@@ -43,6 +43,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
 // A wide header draws its Actions as buttons, each spoken with the section's title, and runs their shortcuts while it is shown.
 export const WideButtons: Story = {
   play: async ({ canvas, userEvent }) => {
@@ -74,11 +76,11 @@ export const CompactContextMenu: Story = {
   },
 };
 
-function sectionHeader(sidebar: boolean): ReactElement {
+function renderSectionHeader(isSidebar: boolean): ReactElement {
   return (
     <ListSectionHeader
       title="Builds"
-      sidebar={sidebar}
+      sidebar={isSidebar}
       leading={<Icon name="folder-open" />}
       isExpanded
       onExpandedChange={fn()}
@@ -87,7 +89,7 @@ function sectionHeader(sidebar: boolean): ReactElement {
   );
 }
 
-async function widePointer(): Promise<void> {
+async function prepareWidePointer(): Promise<void> {
   await settleLayout('wide');
   await cdp().send('Input.dispatchMouseEvent', {
     type: 'mouseMoved',
@@ -96,16 +98,21 @@ async function widePointer(): Promise<void> {
   });
 }
 
-function headerHover(sidebar: boolean): Story {
-  return {
-    render: () => sectionHeader(sidebar),
-    beforeEach: widePointer,
-    play: async ({ canvas }) => {
-      const action = await canvas.findByRole('button', {
-        name: addBuildName,
-      });
+async function getHeaderControls(
+  canvas: PlayContext['canvas'],
+): Promise<{ heading: HTMLElement; action: HTMLElement }> {
+  const action = await canvas.findByRole('button', { name: addBuildName });
+  const heading = canvas.getByRole('button', { name: 'Builds' });
 
-      const heading = canvas.getByRole('button', { name: 'Builds' });
+  return { heading, action };
+}
+
+function createHeaderHoverStory(isSidebar: boolean): Story {
+  return {
+    render: () => renderSectionHeader(isSidebar),
+    beforeEach: prepareWidePointer,
+    play: async ({ canvas }) => {
+      const { heading, action } = await getHeaderControls(canvas);
 
       await expect(action).not.toBeVisible();
       await expect(heading).toBeVisible();
@@ -115,43 +122,98 @@ function headerHover(sidebar: boolean): Story {
       await browserUser.hover(heading);
       await expect(action).toBeVisible();
       await expect(heading.getBoundingClientRect().width).toBe(before.width);
-      await widePointer();
+    },
+  };
+}
+
+export const SidebarHover = createHeaderHoverStory(true);
+
+export const RegularHover = createHeaderHoverStory(false);
+
+function createHeaderPointerExitStory(isSidebar: boolean): Story {
+  return {
+    render: () => renderSectionHeader(isSidebar),
+    beforeEach: prepareWidePointer,
+    play: async ({ canvas }) => {
+      const { heading, action } = await getHeaderControls(canvas);
+
+      await browserUser.hover(heading);
+      await expect(action).toBeVisible();
+
+      await prepareWidePointer();
       await expect(action).not.toBeVisible();
       await expect(heading).toBeVisible();
     },
   };
 }
 
-export const SidebarHover = headerHover(true);
+export const SidebarPointerExit = createHeaderPointerExitStory(true);
 
-export const RegularHover = headerHover(false);
+export const RegularPointerExit = createHeaderPointerExitStory(false);
 
-function keyboardFocus(sidebar: boolean): Story {
+function createHeaderKeyboardFocusStory(isSidebar: boolean): Story {
   return {
-    render: () => sectionHeader(sidebar),
-    beforeEach: widePointer,
+    render: () => renderSectionHeader(isSidebar),
+    beforeEach: prepareWidePointer,
     play: async ({ canvas, userEvent }) => {
-      const heading = await canvas.findByRole('button', { name: 'Builds' });
-      const action = canvas.getByRole('button', { name: addBuildName });
+      const { heading, action } = await getHeaderControls(canvas);
 
       await expect(action).not.toBeVisible();
       await userEvent.tab();
       await expect(heading).toHaveFocus();
       await expect(action).toBeVisible();
+    },
+  };
+}
+
+export const SidebarKeyboardFocus = createHeaderKeyboardFocusStory(true);
+
+export const RegularKeyboardFocus = createHeaderKeyboardFocusStory(false);
+
+function createActionKeyboardFocusStory(isSidebar: boolean): Story {
+  return {
+    render: () => renderSectionHeader(isSidebar),
+    beforeEach: prepareWidePointer,
+    play: async ({ canvas, userEvent }) => {
+      const { heading, action } = await getHeaderControls(canvas);
+
+      await userEvent.tab();
+      await expect(heading).toHaveFocus();
+
       await userEvent.tab();
       await expect(action).toHaveFocus();
+      await expect(action).toBeVisible();
+    },
+  };
+}
+
+export const SidebarActionKeyboardFocus = createActionKeyboardFocusStory(true);
+
+export const RegularActionKeyboardFocus = createActionKeyboardFocusStory(false);
+
+function createKeyboardActivationStory(isSidebar: boolean): Story {
+  return {
+    render: () => renderSectionHeader(isSidebar),
+    beforeEach: prepareWidePointer,
+    play: async ({ canvas, userEvent }) => {
+      const { action } = await getHeaderControls(canvas);
+
+      await userEvent.tab();
+      await userEvent.tab();
+      await expect(action).toHaveFocus();
+
       await userEvent.keyboard('{Enter}');
       await expect(added).toHaveBeenCalledOnce();
     },
   };
 }
 
-export const SidebarKeyboardFocus = keyboardFocus(true);
+export const SidebarKeyboardActivation = createKeyboardActivationStory(true);
 
-export const RegularKeyboardFocus = keyboardFocus(false);
+export const RegularKeyboardActivation = createKeyboardActivationStory(false);
 
-export const SidebarOpenMenu: Story = {
-  render: () => (
+function renderMenuHeader(): ReactElement {
+  return (
     <ListSectionHeader
       title="Builds"
       sidebar
@@ -163,38 +225,70 @@ export const SidebarOpenMenu: Story = {
         </Action>
       }
     />
-  ),
-  beforeEach: widePointer,
-  play: async ({ canvas, canvasElement, userEvent }) => {
-    const heading = await canvas.findByRole('heading', { name: 'Builds' });
+  );
+}
 
-    const trigger = canvas.getByRole('button', {
-      name: 'Build options',
-    });
+function createMenuStory(play: NonNullable<Story['play']>): Story {
+  return { render: renderMenuHeader, beforeEach: prepareWidePointer, play };
+}
 
-    const page = within(canvasElement.ownerDocument.body);
+async function prepareMenuOption({
+  canvas,
+  canvasElement,
+  userEvent,
+}: PlayContext): Promise<{ trigger: HTMLElement; item: HTMLElement }> {
+  const heading = await canvas.findByRole('heading', { name: 'Builds' });
+  const trigger = canvas.getByRole('button', { name: 'Build options' });
+  const page = within(canvasElement.ownerDocument.body);
 
-    await expect(trigger).not.toBeVisible();
-    await browserUser.hover(heading);
-    await userEvent.click(trigger);
+  await expect(trigger).not.toBeVisible();
+  await browserUser.hover(heading);
+  await userEvent.click(trigger);
 
-    const item = await page.findByRole('menuitem', { name: 'Add build' });
+  const item = await page.findByRole('menuitem', { name: 'Add build' });
 
-    await browserUser.hover(item);
-    await waitFor(() => expect(item).toHaveFocus());
-    await expect(trigger).toBeVisible();
-    await userEvent.click(item);
-    await expect(added).toHaveBeenCalledOnce();
-    await expect(trigger).toHaveFocus();
-    await expect(trigger).toBeVisible();
-  },
-};
+  return { trigger, item };
+}
 
-function touchActions(sidebar: boolean): Story {
+async function prepareFocusedMenuOption(
+  context: PlayContext,
+): Promise<{ trigger: HTMLElement; item: HTMLElement }> {
+  const controls = await prepareMenuOption(context);
+
+  await browserUser.hover(controls.item);
+  await waitFor(() => expect(controls.item).toHaveFocus());
+
+  return controls;
+}
+
+export const SidebarOpenMenu = createMenuStory(async (context) => {
+  const { trigger, item } = await prepareMenuOption(context);
+
+  await browserUser.hover(item);
+  await waitFor(() => expect(item).toHaveFocus());
+  await expect(trigger).toBeVisible();
+});
+
+export const SidebarMenuSelection = createMenuStory(async (context) => {
+  const { item } = await prepareFocusedMenuOption(context);
+
+  await context.userEvent.click(item);
+  await expect(added).toHaveBeenCalledOnce();
+});
+
+export const SidebarMenuFocusRestoration = createMenuStory(async (context) => {
+  const { trigger, item } = await prepareFocusedMenuOption(context);
+
+  await context.userEvent.click(item);
+  await expect(trigger).toHaveFocus();
+  await expect(trigger).toBeVisible();
+});
+
+function createTouchActionsStory(isSidebar: boolean): Story {
   return {
-    render: () => sectionHeader(sidebar),
+    render: () => renderSectionHeader(isSidebar),
     beforeEach: async () => {
-      await widePointer();
+      await prepareWidePointer();
       await cdp().send('Emulation.setTouchEmulationEnabled', {
         enabled: true,
         maxTouchPoints: 1,
@@ -231,6 +325,6 @@ function touchActions(sidebar: boolean): Story {
   };
 }
 
-export const SidebarTouch = touchActions(true);
+export const SidebarTouch = createTouchActionsStory(true);
 
-export const RegularTouch = touchActions(false);
+export const RegularTouch = createTouchActionsStory(false);

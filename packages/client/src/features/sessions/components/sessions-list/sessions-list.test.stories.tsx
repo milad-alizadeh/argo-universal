@@ -35,7 +35,6 @@ export const MemoizedRows: Story = {
   name: 'Controlled selection and activity',
 };
 
-// A wide window's heading reveals its Actions while the Project header is hovered or focused.
 export const ProjectActions: Story = {
   beforeEach: () => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {

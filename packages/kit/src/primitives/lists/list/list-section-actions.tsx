@@ -5,10 +5,6 @@ import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
 import type { HeaderProps } from './list-section-parts';
 
-/*
- * The trailing nodes, then the declared Actions as small buttons, each glyph placed as in a 24 box 4 from the next.
- * Hover-capable wide web headers reveal controls while hovered or focused; touch surfaces keep them discoverable.
- */
 const actionsClassName =
   'h-6 shrink-0 flex-row items-center gap-3 px-1 wide-type:h-5';
 
