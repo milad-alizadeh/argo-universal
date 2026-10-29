@@ -10,9 +10,11 @@ import { delegationSteps } from './delegation-scenario.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
+  feedWorkReplySteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
 import { notificationScenarios } from './notification-scenarios.ts';
+import { permissionScenarios } from './permission-command-scenario.ts';
 import { planModeScenarios } from './plan-mode-scenario.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
@@ -56,8 +58,6 @@ const issueDetails: ScriptedStep = {
   },
 };
 
-const editReadme = { toolCallId: 'edit-readme', title: 'Edit README.md' };
-
 const writePressureTools = 32;
 
 const refusedReopen = 'The Agent refused to reopen the Session.';
@@ -77,10 +77,8 @@ export const scenarios = {
   ...subagentScenarios,
   'changed-files': scenario(changedFilesSteps),
   'feed-history': scenario(feedHistorySteps),
-  'feed-work': scenario([
-    ...feedWorkSteps,
-    message('The greeting is updated.'),
-  ]),
+  'feed-work': scenario(feedWorkReplySteps),
+  'completed-tool-held-turn': scenario([...feedWorkSteps, { type: 'hold' }]),
   'feed-interrupted': scenario([...unfinishedFeedWorkSteps, { type: 'hold' }]),
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
   image: scenario([message(imageReply)]),
@@ -113,30 +111,7 @@ export const scenarios = {
     },
     relaunched: scenario([reply]),
   },
-  permission: scenario([
-    update({
-      sessionUpdate: 'tool_call',
-      ...editReadme,
-      kind: 'edit',
-      status: 'pending',
-    }),
-    {
-      type: 'permission',
-      request: {
-        toolCall: editReadme,
-        options: [
-          { optionId: 'allow', name: 'Allow', kind: 'allow_once' },
-          { optionId: 'reject', name: 'Reject', kind: 'reject_once' },
-        ],
-      },
-    },
-    update({
-      sessionUpdate: 'tool_call_update',
-      toolCallId: editReadme.toolCallId,
-      status: 'completed',
-    }),
-    reply,
-  ]),
+  ...permissionScenarios,
   elicitation: scenario([issueDetails, reply]),
   ...planModeScenarios(reply),
   ...contextUsageScenarios(reply),

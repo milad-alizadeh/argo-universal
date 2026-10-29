@@ -3,6 +3,7 @@ import type {
   FeedChange,
   PlanUpdate,
   SessionUpdate,
+  ToolCallContent,
 } from '@repo/contracts';
 import type { session } from '@repo/db/schema';
 import type { WriterCommit, WriterJob } from '../storage';
@@ -50,6 +51,7 @@ export interface FeedContext
   streamEvents: FeedStreamEvent[];
   rejectedChanges: number;
   messageStreams: MessageStreams;
+  toolContents?: Record<string, ToolCallContent[]>;
   outputBlobs: OutputBlob[];
   changes: ChangesSummary;
   changesRequest: number;

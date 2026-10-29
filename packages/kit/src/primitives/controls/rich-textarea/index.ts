@@ -1,5 +1,7 @@
 export { RichTextarea } from './rich-textarea';
 
+export { SuggestionListHost } from './rich-textarea-suggestion-list';
+
 export {
   type RichTextareaHandle,
   type RichTextareaProps,
@@ -7,5 +9,6 @@ export {
 
 export type {
   ComposerSuggestion,
+  SlashCommandEntry,
   SuggestionSource,
 } from './rich-textarea-suggestions';

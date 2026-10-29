@@ -1,4 +1,4 @@
-import type { SessionConfigOption } from '@repo/contracts';
+import { startingRank, type SessionConfigOption } from '@repo/contracts';
 import type { AcpSessionLease } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import { publishTurnContent, type FeedActorRef } from '../feed';
@@ -121,6 +121,70 @@ export const openAcp = async (
     ),
   };
 };
+
+// Resume can return Agent defaults. Reapply the Session's durable choices before admitting a Turn.
+export const restoreAcpConfiguration = async (
+  context: SessionContext,
+  signal: AbortSignal,
+): Promise<SessionConfigOption[]> => {
+  let options = context.configOptions;
+  const pending = [...context.configValues];
+
+  while (pending.length > 0) {
+    signal.throwIfAborted();
+    pending.sort(
+      (left, right) =>
+        configurationRank(options, left.configId) -
+        configurationRank(options, right.configId),
+    );
+    const choice = pending.shift();
+
+    if (choice) options = await restoreConfigChoice(context, options, choice);
+  }
+
+  signal.throwIfAborted();
+
+  return options;
+};
+
+function configurationRank(
+  options: SessionConfigOption[],
+  configId: string,
+): number {
+  return startingRank(
+    options.find((option) => option.configId === configId) ?? { configId },
+  );
+}
+
+async function restoreConfigChoice(
+  context: SessionContext,
+  options: SessionConfigOption[],
+  choice: SessionContext['configValues'][number],
+): Promise<SessionConfigOption[]> {
+  validateConfigChoice(options, choice);
+
+  if (
+    options.find((option) => option.configId === choice.configId)
+      ?.currentValue === choice.value
+  )
+    return options;
+
+  const restored = await configureAcp({
+    ...context,
+    configOptions: options,
+    applyingConfig: { type: 'session.setConfigOption', ...choice },
+  });
+
+  if (
+    restored.find((option) => option.configId === choice.configId)
+      ?.currentValue !== choice.value
+  )
+    throw new Error(
+      `The Agent did not restore ${choice.configId}=${String(choice.value)}`,
+    );
+
+  return restored;
+}
 
 // The Agent's last Turn content reaches the Feed even when the connection is lost.
 export const closeAcp = async (input: AcpOperationInput): Promise<void> => {

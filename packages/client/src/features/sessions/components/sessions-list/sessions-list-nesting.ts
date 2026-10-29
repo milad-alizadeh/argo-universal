@@ -17,6 +17,13 @@ export function nestedSessionEntries(sessions: SessionInfo[]): SessionEntry[] {
   for (const session of sessions)
     placeSession(session, { byId, children, roots });
 
+  if (children.size === 0)
+    return roots.map((session) => ({
+      kind: 'session',
+      id: session.sessionId,
+      session,
+    }));
+
   return roots.flatMap((session) => flattenSession(session, children, root));
 }
 

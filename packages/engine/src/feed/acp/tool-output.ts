@@ -75,11 +75,27 @@ const withText = (
 ): ToolCallContent =>
   text === undefined ? block : { ...block, content: { ...content, text } };
 
-const capBlock = (block: ToolCallContent): ToolCallContent => {
-  if (block.type !== 'content' || block.content.type !== 'text') return block;
+const capTerminal = (
+  block: Extract<ToolCallContent, { type: 'terminal' }>,
+): ToolCallContent => {
+  const output = capText(block.output);
+
+  return output === undefined ? block : { ...block, output };
+};
+
+const capTextBlock = (
+  block: Extract<ToolCallContent, { type: 'content' }>,
+): ToolCallContent => {
+  if (block.content.type !== 'text') return block;
 
   return withText(block, block.content, capText(block.content.text));
 };
+
+const capContentBlock = (block: ToolCallContent): ToolCallContent =>
+  block.type === 'content' ? capTextBlock(block) : block;
+
+const capBlock = (block: ToolCallContent): ToolCallContent =>
+  block.type === 'terminal' ? capTerminal(block) : capContentBlock(block);
 
 const capContent = (content: ToolCallContent[]): CappedField => {
   const capped = content.map(capBlock);
@@ -102,8 +118,9 @@ const capRawOutput = (rawOutput: ToolRow['rawOutput']): CappedField => {
 const capSuppliedFields = (
   row: ToolRow,
   update: ToolUpdate,
+  contentSupplied: boolean,
 ): Partial<Record<OutputField, CappedField>> => ({
-  ...(update.content && { content: capContent(row.content) }),
+  ...(contentSupplied && { content: capContent(row.content) }),
   ...(update.rawOutput != null && { rawOutput: capRawOutput(row.rawOutput) }),
 });
 
@@ -153,8 +170,9 @@ const readCappedValues = (
 export const capToolOutput = (
   row: ToolRow,
   update: ToolUpdate,
+  contentSupplied = update.content != null,
 ): CappedToolOutput => {
-  const capped = capSuppliedFields(row, update);
+  const capped = capSuppliedFields(row, update, contentSupplied);
 
   return {
     row: markTruncation(

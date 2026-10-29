@@ -75,6 +75,7 @@ export const ElicitationEnumOption = z.strictObject({
 export type ElicitationEnumOption = z.infer<typeof ElicitationEnumOption>;
 
 const propertyBase = {
+  _meta: z.record(z.string(), z.unknown()).nullish(),
   title: z.string().optional(),
   description: z.string().optional(),
 };

@@ -47,6 +47,8 @@ const canApplyLifecycleEvent = (
       'xstate.error.actor.saveArchive': 'archiving',
       'xstate.done.actor.openAcp': 'opening',
       'xstate.error.actor.openAcp': 'opening',
+      'xstate.done.actor.restoreAcpConfiguration': 'restoring',
+      'xstate.error.actor.restoreAcpConfiguration': 'restoring',
       'xstate.done.actor.configureAcp': 'configuring',
       'xstate.error.actor.configureAcp': 'configuring',
       'xstate.done.actor.commitPrompt': 'committing',
@@ -245,6 +247,16 @@ export const createAcpSessionModel = (
       type: 'xstate.error.actor.cancelAcp',
       actorId: 'cancelAcp',
       error: new Error('cancel failed'),
+    },
+    {
+      type: 'xstate.done.actor.restoreAcpConfiguration',
+      actorId: 'restoreAcpConfiguration',
+      output: [],
+    },
+    {
+      type: 'xstate.error.actor.restoreAcpConfiguration',
+      actorId: 'restoreAcpConfiguration',
+      error: new Error('Restoration failed'),
     },
     { type: 'session.setConfigOption', configId: 'fast', value: true },
     {

@@ -2,14 +2,17 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { createRef, type RefObject } from 'react';
 import type * as React from 'react';
 import { useState } from 'react';
+import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { exampleLabel } from './rich-textarea-example.mocks';
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
+import { iconlessSuggestionsRichTextarea } from './rich-textarea-iconless.mocks';
 import type {
   RichTextareaHandle,
   RichTextareaProps,
 } from './rich-textarea-props';
+import { SuggestionListHost } from './rich-textarea-suggestion-list';
 import { RichTextarea } from './rich-textarea.native';
 
 // The phone drawing, drawn on the web preview: a controlled field that keeps its draft.
@@ -35,6 +38,14 @@ function NativeField({
 const meta = {
   title: 'Tests/Design System/Primitives/Controls/RichTextarea/Native',
   component: NativeField,
+  parameters: { screenPreview: true },
+  // The Composer sits at the bottom, so the list opens upward into the room above the field.
+  render: (args): React.JSX.Element => (
+    <View className="flex-1 justify-end">
+      <SuggestionListHost />
+      <NativeField {...args} />
+    </View>
+  ),
   args: {
     onChangeText: fn(),
     suggestions: suggestionsRichTextarea.suggestions,
@@ -45,9 +56,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const firstOption = { name: '/first First option' };
+// Rows with an icon name the command without its slash.
+const firstOption = { name: 'first' };
 
-const secondOption = { name: '/second Second option' };
+const secondOption = { name: 'second' };
 
 export const SlashShowsTheListAndTypingNarrowsIt: Story = {
   play: async ({ canvas }) => {
@@ -56,6 +68,7 @@ export const SlashShowsTheListAndTypingNarrowsIt: Story = {
       'Try /',
     );
     await canvas.findByRole('button', firstOption);
+    await expect(canvas.getByText('First option')).toBeVisible();
     await userEvent.keyboard('sec');
     await canvas.findByRole('button', secondOption);
     await waitFor(() =>
@@ -86,6 +99,18 @@ export const TappingAResultReplacesTheSlashWord: Story = {
         .selectionStart,
     ).toBe('Run /second '.length);
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
+  },
+};
+
+export const RowWithoutAnIconKeepsTheSlash: Story = {
+  args: { suggestions: iconlessSuggestionsRichTextarea.suggestions },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await expect(await canvas.findByText('/plain')).toBeVisible();
+    await expect(canvas.getByText('Plain option')).toBeVisible();
   },
 };
 

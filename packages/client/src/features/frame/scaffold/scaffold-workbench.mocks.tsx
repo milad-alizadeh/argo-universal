@@ -23,16 +23,22 @@ type MockState = Pick<
   | 'onInspectorStateChange'
 >;
 
+interface WorkbenchScaffoldProps {
+  inspectorOpen?: boolean;
+  overflowing?: boolean;
+  initialWorkbenchIntent?: WorkbenchIntent;
+}
+
 export function WorkbenchScaffold({
   inspectorOpen = false,
-}: {
-  inspectorOpen?: boolean;
-}): ReactElement {
-  const state = useMockState(inspectorOpen);
+  overflowing = false,
+  initialWorkbenchIntent,
+}: WorkbenchScaffoldProps): ReactElement {
+  const state = useMockState(inspectorOpen, initialWorkbenchIntent);
 
   return (
     <Scaffold
-      {...mockPanes(state.onInspectorStateChange)}
+      {...mockPanes(state.onInspectorStateChange, overflowing)}
       sizeClass="wide"
       {...state}
     />
@@ -44,26 +50,35 @@ type WorkbenchState = Pick<
   'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
 >;
 
-function useWorkbenchState(): WorkbenchState {
-  const [workbenchIntent, onWorkbenchIntentChange] =
-    useState<WorkbenchIntent>('auto');
+function useWorkbenchState(initialIntent?: WorkbenchIntent): WorkbenchState {
+  const [workbenchIntent, onWorkbenchIntentChange] = useState<WorkbenchIntent>(
+    initialIntent ?? 'auto',
+  );
 
   return { inspectorAvailable: true, workbenchIntent, onWorkbenchIntentChange };
 }
 
-function useMockState(inspectorOpen: boolean): MockState {
-  const [sidebarShown, onSidebarShownChange] = useState(true);
-
+function useInspectorState(
+  inspectorOpen: boolean,
+): Pick<MockState, 'inspectorState' | 'onInspectorStateChange'> {
   const [inspectorState, onInspectorStateChange] = useState<InspectorState>(
     inspectorOpen ? 'open' : 'closed',
   );
 
+  return { inspectorState, onInspectorStateChange };
+}
+
+function useMockState(
+  inspectorOpen: boolean,
+  initialIntent?: WorkbenchIntent,
+): MockState {
+  const [sidebarShown, onSidebarShownChange] = useState(true);
+
   return {
     sidebarShown,
     onSidebarShownChange,
-    inspectorState,
-    onInspectorStateChange,
-    ...useWorkbenchState(),
+    ...useInspectorState(inspectorOpen),
+    ...useWorkbenchState(initialIntent),
   };
 }
 
@@ -80,17 +95,22 @@ const mockPage = (
   </View>
 );
 
-function mockPanes(onInspectorStateChange: SetInspectorState): MockPanes {
+const sessionsList = (
+  <Screen title="Sessions">
+    <Text>Sessions list</Text>
+  </Screen>
+);
+
+function mockPanes(
+  onInspectorStateChange: SetInspectorState,
+  overflowing: boolean,
+): MockPanes {
   return {
     sidebar: <View className="w-frame-rail" />,
-    list: (
-      <Screen title="Sessions">
-        <Text>Sessions list</Text>
-      </Screen>
-    ),
+    list: sessionsList,
     page: mockPage,
     inspector: () => mockInspector(onInspectorStateChange),
-    band: mockBand(onInspectorStateChange),
+    band: mockBand(onInspectorStateChange, overflowing),
   };
 }
 
@@ -110,15 +130,38 @@ function mockInspector(
 
 function mockBand(
   onInspectorStateChange: SetInspectorState,
+  overflowing: boolean,
 ): ScaffoldProps['band'] {
   return {
     title: <Text>Session</Text>,
     menu: <IconButton icon="more" accessibilityLabel="More" />,
-    workbench: (
-      <Card title="Changes" onPress={() => onInspectorStateChange('open')}>
-        <Text>2 files</Text>
-      </Card>
-    ),
+    workbench: workbenchCards(onInspectorStateChange, overflowing),
     onInspectorToggle: () => onInspectorStateChange('open'),
   };
 }
+
+const workbenchCards = (
+  open: SetInspectorState,
+  overflowing: boolean,
+): ReactElement =>
+  overflowing ? (
+    overflowCards(open)
+  ) : (
+    <Card title="Changes" onPress={() => open('open')}>
+      <Text>2 files</Text>
+    </Card>
+  );
+
+const overflowCards = (open: SetInspectorState): ReactElement => (
+  <View className="gap-2">
+    {Array.from({ length: 12 }, (_, index) => (
+      <Card
+        key={index}
+        title={`Section ${index + 1}`}
+        onPress={() => open('open')}
+      >
+        <Text>Section preview</Text>
+      </Card>
+    ))}
+  </View>
+);

@@ -7,49 +7,10 @@ import {
 import type {
   FrameLayoutInput,
   InspectorRegion,
-  WorkbenchIntent,
   WorkbenchRegion,
   WorkbenchState,
 } from './frame-layout-types';
-
-// Docked and floating show the Workbench; hidden and auto-hidden wait at the window's edge.
-export const workbenchDrawn = (state: WorkbenchState): boolean =>
-  state === 'docked' || state === 'floating';
-
-const unavailable = (input: FrameLayoutInput): boolean =>
-  !input.workbenchAvailable || input.inspectorState === 'expanded';
-
-const dockedState = (intent: WorkbenchIntent): WorkbenchState =>
-  intent === 'hidden' ? 'hidden' : 'docked';
-
-const floatingState = (intent: WorkbenchIntent): WorkbenchState =>
-  intent === 'shown' ? 'floating' : 'auto-hidden';
-
-export function workbenchState(
-  input: FrameLayoutInput,
-  undock: number,
-): WorkbenchState {
-  if (unavailable(input)) return 'hidden';
-
-  return input.width >= undock
-    ? dockedState(input.workbenchIntent)
-    : floatingState(input.workbenchIntent);
-}
-
-// The Workbench's room beside the content whenever the page has one, which the thresholds budget for.
-export const reservedWorkbench = (input: FrameLayoutInput): number =>
-  input.workbenchAvailable
-    ? input.measures.workbenchWidth + input.measures.paneGap
-    : 0;
-
-export const dockedWorkbench = (
-  input: FrameLayoutInput,
-  state: WorkbenchState,
-): number =>
-  occupied(
-    state === 'docked' ? input.measures.workbenchWidth : 0,
-    input.measures.paneGap,
-  );
+import { workbenchDrawn, workbenchState } from './frame-layout-workbench';
 
 function drawnWorkbenchWidth(
   { width, measures }: FrameLayoutInput,
@@ -66,19 +27,44 @@ function drawnWorkbenchWidth(
 // A Workbench that is not drawn waits at the window's trailing inset, where it slides in from.
 export function workbenchRegion(
   input: FrameLayoutInput,
-  state: WorkbenchState,
   inspector: PaneSpan,
+  contentStart: number,
 ): WorkbenchRegion {
+  const host = conversationHost(input, inspector, contentStart);
+  const state = workbenchState(input, host.width);
   const width = drawnWorkbenchWidth(input, state);
-
-  const trailing =
-    width > 0 ? occupied(inspector.width, input.measures.paneGap) : 0;
 
   return {
     state,
     width,
-    offset: input.width - trailing - input.measures.inset - width,
+    offset: workbenchOffset(input, { state, width }, host),
   };
+}
+
+function conversationHost(
+  input: FrameLayoutInput,
+  inspector: PaneSpan,
+  contentStart: number,
+): PaneSpan {
+  return {
+    offset: contentStart,
+    width:
+      input.width -
+      contentStart -
+      occupied(inspector.width, input.measures.paneGap),
+  };
+}
+
+function workbenchOffset(
+  input: FrameLayoutInput,
+  { state, width }: Pick<WorkbenchRegion, 'state' | 'width'>,
+  host: PaneSpan,
+): number {
+  if (state === 'dedicated') return host.offset + (host.width - width) / 2;
+
+  const trailing = width > 0 ? input.width - host.offset - host.width : 0;
+
+  return input.width - trailing - input.measures.inset - width;
 }
 
 // The widest the Inspector gets beside the page while the content keeps its floor.

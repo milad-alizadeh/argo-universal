@@ -10,7 +10,10 @@ import {
   type FeedState,
   syncPointOf,
 } from '../view/feed-state';
-import { findLiveToolCall } from '../view/live-tool-call';
+import {
+  findLiveToolCall,
+  findPermissionToolCall,
+} from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
 import { useHeldFeedStart, useKeepHeldFeed } from './held-feed';
 import type { SessionFeed } from './session-feed';
@@ -167,6 +170,7 @@ export function useSessionFeed(
     view,
     revision: feed.revision,
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
+    permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),
     snapshot,
     // The first page and the snapshot have both arrived.
     ready: feed.epoch !== null && snapshot !== null,

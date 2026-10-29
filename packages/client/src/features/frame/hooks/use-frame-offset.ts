@@ -10,7 +10,12 @@ import {
 } from 'react-native-reanimated';
 import type { FrameMotion } from '../utils/frame-timing';
 
-type OffsetMotion = FrameMotion & { offset: number; visible: boolean };
+type OffsetMotion = FrameMotion & {
+  offset: number;
+  visible: boolean;
+  // A replacement view cannot travel across the primary content it hides or restores.
+  replacesPrimary?: boolean;
+};
 
 type MotionValues = {
   shift: SharedValue<number>;
@@ -30,12 +35,15 @@ function reset(values: MotionValues, next: OffsetMotion): void {
   values.opacity.set(Number(next.visible));
 }
 
+const canTravel = (next: OffsetMotion, last: OffsetMotion): boolean =>
+  next.animate && !next.replacesPrimary && !last.replacesPrimary;
+
 function move(
   values: MotionValues,
   next: OffsetMotion,
   last: OffsetMotion,
 ): void {
-  if (!next.animate) return reset(values, next);
+  if (!canTravel(next, last)) return reset(values, next);
 
   values.shift.set(values.shift.get() + last.offset - next.offset);
   values.shift.set(timed(0, next));

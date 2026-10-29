@@ -188,6 +188,7 @@ export const feedMachine = setup({
     streamEvents: [],
     rejectedChanges: 0,
     messageStreams: {},
+    toolContents: {},
     outputBlobs: [],
     changes: emptyChangesSummary,
     changesRequest: 0,

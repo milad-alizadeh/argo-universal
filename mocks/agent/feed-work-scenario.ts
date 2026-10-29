@@ -57,3 +57,14 @@ export const feedWorkSteps: ScriptedStep[] = [
     },
   },
 ];
+
+export const feedWorkReplySteps: ScriptedStep[] = [
+  ...feedWorkSteps,
+  {
+    type: 'update',
+    update: {
+      sessionUpdate: 'agent_message_chunk',
+      content: { type: 'text', text: 'The greeting is updated.' },
+    },
+  },
+];

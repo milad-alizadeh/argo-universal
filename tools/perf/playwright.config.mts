@@ -12,6 +12,7 @@ const webPort = process.env.ARGO_PERF_WEB_PORT;
 export default defineConfig({
   testDir: import.meta.dirname,
   testMatch: '*.perf.mts',
+  globalSetup: ['./browser-suite-lock.mts', '../../e2e/engine-bundle.ts'],
   outputDir: path.join(repositoryRoot, 'e2e/test-results/perf'),
   // One page at a time, so runs never share the CPU.
   workers: 1,
@@ -22,6 +23,7 @@ export default defineConfig({
     ...devices['Desktop Chrome'],
     baseURL: `http://127.0.0.1:${webPort}`,
     headless: process.env.PERF_HEADED !== '1',
+    actionTimeout: Number(process.env.PERF_READY_TIMEOUT ?? 10_000),
     reducedMotion: 'no-preference',
     screenshot: 'only-on-failure',
     launchOptions: {

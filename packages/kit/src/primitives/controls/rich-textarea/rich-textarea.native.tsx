@@ -11,7 +11,7 @@ import {
   type RichTextareaHandle,
   type RichTextareaProps,
 } from './rich-textarea-props';
-import { SuggestionList } from './rich-textarea-suggestion-list';
+import { SuggestionPortal } from './rich-textarea-suggestion-list';
 import type { SuggestionSource } from './rich-textarea-suggestions';
 
 type TextInputInstance = React.ComponentRef<typeof TextInput>;
@@ -111,7 +111,7 @@ function RichTextarea(props: RichTextareaProps): React.JSX.Element {
 
   return (
     <View className="w-full">
-      {groups ? <SuggestionList groups={groups} onChoose={choose} /> : null}
+      {groups ? <SuggestionPortal groups={groups} onChoose={choose} /> : null}
       <PlainField props={props} inputRef={inputRef} fieldProps={fieldProps} />
     </View>
   );

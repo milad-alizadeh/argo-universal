@@ -33,3 +33,20 @@ function liveSource(
 ): NonNullable<SessionSnapshot['liveHeader']>['source'] | undefined {
   return snapshot?.liveHeader?.source;
 }
+
+// A request can outlive the live activity label; only its own Turn and Session may supply its Tool input.
+export function findPermissionToolCall(
+  rows: readonly SessionUpdate[],
+  snapshot: SessionSnapshot | null,
+  sessionId: string | undefined,
+): ToolCallUpdate | undefined {
+  if (!snapshot?.pendingPermission) return undefined;
+  const { toolCallId } = snapshot.pendingPermission;
+
+  return rows
+    .filter(
+      (row) =>
+        row.sessionId === sessionId && row.turnId === snapshot.activeTurnId,
+    )
+    .findLast((row): row is ToolCallUpdate => matchesToolCall(row, toolCallId));
+}

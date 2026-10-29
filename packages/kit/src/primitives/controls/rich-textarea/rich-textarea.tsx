@@ -28,7 +28,7 @@ import {
   $importMarkdown,
   richTextareaNodes,
 } from './web/rich-textarea-markdown';
-import { ReferenceProviders } from './web/rich-textarea-reference-token';
+import { TokenProviders } from './web/rich-textarea-token-providers';
 import { TypeaheadPlugin } from './web/rich-textarea-typeahead-plugin';
 
 const placeholderClassName =
@@ -136,9 +136,9 @@ function RichTextarea({
 
   return (
     <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
-      <ReferenceProviders references={references}>
+      <TokenProviders references={references} suggestions={props.suggestions}>
         <EditorParts {...props} editable={editable} references={references} />
-      </ReferenceProviders>
+      </TokenProviders>
     </LexicalComposer>
   );
 }

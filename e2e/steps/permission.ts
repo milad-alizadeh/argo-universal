@@ -1,8 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { replies } from './agent-requests';
+import { replies, releaseAgent } from './agent-requests';
 import { expectListedAgent } from './agents';
 import { Given, When, Then } from './fixtures';
+import { onPhone } from './frame';
 import { expectComposerAccepts } from './input-requests';
 import { messageLabel } from './new-session';
 
@@ -12,12 +13,24 @@ Given('Agent {int} asks to leave plan mode', expectListedAgent);
 
 Given('Agent {int} asks permission to edit README.md', expectListedAgent);
 
+Given('Agent {int} asks permission to run a command', expectListedAgent);
+
+Given(
+  'Agent {int} asks permission before its command details arrive',
+  expectListedAgent,
+);
+
+const requestSurface = (page: Page): Locator =>
+  onPhone(page) ? page.getByRole('dialog') : composer(page);
+
 // The request card takes the Composer's place; the Composer's textbox stays mounted beneath it.
 export async function expectOverComposer(
   page: Page,
   title: string,
 ): Promise<void> {
-  await expect(composer(page).getByText(title, { exact: true })).toBeVisible();
+  await expect(
+    requestSurface(page).getByRole('heading', { name: title, exact: true }),
+  ).toBeVisible();
   await expect(
     composer(page).getByRole('textbox', {
       name: messageLabel,
@@ -30,7 +43,7 @@ export async function answerPermission(
   page: Page,
   option: string,
 ): Promise<void> {
-  await composer(page)
+  await requestSurface(page)
     .getByRole('button', { name: option, exact: true })
     .click();
 }
@@ -99,3 +112,40 @@ for (const request of requestCards)
       await expectClosedForDraft(page, title, draft);
     },
   );
+
+Then(
+  'the Permission request shows command {string}',
+  async ({ page }, command: string): Promise<void> => {
+    const surface = requestSurface(page);
+    await expect(surface.getByText(command, { exact: true })).toBeVisible();
+    await expect(
+      surface.getByText('DO_NOT_SHOW_OTHER_COMMAND', { exact: false }),
+    ).toHaveCount(0);
+    await expect(
+      surface.getByRole('button', { name: 'Allow', exact: true }),
+    ).toBeVisible();
+    await expect(
+      surface.getByRole('button', { name: 'Reject', exact: true }),
+    ).toBeVisible();
+  },
+);
+
+Then(
+  'the Permission request has no command details yet',
+  async ({ page }): Promise<void> => {
+    const surface = requestSurface(page);
+    await expect(
+      surface.getByText("printf 'ARGO_PERMISSION_BODY'", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      surface.getByText('DO_NOT_SHOW_OTHER_COMMAND', { exact: false }),
+    ).toHaveCount(0);
+  },
+);
+
+When(
+  'the Agent sends the delayed command details',
+  async ({ app }): Promise<void> => {
+    releaseAgent(app.requestLogPath);
+  },
+);
