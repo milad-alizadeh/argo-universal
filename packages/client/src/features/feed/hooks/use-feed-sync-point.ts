@@ -14,8 +14,7 @@ export function useFeedSyncPoint(
   firstPage: FeedPageOutput | undefined,
 ): FeedSubscriptionCursor {
   const [held, setHeld] = useState({ sessionId, point: initial });
-  const retained = held.sessionId === sessionId ? held.point : initial;
-  const point = retained ?? historySyncPoint(firstPage);
+  const point = retainedSyncPoint(held, { sessionId, initial, firstPage });
 
   if (held.sessionId !== sessionId || held.point !== point)
     setHeld({ sessionId, point });
@@ -26,4 +25,21 @@ export function useFeedSyncPoint(
   );
 
   return { syncPoint: point, setSyncPoint };
+}
+
+function retainedSyncPoint(
+  held: { sessionId: string | undefined; point: FeedSyncPoint | null },
+  {
+    sessionId,
+    initial,
+    firstPage,
+  }: {
+    sessionId: string | undefined;
+    initial: FeedSyncPoint | null;
+    firstPage: FeedPageOutput | undefined;
+  },
+): FeedSyncPoint | null {
+  const retained = held.sessionId === sessionId ? held.point : initial;
+
+  return retained ?? historySyncPoint(firstPage);
 }

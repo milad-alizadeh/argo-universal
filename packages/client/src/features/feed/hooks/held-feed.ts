@@ -38,15 +38,10 @@ export interface HeldFeedStart {
 export function useHeldFeedStart(sessionId: string | undefined): HeldFeedStart {
   const cache = heldFeedsOf(useQueryClient());
 
-  const start = useMemo((): HeldFeedStart => {
-    const held = sessionId ? cache.read(sessionId) : undefined;
-
-    return {
-      feed: held?.feed ?? emptyFeed,
-      snapshot: held?.snapshot ?? null,
-      syncPoint: held ? syncPointOf(held.feed) : null,
-    };
-  }, [cache, sessionId]);
+  const start = useMemo(
+    () => heldFeedStart(cache, sessionId),
+    [cache, sessionId],
+  );
 
   useEffect(
     () => (sessionId ? cache.hold(sessionId) : undefined),
@@ -66,4 +61,19 @@ export function useKeepHeldFeed(
     if (sessionId && feed.epoch !== null)
       cache.write(sessionId, { feed, snapshot });
   }, [cache, sessionId, feed, snapshot]);
+}
+
+function heldFeedStart(
+  cache: HeldCache<HeldFeed>,
+  sessionId: string | undefined,
+): HeldFeedStart {
+  const held = sessionId ? cache.read(sessionId) : undefined;
+
+  return held
+    ? {
+        feed: held.feed,
+        snapshot: held.snapshot,
+        syncPoint: syncPointOf(held.feed),
+      }
+    : { feed: emptyFeed, snapshot: null, syncPoint: null };
 }
