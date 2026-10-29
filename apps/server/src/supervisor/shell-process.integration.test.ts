@@ -27,6 +27,15 @@ const isAlive = (pid: number): boolean => {
   }
 };
 
+const changeProcesses = (
+  mode: string,
+  pids: { wrapper: number; engine: number },
+): void => {
+  if (mode === 'stopped wrapper') process.kill(pids.wrapper, 'SIGSTOP');
+
+  if (mode !== 'Supervisor force-stop') process.kill(pids.engine, 'SIGKILL');
+};
+
 it.each(
   owners.flatMap((owner) =>
     ['abrupt Engine exit', 'Supervisor force-stop', 'stopped wrapper'].map(
@@ -80,9 +89,7 @@ it.each(
 
     owned.push(pids.command, pids.wrapper);
 
-    if (mode === 'stopped wrapper') process.kill(pids.wrapper, 'SIGSTOP');
-
-    if (mode !== 'Supervisor force-stop') process.kill(pids.engine, 'SIGKILL');
+    changeProcesses(mode, pids);
     const engine = actor.getSnapshot().children['engine'];
 
     if (!engine) throw new Error('Engine did not start');
