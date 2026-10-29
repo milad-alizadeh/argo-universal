@@ -4,6 +4,7 @@ import {
   settleLayout,
   wideBreakpoint,
 } from '@repo/kit/mocks/story-layout';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
@@ -97,15 +98,16 @@ export const ReturnSends: Story = {
   },
 };
 
-// The inline Mode choices are radios: the arrow keys, Home and End move between them, one at a time.
+// The desktop Mode menu moves focus with Arrow, Home and End without choosing.
 export const ArrowKeysMoveThroughModeWide: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
     const overlay = within(document.body);
-    const radios = await overlay.findAllByRole('radio');
-    const [first, second] = radios;
-    const last = radios.at(-1);
+    const menu = await overlay.findByRole('menu', { name: 'Mode' });
+    const choices = within(menu).getAllByRole('menuitemradio');
+    const [first, second] = choices;
+    const last = choices.at(-1);
     first?.focus();
     await userEvent.keyboard('{ArrowDown}');
     await expect(second).toHaveFocus();
@@ -125,6 +127,9 @@ export const ModeArrowDoesNotChooseWide: Story = {
   args: {
     configuration: {
       ...composerUnlistedEffortConfiguration,
+      configOptions: recordedSessionOptions(
+        composerUnlistedEffortConfiguration.agent?.id ?? '',
+      ),
       onConfigChange: modeChanges,
     },
   },
@@ -133,10 +138,23 @@ export const ModeArrowDoesNotChooseWide: Story = {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
     const overlay = within(document.body);
-    const [first, second] = await overlay.findAllByRole('radio');
+    const mode = await overlay.findByRole('menu', { name: 'Mode' });
+    const [first, second] = within(mode).getAllByRole('menuitemradio');
     first?.focus();
+    await expect(modeChanges).not.toHaveBeenCalled();
     await userEvent.keyboard('{ArrowDown}');
     await expect(second).toHaveFocus();
     await expect(modeChanges).not.toHaveBeenCalled();
+    await userEvent.keyboard('{Enter}');
+    await expect(modeChanges).toHaveBeenCalledOnce();
+    await expect(modeChanges).toHaveBeenCalledWith('mode', 'default');
+    await waitFor(() =>
+      expect(
+        overlay.queryByRole('menu', { name: 'Mode' }),
+      ).not.toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'Mode' })).toHaveFocus(),
+    );
   },
 };

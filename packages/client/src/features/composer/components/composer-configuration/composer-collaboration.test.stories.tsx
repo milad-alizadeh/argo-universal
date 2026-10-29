@@ -61,14 +61,27 @@ function collaboration(width: number): Story {
       await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
       const overlay = within(document.body);
-      await userEvent.click(
-        await overlay.findByRole('button', {
-          name: /^Collaboration mode, Default/,
-        }),
-      );
-      await userEvent.click(
-        await overlay.findByRole('radio', { name: 'Plan' }),
-      );
+
+      if (width === layoutWidths.wide) {
+        await userEvent.click(
+          await overlay.findByRole('menuitem', {
+            name: /^Collaboration mode, Default/,
+          }),
+        );
+        await userEvent.click(
+          await overlay.findByRole('menuitemradio', { name: 'Plan' }),
+        );
+      } else {
+        await userEvent.click(
+          await overlay.findByRole('button', {
+            name: /^Collaboration mode, Default/,
+          }),
+        );
+        await userEvent.click(
+          await overlay.findByRole('radio', { name: 'Plan' }),
+        );
+      }
+
       await expect(onConfigChange).toHaveBeenCalledWith(
         'collaboration_mode',
         'plan',
