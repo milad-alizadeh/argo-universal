@@ -58,7 +58,7 @@ function useWorkbenchPlacement(
 }
 
 const visibilityProps = (visible: boolean): ViewProps & { inert: boolean } => ({
-  pointerEvents: visible ? 'auto' : 'none',
+  pointerEvents: visible ? 'box-none' : 'none',
   accessibilityElementsHidden: !visible,
   importantForAccessibility: visible ? 'auto' : 'no-hide-descendants',
   'aria-hidden': !visible,
@@ -106,7 +106,8 @@ function WorkbenchSurface({
 const shadowScrollProps = {
   role: 'region',
   accessibilityLabel: 'Workbench overview',
-  className: '-mx-8 -mt-8 web:pointer-events-none',
+  // box-none restores direct children's input, so the full-height frame must opt out explicitly.
+  className: '-mx-8 -mt-8 web:pointer-events-none!',
   pointerEvents: 'box-none',
   contentContainerStyle: { pointerEvents: 'box-none' },
   contentContainerClassName: 'px-8 pt-8 pb-16',
