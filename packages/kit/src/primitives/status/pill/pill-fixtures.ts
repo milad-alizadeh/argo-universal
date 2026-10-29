@@ -28,3 +28,29 @@ export const labelPills = [
   { text: 'wontfix', color: '#ffffff' },
   { text: 'docs', color: '#0e1a2b' },
 ] as const satisfies readonly PillProps[];
+
+export const controlPill = {
+  variant: 'control',
+  text: 'Choice',
+  icon: 'settings',
+  disclosure: 'down',
+} satisfies PillProps;
+
+export const countedControlPill = {
+  variant: 'control',
+  appearance: 'glass',
+  text: 'Items',
+  icon: 'terminal',
+  count: 2,
+  countTone: 'success',
+} satisfies PillProps;
+
+export const selectedControlPill = {
+  ...controlPill,
+  selected: true,
+} satisfies PillProps;
+
+export const disabledControlPill = {
+  ...controlPill,
+  disabled: true,
+} satisfies PillProps;

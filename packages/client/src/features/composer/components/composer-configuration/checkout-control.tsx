@@ -4,6 +4,7 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { MenuTrigger } from '@repo/kit/primitives/overlays/menu';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useContentWide } from '#lib/product/content-layout';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { checkoutName } from './configuration-values';
@@ -58,11 +59,17 @@ export function ComposerCheckoutControl(
   if (props.checkout.path || !props.checkout.onNewWorktreeChange)
     return <CheckoutLabel checkout={props.checkout} />;
 
+  return <CheckoutPicker {...props} />;
+}
+
+function CheckoutPicker(props: CheckoutProps): React.JSX.Element {
+  const wide = useContentWide();
+
   return (
     <ComposerPopover
       listContent
       label="Checkout"
-      trigger={checkoutTrigger(props)}
+      trigger={checkoutTrigger(props, wide)}
     >
       {(close) => <CheckoutContents {...props} close={close} />}
     </ComposerPopover>
@@ -95,10 +102,17 @@ function CheckoutPath({
 // A branch keeps its prefix and its end; the web ignores the mode and cuts the tail.
 const pathText = (
   checkout: CheckoutProps['checkout'],
-): Pick<React.ComponentProps<typeof Text>, 'ellipsizeMode' | 'role'> =>
+): Pick<
+  React.ComponentProps<typeof Text>,
+  'ellipsizeMode' | 'role' | 'tone'
+> =>
   checkout.newWorktree
-    ? { ellipsizeMode: 'middle', role: 'code' }
-    : { ellipsizeMode: 'tail', role: 'secondary' };
+    ? { ellipsizeMode: 'middle', role: { compact: 'code', wide: 'body-code' } }
+    : {
+        ellipsizeMode: 'tail',
+        role: { compact: 'secondary', wide: 'body' },
+        tone: 'muted',
+      };
 
 function CheckoutIcon({
   newWorktree,
@@ -108,17 +122,23 @@ function CheckoutIcon({
   return <Icon name={newWorktree ? 'branch' : 'folder'} tone="muted" />;
 }
 
-function checkoutTrigger({
-  checkout,
-  disabled,
-}: CheckoutProps): React.JSX.Element {
+function checkoutTrigger(
+  { checkout, disabled }: CheckoutProps,
+  wide: boolean,
+): React.JSX.Element {
   return (
     <MenuTrigger
-      labelRole={{ compact: 'row', wide: 'secondary' }}
+      tone={wide ? 'muted' : undefined}
       disabled={disabled}
       accessibilityLabel="Checkout"
-      label={checkout.newWorktree ? 'New worktree' : 'Local'}
-      icon={checkout.newWorktree ? 'branch' : 'folder'}
+      {...checkoutChoice(checkout)}
     />
   );
 }
+
+const checkoutChoice = (
+  checkout: CheckoutProps['checkout'],
+): Pick<React.ComponentProps<typeof MenuTrigger>, 'label' | 'icon'> =>
+  checkout.newWorktree
+    ? { label: 'New worktree', icon: 'branch' }
+    : { label: 'Local', icon: 'folder' };

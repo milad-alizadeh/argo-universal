@@ -1,8 +1,5 @@
-import type { SessionConfigSelectOption } from '@repo/contracts';
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
-import { View } from 'react-native';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
   currentEffort,
@@ -17,53 +14,35 @@ interface TrailingProps {
   wide: boolean;
 }
 
-// What sits between the model and the trigger's chevron: the effort, wide, and whether fast mode is on.
-export function AgentModelTrailing(props: TrailingProps): React.JSX.Element {
-  return (
-    <View className="flex-row items-center gap-1.5">
-      <EffortLabel {...props} />
-      <FastModeIndicator configuration={props.configuration} />
-    </View>
-  );
-}
-
-function FastModeIndicator({
+export function AgentModelTrailing({
   configuration,
-}: Pick<TrailingProps, 'configuration'>): React.JSX.Element | null {
-  const fastOn = switches(configuration).some(
+}: TrailingProps): React.JSX.Element | null {
+  const fast = switches(configuration).some(
     (option) => isFastMode(option) && option.currentValue,
   );
 
-  return fastOn ? <Icon name="fast-mode" filled testID="fast-mode-on" /> : null;
+  return fast ? <Icon name="fast-mode" filled testID="fast-mode-on" /> : null;
 }
 
-function EffortLabel({
+export function agentModelEffort({
   configuration,
   wide,
-}: TrailingProps): React.JSX.Element | null {
-  const current = selectedChoice(configuration, 'model');
+}: TrailingProps): string | undefined {
+  if (!wide) return undefined;
 
-  if (!wide) return null;
+  if (!modelSupportsEffort(configuration)) return undefined;
 
-  if (!supportsEffort(current)) return null;
-
-  return <CurrentEffortLabel configuration={configuration} />;
+  return effortName(configuration);
 }
 
-function CurrentEffortLabel({
-  configuration,
-}: Pick<TrailingProps, 'configuration'>): React.JSX.Element | null {
-  const selected = currentEffort(configuration).selected;
+function modelSupportsEffort(
+  configuration: ComposerConfigurationProps,
+): boolean {
+  const model = selectedChoice(configuration, 'model');
 
-  return selected ? (
-    <Text role="badge" tone="muted" numberOfLines={1}>
-      {selected.name}
-    </Text>
-  ) : null;
+  return model ? choiceMetadata(model)?.supportsEffort !== false : true;
 }
 
-function supportsEffort(current?: SessionConfigSelectOption): boolean {
-  if (!current) return true;
-
-  return choiceMetadata(current)?.supportsEffort !== false;
-}
+const effortName = (
+  configuration: ComposerConfigurationProps,
+): string | undefined => currentEffort(configuration).selected?.name;

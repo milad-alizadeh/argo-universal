@@ -22,7 +22,7 @@ export const statusComponents = {
     },
   ),
   Pill: defineKitComponent(
-    'Static short text with a semantic tone.',
+    'A semantic label or interactive control with shared pill geometry and supported glass material.',
     pillProps,
     {
       group: 'status',

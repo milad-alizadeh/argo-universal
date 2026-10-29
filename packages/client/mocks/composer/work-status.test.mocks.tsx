@@ -63,8 +63,7 @@ export async function expectPhoneFooter({
     canvas.queryByRole('button', { name: 'Checkout' }),
   ).not.toBeInTheDocument();
   const context = canvas.getByRole('button', { name: contextWindowLabel });
-  await expect(within(context).getByText('34k')).not.toBeVisible();
-  await expect(within(context).getByText('/ 200k')).not.toBeVisible();
+  await expect(context).not.toHaveTextContent(/34k|200k/);
 
   const work = canvas
     .getByRole('button', { name: 'Shells: 1' })
@@ -80,9 +79,8 @@ export async function expectWideFooter({
   canvas,
 }: Pick<PlayContext, 'canvas'>): Promise<void> {
   const context = canvas.getByRole('button', { name: contextWindowLabel });
-  const used = within(context).getByText('34k').getBoundingClientRect();
-  const size = within(context).getByText('/ 200k').getBoundingClientRect();
-  await expect(size.left).toBeGreaterThanOrEqual(used.right);
+  await expect(context).toBeVisible();
+  await expect(context).toHaveTextContent(/34k\s*\/\s*200k/);
 }
 
 export const linesTwoToTen =
