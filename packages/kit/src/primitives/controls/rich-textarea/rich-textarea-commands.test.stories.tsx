@@ -55,14 +55,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A token is the editor's own non-editable chip around the command's name.
+// A token is announced as the command it names.
 function tokenIn(field: HTMLElement, name: string): HTMLElement | null {
-  const chips = field.querySelectorAll<HTMLElement>(
-    '[contenteditable="false"]',
-  );
+  return within(field).queryByRole('img', { name: `Command /${name}` });
+}
 
-  return (
-    [...chips].find((chip) => chip.textContent?.includes(`/${name}`)) ?? null
+// Whether `later` is drawn after `earlier` in the field.
+function follows(earlier: HTMLElement, later: HTMLElement): boolean {
+  return Boolean(
+    earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING,
   );
 }
 
@@ -113,11 +114,15 @@ export const APathStaysPlainText: Story = {
 
 export const ARestoredDraftRebuildsTheTokenAndKeepsItsText: Story = {
   args: { initialValue: withArgument },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
     await waitFor(() => expect(tokenIn(field, reviewName)).not.toBeNull());
-    await expect(within(field).getByText(/main/)).toBeVisible();
     await expect(field).toHaveTextContent(withArgument);
+    await userEvent.click(field);
+    await userEvent.keyboard('{End}!');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith(`${withArgument}!`),
+    );
   },
 };
 
@@ -126,9 +131,14 @@ export const TheHintShowsAfterTheCommandUntilAnArgumentIsTyped: Story = {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, '/rev');
     await userEvent.keyboard('{Enter}');
-    await waitFor(() =>
-      expect(within(field).getByText(hintText)).toBeVisible(),
-    );
+    const hint = await within(field).findByText(hintText);
+
+    const token = within(field).getByRole('img', {
+      name: `Command /${reviewName}`,
+    });
+
+    await expect(follows(token, hint)).toBe(true);
+
     await userEvent.keyboard('main');
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith(withArgument),
