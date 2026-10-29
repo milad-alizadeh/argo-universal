@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveExecutable } from '@repo/executables';
 import { z } from 'zod';
-import { measureFindings } from './not-yet-cleared/measure.mts';
+import { measureFindings } from './measure-allowlist.mts';
 import { allowlistProblems, readAllowlist } from './rule-allowlist.mts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -100,7 +100,7 @@ function check(allowlist: Allowlist, report: string): number {
   return problems.length;
 }
 
-// Checks every allowlist against a report that tools/check-lint-waivers.mts shares with the waiver check.
+// Check the findings for each allowlist.
 export function checkRuleAllowlists(report: string): number {
   const problemCount = allowlists
     .map((allowlist): number => check(allowlist, report))

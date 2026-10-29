@@ -1,5 +1,6 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["./kit-styling-rule.json", "./kit-styling-allowlist.json"],
   // Argo's rules on top of the Prickles pack (prickles.json), and ADR-0016's applications; ADR-0017 says where each comes from.
   // A rule here may be stricter than the pack, never looser; the pack's caps change only with the pack.
   "plugins": [
@@ -254,11 +255,6 @@
         "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx"
       ],
       "rules": { "argo/icon-size": "off" }
-    },
-    {
-      // Kit components take props, never className, style or a *ClassName slot; only @repo/kit styles them. kit-styling-allowlist.json holds the files not yet moved over.
-      "files": ["packages/client/src/**"],
-      "rules": { "argo/kit-styling": "error" }
     },
     {
       // A screen leaves its spacing to Screen, List and FieldGroup, as a Plugin's page must; a missing gap becomes a scaffold prop in @repo/kit.

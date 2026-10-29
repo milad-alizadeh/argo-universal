@@ -10,31 +10,37 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { z } from 'zod';
-import { parseJsonc } from './document.mts';
+import { parseJsonc } from './parse-jsonc.mts';
+import { readAllowlist } from './rule-allowlist.mts';
 
-const rootConfigSchema = z.looseObject({ extends: z.array(z.string()) });
+const rootConfigSchema = z.looseObject({
+  extends: z.array(z.string()),
+  overrides: z.array(z.unknown()).optional(),
+});
 
-const waiverConfig = 'tooling/oxlint/not-yet-cleared.json';
+function allowlistedFiles(root: string): string[] {
+  return readAllowlist(
+    readFileSync(
+      join(root, 'tooling/oxlint/kit-styling-allowlist.json'),
+      'utf8',
+    ),
+    'argo/kit-styling',
+  );
+}
 
-// Every extended config that waives findings; dropping all of them measures the waived rules in one run.
-const waiverConfigs = [
-  waiverConfig,
-  'tooling/oxlint/kit-styling-allowlist.json',
-] as const;
-
-function measuringConfig(root: string, dropped: readonly string[]): string {
+function measuringConfig(root: string): string {
   const config = parseJsonc(
     rootConfigSchema,
     readFileSync(join(root, '.oxlintrc.json'), 'utf8'),
   );
 
-  const droppedPaths = new Set(dropped.map((path): string => join(root, path)));
-
   return JSON.stringify({
     ...config,
-    extends: config.extends
-      .filter((path): boolean => !droppedPaths.has(resolve(root, path)))
-      .map((path): string => resolve(root, path)),
+    extends: config.extends.map((path): string => resolve(root, path)),
+    overrides: [
+      ...(config.overrides ?? []),
+      { files: allowlistedFiles(root), rules: { 'argo/kit-styling': 'error' } },
+    ],
   });
 }
 
@@ -59,14 +65,14 @@ function runOxlint(root: string, config: string): string {
   return result.stdout;
 }
 
-// Lints the tree without every waiver config; each check reads only the rules it waives.
+// Lint with the allowlisted rule enabled to find stale entries.
 export function measureFindings(root: string): string {
-  const directory = mkdtempSync(join(tmpdir(), 'not-yet-cleared-'));
+  const directory = mkdtempSync(join(tmpdir(), 'argo-allowlist-'));
   const config = join(directory, 'oxlint.json');
-  const link = join(root, `.oxlintrc-not-yet-cleared-${randomUUID()}.json`);
+  const link = join(root, `.oxlintrc-allowlist-${randomUUID()}.json`);
 
   try {
-    writeFileSync(config, measuringConfig(root, waiverConfigs));
+    writeFileSync(config, measuringConfig(root));
     // Oxlint resolves override globs against the config path, even when extends are absolute.
     symlinkSync(config, link);
 
