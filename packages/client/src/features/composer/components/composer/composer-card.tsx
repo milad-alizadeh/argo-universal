@@ -3,6 +3,7 @@ import {
   RichTextarea,
   type SuggestionResource,
   SuggestionListHost,
+  type SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
 import { useMemo } from 'react';
@@ -126,15 +127,28 @@ function draftChanges({
   };
 }
 
-function ComposerText(layout: TextLayout): React.JSX.Element {
-  const { slashCommands, suggestionSources } = layout.props;
+function useSuggestionSources(props: TextLayout['props']): SuggestionSource[] {
+  const { slashCommands, suggestionSources } = props;
 
-  const suggestions = useMemo(
+  return useMemo(
     () => [...agentSources(slashCommands), ...(suggestionSources ?? [])],
     [slashCommands, suggestionSources],
   );
+}
 
-  return <RichTextarea {...textInputProps(layout)} suggestions={suggestions} />;
+function ComposerText({
+  field: { attach },
+  ...layout
+}: TextLayout): React.JSX.Element {
+  const suggestions = useSuggestionSources(layout.props);
+
+  return (
+    <RichTextarea
+      {...textInputProps(layout)}
+      ref={attach}
+      suggestions={suggestions}
+    />
+  );
 }
 
 // The padding sits on the field, so a press anywhere in the white area focuses it.
@@ -147,7 +161,7 @@ function textInputProps({
   props,
   inactive,
   send,
-}: TextLayout): React.ComponentProps<typeof RichTextarea> {
+}: Omit<TextLayout, 'field'>): React.ComponentProps<typeof RichTextarea> {
   return {
     ...textFieldLook,
     autoFocus: !inactive,

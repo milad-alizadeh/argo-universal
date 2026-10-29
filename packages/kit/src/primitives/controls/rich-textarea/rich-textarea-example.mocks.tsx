@@ -68,6 +68,16 @@ export function RichTextareaExample({
  * A host that loses the first empty report it hears, as one does when a draft made before the
  * report landed is written over it. It holds whatever the later reports say.
  */
+const forgetsFirstEmpty = (
+  forgot: { current: boolean },
+  resources: readonly SuggestionResource[],
+): boolean => {
+  if (resources.length > 0 || forgot.current) return false;
+  forgot.current = true;
+
+  return true;
+};
+
 export function ForgetfulHostExample({
   onResourcesChange,
   ...props
@@ -75,12 +85,7 @@ export function ForgetfulHostExample({
   const forgot = useRef(false);
 
   const hear = (resources: readonly SuggestionResource[]): void => {
-    if (resources.length === 0 && !forgot.current) {
-      forgot.current = true;
-
-      return;
-    }
-    onResourcesChange?.(resources);
+    if (!forgetsFirstEmpty(forgot, resources)) onResourcesChange?.(resources);
   };
 
   return <RichTextareaExample {...props} onResourcesChange={hear} />;

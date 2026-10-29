@@ -5,7 +5,7 @@ export type AttachmentLayout = Pick<ComposerLayout, 'inactive'> & {
   props: Pick<ComposerProps, 'draft' | 'onDraftChange'>;
 };
 
-export type TextLayout = Pick<ComposerLayout, 'inactive' | 'send'> & {
+export type TextLayout = Pick<ComposerLayout, 'inactive' | 'send' | 'field'> & {
   props: Pick<
     ComposerProps,
     | 'draft'

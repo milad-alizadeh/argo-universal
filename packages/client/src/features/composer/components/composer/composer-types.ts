@@ -1,9 +1,10 @@
 import type { SlashCommand } from '@repo/contracts';
 import type {
+  RichTextareaHandle,
   SuggestionResource,
   SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefCallback } from 'react';
 import type { PermissionRequestProps } from '#features/requests';
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
@@ -30,7 +31,6 @@ export interface ComposerProps {
   onAttachImages: () => void;
   onAttachCamera?: () => void;
   onAttachFiles?: () => void;
-  onSelectSlashCommand?: () => void;
   onCreateGoal?: () => void;
   onSend: (draft: ComposerDraft) => void;
   onStop?: () => void;
@@ -47,6 +47,11 @@ export interface ComposerProps {
 export interface ComposerLayout {
   props: ComposerProps;
   composerId: string;
+  // The message field, for choices that write into it.
+  field: {
+    attach: RefCallback<RichTextareaHandle>;
+    insertWord: (word: string) => void;
+  };
   wide: boolean;
   inactive: boolean;
   configurationInactive: boolean;

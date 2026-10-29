@@ -1,10 +1,14 @@
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import type { TextInputProps } from 'react-native';
-import type { RichTextareaProps } from './rich-textarea-props';
+import type {
+  RichTextareaHandle,
+  RichTextareaProps,
+} from './rich-textarea-props';
 import { useChosenResources } from './rich-textarea-resources';
 import { SuggestionRun } from './rich-textarea-suggestion-run';
 import {
   insertSuggestion,
+  insertWordAtCaret,
   slashQueryAtCaret,
   type ComposerSuggestion,
   type SuggestionGroup,
@@ -24,11 +28,13 @@ export interface NativeSuggestions {
     'onChangeText' | 'onSelectionChange' | 'selection'
   >;
   choose: (suggestion: ComposerSuggestion) => void;
+  insertWord: RichTextareaHandle['insertWord'];
 }
 
 interface CaretState {
   chosen: Selection | null;
   position: number;
+  selected: Selection;
   collapsed: boolean;
   report: (event: SelectionEvent) => void;
   place: (selection: Selection) => void;
@@ -47,8 +53,12 @@ const atEnd = (value: string): Selection => ({
 const where = (
   caret: Selection,
   value: string,
-): Pick<CaretState, 'position' | 'collapsed'> => ({
+): Pick<CaretState, 'position' | 'selected' | 'collapsed'> => ({
   position: Math.min(caret.end, value.length),
+  selected: {
+    start: Math.min(caret.start, value.length),
+    end: Math.min(caret.end, value.length),
+  },
   collapsed: caret.start === caret.end,
 });
 
@@ -77,6 +87,19 @@ function chooser(
 ): NativeSuggestions['choose'] {
   return (suggestion) => {
     const inserted = insertSuggestion(value, caret.position, suggestion);
+
+    caret.place({ start: inserted.caret, end: inserted.caret });
+    onChangeText(inserted.text);
+  };
+}
+
+function wordInserter(
+  value: string,
+  caret: CaretState,
+  onChangeText: (value: string) => void,
+): NativeSuggestions['insertWord'] {
+  return (word) => {
+    const inserted = insertWordAtCaret(value, caret.selected, word);
 
     caret.place({ start: inserted.caret, end: inserted.caret });
     onChangeText(inserted.text);
@@ -160,5 +183,6 @@ export function useNativeSuggestions(
     groups: useSuggestionGroups(suggestions, queryAt(value, caret)),
     fieldProps: fieldProps(caret, onChangeText),
     choose: choosing(chooser(value, caret, onChangeText), track),
+    insertWord: wordInserter(value, caret, onChangeText),
   };
 }
