@@ -44,16 +44,23 @@ class AgentOptionsReader {
   async *read(): AsyncGenerator<AgentOptionsUpdate> {
     try {
       this.start();
-
-      for await (const [event] of this.stream) {
-        if (!event) continue;
-
-        if ('error' in event) throw event.error;
-        yield event.update;
-      }
+      yield* this.readEvents();
     } finally {
       await this.close();
     }
+  }
+
+  private async *readEvents(): AsyncGenerator<AgentOptionsUpdate> {
+    for await (const [event] of this.stream) {
+      if (!event) continue;
+      yield this.readUpdate(event);
+    }
+  }
+
+  private readUpdate(event: ReadEvent): AgentOptionsUpdate {
+    if ('error' in event) throw event.error;
+
+    return event.update;
   }
 
   private start(): void {
@@ -110,22 +117,22 @@ class AgentOptionsReader {
 
   private async discover(saved: AgentOptionsUpdate): Promise<void> {
     try {
-      const configOptions = await refreshAgentOptions(this.deps, this.input, {
-        signal: this.active,
-        progress: (stage, progress) =>
-          this.discovered({ ...this.snapshot(saved), stage, progress }),
-      });
-
-      this.discovered({
-        ...this.snapshot(saved),
-        configOptions,
-        stage: 'ready',
-      });
+      await this.refresh(saved);
     } catch (error) {
       this.failed(saved, error);
     } finally {
       if (!this.input.sessionId) this.events.emit('done');
     }
+  }
+
+  private async refresh(saved: AgentOptionsUpdate): Promise<void> {
+    const configOptions = await refreshAgentOptions(this.deps, this.input, {
+      signal: this.active,
+      progress: (stage, progress) =>
+        this.discovered({ ...this.snapshot(saved), stage, progress }),
+    });
+
+    this.discovered({ ...this.snapshot(saved), configOptions, stage: 'ready' });
   }
 
   private snapshot(saved: AgentOptionsUpdate): AgentOptionsUpdate {
