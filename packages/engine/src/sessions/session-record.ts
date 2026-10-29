@@ -8,7 +8,10 @@ import {
   type SessionFieldsRow,
   type SessionSnapshotFields,
 } from './session-fields';
-import { readQueuedSessionRows, type RowSources } from './session-storage';
+import {
+  readQueuedSessionRows,
+  type RowSources,
+} from './session-storage/session-storage';
 import { decodeStoredSession, storedSessionColumns } from './stored-session';
 
 export { toSessionCheckout } from './session-fields';

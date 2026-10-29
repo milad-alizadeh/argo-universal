@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import { SessionRowUpdateJob } from '../session-storage';
+import { SessionRowUpdateJob } from '../session-storage/session-storage';
 import {
   openChildFeed,
   type ChildFeed,

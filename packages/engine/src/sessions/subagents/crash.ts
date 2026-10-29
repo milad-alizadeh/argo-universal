@@ -1,5 +1,5 @@
 import type { FeedActorRef, FeedEvent, FeedTurnEnding } from '../../feed';
-import { TurnUpdateJob } from '../session-storage';
+import { TurnUpdateJob } from '../session-storage/session-storage';
 import type { ChildFeed } from './child-feed';
 import type { Subagents } from './routing';
 

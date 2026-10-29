@@ -7,7 +7,7 @@ import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
 import { writerMachine } from '../../../storage';
 import { openSessionsMachine } from '../../open-sessions-machine';
-import { SessionRowUpdateJob } from '../../session-storage';
+import { SessionRowUpdateJob } from '../../session-storage/session-storage';
 import { createSessionListReader } from './reader';
 
 const writeEvent = 'writer.write';

@@ -8,7 +8,7 @@ import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import {
   startSession,
   waitForElicitation,
-} from './acp-requests-shared.test.mocks';
+} from './acp-requests/acp-requests-shared.test.mocks';
 
 describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
   it('presents native Codex questions with schema metadata and resumes with the chosen answer', async () => {

@@ -9,7 +9,7 @@ import { writerMachine } from '../storage';
 import { openSessionsMachine } from './open-sessions-machine';
 import { createSessionDirectory } from './session-directory';
 import { createSessionReader } from './session-record';
-import { SessionInsertJob } from './session-storage';
+import { SessionInsertJob } from './session-storage/session-storage';
 
 const notFound = expect.objectContaining({ code: 'NOT_FOUND' });
 

@@ -24,7 +24,7 @@ import type { ElicitationAnswerContent } from './acp/requests/elicitation-types'
 import type {
   SessionCreationReceipt,
   SessionCreationSettled,
-} from './creation-receipt';
+} from './creation/creation-receipt';
 import type {
   NativePermissionEvent,
   NativePermissions,

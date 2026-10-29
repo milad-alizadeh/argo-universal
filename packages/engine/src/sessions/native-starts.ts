@@ -1,7 +1,7 @@
 import type { SessionNewInput, SessionPromptInput } from '@repo/contracts';
+import { startSessionCreation } from './creation/session-creation';
 import type { SessionOrigin } from './prompt-sender';
 import type { SessionRouterDeps } from './router-deps';
-import { startSessionCreation } from './session-creation';
 import { startSessionPrompt } from './session-prompt';
 
 // A caller's origin, with a new Session's pre-allocated id and the signal that stops its admission.

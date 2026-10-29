@@ -52,12 +52,13 @@ import {
 } from './admission/answer-admission';
 import { hasConfigurationCapacity } from './admission/config-admission';
 import { isReplayedHistory } from './admission/update-admission';
-import { AgentOptionsJob } from './agent-options-storage';
+import { AgentOptionsJob } from './agent-options/agent-options-storage';
 import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
+import { toConfigValues } from './configuration/config-choices';
 import {
   acknowledgeConfigChoice,
   applyConfigurationReport,
@@ -68,9 +69,8 @@ import {
   rejectPendingConfig,
   releaseHeldConfig,
   takeConfigChoice,
-} from './config-queue';
-import { toConfigValues } from './configuration/config-choices';
-import { creationSettledEvent } from './creation-receipt';
+} from './configuration/config-queue';
+import { creationSettledEvent } from './creation/creation-receipt';
 import { initialSessionContext } from './initial-context';
 import { nativePermissionEvent } from './native-permissions';
 import { pendingInputRequest } from './pending-input';
@@ -108,7 +108,10 @@ import {
   toSessionInsert,
 } from './session-data';
 import { sessionFeedInput } from './session-feed';
-import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
+import {
+  SessionRowUpdateJob,
+  SessionTitleJob,
+} from './session-storage/session-storage';
 import { withShell } from './shells';
 import {
   flushSubagents,
@@ -122,7 +125,7 @@ import {
   recordCrash,
   startTurn,
   type StartTurnParameters,
-} from './turn-lifecycle';
+} from './turn/turn-lifecycle';
 
 export type {
   SessionCommand,

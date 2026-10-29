@@ -4,7 +4,10 @@ import type { Checkout } from '@repo/git';
 
 export { titleFromPrompt } from '../feed';
 
-export { createSessionCheckout, toSessionInsert } from './session-create-data';
+export {
+  createSessionCheckout,
+  toSessionInsert,
+} from './creation/session-create-data';
 
 export { discardSession, type SessionDiscard } from './session-discard';
 

@@ -8,7 +8,7 @@ import {
 import {
   readQueuedSessionRows,
   type QueuedSessionRows,
-} from '../../session-storage';
+} from '../../session-storage/session-storage';
 import type { ListReadInput } from './input';
 import { shellCountColumns } from './shell-counts';
 
