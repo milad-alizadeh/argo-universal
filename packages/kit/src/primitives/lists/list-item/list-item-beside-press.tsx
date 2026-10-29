@@ -1,16 +1,28 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '../../../utils';
-import { PassThroughContext, RowPressContext } from './list-item-pass-through';
+import {
+  hasAccessories,
+  PassThroughContext,
+  RowPressContext,
+} from './list-item-pass-through';
 import { usePressLanes } from './list-item-press-class';
 import type { DrawingProps, RowPressProps } from './list-item-press-props';
 import { ItemContentSlots } from './list-item-slots';
+import { useFoldButton } from './list-item-tree';
 
 /*
- * A row with accessories draws its press as an empty layer under its content, so the web never nests the accessories'
- * buttons in the row's and a screen reader reaches each accessory after the row. The content lets every press but an
+ * A row with accessories, or a parent's chevron, draws its press as an empty layer under its content, so the web never
+ * nests their buttons in the row's and a screen reader reaches each accessory after the row. The content lets every press but an
  * accessory's fall through to the row's press.
  */
+// Accessories and a parent's chevron are buttons of their own, which the web must not nest in the row's.
+export function useBesidePress(props: DrawingProps): boolean {
+  const folds = useFoldButton();
+
+  return hasAccessories(props) || folds;
+}
+
 interface BesidePressProps {
   props: DrawingProps;
   press: RowPressProps;

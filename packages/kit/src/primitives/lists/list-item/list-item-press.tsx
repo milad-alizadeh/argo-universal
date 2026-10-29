@@ -6,10 +6,9 @@ import type { SpokenElement } from '#primitives/overlays/menu';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
-import { BesidePress } from './list-item-beside-press';
+import { BesidePress, useBesidePress } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
-import { hasAccessories } from './list-item-pass-through';
 import { interactive, usePressClass } from './list-item-press-class';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
@@ -137,11 +136,12 @@ export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
   const focused = { ...press, ...useRowFocus() };
   const className = cn(press.className, focused.className);
+  const beside = useBesidePress(props);
 
   if (useRadioRow(props))
     return <RadioRow row={props} className={press.className} />;
 
-  if (hasAccessories(props))
+  if (beside)
     return <BesidePress props={props} press={{ ...focused, className }} />;
 
   return (
