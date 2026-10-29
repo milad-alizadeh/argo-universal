@@ -100,3 +100,41 @@ it('reading an old Session Feed starts no Agent process', async () => {
     processes: 0,
   });
 });
+
+it('reopens a stored Session with an Agent that supports load but not resume', async () => {
+  const loads: LoadSessionRequest[] = [];
+  const prompts: PromptRequest[] = [];
+
+  const host = await startEngineWithStoredSession({
+    steps: [],
+    initialize: {
+      protocolVersion: 1,
+      agentCapabilities: { loadSession: true },
+    },
+    responses: {
+      'session/load': [
+        {
+          requests: loads,
+          steps: [
+            {
+              type: 'update',
+              update: {
+                sessionUpdate: 'agent_message_chunk',
+                content: { type: 'text', text: 'Replayed history' },
+              },
+            },
+          ],
+        },
+      ],
+      'session/prompt': [{ requests: prompts }],
+    },
+  });
+
+  await promptStoredSession(host);
+  expect(loads).toHaveLength(1);
+  expect(loads[0]?.sessionId).toBe(nativeSessionId);
+  await expect.poll(() => prompts.length).toBe(1);
+  const rows = (await readStoredFeed(host)).rows;
+  expect(rows.slice(0, 2)).toEqual(storedHistory);
+  expect(JSON.stringify(rows)).not.toContain('Replayed history');
+});
