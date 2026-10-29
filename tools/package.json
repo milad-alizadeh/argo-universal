@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/executables": "workspace:*",
     "jsonc-parser": "catalog:",
     "zod": "catalog:"
   },

@@ -120,7 +120,7 @@ describe('signalSupervisor', (): void => {
 it.each([
   [undefined, join(homedir(), '.argo')],
   ['', ''],
-  ['/tmp/server-runtime', '/tmp/server-runtime'],
+  [join(homedir(), 'server-runtime'), join(homedir(), 'server-runtime')],
 ])('resolves ARGO_HOME %s to %s', (override, expected): void => {
   vi.stubEnv('ARGO_HOME', override);
   expect(resolveHome()).toBe(expected);

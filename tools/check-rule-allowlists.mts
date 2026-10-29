@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveExecutable } from '@repo/executables';
 import { z } from 'zod';
 import { measureFindings } from './not-yet-cleared/measure.mts';
 import { allowlistProblems, readAllowlist } from './rule-allowlist.mts';
@@ -23,7 +24,7 @@ const reportSchema = z.object({
 });
 
 const git = (args: string[]): string =>
-  execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+  execFileSync(resolveExecutable('git'), args, { cwd: root, encoding: 'utf8' });
 
 const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
 
