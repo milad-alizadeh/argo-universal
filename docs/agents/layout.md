@@ -12,7 +12,7 @@ Two decisions remain pending: the desktop frame at 900px, and the status dot bes
 - **Sidebar** — the section's list, 312 (`--spacing-frame-list`), beside the rail in the same glass panel. Rail plus list plus the 8 frame inset on each side make the 384 glass zone on "Screen / Approved layout"; the panel itself is `--radius-2xl` over `--color-glass`.
 - **Content column** — the Feed viewport and the Composer share a centered column under the 800 cap. The band carries the title. The local Session header contributes no height. See [The content column](#the-content-column).
 - **Workbench** — the column beside the Feed holding the Session's summary cards, one per section, toggled from the band's `clipboard-list` IconButton. One per Session. It is not a second sidebar and it is not a rail section.
-- **Inspector** — the surface that shows a Workbench card's section in full, as a tab. A card opens it, the Workbench stays, and it is never reached from the rail. A tab lists the section's items and a row opens that item's detail in the same tab.
+- **Inspector** — the surface that shows a Workbench card's section in full, as a tab. A card opens it, the Workbench stays where the width budget permits, and it is never reached from the rail. A tab lists the section's items and a row opens that item's detail in the same tab.
 - **Never in a header** — Changes, their checks, their counts and their file changes are the Workbench's on every platform. A Session header carries identity and state only (ADR-0039). The desktop band owns its title and actions. The proposed status dot needs owner approval.
 
 ## The widths
@@ -47,7 +47,7 @@ These thresholds use default pane widths with an available Workbench.
 Three regions compete with the content column for width: the Sessions list, the Workbench, and the Inspector while it is open. The main content comes first, so narrowing the window gives width up in a fixed order.
 
 1. **The Sessions list collapses first**, folding into the rail. The rail itself never collapses.
-2. **Then the Workbench undocks.** It auto-hides rather than letting the content column be squeezed, so the column keeps the width it had.
+2. **Then the Workbench gives up its separate region.** It auto-hides rather than squeezing the content. An explicit Show uses the dedicated Workbench view described below.
 3. **The content column gives last**, and is capped at 800 however much room there is.
 
 **The Sessions list folds into the rail below 1768 with the Inspector open, and below 1400 without it.** Those are the widths everything docked needs: the rail's 56, the list's 312, the content column, the Workbench's 312 and, when it is open, the Inspector's 352, with the 8 frame insets and the 16 gutters between the regions (board `1RKK-0`). Folding the list frees its 312 and nothing else, because it sits inside the glass panel and has no gutter of its own.
@@ -56,11 +56,15 @@ Three regions compete with the content column for width: the Sessions list, the 
 
 Both thresholds are crossed on the way down, in that order, and neither is a choice: the content comes first, then the Workbench, then the Sessions list. The Inspector is worth 368 at every step, its 352 and the gutter beside it, which is the difference between each pair of widths above. The content column is held at its floor of 688 throughout the derivation — the Composer's 640 and a 24 gutter on each side — so the thresholds are built on that floor and not on the 800 cap; above them the room left over goes to the column until it reaches the cap.
 
-The Workbench therefore has three states, and one toggle in the window band drives all three states.
+The Workbench has five effective states. One toggle drives the person’s Show or Hide intent without rewriting it during a resize.
 
 - **Docked** — its own 312 column beside the content, and beside the Inspector when the Inspector is open.
 - **Auto-hidden** — below the undock threshold, with the toggle unpressed: the Workbench is not drawn and the content column keeps its full width.
-- **Floating** — below the threshold with the toggle pressed: the Workbench overlays the content as a glass panel. The content does not reflow. The panel has no backdrop or resize handle.
+- **Independent** — when both gutters beside the centered, capped content fit a card and its gaps, the cards use the right gutter. Showing or hiding them does not move the Feed or Composer.
+- **Dedicated view** — below the docking budget with explicit Show intent, the Workbench replaces the primary view. The Feed and draft stay mounted but become hidden and inaccessible. The same band toggle restores them. No persistent card overlaps readable Feed content or Composer controls.
+- **Hidden** — explicit Hide persists across resize. An expanded Inspector temporarily hides the Workbench without changing that intent.
+
+The independent placement uses the measured host after effective navigation and the Inspector. Its two gutters each need `workbenchWidth + paneGap + inset`, so the default host threshold is `800 + 2 × (312 + 16 + 8) = 1472`. This threshold describes the host, not the window. Navigation and Inspector widths are added by their actual placement. Below it, the existing docked budget protects the content floor of `640 + 2 × 24 = 688`.
 
 ## The Workbench
 

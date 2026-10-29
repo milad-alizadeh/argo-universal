@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ActionButtons, actionGroups } from '#primitives/actions/action';
+import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
 import type { HeaderProps } from './list-section-parts';
 
-/*
- * The trailing nodes, then the declared Actions as small buttons, each glyph placed as in a 24 box 4 from the next.
- * Desktop and web show them on hover or keyboard focus, never after a click leaves focus behind; phones always show them.
- */
 const actionsClassName =
-  'h-6 shrink-0 flex-row items-center gap-3 px-1 wide-type:h-5 web:wide:opacity-0 web:wide:group-hover:opacity-100 web:wide:has-focus-visible:opacity-100';
+  'h-6 shrink-0 flex-row items-center gap-3 px-1 wide-type:h-5';
 
-// A sidebar's actions sit in their own 24 boxes, always shown.
+// A sidebar's actions keep their 24px boxes while hidden, so the title never shifts.
 const sidebarActionsClassName = 'h-6 shrink-0 flex-row items-center gap-1';
+
+const controlsVisibility =
+  'web:wide:hover-capable:opacity-0 web:wide:group-hover:opacity-100 web:wide:group-focus-within:opacity-100 web:wide:has-aria-expanded:opacity-100';
 
 // Small buttons, each spoken with the section's title so every section's buttons keep their own names.
 const actionButtons = (actions: ReactNode, title?: string): ReactNode =>
@@ -21,7 +21,7 @@ const actionButtons = (actions: ReactNode, title?: string): ReactNode =>
   ) : null;
 
 const trailingClassName = (sidebar?: boolean): string =>
-  sidebar ? sidebarActionsClassName : actionsClassName;
+  cn(sidebar ? sidebarActionsClassName : actionsClassName, controlsVisibility);
 
 // Only a wide header draws its Actions as buttons; below it, a long press opens them.
 export function HeaderActions({
