@@ -153,7 +153,10 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
   },
 };
 
-const itemOption = { name: 'Item 7 Seventh item' };
+// The second-source fixtures carry no icon, so their rows keep the slash in the name.
+const sourceFirstOption = { name: /^\/first/ };
+
+const itemOption = { name: /^Item 7/ };
 
 export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
   args: { suggestions: twoSourcesRichTextarea.suggestions },
@@ -162,7 +165,7 @@ export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    const first = await canvas.findByRole('button', firstOption);
+    const first = await canvas.findByRole('button', sourceFirstOption);
     const item = canvas.getByRole('button', itemOption);
     await expect(follows(canvas.getByText('Suggestions'), first)).toBe(true);
     await expect(follows(first, canvas.getByText('Items'))).toBe(true);
@@ -186,13 +189,15 @@ export const ASourceThatAnswersLateJoinsWithoutHidingTheRest: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await canvas.findByRole('button', firstOption);
+    await canvas.findByRole('button', sourceFirstOption);
     await expect(
       canvas.queryByRole('button', { name: 'Late late-1' }),
     ).not.toBeInTheDocument();
     joining.answer('', [lateItem('late-1')]);
     await canvas.findByRole('button', { name: 'Late late-1' });
-    await expect(canvas.getByRole('button', firstOption)).toBeInTheDocument();
+    await expect(
+      canvas.getByRole('button', sourceFirstOption),
+    ).toBeInTheDocument();
   },
 };
 
