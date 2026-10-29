@@ -3,11 +3,12 @@ import type { OperationId } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import { MemorySessionWork } from '#mocks/memory-session-work';
 import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
-import type {
-  OperationCallRead,
-  SessionOperationCall,
-  SessionWork,
-  SessionWorkRead,
+import {
+  sessionWorkItem,
+  type OperationCallRead,
+  type SessionOperationCall,
+  type SessionWork,
+  type SessionWorkRead,
 } from '../../sessions';
 import type { OperationRunResult } from '../implementations';
 import type { OperationCaller, SessionCaller } from '../session-tokens';
@@ -61,13 +62,13 @@ const toolCallId = 'tool-1';
 export const callWork: SessionWork = {
   kind: 'call',
   sessionId: sessionCaller.sessionId,
-  entityId: toolCallId,
+  toolCallId,
 };
 
 export const turnWork = (sessionId: string, turnId: string): SessionWork => ({
   kind: 'turn',
   sessionId,
-  entityId: turnId,
+  turnId,
 });
 
 export const callRead = (call: OperationCallRead): SessionWorkRead => ({
@@ -76,12 +77,19 @@ export const callRead = (call: OperationCallRead): SessionWorkRead => ({
 });
 
 export function turnRead(
-  { sessionId, entityId }: SessionWork,
+  work: SessionWork,
   status: Turn['status'],
 ): SessionWorkRead {
+  const { sessionId } = work;
+
   return {
     kind: 'turn',
-    turn: { id: entityId, sessionId, status, ...turnEnding(status) },
+    turn: {
+      id: sessionWorkItem(work),
+      sessionId,
+      status,
+      ...turnEnding(status),
+    },
     requiresInput: false,
   };
 }

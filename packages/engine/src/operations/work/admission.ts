@@ -4,7 +4,7 @@ import type { SessionWorkSource } from '../../sessions';
 import type { StartedWork } from '../native-start';
 import { admissionTimedOut } from './clock';
 import type { WaitIds } from './ids';
-import { readOperationWork } from './reader';
+import { nativeWork, readOperationWork } from './reader';
 import type { WorkAdmission } from './wait.machine';
 
 type AdmissionContext = { source: SessionWorkSource; ids: WaitIds };
@@ -62,9 +62,9 @@ function missingAdmission(cause: unknown): never {
 
 function execution(
   { source, ids }: AdmissionContext,
-  { kind, sessionId, turnId }: StartedWork<unknown>,
+  started: StartedWork<unknown>,
 ): OperationExecution {
-  const work = { kind, sessionId, entityId: turnId };
+  const work = nativeWork(started);
 
   return readOperationWork(
     { source, ids, caller: user },

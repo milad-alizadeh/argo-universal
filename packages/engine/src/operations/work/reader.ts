@@ -118,14 +118,17 @@ function linkedTarget(
   { ids, caller }: Context,
   link: OperationWorkTarget,
 ): Target {
-  const work: SessionWork = {
-    kind: link.kind,
-    sessionId: link.sessionId,
-    entityId: link.turnId,
-  };
+  const work = nativeWork(link);
 
   return { id: ids.issue(caller, work), work };
 }
+
+// The one way native work a target names becomes the Session work it is read as.
+export const nativeWork = ({
+  kind,
+  sessionId,
+  turnId,
+}: OperationWorkTarget): SessionWork => ({ kind, sessionId, turnId });
 
 function observation(
   execution: OperationExecution,

@@ -35,7 +35,7 @@ function startUnaccepted(
 const newSession = {
   kind: 'creation',
   sessionId: 'new',
-  entityId: 'first',
+  turnId: 'first',
 } as const;
 
 const turn = (turnId: string): StartedWork<OperationRunResult> => ({

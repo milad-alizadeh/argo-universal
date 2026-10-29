@@ -2,7 +2,7 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { OperationWaitId } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { SessionWork } from '../../sessions';
+import { sessionWorkItem, type SessionWork } from '../../sessions';
 import type { OperationCaller } from '../session-tokens';
 import { tokensMatch } from '../tokens';
 
@@ -28,7 +28,7 @@ export class WaitIds {
   public issue(caller: OperationCaller, work: SessionWork): string {
     const owner = caller.kind === 'user' ? 'user' : caller.sessionId;
 
-    const identity = [owner, work.sessionId, work.entityId];
+    const identity = [owner, work.sessionId, sessionWorkItem(work)];
 
     if (work.kind === 'creation') identity.push(this.epoch);
     const body = Buffer.from(JSON.stringify(identity)).toString('base64url');
@@ -40,11 +40,11 @@ export class WaitIds {
   public require(caller: OperationCaller, value: string): SessionWork {
     const parts = Parts.parse(OperationWaitId.parse(value).split(':'));
     this.requireSignature(parts);
-    const [owner, sessionId, entityId, epoch] = decodeIdentity(parts[1]);
+    const [owner, sessionId, item, epoch] = decodeIdentity(parts[1]);
     this.requireEpoch(parts[0], epoch);
     requireOwner(caller, owner);
 
-    return { kind: parts[0], sessionId, entityId };
+    return sessionWork(parts[0], sessionId, item);
   }
   private requireSignature([kind, body, signature]: WaitParts): void {
     if (!tokensMatch(this.signature(`${kind}:${body}`), signature))
@@ -65,6 +65,16 @@ export class WaitIds {
   private signature(payload: string): string {
     return createHmac('sha256', this.secret).update(payload).digest('hex');
   }
+}
+
+function sessionWork(
+  kind: WaitParts[0],
+  sessionId: string,
+  item: string,
+): SessionWork {
+  return kind === 'call'
+    ? { kind, sessionId, toolCallId: item }
+    : { kind, sessionId, turnId: item };
 }
 
 function decodeIdentity(body: string): z.infer<typeof Identity> {

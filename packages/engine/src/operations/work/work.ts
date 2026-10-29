@@ -110,9 +110,11 @@ export class OperationWork {
     if (caller.kind !== 'session')
       throw new Error('An Operation Tool call needs a Session caller');
 
-    const work = { sessionId: caller.sessionId, entityId: call.toolCallId };
-
-    return this.ids.issue(caller, { kind: 'call', ...work });
+    return this.ids.issue(caller, {
+      kind: 'call',
+      sessionId: caller.sessionId,
+      toolCallId: call.toolCallId,
+    });
   }
   private observe(
     id: string,

@@ -1,13 +1,14 @@
 import { TRPCError } from '@trpc/server';
 import type { Observer, Subscription } from 'xstate';
-import type {
-  SessionWork,
-  SessionWorkRead,
-  SessionWorkSource,
+import {
+  sessionWorkItem,
+  type SessionWork,
+  type SessionWorkRead,
+  type SessionWorkSource,
 } from '../src/sessions';
 
-const key = ({ kind, sessionId, entityId }: SessionWork): string =>
-  `${kind}:${sessionId}:${entityId}`;
+const key = (work: SessionWork): string =>
+  `${work.kind}:${work.sessionId}:${sessionWorkItem(work)}`;
 
 const missing = (work: SessionWork): TRPCError =>
   new TRPCError({ code: 'NOT_FOUND', message: `No Session work ${key(work)}` });

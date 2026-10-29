@@ -113,6 +113,7 @@ export { type SessionWorkWatcher } from './work-watcher';
 
 export {
   createSessionWorkSource,
+  sessionWorkItem,
   type SessionWork,
   type SessionWorkRead,
   type SessionWorkSource,

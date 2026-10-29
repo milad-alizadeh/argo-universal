@@ -1,4 +1,5 @@
 import type { Turn } from '@repo/contracts';
+import type { OperationWorkTarget } from '@repo/contracts/operations';
 import { readSessionCreation, type CreationRead } from './creation-reader';
 import {
   createOperationCalls,
@@ -12,13 +13,14 @@ import {
   type SessionWorkWatcher,
 } from './work-watcher';
 
-// The native Session work an Operation waits for: a Session opening, a Turn, or an Operation Tool call.
-export type SessionWork = {
-  kind: 'creation' | 'turn' | 'call';
-  sessionId: string;
-  // The opening's first Turn, the Turn, or the Tool call.
-  entityId: string;
-};
+// The native Session work an Operation waits for: a Session opening and its first Turn, a Turn, or an Operation Tool call.
+export type SessionWork =
+  | OperationWorkTarget
+  | { kind: 'call'; sessionId: string; toolCallId: string };
+
+// The Turn or the Tool call that names the work within its Session.
+export const sessionWorkItem = (work: SessionWork): string =>
+  work.kind === 'call' ? work.toolCallId : work.turnId;
 
 // A Turn that has not ended may wait for the user's answer to an Input request.
 type TurnRead = { turn: Turn; requiresInput: boolean };
@@ -51,14 +53,20 @@ type Readers = { deps: Sources; calls: OperationCalls };
 
 function readWork(
   { deps, calls }: Readers,
-  { kind, sessionId, entityId }: SessionWork,
+  work: SessionWork,
 ): SessionWorkRead {
+  const { kind, sessionId } = work;
+
+  if (work.kind === 'call')
+    return { kind: 'call', call: calls.read(sessionId, work.toolCallId) };
+
   if (kind === 'creation')
-    return { kind, creation: readSessionCreation(deps, sessionId, entityId) };
+    return {
+      kind,
+      creation: readSessionCreation(deps, sessionId, work.turnId),
+    };
 
-  if (kind === 'call') return { kind, call: calls.read(sessionId, entityId) };
-
-  return { kind, ...readTurn(deps, sessionId, entityId) };
+  return { kind: 'turn', ...readTurn(deps, sessionId, work.turnId) };
 }
 
 function readTurn(deps: Sources, sessionId: string, turnId: string): TurnRead {
