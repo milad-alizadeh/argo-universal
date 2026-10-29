@@ -1,6 +1,7 @@
 import { $createTextNode, type TextNode } from 'lexical';
 import type * as React from 'react';
 import {
+  findCommand,
   querySuggestions,
   type ComposerSuggestion,
   type SuggestionGroup,
@@ -32,17 +33,30 @@ function $insertText(node: TextNode, text: string): void {
   inserted.selectEnd();
 }
 
+// A result is a command token only when its source lists the command, as a typed `/name` must be.
+function listedCommand(
+  sources: readonly SuggestionSource[],
+  command: string | undefined,
+): string | undefined {
+  return command !== undefined && findCommand(sources, command)
+    ? command
+    : undefined;
+}
+
 function insertSuggestion(
   node: TextNode | null,
+  sources: readonly SuggestionSource[],
   { insert, command }: ComposerSuggestion,
 ): void {
   if (!node) return;
+  const name = listedCommand(sources, command);
 
-  if (command) $insertCommand(node, command);
+  if (name) $insertCommand(node, name);
   else $insertText(node, insert);
 }
 
 function suggestionOption(
+  sources: readonly SuggestionSource[],
   source: SuggestionSource,
   suggestion: ComposerSuggestion,
 ): TypeaheadOption {
@@ -53,16 +67,16 @@ function suggestionOption(
   };
 
   return new TypeaheadOption(`${source.id}-${suggestion.id}`, display, (node) =>
-    insertSuggestion(node, suggestion),
+    insertSuggestion(node, sources, suggestion),
   );
 }
 
-function groupOptions({
-  source,
-  suggestions,
-}: SuggestionGroup): TypeaheadOption[] {
-  return suggestions.map((suggestion) => suggestionOption(source, suggestion));
-}
+const groupOptions =
+  (sources: readonly SuggestionSource[]) =>
+  ({ source, suggestions }: SuggestionGroup): TypeaheadOption[] =>
+    suggestions.map((suggestion) =>
+      suggestionOption(sources, source, suggestion),
+    );
 
 interface Answers {
   ask: (query: string) => SuggestionGroup[];
@@ -93,7 +107,7 @@ export function suggestionAdapter(
 
   return {
     trigger: suggestionTrigger(ask),
-    options: (query) => recall(query).flatMap(groupOptions),
+    options: (query) => recall(query).flatMap(groupOptions(sources)),
   };
 }
 

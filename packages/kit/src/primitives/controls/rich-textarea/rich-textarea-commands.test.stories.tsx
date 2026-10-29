@@ -59,6 +59,16 @@ const pluginSource: SuggestionSource = {
       : [],
 };
 
+// A result that names a command its source does not list: it is text, as a typed `/ghost` would be.
+const unlistedSource: SuggestionSource = {
+  id: 'unlisted',
+  title: 'Unlisted',
+  query: (query) =>
+    'ghost'.startsWith(query)
+      ? [{ id: 'ghost', label: '/ghost', insert: '/ghost ', command: 'ghost' }]
+      : [],
+};
+
 const meta = {
   title: 'Tests/Design System/Primitives/Controls/RichTextarea/Commands',
   component: RichTextareaExample,
@@ -203,6 +213,38 @@ export const APluginResultThatInsertsSlashNameStaysPlainText: Story = {
       expect(args.onChangeText).toHaveBeenLastCalledWith('/plan '),
     );
     await userEvent.keyboard(backspaceTwice);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/pla'),
+    );
+  },
+};
+
+export const AResultNamingAnUnlistedCommandStaysPlainText: Story = {
+  args: { suggestions: [unlistedSource] },
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, '/gho');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/ghost '),
+    );
+    await userEvent.keyboard(backspaceTwice);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/ghos'),
+    );
+  },
+};
+
+export const ARestoredPluginSlashNameStaysPlainText: Story = {
+  args: { initialValue: '/plan ', suggestions: [source, pluginSource] },
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.click(field);
+    await userEvent.keyboard('{End}x');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/plan x'),
+    );
+    await userEvent.keyboard('{Backspace}{Backspace}{Backspace}');
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/pla'),
     );
