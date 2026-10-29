@@ -84,8 +84,15 @@ When('I reopen the stored long Feed', async ({ page, server }) => {
   await expect
     .poll(() => historyIsStored(page, server.httpUrl), agentWork)
     .toBe(true);
+  const sessionUrl = page.url();
   await reloadApp(page);
+  await expect(page).toHaveURL(/\/sessions$/);
+  // The bootstrap list can appear before its replacement Screen mounts this control.
+  await expect(
+    page.getByRole('button', { name: 'New Session', exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: /^Build a long history,/ }).click();
+  await expect(page).toHaveURL(sessionUrl);
 });
 
 Then('the Feed opens at its newest history message', async ({ page }) => {
