@@ -1,7 +1,6 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import type { AppRouter } from '@repo/engine/router';
 import {
+  readControlToken,
   readServerAddress,
   resolveRuntimeDirectory,
 } from '@repo/engine/server-runtime';
@@ -17,9 +16,7 @@ export async function connectControl(
 
   if (!address) throw new Error('No Server found. Start it with argo server.');
 
-  const token =
-    process.env.ARGO_TOKEN ??
-    (await readFile(join(home, 'control.token'), 'utf8')).trim();
+  const token = process.env.ARGO_TOKEN ?? (await readControlToken(home));
 
   return createClient(address.port, token, timeoutMs);
 }

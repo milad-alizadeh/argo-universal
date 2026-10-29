@@ -8,7 +8,7 @@ import { Operations, type OperationsDeps } from './operations';
 import { createOperationsRouter } from './router';
 import { generatedOperations } from './router.gen';
 
-export { readControlToken } from './tokens';
+export { ensureControlToken } from './tokens';
 
 export const createOperationRouters = routerFactory((deps: OperationsDeps) => {
   const sessionList = createSessionList(deps);

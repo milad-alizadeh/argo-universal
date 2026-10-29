@@ -4,7 +4,10 @@ import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { writeServerAddress } from '@repo/engine/server-runtime';
+import {
+  controlTokenPath,
+  writeServerAddress,
+} from '@repo/engine/server-runtime';
 import { onTestFinished } from 'vitest';
 
 export async function startMalformedControlHost(
@@ -40,7 +43,7 @@ async function writeControlFiles(home: string, port: number): Promise<void> {
     version: '1.2.3',
     startedAt: '2026-10-03T00:00:00.000Z',
   });
-  await writeFile(join(home, 'control.token'), 'test-token');
+  await writeFile(controlTokenPath(home), 'test-token');
 }
 
 function registerCleanup(server: Server, home: string): void {

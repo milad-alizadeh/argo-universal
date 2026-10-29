@@ -1,8 +1,6 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { createTRPCClient, httpLink, type TRPCClient } from '@trpc/client';
 import type { AppRouter } from '../src/engine/router';
-import { writeServerAddress } from '../src/server-runtime';
+import { readControlToken, writeServerAddress } from '../src/server-runtime';
 
 interface OperationTestHost {
   home: string;
@@ -13,9 +11,7 @@ export async function operationCaller(
   { home, url }: OperationTestHost,
   suppliedToken?: string,
 ): Promise<TRPCClient<AppRouter>> {
-  const token =
-    suppliedToken ??
-    (await readFile(join(home, 'control.token'), 'utf8')).trim();
+  const token = suppliedToken ?? (await readControlToken(home));
 
   return createTRPCClient<AppRouter>({
     links: [

@@ -4,7 +4,7 @@ import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
-import { readControlToken } from '../operations';
+import { ensureControlToken } from '../operations';
 import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
@@ -104,7 +104,7 @@ async function prepareHttpServer(
   const serverId = await readServerId(options.database, options.databaseWriter);
   const setup = prepareHttpSetup(options, serverId);
 
-  const controlToken = await readControlToken(options.home);
+  const controlToken = await ensureControlToken(options.home);
 
   return {
     ...setup,

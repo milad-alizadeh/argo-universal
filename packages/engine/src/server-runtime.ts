@@ -5,12 +5,15 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
 import { jsonCodec } from './lib/json-codec';
 
 const serverAddressFile = 'server.json';
+
+const controlTokenFile = 'control.token';
 
 const StoredServerAddress = jsonCodec(ServerAddress);
 
@@ -22,6 +25,14 @@ let lastUnrecognisedText: string | null = null;
 // The Server and desktop share the ARGO_HOME boundary, including an empty override.
 export const resolveRuntimeDirectory = (): string =>
   process.env.ARGO_HOME ?? join(homedir(), '.argo');
+
+// The user token's file, which the Server makes on its first start (ADR-0044).
+export const controlTokenPath = (home: string): string =>
+  join(home, controlTokenFile);
+
+// The Engine, the CLI and tests read the user token here.
+export const readControlToken = async (home: string): Promise<string> =>
+  (await readFile(controlTokenPath(home), 'utf8')).trim();
 
 // Writes a temp file and renames it, so a reader never sees half a file.
 export function writeServerAddress(home: string, address: ServerAddress): void {

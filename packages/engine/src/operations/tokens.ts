@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { chmod, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { chmod, writeFile } from 'node:fs/promises';
+import { controlTokenPath, readControlToken } from '../server-runtime';
 
 const tokenBytes = 32;
 
@@ -21,13 +21,14 @@ async function createControlToken(path: string): Promise<void> {
   }
 }
 
-export async function readControlToken(home: string): Promise<string> {
-  const path = join(home, 'control.token');
+// Makes the user token on the Server's first start and keeps its file private.
+export async function ensureControlToken(home: string): Promise<string> {
+  const path = controlTokenPath(home);
 
   await createControlToken(path);
   await chmod(path, privateFileMode);
 
-  return (await readFile(path, 'utf8')).trim();
+  return readControlToken(home);
 }
 
 export function tokensMatch(expected: string, supplied: string): boolean {
