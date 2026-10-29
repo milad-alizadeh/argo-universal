@@ -90,7 +90,7 @@ const sourceIcons: Record<
     mutedIcon(toolCall ? toolCallIcon(toolCall) : 'tool'),
 };
 
-function SourceIcon({
+export function SourceIcon({
   source,
   toolCall,
 }: Pick<LiveHeaderProps, 'toolCall'> & {
@@ -99,7 +99,7 @@ function SourceIcon({
   return sourceIcons[source.type](toolCall);
 }
 
-function useTitle(
+export function useLiveHeaderTitle(
   { text, startedAt }: LiveHeaderValue,
   now: number | undefined,
 ): string {
@@ -110,7 +110,7 @@ function useTitle(
   return `${text} ${formatElapsed(clock - startedAt)}`;
 }
 
-function LiveTitle({
+export function LiveTitle({
   title,
   source,
 }: {
@@ -130,7 +130,7 @@ function LiveTitle({
 // The last line of the Feed while a Turn runs; it waits on you in amber, otherwise it shimmers.
 export function LiveHeader(props: LiveHeaderProps): React.JSX.Element {
   const { liveHeader } = props;
-  const title = useTitle(liveHeader, props.now);
+  const title = useLiveHeaderTitle(liveHeader, props.now);
 
   return (
     <View role="status" accessibilityLabel={title} className={rowClassName}>
