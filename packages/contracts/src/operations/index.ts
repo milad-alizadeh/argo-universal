@@ -10,7 +10,11 @@ import { sessionOperations } from './sessions';
 
 export { AgentAccess } from './agent-access';
 
-export { OperationExecution, OperationWaitId } from './execution';
+export {
+  OperationExecution,
+  OperationRunResponse,
+  OperationWaitId,
+} from './execution';
 
 export { OperationWorkTarget } from './work';
 

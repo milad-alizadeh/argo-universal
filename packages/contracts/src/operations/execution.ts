@@ -21,3 +21,17 @@ export const OperationExecution = z.strictObject({
 });
 
 export type OperationExecution = z.infer<typeof OperationExecution>;
+
+// An Operation's own result, answered at once.
+export const OperationAnswer = z.strictObject({
+  kind: z.literal('result'),
+  result: z.json(),
+});
+
+// What `operations.run` answers: the Operation's result, or the native work it is still running.
+export const OperationRunResponse = z.discriminatedUnion('kind', [
+  OperationAnswer,
+  OperationExecution,
+]);
+
+export type OperationRunResponse = z.infer<typeof OperationRunResponse>;
