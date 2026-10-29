@@ -2,23 +2,17 @@ import {
   type SessionAgentOptionsInput,
   type SessionAgentOptionsOutput,
 } from '@repo/contracts';
-import { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { requireInstalledAgent, type AcpSessionLease } from '../../agents';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import { readAcpConfiguration } from '../acp/acp-configuration';
-import { configureOptionsSession } from '../configure-options-session';
 import type { SessionRouterDeps } from '../router-deps';
 import { openOptionsSession } from './agent-options-discovery-session';
-import {
-  AgentOptionsJob,
-  readAgentConfiguration,
-} from './agent-options-storage';
-
-const rejections = createRejectionCounter('Agent options');
+import { AgentOptionsJob } from './agent-options-job';
+import { readAgentConfiguration } from './agent-options-read';
+import { discoverOptions } from './discovery';
 
 export type OptionsDeps = Pick<
   SessionRouterDeps,
@@ -56,15 +50,11 @@ async function discoveredOptions(
   input: SessionAgentOptionsInput,
   state: DiscoveryState,
 ): Promise<SessionAgentOptionsOutput> {
-  return configureOptionsSession(
-    state.lease,
-    readAcpConfiguration(state.lease.response.configOptions, rejections),
-    {
-      saved: savedConfig(state.saved),
-      picks: inputPicks(input),
-      signal: state.signal,
-    },
-  );
+  return discoverOptions(state.lease, {
+    saved: savedConfig(state.saved),
+    picks: inputPicks(input),
+    signal: state.signal,
+  });
 }
 
 const discoveryJob = (

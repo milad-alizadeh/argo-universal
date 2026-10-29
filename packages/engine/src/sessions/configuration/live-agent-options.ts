@@ -3,10 +3,10 @@ import type {
   SessionAgentOptionsInput,
 } from '@repo/contracts';
 import type { Subscription } from 'xstate';
-import { withHeldConfiguration } from './configuration/held-configuration';
-import type { SessionRouterDeps } from './router-deps';
-import type { SessionContext } from './session-context';
-import type { SessionActorRef } from './session-machine';
+import type { SessionRouterDeps } from '../router-deps';
+import type { SessionContext } from '../session-context';
+import type { SessionActorRef } from '../session-machine';
+import { withHeldConfiguration } from './held';
 
 type Deps = Pick<SessionRouterDeps, 'sessions'>;
 

@@ -31,9 +31,7 @@ import {
   cancelAcp,
   closeAcp,
   commitPrompt,
-  configureAcp,
   openAcp,
-  restoreAcpConfiguration,
   promptAcp,
   publishTurn,
   type AcpOperationInput,
@@ -50,26 +48,28 @@ import {
   admitsPermissionAnswer,
   answeredRequest,
 } from './admission/answer-admission';
-import { hasConfigurationCapacity } from './admission/config-admission';
 import { isReplayedHistory } from './admission/update-admission';
-import { AgentOptionsJob } from './agent-options/agent-options-storage';
 import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
-import { toConfigValues } from './configuration/config-choices';
 import {
   acknowledgeConfigChoice,
-  applyConfigurationReport,
+  agentOptionsJob,
+  hasConfigurationCapacity,
   holdConfigChoice,
   queueConfigChoice,
-  readConfigurationUpdate,
   rejectConfigChoice,
   rejectPendingConfig,
   releaseHeldConfig,
+  reportConfiguration,
+  restoreConfiguration,
+  sendQueuedChoice,
+  slashCommandsJob,
   takeConfigChoice,
-} from './configuration/config-queue';
+  type RestoredConfiguration,
+} from './configuration';
 import { creationSettledEvent } from './creation/creation-receipt';
 import { initialSessionContext } from './initial-context';
 import { nativePermissionEvent } from './native-permissions';
@@ -242,16 +242,6 @@ const enqueueCrashedSubagents = (
 const crashDuringTurn = (params: CrashNoticeParameters): boolean =>
   params?.duringTurn ?? false;
 
-const commandsJob = (
-  context: SessionContext,
-  commands: SlashCommand[],
-): AgentOptionsJob =>
-  new AgentOptionsJob(
-    { agent: context.agent, projectId: context.projectId },
-    undefined,
-    { authoritative: true, commands },
-  );
-
 const recordAuthentication = (
   context: SessionContext,
   params: FailureParameters,
@@ -294,7 +284,7 @@ const sessionSetup = setup({
       cancelAcp(input),
     ),
     configureAcp: fromPromise<SessionConfigOption[], SessionContext>(
-      ({ input }) => configureAcp(input),
+      ({ input }) => sendQueuedChoice(input),
     ),
     publishTurn: fromPromise<void, AcpOperationInput>(({ input }) =>
       publishTurn(input),
@@ -313,8 +303,8 @@ const sessionSetup = setup({
     openAcp: fromPromise<OpenedAcpSession, SessionContext>(({ input }) =>
       openAcp(input),
     ),
-    restoreAcpConfiguration: fromPromise<SessionConfigOption[], SessionContext>(
-      ({ input, signal }) => restoreAcpConfiguration(input, signal),
+    restoreAcpConfiguration: fromPromise<RestoredConfiguration, SessionContext>(
+      ({ input, signal }) => restoreConfiguration(input, signal),
     ),
     closeAcp: fromPromise<void, AcpOperationInput>(({ input }) =>
       closeAcp(input),
@@ -388,23 +378,17 @@ const sessionSetup = setup({
 
       enqueue.assign({ slashCommands: commands });
       enqueueWrites(enqueue, context, [
-        { job: commandsJob(context, commands) },
+        { job: slashCommandsJob(context, commands) },
       ]);
     }),
     applyAcpConfig: enqueueActions(
       ({ context, event, enqueue }, options?: SessionConfigOption[]) => {
-        const nextOptions = options ?? readConfigurationUpdate(context, event);
+        const report = reportConfiguration(context, event, options);
 
-        if (!nextOptions) return;
+        if (!report) return;
 
-        const { change, writes } = applyConfigurationReport(
-          context,
-          nextOptions,
-          options !== undefined,
-        );
-
-        enqueue.assign(change);
-        enqueueWrites(enqueue, context, writes);
+        enqueue.assign(report.change);
+        enqueueWrites(enqueue, context, report.writes);
       },
     ),
     acknowledgeAcpConfig: assign(({ context }) =>
@@ -503,10 +487,7 @@ const sessionSetup = setup({
       leaseValues(context, opened),
     ),
     rememberRestoredConfiguration: assign(
-      (_, options: SessionConfigOption[]) => ({
-        configOptions: options,
-        configValues: toConfigValues(options),
-      }),
+      (_, restored: RestoredConfiguration) => restored,
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:
@@ -520,11 +501,7 @@ const sessionSetup = setup({
     rememberFeedEnded: assign({ feedEnded: true }),
     storeAgentOptions: sendTo(writer, ({ context }) => ({
       type: writeFeedEvent,
-      job: new AgentOptionsJob(
-        { agent: context.agent, projectId: context.projectId },
-        context.configOptions,
-        { authoritative: true },
-      ),
+      job: agentOptionsJob(context, context.configOptions),
     })),
     storeAcpSession: sendTo(writer, ({ context }) => ({
       type: writeFeedEvent,
@@ -822,9 +799,7 @@ const sessionSetup = setup({
       ({ context }): boolean => context.heldConfig.length > 0,
     ]),
     hasConfigurationCapacity: ({ context }): boolean =>
-      hasConfigurationCapacity(
-        context.configQueue.length + context.heldConfig.length,
-      ),
+      hasConfigurationCapacity(context),
     acceptsAcpConfig: and([
       'hasConfigurationCapacity',
       or([
@@ -1151,19 +1126,13 @@ export const sessionMachine = sessionSetup.createMachine({
               invoke: {
                 id: 'restoreAcpConfiguration',
                 src: 'restoreAcpConfiguration',
-                input: ({ context }): SessionContext => ({
-                  ...context,
-                  configValues:
-                    context.input.kind === 'existing'
-                      ? context.configValues
-                      : [],
-                }),
+                input: ({ context }) => context,
                 onDone: {
                   target: 'idle',
                   actions: [
                     {
                       type: 'rememberRestoredConfiguration',
-                      params: ({ event }): SessionConfigOption[] =>
+                      params: ({ event }): RestoredConfiguration =>
                         event.output,
                     },
                     'storeSession',

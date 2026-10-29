@@ -1,5 +1,5 @@
 import type { ContentBlock } from '@repo/contracts';
-import { currentModel } from '../configuration/config-choices';
+import { currentModel } from '../configuration';
 import type { SessionContext, SessionWrite } from '../session-context';
 import { TurnInsertJob } from '../session-storage/session-storage';
 

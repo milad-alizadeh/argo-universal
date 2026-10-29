@@ -19,7 +19,7 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
-import { agentOptionsUpdates } from './agent-options/agent-options';
+import { agentOptionsUpdates } from './configuration';
 import type { SessionList } from './list/session-list';
 import type { SessionRouterDeps } from './router-deps';
 import {

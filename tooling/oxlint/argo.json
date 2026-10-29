@@ -1817,6 +1817,14 @@
                 "message": "Import another Engine domain through its index.ts face."
               },
               {
+                "group": [
+                  "./configuration/**",
+                  "!./configuration/index",
+                  "!./configuration/index.ts"
+                ],
+                "message": "Import Session configuration through its index.ts face."
+              },
+              {
                 "group": ["**/engine/**"],
                 "message": "A module sits below the Engine composition, so it never imports engine/."
               }
@@ -1872,6 +1880,14 @@
                   "!../../system/index.ts"
                 ],
                 "message": "Import another Engine domain through its index.ts face."
+              },
+              {
+                "group": [
+                  "../configuration/**",
+                  "!../configuration/index",
+                  "!../configuration/index.ts"
+                ],
+                "message": "Import Session configuration through its index.ts face."
               },
               {
                 "group": ["**/engine/**"],

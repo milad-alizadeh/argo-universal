@@ -65,7 +65,7 @@ export const modelLifecycleEvents = [
   {
     type: 'xstate.done.actor.restoreAcpConfiguration',
     actorId: 'restoreAcpConfiguration',
-    output: [],
+    output: { configOptions: [], configValues: [] },
   },
   {
     type: 'xstate.error.actor.restoreAcpConfiguration',

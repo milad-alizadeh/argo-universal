@@ -6,8 +6,8 @@ import {
 import { agentOptions, agentServers, project } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
-import { isOfferedConfigChoice } from '../admission/config-admission';
 import { decode, ownerWhere, type Stored } from './agent-options-shared';
+import { isOfferedConfigChoice } from './choices';
 
 type Update = {
   authoritative: boolean;

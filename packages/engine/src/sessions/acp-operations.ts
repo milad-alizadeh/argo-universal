@@ -28,10 +28,6 @@ export const cancelAcp = (context: SessionContext): Promise<void> => {
   });
 };
 
-export { configureAcp } from './acp-configuration-operation';
-
-export { restoreAcpConfiguration } from './acp-configuration-restore';
-
 export const publishTurn = (input: AcpOperationInput): Promise<void> => {
   const feed = input.findFeed();
 

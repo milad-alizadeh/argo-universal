@@ -1,56 +1,19 @@
-import type { SessionConfigOption } from '@repo/contracts';
-import { assertEvent } from 'xstate';
-import { readAcpConfiguration } from '../acp/acp-configuration';
 import {
-  acpUpdateEvent,
   setConfigEvent,
+  type SessionCommand,
   type SessionContext,
-  type SessionEvent,
+  type SessionWrite,
 } from '../session-context';
-import type { ConfigChoice } from './config-queue-types';
 
-export type { ConfigChoice } from './config-queue-types';
-
-export { holdConfigChoice } from './config-queue-held';
-
-export {
-  applyConfigurationReport,
-  rejectConfigChoice,
-} from './config-queue-report';
-
-type ConfigUpdate = Extract<
-  Extract<
-    SessionEvent,
-    { type: typeof acpUpdateEvent }
-  >['notification']['update'],
-  { sessionUpdate: 'config_option_update' }
+export type ConfigChoice = Extract<
+  SessionCommand,
+  { type: typeof setConfigEvent }
 >;
 
-function readOptions(
-  context: SessionContext,
-  update: ConfigUpdate,
-): SessionConfigOption[] | undefined {
-  try {
-    return readAcpConfiguration(
-      update.configOptions,
-      context.acpConfigurationRejections,
-    );
-  } catch {
-    return undefined;
-  }
-}
-
-// The Agent's own report of its options, when this update carries one.
-export const readConfigurationUpdate = (
-  context: SessionContext,
-  event: SessionEvent,
-): SessionConfigOption[] | undefined => {
-  assertEvent(event, acpUpdateEvent);
-  const update = event.notification.update;
-
-  if (update.sessionUpdate !== 'config_option_update') return undefined;
-
-  return readOptions(context, update);
+// What a configuration step changes in the Session, and what it asks the writer to store.
+export type ConfigChange<Keys extends keyof SessionContext> = {
+  change: Pick<SessionContext, Keys>;
+  writes: SessionWrite[];
 };
 
 export const queueConfigChoice = (

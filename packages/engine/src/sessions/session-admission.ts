@@ -4,8 +4,6 @@ import type {
   PendingPermission,
   SessionAnswerPermissionInput,
   SessionAnswerElicitationInput,
-  SessionSetConfigOptionInput,
-  SessionConfigOption,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { ZodError } from 'zod';
@@ -14,7 +12,6 @@ import type {
   ElicitationAnswerValue,
 } from './acp/requests/elicitation-types';
 import { answeredRequest, chosenOption } from './admission/answer-admission';
-import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionActorRef } from './session-machine';
 
 const alreadyAnswered = 'already answered';
@@ -122,14 +119,3 @@ export const acceptedElicitationContent = (
 
   return parseElicitation(request, answer);
 };
-
-export function validateConfigChoice(
-  configOptions: SessionConfigOption[],
-  configChoice: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
-): void {
-  if (!isOfferedConfigChoice(configOptions, configChoice))
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `The Agent did not offer ${configChoice.configId}=${String(configChoice.value)}`,
-    });
-}

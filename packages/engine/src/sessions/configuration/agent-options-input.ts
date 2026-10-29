@@ -8,7 +8,7 @@ import {
 import { TRPCError } from '@trpc/server';
 import { readSessionRow } from '../session-record';
 import type { OptionsDeps } from './agent-options-discovery';
-import { readAgentConfiguration } from './agent-options-storage';
+import { readAgentConfiguration } from './agent-options-read';
 
 const matchingOwner = (
   session: SessionRecord,

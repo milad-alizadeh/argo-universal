@@ -2,10 +2,7 @@ import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import {
-  configuration,
-  recoverSession,
-} from './session-configuration-recovery.test.mocks';
+import { configuration, recoverSession } from './restore.test.mocks';
 
 it.each(
   fixtureAgents.flatMap((identity) =>

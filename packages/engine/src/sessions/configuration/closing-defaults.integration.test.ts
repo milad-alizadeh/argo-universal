@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { configuration } from './session-configuration-recovery.test.mocks';
+import { configuration } from './restore.test.mocks';
 
 it('keeps selected Read-only mode when the Agent reports defaults while closing', async () => {
   const host = await startAcpEngine({

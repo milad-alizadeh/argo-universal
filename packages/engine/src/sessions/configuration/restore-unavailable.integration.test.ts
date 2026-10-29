@@ -2,7 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { configuration } from './session-configuration-recovery.test.mocks';
+import { configuration } from './restore.test.mocks';
 
 it.each(['model', 'mode'])(
   'refuses to reopen or prompt when the selected %s is no longer offered',

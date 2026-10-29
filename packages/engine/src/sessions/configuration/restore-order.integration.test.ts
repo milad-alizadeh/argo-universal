@@ -2,7 +2,7 @@ import type { SetSessionConfigOptionRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { configuration } from './session-configuration-recovery.test.mocks';
+import { configuration } from './restore.test.mocks';
 
 it('restores model-dependent choices in model, effort, mode order before the follow-up', async () => {
   const requests: SetSessionConfigOptionRequest[] = [];

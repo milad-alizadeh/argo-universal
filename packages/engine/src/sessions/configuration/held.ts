@@ -1,28 +1,21 @@
-import type {
-  SessionConfigOption,
-  SessionSetConfigOptionInput,
-} from '@repo/contracts';
-
-export type HeldConfigChoice = Pick<
-  SessionSetConfigOptionInput,
-  'configId' | 'value'
->;
+import type { SessionConfigOption } from '@repo/contracts';
+import type { AgentConfigValue } from './choices';
 
 const heldBoolean = (
   option: Extract<SessionConfigOption, { type: 'boolean' }>,
-  value: HeldConfigChoice['value'],
+  value: AgentConfigValue['value'],
 ): SessionConfigOption =>
   typeof value === 'boolean' ? { ...option, currentValue: value } : option;
 
 const heldSelect = (
   option: Extract<SessionConfigOption, { type: 'select' }>,
-  value: HeldConfigChoice['value'],
+  value: AgentConfigValue['value'],
 ): SessionConfigOption =>
   typeof value === 'string' ? { ...option, currentValue: value } : option;
 
 const heldValue = (
   option: SessionConfigOption,
-  value: HeldConfigChoice['value'],
+  value: AgentConfigValue['value'],
 ): SessionConfigOption =>
   option.type === 'boolean'
     ? heldBoolean(option, value)
@@ -30,7 +23,7 @@ const heldValue = (
 
 const heldOption = (
   option: SessionConfigOption,
-  choice: HeldConfigChoice | undefined,
+  choice: AgentConfigValue | undefined,
 ): SessionConfigOption => {
   if (!choice) return option;
 
@@ -43,9 +36,10 @@ const heldOption = (
   };
 };
 
+// A held choice shows as the option's value, marked as waiting for the next Turn.
 export const withHeldConfiguration = (
   options: SessionConfigOption[],
-  held: readonly HeldConfigChoice[],
+  held: readonly AgentConfigValue[],
 ): SessionConfigOption[] =>
   options.map((option) =>
     heldOption(
@@ -55,9 +49,9 @@ export const withHeldConfiguration = (
   );
 
 export const withoutHeldChoice = (
-  held: HeldConfigChoice[],
-  choice: HeldConfigChoice | null,
-): HeldConfigChoice[] => {
+  held: AgentConfigValue[],
+  choice: AgentConfigValue | null,
+): AgentConfigValue[] => {
   if (!choice) return held;
 
   return held.filter(

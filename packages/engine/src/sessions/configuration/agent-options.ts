@@ -4,13 +4,13 @@ import type {
   SessionAgentOptionsInput,
 } from '@repo/contracts';
 import { requireInstalledAgent } from '../../agents';
-import { observeLiveAgentOptions } from '../live-agent-options';
 import {
   refreshAgentOptions,
   type OptionsDeps,
 } from './agent-options-discovery';
 import { discoveryFailure } from './agent-options-discovery-session';
 import { savedAgentOptions, sessionOptionsInput } from './agent-options-input';
+import { observeLiveAgentOptions } from './live-agent-options';
 
 type ReadEvent = { update: AgentOptionsUpdate } | { error: unknown };
 

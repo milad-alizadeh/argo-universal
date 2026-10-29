@@ -1,9 +1,8 @@
 import type { WriterCommit } from '../../storage';
-import type { SessionContext } from '../session-context';
-import type { SessionWrite } from '../session-context';
-import { SessionRowUpdateJob } from '../session-storage/session-storage';
-import type { ConfigChange, ConfigChoice } from './config-queue-types';
-import { withHeldConfiguration } from './held-configuration';
+import type { SessionContext, SessionWrite } from '../session-context';
+import { withHeldConfiguration } from './held';
+import type { ConfigChange, ConfigChoice } from './queue';
+import { sessionChoicesJob } from './store';
 
 const heldCommit = (
   context: SessionContext,
@@ -22,7 +21,7 @@ const heldWrite = (
   choice: ConfigChoice,
   heldConfig: SessionContext['heldConfig'],
 ): SessionWrite => ({
-  job: new SessionRowUpdateJob({ id: context.sessionId, set: { heldConfig } }),
+  job: sessionChoicesJob(context, { heldConfig }),
   committed: heldCommit(context, choice, heldConfig),
 });
 

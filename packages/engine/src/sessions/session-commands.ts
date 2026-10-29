@@ -1,11 +1,38 @@
+import type {
+  SessionSetConfigOptionInput,
+  SessionSetConfigOptionOutput,
+} from '@repo/contracts';
 import type { Bound } from '../lib/bound';
 import { archiveSession, unarchiveSession } from './archive/archive-commands';
+import { applySessionConfig } from './configuration';
 import type { SessionRouterDeps } from './router-deps';
 import { cancelSession, closeSession } from './session-closure';
-import { configureSession } from './session-configuration';
+import { validateSessionCommandAdmission } from './session-command';
+import { openReadySession } from './session-opening';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
 import { stopShell } from './shells/stop';
+
+type ConfigureDeps = Pick<
+  SessionRouterDeps,
+  'sessions' | 'readSession' | 'sessionCommandSignal'
+>;
+
+// A thin Session handler (ADR-0016 §10): the Session configuration module checks and applies the choice.
+async function configureSession(
+  deps: ConfigureDeps,
+  input: SessionSetConfigOptionInput,
+): Promise<SessionSetConfigOptionOutput> {
+  const session = await openReadySession(
+    deps,
+    input.sessionId,
+    'session.setConfigOption',
+  );
+
+  validateSessionCommandAdmission(deps);
+
+  return { configOptions: await applySessionConfig(session, input) };
+}
 
 // The commands act Operations run on a Session, bound to what Sessions run them with.
 export type SessionCommands = {
