@@ -1,8 +1,8 @@
+import { storyPath } from './story-file.mts';
+
 const kitSource = 'packages/kit/src/';
 
 const clientSource = 'packages/client/src/';
-
-export const story = /\.stories\.tsx$/;
 
 export const pascal = (name: string): string =>
   name
@@ -181,7 +181,7 @@ export const packageOf = (
 
 // A story file's own name, without the `.stories.tsx` every story shares.
 export const baseOf = (file: string): string =>
-  (file.split('/').at(-1) ?? '').replace(story, '');
+  (file.split('/').at(-1) ?? '').replace(storyPath, '');
 
 /*
  * The folder a file sits in, as a whole path. `StoryPath.dirs` drops the package, so it cannot name

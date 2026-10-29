@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import type { StoryFile } from './story-file.mts';
 import { kit, meta, src } from './story-title-fixtures.mocks.mts';
 import {
   duplicateTitleProblems,
   presentationTitles,
-  type StoryFile,
   type StoryTitles,
   storyTitleProblems,
 } from './story-title-rules.mts';

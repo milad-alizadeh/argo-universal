@@ -1,12 +1,10 @@
+import { group, startOf, storyExports } from './story-file.mts';
+
 export type Sources = ReadonlyMap<string, string>;
 
 export type ArgsBlock = { owner: string; body: string };
 
 export type Lookup = { file: string; source: string; sources: Sources };
-
-const metaOpens = 'const meta = {';
-
-const metaCloses = '\n};';
 
 const blockComment = /\/\*[\s\S]*?\*\//g;
 
@@ -29,27 +27,9 @@ const keyToken = /\b([A-Za-z_$][\w$]*)\??:/g;
 
 const argsOpens = /\bargs: ?\{/g;
 
-const anyStoryExport = /export const (\w+)/g;
-
 const callbackEntry = /\b[A-Za-z_$][\w$]*\??: {0,3}(?:fn|action|=>)/g;
 
 const flattenRounds = 40;
-
-export const startOf = (match: RegExpMatchArray): number => match.index ?? 0;
-
-export const group = (match: RegExpMatchArray, index: number): string =>
-  match[index] ?? '';
-
-// Sliced rather than matched: a meta holds nested braces, which a regex pays for in backtracking.
-export const metaOf = (source: string): string => {
-  const opens = source.indexOf(metaOpens);
-
-  if (opens < 0) return '';
-
-  const closes = source.indexOf(metaCloses, opens);
-
-  return closes < 0 ? source.slice(opens) : source.slice(opens, closes);
-};
 
 /*
  * Comments and string bodies are emptied before any brace is counted, so a brace inside a quoted
@@ -114,7 +94,8 @@ export const blockAfter = (text: string, match: RegExpMatchArray): string =>
 
 // The story an args block belongs to, or the meta, whose args reach every story in the file.
 const ownerAt = (text: string, cursor: number): string =>
-  [...text.slice(0, cursor).matchAll(anyStoryExport)].at(-1)?.[1] ?? 'meta';
+  storyExports(text).findLast(({ start }): boolean => start < cursor)?.name ??
+  'meta';
 
 export const argsBlocks = (text: string): ArgsBlock[] =>
   [...text.matchAll(argsOpens)].map((match): ArgsBlock => ({

@@ -1,10 +1,9 @@
 import { posix } from 'node:path';
+import { declaresKey, group, namedImports, readStory } from './story-file.mts';
 import {
   argsBlocks,
   bare,
   blockAfter,
-  group,
-  metaOf,
   topLevelKeys,
   type ArgsBlock,
   type Lookup,
@@ -13,25 +12,13 @@ import {
 
 type Component = { name: string; lookup: Lookup };
 
-const declaresComponent = /^[ \t]*component:[ \t]*(\w+)/m;
-
-const namedImport =
-  /import[ \t]+(?:type[ \t]+)?\{([^}]*)\}[ \t\n]*from[ \t]*['"]([^'"]+)['"]/g;
-
-const declaresRender = /^[ \t]*render:/m;
-
 // A props type the gate cannot read whole: an extension, an intersection, a union or a generic.
 const unreadableHead = /extends|[&|<]/;
 
 const moduleExtensions = ['.tsx', '.ts', '/index.tsx', '/index.ts'];
 
-const importedFrom = (source: string, name: string): string | undefined => {
-  const word = new RegExp(`\\b${name}\\b`);
-
-  return [...source.matchAll(namedImport)].find((match): boolean =>
-    word.test(group(match, 1)),
-  )?.[2];
-};
+const importedFrom = (source: string, name: string): string | undefined =>
+  namedImports(source).find(({ names }): boolean => names.includes(name))?.from;
 
 const resolveModule = (
   from: string,
@@ -84,9 +71,6 @@ const importedPropsKeys = (
 const propsKeys = (lookup: Lookup, name: string): string[] | undefined =>
   localPropsKeys(lookup.source, name) ?? importedPropsKeys(lookup, name);
 
-const componentIn = (source: string): string | undefined =>
-  declaresComponent.exec(metaOf(source))?.[1];
-
 const lookupAt = (story: Lookup, module: string): Lookup => ({
   file: module,
   source: story.sources.get(module) ?? '',
@@ -109,7 +93,7 @@ const moduleComponent = (
 };
 
 const componentOf = (story: Lookup): Component | undefined => {
-  const name = componentIn(story.source);
+  const name = readStory(story).component;
 
   return name === undefined ? undefined : moduleComponent(story, name);
 };
@@ -149,7 +133,8 @@ const undeclaredIn = (
 export const undeclaredArgProblems = (story: Lookup): string[] => {
   const known = new Set(declaredPropNames(story));
 
-  if (known.size === 0 || declaresRender.test(metaOf(story.source))) return [];
+  if (known.size === 0 || declaresKey(readStory(story).meta, 'render'))
+    return [];
 
   const blocks = argsBlocks(bare(story.source));
 

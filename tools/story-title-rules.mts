@@ -1,23 +1,18 @@
+import {
+  readStory,
+  storySuffix,
+  storyPath,
+  type StoryFile,
+} from './story-file.mts';
 import { expectedTitle, type StoryTitles } from './story-title-expected.mts';
 import { testFile } from './story-title-neighbours.mts';
-import {
-  baseOf,
-  type Expected,
-  packageOf,
-  story,
-} from './story-title-path.mts';
+import { baseOf, type Expected, packageOf } from './story-title-path.mts';
 
 export { type StoryTitles } from './story-title-expected.mts';
 
 export { pascal } from './story-title-path.mts';
 
 const noTitles: StoryTitles = new Map();
-
-// The first title after `const meta` is the story file's title; a Variation's own titles come later.
-const metaTitle = /const meta\b[\s\S]*?\btitle: '([^']+)'/;
-
-// The component a story's meta draws, which says whether the file draws its folder's component or its own.
-const metaComponent = /const meta\b[\s\S]*?\bcomponent: (\w+)/;
 
 /*
  * The title `pnpm new:story` writes. A screen's page title and a test's subject are the author's, so
@@ -34,10 +29,7 @@ const whyNowhere = (expected: Expected): string =>
   expected.kind === 'none' ? expected.why : '';
 
 export const derivedStoryTitle = (componentFile: string): string => {
-  const storyFile = componentFile.replace(
-    /\.(?:native\.)?tsx?$/,
-    '.stories.tsx',
-  );
+  const storyFile = componentFile.replace(/\.(?:native\.)?tsx?$/, storySuffix);
 
   // `pnpm new:story` writes a story for the component the file itself exports, never for its folder's.
   const expected = expectedTitle(storyFile);
@@ -87,6 +79,7 @@ const expectedProblem = (
     : prefixProblem(file, title, expected);
 };
 
+// The meta's component says whether the file draws its folder's component or its own.
 const titleProblem = (
   { file, source }: StoryFile,
   title: string,
@@ -95,14 +88,14 @@ const titleProblem = (
   expectedProblem(
     file,
     title,
-    expectedTitle(file, metaComponent.exec(source)?.[1], titles),
+    expectedTitle(file, readStory({ file, source }).component, titles),
   );
 
 const isPlacedStory = (file: string): boolean =>
-  story.test(file) && packageOf(file) !== undefined;
+  storyPath.test(file) && packageOf(file) !== undefined;
 
 const metaTitleProblem = (story: StoryFile, titles: StoryTitles): string[] => {
-  const title = metaTitle.exec(story.source)?.[1];
+  const title = readStory(story).title;
 
   return title === undefined
     ? [`${story.file}: the story meta needs a literal title`]
@@ -120,15 +113,9 @@ export const storyTitleProblems = (
 ): string[] =>
   isPlacedStory(file) ? metaTitleProblem({ file, source }, titles) : [];
 
-// A story file and what it holds, as the checker reads it off disk.
-export interface StoryFile {
-  file: string;
-  source: string;
-}
-
 // A placed story file's title; an unplaced file or a missing literal has none.
 const placedTitle = ({ file, source }: StoryFile): string | undefined =>
-  isPlacedStory(file) ? metaTitle.exec(source)?.[1] : undefined;
+  isPlacedStory(file) ? readStory({ file, source }).title : undefined;
 
 const presentationTitle = (story: StoryFile): string | undefined =>
   testFile.test(baseOf(story.file)) ? undefined : placedTitle(story);

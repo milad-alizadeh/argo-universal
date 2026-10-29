@@ -30,11 +30,7 @@ export type ChildStatePair = {
   totalNodes: number;
 };
 
-export {
-  fixturePairs,
-  type FixturePair,
-  type StoryFile,
-} from './story-render-fixtures.mts';
+export { fixturePairs, type FixturePair } from './story-render-fixtures.mts';
 
 const emptyNode: RenderNode = {
   tag: '',

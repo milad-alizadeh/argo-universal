@@ -1,11 +1,17 @@
 import {
+  declaresKey,
+  group,
+  readStory,
+  startOf,
+  type StoryRead,
+  storyPath,
+  testStory,
+} from './story-file.mts';
+import {
   argsBlocks,
   bare,
   blockAfter,
   dataKeys,
-  group,
-  metaOf,
-  startOf,
   type ArgsBlock,
   type Sources,
 } from './story-gate-parse.mts';
@@ -13,20 +19,9 @@ import { undeclaredArgProblems } from './story-gate-props.mts';
 
 export type { Sources } from './story-gate-parse.mts';
 
-const presentationStory = /\.stories\.tsx$/;
-
-const testStory = /\.test\.stories\.tsx$/;
-
 const checkedPackage = /^packages\/(?:kit|client)\/src\//;
 
-// Horizontal space only: `\s` spans newlines under `m`, which costs backtracking for no gain.
-const declaresComponent = /^[ \t]*component:[ \t]*(\w+)/m;
-
-const declaresArgTypes = /^[ \t]*argTypes:/m;
-
 const optsOutOfDocs = /'!autodocs'/;
-
-const storyExport = /^export const (\w+)(?=\s*[:=])/gm;
 
 // A story named for the prop that drives it, rather than for what the component then looks like.
 const namedForAProp = /^(?:With|Without)[A-Z]|(?:True|False)$/;
@@ -42,29 +37,25 @@ const objectArg = /\b([A-Za-z_$][\w$]*): ?\{/g;
 const fixtureKeyCount = 3;
 
 const isChecked = (file: string): boolean =>
-  checkedPackage.test(file) &&
-  presentationStory.test(file) &&
-  !testStory.test(file);
+  checkedPackage.test(file) && storyPath.test(file) && !testStory.test(file);
 
-const storyNames = (source: string): string[] =>
-  [...source.matchAll(storyExport)].map((match): string => group(match, 1));
-
-const documentsAComponent = (meta: string): boolean =>
-  declaresComponent.test(meta) &&
-  !declaresArgTypes.test(meta) &&
+const documentsAComponent = ({ meta, component }: StoryRead): boolean =>
+  component !== undefined &&
+  !declaresKey(meta, 'argTypes') &&
   !optsOutOfDocs.test(meta);
 
 // A file that documents a component states its prop domain, which is what an author writes against.
-const argTypesProblems = (file: string, source: string): string[] =>
-  documentsAComponent(metaOf(source))
+const argTypesProblems = (file: string, read: StoryRead): string[] =>
+  documentsAComponent(read)
     ? [
         `${file}: meta sets \`component:\` but no \`argTypes\`. Add \`argTypes: kitArgTypes('<Component>')\`, or the component's own prop domain, so Controls and the autodocs props table have a schema to read. To opt out instead, add \`tags: ['!autodocs']\` with a comment saying why.`,
       ]
     : [];
 
 // ADR-0040 decision 4: a story is named for the situation it shows, never for the prop that caused it.
-const storyNameProblems = (file: string, source: string): string[] =>
-  storyNames(source)
+const storyNameProblems = (file: string, read: StoryRead): string[] =>
+  read.exports
+    .map(({ name }): string => name)
     .filter((name): boolean => namedForAProp.test(name))
     .map(
       (name): string =>
@@ -111,12 +102,15 @@ export const gateProblems = (
   file: string,
   source: string,
   sources: Sources = new Map(),
-): string[] =>
-  isChecked(file)
-    ? [
-        ...argTypesProblems(file, source),
-        ...storyNameProblems(file, source),
-        ...undeclaredArgProblems({ file, source, sources }),
-        ...inlineFixtureProblems(file, source),
-      ]
-    : [];
+): string[] => {
+  if (!isChecked(file)) return [];
+
+  const read = readStory({ file, source });
+
+  return [
+    ...argTypesProblems(file, read),
+    ...storyNameProblems(file, read),
+    ...undeclaredArgProblems({ file, source, sources }),
+    ...inlineFixtureProblems(file, source),
+  ];
+};
