@@ -143,7 +143,7 @@ export const scrollingSuggestionsRichTextarea = {
       id: 'many',
       title: 'Suggestions',
       query: (): ComposerSuggestion[] =>
-        Array.from({ length: 8 }, (_, index) => ({
+        Array.from({ length: 12 }, (_, index) => ({
           id: String(index),
           label: `/option-${index + 1}`,
           detail:

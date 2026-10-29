@@ -42,7 +42,7 @@ function slowSource(id: string): Deferred {
 const flush = (): Promise<void> => new Promise((done) => setTimeout(done, 0));
 
 describe('SuggestionRun', () => {
-  it('keeps source order, the first eight of each, and drops empty sources', () => {
+  it('keeps source order, every result of each, and drops empty sources', () => {
     const run = new SuggestionRun(
       [fixed('none', 0), fixed('many', 10), fixed('few', 2)],
       '',
@@ -52,7 +52,7 @@ describe('SuggestionRun', () => {
       'many',
       'few',
     ]);
-    expect(idsOf(run.groups()).slice(7, 9)).toEqual(['many-7', 'few-0']);
+    expect(idsOf(run.groups()).slice(9, 11)).toEqual(['many-9', 'few-0']);
   });
 
   it('shows a synchronous source at once and a late one when it arrives', async () => {
@@ -80,15 +80,6 @@ describe('SuggestionRun', () => {
     await flush();
 
     expect(idsOf(run.groups())).toEqual(['A', 'B']);
-  });
-
-  it('limits a late answer to eight too', async () => {
-    const slow = slowSource('Tickets');
-    const run = new SuggestionRun([slow.source], '');
-    slow.settle(Array.from({ length: 10 }, (_, index) => ticket(`T-${index}`)));
-    await flush();
-
-    expect(idsOf(run.groups())).toHaveLength(8);
   });
 
   it('treats a failed promise as no results and keeps the rest', async () => {
