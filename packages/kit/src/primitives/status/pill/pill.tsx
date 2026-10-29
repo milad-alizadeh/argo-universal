@@ -1,9 +1,12 @@
+import { pillDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useUniwind } from 'uniwind';
 import { cn } from '#kit/utils';
 import { Text, type Tone } from '#primitives/content/text';
 import { labelColours, type LabelColours } from './label-colour';
+import { PillControl } from './pill-control';
+import { pillGeometry } from './pill-geometry';
 import type { PillProps } from './pill-props';
 
 const fills = {
@@ -33,14 +36,11 @@ const textTones = {
   done: 'done',
 } as const satisfies Record<Tone, Tone>;
 
-function pillClassName(
-  tone: Tone | undefined,
-  className: string | undefined,
-): string {
+function pillClassName(tone: Tone | undefined): string {
   return cn(
-    'shrink-0 self-start flex-row rounded-full px-2 py-0.5',
+    pillGeometry('label'),
+    'shrink-0 self-start',
     fills[tone ?? 'muted'],
-    className,
   );
 }
 
@@ -69,18 +69,9 @@ const fillStyle = (
 ): { backgroundColor: string } | undefined =>
   label?.fill ? { backgroundColor: label.fill } : undefined;
 
-function PillView({
-  className,
-  tone,
-  label,
-  ...props
-}: PillViewProps): ReactElement {
+function PillView({ tone, label, ...props }: PillViewProps): ReactElement {
   return (
-    <View
-      {...props}
-      className={pillClassName(tone, className)}
-      style={fillStyle(label)}
-    />
+    <View {...props} className={pillClassName(tone)} style={fillStyle(label)} />
   );
 }
 
@@ -91,10 +82,12 @@ function useLabel(color: string | undefined): LabelColours | undefined {
   return color ? labelColours(color, theme === 'dark') : undefined;
 }
 
-export function Pill({
+function LabelPill({
   text,
   tone = 'muted',
   color,
+  variant: _variant,
+  appearance: _appearance,
   ...props
 }: PillProps): ReactElement {
   const label = useLabel(color);
@@ -103,5 +96,15 @@ export function Pill({
     <PillView {...props} tone={tone} label={label}>
       <PillText text={text} tone={tone} label={label} />
     </PillView>
+  );
+}
+
+export function Pill(props: PillProps): ReactElement {
+  const variant = props.variant ?? pillDefaults.variant;
+
+  return variant === 'control' ? (
+    <PillControl {...props} />
+  ) : (
+    <LabelPill {...props} />
   );
 }
