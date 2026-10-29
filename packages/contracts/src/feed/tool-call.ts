@@ -48,13 +48,18 @@ export const CommandAction = z.strictObject({
 
 export type CommandAction = z.infer<typeof CommandAction>;
 
-export function knownCommandActions(toolCall: ToolCallUpdate): CommandAction[] {
-  const actions = toolCall._meta?.argo?.commandActions;
+const commandActions = (
+  toolCall: ToolCallUpdate,
+): CommandAction[] | undefined => toolCall._meta?.argo?.commandActions;
 
-  return actions?.length &&
-    actions.every((action): boolean => action.type !== 'unknown')
-    ? actions
-    : [];
+export function knownCommandActions(toolCall: ToolCallUpdate): CommandAction[] {
+  const actions = commandActions(toolCall);
+
+  return actions && actions.every(isKnownAction) ? actions : [];
+}
+
+function isKnownAction(action: CommandAction): boolean {
+  return action.type !== 'unknown';
 }
 
 export const ToolCallLocation = z.strictObject({
