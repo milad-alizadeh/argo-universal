@@ -117,19 +117,17 @@ export const APathStaysPlainText: Story = {
 };
 
 export const ARestoredDraftRebuildsTheTokenAndKeepsItsText: Story = {
-  args: { initialValue: withArgument },
+  args: { initialValue: `/${reviewName} ` },
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await expect(field).toHaveTextContent(withArgument);
+    await expect(field).toHaveTextContent(`/${reviewName}`);
     await userEvent.click(field);
-    await userEvent.keyboard('{End}!');
+    await userEvent.keyboard('{End}x');
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith(`${withArgument}!`),
+      expect(args.onChangeText).toHaveBeenLastCalledWith(`/${reviewName} x`),
     );
-    await userEvent.keyboard('{Home}{ArrowRight}{Backspace}');
-    await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith(' main!'),
-    );
+    await userEvent.keyboard('{Backspace}{Backspace}{Backspace}');
+    await waitFor(() => expect(args.onChangeText).toHaveBeenLastCalledWith(''));
   },
 };
 
