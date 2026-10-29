@@ -7,7 +7,7 @@
     "argo": "./bin/argo.mjs"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "node ../../tools/plugin-typecheck.mts 'tsc --noEmit'",
     "test": "vitest run"
   },
   "dependencies": {
