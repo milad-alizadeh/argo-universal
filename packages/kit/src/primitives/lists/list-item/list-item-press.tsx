@@ -1,15 +1,15 @@
-import { type ReactElement, type ComponentProps } from 'react';
+import { use, type ReactElement, type ComponentProps } from 'react';
 import { Pressable, type KeyDownEvent } from 'react-native';
 import type { ContextActions } from '#primitives/actions/action';
 import { usePressRipple } from '#primitives/native/material-palette';
 import type { SpokenElement } from '#primitives/overlays/menu';
+import { ListTileContext } from '../../../list-context';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
-import { BesidePress } from './list-item-beside-press';
+import { BesidePress, besidePressFor } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
-import { hasAccessories } from './list-item-pass-through';
 import { interactive, usePressClass } from './list-item-press-class';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
@@ -137,11 +137,13 @@ export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
   const focused = { ...press, ...useRowFocus() };
   const className = cn(press.className, focused.className);
+  const tile = use(ListTileContext) !== null;
 
   if (useRadioRow(props))
     return <RadioRow row={props} className={press.className} />;
 
-  if (hasAccessories(props))
+  // Keep the same press target while an asynchronous accessory arrives during a click.
+  if (besidePressFor(props, tile))
     return <BesidePress props={props} press={{ ...focused, className }} />;
 
   return (
