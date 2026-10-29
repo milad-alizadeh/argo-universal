@@ -1,6 +1,7 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import type { SessionWorkSource } from '../../sessions';
+import { answer, type RunAnswer } from '../implementations';
 import type { StartedWork } from '../native-start';
 import { admissionTimedOut } from './clock';
 import type { WaitIds } from './ids';
@@ -13,30 +14,38 @@ export type BeginWork<Result> = (
   signal: AbortSignal,
 ) => Promise<StartedWork<Result>>;
 
+// A user's native start, admitted under its run's deadline.
+export type UserAdmission = {
+  admit: <Result>(begin: BeginWork<Result>) => Promise<RunAnswer<Result>>;
+};
+
 const user = { kind: 'user' as const };
 
 // The user gets a wait id at once for a new Session, and for a Turn once it is admitted within the deadline.
-export async function admitUserWork<Result>(
+export function userAdmission(
   context: AdmissionContext,
-  begin: BeginWork<Result>,
   admission: WorkAdmission,
-): Promise<Result | OperationExecution> {
-  const started = await begin(admission.signal);
-  admission.started(() => expired(context, started));
+): UserAdmission {
+  return {
+    admit: async (begin) => {
+      const started = await begin(admission.signal);
+      admission.started(() => expired(context, started));
 
-  return admitted(context, started);
+      return admitted(context, started);
+    },
+  };
 }
 
 async function admitted<Result>(
   context: AdmissionContext,
   started: StartedWork<Result>,
-): Promise<Result | OperationExecution> {
+): Promise<RunAnswer<Result>> {
   if (started.kind === 'creation') return execution(context, started);
 
   const accepted = await started.accepted();
 
   return accepted.turnId === undefined
-    ? accepted.result
+    ? answer(accepted.result)
     : execution(context, started);
 }
 

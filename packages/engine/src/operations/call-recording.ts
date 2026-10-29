@@ -1,20 +1,41 @@
+import {
+  operations,
+  type OperationId,
+  type OperationRow,
+} from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { OperationCalls, SessionOperationCall } from '../sessions';
-import type { OperationCaller } from './session-tokens';
+import type { CalledOperation, SessionOperationCall } from '../sessions';
+import type { OperationRunResult } from './implementations';
 
-type Recording = { calls: OperationCalls; caller: OperationCaller };
-
-type Call = { name: string; label: string; input: Json };
-
-export type StartedOperation<Result> = {
-  call?: SessionOperationCall;
+// A Session's Operation, shown as its Tool call until its result or failure settles it.
+export type RecordedOperation<Result> = {
+  call: SessionOperationCall;
   result: Promise<Result>;
 };
 
-function completed<Result>(call: SessionOperationCall, result: Result): Result {
-  call.finish({ output: z.json().parse(result) });
+// Runs the Operation in its Tool call; `output` is what the settled row shows of the result.
+export function recordOperation<Result>(
+  call: SessionOperationCall,
+  run: () => Promise<Result>,
+  output: (result: Result) => Json,
+): RecordedOperation<Result> {
+  const result = Promise.resolve()
+    .then(run)
+    .then(
+      (value) => completed(call, value, output),
+      (cause: unknown) => failed(call, cause),
+    );
+
+  return { call, result };
+}
+
+function completed<Result>(
+  call: SessionOperationCall,
+  result: Result,
+  output: (result: Result) => Json,
+): Result {
+  call.finish({ output: output(result) });
 
   return result;
 }
@@ -26,45 +47,27 @@ function failed(call: SessionOperationCall, cause: unknown): never {
   throw cause;
 }
 
-export function recordOperation<Result>(
-  recording: Recording,
-  operation: Call,
-  run: (call?: SessionOperationCall) => Promise<Result>,
-): Promise<Result> {
-  return startRecordedOperation(recording, operation, run).result;
-}
+export const listedOutput = (value: OperationRow[]): Json =>
+  z.json().parse(value);
 
-export function startRecordedOperation<Result>(
-  { calls, caller }: Recording,
-  operation: Call,
-  run: (call?: SessionOperationCall) => Promise<Result>,
-): StartedOperation<Result> {
-  if (caller.kind === 'user') return { result: run() };
+// A Session's Tool call shows the Operation's own result.
+export const recordedOutput = (value: OperationRunResult): Json =>
+  z.json().parse(value.kind === 'result' ? value.result : value);
 
-  const call = calls.begin(caller.sessionId, operation);
+export const discoveryCall = (filter: string): CalledOperation => ({
+  name: 'operations.list',
+  label: 'Discover Operations',
+  input: { filter },
+});
 
-  return { call, result: runRecorded(call, run) };
-}
-
-function runRecorded<Result>(
-  call: SessionOperationCall,
-  run: (call?: SessionOperationCall) => Promise<Result>,
-): Promise<Result> {
-  return Promise.resolve()
-    .then(() => run(call))
-    .then(
-      (result) => completed(call, result),
-      (cause: unknown) => failed(call, cause),
-    );
-}
-
-export function requireOperationCall(
-  call: SessionOperationCall | undefined,
-): SessionOperationCall {
-  if (call) return call;
-
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: 'The calling Session has no Operation Tool call',
-  });
-}
+export const operationCall = ({
+  id,
+  params,
+}: {
+  id: OperationId;
+  params: Json;
+}): CalledOperation => ({
+  name: id,
+  label: operations[id].label,
+  input: params,
+});

@@ -99,6 +99,7 @@ export { unarchiveSession } from './archive/archive-commands';
 
 export {
   createOperationCalls,
+  type CalledOperation,
   type OperationCalls,
   type OperationCard,
   type OperationCallRead,

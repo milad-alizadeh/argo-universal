@@ -1,23 +1,17 @@
 import type { OperationId } from '@repo/contracts/operations';
-import type { StartedOperation } from '../call-recording';
 import type { OperationRunResult } from '../implementations';
 import { isNativeStartOperation } from '../native-start';
-import type { OperationCaller } from '../session-tokens';
+import type { SessionCaller, TokenCaller } from '../session-tokens';
 import type { WorkObservation } from './observation';
-import type { WorkAdmission } from './wait.machine';
 
-export type RunObservation = {
-  caller: OperationCaller;
+// A Session caller's run: its Tool call observes the work it starts.
+export type SessionObservation = {
+  caller: SessionCaller;
   token?: string;
   wait: boolean;
   signal?: AbortSignal;
   id: OperationId;
 };
-
-// Starts the Operation; a user's start is admitted under the run's deadline.
-export type StartOperation = (
-  admission: WorkAdmission,
-) => StartedOperation<OperationRunResult>;
 
 // A Session caller gets its Operation's result, or what its Tool call observed first.
 export function operationResponse(
@@ -55,10 +49,10 @@ async function nativeOrOriginal(
 
 // A cancelled in-flight Tool call may return only its native cancellation after the caller closes.
 export function recordedCaller(
-  caller: OperationCaller,
-  authorize: () => OperationCaller,
+  caller: SessionCaller,
+  authorize: () => TokenCaller,
   read: () => WorkObservation,
-): OperationCaller {
+): TokenCaller {
   try {
     return authorize();
   } catch (cause) {

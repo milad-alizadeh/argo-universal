@@ -1,6 +1,6 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
-import type { OperationRunResult } from '../implementations';
+import { answer, type OperationRunResult } from '../implementations';
 import {
   callRead,
   callWork,
@@ -11,7 +11,7 @@ import {
   workHost,
 } from './work-fixtures';
 
-const listing: OperationRunResult = [];
+const listing: OperationRunResult = answer([]);
 
 const listProjects = 'project.list';
 
@@ -32,7 +32,7 @@ it('answers with the Operation result when it returns before its Tool call settl
 
 it('answers with the Operation result, not the Tool call, when the call settles first', async () => {
   const host = workHost();
-  host.source.set(callWork, callRead({ status: 'completed', result: listing }));
+  host.source.set(callWork, callRead({ status: 'completed', result: [] }));
   const result = Promise.withResolvers<OperationRunResult>();
   let answered = false;
 
@@ -78,7 +78,7 @@ it('follows a Tool call to the Turn it started, in the Session that runs it', as
   const running = runFromSession(host, {
     id: 'session.prompt',
     wait: true,
-    result: Promise.resolve({ messageId: 'message-1' }),
+    result: Promise.resolve(answer({ messageId: 'message-1' })),
   });
 
   await expect.poll(() => host.source.watching('child')).toBe(1);
@@ -103,7 +103,7 @@ it('returns at the started Turn without wait, and its wait id resumes that Turn'
     await runFromSession(host, {
       id: 'session.prompt',
       wait: false,
-      result: Promise.resolve({ messageId: 'message-1' }),
+      result: Promise.resolve(answer({ messageId: 'message-1' })),
     }),
   );
 

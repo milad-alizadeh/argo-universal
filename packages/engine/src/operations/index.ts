@@ -4,7 +4,7 @@ import {
   createSessionRouter,
   createShellRouter,
 } from '../sessions';
-import { Operations, type OperationsDeps } from './operations';
+import { createRunner, Operations, type OperationsDeps } from './operations';
 import { createOperationsRouter } from './router';
 import { generatedOperations } from './router.gen';
 
@@ -12,8 +12,9 @@ export { ensureControlToken } from './tokens';
 
 export const createOperationRouters = routerFactory((deps: OperationsDeps) => {
   const sessionList = createSessionList(deps);
-  const engine = new Operations(deps, sessionList);
-  const generated = generatedOperations(engine);
+  const runner = createRunner(deps, sessionList);
+  const engine = new Operations(deps, runner);
+  const generated = generatedOperations(runner);
 
   return router({
     ...generated,

@@ -3,121 +3,124 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
   sessionOrigin,
   userOrigin,
+  type SessionDirectory,
   type SessionOperationCall,
 } from '../sessions';
-import { requireOperationCall } from './call-recording';
 import {
-  appImplementations,
-  type AppImplementations,
+  answer,
+  type CallerImplementations,
   type NativeStartImplementations,
+  type NewSessionId,
   type OperationImplementations,
   type OperationParams,
   type OperationResult,
   type OperationRunResult,
   type PlainImplementations,
   type PlainOperationId,
-  type NewSessionId,
-  type SessionImplementations,
   type SessionInvoke,
 } from './implementations';
 import {
+  acceptedResult,
+  eachNativeStart,
   isNativeStartOperation,
   recordStartedWork,
   type NativeStartId,
   type NativeStartRequest,
   type StartedWork,
 } from './native-start';
-import type { OperationsDeps } from './operations';
 import { parseResult, validateParams } from './params';
 import type { SessionScope } from './session-scope';
-import type { OperationCaller, SessionCaller } from './session-tokens';
-import type { OperationWork, WorkAdmission } from './work';
+import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
+import type { UserAdmission } from './work';
 
 type Operation = { id: OperationId; params: Json };
 
-export type RunContext = {
-  caller: OperationCaller;
-  admission: WorkAdmission;
-  call?: SessionOperationCall;
+// The App's procedure has parsed the params, and parses the result itself.
+export type AppRun<Id extends OperationId> = AppCaller & {
+  id: Id;
+  params: OperationParams<Id>;
 };
+
+export type UserRun = UserCaller & Operation & { admission: UserAdmission };
+
+export type SessionRun = SessionCaller &
+  Operation & {
+    call: SessionOperationCall;
+  };
 
 type SessionContext = { caller: SessionCaller; call: SessionOperationCall };
 
-type RunnerPorts = {
-  deps: OperationsDeps;
-  work: OperationWork;
-  scope: SessionScope;
-};
+type RunnerPorts = { scope: SessionScope; directory: SessionDirectory };
 
-// Every caller runs an Operation here: validate, a Session caller's scope, invoke, then parse the result.
+// Every caller runs an Operation here; its kind picks its steps before the implementation runs and its result is parsed.
 export class OperationRunner {
   private readonly plain: PlainImplementations;
   private readonly native: NativeStartImplementations;
-  private readonly app: AppImplementations;
+  private readonly app: CallerImplementations;
   public constructor(
     implementations: OperationImplementations,
     private readonly ports: RunnerPorts,
   ) {
     this.plain = implementations;
     this.native = implementations;
-    this.app = appImplementations(implementations);
+    this.app = {
+      ...implementations,
+      ...eachNativeStart((id, params) =>
+        acceptedResult(this.native[id](params, userOrigin)),
+      ),
+    };
   }
-  // The App's procedure already parsed params and parses the result; the App records and waits for nothing.
-  public runApp<Id extends OperationId>(
-    id: Id,
-    params: OperationParams<Id>,
-  ): Promise<OperationResult<Id>> {
-    return this.app[id](params);
-  }
-  // The user token has no scope step; a Session token's scope may ask the user first.
-  public run(
-    { caller, admission, call }: RunContext,
-    operation: Operation,
-  ): Promise<OperationRunResult> {
-    if (caller.kind === 'user') return this.runUser(admission, operation);
+  // The App has no step: no recording, no wait, no scope; a native start answers once admitted, as the user.
+  public run<Id extends OperationId>(
+    run: AppRun<Id>,
+  ): Promise<OperationResult<Id>>;
+  // The user's token parses the params; a Session token's scope parses them and may ask the user first.
+  public run(run: UserRun | SessionRun): Promise<OperationRunResult>;
+  public run<Id extends OperationId>(
+    run: AppRun<Id> | UserRun | SessionRun,
+  ): Promise<OperationResult<Id> | OperationRunResult> {
+    if (run.kind === 'app') return this.app[run.id](run.params);
 
-    return this.runSession(
-      { caller, call: requireOperationCall(call) },
-      operation,
+    return run.kind === 'user' ? this.runUser(run) : this.runSession(run);
+  }
+  private async runUser({
+    id,
+    params,
+    admission,
+  }: UserRun): Promise<OperationRunResult> {
+    if (!isNativeStartOperation(id))
+      return answer(await this.invoke(id, params));
+
+    return admission.admit((signal) =>
+      this.begin(id, params, { ...userOrigin, signal }),
     );
   }
-  private runUser(
-    admission: WorkAdmission,
-    { id, params }: Operation,
-  ): Promise<OperationRunResult> {
-    if (!isNativeStartOperation(id)) return this.invoke(id, params);
+  private async runSession({
+    call,
+    id,
+    params,
+    ...caller
+  }: SessionRun): Promise<OperationRunResult> {
+    const context = { caller, call };
 
-    return this.ports.work.admitUser(
-      (signal) => this.begin(id, params, { ...userOrigin, signal }),
-      admission,
-    );
-  }
-  private runSession(
-    context: SessionContext,
-    operation: Operation,
-  ): Promise<OperationResult> {
-    return this.ports.scope.run(
+    const result = await this.ports.scope.run(
       { ...context, invoke: this.invokeSession(context) },
-      operation,
+      { id, params },
     );
+
+    return answer(result);
   }
   // The scope parsed the params once; the result is parsed once here.
   private invokeSession(context: SessionContext): SessionInvoke {
-    const implementations = this.sessionImplementations(context);
+    const implementations: CallerImplementations<[NewSessionId]> = {
+      ...this.plain,
+      ...eachNativeStart((id, params, start: NewSessionId) =>
+        this.startFromSession(context, { id, params }, start),
+      ),
+    };
 
     return async ({ id, params }, start = {}) =>
       parseResult(id, await implementations[id](params, start));
-  }
-  private sessionImplementations(
-    context: SessionContext,
-  ): SessionImplementations {
-    return {
-      ...this.plain,
-      'session.new': (params, start) =>
-        this.startFromSession(context, { id: 'session.new', params }, start),
-      'session.prompt': (params, start) =>
-        this.startFromSession(context, { id: 'session.prompt', params }, start),
-    };
   }
   // A Session caller's native start comes from that Session, and its Tool call follows the work.
   private async startFromSession<Id extends NativeStartId>(
@@ -125,7 +128,11 @@ export class OperationRunner {
     { id, params }: { id: Id; params: OperationParams<Id> },
     start: NewSessionId,
   ): Promise<OperationResult<Id>> {
-    const origin = sessionOrigin(this.ports.deps.readSession, caller.sessionId);
+    const origin = sessionOrigin(
+      caller.sessionId,
+      this.ports.directory.session(caller.sessionId),
+    );
+
     const started = await this.native[id](params, { ...origin, ...start });
 
     return recordStartedWork(call, started);

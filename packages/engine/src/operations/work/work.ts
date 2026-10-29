@@ -1,18 +1,17 @@
 import type { OperationExecution } from '@repo/contracts/operations';
 import type { SessionWorkSource } from '../../sessions';
-import { requireOperationCall, type StartedOperation } from '../call-recording';
+import type { RecordedOperation } from '../call-recording';
 import type { OperationRunResult } from '../implementations';
-import type { OperationCaller } from '../session-tokens';
-import { admitUserWork, type BeginWork } from './admission';
+import type { SessionCaller, TokenCaller } from '../session-tokens';
+import { userAdmission, type UserAdmission } from './admission';
 import { operationWaitClock, type OperationWaitClock } from './clock';
 import { WaitIds } from './ids';
-import { answered, observed, unadmitted, userAdmission } from './outcome';
+import { admittedStart, answered, observed } from './outcome';
 import { WorkReading } from './reading';
 import {
   operationResponse,
   recordedCaller,
-  type RunObservation,
-  type StartOperation,
+  type SessionObservation,
 } from './response';
 import { observationSignal, stoppingSignal } from './signals';
 import { waitForWork } from './wait';
@@ -27,7 +26,14 @@ export type WorkDeps = {
   stopping?: AbortSignal;
 };
 
-type Following = { caller: () => OperationCaller; signal?: AbortSignal };
+// A user's run: its token, whether it waits, and its connection.
+export type UserObservation = {
+  token?: string;
+  wait: boolean;
+  signal?: AbortSignal;
+};
+
+type Following = { caller: () => TokenCaller; signal?: AbortSignal };
 
 // Runs an Operation for one call and waits up to ninety seconds for the work it started; leaving never cancels that work.
 export class OperationWork {
@@ -36,58 +42,41 @@ export class OperationWork {
   private readonly clock: OperationWaitClock;
   public constructor(
     private readonly deps: WorkDeps,
-    private readonly caller: (token: string | undefined) => OperationCaller,
+    private readonly caller: (token: string | undefined) => TokenCaller,
   ) {
     this.ids = new WaitIds(deps.controlToken);
     this.reading = new WorkReading(deps.source, this.ids);
     this.clock = deps.clock ?? operationWaitClock;
   }
-  public run(
-    input: RunObservation,
-    start: StartOperation,
+  // A user's Operation runs under the deadline, which also admits any native start it makes.
+  public async runUser(
+    input: UserObservation,
+    start: (admission: UserAdmission) => Promise<OperationRunResult>,
   ): Promise<OperationRunResult> {
-    return input.caller.kind === 'user'
-      ? this.runUser(input, start)
-      : this.runRecorded(input, start(unadmitted));
-  }
-  // A user's native start, admitted under its run's deadline.
-  public admitUser<Result>(
-    begin: BeginWork<Result>,
-    admission: WorkAdmission,
-  ): Promise<Result | OperationExecution> {
-    const context = { source: this.deps.source, ids: this.ids };
-
-    return admitUserWork(context, begin, admission);
-  }
-  public async wait(
-    id: string,
-    token: string | undefined,
-    signal?: AbortSignal,
-  ): Promise<OperationExecution> {
-    const following: Following = { caller: () => this.caller(token), signal };
-
-    return observed(await this.observe(id, following, false)).execution;
-  }
-  private async runUser(
-    input: RunObservation,
-    start: StartOperation,
-  ): Promise<OperationRunResult> {
-    const caller = (): OperationCaller => this.caller(input.token);
-
     const outcome = await this.follow({
-      start: userAdmission(start, input.wait),
-      reader: (id) => this.reading.reader(id, caller),
+      start: admittedStart(
+        (admission) => start(this.admission(admission)),
+        input.wait,
+      ),
+      reader: (id) => this.reading.reader(id, () => this.caller(input.token)),
       stopOnInput: false,
       signal: input.signal,
     });
 
     return answered(outcome);
   }
-  private runRecorded(
-    input: RunObservation,
-    started: StartedOperation<OperationRunResult>,
+  private admission(admission: WorkAdmission): UserAdmission {
+    return userAdmission(
+      { source: this.deps.source, ids: this.ids },
+      admission,
+    );
+  }
+  // A Session caller's Operation answers with its result, or with what its Tool call observed first.
+  public runRecorded(
+    input: SessionObservation,
+    started: RecordedOperation<OperationRunResult>,
   ): Promise<OperationRunResult> {
-    const id = this.callId(input, started);
+    const id = this.callId(input.caller, started);
     const detached = new AbortController();
 
     const following: Following = {
@@ -101,15 +90,19 @@ export class OperationWork {
       detached.abort(),
     );
   }
+  public async wait(
+    id: string,
+    token: string | undefined,
+    signal?: AbortSignal,
+  ): Promise<OperationExecution> {
+    const following: Following = { caller: () => this.caller(token), signal };
+
+    return observed(await this.observe(id, following, false)).execution;
+  }
   private callId(
-    { caller }: RunObservation,
-    started: StartedOperation<OperationRunResult>,
+    caller: SessionCaller,
+    { call }: RecordedOperation<OperationRunResult>,
   ): string {
-    const call = requireOperationCall(started.call);
-
-    if (caller.kind !== 'session')
-      throw new Error('An Operation Tool call needs a Session caller');
-
     return this.ids.issue(caller, {
       kind: 'call',
       sessionId: caller.sessionId,
@@ -133,7 +126,7 @@ export class OperationWork {
 
     return waitForWork({ ...input, signal }, this.clock);
   }
-  private recordedCaller(input: RunObservation, id: string): OperationCaller {
+  private recordedCaller(input: SessionObservation, id: string): TokenCaller {
     return recordedCaller(
       input.caller,
       () => this.caller(input.token),

@@ -1,7 +1,5 @@
-import { OperationExecution } from '@repo/contracts/operations';
 import type { OperationRunResult } from '../implementations';
 import type { WorkObservation } from './observation';
-import type { StartOperation } from './response';
 import type {
   Admitted,
   WaitOutcome,
@@ -9,36 +7,21 @@ import type {
   WorkAdmission,
 } from './wait.machine';
 
-// A Session caller's Operation is observed through its Tool call, so no deadline admits its start.
-export const unadmitted: WorkAdmission = {
-  signal: new AbortController().signal,
-  started: () => {},
-};
-
-// A user who waits follows the wait id its admission returned; any other result answers at once.
-export function userAdmission(start: StartOperation, wait: boolean): WaitStart {
+// A user who waits follows the wait id its admission returned; any other answer returns at once.
+export function admittedStart(
+  start: (admission: WorkAdmission) => Promise<OperationRunResult>,
+  wait: boolean,
+): WaitStart {
   return {
     kind: 'admit',
-    admit: async (admission) =>
-      admittedResult(await start(admission).result, wait),
+    admit: async (admission) => admittedAnswer(await start(admission), wait),
   };
 }
 
-function admittedResult(result: OperationRunResult, wait: boolean): Admitted {
-  const execution = executionOf(result);
-
-  return wait && execution
-    ? { kind: 'observe', id: execution.id }
+function admittedAnswer(result: OperationRunResult, wait: boolean): Admitted {
+  return wait && result.kind === 'operation_execution'
+    ? { kind: 'observe', id: result.id }
     : { kind: 'answer', answer: result };
-}
-
-// Native work answers with its execution; every other answer is the Operation's own result.
-export function executionOf(
-  result: OperationRunResult,
-): OperationExecution | undefined {
-  const execution = OperationExecution.safeParse(result);
-
-  return execution.success ? execution.data : undefined;
 }
 
 export function answered(outcome: WaitOutcome): OperationRunResult {
@@ -49,12 +32,10 @@ export function answered(outcome: WaitOutcome): OperationRunResult {
 
 // Observing work that already has a wait id admits nothing, so its outcome is an observation or a failure.
 export function observed(outcome: WaitOutcome): WorkObservation {
-  switch (outcome.kind) {
-    case 'observation':
-      return outcome.observation;
-    case 'failure':
-      throw outcome.failure;
-    case 'answer':
-      throw new Error('An Operation wait answered without observing its work');
-  }
+  if (outcome.kind === 'observation') return outcome.observation;
+
+  throw outcome.kind === 'failure' ? outcome.failure : unobserved();
 }
+
+const unobserved = (): Error =>
+  new Error('An Operation wait answered without observing its work');

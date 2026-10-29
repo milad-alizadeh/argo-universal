@@ -1,5 +1,4 @@
 import type { NonUserPromptSender, PromptSender } from '@repo/contracts';
-import type { SessionRouterDeps } from './router-deps';
 
 // Who starts native work: the Session that started a new Session, and who sent its Prompt.
 export type SessionOrigin = {
@@ -16,14 +15,10 @@ export type NativeStart<Accepted> = {
 
 // The authenticated caller chooses the identity; Hooks and prompt JSON never do.
 function sessionPromptSender(
-  readSession: SessionRouterDeps['readSession'],
   sessionId: string,
+  { title }: { title: string },
 ): NonUserPromptSender {
-  return {
-    type: 'session',
-    sessionId,
-    title: readSession(sessionId).title.trim() || 'Session',
-  };
+  return { type: 'session', sessionId, title: title.trim() || 'Session' };
 }
 
 // The user starts work with no calling Session.
@@ -34,11 +29,11 @@ export const userOrigin: SessionOrigin = {
 
 // A calling Session is the new Session's started-by Session and its Prompts' sender.
 export function sessionOrigin(
-  readSession: SessionRouterDeps['readSession'],
   callerSessionId: string,
+  caller: { title: string },
 ): SessionOrigin {
   return {
     startedBySessionId: callerSessionId,
-    sender: sessionPromptSender(readSession, callerSessionId),
+    sender: sessionPromptSender(callerSessionId, caller),
   };
 }

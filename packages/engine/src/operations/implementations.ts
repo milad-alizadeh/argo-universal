@@ -4,13 +4,12 @@ import type {
   OperationExecution,
 } from '@repo/contracts/operations';
 import type { z } from 'zod';
-import { userOrigin, type SessionList } from '../sessions';
+import type { SessionList } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
-import {
-  acceptedResult,
-  type NativeStartId,
-  type NativeStartRequest,
-  type StartedWork,
+import type {
+  NativeStartId,
+  NativeStartRequest,
+  StartedWork,
 } from './native-start';
 import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
@@ -33,7 +32,17 @@ export type OperationParams<Id extends OperationId = OperationId> =
 export type OperationResult<Id extends OperationId = OperationId> =
   ResultsById[Id];
 
-export type OperationRunResult = OperationResult | OperationExecution;
+// What a token caller is answered: the Operation's own result, or the native work it started.
+export type RunAnswer<Result> =
+  | { kind: 'result'; result: Result }
+  | OperationExecution;
+
+export type OperationRunResult = RunAnswer<OperationResult>;
+
+export const answer = <Result>(result: Result): RunAnswer<Result> => ({
+  kind: 'result',
+  result,
+});
 
 export type PlainOperationId = Exclude<OperationId, NativeStartId>;
 
@@ -53,8 +62,12 @@ export type NativeStartImplementations = {
 export type OperationImplementations = PlainImplementations &
   NativeStartImplementations;
 
-export type AppImplementations = {
-  [Id in OperationId]: (params: ParamsById[Id]) => Promise<ResultsById[Id]>;
+// Every Operation as one caller kind runs it, with its params parsed.
+export type CallerImplementations<Args extends unknown[] = []> = {
+  [Id in OperationId]: (
+    params: ParamsById[Id],
+    ...args: Args
+  ) => Promise<ResultsById[Id]>;
 };
 
 export function createImplementations(
@@ -79,24 +92,3 @@ export type SessionInvoke = <Id extends OperationId>(
   operation: { id: Id; params: ParamsById[Id] },
   start?: NewSessionId,
 ) => Promise<OperationResult<Id>>;
-
-// Every Operation as a Session caller runs it: native starts follow the caller's Tool call.
-export type SessionImplementations = {
-  [Id in OperationId]: (
-    params: ParamsById[Id],
-    start: NewSessionId,
-  ) => Promise<ResultsById[Id]>;
-};
-
-// The App's own Session starts answer once admitted, as the user, with neither a wait id nor a Tool call.
-export function appImplementations(
-  implementations: OperationImplementations,
-): AppImplementations {
-  return {
-    ...implementations,
-    'session.new': (params) =>
-      acceptedResult(implementations['session.new'](params, userOrigin)),
-    'session.prompt': (params) =>
-      acceptedResult(implementations['session.prompt'](params, userOrigin)),
-  };
-}

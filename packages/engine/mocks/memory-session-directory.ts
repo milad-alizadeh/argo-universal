@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type { DirectorySession, SessionDirectory } from '../src/sessions';
 
-// A Session the test names: still opening has no row yet, and running has a running Turn.
+// A Session the test names, which is also its title: still opening has no row yet, and running has a running Turn.
 export type MemorySession = DirectorySession & {
   opening?: true;
   running?: true;
@@ -33,7 +33,7 @@ export function memorySessionDirectory(
 
       if (found.opening) throw missing(sessionId);
 
-      return fields(found);
+      return { ...fields(found), title: sessionId };
     },
     opening: (sessionId) => fields(find(sessionId)),
     running: (callerId) =>

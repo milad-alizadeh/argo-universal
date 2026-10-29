@@ -21,7 +21,9 @@ const noBlobs: OutputBlobs = () => Promise.reject(new Error('No Blob to read'));
 it('tags an Operation result as one', async () => {
   const responses = new OperationResponses(noBlobs);
 
-  expect(await responses.run({ enabled: true })).toEqual({
+  expect(
+    await responses.run({ kind: 'result', result: { enabled: true } }),
+  ).toEqual({
     kind: 'result',
     result: { enabled: true },
   });

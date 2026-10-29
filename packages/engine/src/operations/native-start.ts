@@ -7,6 +7,7 @@ import type {
   SessionOperationCall,
   SessionOrigin,
 } from '../sessions';
+import type { OperationParams, OperationResult } from './implementations';
 
 // The one list of Operations that start native work: a Session, or a Turn.
 const nativeStartIds = [
@@ -18,6 +19,28 @@ export type NativeStartId = (typeof nativeStartIds)[number];
 
 export function isNativeStartOperation(id: OperationId): id is NativeStartId {
   return nativeStartIds.some((nativeId) => nativeId === id);
+}
+
+type NativeStarts<Args extends unknown[]> = {
+  [Id in NativeStartId]: (
+    params: OperationParams<Id>,
+    ...args: Args
+  ) => Promise<OperationResult<Id>>;
+};
+
+// Each native start, answered the one way a caller kind answers it; only this list names them.
+export function eachNativeStart<Args extends unknown[]>(
+  start: <Id extends NativeStartId>(
+    id: Id,
+    params: OperationParams<Id>,
+    ...args: Args
+  ) => Promise<OperationResult<Id>>,
+): NativeStarts<Args> {
+  return {
+    'session.new': (params, ...args) => start('session.new', params, ...args),
+    'session.prompt': (params, ...args) =>
+      start('session.prompt', params, ...args),
+  };
 }
 
 // A caller's origin, with a new Session's pre-allocated id and the signal that stops its admission.

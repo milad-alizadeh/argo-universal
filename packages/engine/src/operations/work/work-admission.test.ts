@@ -1,6 +1,6 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
-import type { OperationRunResult } from '../implementations';
+import { answer, type OperationResult } from '../implementations';
 import type { StartedWork } from '../native-start';
 import {
   never,
@@ -16,19 +16,17 @@ type Begun = { signal?: AbortSignal };
 // A user's native start that begins as `started` and is never accepted.
 function startUnaccepted(
   host: WorkHost,
-  started: Promise<StartedWork<OperationRunResult>>,
+  started: Promise<StartedWork<OperationResult>>,
   begun: Begun,
 ): ReturnType<typeof runAsUser> {
   return runAsUser(host, {
-    id: 'session.prompt',
     wait: true,
-    start: (admission) => ({
-      result: host.work.admitUser(async (signal) => {
+    start: (admission) =>
+      admission.admit(async (signal) => {
         begun.signal = signal;
 
         return started;
-      }, admission),
-    }),
+      }),
   });
 }
 
@@ -38,7 +36,7 @@ const newSession = {
   turnId: 'first',
 } as const;
 
-const turn = (turnId: string): StartedWork<OperationRunResult> => ({
+const turn = (turnId: string): StartedWork<OperationResult> => ({
   kind: 'turn',
   sessionId: 'session-1',
   turnId,
@@ -49,12 +47,8 @@ it('answers a user Operation with its result within the deadline', async () => {
   const host = workHost();
 
   expect(
-    await runAsUser(host, {
-      id: 'project.list',
-      wait: true,
-      start: () => ({ result: Promise.resolve([]) }),
-    }),
-  ).toEqual([]);
+    await runAsUser(host, { wait: true, start: async () => answer([]) }),
+  ).toEqual({ kind: 'result', result: [] });
   expect(host.clock.activeDeadlines()).toBe(0);
 });
 
@@ -105,7 +99,7 @@ it('shares one deadline across admission and the wait that follows it', async ()
     kind: 'creation',
     creation: { status: 'opening' },
   });
-  const begun = Promise.withResolvers<StartedWork<OperationRunResult>>();
+  const begun = Promise.withResolvers<StartedWork<OperationResult>>();
   let answered = false;
 
   const running = startUnaccepted(host, begun.promise, {}).then((value) => {

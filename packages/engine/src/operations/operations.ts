@@ -1,9 +1,8 @@
-import {
-  operations,
-  type OperationId,
-  type OperationRow,
-  type OperationExecution,
-  type OperationRunResponse,
+import type {
+  OperationId,
+  OperationRow,
+  OperationExecution,
+  OperationRunResponse,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
@@ -16,22 +15,26 @@ import {
   type SessionRouterDeps,
 } from '../sessions';
 import {
+  discoveryCall,
+  listedOutput,
+  operationCall,
+  recordedOutput,
   recordOperation,
-  startRecordedOperation,
-  type StartedOperation,
 } from './call-recording';
 import {
   createImplementations,
-  type OperationParams,
-  type OperationResult,
   type OperationRunResult,
 } from './implementations';
 import { requireOperationId } from './params';
 import { OperationResponses, storedOutputBlobs } from './responses';
-import { OperationRunner, type RunContext } from './runner';
+import { OperationRunner } from './runner';
 import { listOperations } from './search';
 import { scopedOperations, SessionScope } from './session-scope';
-import { type OperationCaller, type SessionTokens } from './session-tokens';
+import type {
+  SessionCaller,
+  SessionTokens,
+  TokenCaller,
+} from './session-tokens';
 import { tokensMatch } from './tokens';
 import { liveWorkDeps, OperationWork, type OperationWaitClock } from './work';
 
@@ -51,65 +54,52 @@ export type OperationsDeps = SessionRouterDeps &
     operationWaitClock?: OperationWaitClock;
   };
 
-type RunInput = { id: OperationId; params: Json; wait: boolean };
+type Operation = { id: OperationId; params: Json };
 
-type RunRequest = Omit<RunInput, 'id'> & { id: string };
+type RunRequest = { id: string; params: Json; wait: boolean };
 
-type OperationCallInput = { name: OperationId; label: string; input: Json };
+type Connection = { token?: string; wait: boolean; signal?: AbortSignal };
 
+// A token caller's Operations: the user's run and admit under the deadline; a Session's are recorded as its Tool calls.
 export class Operations {
-  private readonly runner: OperationRunner;
   private readonly work: OperationWork;
   private readonly calls: OperationCalls;
   private readonly responses: OperationResponses;
   public constructor(
     private readonly deps: OperationsDeps,
-    sessionList: SessionList,
+    private readonly runner: OperationRunner,
   ) {
     this.calls = createOperationCalls(deps);
     this.work = new OperationWork(liveWorkDeps(deps), (token) =>
       this.caller(token),
     );
-    this.runner = createRunner(deps, { sessionList, work: this.work });
     this.responses = new OperationResponses(storedOutputBlobs(deps));
   }
-  public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
+  public async list(
+    token: string | undefined,
+    filter = '',
+  ): Promise<OperationRow[]> {
     const caller = this.caller(token);
 
-    return recordOperation(
-      { calls: this.calls, caller },
-      {
-        name: 'operations.list',
-        label: 'Discover Operations',
-        input: { filter },
-      },
-      async (call) => scopedOperations(listOperations(filter), call),
-    );
+    if (caller.kind === 'user') return listOperations(filter);
+    const call = this.calls.begin(caller.sessionId, discoveryCall(filter));
+
+    const listed = async (): Promise<OperationRow[]> =>
+      scopedOperations(listOperations(filter), call);
+
+    return recordOperation(call, listed, listedOutput).result;
   }
   public async run(
     token: string | undefined,
     request: RunRequest,
     signal?: AbortSignal,
   ): Promise<OperationRunResponse> {
-    const input = { ...request, id: requireOperationId(request.id) };
-    const caller = this.caller(token);
-
-    const value = await this.work.run(
-      { caller, token, wait: input.wait, signal, id: input.id },
-      (admission) => this.start({ caller, admission }, input),
-    );
+    const id = requireOperationId(request.id);
+    const operation = { id, params: request.params };
+    const connection = { token, wait: request.wait, signal };
+    const value = await this.answer(this.caller(token), connection, operation);
 
     return this.responses.run(value, signal);
-  }
-  private start(
-    context: RunContext,
-    input: RunInput,
-  ): StartedOperation<OperationRunResult> {
-    return startRecordedOperation(
-      { calls: this.calls, caller: context.caller },
-      operationCall(input),
-      (call) => this.runner.run({ ...context, call }, input),
-    );
   }
   public async wait(
     id: string,
@@ -120,33 +110,52 @@ export class Operations {
 
     return this.responses.execution(execution, signal);
   }
-  private caller(token: string | undefined): OperationCaller {
+  private answer(
+    caller: TokenCaller,
+    connection: Connection,
+    operation: Operation,
+  ): Promise<OperationRunResult> {
+    if (caller.kind === 'session')
+      return this.runRecorded(caller, connection, operation);
+
+    return this.work.runUser(connection, (admission) =>
+      this.runner.run({ ...caller, ...operation, admission }),
+    );
+  }
+  private runRecorded(
+    caller: SessionCaller,
+    connection: Connection,
+    operation: Operation,
+  ): Promise<OperationRunResult> {
+    const call = this.calls.begin(caller.sessionId, operationCall(operation));
+
+    const run = (): Promise<OperationRunResult> =>
+      this.runner.run({ ...caller, ...operation, call });
+
+    const started = recordOperation(call, run, recordedOutput);
+
+    return this.work.runRecorded(
+      { ...connection, caller, id: operation.id },
+      started,
+    );
+  }
+  private caller(token: string | undefined): TokenCaller {
     if (token && tokensMatch(this.deps.controlToken, token))
       return { kind: 'user' };
 
     return this.deps.sessionTokens.require(token);
   }
-  public runApp<Id extends OperationId>(
-    id: Id,
-    params: OperationParams<Id>,
-  ): Promise<OperationResult<Id>> {
-    return this.runner.runApp(id, params);
-  }
 }
 
-function createRunner(
+// Every caller's one runner, reading Sessions through the Session directory.
+export function createRunner(
   deps: OperationsDeps,
-  { sessionList, work }: { sessionList: SessionList; work: OperationWork },
+  sessionList: SessionList,
 ): OperationRunner {
   const directory = createSessionDirectory(deps);
 
   return new OperationRunner(createImplementations(deps, sessionList), {
-    deps,
-    work,
+    directory,
     scope: new SessionScope({ directory, createId: deps.createId }),
   });
-}
-
-function operationCall({ id, params }: RunInput): OperationCallInput {
-  return { name: id, label: operations[id].label, input: params };
 }

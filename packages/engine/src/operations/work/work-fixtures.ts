@@ -11,8 +11,8 @@ import {
   type SessionWorkRead,
 } from '../../sessions';
 import type { OperationRunResult } from '../implementations';
-import type { OperationCaller, SessionCaller } from '../session-tokens';
-import type { StartOperation } from './response';
+import type { TokenCaller, SessionCaller } from '../session-tokens';
+import type { UserAdmission } from './admission';
 import { OperationWork } from './work';
 
 const sessionCaller: SessionCaller = {
@@ -21,7 +21,7 @@ const sessionCaller: SessionCaller = {
   projectId: 'p1',
 };
 
-const userCaller: OperationCaller = { kind: 'user' };
+const userCaller: TokenCaller = { kind: 'user' };
 
 export const callerToken = 'caller-token';
 
@@ -41,7 +41,7 @@ export function workHost(): WorkHost {
   const clock = new TestOperationWaitClock();
   let revoked = false;
 
-  const caller = (token: string | undefined): OperationCaller => {
+  const caller = (token: string | undefined): TokenCaller => {
     if (token === userToken) return userCaller;
 
     if (revoked) throw new TRPCError({ code: 'UNAUTHORIZED' });
@@ -80,16 +80,11 @@ export function turnRead(
   work: SessionWork,
   status: Turn['status'],
 ): SessionWorkRead {
-  const { sessionId } = work;
+  const turn = { id: sessionWorkItem(work), sessionId: work.sessionId, status };
 
   return {
     kind: 'turn',
-    turn: {
-      id: sessionWorkItem(work),
-      sessionId,
-      status,
-      ...turnEnding(status),
-    },
+    turn: { ...turn, ...turnEnding(status) },
     requiresInput: false,
   };
 }
@@ -123,19 +118,20 @@ export function runFromSession(
 ): Promise<OperationRunResult> {
   const input = { caller: sessionCaller, token: callerToken, wait, signal, id };
 
-  return work.run(input, () => ({ call: recordedCall, result }));
+  return work.runRecorded(input, { call: recordedCall, result });
 }
+
+type UserRun = {
+  wait: boolean;
+  start: (admission: UserAdmission) => Promise<OperationRunResult>;
+};
 
 // A user's Operation, whose start sees the admission it runs under.
 export function runAsUser(
   { work }: WorkHost,
-  {
-    id,
-    wait,
-    start,
-  }: { id: OperationId; wait: boolean; start: StartOperation },
+  { wait, start }: UserRun,
 ): Promise<OperationRunResult> {
-  return work.run({ caller: userCaller, token: userToken, wait, id }, start);
+  return work.runUser({ token: userToken, wait }, start);
 }
 
 export const never = new Promise<never>(() => {});

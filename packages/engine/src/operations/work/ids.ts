@@ -3,7 +3,7 @@ import { OperationWaitId } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { sessionWorkItem, type SessionWork } from '../../sessions';
-import type { OperationCaller } from '../session-tokens';
+import type { TokenCaller } from '../session-tokens';
 import { tokensMatch } from '../tokens';
 
 const Identity = z.tuple([
@@ -25,7 +25,7 @@ type WaitParts = z.infer<typeof Parts>;
 export class WaitIds {
   private readonly epoch = randomUUID();
   public constructor(private readonly secret: string) {}
-  public issue(caller: OperationCaller, work: SessionWork): string {
+  public issue(caller: TokenCaller, work: SessionWork): string {
     const owner = caller.kind === 'user' ? 'user' : caller.sessionId;
 
     const identity = [owner, work.sessionId, sessionWorkItem(work)];
@@ -37,7 +37,7 @@ export class WaitIds {
 
     return `${payload}:${this.signature(payload)}`;
   }
-  public require(caller: OperationCaller, value: string): SessionWork {
+  public require(caller: TokenCaller, value: string): SessionWork {
     const parts = Parts.parse(OperationWaitId.parse(value).split(':'));
     this.requireSignature(parts);
     const [owner, sessionId, item, epoch] = decodeIdentity(parts[1]);
@@ -94,7 +94,7 @@ function invalidWaitId(): never {
   });
 }
 
-function requireOwner(caller: OperationCaller, owner: string): void {
+function requireOwner(caller: TokenCaller, owner: string): void {
   if (caller.kind === 'user') return;
 
   if (owner !== caller.sessionId)

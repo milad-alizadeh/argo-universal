@@ -7,7 +7,15 @@ export type SessionCaller = {
   projectId: string;
 };
 
-export type OperationCaller = { kind: 'user' } | SessionCaller;
+export type UserCaller = { kind: 'user' };
+
+// The App calls Operations from its own procedures, with neither a token nor a Tool call.
+export type AppCaller = { kind: 'app' };
+
+// A caller that presents a token: the user's, or a Session's.
+export type TokenCaller = UserCaller | SessionCaller;
+
+export type OperationCaller = AppCaller | TokenCaller;
 
 const tokenBytes = 32;
 

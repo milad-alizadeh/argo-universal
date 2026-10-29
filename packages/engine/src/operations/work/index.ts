@@ -4,9 +4,7 @@ import type { WorkDeps } from './work';
 
 export { OperationWork, type WorkDeps } from './work';
 
-export type { WorkAdmission } from './wait.machine';
-
-export { executionOf } from './outcome';
+export type { UserAdmission } from './admission';
 
 export type { OperationWaitClock } from './clock';
 

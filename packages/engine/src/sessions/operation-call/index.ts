@@ -16,6 +16,8 @@ export type { OperationCard } from './permission';
 
 export type { OperationCallRead } from './read';
 
+export type { CalledOperation } from './rows';
+
 // The Tool calls of Operations that Sessions call: begin one in the calling Session, or read one back.
 export type OperationCalls = {
   begin: (
