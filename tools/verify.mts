@@ -48,6 +48,12 @@ function staticChecks(changed: string[]): Result[] {
       'tools/generate-operations.mts',
       '--check',
     ]),
+    run(process.execPath, [
+      '--import',
+      'tsx',
+      'packages/contracts/tools/registry/generate-validators.mts',
+      '--check',
+    ]),
   ];
 }
 

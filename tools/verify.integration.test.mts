@@ -30,6 +30,7 @@ const verifyScripts = [
 
 const generatedProcedureFile = 'packages/engine/src/operations/router.gen.ts';
 
+// verify runs the Registry validators' own --check beside the Operation procedures'.
 const registryValidatorGenerator =
   'packages/contracts/tools/registry/generate-validators.mts';
 
@@ -167,6 +168,22 @@ describe('pnpm verify', (): void => {
     expect(result.status).toBe(1);
     expect(result.output).toContain('Operation procedures are stale.');
     expect(result.output).not.toContain('Add an Operation instead');
+    expect(result.output).toContain('1 passed');
+  });
+
+  it('fails when the Registry validators are stale', (): void => {
+    rmSync(path.join(root, registryValidatorGenerator));
+    write(
+      registryValidatorGenerator,
+      "if (process.argv.includes('--check')) throw new Error('Registry validators are stale.');\n",
+    );
+    write('sum.mjs', reorderedSum);
+
+    const result = runVerify();
+
+    expect(result.status).toBe(1);
+    expect(result.output).toContain('Registry validators are stale.');
+    expect(result.output).not.toContain('Operation procedures are stale.');
     expect(result.output).toContain('1 passed');
   });
 });
