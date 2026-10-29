@@ -70,7 +70,9 @@ export function ScreenFooter(props: FieldPickerScreenProps): ReactNode {
 
   return (
     <Button
-      variant="text"
+      variant="secondary"
+      fullWidth
+      icon={action.icon}
       label={action.label}
       onPress={() => {
         props.onClose?.();
