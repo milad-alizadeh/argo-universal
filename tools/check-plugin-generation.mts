@@ -112,7 +112,7 @@ try {
   expectStale();
   assert.match(
     run(['--filter', '@argo/issue-tracker', checkTypes]),
-    /@repo\/contracts:generate:plugin-kit: cache miss/,
+    /(?:@repo\/contracts:generate:plugin-kit: |::group::@repo\/contracts:generate:plugin-kit\r?\n)cache miss, executing /,
     'A direct consumer must invalidate the declaration cache after a schema change',
   );
   assert.ok((await readFile(output, 'utf8')).includes(marker));
