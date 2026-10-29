@@ -53,17 +53,33 @@ it('answers a running Tool call with its wait id at ninety seconds', async () =>
   expect(host.source.watching('caller')).toBe(0);
 });
 
-it('rejects a disconnected wait and keeps no deadline or watch', async () => {
-  const host = workHost();
+// A resumed wait the test disconnects once it watches its Tool call.
+async function disconnectedWait(
+  host: WorkHost,
+): Promise<{ waiting: Promise<unknown> }> {
   const id = await waitingCall(host);
   const abort = new AbortController();
   const waiting = host.work.wait(id, callerToken, abort.signal);
 
   await expect.poll(() => host.source.watching('caller')).toBeGreaterThan(0);
   abort.abort();
+
+  return { waiting };
+}
+
+it('rejects a disconnected wait', async () => {
+  const { waiting } = await disconnectedWait(workHost());
+
   await expect(waiting).rejects.toMatchObject({
     code: 'CLIENT_CLOSED_REQUEST',
   });
+});
+
+it('keeps no deadline or watch once a wait disconnects', async () => {
+  const host = workHost();
+  const { waiting } = await disconnectedWait(host);
+  await waiting.catch(() => null);
+
   expect(host.clock.activeDeadlines()).toBe(0);
   expect(host.source.watching('caller')).toBe(0);
 });

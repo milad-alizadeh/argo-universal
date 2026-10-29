@@ -1,5 +1,6 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
+import type { SessionWork } from '../../sessions';
 import { answer, type OperationRunResult } from '../implementations';
 import {
   callRead,
@@ -9,6 +10,7 @@ import {
   turnRead,
   turnWork,
   workHost,
+  type WorkHost,
 } from './work-fixtures';
 
 const listing: OperationRunResult = answer([]);
@@ -92,7 +94,14 @@ it('follows a Tool call to the Turn it started, in the Session that runs it', as
   expect(host.source.watching('child')).toBe(0);
 });
 
-it('returns at the started Turn without wait, and its wait id resumes that Turn', async () => {
+type StartedTurn = {
+  host: WorkHost;
+  turn: SessionWork;
+  pending: OperationExecution;
+};
+
+// A Session caller's Prompt run without wait, whose Tool call has started a running Turn.
+async function startTurnWithoutWait(): Promise<StartedTurn> {
   const host = workHost();
   const turn = turnWork('child', 'turn-1');
   const work = { kind: 'turn', sessionId: 'child', turnId: 'turn-1' } as const;
@@ -107,7 +116,17 @@ it('returns at the started Turn without wait, and its wait id resumes that Turn'
     }),
   );
 
+  return { host, turn, pending };
+}
+
+it('returns at the started Turn without wait', async () => {
+  const { pending } = await startTurnWithoutWait();
+
   expect(pending).toMatchObject({ status: 'still_running' });
+});
+
+it('resumes the started Turn by the wait id it returned', async () => {
+  const { host, turn, pending } = await startTurnWithoutWait();
   const resumed = host.work.wait(pending.id, 'caller-token');
   await expect.poll(() => host.source.watching('child')).toBe(1);
   host.source.set(turn, turnRead(turn, 'ended'));
