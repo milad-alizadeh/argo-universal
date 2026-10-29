@@ -51,13 +51,15 @@ function SectionCard(props: SectionCardProps): ReactElement {
   return (
     <View testID={`workbench-${props.section.key}`}>
       <Card {...cardProps(props)}>
-        <SectionBody {...props.section} />
+        <SectionBody section={props.section} />
       </Card>
     </View>
   );
 }
 
-function SectionBody(section: WorkbenchSection): ReactNode {
+function SectionBody({
+  section,
+}: Pick<SectionCardProps, 'section'>): ReactNode {
   if (!section.onOpen) return section.summary;
 
   return (
