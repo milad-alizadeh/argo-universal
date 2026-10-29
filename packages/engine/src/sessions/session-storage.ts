@@ -1,368 +1,80 @@
-import { SessionRecord, Turn } from '@repo/contracts';
+import type { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { project, session, turn } from '@repo/db/schema';
-import { and, eq, inArray, ne, sql } from 'drizzle-orm';
-import type { SQLiteUpdateSetSource } from 'drizzle-orm/sqlite-core';
 import { projectQueuedFeedSession, queuedFeedSessionId } from '../feed';
 import {
   readQueuedJobs,
-  type StorageTransaction,
   type WriterActorRef,
   type WriterJob,
 } from '../storage';
 import { SessionArchiveJob } from './archive/archive-storage';
 import { SessionSeenJob } from './session-seen';
-import { ShellWriteJob } from './shells/storage';
+import { presentId } from './session-storage-common';
+import { SessionInsertJob } from './session-storage-insert';
 import {
-  decodeStoredTurn,
-  latestTurnOf,
-  readLatestTurnIds,
-  storedTurnColumns,
-} from './turns';
+  projectedLatestTurn,
+  storedLatestTurns,
+} from './session-storage-latest';
+import { SessionDeleteJob, SessionTitleJob } from './session-storage-title';
+import { TurnInsertJob, TurnUpdateJob } from './session-storage-turn';
+import { SessionRowUpdateJob } from './session-storage-update';
+import { ShellWriteJob } from './shells/storage';
 
-type SessionInsert = {
-  session: typeof session.$inferInsert;
-  checkoutChoice?: NonNullable<typeof project.$inferInsert.checkoutChoice>;
-};
+export { SessionInsertJob } from './session-storage-insert';
 
-type SessionRowChange = {
-  id: string;
-  activityAt?: number;
-  set: Partial<
-    Omit<typeof session.$inferInsert, 'id' | 'projectId' | 'createdAt'>
-  >;
-};
+export { SessionDeleteJob, SessionTitleJob } from './session-storage-title';
 
-type TurnChange = {
-  id: string;
-  set: Partial<Omit<typeof turn.$inferInsert, 'id' | 'sessionId'>>;
-};
+export { TurnInsertJob, TurnUpdateJob } from './session-storage-turn';
 
-const sessionDefaults = {
-  title: '',
-  titleSource: 'prompt',
-  archivedAt: null,
-  seenRevision: 0,
-  activityAt: 0,
-  failure: null,
-  vendorSessionId: null,
-  parentSessionId: null,
-  startedBySessionId: null,
-  checkoutBranch: null,
-  vendorRef: null,
-  configValues: [],
-  heldConfig: [],
-  epoch: 0,
-  maxRevision: 0,
-  createdAt: 0,
-  updatedAt: 0,
-};
+export { SessionRowUpdateJob } from './session-storage-update';
 
-const turnDefaults = {
-  startedAt: 0,
-  endedAt: null,
-  error: null,
-  usage: null,
-  stopReason: null,
-  model: null,
-};
+type SessionProjectJob =
+  | SessionInsertJob
+  | SessionRowUpdateJob
+  | SessionTitleJob
+  | SessionDeleteJob
+  | SessionArchiveJob
+  | SessionSeenJob;
 
-const presentId = (id: string | null | undefined): string[] => (id ? [id] : []);
+const isSessionUpdate = (
+  job: WriterJob,
+): job is SessionInsertJob | SessionRowUpdateJob | SessionTitleJob =>
+  job instanceof SessionInsertJob ||
+  job instanceof SessionRowUpdateJob ||
+  job instanceof SessionTitleJob;
 
-function insertParents(row: typeof session.$inferInsert): string[] {
-  return [
-    ...presentId(row.parentSessionId),
-    ...presentId(row.startedBySessionId),
-  ];
-}
+const isSessionRemoval = (
+  job: WriterJob,
+): job is SessionDeleteJob | SessionArchiveJob | SessionSeenJob =>
+  job instanceof SessionDeleteJob ||
+  job instanceof SessionArchiveJob ||
+  job instanceof SessionSeenJob;
 
-// Stores a new Session; borrows its Project's `checkout_choice` so the chosen checkout is remembered in the same commit.
-export class SessionInsertJob implements WriterJob {
-  public constructor(private readonly insert: SessionInsert) {}
+const isSessionProjectJob = (job: WriterJob): job is SessionProjectJob =>
+  isSessionUpdate(job) || isSessionRemoval(job);
 
-  public describe(): string {
-    return `insert Session ${this.insert.session.id} of Project ${this.insert.session.projectId}`;
-  }
+const isTurnJob = (job: WriterJob): job is TurnInsertJob | TurnUpdateJob =>
+  job instanceof TurnInsertJob || job instanceof TurnUpdateJob;
 
-  public stamp(now: number): SessionInsertJob {
-    const stored = this.insert.session;
+const isOtherIndexedJob = (
+  job: WriterJob,
+): job is ShellWriteJob | TurnInsertJob =>
+  job instanceof ShellWriteJob || job instanceof TurnInsertJob;
 
-    return new SessionInsertJob({
-      ...this.insert,
-      session: {
-        ...stored,
-        createdAt: stored.createdAt ?? now,
-        updatedAt: stored.updatedAt ?? now,
-      },
-    });
-  }
-
-  public commit(transaction: StorageTransaction): void {
-    transaction.insert(session).values(this.insert.session).run();
-
-    if (this.insert.checkoutChoice)
-      transaction
-        .update(project)
-        .set({ checkoutChoice: this.insert.checkoutChoice })
-        .where(eq(project.id, this.insert.session.projectId))
-        .run();
-  }
-
-  public project(
-    current: SessionRecord | undefined,
-    sessionId: string,
-  ): SessionRecord | undefined {
-    return this.insert.session.id === sessionId
-      ? SessionRecord.parse({ ...sessionDefaults, ...this.insert.session })
-      : current;
-  }
-
-  public changedSessionIds(): string[] {
-    const stored = this.insert.session;
-
-    return [stored.id, ...insertParents(stored)];
-  }
-
-  // The Session, when it or its parent is in scope; every queued Session without a scope.
-  public sessionIdIn(scope: readonly string[] | undefined): string[] {
-    const stored = this.insert.session;
-
-    const inScope =
-      !scope ||
-      scope.includes(stored.id) ||
-      insertParents(stored).some((id) => scope.includes(id));
-
-    return inScope ? [stored.id] : [];
-  }
-}
-
-export class SessionRowUpdateJob implements WriterJob {
-  public constructor(private readonly change: SessionRowChange) {}
-
-  public describe(): string {
-    return `update Session ${this.change.id}: ${Object.keys(this.change.set).join(', ')}`;
-  }
-
-  public stamp(now: number): SessionRowUpdateJob {
-    return this.change.set.maxRevision === undefined
-      ? this
-      : new SessionRowUpdateJob({
-          ...this.change,
-          activityAt: this.change.activityAt ?? now,
-        });
-  }
-
-  public commit(transaction: StorageTransaction): void {
-    const { id, set, activityAt } = this.change;
-    const values: SQLiteUpdateSetSource<typeof session> = { ...set };
-
-    if (set.maxRevision !== undefined)
-      values.activityAt = sql`case when ${set.maxRevision} > ${session.maxRevision} then ${activityAt ?? Date.now()} else ${session.activityAt} end`;
-    transaction.update(session).set(values).where(eq(session.id, id)).run();
-  }
-
-  public project(
-    current: SessionRecord | undefined,
-    sessionId: string,
-  ): SessionRecord | undefined {
-    if (!current || this.change.id !== sessionId) return current;
-    const { set } = this.change;
-
-    const projected = { ...current, ...set };
-
-    if (set.maxRevision !== undefined)
-      projected.activityAt = this.revisionActivity(current, set.maxRevision);
-
-    return SessionRecord.parse(projected);
-  }
-
-  public changedSessionIds(): string[] {
-    return [this.change.id, ...presentId(this.change.set.parentSessionId)];
-  }
-
-  private revisionActivity(
-    current: SessionRecord,
-    maxRevision: number,
-  ): number {
-    return maxRevision > current.maxRevision
-      ? (this.change.activityAt ?? current.activityAt)
-      : current.activityAt;
-  }
-}
-
-type SessionTitleChange = {
-  id: string;
-  title: string;
-  titleSource: Exclude<SessionRecord['titleSource'], 'prompt'>;
-};
-
-// A user title outranks every later Agent title; the check runs in the commit, so a queued Agent title cannot replace a rename.
-export class SessionTitleJob implements WriterJob {
-  public constructor(private readonly change: SessionTitleChange) {}
-
-  public describe(): string {
-    return `title Session ${this.change.id} from ${this.change.titleSource}`;
-  }
-
-  public commit(transaction: StorageTransaction): void {
-    const { id, title, titleSource } = this.change;
-
-    transaction
-      .update(session)
-      .set({ title, titleSource })
-      .where(
-        titleSource === 'user'
-          ? eq(session.id, id)
-          : and(eq(session.id, id), ne(session.titleSource, 'user')),
-      )
-      .run();
-  }
-
-  public project(
-    current: SessionRecord | undefined,
-    sessionId: string,
-  ): SessionRecord | undefined {
-    if (!current || this.change.id !== sessionId) return current;
-
-    if (this.change.titleSource === 'agent' && current.titleSource === 'user')
-      return current;
-
-    return {
-      ...current,
-      title: this.change.title,
-      titleSource: this.change.titleSource,
-    };
-  }
-
-  public changedSessionIds(): string[] {
-    return [this.change.id];
-  }
-}
-
-// Removes a Session no prompt reached; its Turns, Feed rows and Blobs go with it.
-export class SessionDeleteJob implements WriterJob {
-  public constructor(private readonly sessionId: string) {}
-
-  public describe(): string {
-    return `delete Session ${this.sessionId}`;
-  }
-
-  public commit(transaction: StorageTransaction): void {
-    transaction.run(sql`
-      WITH RECURSIVE discarded(id) AS (
-        SELECT ${session.id} FROM ${session} WHERE ${session.id} = ${this.sessionId}
-        UNION
-        SELECT child.id FROM session AS child
-        JOIN discarded ON child.parent_session_id = discarded.id
-      )
-      DELETE FROM ${session} WHERE ${session.id} IN (SELECT id FROM discarded)
-    `);
-  }
-
-  public project(
-    current: SessionRecord | undefined,
-    sessionId: string,
-  ): SessionRecord | undefined {
-    return this.sessionId === sessionId ? undefined : current;
-  }
-
-  public changedSessionIds(): string[] {
-    return [this.sessionId];
-  }
-}
-
-export class TurnInsertJob implements WriterJob {
-  public constructor(
-    private readonly insert: { turn: typeof turn.$inferInsert },
-  ) {}
-
-  public describe(): string {
-    return `insert Turn ${this.insert.turn.id} of Session ${this.insert.turn.sessionId}`;
-  }
-
-  public stamp(now: number): TurnInsertJob {
-    const { turn: inserted } = this.insert;
-
-    return new TurnInsertJob({
-      turn: { ...inserted, startedAt: inserted.startedAt ?? now },
-    });
-  }
-
-  public commit(transaction: StorageTransaction): void {
-    transaction.insert(turn).values(this.insert.turn).run();
-  }
-
-  public project(turns: Map<string, Turn>): void {
-    turns.set(
-      this.insert.turn.id,
-      Turn.parse({ ...turnDefaults, ...this.insert.turn }),
-    );
-  }
-
-  public changedSessionIds(): string[] {
-    return [this.insert.turn.sessionId];
-  }
-
-  public sessionIdOf(turnId: string): string | undefined {
-    return this.insert.turn.id === turnId
-      ? this.insert.turn.sessionId
-      : undefined;
-  }
-}
-
-export class TurnUpdateJob implements WriterJob {
-  public constructor(private readonly change: TurnChange) {}
-
-  public describe(): string {
-    return `update Turn ${this.change.id}: ${Object.keys(this.change.set).join(', ')}`;
-  }
-
-  public commit(transaction: StorageTransaction): void {
-    transaction
-      .update(turn)
-      .set(this.change.set)
-      .where(eq(turn.id, this.change.id))
-      .run();
-  }
-
-  // An undefined column is left as it is, as the commit leaves it.
-  public project(turns: Map<string, Turn>): void {
-    const row = turns.get(this.change.id);
-
-    const set = Object.entries(this.change.set).filter(
-      ([, value]): boolean => value !== undefined,
-    );
-
-    if (row)
-      turns.set(
-        this.change.id,
-        Turn.parse({ ...row, ...Object.fromEntries(set) }),
-      );
-  }
-
-  public turnId(): string {
-    return this.change.id;
-  }
-}
+const projectFeedJob = (
+  current: SessionRecord | undefined,
+  job: WriterJob,
+  sessionId: string,
+): SessionRecord | undefined =>
+  current?.id === sessionId ? projectQueuedFeedSession(job, current) : current;
 
 const projectSessionJob = (
   current: SessionRecord | undefined,
   job: WriterJob,
   sessionId: string,
 ): SessionRecord | undefined => {
-  if (
-    job instanceof SessionInsertJob ||
-    job instanceof SessionRowUpdateJob ||
-    job instanceof SessionTitleJob ||
-    job instanceof SessionDeleteJob ||
-    job instanceof SessionArchiveJob ||
-    job instanceof SessionSeenJob
-  )
-    return job.project(current, sessionId);
+  if (isSessionProjectJob(job)) return job.project(current, sessionId);
 
-  return current?.id === sessionId
-    ? projectQueuedFeedSession(job, current)
-    : current;
+  return projectFeedJob(current, job, sessionId);
 };
 
 // The Sessions, Turns and their Feed row advances the Writer holds but has not committed.
@@ -392,9 +104,7 @@ class QueuedSessionRows {
   public turns(rows: readonly Turn[]): Turn[] {
     const turns = new Map(rows.map((row): [string, Turn] => [row.id, row]));
 
-    for (const job of this.jobs)
-      if (job instanceof TurnInsertJob || job instanceof TurnUpdateJob)
-        job.project(turns);
+    for (const job of this.jobs) if (isTurnJob(job)) job.project(turns);
 
     return [...turns.values()];
   }
@@ -404,11 +114,12 @@ class QueuedSessionRows {
   }
 
   public turnSessionId(turnId: string): string | undefined {
-    for (const job of this.jobs)
-      if (job instanceof TurnInsertJob && job.sessionIdOf(turnId))
-        return job.sessionIdOf(turnId);
-
-    return undefined;
+    return this.jobs
+      .find(
+        (job): job is TurnInsertJob =>
+          job instanceof TurnInsertJob && Boolean(job.sessionIdOf(turnId)),
+      )
+      ?.sessionIdOf(turnId);
   }
 }
 
@@ -435,46 +146,15 @@ export function readLatestTurns(
   { database, writer }: RowSources,
   sessionIds: string[],
 ): (sessionId: string) => Turn | undefined {
-  const stored = database
-    .select(storedTurnColumns)
-    .from(turn)
-    .where(
-      inArray(
-        turn.id,
-        readLatestTurnIds({
-          database,
-          sessionIds,
-          updates: [],
-          running: false,
-        }),
-      ),
-    )
-    .all();
-
+  const stored = storedLatestTurns(database, sessionIds);
   const queued = readQueuedSessionRows(writer);
 
   return (sessionId): Turn | undefined =>
-    latestTurnOf(
-      queued.turns(
-        stored
-          .filter((row): boolean => row.sessionId === sessionId)
-          .map(decodeStoredTurn),
-      ),
-      sessionId,
-    );
+    projectedLatestTurn(stored, queued, sessionId);
 }
 
 export const changedSessionIds = (job: WriterJob): string[] => {
-  if (
-    job instanceof SessionInsertJob ||
-    job instanceof SessionRowUpdateJob ||
-    job instanceof SessionTitleJob ||
-    job instanceof SessionDeleteJob ||
-    job instanceof SessionArchiveJob ||
-    job instanceof SessionSeenJob ||
-    job instanceof ShellWriteJob ||
-    job instanceof TurnInsertJob
-  )
+  if (isSessionProjectJob(job) || isOtherIndexedJob(job))
     return job.changedSessionIds();
 
   return presentId(queuedFeedSessionId(job));
