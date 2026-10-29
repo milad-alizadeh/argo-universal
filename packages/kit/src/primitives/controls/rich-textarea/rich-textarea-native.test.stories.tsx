@@ -61,6 +61,9 @@ const firstOption = { name: 'first' };
 
 const secondOption = { name: 'second' };
 
+// Moves the caret back over " later".
+const backOverLater = '{ArrowLeft>6/}';
+
 export const SlashShowsTheListAndTypingNarrowsIt: Story = {
   play: async ({ canvas }) => {
     await userEvent.type(
@@ -89,7 +92,7 @@ export const TappingAResultReplacesTheSlashWord: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       'Run /sec later',
     );
-    await userEvent.keyboard('{ArrowLeft>6/}');
+    await userEvent.keyboard(backOverLater);
     await userEvent.click(await canvas.findByRole('button', secondOption));
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('Run /second  later'),
@@ -137,7 +140,7 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
       '/fi later',
     );
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
-    await userEvent.keyboard('{ArrowLeft>6/}');
+    await userEvent.keyboard(backOverLater);
     await canvas.findByRole('button', firstOption);
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() =>
@@ -146,7 +149,18 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
   },
 };
 
-function insertingWord(initial: string, expected: string): Story {
+// Types the initial text, then moves the caret or selection with keystrokes the native selection tracking sees.
+async function typeThenPlace(
+  field: HTMLTextAreaElement,
+  initial: string,
+  place: string,
+): Promise<void> {
+  if (initial) await userEvent.type(field, initial);
+
+  if (place) await userEvent.keyboard(place);
+}
+
+function insertingWord(initial: string, expected: string, place = ''): Story {
   const handle: RefObject<RichTextareaHandle | null> = createRef();
 
   return {
@@ -156,7 +170,8 @@ function insertingWord(initial: string, expected: string): Story {
         name: exampleLabel,
       });
 
-      if (initial) await userEvent.type(field, initial);
+      await typeThenPlace(field, initial, place);
+      await expect(handle.current).not.toBeNull();
       handle.current?.insertWord('/');
       await waitFor(() =>
         expect(args.onChangeText).toHaveBeenLastCalledWith(expected),
@@ -170,3 +185,17 @@ function insertingWord(initial: string, expected: string): Story {
 export const InsertWordOpensTheListInAnEmptyField = insertingWord('', '/');
 
 export const InsertWordSpacesAfterText = insertingWord('Run', 'Run /');
+
+// The caret sits after "Run", so the slash goes there and " later" stays.
+export const InsertWordInsertsAtAMidTextCaret = insertingWord(
+  'Run later',
+  'Run / later',
+  backOverLater,
+);
+
+// A selected " later" is replaced by the slash.
+export const InsertWordReplacesTheSelection = insertingWord(
+  'Run later',
+  'Run /',
+  `{Shift>}${backOverLater}{/Shift}`,
+);
