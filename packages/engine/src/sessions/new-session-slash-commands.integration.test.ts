@@ -1,4 +1,6 @@
 import type { AgentOptionsUpdate } from '@repo/contracts';
+import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
+import { slashCommandsUpdate } from '@repo/mocks/agent/slash-commands-update';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -72,6 +74,34 @@ it('streams commands an Agent reports after New Session selects it', async () =>
   const stream = await discoverWith(host, [review]);
 
   expect(await nextWithCommands(stream)).toMatchObject({ commands: [review] });
+  await stream.return?.();
+});
+
+it('streams commands an Agent reports before its options are read with the options', async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    configOptions: acpConfiguration,
+    responses: {
+      'session/set_config_option': [
+        {
+          steps: [slashCommandsUpdate([review])],
+          result: {
+            configOptions: acpConfiguration.map((option) =>
+              option.id === 'fast' && option.type === 'boolean'
+                ? { ...option, currentValue: true }
+                : option,
+            ),
+          },
+        },
+      ],
+    },
+  });
+
+  const stream = (
+    await host.caller.session.agentOptions({ ...owner, picks: { fast: true } })
+  )[Symbol.asyncIterator]();
+
+  expect(await nextReady(stream)).toMatchObject({ commands: [review] });
   await stream.return?.();
 });
 

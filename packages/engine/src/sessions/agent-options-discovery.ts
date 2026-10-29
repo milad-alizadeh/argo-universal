@@ -31,7 +31,7 @@ export type OptionsDeps = Pick<
 export type Discovery = {
   signal: AbortSignal;
   progress: (stage: 'installing' | 'loading', fraction?: number) => void;
-  // The options are read; the Slash commands may still be on their way.
+  // The options are saved with any Slash commands sent so far; more may still come.
   configured: (options: SessionAgentOptionsOutput) => void;
 };
 
@@ -94,8 +94,8 @@ async function saveDiscovery(
     commands: early,
   });
 
-  discovery.configured(options);
   await writeDatabaseJobAndWaitForCommit(writer, job);
+  discovery.configured(options);
   /*
    * The options are saved at once. The Agent may send its Slash commands later, so the session
    * stays open for them and they follow in a second write that only the revision it started from may take.
