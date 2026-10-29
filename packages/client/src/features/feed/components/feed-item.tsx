@@ -1,7 +1,13 @@
 import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { memo, Fragment } from 'react';
-import type { FeedActivity, FeedGroup, FeedViewItem } from '../view/feed-view';
+import { toolCallFacts } from '../view/feed-row-facts';
+import {
+  explorationTitle,
+  type FeedActivity,
+  type FeedGroup,
+  type FeedViewItem,
+} from '../view/feed-view';
 import { CommandRow } from './command-row/command-row';
 import { EditRow } from './edit-row/edit-row';
 import { FeedImageUrlContext } from './feed-image';
@@ -34,7 +40,7 @@ const isCommand = (row: ToolCall): boolean =>
   row.kind === 'execute' && hasContent(row, 'terminal');
 
 const isEdit = (row: ToolCall): boolean =>
-  ['edit', 'delete', 'move'].includes(row.kind) && hasContent(row, 'diff');
+  toolCallFacts(row).editedPaths !== null && hasContent(row, 'diff');
 
 function coreToolCallRow(row: ToolCall): React.JSX.Element {
   if (isCommand(row)) return <CommandRow row={row} />;
@@ -107,8 +113,8 @@ const groupOf = (item: GroupLike): FeedGroup =>
     : {
         type: 'group',
         id: item.id,
-        title: item.title,
-        state: item.title === 'Exploring' ? 'open' : 'settled',
+        title: explorationTitle(item.state),
+        state: item.state,
         items: [item],
       };
 

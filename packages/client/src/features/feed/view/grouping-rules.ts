@@ -1,53 +1,17 @@
 import {
-  type CommandAction,
   isToolCallRunning,
-  knownCommandActions,
   type SessionUpdate,
   type ToolCallUpdate,
 } from '@repo/contracts';
-import type { FeedActivity } from './feed-view';
-
-export function explorationActions(row: ToolCallUpdate): CommandAction[] {
-  const actions = knownCommandActions(row);
-
-  if (actions.length) return actions;
-
-  return impliedExploration(row);
-}
-
-function impliedExploration(row: ToolCallUpdate): CommandAction[] {
-  if (!['read', 'search'].includes(row.kind)) return [];
-
-  return [
-    {
-      type: row.kind === 'read' ? 'read' : 'search',
-      command: '',
-      path: firstLocation(row),
-    },
-  ];
-}
-
-export function isEdit(row: ToolCallUpdate): boolean {
-  return ['edit', 'delete', 'move'].includes(row.kind);
-}
-
-export function editedPaths(row: ToolCallUpdate): Set<string> {
-  return new Set([
-    ...(row.locations ?? []).map((location) => location.path),
-    ...row.content.flatMap((content) =>
-      content.type === 'diff'
-        ? content.changes.map((change) => change.path)
-        : [],
-    ),
-  ]);
-}
+import { toolCallFacts } from './feed-row-facts';
+import { explorationTitle, type FeedActivity } from './feed-view';
 
 function hasSuccessfulMultiFileEdit(row: ToolCallUpdate): boolean {
   return row.status !== 'failed' && editsSeveralFiles(row);
 }
 
 function editsSeveralFiles(row: ToolCallUpdate): boolean {
-  return isEdit(row) && editedPaths(row).size > 1;
+  return (toolCallFacts(row).editedPaths?.size ?? 0) > 1;
 }
 
 export function needsGroupHeader(
@@ -75,7 +39,7 @@ export function joinsExploration(
 }
 
 function isExploration(row: ToolCallUpdate): boolean {
-  return explorationActions(row).length > 0 && row.status !== 'failed';
+  return explores(row) && row.status !== 'failed';
 }
 
 function mayExplore(row: ToolCallUpdate, awaitingPermission: boolean): boolean {
@@ -90,11 +54,13 @@ export function liveTitleFor(
 ): string {
   if (awaitingPermission) return 'Awaiting approval';
 
-  return isUnansweredExploration(row) ? 'Exploring' : toolTitle(row);
+  if (isUnansweredExploration(row)) return explorationTitle('open');
+
+  return toolTitle(row);
 }
 
 function isUnansweredExploration(row: ToolCallUpdate): boolean {
-  return explorationActions(row).length > 0 && !hasPermissionOutcome(row);
+  return explores(row) && !hasPermissionOutcome(row);
 }
 
 function toolTitle(row: ToolCallUpdate): string {
@@ -138,10 +104,11 @@ export function startsNewTurn(
   return previousTurnId !== undefined && row.turnId !== previousTurnId;
 }
 
-function firstLocation(row: ToolCallUpdate): string | undefined {
-  return row.locations?.[0]?.path;
+// Whether the Agent's actions, reported or implied, explore rather than change anything.
+export function explores(row: ToolCallUpdate): boolean {
+  return toolCallFacts(row).exploration.length > 0;
 }
 
 function hasPermissionOutcome(row: ToolCallUpdate): boolean {
-  return Boolean(row._meta?.argo?.permissionOutcome);
+  return Boolean(toolCallFacts(row).permissionOutcome);
 }
