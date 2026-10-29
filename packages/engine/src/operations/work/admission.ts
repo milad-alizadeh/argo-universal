@@ -10,9 +10,7 @@ import type { WorkAdmission } from './wait.machine';
 
 type AdmissionContext = { source: SessionWorkSource; ids: WaitIds };
 
-export type BeginWork<Result> = (
-  signal: AbortSignal,
-) => Promise<StartedWork<Result>>;
+type BeginWork<Result> = (signal: AbortSignal) => Promise<StartedWork<Result>>;
 
 // A user's native start, admitted under its run's deadline.
 export type UserAdmission = {

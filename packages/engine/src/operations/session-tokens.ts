@@ -12,10 +12,11 @@ export type UserCaller = { kind: 'user' };
 // The App calls Operations from its own procedures, with neither a token nor a Tool call.
 export type AppCaller = { kind: 'app' };
 
-// A caller that presents a token: the user's, or a Session's.
-export type TokenCaller = UserCaller | SessionCaller;
+// Every kind of caller an Operation has.
+type OperationCaller = AppCaller | UserCaller | SessionCaller;
 
-export type OperationCaller = AppCaller | TokenCaller;
+// A caller that presents a token: the user's, or a Session's.
+export type TokenCaller = Exclude<OperationCaller, AppCaller>;
 
 const tokenBytes = 32;
 

@@ -35,7 +35,6 @@ import { liveWorkDeps, OperationWork, type OperationWaitClock } from './work';
 
 export type {
   OperationImplementations,
-  OperationResult,
   OperationRunResult,
 } from './implementations';
 

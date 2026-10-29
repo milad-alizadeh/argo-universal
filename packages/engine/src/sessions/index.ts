@@ -47,7 +47,7 @@ export { sessionActorId } from './session-system';
 
 export { createSessionRouter } from './router';
 
-export { createSessionList, type SessionList } from './list/session-list';
+export { createSessionList } from './list/session-list';
 
 export type { SessionRouterDeps } from './router-deps';
 
