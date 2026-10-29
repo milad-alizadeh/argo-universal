@@ -1,4 +1,7 @@
-import { RequestError } from '@agentclientprotocol/sdk';
+import {
+  RequestError,
+  type ResumeSessionRequest,
+} from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -15,6 +18,8 @@ it.each([
 ])(
   'recovers the same Session options stream after a $type discovery failure',
   async ({ failure, type }) => {
+    const resumed = Promise.withResolvers<ResumeSessionRequest>();
+
     const host = await startAcpEngine({
       steps: [],
       responses: {
@@ -22,6 +27,7 @@ it.each([
           { result: { sessionId: 'actual' } },
           { error: failure },
         ],
+        'session/resume': [{ received: resumed }],
       },
     });
 
@@ -66,7 +72,11 @@ it.each([
         ...created,
         prompt: [{ type: 'text', text: 'Resume' }],
       });
-      await requireScriptedProcessAt(host.agent.processes).play(
+      const request = await resumed.promise;
+      await requireScriptedProcessAt(
+        host.agent.processes,
+        host.agent.processes.length - 1,
+      ).play(
         [
           {
             type: 'update',
@@ -78,7 +88,7 @@ it.each([
             },
           },
         ],
-        'actual',
+        request.sessionId,
       );
       let ready;
 

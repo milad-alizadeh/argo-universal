@@ -2,7 +2,7 @@ import type {
   NewSessionRequest,
   ResumeSessionRequest,
 } from '@agentclientprotocol/sdk';
-import type { SlashCommand } from '@repo/contracts';
+import type { AgentOptionsUpdate, SlashCommand } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -108,7 +108,7 @@ it('retains live commands while a discovery that started earlier finishes', asyn
   ]();
 
   expect((await discovery.next()).value).toMatchObject({ commands: null });
-  const refreshing = discovery.next();
+  const refreshing = nextReady(discovery);
   await received.promise;
   const liveReader = new AbortController();
 
@@ -138,7 +138,7 @@ it('retains live commands while a discovery that started earlier finishes', asyn
     commands: [{ name: 'review', description: reviewDescription }],
   });
   release.resolve();
-  expect((await refreshing).value).toMatchObject({
+  expect(await refreshing).toMatchObject({
     commands: [{ name: 'review', description: reviewDescription }],
   });
   liveReader.abort();
@@ -250,3 +250,17 @@ it.each(['ready', 'discovering'])(
     await stream.return?.();
   },
 );
+
+async function nextReady(
+  stream: AsyncIterator<AgentOptionsUpdate>,
+): Promise<AgentOptionsUpdate> {
+  let next;
+
+  do {
+    next = await stream.next();
+
+    if (next.done) throw new Error('Discovery ended before its ready update');
+  } while (next.value.stage !== 'ready');
+
+  return next.value;
+}

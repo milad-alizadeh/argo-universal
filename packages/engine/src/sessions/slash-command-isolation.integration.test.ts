@@ -28,7 +28,7 @@ it('keeps each live Session’s commands separate from the Agent and Project sna
     ],
     'owned-1',
   );
-  await process.play(
+  await requireScriptedProcessAt(host.agent.processes, 1).play(
     [
       {
         type: 'update',
