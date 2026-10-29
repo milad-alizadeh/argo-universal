@@ -44,6 +44,30 @@ interface OpenSessionsContext extends OpenSessionsInput {
   sessions: Record<string, SessionActorRef>;
 }
 
+const withSession = (
+  context: OpenSessionsContext,
+  sessionId: string,
+  actor: SessionActorRef,
+): Partial<OpenSessionsContext> => ({
+  sessions: { ...context.sessions, [sessionId]: actor },
+});
+
+type SessionSnapshot = ReturnType<SessionActorRef['getSnapshot']>;
+
+const closingOrArchiving = (snapshot: SessionSnapshot): boolean =>
+  snapshot.matches({ open: { acp: 'closing' } }) ||
+  snapshot.matches({ open: { acp: 'archiving' } });
+
+const canCloseSession = (
+  session: SessionActorRef | undefined,
+  snapshot: SessionSnapshot,
+): session is SessionActorRef =>
+  Boolean(
+    session &&
+    snapshot.can(closureEvent(session)) &&
+    !closingOrArchiving(snapshot),
+  );
+
 export type OpenSessionsCommand =
   | ({ type: 'sessions.create'; sessionId: string } & SessionCreationInput)
   | {
@@ -96,9 +120,7 @@ export const openSessionsMachine = setup({
           input: createSessionActorInput({ context, event }),
         });
 
-        return {
-          sessions: { ...context.sessions, [event.sessionId]: session },
-        };
+        return withSession(context, event.sessionId, session);
       },
     ),
     removeSession: enqueueActions(({ context, event, enqueue }): void => {
@@ -127,12 +149,7 @@ export const openSessionsMachine = setup({
       const { snapshot } = event;
       const session = context.sessions[snapshot.context.sessionId];
 
-      if (
-        session &&
-        snapshot.can(closureEvent(session)) &&
-        !snapshot.matches({ open: { acp: 'closing' } }) &&
-        !snapshot.matches({ open: { acp: 'archiving' } })
-      )
+      if (canCloseSession(session, snapshot))
         enqueue.sendTo(session, closureEvent(session));
     }),
   },
