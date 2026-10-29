@@ -28,7 +28,7 @@
     "zod": "catalog:"
   },
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p testing/tsconfig.json && tsc --noEmit -p cli/tsconfig.json",
+    "check-types": "node ../../tools/plugin-typecheck.mts 'tsc --noEmit && tsc --noEmit -p testing/tsconfig.json && tsc --noEmit -p cli/tsconfig.json'",
     "test": "vitest run"
   },
   "devDependencies": {

@@ -25,6 +25,7 @@ const marker = 'The button label. Generation freshness probe.';
 function run(args: string[]): string {
   return execFileSync('pnpm', args, {
     cwd: root,
+    env: { ...process.env, TURBO_CACHE_DIR: cache, TURBO_CACHE: 'local:rw' },
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -86,8 +87,16 @@ try {
   );
 
   assert.equal(await readFile(output, 'utf8'), baseline);
-  run(['--filter', '@argo/plugin-kit', checkTypes]);
-  run(['--filter', '@argo/issue-tracker', checkTypes]);
+
+  for (const consumer of ['@argo/plugin-kit', '@argo/issue-tracker']) {
+    await rm(output);
+    run(['--filter', consumer, checkTypes]);
+    assert.equal(await readFile(output, 'utf8'), baseline);
+  }
+
+  console.log(
+    'PASS: direct kit and Issue tracker type checks recover a missing declaration',
+  );
   console.log(
     'PASS: cache restoration provides usable Plugin JSX types to the kit and Issue tracker',
   );
@@ -102,14 +111,14 @@ try {
   );
   expectStale();
   assert.match(
-    generate(),
-    /cache miss/,
-    'A schema change must invalidate the declaration cache',
+    run(['--filter', '@argo/issue-tracker', checkTypes]),
+    /@repo\/contracts:generate:plugin-kit: cache miss/,
+    'A direct consumer must invalidate the declaration cache after a schema change',
   );
   assert.ok((await readFile(output, 'utf8')).includes(marker));
   run(['--filter', contracts, 'check:plugin-kit']);
   console.log(
-    'PASS: schema descriptions invalidate the cache and update editor hover hints',
+    'PASS: direct consumer type checks regenerate stale schema descriptions and editor hover hints',
   );
 } finally {
   await writeFile(schema, originalSchema);

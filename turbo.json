@@ -33,7 +33,11 @@
     // Through transit, type checks run in parallel and a dependency's test edit keeps its dependents cached (Turborepo TypeScript guide).
     "check-types": {
       "dependsOn": ["transit", "@repo/contracts#generate:plugin-kit"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "$TURBO_ROOT$/tools/plugin-typecheck.mts"
+      ]
     },
     // Per-package Vitest runs so CI skips unchanged packages; the root vitest.config.ts stays for local runs (Turborepo Vitest guide).
     "test": {
