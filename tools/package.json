@@ -18,6 +18,7 @@
     "@babel/parser": "catalog:",
     "@babel/types": "catalog:",
     "@playwright/test": "catalog:",
+    "@repo/browser-suite-lock": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/e2e": "workspace:*",
     "@repo/typescript": "workspace:*",
