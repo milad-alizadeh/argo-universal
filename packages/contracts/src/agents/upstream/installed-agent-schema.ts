@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { AgentServerEnvironment, RegistryAgentId } from '../agents/servers';
-import { registryAgentSchema } from '../agents/upstream/schema';
+import { AgentServerEnvironment, RegistryAgentId } from '../servers';
+import { registryAgentSchema } from './schema';
 
 export const installedAgentSchema = {
   type: 'object',

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { type AgentServer } from '../agents/servers';
-import type { ACPAgent } from '../agents/upstream/registry.gen';
-import { registryAgentSchema } from '../agents/upstream/schema';
-import { installedAgentSchema } from './registry-result-json';
+import { installedAgentSchema } from '../agents/upstream/installed-agent-schema';
 import {
   validateRegistryEntry,
   validateInstalledAgent,
-} from './registry-validators.gen.js';
+} from '../agents/upstream/registry-validators.gen.js';
+import type { ACPAgent } from '../agents/upstream/registry.gen';
+import { registryAgentSchema } from '../agents/upstream/schema';
 import {
   OperationSchemaRepresentation,
   operationSchemaJson,
