@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import type { SessionRowSources } from './router-deps';
+import type { SessionContext, SessionMachineInput } from './session-context';
 import { createQueuedSessionReader } from './session-record';
 import { readOpenSession } from './session-system';
 
@@ -7,6 +8,10 @@ type SessionCloseTarget = {
   projectId: string;
   parentSessionId: string | null;
   startedBySessionId: string | null;
+};
+
+type NewSessionContext = SessionContext & {
+  input: Extract<SessionMachineInput, { kind: 'new' }>;
 };
 
 // A native opening can be closed before the Agent makes its first stored Session row.
@@ -29,13 +34,20 @@ function openingTarget(
 
   const context = readOpenSession(deps.sessions, sessionId);
 
-  if (!context || context.input.kind !== 'new') throw cause;
+  requireNewSession(context, cause);
 
   return {
     projectId: context.input.projectId,
     parentSessionId: null,
     startedBySessionId: context.input.startedBySessionId ?? null,
   };
+}
+
+function requireNewSession(
+  context: SessionContext | undefined,
+  cause: unknown,
+): asserts context is NewSessionContext {
+  if (!context || context.input.kind !== 'new') throw cause;
 }
 
 function requireMissingSession(cause: unknown): void {

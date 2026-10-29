@@ -1,4 +1,4 @@
-import type { SessionConfigOption } from '@repo/contracts';
+import type { SessionConfigOption, SlashCommand } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
 import {
   type ActorRefFrom,
@@ -21,11 +21,12 @@ import {
   messageRejectedEvent,
   turnEndingEvent,
   type FeedEvent,
+  type FeedActorRef,
   type FeedInput,
   type FeedTurnEnding,
 } from '../feed';
 import { feedMachine } from '../feed';
-import type { WriterActorRef, WriterEvent } from '../storage';
+import type { WriterActorRef, WriterCommit, WriterEvent } from '../storage';
 import {
   cancelAcp,
   closeAcp,
@@ -152,6 +153,48 @@ type FailureParameters = { error: unknown };
 
 type CrashNoticeParameters = { duringTurn?: boolean } | undefined;
 
+type CommitStatus = 'committed' | 'retrying' | 'failed';
+
+type RememberedLease = Pick<
+  SessionContext,
+  'acpLease' | 'vendorSessionId' | 'configOptions' | 'configValues' | 'usage'
+>;
+
+const leaseValues = (
+  context: SessionContext,
+  { lease, configOptions }: OpenedAcpSession,
+): RememberedLease => ({
+  acpLease: lease,
+  vendorSessionId: lease.sessionId,
+  configOptions,
+  configValues: toConfigValues(configOptions),
+  usage: context.usage
+    ? acpContextUsage(context.usage, lease.initialization)
+    : null,
+});
+
+type AcpUpdate = Extract<
+  SessionEvent,
+  { type: typeof acpUpdateEvent }
+>['notification']['update'];
+
+type CommandsUpdate = Extract<
+  AcpUpdate,
+  { sessionUpdate: 'available_commands_update' }
+>;
+
+const commandsFrom = (update: CommandsUpdate): SlashCommand[] =>
+  update.availableCommands.map(({ name, description, input }) => ({
+    name,
+    description,
+    hint: input?.hint,
+  }));
+
+const titleFrom = (update: AcpUpdate): string | undefined =>
+  update.sessionUpdate === 'session_info_update'
+    ? update.title?.trim()
+    : undefined;
+
 type LoadSessionInput = {
   session: SessionInput;
   writer: WriterActorRef | undefined;
@@ -169,6 +212,10 @@ type WriteQueue = {
   sendTo: (target: WriterActorRef, event: WriterEvent) => void;
 };
 
+type CrashQueue = WriteQueue & {
+  sendTo: (target: FeedActorRef, event: FeedEvent) => void;
+};
+
 const enqueueWrites = (
   enqueue: WriteQueue,
   context: SessionContext,
@@ -177,6 +224,43 @@ const enqueueWrites = (
   for (const write of writes)
     enqueue.sendTo(context.input.writer, { type: writeFeedEvent, ...write });
 };
+
+const enqueueCrashedSubagents = (
+  enqueue: CrashQueue,
+  context: SessionContext,
+  subagents: ReturnType<typeof recordCrash>['subagents'],
+): void => {
+  for (const child of subagents) {
+    enqueue.sendTo(child.feed, child.event);
+    enqueueWrites(enqueue, context, [{ job: child.job }]);
+  }
+};
+
+const crashDuringTurn = (params: CrashNoticeParameters): boolean =>
+  params?.duringTurn ?? false;
+
+const commandsJob = (
+  context: SessionContext,
+  commands: SlashCommand[],
+): AgentOptionsJob =>
+  new AgentOptionsJob(
+    { agent: context.agent, projectId: context.projectId },
+    undefined,
+    { authoritative: true, commands },
+  );
+
+const recordAuthentication = (
+  context: SessionContext,
+  params: FailureParameters,
+): void => context.acpLease?.authentication?.recordRequired(params.error);
+
+const commitAcknowledgement = (
+  committed: PromiseWithResolvers<CommitStatus>,
+): WriterCommit => ({
+  resolve: () => committed.resolve('committed'),
+  reject: (_cause, retrying) =>
+    committed.resolve(retrying ? 'retrying' : 'failed'),
+});
 
 // The Session's one child actor: its Feed, invoked under the id "feed".
 type SessionChildren = { feed: 'feed'; [id: `subagent:${string}`]: 'feed' };
@@ -243,6 +327,17 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    rememberCreationReceipt: assign(({ event }) => {
+      assertEvent(event, creationSettledEvent);
+
+      return { creationReceipt: event.receipt };
+    }),
+    rememberShell: assign(({ context, event }) => {
+      assertEvent(event, 'agent.shellChanged');
+
+      return { shells: withShell(context.shells, event.shell) };
+    }),
+    cancelArchiveRequest: assign({ archiveRequested: false }),
     requestArchive: assign({ archiveRequested: true, failure: null }),
     routeSubagentUpdate: assign(({ context, event, spawn, self }) => {
       assertEvent(event, acpUpdateEvent);
@@ -283,23 +378,11 @@ const sessionSetup = setup({
 
       if (update.sessionUpdate !== 'available_commands_update') return;
 
-      const commands = update.availableCommands.map(
-        ({ name, description, input }) => ({
-          name,
-          description,
-          hint: input?.hint,
-        }),
-      );
+      const commands = commandsFrom(update);
 
       enqueue.assign({ slashCommands: commands });
       enqueueWrites(enqueue, context, [
-        {
-          job: new AgentOptionsJob(
-            { agent: context.agent, projectId: context.projectId },
-            undefined,
-            { authoritative: true, commands },
-          ),
-        },
+        { job: commandsJob(context, commands) },
       ]);
     }),
     applyAcpConfig: enqueueActions(
@@ -347,10 +430,7 @@ const sessionSetup = setup({
     ),
     applyAcpTitle: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, acpUpdateEvent);
-      const update = event.notification.update;
-
-      if (update.sessionUpdate !== 'session_info_update') return;
-      const title = update.title?.trim();
+      const title = titleFrom(event.notification.update);
 
       if (!title) return;
       enqueue.sendTo(writer, {
@@ -413,28 +493,8 @@ const sessionSetup = setup({
         return { pendingSubmission: null };
       },
     ),
-    rememberAcpLease: assign(
-      (
-        { context },
-        { lease, configOptions }: OpenedAcpSession,
-      ): Pick<
-        SessionContext,
-        | 'acpLease'
-        | 'vendorSessionId'
-        | 'configOptions'
-        | 'configValues'
-        | 'usage'
-      > => {
-        return {
-          acpLease: lease,
-          vendorSessionId: lease.sessionId,
-          configOptions,
-          configValues: toConfigValues(configOptions),
-          usage: context.usage
-            ? acpContextUsage(context.usage, lease.initialization)
-            : null,
-        };
-      },
+    rememberAcpLease: assign(({ context }, opened: OpenedAcpSession) =>
+      leaseValues(context, opened),
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:
@@ -485,7 +545,7 @@ const sessionSetup = setup({
     ): void => {
       if (context.turnEnding.kind === 'cancel') return;
 
-      context.acpLease?.authentication?.recordRequired(params.error);
+      recordAuthentication(context, params);
     },
     addDiscardFailure: assign(
       ({ context, event }): Pick<SessionContext, 'failure'> => ({
@@ -496,9 +556,7 @@ const sessionSetup = setup({
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
 
-      const committed = Promise.withResolvers<
-        'committed' | 'retrying' | 'failed'
-      >();
+      const committed = Promise.withResolvers<CommitStatus>();
 
       enqueue.assign({
         stored: true,
@@ -507,11 +565,7 @@ const sessionSetup = setup({
       enqueue.sendTo(writer, {
         type: writeFeedEvent,
         job: toSessionInsert(context.input, context),
-        committed: {
-          resolve: () => committed.resolve('committed'),
-          reject: (cause: unknown, retrying?: boolean) =>
-            committed.resolve(retrying ? 'retrying' : 'failed'),
-        },
+        committed: commitAcknowledgement(committed),
       });
     }),
     persistTurn: enqueueActions(
@@ -662,12 +716,9 @@ const sessionSetup = setup({
     recordCrash: enqueueActions(
       ({ context, event, enqueue }, params: CrashNoticeParameters): void => {
         assertEvent(event, 'acp.failed');
-        const crash = recordCrash(context, event, params?.duringTurn ?? false);
+        const crash = recordCrash(context, event, crashDuringTurn(params));
 
-        for (const child of crash.subagents) {
-          enqueue.sendTo(child.feed, child.event);
-          enqueueWrites(enqueue, context, [{ job: child.job }]);
-        }
+        enqueueCrashedSubagents(enqueue, context, crash.subagents);
 
         if (crash.turnEnding) enqueue.assign({ turnEnding: crash.turnEnding });
 
@@ -888,14 +939,12 @@ export const sessionMachine = sessionSetup.createMachine({
   on: {
     [creationSettledEvent]: {
       guard: ({ context }) => context.input.kind === 'new',
-      actions: assign(({ event }) => ({ creationReceipt: event.receipt })),
+      actions: 'rememberCreationReceipt',
     },
     // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
     [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
     'agent.shellChanged': {
-      actions: assign(({ context, event }) => ({
-        shells: withShell(context.shells, event.shell),
-      })),
+      actions: 'rememberShell',
     },
   },
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
@@ -1048,7 +1097,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 onError: {
                   target: 'closing',
                   actions: [
-                    assign({ archiveRequested: false }),
+                    'cancelArchiveRequest',
                     {
                       type: 'rememberFailure',
                       params: ({ event }): FailureParameters => ({

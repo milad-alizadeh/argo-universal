@@ -8,17 +8,31 @@ import { readQueuedSessionRows } from './session-storage';
 import { readOpenSession } from './session-system';
 import { decodeStoredTurn, storedTurnColumns } from './turns';
 
+function readStoredTurn(
+  deps: SessionRowSources,
+  turnId: string,
+): Parameters<typeof decodeStoredTurn>[0] | undefined {
+  return deps.database
+    .select(storedTurnColumns)
+    .from(turn)
+    .where(eq(turn.id, turnId))
+    .get();
+}
+
+function missingTurn(): TRPCError {
+  return new TRPCError({
+    code: 'NOT_FOUND',
+    message: 'The Turn no longer exists',
+  });
+}
+
 // Reads the exact admitted Turn, including updates the Writer has not committed yet.
 export function readSessionTurn(
   deps: SessionRowSources,
   sessionId: string,
   turnId: string,
 ): Turn {
-  const stored = deps.database
-    .select(storedTurnColumns)
-    .from(turn)
-    .where(eq(turn.id, turnId))
-    .get();
+  const stored = readStoredTurn(deps, turnId);
 
   const queued = readQueuedSessionRows(deps.findWriter());
 
@@ -27,10 +41,7 @@ export function readSessionTurn(
     .find((item) => item.id === turnId && item.sessionId === sessionId);
 
   if (row) return row;
-  throw new TRPCError({
-    code: 'NOT_FOUND',
-    message: 'The Turn no longer exists',
-  });
+  throw missingTurn();
 }
 
 export function sessionTurnRequiresInput(

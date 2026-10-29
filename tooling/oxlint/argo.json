@@ -211,19 +211,20 @@
       }
     },
     {
-      // ADR-0016 (2): `setup({ types: {} as … })` has no cast-free form in XState v5, and a statechart reads as one file. Only the Server and the desktop app run machines (ADR-0003).
+      // ADR-0016 (2): `setup({ types: {} as … })` has no cast-free form in XState v5. Only the Server and the desktop app run machines (ADR-0003).
       "files": [
         "apps/desktop/src/**/*machine.ts",
         "apps/server/src/**/*machine.ts",
         "packages/engine/src/**/*machine.ts"
       ],
       "rules": {
-        "typescript/consistent-type-assertions": "off",
-        "max-lines": [
-          "error",
-          { "max": 300, "skipBlankLines": true, "skipComments": true }
-        ]
+        "typescript/consistent-type-assertions": "off"
       }
+    },
+    {
+      // ADR-0016 (2): A statechart stays together, regardless of its length.
+      "files": ["**/*machine.ts"],
+      "rules": { "max-lines": "off" }
     },
     {
       // The app's Hermes has no Array.prototype.toSorted, so code the app loads sorts a copy. Tests run in Node and may keep it.

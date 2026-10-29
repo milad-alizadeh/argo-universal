@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type { SessionCreationReceipt } from './creation-receipt';
 import type { SessionRouterDeps } from './router-deps';
+import type { SessionMachineInput } from './session-context';
 import { readOpenSession } from './session-system';
 import { readSessionTurn } from './work-turn';
 
@@ -22,13 +23,21 @@ export function readSessionCreation(
   if (!context || context.input.kind === 'existing')
     return storedCreation(deps, sessionId, turnId);
 
-  if (context.input.turnId !== turnId)
+  return openingCreation(context.input, context.creationReceipt, turnId);
+}
+
+function openingCreation(
+  input: Extract<SessionMachineInput, { kind: 'new' }>,
+  receipt: SessionCreationReceipt | null,
+  turnId: string,
+): CreationRead {
+  if (input.turnId !== turnId)
     throw new TRPCError({
       code: 'NOT_FOUND',
       message: 'This Session opening no longer exists',
     });
 
-  return context.creationReceipt ?? { status: 'opening' };
+  return receipt ?? { status: 'opening' };
 }
 
 function storedCreation(

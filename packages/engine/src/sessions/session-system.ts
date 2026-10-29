@@ -19,13 +19,16 @@ export function requireLiveSessionActor(
     sessionMachine,
   );
 
-  if (!sessionActor)
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: `No Session ${sessionId}`,
-    });
+  if (!sessionActor) throw missingSession(sessionId);
 
   return sessionActor;
+}
+
+function missingSession(sessionId: string): TRPCError {
+  return new TRPCError({
+    code: 'NOT_FOUND',
+    message: `No Session ${sessionId}`,
+  });
 }
 
 export function findSessionFeed(
