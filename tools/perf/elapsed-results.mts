@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { type ElapsedSample, summarizeElapsed } from './elapsed.mts';
+import type { RowKindCounts } from './seed-statistics.mts';
 import type { UiObservation } from './ui-observation.mts';
 
 export interface ObservedTrial {
@@ -14,6 +15,7 @@ export interface ElapsedResult {
   cpu: number;
   condition: 'warm' | 'document-reload';
   boundary: string;
+  notApplicable?: string;
   warmups: ObservedTrial[];
   samples: ObservedTrial[];
 }
@@ -31,6 +33,9 @@ export interface BenchmarkMetadata {
     sessions: number;
     feedRows: number;
     shortFeedRows?: number;
+    requestedSessions?: number;
+    requestedFeedRows?: number | null;
+    rowKinds?: RowKindCounts;
     content: string;
     attachments: string;
   };

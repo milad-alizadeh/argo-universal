@@ -4,6 +4,7 @@ import {
   type SeededFeed,
   shortRecordedFeeds,
 } from './seed-feed.mts';
+import { rowKindCounts, type RowKindCounts } from './seed-statistics.mts';
 
 type SessionRow = typeof session.$inferSelect;
 
@@ -12,6 +13,7 @@ export interface SeededDataset {
   feed: SeededFeed;
   feedRowCount: number;
   shortFeedRowCount: number;
+  rowKinds: RowKindCounts;
 }
 
 function revision(row: SessionRow, revisions: Map<string, number>): SessionRow {
@@ -22,20 +24,22 @@ function revision(row: SessionRow, revisions: Map<string, number>): SessionRow {
     : { ...row, maxRevision, seenRevision: maxRevision };
 }
 
+const revisionsOf = (feed: SeededFeed): Map<string, number> =>
+  new Map(feed.rows.map((row) => [row.sessionId, row.revision]));
+
 function mergeDataset(
   sessions: SessionRow[],
   longFeed: SeededFeed,
   short: SeededFeed,
 ): SeededDataset {
-  const revisions = new Map(
-    short.rows.map((row) => [row.sessionId, row.revision]),
-  );
+  const revisions = revisionsOf(short);
 
   return {
     sessions: sessions.map((row) => revision(row, revisions)),
     feed: combineFeeds([longFeed, short]),
     feedRowCount: longFeed.rows.length,
     shortFeedRowCount: short.rows.length,
+    rowKinds: rowKindCounts(longFeed),
   };
 }
 
@@ -54,10 +58,11 @@ export async function seededDataset(
 
 export type SeedCounts = Pick<
   SeededDataset,
-  'feedRowCount' | 'shortFeedRowCount'
+  'feedRowCount' | 'shortFeedRowCount' | 'rowKinds'
 >;
 
 export const datasetCounts = (dataset: SeededDataset): SeedCounts => ({
   feedRowCount: dataset.feedRowCount,
   shortFeedRowCount: dataset.shortFeedRowCount,
+  rowKinds: dataset.rowKinds,
 });
