@@ -8,42 +8,55 @@ const rejections = createRejectionCounter('Agent options configuration');
 
 const readers = createAcpResponseReaders(rejections);
 
+async function configureChoice(
+  lease: AcpSessionLease,
+  configId: string,
+  value: string | boolean,
+): Promise<SessionConfigOption[]> {
+  const response = readers['session/set_config_option'].parse(
+    await lease.agent.request<unknown>('session/set_config_option', {
+      sessionId: lease.sessionId,
+      configId,
+      value,
+      ...(typeof value === 'boolean' && { type: 'boolean' }),
+    }),
+  );
+
+  return readAcpConfiguration(response.configOptions, rejections);
+}
+
+const savedChoices = (
+  saved: SessionConfigOption[],
+): Record<string, string | boolean> =>
+  Object.fromEntries(
+    saved.map((option) => [option.configId, option.currentValue]),
+  );
+
+type ConfigurationRequest = {
+  saved: SessionConfigOption[];
+  picks: Readonly<Record<string, string | boolean>>;
+  signal: AbortSignal;
+};
+
 // Apply the model first: its ACP response defines which remaining choices exist.
 export async function configureOptionsSession(
   lease: AcpSessionLease,
   initial: SessionConfigOption[],
-  {
-    saved,
-    picks,
-    signal,
-  }: {
-    saved: SessionConfigOption[];
-    picks: Readonly<Record<string, string | boolean>>;
-    signal: AbortSignal;
-  },
+  request: ConfigurationRequest,
 ): Promise<SessionConfigOption[]> {
   let options = initial;
 
-  const ordered = orderedChoices(initial, saved, picks);
+  const ordered = orderedChoices(initial, request.saved, request.picks);
 
   for (const [configId, value] of ordered) {
-    signal.throwIfAborted();
+    request.signal.throwIfAborted();
 
     if (!needsChange(options, configId, value)) continue;
 
-    const response = readers['session/set_config_option'].parse(
-      await lease.agent.request<unknown>('session/set_config_option', {
-        sessionId: lease.sessionId,
-        configId,
-        value,
-        ...(typeof value === 'boolean' && { type: 'boolean' }),
-      }),
-    );
-
-    options = readAcpConfiguration(response.configOptions, rejections);
+    options = await configureChoice(lease, configId, value);
   }
 
-  signal.throwIfAborted();
+  request.signal.throwIfAborted();
 
   return options;
 }
@@ -54,9 +67,7 @@ function orderedChoices(
   picks: Readonly<Record<string, string | boolean>>,
 ): [string, string | boolean][] {
   const choices = {
-    ...Object.fromEntries(
-      saved.map((option) => [option.configId, option.currentValue]),
-    ),
+    ...savedChoices(saved),
     ...picks,
   };
 
