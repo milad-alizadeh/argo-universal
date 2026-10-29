@@ -19,21 +19,38 @@ function lineCounts(additions: string, deletions: string): LineCounts {
   };
 }
 
+function parseNumstat(entry: string): RegExpExecArray {
+  return (
+    /^(\d+|-)\t(\d+|-)\t(.*)$/s.exec(entry) ?? rejectResponse('numstat', entry)
+  );
+}
+
+const capture = (match: RegExpExecArray, index: number): string =>
+  match[index] ?? '';
+
+function numstatPath(
+  match: RegExpExecArray,
+  nextPath: string | undefined,
+  entry: string,
+): string {
+  return match[3] || nextPath || rejectResponse('numstat path', entry);
+}
+
+const statEntry = (stats: string[], index: number): string =>
+  stats[index] ?? '';
+
 function numstatCounts(numstat: string): Map<string, LineCounts> {
   const counts = new Map<string, LineCounts>();
   const stats = numstat.split('\0');
 
   for (let index = 0; index < stats.length - 1; index += 1) {
-    const entry = stats[index] ?? '';
-    const match = /^(\d+|-)\t(\d+|-)\t(.*)$/s.exec(entry);
-
-    if (!match) return rejectResponse('numstat', entry);
-    const path = match[3] || stats[index + 2];
+    const entry = statEntry(stats, index);
+    const match = parseNumstat(entry);
+    const path = numstatPath(match, stats[index + 2], entry);
 
     if (!match[3]) index += 2;
 
-    if (!path) return rejectResponse('numstat path', entry);
-    counts.set(path, lineCounts(match[1] ?? '', match[2] ?? ''));
+    counts.set(path, lineCounts(capture(match, 1), capture(match, 2)));
   }
 
   return counts;
@@ -56,30 +73,43 @@ function statusOperation(code: string): CheckoutFile['operation'] {
 
 type ParsedStatusFile = { file: CheckoutFile; next: number };
 
+function statusPath(fields: string[], index: number, code: string): string {
+  return (
+    (/^[RC]/.test(code) ? fields[index + 2] : fields[index + 1]) ||
+    rejectResponse('rename', code)
+  );
+}
+
+function oldStatusPath(fields: string[], index: number, code: string): string {
+  return fields[index + 1] || rejectResponse('name-status', code);
+}
+
 function statusFile(
   fields: string[],
   index: number,
   counts: Map<string, LineCounts>,
 ): ParsedStatusFile {
-  const code = fields[index] ?? '';
-  const oldPath = fields[index + 1];
-
-  if (!oldPath) return rejectResponse('name-status', code);
-
-  const renamed = code.startsWith('R') || code.startsWith('C');
-  const path = renamed ? fields[index + 2] : oldPath;
-
-  if (!path) return rejectResponse('rename', code);
-
-  const file: CheckoutFile = {
-    operation: statusOperation(code),
-    path,
-    ...(counts.get(path) ?? { additions: 0, deletions: 0 }),
-  };
+  const code = statEntry(fields, index);
+  const oldPath = oldStatusPath(fields, index, code);
+  const renamed = /^[RC]/.test(code);
+  const path = statusPath(fields, index, code);
+  const file = statusEntry(code, path, counts);
 
   if (renamed) file.oldPath = oldPath;
 
   return { file, next: index + (renamed ? porcelainCodeLength : 2) };
+}
+
+function statusEntry(
+  code: string,
+  path: string,
+  counts: Map<string, LineCounts>,
+): CheckoutFile {
+  return { operation: statusOperation(code), path, ...countsFor(counts, path) };
+}
+
+function countsFor(counts: Map<string, LineCounts>, path: string): LineCounts {
+  return counts.get(path) ?? { additions: 0, deletions: 0 };
 }
 
 export function trackedFiles(status: string, numstat: string): CheckoutFile[] {
@@ -97,6 +127,19 @@ export function trackedFiles(status: string, numstat: string): CheckoutFile[] {
   return files;
 }
 
+function addUntracked(paths: string[], field: string): void {
+  const path = field.slice(porcelainCodeLength);
+
+  // Git reports nested repositories as directories, not individual files.
+  if (!path.endsWith('/')) paths.push(path);
+}
+
+function collectUntracked(paths: string[], field: string): number {
+  if (field.startsWith('?? ')) addUntracked(paths, field);
+
+  return /^[RC]/.test(field.slice(0, 2)) ? 1 : 0;
+}
+
 export function untrackedPaths(status: string): string[] {
   const fields = status.split('\0');
   const paths: string[] = [];
@@ -104,25 +147,20 @@ export function untrackedPaths(status: string): string[] {
   for (let index = 0; index < fields.length - 1; index += 1) {
     const field = fields[index] ?? '';
 
-    if (field.startsWith('?? ')) {
-      const path = field.slice(porcelainCodeLength);
-
-      // Git reports nested repositories as directories, not individual files.
-      if (!path.endsWith('/')) paths.push(path);
-    } else if (/^[RC]/.test(field.slice(0, 2))) index += 1;
+    index += collectUntracked(paths, field);
   }
 
   return paths;
 }
 
 export function untrackedFile(path: string, stat: string): CheckoutFile {
-  const match = /^(\d+|-)\t(\d+|-)\t/s.exec(stat);
-
-  if (!match) return rejectResponse('untracked numstat', stat);
+  const match =
+    /^(\d+|-)\t(\d+|-)\t/s.exec(stat) ??
+    rejectResponse('untracked numstat', stat);
 
   return {
     operation: 'add',
     path,
-    ...lineCounts(match[1] ?? '', match[2] ?? ''),
+    ...lineCounts(capture(match, 1), capture(match, 2)),
   };
 }

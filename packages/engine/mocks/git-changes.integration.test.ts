@@ -107,12 +107,10 @@ it('shows the working file once when it was removed from the index', async () =>
   expect(changes.summary.files).toBe(1);
   expect(
     (
-      await readCheckoutDiff(
-        directory,
-        directory,
-        { type: 'uncommitted' },
-        'kept.txt',
-      )
+      await readCheckoutDiff(directory, directory, {
+        comparison: { type: 'uncommitted' },
+        path: 'kept.txt',
+      })
     )?.patch,
   ).toContain('+kept');
 });
@@ -217,12 +215,10 @@ it('identifies a renamed file and its previous path', async () => {
 it('returns a unified patch for a renamed file', async () => {
   const { directory, checkout } = await renamedCheckout();
 
-  const diff = await readCheckoutDiff(
-    checkout,
-    directory,
-    { type: 'uncommitted' },
-    'new.txt',
-  );
+  const diff = await readCheckoutDiff(checkout, directory, {
+    comparison: { type: 'uncommitted' },
+    path: 'new.txt',
+  });
 
   expect(diff?.patch).toContain('rename to new.txt');
 });
@@ -231,12 +227,10 @@ it('refuses a path outside the changed file list', async () => {
   const { directory, checkout } = await renamedCheckout();
 
   expect(
-    await readCheckoutDiff(
-      checkout,
-      directory,
-      { type: 'uncommitted' },
-      '../old.txt',
-    ),
+    await readCheckoutDiff(checkout, directory, {
+      comparison: { type: 'uncommitted' },
+      path: '../old.txt',
+    }),
   ).toBeNull();
 });
 

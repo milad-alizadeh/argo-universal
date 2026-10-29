@@ -32,13 +32,9 @@
     // complexity, max-lines-per-function, max-statements
     { "files": ["packages/client/src/features/feed/hooks/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["packages/contracts/src/feed/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
     // max-lines, max-lines-per-function, typescript/explicit-function-return-type
-    { "files": ["packages/contracts/src/sessions/*"], "rules": { "max-lines": "off", "max-lines-per-function": "off" } },
     // stylistic/multiline-comment-style, typescript/explicit-function-return-type
-    { "files": ["packages/db/src/*"], "rules": { "stylistic/multiline-comment-style": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements, sonarjs/no-nested-template-literals, typescript/explicit-function-return-type
-    { "files": ["packages/git/src/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-params": "off", "max-statements": "off" } },
     // max-lines-per-function, typescript/explicit-function-return-type
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-os-command-from-path, sonarjs/publicly-writable-directories, typescript/explicit-function-return-type
     { "files": ["tools/*"], "rules": { "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-os-command-from-path": "off", "sonarjs/publicly-writable-directories": "off" } }

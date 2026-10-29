@@ -30,16 +30,24 @@ function addLine(parsed: ParsedPatch, line: string): void {
   if (line === '') return;
 
   if (header) return void parsed.hunks.push(hunkOf(header, line));
+  addContentLine(parsed, line);
+}
 
+function addContentLine(parsed: ParsedPatch, line: string): void {
   if (!parsed.hunks.length) return void parsed.preamble.push(line);
 
-  if (line.startsWith('\\'))
-    return void parsed.entries.at(-1)?.lines.push(line);
+  if (line.startsWith('\\')) return addMarker(parsed, line);
+  addHunkEntry(parsed, line);
+}
 
+function addMarker(parsed: ParsedPatch, line: string): void {
+  parsed.entries.at(-1)?.lines.push(line);
+}
+
+function addHunkEntry(parsed: ParsedPatch, line: string): void {
   const hunk = parsed.hunks.at(-1);
 
   if (!hunk) return;
-
   const entry = { hunk, index: hunk.entries.length, lines: [line] };
 
   hunk.entries.push(entry);
@@ -73,9 +81,16 @@ function pieceHeader(hunk: Hunk, before: Entry[], piece: Entry[]): string {
   return `@@ -${hunk.oldStart + old},${oldCount} +${hunk.newStart + added},${newCount} @@${hunk.section}`;
 }
 
+const isWholeHunk = (hunk: Hunk, piece: Entry[], start: number): boolean =>
+  start === 0 && piece.length === hunk.entries.length;
+
+function firstIndex(piece: Entry[]): number {
+  return piece[0]?.index ?? 0;
+}
+
 function hunkPiece(hunk: Hunk, piece: Entry[]): string[] {
-  const start = piece[0]?.index ?? 0;
-  const whole = start === 0 && piece.length === hunk.entries.length;
+  const start = firstIndex(piece);
+  const whole = isWholeHunk(hunk, piece, start);
 
   const header = whole
     ? hunk.header
@@ -107,13 +122,17 @@ export function pagePatch(
   const parsed = parsePatch(patch);
   const end = cursor + limit;
 
+  return {
+    patch: pageText(parsed, cursor, end),
+    nextCursor: end < parsed.entries.length ? end : null,
+  };
+}
+
+function pageText(parsed: ParsedPatch, cursor: number, end: number): string {
   const lines = [
     ...parsed.preamble,
     ...pageLines(parsed.entries.slice(cursor, end)),
   ];
 
-  return {
-    patch: `${lines.join('\n')}\n`,
-    nextCursor: end < parsed.entries.length ? end : null,
-  };
+  return `${lines.join('\n')}\n`;
 }
