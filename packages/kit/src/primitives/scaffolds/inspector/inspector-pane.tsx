@@ -97,11 +97,13 @@ function InspectorHeading(props: InspectorPaneProps): ReactElement {
   return <InspectorTitle title={props.title} />;
 }
 
+// The hosted header shares the compact Workbench card title line's centre.
 function InspectorHeader(props: InspectorPaneProps): ReactElement {
   return (
     <View
       className={cn(
-        'h-frame-bar flex-row items-center gap-2 pr-1',
+        'flex-row items-center gap-2 pr-1',
+        use(InspectorControlsContext) ? 'h-frame-control' : 'h-frame-bar',
         props.tabs ? 'pl-3' : 'pl-4 wide:pl-5',
       )}
     >
