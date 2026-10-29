@@ -143,14 +143,10 @@ export function keepPlace(list: ListRef, place: Place): void {
 const reachesIntoView = (span: Span, scrollLength: number): boolean =>
   span.top < scrollLength && span.bottom > 0;
 
-const opensInView = (state: ListState, span: Span): boolean =>
-  reachesIntoView(span, state.scrollLength) &&
-  !state.isWithinMaintainScrollAtEndThreshold;
-
 function openingSpan(state: ListState, key: string): Span | undefined {
   const span = spanInView(state, key);
 
-  return span && opensInView(state, span) ? span : undefined;
+  return span && reachesIntoView(span, state.scrollLength) ? span : undefined;
 }
 
 function startRowTopHold(list: ListRef, key: string): void {
@@ -165,8 +161,6 @@ function startRowTopHold(list: ListRef, key: string): void {
  * opening row would push the row up by all it grows, so the row's top stays where it was until it has
  * opened. The reader reads the row they opened, so its top replaces a place held for older rows, and
  * older rows that join it while it opens draw below its top, which stays held until they have measured.
- * At the end, where the Feed follows new rows, and once the row has opened, when the Feed follows them
- * again, the row is left to Legend, so the hold never pulls against following the end.
  */
 export function holdRowTop(list: ListRef, key: string): void {
   if (!isOpening(list, key)) startRowTopHold(list, key);

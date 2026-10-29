@@ -13,6 +13,7 @@ interface ContentMeasurement {
   renderedHeight: number;
   measured: boolean;
   onLayout: (event: LayoutChangeEvent) => void;
+  forget: () => void;
 }
 
 function measureContent(
@@ -40,7 +41,9 @@ function useMeasuredHeight(): Omit<
     setMeasured(true);
   }, []);
 
-  return { contentHeight, measured, renderedHeight, recordHeight };
+  const forget = useCallback((): void => setMeasured(false), []);
+
+  return { contentHeight, measured, renderedHeight, recordHeight, forget };
 }
 
 export function useContentMeasurement(open: boolean): ContentMeasurement {
@@ -53,6 +56,9 @@ export function useContentMeasurement(open: boolean): ContentMeasurement {
   return {
     ...measurement,
     content,
-    onLayout: (event) => recordHeight(event.nativeEvent.layout.height),
+    // Closing content keeps the height it had: lifted out of the flow to move, it can lay out a few points taller, which would push the rows below down before they rise.
+    onLayout: (event) => {
+      if (open) recordHeight(event.nativeEvent.layout.height);
+    },
   };
 }

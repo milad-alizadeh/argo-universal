@@ -12,6 +12,8 @@ interface CodeBlockHeaderProps {
   copyValue: string;
   copyLabel?: string;
   resource?: HeaderResource;
+  // Off under a row that already shows its own icon, such as a command's Shell or an edit's patch.
+  icon?: boolean;
 }
 
 // The bar above the code, and the footer bar below it, which matches it.
@@ -26,12 +28,16 @@ function headerClassName(isResource: boolean): string {
 function HeaderTitle({
   title,
   resource,
-}: Pick<CodeBlockHeaderProps, 'title' | 'resource'>): React.JSX.Element {
+  icon,
+}: Pick<
+  CodeBlockHeaderProps,
+  'title' | 'resource' | 'icon'
+>): React.JSX.Element {
   if (resource) return <ResourceHeading title={title} resource={resource} />;
 
   if (!title) return <View className="flex-1" />;
 
-  return <LanguageTitle title={title} />;
+  return <LanguageTitle title={title} icon={icon} />;
 }
 
 const shellLanguages = new Set(['bash', 'sh', 'shell', 'zsh']);
@@ -47,10 +53,11 @@ function languageIcon(
 
 function LanguageTitle({
   title,
-}: Pick<CodeBlockHeaderProps, 'title'>): React.JSX.Element {
+  icon = true,
+}: Pick<CodeBlockHeaderProps, 'title' | 'icon'>): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5 pr-2">
-      <Icon name={languageIcon(title)} tone="muted" />
+      {icon && <Icon name={languageIcon(title)} tone="muted" />}
       <PathText path={title} quiet testID="code-block-title" />
     </View>
   );
@@ -61,10 +68,11 @@ export function CodeBlockHeader({
   copyValue,
   copyLabel = 'Copy code',
   resource,
+  icon,
 }: CodeBlockHeaderProps): React.JSX.Element {
   return (
     <View className={headerClassName(resource !== undefined)}>
-      <HeaderTitle title={title} resource={resource} />
+      <HeaderTitle title={title} resource={resource} icon={icon} />
       <CopyButton value={copyValue} label={copyLabel} revealOnHover />
     </View>
   );

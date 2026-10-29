@@ -15,7 +15,7 @@ const meta = {
     loadingOlder: false,
     onStartReached: (): void => {},
     imageUrl: recordedImageUrl,
-    alignAtTop: true,
+    opensAtStart: true,
   },
 } satisfies Meta<typeof Feed>;
 
