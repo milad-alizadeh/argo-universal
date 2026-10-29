@@ -1,4 +1,3 @@
-import { Surface } from '@repo/kit/primitives/layout/surface';
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
@@ -35,9 +34,7 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchSurface floating={layout.workbench.state === 'dedicated'}>
-        {children}
-      </WorkbenchSurface>
+      <WorkbenchScroll>{children}</WorkbenchScroll>
     </Animated.View>
   );
 }
@@ -85,22 +82,6 @@ function workbenchPlacement({
       replacesPrimary: workbench.state === 'dedicated',
     },
   };
-}
-
-function WorkbenchSurface({
-  floating,
-  children,
-}: {
-  floating: boolean;
-  children: ReactNode;
-}): ReactElement {
-  return floating ? (
-    <Surface kind="glass" fill>
-      <WorkbenchScroll>{children}</WorkbenchScroll>
-    </Surface>
-  ) : (
-    <WorkbenchScroll>{children}</WorkbenchScroll>
-  );
 }
 
 const shadowScrollProps = {
