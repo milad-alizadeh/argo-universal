@@ -32,3 +32,14 @@ export const runTurn = async (
 
   return { stopReason: turn.isCancelled() ? 'cancelled' : 'end_turn' };
 };
+
+// An Agent sends some updates only after a response has gone out, as with a Session's Slash commands.
+export const runAfterResponse = (
+  steps: readonly ScriptedStep[] | undefined,
+  turn: ScriptedTurn,
+): void => {
+  if (steps)
+    setImmediate(() => {
+      void runTurn(steps, turn).catch(() => {});
+    });
+};

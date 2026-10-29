@@ -13,16 +13,23 @@ import {
   sessionOpenError,
 } from '../agents';
 import { readProjectPath } from '../projects';
+import { toSlashCommands } from './acp/acp-slash-commands';
 import type { OptionsDeps, Discovery } from './agent-options-discovery';
+import type { DiscoveredCommands } from './discovered-commands';
 import { validateSessionCommandAdmission } from './session-command';
 
 // No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
-const optionsDestination: AcpSessionDestination = {
-  update: (): undefined => {},
+const optionsDestination = (
+  discovered: DiscoveredCommands,
+): AcpSessionDestination => ({
+  update: ({ update }): undefined => {
+    if (update.sessionUpdate === 'available_commands_update')
+      discovered.receive(toSlashCommands(update.availableCommands));
+  },
   failed: () => {},
   requestPermission: async () => cancelledPermission,
   createElicitation: async () => cancelledElicitation,
-};
+});
 
 // Discovery uses the same sign-in and failure contract as Send (ADR-0004).
 const agentFailure = (cause: unknown): TRPCError => {
@@ -38,7 +45,13 @@ const agentFailure = (cause: unknown): TRPCError => {
 export async function openOptionsSession(
   deps: OptionsDeps,
   { agent, projectId }: SessionAgentOptionsInput,
-  { signal, progress }: Discovery,
+  {
+    signal,
+    progress,
+    discovered,
+  }: Discovery & {
+    discovered: DiscoveredCommands;
+  },
 ): Promise<AcpSessionLease> {
   const installed = requireInstalledAgent(deps.installedAgents, agent);
   const cwd = readProjectPath(deps.database, projectId);
@@ -61,7 +74,7 @@ export async function openOptionsSession(
         },
       },
       opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
-      destination: optionsDestination,
+      destination: optionsDestination(discovered),
       signal,
     });
   } catch (cause) {

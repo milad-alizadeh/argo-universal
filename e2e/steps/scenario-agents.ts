@@ -84,6 +84,7 @@ const namedScenarioSteps = [
   [agentStep('asks for an Elicitation'), 'elicitation'],
   [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
   [agentStep('asks permission to edit README.md'), 'permission'],
+  [agentStep('offers the review Slash command'), 'slash-commands'],
   [agentStep('holds its first Turn until released'), 'held-until-released'],
   [
     agentStep('names its Session after a question'),

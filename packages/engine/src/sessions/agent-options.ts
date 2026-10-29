@@ -114,8 +114,16 @@ class AgentOptionsReader {
         signal: this.active,
         progress: (stage, progress) =>
           this.discovered({ ...this.snapshot(saved), stage, progress }),
+        configured: (options) =>
+          this.discovered({
+            ...this.snapshot(saved),
+            configOptions: options,
+            stage: 'ready',
+          }),
       });
 
+      // The saved snapshot is the last word, even when it reads as the early one did.
+      this.previous = '';
       this.discovered({
         ...this.snapshot(saved),
         configOptions,

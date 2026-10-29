@@ -1,4 +1,4 @@
-import type { AgentServer, ProjectInfo } from '@repo/contracts';
+import type { AgentServer, ProjectInfo, SlashCommand } from '@repo/contracts';
 import {
   type ErrorToast,
   useErrorToast,
@@ -39,6 +39,8 @@ export interface ReadySessionNewViewProps {
   onAddAgents: () => void;
   // The chosen Agent, its model and effort, and the checkout.
   configuration: ComposerConfigurationProps;
+  // The chosen Agent's Slash commands for the chosen Project; undefined until the Server has seen a list.
+  slashCommands?: SlashCommand[];
   // The first prompt; sending it opens the Session.
   draft: ComposerDraft;
   onDraftChange: (draft: ComposerDraft) => void;

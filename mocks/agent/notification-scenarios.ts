@@ -18,4 +18,20 @@ export const notificationScenarios = {
     configOptions: acpConfiguration,
     steps: [question, question],
   },
+  // Offers a `review` Slash command, sent once each new Session has opened.
+  'slash-commands': {
+    configOptions: acpConfiguration,
+    steps: [],
+    afterOpening: [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'available_commands_update',
+          availableCommands: [
+            { name: 'review', description: 'Review changes' },
+          ],
+        },
+      },
+    ],
+  },
 } satisfies Record<string, ScriptedScenario>;
