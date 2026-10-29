@@ -1,4 +1,9 @@
-import { cloneElement, type ReactElement, useState } from 'react';
+import {
+  cloneElement,
+  type ComponentProps,
+  type ReactElement,
+  useState,
+} from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import type {
@@ -14,23 +19,54 @@ import {
 import type { KitProps } from '../../kit-props';
 
 // Kit-only: the interactive trigger.
-type TooltipProps = KitProps<'Tooltip'> & { children: TriggerElement };
+type TooltipProps = KitProps<'Tooltip'> & {
+  children: TriggerElement;
+  // A parent can keep the same trigger mounted while its label becomes truncated.
+  active?: boolean;
+  frameless?: boolean;
+};
+
+type TooltipState = {
+  popover: TooltipPopoverProps;
+  onDismiss: () => void;
+  onPointerLeave: () => void;
+};
+
+type TooltipPopoverProps = Pick<
+  ComponentProps<typeof Popover>,
+  'open' | 'onOpenChange' | 'openOnHover' | 'frameless'
+>;
 
 export function Tooltip(props: TooltipProps): ReactElement {
-  const [open, setOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const state = useTooltipState(props);
 
   return (
-    <Popover open={open && !dismissed} onOpenChange={setOpen} openOnHover>
+    <Popover {...state.popover}>
       <TooltipTrigger
-        onDismiss={() => setDismissed(true)}
-        onPointerLeave={() => setDismissed(false)}
+        onDismiss={state.onDismiss}
+        onPointerLeave={state.onPointerLeave}
       >
         {props.children}
       </TooltipTrigger>
       <TooltipContent label={props.label} />
     </Popover>
   );
+}
+
+function useTooltipState(props: TooltipProps): TooltipState {
+  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  return {
+    popover: {
+      open: props.active !== false && open && !dismissed,
+      onOpenChange: setOpen,
+      openOnHover: true,
+      frameless: props.frameless,
+    },
+    onDismiss: (): void => setDismissed(true),
+    onPointerLeave: (): void => setDismissed(false),
+  };
 }
 
 type TooltipTriggerProps = {

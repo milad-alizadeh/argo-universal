@@ -45,6 +45,8 @@ export function Popover(props: PopoverProps): React.JSX.Element {
 }
 
 function PopoverFrame(props: PopoverProps): React.JSX.Element {
+  if (props.frameless) return <PopoverChildren {...props} />;
+
   return props.inline ? (
     <span className={props.className}>
       <PopoverChildren {...props} />

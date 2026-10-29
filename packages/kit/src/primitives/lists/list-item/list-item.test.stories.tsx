@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { pressTarget } from '#mocks/press-target';
@@ -115,6 +115,51 @@ export const TrailingAccessory = accessoryPress({
   trailing: <Text>now</Text>,
   trailingAccessories: issueLink,
 });
+
+function AccessoryArrivesDuringPress({
+  onPress,
+}: {
+  onPress?: () => void;
+}): ReactElement {
+  const [showAccessory, setShowAccessory] = useState(false);
+
+  return (
+    <ListItem
+      title={title}
+      onPress={onPress}
+      onPointerDown={() => setShowAccessory(true)}
+      metaAccessories={
+        showAccessory ? (
+          <Pressable role="link" accessibilityLabel="New accessory">
+            <Text>New accessory</Text>
+          </Pressable>
+        ) : undefined
+      }
+    />
+  );
+}
+
+export const AccessoryDuringPress: Story = {
+  render: ({ onPress }) => <AccessoryArrivesDuringPress onPress={onPress} />,
+  play: async ({ args, canvas, userEvent }) => {
+    const row = canvas.getByRole('button', { name: title });
+    await userEvent.pointer({ target: row, keys: '[MouseLeft>]' });
+    await expect(
+      canvas.getByRole('link', { name: 'New accessory' }),
+    ).toBeVisible();
+    await userEvent.pointer({
+      target: canvas.getByRole('button', { name: title }),
+      keys: '[/MouseLeft]',
+    });
+    await expect(args.onPress).toHaveBeenCalledOnce();
+    await expect(canvas.getByRole('button', { name: title })).toBe(row);
+
+    row.focus();
+    await expect(row).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onPress).toHaveBeenCalledTimes(2);
+  },
+};
 
 // A hover target takes the pointer for its own reasons, but pressing it presses the row.
 function HoverTarget(): ReactElement {
