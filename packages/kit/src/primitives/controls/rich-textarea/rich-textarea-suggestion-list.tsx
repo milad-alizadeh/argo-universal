@@ -7,6 +7,7 @@ import {
   menuSurfaceClassName,
 } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
 import { Text } from '#primitives/content/text';
 import type {
   ComposerSuggestion,
@@ -18,11 +19,11 @@ interface SuggestionListProps {
   onChoose: (suggestion: ComposerSuggestion) => void;
 }
 
-const listClassName = cn(
-  menuSurfaceClassName,
-  menuInsetClassName,
-  'absolute bottom-full left-0 right-0 mb-2 max-h-60 overflow-hidden',
-);
+// Placement only: glass and the plain card both keep it.
+const placementClassName =
+  'absolute bottom-full left-0 right-0 mb-2 overflow-hidden';
+
+const listClassName = cn(menuInsetClassName, 'max-h-60');
 
 const rowClassName = cn(
   menuRowClassName,
@@ -83,8 +84,7 @@ function SuggestionRows(props: SuggestionListProps): React.JSX.Element {
   );
 }
 
-// The phone's list of matches, drawn above the plain text field; a press chooses one.
-export function SuggestionList(props: SuggestionListProps): React.JSX.Element {
+function SuggestionGroup(props: SuggestionListProps): React.JSX.Element {
   return (
     <View
       accessibilityLabel={props.groups[0]?.source.title}
@@ -93,5 +93,18 @@ export function SuggestionList(props: SuggestionListProps): React.JSX.Element {
     >
       <SuggestionRows {...props} />
     </View>
+  );
+}
+
+// The phone's list of matches, drawn above the plain text field in the Composer's glass; a press chooses one.
+export function SuggestionList(props: SuggestionListProps): React.JSX.Element {
+  return (
+    <LiquidGlass
+      corners="sheet"
+      className={placementClassName}
+      fallbackClassName={menuSurfaceClassName}
+    >
+      <SuggestionGroup {...props} />
+    </LiquidGlass>
   );
 }
