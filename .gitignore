@@ -54,3 +54,6 @@ apps/universal-app/public/canvaskit.wasm
 # The render gates' scratch: the plan `tools/check-story-renders.mts` hands the browser, and the fingerprints it reads back.
 apps/storybook/story-render-plan.json
 apps/storybook/story-render-fingerprints.json
+
+# Plugin JSX declarations come from Contracts at install and before consumers.
+/packages/plugin-kit/src/components.gen.d.ts

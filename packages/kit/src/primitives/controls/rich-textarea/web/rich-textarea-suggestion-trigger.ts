@@ -5,7 +5,7 @@ import type {
 import { $getSelection, $isRangeSelection, type LexicalNode } from 'lexical';
 import {
   matchSuggestionTrigger,
-  type SuggestionSource,
+  type SuggestionGroup,
 } from '../rich-textarea-suggestions';
 
 function $beforeInlineParent(node: LexicalNode): string {
@@ -46,14 +46,11 @@ function $validMatch(text: string): MenuTextMatch | null {
 }
 
 export function suggestionTrigger(
-  sources: readonly SuggestionSource[],
+  ask: (query: string) => SuggestionGroup[],
 ): TriggerFn {
   return (text) => {
     const match = $validMatch(text);
 
-    return match &&
-      sources.some((source) => source.query(match.matchingString).length > 0)
-      ? match
-      : null;
+    return match && ask(match.matchingString).length > 0 ? match : null;
   };
 }

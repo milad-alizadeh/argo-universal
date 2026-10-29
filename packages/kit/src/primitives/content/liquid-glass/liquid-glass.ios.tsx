@@ -1,44 +1,42 @@
 import { GlassView } from 'expo-glass-effect';
-import type * as React from 'react';
+import { useContext, type ReactElement } from 'react';
 import { useResolveClassNames } from 'uniwind';
-import { useNativeTheme } from '#kit/native-theme';
-import { cn } from '#kit/utils';
-import { liquidGlassAvailable } from './liquid-glass-available';
-import { FallbackSurface } from './liquid-glass-fallback';
+import {
+  readReducedTransparency,
+  subscribeReducedTransparency,
+} from './liquid-glass-accessibility.ios';
+import { liquidGlassAvailable } from './liquid-glass-available.ios';
+import {
+  LiquidGlassPlatform,
+  type GlassSurfaceProps,
+  type LiquidGlassEnvironment,
+} from './liquid-glass-platform';
 import type { LiquidGlassProps } from './liquid-glass-props';
+import { LiquidGlassRenderer } from './liquid-glass-renderer';
+import { createTransparencyStore } from './transparency-store';
 
-const cornerClassName = {
-  container: 'rounded-2xl',
-  sheet: 'rounded-sheet',
-  pill: 'rounded-full',
-} as const;
+const nativePlatform: LiquidGlassEnvironment = liquidGlassAvailable
+  ? {
+      kind: 'native',
+      GlassView: SystemGlassView,
+      transparency: createTransparencyStore({
+        read: readReducedTransparency,
+        subscribe: subscribeReducedTransparency,
+      }),
+    }
+  : { kind: 'fallback' };
 
-const glassLayout = ({ className, corners }: LiquidGlassProps): string =>
-  cn(className, cornerClassName[corners]);
+function SystemGlassView({
+  className,
+  ...props
+}: GlassSurfaceProps): ReactElement {
+  const style = useResolveClassNames(className);
 
-// Where the system draws Liquid Glass, it draws it in the App's light or dark; elsewhere the caller's surface shows.
-export function LiquidGlass(props: LiquidGlassProps): React.JSX.Element {
-  if (!liquidGlassAvailable || props.glass === false)
-    return <FallbackSurface {...props} />;
-
-  return <SystemGlass {...props} />;
+  return <GlassView {...props} style={style} />;
 }
 
-// GlassView takes a resolved style: a className wrapper leaves the glass undrawn.
-function SystemGlass(props: LiquidGlassProps): React.JSX.Element {
-  const { colorScheme } = useNativeTheme();
-  const style = useResolveClassNames(glassLayout(props));
+export function LiquidGlass(props: LiquidGlassProps): ReactElement {
+  const platform = useContext(LiquidGlassPlatform) ?? nativePlatform;
 
-  return (
-    <GlassView
-      glassEffectStyle="regular"
-      isInteractive={props.interactive}
-      colorScheme={colorScheme}
-      style={style}
-    >
-      {props.children}
-    </GlassView>
-  );
+  return <LiquidGlassRenderer {...props} platform={platform} />;
 }
-
-LiquidGlass satisfies React.ComponentType<LiquidGlassProps>;

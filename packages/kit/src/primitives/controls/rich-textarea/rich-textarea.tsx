@@ -22,12 +22,13 @@ import {
   MarkdownValuePlugin,
 } from './web/rich-textarea-field-plugins';
 import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
+import { HandlePlugin } from './web/rich-textarea-handle-plugin';
 import { LinkPlugins } from './web/rich-textarea-link-plugins';
 import {
   $importMarkdown,
   richTextareaNodes,
 } from './web/rich-textarea-markdown';
-import { ReferenceProviders } from './web/rich-textarea-reference-token';
+import { TokenProviders } from './web/rich-textarea-token-providers';
 import { TypeaheadPlugin } from './web/rich-textarea-typeahead-plugin';
 
 const placeholderClassName =
@@ -120,6 +121,7 @@ function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
       <EditablePlugin editable={props.editable} />
       {props.autoFocus && <AutoFocusPlugin />}
       <MarkdownValuePlugin {...props} />
+      <HandlePlugin handle={props.ref} />
     </>
   );
 }
@@ -134,9 +136,9 @@ function RichTextarea({
 
   return (
     <LexicalComposer initialConfig={editorConfig(props.value, editable)}>
-      <ReferenceProviders references={references}>
+      <TokenProviders references={references} suggestions={props.suggestions}>
         <EditorParts {...props} editable={editable} references={references} />
-      </ReferenceProviders>
+      </TokenProviders>
     </LexicalComposer>
   );
 }

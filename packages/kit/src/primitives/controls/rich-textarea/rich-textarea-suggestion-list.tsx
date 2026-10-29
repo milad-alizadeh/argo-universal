@@ -1,13 +1,13 @@
 import type * as React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import {
-  menuInsetClassName,
-  menuRowClassName,
-  menuRowsClassName,
-  menuSurfaceClassName,
-} from '#kit/menu-surface';
-import { cn } from '#kit/utils';
-import { Text } from '#primitives/content/text';
+import { useId } from 'react';
+import { View } from 'react-native';
+import { ListPlaceContext } from '#kit/list-place';
+import { menuInsetClassName, menuSurfaceClassName } from '#kit/menu-surface';
+import { Icon } from '#primitives/content/icon';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
+import { List, ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
+import { Portal, PortalHost } from '#primitives/overlays/portal';
 import type {
   ComposerSuggestion,
   SuggestionGroup,
@@ -18,26 +18,21 @@ interface SuggestionListProps {
   onChoose: (suggestion: ComposerSuggestion) => void;
 }
 
-const listClassName = cn(
-  menuSurfaceClassName,
-  menuInsetClassName,
-  'absolute bottom-full left-0 right-0 mb-2 max-h-60 overflow-hidden',
-);
+// Placement only: the gap above the card; glass and the plain card both keep it.
+const placementClassName = 'w-full pb-2';
 
-const rowClassName = cn(
-  menuRowClassName,
-  'flex-col items-stretch gap-0.5 active:bg-selected',
-);
+// Beyond 200 the rows scroll inside the box.
+const listMaxHeight = 200;
 
-function SuggestionDetail({
-  detail,
-}: Pick<ComposerSuggestion, 'detail'>): React.JSX.Element | null {
-  return detail ? (
-    <Text role="secondary" dimmed>
-      {detail}
-    </Text>
-  ) : null;
-}
+const listProps = {
+  appearance: 'plain',
+  fit: true,
+  maxHeight: listMaxHeight,
+  keyboardShouldPersistTaps: 'always',
+} as const;
+
+// With an icon the row names the command bare; the text a press inserts still starts with the slash.
+const leadingSlash = /^\//;
 
 interface RowProps {
   suggestion: ComposerSuggestion;
@@ -45,15 +40,17 @@ interface RowProps {
 }
 
 function SuggestionRow({ suggestion, onChoose }: RowProps): React.JSX.Element {
+  const { icon, label } = suggestion;
+
   return (
-    <Pressable
+    <ListItem
+      title={icon ? label.replace(leadingSlash, '') : label}
+      subtitle={suggestion.detail}
+      subtitleLines={2}
+      leading={icon ? <Icon name={icon} size="md" /> : undefined}
       accessibilityRole="button"
-      className={rowClassName}
       onPress={() => onChoose(suggestion)}
-    >
-      <Text role="control">{suggestion.label}</Text>
-      <SuggestionDetail detail={suggestion.detail} />
-    </Pressable>
+    />
   );
 }
 
@@ -72,26 +69,54 @@ function suggestionRows({
   );
 }
 
-function SuggestionRows(props: SuggestionListProps): React.JSX.Element {
-  return (
-    <ScrollView
-      keyboardShouldPersistTaps="always"
-      contentContainerClassName={menuRowsClassName}
-    >
-      {suggestionRows(props)}
-    </ScrollView>
-  );
-}
-
-// The phone's list of matches, drawn above the plain text field; a press chooses one.
-export function SuggestionList(props: SuggestionListProps): React.JSX.Element {
+function SuggestionListBody(props: SuggestionListProps): React.JSX.Element {
   return (
     <View
       accessibilityLabel={props.groups[0]?.source.title}
+      className={menuInsetClassName}
       role="group"
-      className={listClassName}
     >
-      <SuggestionRows {...props} />
+      <ListPlaceContext value="popover">
+        <List {...listProps}>
+          <ListSection>{suggestionRows(props)}</ListSection>
+        </List>
+      </ListPlaceContext>
     </View>
   );
+}
+
+function SuggestionList(props: SuggestionListProps): React.JSX.Element {
+  return (
+    <View className={placementClassName}>
+      <LiquidGlass
+        corners="sheet"
+        interactive
+        className="w-full"
+        fallbackClassName={menuSurfaceClassName}
+      >
+        <SuggestionListBody {...props} />
+      </LiquidGlass>
+    </View>
+  );
+}
+
+const hostName = 'rich-textarea-suggestions';
+
+/*
+ * The phone's list of matches, drawn in the Composer's glass; a press chooses one. It is drawn at the
+ * SuggestionListHost, above the Composer's card, never inside it: glass inside the card's own glass draws darker.
+ */
+export function SuggestionPortal(
+  props: SuggestionListProps,
+): React.JSX.Element {
+  return (
+    <Portal hostName={hostName} name={useId()}>
+      <SuggestionList {...props} />
+    </Portal>
+  );
+}
+
+// Where the list is drawn: in the column above the field's card, as wide as the card, growing the column upward.
+export function SuggestionListHost(): React.JSX.Element {
+  return <PortalHost name={hostName} />;
 }

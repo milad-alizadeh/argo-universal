@@ -11,6 +11,7 @@ import type {
   RichTextareaProps,
 } from '../rich-textarea-props';
 import type { SuggestionSource } from '../rich-textarea-suggestions';
+import { registerCommandTokens } from './rich-textarea-command-tokens';
 import { registerReturnToSubmit } from './rich-textarea-keys';
 import { registerReferenceTokens } from './rich-textarea-reference-tokens';
 import { renderTypeaheadMenu } from './rich-textarea-typeahead-menu';
@@ -80,15 +81,28 @@ function useRetriggerOnChange(adapters: TypeaheadAdapter[]): void {
   }, [editor, adapters]);
 }
 
+function useSuggestionAdapter(
+  suggestions: readonly SuggestionSource[],
+): TypeaheadAdapter {
+  const [editor] = useLexicalComposerContext();
+  useEffect(
+    () => registerCommandTokens(editor, suggestions),
+    [editor, suggestions],
+  );
+
+  return useMemo(() => suggestionAdapter(suggestions), [suggestions]);
+}
+
 function useAdapters({
   references,
   suggestions = noSuggestions,
 }: Props): TypeaheadAdapter[] {
   const reference = useReferenceAdapter(references);
+  const suggestion = useSuggestionAdapter(suggestions);
 
   const adapters = useMemo(
-    () => [reference, suggestionAdapter(suggestions)],
-    [reference, suggestions],
+    () => [reference, suggestion],
+    [reference, suggestion],
   );
 
   useRetriggerOnChange(adapters);

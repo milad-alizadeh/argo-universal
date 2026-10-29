@@ -1,14 +1,11 @@
 import type { PlanEntry } from '@repo/contracts';
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
-import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
-import { Pressable } from '@repo/kit/primitives/actions/pressable';
-import { Text } from '@repo/kit/primitives/content/text';
-import { Chevron } from '@repo/kit/primitives/status/chevron';
+import { IconSlot } from '@repo/kit/primitives/content/icon';
+import { Pill } from '@repo/kit/primitives/status/pill';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { completedSteps } from '../../utils/status';
-import { chipClassName, unselectableTextClassName } from './status-surface';
 
 interface PlanTriggerProps {
   entries: PlanEntry[];
@@ -18,145 +15,72 @@ interface PlanTriggerProps {
   toggle: () => void;
 }
 
-interface PlanEntriesProps {
-  entries: PlanEntry[];
-  wide: boolean;
+function PlanProgressMarks({
+  entries,
+}: Pick<PlanTriggerProps, 'entries'>): JSX.Element {
+  return (
+    <IconSlot>
+      <View className="size-full flex-row items-center gap-0.5">
+        {withOccurrenceKeys(entries, (entry) => entry.content).map(
+          ({ item, key }) => (
+            <PlanMark key={key} entry={item} />
+          ),
+        )}
+      </View>
+    </IconSlot>
+  );
 }
 
-interface PlanMarkProps {
-  entry: PlanEntry;
-  wide: boolean;
-}
-
-function PlanProgressMark({ entry, wide }: PlanMarkProps): JSX.Element {
+function PlanMark({ entry }: { entry: PlanEntry }): JSX.Element {
   return (
     <View
       className={cn(
-        'h-1 rounded-xs bg-border',
-        wide ? 'w-3.5' : 'w-1.5',
-        entry.status === 'completed' && 'bg-foreground',
+        'h-1 min-w-0 flex-1 rounded-xs',
+        entry.status === 'completed' ? 'bg-foreground' : 'bg-border',
       )}
     />
   );
 }
 
-function PlanProgressMarks({ entries, wide }: PlanEntriesProps): JSX.Element {
-  return (
-    <View className="flex-row gap-0.5">
-      {withOccurrenceKeys(entries, (entry) => entry.content).map(
-        ({ item: entry, key }) => (
-          <PlanProgressMark key={key} entry={entry} wide={wide} />
-        ),
-      )}
-    </View>
-  );
+export function createPlanTrigger(props: PlanTriggerProps): JSX.Element {
+  return <Pill {...planPillProps(props)} />;
 }
 
-interface CurrentStepProps {
-  entries: PlanEntry[];
-  expanded: boolean;
+const planPillProps = (
+  props: PlanTriggerProps,
+): React.ComponentProps<typeof Pill> => ({
+  variant: 'control',
+  appearance: 'glass',
+  accessibilityLabel: 'Plan',
+  disabled: props.disabled,
+  text: props.wide
+    ? `Plan ${completedSteps(props.entries)}/${props.entries.length}`
+    : 'Plan',
+  leading: <PlanProgressMarks entries={props.entries} />,
+  detail: planDetail(props),
+  fill: props.wide,
+  ...planExpansion(props),
+});
+
+function planDetail({ wide, entries }: PlanTriggerProps): string | undefined {
+  return wide
+    ? entries.find((entry) => entry.status === 'in_progress')?.content
+    : undefined;
 }
 
-function CurrentPlanStep({ entries, expanded }: CurrentStepProps): JSX.Element {
-  const className = cn(
-    'text-muted-foreground web:transition-transform web:duration-200',
-    !expanded && 'rotate-180',
-  );
-
-  return (
-    <>
-      <CurrentStepLabel entries={entries} />
-      <Chevron direction="up" className={className} />
-    </>
-  );
-}
-
-function PlanTriggerLabel({ entries, wide }: PlanEntriesProps): JSX.Element {
-  return (
-    <Text
-      selectable={false}
-      role={wide ? 'secondary' : 'badge'}
-      className={unselectableTextClassName}
-    >
-      {wide ? `Plan ${completedSteps(entries)}/${entries.length}` : 'Plan'}
-    </Text>
-  );
-}
-
-function PlanTriggerContent({
-  entries,
+function planExpansion({
   wide,
   expanded,
-}: Pick<PlanTriggerProps, 'entries' | 'wide' | 'expanded'>): JSX.Element {
-  return (
-    <>
-      <PlanProgressMarks entries={entries} wide={wide} />
-      <PlanTriggerLabel entries={entries} wide={wide} />
-      {wide && <CurrentPlanStep entries={entries} expanded={expanded} />}
-    </>
-  );
-}
-
-export function createPlanTrigger(props: PlanTriggerProps): JSX.Element {
-  const className = planTriggerClass(props);
-
-  const pressableProps = {
-    disabled: props.disabled,
-    accessibilityLabel: 'Plan',
-    ...planExpansionProps(props),
-    className,
-  };
-
-  return (
-    <Pressable {...pressableProps} role="button">
-      <PlanTriggerContent {...props} />
-    </Pressable>
-  );
-}
-
-const currentStepTextProps = {
-  selectable: false,
-  numberOfLines: 1,
-  role: 'secondary',
-  className: 'select-none flex-1 min-w-0 text-foreground',
-} as const;
-
-function CurrentStepLabel({ entries }: { entries: PlanEntry[] }): JSX.Element {
-  return (
-    <Text {...currentStepTextProps}>
-      {entries.find((entry) => entry.status === 'in_progress')?.content}
-    </Text>
-  );
-}
-
-function planTriggerClass({
-  wide,
-  disabled,
-}: Pick<PlanTriggerProps, 'wide' | 'disabled'>): string {
-  return contentActionClass({
-    variant: 'ghost',
-    className: wide
-      ? 'h-8 sm:h-8 py-0 w-full px-3 gap-1.5 rounded-none justify-start'
-      : chipClassName,
-    disabled,
-  });
-}
-
-interface PlanExpansionProps {
-  accessibilityState: { expanded: boolean | undefined };
-  'aria-expanded': boolean | undefined;
-  onPress: (() => void) | undefined;
-}
-
-function planExpansionProps(
-  props: Pick<PlanTriggerProps, 'wide' | 'expanded' | 'toggle'>,
-): PlanExpansionProps {
-  const { wide, expanded, toggle } = props;
-  const revealed = wide ? expanded : undefined;
+  toggle,
+}: PlanTriggerProps): Pick<
+  React.ComponentProps<typeof Pill>,
+  'onPress' | 'aria-expanded' | 'disclosure'
+> {
+  if (!wide) return {};
 
   return {
-    accessibilityState: { expanded: revealed },
-    'aria-expanded': revealed,
-    onPress: wide ? toggle : undefined,
+    onPress: toggle,
+    'aria-expanded': expanded,
+    disclosure: expanded ? 'up' : 'down',
   };
 }

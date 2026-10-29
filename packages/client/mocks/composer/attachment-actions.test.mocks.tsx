@@ -1,4 +1,8 @@
-import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
+import {
+  layoutWidths,
+  settleLayout,
+  wideBreakpoint,
+} from '@repo/kit/mocks/story-layout';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { fn, expect, waitFor, within } from 'storybook/test';
@@ -58,7 +62,6 @@ export function attachmentMenus(width: number): Story {
     args: {
       onAttachCamera: fn(),
       onAttachFiles: fn(),
-      onSelectSlashCommand: fn(),
       onCreateGoal: fn(),
     },
     play: async ({ canvas, userEvent, args }) => {
@@ -74,7 +77,6 @@ export function attachmentMenus(width: number): Story {
             ] as const)
           : ([
               ['Files', args.onAttachFiles],
-              ['Slash Commands', args.onSelectSlashCommand],
               ['Goal', args.onCreateGoal],
             ] as const);
 
@@ -101,4 +103,40 @@ export function attachmentMenus(width: number): Story {
 
 function absentAttachmentChoice(width: number): string {
   return width < wideBreakpoint() ? 'Goal' : 'Camera';
+}
+
+// Each phone action gets its own fixture and checks the callback after the sheet closes.
+export function phoneAttachmentAction(
+  label: 'Camera' | 'Photos' | 'Files',
+): Story {
+  const camera = fn();
+  const photos = fn();
+  const files = fn();
+  const callbacks = { Camera: camera, Photos: photos, Files: files };
+
+  return {
+    args: {
+      onAttachCamera: camera,
+      onAttachImages: photos,
+      onAttachFiles: files,
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleLayout(layoutWidths.phone);
+      await userEvent.click(canvas.getByRole('button', { name: 'Attach' }));
+      const overlay = within(document.body);
+      await userEvent.click(
+        await overlay.findByRole('button', { name: label }),
+      );
+      await waitFor(() => expect(callbacks[label]).toHaveBeenCalledOnce());
+      await waitFor(() =>
+        expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+      );
+
+      for (const other of (['Camera', 'Photos', 'Files'] as const).filter(
+        (name) => name !== label,
+      )) {
+        await expect(callbacks[other]).not.toHaveBeenCalled();
+      }
+    },
+  };
 }

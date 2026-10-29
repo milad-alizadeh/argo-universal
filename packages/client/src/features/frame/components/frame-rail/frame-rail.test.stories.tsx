@@ -46,6 +46,17 @@ export const ListsAndPicksPluginItems: Story = {
   },
 };
 
+export const KeyboardFocusActivatesASection: Story = {
+  play: async ({ args, canvas, userEvent }) => {
+    const sessions = canvas.getByRole('button', { name: 'Sessions' });
+
+    await userEvent.tab();
+    await expect(sessions).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onSectionChange).toHaveBeenLastCalledWith('sessions');
+  },
+};
+
 export const SidebarToggleBelongsToTheBand: Story = {
   play: async ({ canvas }) => {
     await expect(

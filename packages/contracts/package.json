@@ -72,7 +72,9 @@
     "generate:plugin-reference": "tsx tools/generate-plugin-reference.mts",
     "check:plugin-reference": "tsx tools/generate-plugin-reference.mts --check",
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate:plugin-kit": "tsx tools/generate-plugin-kit.mts",
+    "check:plugin-kit": "tsx tools/generate-plugin-kit.mts --check"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

@@ -16,7 +16,7 @@ import {
 } from '../composer-status/chip-trigger';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu } from './agent-model-menu';
-import { AgentModelTrailing } from './agent-model-trailing';
+import { AgentModelTrailing, agentModelEffort } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
@@ -151,9 +151,7 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   return {
     label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
-    // The Composer's own size, the chips' above it: one scale across the envelope (owner, 2026-10-21).
-    labelRole: 'badge',
-    size: 'md',
+    detail: agentModelEffort(props),
     disabled: props.disabled,
     leading: agentModelLeading(props),
     trailing: <AgentModelTrailing configuration={configuration} wide={wide} />,

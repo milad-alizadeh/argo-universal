@@ -1,11 +1,37 @@
 import { describe, expect, it } from 'vitest';
 import {
+  findCommand,
   insertSuggestion,
+  insertWordAtCaret,
   matchSuggestionTrigger,
+  querySuggestions,
   suggestionsAtCaret,
   type ComposerSuggestion,
+  type SuggestionGroup,
   type SuggestionSource,
 } from './rich-textarea-suggestions';
+
+const sources: SuggestionSource[] = [
+  {
+    id: 'agent',
+    title: 'Agent',
+    query: () => [],
+    commands: [{ name: 'review', hint: 'a branch' }, { name: 'revert' }],
+  },
+  {
+    id: 'plugin',
+    title: 'Plugin',
+    query: () => [{ id: 'plan', label: 'Plan', insert: '/plan ' }],
+  },
+];
+
+it('finds a command by its exact name, with its hint', () => {
+  expect(findCommand(sources, 'review')?.hint).toBe('a branch');
+});
+
+it.each(['rev', 'plan', 'nothing'])('finds no command named %j', (name) => {
+  expect(findCommand(sources, name)).toBeUndefined();
+});
 
 it.each([
   ['/', { leadOffset: 0, matchingString: '', replaceableString: '/' }],
@@ -78,11 +104,56 @@ describe('suggestionsAtCaret', () => {
   });
 });
 
+describe('insertWordAtCaret', () => {
+  it.each([
+    ['', { start: 0, end: 0 }, { text: '/', caret: 1 }],
+    ['Run', { start: 3, end: 3 }, { text: 'Run /', caret: 5 }],
+    ['Run ', { start: 4, end: 4 }, { text: 'Run /', caret: 5 }],
+    ['Run\n', { start: 4, end: 4 }, { text: 'Run\n/', caret: 5 }],
+    ['Run later', { start: 3, end: 3 }, { text: 'Run / later', caret: 5 }],
+    ['Run later', { start: 0, end: 0 }, { text: '/Run later', caret: 1 }],
+    ['Run later', { start: 4, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 3, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 0, end: 9 }, { text: '/', caret: 1 }],
+  ])('puts a word where %j is selected as %#', (text, selection, expected) => {
+    expect(insertWordAtCaret(text, selection, '/')).toEqual(expected);
+  });
+});
+
 describe('insertSuggestion', () => {
   it('replaces the slash word and puts the caret after the inserted text', () => {
     expect(insertSuggestion('Do /re later', 6, review)).toEqual({
       text: 'Do /review  later',
       caret: 11,
     });
+  });
+});
+
+const many: SuggestionSource = {
+  id: 'many',
+  title: 'Many',
+  query: () =>
+    Array.from({ length: 10 }, (_, index) => ({
+      id: `option-${index}`,
+      label: `Option ${index}`,
+      insert: `option-${index} `,
+    })),
+};
+
+const none: SuggestionSource = { id: 'none', title: 'None', query: () => [] };
+
+const idsOf = (groups: SuggestionGroup[]): string[] =>
+  groups.flatMap(({ suggestions }) => suggestions.map(({ id }) => id));
+
+describe('querySuggestions', () => {
+  it('keeps source order, the first eight of each, and drops empty sources', () => {
+    const groups = querySuggestions([none, many, commands], '');
+
+    expect(groups.map(({ source }) => source.id)).toEqual(['many', 'commands']);
+    expect(idsOf(groups).slice(7, 9)).toEqual(['option-7', 'review']);
+  });
+
+  it('answers nothing when no source matches', () => {
+    expect(querySuggestions([none, commands], 'zzz')).toEqual([]);
   });
 });

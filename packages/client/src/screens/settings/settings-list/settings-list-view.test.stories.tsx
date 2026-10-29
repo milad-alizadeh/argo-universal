@@ -1,5 +1,6 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor } from 'storybook/test';
+import { SidebarFrame } from '../../../../mocks/sessions-list/sidebar-frame.test.mocks';
 import {
   allPagesNavigate,
   searchNarrowsThePages,
@@ -13,6 +14,7 @@ import {
   searchFindsAppearance,
   themeChoosesInPlace,
 } from '../../../../mocks/settings/settings-list-theme.test.mocks';
+import { SettingsListView } from './settings-list-view';
 
 const meta = { ...settingsListTestMeta, title: 'Tests/Screens/Settings' };
 
@@ -114,3 +116,57 @@ export const TheSearchFindsAppearancePhone = searchFindsAppearance(
 export const TheSearchFindsAppearanceWide = searchFindsAppearance(
   layoutWidths.wide,
 );
+
+// The Frame supplies one equal inset for selected and unselected Settings rows.
+export const FramedSidebarGutters: Story = {
+  args: { selectedPath: '/settings/projects' },
+  parameters: { screenPreview: true },
+  beforeEach: () => settleLayout('wide'),
+  render: (args) => (
+    <SidebarFrame>
+      <SettingsListView {...args} />
+    </SidebarFrame>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const pane = await canvas.findByTestId('desktop-list');
+
+    const selected = await canvas.findByRole('link', {
+      name: /^Projects(?:,|$)/,
+    });
+
+    const other = await canvas.findByRole('link', { name: /^Agents(?:,|$)/ });
+
+    await expect(selected).toHaveAttribute('aria-current', 'page');
+    const divider = canvas.getByRole('separator', { name: 'Resize sidebar' });
+    const initialWidth = pane.getBoundingClientRect().width;
+
+    await expectRowsInFrame(pane, [selected, other]);
+    divider.focus();
+    await userEvent.keyboard('{ArrowLeft}{ArrowLeft}{ArrowLeft}');
+    await expectRowsInFrame(pane, [selected, other]);
+    await userEvent.keyboard(
+      '{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}',
+    );
+    await expectRowsInFrame(pane, [selected, other]);
+
+    await expect(pane.getBoundingClientRect().width).toBeGreaterThan(
+      initialWidth,
+    );
+  },
+};
+
+async function expectRowsInFrame(
+  pane: HTMLElement,
+  rows: HTMLElement[],
+): Promise<void> {
+  for (const row of rows) {
+    const region = pane.getBoundingClientRect();
+    const bounds = row.getBoundingClientRect();
+    const left = bounds.left - region.left;
+    const right = region.right - bounds.right;
+
+    await expect(left).toBeGreaterThan(0);
+    await expect(left).toBeLessThan(16);
+    await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
+  }
+}

@@ -213,6 +213,12 @@
   }
 }
 
+@custom-variant hover-capable {
+  @media (hover: hover) {
+    @slot;
+  }
+}
+
 /*
  * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens. Text follows the platform,
  * not the shell: a wide window everywhere, and on the web and desktop a medium one too, though a
@@ -578,6 +584,20 @@
   @variant wide-type {
     font-size: var(--text-secondary-wide);
     line-height: var(--leading-secondary-wide);
+  }
+}
+
+/* Code that shares the surrounding Body text's size. */
+@utility type-body-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--font-weight-body);
+  color: var(--color-foreground);
+
+  @variant wide-type {
+    font-size: var(--text-body-wide);
+    line-height: var(--leading-body-wide);
   }
 }
 

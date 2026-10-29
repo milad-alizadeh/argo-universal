@@ -1,6 +1,7 @@
 import { hasLiquidGlass } from '@repo/kit/native-header';
 import { ActionShortcutScope } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
+import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -117,9 +118,12 @@ type SessionListOptions = Pick<
   | 'paddingTop'
 >;
 
-function sessionListOptions(props: SessionsListProps): SessionListOptions {
+function sessionListOptions(
+  props: SessionsListProps,
+  held: boolean,
+): SessionListOptions {
   return {
-    ...sessionsListLook(props.view.layout),
+    ...sessionsListLook(props.view.layout, held ? 'inset' : 'padded'),
     getSectionKey: sessionListSection(props),
     paddingTop: searchesAsOneList(props)
       ? searchTopPadding
@@ -132,7 +136,7 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
     <List
       {...listBehaviour}
       {...sessionsFade}
-      {...sessionListOptions(props)}
+      {...sessionListOptions(props, useSidebarGutterHeld())}
       {...sessionsListBehaviours(props)}
       onScroll={props.onScroll}
       {...listRows(props.rows)}

@@ -64,16 +64,30 @@ export function EmptyState(): ReactElement {
 }
 
 export function ScreenFooter(props: FieldPickerScreenProps): ReactNode {
-  const action = props.footerAction;
-
-  if (!action) return null;
+  if (!props.footerAction) return null;
 
   return (
+    <>
+      <View role="separator" className="h-px bg-border" />
+      <FooterButton action={props.footerAction} onClose={props.onClose} />
+    </>
+  );
+}
+
+type FooterButtonProps = {
+  action: NonNullable<FieldPickerScreenProps['footerAction']>;
+  onClose: FieldPickerScreenProps['onClose'];
+};
+
+function FooterButton({ action, onClose }: FooterButtonProps): ReactElement {
+  return (
     <Button
-      variant="text"
+      variant="secondary"
+      fullWidth
+      icon={action.icon}
       label={action.label}
       onPress={() => {
-        props.onClose?.();
+        onClose?.();
         action.onPress();
       }}
     />

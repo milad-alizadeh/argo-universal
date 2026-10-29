@@ -77,6 +77,13 @@ export const ListScreenHeadsTheSidebarColumn = at(layoutWidths.wide, {
         canvas.getByRole('heading', { name: 'Issues' }),
       ),
     );
+    const heading = canvas.getByRole('heading', { name: 'Issues' });
+    const sidebar = canvas.getByTestId('host-sidebar');
+
+    await expect(
+      heading.getBoundingClientRect().left -
+        sidebar.getBoundingClientRect().left,
+    ).toBe(24);
     await expect(column).toContainElement(
       canvas.getByRole('button', { name: 'Search Issues' }),
     );

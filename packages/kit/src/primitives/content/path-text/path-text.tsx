@@ -1,4 +1,4 @@
-import type * as React from 'react';
+import * as React from 'react';
 import { View } from 'react-native';
 import { Pressable } from '#primitives/actions/pressable';
 import { Tooltip } from '#primitives/overlays/tooltip';
@@ -14,6 +14,9 @@ export interface PathTextProps {
   // Compact: the whole path stays on its line and scrolls sideways.
   scroll?: boolean;
   testID?: string;
+  // A parent trigger may own the tooltip while this component still measures truncation.
+  showTooltip?: boolean;
+  onCutChange?: (cut: boolean) => void;
   // Pressing the path, which a tooltip around it would otherwise take.
   onPress?: React.ComponentProps<typeof Pressable>['onPress'];
 }
@@ -71,18 +74,29 @@ function Hinted(props: HintedProps): React.JSX.Element {
 function CutLine(props: PathTextProps): React.JSX.Element {
   const { cut, ...watch } = useCutShort(props.path);
   const line = <Line {...props} {...watch} />;
+  const { onCutChange } = props;
+
+  React.useEffect(() => onCutChange?.(cut), [cut, onCutChange]);
 
   // A column, so the tooltip's own wrapper takes the row's width rather than the path's.
   return (
     <View className="min-w-0 flex-1">
-      {cut ? (
-        <Hinted {...props} onHoverIn={watch.onLayout}>
-          {line}
-        </Hinted>
-      ) : (
-        line
-      )}
+      {cutContent(props, cut, { line, onHoverIn: watch.onLayout })}
     </View>
+  );
+}
+
+function cutContent(
+  props: PathTextProps,
+  cut: boolean,
+  watch: { line: React.ReactElement; onHoverIn: () => void },
+): React.JSX.Element {
+  return cut && props.showTooltip !== false ? (
+    <Hinted {...props} onHoverIn={watch.onHoverIn}>
+      {watch.line}
+    </Hinted>
+  ) : (
+    watch.line
   );
 }
 
