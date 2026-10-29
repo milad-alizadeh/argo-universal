@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { userEvent as browserUser } from 'vitest/browser';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
@@ -43,7 +44,7 @@ export const ProjectActions: Story = {
     });
 
     await waitFor(() => expect(heading).toBeVisible());
-    await userEvent.hover(heading);
+    await browserUser.hover(heading);
 
     const settings = canvas.getByRole('button', {
       name: projectButtonName(projectSettingsLabel),
@@ -65,7 +66,7 @@ export const ProjectActions: Story = {
     await userEvent.click(heading);
     await expect(heading).toHaveAttribute(expandedAttribute, 'false');
     await expect(heading).toHaveAccessibleName('Example Project');
-    await userEvent.hover(heading);
+    await browserUser.hover(heading);
     await userEvent.click(newSession);
     await expect(heading).toHaveAttribute(expandedAttribute, 'false');
   },
