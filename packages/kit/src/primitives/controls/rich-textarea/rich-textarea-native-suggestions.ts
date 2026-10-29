@@ -13,7 +13,7 @@ interface Selection {
   end: number;
 }
 
-interface NativeSuggestions {
+export interface NativeSuggestions {
   groups: SuggestionGroup[] | null;
   // Props for the text field: the draft, the caret, and a caret to hand it after a choice.
   fieldProps: Pick<
@@ -28,7 +28,8 @@ interface CaretState {
   position: number;
   collapsed: boolean;
   report: (event: SelectionEvent) => void;
-  choose: (selection: Selection | null) => void;
+  place: (selection: Selection) => void;
+  release: () => void;
 }
 
 type SelectionEvent = Parameters<
@@ -43,17 +44,18 @@ const atEnd = (value: string): Selection => ({
 // The caret the field last reported, until a choice sets one; at the end of the text before either.
 function useCaret(value: string): CaretState {
   const [reported, setReported] = useState<Selection | null>(null);
-  const [chosen, choose] = useState<Selection | null>(null);
+  const [chosen, setChosen] = useState<Selection | null>(null);
   const caret = chosen ?? reported ?? atEnd(value);
 
   return {
     chosen,
-    choose,
+    release: () => setChosen(null),
+    place: setChosen,
     position: Math.min(caret.end, value.length),
     collapsed: caret.start === caret.end,
     report: (event) => {
       setReported(event.nativeEvent.selection);
-      choose(null);
+      setChosen(null);
     },
   };
 }
@@ -66,7 +68,7 @@ function chooser(
   return (suggestion) => {
     const inserted = insertSuggestion(value, caret.position, suggestion);
 
-    caret.choose({ start: inserted.caret, end: inserted.caret });
+    caret.place({ start: inserted.caret, end: inserted.caret });
     onChangeText(inserted.text);
   };
 }
@@ -77,7 +79,7 @@ function typer(
   onChangeText: (value: string) => void,
 ): (value: string) => void {
   return (changed) => {
-    caret.choose(null);
+    caret.release();
     onChangeText(changed);
   };
 }

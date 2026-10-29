@@ -1,7 +1,10 @@
 import type * as React from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 import { cn } from '#kit/utils';
-import { useNativeSuggestions } from './rich-textarea-native-suggestions';
+import {
+  useNativeSuggestions,
+  type NativeSuggestions,
+} from './rich-textarea-native-suggestions';
 import {
   plainFieldClassName,
   type RichTextareaProps,
@@ -47,7 +50,7 @@ const fieldClassName = (props: RichTextareaProps): string =>
 
 interface PlainFieldProps {
   props: RichTextareaProps;
-  fieldProps: ReturnType<typeof useNativeSuggestions>['fieldProps'];
+  fieldProps: NativeSuggestions['fieldProps'];
 }
 
 function PlainField({ props, fieldProps }: PlainFieldProps): React.JSX.Element {
