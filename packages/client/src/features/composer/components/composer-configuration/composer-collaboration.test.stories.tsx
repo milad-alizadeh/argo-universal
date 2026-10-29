@@ -1,4 +1,5 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -14,7 +15,7 @@ const configured = {
   ...configuration,
   onConfigChange,
   configOptions: [
-    ...configuration.configOptions,
+    ...recordedSessionOptions(configuration.agent?.id ?? ''),
     {
       configId: 'collaboration_mode',
       category: 'collaboration_mode',
@@ -59,8 +60,10 @@ function collaboration(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
+      await expect(onConfigChange).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
       const overlay = within(document.body);
+      await expect(onConfigChange).not.toHaveBeenCalled();
 
       if (width === layoutWidths.wide) {
         await userEvent.click(
@@ -68,6 +71,7 @@ function collaboration(width: number): Story {
             name: /^Collaboration mode, Default/,
           }),
         );
+        await expect(onConfigChange).not.toHaveBeenCalled();
         await userEvent.click(
           await overlay.findByRole('menuitemradio', { name: 'Plan' }),
         );
@@ -82,9 +86,11 @@ function collaboration(width: number): Story {
         );
       }
 
-      await expect(onConfigChange).toHaveBeenCalledWith(
-        'collaboration_mode',
-        'plan',
+      await waitFor(() =>
+        expect(onConfigChange).toHaveBeenCalledWith(
+          'collaboration_mode',
+          'plan',
+        ),
       );
     },
   };
