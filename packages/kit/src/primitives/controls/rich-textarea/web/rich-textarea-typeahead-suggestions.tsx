@@ -66,6 +66,7 @@ function suggestionOption(
   suggestion: ComposerSuggestion,
 ): TypeaheadOption {
   const display = {
+    group: source.id,
     title: source.title,
     content: <SuggestionContent suggestion={suggestion} />,
     className: 'flex-col gap-0.5',

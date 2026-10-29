@@ -123,10 +123,13 @@ function useSuggestionGroups(
   );
   const [arrived, setArrived] = useState<Arrived | null>(null);
 
-  useEffect(
-    () => run?.subscribe(() => setArrived({ run, groups: run.groups() })),
-    [run],
-  );
+  useEffect(() => {
+    if (!run) return undefined;
+    // An answer that settled before this subscribed is read now, not missed.
+    setArrived({ run, groups: run.groups() });
+
+    return run.subscribe(() => setArrived({ run, groups: run.groups() }));
+  }, [run]);
 
   if (!run) return null;
   const groups = arrived?.run === run ? arrived.groups : run.groups();

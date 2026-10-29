@@ -214,3 +214,22 @@ export const AChosenResultWithAResourceSendsItsTextAndResource: Story = {
     );
   },
 };
+
+export const AnAnswerThatIsAlreadySettledStillShows: Story = {
+  args: {
+    suggestions: [
+      {
+        id: 'ready',
+        title: 'Ready',
+        query: () => Promise.resolve([lateItem('ready-1')]),
+      },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await canvas.findByRole('button', { name: 'Late ready-1' });
+  },
+};

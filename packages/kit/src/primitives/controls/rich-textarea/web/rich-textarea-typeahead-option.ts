@@ -8,7 +8,13 @@ import type { ReactNode } from 'react';
 export class TypeaheadOption extends MenuOption {
   constructor(
     key: string,
-    readonly display: { title: string; content: ReactNode; className: string },
+    readonly display: {
+      // Options of one group sit under one title.
+      group: string;
+      title: string;
+      content: ReactNode;
+      className: string;
+    },
     readonly insert: (node: TextNode | null) => void,
   ) {
     super(key);

@@ -75,7 +75,7 @@ function MenuRows(props: MenuProps): React.JSX.Element[] {
       </button>
     );
     const startsGroup =
-      props.options[index - 1]?.display.title !== option.display.title;
+      props.options[index - 1]?.display.group !== option.display.group;
 
     return startsGroup
       ? [
