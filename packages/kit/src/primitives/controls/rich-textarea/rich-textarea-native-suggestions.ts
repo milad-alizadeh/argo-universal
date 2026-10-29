@@ -119,6 +119,7 @@ function useSuggestionGroups(
     () => (query === null ? asksNothing : new SuggestionRun(sources, query)),
     [sources, query],
   );
+
   const groups = useSyncExternalStore(run.subscribe, run.groups);
 
   return groups.length > 0 ? groups : null;

@@ -134,11 +134,12 @@ function useLateAnswers(
 ): void {
   useEffect(() => {
     const refresh = (): void => change(asked);
+
     const stops = adapters.flatMap((adapter) =>
       adapter.subscribe ? [adapter.subscribe(refresh)] : [],
     );
 
-    return () => {
+    return (): void => {
       for (const stop of stops) stop();
     };
   }, [adapters, change]);
