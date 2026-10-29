@@ -101,7 +101,7 @@ async function saveDiscovery(
    * stays open for them and they follow in a second write that only the revision it started from may take.
    */
   await commands.seen(discovery.signal, deps.commandsWaitMs);
-  const { committedRevision } = job;
+  const committedRevision = job.committedRevision();
 
   if (commands.commands && commands.commands !== early && committedRevision)
     await writeDatabaseJobAndWaitForCommit(
