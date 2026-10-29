@@ -24,7 +24,7 @@ export const pluginRoute = ({
   page,
 }: PluginRoute): string[] => [pluginId, navId, ...page];
 
-export function parsePluginRoute(route: readonly string[]): PluginRoute {
+function parsePluginRoute(route: readonly string[]): PluginRoute {
   const [pluginId = '', navId = '', ...page] = route;
 
   return { pluginId, navId, page };

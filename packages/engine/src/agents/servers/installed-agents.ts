@@ -19,7 +19,7 @@ import { readAgentServer } from './agent-servers-sql';
 // A Registry Agent the user installed on this Server: its agent_servers row.
 export type InstalledAgent = { id: string; env: AgentServerEnvironment };
 
-export type InstalledAgentAnswer =
+type InstalledAgentAnswer =
   | { installed: true; agent: InstalledAgent }
   | { installed: false; message: string };
 

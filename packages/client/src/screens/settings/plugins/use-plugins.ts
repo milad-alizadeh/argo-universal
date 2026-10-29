@@ -36,7 +36,7 @@ export function usePluginsLoad(): PluginsLoad {
 }
 
 // Refetches the Plugin list, each Plugin's settings and the declared Slots' items, after the Server changes them.
-export function usePluginsInvalidation(): () => Promise<void> {
+function usePluginsInvalidation(): () => Promise<void> {
   const trpc = useTRPC(),
     cache = useQueryClient();
 

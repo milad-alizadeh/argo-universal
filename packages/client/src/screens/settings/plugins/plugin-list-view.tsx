@@ -35,7 +35,7 @@ export interface PluginListViewProps {
   onOpenSlot: (slotId: string) => void;
 }
 
-export const pluginsTitle = 'Plugins';
+const pluginsTitle = 'Plugins';
 
 // One row per Plugin in one card, as iOS Settings lists its Apps: each opens the Plugin's own page.
 export function PluginListView(props: PluginListViewProps): React.JSX.Element {

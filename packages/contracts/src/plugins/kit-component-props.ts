@@ -7,11 +7,6 @@ export const stringLabel = z
 
 export const optionalLabel = stringLabel.optional();
 
-export const tone = z
-  .enum(['neutral', 'accent', 'success', 'warning', 'danger'])
-  .optional()
-  .describe('Argo semantic tone.');
-
 type EventHandler<Name extends string> = z.ZodUnion<
   readonly [
     z.ZodObject<{ $event: z.ZodLiteral<Name> }, z.core.$strict>,
@@ -43,7 +38,3 @@ export function echoes<
 ): z.ZodNonOptional<Fields[Prop]> {
   return props.shape[prop].nonoptional().meta({ value: prop, ...rules });
 }
-
-export const imageSource = z
-  .union([z.string().url(), z.object({ asset: z.string() })])
-  .describe('A remote URL or Plugin asset served through the Server.');

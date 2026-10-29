@@ -50,7 +50,7 @@ export function pickers(width: number, agentIndex: number): Story {
   };
 }
 
-export function ConfiguredComposer({
+function ConfiguredComposer({
   agent,
 }: {
   agent: AgentServer;

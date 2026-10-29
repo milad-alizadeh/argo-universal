@@ -5,7 +5,7 @@ import type {
   FeedViewItem,
 } from './feed-view';
 
-export function sameList<Value>(
+function sameList<Value>(
   first: readonly Value[],
   second: readonly Value[],
   isSame: (first: Value, second: Value) => boolean = Object.is,

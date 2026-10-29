@@ -55,7 +55,7 @@ type HeadingContent = { title: ReactNode; actions: ReactNode };
  * its search the sidebar's, since it sits above a list beside its page. A List that is selecting replaces it with its
  * own header (ADR-0043).
  */
-export type HeadingPlacement = 'page' | 'list';
+type HeadingPlacement = 'page' | 'list';
 
 type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 

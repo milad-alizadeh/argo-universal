@@ -9,7 +9,7 @@ export type SessionHeaderStatus = Extract<
   'running' | 'needs_input' | 'idle'
 >;
 
-export interface SessionChanges {
+interface SessionChanges {
   summary?: ChangesSummary;
   open: boolean;
   onOpenChange: (open: boolean) => void;

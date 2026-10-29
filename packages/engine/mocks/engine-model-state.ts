@@ -38,13 +38,13 @@ export let databaseCloses: number;
 
 export let engine: Actor<typeof machine>;
 
-export const graphDatabase = openDatabase(':memory:');
+const graphDatabase = openDatabase(':memory:');
 
 afterAll((): void => graphDatabase.$client.close());
 
 export let mockDatabase = graphDatabase;
 
-export let removeDatabase: () => void;
+let removeDatabase: () => void;
 
 function prepareDatabase(): void {
   databaseCloses = 0;

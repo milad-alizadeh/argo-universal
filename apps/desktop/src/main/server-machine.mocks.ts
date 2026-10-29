@@ -71,7 +71,7 @@ export let quitCalls: PendingCall<
   boolean
 >[];
 
-export let badges: number[];
+let badges: number[];
 
 export const expectBadge = (attention: number): void => {
   expect(badges.at(-1)).toBe(attention);

@@ -15,21 +15,6 @@ export type PluginState = {
 // A Plugin the user never changed is on, with every setting at its default (ADR-0025).
 const untouched: PluginState = { enabled: true, settings: {} };
 
-export const readPluginStates = (
-  database: Database,
-): Map<string, PluginState> =>
-  new Map(
-    database
-      .select()
-      .from(pluginState)
-      .all()
-      .map((row) => {
-        const { id, enabled, settings } = PluginStateRecord.parse(row);
-
-        return [id, { enabled, settings }];
-      }),
-  );
-
 export const readPluginState = (
   database: Pick<Database, 'select'>,
   pluginId: string,

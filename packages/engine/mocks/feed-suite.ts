@@ -22,7 +22,7 @@ export let database: Database;
 
 export let runtimeDirectory: string;
 
-export let removeDatabase: () => void;
+let removeDatabase: () => void;
 
 export let feedTestHost: Awaited<ReturnType<typeof startEngineTestHost>>;
 

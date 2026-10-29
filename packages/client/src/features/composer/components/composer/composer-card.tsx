@@ -22,7 +22,7 @@ const cardGlass = {
     'rounded-2xl bg-card shadow-card wide:bg-card/80 dark:wide:bg-card wide:shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
 } as const;
 
-export function ComposerCard(layout: CardLayout): React.JSX.Element {
+function ComposerCard(layout: CardLayout): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass} glass={!layout.wide}>
       <ComposerAttachments {...layout} />

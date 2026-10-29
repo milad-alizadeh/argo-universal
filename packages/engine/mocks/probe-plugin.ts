@@ -17,7 +17,7 @@ import type { PluginNetwork } from '../src/plugins';
 import { fixtureTls } from './fixture-tls';
 import { createRuntimePlugins } from './runtime-plugins';
 
-export const outFile = 'out.json';
+const outFile = 'out.json';
 
 export async function scratch(): Promise<string> {
   const directory = await realpath(

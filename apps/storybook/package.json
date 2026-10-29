@@ -38,7 +38,6 @@
     "@types/react": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "expo": "catalog:",
     "playwright": "catalog:",
     "react-native-worklets": "catalog:",
     "storybook": "catalog:",

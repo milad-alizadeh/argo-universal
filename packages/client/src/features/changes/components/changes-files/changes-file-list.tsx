@@ -16,9 +16,9 @@ import type {
 import { ChangesRow, type RowContext } from './changes-file-rows';
 import { useOpenFiles } from './use-open-files';
 
-export const changedFilesLabel = 'Changed files';
+const changedFilesLabel = 'Changed files';
 
-export const loadingMoreFilesLabel = 'Loading more files';
+const loadingMoreFilesLabel = 'Loading more files';
 
 type FileListProps = ChangesViewProps & { files: readonly ChangedFile[] };
 
