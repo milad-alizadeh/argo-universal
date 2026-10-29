@@ -78,16 +78,18 @@ export async function sessionReadScope(
   const otherId = await addOtherProject(host);
 
   await writeReviewFiles(host, otherId);
-  const calling = await openAccessSession(fixture, 'Caller');
-  const target = await openAccessSession(fixture, 'Target');
-  const foreign = await openAccessSession(fixture, 'Foreign', otherId);
 
-  return {
-    host,
-    calling,
-    target,
-    foreign,
-    otherId,
-    user: await operationCaller(host),
-  };
+  return readScopeSessions(fixture, otherId);
 }
+
+const readScopeSessions = async (
+  fixture: { host: Host; outputs: TerminalOutputResponse[] },
+  otherId: string,
+): Promise<ReadScopeFixture> => ({
+  host: fixture.host,
+  calling: await openAccessSession(fixture, 'Caller'),
+  target: await openAccessSession(fixture, 'Target'),
+  foreign: await openAccessSession(fixture, 'Foreign', otherId),
+  otherId,
+  user: await operationCaller(fixture.host),
+});
