@@ -124,11 +124,11 @@ function EditorTypeahead({
   return <TypeaheadPlugin {...props} onChooseSuggestion={choose} />;
 }
 
-function EditorParts(props: EditorParts): React.JSX.Element {
+function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
   return (
     <>
       <MessageField {...props} />
-      <EditorTypeahead {...props} />
+      <EditorTypeahead {...props} references={references} />
       <EditingPlugins />
       <KeyboardPlugin />
       <EditablePlugin editable={props.editable} />
