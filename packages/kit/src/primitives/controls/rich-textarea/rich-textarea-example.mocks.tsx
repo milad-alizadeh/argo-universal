@@ -59,6 +59,23 @@ export function RichTextareaExample({
   );
 }
 
+// Suggestions that arrive when the person presses a button, with the editor not in focus.
+export function ButtonSuggestionsExample(
+  props: ExampleProps,
+): React.JSX.Element {
+  const [arrived, setArrived] = useState(false);
+  const suggestions = arrived ? props.suggestions : [];
+
+  return (
+    <>
+      <button type="button" onClick={() => setArrived(true)}>
+        Deliver suggestions
+      </button>
+      <RichTextareaExample {...props} suggestions={suggestions} />
+    </>
+  );
+}
+
 // Suggestions that arrive once the person has typed a slash, as an Agent's Slash commands do.
 export function LateSuggestionsExample(props: ExampleProps): React.JSX.Element {
   const [arrived, setArrived] = useState(false);

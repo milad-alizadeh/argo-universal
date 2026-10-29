@@ -1,7 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { expectListedAgent } from './agents';
-import { readAgent } from './agents';
+import { expectListedAgent, readAgent } from './agents';
 import { Given, Then, When } from './fixtures';
 import {
   agentModelLabel,
