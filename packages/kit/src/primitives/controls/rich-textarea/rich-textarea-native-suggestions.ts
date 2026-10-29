@@ -29,6 +29,7 @@ export interface NativeSuggestions {
 interface CaretState {
   chosen: Selection | null;
   position: number;
+  selected: Selection;
   collapsed: boolean;
   report: (event: SelectionEvent) => void;
   place: (selection: Selection) => void;
@@ -47,8 +48,12 @@ const atEnd = (value: string): Selection => ({
 const where = (
   caret: Selection,
   value: string,
-): Pick<CaretState, 'position' | 'collapsed'> => ({
+): Pick<CaretState, 'position' | 'selected' | 'collapsed'> => ({
   position: Math.min(caret.end, value.length),
+  selected: {
+    start: Math.min(caret.start, value.length),
+    end: Math.min(caret.end, value.length),
+  },
   collapsed: caret.start === caret.end,
 });
 
@@ -89,7 +94,7 @@ function wordInserter(
   onChangeText: (value: string) => void,
 ): NativeSuggestions['insertWord'] {
   return (word) => {
-    const inserted = insertWordAtCaret(value, caret.position, word);
+    const inserted = insertWordAtCaret(value, caret.selected, word);
 
     caret.place({ start: inserted.caret, end: inserted.caret });
     onChangeText(inserted.text);

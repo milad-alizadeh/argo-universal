@@ -84,18 +84,18 @@ export function separatorBefore(before: string): string {
   return /(?:^|\s)$/.test(before) ? '' : ' ';
 }
 
-// Puts a word at the caret, a space before it unless the text before is empty or ends in whitespace.
+// Puts a word where the selection is, replacing it, with a space before it unless the text before is empty or ends in whitespace.
 export function insertWordAtCaret(
   text: string,
-  caret: number,
+  selection: { start: number; end: number },
   word: string,
 ): InsertedText {
-  const before = text.slice(0, caret);
+  const before = text.slice(0, selection.start);
   const inserted = separatorBefore(before) + word;
 
   return {
-    text: before + inserted + text.slice(caret),
-    caret: caret + inserted.length,
+    text: before + inserted + text.slice(selection.end),
+    caret: selection.start + inserted.length,
   };
 }
 

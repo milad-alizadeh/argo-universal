@@ -61,9 +61,7 @@ function ComposerAttachItems({
   layout,
   close,
 }: AttachMenuProps): React.JSX.Element {
-  const choices = layout.wide
-    ? wideChoices(layout)
-    : phoneChoices(layout.props);
+  const choices = layout.wide ? wideChoices(layout) : phoneChoices(layout);
 
   return (
     <>
@@ -99,16 +97,14 @@ function slashCommandsChoice({ props, field }: AttachLayout): AttachChoice {
   };
 }
 
-function phoneChoices(
-  props: Pick<
-    AttachLayout['props'],
-    'onAttachCamera' | 'onAttachImages' | 'onAttachFiles'
-  >,
-): AttachChoice[] {
+function phoneChoices(layout: AttachLayout): AttachChoice[] {
+  const { props } = layout;
+
   return [
     ...cameraChoice(props),
     { label: 'Photos', icon: 'photos', onPress: props.onAttachImages },
     ...fileChoice(props),
+    slashCommandsChoice(layout),
   ];
 }
 

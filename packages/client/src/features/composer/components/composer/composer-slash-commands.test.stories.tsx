@@ -1,4 +1,4 @@
-import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, screen, waitFor, within } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import {
@@ -36,12 +36,16 @@ async function typeBeforeChoosing(
   await userEvent.type(canvas.getByRole('textbox', { name: 'Message' }), typed);
 }
 
-function chosenAfter(typed: string, expected: string): Story {
+function chosenAfter(
+  typed: string,
+  expected: string,
+  width: number | 'wide' = 'wide',
+): Story {
   return {
     args: { slashCommands: slashSuggestionsComposer.slashCommands },
     render: (args) => <SuggestionComposer {...args} />,
     play: async (context) => {
-      await settleLayout('wide');
+      await settleLayout(width);
       await typeBeforeChoosing(context, typed);
       await chooseSlashCommands(context);
       await expectMenuAndFocus(context);
@@ -56,6 +60,12 @@ function chosenAfter(typed: string, expected: string): Story {
 }
 
 export const SlashCommandsOpensTheMenuInAnEmptyComposer = chosenAfter('', '/');
+
+export const SlashCommandsOpensTheMenuOnAPhone = chosenAfter(
+  '',
+  '/',
+  layoutWidths.phone,
+);
 
 export const SlashCommandsSpacesAfterText = chosenAfter('Run', 'Run /');
 

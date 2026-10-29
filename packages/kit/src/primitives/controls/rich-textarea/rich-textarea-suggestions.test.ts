@@ -81,25 +81,17 @@ describe('suggestionsAtCaret', () => {
 
 describe('insertWordAtCaret', () => {
   it.each([
-    ['', 0, 1],
-    ['Run', 3, 5],
-    ['Run ', 4, 5],
-    ['Run\n', 4, 5],
-    ['Run later', 3, 5],
-    ['Run later', 0, 1],
-  ])('leaves the caret after a word put at %j, %i', (text, caret, expected) => {
-    expect(insertWordAtCaret(text, caret, '/').caret).toBe(expected);
-  });
-
-  it.each([
-    ['', 0, '/'],
-    ['Run', 3, 'Run /'],
-    ['Run ', 4, 'Run /'],
-    ['Run\n', 4, 'Run\n/'],
-    ['Run later', 3, 'Run / later'],
-    ['Run later', 0, '/Run later'],
-  ])('writes %j with the caret at %i as %j', (text, caret, expected) => {
-    expect(insertWordAtCaret(text, caret, '/').text).toBe(expected);
+    ['', { start: 0, end: 0 }, { text: '/', caret: 1 }],
+    ['Run', { start: 3, end: 3 }, { text: 'Run /', caret: 5 }],
+    ['Run ', { start: 4, end: 4 }, { text: 'Run /', caret: 5 }],
+    ['Run\n', { start: 4, end: 4 }, { text: 'Run\n/', caret: 5 }],
+    ['Run later', { start: 3, end: 3 }, { text: 'Run / later', caret: 5 }],
+    ['Run later', { start: 0, end: 0 }, { text: '/Run later', caret: 1 }],
+    ['Run later', { start: 4, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 3, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 0, end: 9 }, { text: '/', caret: 1 }],
+  ])('puts a word where %j is selected as %#', (text, selection, expected) => {
+    expect(insertWordAtCaret(text, selection, '/')).toEqual(expected);
   });
 });
 

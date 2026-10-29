@@ -44,7 +44,7 @@ export const AttachmentInNarrowContent: Story = {
       ).toBeVisible(),
     );
     await expect(
-      within(document.body).queryByRole('button', { name: 'Slash Commands' }),
+      within(document.body).queryByRole('button', { name: 'Goal' }),
     ).not.toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
   },
