@@ -57,19 +57,29 @@ function SuggestionRow({ suggestion, onChoose }: RowProps): React.JSX.Element {
   );
 }
 
+function GroupTitle({ title }: { title: string }): React.JSX.Element {
+  return (
+    <Text role="secondary" dimmed className="px-2 pt-1.5 pb-1 font-medium">
+      {title}
+    </Text>
+  );
+}
+
+// Each source's title heads its results, in the order the sources are given.
 function suggestionRows({
   groups,
   onChoose,
 }: SuggestionListProps): React.JSX.Element[] {
-  return groups.flatMap(({ source, suggestions }) =>
-    suggestions.map((suggestion) => (
+  return groups.flatMap(({ source, suggestions }) => [
+    <GroupTitle key={`${source.id}-title`} title={source.title} />,
+    ...suggestions.map((suggestion) => (
       <SuggestionRow
         key={`${source.id}-${suggestion.id}`}
         suggestion={suggestion}
         onChoose={onChoose}
       />
     )),
-  );
+  ]);
 }
 
 function SuggestionRows(props: SuggestionListProps): React.JSX.Element {

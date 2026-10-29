@@ -9,6 +9,7 @@ import {
   plainFieldClassName,
   type RichTextareaProps,
 } from './rich-textarea-props';
+import { useChosenResources } from './rich-textarea-resources';
 import { SuggestionList } from './rich-textarea-suggestion-list';
 import type { SuggestionSource } from './rich-textarea-suggestions';
 
@@ -27,6 +28,7 @@ function textFieldProps({
   autoFocus: _autoFocus,
   references: _references,
   suggestions: _suggestions,
+  onResourcesChange: _onResourcesChange,
   ...field
 }: RichTextareaProps): TextInputProps {
   return field;
@@ -73,9 +75,19 @@ function RichTextarea(props: RichTextareaProps): React.JSX.Element {
     props.suggestions ?? noSuggestions,
   );
 
+  const track = useChosenResources(props.value, props.onResourcesChange);
+
   return (
     <View className="w-full">
-      {groups ? <SuggestionList groups={groups} onChoose={choose} /> : null}
+      {groups ? (
+        <SuggestionList
+          groups={groups}
+          onChoose={(suggestion) => {
+            choose(suggestion);
+            track(suggestion);
+          }}
+        />
+      ) : null}
       <PlainField props={props} fieldProps={fieldProps} />
     </View>
   );

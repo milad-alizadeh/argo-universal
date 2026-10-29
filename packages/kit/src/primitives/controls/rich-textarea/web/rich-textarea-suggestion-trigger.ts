@@ -5,7 +5,7 @@ import type {
 import { $getSelection, $isRangeSelection, type LexicalNode } from 'lexical';
 import {
   matchSuggestionTrigger,
-  type SuggestionGroup,
+  type SuggestionRun,
 } from '../rich-textarea-suggestions';
 
 function $beforeInlineParent(node: LexicalNode): string {
@@ -45,12 +45,21 @@ function $validMatch(text: string): MenuTextMatch | null {
   return $startsSlashWord(match.leadOffset) ? match : null;
 }
 
+// The menu opens for a `/` word once a source has results, or may have them when its promise settles.
 export function suggestionTrigger(
-  ask: (query: string) => SuggestionGroup[],
+  ask: (query: string) => SuggestionRun,
+  forget: () => void,
 ): TriggerFn {
   return (text) => {
     const match = $validMatch(text);
 
-    return match && ask(match.matchingString).length > 0 ? match : null;
+    if (!match) {
+      forget();
+
+      return null;
+    }
+    const run = ask(match.matchingString);
+
+    return run.groups().length > 0 || run.pending() ? match : null;
   };
 }

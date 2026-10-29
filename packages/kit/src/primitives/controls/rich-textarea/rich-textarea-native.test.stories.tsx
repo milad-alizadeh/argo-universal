@@ -3,9 +3,15 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
-import { exampleLabel } from './rich-textarea-example.mocks';
-import { suggestionsRichTextarea } from './rich-textarea-fixtures';
+import { exampleLabel, lateSource } from './rich-textarea-example.mocks';
+import {
+  exampleItem,
+  optionsSource,
+  suggestionsRichTextarea,
+  twoSourcesRichTextarea,
+} from './rich-textarea-fixtures';
 import type { RichTextareaProps } from './rich-textarea-props';
+import type { ComposerSuggestion } from './rich-textarea-suggestions';
 import { RichTextarea } from './rich-textarea.native';
 
 // The phone drawing, drawn on the web preview: a controlled field that keeps its draft.
@@ -33,6 +39,7 @@ const meta = {
   component: NativeField,
   args: {
     onChangeText: fn(),
+    onResourcesChange: fn(),
     suggestions: suggestionsRichTextarea.suggestions,
   },
 } satisfies Meta<typeof NativeField>;
@@ -113,6 +120,97 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() =>
       expect(canvas.queryByRole('button', firstOption)).not.toBeInTheDocument(),
+    );
+  },
+};
+
+const itemOption = { name: 'Item 7 Seventh item' };
+
+export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
+  args: { suggestions: twoSourcesRichTextarea.suggestions },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    const first = await canvas.findByRole('button', firstOption);
+    const item = canvas.getByRole('button', itemOption);
+    const follows = (before: Element, after: Element): boolean =>
+      Boolean(
+        before.compareDocumentPosition(after) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+
+    await expect(follows(canvas.getByText('Suggestions'), first)).toBe(true);
+    await expect(follows(first, canvas.getByText('Items'))).toBe(true);
+    await expect(follows(canvas.getByText('Items'), item)).toBe(true);
+  },
+};
+
+const lateItem = (id: string): ComposerSuggestion => ({
+  id,
+  label: `Late ${id}`,
+  insert: `${id} `,
+});
+
+// Each story owns its late source, so no answer reaches another story.
+const joining = lateSource('Late');
+
+export const ASourceThatAnswersLateJoinsWithoutHidingTheRest: Story = {
+  args: { suggestions: [optionsSource, joining.source] },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await canvas.findByRole('button', firstOption);
+    await expect(
+      canvas.queryByRole('button', { name: 'Late late-1' }),
+    ).not.toBeInTheDocument();
+    joining.answer('', [lateItem('late-1')]);
+    await canvas.findByRole('button', { name: 'Late late-1' });
+    await expect(canvas.getByRole('button', firstOption)).toBeInTheDocument();
+  },
+};
+
+const changing = lateSource('Late');
+
+export const AnAnswerForAQueryThatHasChangedIsIgnored: Story = {
+  args: { suggestions: [changing.source] },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/a',
+    );
+    await userEvent.keyboard('b');
+    changing.answer('a', [lateItem('stale')]);
+    changing.answer('ab', [lateItem('fresh')]);
+    await canvas.findByRole('button', { name: 'Late fresh' });
+    await expect(
+      canvas.queryByRole('button', { name: 'Late stale' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const AChosenResultWithAResourceSendsItsTextAndResource: Story = {
+  args: { suggestions: twoSourcesRichTextarea.suggestions },
+  play: async ({ canvas, args }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      'See /it',
+    );
+    await userEvent.click(await canvas.findByRole('button', itemOption));
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('See ITEM-7 '),
+    );
+    await waitFor(() =>
+      expect(args.onResourcesChange).toHaveBeenLastCalledWith([
+        exampleItem.resource,
+      ]),
+    );
+    await userEvent.clear(canvas.getByRole('textbox', { name: exampleLabel }));
+    await waitFor(() =>
+      expect(args.onResourcesChange).toHaveBeenLastCalledWith([]),
     );
   },
 };

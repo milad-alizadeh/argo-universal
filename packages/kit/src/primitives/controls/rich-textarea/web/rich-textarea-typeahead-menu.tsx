@@ -55,20 +55,37 @@ function rowAttributes(props: RowProps): React.ComponentProps<'button'> {
   };
 }
 
+const groupTitleClassName =
+  'shrink-0 px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground';
+
+// Each source's title heads its results; options of one source sit together.
 function MenuRows(props: MenuProps): React.JSX.Element[] {
-  return props.options.map((option, index) => (
-    <button
-      key={option.key}
-      {...rowAttributes({
-        ...props,
-        option,
-        index,
-        selected: props.selectedIndex === index,
-      })}
-    >
-      {option.display.content}
-    </button>
-  ));
+  return props.options.flatMap((option, index) => {
+    const row = (
+      <button
+        key={option.key}
+        {...rowAttributes({
+          ...props,
+          option,
+          index,
+          selected: props.selectedIndex === index,
+        })}
+      >
+        {option.display.content}
+      </button>
+    );
+    const startsGroup =
+      props.options[index - 1]?.display.title !== option.display.title;
+
+    return startsGroup
+      ? [
+          <div key={`${option.key}-title`} className={groupTitleClassName}>
+            {option.display.title}
+          </div>,
+          row,
+        ]
+      : [row];
+  });
 }
 
 function TypeaheadMenu(
@@ -80,9 +97,6 @@ function TypeaheadMenu(
 
   return (
     <div ref={menu} role="group" aria-label={title} className={menuClassName}>
-      <div className="shrink-0 px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground">
-        {title}
-      </div>
       {MenuRows(props)}
     </div>
   );

@@ -2,7 +2,11 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { RichTextarea } from './rich-textarea';
 import type { ReferenceOption } from './rich-textarea-references';
-import type { SuggestionSource } from './rich-textarea-suggestions';
+import type {
+  ComposerSuggestion,
+  SuggestionResource,
+  SuggestionSource,
+} from './rich-textarea-suggestions';
 
 interface ExampleProps {
   initialValue?: string;
@@ -10,6 +14,7 @@ interface ExampleProps {
   onSubmit?: () => void;
   references?: readonly ReferenceOption[];
   suggestions?: readonly SuggestionSource[];
+  onResourcesChange?: (resources: readonly SuggestionResource[]) => void;
 }
 
 export const exampleLabel = 'Message';
@@ -57,4 +62,33 @@ export function RichTextareaExample({
       {...props}
     />
   );
+}
+
+interface LateSource {
+  source: SuggestionSource;
+  // Settles the promise the source gave for this query.
+  answer: (query: string, results: readonly ComposerSuggestion[]) => void;
+}
+
+/*
+ * A source that answers with a promise the story settles by hand, so a play decides when each
+ * answer arrives and in what order. Make one per story, so no answer outlives it.
+ */
+export function lateSource(title: string): LateSource {
+  const settlers = new Map<
+    string,
+    (results: readonly ComposerSuggestion[]) => void
+  >();
+
+  return {
+    source: {
+      id: title,
+      title,
+      query: (query) =>
+        new Promise((settle) => {
+          settlers.set(query, settle);
+        }),
+    },
+    answer: (query, results) => settlers.get(query)?.(results),
+  };
 }

@@ -14,6 +14,7 @@ import {
   type ReferenceOption,
   type RichTextareaProps,
 } from './rich-textarea-props';
+import { useChosenResources } from './rich-textarea-resources';
 import { blockThemeClassNames } from './rich-textarea-theme';
 import { EditingPlugins } from './web/rich-textarea-editing-plugins';
 import {
@@ -110,11 +111,21 @@ type EditorParts = Omit<RichTextareaProps, 'disabled' | 'references'> & {
   references: readonly ReferenceOption[];
 };
 
-function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
+function EditorParts({
+  references,
+  onResourcesChange,
+  ...props
+}: EditorParts): React.JSX.Element {
+  const choose = useChosenResources(props.value, onResourcesChange);
+
   return (
     <>
       <MessageField {...props} />
-      <TypeaheadPlugin {...props} references={references} />
+      <TypeaheadPlugin
+        {...props}
+        references={references}
+        onChooseSuggestion={choose}
+      />
       <EditingPlugins />
       <KeyboardPlugin />
       <EditablePlugin editable={props.editable} />

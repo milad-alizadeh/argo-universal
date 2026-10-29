@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { TextInputProps } from 'react-native';
 import {
   insertSuggestion,
-  suggestionsAtCaret,
+  slashQueryAtCaret,
+  startSuggestionQuery,
   type ComposerSuggestion,
   type SuggestionGroup,
+  type SuggestionRun,
   type SuggestionSource,
 } from './rich-textarea-suggestions';
 
@@ -102,6 +104,36 @@ function fieldProps(
   };
 }
 
+interface Arrived {
+  run: SuggestionRun;
+  groups: SuggestionGroup[];
+}
+
+/*
+ * What the sources offer for a query, growing as their promises settle. A new query starts a new
+ * run, so a late answer to an earlier one is never heard; null asks nothing.
+ */
+function useSuggestionGroups(
+  sources: readonly SuggestionSource[],
+  query: string | null,
+): SuggestionGroup[] | null {
+  const run = useMemo(
+    () => (query === null ? null : startSuggestionQuery(sources, query)),
+    [sources, query],
+  );
+  const [arrived, setArrived] = useState<Arrived | null>(null);
+
+  useEffect(
+    () => run?.subscribe(() => setArrived({ run, groups: run.groups() })),
+    [run],
+  );
+
+  if (!run) return null;
+  const groups = arrived?.run === run ? arrived.groups : run.groups();
+
+  return groups.length > 0 ? groups : null;
+}
+
 // The `/` list of the phone's plain field: the text and the caret decide when it shows (ADR-0023).
 export function useNativeSuggestions(
   value: string,
@@ -110,10 +142,13 @@ export function useNativeSuggestions(
 ): NativeSuggestions {
   const caret = useCaret(value);
 
+  const query = caret.collapsed
+    ? slashQueryAtCaret(value, caret.position)
+    : null;
+  const groups = useSuggestionGroups(sources, query);
+
   return {
-    groups: caret.collapsed
-      ? suggestionsAtCaret(value, caret.position, sources)
-      : null,
+    groups,
     fieldProps: fieldProps(caret, onChangeText),
     choose: chooser(value, caret, onChangeText),
   };

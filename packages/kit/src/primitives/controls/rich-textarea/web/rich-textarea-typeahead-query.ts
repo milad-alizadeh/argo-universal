@@ -1,6 +1,7 @@
 import type { TriggerFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import {
   useCallback,
+  useEffect,
   useMemo,
   useState,
   type Dispatch,
@@ -34,9 +35,10 @@ function matchingAdapter(
 function hasOptions(adapters: TypeaheadAdapter[], result: Match): boolean {
   if (!result.match) return false;
 
-  return Boolean(
-    adapters[result.index]?.options(result.match.matchingString).length,
-  );
+  const adapter = adapters[result.index];
+  const query = result.match.matchingString;
+
+  return Boolean(adapter?.options(query).length || adapter?.pending?.(query));
 }
 
 function sameQuery(
@@ -103,6 +105,7 @@ export function useTypeaheadQuery(
   const [query, setQuery] = useState<Query>(null);
 
   const receive = useQueryReceiver(setQuery);
+  const answered = useAnswers(adapters);
 
   const handlers = useMemo(
     () => queryHandlers(adapters, receive),
@@ -110,8 +113,9 @@ export function useTypeaheadQuery(
   );
 
   const options = useMemo(
+    // `answered` changes when a late answer arrives, so the options are read again.
     () => queryOptions(adapters, query),
-    [adapters, query],
+    [adapters, query, answered],
   );
 
   return { ...handlers, options };
@@ -124,4 +128,19 @@ function useQueryReceiver(
     (next: Query): void => change((previous) => nextQuery(previous, next)),
     [change],
   );
+}
+
+// A count that goes up whenever an adapter hears a late answer.
+function useAnswers(adapters: TypeaheadAdapter[]): number {
+  const [answered, setAnswered] = useState(0);
+
+  useEffect(() => {
+    const stops = adapters.map((adapter) =>
+      adapter.subscribe?.(() => setAnswered((count) => count + 1)),
+    );
+
+    return () => stops.forEach((stop) => stop?.());
+  }, [adapters]);
+
+  return answered;
 }

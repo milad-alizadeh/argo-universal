@@ -1,8 +1,13 @@
 import type { ReferenceOption } from './rich-textarea-references';
-import type { SuggestionSource } from './rich-textarea-suggestions';
+import type {
+  SuggestionResource,
+  SuggestionSource,
+} from './rich-textarea-suggestions';
 
 export type {
   ComposerSuggestion,
+  SuggestionAnswer,
+  SuggestionResource,
   SuggestionSource,
 } from './rich-textarea-suggestions';
 
@@ -19,7 +24,13 @@ export interface RichTextareaProps {
   accessibilityLabel: string;
   // The Issues and pull requests `#` offers; the web editor only, as the phone area has no tokens.
   references?: readonly ReferenceOption[];
+  // The `/` menu's sources, in the order their results are listed.
   suggestions?: readonly SuggestionSource[];
+  /*
+   * The `resource_link`s of the chosen results whose text is still in the draft, told whenever the
+   * list changes. The host sends them with the prompt beside the text, as an Issue reference's is.
+   */
+  onResourcesChange?: (resources: readonly SuggestionResource[]) => void;
   // Padding for the field itself, so a press anywhere in its padded area focuses the editor.
   fieldClassName?: string;
   // Focus the field when it mounts; the web editor only, as a phone keyboard should not open unasked.

@@ -1,5 +1,15 @@
 import type { IconName } from '@repo/contracts/kit-symbols';
 
+export interface SuggestionResource {
+  type: 'resource_link';
+  name: string;
+  uri: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+}
+
 export interface ComposerSuggestion {
   id: string;
   label: string;
@@ -8,15 +18,8 @@ export interface ComposerSuggestion {
   insert: string;
   // Set only when the result is a Slash command: its name, which `commands` of the source lists.
   command?: string;
-  resource?: {
-    type: 'resource_link';
-    name: string;
-    uri: string;
-    title?: string;
-    description?: string;
-    mimeType?: string;
-    size?: number;
-  };
+  // Sent with the prompt beside the text, as an Issue reference's `resource_link` is (ADR-0023).
+  resource?: SuggestionResource;
 }
 
 export interface SlashCommandEntry {
@@ -25,10 +28,15 @@ export interface SlashCommandEntry {
   hint?: string;
 }
 
+export type SuggestionAnswer =
+  | readonly ComposerSuggestion[]
+  | Promise<readonly ComposerSuggestion[]>;
+
 export interface SuggestionSource {
   id: string;
   title: string;
-  query: (query: string) => readonly ComposerSuggestion[];
+  // A source may answer with a promise: it joins the list when it settles, and is ignored if the query has moved on.
+  query: (query: string) => SuggestionAnswer;
   /*
    * The Slash commands this source has, stated apart from `query` so a typed `/name` is decided at once.
    * A result becomes a command token only through `command`, never by what it inserts.
@@ -75,32 +83,81 @@ export interface InsertedText {
 const resultLimit = 8;
 
 /*
- * What the `/` list offers for a query: each source's first matches, in source order, empty sources
- * left out. The web and native lists both ask here, once per change; promises and stale answers (#1326) land here.
+ * One asking of every source for one query. A synchronous source's results are there at once; a
+ * promise's join when it settles and `subscribe` hears of it. Groups keep source order, each source
+ * shows at most 8 and a source with nothing is left out. A run is dropped when its query changes:
+ * drop the subscription and a late answer is never heard.
  */
-export function querySuggestions(
-  sources: readonly SuggestionSource[],
-  query: string,
-): SuggestionGroup[] {
-  return sources.flatMap((source) => {
-    const suggestions = source.query(query).slice(0, resultLimit);
+export interface SuggestionRun {
+  groups: () => SuggestionGroup[];
+  // True while a source's promise has not settled.
+  pending: () => boolean;
+  subscribe: (listener: () => void) => () => void;
+}
 
-    return suggestions.length > 0 ? [{ source, suggestions }] : [];
+type Slot = readonly ComposerSuggestion[] | 'pending';
+
+const isPromise = (
+  answer: SuggestionAnswer,
+): answer is Promise<readonly ComposerSuggestion[]> => 'then' in answer;
+
+function groupsOf(
+  sources: readonly SuggestionSource[],
+  slots: readonly Slot[],
+): SuggestionGroup[] {
+  return sources.flatMap((source, index) => {
+    const slot = slots[index];
+    const suggestions = slot === undefined || slot === 'pending' ? [] : slot;
+
+    return suggestions.length > 0
+      ? [{ source, suggestions: suggestions.slice(0, resultLimit) }]
+      : [];
   });
 }
 
-// What the list offers while the caret is in a `/` word: each source's matches, or null when none match.
-export function suggestionsAtCaret(
-  text: string,
-  caret: number,
+export function startSuggestionQuery(
   sources: readonly SuggestionSource[],
-): SuggestionGroup[] | null {
-  const match = matchSuggestionTrigger(text.slice(0, caret));
+  query: string,
+): SuggestionRun {
+  const listeners = new Set<() => void>();
+  const slots: Slot[] = [];
+  let snapshot: SuggestionGroup[] = [];
 
-  if (!match) return null;
-  const groups = querySuggestions(sources, match.matchingString);
+  const settle = (index: number, results: readonly ComposerSuggestion[]) => {
+    slots[index] = results;
+    snapshot = groupsOf(sources, slots);
+    listeners.forEach((listener) => listener());
+  };
 
-  return groups.length > 0 ? groups : null;
+  sources.forEach((source, index) => {
+    const answer = source.query(query);
+
+    if (isPromise(answer)) {
+      slots[index] = 'pending';
+      answer.then(
+        (results) => settle(index, results),
+        () => settle(index, []),
+      );
+    } else {
+      slots[index] = answer;
+    }
+  });
+  snapshot = groupsOf(sources, slots);
+
+  return {
+    groups: () => snapshot,
+    pending: () => slots.includes('pending'),
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return () => listeners.delete(listener);
+    },
+  };
+}
+
+// The text typed after the `/` word the caret is in, or null when the caret is not in one.
+export function slashQueryAtCaret(text: string, caret: number): string | null {
+  return matchSuggestionTrigger(text.slice(0, caret))?.matchingString ?? null;
 }
 
 // Replaces the `/` word before the caret with the suggestion's text; the caret lands after it.
