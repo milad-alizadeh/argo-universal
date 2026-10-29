@@ -99,6 +99,36 @@ export const suggestionsRichTextarea = {
   ],
 } satisfies RichTextareaFixture;
 
+const knownCommands = [
+  { name: 'init', detail: 'Set up the project' },
+  { name: 'review', detail: 'Review the changes', hint: 'a branch' },
+];
+
+export const commandTokensRichTextarea = {
+  value: 'Run /init now, not /nothing yet.\nThen /review ',
+  accessibilityLabel,
+  suggestions: [
+    {
+      id: 'commands',
+      title: 'Commands',
+      query: (query: string): ComposerSuggestion[] =>
+        knownCommands.flatMap(({ name, detail, hint }) =>
+          name.startsWith(query)
+            ? [
+                {
+                  id: name,
+                  label: `/${name}`,
+                  detail,
+                  insert: `/${name} `,
+                  hint,
+                },
+              ]
+            : [],
+        ),
+    },
+  ],
+} satisfies RichTextareaFixture;
+
 export const scrollingSuggestionsRichTextarea = {
   value: '/',
   accessibilityLabel,

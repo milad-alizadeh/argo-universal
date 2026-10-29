@@ -57,7 +57,7 @@ function CommandHint({ hint }: { hint?: string }): React.JSX.Element | null {
   if (!hint) return null;
 
   return (
-    <span className="pointer-events-none inline-block w-0 select-none overflow-visible whitespace-nowrap pl-1.5 text-muted-foreground">
+    <span className="pointer-events-none inline-block w-0 select-none translate-x-3 overflow-visible whitespace-nowrap text-muted-foreground">
       {hint}
     </span>
   );
