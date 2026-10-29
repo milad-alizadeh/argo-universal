@@ -6,7 +6,7 @@ import { selectionValue } from './selection-value';
 
 const disabledDescription = 'Disable activation.';
 
-export const menuAction = z.object({
+const menuAction = z.object({
   label: z.string().describe('Action label.'),
   onPress: handler('onPress').describe('Action to run.'),
   icon: iconSymbol.optional().describe('Leading icon.'),
@@ -14,18 +14,18 @@ export const menuAction = z.object({
   disabled: z.boolean().optional().describe(disabledDescription),
 });
 
-export const selectionOption = z.object({
+const selectionOption = z.object({
   value: selectionValue,
   label: z.string(),
   disabled: z.boolean().optional(),
   subtitle: z.string().optional(),
 });
 
-export const menuOption = selectionOption
+const menuOption = selectionOption
   .omit({ subtitle: true })
   .extend({ icon: iconName.optional() });
 
-export const menuChoice = z.object({
+const menuChoice = z.object({
   value: selectionValue,
   options: z.array(menuOption).readonly(),
   onValueChange: handler('onValueChange'),
@@ -33,7 +33,7 @@ export const menuChoice = z.object({
   groups: z.never().optional(),
 });
 
-export const actionMenu = z.object({
+const actionMenu = z.object({
   actions: z.array(menuAction).readonly(),
   value: z.never().optional(),
   options: z.never().optional(),

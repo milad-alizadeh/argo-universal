@@ -11,9 +11,9 @@ import {
 
 export const acpUpdateEventType = 'feed.acpUpdate';
 
-export const modelAcpSessionId = 'model-session';
+const modelAcpSessionId = 'model-session';
 
-export const firstMessageRowId = 'message-1#0';
+const firstMessageRowId = 'message-1#0';
 
 const modelToolCallId = 'model-tool';
 
@@ -41,10 +41,10 @@ interface FeedChangeEvent {
   readonly turnId: 'turn-1';
 }
 
-export const change = (feedChange: FeedChange): FeedChangeEvent =>
+const change = (feedChange: FeedChange): FeedChangeEvent =>
   ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
 
-export const openMessage = change({
+const openMessage = change({
   type: 'upsert',
   update: {
     id: firstMessageRowId,
@@ -55,14 +55,14 @@ export const openMessage = change({
   },
 });
 
-export const appendText = change({
+const appendText = change({
   type: 'append',
   id: firstMessageRowId,
   field: 'content.0.text',
   text: 'a',
 });
 
-export const settleMessage = change({
+const settleMessage = change({
   type: 'patch',
   id: firstMessageRowId,
   set: { state: 'settled' },

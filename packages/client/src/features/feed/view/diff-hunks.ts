@@ -1,6 +1,6 @@
 import type { StructuredPatchHunk } from 'diff';
 
-export interface DiffLine {
+interface DiffLine {
   kind: 'context' | 'added' | 'removed' | 'note';
   number: number | null;
   text: string;

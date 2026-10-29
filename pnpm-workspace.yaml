@@ -105,8 +105,6 @@ catalog:
   "@types/ws": 8.18.2
   "@vitest/browser-playwright": 5.0.3
   "@vitest/coverage-v8": 5.0.3
-  # Peers on xstate ^5.28.0.
-  "@xstate/react": 6.1.0
   class-variance-authority: 0.7.1
   clsx: 2.1.1
   # Exact pins: a caret range on 1.0.0-rc.4 pulls commit builds such as 1.0.0-rc.5-5935859.
@@ -168,7 +166,6 @@ catalog:
   xstate: 5.33.2
   zod: 4.6.5
   diff: 9.0.0
-  expo-crypto: ~58.0.7
   fflate: 0.8.3
   tar: 7.5.22
   # Android header icons as vector drawables, the source the Stack Toolbar guide recommends.

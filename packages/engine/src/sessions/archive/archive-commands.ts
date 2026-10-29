@@ -31,7 +31,7 @@ type Snapshot = ReturnType<SessionActorRef['getSnapshot']>;
  * network and process limits. When the limit passes, the Session actor carries on and may still finish;
  * only this acknowledgement stops waiting.
  */
-export const archiveSettleLimitMs = 30_000;
+const archiveSettleLimitMs = 30_000;
 
 const findSession = (
   deps: ArchiveDeps,

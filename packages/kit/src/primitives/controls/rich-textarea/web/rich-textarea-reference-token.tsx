@@ -5,7 +5,7 @@ import { type ReferenceOption, shortTitle } from '../rich-textarea-references';
 import { ReferenceTokenContext } from './rich-textarea-reference-node';
 
 // The Issues and pull requests a token can name; a token with no match still shows its number.
-export const ReferencesContext = createContext<readonly ReferenceOption[]>([]);
+const ReferencesContext = createContext<readonly ReferenceOption[]>([]);
 
 export function ReferenceGlyph({
   state,
@@ -34,11 +34,7 @@ function TokenLabel({ number, option }: LabelProps): React.JSX.Element {
   );
 }
 
-export function ReferenceToken({
-  number,
-}: {
-  number: number;
-}): React.JSX.Element {
+function ReferenceToken({ number }: { number: number }): React.JSX.Element {
   const references = useContext(ReferencesContext);
   const option = references.find((candidate) => candidate.number === number);
 

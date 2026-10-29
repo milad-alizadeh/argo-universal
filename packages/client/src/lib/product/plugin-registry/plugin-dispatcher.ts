@@ -27,7 +27,7 @@ type Queued = {
 };
 
 // A rejected delivery, as the Plugin's Server answered it.
-export type DeliveryFailure = Error;
+type DeliveryFailure = Error;
 
 export type ReportFailure = (failure: DeliveryFailure) => void;
 

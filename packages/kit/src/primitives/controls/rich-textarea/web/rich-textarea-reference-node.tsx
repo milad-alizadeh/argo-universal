@@ -1,6 +1,5 @@
 import {
   DecoratorNode,
-  type LexicalNode,
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical';
@@ -78,10 +77,4 @@ export class ReferenceNode extends DecoratorNode<React.JSX.Element> {
 
 export function $createReferenceNode(number: number): ReferenceNode {
   return new ReferenceNode(number);
-}
-
-export function $isReferenceNode(
-  node: LexicalNode | null | undefined,
-): node is ReferenceNode {
-  return node instanceof ReferenceNode;
 }

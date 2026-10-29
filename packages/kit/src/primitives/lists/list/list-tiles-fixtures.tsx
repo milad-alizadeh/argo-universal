@@ -12,7 +12,7 @@ export const image = {
   format: 'jpeg',
 } as const;
 
-export const metrics = Array.from({ length: 80 }, (_, index) => ({
+const metrics = Array.from({ length: 80 }, (_, index) => ({
   id: String(index),
   title: `Metric ${index + 1}`,
 }));

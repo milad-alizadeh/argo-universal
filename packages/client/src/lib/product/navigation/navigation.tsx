@@ -99,7 +99,7 @@ export interface FirstPage {
  * Asks to be told when the person tries to leave the page: a back swipe, Back, or a link.
  * While `active`, leaving waits for onBlocked, which calls `proceed` to let it go.
  */
-export type LeaveGuard = (
+type LeaveGuard = (
   active: boolean,
   onBlocked: (proceed: () => void) => void,
 ) => void;
@@ -137,13 +137,6 @@ export function NavigationProvider({
       <LeaveGuardContext value={leaveGuard}>{children}</LeaveGuardContext>
     </ScreenFocusContext>
   );
-}
-
-export function useLeaveGuard(
-  active: boolean,
-  onBlocked: (proceed: () => void) => void,
-): void {
-  use(LeaveGuardContext)(active, onBlocked);
 }
 
 // Read at the consuming screen, whose navigator retains it when another section opens.

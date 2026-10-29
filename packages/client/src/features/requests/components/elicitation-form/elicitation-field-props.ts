@@ -13,7 +13,7 @@ export type ElicitationFieldProps = {
   inactive: boolean;
 };
 
-export const fieldLabel = (
+const fieldLabel = (
   props: Pick<ElicitationFieldProps, 'name' | 'property'>,
 ): string => props.property.title ?? props.name;
 

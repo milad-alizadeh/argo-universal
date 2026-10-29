@@ -27,7 +27,6 @@ export {
   elicitationMock,
   elicitationMocks,
   elicitationRequest,
-  permissionMock,
   permissionMocks,
 } from '../../../../mocks/requests/recorded-requests';
 

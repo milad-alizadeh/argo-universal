@@ -18,7 +18,7 @@ const common = [
   'transform',
 ] as const;
 
-export const attributes = {
+const attributes = {
   svg: new Set([
     ...common,
     'x',

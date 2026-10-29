@@ -16,9 +16,9 @@ export const iconSize = z
   .register(kitSchemaJson, { type: 'string', enum: [...iconSizes] });
 
 // The one SF Symbols and Material Symbols check for every kit icon.
-export const sfSymbol = z.enum(sfSymbolNames);
+const sfSymbol = z.enum(sfSymbolNames);
 
-export const materialSymbol = z.enum(materialSymbolNames);
+const materialSymbol = z.enum(materialSymbolNames);
 
 const appleSymbol = z.union([sfSymbol, z.literal('custom.robot')]);
 

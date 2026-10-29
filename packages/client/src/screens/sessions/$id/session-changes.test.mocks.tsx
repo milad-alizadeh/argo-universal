@@ -12,7 +12,7 @@ import {
 } from '../../../features/changes/source/memory-changes.mocks';
 import { SessionInspector } from './session-inspector';
 
-export const branchNames = [
+const branchNames = [
   'main',
   'release/2.4',
   'feature/inspector-tabs',
@@ -26,7 +26,7 @@ export const largeFile = '/repo/large.txt';
 export const shortFile = '/repo/src/feed.ts';
 
 // Recorded edits: a long modified file, a short one, an added file and a deleted one, each at its own path.
-export const fewFiles: FileDiff[] = [
+const fewFiles: FileDiff[] = [
   recordedFile('agent-2', 'edit-states'),
   { ...recordedFile('agent-1'), path: shortFile },
   {
@@ -37,7 +37,7 @@ export const fewFiles: FileDiff[] = [
 ];
 
 // One recorded edit under many paths: the same list, only longer.
-export const manyFiles: FileDiff[] = Array.from({ length: 60 }, (_, index) => ({
+const manyFiles: FileDiff[] = Array.from({ length: 60 }, (_, index) => ({
   ...recordedFile('agent-1'),
   path: `/repo/src/module-${index + 1}/index.ts`,
 }));
@@ -76,7 +76,7 @@ export const repeatedChanges = catalog(always([...fewFiles, ...fewFiles]));
 // A comparison the Server has not answered yet.
 export const loadingChanges = catalog(() => {});
 
-export const loadError = "Git couldn't find main.";
+const loadError = "Git couldn't find main.";
 
 export const unloadableChanges = { ...loadingChanges, loadError };
 

@@ -5,7 +5,7 @@ import { handler } from './kit-component-props';
 import { imageAsset } from './media-kit-props';
 import { perSizeClass } from './schema-size-class';
 
-export const statusMark = z.object({
+const statusMark = z.object({
   tone: z.enum(tones).describe('Semantic status tone.'),
   pulse: z.boolean().optional().describe('Animate the status pulse.'),
 });

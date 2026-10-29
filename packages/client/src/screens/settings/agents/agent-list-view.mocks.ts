@@ -21,7 +21,7 @@ const first = catalog.agents[0]?.entry;
 
 if (!first) throw new Error('Registry fixture needs an Agent');
 
-export const installedAgents: AgentServer[] = [
+const installedAgents: AgentServer[] = [
   {
     id: first.id,
     name: first.name,

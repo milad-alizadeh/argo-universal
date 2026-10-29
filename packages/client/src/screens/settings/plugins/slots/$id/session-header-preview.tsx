@@ -17,7 +17,7 @@ import { sessionHeaderActions } from '../../../../sessions/$id/session-header-ac
 import { useDeclaredHeaderActions } from '../../../../sessions/$id/use-plugin-header-actions';
 import type { SlotPreviewProps } from './slot-detail';
 
-export const previewSessionTitle = 'Fix login redirect';
+const previewSessionTitle = 'Fix login redirect';
 
 const doNothing = (): void => undefined;
 
