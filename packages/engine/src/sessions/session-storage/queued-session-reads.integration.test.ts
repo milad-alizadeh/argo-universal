@@ -1,25 +1,13 @@
 import { type AgentMessage, SessionRecord } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { session } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
-import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest';
-import { createActor } from 'xstate';
-import { openTestDatabase } from '#mocks/database';
+import { expect, it, onTestFinished, vi } from 'vitest';
+import { selectSession, submitWrites } from '#mocks/queued-writes';
 import { FeedRowsJob } from '../../feed';
 import {
-  type WriterActorRef,
-  type WriterJob,
-  writerMachine,
-} from '../../storage';
-import {
   readQueuedSessionRows,
+  SessionDeleteJob,
   SessionInsertJob,
   SessionRowUpdateJob,
 } from '.';
-
-let database: Database;
-
-let removeDatabase: () => void;
 
 const reply: AgentMessage = {
   sessionId: 'session-1',
@@ -34,39 +22,6 @@ const reply: AgentMessage = {
 };
 
 const sessionData = SessionRecord.omit({ createdAt: true, updatedAt: true });
-
-const selectSession = (
-  id = 'session-1',
-): typeof session.$inferSelect | undefined =>
-  database.select().from(session).where(eq(session.id, id)).get();
-
-type SubmittedWrites = { writer: WriterActorRef; committed: Promise<void> };
-
-const submitWrites = (jobs: readonly WriterJob[]): SubmittedWrites => {
-  const writer = createActor(writerMachine, {
-    input: { database, now: () => 12000 },
-  }).start();
-
-  onTestFinished(() => {
-    writer.stop();
-  });
-  const committed = Promise.withResolvers<void>();
-
-  for (const [index, job] of jobs.entries())
-    writer.send({
-      type: 'writer.write',
-      job,
-      committed: index === jobs.length - 1 ? committed : undefined,
-    });
-
-  return { writer, committed: committed.promise };
-};
-
-beforeEach((): void => {
-  ({ database, remove: removeDatabase } = openTestDatabase());
-});
-
-afterEach((): void => removeDatabase());
 
 it('reads a queued Session row update exactly as its commit', async (): Promise<void> => {
   const clock = vi.spyOn(Date, 'now').mockReturnValue(12000);
@@ -133,22 +88,16 @@ it('reads the Session revision of queued Feed rows exactly as their commit', asy
   expect(sessionData.parse(queued)).toEqual(sessionData.parse(selectSession()));
 });
 
-it('reads a queued job of any module through its own Session projection', (): void => {
+it('reads a queued Session removal over a later update exactly as their commit', async (): Promise<void> => {
   const before = SessionRecord.parse(selectSession());
 
-  const { writer } = submitWrites([
-    {
-      describe: (): string => 'pin Session session-1',
-      commit: (): void => undefined,
-      session: (current, sessionId): SessionRecord | undefined =>
-        current && sessionId === 'session-1'
-          ? { ...current, title: 'Pinned' }
-          : current,
-    },
+  const { writer, committed } = submitWrites([
+    new SessionDeleteJob('session-1'),
+    new SessionRowUpdateJob({ id: 'session-1', set: { epoch: 2 } }),
   ]);
 
-  expect(readQueuedSessionRows(writer).session(before, 'session-1')).toEqual({
-    ...before,
-    title: 'Pinned',
-  });
+  const queued = readQueuedSessionRows(writer).session(before, 'session-1');
+  await committed;
+  expect(queued).toBeUndefined();
+  expect(selectSession()).toBeUndefined();
 });

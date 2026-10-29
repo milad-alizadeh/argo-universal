@@ -2,6 +2,8 @@ import { SessionRecord } from '@repo/contracts';
 import { project, session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { AnnouncedJob, WriterChange } from '../writer-changes';
+import type { QueuedSessionChange, QueuedSessionInsert } from './queued-roles';
 import { insertParents } from './session-storage-common';
 
 type SessionInsert = {
@@ -37,7 +39,9 @@ const isInScope = (
   insertParents(stored).some((id) => scope.includes(id));
 
 // Stores a new Session; borrows its Project's `checkout_choice` so the chosen checkout is remembered in the same commit.
-export class SessionInsertJob implements WriterJob {
+export class SessionInsertJob
+  implements WriterJob, QueuedSessionChange, QueuedSessionInsert, AnnouncedJob
+{
   public constructor(private readonly insert: SessionInsert) {}
 
   public describe(): string {
@@ -68,7 +72,7 @@ export class SessionInsertJob implements WriterJob {
         .run();
   }
 
-  public session(
+  public projectSession(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
@@ -77,10 +81,10 @@ export class SessionInsertJob implements WriterJob {
       : current;
   }
 
-  public changedSessionIds(): string[] {
+  public announcedChange(): WriterChange {
     const stored = this.insert.session;
 
-    return [stored.id, ...insertParents(stored)];
+    return { sessionIds: [stored.id, ...insertParents(stored)], turnIds: [] };
   }
 
   // The Session, when it or its parent is in scope; every queued Session without a scope.

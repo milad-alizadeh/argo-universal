@@ -1,8 +1,10 @@
-import type { Database } from '@repo/db';
-import { session, turn } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { describe, expect, it } from 'vitest';
+import {
+  runningTurn,
+  selectSession,
+  selectTurn,
+  testDatabase,
+} from '#mocks/queued-writes';
 import { type WriterJob, writeJobs } from '../../storage';
 import {
   SessionInsertJob,
@@ -11,33 +13,9 @@ import {
   TurnUpdateJob,
 } from '.';
 
-let database: Database;
-
-let removeDatabase: () => void;
-
-const runningTurn = {
-  id: 'turn-1',
-  sessionId: 'session-1',
-  status: 'running' as const,
-};
-
-const selectSession = (
-  id = 'session-1',
-): typeof session.$inferSelect | undefined =>
-  database.select().from(session).where(eq(session.id, id)).get();
-
-const selectTurn = (): typeof turn.$inferSelect | undefined =>
-  database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
-
-beforeEach((): void => {
-  ({ database, remove: removeDatabase } = openTestDatabase());
-});
-
-afterEach((): void => removeDatabase());
-
 describe('commit', (): void => {
   it('inserts a Turn, then updates it', (): void => {
-    writeJobs(database, [
+    writeJobs(testDatabase(), [
       new TurnInsertJob({ turn: runningTurn }),
       new TurnUpdateJob({
         id: 'turn-1',
@@ -56,7 +34,7 @@ describe('commit', (): void => {
   });
 
   it('updates a session row', (): void => {
-    writeJobs(database, [
+    writeJobs(testDatabase(), [
       new SessionRowUpdateJob({
         id: 'session-1',
         set: { vendorSessionId: 'vendor-1', epoch: 2 },
@@ -69,7 +47,7 @@ describe('commit', (): void => {
   });
 
   it('stores a new Session and remembers its checkout choice on the Project', (): void => {
-    writeJobs(database, [
+    writeJobs(testDatabase(), [
       new SessionInsertJob({
         checkoutChoice: { type: 'worktree' },
         session: {
@@ -84,7 +62,9 @@ describe('commit', (): void => {
 
     expect(selectSession('session-2')).toMatchObject({ checkoutPath: '/new' });
     expect(
-      database.$client.prepare('SELECT checkout_choice FROM project').get(),
+      testDatabase()
+        .$client.prepare('SELECT checkout_choice FROM project')
+        .get(),
     ).toEqual({ checkout_choice: JSON.stringify({ type: 'worktree' }) });
   });
 });

@@ -2,6 +2,8 @@ import type { SessionRecord } from '@repo/contracts';
 import { session } from '@repo/db/schema';
 import { and, eq, ne } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { AnnouncedJob, WriterChange } from '../writer-changes';
+import type { QueuedSessionChange } from './queued-roles';
 
 type SessionTitleChange = {
   id: string;
@@ -15,7 +17,9 @@ const titleIsProtected = (
 ): boolean => change.titleSource === 'agent' && current.titleSource === 'user';
 
 // A user title outranks every later Agent title; the check runs in the commit, so a queued Agent title cannot replace a rename.
-export class SessionTitleJob implements WriterJob {
+export class SessionTitleJob
+  implements WriterJob, QueuedSessionChange, AnnouncedJob
+{
   public constructor(private readonly change: SessionTitleChange) {}
 
   public describe(): string {
@@ -36,7 +40,7 @@ export class SessionTitleJob implements WriterJob {
       .run();
   }
 
-  public session(
+  public projectSession(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
@@ -60,7 +64,7 @@ export class SessionTitleJob implements WriterJob {
     };
   }
 
-  public changedSessionIds(): string[] {
-    return [this.change.id];
+  public announcedChange(): WriterChange {
+    return { sessionIds: [this.change.id], turnIds: [] };
   }
 }

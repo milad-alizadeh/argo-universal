@@ -11,9 +11,13 @@ import {
   writeDatabaseJobAndWaitForCommit,
 } from '../storage';
 import type { SessionRouterDeps } from './router-deps';
+import type { QueuedSessionChange } from './session-storage';
+import type { AnnouncedJob, WriterChange } from './writer-changes';
 
 // Raises a Session's seen revision; an older revision, such as from a slower App, never lowers it. It is not capped at the stored `maxRevision`: an App shows live rows before the Writer stores them.
-export class SessionSeenJob implements WriterJob {
+export class SessionSeenJob
+  implements WriterJob, QueuedSessionChange, AnnouncedJob
+{
   public constructor(private readonly seen: SessionMarkSeenInput) {}
 
   public describe(): string {
@@ -30,7 +34,7 @@ export class SessionSeenJob implements WriterJob {
       .run();
   }
 
-  public session(
+  public projectSession(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
@@ -42,8 +46,8 @@ export class SessionSeenJob implements WriterJob {
       : current;
   }
 
-  public changedSessionIds(): string[] {
-    return [this.seen.sessionId];
+  public announcedChange(): WriterChange {
+    return { sessionIds: [this.seen.sessionId], turnIds: [] };
   }
 }
 

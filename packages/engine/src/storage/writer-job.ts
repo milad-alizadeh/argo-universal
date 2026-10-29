@@ -1,12 +1,11 @@
 import type { Database } from '@repo/db';
-import type { QueuedProjection } from './queued-projection';
 
 export type StorageTransaction = Parameters<
   Parameters<Database['transaction']>[0]
 >[0];
 
-// One unit of work for the database Writer. The module that owns the job's tables defines it, with how reads see it while it waits.
-export interface WriterJob extends QueuedProjection {
+// One unit of work for the database Writer. The module that owns the job's tables defines it.
+export interface WriterJob {
   // One line naming what the job writes, for the log of lost jobs.
   describe: () => string;
   commit: (transaction: StorageTransaction) => void;

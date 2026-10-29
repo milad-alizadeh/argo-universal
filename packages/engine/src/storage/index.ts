@@ -2,8 +2,6 @@ export { writeDatabaseJobAndWaitForCommit } from './database-write';
 
 export { readQueuedJobs, type WriterActorRef } from './queued-jobs';
 
-export type { QueuedFeedRows } from './queued-projection';
-
 export type { WriterCommit } from './writer-commit';
 
 export {

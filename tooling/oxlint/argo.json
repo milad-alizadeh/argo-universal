@@ -1939,6 +1939,66 @@
       }
     },
     {
+      // Deeper Session folders (list/reader): a relative path to a Session module's face changes with depth, so these match it at any depth.
+      "files": ["packages/engine/src/sessions/*/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "**/configuration/**",
+                  "!**/configuration/index",
+                  "!**/configuration/index.ts"
+                ],
+                "message": "Import Session configuration through its index.ts face."
+              },
+              {
+                "group": ["**/turn/**", "!**/turn/index", "!**/turn/index.ts"],
+                "message": "Import a Session's Turn module through its index.ts face."
+              },
+              {
+                "group": [
+                  "**/stored-turn/**",
+                  "!**/stored-turn/index",
+                  "!**/stored-turn/index.ts"
+                ],
+                "message": "Import stored Turns through the stored-turn index.ts face."
+              },
+              {
+                "group": [
+                  "**/session-storage/**",
+                  "!**/session-storage/index",
+                  "!**/session-storage/index.ts"
+                ],
+                "message": "Import Session storage through its index.ts face."
+              },
+              {
+                "group": ["**/engine/**"],
+                "message": "A module sits below the Engine composition, so it never imports engine/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["packages/engine/src/system/*"],
       "rules": {
         "no-restricted-imports": [

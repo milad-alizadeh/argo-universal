@@ -6,6 +6,7 @@ import {
 import { agentOptions, agentServers, project } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { QueuedAgentOptionsChange } from './agent-options-read';
 import { decode, ownerWhere, type Stored } from './agent-options-shared';
 import { isOfferedConfigChoice } from './offered';
 
@@ -111,9 +112,9 @@ function saveChanged(
 }
 
 // Discovery preserves preferences and cannot overwrite an ACP update received while it opened.
-export class AgentOptionsJob implements WriterJob {
+export class AgentOptionsJob implements WriterJob, QueuedAgentOptionsChange {
   public constructor(
-    public readonly owner: SessionAgentOptionsInput,
+    private readonly owner: SessionAgentOptionsInput,
     private readonly options: SessionConfigOption[] | undefined,
     private readonly update: Update,
   ) {}
@@ -122,14 +123,21 @@ export class AgentOptionsJob implements WriterJob {
     return `store Agent options for ${this.owner.agent} in ${this.owner.projectId}`;
   }
 
-  public owns(owner: SessionAgentOptionsInput): boolean {
+  public projectAgentOptions(
+    owner: SessionAgentOptionsInput,
+    current: Stored | undefined,
+  ): Stored | undefined {
+    return this.owns(owner) ? this.project(current) : current;
+  }
+
+  private owns(owner: SessionAgentOptionsInput): boolean {
     return (
       this.owner.agent === owner.agent &&
       this.owner.projectId === owner.projectId
     );
   }
 
-  public project(previous: Stored | undefined): Stored | undefined {
+  private project(previous: Stored | undefined): Stored | undefined {
     if (staleUpdate(this.update, previous)) return previous;
 
     return {

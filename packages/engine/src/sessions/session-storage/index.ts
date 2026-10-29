@@ -12,6 +12,13 @@ export { SessionDeleteJob } from './session-storage-delete';
 
 export { TurnInsertJob, TurnUpdateJob } from './session-storage-turn';
 
+export type {
+  QueuedSessionChange,
+  QueuedSessionInsert,
+  QueuedTurnChange,
+  QueuedTurnInsert,
+} from './queued-roles';
+
 export {
   type QueuedSessionRows,
   readQueuedSessionRows,

@@ -3,9 +3,13 @@ import { session, turn } from '@repo/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { settleArchivedChild } from '../../feed';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { QueuedSessionChange } from '../session-storage';
+import type { AnnouncedJob, WriterChange } from '../writer-changes';
 
 // One durable archive decision covers the parent and every borrowed Checkout.
-export class SessionArchiveJob implements WriterJob {
+export class SessionArchiveJob
+  implements WriterJob, QueuedSessionChange, AnnouncedJob
+{
   public constructor(
     private readonly ids: string[],
     private readonly archivedAt: number | null,
@@ -43,7 +47,7 @@ export class SessionArchiveJob implements WriterJob {
       .run();
   }
 
-  public session(
+  public projectSession(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
@@ -52,7 +56,7 @@ export class SessionArchiveJob implements WriterJob {
       : current;
   }
 
-  public changedSessionIds(): string[] {
-    return this.ids;
+  public announcedChange(): WriterChange {
+    return { sessionIds: this.ids, turnIds: [] };
   }
 }

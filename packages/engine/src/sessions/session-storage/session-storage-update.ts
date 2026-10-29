@@ -3,6 +3,8 @@ import { session } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { SQLiteUpdateSetSource } from 'drizzle-orm/sqlite-core';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { AnnouncedJob, WriterChange } from '../writer-changes';
+import type { QueuedSessionChange } from './queued-roles';
 import { presentId } from './session-storage-common';
 
 type SessionRowChange = {
@@ -13,7 +15,9 @@ type SessionRowChange = {
   >;
 };
 
-export class SessionRowUpdateJob implements WriterJob {
+export class SessionRowUpdateJob
+  implements WriterJob, QueuedSessionChange, AnnouncedJob
+{
   public constructor(private readonly change: SessionRowChange) {}
 
   public describe(): string {
@@ -38,7 +42,7 @@ export class SessionRowUpdateJob implements WriterJob {
     transaction.update(session).set(values).where(eq(session.id, id)).run();
   }
 
-  public session(
+  public projectSession(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
@@ -63,8 +67,14 @@ export class SessionRowUpdateJob implements WriterJob {
     return SessionRecord.parse(projected);
   }
 
-  public changedSessionIds(): string[] {
-    return [this.change.id, ...presentId(this.change.set.parentSessionId)];
+  public announcedChange(): WriterChange {
+    return {
+      sessionIds: [
+        this.change.id,
+        ...presentId(this.change.set.parentSessionId),
+      ],
+      turnIds: [],
+    };
   }
 
   private revisionActivity(

@@ -1,6 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
 import {
-  type QueuedFeedRows,
   readQueuedJobs,
   type WriterActorRef,
   type WriterJob,
@@ -8,8 +7,23 @@ import {
 import { newestRows } from './feed-row';
 import { turnEndingsOf, type CommittedTurnEnding } from './turn-settlement';
 
+// One Session's Feed rows a job writes, and the revision it advances that Session to.
+export type QueuedFeedRows = {
+  sessionId: string;
+  rows: SessionUpdate[];
+  maxRevision: number;
+};
+
+// The role of a job that writes Feed rows; a job of any module takes it by having the member.
+export interface QueuedFeedJob {
+  queuedFeedRows: () => QueuedFeedRows;
+}
+
+const writesFeedRows = (job: WriterJob): job is WriterJob & QueuedFeedJob =>
+  'queuedFeedRows' in job;
+
 const feedRowsOf = (jobs: readonly WriterJob[]): QueuedFeedRows[] =>
-  jobs.flatMap((job) => job.feedRows?.() ?? []);
+  jobs.flatMap((job) => (writesFeedRows(job) ? [job.queuedFeedRows()] : []));
 
 // The live Turn endings in a Writer commit. Only queued Feed rows carry one: stored settlement (Engine restart, archive) writes in its own transaction, so its endings never appear here.
 export const committedTurnEndings = (
@@ -19,9 +33,7 @@ export const committedTurnEndings = (
     turnEndingsOf(sessionId, rows),
   );
 
-export type QueuedFeed = {
-  rows: SessionUpdate[];
-  maxRevision: number;
+export type QueuedFeed = Omit<QueuedFeedRows, 'sessionId'> & {
   highestPosition: number;
 };
 

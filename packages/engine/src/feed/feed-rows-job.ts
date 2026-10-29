@@ -1,6 +1,7 @@
 import type { SessionRecord, SessionUpdate } from '@repo/contracts';
-import type { QueuedFeedRows, StorageTransaction, WriterJob } from '../storage';
+import type { StorageTransaction, WriterJob } from '../storage';
 import type { OutputBlob } from './acp/tool-output';
+import type { BlobHoldingJob } from './blob-receipt.machine';
 import {
   insertOutputBlobs,
   insertOutputBlobRefs,
@@ -11,7 +12,11 @@ import {
   type FeedRowsWrite,
   upsertFeedRows,
 } from './feed-rows-write';
+import type { QueuedFeedJob, QueuedFeedRows } from './feed-storage';
 import { titleFromRows } from './prompt-title';
+
+// The Sessions and Turns a job changes, as Session reads' announcer names them.
+type AnnouncedChange = { sessionIds: string[]; turnIds: string[] };
 
 type FeedRowsJobInput = FeedRowsWrite & {
   // The blobs the job's prompt rows show.
@@ -20,13 +25,8 @@ type FeedRowsJobInput = FeedRowsWrite & {
   blobs?: OutputBlob[];
 };
 
-const isRowOf = (
-  current: SessionRecord | undefined,
-  sessionId: string,
-): current is SessionRecord => current?.id === sessionId;
-
-// The live Feed's changed rows of one Session, queued on the Writer; borrows `blob`, `blob_ref` and the `session` revision, activity and prompt title in the same commit.
-export class FeedRowsJob implements WriterJob {
+// The live Feed's changed rows of one Session, queued on the Writer; borrows `blob`, `blob_ref` and the `session` revision, activity and prompt title in the same commit. Session reads see that Session row through `projectSession` and `announcedChange`, the members their roles name.
+export class FeedRowsJob implements WriterJob, QueuedFeedJob, BlobHoldingJob {
   public readonly refusable = true;
 
   public constructor(private readonly input: FeedRowsJobInput) {}
@@ -53,7 +53,7 @@ export class FeedRowsJob implements WriterJob {
     advanceFeedSession(transaction, this.input);
   }
 
-  public feedRows(): QueuedFeedRows {
+  public queuedFeedRows(): QueuedFeedRows {
     const { sessionId, rows, maxRevision } = this.input;
 
     return { sessionId, rows, maxRevision };
@@ -63,18 +63,25 @@ export class FeedRowsJob implements WriterJob {
     return (this.input.blobs ?? []).some(({ blob }) => blob.blobId === blobId);
   }
 
-  public changedSessionIds(): string[] {
-    return [this.input.sessionId];
+  public announcedChange(): AnnouncedChange {
+    return { sessionIds: [this.input.sessionId], turnIds: [] };
   }
 
-  public session(
+  public projectSession(
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
-    if (this.input.sessionId !== sessionId || !isRowOf(current, sessionId))
-      return current;
+    return this.isOwnRow(current, sessionId)
+      ? this.advanceSession(current)
+      : current;
+  }
 
-    return this.advanceSession(current);
+  // Whether the row asked for is this job's Session row.
+  private isOwnRow(
+    current: SessionRecord | undefined,
+    sessionId: string,
+  ): current is SessionRecord {
+    return current?.id === sessionId && sessionId === this.input.sessionId;
   }
 
   // What the commit writes to its Session's row, as `advanceFeedSession` does.

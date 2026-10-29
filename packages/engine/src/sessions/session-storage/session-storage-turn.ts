@@ -2,6 +2,8 @@ import { Turn } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { AnnouncedJob, WriterChange } from '../writer-changes';
+import type { QueuedTurnChange, QueuedTurnInsert } from './queued-roles';
 
 type TurnChange = {
   id: string;
@@ -17,7 +19,9 @@ const turnDefaults = {
   model: null,
 };
 
-export class TurnInsertJob implements WriterJob {
+export class TurnInsertJob
+  implements WriterJob, QueuedTurnChange, QueuedTurnInsert, AnnouncedJob
+{
   public constructor(
     private readonly insert: { turn: typeof turn.$inferInsert },
   ) {}
@@ -38,18 +42,24 @@ export class TurnInsertJob implements WriterJob {
     transaction.insert(turn).values(this.insert.turn).run();
   }
 
-  public turns(turns: ReadonlyMap<string, Turn>): ReadonlyMap<string, Turn> {
-    const inserted = Turn.parse({ ...turnDefaults, ...this.insert.turn });
-
-    return new Map(turns).set(inserted.id, inserted);
+  public projectTurn(): Turn {
+    return Turn.parse({ ...turnDefaults, ...this.insert.turn });
   }
 
-  public changedSessionIds(): string[] {
-    return [this.insert.turn.sessionId];
+  public insertedTurnSessionId(turnId: string): string | undefined {
+    return this.insert.turn.id === turnId
+      ? this.insert.turn.sessionId
+      : undefined;
+  }
+
+  public announcedChange(): WriterChange {
+    return { sessionIds: [this.insert.turn.sessionId], turnIds: [] };
   }
 }
 
-export class TurnUpdateJob implements WriterJob {
+export class TurnUpdateJob
+  implements WriterJob, QueuedTurnChange, AnnouncedJob
+{
   public constructor(private readonly change: TurnChange) {}
 
   public describe(): string {
@@ -65,22 +75,19 @@ export class TurnUpdateJob implements WriterJob {
   }
 
   // An undefined column is left as it is, as the commit leaves it.
-  public turns(turns: ReadonlyMap<string, Turn>): ReadonlyMap<string, Turn> {
+  public projectTurn(turns: ReadonlyMap<string, Turn>): Turn | undefined {
     const row = turns.get(this.change.id);
 
-    if (!row) return turns;
+    if (!row) return undefined;
 
     const set = Object.entries(this.change.set).filter(
       ([, value]): boolean => value !== undefined,
     );
 
-    return new Map(turns).set(
-      this.change.id,
-      Turn.parse({ ...row, ...Object.fromEntries(set) }),
-    );
+    return Turn.parse({ ...row, ...Object.fromEntries(set) });
   }
 
-  public changedTurnIds(): string[] {
-    return [this.change.id];
+  public announcedChange(): WriterChange {
+    return { sessionIds: [], turnIds: [this.change.id] };
   }
 }

@@ -1,68 +1,15 @@
 import { SessionRecord } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { session, turn } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
-import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest';
-import { createActor } from 'xstate';
-import { openTestDatabase } from '#mocks/database';
-import { FeedRowsJob } from '../../feed';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import {
-  type WriterActorRef,
-  type WriterJob,
-  writerMachine,
-} from '../../storage';
+  runningTurn,
+  selectSession,
+  selectTurn,
+  submitWrites,
+} from '#mocks/queued-writes';
+import { FeedRowsJob } from '../../feed';
 import { readQueuedSessionRows, SessionRowUpdateJob, TurnInsertJob } from '.';
 
-let database: Database;
-
-let removeDatabase: () => void;
-
-const runningTurn = {
-  id: 'turn-1',
-  sessionId: 'session-1',
-  status: 'running' as const,
-};
-
-const selectSession = (
-  id = 'session-1',
-): typeof session.$inferSelect | undefined =>
-  database.select().from(session).where(eq(session.id, id)).get();
-
-const selectTurn = (): typeof turn.$inferSelect | undefined =>
-  database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
-
 const committedTurn = (): number | null => selectTurn()?.startedAt ?? null;
-
-interface SubmittedWrites {
-  writer: WriterActorRef;
-  committed: Promise<void>;
-}
-
-const submitWrites = (jobs: readonly WriterJob[]): SubmittedWrites => {
-  const writer = createActor(writerMachine, {
-    input: { database, now: () => 12000 },
-  }).start();
-
-  onTestFinished(() => {
-    writer.stop();
-  });
-  const committed = Promise.withResolvers<void>();
-
-  for (const [index, job] of jobs.entries())
-    writer.send({
-      type: 'writer.write',
-      job,
-      committed: index === jobs.length - 1 ? committed : undefined,
-    });
-
-  return { writer, committed: committed.promise };
-};
-
-beforeEach((): void => {
-  ({ database, remove: removeDatabase } = openTestDatabase());
-});
-
-afterEach((): void => removeDatabase());
 
 it.each([
   {
