@@ -5,6 +5,9 @@ import type {
   SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
 
+// The Agent reports no kind for a command (its `_meta` carries one only to JetBrains AIR clients), so every command draws this glyph.
+const commandIcon = 'code';
+
 const nameStartsWith = (command: SlashCommand, needle: string): boolean =>
   command.name.toLowerCase().startsWith(needle);
 
@@ -31,6 +34,7 @@ const commandSuggestion = (command: SlashCommand): ComposerSuggestion => ({
   id: command.name,
   label: `/${command.name}`,
   detail: command.description,
+  icon: commandIcon,
   insert: `/${command.name} `,
   command: command.name,
 });

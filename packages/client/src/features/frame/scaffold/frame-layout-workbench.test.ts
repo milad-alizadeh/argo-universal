@@ -8,8 +8,8 @@ describe('Workbench states from one toggle', () => {
   it.each([
     { width: 1440, workbenchIntent: 'auto', state: 'docked' },
     { width: 900, workbenchIntent: 'auto', state: autoHidden },
-    { width: 900, workbenchIntent: 'shown', state: 'floating' },
-    { width: 900, workbenchIntent: 'hidden', state: autoHidden },
+    { width: 900, workbenchIntent: 'shown', state: 'dedicated' },
+    { width: 900, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'shown', state: 'docked' },
   ] as const)(
@@ -21,22 +21,23 @@ describe('Workbench states from one toggle', () => {
     },
   );
 
-  describe('floating at 900', () => {
-    const autoHiddenAt900 = frameLayout({ ...input, width: 900 });
-
-    const floating = frameLayout({
+  it('replaces the primary view when explicit Show cannot fit a separate region', () => {
+    const layout = frameLayout({
       ...input,
-      width: 900,
+      inspectorState: 'open',
       workbenchIntent: 'shown',
     });
 
-    it('floats over the same content bounds as the auto-hidden state', () => {
-      expect(floating.content).toEqual(autoHiddenAt900.content);
+    expect(layout.workbench.state).toBe('dedicated');
+    expect(layout.page).toEqual({ offset: 72, width: 0, hidden: true });
+    expect(layout.workbench).toEqual({
+      state: 'dedicated',
+      offset: 416,
+      width: 312,
     });
-
-    it('draws the Workbench', () => {
-      expect(floating.workbench.width).toBeGreaterThan(0);
-    });
+    expect(layout.workbench.offset + layout.workbench.width).toBeLessThan(
+      layout.inspector.offset,
+    );
   });
 
   it('auto-hides beside an open Inspector at 1440', () => {
@@ -97,7 +98,7 @@ describe('panes placed around the Workbench', () => {
       workbenchIntent: 'hidden',
       list: 312,
       page: 1056,
-      handle: 1432,
+      handle: 1440,
       inspector: 0,
     },
     {
@@ -106,7 +107,7 @@ describe('panes placed around the Workbench', () => {
       workbenchIntent: 'shown',
       list: 312,
       page: 728,
-      handle: 1432,
+      handle: 1440,
       inspector: 0,
     },
     {

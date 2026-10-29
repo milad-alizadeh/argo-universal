@@ -1,5 +1,8 @@
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
-import { RichTextarea } from '@repo/kit/primitives/controls/rich-textarea';
+import {
+  RichTextarea,
+  SuggestionListHost,
+} from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
@@ -125,6 +128,7 @@ function textInputProps({
 export function ComposerControls(layout: CardLayout): React.JSX.Element {
   return (
     <View className="w-full">
+      <SuggestionListHost />
       <ComposerCard {...layout} />
       <ComposerBottomTray {...layout} />
     </View>
