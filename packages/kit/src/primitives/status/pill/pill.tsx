@@ -86,6 +86,7 @@ function LabelPill({
   text,
   tone = 'muted',
   color,
+  variant: _variant,
   ...props
 }: PillProps): ReactElement {
   const label = useLabel(color);
