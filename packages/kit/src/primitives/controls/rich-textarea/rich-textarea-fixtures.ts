@@ -72,6 +72,23 @@ export const longDraftRichTextarea = {
   accessibilityLabel,
 } satisfies RichTextareaFixture;
 
+const exampleCommands: ComposerSuggestion[] = [
+  {
+    id: 'first',
+    label: '/first',
+    detail: 'First option',
+    icon: 'code',
+    insert: '/first ',
+  },
+  {
+    id: 'second',
+    label: '/second',
+    detail: 'Second option',
+    icon: 'code',
+    insert: '/second ',
+  },
+];
+
 export const suggestionsRichTextarea = {
   value: '/',
   accessibilityLabel,
@@ -81,20 +98,7 @@ export const suggestionsRichTextarea = {
       id: 'example',
       title: 'Suggestions',
       query: (query: string): ComposerSuggestion[] =>
-        [
-          {
-            id: 'first',
-            label: '/first',
-            detail: 'First option',
-            insert: '/first ',
-          },
-          {
-            id: 'second',
-            label: '/second',
-            detail: 'Second option',
-            insert: '/second ',
-          },
-        ].filter(({ label }) => label.slice(1).startsWith(query)),
+        exampleCommands.filter(({ label }) => label.slice(1).startsWith(query)),
     },
   ],
 } satisfies RichTextareaFixture;
@@ -144,6 +148,7 @@ export const scrollingSuggestionsRichTextarea = {
           label: `/option-${index + 1}`,
           detail:
             'Read the complete description, compare the available options, and choose the option that fits the text you want to write next.',
+          icon: 'code',
           insert: `/option-${index + 1} `,
         })),
     },
