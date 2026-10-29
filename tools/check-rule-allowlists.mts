@@ -72,11 +72,15 @@ function flaggedFiles({ rule }: Allowlist, report: string): Set<string> {
   );
 }
 
-function check(allowlist: Allowlist, report: string): number {
-  const current = readAllowlist(
+function currentAllowlist(allowlist: Allowlist): string[] {
+  return readAllowlist(
     readFileSync(join(root, allowlist.path), 'utf8'),
     allowlist.rule,
   );
+}
+
+function check(allowlist: Allowlist, report: string): number {
+  const current = currentAllowlist(allowlist);
 
   const problems = allowlistProblems({
     rule: allowlist.rule,

@@ -25,33 +25,45 @@ export async function pollServer<T>(
 
 export const stderrTailLength = 2000;
 
-// Only the Server in this isolated home can satisfy readiness.
-export async function waitUntilReady({
-  home,
-  port,
-  server,
-  portTaken,
-  stderrTail,
-}: {
+type Readiness = {
   home: string;
   port: number;
   server: ChildProcess;
   portTaken: () => boolean;
   stderrTail: () => string;
-}): Promise<boolean> {
+};
+
+async function readiness({
+  home,
+  port,
+  server,
+  portTaken,
+  stderrTail,
+}: Readiness): Promise<boolean | undefined> {
+  assertRunning(server, stderrTail());
+
+  if (portTaken()) return false;
+
+  if (serverHasPort(home, port)) return true;
+
+  return undefined;
+}
+
+function assertRunning(server: ChildProcess, tail: string): void {
+  if (hasExited(server))
+    throw new Error(`${describeExit(server)}${withStderr(tail)}`);
+}
+
+function serverHasPort(home: string, port: number): boolean {
+  return readServerAddress(home)?.port === port;
+}
+
+// Only the Server in this isolated home can satisfy readiness.
+export async function waitUntilReady(input: Readiness): Promise<boolean> {
   return pollServer(
-    async (): Promise<boolean | undefined> => {
-      if (hasExited(server))
-        throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
-
-      if (portTaken()) return false;
-
-      if (readServerAddress(home)?.port === port) return true;
-
-      return;
-    },
+    (): Promise<boolean | undefined> => readiness(input),
     (seconds): string =>
-      `The Server did not start within ${seconds} s${withStderr(stderrTail())}`,
+      `The Server did not start within ${seconds} s${withStderr(input.stderrTail())}`,
   );
 }
 

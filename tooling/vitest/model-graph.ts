@@ -34,7 +34,16 @@ type GraphOptions<
   TEvent extends EventObject,
 > = TraversalOptions<SnapshotOf<TLogic>, TEvent, InputFrom<TLogic>>;
 
+type ModelEvent<TLogic extends AnyActorLogic> = GraphEventFromLogic<
+  NoInfer<TLogic>
+>;
+
 type AnyGraphOptions = GraphOptions<AnyActorLogic, EventObject>;
+
+type GraphArguments<
+  TLogic extends AnyActorLogic,
+  TEvent extends EventObject,
+> = [logic: TLogic, options?: GraphOptions<TLogic, TEvent>];
 
 type AnyPaths = (
   logic: AnyActorLogic,
@@ -53,11 +62,9 @@ type TypedPaths = <
 function typedPaths(traverse: AnyPaths): TypedPaths {
   function paths<
     TLogic extends AnyActorLogic,
-    TEvent extends GraphEventFromLogic<NoInfer<TLogic>> =
-      EventFromLogic<TLogic>,
+    TEvent extends ModelEvent<TLogic> = EventFromLogic<TLogic>,
   >(
-    logic: TLogic,
-    options?: GraphOptions<TLogic, TEvent>,
+    ...args: GraphArguments<TLogic, TEvent>
   ): StatePath<SnapshotOf<TLogic>, TEvent>[];
   function paths(
     logic: AnyActorLogic,

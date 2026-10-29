@@ -1,6 +1,7 @@
 import { BrowserWindow, ipcMain, nativeImage, screen } from 'electron';
 import { z } from 'zod';
 import { reportUnrecognised } from './report-unrecognised';
+import { isTrustedWindow } from './trusted-window';
 
 const largestPointSize = 512;
 
@@ -40,7 +41,7 @@ function displayScaleFactor(sender: Electron.WebContents): number {
 
 export function handleSymbolImages(windowOrigin: string): void {
   ipcMain.handle('symbol:render', (event, input): string | null => {
-    if (event.senderFrame?.origin !== windowOrigin) return null;
+    if (!isTrustedWindow(event, windowOrigin)) return null;
     const request = SymbolImageRequest.safeParse(input);
 
     if (request.success)
