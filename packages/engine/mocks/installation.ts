@@ -13,24 +13,31 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
   version: '1.2.3',
   description: 'An external installer fixture',
   license_url: 'https://example.org/license',
-  distribution:
-    kind === 'binary'
-      ? {
-          binary: {
-            [fixturePlatform()]: {
-              archive: 'https://example.org/agent',
-              cmd: './agent',
-            },
-          },
-        }
-      : {
-          [kind]: {
-            package:
-              kind === 'npx'
-                ? 'fixture-install@1.2.3'
-                : 'fixture-install==1.2.3',
-          },
-        },
+  distribution: fixtureDistribution(kind),
+});
+
+const fixtureDistribution = (
+  kind: 'binary' | 'npx' | 'uvx',
+): ACPAgent['distribution'] => {
+  if (kind !== 'binary') return packageDistribution(kind);
+
+  return {
+    binary: {
+      [fixturePlatform()]: {
+        archive: 'https://example.org/agent',
+        cmd: './agent',
+      },
+    },
+  };
+};
+
+const packageDistribution = (
+  kind: 'npx' | 'uvx',
+): ACPAgent['distribution'] => ({
+  [kind]: {
+    package:
+      kind === 'npx' ? 'fixture-install@1.2.3' : 'fixture-install==1.2.3',
+  },
 });
 
 export const installationPorts: InstallPorts = createInstallationPorts();

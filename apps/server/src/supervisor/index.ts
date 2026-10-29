@@ -1,6 +1,6 @@
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { writeLog } from '@repo/machine-log';
-import { createActor } from 'xstate';
+import { createActor, type ActorRefFrom, type SnapshotFrom } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
 
@@ -13,7 +13,18 @@ export function startSupervisor(options: {
   const log = (line: string): void =>
     writeLog({ home, label: 'supervisor', line });
 
-  const supervisor = createActor(supervisorMachine, {
+  const supervisor = createSupervisor(home, options);
+
+  observeSupervisor(supervisor, log);
+  listenForStop(supervisor, log);
+  supervisor.start();
+}
+
+const createSupervisor = (
+  home: string,
+  options: { watch: boolean; engineEntry?: string },
+): ActorRefFrom<typeof supervisorMachine> =>
+  createActor(supervisorMachine, {
     input: {
       home,
       now: Date.now,
@@ -24,18 +35,12 @@ export function startSupervisor(options: {
     },
   });
 
-  let lastState: string | undefined;
+const observeSupervisor = (
+  supervisor: ActorRefFrom<typeof supervisorMachine>,
+  log: (line: string) => void,
+): void => {
   supervisor.subscribe({
-    next: (snapshot): void => {
-      const state =
-        typeof snapshot.value === 'string'
-          ? snapshot.value
-          : JSON.stringify(snapshot.value);
-
-      if (state === lastState) return;
-      lastState = state;
-      log(state);
-    },
+    next: stateLogger(log),
     // The Engine process keeps the event loop alive until it exits, then Node exits with this code.
     complete: (): void => {
       process.exitCode = supervisor.getSnapshot().matches('stopping') ? 0 : 1;
@@ -45,7 +50,29 @@ export function startSupervisor(options: {
       process.exitCode = 1;
     },
   });
+};
 
+const stateLogger = (
+  log: (line: string) => void,
+): ((snapshot: SnapshotFrom<typeof supervisorMachine>) => void) => {
+  let lastState: string | undefined;
+
+  return (snapshot: SnapshotFrom<typeof supervisorMachine>): void => {
+    const state =
+      typeof snapshot.value === 'string'
+        ? snapshot.value
+        : JSON.stringify(snapshot.value);
+
+    if (state === lastState) return;
+    lastState = state;
+    log(state);
+  };
+};
+
+const listenForStop = (
+  supervisor: ActorRefFrom<typeof supervisorMachine>,
+  log: (line: string) => void,
+): void => {
   const stop = (signal: NodeJS.Signals): void => {
     if (supervisor.getSnapshot().status !== 'active') process.exit();
     log(`received ${signal}`);
@@ -54,6 +81,4 @@ export function startSupervisor(options: {
 
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
-
-  supervisor.start();
-}
+};

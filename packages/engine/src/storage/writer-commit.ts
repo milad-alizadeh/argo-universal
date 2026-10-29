@@ -26,10 +26,23 @@ export const rejectPendingCommits = (
   retrying = false,
 ): PendingWriterCommit[] => {
   for (const entry of pendingCommits)
-    if (!retrying || !entry.committed.waitForRetry)
-      entry.committed.reject(cause, retrying);
+    rejectUnlessWaiting(entry.committed, cause, retrying);
 
-  return retrying
+  return commitsWaitingForRetry(pendingCommits, retrying);
+};
+
+const rejectUnlessWaiting = (
+  committed: WriterCommit,
+  cause: unknown,
+  retrying: boolean,
+): void => {
+  if (!retrying || !committed.waitForRetry) committed.reject(cause, retrying);
+};
+
+const commitsWaitingForRetry = (
+  pendingCommits: PendingWriterCommit[],
+  retrying: boolean,
+): PendingWriterCommit[] =>
+  retrying
     ? pendingCommits.filter((entry) => entry.committed.waitForRetry)
     : [];
-};

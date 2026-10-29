@@ -16,26 +16,26 @@ export const startTerminalAuth = async (
   method: Partial<AuthMethodTerminal>,
   agent = subject.agent,
 ): Promise<Host> => {
-  const host = await startAcpEngine(
-    {
-      ...terminalLogin,
-      responses: {},
-      steps: [],
-      initialize: {
-        ...terminalLogin.initialize,
-        authMethods: [
-          { type: 'terminal', id: methodId, name: 'Sign in', ...method },
-        ],
-      },
-    },
-    undefined,
-    agent,
-  );
+  const host = await startAcpEngine(terminalScenario(method), undefined, agent);
 
   await host.caller.session.new({ ...emptySessionInput, agent });
 
   return host;
 };
+
+const terminalScenario = (
+  method: Partial<AuthMethodTerminal>,
+): Parameters<typeof startAcpEngine>[0] => ({
+  ...terminalLogin,
+  responses: {},
+  steps: [],
+  initialize: {
+    ...terminalLogin.initialize,
+    authMethods: [
+      { type: 'terminal', id: methodId, name: 'Sign in', ...method },
+    ],
+  },
+});
 
 export const readTerminal = (
   host: Host,

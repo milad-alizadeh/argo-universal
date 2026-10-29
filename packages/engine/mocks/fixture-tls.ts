@@ -12,7 +12,7 @@ const run = promisify(execFile);
 const subjectAltName =
   'subjectAltName=DNS:localhost,DNS:api.fixture.test,IP:127.0.0.1';
 
-const openSslArguments = (folder: string): string[] => [
+const algorithmArguments = [
   'req',
   '-x509',
   '-newkey',
@@ -20,6 +20,10 @@ const openSslArguments = (folder: string): string[] => [
   '-pkeyopt',
   'ec_paramgen_curve:prime256v1',
   '-nodes',
+];
+
+const openSslArguments = (folder: string): string[] => [
+  ...algorithmArguments,
   '-keyout',
   join(folder, 'key.pem'),
   '-out',
@@ -39,14 +43,16 @@ async function generate(): Promise<FixtureTls> {
   try {
     await run('openssl', openSslArguments(folder));
 
-    return {
-      key: await readFile(join(folder, 'key.pem'), 'utf8'),
-      cert: await readFile(join(folder, 'cert.pem'), 'utf8'),
-    };
+    return await readFixtureTls(folder);
   } finally {
     await rm(folder, { recursive: true, force: true });
   }
 }
+
+const readFixtureTls = async (folder: string): Promise<FixtureTls> => ({
+  key: await readFile(join(folder, 'key.pem'), 'utf8'),
+  cert: await readFile(join(folder, 'cert.pem'), 'utf8'),
+});
 
 let made: Promise<FixtureTls> | undefined;
 

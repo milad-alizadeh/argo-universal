@@ -1,5 +1,9 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import type { SessionSnapshot, SubagentUpdate } from '@repo/contracts';
+import type {
+  FeedSubscribeOutput,
+  SessionSnapshot,
+  SubagentUpdate,
+} from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
@@ -13,10 +17,22 @@ export const waitForAcpSnapshot = async (
 ): Promise<SessionSnapshot> => {
   const events = await host.caller.feed.subscribe({ sessionId, after: null });
 
-  for await (const event of events)
-    if (event.type === 'snapshot' && matches(event.snapshot))
-      return event.snapshot;
+  for await (const event of events) {
+    const snapshot = matchingSnapshot(event, matches);
+
+    if (snapshot) return snapshot;
+  }
+
   throw new Error('The Feed closed before the expected Session snapshot');
+};
+
+const matchingSnapshot = (
+  event: FeedSubscribeOutput,
+  matches: (snapshot: SessionSnapshot) => boolean,
+): SessionSnapshot | undefined => {
+  if (event.type !== 'snapshot') return undefined;
+
+  return matches(event.snapshot) ? event.snapshot : undefined;
 };
 
 export const waitForAcpSessionIdle = async (
@@ -30,29 +46,37 @@ export const waitForAcpSessionIdle = async (
   );
 };
 
+type AcpFeedHost = {
+  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  sessionId: string;
+};
+
 export const openAcpFeedSession = async (
   updates: AcpFeedUpdates | ScriptedScenario,
   agentId = 'mock',
-): Promise<{
-  host: Awaited<ReturnType<typeof startAcpEngine>>;
-  sessionId: string;
-}> => {
+): Promise<AcpFeedHost> => {
   const host = await startAcpEngine(
     'steps' in updates ? updates : feedScenario(updates),
     undefined,
     agentId,
   );
 
-  const created = await host.caller.session.new({
-    ...emptySessionInput,
-    agent: agentId,
-    prompt: [{ type: 'text', text: 'Show the result' }],
-  });
+  const created = await openFeedSession(host, agentId);
 
   await waitForAcpSessionIdle(host, created.sessionId);
 
   return { host, ...created };
 };
+
+const openFeedSession = (
+  host: AcpFeedHost['host'],
+  agentId: string,
+): ReturnType<AcpFeedHost['host']['caller']['session']['new']> =>
+  host.caller.session.new({
+    ...emptySessionInput,
+    agent: agentId,
+    prompt: [{ type: 'text', text: 'Show the result' }],
+  });
 
 // The parent Feed's Subagent rows, in Feed order.
 export const parentSubagentUpdates = async (

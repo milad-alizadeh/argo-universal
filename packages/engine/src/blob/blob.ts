@@ -16,7 +16,7 @@ import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../storage';
-import { BlobMetadataUpsertJob } from './blob-storage';
+import { BlobMetadataUpsertJob, storedBlobIds } from './blob-storage';
 
 export const unusedBlobAge = 86_400_000;
 
@@ -55,9 +55,16 @@ const imageSignatures: [mime: string, matches: (bytes: Buffer) => boolean][] = [
   ],
 ];
 
-const mimeOf = (bytes: Buffer, declared: string): string =>
-  imageSignatures.find(([, matches]): boolean => matches(bytes))?.[0] ??
-  (declared || 'application/octet-stream');
+const mimeOf = (bytes: Buffer, declared: string): string => {
+  const detected = imageSignatures.find(([, matches]): boolean =>
+    matches(bytes),
+  );
+
+  return detected ? detected[0] : declaredMime(declared);
+};
+
+const declaredMime = (declared: string): string =>
+  declared || 'application/octet-stream';
 
 export interface BlobUploadDeps {
   databaseWriter: WriterActorRef;
@@ -68,25 +75,38 @@ export async function uploadBlob(
   resources: BlobUploadDeps,
   file: z.output<typeof BlobUploadInput>,
 ): Promise<BlobUploadOutput> {
-  if (file.size > maxBlobUploadBytes)
+  checkUploadSize(file.size);
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const blobId = blobIdentity(bytes);
+  await writeBlobFile(resources.blobsFolder, blobId, bytes);
+  const mime = mimeOf(bytes, file.type);
+  const metadata = { id: blobId, mime, bytes: bytes.length };
+  await saveMetadata(resources.databaseWriter, metadata);
+
+  return { blobId, mime, bytes: bytes.length };
+}
+
+const blobIdentity = (bytes: Buffer): string =>
+  createHash('sha256').update(bytes).digest('hex');
+
+const checkUploadSize = (size: number): void => {
+  if (size > maxBlobUploadBytes)
     throw new TRPCError({
       code: 'PAYLOAD_TOO_LARGE',
       message: `An upload is at most ${maxBlobUploadBytes} bytes`,
     });
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const blobId = createHash('sha256').update(bytes).digest('hex');
-  await writeBlobFile(resources.blobsFolder, blobId, bytes);
-  const mime = mimeOf(bytes, file.type);
+};
+
+const saveMetadata = async (
+  writer: WriterActorRef,
+  blobMetadata: { id: string; mime: string; bytes: number },
+): Promise<void> => {
   await writeDatabaseJobAndWaitForCommit(
-    resources.databaseWriter,
-    new BlobMetadataUpsertJob({
-      blob: { id: blobId, mime, bytes: bytes.length },
-    }),
+    writer,
+    new BlobMetadataUpsertJob({ blob: blobMetadata }),
     true,
   );
-
-  return { blobId, mime, bytes: bytes.length };
-}
+};
 
 export async function removeUnusedBlobs(options: {
   database: Database;
@@ -96,41 +116,47 @@ export async function removeUnusedBlobs(options: {
   const cutoff = (options.now ?? Date.now()) - unusedBlobAge;
   const { database } = options;
 
-  const removed = database
-    .delete(blob)
-    .where(
-      and(
-        lt(blob.createdAt, cutoff),
-        notExists(
-          database
-            .select({ blobId: blobRef.blobId })
-            .from(blobRef)
-            .where(eq(blobRef.blobId, blob.id)),
-        ),
-      ),
-    )
-    .returning({ id: blob.id })
-    .all();
+  const removed = deleteUnusedBlobRows(database, cutoff);
 
   for (const { id } of removed)
     await rm(join(options.blobsFolder, id), { force: true });
 
-  const stored = new Set(
+  await removeUnstoredFiles(database, options.blobsFolder, cutoff);
+}
+
+const deleteUnusedBlobRows = (
+  database: Database,
+  cutoff: number,
+): { id: string }[] =>
+  database
+    .delete(blob)
+    .where(and(lt(blob.createdAt, cutoff), noReference(database)))
+    .returning({ id: blob.id })
+    .all();
+
+const noReference = (database: Database): ReturnType<typeof notExists> =>
+  notExists(
     database
-      .select({ id: blob.id })
-      .from(blob)
-      .all()
-      .map(({ id }): string => id),
+      .select({ blobId: blobRef.blobId })
+      .from(blobRef)
+      .where(eq(blobRef.blobId, blob.id)),
   );
 
-  const names = await readdir(options.blobsFolder).catch(
-    unlessMissing<string[]>([]),
-  );
+const removeUnstoredFiles = async (
+  database: Database,
+  blobsFolder: string,
+  cutoff: number,
+): Promise<void> => {
+  const stored = storedBlobIds(database);
+
+  const names = await readdir(blobsFolder).catch(unlessMissing<string[]>([]));
 
   for (const name of names) {
     if (stored.has(name)) continue;
-    const path = join(options.blobsFolder, name);
-
-    if ((await stat(path)).mtimeMs < cutoff) await rm(path, { force: true });
+    await removeOldFile(join(blobsFolder, name), cutoff);
   }
-}
+};
+
+const removeOldFile = async (path: string, cutoff: number): Promise<void> => {
+  if ((await stat(path)).mtimeMs < cutoff) await rm(path, { force: true });
+};

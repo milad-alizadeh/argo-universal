@@ -19,11 +19,17 @@ function operationRow(
 ): ToolCallUpdate | undefined {
   if (event.type !== 'row.upsert') return;
 
-  const { row } = event;
+  return archiveRow(event.row, except);
+}
 
+const archiveRow = (
+  row: Extract<FeedSubscribeOutput, { type: 'row.upsert' }>['row'],
+  except: string,
+): ToolCallUpdate | undefined => {
   if (row.sessionUpdate !== 'tool_call_update') return;
 
-  return row.name === 'session.archive' && row.toolCallId !== except
-    ? row
-    : undefined;
-}
+  return isOtherArchive(row, except) ? row : undefined;
+};
+
+const isOtherArchive = (row: ToolCallUpdate, except: string): boolean =>
+  row.name === 'session.archive' && row.toolCallId !== except;

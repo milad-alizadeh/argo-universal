@@ -4,14 +4,9 @@ import type {
   PluginDispatchInput,
   PluginViewInput,
 } from '@repo/contracts/plugins/wire';
-import {
-  createTRPCClient,
-  createWSClient,
-  wsLink,
-  type TRPCClient,
-} from '@trpc/client';
-import { onTestFinished } from 'vitest';
+import { createTRPCClient, wsLink, type TRPCClient } from '@trpc/client';
 import type { AppRouter } from '../src/engine/router';
+import { closePluginSubscription, pluginSocket } from './plugin-socket';
 
 export interface PluginApp {
   client: TRPCClient<AppRouter>;
@@ -25,10 +20,7 @@ export function connectPluginApp(
   url: string,
   page: PluginViewInput,
 ): PluginApp {
-  const socket = createWSClient({
-    url: url.replace('http:', 'ws:'),
-    connectionParams: { pluginSurface: JSON.stringify(currentSurface) },
-  });
+  const socket = pluginSocket(url, currentSurface);
 
   const client = createTRPCClient<AppRouter>({
     links: [wsLink({ client: socket })],
@@ -36,17 +28,22 @@ export function connectPluginApp(
 
   const messages: ViewMessage[] = [];
 
-  const subscription = client.plugins.view.subscribe(page, {
-    onData: (message) => messages.push(message),
-  });
+  const stop = subscribeView(client, socket, { page, messages });
 
-  onTestFinished(async () => {
-    subscription.unsubscribe();
-    await socket.close();
-  });
-
-  return { client, messages, stop: () => subscription.unsubscribe() };
+  return { client, messages, stop };
 }
+
+const subscribeView = (
+  client: TRPCClient<AppRouter>,
+  socket: ReturnType<typeof pluginSocket>,
+  data: { page: PluginViewInput; messages: ViewMessage[] },
+): (() => void) => {
+  const subscription = client.plugins.view.subscribe(data.page, {
+    onData: (message) => data.messages.push(message),
+  });
+
+  return closePluginSubscription(socket, subscription);
+};
 
 type TapTarget = Pick<PluginDispatchInput, 'pluginId' | 'path' | 'key'>;
 
