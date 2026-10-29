@@ -1,11 +1,36 @@
 import { describe, expect, it } from 'vitest';
 import {
+  findCommand,
   insertSuggestion,
   matchSuggestionTrigger,
+  querySuggestions,
   suggestionsAtCaret,
   type ComposerSuggestion,
+  type SuggestionGroup,
   type SuggestionSource,
 } from './rich-textarea-suggestions';
+
+const sources: SuggestionSource[] = [
+  {
+    id: 'agent',
+    title: 'Agent',
+    query: () => [],
+    commands: [{ name: 'review', hint: 'a branch' }, { name: 'revert' }],
+  },
+  {
+    id: 'plugin',
+    title: 'Plugin',
+    query: () => [{ id: 'plan', label: 'Plan', insert: '/plan ' }],
+  },
+];
+
+it('finds a command by its exact name, with its hint', () => {
+  expect(findCommand(sources, 'review')?.hint).toBe('a branch');
+});
+
+it.each(['rev', 'plan', 'nothing'])('finds no command named %j', (name) => {
+  expect(findCommand(sources, name)).toBeUndefined();
+});
 
 it.each([
   ['/', { leadOffset: 0, matchingString: '', replaceableString: '/' }],
@@ -84,5 +109,34 @@ describe('insertSuggestion', () => {
       text: 'Do /review  later',
       caret: 11,
     });
+  });
+});
+
+const many: SuggestionSource = {
+  id: 'many',
+  title: 'Many',
+  query: () =>
+    Array.from({ length: 10 }, (_, index) => ({
+      id: `option-${index}`,
+      label: `Option ${index}`,
+      insert: `option-${index} `,
+    })),
+};
+
+const none: SuggestionSource = { id: 'none', title: 'None', query: () => [] };
+
+const idsOf = (groups: SuggestionGroup[]): string[] =>
+  groups.flatMap(({ suggestions }) => suggestions.map(({ id }) => id));
+
+describe('querySuggestions', () => {
+  it('keeps source order, the first eight of each, and drops empty sources', () => {
+    const groups = querySuggestions([none, many, commands], '');
+
+    expect(groups.map(({ source }) => source.id)).toEqual(['many', 'commands']);
+    expect(idsOf(groups).slice(7, 9)).toEqual(['option-7', 'review']);
+  });
+
+  it('answers nothing when no source matches', () => {
+    expect(querySuggestions([none, commands], 'zzz')).toEqual([]);
   });
 });

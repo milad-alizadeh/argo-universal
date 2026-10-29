@@ -9,7 +9,7 @@ import {
   plainFieldClassName,
   type RichTextareaProps,
 } from './rich-textarea-props';
-import { SuggestionList } from './rich-textarea-suggestion-list';
+import { SuggestionPortal } from './rich-textarea-suggestion-list';
 import type { SuggestionSource } from './rich-textarea-suggestions';
 
 // The phone drawing: a plain native text area that grows to 6 lines, then scrolls (no numberOfLines).
@@ -75,7 +75,7 @@ function RichTextarea(props: RichTextareaProps): React.JSX.Element {
 
   return (
     <View className="w-full">
-      {groups ? <SuggestionList groups={groups} onChoose={choose} /> : null}
+      {groups ? <SuggestionPortal groups={groups} onChoose={choose} /> : null}
       <PlainField props={props} fieldProps={fieldProps} />
     </View>
   );

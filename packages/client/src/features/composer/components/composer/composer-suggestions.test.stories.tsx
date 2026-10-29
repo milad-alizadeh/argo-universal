@@ -8,6 +8,10 @@ import {
 import { slashSuggestionsComposer } from './composer-fixtures';
 import { SuggestionComposer } from './composer-suggestions.mocks';
 
+const inspectName = '/inspect Review changes';
+
+const reviewName = '/review Review a file';
+
 const meta = { ...composerMeta, title: 'Tests/Composer/Suggestions' };
 
 export default meta;
@@ -21,7 +25,7 @@ export const ChosenCommandSendsAsPlainText: Story = {
       canvas.getByRole('textbox', { name: 'Message' }),
       '/re',
     );
-    await screen.findByRole('option', { name: '/review Review a file' });
+    await screen.findByRole('option', { name: reviewName });
     await userEvent.keyboard('{Enter}');
     await expect(args.onSend).not.toHaveBeenCalled();
     await userEvent.keyboard('args');
@@ -36,6 +40,39 @@ export const ChosenCommandSendsAsPlainText: Story = {
       text: '/review args',
       attachments: [],
     });
+  },
+};
+
+// The menu marks the highlighted option as selected.
+const expectHighlighted = (name: string): Promise<void> =>
+  waitFor(() =>
+    expect(screen.getByRole('option', { selected: true })).toHaveAccessibleName(
+      name,
+    ),
+  );
+
+export const ArrowsAndTabChooseTheHighlightedCommand: Story = {
+  args: { slashCommands: slashSuggestionsComposer.slashCommands },
+  render: (args) => <SuggestionComposer {...args} />,
+  play: async ({ canvas, args }) => {
+    await settleLayout('wide');
+    await userEvent.type(canvas.getByRole('textbox', { name: 'Message' }), '/');
+    await screen.findByRole('option', { name: inspectName });
+    await expectHighlighted(inspectName);
+    await userEvent.keyboard('{ArrowDown}');
+    await expectHighlighted(reviewName);
+    await userEvent.keyboard('{ArrowUp}');
+    await expectHighlighted(inspectName);
+    await userEvent.keyboard('{ArrowDown}');
+    await expectHighlighted(reviewName);
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() =>
+      expect(args.onDraftChange).toHaveBeenLastCalledWith({
+        text: '/review ',
+        attachments: [],
+      }),
+    );
+    await expect(args.onSend).not.toHaveBeenCalled();
   },
 };
 

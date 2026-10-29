@@ -10,7 +10,7 @@ type WorkbenchLayout = 'workbench' | 'motion' | 'measures';
 
 type WorkbenchLayoutReads = Pick<ScaffoldLayout, WorkbenchLayout>;
 
-// A floating Workbench overlays the content; its geometry contributes no width to the page.
+// Cards keep their Slot and mounted tree as the width budget changes their placement.
 export function ScaffoldWorkbench(
   parts: PartReads<'band', WorkbenchLayout>,
 ): ReactElement | null {
@@ -35,7 +35,7 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchSurface floating={layout.workbench.state === 'floating'}>
+      <WorkbenchSurface floating={layout.workbench.state === 'dedicated'}>
         {children}
       </WorkbenchSurface>
     </Animated.View>
@@ -46,18 +46,19 @@ function useWorkbenchPlacement(
   layout: WorkbenchLayoutReads,
 ): ComponentProps<typeof Animated.View> & { inert: boolean } {
   const placement = workbenchPlacement(layout);
+  const visible = placement.motion.visible;
   const motion = useFrameOffset({ ...layout.motion, ...placement.motion });
 
   return {
     testID: 'desktop-workbench',
     className: placement.className,
-    style: [placement.style, motion],
-    ...visibilityProps(placement.motion.visible),
+    style: [placement.style, motion, !visible && { opacity: 0 }],
+    ...visibilityProps(visible),
   };
 }
 
 const visibilityProps = (visible: boolean): ViewProps & { inert: boolean } => ({
-  pointerEvents: visible ? 'auto' : 'none',
+  pointerEvents: visible ? 'box-none' : 'none',
   accessibilityElementsHidden: !visible,
   importantForAccessibility: visible ? 'auto' : 'no-hide-descendants',
   'aria-hidden': !visible,
@@ -65,7 +66,7 @@ const visibilityProps = (visible: boolean): ViewProps & { inert: boolean } => ({
 });
 
 type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
-  motion: { offset: number; visible: boolean };
+  motion: { offset: number; visible: boolean; replacesPrimary: boolean };
 };
 
 // The panel keeps its full width while it slides out, so its cards never reflow.
@@ -78,7 +79,11 @@ function workbenchPlacement({
   return {
     className: 'absolute bottom-frame-inset',
     style: { left: offset, width: measures.workbenchWidth, top: 0 },
-    motion: { offset, visible: workbench.width > 0 },
+    motion: {
+      offset,
+      visible: workbench.width > 0,
+      replacesPrimary: workbench.state === 'dedicated',
+    },
   };
 }
 
@@ -98,13 +103,22 @@ function WorkbenchSurface({
   );
 }
 
+const shadowScrollProps = {
+  role: 'region',
+  accessibilityLabel: 'Workbench overview',
+  // box-none restores direct children's input, so the full-height frame must opt out explicitly.
+  className: '-mx-8 -mt-8 web:pointer-events-none!',
+  pointerEvents: 'box-none',
+  contentContainerStyle: { pointerEvents: 'box-none' },
+  contentContainerClassName: 'px-8 pt-8 pb-16',
+} satisfies ComponentProps<typeof ScrollFadeView>;
+
 function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
   return (
-    <ScrollFadeView
-      className="-mx-8 -mt-8"
-      contentContainerClassName="px-8 pt-8 pb-16"
-    >
-      <View className="gap-2">{children}</View>
+    <ScrollFadeView {...shadowScrollProps}>
+      <View pointerEvents="auto" className="gap-2">
+        {children}
+      </View>
     </ScrollFadeView>
   );
 }

@@ -74,10 +74,10 @@ const contextRing = (
   play: async ({ canvas, userEvent }) => {
     await settleLayout(width);
     const trigger = canvas.getByRole('button', { name: contextLabel });
-    const inline = within(trigger).getByText(level.used);
+    const summary = `${level.used} / ${level.size}`;
     await (inlineTokens
-      ? expect(inline).toBeVisible()
-      : expect(inline).not.toBeVisible());
+      ? expect(trigger).toHaveTextContent(summary)
+      : expect(trigger).not.toHaveTextContent(level.used));
 
     await userEvent.click(trigger);
     const panel = within(await within(document.body).findByRole('dialog'));

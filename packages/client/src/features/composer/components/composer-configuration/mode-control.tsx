@@ -64,7 +64,7 @@ function modeTrigger(
 
   if (!props.wide) return <ChipTrigger {...trigger} />;
 
-  return <MenuTrigger {...trigger} labelRole="badge" />;
+  return <MenuTrigger {...trigger} />;
 }
 
 function modeLabel(current?: SessionConfigSelectOption): string {

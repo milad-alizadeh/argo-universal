@@ -3,8 +3,13 @@ import type { PaneSpan } from '../utils/pane-shift';
 // The Inspector: closed, open beside the page, or expanded over it.
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
-// One band toggle drives the Workbench; below the undock width it floats when pressed and auto-hides otherwise.
-export type WorkbenchState = 'docked' | 'auto-hidden' | 'floating' | 'hidden';
+// Effective placement follows the width budget; the separate intent survives automatic hiding.
+export type WorkbenchState =
+  | 'gutter'
+  | 'docked'
+  | 'auto-hidden'
+  | 'dedicated'
+  | 'hidden';
 
 // What the person asked of the Workbench's one toggle: nothing yet, so it docks when the window has room, or to show it or hide it.
 export type WorkbenchIntent = 'auto' | 'shown' | 'hidden';

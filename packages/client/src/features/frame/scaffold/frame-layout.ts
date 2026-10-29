@@ -14,25 +14,18 @@ import {
   listOpenWidth,
   requestedThresholds,
 } from './frame-layout-sidebar';
-import {
-  dockedWorkbench,
-  inspectorRegion,
-  reservedWorkbench,
-  workbenchRegion,
-  workbenchState,
-} from './frame-layout-trailing';
+import { inspectorRegion, workbenchRegion } from './frame-layout-trailing';
 import type {
   FrameArrangement,
   FrameLayout,
   FrameLayoutInput,
-  InspectorRegion,
   ListRegion,
-  WorkbenchState,
 } from './frame-layout-types';
+import { dockedWorkbench, reservedWorkbench } from './frame-layout-workbench';
 
 export { resizeOutcome } from './frame-layout-handles';
 
-export { workbenchDrawn } from './frame-layout-trailing';
+export { workbenchDrawn } from './frame-layout-workbench';
 
 export type * from './frame-layout-types';
 
@@ -62,29 +55,21 @@ function listRegion(input: FrameLayoutInput, listFold: number): ListRegion {
   };
 }
 
-function pageWidth(
-  input: FrameLayoutInput,
-  contentStart: number,
-  trailing: number,
-): number {
-  if (input.inspectorState === 'expanded') return 0;
-
-  return Math.max(0, input.width - contentStart - trailing);
-}
-
 function pageRegion(
   input: FrameLayoutInput,
   contentStart: number,
-  { inspector, state }: { inspector: InspectorRegion; state: WorkbenchState },
+  { inspector, workbench }: Pick<FrameLayout, 'inspector' | 'workbench'>,
 ): FrameLayout['page'] {
   const trailing =
-    dockedWorkbench(input, state) +
+    dockedWorkbench(input, workbench.state) +
     occupied(inspector.width, input.measures.paneGap);
+
+  const hidden = inspector.expanded || workbench.state === 'dedicated';
 
   return {
     offset: contentStart,
-    width: pageWidth(input, contentStart, trailing),
-    hidden: inspector.expanded,
+    width: hidden ? 0 : Math.max(0, input.width - contentStart - trailing),
+    hidden,
   };
 }
 
@@ -130,13 +115,13 @@ function placeRegions(
 ): Placed {
   const { contentStart, ...leading } = leadingRegions(input, thresholds);
   const inspector = inspectorRegion(input, contentStart);
-  const state = workbenchState(input, thresholds.workbenchUndock);
+  const workbench = workbenchRegion(input, inspector, contentStart);
 
   return {
     ...leading,
     inspector,
-    page: pageRegion(input, contentStart, { inspector, state }),
-    workbench: workbenchRegion(input, state, inspector),
+    page: pageRegion(input, contentStart, { inspector, workbench }),
+    workbench,
   };
 }
 

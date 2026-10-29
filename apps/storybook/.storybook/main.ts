@@ -11,6 +11,7 @@ import {
 } from 'vite';
 import svgr from 'vite-plugin-svgr';
 import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
+import { storybookServerOptions } from '../../../tools/storybook-sync-port.js';
 import {
   expoDeclarationImports,
   expoSymbolsWebImports,
@@ -130,9 +131,10 @@ const viteOverrides = (): InlineConfig => ({
 export const storybookVite = (config: InlineConfig): InlineConfig =>
   mergeConfig(config, viteOverrides());
 
-const config: StorybookConfig & {
-  reactNativeServerOptions: { host: string; port: number };
-} = {
+type Config = StorybookConfig &
+  Record<'reactNativeServerOptions', ReturnType<typeof storybookServerOptions>>;
+
+const config: Config = {
   staticDirs: [
     { from: '../../universal-app/public/fonts', to: '/fonts' },
     {
@@ -157,7 +159,7 @@ const config: StorybookConfig & {
     getAbsolutePath('@storybook/addon-docs'),
     getAbsolutePath('@storybook/addon-react-native-server'),
   ],
-  reactNativeServerOptions: { host: '127.0.0.1', port: 7007 },
+  reactNativeServerOptions: storybookServerOptions(),
   typescript: { reactDocgen: 'react-docgen' },
   framework: {
     name: getAbsolutePath('@storybook/react-native-web-vite'),

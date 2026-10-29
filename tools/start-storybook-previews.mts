@@ -9,10 +9,13 @@ import {
   openNamedAndroidStorybook,
 } from './storybook-devices.mts';
 import { forwardOutput } from './storybook-output.mts';
+import { storybookSyncPort } from './storybook-sync-port.js';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 
 const webUrl = 'http://127.0.0.1:6006/';
+
+const syncPort = storybookSyncPort();
 
 const children: ChildProcess[] = [];
 
@@ -111,7 +114,7 @@ function onExpoOutput(output: string): void {
 
 async function websocketReady(): Promise<boolean> {
   return new Promise((resolve) => {
-    const socket = connect(7007, '127.0.0.1');
+    const socket = connect(syncPort, '127.0.0.1');
     socket.once('connect', () => {
       socket.destroy();
       resolve(true);
@@ -153,7 +156,7 @@ for (let attempt = 0; attempt < 120 && !stopping; attempt += 1) {
 }
 
 if (!stopping && !ready) {
-  console.error('Web Storybook did not start on ports 6006 and 7007.');
+  console.error(`Web Storybook did not start on ports 6006 and ${syncPort}.`);
   stop(1);
 }
 

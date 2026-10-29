@@ -3,6 +3,10 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Pill } from './pill';
 import {
+  controlPill,
+  countedControlPill,
+  selectedControlPill,
+  disabledControlPill,
   accentPill,
   dangerPill,
   donePill,
@@ -51,3 +55,11 @@ export const Labels: Story = {
     </View>
   ),
 };
+
+export const Control: Story = { args: controlPill };
+
+export const CountedControl: Story = { args: countedControlPill };
+
+export const SelectedControl: Story = { args: selectedControlPill };
+
+export const DisabledControl: Story = { args: disabledControlPill };
