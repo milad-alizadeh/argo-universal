@@ -43,6 +43,9 @@ export const LeftFeedGutterStaysScrollable = gutterWheel('left');
 
 export const RightFeedGutterStaysScrollable = gutterWheel('right');
 
+const gutterOffset = (edge: 'left' | 'right', width: number): number =>
+  edge === 'left' ? 12 : width - 12;
+
 // A short wheel gesture stops tail-follow, then reads older content from either outer gutter.
 async function wheelInGutter(
   scroll: HTMLElement,
@@ -50,13 +53,13 @@ async function wheelInGutter(
 ): Promise<void> {
   await browserUser.hover(scroll, {
     position: {
-      x: edge === 'left' ? 12 : scroll.clientWidth - 12,
+      x: gutterOffset(edge, scroll.clientWidth),
       y: scroll.clientHeight / 2,
     },
   });
 
   const view = scroll.getBoundingClientRect();
-  const x = edge === 'left' ? view.left + 12 : view.right - 12;
+  const x = view.left + gutterOffset(edge, view.width);
   const before = scroll.scrollTop;
   const marked = markMiddleOfView(scroll);
   const point = { x, y: view.top + view.height / 2 };
