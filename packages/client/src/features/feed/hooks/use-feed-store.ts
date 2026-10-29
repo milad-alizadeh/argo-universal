@@ -32,6 +32,14 @@ type FeedValues = {
 
 export type FeedStore = FeedBuffer & FeedValues & { start: FeedStart };
 
+export type FeedRows = Pick<FeedStore, 'feedRef' | 'replaceFeed'>;
+
+export type LiveStore = FeedRows &
+  Pick<
+    FeedStore,
+    'activeSession' | 'closed' | 'setClosureError' | 'setSnapshot'
+  >;
+
 export function useFeedStore(sessionId: string | undefined): FeedStore {
   const start = useHeldFeedStart(sessionId);
   const values = useFeedValues(start);
