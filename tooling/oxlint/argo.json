@@ -305,10 +305,6 @@
       "rules": { "argo/database-client": "off" }
     },
     {
-      "files": ["tools/**"],
-      "rules": { "argo/cross-package-import": "off" }
-    },
-    {
       // Unit tests mock only outside modules, skip nothing, assert unconditionally and carry unique, valid titles.
       "files": ["**/*.test.ts", "**/*.test.mts"],
       "rules": {
