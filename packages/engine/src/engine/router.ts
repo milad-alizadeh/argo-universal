@@ -3,9 +3,15 @@ import { createBlobRouter } from '../blob';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
 import { createNotificationsRouter } from '../notifications';
-import { createOperationRouters } from '../operations';
+import { createOperationProcedures } from '../operations';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
+import {
+  createSessionList,
+  createSessionPorts,
+  createSessionRouter,
+  createShellRouter,
+} from '../sessions';
 import { createSystemRouter } from '../system';
 import type { AppRouterDeps } from './router-deps';
 
@@ -21,6 +27,22 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     notifications: createNotificationsRouter(deps),
   }),
 );
+
+// Operations share the session and shell nouns with the Session procedures that are not Operations.
+const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
+  const sessionList = createSessionList(deps);
+  const sessionPorts = createSessionPorts(deps, sessionList);
+  const operations = createOperationProcedures({ ...deps, sessionPorts });
+
+  return router({
+    ...operations,
+    session: mergeRouters(
+      createSessionRouter({ ...deps, sessionList }),
+      operations.session,
+    ),
+    shell: mergeRouters(createShellRouter(deps), operations.shell),
+  });
+});
 
 export const createAppRouter = routerFactory((deps: AppRouterDeps) =>
   mergeRouters(createAppProcedures(deps), createOperationRouters(deps)),

@@ -4,13 +4,9 @@ import type {
   OperationExecution,
 } from '@repo/contracts/operations';
 import type { z } from 'zod';
-import type { SessionList } from '../sessions';
+import type { NativeStartRequest } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
-import type {
-  NativeStartId,
-  NativeStartRequest,
-  StartedWork,
-} from './native-start';
+import type { NativeStartId, StartedWork } from './native-start';
 import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
 import { createProjectOperations } from './projects';
@@ -72,12 +68,11 @@ export type CallerImplementations<Args extends unknown[] = []> = {
 
 export function createImplementations(
   deps: OperationsDeps,
-  sessionList: SessionList,
 ): OperationImplementations {
   return {
     ...createAgentAccessOperations(deps),
-    ...sessionImplementations(deps),
-    ...createReadOperations(deps, sessionList),
+    ...sessionImplementations(deps.sessionPorts),
+    ...createReadOperations(deps.sessionPorts),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),

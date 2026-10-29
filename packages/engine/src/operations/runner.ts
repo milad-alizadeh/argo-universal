@@ -3,6 +3,7 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
   sessionOrigin,
   userOrigin,
+  type NativeStartRequest,
   type SessionDirectory,
   type SessionOperationCall,
 } from '../sessions';
@@ -25,7 +26,6 @@ import {
   isNativeStartOperation,
   recordStartedWork,
   type NativeStartId,
-  type NativeStartRequest,
   type StartedWork,
 } from './native-start';
 import { parseResult, validateParams } from './params';

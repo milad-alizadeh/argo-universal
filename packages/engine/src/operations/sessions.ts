@@ -5,52 +5,53 @@ import type {
   SessionPromptOutput,
 } from '@repo/contracts';
 import type { sessionOperations } from '@repo/contracts/operations';
-import {
-  archiveSession,
-  cancelSession,
-  startSessionCreation,
-  startSessionPrompt,
-  stopShell,
-  unarchiveSession,
-  closeSession,
-  configureSession,
-  renameSession,
-  saveSessionPlan,
-  type AcceptedSessionPrompt,
+import type {
+  AcceptedSessionPrompt,
+  NativeStartRequest,
+  SessionPorts,
 } from '../sessions';
 import {
   startedWork,
   type AcceptedWork,
-  type NativeStartRequest,
+  type NativeStartId,
   type StartedWork,
 } from './native-start';
-import type { OperationImplementations, OperationsDeps } from './operations';
+import type { OperationImplementations } from './operations';
 
-export const sessionImplementations = (
-  deps: OperationsDeps,
-): Pick<OperationImplementations, keyof typeof sessionOperations> => ({
-  'session.new': (input, request) => startCreation(deps, input, request),
-  'session.prompt': async (input, request) => startPrompt(deps, input, request),
-  'session.cancel': async (input) => cancelSession(deps, input.sessionId),
-  'session.archive': (input) => archiveSession(deps, input.sessionId),
-  'session.unarchive': (input) => unarchiveSession(deps, input.sessionId),
-  'session.savePlan': saveSessionPlan.bind(null, deps),
-  'session.close': (params) => closeSession(deps, params.sessionId),
-  'session.setConfigOption': configureSession.bind(null, deps),
-  'shell.stop': async (params) => stopShell(deps, params),
-  'session.rename': renameSession.bind(null, deps),
+type SessionImplementations = Pick<
+  OperationImplementations,
+  keyof typeof sessionOperations
+>;
+
+export const sessionImplementations = ({
+  commands,
+  starts,
+}: SessionPorts): SessionImplementations => ({
+  'session.new': (input, request) => startCreation(starts, input, request),
+  'session.prompt': async (input, request) =>
+    startPrompt(starts, input, request),
+  ...commandImplementations(commands),
+});
+
+const commandImplementations = (
+  commands: SessionPorts['commands'],
+): Omit<SessionImplementations, NativeStartId> => ({
+  'session.cancel': async (input) => commands.cancel(input.sessionId),
+  'session.archive': (input) => commands.archive(input.sessionId),
+  'session.unarchive': (input) => commands.unarchive(input.sessionId),
+  'session.savePlan': commands.savePlan,
+  'session.close': (params) => commands.close(params.sessionId),
+  'session.setConfigOption': commands.configure,
+  'shell.stop': async (params) => commands.stopShell(params),
+  'session.rename': commands.rename,
 });
 
 async function startCreation(
-  deps: OperationsDeps,
+  starts: SessionPorts['starts'],
   input: SessionNewInput,
   request: NativeStartRequest,
 ): Promise<StartedWork<SessionNewOutput>> {
-  const creation = await startSessionCreation(
-    admissionDeps(deps, request.signal),
-    input,
-    request,
-  );
+  const creation = await starts.create(input, request);
 
   return startedWork('creation', creation, ({ sessionId, turnId }) => ({
     result: { sessionId },
@@ -59,17 +60,11 @@ async function startCreation(
 }
 
 function startPrompt(
-  deps: OperationsDeps,
+  starts: SessionPorts['starts'],
   input: SessionPromptInput,
   request: NativeStartRequest,
 ): StartedWork<SessionPromptOutput> {
-  const prompt = startSessionPrompt(
-    admissionDeps(deps, request.signal),
-    input,
-    request,
-  );
-
-  return startedWork('turn', prompt, acceptedPrompt);
+  return startedWork('turn', starts.prompt(input, request), acceptedPrompt);
 }
 
 function acceptedPrompt(
@@ -81,18 +76,4 @@ function acceptedPrompt(
     result: { messageId: accepted.messageId },
     turnId: accepted.turnId,
   };
-}
-
-// A user caller's ninety-second budget also stops the Session command it is waiting to admit.
-function admissionDeps(
-  deps: OperationsDeps,
-  signal: AbortSignal | undefined,
-): OperationsDeps {
-  if (!signal) return deps;
-
-  const sessionCommandSignal = deps.sessionCommandSignal
-    ? AbortSignal.any([deps.sessionCommandSignal, signal])
-    : signal;
-
-  return { ...deps, sessionCommandSignal };
 }

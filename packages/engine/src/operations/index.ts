@@ -1,31 +1,26 @@
-import { mergeRouters, router, routerFactory } from '../rpc';
-import {
-  createSessionList,
-  createSessionRouter,
-  createShellRouter,
-} from '../sessions';
 import { createRunner, Operations, type OperationsDeps } from './operations';
 import { createOperationsRouter } from './router';
 import { generatedOperations } from './router.gen';
 
 export { ensureControlToken } from './tokens';
 
-export const createOperationRouters = routerFactory((deps: OperationsDeps) => {
-  const sessionList = createSessionList(deps);
-  const runner = createRunner(deps, sessionList);
-  const engine = new Operations(deps, runner);
-  const generated = generatedOperations(runner);
+export type { OperationsDeps } from './operations';
 
-  return router({
-    ...generated,
-    session: mergeRouters(
-      createSessionRouter({ ...deps, sessionList }),
-      generated.session,
-    ),
-    shell: mergeRouters(createShellRouter(deps), generated.shell),
-    operations: createOperationsRouter(engine),
-  });
-});
+type OperationProcedures = ReturnType<typeof generatedOperations> & {
+  operations: ReturnType<typeof createOperationsRouter>;
+};
+
+// Every Operation's procedures, by noun, and the token callers' operations router; the Engine mounts them.
+export function createOperationProcedures(
+  deps: OperationsDeps,
+): OperationProcedures {
+  const runner = createRunner(deps);
+
+  return {
+    ...generatedOperations(runner),
+    operations: createOperationsRouter(new Operations(deps, runner)),
+  };
+}
 
 export { SessionTokens } from './session-tokens';
 

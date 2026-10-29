@@ -31,18 +31,13 @@ export {
   pendingInputRequest,
 } from './pending-input';
 
-export {
-  createSessionSnapshotWatcher,
-  createSessionSnapshotReader,
-} from './snapshot';
+export { createSessionSnapshotWatcher } from './snapshot';
 
 export { watchTurnActivity } from './turn-activity';
 
 export { createSessionReader, readSessionRow } from './session-record';
 
 export { readDefaultChangesSummary } from './changes-summary';
-
-export { readSessionChanges, readSessionDiff } from './change-readers';
 
 export { createSessionActorInput } from './session-actor-input';
 
@@ -51,8 +46,6 @@ export { openSessionsId } from './open-sessions-system';
 export { sessionActorId } from './session-system';
 
 export { createSessionRouter } from './router';
-
-export { startSessionCreation } from './session-creation';
 
 export { createSessionList, type SessionList } from './list/session-list';
 
@@ -81,24 +74,7 @@ export { recoverShells } from './shells/recovery';
 
 export { releaseShellGroups } from './shells/shell-record';
 
-export { renameSession } from './session-rename';
-
-export { saveSessionPlan } from './session-save-plan';
-
-export { closeSession } from './session-closure';
-
-export { configureSession } from './session-configuration';
-
-export { stopShell } from './shells/stop';
-
-export { createSessionAgentReader, listSessionBranches } from './readers';
-
-export { listSessionShells } from './shells/list';
-
-export { unarchiveSession } from './archive/archive-commands';
-
 export {
-  createOperationCalls,
   type CalledOperation,
   type OperationCalls,
   type OperationCard,
@@ -106,14 +82,9 @@ export {
   type SessionOperationCall,
 } from './operation-call';
 
-export { cancelSession } from './session-closure';
-
-export { archiveSession } from './archive/archive-commands';
-
 export { type SessionWorkWatcher } from './work-watcher';
 
 export {
-  createSessionWorkSource,
   sessionWorkItem,
   type SessionWork,
   type SessionWorkRead,
@@ -121,19 +92,14 @@ export {
 } from './work-source';
 
 export {
-  createSessionDirectory,
   type DirectorySession,
   type SessionDirectory,
 } from './session-directory';
 
-export {
-  startSessionPrompt,
-  type AcceptedSessionPrompt,
-} from './session-prompt';
+export { type AcceptedSessionPrompt } from './session-prompt';
 
-export {
-  sessionOrigin,
-  userOrigin,
-  type NativeStart,
-  type SessionOrigin,
-} from './prompt-sender';
+export { sessionOrigin, userOrigin, type NativeStart } from './prompt-sender';
+
+export { type NativeStartRequest } from './native-starts';
+
+export { createSessionPorts, type SessionPorts } from './session-ports';

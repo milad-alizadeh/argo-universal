@@ -2,11 +2,7 @@ import type {
   OperationId,
   OperationWorkTarget,
 } from '@repo/contracts/operations';
-import type {
-  NativeStart,
-  SessionOperationCall,
-  SessionOrigin,
-} from '../sessions';
+import type { NativeStart, SessionOperationCall } from '../sessions';
 import type { OperationParams, OperationResult } from './implementations';
 
 // The one list of Operations that start native work: a Session, or a Turn.
@@ -42,12 +38,6 @@ export function eachNativeStart<Args extends unknown[]>(
       start('session.prompt', params, ...args),
   };
 }
-
-// A caller's origin, with a new Session's pre-allocated id and the signal that stops its admission.
-export type NativeStartRequest = SessionOrigin & {
-  sessionId?: string;
-  signal?: AbortSignal;
-};
 
 export type AcceptedWork<Result> = { result: Result; turnId?: string };
 

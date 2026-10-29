@@ -6,14 +6,9 @@ import type {
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
+import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
-import {
-  createOperationCalls,
-  createSessionDirectory,
-  type OperationCalls,
-  type SessionList,
-  type SessionRouterDeps,
-} from '../sessions';
+import type { OperationCalls, SessionPorts } from '../sessions';
 import {
   discoveryCall,
   listedOutput,
@@ -44,14 +39,20 @@ export type {
   OperationRunResult,
 } from './implementations';
 
-export type OperationsDeps = SessionRouterDeps &
-  RegistryDeps & {
+// What Operations read: Sessions only through their ports, and the Engine's own deps.
+export type OperationsDeps = RegistryDeps &
+  Pick<FeedDeps, 'findWriter'> & {
+    sessionPorts: SessionPorts;
     controlToken: string;
     userHome: string;
     sessionTokens: SessionTokens;
     blobsFolder: string;
     plugins: PluginsRouterDeps;
     operationWaitClock?: OperationWaitClock;
+    // The Engine's Session command signal: stopping it ends every wait.
+    sessionCommandSignal?: AbortSignal;
+    // Allocates a new Session's id before its start.
+    createId: () => string;
   };
 
 type Operation = { id: OperationId; params: Json };
@@ -69,7 +70,7 @@ export class Operations {
     private readonly deps: OperationsDeps,
     private readonly runner: OperationRunner,
   ) {
-    this.calls = createOperationCalls(deps);
+    this.calls = deps.sessionPorts.calls;
     this.work = new OperationWork(liveWorkDeps(deps), (token) =>
       this.caller(token),
     );
@@ -148,13 +149,10 @@ export class Operations {
 }
 
 // Every caller's one runner, reading Sessions through the Session directory.
-export function createRunner(
-  deps: OperationsDeps,
-  sessionList: SessionList,
-): OperationRunner {
-  const directory = createSessionDirectory(deps);
+export function createRunner(deps: OperationsDeps): OperationRunner {
+  const { directory } = deps.sessionPorts;
 
-  return new OperationRunner(createImplementations(deps, sessionList), {
+  return new OperationRunner(createImplementations(deps), {
     directory,
     scope: new SessionScope({ directory, createId: deps.createId }),
   });
