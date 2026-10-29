@@ -39,6 +39,24 @@ export const ChosenCommandSendsAsPlainText: Story = {
   },
 };
 
+export const ArrowsAndTabChooseTheHighlightedCommand: Story = {
+  args: { slashCommands: slashSuggestionsComposer.slashCommands },
+  render: (args) => <SuggestionComposer {...args} />,
+  play: async ({ canvas, args }) => {
+    await settleLayout('wide');
+    await userEvent.type(canvas.getByRole('textbox', { name: 'Message' }), '/');
+    await screen.findByRole('option', { name: '/inspect Review changes' });
+    await userEvent.keyboard('{ArrowDown}{ArrowUp}{ArrowDown}{Tab}');
+    await waitFor(() =>
+      expect(args.onDraftChange).toHaveBeenLastCalledWith({
+        text: '/review ',
+        attachments: [],
+      }),
+    );
+    await expect(args.onSend).not.toHaveBeenCalled();
+  },
+};
+
 export const NoCommandsLeavesSlashAsPlainText: Story = {
   render: (args) => <SuggestionComposer {...args} />,
   play: async ({ canvas, args }) => {
