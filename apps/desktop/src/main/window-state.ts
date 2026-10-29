@@ -31,11 +31,15 @@ export function readWindowState(file: string): WindowState | undefined {
   try {
     return windowState.parse(JSON.parse(readFileSync(file, 'utf8')));
   } catch (error) {
-    if (fileError.safeParse(error).data?.code !== 'ENOENT')
+    if (!isMissingFile(fileError.safeParse(error).data))
       console.error('Could not restore window bounds', error);
 
     return undefined;
   }
+}
+
+function isMissingFile(error: { code: string } | undefined): boolean {
+  return error?.code === 'ENOENT';
 }
 
 export function saveWindowState(file: string, state: WindowState): void {
@@ -54,32 +58,26 @@ export function windowBounds(
   saved: Rectangle | undefined,
   area: Rectangle,
 ): Rectangle {
-  const width = Math.min(
-    area.width,
-    Math.max(minimumWidth, saved?.width ?? defaultWidth),
-  );
-
-  const height = Math.min(
-    area.height,
-    Math.max(minimumHeight, saved?.height ?? defaultHeight),
-  );
+  const source = saved ?? defaultBounds(area);
+  const width = Math.min(area.width, Math.max(minimumWidth, source.width));
+  const height = Math.min(area.height, Math.max(minimumHeight, source.height));
 
   return {
     width,
     height,
-    x: Math.max(
-      area.x,
-      Math.min(
-        saved?.x ?? area.x + Math.round((area.width - width) / 2),
-        area.x + area.width - width,
-      ),
-    ),
-    y: Math.max(
-      area.y,
-      Math.min(
-        saved?.y ?? area.y + Math.round((area.height - height) / 2),
-        area.y + area.height - height,
-      ),
-    ),
+    x: Math.max(area.x, Math.min(source.x, area.x + area.width - width)),
+    y: Math.max(area.y, Math.min(source.y, area.y + area.height - height)),
+  };
+}
+
+function defaultBounds(area: Rectangle): Rectangle {
+  const width = Math.min(area.width, Math.max(minimumWidth, defaultWidth));
+  const height = Math.min(area.height, Math.max(minimumHeight, defaultHeight));
+
+  return {
+    width,
+    height,
+    x: area.x + Math.round((area.width - width) / 2),
+    y: area.y + Math.round((area.height - height) / 2),
   };
 }

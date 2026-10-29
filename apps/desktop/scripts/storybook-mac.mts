@@ -2,7 +2,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { build } from 'vite';
+import { build, type InlineConfig } from 'vite';
 import { z } from 'zod';
 
 /*
@@ -99,28 +99,30 @@ const waitForStorybook = (
     : pollStorybook();
 
 // The Storybook window's main process, and the desktop app's own preload, unchanged.
-const buildWindow = async (): Promise<void> => {
-  await build({
-    configFile: false,
-    logLevel: 'warn',
-    root: desktopDirectory,
-    build: {
-      outDir: outDirectory,
-      emptyOutDir: true,
-      minify: false,
-      ssr: true,
-      target: 'node22',
-      rollupOptions: {
-        input: {
-          main: join(desktopDirectory, 'src/storybook/storybook-window.ts'),
-          preload: join(desktopDirectory, 'src/preload/preload.ts'),
-        },
-        external: ['electron'],
-        output: { format: 'cjs', entryFileNames: '[name].cjs' },
+const windowBuild = {
+  configFile: false,
+  logLevel: 'warn',
+  root: desktopDirectory,
+  build: {
+    outDir: outDirectory,
+    emptyOutDir: true,
+    minify: false,
+    ssr: true,
+    target: 'node22',
+    rollupOptions: {
+      input: {
+        main: join(desktopDirectory, 'src/storybook/storybook-window.ts'),
+        preload: join(desktopDirectory, 'src/preload/preload.ts'),
       },
+      external: ['electron'],
+      output: { format: 'cjs', entryFileNames: '[name].cjs' },
     },
-    ssr: { noExternal: true },
-  });
+  },
+  ssr: { noExternal: true },
+} satisfies InlineConfig;
+
+const buildWindow = async (): Promise<void> => {
+  await build(windowBuild);
 };
 
 const storybook = (await answers()) ? undefined : startStorybook();

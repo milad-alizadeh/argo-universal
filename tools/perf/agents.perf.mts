@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
-import { startOwnServer } from '../../e2e/own-server.ts';
+import { startOwnServer } from '@repo/e2e/own-server';
 import { publishedRegistry } from '../../mocks/registry/catalog.ts';
 import {
   desktop,

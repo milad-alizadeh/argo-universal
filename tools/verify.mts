@@ -37,24 +37,30 @@ function mergeBase(): string {
   return 'HEAD';
 }
 
-function staticChecks(changed: string[]): Result[] {
+const operationGeneration = [
+  '--import',
+  'tsx',
+  'tools/generate-operations.mts',
+  '--check',
+];
+
+const registryGeneration = [
+  '--import',
+  'tsx',
+  'packages/contracts/tools/registry/generate-validators.mts',
+  '--check',
+];
+
+function generatedChecks(): Result[] {
   return [
-    checkFormat(changed),
-    ...checkChanged(changed),
     run(process.execPath, ['tools/check-operation-mutations.mts']),
-    run(process.execPath, [
-      '--import',
-      'tsx',
-      'tools/generate-operations.mts',
-      '--check',
-    ]),
-    run(process.execPath, [
-      '--import',
-      'tsx',
-      'packages/contracts/tools/registry/generate-validators.mts',
-      '--check',
-    ]),
+    run(process.execPath, operationGeneration),
+    run(process.execPath, registryGeneration),
   ];
+}
+
+function staticChecks(changed: string[]): Result[] {
+  return [checkFormat(changed), ...checkChanged(changed), ...generatedChecks()];
 }
 
 type Listing =
@@ -71,18 +77,23 @@ function dependentTests(base: string): Listing {
     const listing = run(vitest, args);
 
     if (listing.status !== 0) return { listed: false, failure: listing };
-    const parsed = parseJson(listedTests, readFileSync(report, 'utf8'));
 
-    if (parsed.success)
-      return { listed: true, tests: parsed.data.map(({ file }) => file) };
-
-    return {
-      listed: false,
-      failure: { status: 1, output: 'vitest list wrote an unreadable report' },
-    };
+    return readListing(report);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
+}
+
+function readListing(report: string): Listing {
+  const parsed = parseJson(listedTests, readFileSync(report, 'utf8'));
+
+  if (parsed.success)
+    return { listed: true, tests: parsed.data.map(({ file }) => file) };
+
+  return {
+    listed: false,
+    failure: { status: 1, output: 'vitest list wrote an unreadable report' },
+  };
 }
 
 function announce({ files, dependents, narrowed }: TestScope): void {

@@ -6,6 +6,7 @@ import {
   type IpcMainInvokeEvent,
 } from 'electron';
 import { readShareRequest } from './share-request';
+import { isTrustedWindow } from './trusted-window';
 
 export function handleShareMenu(windowOrigin: string): void {
   if (process.platform !== 'darwin') return;
@@ -21,7 +22,7 @@ function shareWindow(
   event: IpcMainInvokeEvent,
   windowOrigin: string,
 ): BrowserWindow {
-  if (event.senderFrame?.origin !== windowOrigin)
+  if (!isTrustedWindow(event, windowOrigin))
     throw new Error('Untrusted share request');
   const window = BrowserWindow.fromWebContents(event.sender);
 

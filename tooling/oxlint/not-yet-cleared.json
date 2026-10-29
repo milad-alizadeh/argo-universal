@@ -5,11 +5,8 @@
   // Never add a waiver identity or rule; the approved Engine relocations preserve existing identities (ADR-0017).
   "overrides": [
     // complexity, max-lines-per-function, max-statements, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["apps/desktop/scripts/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/no-duplicate-string, sonarjs/no-nested-template-literals, sonarjs/no-os-command-from-path, sonarjs/no-unused-vars, sonarjs/publicly-writable-directories, typescript/consistent-type-assertions, typescript/explicit-function-return-type, unicorn/consistent-function-scoping, vitest/expect-expect
-    { "files": ["apps/desktop/src/main/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-nested-template-literals": "off", "sonarjs/no-os-command-from-path": "off", "sonarjs/no-unused-vars": "off", "sonarjs/publicly-writable-directories": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
     // stylistic/multiline-comment-style
-    { "files": ["apps/desktop/src/preload/*"], "rules": { "stylistic/multiline-comment-style": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, sonarjs/no-os-command-from-path, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["packages/engine/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-os-command-from-path": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements, prefer-const, sonarjs/no-duplicate-string, sonarjs/no-os-command-from-path, sonarjs/no-unused-vars, typescript/await-thenable, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-meaningless-void-operator, vitest/expect-expect, vitest/no-conditional-expect, vitest/require-to-throw-message, vitest/valid-expect
@@ -26,7 +23,6 @@
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, unicorn/consistent-function-scoping, vitest/expect-expect
     { "files": ["apps/server/src/supervisor/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
     // complexity, max-lines-per-function, max-statements, sonarjs/no-redundant-jump, sonarjs/no-unused-vars, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["e2e/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-redundant-jump": "off", "sonarjs/no-unused-vars": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-nested-template-literals, sonarjs/no-unused-vars, sonarjs/super-linear-regex, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/restrict-template-expressions, vitest/no-conditional-expect
     // complexity, jsx-a11y/no-autofocus, jsx-a11y/role-has-required-aria-props, max-lines, max-lines-per-function, max-statements, react/set-state-in-effect, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, stylistic/multiline-comment-style, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-floating-promises, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, unicorn/prefer-spread
     // complexity, max-lines-per-function
@@ -39,8 +35,5 @@
     // stylistic/multiline-comment-style, typescript/explicit-function-return-type
     // complexity, max-lines, max-lines-per-function, max-params, max-statements, sonarjs/no-nested-template-literals, typescript/explicit-function-return-type
     // max-lines-per-function, typescript/explicit-function-return-type
-    { "files": ["tooling/vitest/*"], "rules": { "max-lines-per-function": "off" } },
-    // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-os-command-from-path, sonarjs/publicly-writable-directories, typescript/explicit-function-return-type
-    { "files": ["tools/*"], "rules": { "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-os-command-from-path": "off", "sonarjs/publicly-writable-directories": "off" } }
   ]
 }

@@ -18,6 +18,7 @@
     "@jridgewell/trace-mapping": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/executables": "workspace:*",
     "@repo/git": "workspace:*",
     "@repo/machine-log": "workspace:*",
     "@trpc/server": "catalog:",
