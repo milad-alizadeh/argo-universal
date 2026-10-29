@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { page, rowEvents, streamed } from '../../../../mocks/feed-state.mocks';
 import {
-  heldFeedHarness,
-  heldSlots,
-} from '../../../../mocks/feed/held-feed.mocks';
+  sessionFeedHarness,
+  keptFeeds,
+} from '../../../../mocks/feed/session-feed-store.mocks';
 
 const { rows, snapshot, stream } = streamed;
 
@@ -11,9 +11,9 @@ const tail = page(rows, snapshot.maxRevision);
 
 const resumeAt = { epoch: 0, revision: snapshot.maxRevision };
 
-describe('HeldFeedStore', () => {
+describe('SessionFeedStore', () => {
   it('commits the first history page at the next frame and resumes live changes from it', () => {
-    const h = heldFeedHarness();
+    const h = sessionFeedHarness();
     h.store.start();
     h.store.mergeHistory([tail]);
     h.store.receive({ type: 'snapshot', snapshot });
@@ -28,7 +28,7 @@ describe('HeldFeedStore', () => {
   });
 
   it('keeps the sync point it opened at when history pages again', () => {
-    const h = heldFeedHarness();
+    const h = sessionFeedHarness();
     h.store.start();
     h.store.mergeHistory([page(rows, 7)]);
     h.store.mergeHistory([tail]);
@@ -38,7 +38,7 @@ describe('HeldFeedStore', () => {
   });
 
   it('commits a streaming Turn once per frame', () => {
-    const h = heldFeedHarness();
+    const h = sessionFeedHarness();
     h.store.start();
     h.store.mergeHistory([page([], 0)]);
     h.drawFrame();
@@ -52,16 +52,16 @@ describe('HeldFeedStore', () => {
   });
 
   it('starts a Session shown before from its held Feed, resuming after the rows held', () => {
-    const slotOf = heldSlots();
-    const left = heldFeedHarness(slotOf('session-1'));
+    const { slotOf } = keptFeeds();
+    const left = sessionFeedHarness(slotOf('session-1'));
     const stop = left.store.start();
     left.store.mergeHistory([tail]);
     left.store.receive({ type: 'snapshot', snapshot });
     left.drawFrame();
     stop();
 
-    const back = heldFeedHarness(slotOf('session-1')).store.getState();
-    const other = heldFeedHarness(slotOf('session-2')).store.getState();
+    const back = sessionFeedHarness(slotOf('session-1')).store.getState();
+    const other = sessionFeedHarness(slotOf('session-2')).store.getState();
 
     expect(back).toMatchObject({
       feed: { rows },
@@ -77,7 +77,7 @@ describe('HeldFeedStore', () => {
   });
 
   it('drops the frame it held and everything sent after the reader left the Session', async () => {
-    const h = heldFeedHarness();
+    const h = sessionFeedHarness();
     const stop = h.store.start();
     h.store.mergeHistory([page([], 0)]);
     h.drawFrame();
@@ -100,7 +100,7 @@ describe('HeldFeedStore', () => {
   });
 
   it('takes nothing before it starts showing the Session', () => {
-    const h = heldFeedHarness();
+    const h = sessionFeedHarness();
     h.store.mergeHistory([tail]);
     h.drawFrame();
 

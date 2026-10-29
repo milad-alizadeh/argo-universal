@@ -9,7 +9,7 @@ import {
 import { useCallback } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import { type HistoryWindow, needsOlderHistory } from '../view/feed-history';
-import { revisitGraceMs } from './held-feed';
+import { revisitGraceMs } from './kept-feeds';
 
 type HistoryCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
 

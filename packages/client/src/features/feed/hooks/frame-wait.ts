@@ -3,13 +3,10 @@ interface FrameWait {
   timer: ReturnType<typeof setTimeout>;
 }
 
-/*
- * A hidden window draws no frames, so work that waited for one alone would hold still until the
- * window came back. It runs at the next frame, or after this long when no frame comes.
- */
+// A hidden window draws no frames, so work waits this long at most.
 export const noFrameMs = 100;
 
-// Runs `run` once: at the next frame, or after noFrameMs when the window draws none. The returned function cancels it.
+// Runs `run` once, at the next frame or after noFrameMs; returns its cancel.
 export function waitForFrame(run: () => void): () => void {
   const wait: FrameWait = {
     frame: requestAnimationFrame(() => {
