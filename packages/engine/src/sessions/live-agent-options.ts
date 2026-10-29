@@ -4,15 +4,11 @@ import type {
   SessionAgentOptionsInput,
 } from '@repo/contracts';
 import type { Subscription } from 'xstate';
-import {
-  readAgentConfiguration,
-  AgentOptionsJob,
-} from './agent-options-storage';
 import { withHeldConfiguration } from './configuration/held-configuration';
 import type { SessionRouterDeps } from './router-deps';
 import type { SessionActorRef } from './session-machine';
 
-type Deps = Pick<SessionRouterDeps, 'database' | 'findWriter' | 'sessions'>;
+type Deps = Pick<SessionRouterDeps, 'sessions'>;
 
 type Input = SessionAgentOptionsInput & { sessionId: string };
 
@@ -38,11 +34,6 @@ function publication({ deps, input, observer }: Observation): () => void {
 
     const context = session.getSnapshot().context;
 
-    const saved = readAgentConfiguration(
-      { database: deps.database, writer: deps.findWriter() },
-      input,
-    );
-
     const update: AgentOptionsUpdate = {
       agent: input.agent,
       projectId: input.projectId,
@@ -50,7 +41,7 @@ function publication({ deps, input, observer }: Observation): () => void {
         context.configOptions,
         context.heldConfig,
       ),
-      commands: saved?.commands ?? null,
+      commands: context.slashCommands,
       stage: 'ready',
     };
 
@@ -96,23 +87,7 @@ function followSession(
 
 // A Session reader follows replacement actors while the person closes and resumes it.
 export function observeLiveAgentOptions(observation: Observation): () => void {
-  const { deps, input } = observation;
-  const publish = publication(observation);
-  const unsubscribeSession = followSession(observation, publish);
-
-  const writerSubscription = deps
-    .findWriter()
-    ?.on('writer.queued', ({ jobs }) => {
-      if (jobs.some((job) => job instanceof AgentOptionsJob && job.owns(input)))
-        publish();
-    });
-
-  publish();
-
-  return () => {
-    unsubscribeSession();
-    writerSubscription?.unsubscribe();
-  };
+  return followSession(observation, publication(observation));
 }
 
 // An open Session already has its actual configuration; observe it without opening discovery.

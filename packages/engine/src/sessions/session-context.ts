@@ -3,6 +3,7 @@ import type {
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
+  SlashCommand,
   SessionOpenError,
   ShellRecord,
 } from '@repo/contracts';
@@ -99,6 +100,7 @@ export interface SessionContext extends SessionData {
   hookedPermissions: Record<string, string | null>;
   elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];
+  slashCommands: SlashCommand[] | null;
   rejectedMessages: number;
   failure: string | null;
   openError: SessionOpenError | null;

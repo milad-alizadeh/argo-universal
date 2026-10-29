@@ -280,21 +280,22 @@ const sessionSetup = setup({
       const update = event.notification.update;
 
       if (update.sessionUpdate !== 'available_commands_update') return;
+
+      const commands = update.availableCommands.map(
+        ({ name, description, input }) => ({
+          name,
+          description,
+          hint: input?.hint,
+        }),
+      );
+
+      enqueue.assign({ slashCommands: commands });
       enqueueWrites(enqueue, context, [
         {
           job: new AgentOptionsJob(
             { agent: context.agent, projectId: context.projectId },
             undefined,
-            {
-              authoritative: true,
-              commands: update.availableCommands.map(
-                ({ name, description, input }) => ({
-                  name,
-                  description,
-                  hint: input?.hint,
-                }),
-              ),
-            },
+            { authoritative: true, commands },
           ),
         },
       ]);

@@ -1,0 +1,74 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
+import { expect, fn, screen, waitFor } from 'storybook/test';
+import { expect as browserExpect } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { settleLayout } from '#mocks/story-layout';
+import {
+  RichTextareaExample,
+  exampleLabel,
+} from './rich-textarea-example.mocks';
+import { scrollingSuggestionsRichTextarea } from './rich-textarea-fixtures';
+
+const meta = {
+  title: 'Tests/Design System/Primitives/Controls/RichTextarea/Viewport',
+  component: RichTextareaExample,
+  parameters: { screenPreview: true },
+  args: {
+    onChangeText: fn(),
+    onSubmit: fn(),
+    suggestions: scrollingSuggestionsRichTextarea.suggestions,
+  },
+  render: (args): React.JSX.Element => (
+    <div
+      style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+      }}
+    >
+      <RichTextareaExample {...args} />
+    </div>
+  ),
+  beforeEach: async (): Promise<void> => {
+    await settleLayout('wide', 600);
+  },
+} satisfies Meta<typeof RichTextareaExample>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const FirstChoiceCanBePressedInAShortWindow: Story = {
+  play: async ({ canvas, args }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    const first = await screen.findByRole('option', { name: /option-1/ });
+    await browserExpect.element(first).toBeInViewport({ ratio: 1 });
+    await userEvent.click(first);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/option-1 '),
+    );
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+export const KeyboardScrollsTheLastChoiceIntoView: Story = {
+  play: async ({ canvas, args }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await screen.findByRole('option', { name: /option-1/ });
+    await userEvent.keyboard('{ArrowUp}');
+    const last = screen.getByRole('option', { name: /option-8/ });
+    await browserExpect.element(last).toBeInViewport({ ratio: 1 });
+    await userEvent.click(last);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/option-8 '),
+    );
+  },
+};

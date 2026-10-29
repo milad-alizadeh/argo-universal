@@ -102,6 +102,10 @@ const currentUpdate = (
 ): AgentOptionsUpdate | undefined =>
   received?.owner === owner ? received.update : undefined;
 
+function optionsFailure(read: DiscoveryRead): SessionOpenError | undefined {
+  return read.data?.error ?? openErrorOf(read.error);
+}
+
 function useReadError(
   read: DiscoveryRead,
   sessionId: string | undefined,
@@ -109,7 +113,7 @@ function useReadError(
   const dropped = useConnectionDropped(read.error);
   useErrorToast(sessionId ? optionsReadToast(read.error, dropped) : undefined);
 
-  return dropped ? undefined : openErrorOf(read.error);
+  return dropped ? undefined : optionsFailure(read);
 }
 
 function useOptions(
@@ -135,7 +139,7 @@ function useOptions(
  * grows back twice over (owner, 2026-10-20).
  */
 function isOpening(read: DiscoveryRead, chosen: boolean): boolean {
-  if (read.error) return false;
+  if (optionsFailure(read)) return false;
 
   if (!read.data) return chosen;
 

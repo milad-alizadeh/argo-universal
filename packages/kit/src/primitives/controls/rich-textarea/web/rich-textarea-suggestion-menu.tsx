@@ -3,6 +3,7 @@ import {
   type MenuRenderFn,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import type * as React from 'react';
+import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   menuInsetClassName,
@@ -11,6 +12,7 @@ import {
 } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
 import type { ComposerSuggestion } from '../rich-textarea-suggestions';
+import { useSuggestionViewport } from './rich-textarea-suggestion-viewport';
 
 export class SuggestionOption extends MenuOption {
   constructor(
@@ -37,11 +39,11 @@ const menuClassName = cn(
   menuSurfaceClassName,
   menuInsetClassName,
   menuRowsClassName,
-  'absolute bottom-full left-0 mb-7 flex w-100 flex-col overflow-clip',
+  'absolute bottom-full left-0 mb-7 flex w-100 flex-col overflow-x-hidden overflow-y-auto overscroll-contain',
 );
 
 const rowClassName =
-  'flex cursor-default flex-col gap-0.5 rounded-xl p-2 text-start outline-none';
+  'flex shrink-0 cursor-default flex-col gap-0.5 rounded-xl p-2 text-start outline-none';
 
 const keepFocus = (event: React.MouseEvent): void => event.preventDefault();
 
@@ -101,12 +103,16 @@ function MenuRows(props: MenuProps): React.JSX.Element[] {
   ));
 }
 
-function SuggestionMenu(props: MenuProps): React.JSX.Element {
+function SuggestionMenu(
+  props: MenuProps & { anchor: HTMLElement },
+): React.JSX.Element {
+  const menu = useRef<HTMLDivElement>(null);
+  useSuggestionViewport(props.anchor, menu);
   const title = props.options[0]?.groupTitle;
 
   return (
-    <div role="group" aria-label={title} className={menuClassName}>
-      <div className="px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground">
+    <div ref={menu} role="group" aria-label={title} className={menuClassName}>
+      <div className="shrink-0 px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground">
         {title}
       </div>
       {MenuRows(props)}
@@ -122,5 +128,5 @@ export const renderSuggestionMenu: MenuRenderFn<SuggestionOption> = (
 
   if (!anchor || !menu.options.length) return null;
 
-  return createPortal(<SuggestionMenu {...menu} />, anchor);
+  return createPortal(<SuggestionMenu {...menu} anchor={anchor} />, anchor);
 };

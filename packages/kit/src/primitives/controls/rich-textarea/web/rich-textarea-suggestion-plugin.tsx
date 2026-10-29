@@ -10,15 +10,13 @@ import type {
   ReferenceOption,
   RichTextareaProps,
 } from '../rich-textarea-props';
-import {
-  matchSuggestionTrigger,
-  type SuggestionSource,
-} from '../rich-textarea-suggestions';
+import { type SuggestionSource } from '../rich-textarea-suggestions';
 import { ReferencePlugin } from './rich-textarea-reference-plugin';
 import {
   SuggestionOption,
   renderSuggestionMenu,
 } from './rich-textarea-suggestion-menu';
+import { suggestionTrigger } from './rich-textarea-suggestion-trigger';
 
 const resultLimit = 8;
 
@@ -38,17 +36,6 @@ function useSelectSuggestion(editor: LexicalEditor): SelectOption {
       inserted.selectEnd();
     });
     close();
-  };
-}
-
-function suggestionTrigger(sources: readonly SuggestionSource[]): TriggerFn {
-  return (text) => {
-    const match = matchSuggestionTrigger(text);
-
-    return match &&
-      sources.some((source) => source.query(match.matchingString).length > 0)
-      ? match
-      : null;
   };
 }
 

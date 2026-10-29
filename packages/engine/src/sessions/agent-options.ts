@@ -6,6 +6,7 @@ import {
   SessionConfigOption,
   type SessionAgentOptionsInput,
   type SessionAgentOptionsOutput,
+  type SessionOpenError,
 } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
@@ -391,7 +392,7 @@ function publishDiscovery(
             stage: 'ready',
           },
         }),
-      (error) => emit({ error }),
+      (error) => emit(discoveryFailureEvent(deps, { input, cached }, error)),
     )
     .finally(() => {
       if (!input.sessionId) events.emit('done');
@@ -423,5 +424,36 @@ function discoveryPublisher(
       return false;
 
     return events.emit('update', value);
+  };
+}
+
+function discoveryFailure(cause: unknown): SessionOpenError {
+  if (cause instanceof TRPCError && cause.cause instanceof SessionOpenFailure)
+    return cause.cause.openError;
+
+  return sessionOpenError(cause);
+}
+
+function discoveryFailureEvent(
+  deps: OptionsDeps,
+  {
+    input,
+    cached,
+  }: {
+    input: SessionAgentOptionsInput;
+    cached: SessionAgentOptionsOutput | null;
+  },
+  cause: unknown,
+): z.infer<typeof DiscoveryEvent> {
+  if (!input.sessionId) return { error: cause };
+
+  return {
+    update: {
+      agent: input.agent,
+      projectId: input.projectId,
+      commands: readCommands(deps, input),
+      configOptions: cached,
+      error: discoveryFailure(cause),
+    },
   };
 }

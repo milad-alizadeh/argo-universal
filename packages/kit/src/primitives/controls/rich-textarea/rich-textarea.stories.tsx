@@ -17,6 +17,7 @@ import {
   strikethroughRichTextarea,
   threeLinesRichTextarea,
   suggestionsRichTextarea,
+  scrollingSuggestionsRichTextarea,
 } from './rich-textarea-fixtures';
 
 const meta = {
@@ -74,6 +75,16 @@ export const Suggestions: Story = {
   parameters: { screenPreview: true },
   render: ({ value, ...props }) => (
     <View className="flex-1 justify-center">
+      <RichTextareaExample initialValue={value} {...props} />
+    </View>
+  ),
+};
+
+export const ScrollingSuggestions: Story = {
+  args: scrollingSuggestionsRichTextarea,
+  parameters: { screenPreview: true },
+  render: ({ value, ...props }) => (
+    <View className="flex-1 justify-end">
       <RichTextareaExample initialValue={value} {...props} />
     </View>
   ),

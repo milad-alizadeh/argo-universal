@@ -98,3 +98,23 @@ export const suggestionsRichTextarea = {
     },
   ],
 } satisfies RichTextareaFixture;
+
+export const scrollingSuggestionsRichTextarea = {
+  value: '/',
+  accessibilityLabel,
+  autoFocus: true,
+  suggestions: [
+    {
+      id: 'many',
+      title: 'Suggestions',
+      query: (): ComposerSuggestion[] =>
+        Array.from({ length: 8 }, (_, index) => ({
+          id: String(index),
+          label: `/option-${index + 1}`,
+          detail:
+            'Read the complete description, compare the available options, and choose the option that fits the text you want to write next.',
+          insert: `/option-${index + 1} `,
+        })),
+    },
+  ],
+} satisfies RichTextareaFixture;
