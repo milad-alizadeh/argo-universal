@@ -50,6 +50,7 @@ const planPillProps = (
   props: PlanTriggerProps,
 ): React.ComponentProps<typeof Pill> => ({
   variant: 'control',
+  appearance: 'glass',
   accessibilityLabel: 'Plan',
   disabled: props.disabled,
   text: props.wide

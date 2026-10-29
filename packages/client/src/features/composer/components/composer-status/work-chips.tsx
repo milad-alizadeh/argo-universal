@@ -13,7 +13,13 @@ interface WorkChipProps {
 function WorkChip({ work, ...props }: WorkChipProps): JSX.Element | null {
   if (!work) return null;
 
-  return <Pill {...workPillProps({ ...props, work })} />;
+  return (
+    <Pill
+      variant="control"
+      appearance="glass"
+      {...workPillProps({ ...props, work })}
+    />
+  );
 }
 
 function workPillProps({
@@ -21,7 +27,6 @@ function workPillProps({
   ...props
 }: WorkChipProps & { work: ComposerWork }): React.ComponentProps<typeof Pill> {
   return {
-    variant: 'control',
     text: work.count === 1 ? props.singular : props.label,
     icon: props.icon,
     count: work.count,

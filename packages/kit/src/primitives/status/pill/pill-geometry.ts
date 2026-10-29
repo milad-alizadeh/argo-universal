@@ -21,7 +21,7 @@ export const pillContentClass = ({
 }: Pick<PillProps, 'iconOnly' | 'fill'>): string =>
   cn(
     pillGeometry('control'),
-    'shrink',
+    'max-w-full shrink border border-transparent',
     iconOnly && 'w-7 px-0 justify-center',
     fill && 'w-full',
   );

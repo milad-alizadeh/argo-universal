@@ -1,3 +1,4 @@
+import { pillDefaults } from '@repo/contracts/kit-tokens';
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
@@ -11,6 +12,7 @@ import type { PillProps } from './pill-props';
 const ownKeys = [
   'text',
   'variant',
+  'appearance',
   'tone',
   'color',
   'icon',
@@ -55,24 +57,46 @@ export function PillControl(props: PillProps): ReactElement {
 }
 
 function ControlSurface(props: PillProps & { pressed: boolean }): ReactElement {
+  const content = (
+    <View className={surfaceContentClass(props)}>
+      <PillControlContent {...props} />
+    </View>
+  );
+
+  return props.appearance === 'glass' ? (
+    <GlassControlSurface fill={props.fill}>{content}</GlassControlSurface>
+  ) : (
+    content
+  );
+}
+
+type GlassControlProps = Pick<PillProps, 'fill'> & { children: ReactElement };
+
+function GlassControlSurface({
+  children,
+  fill,
+}: GlassControlProps): ReactElement {
   return (
     <LiquidGlass
       corners="pill"
       interactive
       inherit
-      className={cn('min-w-0 max-w-full shrink', props.fill && 'w-full')}
+      className={cn('min-w-0 max-w-full shrink', fill && 'w-full')}
     >
-      <View className={surfaceContentClass(props)}>
-        <PillControlContent {...props} />
-      </View>
+      {children}
     </LiquidGlass>
   );
 }
 
+const appearanceClass = {
+  plain: 'bg-hover wide:bg-transparent',
+  glass: 'border-border',
+} as const;
+
 function surfaceContentClass(props: PillProps & { pressed: boolean }): string {
   return cn(
     pillContentClass(props),
-    'border border-border',
+    appearanceClass[props.appearance ?? pillDefaults.appearance],
     tintTransitionClassName,
     interactionClass(props),
   );

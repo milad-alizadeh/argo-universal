@@ -44,6 +44,11 @@ export const pillProps = z.object({
     .describe(
       'A semantic metadata label or an interactive control with shared pill geometry.',
     ),
+  appearance: z
+    .enum(['plain', 'glass'])
+    .optional()
+    .meta({ default: pillDefaults.appearance })
+    .describe('A plain control, or explicit floating glass for status pills.'),
   icon: iconSymbol.optional().describe('Leading icon, aligned by the Pill.'),
   count: z.number().optional().describe('A count before the label.'),
   countTone: semanticTone.describe(

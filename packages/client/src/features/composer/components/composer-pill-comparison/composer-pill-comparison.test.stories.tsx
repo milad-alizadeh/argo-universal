@@ -33,6 +33,10 @@ function sharedGeometry(width: number): Story {
     play: async ({ canvas }) => {
       for (const name of names)
         await expectControlGeometry(canvas.getByRole('button', { name }));
+      await expectMaterialPolicy(canvas);
+
+      if (width === 390) await expectCompactFill(canvas);
+
       await expectLabelInset(canvas.getByRole('button', { name: 'Mode' }));
     },
   };
@@ -100,3 +104,39 @@ export const ModelRetainsItsConfigurationOverlay: Story = {
     ).toBeVisible();
   },
 };
+
+async function expectMaterialPolicy(
+  canvas: ReturnType<typeof within>,
+): Promise<void> {
+  for (const name of ['Plan', 'Agents: 2', 'Shells: 1'])
+    await expect(hasOwnBackdrop(canvas.getByRole('button', { name }))).toBe(
+      true,
+    );
+
+  for (const name of [modelLabel, 'Mode', 'Context window'])
+    await expect(hasOwnBackdrop(canvas.getByRole('button', { name }))).toBe(
+      false,
+    );
+}
+
+function hasOwnBackdrop(button: HTMLElement): boolean {
+  return [...button.querySelectorAll('*')].some((element) => {
+    const { backdropFilter } = getComputedStyle(element);
+
+    return Boolean(backdropFilter && backdropFilter !== 'none');
+  });
+}
+
+async function expectCompactFill(
+  canvas: ReturnType<typeof within>,
+): Promise<void> {
+  const button = canvas.getByRole('button', { name: 'Mode' });
+  const surface = button.firstElementChild;
+
+  if (!surface) throw new Error('The control needs a visible surface.');
+
+  await expect(getComputedStyle(surface).backgroundColor).not.toBe(
+    getComputedStyle(button).backgroundColor,
+  );
+  await expect(getComputedStyle(surface).boxShadow).toBe('none');
+}

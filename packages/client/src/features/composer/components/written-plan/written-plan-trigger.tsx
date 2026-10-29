@@ -11,14 +11,13 @@ export interface WrittenPlanTriggerProps {
 export function WrittenPlanTrigger(
   props: WrittenPlanTriggerProps,
 ): React.JSX.Element {
-  return <Pill {...triggerProps(props)} />;
+  return <Pill variant="control" appearance="glass" {...triggerProps(props)} />;
 }
 
 function triggerProps(
   props: WrittenPlanTriggerProps,
 ): React.ComponentProps<typeof Pill> {
   return {
-    variant: 'control',
     text: 'Written plan',
     icon: 'file-text',
     detail: props.wide ? props.title : undefined,

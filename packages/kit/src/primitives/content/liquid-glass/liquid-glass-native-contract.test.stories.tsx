@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { View } from 'react-native';
+import { expect, waitFor, within } from 'storybook/test';
 import { Text } from '#primitives/content/text';
+import { Pill } from '#primitives/status/pill';
 import { LiquidGlass } from './liquid-glass';
 import {
   nativeGlassFixture,
@@ -115,5 +117,25 @@ export const PreferenceChangePreservesEditableState: Story = {
     await canvas.findByRole('group', { name: opaqueMaterialLabel });
     await expect(input).toHaveValue('Preserved draft');
     await expect(input).toHaveFocus();
+  },
+};
+
+export const OnlyExplicitFloatingPillsDrawTheirOwnMaterial: Story = {
+  render: (): ReactElement => (
+    <LiquidGlassPlatform value={native.platform}>
+      <View>
+        <LiquidGlass corners="sheet">
+          <Pill variant="control" text="Menu choice" />
+        </LiquidGlass>
+        <Pill variant="control" appearance="glass" text="Floating status" />
+      </View>
+    </LiquidGlassPlatform>
+  ),
+  play: async ({ canvas }) => {
+    const status = canvas.getByRole('button', { name: 'Floating status' });
+    await within(status).findByRole('group', { name: nativeMaterialLabel });
+    const menu = canvas.getByRole('button', { name: 'Menu choice' });
+    await expect(within(menu).queryByRole('group')).toBeNull();
+    await expect(canvas.getAllByRole('group')).toHaveLength(2);
   },
 };

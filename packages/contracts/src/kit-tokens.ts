@@ -71,7 +71,7 @@ export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
 
-export const pillDefaults = { variant: 'label' } as const;
+export const pillDefaults = { variant: 'label', appearance: 'plain' } as const;
 
 export const chartDefaults = { grid: false } as const;
 

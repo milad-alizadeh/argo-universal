@@ -38,6 +38,7 @@ export const controlPill = {
 
 export const countedControlPill = {
   variant: 'control',
+  appearance: 'glass',
   text: 'Items',
   icon: 'terminal',
   count: 2,
