@@ -11,22 +11,13 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveExecutable } from '@repo/executables';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { verifyScripts } from './verify.mocks.mts';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 
 const reorderedSum = 'export const sum = (a, b) => b + a;\n';
-
-const verifyScripts = [
-  'verify.mts',
-  'verify-scope.mts',
-  'hook-checks.mts',
-  'check-operation-mutations.mts',
-  'operation-mutation-rules.mts',
-  'operation-mutation-exceptions.mts',
-  'tracked-files.mts',
-  'generate-operations.mts',
-];
 
 const generatedProcedureFile = 'packages/engine/src/operations/router.gen.ts';
 
@@ -37,7 +28,10 @@ const registryValidatorGenerator =
 let root: string;
 
 function git(...args: string[]): void {
-  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  const result = spawnSync(resolveExecutable('git'), args, {
+    cwd: root,
+    encoding: 'utf8',
+  });
 
   if (result.status !== 0) throw new Error(result.stderr);
 }
@@ -60,10 +54,14 @@ function link(target: string): void {
 type VerifyRun = { status: number | null; output: string };
 
 function runVerify(): VerifyRun {
-  const result = spawnSync('node', [path.join(root, 'tools/verify.mts')], {
-    cwd: root,
-    encoding: 'utf8',
-  });
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, 'tools/verify.mts')],
+    {
+      cwd: root,
+      encoding: 'utf8',
+    },
+  );
 
   return { status: result.status, output: result.stdout + result.stderr };
 }

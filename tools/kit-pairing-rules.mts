@@ -134,11 +134,7 @@ export const pairingProblems = ({
   schemas,
   folders,
 }: PairingInput): string[] => {
-  const drawn = new Map(
-    folders.flatMap((path): [string, string][] =>
-      isExemptFolder(path) ? [] : [[nameOf(path), path]],
-    ),
-  );
+  const drawn = drawnFolders(folders);
 
   const declared = new Map(
     schemas.map((entry): [string, SchemaEntry] => [entry.name, entry]),
@@ -150,3 +146,11 @@ export const pairingProblems = ({
     ...misplaced(declared, drawn),
   ];
 };
+
+function drawnFolders(folders: string[]): Map<string, string> {
+  return new Map(
+    folders.flatMap((path): [string, string][] =>
+      isExemptFolder(path) ? [] : [[nameOf(path), path]],
+    ),
+  );
+}

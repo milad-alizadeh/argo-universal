@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
 import {
   readServerAddress,
+  resolveExecutable,
   resolveRuntimeDirectory,
 } from '@repo/engine/server-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
@@ -55,16 +56,12 @@ const SupervisorStarted = z.object({
   pid: z.number().int().positive(),
 });
 
-// Spawns the CLI with Node, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
-export function spawnSupervisor(
-  paths: SupervisorPaths,
-  report: SpawnReport,
-): () => void {
-  let listening = true;
-  const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
+function launchSupervisor(paths: SupervisorPaths): ReturnType<typeof spawn> {
+  const environment: NodeJS.ProcessEnv = { ...process.env };
+  delete environment.ELECTRON_RUN_AS_NODE;
 
-  const child = spawn(
-    'node',
+  return spawn(
+    resolveExecutable('node'),
     [join(paths.cliDirectory, 'bin/argo.mjs'), 'server'],
     {
       cwd: paths.cliDirectory,
@@ -73,9 +70,13 @@ export function spawnSupervisor(
       env: { ...environment, ARGO_HOME: paths.home },
     },
   );
+}
 
-  child.unref();
-  child.channel?.unref();
+function reportMessages(
+  child: ReturnType<typeof spawn>,
+  report: SpawnReport,
+  active: () => boolean,
+): void {
   const rejections = createRejectionCounter('desktop');
 
   child.on('message', (message): void => {
@@ -87,17 +88,43 @@ export function spawnSupervisor(
       return;
     }
 
-    if (listening) report.spawned(reportPid.data.pid);
+    if (active()) report.spawned(reportPid.data.pid);
   });
+}
+
+type ExitObserver = {
+  paths: SupervisorPaths;
+  report: SpawnReport;
+  active: () => boolean;
+};
+
+function reportExit(
+  child: ReturnType<typeof spawn>,
+  { paths, report, active }: ExitObserver,
+): void {
   child.once('error', (error): void => {
-    if (listening) report.exited(`The Supervisor could not start: ${error}`);
+    if (active()) report.exited(`The Supervisor could not start: ${error}`);
   });
   child.once('exit', (code, signal): void => {
-    if (listening)
-      report.exited(
-        `The Supervisor exited while starting (${code ?? signal}); see ${join(paths.home, 'logs')}`,
-      );
+    if (active()) report.exited(exitMessage(paths.home, code ?? signal));
   });
+}
+
+function exitMessage(home: string, result: number | string | null): string {
+  return `The Supervisor exited while starting (${result}); see ${join(home, 'logs')}`;
+}
+
+// Spawns the CLI with Node, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
+export function spawnSupervisor(
+  paths: SupervisorPaths,
+  report: SpawnReport,
+): () => void {
+  const child = launchSupervisor(paths);
+  let listening = true;
+  child.unref();
+  child.channel?.unref();
+  reportMessages(child, report, () => listening);
+  reportExit(child, { paths, report, active: () => listening });
 
   // Report the CLI pid synchronously so quitting before its Supervisor starts still stops both.
   if (child.pid !== undefined) report.spawned(child.pid);

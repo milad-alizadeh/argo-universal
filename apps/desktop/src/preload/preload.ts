@@ -1,6 +1,8 @@
 import type { DesktopBridge } from '@repo/contracts';
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+/*
+ * See the Electron documentation for details on how to use preload scripts:
+ * https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+ */
 import { contextBridge, ipcRenderer } from 'electron';
 
 // Main passes the Server URL in additionalArguments; a sandboxed preload can read only process.argv.

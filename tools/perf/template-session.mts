@@ -5,8 +5,8 @@ import {
   SessionNewInput,
   SessionNewOutput,
 } from '@repo/contracts';
+import { pollServer, startOwnServer } from '@repo/e2e/own-server';
 import { z } from 'zod';
-import { pollServer, startOwnServer } from '../../e2e/own-server.ts';
 
 // Gives a fresh fixture Server one real Session through the router's own contract schemas, so the perf seed clones only columns the Server wrote.
 interface Procedure<Input extends z.ZodType, Output extends z.ZodType> {

@@ -37,26 +37,31 @@ const isRecognised = <Schema extends z.ZodType>(
   return false;
 };
 
+async function fetchSystemInfo(port: number): Promise<boolean> {
+  const response = await fetch(`http://127.0.0.1:${port}/trpc/system.info`, {
+    signal: AbortSignal.timeout(requestTimeoutMs),
+  });
+
+  if (!response.ok) return false;
+
+  return isRecognised(
+    'system.info answer',
+    SystemInfoResponse,
+    await response.json(),
+  );
+}
+
 // True once server.json in `home` names a port and system.info, over tRPC's HTTP handler on that port, answers.
 export async function serverAnswers(home: string): Promise<boolean> {
   const address = readServerAddress(home);
 
   if (!address) return false;
-  let info: unknown;
 
   try {
-    const response = await fetch(
-      `http://127.0.0.1:${address.port}/trpc/system.info`,
-      { signal: AbortSignal.timeout(requestTimeoutMs) },
-    );
-
-    if (!response.ok) return false;
-    info = await response.json();
+    return await fetchSystemInfo(address.port);
   } catch {
     return false;
   }
-
-  return isRecognised('system.info answer', SystemInfoResponse, info);
 }
 
 const webAnswers = async (): Promise<boolean> => {
