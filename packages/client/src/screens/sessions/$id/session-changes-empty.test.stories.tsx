@@ -52,12 +52,25 @@ function binaryFile(width: number): Story {
     beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ userEvent }) => {
       const header = await findFileHeader(binaryPath);
+      const mark = screen.getByRole('checkbox', { name: 'Viewed' });
+      const headerBounds = header.getBoundingClientRect();
+      const markBounds = mark.getBoundingClientRect();
 
+      await expect(header).toHaveAccessibleName(`Diff for ${binaryPath}`);
+      await expect(mark).toBeVisible();
+      await expect(headerBounds.right).toBeLessThanOrEqual(markBounds.left);
+      if (width === layoutWidths.wide) {
+        const basename = screen.getByText(binaryPath.split('/').at(-1) ?? '');
+
+        await expect(basename.scrollWidth).toBeGreaterThan(
+          basename.clientWidth,
+        );
+      }
       await expect(await screen.findByText(noLines)).toBeVisible();
-      await userEvent.click(header);
+      await userEvent.click(mark);
       await expect(header).toHaveAttribute('aria-expanded', 'false');
       await expect(screen.queryByText(noLines)).toBeNull();
-      await userEvent.click(header);
+      await userEvent.click(mark);
       await expect(await screen.findByText(noLines)).toBeVisible();
     },
   };
