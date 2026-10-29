@@ -5,6 +5,7 @@ import {
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
+import { z } from 'zod';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { askOperation } from '#mocks/operation-permissions';
@@ -16,37 +17,82 @@ import {
   type DelegationJourney,
 } from '#mocks/session-delegation';
 
-type Targets = Record<'self' | 'started' | 'unrelated' | 'foreign', string>;
+const Refusal = z.object({
+  message: z.string(),
+  data: z.object({ code: z.string() }),
+});
+
+type Target = 'self' | 'started' | 'unrelated' | 'foreign';
+
+type Targets = Record<Target, string>;
 
 // Without a held Turn, a call its scope would ask about is refused before it runs.
 const asked = 'A Permission request requires an active Turn';
 
-const actOperations: [OperationId, (sessionId: string) => Json][] = [
-  ['session.rename', (sessionId) => ({ sessionId, title: 'Renamed' })],
-  [
-    'session.setConfigOption',
-    (sessionId) => ({ sessionId, configId: 'mode', type: 'id', value: 'x' }),
-  ],
-  ['session.savePlan', (sessionId) => ({ sessionId, plan: '# Plan' })],
-  ['shell.stop', (sessionId) => ({ sessionId, shellId: 'no-shell' })],
-  ['session.cancel', (sessionId) => ({ sessionId })],
-  ['session.close', (sessionId) => ({ sessionId })],
+// The implementation's own refusal still means the call ran past its scope.
+type ImplementationError = { code: string; message: string };
+
+type ActOperation = {
+  id: OperationId;
+  params: (sessionId: string) => Json;
+  ranWith?: ImplementationError;
+};
+
+// The caller's own Session comes last in each row, and session.close comes last, so closing it ends the table.
+const actOperations: ActOperation[] = [
+  {
+    id: 'session.rename',
+    params: (sessionId) => ({ sessionId, title: 'Renamed' }),
+  },
+  {
+    id: 'session.setConfigOption',
+    params: (sessionId) => ({
+      sessionId,
+      configId: 'mode',
+      type: 'id',
+      value: 'x',
+    }),
+    ranWith: { code: 'BAD_REQUEST', message: 'The Agent did not offer mode=x' },
+  },
+  {
+    id: 'session.savePlan',
+    params: (sessionId) => ({ sessionId, plan: '# Plan' }),
+  },
+  {
+    id: 'shell.stop',
+    params: (sessionId) => ({ sessionId, shellId: 'no-shell' }),
+    ranWith: { code: 'NOT_FOUND', message: 'No Shell in this Session' },
+  },
+  {
+    id: 'session.cancel',
+    params: (sessionId) => ({ sessionId }),
+    ranWith: {
+      code: 'CONFLICT',
+      message:
+        'Session cannot accept session.cancel in {"open":{"acp":"idle"}}',
+    },
+  },
+  { id: 'session.close', params: (sessionId) => ({ sessionId }) },
 ];
 
-const owned = { self: 'runs', started: 'runs', unrelated: 'asks' };
+const ownedRow = {
+  self: 'ran',
+  started: 'ran',
+  unrelated: 'asked',
+  foreign: 'asked',
+};
 
-it('runs act Operations on the caller and the Sessions it started in its Project, and asks for any other', async () => {
+// The caller's own scope is itself and the Sessions it started in its Project: those run, any other asks.
+it('keeps act Operations from a Session token within the caller’s own scope', async () => {
   const journey = await delegationJourney();
   const targets = await scopeTargets(journey);
   const outcomes: Record<string, Record<string, string>> = {};
 
-  for (const [id, params] of actOperations)
-    outcomes[id] = await scopeRow(journey, targets, { id, params });
+  for (const operation of actOperations)
+    outcomes[operation.id] = await scopeRow(journey, targets, operation);
 
   expect(outcomes).toEqual(
-    Object.fromEntries(
-      actOperations.map(([id]) => [id, { ...owned, foreign: 'asks' }]),
-    ),
+    Object.fromEntries(actOperations.map(({ id }) => [id, ownedRow])),
   );
 }, 60_000);
 
@@ -107,33 +153,47 @@ async function startForeign(journey: DelegationJourney): Promise<string> {
   return sessionId;
 }
 
-// The caller's own Session comes last, so closing it ends the row.
 async function scopeRow(
   journey: DelegationJourney,
   targets: Targets,
-  operation: { id: OperationId; params: (sessionId: string) => Json },
+  operation: ActOperation,
 ): Promise<Record<string, string>> {
   const row: Record<string, string> = {};
 
   for (const target of ['foreign', 'unrelated', 'started', 'self'] as const)
-    row[target] = await scopeOf(journey, {
-      id: operation.id,
-      params: operation.params(targets[target]),
-    });
+    row[target] = await scopeOf(journey, operation, targets[target]);
 
   return row;
 }
 
+// ran, asked, or the unexpected refusal itself.
 async function scopeOf(
   journey: DelegationJourney,
-  operation: { id: OperationId; params: Json },
-): Promise<'runs' | 'asks'> {
-  const asks = await journey.caller.caller.operations.run
-    .mutate(operation)
+  { id, params, ranWith }: ActOperation,
+  sessionId: string,
+): Promise<string> {
+  return journey.caller.caller.operations.run
+    .mutate({ id, params: params(sessionId) })
     .then(
-      () => false,
-      (cause: unknown) => cause instanceof Error && cause.message === asked,
+      () => 'ran',
+      (cause: unknown) => refusal(cause, ranWith),
     );
+}
 
-  return asks ? 'asks' : 'runs';
+function refusal(cause: unknown, ranWith?: ImplementationError): string {
+  const { code, message } = refusalOf(cause);
+
+  if (code === 'CONFLICT' && message === asked) return 'asked';
+
+  if (code === ranWith?.code && message === ranWith.message) return 'ran';
+
+  return `unexpected ${code}: ${message}`;
+}
+
+function refusalOf(cause: unknown): ImplementationError {
+  const parsed = Refusal.safeParse(cause);
+
+  return parsed.success
+    ? { code: parsed.data.data.code, message: parsed.data.message }
+    : { code: 'unknown', message: String(cause) };
 }
