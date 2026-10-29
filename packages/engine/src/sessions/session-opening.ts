@@ -30,6 +30,7 @@ const archivedSession = (): TRPCError =>
 
 const subagentSession = (): TRPCError =>
   new TRPCError({ code: 'CONFLICT', message: 'A Subagent is read-only' });
+
 export function sendCheckedOpenSessionsCommand(
   openSessions: OpenSessionsActorRef,
   openSessionsCommand: OpenSessionsCommand,
