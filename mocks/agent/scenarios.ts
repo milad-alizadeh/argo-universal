@@ -10,6 +10,7 @@ import { delegationSteps } from './delegation-scenario.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
+  feedWorkReplySteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
 import { notificationScenarios } from './notification-scenarios.ts';
@@ -77,10 +78,7 @@ export const scenarios = {
   ...subagentScenarios,
   'changed-files': scenario(changedFilesSteps),
   'feed-history': scenario(feedHistorySteps),
-  'feed-work': scenario([
-    ...feedWorkSteps,
-    message('The greeting is updated.'),
-  ]),
+  'feed-work': scenario(feedWorkReplySteps),
   'completed-tool-held-turn': scenario([...feedWorkSteps, { type: 'hold' }]),
   'feed-interrupted': scenario([...unfinishedFeedWorkSteps, { type: 'hold' }]),
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
