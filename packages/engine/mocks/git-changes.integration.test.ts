@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { resolveExecutable } from '@repo/executables';
 import { readCheckoutChanges, readCheckoutDiff } from '@repo/git';
 import { expect, it } from 'vitest';
 import { commit, repository, sessionWorktree } from './git-changes-fixture';
@@ -31,7 +32,7 @@ it('keeps other changed files readable beside an untracked nested repository', a
   const nested = join(directory, 'nested');
 
   mkdirSync(nested);
-  execFileSync('/usr/bin/git', ['init', '-q'], { cwd: nested });
+  execFileSync(resolveExecutable('git'), ['init', '-q'], { cwd: nested });
   writeFileSync(join(nested, 'file.txt'), 'nested\n');
   writeFileSync(join(directory, 'draft.txt'), 'draft\n');
 

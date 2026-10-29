@@ -73,7 +73,7 @@ const isBatchEvent = (event: WriterEvent): event is BatchEvent =>
 const batchIsActive = (snapshot: WriterSnapshot): boolean =>
   snapshot.matches('writing') || snapshot.matches('draining');
 
-export const options = {
+const options = {
   input,
   events,
   limit: 1000,

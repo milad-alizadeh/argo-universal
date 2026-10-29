@@ -9,6 +9,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { resolveExecutable } from '@repo/executables';
 import { zipSync } from 'fflate';
 import { create } from 'tar';
 import { installationExecutable } from './installation';
@@ -59,7 +60,9 @@ const archiveMembers = (link: boolean): string[] =>
   link ? ['agent', 'link'] : ['agent'];
 
 const compressBzip = (bytes: Uint8Array): Uint8Array =>
-  execFileSync('/usr/bin/bzip2', ['--compress', '--stdout'], { input: bytes });
+  execFileSync(resolveExecutable('bzip2'), ['--compress', '--stdout'], {
+    input: bytes,
+  });
 
 export const binaryRejections = [
   {
