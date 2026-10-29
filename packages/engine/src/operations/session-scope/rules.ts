@@ -10,7 +10,8 @@ export const inCallerProject = (
   projectId: string,
 ): boolean => projectId === caller.projectId;
 
-const startedByCaller = (
+// A Session the caller started: one of its own Agents, wherever it runs.
+export const startedByCaller = (
   caller: SessionCaller,
   session: DirectorySession,
 ): boolean => session.startedBySessionId === caller.sessionId;

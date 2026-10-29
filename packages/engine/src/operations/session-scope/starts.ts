@@ -1,6 +1,7 @@
 import type { SessionNewInput } from '@repo/contracts';
 import type { SessionDirectory } from '../../sessions';
 import type { SessionCaller } from '../session-tokens';
+import { startedByCaller } from './rules';
 
 export type StartTarget =
   | { kind: 'new'; input: SessionNewInput; sessionId: string }
@@ -55,10 +56,7 @@ export class SessionStarts {
   private startsAgent(caller: SessionCaller, target: StartTarget): boolean {
     if (target.kind === 'new') return target.input.prompt.length > 0;
 
-    return (
-      this.directory.session(target.sessionId).startedBySessionId ===
-      caller.sessionId
-    );
+    return startedByCaller(caller, this.directory.session(target.sessionId));
   }
   private release(callerId: string, sessionId: string): void {
     const pending = this.pending.get(callerId);

@@ -4,14 +4,30 @@ import type {
   SessionPromptInput,
   SessionPromptOutput,
 } from '@repo/contracts';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { OperationCard, SessionDirectory } from '../../sessions';
-import { admitted, cardUnless, type ScopedRun } from './admission';
+import type { OperationParams, OperationResult } from '../implementations';
+import type { NativeStartId } from '../native-start';
+import { validateParams } from '../params';
+import { cardUnless, confirmed, type ScopedRun } from './confirmation';
 import { ScopeCoverage } from './coverage';
 import { promptCard, startCard } from './rules';
 import { SessionStarts, type StartReservation } from './starts';
 import { scopeTarget } from './targets';
 
-type DelegationPorts = { directory: SessionDirectory; createId: () => string };
+// The Session directory the scope reads, and the ids a new Session takes before its start.
+export type ScopePorts = {
+  directory: SessionDirectory;
+  createId: () => string;
+};
+
+// Each native start's own delegation rule, keyed by the one list of native starts.
+type DelegationRules = {
+  [Id in NativeStartId]: (
+    context: ScopedRun,
+    params: OperationParams<Id>,
+  ) => Promise<OperationResult<Id>>;
+};
 
 // The reservation, whether the target is the caller's own, and the card to show otherwise.
 type Delegated = {
@@ -24,12 +40,23 @@ type Delegated = {
 export class Delegation {
   private readonly starts: SessionStarts;
   private readonly coverage: ScopeCoverage;
-  public constructor(private readonly ports: DelegationPorts) {
+  private readonly rules: DelegationRules = {
+    'session.new': (context, params) => this.start(context, params),
+    'session.prompt': (context, params) => this.prompt(context, params),
+  };
+  public constructor(private readonly ports: ScopePorts) {
     this.starts = new SessionStarts(ports.directory);
     this.coverage = new ScopeCoverage(ports.directory);
   }
+  // Params are parsed once here, and the start runs with exactly these.
+  public run<Id extends NativeStartId>(
+    context: ScopedRun,
+    { id, params }: { id: Id; params: Json },
+  ): Promise<OperationResult<Id>> {
+    return this.rules[id](context, validateParams(id, params));
+  }
   // session.new: in the caller's Project, within the limits.
-  public start(
+  private start(
     context: ScopedRun,
     input: SessionNewInput,
   ): Promise<SessionNewOutput> {
@@ -45,7 +72,7 @@ export class Delegation {
     );
   }
   // session.prompt: one of the caller's Agents, within the limits.
-  public prompt(
+  private prompt(
     context: ScopedRun,
     input: SessionPromptInput,
   ): Promise<SessionPromptOutput> {
@@ -67,7 +94,7 @@ export class Delegation {
     const chosen = (): OperationCard | undefined =>
       cardUnless(owned() && !reserved.exceedsLimits, card);
 
-    return admitted(
+    return confirmed(
       context,
       { card: chosen, release: reserved.release },
       invoke,

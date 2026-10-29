@@ -10,7 +10,7 @@ export type ScopedRun = {
 };
 
 // The card is chosen inside the reservation, which is released once the Operation settles.
-export type Admission = {
+export type Confirmation = {
   card: () => OperationCard | undefined;
   release: () => void;
 };
@@ -22,19 +22,19 @@ export const cardUnless = (
   card: OperationCard,
 ): OperationCard | undefined => (covered ? undefined : card);
 
-// Asks first when the caller's scope does not cover the call, then runs it.
-export async function admitted<Result>(
+// Asks the user first when the caller's scope does not cover the call, then runs it.
+export async function confirmed<Result>(
   { call }: ScopedRun,
-  admission: Admission,
+  confirmation: Confirmation,
   invoke: () => Promise<Result>,
 ): Promise<Result> {
   try {
-    const card = admission.card();
+    const card = confirmation.card();
 
     if (card) await call.confirm(card);
 
     return await invoke();
   } finally {
-    admission.release();
+    confirmation.release();
   }
 }
