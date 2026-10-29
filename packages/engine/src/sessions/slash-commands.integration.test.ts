@@ -10,6 +10,8 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const reviewDescription = 'Review changes';
 
+const keptPrompt = [{ type: 'text' as const, text: 'Keep this Session' }];
+
 const reviewCommandUpdate = [
   slashCommandsUpdate([{ name: 'review', description: reviewDescription }]),
 ];
@@ -85,7 +87,7 @@ it('streams the saved commands for a resumed Session before its Agent reports an
 
   const created = await host.caller.session.new({
     ...emptySessionInput,
-    prompt: [{ type: 'text', text: 'Keep this Session' }],
+    prompt: keptPrompt,
   });
 
   await requireScriptedProcessAt(host.agent.processes).play(
@@ -134,7 +136,7 @@ it('retains live commands while a discovery that started earlier finishes', asyn
 
   const created = await host.caller.session.new({
     ...emptySessionInput,
-    prompt: [{ type: 'text', text: 'Keep this Session' }],
+    prompt: keptPrompt,
   });
 
   const owner = {
@@ -220,7 +222,7 @@ it.each(['ready', 'discovering'])(
 
     const created = await host.caller.session.new({
       ...emptySessionInput,
-      prompt: [{ type: 'text', text: 'Keep this Session' }],
+      prompt: keptPrompt,
     });
 
     await host.caller.session.close(created);

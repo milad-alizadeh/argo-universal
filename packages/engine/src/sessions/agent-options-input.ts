@@ -8,14 +8,12 @@ import { TRPCError } from '@trpc/server';
 import type { OptionsDeps } from './agent-options-discovery';
 import { readAgentConfiguration } from './agent-options-storage';
 import { readSessionRow } from './session-record';
+import type { RowSources } from './session-storage';
 
 // Saved rows, with the writes still queued over them.
 export const storageSources = (
   deps: Pick<OptionsDeps, 'database' | 'findWriter'>,
-): {
-  database: OptionsDeps['database'];
-  writer: ReturnType<OptionsDeps['findWriter']>;
-} => ({
+): RowSources => ({
   database: deps.database,
   writer: deps.findWriter(),
 });
