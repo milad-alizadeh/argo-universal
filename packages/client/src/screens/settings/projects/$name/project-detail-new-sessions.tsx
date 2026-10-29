@@ -47,7 +47,7 @@ const archiveSection = (): React.JSX.Element => (
   <FieldGroup.Section footer={descriptions.archive}>
     <FieldGroup.Toggle
       title="Delete the worktree on archive"
-      value={false}
+      value={true}
       disabled
       onValueChange={ignoreChoice}
     />

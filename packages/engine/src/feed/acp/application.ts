@@ -15,6 +15,7 @@ import type {
   ContentAssemblyInput,
   AssembledContent,
 } from './assembly';
+import { acceptedStreams } from './assembly-state';
 import { assembleContentChange } from './content-dispatch';
 import { settledUpdateRejection } from './update-admission';
 
@@ -65,13 +66,9 @@ const applyAssembledChange = (
 
   if (rejection) return { rejection };
 
-  return {
-    ...applyFeedChange(input.feed, assembled.change, input.turnId),
-    streams: assembled.streams,
-    diagnostics: assembled.diagnostics,
-    blobs: assembled.blobs,
-    unaddressedPlan: assembled.unaddressedPlan,
-  };
+  const { change, ...content } = assembled;
+
+  return { ...content, ...applyFeedChange(input.feed, change, input.turnId) };
 };
 
 const contentFailure = (
@@ -105,6 +102,7 @@ const createAcpContentInput = (
   ...event,
   feed: context,
   streams: context.messageStreams,
+  toolContents: context.toolContents,
   findWrittenRow: context.findWrittenRow,
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
@@ -125,7 +123,7 @@ const createAcceptedFeedState = (
   id: string,
 ): Partial<FeedContext> => ({
   ...result.feed,
-  messageStreams: result.streams ?? context.messageStreams,
+  ...acceptedStreams(context, result),
   unaddressedPlan: result.unaddressedPlan ?? context.unaddressedPlan,
   activityAt: context.now(),
   changedRowIds: [...new Set([...context.changedRowIds, id])],
