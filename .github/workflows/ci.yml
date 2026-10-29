@@ -106,9 +106,11 @@ jobs:
       - name: Build Plugin reference docs
         run: pnpm docs:build
 
-      # The build rewrites the committed reference, so any change means it was stale.
-      - name: Check the Plugin reference is current
-        run: git diff --exit-code
+      - name: Check generated Plugin artifacts
+        run: |
+          pnpm --filter @repo/contracts check:plugin-reference
+          pnpm check:plugin-generation
+          git diff --exit-code
 
       - name: Type checks
         run: pnpm exec turbo run check-types --continue=dependencies-successful
