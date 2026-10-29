@@ -1,9 +1,8 @@
 import { parseArgs } from 'node:util';
-import { OperationRow } from '@repo/contracts/operations';
+import type { OperationRow } from '@repo/contracts/operations/control';
 import { z } from 'zod';
 import { parseUsage } from './command-error';
-import { connectControl } from './control-client';
-import { readControlResponse } from './control-response';
+import type { CommandIo } from './control-client';
 
 type DiscoveryArguments = { filter: string | undefined; json: boolean };
 
@@ -21,22 +20,17 @@ function discoveryArguments(args: string[]): DiscoveryArguments {
 
 export async function runOperations(
   args: string[],
-  write: (line: string) => void,
+  { write, client }: CommandIo,
 ): Promise<number> {
   const { filter, json } = parseUsage(() => discoveryArguments(args));
-  const client = await connectControl();
-
-  const rows = readControlResponse(
-    z.array(OperationRow),
-    await client.operations.list.query({ filter }),
-  );
+  const rows = await client.list(filter);
 
   write(json ? JSON.stringify(rows, null, 2) : rows.map(describe).join('\n'));
 
   return 0;
 }
 
-function describe(row: z.infer<typeof OperationRow>): string {
+function describe(row: OperationRow): string {
   const availability = row.enabled
     ? ''
     : ` (unavailable: ${row.disabledReason})`;

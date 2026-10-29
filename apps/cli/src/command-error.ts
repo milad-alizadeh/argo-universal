@@ -26,6 +26,7 @@ function failureExitCode(error: Error): number {
   return 1;
 }
 
+// The Server refuses invalid params and an unknown Operation id as a bad request: both are usage.
 function serverExitCode(error: TRPCClientError<AppRouter>): number {
   return error.data?.code === 'BAD_REQUEST' ? 2 : 1;
 }

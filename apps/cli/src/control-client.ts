@@ -1,61 +1,62 @@
-import type { AppRouter } from '@repo/engine/router';
 import {
-  readControlToken,
-  readServerAddress,
-  resolveRuntimeDirectory,
-} from '@repo/engine/server-runtime';
-import { createTRPCClient, httpLink } from '@trpc/client';
+  OperationExecution,
+  OperationRow,
+  OperationRunResponse,
+} from '@repo/contracts/operations/control';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { z } from 'zod';
+import { connectControl } from './control-connection';
+import { readControlResponse } from './control-response';
 
-const requestTimeoutMs = 30_000;
+// Leave transport overhead beyond the Engine's ninety-second observation cap.
+const waitRequestTimeoutMs = 100_000;
 
-export async function connectControl(
-  timeoutMs?: number,
-): Promise<ReturnType<typeof createTRPCClient<AppRouter>>> {
-  const home = resolveRuntimeDirectory();
-  const address = readServerAddress(home);
+export type RunRequest = { id: string; params: Json; wait: boolean };
 
-  if (!address) throw new Error('No Server found. Start it with argo server.');
+// The Server's control procedures, answered complete and checked against their envelopes; results stay JSON.
+export type ControlClient = {
+  list: (filter: string | undefined) => Promise<OperationRow[]>;
+  run: (request: RunRequest) => Promise<OperationRunResponse>;
+  wait: (id: string) => Promise<OperationExecution>;
+};
 
-  const token = process.env.ARGO_TOKEN ?? (await readControlToken(home));
+// What a control command reads and writes: standard output and the Server's control procedures.
+export type CommandIo = {
+  write: (line: string) => void;
+  client: ControlClient;
+};
 
-  return createClient(address.port, token, timeoutMs);
-}
+const listOperations = async (
+  filter: string | undefined,
+): Promise<OperationRow[]> =>
+  readControlResponse(
+    z.array(OperationRow),
+    await (await connectControl()).operations.list.query({ filter }),
+  );
 
-function createClient(
-  port: number,
-  token: string,
-  timeoutMs: number | undefined,
-): ReturnType<typeof createTRPCClient<AppRouter>> {
-  const link = controlLink(port, token, timeoutMs);
+const runOperation = async (
+  request: RunRequest,
+): Promise<OperationRunResponse> => {
+  const control = await connectControl(waitRequestTimeoutMs);
 
-  return createTRPCClient<AppRouter>({ links: [link] });
-}
+  return readControlResponse(
+    OperationRunResponse,
+    await control.operations.run.mutate(request),
+  );
+};
 
-function controlLink(
-  port: number,
-  token: string,
-  timeoutMs: number | undefined,
-): ReturnType<typeof httpLink<AppRouter>> {
-  return httpLink<AppRouter>({
-    url: `http://127.0.0.1:${port}/trpc`,
-    headers: { authorization: `Bearer ${token}` },
-    fetch: timedFetch(timeoutMs),
-  });
-}
+const waitOperation = async (id: string): Promise<OperationExecution> => {
+  const control = await connectControl(waitRequestTimeoutMs);
 
-function timedFetch(timeoutMs: number | undefined): typeof globalThis.fetch {
-  return (url, options) =>
-    fetch(url, {
-      ...options,
-      signal: requestSignal(options?.signal, timeoutMs),
-    });
-}
+  return readControlResponse(
+    OperationExecution,
+    await control.operations.wait.mutate({ id }),
+  );
+};
 
-function requestSignal(
-  signal: RequestInit['signal'],
-  timeoutMs: number | undefined,
-): AbortSignal {
-  const timeout = AbortSignal.timeout(timeoutMs ?? requestTimeoutMs);
-
-  return signal ? AbortSignal.any([signal, timeout]) : timeout;
-}
+// Finds the Server and reads the token only when a command first calls it, so a usage error needs no Server.
+export const createControlClient = (): ControlClient => ({
+  list: listOperations,
+  run: runOperation,
+  wait: waitOperation,
+});

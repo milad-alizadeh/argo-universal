@@ -1,50 +1,35 @@
 import type {
   OperationExecution,
-  OperationId,
-  operations,
-} from '@repo/contracts/operations';
-import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import type { z } from 'zod';
-import { readControlBlob } from './control-blob';
+  OperationRunResponse,
+} from '@repo/contracts/operations/control';
 
-type OperationResult = z.output<(typeof operations)[OperationId]['result']>;
+type Write = (line: string) => void;
 
-type OperationResponse = OperationResult | OperationExecution;
+const waitingExitCode = 75;
 
-const isExecution = (value: OperationResponse): value is OperationExecution =>
-  value !== null && 'kind' in value && value.kind === 'operation_execution';
-
-export function completeExecutionResult(
-  value: OperationExecution,
-  deadline: number,
-): Promise<OperationExecution>;
-export function completeExecutionResult(
-  value: OperationResponse,
-  deadline: number,
-): Promise<OperationResponse>;
-export async function completeExecutionResult(
-  value: OperationResponse,
-  deadline: number,
-): Promise<OperationResponse> {
-  return isExecution(value) ? fullExecutionResult(value, deadline) : value;
+export function executionExitCode(execution: OperationExecution): number {
+  return execution.status === 'settled' ? 0 : waitingExitCode;
 }
 
-async function fullExecutionResult(
-  value: OperationExecution,
-  deadline: number,
-): Promise<OperationExecution> {
-  if (!value.fullResult) return value;
-  const result: Json = await readControlBlob(value.fullResult, deadline);
+// Prints a result as JSON, or native work as its execution, and answers the exit code.
+export function writeRunResponse(
+  write: Write,
+  response: OperationRunResponse,
+): number {
+  if (response.kind === 'result') {
+    write(JSON.stringify(response.result, null, 2));
 
-  return { ...value, result };
+    return 0;
+  }
+
+  return writeExecution(write, response);
 }
 
-export function operationExitCode(value: OperationResponse): number {
-  return isExecution(value) ? executionExitCode(value) : 0;
-}
+export function writeExecution(
+  write: Write,
+  execution: OperationExecution,
+): number {
+  write(JSON.stringify(execution, null, 2));
 
-export function executionExitCode(result: OperationExecution): number {
-  const waitingExitCode = 75;
-
-  return result.status === 'settled' ? 0 : waitingExitCode;
+  return executionExitCode(execution);
 }
