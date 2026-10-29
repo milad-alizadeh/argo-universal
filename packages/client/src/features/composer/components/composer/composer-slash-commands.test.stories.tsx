@@ -61,7 +61,8 @@ function chosenAfter(
 
 export const SlashCommandsOpensTheMenuInAnEmptyComposer = chosenAfter('', '/');
 
-export const SlashCommandsOpensTheMenuOnAPhone = chosenAfter(
+// Draws the web editor at phone width; the native field is proven by the kit RichTextarea native stories.
+export const SlashCommandsOpensTheMenuAtPhoneWidth = chosenAfter(
   '',
   '/',
   layoutWidths.phone,
