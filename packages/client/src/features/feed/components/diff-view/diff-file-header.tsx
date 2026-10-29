@@ -87,7 +87,7 @@ type RowProps = FileHeaderProps & { compact?: boolean };
  */
 function FileHeaderRow(props: RowProps): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-2 bg-muted px-4 py-2.5">
+    <View className="flex-row items-center gap-2 bg-muted px-4 py-2">
       <PathToggle {...props} scroll={props.compact} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} compact={props.compact} />
