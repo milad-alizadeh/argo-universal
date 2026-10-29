@@ -1,8 +1,9 @@
 import { $createTextNode, type TextNode } from 'lexical';
 import type * as React from 'react';
-import type {
-  ComposerSuggestion,
-  SuggestionSource,
+import {
+  commandName,
+  type ComposerSuggestion,
+  type SuggestionSource,
 } from '../rich-textarea-suggestions';
 import { $insertCommand } from './rich-textarea-command-tokens';
 import { suggestionTrigger } from './rich-textarea-suggestion-trigger';
@@ -26,9 +27,6 @@ function SuggestionContent({
   );
 }
 
-// A result that writes `/name ` is a Slash command, which the editor shows as a token.
-const commandInsert = /^\/(\S+) $/;
-
 function $insertText(node: TextNode, text: string): void {
   const inserted = $createTextNode(text);
   node.replace(inserted);
@@ -36,7 +34,7 @@ function $insertText(node: TextNode, text: string): void {
 }
 
 function $insertResult(node: TextNode, insert: string): void {
-  const name = commandInsert.exec(insert)?.[1];
+  const name = commandName(insert);
 
   if (name) $insertCommand(node, name);
   else $insertText(node, insert);

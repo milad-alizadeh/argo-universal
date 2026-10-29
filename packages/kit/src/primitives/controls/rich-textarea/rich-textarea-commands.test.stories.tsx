@@ -140,6 +140,26 @@ export const TheHintShowsAfterTheCommandUntilAnArgumentIsTyped: Story = {
   },
 };
 
+export const APastedKnownCommandBecomesAToken: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.click(field);
+    const clipboardData = new DataTransfer();
+    clipboardData.setData('text/plain', `/${initName}`);
+    field.dispatchEvent(
+      new ClipboardEvent('paste', {
+        clipboardData,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith(`/${initName}`),
+    );
+    await waitFor(() => expect(tokenIn(field, initName)).not.toBeNull());
+  },
+};
+
 export const ACommandWithoutAHintShowsNone: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });

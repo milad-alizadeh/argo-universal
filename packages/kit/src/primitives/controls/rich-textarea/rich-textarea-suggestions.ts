@@ -28,6 +28,10 @@ export interface SuggestionSource {
  * The result that writes exactly `/name `, which is how a source names a Slash command; a typed
  * `/name` is a token only when a source has one.
  */
+export function commandName(insert: string): string | undefined {
+  return /^\/(\S+) $/.exec(insert)?.[1];
+}
+
 export function findCommand(
   sources: readonly SuggestionSource[],
   name: string,
@@ -35,7 +39,7 @@ export function findCommand(
   for (const source of sources) {
     const found = source
       .query(name)
-      .find(({ insert }) => insert === `/${name} `);
+      .find(({ insert }) => commandName(insert) === name);
 
     if (found) return found;
   }
