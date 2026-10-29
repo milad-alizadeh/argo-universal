@@ -31,6 +31,41 @@ const draftText = 'Keep my draft';
 
 const pressedAttribute = 'aria-pressed';
 
+export const ClosedInspectorGripKeepsTheWindowEdgeReachable: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1920),
+  play: async ({ canvas, userEvent }) => {
+    const divider = canvas.getByRole('separator', { name: 'Resize Inspector' });
+    const start = divider.getBoundingClientRect();
+    const frame = canvas.getByTestId('wide-frame').getBoundingClientRect();
+    await expect(start.right).toBe(frame.right);
+
+    const point = {
+      clientX: start.left + start.width / 2,
+      clientY: start.top + 100,
+    };
+
+    await expect(document.elementFromPoint(point.clientX, point.clientY)).toBe(
+      divider,
+    );
+    await userEvent.pointer([
+      { target: divider, coords: point, keys: '[MouseLeft>]' },
+      { target: divider, coords: { ...point, clientX: point.clientX - 240 } },
+      { keys: '[/MouseLeft]' },
+    ]);
+    const inspector = canvas.getByTestId('desktop-inspector');
+    await waitFor(() =>
+      expect(inspector.getBoundingClientRect().width).toBe(352),
+    );
+    const width = inspector.getBoundingClientRect().width;
+    divider.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() =>
+      expect(inspector.getBoundingClientRect().width).toBeGreaterThan(width),
+    );
+    await expect(divider).toHaveFocus();
+  },
+};
+
 export const DedicatedViewKeepsTheDraftMounted: Story = {
   args: { inspectorOpen: true },
   play: async ({ canvas, userEvent }) => {

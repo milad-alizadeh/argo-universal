@@ -98,7 +98,7 @@ describe('panes placed around the Workbench', () => {
       workbenchIntent: 'hidden',
       list: 312,
       page: 1056,
-      handle: 1432,
+      handle: 1440,
       inspector: 0,
     },
     {
@@ -107,7 +107,7 @@ describe('panes placed around the Workbench', () => {
       workbenchIntent: 'shown',
       list: 312,
       page: 728,
-      handle: 1432,
+      handle: 1440,
       inspector: 0,
     },
     {

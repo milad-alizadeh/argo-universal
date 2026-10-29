@@ -61,11 +61,11 @@ function listHandle(
   };
 }
 
-// Expanded, the Inspector meets the list at the sidebar's gutter; its grip keeps to its own side of that edge.
+// Closed, the grip uses the window's trailing inset; expanded, it stays on the Inspector's side of the sidebar gutter.
 const inspectorHandleLeft = (
   { measures }: FrameLayoutInput,
-  { offset, expanded }: InspectorRegion,
-): number => offset + (expanded ? measures.inset : 0);
+  { offset, open, expanded }: InspectorRegion,
+): number => offset + (!open || expanded ? measures.inset : 0);
 
 // The Inspector keeps beside the page up to the content's floor, and expands once a drag leaves the content less than half of it.
 function inspectorHandle(
