@@ -797,6 +797,7 @@
       "files": [
         "packages/client/src/features/connection/{stores,utils,api,types}/**",
         "packages/client/src/features/feed/hooks/**",
+        "packages/client/src/features/feed/stores/**",
         "packages/client/src/features/feed/view/**"
       ],
       "rules": {

@@ -1,4 +1,4 @@
-export interface FrameWait {
+interface FrameWait {
   frame: number;
   timer: ReturnType<typeof setTimeout>;
 }
@@ -9,8 +9,8 @@ export interface FrameWait {
  */
 export const noFrameMs = 100;
 
-// Runs `run` once: at the next frame, or after noFrameMs when the window draws none.
-export function waitForFrame(run: () => void): FrameWait {
+// Runs `run` once: at the next frame, or after noFrameMs when the window draws none. The returned function cancels it.
+export function waitForFrame(run: () => void): () => void {
   const wait: FrameWait = {
     frame: requestAnimationFrame(() => {
       clearTimeout(wait.timer);
@@ -22,10 +22,10 @@ export function waitForFrame(run: () => void): FrameWait {
     }, noFrameMs),
   };
 
-  return wait;
+  return () => stopWaiting(wait);
 }
 
-export function stopWaiting({ frame, timer }: FrameWait): void {
+function stopWaiting({ frame, timer }: FrameWait): void {
   cancelAnimationFrame(frame);
   clearTimeout(timer);
 }

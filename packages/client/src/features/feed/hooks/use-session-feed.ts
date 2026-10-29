@@ -1,3 +1,11 @@
+import type { FeedSubscribeOutput, FeedSyncPoint } from '@repo/contracts';
+import {
+  type TRPCSubscriptionResult,
+  useSubscription,
+} from '@trpc/tanstack-react-query';
+import { useEffect } from 'react';
+import { type ClientError, useTRPC } from '#features/connection';
+import type { HeldFeedState, HeldFeedStore } from '../stores';
 import {
   findLiveToolCall,
   findPermissionToolCall,
@@ -5,47 +13,53 @@ import {
 import { toFeedView } from '../view/to-feed-view';
 import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
-import { useFeedStore, type FeedStore } from './use-feed-store';
-import { useFeedView } from './use-feed-view';
-import { useLiveFeed } from './use-live-feed';
+import { useHeldFeed } from './use-held-feed';
+
+type FeedHistory = ReturnType<typeof useFeedHistory>;
+
+type LiveChanges = TRPCSubscriptionResult<FeedSubscribeOutput, ClientError>;
 
 // A Session's held Feed view, paging and live changes (ADR 0007).
 export function useSessionFeed(
   sessionId: string | undefined,
   convert = toFeedView,
 ): SessionFeed {
-  const store = useFeedStore(sessionId);
-  const history = useFeedHistory(sessionId, store.feed);
-  const live = useLiveFeed(sessionId, store, history);
+  const { store, state } = useHeldFeed(sessionId, convert);
+  const history = useFeedHistory(sessionId, state.feed);
+  useHistoryPages(store, history.data);
+  const changes = useLiveChanges(sessionId, store, state.syncPoint);
 
-  const view = useFeedView(sessionId, store.feed, {
-    snapshot: store.snapshot,
-    convert,
-  });
-
-  return feedResult({ store, history, live, view, sessionId });
+  return {
+    ...feedDisplay(state, sessionId),
+    ...feedPaging(history),
+    ...feedConnection(store, { state, changes }),
+  };
 }
 
-type FeedResultInput = {
-  sessionId: string | undefined;
-  store: FeedStore;
-  history: ReturnType<typeof useFeedHistory>;
-  live: ReturnType<typeof useLiveFeed>;
-  view: ReturnType<typeof useFeedView>;
-};
+function useHistoryPages(
+  store: HeldFeedStore,
+  data: FeedHistory['data'],
+): void {
+  useEffect(() => {
+    if (data) store.mergeHistory(data.pages);
+  }, [store, data]);
+}
 
-function feedResult({
-  store,
-  history,
-  live,
-  view,
-  sessionId,
-}: FeedResultInput): SessionFeed {
-  return {
-    ...feedDisplay(store, view, sessionId),
-    ...feedPaging(history),
-    ...feedConnection(store, live),
-  };
+function useLiveChanges(
+  sessionId: string | undefined,
+  store: HeldFeedStore,
+  syncPoint: FeedSyncPoint | null,
+): LiveChanges {
+  const options = useTRPC().feed.subscribe.subscriptionOptions({
+    sessionId: sessionId ?? '',
+    after: syncPoint,
+  });
+
+  return useSubscription({
+    ...options,
+    enabled: sessionId !== undefined && syncPoint !== null,
+    onData: store.receive,
+  });
 }
 
 type FeedDisplay = Pick<
@@ -59,33 +73,21 @@ type FeedDisplay = Pick<
 >;
 
 function feedDisplay(
-  store: FeedStore,
-  view: ReturnType<typeof useFeedView>,
+  { feed, view, snapshot }: HeldFeedState,
   sessionId: string | undefined,
 ): FeedDisplay {
   return {
     view,
-    revision: store.feed.revision,
-    liveToolCall: findLiveToolCall(store.feed.rows, store.snapshot),
-    permissionToolCall: permissionToolCall(store, sessionId),
-    snapshot: store.snapshot,
-    ready: store.feed.epoch !== null && store.snapshot !== null,
+    revision: feed.revision,
+    liveToolCall: findLiveToolCall(feed.rows, snapshot),
+    permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),
+    snapshot,
+    ready: feed.epoch !== null && snapshot !== null,
   };
 }
 
-type PermissionFeed = {
-  feed: Pick<FeedStore['feed'], 'rows'>;
-  snapshot: FeedStore['snapshot'];
-};
-
-const permissionToolCall = (
-  store: PermissionFeed,
-  sessionId: string | undefined,
-): SessionFeed['permissionToolCall'] =>
-  findPermissionToolCall(store.feed.rows, store.snapshot, sessionId);
-
 function feedPaging(
-  history: ReturnType<typeof useFeedHistory>,
+  history: FeedHistory,
 ): Pick<SessionFeed, 'error' | 'retry' | 'loadingOlder' | 'loadOlder'> {
   return {
     error: history.isFetchNextPageError ? null : history.error,
@@ -96,14 +98,18 @@ function feedPaging(
 }
 
 function feedConnection(
-  store: FeedStore,
-  live: ReturnType<typeof useLiveFeed>,
+  store: HeldFeedStore,
+  { state, changes }: { state: HeldFeedState; changes: LiveChanges },
 ): Pick<SessionFeed, 'openError' | 'retryOpen' | 'resumeAfterCommand'> {
+  const retryOpen = (): void => {
+    if (store.retryOpen()) changes.reset();
+  };
+
   return {
-    openError: store.closureError ?? live.error,
-    retryOpen: live.retryOpen,
+    openError: state.closureError ?? changes.error,
+    retryOpen,
     resumeAfterCommand: () => {
-      if (store.closed.current) live.retryOpen();
+      if (store.getState().closed) retryOpen();
     },
   };
 }

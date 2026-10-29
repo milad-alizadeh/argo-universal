@@ -1,9 +1,4 @@
-import type {
-  FeedPageOutput,
-  FeedSyncPoint,
-  SessionSnapshot,
-  ToolCallUpdate,
-} from '@repo/contracts';
+import type { SessionSnapshot, ToolCallUpdate } from '@repo/contracts';
 import type { ClientError } from '#features/connection';
 import type { FeedView } from '../view/feed-view';
 import type { useFeedHistory } from './use-feed-history';
@@ -26,9 +21,3 @@ export interface SessionFeed {
   retryOpen: () => void;
   resumeAfterCommand: () => void;
 }
-
-// The first history page supplies the revision for opening its live subscription.
-export const historySyncPoint = (
-  page: FeedPageOutput | undefined,
-): FeedSyncPoint | null =>
-  page ? { epoch: page.epoch, revision: page.maxRevision } : null;
