@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { cdp, userEvent as browserUser } from 'vitest/browser';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
@@ -73,5 +74,28 @@ export const CardOpensTheInspectorWithoutClosingTheOverview: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Changes' }));
     await expect(await canvas.findByText('Branch files')).toBeVisible();
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+  },
+};
+
+export const OverflowCardsKeepTheirOwnScrollTarget: Story = {
+  args: { overflowing: true },
+  beforeEach: (): Promise<void> => settleLayout(1920),
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByRole('region', {
+      name: 'Workbench overview',
+    });
+
+    const card = canvas.getByRole('button', { name: 'Section 1' });
+    await browserUser.hover(card);
+
+    const box = card.getBoundingClientRect();
+    await cdp().send('Input.dispatchMouseEvent', {
+      type: 'mouseWheel',
+      x: box.left + box.width / 2,
+      y: box.top + box.height / 2,
+      deltaX: 0,
+      deltaY: 300,
+    });
+    await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));
   },
 };

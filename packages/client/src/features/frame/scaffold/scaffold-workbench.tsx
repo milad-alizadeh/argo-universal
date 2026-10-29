@@ -98,13 +98,21 @@ function WorkbenchSurface({
   );
 }
 
+const shadowScrollProps = {
+  role: 'region',
+  accessibilityLabel: 'Workbench overview',
+  className: '-mx-8 -mt-8 web:pointer-events-none',
+  pointerEvents: 'box-none',
+  contentContainerStyle: { pointerEvents: 'box-none' },
+  contentContainerClassName: 'px-8 pt-8 pb-16',
+} satisfies ComponentProps<typeof ScrollFadeView>;
+
 function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
   return (
-    <ScrollFadeView
-      className="-mx-8 -mt-8"
-      contentContainerClassName="px-8 pt-8 pb-16"
-    >
-      <View className="gap-2">{children}</View>
+    <ScrollFadeView {...shadowScrollProps}>
+      <View pointerEvents="auto" className="gap-2">
+        {children}
+      </View>
     </ScrollFadeView>
   );
 }
