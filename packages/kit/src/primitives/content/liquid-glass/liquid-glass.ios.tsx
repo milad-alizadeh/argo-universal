@@ -1,5 +1,6 @@
 import { GlassView } from 'expo-glass-effect';
 import { useContext, type ReactElement } from 'react';
+import { useResolveClassNames } from 'uniwind';
 import {
   readReducedTransparency,
   subscribeReducedTransparency,
@@ -7,6 +8,7 @@ import {
 import { liquidGlassAvailable } from './liquid-glass-available.ios';
 import {
   LiquidGlassPlatform,
+  type GlassSurfaceProps,
   type LiquidGlassEnvironment,
 } from './liquid-glass-platform';
 import type { LiquidGlassProps } from './liquid-glass-props';
@@ -16,13 +18,22 @@ import { createTransparencyStore } from './transparency-store';
 const nativePlatform: LiquidGlassEnvironment = liquidGlassAvailable
   ? {
       kind: 'native',
-      GlassView,
+      GlassView: SystemGlassView,
       transparency: createTransparencyStore({
         read: readReducedTransparency,
         subscribe: subscribeReducedTransparency,
       }),
     }
   : { kind: 'fallback' };
+
+function SystemGlassView({
+  className,
+  ...props
+}: GlassSurfaceProps): ReactElement {
+  const style = useResolveClassNames(className);
+
+  return <GlassView {...props} style={style} />;
+}
 
 export function LiquidGlass(props: LiquidGlassProps): ReactElement {
   const platform = useContext(LiquidGlassPlatform) ?? nativePlatform;

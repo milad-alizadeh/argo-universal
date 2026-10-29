@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { useContext, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
-import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '#kit/native-theme';
 import { cn } from '#kit/utils';
 import { FallbackSurface } from './liquid-glass-fallback';
@@ -94,14 +93,10 @@ function useGlassViewProps(
 ): React.ComponentProps<NativeGlassPlatform['GlassView']> {
   const { colorScheme } = useNativeTheme();
 
-  const style = useResolveClassNames(
-    cn(glassLayout(props), glassSurface(props)),
-  );
-
   return {
     glassEffectStyle: props.withoutEffect ? 'none' : 'regular',
     isInteractive: interactiveEffect(props),
     colorScheme,
-    style,
+    className: cn(glassLayout(props), glassSurface(props)),
   };
 }

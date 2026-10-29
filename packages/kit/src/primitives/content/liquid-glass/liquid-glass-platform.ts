@@ -2,9 +2,13 @@ import type { GlassViewProps } from 'expo-glass-effect';
 import { createContext, type ComponentType } from 'react';
 import type { TransparencyStore } from './transparency-store';
 
+export interface GlassSurfaceProps extends GlassViewProps {
+  className: string;
+}
+
 export interface NativeGlassPlatform {
   kind: 'native';
-  GlassView: ComponentType<GlassViewProps>;
+  GlassView: ComponentType<GlassSurfaceProps>;
   transparency: TransparencyStore;
 }
 

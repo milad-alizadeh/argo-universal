@@ -6,7 +6,15 @@ import type { ComposerPillComparisonProps } from './composer-pill-comparison.moc
 
 export const sharedControls = {
   configuration: defaultEffortConfiguration.configuration,
-  status: { ...runningWork.status, context: smartZoneContext.context },
+  status: {
+    ...runningWork.status,
+    context: smartZoneContext.context,
+    usage: {
+      limits: [
+        { label: '5-hour limit', usedPercent: 54, resets: 'Resets in 2h 14m' },
+      ],
+    },
+  },
   entries: runningPlan.entries,
   disabled: false,
 } satisfies ComposerPillComparisonProps;

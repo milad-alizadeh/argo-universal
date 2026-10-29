@@ -1,6 +1,6 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, isInaccessible, within } from 'storybook/test';
+import { expect, fn, isInaccessible, waitFor, within } from 'storybook/test';
 import { sharedControls } from './composer-pill-comparison-fixtures';
 import comparisonMeta, {
   SharedControls,
@@ -36,6 +36,11 @@ function sharedGeometry(width: number): Story {
       await expectMaterialPolicy(canvas);
 
       if (width === 390) await expectCompactFill(canvas);
+      else {
+        const usage = canvas.getByRole('button', { name: 'Usage' });
+        await expectControlGeometry(usage);
+        await expect(hasOwnBackdrop(usage)).toBe(false);
+      }
 
       await expectLabelInset(canvas.getByRole('button', { name: 'Mode' }));
     },
@@ -97,11 +102,11 @@ export const ModelRetainsItsConfigurationOverlay: Story = {
   beforeEach: () => settleLayout(1440),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: modelLabel }));
-    await expect(
-      await within(document.body).findByRole('dialog', {
-        name: modelLabel,
-      }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        within(document.body).getByRole('dialog', { name: modelLabel }),
+      ).toBeVisible(),
+    );
   },
 };
 

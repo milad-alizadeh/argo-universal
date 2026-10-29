@@ -83,7 +83,8 @@ export const DisabledControlCannotActivate: Story = {
   ),
   play: async ({ canvas, userEvent }) => {
     const button = canvas.getByRole('button', { name: 'Unavailable choice' });
-    await userEvent.click(button);
+    button.focus();
+    await userEvent.keyboard('{Enter} ');
     await expect(disabledPress).not.toHaveBeenCalled();
     await expect(button).toHaveAttribute('aria-disabled', 'true');
   },

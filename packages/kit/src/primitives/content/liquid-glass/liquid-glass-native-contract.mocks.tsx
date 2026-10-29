@@ -1,6 +1,9 @@
 import type { GlassViewProps } from 'expo-glass-effect';
 import type { ReactElement } from 'react';
-import type { NativeGlassPlatform } from './liquid-glass-platform';
+import type {
+  GlassSurfaceProps,
+  NativeGlassPlatform,
+} from './liquid-glass-platform';
 import {
   createTransparencyStore,
   type TransparencySource,
@@ -16,11 +19,11 @@ function glassStyle(style: GlassViewProps['glassEffectStyle']): string {
   return style ? style.style : 'none';
 }
 
-function NativeGlassPort(props: GlassViewProps): ReactElement {
+function NativeGlassPort(props: GlassSurfaceProps): ReactElement {
   const label = `System glass ${glassStyle(props.glassEffectStyle)} ${props.colorScheme ?? 'auto'}`;
 
   return (
-    <div role="group" aria-label={label}>
+    <div role="group" aria-label={label} className={props.className}>
       {props.children}
     </div>
   );
