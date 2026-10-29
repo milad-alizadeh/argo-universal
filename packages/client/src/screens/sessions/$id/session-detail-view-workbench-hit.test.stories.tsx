@@ -32,14 +32,9 @@ function gutterWheel(edge: 'left' | 'right'): Story {
         expect(canvas.getByTestId('desktop-workbench')).toBeVisible(),
       );
       // A real wheel over the outer gutter must reach the pane's scroll viewport.
-      const view = scroll.getBoundingClientRect();
       await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));
       await markSettledMiddleOfView(scroll);
-
-      await wheelInGutter(
-        scroll,
-        edge === 'left' ? view.left + 12 : view.right - 12,
-      );
+      await wheelInGutter(scroll, edge);
     },
   };
 }
@@ -49,17 +44,27 @@ export const LeftFeedGutterStaysScrollable = gutterWheel('left');
 export const RightFeedGutterStaysScrollable = gutterWheel('right');
 
 // A short wheel gesture stops tail-follow, then reads older content from either outer gutter.
-async function wheelInGutter(scroll: HTMLElement, x: number): Promise<void> {
+async function wheelInGutter(
+  scroll: HTMLElement,
+  edge: 'left' | 'right',
+): Promise<void> {
+  await browserUser.hover(scroll, {
+    position: {
+      x: edge === 'left' ? 12 : scroll.clientWidth - 12,
+      y: scroll.clientHeight / 2,
+    },
+  });
+
   const view = scroll.getBoundingClientRect();
+  const x = edge === 'left' ? view.left + 12 : view.right - 12;
   const before = scroll.scrollTop;
   const marked = markMiddleOfView(scroll);
   const point = { x, y: view.top + view.height / 2 };
+  const hit = document.elementFromPoint(point.x, point.y);
   await expect(
-    scroll.contains(document.elementFromPoint(point.x, point.y)),
+    scroll.contains(hit),
+    JSON.stringify({ point, feed: view, hit: hit?.outerHTML.slice(0, 700) }),
   ).toBe(true);
-  await browserUser.hover(scroll, {
-    position: { x: x - view.left, y: view.height / 2 },
-  });
 
   for (let tick = 0; tick < 3; tick++) {
     await cdp().send('Input.dispatchMouseEvent', {
