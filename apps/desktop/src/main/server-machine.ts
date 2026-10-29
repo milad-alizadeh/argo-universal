@@ -97,6 +97,25 @@ const requireOwnedPid = (context: ServerContext): number => {
   return context.ownedPid;
 };
 
+function addressMatchesOwner(
+  context: ServerContext,
+  address: ServerAddress,
+): boolean {
+  return (
+    address.pid === context.ownedPid && startedAfterSpawn(context, address)
+  );
+}
+
+function startedAfterSpawn(
+  context: ServerContext,
+  address: ServerAddress,
+): boolean {
+  return (
+    context.spawnedAt !== null &&
+    Date.parse(address.startedAt) >= context.spawnedAt
+  );
+}
+
 const serverSetup = setup({
   // SAFETY: XState v5 reads these empty objects only for their types and never at runtime (ADR-0016).
   types: {
@@ -151,10 +170,7 @@ const serverSetup = setup({
     foundAddress: (_, params: AddressParameters): boolean =>
       params.address !== null,
     namesOwnedSupervisor: ({ context }, params: AddressParameters): boolean =>
-      params.address !== null &&
-      params.address.pid === context.ownedPid &&
-      context.spawnedAt !== null &&
-      Date.parse(params.address.startedAt) >= context.spawnedAt,
+      params.address !== null && addressMatchesOwner(context, params.address),
     stillRunning: (_, params: RunningParameters): boolean => params.running,
     ownsSupervisor: ({ context }): boolean => context.ownedPid !== null,
     ownsRunningSessions: ({ context }): boolean =>
@@ -167,38 +183,101 @@ const serverSetup = setup({
   },
 });
 
+const readAddressTemplate = serverSetup.createStateConfig({
+  invoke: {
+    id: 'readAddress',
+    src: 'readAddress',
+    input: serverInput,
+    onDone: [
+      {
+        guard: {
+          type: 'foundAddress',
+          params: ({ event }): AddressParameters => ({ address: event.output }),
+        },
+        target: '#serverConnection.ready',
+        actions: assign({
+          address: ({ event }): ServerContext['address'] => event.output,
+          failure: null,
+        }),
+      },
+    ],
+    onError: {
+      target: failedConnectionTarget,
+      actions: assign({
+        failure: ({ event }): string =>
+          `could not read server.json: ${String(event.error)}`,
+      }),
+    },
+  },
+});
+
 // Reads server.json once: `ready` with a live Supervisor, otherwise `noneTarget`.
 const readingAddress = (noneTarget: string): ReadingAddressState =>
   serverSetup.createStateConfig({
     invoke: {
-      id: 'readAddress',
-      src: 'readAddress',
-      input: serverInput,
-      onDone: [
-        {
-          guard: {
-            type: 'foundAddress',
-            params: ({ event }): AddressParameters => ({
-              address: event.output,
-            }),
-          },
-          target: '#serverConnection.ready',
-          actions: assign({
-            address: ({ event }): ServerContext['address'] => event.output,
-            failure: null,
-          }),
+      ...readAddressTemplate.invoke,
+      onDone: [...readAddressTemplate.invoke.onDone, { target: noneTarget }],
+    },
+  });
+
+const checkingTemplate = serverSetup.createStateConfig({
+  invoke: {
+    id: 'checkRunning',
+    src: 'checkRunning',
+    input: ({ context }): CheckRunningInput => ({
+      pid: requireOwnedPid(context),
+    }),
+    onDone: [
+      {
+        guard: {
+          type: 'stillRunning',
+          params: ({ event }): RunningParameters => ({ running: event.output }),
         },
-        { target: noneTarget },
+        target: 'waiting',
+      },
+    ],
+  },
+});
+
+function checkingState(
+  exitedTarget: string,
+): Required<Pick<ServerStateConfig, 'invoke'>> {
+  return serverSetup.createStateConfig({
+    invoke: {
+      ...checkingTemplate.invoke,
+      onDone: [
+        ...checkingTemplate.invoke.onDone,
+        { target: exitedTarget, actions: 'forgetSupervisor' },
       ],
-      onError: {
-        target: failedConnectionTarget,
-        actions: assign({
-          failure: ({ event }): string =>
-            `could not read server.json: ${String(event.error)}`,
+    },
+  });
+}
+
+const stopTimeoutTemplate = serverSetup.createStateConfig({
+  after: {
+    stopLimit: {
+      actions: {
+        type: 'log',
+        params: ({ context }): ServerLogParameters => ({
+          line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / millisecondsPerSecond} seconds`,
         }),
       },
     },
+  },
+});
+
+function stopTimeout(
+  stuckTarget: string,
+): Required<Pick<ServerStateConfig, 'after'>> {
+  return serverSetup.createStateConfig({
+    after: {
+      stopLimit: {
+        ...stopTimeoutTemplate.after.stopLimit,
+        target: stuckTarget,
+      },
+    },
   });
+}
 
 // Signals the Supervisor this app owns, then checks every `pollDelay` until it exits, for `stopLimit` at most.
 const waitingForSupervisorExit = (
@@ -208,40 +287,10 @@ const waitingForSupervisorExit = (
   serverSetup.createStateConfig({
     entry: 'signalOwnedSupervisor',
     initial: 'waiting',
-    after: {
-      stopLimit: {
-        target: stuckTarget,
-        actions: {
-          type: 'log',
-          params: ({ context }): ServerLogParameters => ({
-            line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / millisecondsPerSecond} seconds`,
-          }),
-        },
-      },
-    },
+    ...stopTimeout(stuckTarget),
     states: {
       waiting: { after: { pollDelay: 'checking' } },
-      checking: {
-        invoke: {
-          id: 'checkRunning',
-          src: 'checkRunning',
-          input: ({ context }): CheckRunningInput => ({
-            pid: requireOwnedPid(context),
-          }),
-          onDone: [
-            {
-              guard: {
-                type: 'stillRunning',
-                params: ({ event }): RunningParameters => ({
-                  running: event.output,
-                }),
-              },
-              target: 'waiting',
-            },
-            { target: exitedTarget, actions: 'forgetSupervisor' },
-          ],
-        },
-      },
+      checking: checkingState(exitedTarget),
     },
   });
 

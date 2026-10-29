@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/executables": "workspace:*",
     "jsonc-parser": "catalog:",
     "zod": "catalog:"
   },
@@ -18,6 +19,7 @@
     "@babel/types": "catalog:",
     "@playwright/test": "catalog:",
     "@repo/contracts": "workspace:*",
+    "@repo/e2e": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",

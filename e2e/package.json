@@ -24,5 +24,8 @@
     "rolldown": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"
+  },
+  "exports": {
+    "./own-server": "./own-server.ts"
   }
 }

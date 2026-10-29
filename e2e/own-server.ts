@@ -1,25 +1,15 @@
-import { spawn } from 'node:child_process';
-import type { ChildProcessByStdio } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
-import { cp, mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
-import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { findFreePort } from '@repo/mocks/network/free-port';
-import { offlineRegistry } from '@repo/mocks/registry/catalog';
-import { scriptedRegistry } from '@repo/mocks/registry/scripted';
-import { engineBundlePath } from './engine-bundle';
+import { launchServer, type LaunchOptions } from './own-server-launch';
+import { prepareServer, type InitialServerOptions } from './own-server-setup';
 import { serverHttpUrl, serverUrlFor } from './server-port';
 import { hasExited, stderrTailLength, waitUntilReady } from './server-process';
 
-const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
-
-// The Agents append the ACP requests e2e steps check here, one JSON line each.
-export const requestLogName = 'agent-requests.jsonl';
-
-// initTestRepository makes the Server's one Project here.
-export const projectDirectoryName = 'project';
+export {
+  projectDirectoryName,
+  requestLogName,
+  serverFiles,
+} from './own-server-files';
 
 export { pollServer } from './server-process';
 
@@ -27,139 +17,147 @@ const attempts = 3;
 
 const portTakenPattern = /EADDRINUSE/;
 
-// What a test reads from its own Server's directory.
-type ServerFiles = { projectPath: string; requestLogPath: string };
-
-export const serverFiles = (directory: string): ServerFiles => ({
-  projectPath: path.join(directory, projectDirectoryName),
-  requestLogPath: path.join(directory, requestLogName),
-});
-
-// Starts a real Engine with shared external Agent fixtures in an isolated home.
-export async function startOwnServer(
-  directory: string,
-  agents: AppFixtureAgents,
-  initial: { noProjects?: boolean; registryOffline?: boolean } = {},
-): Promise<{
+type OwnServer = {
   serverUrl: string;
   httpUrl: string;
   registryPath: string;
   installationPath: string;
   stop: () => Promise<void>;
   restart: (whileStopped: () => Promise<void>) => Promise<void>;
-}> {
-  const projectPath = path.join(directory, projectDirectoryName);
-  const home = path.join(directory, 'server-home');
-  const registryPath = path.join(directory, 'registry.json');
-  const installationPath = path.join(directory, 'installation.json');
-  await mkdir(directory, { recursive: true });
-  await writeFile(
-    registryPath,
-    JSON.stringify(
-      initial.registryOffline
-        ? offlineRegistry
-        : scriptedRegistry(agents, {
-            ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
-          }),
-    ),
-  );
-  await writeFile(
-    installationPath,
-    JSON.stringify({ outcome: 'success', released: true }),
-  );
-  await initTestRepository(projectPath, false);
-  await cp(
-    new URL('./mocks/plugins', import.meta.url),
-    path.join(home, 'shipped-plugins'),
-    { recursive: true },
-  );
+};
 
+// Starts a real Engine with shared external Agent fixtures in an isolated home.
+export async function startOwnServer(
+  directory: string,
+  agents: AppFixtureAgents,
+  initial: InitialServerOptions = {},
+): Promise<OwnServer> {
+  const paths = await prepareServer(directory, agents, initial);
+
+  return tryPorts({ paths, agents, initial });
+}
+
+async function tryPorts(
+  input: Omit<LaunchOptions, 'port'>,
+): Promise<OwnServer> {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
+    const server = await startAttempt({ ...input, port });
 
-    const launch = (): ChildProcessByStdio<null, Readable, Readable> =>
-      spawn(process.execPath, [engineBundlePath], {
-        cwd: serverDirectory,
-        env: {
-          ...process.env,
-          ARGO_HOME: home,
-          ARGO_E2E_NO_PROJECTS: initial.noProjects ? '1' : '0',
-          ARGO_SERVER_PORT: String(port),
-          ARGO_PROJECT_PATH: projectPath,
-          ARGO_E2E_AGENTS: JSON.stringify(agents),
-          ARGO_E2E_REGISTRY_PATH: registryPath,
-          ARGO_E2E_INSTALLATION_PATH: installationPath,
-          ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
-          ARGO_E2E_AUTH_EPOCH: randomUUID(),
-          PATH: '/usr/bin:/bin',
-        },
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-
-    let server = launch();
-    let portTaken = false;
-    let stderrTail = '';
-
-    for (const stream of [server.stdout, server.stderr]) {
-      stream.on('data', (chunk: Buffer): void => {
-        if (portTakenPattern.test(chunk.toString())) portTaken = true;
-      });
-    }
-
-    server.stderr.on('data', (chunk: Buffer): void => {
-      stderrTail = (stderrTail + chunk.toString()).slice(-stderrTailLength);
-    });
-
-    const stop = async (): Promise<void> => {
-      if (hasExited(server)) return;
-
-      const exited = new Promise((resolve): typeof server =>
-        server.once('exit', resolve),
-      );
-
-      server.kill('SIGTERM');
-      await exited;
-    };
-
-    try {
-      if (
-        await waitUntilReady({
-          home,
-          port,
-          server,
-          portTaken: (): boolean => portTaken,
-          stderrTail: (): string => stderrTail,
-        })
-      ) {
-        return {
-          serverUrl: serverUrlFor(port),
-          httpUrl: serverHttpUrl(port),
-          registryPath,
-          installationPath,
-          stop,
-          restart: async (whileStopped): Promise<void> => {
-            await stop();
-            await whileStopped();
-            server = launch();
-            server.stdout.resume();
-            server.stderr.resume();
-            await waitUntilReady({
-              home,
-              port,
-              server,
-              portTaken: () => false,
-              stderrTail: () => '',
-            });
-          },
-        };
-      }
-    } catch (error) {
-      await stop();
-      throw error;
-    }
-
-    await stop();
+    if (server) return server;
   }
 
   throw new Error(`Another process took the Server's port ${attempts} times`);
+}
+
+type ServerProcess = ReturnType<typeof launchServer>;
+
+type ProcessHolder = { current: ServerProcess };
+
+type Observation = { portTaken: () => boolean; stderrTail: () => string };
+
+async function stopServer(holder: ProcessHolder): Promise<void> {
+  const server = holder.current;
+
+  if (hasExited(server)) return;
+
+  const exited = new Promise((resolve): typeof server =>
+    server.once('exit', resolve),
+  );
+
+  server.kill('SIGTERM');
+  await exited;
+}
+
+function monitor(server: ServerProcess): Observation {
+  let taken = false;
+  let tail = '';
+
+  for (const stream of [server.stdout, server.stderr])
+    stream.on('data', (chunk: Buffer): void => {
+      if (portTakenPattern.test(chunk.toString())) taken = true;
+    });
+
+  server.stderr.on('data', (chunk: Buffer): void => {
+    tail = (tail + chunk.toString()).slice(-stderrTailLength);
+  });
+
+  return { portTaken: () => taken, stderrTail: () => tail };
+}
+
+async function restartServer(
+  options: LaunchOptions,
+  holder: ProcessHolder,
+  whileStopped: () => Promise<void>,
+): Promise<void> {
+  await stopServer(holder);
+  await whileStopped();
+  holder.current = launchResumed(options);
+  await waitUntilReady(
+    readiness(options, holder, {
+      portTaken: () => false,
+      stderrTail: () => '',
+    }),
+  );
+}
+
+function launchResumed(options: LaunchOptions): ServerProcess {
+  const server = launchServer(options);
+  server.stdout.resume();
+  server.stderr.resume();
+
+  return server;
+}
+
+function serverResult(
+  options: LaunchOptions,
+  holder: ProcessHolder,
+): OwnServer {
+  return {
+    serverUrl: serverUrlFor(options.port),
+    httpUrl: serverHttpUrl(options.port),
+    registryPath: options.paths.registryPath,
+    installationPath: options.paths.installationPath,
+    stop: (): Promise<void> => stopServer(holder),
+    restart: (whileStopped): Promise<void> =>
+      restartServer(options, holder, whileStopped),
+  };
+}
+
+function readiness(
+  options: LaunchOptions,
+  holder: ProcessHolder,
+  observation: Observation,
+): Parameters<typeof waitUntilReady>[0] {
+  return {
+    home: options.paths.home,
+    port: options.port,
+    server: holder.current,
+    ...observation,
+  };
+}
+
+async function attemptReady(
+  options: LaunchOptions,
+  holder: ProcessHolder,
+): Promise<boolean> {
+  try {
+    return await waitUntilReady(
+      readiness(options, holder, monitor(holder.current)),
+    );
+  } catch (error) {
+    await stopServer(holder);
+    throw error;
+  }
+}
+
+async function startAttempt(
+  options: LaunchOptions,
+): Promise<OwnServer | undefined> {
+  const holder = { current: launchServer(options) };
+
+  if (await attemptReady(options, holder)) return serverResult(options, holder);
+  await stopServer(holder);
+
+  return undefined;
 }

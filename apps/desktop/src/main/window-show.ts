@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
+import { isTrustedWindow } from './trusted-window';
 
 function showWindow(window: BrowserWindow): void {
   if (window.isMinimized()) window.restore();
@@ -9,7 +10,7 @@ function showWindow(window: BrowserWindow): void {
 
 export function handleWindowShow(windowOrigin: string): void {
   ipcMain.on('window:show', (event): void => {
-    if (event.senderFrame?.origin !== windowOrigin) return;
+    if (!isTrustedWindow(event, windowOrigin)) return;
 
     const window = BrowserWindow.fromWebContents(event.sender);
 
