@@ -44,3 +44,23 @@ it('summarises the main comparison without a page', async () => {
     }),
   ).toEqual({ files: 3, additions: 3, deletions: 0 });
 });
+
+it('counts every untracked file when they outnumber one batch of reads', async () => {
+  const { directory } = await repository(false);
+
+  const names = Array.from(
+    { length: 19 },
+    (_, index) => `file-${String(index).padStart(2, '0')}.txt`,
+  );
+
+  for (const name of names) writeFileSync(join(directory, name), `${name}\n`);
+
+  const { files, summary } = await readChangedFiles({
+    checkout: directory,
+    projectCheckout: directory,
+  });
+
+  expect(files.map(({ path }) => path)).toEqual(names);
+  expect(files.every(({ additions }) => additions === 1)).toBe(true);
+  expect(summary).toEqual({ files: 19, additions: 19, deletions: 0 });
+});

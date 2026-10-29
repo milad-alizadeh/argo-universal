@@ -33,6 +33,8 @@ export { watchTurnActivity } from './turn/turn-activity';
 
 export { createSessionReader, readSessionRow } from './session-record';
 
+export { sessionChangesSelection } from './changes-selection';
+
 export { createSessionActorInput } from './session-actor-input';
 
 export { openSessionsId } from './open-sessions-system';

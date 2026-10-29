@@ -5,7 +5,7 @@ import type {
 } from '@repo/contracts';
 import { readChangesSummary } from '@repo/git';
 import { findMachineActor } from '../../lib/machine-actor';
-import { readProjectPath } from '../../projects';
+import { sessionChangesSelection } from '../changes-selection';
 import type { SessionRouterDeps } from '../router-deps';
 import { sessionMachine, type SessionActorRef } from '../session-machine';
 import { sessionActorId } from '../session-system';
@@ -70,8 +70,5 @@ function storedChanges(
   deps: SnapshotSources,
   snapshot: SessionGetOutput,
 ): Promise<ChangesSummary> {
-  return readChangesSummary({
-    checkout: snapshot.checkout.path,
-    projectCheckout: readProjectPath(deps.database, snapshot.projectId),
-  });
+  return readChangesSummary(sessionChangesSelection(deps.database, snapshot));
 }

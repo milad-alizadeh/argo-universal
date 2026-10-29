@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { createCheckout } from './index';
-import { initTestRepository } from './test-repository.test.mocks';
+import { initTestRepository } from './test-git.test.mocks';
 
 const mainChoice = (
   projectPath: string,

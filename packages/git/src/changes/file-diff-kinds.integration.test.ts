@@ -1,7 +1,8 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { commit, repository } from '../test-repository.test.mocks';
+import { commit } from '../test-git.test.mocks';
+import { repository } from '../test-repository.test.mocks';
 import { readFileDiff } from '.';
 
 it('reads a path as a name, never as a glob or pathspec magic', async () => {

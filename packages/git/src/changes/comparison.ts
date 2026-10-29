@@ -1,14 +1,17 @@
-import type { SessionChangesInput, SessionComparison } from '@repo/contracts';
 import { git } from '../git';
 
 const headsPrefix = 'refs/heads/';
 
 const remotesPrefix = 'refs/remotes/';
 
+// What a Checkout is compared against: the main Checkout's branch, its own HEAD, or a named branch or ref.
+export type Comparison = 'main' | 'uncommitted' | { branch: string };
+
 // Which Checkout to read, and what to compare it against; the main comparison when none is given.
-export type ChangesSelection = Pick<SessionChangesInput, 'comparison'> & {
+export type ChangesSelection = {
   checkout: string;
   projectCheckout: string;
+  comparison?: Comparison;
 };
 
 async function mainBranch(projectCheckout: string): Promise<string | null> {
@@ -19,7 +22,7 @@ async function mainBranch(projectCheckout: string): Promise<string | null> {
 
 async function baseCommit(
   checkout: string,
-  comparison: SessionComparison,
+  comparison: Comparison,
   main: string | null,
 ): Promise<string> {
   if (comparison === 'uncommitted') return 'HEAD';
@@ -32,7 +35,7 @@ async function baseCommit(
 }
 
 function comparisonBranchName(
-  comparison: Exclude<SessionComparison, 'uncommitted'>,
+  comparison: Exclude<Comparison, 'uncommitted'>,
   main: string | null,
 ): string {
   const branch = comparison === 'main' ? main : comparison.branch;

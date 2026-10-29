@@ -1,6 +1,10 @@
-import { sessionChangesPageFiles } from '@repo/contracts';
 import { comparisonBase, type ChangesSelection } from './comparison';
-import { pageItems, pageWindow, type ChangesPage } from './paging';
+import {
+  defaultFilesLimit,
+  pageItems,
+  pageWindow,
+  type ChangesPage,
+} from './paging';
 import { trackedFiles, untrackedPaths, type CheckoutFile } from './parse';
 import { readNameStatus, readNumstat, readWorktree } from './status';
 import { untrackedChanges } from './untracked';
@@ -16,20 +20,24 @@ type CheckoutChanges = {
 // One page of the changed files, with the totals of the whole comparison.
 export type ChangedFiles = CheckoutChanges & { nextCursor: number | null };
 
+type StatusReads = { status: string; numstat: string; worktree: string };
+
 async function readStatus(
   checkout: string,
   base: string,
-): Promise<[string, string, string]> {
-  return Promise.all([
+): Promise<StatusReads> {
+  const [status, numstat, worktree] = await Promise.all([
     readNameStatus(checkout, base),
     readNumstat(checkout, base),
     readWorktree(checkout),
   ]);
+
+  return { status, numstat, worktree };
 }
 
 async function changeFiles(
   checkout: string,
-  [status, numstat, worktree]: [string, string, string],
+  { status, numstat, worktree }: StatusReads,
 ): Promise<CheckoutFile[]> {
   const untracked = untrackedPaths(worktree);
   const untrackedSet = new Set(untracked);
@@ -73,10 +81,7 @@ export async function readChangedFiles(
 ): Promise<ChangedFiles> {
   const changes = await readChanges(selection);
 
-  const paged = pageItems(
-    changes.files,
-    pageWindow(page, sessionChangesPageFiles),
-  );
+  const paged = pageItems(changes.files, pageWindow(page, defaultFilesLimit));
 
   return { ...changes, files: paged.items, nextCursor: paged.nextCursor };
 }

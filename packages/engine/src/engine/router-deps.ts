@@ -8,11 +8,11 @@ import { type FeedDeps } from '../feed';
 import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PluginsRouterDeps } from '../plugins';
-import { readProjectPath } from '../projects';
 import {
   createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
+  sessionChangesSelection,
   type SessionRouterDeps,
 } from '../sessions';
 import type { SystemDeps } from '../system';
@@ -76,10 +76,7 @@ function createStoredChangesReader(
   return (sessionId) => {
     const session = readSession(sessionId);
 
-    return readChangesSummary({
-      checkout: session.checkout.path,
-      projectCheckout: readProjectPath(input.database, session.projectId),
-    });
+    return readChangesSummary(sessionChangesSelection(input.database, session));
   };
 }
 

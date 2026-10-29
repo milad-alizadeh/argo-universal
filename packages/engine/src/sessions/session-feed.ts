@@ -5,7 +5,7 @@ import {
   readWrittenRow,
   type FeedInput,
 } from '../feed';
-import { readProjectPath } from '../projects';
+import { sessionChangesSelection } from './changes-selection';
 import type { SessionContext } from './session-context';
 
 type FeedPosition = Pick<
@@ -50,10 +50,7 @@ const findUnaddressedPlan = (
 const refreshChanges = (
   context: SessionContext,
 ): ReturnType<typeof readChangesSummary> =>
-  readChangesSummary({
-    checkout: context.checkout.path,
-    projectCheckout: readProjectPath(context.input.database, context.projectId),
-  });
+  readChangesSummary(sessionChangesSelection(context.input.database, context));
 
 // The Session's Feed reads stored and queued rows from its opened position.
 export const sessionFeedInput = (

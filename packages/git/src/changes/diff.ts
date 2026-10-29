@@ -1,6 +1,5 @@
-import { sessionDiffPageLines } from '@repo/contracts';
 import { comparisonBase, type ChangesSelection } from './comparison';
-import { pageWindow, type ChangesPage } from './paging';
+import { defaultPatchLimit, pageWindow, type ChangesPage } from './paging';
 import {
   trackedFiles,
   untrackedPaths,
@@ -58,14 +57,14 @@ async function readWholeDiff(
   const { checkout, path } = selection;
 
   if (leavesCheckout(path)) return null;
-  const { base } = await comparisonBase(selection);
 
   if (await isUntracked(checkout, path)) return untrackedDiff(checkout, path);
+  const { base } = await comparisonBase(selection);
 
   return trackedDiff(checkout, base, path);
 }
 
-// One file's patch, or null when the path is not a changed file; the rest of the comparison's files are not read.
+// One file's patch, or null when the path is not a changed file. An untracked path never resolves a base; a tracked one reads the comparison's names, to pair renames, but counts and patch for its own paths.
 export async function readFileDiff(
   selection: ChangesSelection & { path: string },
   page: ChangesPage = {},
@@ -73,7 +72,7 @@ export async function readFileDiff(
   const diff = await readWholeDiff(selection);
 
   if (!diff) return null;
-  const window = pageWindow(page, sessionDiffPageLines);
+  const window = pageWindow(page, defaultPatchLimit);
   const paged = pagePatch(diff.patch, window.cursor, window.limit);
 
   return { file: diff.file, patch: paged.patch, nextCursor: paged.nextCursor };

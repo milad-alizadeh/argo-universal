@@ -1,4 +1,8 @@
-export { listComparisonBranches, type ChangesSelection } from './comparison';
+export {
+  listComparisonBranches,
+  type ChangesSelection,
+  type Comparison,
+} from './comparison';
 
 export { readFileDiff, type FileDiff } from './diff';
 

@@ -1,7 +1,10 @@
-import type { SessionChangesInput } from '@repo/contracts';
-
 // Where a page starts and how much it holds; each is the caller's, or the default of what is paged.
-export type ChangesPage = Pick<SessionChangesInput, 'cursor' | 'limit'>;
+export type ChangesPage = { cursor?: number; limit?: number };
+
+// The files in a page of changed files, and the lines in a page of one file's diff, unless the caller asks for more.
+export const defaultFilesLimit = 50;
+
+export const defaultPatchLimit = 400;
 
 type ItemsPage<Item> = { items: Item[]; nextCursor: number | null };
 

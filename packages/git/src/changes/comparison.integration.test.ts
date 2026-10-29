@@ -1,8 +1,8 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import { commit } from '../test-git.test.mocks';
 import {
-  commit,
   remoteFeatureRef,
   repository,
   sessionWorktree,

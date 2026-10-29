@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./test-git": "./src/test-git.test.mocks.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@repo/contracts": "workspace:*",
     "@repo/machine-log": "workspace:*",
     "zod": "catalog:"
   },

@@ -1146,6 +1146,9 @@ importers:
       '@repo/contracts':
         specifier: workspace:*
         version: link:../packages/contracts
+      '@repo/git':
+        specifier: workspace:*
+        version: link:../packages/git
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -1480,9 +1483,6 @@ importers:
 
   packages/git:
     dependencies:
-      '@repo/contracts':
-        specifier: workspace:*
-        version: link:../contracts
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../machine-log

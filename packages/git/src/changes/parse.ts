@@ -1,4 +1,12 @@
 import { rejectResponse } from '../reject-response';
+import {
+  capture,
+  countsFor,
+  lineCounts,
+  numstatCounts,
+  statEntry,
+  type LineCounts,
+} from './numstat';
 
 const porcelainCodeLength = 3;
 
@@ -9,52 +17,6 @@ export type CheckoutFile = {
   additions: number | null;
   deletions: number | null;
 };
-
-type LineCounts = Pick<CheckoutFile, 'additions' | 'deletions'>;
-
-function lineCounts(additions: string, deletions: string): LineCounts {
-  return {
-    additions: additions === '-' ? null : Number(additions),
-    deletions: deletions === '-' ? null : Number(deletions),
-  };
-}
-
-function parseNumstat(entry: string): RegExpExecArray {
-  return (
-    /^(\d+|-)\t(\d+|-)\t(.*)$/s.exec(entry) ?? rejectResponse('numstat', entry)
-  );
-}
-
-const capture = (match: RegExpExecArray, index: number): string =>
-  match[index] ?? '';
-
-function numstatPath(
-  match: RegExpExecArray,
-  nextPath: string | undefined,
-  entry: string,
-): string {
-  return match[3] || nextPath || rejectResponse('numstat path', entry);
-}
-
-const statEntry = (stats: string[], index: number): string =>
-  stats[index] ?? '';
-
-function numstatCounts(numstat: string): Map<string, LineCounts> {
-  const counts = new Map<string, LineCounts>();
-  const stats = numstat.split('\0');
-
-  for (let index = 0; index < stats.length - 1; index += 1) {
-    const entry = statEntry(stats, index);
-    const match = parseNumstat(entry);
-    const path = numstatPath(match, stats[index + 2], entry);
-
-    if (!match[3]) index += 2;
-
-    counts.set(path, lineCounts(capture(match, 1), capture(match, 2)));
-  }
-
-  return counts;
-}
 
 // The status letters git documents for `diff --name-status`, bar X (unknown) and B (broken pair).
 const statusOperations = new Map<string, CheckoutFile['operation']>([
@@ -106,10 +68,6 @@ function statusEntry(
   counts: Map<string, LineCounts>,
 ): CheckoutFile {
   return { operation: statusOperation(code), path, ...countsFor(counts, path) };
-}
-
-function countsFor(counts: Map<string, LineCounts>, path: string): LineCounts {
-  return counts.get(path) ?? { additions: 0, deletions: 0 };
 }
 
 // A tracked file's counts, read for its own paths after the whole comparison named it.

@@ -1,12 +1,8 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import {
-  commit,
-  gitIn,
-  repository,
-  sessionWorktree,
-} from '../test-repository.test.mocks';
+import { commit, gitIn } from '../test-git.test.mocks';
+import { repository, sessionWorktree } from '../test-repository.test.mocks';
 import { readChangedFiles } from '.';
 
 it('uses the main Checkout branch merge-base and includes untracked files', async () => {

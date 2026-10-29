@@ -4,9 +4,13 @@ import type {
   SessionDiffInput,
   SessionDiffOutput,
 } from '@repo/contracts';
-import { readChangedFiles, readFileDiff } from '@repo/git';
+import {
+  readChangedFiles,
+  readFileDiff,
+  type ChangesSelection,
+} from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { readProjectPath } from '../projects';
+import { sessionChangesSelection } from './changes-selection';
 import type { SessionRouterDeps } from './router-deps';
 
 type ReaderDeps = Pick<SessionRouterDeps, 'readSession' | 'database'>;
@@ -14,15 +18,12 @@ type ReaderDeps = Pick<SessionRouterDeps, 'readSession' | 'database'>;
 const selection = (
   deps: ReaderDeps,
   input: SessionChangesInput | SessionDiffInput,
-): Parameters<typeof readChangedFiles>[0] => {
-  const session = deps.readSession(input.sessionId);
-
-  return {
-    checkout: session.checkout.path,
-    projectCheckout: readProjectPath(deps.database, session.projectId),
-    comparison: input.comparison,
-  };
-};
+): ChangesSelection =>
+  sessionChangesSelection(
+    deps.database,
+    deps.readSession(input.sessionId),
+    input.comparison,
+  );
 
 export const readSessionChanges = (
   deps: ReaderDeps,

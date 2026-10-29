@@ -1,11 +1,8 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import {
-  commit,
-  repository,
-  sessionWorktree,
-} from '../test-repository.test.mocks';
+import { commit } from '../test-git.test.mocks';
+import { repository, sessionWorktree } from '../test-repository.test.mocks';
 import { readFileDiff } from '.';
 
 const sharedFile = 'shared.txt';
