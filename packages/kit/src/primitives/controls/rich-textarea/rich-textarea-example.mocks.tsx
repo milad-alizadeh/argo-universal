@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { RichTextarea } from './rich-textarea';
 import type { ReferenceOption } from './rich-textarea-references';
 import type {
@@ -62,6 +62,28 @@ export function RichTextareaExample({
       {...props}
     />
   );
+}
+
+/*
+ * A host that loses the first empty report it hears, as one does when a draft made before the
+ * report landed is written over it. It holds whatever the later reports say.
+ */
+export function ForgetfulHostExample({
+  onResourcesChange,
+  ...props
+}: ExampleProps): React.JSX.Element {
+  const forgot = useRef(false);
+
+  const hear = (resources: readonly SuggestionResource[]): void => {
+    if (resources.length === 0 && !forgot.current) {
+      forgot.current = true;
+
+      return;
+    }
+    onResourcesChange?.(resources);
+  };
+
+  return <RichTextareaExample {...props} onResourcesChange={hear} />;
 }
 
 interface LateSource {

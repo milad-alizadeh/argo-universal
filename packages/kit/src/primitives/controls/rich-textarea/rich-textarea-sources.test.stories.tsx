@@ -3,6 +3,7 @@ import { expect, fn, screen, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { settleLayout } from '#mocks/story-layout';
 import {
+  ForgetfulHostExample,
   RichTextareaExample,
   exampleLabel,
   follows,
@@ -160,6 +161,27 @@ export const AChosenResultWithAResourceSendsItsTextAndResource: Story = {
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('See ITEM-7 '),
     );
+    await waitFor(() =>
+      expect(args.onResourcesChange).toHaveBeenLastCalledWith([
+        exampleItem.resource,
+      ]),
+    );
+    await userEvent.keyboard('{Backspace>7/}');
+    await waitFor(() =>
+      expect(args.onResourcesChange).toHaveBeenLastCalledWith([]),
+    );
+  },
+};
+
+export const AHostThatLosesAnEmptyReportEndsHoldingNoResource: Story = {
+  render: (args) => <ForgetfulHostExample {...args} />,
+  play: async ({ canvas, args }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      'See /it',
+    );
+    await screen.findByRole('option', { name: itemName });
+    await userEvent.keyboard('{Enter}');
     await waitFor(() =>
       expect(args.onResourcesChange).toHaveBeenLastCalledWith([
         exampleItem.resource,
