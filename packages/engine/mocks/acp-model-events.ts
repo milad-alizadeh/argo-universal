@@ -1,24 +1,24 @@
 import type { AcpSessionLease } from '../src/agents';
 import {
-  modelShellChanged,
-  modelSubagentUpdate,
-  modelCheckoutCreated,
-  modelCheckoutFailures,
-  modelSessionLoaded,
-} from './acp-model-events-1';
-import {
   modelLifecycleEvents,
   modelPromptCommitted,
   modelPromptEvents,
   modelUsageUpdate,
-} from './acp-model-events-2';
+} from './acp-model-lifecycle-events';
 import {
   modelConfigurationUpdate,
   modelAgentMessage,
   modelRequestEvents,
   modelAcpOpened,
   modelCloseEvents,
-} from './acp-model-events-3';
+} from './acp-model-request-events';
+import {
+  modelShellChanged,
+  modelSubagentUpdate,
+  modelCheckoutCreated,
+  modelCheckoutFailures,
+  modelSessionLoaded,
+} from './acp-model-start-events';
 import type { AcpModelEvent, AcpModelSnapshot } from './acp-session-model';
 
 export const modelEvents = (
