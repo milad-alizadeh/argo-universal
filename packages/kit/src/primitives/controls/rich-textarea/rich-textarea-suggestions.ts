@@ -76,7 +76,7 @@ const resultLimit = 8;
 
 /*
  * What the `/` list offers for a query: each source's first matches, in source order, empty sources
- * left out. Both drawings ask here, once per change; promises and stale answers (#1326) land here.
+ * left out. The web and native lists both ask here, once per change; promises and stale answers (#1326) land here.
  */
 export function querySuggestions(
   sources: readonly SuggestionSource[],
