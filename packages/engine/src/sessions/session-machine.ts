@@ -76,7 +76,6 @@ import {
   setConfigEvent,
   storageFailingEvent,
   writeFeedEvent,
-  type EndTurnParameters,
   type SessionContext,
   type SessionEvent,
   type SessionMachineInput,
@@ -105,12 +104,11 @@ import {
   subagentFeed,
 } from './subagents';
 import {
-  connectionLostDuringTurn,
-  endTurn,
-  recordCrash,
-  startTurn,
+  sessionTurn,
+  type EndTurnParameters,
   type StartTurnParameters,
-} from './turn/turn-lifecycle';
+  type TurnStep,
+} from './turn';
 
 export type {
   SessionCommand,
@@ -188,10 +186,6 @@ type WriteQueue = {
   sendTo: (target: WriterActorRef, event: WriterEvent) => void;
 };
 
-type CrashQueue = WriteQueue & {
-  sendTo: (target: FeedActorRef, event: FeedEvent) => void;
-};
-
 const enqueueWrites = (
   enqueue: WriteQueue,
   context: SessionContext,
@@ -217,15 +211,21 @@ const enqueueStep = (
   enqueueWrites(enqueue, context, step.writes);
 };
 
-const enqueueCrashedSubagents = (
-  enqueue: CrashQueue,
+type TurnQueue = StepQueue & {
+  sendTo: (target: FeedActorRef | 'feed', event: FeedEvent) => void;
+};
+
+// A Turn step: its Session change and writes, then its events for the Feeds.
+const enqueueTurnStep = (
+  enqueue: TurnQueue,
   context: SessionContext,
-  subagents: ReturnType<typeof recordCrash>['subagents'],
+  step: TurnStep,
 ): void => {
-  for (const child of subagents) {
-    enqueue.sendTo(child.feed, child.event);
-    enqueueWrites(enqueue, context, [{ job: child.job }]);
-  }
+  enqueueStep(enqueue, context, step);
+
+  for (const event of step.feed) enqueue.sendTo('feed', event);
+
+  for (const { feed, event } of step.subagentFeeds) enqueue.sendTo(feed, event);
 };
 
 const crashDuringTurn = (params: CrashNoticeParameters): boolean =>
@@ -540,20 +540,16 @@ const sessionSetup = setup({
         { context, enqueue },
         params: Pick<StartTurnParameters, 'turnId'>,
       ): void => {
-        const { change, write } = startTurn(context, params.turnId);
-
-        enqueue.assign(change);
-        enqueueWrites(enqueue, context, [write]);
+        enqueueTurnStep(
+          enqueue,
+          context,
+          sessionTurn.start(context, params.turnId),
+        );
       },
     ),
     endTurn: enqueueActions(
       ({ context, enqueue }, ended: EndTurnParameters): void => {
-        const { change, write, complete } = endTurn(context, ended);
-
-        if (write) enqueueWrites(enqueue, context, [write]);
-
-        if (complete) enqueue.sendTo('feed', complete);
-        enqueue.assign(change);
+        enqueueTurnStep(enqueue, context, sessionTurn.end(context, ended));
       },
     ),
     queuePermission: assign(
@@ -683,13 +679,11 @@ const sessionSetup = setup({
     recordCrash: enqueueActions(
       ({ context, event, enqueue }, params: CrashNoticeParameters): void => {
         assertEvent(event, 'acp.failed');
-        const crash = recordCrash(context, event, crashDuringTurn(params));
-
-        enqueueCrashedSubagents(enqueue, context, crash.subagents);
-
-        if (crash.turnEnding) enqueue.assign({ turnEnding: crash.turnEnding });
-
-        if (crash.announce) enqueue.sendTo('feed', crash.announce);
+        enqueueTurnStep(
+          enqueue,
+          context,
+          sessionTurn.crash(context, event, crashDuringTurn(params)),
+        );
       },
     ),
     discloseInterruption: enqueueActions(({ context, enqueue }): void => {
@@ -1452,7 +1446,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'closing',
                   actions: {
                     type: 'endTurn',
-                    params: connectionLostDuringTurn,
+                    params: sessionTurn.connectionLost,
                   },
                 },
               },
@@ -1467,14 +1461,14 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'closing',
                   actions: {
                     type: 'endTurn',
-                    params: connectionLostDuringTurn,
+                    params: sessionTurn.connectionLost,
                   },
                 },
                 onError: {
                   target: 'closing',
                   actions: {
                     type: 'endTurn',
-                    params: connectionLostDuringTurn,
+                    params: sessionTurn.connectionLost,
                   },
                 },
               },

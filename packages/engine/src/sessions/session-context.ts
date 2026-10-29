@@ -42,8 +42,6 @@ export const acpUpdateEvent = 'acp.update';
 
 export const writeFeedEvent = 'writer.write';
 
-export type EndTurnParameters = AcpTurnOutcome;
-
 export type FailureParameters = { error: unknown };
 
 // What a Session asks the database writer to store, and the commit it may wait on.
@@ -125,7 +123,7 @@ export interface SessionContext extends SessionData {
   acpPrompt: PromptRequest | null;
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
-  acpTurnOutcome: EndTurnParameters | null;
+  acpTurnOutcome: AcpTurnOutcome | null;
   turnEnding: FeedTurnEnding;
   configQueue: Extract<SessionCommand, { type: typeof setConfigEvent }>[];
   applyingConfig: Extract<

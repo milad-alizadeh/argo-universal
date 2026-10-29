@@ -7,7 +7,7 @@ import {
   latestTurnOf,
   readLatestTurnIds,
   storedTurnColumns,
-} from '../turns';
+} from '../stored-turn';
 import type { QueuedSessionRows } from './session-storage';
 
 type StoredTurn = Parameters<typeof decodeStoredTurn>[0];

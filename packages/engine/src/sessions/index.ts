@@ -29,7 +29,7 @@ export { pendingInputRequest } from './pending-input';
 
 export { createSessionSnapshotWatcher } from './snapshot';
 
-export { watchTurnActivity } from './turn/turn-activity';
+export { watchTurnActivity } from './turn';
 
 export { createSessionReader, readSessionRow } from './session-record';
 

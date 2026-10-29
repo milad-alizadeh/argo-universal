@@ -1,22 +1,19 @@
-import type { ContentBlock } from '@repo/contracts';
 import { currentModel } from '../configuration';
 import type { SessionContext, SessionWrite } from '../session-context';
 import { TurnInsertJob } from '../session-storage/session-storage';
+import { turnStep, type TurnStep } from './values';
 
-export type StartTurnParameters = { turnId: string; content: ContentBlock[] };
-
-type StartedTurn = {
-  change: Pick<
-    SessionContext,
-    'activeTurnId' | 'activeTurnStartedAt' | 'turnEnding' | 'kept'
-  >;
-  write: SessionWrite;
+type StartingSession = Pick<SessionContext, 'sessionId' | 'configOptions'> & {
+  input: Pick<SessionContext['input'], 'now'>;
 };
 
 const startChange = (
   turnId: string,
   startedAt: number,
-): StartedTurn['change'] => ({
+): Pick<
+  SessionContext,
+  'activeTurnId' | 'activeTurnStartedAt' | 'turnEnding' | 'kept'
+> => ({
   activeTurnId: turnId,
   activeTurnStartedAt: startedAt,
   turnEnding: { kind: 'completion' },
@@ -24,7 +21,7 @@ const startChange = (
 });
 
 const startWrite = (
-  context: SessionContext,
+  context: StartingSession,
   turnId: string,
   startedAt: number,
 ): SessionWrite => ({
@@ -39,14 +36,15 @@ const startWrite = (
   }),
 });
 
+// A Turn begins: it is active, and stored as running with the model the Session runs now.
 export const startTurn = (
-  context: SessionContext,
+  context: StartingSession,
   turnId: string,
-): StartedTurn => {
+): TurnStep => {
   const startedAt = context.input.now();
 
-  return {
+  return turnStep({
     change: startChange(turnId, startedAt),
-    write: startWrite(context, turnId, startedAt),
-  };
+    writes: [startWrite(context, turnId, startedAt)],
+  });
 };

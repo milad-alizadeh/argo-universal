@@ -6,7 +6,7 @@ import { pendingInputRequest } from './pending-input';
 import type { SessionRowSources } from './router-deps';
 import { readQueuedSessionRows } from './session-storage/session-storage';
 import { readOpenSession } from './session-system';
-import { decodeStoredTurn, storedTurnColumns } from './turns';
+import { decodeStoredTurn, storedTurnColumns } from './stored-turn';
 
 function readStoredTurn(
   deps: SessionRowSources,

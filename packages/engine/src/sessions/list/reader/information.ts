@@ -7,7 +7,7 @@ import {
 } from '@repo/contracts';
 import { newestRows, readQueuedFeed } from '../../../feed';
 import type { SessionActorRef } from '../../session-machine';
-import { latestTurnOf } from '../../turns';
+import { latestTurnOf } from '../../stored-turn';
 import { toSessionInfo, type SessionInfoInput } from '../information';
 import type { SessionListState } from '../state';
 import { readStoredActivity } from './activity-query';
