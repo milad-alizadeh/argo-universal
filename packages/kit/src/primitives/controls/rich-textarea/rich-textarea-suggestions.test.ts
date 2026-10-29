@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   insertSuggestion,
+  insertWordAtCaret,
   matchSuggestionTrigger,
   suggestionsAtCaret,
   type ComposerSuggestion,
@@ -75,6 +76,30 @@ describe('suggestionsAtCaret', () => {
 
   it('follows the caret, not the end of the text', () => {
     expect(offered('/re later', 3)).toEqual(['review', 'rename']);
+  });
+});
+
+describe('insertWordAtCaret', () => {
+  it.each([
+    ['', 0, 1],
+    ['Run', 3, 5],
+    ['Run ', 4, 5],
+    ['Run\n', 4, 5],
+    ['Run later', 3, 5],
+    ['Run later', 0, 1],
+  ])('leaves the caret after a word put at %j, %i', (text, caret, expected) => {
+    expect(insertWordAtCaret(text, caret, '/').caret).toBe(expected);
+  });
+
+  it.each([
+    ['', 0, '/'],
+    ['Run', 3, 'Run /'],
+    ['Run ', 4, 'Run /'],
+    ['Run\n', 4, 'Run\n/'],
+    ['Run later', 3, 'Run / later'],
+    ['Run later', 0, '/Run later'],
+  ])('writes %j with the caret at %i as %j', (text, caret, expected) => {
+    expect(insertWordAtCaret(text, caret, '/').text).toBe(expected);
   });
 });
 

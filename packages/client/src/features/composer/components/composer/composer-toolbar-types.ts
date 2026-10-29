@@ -1,12 +1,15 @@
 import type { ComposerLayout, ComposerProps } from './composer-types';
 
-export type AttachLayout = Pick<ComposerLayout, 'wide' | 'inactive'> & {
+export type AttachLayout = Pick<
+  ComposerLayout,
+  'wide' | 'inactive' | 'field'
+> & {
   props: Pick<
     ComposerProps,
     | 'onAttachImages'
     | 'onAttachCamera'
     | 'onAttachFiles'
-    | 'onSelectSlashCommand'
+    | 'slashCommands'
     | 'onCreateGoal'
   >;
 };

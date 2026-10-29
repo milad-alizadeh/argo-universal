@@ -58,7 +58,6 @@ export function attachmentMenus(width: number): Story {
     args: {
       onAttachCamera: fn(),
       onAttachFiles: fn(),
-      onSelectSlashCommand: fn(),
       onCreateGoal: fn(),
     },
     play: async ({ canvas, userEvent, args }) => {
@@ -74,7 +73,6 @@ export function attachmentMenus(width: number): Story {
             ] as const)
           : ([
               ['Files', args.onAttachFiles],
-              ['Slash Commands', args.onSelectSlashCommand],
               ['Goal', args.onCreateGoal],
             ] as const);
 

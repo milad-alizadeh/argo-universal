@@ -1,5 +1,8 @@
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
-import { RichTextarea } from '@repo/kit/primitives/controls/rich-textarea';
+import {
+  RichTextarea,
+  type SuggestionSource,
+} from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
@@ -12,7 +15,7 @@ import type {
 } from './composer-card-types';
 import { ComposerToolbar } from './composer-toolbar';
 import { ComposerBottomTray } from './composer-trays';
-import type { ComposerDraft } from './composer-types';
+import type { ComposerDraft, ComposerProps } from './composer-types';
 
 const cardGlass = {
   corners: 'sheet',
@@ -91,15 +94,28 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   };
 }
 
-function ComposerText(layout: TextLayout): React.JSX.Element {
-  const commands = layout.props.slashCommands;
-
-  const suggestions = useMemo(
+function useSlashSuggestions(
+  commands: ComposerProps['slashCommands'],
+): SuggestionSource[] {
+  return useMemo(
     () => (commands?.length ? [slashCommandSource(commands)] : []),
     [commands],
   );
+}
 
-  return <RichTextarea {...textInputProps(layout)} suggestions={suggestions} />;
+function ComposerText({
+  field: { attach },
+  ...layout
+}: TextLayout): React.JSX.Element {
+  const suggestions = useSlashSuggestions(layout.props.slashCommands);
+
+  return (
+    <RichTextarea
+      {...textInputProps(layout)}
+      ref={attach}
+      suggestions={suggestions}
+    />
+  );
 }
 
 // The padding sits on the field, so a press anywhere in the white area focuses it.
@@ -112,7 +128,7 @@ function textInputProps({
   props,
   inactive,
   send,
-}: TextLayout): React.ComponentProps<typeof RichTextarea> {
+}: Omit<TextLayout, 'field'>): React.ComponentProps<typeof RichTextarea> {
   return {
     ...textFieldLook,
     autoFocus: !inactive,

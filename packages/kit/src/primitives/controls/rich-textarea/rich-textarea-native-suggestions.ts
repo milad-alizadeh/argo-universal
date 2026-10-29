@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { TextInputProps } from 'react-native';
+import type { RichTextareaHandle } from './rich-textarea-props';
 import {
   insertSuggestion,
+  insertWordAtCaret,
   suggestionsAtCaret,
   type ComposerSuggestion,
   type SuggestionGroup,
@@ -21,6 +23,7 @@ export interface NativeSuggestions {
     'onChangeText' | 'onSelectionChange' | 'selection'
   >;
   choose: (suggestion: ComposerSuggestion) => void;
+  insertWord: RichTextareaHandle['insertWord'];
 }
 
 interface CaretState {
@@ -80,6 +83,19 @@ function chooser(
   };
 }
 
+function wordInserter(
+  value: string,
+  caret: CaretState,
+  onChangeText: (value: string) => void,
+): NativeSuggestions['insertWord'] {
+  return (word) => {
+    const inserted = insertWordAtCaret(value, caret.position, word);
+
+    caret.place({ start: inserted.caret, end: inserted.caret });
+    onChangeText(inserted.text);
+  };
+}
+
 // Typing hands the caret back to the field.
 function typer(
   caret: CaretState,
@@ -116,5 +132,6 @@ export function useNativeSuggestions(
       : null,
     fieldProps: fieldProps(caret, onChangeText),
     choose: chooser(value, caret, onChangeText),
+    insertWord: wordInserter(value, caret, onChangeText),
   };
 }

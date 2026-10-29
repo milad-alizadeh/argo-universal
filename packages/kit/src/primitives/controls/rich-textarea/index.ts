@@ -1,6 +1,9 @@
 export { RichTextarea } from './rich-textarea';
 
-export { type RichTextareaProps } from './rich-textarea-props';
+export {
+  type RichTextareaHandle,
+  type RichTextareaProps,
+} from './rich-textarea-props';
 
 export type {
   ComposerSuggestion,

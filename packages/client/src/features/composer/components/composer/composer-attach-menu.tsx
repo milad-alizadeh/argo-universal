@@ -62,7 +62,7 @@ function ComposerAttachItems({
   close,
 }: AttachMenuProps): React.JSX.Element {
   const choices = layout.wide
-    ? wideChoices(layout.props)
+    ? wideChoices(layout)
     : phoneChoices(layout.props);
 
   return (
@@ -74,25 +74,29 @@ function ComposerAttachItems({
   );
 }
 
-type WideAttachChoices = Pick<
-  AttachLayout['props'],
-  'onAttachFiles' | 'onAttachImages' | 'onSelectSlashCommand' | 'onCreateGoal'
->;
+function wideChoices(layout: AttachLayout): AttachChoice[] {
+  const { props } = layout;
 
-function wideChoices(props: WideAttachChoices): AttachChoice[] {
   return [
     {
       label: 'Files',
       icon: 'folder',
       onPress: props.onAttachFiles ?? props.onAttachImages,
     },
-    {
-      label: 'Slash Commands',
-      icon: 'code',
-      onPress: props.onSelectSlashCommand,
-    },
+    slashCommandsChoice(layout),
     { label: 'Goal', icon: 'goal', onPress: props.onCreateGoal },
   ];
+}
+
+// Chosen, it writes a `/` into the message field, which opens the field's menu; with no commands there is nothing to open.
+function slashCommandsChoice({ props, field }: AttachLayout): AttachChoice {
+  return {
+    label: 'Slash Commands',
+    icon: 'code',
+    onPress: props.slashCommands?.length
+      ? () => field.insertWord('/')
+      : undefined,
+  };
 }
 
 function phoneChoices(

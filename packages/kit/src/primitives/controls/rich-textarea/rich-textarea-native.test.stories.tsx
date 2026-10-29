@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { createRef, type RefObject } from 'react';
 import type * as React from 'react';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { exampleLabel } from './rich-textarea-example.mocks';
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
-import type { RichTextareaProps } from './rich-textarea-props';
+import type {
+  RichTextareaHandle,
+  RichTextareaProps,
+} from './rich-textarea-props';
 import { RichTextarea } from './rich-textarea.native';
 
 // The phone drawing, drawn on the web preview: a controlled field that keeps its draft.
@@ -116,3 +120,32 @@ export const MovingTheCaretOutOfTheWordHidesTheList: Story = {
     );
   },
 };
+
+function insertingWord(initial: string): Story {
+  const handle: RefObject<RichTextareaHandle | null> = createRef();
+
+  return {
+    args: { ref: handle },
+    play: async ({ canvas, args }) => {
+      const field = canvas.getByRole<HTMLTextAreaElement>('textbox', {
+        name: exampleLabel,
+      });
+
+      if (initial) await userEvent.type(field, initial);
+      handle.current?.insertWord('/');
+      await waitFor(() =>
+        expect(args.onChangeText).toHaveBeenLastCalledWith(
+          initial === '' || initial.endsWith(' ')
+            ? `${initial}/`
+            : `${initial} /`,
+        ),
+      );
+      await expect(field).toHaveFocus();
+      await canvas.findByRole('button', firstOption);
+    },
+  };
+}
+
+export const InsertWordOpensTheListInAnEmptyField = insertingWord('');
+
+export const InsertWordSpacesAfterText = insertingWord('Run');

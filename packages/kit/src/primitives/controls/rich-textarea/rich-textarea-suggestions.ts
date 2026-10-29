@@ -79,6 +79,21 @@ export function suggestionsAtCaret(
   return groups.length > 0 ? groups : null;
 }
 
+// Puts a word at the caret, a space before it unless the text before is empty or ends in whitespace.
+export function insertWordAtCaret(
+  text: string,
+  caret: number,
+  word: string,
+): InsertedText {
+  const before = text.slice(0, caret);
+  const inserted = (/(?:^|\s)$/.test(before) ? '' : ' ') + word;
+
+  return {
+    text: before + inserted + text.slice(caret),
+    caret: caret + inserted.length,
+  };
+}
+
 // Replaces the `/` word before the caret with the suggestion's text; the caret lands after it.
 export function insertSuggestion(
   text: string,

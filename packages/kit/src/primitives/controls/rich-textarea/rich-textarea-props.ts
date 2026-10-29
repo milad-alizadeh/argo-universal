@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ReferenceOption } from './rich-textarea-references';
 import type { SuggestionSource } from './rich-textarea-suggestions';
 
@@ -7,6 +8,12 @@ export type {
 } from './rich-textarea-suggestions';
 
 export type { ReferenceOption } from './rich-textarea-references';
+
+// What a parent can ask of the field, on every platform.
+export interface RichTextareaHandle {
+  // Focuses the field and puts the word at the caret, a space before it when the text there is not whitespace.
+  insertWord: (word: string) => void;
+}
 
 // One API on every platform: the value is a markdown string (ADR-0023).
 export interface RichTextareaProps {
@@ -24,6 +31,7 @@ export interface RichTextareaProps {
   fieldClassName?: string;
   // Focus the field when it mounts; the web editor only, as a phone keyboard should not open unasked.
   autoFocus?: boolean;
+  ref?: React.Ref<RichTextareaHandle>;
 }
 
 /*
