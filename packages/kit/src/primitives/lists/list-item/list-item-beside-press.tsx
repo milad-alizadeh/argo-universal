@@ -1,7 +1,11 @@
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '../../../utils';
-import { PassThroughContext, RowPressContext } from './list-item-pass-through';
+import {
+  hasAccessories,
+  PassThroughContext,
+  RowPressContext,
+} from './list-item-pass-through';
 import { usePressLanes } from './list-item-press-class';
 import type { DrawingProps, RowPressProps } from './list-item-press-props';
 import { ItemContentSlots } from './list-item-slots';
@@ -14,6 +18,15 @@ import { ItemContentSlots } from './list-item-slots';
 interface BesidePressProps {
   props: DrawingProps;
   press: RowPressProps;
+}
+
+// Keep the row's press target mounted when asynchronous accessories appear.
+export function besidePressFor(props: DrawingProps, tile: boolean): boolean {
+  if (hasAccessories(props)) return true;
+
+  if (tile) return false;
+
+  return [props.onPress, props.href].some(Boolean);
 }
 
 export function BesidePress({ props, press }: BesidePressProps): ReactElement {
