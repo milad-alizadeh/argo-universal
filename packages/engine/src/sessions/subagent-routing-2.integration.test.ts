@@ -16,6 +16,10 @@ const missingSubagent = 'No Subagent was persisted';
 
 type RowUpdate = Extract<FeedSubscribeOutput, { type: 'row.upsert' }>;
 
+type AgentMessageUpdate = RowUpdate & {
+  row: Extract<RowUpdate['row'], { sessionUpdate: 'agent_message' }>;
+};
+
 function isLaterRow(event: RowUpdate): boolean {
   return (
     event.row.sessionUpdate === 'agent_message' &&
@@ -25,7 +29,7 @@ function isLaterRow(event: RowUpdate): boolean {
 
 function isLaterMessage(
   event: FeedSubscribeOutput | undefined,
-): event is RowUpdate {
+): event is AgentMessageUpdate {
   return event?.type === 'row.upsert' && isLaterRow(event);
 }
 
@@ -39,7 +43,7 @@ async function waitForSnapshot(
 
 async function waitForLaterMessage(
   iterator: AsyncIterator<FeedSubscribeOutput>,
-): Promise<Extract<FeedSubscribeOutput, { type: 'row.upsert' }>> {
+): Promise<AgentMessageUpdate> {
   let next = await iterator.next();
 
   while (!isLaterMessage(next.value)) next = await iterator.next();

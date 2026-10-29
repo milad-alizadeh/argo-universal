@@ -1,4 +1,5 @@
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
+import type { FeedSubscribeOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import {
@@ -6,6 +7,10 @@ import {
   promptInput,
   rowUpsertEvent,
 } from './session-machine.test.mocks';
+
+function isRunningSnapshot(event: FeedSubscribeOutput): boolean {
+  return event.type === snapshotEvent && event.snapshot.state === 'running';
+}
 
 it('attaches live Feed updates when a subscription starts while the Session opens', async () => {
   const opening = Promise.withResolvers<NewSessionRequest>();
@@ -50,10 +55,6 @@ it('attaches live Feed updates when a subscription starts while the Session open
       event = (await updates.next()).value;
 
     return event;
-  }
-
-  function isRunningSnapshot(event: NonNullable<Update>): boolean {
-    return event.type === snapshotEvent && event.snapshot.state === 'running';
   }
 
   async function nextRow(): Promise<Update> {
