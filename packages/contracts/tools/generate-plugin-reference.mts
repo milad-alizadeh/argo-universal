@@ -1,6 +1,5 @@
 import { readdir, readFile, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { pluginKitDeclarations } from './plugin-kit-declarations';
 import {
   documentedComponentNames,
   renderIndex,
@@ -14,11 +13,6 @@ const outputDirectory = resolve(
 
 const checking = process.argv.includes('--check');
 
-const kitDeclarationFile = resolve(
-  import.meta.dirname,
-  '../../plugin-kit/src/components.gen.d.ts',
-);
-
 const componentPages = (): (readonly [string, string])[] =>
   documentedComponentNames.map(
     (name) =>
@@ -28,7 +22,6 @@ const componentPages = (): (readonly [string, string])[] =>
 function generatedFiles(): Map<string, string> {
   return new Map([
     ...componentPages(),
-    [kitDeclarationFile, pluginKitDeclarations()],
     [
       resolve(outputDirectory, 'index.md'),
       renderIndex(documentedComponentNames),
