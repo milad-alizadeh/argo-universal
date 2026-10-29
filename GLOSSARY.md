@@ -66,6 +66,14 @@ _Avoid_: Permission level, risk level
 What an Operation started that its caller can wait for by a wait id: a Session opening, a Turn, or the Operation's own Tool call. A wait gives up after ninety seconds and never stops the work.
 _Avoid_: Job, task
 
+**Session directory**:
+The Sessions an Operation can see, read the way the Operations that act on them read them: the stored row with the Writer's queued changes over it, and a Session that is still opening. A Session caller's scope and the Operations themselves read the same directory, so they never disagree about which Sessions exist.
+_Avoid_: Session registry, Session lookup
+
+**Session work source**:
+Where an Operation reads and watches its Operation work: a Session opening, a Turn, or an Operation's Tool call, read again on each change.
+_Avoid_: Work store, work tracker
+
 ## Plugins
 
 **Plugin**:
