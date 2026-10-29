@@ -44,8 +44,11 @@ it.each(cases)('%j %s', async (scopedOperation, outcome) => {
   expect((await scoped(scopedOperation)).outcome).toBe(outcome);
 });
 
-it('runs with the params it parsed once, and lists its own Project by default', async () => {
+it('runs a listing with the params it parsed once, in its own Project by default', async () => {
   expect((await scoped(list({}))).invoked).toEqual([list({ projectId: 'p1' })]);
+});
+
+it('never runs an Operation whose params fail to parse', async () => {
   expect(
     (await scoped(operation('session.cancel', { sessionId: 7 }))).invoked,
   ).toEqual([]);

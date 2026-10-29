@@ -12,7 +12,7 @@ import { openAccessSession, sessionIdentityStep } from '#mocks/session-access';
 const notFound = { data: { code: 'NOT_FOUND' } };
 
 // Owner, 2026-10-28: only session.close acts on a Session that is still opening.
-it('refuses cancel, rename and Shell stop on a still-opening Session for every caller, and closes it', async () => {
+it('refuses cancel, rename and Shell stop on a still-opening Session for every caller', async () => {
   const { host, caller, sessionId, release } = await openingDelegation();
   const user = await operationCaller(host);
   const cancel = { sessionId };
@@ -40,7 +40,13 @@ it('refuses cancel, rename and Shell stop on a still-opening Session for every c
   await expect(host.caller.shell.stop(stop)).rejects.toMatchObject({
     code: 'NOT_FOUND',
   });
-  expect(await host.caller.session.close(cancel)).toEqual({});
+  release.resolve();
+}, 30_000);
+
+it('closes a still-opening Session', async () => {
+  const { host, sessionId, release } = await openingDelegation();
+
+  expect(await host.caller.session.close({ sessionId })).toEqual({});
   release.resolve();
 }, 30_000);
 
