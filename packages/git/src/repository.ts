@@ -1,8 +1,8 @@
 import { realpath } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 import { z } from 'zod';
+import { git } from './git';
 import { rejectResponse } from './reject-response';
-import { run } from './run';
 
 const branchRefPrefix = 'refs/heads/';
 
@@ -69,14 +69,11 @@ export async function readRepository(
   const directory = await realpath(path);
 
   const responses = await Promise.all([
-    run(['-C', directory, 'rev-parse', '--show-toplevel']),
-    run(['-C', directory, 'rev-parse', '--git-common-dir']),
+    git(directory, ['rev-parse', '--show-toplevel']),
+    git(directory, ['rev-parse', '--git-common-dir']),
   ]);
 
-  return parseRepositoryPaths(
-    directory,
-    responses.map(({ stdout }): string => stdout),
-  );
+  return parseRepositoryPaths(directory, responses);
 }
 
 const repositoryPaths = z.tuple([
@@ -104,12 +101,12 @@ export async function listBranches(
   projectPath: string,
   signal?: AbortSignal,
 ): Promise<{ branches: string[]; currentBranch: string | null }> {
-  const git = (...arguments_: string[]): ReturnType<typeof run> =>
-    run(['-C', projectPath, ...arguments_], signal);
+  const inProject: ProjectGit = (...arguments_) =>
+    git(projectPath, arguments_, signal);
 
-  const [{ stdout }, head] = await Promise.all([
-    git('for-each-ref', '--format=%(refname)', 'refs/heads/'),
-    currentHead(git),
+  const [stdout, head] = await Promise.all([
+    inProject('for-each-ref', '--format=%(refname)', 'refs/heads/'),
+    currentHead(inProject),
   ]);
 
   signal?.throwIfAborted();
@@ -117,11 +114,11 @@ export async function listBranches(
   return parseBranches(stdout, head);
 }
 
-function currentHead(
-  git: (...args: string[]) => ReturnType<typeof run>,
-): Promise<string | null> {
-  return git('symbolic-ref', '--quiet', 'HEAD').then(
-    ({ stdout }): string => stdout.trim(),
+type ProjectGit = (...args: string[]) => Promise<string>;
+
+function currentHead(inProject: ProjectGit): Promise<string | null> {
+  return inProject('symbolic-ref', '--quiet', 'HEAD').then(
+    (stdout): string => stdout.trim(),
     (): null => null,
   );
 }

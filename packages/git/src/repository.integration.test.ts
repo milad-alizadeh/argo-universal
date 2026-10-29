@@ -7,9 +7,9 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { isSessionBranch, readRepository, sessionBranch } from '@repo/git';
-import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
+import { isSessionBranch, readRepository, sessionBranch } from './index';
+import { initTestRepository } from './test-repository.test.mocks';
 
 it('reads the repository root and common directory from a nested path', async (): Promise<void> => {
   const directory = realpathSync(

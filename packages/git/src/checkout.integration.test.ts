@@ -8,9 +8,9 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createCheckout, discardCheckout } from '@repo/git';
-import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
+import { createCheckout, discardCheckout } from './index';
+import { initTestRepository } from './test-repository.test.mocks';
 
 const occupiedBranch = 'argo/occupied';
 

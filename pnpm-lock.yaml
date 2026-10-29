@@ -1480,6 +1480,9 @@ importers:
 
   packages/git:
     dependencies:
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../machine-log

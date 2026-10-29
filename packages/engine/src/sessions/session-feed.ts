@@ -1,10 +1,11 @@
+import { readChangesSummary } from '@repo/git';
 import {
   readQueuedFeedRow,
   readUnaddressedPlan,
   readWrittenRow,
   type FeedInput,
 } from '../feed';
-import { readDefaultChangesSummary } from './changes-summary';
+import { readProjectPath } from '../projects';
 import type { SessionContext } from './session-context';
 
 type FeedPosition = Pick<
@@ -48,12 +49,11 @@ const findUnaddressedPlan = (
 
 const refreshChanges = (
   context: SessionContext,
-): ReturnType<typeof readDefaultChangesSummary> =>
-  readDefaultChangesSummary(
-    context.input.database,
-    context.projectId,
-    context.checkout.path,
-  );
+): ReturnType<typeof readChangesSummary> =>
+  readChangesSummary({
+    checkout: context.checkout.path,
+    projectCheckout: readProjectPath(context.input.database, context.projectId),
+  });
 
 // The Session's Feed reads stored and queued rows from its opened position.
 export const sessionFeedInput = (

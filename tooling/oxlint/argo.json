@@ -1305,6 +1305,10 @@
                   "!@repo/machine-log"
                 ],
                 "message": "git imports only contracts and machine-log from the workspace."
+              },
+              {
+                "group": ["./changes/*"],
+                "message": "Checkout changes is read only through ./changes, its index."
               }
             ]
           }

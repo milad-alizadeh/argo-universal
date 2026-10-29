@@ -1,4 +1,4 @@
-import { rejectResponse } from './reject-response';
+import { rejectResponse } from '../reject-response';
 
 const porcelainCodeLength = 3;
 
@@ -112,7 +112,13 @@ function countsFor(counts: Map<string, LineCounts>, path: string): LineCounts {
   return counts.get(path) ?? { additions: 0, deletions: 0 };
 }
 
-export function trackedFiles(status: string, numstat: string): CheckoutFile[] {
+// A tracked file's counts, read for its own paths after the whole comparison named it.
+export function withCounts(file: CheckoutFile, numstat: string): CheckoutFile {
+  return { ...file, ...countsFor(numstatCounts(numstat), file.path) };
+}
+
+// `numstat` is left out when only the names matter; every count is then 0.
+export function trackedFiles(status: string, numstat = ''): CheckoutFile[] {
   const counts = numstatCounts(numstat);
   const files: CheckoutFile[] = [];
   const fields = status.split('\0');

@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { trackedFiles, untrackedFile } from './changes-parse';
+import { trackedFiles, untrackedFile } from './parse';
 
 const unknownStatus = 'Unrecognised git status response';
 

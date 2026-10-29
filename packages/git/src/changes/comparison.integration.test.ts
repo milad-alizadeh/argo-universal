@@ -1,13 +1,13 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { listComparisonBranches, readCheckoutChanges } from '@repo/git';
 import { expect, it } from 'vitest';
 import {
   commit,
   remoteFeatureRef,
   repository,
   sessionWorktree,
-} from './git-changes-fixture';
+} from '../test-repository.test.mocks';
+import { listComparisonBranches, readChangedFiles } from '.';
 
 async function remoteCheckout(): Promise<{
   directory: string;
@@ -37,16 +37,27 @@ it('compares against a remote-tracking branch ref', async () => {
 
   writeFileSync(join(checkout, 'draft.txt'), 'draft\n');
 
-  expect(
-    (
-      await readCheckoutChanges(checkout, directory, {
-        type: 'branch',
-        branch: remoteFeatureRef,
-      })
-    ).files,
-  ).toEqual([
+  const { files } = await readChangedFiles({
+    checkout,
+    projectCheckout: directory,
+    comparison: { branch: remoteFeatureRef },
+  });
+
+  expect(files).toEqual([
     { operation: 'add', path: 'draft.txt', additions: 1, deletions: 0 },
   ]);
+});
+
+it('compares against a local branch by its name', async () => {
+  const { directory, checkout } = await remoteCheckout();
+
+  const { files } = await readChangedFiles({
+    checkout,
+    projectCheckout: directory,
+    comparison: { branch: 'main' },
+  });
+
+  expect(files).toEqual([]);
 });
 
 it('uses a linked Project Checkout as the main comparison', async () => {
@@ -58,6 +69,7 @@ it('uses a linked Project Checkout as the main comparison', async () => {
   await commit(git, 'Shared feature');
   await git('switch', '-q', 'main');
   const projectCheckout = join(directory, 'project');
+
   await git(
     'worktree',
     'add',
@@ -69,11 +81,10 @@ it('uses a linked Project Checkout as the main comparison', async () => {
   );
   const checkout = await sessionWorktree(directory, git);
 
-  expect(
-    await readCheckoutChanges(checkout, projectCheckout, { type: 'main' }),
-  ).toEqual({
+  expect(await readChangedFiles({ checkout, projectCheckout })).toEqual({
     mainBranch: 'project-linked',
     files: [],
     summary: { files: 0, additions: 0, deletions: 0 },
+    nextCursor: null,
   });
 });

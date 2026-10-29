@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { realpath } from 'node:fs/promises';
+import { git } from './git';
 import { listBranches, readMainCheckout, type Checkout } from './repository';
-import { run } from './run';
 
 // Removes a worktree that no Turn ran in, with its new branch.
 export async function discardCheckout(
@@ -30,8 +30,9 @@ async function removeWorktree(
 ): Promise<void> {
   const flags = options.force ? ['--force', '--force'] : [];
 
-  await run(
-    ['-C', projectPath, 'worktree', 'remove', ...flags, path],
+  await git(
+    projectPath,
+    ['worktree', 'remove', ...flags, path],
     options.signal,
   );
 }
@@ -44,7 +45,7 @@ async function deleteBranch(
   if (!branch) return;
 
   if ((await listBranches(projectPath, signal)).branches.includes(branch))
-    await run(['-C', projectPath, 'branch', '-D', branch], signal);
+    await git(projectPath, ['branch', '-D', branch], signal);
 }
 
 async function isMainCheckout(
@@ -52,12 +53,9 @@ async function isMainCheckout(
   checkout: Checkout,
   signal?: AbortSignal,
 ): Promise<boolean> {
-  const { stdout } = await run(
-    ['-C', projectPath, 'worktree', 'list', '--porcelain', '-z'],
-    signal,
+  const main = readMainCheckout(
+    await git(projectPath, ['worktree', 'list', '--porcelain', '-z'], signal),
   );
-
-  const main = readMainCheckout(stdout);
 
   return (await realpath(main.path)) === (await realpath(checkout.path));
 }
@@ -71,8 +69,9 @@ export async function removeCheckout(
   if (!existsSync(checkout.path)) return;
 
   if (await isMainCheckout(projectPath, checkout, signal)) return;
-  await run(
-    ['-C', projectPath, 'worktree', 'remove', '--force', checkout.path],
+  await git(
+    projectPath,
+    ['worktree', 'remove', '--force', checkout.path],
     signal,
   );
 }

@@ -2,13 +2,13 @@ import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { discardWorktree } from './checkout-removal';
+import { git } from './git';
 import {
   listBranches,
   readMainCheckout,
   type Checkout,
   type CheckoutChoice,
 } from './repository';
-import { run } from './run';
 
 export { discardCheckout, removeCheckout } from './checkout-removal';
 
@@ -38,12 +38,13 @@ export async function createCheckout(
   input: CheckoutInput,
   signal?: AbortSignal,
 ): Promise<Checkout> {
-  const { stdout } = await run(
-    ['-C', input.projectPath, 'worktree', 'list', '--porcelain', '-z'],
-    signal,
+  const main = readMainCheckout(
+    await git(
+      input.projectPath,
+      ['worktree', 'list', '--porcelain', '-z'],
+      signal,
+    ),
   );
-
-  const main = readMainCheckout(stdout);
 
   if (input.choice.type === 'main') return main;
 
@@ -120,14 +121,12 @@ async function runAdd(
   checkout: Checkout,
   signal?: AbortSignal,
 ): Promise<void> {
-  await run(addArguments(input, checkout), signal);
+  await git(input.projectPath, addArguments(input, checkout), signal);
 }
 
 // A full ref keeps the base a local branch, and never an option.
 function addArguments(input: WorktreeInput, checkout: Checkout): string[] {
   return [
-    '-C',
-    input.projectPath,
     'worktree',
     'add',
     '-b',

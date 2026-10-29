@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
+import { readChangesSummary } from '@repo/git';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
@@ -7,11 +8,11 @@ import { type FeedDeps } from '../feed';
 import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PluginsRouterDeps } from '../plugins';
+import { readProjectPath } from '../projects';
 import {
   createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
-  readDefaultChangesSummary,
   type SessionRouterDeps,
 } from '../sessions';
 import type { SystemDeps } from '../system';
@@ -75,11 +76,10 @@ function createStoredChangesReader(
   return (sessionId) => {
     const session = readSession(sessionId);
 
-    return readDefaultChangesSummary(
-      input.database,
-      session.projectId,
-      session.checkout.path,
-    );
+    return readChangesSummary({
+      checkout: session.checkout.path,
+      projectCheckout: readProjectPath(input.database, session.projectId),
+    });
   };
 }
 

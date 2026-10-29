@@ -1,13 +1,15 @@
-import { git } from './changes-git';
+import type { SessionChangesInput, SessionComparison } from '@repo/contracts';
+import { git } from '../git';
 
 const headsPrefix = 'refs/heads/';
 
 const remotesPrefix = 'refs/remotes/';
 
-export type ChangeComparison =
-  | { type: 'main' }
-  | { type: 'uncommitted' }
-  | { type: 'branch'; branch: string };
+// Which Checkout to read, and what to compare it against; the main comparison when none is given.
+export type ChangesSelection = Pick<SessionChangesInput, 'comparison'> & {
+  checkout: string;
+  projectCheckout: string;
+};
 
 async function mainBranch(projectCheckout: string): Promise<string | null> {
   return (
@@ -15,29 +17,12 @@ async function mainBranch(projectCheckout: string): Promise<string | null> {
   );
 }
 
-// Every changed path against the base, renames paired, as `git diff --name-status -z` prints them.
-export const nameStatus = (base: string): string[] => [
-  'diff',
-  '--name-status',
-  '-z',
-  '-M',
-  base,
-];
-
-// The working tree's state, untracked files listed one by one.
-export const worktreeStatus = [
-  'status',
-  '--porcelain=v1',
-  '-z',
-  '--untracked-files=all',
-];
-
 async function baseCommit(
   checkout: string,
-  comparison: ChangeComparison,
+  comparison: SessionComparison,
   main: string | null,
 ): Promise<string> {
-  if (comparison.type === 'uncommitted') return 'HEAD';
+  if (comparison === 'uncommitted') return 'HEAD';
   const branch = comparisonBranchName(comparison, main);
   const ref = branch.startsWith('refs/') ? branch : `${headsPrefix}${branch}`;
 
@@ -47,10 +32,10 @@ async function baseCommit(
 }
 
 function comparisonBranchName(
-  comparison: Exclude<ChangeComparison, { type: 'uncommitted' }>,
+  comparison: Exclude<SessionComparison, 'uncommitted'>,
   main: string | null,
 ): string {
-  const branch = comparison.type === 'main' ? main : comparison.branch;
+  const branch = comparison === 'main' ? main : comparison.branch;
 
   if (!branch) throw new Error('The main Checkout has no branch');
 
@@ -74,18 +59,22 @@ async function requireBranch(
   if (!local.includes(ref)) throw new Error(`No branch ${branch}`);
 }
 
-type ComparisonBase = { main: string | null; base: string };
-
+// The commit the Checkout is compared from, and the branch the Project's main Checkout is on.
 export async function comparisonBase(
-  checkout: string,
-  projectCheckout: string,
-  comparison: ChangeComparison,
-): Promise<ComparisonBase> {
-  const main = await mainBranch(projectCheckout);
+  selection: ChangesSelection,
+): Promise<{ main: string | null; base: string }> {
+  const main = await mainBranch(selection.projectCheckout);
 
-  return { main, base: await baseCommit(checkout, comparison, main) };
+  const base = await baseCommit(
+    selection.checkout,
+    selection.comparison ?? 'main',
+    main,
+  );
+
+  return { main, base };
 }
 
+// The branches a Checkout can be compared against: local and remote-tracking, by name and full ref.
 export async function listComparisonBranches(
   checkout: string,
 ): Promise<{ name: string; ref: string }[]> {

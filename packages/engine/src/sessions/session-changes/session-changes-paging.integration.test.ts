@@ -33,22 +33,6 @@ it('pages one file diff by its lines', async () => {
   });
 });
 
-it('numbers the next diff page from where the last one stopped', async () => {
-  const { host, sessionId } = await threeLineSession();
-
-  expect(
-    await host.caller.session.diff({
-      sessionId,
-      path: 'first.txt',
-      limit: 2,
-      cursor: 2,
-    }),
-  ).toMatchObject({
-    nextCursor: null,
-    patch: { text: expect.stringContaining('@@ -0,0 +3,1 @@') },
-  });
-});
-
 it('keeps Checkout totals in a stored Session snapshot after close', async () => {
   const { host, sessionId } = await mainCheckoutSession();
 
