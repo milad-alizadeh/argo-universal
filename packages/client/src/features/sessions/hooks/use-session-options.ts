@@ -1,12 +1,12 @@
 import type {
   AgentOptionsUpdate,
-  SessionOpenError,
   SessionAgentOptionsInput,
+  SessionOpenError,
 } from '@repo/contracts';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { skipToken, type SkipToken } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   useTRPC,
   useResubscribeOnReconnect,
@@ -15,152 +15,97 @@ import {
 import { openErrorOf } from '../utils/open-failure';
 import { optionsReadToast } from '../utils/options-read-toast';
 import {
-  type SessionOptions,
-  type SessionOptionsChoice,
-  sessionOptions,
-} from '../utils/session-options';
+  SessionOptionsState,
+  type OptionsChoice,
+  type OptionsSnapshot,
+} from '../utils/session-options-state';
 import { useConnectionDropped } from './use-connection-dropped';
 
-export interface OptionsDiscovery extends SessionOptions {
-  stage?: AgentOptionsUpdate['stage'];
-  commands?: AgentOptionsUpdate['commands'];
-  progress?: number;
-  error?: SessionOpenError;
-  retry: () => void;
+export type OptionsDiscovery = OptionsSnapshot & { retry: () => void };
+
+export interface SessionOptionsRead extends OptionsDiscovery {
+  pick: (configId: string, value: string | boolean) => void;
 }
 
-type Choice = Pick<SessionOptionsChoice, 'agent' | 'projectId' | 'picks'> & {
-  sessionId?: string;
-};
+type ReadFailure = { error: SessionOpenError | undefined; dropped: boolean };
 
-interface Received {
-  owner: string;
-  update: AgentOptionsUpdate;
+type DiscoveryRead = { error: ClientError | null; reset: () => void };
+
+type Change = Dispatch<SetStateAction<SessionOptionsState>>;
+
+function inputOf(
+  choice: OptionsChoice,
+  state: SessionOptionsState,
+): SessionAgentOptionsInput | SkipToken {
+  const { agent, projectId, sessionId } = choice;
+
+  return agent && projectId
+    ? { agent, projectId, sessionId, picks: state.picks }
+    : skipToken;
 }
 
-interface DiscoveryRead {
-  data: AgentOptionsUpdate | undefined;
-  error: ClientError | null;
-  reset: () => void;
+function useOptionsState(choice: OptionsChoice): [SessionOptionsState, Change] {
+  const [previous, change] = useState(() => new SessionOptionsState(choice));
+  const current = previous.forChoice(choice);
+
+  if (current !== previous) change(current);
+
+  return [current, change];
 }
 
-const inputOf = ({
-  agent,
-  projectId,
-  picks,
-  sessionId,
-}: Choice): SessionAgentOptionsInput | SkipToken =>
-  agent && projectId ? { agent, projectId, picks, sessionId } : skipToken;
-
-// Keep the displayed Server snapshot while a changed pick restarts the stream.
-function retainSnapshot(
-  previous: Received | undefined,
-  next: Received,
-): Received {
-  if (!previous) return next;
-
-  return retainOwnedSnapshot(previous, next);
-}
-
-function retainOwnedSnapshot(previous: Received, next: Received): Received {
-  if (next.update.configOptions !== null) return next;
-
-  if (previous.owner !== next.owner) return next;
-
-  return {
-    ...next,
-    update: { ...next.update, configOptions: previous.update.configOptions },
-  };
-}
-
-function useDiscovery(choice: Choice): DiscoveryRead {
-  const owner = ownerOf(choice);
-
-  const [received, setReceived] = useState<Received>();
-
+function useDiscovery(
+  choice: OptionsChoice,
+  state: SessionOptionsState,
+  change: Change,
+): DiscoveryRead {
   const stream = useSubscription({
-    ...useTRPC().session.agentOptions.subscriptionOptions(inputOf(choice)),
-    onData: (update) =>
-      setReceived((previous) => retainSnapshot(previous, { owner, update })),
+    ...useTRPC().session.agentOptions.subscriptionOptions(
+      inputOf(choice, state),
+    ),
+    onData: (update: AgentOptionsUpdate): void =>
+      change((previous) => previous.receive(state.owner, update)),
   });
 
   useResubscribeOnReconnect(stream);
 
-  return {
-    data: currentUpdate(received, owner),
-    error: stream.error,
-    reset: stream.reset,
-  };
+  return stream;
 }
 
-const ownerOf = (choice: Choice): string =>
-  JSON.stringify([choice.agent, choice.projectId, choice.sessionId]);
-
-const currentUpdate = (
-  received: Received | undefined,
-  owner: string,
-): AgentOptionsUpdate | undefined =>
-  received?.owner === owner ? received.update : undefined;
-
-function optionsFailure(read: DiscoveryRead): SessionOpenError | undefined {
-  return read.data?.error ?? openErrorOf(read.error);
-}
-
-function useReadError(
-  read: DiscoveryRead,
+function useReadFailure(
+  error: ClientError | null,
   sessionId: string | undefined,
-): SessionOpenError | undefined {
-  const dropped = useConnectionDropped(read.error);
-  useErrorToast(sessionId ? optionsReadToast(read.error, dropped) : undefined);
+): ReadFailure {
+  const dropped = useConnectionDropped(error);
+  useErrorToast(sessionId ? optionsReadToast(error, dropped) : undefined);
 
-  return dropped ? undefined : optionsFailure(read);
+  return { error: openErrorOf(error), dropped };
 }
 
-function useOptions(
-  read: DiscoveryRead,
-  picks: Choice['picks'],
-  // An Agent and a Project are chosen, so an update is on its way even before the first one lands.
-  chosen: boolean,
-): SessionOptions {
-  const cached = read.data?.configOptions ?? undefined;
-  const opening = isOpening(read, chosen);
-
-  return useMemo(
-    () => sessionOptions(cached, { saved: {}, picks, opening }),
-    [cached, picks, opening],
-  );
-}
-
-/*
- * Loading runs from the pick to the options, in two stretches. The Server reports its own discovery as
- * `configOptions: null`; before that there is a gap in which a newly chosen Agent's stream has said nothing at
- * all, since changing the Agent changes the snapshot's owner and drops the old Agent's update. Counting that
- * gap as settled empties the picker for as long as it lasts, and a sheet sized to its contents collapses and
- * grows back twice over (owner, 2026-10-20).
- */
-function isOpening(read: DiscoveryRead, chosen: boolean): boolean {
-  if (optionsFailure(read)) return false;
-
-  if (!read.data) return chosen;
-
-  return read.data.configOptions === null;
-}
-
-const commandsOf = (read: DiscoveryRead): OptionsDiscovery['commands'] =>
-  read.data?.commands;
-
-// The Server owns both the saved snapshot and discovery; the screen keeps only picks.
-export function useSessionOptions(choice: Choice): OptionsDiscovery {
-  const read = useDiscovery(choice);
-  const error = useReadError(read, choice.sessionId);
-  const options = useOptions(read, choice.picks, inputOf(choice) !== skipToken);
+// tRPC and Connection effects adapt the state module to React; Server persistence stays on the Server.
+export function useSessionOptions(choice: OptionsChoice): SessionOptionsRead {
+  const [state, change] = useOptionsState(choice);
+  const read = useDiscovery(choice, state, change);
+  const failure = useReadFailure(read.error, choice.sessionId);
+  const options = useProjection(state, choice, failure.error);
 
   return {
     ...options,
-    commands: commandsOf(read),
-    stage: read.data?.stage,
-    progress: read.data?.progress,
-    error,
+    error: failure.dropped ? undefined : options.error,
     retry: read.reset,
+    pick: (configId: string, value: string | boolean): void =>
+      change((previous) => previous.pick(configId, value)),
   };
+}
+
+function useProjection(
+  state: SessionOptionsState,
+  choice: OptionsChoice,
+  error: SessionOpenError | undefined,
+): OptionsSnapshot {
+  const { liveConfigOptions } = choice;
+
+  return useMemo(
+    () => state.snapshot({ liveConfigOptions, error }),
+    [state, liveConfigOptions, error],
+  );
 }

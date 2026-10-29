@@ -72,3 +72,34 @@ export const KeyboardScrollsTheLastChoiceIntoView: Story = {
     );
   },
 };
+
+const viewportReferences = Array.from({ length: 8 }, (_, index) => ({
+  number: index + 1,
+  title: `Reference ${index + 1}`,
+  state: 'open' as const,
+}));
+
+export const ReferencesShareViewportAndKeyboardScrolling: Story = {
+  args: { references: viewportReferences },
+  beforeEach: async (): Promise<void> => {
+    await settleLayout('wide', 300);
+  },
+  play: async ({ canvas, args }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '#',
+    );
+    const first = await screen.findByRole('option', { name: /#1 Reference 1/ });
+    await browserExpect.element(first).toBeInViewport({ ratio: 1 });
+    await userEvent.keyboard('{ArrowUp}');
+    const last = screen.getByRole('option', { name: /#8 Reference 8/ });
+    await browserExpect.element(last).toBeInViewport({ ratio: 1 });
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('#8 '),
+    );
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+  },
+};

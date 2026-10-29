@@ -11,6 +11,26 @@ function fitMenu(menu: HTMLDivElement | null): void {
   const top = viewportTop();
   const available = menu.getBoundingClientRect().bottom - top - viewportInset;
   menu.style.maxHeight = `${Math.max(0, available)}px`;
+  revealSelection(menu);
+}
+
+function selectionOffset(menu: DOMRect, selected: DOMRect): number {
+  const top = menu.top + viewportInset;
+  const bottom = menu.bottom - viewportInset;
+
+  if (selected.top < top) return selected.top - top;
+
+  return Math.max(0, selected.bottom - bottom);
+}
+
+function revealSelection(menu: HTMLDivElement): void {
+  const selected = menu.querySelector('[aria-selected="true"]');
+
+  if (!selected) return;
+  menu.scrollTop += selectionOffset(
+    menu.getBoundingClientRect(),
+    selected.getBoundingClientRect(),
+  );
 }
 
 function observeViewport(anchor: HTMLElement, update: () => void): () => void {
@@ -30,10 +50,12 @@ function observeViewport(anchor: HTMLElement, update: () => void): () => void {
   };
 }
 
-export function useSuggestionViewport(
+export function useTypeaheadViewport(
   anchor: HTMLElement,
   menu: RefObject<HTMLDivElement | null>,
+  selectedIndex: number | null,
 ): void {
+  useEffect(() => fitMenu(menu.current), [menu, selectedIndex]);
   useEffect(
     () => observeViewport(anchor, () => fitMenu(menu.current)),
     [anchor, menu],

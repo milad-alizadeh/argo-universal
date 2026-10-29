@@ -1,193 +1,164 @@
 import { EventEmitter, on } from 'node:events';
-import {
-  SessionOpenFailure,
-  InitialConfigOption,
+import type {
   AgentOptionsUpdate,
-  SessionConfigOption,
-  type SessionAgentOptionsInput,
-  type SessionAgentOptionsOutput,
-  type SessionOpenError,
+  SessionAgentOptionsInput,
 } from '@repo/contracts';
-import { createRejectionCounter } from '@repo/machine-log';
-import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
+import { requireInstalledAgent } from '../agents';
 import {
-  type AcpSessionDestination,
-  type AcpSessionLease,
-  cancelledElicitation,
-  cancelledPermission,
-  requireInstalledAgent,
-  sessionOpenError,
-} from '../agents';
-import { readProjectPath } from '../projects';
-import { writeDatabaseJobAndWaitForCommit } from '../storage';
-import { readAcpConfiguration } from './acp/acp-configuration';
-import {
-  AgentOptionsJob,
-  readAgentConfiguration,
-} from './agent-options-storage';
-import { configureOptionsSession } from './configure-options-session';
-import {
-  liveAgentOptions,
-  observeLiveAgentOptions,
-} from './live-agent-options';
-import type { SessionRouterDeps } from './router-deps';
-import { validateSessionCommandAdmission } from './session-command';
-import { readSessionRow } from './session-record';
+  refreshAgentOptions,
+  type OptionsDeps,
+} from './agent-options-discovery';
+import { discoveryFailure } from './agent-options-discovery-session';
+import { savedAgentOptions, sessionOptionsInput } from './agent-options-input';
+import { observeLiveAgentOptions } from './live-agent-options';
 
-const rejections = createRejectionCounter('Agent options');
+type ReadEvent = { update: AgentOptionsUpdate } | { error: unknown };
 
-// No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
-const optionsDestination: AcpSessionDestination = {
-  update: (): undefined => {},
-  failed: () => {},
-  requestPermission: async () => cancelledPermission,
-  createElicitation: async () => cancelledElicitation,
-};
+// One reader owns discovery, actor replacement, cancellation and publication precedence.
+class AgentOptionsReader {
+  private readonly events = new EventEmitter<{
+    update: [ReadEvent];
+    done: [];
+  }>();
+  private readonly controller = new AbortController();
+  private readonly active: AbortSignal;
+  private readonly stream: AsyncIterableIterator<ReadEvent[]>;
+  private work = Promise.resolve();
+  private unsubscribe = (): void => {};
+  private previous = '';
 
-type OptionsDeps = Pick<
-  SessionRouterDeps,
-  | 'database'
-  | 'installedAgents'
-  | 'sessions'
-  | 'sessionCommandSignal'
-  | 'findWriter'
->;
-
-type Discovery = {
-  signal: AbortSignal;
-  progress: (stage: 'installing' | 'loading', fraction?: number) => void;
-};
-
-const DiscoveryEvent = z.union([
-  z.object({ update: AgentOptionsUpdate }),
-  z.object({ error: z.unknown() }),
-]);
-
-type DiscoveryEvents = EventEmitter<{
-  update: [z.infer<typeof DiscoveryEvent>];
-  done: [];
-}>;
-
-function availableWriter(
-  deps: OptionsDeps,
-): NonNullable<ReturnType<OptionsDeps['findWriter']>> {
-  const writer = deps.findWriter();
-
-  if (!writer)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'Server storage is unavailable.',
+  constructor(
+    private readonly deps: OptionsDeps,
+    private readonly input: SessionAgentOptionsInput,
+    signal?: AbortSignal,
+  ) {
+    this.active = signal
+      ? AbortSignal.any([signal, this.controller.signal])
+      : this.controller.signal;
+    this.stream = on(this.events, 'update', {
+      signal: this.active,
+      close: ['done'],
     });
+  }
 
-  return writer;
-}
+  async *read(): AsyncGenerator<AgentOptionsUpdate> {
+    try {
+      this.start();
 
-// Discovery uses the same sign-in and failure contract as Send (ADR-0004).
-const agentFailure = (cause: unknown): TRPCError => {
-  const failure = new SessionOpenFailure(sessionOpenError(cause));
+      for await (const [event] of this.stream) {
+        if (!event) continue;
 
-  return new TRPCError({
-    code: 'PRECONDITION_FAILED',
-    message: failure.message,
-    cause: failure,
-  });
-};
+        if ('error' in event) throw event.error;
+        yield event.update;
+      }
+    } finally {
+      await this.close();
+    }
+  }
 
-async function openOptionsSession(
-  deps: OptionsDeps,
-  { agent, projectId }: SessionAgentOptionsInput,
-  { signal, progress }: Discovery,
-): Promise<AcpSessionLease> {
-  const installed = requireInstalledAgent(deps.installedAgents, agent);
-  const cwd = readProjectPath(deps.database, projectId);
-  validateSessionCommandAdmission(deps);
+  private start(): void {
+    this.followSession();
 
-  try {
-    const launch = await deps.installedAgents.launch(installed, projectId, {
-      signal,
-      onInstalling: (fraction) => progress('installing', fraction),
-    });
+    if (this.isLive()) return;
+    const saved = savedAgentOptions(this.deps, this.input);
+    this.publish({ update: saved });
+    this.work = this.discover(saved);
+  }
 
-    return await deps.sessions.getSnapshot().context.acpResources.open({
-      launch: {
-        ...launch,
-        resolve: async (signal) => {
-          const resolved = await launch.resolve(signal);
-          progress('loading');
+  private followSession(): void {
+    const { sessionId } = this.input;
 
-          return resolved;
+    if (!sessionId) return;
+    this.unsubscribe = observeLiveAgentOptions({
+      deps: this.deps,
+      input: { ...this.input, sessionId },
+      observer: {
+        update: (update) => this.publish({ update }),
+        done: () => {
+          this.events.emit('done');
         },
       },
-      opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
-      destination: optionsDestination,
-      signal,
     });
-  } catch (cause) {
-    throw signal.aborted ? cause : agentFailure(cause);
+  }
+
+  private isLive(): boolean {
+    const { sessionId } = this.input;
+
+    return Boolean(
+      sessionId && this.deps.sessions.getSnapshot().context.sessions[sessionId],
+    );
+  }
+
+  private publish(event: ReadEvent): void {
+    if ('error' in event) {
+      this.events.emit('update', event);
+
+      return;
+    }
+
+    const key = JSON.stringify(event.update);
+
+    if (key === this.previous) return;
+    this.previous = key;
+    this.events.emit('update', event);
+  }
+
+  private discovered(update: AgentOptionsUpdate): void {
+    if (this.isLive()) return;
+    this.publish({ update });
+  }
+
+  private async discover(saved: AgentOptionsUpdate): Promise<void> {
+    try {
+      const configOptions = await refreshAgentOptions(this.deps, this.input, {
+        signal: this.active,
+        progress: (stage, progress) =>
+          this.discovered({ ...this.snapshot(saved), stage, progress }),
+      });
+
+      this.discovered({
+        ...this.snapshot(saved),
+        configOptions,
+        stage: 'ready',
+      });
+    } catch (error) {
+      this.failed(saved, error);
+    } finally {
+      if (!this.input.sessionId) this.events.emit('done');
+    }
+  }
+
+  private snapshot(saved: AgentOptionsUpdate): AgentOptionsUpdate {
+    return {
+      ...saved,
+      commands: savedAgentOptions(this.deps, this.input).commands,
+    };
+  }
+
+  private failed(saved: AgentOptionsUpdate, cause: unknown): void {
+    if (this.isLive()) return;
+
+    if (!this.input.sessionId) {
+      this.publish({ error: cause });
+
+      return;
+    }
+
+    this.discovered({
+      ...this.snapshot(saved),
+      error: discoveryFailure(cause),
+    });
+  }
+
+  private async close(): Promise<void> {
+    this.unsubscribe();
+    this.controller.abort();
+    await this.stream.return?.();
+    await this.work;
   }
 }
 
-// Discover in the Project folder and commit before publishing the refreshed snapshot.
-async function refreshAgentOptions(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-  discovery: Discovery,
-): Promise<SessionAgentOptionsOutput> {
-  requireInstalledAgent(deps.installedAgents, input.agent);
-  const writer = availableWriter(deps);
-
-  const saved = readAgentConfiguration(
-    { database: deps.database, writer },
-    input,
-  );
-
-  const lease = await openOptionsSession(deps, input, discovery);
-
-  try {
-    const options = await configureOptionsSession(
-      lease,
-      readAcpConfiguration(lease.response.configOptions, rejections),
-      {
-        saved: saved?.configOptions ?? [],
-        picks: input.picks ?? {},
-        signal: discovery.signal,
-      },
-    );
-
-    if (input.sessionId && saved) return options;
-    await writeDatabaseJobAndWaitForCommit(
-      writer,
-      new AgentOptionsJob(
-        { agent: input.agent, projectId: input.projectId },
-        options,
-        { authoritative: true, expectedRevision: saved?.revision ?? 0 },
-      ),
-    );
-
-    return discoveryResult(deps, input, options);
-  } finally {
-    await lease.close();
-  }
-}
-
-// Explicit picks need their discovered schema even when a newer Session owns persistence.
-function discoveryResult(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-  options: SessionAgentOptionsOutput,
-): SessionAgentOptionsOutput {
-  if (Object.keys(input.picks ?? {}).length) return options;
-
-  return (
-    readAgentConfiguration(
-      { database: deps.database, writer: deps.findWriter() },
-      input,
-    )?.configOptions ?? options
-  );
-}
-
-// One endpoint sends the durable snapshot first, then refreshes without hiding it.
+// The public read keeps its saved snapshot through refresh and recoverable Session failures.
 export async function* agentOptionsUpdates(
   deps: OptionsDeps,
   request: SessionAgentOptionsInput,
@@ -195,265 +166,5 @@ export async function* agentOptionsUpdates(
 ): AsyncGenerator<AgentOptionsUpdate, void> {
   const input = sessionOptionsInput(deps, request);
   requireInstalledAgent(deps.installedAgents, input.agent);
-
-  if (
-    input.sessionId &&
-    deps.sessions.getSnapshot().context.sessions[input.sessionId]
-  ) {
-    yield* liveAgentOptions(
-      deps,
-      { ...input, sessionId: input.sessionId },
-      signal,
-    );
-
-    return;
-  }
-
-  const saved = readAgentConfiguration(
-    { database: deps.database, writer: deps.findWriter() },
-    input,
-  );
-
-  const owner = { agent: input.agent, projectId: input.projectId };
-  yield {
-    ...owner,
-    commands: saved?.commands ?? null,
-    configOptions: saved
-      ? saved.configOptions.map((option) => {
-          const value = input.picks?.[option.configId];
-
-          return typeof value === typeof option.currentValue
-            ? SessionConfigOption.parse({ ...option, currentValue: value })
-            : option;
-        })
-      : null,
-  };
-  // The reader retains this snapshot even if discovery asks for sign-in or fails.
-  yield* discoveryUpdates(deps, input, {
-    cached: saved?.configOptions ?? null,
-    signal,
-  });
-}
-
-/*
- * Browsing keeps the Session closed. Discover using its own saved choices, not
- * whichever choices another Session most recently wrote for this Agent.
- */
-function sessionOptionsInput(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-): SessionAgentOptionsInput {
-  if (!input.sessionId) return input;
-
-  const session = readSessionRow(
-    { database: deps.database, writer: deps.findWriter() },
-    input.sessionId,
-  );
-
-  if (
-    !session ||
-    session.agent !== input.agent ||
-    session.projectId !== input.projectId
-  )
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'Session not found for this Agent and Project.',
-    });
-
-  return {
-    ...input,
-    picks: Object.fromEntries(
-      [
-        ...InitialConfigOption.array().parse(session.configValues),
-        ...InitialConfigOption.array().parse(session.heldConfig),
-      ].map(({ configId, value }) => [configId, value]),
-    ),
-  };
-}
-
-type DiscoveryReadOptions = {
-  cached: SessionAgentOptionsOutput | null;
-  signal?: AbortSignal;
-};
-
-// Buffer discovery and live updates together; cancelling the reader closes both.
-async function* discoveryUpdates(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-  options: DiscoveryReadOptions,
-): AsyncGenerator<AgentOptionsUpdate> {
-  const reader = createDiscoveryReader(deps, input, options);
-
-  try {
-    yield* readDiscovery(reader.stream);
-  } finally {
-    await reader.close();
-  }
-}
-
-type DiscoveryReader = {
-  stream: ReturnType<typeof on>;
-  close: () => Promise<void>;
-};
-
-function createDiscoveryReader(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-  { cached, signal }: DiscoveryReadOptions,
-): DiscoveryReader {
-  const controller = new AbortController();
-
-  const active = signal
-    ? AbortSignal.any([signal, controller.signal])
-    : controller.signal;
-
-  const events: DiscoveryEvents = new EventEmitter();
-  const stream = on(events, 'update', { signal: active, close: ['done'] });
-
-  const unsubscribe = input.sessionId
-    ? observeLiveAgentOptions({
-        deps,
-        input: { ...input, sessionId: input.sessionId },
-        observer: {
-          update: (update) => {
-            events.emit('update', { update });
-          },
-          done: () => {
-            events.emit('done');
-          },
-        },
-      })
-    : undefined;
-
-  const work = publishDiscovery(deps, input, {
-    events,
-    cached,
-    signal: active,
-  });
-
-  return {
-    stream,
-    close: async () => {
-      unsubscribe?.();
-      controller.abort();
-      await stream.return?.();
-      await work;
-    },
-  };
-}
-
-async function* readDiscovery(
-  stream: ReturnType<typeof on>,
-): AsyncGenerator<AgentOptionsUpdate> {
-  for await (const [event] of stream) {
-    const value = DiscoveryEvent.parse(event);
-
-    if ('error' in value) throw value.error;
-    yield value.update;
-  }
-}
-
-function publishDiscovery(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-  {
-    events,
-    cached,
-    signal,
-  }: {
-    events: DiscoveryEvents;
-    cached: SessionAgentOptionsOutput | null;
-    signal: AbortSignal;
-  },
-): Promise<boolean> {
-  const owner = { agent: input.agent, projectId: input.projectId };
-  const emit = discoveryPublisher(deps, input, events);
-
-  return refreshAgentOptions(deps, input, {
-    signal,
-    progress: (stage, progress) =>
-      emit({
-        update: {
-          ...owner,
-          commands: readCommands(deps, input),
-          configOptions: cached,
-          stage,
-          progress,
-        },
-      }),
-  })
-    .then(
-      (configOptions) =>
-        emit({
-          update: {
-            ...owner,
-            commands: readCommands(deps, input),
-            configOptions,
-            stage: 'ready',
-          },
-        }),
-      (error) => emit(discoveryFailureEvent(deps, { input, cached }, error)),
-    )
-    .finally(() => {
-      if (!input.sessionId) events.emit('done');
-    });
-}
-
-function readCommands(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-): AgentOptionsUpdate['commands'] {
-  return (
-    readAgentConfiguration(
-      { database: deps.database, writer: deps.findWriter() },
-      input,
-    )?.commands ?? null
-  );
-}
-
-function discoveryPublisher(
-  deps: OptionsDeps,
-  input: SessionAgentOptionsInput,
-  events: DiscoveryEvents,
-): (value: z.infer<typeof DiscoveryEvent>) => boolean {
-  return (value) => {
-    if (
-      input.sessionId &&
-      deps.sessions.getSnapshot().context.sessions[input.sessionId]
-    )
-      return false;
-
-    return events.emit('update', value);
-  };
-}
-
-function discoveryFailure(cause: unknown): SessionOpenError {
-  if (cause instanceof TRPCError && cause.cause instanceof SessionOpenFailure)
-    return cause.cause.openError;
-
-  return sessionOpenError(cause);
-}
-
-function discoveryFailureEvent(
-  deps: OptionsDeps,
-  {
-    input,
-    cached,
-  }: {
-    input: SessionAgentOptionsInput;
-    cached: SessionAgentOptionsOutput | null;
-  },
-  cause: unknown,
-): z.infer<typeof DiscoveryEvent> {
-  if (!input.sessionId) return { error: cause };
-
-  return {
-    update: {
-      agent: input.agent,
-      projectId: input.projectId,
-      commands: readCommands(deps, input),
-      configOptions: cached,
-      error: discoveryFailure(cause),
-    },
-  };
+  yield* new AgentOptionsReader(deps, input, signal).read();
 }

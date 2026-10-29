@@ -43,10 +43,9 @@ const withValue = (
     : withChoice(option, value);
 };
 
-// Picks of a model, effort or mode count as saved choices, so effort still follows the chosen model.
-function savedWithPicks(
+// Project unsent model, effort and mode picks through the product rules.
+function pickedStartingChoices(
   options: SessionConfigOption[],
-  saved: SavedChoices,
   picks: ConfigurationPicks,
 ): SavedChoices {
   const picked = options.flatMap((option) => {
@@ -57,30 +56,29 @@ function savedWithPicks(
       : [];
   });
 
-  return { ...saved, ...Object.fromEntries(picked) };
+  return Object.fromEntries(picked);
 }
 
-// The model, effort and mode this Device's choices give, effort following the model.
+// Unsent model, effort and mode choices follow the selected model.
 const rememberedValues = (
   options: SessionConfigOption[],
-  saved: SavedChoices,
+  picked: SavedChoices,
 ): Map<string, string> =>
   new Map(
-    draftConfiguration(options, saved).map(({ configId, currentValue }) => [
+    draftConfiguration(options, picked).map(({ configId, currentValue }) => [
       configId,
       currentValue,
     ]),
   );
 
-// Each option with the reader's pick or this Device's saved choice when it is still offered, else the Agent's default.
+// Apply unsent picks only while the Agent still offers them.
 export function chosenOptions(
   options: SessionConfigOption[],
-  saved: SavedChoices,
   picks: ConfigurationPicks,
 ): SessionConfigOption[] {
   const remembered = rememberedValues(
     options,
-    savedWithPicks(options, saved, picks),
+    pickedStartingChoices(options, picks),
   );
 
   const value = (option: SessionConfigOption): string | boolean | undefined =>

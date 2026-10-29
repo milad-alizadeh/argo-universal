@@ -48,6 +48,8 @@ export const ReturnChoosesAndLeavesTheCaretAfterTheSpace: Story = {
     await waitFor(() =>
       expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
     );
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
   },
 };
 
@@ -67,7 +69,7 @@ export const ArrowsAndTabChooseTheHighlightedSuggestion: Story = {
 };
 
 export const TypingNarrowsTheMenuAndNoMatchClosesIt: Story = {
-  play: async ({ canvas }) => {
+  play: async ({ canvas, args }) => {
     await userEvent.type(
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
@@ -86,6 +88,8 @@ export const TypingNarrowsTheMenuAndNoMatchClosesIt: Story = {
         screen.queryByRole('group', { name: 'Suggestions' }),
       ).not.toBeInTheDocument(),
     );
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
   },
 };
 
@@ -104,6 +108,8 @@ export const EscapeKeepsTheSlashWord: Story = {
     );
     await expect(args.onChangeText).toHaveBeenLastCalledWith('/sec');
     await expect(args.onSubmit).not.toHaveBeenCalled();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
   },
 };
 

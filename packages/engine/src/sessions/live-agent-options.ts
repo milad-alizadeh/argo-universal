@@ -1,4 +1,3 @@
-import { EventEmitter, on } from 'node:events';
 import type {
   AgentOptionsUpdate,
   SessionAgentOptionsInput,
@@ -12,8 +11,6 @@ type Deps = Pick<SessionRouterDeps, 'sessions'>;
 
 type Input = SessionAgentOptionsInput & { sessionId: string };
 
-type Events = EventEmitter<{ update: [AgentOptionsUpdate]; done: [] }>;
-
 type Observation = {
   deps: Deps;
   input: Input;
@@ -24,8 +21,6 @@ type Observation = {
 };
 
 function publication({ deps, input, observer }: Observation): () => void {
-  let previous = '';
-
   return () => {
     const session =
       deps.sessions.getSnapshot().context.sessions[input.sessionId];
@@ -45,11 +40,6 @@ function publication({ deps, input, observer }: Observation): () => void {
       stage: 'ready',
     };
 
-    const key = JSON.stringify(update);
-
-    if (key === previous) return;
-
-    previous = key;
     observer.update(update);
   };
 }
@@ -88,34 +78,4 @@ function followSession(
 // A Session reader follows replacement actors while the person closes and resumes it.
 export function observeLiveAgentOptions(observation: Observation): () => void {
   return followSession(observation, publication(observation));
-}
-
-// An open Session already has its actual configuration; observe it without opening discovery.
-export async function* liveAgentOptions(
-  deps: Deps,
-  input: Input,
-  signal?: AbortSignal,
-): AsyncGenerator<AgentOptionsUpdate> {
-  const events: Events = new EventEmitter();
-  const stream = on(events, 'update', { signal, close: ['done'] });
-
-  const unsubscribe = observeLiveAgentOptions({
-    deps,
-    input,
-    observer: {
-      update: (update) => {
-        events.emit('update', update);
-      },
-      done: () => {
-        events.emit('done');
-      },
-    },
-  });
-
-  try {
-    for await (const [update] of stream) yield update;
-  } finally {
-    unsubscribe();
-    await stream.return?.();
-  }
 }

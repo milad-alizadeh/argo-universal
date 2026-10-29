@@ -99,31 +99,10 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   return {
     agent: sessionAgent(open),
     agentId: snapshot.agent,
-    ...optionsOf(open),
+    ...composerOptions(open),
     onConfigChange: open.commands.changeConfig,
     turnRunning: isTurnRunning(snapshot),
     checkout: checkoutProps(snapshot.checkout),
-  };
-}
-
-function optionsOf({
-  snapshot,
-  options,
-}: OpenSession): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
-  if (snapshot.configOptions.length)
-    return { configOptions: snapshot.configOptions, opening: false };
-
-  return discoveredOptions(options);
-}
-
-function discoveredOptions(
-  options: OpenSession['options'],
-): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
-  if (!options) return { configOptions: [], opening: undefined };
-
-  return {
-    configOptions: options.configOptions,
-    opening: options.loading,
   };
 }
 
@@ -154,4 +133,13 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
     status: composerStatus(view.plan, snapshot.usage ?? undefined),
     configuration: configurationProps(open),
   };
+}
+
+function composerOptions({
+  options,
+  snapshot,
+}: OpenSession): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
+  if (!options) return { configOptions: snapshot.configOptions };
+
+  return { configOptions: options.configOptions, opening: options.loading };
 }

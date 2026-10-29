@@ -28,7 +28,7 @@ import {
   richTextareaNodes,
 } from './web/rich-textarea-markdown';
 import { ReferenceProviders } from './web/rich-textarea-reference-token';
-import { SuggestionPlugins } from './web/rich-textarea-suggestion-plugin';
+import { TypeaheadPlugin } from './web/rich-textarea-typeahead-plugin';
 
 const placeholderClassName =
   'pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70 dark:text-muted-foreground';
@@ -114,9 +114,9 @@ function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
   return (
     <>
       <MessageField {...props} />
-      <SuggestionPlugins {...props} references={references} />
+      <TypeaheadPlugin {...props} references={references} />
       <EditingPlugins />
-      <KeyboardPlugin onSubmit={props.onSubmit} />
+      <KeyboardPlugin />
       <EditablePlugin editable={props.editable} />
       {props.autoFocus && <AutoFocusPlugin />}
       <MarkdownValuePlugin {...props} />
