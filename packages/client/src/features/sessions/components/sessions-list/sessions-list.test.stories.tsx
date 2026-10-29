@@ -35,7 +35,7 @@ export const MemoizedRows: Story = {
   name: 'Controlled selection and activity',
 };
 
-// A wide window's heading draws its Actions as buttons, always shown in the sidebar.
+// A wide window's heading reveals its Actions while the Project header is hovered or focused.
 export const ProjectActions: Story = {
   beforeEach: () => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
@@ -44,6 +44,7 @@ export const ProjectActions: Story = {
     });
 
     await waitFor(() => expect(heading).toBeVisible());
+    await userEvent.hover(heading);
 
     const settings = canvas.getByRole('button', {
       name: projectButtonName(projectSettingsLabel),

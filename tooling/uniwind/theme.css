@@ -213,6 +213,12 @@
   }
 }
 
+@custom-variant hover-capable {
+  @media (hover: hover) {
+    @slot;
+  }
+}
+
 /*
  * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens. Text follows the platform,
  * not the shell: a wide window everywhere, and on the web and desktop a medium one too, though a
