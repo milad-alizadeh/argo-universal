@@ -1,38 +1,7 @@
-import type {
-  CommandAction,
-  Notice,
-  PermissionOutcome,
-  ToolCallUpdate,
-  TurnEnd,
-} from '@repo/contracts';
+import type { CommandAction } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { commandRow, workMocks } from '../../../../mocks/feed-view.mocks';
-import { noticeTurnEnd, toolCallFacts } from './feed-row-facts';
-
-const [mock] = workMocks;
-
-if (!mock) throw new Error('Recording needs work');
-
-const base = commandRow(mock.rows);
-
-const call = (changes: Partial<ToolCallUpdate>): ToolCallUpdate => ({
-  ...base,
-  _meta: undefined,
-  locations: undefined,
-  content: [],
-  ...changes,
-});
-
-const withActions = (actions: CommandAction[]): ToolCallUpdate =>
-  call({ _meta: { argo: { commandActions: actions } } });
-
-const fromLocation = 'from-location.ts';
-
-const read = (path?: string): CommandAction => ({
-  type: 'read',
-  command: 'opaque',
-  ...(path && { path }),
-});
+import { toolCallFacts } from './feed-row-facts';
+import { call, read, withActions } from './feed-row-facts.mocks';
 
 describe('toolCallFacts exploration', () => {
   it('is what the Agent reported', () => {
@@ -69,8 +38,11 @@ describe('toolCallFacts exploration', () => {
 });
 
 describe('toolCallFacts edited paths', () => {
-  it('is null for a call that is not an edit', () => {
-    expect(toolCallFacts(call({ kind: 'execute' })).editedPaths).toBeNull();
+  it('is empty for a call that is not an edit', () => {
+    const facts = toolCallFacts(call({ kind: 'execute' }));
+
+    expect(facts.isEdit).toBe(false);
+    expect(facts.editedPaths).toEqual(new Set());
   });
 
   it.each(['edit', 'delete', 'move'] as const)(
@@ -101,74 +73,30 @@ describe('toolCallFacts edited paths', () => {
   });
 });
 
-describe('toolCallFacts path', () => {
-  it('prefers the first reported action path to the first location', () => {
-    const row = call({
-      _meta: {
-        argo: { commandActions: [read(), read('from-action.ts')] },
-      },
-      locations: [{ path: fromLocation }],
-    });
-
-    expect(toolCallFacts(row).path).toBe('from-action.ts');
+describe('toolCallFacts command', () => {
+  it('is a command only for an execute call', () => {
+    expect(toolCallFacts(call({ kind: 'execute' })).isCommand).toBe(true);
+    expect(toolCallFacts(call({ kind: 'read' })).isCommand).toBe(false);
   });
 
-  it('falls back to the first location', () => {
-    const row = call({ locations: [{ path: fromLocation }] });
+  it('keeps the reported actions only when all are classified', () => {
+    const unknown: CommandAction = { type: 'unknown', command: 'make' };
 
-    expect(toolCallFacts(row).path).toBe(fromLocation);
-    expect(toolCallFacts(row).location).toBe(fromLocation);
+    expect(toolCallFacts(withActions([read('a.ts')])).actions).toEqual([
+      read('a.ts'),
+    ]);
+    expect(toolCallFacts(withActions([read('a.ts'), unknown])).actions).toEqual(
+      [],
+    );
   });
 
-  it('is undefined without either', () => {
-    expect(toolCallFacts(call({})).path).toBeUndefined();
-  });
-});
-
-describe('toolCallFacts permission outcome', () => {
-  const outcome: PermissionOutcome = {
-    outcome: 'selected',
-    optionId: 'allow_once',
-    name: 'Allow',
-    kind: 'allow_once',
-  };
-
-  it('carries how the user answered', () => {
-    const row = call({ _meta: { argo: { permissionOutcome: outcome } } });
-
-    expect(toolCallFacts(row).permissionOutcome).toEqual(outcome);
-  });
-
-  it('is undefined while unanswered', () => {
-    expect(toolCallFacts(call({})).permissionOutcome).toBeUndefined();
-  });
-});
-
-const notice = (_meta?: Notice['_meta']): Notice => ({
-  id: 'notice',
-  sessionId: base.sessionId,
-  turnId: base.turnId,
-  position: base.position,
-  revision: base.revision,
-  state: 'settled',
-  sessionUpdate: 'notice',
-  severity: 'info',
-  title: 'Turn ended',
-  _meta,
-});
-
-describe('noticeTurnEnd', () => {
-  it('reads how the Turn ended', () => {
-    const end: TurnEnd = {
-      stopReason: 'end_turn',
-      error: null,
-      durationMs: 5,
+  it('still names the file of an unclassified action', () => {
+    const unknown: CommandAction = {
+      type: 'unknown',
+      command: 'make',
+      path: 'a.ts',
     };
 
-    expect(noticeTurnEnd(notice({ argo: { turnEnd: end } }))).toEqual(end);
-  });
-
-  it('is undefined for a Notice that ends no Turn', () => {
-    expect(noticeTurnEnd(notice())).toBeUndefined();
+    expect(toolCallFacts(withActions([unknown])).path).toBe('a.ts');
   });
 });

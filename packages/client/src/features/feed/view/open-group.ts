@@ -3,6 +3,7 @@ import {
   type SessionSnapshot,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { toolCallFacts } from './feed-row-facts';
 import {
   type FeedActivity,
   type FeedExploration,
@@ -13,7 +14,6 @@ import {
 } from './feed-view';
 import { groupTitle } from './group-title';
 import {
-  explores,
   type GroupRow,
   joinsExploration,
   liveTitleFor,
@@ -77,7 +77,7 @@ export class OpenGroup {
     if (awaitingPermission) call.awaitingApproval = true;
     this.activities.push(call);
 
-    if (!explores(row)) this.exploration = undefined;
+    if (!toolCallFacts(row).explores) this.exploration = undefined;
   }
 
   private noteLiveCall(row: ToolCallUpdate, awaitingPermission: boolean): void {

@@ -11,7 +11,7 @@ function hasSuccessfulMultiFileEdit(row: ToolCallUpdate): boolean {
 }
 
 function editsSeveralFiles(row: ToolCallUpdate): boolean {
-  return (toolCallFacts(row).editedPaths?.size ?? 0) > 1;
+  return toolCallFacts(row).editedPaths.size > 1;
 }
 
 export function needsGroupHeader(
@@ -39,7 +39,7 @@ export function joinsExploration(
 }
 
 function isExploration(row: ToolCallUpdate): boolean {
-  return explores(row) && row.status !== 'failed';
+  return toolCallFacts(row).explores && row.status !== 'failed';
 }
 
 function mayExplore(row: ToolCallUpdate, awaitingPermission: boolean): boolean {
@@ -60,7 +60,7 @@ export function liveTitleFor(
 }
 
 function isUnansweredExploration(row: ToolCallUpdate): boolean {
-  return explores(row) && !hasPermissionOutcome(row);
+  return toolCallFacts(row).explores && !hasPermissionOutcome(row);
 }
 
 function toolTitle(row: ToolCallUpdate): string {
@@ -102,11 +102,6 @@ export function startsNewTurn(
   previousTurnId: string | null | undefined,
 ): boolean {
   return previousTurnId !== undefined && row.turnId !== previousTurnId;
-}
-
-// Whether the Agent's actions, reported or implied, explore rather than change anything.
-export function explores(row: ToolCallUpdate): boolean {
-  return toolCallFacts(row).exploration.length > 0;
 }
 
 function hasPermissionOutcome(row: ToolCallUpdate): boolean {

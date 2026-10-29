@@ -1,4 +1,4 @@
-import type { SessionUpdate, ToolCallUpdate } from '@repo/contracts';
+import type { SessionUpdate } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import {
@@ -6,7 +6,6 @@ import {
   requireCollapsible,
   changedActivity,
 } from '../../../../mocks/feed-items.mocks';
-import { commandRow } from '../../../../mocks/feed-view.mocks';
 import { keepUnchangedItems } from './keep-unchanged-items';
 import { toFeedView } from './to-feed-view';
 
@@ -116,35 +115,5 @@ describe('keepUnchangedItems', () => {
     if (!mock) throw new Error('No recording');
     const next = toFeedView(mock.rows, mock.snapshot);
     expect(keepUnchangedItems(null, next)).toBe(next);
-  });
-
-  it('hands back the new Exploration when only its state changed', () => {
-    const [mock] = mocks;
-
-    if (!mock) throw new Error('No recording');
-
-    const row: ToolCallUpdate = {
-      ...commandRow(mock.rows),
-      state: 'settled',
-      status: 'completed',
-      _meta: {
-        argo: { commandActions: [{ type: 'read', command: '', path: 'a.ts' }] },
-      },
-    };
-
-    const settled = toFeedView([row], mock.snapshot);
-
-    const reopened = {
-      ...settled,
-      items: settled.items.map((item) =>
-        item.type === 'exploration'
-          ? { ...item, state: 'open' as const }
-          : item,
-      ),
-    };
-
-    const next = keepUnchangedItems(reopened, settled);
-
-    expect(next.items[0]).toBe(settled.items[0]);
   });
 });

@@ -37,10 +37,10 @@ const hasContent = (row: ToolCall, type: string): boolean =>
   row.content.some((block) => block.type === type);
 
 const isCommand = (row: ToolCall): boolean =>
-  row.kind === 'execute' && hasContent(row, 'terminal');
+  toolCallFacts(row).isCommand && hasContent(row, 'terminal');
 
 const isEdit = (row: ToolCall): boolean =>
-  toolCallFacts(row).editedPaths !== null && hasContent(row, 'diff');
+  toolCallFacts(row).isEdit && hasContent(row, 'diff');
 
 function coreToolCallRow(row: ToolCall): React.JSX.Element {
   if (isCommand(row)) return <CommandRow row={row} />;

@@ -15,9 +15,9 @@ export function readFileCount(actions: readonly CommandAction[]): number {
 // Edits that name no file count once each.
 export function editedFileCount(toolCalls: ToolCallUpdate[]): number {
   const pathsByCall = toolCalls.flatMap((call) => {
-    const { editedPaths } = toolCallFacts(call);
+    const { editedPaths, isEdit } = toolCallFacts(call);
 
-    return editedPaths ? [editedPaths] : [];
+    return isEdit ? [editedPaths] : [];
   });
 
   const paths = new Set(pathsByCall.flatMap((paths) => [...paths]));

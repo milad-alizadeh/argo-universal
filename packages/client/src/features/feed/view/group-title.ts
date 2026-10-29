@@ -1,7 +1,6 @@
 import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { toolCallFacts } from './feed-row-facts';
 import { editedFileCount, readFileCount } from './group-file-counts';
-import { explores } from './grouping-rules';
 
 const summaryOrder = [
   'command',
@@ -31,7 +30,9 @@ const categoryLabels: Record<Category, CountLabel> = {
 };
 
 function ranCommand(row: ToolCallUpdate): boolean {
-  return row.kind === 'execute' && !explores(row);
+  const facts = toolCallFacts(row);
+
+  return facts.isCommand && !facts.explores;
 }
 
 function actionCount(

@@ -1,9 +1,10 @@
 import type { FeedViewItem } from './feed-view';
 
-const isObject = <Value>(value: Value): value is Value & object =>
-  typeof value === 'object' && value !== null;
+// A wire row is compared as a whole; every other object and array is compared field by field.
+const isStructure = <Value>(value: Value): value is Value & object =>
+  typeof value === 'object' && value !== null && !('sessionUpdate' in value);
 
-function sameEntries<Value extends object>(
+function sameFields<Value extends object>(
   first: Value,
   second: Value,
 ): boolean {
@@ -17,19 +18,16 @@ function sameEntries<Value extends object>(
   );
 }
 
-function sameObjects<Value>(first: Value, second: Value): boolean {
-  if (!isObject(first)) return false;
-
-  return isObject(second) && sameEntries(first, second);
+function sameStructures<Value>(first: Value, second: Value): boolean {
+  return isStructure(first) && isStructure(second) && sameFields(first, second);
 }
 
-function sameValue<Value>(first: Value, second: Value): boolean {
-  return Object.is(first, second) || sameObjects(first, second);
-}
+const sameValue = <Value>(first: Value, second: Value): boolean =>
+  Object.is(first, second) || sameStructures(first, second);
 
 /*
- * Items are plain data, so two items are the same when every field of every nested value is: a field added to an item
- * is compared with no code here. A row that is the same object is the same row without a walk.
+ * Two items are the same when every field of each is: a field added to an item is compared with no code here.
+ * Wire rows are new objects when they change, so a row is the same row only when it is the same object.
  */
 export const sameItem = (first: FeedViewItem, second: FeedViewItem): boolean =>
   sameValue(first, second);
