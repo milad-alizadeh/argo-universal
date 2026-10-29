@@ -1,5 +1,4 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
@@ -23,7 +22,7 @@ import {
   sessionsScrollId,
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
-import { Scaffold } from '../../../frame/scaffold/scaffold';
+import { SidebarFrame } from '../../../../../mocks/sessions-list/sidebar-frame.test.mocks';
 import { SessionsList } from './sessions-list';
 import { largeSessions, sessionsListProps } from './sessions-list.mocks';
 
@@ -183,6 +182,7 @@ export const ScrollFade: Story = {
 // Measure the public row surfaces against the usable scroll viewport at each sidebar width.
 function sidebarGutters(width: number, grouped: boolean): Story {
   const selected = sessionsListProps.sessions[0];
+
   if (!selected) throw new Error('Recorded catalog needs a Session');
 
   return {
@@ -200,29 +200,32 @@ function sidebarGutters(width: number, grouped: boolean): Story {
       const scroll = await canvas.findByTestId(sessionsScrollId);
       const rows = await canvas.findAllByTestId('session-row-surface');
       await expect(rows.length).toBeGreaterThan(1);
+
       const viewport = scroll.getBoundingClientRect();
+
       for (const row of rows.slice(0, 2)) {
         const bounds = row.getBoundingClientRect();
         const left = bounds.left - viewport.left;
         const right = viewport.left + scroll.clientWidth - bounds.right;
+
         await expect(left).toBeGreaterThan(0);
         await expect(left).toBeLessThanOrEqual(8);
         await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
       }
-      if (grouped)
-        await expect(
-          canvas.getByRole('button', { name: exampleProjectName }),
-        ).toBeVisible();
-      else
-        await expect(
-          canvas.queryByRole('button', { name: exampleProjectName }),
-        ).not.toBeInTheDocument();
+
+      const heading = canvas.queryByRole('button', {
+        name: exampleProjectName,
+      });
+
+      await expect(Boolean(heading)).toBe(grouped);
     },
   };
 }
 
 export const NarrowSidebarGutters = sidebarGutters(240, true);
+
 export const DefaultSidebarGutters = sidebarGutters(312, false);
+
 export const ExpandedSidebarGutters = sidebarGutters(420, true);
 
 // Include the Frame's offered column as well as the Sessions list's own inset.
@@ -231,36 +234,24 @@ export const FramedSidebarGutters: Story = {
   parameters: { screenPreview: true },
   beforeEach: () => settleLayout('wide'),
   render: (args) => (
-    <Scaffold
-      sizeClass="wide"
-      sidebarShown
-      onSidebarShownChange={() => {}}
-      inspectorState="closed"
-      onInspectorStateChange={() => {}}
-      inspectorAvailable={false}
-      workbenchIntent="auto"
-      onWorkbenchIntentChange={() => {}}
-      sidebar={<View style={{ width: 56 }} />}
-      list={
-        <Screen title="Sessions">
-          <SessionsList {...args} />
-        </Screen>
-      }
-      inspector={() => null}
-    />
+    <SidebarFrame>
+      <SessionsList {...args} />
+    </SidebarFrame>
   ),
   play: async ({ canvas }) => {
     const region = await canvas.findByTestId('desktop-list');
     const row = (await canvas.findAllByTestId('session-row-surface'))[0];
+
     if (!row) throw new Error('Recorded catalog needs a Session');
-    await waitFor(() => {
+    await waitFor(async () => {
       const pane = region.getBoundingClientRect();
       const bounds = row.getBoundingClientRect();
       const left = bounds.left - pane.left;
       const right = pane.right - bounds.right;
-      expect(left).toBeGreaterThan(0);
-      expect(left).toBeLessThan(16);
-      expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
+
+      await expect(left).toBeGreaterThan(0);
+      await expect(left).toBeLessThan(16);
+      await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
     });
   },
 };
