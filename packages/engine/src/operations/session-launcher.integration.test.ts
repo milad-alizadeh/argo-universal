@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
@@ -10,8 +10,10 @@ import { sessionIdentityStep } from '#mocks/session-access';
 
 type Host = Awaited<ReturnType<typeof startEngineTestHost>>;
 
+const launcherPath = (home: string): string => join(home, 'cli', 'bin', 'argo');
+
 const readLauncher = (home: string): Promise<string> =>
-  readFile(join(home, 'cli', 'bin', 'argo'), 'utf8');
+  readFile(launcherPath(home), 'utf8');
 
 async function openSession(host: Host): Promise<void> {
   const created = await host.caller.session.new({
@@ -49,4 +51,13 @@ it('rewrites the argo launcher for the current CLI entry when a Server starts', 
   expect(launcher).toContain(`'/second/argo.mjs'`);
   expect(launcher).not.toContain('/first/argo.mjs');
   await second.stop();
+}, 30_000);
+
+it('writes the argo launcher once per Server, not at every opening', async () => {
+  const outputs: TerminalOutputResponse[] = [];
+  const host = await startAcpEngine({ steps: [sessionIdentityStep(outputs)] });
+  await openSession(host);
+  const written = await stat(launcherPath(host.home));
+  await openSession(host);
+  expect((await stat(launcherPath(host.home))).ino).toBe(written.ino);
 }, 30_000);

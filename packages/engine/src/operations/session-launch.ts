@@ -12,7 +12,7 @@ const cliLauncher = (cliEntry: string): string => `#!/bin/sh
 exec ${quote(process.execPath)} ${quote(cliEntry)} "$@"
 `;
 
-function cliDirectory(home: string, cliEntry: string): string {
+function writeCliLauncher(home: string, cliEntry: string): string {
   const directory = join(home, 'cli', 'bin');
   mkdirSync(directory, { recursive: true });
   const temporary = join(directory, `argo.${randomUUID()}`);
@@ -28,18 +28,26 @@ function cliDirectory(home: string, cliEntry: string): string {
   return directory;
 }
 
-export const sessionLaunchPolicy =
-  (
-    home: string,
-    tokens: SessionTokens,
-    cliEntry: string,
-  ): NonNullable<AcpResourceInput['sessionAccess']> =>
-  (sessionId, projectId) => {
-    const directory = cliDirectory(home, cliEntry);
+export function sessionLaunchPolicy(
+  home: string,
+  tokens: SessionTokens,
+  cliEntry: string,
+): NonNullable<AcpResourceInput['sessionAccess']> {
+  const launcher = cliLauncherOnce(home, cliEntry);
+
+  return (sessionId, projectId) => {
     const grant = tokens.issue(sessionId, projectId);
 
     return {
-      environment: { token: grant.token, home, cliDirectory: directory },
+      environment: { token: grant.token, home, cliDirectory: launcher() },
       release: grant.release,
     };
   };
+}
+
+// Each Engine writes the launcher for its own CLI entry once, at its first private opening.
+function cliLauncherOnce(home: string, cliEntry: string): () => string {
+  let directory: string | undefined;
+
+  return () => (directory ??= writeCliLauncher(home, cliEntry));
+}
