@@ -73,8 +73,13 @@ function feedDisplay(
   };
 }
 
+type PermissionFeed = {
+  feed: Pick<FeedStore['feed'], 'rows'>;
+  snapshot: FeedStore['snapshot'];
+};
+
 const permissionToolCall = (
-  store: FeedStore,
+  store: PermissionFeed,
   sessionId: string | undefined,
 ): SessionFeed['permissionToolCall'] =>
   findPermissionToolCall(store.feed.rows, store.snapshot, sessionId);
