@@ -16,18 +16,35 @@ async function collectFeed(
   }
 }
 
+type PromptStep = NonNullable<
+  NonNullable<ScriptedScenario['responses']>['session/prompt']
+>[number];
+
+function requireSteps(
+  step: PromptStep | undefined,
+): NonNullable<PromptStep['steps']> {
+  if (!step?.steps) throw new Error('Missing child scenario steps');
+
+  return step.steps;
+}
+
+function firstChild<T>(children: readonly T[]): T {
+  const child = children[0];
+
+  if (!child) throw new Error('No Subagent was persisted');
+
+  return child;
+}
+
 function resumedChildScenario(): ScriptedScenario {
   const scenario = scenarios['subagent-more-work'];
   const [first, followup] = scenario.responses?.['session/prompt'] ?? [];
 
-  if (!first?.steps || !followup?.steps)
-    throw new Error('Missing child scenario steps');
-
   return {
     ...scenario,
     responses: undefined,
-    steps: first.steps,
-    resumedSteps: followup.steps,
+    steps: requireSteps(first),
+    resumedSteps: requireSteps(followup),
   };
 }
 
@@ -38,9 +55,9 @@ it.each(['open', 'closed'] as const)(
       resumedChildScenario(),
     );
 
-    const [child] = await host.caller.session.listAgents({ sessionId });
-
-    if (!child) throw new Error('No Subagent was persisted');
+    const child = firstChild(
+      await host.caller.session.listAgents({ sessionId }),
+    );
 
     if (state === 'closed') await host.caller.session.close({ sessionId });
     const controller = new AbortController();
