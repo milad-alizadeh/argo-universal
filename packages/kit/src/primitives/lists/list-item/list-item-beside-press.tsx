@@ -11,11 +11,6 @@ import type { DrawingProps, RowPressProps } from './list-item-press-props';
 import { ItemContentSlots } from './list-item-slots';
 import { useFoldButton } from './list-item-tree';
 
-/*
- * A row with accessories, or a parent's chevron, draws its press as an empty layer under its content, so the web never
- * nests their buttons in the row's and a screen reader reaches each accessory after the row. The content lets every press but an
- * accessory's fall through to the row's press.
- */
 // Accessories and a parent's chevron are buttons of their own, which the web must not nest in the row's.
 export function useBesidePress(props: DrawingProps): boolean {
   const folds = useFoldButton();
@@ -23,6 +18,11 @@ export function useBesidePress(props: DrawingProps): boolean {
   return hasAccessories(props) || folds;
 }
 
+/*
+ * A row with accessories, or a parent's chevron, draws its press as an empty layer under its content, so the web never
+ * nests their buttons in the row's and a screen reader reaches each accessory after the row. The content lets every
+ * press but an accessory's or the chevron's fall through to the row's press.
+ */
 interface BesidePressProps {
   props: DrawingProps;
   press: RowPressProps;
