@@ -56,18 +56,17 @@ export class AcpConnections {
       this.drop(policy.key, entry);
     }
 
-    return this.start(policy.key, launch, policy.access);
+    return this.start(launch, policy);
   }
   private start(
-    key: string,
     launch: DeferredAgentLaunch,
-    access?: Entry['access'],
+    { key, kind }: ReturnType<typeof launchPolicy>,
   ): Entry {
     const connecting = Promise.withResolvers<AcpConnection>();
 
     const entry = createEntry(launch, this.createConnection(key), {
       connecting: connecting.promise,
-      access,
+      kind,
     });
 
     connecting.resolve(this.connecting(entry, launch, key));

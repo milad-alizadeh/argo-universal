@@ -29,7 +29,7 @@ class EngineAcpResources implements AcpResources {
     try {
       const connection = await awaitAcpOpening(entry.connecting, input.signal);
 
-      return await connection.open(input);
+      return { ...(await connection.open(input)), connectionKind: entry.kind };
     } finally {
       entry.pending -= 1;
       withdrawResolving(entry, input.signal);

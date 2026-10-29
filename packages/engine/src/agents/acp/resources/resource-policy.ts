@@ -1,14 +1,22 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { AcpConnection } from '../connection/connection';
-import { entryInUse, type Entry } from './resource-entry';
+import {
+  entryInUse,
+  type Entry,
+  type EntryKind,
+  type PrivateEntry,
+} from './resource-entry';
 import type { AcpResourceInput, SessionProcessAccess } from './resource-types';
 
-type LaunchPolicy = { key: string; access?: SessionProcessAccess };
+type LaunchPolicy = { key: string; kind: EntryKind };
 
 export const sessionResourceKey = (
   launch: DeferredAgentLaunch,
   sessionId?: string,
 ): string => JSON.stringify([launch.agentId, launch.projectId, sessionId]);
+
+const sharedResourceKey = (launch: DeferredAgentLaunch): string =>
+  JSON.stringify([launch.agentId, launch.projectId]);
 
 function sessionAccess(
   input: AcpResourceInput,
@@ -27,19 +35,20 @@ export function launchPolicy(
 ): LaunchPolicy {
   const access = sessionAccess(input, launch, sessionId);
 
-  const key = access
-    ? sessionResourceKey(launch, sessionId)
-    : JSON.stringify([launch.agentId, launch.projectId]);
-
-  return { key, access };
+  return access
+    ? {
+        key: sessionResourceKey(launch, sessionId),
+        kind: { kind: 'private', access },
+      }
+    : { key: sharedResourceKey(launch), kind: { kind: 'shared' } };
 }
 
 function withdrawPrivateOpening(
-  entry: Entry,
+  entry: PrivateEntry,
   signal: AbortSignal,
   stop: () => void,
 ): void {
-  entry.access?.release();
+  entry.access.release();
 
   if (entry.pending === 0) return;
   entry.resolving.abort(signal.reason);
@@ -53,7 +62,7 @@ export function bindSessionAccess(
 ): void {
   entry.pending += 1;
 
-  if (!entry.access || !signal) return;
+  if (entry.kind === 'shared' || !signal) return;
   signal.addEventListener(
     'abort',
     () => withdrawPrivateOpening(entry, signal, stop),
@@ -78,16 +87,17 @@ export function forgetConnection(
 }
 
 export function canRetire(entry: Entry): boolean {
-  const dropped = !!entry.access || entry.dropped;
+  const dropped = entry.kind === 'private' || entry.dropped;
 
   return dropped && !entryInUse(entry);
 }
 
 export function stopResolving(entry: Entry): void {
   entry.resolving.abort();
-  entry.access?.release();
+  releaseAccess(entry);
 }
 
+// Retiring a private connection ends its Session's access with it.
 function releaseAccess(entry: Entry): void {
-  entry.access?.release();
+  if (entry.kind === 'private') entry.access.release();
 }

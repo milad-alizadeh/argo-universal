@@ -110,9 +110,9 @@ async function sessionAuthentication(
   sessionId: string,
 ): Promise<ConnectionAuthentication> {
   const found = requireSessionAuthentication(deps, subject, sessionId);
-  const launch = deps.sessionConnections.launch(sessionId, subject);
+  const launch = deps.sessionConnections.privateLaunch(sessionId, subject);
 
-  if (!launch?.argo) return found;
+  if (!launch) return found;
 
   const shared = await sharedSessionAuthentication(deps, launch);
 

@@ -59,5 +59,5 @@ const abortWith = (
 
 const sessionLaunch = (entry: Entry, launch: AgentLaunch): AgentLaunch => ({
   ...launch,
-  argo: entry.access?.environment,
+  argo: entry.kind === 'private' ? entry.access.environment : undefined,
 });

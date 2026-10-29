@@ -31,6 +31,8 @@ export type AcpSessionDestination = {
 
 export type AcpSessionLease = {
   launch: AgentLaunch;
+  // A private connection is the Session's own Agent process; a shared one serves its Agent and Project.
+  connectionKind: 'private' | 'shared';
   authentication?: ConnectionAuthentication;
   agent: ClientContext;
   sessionId: SessionId;
@@ -41,6 +43,9 @@ export type AcpSessionLease = {
   rejectRequest: (cause: unknown) => Promise<never>;
   readonly released: Promise<void>;
 };
+
+// What one connection opens; the resources add which kind of connection it runs on.
+export type AcpConnectionLease = Omit<AcpSessionLease, 'connectionKind'>;
 
 export type SessionProcessAccess = {
   environment: NonNullable<AgentLaunch['argo']>;

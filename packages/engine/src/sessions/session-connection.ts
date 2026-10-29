@@ -6,7 +6,8 @@ type ConnectionSubject = { agent: string; projectId: string };
 // What the Agents module may read of open Sessions: the shared ACP resources and one Session's connection.
 export type SessionConnections = {
   acpResources: () => AcpResources;
-  launch: (
+  // The launch of a Session that runs on its own private connection.
+  privateLaunch: (
     sessionId: string,
     subject: ConnectionSubject,
   ) => AgentLaunch | undefined;
@@ -40,6 +41,9 @@ export const createSessionConnections = (
   acpResources: () => sessions.getSnapshot().context.acpResources,
   authentication: (sessionId, subject) =>
     findSessionLease(sessions, sessionId, subject)?.authentication,
-  launch: (sessionId, subject) =>
-    findSessionLease(sessions, sessionId, subject)?.launch,
+  privateLaunch: (sessionId, subject) => {
+    const lease = findSessionLease(sessions, sessionId, subject);
+
+    return lease?.connectionKind === 'private' ? lease.launch : undefined;
+  },
 });

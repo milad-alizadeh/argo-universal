@@ -3,7 +3,12 @@ import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { AcpConnection } from '../connection/connection';
 import type { SessionProcessAccess } from './resource-types';
 
-export type Entry = {
+// A private connection is one Session's own Agent process, holding that Session's access; a shared one serves its Agent and Project.
+export type EntryKind =
+  | { kind: 'shared' }
+  | { kind: 'private'; access: SessionProcessAccess };
+
+export type Entry = EntryKind & {
   agentId: string;
   projectId: string;
   version: string;
@@ -12,18 +17,17 @@ export type Entry = {
   connection: AcpConnection;
   pending: number;
   dropped: boolean;
-  access?: SessionProcessAccess;
   resolving: AbortController;
 };
 
-type EntryConnection = Pick<Entry, 'connecting' | 'access'>;
+export type PrivateEntry = Extract<Entry, { kind: 'private' }>;
 
 export const createEntry = (
   launch: DeferredAgentLaunch,
   connection: AcpConnection,
-  { connecting, access }: EntryConnection,
+  { connecting, kind }: { connecting: Promise<AcpConnection>; kind: EntryKind },
 ): Entry => ({
-  access,
+  ...kind,
   agentId: launch.agentId,
   projectId: launch.projectId,
   version: launch.version,
@@ -59,7 +63,7 @@ export const pendingAuthentication = (
 ): Entry | undefined =>
   [...entries].find(
     (entry) =>
-      !entry.access &&
+      entry.kind === 'shared' &&
       sameProject(entry, agent, project) &&
       entry.connection.authenticating,
   );
