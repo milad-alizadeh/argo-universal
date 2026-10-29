@@ -1,0 +1,38 @@
+import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
+import { expect, it } from 'vitest';
+import { unwalkedAutomaticTransitions } from '#mocks/acp-auto-audit';
+import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { createAcpSessionModel } from '#mocks/acp-session-model';
+import { unwalkedSessionTransitions } from '#mocks/acp-transition-audit';
+import { findMachineActor } from '../lib/machine-actor';
+import { sessionMachine } from './session-machine';
+import { sessionActorId } from './session-system';
+
+it('walks every declared Session event transition, including guarded branches', async () => {
+  const agent = appFixtureAgentIds[0];
+
+  if (!agent) throw new Error('No Agent fixture');
+
+  const host = await startAcpEngine({ steps: [] }, undefined, agent);
+
+  const created = await host.caller.session.new({
+    ...emptySessionInput,
+    agent,
+  });
+
+  const actor = findMachineActor(
+    host.engine.system,
+    sessionActorId(created.sessionId),
+    sessionMachine,
+  );
+
+  if (!actor) throw new Error('The Session model actor is missing');
+
+  const paths = (['new', 'existing', 'opened'] as const).flatMap(
+    (entry) => createAcpSessionModel(actor.getSnapshot(), entry).paths,
+  );
+
+  expect(unwalkedAutomaticTransitions(paths, actor.getSnapshot())).toEqual([]);
+  expect(unwalkedSessionTransitions(paths)).toEqual([]);
+  await host.caller.session.close(created);
+}, 15_000);
