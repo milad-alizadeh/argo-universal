@@ -3,18 +3,15 @@ import { Icon } from '@repo/kit/primitives/content/icon';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { PhoneAttachChoices } from './composer-phone-attach-choices';
+import {
+  type AttachChoice,
+  slashCommandsChoice,
+} from './composer-slash-commands-choice';
 import type { AttachLayout } from './composer-toolbar-types';
-
-interface AttachChoice {
-  label: string;
-  icon: IconName;
-  onPress?: () => void;
-}
 
 export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
   return (
@@ -63,7 +60,7 @@ function ComposerAttachItems({
   layout,
   close,
 }: AttachMenuProps): React.JSX.Element {
-  const choices = wideChoices(layout.props);
+  const choices = wideChoices(layout);
 
   return (
     <>
@@ -74,23 +71,16 @@ function ComposerAttachItems({
   );
 }
 
-type WideAttachChoices = Pick<
-  AttachLayout['props'],
-  'onAttachFiles' | 'onAttachImages' | 'onSelectSlashCommand' | 'onCreateGoal'
->;
+function wideChoices(layout: AttachLayout): AttachChoice[] {
+  const { props } = layout;
 
-function wideChoices(props: WideAttachChoices): AttachChoice[] {
   return [
     {
       label: 'Files',
       icon: 'folder',
       onPress: props.onAttachFiles ?? props.onAttachImages,
     },
-    {
-      label: 'Slash Commands',
-      icon: 'code',
-      onPress: props.onSelectSlashCommand,
-    },
+    slashCommandsChoice(layout),
     { label: 'Goal', icon: 'goal', onPress: props.onCreateGoal },
   ];
 }

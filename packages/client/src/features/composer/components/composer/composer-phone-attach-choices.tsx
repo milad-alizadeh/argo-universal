@@ -1,15 +1,12 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
+import {
+  type AttachChoice,
+  slashCommandsChoice,
+} from './composer-slash-commands-choice';
 import type { AttachLayout } from './composer-toolbar-types';
 import type { ComposerProps } from './composer-types';
-
-interface AttachChoice {
-  label: string;
-  icon: IconName;
-  onPress?: () => void;
-}
 
 interface AttachMenuProps {
   layout: AttachLayout;
@@ -23,7 +20,7 @@ export function PhoneAttachChoices({
   return (
     <FieldGroup>
       <FieldGroup.Section>
-        {phoneChoices(layout.props).map((item) => phoneAttachItem(item, close))}
+        {phoneChoices(layout).map((item) => phoneAttachItem(item, close))}
       </FieldGroup.Section>
     </FieldGroup>
   );
@@ -45,16 +42,14 @@ function phoneAttachItem(
   );
 }
 
-function phoneChoices(
-  props: Pick<
-    AttachLayout['props'],
-    'onAttachCamera' | 'onAttachImages' | 'onAttachFiles'
-  >,
-): AttachChoice[] {
+function phoneChoices(layout: AttachLayout): AttachChoice[] {
+  const { props } = layout;
+
   return [
     ...cameraChoice(props),
     { label: 'Photos', icon: 'photos', onPress: props.onAttachImages },
     ...fileChoice(props),
+    slashCommandsChoice(layout),
   ];
 }
 

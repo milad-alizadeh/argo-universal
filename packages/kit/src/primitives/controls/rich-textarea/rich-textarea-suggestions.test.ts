@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   findCommand,
   insertSuggestion,
+  insertWordAtCaret,
   matchSuggestionTrigger,
   querySuggestions,
   suggestionsAtCaret,
@@ -100,6 +101,22 @@ describe('suggestionsAtCaret', () => {
 
   it('follows the caret, not the end of the text', () => {
     expect(offered('/re later', 3)).toEqual(['review', 'rename']);
+  });
+});
+
+describe('insertWordAtCaret', () => {
+  it.each([
+    ['', { start: 0, end: 0 }, { text: '/', caret: 1 }],
+    ['Run', { start: 3, end: 3 }, { text: 'Run /', caret: 5 }],
+    ['Run ', { start: 4, end: 4 }, { text: 'Run /', caret: 5 }],
+    ['Run\n', { start: 4, end: 4 }, { text: 'Run\n/', caret: 5 }],
+    ['Run later', { start: 3, end: 3 }, { text: 'Run / later', caret: 5 }],
+    ['Run later', { start: 0, end: 0 }, { text: '/Run later', caret: 1 }],
+    ['Run later', { start: 4, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 3, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 0, end: 9 }, { text: '/', caret: 1 }],
+  ])('puts a word where %j is selected as %#', (text, selection, expected) => {
+    expect(insertWordAtCaret(text, selection, '/')).toEqual(expected);
   });
 });
 

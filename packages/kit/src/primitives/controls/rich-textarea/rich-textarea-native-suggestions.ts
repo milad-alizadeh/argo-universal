@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { TextInputProps } from 'react-native';
+import type { RichTextareaHandle } from './rich-textarea-props';
 import {
   insertSuggestion,
+  insertWordAtCaret,
   suggestionsAtCaret,
   type ComposerSuggestion,
   type SuggestionGroup,
@@ -21,11 +23,13 @@ export interface NativeSuggestions {
     'onChangeText' | 'onSelectionChange' | 'selection'
   >;
   choose: (suggestion: ComposerSuggestion) => void;
+  insertWord: RichTextareaHandle['insertWord'];
 }
 
 interface CaretState {
   chosen: Selection | null;
   position: number;
+  selected: Selection;
   collapsed: boolean;
   report: (event: SelectionEvent) => void;
   place: (selection: Selection) => void;
@@ -44,8 +48,12 @@ const atEnd = (value: string): Selection => ({
 const where = (
   caret: Selection,
   value: string,
-): Pick<CaretState, 'position' | 'collapsed'> => ({
+): Pick<CaretState, 'position' | 'selected' | 'collapsed'> => ({
   position: Math.min(caret.end, value.length),
+  selected: {
+    start: Math.min(caret.start, value.length),
+    end: Math.min(caret.end, value.length),
+  },
   collapsed: caret.start === caret.end,
 });
 
@@ -74,6 +82,19 @@ function chooser(
 ): NativeSuggestions['choose'] {
   return (suggestion) => {
     const inserted = insertSuggestion(value, caret.position, suggestion);
+
+    caret.place({ start: inserted.caret, end: inserted.caret });
+    onChangeText(inserted.text);
+  };
+}
+
+function wordInserter(
+  value: string,
+  caret: CaretState,
+  onChangeText: (value: string) => void,
+): NativeSuggestions['insertWord'] {
+  return (word) => {
+    const inserted = insertWordAtCaret(value, caret.selected, word);
 
     caret.place({ start: inserted.caret, end: inserted.caret });
     onChangeText(inserted.text);
@@ -116,5 +137,6 @@ export function useNativeSuggestions(
       : null,
     fieldProps: fieldProps(caret, onChangeText),
     choose: chooser(value, caret, onChangeText),
+    insertWord: wordInserter(value, caret, onChangeText),
   };
 }

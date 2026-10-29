@@ -14,7 +14,6 @@ type ComposerFixture = Omit<
   | 'onAttachImages'
   | 'onAttachCamera'
   | 'onAttachFiles'
-  | 'onSelectSlashCommand'
   | 'onCreateGoal'
   | 'onSend'
   | 'onStop'

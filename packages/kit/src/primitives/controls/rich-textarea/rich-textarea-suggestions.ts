@@ -103,6 +103,26 @@ export function suggestionsAtCaret(
   return groups.length > 0 ? groups : null;
 }
 
+// The space a word needs before it: none at the start of the text or after whitespace.
+export function separatorBefore(before: string): string {
+  return /(?:^|\s)$/.test(before) ? '' : ' ';
+}
+
+// Puts a word where the selection is, replacing it, with a space before it unless the text before is empty or ends in whitespace.
+export function insertWordAtCaret(
+  text: string,
+  selection: { start: number; end: number },
+  word: string,
+): InsertedText {
+  const before = text.slice(0, selection.start);
+  const inserted = separatorBefore(before) + word;
+
+  return {
+    text: before + inserted + text.slice(selection.end),
+    caret: selection.start + inserted.length,
+  };
+}
+
 // Replaces the `/` word before the caret with the suggestion's text; the caret lands after it.
 export function insertSuggestion(
   text: string,

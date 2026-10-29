@@ -22,6 +22,7 @@ import {
   MarkdownValuePlugin,
 } from './web/rich-textarea-field-plugins';
 import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
+import { HandlePlugin } from './web/rich-textarea-handle-plugin';
 import { LinkPlugins } from './web/rich-textarea-link-plugins';
 import {
   $importMarkdown,
@@ -120,6 +121,7 @@ function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
       <EditablePlugin editable={props.editable} />
       {props.autoFocus && <AutoFocusPlugin />}
       <MarkdownValuePlugin {...props} />
+      <HandlePlugin handle={props.ref} />
     </>
   );
 }
