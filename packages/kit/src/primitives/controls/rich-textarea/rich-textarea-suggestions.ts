@@ -40,3 +40,56 @@ export function matchSuggestionTrigger(text: string): {
     replaceableString: match[1],
   };
 }
+
+export interface SuggestionGroup {
+  source: SuggestionSource;
+  suggestions: readonly ComposerSuggestion[];
+}
+
+export interface InsertedText {
+  text: string;
+  caret: number;
+}
+
+const resultLimit = 8;
+
+function sourceGroups(
+  source: SuggestionSource,
+  query: string,
+): SuggestionGroup[] {
+  const suggestions = source.query(query).slice(0, resultLimit);
+
+  return suggestions.length > 0 ? [{ source, suggestions }] : [];
+}
+
+// What the list offers while the caret is in a `/` word: each source's matches, or null when none match.
+export function suggestionsAtCaret(
+  text: string,
+  caret: number,
+  sources: readonly SuggestionSource[],
+): SuggestionGroup[] | null {
+  const match = matchSuggestionTrigger(text.slice(0, caret));
+
+  if (!match) return null;
+
+  const groups = sources.flatMap((source) =>
+    sourceGroups(source, match.matchingString),
+  );
+
+  return groups.length > 0 ? groups : null;
+}
+
+// Replaces the `/` word before the caret with the suggestion's text; the caret lands after it.
+export function insertSuggestion(
+  text: string,
+  caret: number,
+  suggestion: ComposerSuggestion,
+): InsertedText {
+  const start =
+    matchSuggestionTrigger(text.slice(0, caret))?.leadOffset ?? caret;
+
+  return {
+    text: text.slice(0, start) + suggestion.insert + text.slice(caret),
+    caret: start + suggestion.insert.length,
+  };
+}

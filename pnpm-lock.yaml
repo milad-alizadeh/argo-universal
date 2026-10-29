@@ -1899,18 +1899,33 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@repo/browser-suite-lock':
+        specifier: workspace:*
+        version: link:../tooling/browser-suite-lock
       '@repo/contracts':
         specifier: workspace:*
         version: link:../packages/contracts
+      '@repo/engine':
+        specifier: workspace:*
+        version: link:../packages/engine
+      '@repo/mocks':
+        specifier: workspace:*
+        version: link:../mocks
       '@repo/typescript':
         specifier: workspace:*
         version: link:../tooling/typescript
       '@repo/vitest':
         specifier: workspace:*
         version: link:../tooling/vitest
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
