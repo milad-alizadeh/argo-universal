@@ -4,7 +4,7 @@ import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { permissionJourney, answerPermission } from '#mocks/native-permission';
 import { beginHeldTurn } from '#mocks/operation-race';
 import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { openAccessSession } from '#mocks/session-access';
 
 const archiveOperation = 'session.archive';
@@ -66,7 +66,7 @@ it('detaches a disconnected wait without cancelling the Permission or retaining 
   await beginHeldTurn(journey.host, journey.session.sessionId);
 
   const pending = OperationExecution.parse(
-    await journey.session.caller.operations.run.mutate({
+    await runOperation(journey.session.caller.operations, {
       id: archiveOperation,
       params: journey.target,
     }),
@@ -105,7 +105,7 @@ it('returns at the Permission request without wait and refuses borrowed or tampe
   await beginHeldTurn(journey.host, journey.session.sessionId);
 
   const pending = OperationExecution.parse(
-    await journey.session.caller.operations.run.mutate({
+    await runOperation(journey.session.caller.operations, {
       id: archiveOperation,
       params: journey.target,
     }),

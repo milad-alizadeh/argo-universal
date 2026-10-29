@@ -8,7 +8,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { fixtureRegistry } from '#mocks/agent-fixtures';
 import { startEngineTestHost } from '#mocks/engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
 const Environment = z.strictObject({
@@ -73,7 +73,7 @@ it('applies the public Agent access setting to new launches, preserves existing 
   const managedDirectory = join(host.home, 'cli', 'bin');
   expect(enabled.path.split(delimiter)).toContain(managedDirectory);
   const existing = await operationCaller(host, z.string().parse(enabled.token));
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'agent.setAccess',
     params: { enabled: false },
   });
@@ -93,7 +93,7 @@ it('applies the public Agent access setting to new launches, preserves existing 
   const restarted = await startEngineTestHost({ home: host.home, acp: agent });
   const afterRestart = await operationCaller(restarted);
   expect(
-    await afterRestart.operations.run.mutate({
+    await runOperation(afterRestart.operations, {
       id: 'agent.getAccess',
       params: {},
     }),
@@ -102,7 +102,7 @@ it('applies the public Agent access setting to new launches, preserves existing 
   expect(stillDisabled.token).toBeNull();
   expect(stillDisabled.home).toBeNull();
   expect(stillDisabled.path.split(delimiter)).not.toContain(managedDirectory);
-  await afterRestart.operations.run.mutate({
+  await runOperation(afterRestart.operations, {
     id: 'agent.setAccess',
     params: { enabled: true },
   });

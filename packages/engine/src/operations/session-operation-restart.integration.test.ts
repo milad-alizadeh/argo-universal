@@ -1,12 +1,13 @@
 import { assert, expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { runOperation } from '#mocks/operations';
 import { openAccessSession, sessionAccessHost } from '#mocks/session-access';
 
 it('keeps an Operation Tool call row under its argo id across an Engine restart', async () => {
   const fixture = await sessionAccessHost();
   const session = await openAccessSession(fixture, 'Inspect Argo');
   const { sessionId } = session;
-  await session.caller.operations.run.mutate({
+  await runOperation(session.caller.operations, {
     id: 'project.list',
     params: {},
   });

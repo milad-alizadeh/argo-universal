@@ -3,6 +3,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { recordingSource, writeHookPlugins } from '#mocks/hook-plugins';
+import { runOperation } from '#mocks/operations';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
 it('keeps the authenticated sender through Hook rewrites and starts no Turn for a Hook drop', async () => {
@@ -33,7 +34,7 @@ it('keeps the authenticated sender through Hook rewrites and starts no Turn for 
     direction: 'tail',
   });
 
-  const dropped = await journey.caller.caller.operations.run.mutate({
+  const dropped = await runOperation(journey.caller.caller.operations, {
     id: 'session.prompt',
     params: {
       sessionId: target.sessionId,
@@ -50,7 +51,7 @@ it('keeps the authenticated sender through Hook rewrites and starts no Turn for 
   ).toEqual(before);
   const count = requests.length;
 
-  const rewritten = await journey.caller.caller.operations.run.mutate({
+  const rewritten = await runOperation(journey.caller.caller.operations, {
     id: 'session.prompt',
     params: {
       sessionId: target.sessionId,

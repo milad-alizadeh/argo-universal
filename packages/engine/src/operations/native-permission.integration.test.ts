@@ -7,6 +7,7 @@ import {
   permissionRow,
 } from '#mocks/native-permission';
 import { probeAutoAllow } from '#mocks/native-permission-probe';
+import { runOperation } from '#mocks/operations';
 
 it('asks despite bypass mode and an auto-allow Plugin, then archives through the same Operation Tool call', async () => {
   const journey = await permissionJourney();
@@ -67,7 +68,7 @@ it('denies with the exact refusal and records it without archiving the target', 
 it('refuses confirmation without an active Turn instead of leaving a waiting call', async () => {
   const journey = await permissionJourney();
   await expect(
-    journey.session.caller.operations.run.mutate({
+    runOperation(journey.session.caller.operations, {
       id: 'session.archive',
       params: journey.target,
     }),

@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import {
   addOtherProject,
   openAccessSession,
@@ -19,7 +19,7 @@ it('defaults a Session list to its caller Project and requires an active Turn to
   const foreign = await openAccessSession(fixture, 'Foreign', otherId);
 
   expect(
-    await caller.caller.operations.run.mutate({
+    await runOperation(caller.caller.operations, {
       id: listOperationId,
       params: {},
     }),
@@ -30,7 +30,7 @@ it('defaults a Session list to its caller Project and requires an active Turn to
     ]),
   });
   expect(
-    await caller.caller.operations.run.mutate({
+    await runOperation(caller.caller.operations, {
       id: listOperationId,
       params: {},
     }),
@@ -40,7 +40,7 @@ it('defaults a Session list to its caller Project and requires an active Turn to
     ]),
   });
   await expect(
-    caller.caller.operations.run.mutate({
+    runOperation(caller.caller.operations, {
       id: listOperationId,
       params: { projectId: otherId },
     }),
@@ -54,7 +54,7 @@ it('defaults a Session list to its caller Project and requires an active Turn to
   const user = await operationCaller(fixture.host);
 
   expect(
-    await user.operations.run.mutate({
+    await runOperation(user.operations, {
       id: listOperationId,
       params: { projectId: otherId },
     }),
@@ -68,13 +68,13 @@ it('scopes Project branch reads while keeping user access to another Project', a
   const { calling, otherId, user } = await sessionReadScope();
 
   expect(
-    await calling.caller.operations.run.mutate({
+    await runOperation(calling.caller.operations, {
       id: projectBranchesId,
       params: { projectId: 'project-1' },
     }),
   ).toMatchObject({ currentBranch: 'main' });
   await expect(
-    calling.caller.operations.run.mutate({
+    runOperation(calling.caller.operations, {
       id: projectBranchesId,
       params: { projectId: otherId },
     }),
@@ -83,7 +83,7 @@ it('scopes Project branch reads while keeping user access to another Project', a
     message: 'A Permission request requires an active Turn',
   });
   expect(
-    await user.operations.run.mutate({
+    await runOperation(user.operations, {
       id: projectBranchesId,
       params: { projectId: otherId },
     }),

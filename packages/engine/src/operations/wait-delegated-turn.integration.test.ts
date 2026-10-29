@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { delegatedTurnWaitHost } from '#mocks/delegated-turn-wait';
+import { runOperation } from '#mocks/operations';
 
 it('keeps a Session caller waiting for its new Agent’s actual Turn instead of returning its admission result', async () => {
   const { caller, clock, prompted, release } = await delegatedTurnWaitHost();
@@ -42,7 +43,7 @@ it('reauthorizes an active native Turn wait when its calling Session closes, whi
     await delegatedTurnWaitHost();
 
   const outcome = Promise.allSettled([
-    caller.caller.operations.run.mutate({
+    runOperation(caller.caller.operations, {
       id: 'session.new',
       params: {
         ...emptySessionInput,

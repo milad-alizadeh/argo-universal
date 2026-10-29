@@ -5,7 +5,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot, waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const heldStep = 'wait-for-cancel';
 
@@ -32,7 +32,7 @@ it('returns native work at once and keeps an old wait bound to its admitted Turn
   const user = await operationCaller(host);
 
   const started = OperationExecution.parse(
-    await user.operations.run.mutate({
+    await runOperation(user.operations, {
       id: 'session.new',
       params: {
         ...emptySessionInput,

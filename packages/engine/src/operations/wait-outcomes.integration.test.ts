@@ -5,7 +5,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { startEngineTestHost } from '#mocks/engine';
 import { recordingSource, writeHookPlugins } from '#mocks/hook-plugins';
 import { openingWaitHost } from '#mocks/operation-opening';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const startOperation = 'session.new';
 
@@ -31,7 +31,7 @@ it('settles empty and Hook-dropped first Prompts without inventing a Turn', asyn
     [{ type: 'text' as const, text: 'Drop this first Prompt' }],
   ]) {
     const result = OperationExecution.parse(
-      await user.operations.run.mutate({
+      await runOperation(user.operations, {
         id: startOperation,
         params: { ...emptySessionInput, prompt },
         wait: true,
@@ -54,7 +54,7 @@ it('reports a failed opening without persisting a Session or claiming completion
   });
 
   const started = OperationExecution.parse(
-    await host.user.operations.run.mutate({
+    await runOperation(host.user.operations, {
       id: startOperation,
       params: {
         ...emptySessionInput,
@@ -81,7 +81,7 @@ it('retains exact stored Turn waits across restart and expires old Engine openin
   const host = await openingWaitHost();
 
   const started = OperationExecution.parse(
-    await host.user.operations.run.mutate({
+    await runOperation(host.user.operations, {
       id: startOperation,
       params: {
         ...emptySessionInput,

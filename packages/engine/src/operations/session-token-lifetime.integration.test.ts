@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   sessionAccessHost,
@@ -31,13 +31,13 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
     expect.objectContaining({ id: otherId, inScope: false }),
   ]);
 
-  expect(await first.caller.operations.run.mutate(projectList)).toEqual(
+  expect(await runOperation(first.caller.operations, projectList)).toEqual(
     expected,
   );
-  expect(await second.caller.operations.run.mutate(projectList)).toEqual(
+  expect(await runOperation(second.caller.operations, projectList)).toEqual(
     expected,
   );
-  expect(await foreign.caller.operations.run.mutate(projectList)).toEqual(
+  expect(await runOperation(foreign.caller.operations, projectList)).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ id: 'project-1', inScope: false }),
       expect.objectContaining({ id: otherId, inScope: true }),
@@ -51,7 +51,7 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
     }),
   );
   await expect(
-    first.caller.operations.run.mutate({
+    runOperation(first.caller.operations, {
       id: 'session.close',
       params: { sessionId: second.sessionId },
     }),
@@ -71,7 +71,7 @@ it('isolates same-Agent tokens and marks other Projects outside the calling Sess
   await expect(second.caller.operations.list.query()).rejects.toMatchObject({
     data: { code: 'UNAUTHORIZED' },
   });
-  expect(await first.caller.operations.run.mutate(projectList)).toEqual(
+  expect(await runOperation(first.caller.operations, projectList)).toEqual(
     expected,
   );
 }, 30_000);
@@ -87,11 +87,11 @@ it('revokes a closed Session token and reopens with a fresh token without stoppi
     data: { code: 'UNAUTHORIZED' },
   });
   await expect(
-    first.caller.operations.run.mutate(projectList),
+    runOperation(first.caller.operations, projectList),
   ).rejects.toMatchObject({ data: { code: 'UNAUTHORIZED' } });
-  expect(await second.caller.operations.run.mutate(projectList)).toContainEqual(
-    expect.objectContaining({ id: 'project-1', inScope: true }),
-  );
+  expect(
+    await runOperation(second.caller.operations, projectList),
+  ).toContainEqual(expect.objectContaining({ id: 'project-1', inScope: true }));
   expect(
     requireScriptedProcessAt(fixture.host.agent.processes, 0).terminations,
   ).toBe(1);
@@ -109,7 +109,7 @@ it('revokes a closed Session token and reopens with a fresh token without stoppi
   expect(reopened.token).not.toBe(first.token);
   const caller = await operationCaller(fixture.host, reopened.token);
 
-  expect(await caller.operations.run.mutate(projectList)).toContainEqual(
+  expect(await runOperation(caller.operations, projectList)).toContainEqual(
     expect.objectContaining({ id: 'project-1', inScope: true }),
   );
   await expect(first.caller.operations.list.query()).rejects.toMatchObject({

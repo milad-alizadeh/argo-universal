@@ -1,7 +1,7 @@
 import { getConfigOptionDiagnostics } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { sessionConfiguration } from '#mocks/session-journey';
 
 it.each(['App', 'Operations'])(
@@ -40,7 +40,7 @@ it.each(['App', 'Operations'])(
     const applied =
       transport === 'App'
         ? await caller.session.setConfigOption.mutate(params)
-        : await caller.operations.run.mutate({
+        : await runOperation(caller.operations, {
             id: 'session.setConfigOption',
             params,
           });

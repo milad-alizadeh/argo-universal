@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const installOperation = 'agent.installInstructions';
 
@@ -26,13 +26,13 @@ it('writes Agent instructions only on explicit execution and repairs them on the
   const host = await startEngineTestHost({ userHome });
   const caller = await operationCaller(host);
   await caller.operations.list.query({ filter: 'access' });
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'agent.setAccess',
     params: { enabled: false },
   });
   expect(await readdir(userHome)).toEqual([]);
 
-  const installed = await caller.operations.run.mutate({
+  const installed = await runOperation(caller.operations, {
     id: installOperation,
     params: {},
   });
@@ -58,7 +58,7 @@ it('writes Agent instructions only on explicit execution and repairs them on the
   await writeFile(skill, 'outdated instructions');
   await writeFile(rule, 'outdated rule');
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: installOperation,
       params: {},
     }),
@@ -80,7 +80,7 @@ it('refuses a redirected instructions directory without touching a Project', asy
   const host = await startEngineTestHost({ userHome });
   const caller = await operationCaller(host);
   await expect(
-    caller.operations.run.mutate({
+    runOperation(caller.operations, {
       id: installOperation,
       params: {},
     }),
@@ -99,14 +99,14 @@ it('reports incomplete writes honestly and repairs the installation on retry', a
   const host = await startEngineTestHost({ userHome });
   const caller = await operationCaller(host);
   await expect(
-    caller.operations.run.mutate({
+    runOperation(caller.operations, {
       id: installOperation,
       params: {},
     }),
   ).rejects.toThrow('2 of 3 files updated');
   await rm(join(userHome, rulesPath), { recursive: true });
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: installOperation,
       params: {},
     }),
@@ -132,13 +132,13 @@ it('refuses destinations inside a registered Project and accepts no custom desti
 
   const caller = await operationCaller(host);
   await expect(
-    caller.operations.run.mutate({
+    runOperation(caller.operations, {
       id: installOperation,
       params: {},
     }),
   ).rejects.toThrow('inside a Project');
   await expect(
-    caller.operations.run.mutate({
+    runOperation(caller.operations, {
       id: installOperation,
       params: { path: projectPath },
     }),

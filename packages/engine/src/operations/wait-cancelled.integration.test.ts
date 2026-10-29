@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { holdProjectReads } from '#mocks/git-read-gate';
 import { operationRaceHost, beginHeldTurn } from '#mocks/operation-race';
 import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
+import { runOperation } from '#mocks/operations';
 
 it('returns cancelled native work within the cap even if its underlying read has not returned', async () => {
   const clock = new TestOperationWaitClock();
@@ -10,7 +11,7 @@ it('returns cancelled native work within the cap even if its underlying read has
   await beginHeldTurn(host, session.sessionId);
   const gate = await holdProjectReads(host.home);
 
-  const running = session.caller.operations.run.mutate({
+  const running = runOperation(session.caller.operations, {
     id: 'project.list',
     params: {},
     wait: true,

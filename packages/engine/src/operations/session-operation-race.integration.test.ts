@@ -5,6 +5,7 @@ import {
   beginHeldTurn,
   pendingOperation,
 } from '#mocks/operation-race';
+import { runOperation } from '#mocks/operations';
 
 const listProjects = { id: 'project.list', params: {} } as const;
 
@@ -13,7 +14,7 @@ it('finishes an idle Operation row when a new Turn starts before its result retu
   const gate = await holdProjectReads(host.home);
 
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate(listProjects),
+    runOperation(session.caller.operations, listProjects),
   ]);
 
   await gate.started();
@@ -34,7 +35,7 @@ it('keeps a real Turn Operation cancelled when its result arrives during a later
   const gate = await holdProjectReads(host.home);
 
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate(listProjects),
+    runOperation(session.caller.operations, listProjects),
   ]);
 
   await gate.started();
@@ -66,7 +67,7 @@ it('cancels an idle Operation on Session close and ignores its late successful r
   const gate = await holdProjectReads(host.home);
 
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate(listProjects),
+    runOperation(session.caller.operations, listProjects),
   ]);
 
   await gate.started();

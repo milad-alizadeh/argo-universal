@@ -1,6 +1,7 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import { runOperation } from '#mocks/operations';
 import {
   delegationJourney,
   holdSession,
@@ -17,7 +18,7 @@ it('reserves the last running slot across concurrent child prompts and releases 
 
   const prompt = async (sessionId: string): Promise<OperationExecution> => {
     const value = OperationExecution.parse(
-      await journey.caller.caller.operations.run.mutate({
+      await runOperation(journey.caller.caller.operations, {
         id: 'session.prompt',
         params: {
           sessionId,

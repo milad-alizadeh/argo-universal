@@ -4,7 +4,7 @@ import { SessionChangesOutput, SessionDiffOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { startSessionJourney } from '#mocks/session-journey';
 
 async function changedFilesHost(): Promise<
@@ -35,7 +35,7 @@ it('lists Sessions through the user-token Operation and the generated App query'
   });
   const caller = await operationCaller(host);
 
-  const result = await caller.operations.run.mutate({
+  const result = await runOperation(caller.operations, {
     id: 'session.list',
     params: { projectId: 'project-1' },
   });
@@ -53,7 +53,7 @@ it('reads a stored Session snapshot without opening its Agent', async () => {
   const host = await startSessionJourney();
   const caller = await operationCaller(host);
 
-  const result = await caller.operations.run.mutate({
+  const result = await runOperation(caller.operations, {
     id: 'session.get',
     params: { sessionId: 'session-1' },
   });
@@ -77,7 +77,7 @@ it('pages changed files through the user-token Operation while retaining compari
   const caller = await operationCaller(host);
 
   const first = SessionChangesOutput.parse(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.changes',
       params: { sessionId: host.sessionId, limit: 1 },
     }),
@@ -89,7 +89,7 @@ it('pages changed files through the user-token Operation while retaining compari
     nextCursor: 1,
   });
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.changes',
       params: {
         sessionId: host.sessionId,
@@ -108,7 +108,7 @@ it('pages a changed file diff by lines through the user-token Operation', async 
   const caller = await operationCaller(host);
 
   const first = SessionDiffOutput.parse(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.diff',
       params: { sessionId: host.sessionId, path: 'first.txt', limit: 2 },
     }),
@@ -119,7 +119,7 @@ it('pages a changed file diff by lines through the user-token Operation', async 
     patch: { text: expect.not.stringContaining('+three') },
   });
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.diff',
       params: {
         sessionId: host.sessionId,
@@ -147,7 +147,7 @@ it('reads a closed Session snapshot with its current Checkout totals without reo
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.get',
       params: { sessionId: host.sessionId },
     }),

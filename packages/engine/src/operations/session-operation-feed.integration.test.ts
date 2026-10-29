@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { runOperation } from '#mocks/operations';
 import { sessionAccessHost, openAccessSession } from '#mocks/session-access';
 
 it('records discovery and a refused Operation in the calling Session Feed without exposing its token', async () => {
@@ -7,7 +8,7 @@ it('records discovery and a refused Operation in the calling Session Feed withou
 
   await session.caller.operations.list.query({ filter: 'project' });
   await expect(
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'project.list',
       params: { unexpected: 42 },
     }),

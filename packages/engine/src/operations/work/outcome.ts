@@ -24,11 +24,18 @@ export function userAdmission(start: StartOperation, wait: boolean): WaitStart {
 }
 
 function admittedResult(result: OperationRunResult, wait: boolean): Admitted {
+  const execution = executionOf(result);
+
+  return wait && execution ? { observe: execution.id } : { answer: result };
+}
+
+// Native work answers with its execution; every other answer is the Operation's own result.
+export function executionOf(
+  result: OperationRunResult,
+): OperationExecution | undefined {
   const execution = OperationExecution.safeParse(result);
 
-  return wait && execution.success
-    ? { observe: execution.data.id }
-    : { answer: result };
+  return execution.success ? execution.data : undefined;
 }
 
 export function answered(outcome: WaitOutcome): OperationRunResult {

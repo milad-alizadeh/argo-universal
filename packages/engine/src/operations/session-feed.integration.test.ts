@@ -2,7 +2,7 @@ import { SessionFeedOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { openAcpFeedSession } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const feedOperationId = 'session.feed';
 
@@ -34,7 +34,7 @@ it('reads recent Agent messages without spending its page on thoughts or Tool ca
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: feedOperationId,
       params: { sessionId, limit: 1 },
     }),
@@ -61,14 +61,14 @@ it('returns the newest messages when a cursor belongs to another epoch', async (
   const caller = await operationCaller(host);
 
   const current = SessionFeedOutput.parse(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: feedOperationId,
       params: { sessionId },
     }),
   );
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: feedOperationId,
       params: { sessionId, cursor: 0, epoch: current.epoch + 1 },
     }),
@@ -84,7 +84,7 @@ it.each([0, 201])('refuses an invalid message page limit %i', async (limit) => {
   const caller = await operationCaller(host);
 
   await expect(
-    caller.operations.run.mutate({
+    runOperation(caller.operations, {
       id: feedOperationId,
       params: { sessionId: 'session-1', limit },
     }),

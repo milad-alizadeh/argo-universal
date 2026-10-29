@@ -4,12 +4,13 @@ import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { holdBranchReads } from '#mocks/git-read-gate';
 import { openingWaitHost } from '#mocks/operation-opening';
+import { runOperation } from '#mocks/operations';
 
 it('caps an unstored ACP opening, then resumes its one actual first Prompt', async () => {
   const host = await openingWaitHost();
   const { clock, opening, release, user } = host;
 
-  const run = user.operations.run.mutate({
+  const run = runOperation(user.operations, {
     id: 'session.new',
     params: {
       ...emptySessionInput,

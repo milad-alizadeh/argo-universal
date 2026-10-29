@@ -6,6 +6,7 @@ import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from './acp-feed';
 import { hookRecords, recordingSource, writeHookPlugins } from './hook-plugins';
 import { beginHeldTurn } from './operation-race';
+import { runOperation } from './operations';
 import { openAccessSession, sessionIdentityStep } from './session-access';
 
 const autoAllowPlugin = 'auto-allow';
@@ -81,7 +82,7 @@ export async function askArchive(
   await beginHeldTurn(host, session.sessionId);
 
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'session.archive',
       params: target,
       wait: true,

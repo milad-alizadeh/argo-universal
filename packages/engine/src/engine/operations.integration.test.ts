@@ -64,7 +64,9 @@ it('discovers and runs the same Project list as the App with its private user to
   });
 
   expect(await run.json()).toEqual({
-    result: { data: await host.caller.project.list() },
+    result: {
+      data: { kind: 'result', result: await host.caller.project.list() },
+    },
   });
 });
 

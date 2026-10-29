@@ -2,7 +2,7 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import type { TRPCClient } from '@trpc/client';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import type { AppRouter } from '../engine/router';
 
 const exampleAgentId = 'example-agent';
@@ -26,7 +26,7 @@ async function operationHost(): Promise<{
 it('refreshes the Registry through an Operation', async () => {
   const { caller } = await operationHost();
 
-  const result = await caller.operations.run.mutate({
+  const result = await runOperation(caller.operations, {
     id: 'registry.refresh',
     params: {},
   });
@@ -43,7 +43,7 @@ it('reads the cached Registry through an Operation', async () => {
   const { host, caller } = await operationHost();
   const cached = await host.caller.registry.refresh();
 
-  const result = await caller.operations.run.mutate({
+  const result = await runOperation(caller.operations, {
     id: 'registry.get',
     params: {},
   });
@@ -55,7 +55,7 @@ it('syncs the Registry through an Operation', async () => {
   const { host, caller } = await operationHost();
   const cached = await host.caller.registry.refresh();
 
-  const result = await caller.operations.run.mutate({
+  const result = await runOperation(caller.operations, {
     id: 'registry.sync',
     params: {},
   });
@@ -67,7 +67,7 @@ it('installs a Registry Agent through an Operation', async () => {
   const { host, caller } = await operationHost();
   await host.caller.registry.refresh();
 
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'agent.install',
     params: { id: exampleAgentId },
   });
@@ -82,7 +82,7 @@ it('lists Installed Agents through an Operation', async () => {
   await host.caller.registry.refresh();
   await host.caller.agent.install({ id: exampleAgentId });
 
-  const result = await caller.operations.run.mutate({
+  const result = await runOperation(caller.operations, {
     id: 'agent.list',
     params: {},
   });
@@ -95,7 +95,7 @@ it('removes an Installed Agent through an Operation', async () => {
   await host.caller.registry.refresh();
   await host.caller.agent.install({ id: exampleAgentId });
 
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'agent.remove',
     params: { id: exampleAgentId },
   });

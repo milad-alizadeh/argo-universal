@@ -1,6 +1,7 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
+import { runOperation } from '#mocks/operations';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
 it('admits one concurrent Session-sent prompt to the same idle child with a matching acknowledgement', async () => {
@@ -15,7 +16,7 @@ it('admits one concurrent Session-sent prompt to the same idle child with a matc
 
   const outcomes = await Promise.allSettled(
     prompts.map((prompt) =>
-      journey.caller.caller.operations.run.mutate({
+      runOperation(journey.caller.caller.operations, {
         id: 'session.prompt',
         params: { sessionId: target.sessionId, prompt },
       }),

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { runOperation } from '#mocks/operations';
 import {
   delegationJourney,
   holdSession,
@@ -24,7 +25,7 @@ it('records the calling Session as Operation provenance and permits cancelling i
   });
   await holdSession(journey, child.sessionId);
   expect(
-    await journey.caller.caller.operations.run.mutate({
+    await runOperation(journey.caller.caller.operations, {
       id: 'session.cancel',
       params: { sessionId: child.sessionId },
     }),

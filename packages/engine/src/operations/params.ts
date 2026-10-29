@@ -28,6 +28,21 @@ const schemas: {
   };
 } = operations;
 
+// The Server takes any id and looks it up, so an unknown one is a caller's usage error.
+export function requireOperationId(id: string): OperationId {
+  const known = Object.values(operations).find(
+    (operation) => operation.id === id,
+  );
+
+  if (!known)
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Unknown Operation ${id}. Run argo operations to find one.`,
+    });
+
+  return known.id;
+}
+
 export function validateParams<Id extends OperationId>(
   id: Id,
   params: Json,

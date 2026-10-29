@@ -3,7 +3,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { startSessionJourney } from '#mocks/session-journey';
 
 it('starts a Session through the user-token Operation and generated App procedure', async () => {
@@ -12,7 +12,7 @@ it('starts a Session through the user-token Operation and generated App procedur
 
   const created = SessionNewOutput.parse(
     OperationExecution.parse(
-      await user.operations.run.mutate({
+      await runOperation(user.operations, {
         id: 'session.new',
         params: {
           ...emptySessionInput,

@@ -3,7 +3,7 @@ import { runningShellStep } from '@repo/mocks/agent/shell-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { startSessionJourney } from '#mocks/session-journey';
 
 it('renames a Session through its Operation and publishes the title to the App', async () => {
@@ -16,7 +16,7 @@ it('renames a Session through its Operation and publishes the title to the App',
 
   const caller = await operationCaller(host);
 
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'session.rename',
     params: { ...created, title: 'Review the change' },
   });
@@ -43,7 +43,7 @@ it('saves a plan through its Operation in the Session Checkout', async () => {
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.savePlan',
       params: { ...created, plan: '# Review the change\n\nInspect the diff.' },
     }),
@@ -61,7 +61,10 @@ it('closes a Session through its Operation and releases its Agent Session', asyn
   const created = await host.caller.session.new(emptySessionInput);
   const caller = await operationCaller(host);
 
-  await caller.operations.run.mutate({ id: 'session.close', params: created });
+  await runOperation(caller.operations, {
+    id: 'session.close',
+    params: created,
+  });
 
   expect(closed).toEqual([{ sessionId: 'owned-1' }]);
 });
@@ -72,7 +75,7 @@ it('applies a configuration choice through its Operation and returns the Agent o
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.setConfigOption',
       params: { ...created, configId: 'model', type: 'id', value: 'large' },
     }),
@@ -101,7 +104,7 @@ it('stops a running Shell through its Operation and updates the Session snapshot
 
   const shellId = running.shells[0]?.id ?? '';
 
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'shell.stop',
     params: { ...created, shellId },
   });

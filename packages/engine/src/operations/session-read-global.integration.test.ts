@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { runOperation } from '#mocks/operations';
 import { sessionReadScope } from '#mocks/session-read-scope';
 
 it('allows discovery and global reads while retaining Plugin secret masking', async () => {
@@ -16,10 +17,10 @@ it('allows discovery and global reads while retaining Plugin secret masking', as
     'agent.getAccess',
   ] as const)
     expect(
-      await calling.caller.operations.run.mutate({ id, params: {} }),
-    ).toEqual(await user.operations.run.mutate({ id, params: {} }));
+      await runOperation(calling.caller.operations, { id, params: {} }),
+    ).toEqual(await runOperation(user.operations, { id, params: {} }));
 
-  const settings = await calling.caller.operations.run.mutate({
+  const settings = await runOperation(calling.caller.operations, {
     id: 'plugin.getSettings',
     params: { pluginId: 'probe' },
   });

@@ -1,7 +1,7 @@
 import { SessionFeedOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const originalText = 'First';
 
@@ -74,7 +74,7 @@ it('reads a newer live Agent message while its stored update waits for the Write
     const caller = await operationCaller(host);
 
     const page = SessionFeedOutput.parse(
-      await caller.operations.run.mutate({
+      await runOperation(caller.operations, {
         id: 'session.feed',
         params: created,
       }),

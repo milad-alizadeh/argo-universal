@@ -1,7 +1,7 @@
 import type { FeedUpdate } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
 const promptOperation = 'session.prompt';
@@ -19,7 +19,7 @@ it.each(['App', 'user token'] as const)(
     const journey = await delegationJourney();
     const child = await startDelegated(journey);
     await expect(
-      journey.caller.caller.operations.run.mutate({
+      runOperation(journey.caller.caller.operations, {
         id: promptOperation,
         params: {
           sessionId: child.sessionId,
@@ -65,7 +65,7 @@ async function terminalMessage(
   const user = await operationCaller(journey.host);
 
   const result = OperationExecution.parse(
-    await user.operations.run.mutate({ id: promptOperation, params: input }),
+    await runOperation(user.operations, { id: promptOperation, params: input }),
   );
 
   expect(result.turn).toMatchObject({ sessionId: input.sessionId });

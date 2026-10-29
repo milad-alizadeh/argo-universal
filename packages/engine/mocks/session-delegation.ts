@@ -7,7 +7,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
-import { operationCaller } from './operations';
+import { operationCaller, runOperation } from './operations';
 import {
   openAccessSession,
   readAgentIdentity,
@@ -54,7 +54,7 @@ export async function startDelegated(
 ): Promise<DelegationJourney['caller']> {
   const created = SessionNewOutput.parse(
     OperationExecution.parse(
-      await caller.caller.operations.run.mutate({
+      await runOperation(caller.caller.operations, {
         wait: true,
         id: 'session.new',
         params: {

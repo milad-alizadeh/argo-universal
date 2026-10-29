@@ -6,6 +6,7 @@ import {
 } from '#mocks/native-permission';
 import { askOperation } from '#mocks/operation-permissions';
 import { beginHeldTurn } from '#mocks/operation-race';
+import { runOperation } from '#mocks/operations';
 
 it('applies Settings confirmation to Session tokens and keeps their existing access grant valid after Allow', async () => {
   const journey = await permissionJourney();
@@ -34,6 +35,6 @@ it('applies Settings confirmation to Session tokens and keeps their existing acc
     _meta: { argo: { permissionOutcome: { optionId: 'allow_once' } } },
   });
   await expect(
-    session.caller.operations.run.mutate({ id: 'project.list', params: {} }),
+    runOperation(session.caller.operations, { id: 'project.list', params: {} }),
   ).resolves.toEqual(expect.any(Array));
 }, 30_000);

@@ -1,6 +1,7 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
+import { runOperation } from '#mocks/operations';
 import { sessionReadScope } from '#mocks/session-read-scope';
 
 const reviewPath = 'review.txt';
@@ -69,13 +70,13 @@ it.each(targetReads)(
       await sessionReadScope();
 
     expect(
-      await calling.caller.operations.run.mutate({
+      await runOperation(calling.caller.operations, {
         id,
         params: { ...params, sessionId: target.sessionId },
       }),
     ).toMatchObject(expected('project-1'));
     await expect(
-      calling.caller.operations.run.mutate({
+      runOperation(calling.caller.operations, {
         id,
         params: { ...params, sessionId: foreign.sessionId },
       }),
@@ -84,7 +85,7 @@ it.each(targetReads)(
       message: 'A Permission request requires an active Turn',
     });
     expect(
-      await user.operations.run.mutate({
+      await runOperation(user.operations, {
         id,
         params: { ...params, sessionId: foreign.sessionId },
       }),

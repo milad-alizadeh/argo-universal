@@ -2,6 +2,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { runOperation } from '#mocks/operations';
 import {
   delegationJourney,
   holdSession,
@@ -29,7 +30,7 @@ it('reserves the last running slot across concurrent Session starts before Agent
 
   const run = async (): Promise<OperationExecution> => {
     const value = OperationExecution.parse(
-      await journey.caller.caller.operations.run.mutate(operation),
+      await runOperation(journey.caller.caller.operations, operation),
     );
 
     return value.id.startsWith('call:')

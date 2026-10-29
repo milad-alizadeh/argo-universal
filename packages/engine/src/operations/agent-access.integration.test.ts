@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const readAccess = 'agent.getAccess';
 
@@ -13,10 +13,10 @@ it('defaults Agent access on and keeps an explicit choice after Engine restart',
   const host = await startEngineTestHost({ home });
   const caller = await operationCaller(host);
   expect(
-    await caller.operations.run.mutate({ id: readAccess, params: {} }),
+    await runOperation(caller.operations, { id: readAccess, params: {} }),
   ).toEqual({ enabled: true });
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'agent.setAccess',
       params: { enabled: false },
     }),
@@ -25,7 +25,7 @@ it('defaults Agent access on and keeps an explicit choice after Engine restart',
   const restarted = await startEngineTestHost({ home });
   const afterRestart = await operationCaller(restarted);
   expect(
-    await afterRestart.operations.run.mutate({
+    await runOperation(afterRestart.operations, {
       id: readAccess,
       params: {},
     }),

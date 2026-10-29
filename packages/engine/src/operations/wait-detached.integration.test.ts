@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { openingWaitHost } from '#mocks/operation-opening';
+import { runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const opening = (text: string): Json => ({
@@ -16,7 +17,8 @@ it('detaches a disconnected run --wait without cancelling the Session opening', 
   const abort = new AbortController();
 
   const run = Promise.allSettled([
-    host.user.operations.run.mutate(
+    runOperation(
+      host.user.operations,
       { id: 'session.new', params: opening('Detached opening'), wait: true },
       { signal: abort.signal },
     ),
@@ -48,7 +50,7 @@ it('resumes a Session opening wait id after a disconnected wait', async () => {
   const host = await openingWaitHost();
 
   const started = OperationExecution.parse(
-    await host.user.operations.run.mutate({
+    await runOperation(host.user.operations, {
       id: 'session.new',
       params: opening('Resumed opening'),
     }),

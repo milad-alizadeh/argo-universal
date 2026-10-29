@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { promptedArchiveSession } from '#mocks/archive';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { startProjectTestHost } from '#mocks/project-host';
 import { startSessionJourney } from '#mocks/session-journey';
 
@@ -14,7 +14,7 @@ it('lists a Project’s local branches through an Operation', async () => {
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'project.listBranches',
       params: { projectId: 'project-1' },
     }),
@@ -28,7 +28,7 @@ it('lists comparison branches for a Session through an Operation', async () => {
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.listBranches',
       params: created,
     }),
@@ -57,7 +57,7 @@ it('lists a Session’s running Shell through an Operation', async () => {
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.listShells',
       params: created,
     }),
@@ -82,7 +82,7 @@ it('lists ACP-reported subagents through an Operation', async () => {
   const caller = await operationCaller(host);
 
   expect(
-    await caller.operations.run.mutate({
+    await runOperation(caller.operations, {
       id: 'session.listAgents',
       params: created,
     }),
@@ -101,7 +101,7 @@ it('restores an archived Session through an Operation during the Undo window', a
   const caller = await operationCaller(host);
   await host.caller.session.archive({ sessionId: created.sessionId });
 
-  await caller.operations.run.mutate({
+  await runOperation(caller.operations, {
     id: 'session.unarchive',
     params: { sessionId: created.sessionId },
   });

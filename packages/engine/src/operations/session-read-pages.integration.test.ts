@@ -6,6 +6,7 @@ import {
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
+import { runOperation } from '#mocks/operations';
 import { sessionReadScope } from '#mocks/session-read-scope';
 
 const feedOperationId = 'session.feed';
@@ -18,7 +19,13 @@ const reviewPath = 'review.txt';
 
 it('pages messages, changed files and diff lines with a Session token and checks scope on later pages', async () => {
   const { calling, target, foreign } = await sessionReadScope();
-  const run = calling.caller.operations.run;
+
+  const run = {
+    mutate: (
+      input: Parameters<typeof runOperation>[1],
+    ): ReturnType<typeof runOperation> =>
+      runOperation(calling.caller.operations, input),
+  };
 
   const feed = SessionFeedOutput.parse(
     await run.mutate({

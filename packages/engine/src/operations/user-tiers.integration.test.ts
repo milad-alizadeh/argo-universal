@@ -1,22 +1,22 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { permissionJourney } from '#mocks/native-permission';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 it('runs read, act and confirm with the user token without asking a Session', async () => {
   const journey = await permissionJourney();
   const user = await operationCaller(journey.host);
   await expect(
-    user.operations.run.mutate({ id: 'project.list', params: {} }),
+    runOperation(user.operations, { id: 'project.list', params: {} }),
   ).resolves.toEqual(expect.any(Array));
   await expect(
-    user.operations.run.mutate({
+    runOperation(user.operations, {
       id: 'session.rename',
       params: { ...journey.target, title: 'User title' },
     }),
   ).resolves.toEqual({});
   await expect(
-    user.operations.run.mutate({
+    runOperation(user.operations, {
       id: 'session.archive',
       params: journey.target,
     }),

@@ -6,6 +6,8 @@ export { OperationWork, type WorkDeps } from './work';
 
 export type { WorkAdmission } from './wait.machine';
 
+export { executionOf } from './outcome';
+
 export type { OperationWaitClock } from './clock';
 
 type LiveDeps = Parameters<typeof createSessionWorkSource>[0] &

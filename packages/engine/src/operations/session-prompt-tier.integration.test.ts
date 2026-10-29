@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { askOperation } from '#mocks/operation-permissions';
+import { runOperation } from '#mocks/operations';
 import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
 const promptOperation = 'session.prompt';
@@ -83,7 +84,7 @@ it('asks before prompting an unrelated Session, denies without a target Turn, th
 it('does not treat the calling Session itself as a Session it started', async () => {
   const journey = await delegationJourney();
   await expect(
-    journey.caller.caller.operations.run.mutate({
+    runOperation(journey.caller.caller.operations, {
       id: promptOperation,
       params: {
         sessionId: journey.caller.sessionId,

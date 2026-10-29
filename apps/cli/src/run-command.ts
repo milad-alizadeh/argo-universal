@@ -1,14 +1,15 @@
 import { parseArgs } from 'node:util';
 import {
   OperationId,
-  operations,
-  OperationExecution,
+  OperationRunResponse,
+  type OperationExecution,
 } from '@repo/contracts/operations';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { z } from 'zod';
 import { parseUsage } from './command-error';
 import { connectControl } from './control-client';
 import { readControlResponse } from './control-response';
-import { completeExecutionResult, operationExitCode } from './execution-result';
+import { completeExecutionResult, executionExitCode } from './execution-result';
 import { waitRequestTimeoutMs } from './wait-command';
 
 const RunInput = z.strictObject({
@@ -49,12 +50,22 @@ export async function runOperation(
   const client = await connectControl(waitRequestTimeoutMs);
 
   const parsed = readControlResponse(
-    z.union([operations[id].result, OperationExecution]),
+    OperationRunResponse,
     await client.operations.run.mutate({ id, params, wait }),
   );
 
+  if (parsed.kind === 'result') return answer(write, parsed.result);
   const result = await completeExecutionResult(parsed, deadline);
-  write(JSON.stringify(result, null, 2));
 
-  return operationExitCode(result);
+  return answer(write, result, executionExitCode(result));
+}
+
+function answer(
+  write: (line: string) => void,
+  value: Json | OperationExecution,
+  exitCode = 0,
+): number {
+  write(JSON.stringify(value, null, 2));
+
+  return exitCode;
 }

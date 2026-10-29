@@ -7,6 +7,7 @@ import {
   permissionRow,
 } from '#mocks/native-permission';
 import { nextOperationRow } from '#mocks/operation-rows';
+import { runOperation } from '#mocks/operations';
 
 it('queues Argo requests in order and exposes only the next request after the first answer', async () => {
   const journey = await permissionJourney();
@@ -19,7 +20,7 @@ it('queues Argo requests in order and exposes only the next request after the fi
   });
 
   const second = Promise.allSettled([
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'session.archive',
       params: target,
       wait: true,

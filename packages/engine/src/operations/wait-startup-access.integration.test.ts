@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { openingWaitHost } from '#mocks/operation-opening';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const storedPrompt = 'Stored before reopening';
 
@@ -13,7 +13,7 @@ it('refuses Session-token calls before the new Session can store Tool rows, then
   const { opening, release, environment, user } = host;
 
   const started = OperationExecution.parse(
-    await user.operations.run.mutate({
+    await runOperation(user.operations, {
       id: 'session.new',
       params: {
         ...emptySessionInput,
@@ -65,7 +65,7 @@ it('admits discovery while a stored Session reopens, but expires an unadmitted P
   await host.caller.session.close(created);
 
   const pending = Promise.allSettled([
-    host.user.operations.run.mutate({
+    runOperation(host.user.operations, {
       id: 'session.prompt',
       params: {
         ...created,

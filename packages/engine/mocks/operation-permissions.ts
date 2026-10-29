@@ -4,13 +4,14 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { assert, expect } from 'vitest';
 import { waitForAcpSnapshot } from './acp-feed';
 import type { PermissionJourney } from './native-permission';
+import { runOperation } from './operations';
 
 export async function askOperation(
   { host, session }: Pick<PermissionJourney, 'host' | 'session'>,
   operation: { id: OperationId; params: Json },
 ): Promise<AskedOperation> {
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate({ ...operation, wait: true }),
+    runOperation(session.caller.operations, { ...operation, wait: true }),
   ]);
 
   const pending = waitForAcpSnapshot(

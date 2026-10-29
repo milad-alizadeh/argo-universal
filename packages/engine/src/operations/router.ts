@@ -1,6 +1,6 @@
 import {
-  OperationId,
   OperationExecution,
+  OperationRunResponse,
   OperationWaitId,
 } from '@repo/contracts/operations';
 import { z } from 'zod';
@@ -11,8 +11,9 @@ const DiscoveryInput = z
   .strictObject({ filter: z.string().optional() })
   .optional();
 
+// Any id reaches the registry lookup, so a newer or Plugin Operation needs no newer caller.
 const RunInput = z.strictObject({
-  id: OperationId,
+  id: z.string(),
   params: z.json().default({}),
   wait: z.boolean().default(false),
 });
@@ -29,6 +30,7 @@ const executionRouter = routerFactory((engine: Operations) =>
   router({
     run: publicProcedure
       .input(RunInput)
+      .output(OperationRunResponse)
       .mutation(({ ctx, input, signal }) =>
         engine.run(ctx.token, input, signal),
       ),

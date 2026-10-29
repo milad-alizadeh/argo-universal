@@ -1,7 +1,7 @@
 import { operations } from '@repo/contracts/operations';
 import { expect, it, onTestFinished } from 'vitest';
 import { z } from 'zod';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { startProjectTestHost } from '#mocks/project-host';
 
 const projectList = operations['project.list'];
@@ -17,6 +17,6 @@ it('refuses a user-token result that does not match its Operation result', async
   });
 
   await expect(
-    user.operations.run.mutate({ id: 'project.list', params: {} }),
+    runOperation(user.operations, { id: 'project.list', params: {} }),
   ).rejects.toMatchObject({ data: { code: 'INTERNAL_SERVER_ERROR' } });
 });

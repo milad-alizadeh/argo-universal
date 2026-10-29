@@ -6,12 +6,13 @@ import {
   permissionRow,
 } from '#mocks/native-permission';
 import { beginHeldTurn } from '#mocks/operation-race';
+import { runOperation } from '#mocks/operations';
 
 it('cancels the calling Session as act without asking', async () => {
   const { host, session } = await permissionJourney();
   await beginHeldTurn(host, session.sessionId);
   await expect(
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'session.cancel',
       params: { sessionId: session.sessionId },
     }),
@@ -26,7 +27,7 @@ it('asks before cancelling an unrelated Session in the same Project', async () =
   await beginHeldTurn(host, target.sessionId);
 
   const outcome = Promise.allSettled([
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'session.cancel',
       params: target,
       wait: true,

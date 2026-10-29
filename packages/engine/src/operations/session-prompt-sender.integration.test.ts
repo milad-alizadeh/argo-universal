@@ -2,6 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { runOperation } from '#mocks/operations';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
 it('stores the authenticated Session sender for initial and subsequent ordinary Agent prompts', async () => {
@@ -30,7 +31,7 @@ it('stores the authenticated Session sender for initial and subsequent ordinary 
 
   const followUp = 'Inspect the result';
 
-  const result = await journey.caller.caller.operations.run.mutate({
+  const result = await runOperation(journey.caller.caller.operations, {
     id: 'session.prompt',
     params: {
       sessionId: target.sessionId,

@@ -3,6 +3,7 @@ import { assert, expect, it } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { fixtureRegistry } from '#mocks/agent-fixtures';
 import { operationRaceHost, beginHeldTurn } from '#mocks/operation-race';
+import { runOperation } from '#mocks/operations';
 
 it('keeps the native full JSON Blob reference when a resumed Operation result needs a Feed preview', async () => {
   const registry = fixtureRegistry([
@@ -16,7 +17,7 @@ it('keeps the native full JSON Blob reference when a resumed Operation result ne
   await beginHeldTurn(host, session.sessionId);
 
   const pending = OperationExecution.parse(
-    await session.caller.operations.run.mutate({
+    await runOperation(session.caller.operations, {
       id: 'registry.refresh',
       params: {},
     }),

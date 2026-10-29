@@ -6,7 +6,7 @@ import { SessionNewOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { openAccessSession, sessionIdentityStep } from '#mocks/session-access';
 
 const notFound = { data: { code: 'NOT_FOUND' } };
@@ -21,13 +21,13 @@ it('refuses cancel, rename and Shell stop on a still-opening Session for every c
 
   for (const token of [caller, user]) {
     await expect(
-      token.operations.run.mutate({ id: 'session.cancel', params: cancel }),
+      runOperation(token.operations, { id: 'session.cancel', params: cancel }),
     ).rejects.toMatchObject(notFound);
     await expect(
-      token.operations.run.mutate({ id: 'session.rename', params: rename }),
+      runOperation(token.operations, { id: 'session.rename', params: rename }),
     ).rejects.toMatchObject(notFound);
     await expect(
-      token.operations.run.mutate({ id: 'shell.stop', params: stop }),
+      runOperation(token.operations, { id: 'shell.stop', params: stop }),
     ).rejects.toMatchObject(notFound);
   }
 
@@ -62,7 +62,7 @@ async function openingDelegation(): Promise<OpeningDelegation> {
   const session = await openAccessSession({ host, outputs }, 'Caller');
 
   const started = OperationExecution.parse(
-    await session.caller.operations.run.mutate({
+    await runOperation(session.caller.operations, {
       id: 'session.new',
       params: {
         ...emptySessionInput,

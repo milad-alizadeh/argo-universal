@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { holdBranchReads } from '#mocks/git-read-gate';
 import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 it('expires unadmitted branch validation at ninety seconds and prevents a late Session start', async () => {
   const clock = new TestOperationWaitClock();
@@ -11,7 +11,7 @@ it('expires unadmitted branch validation at ninety seconds and prevents a late S
   const gate = await holdBranchReads(host.home);
 
   const outcome = Promise.allSettled([
-    user.operations.run.mutate({
+    runOperation(user.operations, {
       id: 'session.new',
       params: {
         ...emptySessionInput,

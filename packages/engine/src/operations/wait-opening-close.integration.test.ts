@@ -3,6 +3,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { openingWaitHost } from '#mocks/operation-opening';
+import { runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 it('closes the native Session returned before storage and retires its private process', async () => {
@@ -10,7 +11,7 @@ it('closes the native Session returned before storage and retires its private pr
   const { opening, release, user } = host;
 
   const started = OperationExecution.parse(
-    await user.operations.run.mutate({
+    await runOperation(user.operations, {
       id: 'session.new',
       params: {
         ...emptySessionInput,

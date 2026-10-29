@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   sessionAccessHost,
@@ -37,10 +37,10 @@ it('refuses the token of an exited Agent process and gives the next process of t
   expect(relaunched.token).not.toBe(first.token);
   const caller = await operationCaller(fixture.host, relaunched.token);
 
-  expect(await caller.operations.run.mutate(projectList)).toContainEqual(
+  expect(await runOperation(caller.operations, projectList)).toContainEqual(
     expect.objectContaining({ id: 'project-1', inScope: true }),
   );
   await expect(
-    first.caller.operations.run.mutate(projectList),
+    runOperation(first.caller.operations, projectList),
   ).rejects.toMatchObject({ data: { code: 'UNAUTHORIZED' } });
 }, 30_000);

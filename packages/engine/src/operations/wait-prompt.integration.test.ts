@@ -2,7 +2,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
-import { operationCaller } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 it.each(['end_turn', 'cancelled'] as const)(
   'returns the exact terminal Prompt Turn and resumes its %s outcome',
@@ -18,7 +18,7 @@ it.each(['end_turn', 'cancelled'] as const)(
     const user = await operationCaller(host);
 
     const pending = OperationExecution.parse(
-      await user.operations.run.mutate({
+      await runOperation(user.operations, {
         id: 'session.prompt',
         params: {
           ...created,

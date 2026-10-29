@@ -4,6 +4,7 @@ import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { permissionJourney, answerPermission } from '#mocks/native-permission';
 import { askOperation } from '#mocks/operation-permissions';
 import { beginHeldTurn } from '#mocks/operation-race';
+import { runOperation } from '#mocks/operations';
 import { addOtherProject } from '#mocks/session-access';
 
 it('reads another Project only after Permission, preserving refusal and result shapes', async () => {
@@ -66,18 +67,21 @@ it('resolves a Session read’s Project before asking for foreign access', async
 it('reads its own Project and unrelated Sessions in that Project without asking, even between Turns', async () => {
   const { session, target } = await permissionJourney();
   await expect(
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'project.listBranches',
       params: { projectId: 'project-1' },
     }),
   ).resolves.toEqual({ branches: ['feature', 'main'], currentBranch: 'main' });
   await expect(
-    session.caller.operations.run.mutate({
+    runOperation(session.caller.operations, {
       id: 'session.listAgents',
       params: target,
     }),
   ).resolves.toEqual([]);
   await expect(
-    session.caller.operations.run.mutate({ id: 'agent.getAccess', params: {} }),
+    runOperation(session.caller.operations, {
+      id: 'agent.getAccess',
+      params: {},
+    }),
   ).resolves.toEqual({ enabled: true });
 }, 30_000);

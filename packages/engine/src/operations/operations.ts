@@ -3,6 +3,7 @@ import {
   type OperationId,
   type OperationRow,
   type OperationExecution,
+  type OperationRunResponse,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
@@ -25,6 +26,8 @@ import {
   type OperationResult,
   type OperationRunResult,
 } from './implementations';
+import { requireOperationId } from './params';
+import { OperationResponses, storedOutputBlobs } from './responses';
 import { OperationRunner, type RunContext } from './runner';
 import { listOperations } from './search';
 import { scopedOperations, SessionScope } from './session-scope';
@@ -50,12 +53,15 @@ export type OperationsDeps = SessionRouterDeps &
 
 type RunInput = { id: OperationId; params: Json; wait: boolean };
 
+type RunRequest = Omit<RunInput, 'id'> & { id: string };
+
 type OperationCallInput = { name: OperationId; label: string; input: Json };
 
 export class Operations {
   private readonly runner: OperationRunner;
   private readonly work: OperationWork;
   private readonly calls: OperationCalls;
+  private readonly responses: OperationResponses;
   public constructor(
     private readonly deps: OperationsDeps,
     sessionList: SessionList,
@@ -65,6 +71,7 @@ export class Operations {
       this.caller(token),
     );
     this.runner = createRunner(deps, { sessionList, work: this.work });
+    this.responses = new OperationResponses(storedOutputBlobs(deps));
   }
   public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
     const caller = this.caller(token);
@@ -79,17 +86,20 @@ export class Operations {
       async (call) => scopedOperations(listOperations(filter), call),
     );
   }
-  public run(
+  public async run(
     token: string | undefined,
-    input: RunInput,
+    request: RunRequest,
     signal?: AbortSignal,
-  ): Promise<OperationResult | OperationExecution> {
+  ): Promise<OperationRunResponse> {
+    const input = { ...request, id: requireOperationId(request.id) };
     const caller = this.caller(token);
 
-    return this.work.run(
+    const value = await this.work.run(
       { caller, token, wait: input.wait, signal, id: input.id },
       (admission) => this.start({ caller, admission }, input),
     );
+
+    return this.responses.run(value, signal);
   }
   private start(
     context: RunContext,
@@ -101,12 +111,14 @@ export class Operations {
       (call) => this.runner.run({ ...context, call }, input),
     );
   }
-  public wait(
+  public async wait(
     id: string,
     token: string | undefined,
     signal?: AbortSignal,
   ): Promise<OperationExecution> {
-    return this.work.wait(id, token, signal);
+    const execution = await this.work.wait(id, token, signal);
+
+    return this.responses.execution(execution, signal);
   }
   private caller(token: string | undefined): OperationCaller {
     if (token && tokensMatch(this.deps.controlToken, token))
