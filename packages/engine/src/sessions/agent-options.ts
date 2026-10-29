@@ -104,6 +104,11 @@ class AgentOptionsReader {
     this.events.emit('update', event);
   }
 
+  // Discovery always ends with an update, even one matching the last, so a reader waiting on the refresh hears it finish.
+  private republishNext(): void {
+    this.previous = '';
+  }
+
   private discovered(update: AgentOptionsUpdate): void {
     if (this.isLive()) return;
     this.publish({ update });
@@ -123,8 +128,7 @@ class AgentOptionsReader {
           }),
       });
 
-      // The saved snapshot is the last word, even when it reads as the early one did.
-      this.previous = '';
+      this.republishNext();
       this.discovered({
         ...this.snapshot(saved),
         configOptions,

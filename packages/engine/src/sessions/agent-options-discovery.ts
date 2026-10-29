@@ -8,6 +8,7 @@ import { type AcpSessionLease, requireInstalledAgent } from '../agents';
 import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { readAcpConfiguration } from './acp/acp-configuration';
 import { openOptionsSession } from './agent-options-discovery-session';
+import { storageSources } from './agent-options-input';
 import {
   AgentOptionsJob,
   readAgentConfiguration,
@@ -159,9 +160,7 @@ function discoveryResult(
   if (Object.keys(input.picks ?? {}).length) return options;
 
   return (
-    readAgentConfiguration(
-      { database: deps.database, writer: deps.findWriter() },
-      input,
-    )?.configOptions ?? options
+    readAgentConfiguration(storageSources(deps), input)?.configOptions ??
+    options
   );
 }

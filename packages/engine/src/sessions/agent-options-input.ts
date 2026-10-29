@@ -9,6 +9,17 @@ import type { OptionsDeps } from './agent-options-discovery';
 import { readAgentConfiguration } from './agent-options-storage';
 import { readSessionRow } from './session-record';
 
+// Saved rows, with the writes still queued over them.
+export const storageSources = (
+  deps: Pick<OptionsDeps, 'database' | 'findWriter'>,
+): {
+  database: OptionsDeps['database'];
+  writer: ReturnType<OptionsDeps['findWriter']>;
+} => ({
+  database: deps.database,
+  writer: deps.findWriter(),
+});
+
 /*
  * Browsing keeps the Session closed. Discover using its own saved choices, not
  * whichever choices another Session most recently wrote for this Agent.
@@ -19,10 +30,7 @@ export function sessionOptionsInput(
 ): SessionAgentOptionsInput {
   if (!input.sessionId) return input;
 
-  const session = readSessionRow(
-    { database: deps.database, writer: deps.findWriter() },
-    input.sessionId,
-  );
+  const session = readSessionRow(storageSources(deps), input.sessionId);
 
   if (
     !session ||
@@ -49,10 +57,7 @@ export function savedAgentOptions(
   deps: OptionsDeps,
   input: SessionAgentOptionsInput,
 ): AgentOptionsUpdate {
-  const saved = readAgentConfiguration(
-    { database: deps.database, writer: deps.findWriter() },
-    input,
-  );
+  const saved = readAgentConfiguration(storageSources(deps), input);
 
   return {
     agent: input.agent,
