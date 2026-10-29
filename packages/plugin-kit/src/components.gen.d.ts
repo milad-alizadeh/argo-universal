@@ -773,6 +773,32 @@ type ProgressBarHints = {
 type PillHints = {
   /** The text displayed by the kit component. */
   text: unknown;
+  /** A semantic metadata label or an interactive control with shared pill geometry. */
+  variant: unknown;
+  /** A plain control, or explicit floating glass for status pills. */
+  appearance: unknown;
+  /** Leading icon, aligned by the Pill. */
+  icon: unknown;
+  /** A count before the label. */
+  count: unknown;
+  /** Semantic count color without changing the pill geometry. */
+  countTone: unknown;
+  /** Supporting text beside the label, such as the selected effort. */
+  detail: unknown;
+  /** Disclosure direction for a control that opens content. */
+  disclosure: unknown;
+  /** Keep the control label accessible while showing only its leading icon. */
+  iconOnly: unknown;
+  /** Let the control fill its available row width. */
+  fill: unknown;
+  /** Whether an interactive toggle pill is selected. */
+  selected: unknown;
+  /** Disable control activation. */
+  disabled: unknown;
+  /** Spoken control name; defaults to its text. */
+  accessibilityLabel: unknown;
+  /** Control activation. */
+  onPress: unknown;
   /** The Argo semantic tone. */
   tone: unknown;
   /** A tracker label color as #rrggbb: the text takes it, over a lighter fill of it. */
