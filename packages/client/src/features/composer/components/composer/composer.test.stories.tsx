@@ -4,9 +4,10 @@ import {
   settleLayout,
   wideBreakpoint,
 } from '@repo/kit/mocks/story-layout';
-import { expect, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
+import { composerUnlistedEffortConfiguration } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { typing } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { SendingComposer } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -114,5 +115,28 @@ export const ArrowKeysMoveThroughModeWide: Story = {
     await expect(last).toHaveFocus();
     await userEvent.keyboard('{Home}');
     await expect(first).toHaveFocus();
+  },
+};
+
+const modeChanges = fn();
+
+// A desktop Mode menu moves focus with an arrow; choosing waits for Enter or a pointer press.
+export const ModeArrowDoesNotChooseWide: Story = {
+  args: {
+    configuration: {
+      ...composerUnlistedEffortConfiguration,
+      onConfigChange: modeChanges,
+    },
+  },
+  beforeEach: () => modeChanges.mockClear(),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+    const overlay = within(document.body);
+    const [first, second] = await overlay.findAllByRole('radio');
+    first?.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(second).toHaveFocus();
+    await expect(modeChanges).not.toHaveBeenCalled();
   },
 };
