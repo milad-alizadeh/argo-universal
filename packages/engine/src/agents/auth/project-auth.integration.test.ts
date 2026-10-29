@@ -7,6 +7,7 @@ import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { agentCredentials } from '#mocks/agent-credentials';
+import { withoutSessionAccess } from '#mocks/session-access';
 import { seedProject } from '../../projects';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
@@ -37,7 +38,7 @@ it('one authenticate tells every watching Device and lets an open waiting in a s
   await initTestRepository(directory);
   await seedProject(host.database, directory);
 
-  const secondProject = (await host.caller.projects.list()).find(
+  const secondProject = (await host.caller.project.list()).find(
     (project) => project.id !== emptySessionInput.projectId,
   );
 
@@ -63,17 +64,18 @@ it('one authenticate tells every watching Device and lets an open waiting in a s
       ]),
     );
   await host.createCaller().session.new(second);
-  expect(host.agent.processes).toHaveLength(2);
+  expect(host.agent.processes).toHaveLength(4);
 });
 
-it('sessionId picks its live connection after its saved connection entry was dropped', async () => {
-  const host = await startAcpEngine(
-    protocolSessionLogin(agentCredentials({ signedIn: true })),
-  );
+it('without Agent access, sessionId picks its live connection after its saved connection entry was dropped', async () => {
+  const host = await startAcpEngine({
+    ...protocolSessionLogin(agentCredentials({ signedIn: true })),
+    sessionAccess: withoutSessionAccess,
+  });
 
-  await host.caller.agents.addRegistry({ id: 'mock' });
+  await host.caller.agent.install({ id: 'mock' });
   const session = await host.caller.session.new(emptySessionInput);
-  await host.caller.agents.remove({ id: 'mock' });
+  await host.caller.agent.remove({ id: 'mock' });
   await expect(host.caller.agents.authState(subject)).rejects.toMatchObject({
     code: 'PRECONDITION_FAILED',
     message: 'Agent "mock" is not installed.',

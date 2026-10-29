@@ -20,7 +20,7 @@ export function readAgents(
   return query({
     page,
     httpUrl,
-    procedure: 'agents.servers',
+    procedure: 'agent.list',
     input: {},
     output: AgentsList,
   });

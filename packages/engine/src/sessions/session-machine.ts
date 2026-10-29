@@ -68,7 +68,9 @@ import {
   takeConfigChoice,
 } from './config-queue';
 import { toConfigValues } from './configuration/config-choices';
+import { creationSettledEvent } from './creation-receipt';
 import { initialSessionContext } from './initial-context';
+import { nativePermissionEvent } from './native-permissions';
 import { pendingInputRequest } from './pending-input';
 import {
   permissionHookedEvent,
@@ -510,7 +512,7 @@ const sessionSetup = setup({
     ),
     queuePermission: assign(
       ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
-        assertEvent(event, acpPermissionEvent);
+        assertEvent(event, [acpPermissionEvent, nativePermissionEvent]);
 
         return {
           permissionQueue: [...context.permissionQueue, event.request],
@@ -576,17 +578,19 @@ const sessionSetup = setup({
       enqueue.sendTo('feed', cancelled);
       enqueue.assign(queues);
     }),
-    publishPermissionOutcome: sendTo(
-      'feed',
-      ({ context, event }): FeedEvent => {
-        assertEvent(event, answerPermissionEvent);
+    publishPermissionOutcome: sendTo('feed', ({ context, event }) => {
+      assertEvent(event, answerPermissionEvent);
 
-        return permissionOutcome(context, event.optionId);
-      },
-    ),
+      return permissionOutcome(context, event.optionId);
+    }),
     answerAcpPermission: ({ context, event }): void => {
       assertEvent(event, answerPermissionEvent);
       context.acpLifetime.answerPermission(event.requestId, event.optionId);
+    },
+    // An Operation's call publishes its own outcome on its Tool call.
+    answerOperationPermission: ({ context, event }): void => {
+      assertEvent(event, answerPermissionEvent);
+      context.nativePermissions.answer(event.requestId, event.optionId);
     },
     answerAcpElicitation: ({ context, event }): void => {
       assertEvent(event, answerElicitationEvent);
@@ -625,7 +629,8 @@ const sessionSetup = setup({
           ),
       },
     })),
-    cancelAcpRequests: enqueueActions(({ context, enqueue }): void => {
+    cancelSessionRequests: enqueueActions(({ context, enqueue }): void => {
+      context.nativePermissions.cancelAll();
       context.acpLifetime.cancelRequests();
       enqueue.assign(cancelRequests(context));
     }),
@@ -742,6 +747,9 @@ const sessionSetup = setup({
     isUnstored: ({ context }): boolean => !context.stored,
     closesBy: ({ context }, step: ClosureStep): boolean =>
       nextClosureStep(context) === step,
+    // Argo asks about an Operation the Agent called; the Agent asks about its own Tool call.
+    asksForOperation: ({ context }): boolean =>
+      context.permissionQueue[0]?.operation !== undefined,
     isPermissionHead: ({ context, event }): boolean =>
       event.type === answerPermissionEvent &&
       admitsPermissionAnswer(context.permissionQueue, event),
@@ -850,6 +858,10 @@ export const sessionMachine = sessionSetup.createMachine({
   context: ({ input, self }): SessionContext =>
     initialSessionContext(input, (event) => self.send(event)),
   on: {
+    [creationSettledEvent]: {
+      guard: ({ context }) => context.input.kind === 'new',
+      actions: assign(({ event }) => ({ creationReceipt: event.receipt })),
+    },
     // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
     [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
     'agent.shellChanged': {
@@ -1205,7 +1217,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   ],
                 },
               },
-              exit: 'cancelAcpRequests',
+              exit: 'cancelSessionRequests',
               on: {
                 'acp.failed': {
                   target: 'interrupting',
@@ -1217,10 +1229,16 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: '.cancelling',
                   actions: [
                     'rememberCancellation',
-                    'cancelAcpRequests',
+                    'cancelSessionRequests',
                     'publishCancellation',
                     { type: 'endTurn', params: { stopReason: 'cancelled' } },
                   ],
+                },
+                [nativePermissionEvent]: {
+                  guard: ({ context, event }) =>
+                    event.turnId === context.activeTurnId,
+                  target: '.awaitingPermission',
+                  actions: 'queuePermission',
                 },
                 [acpPermissionEvent]: {
                   target: '.awaitingPermission',
@@ -1241,15 +1259,22 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: '.working',
                   actions: 'forgetAcpRequest',
                 },
-                [answerPermissionEvent]: {
-                  guard: 'isPermissionHead',
-                  target: '.working',
-                  actions: [
-                    'publishPermissionOutcome',
-                    'answerAcpPermission',
-                    'removePermission',
-                  ],
-                },
+                [answerPermissionEvent]: [
+                  {
+                    guard: and(['isPermissionHead', 'asksForOperation']),
+                    target: '.working',
+                    actions: ['answerOperationPermission', 'removePermission'],
+                  },
+                  {
+                    guard: 'isPermissionHead',
+                    target: '.working',
+                    actions: [
+                      'publishPermissionOutcome',
+                      'answerAcpPermission',
+                      'removePermission',
+                    ],
+                  },
+                ],
                 [answerElicitationEvent]: {
                   guard: 'isPendingElicitation',
                   target: '.working',
@@ -1260,7 +1285,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: [
                     'rememberStorageFailure',
                     'rememberCancellation',
-                    'cancelAcpRequests',
+                    'cancelSessionRequests',
                     'publishCancellation',
                     { type: 'endTurn', params: { stopReason: 'error' } },
                   ],
@@ -1292,6 +1317,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     [storageFailingEvent]: {
                       actions: 'rememberStorageFailure',
                     },
+                    [nativePermissionEvent]: {},
                     [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
                     [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
                     [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },

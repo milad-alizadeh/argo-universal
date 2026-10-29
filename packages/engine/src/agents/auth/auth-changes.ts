@@ -7,13 +7,28 @@ type AuthChangeEvents = EventEmitter<{ change: [AuthChangeEvent] }>;
 
 // One per Engine: every connection publishes here, so every Device watching an Agent and Project sees the same changes.
 export class AuthChanges {
+  private readonly descriptions = new Map<string, string>();
   private readonly events: AuthChangeEvents = new EventEmitter();
   public constructor() {
     // Each watching App holds one listener; the count is bounded by open subscriptions.
     this.events.setMaxListeners(0);
   }
   public publish(subject: AgentAuthSubject, change: AgentAuthChange): void {
+    const key = JSON.stringify([subject.agent, subject.projectId]);
+
+    if (change.description !== undefined)
+      this.descriptions.set(key, change.description);
+    this.clearSignedInDescription(key, change);
     this.events.emit('change', { subject, change });
+  }
+  private clearSignedInDescription(key: string, change: AgentAuthChange): void {
+    if (change.outcome?.status === 'ok') this.descriptions.delete(key);
+  }
+  public requiredDescription(
+    agent: string,
+    projectId: string,
+  ): string | undefined {
+    return this.descriptions.get(JSON.stringify([agent, projectId]));
   }
   public watch(
     subject: AgentAuthSubject,

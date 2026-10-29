@@ -31,6 +31,7 @@ import { SessionDeleteJob, SessionInsertJob } from './session-storage';
 export type SessionCreationInput = SessionNewInput & {
   projectPath: string;
   turnId: string;
+  startedBySessionId?: string;
 };
 
 export type SessionInput = {
@@ -107,6 +108,7 @@ export function toSessionInsert(
       agent: data.agent,
       title: titleFromPrompt(input.prompt),
       titleSource: 'prompt',
+      startedBySessionId: input.startedBySessionId ?? null,
       vendorSessionId: data.vendorSessionId,
       checkoutPath: data.checkout.path,
       checkoutBranch: data.checkout.branch,

@@ -47,6 +47,7 @@ export const SessionInfo = z.strictObject({
     projectId: true,
     agent: true,
     parentSessionId: true,
+    startedBySessionId: true,
     createdAt: true,
     updatedAt: true,
   }).shape,

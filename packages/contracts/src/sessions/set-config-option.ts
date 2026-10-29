@@ -61,7 +61,8 @@ export const SessionConfigOptionCategory = z
     }
 
     return category;
-  });
+  })
+  .pipe(z.string());
 
 type ConfigOptionDiagnostics = {
   unknownCategories: number;

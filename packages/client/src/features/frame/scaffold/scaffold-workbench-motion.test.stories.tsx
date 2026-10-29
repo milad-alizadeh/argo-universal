@@ -1,7 +1,7 @@
-import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { sampleMotionFrames } from './scaffold-workbench-motion.test.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
 const meta = {
@@ -29,7 +29,7 @@ async function assertSliding(canvas: Canvas, action: string): Promise<void> {
   const left = (): number => workbench.getBoundingClientRect().left;
   const start = left();
 
-  const positions = await sampleEachFrame(
+  const positions = await sampleMotionFrames(
     () => button.click(),
     left,
     motionFrames,

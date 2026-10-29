@@ -47,6 +47,8 @@ export { sessionActorId } from './session-system';
 
 export { createSessionRouter } from './router';
 
+export { createSessionList } from './list/session-list';
+
 export type { SessionRouterDeps } from './router-deps';
 
 export { recoverAfterRestart } from './recovery';
@@ -71,3 +73,33 @@ export { findSessionFeed } from './session-system';
 export { recoverShells } from './shells/recovery';
 
 export { releaseShellGroups } from './shells/shell-record';
+
+export {
+  type CalledOperation,
+  type OperationCalls,
+  type OperationCard,
+  type OperationCallRead,
+  type SessionOperationCall,
+} from './operation-call';
+
+export { type SessionWorkWatcher } from './work-watcher';
+
+export {
+  sessionWorkItem,
+  type SessionWork,
+  type SessionWorkRead,
+  type SessionWorkSource,
+} from './work-source';
+
+export {
+  type DirectorySession,
+  type SessionDirectory,
+} from './session-directory';
+
+export { type AcceptedSessionPrompt } from './session-prompt';
+
+export { sessionOrigin, userOrigin, type NativeStart } from './prompt-sender';
+
+export { type NativeStartRequest } from './native-starts';
+
+export { createSessionPorts, type SessionPorts } from './session-ports';

@@ -25,7 +25,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
     ).toHaveLength(1);
     expect(git('branch', '--list', 'argo/*')).toBe('');
     expect(
-      (await caller.projects.list()).find(
+      (await caller.project.list()).find(
         (project) => project.id === 'project-1',
       ),
     ).toMatchObject({

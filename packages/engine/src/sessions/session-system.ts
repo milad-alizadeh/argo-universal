@@ -2,6 +2,8 @@ import { TRPCError } from '@trpc/server';
 import type { AnyActorRef } from 'xstate';
 import { feedMachine, type FeedActorRef } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
+import type { OpenSessionsActorRef } from './open-sessions-machine';
+import type { SessionContext } from './session-context';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 
 export const sessionActorId = (sessionId: string): string =>
@@ -40,4 +42,19 @@ export function findSessionFeed(
     actor?.getSnapshot().children.feed ??
     findMachineActor(system, `subagent-feed:${sessionId}`, feedMachine)
   );
+}
+
+// An open Session's actor, or undefined when the Session is not open.
+export function findOpenSession(
+  sessions: OpenSessionsActorRef,
+  sessionId: string,
+): SessionActorRef | undefined {
+  return sessions.getSnapshot().context.sessions[sessionId];
+}
+
+export function readOpenSession(
+  sessions: OpenSessionsActorRef,
+  sessionId: string,
+): SessionContext | undefined {
+  return findOpenSession(sessions, sessionId)?.getSnapshot().context;
 }

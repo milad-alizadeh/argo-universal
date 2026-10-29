@@ -26,7 +26,7 @@ it('preserves a registered Project identity and stored metadata through a nested
   const nestedPath = join(projectPath, 'nested');
   mkdirSync(nestedPath);
   await seedProject(database, nestedPath);
-  expect(await caller.projects.list()).toEqual([
+  expect(await caller.project.list()).toEqual([
     {
       id: 'project-1',
       path: projectPath,
@@ -43,14 +43,14 @@ it('registers linked Checkouts as one Project identified by the Git common direc
   const { database, caller, projectPath, git } = await startProjectTestHost();
   database.$client.exec('DELETE FROM session; DELETE FROM project');
   await seedProject(database, projectPath);
-  const originalProjects = await caller.projects.list();
+  const originalProjects = await caller.project.list();
   expect(originalProjects).toEqual([
     expect.objectContaining({ id: expect.stringMatching(/^[a-f0-9]{64}$/) }),
   ]);
   const linkedPath = join(projectPath, 'linked');
   await git('worktree', 'add', '-q', '-b', 'linked', linkedPath);
   await seedProject(database, linkedPath);
-  expect(await caller.projects.list()).toEqual([
+  expect(await caller.project.list()).toEqual([
     {
       ...originalProjects[0],
       path: linkedPath,
@@ -80,7 +80,7 @@ it.each([
       .mockImplementation((): void => {});
 
     onTestFinished((): void => errors.mockRestore());
-    await expect(caller.projects.list()).rejects.toMatchObject({
+    await expect(caller.project.list()).rejects.toMatchObject({
       code: internalServerError,
     });
 
@@ -88,7 +88,7 @@ it.each([
       ? (await startEngineTestHost({ database })).caller
       : caller;
 
-    await expect(nextCaller.projects.list()).rejects.toMatchObject({
+    await expect(nextCaller.project.list()).rejects.toMatchObject({
       code: internalServerError,
     });
     expect(errors.mock.calls.map(([line]): string => String(line))).toEqual(
@@ -100,7 +100,7 @@ it.each([
 it('preserves the exact missing Project error through its real branches procedure', async (): Promise<void> => {
   const { caller } = await startProjectTestHost();
   await expect(
-    caller.projects.branches({ projectId: 'missing' }),
+    caller.project.listBranches({ projectId: 'missing' }),
   ).rejects.toMatchObject({
     code: 'NOT_FOUND',
     message: 'No Project missing',
@@ -113,7 +113,7 @@ it.each([{ projectId: 42 }, { projectId: 'project-1', extra: true }])(
     const { url } = await startProjectTestHost();
     expect(
       await rejectedProcedureCode(url, {
-        path: 'projects.branches',
+        path: 'project.listBranches',
         type: 'query',
         input: JSON.stringify(input),
       }),
@@ -127,13 +127,13 @@ it.each([
   {
     procedure: 'branches',
     call: async (caller: ProjectCaller): Promise<void> => {
-      await caller.projects.branches({ projectId: 'project-1' });
+      await caller.project.listBranches({ projectId: 'project-1' });
     },
   },
   {
     procedure: 'list',
     call: async (caller: ProjectCaller): Promise<void> => {
-      await caller.projects.list();
+      await caller.project.list();
     },
   },
 ])(

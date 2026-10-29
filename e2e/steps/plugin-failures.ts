@@ -44,7 +44,7 @@ When(
       await mutate({
         page,
         httpUrl: app.httpUrl,
-        procedure: 'plugins.activate',
+        procedure: 'plugin.activate',
         input: { pluginId },
       });
   },
@@ -71,7 +71,7 @@ Then('Counter is still running', async ({ page, app }): Promise<void> => {
   const result = await query({
     page,
     httpUrl: app.httpUrl,
-    procedure: 'plugins.list',
+    procedure: 'plugin.list',
     input: {},
     output: pluginStates,
   });

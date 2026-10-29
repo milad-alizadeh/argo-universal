@@ -52,7 +52,7 @@ it.each(['agent-1', 'agent-2'])(
       ),
     );
 
-    expect(host.agent.processes).toHaveLength(1);
+    expect(host.agent.processes).toHaveLength(2);
     expect(
       pages.map((page) => page.rows.map((row) => row.sessionUpdate)),
     ).toEqual(

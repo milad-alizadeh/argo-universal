@@ -4,13 +4,17 @@ import type { AgentIdentity } from '@repo/mocks/agent';
 
 export const fixtureRegistry = (
   identities: readonly AgentIdentity[],
+  environment?: Record<string, string>,
 ): ACPAgentRegistry => ({
   version: '1.0.0',
   extensions: [],
-  agents: identities.map(registryEntry),
+  agents: identities.map((identity) => registryEntry(identity, environment)),
 });
 
-const registryEntry = (identity: AgentIdentity): ACPAgent => ({
+const registryEntry = (
+  identity: AgentIdentity,
+  environment?: Record<string, string>,
+): ACPAgent => ({
   id: identity.agent,
   name: identity.label,
   version: '1.0.0',
@@ -25,6 +29,7 @@ const registryEntry = (identity: AgentIdentity): ACPAgent => ({
         {
           archive: 'https://example.org/agent',
           cmd: './agent',
+          env: environment,
         },
     },
   },

@@ -16,7 +16,11 @@ const drawnItemTypes: Record<
 
 const drawnRows = new Set<string>(['notice', 'compaction_update']);
 
-const messageRows = new Set<string>(['user_message', 'agent_message']);
+const messageRows = new Set<string>([
+  'user_message',
+  'prompt_message',
+  'agent_message',
+]);
 
 const isBlankText = (block: ContentBlock): boolean =>
   block.type === 'text' && block.text.trim() === '';
@@ -34,7 +38,7 @@ const isMessage = (
   row: FeedRow,
 ): row is Extract<
   FeedRow,
-  { sessionUpdate: 'user_message' | 'agent_message' }
+  { sessionUpdate: 'user_message' | 'prompt_message' | 'agent_message' }
 > => messageRows.has(row.sessionUpdate);
 
 // A row draws by its update: a Notice and a Compaction always, a message when it holds anything to see.

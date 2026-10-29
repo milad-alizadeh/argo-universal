@@ -1,3 +1,4 @@
+import { permissionOptions } from '@repo/contracts';
 import {
   agentOptionsProps,
   agentOptionsWithAlwaysReject,
@@ -40,4 +41,21 @@ export const severalRejectOptionsPermission = {
 export const answeredPermission = {
   ...toolCallPermission,
   state: { kind: 'answered', reason: answeredElsewhere },
+} satisfies PermissionRequestFixture;
+
+// Argo asks on the same Composer card before an Operation leaves the Agent's reach.
+export const argoPermission = {
+  request: {
+    requestId: 'argo-request',
+    toolCallId: 'argo-call',
+    title: 'Archive Session',
+    operation: {
+      id: 'session.archive',
+      description:
+        'Archive an idle Session and remove its Checkout after the Undo window.',
+      input: '{"sessionId":"review-session"}',
+    },
+    options: permissionOptions,
+  },
+  state: { kind: 'open' },
 } satisfies PermissionRequestFixture;

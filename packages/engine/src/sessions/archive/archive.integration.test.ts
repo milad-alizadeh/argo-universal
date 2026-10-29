@@ -56,7 +56,7 @@ describe('Session archive through the composed Engine', () => {
         host.caller.session.unarchive({ sessionId: created.sessionId }),
       ).rejects.toMatchObject({ code: 'CONFLICT' });
       expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(
-        0,
+        1,
       );
 
       if (action === 'undo') {
@@ -83,7 +83,7 @@ describe('Session archive through the composed Engine', () => {
     await host.caller.session.archive({ sessionId: created.sessionId });
     expect(resumes).toEqual([]);
     expect(host.agent.processes).toHaveLength(1);
-    expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
+    expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(1);
     const projectPath = archiveProjectPath(host);
     await host.stop();
     expect(existsSync(created.path)).toBe(true);

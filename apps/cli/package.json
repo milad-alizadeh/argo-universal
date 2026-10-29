@@ -1,0 +1,30 @@
+{
+  "name": "@repo/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "argo": "./bin/argo.mjs"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@argo/plugin-kit": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/engine": "workspace:*",
+    "@repo/machine-log": "workspace:*",
+    "@repo/server": "workspace:*",
+    "@trpc/client": "catalog:",
+    "tsx": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/typescript": "workspace:*",
+    "@repo/vitest": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

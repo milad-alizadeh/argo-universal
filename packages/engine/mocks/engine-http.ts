@@ -7,6 +7,7 @@ import { WebSocket } from 'ws';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { type HttpServerOptions } from '../src/engine/http-server';
+import { SessionTokens } from '../src/operations';
 import type { OpenSessionsActorRef } from '../src/sessions';
 
 export let home: string;
@@ -71,6 +72,7 @@ export const readdirSafe = (folder: string): string[] =>
   existsSync(folder) ? readdirSync(folder) : [];
 
 export const options = (): HttpServerOptions => ({
+  sessionTokens: new SessionTokens(),
   createId: randomUUID,
   home,
   port,

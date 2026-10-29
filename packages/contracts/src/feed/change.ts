@@ -11,6 +11,7 @@ import {
   TaskUpdate,
   ToolCallUpdate,
   UserMessage,
+  PromptMessage,
   SessionMessage,
 } from './session-update';
 
@@ -30,6 +31,7 @@ export const feedSetFields = Object.keys(withoutEnvelope).filter(
 // A Session update as an Agent reports it: a row without the fields the Feed actor sets.
 export const FeedUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage.omit(withoutEnvelope),
+  PromptMessage.omit(withoutEnvelope),
   SessionMessage.omit(withoutEnvelope),
   AgentMessage.omit(withoutEnvelope),
   AgentThought.omit(withoutEnvelope),

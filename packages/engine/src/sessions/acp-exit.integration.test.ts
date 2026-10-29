@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
+import { withoutSessionAccess } from '#mocks/session-access';
 
 const exitTitle = 'Agent exited with status 17';
 
@@ -12,11 +13,12 @@ const lateExitMs = 100;
 const turnStatusQuery =
   'SELECT status, stop_reason FROM turn WHERE session_id = ?';
 
-it('an Agent exit ends the Turn with error and stderr, closes the Session, and the next Send resumes without auto-reopening', async () => {
+it('without Agent access, a shared Agent exit ends both Turns with error and stderr and the next Send resumes without auto-reopening', async () => {
   const release = Promise.withResolvers<void>();
 
   const host = await startAcpEngine({
     ...scenarios['exit-with-stderr'],
+    sessionAccess: withoutSessionAccess,
     steps: [
       { type: 'gate', waitFor: release.promise },
       ...scenarios['exit-with-stderr'].steps,

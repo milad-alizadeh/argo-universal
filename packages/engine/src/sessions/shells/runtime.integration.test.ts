@@ -32,7 +32,7 @@ it('stores an exited ACP Shell and its complete output as a referenced Blob', as
       canStop: false,
     },
   ]);
-  expect(await host.caller.session.shells(created)).toMatchObject(
+  expect(await host.caller.session.listShells(created)).toMatchObject(
     snapshot.shells.map(({ durationMs: _duration, ...record }) => record),
   );
   const record = host.database.select().from(shell).get();
@@ -82,7 +82,7 @@ it('keeps Shells running beyond their Turn and stops only the selected Shell', a
   expect(
     (await host.caller.session.list({ archived: false })).sessions,
   ).toMatchObject([{ shells: { total: 2, running: 2 } }]);
-  await host.caller.session.stopShell({ ...created, shellId: selected });
+  await host.caller.shell.stop({ ...created, shellId: selected });
 
   const stopped = await waitForAcpSnapshot(host, created.sessionId, (value) =>
     value.shells.some(
@@ -98,7 +98,7 @@ it('keeps Shells running beyond their Turn and stops only the selected Shell', a
     { status: 'running', canStop: true },
   );
   await expect(
-    host.caller.session.stopShell({ ...created, shellId: selected }),
+    host.caller.shell.stop({ ...created, shellId: selected }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
   await host.caller.session.close(created);
 });

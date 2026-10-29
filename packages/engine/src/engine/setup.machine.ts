@@ -1,11 +1,7 @@
 import type { Database } from '@repo/db';
 import { writeLog } from '@repo/machine-log';
 import { fromPromise, sendTo, setup, type AnyActorRef } from 'xstate';
-import {
-  createAcpResources,
-  type AcpResources,
-  type AcpResourceInput,
-} from '../agents';
+import { type AcpResources, type AcpResourceInput } from '../agents';
 import {
   type FetchAgents,
   type InstallPorts,
@@ -13,6 +9,7 @@ import {
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
+import type { OperationWaitClock, SessionTokens } from '../operations';
 import {
   HookPort,
   type Keychain,
@@ -49,6 +46,7 @@ import {
 import type { EngineMessage } from './ipc';
 import { caffeinateActor } from './keep-awake';
 import { type EngineStop, processSignals } from './process-signals';
+import { sessionAccessServices } from './session-access';
 
 export type EngineLogParameters = { line: string };
 
@@ -70,6 +68,8 @@ export interface EngineInput extends Pick<
   'now' | 'createId'
 > {
   home: string;
+  cliEntry: string;
+  userHome?: string;
   port: number;
   version: string;
   firstPartyPluginsDirectory?: string;
@@ -78,6 +78,7 @@ export interface EngineInput extends Pick<
   pluginNetwork?: PluginNetwork;
   pluginOAuth?: OAuthOptions;
   pluginClock?: PluginClock;
+  operationWaitClock?: OperationWaitClock;
   startedAt: string;
   acp?: AcpResourceInput;
   fetchAgents?: FetchAgents;
@@ -91,6 +92,7 @@ export interface EngineContext extends EngineInput {
   server: HttpServer | null;
   failure: string | null;
   acpResources: AcpResources;
+  sessionTokens: SessionTokens;
   commandAdmission: AbortController;
   // Sessions reach Plugin Hooks through this before the Plugin runtime starts with the HTTP server.
   hookPort: HookPort;
@@ -199,12 +201,15 @@ export const stoppingLog = ({
   event: EngineStop;
 }): EngineLogParameters => ({ line: `stopping: ${event.reason}` });
 
-export const createEngineContext = (input: EngineInput): EngineContext => ({
+export const createEngineContext = (
+  input: EngineInput,
+  database: () => Database,
+): EngineContext => ({
   ...input,
+  ...sessionAccessServices(input, database),
   database: null,
   server: null,
   failure: null,
-  acpResources: createAcpResources(input.acp),
   commandAdmission: new AbortController(),
   hookPort: new HookPort(),
 });

@@ -1,4 +1,4 @@
-import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
+import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import { SessionOpenFailure } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import { listBranches } from '@repo/git';
@@ -7,6 +7,11 @@ import { waitFor } from 'xstate';
 import { requireInstalledAgent } from '../agents';
 import { readProjectPath } from '../projects';
 import { isOfferedConfigChoice } from './admission/config-admission';
+import {
+  observeSessionCreation,
+  type AcceptedSessionStart,
+} from './creation-receipt';
+import type { NativeStart, SessionOrigin } from './prompt-sender';
 import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
@@ -82,18 +87,27 @@ async function waitForSessionInsertCommitted(
     });
 }
 
-export async function createSession(
-  deps: Pick<
-    SessionRouterDeps,
-    | 'database'
-    | 'sessions'
-    | 'createId'
-    | 'sessionCommandSignal'
-    | 'installedAgents'
-    | 'hooks'
-  >,
+type SessionCreationDeps = Pick<
+  SessionRouterDeps,
+  | 'database'
+  | 'sessions'
+  | 'createId'
+  | 'sessionCommandSignal'
+  | 'installedAgents'
+  | 'hooks'
+>;
+
+// A Session's own id may be allocated first, so a delegation limit can hold its place before it opens.
+type SessionCreationOrigin = SessionOrigin & { sessionId?: string };
+
+type SessionCreation = NativeStart<AcceptedSessionStart>;
+
+// Allocate native identity before waiting for the Agent or the first prompt's admission.
+export async function startSessionCreation(
+  deps: SessionCreationDeps,
   newSession: SessionNewInput,
-): Promise<SessionNewOutput> {
+  origin: SessionCreationOrigin,
+): Promise<SessionCreation> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
   requireInstalledAgent(deps.installedAgents, newSession.agent);
 
@@ -103,42 +117,58 @@ export async function createSession(
   );
 
   validateSessionCommandAdmission(deps);
-  const sessionId = deps.createId();
+  const sessionId = origin.sessionId ?? deps.createId();
+  const turnId = deps.createId();
   sendCheckedOpenSessionsCommand(deps.sessions, {
     type: 'sessions.create',
     sessionId,
-    turnId: deps.createId(),
+    turnId,
     ...newSession,
+    startedBySessionId: origin.startedBySessionId ?? undefined,
     projectPath,
   });
-  await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
-  await waitForSessionInsertCommitted(
-    requireOpenSessionActor(deps.sessions, sessionId),
-  );
-  await startSession(
-    deps,
-    requireOpenSessionActor(deps.sessions, sessionId),
-    newSession,
+  const session = requireOpenSessionActor(deps.sessions, sessionId);
+
+  const accepted = observeSessionCreation(
+    session,
+    completeCreation(deps, session, {
+      input: newSession,
+      sender: origin.sender,
+    }),
   );
 
-  return { sessionId };
+  return { sessionId, turnId, accepted };
+}
+
+async function completeCreation(
+  deps: SessionCreationDeps,
+  session: SessionActorRef,
+  initial: { input: SessionNewInput; sender: PromptSender },
+): Promise<AcceptedSessionStart> {
+  await waitForSessionStored(session);
+  await waitForSessionInsertCommitted(session);
+  const turnId = await startSession(deps, session, initial);
+
+  return { sessionId: session.getSnapshot().context.sessionId, turnId };
 }
 
 // Once stored, the Session applies its first choices, then submits its first prompt.
 async function startSession(
   deps: Pick<SessionRouterDeps, 'hooks'>,
   session: SessionActorRef,
-  newSession: SessionNewInput,
-): Promise<void> {
-  await applyInitialConfiguration(session, newSession);
-  await submitInitialAcpPrompt(session, deps.hooks);
+  { input, sender }: { input: SessionNewInput; sender: PromptSender },
+): Promise<string | undefined> {
+  await applyInitialConfiguration(session, input);
+
+  return submitInitialAcpPrompt(session, deps.hooks, sender);
 }
 
 // The first prompt passes `prompt.submit` Hooks like any other; a dropped one leaves the Session waiting.
 const submitInitialAcpPrompt = async (
   session: SessionActorRef,
   hooks: CoreHooks,
-): Promise<void> => {
+  sender: PromptSender,
+): Promise<string | undefined> => {
   const { input, acpLease, sessionId } = session.getSnapshot().context;
 
   if (!acpLease || input.kind !== 'new' || input.prompt.length === 0) return;
@@ -154,7 +184,10 @@ const submitInitialAcpPrompt = async (
   await submitSessionPrompt(session, {
     turnId: input.turnId,
     content: answer.prompt,
+    sender,
   });
+
+  return input.turnId;
 };
 
 const applyInitialConfiguration = async (

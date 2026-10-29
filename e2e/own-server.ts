@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcessByStdio } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { cp, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
@@ -89,6 +90,7 @@ export async function startOwnServer(
           ARGO_E2E_REGISTRY_PATH: registryPath,
           ARGO_E2E_INSTALLATION_PATH: installationPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
+          ARGO_E2E_AUTH_EPOCH: randomUUID(),
           PATH: '/usr/bin:/bin',
         },
         stdio: ['ignore', 'pipe', 'pipe'],

@@ -47,6 +47,7 @@ const sessionDefaults = {
   failure: null,
   vendorSessionId: null,
   parentSessionId: null,
+  startedBySessionId: null,
   checkoutBranch: null,
   vendorRef: null,
   configValues: [],
@@ -67,6 +68,13 @@ const turnDefaults = {
 };
 
 const presentId = (id: string | null | undefined): string[] => (id ? [id] : []);
+
+function insertParents(row: typeof session.$inferInsert): string[] {
+  return [
+    ...presentId(row.parentSessionId),
+    ...presentId(row.startedBySessionId),
+  ];
+}
 
 // Stores a new Session; borrows its Project's `checkout_choice` so the chosen checkout is remembered in the same commit.
 export class SessionInsertJob implements WriterJob {
@@ -112,7 +120,7 @@ export class SessionInsertJob implements WriterJob {
   public changedSessionIds(): string[] {
     const stored = this.insert.session;
 
-    return [stored.id, ...presentId(stored.parentSessionId)];
+    return [stored.id, ...insertParents(stored)];
   }
 
   // The Session, when it or its parent is in scope; every queued Session without a scope.
@@ -122,7 +130,7 @@ export class SessionInsertJob implements WriterJob {
     const inScope =
       !scope ||
       scope.includes(stored.id) ||
-      presentId(stored.parentSessionId).some((id) => scope.includes(id));
+      insertParents(stored).some((id) => scope.includes(id));
 
     return inScope ? [stored.id] : [];
   }

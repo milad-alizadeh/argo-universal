@@ -91,7 +91,7 @@ it(
     const host = await startTerminalAuth({ args: ['--interactive-login'] });
     const result = host.caller.agents.authenticate({ ...subject, methodId });
     await awaitPrompt(host);
-    const agent = requireScriptedProcessAt(host.agent.processes);
+    const agent = requireScriptedProcessAt(host.agent.processes, 1);
     agent.exited.resolve();
     agent.connection.close();
     expect(await result).toMatchObject({ status: 'failed' });
@@ -100,7 +100,7 @@ it(
       ...subject,
       input: { type: 'write', text: '\r' },
     });
-    expect(host.agent.processes).toHaveLength(1);
+    expect(host.agent.processes).toHaveLength(2);
   },
 );
 

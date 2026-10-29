@@ -1,4 +1,9 @@
-export { userMessageChange, userMessageId } from './feed-change';
+export {
+  userMessageChange,
+  userMessageId,
+  promptMessageChange,
+  promptMessageId,
+} from './feed-change';
 
 export {
   type FeedActorRef,
@@ -20,6 +25,8 @@ export {
 
 export type { FeedDeps } from './feed';
 
+export { readFeedRow } from './feed';
+
 export { readFeedRows } from './merged-rows';
 
 export {
@@ -30,6 +37,8 @@ export {
   readQueuedFeed,
   readQueuedFeedRow,
 } from './feed-storage';
+
+export { outputBlobStored } from './stored-output';
 
 export { writeBlobFile } from './blob-files';
 
@@ -47,6 +56,8 @@ export { messageRejectedEvent } from './rejected-message';
 export { readUnaddressedPlan } from './unaddressed-plan';
 
 export { createFeedRouter } from './router';
+
+export { createAgentMessageReader } from './agent-messages';
 
 export { titleFromPrompt } from './prompt-title';
 
@@ -66,3 +77,7 @@ export {
 } from './stored-turn-settlement';
 
 export { mapSupportedContentBlock } from './acp/content';
+
+export { toolCallEvent } from './tool-call-event';
+
+export { nativePermissionOutcomeEvent } from './native-permission-outcome';

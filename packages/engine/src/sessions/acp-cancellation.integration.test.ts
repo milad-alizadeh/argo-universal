@@ -124,7 +124,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     });
   });
 
-  it('cancelling one Session leaves another Session on the same ACP connection running in its own Checkout', async () => {
+  it('cancelling one Session leaves another Session on its own ACP process running in its own Checkout', async () => {
     const { host, cancels, openings, release } = await startCancellableEngine();
     const cancelledSession = await startTurn(host);
 
@@ -154,7 +154,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         readTurns(host, runningSession),
       ],
     }).toEqual({
-      processes: 1,
+      processes: 2,
       distinctCheckouts: 2,
       cancels: [{ sessionId: 'owned-1' }],
       stillRunning: 'running',

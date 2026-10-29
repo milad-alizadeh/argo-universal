@@ -58,7 +58,7 @@ const agentsProgress = ({ status }: InstalledAgents): QueryProgress => ({
 // The Projects and Installed Agents each Session row is drawn with.
 function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
-  const projects = useQuery(trpc.projects.list.queryOptions());
+  const projects = useQuery(trpc.project.list.queryOptions());
   const agents = useInstalledAgents();
 
   return {

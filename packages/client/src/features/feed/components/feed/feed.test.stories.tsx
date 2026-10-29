@@ -39,8 +39,9 @@ export const LoadingEarlier: Story = {
   args: { loadingOlder: true },
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId(feedScrollId);
-    scrollUp(scroll, scroll.scrollTop);
     await eachLayout(async () => {
+      await scrollToTop(scroll);
+
       const indicator = await canvas.findByRole('progressbar', {
         name: earlierFeedLoadingLabel,
       });

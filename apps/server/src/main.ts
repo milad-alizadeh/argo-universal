@@ -1,22 +1,22 @@
 import { parseArgs } from 'node:util';
-import { runPluginCommand } from '@argo/plugin-kit/cli';
 import { startSupervisor } from './supervisor';
 
-const pluginArgumentsIndex = 3;
+type ServerArguments = { watch: boolean };
 
-if (process.argv[2] === 'plugin') {
-  process.exitCode = await runPluginCommand(
-    process.argv.slice(pluginArgumentsIndex),
-    (line) => process.stdout.write(`${line}\n`),
-    'argo plugin',
-  );
-} else startServer();
+// `--watch` restarts the Engine on a file change (the dev script).
+function readServerArguments(): ServerArguments | undefined {
+  try {
+    return parseArgs({
+      options: { watch: { type: 'boolean', default: false } },
+    }).values;
+  } catch (cause) {
+    process.stderr.write(`${String(cause)}\n`);
+    process.exitCode = 2;
 
-function startServer(): void {
-  // `--watch` restarts the Engine on a file change (the dev script).
-  const { values } = parseArgs({
-    options: { watch: { type: 'boolean', default: false } },
-  });
-
-  startSupervisor({ watch: values.watch });
+    return undefined;
+  }
 }
+
+const options = readServerArguments();
+
+if (options) startSupervisor(options);

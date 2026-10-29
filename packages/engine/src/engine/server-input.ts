@@ -11,11 +11,13 @@ import {
 type ServerSource = {
   context: Pick<
     EngineContext,
+    | 'sessionTokens'
     | 'createId'
     | 'commandAdmission'
     | 'acp'
     | 'notificationOptions'
     | 'home'
+    | 'userHome'
     | 'port'
     | 'firstPartyPluginsDirectory'
     | 'keychain'
@@ -26,6 +28,7 @@ type ServerSource = {
     | 'startedAt'
     | 'database'
     | 'hookPort'
+    | 'operationWaitClock'
   >;
   self: Pick<AnyActorRef, 'system'>;
 };
@@ -34,12 +37,15 @@ type ServerInput = (source: ServerSource) => HttpServerOptions;
 
 export const serverInput: ServerInput = ({ context, self }) => ({
   createId: context.createId,
+  sessionTokens: context.sessionTokens,
   sessions: requireOpenSessions(self.system),
   databaseWriter: requireDatabaseWriter(self.system),
   registry: requireRegistry(self.system),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
+  userHome: context.userHome,
   hookPort: context.hookPort,
+  operationWaitClock: context.operationWaitClock,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });

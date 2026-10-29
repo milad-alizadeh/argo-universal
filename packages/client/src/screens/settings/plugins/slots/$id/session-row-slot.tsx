@@ -18,6 +18,7 @@ export const previewSession: SessionInfo = {
   projectId: 'preview',
   agent: 'preview',
   parentSessionId: null,
+  startedBySessionId: null,
   cwd: '',
   status: 'running',
   title: 'Fix login redirect',

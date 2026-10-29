@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { composeEngine } from '@repo/engine/compose';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { z } from 'zod';
@@ -19,6 +20,9 @@ const port = z.coerce
 const home = resolveRuntimeDirectory();
 
 const engine = composeEngine({
+  cliEntry: fileURLToPath(
+    new URL('../../../cli/bin/argo.mjs', import.meta.url),
+  ),
   home,
   now: Date.now,
   createId: randomUUID,

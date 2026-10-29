@@ -89,7 +89,7 @@ it('releases a recorded Shell group before Engine startup serves recovered Shell
   expect(processIsRunning(pid)).toBe(false);
   expect(processIsRunning(record.pid)).toBe(false);
   expect(await readdir(folder)).toEqual([]);
-  expect(await restarted.caller.session.shells(created)).toMatchObject([
+  expect(await restarted.caller.session.listShells(created)).toMatchObject([
     { id: 'interrupted', status: 'lost', canStop: false },
   ]);
 });

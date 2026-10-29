@@ -325,7 +325,11 @@ it.each([undefined, 'large'])(
     )[Symbol.asyncIterator]();
 
     expect((await stream.next()).value?.configOptions).not.toBeNull();
-    const refreshing = stream.next();
+
+    const refreshing = collectOptions(
+      Promise.resolve({ [Symbol.asyncIterator]: () => stream }),
+    );
+
     await received.promise;
 
     const applied = await host.caller.session.setConfigOption({
@@ -336,7 +340,7 @@ it.each([undefined, 'large'])(
     });
 
     release.resolve();
-    const refreshed = (await refreshing).value?.configOptions;
+    const refreshed = await refreshing;
     expect(
       refreshed?.find((option) => option.category === 'model')?.currentValue,
     ).toBe(model ?? 'small');
@@ -395,11 +399,11 @@ it('does not recreate saved options when the Agent is removed during discovery',
   // Removing an Agent drops its connection, so discovery may be cancelled before its reply.
   const settled = discovery.catch(() => []);
   await received.promise;
-  await host.caller.agents.remove({ id: emptySessionInput.agent });
+  await host.caller.agent.remove({ id: emptySessionInput.agent });
   release.resolve();
   await settled;
   expect(host.database.select().from(agentOptions).all()).toEqual([]);
-  expect(await host.caller.agents.servers()).toEqual([]);
+  expect(await host.caller.agent.list()).toEqual([]);
 });
 
 it('refreshes model-dependent options before Send without creating a Session', async () => {

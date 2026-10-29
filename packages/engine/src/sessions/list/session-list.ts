@@ -16,7 +16,7 @@ import {
 import { createSessionListReader } from './reader';
 import { sessionListPage } from './session-list-page';
 
-interface SessionList {
+export interface SessionList {
   list: (input: SessionListInput) => Promise<SessionListOutput>;
   listUpdates: (
     signal: AbortSignal | undefined,

@@ -32,6 +32,7 @@ export type ScriptedStep =
       request: Omit<CreateTerminalRequest, 'sessionId'>;
       toolCallId: string;
       completion: 'leave-running' | 'wait-for-exit' | 'kill';
+      requiredExitCode?: number;
       outputs?: TerminalOutputResponse[];
     }
   | { type: 'update'; update: SessionUpdate; sessionId?: string }
@@ -85,7 +86,9 @@ export type ScriptedScenario = {
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
   resumedSteps?: readonly ScriptedStep[];
-  // In App E2E, an Agent process started again after this scenario's process failed plays this one.
+  // App E2E may give a Session-token process its own scenario, separate from discovery.
+  sessionProcess?: ScriptedScenario;
+  // In App E2E, the next process after a failed opening or exit plays this one.
   relaunched?: ScriptedScenario;
   responses?: ScriptedResponses;
   notifications?: ScriptedNotifications;
