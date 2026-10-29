@@ -84,6 +84,63 @@ it('streams the saved commands first when New Session opens again', async () => 
   await again.return?.();
 });
 
+const commandsUpdate = (
+  name: string,
+): Parameters<ReturnType<typeof requireScriptedProcessAt>['play']>[0] => [
+  {
+    type: 'update',
+    update: {
+      sessionUpdate: 'available_commands_update',
+      availableCommands: [{ name, description: name }],
+    },
+  },
+];
+
+it('keeps a live Session’s commands when a discovery that started earlier reports others', async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/new': [
+        { result: { sessionId: 'actual' } },
+        { result: { sessionId: 'discovery' } },
+      ],
+    },
+  });
+
+  const created = await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [{ type: 'text', text: 'Keep this Session' }],
+  });
+
+  const stream = (await host.caller.session.agentOptions(owner))[
+    Symbol.asyncIterator
+  ]();
+
+  await nextReady(stream);
+  const liveReader = new AbortController();
+
+  const live = (
+    await host
+      .createCaller({ signal: liveReader.signal })
+      .session.agentOptions({ ...owner, ...created })
+  )[Symbol.asyncIterator]();
+
+  await live.next();
+  const reported = nextWithCommands(live);
+  const process = requireScriptedProcessAt(host.agent.processes);
+
+  await process.play(commandsUpdate('live'), 'actual');
+  await reported;
+  await process.play(commandsUpdate('discovered'), 'discovery');
+
+  expect((await nextWithCommands(stream)).commands).toEqual([
+    { name: 'live', description: 'live' },
+  ]);
+  liveReader.abort();
+  await live.return?.();
+  await stream.return?.();
+});
+
 it('tells an Agent that reported nothing from an empty list', async () => {
   const silent = await startAcpEngine({ steps: [] });
 
