@@ -38,6 +38,8 @@ export {
   readQueuedFeedRow,
 } from './feed-storage';
 
+export { outputBlobStored } from './stored-output';
+
 export { writeBlobFile } from './blob-files';
 
 export { publishTurnContent } from './publication';
