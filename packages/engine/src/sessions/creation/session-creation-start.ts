@@ -1,5 +1,6 @@
 import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
+import { asRequestError } from '../admission/refused-choice';
 import { applyInitialConfiguration } from '../configuration';
 import type { SessionRouterDeps } from '../router-deps';
 import { submitSessionPrompt } from '../session-command';
@@ -41,7 +42,9 @@ export async function startSession(
   session: SessionActorRef,
   { input, sender }: { input: SessionNewInput; sender: PromptSender },
 ): Promise<string | undefined> {
-  await applyFirstChoices(session, input);
+  await applyInitialConfiguration(session, input.configOptions).catch(
+    asRequestError,
+  );
 
   return submitInitialAcpPrompt(session, deps.hooks, sender);
 }
@@ -65,13 +68,4 @@ const submitInitialAcpPrompt = async (
     content: answer.prompt,
     sender,
   });
-};
-
-const applyFirstChoices = async (
-  session: SessionActorRef,
-  input: SessionNewInput,
-): Promise<void> => {
-  if (!session.getSnapshot().context.acpLease) return;
-
-  await applyInitialConfiguration(session, input.configOptions);
 };

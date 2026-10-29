@@ -6,9 +6,9 @@ import {
   hasChoice,
   isOfferedConfigChoice,
   requireOfferedChoice,
-  takeNextChoice,
-  type AgentConfigValue,
-} from './choices';
+} from './offered';
+import { nextChoice } from './starting-order';
+import type { AgentConfigValue } from './values';
 
 // The Agent session a choice goes to, with the readers that check its reply.
 export type ConfigurationTarget = {
@@ -92,13 +92,13 @@ export async function applyChoices(
   list: ChoiceList,
   signal: AbortSignal,
 ): Promise<SessionConfigOption[]> {
-  const pending = [...list.choices];
   let { options } = list;
+  let [choice, pending] = nextChoice(list.choices, options);
 
-  for (let choice = takeNextChoice(pending, options); choice;) {
+  while (choice) {
     signal.throwIfAborted();
     options = await applyChoice(target, { ...list, options }, choice);
-    choice = takeNextChoice(pending, options);
+    [choice, pending] = nextChoice(pending, options);
   }
 
   signal.throwIfAborted();

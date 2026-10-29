@@ -1,5 +1,5 @@
 import type { SessionConfigOption } from '@repo/contracts';
-import type { AgentConfigValue } from './choices';
+import type { AgentConfigValue } from './values';
 
 const heldBoolean = (
   option: Extract<SessionConfigOption, { type: 'boolean' }>,

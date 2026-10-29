@@ -6,7 +6,7 @@ import type { Subscription } from 'xstate';
 import type { SessionRouterDeps } from '../router-deps';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
-import { withHeldConfiguration } from './held';
+import { withHeldConfiguration } from './held-options';
 
 type Deps = Pick<SessionRouterDeps, 'sessions'>;
 

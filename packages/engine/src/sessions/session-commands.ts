@@ -3,6 +3,7 @@ import type {
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
 import type { Bound } from '../lib/bound';
+import { asRequestError } from './admission/refused-choice';
 import { archiveSession, unarchiveSession } from './archive/archive-commands';
 import { applySessionConfig } from './configuration';
 import type { SessionRouterDeps } from './router-deps';
@@ -31,7 +32,11 @@ async function configureSession(
 
   validateSessionCommandAdmission(deps);
 
-  return { configOptions: await applySessionConfig(session, input) };
+  const configOptions = await applySessionConfig(session, input).catch(
+    asRequestError,
+  );
+
+  return { configOptions };
 }
 
 // The commands act Operations run on a Session, bound to what Sessions run them with.

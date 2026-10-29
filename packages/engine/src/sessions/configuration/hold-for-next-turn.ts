@@ -1,8 +1,8 @@
 import type { WriterCommit } from '../../storage';
 import type { SessionContext, SessionWrite } from '../session-context';
-import { withHeldConfiguration } from './held';
-import type { ConfigChange, ConfigChoice } from './queue';
+import { withHeldConfiguration } from './held-options';
 import { sessionChoicesJob } from './store';
+import type { ConfigChoice, ConfigurationStep } from './values';
 
 const heldCommit = (
   context: SessionContext,
@@ -26,10 +26,10 @@ const heldWrite = (
 });
 
 // A choice made while a Turn runs is stored with the Session and applies when the Agent is idle; its caller sees the held value once the row commits.
-export const holdConfigChoice = (
+export const holdChoice = (
   context: SessionContext,
   choice: ConfigChoice,
-): ConfigChange<'heldConfig'> => {
+): ConfigurationStep => {
   const heldConfig = [
     ...context.heldConfig.filter(
       ({ configId }) => configId !== choice.configId,

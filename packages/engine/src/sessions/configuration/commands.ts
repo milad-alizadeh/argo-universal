@@ -1,19 +1,19 @@
 import type {
   InitialConfigOption,
-  SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
 import { sendSessionCommand } from '../session-command';
 import { setConfigEvent } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
-import { isOfferedConfigChoice, requireOfferedChoice } from './choices';
+import { isOfferedConfigChoice, requireOfferedChoice } from './offered';
+import type { AgentConfigValue } from './values';
 
 type Options = SessionSetConfigOptionOutput['configOptions'];
 
 // Resolves with the Session's options once the Agent applied the choice, or once a held choice is stored.
-export const applySessionConfig = (
+export const applySessionConfig = async (
   session: SessionActorRef,
-  input: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
+  input: AgentConfigValue,
 ): Promise<Options> => {
   requireOfferedChoice(session.getSnapshot().context.configOptions, input);
 
@@ -39,8 +39,7 @@ const skipsChoice = (
     !isOfferedConfigChoice(session.getSnapshot().context.configOptions, choice),
   );
 
-// A new Session applies its first choices one at a time, in the order they were chosen.
-export async function applyInitialConfiguration(
+async function applyInOrder(
   session: SessionActorRef,
   choices: InitialConfigOption[],
 ): Promise<void> {
@@ -49,4 +48,13 @@ export async function applyInitialConfiguration(
 
     await applySessionConfig(session, choice);
   }
+}
+
+// A new Session with an Agent session applies its first choices one at a time, in the order they were chosen.
+export async function applyInitialConfiguration(
+  session: SessionActorRef,
+  choices: InitialConfigOption[],
+): Promise<void> {
+  if (session.getSnapshot().context.acpLease)
+    await applyInOrder(session, choices);
 }

@@ -1,66 +1,48 @@
-import {
-  setConfigEvent,
-  type SessionCommand,
-  type SessionContext,
-  type SessionWrite,
-} from '../session-context';
+import { setConfigEvent, type SessionContext } from '../session-context';
+import type { ConfigChoice, ConfigurationStep } from './values';
 
-export type ConfigChoice = Extract<
-  SessionCommand,
-  { type: typeof setConfigEvent }
->;
+const changing = (change: Partial<SessionContext>): ConfigurationStep => ({
+  change,
+  writes: [],
+});
 
-// What a configuration step changes in the Session, and what it asks the writer to store.
-export type ConfigChange<Keys extends keyof SessionContext> = {
-  change: Pick<SessionContext, Keys>;
-  writes: SessionWrite[];
-};
-
-export const queueConfigChoice = (
+export const queueChoice = (
   context: SessionContext,
   choice: ConfigChoice,
-): Pick<SessionContext, 'configQueue'> => ({
-  configQueue: [...context.configQueue, choice],
-});
+): ConfigurationStep =>
+  changing({ configQueue: [...context.configQueue, choice] });
 
-export const releaseHeldConfig = (
+// Held choices join the queue once the Turn that held them is over.
+export const releaseHeldChoices = (
   context: SessionContext,
-): Pick<SessionContext, 'configQueue'> => ({
-  configQueue: [
-    ...context.configQueue,
-    ...context.heldConfig.map((choice): ConfigChoice => ({
-      type: setConfigEvent,
-      ...choice,
-      held: true,
-    })),
-  ],
-});
+): ConfigurationStep =>
+  changing({
+    configQueue: [
+      ...context.configQueue,
+      ...context.heldConfig.map((choice): ConfigChoice => ({
+        type: setConfigEvent,
+        ...choice,
+        held: true,
+      })),
+    ],
+  });
 
-export const takeConfigChoice = (
-  context: SessionContext,
-): Pick<SessionContext, 'applyingConfig' | 'configQueue'> => ({
-  applyingConfig: context.configQueue[0] ?? null,
-  configQueue: context.configQueue.slice(1),
-});
-
-export const acknowledgeConfigChoice = (
-  context: SessionContext,
-): Pick<SessionContext, 'applyingConfig'> => {
-  context.applyingConfig?.applied?.resolve(context.configOptions);
-
-  return { applyingConfig: null };
-};
+// The first queued choice becomes the one the Session sends to the Agent.
+export const beginChoice = (context: SessionContext): ConfigurationStep =>
+  changing({
+    applyingConfig: context.configQueue[0] ?? null,
+    configQueue: context.configQueue.slice(1),
+  });
 
 const rejectChoice = (choice: ConfigChoice | null, error: Error): void =>
   choice?.applied?.reject(error);
 
-export const rejectPendingConfig = (
-  context: SessionContext,
-): Pick<SessionContext, 'configQueue' | 'applyingConfig'> => {
+// A closing Session refuses every choice it has not applied yet.
+export const abandonChoices = (context: SessionContext): ConfigurationStep => {
   const error = new Error('Session closed before configuration completed');
   rejectChoice(context.applyingConfig, error);
 
   for (const config of context.configQueue) rejectChoice(config, error);
 
-  return { configQueue: [], applyingConfig: null };
+  return changing({ configQueue: [], applyingConfig: null });
 };

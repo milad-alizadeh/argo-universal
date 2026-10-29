@@ -1,4 +1,4 @@
-import type { SessionConfigOption, SlashCommand } from '@repo/contracts';
+import type { SessionConfigOption } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
 import {
   type ActorRefFrom,
@@ -54,22 +54,7 @@ import {
   removeSessionCheckout,
 } from './archive/archive-operations';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
-import {
-  acknowledgeConfigChoice,
-  agentOptionsJob,
-  hasConfigurationCapacity,
-  holdConfigChoice,
-  queueConfigChoice,
-  rejectConfigChoice,
-  rejectPendingConfig,
-  releaseHeldConfig,
-  reportConfiguration,
-  restoreConfiguration,
-  sendQueuedChoice,
-  slashCommandsJob,
-  takeConfigChoice,
-  type RestoredConfiguration,
-} from './configuration';
+import { sessionConfiguration, type ConfigurationStep } from './configuration';
 import { creationSettledEvent } from './creation/creation-receipt';
 import { initialSessionContext } from './initial-context';
 import { nativePermissionEvent } from './native-permissions';
@@ -181,18 +166,6 @@ type AcpUpdate = Extract<
   { type: typeof acpUpdateEvent }
 >['notification']['update'];
 
-type CommandsUpdate = Extract<
-  AcpUpdate,
-  { sessionUpdate: 'available_commands_update' }
->;
-
-const commandsFrom = (update: CommandsUpdate): SlashCommand[] =>
-  update.availableCommands.map(({ name, description, input }) => ({
-    name,
-    description,
-    hint: input?.hint,
-  }));
-
 const titleFrom = (update: AcpUpdate): string | undefined =>
   update.sessionUpdate === 'session_info_update'
     ? update.title?.trim()
@@ -226,6 +199,22 @@ const enqueueWrites = (
 ): void => {
   for (const write of writes)
     enqueue.sendTo(context.input.writer, { type: writeFeedEvent, ...write });
+};
+
+type StepQueue = WriteQueue & {
+  assign: (change: Partial<SessionContext>) => void;
+};
+
+// A Session configuration step: its change to the Session, then its writes.
+const enqueueStep = (
+  enqueue: StepQueue,
+  context: SessionContext,
+  step: ConfigurationStep | undefined,
+): void => {
+  if (!step) return;
+
+  enqueue.assign(step.change);
+  enqueueWrites(enqueue, context, step.writes);
 };
 
 const enqueueCrashedSubagents = (
@@ -284,7 +273,7 @@ const sessionSetup = setup({
       cancelAcp(input),
     ),
     configureAcp: fromPromise<SessionConfigOption[], SessionContext>(
-      ({ input }) => sendQueuedChoice(input),
+      ({ input }) => sessionConfiguration.send(input),
     ),
     publishTurn: fromPromise<void, AcpOperationInput>(({ input }) =>
       publishTurn(input),
@@ -303,8 +292,8 @@ const sessionSetup = setup({
     openAcp: fromPromise<OpenedAcpSession, SessionContext>(({ input }) =>
       openAcp(input),
     ),
-    restoreAcpConfiguration: fromPromise<RestoredConfiguration, SessionContext>(
-      ({ input, signal }) => restoreConfiguration(input, signal),
+    restoreAcpConfiguration: fromPromise<ConfigurationStep, SessionContext>(
+      ({ input, signal }) => sessionConfiguration.restore(input, signal),
     ),
     closeAcp: fromPromise<void, AcpOperationInput>(({ input }) =>
       closeAcp(input),
@@ -354,56 +343,48 @@ const sessionSetup = setup({
     flushSubagents: ({ context }) => flushSubagents(context.subagents),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
-    queueAcpConfig: assign(({ context, event }) => {
+    queueAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
-
-      return queueConfigChoice(context, event);
+      enqueueStep(
+        enqueue,
+        context,
+        sessionConfiguration.choose(context, event, 'now'),
+      );
     }),
     holdAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
-      const { change, writes } = holdConfigChoice(context, event);
-
-      enqueue.assign(change);
-      enqueueWrites(enqueue, context, writes);
+      enqueueStep(
+        enqueue,
+        context,
+        sessionConfiguration.choose(context, event, 'nextTurn'),
+      );
     }),
-    releaseHeldConfig: assign(({ context }) => releaseHeldConfig(context)),
-    takeAcpConfig: assign(({ context }) => takeConfigChoice(context)),
-    saveAcpCommands: enqueueActions(({ context, event, enqueue }) => {
-      assertEvent(event, acpUpdateEvent);
-      const update = event.notification.update;
-
-      if (update.sessionUpdate !== 'available_commands_update') return;
-
-      const commands = commandsFrom(update);
-
-      enqueue.assign({ slashCommands: commands });
-      enqueueWrites(enqueue, context, [
-        { job: slashCommandsJob(context, commands) },
-      ]);
-    }),
-    applyAcpConfig: enqueueActions(
-      ({ context, event, enqueue }, options?: SessionConfigOption[]) => {
-        const report = reportConfiguration(context, event, options);
-
-        if (!report) return;
-
-        enqueue.assign(report.change);
-        enqueueWrites(enqueue, context, report.writes);
-      },
+    releaseHeldConfig: enqueueActions(({ context, enqueue }) =>
+      enqueueStep(enqueue, context, sessionConfiguration.releaseHeld(context)),
     ),
-    acknowledgeAcpConfig: assign(({ context }) =>
-      acknowledgeConfigChoice(context),
+    takeAcpConfig: enqueueActions(({ context, enqueue }) =>
+      enqueueStep(enqueue, context, sessionConfiguration.begin(context)),
     ),
-    rejectAcpConfig: enqueueActions(
-      ({ context, enqueue }, params: FailureParameters) => {
-        const { change, writes } = rejectConfigChoice(context, params);
-
-        enqueue.assign(change);
-        enqueueWrites(enqueue, context, writes);
-      },
+    reportAcpConfig: enqueueActions(({ context, event, enqueue }) =>
+      enqueueStep(
+        enqueue,
+        context,
+        sessionConfiguration.report(context, event),
+      ),
     ),
-    rejectPendingAcpConfig: assign(({ context }) =>
-      rejectPendingConfig(context),
+    settleAcpConfig: enqueueActions(
+      (
+        { context, enqueue },
+        outcome: Parameters<typeof sessionConfiguration.settle>[1],
+      ) =>
+        enqueueStep(
+          enqueue,
+          context,
+          sessionConfiguration.settle(context, outcome),
+        ),
+    ),
+    rejectPendingAcpConfig: enqueueActions(({ context, enqueue }) =>
+      enqueueStep(enqueue, context, sessionConfiguration.abandon(context)),
     ),
     rememberAcpUsage: assign(
       ({ context, event }): Pick<SessionContext, 'usage'> => {
@@ -486,8 +467,9 @@ const sessionSetup = setup({
     rememberAcpLease: assign(({ context }, opened: OpenedAcpSession) =>
       leaseValues(context, opened),
     ),
-    rememberRestoredConfiguration: assign(
-      (_, restored: RestoredConfiguration) => restored,
+    rememberRestoredConfiguration: enqueueActions(
+      ({ context, enqueue }, restored: ConfigurationStep) =>
+        enqueueStep(enqueue, context, restored),
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:
@@ -499,10 +481,6 @@ const sessionSetup = setup({
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
     rememberFeedEnded: assign({ feedEnded: true }),
-    storeAgentOptions: sendTo(writer, ({ context }) => ({
-      type: writeFeedEvent,
-      job: agentOptionsJob(context, context.configOptions),
-    })),
     storeAcpSession: sendTo(writer, ({ context }) => ({
       type: writeFeedEvent,
       job: new SessionRowUpdateJob({
@@ -799,7 +777,7 @@ const sessionSetup = setup({
       ({ context }): boolean => context.heldConfig.length > 0,
     ]),
     hasConfigurationCapacity: ({ context }): boolean =>
-      hasConfigurationCapacity(context),
+      sessionConfiguration.hasRoom(context),
     acceptsAcpConfig: and([
       'hasConfigurationCapacity',
       or([
@@ -1038,8 +1016,8 @@ export const sessionMachine = sessionSetup.createMachine({
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
             'acp.update': [
               { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
-              { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
-              { guard: 'isCommandsUpdate', actions: 'saveAcpCommands' },
+              { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },
+              { guard: 'isCommandsUpdate', actions: 'reportAcpConfig' },
               {
                 guard: ({ event }): boolean =>
                   event.notification.update.sessionUpdate === 'usage_update',
@@ -1132,12 +1110,10 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: [
                     {
                       type: 'rememberRestoredConfiguration',
-                      params: ({ event }): RestoredConfiguration =>
-                        event.output,
+                      params: ({ event }): ConfigurationStep => event.output,
                     },
                     'storeSession',
                     'storeAcpSession',
-                    'storeAgentOptions',
                     'discloseInterruption',
                   ],
                 },
@@ -1170,20 +1146,16 @@ export const sessionMachine = sessionSetup.createMachine({
                 input: ({ context }) => context,
                 onDone: {
                   target: 'idle',
-                  actions: [
-                    {
-                      type: 'applyAcpConfig',
-                      params: ({ event }): SessionConfigOption[] =>
-                        event.output,
-                    },
-                    'acknowledgeAcpConfig',
-                  ],
+                  actions: {
+                    type: 'settleAcpConfig',
+                    params: ({ event }) => ({ options: event.output }),
+                  },
                 },
                 onError: {
                   target: 'idle',
                   actions: [
                     {
-                      type: 'rejectAcpConfig',
+                      type: 'settleAcpConfig',
                       params: ({ event }): FailureParameters => ({
                         error: event.error,
                       }),
@@ -1393,8 +1365,8 @@ export const sessionMachine = sessionSetup.createMachine({
                         guard: 'isSubagentUpdate',
                         actions: 'routeSubagentUpdate',
                       },
-                      { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
-                      { guard: 'isCommandsUpdate', actions: 'saveAcpCommands' },
+                      { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },
+                      { guard: 'isCommandsUpdate', actions: 'reportAcpConfig' },
                       { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
                       {},
                     ],

@@ -5,33 +5,19 @@
  * on the Session and its Agent, which the Agent options read before Send offers.
  */
 
-// The Session machine's invoked operations.
-export {
-  restoreConfiguration,
-  sendQueuedChoice,
-  type RestoredConfiguration,
-} from './session-operations';
+// What the Session machine does with its choices.
+export { sessionConfiguration } from './session-steps';
 
-// The Session machine's actions and guard.
-export {
-  acknowledgeConfigChoice,
-  queueConfigChoice,
-  rejectPendingConfig,
-  releaseHeldConfig,
-  takeConfigChoice,
-} from './queue';
+export type { ConfigurationStep } from './values';
 
-export { holdConfigChoice } from './hold';
-
-export { rejectConfigChoice, reportConfiguration } from './report';
-
-export { currentModel, hasConfigurationCapacity } from './choices';
-
-export { agentOptionsJob, slashCommandsJob } from './store';
-
-// Session commands and readers.
+// Session commands, and the refusal their handlers turn into a request error.
 export { applyInitialConfiguration, applySessionConfig } from './commands';
 
-export { withHeldConfiguration } from './held';
+export { ChoiceNotOffered } from './offered';
+
+// Readers.
+export { currentModel } from './option-values';
+
+export { withHeldConfiguration } from './held-options';
 
 export { agentOptionsUpdates } from './agent-options';

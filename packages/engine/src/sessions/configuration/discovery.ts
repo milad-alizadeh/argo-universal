@@ -2,8 +2,8 @@ import type { SessionConfigOption } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createAcpResponseReaders, type AcpSessionLease } from '../../agents';
 import { readAcpConfiguration } from '../acp/acp-configuration';
-import type { AgentConfigValue } from './choices';
 import { applyChoices } from './send-choice';
+import type { AgentConfigValue } from './values';
 
 const rejections = createRejectionCounter('Agent options');
 

@@ -1,11 +1,14 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type { SessionContext } from '../session-context';
-import { requireOfferedChoice, toConfigValues } from './choices';
+import { requireOfferedChoice } from './offered';
+import { toConfigValues } from './option-values';
 import {
   applyChoices,
   sendConfigChoice,
   type ConfigurationTarget,
 } from './send-choice';
+import { agentOptionsWrite } from './store';
+import type { ConfigurationStep } from './values';
 
 const sessionTarget = (context: SessionContext): ConfigurationTarget => {
   if (!context.acpLease) throw new Error('No Agent session to configure');
@@ -17,8 +20,8 @@ const sessionTarget = (context: SessionContext): ConfigurationTarget => {
   };
 };
 
-// Sends the queued choice the Session is applying, rechecked against the options the Agent offers now.
-export const sendQueuedChoice = (
+// Sends the choice the Session is applying, rechecked against the options the Agent offers now.
+export const sendChoice = (
   context: SessionContext,
 ): Promise<SessionConfigOption[]> => {
   const choice = context.applyingConfig;
@@ -29,12 +32,9 @@ export const sendQueuedChoice = (
   return sendConfigChoice(sessionTarget(context), choice);
 };
 
-export type RestoredConfiguration = Pick<
-  SessionContext,
-  'configOptions' | 'configValues'
->;
-
-const restoredChoices = (context: SessionContext): RestoredConfiguration =>
+const restoredChoices = (
+  context: SessionContext,
+): Pick<SessionContext, 'configOptions' | 'configValues'> =>
   context.input.kind === 'existing'
     ? context
     : { configOptions: context.configOptions, configValues: [] };
@@ -43,7 +43,7 @@ const restoredChoices = (context: SessionContext): RestoredConfiguration =>
 export async function restoreConfiguration(
   context: SessionContext,
   signal: AbortSignal,
-): Promise<RestoredConfiguration> {
+): Promise<ConfigurationStep> {
   const { configOptions, configValues } = restoredChoices(context);
 
   const options = await applyChoices(
@@ -52,5 +52,8 @@ export async function restoreConfiguration(
     signal,
   );
 
-  return { configOptions: options, configValues: toConfigValues(options) };
+  return {
+    change: { configOptions: options, configValues: toConfigValues(options) },
+    writes: [agentOptionsWrite(context, options)],
+  };
 }
