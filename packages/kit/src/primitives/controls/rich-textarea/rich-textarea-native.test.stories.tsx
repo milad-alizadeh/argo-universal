@@ -5,7 +5,10 @@ import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { exampleLabel } from './rich-textarea-example.mocks';
-import { suggestionsRichTextarea } from './rich-textarea-fixtures';
+import {
+  iconlessSuggestionsRichTextarea,
+  suggestionsRichTextarea,
+} from './rich-textarea-fixtures';
 import type { RichTextareaProps } from './rich-textarea-props';
 import { SuggestionListHost } from './rich-textarea-suggestion-list';
 import { RichTextarea } from './rich-textarea.native';
@@ -63,6 +66,7 @@ export const SlashShowsTheListAndTypingNarrowsIt: Story = {
       'Try /',
     );
     await canvas.findByRole('button', firstOption);
+    await expect(canvas.getByText('First option')).toBeVisible();
     await userEvent.keyboard('sec');
     await canvas.findByRole('button', secondOption);
     await waitFor(() =>
@@ -93,6 +97,18 @@ export const TappingAResultReplacesTheSlashWord: Story = {
         .selectionStart,
     ).toBe('Run /second '.length);
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
+  },
+};
+
+export const RowWithoutAnIconKeepsTheSlash: Story = {
+  args: { suggestions: iconlessSuggestionsRichTextarea.suggestions },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await expect(await canvas.findByText('/plain')).toBeVisible();
+    await expect(canvas.getByText('Plain option')).toBeVisible();
   },
 };
 
