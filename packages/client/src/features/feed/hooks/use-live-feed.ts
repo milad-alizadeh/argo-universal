@@ -14,7 +14,7 @@ import {
   subscriptionEnabled,
 } from './feed-subscription-input';
 import { useFeedHistory } from './use-feed-history';
-import type { FeedStore } from './use-feed-store';
+import type { FeedRows, FeedStore, LiveStore } from './use-feed-store';
 import { useFeedSyncPoint } from './use-feed-sync-point';
 
 const uncached = { staleTime: 0, gcTime: 0 };
@@ -28,8 +28,8 @@ export interface LiveFeed {
 
 export function useLiveFeed(
   sessionId: string | undefined,
-  store: FeedStore,
-  history: History,
+  store: LiveStore & Pick<FeedStore, 'start'>,
+  history: Pick<History, 'data' | 'resetHistory'>,
 ): LiveFeed {
   const cursor = useFeedCursor(sessionId, store, history);
 
@@ -47,8 +47,8 @@ export function useLiveFeed(
 
 function useFeedCursor(
   sessionId: string | undefined,
-  store: FeedStore,
-  history: History,
+  store: Pick<FeedStore, 'start'>,
+  history: Pick<History, 'data'>,
 ): ReturnType<typeof useFeedSyncPoint> {
   return useFeedSyncPoint(
     sessionId,
@@ -59,7 +59,7 @@ function useFeedCursor(
 
 function useLiveSubscription(
   sessionId: string | undefined,
-  store: FeedStore,
+  store: LiveStore,
   input: {
     syncPoint: ReturnType<typeof syncPointOf>;
     resetHistory: () => Promise<void>;
@@ -92,7 +92,10 @@ function useTransportSubscription(
   });
 }
 
-function useHistoryPages(store: FeedStore, history: History): void {
+function useHistoryPages(
+  store: FeedRows,
+  history: Pick<History, 'data'>,
+): void {
   const { feedRef, replaceFeed } = store;
   useEffect(() => {
     const pages = history.data?.pages;
@@ -103,7 +106,7 @@ function useHistoryPages(store: FeedStore, history: History): void {
 
 function useFetchWholeRow(
   sessionId: string | undefined,
-  { feedRef, replaceFeed }: FeedStore,
+  { feedRef, replaceFeed }: FeedRows,
 ): (id: string) => Promise<void> {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -115,7 +118,7 @@ function useFetchWholeRow(
   );
 }
 
-type FetchContext = Pick<FeedStore, 'feedRef' | 'replaceFeed'> & {
+type FetchContext = FeedRows & {
   queryClient: ReturnType<typeof useQueryClient>;
   trpc: ReturnType<typeof useTRPC>;
   sessionId: string | undefined;
@@ -152,7 +155,7 @@ function commitWholeRow(
 
 function useLiveEvents(
   sessionId: string | undefined,
-  store: FeedStore,
+  store: LiveStore,
   input: {
     fetchWholeRow: (id: string) => Promise<void>;
     resetHistory: () => Promise<void>;
@@ -162,7 +165,7 @@ function useLiveEvents(
 }
 
 function useRetryOpen(
-  store: FeedStore,
+  store: Pick<FeedStore, 'closed' | 'setClosureError' | 'feedRef'>,
   input: {
     syncPoint: ReturnType<typeof syncPointOf>;
     setSyncPoint: (point: ReturnType<typeof syncPointOf>) => void;
