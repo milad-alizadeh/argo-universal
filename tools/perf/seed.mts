@@ -2,6 +2,12 @@ import path from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { startOwnServer } from '../../e2e/own-server.ts';
+import {
+  datasetCounts,
+  type SeedCounts,
+  seededDataset,
+  type SeededDataset,
+} from './seed-dataset.mts';
 import { type SeededFeed, seededFeed } from './seed-feed.mts';
 import { withTemplateSession } from './template-session.mts';
 
@@ -9,8 +15,10 @@ import { withTemplateSession } from './template-session.mts';
 export interface SeededServer {
   serverUrl: string;
   longSessionTitle: string;
+  shortSessionTitle: string;
   sessionCount: number;
   feedRowCount: number;
+  shortFeedRowCount: number;
   stop: () => Promise<void>;
 }
 
@@ -32,6 +40,11 @@ const sessionCount = 240;
 const feedCopies = 14;
 
 const longSessionTitle = `${titles[0]} 0`;
+
+const benchmarkTitles = {
+  longSessionTitle,
+  shortSessionTitle: `${titles[1]} 1`,
+};
 
 type SessionRow = typeof session.$inferSelect;
 
@@ -76,17 +89,27 @@ function write(
 }
 
 // Clones the template Session `sessionCount` times, the first holding the long Feed.
-async function seedDatabase(databasePath: string): Promise<number> {
-  const database = openDatabase(databasePath);
+async function prepareDataset(database: Database): Promise<SeededDataset> {
   const template = database.select().from(session).limit(1).get();
 
   if (!template) throw new Error('The template Session is missing');
   const now = Date.now();
   const feed = await seededFeed(longSessionId, feedCopies, now);
-  write(database, clones(template, feed.rows.length, now), feed);
-  database.$client.close();
 
-  return feed.rows.length;
+  return seededDataset(clones(template, feed.rows.length, now), feed, now);
+}
+
+async function seedDatabase(databasePath: string): Promise<SeedCounts> {
+  const database = openDatabase(databasePath);
+
+  try {
+    const dataset = await prepareDataset(database);
+    write(database, dataset.sessions, dataset.feed);
+
+    return datasetCounts(dataset);
+  } finally {
+    database.$client.close();
+  }
 }
 
 // Starts a fixture Server, gives it one real Session, then clones it into many Sessions and copies of the recorded Feeds.
@@ -95,14 +118,14 @@ export async function startSeededServer(
 ): Promise<SeededServer> {
   await withTemplateSession(directory);
   const databasePath = path.join(directory, 'server-home', 'argo.db');
-  const feedRowCount = await seedDatabase(databasePath);
+  const counts = await seedDatabase(databasePath);
   const server = await startOwnServer(directory, {});
 
   return {
     serverUrl: server.serverUrl,
-    longSessionTitle,
+    ...benchmarkTitles,
     sessionCount: sessionCount + 1,
-    feedRowCount,
+    ...counts,
     stop: server.stop,
   };
 }
