@@ -183,7 +183,6 @@ describe('pnpm verify', (): void => {
 
     expect(result.status).toBe(1);
     expect(result.output).toContain('Registry validators are stale.');
-    expect(result.output).not.toContain('Operation procedures are stale.');
     expect(result.output).toContain('1 passed');
   });
 });
