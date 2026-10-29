@@ -43,7 +43,7 @@ const answerText = Array.from({ length: 16 }, (_unused, index) => {
   return `${mark}${sentence.repeat(2 + (index % 3)).trim()}${mark}`;
 }).join('\n\n');
 
-const charsPerChunk = 24;
+const charsPerChunk = 48;
 
 const msBetweenChunks = 24;
 

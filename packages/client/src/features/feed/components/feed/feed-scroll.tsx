@@ -31,11 +31,14 @@ const keepPosition = { data: true };
 const endThreshold = 0.02;
 
 /*
- * The Feed follows its end only as the view and the Composer below it change size. Streamed text and
- * new rows never scroll it: they grow into the room kept below the pinned prompt, then on below the
- * view, where Jump to latest offers them.
+ * The Feed follows its end only as the view and the Composer below it change size. Once a prompt is
+ * pinned, streamed text and new rows never scroll it: they grow into the room kept below the prompt,
+ * then on below the view, where Jump to latest offers them.
  */
 const followComposer = { on: { layout: true, footerLayout: true } };
+
+// With no prompt pinned, the Feed also follows rows that load after it opens, so a settled Session ends above the Composer.
+const followLoadedRows = { on: { ...followComposer.on, dataChange: true } };
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
@@ -135,6 +138,15 @@ type FeedListProps = Pick<
   | 'header'
 >;
 
+const endFollowing = (
+  opensAtStart: boolean | undefined,
+  pinnedPrompt: FeedListProps['anchoredEndSpace'],
+): FeedListProps['maintainScrollAtEnd'] => {
+  if (opensAtStart) return false;
+
+  return pinnedPrompt ? followComposer : followLoadedRows;
+};
+
 // With no Composer below, the Feed stays where the reader is and pins no prompt.
 function anchorsOf(
   opensAtStart: boolean | undefined,
@@ -144,7 +156,7 @@ function anchorsOf(
   'maintainScrollAtEnd' | 'alignItemsAtEnd' | 'anchoredEndSpace'
 > {
   return {
-    maintainScrollAtEnd: opensAtStart ? false : followComposer,
+    maintainScrollAtEnd: endFollowing(opensAtStart, pinnedPrompt),
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
     anchoredEndSpace: opensAtStart ? undefined : pinnedPrompt,
