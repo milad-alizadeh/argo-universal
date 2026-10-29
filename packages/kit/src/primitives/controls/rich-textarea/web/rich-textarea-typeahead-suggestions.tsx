@@ -1,8 +1,9 @@
 import { $createTextNode, type TextNode } from 'lexical';
 import type * as React from 'react';
 import {
-  commandName,
+  querySuggestions,
   type ComposerSuggestion,
+  type SuggestionGroup,
   type SuggestionSource,
 } from '../rich-textarea-suggestions';
 import { $insertCommand } from './rich-textarea-command-tokens';
@@ -11,8 +12,6 @@ import {
   TypeaheadOption,
   type TypeaheadAdapter,
 } from './rich-textarea-typeahead-option';
-
-const resultLimit = 8;
 
 function SuggestionContent({
   suggestion,
@@ -33,18 +32,14 @@ function $insertText(node: TextNode, text: string): void {
   inserted.selectEnd();
 }
 
-function $insertResult(node: TextNode, insert: string): void {
-  const name = commandName(insert);
-
-  if (name) $insertCommand(node, name);
-  else $insertText(node, insert);
-}
-
 function insertSuggestion(
   node: TextNode | null,
-  { insert }: ComposerSuggestion,
+  { insert, command }: ComposerSuggestion,
 ): void {
-  if (node) $insertResult(node, insert);
+  if (!node) return;
+
+  if (command) $insertCommand(node, command);
+  else $insertText(node, insert);
 }
 
 function suggestionOption(
@@ -62,23 +57,43 @@ function suggestionOption(
   );
 }
 
-function sourceOptions(
-  source: SuggestionSource,
-  query: string,
-): TypeaheadOption[] {
-  return source
-    .query(query)
-    .slice(0, resultLimit)
-    .map((suggestion) => suggestionOption(source, suggestion));
+function groupOptions({
+  source,
+  suggestions,
+}: SuggestionGroup): TypeaheadOption[] {
+  return suggestions.map((suggestion) => suggestionOption(source, suggestion));
 }
 
+interface Answers {
+  ask: (query: string) => SuggestionGroup[];
+  recall: (query: string) => SuggestionGroup[];
+}
+
+// `ask` queries the sources and keeps the answer; `recall` reuses it while the query is the same.
+function answers(sources: readonly SuggestionSource[]): Answers {
+  let latest: { query: string; groups: SuggestionGroup[] } | null = null;
+
+  const ask = (query: string): SuggestionGroup[] => {
+    latest = { query, groups: querySuggestions(sources, query) };
+
+    return latest.groups;
+  };
+
+  return {
+    ask,
+    recall: (query) => (latest?.query === query ? latest.groups : ask(query)),
+  };
+}
+
+// The trigger asks the sources once per change and the options recall that answer.
 export function suggestionAdapter(
   sources: readonly SuggestionSource[],
 ): TypeaheadAdapter {
+  const { ask, recall } = answers(sources);
+
   return {
-    trigger: suggestionTrigger(sources),
-    options: (query) =>
-      sources.flatMap((source) => sourceOptions(source, query)),
+    trigger: suggestionTrigger(ask),
+    options: (query) => recall(query).flatMap(groupOptions),
   };
 }
 

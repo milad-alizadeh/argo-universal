@@ -112,7 +112,7 @@ export const commandTokensRichTextarea = {
       id: 'commands',
       title: 'Commands',
       query: (query: string): ComposerSuggestion[] =>
-        knownCommands.flatMap(({ name, detail, hint }) =>
+        knownCommands.flatMap(({ name, detail }) =>
           name.startsWith(query)
             ? [
                 {
@@ -120,11 +120,12 @@ export const commandTokensRichTextarea = {
                   label: `/${name}`,
                   detail,
                   insert: `/${name} `,
-                  hint,
+                  command: name,
                 },
               ]
             : [],
         ),
+      commands: knownCommands.map(({ name, hint }) => ({ name, hint })),
     },
   ],
 } satisfies RichTextareaFixture;

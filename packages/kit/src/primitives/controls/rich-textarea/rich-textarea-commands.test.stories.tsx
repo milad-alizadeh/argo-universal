@@ -33,7 +33,7 @@ const source: SuggestionSource = {
   id: 'commands',
   title: 'Commands',
   query: (query) =>
-    commands.flatMap(({ name, description, hint }) =>
+    commands.flatMap(({ name, description }) =>
       name.startsWith(query)
         ? [
             {
@@ -41,11 +41,22 @@ const source: SuggestionSource = {
               label: `/${name}`,
               detail: description,
               insert: `/${name} `,
-              hint,
+              command: name,
             },
           ]
         : [],
     ),
+  commands: commands.map(({ name, hint }) => ({ name, hint })),
+};
+
+// A Plugin result that happens to insert `/plan `: it is text, not a Slash command.
+const pluginSource: SuggestionSource = {
+  id: 'plugin',
+  title: 'Plugin',
+  query: (query) =>
+    'plan'.startsWith(query)
+      ? [{ id: 'plan', label: 'Plan', insert: '/plan ' }]
+      : [],
 };
 
 const meta = {
@@ -179,5 +190,21 @@ export const ACommandWithoutAHintShowsNone: Story = {
       expect(args.onChangeText).toHaveBeenLastCalledWith('/init '),
     );
     await expect(within(field).queryByText(hintText)).not.toBeInTheDocument();
+  },
+};
+
+export const APluginResultThatInsertsSlashNameStaysPlainText: Story = {
+  args: { suggestions: [source, pluginSource] },
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, '/pla');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/plan '),
+    );
+    await userEvent.keyboard(backspaceTwice);
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/pla'),
+    );
   },
 };
