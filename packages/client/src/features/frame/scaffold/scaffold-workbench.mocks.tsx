@@ -26,13 +26,15 @@ type MockState = Pick<
 interface WorkbenchScaffoldProps {
   inspectorOpen?: boolean;
   overflowing?: boolean;
+  initialWorkbenchIntent?: WorkbenchIntent;
 }
 
 export function WorkbenchScaffold({
   inspectorOpen = false,
   overflowing = false,
+  initialWorkbenchIntent,
 }: WorkbenchScaffoldProps): ReactElement {
-  const state = useMockState(inspectorOpen);
+  const state = useMockState(inspectorOpen, initialWorkbenchIntent);
 
   return (
     <Scaffold
@@ -48,26 +50,35 @@ type WorkbenchState = Pick<
   'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
 >;
 
-function useWorkbenchState(): WorkbenchState {
-  const [workbenchIntent, onWorkbenchIntentChange] =
-    useState<WorkbenchIntent>('auto');
+function useWorkbenchState(initialIntent?: WorkbenchIntent): WorkbenchState {
+  const [workbenchIntent, onWorkbenchIntentChange] = useState<WorkbenchIntent>(
+    initialIntent ?? 'auto',
+  );
 
   return { inspectorAvailable: true, workbenchIntent, onWorkbenchIntentChange };
 }
 
-function useMockState(inspectorOpen: boolean): MockState {
-  const [sidebarShown, onSidebarShownChange] = useState(true);
-
+function useInspectorState(
+  inspectorOpen: boolean,
+): Pick<MockState, 'inspectorState' | 'onInspectorStateChange'> {
   const [inspectorState, onInspectorStateChange] = useState<InspectorState>(
     inspectorOpen ? 'open' : 'closed',
   );
 
+  return { inspectorState, onInspectorStateChange };
+}
+
+function useMockState(
+  inspectorOpen: boolean,
+  initialIntent?: WorkbenchIntent,
+): MockState {
+  const [sidebarShown, onSidebarShownChange] = useState(true);
+
   return {
     sidebarShown,
     onSidebarShownChange,
-    inspectorState,
-    onInspectorStateChange,
-    ...useWorkbenchState(),
+    ...useInspectorState(inspectorOpen),
+    ...useWorkbenchState(initialIntent),
   };
 }
 
