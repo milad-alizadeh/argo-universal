@@ -9,20 +9,28 @@ import {
 import { usePressLanes } from './list-item-press-class';
 import type { DrawingProps, RowPressProps } from './list-item-press-props';
 import { ItemContentSlots } from './list-item-slots';
+import { useFoldButton } from './list-item-tree';
 
 /*
- * A row with accessories draws its press as an empty layer under its content, so the web never nests the accessories'
- * buttons in the row's and a screen reader reaches each accessory after the row. The content lets every press but an
- * accessory's fall through to the row's press.
+ * A row with accessories, or a parent's chevron, draws its press as an empty layer under its content, so the web never
+ * nests their buttons in the row's and a screen reader reaches each accessory after the row. The content lets every
+ * press but an accessory's or the chevron's fall through to the row's press.
  */
 interface BesidePressProps {
   props: DrawingProps;
   press: RowPressProps;
 }
 
+// Accessories and a parent's chevron are buttons of their own, which the web must not nest in the row's.
+function usePassThrough(props: DrawingProps): boolean {
+  const folds = useFoldButton();
+
+  return hasAccessories(props) || folds;
+}
+
 // Keep the row's press target mounted when asynchronous accessories appear.
-export function besidePressFor(props: DrawingProps, tile: boolean): boolean {
-  if (hasAccessories(props)) return true;
+export function useBesidePress(props: DrawingProps, tile: boolean): boolean {
+  if (usePassThrough(props)) return true;
 
   if (tile) return false;
 
@@ -30,7 +38,7 @@ export function besidePressFor(props: DrawingProps, tile: boolean): boolean {
 }
 
 export function BesidePress({ props, press }: BesidePressProps): ReactElement {
-  const accessories = hasAccessories(props);
+  const accessories = usePassThrough(props);
 
   return (
     <View className="relative">

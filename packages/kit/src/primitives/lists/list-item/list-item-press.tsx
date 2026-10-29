@@ -7,7 +7,7 @@ import { ListTileContext } from '../../../list-context';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
-import { BesidePress, besidePressFor } from './list-item-beside-press';
+import { BesidePress, useBesidePress } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
 import { interactive, usePressClass } from './list-item-press-class';
@@ -137,13 +137,13 @@ export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
   const focused = { ...press, ...useRowFocus() };
   const className = cn(press.className, focused.className);
-  const tile = use(ListTileContext) !== null;
+  const beside = useBesidePress(props, use(ListTileContext) !== null);
 
   if (useRadioRow(props))
     return <RadioRow row={props} className={press.className} />;
 
   // Keep the same press target while an asynchronous accessory arrives during a click.
-  if (besidePressFor(props, tile))
+  if (beside)
     return <BesidePress props={props} press={{ ...focused, className }} />;
 
   return (
