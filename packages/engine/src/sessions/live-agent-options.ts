@@ -5,6 +5,7 @@ import type {
 import type { Subscription } from 'xstate';
 import { withHeldConfiguration } from './configuration/held-configuration';
 import type { SessionRouterDeps } from './router-deps';
+import type { SessionContext } from './session-context';
 import type { SessionActorRef } from './session-machine';
 
 type Deps = Pick<SessionRouterDeps, 'sessions'>;
@@ -20,6 +21,20 @@ type Observation = {
   };
 };
 
+const optionsUpdate = (
+  input: Input,
+  context: SessionContext,
+): AgentOptionsUpdate => ({
+  agent: input.agent,
+  projectId: input.projectId,
+  configOptions: withHeldConfiguration(
+    context.configOptions,
+    context.heldConfig,
+  ),
+  commands: context.slashCommands,
+  stage: 'ready',
+});
+
 function publication({ deps, input, observer }: Observation): () => void {
   return () => {
     const session =
@@ -27,52 +42,60 @@ function publication({ deps, input, observer }: Observation): () => void {
 
     if (!session) return;
 
-    const context = session.getSnapshot().context;
-
-    const update: AgentOptionsUpdate = {
-      agent: input.agent,
-      projectId: input.projectId,
-      configOptions: withHeldConfiguration(
-        context.configOptions,
-        context.heldConfig,
-      ),
-      commands: context.slashCommands,
-      stage: 'ready',
-    };
-
-    observer.update(update);
+    observer.update(optionsUpdate(input, session.getSnapshot().context));
   };
 }
 
+type FollowState = {
+  current?: SessionActorRef;
+  subscription?: Subscription;
+};
+
+function replaceSession(
+  state: FollowState,
+  next: SessionActorRef | undefined,
+  publish: () => void,
+): void {
+  state.subscription?.unsubscribe();
+  state.current = next;
+  state.subscription = next?.subscribe({ next: publish });
+}
+
+function followCurrent(
+  state: FollowState,
+  observation: Observation,
+  publish: () => void,
+): void {
+  const next =
+    observation.deps.sessions.getSnapshot().context.sessions[
+      observation.input.sessionId
+    ];
+
+  if (next === state.current) return;
+  replaceSession(state, next, publish);
+  publish();
+}
+
+const stopFollowing = (state: FollowState, sessions: Subscription): void => {
+  state.subscription?.unsubscribe();
+  sessions.unsubscribe();
+};
+
 function followSession(
-  { deps, input, observer }: Observation,
+  observation: Observation,
   publish: () => void,
 ): () => void {
-  let current: SessionActorRef | undefined;
-  let subscription: Subscription | undefined;
+  const state: FollowState = {};
+  const follow = (): void => followCurrent(state, observation, publish);
 
-  const follow = (): void => {
-    const next = deps.sessions.getSnapshot().context.sessions[input.sessionId];
-
-    if (next === current) return;
-
-    subscription?.unsubscribe();
-    current = next;
-    subscription = current?.subscribe({ next: publish });
-    publish();
-  };
-
-  const sessionsSubscription = deps.sessions.subscribe({
+  const sessionsSubscription = observation.deps.sessions.subscribe({
     next: follow,
-    complete: observer.done,
+    complete: observation.observer.done,
   });
 
   follow();
 
-  return () => {
-    subscription?.unsubscribe();
-    sessionsSubscription.unsubscribe();
-  };
+  return () => stopFollowing(state, sessionsSubscription);
 }
 
 // A Session reader follows replacement actors while the person closes and resumes it.
