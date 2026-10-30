@@ -81,3 +81,38 @@ export const OrderedListStart: Story = {
     await expect(canvas.getByText('4.')).toBeVisible();
   },
 };
+
+// A link's href is Agent text, not an App route: only a URL Argo follows draws as a link.
+function inertLink(href: string): Story {
+  return {
+    args: { text: `[qa-note.txt](${href})` },
+    play: async ({ canvas }) => {
+      await expect(canvas.getByText('qa-note.txt')).toBeVisible();
+      await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+    },
+  };
+}
+
+export const AbsolutePathLinkIsInert = inertLink('/work/checkout/qa-note.txt');
+
+export const RelativePathLinkIsInert = inertLink('src/qa-note.txt');
+
+export const PathWithEncodedSpacesLinkIsInert = inertLink(
+  '/work/my%20checkout/qa%20note.txt',
+);
+
+export const UnicodePathLinkIsInert = inertLink(
+  '/work/caf%C3%A9/note-%E6%97%A5.txt',
+);
+
+export const AppRouteLookingLinkIsInert = inertLink('/settings');
+
+export const WebLinkKeepsItsHref: Story = {
+  args: { text: '[a page](https://example.com/a%20b)' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('link', { name: 'a page' })).toHaveAttribute(
+      'href',
+      'https://example.com/a%20b',
+    );
+  },
+};
