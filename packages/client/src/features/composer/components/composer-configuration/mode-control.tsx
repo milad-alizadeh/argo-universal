@@ -16,21 +16,27 @@ import {
 import { ModeContents } from './mode-choices';
 import { ModeMenu } from './mode-menu';
 import type { Mode } from './mode-types';
+import { useReportedConfig } from './use-pending-choices';
 
 interface ModeControlProps {
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }
 
+/*
+ * The pill reads the Mode the Session is in, never a Mode it is only on its way to, so a Mode the Server
+ * never takes is said in a toast rather than shown and taken back (#1481).
+ */
 export function ComposerModeControl(
   props: ModeControlProps,
 ): React.JSX.Element | null {
   const wide = useContentWide();
-  const mode = selection(props.configuration, 'mode');
+  const configuration = useReportedConfig(props.configuration);
+  const mode = selection(configuration, 'mode');
 
   if (!mode) return null;
 
-  return modePresentation({ ...props, mode, wide });
+  return modePresentation({ ...props, configuration, mode, wide });
 }
 
 function modePresentation(
