@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -80,8 +81,12 @@ function collaboration(width: number): Story {
 
         /*
          * Storybook's userEvent fires pointerleave at (0, 0) with a null relatedTarget, which
-         * unmounts the Plan submenu before pointerdown; the browser pointer moves naturally.
+         * unmounts the Plan submenu before pointerdown; the browser pointer moves naturally. That
+         * pointer is aimed at the box the row had when it was measured, so the rows wait until both
+         * menus have stopped moving: the one above is still zooming in, and the submenu rides the
+         * row it hangs off (#1466).
          */
+        await settleOverlays();
         await browserUserEvent.click(plan);
       } else {
         await userEvent.click(
