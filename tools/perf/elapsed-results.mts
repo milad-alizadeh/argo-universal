@@ -1,7 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { elapsedCompleteness } from './elapsed-completeness.mts';
 import { type ElapsedSample, summarizeElapsed } from './elapsed.mts';
+import {
+  completenessNotice,
+  type RunCompleteness,
+} from './run-completeness.mts';
 import type { RowKindCounts } from './seed-statistics.mts';
 import type { UiObservation } from './ui-observation.mts';
 
@@ -113,28 +118,51 @@ const rows = (results: ElapsedReport[]): SummaryRow[] =>
     ...summary.browserSettled,
   }));
 
+export interface ElapsedRun {
+  results: readonly ElapsedResult[];
+  // Every scenario the run set out to measure, named as its test is named.
+  planned: readonly string[];
+  metadata: BenchmarkMetadata;
+}
+
 function reportData(
   results: ElapsedReport[],
+  run: RunCompleteness,
   metadata: BenchmarkMetadata,
 ): string {
+  const date = new Date().toISOString();
+
   return JSON.stringify(
-    { date: new Date().toISOString(), ...metadata, clocks, readiness, results },
+    { date, ...metadata, run, clocks, readiness, results },
     null,
     2,
   );
 }
 
-// Retain unsuccessful trials; browser and driver clocks are never subtracted from one another.
-export async function reportElapsed(
-  results: ElapsedResult[],
-  metadata: BenchmarkMetadata,
-): Promise<void> {
-  const file = await reportFile();
-  const reported = results.map(summarized);
-
-  await writeFile(file, reportData(reported, metadata));
+function print(file: string, reported: ElapsedReport[]): void {
   console.log(
     `Elapsed results: ${file}. Timing observations; no speed budget is asserted.`,
   );
   console.table(rows(reported));
+}
+
+/*
+ * Retain unsuccessful trials; browser and driver clocks are never subtracted from one another.
+ * A run that left a planned scenario unmeasured says so here and then fails, so no reader can
+ * mistake the scenarios this file omits for scenarios that came back clean.
+ */
+export async function reportElapsed({
+  results,
+  planned,
+  metadata,
+}: ElapsedRun): Promise<void> {
+  const file = await reportFile();
+  const reported = results.map(summarized);
+  const run = elapsedCompleteness(planned, results);
+
+  await writeFile(file, reportData(reported, run, metadata));
+  print(file, reported);
+  console.log(completenessNotice(run));
+
+  if (run.status === 'partial') throw new Error(completenessNotice(run));
 }

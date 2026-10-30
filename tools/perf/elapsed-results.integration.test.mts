@@ -45,8 +45,10 @@ const reportSchema = z.object({
   ),
 });
 
+const planned = ['composer-type-ready at 1x CPU'];
+
 it('persists distinct browser and driver samples, failures and build identity', async () => {
-  await reportElapsed([measured], metadata);
+  await reportElapsed({ results: [measured], planned, metadata });
 
   const data = reportSchema.parse(
     JSON.parse(
@@ -92,15 +94,16 @@ it('persists distinct browser and driver samples, failures and build identity', 
 });
 
 it('does not substitute a driver interval when a browser observation is missing', async () => {
-  await reportElapsed(
-    [
+  await reportElapsed({
+    results: [
       {
         ...measured,
         samples: [{ driver: { status: 'completed', elapsedMs: 100 } }],
       },
     ],
+    planned,
     metadata,
-  );
+  });
 
   const data = reportSchema.parse(
     JSON.parse(
