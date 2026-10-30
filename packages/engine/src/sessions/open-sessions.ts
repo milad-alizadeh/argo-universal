@@ -2,9 +2,10 @@ import { TRPCError } from '@trpc/server';
 import type { Observer, Subscription } from 'xstate';
 import type { AcpResources } from '../agents';
 import { writeDatabaseJobAndWaitForCommit, type WriterJob } from '../storage';
-import type {
-  OpenSessionsActorRef,
-  OpenSessionsCommand,
+import {
+  openSessionActor,
+  type OpenSessionsActorRef,
+  type OpenSessionsCommand,
 } from './open-sessions-machine';
 import {
   requireWritableSession,
@@ -72,7 +73,7 @@ export class OpenSessions {
   }
   // The Session's actor while it runs; a stopped one waits in the open Sessions only until they drop it.
   public session(sessionId: string): SessionActorRef | undefined {
-    const actor = this.actor.getSnapshot().context.sessions[sessionId];
+    const actor = openSessionActor(this.actor.getSnapshot().context, sessionId);
 
     return actor?.getSnapshot().status === 'active' ? actor : undefined;
   }

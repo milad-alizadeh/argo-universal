@@ -1,5 +1,8 @@
 import type { AgentLaunch, AcpResources, AcpSessionLease } from '../agents';
-import type { OpenSessionsActorRef } from './open-sessions-machine';
+import {
+  openSessionActor,
+  type OpenSessionsActorRef,
+} from './open-sessions-machine';
 import type { SessionContext } from './session-context';
 
 type ConnectionSubject = { agent: string; projectId: string };
@@ -32,7 +35,7 @@ function findSessionLease(
   sessionId: string,
   subject: ConnectionSubject,
 ): AcpSessionLease | undefined {
-  const actor = sessions.getSnapshot().context.sessions[sessionId];
+  const actor = openSessionActor(sessions.getSnapshot().context, sessionId);
 
   if (!actor) return;
   const session = actor.getSnapshot().context;

@@ -49,6 +49,15 @@ interface OpenSessionsContext extends OpenSessionsInput {
   sessions: Record<string, SessionActorRef>;
 }
 
+// The Session open under this id; an own key only, since an id such as `constructor` names an Object builtin.
+export const openSessionActor = (
+  context: Pick<OpenSessionsContext, 'sessions'>,
+  sessionId: string,
+): SessionActorRef | undefined =>
+  Object.hasOwn(context.sessions, sessionId)
+    ? context.sessions[sessionId]
+    : undefined;
+
 const withSession = (
   context: OpenSessionsContext,
   sessionId: string,
