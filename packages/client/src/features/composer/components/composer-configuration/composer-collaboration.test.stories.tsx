@@ -3,6 +3,7 @@ import { recordedSessionOptions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import {
   ComposerAgentModelControl,
   ComposerModeControl,
@@ -66,15 +67,15 @@ function collaboration(width: number): Story {
       await expect(onConfigChange).not.toHaveBeenCalled();
 
       if (width === layoutWidths.wide) {
-        await userEvent.click(
-          await overlay.findByRole('menuitem', {
-            name: /^Collaboration mode, Default/,
-          }),
-        );
+        const trigger = await overlay.findByRole('menuitem', {
+          name: /^Collaboration mode, Default/,
+        });
+        await userEvent.click(trigger);
         await expect(onConfigChange).not.toHaveBeenCalled();
-        await userEvent.click(
-          await overlay.findByRole('menuitemradio', { name: 'Plan' }),
-        );
+        const plan = await overlay.findByRole('menuitemradio', {
+          name: 'Plan',
+        });
+        await browserUserEvent.click(plan);
       } else {
         await userEvent.click(
           await overlay.findByRole('button', {
