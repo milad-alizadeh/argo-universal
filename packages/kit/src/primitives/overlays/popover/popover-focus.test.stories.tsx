@@ -83,7 +83,7 @@ export const OpeningAnotherWhileOneClosesKeepsItOpenWide: Story = {
     /*
      * The Checkouts popover fades in from transparent, so it shows once its entrance has run. The
      * browser's own animation clock ends that, not a timer here: a runner too busy to draw frames
-     * for a second left it at opacity 0 and failed a one-second wait on a popover that was open.
+     * for a second can leave it at opacity 0, and a one-second wait then fails on a popover that is open.
      */
     const checkouts = await page.findByRole('dialog', { name: 'Checkouts' });
     await settleOverlays();
