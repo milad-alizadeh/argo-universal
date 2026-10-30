@@ -73,9 +73,13 @@ export const MenuClickClosesTheChoices: Story = {
     );
 
     await waitFor(() => expect(choices).not.toBeInTheDocument());
-    await expect(
-      await page.findByRole('dialog', { name: 'Select Vegetable' }),
-    ).toBeVisible();
+
+    const vegetables = await page.findByRole('dialog', {
+      name: 'Select Vegetable',
+    });
+
+    // The choices fade in from transparent, so they show once their entrance starts.
+    await waitFor(() => expect(vegetables).toBeVisible());
     await expect(menu).toHaveAttribute(openState, 'open');
   },
 };

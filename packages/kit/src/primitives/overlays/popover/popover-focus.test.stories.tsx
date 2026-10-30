@@ -79,7 +79,10 @@ export const OpeningAnotherWhileOneClosesKeepsItOpenWide: Story = {
     await waitFor(() => expect(agents).not.toBeInTheDocument());
     // Radix returns focus a task after the content leaves the page.
     await new Promise((settle) => setTimeout(settle, 50));
-    await expect(page.getByRole('dialog', { name: 'Checkouts' })).toBeVisible();
+    // The Checkouts popover fades in from transparent, so it shows once its entrance starts.
+    await waitFor(() =>
+      expect(page.getByRole('dialog', { name: 'Checkouts' })).toBeVisible(),
+    );
     await expect(
       canvas.getByRole('button', { name: 'Agent' }),
     ).not.toHaveFocus();
