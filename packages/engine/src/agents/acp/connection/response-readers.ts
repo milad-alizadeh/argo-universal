@@ -20,6 +20,7 @@ type AcpResponses = Pick<
   | 'authenticate'
   | 'session/new'
   | 'session/resume'
+  | 'session/load'
   | 'session/close'
   | 'session/set_config_option'
   | 'session/prompt'
@@ -79,6 +80,9 @@ const schemas = {
   resume: compileAcpResponseSchema<AcpResponses['session/resume']>(
     'ResumeSessionResponse',
   ),
+  load: compileAcpResponseSchema<AcpResponses['session/load']>(
+    'LoadSessionResponse',
+  ),
   close: compileAcpResponseSchema<AcpResponses['session/close']>(
     'CloseSessionResponse',
   ),
@@ -99,6 +103,7 @@ const createSessionResponseReaders = (
 ): SessionResponseReaders => ({
   'session/new': schemas.newSession.reader(rejectionReporter),
   'session/resume': schemas.resume.reader(rejectionReporter),
+  'session/load': schemas.load.reader(rejectionReporter),
   'session/close': schemas.close.reader(rejectionReporter),
   'session/set_config_option': schemas.config.reader(rejectionReporter),
   'session/prompt': schemas.prompt.reader(rejectionReporter),

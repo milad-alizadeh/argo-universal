@@ -8,7 +8,7 @@ Spec 0009 builds the cap for ACP tool rows (owner, 2026-10-10, #358). Text conte
 
 Claude deletes its transcripts after 30 days by default; the Feed then stays readable from our rows, but the Session cannot resume. Mirroring the transcript through the SDK `SessionStore` is deferred until we measure real Session sizes.
 
-Under ACP (Spec 0009, #356), reading a Feed never opens the Agent. A Session from the native integration resumes with `session/resume` and its stored upstream id; Argo never loads or lists Agent sessions to rebuild one. When the Agent cannot resume it, the Session fails with the Agent's reason, its Feed stays readable from our rows, and no prompt is sent.
+Under ACP (Spec 0009, #356), reading a Feed never opens the Agent. A Session from the native integration reopens with its stored upstream id. Argo uses `session/resume` when the Agent supports it, and falls back to `session/load` when it does not. Argo discards the history replayed during `session/load`; the stored Feed remains authoritative. Argo never lists Agent sessions to rebuild a Feed. The owner approved this fallback on 2026-10-29. When the Agent cannot resume it, the Session fails with the Agent's reason, its Feed stays readable from our rows, and no prompt is sent.
 
 ## Considered Options
 

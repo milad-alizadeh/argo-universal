@@ -1,8 +1,14 @@
+import type { LiveHeader } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
+import {
+  LiveTitle,
+  SourceIcon,
+  useLiveHeaderTitle,
+} from '../live-header/live-header';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
@@ -10,6 +16,7 @@ import {
 import { toolCallIcon } from '../tool-call-icon';
 import {
   activityKey,
+  liveHeaderOf,
   liveToolCall,
   showsDuration,
   visibleActivities,
@@ -80,7 +87,48 @@ function GroupActivities({
   );
 }
 
+function liveHeaderDisclosureProps(
+  { source }: LiveHeader,
+  title: string,
+): Pick<
+  React.ComponentProps<typeof ToolCallDisclosure>,
+  'label' | 'leading' | 'title'
+> {
+  return {
+    label: title,
+    leading: <SourceIcon source={source} />,
+    title: <LiveTitle title={title} source={source} />,
+  };
+}
+
+function LiveHeaderGroup({
+  liveHeader,
+  ...props
+}: ToolCallGroupProps & { liveHeader: LiveHeader }): React.JSX.Element {
+  const title = useLiveHeaderTitle(liveHeader, props.now);
+  const activities = useGroupActivities(props.group);
+
+  return (
+    <ToolCallDisclosure
+      {...liveHeaderDisclosureProps(liveHeader, title)}
+      initialOpen={props.initialOpen}
+    >
+      <GroupActivities {...activities} renderActivity={props.renderActivity} />
+    </ToolCallDisclosure>
+  );
+}
+
 export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
+  const liveHeader = liveHeaderOf(props.group);
+
+  return liveHeader ? (
+    <LiveHeaderGroup {...props} liveHeader={liveHeader} />
+  ) : (
+    <SettledOrLiveCallGroup {...props} />
+  );
+}
+
+function SettledOrLiveCallGroup(props: ToolCallGroupProps): React.JSX.Element {
   const trailing = useGroupTrailing(props.group, props.now);
   const activities = useGroupActivities(props.group);
 

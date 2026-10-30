@@ -6,96 +6,14 @@ import {
   type RefObject,
 } from 'react';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
-import {
-  drawnHeight,
-  durationFor,
-  easeInOut,
-  elapsedFraction,
-  type CollapsibleLayoutSync,
-} from './collapsible-context';
+import { drawnHeight, type CollapsibleLayoutSync } from './collapsible-context';
+import { beginMotion, type StepMotion } from './collapsible-layout-frames';
 
 interface MotionOptions {
   open: boolean;
   measured: boolean;
   contentHeight: RefObject<number>;
   layoutSync: Pick<CollapsibleLayoutSync, 'grow' | 'onMotionChange'>;
-}
-
-interface FrameMotion {
-  from: number;
-  target: number;
-  height: number;
-  remainingDuration: number;
-  latestProgress: RefObject<number>;
-  setProgress: (progress: number) => void;
-  grow: (height: number) => void;
-  onMotionChange: (moving: boolean) => void;
-}
-
-type StepMotion = Omit<FrameMotion, 'remainingDuration'>;
-
-function stepTo(motion: StepMotion, progress: number): void {
-  motion.grow(
-    drawnHeight(motion.height, progress) -
-      drawnHeight(motion.height, motion.latestProgress.current),
-  );
-  motion.latestProgress.current = progress;
-  motion.setProgress(progress);
-}
-
-function advanceProgress(motion: FrameMotion, elapsed: number): number {
-  const fraction = elapsedFraction(elapsed, motion.remainingDuration);
-  stepTo(
-    motion,
-    motion.from + (motion.target - motion.from) * easeInOut(fraction),
-  );
-
-  return fraction;
-}
-
-// Under reduced motion the content takes its final height in one step, which the list still hears as a motion, so it can hold its rows as it does for an animated one.
-function jumpTo(motion: StepMotion): undefined {
-  motion.onMotionChange(true);
-  stepTo(motion, motion.target);
-  motion.onMotionChange(false);
-}
-
-function stopFrames(frame: number, moving: boolean, motion: FrameMotion): void {
-  cancelAnimationFrame(frame);
-
-  if (moving) motion.onMotionChange(false);
-}
-
-function runFrames(motion: FrameMotion): () => void {
-  motion.onMotionChange(true);
-  let moving = true;
-  const startedAt = performance.now();
-
-  let frame = requestAnimationFrame(function step(time): void {
-    const fraction = advanceProgress(motion, time - startedAt);
-
-    if (fraction < 1) frame = requestAnimationFrame(step);
-    else {
-      moving = false;
-      motion.onMotionChange(false);
-    }
-  });
-
-  return () => stopFrames(frame, moving, motion);
-}
-
-function beginMotion(
-  motion: StepMotion,
-  reducedMotion: boolean,
-): (() => void) | undefined {
-  const remainingDuration =
-    Math.abs(motion.target - motion.from) * durationFor(motion.height);
-
-  if (!remainingDuration) return;
-
-  if (reducedMotion) return jumpTo(motion);
-
-  return runFrames({ ...motion, remainingDuration });
 }
 
 export function useLayoutMotion(options: MotionOptions): number {
@@ -119,10 +37,14 @@ interface MotionEffectOptions extends MotionOptions {
 function motionOf(options: MotionEffectOptions): StepMotion {
   const { latestProgress, setProgress, layoutSync } = options;
 
+  const height = options.contentHeight.current;
+
   return {
     from: latestProgress.current,
     target: options.open ? 1 : 0,
-    height: options.contentHeight.current,
+    height,
+    contentHeight: options.contentHeight,
+    latestDrawn: { current: drawnHeight(height, latestProgress.current) },
     latestProgress,
     setProgress,
     grow: layoutSync.grow,

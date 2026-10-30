@@ -54,7 +54,7 @@ const edgeDepth = (
 
 // Each edge's depth: the caller's, or the default.
 export const fadeDepth = (
-  depth: PerEdge<number> | undefined,
+  depth?: PerEdge<number>,
 ): Required<PerEdge<number>> => ({
   top: edgeDepth('top', depth),
   bottom: edgeDepth('bottom', depth),
