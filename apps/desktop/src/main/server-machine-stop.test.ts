@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   abandonStuckSupervisor,
   context,
+  quitTheApp,
   spawnSupervisor,
   startSupervisor,
   value,
@@ -94,7 +95,7 @@ describe('server connection', (): void => {
 
   it('waits 5 seconds at most for the Supervisor it started to stop on quit', async (): Promise<void> => {
     await startSupervisor();
-    server.send({ type: 'app.quit' });
+    quitTheApp();
     expect(stoppedPids).toEqual([startedAddress.pid]);
 
     await vi.advanceTimersByTimeAsync(pollIntervalMs);
@@ -108,7 +109,7 @@ describe('server connection', (): void => {
 
   it('quits as soon as the Supervisor it started exits', async (): Promise<void> => {
     await startSupervisor();
-    server.send({ type: 'app.quit' });
+    quitTheApp();
 
     await vi.advanceTimersByTimeAsync(pollIntervalMs);
     await settle((): void => latest(checkRunningCalls).resolve(false));

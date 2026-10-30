@@ -15,6 +15,7 @@ import {
   enqueueActions,
   fromCallback,
   fromPromise,
+  sendTo,
   type Snapshot,
   setup,
 } from 'xstate';
@@ -23,9 +24,27 @@ import {
   type SupervisorPaths,
   spawnSupervisor,
 } from './server-process';
-import { type CountsReport, watchSessionCounts } from './session-counts';
+import {
+  type CountsReport,
+  countsReleaseEvent,
+  releaseLimitMs,
+  watchSessionCounts,
+} from './session-counts';
 
 const failedConnectionTarget = '#serverConnection.failed';
+
+const countsActorId = 'watchCounts';
+
+const stoppedTarget = '#serverConnection.stopped';
+
+const stoppingTarget = '#serverConnection.stopping';
+
+// Where a quit goes once the App has let go of its Server Connection.
+const quitAfterRelease = [
+  { guard: 'ownsRunningSessions', target: 'confirming' },
+  { guard: 'ownsSupervisor', target: stoppingTarget },
+  { target: stoppedTarget },
+] as const;
 
 type ServerStateConfig = ReturnType<typeof serverSetup.createStateConfig>;
 
@@ -180,6 +199,7 @@ const serverSetup = setup({
     pollDelay: pollIntervalMs,
     startLimit: startLimitMs,
     stopLimit: stopLimitMs,
+    releaseLimit: releaseLimitMs,
   },
 });
 
@@ -403,6 +423,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
     ready: {
       entry: 'announceReady',
       invoke: {
+        id: countsActorId,
         src: 'watchCounts',
         input: ({ context }): Pick<ServerAddress, 'port'> => {
           if (!context.address) throw new Error('The Server has no address');
@@ -436,9 +457,23 @@ export const serverConnectionMachine = serverSetup.createMachine({
       },
       states: {
         active: {
+          on: { 'app.quit': { target: 'releasing' } },
+        },
+        /*
+         * Electron tears its Node environment down with the App, and a socket still closing holds the
+         * process alive long after the window goes, so the App lets go of its Server Connection first.
+         */
+        releasing: {
+          entry: sendTo(countsActorId, { type: countsReleaseEvent }),
           on: {
-            'app.quit': { guard: 'ownsRunningSessions', target: 'confirming' },
+            'counts.released': quitAfterRelease,
+            // The App is on its way out, so a disconnect no longer clears the badge or the Session count the question needs.
+            'counts.disconnected': { actions: [] },
+            // Already letting go; a second quit waits for the same release.
+            'app.quit': { actions: [] },
           },
+          // A Server that never answers may not hold the App open.
+          after: { releaseLimit: quitAfterRelease },
         },
         confirming: {
           invoke: {
@@ -451,9 +486,9 @@ export const serverConnectionMachine = serverSetup.createMachine({
             onDone: [
               {
                 guard: ({ event }): boolean => event.output,
-                target: '#serverConnection.stopped',
+                target: stoppedTarget,
               },
-              { target: '#serverConnection.stopping' },
+              { target: stoppingTarget },
             ],
             onError: { target: 'active' },
           },
@@ -476,7 +511,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
       failedConnectionTarget,
     ),
     stopping: {
-      ...waitingForSupervisorExit('#serverConnection.stopped'),
+      ...waitingForSupervisorExit(stoppedTarget),
       // Already stopping; a second quit waits for the same stop.
       on: { 'app.quit': { actions: [] } },
     },

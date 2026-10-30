@@ -1,4 +1,5 @@
 import type { DelayEvent } from '@repo/vitest/model-test';
+import { expect } from 'vitest';
 import type { EventExecutor } from 'xstate/graph';
 import {
   checkRunningDoneEvent,
@@ -8,9 +9,9 @@ import {
   type ServerEvent,
 } from './server-machine-model-events.mocks';
 import {
+  badges,
   checkRunningCalls,
   countsChangedEvent,
-  expectBadge,
   latest,
   quitCalls,
   quitDoneEvent,
@@ -23,6 +24,10 @@ import {
   type ServerSnapshot,
   settle,
 } from './server-machine.mocks';
+
+const expectBadge = (attention: number | undefined): void => {
+  expect(badges.at(-1)).toBe(attention);
+};
 
 export const executors = {
   [readAddressDoneEvent]: ({ event }): Promise<void> => {
@@ -49,8 +54,19 @@ export const executors = {
     expectBadge(event.counts.attention);
   },
   'counts.disconnected': (): void => {
+    // On the way out the disconnect answers the App's own release, so it clears no badge and keeps the Session count the question needs.
+    const kept = server.getSnapshot().matches({ ready: 'releasing' })
+      ? badges.at(-1)
+      : 0;
+
     server.send({ type: 'counts.disconnected' });
-    expectBadge(0);
+    expectBadge(kept);
+  },
+  'counts.released': (): void => {
+    const kept = badges.at(-1);
+    server.send({ type: 'counts.released' });
+    // Letting go on the way out touches no badge.
+    expectBadge(kept);
   },
   [quitDoneEvent]: async ({ event }): Promise<void> => {
     if (event.type !== quitDoneEvent) throw new Error('Expected quit answer');

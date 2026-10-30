@@ -22,6 +22,7 @@ import {
   startedAddress,
   supervisorExitedEvent,
   supervisorSpawnedEvent,
+  watchCountsDouble,
 } from './server-machine-data.mocks';
 
 export {
@@ -36,6 +37,7 @@ export {
   startedAddress,
   supervisorExitedEvent,
   supervisorSpawnedEvent,
+  watchCountsDouble,
 } from './server-machine-data.mocks';
 
 export interface PendingCall<TInput, TOutput> {
@@ -71,11 +73,7 @@ export let quitCalls: PendingCall<
   boolean
 >[];
 
-let badges: number[];
-
-export const expectBadge = (attention: number): void => {
-  expect(badges.at(-1)).toBe(attention);
-};
+export let badges: number[];
 
 export let stoppedPids: (number | null)[];
 
@@ -87,7 +85,7 @@ export let server: Actor<typeof machine>;
 
 export const machine = serverConnectionMachine.provide({
   actors: {
-    watchCounts: fromCallback(() => {}),
+    watchCounts: watchCountsDouble,
     askQuit: createPromiseMock(() => quitCalls),
     readAddress: createPromiseMock(
       (): PendingCall<ServerInput, ServerAddress | null>[] => readAddressCalls,
