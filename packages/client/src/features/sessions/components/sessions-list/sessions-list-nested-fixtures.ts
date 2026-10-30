@@ -1,7 +1,7 @@
 import { sessionRows } from '@repo/mocks/app';
 import { sessionsListProps } from './sessions-list.mocks';
 
-const parent = {
+export const parent = {
   ...sessionRows.idle,
   sessionId: 'parent',
   title: 'Investigate the regression',
