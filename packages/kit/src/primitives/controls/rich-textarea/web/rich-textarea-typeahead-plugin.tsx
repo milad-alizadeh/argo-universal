@@ -22,7 +22,7 @@ import type {
 import { commandTokens } from './rich-textarea-command-tokens';
 import { registerReturnToSubmit } from './rich-textarea-keys';
 import { referenceTokens } from './rich-textarea-reference-tokens';
-import { $claimQuery } from './rich-textarea-trigger-claim';
+import { $restoreQueryFront } from './rich-textarea-trigger-claim';
 import { renderTypeaheadMenu } from './rich-textarea-typeahead-menu';
 import {
   type TypeaheadAdapter,
@@ -119,7 +119,10 @@ function useSelectOption(): SelectOption {
   const [editor] = useLexicalComposerContext();
 
   return (option, node, close) => {
-    editor.update(() => option.insert($claimQuery(node)));
+    editor.update(() => {
+      $restoreQueryFront(node);
+      option.insert(node);
+    });
     close();
   };
 }

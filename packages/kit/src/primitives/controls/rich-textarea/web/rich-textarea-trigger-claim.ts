@@ -1,6 +1,5 @@
 import { $isTextNode, type LexicalNode, type TextNode } from 'lexical';
 
-// The word a text ends in: what follows its last whitespace.
 const endingWord = (text: string): string => text.split(/\s/).at(-1) ?? '';
 
 function $simpleTextBefore(node: TextNode): TextNode | null {
@@ -9,7 +8,7 @@ function $simpleTextBefore(node: TextNode): TextNode | null {
   return $isTextNode(previous) && previous.isSimpleText() ? previous : null;
 }
 
-function $moveFront(to: TextNode): void {
+function $moveQueryFront(to: TextNode): void {
   const from = $simpleTextBefore(to);
 
   if (!from) return;
@@ -24,8 +23,6 @@ function $moveFront(to: TextNode): void {
  * lands before the menu hears of it leaves the cut short, and the front of the word stays behind as text.
  * The query is one word, so what precedes the cut in the same word is the rest of it.
  */
-export function $claimQuery(node: TextNode | null): TextNode | null {
-  if (node) $moveFront(node);
-
-  return node;
+export function $restoreQueryFront(node: TextNode | null): void {
+  if (node) $moveQueryFront(node);
 }
