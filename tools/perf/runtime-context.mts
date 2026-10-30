@@ -13,38 +13,55 @@ export interface RuntimeContext {
   client: RuntimeClient;
   signal: AbortSignal;
   close: () => void;
-  // Starts the workload's timeoutMs; call once, when prepare is done and the Turn is about to be dispatched.
+  // Starts the workload's timeoutMs once prepare is done and the Turn is about to be dispatched.
   startDeadline: () => void;
   phase: string;
+}
+
+// Aborts its signal like AbortSignal.timeout, but the clock can be restarted for the next phase.
+function phaseDeadline(firstMs: number): {
+  signal: AbortSignal;
+  restart: (ms: number) => void;
+  clear: () => void;
+} {
+  const controller = new AbortController();
+  let timer: NodeJS.Timeout | undefined;
+
+  const restart = (ms: number): void => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      controller.abort(
+        new DOMException('The operation timed out.', 'TimeoutError'),
+      );
+    }, ms).unref();
+  };
+
+  restart(firstMs);
+
+  return {
+    signal: controller.signal,
+    restart,
+    clear: () => clearTimeout(timer),
+  };
 }
 
 export function runtimeContext(
   target: RuntimeTarget,
   workload: RuntimeWorkload,
 ): RuntimeContext {
-  const controller = new AbortController();
-
-  const expire = (ms: number): NodeJS.Timeout =>
-    setTimeout(() => {
-      controller.abort(new DOMException('The operation timed out.', 'TimeoutError'));
-    }, ms).unref();
-
-  let timer = expire(prepareTimeoutMs);
-  const connection = runtimeClient(target, controller.signal);
+  const deadline = phaseDeadline(prepareTimeoutMs);
+  const connection = runtimeClient(target, deadline.signal);
 
   return {
     target,
     workload,
-    signal: controller.signal,
+    signal: deadline.signal,
     client: connection.client,
     close: () => {
-      clearTimeout(timer);
+      deadline.clear();
       connection.close();
     },
-    startDeadline: () => {
-      clearTimeout(timer);
-      timer = expire(workload.timeoutMs);
-    },
+    startDeadline: () => deadline.restart(workload.timeoutMs),
     phase: 'prepare',
     record: new RuntimeRecord(target.sessionId, workload),
   };

@@ -12,22 +12,37 @@ const workload = { id: 'w', prompt: 'p', timeoutMs: 500 };
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
-it('does not spend the workload timeout while the Session is being prepared', () => {
-  const context = runtimeContext(target, workload);
-  vi.advanceTimersByTime(5_000);
-  expect(context.signal.aborted).toBe(false);
+let context: ReturnType<typeof runtimeContext>;
 
+beforeEach(() => {
+  context = runtimeContext(target, workload);
+});
+
+afterEach(() => context.close());
+
+it('does not spend the workload timeout while the Session is being prepared', () => {
+  vi.advanceTimersByTime(5_000);
+
+  expect(context.signal.aborted).toBe(false);
+});
+
+it('times the workload from the moment its deadline starts', () => {
+  vi.advanceTimersByTime(5_000);
+  context.startDeadline();
+  vi.advanceTimersByTime(500);
+
+  expect(context.signal.aborted).toBe(true);
+});
+
+it('does not abort just before the workload timeout elapses', () => {
   context.startDeadline();
   vi.advanceTimersByTime(499);
+
   expect(context.signal.aborted).toBe(false);
-  vi.advanceTimersByTime(1);
-  expect(context.signal.aborted).toBe(true);
-  context.close();
 });
 
 it('still bounds a Session that never finishes preparing', () => {
-  const context = runtimeContext(target, workload);
   vi.advanceTimersByTime(10_000);
+
   expect(context.signal.aborted).toBe(true);
-  context.close();
 });
