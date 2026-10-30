@@ -70,7 +70,7 @@ const movedFrom = (file: FileHeaderProps['file']): string | undefined =>
     ? file.oldPath
     : undefined;
 
-function OldPathArrow(props: {
+function OldPathParts(props: {
   path: string;
   scroll?: boolean;
 }): React.JSX.Element {
@@ -81,6 +81,20 @@ function OldPathArrow(props: {
         →
       </Text>
     </>
+  );
+}
+
+// A wide path would otherwise stretch to half the row and push the arrow away from the new path.
+function OldPathArrow(props: {
+  path: string;
+  scroll?: boolean;
+}): React.JSX.Element {
+  if (props.scroll) return <OldPathParts {...props} />;
+
+  return (
+    <View className="min-w-0 shrink flex-row items-center gap-2">
+      <OldPathParts {...props} />
+    </View>
   );
 }
 
