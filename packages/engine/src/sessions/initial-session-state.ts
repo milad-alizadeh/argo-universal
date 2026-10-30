@@ -12,6 +12,7 @@ type TurnState = Pick<
   | 'permissionQueue'
   | 'nativePermissions'
   | 'hookedPermissions'
+  | 'permissionDenied'
   | 'elicitationQueue'
 >;
 
@@ -22,6 +23,7 @@ export const initialTurnState = (): TurnState => ({
   permissionQueue: [],
   nativePermissions: new NativePermissions(),
   hookedPermissions: {},
+  permissionDenied: false,
   elicitationQueue: [],
 });
 

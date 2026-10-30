@@ -48,6 +48,21 @@ const selectedPermission = (
   option,
 });
 
+const denyingKinds = new Set<string>(['reject_once', 'reject_always']);
+
+const denies = (option: ReturnType<typeof chosenOption>): boolean =>
+  denyingKinds.has(option?.kind ?? '');
+
+// Whether an answer to the first queued request denies it with a reject option.
+export const deniesPermission = (
+  context: SessionContext,
+  optionId: string | null,
+): boolean => {
+  const request = context.permissionQueue[0];
+
+  return request ? denies(chosenOption(request, optionId)) : false;
+};
+
 // What the Feed shows once the first queued request is answered.
 export const permissionOutcome = (
   context: SessionContext,
