@@ -504,9 +504,14 @@ const sessionSetup = setup({
     rememberAcpLease: assign(({ context }, opened: OpenedAcpSession) =>
       leaseValues(context, opened),
     ),
-    rememberRestoredConfiguration: enqueueActions(
+    rememberRestoredConfiguration: assign(
+      (_, restored: ConfigurationStep): Partial<SessionContext> =>
+        restored.change,
+    ),
+    // The restored options are written once the Session and its Agent session are stored.
+    storeRestoredConfiguration: enqueueActions(
       ({ context, enqueue }, restored: ConfigurationStep) =>
-        enqueueChangeAndWrites(enqueue, context, restored),
+        enqueueWrites(enqueue, context, restored.writes),
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:
@@ -1150,6 +1155,10 @@ export const sessionMachine = sessionSetup.createMachine({
                     },
                     'storeSession',
                     'storeAcpSession',
+                    {
+                      type: 'storeRestoredConfiguration',
+                      params: ({ event }): ConfigurationStep => event.output,
+                    },
                     'discloseInterruption',
                   ],
                 },
