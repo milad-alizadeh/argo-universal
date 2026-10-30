@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished } from 'vitest';
 
-export const example = fileURLToPath(
+// The shipped example a fixture is scaffolded from, and the real Plugin the example-run tests use.
+export const githubSignIn = fileURLToPath(
   new URL('../../../plugins/examples/github-sign-in/', import.meta.url),
 );
 
@@ -17,7 +18,7 @@ export async function fixture(source: string): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'argo-cli-plugin-'));
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
   // Each fixture brings its own tests, so the example's tests stay behind.
-  await cp(example, directory, {
+  await cp(githubSignIn, directory, {
     recursive: true,
     filter: (path) => !testFile.test(path),
   });

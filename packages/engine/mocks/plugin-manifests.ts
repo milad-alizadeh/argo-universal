@@ -1,5 +1,22 @@
 import { rejectedCapabilities } from './plugin-capability-manifests';
 
+// The valid manifest the fixtures below patch, and the one every fixture Plugin folder is written from.
+// It is its own fixture so that editing a shipped Plugin's manifest cannot change what these tests mean.
+export const manifestTemplate = {
+  id: 'fixture-plugin',
+  name: 'Fixture Plugin',
+  version: '1.0.0',
+  engines: { argo: '^1.0.0' },
+  main: 'index.js',
+  icon: { sf: 'ticket', sfFilled: 'ticket.fill' },
+  contributes: {
+    nav: [
+      { id: 'issues', title: 'Issues', path: '/issues' },
+      { id: 'plans', title: 'Plans', path: '/plans' },
+    ],
+  },
+};
+
 // Malformed manifest data, supplied through real Plugin folders to the Engine journey.
 export const rejectedManifests = [
   { folder: 'missing-id', patch: { id: undefined }, reason: 'id' },

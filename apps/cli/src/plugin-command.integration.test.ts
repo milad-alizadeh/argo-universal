@@ -2,9 +2,9 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { example, fixture, run } from '../mocks/plugin-cli';
+import { fixture, githubSignIn, run } from '../mocks/plugin-cli';
 
-// The example starts a separate worker for each of its interaction tests.
+// The example starts a separate worker for each of its tests.
 const exampleTestLimitMs = 60_000;
 
 it.each([
@@ -66,11 +66,12 @@ it.each([
   30_000,
 );
 
-it('validate reports the example Plugin contributions', async () => {
-  expect(await run('validate', example)).toMatchObject({
-    code: 0,
-    output: expect.stringContaining('argo.accounts.provide'),
-  });
+it('validate reports a shipped example Plugin’s contributions', async () => {
+  const result = await run('validate', githubSignIn);
+  expect(result).toMatchObject({ code: 0 });
+  // Both of the example's registrations, named as the Plugin API calls that make them.
+  expect(result.output).toContain('argo.pages.register');
+  expect(result.output).toContain('argo.accounts.provide');
 }, 30_000);
 
 it('validate reports the declared order', async () => {
@@ -104,13 +105,56 @@ it('validate reports the declared order', async () => {
 }, 30_000);
 
 it(
-  'test runs the example Plugin worker test',
+  'test runs a shipped example Plugin’s own tests',
   async () => {
-    expect(await run('test', example, exampleTestLimitMs)).toMatchObject({
+    expect(await run('test', githubSignIn, exampleTestLimitMs)).toMatchObject({
       code: 0,
       output: expect.stringContaining(
         'PASS the provider is registered for the Account host with the Authorization header',
       ),
+    });
+  },
+  exampleTestLimitMs + 10_000,
+);
+
+it(
+  'test runs a Plugin’s interaction test in its worker',
+  async () => {
+    const directory =
+      await fixture(`import { Action, Screen, Text, useState } from '@argo/plugin-kit';
+
+function Page() {
+  const [tapped, setTapped] = useState(false);
+  return (
+    <Screen title="Tap" primaryAction={<Action key="tap" label="Tap me" icon="add" onPress={() => setTapped(true)} />}>
+      <Text>{tapped ? 'Tapped' : 'Not tapped'}</Text>
+    </Screen>
+  );
+}
+
+export function register(argo) {
+  // The path the copied manifest declares as its Account page.
+  argo.pages.register('/sign-in', Page);
+}
+`);
+
+    await writeFile(
+      join(directory, 'tap.test.ts'),
+      `
+    import assert from 'node:assert/strict';
+    import { test } from '@argo/plugin-kit/testing';
+    test('pressing Tap me', async ({ mount }) => {
+      const page = await mount({ page: '/sign-in', surface: { platform: 'web' } });
+      await page.find('Not tapped');
+      await page.press('Tap me');
+      assert.equal((await page.find('Tapped')).type, 'Text');
+    });
+  `,
+    );
+
+    expect(await run('test', directory, exampleTestLimitMs)).toMatchObject({
+      code: 0,
+      output: expect.stringContaining('PASS pressing Tap me'),
     });
   },
   exampleTestLimitMs + 10_000,

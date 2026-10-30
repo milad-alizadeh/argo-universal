@@ -1,16 +1,9 @@
-import {
-  mkdtemp,
-  mkdir,
-  rm,
-  readFile,
-  symlink,
-  writeFile,
-} from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { rejectedManifests } from '#mocks/plugin-manifests';
+import { manifestTemplate, rejectedManifests } from '#mocks/plugin-manifests';
 
 it('lists first-party Plugin manifests without starting their code, and reports user Plugins without loading them', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'argo-plugins-'));
@@ -63,22 +56,12 @@ it('reports malformed and incompatible manifests while keeping them out of Plugi
   const home = join(directory, 'home');
   await mkdir(home);
 
-  const fixture = JSON.parse(
-    await readFile(
-      new URL(
-        '../../../mocks/plugins/first-party/tracker/plugin.json',
-        import.meta.url,
-      ),
-      'utf8',
-    ),
-  );
-
   for (const { folder, patch } of rejectedManifests) {
     const plugin = join(home, 'plugins', folder);
     await mkdir(plugin, { recursive: true });
     await writeFile(
       join(plugin, manifestFile),
-      JSON.stringify({ ...fixture, id: folder, ...patch }),
+      JSON.stringify({ ...manifestTemplate, id: folder, ...patch }),
     );
   }
 
@@ -150,20 +133,10 @@ it('admits Plugins in a root and one collection below it, follows symlinks, and 
 });
 
 async function writePlugin(folder: string, id: string): Promise<void> {
-  const fixture = JSON.parse(
-    await readFile(
-      new URL(
-        '../../../mocks/plugins/first-party/tracker/plugin.json',
-        import.meta.url,
-      ),
-      'utf8',
-    ),
-  );
-
   await mkdir(folder, { recursive: true });
   await writeFile(
     join(folder, manifestFile),
-    JSON.stringify({ ...fixture, id }),
+    JSON.stringify({ ...manifestTemplate, id }),
   );
   await writeFile(join(folder, 'index.js'), '');
 }
