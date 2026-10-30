@@ -47,6 +47,11 @@ it.each([
   ],
   ['a home path', 'Open ~/dev/app/notes.md', 'Open notes.md'],
   ['a short slash word', 'Use and/or /help', 'Use and/or /help'],
+  [
+    'an API route',
+    'Call /api/v1/users and /usr/bin',
+    'Call /api/v1/users and /usr/bin',
+  ],
   ['a url', 'Visit https://a.dev/x/y/z', 'Visit https://a.dev/x/y/z'],
   ['leading blank lines', '\n\nFirst line\nSecond', 'First line'],
   ['empty text', '', ''],

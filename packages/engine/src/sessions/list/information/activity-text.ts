@@ -1,9 +1,3 @@
-/**
- * The Session row activity line is one line of plain text. The Agent writes
- * Markdown, so this drops the syntax and keeps the words; an absolute path
- * shrinks to its file name so a long home path never fills the row.
- */
-
 const LINK = /!?\[([^\]]{0,200})\]\([^)\s]{0,2000}(?: "[^"]{0,200}")?\)/g;
 
 const REFERENCE_LINK = /\[([^\]]{1,200})\]\[[^\]]{0,50}\]/g;
@@ -22,7 +16,8 @@ const BLOCK_PREFIX = /^\s*(?:#{1,6}|>|[-*+]|\d+[.)])\s+/;
 
 const CHECKBOX = /^\[[ xX]\]\s+/;
 
-const ABSOLUTE_PATH = /(?<![\w:/.~-])~?(?:\/[^\s/`'"()<>[\]]{1,255}){2,50}/g;
+const ABSOLUTE_PATH =
+  /(?<![\w:/.~-])(?:~|\/(?:Users|home|tmp|var|private|opt))(?:\/[^\s/`'"()<>[\]]{1,255}){2,50}/g;
 
 const TRAILING_PUNCTUATION = /[.,;:!?]{1,50}$/;
 
