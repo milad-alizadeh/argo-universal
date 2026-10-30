@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { DiffView } from './diff-view';
-import { inlineDiff, inspectorDiff } from './diff-view-fixtures';
+import { inlineDiff, inspectorDiff, movedDiff } from './diff-view-fixtures';
 
 const meta = {
   title: 'Feed/DiffView',
@@ -50,3 +50,6 @@ export const Unviewed: Story = {
 export const Viewed: Story = {
   args: { ...inspectorDiff, viewed: true, onViewedChange: action('viewed') },
 };
+
+// A moved file's header reads old path, an arrow, then the new path.
+export const Moved: Story = { args: movedDiff };

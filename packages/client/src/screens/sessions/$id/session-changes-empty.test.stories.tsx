@@ -2,8 +2,14 @@ import { allToasts, findToast } from '@repo/kit/mocks/find-toast';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, screen } from 'storybook/test';
-import { binaryChanges, binaryPath } from './session-changes-empty.test.mocks';
+import { expect, screen, within } from 'storybook/test';
+import {
+  binaryChanges,
+  binaryPath,
+  movedFrom,
+  movedTo,
+  renamedChanges,
+} from './session-changes-empty.test.mocks';
 import {
   findFileHeader,
   largeFile,
@@ -30,6 +36,8 @@ const nothingChanged = 'No changes';
 
 const noLines = 'No lines to show';
 
+const cantPreview = /can't be previewed/;
+
 const loadErrorTitle = "Couldn't load changes";
 
 export const NoChangesSinceMain: Story = {
@@ -45,7 +53,7 @@ export const NoChangesSinceMain: Story = {
   },
 };
 
-// A binary file remains accessible by its full path while its empty diff can fold and reopen.
+// A binary file remains accessible by its full path while its status can fold and reopen; it never claims an empty text diff.
 function binaryFile(width: number): Story {
   return {
     args: { catalog: binaryChanges },
@@ -68,12 +76,13 @@ function binaryFile(width: number): Story {
         );
       }
 
-      await expect(await screen.findByText(noLines)).toBeVisible();
-      await userEvent.click(mark);
-      await expect(header).toHaveAttribute('aria-expanded', 'false');
+      await expect(await screen.findByText(cantPreview)).toBeVisible();
       await expect(screen.queryByText(noLines)).toBeNull();
       await userEvent.click(mark);
-      await expect(await screen.findByText(noLines)).toBeVisible();
+      await expect(header).toHaveAttribute('aria-expanded', 'false');
+      await expect(screen.queryByText(cantPreview)).toBeNull();
+      await userEvent.click(mark);
+      await expect(await screen.findByText(cantPreview)).toBeVisible();
     },
   };
 }
@@ -81,6 +90,33 @@ function binaryFile(width: number): Story {
 export const BinaryFilePhone = binaryFile(layoutWidths.phone);
 
 export const BinaryFileWide = binaryFile(layoutWidths.wide);
+
+// A moved file reads as where it was and where it is, not as its new path alone.
+function renamedFile(width: number): Story {
+  return {
+    args: { catalog: renamedChanges },
+    beforeEach: (): Promise<void> => settleLayout(width),
+    play: async () => {
+      const header = await findFileHeader(movedTo);
+
+      await expect(header).toBeVisible();
+
+      /*
+       * A phone's scrolling path carries no accessibility label, and a wide one wraps its folder in direction marks,
+       * so each path is read by the name it draws.
+       */
+      for (const path of [movedFrom, movedTo]) {
+        await expect(
+          within(header).getByText(path.slice(path.lastIndexOf('/') + 1)),
+        ).toBeVisible();
+      }
+    },
+  };
+}
+
+export const RenamedFilePhone = renamedFile(layoutWidths.phone);
+
+export const RenamedFileWide = renamedFile(layoutWidths.wide);
 
 export const LoadingShowsSpinner: Story = {
   args: { catalog: loadingChanges },

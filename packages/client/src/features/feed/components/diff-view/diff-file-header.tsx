@@ -1,7 +1,7 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { PathText } from '@repo/kit/primitives/content/path-text';
-import { TextClassContext } from '@repo/kit/primitives/content/text';
+import { Text, TextClassContext } from '@repo/kit/primitives/content/text';
 import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { SizeClass } from '@repo/kit/size-class/size-class';
@@ -64,13 +64,49 @@ const toggleOf = (props: FileHeaderProps): Omit<ToggleProps, 'children'> => ({
   onPress: () => props.onOpenChange(!props.open),
 });
 
+// A moved file's old path, when the Server reports one that differs from where the file is now.
+const movedFrom = (file: FileHeaderProps['file']): string | undefined =>
+  file.operation === 'move' && file.oldPath !== file.path
+    ? file.oldPath
+    : undefined;
+
+function OldPathParts(props: {
+  path: string;
+  scroll?: boolean;
+}): React.JSX.Element {
+  return (
+    <>
+      <PathText path={props.path} quiet scroll={props.scroll} />
+      <Text selectable={false} aria-hidden>
+        →
+      </Text>
+    </>
+  );
+}
+
+// A wide path would otherwise stretch to half the row and push the arrow away from the new path.
+function OldPathArrow(props: {
+  path: string;
+  scroll?: boolean;
+}): React.JSX.Element {
+  if (props.scroll) return <OldPathParts {...props} />;
+
+  return (
+    <View className="min-w-0 shrink flex-row items-center gap-2">
+      <OldPathParts {...props} />
+    </View>
+  );
+}
+
 function PathToggle(
   props: FileHeaderProps & { scroll?: boolean },
 ): React.JSX.Element {
   const toggle = toggleOf(props);
+  const oldPath = movedFrom(props.file);
 
   return props.scroll ? (
     <FileHeaderToggle {...toggle}>
+      {oldPath !== undefined && <OldPathArrow path={oldPath} scroll />}
       <PathText path={props.file.path} scroll />
     </FileHeaderToggle>
   ) : (
@@ -78,13 +114,18 @@ function PathToggle(
   );
 }
 
+const pathLabel = (path: string, oldPath?: string): string =>
+  oldPath === undefined ? path : `${oldPath} → ${path}`;
+
 function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
   const [pathCut, setPathCut] = React.useState(false);
   const path = props.file.path;
+  const oldPath = movedFrom(props.file);
 
   return (
-    <Tooltip label={path} active={pathCut} frameless>
+    <Tooltip label={pathLabel(path, oldPath)} active={pathCut} frameless>
       <FileHeaderToggle {...toggleOf(props)}>
+        {oldPath !== undefined && <OldPathArrow path={oldPath} />}
         <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
       </FileHeaderToggle>
     </Tooltip>
