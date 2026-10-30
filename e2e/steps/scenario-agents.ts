@@ -4,6 +4,7 @@ import {
 } from '@repo/mocks/agent/app-fixtures';
 import { agentScenarioSteps, agentStep } from './agent-steps';
 import { signInScenarios } from './sign-in-agents';
+import { slashCommandScenarios } from './slash-command-scenarios';
 
 export function agentId(ordinal: number): string {
   const id = appFixtureAgentIds[ordinal - 1];
@@ -84,8 +85,10 @@ const namedScenarioSteps = [
   [agentStep('asks for an Elicitation'), 'elicitation'],
   [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
   [agentStep('asks permission to edit README.md'), 'permission'],
-  [agentStep('offers the review Slash command'), 'slash-commands'],
-  [agentStep('offers the deploy Slash command'), 'slash-commands-deploy'],
+  ...Object.entries(slashCommandScenarios).map(
+    ([name, scenario]) =>
+      [agentStep(`offers the "${name}" Slash command`), scenario] as const,
+  ),
   [agentStep('asks permission to run a command'), 'permission-command'],
   [
     agentStep('asks permission before its command details arrive'),

@@ -8,12 +8,13 @@ import { type AcpSessionLease, requireInstalledAgent } from '../agents';
 import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { readAcpConfiguration } from './acp/acp-configuration';
 import { openOptionsSession } from './agent-options-discovery-session';
+import { storageSources } from './agent-options-input';
 import {
   AgentOptionsJob,
   readAgentConfiguration,
 } from './agent-options-storage';
 import { configureOptionsSession } from './configure-options-session';
-import { DiscoveredCommands } from './discovered-commands';
+import { DiscoveredSlashCommands } from './discovered-slash-commands';
 import type { SessionRouterDeps } from './router-deps';
 
 const rejections = createRejectionCounter('Agent options');
@@ -24,14 +25,14 @@ export type OptionsDeps = Pick<
   | 'installedAgents'
   | 'sessions'
   | 'sessionCommandSignal'
-  | 'commandsWaitMs'
+  | 'slashCommandsWaitMs'
   | 'findWriter'
 >;
 
 export type Discovery = {
   signal: AbortSignal;
   progress: (stage: 'installing' | 'loading', fraction?: number) => void;
-  // The options are read; the Slash commands may still be on their way.
+  // The options are saved with any Slash commands sent so far; more may still come.
   configured: (options: SessionAgentOptionsOutput) => void;
 };
 
@@ -49,18 +50,14 @@ function availableWriter(
   return writer;
 }
 
-type Stored = ReturnType<typeof readAgentConfiguration>;
+type SavedConfiguration = ReturnType<typeof readAgentConfiguration>;
 
-type Discovered = {
-  lease: AcpSessionLease;
-  saved: Stored;
-  commands: DiscoveredCommands;
-};
+type Writer = NonNullable<ReturnType<OptionsDeps['findWriter']>>;
 
 async function readOptions(
-  { lease, saved }: Discovered,
-  input: SessionAgentOptionsInput,
-  signal: AbortSignal,
+  lease: AcpSessionLease,
+  saved: SavedConfiguration,
+  { input, signal }: { input: SessionAgentOptionsInput; signal: AbortSignal },
 ): Promise<SessionAgentOptionsOutput> {
   return configureOptionsSession(
     lease,
@@ -73,20 +70,20 @@ async function readOptions(
   );
 }
 
-type Save = {
-  deps: OptionsDeps;
-  writer: NonNullable<ReturnType<OptionsDeps['findWriter']>>;
+type DiscoveryOutcome = {
   input: SessionAgentOptionsInput;
   options: SessionAgentOptionsOutput;
+  saved: SavedConfiguration;
+  slashCommands: DiscoveredSlashCommands;
 };
 
 async function saveDiscovery(
-  { deps, writer, input, options }: Save,
+  { deps, writer }: { deps: OptionsDeps; writer: Writer },
   discovery: Discovery,
-  { saved, commands }: Discovered,
+  { input, options, saved, slashCommands }: DiscoveryOutcome,
 ): Promise<SessionAgentOptionsOutput> {
   const owner = { agent: input.agent, projectId: input.projectId };
-  const early = commands.commands;
+  const early = slashCommands.list;
 
   const job = new AgentOptionsJob(owner, options, {
     authoritative: true,
@@ -94,22 +91,20 @@ async function saveDiscovery(
     commands: early,
   });
 
-  discovery.configured(options);
   await writeDatabaseJobAndWaitForCommit(writer, job);
-  /*
-   * The options are saved at once. The Agent may send its Slash commands later, so the session
-   * stays open for them and they follow in a second write that only the revision it started from may take.
-   */
-  await commands.seen(discovery.signal, deps.commandsWaitMs);
-  const { committedRevision } = job;
+  discovery.configured(options);
+  // Agents often send their list after opening, so a late one is saved only over the revision this discovery wrote.
+  await slashCommands.seen(discovery.signal, deps.slashCommandsWaitMs);
+  const committedRevision = job.committedRevision();
+  const late = slashCommands.list;
 
-  if (commands.commands && commands.commands !== early && committedRevision)
+  if (late && late !== early && committedRevision)
     await writeDatabaseJobAndWaitForCommit(
       writer,
       new AgentOptionsJob(owner, undefined, {
         authoritative: false,
         expectedRevision: committedRevision,
-        commands: commands.commands,
+        commands: late,
       }),
     );
 
@@ -130,26 +125,26 @@ export async function refreshAgentOptions(
     input,
   );
 
-  const commands = new DiscoveredCommands();
+  const slashCommands = new DiscoveredSlashCommands();
 
   const lease = await openOptionsSession(deps, input, {
     ...discovery,
-    discovered: commands,
+    discovered: slashCommands,
   });
 
   try {
-    const options = await readOptions(
-      { lease, saved, commands },
+    const options = await readOptions(lease, saved, {
       input,
-      discovery.signal,
-    );
+      signal: discovery.signal,
+    });
 
     if (input.sessionId && saved) return options;
 
-    return await saveDiscovery({ deps, writer, input, options }, discovery, {
-      lease,
+    return await saveDiscovery({ deps, writer }, discovery, {
+      input,
+      options,
       saved,
-      commands,
+      slashCommands,
     });
   } finally {
     await lease.close();
@@ -165,9 +160,7 @@ function discoveryResult(
   if (Object.keys(input.picks ?? {}).length) return options;
 
   return (
-    readAgentConfiguration(
-      { database: deps.database, writer: deps.findWriter() },
-      input,
-    )?.configOptions ?? options
+    readAgentConfiguration(storageSources(deps), input)?.configOptions ??
+    options
   );
 }

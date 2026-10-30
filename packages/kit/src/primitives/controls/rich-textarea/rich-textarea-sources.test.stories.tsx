@@ -112,7 +112,7 @@ export const ReturnSendsWhileASlowSourceHasNothingToShow: Story = {
   },
 };
 
-export const EachSourceShowsAtMostEightResults: Story = {
+export const EachSourceShowsEveryResult: Story = {
   args: {
     suggestions: [
       {
@@ -140,13 +140,13 @@ export const EachSourceShowsAtMostEightResults: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await waitFor(() => expect(optionNames()).toHaveLength(16));
+    await waitFor(() => expect(optionNames()).toHaveLength(24));
     await expect(
       optionNames().filter((name) => name?.startsWith('Late many')),
-    ).toHaveLength(8);
+    ).toHaveLength(12);
     await expect(
       optionNames().filter((name) => name?.startsWith('Late later')),
-    ).toHaveLength(8);
+    ).toHaveLength(12);
   },
 };
 

@@ -15,12 +15,12 @@ import {
 import { readProjectPath } from '../projects';
 import { toSlashCommands } from './acp/acp-slash-commands';
 import type { OptionsDeps, Discovery } from './agent-options-discovery';
-import type { DiscoveredCommands } from './discovered-commands';
+import type { DiscoveredSlashCommands } from './discovered-slash-commands';
 import { validateSessionCommandAdmission } from './session-command';
 
 // No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
 const optionsDestination = (
-  discovered: DiscoveredCommands,
+  discovered: DiscoveredSlashCommands,
 ): AcpSessionDestination => ({
   update: ({ update }): undefined => {
     if (update.sessionUpdate === 'available_commands_update')
@@ -50,7 +50,7 @@ export async function openOptionsSession(
     progress,
     discovered,
   }: Discovery & {
-    discovered: DiscoveredCommands;
+    discovered: DiscoveredSlashCommands;
   },
 ): Promise<AcpSessionLease> {
   const installed = requireInstalledAgent(deps.installedAgents, agent);

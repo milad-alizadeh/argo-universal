@@ -32,7 +32,10 @@ export const startAcpEngine = async (
   scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
       Pick<
         EngineInput,
-        'fetchAgents' | 'caffeinate' | 'operationWaitClock' | 'commandsWaitMs'
+        | 'fetchAgents'
+        | 'caffeinate'
+        | 'operationWaitClock'
+        | 'slashCommandsWaitMs'
       >
     > &
     Pick<
@@ -46,11 +49,13 @@ export const startAcpEngine = async (
       installPlugins?: (home: string) => Promise<void>;
       // Starts over the storage a stopped Engine left (its `home`), as an app restart does.
       restartOver?: string;
+      // Installed beside the main Agent, each with its own scripted process.
+      otherAgents?: readonly string[];
     } = {
     steps: [],
   },
   createId: () => string = randomUUID,
-  agentIds: string | readonly string[] = 'mock',
+  agentId = 'mock',
 ): Promise<
   Awaited<ReturnType<typeof startEngineTestHost>> & {
     agent: ReturnType<typeof createScriptedAgentProcess>;
@@ -74,8 +79,10 @@ export const startAcpEngine = async (
     caffeinate: scenario.caffeinate,
     operationWaitClock: scenario.operationWaitClock,
     // Most tests have Agents that send no list; they must not wait for one.
-    commandsWaitMs: scenario.commandsWaitMs ?? 0,
-    fixtureAgents: [agentIds].flat().map(createAgentMetadata),
+    slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
+    fixtureAgents: [agentId, ...(scenario.otherAgents ?? [])].map(
+      createAgentMetadata,
+    ),
     acp: {
       ...agent,
       launchProcess: scenario.launchProcess ?? agent.launchProcess,
