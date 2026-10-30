@@ -14,7 +14,8 @@ ruleTester.run('icon-size', iconSize, {
     'size(pixels, pixels);',
     "import { Host, Text } from '@expo/ui/swift-ui';",
     "import { Image } from 'expo-image';",
-    '<NativeSymbol name="search" size="md" muted />;',
+    '<NativeSymbol name="search" size="md" tone="muted" />;',
+    'const icon = { assetName: image.name };',
   ],
   invalid: [
     { code: '<Icon name="add" size={16} />;', errors: pixelSize },
@@ -24,6 +25,8 @@ ruleTester.run('icon-size', iconSize, {
     },
     { code: '<IconSlot size="md" className="size-6" />;', errors: pixelSize },
     { code: '<Image systemName="chevron.right" />;', errors: nativeSymbol },
+    { code: '<Label systemImage="folder" />;', errors: nativeSymbol },
+    { code: 'const icon = { systemImage: image.name };', errors: nativeSymbol },
     { code: 'size(16, 16);', errors: nativeSymbol },
     {
       code: "import { Host, Image } from '@expo/ui/swift-ui';",

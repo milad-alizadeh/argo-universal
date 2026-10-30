@@ -7,6 +7,7 @@ import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
+import { glyphForegroundClass } from '../../../symbols/glyph-tone';
 import {
   type IconSizeValue,
   useIconBox,
@@ -41,7 +42,7 @@ const iconDrawing = (
 
 function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
-    'text-foreground',
+    glyphForegroundClass,
     useContext(TextClassContext),
     toneClass(props.tone),
     props.className,

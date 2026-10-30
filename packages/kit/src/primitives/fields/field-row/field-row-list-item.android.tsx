@@ -9,8 +9,10 @@ import {
 import { type ReactElement, type ReactNode, useContext } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
+import { rowGlyphSize } from '../../../symbols/glyph-tone';
 import { useIconPixels } from '../../../symbols/icon-size';
 import { nativeIconName } from '../../../symbols/native-icon-name';
+import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
 import { RowLogo } from './field-row-logo';
 import {
   cornerRadii,
@@ -96,7 +98,7 @@ function TrailingSlot(props: Pick<RowListItemProps, 'trailing'>): ReactNode {
 }
 
 function LeadingSlot(
-  props: Pick<RowTextProps, 'leading' | 'logo'> & { title: string },
+  props: Pick<RowTextProps, 'leading' | 'logo' | 'tone'> & { title: string },
 ): ReactNode {
   if (props.logo)
     return (
@@ -105,18 +107,23 @@ function LeadingSlot(
       </ListItem.LeadingContent>
     );
 
-  return <IconSlot leading={props.leading} />;
+  return <IconSlot leading={props.leading} tone={props.tone} />;
 }
 
-function IconSlot(props: Pick<RowTextProps, 'leading'>): ReactNode {
+/*
+ * The row glyph rule: one size by role, in the glyph token rather than the ListItem's own content colour, so a
+ * Settings row and a kit ListItem row read the same in light mode and in Graphite (glyph-tone.ts).
+ */
+function IconSlot(props: Pick<RowTextProps, 'leading' | 'tone'>): ReactNode {
   const source = leadingSource(props.leading);
-  const size = useIconPixels('md');
+  const size = useIconPixels(rowGlyphSize);
+  const tint = useRowGlyphColor(props.tone);
 
   if (!source) return null;
 
   return (
     <ListItem.LeadingContent>
-      <Icon source={source} size={size} />
+      <Icon source={source} size={size} tint={tint} />
     </ListItem.LeadingContent>
   );
 }

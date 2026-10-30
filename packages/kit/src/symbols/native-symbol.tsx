@@ -2,8 +2,38 @@ import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { Icon, IconSlot, useIconSize } from '#primitives/content/icon';
+import { glyphForegroundClass } from './glyph-tone';
 import { NativeIcon } from './native-icon';
-import type { NativeSymbolProps } from './native-symbol-props';
+import type {
+  NativeSymbolProps,
+  NativeSymbolTone,
+} from './native-symbol-props';
+
+function toneClassName(tone: NativeSymbolTone | undefined): string | undefined {
+  if (tone === 'muted') return 'text-muted-foreground';
+
+  return tone === 'foreground' ? glyphForegroundClass : undefined;
+}
+
+// The token the symbol draws in; unset, it keeps the content colour of the Compose control around it.
+function useToneColor(tone: NativeSymbolTone | undefined): string | undefined {
+  const { foreground, mutedForeground } = useNativeTheme().colors;
+
+  if (tone === 'foreground') return foreground;
+
+  return tone === 'muted' ? mutedForeground : undefined;
+}
+
+// An Argo icon inside a Compose tree: Expo UI's Icon in the token the tone names, or the control's content colour.
+export function NativeSymbol(props: NativeSymbolProps): React.JSX.Element {
+  return (
+    <NativeIcon
+      {...props}
+      color={useToneColor(props.tone)}
+      fallback={<HostedSymbol {...props} />}
+    />
+  );
+}
 
 const hostedIconSlot = {
   collapsable: false,
@@ -12,26 +42,9 @@ const hostedIconSlot = {
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
-function mutedClassName(muted: boolean | undefined): string | undefined {
-  return muted === true ? 'text-muted-foreground' : undefined;
-}
-
-// An Argo icon inside a Compose tree: Expo UI's Icon in the control's content colour, or Argo's muted tone.
-export function NativeSymbol(props: NativeSymbolProps): React.JSX.Element {
-  const { mutedForeground } = useNativeTheme().colors;
-
-  return (
-    <NativeIcon
-      {...props}
-      color={props.muted === true ? mutedForeground : undefined}
-      fallback={<HostedSymbol {...props} />}
-    />
-  );
-}
-
 // An icon Expo UI cannot draw, hosted as a React Native view; the row it sits in names it for screen readers.
 function HostedSymbol({
-  muted,
+  tone,
   ...props
 }: NativeSymbolProps): React.JSX.Element {
   const size = useIconSize(props.size);
@@ -39,7 +52,7 @@ function HostedSymbol({
   return (
     <RNHostView matchContents>
       <IconSlot size={size} {...hostedIconSlot}>
-        <Icon {...props} size={size} className={mutedClassName(muted)} />
+        <Icon {...props} size={size} className={toneClassName(tone)} />
       </IconSlot>
     </RNHostView>
   );
