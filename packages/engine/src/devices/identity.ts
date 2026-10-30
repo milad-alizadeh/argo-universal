@@ -25,7 +25,7 @@ export async function ensureServerIdentity(
 ): Promise<string> {
   const publicKey = await ensureServerPublicKey(options.home);
   await ensureServerDevice(options.database, options.databaseWriter, {
-    id: options.createId(),
+    createId: options.createId,
     publicKey,
     name: readSystemInfo(options).name,
     platform: serverPlatform(),

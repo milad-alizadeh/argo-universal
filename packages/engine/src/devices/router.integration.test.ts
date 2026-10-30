@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -39,16 +39,46 @@ it('gives a separate Server its own key', async (): Promise<void> => {
   );
 });
 
+it('makes the Server Device follow a regenerated static key', async (): Promise<void> => {
+  const first = await startEngineTestHost();
+  const before = (await first.caller.devices.serverKey()).publicKey;
+  await first.stop();
+  await rm(join(first.home, keyFilename));
+
+  const { caller } = await startEngineTestHost({ home: first.home });
+  const { publicKey } = await caller.devices.serverKey();
+  const devices = await caller.devices.list();
+
+  expect(publicKey).not.toBe(before);
+  expect(devices).toEqual([
+    expect.objectContaining({ serverDevice: true, publicKey }),
+  ]);
+});
+
+// The private half in every encoding someone might return it in.
+const encodingsOf = (pem: string): string[] => {
+  const der = Buffer.from(
+    pem
+      .split('\n')
+      .filter((line) => line && !line.startsWith('-----'))
+      .join(''),
+    'base64',
+  );
+
+  const raw = der.subarray(-32);
+
+  return [der, raw].flatMap((bytes) => [
+    bytes.toString('base64'),
+    bytes.toString('base64url'),
+    bytes.toString('hex'),
+  ]);
+};
+
 it('writes the private half owner-only and returns it from no procedure', async (): Promise<void> => {
   const { caller, home } = await startEngineTestHost();
   const path = join(home, keyFilename);
 
   expect((await stat(path)).mode & 0o777).toBe(0o600);
-
-  const material = (await readFile(path, 'utf8'))
-    .split('\n')
-    .filter((line) => line && !line.startsWith('-----'))
-    .join('');
 
   const answers = JSON.stringify([
     await caller.devices.list(),
@@ -56,6 +86,6 @@ it('writes the private half owner-only and returns it from no procedure', async 
     await caller.system.info(),
   ]);
 
-  expect(material.length).toBeGreaterThan(0);
-  expect(answers).not.toContain(material);
+  for (const encoding of encodingsOf(await readFile(path, 'utf8')))
+    expect(answers).not.toContain(encoding);
 });
