@@ -22,12 +22,20 @@ const linksOf = (agent: AgentRowEntry): Link[] => [
 
 type AgentMetaProps = { agent: AgentRowEntry };
 
-// One line, every item centred on the text and spaced by the row's own gap: version, desktop's unsupported note, then the links.
+// One line, every item centred on the text and spaced by the row's own gap: version, then desktop's unsupported note; the links follow as the row's accessories.
 export function AgentMeta({ agent }: AgentMetaProps): React.JSX.Element {
   return (
     <>
       <Label text={`v${agent.version}`} />
       <UnsupportedNote agent={agent} />
+    </>
+  );
+}
+
+// The links are buttons of their own, so the row draws them beside its press, where a screen reader reaches each.
+export function AgentLinks({ agent }: AgentMetaProps): React.JSX.Element {
+  return (
+    <>
       {linksOf(agent).map((link) => (
         <AgentLink key={link.label} link={link} />
       ))}

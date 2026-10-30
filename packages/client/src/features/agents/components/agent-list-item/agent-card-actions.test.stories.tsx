@@ -77,6 +77,43 @@ export const LinksPhone = links(layoutWidths.phone);
 
 export const LinksWide = links(layoutWidths.wide);
 
+// An accessible row collapses what it holds into one element on iOS, so its buttons must sit beside the row's own press.
+function besideRow(installed: boolean): Story {
+  return {
+    args: {
+      agent: {
+        ...agent,
+        installed,
+        repository: 'https://example.org/repository',
+        website: 'https://example.org/website',
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleLayout('phone');
+
+      const row = canvas.getByRole('group', {
+        name: new RegExp(`^${agent.name}, v`),
+      });
+
+      const names = [
+        actionName(installed ? 'Remove' : 'Install'),
+        'Repository',
+        'Website',
+      ];
+
+      for (const name of names) {
+        const button = canvas.getByRole('button', { name });
+
+        await expect(row.contains(button)).toBe(false);
+      }
+    },
+  };
+}
+
+export const InstallBesideRow = besideRow(false);
+
+export const RemoveBesideRow = besideRow(true);
+
 const unsupported = 'Not supported on this platform';
 
 const unavailableAgent = { agent: { ...agent, unavailable: true } };
