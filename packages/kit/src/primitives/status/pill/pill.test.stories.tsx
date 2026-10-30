@@ -112,6 +112,7 @@ export const LabelThatCarriesTheTextAddsNoValue: Story = {
     const button = canvas.getByRole('button', {
       name: 'Setting: Chosen value',
     });
+
     await expect(button).not.toHaveAttribute('aria-valuetext');
   },
 };
