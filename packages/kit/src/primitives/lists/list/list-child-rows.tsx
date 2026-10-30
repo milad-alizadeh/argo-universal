@@ -32,7 +32,7 @@ function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
     <ChildDataList
       {...props}
       {...prepared}
-      maxHeight={childMaxHeight(props, height)}
+      {...childHeights(props, height)}
       maintainVisibleContentPosition={childAnchor(props.anchor)}
     />
   );
@@ -70,13 +70,18 @@ function ChildDataList({
   return <DataList {...rowsOf(props)} {...childDrawing} />;
 }
 
-function childMaxHeight(
+/*
+ * A List its caller held to a height keeps it wherever it is drawn. One left to fit its content has
+ * only the window to fit it in, and gives that back to whatever pane it lands in (#1420).
+ */
+function childHeights(
   props: ChildrenOptions,
   height: number,
-): ListProps<never>['maxHeight'] {
-  if (props.fit === false) return props.maxHeight;
+): Pick<ListProps<never>, 'maxHeight' | 'fitHeight'> {
+  if (props.fit === false || props.maxHeight !== undefined)
+    return { maxHeight: props.maxHeight };
 
-  return props.maxHeight ?? height;
+  return { fitHeight: height };
 }
 
 function PlainRows<Item>(props: ListProps<Item>): ReactElement {

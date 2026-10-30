@@ -40,6 +40,7 @@ type TileScrollOptions = Pick<
   | 'columnWrapperStyle'
   | 'contentContainerStyle'
   | 'maxHeight'
+  | 'fitHeight'
   | 'viewabilityConfig'
   | 'estimatedItemSize'
   | 'recycleItems'
@@ -135,6 +136,7 @@ function tileScrollProps<Item>(
     columnWrapperStyle: columnGaps(layout),
     contentContainerStyle: tileContentStyle(layout),
     maxHeight: layout.horizontal ? undefined : props.maxHeight,
+    fitHeight: layout.horizontal ? undefined : props.fitHeight,
     estimatedItemSize: tileEstimate(layout),
   };
 }

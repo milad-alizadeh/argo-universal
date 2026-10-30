@@ -40,6 +40,7 @@ function shelfScrollProps(
 ): Partial<ScrollFadeListProps<ListBlock>> {
   return {
     maxHeight: props.maxHeight,
+    fitHeight: props.fitHeight,
     ...sectionTestId(props.testID),
     ListHeaderComponent: props.header ? <View>{props.header}</View> : undefined,
     ListFooterComponent: (
