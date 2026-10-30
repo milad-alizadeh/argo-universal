@@ -1,4 +1,3 @@
-import { setTimeout as delay } from 'node:timers/promises';
 import { type PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   ComponentEvent,
@@ -11,6 +10,7 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 import { testConnection } from './test-connection';
+import { pollUntil, viewTimeoutMessage } from './view-timeout';
 
 // A test mount chooses the platform; the test App always speaks the current wire version.
 type MountSurface = Pick<PluginSurface, 'platform'>;
@@ -30,7 +30,10 @@ export type PluginMount = {
   connectionId?: string;
 } & ({ page: string } | { slot: PluginSlotInput });
 
-const viewLimitMs = 3000;
+// A slow machine can lengthen this for one run, as ARGO_VIEW_LIMIT_MS=20000; nothing else changes it.
+const defaultViewLimitMs = 3000;
+const viewLimitMs =
+  Number(process.env.ARGO_VIEW_LIMIT_MS) || defaultViewLimitMs;
 
 type Event = ComponentEvent & { key: string };
 
@@ -87,7 +90,10 @@ export class PluginTestView {
   }
 
   public async find(text: string): Promise<WireNode> {
-    await this.waitFor(() => this.findText(text) !== undefined);
+    await this.waitFor(
+      () => this.findText(text) !== undefined,
+      `a node reading ${JSON.stringify(text)}`,
+    );
     const entry = this.findText(text);
 
     if (!entry) throw new Error(`Plugin node not found: ${text}`);
@@ -95,14 +101,15 @@ export class PluginTestView {
     return entry.node;
   }
 
-  public async waitFor(ready: () => boolean): Promise<void> {
-    const deadline = Date.now() + viewLimitMs;
-
-    while (!ready()) {
-      if (Date.now() >= deadline)
-        throw new Error('Plugin view did not reach the expected state');
-      await delay(1);
-    }
+  public async waitFor(ready: () => boolean, what?: string): Promise<void> {
+    await pollUntil(ready, viewLimitMs, (waited) =>
+      viewTimeoutMessage({
+        ...waited,
+        what,
+        limitMs: viewLimitMs,
+        trees: this.latest ? this.history.length : undefined,
+      }),
+    );
   }
 
   public async dispatch(event: Event): Promise<void> {
