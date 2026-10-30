@@ -15,6 +15,7 @@ import {
 } from '@repo/engine/plugins';
 import { itemsConnection } from './test-connection';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
+import { testOperations } from './test-operations';
 import { TestProjects } from './test-projects';
 import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
 import { serviceFor } from './test-services';
@@ -142,6 +143,12 @@ class HostedPlugin implements PluginTest {
 
   public readonly slotItems: PluginTest['slotItems'] = (input, options) =>
     this.service.slotItems(input, itemsConnection(options));
+
+  get operations(): PluginTest['operations'] {
+    const { service, runtime } = this;
+
+    return testOperations({ service, runtime }, this.options.pluginId);
+  }
 
   private open(
     opening: Opening,

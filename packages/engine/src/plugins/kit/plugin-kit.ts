@@ -14,6 +14,11 @@ import {
   type KitElementType,
 } from './jsx-runtime';
 import {
+  operationHandlers,
+  type OperationHandlers,
+  type OperationSend,
+} from './operation-handlers';
+import {
   mountPages,
   type Pages,
   type ViewSender,
@@ -74,6 +79,8 @@ export interface Kit {
   registerPage: Pages['register'];
   // The worker's `argo.slots`; it also answers the batched items calls the inbox hands it.
   slots: Argo['slots'];
+  // The worker's `argo.operations`; it also answers the Operation calls the inbox hands it.
+  operations: OperationHandlers;
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
   requirePage: Pages['requirePage'];
@@ -83,11 +90,28 @@ export interface Kit {
   ) => { treePath: string };
 }
 
+// What the host answers for a Plugin: its Queries, its Slot items and its own Operations.
+type KitCalls = {
+  data: Parameters<typeof dataClient>[0];
+  slots: SlotSend;
+  operations: OperationSend;
+};
+
+type DataClient = ReturnType<typeof dataClient>;
+
+// Each part of the kit a host event can be for.
+type KitParts = {
+  data: DataClient;
+  pages: Pages;
+  slots: SlotProviders;
+  operations: OperationHandlers;
+};
+
 // Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
 export function createKit(
   send: ViewSender,
   settle: DispatchSender,
-  calls: { data: Parameters<typeof dataClient>[0]; slots: SlotSend },
+  calls: KitCalls,
 ): Kit {
   const data = dataClient(calls.data);
 
@@ -95,12 +119,21 @@ export function createKit(
     data.ready(viewId, background),
   );
 
-  return pageKit(data, pages, slotProviders(calls.slots, pages));
+  return pageKit({ data, pages, ...providers(calls, pages) });
 }
 
-type DataClient = ReturnType<typeof dataClient>;
+// What a Plugin registers against its own pages: the Slots it fills and the Operations it declares.
+const providers = (
+  calls: KitCalls,
+  pages: Pages,
+): Pick<KitParts, 'slots' | 'operations'> => ({
+  slots: slotProviders(calls.slots, pages),
+  operations: operationHandlers(calls.operations),
+});
 
-function pageKit(data: DataClient, pages: Pages, slots: SlotProviders): Kit {
+function pageKit(parts: KitParts): Kit {
+  const { data, pages, slots, operations } = parts;
+
   return {
     isElement: React.isValidElement,
     requirePage: pages.requirePage,
@@ -109,22 +142,31 @@ function pageKit(data: DataClient, pages: Pages, slots: SlotProviders): Kit {
     jsxRuntime,
     registerPage: pages.register,
     slots,
-    inbox: inbox(data, pages, slots),
+    operations,
+    inbox: inbox(parts),
   };
 }
 
-function inbox(
-  data: ReturnType<typeof dataClient>,
-  pages: Pages,
-  providers: SlotProviders,
-): Kit['inbox'] {
-  return (json): void => {
-    const event = PluginEvent.parse(JSON.parse(json));
+function inbox(parts: KitParts): Kit['inbox'] {
+  return (json): void => deliver(parts, PluginEvent.parse(JSON.parse(json)));
+}
 
-    if (event.type === 'data') data.receive(event);
-    else if (event.type === 'slotItems') providers.answer(event);
-    else pages.receive(event);
-  };
+// Each event the host sends goes to the part waiting for it; anything else is a page's.
+function deliver(parts: KitParts, event: PluginEvent): void {
+  if (event.type === 'data') return parts.data.receive(event);
+
+  if (event.type === 'slotItems') return parts.slots.answer(event);
+
+  return answerOrDraw(parts, event);
+}
+
+function answerOrDraw(
+  parts: KitParts,
+  event: Exclude<PluginEvent, { type: 'data' | 'slotItems' }>,
+): void {
+  if (event.type === 'operation') return parts.operations.answer(event);
+
+  return parts.pages.receive(event);
 }
 
 function replacementOf(pages: Pages): Kit['replacement'] {

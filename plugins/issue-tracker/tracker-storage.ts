@@ -1,4 +1,14 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
+import {
+  attachSession,
+  detachSession,
+  issueSessions,
+  issueSessionsTable,
+  type IssueLink,
+  type IssueSession,
+} from './issue-sessions-store';
+
+export type { IssueLink, IssueSession } from './issue-sessions-store';
 
 // A page's last loaded data in a Project, by the page's own name: shown at once while it loads again.
 type CacheKey = { projectId: string; view: string };
@@ -9,6 +19,12 @@ export type TrackerStorage = {
   // Only this Plugin writes the cache, so a read trusts what it stored.
   readCache: <Value>(key: CacheKey) => Promise<Value | null>;
   writeCache: <Value>(key: CacheKey, value: Value) => Promise<void>;
+  // Connecting a Session to an Issue again leaves the first time it was attached.
+  attachSession: (link: IssueLink) => Promise<void>;
+  detachSession: (link: IssueLink) => Promise<void>;
+  issueSessions: (
+    issue: Omit<IssueLink, 'sessionId'>,
+  ) => Promise<IssueSession[]>;
 };
 
 type Store = {
@@ -28,6 +44,9 @@ export function createTrackerStorage(
     chooseTracker: (projectId, id) => chooseTracker(store, projectId, id),
     readCache: (key) => readCache(store, key),
     writeCache: (key, value) => writeCache(store, key, value),
+    attachSession: (link) => attachSession(store, link),
+    detachSession: (link) => detachSession(store, link),
+    issueSessions: (issue) => issueSessions(store, issue),
   };
 }
 
@@ -35,6 +54,7 @@ const tableStatements = [
   'CREATE TABLE IF NOT EXISTS tracker_preferences (project_id TEXT PRIMARY KEY, tracker_id TEXT NOT NULL)',
   'DROP TABLE IF EXISTS issue_cache',
   'CREATE TABLE IF NOT EXISTS view_cache (project_id TEXT NOT NULL, view TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (project_id, view))',
+  issueSessionsTable,
 ];
 
 function createTables(argo: Argo): Store['ensureTables'] {

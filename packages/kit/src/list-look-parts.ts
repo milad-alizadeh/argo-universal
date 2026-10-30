@@ -50,6 +50,8 @@ export interface PlaceLook {
   sidebar: boolean;
   // Its sections end their container, so none draws space after itself.
   sectionEnds: boolean;
+  // A Detail's content column already pads and scrolls this block, so it sizes to its rows and insets nothing.
+  padded: boolean;
 }
 
 export interface FormLook {
@@ -162,13 +164,13 @@ export const phonePaddingOf = (
 export function insetLook(
   drawing: Drawing,
   input: ListLookInput,
-  form: FormLook & { menu: boolean },
+  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded'>,
 ): InsetLook {
-  const { menu } = form;
+  const { menu, padded } = form;
   const phone = form.phone !== undefined;
 
   return {
-    insets: insetsOf({ ...form, menu, phone, fit: input.fit }),
+    insets: insetsOf({ ...form, menu, padded, phone, fit: input.fit }),
     phonePadding: phonePaddingOf(drawing, input),
     headingInset: headingInsetOf(form.webGrouped, input.wide),
   };
@@ -184,6 +186,7 @@ export function placeLook(
     menu: facts.menu,
     sidebar: facts.sidebar,
     sectionEnds: facts.ends,
+    padded: facts.padded,
   };
 }
 

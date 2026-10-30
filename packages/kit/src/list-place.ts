@@ -7,6 +7,7 @@ import { createContext, use } from 'react';
  */
 export type ListPlace =
   | 'page'
+  | 'detail'
   | 'popover'
   | 'choice'
   | 'sidebar'
@@ -22,12 +23,24 @@ export interface ListPlaceFacts {
   sidebar: boolean;
   // Its sections end their container, so none draws space after itself.
   ends: boolean;
+  /*
+   * A Detail's content column, which pads and scrolls what it holds: a List or a FieldGroup here sizes to its rows,
+   * draws no inset of its own and claims no column, so it starts on the body's line.
+   */
+  padded: boolean;
 }
 
-const none = { menu: false, choosing: false, sidebar: false, ends: false };
+const none = {
+  menu: false,
+  choosing: false,
+  sidebar: false,
+  ends: false,
+  padded: false,
+};
 
 const facts = {
   page: none,
+  detail: { ...none, padded: true },
   popover: { ...none, menu: true },
   choice: { ...none, menu: true, choosing: true },
   sidebar: { ...none, sidebar: true },
@@ -45,6 +58,7 @@ export const choosingPlace = (place: ListPlace): ListPlace =>
 // A popover's rows are menu rows, and one opened from the sidebar keeps the sidebar's drawing, as the place it opened from.
 const popoverPlaces = {
   page: 'popover',
+  detail: 'popover',
   popover: 'popover',
   choice: 'choice',
   sidebar: 'sidebar-menu',

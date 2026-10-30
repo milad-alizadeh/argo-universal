@@ -50,25 +50,21 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
+type PluginPageProps = PluginDetailScreenProps & { section: PluginSection };
+
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
-function PluginPage({
-  section,
-  path,
-  sessionId,
-}: PluginDetailScreenProps & {
-  section: PluginSection;
-}): React.JSX.Element {
+function PluginPage(props: PluginPageProps): React.JSX.Element {
+  const { section } = props;
+
   const view = usePluginView({
     pluginId: section.pluginId,
-    path: pluginPagePath(path),
-    sessionId,
+    path: pluginPagePath(props.path),
+    sessionId: props.sessionId,
   });
-
-  const onOpenPage = usePluginOpener()(section.pluginId);
 
   return (
     <PluginDetailView
-      {...pluginPageProps(section, view, onOpenPage)}
+      {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
       onBack={usePushedBack()}
     />
   );

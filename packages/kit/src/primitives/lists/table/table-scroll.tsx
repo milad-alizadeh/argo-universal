@@ -147,7 +147,7 @@ function ScrolledRow(props: {
     <MeasuredScrollRow
       row={props.row.key}
       side="scrolled"
-      contentClassName="min-h-12 shrink-0 flex-row items-center gap-4 py-3"
+      contentClassName="min-h-12 shrink-0 flex-row items-start gap-4 py-3"
     >
       {scrolledCells(props.columns, props.row)}
     </MeasuredScrollRow>

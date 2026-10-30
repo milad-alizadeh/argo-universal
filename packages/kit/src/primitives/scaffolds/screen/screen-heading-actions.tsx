@@ -53,17 +53,19 @@ function PrimaryEntry({
   );
 }
 
-// Only a page's heading names it, and only a press Action: a submenu is a menu, and keeps its icon trigger.
+// Only a page's heading names its primary Action; a list column's keeps its icon buttons.
 function namedPrimary(
   header: ScreenHeader,
   size: IconButtonSize | undefined,
 ): IconAction | null {
-  const { primary } = header;
+  if (size !== undefined) return null;
 
-  if (size !== undefined || !primary || isSubmenu(primary)) return null;
-
-  return primary;
+  return pressPrimary(header);
 }
+
+// Only a press Action names itself: a submenu is a menu, and keeps its icon trigger.
+const pressPrimary = ({ primary }: ScreenHeader): IconAction | null =>
+  primary && !isSubmenu(primary) ? primary : null;
 
 function PrimaryButton({ action }: { action: IconAction }): ReactElement {
   return (

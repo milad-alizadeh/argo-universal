@@ -5,6 +5,7 @@ import { Link, isRoute, type LinkProps } from '#primitives/content/link';
 import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { flattenedChildren } from '../../../flattened-children';
+import { useWide } from '../../../use-wide/use-wide';
 import { useMetadataDrawing } from './metadata-drawing-context';
 import { MetadataField } from './metadata-field';
 import { MetadataPills } from './metadata-pills';
@@ -40,15 +41,18 @@ function destination(href: string): Pick<LinkProps, 'href' | 'route'> {
 }
 
 /*
- * A link the page already carries elsewhere — a Screen's linked caption — is drawn only where the Metadata has no
- * column of its own: a phone's grouped rows, or the one inline line a narrow pane draws.
+ * A link the page already carries elsewhere — a Screen's linked caption — is drawn only where the page does not carry
+ * it: the caption shows on a wide window alone, so a narrower one keeps the field whatever root it draws.
  */
 export function MetadataLink(props: MetadataLinkProps): ReactElement | null {
-  const { root } = useMetadataDrawing();
+  const wide = useWide();
 
-  if (props.whenNarrow && (root === 'properties' || root === 'list-section'))
-    return null;
+  if (props.whenNarrow && wide) return null;
 
+  return <LinkField {...props} />;
+}
+
+function LinkField(props: MetadataLinkProps): ReactElement {
   return (
     <MetadataField
       {...fieldProps(props)}

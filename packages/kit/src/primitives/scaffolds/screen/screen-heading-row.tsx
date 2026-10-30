@@ -15,17 +15,12 @@ import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 
 // The Screen's own heading, drawn where its plan puts the header there.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
-  const header = props.headers.heading;
-
   return (
     <View className="py-6">
       <ScreenColumn width={props.width}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
-          <ScreenCaption
-            caption={header.selecting ? undefined : props.caption}
-            captionHref={props.captionHref}
-          />
+          <HeadingCaption {...props} />
         </View>
       </ScreenColumn>
     </View>
@@ -38,6 +33,18 @@ const headingInset = (inset: number): ViewStyle => ({
   paddingRight: inset,
 });
 
+// A List that is selecting owns the header, so the page's caption stands down with its title.
+function HeadingCaption(props: ScreenHeaderInput): ReactNode {
+  const { selecting } = props.headers.heading;
+
+  return (
+    <ScreenCaption
+      caption={selecting ? undefined : props.caption}
+      captionHref={props.captionHref}
+    />
+  );
+}
+
 // A wide page's caption; a phone leaves it out, as its native header has no room for it.
 function ScreenCaption({
   caption,
@@ -47,28 +54,29 @@ function ScreenCaption({
 
   if (!caption || !wide) return null;
 
-  if (!captionHref)
-    return (
-      <Text role="body" tone="muted">
-        {caption}
-      </Text>
-    );
+  return <Caption caption={caption} href={captionHref} />;
+}
 
-  return <CaptionLink caption={caption} href={captionHref} />;
+function Caption(props: { caption: string; href?: string }): ReactNode {
+  if (!props.href) return <CaptionText caption={props.caption} />;
+
+  return <CaptionLink caption={props.caption} href={props.href} />;
+}
+
+function CaptionText({ caption }: { caption: string }): ReactNode {
+  return (
+    <Text role="body" tone="muted">
+      {caption}
+    </Text>
+  );
 }
 
 // A caption that goes somewhere says so with a link glyph after it, as the page's one link out.
-function CaptionLink({
-  caption,
-  href,
-}: {
-  caption: string;
-  href: string;
-}): ReactNode {
+function CaptionLink(props: { caption: string; href: string }): ReactNode {
   return (
     <View className="flex-row items-center gap-1">
       <Text role="body" tone="muted">
-        <Link label={caption} {...captionTarget(href)} />
+        <Link label={props.caption} {...captionTarget(props.href)} />
       </Text>
       <Icon name="external-link" size="sm" tone="muted" />
     </View>

@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { PluginDataState } from '#plugin-argo-calls';
+import {
+  PluginOperationCaller,
+  PluginOperationName,
+  PluginOperationParams,
+} from '#plugin-operations';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
 import {
@@ -121,6 +126,17 @@ export const PluginEvent = z.union([
     requestId: PluginDispatchId,
     ...target.shape,
     ...ComponentEvent.shape,
+  }),
+  /*
+   * One of the Plugin's own Operations, run by an Agent or the user through `argo run`; it answers by
+   * `id` with the handler's result, or with why it failed.
+   */
+  z.object({
+    type: z.literal('operation'),
+    id: z.number().int().nonnegative(),
+    name: PluginOperationName,
+    params: PluginOperationParams,
+    caller: PluginOperationCaller,
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({

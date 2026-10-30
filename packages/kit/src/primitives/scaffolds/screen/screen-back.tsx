@@ -38,10 +38,14 @@ function useBack(onBack: ScreenProps['onBack']): (() => void) | null {
 
   if (!wide) return null;
 
-  if (onBack) return besideList ? null : onBack;
-
-  return host;
+  return onBack ? ownBack(onBack, besideList) : host;
 }
+
+// Beside a list, a page's own Back belongs to the list, so the page draws none of its own.
+const ownBack = (
+  onBack: () => void,
+  besideList: boolean,
+): (() => void) | null => (besideList ? null : onBack);
 
 // A back glyph, not a chevron: a disclosure chevron draws smaller, and this is the page's one Back.
 function BackButton({ onBack }: { onBack: () => void }): ReactElement {

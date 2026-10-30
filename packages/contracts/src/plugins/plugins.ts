@@ -4,6 +4,7 @@ import { AccountHost, PluginCapability } from './capabilities';
 import { DeclaredContributions } from './declared-slots';
 import { HookEventName } from './hooks';
 import { PluginIcon, PluginPath } from './manifest-fields';
+import { PluginOperationContributions } from './plugin-operations';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
 import { AddOnlySlotId, ReplaceableSlotId } from './wire';
@@ -109,6 +110,8 @@ export const PluginManifest = z
           HookEventName,
           'Hook events must be unique',
         ).optional(),
+        // The Operations the Plugin adds to the registry, which an Agent runs with `argo run <plugin-id>.<name>` (ADR-0044).
+        operations: PluginOperationContributions.optional(),
         // Where the Plugin sits among a Slot's contributors and in a Replaceable Slot's `ui.render` chain: lower comes first, 0 when left out (ADR-0035).
         order: z.int().optional(),
       })

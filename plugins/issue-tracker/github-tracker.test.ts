@@ -70,7 +70,7 @@ it('lists one GitHub search across both states, as many as asked', async () => {
       '--limit',
       '60',
       '--json',
-      'number,title,state,stateReason,labels,assignees,parent,url',
+      'number,title,state,stateReason,labels,assignees,parent,url,blockedBy,subIssuesSummary',
     ],
   ]);
 });

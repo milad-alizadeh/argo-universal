@@ -52,7 +52,7 @@ export function resolveListLook(input: ListLookInput): ListLook {
     ...placeLook(input, place),
     ...form,
     ...rows,
-    ...insetLook(drawing, input, { ...form, menu: place.menu }),
+    ...insetLook(drawing, input, { ...form, ...place }),
     ...platformLook(input, place.menu),
     section: sectionDrawing({ ...place, ...rows, ...form, phone }),
   };

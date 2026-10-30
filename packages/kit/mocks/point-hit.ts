@@ -12,10 +12,17 @@ export function topmostAt({ x, y }: Point): Element | null {
   return document.elementFromPoint(x, y);
 }
 
+/*
+ * Where a person would point at the element: its first line box. An inline element that wraps across lines has a
+ * bounding box whose centre falls on the text beside it, not on the element itself.
+ */
+export const pointableAt = (element: Element): Point =>
+  centreOf(element.getClientRects()[0] ?? element.getBoundingClientRect());
+
 // Whether a person can see and point at the element there, rather than something covering or clipping it.
 export function canPointAt(
   element: Element,
-  point: Point = centreOf(element.getBoundingClientRect()),
+  point: Point = pointableAt(element),
 ): boolean {
   const hit = topmostAt(point);
 

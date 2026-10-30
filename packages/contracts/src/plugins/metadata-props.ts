@@ -35,7 +35,7 @@ export const metadataLinkProps = field.extend({
     .boolean()
     .optional()
     .describe(
-      'Draw the field only where the Metadata has no column of its own, for a link the page already carries elsewhere.',
+      'Draw the field only where the page does not already carry the link in its linked caption, which a wide window alone shows.',
     ),
 });
 
