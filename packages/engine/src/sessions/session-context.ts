@@ -109,6 +109,8 @@ export interface SessionContext extends SessionData {
   nativePermissions: NativePermissions;
   // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
   hookedPermissions: Record<string, string | null>;
+  // The user (or a Hook) denied a Permission request during the running Turn.
+  permissionDenied: boolean;
   elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];
   slashCommands: SlashCommand[] | null;

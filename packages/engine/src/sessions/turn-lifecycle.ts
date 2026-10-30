@@ -33,7 +33,11 @@ export const connectionLostDuringTurn = interruptedTurn(
 type StartedTurn = {
   change: Pick<
     SessionContext,
-    'activeTurnId' | 'activeTurnStartedAt' | 'turnEnding' | 'kept'
+    | 'activeTurnId'
+    | 'activeTurnStartedAt'
+    | 'turnEnding'
+    | 'kept'
+    | 'permissionDenied'
   >;
   write: SessionWrite;
 };
@@ -50,6 +54,7 @@ export const startTurn = (
       activeTurnStartedAt: startedAt,
       turnEnding: { kind: 'completion' },
       kept: true,
+      permissionDenied: false,
     },
     write: {
       job: new TurnInsertJob({
@@ -72,6 +77,7 @@ type EndedTurn = {
     | 'activeTurnStartedAt'
     | 'permissionQueue'
     | 'hookedPermissions'
+    | 'permissionDenied'
     | 'elicitationQueue'
     | 'storageFailedTurn'
   >;
@@ -92,6 +98,7 @@ export const endTurn = (
     activeTurnStartedAt: null,
     permissionQueue: [],
     hookedPermissions: {},
+    permissionDenied: false,
     elicitationQueue: [],
     storageFailedTurn: false,
   };
@@ -122,6 +129,7 @@ export const endTurn = (
         turnEnd: {
           stopReason: params.stopReason,
           error: params.error ?? null,
+          ...(params.permissionDenied && { permissionDenied: true as const }),
           durationMs: Math.max(
             0,
             endedAt - (context.activeTurnStartedAt ?? endedAt),

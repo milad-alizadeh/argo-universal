@@ -50,6 +50,14 @@ export const StoppedWide = ending(layoutWidths.wide, endings.stopped, {
   title: 'You stopped after 1m 20s',
 });
 
+export const DeniedPhone = ending(layoutWidths.phone, endings.denied, {
+  title: 'Turn ended after you denied a Permission request',
+});
+
+export const DeniedWide = ending(layoutWidths.wide, endings.denied, {
+  title: 'Turn ended after you denied a Permission request',
+});
+
 export const OutputLimitPhone = ending(
   layoutWidths.phone,
   endings.outputLimit,

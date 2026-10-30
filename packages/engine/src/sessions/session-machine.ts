@@ -82,6 +82,7 @@ import {
 import {
   cancelRequests,
   hookedAnswer,
+  deniesPermission,
   permissionOutcome,
   rememberHookedPermission,
   withdrawRequest,
@@ -603,6 +604,17 @@ const sessionSetup = setup({
       enqueue.sendTo('feed', cancelled);
       enqueue.assign(queues);
     }),
+    rememberPermissionDenial: assign(
+      ({ context, event }): Pick<SessionContext, 'permissionDenied'> => {
+        assertEvent(event, answerPermissionEvent);
+
+        return {
+          permissionDenied:
+            context.permissionDenied ||
+            deniesPermission(context, event.optionId),
+        };
+      },
+    ),
     publishPermissionOutcome: sendTo('feed', ({ context, event }) => {
       assertEvent(event, answerPermissionEvent);
 
@@ -1238,6 +1250,11 @@ export const sessionMachine = sessionSetup.createMachine({
                         context.turnEnding.kind === 'cancel'
                           ? 'cancelled'
                           : event.output.stopReason,
+                      ...(context.turnEnding.kind !== 'cancel' &&
+                        event.output.stopReason === 'cancelled' &&
+                        context.permissionDenied && {
+                          permissionDenied: true as const,
+                        }),
                       usage: acpTurnUsage(
                         event.output.usage,
                         context.acpLease?.initialization.agentInfo,
@@ -1323,6 +1340,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     guard: 'isPermissionHead',
                     target: '.working',
                     actions: [
+                      'rememberPermissionDenial',
                       'publishPermissionOutcome',
                       'answerAcpPermission',
                       'removePermission',

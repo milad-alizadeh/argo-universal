@@ -45,6 +45,7 @@ export const initialSessionContext = (
     permissionQueue: [],
     nativePermissions: new NativePermissions(),
     hookedPermissions: {},
+    permissionDenied: false,
     elicitationQueue: [],
     configOptions: [],
     slashCommands: null,

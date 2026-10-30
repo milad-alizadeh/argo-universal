@@ -5,6 +5,8 @@ export type AcpTurnOutcome = {
   stopReason: StopReason;
   usage?: TurnUsage;
   error?: TurnError;
+  // The Agent ended the Turn as cancelled after the user denied a Permission request.
+  permissionDenied?: true;
 };
 
 const promptError = (cause: unknown): TurnError =>

@@ -33,6 +33,17 @@ const cancelledPermissions = (
   toolCallIds: requests.map((request) => request.toolCallId),
 });
 
+// Whether an answer to the first queued request denies it with a reject option.
+export const deniesPermission = (
+  context: SessionContext,
+  optionId: string | null,
+): boolean => {
+  const request = context.permissionQueue[0];
+  const option = request && chosenOption(request, optionId);
+
+  return option?.kind === 'reject_once' || option?.kind === 'reject_always';
+};
+
 // What the Feed shows once the first queued request is answered.
 export const permissionOutcome = (
   context: SessionContext,
