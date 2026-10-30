@@ -71,6 +71,10 @@ It also records Server identity, Installed Agent Registry version, observer comm
 The declared Server commit remains separate from the version that the Server reports.
 An Installed Agent Registry version does not establish an unreported bundled SDK version.
 
+`--timeout-ms` is a per-trial deadline that starts after the Session is prepared, when the prompt is about to be dispatched.
+Preparing (reading, reopening and checking the Session) has its own fixed 10-second bound and never spends the trial's deadline, so a slow setup cannot time out the work being timed.
+The deadline still covers dispatch, the wait for the Turn to end, and the final Feed read.
+
 On failure or timeout, cleanup cancels only the same still-active Turn.
 Cleanup has a separate deadline and never converts the failed trial into a successful sample.
 Cleanup records public cancellation state, not operating-system process cleanup.
