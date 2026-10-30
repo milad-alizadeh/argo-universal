@@ -46,7 +46,9 @@ export const ListsEachPluginAsARow: Story = {
 export const ARowOpensItsPlugin: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByText(examplePlugin.name));
-    await expect(args.onOpenPlugin).toHaveBeenCalledWith(examplePlugin.pluginId);
+    await expect(args.onOpenPlugin).toHaveBeenCalledWith(
+      examplePlugin.pluginId,
+    );
     await userEvent.click(canvas.getByText(githubPlugin.name));
     await expect(args.onOpenPlugin).toHaveBeenLastCalledWith(
       githubPlugin.pluginId,
