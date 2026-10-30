@@ -52,7 +52,8 @@ const longRegistry = (): Registry => {
 };
 
 /*
- * The Agents page lists the catalog in name order (`byName`, agent-rows.ts), and none of these
+ * The Agents page lists the catalog in name order (`byName`, installed-agents.ts, applied in
+ * agent-rows.ts), and none of these
  * Agents is installed, so nothing is lifted above it. The rows that prove the catalog arrived and
  * that the list has been reached to its end are therefore the first and last names, not the first
  * and last entries: "Binary Agent 103" sorts before "Binary Agent 11", and 200 is nowhere near last.
@@ -61,9 +62,18 @@ const catalogOrder = longRegistry()
   .agents.map(({ name }) => name)
   .toSorted((left, right) => left.localeCompare(right));
 
-const firstAgent = catalogOrder[0] ?? '';
+// An empty name would build the regex `^, v`, which matches some other Agent's card and passes.
+const namedAt = (index: number): string => {
+  const name = catalogOrder.at(index);
 
-const lastAgent = catalogOrder.at(-1) ?? '';
+  if (!name) throw new Error(`The long registry has no Agent at ${index}`);
+
+  return name;
+};
+
+const firstAgent = namedAt(0);
+
+const lastAgent = namedAt(-1);
 
 // Not serial: one scenario's failure must not silently void the scenarios queued behind it.
 test.describe.configure({ mode: 'default' });

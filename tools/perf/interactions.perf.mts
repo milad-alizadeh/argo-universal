@@ -39,10 +39,13 @@ const openNavigation = 'Open navigation';
 const closeNavigation = 'Close drawer';
 
 /*
- * The strip of the page the drawer leaves showing beside it (use-phone-drawer-width.ts). The scrim
- * spans the window, but the drawer covers its middle, so the tap that dismisses it lands here.
+ * The scrim spans the window, but the drawer sits over its leading edge, so a tap on the scrim's
+ * middle is intercepted by the drawer. The drawer always leaves a strip of the page showing beside
+ * it, so the tap that dismisses it goes just inside the scrim's trailing edge, whatever that strip
+ * is worth: reading the drawer's own width here would couple this to how wide the drawer happens
+ * to be.
  */
-const visibleStripWidth = 64;
+const scrimTapInset = 8;
 
 const results: Result[] = [];
 
@@ -113,10 +116,7 @@ const cycleDrawer = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: openNavigation }).click();
   await page.waitForTimeout(drawerSettleMilliseconds);
   await page.getByRole('button', { name: closeNavigation }).click({
-    position: {
-      x: phone.width - visibleStripWidth / 2,
-      y: phone.height / 2,
-    },
+    position: { x: phone.width - scrimTapInset, y: phone.height / 2 },
   });
   await page.waitForTimeout(drawerSettleMilliseconds);
 };

@@ -24,6 +24,9 @@ const cleanBoundMilliseconds = 250;
 // Enough frames either side of the stall for an interval to span it.
 const settleMilliseconds = 400;
 
+// The share of the stall the interval spanning it must carry, with room for where it starts.
+const seenStallShare = 0.8;
+
 const scrollTestId = 'collector-scroll';
 
 // The same brisk flick the scenarios measure, over enough rows that it never reaches the end.
@@ -112,7 +115,7 @@ test('the frame collector sees a main thread the page holds', async ({
   const stalled = await heldWindow(page, session, stallMilliseconds);
 
   // The held main thread arrives as one long frame interval, not as a clean 60 Hz.
-  expect(stalled.maxMs).toBeGreaterThan(stallMilliseconds * 0.8);
+  expect(stalled.maxMs).toBeGreaterThan(stallMilliseconds * seenStallShare);
   // And the collector is not merely always large: an unheld window stays inside a frame or two.
   expect(clean.maxMs).toBeLessThan(cleanBoundMilliseconds);
 });
