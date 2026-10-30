@@ -60,6 +60,7 @@ function failedRuntime(context: RuntimeContext, error: Error): void {
 async function attemptRuntime(context: RuntimeContext): Promise<void> {
   try {
     await prepareRuntime(context);
+    context.startDeadline();
     context.phase = 'observe';
     await measureRuntime(context);
   } catch (error) {
