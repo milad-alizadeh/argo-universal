@@ -3,7 +3,6 @@ import type {
   ProjectsListOutput,
   SessionInfo,
 } from '@repo/contracts';
-import type { ReactElement } from 'react';
 import type { SessionsView } from '../../stores/sessions-view';
 import type {
   OpenPluginItemPage,
@@ -41,6 +40,4 @@ export interface SessionsListProps {
   onArchiveMany?: (sessionIds: readonly string[]) => void;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;
-  // Shown instead of the rows while Sessions load or fail to load.
-  placeholder?: ReactElement;
 }

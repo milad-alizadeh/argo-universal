@@ -5,4 +5,6 @@ export const Skeleton = Object.assign(SkeletonRoot, {
   Ignore: SkeletonIgnore,
 });
 
+export { useSkeletonLoading } from './skeleton-loading';
+
 export type { SkeletonIgnoreProps, SkeletonProps } from './skeleton-props';

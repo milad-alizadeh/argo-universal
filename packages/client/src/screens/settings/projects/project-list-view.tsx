@@ -1,10 +1,5 @@
+import type { ProjectInfo } from '@repo/contracts';
 import { Action } from '@repo/kit/primitives/actions/action';
-import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { List } from '@repo/kit/primitives/lists/list';
-import {
-  type LoadingRow,
-  loadingRows,
-} from '@repo/kit/primitives/lists/list-item';
 import {
   type ErrorToast,
   useErrorToast,
@@ -13,11 +8,15 @@ import {
   Screen,
   type ScreenProps,
 } from '@repo/kit/primitives/scaffolds/screen';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Platform } from 'react-native';
-import type { ProjectListViewProps, SearchedProps } from './project-list-props';
-import { LoadedProjects, ProjectsColumn } from './project-list-rows';
+import type {
+  ProjectListViewProps,
+  ProjectsLoad,
+  SearchedProps,
+} from './project-list-props';
+import { LoadedProjects } from './project-list-rows';
 import { projectsTitle, searchLabel } from './project-list-search';
 
 // The Server's Projects, found by name or folder; each opens its own page.
@@ -60,34 +59,30 @@ const loadFailed: ErrorToast = {
   message: 'The Server did not send its Projects.',
 };
 
-// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
+/*
+ * A failed load keeps the skeleton: the toast says why, and the query retries when the Connection reopens.
+ * Loading or failed, the page draws the card it will show with no Projects in it, so the List stands in for
+ * itself with rows of its own. The phones draw those rows themselves rather than as their grouped list, which
+ * holds only FieldGroup rows, so the rows a Project lands on are a row's height but not a grouped row's.
+ */
 function ProjectsBody(props: SearchedProps): React.JSX.Element {
   const { projects } = props;
+  const loading = projects.status !== 'loaded';
+
   useErrorToast(projects.status === 'error' ? loadFailed : undefined);
 
-  if (projects.status !== 'loaded') return <LoadingProjects />;
-
-  return <LoadedProjects {...props} projects={projects.projects} />;
-}
-
-// Widths, not words: a Project row is its folder icon, its name and its remote, so these stand in for them.
-const loadingProjects: LoadingRow[] = [
-  { title: 'Argo Universal' },
-  { title: 'Server' },
-  { title: 'Plugin kit' },
-];
-
-const loadingRow = <FieldGroup.Value title="Loading…" value="" />;
-
-// The native list on iOS and Android holds only FieldGroup rows, so it waits on one; the web draws the rows' shapes.
-const waiting = (): React.JSX.Element | React.JSX.Element[] =>
-  Platform.OS === 'web' ? loadingRows(loadingProjects) : loadingRow;
-
-// The loading rows stand in the one card the loaded ones fill.
-function LoadingProjects(): React.JSX.Element {
   return (
-    <ProjectsColumn>
-      <List.Section>{waiting()}</List.Section>
-    </ProjectsColumn>
+    <Skeleton fill loading={loading} accessibilityLabel="Loading Projects">
+      <LoadedProjects
+        {...props}
+        loading={loading}
+        projects={foundProjects(projects)}
+      />
+    </Skeleton>
   );
 }
+
+const noProjects: ProjectInfo[] = [];
+
+const foundProjects = (projects: ProjectsLoad): ProjectInfo[] =>
+  projects.status === 'loaded' ? projects.projects : noProjects;

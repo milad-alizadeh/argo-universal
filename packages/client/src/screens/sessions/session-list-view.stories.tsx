@@ -3,7 +3,10 @@ import type { ReactElement } from 'react';
 import { action } from 'storybook/actions';
 import { SessionsPreviewMock } from '../../../mocks/sessions-preview-mock';
 import { SessionListView } from './session-list-view';
-import { loadedSessionListView } from './session-list-view.mocks';
+import {
+  loadedSessionListView,
+  loadingSessionListView,
+} from './session-list-view.mocks';
 
 const meta = {
   title: 'Screens/Sessions/Sessions',
@@ -35,11 +38,15 @@ type Story = StoryObj<typeof meta>;
 // The Sessions of every Project, newest first, under the list's own search field.
 export const Sessions: Story = {};
 
-export const Loading: Story = { args: { loadState: 'loading' } };
+export const Loading: Story = {
+  args: { ...loadingSessionListView, loadState: 'loading' },
+};
 
 export const Empty: Story = { args: { sessions: [] } };
 
-export const LoadError: Story = { args: { loadState: 'error' } };
+export const LoadError: Story = {
+  args: { ...loadingSessionListView, loadState: 'error' },
+};
 
 export const LiveUpdatesStopped: Story = {
   args: { liveUpdatesStopped: true },

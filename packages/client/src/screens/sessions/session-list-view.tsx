@@ -4,7 +4,7 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { SizeClass } from '@repo/kit/size-class/size-class';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -12,7 +12,6 @@ import {
   type SessionsLoadState,
   type SessionsView,
   serverSilentMessage,
-  SessionsLoading,
 } from '#features/sessions';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionsListContent } from './session-list-view-rows';
@@ -91,31 +90,20 @@ export function SessionListView(
 }
 
 /*
- * While loading, a wide sidebar shows the loading rows alone; a phone shows them in the list, under its header.
- * The list stays mounted throughout, hidden on a wide window until it has loaded.
+ * The list stays mounted throughout. Until the first Sessions arrive it has no rows, so inside the Skeleton it
+ * draws placeholder rows of its own, in its own appearance; once it has rows of its own it keeps them, drawn
+ * over, however much of the rest the page is still waiting for.
  */
 function SessionsContent(props: SessionListViewProps): React.JSX.Element {
-  // A failed first load keeps the loading rows: the toast says why, and the queries retry when the Connection reopens.
+  // A failed first load keeps the skeleton: the toast says why, and the queries retry when the Connection reopens.
   const loading = props.loadState !== 'ready';
 
   return (
-    <>
-      {loading && <WideLoading layout={props.view.layout} />}
-      <View
-        className={loading ? 'flex-1 wide:hidden' : 'flex-1'}
-        style={fillStyle}
-      >
-        <SessionsListContent {...props} loading={loading} />
+    <Skeleton fill loading={loading} accessibilityLabel="Loading Sessions">
+      <View className="flex-1" style={fillStyle}>
+        <SessionsListContent {...props} />
       </View>
-    </>
-  );
-}
-
-function WideLoading(props: Pick<SessionsView, 'layout'>): React.JSX.Element {
-  return (
-    <SizeClass only="wide">
-      <SessionsLoading layout={props.layout} />
-    </SizeClass>
+    </Skeleton>
   );
 }
 

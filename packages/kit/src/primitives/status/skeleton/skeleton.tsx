@@ -1,5 +1,6 @@
 import { type ComponentRef, type ReactElement, useRef } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
+import { SkeletonLoadingContext } from './skeleton-loading';
 import { overlayAttribute } from './skeleton-marks';
 import type { SkeletonPlaceholder } from './skeleton-placeholder';
 import type { SkeletonProps } from './skeleton-props';
@@ -12,12 +13,21 @@ const markOverlay = (node: ComponentRef<typeof View> | null): void => {
 const fillClass = (props: SkeletonProps): string | undefined =>
   props.fill ? 'flex-1' : undefined;
 
+// A loading Skeleton is a busy status, named by what the page is waiting for.
+const busyProps = (props: SkeletonProps): ViewProps =>
+  props.loading
+    ? {
+        role: 'status',
+        'aria-busy': true,
+        'aria-label': props.accessibilityLabel,
+      }
+    : {};
+
 // React Native Web's View is already the positioning context the overlay needs, so the wrapper adds no style.
 const rootProps = (props: SkeletonProps): ViewProps => ({
   className: fillClass(props),
   testID: props.testID,
-  role: props.loading ? 'status' : undefined,
-  'aria-busy': props.loading ? true : undefined,
+  ...busyProps(props),
 });
 
 const keyOf = (placeholder: SkeletonPlaceholder): string =>
@@ -75,7 +85,9 @@ export function Skeleton(props: SkeletonProps): ReactElement {
 
   return (
     <View ref={ref} {...rootProps(props)}>
-      {props.children}
+      <SkeletonLoadingContext value={props.loading}>
+        {props.children}
+      </SkeletonLoadingContext>
       {props.loading && (
         <Placeholders placeholders={placeholders} animation={props.animation} />
       )}

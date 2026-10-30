@@ -14,3 +14,9 @@ export const loadedSessionListView = {
   query: '',
   view: defaultSessionsView,
 } satisfies Partial<SessionListViewProps>;
+
+// Before the Server has sent any Project or Session: a load still going, and one that failed, alike.
+export const loadingSessionListView = {
+  projects: [],
+  sessions: [],
+} satisfies Partial<SessionListViewProps>;

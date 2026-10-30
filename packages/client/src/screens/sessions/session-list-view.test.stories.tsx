@@ -17,6 +17,7 @@ import {
   meta as sessionListViewMeta,
   type Story,
 } from '../../../mocks/sessions-view/sessions-view-story-context.test.mocks';
+import { loadingSessionListView } from './session-list-view.mocks';
 
 const retry = { name: 'Retry' };
 
@@ -29,7 +30,7 @@ const meta = { ...sessionListViewMeta, title: 'Tests/Screens/Sessions' };
 export default meta;
 
 export const LoadingKeepsNewSession: Story = {
-  args: { loadState: 'loading' },
+  args: { ...loadingSessionListView, loadState: 'loading' },
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(
@@ -41,9 +42,9 @@ export const LoadingKeepsNewSession: Story = {
     }),
 };
 
-// The toast says why; the list keeps its loading rows and offers no inline retry.
+// The toast says why; the list keeps its skeleton and offers no inline retry.
 export const LoadErrorShowsAToastOnce: Story = {
-  args: { loadState: 'error' },
+  args: { ...loadingSessionListView, loadState: 'error' },
   play: async ({ canvas }) => {
     await expect(await findToast(loadFailure)).toBeVisible();
     await expect(await allToasts(loadFailure)).toHaveLength(1);

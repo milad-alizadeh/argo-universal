@@ -4,7 +4,7 @@ import { List } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import type { LoadedProps } from './project-list-props';
 
-type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
+type FoundProps = Pick<LoadedProps, 'onOpenProject' | 'loading'> & {
   found: ProjectInfo[];
   searching: boolean;
 };
@@ -25,8 +25,8 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
   );
 }
 
-// The Projects' card, its place on the page the List's own, shared by the loading rows so the loaded ones land where they stood.
-export function ProjectsColumn(props: {
+// The Projects' card, its place on the page the List's own.
+function ProjectsColumn(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
@@ -37,9 +37,10 @@ export function ProjectsColumn(props: {
 }
 
 function projectRows(props: FoundProps): React.JSX.Element {
-  if (props.found.length === 0) return noProjects(props.searching);
+  if (props.found.length > 0) return foundProjects(props);
 
-  return foundProjects(props);
+  // Inside the Skeleton an empty Section draws the placeholder rows the loaded ones land on.
+  return props.loading ? <List.Section /> : noProjects(props.searching);
 }
 
 function noProjects(searching: boolean): React.JSX.Element {

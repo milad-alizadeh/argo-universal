@@ -153,8 +153,6 @@ export {
   type SessionsListProps,
 } from './components/sessions-list/sessions-list-props';
 
-export { SessionsLoading } from './components/sessions-loading/sessions-loading';
-
 export { type SessionsLoadState } from './utils/sessions-load-state';
 
 export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';

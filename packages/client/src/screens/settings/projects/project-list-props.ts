@@ -20,4 +20,6 @@ export type SearchedProps = ProjectListViewProps & {
 
 export type LoadedProps = Omit<SearchedProps, 'projects'> & {
   projects: ProjectInfo[];
+  // The Projects have not arrived: no rows is not yet "none", so the page says nothing about them.
+  loading?: boolean;
 };
