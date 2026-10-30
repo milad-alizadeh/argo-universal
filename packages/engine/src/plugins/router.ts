@@ -23,6 +23,7 @@ import {
 import type { RpcContext } from '../rpc/connection';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
+import type { PluginListChanges } from './list-changes';
 import type { PluginService } from './service';
 
 function requireSignal(signal: AbortSignal | undefined): AbortSignal {
@@ -66,6 +67,15 @@ const createLifecycleRouter = routerFactory((plugins: PluginService) =>
     ),
     badges: publicProcedure.subscription(({ signal }) =>
       plugins.badges(requireSignal(signal)),
+    ),
+  }),
+);
+
+// The connected Server's Plugin list changed: the App reads it again, so its rail and its open pages follow.
+const createListRouter = routerFactory((listChanges: PluginListChanges) =>
+  router({
+    listChanges: publicProcedure.subscription(({ signal }) =>
+      listChanges.watch(requireSignal(signal)),
     ),
   }),
 );
@@ -126,13 +136,15 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
 export type PluginsRouterDeps = {
   plugins: PluginService;
   accounts: PluginAccounts;
+  listChanges: PluginListChanges;
 };
 
 export const createPluginsRouter = routerFactory(
-  ({ plugins, accounts }: PluginsRouterDeps) =>
+  ({ plugins, accounts, listChanges }: PluginsRouterDeps) =>
     mergeRouters(
       router({ accounts: accountsRouter(accounts) }),
       createLifecycleRouter(plugins),
+      createListRouter(listChanges),
       createViewsRouter(plugins),
       createSlotItemsRouter(plugins),
       createViewEventsRouter(plugins),

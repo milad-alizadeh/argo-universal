@@ -73,3 +73,38 @@ it('ends the open pages of a Plugin when it is turned off', async () => {
 
   await expect(messages.next()).resolves.toMatchObject({ done: true });
 }, 20_000);
+
+it('tells a watching App that a Plugin was turned off', async () => {
+  const home = await createRuntimePlugins([settingsProbe]);
+  const { caller, createCaller } = await startEngineTestHost({ home });
+  const controller = new AbortController();
+  const watching = createCaller({ signal: controller.signal });
+
+  const changes = (await watching.plugins.listChanges())[
+    Symbol.asyncIterator
+  ]();
+
+  const change = changes.next();
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
+
+  expect((await change).value).toEqual({ pluginId: 'probe' });
+  controller.abort();
+  expect(await changes.next()).toMatchObject({ done: true });
+}, 20_000);
+
+it('tells a watching App that a Plugin was turned back on', async () => {
+  const home = await createRuntimePlugins([settingsProbe]);
+  const { caller, createCaller } = await startEngineTestHost({ home });
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
+
+  const changes = (
+    await createCaller({
+      signal: new AbortController().signal,
+    }).plugins.listChanges()
+  )[Symbol.asyncIterator]();
+
+  const change = changes.next();
+  await caller.plugin.setEnabled({ pluginId: 'probe', enabled: true });
+
+  expect((await change).value).toEqual({ pluginId: 'probe' });
+}, 20_000);

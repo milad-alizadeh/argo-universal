@@ -25,3 +25,11 @@ export const PluginFailure = z.object({
 });
 
 export type PluginFailure = z.infer<typeof PluginFailure>;
+
+/*
+ * What the App is told when the connected Server's Plugin list changes, such as a Plugin being turned
+ * off or on: the App reads the list again rather than drawing a Plugin the Server no longer runs.
+ */
+export const PluginListChange = z.object({ pluginId: z.string() });
+
+export type PluginListChange = z.infer<typeof PluginListChange>;

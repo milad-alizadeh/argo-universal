@@ -6,6 +6,7 @@ import type { OAuthOptions } from './accounts/plugin-oauth';
 import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
 import { HookPort } from './hooks/hook-port';
+import { PluginListChanges } from './list-changes';
 import { pluginLocation, pluginManifest } from './located-plugins';
 import { projectPorts } from './project-ports';
 import { createPluginRuntime } from './runtime/create-runtime';
@@ -43,12 +44,14 @@ type Discovery = Pick<
 export type Assembled = {
   service: PluginService;
   accounts: PluginAccounts;
+  listChanges: PluginListChanges;
   runtime: PluginRuntime;
   hookPort: HookPort;
 };
 
 type Foundations = {
   keychain: Keychain;
+  listChanges: PluginListChanges;
   discovery: Discovery;
   hookPort: HookPort;
   settings: PluginSettings;
@@ -72,19 +75,32 @@ function accountsFor(
   });
 }
 
+// A Plugin's settings, with the Apps that watch the list told whenever one is turned on or off.
+function settingsFor(
+  options: PluginsOptions,
+  parts: Pick<Foundations, 'keychain' | 'discovery' | 'listChanges'>,
+): PluginSettings {
+  const { keychain, discovery, listChanges } = parts;
+
+  return new PluginSettings({
+    ...options,
+    keychain,
+    listChanges,
+    manifest: (pluginId) => pluginManifest(discovery, pluginId),
+  });
+}
+
 function foundations(options: PluginsOptions): Foundations {
   const keychain = options.keychain ?? macKeychain;
+  const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const discovery = { home, version, firstPartyPluginsDirectory };
-
-  const manifest = (pluginId: string): ReturnType<typeof pluginManifest> =>
-    pluginManifest(discovery, pluginId);
+  const parts = { keychain, discovery, listChanges };
 
   return {
-    keychain,
-    discovery,
+    ...parts,
     hookPort: options.hookPort ?? new HookPort(),
-    settings: new PluginSettings({ ...options, keychain, manifest }),
+    settings: settingsFor(options, parts),
     accounts: accountsFor(options, { keychain, discovery }),
   };
 }
@@ -147,6 +163,7 @@ export function assemble(options: PluginsOptions): Assembled {
     service,
     runtime,
     accounts: parts.accounts,
+    listChanges: parts.listChanges,
     hookPort: parts.hookPort,
   };
 }

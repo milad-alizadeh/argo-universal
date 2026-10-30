@@ -102,6 +102,8 @@ export {
 
 export { PluginErrorToasts } from './screens/plugins/plugin-error-toasts';
 
+export { usePluginListChanges } from './screens/plugins/use-plugin-list-changes';
+
 export {
   pluginAt,
   pluginPath,

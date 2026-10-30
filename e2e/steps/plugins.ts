@@ -7,7 +7,7 @@ import { expectMessage } from './new-session';
 const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists', 'Issues'];
 
 // A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
-async function navigation(page: Page): Promise<Locator> {
+export async function navigation(page: Page): Promise<Locator> {
   if (!onPhone(page)) return page.getByTestId('desktop-rail');
 
   await page.getByRole('button', { name: 'Open navigation' }).click();
