@@ -64,7 +64,7 @@ export async function inspectorDiff(
 
   return {
     condition: 'document-reload',
-    boundary: `Changes overview pointerdown → first changed line of ${diffFile(size)} (${changedLines} changed lines, ${bytes} bytes) drawn in the Changes list with unchanged geometry; the Session is reloaded and reopened before each trial; Back and tab switches are not timed`,
+    boundary: `Changes overview pointerdown → first row of the diff of ${diffFile(size)}, its first changed line (${changedLines} changed lines, ${bytes} bytes), drawn in the Changes list with unchanged geometry; the Session is reloaded and reopened before each trial; Back and tab switches are not timed`,
     prepare: () => prepareDiff(page, server, size),
   };
 }

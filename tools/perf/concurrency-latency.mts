@@ -1,4 +1,5 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { sharedReply } from '@repo/mocks/agent/scenarios';
 import { composerUsable } from './driver-wait.mts';
 import {
   type DriverAction,
@@ -11,9 +12,6 @@ import type { SeededServer } from './seed.mts';
 
 const send = (page: Page): Promise<void> =>
   page.getByRole('button', { name: 'Send', exact: true }).click();
-
-const stop = (page: Page): Locator =>
-  page.getByRole('button', { name: 'Stop', exact: true });
 
 // Session `index` + 1 of the seeded list, one per page; Session 0 holds the long Feed and is left out.
 async function openOn(
@@ -44,28 +42,61 @@ async function openPages(
   return pages;
 }
 
-async function typePrompt(page: Page): Promise<void> {
+async function typePrompt(page: Page, prompt: string): Promise<void> {
   await composerUsable(page);
-  await page.getByRole('textbox', { name: 'Message' }).fill(streamedPrompt);
+  await page.getByRole('textbox', { name: 'Message' }).fill(prompt);
 }
 
-// The Turn is running once Stop is drawn and finished once it is gone again.
-async function finished(page: Page): Promise<void> {
-  const options = { timeout: turnTimeoutMilliseconds };
-
-  await stop(page).waitFor({ state: 'attached', ...options });
-  await stop(page).waitFor({ state: 'detached', ...options });
+interface Answer {
+  prompt: string;
+  reply: string;
 }
+
+const answered = ({ prompt, reply }: Answer): boolean => {
+  const text =
+    document.querySelector('[data-testid="feed-scroll"]')?.textContent ?? '';
+
+  const asked = text.lastIndexOf(prompt);
+
+  const drawn = Array.from(
+    document.querySelectorAll('[role="button"][aria-label]'),
+  ).some((element) => element.getAttribute('aria-label') === 'Stop');
+
+  return asked !== -1 && text.indexOf(reply, asked) !== -1 && !drawn;
+};
+
+/*
+ * The Turn is finished once the Feed holds this trial's own prompt followed by the fixture's reply,
+ * and Stop is not drawn. Each trial's prompt is new, because a Feed holds only the rows near its
+ * end: counting replies stops growing once older ones leave the page.
+ *
+ * Stop is not a signal to wait for. The scripted Turn can answer without Stop ever being drawn (the
+ * first Turn on a page did, with the Feed holding the reply), so a wait for Stop to appear never
+ * returns. When it is drawn it stays about 60 ms, which a polling locator misses as well.
+ */
+const finished = (page: Page, prompt: string): Promise<void> =>
+  page
+    .waitForFunction(
+      answered,
+      { prompt, reply: sharedReply },
+      { polling: 'raf', timeout: turnTimeoutMilliseconds },
+    )
+    .then(() => undefined);
+
+let turns = 0;
 
 async function prepareTurns(pages: Page[]): Promise<DriverAction> {
-  await Promise.all(pages.map(typePrompt));
+  turns += 1;
+  const prompt = `${streamedPrompt} (${turns})`;
+
+  await Promise.all(pages.map((page) => typePrompt(page, prompt)));
 
   return {
     dispatch: async () => {
       await Promise.all(pages.map(send));
     },
     ready: async () => {
-      await Promise.all(pages.map(finished));
+      await Promise.all(pages.map((page) => finished(page, prompt)));
     },
   };
 }
@@ -84,7 +115,7 @@ export async function concurrentTurns(
 
   return {
     condition: 'warm',
-    boundary: `Send pressed together in ${count} Session${count === 1 ? '' : 's'} with the scripted fixture Agent → Stop drawn and then gone on every page, so the slowest Session's Turn; not a real Agent, per-Session timings and resource use are not recorded`,
+    boundary: `Send pressed together in ${count} Session${count === 1 ? '' : 's'} with the scripted fixture Agent → this Turn's prompt answered with the fixture's reply in the Feed and Stop not drawn, on every page, so the slowest Session's Turn; not a real Agent, per-Session timings and resource use are not recorded`,
     driverOnly: true,
     unthrottled: 'Only the first page is slowed by browser CPU emulation',
     prepare: () => prepareTurns(pages),
