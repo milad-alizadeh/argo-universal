@@ -2,6 +2,8 @@ import { useEffect, type RefObject } from 'react';
 
 const viewportInset = 8;
 
+const menuMaxHeight = 350;
+
 function viewportTop(): number {
   return window.visualViewport?.offsetTop ?? 0;
 }
@@ -10,7 +12,7 @@ function fitMenu(menu: HTMLDivElement | null): void {
   if (!menu?.isConnected) return;
   const top = viewportTop();
   const available = menu.getBoundingClientRect().bottom - top - viewportInset;
-  menu.style.maxHeight = `${Math.max(0, available)}px`;
+  menu.style.maxHeight = `${Math.max(0, Math.min(menuMaxHeight, available))}px`;
   revealSelection(menu);
 }
 

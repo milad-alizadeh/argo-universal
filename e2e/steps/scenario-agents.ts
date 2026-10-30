@@ -4,6 +4,7 @@ import {
 } from '@repo/mocks/agent/app-fixtures';
 import { agentScenarioSteps, agentStep } from './agent-steps';
 import { signInScenarios } from './sign-in-agents';
+import { slashCommandScenarios } from './slash-command-scenarios';
 
 export function agentId(ordinal: number): string {
   const id = appFixtureAgentIds[ordinal - 1];
@@ -75,12 +76,6 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     signInConfiguration(steps),
   );
 }
-
-// The Slash commands a scripted Agent can offer, each with the scenario that sends it.
-export const slashCommandScenarios = {
-  review: 'slash-commands-review',
-  deploy: 'slash-commands-deploy',
-} as const;
 
 const namedScenarioSteps = [
   [agentStep('delegates work through the argo CLI'), 'session-delegation'],

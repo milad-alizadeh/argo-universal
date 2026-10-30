@@ -7,7 +7,7 @@ import {
   messageLabel,
   openConfiguration,
 } from './new-session';
-import { slashCommandScenarios } from './scenario-agents';
+import { slashCommandScenarios } from './slash-command-scenarios';
 
 // The step's text picks the Agent's scenario (scenario-agents.ts); a name without one would leave the Agent with no list.
 Given(
