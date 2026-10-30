@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { resolveExecutable } from '@repo/executables';
 import { z } from 'zod';
 
 const command = process.argv[2];
@@ -18,7 +19,7 @@ if (process.env.TURBO_HASH) {
     .parse(JSON.parse(await readFile(resolve('package.json'), 'utf8')));
 
   const result = spawnSync(
-    'pnpm',
+    resolveExecutable('pnpm'),
     ['exec', 'turbo', 'run', 'check-types', `--filter=${manifest.name}`],
     { cwd: resolve(import.meta.dirname, '..'), stdio: 'inherit' },
   );
