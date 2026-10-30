@@ -104,7 +104,7 @@ describe('model test', (): void => {
         delays: { cooldown: declared },
       });
 
-      await expect(runFirstCase(model)).rejects.toThrow(/"idle"/);
+      await expect(runFirstCase(model)).rejects.toThrow(/its declared delay/);
     },
   );
 

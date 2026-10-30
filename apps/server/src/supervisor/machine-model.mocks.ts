@@ -1,4 +1,4 @@
-import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
+import type { ModelFixture } from '@repo/vitest/model-test';
 import type { Vertex } from '@repo/vitest/model-test';
 import { beforeEach } from 'vitest';
 import type { SnapshotFrom } from 'xstate';
@@ -52,7 +52,7 @@ export const fixtures = [
   { type: engineStoppedEvent },
   { type: engineUnresolvedEvent },
   { type: stopServerEvent },
-] satisfies GraphEventFromLogic<typeof machine>[];
+] satisfies ModelFixture<typeof machine>[];
 
 export type SupervisorEvent = (typeof fixtures)[number];
 

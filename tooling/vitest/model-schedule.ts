@@ -12,9 +12,9 @@ import type {
   Modelled,
   ModelStep,
   PathRun,
-  SnapshotOf,
 } from './model-types';
 import { declaredDelay } from './model-validate';
+import type { SnapshotOf } from './model-walk';
 
 type Params = ExecutableActionObject['params'];
 

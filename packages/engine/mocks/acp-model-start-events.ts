@@ -45,7 +45,6 @@ export const modelCheckoutFailures = [
     actorId: 'createCheckout',
     error: new Error('Checkout failed'),
   },
-  { type: 'xstate.after.checkoutLimit.session.creating' },
 ] satisfies AcpModelEvent[];
 
 export const modelSessionLoaded = (

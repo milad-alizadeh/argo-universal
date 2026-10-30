@@ -4,14 +4,12 @@ const roots = new Map(
   Object.entries({
     'xstate.done.actor.createCheckout': 'creating',
     'xstate.error.actor.createCheckout': 'creating',
-    'xstate.after.checkoutLimit.session.creating': 'creating',
     'xstate.done.actor.loadSession': 'loading',
     'xstate.error.actor.loadSession': 'loading',
     'xstate.done.actor.removeCheckout': 'removingCheckout',
     'xstate.error.actor.removeCheckout': 'removingCheckout',
     'xstate.done.actor.undoArchive': 'undoingArchive',
     'xstate.error.actor.undoArchive': 'undoingArchive',
-    'xstate.after.checkoutRemovalDelay.session.archived': 'archived',
     'xstate.done.actor.discardSession': 'discarding',
     'xstate.error.actor.discardSession': 'discarding',
   } as const),
@@ -39,7 +37,6 @@ const invoking = new Map(
     'xstate.error.actor.closeAcp': 'closing',
     'xstate.done.actor.publishInterruptedTurn': 'interrupting',
     'xstate.error.actor.publishInterruptedTurn': 'interrupting',
-    'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const),
 );
 
