@@ -27,13 +27,12 @@ import {
 import { LiveConnectionBanner } from './connection-banner';
 import {
   type FrameListDetail,
-  FrameListDetailPendingOffer,
-  FrameListDetailSidebar,
-  sectionScaffold,
+  FrameListDetailOffers,
   useFrameListDetail,
 } from './frame-list-detail';
 import { type FrameState, useFrameState } from './frame-state';
 import { type FrameSections, SectionListsContext } from './section-lists';
+import { sectionScaffold } from './section-scaffold';
 
 export { useFrameState } from './frame-state';
 
@@ -107,13 +106,11 @@ export function Frame({ frame, children }: FrameProps): React.JSX.Element {
   return (
     <SectionListsContext value={frame.lists}>
       <InspectorPlaceOffer value={frame.inspectorPlace}>
-        <FrameListDetailSidebar value={frame.listDetail.sidebar}>
-          <FrameListDetailPendingOffer value={frame.listDetail.pending}>
-            <WindowBandProvider places={frame.bandPlaces}>
-              <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
-            </WindowBandProvider>
-          </FrameListDetailPendingOffer>
-        </FrameListDetailSidebar>
+        <FrameListDetailOffers listDetail={frame.listDetail}>
+          <WindowBandProvider places={frame.bandPlaces}>
+            <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
+          </WindowBandProvider>
+        </FrameListDetailOffers>
       </InspectorPlaceOffer>
     </SectionListsContext>
   );

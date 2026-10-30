@@ -3,6 +3,7 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useKeepSidebarWhileOpening } from '#features/frame';
 import { pluginPagePath } from '../plugin-page-route';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
@@ -31,6 +32,7 @@ export function PluginDetailScreen({
   sessionId,
 }: PluginDetailScreenProps): React.JSX.Element {
   const { section, loaded } = usePluginAt(pluginPath(path));
+  useKeepSidebarWhileOpening();
 
   if (section)
     return <PluginPage section={section} path={path} sessionId={sessionId} />;
