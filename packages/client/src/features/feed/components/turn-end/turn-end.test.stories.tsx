@@ -37,6 +37,11 @@ function ending(
           expected.description,
         );
       await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
+      await expect(
+        canvas
+          .getByText(expected.title, { exact: false })
+          .getBoundingClientRect().width,
+      ).toBeGreaterThan(40);
       await expect(canvas.queryByText('Turn ended')).not.toBeInTheDocument();
     },
   };
