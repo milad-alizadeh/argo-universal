@@ -22,6 +22,7 @@ import { useUniwind, withUniwind } from 'uniwind';
 import { holdPhonesInPortrait } from '@/lib/phone-orientation';
 import { useNavigationTheme } from '@/lib/theme';
 import { useWindowBackground } from '@/lib/window-background';
+import { SpikeScreen } from '@/spike-screen';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -59,6 +60,8 @@ const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 const RootView = withUniwind(GestureHandlerRootView);
 
 export default function RootLayout(): React.JSX.Element {
+  if (process.env.EXPO_PUBLIC_ARGO_SPIKE) return <SpikeScreen />;
+
   return (
     // The phone drawer's gestures need this root; it sits on the content surface, as the window does.
     <RootView className="flex-1 bg-content">

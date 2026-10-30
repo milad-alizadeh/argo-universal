@@ -22,6 +22,7 @@ import {
 } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
 import { createAppRouterDeps, type AppRouterInput } from './router-deps';
+import { startSpikeAdvertising } from './spike-lan';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
@@ -157,6 +158,7 @@ async function listenWithPlugins(
   }
 
   setup.plugins.listening();
+  startSpikeAdvertising(port);
 }
 
 function listenerOptions(
