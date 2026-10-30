@@ -20,6 +20,8 @@ For now the Server binds to `127.0.0.1` only, without authentication. It checks 
 
 [ADR-0044](0044-argo-is-driven-through-one-operation-registry-and-the-argo-cli.md) (owner, 2026-10-28) amends this: the `argo` CLI calls `operations.list` and `operations.run` through tRPC over HTTP, and those two refuse a call without a token, either a Session's own or the user's from `~/.argo/control.token`. The rest of tRPC stays open until Pairing.
 
+[ADR-0045](0045-pairing-gives-every-device-its-own-key.md) (owner, 2026-10-30) is that ADR, and it replaces the paragraph above and part of the transport. The Server binds `127.0.0.1` until the owner turns on Local network access, and every Connection beyond loopback is authenticated by the Device's own key. `Host` checking (`requestHostAllowed`) is deleted rather than kept beside the handshake; the `Origin` check stays, narrowly, for the browser case. Plain HTTP serves nothing: `GET /blobs/:id` and `/plugin-assets/*` move onto the authenticated channel. On native Apps that channel is the transport rather than a `ws://` WebSocket, because a release Android build refuses cleartext HTTP to a local address; tRPC rides inside it. Web and the desktop renderer keep the WebSocket described above.
+
 ## Considered Options
 
 - Run the Server inside the Electron main process. Rejected: the phone cannot use it when desktop is closed, and Argo's current tRPC-over-IPC bridge is the code we want to remove.
