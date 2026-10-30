@@ -18,6 +18,8 @@ export interface SessionSources extends Pick<
   createId: () => string;
   // Aborts when the Engine stops admitting Session commands.
   sessionCommandSignal?: AbortSignal;
+  // Overrides how long New Session discovery waits for Slash commands (tests).
+  commandsWaitMs?: number;
   // Plugin Hooks on starting a Session and submitting a prompt (ADR-0027).
   hooks: CoreHooks;
 }

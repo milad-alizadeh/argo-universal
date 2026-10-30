@@ -1,6 +1,7 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { List } from '@repo/kit/primitives/lists/list';
 import { Skeleton } from '@repo/kit/primitives/status/skeleton';
+import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { SessionsLayout } from '../../stores/sessions-view';
@@ -48,18 +49,25 @@ function PlaceholderSection({
 }
 
 function PlaceholderList({
-  layout,
-  inList,
+  layout = 'regular',
+  inList = false,
 }: SessionsLoadingProps): React.JSX.Element {
+  const look = usePlaceholderLook(layout, inList);
+
   return (
-    <List
-      {...sessionsListLook(layout ?? 'regular', inList ? 'inset' : 'padded')}
-      fit
-      paddingTop={standardTopPadding}
-    >
+    <List {...look} fit paddingTop={standardTopPadding}>
       <PlaceholderSection layout={layout} />
     </List>
   );
+}
+
+function usePlaceholderLook(
+  layout: SessionsLayout,
+  inList: boolean,
+): ReturnType<typeof sessionsListLook> {
+  const held = useSidebarGutterHeld();
+
+  return sessionsListLook(layout, inList || held ? 'inset' : 'padded');
 }
 
 // The Sessions list's own rows under a Project's section, drawn by the real Session row; the Skeleton swaps each line for a bar, so nothing shifts when the Sessions load.

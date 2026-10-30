@@ -80,6 +80,8 @@ type HeaderTriggerProps = HeaderProps & {
 };
 
 function HeaderIcon(props: CollapsibleHeaderProps): ReactElement | null {
+  if (props.leading) return <LineSlot>{props.leading}</LineSlot>;
+
   if (!props.icon) return null;
 
   return (

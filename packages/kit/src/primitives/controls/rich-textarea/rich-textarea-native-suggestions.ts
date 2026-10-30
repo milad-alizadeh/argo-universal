@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import type { TextInputProps } from 'react-native';
+import { queryAt, useSuggestionGroups } from './rich-textarea-native-groups';
+import type {
+  RichTextareaHandle,
+  RichTextareaProps,
+} from './rich-textarea-props';
+import { useChosenResources } from './rich-textarea-resources';
 import {
   insertSuggestion,
-  suggestionsAtCaret,
+  insertWordAtCaret,
   type ComposerSuggestion,
   type SuggestionGroup,
   type SuggestionSource,
@@ -21,11 +27,13 @@ export interface NativeSuggestions {
     'onChangeText' | 'onSelectionChange' | 'selection'
   >;
   choose: (suggestion: ComposerSuggestion) => void;
+  insertWord: RichTextareaHandle['insertWord'];
 }
 
 interface CaretState {
   chosen: Selection | null;
   position: number;
+  selected: Selection;
   collapsed: boolean;
   report: (event: SelectionEvent) => void;
   place: (selection: Selection) => void;
@@ -44,8 +52,12 @@ const atEnd = (value: string): Selection => ({
 const where = (
   caret: Selection,
   value: string,
-): Pick<CaretState, 'position' | 'collapsed'> => ({
+): Pick<CaretState, 'position' | 'selected' | 'collapsed'> => ({
   position: Math.min(caret.end, value.length),
+  selected: {
+    start: Math.min(caret.start, value.length),
+    end: Math.min(caret.end, value.length),
+  },
   collapsed: caret.start === caret.end,
 });
 
@@ -80,6 +92,19 @@ function chooser(
   };
 }
 
+function wordInserter(
+  value: string,
+  caret: CaretState,
+  onChangeText: (value: string) => void,
+): NativeSuggestions['insertWord'] {
+  return (word) => {
+    const inserted = insertWordAtCaret(value, caret.selected, word);
+
+    caret.place({ start: inserted.caret, end: inserted.caret });
+    onChangeText(inserted.text);
+  };
+}
+
 // Typing hands the caret back to the field.
 function typer(
   caret: CaretState,
@@ -102,19 +127,36 @@ function fieldProps(
   };
 }
 
+// A choice that also tells the draft's resources.
+const choosing =
+  (
+    choose: NativeSuggestions['choose'],
+    track: NativeSuggestions['choose'],
+  ): NativeSuggestions['choose'] =>
+  (suggestion) => {
+    choose(suggestion);
+    track(suggestion);
+  };
+
+type NativeSuggestionProps = Pick<
+  RichTextareaProps,
+  'value' | 'onChangeText' | 'suggestions' | 'onResourcesChange'
+>;
+
+const noSources: readonly SuggestionSource[] = [];
+
 // The `/` list of the phone's plain field: the text and the caret decide when it shows (ADR-0023).
 export function useNativeSuggestions(
-  value: string,
-  onChangeText: (value: string) => void,
-  sources: readonly SuggestionSource[],
+  props: NativeSuggestionProps,
 ): NativeSuggestions {
+  const { value, onChangeText, suggestions = noSources } = props;
   const caret = useCaret(value);
+  const track = useChosenResources(value, props.onResourcesChange);
 
   return {
-    groups: caret.collapsed
-      ? suggestionsAtCaret(value, caret.position, sources)
-      : null,
+    groups: useSuggestionGroups(suggestions, queryAt(value, caret)),
     fieldProps: fieldProps(caret, onChangeText),
-    choose: chooser(value, caret, onChangeText),
+    choose: choosing(chooser(value, caret, onChangeText), track),
+    insertWord: wordInserter(value, caret, onChangeText),
   };
 }

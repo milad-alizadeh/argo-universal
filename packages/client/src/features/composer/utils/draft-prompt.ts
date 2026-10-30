@@ -5,6 +5,12 @@ import {
   type SessionNewInput,
 } from '@repo/contracts';
 
+// A chosen suggestion's link, sent beside its text as an Issue reference's is (ADR-0023).
+export type PromptResource = Extract<
+  SessionNewInput['prompt'][number],
+  { type: 'resource_link' }
+>;
+
 export interface UploadedAttachment {
   name: string;
   blob: BlobRef;
@@ -24,13 +30,27 @@ const attachmentBlock = ({ name, blob }: UploadedAttachment): PromptBlock =>
         blob,
       };
 
-// A sent draft as prompt blocks: its text unless blank, then each uploaded attachment in draft order.
+// A sent draft as prompt blocks: its text unless blank, its chosen resources, then each uploaded attachment in draft order.
 export function draftPrompt(
   text: string,
   uploads: readonly UploadedAttachment[],
+  resources: readonly PromptResource[] = [],
 ): SessionNewInput['prompt'] {
   return [
     ...(text.trim() ? [{ type: 'text' as const, text }] : []),
+    ...resources,
     ...uploads.map(attachmentBlock),
   ];
+}
+
+// Each upload paired with the Blob stored for it, in draft order.
+export function uploadedAttachments(
+  uploads: readonly { name: string }[],
+  blobs: readonly BlobRef[],
+): UploadedAttachment[] {
+  return uploads.flatMap(({ name }, index) => {
+    const blob = blobs[index];
+
+    return blob ? [{ name, blob }] : [];
+  });
 }

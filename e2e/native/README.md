@@ -34,3 +34,9 @@ On iOS a Session row is one element named by its title and status, such as `Fix 
 `plugin-hello-tap.yaml` runs on iOS or Android against a real Server that loads the first-party `hello` Plugin, with the App on the phone Sessions list. Start the Server and Metro, open the development client, then run `maestro --device <device-id> test e2e/native/plugin-hello-tap.yaml`.
 
 The flow opens the `hello` Plugin from the drawer and checks that its page is drawn natively from the wire tree. It reads the current count, which other viewers of the same Server may have raised, presses "Tap me" and expects the count to rise by one. That holds only when the event reaches the Plugin on the Server and its patch comes back.
+
+# Slash Commands in the Attach menu
+
+`slash-commands-attach.yaml` runs on iOS or Android. With Metro and the development client running, run `maestro --device <device-id> test e2e/native/slash-commands-attach.yaml`.
+
+It opens **Composer → Composer → Suggestions** through the `argo://storybook` link, empties the draft, taps Attach, then Slash Commands, and expects the field to hold `/` with the inspect and review list open. That proves the native Composer hands its field to the native RichTextarea and that the Attach item reaches it. It passes on the iOS Simulator and an Android Emulator. It is not run in CI.

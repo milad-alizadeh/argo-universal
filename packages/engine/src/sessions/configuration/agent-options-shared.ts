@@ -15,7 +15,7 @@ export type Sources = { database: Database; writer?: WriterActorRef };
 
 // What discovering an Agent's options reads: its saved rows, the installed Agent and an ACP Session of its own.
 export type DiscoverySources = HandlerSources<
-  'database' | 'findWriter' | 'installedAgents',
+  'database' | 'findWriter' | 'installedAgents' | 'commandsWaitMs',
   'admit' | 'acpResources'
 >;
 

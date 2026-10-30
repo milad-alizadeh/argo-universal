@@ -96,3 +96,36 @@ export const RunningReadWide = runningReadGroup(layoutWidths.wide);
 export const RunningReadPhoneDark: Story = { ...RunningReadPhone, ...dark };
 
 export const RunningReadWideDark: Story = { ...RunningReadWide, ...dark };
+
+const movingTempDirectory = 'Moving temp directory';
+
+function liveHeaderGroup(width: number): Story {
+  return {
+    args: {
+      group: {
+        ...toolCallGroupMock.running,
+        state: 'open',
+        liveHeader: {
+          text: movingTempDirectory,
+          source: { type: 'thought' },
+          startedAt: runningReadNow - 97_000,
+        },
+      },
+      now: runningReadNow,
+    },
+    play: async ({ canvas }) => {
+      await settleLayout(width);
+
+      const header = canvas.getByRole('button', {
+        name: `${movingTempDirectory} 1m 37s`,
+      });
+
+      await expect(header).toBeVisible();
+      await expect(canvas.queryByRole('status')).toBeNull();
+    },
+  };
+}
+
+export const LiveHeaderTitlePhone = liveHeaderGroup(layoutWidths.phone);
+
+export const LiveHeaderTitleWide = liveHeaderGroup(layoutWidths.wide);

@@ -1,5 +1,6 @@
 import type {
   AgentThought,
+  LiveHeader,
   Notice,
   Plan,
   SessionUpdate,
@@ -51,6 +52,8 @@ export type FeedGroup = {
   | {
       state: 'open';
       live?: { toolCall: ToolCallUpdate; awaitingApproval: boolean };
+      // The live header drawn as this group's title, merged in while the Turn runs.
+      liveHeader?: LiveHeader;
     }
 );
 

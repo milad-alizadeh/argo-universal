@@ -61,7 +61,11 @@ type Ready = {
   launch: AgentLaunch;
 };
 
-const openingMethods = new Set(['session/new', 'session/resume']);
+const loadMethod = 'session/load';
+
+const resumeMethod = 'session/resume';
+
+const openingMethods = new Set(['session/new', resumeMethod, loadMethod]);
 
 const isRequest = (message: AnyMessage): message is AnyRequest =>
   'method' in message && 'id' in message;
@@ -243,15 +247,33 @@ export class AcpConnection {
   private readonly update = (notification: SessionNotification): undefined => {
     const owner = this.subagents.owner(notification.sessionId);
 
-    if (!owner) {
-      this.find(notification.sessionId);
-
-      return;
-    }
+    if (!owner) return this.unknownUpdate(notification.sessionId);
 
     if (this.subagents.associate(notification, owner))
       owner.destination.update(notification);
   };
+  private unknownUpdate(id: string): undefined {
+    if (!this.isLoading(id)) this.find(id);
+
+    return undefined;
+  }
+  private isLoading(id: string): boolean {
+    if (this.supportsResume()) return false;
+
+    return [...this.registrations.values()].some((registration) =>
+      this.matchesExistingOpening(registration, id),
+    );
+  }
+  private matchesExistingOpening(
+    registration: Registration | undefined,
+    id: string,
+  ): boolean {
+    if (!registration) return false;
+
+    const opening = registration.opening.opening;
+
+    return opening.method === resumeMethod && opening.params.sessionId === id;
+  }
   private readonly permission: Permission = (context) =>
     this.respond({
       id: context.params.sessionId,
@@ -407,7 +429,10 @@ export class AcpConnection {
   ): string {
     if (opening.method === 'session/new')
       return this.readers['session/new'].parse(response.result).sessionId;
-    this.readers['session/resume'].parse(response.result);
+
+    if (this.supportsResume())
+      this.readers[resumeMethod].parse(response.result);
+    else this.readers[loadMethod].parse(response.result);
 
     return opening.params.sessionId;
   }
@@ -447,8 +472,17 @@ export class AcpConnection {
     this.requireOpeningMethod(input);
   }
   private requireOpeningMethod({ opening }: AcpOpenInput): void {
-    if (opening.method === 'session/resume' && !this.supportsResume())
-      throw new Error('Agent does not support session/resume');
+    if (opening.method !== resumeMethod) return;
+
+    if (this.supportsExisting()) return;
+
+    throw new Error('Agent does not support session/resume or session/load');
+  }
+  private supportsExisting(): boolean {
+    return this.supportsResume() || this.supportsLoad();
+  }
+  private supportsLoad(): boolean {
+    return !!this.requireReady().initialization.agentCapabilities?.loadSession;
   }
   private supportsResume(): boolean {
     return !!sessionCapabilities(this.requireReady().initialization)?.resume;

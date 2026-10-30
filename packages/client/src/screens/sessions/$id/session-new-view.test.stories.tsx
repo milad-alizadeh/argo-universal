@@ -1,7 +1,7 @@
 import { findToast } from '@repo/kit/mocks/find-toast';
 import { shownText } from '@repo/kit/mocks/shown-text';
 import { eachLayout } from '@repo/kit/mocks/story-layout';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, screen } from 'storybook/test';
 import {
   checkoutChoice,
   narrowMainColumn,
@@ -73,6 +73,22 @@ export const Ready: Story = {
       ).toBeNull();
       await expect(canvas.queryByText('Reconnecting…')).toBeNull();
     }),
+};
+
+// The Server keeps the chosen Agent's list, so the menu works before the first Send.
+export const OffersTheChosenAgentsSlashCommands: Story = {
+  args: readyArgs({
+    slashCommands: [{ name: 'review', description: 'Review changes' }],
+  }),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: messageLabel }),
+      '/re',
+    );
+    await expect(
+      await screen.findByRole('option', { name: '/review Review changes' }),
+    ).toBeVisible();
+  },
 };
 
 export const SendsTheFirstPrompt = sendsTheFirstPrompt;

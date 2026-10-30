@@ -13,9 +13,29 @@ const question: ScriptedStep = {
   },
 };
 
+const commandsUpdate = (name: string, description: string): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'available_commands_update',
+    availableCommands: [{ name, description }],
+  },
+});
+
+// An Agent that offers one Slash command, sent once each new Session has opened.
+const offeringCommand = (
+  name: string,
+  description: string,
+): ScriptedScenario => ({
+  configOptions: acpConfiguration,
+  steps: [],
+  afterOpening: [commandsUpdate(name, description)],
+});
+
 export const notificationScenarios = {
   'successive-input': {
     configOptions: acpConfiguration,
     steps: [question, question],
   },
+  'slash-commands': offeringCommand('review', 'Review changes'),
+  'slash-commands-deploy': offeringCommand('deploy', 'Deploy the build'),
 } satisfies Record<string, ScriptedScenario>;

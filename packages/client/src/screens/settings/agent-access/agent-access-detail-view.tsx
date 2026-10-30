@@ -56,6 +56,7 @@ function instructionsSection(
     <FieldGroup.Section footer="Install instructions for your Agents and a Codex rule in your home folder on the Server. Project files stay untouched.">
       <Button
         label="Add Argo to your Agents"
+        variant="text"
         onPress={props.onInstall}
         disabled={props.access.status !== 'loaded'}
         loading={props.installing}
@@ -97,5 +98,7 @@ function retryButton(
   status: AgentAccessLoad['status'],
   onRetry: () => void,
 ): React.JSX.Element | null {
-  return status === 'error' ? <Button label="Retry" onPress={onRetry} /> : null;
+  return status === 'error' ? (
+    <Button label="Retry" variant="text" onPress={onRetry} />
+  ) : null;
 }

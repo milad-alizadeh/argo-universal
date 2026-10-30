@@ -1,6 +1,7 @@
 import type { TriggerFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import {
   useCallback,
+  useEffect,
   useMemo,
   useState,
   type Dispatch,
@@ -31,12 +32,16 @@ function matchingAdapter(
     .find((result) => hasOptions(adapters, result));
 }
 
-function hasOptions(adapters: TypeaheadAdapter[], result: Match): boolean {
-  if (!result.match) return false;
+function canOffer(adapter: TypeaheadAdapter, query: string): boolean {
+  return adapter.options(query).length > 0 || Boolean(adapter.pending?.(query));
+}
 
-  return Boolean(
-    adapters[result.index]?.options(result.match.matchingString).length,
-  );
+function hasOptions(adapters: TypeaheadAdapter[], result: Match): boolean {
+  const adapter = adapters[result.index];
+
+  return result.match && adapter
+    ? canOffer(adapter, result.match.matchingString)
+    : false;
 }
 
 function sameQuery(
@@ -101,20 +106,13 @@ export function useTypeaheadQuery(
   adapters: TypeaheadAdapter[],
 ): TypeaheadQuery {
   const [query, setQuery] = useState<Query>(null);
-
   const receive = useQueryReceiver(setQuery);
+  useLateAnswers(adapters, setQuery);
 
-  const handlers = useMemo(
-    () => queryHandlers(adapters, receive),
-    [adapters, receive],
-  );
-
-  const options = useMemo(
-    () => queryOptions(adapters, query),
-    [adapters, query],
-  );
-
-  return { ...handlers, options };
+  return {
+    ...useMemo(() => queryHandlers(adapters, receive), [adapters, receive]),
+    options: useMemo(() => queryOptions(adapters, query), [adapters, query]),
+  };
 }
 
 function useQueryReceiver(
@@ -124,4 +122,25 @@ function useQueryReceiver(
     (next: Query): void => change((previous) => nextQuery(previous, next)),
     [change],
   );
+}
+
+// The same query again, as a new object, so the options are read once more.
+const asked = (query: Query): Query => query && { ...query };
+
+// A late answer to the query being asked makes the options be read again.
+function useLateAnswers(
+  adapters: TypeaheadAdapter[],
+  change: Dispatch<SetStateAction<Query>>,
+): void {
+  useEffect(() => {
+    const refresh = (): void => change(asked);
+
+    const stops = adapters.flatMap((adapter) =>
+      adapter.subscribe ? [adapter.subscribe(refresh)] : [],
+    );
+
+    return (): void => {
+      for (const stop of stops) stop();
+    };
+  }, [adapters, change]);
 }

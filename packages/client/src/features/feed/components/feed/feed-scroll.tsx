@@ -15,8 +15,9 @@ import {
 } from './feed-row-data';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
+import { usePinnedPrompt } from './use-pinned-prompt';
 
-// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
+// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, so the room kept below the pinned prompt counts it.
 function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
 
@@ -26,8 +27,18 @@ function FeedEnd(): React.JSX.Element {
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
 const keepPosition = { data: true };
 
-// In screens from the end: only a reader at the very end is followed.
+// In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
+
+/*
+ * The Feed follows its end only as the view and the Composer below it change size. Once a prompt is
+ * pinned, streamed text and new rows never scroll it: they grow into the room kept below the prompt,
+ * then on below the view, where Jump to latest offers them.
+ */
+const followComposer = { on: { layout: true, footerLayout: true } };
+
+// With no prompt pinned, the Feed also follows rows that load after it opens, so a settled Session ends above the Composer.
+const followLoadedRows = { on: { ...followComposer.on, dataChange: true } };
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
@@ -111,8 +122,8 @@ export interface FeedScrollProps extends EntryDrawing {
   loadingOlder: boolean;
   // Whether the reader is at the Feed's end, where its bottom fade is shallower.
   atEnd: boolean;
-  // Rows start at the top and the Feed does not follow its end, for a Feed read without a Composer.
-  alignAtTop?: boolean;
+  // The Feed pins no prompt and does not follow its end, for a Feed read without a Composer.
+  opensAtStart?: boolean;
 }
 
 type FeedListProps = Pick<
@@ -122,24 +133,48 @@ type FeedListProps = Pick<
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
   | 'alignItemsAtEnd'
+  | 'anchoredEndSpace'
   | 'onStartReached'
   | 'header'
 >;
+
+const endFollowing = (
+  opensAtStart: boolean | undefined,
+  pinnedPrompt: FeedListProps['anchoredEndSpace'],
+): FeedListProps['maintainScrollAtEnd'] => {
+  if (opensAtStart) return false;
+
+  return pinnedPrompt ? followComposer : followLoadedRows;
+};
+
+// With no Composer below, the Feed stays where the reader is and pins no prompt.
+function anchorsOf(
+  opensAtStart: boolean | undefined,
+  pinnedPrompt: FeedListProps['anchoredEndSpace'],
+): Pick<
+  FeedListProps,
+  'maintainScrollAtEnd' | 'alignItemsAtEnd' | 'anchoredEndSpace'
+> {
+  return {
+    maintainScrollAtEnd: endFollowing(opensAtStart, pinnedPrompt),
+    // Rows start at the top of the view, never against the Composer.
+    alignItemsAtEnd: false,
+    anchoredEndSpace: opensAtStart ? undefined : pinnedPrompt,
+  };
+}
 
 function useFeedListProps(
   list: ListRef,
   { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
-  const { maintainScrollAtEnd, ...motion } = useCollapsibleMotion(list);
+  const motion = useCollapsibleMotion(list);
+  const items = useFeedRowData(entries);
 
   return {
-    items: useFeedRowData(entries),
+    items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there. Aligned at the top, it stays where the reader is.
-    maintainScrollAtEnd: props.alignAtTop ? false : maintainScrollAtEnd,
-    // Rows rest against the Composer below them, or against the top when there is none.
-    alignItemsAtEnd: !props.alignAtTop,
+    ...anchorsOf(props.opensAtStart, usePinnedPrompt(list, items)),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

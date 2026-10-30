@@ -3,6 +3,7 @@ import type {
   SetSessionConfigOptionRequest,
   SessionConfigOption,
   CancelNotification,
+  NewSessionResponse,
 } from '@agentclientprotocol/sdk';
 import {
   serveOtherMethods,
@@ -11,6 +12,7 @@ import {
 import { ScriptedMethodPlayer } from './scripted-method-player.ts';
 import type { ScriptedNotifications } from './scripted-responses.ts';
 import {
+  runAfterResponse,
   scriptedInitialization,
   type ScriptedScenario,
 } from './scripted-scenario.ts';
@@ -34,21 +36,35 @@ const serveInitialization = (
   );
 };
 
+// A new Session's Slash commands come after its response, as an Agent sends them.
+const afterOpening = (
+  { scenario, player }: Pick<Script, 'scenario' | 'player'>,
+  context: Parameters<ScriptedMethodPlayer['turn']>[0],
+  response: NewSessionResponse,
+): NewSessionResponse => {
+  if (scenario.afterOpening)
+    runAfterResponse(
+      scenario.afterOpening,
+      player.turn(context, response.sessionId, false),
+    );
+
+  return response;
+};
+
 const serveNewSession = (
   app: AgentApp,
   script: Pick<Script, 'sessions' | 'player' | 'nextId' | 'scenario'>,
 ): AgentApp => {
   const { sessions, player, nextId, scenario } = script;
-  const newSession = player.respond('session/new');
+  const respond = player.respond('session/new');
 
-  return app.onRequest('session/new', (context) => {
+  return app.onRequest('session/new', async (context) => {
     requireScriptedAuthentication(scenario);
     const sessionId = nextId();
+    const configOptions = sessions.open(sessionId);
+    const response = await respond(context, { sessionId, configOptions });
 
-    return newSession(context, {
-      sessionId,
-      configOptions: sessions.open(sessionId),
-    });
+    return afterOpening(script, context, response);
   });
 };
 

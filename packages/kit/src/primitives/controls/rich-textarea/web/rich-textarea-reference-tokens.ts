@@ -1,10 +1,7 @@
-import { $createTextNode, type LexicalEditor, type TextNode } from 'lexical';
+import { $createTextNode, type TextNode } from 'lexical';
 import type { ReferenceOption } from '../rich-textarea-references';
 import { $createReferenceNode } from './rich-textarea-reference-node';
-import {
-  registerTypedTokens,
-  type TypedToken,
-} from './rich-textarea-typed-tokens';
+import type { TokenFinder, TypedToken } from './rich-textarea-typed-tokens';
 
 // `#123` after a space or a bracket, and before a space or the end of the text.
 const typedReference = /(?<![^\s(])#(\d+)(?=\s|$)/g;
@@ -30,13 +27,12 @@ function foundIn(text: string, known: ReadonlySet<number>): TypedToken[] {
  * A typed `#123` that names a known Issue or pull request becomes a token, so a draft loaded with
  * `#443` in it shows the token too. The number is left alone while it is being typed.
  */
-export function registerReferenceTokens(
-  editor: LexicalEditor,
+export function referenceTokens(
   references: readonly ReferenceOption[],
-): () => void {
+): TokenFinder {
   const known = new Set(references.map(({ number }) => number));
 
-  return registerTypedTokens(editor, (text) => foundIn(text, known));
+  return (text) => foundIn(text, known);
 }
 
 // What choosing an option leaves: the token and a space after it, the caret past both.

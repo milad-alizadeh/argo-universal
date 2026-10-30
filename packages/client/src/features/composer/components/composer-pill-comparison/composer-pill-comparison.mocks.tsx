@@ -59,3 +59,17 @@ function ComparisonRow({
     </View>
   );
 }
+
+/* Clear themed space around the real menu trigger is the public paint audit's backdrop. */
+export function CompactMenuSurface(
+  props: ComposerPillComparisonProps,
+): ReactElement {
+  return (
+    <View className="bg-card items-start p-10">
+      <ComposerModeControl
+        configuration={props.configuration}
+        disabled={false}
+      />
+    </View>
+  );
+}

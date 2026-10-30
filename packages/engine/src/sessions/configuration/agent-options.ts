@@ -79,9 +79,7 @@ class AgentOptionsReader {
       input: { ...this.input, sessionId },
       observer: {
         update: (update) => this.publish({ update }),
-        done: () => {
-          this.events.emit('done');
-        },
+        done: () => this.events.emit('done'),
       },
     });
   }
@@ -126,8 +124,18 @@ class AgentOptionsReader {
       signal: this.active,
       progress: (stage, progress) =>
         this.discovered({ ...this.snapshot(saved), stage, progress }),
+      configured: (options) => this.ready(saved, options),
     });
 
+    // The saved snapshot is the last word, even when it reads as the early one did.
+    this.previous = '';
+    this.ready(saved, configOptions);
+  }
+
+  private ready(
+    saved: AgentOptionsUpdate,
+    configOptions: AgentOptionsUpdate['configOptions'],
+  ): void {
     this.discovered({ ...this.snapshot(saved), configOptions, stage: 'ready' });
   }
 

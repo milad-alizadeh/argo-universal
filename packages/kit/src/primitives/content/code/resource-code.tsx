@@ -38,6 +38,8 @@ function SourceHeader(props: ResourceCodeProps): ReactElement {
       copyValue={copy.value}
       copyLabel={copy.label}
       resource={props.resource}
+      // A title of Argo's own heads a tool's output, under the row's own icon.
+      icon={props.title === undefined}
     />
   );
 }

@@ -17,6 +17,8 @@ export interface CollapsibleHeaderProps {
   // Names the trigger for assistive technology, and is its text unless children replace it.
   label: string;
   icon?: IconName;
+  // Replaces the icon with a drawn glyph, for a status the icon names cannot draw.
+  leading?: ReactNode;
   // Colours the icon; the label and chevron keep the header's colour.
   iconTone?: Tone;
   // Replaces the label text, between the icon and the chevron; hover is read with useCollapsibleHovered.

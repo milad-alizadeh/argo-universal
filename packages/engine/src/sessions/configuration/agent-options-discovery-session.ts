@@ -14,16 +14,26 @@ import {
   sessionOpenError,
 } from '../../agents';
 import { readProjectPath } from '../../projects';
+import { toSlashCommands } from '../acp/acp-slash-commands';
 import type { Discovery } from './agent-options-discovery';
 import type { DiscoverySources } from './agent-options-shared';
+import type { DiscoveredCommands } from './discovered-commands';
+
+// A discovery's own ACP session, which also hears the Slash commands its Agent sends.
+export type DiscoverySession = Discovery & { discovered: DiscoveredCommands };
 
 // No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
-const optionsDestination: AcpSessionDestination = {
-  update: (): undefined => {},
+const optionsDestination = (
+  discovered: DiscoveredCommands,
+): AcpSessionDestination => ({
+  update: ({ update }): undefined => {
+    if (update.sessionUpdate === 'available_commands_update')
+      discovered.receive(toSlashCommands(update.availableCommands));
+  },
   failed: () => {},
   requestPermission: async () => cancelledPermission,
   createElicitation: async () => cancelledElicitation,
-};
+});
 
 // Discovery uses the same sign-in and failure contract as Send (ADR-0004).
 const agentFailure = (cause: unknown): TRPCError => {
@@ -36,11 +46,7 @@ const agentFailure = (cause: unknown): TRPCError => {
   });
 };
 
-type DiscoveryOpening = {
-  launch: DeferredAgentLaunch;
-  cwd: string;
-  signal: AbortSignal;
-};
+type DiscoveryOpening = { launch: DeferredAgentLaunch; cwd: string };
 
 type DiscoveryPreparation = {
   installed: ReturnType<typeof requireInstalledAgent>;
@@ -64,13 +70,13 @@ const withLoadingProgress = (
 
 const openDiscoverySession = (
   sources: DiscoverySources,
-  { launch, cwd, signal }: DiscoveryOpening,
-  progress: Discovery['progress'],
+  { launch, cwd }: DiscoveryOpening,
+  { signal, progress, discovered }: DiscoverySession,
 ): Promise<AcpSessionLease> =>
   sources.open.acpResources.open({
     launch: withLoadingProgress(launch, progress),
     opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
-    destination: optionsDestination,
+    destination: optionsDestination(discovered),
     signal,
   });
 
@@ -88,20 +94,20 @@ function prepareDiscovery(
 async function startDiscovery(
   sources: DiscoverySources,
   { installed, cwd, projectId }: DiscoverySetup,
-  { signal, progress }: Discovery,
+  discovery: DiscoverySession,
 ): Promise<AcpSessionLease> {
   const launch = await sources.installedAgents.launch(installed, projectId, {
-    signal,
-    onInstalling: (fraction) => progress('installing', fraction),
+    signal: discovery.signal,
+    onInstalling: (fraction) => discovery.progress('installing', fraction),
   });
 
-  return openDiscoverySession(sources, { launch, cwd, signal }, progress);
+  return openDiscoverySession(sources, { launch, cwd }, discovery);
 }
 
 export async function openOptionsSession(
   sources: DiscoverySources,
   input: SessionAgentOptionsInput,
-  discovery: Discovery,
+  discovery: DiscoverySession,
 ): Promise<AcpSessionLease> {
   const prepared = prepareDiscovery(sources, input);
 

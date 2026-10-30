@@ -1,9 +1,10 @@
 import { OfferColumn } from '@repo/kit/content-column/content-column';
 import { ScreenListColumn } from '@repo/kit/primitives/scaffolds/screen';
 import { SelectionModeScope } from '@repo/kit/selection-mode';
+import { SidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import {
   FramePane,
   type FramePaneProps,
@@ -15,8 +16,8 @@ import {
 import type { FrameMotion } from '../utils/frame-timing';
 import type { ScaffoldLayout } from './use-scaffold-layout';
 
-// The list scrolls across the whole pane, so its scrollbar sits at the pane's edge; its rows keep 8 from the rail and 14 from the pane's edge.
-const listColumn = { paddingLeft: 8, paddingRight: 14 };
+// The list scrolls across the pane, with equal insets and its scrollbar at the edge.
+const listColumn = { paddingLeft: 8, paddingRight: 8 };
 
 interface SidebarLayout {
   layout: Pick<ScaffoldLayout, 'measures' | 'list' | 'motion'>;
@@ -39,11 +40,13 @@ function SidebarGlass(parts: SidebarLayout): React.JSX.Element {
 // The list's Screen draws its heading in the column's row under the window's band, so the heading slides with the list.
 function SidebarListContent({ list }: { list: ReactNode }): React.JSX.Element {
   return (
-    <ScreenListColumn underBand>
-      <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
-        <OfferColumn column={listColumn}>{list}</OfferColumn>
-      </View>
-    </ScreenListColumn>
+    <SidebarGutterHeld value={Platform.OS === 'web'}>
+      <ScreenListColumn underBand>
+        <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
+          <OfferColumn column={listColumn}>{list}</OfferColumn>
+        </View>
+      </ScreenListColumn>
+    </SidebarGutterHeld>
   );
 }
 

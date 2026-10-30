@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   findCommand,
   insertSuggestion,
+  insertWordAtCaret,
   matchSuggestionTrigger,
-  querySuggestions,
-  suggestionsAtCaret,
+  slashQueryAtCaret,
   type ComposerSuggestion,
-  type SuggestionGroup,
   type SuggestionSource,
 } from './rich-textarea-suggestions';
 
@@ -59,32 +58,13 @@ const review: ComposerSuggestion = {
   insert: '/review ',
 };
 
-const commands: SuggestionSource = {
-  id: 'commands',
-  title: 'Commands',
-  query: (query) =>
-    [
-      review,
-      { id: 'rename', label: '/rename', insert: '/rename ' },
-      { id: 'plan', label: '/plan', insert: '/plan ' },
-    ].filter(({ label }) => label.slice(1).startsWith(query)),
-};
-
-function offered(text: string, caret: number): string[] | null {
-  const groups = suggestionsAtCaret(text, caret, [commands]);
-
-  return (
-    groups && groups.flatMap((group) => group.suggestions.map(({ id }) => id))
-  );
-}
-
-describe('suggestionsAtCaret', () => {
-  it('offers every command for a bare slash', () => {
-    expect(offered('/', 1)).toEqual(['review', 'rename', 'plan']);
+describe('slashQueryAtCaret', () => {
+  it('is the text after a bare slash', () => {
+    expect(slashQueryAtCaret('/', 1)).toBe('');
   });
 
-  it('narrows as you type', () => {
-    expect(offered('Do /re', 6)).toEqual(['review', 'rename']);
+  it('is what is typed after the slash', () => {
+    expect(slashQueryAtCaret('Do /re', 6)).toBe('re');
   });
 
   it.each([
@@ -92,14 +72,29 @@ describe('suggestionsAtCaret', () => {
     ['a/b', 3],
     ['/ later', 7],
     ['/ ', 2],
-    ['/zzz', 4],
     ['/re later', 9],
-  ])('offers nothing for %j with the caret at %i', (text, caret) => {
-    expect(offered(text, caret)).toBeNull();
+  ])('is null for %j with the caret at %i', (text, caret) => {
+    expect(slashQueryAtCaret(text, caret)).toBeNull();
   });
 
   it('follows the caret, not the end of the text', () => {
-    expect(offered('/re later', 3)).toEqual(['review', 'rename']);
+    expect(slashQueryAtCaret('/re later', 3)).toBe('re');
+  });
+});
+
+describe('insertWordAtCaret', () => {
+  it.each([
+    ['', { start: 0, end: 0 }, { text: '/', caret: 1 }],
+    ['Run', { start: 3, end: 3 }, { text: 'Run /', caret: 5 }],
+    ['Run ', { start: 4, end: 4 }, { text: 'Run /', caret: 5 }],
+    ['Run\n', { start: 4, end: 4 }, { text: 'Run\n/', caret: 5 }],
+    ['Run later', { start: 3, end: 3 }, { text: 'Run / later', caret: 5 }],
+    ['Run later', { start: 0, end: 0 }, { text: '/Run later', caret: 1 }],
+    ['Run later', { start: 4, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 3, end: 9 }, { text: 'Run /', caret: 5 }],
+    ['Run later', { start: 0, end: 9 }, { text: '/', caret: 1 }],
+  ])('puts a word where %j is selected as %#', (text, selection, expected) => {
+    expect(insertWordAtCaret(text, selection, '/')).toEqual(expected);
   });
 });
 
@@ -109,34 +104,5 @@ describe('insertSuggestion', () => {
       text: 'Do /review  later',
       caret: 11,
     });
-  });
-});
-
-const many: SuggestionSource = {
-  id: 'many',
-  title: 'Many',
-  query: () =>
-    Array.from({ length: 10 }, (_, index) => ({
-      id: `option-${index}`,
-      label: `Option ${index}`,
-      insert: `option-${index} `,
-    })),
-};
-
-const none: SuggestionSource = { id: 'none', title: 'None', query: () => [] };
-
-const idsOf = (groups: SuggestionGroup[]): string[] =>
-  groups.flatMap(({ suggestions }) => suggestions.map(({ id }) => id));
-
-describe('querySuggestions', () => {
-  it('keeps source order, the first eight of each, and drops empty sources', () => {
-    const groups = querySuggestions([none, many, commands], '');
-
-    expect(groups.map(({ source }) => source.id)).toEqual(['many', 'commands']);
-    expect(idsOf(groups).slice(7, 9)).toEqual(['option-7', 'review']);
-  });
-
-  it('answers nothing when no source matches', () => {
-    expect(querySuggestions([none, commands], 'zzz')).toEqual([]);
   });
 });

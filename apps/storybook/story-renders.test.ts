@@ -7,15 +7,18 @@ import {
   setProjectAnnotations,
 } from '@storybook/react-native-web-vite';
 import { expect, test } from 'vitest';
-import { server } from 'vitest/browser';
+import { page, server } from 'vitest/browser';
 import type {
   ChildStatePair,
   FixturePair,
   StoryRender,
 } from '../../tools/story-render-rules.mts';
 import preview from './.storybook/preview';
+import { auditCompactMenuPaint } from './composer-material-render-audit.ts';
 import {
   drawStory,
+  type ComposedStory,
+  type DrawnStory,
   measurePair,
   presentationStories,
   type PairSubject,
@@ -73,6 +76,30 @@ const warmUp = async (module: StoryModule): Promise<void> => {
   if (story !== undefined) await drawStory(story);
 };
 
+const drawAuditedStory = async (
+  file: string,
+  name: string,
+  story: ComposedStory,
+): Promise<DrawnStory> => {
+  if (
+    !file.endsWith('/composer-pill-comparison.stories.tsx') ||
+    name !== 'CompactMenuSurface'
+  )
+    return drawStory(story);
+
+  await page.viewport(390, 844);
+
+  try {
+    const drawn = await drawStory(story);
+
+    await auditCompactMenuPaint();
+
+    return drawn;
+  } finally {
+    await page.viewport(1440, 900);
+  }
+};
+
 const drawFile = async (
   file: string,
   module: StoryModule,
@@ -85,7 +112,7 @@ const drawFile = async (
     const story = module[name];
 
     if (story === undefined) continue;
-    const drawn = await drawStory(story);
+    const drawn = await drawAuditedStory(file, name, story);
 
     subjects.set(name, { story, tree: drawn.tree });
     renders.push({

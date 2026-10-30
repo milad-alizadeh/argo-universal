@@ -65,3 +65,24 @@ it.each([
     expect(requests).toEqual([]);
   },
 );
+
+it('a New Session sends a chosen suggestion link, with no uploaded file, to the Agent beside its text', async () => {
+  const received = Promise.withResolvers<PromptRequest>();
+
+  const host = await startAcpEngine({
+    steps: [],
+    responses: { 'session/prompt': [{ received }] },
+  });
+
+  await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [
+      { type: 'text', text: 'See ITEM-7 ' },
+      { type: 'resource_link', name: 'ITEM-7', uri: 'example://items/7' },
+    ],
+  });
+  expect((await received.promise).prompt).toEqual([
+    { type: 'text', text: 'See ITEM-7 ' },
+    { type: 'resource_link', name: 'ITEM-7', uri: 'example://items/7' },
+  ]);
+});

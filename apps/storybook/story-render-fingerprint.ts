@@ -102,3 +102,54 @@ export const settle = async (): Promise<void> => {
 
 export const pixelHash = async (): Promise<string> =>
   hashOf(await page.screenshot({ save: false, base64: true }));
+
+export type ViewportPixels = { at: (x: number, y: number) => string };
+
+const screenshotImage = async (): Promise<HTMLImageElement> => {
+  const image = new Image();
+
+  image.src = `data:image/png;base64,${await page.screenshot({ save: false, base64: true })}`;
+  await image.decode();
+
+  return image;
+};
+
+const imageContext = (image: HTMLImageElement): CanvasRenderingContext2D => {
+  const canvas = document.createElement('canvas');
+
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const context = canvas.getContext('2d');
+
+  if (!context) throw new Error('The render audit needs a 2D pixel reader.');
+  context.drawImage(image, 0, 0);
+
+  return context;
+};
+
+const pixelReader = (
+  context: CanvasRenderingContext2D,
+  scaleX: number,
+  scaleY: number,
+): ViewportPixels => ({
+  at: (x, y): string =>
+    [
+      ...context.getImageData(
+        Math.floor(x * scaleX),
+        Math.floor(y * scaleY),
+        1,
+        1,
+      ).data,
+    ].join(','),
+});
+
+/* Decode the same viewport screenshot used by fingerprints, without a PNG dependency. */
+export const viewportPixels = async (): Promise<ViewportPixels> => {
+  const image = await screenshotImage();
+
+  return pixelReader(
+    imageContext(image),
+    image.width / window.innerWidth,
+    image.height / window.innerHeight,
+  );
+};

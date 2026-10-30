@@ -11,7 +11,7 @@ import {
 } from '../src/plugins/plugin-kit-exports';
 import { componentObjectSchema } from '../src/plugins/plugin-object-schema';
 
-const preamble = `/* Generated from Contracts kit components and prop descriptions by \`pnpm docs:build\`. Do not edit by hand. */
+const preamble = `/* Generated from Contracts kit components and prop descriptions by \`pnpm generate:plugin-kit\`. Do not edit by hand. */
 import type { ComponentType, ReactElement } from 'react';
 import type { PluginComponents, PluginProps } from './index';
 
