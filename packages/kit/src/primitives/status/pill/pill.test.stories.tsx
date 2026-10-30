@@ -92,20 +92,26 @@ export const DisabledControlCannotActivate: Story = {
 
 export const NamedControlSaysItsValue: Story = {
   render: (): ReactElement => (
-    <Pill variant="control" text="Auto review" accessibilityLabel="Mode" />
+    <Pill variant="control" text="Chosen value" accessibilityLabel="Setting" />
   ),
   play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: 'Mode' });
-    await expect(button).toHaveAttribute('aria-valuetext', 'Auto review');
+    const button = canvas.getByRole('button', { name: 'Setting' });
+    await expect(button).toHaveAttribute('aria-valuetext', 'Chosen value');
   },
 };
 
 export const LabelThatCarriesTheTextAddsNoValue: Story = {
   render: (): ReactElement => (
-    <Pill variant="control" text="proj" accessibilityLabel="Project: proj" />
+    <Pill
+      variant="control"
+      text="Chosen value"
+      accessibilityLabel="Setting: Chosen value"
+    />
   ),
   play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: 'Project: proj' });
+    const button = canvas.getByRole('button', {
+      name: 'Setting: Chosen value',
+    });
     await expect(button).not.toHaveAttribute('aria-valuetext');
   },
 };
