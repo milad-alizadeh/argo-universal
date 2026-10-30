@@ -9,6 +9,7 @@ import {
 import type * as React from 'react';
 import type { ViewStyle } from 'react-native';
 import { Host } from '#primitives/native/host';
+import { decorativeGlyph } from '../decorative-glyph';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 
 interface AssetSymbolProps extends Omit<
@@ -43,7 +44,7 @@ function symbolModifiers({
 // An asset-catalog symbol in a React Native tree, as `NativeSymbol` draws one inside a SwiftUI tree.
 export function AssetSymbol(props: AssetSymbolProps): React.JSX.Element {
   return (
-    <Host style={hostStyle(props)} testID={props.testID}>
+    <Host {...decorativeGlyph} style={hostStyle(props)} testID={props.testID}>
       <Image assetName={props.assetName} modifiers={symbolModifiers(props)} />
     </Host>
   );

@@ -24,8 +24,7 @@ type Story = StoryObj<typeof meta>;
 
 const smallEdit: RecordedEdit = {
   row: recordedEdit('agent-1'),
-  path: '/project/hello.txt',
-  verb: 'Edited',
+  name: 'Edited hello.txt, plus 1, minus 1',
   added: '+1',
   removed: '−1',
   line: 'hello Argo',
@@ -38,8 +37,7 @@ export const SmallEditWide = editRow(layoutWidths.wide, smallEdit);
 
 const smallPatch: RecordedEdit = {
   row: recordedEdit('agent-2'),
-  path: '/repo/app.txt',
-  verb: 'Edited',
+  name: 'Edited app.txt, plus 1, minus 1',
   added: '+1',
   removed: '−1',
   line: 'gamma',
@@ -52,8 +50,7 @@ export const SmallPatchWide = editRow(layoutWidths.wide, smallPatch);
 
 const newFile: RecordedEdit = {
   row: recordedEdit('agent-1', 'edit-and-command', 'add'),
-  path: '/project/notes.md',
-  verb: 'Added',
+  name: 'Added notes.md, plus 4',
   added: '+4',
   removed: null,
   line: '# Todo',
@@ -66,8 +63,7 @@ export const NewFileWide = editRow(layoutWidths.wide, newFile);
 
 const newFileFromPatch: RecordedEdit = {
   row: recordedEdit('agent-2', 'edit-and-command', 'add'),
-  path: '/repo/notes.md',
-  verb: 'Added',
+  name: 'Added notes.md, plus 1',
   added: '+1',
   removed: null,
   line: 'hello',

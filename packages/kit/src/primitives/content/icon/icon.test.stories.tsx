@@ -25,6 +25,20 @@ export const ShowsCornerStatus: Story = {
   },
 };
 
+/*
+ * A drawn symbol is decoration and never a stop of its own (decorative-glyph.ts, #1505). The web has always drawn
+ * it `aria-hidden`; this holds that contract for the whole kit, which native now shares.
+ */
+export const HidesTheSymbolFromScreenReaders: Story = {
+  render: () => <Icon name="sessions" size="sm" testID="sessions-icon" />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId('sessions-icon')).toHaveAttribute(
+      'aria-hidden',
+    );
+    await expect(canvas.queryByRole('img')).toBeNull();
+  },
+};
+
 export const SpeaksLogoName: Story = {
   render: () => <Icon source={logoSources.github} size="sm" />,
   play: async ({ canvas }) => {
