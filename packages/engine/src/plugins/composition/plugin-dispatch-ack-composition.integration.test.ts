@@ -36,6 +36,8 @@ it(
 
     // A List asks again the moment its load is acknowledged, from the tree it holds then.
     expect(app.messages).toHaveLength(2);
-    await app.client.plugins.dispatch.mutate(more(app.messages.at(-1)));
+    await expect(
+      app.client.plugins.dispatch.mutate(more(app.messages.at(-1))),
+    ).resolves.toEqual({ ok: true });
   },
 );

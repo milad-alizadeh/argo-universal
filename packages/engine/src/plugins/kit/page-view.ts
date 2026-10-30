@@ -7,7 +7,7 @@ import type {
   WireNode,
 } from '@repo/contracts/plugins/wire';
 import { diff } from '@repo/contracts/plugins/wire-patch';
-import { whenRendered } from './page-frame';
+import { whenSent } from './page-frame';
 import type { Mounted } from './reconciler';
 import type { KitTimer } from './scheduler';
 import type { Handlers } from './wire-tree';
@@ -25,7 +25,7 @@ export interface OpenView {
   background?: boolean;
   frame: KitTimer | undefined;
   // Released once the pending frame has sent its tree.
-  rendered: Array<() => void>;
+  sentWaiters: Array<() => void>;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
@@ -60,7 +60,7 @@ async function runCurrentHandler(
 
   if (!handler) throw new Error('Plugin handler is no longer available');
   await handler(event.payload);
-  await whenRendered(view);
+  await whenSent(view);
 }
 
 function requireCurrentRevision(view: OpenView, revision: number): void {
