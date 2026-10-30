@@ -4,16 +4,12 @@ import {
   Pressable,
   type TextInputInstance,
   type TextInput,
-  View,
   type ViewInstance,
 } from 'react-native';
 import { Lens } from './search-field-lens';
 import { type MorphState, OpenField } from './search-field-parts';
+import type { LayoutHandler } from './search-field-props';
 import { QueryInput } from './search-field-query';
-
-export type LayoutHandler = NonNullable<
-  React.ComponentProps<typeof View>['onLayout']
->;
 
 export interface ControlsProps {
   onFocus?: React.ComponentProps<typeof TextInput>['onFocus'];
