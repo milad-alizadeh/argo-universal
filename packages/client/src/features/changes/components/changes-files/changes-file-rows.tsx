@@ -155,7 +155,7 @@ function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
   );
 }
 
-const emptyText = (file: ChangedFile): string =>
+const emptyDiffText = (file: ChangedFile): string =>
   file.binary ? "Binary file, can't be previewed" : 'No lines to show';
 
 function StatusContent(props: {
@@ -167,7 +167,7 @@ function StatusContent(props: {
   if (loadError !== undefined) return statusText(loadError, 'danger');
 
   if (hasNothingToShow(props.diff))
-    return statusText(emptyText(props.file), 'muted');
+    return statusText(emptyDiffText(props.file), 'muted');
 
   return <Spinner accessibilityLabel={loadingDiffLabel(props.file.path)} />;
 }

@@ -32,7 +32,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // A moved file's header reads where it was, then where it is.
-export const Renamed: Story = { args: renamedFile };
+export const RenamedFile: Story = {};
 
 // A binary file says it cannot be previewed, not that it has no lines.
-export const Binary: Story = { args: binaryFile };
+export const BinaryFile: Story = { args: binaryFile };

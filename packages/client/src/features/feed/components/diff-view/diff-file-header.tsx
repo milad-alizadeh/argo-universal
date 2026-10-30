@@ -70,7 +70,7 @@ const movedFrom = (file: FileHeaderProps['file']): string | undefined =>
     ? file.oldPath
     : undefined;
 
-function RenamedFrom(props: {
+function OldPathArrow(props: {
   path: string;
   scroll?: boolean;
 }): React.JSX.Element {
@@ -92,7 +92,7 @@ function PathToggle(
 
   return props.scroll ? (
     <FileHeaderToggle {...toggle}>
-      {oldPath !== undefined && <RenamedFrom path={oldPath} scroll />}
+      {oldPath !== undefined && <OldPathArrow path={oldPath} scroll />}
       <PathText path={props.file.path} scroll />
     </FileHeaderToggle>
   ) : (
@@ -111,7 +111,7 @@ function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
   return (
     <Tooltip label={pathLabel(path, oldPath)} active={pathCut} frameless>
       <FileHeaderToggle {...toggleOf(props)}>
-        {oldPath !== undefined && <RenamedFrom path={oldPath} />}
+        {oldPath !== undefined && <OldPathArrow path={oldPath} />}
         <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
       </FileHeaderToggle>
     </Tooltip>
