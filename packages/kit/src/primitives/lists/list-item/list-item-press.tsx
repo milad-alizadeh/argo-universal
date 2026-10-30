@@ -151,10 +151,13 @@ function currentPage(props: DrawingProps): 'page' | undefined {
   return props.selected && rowRole(props) === 'link' ? 'page' : undefined;
 }
 
+// A group has no press to tab to, and a listbox's option is reached from the field that owns the keyboard.
+const outsideTabOrder = new Set(['group', 'option']);
+
 function focusProps(props: DrawingProps): RowPressProps {
   return {
     accessibilityLabel: spokenRowLabel(props),
-    tabIndex: rowRole(props) === 'group' ? -1 : undefined,
+    tabIndex: outsideTabOrder.has(rowRole(props) ?? '') ? -1 : undefined,
   };
 }
 

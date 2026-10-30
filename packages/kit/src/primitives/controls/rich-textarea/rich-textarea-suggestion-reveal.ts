@@ -43,14 +43,18 @@ function reveal(list: LegendListRef, index: number): void {
 const legendList = (list: ListRef | null): LegendListRef | undefined =>
   list && isLegendList(list) ? list : undefined;
 
-// Scrolls the highlighted row wholly into view, as little as it can, though the rows around it may not be drawn yet.
+/*
+ * Scrolls the highlighted row wholly into view, as little as it can, though the rows around it may not be drawn
+ * yet. New results reveal it again even when it lands on the same index, because the rows beneath it moved.
+ */
 export function useRevealRow(
   list: RefObject<ListRef | null>,
+  entries: readonly unknown[],
   index: number,
 ): void {
   useEffect(() => {
     const current = legendList(list.current);
 
     if (current && index >= 0) reveal(current, index);
-  }, [list, index]);
+  }, [list, entries, index]);
 }

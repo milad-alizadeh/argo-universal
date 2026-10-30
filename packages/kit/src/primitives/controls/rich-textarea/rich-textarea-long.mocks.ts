@@ -3,10 +3,30 @@ import type { RichTextareaProps } from './rich-textarea-props';
 import type { ComposerSuggestion } from './rich-textarea-suggestions';
 
 // As many results as an Agent's Slash commands can run to, so the menu scrolls far past its window.
-export const longCommandCount = 100;
+export const longSuggestionCount = 100;
 
-// Every command of the catalog carries a detail and the text choosing it inserts, so a test can read either.
-type RecordedCommand = ComposerSuggestion & { detail: string; insert: string };
+/*
+ * The rows the menu draws at once in its 350px box, with room to spare for whatever the List keeps beyond its
+ * window; far fewer than the catalog, so drawing every result would fail an assertion made against it.
+ */
+export const drawnWindowLimit = 30;
+
+// Every result of the catalog carries a detail and the text choosing it inserts, so a test can read either.
+type RecordedSuggestion = ComposerSuggestion & {
+  detail: string;
+  insert: string;
+};
+
+export const longSuggestions: RecordedSuggestion[] = Array.from(
+  { length: longSuggestionCount },
+  (_, index) => ({
+    id: `skill-${index + 1}`,
+    label: `/skill-${index + 1}`,
+    detail: `Skill ${index + 1}`,
+    icon: 'code',
+    insert: `/skill-${index + 1} `,
+  }),
+);
 
 // What one row of the catalog reads as, and what choosing it inserts.
 interface RecordedRow {
@@ -14,27 +34,19 @@ interface RecordedRow {
   insert: string;
 }
 
-export const longCommands: RecordedCommand[] = Array.from(
-  { length: longCommandCount },
-  (_, index) => ({
-    id: `command-${index + 1}`,
-    label: `/command-${index + 1}`,
-    detail: `Command ${index + 1}`,
-    icon: 'code',
-    insert: `/command-${index + 1} `,
-  }),
-);
+// Read from the recorded result rather than from the menu's own wording.
+export function longSuggestion(index: number): RecordedRow {
+  const suggestion = longSuggestions[index];
 
-// Read from the recorded command rather than from the menu's own wording.
-export function longCommand(index: number): RecordedRow {
-  const command = longCommands[index];
-
-  if (!command)
+  if (!suggestion)
     throw new Error(
-      `Recorded catalog needs ${longCommandCount} commands, each with a label, a detail and the text it inserts.`,
+      `Recorded catalog needs ${longSuggestionCount} results, each with a label, a detail and the text it inserts.`,
     );
 
-  return { name: `${command.label} ${command.detail}`, insert: command.insert };
+  return {
+    name: `${suggestion.label} ${suggestion.detail}`,
+    insert: suggestion.insert,
+  };
 }
 
 export const longSuggestionsRichTextarea = {
@@ -44,7 +56,7 @@ export const longSuggestionsRichTextarea = {
     {
       id: 'long',
       title: 'Suggestions',
-      query: (): ComposerSuggestion[] => longCommands,
+      query: (): ComposerSuggestion[] => longSuggestions,
     },
   ],
 } satisfies Omit<RichTextareaProps, 'onChangeText'>;

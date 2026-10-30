@@ -67,6 +67,8 @@ const hostName = 'rich-textarea-suggestions';
 /*
  * The phone's list of matches, drawn in the Composer's glass; a press chooses one. It is drawn at the
  * SuggestionListHost, above the Composer's card, never inside it: glass inside the card's own glass draws darker.
+ * The host already sits inside the Screen's KeyboardAvoidingView, so the list keeps none of its own: a second
+ * one nested in the first pads the list away from the keyboard twice.
  */
 export function SuggestionPortal(
   props: SuggestionListProps,

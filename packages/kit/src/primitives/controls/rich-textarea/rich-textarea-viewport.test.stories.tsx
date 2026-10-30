@@ -10,8 +10,9 @@ import {
 } from './rich-textarea-example.mocks';
 import { scrollingSuggestionsRichTextarea } from './rich-textarea-fixtures';
 import {
-  longCommand,
-  longCommandCount,
+  drawnWindowLimit,
+  longSuggestion,
+  longSuggestionCount,
   longSuggestionsRichTextarea,
 } from './rich-textarea-long.mocks';
 
@@ -95,43 +96,64 @@ export const KeyboardScrollsTheLastChoiceIntoView: Story = {
   },
 };
 
-const firstCommand = longCommand(0);
+const firstResult = longSuggestion(0);
 
-const lastCommand = longCommand(longCommandCount - 1);
+const lastResult = longSuggestion(longSuggestionCount - 1);
 
-/*
- * The rows a 350px menu draws at once, with room to spare for whatever the List keeps beyond its window; far
- * fewer than the catalog, so drawing every row would fail this.
- */
-const drawnWindowLimit = 30;
+const longMenu = { suggestions: longSuggestionsRichTextarea.suggestions };
 
-export const ALongMenuDrawsAWindowYetArrowDownReachesTheLastChoice: Story = {
-  args: { suggestions: longSuggestionsRichTextarea.suggestions },
-  play: async ({ canvas, args }) => {
-    const textbox = canvas.getByRole('textbox', { name: exampleLabel });
+// A pointer left over the menu by an earlier story would highlight whichever row scrolls under it.
+async function openLongMenu(textbox: HTMLElement): Promise<void> {
+  await userEvent.hover(textbox);
+  await userEvent.type(textbox, '/');
+  await screen.findByRole('option', { name: firstResult.name });
+}
 
-    await userEvent.hover(textbox);
-    await userEvent.type(textbox, '/');
-    await screen.findByRole('option', { name: firstCommand.name });
+export const ALongMenuDrawsOnlyAWindowOfItsResults: Story = {
+  args: longMenu,
+  play: async ({ canvas }) => {
+    await openLongMenu(canvas.getByRole('textbox', { name: exampleLabel }));
     await expect(screen.getAllByRole('option').length).toBeLessThan(
       drawnWindowLimit,
     );
     await expect(
-      screen.queryByRole('option', { name: lastCommand.name }),
+      screen.queryByRole('option', { name: lastResult.name }),
     ).toBeNull();
-    await userEvent.keyboard('{ArrowDown}'.repeat(longCommandCount - 1));
+  },
+};
+
+/*
+ * The highlight names the catalog's last result, not whichever row the List recycled into that place, so
+ * choosing it inserts that result's own text.
+ */
+export const ArrowDownReachesTheLastResultOfALongMenu: Story = {
+  args: longMenu,
+  play: async ({ canvas }) => {
+    await openLongMenu(canvas.getByRole('textbox', { name: exampleLabel }));
+    await userEvent.keyboard('{ArrowDown}'.repeat(longSuggestionCount - 1));
     await waitFor(() =>
       expect(
-        screen.getByRole('option', { name: lastCommand.name, selected: true }),
+        screen.getByRole('option', { name: lastResult.name, selected: true }),
       ).toBeInTheDocument(),
     );
     await browserExpect
-      .element(screen.getByRole('option', { name: lastCommand.name }))
+      .element(screen.getByRole('option', { name: lastResult.name }))
       .toBeInViewport({ ratio: 1 });
-    // The highlight names the catalog's last command, not whichever row the List recycled into that place.
+  },
+};
+
+export const ReturnChoosesTheLastResultOfALongMenu: Story = {
+  args: longMenu,
+  play: async ({ canvas, args }) => {
+    await openLongMenu(canvas.getByRole('textbox', { name: exampleLabel }));
+    await userEvent.keyboard('{ArrowDown}'.repeat(longSuggestionCount - 1));
+    await screen.findByRole('option', {
+      name: lastResult.name,
+      selected: true,
+    });
     await userEvent.keyboard('{Enter}');
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith(lastCommand.insert),
+      expect(args.onChangeText).toHaveBeenLastCalledWith(lastResult.insert),
     );
   },
 };

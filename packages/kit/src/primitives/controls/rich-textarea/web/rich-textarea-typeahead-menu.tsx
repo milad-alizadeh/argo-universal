@@ -38,8 +38,8 @@ function useKeepFocus(menu: RefObject<HTMLDivElement | null>): void {
   }, [menu]);
 }
 
-// Lexical's options as the menu's rows, highlighted from the field and chosen through Lexical.
-function menuRows(props: MenuProps): Omit<SuggestionMenuProps, 'maxHeight'> {
+// Lexical's options as the menu takes them: rows highlighted from the field and chosen through Lexical.
+function menuContent(props: MenuProps): Omit<SuggestionMenuProps, 'maxHeight'> {
   return {
     rows: props.options.map((option) => option.display),
     onChoose: (index) => {
@@ -64,16 +64,16 @@ function useMenuSurface(anchor: HTMLElement): MenuSurface {
 
 function TypeaheadMenu(props: TypeaheadMenuProps): React.JSX.Element {
   const { menu, maxHeight } = useMenuSurface(props.anchor);
-  const rows = menuRows(props);
+  const content = menuContent(props);
 
   return (
     <div
       ref={menu}
       role="group"
-      aria-label={rows.rows[0]?.groupTitle}
+      aria-label={content.rows[0]?.groupTitle}
       className={menuClassName}
     >
-      <SuggestionMenu {...rows} maxHeight={maxHeight} />
+      <SuggestionMenu {...content} maxHeight={maxHeight} />
     </div>
   );
 }

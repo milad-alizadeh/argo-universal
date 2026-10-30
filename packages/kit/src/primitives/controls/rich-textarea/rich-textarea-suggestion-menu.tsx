@@ -7,7 +7,7 @@ import { useRevealRow } from './rich-textarea-suggestion-reveal';
 import type { SuggestionRow } from './rich-textarea-suggestion-row';
 
 // The desktop's rows are a listbox's options, highlighted from the field while focus stays in it.
-export interface SuggestionListbox {
+interface SuggestionListbox {
   highlighted: number | null;
   onHighlight: (index: number) => void;
 }
@@ -25,7 +25,7 @@ type Entry = { kind: 'title'; key: string; title: string } | RowEntry;
 
 const titleEntry = (row: SuggestionRow): Entry => ({
   kind: 'title',
-  key: `${row.group}-title`,
+  key: `header:${row.group}`,
   title: row.groupTitle,
 });
 
@@ -76,7 +76,6 @@ function itemProps(
 
 const listProps = {
   appearance: 'plain',
-  fit: true,
   recycleItems: true,
   estimatedItemSize: 56,
   keyboardShouldPersistTaps: 'always',
@@ -100,7 +99,7 @@ function useMenuEntries(
   list: RefObject<ListRef | null>,
 ): Entry[] {
   const entries = useMemo(() => menuEntries(rows), [rows]);
-  useRevealRow(list, highlightedEntry(entries, listbox));
+  useRevealRow(list, entries, highlightedEntry(entries, listbox));
 
   return entries;
 }
