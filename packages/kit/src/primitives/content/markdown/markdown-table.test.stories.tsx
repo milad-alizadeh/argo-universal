@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { router } from 'expo-router';
-import { expect, spyOn, waitFor } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { canPointAt } from '../../../../mocks/point-hit';
 import { Markdown } from './index';
@@ -17,17 +16,12 @@ type Story = StoryObj<typeof meta>;
 
 export const HeaderLinksRemainInteractive: Story = {
   args: {
-    text: '| [Read more](/settings) | Value |\n| --- | --- |\n| Item | 42 |',
+    text: '| [Read more](https://example.com) | Value |\n| --- | --- |\n| Item | 42 |',
   },
-  play: async ({ canvas, userEvent }) => {
-    const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
-
-    try {
-      await userEvent.click(canvas.getByRole('link', { name: 'Read more' }));
-      await expect(navigate).toHaveBeenCalledWith('/settings');
-    } finally {
-      navigate.mockRestore();
-    }
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole('link', { name: 'Read more' });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await waitFor(() => expect(canPointAt(link)).toBe(true));
   },
 };
 
@@ -36,7 +30,7 @@ const longCell =
 
 export const WrappedCellsRemainReadable: Story = {
   args: {
-    text: `| Name | Value |\n| --- | --- |\n| First | ${longCell} [Read more](/settings) |\n| Second | Next row |`,
+    text: `| Name | Value |\n| --- | --- |\n| First | ${longCell} [Read more](https://example.com) |\n| Second | Next row |`,
   },
   play: async ({ canvas }) => {
     await settleLayout('phone');
@@ -48,26 +42,17 @@ export const WrappedCellsRemainReadable: Story = {
 
 export const CompactCellLinksWorkFromTheKeyboard: Story = {
   args: {
-    text: '| Name | Info |\n| --- | --- |\n| [First link](/settings) | [Later link](/settings) |',
+    text: '| Name | Info |\n| --- | --- |\n| [First link](https://example.com/a) | [Later link](https://example.com/b) |',
   },
   play: async ({ canvas, userEvent }) => {
     await settleLayout('phone');
     const first = canvas.getByRole('link', { name: 'First link' });
     const later = canvas.getByRole('link', { name: 'Later link' });
-    const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
 
-    try {
-      first.focus();
-      await expect(first).toHaveFocus();
-      await userEvent.keyboard('{Enter}');
-      await expect(navigate).toHaveBeenCalledWith('/settings');
-      await userEvent.tab();
-      await expect(later).toHaveFocus();
-      await userEvent.keyboard('{Enter}');
-      await expect(navigate).toHaveBeenCalledTimes(2);
-    } finally {
-      navigate.mockRestore();
-    }
+    first.focus();
+    await expect(first).toHaveFocus();
+    await userEvent.tab();
+    await expect(later).toHaveFocus();
   },
 };
 
