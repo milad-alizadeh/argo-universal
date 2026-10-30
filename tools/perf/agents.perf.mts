@@ -51,6 +51,20 @@ const longRegistry = (): Registry => {
   };
 };
 
+/*
+ * The Agents page lists the catalog in name order (`byName`, agent-rows.ts), and none of these
+ * Agents is installed, so nothing is lifted above it. The rows that prove the catalog arrived and
+ * that the list has been reached to its end are therefore the first and last names, not the first
+ * and last entries: "Binary Agent 103" sorts before "Binary Agent 11", and 200 is nowhere near last.
+ */
+const catalogOrder = longRegistry()
+  .agents.map(({ name }) => name)
+  .toSorted((left, right) => left.localeCompare(right));
+
+const firstAgent = catalogOrder[0] ?? '';
+
+const lastAgent = catalogOrder.at(-1) ?? '';
+
 // Not serial: one scenario's failure must not silently void the scenarios queued behind it.
 test.describe.configure({ mode: 'default' });
 
@@ -71,8 +85,9 @@ test.afterAll(async () => {
   await report(results, { agents: agentCount }, 'agents');
 });
 
-const agentLink = (page: Page, name: string): ReturnType<Page['getByRole']> =>
-  page.getByRole('link', { name: new RegExp(`^${name},`, 'u') });
+// An Agent's card is a group, named by the label the Agents page gives it: name, version, description.
+const agentCard = (page: Page, name: string): ReturnType<Page['getByRole']> =>
+  page.getByRole('group', { name: new RegExp(`^${name}, v`, 'u') });
 
 // Opens Settings, then Agents, and waits for the long registry's rows.
 async function openAgents(page: Page, viewport: Viewport): Promise<CDPSession> {
@@ -85,7 +100,7 @@ async function openAgents(page: Page, viewport: Viewport): Promise<CDPSession> {
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('link', { name: /^Agents(?:,|$)/u }).click();
-  await agentLink(page, 'Example Agent 1').waitFor();
+  await agentCard(page, firstAgent).waitFor();
 
   return session;
 }
@@ -93,7 +108,7 @@ async function openAgents(page: Page, viewport: Viewport): Promise<CDPSession> {
 // Reaches the last Agent once, so the list has measured every row before the flicks.
 async function warmList(page: Page): Promise<void> {
   await jump(page, catalogScroll, false);
-  await agentLink(page, `Windows Agent ${agentCount}`).waitFor();
+  await agentCard(page, lastAgent).waitFor();
   await jump(page, catalogScroll, true);
   await page.waitForTimeout(settleMilliseconds);
 }

@@ -38,6 +38,12 @@ const openNavigation = 'Open navigation';
 // The front drawer's scrim, which react-native-drawer-layout labels for its own close affordance.
 const closeNavigation = 'Close drawer';
 
+/*
+ * The strip of the page the drawer leaves showing beside it (use-phone-drawer-width.ts). The scrim
+ * spans the window, but the drawer covers its middle, so the tap that dismisses it lands here.
+ */
+const visibleStripWidth = 64;
+
 const results: Result[] = [];
 
 let server: SeededServer;
@@ -106,7 +112,12 @@ const sessions: Scenario = async (page) => {
 const cycleDrawer = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: openNavigation }).click();
   await page.waitForTimeout(drawerSettleMilliseconds);
-  await page.getByRole('button', { name: closeNavigation }).click();
+  await page.getByRole('button', { name: closeNavigation }).click({
+    position: {
+      x: phone.width - visibleStripWidth / 2,
+      y: phone.height / 2,
+    },
+  });
   await page.waitForTimeout(drawerSettleMilliseconds);
 };
 
