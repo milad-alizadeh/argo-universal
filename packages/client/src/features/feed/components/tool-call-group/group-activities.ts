@@ -8,7 +8,7 @@ type FeedExploration = Extract<FeedActivity, { type: 'exploration' }>;
 export const activityKey = (activity: FeedActivity): string =>
   activity.type === 'exploration' ? activity.id : activity.row.id;
 
-export const openLive = (group: FeedGroup): LiveToolCall =>
+const openLive = (group: FeedGroup): LiveToolCall =>
   group.state === 'open' ? group.live : undefined;
 
 export const liveHeaderOf = (group: FeedGroup): LiveHeader | undefined =>
