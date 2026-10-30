@@ -29,7 +29,7 @@ export function PaneBanner({
   return (
     <View
       className="pointer-events-box-none absolute top-3 items-center"
-      style={bannerSpan(left, width)}
+      style={bannerStyle(left, width)}
     >
       {children}
     </View>
@@ -37,5 +37,5 @@ export function PaneBanner({
 }
 
 // With no width the banner runs to the window's right edge.
-const bannerSpan = (left = 0, width?: number): ViewStyle =>
+const bannerStyle = (left?: number, width?: number): ViewStyle =>
   width === undefined ? { left, right: 0 } : { left, width };
