@@ -1,7 +1,7 @@
 import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { Given, Then, When } from './fixtures';
-import { sessionRow } from './live-session';
+import { openSessionRow, openSessionUrl, sessionRow } from './live-session';
 import { sessionOpenTimeout } from './new-session';
 
 const parentTitle = 'Delegate the investigation';
@@ -26,12 +26,19 @@ When('I return from the Session detail', async ({ page }) => {
 When(
   "I open the delegated Agent from its caller's Agents card",
   async ({ page }) => {
-    await sessionRow(page, parentTitle).click();
+    await openSessionRow(page, sessionRow(page, parentTitle), parentTitle);
+    const callerUrl = page.url();
+
     await page.getByRole('button', { name: 'Agents: 1', exact: true }).click();
     await page
       .getByRole('dialog', { name: 'Agents', exact: true })
       .getByText(childTitle, { exact: true })
       .click();
+    // The card's rows expose no pressed state, so the URL leaving the caller's Session is the only signal.
+    const notOpened = `the delegated Agent "${childTitle}" did not open`;
+
+    await expect(page, notOpened).toHaveURL(openSessionUrl);
+    await expect(page, notOpened).not.toHaveURL(callerUrl);
   },
 );
 
