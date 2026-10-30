@@ -135,8 +135,10 @@ function mockBand(
   return {
     title: <Text>Session</Text>,
     menu: <IconButton icon="more" accessibilityLabel="More" />,
-    workbench: workbenchCards(onInspectorStateChange, overflowing),
-    onInspectorToggle: () => onInspectorStateChange('open'),
+    session: {
+      workbench: workbenchCards(onInspectorStateChange, overflowing),
+      onInspectorToggle: () => onInspectorStateChange('open'),
+    },
   };
 }
 

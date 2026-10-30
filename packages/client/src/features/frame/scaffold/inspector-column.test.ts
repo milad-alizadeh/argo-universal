@@ -13,6 +13,11 @@ import {
 
 type ChangeInspector = (state: InspectorState) => void;
 
+// A page that owns a Session and opens its own Inspector.
+const opens = (onInspectorToggle: () => void): InspectorOpener => ({
+  band: { session: { onInspectorToggle } },
+});
+
 function column(
   inspectorState: InspectorState,
   opener: InspectorOpener = {},
@@ -36,7 +41,7 @@ describe('the band toggle', () => {
 
   it('opens through the page when it offers an opener', () => {
     const onInspectorToggle = vi.fn<() => void>();
-    const closed = column('closed', { band: { onInspectorToggle } });
+    const closed = column('closed', opens(onInspectorToggle));
     moveInspector(closed, 'toggle');
     expect(onInspectorToggle).toHaveBeenCalledOnce();
     expect(closed.onInspectorStateChange).not.toHaveBeenCalled();
@@ -44,7 +49,7 @@ describe('the band toggle', () => {
 
   it('closes without asking the page', () => {
     const onInspectorToggle = vi.fn<() => void>();
-    const open = column('open', { band: { onInspectorToggle } });
+    const open = column('open', opens(onInspectorToggle));
     moveInspector(open, 'toggle');
     expect(open.onInspectorStateChange).toHaveBeenCalledWith('closed');
     expect(onInspectorToggle).not.toHaveBeenCalled();
@@ -98,7 +103,7 @@ describe('a divider drag', () => {
 
   it('reopens by drag without going through the page', () => {
     const onInspectorToggle = vi.fn<() => void>();
-    const closed = column('closed', { band: { onInspectorToggle } });
+    const closed = column('closed', opens(onInspectorToggle));
     moveInspector(closed, { dragged: 400 });
     expect(closed.onInspectorStateChange).toHaveBeenCalledWith('open');
     expect(onInspectorToggle).not.toHaveBeenCalled();
@@ -126,7 +131,7 @@ describe('what the band offers', () => {
   it('offers the column when the page only has an opener', () => {
     const offer = {
       inspectorAvailable: false,
-      band: { onInspectorToggle: vi.fn<() => void>() },
+      ...opens(vi.fn<() => void>()),
     };
 
     expect(inspectorOffered(offer)).toBe(true);

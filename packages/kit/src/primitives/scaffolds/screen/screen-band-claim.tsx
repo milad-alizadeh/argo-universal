@@ -12,7 +12,7 @@ export function ScreenBandClaim(props: ScreenHeaderInput): null {
   return null;
 }
 
-// An empty header leaves the menu to the band, which keeps its own control box.
+// An empty header declares no menu; what the band does with the empty slot is the band's own business.
 function bandOf(props: ScreenHeaderInput): ScreenBand {
   const header = props.headers.heading;
 

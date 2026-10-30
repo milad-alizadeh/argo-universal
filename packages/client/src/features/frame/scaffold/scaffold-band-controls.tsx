@@ -4,6 +4,10 @@ import {
 } from '@repo/kit/primitives/actions/icon-button';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import type {
+  WindowBandSession,
+  WindowBandView,
+} from '#lib/product/window-band';
 import {
   bandControlAppearance,
   bandToggleAppearance,
@@ -12,10 +16,11 @@ import { workbenchDrawn } from './frame-layout';
 import { inspectorOffered, moveInspector } from './inspector-column';
 import type { PartReads, ScaffoldPartProps } from './use-scaffold-layout';
 
-type WorkbenchReads = PartReads<
-  'band' | 'onWorkbenchIntentChange',
-  'workbench'
->;
+// A control over the Session reads the Session the page claimed beside the layout its pane is in.
+type SessionReads = { session: WindowBandSession };
+
+type WorkbenchReads = PartReads<'onWorkbenchIntentChange', 'workbench'> &
+  SessionReads;
 
 type ExpandReads = PartReads<
   'inspectorState' | 'onInspectorStateChange' | 'band',
@@ -27,14 +32,18 @@ type InspectorToggleReads = PartReads<
   'inspector'
 >;
 
-function workbenchProps({ scaffold, layout }: WorkbenchReads): IconButtonProps {
+function workbenchProps({
+  scaffold,
+  layout,
+  session,
+}: WorkbenchReads): IconButtonProps {
   const visible = workbenchDrawn(layout.workbench.state);
 
   return {
     ...bandToggleAppearance(visible),
     icon: 'workbench',
     accessibilityLabel: 'Toggle Workbench',
-    disabled: !scaffold.band?.workbench,
+    disabled: !session.workbench,
     onPress: () =>
       scaffold.onWorkbenchIntentChange(visible ? 'hidden' : 'shown'),
   };
@@ -67,31 +76,67 @@ function inspectorToggleProps({
   };
 }
 
-function BandMenu({ menu }: { menu: ReactNode }): ReactElement {
+// A Session that declares no Action still holds the slot, so the group never reflows as the Session's own state changes.
+const sessionMenu = (menu: ReactNode): ReactNode =>
+  menu ?? (
+    <IconButton
+      {...bandControlAppearance}
+      icon="more"
+      accessibilityLabel="More"
+      disabled
+    />
+  );
+
+function SessionControls(
+  parts: ScaffoldPartProps & SessionReads & { menu: ReactNode },
+): ReactElement {
   return (
-    <View className="shrink-0 flex-row items-center gap-1">
-      {menu ?? (
-        <IconButton
-          {...bandControlAppearance}
-          icon="more"
-          accessibilityLabel="More"
-          disabled
-        />
-      )}
-    </View>
+    <>
+      {sessionMenu(parts.menu)}
+      <IconButton {...workbenchProps(parts)} />
+      <IconButton {...expandProps(parts)} />
+      <IconButton {...inspectorToggleProps(parts)} />
+    </>
   );
 }
 
-export function BandTrailing(parts: ScaffoldPartProps): ReactElement {
+function trailingContent(
+  band: WindowBandView,
+  parts: ScaffoldPartProps,
+): ReactNode {
+  return band.session ? (
+    <SessionControls {...parts} session={band.session} menu={band.menu} />
+  ) : (
+    band.menu
+  );
+}
+
+function TrailingGroup({
+  band,
+  ...parts
+}: ScaffoldPartProps & { band: WindowBandView }): ReactElement {
   return (
     <View
       testID="window-band-trailing"
       className="shrink-0 flex-row items-center gap-1 web:[app-region:no-drag]"
     >
-      <BandMenu menu={parts.scaffold.band?.menu} />
-      <IconButton {...workbenchProps(parts)} />
-      <IconButton {...expandProps(parts)} />
-      <IconButton {...inspectorToggleProps(parts)} />
+      {trailingContent(band, parts)}
     </View>
   );
+}
+
+const trailingDrawn = (band: WindowBandView): boolean =>
+  Boolean(band.menu || band.session);
+
+/*
+ * The band's trailing group is what the focused page contributes, never a list of screens the band knows: a Session's
+ * controls over its Workbench and its Inspector, or, from a page that owns no Session, that page's own Screen
+ * Actions. A page that contributes neither has no group, and the band's leading group and title keep their places.
+ */
+export function BandTrailing(parts: ScaffoldPartProps): ReactElement | null {
+  const band = parts.scaffold.band;
+
+  return band && trailingDrawn(band) ? (
+    <TrailingGroup {...parts} band={band} />
+  ) : null;
 }

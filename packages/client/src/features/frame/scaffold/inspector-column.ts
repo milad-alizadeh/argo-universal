@@ -15,7 +15,7 @@ export interface InspectorColumnState {
 
 // How the shown page opens its own Inspector.
 export interface InspectorOpener {
-  band?: { onInspectorToggle?: () => void } | null;
+  band?: { session?: { onInspectorToggle?: () => void } | null } | null;
 }
 
 export interface InspectorOffer extends InspectorOpener {
@@ -58,7 +58,7 @@ export function nextInspectorState(
 }
 
 const pageOpener = (page: InspectorOpener): (() => void) | undefined =>
-  page.band?.onInspectorToggle;
+  page.band?.session?.onInspectorToggle;
 
 export const inspectorOffered = (offer: InspectorOffer): boolean =>
   offer.inspectorAvailable || Boolean(pageOpener(offer));
