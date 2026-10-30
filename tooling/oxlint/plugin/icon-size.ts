@@ -69,10 +69,10 @@ const hasPixelSize =
  */
 const nativeSymbolNames = new Set(['systemName', 'systemImage']);
 
-const isSystemName = (node: ESTree.JSXAttribute): boolean =>
+const isNativeSymbolAttribute = (node: ESTree.JSXAttribute): boolean =>
   nativeSymbolNames.has(attributeName(node));
 
-const isSystemImageProperty = (node: ESTree.ObjectProperty): boolean =>
+const isNativeSymbolProperty = (node: ESTree.ObjectProperty): boolean =>
   node.key.type === 'Identifier' && nativeSymbolNames.has(node.key.name);
 
 const reportNativeSymbol =
@@ -84,8 +84,8 @@ const reportNativeSymbol =
 const nativeSymbolChecks = (
   context: Context,
 ): Omit<IconVisitor, 'JSXOpeningElement'> => ({
-  JSXAttribute: reportNativeSymbol(context, isSystemName),
-  Property: reportNativeSymbol(context, isSystemImageProperty),
+  JSXAttribute: reportNativeSymbol(context, isNativeSymbolAttribute),
+  Property: reportNativeSymbol(context, isNativeSymbolProperty),
   CallExpression: reportNativeSymbol(context, isPixelModifier),
   ImportDeclaration: reportNativeSymbol(context, isSwiftUIImage),
 });

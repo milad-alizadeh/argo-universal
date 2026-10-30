@@ -4,7 +4,7 @@ import { AgentLogo } from '#primitives/content/agent-logo';
 import { IconSlot } from '#primitives/content/icon';
 import { NativeText } from '#primitives/content/native-text';
 import type { Tone } from '#primitives/content/text';
-import { rowGlyphSize } from '../../../symbols/glyph-tone';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
 import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
@@ -92,7 +92,7 @@ function LogoMark(props: { logo: string; title: string }): ReactElement {
   );
 }
 
-// The row glyph rule: one size by role, in the glyph token, the same as a kit ListItem's leading icon (glyph-tone.ts).
+// The row glyph rule: one size by role, in the glyph token, the same as a kit ListItem's leading icon (row-glyph.ts).
 function LeadingIcon(
   props: Pick<RowTextProps, 'leading' | 'tone'>,
 ): ReactElement | null {

@@ -9,7 +9,7 @@ import {
 import { type ReactElement, type ReactNode, useContext } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
-import { rowGlyphSize } from '../../../symbols/glyph-tone';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { useIconPixels } from '../../../symbols/icon-size';
 import { nativeIconName } from '../../../symbols/native-icon-name';
 import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
@@ -112,7 +112,7 @@ function LeadingSlot(
 
 /*
  * The row glyph rule: one size by role, in the glyph token rather than the ListItem's own content colour, so a
- * Settings row and a kit ListItem row read the same in light mode and in Graphite (glyph-tone.ts).
+ * Settings row and a kit ListItem row read the same in light mode and in Graphite (row-glyph.ts).
  */
 function IconSlot(props: Pick<RowTextProps, 'leading' | 'tone'>): ReactNode {
   const source = leadingSource(props.leading);

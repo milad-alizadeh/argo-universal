@@ -8,7 +8,7 @@ import {
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { hasBadge, ItemBadge, useLeadingBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
-import { rowGlyphSize } from '../../../symbols/glyph-tone';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { cn } from '../../../utils';
 import { useInertLane } from './list-item-pass-through';
 import type { ListItemProps } from './list-item-props';
@@ -33,7 +33,7 @@ type LeadingLane = keyof typeof leadingClasses;
 
 /*
  * One icon size per lane, fixed, so every row in a list presents the same glyph however its call site writes its
- * icon: a row's leading glyph takes the row glyph role a Settings row takes (glyph-tone.ts), a menu row takes the
+ * icon: a row's leading glyph takes the row glyph role a Settings row takes (row-glyph.ts), a menu row takes the
  * menu role, and a sidebar or compact row's narrower lane takes the size that fits it. An avatar is not a glyph and
  * sizes itself with its own lane.
  */

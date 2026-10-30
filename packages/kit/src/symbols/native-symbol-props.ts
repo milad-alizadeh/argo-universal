@@ -2,7 +2,7 @@ import type { IconSize } from './icon-size';
 import type { IconSymbol } from './icon-symbol';
 
 /*
- * How a symbol inside a native tree is coloured: `foreground` is the kit's glyph token (glyph-tone.ts), which a row's
+ * How a symbol inside a native tree is coloured: `foreground` is the kit's glyph token (row-glyph.ts), which a row's
  * leading glyph takes so the platform's own tint cannot colour it; `muted` is the platform's secondary tone, as a
  * row's chevron or a search lens draws.
  */

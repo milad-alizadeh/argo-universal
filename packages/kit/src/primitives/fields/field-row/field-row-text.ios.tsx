@@ -3,7 +3,7 @@ import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText, useTextColor } from '#primitives/content/native-text';
-import { rowGlyphSize } from '../../../symbols/glyph-tone';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { iosImage } from '../../../symbols/ios-image';
 import { NativeSymbol } from '../../../symbols/native-symbol';
@@ -90,7 +90,7 @@ type LabelIcon = Pick<LabelProps, 'icon'>;
 /*
  * A row's leading icon as the Label takes it: one icon view for a system SF Symbol and for Argo's own symbol
  * (`custom.robot`, an asset-catalog image) alike, at the row glyph role's fixed size in the glyph token, never at
- * the Label's font size and never in SwiftUI's accent tint (glyph-tone.ts, ADR-0019). An SVG icon has no image on
+ * the Label's font size and never in SwiftUI's accent tint (row-glyph.ts, ADR-0019). An SVG icon has no image on
  * iOS, so the row draws none.
  */
 function labelIcon(props: RowTextProps): LabelIcon | undefined {

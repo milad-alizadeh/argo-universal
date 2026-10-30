@@ -7,7 +7,7 @@ import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
-import { glyphForegroundClass } from '../../../symbols/glyph-tone';
+import { glyphForegroundClass } from '../../../symbols/row-glyph';
 import {
   type IconSizeValue,
   useIconBox,
