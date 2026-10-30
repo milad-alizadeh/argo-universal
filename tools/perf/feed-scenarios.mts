@@ -17,7 +17,7 @@ const toggledCollapsibles = 6;
 const feedSettleMilliseconds = 1500;
 
 // A prompt the fixture Agent answers with rows of its own.
-const streamedPrompt = 'Run the checks';
+export const streamedPrompt = 'Run the checks';
 
 // Far longer than a Turn takes, even at the heaviest CPU slowdown.
 export const turnTimeoutMilliseconds = 120_000;

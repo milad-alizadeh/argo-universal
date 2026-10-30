@@ -21,7 +21,6 @@ const feedText = (wanted: string): boolean =>
     .querySelector('[data-testid="feed-scroll"]')
     ?.textContent?.includes(wanted) === true;
 
-// The Feed has drawn the text.
 export const feedShows = (page: Page, text: string): Promise<void> =>
   untilTrue(page, feedText, text);
 
@@ -40,7 +39,6 @@ const composerDrawn = (): boolean => {
   );
 };
 
-// The Composer is drawn and not disabled.
 export const composerUsable = (page: Page): Promise<void> =>
   untilTrue(page, composerDrawn);
 
@@ -55,7 +53,6 @@ export const composerHolds = (page: Page, text: string): Promise<void> =>
 const listedRow = (id: string): boolean =>
   document.querySelector(`[data-testid="${id}"] [role="button"]`) !== null;
 
-// The Sessions list has drawn a row.
 export const sessionsListed = (page: Page): Promise<void> =>
   untilTrue(page, listedRow, 'sessions-scroll');
 

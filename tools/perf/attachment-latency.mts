@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { setTimeout as pause } from 'node:timers/promises';
 import type { FileChooser, Page } from '@playwright/test';
 import {
   type AttachmentFile,
@@ -46,15 +48,19 @@ const drawnPreview = (wanted: string): boolean =>
 const previewShown = (page: Page, name: string): Promise<void> =>
   untilTrue(page, drawnPreview, name);
 
+const pollEveryMs = 20;
+
+// The Server answers the Blob, and what it answers hashes to the Blob's id: every byte, not just the count.
 async function stored(
   server: SeededServer,
   file: AttachmentFile,
 ): Promise<boolean> {
   const response = await fetch(`${server.httpUrl}/blobs/${file.blobId}`);
 
-  return (
-    response.ok && (await response.arrayBuffer()).byteLength === file.bytes
-  );
+  if (!response.ok) return false;
+  const body = Buffer.from(await response.arrayBuffer());
+
+  return createHash('sha256').update(body).digest('hex') === file.blobId;
 }
 
 async function untilStored(
@@ -67,6 +73,7 @@ async function untilStored(
       throw Object.assign(new Error(`Blob ${file.blobId} never arrived`), {
         name: 'TimeoutError',
       });
+    await pause(pollEveryMs);
   }
 }
 

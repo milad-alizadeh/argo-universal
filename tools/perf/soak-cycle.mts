@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { composerUsable, feedShows } from './driver-wait.mts';
 import { latestMessage } from './elapsed-scenario.mts';
-import { turnTimeoutMilliseconds } from './feed-scenarios.mts';
+import { streamedPrompt, turnTimeoutMilliseconds } from './feed-scenarios.mts';
 import {
   feedScroll,
   openSession,
@@ -10,7 +10,7 @@ import {
 } from './page.mts';
 import type { Probe, Soak } from './soak-state.mts';
 
-const prompt = 'Run the checks';
+const stopName = 'Stop';
 
 // How long a cancellation waits for the Stop button before the cycle records that it could not cancel.
 const stopAppearsMs = 5000;
@@ -48,7 +48,7 @@ export async function probe(page: Page, soak: Soak): Promise<void> {
 
 const appeared = (page: Page): Promise<boolean> =>
   page
-    .getByRole('button', { name: 'Stop', exact: true })
+    .getByRole('button', { name: stopName, exact: true })
     .waitFor({ state: 'attached', timeout: stopAppearsMs })
     .then(
       () => true,
@@ -59,19 +59,19 @@ async function cancelTurn(page: Page, soak: Soak): Promise<void> {
   soak.activity.cancellationsAttempted += 1;
 
   if (!(await appeared(page))) return;
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: stopName, exact: true }).click();
   soak.activity.cancellationsObserved += 1;
 }
 
 async function turn(page: Page, soak: Soak, cancel: boolean): Promise<void> {
   await composerUsable(page);
-  await page.getByRole('textbox', { name: 'Message' }).fill(prompt);
+  await page.getByRole('textbox', { name: 'Message' }).fill(streamedPrompt);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   soak.activity.turns += 1;
 
   if (cancel) await cancelTurn(page, soak);
   await page
-    .getByRole('button', { name: 'Stop', exact: true })
+    .getByRole('button', { name: stopName, exact: true })
     .waitFor({ state: 'detached', timeout: turnTimeoutMilliseconds });
 }
 

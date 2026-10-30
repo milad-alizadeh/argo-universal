@@ -55,11 +55,25 @@ Server restart scenarios restart the one Server of the run and leave it on the s
 Browser CPU slowdown reaches only the first page. A scenario it cannot reach (`server-restart-ready`, `turns-concurrent-*-scripted`) is recorded `notApplicable`, with its reason, at any slowdown other than 1x, and never as a measurement.
 An unset `PERF_ONLY` plans all of them, so a default elapsed run is now much longer; name the scenarios to run fewer.
 
+## Reading these scenarios
+
+- The cold and server-restart scenarios take the same warm-ups and repetitions as the rest. #1461 asks for five independent cold trials, so run them with `PERF_RUNS=5`.
+- `server-restart-reconnected` and `-usable` start their clock when the restart call returns, because the restart cannot be hooked at its ready instant. A near-zero sample can mean the App reconnected before the clock started.
+- The touch scenarios' raw `driver` samples include the whole swipe gesture, about 400 ms. Read the browser summary, which the table prints.
+- `turns-concurrent-*-scripted` and the soak use the scripted fixture Agent. They are App and Server evidence only, not PF-13 or real-Turn soak evidence.
+- Soak `cpuPercent` is `ps pcpu`, which on macOS is a decayed average over the process's life, not current CPU. Use the heap, node and process counts for growth, and treat CPU as indicative.
+- PF-03 was designed around #1434 (desktop "Try again"). These scenarios restart the Server by supervising the process, not through the App's retry button, so they do not exercise that fix.
+- The diff scenarios commit two files to the seeded Project's git repository and set `refs/remotes/origin/main`; later scenarios in the same run see that repository.
+
 ## What these scenarios do not cover
 
 - **PF-01 first frame** and **PF-02 native foreground resume** have no web equivalent here. The native half needs a device run.
 - **PF-13** with a real Agent: queue delay, provider contention, and per-Session CPU and memory. `turns-concurrent-*-scripted` uses the fixture Agent and is not PF-13 evidence.
 - **PF-14** Agent receipt of the file, and a file the App rejects as too large: a rejected file shows as a timed-out preview, not as a size limit.
+- **PF-02** the current Connection state after reopen.
+- **PF-03** retry delay and any configuration reset.
+- **PF-24** App CPU, and Server reads and subscriptions.
+- **PF-23** stale results while typing: the whole query is filled at once.
 - **PF-21** Back and tab switching, and the phone's changed-files sheet.
 - **PF-17** and **PF-04 to PF-12** need a real Agent. The `streaming` scenario uses a scripted Agent and is not PF-17.
 

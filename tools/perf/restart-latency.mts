@@ -15,7 +15,7 @@ const boundaries: Record<Milestone, string> = {
   ready:
     'Server process launch → Server publishes its address (the same port and data); the stop before it is not timed; PF-01 Server half and PF-03 launch-to-ready, with the filesystem cache warm',
   reconnected:
-    'Server ready (restart call returned) → the Connection banner gone from the App; PF-03 ready-to-reconnection',
+    'Server ready (restart call returned) → the Connection banner gone from the App; PF-03 ready-to-reconnection; the App retries while the Server starts, so a sample near zero means it had already reconnected when the clock started',
   usable:
     'Server ready (restart call returned) → banner gone, latest Feed text drawn and Composer enabled; PF-03 ready-to-usable; the Feed is the one it had before, so currency is not separately checked',
 };
@@ -31,6 +31,9 @@ function holdDown(server: SeededServer): Restart {
   const gate = Promise.withResolvers<void>();
   const ready = server.restart(() => gate.promise);
 
+  // A restart that fails while the App is still being watched is reported by whoever awaits `ready`.
+  ready.catch(() => null);
+
   return { release: gate.resolve, ready };
 }
 
@@ -45,7 +48,7 @@ async function downUnderApp(
     await bannerUp(page);
   } catch (error) {
     restart.release();
-    await restart.ready;
+    await restart.ready.catch(() => null);
     throw error;
   }
 

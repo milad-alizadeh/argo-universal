@@ -4,13 +4,10 @@ import {
   type DriverAction,
   type ElapsedScenario,
 } from './elapsed-scenario.mts';
-import { turnTimeoutMilliseconds } from './feed-scenarios.mts';
+import { streamedPrompt, turnTimeoutMilliseconds } from './feed-scenarios.mts';
 import { desktop, openApp } from './page.mts';
 import { sessionTitle } from './seed-sessions.mts';
 import type { SeededServer } from './seed.mts';
-
-// A prompt the fixture Agent answers with rows of its own.
-const prompt = 'Run the checks';
 
 const send = (page: Page): Promise<void> =>
   page.getByRole('button', { name: 'Send', exact: true }).click();
@@ -49,7 +46,7 @@ async function openPages(
 
 async function typePrompt(page: Page): Promise<void> {
   await composerUsable(page);
-  await page.getByRole('textbox', { name: 'Message' }).fill(prompt);
+  await page.getByRole('textbox', { name: 'Message' }).fill(streamedPrompt);
 }
 
 // The Turn is running once Stop is drawn and finished once it is gone again.

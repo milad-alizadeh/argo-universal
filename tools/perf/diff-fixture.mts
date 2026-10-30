@@ -20,17 +20,15 @@ export const diffFile = (size: DiffSize): string => `perf-${size}.txt`;
 export const changedMarker = (size: DiffSize): string =>
   `PERF_DIFF_${size.toUpperCase()}_CHANGED 1`;
 
-const baselineText = (size: DiffSize): string =>
+const text = (size: DiffSize, word: 'BASELINE' | 'CHANGED'): string =>
   Array.from(
     { length: sizes[size] },
-    (_, index) => `PERF_DIFF_${size.toUpperCase()}_BASELINE ${index + 1}`,
+    (_, index) => `PERF_DIFF_${size.toUpperCase()}_${word} ${index + 1}`,
   ).join('\n');
 
-const changedText = (size: DiffSize): string =>
-  Array.from(
-    { length: sizes[size] },
-    (_, index) => `PERF_DIFF_${size.toUpperCase()}_CHANGED ${index + 1}`,
-  ).join('\n');
+const baselineText = (size: DiffSize): string => text(size, 'BASELINE');
+
+const changedText = (size: DiffSize): string => text(size, 'CHANGED');
 
 export interface DiffCounts {
   size: DiffSize;
