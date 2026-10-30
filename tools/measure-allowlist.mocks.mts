@@ -84,6 +84,7 @@ function commitBaseline(root: string): void {
 const fixtureFiles = [
   'tooling/oxlint',
   'tools/check-rule-allowlists.mts',
+  'tools/lint-findings.mts',
   'tools/measure-allowlist.mts',
   'tools/parse-jsonc.mts',
   'tools/rule-allowlist.mts',

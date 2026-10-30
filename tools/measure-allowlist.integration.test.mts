@@ -4,11 +4,14 @@ import { expect, it } from 'vitest';
 import {
   file,
   fixture,
+  invalid,
   run,
   valid,
   write,
 } from './measure-allowlist.mocks.mts';
 import { measureFindings } from './measure-allowlist.mts';
+
+const unlisted = 'packages/client/src/unlisted.tsx';
 
 it('keeps allowed styling quiet while measuring and rejecting stale entries', (): void => {
   const root = fixture();
@@ -33,6 +36,18 @@ it('keeps allowed styling quiet while measuring and rejecting stale entries', ()
 
     expect(stale.status).toBe(1);
     expect(stale.output).toContain(`${file}: no argo/kit-styling findings`);
+
+    // The same run is the lint gate: a finding outside the allowlist fails it.
+    write(root, file, invalid);
+    write(root, unlisted, invalid);
+
+    const unwaived = check();
+
+    expect(unwaived.status).toBe(1);
+    expect(unwaived.output).toContain(`${unlisted}:3:`);
+    expect(unwaived.output).toContain(
+      'oxlint: 1 findings outside the allowlists',
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
