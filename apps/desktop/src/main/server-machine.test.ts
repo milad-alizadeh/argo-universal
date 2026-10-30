@@ -1,4 +1,3 @@
-import { pollIntervalMs, startLimitMs, stopLimitMs } from '@repo/process';
 import { describeModel, modelTest } from '@repo/vitest/model-test';
 import { describe, expect, it } from 'vitest';
 import { fixtures } from './server-machine-model-events.mocks';
@@ -31,11 +30,8 @@ const model = modelTest(
   },
   {
     start: startServerMachine,
-    delays: {
-      pollDelay: pollIntervalMs,
-      startLimit: startLimitMs,
-      stopLimit: stopLimitMs,
-    },
+    // Stated here, not imported, so a wrong delay in the machine fails.
+    delays: { pollDelay: 200, startLimit: 30_000, stopLimit: 5000 },
     executors,
     always,
     states,

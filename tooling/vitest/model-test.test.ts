@@ -141,4 +141,35 @@ describe('model test', (): void => {
       'xstate.init → kettle.heat',
     ]);
   });
+
+  it('fails a delay whose state is left before it falls due', async (): Promise<void> => {
+    // Steam leaves heating at 500 and settles into idle at 1000, so `heat → cooldown` only looks walked.
+    const steaming = setup({
+      delays: { cooldown: 1000, steam: 500, settle: 500 },
+    }).createMachine({
+      id: 'kettle',
+      initial: 'idle',
+      states: {
+        idle: { on: { 'kettle.heat': 'heating' } },
+        heating: { after: { cooldown: 'idle', steam: 'cooling' } },
+        cooling: { after: { settle: 'idle' } },
+      },
+    });
+
+    const started = createActor(steaming);
+
+    const model = modelTest(steaming, graph, {
+      start: () => started.start(),
+      delays: { cooldown: 1000, steam: 500, settle: 500 },
+      executors: { 'kettle.heat': (): void => started.send(heat) },
+      states: {},
+    });
+
+    const cooldown = model.suites
+      .flatMap(({ cases }) => cases)
+      .find(({ title }) => title.endsWith('kettle.heat → after cooldown'));
+
+    await expect(cooldown?.run()).rejects.toThrow('"cooling" left heating');
+    started.stop();
+  });
 });
