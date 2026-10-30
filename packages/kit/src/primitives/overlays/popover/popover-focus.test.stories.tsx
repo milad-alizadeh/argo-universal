@@ -80,9 +80,11 @@ export const OpeningAnotherWhileOneClosesKeepsItOpenWide: Story = {
     await waitFor(() => expect(agents).not.toBeInTheDocument());
     // Radix returns focus a task after the content leaves the page.
     await new Promise((settle) => setTimeout(settle, 50));
-    // The Checkouts popover fades in from transparent, so it shows once its entrance has run. The
-    // browser's own animation clock ends that, not a timer here: a runner too busy to draw frames
-    // for a second left it at opacity 0 and failed a one-second wait on a popover that was open.
+    /*
+     * The Checkouts popover fades in from transparent, so it shows once its entrance has run. The
+     * browser's own animation clock ends that, not a timer here: a runner too busy to draw frames
+     * for a second left it at opacity 0 and failed a one-second wait on a popover that was open.
+     */
     const checkouts = await page.findByRole('dialog', { name: 'Checkouts' });
     await settleOverlays();
     await expect(checkouts).toBeVisible();
