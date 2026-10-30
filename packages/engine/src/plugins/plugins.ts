@@ -22,6 +22,7 @@ export class Plugins {
     this.router = {
       plugins: this.parts.service,
       accounts: this.parts.accounts,
+      listChanges: this.parts.listChanges,
     };
     this.attachHooks();
 
@@ -45,6 +46,7 @@ export class Plugins {
     await this.backgroundStarted;
     this.unwatchTurns();
     this.parts.hookPort.detach();
+    this.parts.listChanges.close();
     await this.parts.runtime.close();
   }
 

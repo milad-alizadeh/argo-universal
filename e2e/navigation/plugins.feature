@@ -31,6 +31,15 @@ Feature: Plugin navigation
       | wide  |
       | phone |
 
+  Scenario: A Plugin stopped on the Server leaves the navigation and its open page returns to Sessions
+    Given a wide Frame
+    When I open the Counter Plugin
+    Then the Plugin page shows Counter
+    When the Counter Plugin is turned off on the Server
+    Then the App returns to Sessions
+    And the navigation no longer lists the Counter Plugin
+    And a toast says the Plugin is not available
+
   Scenario: A Plugin opens New Session with its draft, which is not kept
     Given a wide Frame
     When I open the Counter Plugin

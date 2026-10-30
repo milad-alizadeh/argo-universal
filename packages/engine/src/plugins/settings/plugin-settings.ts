@@ -9,6 +9,7 @@ import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
+import type { PluginListChanges } from '../list-changes';
 import {
   pluginSettingsKeychainService,
   type Keychain,
@@ -18,6 +19,8 @@ import { check, storedEntry, valueOf } from './setting-values';
 
 export type PluginSettingsDeps = {
   database: Database;
+  // Told when a Plugin is turned on or off, so every connected App reads the list again.
+  listChanges: PluginListChanges;
   databaseWriter: WriterActorRef;
   keychain: Keychain;
   manifest: (pluginId: string) => Promise<PluginManifest>;
@@ -80,6 +83,8 @@ export class PluginSettings {
       new PluginStateJob(pluginId, { enabled }),
       true,
     );
+
+    this.deps.listChanges.changed(pluginId);
   }
 
   private async fields(pluginId: string): Promise<PluginSettingField[]> {
