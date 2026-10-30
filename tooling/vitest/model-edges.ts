@@ -9,6 +9,10 @@ export type DelayEvent = EventObject & { type: `xstate.after.${string}` };
 export const isDelayEvent = (event: EventObject): event is DelayEvent =>
   event.type.startsWith(delayPrefix);
 
+// The name the machine's `delays` give a delay, from the event XState generates for it.
+export const delayName = (type: string): string =>
+  type.slice(delayPrefix.length).split('.').at(0) ?? '';
+
 const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge): string => edge.label.text),
   ...node.children.flatMap(eventTypes),

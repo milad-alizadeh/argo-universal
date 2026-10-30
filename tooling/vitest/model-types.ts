@@ -1,6 +1,11 @@
-import type { AnyStateMachine, EventObject, InputFrom } from 'xstate';
+import type {
+  AnyActorRef,
+  AnyMachineSnapshot,
+  AnyStateMachine,
+  EventObject,
+  InputFrom,
+} from 'xstate';
 import type { EventExecutor, StatePath, TraversalOptions } from 'xstate/graph';
-import type { Running } from './model-delay';
 import type { DelayEvent } from './model-edges';
 
 // The snapshot the graph search produces, as the model-graph wrappers type it.
@@ -33,8 +38,8 @@ export interface ModelWalk<
   stopWhen?: (snapshot: SnapshotOf<TMachine>) => boolean;
 }
 
-// What every walk of one machine shares.
-export interface ModelTraversal<
+// What builds the graph: the events a machine's edges need, what its states are, and the ways to walk it.
+export interface ModelGraph<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
 > {
@@ -44,6 +49,7 @@ export interface ModelTraversal<
   // Beyond what the machine itself accepts through `snapshot.can`.
   permits?: Check<TMachine, TEvent>;
   limit?: number;
+  walks: ModelWalk<TMachine, TEvent>[];
 }
 
 // What one walk of a model searches with.
@@ -52,7 +58,7 @@ export interface Walked<
   TEvent extends EventObject,
 > {
   machine: TMachine;
-  model: ModelTraversal<TMachine, TEvent>;
+  graph: ModelGraph<TMachine, TEvent>;
   walk: ModelWalk<TMachine, TEvent>;
 }
 
@@ -62,41 +68,71 @@ export type ModelEvent<TEvent extends EventObject> = TEvent | DelayEvent;
 export type ModelPaths<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
-> = StatePath<SnapshotOf<TMachine>, TEvent | DelayEvent>[];
+> = StatePath<SnapshotOf<TMachine>, ModelEvent<TEvent>>[];
+
+// One step of a generated path: the event sent and the state it leads to.
+export type PathStep<
+  TSnapshot extends AnyMachineSnapshot = AnyMachineSnapshot,
+  TEvent extends EventObject = EventObject,
+> = StatePath<TSnapshot, TEvent>['steps'][number];
 
 export type ModelStep<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
-> = ModelPaths<TMachine, TEvent>[number]['steps'][number];
+> = PathStep<SnapshotOf<TMachine>, ModelEvent<TEvent>>;
 
 export type ModelOptions<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
 > = TraversalOptions<
   SnapshotOf<TMachine>,
-  TEvent | DelayEvent,
+  ModelEvent<TEvent>,
   InputFrom<TMachine>
 >;
 
-// What a statechart's model test supplies: fixtures for the events its edges need, and how to drive and check the real actor.
-export interface ModelSpec<
+// The actor of the path being run.
+export type Running = AnyActorRef;
+
+// What one path's run keeps: its actor, and when each delay set so far falls due.
+export interface PathRun {
+  actor: Running | undefined;
+  due: Map<string, number>;
+}
+
+// The milliseconds a named delay declares: a constant, or a function of the snapshot the delay was set in, as the machine's own delay is.
+export type DeclaredDelay<TMachine extends AnyStateMachine> =
+  | number
+  | ((snapshot: SnapshotOf<TMachine>) => number);
+
+// What drives and checks the real actor along each path.
+export interface ModelActor<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
-> extends ModelTraversal<TMachine, TEvent> {
-  walks: ModelWalk<TMachine, TEvent>[];
-  // The actor of the running test, which delayed events wait on.
-  running: () => Running;
-  start: () => void;
+> {
+  // Starts the actor of one path with the graph's input.
+  start: (input: InputFrom<TMachine>) => Running;
   // Drives each event the model sends, by event type; a delayed event needs none, its timer fires.
   executors: Record<
     string,
-    EventExecutor<SnapshotOf<TMachine>, TEvent | DelayEvent>
+    EventExecutor<SnapshotOf<TMachine>, ModelEvent<TEvent>>
   >;
+  // Each delay the machine names, by delay name, with the milliseconds it must wait: stated here, not read from the actor, so a wrong delay fails.
+  delays: Record<string, DeclaredDelay<TMachine>>;
   // Checked after every step, then the check of each state the step is in.
   always?: (snapshot: SnapshotOf<TMachine>) => void;
   states: Record<string, (snapshot: SnapshotOf<TMachine>) => void>;
   // A suffix for the title of an event that carries data.
-  label?: (event: TEvent | DelayEvent) => string | undefined;
+  label?: (event: ModelEvent<TEvent>) => string | undefined;
+}
+
+// The machine with everything its paths are driven by.
+export interface Modelled<
+  TMachine extends AnyStateMachine,
+  TEvent extends EventObject,
+> {
+  machine: TMachine;
+  graph: ModelGraph<TMachine, TEvent>;
+  actor: ModelActor<TMachine, TEvent>;
 }
 
 // One generated path, to run against the real actor.

@@ -1,43 +1,32 @@
 import { type AnyStateMachine, type EventObject, matchesState } from 'xstate';
 import { fireDelay } from './model-delay';
 import { isDelayEvent } from './model-edges';
+import { noteDelays } from './model-schedule';
 import type {
+  Modelled,
   ModelCase,
   ModelPaths,
-  ModelSpec,
   ModelStep,
+  PathRun,
   SnapshotOf,
 } from './model-types';
+import { executorFor } from './model-validate';
 
 const initType: string = 'xstate.init';
-
-function executorFor<
-  TMachine extends AnyStateMachine,
-  TEvent extends EventObject,
->(
-  spec: ModelSpec<TMachine, TEvent>,
-  type: string,
-): ModelSpec<TMachine, TEvent>['executors'][string] {
-  const executor = spec.executors[type];
-
-  if (!executor) throw new Error(`Missing executor for ${type}`);
-
-  return executor;
-}
 
 async function drive<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
 >(
-  spec: ModelSpec<TMachine, TEvent>,
+  { graph, actor }: Modelled<TMachine, TEvent>,
+  run: PathRun,
   step: ModelStep<TMachine, TEvent>,
 ): Promise<void> {
   const { event } = step;
 
-  if (event.type === initType) return spec.start();
-
-  if (isDelayEvent(event)) return fireDelay(spec.running(), { ...step, event });
-  await executorFor(spec, event.type)(step);
+  if (event.type === initType) run.actor = actor.start(graph.input);
+  else if (isDelayEvent(event)) await fireDelay(run, step);
+  else await executorFor(actor.executors, event.type)(step);
 }
 
 function checkStates<TMachine extends AnyStateMachine>(
@@ -60,13 +49,16 @@ async function walkPath<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
 >(
-  spec: ModelSpec<TMachine, TEvent>,
+  modelled: Modelled<TMachine, TEvent>,
   path: ModelPaths<TMachine, TEvent>[number],
 ): Promise<void> {
-  for (const step of path.steps) {
-    await drive(spec, step);
-    spec.always?.(step.state);
-    checkStates(spec.states, step.state);
+  const run: PathRun = { actor: undefined, due: new Map() };
+
+  for (const [index, step] of path.steps.entries()) {
+    await drive(modelled, run, step);
+    noteDelays(modelled, run, { step, previous: path.steps[index - 1] });
+    modelled.actor.always?.(step.state);
+    checkStates(modelled.actor.states, step.state);
   }
 }
 
@@ -74,14 +66,14 @@ export function modelCase<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
 >(
-  spec: ModelSpec<TMachine, TEvent>,
+  modelled: Modelled<TMachine, TEvent>,
   path: ModelPaths<TMachine, TEvent>[number],
 ): ModelCase {
-  const { label = (): undefined => undefined } = spec;
+  const { label = (): undefined => undefined } = modelled.actor;
 
   const title = path.steps
     .map(({ event }) => eventTitle(event.type, label(event)))
     .join(' → ');
 
-  return { title, run: (): Promise<void> => walkPath(spec, path) };
+  return { title, run: (): Promise<void> => walkPath(modelled, path) };
 }

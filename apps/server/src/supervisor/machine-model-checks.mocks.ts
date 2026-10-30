@@ -1,5 +1,9 @@
 import { expect, vi } from 'vitest';
-import { heartbeatTimeoutMs, maxCrashesInWindow } from './machine';
+import {
+  heartbeatTimeoutMs,
+  maxCrashesInWindow,
+  readyTimeoutMs,
+} from './machine';
 import {
   engines,
   latestEngine,
@@ -18,6 +22,20 @@ import {
   serverAddressRemovals,
   type SupervisorSnapshot,
 } from './machine-model.mocks';
+
+// The wait before each restart, by crashes so far: doubling from 500 ms, capped at 30 s.
+const backoffByCrashes = [
+  500, 1000, 2000, 4000, 8000, 16_000, 30_000, 30_000, 30_000, 30_000,
+];
+
+// The milliseconds the Supervisor's delays must wait, stated, not read back from its timers.
+export const delays = {
+  heartbeatTimeout: heartbeatTimeoutMs,
+  readyTimeout: readyTimeoutMs,
+  backoff: (snapshot: SupervisorSnapshot): number =>
+    backoffByCrashes[snapshot.context.crashTimes.length - 1] ??
+    expect.unreachable('No backoff is declared for this many crashes'),
+};
 
 // Drives each graph event against the real Supervisor.
 export const executors = {

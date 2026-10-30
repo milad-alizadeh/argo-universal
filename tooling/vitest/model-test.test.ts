@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, createActor, setup } from 'xstate';
-import { modelTest, type Vertex } from './model-test';
+import {
+  describeModel,
+  type Model,
+  type ModelGraph,
+  type ModelWalk,
+  modelTest,
+  type Vertex,
+} from './model-test';
 
 const machine = setup({ delays: { cooldown: 1000 } }).createMachine({
   id: 'kettle',
@@ -11,9 +18,11 @@ const machine = setup({ delays: { cooldown: 1000 } }).createMachine({
   },
 });
 
-let kettle: Actor<typeof machine> | undefined;
+type Kettle = Actor<typeof machine>;
 
-const running = (): Actor<typeof machine> =>
+let kettle: Kettle | undefined;
+
+const running = (): Kettle =>
   kettle ?? expect.unreachable('the kettle has not started');
 
 beforeEach((): void => {
@@ -25,31 +34,111 @@ afterEach((): void => {
   vi.useRealTimers();
 });
 
-// The `cooldown` delay needs no fixture and no executor: the model finds it and fires its timer.
-const model = modelTest(machine, {
+const heat = { type: 'kettle.heat' };
+
+const shortest: ModelWalk<typeof machine, typeof heat> = {
+  name: 'shortest path',
+  search: 'shortest',
+};
+
+const graph: ModelGraph<typeof machine, typeof heat> = {
   input: undefined,
-  fixtures: [{ type: 'kettle.heat' }],
+  fixtures: [heat],
   vertex: (snapshot): Vertex => snapshot.value,
-  running,
-  start: (): void => {
+  walks: [shortest],
+};
+
+// The `cooldown` delay needs no fixture and no executor: the model finds it and fires its timer after the stated 1000 ms.
+const actor = {
+  start: (): Kettle => {
     kettle = createActor(machine).start();
+
+    return kettle;
   },
-  executors: {
-    'kettle.heat': (): void => running().send({ type: 'kettle.heat' }),
-  },
+  delays: { cooldown: 1000 },
+  executors: { 'kettle.heat': (): void => running().send(heat) },
   states: {},
-  walks: [{ name: 'shortest path', search: 'shortest' }],
-});
+};
+
+const walkOf = (walks: typeof graph.walks): Model =>
+  modelTest(machine, { ...graph, walks }, actor);
+
+async function runFirstCase(model: Model): Promise<void> {
+  await model.suites[0]?.cases[0]?.run();
+}
 
 describe('kettle model', (): void => {
-  describe.each(model.suites)('$name', ({ cases }): void => {
-    it.each(cases)('$title', async ({ run }): Promise<void> => {
-      expect.hasAssertions();
-      await run();
-    });
-  });
+  const model = modelTest(machine, graph, actor);
+
+  describeModel(model);
 
   it('the generated paths walk every transition', (): void => {
     expect(model.unwalked()).toEqual([]);
+  });
+});
+
+describe('model test', (): void => {
+  it('throws when an event of the machine has no fixture', (): void => {
+    expect(() => modelTest(machine, { ...graph, fixtures: [] }, actor)).toThrow(
+      'Missing graph fixture for kettle.heat',
+    );
+  });
+
+  it('throws when a fixture has no executor', (): void => {
+    expect(() =>
+      modelTest(machine, graph, { ...actor, executors: {} }),
+    ).toThrow('Missing executor for kettle.heat');
+  });
+
+  it('throws when a delay has no declared duration', (): void => {
+    expect(() => modelTest(machine, graph, { ...actor, delays: {} })).toThrow(
+      'Missing declared delay for xstate.after.cooldown.kettle.heating',
+    );
+  });
+
+  it.each([999, 1001])(
+    'fails a delay declared as %d ms when the timer takes 1000',
+    async (declared): Promise<void> => {
+      const model = modelTest(machine, graph, {
+        ...actor,
+        delays: { cooldown: declared },
+      });
+
+      await expect(runFirstCase(model)).rejects.toThrow(/"idle"/);
+    },
+  );
+
+  it('runs a delay declared as a function of the snapshot', async (): Promise<void> => {
+    const model = modelTest(machine, graph, {
+      ...actor,
+      delays: {
+        cooldown: (snapshot): number =>
+          snapshot.matches('heating') ? 1000 : 0,
+      },
+    });
+
+    await expect(runFirstCase(model)).resolves.toBeUndefined();
+  });
+
+  it('reports a transition that no generated path walks', (): void => {
+    // Without arrivals, the shortest path to each state leaves the way back to a visited state unwalked.
+    const model = walkOf([{ ...shortest, arrivals: false }]);
+
+    expect(model.unwalked()).toEqual([
+      expect.stringContaining('xstate.after.cooldown.kettle.heating'),
+    ]);
+  });
+
+  it('stops a path where the walk says', (): void => {
+    const model = walkOf([
+      {
+        ...shortest,
+        stopWhen: (snapshot): boolean => snapshot.matches('heating'),
+      },
+    ]);
+
+    expect(model.suites[0]?.cases.map(({ title }) => title)).toEqual([
+      'xstate.init → kettle.heat',
+    ]);
   });
 });

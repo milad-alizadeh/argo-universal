@@ -86,6 +86,8 @@ afterEach((): void => {
 export function startSupervisorActor(
   machine: typeof supervisorMachine,
   input: SupervisorInput,
-): void {
+): typeof supervisor {
   supervisor = createActor(machine, { input }).start();
+
+  return supervisor;
 }

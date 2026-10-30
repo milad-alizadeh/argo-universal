@@ -130,8 +130,10 @@ export const sendWrite = (refusable = false): void => {
   });
 };
 
-export function startWriterActor(): void {
+export function startWriterActor(): Actor<typeof machine> {
   actor = createActor(machine, { input }).start();
+
+  return actor;
 }
 
 beforeEach((): void => {

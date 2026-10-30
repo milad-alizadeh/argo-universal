@@ -1,40 +1,23 @@
 import { expect, vi } from 'vitest';
-import type { AnyActorRef, StateValue } from 'xstate';
-import type { DelayEvent } from './model-edges';
+import { stateKey } from './model-state';
+import type { PathRun, PathStep, Running } from './model-types';
 
-// The actor of the running test.
-export type Running = AnyActorRef;
-
-// More timers than this before the state is reached means the delayed transition never ran.
-const timerLimit = 8;
-
-const sameValue = (left: StateValue, right: StateValue): boolean =>
-  JSON.stringify(left) === JSON.stringify(right);
-
-// When the actor's own scheduler will send the delayed event: its start plus its delay, however the machine declared it.
-function dueAt(running: Running, event: DelayEvent): number {
-  const scheduled = Object.values(
-    running.system.getSnapshot()._scheduledEvents,
-  ).find((candidate): boolean => candidate.event.type === event.type);
-
-  if (!scheduled) return expect.unreachable(`${event.type} is not scheduled`);
-
-  return scheduled.startedAt + scheduled.delay;
+function actorOf(run: PathRun): Running {
+  return run.actor ?? expect.unreachable('The path has not started its actor');
 }
 
-// Fires timers in order until the delayed transition has run, on the very tick it is due; an earlier delay may fire on the way.
-export async function fireDelay(
-  running: Running,
-  step: { event: DelayEvent; state: { value: StateValue } },
-): Promise<void> {
-  const due = dueAt(running, step.event);
+const reached = (actor: Running): string => stateKey(actor.getSnapshot().value);
 
-  for (let fired = 0; fired < timerLimit; fired++) {
-    await vi.advanceTimersToNextTimerAsync();
+// Holds the clock one millisecond short of the declared delay, where the state must not have changed, then crosses it, where the delayed transition must have run; timers due on the way fire in order.
+export async function fireDelay(run: PathRun, step: PathStep): Promise<void> {
+  const actor = actorOf(run);
+  const due = run.due.get(step.event.type);
 
-    if (sameValue(running.getSnapshot().value, step.state.value))
-      return expect(Date.now()).toBe(due);
-  }
+  if (due === undefined)
+    return expect.unreachable(`${step.event.type} was never set`);
 
-  expect.unreachable(`${JSON.stringify(step.state.value)} was never reached`);
+  await vi.advanceTimersByTimeAsync(Math.max(due - 1 - Date.now(), 0));
+  expect(reached(actor)).not.toBe(stateKey(step.state.value));
+  await vi.advanceTimersByTimeAsync(1);
+  expect(reached(actor)).toBe(stateKey(step.state.value));
 }

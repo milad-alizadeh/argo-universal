@@ -1,14 +1,13 @@
 import type { AnyMachineSnapshot, EventObject } from 'xstate';
 import type { StatePath } from 'xstate/graph';
+import type { PathStep } from './model-types';
 
 // One event sent to one state.
 export type Sent = { state: AnyMachineSnapshot; event: EventObject };
 
 type Paths = StatePath<AnyMachineSnapshot, EventObject>[];
 
-function requireStep(
-  step: Paths[number]['steps'][number] | undefined,
-): Paths[number]['steps'][number] {
+function requireStep(step: PathStep | undefined): PathStep {
   if (!step) throw new Error('The model path has a missing step');
 
   return step;

@@ -4,6 +4,7 @@ import {
   getMicrosteps,
 } from 'xstate';
 import type { Sent } from './model-sent';
+import { sameState } from './model-state';
 
 type Node = AnyStateMachine['root'];
 
@@ -40,8 +41,7 @@ function targetMatches(
 ): boolean {
   const transition = automaticTransition(node, index);
 
-  if (!transition.target)
-    return JSON.stringify(pair.from.value) === JSON.stringify(pair.to.value);
+  if (!transition.target) return sameState(pair.from.value, pair.to.value);
 
   return transition.target.every((target) => hasNode(pair.to, target.id));
 }

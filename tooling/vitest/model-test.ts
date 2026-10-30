@@ -1,23 +1,33 @@
 import type { AnyStateMachine, EventObject } from 'xstate';
 import { modelCase } from './model-case';
 import { unwalkedTransitions } from './model-coverage';
-import { traversalOptions } from './model-options';
+import { traversalOptions, walkEvents } from './model-options';
 import { adjacencyOf, searchPaths } from './model-search';
+import { stateKey } from './model-state';
 import type {
   Model,
+  Modelled,
+  ModelActor,
+  ModelEvent,
+  ModelGraph,
   ModelOptions,
   ModelPaths,
-  ModelSpec,
+  ModelSuite,
   ModelWalk,
   Walked,
 } from './model-types';
+import { requireDrivers } from './model-validate';
+
+export { describeModel } from './model-describe';
 
 export type { DelayEvent } from './model-edges';
 
 export type {
+  DeclaredDelay,
   Model,
+  ModelActor,
   ModelCase,
-  ModelSpec,
+  ModelGraph,
   ModelSuite,
   ModelWalk,
   Vertex,
@@ -25,6 +35,7 @@ export type {
 
 interface Search<TMachine extends AnyStateMachine, TEvent extends EventObject> {
   walk: ModelWalk<TMachine, TEvent>;
+  events: ModelEvent<TEvent>[];
   options: ModelOptions<TMachine, TEvent>;
   paths: ModelPaths<TMachine, TEvent>;
 }
@@ -32,10 +43,11 @@ interface Search<TMachine extends AnyStateMachine, TEvent extends EventObject> {
 function search<TMachine extends AnyStateMachine, TEvent extends EventObject>(
   walked: Walked<TMachine, TEvent>,
 ): Search<TMachine, TEvent> {
-  const options = traversalOptions(walked);
+  const events = walkEvents(walked);
+  const options = traversalOptions({ ...walked, events });
   const { machine, walk } = walked;
 
-  return { walk, options, paths: searchPaths(machine, options, walk) };
+  return { walk, events, options, paths: searchPaths(machine, options, walk) };
 }
 
 function unwalked<TMachine extends AnyStateMachine, TEvent extends EventObject>(
@@ -47,25 +59,43 @@ function unwalked<TMachine extends AnyStateMachine, TEvent extends EventObject>(
       getAdjacencyMap: () => adjacencyOf(machine, options),
     })),
     paths: searches.flatMap(({ paths }) => paths),
-    stateKey: (snapshot): string => JSON.stringify(snapshot.value),
+    stateKey: (snapshot): string => stateKey(snapshot.value),
     eventKey: (event): string => event.type,
   });
 }
 
-// Walks the machine's graph and returns each generated path as a case that drives the real actor, with every state the path enters checked; a test file runs them under `describe` and `it`.
+function suiteOf<TMachine extends AnyStateMachine, TEvent extends EventObject>(
+  modelled: Modelled<TMachine, TEvent>,
+  { walk, paths }: Search<TMachine, TEvent>,
+): ModelSuite {
+  return {
+    name: walk.name,
+    cases: paths.map((path) => modelCase(modelled, path)),
+  };
+}
+
+function modelOf<TMachine extends AnyStateMachine, TEvent extends EventObject>(
+  modelled: Modelled<TMachine, TEvent>,
+): Model {
+  const { machine, graph, actor } = modelled;
+  const searches = graph.walks.map((walk) => search({ machine, graph, walk }));
+
+  for (const { events } of searches) requireDrivers(events, actor);
+
+  return {
+    suites: searches.map((found) => suiteOf(modelled, found)),
+    unwalked: (): string[] => unwalked(machine, searches),
+  };
+}
+
+// Walks the machine's graph and returns each generated path as a case that drives the real actor, with every state the path enters checked; `describeModel` runs them. A missing fixture, executor or declared delay throws here.
 export function modelTest<
   TMachine extends AnyStateMachine,
   TEvent extends EventObject,
->(machine: TMachine, spec: ModelSpec<TMachine, TEvent>): Model {
-  const searches = spec.walks.map((walk) =>
-    search({ machine, model: spec, walk }),
-  );
-
-  return {
-    suites: searches.map(({ walk, paths }) => ({
-      name: walk.name,
-      cases: paths.map((path) => modelCase(spec, path)),
-    })),
-    unwalked: (): string[] => unwalked(machine, searches),
-  };
+>(
+  machine: TMachine,
+  graph: ModelGraph<TMachine, TEvent>,
+  actor: ModelActor<TMachine, TEvent>,
+): Model {
+  return modelOf({ machine, graph, actor });
 }
