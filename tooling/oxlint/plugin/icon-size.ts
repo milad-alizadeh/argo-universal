@@ -48,6 +48,7 @@ const isSwiftUIImage = (node: ESTree.ImportDeclaration): boolean =>
 type IconVisitor = {
   JSXOpeningElement: NonNullable<Visitor['JSXOpeningElement']>;
   JSXAttribute: NonNullable<Visitor['JSXAttribute']>;
+  Property: NonNullable<Visitor['Property']>;
   CallExpression: NonNullable<Visitor['CallExpression']>;
   ImportDeclaration: NonNullable<Visitor['ImportDeclaration']>;
 };
@@ -61,8 +62,18 @@ const hasPixelSize =
       context.sourceCode.getText(attribute.value),
     );
 
-const isSystemName = (node: ESTree.JSXAttribute): boolean =>
-  attributeName(node) === 'systemName';
+/*
+ * A SwiftUI Image or Label named by hand: `systemName` as an attribute, and `systemImage` wherever a Label's icon is
+ * handed over, including as an object property. Both draw at the surrounding font's size in the platform's tint,
+ * which is how a Settings row's glyph turned up accent blue (#1452); NativeSymbol gives it a role size and a token.
+ */
+const nativeSymbolNames = new Set(['systemName', 'systemImage']);
+
+const isNativeSymbolAttribute = (node: ESTree.JSXAttribute): boolean =>
+  nativeSymbolNames.has(attributeName(node));
+
+const isNativeSymbolProperty = (node: ESTree.ObjectProperty): boolean =>
+  node.key.type === 'Identifier' && nativeSymbolNames.has(node.key.name);
 
 const reportNativeSymbol =
   <Node extends ESTree.Node>(context: Context, test: (node: Node) => boolean) =>
@@ -73,7 +84,8 @@ const reportNativeSymbol =
 const nativeSymbolChecks = (
   context: Context,
 ): Omit<IconVisitor, 'JSXOpeningElement'> => ({
-  JSXAttribute: reportNativeSymbol(context, isSystemName),
+  JSXAttribute: reportNativeSymbol(context, isNativeSymbolAttribute),
+  Property: reportNativeSymbol(context, isNativeSymbolProperty),
   CallExpression: reportNativeSymbol(context, isPixelModifier),
   ImportDeclaration: reportNativeSymbol(context, isSwiftUIImage),
 });
@@ -85,7 +97,7 @@ export const iconSize = defineRule({
       iconSize:
         'Icons take a size (xs, sm, md, lg), never a pixel number or a size-* class.',
       nativeSymbol:
-        'Draw a native symbol with NativeSymbol, or size it with useIconPixels(size), so native icons follow the same sizes.',
+        'Draw a native symbol with NativeSymbol, or size it with useIconPixels(size), so native icons follow the same sizes and take the kit’s glyph token rather than the platform’s tint.',
     },
   },
   create: (context): IconVisitor => ({

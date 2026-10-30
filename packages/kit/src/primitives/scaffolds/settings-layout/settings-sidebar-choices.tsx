@@ -78,4 +78,4 @@ function choiceTrigger(props: FieldPickerSingle): ReactElement {
 }
 
 const leadingIcon = (icon: FieldPickerSingle['leading']): ReactNode =>
-  icon && isStockIconName(icon) ? <Icon name={icon} size="md" /> : undefined;
+  icon && isStockIconName(icon) ? <Icon name={icon} /> : undefined;

@@ -7,8 +7,8 @@
   },
   "main": "index.tsx",
   "icon": {
-    "sf": "person.badge.key",
-    "material": "passkey"
+    "sf": "key",
+    "material": "key"
   },
   "contributes": {
     "nav": [],

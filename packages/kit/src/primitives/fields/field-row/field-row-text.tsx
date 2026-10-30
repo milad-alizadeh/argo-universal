@@ -1,12 +1,13 @@
 import { Column, Row } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
-import { useNativeTheme } from '#kit/native-theme';
 import { AgentLogo } from '#primitives/content/agent-logo';
 import { IconSlot } from '#primitives/content/icon';
 import { NativeText } from '#primitives/content/native-text';
 import type { Tone } from '#primitives/content/text';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
+import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
 
 // What every row but a Button shares with Expo UI's universal ListItem: an icon before the title.
 export type RowTextProps = {
@@ -79,24 +80,29 @@ function Mark(props: RowTextProps & { title: string }): ReactElement {
   return props.logo ? (
     <LogoMark logo={props.logo} title={props.title} />
   ) : (
-    <LeadingIcon leading={props.leading} />
+    <LeadingIcon leading={props.leading} tone={props.tone} />
   );
 }
 
 function LogoMark(props: { logo: string; title: string }): ReactElement {
   return (
-    <IconSlot size="md">
-      <AgentLogo logo={props.logo} label={props.title} size="md" />
+    <IconSlot size={rowGlyphSize}>
+      <AgentLogo logo={props.logo} label={props.title} size={rowGlyphSize} />
     </IconSlot>
   );
 }
 
+// The row glyph rule: one size by role, in the glyph token, the same as a kit ListItem's leading icon (row-glyph.ts).
 function LeadingIcon(
-  props: Pick<RowTextProps, 'leading'>,
+  props: Pick<RowTextProps, 'leading' | 'tone'>,
 ): ReactElement | null {
-  const color = useNativeTheme().colors.mutedForeground;
+  const color = useRowGlyphColor(props.tone);
 
   if (!props.leading) return null;
 
-  return <NativeIcon name={props.leading} size="md" color={color} />;
+  return (
+    <IconSlot size={rowGlyphSize}>
+      <NativeIcon name={props.leading} size={rowGlyphSize} color={color} />
+    </IconSlot>
+  );
 }

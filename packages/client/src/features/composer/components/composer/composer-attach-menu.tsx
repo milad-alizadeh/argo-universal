@@ -97,7 +97,7 @@ function ComposerAttachItem({
   return (
     <ListItem
       title={item.label}
-      leading={<Icon name={item.icon} size="md" />}
+      leading={<Icon name={item.icon} />}
       accessibilityRole="button"
 
       disabled={!item.onPress}

@@ -63,10 +63,13 @@ function MaterialGlyph({
 
 /*
  * Android draws a Material Symbol from the same XML drawing Expo UI's Icon draws inside a button or menu (one source,
- * one weight); a name with no drawing keeps the font, and an SVG symbol draws from its component.
+ * one weight); a name with no drawing keeps the font, and an SVG symbol draws from its component. A row's lane is
+ * dropped: a Material glyph is drawn padded inside its 24-unit grid, which is the box stock Android Settings gives a
+ * row (row-glyph.ts), so it draws at the lane itself.
  */
 export function SymbolGlyph({
   symbol,
+  lane: _lane,
   ...props
 }: SymbolGlyphProps): React.JSX.Element {
   if (symbol.kind === 'svg')

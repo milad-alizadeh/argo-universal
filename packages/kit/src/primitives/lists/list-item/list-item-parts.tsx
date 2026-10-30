@@ -8,6 +8,7 @@ import {
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { hasBadge, ItemBadge, useLeadingBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { cn } from '../../../utils';
 import { useInertLane } from './list-item-pass-through';
 import type { ListItemProps } from './list-item-props';
@@ -30,11 +31,17 @@ const leadingClasses = {
 
 type LeadingLane = keyof typeof leadingClasses;
 
+/*
+ * One icon size per lane, fixed, so every row in a list presents the same glyph however its call site writes its
+ * icon: a row's leading glyph takes the row glyph role a Settings row takes, and draws in that row's lane so the two
+ * kinds of row present the same glyph (row-glyph.ts); a menu row takes the menu role, and a sidebar or compact row's
+ * narrower lane takes the size that fits it. An avatar is not a glyph and sizes itself with its own lane.
+ */
 const leadingIconSizes = {
-  row: undefined,
+  row: { size: rowGlyphSize, fixed: true, lane: 'row' },
   menu: { size: 'md', fixed: true },
-  sidebar: undefined,
-} as const satisfies Record<LeadingLane, IconSizing | undefined>;
+  sidebar: { size: 'sm', fixed: true },
+} as const satisfies Record<LeadingLane, IconSizing>;
 
 type LeadingProps = Pick<
   ListItemProps,
@@ -69,7 +76,7 @@ export function Leading(props: LeadingProps): ReactNode {
 
   return (
     <LeadingFrame className={leadingClass(lane, props.leadingSize)}>
-      <IconSizeContext value={leadingIconSizes[lane]}>
+      <IconSizeContext value={laneSizing(lane, props.leadingSize)}>
         <StatusMarkHidden value={hasBadge(props.badge)}>
           {props.leading}
         </StatusMarkHidden>
@@ -78,6 +85,12 @@ export function Leading(props: LeadingProps): ReactNode {
     </LeadingFrame>
   );
 }
+
+const laneSizing = (
+  lane: LeadingLane,
+  size: LeadingProps['leadingSize'],
+): IconSizing | undefined =>
+  size === 'avatar' ? undefined : leadingIconSizes[lane];
 
 export function Accessory({ children }: { children?: ReactNode }): ReactNode {
   const inert = useInertLane();

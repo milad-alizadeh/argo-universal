@@ -134,7 +134,7 @@ function SettingsScreenRow({
     <ListItem
       {...row}
       {...screenRow}
-      leading={icon && <Icon name={icon} size="md" />}
+      leading={icon && <Icon name={icon} />}
       selected={id === selected}
       onPress={onSelect && (() => onSelect(row.href))}
     />

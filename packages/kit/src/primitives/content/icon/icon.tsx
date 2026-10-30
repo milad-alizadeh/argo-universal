@@ -19,9 +19,10 @@ import {
 } from '../../../symbols/icon-symbol';
 import { LogoGlyph } from '../../../symbols/logo-glyph';
 import type { LogoSource } from '../../../symbols/logo-source';
+import { glyphForegroundClass } from '../../../symbols/row-glyph';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps } from './icon-props';
-import { useIconSize } from './icon-size-context';
+import { useIconLane, useIconSize } from './icon-size-context';
 
 // Web colours the glyph with CSS from `colorClassName`, so only native resolves the class to a tint, which costs a style lookup each render on web.
 const TintedSymbol =
@@ -41,7 +42,7 @@ const iconDrawing = (
 
 function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
-    'text-foreground',
+    glyphForegroundClass,
     useContext(TextClassContext),
     toneClass(props.tone),
     props.className,
@@ -109,6 +110,8 @@ function useSymbolDrawingProps(
     symbol: iconDrawing(icon, props.filled),
     colorClassName,
     pixels: useIconPixels(props.size),
+    // A row's leading lane draws its glyph at what the platform's Settings app draws (row-glyph.ts).
+    lane: useIconLane(),
     testID: props.testID ?? `icon-${icon.key}`,
   };
 }

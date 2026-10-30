@@ -6,6 +6,7 @@ import { NativeText, useTextColor } from '#primitives/content/native-text';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { iosImage } from '../../../symbols/ios-image';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
 
@@ -84,25 +85,43 @@ function useDangerStyle(
   return tone === 'danger' && color ? [foregroundStyle(color)] : [];
 }
 
-type LabelIcon = Pick<LabelProps, 'systemImage' | 'icon'>;
+type LabelIcon = Pick<LabelProps, 'icon'>;
 
 /*
- * A row's leading icon as the Label takes it: a system SF Symbol by name, Argo's own symbol (`custom.robot`, an
- * asset-catalog image) as the Label's icon view, at the size nearest the Label's body font so it matches a system
- * symbol. An SVG icon has no image, so the row draws none.
+ * A row's leading icon as the Label takes it: one icon view for a system SF Symbol and for Argo's own symbol
+ * (`custom.robot`, an asset-catalog image) alike, at the row glyph role's fixed size in the glyph token, never at
+ * the Label's font size and never in SwiftUI's accent tint (row-glyph.ts, ADR-0019). An SVG icon has no image on
+ * iOS, so the row draws none.
  */
 function labelIcon(props: RowTextProps): LabelIcon | undefined {
-  return props.leading ? iconView(props.leading) : undefined;
+  return props.leading ? iconView(props.leading, props.tone) : undefined;
 }
 
-function iconView(leading: IconSymbol): LabelIcon | undefined {
-  const image = iosImage(leading);
+function iconView(
+  leading: IconSymbol,
+  tone: RowTextProps['tone'],
+): LabelIcon | undefined {
+  if (!iosImage(leading)) return undefined;
 
-  if (!image) return undefined;
+  return { icon: <RowGlyph leading={leading} tone={tone} /> };
+}
 
-  return image.kind === 'system'
-    ? { systemImage: image.name }
-    : { icon: <NativeSymbol name={leading} /> };
+/*
+ * A destructive row colours its whole Label, glyph included, so its glyph names no tone of its own; every other
+ * row's glyph takes the kit's glyph token in place of the tint it would otherwise inherit.
+ */
+function RowGlyph(props: {
+  leading: IconSymbol;
+  tone: RowTextProps['tone'];
+}): ReactElement {
+  return (
+    <NativeSymbol
+      name={props.leading}
+      size={rowGlyphSize}
+      lane="row"
+      tone={props.tone === 'danger' ? undefined : 'foreground'}
+    />
+  );
 }
 
 type LabelProps = React.ComponentProps<typeof Label>;

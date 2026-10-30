@@ -8,7 +8,7 @@ import type { ListProps } from './list-props';
 const children = (
   <>
     <List.Section title="Section one" footer="Footer">
-      <ListItem title="Item" leading={<Icon size="sm" name="agent" />} />
+      <ListItem title="Item" leading={<Icon name="agent" />} />
       <ListItem title="Item" subtitle="Subtitle" />
     </List.Section>
     <List.Section title="Section two">

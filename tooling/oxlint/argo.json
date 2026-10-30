@@ -249,10 +249,15 @@
     },
     {
       // The symbols folder turns roles into pixels; the iOS Link and page Picker rows' stock disclosure chevron is a font-sized SF Symbol (footnote, semibold), not a role-sized icon.
+      // A stock SwiftUI Menu, Toggle, Button or toolbar item takes its glyph only as a `systemImage`, and iOS draws it at the control's own size and tint; a row's leading glyph does not (#1452).
       "files": [
         "packages/kit/src/symbols/**",
         "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx",
-        "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx"
+        "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx",
+        "packages/kit/src/primitives/overlays/menu/context-menu-swift-items.ios.tsx",
+        "packages/kit/src/primitives/overlays/sheet/sheet-screen-toolbar.ios.tsx",
+        "packages/kit/src/primitives/actions/icon-button/icon-button.ios.tsx",
+        "packages/kit/src/primitives/actions/icon-button/stock-probe.ios.tsx"
       ],
       "rules": { "argo/icon-size": "off" }
     },

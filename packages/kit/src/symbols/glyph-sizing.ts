@@ -31,3 +31,18 @@ const appleSymbolScale = 0.8;
 export function appleSymbolShare(isChevron: boolean): number {
   return appleSymbolScale * (isChevron ? desktopChevronScale : 1);
 }
+
+/*
+ * Measured on an iPhone 17 Pro (iOS 26.5, @3x) against stock Settings: each row draws its symbol inside a 29pt
+ * plate and the mark inside that plate inks 19.7–21.3pt, while an SF Symbol's ink overruns its point size — Argo's
+ * 24pt row glyph inked 34pt, half again as large as Apple's own. A row's SF Symbol therefore draws at this share of
+ * its lane, landing its ink on stock's ~20pt; the lane keeps its full width, so the title beside it still starts
+ * where stock starts one. Android Settings needs no share: measured on a 420dpi emulator it draws the standard 24dp
+ * Material box, which is this table's phone size as it stands.
+ */
+const appleRowSymbolScale = 0.6;
+
+// The pixels a row's SF Symbol draws at inside a lane of `boxPixels`.
+export function appleRowSymbolPixels(boxPixels: number): number {
+  return Math.round(boxPixels * appleRowSymbolScale);
+}
