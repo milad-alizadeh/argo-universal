@@ -8,6 +8,8 @@ export type PopoverProps = KitProps<'Popover'> & {
   openOnHover?: boolean;
   // Web only: preserve inline text flow for a Link.
   inline?: boolean;
+  // Keep the trigger in its existing layout parent.
+  frameless?: boolean;
   className?: string;
   style?: StyleProp<ViewStyle>;
 };

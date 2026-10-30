@@ -10,7 +10,7 @@
     "./supervisor-command": "./src/supervisor-command.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "node ../../tools/plugin-typecheck.mts 'tsc --noEmit'",
     "test": "vitest run"
   },
   "dependencies": {

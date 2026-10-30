@@ -14,6 +14,7 @@ import {
   type ReferenceOption,
   type RichTextareaProps,
 } from './rich-textarea-props';
+import { useChosenResources } from './rich-textarea-resources';
 import { blockThemeClassNames } from './rich-textarea-theme';
 import { EditingPlugins } from './web/rich-textarea-editing-plugins';
 import {
@@ -22,6 +23,7 @@ import {
   MarkdownValuePlugin,
 } from './web/rich-textarea-field-plugins';
 import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
+import { HandlePlugin } from './web/rich-textarea-handle-plugin';
 import { LinkPlugins } from './web/rich-textarea-link-plugins';
 import {
   $importMarkdown,
@@ -110,16 +112,29 @@ type EditorParts = Omit<RichTextareaProps, 'disabled' | 'references'> & {
   references: readonly ReferenceOption[];
 };
 
+type TypeaheadParts = Omit<EditorParts, 'editable'>;
+
+// The `/` and `#` menus, and the resources the chosen `/` results carry.
+function EditorTypeahead({
+  onResourcesChange,
+  ...props
+}: TypeaheadParts): React.JSX.Element {
+  const choose = useChosenResources(props.value, onResourcesChange);
+
+  return <TypeaheadPlugin {...props} onChooseSuggestion={choose} />;
+}
+
 function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
   return (
     <>
       <MessageField {...props} />
-      <TypeaheadPlugin {...props} references={references} />
+      <EditorTypeahead {...props} references={references} />
       <EditingPlugins />
       <KeyboardPlugin />
       <EditablePlugin editable={props.editable} />
       {props.autoFocus && <AutoFocusPlugin />}
       <MarkdownValuePlugin {...props} />
+      <HandlePlugin handle={props.ref} />
     </>
   );
 }

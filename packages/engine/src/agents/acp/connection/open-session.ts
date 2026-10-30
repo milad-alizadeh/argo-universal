@@ -49,17 +49,20 @@ const newSession = async ({
   return { response, sessionId: response.sessionId };
 };
 
+const openingMethod = (
+  initialization: InitializeResponse,
+): 'session/resume' | 'session/load' =>
+  sessionCapabilities(initialization)?.resume
+    ? 'session/resume'
+    : 'session/load';
+
 const resumeSession = async (
   { agent, initialization }: OpeningInput,
   params: ResumeSessionRequest,
-): Promise<Opened> => {
-  const capabilities = sessionCapabilities(initialization);
-
-  if (!capabilities?.resume)
-    throw new Error('Agent does not support session/resume');
-
-  return {
-    response: await agent.request('session/resume', params),
-    sessionId: params.sessionId,
-  };
-};
+): Promise<Opened> => ({
+  response: await agent.request(openingMethod(initialization), {
+    ...params,
+    mcpServers: params.mcpServers ?? [],
+  }),
+  sessionId: params.sessionId,
+});

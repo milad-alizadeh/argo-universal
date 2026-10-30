@@ -10,11 +10,13 @@ const brief: BlobRef = { blobId: 'blob-3', mime: 'text/markdown', bytes: 30 };
 
 const vector: BlobRef = { blobId: 'blob-4', mime: 'image/svg+xml', bytes: 40 };
 
+const screenshotName = 'screenshot.png';
+
 describe('draftPrompt', () => {
   it('sends the text as written, then each image in draft order', () => {
     expect(
       draftPrompt('  Fix this  ', [
-        { name: 'screenshot.png', blob: screenshot },
+        { name: screenshotName, blob: screenshot },
         { name: 'photo.jpg', blob: photo },
       ]),
     ).toEqual([
@@ -24,9 +26,29 @@ describe('draftPrompt', () => {
     ]);
   });
 
+  it('sends each chosen suggestion resource after the text, before the uploads', () => {
+    const resource = {
+      type: 'resource_link' as const,
+      name: 'Item 7',
+      uri: 'example://items/7',
+    };
+
+    expect(
+      draftPrompt(
+        'See ITEM-7 ',
+        [{ name: screenshotName, blob: screenshot }],
+        [resource],
+      ),
+    ).toEqual([
+      { type: 'text', text: 'See ITEM-7 ' },
+      resource,
+      { type: 'image', mimeType: 'image/png', blob: screenshot },
+    ]);
+  });
+
   it('leaves out blank text', () => {
     expect(
-      draftPrompt(' \n', [{ name: 'screenshot.png', blob: screenshot }]),
+      draftPrompt(' \n', [{ name: screenshotName, blob: screenshot }]),
     ).toEqual([{ type: 'image', mimeType: 'image/png', blob: screenshot }]);
   });
 

@@ -19,7 +19,7 @@ const across = 'absolute top-1/2 right-0 h-px bg-border';
 // An ancestor's rail that runs on past this row to a later sibling of the row's own branch.
 function ThroughLane({ runs }: { runs: boolean }): ReactElement {
   return (
-    <View className={lane}>
+    <View pointerEvents="none" className={lane}>
       {runs ? <View className={cn(rail, 'inset-y-0')} /> : null}
     </View>
   );
@@ -28,7 +28,7 @@ function ThroughLane({ runs }: { runs: boolean }): ReactElement {
 // The parent's rail beside this row, with a stub across to the row's own lane; a last child's ends there.
 function ParentLane({ last }: { last: boolean }): ReactElement {
   return (
-    <View className={lane}>
+    <View pointerEvents="none" className={lane}>
       <View
         className={cn(rail, 'top-0', last ? 'bottom-1/2 -mb-px' : 'bottom-0')}
       />
@@ -42,9 +42,12 @@ type FoldProps = { parent: NonNullable<TreeRow['parent']>; title: string };
 // A parent's chevron folds and unfolds its children; an open parent's rail starts under it.
 function FoldLane({ parent, title }: FoldProps): ReactElement {
   return (
-    <View className={lane}>
+    <View pointerEvents="box-none" className={lane}>
       {parent.open ? (
-        <View className={cn(rail, 'top-1/2 bottom-0 mt-2')} />
+        <View
+          pointerEvents="none"
+          className={cn(rail, 'top-1/2 bottom-0 mt-2')}
+        />
       ) : null}
       <FoldButton parent={parent} title={title} />
     </View>
@@ -77,7 +80,7 @@ function OwnLane({
   if (tree.parent) return <FoldLane parent={tree.parent} title={title} />;
 
   return (
-    <View className={lane}>
+    <View pointerEvents="none" className={lane}>
       {tree.depth > 0 ? <View className={cn(across, 'left-0')} /> : null}
     </View>
   );
@@ -99,6 +102,14 @@ function ThroughLanes({ through }: { through: readonly boolean[] }): ReactNode {
 
 type LaneProps = { title: string; compact: boolean };
 
+// True when the row draws a chevron of its own, a button its row's press must not hold (list-item-beside-press.tsx).
+export function useFoldButton(): boolean {
+  const tree = useTreeRow();
+  const { treeDrawn } = useListLook();
+
+  return Boolean(tree?.parent && treeDrawn);
+}
+
 /*
  * The row's tree lane, drawn only on a wide desktop or web window: its ancestors' rails, its parent's, then its own
  * lane, which holds a parent's chevron. It runs the row's full height, past a regular row's own padding.
@@ -112,13 +123,16 @@ export function TreeLane(props: LaneProps): ReactNode {
   return <Lanes tree={tree} {...props} />;
 }
 
+const lanesClass = (compact: boolean): string =>
+  cn('flex-row self-stretch', !compact && '-my-4');
+
 function Lanes({
   tree,
   title,
   compact,
 }: LaneProps & { tree: TreeRow }): ReactElement {
   return (
-    <View className={cn('flex-row self-stretch', !compact && '-my-4')}>
+    <View pointerEvents="box-none" className={lanesClass(compact)}>
       <ThroughLanes through={tree.through} />
       {tree.depth > 0 ? <ParentLane last={tree.last} /> : null}
       <OwnLane tree={tree} title={title} />

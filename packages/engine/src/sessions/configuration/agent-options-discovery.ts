@@ -4,20 +4,20 @@ import {
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { requireInstalledAgent, type AcpSessionLease } from '../../agents';
-import {
-  writeDatabaseJobAndWaitForCommit,
-  type WriterActorRef,
-} from '../../storage';
+import type { WriterActorRef } from '../../storage';
 import type { SessionSources } from '../session-sources';
 import { openOptionsSession } from './agent-options-discovery-session';
-import { AgentOptionsJob } from './agent-options-job';
 import { readAgentConfiguration } from './agent-options-read';
+import { saveDiscovery } from './agent-options-save';
 import type { DiscoverySources } from './agent-options-shared';
+import { DiscoveredCommands } from './discovered-commands';
 import { discoverOptions } from './discovery';
 
 export type Discovery = {
   signal: AbortSignal;
   progress: (stage: 'installing' | 'loading', fraction?: number) => void;
+  // The options are read; the Slash commands may still be on their way.
+  configured: (options: SessionAgentOptionsOutput) => void;
 };
 
 type SavedOptions = ReturnType<typeof readAgentConfiguration>;
@@ -26,13 +26,12 @@ type DiscoveryState = {
   writer: WriterActorRef;
   saved: SavedOptions;
   lease: AcpSessionLease;
-  signal: AbortSignal;
+  commands: DiscoveredCommands;
+  discovery: Discovery;
 };
 
 const savedConfig = (saved: SavedOptions): SessionAgentOptionsOutput =>
   saved?.configOptions ?? [];
-
-const savedRevision = (saved: SavedOptions): number => saved?.revision ?? 0;
 
 const inputPicks = (
   input: SessionAgentOptionsInput,
@@ -45,20 +44,9 @@ async function discoveredOptions(
   return discoverOptions(state.lease, {
     saved: savedConfig(state.saved),
     picks: inputPicks(input),
-    signal: state.signal,
+    signal: state.discovery.signal,
   });
 }
-
-const discoveryJob = (
-  input: SessionAgentOptionsInput,
-  options: SessionAgentOptionsOutput,
-  saved: SavedOptions,
-): AgentOptionsJob =>
-  new AgentOptionsJob(
-    { agent: input.agent, projectId: input.projectId },
-    options,
-    { authoritative: true, expectedRevision: savedRevision(saved) },
-  );
 
 async function finishDiscovery(
   sources: DiscoverySources,
@@ -69,9 +57,10 @@ async function finishDiscovery(
 
   if (input.sessionId && state.saved) return options;
 
-  await writeDatabaseJobAndWaitForCommit(
-    state.writer,
-    discoveryJob(input, options, state.saved),
+  state.discovery.configured(options);
+  await saveDiscovery(
+    { ...state, signal: state.discovery.signal, input, options },
+    sources.commandsWaitMs,
   );
 
   return discoveryResult(sources, input, options);
@@ -106,9 +95,14 @@ async function prepareDiscovery(
   requireInstalledAgent(sources.installedAgents, input.agent);
   const writer = availableWriter(sources);
   const saved = readSavedOptions(sources, input, writer);
-  const lease = await openOptionsSession(sources, input, discovery);
+  const commands = new DiscoveredCommands();
 
-  return { writer, saved, lease, signal: discovery.signal };
+  const lease = await openOptionsSession(sources, input, {
+    ...discovery,
+    discovered: commands,
+  });
+
+  return { writer, saved, lease, commands, discovery };
 }
 
 // Discover in the Project folder and commit before publishing the refreshed snapshot.

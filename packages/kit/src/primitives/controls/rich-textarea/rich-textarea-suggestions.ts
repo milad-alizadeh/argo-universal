@@ -1,5 +1,15 @@
 import type { IconName } from '@repo/contracts/kit-symbols';
 
+export interface SuggestionResource {
+  type: 'resource_link';
+  name: string;
+  uri: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+}
+
 export interface ComposerSuggestion {
   id: string;
   label: string;
@@ -8,15 +18,8 @@ export interface ComposerSuggestion {
   insert: string;
   // Set only when the result is a Slash command: its name, which `commands` of the source lists.
   command?: string;
-  resource?: {
-    type: 'resource_link';
-    name: string;
-    uri: string;
-    title?: string;
-    description?: string;
-    mimeType?: string;
-    size?: number;
-  };
+  // Sent with the prompt beside the text, as an Issue reference's `resource_link` is (ADR-0023).
+  resource?: SuggestionResource;
 }
 
 export interface SlashCommandEntry {
@@ -25,10 +28,15 @@ export interface SlashCommandEntry {
   hint?: string;
 }
 
+export type SuggestionAnswer =
+  | readonly ComposerSuggestion[]
+  | Promise<readonly ComposerSuggestion[]>;
+
 export interface SuggestionSource {
   id: string;
   title: string;
-  query: (query: string) => readonly ComposerSuggestion[];
+  // A source may answer with a promise: it joins the list when it settles, and is ignored if the query has moved on.
+  query: (query: string) => SuggestionAnswer;
   /*
    * The Slash commands this source has, stated apart from `query` so a typed `/name` is decided at once.
    * A result becomes a command token only through `command`, never by what it inserts.
@@ -72,35 +80,29 @@ export interface InsertedText {
   caret: number;
 }
 
-const resultLimit = 8;
-
-/*
- * What the `/` list offers for a query: each source's first matches, in source order, empty sources
- * left out. The web and native lists both ask here, once per change; promises and stale answers (#1326) land here.
- */
-export function querySuggestions(
-  sources: readonly SuggestionSource[],
-  query: string,
-): SuggestionGroup[] {
-  return sources.flatMap((source) => {
-    const suggestions = source.query(query).slice(0, resultLimit);
-
-    return suggestions.length > 0 ? [{ source, suggestions }] : [];
-  });
+// The text typed after the `/` word the caret is in, or null when the caret is not in one.
+export function slashQueryAtCaret(text: string, caret: number): string | null {
+  return matchSuggestionTrigger(text.slice(0, caret))?.matchingString ?? null;
 }
 
-// What the list offers while the caret is in a `/` word: each source's matches, or null when none match.
-export function suggestionsAtCaret(
+// The space a word needs before it: none at the start of the text or after whitespace.
+export function separatorBefore(before: string): string {
+  return /(?:^|\s)$/.test(before) ? '' : ' ';
+}
+
+// Puts a word where the selection is, replacing it, with a space before it unless the text before is empty or ends in whitespace.
+export function insertWordAtCaret(
   text: string,
-  caret: number,
-  sources: readonly SuggestionSource[],
-): SuggestionGroup[] | null {
-  const match = matchSuggestionTrigger(text.slice(0, caret));
+  selection: { start: number; end: number },
+  word: string,
+): InsertedText {
+  const before = text.slice(0, selection.start);
+  const inserted = separatorBefore(before) + word;
 
-  if (!match) return null;
-  const groups = querySuggestions(sources, match.matchingString);
-
-  return groups.length > 0 ? groups : null;
+  return {
+    text: before + inserted + text.slice(selection.end),
+    caret: selection.start + inserted.length,
+  };
 }
 
 // Replaces the `/` word before the caret with the suggestion's text; the caret lands after it.

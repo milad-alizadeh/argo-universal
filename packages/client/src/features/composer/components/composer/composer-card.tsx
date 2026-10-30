@@ -4,15 +4,14 @@ import {
   SuggestionListHost,
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
-import { useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
-import { slashCommandSource } from '../../utils/slash-command-suggestions';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
   AttachmentLayout,
   TextLayout,
 } from './composer-card-types';
+import { draftChanges, useSuggestionSources } from './composer-text-draft';
 import { ComposerToolbar } from './composer-toolbar';
 import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
@@ -92,15 +91,19 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   };
 }
 
-function ComposerText(layout: TextLayout): React.JSX.Element {
-  const commands = layout.props.slashCommands;
+function ComposerText({
+  field: { attach },
+  ...layout
+}: TextLayout): React.JSX.Element {
+  const suggestions = useSuggestionSources(layout.props);
 
-  const suggestions = useMemo(
-    () => (commands?.length ? [slashCommandSource(commands)] : []),
-    [commands],
+  return (
+    <RichTextarea
+      {...textInputProps(layout)}
+      ref={attach}
+      suggestions={suggestions}
+    />
   );
-
-  return <RichTextarea {...textInputProps(layout)} suggestions={suggestions} />;
 }
 
 // The padding sits on the field, so a press anywhere in the white area focuses it.
@@ -113,14 +116,14 @@ function textInputProps({
   props,
   inactive,
   send,
-}: TextLayout): React.ComponentProps<typeof RichTextarea> {
+}: Omit<TextLayout, 'field'>): React.ComponentProps<typeof RichTextarea> {
   return {
     ...textFieldLook,
     autoFocus: !inactive,
     placeholder: props.placeholder ?? '',
     value: props.draft.text,
     disabled: inactive,
-    onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),
+    ...draftChanges(props),
     onSubmit: send,
   };
 }

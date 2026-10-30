@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import type * as React from 'react';
+import { expect, fn } from 'storybook/test';
+import { pressTarget } from '#mocks/press-target';
 import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { List } from './list';
-import { nestedList } from './list-nested-fixtures';
+import { nestedList, nestedRegularList } from './list-nested-fixtures';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Nested',
@@ -94,17 +96,89 @@ export const FoldsFromTheKeyboard: Story = {
   },
 };
 
+const pressParent = fn();
+
+const pressChild = fn();
+
+// A parent and its child, each with a press of its own.
+const pressedRows = (): React.JSX.Element => (
+  <List appearance="plain" density="compact">
+    <ListItem key="parent" title={parent} onPress={pressParent}>
+      <ListItem key="child" title={child} onPress={pressChild} />
+    </ListItem>
+  </List>
+);
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+// The middle of an element, where a tap lands.
+const middle = (element: Element): Point => {
+  const box = element.getBoundingClientRect();
+
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+};
+
+// What a tap reaches at a point.
+function tapAt(x: number, y: number): Element {
+  const target = document.elementFromPoint(x, y);
+
+  if (!target) throw new Error('Nothing at the point to press');
+
+  return target;
+}
+
 // Pressing a parent's row presses the row; only its chevron folds it.
 export const RowPressKeepsChildren: Story = {
-  args: nestedList,
+  render: () => pressedRows(),
   play: async ({ canvas, userEvent }) => {
+    pressParent.mockClear();
     await settleLayout('wide');
-    await userEvent.click(await canvas.findByText(parent));
+    await userEvent.click(pressTarget(await canvas.findByText(parent)));
 
+    await expect(pressParent).toHaveBeenCalledOnce();
     await expectShown(canvas, [child]);
     await expect(canvas.getByRole('button', chevron(true))).toBeVisible();
   },
 };
+
+// A child's rail, under its parent's chevron, presses the child's row rather than taking the press.
+export const RailPressesItsRow: Story = {
+  render: () => pressedRows(),
+  play: async ({ canvas, userEvent }) => {
+    pressChild.mockClear();
+    await settleLayout('wide');
+
+    const lane = middle(await canvas.findByRole('button', chevron(true)));
+    const row = middle(await canvas.findByText(child));
+
+    await userEvent.click(tapAt(lane.x, row.y));
+
+    await expect(pressChild).toHaveBeenCalledOnce();
+    await expectShown(canvas, [child]);
+  },
+};
+
+// A parent's chevron sits beside its row's press, never inside it, so the web nests no button in another.
+const chevronBeside = (args: Story['args']): Story => ({
+  args,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    const toggle = await canvas.findByRole('button', chevron(true));
+
+    await expect(
+      toggle.parentElement?.closest('button, [role="button"]'),
+    ).toBeNull();
+  },
+});
+
+export const ChevronIsNotInsideTheRowsButton = chevronBeside(nestedList);
+
+export const ChevronIsNotInsideARegularRowsButton =
+  chevronBeside(nestedRegularList);
 
 // A phone width draws every child flat after its parent, with nothing to fold.
 export const FlatOnPhone: Story = {

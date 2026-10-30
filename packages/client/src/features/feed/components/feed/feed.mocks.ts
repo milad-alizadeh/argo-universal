@@ -131,11 +131,3 @@ export const arrivingRow: SessionUpdate = {
   position: lastLongRow.position + 1,
   revision: newestRevision + 1,
 };
-
-// The rows the Agent streams to the end after the arriving row, one at a time.
-export const streamedRow = (index: number): SessionUpdate => ({
-  ...arrivingRow,
-  id: `streamed-row-${index}`,
-  position: arrivingRow.position + 1 + index,
-  revision: arrivingRow.revision + 1 + index,
-});

@@ -95,12 +95,7 @@ const readStored = (
 const unchanged = (next: Stored, row: StoredRow | undefined): boolean =>
   next.revision === row?.revision;
 
-function saveChanged(
-  transaction: StorageTransaction,
-  row: StoredRow | undefined,
-  next: Stored | undefined,
-): void {
-  if (!next || unchanged(next, row)) return;
+const upsert = (transaction: StorageTransaction, next: Stored): void => {
   transaction
     .insert(agentOptions)
     .values(next)
@@ -109,10 +104,25 @@ function saveChanged(
       set: next,
     })
     .run();
+};
+
+// The revision saved, or `undefined` when this job changed nothing.
+function saveChanged(
+  transaction: StorageTransaction,
+  row: StoredRow | undefined,
+  next: Stored | undefined,
+): number | undefined {
+  if (!next || unchanged(next, row)) return undefined;
+  upsert(transaction, next);
+
+  return next.revision;
 }
 
 // Discovery preserves preferences and cannot overwrite an ACP update received while it opened.
 export class AgentOptionsJob implements WriterJob, QueuedAgentOptionsChange {
+  // The revision this job wrote, once committed; `undefined` when a newer write took precedence.
+  public committedRevision: number | undefined;
+
   public constructor(
     private readonly owner: SessionAgentOptionsInput,
     private readonly options: SessionConfigOption[] | undefined,
@@ -166,6 +176,6 @@ export class AgentOptionsJob implements WriterJob, QueuedAgentOptionsChange {
 
     const next = this.project(row && decode(row));
 
-    saveChanged(transaction, row, next);
+    this.committedRevision = saveChanged(transaction, row, next);
   }
 }

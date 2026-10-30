@@ -15,7 +15,7 @@ import {
   toUploadForms,
 } from '../utils/attachment-draft';
 import { type DraftKey, type DraftOwner, draftKey } from '../utils/draft-key';
-import { draftPrompt } from '../utils/draft-prompt';
+import { draftPrompt, uploadedAttachments } from '../utils/draft-prompt';
 import { droppedFiles, pickFiles, pickImages } from './pick-attachments';
 import { useKeptDraft } from './use-kept-draft';
 
@@ -158,22 +158,22 @@ async function uploadDraftAsPrompt(
   upload.reset();
   const uploads = toUploadForms(sent, state.files);
 
-  const blobs = uploads.length
-    ? await upload
-        .mutateAsync(uploads.map(({ form }) => form))
-        .catch((): undefined => undefined)
-    : [];
+  const blobs = await storedBlobs(upload, uploads);
 
-  return blobs && draftPrompt(sent.text, uploadedAttachments(uploads, blobs));
+  return (
+    blobs &&
+    draftPrompt(sent.text, uploadedAttachments(uploads, blobs), sent.resources)
+  );
 }
 
-function uploadedAttachments(
+// The Blob stored for each upload, or undefined when storing failed.
+function storedBlobs(
+  upload: Upload,
   uploads: ReturnType<typeof toUploadForms>,
-  blobs: BlobRef[],
-): { name: string; blob: BlobRef }[] {
-  return uploads.flatMap(({ name }, index) => {
-    const blob = blobs[index];
+): Promise<BlobRef[] | undefined> {
+  if (uploads.length === 0) return Promise.resolve([]);
 
-    return blob ? [{ name, blob }] : [];
-  });
+  return upload
+    .mutateAsync(uploads.map(({ form }) => form))
+    .catch((): undefined => undefined);
 }

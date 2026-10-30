@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { useImperativeHandle, useRef } from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 import { cn } from '#kit/utils';
 import {
@@ -7,17 +8,17 @@ import {
 } from './rich-textarea-native-suggestions';
 import {
   plainFieldClassName,
+  type RichTextareaHandle,
   type RichTextareaProps,
 } from './rich-textarea-props';
 import { SuggestionPortal } from './rich-textarea-suggestion-list';
-import type { SuggestionSource } from './rich-textarea-suggestions';
+
+type TextInputInstance = React.ComponentRef<typeof TextInput>;
 
 // The phone drawing: a plain native text area that grows to 6 lines, then scrolls (no numberOfLines).
 const maximumVisibleLines = 6;
 
 const lineHeight = 20;
-
-const noSuggestions: readonly SuggestionSource[] = [];
 
 // What the text field takes: the drawing's own props stay out of it.
 function textFieldProps({
@@ -27,6 +28,8 @@ function textFieldProps({
   autoFocus: _autoFocus,
   references: _references,
   suggestions: _suggestions,
+  onResourcesChange: _onResourcesChange,
+  ref: _ref,
   ...field
 }: RichTextareaProps): TextInputProps {
   return field;
@@ -48,35 +51,63 @@ const fieldClassName = (props: RichTextareaProps): string =>
     props.disabled === true && 'opacity-50',
   );
 
+const fieldLook = {
+  multiline: true,
+  textAlignVertical: 'top',
+  style: { maxHeight: maximumVisibleLines * lineHeight },
+} as const;
+
 interface PlainFieldProps {
   props: RichTextareaProps;
+  inputRef: React.Ref<TextInputInstance>;
   fieldProps: NativeSuggestions['fieldProps'];
 }
 
-function PlainField({ props, fieldProps }: PlainFieldProps): React.JSX.Element {
+function PlainField({
+  props,
+  inputRef,
+  fieldProps,
+}: PlainFieldProps): React.JSX.Element {
   return (
     <TextInput
+      ref={inputRef}
       {...plainFieldProps(props)}
       {...fieldProps}
-      multiline
-      textAlignVertical="top"
-      style={{ maxHeight: maximumVisibleLines * lineHeight }}
+      {...fieldLook}
       className={fieldClassName(props)}
     />
   );
 }
 
+// The handle's `insertWord`, which focuses the field before writing into it.
+function useFieldHandle(
+  props: RichTextareaProps,
+  insertWord: RichTextareaHandle['insertWord'],
+): React.RefObject<TextInputInstance | null> {
+  const inputRef = useRef<TextInputInstance>(null);
+
+  const handle = (): RichTextareaHandle => ({
+    insertWord: (word): void => {
+      inputRef.current?.focus();
+      insertWord(word);
+    },
+  });
+
+  useImperativeHandle(props.ref, handle, [insertWord]);
+
+  return inputRef;
+}
+
 function RichTextarea(props: RichTextareaProps): React.JSX.Element {
-  const { groups, choose, fieldProps } = useNativeSuggestions(
-    props.value,
-    props.onChangeText,
-    props.suggestions ?? noSuggestions,
-  );
+  const { groups, choose, fieldProps, insertWord } =
+    useNativeSuggestions(props);
+
+  const inputRef = useFieldHandle(props, insertWord);
 
   return (
     <View className="w-full">
       {groups ? <SuggestionPortal groups={groups} onChoose={choose} /> : null}
-      <PlainField props={props} fieldProps={fieldProps} />
+      <PlainField props={props} inputRef={inputRef} fieldProps={fieldProps} />
     </View>
   );
 }

@@ -18,7 +18,7 @@ export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
       <SizeClass only="wide">
         <SubagentFeedHeader {...props} />
       </SizeClass>
-      <Feed {...props.feed} alignAtTop />
+      <Feed {...props.feed} opensAtStart />
     </View>
   );
 }

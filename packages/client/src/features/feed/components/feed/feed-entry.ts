@@ -24,17 +24,26 @@ export const entryType = (
 export const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
 
-// The drawn items, then the live header while it shows.
+const isOpenGroup = (
+  item: FeedViewItem | undefined,
+): item is Extract<FeedViewItem, { type: 'group'; state: 'open' }> =>
+  item?.type === 'group' && item.state === 'open';
+
+// The drawn items, then the live header while it shows; an open group last takes it as its title.
 export function withLiveHeader(
   drawnItems: FeedViewItem[],
   liveHeader: LiveHeaderValue | null,
-  toolCall: ToolCallUpdate | undefined,
+  toolCall?: ToolCallUpdate,
 ): FeedEntry[] {
   const shown = shownLiveHeader(drawnItems, liveHeader);
+  const newest = drawnItems.at(-1);
 
-  return shown
-    ? [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }]
-    : drawnItems;
+  if (!shown) return drawnItems;
+
+  if (isOpenGroup(newest))
+    return [...drawnItems.slice(0, -1), { ...newest, liveHeader: shown }];
+
+  return [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }];
 }
 
 export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {

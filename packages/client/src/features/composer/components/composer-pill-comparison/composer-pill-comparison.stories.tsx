@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { SessionColumn } from '#lib/product/session-column';
 import { sharedControls } from './composer-pill-comparison-fixtures';
-import { ComposerPillComparison } from './composer-pill-comparison.mocks';
+import {
+  CompactMenuSurface as CompactMenuSurfaceFixture,
+  ComposerPillComparison,
+} from './composer-pill-comparison.mocks';
 
 const meta = {
   title: 'Composer/ComposerPillComparison',
@@ -28,3 +31,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const SharedControls: Story = { args: sharedControls };
+
+/* The render gate audits fill and exterior pixels at the compact viewport. */
+export const CompactMenuSurface: Story = {
+  args: sharedControls,
+  globals: { mode: 'light', viewport: { value: 'phone' } },
+  render: CompactMenuSurfaceFixture,
+};

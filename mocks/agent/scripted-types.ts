@@ -85,6 +85,8 @@ export type ScriptedScenario = {
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
+  // Sent for a new Session once its response has gone out, as an Agent sends its Slash commands.
+  afterOpening?: readonly ScriptedStep[];
   resumedSteps?: readonly ScriptedStep[];
   // App E2E may give a Session-token process its own scenario, separate from discovery.
   sessionProcess?: ScriptedScenario;

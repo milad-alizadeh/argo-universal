@@ -10,8 +10,12 @@
   },
   // No task reads a README, so every task leaves them out. Other Markdown stays in: mocks/agent/release-notes.md is an e2e fixture.
   "tasks": {
+    "@repo/contracts#generate:plugin-kit": {
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md", "!**/*.test.ts"],
+      "outputs": ["$TURBO_ROOT$/packages/plugin-kit/src/components.gen.d.ts"]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@repo/contracts#generate:plugin-kit"],
       // The web export bundles no tests, so a test edit keeps the export and the e2e shards cached.
       // Only build drops test stories: Storybook's tests read @repo/client's through transit.
       "inputs": [
@@ -28,19 +32,23 @@
     },
     // Through transit, type checks run in parallel and a dependency's test edit keeps its dependents cached (Turborepo TypeScript guide).
     "check-types": {
-      "dependsOn": ["transit"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"]
+      "dependsOn": ["transit", "@repo/contracts#generate:plugin-kit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "$TURBO_ROOT$/tools/plugin-typecheck.mts"
+      ]
     },
     // Per-package Vitest runs so CI skips unchanged packages; the root vitest.config.ts stays for local runs (Turborepo Vitest guide).
     "test": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "@repo/contracts#generate:plugin-kit"],
       "env": ["VITEST_MAX_WORKERS"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": []
     },
     // Storybook's browser tests, apart from test so CI runs them in their own sharded job; a shard's --shard argument feeds its hash.
     "test:stories": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "@repo/contracts#generate:plugin-kit"],
       "env": ["VITEST_MAX_WORKERS"],
       "passThroughEnv": ["ARGO_BROWSER_SUITE_LOCK_HELD"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
@@ -48,7 +56,7 @@
     },
     // @repo/e2e lists the Server, App, and Desktop as dependencies, so their sources and the web export feed this hash (Turborepo Playwright guide).
     "test:web": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@repo/contracts#generate:plugin-kit"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       // A CI shard's blob report replays from the cache too, so the merged HTML report stays whole.
       "outputs": ["playwright-report/**", "blob-report/**"],
@@ -68,7 +76,7 @@
     },
     // Electron Forge's package; e2e launches Electron from .vite/build, so the 300 MB out/ stays out of the shared cache.
     "package": {
-      "dependsOn": ["^transit"],
+      "dependsOn": ["^transit", "@repo/contracts#generate:plugin-kit"],
       // The package bundles no tests, so a test edit keeps it and the Electron e2e cached.
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -92,6 +100,7 @@
       ]
     },
     "dev": {
+      "dependsOn": ["@repo/contracts#generate:plugin-kit"],
       "cache": false,
       "persistent": true,
       // Strict env mode hides the Server home, port, and Expo web URL from dev scripts otherwise.

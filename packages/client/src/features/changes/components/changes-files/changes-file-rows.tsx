@@ -147,16 +147,24 @@ const loadErrorOf = (diff: FileDiffPages | undefined): string | undefined =>
 const hasNothingToShow = (diff: FileDiffPages | undefined): boolean =>
   diff !== undefined && settled(diff);
 
+function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
+  return (
+    <Text role="secondary" tone={tone}>
+      {text}
+    </Text>
+  );
+}
+
 function StatusContent(props: {
   file: ChangedFile;
   diff?: FileDiffPages;
 }): React.JSX.Element {
   const loadError = loadErrorOf(props.diff);
 
-  if (loadError !== undefined) return <Text tone="danger">{loadError}</Text>;
+  if (loadError !== undefined) return statusText(loadError, 'danger');
 
   if (hasNothingToShow(props.diff))
-    return <Text tone="muted">No lines to show</Text>;
+    return statusText('No lines to show', 'muted');
 
   return <Spinner accessibilityLabel={loadingDiffLabel(props.file.path)} />;
 }

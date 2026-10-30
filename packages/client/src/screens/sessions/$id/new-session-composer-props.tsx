@@ -18,6 +18,7 @@ export const promptComposerProps = (
   props: ReadySessionNewViewProps,
 ): ComposerProps => ({
   ...composerDraftProps(props),
+  slashCommands: props.slashCommands,
   onAttachImages: props.onAttachImages,
   onAttachFiles: props.onAttachFiles,
   onSend: props.onSend,

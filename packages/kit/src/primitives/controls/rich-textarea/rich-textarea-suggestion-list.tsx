@@ -54,19 +54,40 @@ function SuggestionRow({ suggestion, onChoose }: RowProps): React.JSX.Element {
   );
 }
 
-function suggestionRows({
+interface SectionProps {
+  group: SuggestionGroup;
+  onChoose: SuggestionListProps['onChoose'];
+}
+
+const sectionRows = ({ group, onChoose }: SectionProps): React.JSX.Element[] =>
+  group.suggestions.map((suggestion) => (
+    <SuggestionRow
+      key={suggestion.id}
+      suggestion={suggestion}
+      onChoose={onChoose}
+    />
+  ));
+
+function SuggestionSection(props: SectionProps): React.JSX.Element {
+  return (
+    <ListSection title={props.group.source.title}>
+      {sectionRows(props)}
+    </ListSection>
+  );
+}
+
+// Each source's title heads its own section, in the order the sources are given.
+function suggestionSections({
   groups,
   onChoose,
 }: SuggestionListProps): React.JSX.Element[] {
-  return groups.flatMap(({ source, suggestions }) =>
-    suggestions.map((suggestion) => (
-      <SuggestionRow
-        key={`${source.id}-${suggestion.id}`}
-        suggestion={suggestion}
-        onChoose={onChoose}
-      />
-    )),
-  );
+  return groups.map((group) => (
+    <SuggestionSection
+      key={group.source.id}
+      group={group}
+      onChoose={onChoose}
+    />
+  ));
 }
 
 function SuggestionListBody(props: SuggestionListProps): React.JSX.Element {
@@ -77,9 +98,7 @@ function SuggestionListBody(props: SuggestionListProps): React.JSX.Element {
       role="group"
     >
       <ListPlaceContext value="popover">
-        <List {...listProps}>
-          <ListSection>{suggestionRows(props)}</ListSection>
-        </List>
+        <List {...listProps}>{suggestionSections(props)}</List>
       </ListPlaceContext>
     </View>
   );

@@ -3,6 +3,7 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen } from 'storybook/test';
+import { binaryChanges, binaryPath } from './session-changes-empty.test.mocks';
 import {
   findFileHeader,
   largeFile,
@@ -27,6 +28,8 @@ type Story = StoryObj<typeof meta>;
 
 const nothingChanged = 'No changes';
 
+const noLines = 'No lines to show';
+
 const loadErrorTitle = "Couldn't load changes";
 
 export const NoChangesSinceMain: Story = {
@@ -41,6 +44,43 @@ export const NoChangesSinceMain: Story = {
     }
   },
 };
+
+// A binary file remains accessible by its full path while its empty diff can fold and reopen.
+function binaryFile(width: number): Story {
+  return {
+    args: { catalog: binaryChanges },
+    beforeEach: (): Promise<void> => settleLayout(width),
+    play: async ({ userEvent }) => {
+      const header = await findFileHeader(binaryPath);
+      const mark = screen.getByRole('checkbox', { name: 'Viewed' });
+      const headerBounds = header.getBoundingClientRect();
+      const markBounds = mark.getBoundingClientRect();
+
+      await expect(header).toHaveAccessibleName(`Diff for ${binaryPath}`);
+      await expect(mark).toBeVisible();
+      await expect(headerBounds.right).toBeLessThanOrEqual(markBounds.left);
+
+      if (width === layoutWidths.wide) {
+        const basename = screen.getByText(binaryPath.split('/').at(-1) ?? '');
+
+        await expect(basename.scrollWidth).toBeGreaterThan(
+          basename.clientWidth,
+        );
+      }
+
+      await expect(await screen.findByText(noLines)).toBeVisible();
+      await userEvent.click(mark);
+      await expect(header).toHaveAttribute('aria-expanded', 'false');
+      await expect(screen.queryByText(noLines)).toBeNull();
+      await userEvent.click(mark);
+      await expect(await screen.findByText(noLines)).toBeVisible();
+    },
+  };
+}
+
+export const BinaryFilePhone = binaryFile(layoutWidths.phone);
+
+export const BinaryFileWide = binaryFile(layoutWidths.wide);
 
 export const LoadingShowsSpinner: Story = {
   args: { catalog: loadingChanges },

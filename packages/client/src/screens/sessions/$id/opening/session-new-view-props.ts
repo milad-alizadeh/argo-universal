@@ -92,6 +92,7 @@ const readyProps = (
   ...projectProps(wiring),
   ...agentChoiceProps(agents, wiring),
   configuration: configurationProps(wiring),
+  slashCommands: wiring.discovery?.commands ?? undefined,
   ...draftProps(wiring),
   ...openingProps(wiring),
   ...noticeProps(wiring),

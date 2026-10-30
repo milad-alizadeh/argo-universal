@@ -1,5 +1,6 @@
-import type { SessionConfigOption, SlashCommand } from '@repo/contracts';
+import type { SessionConfigOption } from '@repo/contracts';
 import { readAcpConfiguration } from '../acp/acp-configuration';
+import { toSlashCommands } from '../acp/acp-slash-commands';
 import {
   acpUpdateEvent,
   type SessionContext,
@@ -67,18 +68,11 @@ const readOptions = (
   }
 };
 
-const commandsFrom = (update: CommandsUpdate): SlashCommand[] =>
-  update.availableCommands.map(({ name, description, input }) => ({
-    name,
-    description,
-    hint: input?.hint,
-  }));
-
 const storedCommands = (
   context: SessionContext,
   update: CommandsUpdate,
 ): ConfigurationStep => {
-  const commands = commandsFrom(update);
+  const commands = toSlashCommands(update.availableCommands);
 
   return {
     change: { slashCommands: commands },
