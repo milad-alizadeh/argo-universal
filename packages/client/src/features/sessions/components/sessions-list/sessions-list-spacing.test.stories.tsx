@@ -5,7 +5,12 @@ import {
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
 import { orphanSessions } from './sessions-list-nested-fixtures';
-import { flatSessions } from './sessions-list-spacing-fixtures';
+import {
+  compactStatusSessions,
+  flatSessions,
+  mixedSessions,
+  statusSessions,
+} from './sessions-list-spacing-fixtures';
 
 const meta = {
   ...sessionsMeta,
@@ -36,12 +41,18 @@ if (!selected) throw new Error('The spacing fixture needs a selected Session');
 
 const selectedTitle = selected.title;
 
-function flatRows(width: number, expectedGap: number): Story {
+type Fixture = typeof statusSessions | typeof compactStatusSessions;
+
+/*
+ * Every row's logo sits `expectedGap` from its title, whatever its status, Agent or title length, and its content stays
+ * inside the row. The age ends each row, so a long title truncates instead of pushing it out.
+ */
+function rowsAt(args: Fixture, width: number, expectedGap: number): Story {
   return {
-    args: flatSessions,
+    args,
     beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
-      for (const session of flatSessions.sessions) {
+      for (const session of args.sessions) {
         const title = await canvas.findByText(session.title);
         const row = title.closest<HTMLElement>('[role="button"]');
 
@@ -56,8 +67,19 @@ function flatRows(width: number, expectedGap: number): Story {
         await expect(within(row).getByText(/^(now|\d+[smhdw])$/)).toBeVisible();
         await expectLogoGap(title, logo, expectedGap);
       }
+    },
+  };
+}
 
-      const title = canvas.getByText(selectedTitle);
+function flatRows(width: number, expectedGap: number): Story {
+  const rows = rowsAt(flatSessions, width, expectedGap);
+
+  return {
+    ...rows,
+    play: async (context) => {
+      await rows.play?.(context);
+
+      const title = context.canvas.getByText(selectedTitle);
       await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
       await expect(title.closest('[role="button"]')).toHaveAttribute(
         'aria-pressed',
@@ -71,6 +93,33 @@ function flatRows(width: number, expectedGap: number): Story {
 export const FlatRowsPhone = flatRows(390, 8);
 
 export const FlatRowsWide = flatRows(1440, 10);
+
+// Running, failed, idle, unread and waiting Sessions of both Agents keep one gap.
+export const StatusRowsWide = rowsAt(statusSessions, 1440, 10);
+
+export const StatusRowsPhone = rowsAt(statusSessions, 390, 8);
+
+// A Compact row is one line with its lanes 10 apart, the same logo-to-title gap as a Regular row.
+export const CompactRowsWide = rowsAt(compactStatusSessions, 1440, 10);
+
+export const CompactRowsPhone = rowsAt(compactStatusSessions, 390, 8);
+
+// A parent and a childless Session in one group start their titles on one edge, with the tree lane between logo and text.
+export const MixedTreeRows: Story = {
+  args: mixedSessions,
+  beforeEach: () => settleLayout('wide'),
+  play: async ({ canvas }) => {
+    const parent = await canvas.findByText('Investigate the regression');
+    const leaf = await canvas.findByText('Standalone Session');
+
+    await waitFor(() =>
+      expect(leaf.getBoundingClientRect().left).toBeCloseTo(
+        parent.getBoundingClientRect().left,
+        0,
+      ),
+    );
+  },
+};
 
 async function expectLogoGap(
   title: HTMLElement,
