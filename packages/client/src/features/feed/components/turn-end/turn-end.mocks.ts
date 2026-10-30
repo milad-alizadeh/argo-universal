@@ -25,6 +25,7 @@ export const turnEndItems = (
 
 export const endings = {
   stopped: stoppedTurn.end,
+  denied: { ...stoppedTurn.end, permissionDenied: true },
   outputLimit: { ...stoppedTurn.end, stopReason: 'max_tokens' },
   stepLimit: { ...stoppedTurn.end, stopReason: 'max_turn_requests' },
   refused: { ...stoppedTurn.end, stopReason: 'refusal' },

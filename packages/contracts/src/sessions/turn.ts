@@ -42,6 +42,8 @@ export const TurnEnd = z.strictObject({
   stopReason: turnColumns.shape.stopReason.unwrap(),
   error: TurnError.nullable(),
   durationMs: z.number(),
+  // The user denied a Permission request and the Agent then ended the Turn as cancelled; absent otherwise, and never set by a Stop.
+  permissionDenied: z.literal(true).optional(),
 });
 
 export type TurnEnd = z.infer<typeof TurnEnd>;

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { TurnEndRow } from './turn-end';
 import {
   authenticationRequiredTurnEnd,
+  deniedTurnEnd,
   erroredTurnEnd,
   erroredWithoutDetailsTurnEnd,
   outputLimitTurnEnd,
@@ -28,6 +29,9 @@ type Story = StoryObj<typeof meta>;
 
 // You stopped the Turn, after how long it ran.
 export const Stopped: Story = { args: stoppedTurnEnd };
+
+// You denied a Permission request and the Agent ended the Turn; not a Stop.
+export const Denied: Story = { args: deniedTurnEnd };
 
 export const OutputLimit: Story = { args: outputLimitTurnEnd };
 

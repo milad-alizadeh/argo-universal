@@ -5,6 +5,10 @@ export const stoppedTurnEnd = {
   end: endings.stopped,
 } satisfies TurnEndRowProps;
 
+export const deniedTurnEnd = {
+  end: endings.denied,
+} satisfies TurnEndRowProps;
+
 export const outputLimitTurnEnd = {
   end: endings.outputLimit,
 } satisfies TurnEndRowProps;
