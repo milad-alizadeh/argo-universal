@@ -24,6 +24,10 @@ _Avoid_: Worker, child, core
 The one queue in the Engine that writes Session updates, Turns, and Sessions to storage. Until a job commits, readers show its queued copy over the stored one.
 _Avoid_: Write queue, persister, flusher
 
+**Queued role**:
+A part a Writer job plays in reads while it waits in the queue, such as the Session row or Feed rows it will write. A reader finds a role by what the job offers, never by its kind.
+_Avoid_: Projection, job type
+
 **App**:
 A program that shows Argo to a person: the universal app on iOS, Android, and web, or the desktop app.
 _Avoid_: Client (ACP uses that word for the Server), frontend
@@ -73,6 +77,14 @@ _Avoid_: Session registry, Session lookup
 **Session work source**:
 Where an Operation reads and watches its Operation work: a Session opening, a Turn, or an Operation's Tool call, read again on each change.
 _Avoid_: Work store, work tracker
+
+**Open Sessions**:
+The Engine's live Sessions, keyed by Session id. A Session command reaches a Session only through them, and a Session they no longer hold is not found.
+_Avoid_: Session registry, active Sessions
+
+**Ready Session**:
+An open Session that accepts Session commands now. Its statechart says so with a tag; nothing outside the statechart reads its state names.
+_Avoid_: Idle Session, live Session (for this)
 
 ## Plugins
 
@@ -182,6 +194,10 @@ _Avoid_: Workspace, worktree (when the main checkout is also possible)
 One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
 _Avoid_: PR, pull request, diff, branch (for the work)
 
+**Comparison**:
+What a Checkout's changed files are measured against: `main`, `uncommitted`, or another branch.
+_Avoid_: Base, diff target
+
 **Composer**:
 Where the user writes the next prompt for a Session, with its Agent, model and mode controls.
 _Avoid_: Input, chat box, prompt bar
@@ -189,6 +205,14 @@ _Avoid_: Input, chat box, prompt bar
 **Starting choices**:
 The model, effort and mode a new Session starts with, sent in that order because the model decides which effort levels and modes remain. Effort is ACP's `thought_level`; whether the model has effort at all comes from its `supportsEffort`.
 _Avoid_: Preferences, defaults, config options (for the three alone)
+
+**Session configuration**:
+The Agent options a Session runs with: its model, effort, mode and the rest the Agent offers. Choices made before Send are applied in Starting choices order; a choice made during a Turn is held until the Turn ends.
+_Avoid_: Settings, config options (for the whole set)
+
+**Held choice**:
+A Session configuration choice made while a Turn runs, held and sent to the Agent when the Turn ends.
+_Avoid_: Pending option, queued config
 
 **Slash command**:
 A command or skill the Agent offers, named in a prompt as `/name` with optional arguments.
@@ -209,6 +233,10 @@ _Avoid_: Message (alone), input, instruction
 **Turn**:
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
+
+**Stored Turn**:
+A Turn as read back from storage, before the Writer's queued changes are laid over it.
+_Avoid_: Turn row, saved Turn
 
 **Agent session**:
 The Agent's own live session behind a Session, identified by the Agent's session id.
@@ -255,6 +283,10 @@ _Avoid_: Reasoning, thinking
 **Tool call**:
 One action that the Agent took, such as reading a file, editing files, or running a command.
 _Avoid_: Tool use, function call, command (for the action)
+
+**Tool call facts**:
+What the Feed needs to know about a Tool call, decoded once from its wire details: whether it explores, edits or runs a command, the path it names, and its permission outcome.
+_Avoid_: Tool call meta
 
 **Plan**:
 The Agent's live checklist for a Session. The Agent replaces it whole on each change.
