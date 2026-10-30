@@ -4,7 +4,6 @@ import type {
   SessionAnswerPermissionInput,
   SessionAnswerPermissionOutput,
 } from '@repo/contracts';
-import type { OpenSessions } from './open-sessions';
 import {
   acceptedElicitationContent,
   validateElicitationAnswer,
@@ -12,22 +11,25 @@ import {
 } from './session-admission';
 import { requireWritableSession, sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
+import type { HandlerSources } from './session-sources';
+
+type AnswerSources = HandlerSources<'readSession', 'admit' | 'session'>;
 
 const findAnsweredSession = (
-  open: OpenSessions,
+  sources: AnswerSources,
   sessionId: string,
 ): SessionActorRef | undefined => {
-  open.admit();
-  requireWritableSession(open.readSession(sessionId));
+  sources.open.admit();
+  requireWritableSession(sources.readSession(sessionId));
 
-  return open.session(sessionId);
+  return sources.open.session(sessionId);
 };
 
 export const answerSessionPermission = (
-  open: OpenSessions,
+  sources: AnswerSources,
   input: SessionAnswerPermissionInput,
 ): SessionAnswerPermissionOutput => {
-  const sessionActor = findAnsweredSession(open, input.sessionId);
+  const sessionActor = findAnsweredSession(sources, input.sessionId);
   validatePermissionAnswer(sessionActor, input);
   sendSessionCommand(sessionActor, {
     type: 'session.answerPermission',
@@ -39,10 +41,10 @@ export const answerSessionPermission = (
 };
 
 export const answerSessionElicitation = (
-  open: OpenSessions,
+  sources: AnswerSources,
   input: SessionAnswerElicitationInput,
 ): SessionAnswerElicitationOutput => {
-  const sessionActor = findAnsweredSession(open, input.sessionId);
+  const sessionActor = findAnsweredSession(sources, input.sessionId);
   validateElicitationAnswer(sessionActor, input);
   sendSessionCommand(sessionActor, {
     type: 'session.answerElicitation',

@@ -1,7 +1,9 @@
 import type { SessionRecord } from '@repo/contracts';
-import type { OpenSessions } from './open-sessions';
+import type { HandlerSources } from './session-sources';
 import { readLatestTurns } from './session-storage';
 import { readChildSessions } from './subagents/children';
+
+type DelegationSources = HandlerSources<'database' | 'findWriter', 'context'>;
 
 const startedChildren = (
   sources: Parameters<typeof readChildSessions>[0],
@@ -14,11 +16,11 @@ const startedChildren = (
     );
 
 const isRunning = (
-  open: OpenSessions,
+  sources: DelegationSources,
   latest: ReturnType<typeof readLatestTurns>,
   sessionId: string,
 ): boolean => {
-  const live = open.context(sessionId);
+  const live = sources.open.context(sessionId);
 
   return live
     ? live.activeTurnId !== null
@@ -26,19 +28,19 @@ const isRunning = (
 };
 
 export function runningStartedSessions(
-  open: OpenSessions,
+  sources: DelegationSources,
   callerId: string,
 ): string[] {
-  const sources = { database: open.database, writer: open.findWriter() };
+  const rows = { database: sources.database, writer: sources.findWriter() };
 
-  const children = startedChildren(sources, callerId);
+  const children = startedChildren(rows, callerId);
 
   const latest = readLatestTurns(
-    sources,
+    rows,
     children.map((child) => child.id),
   );
 
   return children
-    .filter((child) => isRunning(open, latest, child.id))
+    .filter((child) => isRunning(sources, latest, child.id))
     .map((child) => child.id);
 }

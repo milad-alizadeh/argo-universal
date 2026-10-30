@@ -1,6 +1,11 @@
 import { readSessionCloseTarget } from './close-target';
 import { runningStartedSessions } from './delegation';
-import type { OpenSessions } from './open-sessions';
+import type { HandlerSources } from './session-sources';
+
+type DirectorySources = HandlerSources<
+  'database' | 'findWriter',
+  'queued' | 'context'
+>;
 
 // What a Session caller's scope knows of a Session: its Project, and the Session that started it.
 export type DirectorySession = {
@@ -20,13 +25,15 @@ export type SessionDirectory = {
   title: (sessionId: string) => string;
 };
 
-export function createSessionDirectory(open: OpenSessions): SessionDirectory {
+export function createSessionDirectory(
+  sources: DirectorySources,
+): SessionDirectory {
   return {
-    session: (sessionId) => directorySession(open.queued(sessionId)),
+    session: (sessionId) => directorySession(sources.open.queued(sessionId)),
     opening: (sessionId) =>
-      directorySession(readSessionCloseTarget(open, sessionId)),
-    running: (callerId) => runningStartedSessions(open, callerId),
-    title: (sessionId) => open.queued(sessionId).title,
+      directorySession(readSessionCloseTarget(sources.open, sessionId)),
+    running: (callerId) => runningStartedSessions(sources, callerId),
+    title: (sessionId) => sources.open.queued(sessionId).title,
   };
 }
 

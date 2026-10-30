@@ -4,8 +4,8 @@ import {
   readSessionCreation,
   type CreationRead,
 } from './creation/creation-reader';
-import type { OpenSessions } from './open-sessions';
 import { readOperationCall, type OperationCallRead } from './operation-call';
+import type { SessionHandlerSources } from './session-sources';
 import { readSessionTurn, sessionTurnRequiresInput } from './work-turn';
 import {
   createSessionWorkWatcher,
@@ -34,41 +34,47 @@ export type SessionWorkSource = {
   watch: SessionWorkWatcher;
 };
 
-export function createSessionWorkSource(open: OpenSessions): SessionWorkSource {
+export function createSessionWorkSource(
+  sources: SessionHandlerSources,
+): SessionWorkSource {
   return {
-    read: (work) => readWork(open, work),
-    watch: createSessionWorkWatcher(open),
+    read: (work) => readWork(sources, work),
+    watch: createSessionWorkWatcher(sources),
   };
 }
 
-function readWork(open: OpenSessions, work: SessionWork): SessionWorkRead {
-  const { kind, sessionId } = work;
+function readWork(
+  sources: SessionHandlerSources,
+  work: SessionWork,
+): SessionWorkRead {
+  if (work.kind === 'call') return readCall(sources, work);
 
-  if (work.kind === 'call')
-    return {
-      kind: 'call',
-      call: readOperationCall(open, sessionId, work.toolCallId),
-    };
+  const { kind, sessionId, turnId } = work;
 
   if (kind === 'creation')
-    return {
-      kind,
-      creation: readSessionCreation(open, sessionId, work.turnId),
-    };
+    return { kind, creation: readSessionCreation(sources, sessionId, turnId) };
 
-  return { kind: 'turn', ...readTurn(open, sessionId, work.turnId) };
+  return { kind: 'turn', ...readTurn(sources, sessionId, turnId) };
 }
 
+const readCall = (
+  sources: SessionHandlerSources,
+  { sessionId, toolCallId }: Extract<SessionWork, { kind: 'call' }>,
+): SessionWorkRead => ({
+  kind: 'call',
+  call: readOperationCall(sources, sessionId, toolCallId),
+});
+
 function readTurn(
-  open: OpenSessions,
+  sources: SessionHandlerSources,
   sessionId: string,
   turnId: string,
 ): TurnRead {
-  const turn = readSessionTurn(open, sessionId, turnId);
+  const turn = readSessionTurn(sources, sessionId, turnId);
 
   const requiresInput =
     turn.status !== 'ended' &&
-    sessionTurnRequiresInput(open, sessionId, turnId);
+    sessionTurnRequiresInput(sources.open, sessionId, turnId);
 
   return { turn, requiresInput };
 }

@@ -1,8 +1,6 @@
-import type { CoreHooks } from '@repo/contracts/plugins';
-import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import type { Observer, Subscription } from 'xstate';
-import type { AcpResources, InstalledAgents } from '../agents';
+import type { AcpResources } from '../agents';
 import { writeDatabaseJobAndWaitForCommit, type WriterJob } from '../storage';
 import type {
   OpenSessionsActorRef,
@@ -25,31 +23,32 @@ type SessionOpening = Exclude<
 
 type QueuedSession = ReturnType<ReturnType<typeof createQueuedSessionReader>>;
 
+type OpenSessionsSources = Pick<
+  SessionSources,
+  | 'sessions'
+  | 'readSession'
+  | 'database'
+  | 'findWriter'
+  | 'sessionCommandSignal'
+>;
+
 /*
  * The Engine's open Sessions as a thin Session handler reaches them (ADR-0016 §10): it admits a command,
- * finds or opens the Session's actor, and reads and writes the Session's row. Readiness is asked of the
- * Session statechart's tags, never of its state names.
+ * finds or opens the Session's actor, and reads and writes the Session's row through the Writer. Readiness
+ * is asked of the Session statechart's tags, never of its state names.
  */
 export class OpenSessions {
-  public readonly database: Database;
-  public readonly readSession: SessionSources['readSession'];
-  public readonly findFeed: SessionSources['findFeed'];
-  public readonly findWriter: SessionSources['findWriter'];
-  public readonly createId: () => string;
-  public readonly installedAgents: InstalledAgents;
-  public readonly hooks: CoreHooks;
   private readonly actor: OpenSessionsActorRef;
   private readonly stopping: AbortSignal | undefined;
-  public constructor(sources: SessionSources) {
-    this.database = sources.database;
-    this.readSession = sources.readSession;
-    this.findFeed = sources.findFeed;
-    this.findWriter = sources.findWriter;
-    this.createId = sources.createId;
-    this.installedAgents = sources.installedAgents;
-    this.hooks = sources.hooks;
+  private readonly readSession: SessionSources['readSession'];
+  private readonly findWriter: SessionSources['findWriter'];
+  private readonly readQueued: (sessionId: string) => QueuedSession;
+  public constructor(sources: OpenSessionsSources) {
     this.actor = sources.sessions;
     this.stopping = sources.sessionCommandSignal;
+    this.readSession = sources.readSession;
+    this.findWriter = sources.findWriter;
+    this.readQueued = createQueuedSessionReader(sources);
   }
   // A Session command is accepted while the Engine and its caller wait for it and the open Sessions admit it.
   public admit(signal?: AbortSignal): void {
@@ -104,7 +103,7 @@ export class OpenSessions {
   }
   // The Session's row as the Writer will leave it: its queued jobs replayed over the stored row.
   public queued(sessionId: string): QueuedSession {
-    return createQueuedSessionReader(this)(sessionId);
+    return this.readQueued(sessionId);
   }
   public async write(job: WriterJob): Promise<void> {
     const writer =

@@ -6,9 +6,11 @@ import type {
 import { session } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../storage';
-import type { OpenSessions } from './open-sessions';
+import type { HandlerSources } from './session-sources';
 import type { QueuedSessionChange } from './session-storage';
 import type { AnnouncedJob, WriterChange } from './writer-changes';
+
+type SeenSources = HandlerSources<'readSession', 'write'>;
 
 // Raises a Session's seen revision; an older revision, such as from a slower App, never lowers it. It is not capped at the stored `maxRevision`: an App shows live rows before the Writer stores them.
 export class SessionSeenJob
@@ -48,11 +50,11 @@ export class SessionSeenJob
 }
 
 export async function markSessionSeen(
-  open: OpenSessions,
+  sources: SeenSources,
   input: SessionMarkSeenInput,
 ): Promise<SessionMarkSeenOutput> {
-  open.readSession(input.sessionId);
-  await open.write(new SessionSeenJob(input));
+  sources.readSession(input.sessionId);
+  await sources.open.write(new SessionSeenJob(input));
 
   return {};
 }

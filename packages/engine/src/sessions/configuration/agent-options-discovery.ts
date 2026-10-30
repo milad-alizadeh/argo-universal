@@ -8,10 +8,11 @@ import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import type { OpenSessions } from '../open-sessions';
+import type { SessionSources } from '../session-sources';
 import { openOptionsSession } from './agent-options-discovery-session';
 import { AgentOptionsJob } from './agent-options-job';
 import { readAgentConfiguration } from './agent-options-read';
+import type { DiscoverySources } from './agent-options-shared';
 import { discoverOptions } from './discovery';
 
 export type Discovery = {
@@ -60,7 +61,7 @@ const discoveryJob = (
   );
 
 async function finishDiscovery(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
   state: DiscoveryState,
 ): Promise<SessionAgentOptionsOutput> {
@@ -73,13 +74,13 @@ async function finishDiscovery(
     discoveryJob(input, options, state.saved),
   );
 
-  return discoveryResult(deps, input, options);
+  return discoveryResult(sources, input, options);
 }
 
 function availableWriter(
-  deps: OpenSessions,
-): NonNullable<ReturnType<OpenSessions['findWriter']>> {
-  const writer = deps.findWriter();
+  sources: DiscoverySources,
+): NonNullable<ReturnType<SessionSources['findWriter']>> {
+  const writer = sources.findWriter();
 
   if (!writer)
     throw new TRPCError({
@@ -91,35 +92,35 @@ function availableWriter(
 }
 
 const readSavedOptions = (
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
   writer: WriterActorRef,
 ): SavedOptions =>
-  readAgentConfiguration({ database: deps.database, writer }, input);
+  readAgentConfiguration({ database: sources.database, writer }, input);
 
 async function prepareDiscovery(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
   discovery: Discovery,
 ): Promise<DiscoveryState> {
-  requireInstalledAgent(deps.installedAgents, input.agent);
-  const writer = availableWriter(deps);
-  const saved = readSavedOptions(deps, input, writer);
-  const lease = await openOptionsSession(deps, input, discovery);
+  requireInstalledAgent(sources.installedAgents, input.agent);
+  const writer = availableWriter(sources);
+  const saved = readSavedOptions(sources, input, writer);
+  const lease = await openOptionsSession(sources, input, discovery);
 
   return { writer, saved, lease, signal: discovery.signal };
 }
 
 // Discover in the Project folder and commit before publishing the refreshed snapshot.
 export async function refreshAgentOptions(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
   discovery: Discovery,
 ): Promise<SessionAgentOptionsOutput> {
-  const state = await prepareDiscovery(deps, input, discovery);
+  const state = await prepareDiscovery(sources, input, discovery);
 
   try {
-    return await finishDiscovery(deps, input, state);
+    return await finishDiscovery(sources, input, state);
   } finally {
     await state.lease.close();
   }
@@ -129,21 +130,21 @@ const hasPicks = (input: SessionAgentOptionsInput): boolean =>
   Object.keys(inputPicks(input)).length > 0;
 
 const storedOptions = (
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
 ): SessionAgentOptionsOutput | undefined =>
   readAgentConfiguration(
-    { database: deps.database, writer: deps.findWriter() },
+    { database: sources.database, writer: sources.findWriter() },
     input,
   )?.configOptions;
 
 // Explicit picks need their discovered schema even when a newer Session owns persistence.
 function discoveryResult(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
   options: SessionAgentOptionsOutput,
 ): SessionAgentOptionsOutput {
   if (hasPicks(input)) return options;
 
-  return storedOptions(deps, input) ?? options;
+  return storedOptions(sources, input) ?? options;
 }

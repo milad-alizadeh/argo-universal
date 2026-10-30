@@ -1,8 +1,13 @@
 import type { Observer, Subscription } from 'xstate';
 import type { FeedActorRef } from '../feed';
-import type { OpenSessions } from './open-sessions';
 import type { SessionActorRef } from './session-machine';
+import type { HandlerSources } from './session-sources';
 import { onWriterChange } from './writer-changes';
+
+type WatchSources = HandlerSources<
+  'findFeed' | 'findWriter',
+  'session' | 'subscribe'
+>;
 
 export type SessionWorkWatcher = (
   sessionId: string,
@@ -13,10 +18,10 @@ type WorkActor = { subscribe: (listener: Observer<unknown>) => Subscription };
 
 // Observes native Session work before storage exists, and through queued commits and close.
 export function createSessionWorkWatcher(
-  deps: OpenSessions,
+  sources: WatchSources,
 ): SessionWorkWatcher {
   return (sessionId, listener) =>
-    new WorkWatcher(deps, sessionId, listener).start();
+    new WorkWatcher(sources, sessionId, listener).start();
 }
 
 class WorkWatcher implements Subscription {
@@ -26,19 +31,19 @@ class WorkWatcher implements Subscription {
   private feedListener: Subscription | undefined;
   private readonly subscriptions = new Set<Subscription>();
   public constructor(
-    private readonly deps: OpenSessions,
+    private readonly sources: WatchSources,
     private readonly sessionId: string,
     private readonly listener: Observer<void>,
   ) {}
   public start(): Subscription {
     this.subscriptions.add(
-      this.deps.subscribe({
+      this.sources.open.subscribe({
         next: this.changed,
         error: this.listener.error,
         complete: this.listener.complete,
       }),
     );
-    const writer = this.deps.findWriter();
+    const writer = this.sources.findWriter();
 
     if (writer) this.subscriptions.add(onWriterChange(writer, this.changed));
     this.refresh();
@@ -54,9 +59,9 @@ class WorkWatcher implements Subscription {
     this.listener.next?.();
   };
   private refresh(): void {
-    const session = this.deps.session(this.sessionId);
+    const session = this.sources.open.session(this.sessionId);
 
-    const feed = this.deps.findFeed(this.sessionId);
+    const feed = this.sources.findFeed(this.sessionId);
 
     if (session !== this.session) this.watchSession(session);
 

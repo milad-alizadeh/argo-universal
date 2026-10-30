@@ -6,14 +6,19 @@ import type { OpenSessions } from './open-sessions';
 import { requireWritableSession, sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 
+type ClosingSessions = Pick<
+  OpenSessions,
+  'admit' | 'live' | 'queued' | 'context'
+>;
+
 const isClosing = (actor: SessionActorRef): boolean => {
   const snapshot = actor.getSnapshot();
 
   return snapshot.hasTag('closing') || snapshot.hasTag('archived');
 };
 
-function requireClosable(open: OpenSessions, sessionId: string): void {
-  if (readSessionCloseTarget(open, sessionId).parentSessionId !== null)
+function requireClosable(sessions: ClosingSessions, sessionId: string): void {
+  if (readSessionCloseTarget(sessions, sessionId).parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',
@@ -35,12 +40,12 @@ async function awaitClosure(actor: SessionActorRef): Promise<void> {
 }
 
 export const closeSession = async (
-  open: OpenSessions,
+  sessions: ClosingSessions,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
-  open.admit();
-  requireClosable(open, sessionId);
-  const actor = open.live(sessionId);
+  sessions.admit();
+  requireClosable(sessions, sessionId);
+  const actor = sessions.live(sessionId);
 
   if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
 
@@ -51,12 +56,12 @@ export const closeSession = async (
 
 // Reads the Session as a Session caller's scope does, with the Writer's queued rows.
 export const cancelSession = (
-  open: OpenSessions,
+  sessions: ClosingSessions,
   sessionId: string,
 ): SessionCancelOutput => {
-  open.admit();
-  requireWritableSession(open.queued(sessionId));
-  sendSessionCommand(open.live(sessionId), { type: 'session.cancel' });
+  sessions.admit();
+  requireWritableSession(sessions.queued(sessionId));
+  sendSessionCommand(sessions.live(sessionId), { type: 'session.cancel' });
 
   return {};
 };

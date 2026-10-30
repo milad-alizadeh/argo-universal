@@ -134,9 +134,12 @@ const configuringState = 'configuring';
 
 /*
  * What a state means to the code outside this statechart, so a renamed state never changes admission:
- * starting (the Session is creating, loading or opening its Agent), ready (it accepts Session commands),
- * settling (a prompt waits for a choice or a cancellation), closing (it is on its way out), archived,
- * turn (a Turn is active, cancelling included), running and requiresAction (as the Session snapshot shows it).
+ * - starting: creating, loading or opening its Agent; a command waits for it.
+ * - ready: accepts Session commands, archiving included; a close while archiving is refused.
+ * - settling: a choice or a cancellation is in flight; a prompt waits for it.
+ * - closing: closing or flushing; a close waits for it instead of being sent again.
+ * - archived: read-only; a command is refused and a close waits for the actor to stop.
+ * - turn, running, requiresAction: not admission; Tool calls and the Session snapshot read them.
  */
 type SessionTag =
   | 'starting'
@@ -1082,7 +1085,7 @@ export const sessionMachine = sessionSetup.createMachine({
               ],
             },
             archiving: {
-              tags: ['ready', 'closing'],
+              tags: ['ready'],
               on: {
                 'session.close': {},
                 'acp.failed': { actions: 'recordCrash' },

@@ -5,36 +5,44 @@ import type {
 } from '@repo/contracts';
 import { readChangesSummary } from '@repo/git';
 import { sessionChangesSelection } from '../changes-selection';
-import type { OpenSessions } from '../open-sessions';
+import type { HandlerSources } from '../session-sources';
 import { SessionSnapshotReader } from './reader';
 
+type SnapshotSources = HandlerSources<
+  'database' | 'findFeed' | 'findWriter',
+  'session'
+>;
+
 export function createSessionSnapshotReader(
-  deps: OpenSessions,
+  sources: SnapshotSources,
 ): (input: SessionGetInput) => Promise<SessionGetOutput> {
-  const reader = new SessionSnapshotReader(deps);
+  const reader = new SessionSnapshotReader(sources);
 
   return ({ sessionId }): Promise<SessionGetOutput> =>
-    readCurrentSnapshot(deps, reader, sessionId);
+    readCurrentSnapshot(sources, reader, sessionId);
 }
 
 async function readCurrentSnapshot(
-  deps: OpenSessions,
+  sources: SnapshotSources,
   reader: SessionSnapshotReader,
   sessionId: string,
 ): Promise<SessionGetOutput> {
-  const snapshot = reader.read(sessionId, deps.session(sessionId)).snapshot;
+  const snapshot = reader.read(
+    sessionId,
+    sources.open.session(sessionId),
+  ).snapshot;
 
-  if (deps.findFeed(sessionId)) return snapshot;
+  if (sources.findFeed(sessionId)) return snapshot;
 
-  return withStoredChanges(deps, { sessionId, snapshot });
+  return withStoredChanges(sources, { sessionId, snapshot });
 }
 
 async function withStoredChanges(
-  deps: OpenSessions,
+  sources: SnapshotSources,
   { sessionId, snapshot }: { sessionId: string; snapshot: SessionGetOutput },
 ): Promise<SessionGetOutput> {
   try {
-    const changes = await storedChanges(deps, snapshot);
+    const changes = await storedChanges(sources, snapshot);
 
     return { ...snapshot, changes };
   } catch (error) {
@@ -45,8 +53,10 @@ async function withStoredChanges(
 }
 
 function storedChanges(
-  deps: OpenSessions,
+  sources: SnapshotSources,
   snapshot: SessionGetOutput,
 ): Promise<ChangesSummary> {
-  return readChangesSummary(sessionChangesSelection(deps.database, snapshot));
+  return readChangesSummary(
+    sessionChangesSelection(sources.database, snapshot),
+  );
 }

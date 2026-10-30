@@ -67,10 +67,10 @@ async function writeNewFile(file: PlanFile, attempt = 1): Promise<string> {
 
 // Reads the Session as a Session caller's scope does, with the Writer's queued rows.
 export async function saveSessionPlan(
-  open: OpenSessions,
+  sessions: Pick<OpenSessions, 'queued'>,
   input: SessionSavePlanInput,
 ): Promise<SessionSavePlanOutput> {
-  const session = requireWritableSession(open.queued(input.sessionId));
+  const session = requireWritableSession(sessions.queued(input.sessionId));
 
   const directory = join(session.checkout.path, savedPlansDirectory);
 

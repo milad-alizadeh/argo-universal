@@ -11,7 +11,7 @@ import { withHeldConfiguration } from './held-options';
 type Input = SessionAgentOptionsInput & { sessionId: string };
 
 type Observation = {
-  deps: OpenSessions;
+  sessions: Pick<OpenSessions, 'session' | 'subscribe'>;
   input: Input;
   observer: {
     update: (update: AgentOptionsUpdate) => void;
@@ -33,9 +33,9 @@ const optionsUpdate = (
   stage: 'ready',
 });
 
-function publication({ deps, input, observer }: Observation): () => void {
+function publication({ sessions, input, observer }: Observation): () => void {
   return () => {
-    const session = deps.session(input.sessionId);
+    const session = sessions.session(input.sessionId);
 
     if (!session) return;
 
@@ -63,7 +63,7 @@ function followCurrent(
   observation: Observation,
   publish: () => void,
 ): void {
-  const next = observation.deps.session(observation.input.sessionId);
+  const next = observation.sessions.session(observation.input.sessionId);
 
   if (next === state.current) return;
   replaceSession(state, next, publish);
@@ -82,7 +82,7 @@ function followSession(
   const state: FollowState = {};
   const follow = (): void => followCurrent(state, observation, publish);
 
-  const sessionsSubscription = observation.deps.subscribe({
+  const sessionsSubscription = observation.sessions.subscribe({
     next: follow,
     complete: observation.observer.done,
   });

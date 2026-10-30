@@ -3,16 +3,21 @@ import type {
   SessionStopShellOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { OpenSessions } from '../open-sessions';
+import type { HandlerSources } from '../session-sources';
 import { requireShell } from './output-reader';
 
+type StopSources = HandlerSources<'database', 'admit' | 'live'>;
+
 export const stopShell = (
-  open: OpenSessions,
+  sources: StopSources,
   input: SessionStopShellInput,
 ): SessionStopShellOutput => {
-  open.admit();
-  const record = requireShell(open.database, input);
-  const runtime = open.live(input.sessionId).getSnapshot().context.shellRuntime;
+  sources.open.admit();
+
+  const record = requireShell(sources.database, input);
+
+  const runtime = sources.open.live(input.sessionId).getSnapshot()
+    .context.shellRuntime;
 
   requireStoppable(runtime.canStop(record.id));
   runtime.stop(input.shellId);

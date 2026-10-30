@@ -5,25 +5,30 @@ import type {
   SessionBranchesOutput,
 } from '@repo/contracts';
 import { listComparisonBranches } from '@repo/git';
-import type { OpenSessions } from './open-sessions';
+import type { SessionSources } from './session-sources';
 import { createSubagentsReader } from './subagents';
 
+type ReaderSources = Pick<
+  SessionSources,
+  'readSession' | 'database' | 'findFeed' | 'findWriter'
+>;
+
 export async function listSessionBranches(
-  open: OpenSessions,
+  sources: ReaderSources,
   { sessionId }: SessionBranchesInput,
 ): Promise<SessionBranchesOutput> {
-  const session = open.readSession(sessionId);
+  const session = sources.readSession(sessionId);
 
   return { branches: await listComparisonBranches(session.checkout.path) };
 }
 
 export function createSessionAgentReader(
-  open: OpenSessions,
+  sources: ReaderSources,
 ): (params: SessionSubagentsInput) => SessionSubagentsOutput {
-  const readSubagents = createSubagentsReader(open);
+  const readSubagents = createSubagentsReader(sources);
 
   return ({ sessionId }): SessionSubagentsOutput => {
-    open.readSession(sessionId);
+    sources.readSession(sessionId);
 
     return readSubagents(sessionId);
   };

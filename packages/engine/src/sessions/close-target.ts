@@ -2,6 +2,8 @@ import { TRPCError } from '@trpc/server';
 import type { OpenSessions } from './open-sessions';
 import type { SessionContext, SessionMachineInput } from './session-context';
 
+type TargetSessions = Pick<OpenSessions, 'queued' | 'context'>;
+
 type SessionCloseTarget = {
   projectId: string;
   parentSessionId: string | null;
@@ -14,23 +16,23 @@ type NewSessionContext = SessionContext & {
 
 // A native opening can be closed before the Agent makes its first stored Session row.
 export function readSessionCloseTarget(
-  open: OpenSessions,
+  sessions: TargetSessions,
   sessionId: string,
 ): SessionCloseTarget {
   try {
-    return open.queued(sessionId);
+    return sessions.queued(sessionId);
   } catch (cause) {
-    return openingTarget(open, { sessionId, cause });
+    return openingTarget(sessions, { sessionId, cause });
   }
 }
 
 function openingTarget(
-  open: OpenSessions,
+  sessions: TargetSessions,
   { sessionId, cause }: { sessionId: string; cause: unknown },
 ): SessionCloseTarget {
   requireMissingSession(cause);
 
-  const context = open.context(sessionId);
+  const context = sessions.context(sessionId);
 
   requireNewSession(context, cause);
 

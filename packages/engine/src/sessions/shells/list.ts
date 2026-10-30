@@ -1,16 +1,18 @@
 import type { SessionShellsOutput } from '@repo/contracts';
-import type { OpenSessions } from '../open-sessions';
+import type { HandlerSources } from '../session-sources';
 import { readShellRecords } from './reader';
 import { toShell } from './shell-data';
 
+type ListSources = HandlerSources<'database' | 'readSession', 'context'>;
+
 export const listSessionShells = (
-  open: OpenSessions,
+  sources: ListSources,
   sessionId: string,
 ): SessionShellsOutput => {
-  open.readSession(sessionId);
-  const runtime = open.context(sessionId)?.shellRuntime;
+  sources.readSession(sessionId);
+  const runtime = sources.open.context(sessionId)?.shellRuntime;
 
-  return readShellRecords(open.database, sessionId).map((record) =>
+  return readShellRecords(sources.database, sessionId).map((record) =>
     toShell(record, {
       now: Date.now(),
       terminalAvailable: runtime?.canStop(record.id) ?? false,

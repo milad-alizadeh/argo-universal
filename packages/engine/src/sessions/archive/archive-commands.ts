@@ -3,12 +3,15 @@ import type {
   SessionUnarchiveOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { waitFor } from 'xstate';
-import type { OpenSessions } from '../open-sessions';
 import { sendSessionCommand } from '../session-command';
 import type { SessionActorRef } from '../session-machine';
+import type { HandlerSources } from '../session-sources';
+import { settleWithin, type Snapshot } from './archive-settle';
 
-type Snapshot = ReturnType<SessionActorRef['getSnapshot']>;
+type ArchiveSources = HandlerSources<
+  'readSession',
+  'admit' | 'session' | 'open'
+>;
 
 /*
  * How long an archive or an Undo may take before the caller is told. The Session machine bounds its own
@@ -20,8 +23,8 @@ type Snapshot = ReturnType<SessionActorRef['getSnapshot']>;
 const archiveSettleLimitMs = 30_000;
 
 // Only an active, top-level Session archives: a child is archived with its parent.
-function requireArchivable(open: OpenSessions, sessionId: string): void {
-  const record = open.readSession(sessionId);
+function requireArchivable(sources: ArchiveSources, sessionId: string): void {
+  const record = sources.readSession(sessionId);
 
   if (record.parentSessionId !== null || record.archivedAt !== null)
     throw new TRPCError({
@@ -30,47 +33,30 @@ function requireArchivable(open: OpenSessions, sessionId: string): void {
     });
 }
 
-function startArchive(open: OpenSessions, sessionId: string): SessionActorRef {
-  requireArchivable(open, sessionId);
+function startArchive(
+  sources: ArchiveSources,
+  sessionId: string,
+): SessionActorRef {
+  requireArchivable(sources, sessionId);
 
-  const live = open.session(sessionId);
+  const live = sources.open.session(sessionId);
 
-  if (live) {
-    sendSessionCommand(live, { type: 'session.archive' });
+  if (!live) return openArchiving(sources, sessionId);
 
-    return live;
-  }
+  sendSessionCommand(live, { type: 'session.archive' });
 
-  return open.open({
+  return live;
+}
+
+const openArchiving = (
+  sources: ArchiveSources,
+  sessionId: string,
+): SessionActorRef =>
+  sources.open.open({
     type: 'sessions.archive',
     sessionId,
-    agent: open.readSession(sessionId).agent,
+    agent: sources.readSession(sessionId).agent,
   });
-}
-
-// The limit stays in the log; the person sees that the change may still land.
-const timedOut = (limitMs: number, cause: unknown): TRPCError =>
-  new TRPCError({
-    code: 'TIMEOUT',
-    message: 'This is taking longer than expected and may still finish',
-    cause: new Error(`The Session did not settle within ${limitMs} ms`, {
-      cause,
-    }),
-  });
-
-async function settleWithin(
-  actor: SessionActorRef,
-  isSettled: (snapshot: Snapshot) => boolean,
-  limitMs: number,
-): Promise<Snapshot> {
-  const deadline = AbortSignal.timeout(limitMs);
-
-  try {
-    return await waitFor(actor, isSettled, { signal: deadline });
-  } catch (error) {
-    throw deadline.aborted ? timedOut(limitMs, error) : error;
-  }
-}
 
 function requireArchived(outcome: Snapshot): void {
   if (!outcome.hasTag('archived'))
@@ -81,14 +67,14 @@ function requireArchived(outcome: Snapshot): void {
 }
 
 export async function archiveSession(
-  open: OpenSessions,
+  sources: ArchiveSources,
   sessionId: string,
   limitMs: number = archiveSettleLimitMs,
 ): Promise<SessionArchiveOutput> {
-  open.admit();
+  sources.open.admit();
 
   const outcome = await settleWithin(
-    startArchive(open, sessionId),
+    startArchive(sources, sessionId),
     (snapshot) => snapshot.hasTag('archived') || snapshot.status !== 'active',
     limitMs,
   );
@@ -98,9 +84,12 @@ export async function archiveSession(
   return {};
 }
 
-function startUndo(open: OpenSessions, sessionId: string): SessionActorRef {
-  open.readSession(sessionId);
-  const actor = open.session(sessionId);
+function startUndo(
+  sources: ArchiveSources,
+  sessionId: string,
+): SessionActorRef {
+  sources.readSession(sessionId);
+  const actor = sources.open.session(sessionId);
 
   if (!actor)
     throw new TRPCError({
@@ -122,14 +111,14 @@ function requireUndoSucceeded(outcome: Snapshot): void {
 }
 
 export async function unarchiveSession(
-  open: OpenSessions,
+  sources: ArchiveSources,
   sessionId: string,
   limitMs: number = archiveSettleLimitMs,
 ): Promise<SessionUnarchiveOutput> {
-  open.admit();
+  sources.open.admit();
 
   const outcome = await settleWithin(
-    startUndo(open, sessionId),
+    startUndo(sources, sessionId),
     (snapshot) => snapshot.status !== 'active',
     limitMs,
   );

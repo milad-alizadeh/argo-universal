@@ -4,14 +4,17 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import type { OpenSessions } from './open-sessions';
 import { pendingInputRequest } from './pending-input';
+import type { SessionSources } from './session-sources';
 import { readQueuedSessionRows } from './session-storage';
 import { decodeStoredTurn, storedTurnColumns } from './stored-turn';
 
+type TurnSources = Pick<SessionSources, 'database' | 'findWriter'>;
+
 function readStoredTurn(
-  deps: OpenSessions,
+  sources: TurnSources,
   turnId: string,
 ): Parameters<typeof decodeStoredTurn>[0] | undefined {
-  return deps.database
+  return sources.database
     .select(storedTurnColumns)
     .from(turn)
     .where(eq(turn.id, turnId))
@@ -27,13 +30,13 @@ function missingTurn(): TRPCError {
 
 // Reads the exact admitted Turn, including updates the Writer has not committed yet.
 export function readSessionTurn(
-  deps: OpenSessions,
+  sources: TurnSources,
   sessionId: string,
   turnId: string,
 ): Turn {
-  const stored = readStoredTurn(deps, turnId);
+  const stored = readStoredTurn(sources, turnId);
 
-  const queued = readQueuedSessionRows(deps.findWriter());
+  const queued = readQueuedSessionRows(sources.findWriter());
 
   const row = queued
     .turns(stored ? [decodeStoredTurn(stored)] : [])
@@ -44,7 +47,7 @@ export function readSessionTurn(
 }
 
 export function sessionTurnRequiresInput(
-  open: OpenSessions,
+  open: Pick<OpenSessions, 'context'>,
   sessionId: string,
   turnId: string,
 ): boolean {

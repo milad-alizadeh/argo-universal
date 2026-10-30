@@ -4,10 +4,10 @@ import type {
   SessionAgentOptionsInput,
 } from '@repo/contracts';
 import { requireInstalledAgent } from '../../agents';
-import type { OpenSessions } from '../open-sessions';
 import { refreshAgentOptions } from './agent-options-discovery';
 import { discoveryFailure } from './agent-options-discovery-session';
 import { savedAgentOptions, sessionOptionsInput } from './agent-options-input';
+import type { AgentOptionsSources } from './agent-options-shared';
 import { observeLiveAgentOptions } from './live-agent-options';
 
 type ReadEvent = { update: AgentOptionsUpdate } | { error: unknown };
@@ -26,7 +26,7 @@ class AgentOptionsReader {
   private previous = '';
 
   constructor(
-    private readonly deps: OpenSessions,
+    private readonly sources: AgentOptionsSources,
     private readonly input: SessionAgentOptionsInput,
     signal?: AbortSignal,
   ) {
@@ -65,7 +65,7 @@ class AgentOptionsReader {
     this.followSession();
 
     if (this.isLive()) return;
-    const saved = savedAgentOptions(this.deps, this.input);
+    const saved = savedAgentOptions(this.sources, this.input);
     this.publish({ update: saved });
     this.work = this.discover(saved);
   }
@@ -75,7 +75,7 @@ class AgentOptionsReader {
 
     if (!sessionId) return;
     this.unsubscribe = observeLiveAgentOptions({
-      deps: this.deps,
+      sessions: this.sources.open,
       input: { ...this.input, sessionId },
       observer: {
         update: (update) => this.publish({ update }),
@@ -89,7 +89,7 @@ class AgentOptionsReader {
   private isLive(): boolean {
     const { sessionId } = this.input;
 
-    return Boolean(sessionId && this.deps.session(sessionId));
+    return Boolean(sessionId && this.sources.open.session(sessionId));
   }
 
   private publish(event: ReadEvent): void {
@@ -122,7 +122,7 @@ class AgentOptionsReader {
   }
 
   private async refresh(saved: AgentOptionsUpdate): Promise<void> {
-    const configOptions = await refreshAgentOptions(this.deps, this.input, {
+    const configOptions = await refreshAgentOptions(this.sources, this.input, {
       signal: this.active,
       progress: (stage, progress) =>
         this.discovered({ ...this.snapshot(saved), stage, progress }),
@@ -134,7 +134,7 @@ class AgentOptionsReader {
   private snapshot(saved: AgentOptionsUpdate): AgentOptionsUpdate {
     return {
       ...saved,
-      commands: savedAgentOptions(this.deps, this.input).commands,
+      commands: savedAgentOptions(this.sources, this.input).commands,
     };
   }
 
@@ -163,11 +163,11 @@ class AgentOptionsReader {
 
 // The public read keeps its saved snapshot through refresh and recoverable Session failures.
 export async function* agentOptionsUpdates(
-  deps: OpenSessions,
+  sources: AgentOptionsSources,
   request: SessionAgentOptionsInput,
   signal?: AbortSignal,
 ): AsyncGenerator<AgentOptionsUpdate, void> {
-  const input = sessionOptionsInput(deps, request);
-  requireInstalledAgent(deps.installedAgents, input.agent);
-  yield* new AgentOptionsReader(deps, input, signal).read();
+  const input = sessionOptionsInput(sources, request);
+  requireInstalledAgent(sources.installedAgents, input.agent);
+  yield* new AgentOptionsReader(sources, input, signal).read();
 }

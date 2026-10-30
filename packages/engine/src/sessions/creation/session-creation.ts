@@ -1,9 +1,9 @@
 import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import { requireInstalledAgent } from '../../agents';
-import type { OpenSessions } from '../open-sessions';
 import type { OpenSessionsCommand } from '../open-sessions-machine';
 import type { NativeStart, NativeStartRequest } from '../prompt-sender';
 import type { SessionActorRef } from '../session-machine';
+import type { HandlerSources } from '../session-sources';
 import {
   observeSessionCreation,
   type AcceptedSessionStart,
@@ -14,6 +14,11 @@ import {
   waitForSessionInsertCommitted,
   waitForSessionStored,
 } from './session-creation-wait';
+
+type CreationSources = HandlerSources<
+  'database' | 'createId' | 'installedAgents' | 'hooks',
+  'admit' | 'open'
+>;
 
 type SessionCreation = NativeStart<AcceptedSessionStart>;
 
@@ -38,60 +43,60 @@ const creationCommand = (
 });
 
 const acceptedFor = (
-  open: OpenSessions,
+  sources: CreationSources,
   session: SessionActorRef,
   prepared: PreparedCreation,
 ): Promise<AcceptedSessionStart> =>
   observeSessionCreation(
     session,
-    completeCreation(open, session, {
+    completeCreation(sources, session, {
       input: prepared.newSession,
       sender: prepared.origin.sender,
     }),
   );
 
 function openCreation(
-  open: OpenSessions,
+  sources: CreationSources,
   prepared: PreparedCreation,
 ): SessionCreation {
   const ids = {
-    sessionId: prepared.origin.sessionId ?? open.createId(),
-    turnId: open.createId(),
+    sessionId: prepared.origin.sessionId ?? sources.createId(),
+    turnId: sources.createId(),
   };
 
-  const session = open.open(creationCommand(prepared, ids));
-  const accepted = acceptedFor(open, session, prepared);
+  const session = sources.open.open(creationCommand(prepared, ids));
+  const accepted = acceptedFor(sources, session, prepared);
 
   return { ...ids, accepted };
 }
 
 // Allocate native identity before waiting for the Agent or the first prompt's admission.
 export async function startSessionCreation(
-  open: OpenSessions,
+  sources: CreationSources,
   newSession: SessionNewInput,
   origin: NativeStartRequest,
 ): Promise<SessionCreation> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
-  requireInstalledAgent(open.installedAgents, newSession.agent);
+  requireInstalledAgent(sources.installedAgents, newSession.agent);
 
   const projectPath = await requireCheckoutProjectPath(
-    open.database,
+    sources.database,
     newSession,
   );
 
-  open.admit(origin.signal);
+  sources.open.admit(origin.signal);
 
-  return openCreation(open, { newSession, origin, projectPath });
+  return openCreation(sources, { newSession, origin, projectPath });
 }
 
 async function completeCreation(
-  open: OpenSessions,
+  sources: CreationSources,
   session: SessionActorRef,
   initial: { input: SessionNewInput; sender: PromptSender },
 ): Promise<AcceptedSessionStart> {
   await waitForSessionStored(session);
   await waitForSessionInsertCommitted(session);
-  const turnId = await startSession(open.hooks, session, initial);
+  const turnId = await startSession(sources.hooks, session, initial);
 
   return { sessionId: session.getSnapshot().context.sessionId, turnId };
 }

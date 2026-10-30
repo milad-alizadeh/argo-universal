@@ -1,10 +1,15 @@
 import type { SessionPromptInput, PromptSender } from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
 import { promptMessageId } from '../feed';
-import type { OpenSessions } from './open-sessions';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { submitSessionPrompt } from './session-command';
 import type { SessionActorRef } from './session-machine';
+import type { HandlerSources } from './session-sources';
+
+type PromptSources = HandlerSources<
+  'readSession' | 'createId' | 'installedAgents' | 'hooks',
+  'admit' | 'ready'
+>;
 
 // A caller's budget also stops the Prompt it is waiting to admit.
 type PromptTurn = {
@@ -13,20 +18,23 @@ type PromptTurn = {
   signal?: AbortSignal;
 };
 
-const requirePromptAgent = (open: OpenSessions, sessionId: string): void => {
+const requirePromptAgent = (
+  sources: PromptSources,
+  sessionId: string,
+): void => {
   requireInstalledAgent(
-    open.installedAgents,
-    open.readSession(sessionId).agent,
+    sources.installedAgents,
+    sources.readSession(sessionId).agent,
   );
 };
 
 const runPromptHook = (
-  open: OpenSessions,
+  sources: PromptSources,
   { sessionId, prompt }: SessionPromptInput,
-): ReturnType<OpenSessions['hooks']['prompt.submit']> =>
-  open.hooks['prompt.submit']({
+): ReturnType<PromptSources['hooks']['prompt.submit']> =>
+  sources.hooks['prompt.submit']({
     sessionId,
-    projectId: open.readSession(sessionId).projectId,
+    projectId: sources.readSession(sessionId).projectId,
     prompt,
   });
 
@@ -46,32 +54,48 @@ async function submitAcceptedPrompt(
 
 // The Turn id is allocated before admission, so a caller that stops waiting can still follow the Turn.
 export function startSessionPrompt(
-  open: OpenSessions,
+  sources: PromptSources,
   input: SessionPromptInput,
   { sender, signal }: Pick<NativeStartRequest, 'sender' | 'signal'>,
 ): NativeStart<AcceptedSessionPrompt> {
-  const turnId = open.createId();
+  const turnId = sources.createId();
 
   return {
     sessionId: input.sessionId,
     turnId,
-    accepted: admitPrompt(open, input, { turnId, sender, signal }),
+    accepted: admitPrompt(sources, input, { turnId, sender, signal }),
   };
 }
 
+async function readyPromptSession(
+  sources: PromptSources,
+  sessionId: string,
+  signal: AbortSignal | undefined,
+): Promise<SessionActorRef> {
+  requirePromptAgent(sources, sessionId);
+
+  const sessionActor = await sources.open.ready(
+    sessionId,
+    'session.prompt',
+    signal,
+  );
+
+  sources.open.admit(signal);
+
+  return sessionActor;
+}
+
 async function admitPrompt(
-  open: OpenSessions,
+  sources: PromptSources,
   { sessionId, prompt }: SessionPromptInput,
   { turnId, sender, signal }: PromptTurn,
 ): Promise<AcceptedSessionPrompt> {
-  requirePromptAgent(open, sessionId);
-  const sessionActor = await open.ready(sessionId, 'session.prompt', signal);
-  open.admit(signal);
-
-  const answer = await runPromptHook(open, { sessionId, prompt });
+  const sessionActor = await readyPromptSession(sources, sessionId, signal);
+  const answer = await runPromptHook(sources, { sessionId, prompt });
 
   if ('drop' in answer) return { messageId: null, drop: answer.drop };
-  open.admit(signal);
+
+  sources.open.admit(signal);
 
   return submitAcceptedPrompt(sessionActor, { turnId, sender }, answer.prompt);
 }

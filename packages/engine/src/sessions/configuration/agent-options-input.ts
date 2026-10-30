@@ -6,9 +6,11 @@ import {
   type SessionRecord,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { OpenSessions } from '../open-sessions';
 import { readSessionRow } from '../session-record';
+import type { SessionSources } from '../session-sources';
 import { readAgentConfiguration } from './agent-options-read';
+
+type InputSources = Pick<SessionSources, 'database' | 'findWriter'>;
 
 const matchingOwner = (
   session: SessionRecord,
@@ -23,12 +25,12 @@ const missingOptionsSession = (): TRPCError =>
   });
 
 function requireOptionsSession(
-  deps: OpenSessions,
+  sources: InputSources,
   input: SessionAgentOptionsInput,
   sessionId: string,
 ): SessionRecord {
   const session = readSessionRow(
-    { database: deps.database, writer: deps.findWriter() },
+    { database: sources.database, writer: sources.findWriter() },
     sessionId,
   );
 
@@ -54,12 +56,12 @@ const savedPicks = (
  * whichever choices another Session most recently wrote for this Agent.
  */
 export function sessionOptionsInput(
-  deps: OpenSessions,
+  sources: InputSources,
   input: SessionAgentOptionsInput,
 ): SessionAgentOptionsInput {
   if (!input.sessionId) return input;
 
-  const session = requireOptionsSession(deps, input, input.sessionId);
+  const session = requireOptionsSession(sources, input, input.sessionId);
 
   return {
     ...input,
@@ -68,11 +70,11 @@ export function sessionOptionsInput(
 }
 
 export function savedAgentOptions(
-  deps: OpenSessions,
+  sources: InputSources,
   input: SessionAgentOptionsInput,
 ): AgentOptionsUpdate {
   const saved = readAgentConfiguration(
-    { database: deps.database, writer: deps.findWriter() },
+    { database: sources.database, writer: sources.findWriter() },
     input,
   );
 

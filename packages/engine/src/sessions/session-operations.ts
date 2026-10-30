@@ -19,6 +19,7 @@ import { createSessionAgentReader, listSessionBranches } from './readers';
 import { cancelSession, closeSession } from './session-closure';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
+import type { SessionHandlerSources } from './session-sources';
 import { listSessionShells } from './shells/list';
 import { stopShell } from './shells/stop';
 import { createSessionSnapshotReader } from './snapshot';
@@ -43,55 +44,56 @@ type ReadId = Exclude<SessionOperationId, ActId>;
 type FeedReadId = 'session.feed' | 'session.get' | 'session.listAgents';
 
 export const sessionOperationImplementations = (
-  open: OpenSessions,
+  sources: SessionHandlerSources,
   list: SessionList,
 ): SessionOperationImplementations => ({
-  ...actImplementations(open),
-  ...feedReads(open),
-  ...rowReads(open, list),
+  ...actImplementations(sources),
+  ...feedReads(sources),
+  ...rowReads(sources, list),
 });
 
 const actImplementations = (
-  open: OpenSessions,
+  sources: SessionHandlerSources,
 ): Pick<SessionOperationImplementations, ActId> => ({
-  'session.cancel': async ({ sessionId }) => cancelSession(open, sessionId),
-  'session.archive': ({ sessionId }) => archiveSession(open, sessionId),
-  'session.unarchive': ({ sessionId }) => unarchiveSession(open, sessionId),
-  'session.savePlan': (input) => saveSessionPlan(open, input),
-  'session.close': ({ sessionId }) => closeSession(open, sessionId),
-  'session.setConfigOption': (input) => configureSession(open, input),
-  'session.rename': (input) => renameSession(open, input),
-  'shell.stop': async (input) => stopShell(open, input),
+  'session.cancel': async ({ sessionId }) =>
+    cancelSession(sources.open, sessionId),
+  'session.archive': ({ sessionId }) => archiveSession(sources, sessionId),
+  'session.unarchive': ({ sessionId }) => unarchiveSession(sources, sessionId),
+  'session.savePlan': (input) => saveSessionPlan(sources.open, input),
+  'session.close': ({ sessionId }) => closeSession(sources.open, sessionId),
+  'session.setConfigOption': (input) => configureSession(sources.open, input),
+  'session.rename': (input) => renameSession(sources.open, input),
+  'shell.stop': async (input) => stopShell(sources, input),
 });
 
 function feedReads(
-  open: OpenSessions,
+  sources: SessionHandlerSources,
 ): Pick<SessionOperationImplementations, FeedReadId> {
-  const feed = createAgentMessageReader(open);
-  const agents = createSessionAgentReader(open);
+  const feed = createAgentMessageReader(sources);
+  const agents = createSessionAgentReader(sources);
 
   return {
     'session.feed': async (input) => feed(input),
-    'session.get': createSessionSnapshotReader(open),
+    'session.get': createSessionSnapshotReader(sources),
     'session.listAgents': async (input) => agents(input),
   };
 }
 
 const rowReads = (
-  open: OpenSessions,
+  sources: SessionHandlerSources,
   list: SessionList,
 ): Pick<SessionOperationImplementations, Exclude<ReadId, FeedReadId>> => ({
   'session.list': (input) => list.list(input),
   'session.listShells': async ({ sessionId }) =>
-    listSessionShells(open, sessionId),
-  'session.diff': (input) => readSessionDiff(open, input),
-  'session.changes': (input) => readSessionChanges(open, input),
-  'session.listBranches': (input) => listSessionBranches(open, input),
+    listSessionShells(sources, sessionId),
+  'session.diff': (input) => readSessionDiff(sources, input),
+  'session.changes': (input) => readSessionChanges(sources, input),
+  'session.listBranches': (input) => listSessionBranches(sources, input),
 });
 
 // A thin Session handler (ADR-0016 §10): the Session configuration module checks and applies the choice.
 async function configureSession(
-  open: OpenSessions,
+  open: Pick<OpenSessions, 'admit' | 'ready'>,
   input: SessionSetConfigOptionInput,
 ): Promise<SessionSetConfigOptionOutput> {
   const session = await open.ready(input.sessionId, 'session.setConfigOption');

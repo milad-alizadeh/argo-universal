@@ -1,21 +1,23 @@
 import { TRPCError } from '@trpc/server';
-import type { OpenSessions } from '../open-sessions';
 import type { SessionMachineInput } from '../session-context';
+import type { HandlerSources } from '../session-sources';
 import { readSessionTurn } from '../work-turn';
 import type { SessionCreationReceipt } from './creation-receipt';
+
+type CreationSources = HandlerSources<'database' | 'findWriter', 'context'>;
 
 export type CreationRead = SessionCreationReceipt | { status: 'opening' };
 
 // The creation receipt is independent of idle/running state or a later Turn.
 export function readSessionCreation(
-  open: OpenSessions,
+  sources: CreationSources,
   sessionId: string,
   turnId: string,
 ): CreationRead {
-  const context = open.context(sessionId);
+  const context = sources.open.context(sessionId);
 
   if (!context || context.input.kind === 'existing')
-    return storedCreation(open, sessionId, turnId);
+    return storedCreation(sources, sessionId, turnId);
 
   return openingCreation(context.input, context.creationReceipt, turnId);
 }
@@ -35,11 +37,11 @@ function openingCreation(
 }
 
 function storedCreation(
-  open: OpenSessions,
+  sources: CreationSources,
   sessionId: string,
   turnId: string,
 ): CreationRead {
-  const turn = readSessionTurn(open, sessionId, turnId);
+  const turn = readSessionTurn(sources, sessionId, turnId);
 
   return { status: 'accepted', start: { sessionId, turnId: turn.id } };
 }

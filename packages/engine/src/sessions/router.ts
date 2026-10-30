@@ -27,6 +27,7 @@ import {
   answerSessionPermission,
 } from './session-answers';
 import { markSessionSeen } from './session-seen';
+import type { SessionHandlerSources } from './session-sources';
 
 const createListUpdatesRouter = routerFactory((sessionList: SessionList) =>
   router({
@@ -52,18 +53,18 @@ const createCountsRouter = routerFactory((sessionList: SessionList) =>
   }),
 );
 
-const createSeenRouter = routerFactory((open: OpenSessions) =>
+const createSeenRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     markSeen: publicProcedure
       .input(SessionMarkSeenInput)
       .output(SessionMarkSeenOutput)
-      .mutation(({ input }) => markSessionSeen(open, input)),
+      .mutation(({ input }) => markSessionSeen(sources, input)),
   }),
 );
 
 // Opens a Session, or waits for its open, without a Turn: Retry after a failed open never resends one.
 const openSession = async (
-  open: OpenSessions,
+  open: Pick<OpenSessions, 'ready'>,
   { sessionId }: SessionOpenInput,
 ): Promise<SessionOpenOutput> => {
   await open.ready(sessionId, 'session.open');
@@ -71,42 +72,42 @@ const openSession = async (
   return {};
 };
 
-const createStartRouter = routerFactory((open: OpenSessions) =>
+const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     open: publicProcedure
       .input(SessionOpenInput)
       .output(SessionOpenOutput)
-      .mutation(({ input }) => openSession(open, input)),
+      .mutation(({ input }) => openSession(sources.open, input)),
     agentOptions: publicProcedure
       .input(SessionAgentOptionsInput)
       .output(zAsyncIterable({ yield: AgentOptionsUpdate }))
       .subscription(({ input, signal }) =>
-        agentOptionsUpdates(open, input, signal),
+        agentOptionsUpdates(sources, input, signal),
       ),
   }),
 );
 
-const createAnswerRouter = routerFactory((open: OpenSessions) =>
+const createAnswerRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     answerPermission: publicProcedure
       .input(SessionAnswerPermissionInput)
       .output(SessionAnswerPermissionOutput)
-      .mutation(({ input }) => answerSessionPermission(open, input)),
+      .mutation(({ input }) => answerSessionPermission(sources, input)),
     answerElicitation: publicProcedure
       .input(SessionAnswerElicitationInput)
       .output(SessionAnswerElicitationOutput)
-      .mutation(({ input }) => answerSessionElicitation(open, input)),
+      .mutation(({ input }) => answerSessionElicitation(sources, input)),
   }),
 );
 
 // The Session procedures that are not Operations: the list's updates, seen marks, opening and answers.
 export const createSessionRouter = routerFactory(
-  ({ open, list }: { open: OpenSessions; list: SessionList }) =>
+  ({ sources, list }: { sources: SessionHandlerSources; list: SessionList }) =>
     mergeRouters(
       createListUpdatesRouter(list),
       createCountsRouter(list),
-      createSeenRouter(open),
-      createStartRouter(open),
-      createAnswerRouter(open),
+      createSeenRouter(sources),
+      createStartRouter(sources),
+      createAnswerRouter(sources),
     ),
 );

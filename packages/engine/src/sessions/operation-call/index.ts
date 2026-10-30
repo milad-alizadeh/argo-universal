@@ -1,9 +1,11 @@
 import { TRPCError } from '@trpc/server';
 import type { FeedActorRef } from '../../feed';
-import type { OpenSessions } from '../open-sessions';
+import type { HandlerSources } from '../session-sources';
 import { OperationCall, type SessionOperationCall } from './call';
 import { CallingSession } from './calling-session';
 import type { CalledOperation } from './rows';
+
+type CallerSources = HandlerSources<'findFeed', 'live'>;
 
 export type { SessionOperationCall } from './call';
 
@@ -15,27 +17,27 @@ export type { CalledOperation } from './rows';
 
 // Begins the Tool call of an Operation a Session calls, in the calling Session's Feed.
 export function beginOperationCall(
-  open: OpenSessions,
+  sources: CallerSources,
   sessionId: string,
   operation: CalledOperation,
 ): SessionOperationCall {
-  const session = new CallingSession(open.live(sessionId));
+  const session = new CallingSession(sources.open.live(sessionId));
 
   if (!session.stored)
     throw callerConflict('The calling Session is still opening');
 
   return new OperationCall(
-    { session, feed: requireOpenFeed(open, session, sessionId) },
+    { session, feed: requireOpenFeed(sources, session, sessionId) },
     operation,
   );
 }
 
 function requireOpenFeed(
-  open: OpenSessions,
+  sources: CallerSources,
   session: CallingSession,
   sessionId: string,
 ): FeedActorRef {
-  const feed = open.findFeed(sessionId);
+  const feed = sources.findFeed(sessionId);
 
   if (!feed || !session.open)
     throw callerConflict('The calling Session is closed');

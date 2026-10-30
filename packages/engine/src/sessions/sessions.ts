@@ -18,7 +18,7 @@ import {
   type SessionOperationImplementations,
 } from './session-operations';
 import { startSessionPrompt } from './session-prompt';
-import type { SessionSources } from './session-sources';
+import type { SessionHandlerSources, SessionSources } from './session-sources';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
 /*
@@ -35,35 +35,47 @@ export class Sessions {
   public readonly work: SessionWorkSource;
   // The Session procedures that are not Operations.
   public readonly router: ReturnType<typeof createSessionRouter>;
-  private readonly open: OpenSessions;
+  private readonly sources: SessionHandlerSources;
   public constructor(sources: SessionSources) {
     const list = createSessionList(sources);
 
-    this.open = new OpenSessions(sources);
-    this.implementations = sessionOperationImplementations(this.open, list);
-    this.directory = createSessionDirectory(this.open);
-    this.work = createSessionWorkSource(this.open);
-    this.router = createSessionRouter({ open: this.open, list });
+    this.sources = handlerSources(sources);
+    this.implementations = sessionOperationImplementations(this.sources, list);
+    this.directory = createSessionDirectory(this.sources);
+    this.work = createSessionWorkSource(this.sources);
+    this.router = createSessionRouter({ sources: this.sources, list });
   }
   // Starts a new Session; the request's signal also stops its admission.
   public create(
     input: SessionNewInput,
     request: NativeStartRequest,
   ): ReturnType<typeof startSessionCreation> {
-    return startSessionCreation(this.open, input, request);
+    return startSessionCreation(this.sources, input, request);
   }
   // Starts a Prompt's Turn; the request's signal also stops its admission.
   public prompt(
     input: SessionPromptInput,
     request: NativeStartRequest,
   ): ReturnType<typeof startSessionPrompt> {
-    return startSessionPrompt(this.open, input, request);
+    return startSessionPrompt(this.sources, input, request);
   }
   // Begins the Tool call of an Operation that a Session calls.
   public call(
     sessionId: string,
     operation: CalledOperation,
   ): SessionOperationCall {
-    return beginOperationCall(this.open, sessionId, operation);
+    return beginOperationCall(this.sources, sessionId, operation);
   }
 }
+
+// Handlers reach the open Sessions' actor and command signal only through `OpenSessions`.
+const handlerSources = (sources: SessionSources): SessionHandlerSources => ({
+  database: sources.database,
+  readSession: sources.readSession,
+  findFeed: sources.findFeed,
+  findWriter: sources.findWriter,
+  createId: sources.createId,
+  installedAgents: sources.installedAgents,
+  hooks: sources.hooks,
+  open: new OpenSessions(sources),
+});

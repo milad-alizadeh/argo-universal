@@ -14,8 +14,8 @@ import {
   sessionOpenError,
 } from '../../agents';
 import { readProjectPath } from '../../projects';
-import type { OpenSessions } from '../open-sessions';
 import type { Discovery } from './agent-options-discovery';
+import type { DiscoverySources } from './agent-options-shared';
 
 // No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
 const optionsDestination: AcpSessionDestination = {
@@ -63,11 +63,11 @@ const withLoadingProgress = (
 });
 
 const openDiscoverySession = (
-  deps: OpenSessions,
+  sources: DiscoverySources,
   { launch, cwd, signal }: DiscoveryOpening,
   progress: Discovery['progress'],
 ): Promise<AcpSessionLease> =>
-  deps.acpResources.open({
+  sources.open.acpResources.open({
     launch: withLoadingProgress(launch, progress),
     opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
     destination: optionsDestination,
@@ -75,38 +75,38 @@ const openDiscoverySession = (
   });
 
 function prepareDiscovery(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   { agent, projectId }: SessionAgentOptionsInput,
 ): DiscoverySetup {
-  const installed = requireInstalledAgent(deps.installedAgents, agent);
-  const cwd = readProjectPath(deps.database, projectId);
-  deps.admit();
+  const installed = requireInstalledAgent(sources.installedAgents, agent);
+  const cwd = readProjectPath(sources.database, projectId);
+  sources.open.admit();
 
   return { installed, cwd, projectId };
 }
 
 async function startDiscovery(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   { installed, cwd, projectId }: DiscoverySetup,
   { signal, progress }: Discovery,
 ): Promise<AcpSessionLease> {
-  const launch = await deps.installedAgents.launch(installed, projectId, {
+  const launch = await sources.installedAgents.launch(installed, projectId, {
     signal,
     onInstalling: (fraction) => progress('installing', fraction),
   });
 
-  return openDiscoverySession(deps, { launch, cwd, signal }, progress);
+  return openDiscoverySession(sources, { launch, cwd, signal }, progress);
 }
 
 export async function openOptionsSession(
-  deps: OpenSessions,
+  sources: DiscoverySources,
   input: SessionAgentOptionsInput,
   discovery: Discovery,
 ): Promise<AcpSessionLease> {
-  const prepared = prepareDiscovery(deps, input);
+  const prepared = prepareDiscovery(sources, input);
 
   try {
-    return await startDiscovery(deps, prepared, discovery);
+    return await startDiscovery(sources, prepared, discovery);
   } catch (cause) {
     throw discovery.signal.aborted ? cause : agentFailure(cause);
   }
