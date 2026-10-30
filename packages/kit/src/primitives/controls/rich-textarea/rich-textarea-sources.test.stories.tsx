@@ -39,8 +39,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const optionNames = (): (string | null)[] =>
-  screen.getAllByRole('option').map((option) => option.textContent);
+const highlightedName = (): string =>
+  screen.getByRole('option', { selected: true }).textContent ?? '';
+
+// Moves the highlight down `steps` times, collecting the name of each option it lands on.
+async function walkOptions(steps: number, seen: string[]): Promise<string[]> {
+  if (steps === 0) return seen;
+
+  await userEvent.keyboard('{ArrowDown}');
+  const name = await waitFor(() => {
+    const current = highlightedName();
+    expect(current).not.toBe(seen.at(-1));
+
+    return current;
+  });
+
+  return walkOptions(steps - 1, [...seen, name]);
+}
 
 export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
   play: async ({ canvas }) => {
@@ -140,12 +155,15 @@ export const EachSourceShowsEveryResult: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await waitFor(() => expect(optionNames()).toHaveLength(24));
+    await screen.findByRole('option', { name: lateName('many-1') });
+    // The menu draws only the rows in view, so the walk visits each result in turn.
+    const names = await walkOptions(23, [highlightedName()]);
+    await expect(new Set(names).size).toBe(24);
     await expect(
-      optionNames().filter((name) => name?.startsWith('Late many')),
+      names.filter((name) => name.startsWith('Late many')),
     ).toHaveLength(12);
     await expect(
-      optionNames().filter((name) => name?.startsWith('Late later')),
+      names.filter((name) => name.startsWith('Late later')),
     ).toHaveLength(12);
   },
 };

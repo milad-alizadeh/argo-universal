@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 
 const viewportInset = 8;
 
@@ -8,31 +8,13 @@ function viewportTop(): number {
   return window.visualViewport?.offsetTop ?? 0;
 }
 
-function fitMenu(menu: HTMLDivElement | null): void {
-  if (!menu?.isConnected) return;
-  const top = viewportTop();
-  const available = menu.getBoundingClientRect().bottom - top - viewportInset;
-  menu.style.maxHeight = `${Math.max(0, Math.min(menuMaxHeight, available))}px`;
-  revealSelection(menu);
-}
+// The menu's rows grow up from the field: as tall as the room above it, to 350 at most.
+function fitMenu(menu: HTMLDivElement | null): number | undefined {
+  if (!menu?.isConnected) return undefined;
+  const available =
+    menu.getBoundingClientRect().bottom - viewportTop() - viewportInset;
 
-function selectionOffset(menu: DOMRect, selected: DOMRect): number {
-  const top = menu.top + viewportInset;
-  const bottom = menu.bottom - viewportInset;
-
-  if (selected.top < top) return selected.top - top;
-
-  return Math.max(0, selected.bottom - bottom);
-}
-
-function revealSelection(menu: HTMLDivElement): void {
-  const selected = menu.querySelector('[aria-selected="true"]');
-
-  if (!selected) return;
-  menu.scrollTop += selectionOffset(
-    menu.getBoundingClientRect(),
-    selected.getBoundingClientRect(),
-  );
+  return Math.max(0, Math.min(menuMaxHeight, available));
 }
 
 function observeViewport(anchor: HTMLElement, update: () => void): () => void {
@@ -52,14 +34,21 @@ function observeViewport(anchor: HTMLElement, update: () => void): () => void {
   };
 }
 
-export function useTypeaheadViewport(
+// How tall the menu's rows may grow, kept up to date as the window and the field move.
+export function useMenuMaxHeight(
   anchor: HTMLElement,
   menu: RefObject<HTMLDivElement | null>,
-  selectedIndex: number | null,
-): void {
-  useEffect(() => fitMenu(menu.current), [menu, selectedIndex]);
+): number {
+  const [maxHeight, setMaxHeight] = useState(menuMaxHeight);
   useEffect(
-    () => observeViewport(anchor, () => fitMenu(menu.current)),
+    () =>
+      observeViewport(anchor, () => {
+        const fitted = fitMenu(menu.current);
+
+        if (fitted !== undefined) setMaxHeight(fitted);
+      }),
     [anchor, menu],
   );
+
+  return maxHeight;
 }

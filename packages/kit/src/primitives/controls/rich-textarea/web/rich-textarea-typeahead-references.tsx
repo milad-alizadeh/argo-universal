@@ -1,5 +1,4 @@
 import type { TriggerFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
-import type * as React from 'react';
 import {
   matchReferences,
   type ReferenceOption,
@@ -11,34 +10,17 @@ import {
   type TypeaheadAdapter,
 } from './rich-textarea-typeahead-option';
 
-const numberClassName =
-  'w-9 shrink-0 text-start type-secondary text-muted-foreground';
-
-const titleClassName =
-  'min-w-0 flex-1 truncate text-start type-control text-foreground';
-
-function ReferenceContent({
-  reference,
-}: {
-  reference: ReferenceOption;
-}): React.JSX.Element {
-  return (
-    <>
-      <ReferenceGlyph state={reference.state} />
-      <span className={numberClassName}>#{reference.number}</span>
-      <span className={titleClassName}>{reference.title}</span>
-    </>
-  );
-}
-
 function referenceOption(reference: ReferenceOption): TypeaheadOption {
+  const title = `#${reference.number} ${reference.title}`;
+
   return new TypeaheadOption(
-    `reference-${reference.number}`,
     {
+      key: `reference-${reference.number}`,
       group: 'references',
-      title: 'Issues and pull requests',
-      content: <ReferenceContent reference={reference} />,
-      className: 'items-center gap-2',
+      groupTitle: 'Issues and pull requests',
+      title,
+      leading: <ReferenceGlyph state={reference.state} />,
+      label: title,
     },
     (node) => $insertReference(node, reference),
   );

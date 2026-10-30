@@ -6,6 +6,7 @@ import {
   ListSelectionContext,
   ListTileContext,
   RowPositionContext,
+  type ListSelection,
 } from '../../../list-context';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
@@ -162,8 +163,16 @@ interface PressedProps extends RowParts {
   drawing: ItemDrawing;
 }
 
+// A menu's chosen row shows its check, not a tint; a listbox's highlighted option is tinted.
+const tintsSelection = (
+  menu: boolean,
+  role: ListItemProps['role'],
+  selectionMode: ListSelection['selectionMode'],
+): boolean => !selectionMode && (!menu || role === 'option');
+
 function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
   const { selectionMode } = useContext(ListSelectionContext);
+  const { menu } = drawing.look;
 
   return (
     <>
@@ -171,7 +180,9 @@ function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
         {...drawingContent(props, tile, drawing.look.valuePlacement)}
       />
       <Selection
-        selected={props.selected && !drawing.look.menu && !selectionMode}
+        selected={
+          props.selected && tintsSelection(menu, props.role, selectionMode)
+        }
       />
     </>
   );

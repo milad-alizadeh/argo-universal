@@ -14,6 +14,10 @@ import {
 } from './rich-textarea-example.mocks';
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
 import { iconlessSuggestionsRichTextarea } from './rich-textarea-iconless.mocks';
+import {
+  longCommandCount,
+  longSuggestionsRichTextarea,
+} from './rich-textarea-long.mocks';
 import type {
   RichTextareaHandle,
   RichTextareaProps,
@@ -68,10 +72,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Rows with an icon name the command without its slash.
-const firstOption = { name: 'first' };
+// A row reads the command as typed, with its detail, though one with an icon draws it without its slash.
+const firstOption = { name: '/first First option' };
 
-const secondOption = { name: 'second' };
+const secondOption = { name: '/second Second option' };
 
 // Moves the caret back over " later".
 const backOverLater = '{ArrowLeft>6/}';
@@ -114,6 +118,19 @@ export const TappingAResultReplacesTheSlashWord: Story = {
         .selectionStart,
     ).toBe('Run /second '.length);
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
+  },
+};
+
+export const ALongListDrawsOnlyAWindowOfRows: Story = {
+  args: { suggestions: longSuggestionsRichTextarea.suggestions },
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    await canvas.findByRole('button', { name: '/command-1 Command 1' });
+    const drawn = canvas.getAllByRole('button', { name: /^\/command-/ });
+    await expect(drawn.length).toBeLessThan(longCommandCount / 2);
   },
 };
 

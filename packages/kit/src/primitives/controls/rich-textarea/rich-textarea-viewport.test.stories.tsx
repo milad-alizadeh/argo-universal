@@ -9,6 +9,10 @@ import {
   exampleLabel,
 } from './rich-textarea-example.mocks';
 import { scrollingSuggestionsRichTextarea } from './rich-textarea-fixtures';
+import {
+  longCommandCount,
+  longSuggestionsRichTextarea,
+} from './rich-textarea-long.mocks';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Controls/RichTextarea/Viewport',
@@ -65,7 +69,7 @@ export const ArrowDownScrollsEachChoiceIntoView: Story = {
     await userEvent.type(textbox, '/');
     await screen.findByRole('option', { name: /option-1 / });
     await userEvent.keyboard('{ArrowDown}'.repeat(10));
-    const eleventh = screen.getByRole('option', { name: /option-11 / });
+    const eleventh = await screen.findByRole('option', { name: /option-11 / });
     await waitFor(() =>
       expect(eleventh).toHaveAttribute('aria-selected', 'true'),
     );
@@ -81,12 +85,40 @@ export const KeyboardScrollsTheLastChoiceIntoView: Story = {
     );
     await screen.findByRole('option', { name: /option-1 / });
     await userEvent.keyboard('{ArrowUp}');
-    const last = screen.getByRole('option', { name: /option-12 / });
+    const last = await screen.findByRole('option', { name: /option-12 / });
     await browserExpect.element(last).toBeInViewport({ ratio: 1 });
     await userEvent.click(last);
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/option-12 '),
     );
+  },
+};
+
+const lastCommand = {
+  name: `/command-${longCommandCount} Command ${longCommandCount}`,
+};
+
+export const ALongMenuDrawsAWindowYetArrowDownReachesTheLastChoice: Story = {
+  args: { suggestions: longSuggestionsRichTextarea.suggestions },
+  play: async ({ canvas }) => {
+    const textbox = canvas.getByRole('textbox', { name: exampleLabel });
+
+    await userEvent.hover(textbox);
+    await userEvent.type(textbox, '/');
+    await screen.findByRole('option', { name: '/command-1 Command 1' });
+    await expect(screen.getAllByRole('option').length).toBeLessThan(
+      longCommandCount / 2,
+    );
+    await expect(screen.queryByRole('option', lastCommand)).toBeNull();
+    await userEvent.keyboard('{ArrowDown}'.repeat(longCommandCount - 1));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('option', { ...lastCommand, selected: true }),
+      ).toBeInTheDocument(),
+    );
+    await browserExpect
+      .element(screen.getByRole('option', lastCommand))
+      .toBeInViewport({ ratio: 1 });
   },
 };
 

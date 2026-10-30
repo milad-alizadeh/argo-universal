@@ -39,7 +39,7 @@ function pressHandlers(props: ListItemProps): RowPressProps {
 
 function rowRole(
   props: DrawingProps,
-): 'button' | 'link' | 'switch' | 'radio' | 'group' | undefined {
+): 'button' | 'link' | 'switch' | 'radio' | 'group' | 'option' | undefined {
   if (props.checked !== undefined) return 'switch';
 
   return explicitRole(props) ?? pressRole(props.onPress);
@@ -68,11 +68,18 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
     accessibilityState: rowState(props),
     accessibilityHint: props.description,
     'aria-checked': props.checked,
-    'aria-pressed': props.selected,
+    ...selectedState(props),
     'aria-current': currentPage(props),
     accessible: props.accessible ?? props.content === undefined,
     disabled: props.disabled,
   };
+}
+
+// An option's highlight is its selection; another row's selection is pressed.
+function selectedState(props: DrawingProps): RowPressProps {
+  return props.role === 'option'
+    ? { 'aria-selected': props.selected }
+    : { 'aria-pressed': props.selected };
 }
 
 function usePressProps(props: DrawingProps): RowPressProps {
@@ -98,6 +105,7 @@ function triggerProps(props: DrawingProps): RowPressProps {
   return {
     onPointerDown: props.onPointerDown,
     ref: props.ref,
+    nativeID: props.nativeID,
     href: props.href,
     'aria-haspopup': props['aria-haspopup'],
     'aria-expanded': props['aria-expanded'],
