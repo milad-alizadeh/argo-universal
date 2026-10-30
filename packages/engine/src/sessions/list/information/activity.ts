@@ -4,6 +4,7 @@ import {
   pendingInputRequest,
 } from '../../pending-input';
 import { latestTurnOf } from '../../stored-turn';
+import { activityText } from './activity-text';
 import type { SessionInfoInput } from './information';
 import { deriveSessionStatus } from './status';
 
@@ -69,11 +70,10 @@ function interrupted(turn: Turn | undefined): boolean {
 }
 
 function messagePreview(input: SessionInfoInput): string {
-  return (
+  return activityText(
     input.message?.content
       .filter((block): block is TextContent => block.type === 'text')
       .map((block): string => block.text)
-      .join('\n')
-      .split('\n')[0] ?? ''
+      .join('\n') ?? '',
   );
 }
