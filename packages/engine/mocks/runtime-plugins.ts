@@ -1,5 +1,4 @@
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import {
   PluginManifest,
@@ -11,6 +10,7 @@ import type {
   AddOnlySlotId,
   ReplaceableSlotId,
 } from '@repo/contracts/plugins/wire';
+import { makeResolvedTempFolder } from '@repo/mocks/fs/resolved-temp-folder';
 import { onTestFinished } from 'vitest';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
@@ -37,7 +37,7 @@ type FixturePlugin = {
 export async function createRuntimePlugins(
   plugins: FixturePlugin[],
 ): Promise<string> {
-  const home = await mkdtemp(join(tmpdir(), 'argo-plugin-runtime-'));
+  const home = await makeResolvedTempFolder('argo-plugin-runtime-');
 
   onTestFinished(() => rm(home, { recursive: true, force: true }));
 

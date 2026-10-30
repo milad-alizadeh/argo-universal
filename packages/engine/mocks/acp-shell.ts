@@ -1,8 +1,8 @@
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
+import { makeResolvedTempFolderSync } from '@repo/mocks/fs/resolved-temp-folder';
 import { onTestFinished, vi } from 'vitest';
 import { createAcpResources, type AcpSessionLease } from '../src/agents';
 import {
@@ -46,7 +46,7 @@ const loginEnvironment = (directory: string): void => {
 type LoginProject = { directory: string; bin: string };
 
 const loginProject = (): LoginProject => {
-  const directory = mkdtempSync(join(tmpdir(), 'argo-shell-env-'));
+  const directory = makeResolvedTempFolderSync('argo-shell-env-');
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const bin = join(directory, 'bin');
   mkdirSync(bin);
