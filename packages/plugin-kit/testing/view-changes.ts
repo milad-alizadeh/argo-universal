@@ -18,10 +18,10 @@ export class ViewChanges {
   // Rechecks `ready` after every announcement; fails once the stream has ended without `ready` holding.
   public async until(
     ready: () => boolean,
-    closed: () => string,
+    closure: () => Error,
   ): Promise<void> {
     while (!ready()) {
-      if (this.ended) throw new Error(closed());
+      if (this.ended) throw closure();
       await new Promise<void>((resolve) => this.waiters.add(resolve));
     }
   }

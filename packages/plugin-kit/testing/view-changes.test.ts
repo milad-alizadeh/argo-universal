@@ -8,7 +8,7 @@ describe('view changes', () => {
 
     const waited = changes.until(
       () => held,
-      () => 'closed',
+      () => new Error('closed'),
     );
 
     changes.announce();
@@ -24,7 +24,7 @@ describe('view changes', () => {
 
     const waited = changes.until(
       () => false,
-      () => 'closed early',
+      () => new Error('closed early'),
     );
 
     changes.end();
@@ -39,7 +39,7 @@ describe('view changes', () => {
     await expect(
       changes.until(
         () => true,
-        () => 'unreachable',
+        () => new Error('unreachable'),
       ),
     ).resolves.toBeUndefined();
   });

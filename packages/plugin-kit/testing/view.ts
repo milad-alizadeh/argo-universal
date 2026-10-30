@@ -100,7 +100,7 @@ export class PluginTestView {
    * to end, because only it knows how long this machine and this test are worth waiting.
    */
   public async waitFor(ready: () => boolean, what?: string): Promise<void> {
-    await this.changes.until(ready, () => this.closedMessage(what));
+    await this.changes.until(ready, () => this.closure(what));
   }
 
   private watch(opening: Opening): void {
@@ -111,14 +111,21 @@ export class PluginTestView {
       .finally(() => this.changes.end());
   }
 
-  private closedMessage(what: string | undefined): string {
+  // A stream that failed says why; one that merely ended says what it had rendered.
+  private closure(what: string | undefined): Error {
+    if (this.failure) return this.failure;
+
     const waiting = what ? ` (waiting for ${what})` : '';
 
-    const arrived = this.latest
+    return new Error(
+      `Plugin view closed before it reached the expected state${waiting}; ${this.arrived()}.`,
+    );
+  }
+
+  private arrived(): string {
+    return this.latest
       ? `the view had rendered ${this.history.length} tree(s)`
       : 'no view message had arrived';
-
-    return `Plugin view closed before it reached the expected state${waiting}; ${arrived}.`;
   }
 
   public async dispatch(event: Event): Promise<void> {
