@@ -14,7 +14,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const chime = {
-  pluginId: 'hello',
+  pluginId: 'example',
   hash: 'a'.repeat(64),
   format: 'mp3',
 } as const;

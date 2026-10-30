@@ -14,7 +14,7 @@ type Story = StoryObj<typeof meta>;
 
 const hash = 'a'.repeat(64);
 
-const clip = { pluginId: 'hello', hash, format: 'mp4' } as const;
+const clip = { pluginId: 'example', hash, format: 'mp4' } as const;
 
 // Refuses the clip until a test mends it, so a retry proves it loads again.
 let mended = false;
@@ -41,7 +41,7 @@ export const LoadsWithStockControls: Story = {
   render: () => (
     <Video
       source={clip}
-      poster={{ pluginId: 'hello', hash, format: 'jpeg' }}
+      poster={{ pluginId: 'example', hash, format: 'jpeg' }}
       accessibilityLabel="Demo clip"
     />
   ),

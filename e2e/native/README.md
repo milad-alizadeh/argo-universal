@@ -31,9 +31,9 @@ On iOS a Session row is one element named by its title and status, such as `Fix 
 
 # Plugin page tap
 
-`plugin-hello-tap.yaml` runs on iOS or Android against a real Server that loads the first-party `hello` Plugin, with the App on the phone Sessions list. Start the Server and Metro, open the development client, then run `maestro --device <device-id> test e2e/native/plugin-hello-tap.yaml`.
+`plugin-counter-tap.yaml` runs on iOS or Android against a real Server that loads the first-party `counter` fixture Plugin, with the App on the phone Sessions list. Start the Server and Metro, open the development client, then run `maestro --device <device-id> test e2e/native/plugin-counter-tap.yaml`.
 
-The flow opens the `hello` Plugin from the drawer and checks that its page is drawn natively from the wire tree. It reads the current count, which other viewers of the same Server may have raised, presses "Tap me" and expects the count to rise by one. That holds only when the event reaches the Plugin on the Server and its patch comes back.
+The flow opens the `counter` Plugin from the drawer and checks that its page is drawn natively from the wire tree. It reads the current count, which other viewers of the same Server may have raised, presses "Tap me" and expects the count to rise by one. That holds only when the event reaches the Plugin on the Server and its patch comes back.
 
 # Slash Commands in the Attach menu
 

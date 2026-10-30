@@ -5,7 +5,7 @@ import { expect, fn } from 'storybook/test';
 import { PluginListView } from './plugin-list-view';
 import {
   githubPlugin,
-  helloPlugin,
+  examplePlugin,
   pluginRows,
 } from './plugin-settings.fixtures';
 
@@ -45,8 +45,10 @@ export const ListsEachPluginAsARow: Story = {
 
 export const ARowOpensItsPlugin: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByText(helloPlugin.name));
-    await expect(args.onOpenPlugin).toHaveBeenCalledWith(helloPlugin.pluginId);
+    await userEvent.click(canvas.getByText(examplePlugin.name));
+    await expect(args.onOpenPlugin).toHaveBeenCalledWith(
+      examplePlugin.pluginId,
+    );
     await userEvent.click(canvas.getByText(githubPlugin.name));
     await expect(args.onOpenPlugin).toHaveBeenLastCalledWith(
       githubPlugin.pluginId,

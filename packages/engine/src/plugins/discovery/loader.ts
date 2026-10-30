@@ -21,7 +21,7 @@ type Discovery = {
   locations: Map<string, string>;
 };
 
-// A Plugin sits directly in a root or in one collection folder below it, such as `plugins/examples/hello`.
+// A Plugin sits directly in a root or in one collection folder below it, such as `plugins/examples/github-sign-in`.
 const maxDepth = 2;
 
 /*

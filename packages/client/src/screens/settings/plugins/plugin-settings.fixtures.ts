@@ -11,13 +11,13 @@ export const githubPlugin: PluginRow = {
   icon: pluginSymbol({}),
 };
 
-export const helloPlugin: PluginRow = {
-  pluginId: 'hello',
-  name: 'Hello',
+export const examplePlugin: PluginRow = {
+  pluginId: 'example',
+  name: 'Example',
   icon: pluginSymbol({}),
 };
 
-export const pluginRows: PluginRow[] = [githubPlugin, helloPlugin];
+export const pluginRows: PluginRow[] = [githubPlugin, examplePlugin];
 
 // One field of each type the schema allows, checked by the same schema the Server checks manifests with.
 export const settingsSchema = PluginSettingsSchema.parse([

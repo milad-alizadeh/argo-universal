@@ -50,8 +50,8 @@ export const PluginSection: Story = {
       <PluginSlot
         contributions={[
           {
-            pluginId: 'hello',
-            name: 'Hello',
+            pluginId: 'example',
+            name: 'Example',
             root: slotCounterRoot,
             onEvent: action('plugin event'),
           },

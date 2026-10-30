@@ -10,12 +10,12 @@
       "key": "clip",
       "props": {
         "source": {
-          "pluginId": "hello",
+          "pluginId": "example",
           "hash": "1111111111111111111111111111111111111111111111111111111111111111",
           "format": "mp4"
         },
         "poster": {
-          "pluginId": "hello",
+          "pluginId": "example",
           "hash": "2222222222222222222222222222222222222222222222222222222222222222",
           "format": "jpeg"
         },
@@ -29,7 +29,7 @@
       "key": "chime",
       "props": {
         "source": {
-          "pluginId": "hello",
+          "pluginId": "example",
           "hash": "3333333333333333333333333333333333333333333333333333333333333333",
           "format": "mp3"
         },

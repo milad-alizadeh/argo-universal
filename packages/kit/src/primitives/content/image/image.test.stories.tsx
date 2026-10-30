@@ -14,7 +14,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const asset = {
-  pluginId: 'hello',
+  pluginId: 'example',
   hash: 'a'.repeat(64),
   format: 'jpeg',
 } as const;
