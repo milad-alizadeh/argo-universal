@@ -2,10 +2,13 @@ import type {
   ElicitationPropertySchema,
   PendingElicitation,
 } from '@repo/contracts';
-import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
-import addFormats from 'ajv-formats';
 import { errorMessage } from './elicitation-errors';
 import { numericProperty } from './elicitation-property';
+import {
+  elicitationValidator,
+  type ElicitationIssue,
+  type ElicitationValidator,
+} from './elicitation-validate';
 
 type ElicitationField = {
   name: string;
@@ -26,29 +29,25 @@ interface ElicitationSchema {
   }) => { form?: string; fields: Record<string, string> } | undefined;
 }
 
-type CompiledSchema = { check?: ValidateFunction; error?: string };
-
 export type ElicitationValue = string | boolean | string[];
 
 export type ElicitationValues = Record<string, ElicitationValue>;
 
 type ElicitationFormValues = Record<string, ElicitationValue | undefined>;
 
-const validator = addFormats(new Ajv({ allErrors: true, strict: false }));
-
 export function createElicitationSchema(
   schema: PendingElicitation['requestedSchema'],
 ): ElicitationSchema {
   const fields = schemaFields(schema);
-  const compiled = compileSchema(schema);
+  const checked = elicitationValidator(schema);
   const content = contentOf(fields);
 
   return {
     fields,
-    error: compiled.error,
+    error: checked.error,
     content,
     defaultValues: defaultValuesOf(fields),
-    validate: validatorOf(fields, compiled, content),
+    validate: validatorOf(fields, checked, content),
   };
 }
 
@@ -61,16 +60,6 @@ function schemaFields(
     key: `property${index}`,
     required: schema.required?.includes(name) ?? false,
   }));
-}
-
-function compileSchema(
-  schema: PendingElicitation['requestedSchema'],
-): CompiledSchema {
-  try {
-    return { check: validator.compile({ type: 'object', ...schema }) };
-  } catch {
-    return { error: 'The Agent provided an invalid form.' };
-  }
 }
 
 function contentOf(fields: ElicitationField[]): ElicitationSchema['content'] {
@@ -120,50 +109,44 @@ const formValue = (
 
 function validatorOf(
   fields: ElicitationField[],
-  compiled: CompiledSchema,
+  checked: ElicitationValidator,
   content: ElicitationSchema['content'],
 ): ElicitationSchema['validate'] {
-  const check = compiled.check;
+  const validate = checked.validate;
 
-  if (!check) return () => ({ form: compiled.error, fields: {} });
+  if (!validate) return () => ({ form: checked.error, fields: {} });
 
-  return ({ value }) =>
-    check(content(value))
-      ? undefined
-      : { fields: fieldErrors(fields, check.errors ?? []) };
+  return ({ value }) => formErrors(fields, validate(content(value)));
 }
 
-// A field shows its first error: later entries win, so the errors go in last to first.
+const formErrors = (
+  fields: ElicitationField[],
+  issues: ElicitationIssue[],
+): { fields: Record<string, string> } | undefined =>
+  issues.length === 0 ? undefined : { fields: fieldErrors(fields, issues) };
+
+// A field shows its first issue: later entries win, so the issues go in last to first.
 function fieldErrors(
   fields: ElicitationField[],
-  errors: readonly ErrorObject[],
+  issues: readonly ElicitationIssue[],
 ): Record<string, string> {
   return Object.fromEntries(
-    erroredFields(fields, errors)
+    erroredFields(fields, issues)
       .reverse()
-      .map(([field, error]) => [
+      .map(([field, issue]) => [
         field.key,
-        errorMessage(error, field.property),
+        errorMessage(issue, field.property),
       ]),
   );
 }
 
 function erroredFields(
   fields: ElicitationField[],
-  errors: readonly ErrorObject[],
-): [ElicitationField, ErrorObject][] {
-  return errors.flatMap((error): [ElicitationField, ErrorObject][] => {
-    const field = fields.find(({ name }) => name === errorProperty(error));
+  issues: readonly ElicitationIssue[],
+): [ElicitationField, ElicitationIssue][] {
+  return issues.flatMap((issue): [ElicitationField, ElicitationIssue][] => {
+    const field = fields.find(({ name }) => name === issue.property);
 
-    return field ? [[field, error]] : [];
+    return field ? [[field, issue]] : [];
   });
 }
-
-function errorProperty(error: ErrorObject): string | undefined {
-  return error.keyword === 'required'
-    ? String(error.params.missingProperty)
-    : pointerName(error.instancePath);
-}
-
-const pointerName = (path: string): string | undefined =>
-  path.slice(1).split('/')[0]?.replaceAll('~1', '/').replaceAll('~0', '~');

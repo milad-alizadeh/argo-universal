@@ -1204,12 +1204,6 @@ importers:
       '@xterm/xterm':
         specifier: 'catalog:'
         version: 6.0.0
-      ajv:
-        specifier: 'catalog:'
-        version: 8.20.0
-      ajv-formats:
-        specifier: 'catalog:'
-        version: 3.0.1
       diff:
         specifier: 'catalog:'
         version: 9.0.0
