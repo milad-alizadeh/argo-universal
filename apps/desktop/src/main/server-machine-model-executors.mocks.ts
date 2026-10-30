@@ -29,6 +29,14 @@ const expectBadge = (attention: number | undefined): void => {
   expect(badges.at(-1)).toBe(attention);
 };
 
+const sendAndExpectBadge = (
+  event: { type: 'counts.disconnected' } | { type: 'counts.released' },
+  attention: number | undefined,
+): void => {
+  server.send(event);
+  expectBadge(attention);
+};
+
 export const executors = {
   [readAddressDoneEvent]: ({ event }): Promise<void> => {
     if (event.type !== readAddressDoneEvent)
@@ -53,21 +61,14 @@ export const executors = {
     server.send(event);
     expectBadge(event.counts.attention);
   },
-  'counts.disconnected': (): void => {
-    // On the way out the disconnect answers the App's own release, so it clears no badge and keeps the Session count the question needs.
-    const kept = server.getSnapshot().matches({ ready: 'releasing' })
-      ? badges.at(-1)
-      : 0;
-
-    server.send({ type: 'counts.disconnected' });
-    expectBadge(kept);
-  },
-  'counts.released': (): void => {
-    const kept = badges.at(-1);
-    server.send({ type: 'counts.released' });
-    // Letting go on the way out touches no badge.
-    expectBadge(kept);
-  },
+  // On the way out a disconnect answers the App's own release, so it clears no badge and keeps the Session count the question needs.
+  'counts.disconnected': (): void =>
+    sendAndExpectBadge(
+      { type: 'counts.disconnected' },
+      server.getSnapshot().matches({ ready: 'releasing' }) ? badges.at(-1) : 0,
+    ),
+  'counts.released': (): void =>
+    sendAndExpectBadge({ type: 'counts.released' }, badges.at(-1)),
   [quitDoneEvent]: async ({ event }): Promise<void> => {
     if (event.type !== quitDoneEvent) throw new Error('Expected quit answer');
     await settle(() => latest(quitCalls).resolve(event.output));

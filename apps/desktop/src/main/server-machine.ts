@@ -459,10 +459,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
         active: {
           on: { 'app.quit': { target: 'releasing' } },
         },
-        /*
-         * Electron tears its Node environment down with the App, and a socket still closing holds the
-         * process alive long after the window goes, so the App lets go of its Server Connection first.
-         */
+        // Lets go of the Server Connection first; `watchSessionCounts` says why that has to happen before the App quits.
         releasing: {
           entry: sendTo(countsActorId, { type: countsReleaseEvent }),
           on: {
@@ -490,7 +487,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
               },
               { target: stoppingTarget },
             ],
-            onError: { target: 'active' },
+            // The App stays, but its Server Connection was let go, so it is built again.
+            onError: { target: '#serverConnection.locating' },
           },
           on: { 'app.quit': { actions: [] } },
         },
