@@ -164,7 +164,12 @@ function StatusContent(props: {
   if (loadError !== undefined) return statusText(loadError, 'danger');
 
   if (hasNothingToShow(props.diff))
-    return statusText('No lines to show', 'muted');
+    return statusText(
+      props.file.binary
+        ? "Binary file, can't be previewed"
+        : 'No lines to show',
+      'muted',
+    );
 
   return <Spinner accessibilityLabel={loadingDiffLabel(props.file.path)} />;
 }

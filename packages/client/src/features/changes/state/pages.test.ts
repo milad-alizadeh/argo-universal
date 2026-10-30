@@ -107,6 +107,26 @@ describe('file pages', () => {
     expect(changes.summary?.files).toBe(3);
     expect(changes.mainBranch).toBe('trunk');
   });
+
+  it('marks a file Git reports no counts for as binary, and keeps a rename’s old path', () => {
+    const changes = filesFromPages([
+      page(
+        [
+          file('/logo.png', null),
+          file('/empty.txt', 0),
+          { ...file('/b.txt', 1), operation: 'move', oldPath: '/a.txt' },
+        ],
+        null,
+      ),
+    ]);
+
+    expect(changes.files?.map(({ path, binary }) => [path, binary])).toEqual([
+      ['/logo.png', true],
+      ['/empty.txt', false],
+      ['/b.txt', false],
+    ]);
+    expect(changes.files?.[2]?.oldPath).toBe('/a.txt');
+  });
 });
 
 describe('comparisons and branches', () => {

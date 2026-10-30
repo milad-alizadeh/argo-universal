@@ -1,7 +1,7 @@
 import { contentActionClass } from '@repo/kit/primitives/actions/pressable';
 import { Pressable } from '@repo/kit/primitives/actions/pressable';
 import { PathText } from '@repo/kit/primitives/content/path-text';
-import { TextClassContext } from '@repo/kit/primitives/content/text';
+import { Text, TextClassContext } from '@repo/kit/primitives/content/text';
 import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { SizeClass } from '@repo/kit/size-class/size-class';
@@ -64,13 +64,35 @@ const toggleOf = (props: FileHeaderProps): Omit<ToggleProps, 'children'> => ({
   onPress: () => props.onOpenChange(!props.open),
 });
 
+// A moved file's old path, when the Server reports one that differs from where the file is now.
+const movedFrom = (file: FileHeaderProps['file']): string | undefined =>
+  file.operation === 'move' && file.oldPath !== file.path
+    ? file.oldPath
+    : undefined;
+
+function RenamedFrom(props: {
+  path: string;
+  scroll?: boolean;
+}): React.JSX.Element {
+  return (
+    <>
+      <PathText path={props.path} quiet scroll={props.scroll} />
+      <Text selectable={false} aria-hidden>
+        →
+      </Text>
+    </>
+  );
+}
+
 function PathToggle(
   props: FileHeaderProps & { scroll?: boolean },
 ): React.JSX.Element {
   const toggle = toggleOf(props);
+  const oldPath = movedFrom(props.file);
 
   return props.scroll ? (
     <FileHeaderToggle {...toggle}>
+      {oldPath !== undefined && <RenamedFrom path={oldPath} scroll />}
       <PathText path={props.file.path} scroll />
     </FileHeaderToggle>
   ) : (
@@ -81,10 +103,16 @@ function PathToggle(
 function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
   const [pathCut, setPathCut] = React.useState(false);
   const path = props.file.path;
+  const oldPath = movedFrom(props.file);
 
   return (
-    <Tooltip label={path} active={pathCut} frameless>
+    <Tooltip
+      label={oldPath === undefined ? path : `${oldPath} → ${path}`}
+      active={pathCut}
+      frameless
+    >
       <FileHeaderToggle {...toggleOf(props)}>
+        {oldPath !== undefined && <RenamedFrom path={oldPath} />}
         <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
       </FileHeaderToggle>
     </Tooltip>

@@ -10,7 +10,10 @@ export interface ChangesBranches {
 }
 
 // A changed file as its row draws it; its diff loads in pages once the row is opened.
-export type ChangedFile = Omit<FileDiff, 'hunks'>;
+export type ChangedFile = Omit<FileDiff, 'hunks'> & {
+  // Git reports no line counts for it, so its diff has no text to draw.
+  binary?: boolean;
+};
 
 // What has loaded of one file's diff, a page of hunks at a time.
 export interface FileDiffPages {
