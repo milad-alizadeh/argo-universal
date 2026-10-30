@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
+import { ensureServerIdentity } from '../devices';
 import { Notifications, type NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import { ensureControlToken } from '../operations';
@@ -15,13 +16,14 @@ import {
   connectWebSockets,
   listenOnLoopback,
 } from './http-connections';
+import { httpRouterInput } from './http-router-input';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
   type RequestListenerOptions,
 } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
-import { createAppRouterDeps, type AppRouterInput } from './router-deps';
+import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
@@ -49,7 +51,7 @@ export interface HttpServer {
   close: () => Promise<void>;
 }
 
-type HttpSetup = {
+export type HttpSetup = {
   plugins: Plugins;
   blobsFolder: string;
   commandAdmission: AbortController;
@@ -105,11 +107,13 @@ async function prepareHttpServer(
   const setup = prepareHttpSetup(options, serverId);
 
   const controlToken = await ensureControlToken(options.home);
+  const serverPublicKey = await ensureServerIdentity(options);
+  const input = httpRouterInput(options, setup, controlToken);
 
   return {
     ...setup,
     appRouter: createAppRouter(
-      createAppRouterDeps(httpRouterInput(options, setup, controlToken)),
+      createAppRouterDeps({ ...input, serverPublicKey }),
     ),
   };
 }
@@ -123,22 +127,6 @@ function prepareHttpSetup(
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
     plugins: new Plugins(options),
-  };
-}
-
-function httpRouterInput(
-  options: HttpServerOptions,
-  setup: HttpSetup,
-  controlToken: string,
-): AppRouterInput {
-  return {
-    ...options,
-    controlToken,
-    blobsFolder: setup.blobsFolder,
-    sessionCommandSignal: setup.commandAdmission.signal,
-    notifications: setup.notifications,
-    hooks: setup.plugins.hooks,
-    plugins: setup.plugins.router,
   };
 }
 
