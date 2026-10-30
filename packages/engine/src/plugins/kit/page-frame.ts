@@ -4,6 +4,7 @@ import { flushEffects } from './reconciler';
 import { kitScheduler } from './scheduler';
 
 const frameMs = 16;
+
 // Past this a view that is not ready no longer holds back an acknowledgement.
 const sentWaitMs = 1000;
 
@@ -33,6 +34,7 @@ export async function whenSent(view: OpenView): Promise<void> {
   if (view.frame === undefined) return;
 
   const sent = new Promise<void>((resolve) => view.sentWaiters.push(resolve));
+
   const waited = new Promise<void>((resolve) =>
     kitScheduler.schedule(resolve, sentWaitMs),
   );
