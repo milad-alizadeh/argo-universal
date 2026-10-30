@@ -1,8 +1,5 @@
-import {
-  layoutWidths,
-  nextFrames,
-  settleLayout,
-} from '@repo/kit/mocks/story-layout';
+import { nextFrames } from '@repo/kit/mocks/next-frames';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { screen } from 'storybook/test';
 
 /*

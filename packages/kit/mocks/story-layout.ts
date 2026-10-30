@@ -28,12 +28,6 @@ async function viewportApplied(width: number): Promise<void> {
   });
 }
 
-// Two animation frames, so a change the page has just made has been drawn.
-export const nextFrames = (): Promise<void> =>
-  new Promise((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
-
 // Sizes the viewport to a named layout, or to an exact width, and waits for the frame to take it, then for fonts and two frames.
 export async function settleLayout(
   layout: LayoutName | number,
