@@ -77,6 +77,14 @@ function perfFlick(id: string, motion: Motion): Promise<void> {
   });
 }
 
+/*
+ * One frame interval per animation frame, from the frame's own timestamp. The clock is the main
+ * thread's: a main thread held for 500 ms is measured as one 500 ms interval (collector.perf.mts
+ * proves it, including in headless Chromium, where the vsync is emulated at 60 Hz). What it cannot
+ * see is jank that never reaches the main thread — raster, compositing, or a frame the compositor
+ * drops while the page's own callbacks keep pace. Those are read from the compositor's own frame
+ * reports instead, as `presentedFrames`, `partialFrames` and `compositorDropped`.
+ */
 function perfFrame(now: number): void {
   const state = window.perfFrames;
 

@@ -8,6 +8,8 @@ import { scriptedRegistry } from '@repo/mocks/registry/scripted';
 export type InitialServerOptions = {
   noProjects?: boolean;
   registryOffline?: boolean;
+  // A registry to serve in place of the scripted Agents. It is on disk before the Engine starts, so the Engine's first read sees it.
+  registry?: ReturnType<typeof scriptedRegistry>;
 };
 
 export type ServerPaths = {
@@ -60,9 +62,13 @@ async function writeRegistry(
   agents: AppFixtureAgents,
   initial: InitialServerOptions,
 ): Promise<void> {
-  const registry = initial.registryOffline
-    ? offlineRegistry
-    : scriptedRegistry(agents, { ARGO_E2E_REQUEST_LOG: paths.requestLogPath });
+  const registry =
+    initial.registry ??
+    (initial.registryOffline
+      ? offlineRegistry
+      : scriptedRegistry(agents, {
+          ARGO_E2E_REQUEST_LOG: paths.requestLogPath,
+        }));
 
   await writeFile(paths.registryPath, JSON.stringify(registry));
 }

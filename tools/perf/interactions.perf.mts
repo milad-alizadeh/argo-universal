@@ -35,11 +35,15 @@ const drawerCycles = 3;
 
 const openNavigation = 'Open navigation';
 
+// The front drawer's scrim, which react-native-drawer-layout labels for its own close affordance.
+const closeNavigation = 'Close drawer';
+
 const results: Result[] = [];
 
 let server: SeededServer;
 
-test.describe.configure({ mode: 'serial' });
+// Not serial: one scenario's failure must not silently void the scenarios queued behind it.
+test.describe.configure({ mode: 'default' });
 
 test.beforeAll(async () => {
   server = await startSeededServer(
@@ -102,7 +106,7 @@ const sessions: Scenario = async (page) => {
 const cycleDrawer = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: openNavigation }).click();
   await page.waitForTimeout(drawerSettleMilliseconds);
-  await page.getByLabel('Close navigation').click();
+  await page.getByRole('button', { name: closeNavigation }).click();
   await page.waitForTimeout(drawerSettleMilliseconds);
 };
 

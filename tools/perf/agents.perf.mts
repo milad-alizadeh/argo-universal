@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
@@ -51,14 +51,19 @@ const longRegistry = (): Registry => {
   };
 };
 
-test.describe.configure({ mode: 'serial' });
+// Not serial: one scenario's failure must not silently void the scenarios queued behind it.
+test.describe.configure({ mode: 'default' });
 
+/*
+ * The long registry goes in as the Server's own registry, not over it afterwards: the Engine reads
+ * the file as it starts, so a write that lands later is never the catalog the scenario measures.
+ */
 test.beforeAll(async () => {
   server = await startOwnServer(
     await mkdtemp(path.join(os.tmpdir(), 'argo-perf-agents-')),
     {},
+    { registry: longRegistry() },
   );
-  await writeFile(server.registryPath, JSON.stringify(longRegistry()));
 });
 
 test.afterAll(async () => {
