@@ -25,10 +25,19 @@ async function settlingPage(): Promise<{
 
   const { url } = await startEngineTestHost({ home });
   const app = connectPluginApp(url, page);
-  await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(1);
+
+  /*
+   * The page draws its cached rows and then settles to the fetched ones by itself: two frames and no
+   * more. Waiting on the settled count rather than on the cached one asks after a state that stays:
+   * the cached frame is on its own for the 50ms the fixture's timer runs, which is exactly one poll
+   * interval, so a poll for it reads 2 whenever a sample lands on the far side of that timer.
+   */
+  await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(2);
+
   const held = app.messages[0];
 
-  await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(2);
+  // The App holds the first frame: the cached tree, the one that still draws Retry.
+  expect(JSON.stringify(held)).toContain('cached 30');
 
   return { app, held };
 }
