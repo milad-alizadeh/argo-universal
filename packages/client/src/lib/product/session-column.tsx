@@ -13,12 +13,19 @@ export const sessionSurface = 'bg-content';
 type SessionColumnProps = ViewProps & {
   ref?: Ref<ViewInstance>;
   fill?: boolean;
+  // The column gives its height up to the box it sits in, rather than running past the bottom of it.
+  shrink?: boolean;
 };
 
 type ColumnPaneProps = Pick<
   SessionColumnProps,
-  'fill' | 'pointerEvents' | 'children'
+  'fill' | 'shrink' | 'pointerEvents' | 'children'
 >;
+
+const shrinkClass = 'min-h-0 shrink';
+
+const paneClassName = ({ shrink, fill }: ColumnPaneProps): string =>
+  cn('w-full', shrink && shrinkClass, fill && filledClass);
 
 // The pane's side padding, the content rule's gutter at the window's Size class.
 function ColumnPane(props: ColumnPaneProps): React.JSX.Element {
@@ -27,7 +34,7 @@ function ColumnPane(props: ColumnPaneProps): React.JSX.Element {
   return (
     <View
       pointerEvents={props.pointerEvents}
-      className={cn('w-full', props.fill && filledClass)}
+      className={paneClassName(props)}
       style={{ paddingHorizontal: gutter }}
     >
       {props.children}
@@ -53,16 +60,20 @@ function ColumnBody(props: ViewProps): React.JSX.Element {
 // The Session's one column: as wide as the content rule allows, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
 export function SessionColumn({
   fill,
+  shrink,
   ...props
 }: SessionColumnProps): React.JSX.Element {
   return (
-    <ColumnPane fill={fill} pointerEvents={props.pointerEvents}>
+    <ColumnPane fill={fill} shrink={shrink} pointerEvents={props.pointerEvents}>
       <ColumnBody {...props} />
     </ColumnPane>
   );
 }
 
-// A filled column runs the pane's height, as a plan read full page does.
+/*
+ * A filled column runs the pane's height, as a plan read full page does. The Composer's column always gives
+ * its height up: laid over the Feed's end, it has only the room above the keyboard to draw in (#1529).
+ */
 export function ComposerColumn(
   props: Pick<ViewProps, 'onLayout' | 'children'> & {
     ref?: Ref<ViewInstance>;
@@ -72,8 +83,9 @@ export function ComposerColumn(
   return (
     <SessionColumn
       {...props}
+      shrink
       testID="composer-column"
-      className={cn('items-center', props.fill && filledClass)}
+      className={cn('items-center', shrinkClass, props.fill && filledClass)}
     />
   );
 }
