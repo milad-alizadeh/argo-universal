@@ -77,6 +77,6 @@ const handlerSources = (sources: SessionSources): SessionHandlerSources => ({
   createId: sources.createId,
   installedAgents: sources.installedAgents,
   hooks: sources.hooks,
-  commandsWaitMs: sources.commandsWaitMs,
+  slashCommandsWaitMs: sources.slashCommandsWaitMs,
   open: new OpenSessions(sources),
 });

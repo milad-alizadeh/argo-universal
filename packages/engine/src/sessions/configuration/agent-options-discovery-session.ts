@@ -17,14 +17,16 @@ import { readProjectPath } from '../../projects';
 import { toSlashCommands } from '../acp/acp-slash-commands';
 import type { Discovery } from './agent-options-discovery';
 import type { DiscoverySources } from './agent-options-shared';
-import type { DiscoveredCommands } from './discovered-commands';
+import type { DiscoveredSlashCommands } from './discovered-slash-commands';
 
 // A discovery's own ACP session, which also hears the Slash commands its Agent sends.
-export type DiscoverySession = Discovery & { discovered: DiscoveredCommands };
+export type DiscoverySession = Discovery & {
+  discovered: DiscoveredSlashCommands;
+};
 
 // No prompt reaches this Agent session, so it asks nothing; anything it asks anyway is refused.
 const optionsDestination = (
-  discovered: DiscoveredCommands,
+  discovered: DiscoveredSlashCommands,
 ): AcpSessionDestination => ({
   update: ({ update }): undefined => {
     if (update.sessionUpdate === 'available_commands_update')

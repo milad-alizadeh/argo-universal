@@ -101,7 +101,7 @@ function $retokenize(): void {
   for (const node of $getRoot().getAllTextNodes()) node.markDirty();
 }
 
-const isFocused = (editor: LexicalEditor): boolean =>
+export const isFocused = (editor: LexicalEditor): boolean =>
   Boolean(editor.getRootElement()?.contains(document.activeElement));
 
 /*
@@ -118,12 +118,7 @@ function registerTypedTokens(
   );
 }
 
-/*
- * Reads the text again after the names change. Every editor update makes the typeahead look for
- * its trigger and may write the selection back to the page, so this updates only when a name would
- * become a token, and an editor out of focus keeps its DOM selection: a list arriving while the
- * person is elsewhere never opens the menu or pulls focus into the editor.
- */
+// Every editor update reruns the typeahead and may write the DOM selection, which would pull focus from wherever the person is.
 function retokenize(editor: LexicalEditor, find: TokenFinder): void {
   if (!editor.read(() => $hasTokenToMake(find))) return;
 

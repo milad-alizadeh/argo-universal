@@ -23,7 +23,10 @@ export const emptySessionInput = {
 type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
     Pick<
       EngineInput,
-      'fetchAgents' | 'caffeinate' | 'operationWaitClock' | 'commandsWaitMs'
+      | 'fetchAgents'
+      | 'caffeinate'
+      | 'operationWaitClock'
+      | 'slashCommandsWaitMs'
     >
   > &
   Pick<
@@ -34,9 +37,9 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
     installPlugins?: (home: string) => Promise<void>;
     // Starts over the storage a stopped Engine left (its `home`), as an app restart does.
     restartOver?: string;
+    // Installed beside the main Agent, each with its own scripted process.
+    otherAgents?: readonly string[];
   };
-
-type AgentIds = string | readonly string[];
 
 type AcpHost = Awaited<ReturnType<typeof startEngineTestHost>> & {
   agent: ReturnType<typeof createScriptedAgentProcess>;
@@ -45,12 +48,12 @@ type AcpHost = Awaited<ReturnType<typeof startEngineTestHost>> & {
 export const startAcpEngine = (
   scenario: AcpScenario = { steps: [] },
   createId: () => string = randomUUID,
-  agentIds?: AgentIds,
-): Promise<AcpHost> => launchAcpFixture(scenario, { createId, agentIds });
+  agentId?: string,
+): Promise<AcpHost> => launchAcpFixture(scenario, { createId, agentId });
 
 const launchAcpFixture = async (
   scenario: AcpScenario,
-  identity: { createId: () => string; agentIds?: AgentIds },
+  identity: { createId: () => string; agentId?: string },
 ): Promise<AcpHost> => {
   const { directory, ...opened } = await setupAcpStorage(scenario);
   const agent = createScriptedAgentProcess(scenario);
@@ -98,20 +101,21 @@ const setupAcpStorage = async (scenario: AcpScenario): Promise<AcpStorage> => {
 type Fixture = OpenedStorage & {
   agent: ReturnType<typeof createScriptedAgentProcess>;
   createId: () => string;
-  agentIds?: AgentIds;
+  agentId?: string;
 };
 
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   caffeinate: scenario.caffeinate,
   operationWaitClock: scenario.operationWaitClock,
-  commandsWaitMs: scenario.commandsWaitMs ?? 0,
+  slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
 });
 
 const fixtureAgents = (
-  agentIds: AgentIds = 'mock',
+  scenario: AcpScenario,
+  agentId = 'mock',
 ): EngineTestOptions['fixtureAgents'] =>
-  [agentIds].flat().map(createAgentMetadata);
+  [agentId, ...(scenario.otherAgents ?? [])].map(createAgentMetadata);
 
 const engineOptions = (
   scenario: AcpScenario,
@@ -122,7 +126,7 @@ const engineOptions = (
     database: fixture.storage?.database,
     home: fixture.home,
     createId: fixture.createId,
-    fixtureAgents: fixtureAgents(fixture.agentIds),
+    fixtureAgents: fixtureAgents(scenario, fixture.agentId),
     acp: acpOptions(scenario, fixture.agent),
   };
 

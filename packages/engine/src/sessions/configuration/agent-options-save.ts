@@ -7,21 +7,22 @@ import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
+import type { Discovery } from './agent-options-discovery';
 import { AgentOptionsJob } from './agent-options-job';
 import type { Stored } from './agent-options-shared';
-import type { DiscoveredCommands } from './discovered-commands';
+import type { DiscoveredSlashCommands } from './discovered-slash-commands';
 
 // What a discovery that read its Agent's options saves: the options, and the Slash commands its session hears.
 export type DiscoverySave = {
   writer: WriterActorRef;
   saved: Stored | undefined;
-  commands: DiscoveredCommands;
-  signal: AbortSignal;
+  slashCommands: DiscoveredSlashCommands;
+  discovery: Discovery;
   input: SessionAgentOptionsInput;
   options: SessionAgentOptionsOutput;
 };
 
-type Commands = SlashCommand[] | undefined;
+type SlashCommandList = SlashCommand[] | undefined;
 
 const ownerOf = ({
   agent,
@@ -34,7 +35,10 @@ const ownerOf = ({
 const savedRevision = (saved: Stored | undefined): number =>
   saved?.revision ?? 0;
 
-const optionsJob = (save: DiscoverySave, commands: Commands): AgentOptionsJob =>
+const optionsJob = (
+  save: DiscoverySave,
+  commands: SlashCommandList,
+): AgentOptionsJob =>
   new AgentOptionsJob(ownerOf(save.input), save.options, {
     authoritative: true,
     expectedRevision: savedRevision(save.saved),
@@ -42,13 +46,16 @@ const optionsJob = (save: DiscoverySave, commands: Commands): AgentOptionsJob =>
   });
 
 // A list that arrived after the options were saved; one already saved with them is not saved again.
-const lateCommands = (save: DiscoverySave, early: Commands): Commands => {
-  const latest = save.commands.commands;
+const lateSlashCommands = (
+  save: DiscoverySave,
+  early: SlashCommandList,
+): SlashCommandList => {
+  const latest = save.slashCommands.list;
 
   return latest === early ? undefined : latest;
 };
 
-const commandsJob = (
+const slashCommandsJob = (
   save: DiscoverySave,
   commands: SlashCommand[],
   revision: number,
@@ -60,18 +67,18 @@ const commandsJob = (
   });
 
 // Only the revision the options write committed may take the late list, so a newer write keeps its own.
-async function saveLateCommands(
+async function saveLateSlashCommands(
   save: DiscoverySave,
-  early: Commands,
+  early: SlashCommandList,
   revision: number | undefined,
 ): Promise<void> {
-  const commands = lateCommands(save, early);
+  const late = lateSlashCommands(save, early);
 
-  if (!commands || !revision) return;
+  if (!late || !revision) return;
 
   await writeDatabaseJobAndWaitForCommit(
     save.writer,
-    commandsJob(save, commands, revision),
+    slashCommandsJob(save, late, revision),
   );
 }
 
@@ -79,14 +86,12 @@ export async function saveDiscovery(
   save: DiscoverySave,
   waitMs?: number,
 ): Promise<void> {
-  const early = save.commands.commands;
+  const early = save.slashCommands.list;
   const job = optionsJob(save, early);
 
   await writeDatabaseJobAndWaitForCommit(save.writer, job);
-  /*
-   * The options are saved at once. The Agent may send its Slash commands later, so the session
-   * stays open for them and they follow in a second write that only the revision it started from may take.
-   */
-  await save.commands.seen(save.signal, waitMs);
-  await saveLateCommands(save, early, job.committedRevision);
+  save.discovery.configured(save.options);
+  // Agents often send their list after opening, so a late one is saved only over the revision this discovery wrote.
+  await save.slashCommands.seen(save.discovery.signal, waitMs);
+  await saveLateSlashCommands(save, early, job.committedRevision());
 }

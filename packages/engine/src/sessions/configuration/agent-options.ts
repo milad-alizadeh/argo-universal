@@ -77,6 +77,7 @@ class AgentOptionsReader {
     this.unsubscribe = observeLiveAgentOptions({
       sessions: this.sources.open,
       input: { ...this.input, sessionId },
+      savedCommands: () => savedAgentOptions(this.sources, this.input).commands,
       observer: {
         update: (update) => this.publish({ update }),
         done: () => this.events.emit('done'),
@@ -127,7 +128,7 @@ class AgentOptionsReader {
       configured: (options) => this.ready(saved, options),
     });
 
-    // The saved snapshot is the last word, even when it reads as the early one did.
+    // Discovery always ends with an update, even one matching the last, so a reader waiting on the refresh hears it finish.
     this.previous = '';
     this.ready(saved, configOptions);
   }

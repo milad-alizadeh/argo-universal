@@ -9,6 +9,7 @@ import { TRPCError } from '@trpc/server';
 import { readSessionRow } from '../session-record';
 import type { SessionSources } from '../session-sources';
 import { readAgentConfiguration } from './agent-options-read';
+import { storageSources } from './agent-options-shared';
 
 type InputSources = Pick<SessionSources, 'database' | 'findWriter'>;
 
@@ -29,10 +30,7 @@ function requireOptionsSession(
   input: SessionAgentOptionsInput,
   sessionId: string,
 ): SessionRecord {
-  const session = readSessionRow(
-    { database: sources.database, writer: sources.findWriter() },
-    sessionId,
-  );
+  const session = readSessionRow(storageSources(sources), sessionId);
 
   if (!session) throw missingOptionsSession();
 
@@ -73,10 +71,7 @@ export function savedAgentOptions(
   sources: InputSources,
   input: SessionAgentOptionsInput,
 ): AgentOptionsUpdate {
-  const saved = readAgentConfiguration(
-    { database: sources.database, writer: sources.findWriter() },
-    input,
-  );
+  const saved = readAgentConfiguration(storageSources(sources), input);
 
   return {
     agent: input.agent,

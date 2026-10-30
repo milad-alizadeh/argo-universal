@@ -120,14 +120,18 @@ function saveChanged(
 
 // Discovery preserves preferences and cannot overwrite an ACP update received while it opened.
 export class AgentOptionsJob implements WriterJob, QueuedAgentOptionsChange {
-  // The revision this job wrote, once committed; `undefined` when a newer write took precedence.
-  public committedRevision: number | undefined;
+  private written: number | undefined;
 
   public constructor(
     private readonly owner: SessionAgentOptionsInput,
     private readonly options: SessionConfigOption[] | undefined,
     private readonly update: Update,
   ) {}
+
+  // The revision this job wrote, once committed; `undefined` when a newer write took precedence.
+  public committedRevision(): number | undefined {
+    return this.written;
+  }
 
   public describe(): string {
     return `store Agent options for ${this.owner.agent} in ${this.owner.projectId}`;
@@ -176,6 +180,6 @@ export class AgentOptionsJob implements WriterJob, QueuedAgentOptionsChange {
 
     const next = this.project(row && decode(row));
 
-    this.committedRevision = saveChanged(transaction, row, next);
+    this.written = saveChanged(transaction, row, next);
   }
 }

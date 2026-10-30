@@ -1,4 +1,5 @@
 import type { AgentOptionsUpdate } from '@repo/contracts';
+import { slashCommandsUpdate } from '@repo/mocks/agent/slash-commands-update';
 import { emptySessionInput, type startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -25,13 +26,13 @@ async function nextWhere(
   return matches(next.value) ? next.value : nextWhere(stream, matches, ended);
 }
 
-export const nextWithCommands = (
+export const nextWithSlashCommands = (
   stream: Updates,
 ): Promise<AgentOptionsUpdate> =>
   nextWhere(
     stream,
     (update) => update.commands !== null,
-    'Discovery ended without commands',
+    'Discovery ended without Slash commands',
   );
 
 export const nextReady = (stream: Updates): Promise<AgentOptionsUpdate> =>
@@ -48,36 +49,30 @@ export async function finish(stream: Updates): Promise<void> {
 
 export type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
-type Commands = readonly { name: string; description: string }[];
+type SlashCommands = readonly { name: string; description: string }[];
 
-export const commandsUpdate = (
-  commands: Commands,
-): Parameters<ReturnType<typeof requireScriptedProcessAt>['play']>[0] => [
-  {
-    type: 'update',
-    update: {
-      sessionUpdate: 'available_commands_update',
-      availableCommands: [...commands],
-    },
-  },
-];
+type Discovering = { agent?: string; delayMs?: number; sessionId?: string };
+
+const discovering = { agent: owner.agent, delayMs: 0, sessionId: 'owned-1' };
 
 // An Agent sends its list once the discovery session is open, so play it after the options are ready.
 export async function discoverWith(
   host: Host,
-  commands: Commands,
-  delayMs = 0,
+  slashCommands: SlashCommands,
+  options: Discovering = {},
 ): Promise<Updates> {
-  const stream = (await host.caller.session.agentOptions(owner))[
+  const { agent, delayMs, sessionId } = { ...discovering, ...options };
+
+  const stream = (await host.caller.session.agentOptions({ ...owner, agent }))[
     Symbol.asyncIterator
   ]();
 
   await nextReady(stream);
   await new Promise((resolve) => setTimeout(resolve, delayMs));
-  await requireScriptedProcessAt(host.agent.processes).play(
-    commandsUpdate(commands),
-    'owned-1',
-  );
+  await requireScriptedProcessAt(
+    host.agent.processes,
+    host.agent.processes.length - 1,
+  ).play([slashCommandsUpdate(slashCommands)], sessionId);
 
   return stream;
 }

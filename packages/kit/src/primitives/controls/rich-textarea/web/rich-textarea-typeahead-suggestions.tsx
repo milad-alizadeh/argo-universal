@@ -1,5 +1,6 @@
 import { $createTextNode, type TextNode } from 'lexical';
 import type * as React from 'react';
+import { Text } from '#primitives/content/text';
 import { Listeners } from '../rich-textarea-listeners';
 import { SuggestionRun } from '../rich-textarea-suggestion-run';
 import {
@@ -154,6 +155,8 @@ function SuggestionDetail({
   detail,
 }: Pick<ComposerSuggestion, 'detail'>): React.JSX.Element | null {
   return detail ? (
-    <span className="type-secondary text-muted-foreground">{detail}</span>
+    <Text role="secondary" tone="muted" numberOfLines={2}>
+      {detail}
+    </Text>
   ) : null;
 }
