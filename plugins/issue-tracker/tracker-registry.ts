@@ -42,7 +42,7 @@ function createGitHubType(argo: Argo): TrackerType {
   return {
     id: githubId,
     name: 'GitHub Issues',
-    icon: { sf: 'ticket', material: 'confirmation_number' },
+    icon: 'issue',
     openClient: (originUrl) => {
       const repository = githubRepositoryFromOrigin(originUrl);
 

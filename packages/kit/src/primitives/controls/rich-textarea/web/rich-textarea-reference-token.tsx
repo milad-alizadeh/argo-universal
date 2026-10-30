@@ -11,7 +11,7 @@ export function ReferenceGlyph({
   state,
 }: Pick<ReferenceOption, 'state'>): React.JSX.Element {
   return state === 'open' ? (
-    <Icon name="issue-open" className="text-success" />
+    <Icon name="issue" className="text-success" />
   ) : (
     <Icon name="passed" className="text-done" />
   );
