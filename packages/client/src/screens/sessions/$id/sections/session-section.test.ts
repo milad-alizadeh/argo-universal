@@ -93,13 +93,14 @@ describe("a Session's Sections", () => {
     expect(changesFacts.count(content)).toBe(7);
   });
 
-  it("falls back to the snapshot's totals only until the first read settles", () => {
-    const content = { header: header(2), changes: loaded() };
+  it("falls back to the snapshot's totals until the first read settles", () => {
+    expect(summaryOf({ header: header(2), changes: loaded() })?.files).toBe(2);
+  });
 
-    expect(summaryOf(content)?.files).toBe(2);
-    expect(summaryOf({ ...content, changes: loaded(noChanges) })).toEqual(
-      noChanges,
-    );
+  it('reads a settled count of nothing as nothing, not as a missing read', () => {
+    expect(
+      summaryOf({ header: header(2), changes: loaded(noChanges) }),
+    ).toEqual(noChanges);
   });
 
   it('draws a card only for a Section with something to count', () => {

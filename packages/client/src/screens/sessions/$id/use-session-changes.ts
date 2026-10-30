@@ -49,16 +49,21 @@ interface OpenChanges {
   changes: ChangesViewProps;
 }
 
+type OpenSessionPage = Extract<SessionDetailViewProps, { state: 'open' }>;
+
+// A Session page draws its Changes while it is open, and nothing while it is still opening or has failed.
+const isOpen = ({ props }: ChangedSession): boolean => props.state === 'open';
+
 function useOpenChanges(
-  { sessionId, feed, source }: ChangedSession,
+  session: ChangedSession,
   panels: SessionPanels,
-  open: boolean,
 ): OpenChanges {
+  const { sessionId, feed, source } = session;
   const revision = useCheckoutRevision(feed);
 
   return {
     header: changesHeader(panels, feed),
-    changes: useChanges({ sessionId, open, revision }, source),
+    changes: useChanges({ sessionId, open: isOpen(session), revision }, source),
   };
 }
 
@@ -71,16 +76,22 @@ export function useChangedSession(
   session: ChangedSession,
 ): SessionDetailViewProps {
   const { props } = session;
-  const open = props.state === 'open';
-  const panels = useInspectorPanels(open ? props : {});
-  const { header, changes } = useOpenChanges(session, panels, open);
+  const panels = useInspectorPanels(props.state === 'open' ? props : {});
+  const { header, changes } = useOpenChanges(session, panels);
 
-  if (!open) return props;
+  if (props.state !== 'open') return props;
 
-  return {
-    ...props,
-    inspectorPanels: panels,
-    changes,
-    header: { ...props.header, changes: header },
-  };
+  return withChanges(props, panels, { ...header, changes });
 }
+
+// The open page with its Inspector tabs, its loaded Changes and the Changes its header offers.
+const withChanges = (
+  props: OpenSessionPage,
+  inspectorPanels: SessionPanels,
+  { changes, ...header }: ChangesHeader & { changes: ChangesViewProps },
+): SessionDetailViewProps => ({
+  ...props,
+  inspectorPanels,
+  changes,
+  header: { ...props.header, changes: header },
+});

@@ -101,7 +101,7 @@ function useSessionViewProps(
   const surroundings = useSessionSurroundings(page, cards, sources.feed);
   const reads = usePageCallout(sessionId, sources, surroundings.agents);
   const props = pageProps(sessionId, sources, { ...surroundings, ...reads });
-  const changed = useChangedSession(sessionId, props, sources.feed);
+  const changed = useChangedSession({ sessionId, props, feed: sources.feed });
   const bar = useWithSessionBar(sessionId, sources.feed, changed);
 
   return withPluginCards(withAgentFeed(bar), cards);

@@ -25,10 +25,12 @@ function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
   return { ...props.header.menu, changes: menuChanges(props) };
 }
 
+type MenuContent = Pick<OpenSessionViewProps, 'header' | 'changes'>;
+
 // The same reading of the Checkout the Workbench card summarises, so "…" never counts files the Inspector does not.
-function menuChanges(props: OpenSessionViewProps): SessionMenu['changes'] {
-  const changes = props.header.changes;
-  const summary = summaryOf(props);
+function menuChanges(content: MenuContent): SessionMenu['changes'] {
+  const changes = content.header.changes;
+  const summary = summaryOf(content);
 
   if (!changes || !summary) return undefined;
 

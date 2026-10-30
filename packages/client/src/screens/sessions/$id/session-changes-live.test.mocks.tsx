@@ -52,8 +52,15 @@ const totalsOf = (files: readonly FileDiff[]): ChangesSummary => ({
   deletions: files.reduce((sum, file) => sum + file.removed, 0),
 });
 
-const holds = (files: readonly FileDiff[], totals: ChangesSummary): boolean =>
-  JSON.stringify(totalsOf(files)) === JSON.stringify(totals);
+const holds = (files: readonly FileDiff[], totals: ChangesSummary): boolean => {
+  const read = totalsOf(files);
+
+  return (
+    read.files === totals.files &&
+    read.additions === totals.additions &&
+    read.deletions === totals.deletions
+  );
+};
 
 if (!holds(firstReading, firstTotals) || !holds(laterReading, laterTotals))
   throw new Error('Recorded catalog needs the totals the assertions name');
@@ -63,15 +70,15 @@ let reading = firstReading;
 
 const readers = new Set<() => void>();
 
-const read = (files: readonly FileDiff[]): void => {
+const recordReading = (files: readonly FileDiff[]): void => {
   reading = files;
 
   for (const redraw of readers) redraw();
 };
 
-export const turnStarted = (): void => read(firstReading);
+export const turnStarted = (): void => recordReading(firstReading);
 
-export const moreFilesEdited = (): void => read(laterReading);
+export const moreFilesEdited = (): void => recordReading(laterReading);
 
 const watchReading = (redraw: () => void): (() => void) => {
   readers.add(redraw);
@@ -89,7 +96,7 @@ const catalog: MemoryCatalog = {
  * A Server that answers only what the page asks for. The shared in-memory source hands over a comparison's first
  * page whether the Changes are open or not, which would hide whether the page asked for them at all.
  */
-const whenAsked = (source: ChangesSource): ChangesSource => ({
+const answersOnlyOpenQueries = (source: ChangesSource): ChangesSource => ({
   ...source,
   useFiles: (query) => {
     const files = source.useFiles(query);
@@ -119,7 +126,10 @@ const staleFeed = {
  */
 export function LiveChangedSession(): JSX.Element {
   useSyncExternalStore(watchReading, () => reading);
-  const [source] = useState(() => whenAsked(memoryChanges(catalog)));
+
+  const [source] = useState(() =>
+    answersOnlyOpenQueries(memoryChanges(catalog)),
+  );
 
   return (
     <FramedSessionPreview

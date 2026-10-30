@@ -79,7 +79,9 @@ function useLoaded(
 /*
  * A Session's Changes for the comparison picked: the changed files a page at a time, each opened file's diff a page
  * of lines at a time, and the paths marked Viewed. Picking another comparison starts all of it over. Nothing loads
- * while the Changes are closed, and a new revision reloads them. The Server is the source unless a story passes one.
+ * for a scope that is not open, and a new revision reloads them. A Session page is open while it is drawn, because
+ * its Workbench card summarises the same reading its Inspector tab shows. The Server is the source unless a story
+ * passes one.
  */
 export function useChanges(
   scope: ChangesScope,

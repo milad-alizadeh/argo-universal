@@ -11,6 +11,9 @@ import {
   turnStarted,
 } from './session-changes-live.test.mocks';
 
+// Wide enough for the Sessions list, the content column, the Workbench and the Inspector at once (layout.md).
+const workbenchAndInspector = 2224;
+
 const meta = {
   title: 'Tests/Screens/Sessions/Session/WorkbenchChangesLive',
   parameters: { screenPreview: true },
@@ -18,7 +21,7 @@ const meta = {
   beforeEach: (): Promise<void> => {
     turnStarted();
 
-    return settleLayout(2224);
+    return settleLayout(workbenchAndInspector);
   },
 } satisfies Meta;
 
