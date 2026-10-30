@@ -23,12 +23,20 @@ const lastStderrBlock = (stderr: string): string =>
     .join('\n');
 
 const failureMessage = (cause: unknown): string => {
-  if (cause instanceof AgentProcessExitError)
-    return [cause.message, lastStderrBlock(cause.stderr)]
-      .filter(Boolean)
-      .join('\n');
+  if (cause instanceof AgentProcessExitError) return exitMessage(cause);
 
   return cause instanceof Error ? cause.message : String(cause);
+};
+
+const exitMessage = (cause: AgentProcessExitError): string => {
+  const { title, description } = cause.notice;
+
+  return [
+    title,
+    cause.missingExecutable ? description : lastStderrBlock(cause.stderr),
+  ]
+    .filter(Boolean)
+    .join('\n');
 };
 
 export const authenticationDescription = (
