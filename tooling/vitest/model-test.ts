@@ -20,7 +20,7 @@ import { requireDrivers } from './model-validate';
 
 export { describeModel } from './model-describe';
 
-export type { DelayEvent } from './model-edges';
+export type { DelayEvent, ModelFixture } from './model-edges';
 
 export type {
   DeclaredDelay,

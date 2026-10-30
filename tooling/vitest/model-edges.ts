@@ -1,10 +1,24 @@
-import type { AnyStateMachine, EventObject } from 'xstate';
+import type {
+  AnyStateMachine,
+  DoneActorEvent,
+  ErrorActorEvent,
+  EventFromLogic,
+  EventObject,
+  SnapshotEvent,
+} from 'xstate';
 import { type DirectedGraphNode, toDirectedGraph } from 'xstate/graph';
 
 const delayPrefix = 'xstate.after.';
 
 // A delayed transition's event, named by its delay and the state that holds it; XState generates the rest.
 export type DelayEvent = EventObject & { type: `xstate.after.${string}` };
+
+// What a fixture may send: the machine's public events, and its invoked actors' done, error and snapshot events.
+export type ModelFixture<TMachine extends AnyStateMachine> =
+  | EventFromLogic<TMachine>
+  | DoneActorEvent
+  | ErrorActorEvent
+  | SnapshotEvent;
 
 export const isDelayEvent = (event: EventObject): event is DelayEvent =>
   event.type.startsWith(delayPrefix);

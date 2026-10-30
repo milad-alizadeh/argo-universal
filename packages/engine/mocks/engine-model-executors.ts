@@ -1,16 +1,12 @@
+import type { DelayEvent } from '@repo/vitest/model-test';
 import { expect, vi } from 'vitest';
+import { type Actor } from 'xstate';
 import { type EventExecutor } from 'xstate/graph';
-import {
-  httpCloseLimit,
-  sessionStopLimit,
-  writerDrainLimit,
-} from '../src/engine/setup.machine';
 import { type EngineEvent } from './engine-model-events';
 import {
   stopAllSessionsEvent,
   drainWriterEvent,
   stopEngineEvent,
-  heartbeatIntervalMs,
   mockHttpServer,
   openError,
   recoveryError,
@@ -32,13 +28,16 @@ export const settle = async (settleCall: () => void): Promise<void> => {
   await vi.advanceTimersByTimeAsync(0);
 };
 
+export const startEngine = (): Actor<typeof machine> => {
+  startModelEngine(machine);
+
+  return model.engine;
+};
+
 export const executors: Record<
-  EngineEvent['type'] | 'xstate.init',
-  EventExecutor<EngineSnapshot, EngineEvent>
+  EngineEvent['type'],
+  EventExecutor<EngineSnapshot, EngineEvent | DelayEvent>
 > = {
-  'xstate.init': (): void => {
-    startModelEngine(machine);
-  },
   'xstate.done.actor.openDatabase': (): Promise<void> =>
     settle((): void =>
       latest(model.openDatabaseCalls).resolve(model.mockDatabase),
@@ -73,24 +72,6 @@ export const executors: Record<
     model.engine.system.get('databaseWriter').send({ type: drainWriterEvent }),
   'xstate.error.actor.databaseWriter': (): void =>
     model.engine.send(writerFailure),
-  'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp': (): void => {
-    vi.advanceTimersByTime(httpCloseLimit);
-  },
-  'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions':
-    (): void => {
-      vi.advanceTimersByTime(sessionStopLimit);
-    },
-  'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter':
-    (): void => {
-      vi.advanceTimersByTime(writerDrainLimit);
-    },
-  'xstate.after.heartbeatInterval.engine.live.running': (): void => {
-    const sent = model.messages.length;
-    vi.advanceTimersByTime(heartbeatIntervalMs - 1);
-    expect(model.messages).toHaveLength(sent);
-    vi.advanceTimersByTime(1);
-    expect(model.messages).toHaveLength(sent + 1);
-  },
   'engine.stop': (): void =>
     model.processSignals.send({ type: stopEngineEvent, reason: 'SIGTERM' }),
 };
