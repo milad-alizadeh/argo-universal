@@ -20,7 +20,8 @@ import type { FieldGroupSectionProps } from './field-group-section';
  * A copy of Expo UI's Android FieldGroup.Section (FieldSection.android.tsx): the title, then a 2dp-spaced column
  * of rows, then the footer. The one change is that each row is drawn as itself (field-row-list-item.android.tsx)
  * instead of inside a ListItem headline; the Section only tells it where it sits. A Button gets a card of its
- * own, as Expo's Section gives every child.
+ * own, as Expo's Section gives every child. Each child is one row, as on the other platforms (see
+ * FieldGroupSectionProps).
  */
 const headingSpacing = 4;
 
