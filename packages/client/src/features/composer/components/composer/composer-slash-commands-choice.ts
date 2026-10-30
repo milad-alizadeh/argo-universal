@@ -1,4 +1,5 @@
 import type { IconName } from '@repo/kit/symbols/icon-names';
+import { slashCommandIcon } from '../../utils/slash-command-suggestions';
 import type { AttachLayout } from './composer-toolbar-types';
 
 // One row of the Attach menu; without onPress it is disabled.
@@ -15,7 +16,7 @@ export function slashCommandsChoice({
 }: AttachLayout): AttachChoice {
   return {
     label: 'Slash Commands',
-    icon: 'code',
+    icon: slashCommandIcon,
     onPress: props.slashCommands?.length
       ? () => field.insertWord('/')
       : undefined,

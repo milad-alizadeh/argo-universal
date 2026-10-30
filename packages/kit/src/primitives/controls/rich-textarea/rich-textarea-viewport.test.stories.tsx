@@ -46,7 +46,7 @@ export const FirstChoiceCanBePressedInAShortWindow: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    const first = await screen.findByRole('option', { name: /option-1/ });
+    const first = await screen.findByRole('option', { name: /option-1 / });
     await browserExpect.element(first).toBeInViewport({ ratio: 1 });
     await userEvent.click(first);
     await waitFor(() =>
@@ -56,19 +56,36 @@ export const FirstChoiceCanBePressedInAShortWindow: Story = {
   },
 };
 
+export const ArrowDownScrollsEachChoiceIntoView: Story = {
+  play: async ({ canvas }) => {
+    const textbox = canvas.getByRole('textbox', { name: exampleLabel });
+
+    // A pointer left over the menu by an earlier story would highlight whichever row scrolls under it.
+    await userEvent.hover(textbox);
+    await userEvent.type(textbox, '/');
+    await screen.findByRole('option', { name: /option-1 / });
+    await userEvent.keyboard('{ArrowDown}'.repeat(10));
+    const eleventh = screen.getByRole('option', { name: /option-11 / });
+    await waitFor(() =>
+      expect(eleventh).toHaveAttribute('aria-selected', 'true'),
+    );
+    await browserExpect.element(eleventh).toBeInViewport({ ratio: 1 });
+  },
+};
+
 export const KeyboardScrollsTheLastChoiceIntoView: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.type(
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await screen.findByRole('option', { name: /option-1/ });
+    await screen.findByRole('option', { name: /option-1 / });
     await userEvent.keyboard('{ArrowUp}');
-    const last = screen.getByRole('option', { name: /option-8/ });
+    const last = screen.getByRole('option', { name: /option-12 / });
     await browserExpect.element(last).toBeInViewport({ ratio: 1 });
     await userEvent.click(last);
     await waitFor(() =>
-      expect(args.onChangeText).toHaveBeenLastCalledWith('/option-8 '),
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/option-12 '),
     );
   },
 };

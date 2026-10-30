@@ -1,6 +1,7 @@
 import type {
   AgentOptionsUpdate,
   SessionAgentOptionsInput,
+  SlashCommand,
 } from '@repo/contracts';
 import type { Subscription } from 'xstate';
 import type { OpenSessions } from '../open-sessions';
@@ -13,6 +14,8 @@ type Input = SessionAgentOptionsInput & { sessionId: string };
 type Observation = {
   sessions: Pick<OpenSessions, 'session' | 'subscribe'>;
   input: Input;
+  // The Agent and Project list, which stands in until this Session's Agent reports its own.
+  savedCommands: () => SlashCommand[] | null;
   observer: {
     update: (update: AgentOptionsUpdate) => void;
     done: () => void;
@@ -20,7 +23,7 @@ type Observation = {
 };
 
 const optionsUpdate = (
-  input: Input,
+  { input, savedCommands }: Observation,
   context: SessionContext,
 ): AgentOptionsUpdate => ({
   agent: input.agent,
@@ -29,17 +32,19 @@ const optionsUpdate = (
     context.configOptions,
     context.heldConfig,
   ),
-  commands: context.slashCommands,
+  commands: context.slashCommands ?? savedCommands(),
   stage: 'ready',
 });
 
-function publication({ sessions, input, observer }: Observation): () => void {
+function publication(observation: Observation): () => void {
   return () => {
-    const session = sessions.session(input.sessionId);
+    const session = observation.sessions.session(observation.input.sessionId);
 
     if (!session) return;
 
-    observer.update(optionsUpdate(input, session.getSnapshot().context));
+    observation.observer.update(
+      optionsUpdate(observation, session.getSnapshot().context),
+    );
   };
 }
 

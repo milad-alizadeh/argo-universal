@@ -6,8 +6,6 @@ import type {
   SuggestionSource,
 } from './rich-textarea-suggestions';
 
-const resultLimit = 8;
-
 type Slot = readonly ComposerSuggestion[] | 'pending';
 
 const isPromise = (
@@ -21,7 +19,7 @@ function groupOf(
   source: SuggestionSource,
   slot: Slot | undefined,
 ): SuggestionGroup[] {
-  const suggestions = resultsOf(slot).slice(0, resultLimit);
+  const suggestions = resultsOf(slot);
 
   return suggestions.length > 0 ? [{ source, suggestions }] : [];
 }
@@ -29,7 +27,7 @@ function groupOf(
 /*
  * One asking of every source for one query. A synchronous source's results are there at once; a
  * promise's join when it settles, and a listener hears of that. Groups keep source order, each
- * source shows at most 8 and a source with nothing is left out. A run is dropped when its query
+ * source shows every result, which the menu scrolls to, and a source with nothing is left out. A run is dropped when its query
  * changes: leave its listeners and a late answer is never heard. Listeners run when an answer
  * arrives, outside whatever the caller is doing, so a listener only asks for a new snapshot.
  */

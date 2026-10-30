@@ -1,5 +1,4 @@
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
-import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import {
@@ -9,7 +8,6 @@ import {
   checkPermissionHook,
 } from '#mocks/acp-session-extra-assertions';
 import {
-  acpModelEventKey,
   createAcpSessionModel,
   type AcpModelSnapshot,
 } from '#mocks/acp-session-model';
@@ -38,21 +36,14 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       if (!actor)
         throw new Error('The Session for the structural graph is missing');
 
-      const { model, paths, lease } = createAcpSessionModel(
+      const { paths, unwalked, lease } = createAcpSessionModel(
         actor.getSnapshot(),
         entry,
       );
 
       checkModelPaths(paths, lease, checkoutLimit);
 
-      expect(
-        unwalkedTransitions({
-          models: [model],
-          paths,
-          stateKey: (snapshot) => JSON.stringify(snapshot.value),
-          eventKey: acpModelEventKey,
-        }),
-      ).toEqual([]);
+      expect(unwalked()).toEqual([]);
 
       const states = paths.flatMap(pathStates);
       checkNativePermission(states);

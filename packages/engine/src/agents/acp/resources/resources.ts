@@ -5,6 +5,7 @@ import { awaitAcpOpening } from '../connection/client';
 import { AcpConnections } from './resource-connections';
 import { entryAuthentication } from './resource-entry';
 import { withdrawResolving } from './resource-launch';
+import { openResourceSession } from './resource-mcp';
 import { bindSessionAccess } from './resource-policy';
 import type {
   AcpOpenInput,
@@ -29,7 +30,7 @@ class EngineAcpResources implements AcpResources {
     try {
       const connection = await awaitAcpOpening(entry.connecting, input.signal);
 
-      return { ...(await connection.open(input)), connectionKind: entry.kind };
+      return await openResourceSession(connection, input, entry);
     } finally {
       entry.pending -= 1;
       withdrawResolving(entry, input.signal);

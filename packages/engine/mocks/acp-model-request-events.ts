@@ -104,5 +104,4 @@ export const modelCloseEvents = [
     actorId: 'feed',
     error: new Error('Feed failed'),
   },
-  { type: 'xstate.after.feedFlushLimit.session.open.acp.flushing' },
 ] satisfies AcpModelEvent[];

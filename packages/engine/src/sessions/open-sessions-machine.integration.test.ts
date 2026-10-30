@@ -1,73 +1,82 @@
-import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import { afterAll, afterEach, expect, it } from 'vitest';
-import { createActor, type EventObject } from 'xstate';
 import {
+  type DelayEvent,
+  describeModel,
+  modelTest,
+} from '@repo/vitest/model-test';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
+import { type Actor, createActor } from 'xstate';
+import {
+  actorBelongsToModel,
   events,
   input,
   key,
-  model,
+  openSessionsGraphMachine,
   openSessionsModelMachine,
-  paths,
   remove,
+  vertex,
   type OpenSessionsEvent,
+  type OpenSessionsSnapshot,
 } from './open-sessions-model.test.mocks';
 
 afterAll(remove);
 
-let openSessions: ReturnType<
-  typeof createActor<typeof openSessionsModelMachine>
->;
+let openSessions: Actor<typeof openSessionsModelMachine>;
 
 afterEach((): typeof openSessions => openSessions?.stop());
 
-it.each(
-  paths.map(
-    (path, index): readonly [number, typeof path] => [index, path] as const,
-  ),
-)('walks open Sessions model path %i', async (_, path): Promise<void> => {
-  openSessions = createActor(openSessionsModelMachine, { input }).start();
-  await path.test({
-    events: Object.fromEntries(
-      events.map(
-        ({
-          type,
-        }): [
-          OpenSessionsEvent['type'],
-          (args: { event: EventObject }) => void,
-        ] => [
-          type,
-          ({ event }): void => {
-            const fixture = events.find(
-              (candidate): boolean => candidate === event,
-            );
+// The step's own fixture: both Sessions send events of the same type.
+const fixtureOf = (event: OpenSessionsEvent | DelayEvent): OpenSessionsEvent =>
+  events.find((fixture): boolean => fixture === event) ??
+  expect.unreachable(`${event.type} is not a fixture`);
 
-            if (!fixture) throw new Error('Unknown open Sessions model event');
-            openSessions.send(fixture);
-          },
-        ],
-      ),
-    ),
-    states: {
-      '*': (expected): void => {
-        expect(key(openSessions.getSnapshot())).toBe(key(expected));
-        expect(openSessions.getSnapshot().status).toBe(expected.status);
+const send = ({ event }: { event: OpenSessionsEvent | DelayEvent }): void =>
+  openSessions.send(fixtureOf(event));
 
-        for (const sessionId of Object.keys(expected.context.sessions))
-          expect(openSessions.system.get(`session:${sessionId}`)).toBeDefined();
+// The actor is where the model is, with a Session actor for each open Session.
+function expectOpenSessions(expected: OpenSessionsSnapshot): void {
+  expect(key(openSessions.getSnapshot())).toBe(key(expected));
+  expect(openSessions.getSnapshot().status).toBe(expected.status);
+
+  for (const sessionId of Object.keys(expected.context.sessions))
+    expect(openSessions.system.get(`session:${sessionId}`)).toBeDefined();
+}
+
+const model = modelTest(
+  openSessionsGraphMachine,
+  {
+    input,
+    fixtures: events,
+    vertex,
+    permits: actorBelongsToModel,
+    stateKey: key,
+    walks: [
+      {
+        name: 'shortest path',
+        search: 'shortest',
+        arrival: (_, event, previous): string =>
+          `${key(previous)} ${event.type}`,
       },
-    },
-  });
-});
+    ],
+  },
+  {
+    start: (): typeof openSessions => {
+      openSessions = createActor(openSessionsModelMachine, { input }).start();
 
-it('the generated open Sessions paths walk every transition', (): void => {
-  expect(
-    unwalkedTransitions({
-      models: [model],
-      paths,
-      stateKey: key,
-      eventKey: (event): typeof event.type => event.type,
-    }),
-  ).toEqual([]);
+      return openSessions;
+    },
+    executors: Object.fromEntries(events.map(({ type }) => [type, send])),
+    delays: {},
+    always: expectOpenSessions,
+    states: {},
+  },
+);
+
+describe('open Sessions model', (): void => {
+  describeModel(model);
+
+  it('the generated paths walk every transition', (): void => {
+    expect(model.unwalked()).toEqual([]);
+  });
 });
 
 it('removes a failed Session while keeping another Session available', (): void => {

@@ -4,7 +4,11 @@ import type { RecordedOperation } from '../call-recording';
 import type { OperationRunResult } from '../implementations';
 import type { SessionCaller, TokenCaller } from '../session-tokens';
 import { userAdmission, type UserAdmission } from './admission';
-import { operationWaitClock, type OperationWaitClock } from './clock';
+import {
+  operationWaitClock,
+  type OperationWaitClock,
+  type ObservationOptions,
+} from './clock';
 import { WaitId, WaitIds } from './ids';
 import { admittedStart, answered, observed } from './outcome';
 import { WorkReading } from './reading';
@@ -15,7 +19,12 @@ import {
 } from './response';
 import { observationSignal, stoppingSignal } from './signals';
 import { waitForWork } from './wait';
-import type { WaitInput, WaitOutcome, WorkAdmission } from './wait.machine';
+import type {
+  WaitInput,
+  WaitOutcome,
+  WorkAdmission,
+  WaitStart,
+} from './wait.machine';
 
 export type WorkDeps = {
   // Signs wait ids, so only this Engine's callers resume them.
@@ -27,13 +36,12 @@ export type WorkDeps = {
 };
 
 // A user's run: its token, whether it waits, and its connection.
-export type UserObservation = {
+export type UserObservation = ObservationOptions & {
   token?: string;
   wait: boolean;
-  signal?: AbortSignal;
 };
 
-type Following = { caller: () => TokenCaller; signal?: AbortSignal };
+type Following = ObservationOptions & { caller: () => TokenCaller };
 
 // Runs an Operation for one call and waits up to ninety seconds for the work it started; leaving never cancels that work.
 export class OperationWork {
@@ -54,16 +62,20 @@ export class OperationWork {
     start: (admission: UserAdmission) => Promise<OperationRunResult>,
   ): Promise<OperationRunResult> {
     const outcome = await this.follow({
-      start: admittedStart(
-        (admission) => start(this.admission(admission)),
-        input.wait,
-      ),
+      start: this.userStart(input.wait, start),
       reader: (id) => this.reading.reader(id, () => this.caller(input.token)),
       stopOnInput: false,
       signal: input.signal,
+      timeoutMs: input.timeoutMs,
     });
 
     return answered(outcome);
+  }
+  private userStart(
+    wait: boolean,
+    start: (admission: UserAdmission) => Promise<OperationRunResult>,
+  ): WaitStart {
+    return admittedStart((admission) => start(this.admission(admission)), wait);
   }
   private admission(admission: WorkAdmission): UserAdmission {
     return userAdmission(
@@ -79,10 +91,7 @@ export class OperationWork {
     const id = this.callId(input.caller, started);
     const detached = new AbortController();
 
-    const following: Following = {
-      caller: () => this.recordedCaller(input, id),
-      signal: observationSignal(input.signal, detached.signal),
-    };
+    const following = this.recordedObservation(input, id, detached.signal);
 
     const work = this.observe(id, following, !input.wait).then(observed);
 
@@ -90,12 +99,27 @@ export class OperationWork {
       detached.abort(),
     );
   }
+  private recordedObservation(
+    input: SessionObservation,
+    id: WaitId,
+    signal: AbortSignal,
+  ): Following {
+    return {
+      caller: () => this.recordedCaller(input, id),
+      signal: observationSignal(input.signal, signal),
+      timeoutMs: input.timeoutMs,
+    };
+  }
   public async wait(
     id: string,
     token: string | undefined,
-    signal?: AbortSignal,
+    options: ObservationOptions = {},
   ): Promise<OperationExecution> {
-    const following: Following = { caller: () => this.caller(token), signal };
+    const following: Following = {
+      ...options,
+      caller: () => this.caller(token),
+    };
+
     const waitId = WaitId.parse(id);
 
     return observed(await this.observe(waitId, following, false)).execution;
@@ -112,7 +136,7 @@ export class OperationWork {
   }
   private observe(
     id: WaitId,
-    { caller, signal }: Following,
+    { caller, signal, timeoutMs }: Following,
     stopOnInput: boolean,
   ): Promise<WaitOutcome> {
     return this.follow({
@@ -120,6 +144,7 @@ export class OperationWork {
       reader: () => this.reading.reader(id, caller),
       stopOnInput,
       signal,
+      timeoutMs,
     });
   }
   private follow(input: WaitInput): Promise<WaitOutcome> {

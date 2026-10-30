@@ -104,7 +104,7 @@ describe('model test', (): void => {
         delays: { cooldown: declared },
       });
 
-      await expect(runFirstCase(model)).rejects.toThrow(/"idle"/);
+      await expect(runFirstCase(model)).rejects.toThrow(/its declared delay/);
     },
   );
 
@@ -169,7 +169,7 @@ describe('model test', (): void => {
       .flatMap(({ cases }) => cases)
       .find(({ title }) => title.endsWith('kettle.heat → after cooldown'));
 
-    await expect(cooldown?.run()).rejects.toThrow('"cooling" left heating');
+    await expect(cooldown?.run()).rejects.toThrow('missed its declared delay');
     started.stop();
   });
 });

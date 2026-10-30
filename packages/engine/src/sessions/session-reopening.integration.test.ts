@@ -17,7 +17,16 @@ it('removes a closed Session and resumes its stored Agent identity on the next p
   });
   expect(openings).toHaveLength(1);
   expect(resumes).toEqual([
-    { sessionId: 'owned-1', cwd: opening.cwd, mcpServers: [] },
+    {
+      sessionId: 'owned-1',
+      cwd: opening.cwd,
+      mcpServers: [
+        expect.objectContaining({
+          name: expect.stringMatching(/^argo-/),
+          args: ['mcp'],
+        }),
+      ],
+    },
   ]);
   await expect
     .poll(() => prompts)
@@ -37,7 +46,16 @@ it('opens a stored Session without a Turn, so a Retry never resends one', async 
   await caller.session.close({ sessionId });
   await expect(caller.session.open({ sessionId })).resolves.toEqual({});
   expect(resumes).toEqual([
-    { sessionId: 'owned-1', cwd: opening.cwd, mcpServers: [] },
+    {
+      sessionId: 'owned-1',
+      cwd: opening.cwd,
+      mcpServers: [
+        expect.objectContaining({
+          name: expect.stringMatching(/^argo-/),
+          args: ['mcp'],
+        }),
+      ],
+    },
   ]);
   expect(prompts).toHaveLength(1);
 });

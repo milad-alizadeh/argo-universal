@@ -1,10 +1,11 @@
 import {
-  getAdjacencyMap,
-  getShortestPaths,
-  type GraphEventFromLogic,
-} from '@repo/vitest/model-graph';
+  type DelayEvent,
+  type ModelFixture,
+  type Vertex,
+  walkGraph,
+  type WalkedGraph,
+} from '@repo/vitest/model-test';
 import type { SnapshotFrom } from 'xstate';
-import type { StatePath, AdjacencyMap } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/agents';
 import { sessionMachine } from '../src/sessions';
 import { modelEvents } from './acp-model-events';
@@ -14,19 +15,18 @@ export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 
 const updateEvent = 'acp.update';
 
-export type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
+export type AcpModelEvent = ModelFixture<typeof sessionMachine>;
 
-export function acpModelEventKey(event: AcpModelEvent): string {
-  return event.type === updateEvent
+export function acpModelEventKey(event: AcpModelEvent | DelayEvent): string {
+  return event.type === updateEvent && 'notification' in event
     ? `${event.type}:${event.notification.update.sessionUpdate}`
     : event.type;
 }
 
-interface AcpSessionModel {
-  paths: StatePath<AcpModelSnapshot, AcpModelEvent>[];
-  model: {
-    getAdjacencyMap: () => AdjacencyMap<AcpModelSnapshot, AcpModelEvent>;
-  };
+interface AcpSessionModel extends WalkedGraph<
+  typeof structuralMachine,
+  AcpModelEvent
+> {
   lease: AcpSessionLease;
 }
 
@@ -36,18 +36,12 @@ const structuralMachine = sessionMachine.provide({
 
 type ModelEntry = 'new' | 'existing' | 'opened';
 
-type ModelOptions = {
-  fromState: AcpModelSnapshot;
-  events: AcpModelEvent[];
-  limit: number;
-  serializeEvent: typeof acpModelEventKey;
-  filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent) => boolean;
-  serializeState: (
-    snapshot: AcpModelSnapshot,
-    event: AcpModelEvent | undefined,
-    previous?: AcpModelSnapshot,
-  ) => string;
-};
+// The extra assertions send these to a state the paths reach, each on its own.
+const checkedApart = [
+  'session.creationSettled',
+  'session.permissionHooked',
+  'session.permissionRequested',
+];
 
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
@@ -55,20 +49,45 @@ export const createAcpSessionModel = (
 ): AcpSessionModel => {
   const lease = requireLease(initial);
   const data = modelData(initial, entry);
-  const fromState = startState(initial, entry, data);
-  const options = modelOptions(fromState, modelEvents(initial, data, lease));
 
   return {
-    paths: getShortestPaths(structuralMachine, options),
-    model: adjacencyModel(options),
+    ...walkFrom(initial, startState(initial, entry, data), lease),
     lease,
   };
 };
 
-const adjacencyModel = (options: ModelOptions): AcpSessionModel['model'] => ({
-  getAdjacencyMap: (): AdjacencyMap<AcpModelSnapshot, AcpModelEvent> =>
-    getAdjacencyMap(structuralMachine, options),
+const modelVertex = (snapshot: AcpModelSnapshot): Vertex => ({
+  value: snapshot.value,
+  failure: snapshot.context.failure !== null,
+  stored: snapshot.context.stored,
+  kept: snapshot.context.kept,
+  archiveRequested: snapshot.context.archiveRequested,
+  feedEnded: snapshot.context.feedEnded,
 });
+
+// What every ACP walk shares; only its start differs.
+const walkRules = {
+  omitted: checkedApart,
+  vertex: modelVertex,
+  accepts: canApplyLifecycleEvent,
+  eventKey: acpModelEventKey,
+  limit: 10_000,
+  walks: [
+    { name: 'shortest path', search: 'shortest', prefixes: true } as const,
+  ],
+};
+
+const walkFrom = (
+  initial: AcpModelSnapshot,
+  from: AcpModelSnapshot,
+  lease: AcpSessionLease,
+): WalkedGraph<typeof structuralMachine, AcpModelEvent> =>
+  walkGraph(structuralMachine, {
+    input: from.context.input,
+    from,
+    fixtures: modelEvents(initial, from.context, lease),
+    ...walkRules,
+  });
 
 const requireLease = (initial: AcpModelSnapshot): AcpSessionLease => {
   const lease = initial.context.acpLease;
@@ -116,32 +135,3 @@ const startState = (
 
   return fromState;
 };
-
-const modelOptions = (
-  fromState: AcpModelSnapshot,
-  events: AcpModelEvent[],
-): ModelOptions => ({
-  fromState,
-  events,
-  limit: 10_000,
-  serializeEvent: acpModelEventKey,
-  filterEvents: (snapshot, event): boolean =>
-    snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
-  serializeState: modelStateKey,
-});
-
-const modelStateKey = (
-  snapshot: AcpModelSnapshot,
-  event: AcpModelEvent | undefined,
-  previous?: AcpModelSnapshot,
-): string =>
-  JSON.stringify({
-    value: snapshot.value,
-    failure: snapshot.context.failure !== null,
-    stored: snapshot.context.stored,
-    kept: snapshot.context.kept,
-    archiveRequested: snapshot.context.archiveRequested,
-    feedEnded: snapshot.context.feedEnded,
-    via:
-      event && `${JSON.stringify(previous?.value)} ${acpModelEventKey(event)}`,
-  });

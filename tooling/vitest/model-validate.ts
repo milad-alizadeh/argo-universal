@@ -1,6 +1,7 @@
 import type { AnyStateMachine, EventObject } from 'xstate';
 import { delayName, isDelayEvent } from './model-edges';
-import type { DeclaredDelay, ModelActor, ModelEvent } from './model-types';
+import type { DeclaredDelay, ModelActor } from './model-types';
+import type { ModelEvent } from './model-walk';
 
 export function executorFor<TExecutor>(
   executors: Record<string, TExecutor>,
