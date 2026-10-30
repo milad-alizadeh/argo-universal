@@ -41,7 +41,7 @@ export function CardContent(props: CardProps): ReactElement {
   return (
     <View className={`${space.gap} ${space.padding}`}>
       <CardHeader {...props} />
-      <CardBody density={props.density}>{props.children}</CardBody>
+      <CardBody>{props.children}</CardBody>
     </View>
   );
 }
