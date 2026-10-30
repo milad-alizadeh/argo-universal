@@ -47,23 +47,20 @@ async function typePrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: 'Message' }).fill(prompt);
 }
 
-interface Answer {
-  prompt: string;
-  reply: string;
-}
+const feedText = (): string =>
+  document.querySelector('[data-testid="feed-scroll"]')?.textContent ?? '';
 
-const answered = ({ prompt, reply }: Answer): boolean => {
-  const text =
-    document.querySelector('[data-testid="feed-scroll"]')?.textContent ?? '';
+const stopDrawn = (): boolean =>
+  [...document.querySelectorAll('[role="button"][aria-label]')].some(
+    (element) => element.getAttribute('aria-label') === 'Stop',
+  );
 
-  const asked = text.lastIndexOf(prompt);
+const followsPrompt = (text: string, prompt: string, reply: string): boolean =>
+  text.includes(prompt) && text.slice(text.lastIndexOf(prompt)).includes(reply);
 
-  const drawn = Array.from(
-    document.querySelectorAll('[role="button"][aria-label]'),
-  ).some((element) => element.getAttribute('aria-label') === 'Stop');
-
-  return asked !== -1 && text.indexOf(reply, asked) !== -1 && !drawn;
-};
+const answeredScript = [feedText, stopDrawn, followsPrompt]
+  .map(String)
+  .join('\n');
 
 /*
  * The Turn is finished once the Feed holds this trial's own prompt followed by the fixture's reply,
@@ -74,14 +71,16 @@ const answered = ({ prompt, reply }: Answer): boolean => {
  * first Turn on a page did, with the Feed holding the reply), so a wait for Stop to appear never
  * returns. When it is drawn it stays about 60 ms, which a polling locator misses as well.
  */
-const finished = (page: Page, prompt: string): Promise<void> =>
-  page
-    .waitForFunction(
-      answered,
-      { prompt, reply: sharedReply },
-      { polling: 'raf', timeout: turnTimeoutMilliseconds },
-    )
-    .then(() => undefined);
+async function finished(page: Page, prompt: string): Promise<void> {
+  const asked = JSON.stringify(prompt);
+  const reply = JSON.stringify(sharedReply);
+
+  await page.waitForFunction(
+    `(() => { ${answeredScript}\nreturn followsPrompt(feedText(), ${asked}, ${reply}) && !stopDrawn(); })()`,
+    undefined,
+    { polling: 'raf', timeout: turnTimeoutMilliseconds },
+  );
+}
 
 let turns = 0;
 
