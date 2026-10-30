@@ -49,7 +49,7 @@ async function assertSupervisorStopped(server: DesktopServer): Promise<void> {
   );
 }
 
-async function launch(
+async function launchWithChild(
   input: ElectronInput,
   server: DesktopServer,
 ): Promise<LaunchedElectron> {
@@ -68,7 +68,7 @@ export async function useElectronApp(input: ElectronInput): Promise<void> {
   let launched: LaunchedElectron | undefined;
 
   try {
-    launched = await launch(input, server);
+    launched = await launchWithChild(input, server);
     await input.use(await appForElectron(input, server, launched.application));
   } finally {
     await cleanElectron(server, launched);
