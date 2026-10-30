@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
+import { bandWorkbench } from '#lib/product/window-band';
 import type { ContentRule } from '../../../lib/product/content-rule';
 import { useContentRule } from '../../../lib/product/use-content-rule';
 import {
@@ -143,7 +144,7 @@ const layoutOf = (
     ...scaffold,
     ...sizing,
     width,
-    workbenchAvailable: Boolean(scaffold.band?.workbench),
+    workbenchAvailable: Boolean(bandWorkbench(scaffold.band)),
   });
 
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {

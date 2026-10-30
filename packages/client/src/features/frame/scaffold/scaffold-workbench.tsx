@@ -2,6 +2,7 @@ import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { bandWorkbench } from '#lib/product/window-band';
 import { useFrameOffset } from '../hooks/use-frame-offset';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
@@ -14,7 +15,7 @@ export function ScaffoldWorkbench(
   parts: PartReads<'band', WorkbenchLayout>,
 ): ReactElement | null {
   const { scaffold, layout } = parts;
-  const workbench = scaffold.band?.workbench;
+  const workbench = bandWorkbench(scaffold.band);
 
   if (!workbench) return null;
 

@@ -1,9 +1,11 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Text } from '@repo/kit/primitives/content/text';
+import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { expect, within } from 'storybook/test';
+import { SessionBandClaim } from '#features/sessions';
 import { HostedScaffoldMock } from './hosted-scaffold.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
@@ -22,6 +24,12 @@ export const NoInspectorDisablesTheInspectorToggle: Story = {
   beforeEach: (): Promise<void> => settleLayout('wide'),
   render: (): JSX.Element => (
     <HostedScaffoldMock>
+      <ScreenStackHeader title="No Inspector offered" />
+      <SessionBandClaim
+        title="No Inspector offered"
+        status="idle"
+        startedAt={null}
+      />
       <Text>No Inspector offered</Text>
     </HostedScaffoldMock>
   ),

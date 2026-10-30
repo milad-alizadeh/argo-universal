@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { WindowBand } from '../../../lib/product/window-band';
+import { WindowBand } from '#lib/product/window-band';
 import type { SessionHeaderProps } from './session-header-props';
 import { SessionWorkbenchColumn } from './session-workbench';
 

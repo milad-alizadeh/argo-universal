@@ -28,12 +28,19 @@ export type ScaffoldMockProps = Partial<ScaffoldState> & {
   onSectionChange?: (section: Section) => void;
   // The Inspector's content, under its header.
   inspector?: ReactNode;
+  // What the page claims in the band; null for a page that owns no Session, as Settings and the other sections do.
   band?: ScaffoldProps['band'];
   // The page; a stand-in page names the section when there is none.
   children?: ReactNode;
 };
 
 const ignore = (): void => {};
+
+// The stand-in page owns a Session, as the band's pane controls need a subject; a story passes null for a page that owns none.
+const mockSessionBand: ScaffoldProps['band'] = { session: {} };
+
+const mockBand = (props: ScaffoldMockProps): ScaffoldProps['band'] =>
+  props.band === undefined ? mockSessionBand : props.band;
 
 type SidebarState = Pick<
   ScaffoldState,
@@ -149,7 +156,7 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
         {...state}
         {...mockWorkbench}
         {...mockPanes(props, state)}
-        band={props.band}
+        band={mockBand(props)}
       />
     </View>
   );
