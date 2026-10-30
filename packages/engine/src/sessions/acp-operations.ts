@@ -20,6 +20,12 @@ export type AcpOperationInput = {
   findFeed: () => FeedActorRef | undefined;
 };
 
+/*
+ * Cancels the Turn, not the commands it started. The Turn ends at once
+ * (ADR-0024) and says nothing about any process: only a Shell Argo created is
+ * Argo's to end, and it stays running and stoppable until the Session closes.
+ * A command the Agent runs inside itself outlives the cancel (#1337).
+ */
 export const cancelAcp = (context: SessionContext): Promise<void> => {
   if (!context.acpLease) throw new Error('No active ACP Session');
 
