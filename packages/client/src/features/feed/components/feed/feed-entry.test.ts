@@ -39,9 +39,11 @@ describe('withLiveHeader', () => {
       source: { type: 'tool_call', toolCallId: 'tool-1' },
       startedAt: 1_000,
     };
-    const settled: FeedViewItem = { ...openGroup, state: 'settled' };
 
-    for (const items of [[openGroup], [settled]])
+    const settled: FeedViewItem = { ...openGroup, state: 'settled' };
+    const cases = [[openGroup], [settled]];
+
+    for (const items of cases)
       expect(withLiveHeader(items, live)).toEqual([
         { ...items[0], liveHeader: live },
       ]);
