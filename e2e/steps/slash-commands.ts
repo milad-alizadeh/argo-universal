@@ -7,12 +7,15 @@ import {
   messageLabel,
   openConfiguration,
 } from './new-session';
+import { slashCommandScenarios } from './scenario-agents';
 
-// The step's text picks the Agent's scenario (scenario-agents.ts); here it only checks the Agent is listed.
+// The step's text picks the Agent's scenario (scenario-agents.ts); a name without one would leave the Agent with no list.
 Given(
   'Agent {int} offers the {string} Slash command',
-  async ({ page, server }, ordinal: number, _name: string): Promise<void> =>
-    expectListedAgent({ page, server }, ordinal),
+  async ({ page, server }, ordinal: number, name: string): Promise<void> => {
+    expect(Object.keys(slashCommandScenarios)).toContain(name);
+    await expectListedAgent({ page, server }, ordinal);
+  },
 );
 
 const menuOption = (page: Page, name: string): Locator =>

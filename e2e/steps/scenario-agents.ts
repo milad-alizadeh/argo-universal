@@ -76,6 +76,12 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
   );
 }
 
+// The Slash commands a scripted Agent can offer, each with the scenario that sends it.
+export const slashCommandScenarios = {
+  review: 'slash-commands-review',
+  deploy: 'slash-commands-deploy',
+} as const;
+
 const namedScenarioSteps = [
   [agentStep('delegates work through the argo CLI'), 'session-delegation'],
   [agentStep('starts a Shell when released'), 'shell-live'],
@@ -84,8 +90,10 @@ const namedScenarioSteps = [
   [agentStep('asks for an Elicitation'), 'elicitation'],
   [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
   [agentStep('asks permission to edit README.md'), 'permission'],
-  [agentStep('offers the "review" Slash command'), 'slash-commands-review'],
-  [agentStep('offers the "deploy" Slash command'), 'slash-commands-deploy'],
+  ...Object.entries(slashCommandScenarios).map(
+    ([name, scenario]) =>
+      [agentStep(`offers the "${name}" Slash command`), scenario] as const,
+  ),
   [agentStep('asks permission to run a command'), 'permission-command'],
   [
     agentStep('asks permission before its command details arrive'),
