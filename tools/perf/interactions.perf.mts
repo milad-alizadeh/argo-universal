@@ -35,11 +35,24 @@ const drawerCycles = 3;
 
 const openNavigation = 'Open navigation';
 
+// The front drawer's scrim, which react-native-drawer-layout labels for its own close affordance.
+const closeNavigation = 'Close drawer';
+
+/*
+ * The scrim spans the window, but the drawer sits over its leading edge, so a tap on the scrim's
+ * middle is intercepted by the drawer. The drawer always leaves a strip of the page showing beside
+ * it, so the tap that dismisses it goes just inside the scrim's trailing edge, whatever that strip
+ * is worth: reading the drawer's own width here would couple this to how wide the drawer happens
+ * to be.
+ */
+const scrimTapInset = 8;
+
 const results: Result[] = [];
 
 let server: SeededServer;
 
-test.describe.configure({ mode: 'serial' });
+// Not serial: one scenario's failure must not silently void the scenarios queued behind it.
+test.describe.configure({ mode: 'default' });
 
 test.beforeAll(async () => {
   server = await startSeededServer(
@@ -102,7 +115,9 @@ const sessions: Scenario = async (page) => {
 const cycleDrawer = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: openNavigation }).click();
   await page.waitForTimeout(drawerSettleMilliseconds);
-  await page.getByLabel('Close navigation').click();
+  await page.getByRole('button', { name: closeNavigation }).click({
+    position: { x: phone.width - scrimTapInset, y: phone.height / 2 },
+  });
   await page.waitForTimeout(drawerSettleMilliseconds);
 };
 
