@@ -1,7 +1,6 @@
 import {
   createPlace,
   useClaim,
-  useClaimed,
   usePlaceHeld,
   type Place,
 } from '@repo/kit/place';
@@ -10,16 +9,12 @@ import { useIsShownPage } from '@repo/kit/use-shown-page';
 import {
   createContext,
   use,
+  type PropsWithChildren,
   type ReactNode,
   useLayoutEffect,
   useState,
 } from 'react';
-import {
-  isCoreSection,
-  type Section,
-} from '../../../lib/product/navigation/sections';
-import type { ScaffoldProps } from '../scaffold/scaffold';
-import type { FrameSections } from './section-lists';
+import type { Section } from '../../../lib/product/navigation/sections';
 
 // The Frame's sidebar, which a Plugin page's ListDetail may hold on a wide window.
 export const FrameListDetailSidebar = createContext<
@@ -40,6 +35,42 @@ export function useKeepSidebarWhilePending(): void {
   useClaim(useIsShownPage() ? pending : undefined, true);
 }
 
+// Held by the shown section's Plugin page for the whole of its life, drawn or not.
+const FrameListDetailPage = createContext<Place<true> | undefined>(undefined);
+
+export const FrameListDetailPageOffer = FrameListDetailPage.Provider;
+
+/*
+ * A section's page mounts a few frames after the path names the section, and until it does the Frame has no page to
+ * ask whether the section has a list. Holding this says one is here: before it the Frame keeps the sidebar it had
+ * rather than reading the gap as a section with no list, which it would close the pane for and open again.
+ */
+export function useKeepSidebarWhileOpening(): void {
+  const page = use(FrameListDetailPage);
+
+  useClaim(useIsShownPage() ? page : undefined, true);
+}
+
+export type FrameListDetailOffersProps = PropsWithChildren<{
+  listDetail: FrameListDetail;
+}>;
+
+// The Places a section's pages fill: the sidebar a drawn ListDetail claims, and the two a page holds to say it is here and that it is waiting for its drawing.
+export function FrameListDetailOffers({
+  listDetail,
+  children,
+}: FrameListDetailOffersProps): ReactNode {
+  return (
+    <FrameListDetailSidebar value={listDetail.sidebar}>
+      <FrameListDetailPendingOffer value={listDetail.pending}>
+        <FrameListDetailPageOffer value={listDetail.page}>
+          {children}
+        </FrameListDetailPageOffer>
+      </FrameListDetailPendingOffer>
+    </FrameListDetailSidebar>
+  );
+}
+
 export interface SectionListDetailProps {
   children: ReactNode;
 }
@@ -55,22 +86,12 @@ export function SectionListDetail({
   );
 }
 
-// The list a Plugin page's ListDetail holds the Frame's sidebar with.
-function ClaimedList(props: {
-  sidebar: Place<ReactNode>;
-  kept?: ReactNode;
-}): ReactNode {
-  return useClaimed(props.sidebar) ?? props.kept;
-}
-
-type SectionScaffold = Pick<ScaffoldProps, 'list'> &
-  Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
-
 export interface FrameListDetail {
   sidebar: Place<ReactNode>;
-  // The Place a page waiting for its drawing holds.
+  // The Places a page holds: one while it waits for its drawing, one for the whole of its life.
   pending: Place<true>;
-  // Whether the shown page's ListDetail holds the sidebar, or the list it drew is kept for the page that follows.
+  page: Place<true>;
+  // Whether the shown page's ListDetail holds the sidebar, or a page that cannot answer yet keeps it open until it can.
   held: boolean;
   // The list the section drew last, while its next page is pending.
   kept?: ReactNode;
@@ -110,60 +131,33 @@ function useRemembered(sidebar: Place<ReactNode>, section: Section): ReactNode {
   return memory.last?.section === section ? memory.last.list : undefined;
 }
 
-// The Frame's one sidebar store, made once, and whether a ListDetail holds it now, or its list is kept while the next page draws.
+// The pane stays although no list holds it while the section's page is not here yet, and while the page here waits for its drawing.
+const keepsPane = (
+  pageHere: boolean,
+  pageWaiting: boolean,
+  listHeld: boolean,
+): boolean => !pageHere || (pageWaiting && !listHeld);
+
+/*
+ * The Frame's one sidebar store, made once, and whether a ListDetail holds it now, or a page that cannot answer for
+ * the section yet keeps it. Only a drawn ListDetail claims the sidebar, so between the path naming a section and
+ * that section's page drawing there is nothing to read it from: closing the pane there and opening it again when the
+ * drawing lands is what the Frame plays as a pane the person closed, sliding the glass, the list and the page twice.
+ */
 export function useFrameListDetail(section: Section): FrameListDetail {
   const [sidebar] = useState(() => createPlace<ReactNode>());
   const [pending] = useState(() => createPlace<true>());
-  const kept = useKeptList({ sidebar, pending }, section);
+  const [page] = useState(() => createPlace<true>());
+  const held = usePlaceHeld(sidebar);
+  const waiting = keepsPane(usePlaceHeld(page), usePlaceHeld(pending), held);
+  const remembered = useRemembered(sidebar, section);
 
   return {
     sidebar,
     pending,
-    held: usePlaceHeld(sidebar) || kept !== undefined,
-    kept,
-  };
-}
-
-// The remembered list, while the section's next page is pending and no page holds the sidebar.
-function useKeptList(
-  places: Pick<FrameListDetail, 'sidebar' | 'pending'>,
-  section: Section,
-): ReactNode {
-  const remembered = useRemembered(places.sidebar, section);
-  const pending = usePlaceHeld(places.pending);
-  const held = usePlaceHeld(places.sidebar);
-
-  return pending && !held ? remembered : undefined;
-}
-
-const noList: SectionScaffold = {
-  list: null,
-  sidebarShown: false,
-  inspectorState: 'closed',
-};
-
-// A core section's own list; a Plugin section's only while its page's ListDetail holds the sidebar with its own.
-export function sectionScaffold(
-  shown: Pick<FrameSections, 'section' | 'lists'>,
-  listDetail: FrameListDetail,
-): SectionScaffold {
-  const { section, lists } = shown;
-
-  if (!isCoreSection(section)) return pluginSectionScaffold(listDetail);
-
-  return { list: lists[section].list };
-}
-
-// The list's own Screen, claimed with it, draws its heading, as a core section's list does.
-function pluginSectionScaffold({
-  sidebar,
-  held,
-  kept,
-}: FrameListDetail): SectionScaffold {
-  if (!held) return noList;
-
-  return {
-    list: <ClaimedList sidebar={sidebar} kept={kept} />,
-    inspectorState: 'closed',
+    page,
+    held: held || waiting,
+    // A page waiting in the section that drew the list keeps it; one opening a section anew waits with an empty pane.
+    kept: waiting ? remembered : undefined,
   };
 }

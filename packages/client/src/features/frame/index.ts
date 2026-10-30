@@ -16,6 +16,7 @@ export {
 
 export {
   SectionListDetail,
+  useKeepSidebarWhileOpening,
   useKeepSidebarWhilePending,
 } from './frame/frame-list-detail';
 
