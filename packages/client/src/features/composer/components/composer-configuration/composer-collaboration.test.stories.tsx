@@ -78,6 +78,10 @@ function collaboration(width: number): Story {
           name: 'Plan',
         });
 
+        /*
+         * Storybook's userEvent fires pointerleave at (0, 0) with a null relatedTarget, which
+         * unmounts the Plan submenu before pointerdown; the browser pointer moves naturally.
+         */
         await browserUserEvent.click(plan);
       } else {
         await userEvent.click(
