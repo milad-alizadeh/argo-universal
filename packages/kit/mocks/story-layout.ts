@@ -1,5 +1,6 @@
 import { Uniwind } from 'uniwind';
 import { page } from 'vitest/browser';
+import { nextFrames } from '#mocks/next-frames';
 
 // The one story-test driver for the viewport: a named layout, the breakpoints behind it, and waiting for the page to settle. It imports the browser runner, so it lives with the kit's test mocks, and tools/check-test-only-imports.mts keeps shipped code from reaching it. Tablet sits between the phone and wide layouts, like an iPad in portrait.
 export const layoutWidths = { phone: 390, tablet: 1024, wide: 1440 } as const;
@@ -17,9 +18,7 @@ export async function settleLayout(
 
   await page.viewport(width, height);
   await document.fonts.ready;
-  await new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
+  await nextFrames();
 }
 
 // Reads a width token from tooling/uniwind/theme.css off the page, so tests never copy it.
