@@ -4,54 +4,43 @@ import type {
   SessionPromptInput,
   SessionPromptOutput,
 } from '@repo/contracts';
-import type { sessionOperations } from '@repo/contracts/operations';
+import type {
+  readerOperations,
+  sessionOperations,
+} from '@repo/contracts/operations';
 import type {
   AcceptedSessionPrompt,
   NativeStartRequest,
-  SessionPorts,
+  Sessions,
 } from '../sessions';
 import {
   startedWork,
   type AcceptedWork,
-  type NativeStartId,
   type StartedWork,
 } from './native-start';
 import type { OperationImplementations } from './operations';
 
 type SessionImplementations = Pick<
   OperationImplementations,
-  keyof typeof sessionOperations
+  keyof typeof sessionOperations | keyof typeof readerOperations
 >;
 
-export const sessionImplementations = ({
-  commands,
-  starts,
-}: SessionPorts): SessionImplementations => ({
-  'session.new': (input, request) => startCreation(starts, input, request),
+// Sessions answer their own Operations; a new Session and a Prompt answer with the native work they start.
+export const sessionImplementations = (
+  sessions: Sessions,
+): SessionImplementations => ({
+  'session.new': (input, request) => startCreation(sessions, input, request),
   'session.prompt': async (input, request) =>
-    startPrompt(starts, input, request),
-  ...commandImplementations(commands),
-});
-
-const commandImplementations = (
-  commands: SessionPorts['commands'],
-): Omit<SessionImplementations, NativeStartId> => ({
-  'session.cancel': async (input) => commands.cancel(input.sessionId),
-  'session.archive': (input) => commands.archive(input.sessionId),
-  'session.unarchive': (input) => commands.unarchive(input.sessionId),
-  'session.savePlan': commands.savePlan,
-  'session.close': (params) => commands.close(params.sessionId),
-  'session.setConfigOption': commands.configure,
-  'shell.stop': async (params) => commands.stopShell(params),
-  'session.rename': commands.rename,
+    startPrompt(sessions, input, request),
+  ...sessions.implementations,
 });
 
 async function startCreation(
-  starts: SessionPorts['starts'],
+  sessions: Sessions,
   input: SessionNewInput,
   request: NativeStartRequest,
 ): Promise<StartedWork<SessionNewOutput>> {
-  const creation = await starts.create(input, request);
+  const creation = await sessions.create(input, request);
 
   return startedWork('creation', creation, ({ sessionId, turnId }) => ({
     result: { sessionId },
@@ -60,11 +49,11 @@ async function startCreation(
 }
 
 function startPrompt(
-  starts: SessionPorts['starts'],
+  sessions: Sessions,
   input: SessionPromptInput,
   request: NativeStartRequest,
 ): StartedWork<SessionPromptOutput> {
-  return startedWork('turn', starts.prompt(input, request), acceptedPrompt);
+  return startedWork('turn', sessions.prompt(input, request), acceptedPrompt);
 }
 
 function acceptedPrompt(

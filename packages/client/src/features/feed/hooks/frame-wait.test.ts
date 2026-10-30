@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { noFrameMs, stopWaiting, waitForFrame } from './frame-wait';
+import { noFrameMs, waitForFrame } from './frame-wait';
 
 const frameMs = 16;
 
@@ -45,10 +45,10 @@ describe('waitForFrame', () => {
     expect(run).toHaveBeenCalledTimes(1);
   });
 
-  it('runs nothing once stopped', () => {
+  it('runs nothing once cancelled', () => {
     drawFrames(true);
     const run = vi.fn<() => void>();
-    stopWaiting(waitForFrame(run));
+    waitForFrame(run)();
 
     vi.advanceTimersByTime(noFrameMs);
     expect(run).not.toHaveBeenCalled();

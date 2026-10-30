@@ -7,15 +7,21 @@ import {
   messageLabel,
   openConfiguration,
 } from './new-session';
+import { slashCommandScenarios } from './slash-command-scenarios';
 
-Given('Agent {int} offers the review Slash command', expectListedAgent);
-
-Given('Agent {int} offers the deploy Slash command', expectListedAgent);
+// The step's text picks the Agent's scenario (scenario-agents.ts); a name without one would leave the Agent with no list.
+Given(
+  'Agent {int} offers the {string} Slash command',
+  async ({ page, server }, ordinal: number, name: string): Promise<void> => {
+    expect(Object.keys(slashCommandScenarios)).toContain(name);
+    await expectListedAgent({ page, server }, ordinal);
+  },
+);
 
 const menuOption = (page: Page, name: string): Locator =>
   page.getByRole('option', { name: new RegExp(`^/${name}\\b`) });
 
-// Typed once: an open menu picks the list up when discovery delivers it, so the Message box is the only signal to wait for.
+// Discovery may deliver the list after the `/` is typed; the open menu picks it up.
 When('I open the Slash command menu', async ({ page }): Promise<void> => {
   const message = page.getByRole('textbox', { name: messageLabel });
 
@@ -32,13 +38,6 @@ When(
     await menuOption(page, name).click();
   },
 );
-
-When('I clear the Message box', async ({ page }): Promise<void> => {
-  const message = page.getByRole('textbox', { name: messageLabel });
-
-  await message.fill('');
-  await expect(page.getByRole('option')).toHaveCount(0);
-});
 
 When(
   'I change the Agent to Agent {int}',

@@ -1,5 +1,5 @@
 import { emptyChangesSummary, type SessionSnapshot } from '@repo/contracts';
-import { withHeldConfiguration } from '../configuration/held-configuration';
+import { withHeldConfiguration } from '../configuration';
 import { toShell } from '../shells';
 import { snapshotState, type SessionState } from './state';
 

@@ -3,26 +3,15 @@ import type {
   SessionUnarchiveOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { waitFor } from 'xstate';
-import { findMachineActor } from '../../lib/machine-actor';
-import type { SessionRouterDeps } from '../router-deps';
-import {
-  sendSessionCommand,
-  validateSessionCommandAdmission,
-} from '../session-command';
-import { type SessionActorRef, sessionMachine } from '../session-machine';
-import {
-  requireOpenSessionActor,
-  sendCheckedOpenSessionsCommand,
-} from '../session-opening';
-import { sessionActorId } from '../session-system';
+import { sendSessionCommand } from '../session-command';
+import type { SessionActorRef } from '../session-machine';
+import type { HandlerSources } from '../session-sources';
+import { settleWithin, type Snapshot } from './archive-settle';
 
-type ArchiveDeps = Pick<
-  SessionRouterDeps,
-  'sessions' | 'readSession' | 'sessionCommandSignal'
+type ArchiveSources = HandlerSources<
+  'readSession',
+  'admit' | 'session' | 'open'
 >;
-
-type Snapshot = ReturnType<SessionActorRef['getSnapshot']>;
 
 /*
  * How long an archive or an Undo may take before the caller is told. The Session machine bounds its own
@@ -31,17 +20,11 @@ type Snapshot = ReturnType<SessionActorRef['getSnapshot']>;
  * network and process limits. When the limit passes, the Session actor carries on and may still finish;
  * only this acknowledgement stops waiting.
  */
-export const archiveSettleLimitMs = 30_000;
-
-const findSession = (
-  deps: ArchiveDeps,
-  id: string,
-): SessionActorRef | undefined =>
-  findMachineActor(deps.sessions.system, sessionActorId(id), sessionMachine);
+const archiveSettleLimitMs = 30_000;
 
 // Only an active, top-level Session archives: a child is archived with its parent.
-function requireArchivable(deps: ArchiveDeps, sessionId: string): void {
-  const record = deps.readSession(sessionId);
+function requireArchivable(sources: ArchiveSources, sessionId: string): void {
+  const record = sources.readSession(sessionId);
 
   if (record.parentSessionId !== null || record.archivedAt !== null)
     throw new TRPCError({
@@ -50,52 +33,33 @@ function requireArchivable(deps: ArchiveDeps, sessionId: string): void {
     });
 }
 
-function startArchive(deps: ArchiveDeps, sessionId: string): SessionActorRef {
-  requireArchivable(deps, sessionId);
+function startArchive(
+  sources: ArchiveSources,
+  sessionId: string,
+): SessionActorRef {
+  requireArchivable(sources, sessionId);
 
-  const live = findSession(deps, sessionId);
+  const live = sources.open.session(sessionId);
 
-  if (live) {
-    sendSessionCommand(live, { type: 'session.archive' });
+  if (!live) return openArchiving(sources, sessionId);
 
-    return live;
-  }
+  sendSessionCommand(live, { type: 'session.archive' });
 
-  sendCheckedOpenSessionsCommand(deps.sessions, {
+  return live;
+}
+
+const openArchiving = (
+  sources: ArchiveSources,
+  sessionId: string,
+): SessionActorRef =>
+  sources.open.open({
     type: 'sessions.archive',
     sessionId,
-    agent: deps.readSession(sessionId).agent,
+    agent: sources.readSession(sessionId).agent,
   });
-
-  return requireOpenSessionActor(deps.sessions, sessionId);
-}
-
-// The limit stays in the log; the person sees that the change may still land.
-const timedOut = (limitMs: number, cause: unknown): TRPCError =>
-  new TRPCError({
-    code: 'TIMEOUT',
-    message: 'This is taking longer than expected and may still finish',
-    cause: new Error(`The Session did not settle within ${limitMs} ms`, {
-      cause,
-    }),
-  });
-
-async function settleWithin(
-  actor: SessionActorRef,
-  isSettled: (snapshot: Snapshot) => boolean,
-  limitMs: number,
-): Promise<Snapshot> {
-  const deadline = AbortSignal.timeout(limitMs);
-
-  try {
-    return await waitFor(actor, isSettled, { signal: deadline });
-  } catch (error) {
-    throw deadline.aborted ? timedOut(limitMs, error) : error;
-  }
-}
 
 function requireArchived(outcome: Snapshot): void {
-  if (!outcome.matches('archived'))
+  if (!outcome.hasTag('archived'))
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: outcome.context.failure ?? 'Archive failed',
@@ -103,15 +67,15 @@ function requireArchived(outcome: Snapshot): void {
 }
 
 export async function archiveSession(
-  deps: ArchiveDeps,
+  sources: ArchiveSources,
   sessionId: string,
   limitMs: number = archiveSettleLimitMs,
 ): Promise<SessionArchiveOutput> {
-  validateSessionCommandAdmission(deps);
+  sources.open.admit();
 
   const outcome = await settleWithin(
-    startArchive(deps, sessionId),
-    (snapshot) => snapshot.matches('archived') || snapshot.status !== 'active',
+    startArchive(sources, sessionId),
+    (snapshot) => snapshot.hasTag('archived') || snapshot.status !== 'active',
     limitMs,
   );
 
@@ -120,9 +84,12 @@ export async function archiveSession(
   return {};
 }
 
-function startUndo(deps: ArchiveDeps, sessionId: string): SessionActorRef {
-  deps.readSession(sessionId);
-  const actor = findSession(deps, sessionId);
+function startUndo(
+  sources: ArchiveSources,
+  sessionId: string,
+): SessionActorRef {
+  sources.readSession(sessionId);
+  const actor = sources.open.session(sessionId);
 
   if (!actor)
     throw new TRPCError({
@@ -144,14 +111,14 @@ function requireUndoSucceeded(outcome: Snapshot): void {
 }
 
 export async function unarchiveSession(
-  deps: ArchiveDeps,
+  sources: ArchiveSources,
   sessionId: string,
   limitMs: number = archiveSettleLimitMs,
 ): Promise<SessionUnarchiveOutput> {
-  validateSessionCommandAdmission(deps);
+  sources.open.admit();
 
   const outcome = await settleWithin(
-    startUndo(deps, sessionId),
+    startUndo(sources, sessionId),
     (snapshot) => snapshot.status !== 'active',
     limitMs,
   );

@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PromptRequest } from '@agentclientprotocol/sdk';
+import type { SessionUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -13,6 +14,14 @@ const imageInitialization = {
     sessionCapabilities: { close: {} },
   },
 };
+
+const expectedFailure = (failure: string): string =>
+  failure === 'unavailable' ? 'unavailable' : 'contents do not match';
+
+const rowId = (row: SessionUpdate | undefined): string | undefined => row?.id;
+
+const rowTurnId = (row: SessionUpdate | undefined): string | null | undefined =>
+  row?.turnId;
 
 it.each(['unavailable', 'corrupt'])(
   'an %s image rejects instead of dropping a block or returning success',
@@ -44,9 +53,7 @@ it.each(['unavailable', 'corrupt'])(
         ...created,
         prompt: [{ type: 'image', mimeType: 'image/png', blob: reference }],
       }),
-    ).rejects.toThrow(
-      failure === 'unavailable' ? 'unavailable' : 'contents do not match',
-    );
+    ).rejects.toThrow(expectedFailure(failure));
     expect(requests).toEqual([]);
     expect(
       host.database.$client
@@ -109,6 +116,6 @@ it('thoughts and messages keep separate identities while an Agent user echo adds
       _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
     },
   ]);
-  expect(page.rows[1]?.id).not.toBe(page.rows[2]?.id);
-  expect(page.rows[1]?.turnId).toBe(page.rows[2]?.turnId);
+  expect(rowId(page.rows[1])).not.toBe(rowId(page.rows[2]));
+  expect(rowTurnId(page.rows[1])).toBe(rowTurnId(page.rows[2]));
 });

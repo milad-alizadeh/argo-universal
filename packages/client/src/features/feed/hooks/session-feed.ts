@@ -1,18 +1,10 @@
-import type {
-  FeedPageOutput,
-  FeedSyncPoint,
-  SessionSnapshot,
-  ToolCallUpdate,
-} from '@repo/contracts';
+import type { SessionSnapshot, ToolCallUpdate } from '@repo/contracts';
 import type { ClientError } from '#features/connection';
 import type { FeedView } from '../view/feed-view';
-import type { useFeedHistory } from './use-feed-history';
-
-type FeedHistory = ReturnType<typeof useFeedHistory>;
 
 export interface SessionFeed {
   loadingOlder: boolean;
-  loadOlder: FeedHistory['loadOlder'];
+  loadOlder: () => Promise<void>;
   view: FeedView | null;
   // The newest Feed revision held, which the reader has seen when the Feed's end is on screen.
   revision: number;
@@ -20,15 +12,10 @@ export interface SessionFeed {
   permissionToolCall: ToolCallUpdate | undefined;
   snapshot: SessionSnapshot | null;
   ready: boolean;
-  error: FeedHistory['error'];
-  retry: FeedHistory['refetch'];
+  // Paging history failed; a failed older page is not one.
+  error: Error | null;
+  retry: () => void;
   openError: Error | ClientError | null;
   retryOpen: () => void;
   resumeAfterCommand: () => void;
 }
-
-// The first history page supplies the revision for opening its live subscription.
-export const historySyncPoint = (
-  page: FeedPageOutput | undefined,
-): FeedSyncPoint | null =>
-  page ? { epoch: page.epoch, revision: page.maxRevision } : null;

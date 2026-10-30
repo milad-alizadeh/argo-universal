@@ -1,42 +1,57 @@
 import { createElicitationAnswerSchema } from '@repo/contracts';
 import type {
   PendingElicitation,
+  PendingPermission,
   SessionAnswerPermissionInput,
   SessionAnswerElicitationInput,
-  SessionSetConfigOptionInput,
-  SessionConfigOption,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import type { ZodError } from 'zod';
 import type {
   ElicitationAnswerContent,
   ElicitationAnswerValue,
 } from './acp/requests/elicitation-types';
 import { answeredRequest, chosenOption } from './admission/answer-admission';
-import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionActorRef } from './session-machine';
 
 const alreadyAnswered = 'already answered';
+
+const permissionQueue = (
+  actor: SessionActorRef | undefined,
+): PendingPermission[] => actor?.getSnapshot().context.permissionQueue ?? [];
+
+const elicitationQueue = (
+  actor: SessionActorRef | undefined,
+): PendingElicitation[] => actor?.getSnapshot().context.elicitationQueue ?? [];
+
+const answeredError = (): TRPCError =>
+  new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
+
+const unofferedOption = (): TRPCError =>
+  new TRPCError({
+    code: 'BAD_REQUEST',
+    message: 'The Agent did not offer that option',
+  });
+
+function pendingPermission(
+  actor: SessionActorRef | undefined,
+  requestId: string,
+): PendingPermission {
+  const request = answeredRequest(permissionQueue(actor), requestId);
+
+  if (!request) throw answeredError();
+
+  return request;
+}
 
 export function validatePermissionAnswer(
   sessionActor: SessionActorRef | undefined,
   answer: Pick<SessionAnswerPermissionInput, 'requestId' | 'optionId'>,
 ): asserts sessionActor is SessionActorRef {
-  const context = sessionActor?.getSnapshot().context;
-
-  const request = answeredRequest(
-    context?.permissionQueue ?? [],
-    answer.requestId,
-  );
-
-  if (!request)
-    throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
+  const request = pendingPermission(sessionActor, answer.requestId);
   const option = chosenOption(request, answer.optionId);
 
-  if (!option)
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'The Agent did not offer that option',
-    });
+  if (!option) throw unofferedOption();
 }
 
 type ElicitationAnswer = Pick<
@@ -48,13 +63,9 @@ const pendingElicitation = (
   sessionActor: SessionActorRef | undefined,
   requestId: string,
 ): PendingElicitation => {
-  const request = answeredRequest(
-    sessionActor?.getSnapshot().context.elicitationQueue ?? [],
-    requestId,
-  );
+  const request = answeredRequest(elicitationQueue(sessionActor), requestId);
 
-  if (!request)
-    throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
+  if (!request) throw answeredError();
 
   return request;
 };
@@ -78,6 +89,26 @@ const answeredFields = (
   return content;
 };
 
+const invalidElicitation = (cause: ZodError): TRPCError =>
+  new TRPCError({
+    code: 'BAD_REQUEST',
+    message: 'The answer does not match the Elicitation form',
+    cause,
+  });
+
+function parseElicitation(
+  request: PendingElicitation,
+  answer: ElicitationAnswer,
+): ElicitationAnswerContent {
+  const parsed = createElicitationAnswerSchema(
+    request.requestedSchema,
+  ).safeParse(answer.content ?? {});
+
+  if (!parsed.success) throw invalidElicitation(parsed.error);
+
+  return answeredFields(parsed.data);
+}
+
 // Parses an accepted answer against the pending request's form; other actions carry no content.
 export const acceptedElicitationContent = (
   sessionActor: SessionActorRef,
@@ -86,27 +117,5 @@ export const acceptedElicitationContent = (
   if (answer.action !== 'accept') return undefined;
   const request = pendingElicitation(sessionActor, answer.requestId);
 
-  const parsedAnswer = createElicitationAnswerSchema(
-    request.requestedSchema,
-  ).safeParse(answer.content ?? {});
-
-  if (!parsedAnswer.success)
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'The answer does not match the Elicitation form',
-      cause: parsedAnswer.error,
-    });
-
-  return answeredFields(parsedAnswer.data);
+  return parseElicitation(request, answer);
 };
-
-export function validateConfigChoice(
-  configOptions: SessionConfigOption[],
-  configChoice: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
-): void {
-  if (!isOfferedConfigChoice(configOptions, configChoice))
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `The Agent did not offer ${configChoice.configId}=${String(configChoice.value)}`,
-    });
-}

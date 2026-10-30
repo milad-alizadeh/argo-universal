@@ -24,7 +24,7 @@ import type { ElicitationAnswerContent } from './acp/requests/elicitation-types'
 import type {
   SessionCreationReceipt,
   SessionCreationSettled,
-} from './creation-receipt';
+} from './creation/creation-receipt';
 import type {
   NativePermissionEvent,
   NativePermissions,
@@ -41,8 +41,6 @@ export const storageFailingEvent = 'session.storageFailing';
 export const acpUpdateEvent = 'acp.update';
 
 export const writeFeedEvent = 'writer.write';
-
-export type EndTurnParameters = AcpTurnOutcome;
 
 export type FailureParameters = { error: unknown };
 
@@ -109,6 +107,8 @@ export interface SessionContext extends SessionData {
   nativePermissions: NativePermissions;
   // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
   hookedPermissions: Record<string, string | null>;
+  // The user (or a Hook) denied a Permission request during the running Turn.
+  permissionDenied: boolean;
   elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];
   slashCommands: SlashCommand[] | null;
@@ -125,7 +125,7 @@ export interface SessionContext extends SessionData {
   acpPrompt: PromptRequest | null;
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
-  acpTurnOutcome: EndTurnParameters | null;
+  acpTurnOutcome: AcpTurnOutcome | null;
   turnEnding: FeedTurnEnding;
   configQueue: Extract<SessionCommand, { type: typeof setConfigEvent }>[];
   applyingConfig: Extract<

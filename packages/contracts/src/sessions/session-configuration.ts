@@ -141,6 +141,13 @@ export function effortSelection(
     option,
   );
 
+  return effortResult(option, choices);
+}
+
+function effortResult(
+  option: SelectOption | undefined,
+  choices: SessionConfigSelectOption[],
+): EffortSelection {
   const current = currentConfigurationChoice(option, choices);
 
   return {

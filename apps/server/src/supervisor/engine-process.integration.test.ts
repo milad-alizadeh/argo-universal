@@ -2,34 +2,21 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAlive } from '@repo/process';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { type AnyActorRef, createActor, setup } from 'xstate';
 import { z } from 'zod';
-import {
-  defaultKillTimeoutMs,
-  engineProcess,
-  type EngineProcessInput,
-} from './engine-process';
+import { engineProcess, type EngineProcessInput } from './engine-process';
 
 const entry = fileURLToPath(
   new URL('../../mocks/engine-fixture.ts', import.meta.url),
 );
 
-const isAlive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 let folder: string;
 
 let events: { type: string }[];
 
-let killTimeoutMs = defaultKillTimeoutMs;
+let killTimeoutMs: number | undefined;
 
 type StoppableActor = { stop: () => void };
 
@@ -84,7 +71,7 @@ const outcomes = (): string[] =>
 beforeEach((): void => {
   folder = mkdtempSync(join(tmpdir(), 'argo-engine-process-'));
   events = [];
-  killTimeoutMs = defaultKillTimeoutMs;
+  killTimeoutMs = undefined;
   vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
   vi.stubEnv('ARGO_HOME', folder);
 });

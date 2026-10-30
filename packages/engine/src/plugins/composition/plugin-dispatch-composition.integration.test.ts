@@ -23,7 +23,7 @@ function tap(view: ViewMessage | undefined, key: string): PluginDispatchInput {
 }
 
 it(
-  'refuses a tap captured before a reorder and keeps the keyed row handler after it',
+  'runs a tap captured before a reorder on the row it named, not the row now in its place',
   { timeout: 20_000 },
   async () => {
     const home = await createRuntimePlugins([
@@ -41,10 +41,10 @@ it(
       applyPatch(initial.root, reordered.ops).children.map((node) => node.key),
     ).toEqual(['0', 'reverse', 'beta', 'alpha', 'fail', 'waiting']);
 
+    // ADR-0031: the tap names alpha, so it runs alpha's handler and never beta's, now in its place.
     await expect(
       app.client.plugins.dispatch.mutate(tap(app.messages[0], '0/alpha')),
-    ).rejects.toThrow('Plugin view changed');
-    await app.client.plugins.dispatch.mutate(tap(app.messages[1], '0/alpha'));
+    ).resolves.toEqual({ ok: true });
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
       .toMatchObject({ revision: 3, ops: [{ props: { children: 'alpha' } }] });

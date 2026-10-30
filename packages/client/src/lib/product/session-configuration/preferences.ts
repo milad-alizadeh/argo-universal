@@ -21,9 +21,7 @@ export function isRememberedConfiguration(
   return option.type === 'select' && startingCategory(option) !== undefined;
 }
 
-export function orderedOptions(
-  options: SessionConfigOption[],
-): RememberedOption[] {
+function orderedOptions(options: SessionConfigOption[]): RememberedOption[] {
   const eligible = options.filter(isRememberedConfiguration);
 
   return startingCategories.flatMap((category) =>

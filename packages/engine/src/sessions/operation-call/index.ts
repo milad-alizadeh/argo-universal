@@ -1,61 +1,43 @@
 import { TRPCError } from '@trpc/server';
 import type { FeedActorRef } from '../../feed';
-import type { SessionWorkSources } from '../router-deps';
-import { findSessionFeed, requireLiveSessionActor } from '../session-system';
+import type { HandlerSources } from '../session-sources';
 import { OperationCall, type SessionOperationCall } from './call';
 import { CallingSession } from './calling-session';
-import { readOperationCall, type OperationCallRead } from './read';
 import type { CalledOperation } from './rows';
+
+type CallerSources = HandlerSources<'findFeed', 'live'>;
 
 export type { SessionOperationCall } from './call';
 
 export type { OperationCard } from './permission';
 
-export type { OperationCallRead } from './read';
+export { readOperationCall, type OperationCallRead } from './read';
 
 export type { CalledOperation } from './rows';
 
-// The Tool calls of Operations that Sessions call: begin one in the calling Session, or read one back.
-export type OperationCalls = {
-  begin: (
-    sessionId: string,
-    operation: CalledOperation,
-  ) => SessionOperationCall;
-  read: (sessionId: string, toolCallId: string) => OperationCallRead;
-};
-
-export function createOperationCalls(deps: SessionWorkSources): OperationCalls {
-  return {
-    begin: (sessionId, operation) => beginCall(deps, sessionId, operation),
-    read: (sessionId, toolCallId) =>
-      readOperationCall(deps, sessionId, toolCallId),
-  };
-}
-
-function beginCall(
-  { sessions }: SessionWorkSources,
+// Begins the Tool call of an Operation a Session calls, in the calling Session's Feed.
+export function beginOperationCall(
+  sources: CallerSources,
   sessionId: string,
   operation: CalledOperation,
 ): SessionOperationCall {
-  const session = new CallingSession(
-    requireLiveSessionActor(sessions.system, sessionId),
-  );
+  const session = new CallingSession(sources.open.live(sessionId));
 
   if (!session.stored)
     throw callerConflict('The calling Session is still opening');
 
   return new OperationCall(
-    { session, feed: requireOpenFeed(sessions, session, sessionId) },
+    { session, feed: requireOpenFeed(sources, session, sessionId) },
     operation,
   );
 }
 
 function requireOpenFeed(
-  sessions: SessionWorkSources['sessions'],
+  sources: CallerSources,
   session: CallingSession,
   sessionId: string,
 ): FeedActorRef {
-  const feed = findSessionFeed(sessions.system, sessionId);
+  const feed = sources.findFeed(sessionId);
 
   if (!feed || !session.open)
     throw callerConflict('The calling Session is closed');

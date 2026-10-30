@@ -37,7 +37,7 @@ export const reply = (ok: boolean, body: Record<string, string>): Reply => ({
   json: () => Promise.resolve(body),
 });
 
-export const started: Start = {
+const started: Start = {
   redirectUri: 'http://127.0.0.1:51789/callback',
   state: 'state-1',
   codeChallenge: 'challenge',
@@ -45,7 +45,7 @@ export const started: Start = {
 };
 
 // What the Plugin asked of Argo, for the tests to read.
-export type Log = {
+type Log = {
   authorize: string[];
   requests: { url: string; body: string | undefined }[];
   added: { host: string; label: string }[];

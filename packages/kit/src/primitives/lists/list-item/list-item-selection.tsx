@@ -8,6 +8,7 @@ import {
 import { ChoiceMark } from './list-item-choice-mark';
 import { LinkAccessory } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
+import { selectionTint } from './list-item-styles';
 
 function toggleSelection(id: string, current: readonly string[]): string[] {
   return current.includes(id)
@@ -47,7 +48,7 @@ export function useItemSelection(props: ListItemProps): ListItemProps {
     : controlledSelection(props, props.id, context);
 }
 
-export function ChoiceAccessory(props: ListItemProps): ReactNode {
+function ChoiceAccessory(props: ListItemProps): ReactNode {
   const { selectionMode } = useContext(ListSelectionContext);
 
   if (!selectionMode) return null;
@@ -96,4 +97,23 @@ export function useTrailingChoice(
   if (menu || !selectionMode) return undefined;
 
   return <ChoiceAccessory {...selected} />;
+}
+
+type TintProps = Pick<ListItemProps, 'selected' | 'role'> & { menu: boolean };
+
+// A menu's chosen row shows its check, not a tint; a listbox's highlighted option is tinted.
+const tintedHere = ({ menu, role }: TintProps): boolean =>
+  !menu || role === 'option';
+
+const tinted = (
+  props: TintProps,
+  mode: ListSelection['selectionMode'],
+): boolean => props.selected === true && !mode && tintedHere(props);
+
+export function SelectionTint(props: TintProps): ReactNode {
+  const { selectionMode } = useContext(ListSelectionContext);
+
+  if (!tinted(props, selectionMode)) return null;
+
+  return <View pointerEvents="none" aria-hidden className={selectionTint} />;
 }

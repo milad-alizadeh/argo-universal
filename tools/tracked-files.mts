@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveExecutable } from '@repo/executables';
 
 export const root = fileURLToPath(new URL('..', import.meta.url));
 
@@ -14,10 +15,18 @@ export function trackedFiles(
 ): string[] {
   const scope = options.untracked ? untrackedToo : [];
 
-  return execFileSync('git', ['ls-files', ...scope, '--', ...pathspecs], {
-    cwd: root,
-    encoding: 'utf8',
-  })
+  return listFiles(pathspecs, scope)
     .split('\n')
     .filter((file): boolean => file !== '' && existsSync(resolve(root, file)));
+}
+
+function listFiles(pathspecs: readonly string[], scope: string[]): string {
+  return execFileSync(
+    resolveExecutable('git'),
+    ['ls-files', ...scope, '--', ...pathspecs],
+    {
+      cwd: root,
+      encoding: 'utf8',
+    },
+  );
 }

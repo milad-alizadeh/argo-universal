@@ -9,7 +9,7 @@ import { expectListeningOptions } from './engine-model-listening';
 import { type EngineSnapshot } from './engine-model-logic';
 import * as model from './engine-model-state';
 
-export const expectModelState = (expected: EngineSnapshot): void => {
+const expectModelState = (expected: EngineSnapshot): void => {
   const actual = model.engine.getSnapshot();
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
@@ -21,10 +21,7 @@ export const expectModelState = (expected: EngineSnapshot): void => {
 };
 
 // Final states close the database they opened, stop listening for signals, and exit with a code.
-export const expectExit = (
-  snapshot: EngineSnapshot,
-  exitCode: number,
-): void => {
+const expectExit = (snapshot: EngineSnapshot, exitCode: number): void => {
   expectModelState(snapshot);
   expect(model.engine.getSnapshot().output).toEqual({ exitCode });
   expect(model.databaseCloses).toBe(snapshot.context.database === null ? 0 : 1);

@@ -67,7 +67,7 @@ it.each(workMocks)('groups recorded work for $agent', ({ rows, snapshot }) => {
     title: 'Ran 1 command, Read 1 file, Edited 2 files',
     state: 'settled',
     items: expect.arrayContaining([
-      expect.objectContaining({ type: 'exploration', title: 'Explored' }),
+      expect.objectContaining({ type: 'exploration', state: 'settled' }),
       expect.objectContaining({ type: 'tool_call' }),
     ]),
   });

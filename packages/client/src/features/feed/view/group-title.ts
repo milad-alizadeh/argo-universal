@@ -1,6 +1,6 @@
 import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
+import { toolCallFacts } from './feed-row-facts';
 import { editedFileCount, readFileCount } from './group-file-counts';
-import { explorationActions } from './grouping-rules';
 
 const summaryOrder = [
   'command',
@@ -30,11 +30,13 @@ const categoryLabels: Record<Category, CountLabel> = {
 };
 
 function ranCommand(row: ToolCallUpdate): boolean {
-  return row.kind === 'execute' && !explorationActions(row).length;
+  const facts = toolCallFacts(row);
+
+  return facts.isCommand && !facts.explores;
 }
 
 function actionCount(
-  actions: CommandAction[],
+  actions: readonly CommandAction[],
   type: CommandAction['type'],
 ): number {
   return actions.filter((action) => action.type === type).length;
@@ -48,7 +50,7 @@ function kindCount(
 }
 
 function categoryCounts(toolCalls: ToolCallUpdate[]): Record<Category, number> {
-  const actions = toolCalls.flatMap(explorationActions);
+  const actions = toolCalls.flatMap((row) => toolCallFacts(row).exploration);
 
   return {
     command: toolCalls.filter(ranCommand).length,

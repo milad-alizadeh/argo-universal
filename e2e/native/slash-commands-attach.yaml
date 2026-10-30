@@ -4,15 +4,16 @@ name: The Attach menu's Slash Commands puts a slash in the Composer and opens th
 # Opens Composer → Composer → Suggestions, whose draft is "/" and whose Agent offers inspect and review.
 - openLink: "argo://storybook?STORYBOOK_STORY_ID=composer-composer--suggestions"
 # Empty the draft (a fresh story holds "/"): the list closes with the slash.
+# A row is named as it reads — the result as typed, then its detail — which is the one element iOS exposes.
 - tapOn:
     text: "^/$"
     optional: true
 - eraseText: 5
-- assertNotVisible: "^inspect$"
+- assertNotVisible: "/inspect Review changes"
 - hideKeyboard
 - tapOn: "^Attach$"
 - tapOn: "Slash Commands"
 # The Composer's field now holds the slash and the list is open again.
 - assertVisible: "^/$"
-- assertVisible: "^inspect$"
-- assertVisible: "^review$"
+- assertVisible: "/inspect Review changes"
+- assertVisible: "/review Review a file"

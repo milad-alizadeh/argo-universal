@@ -9,7 +9,7 @@ import { type HoverTimer, useHoverTimer } from './popover-hover-timer';
  * A browser reports the content's enter before the trigger's leave, so the popover closes only once
  * the pointer has left every part, whatever order their events arrive in.
  */
-export type HoverPart = 'trigger' | 'content' | (string & {});
+type HoverPart = 'trigger' | 'content' | (string & {});
 
 export interface Hover {
   enter: (part: HoverPart) => void;

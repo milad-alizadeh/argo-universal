@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
+import { readChangesSummary } from '@repo/git';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
@@ -11,8 +12,8 @@ import {
   createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
-  readDefaultChangesSummary,
-  type SessionRouterDeps,
+  sessionChangesSelection,
+  type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
 import {
@@ -23,7 +24,7 @@ import {
 
 export { createFeedSources } from './feed-sources';
 
-export type AppRouterDeps = SessionRouterDeps &
+export type AppRouterDeps = SessionSources &
   AgentsRouterDeps &
   BlobUploadDeps &
   SystemDeps &
@@ -34,7 +35,6 @@ export type AppRouterDeps = SessionRouterDeps &
     controlToken: string;
     plugins: PluginsRouterDeps;
     operationWaitClock?: OperationWaitClock;
-    commandsWaitMs?: number;
   };
 
 // The Engine owns connection lifetimes and shared Feed sources.
@@ -76,11 +76,7 @@ function createStoredChangesReader(
   return (sessionId) => {
     const session = readSession(sessionId);
 
-    return readDefaultChangesSummary(
-      input.database,
-      session.projectId,
-      session.checkout.path,
-    );
+    return readChangesSummary(sessionChangesSelection(input.database, session));
   };
 }
 

@@ -1,7 +1,13 @@
 import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { memo, Fragment } from 'react';
-import type { FeedActivity, FeedGroup, FeedViewItem } from '../view/feed-view';
+import { toolCallFacts } from '../view/feed-row-facts';
+import {
+  explorationTitle,
+  type FeedActivity,
+  type FeedGroup,
+  type FeedViewItem,
+} from '../view/feed-view';
 import { CommandRow } from './command-row/command-row';
 import { EditRow } from './edit-row/edit-row';
 import { FeedImageUrlContext } from './feed-image';
@@ -18,6 +24,8 @@ export interface FeedItemProps {
   imageUrl: (blob: BlobRef) => string;
   // Opens a Subagent row's Feed, where the Session offers one.
   onOpenSubagent?: (subagentSessionId: string) => void;
+  // Fixes the clock a merged live header counts from, for stories and tests.
+  now?: number;
 }
 
 type ToolCallActivity = Extract<
@@ -31,10 +39,10 @@ const hasContent = (row: ToolCall, type: string): boolean =>
   row.content.some((block) => block.type === type);
 
 const isCommand = (row: ToolCall): boolean =>
-  row.kind === 'execute' && hasContent(row, 'terminal');
+  toolCallFacts(row).isCommand && hasContent(row, 'terminal');
 
 const isEdit = (row: ToolCall): boolean =>
-  ['edit', 'delete', 'move'].includes(row.kind) && hasContent(row, 'diff');
+  toolCallFacts(row).isEdit && hasContent(row, 'diff');
 
 function coreToolCallRow(row: ToolCall): React.JSX.Element {
   if (isCommand(row)) return <CommandRow row={row} />;
@@ -77,15 +85,14 @@ const renderActivity = (activity: FeedActivity): React.JSX.Element => (
 // One item of the Feed view, drawn by the row component for its kind.
 export const FeedItem = memo(function FeedItem({
   item,
-  imageUrl,
-  onOpenSubagent,
+  ...drawing
 }: FeedItemProps) {
   return (
-    <FeedImageUrlContext.Provider value={imageUrl}>
+    <FeedImageUrlContext.Provider value={drawing.imageUrl}>
       {item.type === 'turn_end' ? (
         <TurnEndRow end={item.end} />
       ) : (
-        renderFeedItem(item, { imageUrl, onOpenSubagent })
+        renderFeedItem(item, drawing)
       )}
     </FeedImageUrlContext.Provider>
   );
@@ -95,7 +102,7 @@ type GroupLike = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
 
 type FeedRowItem = Extract<FeedViewItem, { type: 'row' }>['row'];
 
-type Drawing = Pick<FeedItemProps, 'imageUrl' | 'onOpenSubagent'>;
+type Drawing = Pick<FeedItemProps, 'imageUrl' | 'onOpenSubagent' | 'now'>;
 
 const isGroupLike = (item: FeedViewItem): item is GroupLike =>
   item.type === 'group' || item.type === 'exploration';
@@ -107,8 +114,8 @@ const groupOf = (item: GroupLike): FeedGroup =>
     : {
         type: 'group',
         id: item.id,
-        title: item.title,
-        state: item.title === 'Exploring' ? 'open' : 'settled',
+        title: explorationTitle(item.state),
+        state: item.state,
         items: [item],
       };
 
@@ -156,7 +163,7 @@ function renderFeedItem(
   if (item.type === 'subagent')
     return <SubagentRow item={item} onOpen={drawing.onOpenSubagent} />;
 
-  return renderActivityItem(item);
+  return renderActivityItem(item, drawing.now);
 }
 
 function explorationRows(rows: ToolCall[]): React.JSX.Element[] {
@@ -167,10 +174,13 @@ function explorationRows(rows: ToolCall[]): React.JSX.Element[] {
 
 function renderActivityItem(
   item: Exclude<FeedViewItem, { type: 'turn_end' | 'row' | 'subagent' }>,
+  now: number | undefined,
 ): React.JSX.Element {
-  return isGroupLike(item) ? (
-    <ToolCallGroup group={groupOf(item)} renderActivity={renderActivity} />
-  ) : (
-    <FeedActivityRow activity={item} />
+  if (!isGroupLike(item)) return <FeedActivityRow activity={item} />;
+
+  const group = groupOf(item);
+
+  return (
+    <ToolCallGroup group={group} renderActivity={renderActivity} now={now} />
   );
 }

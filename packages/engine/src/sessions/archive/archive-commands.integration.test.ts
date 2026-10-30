@@ -3,14 +3,16 @@ import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
 import { insertSession } from '#mocks/database';
+import { sessionSources } from '#mocks/session-sources';
+import { OpenSessions } from '../open-sessions';
 import { createSessionReader } from '../session-record';
 import { archiveSession, unarchiveSession } from './archive-commands';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
-const operationDeps = (host: Host): Parameters<typeof archiveSession>[0] => ({
-  sessions: host.openSessions,
+const archiveSources = (host: Host): Parameters<typeof archiveSession>[0] => ({
   readSession: createSessionReader(host.database),
+  open: new OpenSessions(sessionSources(host.openSessions)),
 });
 
 it('refuses to archive a child Session', async () => {
@@ -23,17 +25,19 @@ it('refuses to archive a child Session', async () => {
   });
 
   await expect(
-    archiveSession(operationDeps(host), 'child'),
+    archiveSession(archiveSources(host), 'child'),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
 });
 
 it('refuses to archive a Session that is already archived', async () => {
   const host = await startAcpEngine({ steps: [] });
   const created = await promptedArchiveSession(host);
-  const deps = operationDeps(host);
-  await archiveSession(deps, created.sessionId);
+  const sources = archiveSources(host);
+  await archiveSession(sources, created.sessionId);
 
-  await expect(archiveSession(deps, created.sessionId)).rejects.toMatchObject({
+  await expect(
+    archiveSession(sources, created.sessionId),
+  ).rejects.toMatchObject({
     code: 'CONFLICT',
   });
 });
@@ -41,10 +45,12 @@ it('refuses to archive a Session that is already archived', async () => {
 it('acknowledges an archive and its Undo', async () => {
   const host = await startAcpEngine({ steps: [] });
   const created = await promptedArchiveSession(host);
-  const deps = operationDeps(host);
+  const sources = archiveSources(host);
 
-  await expect(archiveSession(deps, created.sessionId)).resolves.toEqual({});
-  await expect(unarchiveSession(deps, created.sessionId)).resolves.toEqual({});
+  await expect(archiveSession(sources, created.sessionId)).resolves.toEqual({});
+  await expect(unarchiveSession(sources, created.sessionId)).resolves.toEqual(
+    {},
+  );
 });
 
 it('fails with TIMEOUT when the archive has not settled within the limit', async () => {
@@ -61,6 +67,6 @@ it('fails with TIMEOUT when the archive has not settled within the limit', async
   const created = await promptedArchiveSession(host);
 
   await expect(
-    archiveSession(operationDeps(host), created.sessionId, 50),
+    archiveSession(archiveSources(host), created.sessionId, 50),
   ).rejects.toMatchObject({ code: 'TIMEOUT' });
 });

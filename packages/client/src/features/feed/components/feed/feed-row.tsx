@@ -48,13 +48,13 @@ function useLayoutSync(
 
 function entryContent(
   entry: FeedEntry,
-  { now, ...drawing }: EntryDrawing,
+  drawing: EntryDrawing,
 ): React.JSX.Element {
   return entry.type === 'live_header' ? (
     <LiveHeader
       liveHeader={entry.liveHeader}
       toolCall={entry.toolCall}
-      now={now}
+      now={drawing.now}
     />
   ) : (
     <FeedItem item={entry} {...drawing} />

@@ -1,84 +1,53 @@
-import {
-  sessionChangesPageFiles,
-  sessionDiffPageLines,
-  type SessionChangesInput,
-  type SessionChangesOutput,
-  type SessionComparison,
-  type SessionDiffInput,
-  type SessionDiffOutput,
+import type {
+  SessionChangesInput,
+  SessionChangesOutput,
+  SessionDiffInput,
+  SessionDiffOutput,
 } from '@repo/contracts';
 import {
-  pagePatch,
-  readCheckoutChanges,
-  readCheckoutDiff,
-  type ChangeComparison,
+  readChangedFiles,
+  readFileDiff,
+  type ChangesSelection,
 } from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { pageItems, pageWindow } from '../lib/page-items';
-import { readProjectPath } from '../projects';
-import type { SessionRouterDeps } from './router-deps';
+import { sessionChangesSelection } from './changes-selection';
+import type { SessionSources } from './session-sources';
 
-const gitComparison = (
-  comparison: SessionComparison | undefined,
-): ChangeComparison => {
-  if (comparison === undefined || comparison === 'main')
-    return { type: 'main' };
+type ChangeSources = Pick<SessionSources, 'readSession' | 'database'>;
 
-  if (comparison === 'uncommitted') return { type: 'uncommitted' };
+const selection = (
+  sources: ChangeSources,
+  input: SessionChangesInput | SessionDiffInput,
+): ChangesSelection =>
+  sessionChangesSelection(
+    sources.database,
+    sources.readSession(input.sessionId),
+    input.comparison,
+  );
 
-  return { type: 'branch', branch: comparison.branch };
-};
-
-export async function readSessionChanges(
-  deps: Pick<SessionRouterDeps, 'readSession' | 'database'>,
+export const readSessionChanges = (
+  sources: ChangeSources,
   input: SessionChangesInput,
-): Promise<SessionChangesOutput> {
-  const session = deps.readSession(input.sessionId);
+): Promise<SessionChangesOutput> =>
+  readChangedFiles(selection(sources, input), input);
 
-  const result = await readCheckoutChanges(
-    session.checkout.path,
-    readProjectPath(deps.database, session.projectId),
-    gitComparison(input.comparison),
-  );
-
-  const page = pageItems(
-    result.files,
-    pageWindow(input, sessionChangesPageFiles),
-  );
-
-  return {
-    mainBranch: result.mainBranch,
-    summary: result.summary,
-    files: page.items,
-    nextCursor: page.nextCursor,
-  };
-}
+const missingDiff = (path: string): TRPCError =>
+  new TRPCError({ code: 'NOT_FOUND', message: `No changed file ${path}` });
 
 export async function readSessionDiff(
-  deps: Pick<SessionRouterDeps, 'readSession' | 'database'>,
+  sources: ChangeSources,
   input: SessionDiffInput,
 ): Promise<SessionDiffOutput> {
-  const session = deps.readSession(input.sessionId);
-
-  const result = await readCheckoutDiff(
-    session.checkout.path,
-    readProjectPath(deps.database, session.projectId),
-    gitComparison(input.comparison),
-    input.path,
+  const diff = await readFileDiff(
+    { ...selection(sources, input), path: input.path },
+    input,
   );
 
-  if (!result)
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: `No changed file ${input.path}`,
-    });
-
-  const window = pageWindow(input, sessionDiffPageLines);
-  const page = pagePatch(result.patch, window.cursor, window.limit);
+  if (!diff) throw missingDiff(input.path);
 
   return {
-    file: result.file,
-    patch: { format: 'git_patch', text: page.patch },
-    nextCursor: page.nextCursor,
+    file: diff.file,
+    patch: { format: 'git_patch', text: diff.patch },
+    nextCursor: diff.nextCursor,
   };
 }

@@ -1,5 +1,6 @@
 import type { TriggerFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import type * as React from 'react';
+import { Text } from '#primitives/content/text';
 import {
   matchReferences,
   type ReferenceOption,
@@ -11,13 +12,10 @@ import {
   type TypeaheadAdapter,
 } from './rich-textarea-typeahead-option';
 
-const numberClassName =
-  'w-9 shrink-0 text-start type-secondary text-muted-foreground';
+// A fixed lane, so every row's title starts on one x however many digits the number has.
+const numberClassName = 'w-9 shrink-0 text-start text-muted-foreground';
 
-const titleClassName =
-  'min-w-0 flex-1 truncate text-start type-control text-foreground';
-
-function ReferenceContent({
+function ReferenceLead({
   reference,
 }: {
   reference: ReferenceOption;
@@ -25,20 +23,23 @@ function ReferenceContent({
   return (
     <>
       <ReferenceGlyph state={reference.state} />
-      <span className={numberClassName}>#{reference.number}</span>
-      <span className={titleClassName}>{reference.title}</span>
+      <Text role="secondary" className={numberClassName}>
+        #{reference.number}
+      </Text>
     </>
   );
 }
 
 function referenceOption(reference: ReferenceOption): TypeaheadOption {
   return new TypeaheadOption(
-    `reference-${reference.number}`,
     {
+      key: `reference-${reference.number}`,
       group: 'references',
-      title: 'Issues and pull requests',
-      content: <ReferenceContent reference={reference} />,
-      className: 'items-center gap-2',
+      groupTitle: 'Issues and pull requests',
+      title: reference.title,
+      leading: <ReferenceLead reference={reference} />,
+      // The number leads the row as it reads, though it is drawn in its own lane.
+      label: `#${reference.number} ${reference.title}`,
     },
     (node) => $insertReference(node, reference),
   );

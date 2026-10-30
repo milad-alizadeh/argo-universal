@@ -19,7 +19,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   multiline?: boolean;
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];
   onKeyDown?: ComponentProps<typeof Pressable>['onKeyDown'];
-  role?: 'button' | 'link' | 'group';
+  // An option is a listbox's row, highlighted while focus stays in the field that owns it; `selected` is its highlight.
+  role?: 'button' | 'link' | 'group' | 'option';
   onHoverIn?: ComponentProps<typeof Pressable>['onHoverIn'];
   onHoverOut?: ComponentProps<typeof Pressable>['onHoverOut'];
   // Muted: a placeholder line, such as an empty section's, with no surface of its own.
@@ -30,6 +31,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   'aria-expanded'?: boolean;
   'aria-controls'?: string;
   id?: string;
+  // The row's element id, which a field's `aria-activedescendant` names.
+  nativeID?: string;
   accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
   // A value that reads as content, such as a Server's details, in the title's colour rather than muted.

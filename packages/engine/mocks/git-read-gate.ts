@@ -17,16 +17,7 @@ export async function holdBranchReads(home: string): Promise<Gate> {
 }
 
 async function holdGitReads(home: string, argument: string): Promise<Gate> {
-  const { stdout } = await execute('which', ['git']);
-  const directory = join(home, 'git-read-gate');
-  await mkdir(directory);
-  const entered = join(directory, 'entered');
-  const released = join(directory, 'released');
-  await writeFile(
-    join(directory, 'git'),
-    gitGateSource({ executable: stdout.trim(), entered, released, argument }),
-    { mode: 0o755 },
-  );
+  const { directory, entered, released } = await prepareGate(home, argument);
   const release = (): Promise<void> => writeFile(released, 'released');
 
   onTestFinished(async () => {
@@ -38,20 +29,54 @@ async function holdGitReads(home: string, argument: string): Promise<Gate> {
   return { release, started: () => waitForRead(entered) };
 }
 
+type GatePaths = { directory: string; entered: string; released: string };
+
+const prepareGate = async (
+  home: string,
+  argument: string,
+): Promise<GatePaths> => {
+  const { stdout } = await execute('which', ['git']);
+  const { directory, entered, released } = gatePaths(home);
+  await mkdir(directory);
+  await writeFile(
+    join(directory, 'git'),
+    gitGateSource({ executable: stdout.trim(), entered, released, argument }),
+    { mode: 0o755 },
+  );
+
+  return { directory, entered, released };
+};
+
+const gatePaths = (home: string): GatePaths => {
+  const directory = join(home, 'git-read-gate');
+
+  return {
+    directory,
+    entered: join(directory, 'entered'),
+    released: join(directory, 'released'),
+  };
+};
+
 async function waitForRead(path: string): Promise<void> {
   await expect.poll(() => readFile(path, 'utf8')).toBe('reading');
 }
 
-function gitGateSource(input: {
+type GateSource = {
   executable: string;
   entered: string;
   released: string;
   argument: string;
-}): string {
-  return `#!/usr/bin/env node
+};
+
+const gitGateSource = (input: GateSource): string =>
+  gatePrefix + JSON.stringify(input) + gateSuffix;
+
+const gatePrefix = `#!/usr/bin/env node
 const { spawn } = require('node:child_process');
 const { existsSync, writeFileSync } = require('node:fs');
-const input = ${JSON.stringify(input)};
+const input = `;
+
+const gateSuffix = `;
 const run = () => {
   const child = spawn(input.executable, process.argv.slice(2), { stdio: 'inherit' });
   child.once('error', () => process.exit(1));
@@ -63,4 +88,3 @@ else {
   const timer = setInterval(() => { if (!existsSync(input.entered)) process.exit(1); if (!existsSync(input.released)) return; clearInterval(timer); run(); }, 10);
 }
 `;
-}

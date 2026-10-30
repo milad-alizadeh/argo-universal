@@ -3,7 +3,12 @@ import {
   LexicalTypeaheadMenuPlugin,
   useBasicTypeaheadTriggerMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
-import { $getSelection, $isRangeSelection, type TextNode } from 'lexical';
+import {
+  $getSelection,
+  $isRangeSelection,
+  SKIP_DOM_SELECTION_TAG,
+  type TextNode,
+} from 'lexical';
 import { useEffect, useMemo, useState } from 'react';
 import type * as React from 'react';
 import type {
@@ -17,6 +22,7 @@ import type {
 import { commandTokens } from './rich-textarea-command-tokens';
 import { registerReturnToSubmit } from './rich-textarea-keys';
 import { referenceTokens } from './rich-textarea-reference-tokens';
+import { $restoreQueryFront } from './rich-textarea-trigger-claim';
 import { renderTypeaheadMenu } from './rich-textarea-typeahead-menu';
 import {
   type TypeaheadAdapter,
@@ -29,7 +35,7 @@ import {
 } from './rich-textarea-typeahead-query';
 import { referenceAdapter } from './rich-textarea-typeahead-references';
 import { suggestionAdapter } from './rich-textarea-typeahead-suggestions';
-import { useTypedTokens } from './rich-textarea-typed-tokens';
+import { isFocused, useTypedTokens } from './rich-textarea-typed-tokens';
 
 type Props = Pick<RichTextareaProps, 'suggestions' | 'onSubmit'> & {
   references: readonly ReferenceOption[];
@@ -63,22 +69,18 @@ function useReferenceAdapter(
   );
 }
 
-/*
- * Lexical looks for a trigger only when the editor changes, so a new source list nudges the caret.
- * Only a focused editor is nudged, and without touching the DOM selection, so a list arriving while
- * the person is in a picker or popover never pulls focus into the editor.
- */
+// Lexical looks for a trigger only when the editor changes; nudging an unfocused editor would pull focus into it.
 function useRetriggerOnChange(adapters: TypeaheadAdapter[]): void {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
-    if (!editor.getRootElement()?.contains(document.activeElement)) return;
+    if (!isFocused(editor)) return;
     editor.update(
       () => {
         const selection = $getSelection();
 
         if ($isRangeSelection(selection)) selection.dirty = true;
       },
-      { tag: 'skip-dom-selection' },
+      { tag: SKIP_DOM_SELECTION_TAG },
     );
   }, [editor, adapters]);
 }
@@ -117,7 +119,10 @@ function useSelectOption(): SelectOption {
   const [editor] = useLexicalComposerContext();
 
   return (option, node, close) => {
-    editor.update(() => option.insert(node));
+    editor.update(() => {
+      $restoreQueryFront(node);
+      option.insert(node);
+    });
     close();
   };
 }

@@ -18,7 +18,7 @@ export type Open = Extract<PluginEvent, { type: 'open' }>;
 
 export type Opening = Omit<Open, 'type' | 'viewId'>;
 
-export type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
+type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
 /*
  * One App's view of a Plugin route or Slot. `root` is the Plugin's tree as the worker sent it, which
@@ -141,12 +141,16 @@ export function currentDispatch(
   return dispatchTarget(view, input);
 }
 
+/*
+ * ADR-0031: a dispatch names its node, so it runs against the view's current tree and is refused
+ * only when that node is gone. The App's own revision is not required to be the current one: a view
+ * that moves on by itself, as a page settling after its first rows draw does, leaves the App holding
+ * an earlier tree through no fault of its own.
+ */
 function dispatchTarget(
   view: OpenView,
   input: PluginDispatchInput,
 ): DispatchTarget {
-  if (view.revision !== input.revision) throw new Error(staleView);
-
   if (view.workerRevision === null) throw new Error(staleView);
   requireViewHandler(view.root, input);
 

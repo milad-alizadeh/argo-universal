@@ -7,7 +7,6 @@ export { type AgentsRouterDeps, createAgentsRouter } from './router';
 export type {
   AgentLaunch,
   DeferredAgentLaunch,
-  LoginTerminalProcess,
   LaunchLoginTerminal,
 } from './agent-launch';
 

@@ -75,7 +75,7 @@ it.each(workMocks)(
           {
             type: 'exploration',
             id: firstReadId,
-            title: 'Explored',
+            state: 'settled',
             toolCalls: [first, second],
           },
           { type: 'thought', row: thought },

@@ -1,6 +1,5 @@
 import {
   DecoratorNode,
-  type LexicalNode,
   type SerializedLexicalNode,
   type Spread,
 } from 'lexical';
@@ -75,10 +74,4 @@ export class CommandNode extends DecoratorNode<React.JSX.Element> {
 
 export function $createCommandNode(name: string): CommandNode {
   return new CommandNode(name);
-}
-
-export function $isCommandNode(
-  node: LexicalNode | null | undefined,
-): node is CommandNode {
-  return node instanceof CommandNode;
 }

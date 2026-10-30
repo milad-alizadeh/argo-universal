@@ -19,10 +19,15 @@ interface FeedThought {
   row: AgentThought;
 }
 
+// How an Exploration draws its header; the state, never this title, tells whether it is open.
+export const explorationTitle = (state: 'open' | 'settled'): string =>
+  state === 'open' ? 'Exploring' : 'Explored';
+
 export interface FeedExploration {
   type: 'exploration';
   id: string;
-  title: 'Exploring' | 'Explored';
+  // Open while any of its calls still runs.
+  state: 'open' | 'settled';
   toolCalls: ToolCallUpdate[];
 }
 
@@ -42,13 +47,13 @@ export type FeedGroup = {
   id: string;
   title: string;
   items: FeedActivity[];
+  // The live header drawn as this group's title, merged in while the Turn runs; the Session row shows the same line.
+  liveHeader?: LiveHeader;
 } & (
   | { state: 'settled' }
   | {
       state: 'open';
       live?: { toolCall: ToolCallUpdate; awaitingApproval: boolean };
-      // The live header drawn as this group's title, merged in while the Turn runs.
-      liveHeader?: LiveHeader;
     }
 );
 

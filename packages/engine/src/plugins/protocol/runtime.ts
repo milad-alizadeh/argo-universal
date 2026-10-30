@@ -103,8 +103,6 @@ export type HostDelivery = Extract<
   { type: 'reply' | 'hook' | 'accountToken' }
 >;
 
-export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
-
 export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
 
 export type HostHook = Extract<HostCommand, { type: 'hook' }>;

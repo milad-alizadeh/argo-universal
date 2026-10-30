@@ -62,3 +62,10 @@ export const ManyPluginSections: Story = {
 
 // A Plugin's `argo.nav.badge` count rides its tile's corner, capped at 99+.
 export const PluginBadges: Story = { args: pluginBadgeRail };
+
+// A pointer over an unselected tile darkens its icon. The tile's fill and the selected tile's hairline ring are CSS `:hover`, which the story's synthetic hover never sets, so they are not drawn here; a selected tile hovered draws as Expanded does.
+export const Hovered: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByRole('button', { name: 'Settings' }));
+  },
+};

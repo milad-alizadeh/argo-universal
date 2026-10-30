@@ -83,3 +83,5 @@ function reportUnrecognised(text: string, cause: unknown): void {
     cause,
   );
 }
+
+export { resolveExecutable } from '@repo/executables';

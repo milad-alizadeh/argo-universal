@@ -1,13 +1,10 @@
-import type { Notice, SessionUpdate, TurnEnd } from '@repo/contracts';
+import type { SessionUpdate } from '@repo/contracts';
+import { noticeTurnEnd } from './feed-row-facts';
 import type { FeedTurnEnd } from './feed-view';
 
-const readEnd = (row: Notice): TurnEnd | undefined => row._meta?.argo?.turnEnd;
-
-const noticeEnd = (row: Notice): FeedTurnEnd | undefined => {
-  const end = readEnd(row);
+export function turnEndItem(row: SessionUpdate): FeedTurnEnd | undefined {
+  if (row.sessionUpdate !== 'notice') return undefined;
+  const end = noticeTurnEnd(row);
 
   return end ? { type: 'turn_end', row, end } : undefined;
-};
-
-export const turnEndItem = (row: SessionUpdate): FeedTurnEnd | undefined =>
-  row.sessionUpdate === 'notice' ? noticeEnd(row) : undefined;
+}

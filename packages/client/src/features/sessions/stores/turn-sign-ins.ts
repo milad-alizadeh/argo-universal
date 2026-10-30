@@ -1,4 +1,5 @@
 import type { Connection } from '#features/connection';
+import { StoreListeners } from '../../../lib/store-listeners';
 import type { TurnSignIn } from '../types/turn-sign-in';
 
 const none: TurnSignIn = { authenticating: undefined, answered: undefined };
@@ -12,13 +13,9 @@ const sameSignIn = (a: TurnSignIn, b: TurnSignIn): boolean =>
  */
 export class TurnSignIns {
   private readonly sessions = new Map<string, TurnSignIn>();
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new StoreListeners();
 
-  public readonly subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => void this.listeners.delete(listener);
-  };
+  public readonly subscribe = this.listeners.subscribe;
 
   public of(sessionId: string): TurnSignIn {
     return this.sessions.get(sessionId) ?? none;
@@ -43,7 +40,7 @@ export class TurnSignIns {
     if (sameSignIn(next, this.of(sessionId))) return;
     this.sessions.set(sessionId, next);
 
-    for (const listener of this.listeners) listener();
+    this.listeners.notify();
   }
 }
 

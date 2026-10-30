@@ -18,6 +18,7 @@ const startingId = 'starting';
 
 const deviceImage = (attachment: ComposerAttachment): ContentBlock => ({
   type: 'image',
+  name: attachment.name,
   mimeType: attachment.mimeType,
   blob: {
     blobId: attachment.id,

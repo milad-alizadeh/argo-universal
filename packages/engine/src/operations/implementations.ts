@@ -6,7 +6,6 @@ import type { NativeStartId, StartedWork } from './native-start';
 import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
 import { createProjectOperations } from './projects';
-import { createReadOperations } from './readers';
 import { createRegistryOperations } from './registry';
 import { sessionImplementations } from './sessions';
 import type { WorkExecution } from './work';
@@ -68,8 +67,7 @@ export function createImplementations(
 ): OperationImplementations {
   return {
     ...createAgentAccessOperations(deps),
-    ...sessionImplementations(deps.sessionPorts),
-    ...createReadOperations(deps.sessionPorts),
+    ...sessionImplementations(deps.sessions),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),

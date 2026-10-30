@@ -127,11 +127,9 @@ function writeFeedField(
       'A resolved Feed path needs a list or record before its text',
     );
 
-  return writeBranch(
-    node,
-    key,
-    writeFeedField(childNode(node, key), rest, text),
-  );
+  const child = writeFeedField(childNode(node, key), rest, text);
+
+  return writeBranch(node, key, child);
 }
 
 // The top-level field of `row` that holds `field`, with `text` written at its path.

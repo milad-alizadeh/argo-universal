@@ -1,7 +1,7 @@
 import { maxBlobUploadBytes } from '@repo/contracts';
 import type { ComposerProps } from './composer-types';
 
-export function hasOversizedAttachment(props: ComposerProps): boolean {
+function hasOversizedAttachment(props: ComposerProps): boolean {
   return oversizedAttachmentIds(props).length > 0;
 }
 
@@ -19,7 +19,7 @@ export function isConfigurationInactive(props: ComposerProps): boolean {
   return Boolean(props.sending || props.disabled);
 }
 
-export function isSendReady(props: ComposerProps): boolean {
+function isSendReady(props: ComposerProps): boolean {
   return canSubmit(props) && hasDraftContent(props);
 }
 

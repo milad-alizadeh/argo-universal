@@ -1,70 +1,101 @@
 import type { SessionPromptInput, PromptSender } from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
 import { promptMessageId } from '../feed';
-import type { NativeStart, SessionOrigin } from './prompt-sender';
-import type { SessionRouterDeps } from './router-deps';
-import {
-  submitSessionPrompt,
-  validateSessionCommandAdmission,
-} from './session-command';
-import { openReadySession } from './session-opening';
+import type { NativeStart, NativeStartRequest } from './prompt-sender';
+import { submitSessionPrompt } from './session-command';
+import type { SessionActorRef } from './session-machine';
+import type { HandlerSources } from './session-sources';
 
-type PromptDeps = Pick<
-  SessionRouterDeps,
-  | 'sessions'
-  | 'readSession'
-  | 'createId'
-  | 'sessionCommandSignal'
-  | 'installedAgents'
-  | 'hooks'
+type PromptSources = HandlerSources<
+  'readSession' | 'createId' | 'installedAgents' | 'hooks',
+  'admit' | 'ready'
 >;
 
-type PromptTurn = { turnId: string; sender: PromptSender };
+// A caller's budget also stops the Prompt it is waiting to admit.
+type PromptTurn = {
+  turnId: string;
+  sender: PromptSender;
+  signal?: AbortSignal;
+};
+
+const requirePromptAgent = (
+  sources: PromptSources,
+  sessionId: string,
+): void => {
+  requireInstalledAgent(
+    sources.installedAgents,
+    sources.readSession(sessionId).agent,
+  );
+};
+
+const runPromptHook = (
+  sources: PromptSources,
+  { sessionId, prompt }: SessionPromptInput,
+): ReturnType<PromptSources['hooks']['prompt.submit']> =>
+  sources.hooks['prompt.submit']({
+    sessionId,
+    projectId: sources.readSession(sessionId).projectId,
+    prompt,
+  });
 
 export type AcceptedSessionPrompt =
   | { messageId: string; turnId: string }
   | { messageId: null; drop: string };
 
+async function submitAcceptedPrompt(
+  sessionActor: SessionActorRef,
+  { turnId, sender }: PromptTurn,
+  content: SessionPromptInput['prompt'],
+): Promise<AcceptedSessionPrompt> {
+  await submitSessionPrompt(sessionActor, { turnId, content, sender });
+
+  return { messageId: promptMessageId(turnId, sender), turnId };
+}
+
 // The Turn id is allocated before admission, so a caller that stops waiting can still follow the Turn.
 export function startSessionPrompt(
-  deps: PromptDeps,
+  sources: PromptSources,
   input: SessionPromptInput,
-  { sender }: Pick<SessionOrigin, 'sender'>,
+  { sender, signal }: Pick<NativeStartRequest, 'sender' | 'signal'>,
 ): NativeStart<AcceptedSessionPrompt> {
-  const turnId = deps.createId();
+  const turnId = sources.createId();
 
   return {
     sessionId: input.sessionId,
     turnId,
-    accepted: admitPrompt(deps, input, { turnId, sender }),
+    accepted: admitPrompt(sources, input, { turnId, sender, signal }),
   };
 }
 
-async function admitPrompt(
-  deps: PromptDeps,
-  { sessionId, prompt }: SessionPromptInput,
-  { turnId, sender }: PromptTurn,
-): Promise<AcceptedSessionPrompt> {
-  requireInstalledAgent(
-    deps.installedAgents,
-    deps.readSession(sessionId).agent,
-  );
-  const sessionActor = await openReadySession(deps, sessionId);
-  validateSessionCommandAdmission(deps);
+async function readyPromptSession(
+  sources: PromptSources,
+  sessionId: string,
+  signal: AbortSignal | undefined,
+): Promise<SessionActorRef> {
+  requirePromptAgent(sources, sessionId);
 
-  const answer = await deps.hooks['prompt.submit']({
+  const sessionActor = await sources.open.ready(
     sessionId,
-    projectId: deps.readSession(sessionId).projectId,
-    prompt,
-  });
+    'session.prompt',
+    signal,
+  );
+
+  sources.open.admit(signal);
+
+  return sessionActor;
+}
+
+async function admitPrompt(
+  sources: PromptSources,
+  { sessionId, prompt }: SessionPromptInput,
+  { turnId, sender, signal }: PromptTurn,
+): Promise<AcceptedSessionPrompt> {
+  const sessionActor = await readyPromptSession(sources, sessionId, signal);
+  const answer = await runPromptHook(sources, { sessionId, prompt });
 
   if ('drop' in answer) return { messageId: null, drop: answer.drop };
-  validateSessionCommandAdmission(deps);
-  await submitSessionPrompt(sessionActor, {
-    turnId,
-    content: answer.prompt,
-    sender,
-  });
 
-  return { messageId: promptMessageId(turnId, sender), turnId };
+  sources.open.admit(signal);
+
+  return submitAcceptedPrompt(sessionActor, { turnId, sender }, answer.prompt);
 }

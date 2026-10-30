@@ -26,15 +26,23 @@ const routes = new Map<string, Route>([
   [
     '/headers',
     (response, { headers }): void =>
-      void response.end(
-        JSON.stringify({
-          authorization: headers.authorization ?? null,
-          cookie: headers.cookie ?? null,
-          custom: headers['x-custom'] ?? null,
-        }),
-      ),
+      void response.end(JSON.stringify(fixtureHeaders(headers))),
   ],
 ]);
+
+const nullIfMissing = <T>(value: T | undefined): T | null => value ?? null;
+
+type EchoHeaders = {
+  authorization: string | null;
+  cookie: string | null;
+  custom: string | string[] | null;
+};
+
+const fixtureHeaders = (headers: IncomingMessage['headers']): EchoHeaders => ({
+  authorization: nullIfMissing(headers.authorization),
+  cookie: nullIfMissing(headers.cookie),
+  custom: nullIfMissing(headers['x-custom']),
+});
 
 export const serving = (): Promise<number> =>
   httpsServer((request, response) => {

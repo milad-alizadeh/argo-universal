@@ -16,7 +16,6 @@ export { type ThemeChoice, themeChoices } from './stores/theme-choice';
 export {
   slotChoicesQuery,
   type SlotChoices,
-  type SlotChoosers,
   useSlotChoices,
   useSlotChoosers,
 } from './stores/slot-choices';

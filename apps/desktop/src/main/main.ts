@@ -1,33 +1,23 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
-import {
-  app,
-  BrowserWindow,
-  dialog,
-  ipcMain,
-  Menu,
-  screen,
-  shell,
-  type WindowOpenHandlerResponse,
-} from 'electron';
+import { app, BrowserWindow, dialog, Menu } from 'electron';
 import { createActor } from 'xstate';
 import {
   appOrigin,
   handleAppProtocol,
   registerAppScheme,
 } from './app-protocol';
+import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
+import { handleServerRetry } from './server-retry';
 import { handleShareMenu } from './share-menu';
 import { handleSymbolImages } from './symbol-images';
 import { handleWindowBackground } from './window-background';
-import {
-  handleWindowMinimized,
-  reportWindowMinimized,
-} from './window-minimized';
+import { handleWindowControls } from './window-controls';
+import { handleWindowMinimized } from './window-minimized';
 import { handleWindowShow } from './window-show';
-import { readWindowState, saveWindowState, windowBounds } from './window-state';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
@@ -37,13 +27,6 @@ const appDirectory = app.getAppPath();
 const cliDirectory = path.join(appDirectory, '../cli');
 
 const webExportDirectory = path.join(appDirectory, '../universal-app/dist');
-
-// Node's URL gives origin 'null' for the app: scheme, so build the origin from its parts.
-const originOf = (url: string): string => {
-  const { protocol, host } = new URL(url);
-
-  return `${protocol}//${host}`;
-};
 
 const windowOrigin = webDevelopmentUrl
   ? originOf(webDevelopmentUrl)
@@ -87,88 +70,14 @@ const server = createActor(serverConnectionMachine, {
   },
 });
 
-// The 12px lights are centred in the window band's 44px row.
-const trafficLights = { x: 20, y: 16 };
-
-const createWindow = (url: string): void => {
-  const stateFile = path.join(app.getPath('userData'), 'window-state.json');
-  const saved = readWindowState(stateFile);
-
-  const display = saved
-    ? screen.getDisplayMatching(saved.bounds)
-    : screen.getPrimaryDisplay();
-
-  const mainWindow = new BrowserWindow({
-    ...windowBounds(saved?.bounds, display.workArea),
-    // Below 600 is a phone's width, the compact size class (ADR-0026).
-    minWidth: 600,
-    show: !runsInBackground,
-    // On macOS the traffic lights sit in the shared top bar's window controls on the glass, with no title bar above.
-    ...(process.platform === 'darwin' && {
-      titleBarStyle: 'hidden',
-      trafficLightPosition: trafficLights,
-    }),
-    webPreferences: {
-      // A hidden window would otherwise throttle timers and animations.
-      backgroundThrottling: !runsInBackground,
-      preload: path.join(__dirname, 'preload.cjs'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      // The preload reads the Server URL from its process.argv.
-      additionalArguments: [`--server-url=${url}`],
-    },
+const showAppWindow = (url: string): void =>
+  createWindow(url, {
+    origin: windowOrigin,
+    developmentUrl: webDevelopmentUrl,
+    background: runsInBackground,
   });
 
-  if (saved?.maximized) mainWindow.maximize();
-  mainWindow.on('close', () => {
-    saveWindowState(stateFile, {
-      bounds: mainWindow.getNormalBounds(),
-      maximized: mainWindow.isMaximized(),
-    });
-  });
-  reportWindowMinimized(mainWindow);
-
-  // Keep the window on the App; the development inspector opens separately.
-  mainWindow.webContents.on('will-navigate', (event, target): void => {
-    if (originOf(target) === windowOrigin) return;
-    event.preventDefault();
-    openBrowserLink(target);
-  });
-  mainWindow.webContents.setWindowOpenHandler(
-    ({ url }): WindowOpenHandlerResponse => {
-      openBrowserLink(url);
-
-      return { action: 'deny' };
-    },
-  );
-
-  void mainWindow.loadURL(webDevelopmentUrl ?? `${appOrigin}/`);
-};
-
-// Agent metadata and Feed links open in the system browser, never a second App window.
-function openBrowserLink(target: string): void {
-  if (!URL.canParse(target)) return;
-  const { protocol } = new URL(target);
-
-  if (protocol !== 'https:' && protocol !== 'http:') return;
-  void shell.openExternal(target).catch((error: Error) => {
-    console.error('Could not open browser link', error);
-  });
-}
-
-for (const action of ['minimize', 'maximize', 'close'] as const) {
-  ipcMain.on(`window:${action}`, (event): void => {
-    if (event.senderFrame?.origin !== windowOrigin) return;
-    const window = BrowserWindow.fromWebContents(event.sender);
-
-    if (!window) return;
-
-    if (action !== 'maximize') window[action]();
-    else if (window.isMaximized()) window.unmaximize();
-    else window.maximize();
-  });
-}
+handleWindowControls(windowOrigin);
 
 handleWindowShow(windowOrigin);
 
@@ -180,7 +89,55 @@ handleShareMenu(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 
+handleServerRetry(windowOrigin, (): void =>
+  server.send({ type: 'server.retry' }),
+);
+
 let serverStarted = false;
+
+let currentUrl: string | null = null;
+
+function reportFailure(failure: string | null): void {
+  void dialog
+    .showMessageBox({
+      type: 'error',
+      message: 'Argo could not start the Server',
+      detail: failure ?? undefined,
+      buttons: ['Retry', 'Quit'],
+      defaultId: 0,
+      cancelId: 1,
+    })
+    .then(({ response }): void => {
+      if (response === 0) server.send({ type: 'server.retry' });
+      else app.quit();
+    });
+}
+
+function listenToServer(): void {
+  server.on('server.ready', ({ address }): void => {
+    currentUrl = serverUrl(address);
+
+    if (BrowserWindow.getAllWindows().length === 0) showAppWindow(currentUrl);
+  });
+  server.on('badge.changed', ({ attention }): void => {
+    app.dock?.setBadge(attention > 0 ? String(attention) : '');
+  });
+  server.on('server.failed', ({ failure }): void => reportFailure(failure));
+  server.subscribe({
+    error: (error): void => reportUnexpectedFailure(String(error)),
+  });
+}
+
+function reportUnexpectedFailure(error: string): void {
+  void dialog
+    .showMessageBox({
+      type: 'error',
+      message: 'Argo could not start the Server',
+      detail: error,
+      buttons: ['Quit'],
+    })
+    .then((): void => app.quit());
+}
 
 const start = (): void => {
   Menu.setApplicationMenu(
@@ -188,56 +145,15 @@ const start = (): void => {
   );
 
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
-  let url: string | null = null;
-  server.on('server.ready', ({ address }): void => {
-    url = serverUrl(address);
 
-    if (BrowserWindow.getAllWindows().length === 0) createWindow(url);
-  });
-  server.on('badge.changed', ({ attention }): void => {
-    app.dock?.setBadge(attention > 0 ? String(attention) : '');
-  });
-
-  // The failure dialog offers Retry and Quit.
-  server.on('server.failed', ({ failure }): void => {
-    void dialog
-      .showMessageBox({
-        type: 'error',
-        message: 'Argo could not start the Server',
-        detail: failure ?? undefined,
-        buttons: ['Retry', 'Quit'],
-        defaultId: 0,
-        cancelId: 1,
-      })
-      .then(({ response }): void => {
-        if (response === 0) server.send({ type: 'server.retry' });
-        else app.quit();
-      });
-  });
-  server.subscribe({
-    error: (error): void => {
-      void dialog
-        .showMessageBox({
-          type: 'error',
-          message: 'Argo could not start the Server',
-          detail: String(error),
-          buttons: ['Quit'],
-        })
-        .then((): void => app.quit());
-    },
-  });
-  ipcMain.on('server:retry', (event): void => {
-    if (event.senderFrame?.origin !== windowOrigin) return;
-    server.send({ type: 'server.retry' });
-  });
+  listenToServer();
   server.start();
   serverStarted = true;
 
   // On macOS, clicking the dock icon with no window open opens one.
   app.on('activate', (): void => {
-    if (url && BrowserWindow.getAllWindows().length === 0) {
-      createWindow(url);
-    }
+    if (currentUrl && BrowserWindow.getAllWindows().length === 0)
+      showAppWindow(currentUrl);
   });
 };
 

@@ -1,6 +1,5 @@
 import { assign, fromCallback, setup, type Subscription } from 'xstate';
 import type { WriterActorRef, WriterJob } from '../storage';
-import { FeedRowsJob } from './feed-rows-job';
 
 type ReceiptInput = {
   writer: WriterActorRef;
@@ -20,11 +19,18 @@ type ReceiptContext = ReceiptInput & { outcome?: ReceiptOutcome };
 const unstoredMessage =
   'The Writer stopped before storing the Operation result';
 
+// The role of a job that stores Blobs; a job of any module takes it by having the member.
+export interface BlobHoldingJob {
+  holdsBlob: (blobId: string) => boolean;
+}
+
+const storesBlobs = (job: WriterJob): job is WriterJob & BlobHoldingJob =>
+  'holdsBlob' in job;
+
 export const holdsBlob = (
   jobs: readonly WriterJob[],
   blobId: string,
-): boolean =>
-  jobs.some((job) => job instanceof FeedRowsJob && job.holdsBlob(blobId));
+): boolean => jobs.filter(storesBlobs).some((job) => job.holdsBlob(blobId));
 
 // Follows the Writer until the job holding the Blob commits, the Writer stops, or the caller leaves (ADR-0002, ADR-0003).
 export const blobReceiptMachine = setup({

@@ -23,7 +23,7 @@ const sectionEnd = 'web:mb-4.5';
 
 const flatRow = 'web:overflow-hidden web:rounded-xl';
 
-export function rowClassName(closing?: boolean, endsSection?: boolean): string {
+function rowClassName(closing?: boolean, endsSection?: boolean): string {
   return cn(
     'web:transition-opacity web:duration-150',
     flatRow,

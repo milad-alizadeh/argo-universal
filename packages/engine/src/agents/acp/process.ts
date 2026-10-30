@@ -4,7 +4,7 @@ import { agentEnvironment } from '../launch/agent-environment';
 import { ProcessOutput, exitDrainMs } from './process-output';
 import type { AcpProcess } from './resources/resource-types';
 
-export { AgentProcessExitError, exitDrainMs } from './process-output';
+export { AgentProcessExitError } from './process-output';
 
 export type AcpChild = ChildProcessWithoutNullStreams;
 

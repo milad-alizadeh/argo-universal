@@ -1,5 +1,6 @@
 import type {
   LiveHeader as LiveHeaderValue,
+  SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
@@ -24,12 +25,11 @@ export const entryType = (
 export const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
 
-const isOpenGroup = (
+const isGroup = (
   item: FeedViewItem | undefined,
-): item is Extract<FeedViewItem, { type: 'group'; state: 'open' }> =>
-  item?.type === 'group' && item.state === 'open';
+): item is Extract<FeedViewItem, { type: 'group' }> => item?.type === 'group';
 
-// The drawn items, then the live header while it shows; an open group last takes it as its title.
+// The drawn items, then the live header while it shows; a group last takes it as its title, so the Feed and the Session row say one line.
 export function withLiveHeader(
   drawnItems: FeedViewItem[],
   liveHeader: LiveHeaderValue | null,
@@ -40,7 +40,7 @@ export function withLiveHeader(
 
   if (!shown) return drawnItems;
 
-  if (isOpenGroup(newest))
+  if (isGroup(newest))
     return [...drawnItems.slice(0, -1), { ...newest, liveHeader: shown }];
 
   return [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }];
@@ -52,8 +52,16 @@ export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {
   return newestItem ? feedItemKey(newestItem) : '';
 }
 
-// Thoughts, tool calls and the live header: what the Agent does between messages.
-const isActivity = (entry: FeedEntry): boolean => entry.type !== 'row';
+/*
+ * What the Agent does between messages. A Notice or a Compaction reports on the work beside it,
+ * and a group already draws it among its Tool calls, so it keeps the activity rhythm standing on
+ * its own rather than the space that separates one message from the next.
+ */
+const isActivity = (entry: FeedEntry): boolean =>
+  entry.type !== 'row' || drawsNotice(entry.row);
+
+const drawsNotice = (row: SessionUpdate): boolean =>
+  row.sessionUpdate === 'notice' || row.sessionUpdate === 'compaction_update';
 
 const isAgentMessage = (entry: FeedEntry): boolean =>
   entry.type === 'row' && entry.row.sessionUpdate === 'agent_message';

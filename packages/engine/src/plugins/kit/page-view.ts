@@ -7,6 +7,7 @@ import type {
   WireNode,
 } from '@repo/contracts/plugins/wire';
 import { diff } from '@repo/contracts/plugins/wire-patch';
+import { whenSent } from './page-frame';
 import type { Mounted } from './reconciler';
 import type { KitTimer } from './scheduler';
 import type { Handlers } from './wire-tree';
@@ -23,6 +24,8 @@ export interface OpenView {
   replaceable?: boolean;
   background?: boolean;
   frame: KitTimer | undefined;
+  // Released once the pending frame has sent its tree.
+  sentWaiters: Array<() => void>;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
@@ -51,15 +54,12 @@ async function runCurrentHandler(
   view: OpenView,
   event: Extract<PluginEvent, { type: 'dispatch' }>,
 ): Promise<void> {
-  requireCurrentRevision(view, event.revision);
+  // A commit on its way out carries the handlers this event names, so it is looked up after it lands.
+  if (view.frame !== undefined) await whenSent(view);
 
   const handler = view.handlers.get(JSON.stringify([event.key, event.event]));
 
   if (!handler) throw new Error('Plugin handler is no longer available');
   await handler(event.payload);
-}
-
-function requireCurrentRevision(view: OpenView, revision: number): void {
-  if (view.revision !== revision || view.frame !== undefined)
-    throw new Error('Plugin view changed; try again');
+  await whenSent(view);
 }

@@ -70,7 +70,14 @@ describe('startingFeed', () => {
       {
         type: 'row',
         row: expect.objectContaining({
-          content: [{ type: 'image', mimeType: 'image/png', blob }],
+          content: [
+            {
+              type: 'image',
+              name: 'screenshot.png',
+              mimeType: 'image/png',
+              blob,
+            },
+          ],
         }),
       },
     ]);

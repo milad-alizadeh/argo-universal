@@ -1,11 +1,13 @@
 import type { Observer, Subscription } from 'xstate';
 import type { FeedActorRef } from '../feed';
-import type { SessionRouterDeps } from './router-deps';
 import type { SessionActorRef } from './session-machine';
-import { findOpenSession } from './session-system';
+import type { HandlerSources } from './session-sources';
 import { onWriterChange } from './writer-changes';
 
-type Sources = Pick<SessionRouterDeps, 'sessions' | 'findFeed' | 'findWriter'>;
+type WatchSources = HandlerSources<
+  'findFeed' | 'findWriter',
+  'session' | 'subscribe'
+>;
 
 export type SessionWorkWatcher = (
   sessionId: string,
@@ -15,9 +17,11 @@ export type SessionWorkWatcher = (
 type WorkActor = { subscribe: (listener: Observer<unknown>) => Subscription };
 
 // Observes native Session work before storage exists, and through queued commits and close.
-export function createSessionWorkWatcher(deps: Sources): SessionWorkWatcher {
+export function createSessionWorkWatcher(
+  sources: WatchSources,
+): SessionWorkWatcher {
   return (sessionId, listener) =>
-    new WorkWatcher(deps, sessionId, listener).start();
+    new WorkWatcher(sources, sessionId, listener).start();
 }
 
 class WorkWatcher implements Subscription {
@@ -27,19 +31,19 @@ class WorkWatcher implements Subscription {
   private feedListener: Subscription | undefined;
   private readonly subscriptions = new Set<Subscription>();
   public constructor(
-    private readonly deps: Sources,
+    private readonly sources: WatchSources,
     private readonly sessionId: string,
     private readonly listener: Observer<void>,
   ) {}
   public start(): Subscription {
     this.subscriptions.add(
-      this.deps.sessions.subscribe({
+      this.sources.open.subscribe({
         next: this.changed,
         error: this.listener.error,
         complete: this.listener.complete,
       }),
     );
-    const writer = this.deps.findWriter();
+    const writer = this.sources.findWriter();
 
     if (writer) this.subscriptions.add(onWriterChange(writer, this.changed));
     this.refresh();
@@ -55,9 +59,9 @@ class WorkWatcher implements Subscription {
     this.listener.next?.();
   };
   private refresh(): void {
-    const session = findOpenSession(this.deps.sessions, this.sessionId);
+    const session = this.sources.open.session(this.sessionId);
 
-    const feed = this.deps.findFeed(this.sessionId);
+    const feed = this.sources.findFeed(this.sessionId);
 
     if (session !== this.session) this.watchSession(session);
 

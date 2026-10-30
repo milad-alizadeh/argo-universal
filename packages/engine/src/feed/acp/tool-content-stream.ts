@@ -15,7 +15,7 @@ export const restoreToolContent = (
   content: contents[row.id] ?? row.content,
 });
 
-export const suppliedToolContent = (
+const suppliedToolContent = (
   update: ToolUpdate,
   previous: ToolRow,
   assembled: ToolRow,

@@ -4,12 +4,14 @@ import { assert, expect } from 'vitest';
 import type { OperationWaitClock } from '../src/operations';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from './acp-feed';
-import { hookRecords, recordingSource, writeHookPlugins } from './hook-plugins';
+import { hookRecords } from './hook-plugins';
+import {
+  autoAllowPlugin,
+  permissionScenario,
+} from './native-permission-scenario';
 import { beginHeldTurn } from './operation-race';
 import { runOperation } from './operations';
-import { openAccessSession, sessionIdentityStep } from './session-access';
-
-const autoAllowPlugin = 'auto-allow';
+import { openAccessSession } from './session-access';
 
 export async function permissionJourney(
   operationWaitClock?: OperationWaitClock,
@@ -17,37 +19,9 @@ export async function permissionJourney(
   const outputs: TerminalOutputResponse[] = [];
   const release = Promise.withResolvers<void>();
 
-  const host = await startAcpEngine({
-    operationWaitClock,
-    steps: [],
-    sessionIds: ['permission-session'],
-    configOptions: [
-      {
-        id: 'mode',
-        name: 'Mode',
-        category: 'mode',
-        type: 'select',
-        currentValue: 'bypass',
-        options: [{ value: 'bypass', name: 'Bypass permissions' }],
-      },
-    ],
-    responses: {
-      'session/prompt': [
-        { steps: [sessionIdentityStep(outputs)] },
-        { steps: [{ type: 'wait-for-cancel', until: release.promise }] },
-      ],
-    },
-    installPlugins: (home) =>
-      writeHookPlugins(home, [
-        {
-          id: autoAllowPlugin,
-          source: recordingSource(
-            "await on('tool.check', () => ({ decision: 'allow' }));",
-          ),
-          hooks: ['tool.check'],
-        },
-      ]),
-  });
+  const host = await startAcpEngine(
+    permissionScenario(outputs, release, operationWaitClock),
+  );
 
   expect(
     await host.caller.plugin.activate({ pluginId: autoAllowPlugin }),
@@ -55,6 +29,12 @@ export async function permissionJourney(
 
   const session = await openAccessSession({ host, outputs }, 'Caller');
 
+  const target = await openTarget(host);
+
+  return { host, session, target, release, outputs };
+}
+
+const openTarget = async (host: Host): Promise<{ sessionId: string }> => {
   const target = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Target' }],
@@ -62,8 +42,8 @@ export async function permissionJourney(
 
   await waitForAcpSessionIdle(host, target.sessionId);
 
-  return { host, session, target, release, outputs };
-}
+  return target;
+};
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
@@ -81,7 +61,36 @@ export async function askArchive(
   const { host, session, target } = journey;
   await beginHeldTurn(host, session.sessionId);
 
-  const outcome = Promise.allSettled([
+  const outcome = archiveOutcome(session, target);
+
+  const { request, configOptions } = await archiveRequest(
+    host,
+    session,
+    outcome,
+  );
+
+  await verifyArchivePermission(host, configOptions);
+
+  return { request, outcome };
+}
+
+const verifyArchivePermission = async (
+  host: Host,
+  configOptions: Awaited<
+    ReturnType<typeof waitForAcpSnapshot>
+  >['configOptions'],
+): Promise<void> => {
+  expect(configOptions).toContainEqual(
+    expect.objectContaining({ configId: 'mode', currentValue: 'bypass' }),
+  );
+  expect(await hookRecords(host.home, autoAllowPlugin)).toEqual([]);
+};
+
+const archiveOutcome = (
+  session: PermissionJourney['session'],
+  target: PermissionJourney['target'],
+): AskedArchive['outcome'] =>
+  Promise.allSettled([
     runOperation(session.caller.operations, {
       id: 'session.archive',
       params: target,
@@ -89,24 +98,39 @@ export async function askArchive(
     }),
   ]);
 
-  const pending = waitForAcpSnapshot(
-    host,
-    session.sessionId,
-    (value) => value.pendingPermission !== null,
-  );
+type ArchiveRequest = {
+  request: PendingPermission;
+  configOptions: Awaited<
+    ReturnType<typeof waitForAcpSnapshot>
+  >['configOptions'];
+};
+
+const archiveRequest = async (
+  host: Host,
+  session: PermissionJourney['session'],
+  outcome: AskedArchive['outcome'],
+): Promise<ArchiveRequest> => {
+  const pending = archivePending(host, session.sessionId);
 
   expect(await Promise.race([pending.then(() => 'permission'), outcome])).toBe(
     'permission',
   );
   const { pendingPermission: request, configOptions } = await pending;
-  assert(request);
-  expect(configOptions).toContainEqual(
-    expect.objectContaining({ configId: 'mode', currentValue: 'bypass' }),
-  );
-  expect(await hookRecords(host.home, autoAllowPlugin)).toEqual([]);
 
-  return { request, outcome };
-}
+  assert(request);
+
+  return { request, configOptions };
+};
+
+const archivePending = (
+  host: Host,
+  sessionId: string,
+): ReturnType<typeof waitForAcpSnapshot> =>
+  waitForAcpSnapshot(
+    host,
+    sessionId,
+    (value) => value.pendingPermission !== null,
+  );
 
 type AskedArchive = {
   request: PendingPermission;

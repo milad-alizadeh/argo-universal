@@ -50,7 +50,7 @@ function addNamed(
   if (visualComponents.includes(name)) names.set(specifier.local.name, name);
 }
 
-export function jsxName(name: JSXOpeningElement['name']): string {
+function jsxName(name: JSXOpeningElement['name']): string {
   if (name.type === 'JSXIdentifier') return name.name;
 
   if (name.type !== 'JSXMemberExpression') return '';

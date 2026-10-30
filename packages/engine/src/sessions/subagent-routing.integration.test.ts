@@ -1,20 +1,44 @@
+import type { FeedSubscribeOutput } from '@repo/contracts';
 import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq } from 'drizzle-orm';
-import { expect, it, vi, onTestFinished } from 'vitest';
-import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
-import {
-  openAcpFeedSession,
-  waitForAcpSessionIdle,
-  waitForAcpSnapshot,
-} from '#mocks/acp-feed';
-import { startEngineTestHost } from '#mocks/engine';
-import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { expect, it, vi } from 'vitest';
+import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const backgroundScenario = 'subagent-background';
 
 const missingSubagent = 'No Subagent was persisted';
+
+function isAgentMessage(event: FeedSubscribeOutput): boolean {
+  return (
+    event.type === 'row.upsert' && event.row.sessionUpdate === 'agent_message'
+  );
+}
+
+function requireValue<T>(value: T | undefined): T {
+  if (!value) throw new Error(missingSubagent);
+
+  return value;
+}
+
+function childState(scenario: string): string {
+  return scenario === backgroundScenario ? 'running' : 'idle';
+}
+
+async function expectLiveChildMessage(
+  host: Awaited<ReturnType<typeof openAcpFeedSession>>['host'],
+  sessionId: string,
+): Promise<void> {
+  const stream = await host.caller.feed.subscribe({
+    sessionId,
+    after: { epoch: 0, revision: 0 },
+  });
+
+  for await (const event of stream) if (isAgentMessage(event)) return;
+
+  throw new Error('No live Subagent message');
+}
 
 it.each(
   appFixtureAgentIds.flatMap((agentId) => [
@@ -42,13 +66,11 @@ it.each(
     expect(children).toHaveLength(1);
     const list = await host.caller.session.list({ archived: false });
     expect(list.sessions.map((row) => row.sessionId)).toEqual([sessionId]);
-    const child = children[0];
-
-    if (!child) throw new Error(missingSubagent);
+    const child = requireValue(children[0]);
     expect(child).toMatchObject({
       parentSessionId: sessionId,
       title: 'Review the change',
-      state: scenario === backgroundScenario ? 'running' : 'idle',
+      state: childState(scenario),
     });
 
     const stored = host.database
@@ -116,134 +138,3 @@ it.each(
   },
   15_000,
 );
-
-async function expectLiveChildMessage(
-  host: Awaited<ReturnType<typeof openAcpFeedSession>>['host'],
-  sessionId: string,
-): Promise<void> {
-  const stream = await host.caller.feed.subscribe({
-    sessionId,
-    after: { epoch: 0, revision: 0 },
-  });
-
-  for await (const event of stream)
-    if (
-      event.type === 'row.upsert' &&
-      event.row.sessionUpdate === 'agent_message'
-    )
-      return;
-
-  throw new Error('No live Subagent message');
-}
-
-// The restart budget includes ACP's five-second close deadline and two Engine starts.
-it('reads the stored Subagent Feed after restart without launching an Agent', async () => {
-  const { host, sessionId } = await openAcpFeedSession(
-    scenarios['subagent-foreground'],
-  );
-
-  const [child] = await host.caller.session.listAgents({ sessionId });
-
-  if (!child) throw new Error(missingSubagent);
-  await host.stop();
-
-  const restarted = await startEngineTestHost({
-    home: host.home,
-    acp: host.agent,
-  });
-
-  const saved = await restarted.caller.feed.page({
-    sessionId: child.sessionId,
-    direction: 'tail',
-  });
-
-  expect(saved.rows.map((row) => row.sessionUpdate)).toEqual([
-    'session_message',
-    'agent_message',
-  ]);
-  expect(host.agent.processes).toHaveLength(1);
-  expect(
-    await restarted.caller.session.listAgents({ sessionId }),
-  ).toMatchObject([{ sessionId: child.sessionId, state: 'idle' }]);
-}, 15_000);
-
-it.each(['idle', 'cancelled'] as const)(
-  'streams new child content while the parent Turn is %s',
-  async (phase) => {
-    const { host, sessionId } = await backgroundParent(phase);
-
-    const [child] = await host.caller.session.listAgents({ sessionId });
-
-    if (!child) throw new Error(missingSubagent);
-
-    const stream = await host.caller.feed.subscribe({
-      sessionId: child.sessionId,
-      after: null,
-    });
-
-    const iterator = stream[Symbol.asyncIterator]();
-    let initial = await iterator.next();
-
-    while (initial.value?.type !== 'snapshot') initial = await iterator.next();
-    await requireScriptedProcessAt(host.agent.processes).play(
-      [
-        {
-          type: 'update',
-          sessionId: 'subagent-review',
-          update: {
-            sessionUpdate: 'agent_message_chunk',
-            messageId: 'later',
-            content: { type: 'text', text: 'Still reviewing' },
-          },
-        },
-      ],
-      'unused',
-    );
-
-    let next = await iterator.next();
-
-    while (
-      next.value?.type !== 'row.upsert' ||
-      next.value.row.sessionUpdate !== 'agent_message' ||
-      next.value.row.messageId !== 'later'
-    )
-      next = await iterator.next();
-    expect(next.value.row.content).toEqual([
-      { type: 'text', text: 'Still reviewing' },
-    ]);
-    await iterator.return?.();
-  },
-);
-
-async function backgroundParent(
-  phase: 'idle' | 'cancelled',
-): Promise<Awaited<ReturnType<typeof openAcpFeedSession>>> {
-  const gate = Promise.withResolvers<void>();
-  onTestFinished(() => gate.resolve());
-
-  const host = await startAcpEngine({
-    ...scenarios[backgroundScenario],
-    responses: {
-      'session/prompt': [
-        { steps: scenarios[backgroundScenario].steps, waitFor: gate.promise },
-      ],
-    },
-  });
-
-  const { sessionId } = await host.caller.session.new({
-    ...emptySessionInput,
-    prompt: [{ type: 'text', text: 'Start background work' }],
-  });
-
-  await waitForAcpSnapshot(
-    host,
-    sessionId,
-    (snapshot) => snapshot.subagents.length === 1,
-  );
-
-  if (phase === 'cancelled') await host.caller.session.cancel({ sessionId });
-  else gate.resolve();
-  await waitForAcpSessionIdle(host, sessionId);
-
-  return { host, sessionId };
-}

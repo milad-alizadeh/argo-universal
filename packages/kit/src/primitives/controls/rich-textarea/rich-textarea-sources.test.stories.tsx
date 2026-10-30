@@ -39,8 +39,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const optionNames = (): (string | null)[] =>
-  screen.getAllByRole('option').map((option) => option.textContent);
+const highlightedName = (): string =>
+  screen.getByRole('option', { selected: true }).textContent ?? '';
+
+// The highlighted option's name, once the highlight has left `previous`.
+function movedFrom(previous: string | undefined): string {
+  const current = highlightedName();
+
+  if (current === previous) throw new Error('The highlight has not moved yet');
+
+  return current;
+}
+
+// Moves the highlight down `steps` times, collecting the name of each option it lands on.
+async function walkOptions(steps: number, seen: string[]): Promise<string[]> {
+  if (steps === 0) return seen;
+
+  await userEvent.keyboard('{ArrowDown}');
+  const name = await waitFor(() => movedFrom(seen.at(-1)));
+
+  return walkOptions(steps - 1, [...seen, name]);
+}
 
 export const ResultsShowGroupedUnderEachSourceInOrder: Story = {
   play: async ({ canvas }) => {
@@ -112,7 +131,7 @@ export const ReturnSendsWhileASlowSourceHasNothingToShow: Story = {
   },
 };
 
-export const EachSourceShowsAtMostEightResults: Story = {
+export const EachSourceShowsEveryResult: Story = {
   args: {
     suggestions: [
       {
@@ -140,13 +159,16 @@ export const EachSourceShowsAtMostEightResults: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await waitFor(() => expect(optionNames()).toHaveLength(16));
+    await screen.findByRole('option', { name: lateName('many-1') });
+    // The menu draws only the rows in view, so the walk visits each result in turn.
+    const names = await walkOptions(23, [highlightedName()]);
+    await expect(new Set(names).size).toBe(24);
     await expect(
-      optionNames().filter((name) => name?.startsWith('Late many')),
-    ).toHaveLength(8);
+      names.filter((name) => name.startsWith('Late many')),
+    ).toHaveLength(12);
     await expect(
-      optionNames().filter((name) => name?.startsWith('Late later')),
-    ).toHaveLength(8);
+      names.filter((name) => name.startsWith('Late later')),
+    ).toHaveLength(12);
   },
 };
 

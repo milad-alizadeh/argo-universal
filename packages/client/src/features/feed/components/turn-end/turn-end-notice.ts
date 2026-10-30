@@ -8,7 +8,9 @@ const notices: Record<StopReason, (end: TurnEnd) => NoticeMessageProps | null> =
     cancelled: (end) => ({
       severity: 'info',
       icon: 'cancelled',
-      title: `You stopped after ${formatElapsed(end.durationMs)}`,
+      title: end.permissionDenied
+        ? 'Turn ended after you denied a Permission request'
+        : `You stopped after ${formatElapsed(end.durationMs)}`,
     }),
     error: (end) => errorDetails(end.error),
     max_tokens: () => ({

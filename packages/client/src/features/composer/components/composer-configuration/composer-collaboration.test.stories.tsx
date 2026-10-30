@@ -1,7 +1,9 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import {
   ComposerAgentModelControl,
   ComposerModeControl,
@@ -14,7 +16,7 @@ const configured = {
   ...configuration,
   onConfigChange,
   configOptions: [
-    ...configuration.configOptions,
+    ...recordedSessionOptions(configuration.agent?.id ?? ''),
     {
       configId: 'collaboration_mode',
       category: 'collaboration_mode',
@@ -59,19 +61,44 @@ function collaboration(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
+      await expect(onConfigChange).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
       const overlay = within(document.body);
-      await userEvent.click(
-        await overlay.findByRole('button', {
+      await expect(onConfigChange).not.toHaveBeenCalled();
+
+      if (width === layoutWidths.wide) {
+        const trigger = await overlay.findByRole('menuitem', {
           name: /^Collaboration mode, Default/,
-        }),
-      );
-      await userEvent.click(
-        await overlay.findByRole('radio', { name: 'Plan' }),
-      );
-      await expect(onConfigChange).toHaveBeenCalledWith(
-        'collaboration_mode',
-        'plan',
+        });
+
+        await userEvent.click(trigger);
+        await expect(onConfigChange).not.toHaveBeenCalled();
+
+        const plan = await overlay.findByRole('menuitemradio', {
+          name: 'Plan',
+        });
+
+        /*
+         * Storybook's userEvent fires pointerleave at (0, 0) with a null relatedTarget, which
+         * unmounts the Plan submenu before pointerdown; the browser pointer moves naturally.
+         */
+        await browserUserEvent.click(plan);
+      } else {
+        await userEvent.click(
+          await overlay.findByRole('button', {
+            name: /^Collaboration mode, Default/,
+          }),
+        );
+        await userEvent.click(
+          await overlay.findByRole('radio', { name: 'Plan' }),
+        );
+      }
+
+      await waitFor(() =>
+        expect(onConfigChange).toHaveBeenCalledWith(
+          'collaboration_mode',
+          'plan',
+        ),
       );
     },
   };

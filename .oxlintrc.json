@@ -1,12 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  // The Prickles pack, Argo's rules on top, then the folders that do not meet them yet (ADR-0016, ADR-0017).
-  "extends": [
-    "./tooling/oxlint/prickles.json",
-    "./tooling/oxlint/argo.json",
-    "./tooling/oxlint/kit-styling-allowlist.json",
-    "./tooling/oxlint/not-yet-cleared.json"
-  ],
+  // The Prickles pack and Argo's rules (ADR-0016, ADR-0017).
+  "extends": ["./tooling/oxlint/prickles.json", "./tooling/oxlint/argo.json"],
   "options": {
     "reportUnusedDisableDirectives": "error"
   },

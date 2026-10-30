@@ -18,11 +18,14 @@ const readStoredBlob = (database: Database, reference: BlobRef): BlobRef => {
   if (!stored) throw new Error('The attached Blob is unavailable');
   const accepted = BlobRef.parse(stored);
 
-  if (accepted.mime !== reference.mime || accepted.bytes !== reference.bytes)
+  if (!sameBlobMetadata(accepted, reference))
     throw new Error('The attached Blob metadata does not match storage');
 
   return accepted;
 };
+
+const sameBlobMetadata = (stored: BlobRef, reference: BlobRef): boolean =>
+  stored.mime === reference.mime && stored.bytes === reference.bytes;
 
 const requireStoredBlobIdentityAndSize = (reference: BlobRef): void => {
   if (!/^[a-f0-9]{64}$/.test(reference.blobId))
