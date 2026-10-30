@@ -107,7 +107,7 @@ export const UnicodePathLinkIsInert = inertLink(
 
 export const AppRouteLookingLinkIsInert = inertLink('/settings');
 
-export const WebLinkStillOpens: Story = {
+export const WebLinkKeepsItsHref: Story = {
   args: { text: '[a page](https://example.com/a%20b)' },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('link', { name: 'a page' })).toHaveAttribute(

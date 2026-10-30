@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const HeaderLinksRemainInteractive: Story = {
+export const HeaderLinksStayReachable: Story = {
   args: {
     text: '| [Read more](https://example.com) | Value |\n| --- | --- |\n| Item | 42 |',
   },
@@ -40,7 +40,7 @@ export const WrappedCellsRemainReadable: Story = {
   },
 };
 
-export const CompactCellLinksWorkFromTheKeyboard: Story = {
+export const CompactCellLinksAreTabbable: Story = {
   args: {
     text: '| Name | Info |\n| --- | --- |\n| [First link](https://example.com/a) | [Later link](https://example.com/b) |',
   },
