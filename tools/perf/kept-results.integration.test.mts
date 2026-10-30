@@ -42,10 +42,14 @@ describe('results kept across worker restarts', () => {
     expect(await keptResults('frames')).toEqual([{ fps: 2 }]);
   });
 
-  it('starts a new run, and a different suite, with nothing', async () => {
+  it('starts a different suite with nothing', async () => {
     await keepResult('frames', sidebar, { fps: 1 });
 
     expect(await keptResults('agents')).toEqual([]);
+  });
+
+  it('starts a new run with nothing', async () => {
+    await keepResult('frames', sidebar, { fps: 1 });
     vi.stubEnv('PERF_RUN_ID', 'next');
     expect(await keptResults('frames')).toEqual([]);
   });

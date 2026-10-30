@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { keptResults, outputDirectory } from './kept-results.mts';
+import { frameSuite, keptResults, outputDirectory } from './kept-results.mts';
 import { medianRow } from './results-table.mts';
 import { label, output, type Result } from './results.mts';
 import {
@@ -38,7 +38,7 @@ const fileName = (suite?: string): string =>
  */
 export async function report(frames: FrameReport): Promise<void> {
   const { planned, suite } = frames;
-  const results = await keptResults<Result>(suite ?? 'frames');
+  const results = await keptResults<Result>(suite ?? frameSuite);
 
   const file = output(fileName(suite));
 

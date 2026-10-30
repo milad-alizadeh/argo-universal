@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { CDPSession, Page } from '@playwright/test';
 import { measure } from './frames.mts';
-import { keepResult, outputDirectory } from './kept-results.mts';
+import { frameSuite, keepResult, outputDirectory } from './kept-results.mts';
 import { caseName, type PerfCase } from './run-completeness.mts';
 import { median, type Sample } from './sample.mts';
 import { hotspots, trace } from './trace.mts';
@@ -22,7 +22,7 @@ const only = (): string[] =>
 // Keeps a result the moment it is measured, so a later worker restart cannot lose it.
 export const keepFrameResult = (
   result: Result,
-  suite = 'frames',
+  suite = frameSuite,
 ): Promise<void> => keepResult(suite, caseName(result), result);
 
 const wanted = (interaction: string): boolean => {
