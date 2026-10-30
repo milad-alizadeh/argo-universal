@@ -78,7 +78,7 @@ export const LinksPhone = links(layoutWidths.phone);
 export const LinksWide = links(layoutWidths.wide);
 
 // An accessible row collapses what it holds into one element on iOS, so its buttons must sit beside the row's own press.
-function besideRow(installed: boolean): Story {
+function actionsBesideRow(installed: boolean): Story {
   return {
     args: {
       agent: {
@@ -110,9 +110,9 @@ function besideRow(installed: boolean): Story {
   };
 }
 
-export const InstallBesideRow = besideRow(false);
+export const InstallBesideRow = actionsBesideRow(false);
 
-export const RemoveBesideRow = besideRow(true);
+export const RemoveBesideRow = actionsBesideRow(true);
 
 const unsupported = 'Not supported on this platform';
 
