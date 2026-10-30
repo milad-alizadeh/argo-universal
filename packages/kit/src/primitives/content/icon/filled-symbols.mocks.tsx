@@ -5,7 +5,6 @@ import { Icon } from './icon';
 
 const symbolNames = [
   'sessions',
-  'issue',
   'atlas',
   'settings',
   'fast-mode',
