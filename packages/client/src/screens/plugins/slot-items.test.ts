@@ -11,7 +11,7 @@ import {
   type PluginLookup,
   readSlotItems,
   type ReadItem,
-  type SlotReaderOn,
+  type SlotReader,
 } from './slot-items';
 
 const issues = 'issue-tracker';
@@ -39,7 +39,7 @@ const lookup: PluginLookup = (pluginId) =>
  * This Device's choices for the Slot, as the Settings store works them out: the Plugins left on, and the one chosen
  * to write a Single-owner line.
  */
-const on = (owner: string | null, hidden: string[] = []): SlotReaderOn => ({
+const on = (owner: string | null, hidden: string[] = []): SlotReader => ({
   visibility: visibility(owner, hidden),
   lookup,
 });
@@ -180,7 +180,7 @@ describe('reading a Single-owner Slot', () => {
     });
   });
 
-  it('leaves the line to Argo while no Plugin is chosen', () => {
+  it('reads no owner while no Plugin is chosen, so the row keeps Argo’s own line', () => {
     expect(owner(null)).toBeUndefined();
   });
 

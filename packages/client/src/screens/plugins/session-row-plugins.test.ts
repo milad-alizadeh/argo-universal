@@ -30,13 +30,13 @@ const nothingRead = { items: [], overflow: [], owner: undefined };
 const noLines: SlotReading<SessionActivityItem> = nothingRead;
 
 describe('a Session row’s Plugin content', () => {
-  it('keeps each item’s Plugin name, behind "+N" too, and keeps the line Argo’s when no Plugin writes it', () => {
+  it('keeps each item’s Plugin name, behind "+N" too', () => {
     expect(
       sessionRowPlugins(
         { items: [issue], overflow: [coverage], owner: undefined },
         noLines,
       ),
-    ).toEqual({
+    ).toMatchObject({
       items: [
         {
           key: 'issues:0',
@@ -53,8 +53,13 @@ describe('a Session row’s Plugin content', () => {
           item: coverage.item,
         },
       ],
-      activity: undefined,
     });
+  });
+
+  it('keeps the Activity line Argo’s when no Plugin writes it', () => {
+    const row = { items: [issue], overflow: [], owner: undefined };
+
+    expect(sessionRowPlugins(row, noLines)?.activity).toBeUndefined();
   });
 
   it('leads the chosen Plugin’s Activity line with that Plugin’s glyph', () => {

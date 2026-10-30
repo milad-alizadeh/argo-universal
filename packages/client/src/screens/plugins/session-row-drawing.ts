@@ -24,12 +24,12 @@ export function rowDrawing(
   visibility: SlotVisibility,
   lookup: PluginLookup,
 ): DrawFromSent<SessionRowPlugins> {
-  const on = { visibility, lookup };
+  const reader = { visibility, lookup };
 
   return (items, lines) =>
     sessionRowPlugins(
-      readSlotItems(rowSlot, items, on),
-      readSlotItems(activitySlot, lines, on),
+      readSlotItems(rowSlot, items, reader),
+      readSlotItems(activitySlot, lines, reader),
     );
 }
 

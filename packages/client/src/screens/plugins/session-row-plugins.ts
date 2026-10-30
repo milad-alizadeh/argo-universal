@@ -30,16 +30,16 @@ const activityLine = (
  * and the chosen Plugin's Activity line. Nothing when no Plugin adds to the row, so it stays Argo's own.
  */
 export function sessionRowPlugins(
-  items: SlotReading<SessionRowItem>,
+  row: SlotReading<SessionRowItem>,
   lines: SlotReading<SessionActivityItem>,
 ): SessionRowPlugins | undefined {
   const activity = activityLine(lines.owner);
 
-  if (!items.items.length && !activity) return undefined;
+  if (!row.items.length && !activity) return undefined;
 
   return {
-    items: items.items.map(rowItem),
-    more: items.overflow.map(rowItem),
+    items: row.items.map(rowItem),
+    more: row.overflow.map(rowItem),
     activity,
   };
 }

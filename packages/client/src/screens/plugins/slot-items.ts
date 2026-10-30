@@ -12,16 +12,21 @@ type ItemsEntry = Extract<
 type ItemsSlotId = ItemsEntry['id'];
 
 /*
- * The registry's entry for one items Slot, with the item that Slot answers; a Slot screen names its Slot and the
- * reader finds everything else here.
+ * The registry's entry for one items Slot, with the item that Slot answers; a Slot's screen names its Slot and the
+ * reader finds everything else here. Only a registry id type-checks, so a missing entry is a broken registry.
  */
-export const itemsSlotEntry = <Id extends ItemsSlotId>(
+export function itemsSlotEntry<Id extends ItemsSlotId>(
   slotId: Id,
-): Extract<ItemsEntry, { id: Id }> | undefined =>
-  addOnlySlots.find(
-    (entry): entry is Extract<ItemsEntry, { id: Id }> =>
-      entry.id === slotId && entry.content.type === 'items',
+): Extract<ItemsEntry, { id: Id }> {
+  const entry = addOnlySlots.find(
+    (held): held is Extract<ItemsEntry, { id: Id }> =>
+      held.id === slotId && held.content.type === 'items',
   );
+
+  if (!entry) throw new Error(`The Slot registry has no items Slot ${slotId}`);
+
+  return entry;
+}
 
 // One context's answer from one items Slot as the Server sent it; none when no Plugin answered for it.
 export type SentItems = SlotItems[string] | undefined;
@@ -34,8 +39,8 @@ export interface PluginIdentity {
 
 export type PluginLookup = (pluginId: string) => PluginIdentity;
 
-// What a Slot is read under: this Device's choices for it, and the Plugins' names on the connected Server.
-export interface SlotReaderOn {
+// Who reads a Slot: the choices that apply to it, and the Plugins' names on the connected Server.
+export interface SlotReader {
   visibility: SlotVisibility;
   lookup: PluginLookup;
 }
@@ -73,12 +78,6 @@ type SlotEntry<Item> = {
 };
 
 const noAnswer: Answer<never> = { items: [], overflow: [] };
-
-const noSlotReading: SlotReading<never> = {
-  items: [],
-  overflow: [],
-  owner: undefined,
-};
 
 // A Server that sent no answer for the context, or something the Slot's own schema rejects, gives none.
 function sentAnswer<Item>(
@@ -154,12 +153,10 @@ const namedReading = <Item>(
  * chosen Plugin's item in a Single-owner Slot. A Slot's screen then only draws what comes back.
  */
 export function readSlotItems<Item>(
-  slot: SlotEntry<Item> | undefined,
+  slot: SlotEntry<Item>,
   sent: SentItems,
-  { visibility, lookup }: SlotReaderOn,
+  { visibility, lookup }: SlotReader,
 ): SlotReading<Item> {
-  if (!slot) return noSlotReading;
-
   const answer = sentAnswer(slot, sent);
 
   return namedReading(
