@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { onTestFinished } from 'vitest';
 
 export const example = fileURLToPath(
-  new URL('../../../plugins/examples/hello/', import.meta.url),
+  new URL('../../../plugins/examples/github-sign-in/', import.meta.url),
 );
 
 const testFile = /\.test\.[jt]s$/;

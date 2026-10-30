@@ -41,8 +41,6 @@ const clip = await argo.assets.resolve({ asset: 'assets/clip.mp4' });
 <Video source={clip} accessibilityLabel="Release demo" />;
 ```
 
-The Hello example's `/media` page resolves a clip, a poster and a sound this way.
-
 ## Load a reference in an App
 
 `pluginAssetPath(reference)`, from `@repo/contracts/plugins/assets`, returns the Server route:

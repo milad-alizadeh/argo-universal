@@ -77,7 +77,7 @@ async function writeManifest(plugin: ManifestInput): Promise<void> {
   const template = PluginManifest.parse(
     JSON.parse(
       await readFile(
-        new URL('./plugins/user/hello/plugin.json', import.meta.url),
+        new URL('./plugins/first-party/tracker/plugin.json', import.meta.url),
         'utf8',
       ),
     ),

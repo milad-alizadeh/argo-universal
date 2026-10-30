@@ -1,5 +1,4 @@
 import {
-  cp,
   mkdtemp,
   mkdir,
   rm,
@@ -18,10 +17,11 @@ it('lists first-party Plugin manifests without starting their code, and reports 
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
   const home = join(directory, 'home');
   await mkdir(home);
-  await cp(
-    new URL('../../../mocks/plugins/user', import.meta.url),
-    join(home, 'plugins'),
-    { recursive: true },
+  const userPlugin = join(home, 'plugins', 'user-plugin');
+  await writePlugin(userPlugin, 'user-plugin');
+  await writeFile(
+    join(userPlugin, 'index.js'),
+    "throw new Error('Discovery must never run Plugin code');",
   );
 
   const { caller } = await startEngineTestHost({
@@ -46,7 +46,7 @@ it('lists first-party Plugin manifests without starting their code, and reports 
     ],
     errors: [
       {
-        directory: join(home, 'plugins', 'hello'),
+        directory: userPlugin,
         message: expect.stringContaining('not loaded'),
       },
     ],
@@ -65,7 +65,10 @@ it('reports malformed and incompatible manifests while keeping them out of Plugi
 
   const fixture = JSON.parse(
     await readFile(
-      new URL('../../../mocks/plugins/user/hello/plugin.json', import.meta.url),
+      new URL(
+        '../../../mocks/plugins/first-party/tracker/plugin.json',
+        import.meta.url,
+      ),
       'utf8',
     ),
   );
@@ -149,7 +152,10 @@ it('admits Plugins in a root and one collection below it, follows symlinks, and 
 async function writePlugin(folder: string, id: string): Promise<void> {
   const fixture = JSON.parse(
     await readFile(
-      new URL('../../../mocks/plugins/user/hello/plugin.json', import.meta.url),
+      new URL(
+        '../../../mocks/plugins/first-party/tracker/plugin.json',
+        import.meta.url,
+      ),
       'utf8',
     ),
   );

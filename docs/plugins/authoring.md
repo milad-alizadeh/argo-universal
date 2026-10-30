@@ -4,7 +4,7 @@ A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-ki
 
 ```json
 {
-  "name": "@argo/hello",
+  "name": "@argo/github-sign-in",
   "private": true,
   "type": "module",
   "scripts": {

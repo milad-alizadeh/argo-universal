@@ -8,7 +8,7 @@ import { mutate, query } from './server-query';
 import { toast } from './toasts';
 
 const fixtureDirectory = new URL(
-  '../../packages/engine/mocks/plugins/user/hello',
+  '../../packages/engine/mocks/plugins/first-party/tracker',
   import.meta.url,
 );
 
@@ -40,7 +40,7 @@ async function writeCompatibleManifest(manifest: string): Promise<void> {
 When(
   'the crashing Plugin starts alongside Counter',
   async ({ page, app }): Promise<void> => {
-    for (const pluginId of ['counter', 'fixture-hello'])
+    for (const pluginId of ['counter', 'fixture-tracker'])
       await mutate({
         page,
         httpUrl: app.httpUrl,
@@ -50,7 +50,7 @@ When(
   },
 );
 
-const title = 'Fixture hello stopped';
+const title = 'Fixture tracker stopped';
 
 Then(
   'an error toast names the crashed Plugin',

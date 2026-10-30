@@ -29,7 +29,7 @@ it.each([
       {
         pluginId: 'bad',
         kind: 'stopped',
-        name: 'Fixture hello',
+        name: 'Fixture tracker',
         message,
         key: expect.any(String),
       },

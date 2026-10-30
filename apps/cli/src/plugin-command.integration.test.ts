@@ -66,10 +66,10 @@ it.each([
   30_000,
 );
 
-it('validate reports the hello Plugin contributions', async () => {
+it('validate reports the example Plugin contributions', async () => {
   expect(await run('validate', example)).toMatchObject({
     code: 0,
-    output: expect.stringContaining('argo.slots.register'),
+    output: expect.stringContaining('argo.accounts.provide'),
   });
 }, 30_000);
 
@@ -104,11 +104,13 @@ it('validate reports the declared order', async () => {
 }, 30_000);
 
 it(
-  'test runs the hello Plugin worker interaction',
+  'test runs the example Plugin worker interaction',
   async () => {
     expect(await run('test', example, exampleTestLimitMs)).toMatchObject({
       code: 0,
-      output: expect.stringContaining('PASS pressing Tap me'),
+      output: expect.stringContaining(
+        'PASS the provider is registered for the Account host with the Authorization header',
+      ),
     });
   },
   exampleTestLimitMs + 10_000,
@@ -122,7 +124,7 @@ it.each([
   async (assertion, code, output) => {
     const directory = await fixture('export function register() {}');
     await writeFile(
-      join(directory, 'hello.test.ts'),
+      join(directory, 'fixture.test.ts'),
       `
     import assert from 'node:assert/strict';
     import { test } from '@argo/plugin-kit/testing';
