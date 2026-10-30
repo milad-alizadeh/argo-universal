@@ -1,6 +1,9 @@
 import type { RequestPermissionRequest } from '@agentclientprotocol/sdk';
 import type { SessionUpdate } from '@repo/contracts';
-import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
+import type {
+  ScriptedScenario,
+  ScriptedStep,
+} from '@repo/mocks/agent/scripted-scenario';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
@@ -15,7 +18,7 @@ const options: RequestPermissionRequest['options'] = [
 ];
 
 // An Agent that asks before a Tool call and then ends its Turn as it is told to.
-const askSteps = (): NonNullable<PromptResponses>[number]['steps'] => [
+const askSteps = (): ScriptedStep[] => [
   {
     type: 'permission',
     request: { toolCall: { toolCallId: 'edit', title: 'Edit' }, options },
@@ -112,7 +115,7 @@ describe('a Turn that ends after a Permission request', () => {
   it('keeps a Stop after a denial a Stop', async () => {
     const { host, sessionId } = await startSession([
       {
-        steps: [...(askSteps() ?? []), { type: 'wait-for-cancel' }],
+        steps: [...askSteps(), { type: 'wait-for-cancel' }],
         result: { stopReason: 'cancelled' },
       },
     ]);
@@ -123,6 +126,30 @@ describe('a Turn that ends after a Permission request', () => {
 
     expect(ending).toMatchObject({
       _meta: { argo: { turnEnd: { stopReason: 'cancelled', error: null } } },
+    });
+    expect(JSON.stringify(ending)).not.toContain('permissionDenied');
+  });
+
+  it('keeps an error ending after a denial an error', async () => {
+    const { host, sessionId } = await startSession([
+      {
+        steps: askSteps(),
+        error: { code: -32603, message: 'Provider failed' },
+      },
+    ]);
+
+    await answerRequest(host, sessionId, 'reject');
+    const ending = await endingRow(host, sessionId);
+
+    expect(ending).toMatchObject({
+      _meta: {
+        argo: {
+          turnEnd: {
+            stopReason: 'error',
+            error: expect.objectContaining({ message: 'Provider failed' }),
+          },
+        },
+      },
     });
     expect(JSON.stringify(ending)).not.toContain('permissionDenied');
   });

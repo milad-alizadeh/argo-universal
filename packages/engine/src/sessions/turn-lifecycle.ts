@@ -33,11 +33,7 @@ export const connectionLostDuringTurn = interruptedTurn(
 type StartedTurn = {
   change: Pick<
     SessionContext,
-    | 'activeTurnId'
-    | 'activeTurnStartedAt'
-    | 'turnEnding'
-    | 'kept'
-    | 'permissionDenied'
+    'activeTurnId' | 'activeTurnStartedAt' | 'turnEnding' | 'kept'
   >;
   write: SessionWrite;
 };
@@ -54,7 +50,6 @@ export const startTurn = (
       activeTurnStartedAt: startedAt,
       turnEnding: { kind: 'completion' },
       kept: true,
-      permissionDenied: false,
     },
     write: {
       job: new TurnInsertJob({
