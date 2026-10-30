@@ -1,13 +1,13 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
-import type { ErrorObject } from 'ajv';
 import {
   elicitationChoices,
   numericProperty,
   type NumericProperty,
 } from './elicitation-property';
+import type { ElicitationIssue } from './elicitation-validate';
 
 type ErrorRule = (
-  error: ErrorObject,
+  error: ElicitationIssue,
   property: ElicitationPropertySchema,
 ) => string | undefined;
 
@@ -20,16 +20,29 @@ const formatMessages = new Map([
   ['date-time', 'Enter a valid date and time.'],
 ]);
 
-const keywordMessages = new Map<string, (error: ErrorObject) => string>([
+const keywordMessages = new Map<string, (error: ElicitationIssue) => string>([
   [
     'format',
     (error): string =>
-      formatMessages.get(String(error.params.format)) ?? requestedFormat,
+      formatMessages.get(String(error.format)) ?? requestedFormat,
   ],
   ['pattern', (): string => requestedFormat],
+  ['minLength', (error): string => `Enter ${error.limit} characters or more.`],
+  ['maxLength', (error): string => `Enter ${error.limit} characters or fewer.`],
+  ['minItems', (error): string => `Choose ${error.limit} or more.`],
+  ['maxItems', (error): string => `Choose ${error.limit} or fewer.`],
 ]);
 
 const numberNouns = { integer: 'a whole number', number: 'a number' } as const;
+
+// An answer off the list of what the form offers.
+const chosenMessage = (
+  error: ElicitationIssue,
+  property: ElicitationPropertySchema,
+): string | undefined =>
+  error.keyword === 'enum' && elicitationChoices(property)
+    ? 'Choose an available option.'
+    : undefined;
 
 // The first rule that knows the error words it.
 const errorRules: readonly ErrorRule[] = [
@@ -37,12 +50,11 @@ const errorRules: readonly ErrorRule[] = [
     error.keyword === 'required' ? 'This field is required.' : undefined,
   numberMessage,
   (error) => keywordMessages.get(error.keyword)?.(error),
-  (_error, property) =>
-    elicitationChoices(property) ? 'Choose an available option.' : undefined,
+  chosenMessage,
 ];
 
 export function errorMessage(
-  error: ErrorObject,
+  error: ElicitationIssue,
   property: ElicitationPropertySchema,
 ): string {
   for (const rule of errorRules) {
@@ -51,14 +63,11 @@ export function errorMessage(
     if (message !== undefined) return message;
   }
 
-  return valueMessage(error);
+  return 'Enter a valid value.';
 }
 
-const valueMessage = (error: ErrorObject): string =>
-  error.message ? `Value ${error.message}.` : 'Enter a valid value.';
-
 function numberMessage(
-  error: ErrorObject,
+  error: ElicitationIssue,
   property: ElicitationPropertySchema,
 ): string | undefined {
   if (!numericProperty(property)) return undefined;

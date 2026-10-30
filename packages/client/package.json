@@ -28,8 +28,6 @@
     "@trpc/tanstack-react-query": "catalog:",
     "@xterm/addon-fit": "catalog:",
     "@xterm/xterm": "catalog:",
-    "ajv": "catalog:",
-    "ajv-formats": "catalog:",
     "diff": "catalog:",
     "expo": "catalog:",
     "expo-clipboard": "catalog:",
