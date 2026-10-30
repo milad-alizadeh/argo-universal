@@ -92,4 +92,33 @@ export const rules: {
       running: false,
     },
   },
+  {
+    rule: 'idle activity shows Markdown as plain text with a short path',
+    input: {
+      ...idle,
+      message: {
+        id: 'message-3',
+        sessionId: 'session-1',
+        turnId: 'turn-1',
+        position: 3,
+        revision: 3,
+        state: 'settled',
+        sessionUpdate: 'agent_message',
+        messageId: 'message-3',
+        content: [
+          {
+            type: 'text',
+            text: 'Created [qa-note.txt](/tmp/argo-qa/home/worktrees/abc/qa-note.txt) with `QA_FILE_1320`.',
+          },
+        ],
+      },
+    },
+    expected: {
+      information: {
+        ...information,
+        activity: 'Created qa-note.txt with QA_FILE_1320.',
+      },
+      running: false,
+    },
+  },
 ];
