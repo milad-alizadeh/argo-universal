@@ -5,7 +5,7 @@ import {
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { useState } from 'react';
-import { rowAnswer, type SessionRowAnswer } from './session-row-answers';
+import type { SentItems } from './slot-items';
 import { type SlotItemsSnapshot, useSlotItems } from './use-slot-items';
 
 export type RowSession = Pick<SessionInfo, 'sessionId' | 'projectId'>;
@@ -53,15 +53,19 @@ const contextsOf = (session: RowSession | undefined): RowContexts | undefined =>
 const idOf = (session: RowSession | undefined): string =>
   session?.sessionId ?? '';
 
+// One Session's answers from both Session row Slots, as the Server sent them.
+export interface SentRowItems {
+  items: SentItems;
+  lines: SentItems;
+}
+
 /*
  * Both Session row Slots' answers for one Session, live from the Server, for the Settings preview; none while there is
  * no Session to ask about.
  */
-export function useSessionRowAnswer(
-  session: RowSession | undefined,
-): SessionRowAnswer {
+export function useSentRowItems(session: RowSession | undefined): SentRowItems {
   const id = idOf(session);
   const { items, lines } = useRowSnapshots(useKeyed(id, contextsOf(session)));
 
-  return rowAnswer(items.items[id], lines.items[id]);
+  return { items: items.items[id], lines: lines.items[id] };
 }

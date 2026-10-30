@@ -21,9 +21,6 @@ export {
 } from './stores/slot-choices';
 
 export {
-  type SplitItems,
-  ownerItem,
-  shownItems,
   slotVisibility,
   type SlotVisibility,
   useSlotVisibility,

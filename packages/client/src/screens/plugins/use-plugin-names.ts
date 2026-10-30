@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPC } from '#features/connection';
-import type { PluginIdentity, PluginLookup } from '#features/sessions';
 import { pluginSymbol } from '../../lib/product/plugin-symbol';
+import type { PluginIdentity, PluginLookup } from './slot-items';
 
 // A Plugin the list has not sent yet: its id, and the generic Plugin glyph.
 const unknownPlugin = (pluginId: string): PluginIdentity => ({

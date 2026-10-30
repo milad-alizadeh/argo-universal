@@ -8,7 +8,6 @@ import type {
   SessionsListPlugins,
 } from '#features/sessions';
 import { useSlotChoices } from '#features/settings';
-import { sentDrawing } from './session-row-answers';
 import {
   cachedRows,
   type DrawFromSent,
@@ -18,6 +17,7 @@ import {
   redrawnRows,
   type RowCache,
 } from './session-row-cache';
+import { sentDrawing } from './session-row-drawing';
 import { useDrawnSessions } from './use-drawn-sessions';
 import { usePluginLookup } from './use-plugin-names';
 import {

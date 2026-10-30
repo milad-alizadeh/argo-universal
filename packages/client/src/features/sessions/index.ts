@@ -214,14 +214,11 @@ export { SessionChangeDetail } from './components/session-change-detail';
 
 export { SessionRow } from './components/session-row/session-row';
 
-export { type SessionRowPlugins } from './components/session-row/session-row-props';
-
 export {
-  type PluginIdentity,
-  type PluginLookup,
-  sessionRowPlugins,
-  type ShownRowAnswer,
-} from './components/session-row/session-row-plugins';
+  type SessionRowActivity,
+  type SessionRowPluginItem,
+  type SessionRowPlugins,
+} from './components/session-row/session-row-props';
 
 export { NewSessionQuestion } from './components/new-session-question/new-session-question';
 

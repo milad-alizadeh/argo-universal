@@ -1,11 +1,8 @@
-import type { SlotItems } from '@repo/contracts/plugins/wire';
+import type { SentItems } from './slot-items';
 import type { SlotItemsSnapshot } from './use-slot-items';
 
-// One Session's answer from one Slot as the Server sent it; none when the Plugins sent nothing for it.
-export type SentAnswer = SlotItems[string] | undefined;
-
 // Each Session's last answer from one Slot, kept while its row is out of the window the list asks about.
-export type KeptAnswers = ReadonlyMap<string, SentAnswer>;
+export type KeptAnswers = ReadonlyMap<string, SentItems>;
 
 export const noKeptAnswers: KeptAnswers = new Map();
 
@@ -36,11 +33,11 @@ interface CachedRow<Row> {
 export type RowCache<Row> = ReadonlyMap<string, CachedRow<Row>>;
 
 export type DrawFromSent<Row> = (
-  items: SentAnswer,
-  lines: SentAnswer,
+  items: SentItems,
+  lines: SentItems,
 ) => Row | undefined;
 
-type SentPair = [items: SentAnswer, lines: SentAnswer];
+type SentPair = [items: SentItems, lines: SentItems];
 
 const sentKey = (pair: SentPair): string =>
   JSON.stringify(pair.map((answer) => answer ?? null));

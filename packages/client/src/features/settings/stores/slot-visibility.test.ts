@@ -1,44 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { ownerItem, shownItems, slotVisibility } from './slot-visibility';
-
-const merged = {
-  items: [
-    { pluginId: 'issues', item: 'Issue 412' },
-    { pluginId: 'deploys', item: 'Preview ready' },
-  ],
-  overflow: [{ pluginId: 'coverage', item: '78%' }],
-};
+import { slotVisibility } from './slot-visibility';
 
 describe('what a Slot shows on this Device', () => {
-  it('shows every Plugin and Argo’s line until the Device chooses', () => {
+  it('shows every Plugin and leaves the line to Argo until the Device chooses', () => {
     const visibility = slotVisibility({ hidden: [], owner: null });
 
-    expect(shownItems(merged, visibility)).toEqual(merged);
-    expect(ownerItem(merged, visibility)).toBeUndefined();
+    expect(visibility.shows('issues')).toBe(true);
+    expect(visibility.owner).toBeNull();
   });
 
-  it('lets the next Plugin in line take a hidden Plugin’s place', () => {
+  it('leaves out a Plugin the Device turned off', () => {
     const visibility = slotVisibility({ hidden: ['deploys'], owner: null });
 
-    expect(shownItems(merged, visibility)).toEqual({
-      items: [
-        { pluginId: 'issues', item: 'Issue 412' },
-        { pluginId: 'coverage', item: '78%' },
-      ],
-      overflow: [],
-    });
+    expect(visibility.shows('deploys')).toBe(false);
+    expect(visibility.shows('issues')).toBe(true);
   });
 
-  it('shows the chosen owner’s answer, even past what fits', () => {
-    const visibility = slotVisibility({ hidden: [], owner: 'coverage' });
-
-    expect(ownerItem(merged, visibility)).toBe('78%');
+  it('keeps the chosen Plugin as the one that writes the Single-owner line', () => {
+    expect(slotVisibility({ hidden: [], owner: 'coverage' }).owner).toBe(
+      'coverage',
+    );
   });
 
   it('gives the line back to Argo when its owner is turned off', () => {
     const visibility = slotVisibility({ hidden: ['issues'], owner: 'issues' });
 
     expect(visibility.owner).toBeNull();
-    expect(ownerItem(merged, visibility)).toBeUndefined();
   });
 });
