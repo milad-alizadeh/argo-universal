@@ -49,11 +49,19 @@ A run with anything in `missing` writes `"status": "partial"`, prints `INCOMPLET
 A run that planned no scenarios at all, which an unmatched `PERF_ONLY` produces, is partial for the same reason.
 For the elapsed suite, a scenario whose every trial failed or timed out is `missing`: it recorded what happened, but it timed nothing.
 
-## Not yet verified
+## What has and has not been verified
 
-No run of these suites has been taken on a quiet machine.
-The `sidebar` and `sessions` scenarios have never been verified end to end, and no `PERF_HEADED=1` cross-check against the headless collector has been done.
-Both are outstanding from PR #1482 and need a quiet measurement window, not a code change.
+**No run of these suites has been taken on a quiet machine, so no number from any of them is a baseline.**
+
+`sidebar` and `sessions` do execute end to end: both ran on 2026-10-30 against this build, 3 windows each at 1x CPU, and the report came back `"status": "complete"`.
+That verifies the scenarios, not their numbers — the host was at a 1-minute load average between 174 and 214 throughout.
+
+No `PERF_HEADED=1` cross-check against the headless collector has been done.
+One was attempted in the same window and abandoned when the host reached a load average of 429; a headed run under that load cannot tell an insensitive collector from a loaded machine.
+It is still outstanding from PR #1482 and needs a quiet measurement window, not a code change.
+
+One observation from the loaded run, which bears on how these numbers are read: at a load average around 200 the frame intervals were identical in every window — 16.8 ms maximum, zero dropped frames — while the compositor's own counters did move, one `sessions` window reporting 62 partial frames and one dropped.
+Read `partialFrames` and `compositorDropped` for whether a window was disturbed. Do not read a flat `maxMs` as a quiet one.
 
 ## What the numbers do not say
 
