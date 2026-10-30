@@ -88,8 +88,6 @@ function renderEntry(
   return projectHeading(item, headingContext);
 }
 
-const noEntries: SessionsListEntry[] = [];
-
 export interface ListRows {
   // Whether the list is moving rows now.
   animating: boolean;
@@ -155,7 +153,7 @@ export function useListRows(
 
   return {
     animating: input.animating,
-    items: props.placeholder ? noEntries : input.entries,
+    items: input.entries,
     extraData: useExtraData(input.rows, input.collapsedProjects),
     renderItem: useRenderItem(props, input),
   };

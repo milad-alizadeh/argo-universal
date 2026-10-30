@@ -4,9 +4,11 @@ import * as React from 'react';
 import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#kit/utils';
+import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { isPerSizeClass } from '../../../use-size-class/size-class-value';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { TextProps, TextRole } from './text-props';
+import { skeletonWords } from './text-skeleton';
 import { toneClass } from './text-tone';
 
 const textRoles = {
@@ -34,6 +36,10 @@ export function useTextStyle(
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
 type RoleTextProps = Omit<TextProps, 'role'> & { role?: TextRole };
+
+type RNTextProps = React.ComponentProps<typeof RNText> & {
+  key?: React.Key | null;
+};
 
 type TextDrawing = Pick<
   RoleTextProps,
@@ -71,19 +77,45 @@ function useNativeTextKey(): number | undefined {
   return Platform.OS === 'web' ? undefined : fontScale;
 }
 
-function RoleText(options: RoleTextProps): ReactElement {
+const isBlank = (children: React.ReactNode): boolean =>
+  React.Children.toArray(children).every((child) => child === '');
+
+const placeholderWords = (role: TextRole | undefined): string =>
+  skeletonWords[role ?? textDefaults.role];
+
+/*
+ * What the line says: its own words, or, with none inside a loading Skeleton, the placeholder words of its role.
+ * A line that says nothing lays out no line, and a Skeleton draws a bar only over a line it can measure.
+ */
+function useWords(
+  role: TextRole | undefined,
+  children: React.ReactNode,
+): React.ReactNode {
+  const loading = useSkeletonLoading();
+
+  return loading && isBlank(children) ? placeholderWords(role) : children;
+}
+
+function useDrawnProps(options: RoleTextProps): RNTextProps {
   const { className, role, tone, dimmed, accessibilityRole, ...props } =
     options;
 
   const key = useNativeTextKey();
   const textClass = React.useContext(TextClassContext);
 
-  return React.createElement(RNText, {
+  return {
     key,
     className: textClassName({ role, tone, dimmed, className }, textClass),
     role: accessibilityRole,
     ...props,
-  });
+  };
+}
+
+function RoleText(options: RoleTextProps): ReactElement {
+  // The words come last, so a line standing in for itself draws its placeholder instead of nothing.
+  const words = useWords(options.role, options.children);
+
+  return React.createElement(RNText, useDrawnProps(options), words);
 }
 
 function SizeClassText(options: TextProps): ReactElement {

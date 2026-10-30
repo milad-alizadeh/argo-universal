@@ -36,11 +36,6 @@ const meta = {
       control: false,
       description: 'How the list groups, filters and lays out its rows.',
     },
-    placeholder: {
-      control: false,
-      description:
-        'Shown instead of the rows while Sessions load or fail to load.',
-    },
     onSelect: { control: false },
     onStartSession: { control: false },
     onRename: { control: false },
@@ -76,9 +71,9 @@ export const DelegatedWork: Story = { args: nestedSessions };
 export const ProjectWithoutSessions: Story = { args: projectWithoutSessions };
 
 /*
- * The three empty states below are the list's own: with no rows it swaps its
- * placeholder, and what the placeholder says comes from this list's query and
- * view. A Session's own states belong to SessionRow.
+ * The three empty states below are the list's own: with no rows it draws its
+ * empty state, and what that says comes from this list's query and view.
+ * A Session's own states belong to SessionRow.
  */
 export const NoProjects: Story = { args: noProjects };
 

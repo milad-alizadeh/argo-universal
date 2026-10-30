@@ -9,6 +9,10 @@ import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { drawsMovePicker } from '../list/list-move-picker-drawing';
 import {
+  drawsPlaceholderRows,
+  type PlaceholderRowProps,
+} from '../list/list-placeholder';
+import {
   useContentItemDrawing,
   useContentItemActions,
   useSelectedSeparator,
@@ -115,6 +119,9 @@ nestsChildren(ListItem);
 
 // A native grouped List's FieldGroup rows open the same Move to… picker, its places listed as ListItems.
 drawsMovePicker(({ id }) => <RowMovePicker id={id} Row={ListItem} />);
+
+// A List with no rows of its own stands in for itself with rows of this shape.
+drawsPlaceholderRows((props: PlaceholderRowProps) => <ListItem {...props} />);
 
 // A row's props, and whether it draws as a tile.
 interface RowParts {

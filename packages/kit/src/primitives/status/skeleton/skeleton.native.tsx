@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
 import { HostRedactionContext } from '#primitives/native/host';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
+import { SkeletonLoadingContext } from './skeleton-loading';
 import type { SkeletonProps } from './skeleton-props';
 
 interface NativeSkeletonProps extends ViewProps {
@@ -46,7 +47,9 @@ function NativeSkeletonView({
 export function Skeleton(props: SkeletonProps): ReactElement {
   return (
     <HostRedactionContext value={props.loading}>
-      <NativeSkeletonView {...props} />
+      <SkeletonLoadingContext value={props.loading}>
+        <NativeSkeletonView {...props} />
+      </SkeletonLoadingContext>
     </HostRedactionContext>
   );
 }

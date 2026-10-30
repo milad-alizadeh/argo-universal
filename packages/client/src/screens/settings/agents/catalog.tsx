@@ -1,7 +1,4 @@
-import {
-  type LoadingRow,
-  loadingRows,
-} from '@repo/kit/primitives/lists/list-item';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import {
   agentRows,
@@ -23,29 +20,52 @@ type CatalogProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
 
 const agentsCatalogTestId = 'agents-catalog';
 
+/*
+ * Nothing known yet while a load goes on: the catalog has no cards of its own, so inside the Skeleton its List
+ * draws placeholder rows at the size the cards will be.
+ */
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
+  const sections = catalogSections(props);
+
+  return (
+    <Skeleton
+      fill
+      loading={isWaiting(props.agents, sections)}
+      accessibilityLabel="Loading Agents"
+    >
+      <Catalog {...props} sections={sections} />
+    </Skeleton>
+  );
+}
+
+function Catalog(
+  props: CatalogProps & { sections: FieldListSection[] },
+): React.JSX.Element {
   return (
     <FieldList
       testID={agentsCatalogTestId}
-      sections={catalogSections(props)}
+      sections={props.sections}
       header={<AgentsFilterPills {...props} />}
       headerBleeds
     />
   );
 }
 
+const isWaiting = (
+  load: RowsLoad,
+  sections: readonly FieldListSection[],
+): boolean => load.status === 'loading' && sections.length === 0;
+
 /*
  * Every Agent is a card in one section, so the cards sit a card's gap apart rather than a section's.
- * A load still going stands in for the cards it will bring; one that failed says so and offers Retry.
- * Either way the Agents already known keep their cards above it.
+ * A load still going adds no cards; one that failed says so and offers Retry. Either way the Agents
+ * already known keep their cards above it.
  */
 const catalogSections = (props: CatalogProps): FieldListSection[] => {
   const { rows, ...load } = props.agents;
+  const found = filterAgents(rows, props.filter, props.search);
 
-  const cards = [
-    ...agentRows(filterAgents(rows, props.filter, props.search), props),
-    ...(load.status === 'loading' ? loadingCards : []),
-  ];
+  const cards = agentRows(found, props);
 
   return [...cardsSection(cards), ...belowCards(load, cards, props)];
 };
@@ -53,42 +73,22 @@ const catalogSections = (props: CatalogProps): FieldListSection[] => {
 const cardsSection = (cards: React.ReactElement[]): FieldListSection[] =>
   cards.length ? [{ rows: cards }] : [];
 
+// A load still going has found nothing yet, which is not the same as there being none.
 const belowCards = (
   load: RowsLoad,
   cards: React.ReactElement[],
   props: CatalogProps,
 ): FieldListSection[] => {
-  if (load.status === 'failed') return [registrySection(load, props)];
+  if (load.status !== 'loaded') return failedSection(load, props);
 
   return cards.length ? [] : [emptySection(props)];
 };
 
-/*
- * Widths, not words: an Agent card is its logo, its name, the line of description under it and its version
- * below that, so the cards the page is waiting for stand in for themselves at the size they will be.
- */
-export const agentsLoadingTitle = 'Claude Code';
-
-const loadingAgents: LoadingRow[] = [
-  {
-    title: agentsLoadingTitle,
-    subtitle: 'Anthropic’s Agent for the terminal and the editor.',
-    meta: 'v2.1.0',
-  },
-  {
-    title: 'Gemini CLI',
-    subtitle: 'Google’s open-source Agent, run from a Project’s folder.',
-    meta: 'v0.14.2',
-  },
-  {
-    title: 'Codex',
-    subtitle: 'OpenAI’s Agent over ACP.',
-    meta: 'v0.8.0',
-  },
-];
-
-// The loading rows join the Agents' section, a card each, as the cards above them are.
-const loadingCards = loadingRows(loadingAgents);
+const failedSection = (
+  load: RowsLoad,
+  props: CatalogProps,
+): FieldListSection[] =>
+  load.status === 'failed' ? [registrySection(load, props)] : [];
 
 const registrySection = (
   load: Extract<RowsLoad, { status: 'failed' }>,

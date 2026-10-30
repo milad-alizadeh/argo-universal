@@ -10,7 +10,6 @@ import {
   longCatalog,
   pageRows,
 } from './agent-list-view.mocks';
-import { agentsLoadingTitle } from './catalog';
 
 const meta = {
   title: 'Tests/Screens/Settings/Agents',
@@ -109,7 +108,7 @@ export const SearchEmptyUninstalled = empty(
   /No uninstalled Agents match/,
 );
 
-// Until the Server says which Agents are installed, the page stands in for its cards.
+// Until the Server says which Agents are installed, the page is a busy status with no card to press.
 export const WaitsForInstalledAgents: Story = {
   args: {
     agents: agentsPage(
@@ -118,7 +117,11 @@ export const WaitsForInstalledAgents: Story = {
     ),
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(agentsLoadingTitle)).toBeVisible();
+    await expect(await canvas.findByRole('status')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    await expect(canvas.queryByRole('button', { name: /Install/ })).toBeNull();
   },
 };
 

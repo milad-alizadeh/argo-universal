@@ -86,9 +86,7 @@ interface ListChrome {
 
 function listChrome(props: SessionsListProps): ListChrome {
   return {
-    empty: props.placeholder ?? (
-      <EmptySessionsList query={props.query} view={props.view} />
-    ),
+    empty: <EmptySessionsList query={props.query} view={props.view} />,
     estimatedItemSize: estimatedItemSize[props.view.layout],
   };
 }

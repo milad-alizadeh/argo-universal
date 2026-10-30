@@ -1,10 +1,5 @@
 import type * as React from 'react';
-import {
-  type SessionsLayout,
-  SessionsList,
-  type SessionsListProps,
-  SessionsLoading,
-} from '#features/sessions';
+import { SessionsList, type SessionsListProps } from '#features/sessions';
 import type { SessionListViewProps } from './session-list-view';
 
 type ListData = Pick<
@@ -57,23 +52,8 @@ function listActions(props: SessionListViewProps): ListActions {
   };
 }
 
-// The list insets it below a transparent header, as it does the rows.
-const insetLoading = (layout: SessionsLayout): React.JSX.Element => (
-  <SessionsLoading layout={layout} inList />
-);
-
-interface SessionsListContentProps extends SessionListViewProps {
-  loading: boolean;
-}
-
 export function SessionsListContent(
-  props: SessionsListContentProps,
+  props: SessionListViewProps,
 ): React.JSX.Element {
-  return (
-    <SessionsList
-      {...listData(props)}
-      {...listActions(props)}
-      placeholder={props.loading ? insetLoading(props.view.layout) : undefined}
-    />
-  );
+  return <SessionsList {...listData(props)} {...listActions(props)} />;
 }
