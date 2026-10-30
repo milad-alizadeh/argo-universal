@@ -15,9 +15,6 @@ function disclosure(props: HeaderProps): ReactNode {
 }
 
 function leadingIcon(props: HeaderProps): ReactNode {
-  if (props.isLoading)
-    return <View className="size-5 rounded-sm bg-foreground/5 wide:size-4" />;
-
   return props.leading === undefined ? disclosure(props) : props.leading;
 }
 

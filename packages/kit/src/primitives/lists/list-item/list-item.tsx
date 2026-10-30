@@ -4,7 +4,6 @@ import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
 import { ListTileContext, RowPositionContext } from '../../../list-context';
 import { useCompactRows, useListLook } from '../../../list-look-context';
-import { loadingLanes } from '../../../list-skeleton-lanes';
 import { nestedRows, nestsChildren } from '../../../list-tree';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { drawsMovePicker } from '../list/list-move-picker-drawing';
@@ -99,14 +98,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
   );
 }
 
-// A loading row keeps the row's surface, lanes and line heights, with nothing to press or read.
-function LoadingItem(props: ListItemProps): ReactElement {
-  return <ListItemFrame title={props.title} {...loadingLanes(props)} />;
-}
-
 export function ListItem({ children, ...props }: ListItemProps): ReactElement {
-  if (props.isLoading) return <LoadingItem {...props} />;
-
   const rows = nestedRows(children);
 
   if (rows.length === 0) return <ChoosingItem {...props} />;

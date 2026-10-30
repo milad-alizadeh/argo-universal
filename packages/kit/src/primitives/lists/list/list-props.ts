@@ -64,12 +64,11 @@ export type MovesOrItems =
   | { items?: undefined; layout?: 'list' | 'lanes'; direction?: 'vertical' }
   | { onMove?: undefined };
 
-// Kit-only: native selection, controlled section expansion and the loading header.
+// Kit-only: native selection, and controlled section expansion.
 export type ListSectionProps = KitProps<'List.Section'> &
   ListSelection & {
     count?: number;
     tone?: 'danger';
     isExpanded?: boolean;
     onExpandedChange?: (expanded: boolean) => void;
-    isLoading?: boolean;
   };

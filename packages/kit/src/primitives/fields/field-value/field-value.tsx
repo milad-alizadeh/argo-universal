@@ -34,7 +34,7 @@ export function FieldValue(props: FieldValueProps): ReactElement {
 function Placeholder(props: FieldValueProps): ReactElement {
   return (
     <View aria-hidden>
-      <SkeletonBar kind="title" text={props.title} />
+      <SkeletonBar text={props.title} />
     </View>
   );
 }
