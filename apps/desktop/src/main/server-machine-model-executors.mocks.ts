@@ -1,4 +1,5 @@
 import type { DelayEvent } from '@repo/vitest/model-test';
+import { expect } from 'vitest';
 import type { EventExecutor } from 'xstate/graph';
 import {
   checkRunningDoneEvent,
@@ -8,9 +9,9 @@ import {
   type ServerEvent,
 } from './server-machine-model-events.mocks';
 import {
+  badges,
   checkRunningCalls,
   countsChangedEvent,
-  expectBadge,
   latest,
   quitCalls,
   quitDoneEvent,
@@ -23,6 +24,18 @@ import {
   type ServerSnapshot,
   settle,
 } from './server-machine.mocks';
+
+const expectBadge = (attention: number | undefined): void => {
+  expect(badges.at(-1)).toBe(attention);
+};
+
+const sendAndExpectBadge = (
+  event: { type: 'counts.disconnected' } | { type: 'counts.released' },
+  attention: number | undefined,
+): void => {
+  server.send(event);
+  expectBadge(attention);
+};
 
 export const executors = {
   [readAddressDoneEvent]: ({ event }): Promise<void> => {
@@ -48,10 +61,14 @@ export const executors = {
     server.send(event);
     expectBadge(event.counts.attention);
   },
-  'counts.disconnected': (): void => {
-    server.send({ type: 'counts.disconnected' });
-    expectBadge(0);
-  },
+  // On the way out a disconnect answers the App's own release, so it clears no badge and keeps the Session count the question needs.
+  'counts.disconnected': (): void =>
+    sendAndExpectBadge(
+      { type: 'counts.disconnected' },
+      server.getSnapshot().matches({ ready: 'releasing' }) ? badges.at(-1) : 0,
+    ),
+  'counts.released': (): void =>
+    sendAndExpectBadge({ type: 'counts.released' }, badges.at(-1)),
   [quitDoneEvent]: async ({ event }): Promise<void> => {
     if (event.type !== quitDoneEvent) throw new Error('Expected quit answer');
     await settle(() => latest(quitCalls).resolve(event.output));

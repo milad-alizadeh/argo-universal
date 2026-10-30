@@ -29,6 +29,12 @@ export const startSupervisor = async (): Promise<void> => {
   expect(value()).toEqual({ ready: 'active' });
 };
 
+// Quits the App: the Server Connection lets go first, and answers that it has.
+export const quitTheApp = (): void => {
+  server.send({ type: 'app.quit' });
+  server.send({ type: 'counts.released' });
+};
+
 // Reaches `failed` with the spawned Supervisor still owned, as when it ignores SIGTERM.
 export const abandonStuckSupervisor = async (): Promise<void> => {
   await spawnSupervisor();

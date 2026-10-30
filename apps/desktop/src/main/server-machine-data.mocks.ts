@@ -1,4 +1,21 @@
 import type { ServerAddress } from '@repo/contracts';
+import { beforeEach } from 'vitest';
+import { type EventObject, fromCallback } from 'xstate';
+
+// What the machine sent the Server Connection, such as a quit's release.
+export const sentToCounts: string[] = [];
+
+beforeEach((): void => {
+  sentToCounts.length = 0;
+});
+
+// A Server Connection that holds on to what it is told until the test answers for it.
+export const watchCountsDouble = fromCallback<
+  EventObject,
+  Pick<ServerAddress, 'port'>
+>(({ receive }): void =>
+  receive((event): void => void sentToCounts.push(event.type)),
+);
 
 export const supervisorExitedEvent = 'server.exited';
 
