@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { StatementSync } from 'node:sqlite';
@@ -17,7 +17,7 @@ export function openTestDatabase(
   sessionValues: Partial<typeof session.$inferInsert> = {},
   projectPath = '/project',
 ): TestDatabase {
-  const directory = mkdtempSync(join(tmpdir(), 'argo-server-'));
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), 'argo-server-')));
   const database = openDatabase(join(directory, 'argo.db'));
   insertProject(database, projectPath);
   insertSession(database, sessionValues);
