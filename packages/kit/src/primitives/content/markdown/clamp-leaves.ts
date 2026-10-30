@@ -57,24 +57,37 @@ interface Binding {
   slot: LeafSlot;
 }
 
+// A leaf registered again keeps the height its text drew, which a layout that did not change would not report anew.
+function carriedHeight(
+  slot: LeafSlot,
+  lineHeight: number | undefined,
+): number | undefined {
+  return slot.current?.lineHeight ?? lineHeight;
+}
+
 function registerLeaf(
   { registry, slot }: Binding,
   node: MeasurableNode | null,
   lineHeight: number | undefined,
 ): (() => void) | undefined {
   if (!node || !registry) return;
-  const leaf: ClampLeaf = { node, lineHeight };
-  slot.current = leaf;
-  const release = registry.register(leaf);
 
-  return () => {
-    slot.current = null;
-    release();
-  };
+  const leaf: ClampLeaf = { node, lineHeight: carriedHeight(slot, lineHeight) };
+  slot.current = leaf;
+
+  return registry.register(leaf);
 }
 
 function setDrawn(slot: LeafSlot, drawn: number): void {
   if (slot.current) slot.current.lineHeight = drawn;
+}
+
+function shortestLine(
+  lines: readonly { height: number }[],
+): number | undefined {
+  return lines.length === 0
+    ? undefined
+    : Math.min(...lines.map((line) => line.height));
 }
 
 function reportBodyLine(
@@ -110,7 +123,8 @@ function useDrawnLine(
 
   return useCallback(
     ({ nativeEvent }: TextLayoutEvent): void => {
-      const drawn = nativeEvent.lines[0]?.height;
+      // The shortest line: a first line with a taller glyph in it would otherwise stretch the limit.
+      const drawn = shortestLine(nativeEvent.lines);
 
       if (drawn === undefined) return;
 
