@@ -34,12 +34,21 @@ describe('shownLiveHeader', () => {
     { source: { type: 'tool_call', toolCallId: 'tool' } as const },
     { source: { type: 'working' } as const },
   ])(
-    'leaves a $source.type header out while the newest group is open',
+    'leaves a $source.type header out while an open Exploration draws the work',
     ({ source }) => {
-      expect(shownLiveHeader([openGroup], header(source))).toBeNull();
       expect(shownLiveHeader([exploring], header(source))).toBeNull();
     },
   );
+
+  // A group takes the header as its title (#1405), so the Feed says what the Session row's activity line says (#1410).
+  it.each([
+    { source: { type: 'tool_call', toolCallId: 'tool' } as const },
+    { source: { type: 'working' } as const },
+  ])('keeps a $source.type header for a group to title', ({ source }) => {
+    const value = header(source);
+    expect(shownLiveHeader([openGroup], value)).toBe(value);
+    expect(shownLiveHeader([settledGroup], value)).toBe(value);
+  });
 
   it.each([
     { source: { type: 'request' } as const },
@@ -60,5 +69,6 @@ describe('shownLiveHeader', () => {
 
   it('shows nothing without a live header', () => {
     expect(shownLiveHeader([openGroup], null)).toBeNull();
+    expect(shownLiveHeader([exploring], null)).toBeNull();
   });
 });

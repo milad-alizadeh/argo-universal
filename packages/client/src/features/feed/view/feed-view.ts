@@ -47,13 +47,13 @@ export type FeedGroup = {
   id: string;
   title: string;
   items: FeedActivity[];
+  // The live header drawn as this group's title, merged in while the Turn runs; the Session row shows the same line.
+  liveHeader?: LiveHeader;
 } & (
   | { state: 'settled' }
   | {
       state: 'open';
       live?: { toolCall: ToolCallUpdate; awaitingApproval: boolean };
-      // The live header drawn as this group's title, merged in while the Turn runs.
-      liveHeader?: LiveHeader;
     }
 );
 

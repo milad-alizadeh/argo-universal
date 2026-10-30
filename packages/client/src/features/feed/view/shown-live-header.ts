@@ -1,25 +1,16 @@
 import type { LiveHeader } from '@repo/contracts';
 import type { FeedViewItem } from './feed-view';
 
-function isOpenWork(item: FeedViewItem | undefined): boolean {
-  if (!item) return false;
-
-  return isOpenGroup(item) || isLiveExploration(item);
+function isLiveExploration(item: FeedViewItem | undefined): boolean {
+  return item?.type === 'exploration' && item.state === 'open';
 }
 
-function isOpenGroup(item: FeedViewItem): boolean {
-  return item.type === 'group' && item.state === 'open';
-}
-
-function isLiveExploration(item: FeedViewItem): boolean {
-  return item.type === 'exploration' && item.state === 'open';
-}
-
+// A group takes the header as its title, so it never hides one; an open Exploration draws its own work.
 export function shownLiveHeader(
   items: readonly FeedViewItem[],
   liveHeader: LiveHeader | null,
 ): LiveHeader | null {
-  if (!liveHeader || !isOpenWork(items.at(-1))) return liveHeader;
+  if (!liveHeader || !isLiveExploration(items.at(-1))) return liveHeader;
 
   return independentHeader(liveHeader);
 }

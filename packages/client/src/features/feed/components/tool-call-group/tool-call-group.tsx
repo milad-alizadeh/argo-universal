@@ -1,4 +1,4 @@
-import type { LiveHeader } from '@repo/contracts';
+import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
@@ -18,6 +18,7 @@ import {
   activityKey,
   liveHeaderOf,
   liveToolCall,
+  openLive,
   showsDuration,
   visibleActivities,
 } from './group-activities';
@@ -90,13 +91,14 @@ function GroupActivities({
 function liveHeaderDisclosureProps(
   { source }: LiveHeader,
   title: string,
+  toolCall: ToolCallUpdate | undefined,
 ): Pick<
   React.ComponentProps<typeof ToolCallDisclosure>,
   'label' | 'leading' | 'title'
 > {
   return {
     label: title,
-    leading: <SourceIcon source={source} />,
+    leading: <SourceIcon source={source} toolCall={toolCall} />,
     title: <LiveTitle title={title} source={source} />,
   };
 }
@@ -107,10 +109,11 @@ function LiveHeaderGroup({
 }: ToolCallGroupProps & { liveHeader: LiveHeader }): React.JSX.Element {
   const title = useLiveHeaderTitle(liveHeader, props.now);
   const activities = useGroupActivities(props.group);
+  const toolCall = openLive(props.group)?.toolCall;
 
   return (
     <ToolCallDisclosure
-      {...liveHeaderDisclosureProps(liveHeader, title)}
+      {...liveHeaderDisclosureProps(liveHeader, title, toolCall)}
       initialOpen={props.initialOpen}
     >
       <GroupActivities {...activities} renderActivity={props.renderActivity} />
