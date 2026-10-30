@@ -16,10 +16,12 @@ export async function openSession(page: Page, title: string): Promise<void> {
   // A swallowed row press leaves the App on its page; name that before the Feed's content is blamed.
   const notOpened = `the Session "${title}" did not open`;
   await expect(page, notOpened).toHaveURL(openSessionUrl);
+
   // A wide Frame keeps the list beside the page, so the row itself says which Session is open.
   if (!onPhone(page)) {
     await expect(row, notOpened).toHaveAttribute('aria-pressed', 'true');
   }
+
   await expect(feed(page)).toContainText(title);
 }
 
