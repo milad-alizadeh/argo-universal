@@ -7,6 +7,43 @@
   --placeholderTextColor: var(--color-muted-foreground);
 }
 
+/* Expo UI's web components colour themselves from a palette of their own, the
+   `--expo-ui-*` variables its Host writes: a GitHub-ish ramp whose dark end is a
+   blue near-black (#0b0f14), not Graphite. Every one of them is remapped onto
+   Argo's tokens here, so an Expo UI surface on the web is the same surface the
+   rest of the App draws. Expo sets them on `:root` and again on each Host's own
+   `[data-theme]` element, unlayered and at the specificity of a single attribute,
+   so each selector it writes to is matched here and the declarations are marked,
+   as this file's other third-party override is. Nothing switches on the
+   Appearance: the tokens already do. */
+:root,
+[data-theme] {
+  /* A grouped card, a field and a picker's surface. */
+  --expo-ui-background: var(--color-card) !important;
+  /* A switch's label and a checkbox's mark. */
+  --expo-ui-foreground: var(--color-foreground) !important;
+  /* The grouped scroll view's own ground, which the kit draws transparent. */
+  --expo-ui-gray-50: var(--color-content) !important;
+  /* A card's edge and the line between its rows. */
+  --expo-ui-gray-100: var(--color-hairline) !important;
+  --expo-ui-gray-150: var(--color-border) !important;
+  /* A field's edge and a slider's track. */
+  --expo-ui-gray-200: var(--color-border) !important;
+  /* A control's edge and a switch's off track. */
+  --expo-ui-gray-300: var(--color-border) !important;
+  /* Marks that repeat an adjacent label. */
+  --expo-ui-gray-400: var(--color-tertiary) !important;
+  --expo-ui-gray-500: var(--color-muted-foreground) !important;
+  --expo-ui-gray-600: var(--color-muted-foreground) !important;
+  /* Text on a surface. */
+  --expo-ui-gray-700: var(--color-foreground) !important;
+  --expo-ui-gray-800: var(--color-foreground) !important;
+  --expo-ui-gray-900: var(--color-foreground) !important;
+  /* A control's shadow, which Graphite leaves empty: a dark shadow cannot show
+     on a dark ground. */
+  --expo-ui-shadow-button: var(--shadow-control) !important;
+}
+
 @layer base {
   body {
     user-select: none;
