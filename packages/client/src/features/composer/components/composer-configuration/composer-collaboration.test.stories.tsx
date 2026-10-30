@@ -70,11 +70,14 @@ function collaboration(width: number): Story {
         const trigger = await overlay.findByRole('menuitem', {
           name: /^Collaboration mode, Default/,
         });
+
         await userEvent.click(trigger);
         await expect(onConfigChange).not.toHaveBeenCalled();
+
         const plan = await overlay.findByRole('menuitemradio', {
           name: 'Plan',
         });
+
         await browserUserEvent.click(plan);
       } else {
         await userEvent.click(
