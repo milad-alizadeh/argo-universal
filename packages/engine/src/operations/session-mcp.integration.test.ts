@@ -3,10 +3,12 @@ import type {
   NewSessionRequest,
   ResumeSessionRequest,
   McpServerStdio,
+  InitializeResponse,
 } from '@agentclientprotocol/sdk';
 import { assert, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { resourceInitialization } from '#mocks/acp-resource';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { discoverOptions } from '#mocks/session-access';
 
@@ -88,38 +90,62 @@ it('does not supply Argo MCP when Agent access is disabled', async () => {
   await host.caller.session.close(disabled);
 }, 30_000);
 
-it('supplies a fresh MCP token when a Session resumes after its Agent process exits', async () => {
-  const openings: NewSessionRequest[] = [];
-  const resumed: ResumeSessionRequest[] = [];
+function initializationFor(
+  method: 'session/resume' | 'session/load',
+): InitializeResponse {
+  return method === 'session/resume'
+    ? resourceInitialization
+    : {
+        protocolVersion: 1,
+        agentCapabilities: {
+          loadSession: true,
+          sessionCapabilities: { close: {} },
+        },
+      };
+}
 
-  const host = await startAcpEngine({
-    steps: [],
-    responses: {
-      'session/new': [{ requests: openings }],
-      'session/resume': [{ requests: resumed }],
-    },
-  });
+it.each(['session/resume', 'session/load'] as const)(
+  'supplies fresh MCP credentials on %s after the Agent process exits',
+  async (method) => {
+    const openings: NewSessionRequest[] = [];
+    const resumed: ResumeSessionRequest[] = [];
 
-  const created = await host.caller.session.new({
-    ...emptySessionInput,
-    prompt: [{ type: 'text', text: 'First' }],
-  });
+    const host = await startAcpEngine({
+      steps: [],
+      responses: {
+        initialize: [{ result: initializationFor(method) }],
+        'session/new': [{ requests: openings }],
+        [method]: [{ requests: resumed }],
+      },
+    });
 
-  await waitForAcpSessionIdle(host, created.sessionId);
-  const events = await host.caller.feed.subscribe({ ...created, after: null });
-  requireScriptedProcessAt(host.agent.processes).exited.resolve();
+    const created = await host.caller.session.new({
+      ...emptySessionInput,
+      prompt: [{ type: 'text', text: 'First' }],
+    });
 
-  for await (const event of events) if (event.type === 'closed') break;
-  await host.caller.session.prompt({
-    ...created,
-    prompt: [{ type: 'text', text: 'Again' }],
-  });
-  await waitForAcpSessionIdle(host, created.sessionId);
-  expect(resumed).toHaveLength(1);
-  const [request] = resumed;
+    await waitForAcpSessionIdle(host, created.sessionId);
 
-  assert(request);
-  expect(serverAt(request).name).toBe(serverAt(requestAt(openings, 0)).name);
-  expect(request.mcpServers).toMatchObject([{ args: ['mcp'] }]);
-  expect(request.mcpServers).not.toEqual(requestAt(openings, 0).mcpServers);
-}, 30_000);
+    const events = await host.caller.feed.subscribe({
+      ...created,
+      after: null,
+    });
+
+    requireScriptedProcessAt(host.agent.processes).exited.resolve();
+
+    for await (const event of events) if (event.type === 'closed') break;
+    await host.caller.session.prompt({
+      ...created,
+      prompt: [{ type: 'text', text: 'Again' }],
+    });
+    await waitForAcpSessionIdle(host, created.sessionId);
+    expect(resumed).toHaveLength(1);
+    const [request] = resumed;
+
+    assert(request);
+    expect(serverAt(request).name).toBe(serverAt(requestAt(openings, 0)).name);
+    expect(request.mcpServers).toMatchObject([{ args: ['mcp'] }]);
+    expect(request.mcpServers).not.toEqual(requestAt(openings, 0).mcpServers);
+  },
+  30_000,
+);
