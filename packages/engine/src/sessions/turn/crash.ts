@@ -1,4 +1,4 @@
-import { AgentProcessExitError } from '../../agents';
+import { AgentProcessExitError, type ExitNotice } from '../../agents';
 import { turnEndingEvent } from '../../feed';
 import type { AcpLifetimeEvent } from '../acp/acp-lifetime';
 import type { SessionContext } from '../session-context';
@@ -12,9 +12,7 @@ type CrashedSession = Pick<
   'activeTurnId' | 'turnEnding' | 'subagents'
 > & { input: Pick<SessionContext['input'], 'now'> };
 
-const crashNotice = (
-  failed: AcpFailed,
-): { title: string; description: string | undefined } =>
+const crashNotice = (failed: AcpFailed): ExitNotice =>
   failed.error instanceof AgentProcessExitError
     ? failed.error.notice
     : {

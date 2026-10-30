@@ -29,14 +29,9 @@ const failureMessage = (cause: unknown): string => {
 };
 
 const exitMessage = (cause: AgentProcessExitError): string => {
-  const { title, description } = cause.notice;
+  const { title, description = '' } = cause.notice;
 
-  return [
-    title,
-    cause.missingExecutable ? description : lastStderrBlock(cause.stderr),
-  ]
-    .filter(Boolean)
-    .join('\n');
+  return [title, lastStderrBlock(description)].filter(Boolean).join('\n');
 };
 
 export const authenticationDescription = (
