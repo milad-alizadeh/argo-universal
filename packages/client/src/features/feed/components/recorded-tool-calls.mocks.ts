@@ -1,4 +1,8 @@
-import type { SessionSnapshot, ToolCallUpdate } from '@repo/contracts';
+import type {
+  CommandAction,
+  SessionSnapshot,
+  ToolCallUpdate,
+} from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import { toolCallFacts } from '../view/feed-row-facts';
 import type { FeedActivity, FeedGroup } from '../view/feed-view';
@@ -29,8 +33,16 @@ const isToolCallUpdate = (row: RecordedRow): row is ToolCallUpdate =>
 export const toolCallRows = (rows: readonly RecordedRow[]): ToolCallUpdate[] =>
   rows.filter(isToolCallUpdate);
 
+const argoOf = (
+  row: ToolCallUpdate,
+): NonNullable<ToolCallUpdate['_meta']>['argo'] => row._meta?.argo;
+
+// Any reported read, even beside an action the Agent could not classify, which the Feed's facts leave out.
+const reportedActions = (row: ToolCallUpdate): readonly CommandAction[] =>
+  argoOf(row)?.commandActions ?? [];
+
 const readsFiles = (row: ToolCallUpdate): boolean =>
-  toolCallFacts(row).actions.some((action) => action.type === 'read');
+  reportedActions(row).some((action) => action.type === 'read');
 
 export const isCommand = (row: ToolCallUpdate): boolean =>
   row.kind === 'execute' && !readsFiles(row);

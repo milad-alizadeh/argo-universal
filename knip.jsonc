@@ -14,9 +14,7 @@
   "workspaces": {
     ".": {
       // The Expo UI skill invokes this script directly by path.
-      "entry": [".agents/skills/expo-ui/scripts/list-components.js"],
-      // The lint tools are resolved by path from the waiver checker.
-      "ignoreDependencies": ["oxlint", "oxlint-tsgolint"]
+      "entry": [".agents/skills/expo-ui/scripts/list-components.js"]
     },
     "packages/client": {
       // Metro selects platform modules by filename rather than by a literal import.

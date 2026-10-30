@@ -144,6 +144,21 @@ start('pnpm', [
   '--no-open',
 ]);
 
+const browserNotOpened = (error: Error): void =>
+  console.error(`Could not open the browser: ${error.message}`);
+
+// A Mac without `open` in PATH still starts the previews, as one whose `open` fails does.
+function openBrowser(): void {
+  try {
+    spawn(resolveExecutable('open'), [webUrl], {
+      cwd: repoRoot,
+      stdio: 'ignore',
+    }).once('error', browserNotOpened);
+  } catch (error) {
+    browserNotOpened(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
 let ready = false;
 
 for (let attempt = 0; attempt < 120 && !stopping; attempt += 1) {
@@ -161,14 +176,7 @@ if (!stopping && !ready) {
 }
 
 if (!stopping) {
-  const browser = spawn(resolveExecutable('open'), [webUrl], {
-    cwd: repoRoot,
-    stdio: 'ignore',
-  });
-
-  browser.once('error', (error) =>
-    console.error(`Could not open the browser: ${error.message}`),
-  );
+  openBrowser();
   start(
     'pnpm',
     [
