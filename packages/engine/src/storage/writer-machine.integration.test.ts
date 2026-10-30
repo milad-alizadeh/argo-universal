@@ -32,7 +32,7 @@ describe('database writer', (): void => {
     };
 
     const refused = vi.fn<() => void>();
-    writer.send({
+    writer().send({
       type: writeFeedEvent,
       job: refusableJob(9),
       committed,
@@ -48,7 +48,7 @@ describe('database writer', (): void => {
     expect(logLines).toEqual([refusalLine]);
     await settle((call): void => call.resolve());
     sendWrite(true);
-    expect(writer.getSnapshot().context.queue.map(isRefusable)).toEqual([
+    expect(writer().getSnapshot().context.queue.map(isRefusable)).toEqual([
       false,
       true,
     ]);
@@ -71,7 +71,7 @@ describe('database writer', (): void => {
   });
 
   it('keeps the enqueue clock value when a write is retried', async (): Promise<void> => {
-    writer.send({ type: writeFeedEvent, job: job(1) });
+    writer().send({ type: writeFeedEvent, job: job(1) });
     await settle((call): void => call.reject(writeError));
     vi.advanceTimersByTime(writeRetryDelayMs);
 
@@ -88,12 +88,12 @@ describe('database writer', (): void => {
 
   it('logs each lost job when the drain fails', async (): Promise<void> => {
     sendWrite();
-    writer.send({ type: drainWriterEvent });
+    writer().send({ type: drainWriterEvent });
     sendWrite();
     await settle((call): void => call.resolve());
     await settle((call): void => call.reject(writeError));
 
-    expect(writer.getSnapshot().status).toBe('done');
+    expect(writer().getSnapshot().status).toBe('done');
     expect(logLines).toEqual([
       'could not write while draining, lost 1 jobs: Error: database is locked\nUPDATE turn SET ended_at = 2',
     ]);
@@ -101,7 +101,7 @@ describe('database writer', (): void => {
 
   it('names at most 20 lost jobs when the drain fails', async (): Promise<void> => {
     sendWrite();
-    writer.send({ type: drainWriterEvent });
+    writer().send({ type: drainWriterEvent });
 
     for (let index = 0; index < 30; index += 1) sendWrite();
     await settle((call): void => call.resolve());

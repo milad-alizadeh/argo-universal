@@ -37,14 +37,9 @@ export const committedJobs: WriterJob[] = [];
 
 let actor: Actor<typeof machine> | undefined;
 
-const started = (): Actor<typeof machine> =>
-  actor ?? expect.unreachable('the Writer actor has not started');
-
 // The Writer actor of the running test.
-export const writer: Pick<Actor<typeof machine>, 'send' | 'getSnapshot'> = {
-  send: (event): void => started().send(event),
-  getSnapshot: () => started().getSnapshot(),
-};
+export const writer = (): Actor<typeof machine> =>
+  actor ?? expect.unreachable('the Writer actor has not started');
 
 export const mockDatabase = openDatabase(':memory:');
 
@@ -125,7 +120,7 @@ export const sendWrite = (refusable = false): void => {
   const index = sentJobs.length + refusedJobs.length + 1;
   const sent = refusable ? refusableJob(index) : job(index);
   sentJobs.push(sent);
-  writer.send({
+  writer().send({
     type: writeFeedEvent,
     job: sent,
     refused: (): void => {

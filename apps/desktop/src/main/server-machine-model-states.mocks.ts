@@ -11,25 +11,27 @@ import {
   startedAddress,
 } from './server-machine.mocks';
 
-export const states = {
-  '*': (snapshot: ServerSnapshot): void => {
-    const actual = server.getSnapshot();
-    expect(actual.value).toEqual(snapshot.value);
-    expect(actual.status).toBe(snapshot.status);
-    expect(actual.context.address).toEqual(snapshot.context.address);
-    expect(actual.context.ownedPid).toBe(snapshot.context.ownedPid);
-    expect(actual.context.running).toBe(snapshot.context.running);
+// Checked after every step of every path.
+export const always = (snapshot: ServerSnapshot): void => {
+  const actual = server.getSnapshot();
+  expect(actual.value).toEqual(snapshot.value);
+  expect(actual.status).toBe(snapshot.status);
+  expect(actual.context.address).toEqual(snapshot.context.address);
+  expect(actual.context.ownedPid).toBe(snapshot.context.ownedPid);
+  expect(actual.context.running).toBe(snapshot.context.running);
 
-    expect(actual.context.failure === null).toBe(
-      snapshot.context.failure === null,
-    );
-    // A Supervisor that this app did not start is never stopped.
-    expect(stoppedPids).not.toContain(runningAddress.pid);
-    // Only `starting` listens to the Supervisor it spawned.
-    expect(spawnCalls.filter((call): boolean => call.live)).toHaveLength(
-      snapshot.matches('starting') ? 1 : 0,
-    );
-  },
+  expect(actual.context.failure === null).toBe(
+    snapshot.context.failure === null,
+  );
+  // A Supervisor that this app did not start is never stopped.
+  expect(stoppedPids).not.toContain(runningAddress.pid);
+  // Only `starting` listens to the Supervisor it spawned.
+  expect(spawnCalls.filter((call): boolean => call.live)).toHaveLength(
+    snapshot.matches('starting') ? 1 : 0,
+  );
+};
+
+export const states = {
   ready: (snapshot: ServerSnapshot): void => {
     // `ready` hands its address to the main process once, never a stale one.
     expect(readyAddresses).toEqual([snapshot.context.address]);

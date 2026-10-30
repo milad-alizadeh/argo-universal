@@ -1,37 +1,25 @@
+import { pathStates, pathWalks, type Sent } from '@repo/vitest/model-audit';
 import { sessionMachine } from '../src/sessions';
 import { modelShellChanged } from './acp-model-start-events';
 import type {
-  AcpModelEvent,
   AcpModelSnapshot,
   createAcpSessionModel,
 } from './acp-session-model';
 
 type Paths = ReturnType<typeof createAcpSessionModel>['paths'];
 
-export type Walk = { state: AcpModelSnapshot; event: AcpModelEvent };
-
-function fromPath(path: Paths[number]): Walk[] {
-  return path.steps.slice(1).map((step, index) => {
-    const previous = path.steps[index];
-
-    if (!previous) throw new Error('The model path has a missing step');
-
-    return { state: previous.state, event: step.event };
-  });
-}
-
 function synthetic(
   initial: AcpModelSnapshot,
   value: AcpModelSnapshot['value'],
   context: AcpModelSnapshot['context'],
-): Walk {
+): Sent {
   const state = sessionMachine.resolveState({ value, context });
   Object.assign(state.children, initial.children);
 
   return { state, event: modelShellChanged(state) };
 }
 
-function entryWalks(initial: AcpModelSnapshot): Walk[] {
+function entryWalks(initial: AcpModelSnapshot): Sent[] {
   const context = initial.context;
 
   if (context.input.kind !== 'new')
@@ -46,7 +34,7 @@ function entryWalks(initial: AcpModelSnapshot): Walk[] {
   ];
 }
 
-function archiveWalk(initial: AcpModelSnapshot): Walk {
+function archiveWalk(initial: AcpModelSnapshot): Sent {
   return synthetic(
     initial,
     { open: { acp: 'entering' } },
@@ -54,7 +42,7 @@ function archiveWalk(initial: AcpModelSnapshot): Walk {
   );
 }
 
-function heldWalk(states: AcpModelSnapshot[], initial: AcpModelSnapshot): Walk {
+function heldWalk(states: AcpModelSnapshot[], initial: AcpModelSnapshot): Sent {
   const pending = states.find(
     (state) => state.context.pendingSubmission !== null,
   );
@@ -75,11 +63,11 @@ function heldWalk(states: AcpModelSnapshot[], initial: AcpModelSnapshot): Walk {
 export function automaticWalks(
   paths: Paths,
   initial: AcpModelSnapshot,
-): Walk[] {
-  const states = paths.flatMap((path) => path.steps.map((step) => step.state));
+): Sent[] {
+  const states = pathStates(paths);
 
   return [
-    ...paths.flatMap(fromPath),
+    ...pathWalks(paths),
     ...entryWalks(initial),
     archiveWalk(initial),
     heldWalk(states, initial),
