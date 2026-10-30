@@ -89,3 +89,23 @@ export const DisabledControlCannotActivate: Story = {
     await expect(button).toHaveAttribute('aria-disabled', 'true');
   },
 };
+
+export const NamedControlSaysItsValue: Story = {
+  render: (): ReactElement => (
+    <Pill variant="control" text="Auto review" accessibilityLabel="Mode" />
+  ),
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', { name: 'Mode' });
+    await expect(button).toHaveAttribute('aria-valuetext', 'Auto review');
+  },
+};
+
+export const LabelThatCarriesTheTextAddsNoValue: Story = {
+  render: (): ReactElement => (
+    <Pill variant="control" text="proj" accessibilityLabel="Project: proj" />
+  ),
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', { name: 'Project: proj' });
+    await expect(button).not.toHaveAttribute('aria-valuetext');
+  },
+};

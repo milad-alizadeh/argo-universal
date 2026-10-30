@@ -43,10 +43,21 @@ function pressProps(
     ...nativeHandlers(props),
     ...controlInteraction(props),
     accessibilityLabel: props.accessibilityLabel ?? props.text,
+    ...spokenValue(props),
     'aria-pressed': props.selected,
     className: cn(pillTouchClass(props), props.disabled && 'opacity-35'),
   };
 }
+
+/*
+ * A control named for what it sets ("Mode") still says what is set ("Auto review"), as Configure's rows do. A
+ * label that already carries the text ("Project: proj") needs no value, or a reader would hear it twice.
+ */
+const carriesText = ({ accessibilityLabel, text }: PillProps): boolean =>
+  !accessibilityLabel || accessibilityLabel.includes(text);
+
+const spokenValue = (props: PillProps): Pick<PillProps, 'aria-valuetext'> =>
+  carriesText(props) ? {} : { 'aria-valuetext': props.text };
 
 export function PillControl(props: PillProps): ReactElement {
   return (
