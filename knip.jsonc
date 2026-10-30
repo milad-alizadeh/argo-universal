@@ -39,8 +39,8 @@
       "ignoreBinaries": ["unset"]
     },
     "packages/process": {
-      // The lifecycle tests launch this child by path.
-      "entry": ["mocks/child-fixture.mjs"]
+      // The lifecycle tests launch these by path.
+      "entry": ["mocks/child-fixture.mjs", "mocks/parent-fixture.ts"]
     },
     "apps/server": {
       // The Supervisor and E2E launch these Engine entries by path in a separate process.

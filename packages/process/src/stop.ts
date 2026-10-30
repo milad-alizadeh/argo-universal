@@ -9,9 +9,8 @@ import { once } from './once';
 import { pollUntil } from './poll';
 import { releaseDeadlineMs } from './timing';
 
-// What the ladder needs from a process: its group, whether it still runs, how to ask it to stop, and when it has.
+// What the ladder needs from a process: whether it still runs, how to ask it to stop, and when it has.
 type Stoppable = {
-  group: number;
   running: () => boolean;
   terminate: () => void;
   exited: () => Promise<void>;
@@ -31,27 +30,25 @@ const terminate = async (
   clearTimeout(force);
 };
 
-// Releases the group last, since a dead leader's descendants keep running.
+// Releases last, since a dead leader's descendants keep running.
 const climb = async (
   target: Stoppable,
+  forced: Release,
   graceMs: number,
 ): Promise<GroupRelease> => {
-  const release = once((): Promise<GroupRelease> =>
-    releaseProcessGroup(target.group),
-  );
+  const release = once(forced);
 
   if (target.running()) await terminate(target, release, graceMs);
 
   return release();
 };
 
-// A child started here leads its own group, so its pid is the group id.
-const childTarget = (
-  child: ChildProcess,
-  group: number,
-  exit: ExitWatch,
-): Stoppable => ({
-  group,
+const releaseGroup =
+  (group: number): Release =>
+  (): Promise<GroupRelease> =>
+    releaseProcessGroup(group);
+
+const childTarget = (child: ChildProcess, exit: ExitWatch): Stoppable => ({
   running: (): boolean => exit.ended() === undefined,
   terminate: (): void => void child.kill('SIGTERM'),
   exited: async (): Promise<void> => {
@@ -59,6 +56,7 @@ const childTarget = (
   },
 });
 
+// A child that leads its own group, so its pid is the group id.
 export const stopChild = (
   child: ChildProcess,
   exit: ExitWatch,
@@ -66,7 +64,24 @@ export const stopChild = (
 ): Promise<GroupRelease> =>
   child.pid === undefined
     ? Promise.resolve('released')
-    : climb(childTarget(child, child.pid, exit), graceMs);
+    : climb(childTarget(child, exit), releaseGroup(child.pid), graceMs);
+
+// Only the child is killed, since its group is this process's own; what it launched cannot be proven gone.
+const killChild =
+  (child: ChildProcess): Release =>
+  async (): Promise<GroupRelease> => {
+    child.kill('SIGKILL');
+
+    return 'unresolved';
+  };
+
+// A child in this process's own group.
+export const stopGroupMember = (
+  child: ChildProcess,
+  exit: ExitWatch,
+  graceMs: number,
+): Promise<GroupRelease> =>
+  climb(childTarget(child, exit), killChild(child), graceMs);
 
 // Bounded, so a process that outlives its group kill still ends the wait.
 const goneWithin = async (pid: number, limitMs: number): Promise<void> => {
@@ -77,12 +92,7 @@ const goneWithin = async (pid: number, limitMs: number): Promise<void> => {
   ).catch((): undefined => undefined);
 };
 
-const processTarget = (
-  pid: number,
-  group: number,
-  graceMs: number,
-): Stoppable => ({
-  group,
+const processTarget = (pid: number, graceMs: number): Stoppable => ({
   running: (): boolean => isAlive(pid),
   terminate: (): void => signalStop(pid),
   exited: (): Promise<void> => goneWithin(pid, graceMs + releaseDeadlineMs),
@@ -104,5 +114,5 @@ export async function stopProcess(
     return 'unresolved';
   }
 
-  return climb(processTarget(pid, group, graceMs), graceMs);
+  return climb(processTarget(pid, graceMs), releaseGroup(group), graceMs);
 }

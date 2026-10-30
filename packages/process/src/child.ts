@@ -9,7 +9,7 @@ import { type Exit, watchExit } from './exit';
 import { type GroupRelease, supportsProcessGroups } from './group';
 import type { Check } from './poll';
 import { recordOutputTail, waitUntilReady } from './ready';
-import { stopChild } from './stop';
+import { stopChild, stopGroupMember } from './stop';
 
 // What a child sends over its IPC channel, before the receiver parses it.
 export type ChildMessage = Serializable;
@@ -32,9 +32,15 @@ export interface ChildOptions {
   messages?: boolean;
   // `inherit` shares the parent's output; `tail` keeps the end of stdout and stderr for errors.
   output?: 'inherit' | 'tail';
+  /*
+   * `own` (the default) leads a new process group, so a stop also ends what the child launched.
+   * `caller` stays in this process's group, so a kill of that group (Ctrl+C, a test runner's) ends the child too;
+   * a stop then kills only the child and answers `unresolved`.
+   */
+  group?: 'own' | 'caller';
 }
 
-// A started child, which leads its own process group.
+// A started child.
 export interface ChildHandle {
   readonly pid: number | undefined;
   // Settles once, when the child exits or fails to start.
@@ -44,7 +50,7 @@ export interface ChildHandle {
   waitUntil: <T>(check: Check<T>) => Promise<T>;
   // The end of stdout and stderr together, with `output: 'tail'`.
   outputTail: () => string;
-  // SIGTERM, the group killed after `graceMs`, then `released` once no member of the group is left.
+  // SIGTERM, the group (or a `caller` child alone) killed after `graceMs`, then `released` once no member of the group is left.
   stop: (graceMs: number) => Promise<GroupRelease>;
 }
 
@@ -71,6 +77,8 @@ const listenTo =
 
 type Spawning = { detached: boolean; stdio: StdioOptions };
 
+type Stop = typeof stopChild;
+
 const spawnNode = (command: ChildCommand, spawning: Spawning): ChildProcess =>
   spawn(nodeExecutable(), nodeArguments(command), {
     cwd: command.cwd,
@@ -78,7 +86,7 @@ const spawnNode = (command: ChildCommand, spawning: Spawning): ChildProcess =>
     ...spawning,
   });
 
-function handleFor(label: string, child: ChildProcess): ChildHandle {
+function handle(label: string, child: ChildProcess, stop: Stop): ChildHandle {
   const exit = watchExit(child);
   const outputTail = recordOutputTail(child);
 
@@ -86,24 +94,28 @@ function handleFor(label: string, child: ChildProcess): ChildHandle {
     pid: child.pid,
     exited: exit.exited,
     onMessage: listenTo(child),
-    waitUntil: (check) =>
-      waitUntilReady({ label, ended: exit.ended, outputTail }, check),
+    waitUntil: (check) => waitUntilReady({ label, ...exit, outputTail }, check),
     outputTail,
-    stop: (graceMs) => stopChild(child, exit, graceMs),
+    stop: (graceMs) => stop(child, exit, graceMs),
   };
 }
 
-// Starts a child this process owns and stops: in its own process group, so stopping it also stops what it launched.
+const ownsGroup = (options: ChildOptions): boolean =>
+  supportsProcessGroups && options.group !== 'caller';
+
+// Starts a child this process owns and stops, in the process group `options.group` picks.
 export function startChild(
   command: ChildCommand,
   options: ChildOptions = {},
 ): ChildHandle {
+  const ownGroup = ownsGroup(options);
+
   const child = spawnNode(command, {
-    detached: supportsProcessGroups,
+    detached: ownGroup,
     stdio: childStdio(options),
   });
 
-  return handleFor(command.label, child);
+  return handle(command.label, child, ownGroup ? stopChild : stopGroupMember);
 }
 
 /*
@@ -119,5 +131,5 @@ export function startService(command: ChildCommand): ChildHandle {
   child.unref();
   child.channel?.unref();
 
-  return handleFor(command.label, child);
+  return handle(command.label, child, stopChild);
 }

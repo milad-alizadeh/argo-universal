@@ -67,7 +67,10 @@ const serverEnvironment = (launch: Launch): NodeJS.ProcessEnv => ({
   PATH: '/usr/bin:/bin',
 });
 
-// The Engine alone publishes its own address; it leads its own process group, so a stop also ends its Agents.
+/*
+ * The Engine alone publishes its own address. It stays in the worker's process group, so a kill of that group
+ * (Ctrl+C, a cancelled run) ends it rather than leaving it orphaned on its port; a stop asks it to end its Agents.
+ */
 const launchServer = (launch: Launch): ChildHandle =>
   startChild(
     {
@@ -76,7 +79,7 @@ const launchServer = (launch: Launch): ChildHandle =>
       cwd: serverDirectory,
       env: serverEnvironment(launch),
     },
-    { output: 'tail' },
+    { output: 'tail', group: 'caller' },
   );
 
 // Only the Server in this isolated home can publish this port.
