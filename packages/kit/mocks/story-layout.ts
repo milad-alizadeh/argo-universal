@@ -12,7 +12,7 @@ const viewportHeight = 844;
  * `page.viewport` resolves once the runner has been told the size, not once the story's frame has it, so a loaded
  * machine can run on at the old width and switch layouts mid-play. Waits for the frame to be the width it was asked for.
  */
-export async function viewportApplied(width: number): Promise<void> {
+async function viewportApplied(width: number): Promise<void> {
   if (window.innerWidth === width) return;
 
   await new Promise<void>((resolve) => {
@@ -27,6 +27,12 @@ export async function viewportApplied(width: number): Promise<void> {
   });
 }
 
+// Two animation frames, so a change the page has just made has been drawn.
+export const nextFrames = (): Promise<void> =>
+  new Promise((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+
 // Sizes the viewport to a named layout, or to an exact width, and waits for the frame to take it, then for fonts and two frames.
 export async function settleLayout(
   layout: LayoutName | number,
@@ -37,9 +43,7 @@ export async function settleLayout(
   await page.viewport(width, height);
   await viewportApplied(width);
   await document.fonts.ready;
-  await new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
+  await nextFrames();
 }
 
 // Reads a width token from tooling/uniwind/theme.css off the page, so tests never copy it.

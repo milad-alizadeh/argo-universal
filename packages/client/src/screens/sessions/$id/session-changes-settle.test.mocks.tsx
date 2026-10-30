@@ -1,4 +1,8 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import {
+  layoutWidths,
+  nextFrames,
+  settleLayout,
+} from '@repo/kit/mocks/story-layout';
 import { screen } from 'storybook/test';
 
 /*
@@ -15,11 +19,6 @@ export async function settleChanges(width: number): Promise<void> {
   await nextFrames();
   await sheetStopped(sheet);
 }
-
-const nextFrames = (): Promise<void> =>
-  new Promise((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
 
 // Waits on the sheet's own slide, however long a loaded machine takes to run it; the spinners inside it never end.
 async function sheetStopped(sheet: HTMLElement): Promise<void> {
