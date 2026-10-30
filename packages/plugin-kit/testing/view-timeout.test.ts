@@ -2,15 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { pollUntil, viewTimeoutMessage } from './view-timeout';
 
 describe('view timeout', () => {
-  it('names a stalled test process as load', () => {
-    const base = { what: 'x', limitMs: 3000, waitedMs: 3001, trees: 1 };
+  it.each([
+    { stallMs: 900, verdict: 'stalled for' },
+    { stallMs: 3, verdict: 'stayed responsive' },
+  ])('reads a $stallMs ms stall as "$verdict"', ({ stallMs, verdict }) => {
+    const message = viewTimeoutMessage({
+      what: 'x',
+      limitMs: 3000,
+      waitedMs: 3001,
+      trees: 1,
+      stallMs,
+    });
 
-    expect(viewTimeoutMessage({ ...base, stallMs: 900 })).toContain(
-      'stalled for',
-    );
-    expect(viewTimeoutMessage({ ...base, stallMs: 3 })).toContain(
-      'stayed responsive',
-    );
+    expect(message).toContain(verdict);
   });
 
   it('says when no view message ever arrived', () => {

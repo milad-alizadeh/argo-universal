@@ -3,10 +3,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 // A 1 ms poll that comes back this much later says the event loop was starved, not that the view is slow.
 const stalledPollMs = 250;
 
-// stallMs is the longest a 1 ms poll took to come back.
 type Waited = { waitedMs: number; stallMs: number };
 
-// Polls every millisecond until ready; on the limit it throws the message built from how long it waited and stalled.
 export async function pollUntil(
   ready: () => boolean,
   limitMs: number,
@@ -32,7 +30,6 @@ type Timeout = Waited & {
   trees: number | undefined;
 };
 
-// Says whether a wait ran out because the view never came or because the machine was too busy to run it.
 export function viewTimeoutMessage(timeout: Timeout): string {
   const waiting = timeout.what ? ` (waiting for ${timeout.what})` : '';
 
