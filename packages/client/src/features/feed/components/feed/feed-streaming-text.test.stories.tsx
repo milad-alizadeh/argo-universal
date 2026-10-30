@@ -124,8 +124,8 @@ function StreamingFeed(): React.JSX.Element {
 const topInView = (row: HTMLElement, scroll: HTMLElement): number =>
   row.getBoundingClientRect().top - scroll.getBoundingClientRect().top;
 
-// Longest the answer may take to stream in, under load, before the story gives up.
-const streamDeadlineMs = 20_000;
+// Longest the answer may take to stream in before the story gives up. It streams in about 3s, and the steps before it can spend 15s of the 30s test timeout, so this stays well inside what is left.
+const streamDeadlineMs = 8000;
 
 // Reads the prompt's place in the view on every frame until the answer has streamed in full. The deadline is a timer, so it still fires when frames stop, and the failure says how far the stream and the frames had got.
 function promptTopsWhileStreaming(
