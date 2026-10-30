@@ -1,5 +1,6 @@
 import type { IconSize } from './icon-size';
 import type { IconSymbol } from './icon-symbol';
+import type { GlyphLane } from './row-glyph';
 
 /*
  * How a symbol inside a native tree is coloured: `foreground` is the kit's glyph token (row-glyph.ts), which a row's
@@ -15,9 +16,6 @@ export interface NativeSymbolProps {
   filled?: boolean;
   // Unset, the symbol takes the colour its surroundings give it (iOS: the SwiftUI tint; Compose: the content colour).
   tone?: NativeSymbolTone;
-  /*
-   * Set on a row's leading glyph, which sits in a lane rather than drawing at its own size: the lane keeps the
-   * width `size` gives it and each platform draws the symbol at what its own Settings app draws (row-glyph.ts).
-   */
-  lane?: 'row';
+  // Set on a row's leading glyph, which draws in a lane rather than at its own size (row-glyph.ts).
+  lane?: GlyphLane;
 }

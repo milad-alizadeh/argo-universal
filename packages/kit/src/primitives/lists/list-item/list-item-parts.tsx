@@ -33,12 +33,12 @@ type LeadingLane = keyof typeof leadingClasses;
 
 /*
  * One icon size per lane, fixed, so every row in a list presents the same glyph however its call site writes its
- * icon: a row's leading glyph takes the row glyph role a Settings row takes (row-glyph.ts), a menu row takes the
- * menu role, and a sidebar or compact row's narrower lane takes the size that fits it. An avatar is not a glyph and
- * sizes itself with its own lane.
+ * icon: a row's leading glyph takes the row glyph role a Settings row takes, and draws in that row's lane so the two
+ * kinds of row present the same glyph (row-glyph.ts); a menu row takes the menu role, and a sidebar or compact row's
+ * narrower lane takes the size that fits it. An avatar is not a glyph and sizes itself with its own lane.
  */
 const leadingIconSizes = {
-  row: { size: rowGlyphSize, fixed: true },
+  row: { size: rowGlyphSize, fixed: true, lane: 'row' },
   menu: { size: 'md', fixed: true },
   sidebar: { size: 'sm', fixed: true },
 } as const satisfies Record<LeadingLane, IconSizing>;

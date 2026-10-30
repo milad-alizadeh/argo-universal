@@ -14,6 +14,10 @@ const glyphBox = {
   fontSynthesis: 'none',
 } as const;
 
+/*
+ * A row's lane changes nothing here: the web's own Tabler drawing is inked inside its box, and an SF-shaped glyph
+ * already draws at `appleSymbolShare` of it (glyph-sizing.ts), so both land on the size the lane gives them.
+ */
 export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
   return (
     // data-icon lets a parent style the icons inside it, as `has-[>[data-icon]]` does on Button.

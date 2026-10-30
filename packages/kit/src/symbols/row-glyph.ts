@@ -10,9 +10,19 @@ import type { IconSize } from './icon-size';
  *
  * Size: the lane is one role, `md`, in every FieldGroup row and every kit ListItem row, which lands a title 72.7pt
  * from the screen's edge — exactly where stock iOS Settings starts one. ADR-0019: iOS list rows draw at the same
- * fixed sizes as every other icon, never at their row's text size. What the symbol draws at inside that lane is a
- * platform's own business, and `appleRowSymbolPixels` holds the measurement for iOS (#1452).
+ * fixed sizes as every other icon, never at their row's text size. What the glyph draws at inside that lane is the
+ * platform's own business: iOS shrinks its SF Symbol to the size stock Settings draws a mark at
+ * (`appleRowSymbolPixels`), while Android and web draw a Material or Tabler glyph, already padded inside its grid,
+ * at the lane itself.
  */
 export const glyphForegroundClass = 'text-foreground';
+
+/*
+ * A glyph that sits in a row's leading lane rather than drawing at its own size: the lane keeps the width its role
+ * gives it, so every title beside one starts on the same line, and the glyph inside it draws at what the platform's
+ * own Settings app draws. Both icon paths carry it — the SwiftUI `NativeSymbol` of a FieldGroup row, and the kit's
+ * `Icon` inside a ListItem's leading lane — so the two kinds of row present the same glyph.
+ */
+export type GlyphLane = 'row';
 
 export const rowGlyphSize: IconSize = 'md';
