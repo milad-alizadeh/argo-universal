@@ -53,14 +53,12 @@ export function createOperationMcpServer(client: ControlClient): McpServer {
 }
 
 const instructions =
-  'Use operation_list to find Argo Operations and their argument schemas. ' +
-  'Use operation_run to run one. Argo enforces Session scope and asks for confirmation when required. ' +
-  'Each wait returns within thirty seconds. ' +
-  'For work still running, pass its returned id as waitId to operation_run. Do not restart the Operation.';
+  'Discover: call operation_list with a task-specific filter. ' +
+  'Read the matching params schema and availability before calling operation_run.';
 
 const discoveryTool = {
   description:
-    'Find Argo Operations by id, label or keyword. Returns matching descriptions, argument schemas, tiers and availability. Use a filter to keep results small.',
+    'Find Argo Operations by id, label or keyword. Returns matching argument schemas, tiers and availability.',
   inputSchema: z.strictObject({ filter: z.string().optional() }),
   annotations: { readOnlyHint: true, openWorldHint: false },
 };
@@ -73,9 +71,10 @@ function registerDiscovery(server: McpServer, client: ControlClient): void {
 
 const executionTool = {
   description:
-    'Run an Argo Operation discovered with operation_list. Supply id, params and optional wait. ' +
-    'If work is still running or waiting for the user, observe it by supplying only waitId from its returned id. ' +
-    'Waiting never restarts or cancels work. Report a user refusal and stop that Operation.',
+    'Run a discovered Operation with id and params. Set wait=true when you need its completed result. ' +
+    'Treat kind=result or status=settled as completion. ' +
+    'For still_running or waiting_for_user, poll with only waitId set to the latest returned id. ' +
+    'Report the result or cancellation. On refusal, report it and stop that Operation.',
   inputSchema: runInput,
   annotations: { readOnlyHint: false, openWorldHint: true },
 };
