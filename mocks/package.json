@@ -7,6 +7,7 @@
     "./agent": "./agent/metadata.ts",
     "./agent/*": "./agent/*.ts",
     "./app": "./app/index.ts",
+    "./fs/*": "./fs/*.ts",
     "./git/*": "./git/*.ts",
     "./network/*": "./network/*.ts",
     "./plugins/svg.json": "./plugins/svg.json",

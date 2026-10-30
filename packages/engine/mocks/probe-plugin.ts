@@ -1,15 +1,15 @@
 import { lookup } from 'node:dns';
-import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import type { RequestListener } from 'node:http';
 import { createServer } from 'node:https';
 import type { LookupFunction } from 'node:net';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type {
   PluginCapability,
   PluginSettingField,
   PluginManifest,
 } from '@repo/contracts/plugins';
+import { makeResolvedTempFolder } from '@repo/mocks/fs/resolved-temp-folder';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
@@ -20,9 +20,7 @@ import { createRuntimePlugins } from './runtime-plugins';
 const outFile = 'out.json';
 
 export async function scratch(): Promise<string> {
-  const directory = await realpath(
-    await mkdtemp(join(tmpdir(), 'argo-plugin-argo-')),
-  );
+  const directory = await makeResolvedTempFolder('argo-plugin-argo-');
 
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
 

@@ -1,8 +1,7 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { rmSync } from 'node:fs';
 import type { ACPAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
+import { makeResolvedTempFolderSync } from '@repo/mocks/fs/resolved-temp-folder';
 import { onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
 import {
@@ -59,7 +58,7 @@ export const startLaunchHost = async (
   entry: ACPAgent,
   options: EngineTestOptions = {},
 ): Promise<{ host: EngineHost; projectPath: string }> => {
-  const projectPath = mkdtempSync(join(tmpdir(), 'argo-installed-agent-'));
+  const projectPath = makeResolvedTempFolderSync('argo-installed-agent-');
   const storage = openTestDatabase({}, projectPath);
   const { id } = entry;
 
