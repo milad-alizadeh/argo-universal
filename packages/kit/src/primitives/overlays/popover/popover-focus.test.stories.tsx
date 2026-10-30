@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { expect, waitFor, within } from 'storybook/test';
+import { settleOverlays } from '#mocks/settle-overlays';
 import { settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
@@ -79,10 +80,12 @@ export const OpeningAnotherWhileOneClosesKeepsItOpenWide: Story = {
     await waitFor(() => expect(agents).not.toBeInTheDocument());
     // Radix returns focus a task after the content leaves the page.
     await new Promise((settle) => setTimeout(settle, 50));
-    // The Checkouts popover fades in from transparent, so it shows once its entrance starts.
-    await waitFor(() =>
-      expect(page.getByRole('dialog', { name: 'Checkouts' })).toBeVisible(),
-    );
+    // The Checkouts popover fades in from transparent, so it shows once its entrance has run. The
+    // browser's own animation clock ends that, not a timer here: a runner too busy to draw frames
+    // for a second left it at opacity 0 and failed a one-second wait on a popover that was open.
+    const checkouts = await page.findByRole('dialog', { name: 'Checkouts' });
+    await settleOverlays();
+    await expect(checkouts).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Agent' }),
     ).not.toHaveFocus();
