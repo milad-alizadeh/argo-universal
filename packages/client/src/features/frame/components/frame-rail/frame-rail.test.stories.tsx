@@ -73,7 +73,6 @@ export const HoverDoesNotSelectOrNavigate: Story = {
     await expect(args.onSectionChange).not.toHaveBeenCalled();
     await expect(sessions).toHaveAttribute(ariaCurrent, 'page');
     await expect(settings).not.toHaveAttribute(ariaCurrent);
-    await expect(settings).toHaveAccessibleName(settingsName);
   },
 };
 

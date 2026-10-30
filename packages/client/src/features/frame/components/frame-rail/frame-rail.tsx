@@ -33,7 +33,14 @@ type SectionButtonProps = Pick<FrameRailProps, 'onSectionChange'> & {
   selected: boolean;
 };
 
+// react-native-web adds `hovered` to Pressable's state; native has none, so touch never reads hover.
 type HoverState = PressableStateCallbackType & { hovered?: boolean };
+
+// The CSS fills are gated on `(hover: hover)`; the icon tone follows the same gate so a tap on touch never leaves it dark.
+const pointerCanHover = (): boolean =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(hover: hover)').matches;
 
 type TileIconProps = Pick<SectionButtonProps, 'section' | 'selected'> & {
   // A pointer over the tile darkens its icon; touch has no hover, so native keeps the muted tone.
@@ -62,6 +69,13 @@ function TileIcon(props: TileIconProps): React.JSX.Element {
   );
 }
 
+const tileIcon = (
+  props: SectionButtonProps,
+  state: HoverState,
+): React.JSX.Element => (
+  <TileIcon {...props} hovered={state.hovered === true && pointerCanHover()} />
+);
+
 const tileAccessibility = (props: SectionButtonProps) =>
   ({
     accessibilityRole: 'button',
@@ -80,9 +94,7 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
       className={tileClass(props.selected)}
       style={style}
     >
-      {(state: HoverState) => (
-        <TileIcon {...props} hovered={state.hovered === true} />
-      )}
+      {(state: HoverState) => tileIcon(props, state)}
     </Pressable>
   );
 }
