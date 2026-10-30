@@ -250,7 +250,7 @@ A Plugin lists its Session header actions in `plugin.json` under `contributes.de
 }
 ```
 
-An action is `{ id, label, icon, placement, target }`: `label` is at most 40 characters, `placement` is `header` or `menu`, and the only target is `{ type: "page", path }`, one of the Plugin's own pages under one of its nav items. A Plugin lists at most 4 actions, each id once.
+An action is `{ id, label, icon, placement, target }`: `label` is at most 40 characters, `placement` is `header` or `menu`, and a target is either `{ type: "page", path }`, one of the Plugin's own pages under one of its nav items, or `{ type: "card", cardId }`, a Workbench card the same manifest declares. A Plugin lists at most 4 actions, each id once.
 Argo's own actions come first. On a wide window the first `header` action, in Slot order, is an icon before Argo's "…"; every other action goes inside "…" after Argo's entries. A compact or medium window (phones, and narrow web) keeps every Plugin action in "…". Settings › Plugins › Session header turns each Plugin's actions off on that Device.
 The page opens for the Session whose header it was pressed in: it reads the Session's id from `context.sessionId`.
 
@@ -259,6 +259,30 @@ argo.pages.register('/issues', ({ context }) => <Issues sessionId={context.sessi
 ```
 
 A page opened any other way has no `sessionId`.
+
+## Session Workbench card
+
+A Plugin adds one card to a Session's Workbench under the Slot `argo/session/workbench/v1`, again from the manifest alone:
+
+```json
+"declared": {
+  "argo/session/workbench/v1": [
+    {
+      "id": "issue",
+      "title": "Issue",
+      "icon": { "sf": "ticket", "material": "confirmation_number" },
+      "page": "/issues/session",
+      "tab": "/issues/session/full"
+    }
+  ]
+}
+```
+
+A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters and names the card, its Inspector tab and its row in a phone's Workbench, and both paths are the Plugin's own. Argo draws the card and owns where it goes: its own cards (Changes, Agents, Shells) come first, then one card per Plugin in Slot order, each in a collapsible glass card the Plugin cannot restyle (ADR-0039). The Plugin draws `page` inside it with any kit components, as on its own pages, and keeps it to a summary — the Workbench shows summaries, not lists.
+
+Give a card a `tab` and pressing its body opens that page in full as an Inspector tab; leave it out and the card stays a card. A phone has no Workbench column, so the card opens as the Inspector's sheet instead.
+
+Both pages open for the Session whose Workbench they are in, so they read `context.sessionId` as a header action's page does. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
 
 ## Background pages and badges
 

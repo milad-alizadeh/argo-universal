@@ -8,11 +8,13 @@ export const sessionHeaderSlotId = 'argo/session/header/v1';
 export const sessionHeaderLabelLimit = 40;
 
 /*
- * What pressing a header action does. Only opening one of the Plugin's own pages exists yet; opening the Plugin's
- * Workbench card joins this union (#1130), and running a Plugin action waits for a Plugin API to call (ADR-0035).
+ * What pressing a header action does: open one of the Plugin's own pages, or open the Workbench card the Plugin
+ * declares under `cardId` and close it when it is already open. Running a Plugin action waits for a Plugin API to
+ * call (ADR-0035).
  */
 export const SessionHeaderTarget = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('page'), path: PluginPath }),
+  z.strictObject({ type: z.literal('card'), cardId: PluginIdentifier }),
 ]);
 
 export type SessionHeaderTarget = z.infer<typeof SessionHeaderTarget>;

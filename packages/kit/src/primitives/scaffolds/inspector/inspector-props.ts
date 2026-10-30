@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { KitProps } from '../../kit-props';
 
-// One of the Inspector's tabs: what it shows, its icon and, for a list, how many it holds.
+// One of the Inspector's tabs: what it shows, its icon — one of Argo's, or a Plugin's own symbol pair — and, for a list, how many it holds.
 export interface InspectorTab {
   key: string;
   label: string;
-  icon: IconName;
+  icon: IconSymbol;
   count?: number;
   // `success` while something in it runs.
   countTone?: 'success' | 'muted';

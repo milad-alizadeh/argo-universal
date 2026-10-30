@@ -7,6 +7,11 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 import { agentsSection } from './agents-section';
 import { changesSection } from './changes-section';
 import {
+  pluginCardKey,
+  pluginCardSection,
+  type SessionPluginCard,
+} from './plugin-card-section';
+import {
   drawsCard,
   itemsOf,
   offeredKeys,
@@ -16,18 +21,44 @@ import {
 } from './session-section';
 import { shellsSection } from './shells-section';
 
-// A Session's Sections, in the order the Workbench stacks them by default.
-export const sessionSections: readonly SessionSection[] = [
+// Argo's own Sections, in the order the Workbench stacks them by default.
+const argoSections: readonly SessionSection[] = [
   changesSection,
   agentsSection,
   shellsSection,
 ];
 
-export const offeredSections = (items: SessionItems): string[] =>
-  offeredKeys(sessionSections, items);
+// All a Section list needs of a Session: the Plugin cards it has open. The Sections read the rest when they draw.
+type SessionCards = Pick<SessionInspectorContent, 'pluginCards'>;
 
-export const sectionOf = (key: string): SessionSection | undefined =>
-  sessionSections.find((section) => section.key === key);
+const openCards = (content: SessionCards): readonly SessionPluginCard[] =>
+  content.pluginCards ?? [];
+
+// A Session's Sections: Argo's own, then one for each open Plugin card, which the Workbench stacks after them (ADR-0035).
+export const sessionSections = (
+  content: SessionCards,
+): readonly SessionSection[] => [
+  ...argoSections,
+  ...openCards(content).map(pluginCardSection),
+];
+
+/*
+ * The Sections a Session offers Inspector tabs: Argo's, by what its work holds, and the Plugin cards it has open. A
+ * card that closes takes its tab with it.
+ */
+export const offeredSections = (
+  items: SessionItems,
+  cards: readonly SessionPluginCard[] = [],
+): string[] => [
+  ...offeredKeys(argoSections, items),
+  ...cards.map((card) => pluginCardKey(card.pluginId, card.card.id)),
+];
+
+export const sectionOf = (
+  content: SessionCards,
+  key: string,
+): SessionSection | undefined =>
+  sessionSections(content).find((section) => section.key === key);
 
 export const sectionTab = (
   panels: SessionPanels,
@@ -59,7 +90,7 @@ function openFirst(
   content: SessionInspectorContent,
   panels: SessionPanels,
 ): () => void {
-  const [first] = offeredSections(itemsOf(content));
+  const [first] = offeredSections(itemsOf(content), openCards(content));
 
   return () => first && panels.select(first);
 }
@@ -68,7 +99,7 @@ export const sessionWorkbench = (
   content: SessionInspectorContent,
   panels: SessionPanels,
 ): SessionWorkbench => ({
-  sections: sessionSections.flatMap((section) =>
+  sections: sessionSections(content).flatMap((section) =>
     workbenchCard(content, panels, section),
   ),
   onOpenInspector: openFirst(content, panels),

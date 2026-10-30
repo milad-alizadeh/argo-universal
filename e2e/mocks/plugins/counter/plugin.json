@@ -32,6 +32,22 @@
           "icon": { "sf": "plus.circle", "material": "add_circle" },
           "placement": "header",
           "target": { "type": "page", "path": "/" }
+        },
+        {
+          "id": "toggle-counter-card",
+          "label": "Toggle Counter card",
+          "icon": { "sf": "square.stack", "material": "dashboard" },
+          "placement": "menu",
+          "target": { "type": "card", "cardId": "counter-card" }
+        }
+      ],
+      "argo/session/workbench/v1": [
+        {
+          "id": "counter-card",
+          "title": "Counter card",
+          "icon": { "sf": "square.stack", "material": "dashboard" },
+          "page": "/card",
+          "tab": "/card/full"
         }
       ]
     }

@@ -1,6 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { InspectorTab } from '@repo/kit/primitives/scaffolds/inspector';
-import type { IconName } from '@repo/kit/symbols/icon-names';
+import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
 import type { ReactNode } from 'react';
 import type { WorkbenchSection } from '#features/sessions';
 import type { SessionInspectorContent } from '../session-inspector-content';
@@ -15,7 +15,8 @@ export interface SectionFacts {
   // Its Inspector tab's key and its Workbench card's id.
   key: string;
   title: string;
-  icon: IconName;
+  // One of Argo's icons, or a Plugin's own symbol pair for the card it adds.
+  icon: IconSymbol;
   // A Section that isn't offered has no Inspector tab, and an open one closes.
   offered: (items: SessionItems) => boolean;
   // What its Workbench card counts; with nothing to count, the card isn't drawn.

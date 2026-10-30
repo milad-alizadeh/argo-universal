@@ -1,4 +1,7 @@
-import { sessionHeaderSlotId } from '@repo/contracts/plugins/declared-slots';
+import {
+  sessionHeaderSlotId,
+  sessionWorkbenchSlotId,
+} from '@repo/contracts/plugins/declared-slots';
 import {
   projectDetailsSlotId,
   sessionActivitySlotId,
@@ -8,6 +11,7 @@ import {
 import { sessionBarSlot } from './session-bar-slot';
 import { sessionHeaderSlot } from './session-header-slot';
 import { sessionRowSlot } from './session-row-slot';
+import { sessionWorkbenchSlot } from './session-workbench-slot';
 import type { SlotDetail, SlotDetailId } from './slot-detail';
 
 /*
@@ -22,6 +26,7 @@ const declared = {
   [sessionActivitySlotId]: null,
   [sessionBarSlotId]: sessionBarSlot,
   [sessionHeaderSlotId]: sessionHeaderSlot,
+  [sessionWorkbenchSlotId]: sessionWorkbenchSlot,
 } satisfies Record<SlotDetailId, SlotDetail | null>;
 
 export const slotDetails: readonly SlotDetail[] = Object.values(

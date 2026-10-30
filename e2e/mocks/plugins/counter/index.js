@@ -74,10 +74,24 @@ function Details({ onBack }) {
   );
 }
 
+// The Workbench card's own page: a summary in the card, and the whole of it in the Inspector tab.
+function Card({ sessionId }) {
+  return (
+    <Stack direction="column">
+      <Text>Counter card summary</Text>
+      {sessionId ? <Text>{`Card for Session ${sessionId}`}</Text> : null}
+    </Stack>
+  );
+}
+
 export function register(argo) {
   argo.pages.register('/', ({ context }) => (
     <Counter argo={argo} sessionId={context.sessionId} />
   ));
+  argo.pages.register('/card', ({ context }) => (
+    <Card sessionId={context.sessionId} />
+  ));
+  argo.pages.register('/card/full', () => <Text>Counter card in full</Text>);
   argo.slots.register('argo/project/details/v1', ({ context }) => (
     <Text>{`Fixture Slot for ${context.projectId}`}</Text>
   ));

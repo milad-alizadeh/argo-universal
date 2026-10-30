@@ -36,14 +36,14 @@ function PageBody({ section, ...props }: PageProps): ReactElement {
   );
 }
 
-const openSections = (panels: SessionPanels): SessionSection[] =>
-  panels.state.tabs.flatMap((key) => sectionOf(key) ?? []);
+const openSections = (props: Props): SessionSection[] =>
+  props.panels.state.tabs.flatMap((key) => sectionOf(props, key) ?? []);
 
 // Hidden tab pages keep their content tree and native/virtualised scroll views mounted.
 export function RetainedInspectorPages(props: Props): ReactElement {
   return (
     <InspectorScreens>
-      {openSections(props.panels).map((section) => (
+      {openSections(props).map((section) => (
         <RetainedPage key={section.key} {...props} section={section} />
       ))}
     </InspectorScreens>

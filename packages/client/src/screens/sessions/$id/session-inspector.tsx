@@ -25,7 +25,7 @@ export type { SessionInspectorContent } from './session-inspector-content';
 
 export const offeredSessionPanels = (
   content: SessionInspectorContent,
-): string[] => offeredSections(itemsOf(content));
+): string[] => offeredSections(itemsOf(content), content.pluginCards);
 
 type SessionInspectorProps = SessionInspectorContent & {
   panels: SessionPanels;
@@ -37,7 +37,7 @@ const tabOf = (
 ): SectionTab => section.tab(props, sectionTab(props.panels, section.key));
 
 function tabItem(props: SessionInspectorProps, key: string): InspectorTab[] {
-  const section = sectionOf(key);
+  const section = sectionOf(props, key);
 
   if (!section) return [];
 
@@ -62,7 +62,7 @@ const shownSection = (
 ): SessionSection | undefined =>
   props.panels.state.shown === undefined
     ? undefined
-    : sectionOf(props.panels.state.shown);
+    : sectionOf(props, props.panels.state.shown);
 
 // The shown Section names the Inspector and leads its sheet.
 function shownHeading(
@@ -97,7 +97,7 @@ const phoneSection = (
   props: SessionInspectorProps,
 ): SessionSection | undefined =>
   props.panels.state.shown === undefined
-    ? sessionSections.find((section) => section.phone)
+    ? sessionSections(props).find((section) => section.phone)
     : shownSection(props);
 
 const phonePage = (

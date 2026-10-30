@@ -114,6 +114,17 @@ Feature: Plugin navigation
     Then the Plugin page shows Counter
     And the Plugin page opened for that Session
 
+  Scenario: A Plugin's Workbench card opens its Inspector tab, and its header action closes it
+    Given a wide Frame
+    And a Session named "Check the live list"
+    Then the Session Workbench shows the Plugin card "Counter card"
+    When I press the Plugin card "Counter card"
+    Then the Inspector tab "Counter card" shows "Counter card in full"
+    When I press "Toggle Counter card" in the Session header menu
+    Then the Session Workbench has no Plugin card "Counter card"
+    When I press "Toggle Counter card" in the Session header menu
+    Then the Session Workbench shows the Plugin card "Counter card"
+
   Scenario: A Plugin ListDetail drills into the opened row on a phone Frame
     Given a phone Frame
     When I open the Issues Plugin
