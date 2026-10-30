@@ -21,8 +21,9 @@ Everything else works on every Device: Projects, Agents (install and remove incl
 Still deferred:
 
 - **Notifications:** whether a Device's choices are stored on the Device or on the Server (which a push to a sleeping phone needs), and whether a paired phone's Settings list gets the row.
-- **The pairing and authentication protocol:** its own ADR, as ADR-0002 says. Until then the Server binds `127.0.0.1`, every Connection is on the Server Device, and no paired Device exists.
 - **The relay.**
+
+[ADR-0045](0045-pairing-gives-every-device-its-own-key.md) (owner, 2026-10-30) is the pairing and authentication protocol this ADR deferred, and it replaces the deferral above: "the pairing and authentication protocol: its own ADR, as ADR-0002 says. Until then the Server binds `127.0.0.1`, every Connection is on the Server Device, and no paired Device exists." A Device now pairs with a single-use Pairing Ticket and authenticates afterwards with its own Device Key, so the Server's per-Connection answer to "is this the Server Device, and which Device is it" comes from the authenticated credential rather than from the socket's address. Unpairing is one row deleted and closes that Device's open Connection. The list of Server-Device-only actions above is unchanged; ADR-0045 only says how the Server knows, and adds that keeping the Server running after the desktop app quits ships with Pairing rather than later, because otherwise quitting a window makes a paired phone read as broken. Notifications and the relay stay deferred.
 
 ## Considered Options
 

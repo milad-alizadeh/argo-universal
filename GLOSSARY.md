@@ -52,6 +52,20 @@ _Avoid_: Linking, enrolment, registration
 A Device whose App has access to a Server through Pairing. It is never that Server's Server Device.
 _Avoid_: Remote Device, guest, client
 
+Server Device and Paired Device describe a Device's relationship to one Server, not a kind of computer, so one Device can be both at once for different Servers: a laptop is the Server Device for its own Server and a Paired Device for the desktop's.
+
+**Pairing Ticket**:
+The short-lived, single-use code in a Server's QR that lets one Device start Pairing. It is not the credential: the Device sends its own Device Key during Pairing and authenticates with that afterwards, and the ticket is spent.
+_Avoid_: Pairing code (in code), token, invite, key
+
+**Device Key**:
+The long-term keypair an App makes for its Device and keeps in the platform's secure storage. Its public half is what a Server stores for a Paired Device, so unpairing that Device is one row deleted. A Device that cannot store one securely is refused rather than half-trusted.
+_Avoid_: Client key, certificate, identity (for the key)
+
+**Local network access**:
+The Server Device-only setting, off by default, that lets a Server listen beyond `127.0.0.1` and advertise itself for discovery. Pairing is unavailable until it is on, and nothing turns it on as a side effect.
+_Avoid_: Remote access (that reaches the internet), LAN mode, network sharing
+
 **Issue**:
 A work item in an Issue tracker that a Plugin draws, such as Linear or GitHub Issues. Argo has no Issues of its own.
 _Avoid_: Ticket, task

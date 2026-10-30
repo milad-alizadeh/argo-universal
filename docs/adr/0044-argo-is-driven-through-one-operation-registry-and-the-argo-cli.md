@@ -17,7 +17,7 @@ Owner amendment, 2026-10-29: Argo supplies MCP tools automatically when it opens
 
   The Server implements it. Every caller uses it: Apps, the CLI, and later MCP, Feed actions and voice mode. Copied from PhotoCraft's command registry.
 - **The App runs through Operations too.** The registry generates the tRPC procedure for each Operation, named by its id, so the App, Agents and the CLI hit one code path, and whatever a user can do, an Agent can. Two kinds of procedure stay hand-written:
-  - consent, sign-in and presence, which are the user's alone: answering a Permission request or an Elicitation, marking a Session seen, choosing and granting Accounts, signing out, signing in to an Agent, and acknowledging Notifications;
+  - consent, sign-in and presence, which are the user's alone: answering a Permission request or an Elicitation, marking a Session seen, choosing and granting Accounts, signing out, signing in to an Agent, acknowledging Notifications, and — added by [ADR-0045](0045-pairing-gives-every-device-its-own-key.md) (owner, 2026-10-30) — pairing and unpairing a Device, with the Local network access and keep-running-after-quit settings. Pairing is the clearest case this exception has: the whole protocol exists so that a Device is trusted only when the person at the Server Device allows it, so an Agent that could mint a Pairing Ticket or allow a registration would make that confirmation theatre, and one that could unpair could cut the owner off from their own Server. An Agent also runs inside a Session on a Server some Device was already trusted to reach, so letting it pair would let any paired Device pair another, which ADR-0022 forbids for the lost-phone reason. These have no tier, because there is no tier that would make them askable;
   - App plumbing: subscriptions, the Plugin wire, opening a Session for viewing, Blob upload and link previews.
 
   A CI check refuses a new hand-written tRPC mutation outside that list, so a new feature becomes an Operation first. Today's procedures move over in two steps: the first spec's Operations, then the rest.
@@ -46,7 +46,7 @@ Owner amendment, 2026-10-29: Argo supplies MCP tools automatically when it opens
 - **A call acts as the user, scoped by its caller.**
   - A call with a Session token is scoped to that Session's Project, and the Server knows which Session made it.
   - A call with the user token, read from `~/.argo/control.token` (mode `0600`, made on first start, as PhotoCraft's token file), has the user's full scope. That includes an outside Agent using the CLI from a terminal.
-  - `operations.*` refuses a call with no token. This is the Server's first authentication; the rest of tRPC stays open, as ADR-0002 says, until Pairing.
+  - `operations.*` refuses a call with no token. This is the Server's first authentication; the rest of tRPC stays open, as ADR-0002 says, until Pairing. ADR-0045 spends that "until": the rest of tRPC is now authenticated too, by the calling Device's key. The control token is unchanged and sits beside it, not under it — a token says which Agent is calling and in whose scope, a Device Key says which Device is connected at all.
 - **Operation tiers bind Agents only.** Calls made with a Session token are checked against the Operation's tier:
   - `read` never asks;
   - `act` never asks inside the caller's scope: this Project, and Sessions this Session started;
