@@ -1,6 +1,6 @@
 import { Skia, type SkPath } from '@shopify/react-native-skia';
+import { drawingFill, drawingStroke } from './canvas-geometry';
 import type { Matrix } from './canvas-matrix';
-import { drawingFill, drawingStroke } from './canvas-paths';
 import type { CanvasDrawing } from './canvas-props';
 import type { SceneEntry } from './canvas-scene-types';
 

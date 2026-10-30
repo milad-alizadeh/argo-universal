@@ -1,4 +1,4 @@
-import type { Bounds, Point } from './canvas-props';
+import type { Bounds, CanvasDrawing, Point } from './canvas-props';
 
 export const drawingOrigin = (props: { x?: number; y?: number }): Point => ({
   x: props.x ?? 0,
@@ -16,3 +16,9 @@ export const rectCorners = ({
   { x: 0, y: height },
   { x: width, y: height },
 ];
+
+export const drawingFill = (drawing: CanvasDrawing): boolean =>
+  drawing.props.fill ?? drawing.kind !== 'line';
+
+export const drawingStroke = (drawing: CanvasDrawing): boolean =>
+  drawing.props.stroke ?? drawing.kind === 'line';

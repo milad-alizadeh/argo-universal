@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { CanvasLabel } from './canvas-label';
-import { labelBox, isTextEntry } from './canvas-label-layout';
+import { isTextEntry } from './canvas-label-containers';
+import { labelBox } from './canvas-label-layout';
 import type { LabelsProps } from './canvas-label-props';
 import type { Bounds } from './canvas-props';
 import type { SceneEntry } from './canvas-scene-types';

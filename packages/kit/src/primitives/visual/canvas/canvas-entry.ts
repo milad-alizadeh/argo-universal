@@ -2,7 +2,8 @@ import { Skia, type SkPath } from '@shopify/react-native-skia';
 import { hitPaths } from './canvas-drawing';
 import { drawingOrigin } from './canvas-geometry';
 import { drawingPath } from './canvas-paths';
-import type { CanvasDrawing } from './canvas-props';
+import type { Bounds, CanvasDrawing } from './canvas-props';
+import { plainRectBounds } from './canvas-rect-bounds';
 import {
   matrixPoint,
   unionBounds,
@@ -16,6 +17,14 @@ export function leafEntry(
 ): SceneEntry {
   if (entry.drawing.kind === 'text')
     return textEntry(entry, entry.drawing.props);
+  const rectangle = plainRectBounds(entry.drawing, entry.matrix);
+
+  return rectangle
+    ? rectEntry(entry, context, rectangle)
+    : pathEntry(entry, context);
+}
+
+function pathEntry(entry: SceneEntry, context: SceneContext): SceneEntry {
   const path = drawingPath(entry.drawing);
 
   if (!path) return entry;
@@ -25,6 +34,31 @@ export function leafEntry(
   } finally {
     path.dispose();
   }
+}
+
+function rectEntry(
+  entry: SceneEntry,
+  context: SceneContext,
+  bounds: Bounds,
+): SceneEntry {
+  entry.bounds = bounds;
+
+  if (entry.color) recordRect(context, entry.color, bounds);
+
+  return entry;
+}
+
+function recordRect(
+  context: SceneContext,
+  color: string,
+  bounds: Bounds,
+): void {
+  context.paint.setColor(Skia.Color(color));
+
+  context.canvas.drawRect(
+    Skia.XYWHRect(bounds.x, bounds.y, bounds.width, bounds.height),
+    context.paint,
+  );
 }
 
 function textEntry(

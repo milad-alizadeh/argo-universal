@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState } from 'react';
 import { initialCamera } from './canvas-camera';
 import { updateLabelBounds } from './canvas-label-bounds';
 import type { Bounds, CanvasProps, Camera } from './canvas-props';
@@ -20,16 +20,6 @@ interface Selection {
   key?: string;
 }
 
-function selectionHandler(
-  source: string | undefined,
-  set: React.Dispatch<React.SetStateAction<Selection>>,
-): CanvasControls['onSelect'] {
-  return (entry) => {
-    set({ source, key: entry.address });
-    entry.onPress?.();
-  };
-}
-
 function useSelection(
   selectedKey?: string,
 ): Pick<CanvasControls, 'selected' | 'onSelect'> {
@@ -38,10 +28,15 @@ function useSelection(
 
   if (selection.source !== selectedKey) set(initial);
 
-  const onSelect = useMemo(
-    () => selectionHandler(selectedKey, set),
-    [selectedKey],
-  );
+  /*
+   * Reading the source from the state it sets leaves the handler holding nothing from the render
+   * that made it, so it stays the same function: every shape's accessible row takes this handler,
+   * and a new one on each render would redraw them all.
+   */
+  const onSelect = useCallback<CanvasControls['onSelect']>((entry) => {
+    set((previous) => ({ source: previous.source, key: entry.address }));
+    entry.onPress?.();
+  }, []);
 
   return { selected: selection.key, onSelect };
 }
