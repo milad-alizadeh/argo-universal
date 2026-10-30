@@ -75,6 +75,7 @@ export const contentListProps = z.object({
   aspect: z
     .enum(['square', 'landscape', 'portrait'])
     .optional()
+    .meta({ default: listDefaults.aspect })
     .describe('Media aspect: square 1:1, landscape 16:10, portrait 3:4.'),
   appearance: z
     .enum(['plain', 'cards', 'grouped'])

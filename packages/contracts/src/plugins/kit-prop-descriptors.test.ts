@@ -79,6 +79,7 @@ describe('a kit prop default', () => {
     ['Svg', 'tone', "'neutral'"],
     ['Menu', 'align', "'end'"],
     ['List', 'tileSize', "'md'"],
+    ['List', 'aspect', "'landscape'"],
     ['StatusDot', 'size', "'md'"],
     ['FieldGroup.DatePicker', 'mode', "'date'"],
   ] as const)('reads %s %s as %s', (component, name, defaultValue) => {

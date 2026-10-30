@@ -117,4 +117,5 @@ export const listDefaults = {
   appearance: 'cards',
   density: 'regular',
   tileSize: 'md',
+  aspect: 'landscape',
 } as const;

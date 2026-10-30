@@ -61,7 +61,7 @@ function columnCount(
 
 export function tileLayout(props: Options, metrics: Metrics): TileLayout {
   const minimum = minimumWidth(props, metrics.sizeClass);
-  const aspect = aspects[props.aspect ?? 'landscape'];
+  const aspect = aspects[props.aspect ?? listDefaults.aspect];
 
   if (props.direction === 'horizontal')
     return { columns: 1, width: Math.min(metrics.width, minimum), aspect };
