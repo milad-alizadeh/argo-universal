@@ -1,7 +1,9 @@
 import type { Page } from '@playwright/test';
 import type { ElapsedResult, ObservedTrial } from './elapsed-results.mts';
 import {
+  type DriverAction,
   type ElapsedScenario,
+  isObserved,
   readinessTimeout,
   repetitions,
   type TimedAction,
@@ -16,7 +18,7 @@ import {
 } from './ui-observation.mts';
 
 interface TrialState {
-  action?: TimedAction;
+  action?: TimedAction | DriverAction;
   browser?: UiObservation;
 }
 
@@ -25,13 +27,23 @@ async function prepareTrial(
   scenario: ElapsedScenario,
   state: TrialState,
 ): Promise<void> {
-  state.action = await scenario.prepare();
-  await observeUi(page, state.action.event, state.action.readiness);
+  const action = await scenario.prepare();
+  state.action = action;
+
+  if (isObserved(action)) await observeUi(page, action.event, action.readiness);
 }
 
 async function dispatchTrial(state: TrialState): Promise<void> {
   if (!state.action) throw new Error('The action was not prepared');
   await state.action.dispatch();
+}
+
+async function awaitReady(page: Page, state: TrialState): Promise<void> {
+  if (!state.action) throw new Error('The action was not prepared');
+
+  if (isObserved(state.action))
+    state.browser = await readUiObservation(page, readinessTimeout);
+  else await state.action.ready();
 }
 
 async function trial(
@@ -43,9 +55,7 @@ async function trial(
   const driver = await measureElapsed({
     prepare: () => prepareTrial(page, scenario, state),
     action: () => dispatchTrial(state),
-    ready: async () => {
-      state.browser = await readUiObservation(page, readinessTimeout);
-    },
+    ready: () => awaitReady(page, state),
   });
 
   await cancelUiObservation(page);

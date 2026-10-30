@@ -17,10 +17,10 @@ const toggledCollapsibles = 6;
 const feedSettleMilliseconds = 1500;
 
 // A prompt the fixture Agent answers with rows of its own.
-const streamedPrompt = 'Run the checks';
+export const streamedPrompt = 'Run the checks';
 
 // Far longer than a Turn takes, even at the heaviest CPU slowdown.
-const turnTimeoutMilliseconds = 120_000;
+export const turnTimeoutMilliseconds = 120_000;
 
 // The long Session, and how to open it on a page.
 export interface FeedTarget {
