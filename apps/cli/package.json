@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@argo/plugin-kit": "workspace:*",
+    "@modelcontextprotocol/sdk": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/machine-log": "workspace:*",

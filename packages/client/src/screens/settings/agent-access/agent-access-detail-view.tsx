@@ -38,7 +38,7 @@ function accessSection(props: AgentAccessDetailViewProps): React.JSX.Element {
   const access = props.access;
 
   return (
-    <FieldGroup.Section footer="New Sessions receive the Argo CLI and their own token. Existing Sessions keep their access.">
+    <FieldGroup.Section footer="New Sessions receive Argo tools automatically, the Argo CLI and their own token. Existing Sessions keep their access.">
       <FieldGroup.Toggle
         title="Agent access to Argo"
         value={access.status === 'loaded' && access.enabled}
@@ -53,7 +53,7 @@ function instructionsSection(
   props: AgentAccessDetailViewProps,
 ): React.JSX.Element {
   return (
-    <FieldGroup.Section footer="Install instructions for your Agents and a Codex rule in your home folder on the Server. Project files stay untouched.">
+    <FieldGroup.Section footer="For Agents you run outside Argo, optionally install CLI instructions and a Codex rule in your home folder on the Server.">
       <Button
         label="Add Argo to your Agents"
         variant="text"

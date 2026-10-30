@@ -4,6 +4,8 @@ This amends [ADR-0002](0002-a-local-server-owns-all-machine-work.md) and [ADR-00
 
 PhotoCraft, an open-source Photoshop, has solved this: every menu item runs a command from one registry of 500+, and its UI, its CLI, a JSON control channel and an MCP server all share that registry. Its MCP server exposes `command_list` and `command_run`, not 500 tools. We copy it.
 
+Owner amendment, 2026-10-29: Argo supplies MCP tools automatically when it opens a Session with Agent access. No Skill installation is required. This brings forward the MCP interface described below. PhotoCraft also exposes specialized tools alongside command discovery and execution; Argo starts with two tools to limit context use.
+
 ## Decision
 
 - **One Operation registry.** An Operation is defined once, in `packages/contracts/src/operations`:
@@ -31,9 +33,10 @@ PhotoCraft, an open-source Photoshop, has solved this: every menu item runs a co
   - `argo plugin validate|test`, as before.
 
   A bare `argo` prints help. The CLI finds the Server through `~/.argo/server.json`, and `apps/server` no longer owns a bin. An Agent's `argo` call shows in the Feed as an ordinary Tool call. Copied from `photocraft-cli`.
-- **MCP comes later, from the same registry.** When it comes, it copies PhotoCraft's two tools: `operation_list` and `operation_run`, about 1,000 tokens whatever the registry's size. It is not in the first spec.
+- **MCP uses the same registry and control client as the CLI.** `argo mcp` serves two tools over stdio: `operation_list` and `operation_run`. Discovery returns matching Operation descriptions, argument schemas, tiers and availability. Execution accepts an Operation id with params and optional wait, or a wait id alone to observe existing work. The tool definitions do not grow with the registry. Matching schemas and results enter context when requested. This does not eliminate all context use.
 - **Every Session gets `argo` by default.** The Server puts `argo` on each Agent's `PATH` and gives each Session its own token in `ARGO_TOKEN`, revoked when the Session closes. One Settings switch turns this off.
-- **Teaching Agents that `argo` exists is one explicit step.** PhotoCraft has the user register it by hand (`claude mcp add photocraft …`). Argo has a Settings button, "Add Argo to your Agents", that writes:
+- **Sessions receive Argo tools automatically.** The Server supplies its stdio MCP launcher through ACP on Session creation and resume. Each MCP connection receives that Session's `ARGO_TOKEN` and Server location explicitly. Configuration discovery and sign-in receive no Argo MCP connection. The existing Agent access switch controls the CLI, token and MCP tools for new Sessions. Existing Sessions retain their access. Agents must honor ACP's client-supplied MCP servers to discover these tools.
+- **Outside Agents can use optional CLI instructions.** PhotoCraft has the user register MCP by hand (`claude mcp add photocraft …`). Argo registers it for its own Sessions. The Settings button, "Add Argo to your Agents", optionally writes instructions for Agents run outside Argo:
   - a small Skill, `argo/SKILL.md`, to `~/.agents/skills` and `~/.claude/skills`, which Claude, Codex, Gemini CLI, OpenCode and Pi read;
   - a Codex prefix rule, `prefix_rule(pattern=["argo"], decision="allow")`, to `~/.codex/rules/argo.rules`. Codex's default sandbox blocks the shell from reaching localhost, so this rule lets only `argo` run outside it. Without it, Codex asks to rerun each blocked call.
 
