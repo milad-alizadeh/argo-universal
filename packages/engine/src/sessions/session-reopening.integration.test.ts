@@ -20,7 +20,12 @@ it('removes a closed Session and resumes its stored Agent identity on the next p
     {
       sessionId: 'owned-1',
       cwd: opening.cwd,
-      mcpServers: [expect.objectContaining({ name: 'argo', args: ['mcp'] })],
+      mcpServers: [
+        expect.objectContaining({
+          name: expect.stringMatching(/^argo-/),
+          args: ['mcp'],
+        }),
+      ],
     },
   ]);
   await expect
@@ -44,7 +49,12 @@ it('opens a stored Session without a Turn, so a Retry never resends one', async 
     {
       sessionId: 'owned-1',
       cwd: opening.cwd,
-      mcpServers: [expect.objectContaining({ name: 'argo', args: ['mcp'] })],
+      mcpServers: [
+        expect.objectContaining({
+          name: expect.stringMatching(/^argo-/),
+          args: ['mcp'],
+        }),
+      ],
     },
   ]);
   expect(prompts).toHaveLength(1);

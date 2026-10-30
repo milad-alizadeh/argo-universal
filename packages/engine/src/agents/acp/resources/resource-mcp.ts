@@ -19,14 +19,22 @@ export async function openResourceSession(
   return { ...lease, connectionKind: entry.kind };
 }
 
-// Only private Session connections receive Argo tools and that Session's own token.
 function withArgoMcp(input: AcpOpenInput, entry: EntryKind): AcpOpenInput {
   if (entry.kind === 'shared') return input;
 
   return {
     ...input,
-    opening: appendServer(input.opening, argoServer(entry.access.environment)),
+    opening: appendServer(
+      input.opening,
+      argoServer(entry.access.environment, sessionId(input)),
+    ),
   };
+}
+
+function sessionId(input: AcpOpenInput): string {
+  if (input.sessionId !== undefined) return input.sessionId;
+
+  throw new Error('Argo MCP access requires a Session id');
 }
 
 function appendServer(
@@ -47,13 +55,12 @@ function appendServer(
   };
 }
 
-function argoServer({
-  token,
-  home,
-  cliDirectory,
-}: SessionProcessAccess['environment']): McpServer {
+function argoServer(
+  { token, home, cliDirectory }: SessionProcessAccess['environment'],
+  id: string,
+): McpServer {
   return {
-    name: 'argo',
+    name: `argo-${id.replaceAll('-', '')}`,
     command: join(cliDirectory, 'argo'),
     args: ['mcp'],
     env: [

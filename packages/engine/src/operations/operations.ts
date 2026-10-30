@@ -4,6 +4,10 @@ import type {
   OperationExecution,
   OperationRunResponse,
 } from '@repo/contracts/operations';
+import type {
+  OperationRunRequest,
+  OperationWaitRequest,
+} from '@repo/contracts/operations/control';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
 import type { FeedDeps } from '../feed';
@@ -20,6 +24,10 @@ import {
   createImplementations,
   type OperationRunResult,
 } from './implementations';
+import {
+  operationConnection,
+  type OperationConnection,
+} from './operation-connection';
 import { requireOperationId } from './params';
 import { OperationResponses, storedOutputBlobs } from './responses';
 import { OperationRunner } from './runner';
@@ -56,9 +64,7 @@ export type OperationsDeps = RegistryDeps &
 
 type Operation = { id: OperationId; params: Json };
 
-type RunRequest = { id: string; params: Json; wait: boolean };
-
-type Connection = { token?: string; wait: boolean; signal?: AbortSignal };
+type RunRequest = OperationRunRequest;
 
 // A token caller's Operations: the user's run and admit under the deadline; a Session's are recorded as its Tool calls.
 export class Operations {
@@ -96,23 +102,28 @@ export class Operations {
   ): Promise<OperationRunResponse> {
     const id = requireOperationId(request.id);
     const operation = { id, params: request.params };
-    const connection = { token, wait: request.wait, signal };
+
+    const connection = operationConnection(token, request, signal);
+
     const value = await this.answer(this.caller(token), connection, operation);
 
     return this.responses.run(value, signal);
   }
   public async wait(
-    id: string,
+    request: OperationWaitRequest,
     token: string | undefined,
     signal?: AbortSignal,
   ): Promise<OperationExecution> {
-    const execution = await this.work.wait(id, token, signal);
+    const execution = await this.work.wait(request.id, token, {
+      signal,
+      timeoutMs: request.timeoutMs,
+    });
 
     return this.responses.execution(execution, signal);
   }
   private answer(
     caller: TokenCaller,
-    connection: Connection,
+    connection: OperationConnection,
     operation: Operation,
   ): Promise<OperationRunResult> {
     if (caller.kind === 'session')
@@ -124,7 +135,7 @@ export class Operations {
   }
   private runRecorded(
     caller: SessionCaller,
-    connection: Connection,
+    connection: OperationConnection,
     operation: Operation,
   ): Promise<OperationRunResult> {
     const call = this.calls.begin(caller.sessionId, operationCall(operation));

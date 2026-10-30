@@ -37,6 +37,7 @@ export type WaitInput = {
   // Also stop once a Tool call reaches its native work or waits for the user.
   stopOnInput: boolean;
   signal?: AbortSignal;
+  timeoutMs?: number;
 };
 
 export type WaitOutcome =
@@ -84,7 +85,9 @@ export const operationWaitMachine = setup({
         onDisconnect(input, () => sendBack({ type: 'wait.disconnected' })),
     ),
   },
-  delays: { waitLimit: operationWaitLimitMs },
+  delays: {
+    waitLimit: ({ context }) => context.timeoutMs ?? operationWaitLimitMs,
+  },
   actions: {
     expire: raise({ type: 'wait.expired' }),
     rememberExpiry: assign(

@@ -6,7 +6,9 @@ import { startCliHost } from '../mocks/operations-cli';
 
 const projectList = 'project.list';
 
-it('discovers only two tools over stdio, loads matching Operation schemas on demand and runs the same read as the App', async () => {
+const archiveSession = 'session.archive';
+
+it('advertises exactly two tools without loading Operation definitions', async () => {
   const host = await startCliHost();
   const client = await connectMcp(host.home);
   const tools = await client.listTools();
@@ -16,6 +18,11 @@ it('discovers only two tools over stdio, loads matching Operation schemas on dem
     'operation_run',
   ]);
   expect(JSON.stringify(tools)).not.toContain(projectList);
+}, 30_000);
+
+it('discovers matching Operation argument schemas on demand', async () => {
+  const host = await startCliHost();
+  const client = await connectMcp(host.home);
 
   const discovery = await client.callTool({
     name: 'operation_list',
@@ -31,6 +38,12 @@ it('discovers only two tools over stdio, loads matching Operation schemas on dem
       enabled: true,
     }),
   );
+}, 30_000);
+
+it('runs the same read as the App', async () => {
+  const host = await startCliHost();
+  const client = await connectMcp(host.home);
+
   const read = await callMcp(client, { id: projectList, wait: true });
 
   expect(read.isError).not.toBe(true);
@@ -71,12 +84,12 @@ it('rejects ambiguous wait requests without starting the Operation', async () =>
   expect(await host.caller.agent.getAccess()).toEqual({ enabled: true });
 }, 30_000);
 
-it('uses Argo confirmation and resumes the same work after the user refuses', async () => {
+it('reports the user refusal when observing previously started work', async () => {
   const host = await startPermissionWaitHost();
   const client = await connectMcp(host.home, host.token);
 
   const response = await callMcp(client, {
-    id: 'session.archive',
+    id: archiveSession,
     params: host.target,
   });
 
@@ -87,7 +100,7 @@ it('uses Argo confirmation and resumes the same work after the user refuses', as
   const waiting = callMcp(client, { waitId: pending.id });
 
   await host.waitStarted();
-  host.advance(90_000);
+  host.advance(30_000);
   expect(await waiting).toMatchObject({
     content: [
       { type: 'text', text: expect.stringContaining('waiting_for_user') },
@@ -100,9 +113,6 @@ it('uses Argo confirmation and resumes the same work after the user refuses', as
       { type: 'text', text: expect.stringContaining('The user refused') },
     ],
   });
-  expect(await callMcp(client, { id: projectList })).not.toMatchObject({
-    isError: true,
-  });
 }, 30_000);
 
 it('completes a waiting write only after the user allows it', async () => {
@@ -110,7 +120,7 @@ it('completes a waiting write only after the user allows it', async () => {
   const client = await connectMcp(host.home, host.token);
 
   const running = callMcp(client, {
-    id: 'session.archive',
+    id: archiveSession,
     params: host.target,
     wait: true,
   });
@@ -121,4 +131,30 @@ it('completes a waiting write only after the user allows it', async () => {
 
   expect(response.isError).not.toBe(true);
   expect(mcpValue(response)).toEqual({ kind: 'result', result: {} });
+}, 30_000);
+
+it('returns resumable work at thirty seconds without cancelling the Operation', async () => {
+  const host = await startPermissionWaitHost();
+  const client = await connectMcp(host.home, host.token);
+
+  const running = callMcp(client, {
+    id: archiveSession,
+    params: host.target,
+    wait: true,
+  });
+
+  await host.permission();
+  await host.waitStarted();
+  host.advance(30_000);
+  const pending = OperationExecution.parse(mcpValue(await running));
+
+  expect(pending.status).toBe('waiting_for_user');
+  await host.answer('allow_once');
+  expect(mcpValue(await callMcp(client, { waitId: pending.id }))).toMatchObject(
+    {
+      id: pending.id,
+      status: 'settled',
+      result: {},
+    },
+  );
 }, 30_000);

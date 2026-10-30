@@ -6,3 +6,9 @@ export {
 } from './execution';
 
 export { OperationRow } from './metadata';
+
+export {
+  OperationRunRequest,
+  OperationWaitRequest,
+  operationWaitLimitMs,
+} from './control-input';

@@ -44,11 +44,7 @@ export function callMcp(
   client: Client,
   arguments_: Record<string, Json>,
 ): ReturnType<Client['callTool']> {
-  return client.callTool(
-    { name: 'operation_run', arguments: arguments_ },
-    undefined,
-    { timeout: 100_000 },
-  );
+  return client.callTool({ name: 'operation_run', arguments: arguments_ });
 }
 
 const textResult = z.object({

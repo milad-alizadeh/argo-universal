@@ -59,7 +59,7 @@ async function disconnectedWait(
 ): Promise<{ waiting: Promise<unknown> }> {
   const id = await waitingCall(host);
   const abort = new AbortController();
-  const waiting = host.work.wait(id, callerToken, abort.signal);
+  const waiting = host.work.wait(id, callerToken, { signal: abort.signal });
 
   await expect.poll(() => host.source.watching('caller')).toBeGreaterThan(0);
   abort.abort();
@@ -89,7 +89,7 @@ it('rejects a wait already disconnected before it reads', async () => {
   const id = await waitingCall(host);
 
   await expect(
-    host.work.wait(id, callerToken, AbortSignal.abort()),
+    host.work.wait(id, callerToken, { signal: AbortSignal.abort() }),
   ).rejects.toMatchObject({ code: 'CLIENT_CLOSED_REQUEST' });
   expect(host.clock.activeDeadlines()).toBe(0);
 });

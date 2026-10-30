@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import type {
   NewSessionRequest,
   ResumeSessionRequest,
+  McpServerStdio,
 } from '@agentclientprotocol/sdk';
 import { assert, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { operationCaller, runOperation } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { discoverOptions } from '#mocks/session-access';
 
@@ -21,7 +21,21 @@ function requestAt(
   return request;
 }
 
-it('automatically supplies isolated MCP credentials to new Sessions, never configuration discovery or disabled Sessions', async () => {
+function serverAt(
+  request: NewSessionRequest | ResumeSessionRequest,
+): McpServerStdio {
+  const [server] = request.mcpServers ?? [];
+
+  assert(server);
+  assert('command' in server);
+
+  return server;
+}
+
+async function recordedOpenings(): Promise<{
+  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  openings: NewSessionRequest[];
+}> {
   const openings: NewSessionRequest[] = [];
 
   const host = await startAcpEngine({
@@ -29,34 +43,48 @@ it('automatically supplies isolated MCP credentials to new Sessions, never confi
     responses: { 'session/new': [{ requests: openings }] },
   });
 
+  return { host, openings };
+}
+
+it('supplies isolated MCP credentials to each new Session', async () => {
+  const { host, openings } = await recordedOpenings();
+
   const first = await host.caller.session.new(emptySessionInput);
   const second = await host.caller.session.new(emptySessionInput);
-  const firstServers = requestAt(openings, 0).mcpServers;
-  const secondServers = requestAt(openings, 1).mcpServers;
+  const firstServer = serverAt(requestAt(openings, 0));
+  const secondServer = serverAt(requestAt(openings, 1));
 
-  expect(firstServers).toMatchObject([
-    {
-      name: 'argo',
-      command: join(host.home, 'cli', 'bin', 'argo'),
-      args: ['mcp'],
-      env: [
-        { name: 'ARGO_HOME', value: host.home },
-        { name: 'ARGO_TOKEN', value: expect.any(String) },
-      ],
-    },
-  ]);
-  expect(secondServers).not.toEqual(firstServers);
-  await discoverOptions(host, { agent: 'mock', projectId: 'project-1' });
-  expect(requestAt(openings, 2).mcpServers).toEqual([]);
-  const user = await operationCaller(host);
-  await runOperation(user.operations, {
-    id: 'agent.setAccess',
-    params: { enabled: false },
+  expect(firstServer).toMatchObject({
+    name: expect.stringMatching(/^argo-/),
+    command: join(host.home, 'cli', 'bin', 'argo'),
+    args: ['mcp'],
+    env: [
+      { name: 'ARGO_HOME', value: host.home },
+      { name: 'ARGO_TOKEN', value: expect.any(String) },
+    ],
   });
-  const disabled = await host.caller.session.new(emptySessionInput);
-  expect(requestAt(openings, 3).mcpServers).toEqual([]);
+  expect(firstServer.name).not.toBe('argo');
+  expect(secondServer.name).not.toBe(firstServer.name);
+  expect(secondServer.env).not.toEqual(firstServer.env);
   await host.caller.session.close(first);
   await host.caller.session.close(second);
+}, 30_000);
+
+it('keeps Argo MCP credentials out of configuration discovery', async () => {
+  const { host, openings } = await recordedOpenings();
+
+  await discoverOptions(host, { agent: 'mock', projectId: 'project-1' });
+
+  expect(requestAt(openings, 0).mcpServers).toEqual([]);
+}, 30_000);
+
+it('does not supply Argo MCP when Agent access is disabled', async () => {
+  const { host, openings } = await recordedOpenings();
+  await host.caller.agent.setAccess({ enabled: false });
+
+  const disabled = await host.caller.session.new(emptySessionInput);
+
+  expect(requestAt(openings, 0).mcpServers).toEqual([]);
   await host.caller.session.close(disabled);
 }, 30_000);
 
@@ -91,6 +119,7 @@ it('supplies a fresh MCP token when a Session resumes after its Agent process ex
   const [request] = resumed;
 
   assert(request);
-  expect(request.mcpServers).toMatchObject([{ name: 'argo', args: ['mcp'] }]);
+  expect(serverAt(request).name).toBe(serverAt(requestAt(openings, 0)).name);
+  expect(request.mcpServers).toMatchObject([{ args: ['mcp'] }]);
   expect(request.mcpServers).not.toEqual(requestAt(openings, 0).mcpServers);
 }, 30_000);
