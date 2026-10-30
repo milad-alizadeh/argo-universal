@@ -5,9 +5,11 @@ import { refreshPluginList } from './refresh-plugin-list';
 const liveName = 'Check the live list';
 
 const listKey = ['plugin', 'list'] as const;
+
 const declaredKey = ['plugins', 'declared'] as const;
 
 const listFilter = { queryKey: listKey };
+
 const declaredFilter = { queryKey: declaredKey };
 
 // Enough turns for a cancelled fetch, the fetch that replaces it and its answer.
@@ -86,6 +88,7 @@ describe('refreshing the Plugin list for a live change', () => {
       listFilter,
       declaredFilter,
     ]);
+
     await held.settle();
     await refreshed;
 
@@ -103,6 +106,7 @@ describe('refreshing the Plugin list for a live change', () => {
       listFilter,
       declaredFilter,
     ]);
+
     await held.settle();
     await refreshed;
 
