@@ -4,6 +4,8 @@ import { useHeadingInset } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import type { ScreenHeader } from '#primitives/actions/action';
 import type { IconButtonSize } from '#primitives/actions/icon-button';
+import { Icon } from '#primitives/content/icon';
+import { Link, isRoute } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { ScreenBack } from './screen-back';
 import { ScreenColumn } from './screen-column';
@@ -22,6 +24,7 @@ export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
           <HeadingRow {...props} />
           <ScreenCaption
             caption={header.selecting ? undefined : props.caption}
+            captionHref={props.captionHref}
           />
         </View>
       </ScreenColumn>
@@ -36,17 +39,45 @@ const headingInset = (inset: number): ViewStyle => ({
 });
 
 // A wide page's caption; a phone leaves it out, as its native header has no room for it.
-function ScreenCaption({ caption }: Pick<ScreenProps, 'caption'>): ReactNode {
+function ScreenCaption({
+  caption,
+  captionHref,
+}: Pick<ScreenProps, 'caption' | 'captionHref'>): ReactNode {
   const wide = useWide();
 
   if (!caption || !wide) return null;
 
+  if (!captionHref)
+    return (
+      <Text role="body" tone="muted">
+        {caption}
+      </Text>
+    );
+
+  return <CaptionLink caption={caption} href={captionHref} />;
+}
+
+// A caption that goes somewhere says so with a link glyph after it, as the page's one link out.
+function CaptionLink({
+  caption,
+  href,
+}: {
+  caption: string;
+  href: string;
+}): ReactNode {
   return (
-    <Text role="body" tone="muted">
-      {caption}
-    </Text>
+    <View className="flex-row items-center gap-1">
+      <Text role="body" tone="muted">
+        <Link label={caption} {...captionTarget(href)} />
+      </Text>
+      <Icon name="external-link" size="sm" tone="muted" />
+    </View>
   );
 }
+
+// One `href` is an App route or a URL, as a Metadata link's is; the kit Link takes them apart.
+const captionTarget = (href: string): { href: string } | { route: string } =>
+  isRoute(href) ? { route: href } : { href };
 
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 

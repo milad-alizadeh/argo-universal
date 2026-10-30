@@ -31,6 +31,12 @@ export const metadataLinkProps = field.extend({
     .describe(
       'An http, https or mailto URL, or an absolute route within the App.',
     ),
+  whenNarrow: z
+    .boolean()
+    .optional()
+    .describe(
+      'Draw the field only where the Metadata has no column of its own, for a link the page already carries elsewhere.',
+    ),
 });
 
 export const metadataPillsProps = field;

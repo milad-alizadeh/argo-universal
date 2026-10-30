@@ -14,6 +14,7 @@ import {
   useResolvedMetadataDrawing,
 } from '../metadata/metadata-drawing-context';
 import type { DetailColumnsProps } from './detail-props';
+import { stickyColumnStyle } from './detail-sticky';
 
 // The narrowest container that holds the content beside the 280 Metadata column.
 const splitWidth = 720;
@@ -24,7 +25,7 @@ const layouts = {
     row: 'flex-row items-start',
     content: 'min-w-0 flex-1',
     metadata: 'shrink-0',
-    metadataStyle: { width: sideColumn.width },
+    metadataStyle: { width: sideColumn.width, ...stickyColumnStyle },
     width: 'column',
   },
   stacked: {

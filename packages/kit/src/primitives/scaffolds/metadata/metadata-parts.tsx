@@ -39,7 +39,16 @@ function destination(href: string): Pick<LinkProps, 'href' | 'route'> {
   return isRoute(href) ? { route: href } : { href };
 }
 
-export function MetadataLink(props: MetadataLinkProps): ReactElement {
+/*
+ * A link the page already carries elsewhere — a Screen's linked caption — is drawn only where the Metadata has no
+ * column of its own: a phone's grouped rows, or the one inline line a narrow pane draws.
+ */
+export function MetadataLink(props: MetadataLinkProps): ReactElement | null {
+  const { root } = useMetadataDrawing();
+
+  if (props.whenNarrow && (root === 'properties' || root === 'list-section'))
+    return null;
+
   return (
     <MetadataField
       {...fieldProps(props)}

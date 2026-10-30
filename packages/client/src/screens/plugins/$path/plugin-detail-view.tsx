@@ -1,7 +1,10 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
-import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import {
+  Screen,
+  ScreenDefaultBack,
+} from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhilePending } from '#features/frame';
@@ -23,12 +26,22 @@ export interface PluginDetailViewProps {
   title?: string;
   viewId?: PluginViewId | null;
   callbacks: PluginPageCallbacks;
+  // The App's own Back for a pushed page; a Plugin declares no navigation (`ScreenDefaultBack`).
+  onBack?: (() => void) | null;
 }
 
 // A Plugin's page, drawn by the App's registry; one that is not a Screen of its own scrolls in the kit's Detail, in the Screen's column.
 export function PluginDetailView(
   props: PluginDetailViewProps,
 ): React.ReactNode {
+  return (
+    <ScreenDefaultBack value={props.onBack ?? null}>
+      <PluginPageBody {...props} />
+    </ScreenDefaultBack>
+  );
+}
+
+function PluginPageBody(props: PluginDetailViewProps): React.ReactNode {
   if (ownsPage(props.root)) return <PluginContent {...props} />;
 
   return (
