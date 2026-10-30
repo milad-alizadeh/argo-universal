@@ -54,16 +54,12 @@ async function runCurrentHandler(
   view: OpenView,
   event: Extract<PluginEvent, { type: 'dispatch' }>,
 ): Promise<void> {
-  requireCurrentRevision(view, event.revision);
+  // A commit on its way out carries the handlers this event names, so it is looked up after it lands.
+  if (view.frame !== undefined) await whenSent(view);
 
   const handler = view.handlers.get(JSON.stringify([event.key, event.event]));
 
   if (!handler) throw new Error('Plugin handler is no longer available');
   await handler(event.payload);
   await whenSent(view);
-}
-
-function requireCurrentRevision(view: OpenView, revision: number): void {
-  if (view.revision !== revision || view.frame !== undefined)
-    throw new Error('Plugin view changed; try again');
 }

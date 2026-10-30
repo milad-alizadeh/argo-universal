@@ -41,9 +41,13 @@ it(
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
       .toMatchObject({ revision: 2, ops: [{ props: { children: 'Second' } }] });
+    // ADR-0031: the Action is still drawn, so a press from the tree the App holds runs it.
     await expect(
       app.client.plugins.dispatch.mutate({ ...target, key: '0/run/first' }),
-    ).rejects.toThrow('Plugin view changed');
+    ).resolves.toEqual({ ok: true });
+    await expect
+      .poll(() => app.messages.at(-1), { timeout: 10_000 })
+      .toMatchObject({ revision: 3, ops: [{ props: { children: 'First' } }] });
   },
 );
 
