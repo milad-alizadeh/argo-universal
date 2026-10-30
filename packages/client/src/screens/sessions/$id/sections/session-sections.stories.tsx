@@ -13,6 +13,7 @@ import {
   subagentStates,
 } from '../../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import type { SessionInspectorContent } from '../session-inspector-content';
+import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
 
@@ -37,7 +38,9 @@ function SectionsWorkbench({
 }: {
   content: SessionInspectorContent;
 }): ReactElement {
-  const panels = useSessionPanels(offeredSections(itemsOf(content)));
+  const panels = useSessionPanels(
+    offeredSections(itemsOf(content), content.pluginCards),
+  );
 
   return (
     <View className="m-4 w-frame-list">
@@ -68,3 +71,10 @@ type Story = StoryObj<typeof meta>;
 
 // Every Section a Session offers: Changes, Agents and Shells, each on its own card with only its title, chevron and handle on the title line.
 export const AllSections: Story = {};
+
+// Two Plugins' cards, stacked after Argo's own in the order the Slot gives them (ADR-0035).
+export const PluginCards: Story = {
+  args: {
+    content: { ...everySection, pluginCards: [issueTrackerCard, coverageCard] },
+  },
+};

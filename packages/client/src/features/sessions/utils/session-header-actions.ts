@@ -37,7 +37,7 @@ export function placeSessionHeaderActions<Action extends DeclaredHeaderAction>(
   declared: readonly Action[],
   { phone, shows }: HeaderPlace,
 ): PlacedHeaderActions<Action> {
-  const { limit, shown } = sessionHeaderSlot.content;
+  const { limit, shown } = sessionHeaderSlot.content.placement;
   const visible = declared.filter(({ pluginId }) => shows(pluginId));
 
   const beside = visible

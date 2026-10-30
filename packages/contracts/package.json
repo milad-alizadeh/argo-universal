@@ -10,6 +10,7 @@
     "#plugin-slot-registry": "./src/plugins/slot-registry.ts",
     "#plugin-session-bar-item": "./src/plugins/session-bar-item.ts",
     "#plugin-session-header-action": "./src/plugins/session-header-action.ts",
+    "#plugin-session-workbench-card": "./src/plugins/session-workbench-card.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
     "#plugin-kit-component-events": "./src/plugins/kit-component-events.ts",

@@ -5,38 +5,13 @@ import {
   DeclaredSlotId,
   sessionHeaderSlotId,
 } from './declared-slots';
+import {
+  headerActions,
+  manifestDeclaring,
+  openIssue,
+} from './declared-slots.mocks';
 import { PluginManifest } from './plugins';
 import { sessionRowSlotId } from './wire';
-
-const openIssue = {
-  id: 'open-issue',
-  label: 'Open Issue',
-  icon: { sf: 'ticket', material: 'confirmation_number' },
-  placement: 'header',
-  target: { type: 'page', path: '/issues' },
-};
-
-// A manifest's `contributes.declared` as an author writes it, before Argo checks it.
-type AuthoredDeclared = Record<string, readonly object[]>;
-
-const manifestDeclaring = (
-  declared: AuthoredDeclared,
-): ReturnType<typeof PluginManifest.safeParse> =>
-  PluginManifest.safeParse({
-    id: 'tracker',
-    name: 'Tracker',
-    version: '1.0.0',
-    engines: { argo: '>=0.0.0' },
-    main: 'index.js',
-    icon: { material: 'extension' },
-    contributes: { nav: [], declared },
-  });
-
-const headerActions = (
-  actions: readonly object[],
-): Record<DeclaredSlotId, readonly object[]> => ({
-  [sessionHeaderSlotId]: actions,
-});
 
 it('lets a manifest declare Session header actions for the header and the menu', () => {
   const actions = [
