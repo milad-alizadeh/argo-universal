@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -45,6 +46,8 @@ export const EscapeClosesModelsThenConfigure: Story = {
       name: modelPickerLabel,
     });
 
+    // Configure fades in from transparent, so it reads as visible once its entrance has run by the browser's clock (#1520).
+    await settleOverlays();
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(picker).not.toBeInTheDocument());
@@ -94,6 +97,7 @@ export const ClickOpensModelPicker: Story = {
     await userEvent.unhover(model);
     await userEvent.hover(picker);
     await waitFor(() => expect(picker).toBeVisible());
+    await settleOverlays();
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
   },
