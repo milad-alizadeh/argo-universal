@@ -8,8 +8,14 @@ import { onPhone } from './frame';
 
 const exampleName = 'Example Agent';
 
+/*
+ * The row's press is an empty labelled layer, so the card is the row around it: its buttons and links sit beside the
+ * layer, not inside it, and each stays its own accessibility element.
+ */
 export const agentCard = (page: Page, name: string): Locator =>
-  page.getByRole('group', { name: new RegExp(`^${name}, v`) });
+  page
+    .getByRole('group', { name: new RegExp(`^${name}, v`) })
+    .locator('xpath=..');
 
 const settingsLink = (page: Page, name: string): Locator =>
   page.getByRole('link', { name: new RegExp(`^${name}(?:,|$)`) });
