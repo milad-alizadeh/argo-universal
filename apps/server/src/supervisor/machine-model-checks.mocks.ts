@@ -1,49 +1,44 @@
 import { expect, vi } from 'vitest';
-import type { EventExecutor } from 'xstate/graph';
 import {
   heartbeatTimeoutMs,
   maxCrashesInWindow,
   readyTimeoutMs,
 } from './machine';
 import {
-  backoffMs,
   engines,
   latestEngine,
   liveEngines,
   supervisor,
-  startSupervisorActor,
   readyEngineEvent,
   engineExitedEvent,
   heartbeatEngineEvent,
   engineStoppedEvent,
   engineUnresolvedEvent,
   stopServerEvent,
-  readyDelayEvent,
-  heartbeatDelayEvent,
-  backoffDelayEvent,
 } from './machine-fixture.mocks';
 import {
   input,
-  machine,
   serverAddressWrites,
   serverAddressRemovals,
   type SupervisorSnapshot,
-  type SupervisorEvent,
 } from './machine-model.mocks';
 
-// Moves to one millisecond short of a delay, checks the state held, then crosses it.
-const crossDelay = (milliseconds: number): void => {
-  const before = supervisor.getSnapshot().value;
-  vi.advanceTimersByTime(milliseconds - 1);
-  expect(supervisor.getSnapshot().value).toEqual(before);
-  vi.advanceTimersByTime(1);
+// The wait before each restart, by crashes so far: doubling from 500 ms, capped at 30 s.
+const backoffByCrashes = [
+  500, 1000, 2000, 4000, 8000, 16_000, 30_000, 30_000, 30_000, 30_000,
+];
+
+// The milliseconds the Supervisor's delays must wait, stated, not read back from its timers.
+export const delays = {
+  heartbeatTimeout: heartbeatTimeoutMs,
+  readyTimeout: readyTimeoutMs,
+  backoff: (snapshot: SupervisorSnapshot): number =>
+    backoffByCrashes[snapshot.context.crashTimes.length - 1] ??
+    expect.unreachable('No backoff is declared for this many crashes'),
 };
 
 // Drives each graph event against the real Supervisor.
-const eventExecutors = {
-  'xstate.init': (): void => {
-    startSupervisorActor(machine, input);
-  },
+export const executors = {
   'engine.ready': (): void =>
     latestEngine().send({ type: readyEngineEvent, port: 7337 }),
   [heartbeatEngineEvent]: (): void => {
@@ -61,16 +56,7 @@ const eventExecutors = {
     latestEngine().unresolved();
   },
   'server.stop': (): void => supervisor.send({ type: stopServerEvent }),
-  [readyDelayEvent]: (): void => crossDelay(readyTimeoutMs),
-  [heartbeatDelayEvent]: (): void => crossDelay(heartbeatTimeoutMs),
-  [backoffDelayEvent]: (): void =>
-    crossDelay(backoffMs(supervisor.getSnapshot().context.crashTimes.length)),
 };
-
-export const executors = new Map<
-  string,
-  EventExecutor<SupervisorSnapshot, SupervisorEvent>
->(Object.entries(eventExecutors));
 
 const expectModelState = (expected: SupervisorSnapshot): void => {
   const actual = supervisor.getSnapshot();

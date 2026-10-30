@@ -1,9 +1,14 @@
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
+import {
+  pathWalks,
+  unwalkedAutomaticTransitions,
+  unwalkedDeclaredTransitions,
+} from '@repo/vitest/model-audit';
 import { expect, it } from 'vitest';
-import { unwalkedAutomaticTransitions } from '#mocks/acp-auto-audit';
+import { automaticWalks } from '#mocks/acp-auto-witnesses';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createAcpSessionModel } from '#mocks/acp-session-model';
-import { unwalkedSessionTransitions } from '#mocks/acp-transition-audit';
+import { extraTransitionWitnesses } from '#mocks/acp-transition-witnesses';
 import { findMachineActor } from '../lib/machine-actor';
 import { sessionActorId } from './open-sessions-machine';
 import { sessionMachine } from './session-machine';
@@ -32,7 +37,17 @@ it('walks every declared Session event transition, including guarded branches', 
     (entry) => createAcpSessionModel(actor.getSnapshot(), entry).paths,
   );
 
-  expect(unwalkedAutomaticTransitions(paths, actor.getSnapshot())).toEqual([]);
-  expect(unwalkedSessionTransitions(paths)).toEqual([]);
+  expect(
+    unwalkedAutomaticTransitions(
+      sessionMachine,
+      automaticWalks(paths, actor.getSnapshot()),
+    ),
+  ).toEqual([]);
+  expect(
+    unwalkedDeclaredTransitions(sessionMachine, {
+      walks: pathWalks(paths),
+      witnesses: extraTransitionWitnesses(paths),
+    }),
+  ).toEqual([]);
   await host.caller.session.close(created);
 }, 15_000);

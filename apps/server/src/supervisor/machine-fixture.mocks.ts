@@ -8,12 +8,7 @@ import {
   type EventObject,
 } from 'xstate';
 import type { EngineCommand } from './engine-message';
-import {
-  backoffBaseMs,
-  backoffCapMs,
-  supervisorMachine,
-  type SupervisorInput,
-} from './machine';
+import { supervisorMachine, type SupervisorInput } from './machine';
 
 export const supervisorStartedAt = '2026-10-03T00:00:00.000Z';
 
@@ -28,18 +23,6 @@ export const heartbeatEngineEvent = 'engine.heartbeat';
 export const engineStoppedEvent = 'engine.exited';
 
 export const engineUnresolvedEvent = 'engine.unresolved';
-
-export const readyDelayEvent = 'xstate.after.readyTimeout.supervisor.starting';
-
-export const heartbeatDelayEvent =
-  'xstate.after.heartbeatTimeout.supervisor.running';
-
-export const backoffDelayEvent =
-  'xstate.after.backoff.supervisor.backingOff.delay.waiting';
-
-// Doubling from the base, up to the cap.
-export const backoffMs = (crashes: number): number =>
-  Math.min(backoffBaseMs * 2 ** (crashes - 1), backoffCapMs);
 
 interface MockEngine {
   send: (event: AnyEventObject) => void;
@@ -103,6 +86,8 @@ afterEach((): void => {
 export function startSupervisorActor(
   machine: typeof supervisorMachine,
   input: SupervisorInput,
-): void {
+): typeof supervisor {
   supervisor = createActor(machine, { input }).start();
+
+  return supervisor;
 }

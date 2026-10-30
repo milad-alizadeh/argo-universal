@@ -1,10 +1,14 @@
+import { pathStates, type Sent } from '@repo/vitest/model-audit';
 import { getNextSnapshot, type EventFromLogic } from 'xstate';
 import { sessionMachine } from '../src/sessions';
-import type { AcpModelSnapshot } from './acp-session-model';
+import type {
+  AcpModelSnapshot,
+  createAcpSessionModel,
+} from './acp-session-model';
 
 type SessionEvent = EventFromLogic<typeof sessionMachine>;
 
-type Witness = { state: AcpModelSnapshot; event: SessionEvent };
+type Paths = ReturnType<typeof createAcpSessionModel>['paths'];
 
 function stateFor(
   states: AcpModelSnapshot[],
@@ -66,7 +70,7 @@ function creationReceipt(state: AcpModelSnapshot): SessionEvent {
   };
 }
 
-function creationWitnesses(states: AcpModelSnapshot[]): Witness[] {
+function creationWitnesses(states: AcpModelSnapshot[]): Sent[] {
   const state = stateFor(
     states,
     (item) => item.matches('creating') && item.context.input.kind === 'new',
@@ -78,7 +82,7 @@ function creationWitnesses(states: AcpModelSnapshot[]): Witness[] {
   ];
 }
 
-function openingWitnesses(states: AcpModelSnapshot[]): Witness[] {
+function openingWitnesses(states: AcpModelSnapshot[]): Sent[] {
   const state = stateFor(states, (item) =>
     item.matches({ open: { acp: 'opening' } }),
   );
@@ -103,7 +107,7 @@ function isWorking(state: AcpModelSnapshot): boolean {
   );
 }
 
-function permissionWitnesses(states: AcpModelSnapshot[]): Witness[] {
+function permissionWitnesses(states: AcpModelSnapshot[]): Sent[] {
   const state = stateFor(states, isWorking);
 
   const permission = nativePermission(state);
@@ -117,7 +121,7 @@ function permissionWitnesses(states: AcpModelSnapshot[]): Witness[] {
   ];
 }
 
-function cancellationWitnesses(states: AcpModelSnapshot[]): Witness[] {
+function cancellationWitnesses(states: AcpModelSnapshot[]): Sent[] {
   const state = stateFor(states, (item) =>
     item.matches({ open: { acp: { activeTurn: 'cancelling' } } }),
   );
@@ -139,16 +143,16 @@ function closingStates(states: AcpModelSnapshot[]): AcpModelSnapshot[] {
   ];
 }
 
-function closeWitnesses(states: AcpModelSnapshot[]): Witness[] {
+function closeWitnesses(states: AcpModelSnapshot[]): Sent[] {
   return closingStates(states).map((state) => ({
     state,
     event: { type: 'session.close' },
   }));
 }
 
-export function extraTransitionWitnesses(
-  states: AcpModelSnapshot[],
-): Witness[] {
+export function extraTransitionWitnesses(paths: Paths): Sent[] {
+  const states = pathStates(paths);
+
   return [
     ...creationWitnesses(states),
     ...openingWitnesses(states),
