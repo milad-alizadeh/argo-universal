@@ -35,7 +35,7 @@ export interface PluginTestOptions {
 }
 
 // The App an items Slot list is asked from; it decides how many items show before "+N".
-export type SlotItemsOptions = {
+type SlotItemsOptions = {
   signal: AbortSignal;
   platform?: PluginSurface['platform'];
 };

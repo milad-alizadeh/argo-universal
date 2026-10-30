@@ -101,9 +101,19 @@ export const messageFacts = (rows: readonly SessionUpdate[]): MessageFacts[] =>
           {
             messageId: row.messageId,
             content: row.content,
-            senderSessionId: row._meta?.argo?.senderSessionId,
-            recipientSessionId: row._meta?.argo?.recipientSessionId,
+            ...participantFacts(row),
           },
         ]
       : [],
   );
+
+const participantFacts = (
+  row: Extract<SessionUpdate, { sessionUpdate: 'session_message' }>,
+): Pick<MessageFacts, 'senderSessionId' | 'recipientSessionId'> => ({
+  senderSessionId: participant(row)?.senderSessionId,
+  recipientSessionId: participant(row)?.recipientSessionId,
+});
+
+const participant = (
+  row: Extract<SessionUpdate, { sessionUpdate: 'session_message' }>,
+): NonNullable<typeof row._meta>['argo'] => row._meta?.argo;

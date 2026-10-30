@@ -4,4 +4,4 @@ export { PluginSlot, type PluginSlotContribution } from './plugin-slot';
 
 export * from './plugin-stream-state';
 
-export { ReplaceableSlot, ReplaceableSlotRenderer } from './replaceable-slot';
+export { ReplaceableSlotRenderer } from './replaceable-slot';

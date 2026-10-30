@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 // The kit folder a kit component is drawn in, `packages/kit/src/primitives/<group>/` (tools/kit-pairing-rules.mts).
-export const kitComponentGroups = [
+const kitComponentGroups = [
   'actions',
   'content',
   'controls',

@@ -1,5 +1,8 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { addProfileRows } from './profile-frame-rows.mjs';
 
 // The Scaffold story holds no state of its own, so each toggle sets the story's args, as its controls do.
 const storyId = 'frame-scaffold--overview';
@@ -32,7 +35,9 @@ await session.send('Performance.enable');
 
 await session.send('Emulation.setCPUThrottlingRate', { rate: throttle });
 
-await mkdir('/tmp/argo-frame-profile', { recursive: true });
+const outputDirectory = await mkdtemp(
+  path.join(tmpdir(), 'argo-frame-profile-'),
+);
 
 await page.goto(`${origin}/iframe.html?id=${storyId}&viewMode=story`);
 
@@ -40,23 +45,7 @@ await page.getByRole('button', { name: 'Hide sidebar' }).waitFor();
 
 await page.waitForTimeout(500);
 
-await page.evaluate(() => {
-  for (const [id, count] of [
-    ['list-content', 150],
-    ['detail-content', 300],
-  ]) {
-    const parent = document.querySelector(
-      `[data-testid="${id}"]`,
-    ).parentElement;
-
-    for (let row = 0; row < count; row++) {
-      const item = document.createElement('div');
-      item.textContent = `Profiling row ${row}: representative text content that stays readable while the Frame moves.`;
-      item.style.cssText = 'padding:8px 16px;font-size:14px;line-height:20px;';
-      parent.appendChild(item);
-    }
-  }
-});
+await page.evaluate(addProfileRows);
 
 const setArgs = (updatedArgs) =>
   page.evaluate((update) => window.__STORYBOOK_PREVIEW__.onUpdateArgs(update), {
@@ -151,7 +140,7 @@ for (;;) {
 
 await session.send('IO.close', { handle: stream });
 
-await writeFile(`/tmp/argo-frame-profile/${label}-trace.json`, trace);
+await writeFile(path.join(outputDirectory, `${label}-trace.json`), trace);
 
 const events = JSON.parse(trace).traceEvents;
 
@@ -187,6 +176,7 @@ const deltas = Object.fromEntries(
 
 const report = {
   label,
+  outputDirectory,
   throttle,
   origin,
   browserVersion: browser.version(),
@@ -200,7 +190,7 @@ const report = {
 };
 
 await writeFile(
-  `/tmp/argo-frame-profile/${label}.json`,
+  path.join(outputDirectory, `${label}.json`),
   JSON.stringify(report, null, 2),
 );
 

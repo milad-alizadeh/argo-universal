@@ -63,7 +63,7 @@ export const buttonProps = z.object({
     .describe('Spoken name when the visible label says too little.'),
 });
 
-export const layoutProps = z.object({
+const layoutProps = z.object({
   gap: z
     .enum(spacingSteps)
     .optional()

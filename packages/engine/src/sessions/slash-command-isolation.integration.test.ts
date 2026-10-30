@@ -1,6 +1,18 @@
+import type { AgentOptionsUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+
+const readCommands = async (
+  stream: AsyncIterator<AgentOptionsUpdate>,
+): Promise<AgentOptionsUpdate['commands'] | undefined> =>
+  (await stream.next()).value?.commands;
+
+async function closeStream(
+  stream: AsyncIterator<AgentOptionsUpdate>,
+): Promise<void> {
+  await stream.return?.();
+}
 
 it('keeps each live Session’s commands separate from the Agent and Project snapshot', async () => {
   const host = await startAcpEngine({ steps: [] });
@@ -50,12 +62,12 @@ it('keeps each live Session’s commands separate from the Agent and Project sna
   )[Symbol.asyncIterator]();
 
   try {
-    expect((await stream.next()).value?.commands).toEqual([
+    expect(await readCommands(stream)).toEqual([
       { name: 'first-only', description: 'Only first' },
     ]);
   } finally {
     reader.abort();
-    await stream.return?.();
+    await closeStream(stream);
   }
 
   const latest = (await host.caller.session.agentOptions(owner))[
@@ -63,11 +75,11 @@ it('keeps each live Session’s commands separate from the Agent and Project sna
   ]();
 
   try {
-    expect((await latest.next()).value?.commands).toEqual([
+    expect(await readCommands(latest)).toEqual([
       { name: 'second-only', description: 'Only second' },
     ]);
   } finally {
-    await latest.return?.();
+    await closeStream(latest);
   }
 
   expect(first.sessionId).not.toBe(second.sessionId);

@@ -14,9 +14,7 @@ const formatModes = { date: 'date', 'date-time': 'datetime' } as const;
 const formatMode = (format: string | undefined): DateMode | undefined =>
   format === 'date' || format === 'date-time' ? formatModes[format] : undefined;
 
-export const dateMode = (
-  property: ElicitationPropertySchema,
-): DateMode | undefined =>
+const dateMode = (property: ElicitationPropertySchema): DateMode | undefined =>
   property.type === 'string' ? formatMode(property.format) : undefined;
 
 export const isDate = (property: ElicitationPropertySchema): boolean =>

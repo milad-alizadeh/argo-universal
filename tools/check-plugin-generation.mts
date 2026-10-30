@@ -3,8 +3,11 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { resolveExecutable } from '@repo/executables';
 
 const contracts = '@repo/contracts';
+
+const pnpm = resolveExecutable('pnpm');
 
 const checkTypes = 'check-types';
 
@@ -23,7 +26,7 @@ const cache = await mkdtemp(join(tmpdir(), 'argo-plugin-generation-'));
 const marker = 'The button label. Generation freshness probe.';
 
 function run(args: string[]): string {
-  return execFileSync('pnpm', args, {
+  return execFileSync(pnpm, args, {
     cwd: root,
     env: { ...process.env, TURBO_CACHE_DIR: cache, TURBO_CACHE: 'local:rw' },
     encoding: 'utf8',
@@ -44,11 +47,10 @@ function generate(): string {
 }
 
 function expectStale(): void {
-  const result = spawnSync(
-    'pnpm',
-    ['--filter', contracts, 'check:plugin-kit'],
-    { cwd: root, encoding: 'utf8' },
-  );
+  const result = spawnSync(pnpm, ['--filter', contracts, 'check:plugin-kit'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
 
   assert.equal(
     result.status,

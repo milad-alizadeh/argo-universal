@@ -2,6 +2,7 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAlive } from '@repo/process';
 import { expect, it, vi, onTestFinished } from 'vitest';
 import { createActor, setup } from 'xstate';
 import { z } from 'zod';
@@ -17,14 +18,13 @@ const owners = [
   },
 ];
 
-const isAlive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
+const changeProcesses = (
+  mode: string,
+  pids: { wrapper: number; engine: number },
+): void => {
+  if (mode === 'stopped wrapper') process.kill(pids.wrapper, 'SIGSTOP');
 
-    return true;
-  } catch {
-    return false;
-  }
+  if (mode !== 'Supervisor force-stop') process.kill(pids.engine, 'SIGKILL');
 };
 
 it.each(
@@ -80,9 +80,7 @@ it.each(
 
     owned.push(pids.command, pids.wrapper);
 
-    if (mode === 'stopped wrapper') process.kill(pids.wrapper, 'SIGSTOP');
-
-    if (mode !== 'Supervisor force-stop') process.kill(pids.engine, 'SIGKILL');
+    changeProcesses(mode, pids);
     const engine = actor.getSnapshot().children['engine'];
 
     if (!engine) throw new Error('Engine did not start');

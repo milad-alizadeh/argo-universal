@@ -21,56 +21,45 @@ import {
   messageRejectedEvent,
   turnEndingEvent,
   type FeedEvent,
+  type FeedActorRef,
   type FeedInput,
   type FeedTurnEnding,
 } from '../feed';
 import { feedMachine } from '../feed';
-import type { WriterActorRef, WriterEvent } from '../storage';
+import type { WriterActorRef, WriterCommit, WriterEvent } from '../storage';
 import {
   cancelAcp,
   closeAcp,
   commitPrompt,
-  configureAcp,
   openAcp,
-  restoreAcpConfiguration,
   promptAcp,
   publishTurn,
   type AcpOperationInput,
   type OpenedAcpSession,
 } from './acp-operations';
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
-import { toSlashCommands } from './acp/acp-slash-commands';
 import { promptFailureOutcome } from './acp/prompts/prompt-outcome';
 import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
 } from './acp/prompts/prompt-types';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
+import { isReplayedHistory } from './acp/replayed-history';
 import {
   admitsPermissionAnswer,
   answeredRequest,
 } from './admission/answer-admission';
-import { hasConfigurationCapacity } from './admission/config-admission';
-import { isReplayedHistory } from './admission/update-admission';
-import { AgentOptionsJob } from './agent-options-storage';
 import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
+import { sessionConfiguration, type ConfigurationStep } from './configuration';
+import { creationSettledEvent } from './creation/creation-receipt';
 import {
-  acknowledgeConfigChoice,
-  applyConfigurationReport,
-  holdConfigChoice,
-  queueConfigChoice,
-  readConfigurationUpdate,
-  rejectConfigChoice,
-  rejectPendingConfig,
-  releaseHeldConfig,
-  takeConfigChoice,
-} from './config-queue';
-import { toConfigValues } from './configuration/config-choices';
-import { creationSettledEvent } from './creation-receipt';
+  createSessionCheckout,
+  toSessionInsert,
+} from './creation/session-create-data';
 import { initialSessionContext } from './initial-context';
 import { nativePermissionEvent } from './native-permissions';
 import { pendingInputRequest } from './pending-input';
@@ -91,23 +80,19 @@ import {
   setConfigEvent,
   storageFailingEvent,
   writeFeedEvent,
-  type EndTurnParameters,
   type SessionContext,
   type SessionEvent,
   type SessionMachineInput,
   type SessionWrite,
 } from './session-context';
-import {
-  createSessionCheckout,
-  discardSession,
-  loadSession,
-  type NewSessionInput,
-  type SessionData,
-  type SessionDiscard,
-  type SessionInput,
-  toSessionInsert,
+import type {
+  NewSessionInput,
+  SessionData,
+  SessionInput,
 } from './session-data';
+import { discardSession, type SessionDiscard } from './session-discard';
 import { sessionFeedInput } from './session-feed';
+import { loadSession } from './session-load';
 import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
 import { withShell } from './shells';
 import {
@@ -117,12 +102,11 @@ import {
   subagentFeed,
 } from './subagents';
 import {
-  connectionLostDuringTurn,
-  endTurn,
-  recordCrash,
-  startTurn,
+  sessionTurn,
+  type EndTurnParameters,
   type StartTurnParameters,
-} from './turn-lifecycle';
+  type TurnStep,
+} from './turn';
 
 export type {
   SessionCommand,
@@ -148,11 +132,59 @@ const answerElicitationEvent = 'session.answerElicitation';
 
 const configuringState = 'configuring';
 
+/*
+ * What a state means to the code outside this statechart, so a renamed state never changes admission:
+ * - starting: creating, loading or opening its Agent; a command waits for it.
+ * - ready: accepts Session commands, archiving included; a close while archiving is refused.
+ * - settling: a choice or a cancellation is in flight; a prompt waits for it.
+ * - closing: closing or flushing; a close waits for it instead of being sent again.
+ * - archived: read-only; a command is refused and a close waits for the actor to stop.
+ * - turn, running, requiresAction: not admission; Tool calls and the Session snapshot read them.
+ */
+type SessionTag =
+  | 'starting'
+  | 'ready'
+  | 'settling'
+  | 'closing'
+  | 'archived'
+  | 'turn'
+  | 'running'
+  | 'requiresAction';
+
 type SessionDataParameters = { data: SessionData };
 
 type FailureParameters = { error: unknown };
 
 type CrashNoticeParameters = { duringTurn?: boolean } | undefined;
+
+type CommitStatus = 'committed' | 'retrying' | 'failed';
+
+type RememberedLease = Pick<
+  SessionContext,
+  'acpLease' | 'vendorSessionId' | 'configOptions' | 'usage'
+>;
+
+const leaseValues = (
+  context: SessionContext,
+  { lease, configOptions }: OpenedAcpSession,
+): RememberedLease => ({
+  acpLease: lease,
+  vendorSessionId: lease.sessionId,
+  configOptions,
+  usage: context.usage
+    ? acpContextUsage(context.usage, lease.initialization)
+    : null,
+});
+
+type AcpUpdate = Extract<
+  SessionEvent,
+  { type: typeof acpUpdateEvent }
+>['notification']['update'];
+
+const titleFrom = (update: AcpUpdate): string | undefined =>
+  update.sessionUpdate === 'session_info_update'
+    ? update.title?.trim()
+    : undefined;
 
 type LoadSessionInput = {
   session: SessionInput;
@@ -180,6 +212,62 @@ const enqueueWrites = (
     enqueue.sendTo(context.input.writer, { type: writeFeedEvent, ...write });
 };
 
+type StepQueue = WriteQueue & {
+  assign: (change: Partial<SessionContext>) => void;
+};
+
+type ChangeAndWrites = Pick<ConfigurationStep, 'writes'> & {
+  change?: Partial<SessionContext>;
+};
+
+// Any step's change to the Session, when it has one, then its writes.
+const enqueueChangeAndWrites = (
+  enqueue: StepQueue,
+  context: SessionContext,
+  step: ChangeAndWrites | undefined,
+): void => {
+  if (!step) return;
+
+  if (step.change) enqueue.assign(step.change);
+  enqueueWrites(enqueue, context, step.writes);
+};
+
+type TurnQueue = StepQueue & {
+  sendTo: (target: FeedActorRef | 'feed', event: FeedEvent) => void;
+};
+
+// A Turn step: its change and writes, then its events for the Feeds; each Subagent's Feed hears its Turn end before its write, and the Session's own Feed after them.
+const enqueueTurnStep = (
+  enqueue: TurnQueue,
+  context: SessionContext,
+  step: TurnStep,
+): void => {
+  enqueueChangeAndWrites(enqueue, context, step);
+
+  for (const { feed, event, write } of step.subagentTurns) {
+    enqueue.sendTo(feed, event);
+    enqueueWrites(enqueue, context, [write]);
+  }
+
+  for (const event of step.feed) enqueue.sendTo('feed', event);
+};
+
+const crashDuringTurn = (params: CrashNoticeParameters): boolean =>
+  params?.duringTurn ?? false;
+
+const recordAuthentication = (
+  context: SessionContext,
+  params: FailureParameters,
+): void => context.acpLease?.authentication?.recordRequired(params.error);
+
+const commitAcknowledgement = (
+  committed: PromiseWithResolvers<CommitStatus>,
+): WriterCommit => ({
+  resolve: () => committed.resolve('committed'),
+  reject: (_cause, retrying) =>
+    committed.resolve(retrying ? 'retrying' : 'failed'),
+});
+
 // The Session's one child actor: its Feed, invoked under the id "feed".
 type SessionChildren = { feed: 'feed'; [id: `subagent:${string}`]: 'feed' };
 
@@ -191,6 +279,7 @@ const sessionSetup = setup({
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as Pick<SessionContext, 'failure'>,
+    tags: {} as SessionTag,
   },
   actors: {
     toolCallHooks,
@@ -209,7 +298,7 @@ const sessionSetup = setup({
       cancelAcp(input),
     ),
     configureAcp: fromPromise<SessionConfigOption[], SessionContext>(
-      ({ input }) => configureAcp(input),
+      ({ input }) => sessionConfiguration.send(input),
     ),
     publishTurn: fromPromise<void, AcpOperationInput>(({ input }) =>
       publishTurn(input),
@@ -228,8 +317,8 @@ const sessionSetup = setup({
     openAcp: fromPromise<OpenedAcpSession, SessionContext>(({ input }) =>
       openAcp(input),
     ),
-    restoreAcpConfiguration: fromPromise<SessionConfigOption[], SessionContext>(
-      ({ input, signal }) => restoreAcpConfiguration(input, signal),
+    restoreAcpConfiguration: fromPromise<ConfigurationStep, SessionContext>(
+      ({ input, signal }) => sessionConfiguration.restore(input, signal),
     ),
     closeAcp: fromPromise<void, AcpOperationInput>(({ input }) =>
       closeAcp(input),
@@ -248,6 +337,17 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    rememberCreationReceipt: assign(({ event }) => {
+      assertEvent(event, creationSettledEvent);
+
+      return { creationReceipt: event.receipt };
+    }),
+    rememberShell: assign(({ context, event }) => {
+      assertEvent(event, 'agent.shellChanged');
+
+      return { shells: withShell(context.shells, event.shell) };
+    }),
+    cancelArchiveRequest: assign({ archiveRequested: false }),
     requestArchive: assign({ archiveRequested: true, failure: null }),
     routeSubagentUpdate: assign(({ context, event, spawn, self }) => {
       assertEvent(event, acpUpdateEvent);
@@ -268,68 +368,60 @@ const sessionSetup = setup({
     flushSubagents: ({ context }) => flushSubagents(context.subagents),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
-    queueAcpConfig: assign(({ context, event }) => {
+    queueAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
-
-      return queueConfigChoice(context, event);
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.choose(context, event, 'now'),
+      );
     }),
     holdAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
-      const { change, writes } = holdConfigChoice(context, event);
-
-      enqueue.assign(change);
-      enqueueWrites(enqueue, context, writes);
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.choose(context, event, 'nextTurn'),
+      );
     }),
-    releaseHeldConfig: assign(({ context }) => releaseHeldConfig(context)),
-    takeAcpConfig: assign(({ context }) => takeConfigChoice(context)),
-    saveAcpCommands: enqueueActions(({ context, event, enqueue }) => {
-      assertEvent(event, acpUpdateEvent);
-      const update = event.notification.update;
-
-      if (update.sessionUpdate !== 'available_commands_update') return;
-
-      const commands = toSlashCommands(update.availableCommands);
-
-      enqueue.assign({ slashCommands: commands });
-      enqueueWrites(enqueue, context, [
-        {
-          job: new AgentOptionsJob(
-            { agent: context.agent, projectId: context.projectId },
-            undefined,
-            { authoritative: true, commands },
-          ),
-        },
-      ]);
-    }),
-    applyAcpConfig: enqueueActions(
-      ({ context, event, enqueue }, options?: SessionConfigOption[]) => {
-        const nextOptions = options ?? readConfigurationUpdate(context, event);
-
-        if (!nextOptions) return;
-
-        const { change, writes } = applyConfigurationReport(
+    releaseHeldConfig: enqueueActions(({ context, enqueue }) =>
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.releaseHeld(context),
+      ),
+    ),
+    takeAcpConfig: enqueueActions(({ context, enqueue }) =>
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.begin(context),
+      ),
+    ),
+    reportAcpConfig: enqueueActions(({ context, event, enqueue }) =>
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.report(context, event),
+      ),
+    ),
+    settleAcpConfig: enqueueActions(
+      (
+        { context, enqueue },
+        outcome: Parameters<typeof sessionConfiguration.settle>[1],
+      ) =>
+        enqueueChangeAndWrites(
+          enqueue,
           context,
-          nextOptions,
-          options !== undefined,
-        );
-
-        enqueue.assign(change);
-        enqueueWrites(enqueue, context, writes);
-      },
+          sessionConfiguration.settle(context, outcome),
+        ),
     ),
-    acknowledgeAcpConfig: assign(({ context }) =>
-      acknowledgeConfigChoice(context),
-    ),
-    rejectAcpConfig: enqueueActions(
-      ({ context, enqueue }, params: FailureParameters) => {
-        const { change, writes } = rejectConfigChoice(context, params);
-
-        enqueue.assign(change);
-        enqueueWrites(enqueue, context, writes);
-      },
-    ),
-    rejectPendingAcpConfig: assign(({ context }) =>
-      rejectPendingConfig(context),
+    rejectPendingAcpConfig: enqueueActions(({ context, enqueue }) =>
+      enqueueChangeAndWrites(
+        enqueue,
+        context,
+        sessionConfiguration.abandon(context),
+      ),
     ),
     rememberAcpUsage: assign(
       ({ context, event }): Pick<SessionContext, 'usage'> => {
@@ -346,10 +438,7 @@ const sessionSetup = setup({
     ),
     applyAcpTitle: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, acpUpdateEvent);
-      const update = event.notification.update;
-
-      if (update.sessionUpdate !== 'session_info_update') return;
-      const title = update.title?.trim();
+      const title = titleFrom(event.notification.update);
 
       if (!title) return;
       enqueue.sendTo(writer, {
@@ -412,29 +501,17 @@ const sessionSetup = setup({
         return { pendingSubmission: null };
       },
     ),
-    rememberAcpLease: assign(
-      (
-        { context },
-        { lease, configOptions }: OpenedAcpSession,
-      ): Pick<
-        SessionContext,
-        'acpLease' | 'vendorSessionId' | 'configOptions' | 'usage'
-      > => {
-        return {
-          acpLease: lease,
-          vendorSessionId: lease.sessionId,
-          configOptions,
-          usage: context.usage
-            ? acpContextUsage(context.usage, lease.initialization)
-            : null,
-        };
-      },
+    rememberAcpLease: assign(({ context }, opened: OpenedAcpSession) =>
+      leaseValues(context, opened),
     ),
     rememberRestoredConfiguration: assign(
-      (_, options: SessionConfigOption[]) => ({
-        configOptions: options,
-        configValues: toConfigValues(options),
-      }),
+      (_, restored: ConfigurationStep): Partial<SessionContext> =>
+        restored.change,
+    ),
+    // The restored options are written once the Session and its Agent session are stored.
+    storeRestoredConfiguration: enqueueActions(
+      ({ context, enqueue }, restored: ConfigurationStep) =>
+        enqueueWrites(enqueue, context, restored.writes),
     ),
     rememberPromptFailure: assign(({ context }, params: FailureParameters) => ({
       failure:
@@ -446,14 +523,6 @@ const sessionSetup = setup({
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
     rememberFeedEnded: assign({ feedEnded: true }),
-    storeAgentOptions: sendTo(writer, ({ context }) => ({
-      type: writeFeedEvent,
-      job: new AgentOptionsJob(
-        { agent: context.agent, projectId: context.projectId },
-        context.configOptions,
-        { authoritative: true },
-      ),
-    })),
     storeAcpSession: sendTo(writer, ({ context }) => ({
       type: writeFeedEvent,
       job: new SessionRowUpdateJob({
@@ -485,7 +554,7 @@ const sessionSetup = setup({
     ): void => {
       if (context.turnEnding.kind === 'cancel') return;
 
-      context.acpLease?.authentication?.recordRequired(params.error);
+      recordAuthentication(context, params);
     },
     addDiscardFailure: assign(
       ({ context, event }): Pick<SessionContext, 'failure'> => ({
@@ -496,9 +565,7 @@ const sessionSetup = setup({
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
 
-      const committed = Promise.withResolvers<
-        'committed' | 'retrying' | 'failed'
-      >();
+      const committed = Promise.withResolvers<CommitStatus>();
 
       enqueue.assign({
         stored: true,
@@ -507,11 +574,7 @@ const sessionSetup = setup({
       enqueue.sendTo(writer, {
         type: writeFeedEvent,
         job: toSessionInsert(context.input, context),
-        committed: {
-          resolve: () => committed.resolve('committed'),
-          reject: (cause: unknown, retrying?: boolean) =>
-            committed.resolve(retrying ? 'retrying' : 'failed'),
-        },
+        committed: commitAcknowledgement(committed),
       });
     }),
     persistTurn: enqueueActions(
@@ -519,20 +582,16 @@ const sessionSetup = setup({
         { context, enqueue },
         params: Pick<StartTurnParameters, 'turnId'>,
       ): void => {
-        const { change, write } = startTurn(context, params.turnId);
-
-        enqueue.assign(change);
-        enqueueWrites(enqueue, context, [write]);
+        enqueueTurnStep(
+          enqueue,
+          context,
+          sessionTurn.start(context, params.turnId),
+        );
       },
     ),
     endTurn: enqueueActions(
       ({ context, enqueue }, ended: EndTurnParameters): void => {
-        const { change, write, complete } = endTurn(context, ended);
-
-        if (write) enqueueWrites(enqueue, context, [write]);
-
-        if (complete) enqueue.sendTo('feed', complete);
-        enqueue.assign(change);
+        enqueueTurnStep(enqueue, context, sessionTurn.end(context, ended));
       },
     ),
     queuePermission: assign(
@@ -662,16 +721,11 @@ const sessionSetup = setup({
     recordCrash: enqueueActions(
       ({ context, event, enqueue }, params: CrashNoticeParameters): void => {
         assertEvent(event, 'acp.failed');
-        const crash = recordCrash(context, event, params?.duringTurn ?? false);
-
-        for (const child of crash.subagents) {
-          enqueue.sendTo(child.feed, child.event);
-          enqueueWrites(enqueue, context, [{ job: child.job }]);
-        }
-
-        if (crash.turnEnding) enqueue.assign({ turnEnding: crash.turnEnding });
-
-        if (crash.announce) enqueue.sendTo('feed', crash.announce);
+        enqueueTurnStep(
+          enqueue,
+          context,
+          sessionTurn.crash(context, event, crashDuringTurn(params)),
+        );
       },
     ),
     discloseInterruption: enqueueActions(({ context, enqueue }): void => {
@@ -759,9 +813,7 @@ const sessionSetup = setup({
       ({ context }): boolean => context.heldConfig.length > 0,
     ]),
     hasConfigurationCapacity: ({ context }): boolean =>
-      hasConfigurationCapacity(
-        context.configQueue.length + context.heldConfig.length,
-      ),
+      sessionConfiguration.hasRoom(context),
     acceptsAcpConfig: and([
       'hasConfigurationCapacity',
       or([
@@ -893,14 +945,12 @@ export const sessionMachine = sessionSetup.createMachine({
   on: {
     [creationSettledEvent]: {
       guard: ({ context }) => context.input.kind === 'new',
-      actions: assign(({ event }) => ({ creationReceipt: event.receipt })),
+      actions: 'rememberCreationReceipt',
     },
     // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
     [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
     'agent.shellChanged': {
-      actions: assign(({ context, event }) => ({
-        shells: withShell(context.shells, event.shell),
-      })),
+      actions: 'rememberShell',
     },
   },
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
@@ -912,6 +962,7 @@ export const sessionMachine = sessionSetup.createMachine({
       always: [{ guard: 'isNew', target: 'creating' }, { target: 'loading' }],
     },
     creating: {
+      tags: ['starting'],
       after: {
         checkoutLimit: {
           target: 'closed',
@@ -933,6 +984,7 @@ export const sessionMachine = sessionSetup.createMachine({
       },
     },
     loading: {
+      tags: ['starting'],
       invoke: {
         id: 'loadSession',
         src: 'loadSession',
@@ -1002,8 +1054,8 @@ export const sessionMachine = sessionSetup.createMachine({
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
             'acp.update': [
               { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
-              { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
-              { guard: 'isCommandsUpdate', actions: 'saveAcpCommands' },
+              { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },
+              { guard: 'isCommandsUpdate', actions: 'reportAcpConfig' },
               {
                 guard: ({ event }): boolean =>
                   event.notification.update.sessionUpdate === 'usage_update',
@@ -1038,6 +1090,7 @@ export const sessionMachine = sessionSetup.createMachine({
               ],
             },
             archiving: {
+              tags: ['ready'],
               on: {
                 'session.close': {},
                 'acp.failed': { actions: 'recordCrash' },
@@ -1053,7 +1106,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 onError: {
                   target: 'closing',
                   actions: [
-                    assign({ archiveRequested: false }),
+                    'cancelArchiveRequest',
                     {
                       type: 'rememberFailure',
                       params: ({ event }): FailureParameters => ({
@@ -1065,6 +1118,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             opening: {
+              tags: ['starting'],
               invoke: {
                 id: 'openAcp',
                 src: 'openAcp',
@@ -1087,27 +1141,24 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             restoring: {
+              tags: ['starting'],
               invoke: {
                 id: 'restoreAcpConfiguration',
                 src: 'restoreAcpConfiguration',
-                input: ({ context }): SessionContext => ({
-                  ...context,
-                  configValues:
-                    context.input.kind === 'existing'
-                      ? context.configValues
-                      : [],
-                }),
+                input: ({ context }) => context,
                 onDone: {
                   target: 'idle',
                   actions: [
                     {
                       type: 'rememberRestoredConfiguration',
-                      params: ({ event }): SessionConfigOption[] =>
-                        event.output,
+                      params: ({ event }): ConfigurationStep => event.output,
                     },
                     'storeSession',
                     'storeAcpSession',
-                    'storeAgentOptions',
+                    {
+                      type: 'storeRestoredConfiguration',
+                      params: ({ event }): ConfigurationStep => event.output,
+                    },
                     'discloseInterruption',
                   ],
                 },
@@ -1119,6 +1170,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             idle: {
+              tags: ['ready'],
               always: [
                 { guard: 'hasAcpConfig', target: configuringState },
                 { guard: 'hasHeldSubmission', actions: 'releaseHeldConfig' },
@@ -1133,6 +1185,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             configuring: {
+              tags: ['ready', 'settling'],
               entry: 'takeAcpConfig',
               invoke: {
                 src: 'configureAcp',
@@ -1140,20 +1193,16 @@ export const sessionMachine = sessionSetup.createMachine({
                 input: ({ context }) => context,
                 onDone: {
                   target: 'idle',
-                  actions: [
-                    {
-                      type: 'applyAcpConfig',
-                      params: ({ event }): SessionConfigOption[] =>
-                        event.output,
-                    },
-                    'acknowledgeAcpConfig',
-                  ],
+                  actions: {
+                    type: 'settleAcpConfig',
+                    params: ({ event }) => ({ options: event.output }),
+                  },
                 },
                 onError: {
                   target: 'idle',
                   actions: [
                     {
-                      type: 'rejectAcpConfig',
+                      type: 'settleAcpConfig',
                       params: ({ event }): FailureParameters => ({
                         error: event.error,
                       }),
@@ -1169,6 +1218,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             committing: {
+              tags: ['ready', 'running'],
               entry: { type: 'persistTurn', params: toPromptTurn },
               invoke: {
                 id: 'commitPrompt',
@@ -1225,6 +1275,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             activeTurn: {
+              tags: ['ready', 'turn'],
               invoke: {
                 id: 'promptAcp',
                 src: 'promptAcp',
@@ -1348,14 +1399,19 @@ export const sessionMachine = sessionSetup.createMachine({
               initial: 'working',
               states: {
                 working: {
+                  tags: ['running'],
                   always: [
                     { guard: 'hasPermission', target: 'awaitingPermission' },
                     { guard: 'hasElicitation', target: 'awaitingElicitation' },
                   ],
                 },
-                awaitingPermission: { entry: 'answerHookedPermission' },
-                awaitingElicitation: {},
+                awaitingPermission: {
+                  tags: ['running', 'requiresAction'],
+                  entry: 'answerHookedPermission',
+                },
+                awaitingElicitation: { tags: ['running', 'requiresAction'] },
                 cancelling: {
+                  tags: ['settling'],
                   on: {
                     // The parent Turn ended; Subagents still own their active Turns.
                     'acp.update': [
@@ -1363,8 +1419,8 @@ export const sessionMachine = sessionSetup.createMachine({
                         guard: 'isSubagentUpdate',
                         actions: 'routeSubagentUpdate',
                       },
-                      { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
-                      { guard: 'isCommandsUpdate', actions: 'saveAcpCommands' },
+                      { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },
+                      { guard: 'isCommandsUpdate', actions: 'reportAcpConfig' },
                       { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
                       {},
                     ],
@@ -1402,6 +1458,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             publishing: {
+              tags: ['ready', 'running'],
               initial: 'connected',
               states: {
                 connected: {
@@ -1444,13 +1501,14 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             interrupting: {
+              tags: ['ready'],
               on: {
                 'acp.failed': {},
                 'session.close': {
                   target: 'closing',
                   actions: {
                     type: 'endTurn',
-                    params: connectionLostDuringTurn,
+                    params: sessionTurn.connectionLost,
                   },
                 },
               },
@@ -1465,19 +1523,20 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'closing',
                   actions: {
                     type: 'endTurn',
-                    params: connectionLostDuringTurn,
+                    params: sessionTurn.connectionLost,
                   },
                 },
                 onError: {
                   target: 'closing',
                   actions: {
                     type: 'endTurn',
-                    params: connectionLostDuringTurn,
+                    params: sessionTurn.connectionLost,
                   },
                 },
               },
             },
             closing: {
+              tags: ['closing'],
               entry: [
                 'rejectPendingAcpConfig',
                 {
@@ -1505,6 +1564,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             flushing: {
+              tags: ['closing'],
               on: { 'session.close': {} },
               entry: ['flushSubagents', 'flushFeed'],
               after: {
@@ -1545,6 +1605,7 @@ export const sessionMachine = sessionSetup.createMachine({
       ],
     },
     archived: {
+      tags: ['archived'],
       after: { checkoutRemovalDelay: { target: 'removingCheckout' } },
       on: {
         'session.unarchive': { target: 'undoingArchive' },

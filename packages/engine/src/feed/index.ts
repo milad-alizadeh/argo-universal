@@ -1,9 +1,4 @@
-export {
-  userMessageChange,
-  userMessageId,
-  promptMessageChange,
-  promptMessageId,
-} from './feed-change';
+export { promptMessageChange, promptMessageId } from './feed-change';
 
 export {
   type FeedActorRef,
@@ -17,7 +12,6 @@ export {
   highestFeedPosition,
   hydrateStoredFeedRow,
   newestRows,
-  payloadVersion,
   readWrittenRow,
   storedFeedColumns,
   toFeedRowWrite,
@@ -31,12 +25,11 @@ export { readFeedRows } from './merged-rows';
 
 export {
   committedTurnEndings,
-  FeedRowsJob,
-  projectQueuedFeedSession,
-  queuedFeedSessionId,
   readQueuedFeed,
   readQueuedFeedRow,
 } from './feed-storage';
+
+export { FeedRowsJob } from './feed-rows-job';
 
 export { outputBlobStored } from './stored-output';
 

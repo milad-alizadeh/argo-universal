@@ -4,8 +4,6 @@ import type { SessionData } from '../session-data';
 import { flushSubagents, routeSubagents, type Subagents } from './routing';
 import type { SubagentRouting } from './routing-types';
 
-export { crashedSubagentTurns } from './crash';
-
 export { flushSubagents, type Subagents };
 
 // The Session a Subagent update arrives on: its data and the machine input it was opened with, its own Feed, how a child's Feed starts, and how failing storage is reported.

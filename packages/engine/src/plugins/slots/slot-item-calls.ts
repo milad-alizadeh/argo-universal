@@ -3,7 +3,7 @@ import type { PluginEvent, SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 
 // How long one batched call may take before its Plugin is left out of that answer.
-export const slotItemsLimitMs = 2000;
+const slotItemsLimitMs = 2000;
 
 // Why a Plugin's items were left out; each is logged once per Plugin and Slot.
 export const itemsLeftOut = {

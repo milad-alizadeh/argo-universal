@@ -6,17 +6,19 @@ export type SystemDeps = Pick<SystemInfo, 'version' | 'startedAt'>;
 
 // macOS keeps the name people gave the computer apart from its network host name.
 function readComputerName(): string {
-  if (process.platform === 'darwin') {
-    try {
-      const name = execFileSync('scutil', ['--get', 'ComputerName'], {
-        encoding: 'utf8',
-      }).trim();
+  return macComputerName() || hostname().replace(/\.local$/, '');
+}
 
-      if (name) return name;
-    } catch {}
+function macComputerName(): string | undefined {
+  if (process.platform !== 'darwin') return undefined;
+
+  try {
+    return execFileSync('/usr/sbin/scutil', ['--get', 'ComputerName'], {
+      encoding: 'utf8',
+    }).trim();
+  } catch {
+    return undefined;
   }
-
-  return hostname().replace(/\.local$/, '');
 }
 
 let computerName: string | undefined;

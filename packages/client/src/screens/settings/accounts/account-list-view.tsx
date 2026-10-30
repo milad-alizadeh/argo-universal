@@ -23,7 +23,7 @@ export interface AccountListViewProps {
   onOpenAccount: (accountId: string) => void;
 }
 
-export const accountsTitle = 'Accounts';
+const accountsTitle = 'Accounts';
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Accounts',

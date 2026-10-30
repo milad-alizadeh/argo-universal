@@ -1,122 +1,134 @@
-import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import { type ChildHandle, childEnvironment, stopProcess } from '@repo/process';
 import {
-  ownedSupervisorEnvironment,
   prepareSupervisorRuntime,
-} from './desktop/owned-supervisor';
-import { pollServer, startOwnServer } from './own-server';
-import { hasExited } from './server-process';
+  startSupervisor,
+  supervisorEnvironment,
+} from './desktop/supervisor';
+import { startOwnServer } from './own-server';
 
-interface DesktopServer {
-  fixtureServer: Awaited<ReturnType<typeof startOwnServer>>;
+/*
+ * `fixture`: desktop finds the fixture Server. `reused`: the test starts a Supervisor that desktop finds and leaves running.
+ * `owned`: desktop starts its own Supervisor from the shipped app layout.
+ */
+export type SupervisorMode = 'fixture' | 'reused' | 'owned';
+
+type FixtureServer = Awaited<ReturnType<typeof startOwnServer>>;
+
+type ServerBase = {
+  fixtureServer: FixtureServer;
   home: string;
   launchDirectory: string;
   environment: NodeJS.ProcessEnv;
-  externalSupervisor?: ChildProcess;
-}
+};
 
-export async function prepareDesktopServer(input: {
+export type DesktopServer =
+  | (ServerBase & { mode: 'fixture' | 'owned' })
+  | (ServerBase & { mode: 'reused'; supervisor: ChildHandle });
+
+type DesktopServerInput = {
   directory: string;
   agents: AppFixtureAgents;
-  ownsSupervisor: boolean;
-  usesSupervisor: boolean;
-}): Promise<DesktopServer> {
+  mode: SupervisorMode;
+};
+
+type SupervisedInput = DesktopServerInput & { mode: 'reused' | 'owned' };
+
+const desktopDirectory = path.resolve(import.meta.dirname, '../apps/desktop');
+
+// Desktop finds the Server's home, without the Expo dev URL.
+const desktopEnvironment = (
+  home: string,
+  supervisor: NodeJS.ProcessEnv = {},
+): NodeJS.ProcessEnv =>
+  childEnvironment({
+    ...supervisor,
+    ARGO_HOME: home,
+    ARGO_EXPO_WEB_URL: undefined,
+  });
+
+type SupervisedBase = Omit<ServerBase, 'launchDirectory'> & {
+  runtime: Awaited<ReturnType<typeof prepareSupervisorRuntime>>;
+};
+
+// The Supervisor's Engine takes the fixture Server's port, so the fixture Server stops first.
+async function supervisedBase(
+  input: SupervisedInput,
+  fixtureServer: FixtureServer,
+  home: string,
+): Promise<SupervisedBase> {
+  await fixtureServer.stop();
+
+  const runtime = await prepareSupervisorRuntime(input.directory);
+
+  const environment = desktopEnvironment(
+    home,
+    supervisorEnvironment({ ...input, port: fixtureServer.port }),
+  );
+
+  return { fixtureServer, home, environment, runtime };
+}
+
+async function reusedServer({
+  runtime,
+  ...base
+}: SupervisedBase): Promise<DesktopServer> {
+  const { home, environment: env } = base;
+  const supervisor = await startSupervisor({ cli: runtime.cli, home, env });
+
+  return {
+    ...base,
+    mode: 'reused',
+    launchDirectory: desktopDirectory,
+    supervisor,
+  };
+}
+
+async function supervisedServer(
+  input: SupervisedInput,
+  fixtureServer: FixtureServer,
+  home: string,
+): Promise<DesktopServer> {
+  const { runtime, ...base } = await supervisedBase(input, fixtureServer, home);
+
+  if (input.mode === 'reused') return reusedServer({ runtime, ...base });
+
+  return { ...base, mode: 'owned', launchDirectory: runtime.app };
+}
+
+export async function prepareDesktopServer(
+  input: DesktopServerInput,
+): Promise<DesktopServer> {
   const fixtureServer = await startOwnServer(input.directory, input.agents);
   const home = path.join(input.directory, 'server-home');
 
-  const {
-    ARGO_EXPO_WEB_URL: _webUrl,
-    ELECTRON_RUN_AS_NODE: _asNode,
-    ...environment
-  } = process.env;
+  if (input.mode === 'fixture')
+    return {
+      mode: 'fixture',
+      fixtureServer,
+      home,
+      launchDirectory: desktopDirectory,
+      environment: desktopEnvironment(home),
+    };
 
-  const server: DesktopServer = {
-    fixtureServer,
-    home,
-    launchDirectory: path.resolve(import.meta.dirname, '../apps/desktop'),
-    environment: { ...environment, ARGO_HOME: home },
-  };
-
-  try {
-    if (!input.usesSupervisor) return server;
-    await fixtureServer.stop();
-    const runtime = await prepareSupervisorRuntime(input.directory);
-    Object.assign(
-      server.environment,
-      ownedSupervisorEnvironment({
-        directory: input.directory,
-        server: fixtureServer,
-        agents: input.agents,
-      }),
-    );
-
-    if (input.ownsSupervisor) server.launchDirectory = runtime.app;
-    else
-      server.externalSupervisor = spawn(
-        process.execPath,
-        ['--import', 'tsx', 'src/main.ts'],
-        {
-          cwd: runtime.server,
-          env: server.environment,
-          stdio: 'ignore',
-        },
-      );
-
-    if (!input.ownsSupervisor) await waitForSupervisorAddress(home);
-
-    return server;
-  } catch (error) {
-    await stopExternalSupervisor(server.externalSupervisor);
-    await fixtureServer.stop();
-    throw error;
-  }
+  return supervisedServer({ ...input, mode: input.mode }, fixtureServer, home);
 }
 
-export function waitForSupervisorAddress(
-  home: string,
-): Promise<NonNullable<ReturnType<typeof readServerAddress>>> {
-  return pollServer(
-    async (): Promise<
-      NonNullable<ReturnType<typeof readServerAddress>> | undefined
-    > => readServerAddress(home) ?? undefined,
-    (seconds): string =>
-      `The Supervisor did not publish its address within ${seconds} s`,
-  );
+// A Supervisor that desktop started and left running, as Keep on quit does.
+async function stopLeftoverSupervisor(home: string): Promise<void> {
+  const leftover = readServerAddress(home);
+
+  if (leftover) await stopProcess(leftover.pid, supervisorStopGraceMs);
 }
 
-export async function stopExternalSupervisor(
-  child: ChildProcess | undefined,
-): Promise<void> {
-  if (!child || hasExited(child)) return;
+// Stops every Server process the test started, and one desktop started and kept.
+export async function stopDesktopServer(server: DesktopServer): Promise<void> {
+  if (server.mode === 'owned') await stopLeftoverSupervisor(server.home);
 
-  const exited = new Promise<void>((resolve): void => {
-    child.once('exit', (): void => resolve());
-  });
-
-  child.kill('SIGTERM');
-  await exited;
-}
-
-export async function stopOwnedSupervisor(pid: number): Promise<void> {
-  try {
-    process.kill(pid, 'SIGTERM');
-  } catch {
-    return;
-  }
-
-  await pollServer(
-    async (): Promise<true | undefined> => {
-      try {
-        process.kill(pid, 0);
-
-        return undefined;
-      } catch {
-        return true;
-      }
-    },
-    (seconds): string =>
-      `The owned Supervisor did not stop within ${seconds} s`,
-  );
+  if (server.mode === 'reused')
+    await server.supervisor.stop(supervisorStopGraceMs);
+  await server.fixtureServer.stop();
 }

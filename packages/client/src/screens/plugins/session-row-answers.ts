@@ -56,7 +56,7 @@ function chosenLine(
  * What this Device shows of a Session's answers: the items of the Plugins left on, one hidden making room for the next
  * in line, and the chosen Plugin's line; a Plugin turned off gives the line back to Argo.
  */
-export const shownRowAnswer = (
+const shownRowAnswer = (
   answer: SessionRowAnswer,
   visibility: SlotVisibility,
 ): ShownRowAnswer => ({

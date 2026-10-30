@@ -42,7 +42,7 @@ export function HeaderActions({
   );
 }
 
-export const hasActions = (actions: ReactNode): boolean =>
+const hasActions = (actions: ReactNode): boolean =>
   actionGroups(actions).length > 0;
 
 export function hasSectionHeader(props: ListSectionProps): boolean {

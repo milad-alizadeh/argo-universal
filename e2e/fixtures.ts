@@ -1,15 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import {
-  type Page,
-  type ElectronApplication,
-  type Disposable,
-} from '@playwright/test';
+import { type Page, type ElectronApplication } from '@playwright/test';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import type { GroupRelease } from '@repo/process';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
-import { useElectronApp } from './electron-app';
-import { serverFiles, startOwnServer } from './own-server';
+import { useApp } from './fixture-app';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -23,12 +19,6 @@ export const serverVersion = ServerPackage.parse(
     readFileSync(path.join(repositoryRoot, 'apps/server/package.json'), 'utf8'),
   ),
 ).version;
-
-// The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
-const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
-  page.addInitScript((url): void => {
-    Object.assign(globalThis, { argo: { serverUrl: url } });
-  }, serverUrl);
 
 export type ServerOptions = {
   // Shared Argo fixture options by registered Agent identity.
@@ -49,11 +39,18 @@ export type App = {
     application: ElectronApplication;
     home: string;
     supervisorPid: number;
-    disconnect: () => Promise<void>;
+    disconnect: () => Promise<GroupRelease>;
   };
 };
 
-const ownServerDirectory = 'own-server';
+function prepareTest(tags: string[]): void {
+  // Starting each test's own Server takes seconds when several runs share the machine.
+  test.skip(
+    tags.includes('@mac-only') && process.platform !== 'darwin',
+    'The Dock and native macOS quit dialog require macOS',
+  );
+  test.slow();
+}
 
 export const test = base.extend<
   AppOptions & ServerOptions & { app: App; server: { httpUrl: string } }
@@ -66,52 +63,15 @@ export const test = base.extend<
     use,
     testInfo,
   ): Promise<void> => {
-    // Starting each test's own Server takes seconds when several runs share the machine.
-    test.skip(
-      $tags.includes('@mac-only') && process.platform !== 'darwin',
-      'The Dock and native macOS quit dialog require macOS',
-    );
-    test.slow();
+    prepareTest($tags);
 
-    if (appTarget === 'web') {
-      const serverDirectory = testInfo.outputPath(ownServerDirectory);
-
-      const server = await startOwnServer(serverDirectory, mockAgents, {
-        noProjects: $tags.includes('@without-projects'),
-        registryOffline: $tags.includes('@registry-offline'),
-      });
-
-      try {
-        const page = await context.newPage();
-        await pointAppAtServer(page, server.serverUrl);
-        await use({
-          page,
-          httpUrl: server.httpUrl,
-          registryPath: server.registryPath,
-          installationPath: server.installationPath,
-          ...serverFiles(serverDirectory),
-          restartEngine: server.restart,
-          openPage: async (): Promise<Page> => {
-            const other = await context.newPage();
-            await pointAppAtServer(other, server.serverUrl);
-
-            return other;
-          },
-        });
-      } finally {
-        await server.stop();
-      }
-
-      return;
-    }
-
-    await useElectronApp({
-      directory: testInfo.outputPath(ownServerDirectory),
-      userDataDirectory: testInfo.outputPath('user-data'),
+    await useApp({
+      appTarget,
+      context,
       mockAgents,
-      ownsSupervisor: $tags.includes('@owned-supervisor'),
-      usesSupervisor: $tags.includes('@supervisor'),
+      tags: $tags,
       use,
+      testInfo,
     });
   },
   page: async ({ app }, use): Promise<void> => {

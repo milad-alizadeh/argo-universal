@@ -1,39 +1,30 @@
 import type { SessionRenameInput, SessionRenameOutput } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
-import { writeDatabaseJobAndWaitForCommit } from '../storage';
-import type { SessionRouterDeps } from './router-deps';
-import { validateSessionCommandAdmission } from './session-command';
-import { readWritableSession } from './session-opening';
-import { createQueuedSessionReader } from './session-record';
+import type { OpenSessions } from './open-sessions';
+import { requireWritableSession } from './session-command';
 import { SessionTitleJob } from './session-storage';
+
+type RenamingSessions = Pick<OpenSessions, 'admit' | 'queued' | 'write'>;
+
+const shouldRename = (title: string, current: string): boolean =>
+  title.length > 0 && title !== current;
+
+const currentTitle = (sessions: RenamingSessions, sessionId: string): string =>
+  requireWritableSession(sessions.queued(sessionId)).title;
 
 // Argo only: ACP has no request that renames a Session on the Agent's side.
 export async function renameSession(
-  deps: SessionRouterDeps,
+  sessions: RenamingSessions,
   input: SessionRenameInput,
 ): Promise<SessionRenameOutput> {
-  validateSessionCommandAdmission(deps);
+  sessions.admit();
 
   // The title as the list shows it, with queued writes, so a queued Agent title counts as current.
-  const current = readWritableSession(
-    createQueuedSessionReader(deps),
-    input.sessionId,
-  );
-
+  const current = currentTitle(sessions, input.sessionId);
   const title = input.title.trim();
 
-  if (!title || title === current.title) return {};
+  if (!shouldRename(title, current)) return {};
 
-  const writer = deps.findWriter();
-
-  if (!writer)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Database Writer is not available',
-    });
-
-  await writeDatabaseJobAndWaitForCommit(
-    writer,
+  await sessions.write(
     new SessionTitleJob({ id: input.sessionId, title, titleSource: 'user' }),
   );
 

@@ -1,9 +1,14 @@
-import { execFile, spawn, type ChildProcess } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { connect } from 'node:net';
-import type { Readable, Writable } from 'node:stream';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { resolveExecutable } from '@repo/executables';
+import {
+  findIosDevice,
+  openIosStorybook,
+  openNamedAndroidStorybook,
+} from './storybook-devices.mts';
+import { forwardOutput } from './storybook-output.mts';
 import { storybookSyncPort } from './storybook-sync-port.js';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -13,8 +18,6 @@ const webUrl = 'http://127.0.0.1:6006/';
 const syncPort = storybookSyncPort();
 
 const children: ChildProcess[] = [];
-
-const run = promisify(execFile);
 
 const linkedDevices = new Set<string>();
 
@@ -38,13 +41,19 @@ function start(
   args: string[],
   onOutput?: (output: string) => void,
 ): ChildProcess {
-  const child = spawn(name, args, {
+  const child = spawn(resolveExecutable(name), args, {
     cwd: repoRoot,
     stdio: onOutput ? ['inherit', 'pipe', 'pipe'] : 'inherit',
   });
 
   if (onOutput) forwardOutput(child, onOutput);
 
+  watchChild(child);
+
+  return child;
+}
+
+function watchChild(child: ChildProcess): void {
   children.push(child);
   child.once('error', (error) => {
     console.error(error);
@@ -53,125 +62,6 @@ function start(
   child.once('exit', (code) => {
     if (!stopping) stop(code ?? 1);
   });
-
-  return child;
-}
-
-function pipeOutput(
-  stream: Readable | null,
-  destination: Writable,
-  onOutput: (output: string) => void,
-): void {
-  if (!stream) return;
-
-  let pending = '';
-
-  stream.setEncoding('utf8');
-  stream.on('data', (output: string) => {
-    destination.write(output);
-    pending += output;
-
-    const lines = pending.split(/[\r\n]+/);
-
-    pending = lines.pop() ?? '';
-
-    for (const line of lines) onOutput(line);
-  });
-}
-
-function forwardOutput(
-  child: ChildProcess,
-  onOutput: (output: string) => void,
-): void {
-  pipeOutput(child.stdout, process.stdout, onOutput);
-  pipeOutput(child.stderr, process.stderr, onOutput);
-}
-
-function simulatorId(line: string): string | null {
-  return line.match(/\(([A-F0-9-]{36})\)/)?.[1] ?? null;
-}
-
-async function findIosDevice(deviceName: string): Promise<string | null> {
-  const { stdout } = await run('xcrun', [
-    'simctl',
-    'list',
-    'devices',
-    'booted',
-  ]);
-
-  const line = stdout
-    .split('\n')
-    .find((entry) => entry.trim().startsWith(`${deviceName} (`));
-
-  if (!line) return null;
-
-  return simulatorId(line);
-}
-
-async function findAndroidDevice(deviceName: string): Promise<string | null> {
-  const { stdout } = await run('adb', ['devices']);
-
-  const serials = stdout.match(/^emulator-\d+(?=\s+device)/gm) ?? [];
-
-  const matches = await Promise.all(
-    serials.map(async (serial) => {
-      const { stdout: avdName } = await run('adb', [
-        '-s',
-        serial,
-        'emu',
-        'avd',
-        'name',
-      ]);
-
-      return avdName.trim().split(/\r?\n/)[0] === deviceName ? serial : null;
-    }),
-  );
-
-  return matches.find((serial) => serial !== null) ?? null;
-}
-
-async function openIosStorybook(udid: string): Promise<void> {
-  await run('xcrun', ['simctl', 'openurl', udid, 'argo://storybook']);
-}
-
-async function openAndroidStorybook(serial: string): Promise<void> {
-  await run('adb', [
-    '-s',
-    serial,
-    'shell',
-    'am',
-    'start',
-    '-a',
-    'android.intent.action.VIEW',
-    '-d',
-    'argo://storybook',
-    'dev.argo.app',
-  ]);
-}
-
-async function androidAppRunning(serial: string): Promise<boolean> {
-  try {
-    const { stdout } = await run('adb', [
-      '-s',
-      serial,
-      'shell',
-      'pidof',
-      'dev.argo.app',
-    ]);
-
-    return Boolean(stdout.trim());
-  } catch {
-    return false;
-  }
-}
-
-async function androidSerial(deviceName: string): Promise<string> {
-  const serial = await findAndroidDevice(deviceName);
-
-  if (!serial)
-    throw new Error(`Could not find Expo's opened device: ${deviceName}`);
-
-  return serial;
 }
 
 // A link sent while the dev client is still on its launcher or loading the bundle is dropped.
@@ -179,28 +69,6 @@ let androidBundled = false;
 
 function androidReadyToLink(): boolean {
   return androidBundled || stopping;
-}
-
-async function waitForAndroidBundle(): Promise<void> {
-  for (let attempt = 0; attempt < 240 && !androidReadyToLink(); attempt += 1)
-    await delay(500);
-
-  await delay(1500);
-}
-
-async function openNamedAndroidStorybook(deviceName: string): Promise<void> {
-  const serial = await androidSerial(deviceName);
-
-  await waitForAndroidBundle();
-
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await openAndroidStorybook(serial);
-    await delay(2000);
-
-    if (await androidAppRunning(serial)) return;
-  }
-
-  throw new Error(`Android app did not stay open on ${deviceName}`);
 }
 
 async function linkToStorybook(deviceName: string): Promise<void> {
@@ -212,7 +80,7 @@ async function linkToStorybook(deviceName: string): Promise<void> {
 
   await (iosDevice
     ? openIosStorybook(iosDevice)
-    : openNamedAndroidStorybook(deviceName));
+    : openNamedAndroidStorybook(deviceName, androidReadyToLink));
 
   console.log(`Opened /storybook on ${deviceName}`);
 }
@@ -276,6 +144,21 @@ start('pnpm', [
   '--no-open',
 ]);
 
+const browserNotOpened = (error: Error): void =>
+  console.error(`Could not open the browser: ${error.message}`);
+
+// A Mac without `open` in PATH still starts the previews, as one whose `open` fails does.
+function openBrowser(): void {
+  try {
+    spawn(resolveExecutable('open'), [webUrl], {
+      cwd: repoRoot,
+      stdio: 'ignore',
+    }).once('error', browserNotOpened);
+  } catch (error) {
+    browserNotOpened(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
 let ready = false;
 
 for (let attempt = 0; attempt < 120 && !stopping; attempt += 1) {
@@ -293,10 +176,7 @@ if (!stopping && !ready) {
 }
 
 if (!stopping) {
-  const browser = spawn('open', [webUrl], { cwd: repoRoot, stdio: 'ignore' });
-  browser.once('error', (error) =>
-    console.error(`Could not open the browser: ${error.message}`),
-  );
+  openBrowser();
   start(
     'pnpm',
     [

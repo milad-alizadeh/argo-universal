@@ -1,5 +1,5 @@
 import type { FeedChange } from '@repo/contracts';
-import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
+import type { ModelFixture } from '@repo/vitest/model-test';
 import type { SnapshotFrom } from 'xstate';
 import {
   feedMachine,
@@ -11,9 +11,9 @@ import {
 
 export const acpUpdateEventType = 'feed.acpUpdate';
 
-export const modelAcpSessionId = 'model-session';
+const modelAcpSessionId = 'model-session';
 
-export const firstMessageRowId = 'message-1#0';
+const firstMessageRowId = 'message-1#0';
 
 const modelToolCallId = 'model-tool';
 
@@ -41,10 +41,10 @@ interface FeedChangeEvent {
   readonly turnId: 'turn-1';
 }
 
-export const change = (feedChange: FeedChange): FeedChangeEvent =>
+const change = (feedChange: FeedChange): FeedChangeEvent =>
   ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
 
-export const openMessage = change({
+const openMessage = change({
   type: 'upsert',
   update: {
     id: firstMessageRowId,
@@ -55,27 +55,21 @@ export const openMessage = change({
   },
 });
 
-export const appendText = change({
+const appendText = change({
   type: 'append',
   id: firstMessageRowId,
   field: 'content.0.text',
   text: 'a',
 });
 
-export const settleMessage = change({
+const settleMessage = change({
   type: 'patch',
   id: firstMessageRowId,
   set: { state: 'settled' },
 });
 
-export const streamBatchDelayEvent =
-  'xstate.after.streamBatchDelay.feed.active.stream.batching';
-
-export const storeDelayEvent =
-  'xstate.after.storeDelay.feed.active.store.dirty';
-
-// Done events of states are left out: the model would send them before the regions are done.
-export const events = [
+// The machine raises the done events of its states, and its delays need no fixture.
+export const fixtures = [
   openMessage,
   appendText,
   settleMessage,
@@ -150,8 +144,6 @@ export const events = [
     reason: 'model reason',
   },
   { type: 'feed.flush' },
-  { type: streamBatchDelayEvent },
-  { type: storeDelayEvent },
-] satisfies GraphEventFromLogic<typeof machine>[];
+] satisfies ModelFixture<typeof machine>[];
 
-export type FeedMachineEvent = (typeof events)[number];
+export type FeedMachineEvent = (typeof fixtures)[number];

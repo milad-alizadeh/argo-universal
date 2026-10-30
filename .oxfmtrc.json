@@ -42,8 +42,6 @@
     // Markdown stays as written: the Prickles canon files are verbatim copies.
     "*.md",
     "pnpm-lock.yaml",
-    // The burn-down list keeps one line per folder.
-    "tooling/oxlint/not-yet-cleared.json",
     "packages/db/drizzle/",
     "**/.rnstorybook/storybook.requires.ts",
     "*.gen.*",

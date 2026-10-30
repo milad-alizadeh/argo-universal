@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/executables": "workspace:*",
     "jsonc-parser": "catalog:",
     "zod": "catalog:"
   },
@@ -20,8 +21,10 @@
     "@playwright/test": "catalog:",
     "@repo/browser-suite-lock": "workspace:*",
     "@repo/contracts": "workspace:*",
+    "@repo/e2e": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/mocks": "workspace:*",
+    "@repo/process": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@trpc/client": "catalog:",

@@ -1,3 +1,4 @@
+import type { Database } from '@repo/db';
 import { blob } from '@repo/db/schema';
 import { sql } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../storage';
@@ -23,3 +24,12 @@ export class BlobMetadataUpsertJob implements WriterJob {
       .run();
   }
 }
+
+export const storedBlobIds = (database: Database): Set<string> =>
+  new Set(
+    database
+      .select({ id: blob.id })
+      .from(blob)
+      .all()
+      .map(({ id }): string => id),
+  );

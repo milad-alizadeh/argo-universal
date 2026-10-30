@@ -8,7 +8,8 @@ import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { createTRPCUntypedClient, httpLink } from '@trpc/client';
 import { onTestFinished } from 'vitest';
 import { z } from 'zod';
-import { startOwnServer, serverFiles } from '../../e2e/own-server.ts';
+import { serverFiles } from '../../e2e/own-server-setup.ts';
+import { startOwnServer } from '../../e2e/own-server.ts';
 
 export async function runtimeTestHost(
   scenario:

@@ -1,4 +1,13 @@
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
+import {
+  isAlive,
+  millisecondsPerSecond,
+  pollIntervalMs,
+  startLimitMs,
+  stopLimitMs,
+  stopProcess,
+} from '@repo/process';
 import {
   type ActorRef,
   assign,
@@ -10,10 +19,8 @@ import {
   setup,
 } from 'xstate';
 import {
-  isRunning,
   readLiveServerAddress,
   type SupervisorPaths,
-  signalSupervisor,
   spawnSupervisor,
 } from './server-process';
 import { type CountsReport, watchSessionCounts } from './session-counts';
@@ -76,14 +83,6 @@ export interface CheckRunningInput {
   pid: number;
 }
 
-export const pollDelayMs = 200;
-
-export const startLimitMs = 30_000;
-
-export const stopLimitMs = 5000;
-
-const millisecondsPerSecond = 1000;
-
 const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
   home: context.home,
   cliDirectory: context.cliDirectory,
@@ -96,6 +95,25 @@ const requireOwnedPid = (context: ServerContext): number => {
 
   return context.ownedPid;
 };
+
+function addressMatchesOwner(
+  context: ServerContext,
+  address: ServerAddress,
+): boolean {
+  return (
+    address.pid === context.ownedPid && startedAfterSpawn(context, address)
+  );
+}
+
+function startedAfterSpawn(
+  context: ServerContext,
+  address: ServerAddress,
+): boolean {
+  return (
+    context.spawnedAt !== null &&
+    Date.parse(address.startedAt) >= context.spawnedAt
+  );
+}
 
 const serverSetup = setup({
   // SAFETY: XState v5 reads these empty objects only for their types and never at runtime (ADR-0016).
@@ -127,7 +145,7 @@ const serverSetup = setup({
         }),
     ),
     checkRunning: fromPromise<boolean, CheckRunningInput>(
-      async ({ input }): Promise<boolean> => isRunning(input.pid),
+      async ({ input }): Promise<boolean> => isAlive(input.pid),
     ),
   },
   actions: {
@@ -139,8 +157,9 @@ const serverSetup = setup({
     announceFailure: enqueueActions(({ context, enqueue }): void => {
       enqueue.emit({ type: 'server.failed', failure: context.failure });
     }),
-    signalOwnedSupervisor: ({ context }): void => {
-      signalSupervisor(requireOwnedPid(context));
+    // The ladder runs on past `stopLimit`, so a Supervisor that never stops has its group killed once its grace passes.
+    stopOwnedSupervisor: ({ context }): void => {
+      void stopProcess(requireOwnedPid(context), supervisorStopGraceMs);
     },
     forgetSupervisor: assign({ ownedPid: null, spawnedAt: null }),
     log: (_, params: ServerLogParameters): void => {
@@ -151,19 +170,44 @@ const serverSetup = setup({
     foundAddress: (_, params: AddressParameters): boolean =>
       params.address !== null,
     namesOwnedSupervisor: ({ context }, params: AddressParameters): boolean =>
-      params.address !== null &&
-      params.address.pid === context.ownedPid &&
-      context.spawnedAt !== null &&
-      Date.parse(params.address.startedAt) >= context.spawnedAt,
+      params.address !== null && addressMatchesOwner(context, params.address),
     stillRunning: (_, params: RunningParameters): boolean => params.running,
     ownsSupervisor: ({ context }): boolean => context.ownedPid !== null,
     ownsRunningSessions: ({ context }): boolean =>
       context.ownedPid !== null && context.running > 0,
   },
   delays: {
-    pollDelay: pollDelayMs,
+    pollDelay: pollIntervalMs,
     startLimit: startLimitMs,
     stopLimit: stopLimitMs,
+  },
+});
+
+const readAddressTemplate = serverSetup.createStateConfig({
+  invoke: {
+    id: 'readAddress',
+    src: 'readAddress',
+    input: serverInput,
+    onDone: [
+      {
+        guard: {
+          type: 'foundAddress',
+          params: ({ event }): AddressParameters => ({ address: event.output }),
+        },
+        target: '#serverConnection.ready',
+        actions: assign({
+          address: ({ event }): ServerContext['address'] => event.output,
+          failure: null,
+        }),
+      },
+    ],
+    onError: {
+      target: failedConnectionTarget,
+      actions: assign({
+        failure: ({ event }): string =>
+          `could not read server.json: ${String(event.error)}`,
+      }),
+    },
   },
 });
 
@@ -171,77 +215,82 @@ const serverSetup = setup({
 const readingAddress = (noneTarget: string): ReadingAddressState =>
   serverSetup.createStateConfig({
     invoke: {
-      id: 'readAddress',
-      src: 'readAddress',
-      input: serverInput,
-      onDone: [
-        {
-          guard: {
-            type: 'foundAddress',
-            params: ({ event }): AddressParameters => ({
-              address: event.output,
-            }),
-          },
-          target: '#serverConnection.ready',
-          actions: assign({
-            address: ({ event }): ServerContext['address'] => event.output,
-            failure: null,
-          }),
-        },
-        { target: noneTarget },
-      ],
-      onError: {
-        target: failedConnectionTarget,
-        actions: assign({
-          failure: ({ event }): string =>
-            `could not read server.json: ${String(event.error)}`,
-        }),
-      },
+      ...readAddressTemplate.invoke,
+      onDone: [...readAddressTemplate.invoke.onDone, { target: noneTarget }],
     },
   });
 
-// Signals the Supervisor this app owns, then checks every `pollDelay` until it exits, for `stopLimit` at most.
+const checkingTemplate = serverSetup.createStateConfig({
+  invoke: {
+    id: 'checkRunning',
+    src: 'checkRunning',
+    input: ({ context }): CheckRunningInput => ({
+      pid: requireOwnedPid(context),
+    }),
+    onDone: [
+      {
+        guard: {
+          type: 'stillRunning',
+          params: ({ event }): RunningParameters => ({ running: event.output }),
+        },
+        target: 'waiting',
+      },
+    ],
+  },
+});
+
+function checkingState(
+  exitedTarget: string,
+): Required<Pick<ServerStateConfig, 'invoke'>> {
+  return serverSetup.createStateConfig({
+    invoke: {
+      ...checkingTemplate.invoke,
+      onDone: [
+        ...checkingTemplate.invoke.onDone,
+        { target: exitedTarget, actions: 'forgetSupervisor' },
+      ],
+    },
+  });
+}
+
+const stopTimeoutTemplate = serverSetup.createStateConfig({
+  after: {
+    stopLimit: {
+      actions: {
+        type: 'log',
+        params: ({ context }): ServerLogParameters => ({
+          line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / millisecondsPerSecond} seconds`,
+        }),
+      },
+    },
+  },
+});
+
+function stopTimeout(
+  stuckTarget: string,
+): Required<Pick<ServerStateConfig, 'after'>> {
+  return serverSetup.createStateConfig({
+    after: {
+      stopLimit: {
+        ...stopTimeoutTemplate.after.stopLimit,
+        target: stuckTarget,
+      },
+    },
+  });
+}
+
+// Stops the Supervisor this app owns, then checks every `pollDelay` until it exits, for `stopLimit` at most.
 const waitingForSupervisorExit = (
   exitedTarget: string,
   stuckTarget = exitedTarget,
 ): WaitingForSupervisorExitState =>
   serverSetup.createStateConfig({
-    entry: 'signalOwnedSupervisor',
+    entry: 'stopOwnedSupervisor',
     initial: 'waiting',
-    after: {
-      stopLimit: {
-        target: stuckTarget,
-        actions: {
-          type: 'log',
-          params: ({ context }): ServerLogParameters => ({
-            line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / millisecondsPerSecond} seconds`,
-          }),
-        },
-      },
-    },
+    ...stopTimeout(stuckTarget),
     states: {
       waiting: { after: { pollDelay: 'checking' } },
-      checking: {
-        invoke: {
-          id: 'checkRunning',
-          src: 'checkRunning',
-          input: ({ context }): CheckRunningInput => ({
-            pid: requireOwnedPid(context),
-          }),
-          onDone: [
-            {
-              guard: {
-                type: 'stillRunning',
-                params: ({ event }): RunningParameters => ({
-                  running: event.output,
-                }),
-              },
-              target: 'waiting',
-            },
-            { target: exitedTarget, actions: 'forgetSupervisor' },
-          ],
-        },
-      },
+      checking: checkingState(exitedTarget),
     },
   });
 

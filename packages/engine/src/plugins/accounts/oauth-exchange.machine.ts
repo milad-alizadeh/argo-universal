@@ -19,7 +19,7 @@ type ExchangeContext = { result: ExchangeResult };
 
 const exchangeLimitMs = 300_000;
 
-export const oauthExchangeMachine = setup({
+const oauthExchangeMachine = setup({
   // SAFETY: XState consumes these declarations as types only.
   types: {
     context: {} as ExchangeContext,

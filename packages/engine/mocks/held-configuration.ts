@@ -39,25 +39,52 @@ export function heldConfigurationScenario(): HeldConfigurationScenario {
   const prompted = Promise.withResolvers<PromptRequest>();
   const commands: (PromptRequest | SetSessionConfigOptionRequest)[] = [];
 
-  const scenario: ScriptedScenario = {
-    configOptions: acpConfiguration,
-    steps: [],
-    responses: {
-      'session/prompt': [
-        { requests: commands, received: prompted, waitFor: finishTurn.promise },
-        { requests: commands },
-      ],
-      'session/set_config_option': [
-        {
-          requests: commands,
-          received: applying,
-          waitFor: finishConfig.promise,
-          result: { configOptions: appliedConfiguration },
-        },
-        { requests: commands, result: { configOptions: appliedConfiguration } },
-      ],
-    },
-  };
+  const scenario = scriptedConfiguration({
+    finishTurn,
+    applying,
+    finishConfig,
+    prompted,
+    commands,
+  });
 
   return { scenario, finishTurn, applying, finishConfig, prompted, commands };
 }
+
+type ConfigurationEvents = Omit<HeldConfigurationScenario, 'scenario'>;
+
+const scriptedConfiguration = (
+  events: ConfigurationEvents,
+): ScriptedScenario => ({
+  configOptions: acpConfiguration,
+  steps: [],
+  responses: {
+    'session/prompt': promptResponses(events),
+    'session/set_config_option': configurationResponses(events),
+  },
+});
+
+const promptResponses = (
+  events: ConfigurationEvents,
+): NonNullable<ScriptedScenario['responses']>['session/prompt'] => [
+  {
+    requests: events.commands,
+    received: events.prompted,
+    waitFor: events.finishTurn.promise,
+  },
+  { requests: events.commands },
+];
+
+const configurationResponses = (
+  events: ConfigurationEvents,
+): NonNullable<ScriptedScenario['responses']>['session/set_config_option'] => [
+  {
+    requests: events.commands,
+    received: events.applying,
+    waitFor: events.finishConfig.promise,
+    result: { configOptions: appliedConfiguration },
+  },
+  {
+    requests: events.commands,
+    result: { configOptions: appliedConfiguration },
+  },
+];

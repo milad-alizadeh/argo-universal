@@ -33,14 +33,18 @@ export function chooseTests({
   if (files.length <= limit)
     return { files, dependents: files.length, narrowed: false };
 
-  // A root file, such as the lockfile, sits in every folder, so it narrows to nothing.
-  const folders = [
-    ...new Set(changed.map((file) => path.join(root, path.dirname(file)))),
-  ].filter((folder): boolean => folder !== root);
+  const folders = touchedFolders(changed, root);
 
   const inTouchedFolders = files.filter((file): boolean =>
     folders.some((folder): boolean => isWithin(file, folder)),
   );
 
   return { files: inTouchedFolders, dependents: files.length, narrowed: true };
+}
+
+// A root file, such as the lockfile, sits in every folder, so it narrows to nothing.
+function touchedFolders(changed: string[], root: string): string[] {
+  return [
+    ...new Set(changed.map((file) => path.join(root, path.dirname(file)))),
+  ].filter((folder): boolean => folder !== root);
 }

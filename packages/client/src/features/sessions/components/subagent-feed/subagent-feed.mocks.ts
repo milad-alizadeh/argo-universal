@@ -34,10 +34,6 @@ const incoming: SessionMessage = {
   },
 };
 
-export const incomingMessageText = prompt.content
-  .flatMap((block) => (block.type === 'text' ? [block.text] : []))
-  .join('\n\n');
-
 // The child's own updates: everything the recording holds after the prompt it answered.
 const childRows: readonly SessionUpdate[] = recording.rows.slice(1);
 
@@ -88,7 +84,7 @@ export const runningFeed = feedOf([incoming, ...childRows], liveToolCallHeader);
 export const finishedFeed = feedOf([incoming, ...childRows], null);
 
 // Nothing reported yet: only the live row, which the Server names.
-export const startingLiveHeader: LiveHeader = {
+const startingLiveHeader: LiveHeader = {
   text: 'Starting',
   source: { type: 'working' },
   startedAt: subagentFeedNow - 2_000,

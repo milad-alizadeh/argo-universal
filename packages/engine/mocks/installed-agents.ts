@@ -33,15 +33,20 @@ export const unlaunchedInstalledAgents = (
     home,
     resources: createAcpResources(),
     ports: installationPorts,
-    registry: createActor(registryMachine, {
-      input: {
-        database,
-        writer: createActor(writerMachine, {
-          input: { database, now: Date.now },
-        }),
-        now: Date.now,
-      },
-    }),
+    registry: fixtureRegistry(database),
+  });
+
+const fixtureRegistry = (
+  database: Database,
+): ReturnType<typeof createActor<typeof registryMachine>> =>
+  createActor(registryMachine, {
+    input: {
+      database,
+      writer: createActor(writerMachine, {
+        input: { database, now: Date.now },
+      }),
+      now: Date.now,
+    },
   });
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
@@ -58,22 +63,36 @@ export const startLaunchHost = async (
   const storage = openTestDatabase({}, projectPath);
   const { id } = entry;
 
-  const host = await startEngineTestHost({
-    database: storage.database,
-    fetchAgents: async () =>
-      JSON.stringify({ version: '1.0.0', agents: [entry] }),
-    acp: createScriptedAgentProcess(),
-    ...options,
-  });
+  const host = await startEngineTestHost(
+    launchOptions(entry, storage.database, options),
+  );
 
-  onTestFinished(() => {
-    storage.remove();
-    rmSync(projectPath, { recursive: true, force: true });
-  });
+  onTestFinished(() => removeLaunchHost(storage, projectPath));
+
   await host.caller.registry.refresh();
   await host.caller.agent.install({ id });
 
   return { host, projectPath };
+};
+
+const launchOptions = (
+  entry: ACPAgent,
+  database: Database,
+  options: EngineTestOptions,
+): EngineTestOptions => ({
+  database,
+  fetchAgents: async () =>
+    JSON.stringify({ version: '1.0.0', agents: [entry] }),
+  acp: createScriptedAgentProcess(),
+  ...options,
+});
+
+const removeLaunchHost = (
+  storage: ReturnType<typeof openTestDatabase>,
+  projectPath: string,
+): void => {
+  storage.remove();
+  rmSync(projectPath, { recursive: true, force: true });
 };
 
 export const requireInstalled = (

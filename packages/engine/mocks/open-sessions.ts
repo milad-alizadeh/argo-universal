@@ -1,5 +1,6 @@
 import {
   assertEvent,
+  type EventFrom,
   assign,
   createActor,
   fromPromise,
@@ -23,31 +24,46 @@ const session = sessionMachine.provide({
   },
 });
 
+const graphEvents = [
+  'sessions.create',
+  'sessions.open',
+  'sessions.archive',
+] as const;
+
 export const createOpenSessionsModelMachine = (
   forGraph: boolean,
 ): typeof openSessionsMachine =>
+  forGraph
+    ? graphModel()
+    : openSessionsMachine.provide({ actors: { session }, actions: {} });
+
+const graphModel = (): typeof openSessionsMachine =>
   openSessionsMachine.provide({
     actors: { session },
-    actions: forGraph
-      ? {
-          openSession: assign(({ context, event }): Partial<ModelContext> => {
-            assertEvent(event, [
-              'sessions.create',
-              'sessions.open',
-              'sessions.archive',
-            ]);
+    actions: {
+      openSession: assign(({ context, event }): Partial<ModelContext> => {
+        assertEvent(event, graphEvents);
 
-            if (context.sessions[event.sessionId]) return {};
-
-            const actor = createActor(session, {
-              id: `session:${event.sessionId}`,
-              input: createSessionActorInput({ context, event }),
-            });
-
-            return {
-              sessions: { ...context.sessions, [event.sessionId]: actor },
-            };
-          }),
-        }
-      : {},
+        return openGraphSession(context, event);
+      }),
+    },
   });
+
+type OpenEvent = Extract<
+  EventFrom<typeof openSessionsMachine>,
+  { type: 'sessions.create' | 'sessions.open' | 'sessions.archive' }
+>;
+
+const openGraphSession = (
+  context: ModelContext,
+  event: OpenEvent,
+): Partial<ModelContext> => {
+  if (context.sessions[event.sessionId]) return {};
+
+  const actor = createActor(session, {
+    id: `session:${event.sessionId}`,
+    input: createSessionActorInput({ context, event }),
+  });
+
+  return { sessions: { ...context.sessions, [event.sessionId]: actor } };
+};

@@ -5,13 +5,13 @@ import { createServer } from 'node:net';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
+import { isAlive, startLimitMs, stopProcess } from '@repo/process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  isRunning,
   readLiveServerAddress,
   resolveHome,
-  signalSupervisor,
   spawnSupervisor,
 } from './server-process';
 
@@ -83,7 +83,7 @@ describe('spawnSupervisor', (): void => {
     expect(reportsOnReturn).toEqual(['spawned number']);
     expect(reports).toEqual([
       'spawned number',
-      `The Supervisor exited while starting (1); see ${join(home, 'logs')}`,
+      `The Supervisor exited while starting (code 1); see ${join(home, 'logs')}`,
     ]);
   });
 
@@ -103,24 +103,16 @@ describe('spawnSupervisor', (): void => {
 
     stopListening();
 
-    await expect.poll((): boolean => isRunning(pid)).toBe(false);
+    await expect.poll((): boolean => isAlive(pid)).toBe(false);
 
     expect(reports).toEqual([]);
-  });
-});
-
-describe('signalSupervisor', (): void => {
-  it('does nothing for a pid that has exited', (): void => {
-    const exited = spawnSync(process.execPath, ['--version']).pid;
-
-    expect((): void => signalSupervisor(exited)).not.toThrow();
   });
 });
 
 it.each([
   [undefined, join(homedir(), '.argo')],
   ['', ''],
-  ['/tmp/server-runtime', '/tmp/server-runtime'],
+  [join(homedir(), 'server-runtime'), join(homedir(), 'server-runtime')],
 ])('resolves ARGO_HOME %s to %s', (override, expected): void => {
   vi.stubEnv('ARGO_HOME', override);
   expect(resolveHome()).toBe(expected);
@@ -138,32 +130,41 @@ async function availablePort(): Promise<number> {
   return address.port;
 }
 
-it('launches argo server and owns the pid published by its Supervisor', async () => {
-  const port = await availablePort();
-  vi.stubEnv('ARGO_SERVER_PORT', String(port));
-  const pids: number[] = [];
-  const exited = Promise.withResolvers<void>();
-  const cliDirectory = fileURLToPath(new URL('../../../cli/', import.meta.url));
+it(
+  'launches argo server and owns the pid published by its Supervisor',
+  async () => {
+    const port = await availablePort();
+    vi.stubEnv('ARGO_SERVER_PORT', String(port));
+    const pids: number[] = [];
+    const exited = Promise.withResolvers<void>();
 
-  const stopListening = spawnSupervisor(
-    { home, cliDirectory },
-    {
-      spawned: (pid): void => {
-        pids.push(pid);
+    const cliDirectory = fileURLToPath(
+      new URL('../../../cli/', import.meta.url),
+    );
+
+    const stopListening = spawnSupervisor(
+      { home, cliDirectory },
+      {
+        spawned: (pid): void => {
+          pids.push(pid);
+        },
+        exited: (): void => exited.resolve(),
       },
-      exited: (): void => exited.resolve(),
-    },
-  );
+    );
 
-  try {
-    await expect
-      .poll(() => readLiveServerAddress(home), { timeout: 20_000 })
-      .toMatchObject({ port });
-    expect(pids).toHaveLength(2);
-    expect(readLiveServerAddress(home)?.pid).toBe(pids[1]);
-  } finally {
-    for (const pid of pids) signalSupervisor(pid);
-    await exited.promise;
-    stopListening();
-  }
-}, 30_000);
+    try {
+      await expect
+        .poll(() => readLiveServerAddress(home), { timeout: 20_000 })
+        .toMatchObject({ port });
+      expect(pids).toHaveLength(2);
+      expect(readLiveServerAddress(home)?.pid).toBe(pids[1]);
+    } finally {
+      await Promise.all(
+        pids.map((pid) => stopProcess(pid, supervisorStopGraceMs)),
+      );
+      await exited.promise;
+      stopListening();
+    }
+  },
+  startLimitMs,
+);

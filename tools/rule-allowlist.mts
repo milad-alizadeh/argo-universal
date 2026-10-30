@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parseJsonc } from './not-yet-cleared/document.mts';
+import { parseJsonc } from './parse-jsonc.mts';
 
 // A shrinking allowlist: one override that turns one argo rule off for the files not yet moved over.
 const allowlistSchema = z.strictObject({

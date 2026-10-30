@@ -55,6 +55,25 @@ it('rejects unknown Sessions and input that breaks the contract', async (): Prom
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
+it.each(['constructor', 'toString', '__proto__'])(
+  'finds no Session named after an object builtin, %s',
+  async (sessionId): Promise<void> => {
+    const { caller } = await startSessionJourney();
+
+    await expect(
+      caller.session.setConfigOption({
+        sessionId,
+        configId: 'mode',
+        type: 'id',
+        value: 'plan',
+      }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(caller.session.cancel({ sessionId })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+  },
+);
+
 it('reads a stored Session snapshot without connecting an Agent when its Feed is subscribed', async (): Promise<void> => {
   const { agent, createCaller } = await startSessionJourney();
   expect(agent.processes).toHaveLength(0);

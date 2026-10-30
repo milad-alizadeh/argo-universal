@@ -29,6 +29,7 @@
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
     "@repo/contracts": "workspace:*",
+    "@repo/git": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

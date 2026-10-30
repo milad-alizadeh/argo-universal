@@ -40,14 +40,9 @@ export async function overlappingOAuth(): Promise<{
   const fixture = await installed(originSource);
   const browser = recordBrowser();
 
-  const runtime = startPluginRuntime(fixture.home, {
-    clock: new PluginTestClock(0),
-    oauth: browser.oauth,
-  });
+  const runtime = originRuntime(fixture.home, browser.oauth);
 
-  await runtime.activate({
-    entry: { pluginId: 'probe', directory: fixture.code, main: 'index.mjs' },
-  });
+  await activateOrigin(runtime, fixture.code);
   await openOrigins(runtime);
 
   return {
@@ -56,28 +51,56 @@ export async function overlappingOAuth(): Promise<{
   };
 }
 
+const originRuntime = (
+  home: string,
+  oauth: OAuthOptions,
+): ReturnType<typeof startPluginRuntime> =>
+  startPluginRuntime(home, { clock: new PluginTestClock(0), oauth });
+
+const activateOrigin = async (
+  runtime: ReturnType<typeof startPluginRuntime>,
+  directory: string,
+): Promise<void> => {
+  await runtime.activate({
+    entry: { pluginId: 'probe', directory, main: 'index.mjs' },
+  });
+};
+
 async function openOrigins(
   runtime: ReturnType<typeof startPluginRuntime>,
 ): Promise<void> {
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
   await Promise.all(
-    [true, false].map(async (serverDevice) => {
-      const view = runtime.views.watch(
-        'probe',
-        { path: '/' },
-        {
-          id: randomUUID(),
-          signal: controller.signal,
-          surface: currentPluginSurface('web'),
-          serverDevice,
-        },
-      );
-
-      await view[Symbol.asyncIterator]().next();
-    }),
+    [true, false].map((serverDevice) =>
+      watchOrigin(runtime, controller, serverDevice),
+    ),
   );
 }
+
+const watchOrigin = async (
+  runtime: ReturnType<typeof startPluginRuntime>,
+  controller: AbortController,
+  serverDevice: boolean,
+): Promise<void> => {
+  const view = runtime.views.watch(
+    'probe',
+    { path: '/' },
+    originContext(controller, serverDevice),
+  );
+
+  await view[Symbol.asyncIterator]().next();
+};
+
+const originContext = (
+  controller: AbortController,
+  serverDevice: boolean,
+): Parameters<ReturnType<typeof startPluginRuntime>['views']['watch']>[2] => ({
+  id: randomUUID(),
+  signal: controller.signal,
+  surface: currentPluginSurface('web'),
+  serverDevice,
+});
 
 type Browser = { opened: string[]; oauth: OAuthOptions };
 

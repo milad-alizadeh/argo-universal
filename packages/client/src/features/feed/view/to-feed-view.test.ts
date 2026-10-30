@@ -106,7 +106,7 @@ describe.each(workMocks)('command actions for $agent', ({ rows, snapshot }) => {
           {
             type: 'exploration',
             id: row.id,
-            title: 'Exploring',
+            state: 'open',
             toolCalls: [row],
           },
         ],

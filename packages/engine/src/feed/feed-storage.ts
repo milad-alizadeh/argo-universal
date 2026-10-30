@@ -1,37 +1,49 @@
-import type { SessionRecord, SessionUpdate } from '@repo/contracts';
+import type { SessionUpdate } from '@repo/contracts';
 import {
   readQueuedJobs,
   type WriterActorRef,
   type WriterJob,
 } from '../storage';
 import { newestRows } from './feed-row';
-import { FeedRowsJob, type QueuedFeedRows } from './feed-rows-job';
-import type { CommittedTurnEnding } from './turn-settlement';
+import { turnEndingsOf, type CommittedTurnEnding } from './turn-settlement';
 
-export { FeedRowsJob } from './feed-rows-job';
+// One Session's Feed rows a job writes, and the revision it advances that Session to.
+export type QueuedFeedRows = {
+  sessionId: string;
+  rows: SessionUpdate[];
+  maxRevision: number;
+};
 
-function queuedRows(job: WriterJob, sessionId: string): QueuedFeedRows[] {
-  const queued =
-    job instanceof FeedRowsJob ? job.queuedRows(sessionId) : undefined;
-
-  return queued ? [queued] : [];
+// The role of a job that writes Feed rows; a job of any module takes it by having the member.
+export interface QueuedFeedJob {
+  queuedFeedRows: () => QueuedFeedRows;
 }
 
-// The live Turn endings in a Writer commit. Only a `FeedRowsJob` carries one: stored settlement (Engine restart, archive) writes in its own transaction, so its endings never appear here.
+const writesFeedRows = (job: WriterJob): job is WriterJob & QueuedFeedJob =>
+  'queuedFeedRows' in job;
+
+const feedRowsOf = (jobs: readonly WriterJob[]): QueuedFeedRows[] =>
+  jobs.flatMap((job) => (writesFeedRows(job) ? [job.queuedFeedRows()] : []));
+
+// The live Turn endings in a Writer commit. Only queued Feed rows carry one: stored settlement (Engine restart, archive) writes in its own transaction, so its endings never appear here.
 export const committedTurnEndings = (
   jobs: readonly WriterJob[],
 ): readonly CommittedTurnEnding[] =>
-  jobs.flatMap((job) => (job instanceof FeedRowsJob ? job.turnEndings() : []));
+  feedRowsOf(jobs).flatMap(({ sessionId, rows }) =>
+    turnEndingsOf(sessionId, rows),
+  );
 
-export type QueuedFeed = QueuedFeedRows & { highestPosition: number };
+export type QueuedFeed = Omit<QueuedFeedRows, 'sessionId'> & {
+  highestPosition: number;
+};
 
 // The Feed rows of one Session the Writer holds but has not committed, newest revision of each.
 export const readQueuedFeed = (
   writer: WriterActorRef | undefined,
   sessionId: string,
 ): QueuedFeed => {
-  const batches = readQueuedJobs(writer).flatMap((job) =>
-    queuedRows(job, sessionId),
+  const batches = feedRowsOf(readQueuedJobs(writer)).filter(
+    (batch) => batch.sessionId === sessionId,
   );
 
   const rows = batches.flatMap((batch): SessionUpdate[] => batch.rows);
@@ -48,16 +60,3 @@ export const readQueuedFeedRow = (
   { sessionId, id }: { sessionId: string; id: string },
 ): SessionUpdate | undefined =>
   readQueuedFeed(writer, sessionId).rows.find((row) => row.id === id);
-
-// A Session row as a queued job leaves it, when the job is a Feed row job of that Session.
-export const projectQueuedFeedSession = (
-  job: WriterJob,
-  current: SessionRecord,
-): SessionRecord =>
-  job instanceof FeedRowsJob && job.sessionId === current.id
-    ? job.projectSession(current)
-    : current;
-
-// The Session whose row a queued Feed row job changes.
-export const queuedFeedSessionId = (job: WriterJob): string | undefined =>
-  job instanceof FeedRowsJob ? job.sessionId : undefined;

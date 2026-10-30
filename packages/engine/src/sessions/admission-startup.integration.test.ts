@@ -6,6 +6,7 @@ import { session } from '@repo/db/schema';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { admittedPrompt, fulfilled } from './admission-startup.test.mocks';
 
 const identities = fixtureAgents.map(({ agent }) => agent);
 
@@ -96,14 +97,8 @@ it.each(identities)(
       'rejected',
     ]);
 
-    const acknowledged = results.find(
-      (result) => result.status === 'fulfilled',
-    );
-
-    if (!acknowledged) throw new Error('No prompt was acknowledged');
-
-    const admittedPrompt =
-      results[0]?.status === 'fulfilled' ? firstPrompt : secondPrompt;
+    const acknowledged = fulfilled(results);
+    const admitted = admittedPrompt(results, firstPrompt, secondPrompt);
 
     expect(
       results.find((result) => result.status === 'rejected'),
@@ -119,10 +114,10 @@ it.each(identities)(
         sessionId: 'session-1',
         id: acknowledged.value.messageId ?? 'dropped',
       }),
-    ).toMatchObject({ content: admittedPrompt });
+    ).toMatchObject({ content: admitted });
     await expect
       .poll(() => requests)
-      .toEqual([{ sessionId: 'owned-1', prompt: admittedPrompt }]);
+      .toEqual([{ sessionId: 'owned-1', prompt: admitted }]);
     expect(host.agent.processes).toHaveLength(1);
   },
 );

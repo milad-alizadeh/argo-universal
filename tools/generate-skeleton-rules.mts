@@ -57,7 +57,8 @@ const quoted = (names: string[]): string =>
 const header = `Generated from ${rulesSource} by tools/generate-skeleton-rules.mts; do not edit.`;
 
 export function webSource(rules: SkeletonRules): string {
-  return `// ${header}
+  return (
+    `// ${header}
 export const skeletonRules = {
   lineFill: ${rules.lineFill},
   hairline: ${rules.hairline},
@@ -66,7 +67,12 @@ export const skeletonRules = {
   sameSizeTolerance: ${rules.sameSizeTolerance},
   roundSlack: ${rules.roundSlack},
   minBarWidthPerHeight: ${rules.minBarWidthPerHeight},
-  atomicTags: new Set([${quoted(rules.atomic.web.tags)}]),
+` + webLists(rules)
+  );
+}
+
+function webLists(rules: SkeletonRules): string {
+  return `  atomicTags: new Set([${quoted(rules.atomic.web.tags)}]),
   atomicRoles: new Set([${quoted(rules.atomic.web.roles)}]),
   glyphTags: new Set([${quoted(rules.atomic.web.glyphTags)}]),
   glyphRoles: new Set([${quoted(rules.atomic.web.glyphRoles)}]),
@@ -76,7 +82,8 @@ export const skeletonRules = {
 }
 
 export function swiftSource(rules: SkeletonRules): string {
-  return `import UIKit
+  return (
+    `import UIKit
 
 // ${header}
 enum SkeletonRules {
@@ -87,7 +94,12 @@ enum SkeletonRules {
   static let sameSizeTolerance: CGFloat = ${rules.sameSizeTolerance}
   static let roundSlack: CGFloat = ${rules.roundSlack}
   static let minBarWidthPerHeight: CGFloat = ${rules.minBarWidthPerHeight}
-  static let singleLineMax: CGFloat = ${rules.singleLineMax}
+` + swiftLists(rules)
+  );
+}
+
+function swiftLists(rules: SkeletonRules): string {
+  return `  static let singleLineMax: CGFloat = ${rules.singleLineMax}
   static let atomicClasses = [${quoted(rules.atomic.ios.classes)}]
   static let glyphClasses = [${quoted(rules.atomic.ios.glyphClasses)}]
   static let vectorClasses = [${quoted(rules.atomic.ios.vectorClasses)}]
@@ -99,7 +111,8 @@ enum SkeletonRules {
 }
 
 export function kotlinSource(rules: SkeletonRules): string {
-  return `package expo.modules.argoskeleton
+  return (
+    `package expo.modules.argoskeleton
 
 // ${header}
 object SkeletonRules {
@@ -110,7 +123,12 @@ object SkeletonRules {
   const val SAME_SIZE_TOLERANCE = ${rules.sameSizeTolerance}f
   const val ROUND_SLACK = ${rules.roundSlack}f
   const val MIN_BAR_WIDTH_PER_HEIGHT = ${rules.minBarWidthPerHeight}f
-  val atomicClasses = listOf(${quoted(rules.atomic.android.classes)})
+` + kotlinLists(rules)
+  );
+}
+
+function kotlinLists(rules: SkeletonRules): string {
+  return `  val atomicClasses = listOf(${quoted(rules.atomic.android.classes)})
   val glyphClasses = listOf(${quoted(rules.atomic.android.glyphClasses)})
   val vectorClasses = listOf(${quoted(rules.atomic.android.vectorClasses)})
 }

@@ -1,6 +1,4 @@
 export {
-  orderedOptions,
-  type RememberedOption,
   draftConfiguration,
   isRememberedConfiguration,
   type SavedChoices,

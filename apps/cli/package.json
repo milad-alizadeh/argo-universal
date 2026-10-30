@@ -6,6 +6,9 @@
   "bin": {
     "argo": "./bin/argo.mjs"
   },
+  "exports": {
+    "./supervisor-command": "./src/supervisor-command.ts"
+  },
   "scripts": {
     "check-types": "node ../../tools/plugin-typecheck.mts 'tsc --noEmit'",
     "test": "vitest run"
@@ -16,9 +19,9 @@
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/machine-log": "workspace:*",
+    "@repo/process": "workspace:*",
     "@repo/server": "workspace:*",
     "@trpc/client": "catalog:",
-    "tsx": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

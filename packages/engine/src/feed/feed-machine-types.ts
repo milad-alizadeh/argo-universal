@@ -88,14 +88,14 @@ export type FeedEvent =
     }
   | { type: 'feed.flush' };
 
-export type FeedChangeApplied = {
+type FeedChangeApplied = {
   type: 'feed.changeApplied';
   settled: boolean;
   commitWith?: WriterJob;
   committed?: WriterCommit;
 };
 
-export type FeedChangeRejected = {
+type FeedChangeRejected = {
   type: 'feed.changeRejected';
   reason: string;
 };

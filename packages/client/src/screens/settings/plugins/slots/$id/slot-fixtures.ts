@@ -14,7 +14,7 @@ export const issueTracker: SlotPlugin = {
   asks: true,
 };
 
-export const deploys: SlotPlugin = {
+const deploys: SlotPlugin = {
   pluginId: 'deploys',
   name: 'Deploys',
   fills: true,
@@ -23,7 +23,7 @@ export const deploys: SlotPlugin = {
 };
 
 // Fills the Slot but does not ask for its Single-owner Slot.
-export const coverage: SlotPlugin = {
+const coverage: SlotPlugin = {
   pluginId: 'coverage',
   name: 'Coverage',
   fills: true,

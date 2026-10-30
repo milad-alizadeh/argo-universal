@@ -18,7 +18,7 @@ export type Open = Extract<PluginEvent, { type: 'open' }>;
 
 export type Opening = Omit<Open, 'type' | 'viewId'>;
 
-export type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
+type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
 /*
  * One App's view of a Plugin route or Slot. `root` is the Plugin's tree as the worker sent it, which

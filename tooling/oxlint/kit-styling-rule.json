@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  // Kit components take props; only the Kit styles them.
+  "overrides": [
+    {
+      "files": ["packages/client/src/**"],
+      "rules": { "argo/kit-styling": "error" }
+    }
+  ]
+}

@@ -1,7 +1,20 @@
 import type { AgentLaunch, AcpResources, AcpSessionLease } from '../agents';
-import type { OpenSessionsActorRef } from './open-sessions-machine';
+import {
+  openSessionActor,
+  type OpenSessionsActorRef,
+} from './open-sessions-machine';
+import type { SessionContext } from './session-context';
 
 type ConnectionSubject = { agent: string; projectId: string };
+
+const matchesSubject = (
+  session: ConnectionSubject,
+  subject: ConnectionSubject,
+): boolean =>
+  session.agent === subject.agent && session.projectId === subject.projectId;
+
+const currentLease = (session: SessionContext): AcpSessionLease | undefined =>
+  session.acpLease ?? undefined;
 
 // What the Agents module may read of open Sessions: the shared ACP resources and one Session's connection.
 export type SessionConnections = {
@@ -22,17 +35,14 @@ function findSessionLease(
   sessionId: string,
   subject: ConnectionSubject,
 ): AcpSessionLease | undefined {
-  const session = sessions
-    .getSnapshot()
-    .context.sessions[sessionId]?.getSnapshot().context;
+  const actor = openSessionActor(sessions.getSnapshot().context, sessionId);
 
-  if (
-    session?.agent !== subject.agent ||
-    session.projectId !== subject.projectId
-  )
-    return;
+  if (!actor) return;
+  const session = actor.getSnapshot().context;
 
-  return session.acpLease ?? undefined;
+  if (!matchesSubject(session, subject)) return;
+
+  return currentLease(session);
 }
 
 export const createSessionConnections = (

@@ -50,7 +50,7 @@ const ThemedCircle = withUniwind(Circle, {
   },
 });
 
-export function checksState({
+function checksState({
   failing,
   running,
 }: PullRequestChecksProps): ChecksState {
@@ -59,10 +59,7 @@ export function checksState({
   return running > 0 ? 'running' : 'passed';
 }
 
-export function stateText(
-  checks: PullRequestChecksProps,
-  state: ChecksState,
-): string {
+function stateText(checks: PullRequestChecksProps, state: ChecksState): string {
   if (state === 'failing') return `${checks.failing} failing`;
 
   return state === 'running' ? `${checks.running} running` : 'passed';

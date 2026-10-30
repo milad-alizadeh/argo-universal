@@ -7,7 +7,9 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { lockBrowserSuite } from '../tooling/browser-suite-lock/browser-suite-lock.ts';
+import { lockBrowserSuite } from '@repo/browser-suite-lock';
+import { readStory, testStory, type StoryFile } from './story-file.mts';
+import { loadStoryFiles } from './story-files.mts';
 import {
   childStateProblems,
   duplicateRenderProblems,
@@ -16,7 +18,7 @@ import {
   type FixturePair,
   type StoryRender,
 } from './story-render-rules.mts';
-import { root, trackedFiles } from './tracked-files.mts';
+import { root } from './tracked-files.mts';
 
 type PlannedFile = { file: string; pairs: FixturePair[] };
 
@@ -32,19 +34,15 @@ const planPath = resolve(storybook, 'story-render-plan.json');
 
 const fingerprintPath = resolve(storybook, 'story-render-fingerprints.json');
 
-const storyExport = /^export const \w+\s*:/gm;
+const presentationFiles = (): StoryFile[] =>
+  loadStoryFiles(['packages/*/src/**/*.stories.tsx']).filter(
+    ({ file }): boolean => !testStory.test(file),
+  );
 
-const presentationFiles = (): string[] =>
-  trackedFiles(['packages/*/src/**/*.stories.tsx'], {
-    untracked: true,
-  }).filter((file): boolean => !file.endsWith('.test.stories.tsx'));
-
-const planFor = (file: string): PlannedFile[] => {
-  const source = readFileSync(resolve(root, file), 'utf8');
-  const stories = [...source.matchAll(storyExport)].length;
-
-  return stories < 2 ? [] : [{ file, pairs: fixturePairs({ file, source }) }];
-};
+const planFor = (story: StoryFile): PlannedFile[] =>
+  readStory(story).exports.length < 2
+    ? []
+    : [{ file: story.file, pairs: fixturePairs(story) }];
 
 const runStorybookProject = (): void => {
   execFileSync(
@@ -71,7 +69,7 @@ const report = (problems: readonly string[], files: number): number => {
 const only = process.argv[2] ?? '';
 
 const files = presentationFiles()
-  .filter((file): boolean => file.includes(only))
+  .filter(({ file }): boolean => file.includes(only))
   .flatMap(planFor);
 
 const release = await lockBrowserSuite();

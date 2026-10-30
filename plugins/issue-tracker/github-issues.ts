@@ -2,7 +2,7 @@
 export type IssueStatus = 'open' | 'closed';
 
 // Why GitHub closed an Issue: done, or set aside (not planned, or a duplicate).
-export type IssueClosedAs = 'completed' | 'not-planned';
+type IssueClosedAs = 'completed' | 'not-planned';
 
 // A label's colour is GitHub's own, as `#d73a4a`, or none when GitHub sends no valid one.
 export type IssueLabel = { name: string; color?: string };
