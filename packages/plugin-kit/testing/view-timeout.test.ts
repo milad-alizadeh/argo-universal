@@ -5,7 +5,9 @@ describe('view timeout', () => {
   it('names a stalled test process as load', () => {
     const base = { what: 'x', limitMs: 3000, waitedMs: 3001, trees: 1 };
 
-    expect(viewTimeoutMessage({ ...base, stallMs: 900 })).toContain('busy');
+    expect(viewTimeoutMessage({ ...base, stallMs: 900 })).toContain(
+      'stalled for',
+    );
     expect(viewTimeoutMessage({ ...base, stallMs: 3 })).toContain(
       'stayed responsive',
     );
