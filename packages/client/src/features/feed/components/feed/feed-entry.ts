@@ -1,5 +1,6 @@
 import type {
   LiveHeader as LiveHeaderValue,
+  SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
 import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
@@ -52,8 +53,17 @@ export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {
   return newestItem ? feedItemKey(newestItem) : '';
 }
 
-// Thoughts, tool calls and the live header: what the Agent does between messages.
-const isActivity = (entry: FeedEntry): boolean => entry.type !== 'row';
+/*
+ * Thoughts, Tool calls, the live header, and the status row a Notice or a Compaction draws:
+ * what the Agent does between messages. A status row standing on its own reports on the work
+ * beside it, as it does inside a group, so it keeps the activity rhythm rather than the space
+ * that separates one message from the next.
+ */
+const isActivity = (entry: FeedEntry): boolean =>
+  entry.type !== 'row' || isStatusRow(entry.row);
+
+const isStatusRow = (row: SessionUpdate): boolean =>
+  row.sessionUpdate === 'notice' || row.sessionUpdate === 'compaction_update';
 
 const isAgentMessage = (entry: FeedEntry): boolean =>
   entry.type === 'row' && entry.row.sessionUpdate === 'agent_message';
