@@ -20,6 +20,10 @@ export const longSuggestionsRichTextarea = {
   value: '',
   accessibilityLabel: exampleLabel,
   suggestions: [
-    { id: 'long', title: 'Suggestions', query: () => longCommands },
+    {
+      id: 'long',
+      title: 'Suggestions',
+      query: (): ComposerSuggestion[] => longCommands,
+    },
   ],
 } satisfies Omit<RichTextareaProps, 'onChangeText'>;

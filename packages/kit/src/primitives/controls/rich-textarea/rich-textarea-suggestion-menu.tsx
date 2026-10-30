@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, type RefObject } from 'react';
 import { ListPlaceContext } from '#kit/list-place';
 import { List, ListSectionHeader, type ListRef } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
@@ -58,23 +58,20 @@ function rowRole(
   };
 }
 
-function SuggestionItem(props: {
-  entry: RowEntry;
-  menu: SuggestionMenuProps;
-}): React.JSX.Element {
-  const { row, index } = props.entry;
-
-  return (
-    <ListItem
-      title={row.title}
-      subtitle={row.subtitle}
-      subtitleLines={2}
-      leading={row.leading}
-      accessibilityLabel={row.label}
-      onPress={() => props.menu.onChoose(index)}
-      {...rowRole(props.menu.listbox, index)}
-    />
-  );
+// One shared row: the type icon, the name, and up to two lines of detail.
+function itemProps(
+  { row, index }: RowEntry,
+  menu: SuggestionMenuProps,
+): ListItemProps {
+  return {
+    title: row.title,
+    subtitle: row.subtitle,
+    subtitleLines: 2,
+    leading: row.leading,
+    accessibilityLabel: row.label,
+    onPress: () => menu.onChoose(index),
+    ...rowRole(menu.listbox, index),
+  };
 }
 
 const listProps = {
@@ -94,8 +91,19 @@ const entryDrawing =
     entry.kind === 'title' ? (
       <ListSectionHeader title={entry.title} />
     ) : (
-      <SuggestionItem entry={entry} menu={menu} />
+      <ListItem {...itemProps(entry, menu)} />
     );
+
+// The menu's titles and rows, kept with the highlighted row in view.
+function useMenuEntries(
+  { rows, listbox }: SuggestionMenuProps,
+  list: RefObject<ListRef | null>,
+): Entry[] {
+  const entries = useMemo(() => menuEntries(rows), [rows]);
+  useRevealRow(list, highlightedEntry(entries, listbox));
+
+  return entries;
+}
 
 /*
  * The `/` and `#` results, on a phone and on the desktop: a virtualized List that draws only the rows in view,
@@ -103,8 +111,7 @@ const entryDrawing =
  */
 export function SuggestionMenu(props: SuggestionMenuProps): React.JSX.Element {
   const list = useRef<ListRef>(null);
-  const entries = useMemo(() => menuEntries(props.rows), [props.rows]);
-  useRevealRow(list, highlightedEntry(entries, props.listbox));
+  const entries = useMenuEntries(props, list);
 
   return (
     <ListPlaceContext value="popover">

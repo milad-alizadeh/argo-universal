@@ -2,12 +2,7 @@ import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
-import {
-  ListSelectionContext,
-  ListTileContext,
-  RowPositionContext,
-  type ListSelection,
-} from '../../../list-context';
+import { ListTileContext, RowPositionContext } from '../../../list-context';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { loadingLanes } from '../../../list-skeleton-lanes';
 import { nestedRows, nestsChildren } from '../../../list-tree';
@@ -30,11 +25,11 @@ import {
   useItemSelection,
   useTrailingChoice,
   ChoiceSlot,
+  SelectionTint,
 } from './list-item-selection';
 import {
   itemSeparator,
   itemSurface,
-  selectionTint,
   type ItemDrawing,
 } from './list-item-styles';
 
@@ -66,12 +61,6 @@ function ItemSeparator(props: ListItemProps): ReactNode {
       className={separatorClass(separator, props.leadingSize)}
       style={hairline}
     />
-  ) : null;
-}
-
-function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
-  return selected ? (
-    <View pointerEvents="none" aria-hidden className={selectionTint} />
   ) : null;
 }
 
@@ -163,26 +152,16 @@ interface PressedProps extends RowParts {
   drawing: ItemDrawing;
 }
 
-// A menu's chosen row shows its check, not a tint; a listbox's highlighted option is tinted.
-const tintsSelection = (
-  menu: boolean,
-  role: ListItemProps['role'],
-  selectionMode: ListSelection['selectionMode'],
-): boolean => !selectionMode && (!menu || role === 'option');
-
 function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
-  const { selectionMode } = useContext(ListSelectionContext);
-  const { menu } = drawing.look;
-
   return (
     <>
       <ItemPress
         {...drawingContent(props, tile, drawing.look.valuePlacement)}
       />
-      <Selection
-        selected={
-          props.selected && tintsSelection(menu, props.role, selectionMode)
-        }
+      <SelectionTint
+        selected={props.selected}
+        role={props.role}
+        menu={drawing.look.menu}
       />
     </>
   );

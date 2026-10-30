@@ -11,6 +11,7 @@ import { BesidePress, useBesidePress } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
 import { interactive, usePressClass } from './list-item-press-class';
+import { rowState, selectedState } from './list-item-press-state';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
 import { ItemContentSlots } from './list-item-slots';
@@ -53,14 +54,6 @@ const explicitRole = (
 const pressRole = (onPress: ListItemProps['onPress']): 'button' | 'group' =>
   onPress ? 'button' : 'group';
 
-const rowState = (
-  props: DrawingProps,
-): NonNullable<ComponentProps<typeof Pressable>['accessibilityState']> => ({
-  selected: props.selected,
-  disabled: props.disabled,
-  checked: props.checked,
-});
-
 function accessibilityProps(props: DrawingProps): RowPressProps {
   return {
     role: rowRole(props),
@@ -73,13 +66,6 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
     accessible: props.accessible ?? props.content === undefined,
     disabled: props.disabled,
   };
-}
-
-// An option's highlight is its selection; another row's selection is pressed.
-function selectedState(props: DrawingProps): RowPressProps {
-  return props.role === 'option'
-    ? { 'aria-selected': props.selected }
-    : { 'aria-pressed': props.selected };
 }
 
 function usePressProps(props: DrawingProps): RowPressProps {

@@ -42,17 +42,21 @@ type Story = StoryObj<typeof meta>;
 const highlightedName = (): string =>
   screen.getByRole('option', { selected: true }).textContent ?? '';
 
+// The highlighted option's name, once the highlight has left `previous`.
+function movedFrom(previous: string | undefined): string {
+  const current = highlightedName();
+
+  if (current === previous) throw new Error('The highlight has not moved yet');
+
+  return current;
+}
+
 // Moves the highlight down `steps` times, collecting the name of each option it lands on.
 async function walkOptions(steps: number, seen: string[]): Promise<string[]> {
   if (steps === 0) return seen;
 
   await userEvent.keyboard('{ArrowDown}');
-  const name = await waitFor(() => {
-    const current = highlightedName();
-    expect(current).not.toBe(seen.at(-1));
-
-    return current;
-  });
+  const name = await waitFor(() => movedFrom(seen.at(-1)));
 
   return walkOptions(steps - 1, [...seen, name]);
 }

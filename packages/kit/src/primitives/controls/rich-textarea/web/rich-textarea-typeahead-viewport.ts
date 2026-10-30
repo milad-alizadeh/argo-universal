@@ -11,6 +11,7 @@ function viewportTop(): number {
 // The menu's rows grow up from the field: as tall as the room above it, to 350 at most.
 function fitMenu(menu: HTMLDivElement | null): number | undefined {
   if (!menu?.isConnected) return undefined;
+
   const available =
     menu.getBoundingClientRect().bottom - viewportTop() - viewportInset;
 
