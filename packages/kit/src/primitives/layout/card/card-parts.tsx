@@ -11,22 +11,19 @@ type CardSpace = {
   padding: string;
   gap: string;
   bodyTop: string;
-  bodyBleed: string;
 };
 
 /*
  * The card's padding and the space under its title line, per density: compact suits cards stacked in a narrow
  * column. A plain card spaces its header and body with a gap; a collapsible one insets its folding body instead.
- * A compact card's body holds rows, which carry 4 of their own beside their hover tile, so it pulls 4 out to line
- * the rows' text up with the title.
+ * The body starts on the card's padding like the title does, whatever it holds.
  */
 const densitySpace: Record<CardDensity, CardSpace> = {
-  regular: { padding: 'p-4', gap: 'gap-2', bodyTop: 'pt-2', bodyBleed: '' },
+  regular: { padding: 'p-4', gap: 'gap-2', bodyTop: 'pt-2' },
   compact: {
     padding: 'px-3 py-2.5',
     gap: 'gap-1',
     bodyTop: 'pt-1',
-    bodyBleed: '-mx-1',
   },
 };
 
@@ -70,11 +67,7 @@ export const IconLane = ({ children }: { children?: ReactNode }): ReactNode => (
   </TitleLine>
 );
 
-// The body and the footer, on the card's own edge for its density; nothing when the card holds neither.
-export function CardBody(
-  props: Pick<CardProps, 'density' | 'children'>,
-): ReactNode {
-  if (!props.children) return null;
-
-  return <View className={cardSpace(props).bodyBleed}>{props.children}</View>;
+// The body and the footer, on the card's own edge; nothing when the card holds neither.
+export function CardBody(props: Pick<CardProps, 'children'>): ReactNode {
+  return props.children ? <View>{props.children}</View> : null;
 }

@@ -3,6 +3,7 @@ import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { View } from 'react-native';
 import { useKeepSidebarWhilePending } from '#features/frame';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
@@ -32,10 +33,25 @@ export function PluginDetailView(
 
   return (
     <Screen title={props.title ?? 'Plugin'}>
-      <Detail testID="plugin-page">
+      <PageHolder root={props.root}>
         <PluginContent {...props} />
-      </Detail>
+      </PageHolder>
     </Screen>
+  );
+}
+
+// A List scrolls and insets itself, so it fills the body; anything else scrolls in a Detail.
+function PageHolder(props: {
+  root: WireNode | null;
+  children: React.ReactNode;
+}): React.ReactNode {
+  if (props.root?.type !== 'List')
+    return <Detail testID="plugin-page">{props.children}</Detail>;
+
+  return (
+    <View testID="plugin-page" className="min-h-0 flex-1">
+      {props.children}
+    </View>
   );
 }
 
