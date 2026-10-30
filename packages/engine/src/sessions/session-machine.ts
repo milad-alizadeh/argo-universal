@@ -38,7 +38,10 @@ import {
   type OpenedAcpSession,
 } from './acp-operations';
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
-import { promptFailureOutcome } from './acp/prompts/prompt-outcome';
+import {
+  deniedOutcome,
+  promptFailureOutcome,
+} from './acp/prompts/prompt-outcome';
 import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
@@ -251,6 +254,23 @@ const enqueueTurnStep = (
   }
 
   for (const event of step.feed) enqueue.sendTo('feed', event);
+};
+
+// What the Agent reported the Turn ended with: a Stop wins the reason, and a denial under it is carried on.
+const acpOutcome = (
+  context: SessionContext,
+  output: PromptResponse,
+): EndTurnParameters => {
+  const stopped = context.turnEnding.kind === 'cancel';
+
+  return {
+    stopReason: stopped ? 'cancelled' : output.stopReason,
+    ...deniedOutcome(stopped, output.stopReason, context.permissionDenied),
+    usage: acpTurnUsage(
+      output.usage,
+      context.acpLease?.initialization.agentInfo,
+    ),
+  };
 };
 
 const crashDuringTurn = (params: CrashNoticeParameters): boolean =>
@@ -1296,21 +1316,8 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'publishing',
                   actions: {
                     type: 'rememberAcpOutcome',
-                    params: ({ context, event }) => ({
-                      stopReason:
-                        context.turnEnding.kind === 'cancel'
-                          ? 'cancelled'
-                          : event.output.stopReason,
-                      ...(context.turnEnding.kind !== 'cancel' &&
-                        event.output.stopReason === 'cancelled' &&
-                        context.permissionDenied && {
-                          permissionDenied: true as const,
-                        }),
-                      usage: acpTurnUsage(
-                        event.output.usage,
-                        context.acpLease?.initialization.agentInfo,
-                      ),
-                    }),
+                    params: ({ context, event }) =>
+                      acpOutcome(context, event.output),
                   },
                 },
                 onError: {

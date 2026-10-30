@@ -63,10 +63,16 @@ type Ending = {
   turnId: string;
 };
 
+// A denial is carried on the Turn's end only when it is set; the Stop reason stays `cancelled`.
+const denial = (
+  params: EndTurnParameters,
+): Pick<TurnEnd, 'permissionDenied'> =>
+  params.permissionDenied ? { permissionDenied: true } : {};
+
 const turnEnd = ({ context, params, endedAt }: Ending): TurnEnd => ({
   stopReason: params.stopReason,
   error: params.error ?? null,
-  ...(params.permissionDenied && { permissionDenied: true as const }),
+  ...denial(params),
   durationMs: Math.max(0, endedAt - (context.activeTurnStartedAt ?? endedAt)),
 });
 
