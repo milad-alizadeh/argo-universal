@@ -119,7 +119,7 @@ export function NoticeMessage(props: NoticeMessageProps): React.JSX.Element {
   return (
     <View {...noticeRowProps(props)}>
       <NoticeIcon {...appearance} />
-      <View className="min-w-0 flex-1 gap-0.5">
+      <View className="min-w-0 shrink gap-0.5">
         <NoticeTitle {...props} color={appearance.color} />
         {!props.inlineDescription && (
           <NoticeDescription description={props.description} />
