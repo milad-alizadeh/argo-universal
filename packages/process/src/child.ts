@@ -8,7 +8,7 @@ import { childEnvironment, nodeExecutable } from './environment';
 import { type Exit, watchExit } from './exit';
 import { type GroupRelease, supportsProcessGroups } from './group';
 import type { Check } from './poll';
-import { recordStderrTail, waitUntilReady } from './ready';
+import { recordOutputTail, waitUntilReady } from './ready';
 import { stopChild } from './stop';
 
 // What a child sends over its IPC channel, before the receiver parses it.
@@ -30,7 +30,7 @@ export interface ChildCommand {
 export interface ChildOptions {
   // Opens an IPC channel for `onMessage`.
   messages?: boolean;
-  // `inherit` shares the parent's output; `tail` keeps the end of stderr for errors.
+  // `inherit` shares the parent's output; `tail` keeps the end of stdout and stderr for errors.
   output?: 'inherit' | 'tail';
 }
 
@@ -42,7 +42,8 @@ export interface ChildHandle {
   onMessage: (listener: (message: ChildMessage) => void) => () => void;
   // Polls `check` every pollIntervalMs until it answers; rejects when the child exits first or startLimitMs passes.
   waitUntil: <T>(check: Check<T>) => Promise<T>;
-  stderrTail: () => string;
+  // The end of stdout and stderr together, with `output: 'tail'`.
+  outputTail: () => string;
   // SIGTERM, the group killed after `graceMs`, then `released` once no member of the group is left.
   stop: (graceMs: number) => Promise<GroupRelease>;
 }
@@ -55,7 +56,7 @@ const nodeArguments = (command: ChildCommand): string[] => [
 
 const childStdio = (options: ChildOptions): StdioOptions => [
   ...(options.output === 'tail'
-    ? (['ignore', 'ignore', 'pipe'] as const)
+    ? (['ignore', 'pipe', 'pipe'] as const)
     : (['inherit', 'inherit', 'inherit'] as const)),
   ...(options.messages ? (['ipc'] as const) : []),
 ];
@@ -79,15 +80,15 @@ const spawnNode = (command: ChildCommand, spawning: Spawning): ChildProcess =>
 
 function handleFor(label: string, child: ChildProcess): ChildHandle {
   const exit = watchExit(child);
-  const stderrTail = recordStderrTail(child);
+  const outputTail = recordOutputTail(child);
 
   return {
     pid: child.pid,
     exited: exit.exited,
     onMessage: listenTo(child),
     waitUntil: (check) =>
-      waitUntilReady({ label, ended: exit.ended, stderrTail }, check),
-    stderrTail,
+      waitUntilReady({ label, ended: exit.ended, outputTail }, check),
+    outputTail,
     stop: (graceMs) => stopChild(child, exit, graceMs),
   };
 }

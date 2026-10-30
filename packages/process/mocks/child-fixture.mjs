@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 /*
  * A child for lifecycle tests; its first argument picks what it does:
  * `serve` launches a descendant in its group, reports the descendant's pid and runs until stopped (ignoring SIGTERM with FIXTURE_IGNORE_TERM);
- * `fail` writes to stderr and exits with code 3; `environment` reports two variables and exits.
+ * `fail` logs a taken port to stdout, as the Engine does, writes to stderr and exits with code 3; `environment` reports two variables and exits.
  */
 const mode = process.argv[2];
 
@@ -22,7 +22,8 @@ function serve() {
 if (mode === 'serve') serve();
 
 if (mode === 'fail') {
-  process.stderr.write('listen EADDRINUSE: address already in use\n');
+  process.stdout.write('could not listen: listen EADDRINUSE\n');
+  process.stderr.write('Engine stopped\n');
   process.exitCode = 3;
 }
 

@@ -96,7 +96,7 @@ async function startReady(launch: Launch): Promise<ChildHandle | undefined> {
   } catch (error) {
     await engine.stop(supervisorStopGraceMs);
 
-    if (portTakenPattern.test(engine.stderrTail())) return undefined;
+    if (portTakenPattern.test(engine.outputTail())) return undefined;
     throw error;
   }
 }

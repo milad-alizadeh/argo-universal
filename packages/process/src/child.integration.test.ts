@@ -98,16 +98,17 @@ it('a process stopped by its pid that ignores SIGTERM is killed with its group a
   expect(isAlive(descendant)).toBe(false);
 });
 
-it('waiting for a child that exits fails with its exit and the end of its stderr', async () => {
+it('waiting for a child that exits fails with its exit and the end of its output, stdout included', async () => {
   const child = startChild(
     { label, entry, args: ['fail'] },
     { output: 'tail' },
   );
 
   await expect(child.waitUntil((): undefined => undefined)).rejects.toThrow(
-    /^The Fixture exited \(code 3\)\nstderr \(last 2000 characters\):\nlisten EADDRINUSE/,
+    /^The Fixture exited \(code 3\)\noutput \(last 2000 characters\):\n[\s\S]*listen EADDRINUSE/,
   );
-  expect(child.stderrTail()).toContain('EADDRINUSE');
+  expect(child.outputTail()).toContain('listen EADDRINUSE');
+  expect(child.outputTail()).toContain('Engine stopped');
 });
 
 it('waiting returns the first answer the check gives while the child runs', async () => {

@@ -2,20 +2,24 @@ import type { ChildProcess } from 'node:child_process';
 import { describeExit, type Exit } from './exit';
 import { type Check, pollUntil } from './poll';
 
-export const stderrTailLength = 2000;
+export const outputTailLength = 2000;
 
 export type Watched = {
   label: string;
   ended: () => Exit | undefined;
-  stderrTail: () => string;
+  outputTail: () => string;
 };
 
-export function recordStderrTail(child: ChildProcess): () => string {
+// The end of what the child wrote to stdout and stderr together: the Engine logs to stdout, a crash goes to stderr.
+export function recordOutputTail(child: ChildProcess): () => string {
   let tail = '';
 
-  child.stderr?.on('data', (chunk: Buffer): void => {
-    tail = (tail + chunk.toString()).slice(-stderrTailLength);
-  });
+  const keep = (chunk: Buffer): void => {
+    tail = (tail + chunk.toString()).slice(-outputTailLength);
+  };
+
+  child.stdout?.on('data', keep);
+  child.stderr?.on('data', keep);
 
   return (): string => tail;
 }
@@ -30,15 +34,15 @@ const whileRunning =
     return check();
   };
 
-const withStderr = (error: Error, tail: string): Error =>
+const withOutput = (error: Error, tail: string): Error =>
   tail === ''
     ? error
     : new Error(
-        `${error.message}\nstderr (last ${stderrTailLength} characters):\n${tail}`,
+        `${error.message}\noutput (last ${outputTailLength} characters):\n${tail}`,
         { cause: error },
       );
 
-// Polls `check` until it answers; fails at once when the child exits, and at the start limit otherwise, with the end of its stderr.
+// Polls `check` until it answers; fails at once when the child exits, and at the start limit otherwise, with the end of its output.
 export async function waitUntilReady<T>(
   watched: Watched,
   check: Check<T>,
@@ -50,6 +54,6 @@ export async function waitUntilReady<T>(
     );
   } catch (error) {
     if (!(error instanceof Error)) throw error;
-    throw withStderr(error, watched.stderrTail());
+    throw withOutput(error, watched.outputTail());
   }
 }
