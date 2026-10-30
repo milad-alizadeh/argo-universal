@@ -53,7 +53,16 @@ const acceptedFor = (
       input: prepared.newSession,
       sender: prepared.origin.sender,
     }),
+    closeFailedCreation,
   );
+
+// A creation that fails leaves nothing behind, as a failed open does: closing discards the Session no Turn reached.
+function closeFailedCreation(session: SessionActorRef): void {
+  const snapshot = session.getSnapshot();
+
+  if (snapshot.context.kept || !snapshot.can({ type: 'session.close' })) return;
+  session.send({ type: 'session.close' });
+}
 
 function openCreation(
   sources: CreationSources,
