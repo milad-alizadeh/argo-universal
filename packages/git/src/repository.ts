@@ -72,15 +72,17 @@ export interface Repository {
 export async function readRepository(path: string): Promise<Repository> {
   const directory = await realpath(path);
 
-  const [checkouts, commonDirectory] = await Promise.all([
+  const [checkoutList, commonResponse] = await Promise.all([
     git(directory, ['worktree', 'list', '--porcelain', '-z']),
     git(directory, ['rev-parse', '--git-common-dir']),
   ]);
 
-  return {
-    mainCheckout: readMainCheckout(checkouts).path,
-    commonDirectory: await readCommonDirectory(directory, commonDirectory),
-  };
+  const [mainCheckout, commonDirectory] = await Promise.all([
+    realpath(readMainCheckout(checkoutList).path),
+    readCommonDirectory(directory, commonResponse),
+  ]);
+
+  return { mainCheckout, commonDirectory };
 }
 
 const commonDirectoryResponse = z.string().trim().min(1);
