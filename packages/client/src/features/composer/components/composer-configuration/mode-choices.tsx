@@ -12,7 +12,7 @@ import type { ModeContentsProps } from './mode-types';
  */
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 bg-content web:wide:bg-card">
+    <View className="native:flex-1 bg-content">
       <FieldGroup>
         {modeSection(props)}
         {collaborationSection(props)}
