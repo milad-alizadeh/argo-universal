@@ -13,6 +13,7 @@ import {
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import { sectionBadge } from '../../utils/section-badge';
+import { DrawerFocusScope } from './drawer-focus-scope';
 
 interface DrawerNavigation {
   items: readonly NavigationSection[];
@@ -98,17 +99,14 @@ function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
   );
 }
 
-const hiddenWhileClosed = (open: boolean) =>
-  ({ 'aria-hidden': !open, accessibilityElementsHidden: !open }) as const;
-
 // The phone's drawer of sections: the title, then a row per section, on the window surface.
 export function PhoneDrawerContent({
   open,
   ...glass
 }: PhoneDrawerContentProps): React.JSX.Element {
   return (
-    <View className="flex-1" {...hiddenWhileClosed(open)}>
+    <DrawerFocusScope open={open}>
       <DrawerGlass {...glass} />
-    </View>
+    </DrawerFocusScope>
   );
 }

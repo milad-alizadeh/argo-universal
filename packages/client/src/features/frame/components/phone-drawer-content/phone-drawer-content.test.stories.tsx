@@ -1,8 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { expect, fn, waitFor, type within } from 'storybook/test';
+import { userEvent as browserKeyboard } from 'vitest/browser';
 import type { Section } from '../../../../lib/product/navigation/sections';
 import { pluginNavigationItems } from '../navigation-items.mocks';
-import { PhoneDrawerContent } from './phone-drawer-content';
+import {
+  PhoneDrawerContent,
+  type PhoneDrawerContentProps,
+} from './phone-drawer-content';
 
 const meta = {
   title: 'Tests/Frame/PhoneDrawerContent',
@@ -126,5 +132,120 @@ export const ClosedIsHiddenFromAssistiveTechnology: Story = {
   args: { open: false },
   play: async ({ canvas }) => {
     await expect(canvas.queryByRole('heading', { name: 'Argo' })).toBeNull();
+  },
+};
+
+interface DrawerAndPageProps extends Omit<PhoneDrawerContentProps, 'open'> {
+  startsOpen: boolean;
+}
+
+const openerName = 'Open navigation';
+
+// The pieces a real window puts around the drawer: the opener in the page's header, the page's own controls, and the scrim's dismiss. Navigation's own wiring is not drawn here; the drawer takes only `open`.
+function DrawerAndPage({
+  startsOpen,
+  ...drawer
+}: DrawerAndPageProps): React.JSX.Element {
+  const [open, setOpen] = useState(startsOpen);
+
+  return (
+    <View>
+      <Pressable role="button" onPress={() => setOpen(true)}>
+        <Text>{openerName}</Text>
+      </Pressable>
+      <PhoneDrawerContent {...drawer} open={open} />
+      <Pressable role="button">
+        <Text>Page control</Text>
+      </Pressable>
+      <Pressable role="button" onPress={() => setOpen(false)}>
+        <Text>Dismiss</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const sectionTitles = pluginNavigationItems.map((item) => item.title);
+
+const [firstSection, lastSection] = [sectionTitles[0], sectionTitles.at(-1)];
+
+if (
+  firstSection === undefined ||
+  lastSection === undefined ||
+  firstSection === lastSection
+)
+  throw new Error('Recorded catalog needs at least two sections');
+
+const drawerAndPage = (startsOpen: boolean): Story => ({
+  args: { open: startsOpen },
+  render: ({ open: _open, ...args }) => (
+    <DrawerAndPage {...args} startsOpen={startsOpen} />
+  ),
+});
+
+type Canvas = Pick<ReturnType<typeof within>, 'getByRole'>;
+
+const rowNamed = (canvas: Canvas, title: string): HTMLElement =>
+  canvas.getByRole('button', { name: title });
+
+// A closed drawer's rows are off screen and hidden; Tab goes straight to the page.
+export const ClosedDrawerTakesNoTabStop: Story = {
+  ...drawerAndPage(false),
+  play: async ({ canvas }) => {
+    canvas.getByRole('button', { name: openerName }).focus();
+    await browserKeyboard.tab();
+
+    await expect(
+      canvas.getByRole('button', { name: 'Page control' }),
+    ).toHaveFocus();
+  },
+};
+
+// Opening the drawer moves focus to its first row.
+export const OpeningMovesFocusIntoTheDrawer: Story = {
+  ...drawerAndPage(false),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: openerName }));
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+  },
+};
+
+// Tab past the last row wraps to the first, never reaching the page.
+export const TabWrapsWithinTheOpenDrawer: Story = {
+  ...drawerAndPage(true),
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+
+    for (const title of sectionTitles.slice(1)) {
+      await browserKeyboard.tab();
+      await expect(rowNamed(canvas, title)).toHaveFocus();
+    }
+
+    await browserKeyboard.tab();
+    await expect(rowNamed(canvas, firstSection)).toHaveFocus();
+  },
+};
+
+// Shift+Tab before the first row wraps to the last.
+export const ShiftTabWrapsWithinTheOpenDrawer: Story = {
+  ...drawerAndPage(true),
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+
+    await browserKeyboard.tab({ shift: true });
+    await expect(rowNamed(canvas, lastSection)).toHaveFocus();
+  },
+};
+
+// Closing returns focus to the control that opened the drawer.
+export const ClosingReturnsFocusToTheOpener: Story = {
+  ...drawerAndPage(false),
+  play: async ({ canvas, userEvent }) => {
+    const opener = canvas.getByRole('button', { name: openerName });
+
+    await userEvent.click(opener);
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+
+    await userEvent.click(canvas.getByText('Dismiss'));
+    await waitFor(() => expect(opener).toHaveFocus());
   },
 };
