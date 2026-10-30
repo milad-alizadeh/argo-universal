@@ -13,7 +13,7 @@ const diff = (file: Partial<FileDiff>): FileDiff => ({
 
 describe('fileName', () => {
   it('keeps the name at the end of an absolute path', () => {
-    expect(fileName('/private/tmp/worktrees/585ad15d/notes.md')).toBe(
+    expect(fileName('/Users/someone/argo/worktrees/585ad15d/notes.md')).toBe(
       'notes.md',
     );
   });
