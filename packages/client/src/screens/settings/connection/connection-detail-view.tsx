@@ -63,7 +63,7 @@ const ServerRows = ({
 }): React.JSX.Element => (
   <FieldGroup>
     <FieldGroup.Section title="Server">
-      <DetailRows values={rowValues(server)} />
+      {detailRows(rowValues(server))}
     </FieldGroup.Section>
   </FieldGroup>
 );
@@ -87,16 +87,16 @@ function rowValues(server: ServerDetails): RowValues {
   };
 }
 
-function DetailRows({ values }: { values: RowValues }): React.JSX.Element {
-  return (
-    <>
-      <DetailRow title="Version" value={values.version} />
-      <DetailRow title="Started" value={values.started} />
-      <DetailRow title="PID" value={values.pid} />
-      <DetailRow title="Clock" value={values.clock} />
-    </>
-  );
-}
+/*
+ * Called, not rendered: the Section frames each child as one row, so rows hidden behind a component would share one
+ * frame and pack at the text's own height, with no separator between them.
+ */
+const detailRows = (values: RowValues): React.JSX.Element[] => [
+  <DetailRow key="version" title="Version" value={values.version} />,
+  <DetailRow key="started" title="Started" value={values.started} />,
+  <DetailRow key="pid" title="PID" value={values.pid} />,
+  <DetailRow key="clock" title="Clock" value={values.clock} />,
+];
 
 // A Server detail is a read-only value row.
 function DetailRow(props: {
