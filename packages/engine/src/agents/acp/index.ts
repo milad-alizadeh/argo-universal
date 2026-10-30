@@ -22,3 +22,5 @@ export {
   cancelledElicitation,
   cancelledPermission,
 } from './connection/refusals';
+
+export type { ExitNotice } from './exit-notice';

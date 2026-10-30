@@ -4,6 +4,11 @@ import {
   type AnyMessage,
   type Stream,
 } from '@agentclientprotocol/sdk';
+import {
+  exitNotice,
+  missingExecutableIn,
+  type ExitNotice,
+} from './exit-notice';
 import type { AcpChild } from './process';
 
 export const exitDrainMs = 250;
@@ -12,6 +17,11 @@ export const exitDrainMs = 250;
 const stderrLimit = 16_384;
 
 export class AgentProcessExitError extends Error {
+  // The command the Agent could not find, when that is why it exited.
+  public readonly missingExecutable: string | undefined;
+  public get notice(): ExitNotice {
+    return exitNotice(this.message, this.stderr, this.missingExecutable);
+  }
   public constructor(
     public readonly code: number | null,
     signal: NodeJS.Signals | null,
@@ -22,6 +32,7 @@ export class AgentProcessExitError extends Error {
         ? `Agent exited by signal ${signal}`
         : `Agent exited with status ${code}`,
     );
+    this.missingExecutable = missingExecutableIn(stderr);
   }
 }
 
