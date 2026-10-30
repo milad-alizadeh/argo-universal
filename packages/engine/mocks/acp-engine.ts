@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createAgentMetadata } from '@repo/mocks/agent';
@@ -91,7 +91,10 @@ async function openFixtureStorage(
 }
 
 const setupAcpStorage = async (scenario: AcpScenario): Promise<AcpStorage> => {
-  const directory = mkdtempSync(join(tmpdir(), 'argo-acp-engine-'));
+  const directory = realpathSync(
+    mkdtempSync(join(tmpdir(), 'argo-acp-engine-')),
+  );
+
   const opened = await openFixtureStorage(scenario, directory);
   await scenario.installPlugins?.(opened.home);
 
