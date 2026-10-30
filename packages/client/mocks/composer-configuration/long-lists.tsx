@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, within } from 'storybook/test';
 import {
@@ -61,10 +62,7 @@ async function assertShortModelList({ userEvent }: PlayContext): Promise<void> {
 
   const scroll = await overlay.findByRole('radiogroup', { name: 'Model' });
   // The list must fit once the popover has opened, not only while it zooms in.
-  const popover = scroll.closest('[role="dialog"]');
-  await Promise.all(
-    (popover?.getAnimations() ?? []).map((animation) => animation.finished),
-  );
+  await settleOverlays();
 
   await waitFor(() =>
     expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight),

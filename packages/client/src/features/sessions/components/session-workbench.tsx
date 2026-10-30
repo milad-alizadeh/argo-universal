@@ -11,6 +11,8 @@ export interface WorkbenchSection {
   footer?: ReactNode;
   // Absent where the summary's own rows carry the presses.
   onOpen?: () => void;
+  // A Plugin's own content, not rows: it has no row inset to give back.
+  noRows?: boolean;
 }
 
 // What a Session gives its Workbench: the cards its Sections draw, in order, and the band's button that opens the Inspector.
@@ -44,8 +46,23 @@ const cardProps = ({ section, handle }: SectionCardProps): CardProps => ({
   defaultOpen: true,
   title: section.title,
   actions: handle,
-  footer: section.footer,
+  footer: section.footer && (
+    <RowsEdge section={section}>{section.footer}</RowsEdge>
+  ),
 });
+
+// Rows carry 4 of their own beside their hover tile; pulling them out puts their text on the title's edge.
+function RowsEdge({
+  section,
+  children,
+}: {
+  section: WorkbenchSection;
+  children: ReactNode;
+}): ReactNode {
+  if (section.noRows) return children;
+
+  return <View className="-mx-1">{children}</View>;
+}
 
 function SectionCard(props: SectionCardProps): ReactElement {
   return (
@@ -60,7 +77,9 @@ function SectionCard(props: SectionCardProps): ReactElement {
 function SectionBody({
   section,
 }: Pick<SectionCardProps, 'section'>): ReactNode {
-  if (!section.onOpen) return section.summary;
+  const summary = <RowsEdge section={section}>{section.summary}</RowsEdge>;
+
+  if (!section.onOpen) return summary;
 
   return (
     <Pressable
@@ -68,7 +87,7 @@ function SectionBody({
       accessibilityLabel={`Open ${section.title} overview`}
       onPress={section.onOpen}
     >
-      {section.summary}
+      {summary}
     </Pressable>
   );
 }

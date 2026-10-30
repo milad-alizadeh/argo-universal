@@ -38,11 +38,11 @@ function ClampFrame(props: ContentProps): ReactElement {
 }
 
 function ClampContent(props: ContentProps): ReactElement {
-  const { content, onContentLayout, registerLeaf, children } = props;
+  const { content, onContentLayout, leafRegistry, children } = props;
 
   return (
     <View ref={content} onLayout={onContentLayout} className="max-w-full">
-      <ClampLeaves.Provider value={registerLeaf}>
+      <ClampLeaves.Provider value={leafRegistry}>
         {children}
       </ClampLeaves.Provider>
     </View>

@@ -16,10 +16,14 @@ import { ComposerToolbar } from './composer-toolbar';
 import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
 
+/*
+ * `min-h-0 shrink`, so the card gives height up to the room left above the keyboard rather than running on
+ * past it. Inside the card only the draft field gives any up; the toolbar keeps its own (#1529).
+ */
 const cardGlass = {
   corners: 'sheet',
   interactive: true,
-  className: 'w-full z-10',
+  className: 'w-full min-h-0 shrink z-10',
 } as const;
 
 function ComposerCard(layout: CardLayout): React.JSX.Element {
@@ -130,7 +134,7 @@ function textInputProps({
 
 export function ComposerControls(layout: CardLayout): React.JSX.Element {
   return (
-    <View className="w-full">
+    <View className="w-full min-h-0 shrink">
       <SuggestionListHost />
       <ComposerCard {...layout} />
       <ComposerBottomTray {...layout} />

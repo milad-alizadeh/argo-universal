@@ -18,25 +18,40 @@ import type {
   SendLayout,
 } from './composer-toolbar-types';
 
+/*
+ * The order the toolbar gives its width up in, as the layout's regions have one (docs/agents/layout.md).
+ * Attach and Send keep theirs, so a fixed glyph is never squeezed out of its box and painted over the pill
+ * beside it. The two pills keep theirs next: the row wraps to a second line before either is narrowed, which
+ * is what the largest Dynamic Type sizes need. Only once a whole line is too narrow does a pill truncate.
+ */
+const toolbarClassName =
+  'pointer-events-box-none shrink-0 flex-row flex-wrap items-center justify-end gap-x-2 gap-y-1.5 pl-2 pr-2.5 wide:px-4.75 pb-2.5';
+
 export function ComposerToolbar(layout: ToolbarLayout): React.JSX.Element {
   return (
-    <View className="pointer-events-box-none flex-row items-center justify-between gap-2 pl-2 pr-2.5 wide:px-4.75 pb-2.5">
+    <View className={toolbarClassName}>
       <ComposerLeftControls {...layout} />
       <ComposerRightControls {...layout} />
     </View>
   );
 }
 
+/*
+ * `grow`, not `flex-1`: a zero basis would make the group's width count for nothing when the row decides
+ * where to break, and the pills inside it would be crushed instead of moved to their own line.
+ */
 const leftControlsClassName = (inactive: boolean): string =>
   cn(
-    'min-w-0 flex-1 flex-row items-center gap-1',
+    'min-w-0 max-w-full grow flex-row items-center gap-1',
     inactive ? 'pointer-events-none' : 'pointer-events-box-none',
   );
 
 function ComposerLeftControls(layout: LeftControlsLayout): React.JSX.Element {
   return (
     <View className={leftControlsClassName(layout.configurationInactive)}>
-      <ComposerAttachMenu {...layout} />
+      <View className="shrink-0">
+        <ComposerAttachMenu {...layout} />
+      </View>
       <ComposerAgentControl {...layout} />
       <ComposerPhoneStatus {...layout} />
     </View>
@@ -69,9 +84,11 @@ function ComposerPhoneStatus({
 
 function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
-    <View className="pointer-events-box-none flex-row items-center gap-2.5">
+    <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
-      <ComposerSendButton {...layout} />
+      <View className="shrink-0">
+        <ComposerSendButton {...layout} />
+      </View>
     </View>
   );
 }

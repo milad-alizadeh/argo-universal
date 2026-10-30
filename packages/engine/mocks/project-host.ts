@@ -1,6 +1,5 @@
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { rmSync } from 'node:fs';
+import { makeResolvedTempFolderSync } from '@repo/mocks/fs/resolved-temp-folder';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from './database';
@@ -13,7 +12,7 @@ type ProjectTestHost = Awaited<ReturnType<typeof startEngineTestHost>> & {
 
 // An Engine whose one registered Project, project-1, is a fresh repository in a temporary folder.
 export async function startProjectTestHost(): Promise<ProjectTestHost> {
-  const projectPath = realpathSync(mkdtempSync(join(tmpdir(), 'project-')));
+  const projectPath = makeResolvedTempFolderSync('project-');
   const git = await initTestRepository(projectPath);
   const { database, remove } = openTestDatabase({}, projectPath);
   onTestFinished((): void => removeProject(projectPath, remove));

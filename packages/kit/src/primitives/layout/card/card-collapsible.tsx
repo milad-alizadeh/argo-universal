@@ -36,8 +36,8 @@ const CollapsibleBody = (
   props: CollapsibleCardProps & { className: string },
 ): ReactElement => (
   <CollapsibleContent className={props.className}>
-    <CardBody density={props.density}>{props.children}</CardBody>
-    <CardBody density={props.density}>{props.footer}</CardBody>
+    <CardBody>{props.children}</CardBody>
+    <CardBody>{props.footer}</CardBody>
   </CollapsibleContent>
 );
 

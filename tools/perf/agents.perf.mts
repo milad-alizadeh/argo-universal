@@ -4,6 +4,7 @@ import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
 import { startOwnServer } from '@repo/e2e/own-server';
 import { publishedRegistry } from '../../mocks/registry/catalog.ts';
+import { report } from './frame-report.mts';
 import {
   desktop,
   jump,
@@ -12,7 +13,8 @@ import {
   scrollDownAndUp,
   type Viewport,
 } from './page.mts';
-import { cpuRates, report, type Result, run, wanted } from './results.mts';
+import { keepFrameResult, plannedCases, run } from './results.mts';
+import { caseName } from './run-completeness.mts';
 
 // The Agents page against a registry long enough that its list must virtualise.
 const agentCount = 200;
@@ -26,8 +28,6 @@ type Server = Awaited<ReturnType<typeof startOwnServer>>;
 type Registry = typeof publishedRegistry;
 
 type RegistryAgent = Registry['agents'][number];
-
-const results: Result[] = [];
 
 let server: Server;
 
@@ -92,7 +92,11 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await server.stop();
-  await report(results, { agents: agentCount }, 'agents');
+  await report({
+    planned,
+    seeded: { agents: agentCount },
+    suite: 'agents',
+  });
 });
 
 // An Agent's card is a group, named by the label the Agents page gives it: name, version, description.
@@ -123,21 +127,30 @@ async function warmList(page: Page): Promise<void> {
   await page.waitForTimeout(settleMilliseconds);
 }
 
-const viewports = {
-  agents: desktop,
-  'agents-phone': phone,
-} satisfies Record<string, Viewport>;
+const viewports = new Map<string, Viewport>([
+  ['agents', desktop],
+  ['agents-phone', phone],
+]);
 
-for (const cpu of cpuRates)
-  for (const [interaction, viewport] of Object.entries(viewports).filter(
-    ([name]) => wanted(name),
-  ))
-    test(`${interaction} at ${cpu}x CPU`, async ({ page }) => {
-      const session = await openAgents(page, viewport);
-      await warmList(page);
-      const once = (): Promise<void> => scrollDownAndUp(page, catalogScroll);
-      await once();
-      const result = await run({ interaction, cpu, session, page, once });
-      results.push(result);
-      expect(result.median.fps).toBeGreaterThan(0);
-    });
+function viewportFor(interaction: string): Viewport {
+  const viewport = viewports.get(interaction);
+
+  if (!viewport) throw new Error(`No ${interaction} viewport`);
+
+  return viewport;
+}
+
+// The scenarios this run owes a measurement for, and the tests that owe them, from one list.
+const planned = plannedCases([...viewports.keys()]);
+
+for (const planCase of planned)
+  test(caseName(planCase), async ({ page }) => {
+    const { interaction, cpu } = planCase;
+    const session = await openAgents(page, viewportFor(interaction));
+    await warmList(page);
+    const once = (): Promise<void> => scrollDownAndUp(page, catalogScroll);
+    await once();
+    const result = await run({ interaction, cpu, session, page, once });
+    await keepFrameResult(result, 'agents');
+    expect(result.median.fps).toBeGreaterThan(0);
+  });

@@ -2,12 +2,13 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import {
-  type SessionHeaderProps,
   type SessionMenu,
   type SessionPanels,
   type SessionPluginActions,
 } from '#features/sessions';
+import { summaryOf } from './sections/changes-facts';
 import {
+  type OpenSessionViewProps,
   type SessionDetailViewProps,
   sessionPageTitle,
 } from './session-detail-view';
@@ -21,18 +22,19 @@ import { type WorkbenchCards, toggleCardSheet } from './use-workbench-cards';
 function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
   if (props.state !== 'open' || !props.header.menu) return undefined;
 
-  return { ...props.header.menu, changes: menuChanges(props.header.changes) };
+  return { ...props.header.menu, changes: menuChanges(props) };
 }
 
-function menuChanges(
-  changes: SessionHeaderProps['changes'],
-): SessionMenu['changes'] {
-  if (!changes?.summary) return undefined;
+type MenuContent = Pick<OpenSessionViewProps, 'header' | 'changes'>;
 
-  return {
-    files: changes.summary.files,
-    onPress: () => changes.onOpenChange(true),
-  };
+// The same reading of the Checkout the Workbench card summarises, so "…" never counts files the Inspector does not.
+function menuChanges(content: MenuContent): SessionMenu['changes'] {
+  const changes = content.header.changes;
+  const summary = summaryOf(content);
+
+  if (!changes || !summary) return undefined;
+
+  return { files: summary.files, onPress: () => changes.onOpenChange(true) };
 }
 
 const noPluginActions: SessionPluginActions = { beside: [], menu: [] };

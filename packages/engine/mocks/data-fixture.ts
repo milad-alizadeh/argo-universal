@@ -1,14 +1,7 @@
-import {
-  chmod,
-  mkdtemp,
-  readFile,
-  realpath,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginManifest, PluginCapability } from '@repo/contracts/plugins';
+import { makeResolvedTempFolder } from '@repo/mocks/fs/resolved-temp-folder';
 import { onTestFinished } from 'vitest';
 
 export type Contributions = Partial<PluginManifest['contributes']>;
@@ -47,9 +40,7 @@ export async function dataFixture(
 }
 
 async function fixtureDirectory(): Promise<string> {
-  const directory = await realpath(
-    await mkdtemp(join(tmpdir(), 'argo-data-kit-')),
-  );
+  const directory = await makeResolvedTempFolder('argo-data-kit-');
 
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
 

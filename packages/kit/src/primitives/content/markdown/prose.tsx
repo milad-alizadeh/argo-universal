@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useContext } from 'react';
 import { Text, type TextProps } from '#primitives/content/text';
 import { Caret } from './caret';
-import { useClampLeaf, useLineHeight } from './clamp-leaves';
+import { useClampText } from './clamp-leaves';
 import { InlineTokens } from './inline-tokens';
 import { MarkdownTone } from './markdown-tone';
 
@@ -23,7 +23,7 @@ function useProseProps(headingLevel?: number): TextProps {
   const role = proseRole(headingLevel);
 
   return {
-    ref: useClampLeaf(useLineHeight(role)),
+    ...useClampText(role),
     role,
     tone: useContext(MarkdownTone),
     accessibilityRole: headingLevel ? ('heading' as const) : undefined,

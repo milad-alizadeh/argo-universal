@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMemo } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { refreshPluginList } from './refresh-plugin-list';
 
 /*
  * Keeps the App's copy of the connected Server's Plugin list true to the Server. A Plugin can be turned
@@ -30,8 +31,10 @@ function usePluginListReread(): () => void {
 
   return useMemo(
     () => (): void => {
-      void cache.invalidateQueries(trpc.plugin.list.queryFilter());
-      void cache.invalidateQueries(trpc.plugins.declared.queryFilter());
+      void refreshPluginList(cache, [
+        trpc.plugin.list.queryFilter(),
+        trpc.plugins.declared.queryFilter(),
+      ]);
     },
     [cache, trpc],
   );

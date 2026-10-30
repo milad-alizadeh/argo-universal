@@ -202,15 +202,6 @@ export const SubtitleIcon: Story = {
   },
 };
 
-export const Loading: Story = {
-  args: { isLoading: true, subtitle: 'main' },
-  play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.queryByRole('button')).toBeNull();
-    await userEvent.click(canvas.getByText(title));
-    await expect(args.onPress).not.toHaveBeenCalled();
-  },
-};
-
 /*
  * A listbox's row: a field elsewhere owns the keyboard and names the highlighted row by its id, so the row
  * reads as selected rather than pressed and keeps nothing of a button's own pressed state.

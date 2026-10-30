@@ -9,6 +9,6 @@ export {
 
 export { useChanges } from './use-changes';
 
-export type { ChangesRevision } from './source/changes-source';
+export type { ChangesRevision, ChangesSource } from './source/changes-source';
 
 export type { ChangesViewProps } from './view/changes-view-props';

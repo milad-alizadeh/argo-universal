@@ -1,5 +1,6 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import {
+  accessibilityHidden,
   aspectRatio,
   font,
   foregroundStyle,
@@ -9,6 +10,7 @@ import {
 import type * as React from 'react';
 import type { ViewStyle } from 'react-native';
 import { Host } from '#primitives/native/host';
+import { decorativeGlyph } from '../decorative-glyph';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 
 interface AssetSymbolProps extends Omit<
@@ -32,6 +34,8 @@ function symbolModifiers({
   tintColor,
 }: AssetSymbolProps): ImageProps['modifiers'] {
   return [
+    // Hidden here as well as on the Host, which draws nothing of its own inside another Host (decorative-glyph.ts).
+    accessibilityHidden(),
     resizable(),
     font({ size: pixels, weight: 'regular' }),
     aspectRatio({ contentMode: 'fit' }),
@@ -43,7 +47,7 @@ function symbolModifiers({
 // An asset-catalog symbol in a React Native tree, as `NativeSymbol` draws one inside a SwiftUI tree.
 export function AssetSymbol(props: AssetSymbolProps): React.JSX.Element {
   return (
-    <Host style={hostStyle(props)} testID={props.testID}>
+    <Host {...decorativeGlyph} style={hostStyle(props)} testID={props.testID}>
       <Image assetName={props.assetName} modifiers={symbolModifiers(props)} />
     </Host>
   );

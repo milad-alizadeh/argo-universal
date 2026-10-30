@@ -2,6 +2,7 @@ import { Icon, type IconName } from '@expo/ui';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Host } from '#primitives/native/host';
+import { decorativeGlyph } from '../decorative-glyph';
 import type { DrawnSymbol } from '../drawn-symbol';
 import {
   materialFilledImage,
@@ -23,6 +24,7 @@ function DrawingGlyph(
 ): React.JSX.Element {
   return (
     <View
+      {...decorativeGlyph}
       testID={props.testID}
       style={{ width: props.pixels, height: props.pixels }}
     >

@@ -2,6 +2,7 @@ import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, type Page, test } from '@playwright/test';
+import { caseScenarios } from './elapsed-registry.mts';
 import {
   type BenchmarkMetadata,
   type ElapsedResult,
@@ -13,13 +14,15 @@ import {
   readinessTimeout,
   repetitions,
   type ScenarioFactory,
+  scenarioNotes,
   warmups,
 } from './elapsed-scenario.mts';
 import { runElapsed } from './elapsed-trial.mts';
 import { expansion, typing, wheel } from './interaction-latency.mts';
 import { renderingManifest, type RenderingManifest } from './manifest.mts';
 import { desktop, feedScroll, sessionsScroll } from './page.mts';
-import { cpuRates, wanted } from './results.mts';
+import { plannedCases } from './results.mts';
+import { caseName } from './run-completeness.mts';
 import { type SeededServer, startSeededServer } from './seed.mts';
 import { paging, sessionOpen } from './session-latency.mts';
 
@@ -83,25 +86,32 @@ const failedTrials = (result: ElapsedResult): FailedTrial[] =>
 test.afterAll(async () => {
   if (!server) return;
   await server.stop();
-  await reportElapsed(results, metadata());
+  await reportElapsed({
+    results,
+    planned: planned.map(caseName),
+    metadata: metadata(),
+  });
 });
 
-const scenarios = {
-  'session-open-warm': (page: Page): Promise<ElapsedScenario> =>
-    sessionOpen(page, server, false),
-  'session-open-reload': (page: Page): Promise<ElapsedScenario> =>
-    sessionOpen(page, server, true),
-  'feed-page-ready': (page: Page): Promise<ElapsedScenario> =>
-    paging(page, server),
-  'tool-expand-ready': (page: Page): Promise<ElapsedScenario> =>
-    expansion(page, server),
-  'feed-wheel-ready': (page: Page): Promise<ElapsedScenario> =>
-    wheel(page, server, feedScroll),
-  'sessions-wheel-ready': (page: Page): Promise<ElapsedScenario> =>
-    wheel(page, server, sessionsScroll),
-  'composer-type-ready': (page: Page): Promise<ElapsedScenario> =>
-    typing(page, server),
-} satisfies Record<string, ScenarioFactory>;
+const scenarios = new Map<string, ScenarioFactory>(
+  Object.entries({
+    'session-open-warm': (page: Page): Promise<ElapsedScenario> =>
+      sessionOpen(page, server, false),
+    'session-open-reload': (page: Page): Promise<ElapsedScenario> =>
+      sessionOpen(page, server, true),
+    'feed-page-ready': (page: Page): Promise<ElapsedScenario> =>
+      paging(page, server),
+    'tool-expand-ready': (page: Page): Promise<ElapsedScenario> =>
+      expansion(page, server),
+    'feed-wheel-ready': (page: Page): Promise<ElapsedScenario> =>
+      wheel(page, server, feedScroll),
+    'sessions-wheel-ready': (page: Page): Promise<ElapsedScenario> =>
+      wheel(page, server, sessionsScroll),
+    'composer-type-ready': (page: Page): Promise<ElapsedScenario> =>
+      typing(page, server),
+    ...caseScenarios(() => server),
+  }),
+);
 
 function datasetLimit(
   interaction: string,
@@ -110,6 +120,15 @@ function datasetLimit(
     ? { notApplicable: 'The 100-row tier fits in the initial App history page' }
     : {};
 }
+
+const notes = (
+  interaction: string,
+  scenario: ElapsedScenario,
+  cpu: number,
+): Pick<ElapsedResult, 'driverOnly' | 'notApplicable'> => ({
+  ...datasetLimit(interaction),
+  ...scenarioNotes(scenario, cpu),
+});
 
 function resultFor(
   interaction: string,
@@ -123,24 +142,33 @@ function resultFor(
     boundary: scenario.boundary,
     warmups: [],
     samples: [],
-    ...datasetLimit(interaction),
+    ...notes(interaction, scenario, cpu),
   };
 }
 
-for (const cpu of cpuRates)
-  for (const [interaction, factory] of Object.entries(scenarios).filter(
-    ([name]) => wanted(name),
-  ))
-    test(`${interaction} at ${cpu}x CPU`, async ({ page }) => {
-      const scenario = await factory(page);
+function factoryFor(interaction: string): ScenarioFactory {
+  const factory = scenarios.get(interaction);
 
-      const result = resultFor(interaction, cpu, scenario);
-      results.push(result);
-      // The 100-row tier fits in the initial page, so it cannot measure older-history pagination.
-      test.skip(result.notApplicable !== undefined, result.notApplicable);
-      await runElapsed(page, scenario, result);
-      expect(
-        failedTrials(result),
-        'Readiness failures remain in the raw report',
-      ).toEqual([]);
-    });
+  if (!factory) throw new Error(`No ${interaction} scenario`);
+
+  return factory;
+}
+
+// The scenarios this run owes a measurement for, and the tests that owe them, from one list.
+const planned = plannedCases([...scenarios.keys()]);
+
+for (const planCase of planned)
+  test(caseName(planCase), async ({ page }) => {
+    const { interaction, cpu } = planCase;
+    const scenario = await factoryFor(interaction)(page);
+
+    const result = resultFor(interaction, cpu, scenario);
+    results.push(result);
+    // A tier the dataset cannot exercise, or a slowdown the scenario is not subject to, carries its reason.
+    test.skip(result.notApplicable !== undefined, result.notApplicable);
+    await runElapsed(page, scenario, result);
+    expect(
+      failedTrials(result),
+      'Readiness failures remain in the raw report',
+    ).toEqual([]);
+  });

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import { findFreePort } from '../../mocks/network/free-port.ts';
@@ -6,6 +7,9 @@ import { findFreePort } from '../../mocks/network/free-port.ts';
 const repositoryRoot = path.resolve(import.meta.dirname, '../..');
 
 process.env.ARGO_PERF_WEB_PORT ??= String(await findFreePort());
+
+// Every worker of this run reads and writes one set of kept results, however often Playwright restarts it.
+process.env.PERF_RUN_ID ??= randomUUID();
 
 const webPort = process.env.ARGO_PERF_WEB_PORT;
 

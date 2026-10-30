@@ -23,10 +23,27 @@ export interface TimedAction {
   dispatch: () => Promise<void>;
 }
 
+/*
+ * An action the browser cannot observe, because the page is replaced or the Server is restarted
+ * under it. It is timed on the driver's clock alone: `dispatch` starts it, `ready` ends it.
+ */
+export interface DriverAction {
+  dispatch: () => Promise<void>;
+  ready: () => Promise<void>;
+}
+
+export const isObserved = (
+  action: TimedAction | DriverAction,
+): action is TimedAction => 'readiness' in action;
+
 export interface ElapsedScenario {
   condition: ElapsedResult['condition'];
   boundary: string;
-  prepare: () => Promise<TimedAction>;
+  prepare: () => Promise<TimedAction | DriverAction>;
+  // The result is timed on the driver's clock alone; there is no browser observation to report.
+  driverOnly?: true;
+  // Why this scenario cannot be measured at a browser CPU slowdown other than 1, when it cannot.
+  unthrottled?: string;
 }
 
 export type ScenarioFactory = (page: Page) => Promise<ElapsedScenario>;
@@ -55,3 +72,23 @@ export function warmScenario(
 ): ElapsedScenario {
   return { condition: 'warm', boundary, prepare };
 }
+
+const unthrottled = (
+  { unthrottled: reason }: ElapsedScenario,
+  cpu: number,
+): Pick<ElapsedResult, 'notApplicable'> =>
+  cpu !== 1 && reason !== undefined ? { notApplicable: reason } : {};
+
+const driverClock = ({
+  driverOnly,
+}: ElapsedScenario): Pick<ElapsedResult, 'driverOnly'> =>
+  driverOnly ? { driverOnly } : {};
+
+// What a result records about its scenario: a driver-only clock, and a slowdown the scenario cannot take.
+export const scenarioNotes = (
+  scenario: ElapsedScenario,
+  cpu: number,
+): Pick<ElapsedResult, 'driverOnly' | 'notApplicable'> => ({
+  ...driverClock(scenario),
+  ...unthrottled(scenario, cpu),
+});

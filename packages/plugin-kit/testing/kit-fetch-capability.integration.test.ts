@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { localhost } from '../../engine/mocks/fetch-fixture-server';
 import { fixtureNetwork, httpsServer } from '../../engine/mocks/probe-plugin';
 import { dataFixture } from '../mocks/data-fixture';
-import { mountTimeout } from '../mocks/kit-page-helpers';
+import { pluginTestTimeoutMs } from './test-timeout';
 
 type Recorded = { port: number; requested: string[] };
 
@@ -43,34 +43,26 @@ async function postsPage(
 // Starting a Plugin host and answering over TLS outruns the view's own wait on a busy Mac.
 async function shows(page: PluginTestView, text: string): Promise<void> {
   await expect
-    .poll(() => page.findText(text), { timeout: mountTimeout })
+    .poll(() => page.findText(text), { timeout: pluginTestTimeoutMs })
     .toBeDefined();
 }
 
-it(
-  'answers a page fetching the host its manifest declares',
-  async () => {
-    const { port, requested } = await recordingServer();
+it('answers a page fetching the host its manifest declares', async () => {
+  const { port, requested } = await recordingServer();
 
-    const page = await postsPage(port, [localhost(port)]);
+  const page = await postsPage(port, [localhost(port)]);
 
-    await shows(page, '200:posts');
-    expect(requested).toEqual(['/posts']);
-  },
-  mountTimeout,
-);
+  await shows(page, '200:posts');
+  expect(requested).toEqual(['/posts']);
+});
 
-it(
-  'refuses a page fetching a host its manifest does not declare',
-  async () => {
-    const { port, requested } = await recordingServer();
+it('refuses a page fetching a host its manifest does not declare', async () => {
+  const { port, requested } = await recordingServer();
 
-    const page = await postsPage(port, [
-      { kind: 'fetch', host: 'example.com', reason: 'Some other host' },
-    ]);
+  const page = await postsPage(port, [
+    { kind: 'fetch', host: 'example.com', reason: 'Some other host' },
+  ]);
 
-    await shows(page, `Refused: localhost:${port} is not a declared host`);
-    expect(requested).toEqual([]);
-  },
-  mountTimeout,
-);
+  await shows(page, `Refused: localhost:${port} is not a declared host`);
+  expect(requested).toEqual([]);
+});

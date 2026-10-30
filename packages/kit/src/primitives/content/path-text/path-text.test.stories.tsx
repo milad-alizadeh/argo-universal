@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { expect, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { PathText } from './path-text';
-import { longPath, shortPath } from './path-text-fixtures';
+import { longPath, rootFilePath, shortPath } from './path-text-fixtures';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Content/PathText',
@@ -62,3 +62,22 @@ export const CutPathKeepsNameWhole: Story = {
     );
   },
 };
+
+// A screen reader reads the path as written, at every width: never its drawn pieces, never the direction marks the wide drawing wraps its folder in.
+const announcedAs = (path: string, scroll: boolean): Story => ({
+  args: { path, scroll },
+  play: async ({ canvas }) => {
+    await settleLayout(scroll ? 'phone' : 'wide');
+    await expect(canvas.getByLabelText(path, { exact: true })).toBeVisible();
+    await expect(canvas.getAllByLabelText(path)).toHaveLength(1);
+  },
+});
+
+export const WidePathIsAnnouncedWhole = announcedAs(longPath.path, false);
+
+export const ScrollingPathIsAnnouncedWhole = announcedAs(longPath.path, true);
+
+export const ScrollingRootFileIsAnnouncedWhole = announcedAs(
+  rootFilePath.path,
+  true,
+);

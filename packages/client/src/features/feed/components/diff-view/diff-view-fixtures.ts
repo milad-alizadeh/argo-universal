@@ -13,3 +13,13 @@ export const inlineDiff = {
   file: recordedFile('agent-1'),
   inline: true,
 } satisfies DiffViewFixture;
+
+// A moved file, as the Server reports it: where it is now and where it was.
+export const movedDiff = {
+  file: {
+    ...recordedFile('agent-1'),
+    operation: 'move',
+    path: '/repo/docs/guides/new-name.md',
+    oldPath: '/repo/src/old-name.md',
+  },
+} satisfies DiffViewFixture;

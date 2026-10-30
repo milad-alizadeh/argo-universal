@@ -14,7 +14,7 @@ import { agentCredentials } from '#mocks/agent-credentials';
 import { fixtureRegistry } from '#mocks/agent-fixtures';
 import { publishControlAddress } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
-import { discoverOptions } from '#mocks/session-access';
+import { addOtherProject, discoverOptions } from '#mocks/session-access';
 import { agentEnvironment } from '../agents';
 
 it('lets an Agent run argo without Node on PATH and shows the call as an ordinary Feed Tool call', async () => {
@@ -135,5 +135,18 @@ it('shares sign-in for isolated Sessions without giving its process a Session to
   await host.caller.session.close(second);
   expect(requireScriptedProcessAt(host.agent.processes, 2).terminations).toBe(
     0,
+  );
+});
+
+// A Project registers at its resolved main checkout, so a fixture home reached through a symlink would hide it.
+it('registers a Project seeded under the fixture home at the path the fixture built', async () => {
+  const host = await startAcpEngine();
+  const projectId = await addOtherProject(host);
+
+  expect(await host.caller.project.list()).toContainEqual(
+    expect.objectContaining({
+      id: projectId,
+      path: join(host.home, 'other-project'),
+    }),
   );
 });

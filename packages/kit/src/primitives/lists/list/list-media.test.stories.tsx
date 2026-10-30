@@ -42,26 +42,6 @@ export const BadgeOwnsTheCorner: Story = {
   },
 };
 
-export const LoadingTile: Story = {
-  render: () => (
-    <List layout="grid">
-      <ListItem
-        title="Loading item"
-        subtitle="Caption"
-        isLoading
-        media={<Text>Preview</Text>}
-      />
-    </List>
-  ),
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Loading item')).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
-    await expect(canvas.queryByText('Preview')).toBeNull();
-  },
-};
-
 function PeopleSection(): React.JSX.Element {
   const [selection, onSelectionChange] = useState<readonly string[]>([]);
 

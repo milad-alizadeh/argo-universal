@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { reportElapsed } from './elapsed-results.mts';
 import { metadata, measured } from './elapsed-results.test.mocks.mts';
 
+const reportName = 'report-regression-elapsed.json';
+
 let directory: string;
 
 beforeEach(async () => {
@@ -45,16 +47,13 @@ const reportSchema = z.object({
   ),
 });
 
+const planned = ['composer-type-ready at 1x CPU'];
+
 it('persists distinct browser and driver samples, failures and build identity', async () => {
-  await reportElapsed([measured], metadata);
+  await reportElapsed({ results: [measured], planned, metadata });
 
   const data = reportSchema.parse(
-    JSON.parse(
-      await readFile(
-        path.join(directory, 'report-regression-elapsed.json'),
-        'utf8',
-      ),
-    ),
+    JSON.parse(await readFile(path.join(directory, reportName), 'utf8')),
   );
 
   expect(data).toMatchObject({
@@ -92,23 +91,19 @@ it('persists distinct browser and driver samples, failures and build identity', 
 });
 
 it('does not substitute a driver interval when a browser observation is missing', async () => {
-  await reportElapsed(
-    [
+  await reportElapsed({
+    results: [
       {
         ...measured,
         samples: [{ driver: { status: 'completed', elapsedMs: 100 } }],
       },
     ],
+    planned,
     metadata,
-  );
+  });
 
   const data = reportSchema.parse(
-    JSON.parse(
-      await readFile(
-        path.join(directory, 'report-regression-elapsed.json'),
-        'utf8',
-      ),
-    ),
+    JSON.parse(await readFile(path.join(directory, reportName), 'utf8')),
   );
 
   expect(data.results[0]?.summary.browserSettled).toEqual({
@@ -118,5 +113,34 @@ it('does not substitute a driver interval when a browser observation is missing'
     timedOut: 0,
     p50Ms: null,
     maxMs: null,
+  });
+});
+
+it('reports a driver-only scenario on its driver clock, with no browser summary to fail', async () => {
+  await reportElapsed({
+    results: [
+      {
+        ...measured,
+        driverOnly: true,
+        samples: [{ driver: { status: 'completed', elapsedMs: 100 } }],
+      },
+    ],
+    planned,
+    metadata,
+  });
+
+  const data = z
+    .object({
+      results: z.array(
+        z.object({ summary: z.object({ driver: summary }).strict() }),
+      ),
+    })
+    .parse(
+      JSON.parse(await readFile(path.join(directory, reportName), 'utf8')),
+    );
+
+  expect(data.results[0]?.summary.driver).toMatchObject({
+    completed: 1,
+    p50Ms: 100,
   });
 });

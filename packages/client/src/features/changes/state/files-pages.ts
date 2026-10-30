@@ -18,13 +18,14 @@ import type {
 
 type Page = SessionChangesOutput;
 
-// Binary files have no line counts.
+// Git reports a binary file's counts as `-`, which the wire carries as null.
 const changedFile = (file: Page['files'][number]): ChangedFile => ({
   operation: file.operation,
   path: file.path,
   oldPath: file.oldPath,
   added: file.additions ?? 0,
   removed: file.deletions ?? 0,
+  binary: file.additions === null,
 });
 
 const loadedFiles = (pages: readonly Page[]): ChangedFile[] =>

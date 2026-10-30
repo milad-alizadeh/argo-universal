@@ -3,6 +3,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { Platform, type TextStyle } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { fileName } from '../../view/file-edit-label';
 
 const fileNameClassName =
   'select-none min-w-0 shrink web:underline web:decoration-focus web:underline-offset-2';
@@ -32,7 +33,7 @@ export function FileName(props: FileNameProps): React.JSX.Element {
       role="code"
       className={cn(fileNameClassName, props.className)}
     >
-      {props.path.split('/').at(-1)}
+      {fileName(props.path)}
     </Text>
   );
 }

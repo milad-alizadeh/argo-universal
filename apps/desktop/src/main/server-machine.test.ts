@@ -31,7 +31,12 @@ const model = modelTest(
   {
     start: startServerMachine,
     // Stated here, not imported, so a wrong delay in the machine fails.
-    delays: { pollDelay: 200, startLimit: 30_000, stopLimit: 5000 },
+    delays: {
+      pollDelay: 200,
+      startLimit: 30_000,
+      stopLimit: 5000,
+      releaseLimit: 2000,
+    },
     executors,
     always,
     states,

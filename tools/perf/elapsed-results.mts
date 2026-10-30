@@ -1,7 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { elapsedCompleteness } from './elapsed-completeness.mts';
 import { type ElapsedSample, summarizeElapsed } from './elapsed.mts';
+import {
+  completenessNotice,
+  type RunCompleteness,
+} from './run-completeness.mts';
 import type { RowKindCounts } from './seed-statistics.mts';
 import type { UiObservation } from './ui-observation.mts';
 
@@ -13,8 +18,10 @@ export interface ObservedTrial {
 export interface ElapsedResult {
   interaction: string;
   cpu: number;
-  condition: 'warm' | 'document-reload';
+  condition: 'warm' | 'document-reload' | 'cold-cache' | 'server-restart';
   boundary: string;
+  // Timed on the driver's clock alone, so there is no browser observation to summarise.
+  driverOnly?: true;
   notApplicable?: string;
   warmups: ObservedTrial[];
   samples: ObservedTrial[];
@@ -64,8 +71,8 @@ type Summary = ReturnType<typeof summarizeElapsed>;
 interface ElapsedReport extends ElapsedResult {
   summary: {
     driver: Summary;
-    browserFirstReady: Summary;
-    browserSettled: Summary;
+    browserFirstReady?: Summary;
+    browserSettled?: Summary;
   };
 }
 
@@ -76,12 +83,14 @@ const summarized = (result: ElapsedResult): ElapsedReport => ({
   ...result,
   summary: {
     driver: summarizeElapsed(result.samples.map(({ driver }) => driver)),
-    browserFirstReady: summarizeElapsed(
-      result.samples.map((sample) => browserSample(sample, 'firstReadyMs')),
-    ),
-    browserSettled: summarizeElapsed(
-      result.samples.map((sample) => browserSample(sample, 'settledMs')),
-    ),
+    ...(!result.driverOnly && {
+      browserFirstReady: summarizeElapsed(
+        result.samples.map((sample) => browserSample(sample, 'firstReadyMs')),
+      ),
+      browserSettled: summarizeElapsed(
+        result.samples.map((sample) => browserSample(sample, 'settledMs')),
+      ),
+    }),
   },
 });
 
@@ -110,31 +119,55 @@ const rows = (results: ElapsedReport[]): SummaryRow[] =>
     interaction,
     cpu,
     condition,
-    ...summary.browserSettled,
+    ...(summary.browserSettled ?? summary.driver),
   }));
+
+export interface ElapsedRun {
+  results: readonly ElapsedResult[];
+  // Every scenario the run set out to measure, named as its test is named.
+  planned: readonly string[];
+  metadata: BenchmarkMetadata;
+}
 
 function reportData(
   results: ElapsedReport[],
+  run: RunCompleteness,
   metadata: BenchmarkMetadata,
 ): string {
+  const date = new Date().toISOString();
+
   return JSON.stringify(
-    { date: new Date().toISOString(), ...metadata, clocks, readiness, results },
+    { date, ...metadata, run, clocks, readiness, results },
     null,
     2,
   );
 }
 
-// Retain unsuccessful trials; browser and driver clocks are never subtracted from one another.
-export async function reportElapsed(
-  results: ElapsedResult[],
-  metadata: BenchmarkMetadata,
-): Promise<void> {
-  const file = await reportFile();
-  const reported = results.map(summarized);
-
-  await writeFile(file, reportData(reported, metadata));
+function print(file: string, reported: ElapsedReport[]): void {
   console.log(
     `Elapsed results: ${file}. Timing observations; no speed budget is asserted.`,
   );
   console.table(rows(reported));
+}
+
+/*
+ * Retain unsuccessful trials; browser and driver clocks are never subtracted from one another.
+ * A run that left a planned scenario unmeasured says so here and then fails, so no reader can
+ * mistake the scenarios this file omits for scenarios that came back clean.
+ */
+export async function reportElapsed({
+  results,
+  planned,
+  metadata,
+}: ElapsedRun): Promise<void> {
+  const file = await reportFile();
+  const reported = results.map(summarized);
+  const completeness = elapsedCompleteness(planned, results);
+
+  await writeFile(file, reportData(reported, completeness, metadata));
+  print(file, reported);
+  console.log(completenessNotice(completeness));
+
+  if (completeness.status === 'partial')
+    throw new Error(completenessNotice(completeness));
 }

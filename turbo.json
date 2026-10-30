@@ -67,6 +67,8 @@
       "dependsOn": ["^build", "^package"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["playwright-report/**"],
+      // ARGO_E2E_FOCUS=1 runs the @needs-focus scenarios; without it in the hash, turbo strips it and they skip.
+      "env": ["ARGO_E2E_FOCUS"],
       // xvfb-run hands Electron its display through XAUTHORITY.
       "passThroughEnv": [
         "PLAYWRIGHT_*",

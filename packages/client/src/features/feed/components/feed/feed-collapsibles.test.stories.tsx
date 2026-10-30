@@ -190,7 +190,7 @@ async function openedEditsInGroup(
   await openRow(edits);
 
   const file = await inGroup.findByRole('button', {
-    name: /^Edited .*large\.txt$/,
+    name: /^Edited large\.txt, plus \d+, minus \d+$/,
   });
 
   await openRow(file);

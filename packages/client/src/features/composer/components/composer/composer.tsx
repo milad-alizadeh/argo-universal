@@ -32,7 +32,10 @@ export function Composer(props: ComposerProps): React.JSX.Element {
 
 // Filled, the Composer takes the Session column's height for its request.
 function useComposerClass(): string {
-  return cn('w-full items-center', useSessionFill().filled && filledClass);
+  return cn(
+    'w-full min-h-0 shrink items-center',
+    useSessionFill().filled && filledClass,
+  );
 }
 
 const requestTrayClass = cn(

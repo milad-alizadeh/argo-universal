@@ -1,10 +1,15 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { example, fixture, run } from '../mocks/plugin-cli';
+import {
+  fixture,
+  githubSignIn,
+  manifestFile,
+  readManifest,
+  run,
+} from '../mocks/plugin-cli';
 
-// The example starts a separate worker for each of its interaction tests.
+// The example starts a separate worker for each of its tests.
 const exampleTestLimitMs = 60_000;
 
 it.each([
@@ -44,12 +49,8 @@ it.each([
   'validate reports a bad manifest at its %s field',
   async (field, change) => {
     const directory = await fixture('export function register() {}');
-    const file = join(directory, 'plugin.json');
-
-    const manifest = PluginManifest.parse(
-      JSON.parse(await readFile(file, 'utf8')),
-    );
-
+    const file = join(directory, manifestFile);
+    const manifest = await readManifest(directory);
     const text = JSON.stringify({ ...manifest, ...change }, null, 2);
     await writeFile(file, text);
 
@@ -66,11 +67,12 @@ it.each([
   30_000,
 );
 
-it('validate reports the example Plugin contributions', async () => {
-  expect(await run('validate', example)).toMatchObject({
-    code: 0,
-    output: expect.stringContaining('argo.accounts.provide'),
-  });
+it('validate reports a shipped example Plugin’s contributions', async () => {
+  const result = await run('validate', githubSignIn);
+  expect(result).toMatchObject({ code: 0 });
+  // Both of the example's registrations, named as the Plugin API calls that make them.
+  expect(result.output).toContain('argo.pages.register');
+  expect(result.output).toContain('argo.accounts.provide');
 }, 30_000);
 
 it('validate reports the declared order', async () => {
@@ -78,11 +80,8 @@ it('validate reports the declared order', async () => {
     "export function register(argo) { argo.on('ui.render', (ctx, e, next) => next()); }",
   );
 
-  const file = join(directory, 'plugin.json');
-
-  const manifest = PluginManifest.parse(
-    JSON.parse(await readFile(file, 'utf8')),
-  );
+  const file = join(directory, manifestFile);
+  const manifest = await readManifest(directory);
 
   await writeFile(
     file,
@@ -104,9 +103,9 @@ it('validate reports the declared order', async () => {
 }, 30_000);
 
 it(
-  'test runs the example Plugin worker test',
+  'test runs a shipped example Plugin’s own tests',
   async () => {
-    expect(await run('test', example, exampleTestLimitMs)).toMatchObject({
+    expect(await run('test', githubSignIn, exampleTestLimitMs)).toMatchObject({
       code: 0,
       output: expect.stringContaining(
         'PASS the provider is registered for the Account host with the Authorization header',

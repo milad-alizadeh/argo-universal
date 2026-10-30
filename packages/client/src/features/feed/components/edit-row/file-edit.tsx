@@ -9,6 +9,7 @@ import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import type { FileDiff } from '../../view/file-diff';
+import { editVerbs, fileEditLabel } from '../../view/file-edit-label';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';
 
@@ -23,13 +24,6 @@ const editIcons = {
   delete: 'delete',
   move: 'arrow-right',
 } as const;
-
-const verbs = {
-  modify: 'Edited',
-  add: 'Added',
-  delete: 'Deleted',
-  move: 'Moved',
-};
 
 function MoveTarget({ file }: FileEditProps): React.JSX.Element | null {
   if (!file.oldPath) return null;
@@ -72,7 +66,7 @@ function LineCounts({ file }: FileEditProps): React.JSX.Element {
 function FileEditSummary({ file, nested }: FileEditProps): React.JSX.Element {
   return (
     <View className="min-w-0 shrink flex-row items-center gap-1">
-      {!nested && <Text selectable={false}>{verbs[file.operation]}</Text>}
+      {!nested && <Text selectable={false}>{editVerbs[file.operation]}</Text>}
       <FileName path={file.oldPath ?? file.path} />
       <MoveTarget file={file} />
       <LineCounts file={file} />
@@ -83,7 +77,7 @@ function FileEditSummary({ file, nested }: FileEditProps): React.JSX.Element {
 function FileEditHeader({ file, nested }: FileEditProps): React.JSX.Element {
   return (
     <CollapsibleHeader
-      label={`${verbs[file.operation]} ${file.path}`}
+      label={fileEditLabel(file)}
       icon={nested ? fileTypeIcon(file.path) : editIcons[file.operation]}
       iconTone={nested ? 'muted' : undefined}
     >

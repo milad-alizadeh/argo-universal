@@ -21,8 +21,7 @@ export default meta;
 
 const deletedFile: RecordedEdit = {
   row: recordedEdit('agent-2', 'edit-states', 'delete'),
-  path: '/repo/legacy.txt',
-  verb: 'Deleted',
+  name: 'Deleted legacy.txt, minus 3',
   added: null,
   removed: '−3',
   line: 'first legacy line',
@@ -35,8 +34,7 @@ export const DeletedFileWide = editRow(layoutWidths.wide, deletedFile);
 
 const largeDiff: RecordedEdit = {
   row: recordedEdit('agent-2', 'edit-states'),
-  path: '/repo/large.txt',
-  verb: 'Edited',
+  name: 'Edited large.txt, plus 60, minus 60',
   added: '+60',
   removed: '−60',
   line: 'old value 1',

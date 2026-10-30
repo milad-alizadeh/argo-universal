@@ -7,10 +7,13 @@ import type { FileDiff } from '#features/feed';
 import { uniqueChangedFiles } from '../view/changes-files';
 import type { DiffPage } from './changes-source';
 
+// A file the in-memory Server holds; a binary one has no counts, as Git reports it.
+export type MemoryFile = FileDiff & { binary?: boolean };
+
 // What the in-memory Server holds for a Session.
 export interface MemoryCatalog {
   // The files a comparison has changed; none, and that comparison never answers.
-  files: (comparison: SessionComparison) => readonly FileDiff[] | undefined;
+  files: (comparison: SessionComparison) => readonly MemoryFile[] | undefined;
   mainBranch?: string;
   branches?: readonly string[];
   // Every read of the files fails with this; with files too, it is a refresh that failed after they loaded.
@@ -75,18 +78,18 @@ function summaryOf(files: readonly FileDiff[]): ChangesSummary {
 }
 
 const changedFile = (
-  file: FileDiff,
+  file: MemoryFile,
 ): SessionChangesOutput['files'][number] => ({
   operation: file.operation,
   path: file.path,
   oldPath: file.oldPath,
-  additions: file.added,
-  deletions: file.removed,
+  additions: file.binary ? null : file.added,
+  deletions: file.binary ? null : file.removed,
 });
 
 // One page of the changed files, with the whole comparison's totals.
 export function memoryFilesPage(
-  files: readonly FileDiff[],
+  files: readonly MemoryFile[],
   index: number,
   catalog: MemoryCatalog,
 ): SessionChangesOutput {

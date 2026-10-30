@@ -1,4 +1,3 @@
-import { setTimeout as delay } from 'node:timers/promises';
 import { type PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   ComponentEvent,
@@ -11,6 +10,7 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 import { testConnection } from './test-connection';
+import { ViewChanges } from './view-changes';
 
 // A test mount chooses the platform; the test App always speaks the current wire version.
 type MountSurface = Pick<PluginSurface, 'platform'>;
@@ -30,8 +30,6 @@ export type PluginMount = {
   connectionId?: string;
 } & ({ page: string } | { slot: PluginSlotInput });
 
-const viewLimitMs = 3000;
-
 type Event = ComponentEvent & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
@@ -42,6 +40,7 @@ export class PluginTestView {
   private readonly history: WireNode[] = [];
   private latest: ViewMessage | null = null;
   private failure: Error | null = null;
+  private readonly changes = new ViewChanges();
   private path: string;
   private readonly projectId: string | undefined;
 
@@ -53,9 +52,7 @@ export class PluginTestView {
     this.connection = testConnection(this.controller.signal, opening);
     this.path = opening.path;
     this.projectId = opening.projectId;
-    void this.receive(opening).catch((error: Error) => {
-      this.failure = error;
-    });
+    this.watch(opening);
   }
 
   public get tree(): WireNode | null {
@@ -87,7 +84,10 @@ export class PluginTestView {
   }
 
   public async find(text: string): Promise<WireNode> {
-    await this.waitFor(() => this.findText(text) !== undefined);
+    await this.waitFor(
+      () => this.findText(text) !== undefined,
+      `a node reading ${JSON.stringify(text)}`,
+    );
     const entry = this.findText(text);
 
     if (!entry) throw new Error(`Plugin node not found: ${text}`);
@@ -95,14 +95,37 @@ export class PluginTestView {
     return entry.node;
   }
 
-  public async waitFor(ready: () => boolean): Promise<void> {
-    const deadline = Date.now() + viewLimitMs;
+  /*
+   * Waits for what must happen, not for a time. A view that never comes is the test runner's timeout
+   * to end, because only it knows how long this machine and this test are worth waiting.
+   */
+  public async waitFor(ready: () => boolean, what?: string): Promise<void> {
+    await this.changes.until(ready, () => this.closure(what));
+  }
 
-    while (!ready()) {
-      if (Date.now() >= deadline)
-        throw new Error('Plugin view did not reach the expected state');
-      await delay(1);
-    }
+  private watch(opening: Opening): void {
+    void this.receive(opening)
+      .catch((error: Error) => {
+        this.failure = error;
+      })
+      .finally(() => this.changes.end());
+  }
+
+  // A stream that failed says why; one that merely ended says what it had rendered.
+  private closure(what: string | undefined): Error {
+    if (this.failure) return this.failure;
+
+    const waiting = what ? ` (waiting for ${what})` : '';
+
+    return new Error(
+      `Plugin view closed before it reached the expected state${waiting}; ${this.arrived()}.`,
+    );
+  }
+
+  private arrived(): string {
+    return this.latest
+      ? `the view had rendered ${this.history.length} tree(s)`
+      : 'no view message had arrived';
   }
 
   public async dispatch(event: Event): Promise<void> {
@@ -161,5 +184,6 @@ export class PluginTestView {
 
     if (this.root) this.history.push(this.root);
     this.latest = message;
+    this.changes.announce();
   }
 }

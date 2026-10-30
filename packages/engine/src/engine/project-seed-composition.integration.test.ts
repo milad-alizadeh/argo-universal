@@ -10,6 +10,22 @@ import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 const engineStopEvent = 'engine.stop';
 
+// The main checkout, read straight from git rather than through the reader under test.
+function readMainCheckoutOf(directory: string): string {
+  const listed = execFileSync(
+    '/usr/bin/git',
+    ['worktree', 'list', '--porcelain'],
+    { cwd: directory, encoding: 'utf8' },
+  );
+
+  const [first] = listed.split('\n');
+
+  if (first === undefined || !first.startsWith('worktree '))
+    throw new Error(`No main checkout for ${directory}`);
+
+  return realpathSync(first.slice('worktree '.length));
+}
+
 it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(path.join(tmpdir(), 'argo-seed-')),
@@ -28,15 +44,12 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
   const caller = createCaller();
   const projects = await caller.project.list();
   expect(projects).toHaveLength(1);
-  // CI checks out a detached HEAD, which defaults to the main checkout.
-  const { currentBranch } = await listBranches(process.cwd());
-
-  const root = execFileSync('/usr/bin/git', ['rev-parse', '--show-toplevel'], {
-    encoding: 'utf8',
-  }).trim();
+  const mainCheckout = readMainCheckoutOf(process.cwd());
+  // The main checkout carries the Project, so its HEAD decides the default choice, and CI's detached HEAD defaults to the main checkout.
+  const { currentBranch } = await listBranches(mainCheckout);
 
   expect(projects[0]).toMatchObject({
-    name: path.basename(root),
+    name: path.basename(mainCheckout),
     checkoutChoice:
       currentBranch === null
         ? { type: 'main' }

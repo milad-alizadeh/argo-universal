@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { wide, wideFrame } from './frame';
+import { onPhone, wide, wideFrame } from './frame';
 import { agentModelLabel, openNewSession, sendPrompt } from './new-session';
 
 export const liveTitle = 'Check the live list';
@@ -21,6 +21,26 @@ const escapeRegExp = (text: string): string =>
 
 export const sessionRow = (page: Page, title: string): Locator =>
   page.getByRole('button', { name: new RegExp(`^${escapeRegExp(title)}, `) });
+
+export const openSessionUrl = /\/sessions\/(?!new)[^/]+$/;
+
+// A swallowed row press leaves the App where it was, so name the press before the destination is blamed.
+export async function openSessionRow(
+  page: Page,
+  row: Locator,
+  title: string,
+): Promise<void> {
+  await row.click();
+
+  const notOpened = `the Session "${title}" did not open`;
+
+  await expect(page, notOpened).toHaveURL(openSessionUrl);
+
+  // A phone's page covers the list, so only the URL is left to check there.
+  if (!onPhone(page)) {
+    await expect(row, notOpened).toHaveAttribute('aria-pressed', 'true');
+  }
+}
 
 export function liveSessionRow(page: Page): Locator {
   return sessionRow(page, liveTitle);

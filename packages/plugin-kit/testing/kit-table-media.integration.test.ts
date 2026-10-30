@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest';
 import {
   keyOf,
-  mountTimeout,
   startKit,
   webSurface as surface,
 } from '../mocks/kit-page-helpers';
@@ -72,47 +71,39 @@ export function register(argo) {
 const start = (): ReturnType<typeof startKit> =>
   startKit(source, ['clip.mp4', 'poster.jpeg', 'chime.mp3']);
 
-it(
-  'sorts a table of runs when Argo reports the new sort',
-  async () => {
-    const kit = await start();
-    const page = await kit.mount({ page: '/runs', surface });
-    expect((await page.find('CI runs')).type).toBe('Table');
-    expect((await page.find('Build iOS')).type).toBe('Table.Cell');
+it('sorts a table of runs when Argo reports the new sort', async () => {
+  const kit = await start();
+  const page = await kit.mount({ page: '/runs', surface });
+  expect((await page.find('CI runs')).type).toBe('Table');
+  expect((await page.find('Build iOS')).type).toBe('Table.Cell');
 
-    const firstRun = (): string =>
-      JSON.stringify(page.findText('CI runs')?.node.children[0]?.props.id);
+  const firstRun = (): string =>
+    JSON.stringify(page.findText('CI runs')?.node.children[0]?.props.id);
 
-    expect(firstRun()).toBe('"typecheck"');
-    await page.dispatch({
-      key: keyOf(page, 'CI runs'),
-      event: 'onSortChange',
-      payload: { column: 'started', direction: 'descending' },
-    });
-    await page.waitFor(() => firstRun() === '"lint"');
-  },
-  mountTimeout,
-);
+  expect(firstRun()).toBe('"typecheck"');
+  await page.dispatch({
+    key: keyOf(page, 'CI runs'),
+    event: 'onSortChange',
+    payload: { column: 'started', direction: 'descending' },
+  });
+  await page.waitFor(() => firstRun() === '"lint"');
+});
 
-it(
-  'plays a clip and a sound named by the Server reference, not a Plugin host',
-  async () => {
-    const kit = await start();
-    const page = await kit.mount({ page: '/media', surface });
-    const clip = await page.find('Clip');
-    const chime = await page.find('Chime');
-    expect(clip.type).toBe('Video');
-    expect(Object.keys(clip.props.source ?? {}).toSorted()).toEqual([
-      'format',
-      'hash',
-      'pluginId',
-    ]);
-    expect(clip.props).toMatchObject({
-      source: { format: 'mp4' },
-      poster: { format: 'jpeg' },
-    });
-    expect(chime.type).toBe('Audio');
-    expect(chime.props).toMatchObject({ source: { format: 'mp3' } });
-  },
-  mountTimeout,
-);
+it('plays a clip and a sound named by the Server reference, not a Plugin host', async () => {
+  const kit = await start();
+  const page = await kit.mount({ page: '/media', surface });
+  const clip = await page.find('Clip');
+  const chime = await page.find('Chime');
+  expect(clip.type).toBe('Video');
+  expect(Object.keys(clip.props.source ?? {}).toSorted()).toEqual([
+    'format',
+    'hash',
+    'pluginId',
+  ]);
+  expect(clip.props).toMatchObject({
+    source: { format: 'mp4' },
+    poster: { format: 'jpeg' },
+  });
+  expect(chime.type).toBe('Audio');
+  expect(chime.props).toMatchObject({ source: { format: 'mp3' } });
+});

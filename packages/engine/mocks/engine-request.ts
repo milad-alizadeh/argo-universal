@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { request, type RequestOptions } from 'node:http';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { makeResolvedTempFolderSync } from '@repo/mocks/fs/resolved-temp-folder';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { readHttpResponse, type HttpResponse } from './http-response';
@@ -73,7 +73,7 @@ export const createUploadForm = (): FormData => {
 };
 
 beforeEach(async (): Promise<void> => {
-  home = mkdtempSync(join(tmpdir(), 'server-request-listener-'));
+  home = makeResolvedTempFolderSync('server-request-listener-');
   mkdirSync(join(home, 'blobs'));
   writeFileSync(join(home, 'blobs', blobId), blobBytes);
   vi.spyOn(console, 'error').mockImplementation((): void => {});

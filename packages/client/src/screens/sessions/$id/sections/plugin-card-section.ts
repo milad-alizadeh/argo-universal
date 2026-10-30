@@ -36,6 +36,7 @@ export const pluginCardSection = (card: SessionPluginCard): SessionSection => ({
   card: (_content, tab) => ({
     summary: card.page,
     onOpen: card.tab ? tab.open : undefined,
+    noRows: true,
   }),
   tab: () => ({ body: card.tab }),
   // A phone has no column: the card's full view, or the card itself, is the sheet.

@@ -6,7 +6,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { localRequests } from './agent-requests';
 import { Given, When, Then } from './fixtures';
-import { liveSessionRow, sessionRow } from './live-session';
+import { liveSessionRow, openSessionRow, sessionRow } from './live-session';
 
 const archivedToastTitle = /session archived/i;
 
@@ -102,7 +102,7 @@ Then(
 When(
   'I open the archived Session {string}',
   async ({ page }, title: string): Promise<void> => {
-    await sessionRow(page, title).click();
+    await openSessionRow(page, sessionRow(page, title), title);
   },
 );
 

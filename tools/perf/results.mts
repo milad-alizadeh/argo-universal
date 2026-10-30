@@ -1,29 +1,48 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import type { CDPSession, Page } from '@playwright/test';
 import { measure } from './frames.mts';
+import { frameSuite, keepResult, outputDirectory } from './kept-results.mts';
+import { caseName, type PerfCase } from './run-completeness.mts';
 import { median, type Sample } from './sample.mts';
 import { hotspots, trace } from './trace.mts';
 
 // PERF_LABEL names the run (before, after-…); PERF_CPU lists CPU slowdowns; PERF_RUNS repeats each measurement; PERF_TRACE=1 saves one trace and PERF_PROFILE=1 one CPU profile per interaction; PERF_ONLY picks interactions; PERF_OUT is where results go.
-const label = process.env.PERF_LABEL ?? 'current';
+export const label = (): string => process.env.PERF_LABEL ?? 'current';
 
-export const cpuRates = (process.env.PERF_CPU ?? '1,4').split(',').map(Number);
+const cpuRates = (): number[] =>
+  (process.env.PERF_CPU ?? '1,4').split(',').map(Number);
 
-const runs = Number(process.env.PERF_RUNS ?? 3);
+const runs = (): number => Number(process.env.PERF_RUNS ?? 3);
 
-const tracing = process.env.PERF_TRACE === '1';
+// An empty PERF_ONLY is no filter at all, not a filter that selects nothing.
+const only = (): string[] =>
+  (process.env.PERF_ONLY ?? '').split(',').filter(Boolean);
 
-const profiling = process.env.PERF_PROFILE === '1';
+// Keeps a result the moment it is measured, so a later worker restart cannot lose it.
+export const keepFrameResult = (
+  result: Result,
+  suite = frameSuite,
+): Promise<void> => keepResult(suite, caseName(result), result);
 
-const only = process.env.PERF_ONLY?.split(',');
+const wanted = (interaction: string): boolean => {
+  const chosen = only();
 
-const outputDirectory =
-  process.env.PERF_OUT ?? path.join(os.tmpdir(), 'argo-perf');
+  return !chosen.length || chosen.includes(interaction);
+};
 
-export const wanted = (interaction: string): boolean =>
-  !only || only.includes(interaction);
+/*
+ * Every scenario the run intends to measure. A suite declares its tests from this same list, so
+ * the plan a report is held to cannot drift from the tests the run actually queued.
+ */
+export const plannedCases = (
+  interactions: readonly string[],
+): readonly PerfCase[] =>
+  cpuRates().flatMap((cpu) =>
+    interactions.flatMap((interaction) =>
+      wanted(interaction) ? [{ interaction, cpu }] : [],
+    ),
+  );
 
 export interface Result {
   interaction: string;
@@ -43,7 +62,8 @@ export interface Measurement {
   before?: () => Promise<void>;
 }
 
-const output = (file: string): string => path.join(outputDirectory, file);
+export const output = (file: string): string =>
+  path.join(outputDirectory(), file);
 
 // Saves one full trace of `once`, and returns where the main thread spent its time.
 async function traceOnce({
@@ -56,7 +76,7 @@ async function traceOnce({
   await before?.();
   const recorded = await trace(session, once);
   await writeFile(
-    output(`${label}-${interaction}-${cpu}x.trace.json`),
+    output(`${label()}-${interaction}-${cpu}x.trace.json`),
     recorded.raw,
   );
 
@@ -72,7 +92,7 @@ async function profileOnce(measurement: Measurement): Promise<void> {
   await session.send('Profiler.start');
   await once();
   const { profile } = await session.send('Profiler.stop');
-  const file = output(`${label}-${interaction}-${cpu}x.cpuprofile`);
+  const file = output(`${label()}-${interaction}-${cpu}x.cpuprofile`);
   await writeFile(file, JSON.stringify(profile));
 }
 
@@ -84,7 +104,7 @@ async function samples({
 }: Measurement): Promise<Sample[]> {
   const measured: Sample[] = [];
 
-  for (let index = 0; index < runs; index += 1) {
+  for (let index = 0; index < runs(); index += 1) {
     await before?.();
     measured.push(await measure(page, session, once));
   }
@@ -93,17 +113,19 @@ async function samples({
 }
 
 async function screenshot(page: Page, interaction: string): Promise<void> {
-  await mkdir(outputDirectory, { recursive: true });
-  await page.screenshot({ path: output(`${label}-${interaction}.png`) });
+  await mkdir(outputDirectory(), { recursive: true });
+  await page.screenshot({ path: output(`${label()}-${interaction}.png`) });
 }
 
 // The optional trace and profile of one more pass.
 async function extras(
   measurement: Measurement,
 ): Promise<Pick<Result, 'hotspots'>> {
-  if (profiling) await profileOnce(measurement);
+  if (process.env.PERF_PROFILE === '1') await profileOnce(measurement);
 
-  return tracing ? { hotspots: await traceOnce(measurement) } : {};
+  return process.env.PERF_TRACE === '1'
+    ? { hotspots: await traceOnce(measurement) }
+    : {};
 }
 
 // Measures `once` `runs` times at the CPU slowdown, plus an optional trace and profile, and keeps the result.
@@ -122,57 +144,4 @@ export async function run(measurement: Measurement): Promise<Result> {
     median: median(measured),
     ...more,
   };
-}
-
-const fixed = (value: number, digits: number): string => value.toFixed(digits);
-
-type FrameColumns = {
-  fps: string;
-  p95: string;
-  max: string;
-  dropped: number;
-  ccDropped: number;
-};
-
-type CostColumns = { layoutMs: string; styleMs: string; scriptMs: string };
-
-// One printed line of the medians table.
-type Row = { interaction: string; cpu: string } & FrameColumns & CostColumns;
-
-const frameColumns = (value: Sample): FrameColumns => ({
-  fps: fixed(value.fps, 1),
-  p95: fixed(value.p95Ms, 1),
-  max: fixed(value.maxMs, 1),
-  dropped: value.droppedFrames,
-  ccDropped: value.compositorDropped,
-});
-
-const costColumns = (value: Sample): CostColumns => ({
-  layoutMs: fixed(value.layoutMs, 0),
-  styleMs: fixed(value.styleMs, 0),
-  scriptMs: fixed(value.scriptMs, 0),
-});
-
-const row = ({ interaction, cpu, median: value }: Result): Row => ({
-  interaction,
-  cpu: `${cpu}x`,
-  ...frameColumns(value),
-  ...costColumns(value),
-});
-
-// Writes every result to `<label>.json`, or `<label>-<suite>.json`, and prints their medians.
-export async function report(
-  results: readonly Result[],
-  seeded: Record<string, number>,
-  suite?: string,
-): Promise<void> {
-  await mkdir(outputDirectory, { recursive: true });
-  const file = output(suite ? `${label}-${suite}.json` : `${label}.json`);
-  const date = new Date().toISOString();
-  await writeFile(
-    file,
-    JSON.stringify({ label, date, ...seeded, results }, null, 2),
-  );
-  console.log(`\nResults: ${file}`);
-  console.table(results.map(row));
 }
