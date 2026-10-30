@@ -1,18 +1,10 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import type { PluginTest, PluginTestView } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
-import { dataFixture } from '../mocks/data-fixture';
-
-const surface = { platform: 'web' as const };
-
-function keyOf(page: PluginTestView, label: string): string {
-  const entry = page.findText(label);
-
-  if (!entry) throw new Error(`Plugin node not found: ${label}`);
-
-  return entry.key;
-}
+import {
+  keyOf,
+  mountTimeout,
+  startKit,
+  webSurface as surface,
+} from '../mocks/kit-page-helpers';
 
 const source = `import { Audio, Pill, Screen, ScrollView, Stack, Surface, Table, Text, Video, useEffect, useState } from '@argo/plugin-kit';
 
@@ -77,50 +69,50 @@ export function register(argo) {
   argo.pages.register('/media', () => <Media assets={argo.assets} />);
 }`;
 
-async function start(): Promise<PluginTest> {
-  const fixture = await dataFixture(source);
-  await mkdir(join(fixture.directory, 'assets'));
+const start = (): ReturnType<typeof startKit> =>
+  startKit(source, ['clip.mp4', 'poster.jpeg', 'chime.mp3']);
 
-  // The Server takes a file's format from its extension, so placeholder bytes are enough.
-  for (const file of ['clip.mp4', 'poster.jpeg', 'chime.mp3'])
-    await writeFile(join(fixture.directory, 'assets', file), file);
+it(
+  'sorts a table of runs when Argo reports the new sort',
+  async () => {
+    const kit = await start();
+    const page = await kit.mount({ page: '/runs', surface });
+    expect((await page.find('CI runs')).type).toBe('Table');
+    expect((await page.find('Build iOS')).type).toBe('Table.Cell');
 
-  return fixture.start({ clockStart: 0 });
-}
+    const firstRun = (): string =>
+      JSON.stringify(page.findText('CI runs')?.node.children[0]?.props.id);
 
-it('sorts a table of runs when Argo reports the new sort', async () => {
-  const kit = await start();
-  const page = await kit.mount({ page: '/runs', surface });
-  expect((await page.find('CI runs')).type).toBe('Table');
-  expect((await page.find('Build iOS')).type).toBe('Table.Cell');
+    expect(firstRun()).toBe('"typecheck"');
+    await page.dispatch({
+      key: keyOf(page, 'CI runs'),
+      event: 'onSortChange',
+      payload: { column: 'started', direction: 'descending' },
+    });
+    await page.waitFor(() => firstRun() === '"lint"');
+  },
+  mountTimeout,
+);
 
-  const firstRun = (): string =>
-    JSON.stringify(page.findText('CI runs')?.node.children[0]?.props.id);
-
-  expect(firstRun()).toBe('"typecheck"');
-  await page.dispatch({
-    key: keyOf(page, 'CI runs'),
-    event: 'onSortChange',
-    payload: { column: 'started', direction: 'descending' },
-  });
-  await page.waitFor(() => firstRun() === '"lint"');
-}, 20_000);
-
-it('plays a clip and a sound named by the Server reference, not a Plugin host', async () => {
-  const kit = await start();
-  const page = await kit.mount({ page: '/media', surface });
-  const clip = await page.find('Clip');
-  const chime = await page.find('Chime');
-  expect(clip.type).toBe('Video');
-  expect(Object.keys(clip.props.source ?? {}).toSorted()).toEqual([
-    'format',
-    'hash',
-    'pluginId',
-  ]);
-  expect(clip.props).toMatchObject({
-    source: { format: 'mp4' },
-    poster: { format: 'jpeg' },
-  });
-  expect(chime.type).toBe('Audio');
-  expect(chime.props).toMatchObject({ source: { format: 'mp3' } });
-}, 20_000);
+it(
+  'plays a clip and a sound named by the Server reference, not a Plugin host',
+  async () => {
+    const kit = await start();
+    const page = await kit.mount({ page: '/media', surface });
+    const clip = await page.find('Clip');
+    const chime = await page.find('Chime');
+    expect(clip.type).toBe('Video');
+    expect(Object.keys(clip.props.source ?? {}).toSorted()).toEqual([
+      'format',
+      'hash',
+      'pluginId',
+    ]);
+    expect(clip.props).toMatchObject({
+      source: { format: 'mp4' },
+      poster: { format: 'jpeg' },
+    });
+    expect(chime.type).toBe('Audio');
+    expect(chime.props).toMatchObject({ source: { format: 'mp3' } });
+  },
+  mountTimeout,
+);

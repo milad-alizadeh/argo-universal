@@ -1,6 +1,6 @@
 import type { PluginTestView } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
-import { dataFixture } from '../mocks/data-fixture';
+import { mountTimeout, startKit } from '../mocks/kit-page-helpers';
 
 type Node = NonNullable<PluginTestView['tree']>;
 
@@ -48,44 +48,70 @@ function canvases(node: Node | null): Node[] {
 }
 
 for (const platform of ['ios', 'android', 'desktop'] as const)
-  it(`mounts Canvas.Rect shapes and selects one on press on ${platform}`, async () => {
-    const kit = await (await dataFixture(source)).start({ clockStart: 0 });
-    const page = await kit.mount({ page: '/', surface: { platform } });
-    expect((await page.find('Day 0')).type).toBe('Canvas.Rect');
-    expect((await page.find('packages/file-1.ts')).type).toBe('Canvas.Rect');
+  it(
+    `mounts Canvas.Rect shapes and selects one on press on ${platform}`,
+    async () => {
+      const kit = await startKit(source);
+      const page = await kit.mount({ page: '/', surface: { platform } });
+      expect((await page.find('Day 0')).type).toBe('Canvas.Rect');
+      expect((await page.find('packages/file-1.ts')).type).toBe('Canvas.Rect');
 
-    const selectedKey = (): string => {
-      const files = canvases(page.tree).find(
-        (node) => node.props.label === 'Project files',
-      );
+      const selectedKey = (): string => {
+        const canvas = canvases(page.tree).find(
+          (node) => node.props.label === 'Project files',
+        );
 
-      return JSON.stringify(files?.props.selectedKey);
-    };
+        return JSON.stringify(canvas?.props.selectedKey);
+      };
 
-    expect(selectedKey()).toBe('"packages-0"');
-    await page.press('packages/file-1.ts');
+      expect(selectedKey()).toBe('"packages-0"');
+      await page.press('packages/file-1.ts');
+      await kit.clock.advance(16);
+      await page.waitFor(() => selectedKey() === '"packages-1"');
+    },
+    mountTimeout,
+  );
+
+it(
+  'sends one keyed patch when one shape changes',
+  async () => {
+    const kit = await startKit(source);
+
+    const page = await kit.mount({
+      page: '/',
+      surface: { platform: 'desktop' },
+    });
+
+    await page.find('Day 2: 0.5');
+    await page.press('Change one shape');
     await kit.clock.advance(16);
-    await page.waitFor(() => selectedKey() === '"packages-1"');
-  }, 20_000);
+    await page.find('Day 2: 1');
 
-it('sends one keyed patch when one shape changes', async () => {
-  const kit = await (await dataFixture(source)).start({ clockStart: 0 });
-  const page = await kit.mount({ page: '/', surface: { platform: 'desktop' } });
-  await page.find('Day 2: 0.5');
-  await page.press('Change one shape');
-  await kit.clock.advance(16);
-  await page.find('Day 2: 1');
-  const ops = setPropsOps(page);
+    const op = soleSetProps(page);
 
-  expect(ops).toHaveLength(1);
-  expect(ops[0]?.key.at(-1)).toBe('day-2');
-  expect(ops[0]?.props).toEqual({ intensity: 1, label: 'Day 2: 1' });
-}, 20_000);
+    expect(op.props).toEqual({ intensity: 1, label: 'Day 2: 1' });
+    expect(op.key.at(-1)).toBe('day-2');
+  },
+  mountTimeout,
+);
 
-function setPropsOps(page: PluginTestView): SetProps[] {
+function patchOps(page: PluginTestView): Patch['ops'] {
   const { message } = page;
 
   if (message?.type !== 'patch') throw new Error('Expected a patch');
 
-  return message.ops.filter((op): op is SetProps => op.op === 'setProps');
+  return message.ops;
+}
+
+// The patch holds exactly one op, and it is a keyed `setProps`.
+function soleSetProps(page: PluginTestView): SetProps {
+  const ops = patchOps(page);
+
+  expect(ops).toHaveLength(1);
+
+  const [op] = ops;
+
+  if (op?.op !== 'setProps') throw new Error('Expected a setProps op');
+
+  return op;
 }

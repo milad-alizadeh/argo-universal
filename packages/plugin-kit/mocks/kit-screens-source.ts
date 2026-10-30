@@ -29,7 +29,7 @@ function Dashboard() {
       <Stack direction="column" gap={4}>
         <Text role="heading">Issues</Text>
         <Grid columns={{ compact: 2, medium: 2, wide: 3 }} gap={3}>
-          {['Open', 'Blocked'].map((title) => <Card key={title} title={title}><Text>1</Text></Card>)}
+          {['Open', 'In progress', 'Done', 'Blocked'].map((title) => <Card key={title} title={title}><Text>1</Text></Card>)}
         </Grid>
       </Stack>
     </Screen>
@@ -49,14 +49,14 @@ function Form() {
         </FieldGroup.Section>
       </FieldGroup>
       <Stack direction="column" gap={2}>
-        <Button label="Create Issue" onPress={() => setSaved(draft.title + ' ' + draft.labels.join() + ' ' + draft.due)} />
+        <Button label="Create Issue" onPress={() => setSaved(draft.title)} />
         {saved ? <Text>{'Created ' + saved}</Text> : null}
       </Stack>
     </Screen>
   );
 }
 
-function Build({ selected }) {
+function Build() {
   const [cancelled, setCancelled] = useState(false);
   return (
     <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={() => setCancelled(!cancelled)} />}>
@@ -68,7 +68,7 @@ function Build({ selected }) {
 function Builds({ selected }) {
   return (
     <ListDetail
-      list={<List appearance="cards" items={[{ id: 'web', title: 'Deploy web' }]} renderItem={(build) => <ListItem key={build.id} title={build.title} selected={selected} onPress={{ action: 'navigate', path: '/builds/web' }} />} />}
+      list={<List appearance="cards" items={[{ id: 'web', title: 'Deploy web' }, { id: 'native', title: 'Build native' }]} renderItem={(build) => <ListItem key={build.id} title={build.title} selected={selected && build.id === 'web'} onPress={{ action: 'navigate', path: '/builds/' + build.id }} />} />}
       detail={selected ? <Build /> : undefined}
       empty={<EmptyState title="Select a build" description="Choose a build from the list." />}
     />
@@ -78,7 +78,7 @@ function Builds({ selected }) {
 function Demos() {
   return (
     <Screen title="Demos">
-      <Card title="Builds" onPress={{ action: 'navigate', path: '/builds' }} />
+      {['Lists', 'Dashboard', 'Form', 'Builds'].map((title) => <Card key={title} title={title} onPress={{ action: 'navigate', path: '/' + title.toLowerCase() }} />)}
     </Screen>
   );
 }

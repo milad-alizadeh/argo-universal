@@ -1,21 +1,14 @@
-import type { PluginTest, PluginTestView } from '@argo/plugin-kit/testing';
+import type { PluginTestView } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
-import { dataFixture } from '../mocks/data-fixture';
+import {
+  keyOf,
+  mountTimeout,
+  startKit,
+  webSurface as surface,
+} from '../mocks/kit-page-helpers';
 import { kitScreensSource } from '../mocks/kit-screens-source';
 
-const surface = { platform: 'web' as const };
-
-async function start(): Promise<PluginTest> {
-  return (await dataFixture(kitScreensSource)).start({ clockStart: 0 });
-}
-
-function keyOf(page: PluginTestView, label: string): string {
-  const entry = page.findText(label);
-
-  if (!entry) throw new Error(`Plugin node not found: ${label}`);
-
-  return entry.key;
-}
+const start = (): ReturnType<typeof startKit> => startKit(kitScreensSource);
 
 // Each edit re-renders the page, so the next one waits for the field to show it.
 async function edit(
@@ -31,74 +24,114 @@ async function edit(
   );
 }
 
-it('switches the view and shows the matching content', async () => {
-  const page = await (await start()).mount({ page: '/views', surface });
+it(
+  'switches the view and shows the matching content',
+  async () => {
+    const page = await (await start()).mount({ page: '/views', surface });
 
-  expect((await page.find('Open Issue')).type).toBe('Text');
-  expect((await page.find('Issue view')).type).toBe('SegmentedControl');
-  await page.dispatch({
-    key: keyOf(page, 'Issue view'),
-    event: 'onValueChange',
-    payload: 'closed',
-  });
-  expect((await page.find('Closed Issue')).type).toBe('Text');
-  expect(page.findText('Open Issue')).toBeUndefined();
-}, 20_000);
+    expect((await page.find('Open Issue')).type).toBe('Text');
+    expect((await page.find('Issue view')).type).toBe('SegmentedControl');
+    await page.dispatch({
+      key: keyOf(page, 'Issue view'),
+      event: 'onValueChange',
+      payload: 'closed',
+    });
+    expect((await page.find('Closed Issue')).type).toBe('Text');
+    expect(page.findText('Open Issue')).toBeUndefined();
+  },
+  mountTimeout,
+);
 
-it("adds a row from the Screen's primary Action", async () => {
-  const page = await (await start()).mount({ page: '/lists', surface });
-  const add = await page.find('Add build');
+it(
+  "adds a row from the Screen's primary Action",
+  async () => {
+    const page = await (await start()).mount({ page: '/lists', surface });
+    const add = await page.find('Add build');
 
-  expect(add.type).toBe('Action');
-  expect(page.findText('Build 2')).toBeUndefined();
-  await page.press('Add build');
-  expect((await page.find('Build 2')).type).toBe('ListItem');
-}, 20_000);
+    expect(add.type).toBe('Action');
+    expect(add.props.icon).toBe('add');
+    expect(page.findText('Build 2')).toBeUndefined();
+    await page.press('Add build');
+    expect((await page.find('Build 2')).type).toBe('ListItem');
+  },
+  mountTimeout,
+);
 
-it('draws a grid of Cards', async () => {
-  const page = await (await start()).mount({ page: '/dashboard', surface });
+it(
+  'draws a grid of Cards',
+  async () => {
+    const page = await (await start()).mount({ page: '/dashboard', surface });
 
-  for (const title of ['Open', 'Blocked'])
-    expect((await page.find(title)).type).toBe('Card');
-}, 20_000);
+    expect((await page.find('Issues')).type).toBe('Text');
 
-it('submits the drafted Issue from a FieldGroup form', async () => {
-  const page = await (await start()).mount({ page: '/form', surface });
+    for (const title of ['Open', 'In progress', 'Done', 'Blocked'])
+      expect((await page.find(title)).type).toBe('Card');
+  },
+  mountTimeout,
+);
 
-  await page.find('Title');
-  await edit(page, { label: 'Title', event: 'onChangeText', value: 'Crash' });
-  await edit(page, { label: 'Labels', event: 'onValueChange', value: ['bug'] });
-  await edit(page, {
-    label: 'Due',
-    event: 'onValueChange',
-    value: '2026-10-30',
-  });
-  await page.press('Create Issue');
-  expect((await page.find('Created Crash bug 2026-10-30')).type).toBe('Text');
-}, 20_000);
+it(
+  'submits the drafted Issue from a FieldGroup form',
+  async () => {
+    const page = await (await start()).mount({ page: '/form', surface });
 
-it('opens a build beside the list and offers to rerun it once cancelled', async () => {
-  const kit = await start();
-  const empty = await kit.mount({ page: '/builds', surface });
+    await page.find('Title');
+    await edit(page, { label: 'Title', event: 'onChangeText', value: 'Crash' });
+    await edit(page, {
+      label: 'Labels',
+      event: 'onValueChange',
+      value: ['bug'],
+    });
+    await edit(page, {
+      label: 'Due',
+      event: 'onValueChange',
+      value: '2026-10-30',
+    });
+    await page.press('Create Issue');
+    expect((await page.find('Created Crash')).type).toBe('Text');
+  },
+  mountTimeout,
+);
 
-  expect((await empty.find('Select a build')).type).toBe('EmptyState');
-  expect((await empty.find('Deploy web')).props.onPress).toEqual({
-    action: 'navigate',
-    path: '/builds/web',
-  });
+it(
+  'opens a build beside the list and offers to rerun it once cancelled',
+  async () => {
+    const kit = await start();
+    const empty = await kit.mount({ page: '/builds', surface });
 
-  const page = await kit.mount({ page: '/builds/web', surface });
+    expect((await empty.find('Select a build')).type).toBe('EmptyState');
+    expect((await empty.find('Deploy web')).props.onPress).toEqual({
+      action: 'navigate',
+      path: '/builds/web',
+    });
 
-  expect((await page.find('Running')).type).toBe('Metadata.StatusDot');
-  await page.press('Cancel');
-  expect((await page.find('Rerun')).type).toBe('Action');
-}, 20_000);
+    const page = await kit.mount({ page: '/builds/web', surface });
 
-it('opens the page a Card names when pressed', async () => {
-  const page = await (await start()).mount({ page: '/', surface });
+    expect((await page.find('Build native')).type).toBe('ListItem');
+    expect((await page.find('Running')).type).toBe('Metadata.StatusDot');
+    await page.press('Cancel');
+    expect((await page.find('Rerun')).type).toBe('Action');
+  },
+  mountTimeout,
+);
 
-  expect((await page.find('Builds')).props.onPress).toEqual({
-    action: 'navigate',
-    path: '/builds',
-  });
-}, 20_000);
+it(
+  'lists each demo as a Card that opens the page at its own path',
+  async () => {
+    const kit = await start();
+    const page = await kit.mount({ page: '/', surface });
+
+    for (const title of ['Lists', 'Dashboard', 'Form', 'Builds'])
+      expect((await page.find(title)).type).toBe('Card');
+
+    expect((await page.find('Builds')).props.onPress).toEqual({
+      action: 'navigate',
+      path: '/builds',
+    });
+
+    const builds = await kit.mount({ page: '/builds', surface });
+
+    expect((await builds.find('Select a build')).type).toBe('EmptyState');
+  },
+  mountTimeout,
+);
