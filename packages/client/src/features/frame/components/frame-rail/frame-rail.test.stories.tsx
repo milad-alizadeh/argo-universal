@@ -25,6 +25,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const settingsName = 'Settings';
+
+const sessionsName = 'Sessions';
+
+const ariaCurrent = 'aria-current';
+
 const sidebarToggle = /^(Hide|Show) sidebar$/;
 
 // Core sections first, then each Plugin nav item in manifest order; a tile reports its section.
@@ -48,12 +54,26 @@ export const ListsAndPicksPluginItems: Story = {
 
 export const KeyboardFocusActivatesASection: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    const sessions = canvas.getByRole('button', { name: 'Sessions' });
+    const sessions = canvas.getByRole('button', { name: sessionsName });
 
     await userEvent.tab();
     await expect(sessions).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     await expect(args.onSectionChange).toHaveBeenLastCalledWith('sessions');
+  },
+};
+
+// Hover is feedback only: it neither selects a section nor moves the current one.
+export const HoverDoesNotSelectOrNavigate: Story = {
+  play: async ({ args, canvas, userEvent }) => {
+    const settings = canvas.getByRole('button', { name: settingsName });
+    const sessions = canvas.getByRole('button', { name: sessionsName });
+
+    await userEvent.hover(settings);
+    await expect(args.onSectionChange).not.toHaveBeenCalled();
+    await expect(sessions).toHaveAttribute(ariaCurrent, 'page');
+    await expect(settings).not.toHaveAttribute(ariaCurrent);
+    await expect(settings).toHaveAccessibleName(settingsName);
   },
 };
 
@@ -94,7 +114,7 @@ export const PluginPageHasNoSidebarToggle: Story = {
   args: { selectedSection: 'plugins/hello/hello', hasSidebar: false },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('button', { name: 'Hello' })).toHaveAttribute(
-      'aria-current',
+      ariaCurrent,
       'page',
     );
     await expect(

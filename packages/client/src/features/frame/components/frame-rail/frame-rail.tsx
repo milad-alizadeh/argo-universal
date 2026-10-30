@@ -5,7 +5,7 @@ import { ScrollView } from '@repo/kit/primitives/layout/scroll-view';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { memo } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type PressableStateCallbackType } from 'react-native';
 import {
   type Section,
   type NavigationSection,
@@ -33,25 +33,41 @@ type SectionButtonProps = Pick<FrameRailProps, 'onSectionChange'> & {
   selected: boolean;
 };
 
+type HoverState = PressableStateCallbackType & { hovered?: boolean };
+
+type TileIconProps = Pick<SectionButtonProps, 'section' | 'selected'> & {
+  // A pointer over the tile darkens its icon; touch has no hover, so native keeps the muted tone.
+  hovered: boolean;
+};
+
 const tileClass = (selected: boolean): string =>
   cn(
     'items-center justify-center web:transition-colors web:duration-150 web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
-    selected ? 'web:hover:ring-1 web:hover:ring-hover' : 'web:hover:bg-hover',
+    selected
+      ? 'web:hover-capable:hover:ring-1 web:hover-capable:hover:ring-border'
+      : 'web:hover-capable:hover:bg-hover',
     railTiles.size,
     railTiles.corners,
     selected && railTiles.selected,
   );
 
-function TileIcon(props: SectionButtonProps): React.JSX.Element {
+function TileIcon(props: TileIconProps): React.JSX.Element {
   return (
     <Icon
       name={props.section.icon}
       size="md"
       filled={props.selected}
-      tone={props.selected ? undefined : 'muted'}
+      tone={props.selected || props.hovered ? undefined : 'muted'}
     />
   );
 }
+
+const tileAccessibility = (props: SectionButtonProps) =>
+  ({
+    accessibilityRole: 'button',
+    accessibilityLabel: props.section.title,
+    'aria-current': props.selected ? 'page' : undefined,
+  }) as const;
 
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
   // Android fills the selected tile from the Material palette; the style wins over the class there.
@@ -59,14 +75,14 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={props.section.title}
-      aria-current={props.selected ? 'page' : undefined}
+      {...tileAccessibility(props)}
       onPress={() => props.onSectionChange(props.section.id)}
       className={tileClass(props.selected)}
       style={style}
     >
-      <TileIcon {...props} />
+      {(state: HoverState) => (
+        <TileIcon {...props} hovered={state.hovered === true} />
+      )}
     </Pressable>
   );
 }
