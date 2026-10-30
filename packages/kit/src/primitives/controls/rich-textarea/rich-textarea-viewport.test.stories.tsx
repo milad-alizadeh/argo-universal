@@ -10,6 +10,7 @@ import {
 } from './rich-textarea-example.mocks';
 import { scrollingSuggestionsRichTextarea } from './rich-textarea-fixtures';
 import {
+  longCommand,
   longCommandCount,
   longSuggestionsRichTextarea,
 } from './rich-textarea-long.mocks';
@@ -94,31 +95,44 @@ export const KeyboardScrollsTheLastChoiceIntoView: Story = {
   },
 };
 
-const lastCommand = {
-  name: `/command-${longCommandCount} Command ${longCommandCount}`,
-};
+const firstCommand = longCommand(0);
+
+const lastCommand = longCommand(longCommandCount - 1);
+
+/*
+ * The rows a 350px menu draws at once, with room to spare for whatever the List keeps beyond its window; far
+ * fewer than the catalog, so drawing every row would fail this.
+ */
+const drawnWindowLimit = 30;
 
 export const ALongMenuDrawsAWindowYetArrowDownReachesTheLastChoice: Story = {
   args: { suggestions: longSuggestionsRichTextarea.suggestions },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, args }) => {
     const textbox = canvas.getByRole('textbox', { name: exampleLabel });
 
     await userEvent.hover(textbox);
     await userEvent.type(textbox, '/');
-    await screen.findByRole('option', { name: '/command-1 Command 1' });
+    await screen.findByRole('option', { name: firstCommand.name });
     await expect(screen.getAllByRole('option').length).toBeLessThan(
-      longCommandCount / 2,
+      drawnWindowLimit,
     );
-    await expect(screen.queryByRole('option', lastCommand)).toBeNull();
+    await expect(
+      screen.queryByRole('option', { name: lastCommand.name }),
+    ).toBeNull();
     await userEvent.keyboard('{ArrowDown}'.repeat(longCommandCount - 1));
     await waitFor(() =>
       expect(
-        screen.getByRole('option', { ...lastCommand, selected: true }),
+        screen.getByRole('option', { name: lastCommand.name, selected: true }),
       ).toBeInTheDocument(),
     );
     await browserExpect
-      .element(screen.getByRole('option', lastCommand))
+      .element(screen.getByRole('option', { name: lastCommand.name }))
       .toBeInViewport({ ratio: 1 });
+    // The highlight names the catalog's last command, not whichever row the List recycled into that place.
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith(lastCommand.insert),
+    );
   },
 };
 

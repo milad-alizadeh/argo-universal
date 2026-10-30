@@ -15,6 +15,7 @@ import {
 import { suggestionsRichTextarea } from './rich-textarea-fixtures';
 import { iconlessSuggestionsRichTextarea } from './rich-textarea-iconless.mocks';
 import {
+  longCommand,
   longCommandCount,
   longSuggestionsRichTextarea,
 } from './rich-textarea-long.mocks';
@@ -121,6 +122,13 @@ export const TappingAResultReplacesTheSlashWord: Story = {
   },
 };
 
+const firstLongCommand = longCommand(0);
+
+const lastLongCommand = longCommand(longCommandCount - 1);
+
+// The rows the phone's list draws at once, with room for whatever the List keeps beyond its window.
+const drawnWindowLimit = 30;
+
 export const ALongListDrawsOnlyAWindowOfRows: Story = {
   args: { suggestions: longSuggestionsRichTextarea.suggestions },
   play: async ({ canvas }) => {
@@ -128,9 +136,12 @@ export const ALongListDrawsOnlyAWindowOfRows: Story = {
       canvas.getByRole('textbox', { name: exampleLabel }),
       '/',
     );
-    await canvas.findByRole('button', { name: '/command-1 Command 1' });
+    await canvas.findByRole('button', { name: firstLongCommand.name });
     const drawn = canvas.getAllByRole('button', { name: /^\/command-/ });
-    await expect(drawn.length).toBeLessThan(longCommandCount / 2);
+    await expect(drawn.length).toBeLessThan(drawnWindowLimit);
+    await expect(
+      canvas.queryByRole('button', { name: lastLongCommand.name }),
+    ).not.toBeInTheDocument();
   },
 };
 
