@@ -15,3 +15,5 @@ export * from './system';
 export * from './notifications';
 
 export * from './link-preview';
+
+export * from './devices';

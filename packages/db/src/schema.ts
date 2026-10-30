@@ -25,3 +25,5 @@ export * from '#schema-server-identity';
 export * from '#schema-plugins';
 
 export * from '#schema-agent-access';
+
+export * from '#schema-devices';
