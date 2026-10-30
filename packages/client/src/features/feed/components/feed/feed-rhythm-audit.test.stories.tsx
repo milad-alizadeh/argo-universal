@@ -130,14 +130,13 @@ export const PermissionPhone = rhythm(rhythmAudits.permission, 390);
 
 export const PermissionDesktop = rhythm(rhythmAudits.permission, 1440);
 
+// The space the answer keeps below the prompt, and how tall the prompt's own content is.
 interface ExpansionMeasure {
-  // The space the answer keeps below the prompt's drawn content.
   gap: number;
-  // How tall that content is, so an opened prompt reads as grown.
   height: number;
 }
 
-function measuredGap(canvas: Canvas): ExpansionMeasure {
+function measuredExpansion(canvas: Canvas): ExpansionMeasure {
   const columns = sortedColumns(canvas);
   const answer = requiredColumn(columns, 1);
   const content = requiredContent(requiredColumn(columns, 0));
@@ -149,8 +148,8 @@ function measuredGap(canvas: Canvas): ExpansionMeasure {
   };
 }
 
-// The list leaves a cell it has not placed yet out of reach; a reader presses the row once it is placed.
-async function placed(element: HTMLElement): Promise<void> {
+// The list leaves a cell it has not placed yet out of reach; a reader presses the row once it is.
+async function pressable(element: HTMLElement): Promise<void> {
   const reachable = (): boolean =>
     globalThis.getComputedStyle(element).pointerEvents !== 'none';
 
@@ -169,13 +168,13 @@ function expansion(width: number): Story {
     beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
       await canvas.findAllByTestId(feedColumn);
-      const closed = await waitFor(() => measuredGap(canvas));
+      const closed = await waitFor(() => measuredExpansion(canvas));
       await expect(closed.gap).toBeCloseTo(gap, 0);
       const more = await canvas.findByText('Show more');
-      await placed(more);
+      await pressable(more);
       await userEvent.click(more);
       await waitFor(async () => {
-        const opened = measuredGap(canvas);
+        const opened = measuredExpansion(canvas);
 
         await expect(opened.height).toBeGreaterThan(closed.height);
         await expect(opened.gap).toBeCloseTo(gap, 0);

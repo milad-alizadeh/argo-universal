@@ -54,15 +54,14 @@ export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {
 }
 
 /*
- * Thoughts, Tool calls, the live header, and the status row a Notice or a Compaction draws:
- * what the Agent does between messages. A status row standing on its own reports on the work
- * beside it, as it does inside a group, so it keeps the activity rhythm rather than the space
- * that separates one message from the next.
+ * What the Agent does between messages. A Notice or a Compaction reports on the work beside it,
+ * and a group already draws it among its Tool calls, so it keeps the activity rhythm standing on
+ * its own rather than the space that separates one message from the next.
  */
 const isActivity = (entry: FeedEntry): boolean =>
-  entry.type !== 'row' || isStatusRow(entry.row);
+  entry.type !== 'row' || drawsNotice(entry.row);
 
-const isStatusRow = (row: SessionUpdate): boolean =>
+const drawsNotice = (row: SessionUpdate): boolean =>
   row.sessionUpdate === 'notice' || row.sessionUpdate === 'compaction_update';
 
 const isAgentMessage = (entry: FeedEntry): boolean =>
