@@ -144,8 +144,12 @@ function horizontalScroller(element: HTMLElement | null): HTMLElement {
   return horizontalScroller(element.parentElement);
 }
 
-// Paper's Table pins the first column; the remaining columns scroll on phones.
-export const TableScrollsSideways: Story = {
+/*
+ * A Markdown table's columns take the width their own text needs, so an answer's two-column table holds both
+ * columns on a phone: nothing scrolls sideways, and every cell is read where it is. A table too wide for the
+ * page still scrolls, which the kit's own Table stories guarantee.
+ */
+export const TableHoldsBothColumnsOnPhones: Story = {
   args: { row: recordedAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
     await settleLayout('phone');
@@ -155,8 +159,10 @@ export const TableScrollsSideways: Story = {
     );
 
     scroller.scrollLeft = scroller.scrollWidth;
-    await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(0));
+    await waitFor(() => expect(scroller.scrollLeft).toBe(0));
     await expect(canvas.getByText('Property')).toBeVisible();
     await expect(canvas.getByText('Result')).toBeVisible();
+    await expect(canvas.getByText('Row state')).toBeVisible();
+    await expect(canvas.getByText('Preserved by stable keys')).toBeVisible();
   },
 };
