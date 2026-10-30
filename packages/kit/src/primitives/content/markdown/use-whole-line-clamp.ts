@@ -1,7 +1,11 @@
 import type * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LayoutChangeEvent, View } from 'react-native';
-import { type ClampLeaf, useLineHeight } from './clamp-leaves';
+import {
+  type ClampLeaf,
+  type ClampLeafRegistry,
+  useLineHeight,
+} from './clamp-leaves';
 import { type MeasuredLeaf, wholeLineCut } from './whole-line-cut';
 
 type ContentView = React.ComponentRef<typeof View>;
@@ -39,7 +43,7 @@ async function measuredCut(
 }
 
 export interface WholeLineClamp {
-  registerLeaf: (leaf: ClampLeaf) => () => void;
+  leafRegistry: ClampLeafRegistry;
   content: React.RefObject<ContentView | null>;
   onContentLayout: (event: LayoutChangeEvent) => void;
   // Where to cut the markdown, or undefined when it fits within the lines.
@@ -127,23 +131,34 @@ function useClipOnLayout(
   };
 }
 
+function addLeaf(leaves: Leaves, leaf: ClampLeaf): () => void {
+  leaves.current.add(leaf);
+
+  return () => {
+    leaves.current.delete(leaf);
+  };
+}
+
+function useLeafRegistry(
+  leaves: Leaves,
+  bodyLineDrawn: (height: number) => void,
+): ClampLeafRegistry {
+  return useMemo(
+    () => ({ register: (leaf) => addLeaf(leaves, leaf), bodyLineDrawn }),
+    [leaves, bodyLineDrawn],
+  );
+}
+
 // Clamps markdown to at most `lines` body lines, cutting after the last line or block that fits whole.
 export function useWholeLineClamp(lines: number | undefined): WholeLineClamp {
-  const limit = clampLimit(useLineHeight('body'), lines);
+  const styled = useLineHeight('body');
+  const [drawn, setDrawn] = useState<number>();
   const leaves = useRef(new Set<ClampLeaf>());
   const content = useRef<ContentView>(null);
-
-  const registerLeaf = useCallback((leaf: ClampLeaf): (() => void) => {
-    leaves.current.add(leaf);
-
-    return () => {
-      leaves.current.delete(leaf);
-    };
-  }, []);
-
+  const limit = clampLimit(drawn ?? styled, lines);
   const clip = useClipOnLayout(limit, leaves, content);
 
-  return { registerLeaf, content, ...clip };
+  return { leafRegistry: useLeafRegistry(leaves, setDrawn), content, ...clip };
 }
 
 function clampLimit(
