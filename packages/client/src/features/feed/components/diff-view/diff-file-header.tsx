@@ -57,9 +57,20 @@ function FileHeaderToggle({
   );
 }
 
+const isRenamed = (
+  file: FileHeaderProps['file'],
+): file is typeof file & { oldPath: string } =>
+  file.operation === 'move' && !!file.oldPath && file.oldPath !== file.path;
+
+// What a screen reader says for the toggle: a moved file's old path too, since a sighted reader is shown both.
+const toggleName = (file: FileHeaderProps['file']): string =>
+  isRenamed(file)
+    ? `Diff for ${file.path}, renamed from ${file.oldPath}`
+    : `Diff for ${file.path}`;
+
 const toggleOf = (props: FileHeaderProps): Omit<ToggleProps, 'children'> => ({
   open: props.open,
-  'aria-label': `Diff for ${props.file.path}`,
+  'aria-label': toggleName(props.file),
   'aria-expanded': props.open,
   onPress: () => props.onOpenChange(!props.open),
 });
