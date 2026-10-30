@@ -75,11 +75,9 @@ const copyPluginFixture = async (
 type ManifestInput = FixturePlugin & { folder: string; main: string };
 
 async function writeManifest(plugin: ManifestInput): Promise<void> {
-  const template = PluginManifest.parse(manifestTemplate);
-
   await writeFile(
     join(plugin.folder, 'plugin.json'),
-    JSON.stringify(pluginManifest(template, plugin)),
+    JSON.stringify(pluginManifest(manifestTemplate, plugin)),
   );
 }
 

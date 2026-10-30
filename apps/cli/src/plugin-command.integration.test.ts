@@ -7,6 +7,14 @@ import { fixture, githubSignIn, run } from '../mocks/plugin-cli';
 // The example starts a separate worker for each of its tests.
 const exampleTestLimitMs = 60_000;
 
+const manifestFile = 'plugin.json';
+
+// Every fixture is scaffolded from the example, so a test that needs its own manifest reads this one first.
+const readManifest = async (directory: string): Promise<PluginManifest> =>
+  PluginManifest.parse(
+    JSON.parse(await readFile(join(directory, manifestFile), 'utf8')),
+  );
+
 it.each([
   ['process.cwd();', 'Node global process'],
   ["new URL('https://example.com');", 'Node global URL'],
@@ -44,12 +52,8 @@ it.each([
   'validate reports a bad manifest at its %s field',
   async (field, change) => {
     const directory = await fixture('export function register() {}');
-    const file = join(directory, 'plugin.json');
-
-    const manifest = PluginManifest.parse(
-      JSON.parse(await readFile(file, 'utf8')),
-    );
-
+    const file = join(directory, manifestFile);
+    const manifest = await readManifest(directory);
     const text = JSON.stringify({ ...manifest, ...change }, null, 2);
     await writeFile(file, text);
 
@@ -79,11 +83,8 @@ it('validate reports the declared order', async () => {
     "export function register(argo) { argo.on('ui.render', (ctx, e, next) => next()); }",
   );
 
-  const file = join(directory, 'plugin.json');
-
-  const manifest = PluginManifest.parse(
-    JSON.parse(await readFile(file, 'utf8')),
-  );
+  const file = join(directory, manifestFile);
+  const manifest = await readManifest(directory);
 
   await writeFile(
     file,
@@ -133,10 +134,18 @@ function Page() {
 }
 
 export function register(argo) {
-  // The path the copied manifest declares as its Account page.
-  argo.pages.register('/sign-in', Page);
+  argo.pages.register('/', Page);
 }
 `);
+
+    // The fixture draws one page of its own, so it keeps none of the example's contributions.
+    await writeFile(
+      join(directory, manifestFile),
+      JSON.stringify({
+        ...(await readManifest(directory)),
+        contributes: { nav: [] },
+      }),
+    );
 
     await writeFile(
       join(directory, 'tap.test.ts'),
@@ -144,7 +153,7 @@ export function register(argo) {
     import assert from 'node:assert/strict';
     import { test } from '@argo/plugin-kit/testing';
     test('pressing Tap me', async ({ mount }) => {
-      const page = await mount({ page: '/sign-in', surface: { platform: 'web' } });
+      const page = await mount({ page: '/', surface: { platform: 'web' } });
       await page.find('Not tapped');
       await page.press('Tap me');
       assert.equal((await page.find('Tapped')).type, 'Text');

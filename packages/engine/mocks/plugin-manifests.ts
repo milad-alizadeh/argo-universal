@@ -1,8 +1,9 @@
+import { PluginManifest } from '@repo/contracts/plugins';
 import { rejectedCapabilities } from './plugin-capability-manifests';
 
 // The valid manifest the fixtures below patch, and the one every fixture Plugin folder is written from.
 // It is its own fixture so that editing a shipped Plugin's manifest cannot change what these tests mean.
-export const manifestTemplate = {
+export const manifestTemplate = PluginManifest.parse({
   id: 'fixture-plugin',
   name: 'Fixture Plugin',
   version: '1.0.0',
@@ -15,7 +16,7 @@ export const manifestTemplate = {
       { id: 'plans', title: 'Plans', path: '/plans' },
     ],
   },
-};
+});
 
 // Malformed manifest data, supplied through real Plugin folders to the Engine journey.
 export const rejectedManifests = [
