@@ -4,7 +4,7 @@ import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { AgentButton, type AgentActions } from './agent-button';
-import { AgentMeta } from './agent-meta';
+import { AgentLinks, AgentMeta } from './agent-meta';
 
 export interface AgentListItemProps {
   // The Registry's row for one Agent, which says whether it is installed or unavailable here.
@@ -17,7 +17,8 @@ export function AgentListItem(props: AgentListItemProps): React.JSX.Element {
   return (
     <ListItem
       {...cardContent(props.agent)}
-      trailing={<AgentButton {...props} />}
+      trailingAccessories={<AgentButton {...props} />}
+      metaAccessories={<AgentLinks agent={props.agent} />}
     />
   );
 }
