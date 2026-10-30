@@ -27,7 +27,7 @@ export async function persistFixtureTrial(
       timeOriginUnixMs: performance.timeOrigin,
       startedAt: new Date().toISOString(),
     },
-    requested: { runs: 1, warmups: 0 },
+    requested: { runs: 1, warmups: 0, cases: ['command'] },
     warmups: [],
     samples: [{ case: 'command', trial }],
   };

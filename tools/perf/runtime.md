@@ -76,6 +76,10 @@ Cleanup has a separate deadline and never converts the failed trial into a succe
 Cleanup records public cancellation state, not operating-system process cleanup.
 A nonzero exit retains the report and all failed samples.
 
+The report's `run` block names the cases the run asked for and the cases that produced every sample it asked for.
+A case that never ran, or that stopped part way through its samples, is listed in `run.missing` and the run exits nonzero.
+A report whose `run.status` is `partial` measured less than it was asked to, and its absent cases carry no result of any kind.
+
 ## Regression checks
 
 ```sh

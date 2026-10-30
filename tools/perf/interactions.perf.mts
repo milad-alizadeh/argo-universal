@@ -16,13 +16,13 @@ import {
   sessionsScroll,
 } from './page.mts';
 import {
-  cpuRates,
   type Measurement,
+  plannedCases,
   report,
   type Result,
   run,
-  wanted,
 } from './results.mts';
+import { caseName } from './run-completeness.mts';
 import { type SeededServer, startSeededServer } from './seed.mts';
 
 const toggleSettleMilliseconds = 330;
@@ -65,9 +65,13 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await server.stop();
-  await report(results, {
-    sessions: server.sessionCount,
-    feedRows: server.feedRowCount,
+  await report({
+    results,
+    planned,
+    seeded: {
+      sessions: server.sessionCount,
+      feedRows: server.feedRowCount,
+    },
   });
 });
 
@@ -151,6 +155,9 @@ const scenarios = new Map<string, Scenario>(
   }),
 );
 
+// The scenarios this run owes a measurement for, and the tests that owe them, from one list.
+const planned = plannedCases([...scenarios.keys()]);
+
 // What `run` is handed: a scenario with no setup leaves `before` out rather than passing an undefined one.
 function measurement(
   scenario: Measured,
@@ -178,10 +185,10 @@ async function measureScenario(
   return run(measurement(started, { page, interaction, cpu }));
 }
 
-for (const cpu of cpuRates)
-  for (const interaction of [...scenarios.keys()].filter(wanted))
-    test(`${interaction} at ${cpu}x CPU`, async ({ page }) => {
-      const result = await measureScenario(page, interaction, cpu);
-      results.push(result);
-      expect(result.median.fps).toBeGreaterThan(0);
-    });
+for (const planCase of planned)
+  test(caseName(planCase), async ({ page }) => {
+    const { interaction, cpu } = planCase;
+    const result = await measureScenario(page, interaction, cpu);
+    results.push(result);
+    expect(result.median.fps).toBeGreaterThan(0);
+  });

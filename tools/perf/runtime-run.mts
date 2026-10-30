@@ -1,3 +1,7 @@
+import {
+  completenessNotice,
+  type RunCompleteness,
+} from './run-completeness.mts';
 import { runtimeError } from './runtime-error.mts';
 import { runtimeMetadata, runtimeTarget } from './runtime-metadata.mts';
 import {
@@ -6,6 +10,7 @@ import {
   type RuntimeCase,
 } from './runtime-options.mts';
 import {
+  runtimeCompleteness,
   writeRuntimeReport,
   type RuntimeReport,
   type RuntimeSample,
@@ -45,6 +50,16 @@ async function trials(
       await sample(runner, kind, destination);
 }
 
+const incomplete = (report: RuntimeReport, run: RunCompleteness): boolean =>
+  run.status === 'partial' ||
+  report.samples.some((value) => value.trial.status !== 'completed');
+
+const requested = (options: RuntimeOptions): RuntimeReport['requested'] => ({
+  runs: options.runs,
+  warmups: options.warmups,
+  cases: options.cases,
+});
+
 async function createRunner(options: RuntimeOptions): Promise<Runner> {
   const target = await runtimeTarget(options);
   const metadata = await runtimeMetadata(target, options);
@@ -62,11 +77,14 @@ async function main(): Promise<void> {
   await writeRuntimeReport(options.output, runner.report);
   await trials(runner, options.warmups, runner.report.warmups);
   await trials(runner, options.runs, runner.report.samples);
-  process.exitCode = runner.report.samples.some(
-    (value) => value.trial.status !== 'completed',
-  )
-    ? 1
-    : 0;
+
+  const run = runtimeCompleteness(
+    runner.report.requested,
+    runner.report.samples.map((sample) => sample.case),
+  );
+
+  console.log(completenessNotice(run));
+  process.exitCode = incomplete(runner.report, run) ? 1 : 0;
   console.log(`Saved runtime timing report: ${options.output}`);
 }
 
@@ -82,7 +100,7 @@ function createReport(
   return {
     metadata,
     clock: clockMetadata(),
-    requested: { runs: options.runs, warmups: options.warmups },
+    requested: requested(options),
     warmups: [],
     samples: [],
   };
