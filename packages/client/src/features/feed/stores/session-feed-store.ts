@@ -1,4 +1,5 @@
 import type { FeedPageOutput, FeedSubscribeOutput } from '@repo/contracts';
+import { StoreListeners } from '../../../lib/store-listeners';
 import { closedFeedError } from '../utils/closed-feed-error';
 import { mergeHistoryPages } from '../view/feed-history';
 import { upsertRow } from '../view/feed-row-events';
@@ -29,7 +30,7 @@ export class SessionFeedStore {
   private buffer: FeedState;
   private run: Run | undefined;
   private cancelFrame: (() => void) | undefined;
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new StoreListeners();
 
   public constructor(private ports: SessionFeedPorts) {
     this.state = startState(ports);
@@ -41,11 +42,7 @@ export class SessionFeedStore {
     this.ports = ports;
   }
 
-  public readonly subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => void this.listeners.delete(listener);
-  };
+  public readonly subscribe = this.listeners.subscribe;
 
   public readonly getState = (): SessionFeedState => this.state;
 
@@ -153,6 +150,6 @@ export class SessionFeedStore {
         snapshot: this.state.snapshot,
       });
 
-    for (const listener of this.listeners) listener();
+    this.listeners.notify();
   }
 }
