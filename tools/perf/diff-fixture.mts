@@ -22,7 +22,7 @@ export const diffFile = (size: DiffSize): string => `perf-${size}.txt`;
  * drawn is the first removed line, and the first added line sits below all the removed ones,
  * out of the reading area for any file longer than the Changes list is tall.
  */
-export const changedMarker = (size: DiffSize): string =>
+export const firstDiffRowMarker = (size: DiffSize): string =>
   `PERF_DIFF_${size.toUpperCase()}_BASELINE 1`;
 
 const text = (size: DiffSize, word: 'BASELINE' | 'CHANGED'): string =>

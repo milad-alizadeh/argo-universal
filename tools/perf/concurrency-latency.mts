@@ -47,25 +47,33 @@ async function typePrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: 'Message' }).fill(prompt);
 }
 
-const feedText = (): string =>
-  document.querySelector('[data-testid="feed-scroll"]')?.textContent ?? '';
+// Function declarations, because the wait below sends their source to the page by name.
+function feedText(): string {
+  return (
+    document.querySelector('[data-testid="feed-scroll"]')?.textContent ?? ''
+  );
+}
 
-const stopDrawn = (): boolean =>
-  [...document.querySelectorAll('[role="button"][aria-label]')].some(
+function stopDrawn(): boolean {
+  return [...document.querySelectorAll('[role="button"][aria-label]')].some(
     (element) => element.getAttribute('aria-label') === 'Stop',
   );
+}
 
-const followsPrompt = (text: string, prompt: string, reply: string): boolean =>
-  text.includes(prompt) && text.slice(text.lastIndexOf(prompt)).includes(reply);
+function followsPrompt(text: string, prompt: string, reply: string): boolean {
+  return (
+    text.includes(prompt) &&
+    text.slice(text.lastIndexOf(prompt)).includes(reply)
+  );
+}
 
 const answeredScript = [feedText, stopDrawn, followsPrompt]
   .map(String)
   .join('\n');
 
 /*
- * The Turn is finished once the Feed holds this trial's own prompt followed by the fixture's reply,
- * and Stop is not drawn. Each trial's prompt is new, because a Feed holds only the rows near its
- * end: counting replies stops growing once older ones leave the page.
+ * Each trial's prompt is new, because a Feed holds only the rows near its end: counting replies
+ * stops growing once older ones leave the page.
  *
  * Stop is not a signal to wait for. The scripted Turn can answer without Stop ever being drawn (the
  * first Turn on a page did, with the Feed holding the reply), so a wait for Stop to appear never

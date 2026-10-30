@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import {
-  changedMarker,
+  firstDiffRowMarker,
   changeOnly,
   diffFile,
   diffCounts,
@@ -40,7 +40,7 @@ async function prepareDiff(
   size: DiffSize,
 ): Promise<TimedAction> {
   const overview = await reopenChanged(page, server, size);
-  const text = changedMarker(size);
+  const text = firstDiffRowMarker(size);
 
   return {
     event: 'pointerdown',
