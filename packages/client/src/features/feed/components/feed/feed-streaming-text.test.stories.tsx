@@ -43,7 +43,8 @@ const answerText = Array.from({ length: 16 }, (_unused, index) => {
   return `${mark}${sentence.repeat(2 + (index % 3)).trim()}${mark}`;
 }).join('\n\n');
 
-const charsPerChunk = 48;
+// Few enough chunks that a loaded runner, which spends about 170ms rendering the Feed per chunk, still finishes well inside the test timeout.
+const charsPerChunk = 240;
 
 const msBetweenChunks = 24;
 
@@ -124,8 +125,8 @@ function StreamingFeed(): React.JSX.Element {
 const topInView = (row: HTMLElement, scroll: HTMLElement): number =>
   row.getBoundingClientRect().top - scroll.getBoundingClientRect().top;
 
-// Longest the answer may take to stream in before the story gives up. It streams in about 3s, and the steps before it can spend 15s of the 30s test timeout, so this stays well inside what is left.
-const streamDeadlineMs = 8000;
+// Longest the answer may take to stream in before the story gives up. The steps before it can spend 15s of the 30s test timeout, so this stays inside what is left.
+const streamDeadlineMs = 12_000;
 
 // Reads the prompt's place in the view on every frame until the answer has streamed in full. The deadline is a timer, so it still fires when frames stop, and the failure says how far the stream and the frames had got.
 function promptTopsWhileStreaming(
