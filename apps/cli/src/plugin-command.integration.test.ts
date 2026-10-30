@@ -104,7 +104,7 @@ it('validate reports the declared order', async () => {
 }, 30_000);
 
 it(
-  'test runs the example Plugin worker interaction',
+  'test runs the example Plugin worker test',
   async () => {
     expect(await run('test', example, exampleTestLimitMs)).toMatchObject({
       code: 0,
