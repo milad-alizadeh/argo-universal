@@ -126,13 +126,14 @@ export const SecondAgentOpensImageWide = opensImage(
 // A sent image keeps the name it was attached under, on its button and in its viewer.
 const namedImage = 'qa-red.png';
 
+const recordedImagePrompt = recordedUserMessage('agent-1', imageRecording);
+
 export const NamedImageOpensWithItsName: Story = {
   args: {
     row: {
-      ...recordedUserMessage('agent-1', imageRecording),
-      content: recordedUserMessage('agent-1', imageRecording).content.map(
-        (block) =>
-          block.type === 'image' ? { ...block, name: namedImage } : block,
+      ...recordedImagePrompt,
+      content: recordedImagePrompt.content.map((block) =>
+        block.type === 'image' ? { ...block, name: namedImage } : block,
       ),
     },
   },
