@@ -15,29 +15,7 @@ export function snapshotState(
 }
 
 function activeState(session: SessionState): SessionSnapshot['state'] {
-  if (needsAction(session)) return 'requires_action';
+  if (session.hasTag('requiresAction')) return 'requires_action';
 
-  return isRunning(session) ? 'running' : 'idle';
-}
-
-function needsAction(session: SessionState): boolean {
-  return (
-    session.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
-    session.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
-  );
-}
-
-function isRunning(session: SessionState): boolean {
-  return (
-    session.matches({ open: { acp: 'committing' } }) ||
-    runningTurn(session) ||
-    session.matches({ open: { acp: 'publishing' } })
-  );
-}
-
-function runningTurn(session: SessionState): boolean {
-  return (
-    session.matches({ open: { acp: 'activeTurn' } }) &&
-    !session.matches({ open: { acp: { activeTurn: 'cancelling' } } })
-  );
+  return session.hasTag('running') ? 'running' : 'idle';
 }

@@ -5,7 +5,6 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
-import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ChipTrigger } from '../composer-status/chip-trigger';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
@@ -15,6 +14,7 @@ import {
   selection,
 } from './configuration-values';
 import { ModeContents } from './mode-choices';
+import { ModeMenu } from './mode-menu';
 import type { Mode } from './mode-types';
 
 interface ModeControlProps {
@@ -30,19 +30,22 @@ export function ComposerModeControl(
 
   if (!mode) return null;
 
-  return <ModePopover {...props} mode={mode} wide={wide} />;
+  return modePresentation({ ...props, mode, wide });
 }
 
-function ModePopover(
+function modePresentation(
   props: ModeControlProps & { mode: Mode; wide: boolean },
 ): React.JSX.Element {
-  if (!props.wide || Platform.OS !== 'web') return <ModeSheet {...props} />;
+  if (props.wide && Platform.OS === 'web')
+    return (
+      <ModeMenu
+        configuration={props.configuration}
+        mode={props.mode}
+        trigger={modeTrigger(props)}
+      />
+    );
 
-  return (
-    <ComposerPopover listContent label="Mode" trigger={modeTrigger(props)}>
-      {(close) => <ModeContents {...props} close={close} />}
-    </ComposerPopover>
-  );
+  return <ModeSheet {...props} />;
 }
 
 /*

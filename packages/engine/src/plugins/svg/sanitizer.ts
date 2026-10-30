@@ -10,7 +10,7 @@ import {
 
 export { svgCharacterLimit, svgDepthLimit, svgElementLimit } from './types';
 
-export type { SvgAstNode, SvgParser, SvgSanitization } from './types';
+export type { SvgParser, SvgSanitization } from './types';
 
 export function sanitizeSvg(xml: string, parse: SvgParser): SvgSanitization {
   if (xml.length > svgCharacterLimit)

@@ -45,7 +45,7 @@ export function togglePanel(
   return selectPanel(state, panel);
 }
 
-export function requestPanel(
+function requestPanel(
   state: SessionPanelsState,
   panel: string,
 ): SessionPanelsState {

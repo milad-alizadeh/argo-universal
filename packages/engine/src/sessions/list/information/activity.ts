@@ -3,7 +3,7 @@ import {
   type PendingInputRequest,
   pendingInputRequest,
 } from '../../pending-input';
-import { latestTurnOf } from '../../turns';
+import { latestTurnOf } from '../../stored-turn';
 import { activityText } from './activity-text';
 import type { SessionInfoInput } from './information';
 import { deriveSessionStatus } from './status';

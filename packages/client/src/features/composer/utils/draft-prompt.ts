@@ -20,7 +20,7 @@ type PromptBlock = SessionNewInput['prompt'][number];
 
 const attachmentBlock = ({ name, blob }: UploadedAttachment): PromptBlock =>
   isPromptImage(blob.mime)
-    ? { type: 'image', mimeType: blob.mime, blob }
+    ? { type: 'image', name, mimeType: blob.mime, blob }
     : {
         type: 'resource_link',
         name,

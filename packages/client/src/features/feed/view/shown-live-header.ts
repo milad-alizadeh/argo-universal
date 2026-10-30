@@ -12,7 +12,7 @@ function isOpenGroup(item: FeedViewItem): boolean {
 }
 
 function isLiveExploration(item: FeedViewItem): boolean {
-  return item.type === 'exploration' && item.title === 'Exploring';
+  return item.type === 'exploration' && item.state === 'open';
 }
 
 export function shownLiveHeader(

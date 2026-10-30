@@ -20,87 +20,145 @@ export const emptySessionInput = {
   prompt: [],
 };
 
-async function openRepositoryStorage(
-  directory: string,
-): Promise<ReturnType<typeof openTestDatabase>> {
-  await initTestRepository(directory);
+type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
+    Pick<
+      EngineInput,
+      | 'fetchAgents'
+      | 'caffeinate'
+      | 'operationWaitClock'
+      | 'slashCommandsWaitMs'
+    >
+  > &
+  Pick<
+    AcpResourceInput,
+    'closeTimeoutMs' | 'launchLoginTerminal' | 'launchProcess' | 'sessionAccess'
+  > & {
+    // Writes first-party fixture Plugins into the Engine's home before it starts.
+    installPlugins?: (home: string) => Promise<void>;
+    // Starts over the storage a stopped Engine left (its `home`), as an app restart does.
+    restartOver?: string;
+    // Installed beside the main Agent, each with its own scripted process.
+    otherAgents?: readonly string[];
+  };
 
-  return openTestDatabase({}, directory);
+type AcpHost = Awaited<ReturnType<typeof startEngineTestHost>> & {
+  agent: ReturnType<typeof createScriptedAgentProcess>;
+};
+
+export const startAcpEngine = (
+  scenario: AcpScenario = { steps: [] },
+  createId: () => string = randomUUID,
+  agentId?: string,
+): Promise<AcpHost> => launchAcpFixture(scenario, { createId, agentId });
+
+const launchAcpFixture = async (
+  scenario: AcpScenario,
+  identity: { createId: () => string; agentId?: string },
+): Promise<AcpHost> => {
+  const { directory, ...opened } = await setupAcpStorage(scenario);
+  const agent = createScriptedAgentProcess(scenario);
+  const options = engineOptions(scenario, { ...opened, agent, ...identity });
+
+  const host = await startEngineTestHost(options);
+
+  onTestFinished(() =>
+    stopAcpFixture({ host, agent, storage: opened.storage, directory }),
+  );
+
+  return { ...host, agent };
+};
+
+type TestStorage = ReturnType<typeof openTestDatabase>;
+
+type OpenedStorage = {
+  // None when the Engine starts over a stopped Engine's storage.
+  storage: TestStorage | undefined;
+  home: string;
+};
+
+type AcpStorage = OpenedStorage & { directory: string };
+
+async function openFixtureStorage(
+  scenario: AcpScenario,
+  directory: string,
+): Promise<OpenedStorage> {
+  if (scenario.restartOver)
+    return { storage: undefined, home: scenario.restartOver };
+  await initTestRepository(directory);
+  const storage = openTestDatabase({}, directory);
+
+  return { storage, home: storage.directory };
 }
 
-export const startAcpEngine = async (
-  scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
-      Pick<
-        EngineInput,
-        | 'fetchAgents'
-        | 'caffeinate'
-        | 'operationWaitClock'
-        | 'slashCommandsWaitMs'
-      >
-    > &
-    Pick<
-      AcpResourceInput,
-      | 'closeTimeoutMs'
-      | 'launchLoginTerminal'
-      | 'launchProcess'
-      | 'sessionAccess'
-    > & {
-      // Writes first-party fixture Plugins into the Engine's home before it starts.
-      installPlugins?: (home: string) => Promise<void>;
-      // Starts over the storage a stopped Engine left (its `home`), as an app restart does.
-      restartOver?: string;
-      // Installed beside the main Agent, each with its own scripted process.
-      otherAgents?: readonly string[];
-    } = {
-    steps: [],
-  },
-  createId: () => string = randomUUID,
-  agentId = 'mock',
-): Promise<
-  Awaited<ReturnType<typeof startEngineTestHost>> & {
-    agent: ReturnType<typeof createScriptedAgentProcess>;
-  }
-> => {
+const setupAcpStorage = async (scenario: AcpScenario): Promise<AcpStorage> => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-acp-engine-'));
+  const opened = await openFixtureStorage(scenario, directory);
+  await scenario.installPlugins?.(opened.home);
 
-  const storage = scenario.restartOver
-    ? undefined
-    : await openRepositoryStorage(directory);
+  return { ...opened, directory };
+};
 
-  await scenario.installPlugins?.(
-    storage?.directory ?? scenario.restartOver ?? directory,
-  );
-  const agent = createScriptedAgentProcess(scenario);
+type Fixture = OpenedStorage & {
+  agent: ReturnType<typeof createScriptedAgentProcess>;
+  createId: () => string;
+  agentId?: string;
+};
 
+// Most tests have Agents that send no Slash command list; they must not wait for one.
+const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
+  caffeinate: scenario.caffeinate,
+  operationWaitClock: scenario.operationWaitClock,
+  slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
+});
+
+const fixtureAgents = (
+  scenario: AcpScenario,
+  agentId = 'mock',
+): EngineTestOptions['fixtureAgents'] =>
+  [agentId, ...(scenario.otherAgents ?? [])].map(createAgentMetadata);
+
+const engineOptions = (
+  scenario: AcpScenario,
+  fixture: Fixture,
+): EngineTestOptions => {
   const options: EngineTestOptions = {
-    database: storage?.database,
-    home: scenario.restartOver,
-    createId,
-    caffeinate: scenario.caffeinate,
-    operationWaitClock: scenario.operationWaitClock,
-    // Most tests have Agents that send no list; they must not wait for one.
-    slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
-    fixtureAgents: [agentId, ...(scenario.otherAgents ?? [])].map(
-      createAgentMetadata,
-    ),
-    acp: {
-      ...agent,
-      launchProcess: scenario.launchProcess ?? agent.launchProcess,
-      launchLoginTerminal: scenario.launchLoginTerminal,
-      closeTimeoutMs: scenario.closeTimeoutMs,
-      sessionAccess: scenario.sessionAccess,
-    },
+    ...scenarioOptions(scenario),
+    database: fixture.storage?.database,
+    home: fixture.home,
+    createId: fixture.createId,
+    fixtureAgents: fixtureAgents(scenario, fixture.agentId),
+    acp: acpOptions(scenario, fixture.agent),
   };
 
   if (scenario.fetchAgents) options.fetchAgents = scenario.fetchAgents;
-  const host = await startEngineTestHost(options);
 
-  onTestFinished(async () => {
-    for (const process of agent.processes) process.exited.resolve();
-    await host.stop();
-    storage?.remove();
-    rmSync(directory, { recursive: true, force: true });
-  });
+  return options;
+};
 
-  return { ...host, agent };
+const acpOptions = (
+  scenario: AcpScenario,
+  agent: Fixture['agent'],
+): NonNullable<EngineTestOptions['acp']> => ({
+  ...agent,
+  launchProcess: scenario.launchProcess ?? agent.launchProcess,
+  launchLoginTerminal: scenario.launchLoginTerminal,
+  closeTimeoutMs: scenario.closeTimeoutMs,
+  sessionAccess: scenario.sessionAccess,
+});
+
+type FixtureCleanup = Pick<Fixture, 'agent' | 'storage'> & {
+  host: Awaited<ReturnType<typeof startEngineTestHost>>;
+  directory: string;
+};
+
+const stopAcpFixture = async ({
+  host,
+  agent,
+  storage,
+  directory,
+}: FixtureCleanup): Promise<void> => {
+  for (const process of agent.processes) process.exited.resolve();
+  await host.stop();
+  storage?.remove();
+  rmSync(directory, { recursive: true, force: true });
 };

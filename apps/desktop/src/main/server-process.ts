@@ -1,11 +1,18 @@
-import { spawn } from 'node:child_process';
 import { join } from 'node:path';
+import { supervisorCommand } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
 import {
   readServerAddress,
   resolveRuntimeDirectory,
 } from '@repo/engine/server-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
+import {
+  type ChildHandle,
+  describeExit,
+  type Exit,
+  isAlive,
+  startService,
+} from '@repo/process';
 import { z } from 'zod';
 
 // One-shot I/O for the Server connection machine; the machine owns every wait.
@@ -13,30 +20,11 @@ import { z } from 'zod';
 // ARGO_HOME overrides ~/.argo, as in the Server.
 export const resolveHome = resolveRuntimeDirectory;
 
-export const isRunning = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 // server.json when its pid is alive; the Supervisor removes the file when it stops, so a crash can leave one behind.
 export function readLiveServerAddress(home: string): ServerAddress | null {
   const address = readServerAddress(home);
 
-  return address && isRunning(address.pid) ? address : null;
-}
-
-// Asks the Supervisor to stop; one that has already exited needs nothing.
-export function signalSupervisor(pid: number): void {
-  try {
-    process.kill(pid, 'SIGTERM');
-  } catch {
-    // It has already exited.
-  }
+  return address && isAlive(address.pid) ? address : null;
 }
 
 // Where the Supervisor keeps its state, and apps/cli, which `spawnSupervisor` runs.
@@ -55,30 +43,34 @@ const SupervisorStarted = z.object({
   pid: z.number().int().positive(),
 });
 
-// Spawns the CLI with Node, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
-export function spawnSupervisor(
-  paths: SupervisorPaths,
-  report: SpawnReport,
-): () => void {
-  let listening = true;
-  const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
-
-  const child = spawn(
-    'node',
-    [join(paths.cliDirectory, 'bin/argo.mjs'), 'server'],
-    {
-      cwd: paths.cliDirectory,
-      detached: true,
-      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
-      env: { ...environment, ARGO_HOME: paths.home },
-    },
+// A service that outlives this app; utilityProcess has no `detached`.
+const launchSupervisor = (paths: SupervisorPaths): ChildHandle =>
+  startService(
+    supervisorCommand(paths.cliDirectory, { ARGO_HOME: paths.home }),
   );
 
-  child.unref();
-  child.channel?.unref();
+// A Supervisor that cannot launch, as with no Node in PATH, is reported as one that exited, so its failure offers Retry.
+function tryLaunch(
+  paths: SupervisorPaths,
+  report: SpawnReport,
+): ChildHandle | undefined {
+  try {
+    return launchSupervisor(paths);
+  } catch (error) {
+    report.exited(error instanceof Error ? error.message : String(error));
+
+    return undefined;
+  }
+}
+
+function reportMessages(
+  child: ChildHandle,
+  report: SpawnReport,
+  active: () => boolean,
+): void {
   const rejections = createRejectionCounter('desktop');
 
-  child.on('message', (message): void => {
+  child.onMessage((message): void => {
     const reportPid = SupervisorStarted.safeParse(message);
 
     if (!reportPid.success) {
@@ -87,16 +79,24 @@ export function spawnSupervisor(
       return;
     }
 
-    if (listening) report.spawned(reportPid.data.pid);
+    if (active()) report.spawned(reportPid.data.pid);
   });
-  child.once('error', (error): void => {
-    if (listening) report.exited(`The Supervisor could not start: ${error}`);
-  });
-  child.once('exit', (code, signal): void => {
-    if (listening)
-      report.exited(
-        `The Supervisor exited while starting (${code ?? signal}); see ${join(paths.home, 'logs')}`,
-      );
+}
+
+const exitMessage = (home: string, exit: Exit): string =>
+  `The Supervisor exited while starting (${describeExit(exit)}); see ${join(home, 'logs')}`;
+
+// Reports the pids a launched CLI learns, then an exit while the Supervisor starts. The returned function stops reporting.
+function followSupervisor(
+  child: ChildHandle,
+  home: string,
+  report: SpawnReport,
+): () => void {
+  let listening = true;
+  reportMessages(child, report, () => listening);
+
+  void child.exited.then((exit): void => {
+    if (listening) report.exited(exitMessage(home, exit));
   });
 
   // Report the CLI pid synchronously so quitting before its Supervisor starts still stops both.
@@ -105,4 +105,14 @@ export function spawnSupervisor(
   return (): void => {
     listening = false;
   };
+}
+
+// Starts the CLI and follows it; a CLI that cannot launch is reported as exited. The returned function stops reporting.
+export function spawnSupervisor(
+  paths: SupervisorPaths,
+  report: SpawnReport,
+): () => void {
+  const child = tryLaunch(paths, report);
+
+  return child ? followSupervisor(child, paths.home, report) : (): void => {};
 }

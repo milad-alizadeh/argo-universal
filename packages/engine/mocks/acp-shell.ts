@@ -22,16 +22,19 @@ export const openLoginShellAgent = async (): Promise<{
 
   const lease = await resources.open({
     ...base,
-    launch: deferLaunch({
-      ...resourceLaunch,
-      registryId: fixtureRegistryIds[0],
-      ...scriptedAgentCommand('reply'),
-      cwd: directory,
-    }),
+    launch: loginLaunch(directory),
   });
 
   return { lease, bin };
 };
+
+const loginLaunch = (directory: string): ReturnType<typeof deferLaunch> =>
+  deferLaunch({
+    ...resourceLaunch,
+    registryId: fixtureRegistryIds[0],
+    ...scriptedAgentCommand('reply'),
+    cwd: directory,
+  });
 
 const loginEnvironment = (directory: string): void => {
   // bash ships on macOS and the Linux CI image; zsh is missing on the latter.
@@ -47,6 +50,13 @@ const loginProject = (): LoginProject => {
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const bin = join(directory, 'bin');
   mkdirSync(bin);
+  writeLoginProfile(directory, bin);
+  loginEnvironment(directory);
+
+  return { directory, bin };
+};
+
+const writeLoginProfile = (directory: string, bin: string): void => {
   writeFileSync(
     join(directory, '.bash_profile'),
     [
@@ -58,7 +68,4 @@ const loginProject = (): LoginProject => {
       '',
     ].join('\n'),
   );
-  loginEnvironment(directory);
-
-  return { directory, bin };
 };

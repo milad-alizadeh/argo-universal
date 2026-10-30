@@ -32,7 +32,7 @@ export type FeedChangeResult =
   | { rejection: string };
 
 // The prompt a person sent, written as the Turn's first row (ADR 0012).
-export const userMessageId = (turnId: string): string => `${turnId}:user`;
+const userMessageId = (turnId: string): string => `${turnId}:user`;
 
 export const userMessageChange = (
   turnId: string,

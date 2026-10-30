@@ -21,7 +21,7 @@ import { RegistryState } from './catalog-states';
 
 type CatalogProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
 
-export const agentsCatalogTestId = 'agents-catalog';
+const agentsCatalogTestId = 'agents-catalog';
 
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (

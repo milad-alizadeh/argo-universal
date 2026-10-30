@@ -13,7 +13,12 @@ import type { WriterActorRef } from '../storage';
 import { createSessionActorInput } from './session-actor-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
-import { sessionActorId } from './session-system';
+
+// The open Sessions actor's system id, and each Session actor's.
+export const openSessionsId = 'sessions';
+
+export const sessionActorId = (sessionId: string): string =>
+  `session:${sessionId}`;
 
 const createSessionEvent = 'sessions.create';
 
@@ -22,7 +27,7 @@ const closeSessionEvent = 'session.close';
 type ClosureEvent = { type: 'session.close' | 'session.shutdown' };
 
 const closureEvent = (session: SessionActorRef): ClosureEvent => ({
-  type: session.getSnapshot().matches('archived')
+  type: session.getSnapshot().hasTag('archived')
     ? 'session.shutdown'
     : closeSessionEvent,
 });
@@ -43,6 +48,35 @@ export interface OpenSessionsInput {
 interface OpenSessionsContext extends OpenSessionsInput {
   sessions: Record<string, SessionActorRef>;
 }
+
+// The Session open under this id; an own key only, since an id such as `constructor` names an Object builtin.
+export const openSessionActor = (
+  context: Pick<OpenSessionsContext, 'sessions'>,
+  sessionId: string,
+): SessionActorRef | undefined =>
+  Object.hasOwn(context.sessions, sessionId)
+    ? context.sessions[sessionId]
+    : undefined;
+
+const withSession = (
+  context: OpenSessionsContext,
+  sessionId: string,
+  actor: SessionActorRef,
+): Partial<OpenSessionsContext> => ({
+  sessions: { ...context.sessions, [sessionId]: actor },
+});
+
+type SessionSnapshot = ReturnType<SessionActorRef['getSnapshot']>;
+
+const canCloseSession = (
+  session: SessionActorRef | undefined,
+  snapshot: SessionSnapshot,
+): session is SessionActorRef =>
+  Boolean(
+    session &&
+    snapshot.can(closureEvent(session)) &&
+    !snapshot.hasTag('closing'),
+  );
 
 export type OpenSessionsCommand =
   | ({ type: 'sessions.create'; sessionId: string } & SessionCreationInput)
@@ -76,6 +110,8 @@ export const openSessionsMachine = setup({
     input: {} as OpenSessionsInput,
     context: {} as OpenSessionsContext,
     events: {} as OpenSessionsEvent,
+    // admitting: the machine admits Session commands until every Session stops.
+    tags: {} as 'admitting',
   },
   actors: { session: sessionMachine },
   actions: {
@@ -96,9 +132,7 @@ export const openSessionsMachine = setup({
           input: createSessionActorInput({ context, event }),
         });
 
-        return {
-          sessions: { ...context.sessions, [event.sessionId]: session },
-        };
+        return withSession(context, event.sessionId, session);
       },
     ),
     removeSession: enqueueActions(({ context, event, enqueue }): void => {
@@ -127,12 +161,7 @@ export const openSessionsMachine = setup({
       const { snapshot } = event;
       const session = context.sessions[snapshot.context.sessionId];
 
-      if (
-        session &&
-        snapshot.can(closureEvent(session)) &&
-        !snapshot.matches({ open: { acp: 'closing' } }) &&
-        !snapshot.matches({ open: { acp: 'archiving' } })
-      )
+      if (canCloseSession(session, snapshot))
         enqueue.sendTo(session, closureEvent(session));
     }),
   },
@@ -167,6 +196,7 @@ export const openSessionsMachine = setup({
   },
   states: {
     running: {
+      tags: ['admitting'],
       on: {
         'sessions.create': {
           guard: 'isRegisteredAgent',

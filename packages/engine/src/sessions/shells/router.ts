@@ -5,17 +5,16 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../../rpc';
-import type { SessionRouterDeps } from '../router-deps';
 import { watchShellOutput } from './output';
+import type { OutputStorage } from './output-reader';
 
-export const createShellRouter = routerFactory(
-  (deps: SessionRouterDeps & { blobsFolder: string }) =>
-    router({
-      output: publicProcedure
-        .input(ShellOutputInput)
-        .output(zAsyncIterable({ yield: ShellOutput }))
-        .subscription(({ input, signal }) =>
-          watchShellOutput(deps, input, signal),
-        ),
-    }),
+export const createShellRouter = routerFactory((deps: OutputStorage) =>
+  router({
+    output: publicProcedure
+      .input(ShellOutputInput)
+      .output(zAsyncIterable({ yield: ShellOutput }))
+      .subscription(({ input, signal }) =>
+        watchShellOutput(deps, input, signal),
+      ),
+  }),
 );

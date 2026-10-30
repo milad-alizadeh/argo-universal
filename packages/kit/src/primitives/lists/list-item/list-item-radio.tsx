@@ -11,7 +11,7 @@ type RadioPressProps = {
   children: ReactNode;
 };
 
-export function RadioPress(props: RadioPressProps): ReactElement {
+function RadioPress(props: RadioPressProps): ReactElement {
   const focus = useRowFocus();
 
   return (

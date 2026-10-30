@@ -12,7 +12,7 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
 import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
-import type { OperationCalls, SessionPorts } from '../sessions';
+import type { Sessions } from '../sessions';
 import {
   discoveryCall,
   listedOutput,
@@ -46,10 +46,10 @@ export type {
   OperationRunResult,
 } from './implementations';
 
-// What Operations read: Sessions only through their ports, and the Engine's own deps.
+// What Operations read: Sessions only through their one interface, and the Engine's own deps.
 export type OperationsDeps = RegistryDeps &
   Pick<FeedDeps, 'findWriter'> & {
-    sessionPorts: SessionPorts;
+    sessions: Sessions;
     controlToken: string;
     userHome: string;
     sessionTokens: SessionTokens;
@@ -69,13 +69,13 @@ type RunRequest = OperationRunRequest;
 // A token caller's Operations: the user's run and admit under the deadline; a Session's are recorded as its Tool calls.
 export class Operations {
   private readonly work: OperationWork;
-  private readonly calls: OperationCalls;
+  private readonly sessions: Sessions;
   private readonly responses: OperationResponses;
   public constructor(
     private readonly deps: OperationsDeps,
     private readonly runner: OperationRunner,
   ) {
-    this.calls = deps.sessionPorts.calls;
+    this.sessions = deps.sessions;
     this.work = new OperationWork(liveWorkDeps(deps), (token) =>
       this.caller(token),
     );
@@ -88,7 +88,7 @@ export class Operations {
     const caller = this.caller(token);
 
     if (caller.kind === 'user') return listOperations(filter);
-    const call = this.calls.begin(caller.sessionId, discoveryCall(filter));
+    const call = this.sessions.call(caller.sessionId, discoveryCall(filter));
 
     const listed = async (): Promise<OperationRow[]> =>
       scopedOperations(listOperations(filter), call);
@@ -138,7 +138,7 @@ export class Operations {
     connection: OperationConnection,
     operation: Operation,
   ): Promise<OperationRunResult> {
-    const call = this.calls.begin(caller.sessionId, operationCall(operation));
+    const call = this.sessions.call(caller.sessionId, operationCall(operation));
 
     const run = (): Promise<OperationRunResult> =>
       this.runner.run({ ...caller, ...operation, call });
@@ -160,7 +160,7 @@ export class Operations {
 
 // Every caller's one runner, reading Sessions through the Session directory.
 export function createRunner(deps: OperationsDeps): OperationRunner {
-  const { directory } = deps.sessionPorts;
+  const { directory } = deps.sessions;
 
   return new OperationRunner(createImplementations(deps), {
     directory,

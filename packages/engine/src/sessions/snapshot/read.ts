@@ -3,59 +3,46 @@ import type {
   SessionGetInput,
   SessionGetOutput,
 } from '@repo/contracts';
-import { findMachineActor } from '../../lib/machine-actor';
-import { readDefaultChangesSummary } from '../changes-summary';
-import type { SessionRouterDeps } from '../router-deps';
-import { sessionMachine, type SessionActorRef } from '../session-machine';
-import { sessionActorId } from '../session-system';
+import { readChangesSummary } from '@repo/git';
+import { sessionChangesSelection } from '../changes-selection';
+import type { HandlerSources } from '../session-sources';
 import { SessionSnapshotReader } from './reader';
 
-type SnapshotSources = Pick<
-  SessionRouterDeps,
-  'database' | 'findFeed' | 'findWriter' | 'sessions'
+type SnapshotSources = HandlerSources<
+  'database' | 'findFeed' | 'findWriter',
+  'session'
 >;
 
 export function createSessionSnapshotReader(
-  deps: SnapshotSources,
+  sources: SnapshotSources,
 ): (input: SessionGetInput) => Promise<SessionGetOutput> {
-  const reader = new SessionSnapshotReader(deps);
+  const reader = new SessionSnapshotReader(sources);
 
   return ({ sessionId }): Promise<SessionGetOutput> =>
-    readCurrentSnapshot(deps, reader, sessionId);
+    readCurrentSnapshot(sources, reader, sessionId);
 }
 
 async function readCurrentSnapshot(
-  deps: SnapshotSources,
+  sources: SnapshotSources,
   reader: SessionSnapshotReader,
   sessionId: string,
 ): Promise<SessionGetOutput> {
   const snapshot = reader.read(
     sessionId,
-    findSession(deps, sessionId),
+    sources.open.session(sessionId),
   ).snapshot;
 
-  if (deps.findFeed(sessionId)) return snapshot;
+  if (sources.findFeed(sessionId)) return snapshot;
 
-  return withStoredChanges(deps, { sessionId, snapshot });
-}
-
-function findSession(
-  deps: SnapshotSources,
-  sessionId: string,
-): SessionActorRef | undefined {
-  return findMachineActor(
-    deps.sessions.system,
-    sessionActorId(sessionId),
-    sessionMachine,
-  );
+  return withStoredChanges(sources, { sessionId, snapshot });
 }
 
 async function withStoredChanges(
-  deps: SnapshotSources,
+  sources: SnapshotSources,
   { sessionId, snapshot }: { sessionId: string; snapshot: SessionGetOutput },
 ): Promise<SessionGetOutput> {
   try {
-    const changes = await storedChanges(deps, snapshot);
+    const changes = await storedChanges(sources, snapshot);
 
     return { ...snapshot, changes };
   } catch (error) {
@@ -66,12 +53,10 @@ async function withStoredChanges(
 }
 
 function storedChanges(
-  deps: SnapshotSources,
+  sources: SnapshotSources,
   snapshot: SessionGetOutput,
 ): Promise<ChangesSummary> {
-  return readDefaultChangesSummary(
-    deps.database,
-    snapshot.projectId,
-    snapshot.checkout.path,
+  return readChangesSummary(
+    sessionChangesSelection(sources.database, snapshot),
   );
 }

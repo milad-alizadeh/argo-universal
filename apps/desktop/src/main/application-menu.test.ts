@@ -6,9 +6,15 @@ function pasteAsPlainText(platform: NodeJS.Platform): string | undefined {
     (menu) => menu.role === 'editMenu',
   );
 
-  const items = Array.isArray(edit?.submenu) ? edit.submenu : [];
+  const items = menuItems(edit);
 
   return items.find((item) => item.role === 'pasteAndMatchStyle')?.accelerator;
+}
+
+function menuItems(
+  menu: ReturnType<typeof applicationMenu>[number] | undefined,
+): Electron.MenuItemConstructorOptions[] {
+  return Array.isArray(menu?.submenu) ? menu.submenu : [];
 }
 
 describe('application menu', () => {

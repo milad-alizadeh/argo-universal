@@ -24,7 +24,7 @@ const echoed = (text: string): string =>
   `argo.process.run(['echo', '${text}']).then((r) => r.stdout.trim())`;
 
 // The Plugin whose `argo.process` calls the Hooks see: once it loads, it runs `echo hi`, then any later echoes named.
-export const probeEchoing = (...later: string[]): HookPlugin => ({
+const probeEchoing = (...later: string[]): HookPlugin => ({
   id: 'probe',
   source: probeSource({
     echo: echoed('hi'),

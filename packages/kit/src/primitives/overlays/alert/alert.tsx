@@ -102,6 +102,6 @@ function AlertButton(props: AlertButtonProps): React.JSX.Element {
   );
 }
 
-export type { AlertAction, AlertProps } from './alert-props';
+export type { AlertProps } from './alert-props';
 
 Alert satisfies React.ComponentType<AlertProps>;

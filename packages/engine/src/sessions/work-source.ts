@@ -1,12 +1,11 @@
 import type { Turn } from '@repo/contracts';
 import type { OperationWorkTarget } from '@repo/contracts/operations';
-import { readSessionCreation, type CreationRead } from './creation-reader';
 import {
-  createOperationCalls,
-  type OperationCallRead,
-  type OperationCalls,
-} from './operation-call';
-import type { SessionWorkSources } from './router-deps';
+  readSessionCreation,
+  type CreationRead,
+} from './creation/creation-reader';
+import { readOperationCall, type OperationCallRead } from './operation-call';
+import type { SessionHandlerSources } from './session-sources';
 import { readSessionTurn, sessionTurnRequiresInput } from './work-turn';
 import {
   createSessionWorkWatcher,
@@ -36,46 +35,46 @@ export type SessionWorkSource = {
 };
 
 export function createSessionWorkSource(
-  deps: SessionWorkSources,
+  sources: SessionHandlerSources,
 ): SessionWorkSource {
-  const calls = createOperationCalls(deps);
-
   return {
-    read: (work) => readWork({ deps, calls }, work),
-    watch: createSessionWorkWatcher(deps),
+    read: (work) => readWork(sources, work),
+    watch: createSessionWorkWatcher(sources),
   };
 }
 
-type Readers = { deps: SessionWorkSources; calls: OperationCalls };
-
 function readWork(
-  { deps, calls }: Readers,
+  sources: SessionHandlerSources,
   work: SessionWork,
 ): SessionWorkRead {
-  const { kind, sessionId } = work;
+  if (work.kind === 'call') return readCall(sources, work);
 
-  if (work.kind === 'call')
-    return { kind: 'call', call: calls.read(sessionId, work.toolCallId) };
+  const { kind, sessionId, turnId } = work;
 
   if (kind === 'creation')
-    return {
-      kind,
-      creation: readSessionCreation(deps, sessionId, work.turnId),
-    };
+    return { kind, creation: readSessionCreation(sources, sessionId, turnId) };
 
-  return { kind: 'turn', ...readTurn(deps, sessionId, work.turnId) };
+  return { kind: 'turn', ...readTurn(sources, sessionId, turnId) };
 }
 
+const readCall = (
+  sources: SessionHandlerSources,
+  { sessionId, toolCallId }: Extract<SessionWork, { kind: 'call' }>,
+): SessionWorkRead => ({
+  kind: 'call',
+  call: readOperationCall(sources, sessionId, toolCallId),
+});
+
 function readTurn(
-  deps: SessionWorkSources,
+  sources: SessionHandlerSources,
   sessionId: string,
   turnId: string,
 ): TurnRead {
-  const turn = readSessionTurn(deps, sessionId, turnId);
+  const turn = readSessionTurn(sources, sessionId, turnId);
 
   const requiresInput =
     turn.status !== 'ended' &&
-    sessionTurnRequiresInput(deps, sessionId, turnId);
+    sessionTurnRequiresInput(sources.open, sessionId, turnId);
 
   return { turn, requiresInput };
 }

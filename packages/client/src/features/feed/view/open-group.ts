@@ -3,6 +3,7 @@ import {
   type SessionSnapshot,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { toolCallFacts } from './feed-row-facts';
 import {
   type FeedActivity,
   type FeedExploration,
@@ -13,7 +14,6 @@ import {
 } from './feed-view';
 import { groupTitle } from './group-title';
 import {
-  explorationActions,
   type GroupRow,
   joinsExploration,
   liveTitleFor,
@@ -23,9 +23,9 @@ import {
 
 function settleExploration(activity: FeedActivity): void {
   if (activity.type !== 'exploration') return;
-  activity.title = activity.toolCalls.some(isToolCallRunning)
-    ? 'Exploring'
-    : 'Explored';
+  activity.state = activity.toolCalls.some(isToolCallRunning)
+    ? 'open'
+    : 'settled';
 }
 
 type LiveCall = Extract<FeedGroup, { state: 'open' }>['live'];
@@ -77,7 +77,7 @@ export class OpenGroup {
     if (awaitingPermission) call.awaitingApproval = true;
     this.activities.push(call);
 
-    if (!explorationActions(row).length) this.exploration = undefined;
+    if (!toolCallFacts(row).explores) this.exploration = undefined;
   }
 
   private noteLiveCall(row: ToolCallUpdate, awaitingPermission: boolean): void {
@@ -101,7 +101,7 @@ export class OpenGroup {
       this.exploration = {
         type: 'exploration',
         id: row.id,
-        title: 'Explored',
+        state: 'settled',
         toolCalls: [],
       };
       this.activities.push(this.exploration);

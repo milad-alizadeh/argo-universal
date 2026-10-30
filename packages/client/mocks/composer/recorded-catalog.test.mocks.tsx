@@ -40,7 +40,7 @@ if (
 )
   throw new Error('Recorded catalog needs a model without effort.');
 
-export const [firstCatalog] = pickerCatalogs;
+const [firstCatalog] = pickerCatalogs;
 
 if (!firstCatalog) throw new Error(missingAvailableAgentFailure);
 

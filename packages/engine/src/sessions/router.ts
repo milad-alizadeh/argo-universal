@@ -19,15 +19,15 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
-import { agentOptionsUpdates } from './agent-options';
+import { agentOptionsUpdates } from './configuration';
 import type { SessionList } from './list/session-list';
-import type { SessionRouterDeps } from './router-deps';
+import type { OpenSessions } from './open-sessions';
 import {
   answerSessionElicitation,
   answerSessionPermission,
 } from './session-answers';
-import { openSession } from './session-opening';
 import { markSessionSeen } from './session-seen';
+import type { SessionHandlerSources } from './session-sources';
 
 const createListUpdatesRouter = routerFactory((sessionList: SessionList) =>
   router({
@@ -53,53 +53,61 @@ const createCountsRouter = routerFactory((sessionList: SessionList) =>
   }),
 );
 
-const createSeenRouter = routerFactory((deps: SessionRouterDeps) =>
+const createSeenRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     markSeen: publicProcedure
       .input(SessionMarkSeenInput)
       .output(SessionMarkSeenOutput)
-      .mutation(({ input }) => markSessionSeen(deps, input)),
+      .mutation(({ input }) => markSessionSeen(sources, input)),
   }),
 );
 
-const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
+// Opens a Session, or waits for its open, without a Turn: Retry after a failed open never resends one.
+const openSession = async (
+  open: Pick<OpenSessions, 'ready'>,
+  { sessionId }: SessionOpenInput,
+): Promise<SessionOpenOutput> => {
+  await open.ready(sessionId, 'session.open');
+
+  return {};
+};
+
+const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     open: publicProcedure
       .input(SessionOpenInput)
       .output(SessionOpenOutput)
-      .mutation(({ input }) => openSession(deps, input)),
+      .mutation(({ input }) => openSession(sources.open, input)),
     agentOptions: publicProcedure
       .input(SessionAgentOptionsInput)
       .output(zAsyncIterable({ yield: AgentOptionsUpdate }))
       .subscription(({ input, signal }) =>
-        agentOptionsUpdates(deps, input, signal),
+        agentOptionsUpdates(sources, input, signal),
       ),
   }),
 );
 
-const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
+const createAnswerRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     answerPermission: publicProcedure
       .input(SessionAnswerPermissionInput)
       .output(SessionAnswerPermissionOutput)
-      .mutation(({ input }) => answerSessionPermission(deps, input)),
+      .mutation(({ input }) => answerSessionPermission(sources, input)),
     answerElicitation: publicProcedure
       .input(SessionAnswerElicitationInput)
       .output(SessionAnswerElicitationOutput)
-      .mutation(({ input }) => answerSessionElicitation(deps, input)),
+      .mutation(({ input }) => answerSessionElicitation(sources, input)),
   }),
 );
 
+// The Session procedures that are not Operations: the list's updates, seen marks, opening and answers.
 export const createSessionRouter = routerFactory(
-  (deps: SessionRouterDeps & { sessionList: SessionList }) => {
-    const { sessionList } = deps;
-
-    return mergeRouters(
-      createListUpdatesRouter(sessionList),
-      createCountsRouter(sessionList),
-      createSeenRouter(deps),
-      createStartRouter(deps),
-      createAnswerRouter(deps),
-    );
-  },
+  ({ sources, list }: { sources: SessionHandlerSources; list: SessionList }) =>
+    mergeRouters(
+      createListUpdatesRouter(list),
+      createCountsRouter(list),
+      createSeenRouter(sources),
+      createStartRouter(sources),
+      createAnswerRouter(sources),
+    ),
 );

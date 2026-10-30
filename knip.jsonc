@@ -2,7 +2,20 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   // Vendored anti-slop keeps upstream's files whole, including the Effect rules Argo does not register.
   "ignore": ["**/*.gen.*", "tooling/oxlint/anti-slop/**"],
+  // These aliases give the same value two domain names used by consumers.
+  "ignoreIssues": {
+    // Kept for the planned form controls.
+    "packages/kit/src/form-focus.tsx": ["exports"],
+    "packages/contracts/src/plugins/accounts.ts": ["duplicates"],
+    "packages/engine/src/agents/acp/connection/draft-subagent-fixtures.ts": [
+      "duplicates"
+    ]
+  },
   "workspaces": {
+    ".": {
+      // The Expo UI skill invokes this script directly by path.
+      "entry": [".agents/skills/expo-ui/scripts/list-components.js"]
+    },
     "packages/client": {
       // Metro selects platform modules by filename rather than by a literal import.
       "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
@@ -25,15 +38,27 @@
       // A shell builtin in the dev and start scripts, not an npm binary.
       "ignoreBinaries": ["unset"]
     },
+    "packages/process": {
+      // The lifecycle tests launch these by path.
+      "entry": ["mocks/child-fixture.mjs", "mocks/parent-fixture.ts"]
+    },
     "apps/server": {
       // The Supervisor and E2E launch these Engine entries by path in a separate process.
-      "entry": ["src/engine/main.ts", "mocks/e2e-engine.ts"]
+      "entry": [
+        "src/engine/main.ts",
+        "mocks/e2e-engine.ts",
+        "mocks/e2e-supervisor.ts"
+      ]
     },
     "packages/engine": {
       // The OS supplies computer-name lookup and bzip2 archive compression.
       "ignoreBinaries": ["scutil", "bzip2"],
-      // `tools/record-user-messages.mts` runs this recorder by path.
-      "entry": ["mocks/user-message-recording.ts"]
+      // The recorder runs by path; plugin fixtures are loaded by manifest or fixture name.
+      "entry": [
+        "mocks/user-message-recording.ts",
+        "mocks/plugin-runtime/*.{js,mjs,cjs}",
+        "mocks/plugins/first-party/*/index.js"
+      ]
     },
     "packages/plugin-kit": {
       // The `argo-plugin` bin runs this entry by path through tsx.
@@ -43,6 +68,10 @@
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
         "@expo/ui",
+        "@expo/material-symbols",
+        "burnt",
+        "expo-asset",
+        "expo-document-picker",
         "expo-audio",
         "expo-clipboard",
         "expo-file-system",
@@ -58,28 +87,34 @@
       "entry": ["plugins/*.mjs"]
     },
     "apps/storybook": {
+      // The story render checker selects this Vitest config by path.
+      "entry": ["vitest.renders.config.ts"],
       // Peers of @repo/kit's primitives, listed here so the Storybook Vite build resolves them.
       // @repo/kit is listed so Turborepo hashes the kit into the Storybook tasks; its stories reach the build through the stories globs, not an import.
       "ignoreDependencies": [
         "@repo/kit",
+        "expo",
         "react-native-gesture-handler",
         "react-native-safe-area-context",
         "react-native-svg"
       ]
     },
     "e2e": {
-      // playwright-bdd discovers step definitions through the config's steps glob.
-      "entry": ["steps/**/*.ts"],
+      // playwright-bdd discovers steps by glob; the E2E Server loads Plugins by manifest.
+      "entry": ["steps/**/*.ts", "mocks/plugins/*/*.js"],
       // Listed so Turborepo hashes the Server, App, and Desktop into the e2e tasks; the specs reach them over HTTP and Electron, not imports.
       "ignoreDependencies": [
         "@repo/desktop",
         "@repo/server",
-        "@repo/universal-app"
+        "@repo/universal-app",
+        // The Engine bundle marks these external and resolves them from E2E.
+        "esbuild",
+        "node-pty"
       ]
     },
     "tools": {
       // Each script runs by path from a package script, a hook config or by hand; `pnpm perf` runs the perf suites.
-      "entry": ["*.{mts,mjs}", "perf/*.perf.mts"]
+      "entry": ["*.{mts,mjs}", "perf/*.perf.mts", "storybook-sync-port.d.ts"]
     }
   }
 }

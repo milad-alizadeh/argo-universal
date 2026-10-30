@@ -1,12 +1,20 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
-import { project, session } from '@repo/db/schema';
+import { session } from '@repo/db/schema';
+import { resolveExecutable } from '@repo/executables';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { projectPathFor } from './empty-session.test.mocks';
+
+type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
+
+const openingWorktree = (openings: NewSessionRequest[]): string | undefined =>
+  openings[0]?.cwd;
 
 const prompt = [{ type: 'text' as const, text: 'Fix the build' }];
 
@@ -49,16 +57,17 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       },
     });
     await feed.return?.();
-    expect(host.agent.processes[0]?.terminations).toBe(0);
+    const process = requireScriptedProcessAt(host.agent.processes);
+    expect(process.terminations).toBe(0);
     expect(
       await host.caller.session.close({ sessionId: created.sessionId }),
     ).toEqual({});
-    expect(host.agent.processes[0]?.terminations).toBe(1);
+    expect(process.terminations).toBe(1);
   },
 );
 
 const startWorktreeSession = async (): Promise<{
-  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  host: AcpEngine;
   sessionId: string;
   worktree: string;
   readBranches: () => string;
@@ -73,13 +82,8 @@ const startWorktreeSession = async (): Promise<{
 
   const { sessionId } = await host.caller.session.new(worktreeInput);
 
-  const projectPath = host.database
-    .select({ path: project.path })
-    .from(project)
-    .where(eq(project.id, emptySessionInput.projectId))
-    .get()?.path;
-
-  const worktree = openings[0]?.cwd;
+  const projectPath = projectPathFor(host);
+  const worktree = openingWorktree(openings);
 
   if (!projectPath || !worktree)
     throw new Error('The worktree Session did not open in a worktree');
@@ -90,7 +94,7 @@ const startWorktreeSession = async (): Promise<{
     worktree,
     readBranches: () =>
       execFileSync(
-        'git',
+        resolveExecutable('git'),
         [
           '-C',
           projectPath,

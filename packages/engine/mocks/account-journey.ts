@@ -24,36 +24,63 @@ export async function borrow(
   options: BorrowOptions = {},
 ): Promise<BorrowJourney> {
   await registeredProject();
+  const setup = await borrowSetup(expression, options);
+  const { host } = setup;
+
+  await prepareProvider(host, prepare);
+  const projectId = await borrowProject(host);
+  await openBorrower(host, projectId);
+
+  return finishBorrow(setup, projectId);
+}
+
+type BorrowSetup = {
+  host: EngineHost;
+  plugins: Awaited<ReturnType<typeof accountPlugins>>;
+  network: Awaited<ReturnType<typeof accountNetwork>>;
+  keychain: MemoryKeychain;
+};
+
+const borrowSetup = async (
+  expression: string,
+  options: BorrowOptions,
+): Promise<BorrowSetup> => {
   const plugins = await accountPlugins(expression);
   const network = await accountNetwork();
-
   const keychain = options.keychain ?? new MemoryKeychain();
 
   const host = await startEngineTestHost({
     home: plugins.home,
     pluginNetwork: network.pluginNetwork,
     keychain,
-    pluginClock: options.clock ?? new PluginTestClock(0),
+    pluginClock: borrowClock(options),
   });
 
-  await prepareProvider(host, prepare);
-  const projectId = await borrowProject(host);
-  await openBorrower(host, projectId);
+  return { host, plugins, network, keychain };
+};
+
+const finishBorrow = async (
+  setup: BorrowSetup,
+  projectId: string,
+): Promise<BorrowJourney> => ({
+  ...setup.plugins,
+  ...setup.network,
+  ...setup.host,
+  keychain: setup.keychain,
+  result: await borrowResult(setup.plugins.borrowerData),
+  projectId,
+});
+
+const borrowClock = (options: BorrowOptions): PluginClock =>
+  options.clock ?? new PluginTestClock(0);
+
+const borrowResult = async (data: string): Promise<BorrowJourney['result']> => {
   await expect
-    .poll(() => probeResult(plugins.borrowerData).catch(() => null), {
-      timeout: 10_000,
-    })
+    .poll(() => probeResult(data).catch(() => null), { timeout: 10_000 })
     .not.toBeNull();
 
-  return {
-    ...plugins,
-    ...network,
-    ...host,
-    keychain,
-    result: await probeResult(plugins.borrowerData),
-    projectId,
-  };
-}
+  return probeResult(data);
+};
 
 async function borrowProject(host: EngineHost): Promise<string> {
   const [project] = await host.caller.project.list();

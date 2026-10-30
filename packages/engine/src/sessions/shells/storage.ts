@@ -1,15 +1,16 @@
 import type { ShellRecord } from '@repo/contracts';
 import { blob, blobRef, shell } from '@repo/db/schema';
 import type { StorageTransaction, WriterJob } from '../../storage';
+import type { AnnouncedJob, WriterChange } from '../writer-changes';
 import { writeShellBlob, type ShellOutputBlob } from './output-blob';
 
-export class ShellWriteJob implements WriterJob {
+export class ShellWriteJob implements WriterJob, AnnouncedJob {
   public constructor(
     private readonly record: ShellRecord,
     private readonly output?: ShellOutputBlob,
   ) {}
-  public changedSessionIds(): string[] {
-    return [this.record.sessionId];
+  public announcedChange(): WriterChange {
+    return { sessionIds: [this.record.sessionId], turnIds: [] };
   }
   public describe(): string {
     return `store Shell ${this.record.sessionId}/${this.record.id}`;

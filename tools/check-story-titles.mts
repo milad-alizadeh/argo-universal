@@ -1,19 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { loadStoryFiles } from './story-files.mts';
 import {
   duplicateTitleProblems,
   presentationTitles,
-  type StoryFile,
   storyTitleProblems,
 } from './story-title-rules.mts';
-import { root, trackedFiles } from './tracked-files.mts';
 
-const files = trackedFiles(['*.stories.tsx'], { untracked: true });
-
-const stories: StoryFile[] = files.map((file): StoryFile => ({
-  file,
-  source: readFileSync(resolve(root, file), 'utf8'),
-}));
+const stories = loadStoryFiles();
 
 // A test file's title mirrors its subject's, so every presentation title is read before any is checked.
 const titles = presentationTitles(stories);
@@ -28,7 +20,7 @@ const problems = [
 for (const problem of problems) console.error(problem);
 
 console.log(
-  `check-story-titles: ${files.length} files, ${problems.length} problems`,
+  `check-story-titles: ${stories.length} files, ${problems.length} problems`,
 );
 
 process.exit(problems.length > 0 ? 1 : 0);

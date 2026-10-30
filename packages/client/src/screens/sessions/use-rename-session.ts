@@ -13,7 +13,7 @@ import { type ClientError, useTRPC } from '#features/connection';
 import type { RenameSessionDialogProps } from '#features/sessions';
 
 // What the rename dialog says when the Server refuses the new title or cannot be reached.
-export const renameFailedMessage = 'Couldn’t rename the Session. Try again.';
+const renameFailedMessage = 'Couldn’t rename the Session. Try again.';
 
 type RenameMutation = UseMutationResult<
   SessionRenameOutput,

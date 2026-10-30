@@ -1,36 +1,89 @@
-import { fork, type Serializable } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { EngineMessage } from '@repo/engine/ipc';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { releaseShellGroups } from '@repo/engine/shell-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
+import {
+  type ChildHandle,
+  type ChildMessage,
+  type GroupRelease,
+  once,
+  startChild,
+} from '@repo/process';
 import { fromCallback } from 'xstate';
 import {
   type EngineCommand,
   type EngineEvent,
   WatchModeMessage,
 } from './engine-message';
-import { releaseProcessGroup, supportsProcessGroups } from './process-group';
 
 const engineEntry = fileURLToPath(
   new URL('../engine/main.ts', import.meta.url),
 );
 
+// The Engine's HTTP close, Session stop and writer drain limits, plus five seconds; past this its group is killed.
+const engineStopGraceMs = 25_000;
+
 export interface EngineProcessInput {
   watch: boolean;
-  // Tests fork a stand-in Engine and shorten the kill timeout.
+  // Tests start a stand-in Engine and shorten the kill timeout.
   entry?: string;
   killTimeoutMs?: number;
 }
 
-// Allow the Engine's HTTP close, Session stop, and writer drain limits, plus five seconds.
-export const defaultKillTimeoutMs = 25_000;
+type Send = (event: EngineEvent) => void;
 
-const releaseEngineGroups = async (
-  pid: number,
-  home: string,
-): Promise<'released' | 'unresolved'> => {
-  if ((await releaseProcessGroup(pid)) !== 'released') return 'unresolved';
+// Where the Engine recorded its Shells, and how long it gets to stop before its group is killed.
+type ReleaseLimits = { home: string; graceMs: number };
+
+// Starts the Engine as a process group leader, and releases it with every Agent and Shell it launched.
+export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
+  ({ input, sendBack, receive }): (() => void) => {
+    const engine = startEngine(input);
+
+    const release = once((): Promise<GroupRelease> =>
+      releaseEngine(engine, releaseLimits(input)),
+    );
+
+    const detach = watchEngine(engine, sendBack);
+
+    receive(
+      (): void =>
+        void release().then((outcome): void => reportExit(sendBack, outcome)),
+    );
+
+    return (): void => {
+      detach();
+      void release();
+    };
+  },
+);
+
+const startEngine = (input: EngineProcessInput): ChildHandle =>
+  startChild(
+    {
+      label: 'Engine',
+      entry: input.entry ?? engineEntry,
+      execArgv: [
+        '--import',
+        import.meta.resolve('tsx'),
+        ...(input.watch ? ['--watch'] : []),
+      ],
+    },
+    { messages: true },
+  );
+
+const releaseLimits = (input: EngineProcessInput): ReleaseLimits => ({
+  home: resolveRuntimeDirectory(),
+  graceMs: input.killTimeoutMs ?? engineStopGraceMs,
+});
+
+// The Engine's group goes first, then its recorded Shell groups; the callback releases once for every caller, since two would race on Shell records.
+const releaseEngine = async (
+  engine: ChildHandle,
+  { home, graceMs }: ReleaseLimits,
+): Promise<GroupRelease> => {
+  if ((await engine.stop(graceMs)) !== 'released') return 'unresolved';
 
   try {
     await releaseShellGroups(home);
@@ -41,94 +94,44 @@ const releaseEngineGroups = async (
   }
 };
 
-// Forks the Engine under tsx as the leader of its own process group, so the Engine and every Agent it launched can be released together; in watch mode Node restarts it on a file change and relays its IPC messages.
-export const engineProcess = fromCallback<EngineCommand, EngineProcessInput>(
-  ({ input, sendBack, receive }): (() => void) => {
-    const home = resolveRuntimeDirectory();
-    const send = (event: EngineEvent): void => sendBack(event);
+const reportExit = (send: Send, outcome: GroupRelease): void =>
+  send({
+    type: outcome === 'released' ? 'engine.exited' : 'engine.unresolved',
+  });
 
-    const child = fork(input.entry ?? engineEntry, [], {
-      detached: supportsProcessGroups,
-      execArgv: [
-        '--import',
-        import.meta.resolve('tsx'),
-        ...(input.watch ? ['--watch'] : []),
-      ],
-    });
+const watchEngine = (engine: ChildHandle, send: Send): (() => void) => {
+  let watching = true;
+  const stopListening = engine.onMessage(messageReceiver(send));
 
-    const rejections = createRejectionCounter('supervisor');
+  void engine.exited.then((exit): void => {
+    if (watching) send({ type: 'engine.exit', code: exit.code });
+  });
 
-    const onMessage = (raw: Serializable): void => {
-      const message = EngineMessage.safeParse(raw);
+  return (): void => {
+    watching = false;
+    stopListening();
+  };
+};
 
-      if (message.success) {
-        if (message.data.type === 'ready')
-          send({ type: 'engine.ready', port: message.data.port });
-        else send({ type: 'engine.heartbeat' });
+const messageReceiver = (send: Send): ((raw: ChildMessage) => void) => {
+  const rejections = createRejectionCounter('supervisor');
 
-        return;
-      }
+  return (raw: ChildMessage): void => {
+    const message = EngineMessage.safeParse(raw);
 
-      if (WatchModeMessage.safeParse(raw).success) return;
-      rejections.report('unrecognised engine message', message.error.issues);
-    };
+    if (message.success) return relayMessage(send, message.data);
 
-    const onExit = (code: number | null): void =>
-      send({ type: 'engine.exit', code });
+    if (WatchModeMessage.safeParse(raw).success) return;
 
-    const hasExited = (): boolean =>
-      child.exitCode !== null || child.signalCode !== null;
+    rejections.report('unrecognised engine message', message.error.issues);
+  };
+};
 
-    const exited = new Promise<void>((resolve): void => {
-      if (hasExited()) resolve();
-      else child.once('exit', (): void => resolve());
-    });
-
-    // Without a pid nothing was spawned, so no group exists. The kill timer and the Engine's exit both release; they share one run, because two at once race over the same Shell records.
-    let releasing: Promise<'released' | 'unresolved'> | undefined;
-
-    const release = (): Promise<'released' | 'unresolved'> => {
-      if (child.pid === undefined) return Promise.resolve('released');
-
-      releasing ??= releaseEngineGroups(child.pid, home).finally((): void => {
-        releasing = undefined;
-      });
-
-      return releasing;
-    };
-
-    // Asks the Engine to stop, kills its group after the timeout, then proves the whole group is gone.
-    const terminate = async (): Promise<'released' | 'unresolved'> => {
-      if (!hasExited()) {
-        child.kill('SIGTERM');
-
-        const forceKill = setTimeout(
-          (): void => void release(),
-          input.killTimeoutMs ?? defaultKillTimeoutMs,
-        );
-
-        await exited;
-        clearTimeout(forceKill);
-      }
-
-      return release();
-    };
-
-    child.on('message', onMessage);
-    child.on('exit', onExit);
-    receive((): void => {
-      void terminate().then((outcome): void =>
-        send({
-          type: outcome === 'released' ? 'engine.exited' : 'engine.unresolved',
-        }),
-      );
-    });
-
-    return (): void => {
-      child.off('message', onMessage);
-      child.off('exit', onExit);
-      // The Supervisor is going away; take the whole group down with the Engine.
-      void terminate();
-    };
-  },
-);
+const relayMessage = (
+  send: Send,
+  message: typeof EngineMessage._output,
+): void => {
+  if (message.type === 'ready')
+    send({ type: 'engine.ready', port: message.port });
+  else send({ type: 'engine.heartbeat' });
+};

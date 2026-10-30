@@ -1,7 +1,8 @@
 import path from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { startOwnServer } from '../../e2e/own-server.ts';
+import { startOwnServer } from '@repo/e2e/own-server';
+import type { GroupRelease } from '@repo/process';
 import { writeBatches } from './seed-batches.mts';
 import {
   datasetCounts,
@@ -31,7 +32,7 @@ export interface SeededServer extends SeedCounts {
   shortSessionTitle: string;
   sessionCount: number;
   requested: SeedConfiguration;
-  stop: () => Promise<void>;
+  stop: () => Promise<GroupRelease>;
 }
 
 const feedCopies = 14;

@@ -37,7 +37,6 @@
         "packages/client/src/features/requests/components/request-card/request-heading.tsx",
         "packages/client/src/features/requests/components/request-card/request-status.tsx",
         "packages/client/src/features/sessions/components/pull-request-checks.tsx",
-        "packages/client/src/features/sessions/components/session-pull-request.tsx",
         "packages/client/src/screens/onboarding/onboarding-view.tsx",
         "packages/client/src/screens/onboarding/setup-step.tsx"
       ],

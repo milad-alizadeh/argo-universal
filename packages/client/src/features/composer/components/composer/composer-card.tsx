@@ -22,7 +22,7 @@ const cardGlass = {
   className: 'w-full z-10',
 } as const;
 
-export function ComposerCard(layout: CardLayout): React.JSX.Element {
+function ComposerCard(layout: CardLayout): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass}>
       <ComposerAttachments {...layout} />

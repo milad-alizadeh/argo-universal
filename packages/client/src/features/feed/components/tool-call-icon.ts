@@ -1,5 +1,6 @@
-import { knownCommandActions, type ToolCallUpdate } from '@repo/contracts';
+import type { ToolCallUpdate } from '@repo/contracts';
 import type { IconName } from '@repo/kit/symbols/icon-names';
+import { toolCallFacts } from '../view/feed-row-facts';
 
 const categoryIcons = new Map<string, IconName>([
   ['read', 'read'],
@@ -13,7 +14,7 @@ const categoryIcons = new Map<string, IconName>([
 ]);
 
 const toolCallCategory = (row: ToolCallUpdate): string =>
-  knownCommandActions(row)[0]?.type ?? row.kind;
+  toolCallFacts(row).actions[0]?.type ?? row.kind;
 
 export function toolCallIcon(row: ToolCallUpdate): IconName {
   return categoryIcons.get(toolCallCategory(row)) ?? 'tool';

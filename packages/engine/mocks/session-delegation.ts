@@ -14,32 +14,41 @@ import {
   sessionIdentityStep,
 } from './session-access';
 
+type DelegationOptions = {
+  requests?: PromptRequest[];
+  installPlugins?: NonNullable<
+    Parameters<typeof startAcpEngine>[0]
+  >['installPlugins'];
+};
+
 export async function delegationJourney(
-  options: {
-    requests?: PromptRequest[];
-    installPlugins?: NonNullable<
-      Parameters<typeof startAcpEngine>[0]
-    >['installPlugins'];
-  } = {},
+  options: DelegationOptions = {},
 ): Promise<DelegationJourney> {
   const outputs: TerminalOutputResponse[] = [];
   const firstTurnSteps: ScriptedStep[] = [sessionIdentityStep(outputs)];
 
-  const host = await startAcpEngine({
-    steps: [],
-    installPlugins: options.installPlugins,
-    responses: {
-      'session/prompt': [
-        { steps: firstTurnSteps, requests: options.requests },
-        { steps: [{ type: 'wait-for-cancel' }], requests: options.requests },
-      ],
-    },
-  });
+  const host = await startAcpEngine(
+    delegationScenario(options, firstTurnSteps),
+  );
 
   const caller = await openAccessSession({ host, outputs }, 'Caller');
 
   return { host, outputs, caller, firstTurnSteps };
 }
+
+const delegationScenario = (
+  options: DelegationOptions,
+  firstTurnSteps: ScriptedStep[],
+): NonNullable<Parameters<typeof startAcpEngine>[0]> => ({
+  steps: [],
+  installPlugins: options.installPlugins,
+  responses: {
+    'session/prompt': [
+      { steps: firstTurnSteps, requests: options.requests },
+      { steps: [{ type: 'wait-for-cancel' }], requests: options.requests },
+    ],
+  },
+});
 
 export type DelegationJourney = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
@@ -52,7 +61,22 @@ export async function startDelegated(
   journey: DelegationJourney,
   caller = journey.caller,
 ): Promise<DelegationJourney['caller']> {
-  const created = SessionNewOutput.parse(
+  const created = await startDelegatedSession(caller);
+
+  await waitForAcpSessionIdle(journey.host, created.sessionId);
+  const identity = readAgentIdentity(journey.outputs);
+
+  return {
+    ...created,
+    ...identity,
+    caller: await operationCaller(journey.host, identity.token),
+  };
+}
+
+const startDelegatedSession = async (
+  caller: DelegationJourney['caller'],
+): Promise<ReturnType<typeof SessionNewOutput.parse>> =>
+  SessionNewOutput.parse(
     OperationExecution.parse(
       await runOperation(caller.caller.operations, {
         wait: true,
@@ -64,16 +88,6 @@ export async function startDelegated(
       }),
     ).result,
   );
-
-  await waitForAcpSessionIdle(journey.host, created.sessionId);
-  const identity = readAgentIdentity(journey.outputs);
-
-  return {
-    ...created,
-    ...identity,
-    caller: await operationCaller(journey.host, identity.token),
-  };
-}
 
 export async function holdSession(
   journey: DelegationJourney,

@@ -28,7 +28,7 @@ async function forwardedAnswer(
     : null;
 }
 
-export type RenderedReplacement = { pluginId: string; path: string };
+type RenderedReplacement = { pluginId: string; path: string };
 
 // A tree a Hook answered with in this chain, and the Hook that answered it.
 export type RetainedReplacement = RenderedReplacement & {

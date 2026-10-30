@@ -1,155 +1,21 @@
-import { spawnSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-
-const scratchSourceFile = 'scratch.ts';
-
-const afterEditHook = 'after-edit';
-
-const invalidJsonFile = 'crooked.json';
-
-const beforeStopHook = 'before-stop';
-
-const blockedSourceFile = 'blocked.ts';
-
-const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-
-const BLOCKED = 2;
-
-const hookScripts = [
-  'agent-hooks.mts',
-  'agent-hook-run.mts',
-  'hook-checks.mts',
-];
-
-const anyViolation = 'export const value: any = 1;\n';
-
-const explicitAnyRule = 'no-explicit-any';
-
-const unformattedJson = '{"a":1}\n';
-
-let root: string;
-
-function git(...args: string[]): void {
-  spawnSync('git', args, { cwd: root, encoding: 'utf8' });
-}
-
-// A recorded hook input: an Edit or Write call carries file_path; an apply_patch call carries a command.
-type RecordedInput = {
-  cwd?: string;
-  tool_name?: string;
-  stop_hook_active?: boolean;
-  tool_input?: { file_path?: string; command?: string | string[] };
-};
-
-// What a test pipes to a hook: a recorded input, or input the hook must skip.
-type HookStdin = RecordedInput | [] | string;
-
-type HookRun = { status: number | null; stderr: string; stdout: string };
-
-function runHook(command: string, input: HookStdin): HookRun {
-  const stdin = typeof input === 'string' ? input : JSON.stringify(input);
-
-  const result = spawnSync(
-    'node',
-    [path.join(root, 'tools/agent-hooks.mts'), command],
-    {
-      cwd: root,
-      input: stdin,
-      encoding: 'utf8',
-    },
-  );
-
-  return {
-    status: result.status,
-    stderr: result.stderr,
-    stdout: result.stdout,
-  };
-}
-
-const fileEdit = (file: string): RecordedInput => ({
-  cwd: root,
-  tool_name: 'Edit',
-  tool_input: { file_path: file },
-});
-
-const patchEdit = (file: string): RecordedInput => ({
-  cwd: root,
-  tool_name: 'apply_patch',
-  tool_input: {
-    command: `*** Begin Patch\n*** Update File: ${file}\n@@\n-a\n+b\n*** End Patch`,
-  },
-});
-
-const patchArray = (file: string): RecordedInput => ({
-  cwd: root,
-  tool_name: 'apply_patch',
-  tool_input: {
-    command: [
-      'apply_patch',
-      `*** Begin Patch\n*** Add File: ${file}\n+x\n*** End Patch`,
-    ],
-  },
-});
-
-beforeAll((): void => {
-  root = mkdtempSync(path.join(tmpdir(), 'agent-hooks-'));
-  mkdirSync(path.join(root, 'tools'));
-
-  for (const script of hookScripts)
-    cpSync(
-      path.join(repositoryRoot, 'tools', script),
-      path.join(root, 'tools', script),
-    );
-  symlinkSync(
-    path.join(repositoryRoot, 'tools/node_modules'),
-    path.join(root, 'tools/node_modules'),
-  );
-  symlinkSync(
-    path.join(repositoryRoot, 'node_modules'),
-    path.join(root, 'node_modules'),
-  );
-  writeFileSync(path.join(root, 'package.json'), '{"type":"module"}\n');
-  writeFileSync(
-    path.join(root, '.oxlintrc.json'),
-    JSON.stringify({
-      options: { reportUnusedDisableDirectives: 'error' },
-      rules: {
-        'typescript/no-explicit-any': 'error',
-        'no-console': 'warn',
-        'no-unused-vars': 'error',
-      },
-    }),
-  );
-  writeFileSync(path.join(root, '.oxfmtrc.json'), '{ "singleQuote": true }\n');
-  writeFileSync(path.join(root, scratchSourceFile), anyViolation);
-  writeFileSync(path.join(root, 'clean.ts'), 'export const value = 1;\n');
-  writeFileSync(
-    path.join(root, 'unused.ts'),
-    "import { a } from './clean.ts';\n",
-  );
-  git('init', '-q');
-  git('config', 'user.email', 'test@example.com');
-  git('config', 'user.name', 'test');
-  writeFileSync(path.join(root, '.gitignore'), 'node_modules\n');
-  git('add', '.');
-  git('commit', '-q', '-m', 'base');
-});
-
-afterAll((): void => {
-  rmSync(root, { recursive: true, force: true });
-});
+import { describe, expect, it } from 'vitest';
+import {
+  afterEditHook,
+  anyViolation,
+  BLOCKED,
+  explicitAnyRule,
+  fileEdit,
+  invalidJsonFile,
+  patchArray,
+  patchEdit,
+  type RecordedInput,
+  root,
+  runHook,
+  scratchSourceFile,
+  unformattedJson,
+} from './agent-hooks.mocks';
 
 describe('after-edit', (): void => {
   it.each([
@@ -241,76 +107,5 @@ describe('after-edit', (): void => {
 
   it('skips input that is not JSON', (): void => {
     expect(runHook(afterEditHook, 'not json').status).toBe(0);
-  });
-});
-
-describe('a Checkout without dependencies', (): void => {
-  it('passes quietly, as there is nothing to check with', (): void => {
-    const bare = mkdtempSync(path.join(tmpdir(), 'agent-hooks-bare-'));
-    mkdirSync(path.join(bare, 'tools'));
-
-    for (const script of hookScripts)
-      cpSync(
-        path.join(repositoryRoot, 'tools', script),
-        path.join(bare, 'tools', script),
-      );
-    writeFileSync(path.join(bare, blockedSourceFile), anyViolation);
-
-    const result = spawnSync(
-      'node',
-      [path.join(bare, 'tools/agent-hooks.mts'), beforeStopHook],
-      { cwd: bare, input: '{}', encoding: 'utf8' },
-    );
-
-    rmSync(bare, { recursive: true, force: true });
-    expect(result.status).toBe(0);
-    expect(result.stderr).toBe('');
-  });
-});
-
-describe('command', (): void => {
-  it('rejects an unknown command with a usage line', (): void => {
-    const result = runHook('nonsense', {});
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain('usage');
-  });
-});
-
-describe('before-stop', (): void => {
-  it('exits at once when stop_hook_active is set', (): void => {
-    writeFileSync(path.join(root, blockedSourceFile), anyViolation);
-    expect(runHook(beforeStopHook, { stop_hook_active: true }).status).toBe(0);
-  });
-
-  it('blocks on a finding in a changed file, and a second stop passes', (): void => {
-    const first = runHook(beforeStopHook, {
-      cwd: root,
-      stop_hook_active: false,
-    });
-
-    expect(first.status).toBe(BLOCKED);
-    expect(first.stderr).toContain(blockedSourceFile);
-    expect(
-      runHook(beforeStopHook, { cwd: root, stop_hook_active: true }).status,
-    ).toBe(0);
-  });
-
-  it('formats changed files', (): void => {
-    rmSync(path.join(root, blockedSourceFile));
-    rmSync(path.join(root, scratchSourceFile));
-    rmSync(path.join(root, 'added.ts'));
-    rmSync(path.join(root, 'unused.ts'));
-    const result = runHook(beforeStopHook, { cwd: root });
-    expect(result.status).toBe(0);
-    expect(readFileSync(path.join(root, invalidJsonFile), 'utf8')).toBe(
-      '{ "a": 1 }\n',
-    );
-  });
-
-  it('exits at once when no checked file changed', (): void => {
-    git('add', '.');
-    git('commit', '-q', '-m', 'second');
-    writeFileSync(path.join(root, 'notes.md'), 'notes\n');
-    expect(runHook(beforeStopHook, { cwd: root }).status).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import type { UserMessage } from '@repo/contracts';
+import type { SessionUpdate, UserMessage } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
@@ -39,20 +39,29 @@ const recordPrompt = async (
 
   await waitForAcpSessionIdle(host, created.sessionId);
 
+  return readRecordedPrompt(host, created.sessionId, agent);
+};
+
+const readRecordedPrompt = async (
+  host: Awaited<ReturnType<typeof startAcpEngine>>,
+  sessionId: string,
+  agent: string,
+): Promise<UserMessage> => {
   const page = await host.caller.feed.page({
-    sessionId: created.sessionId,
+    sessionId: sessionId,
     direction: 'tail',
     limit: 200,
   });
 
-  const row = page.rows.find(
-    (row): row is UserMessage => row.sessionUpdate === 'user_message',
-  );
+  const row = page.rows.find(isUserMessage);
 
   if (!row) throw new Error(`No user message stored for ${agent}`);
 
   return row;
 };
+
+const isUserMessage = (row: SessionUpdate): row is UserMessage =>
+  row.sessionUpdate === 'user_message';
 
 it('records the markdown prompt each Agent stores', async () => {
   const recordings = [];

@@ -8,7 +8,8 @@ import { openTestDatabase } from '#mocks/database';
 import { row } from '#mocks/feed-storage-input';
 import { writeJobs, writerMachine } from '../storage';
 import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
-import { FeedRowsJob, readQueuedFeed } from './feed-storage';
+import { FeedRowsJob } from './feed-rows-job';
+import { readQueuedFeed } from './feed-storage';
 
 let database: Database;
 

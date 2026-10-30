@@ -40,10 +40,15 @@ export class MemorySessionWork implements SessionWorkSource {
   public set(work: SessionWork, read: SessionWorkRead | Error): void {
     this.reads.set(key(work), read);
 
-    for (const listener of this.watchers.get(work.sessionId) ?? [])
-      listener.next?.();
+    notifyWatchers(this.watchers.get(work.sessionId));
   }
   public watching(sessionId: string): number {
     return this.watchers.get(sessionId)?.size ?? 0;
   }
 }
+
+const notifyWatchers = (watchers: Set<Observer<void>> | undefined): void => {
+  for (const watcher of watchers ?? []) notifyWatcher(watcher);
+};
+
+const notifyWatcher = (watcher: Observer<void>): void => watcher.next?.();
