@@ -8,6 +8,7 @@ import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import {
   useResubscribeOnFocus,
   createCoalescedRefetch,
+  refreshSessionList,
 } from '#features/sessions';
 
 type SessionListSubscription = TRPCSubscriptionResult<
@@ -22,9 +23,7 @@ function useSessionListRefetch(): () => void {
   return useMemo(
     () =>
       createCoalescedRefetch(() =>
-        queryClient.invalidateQueries(trpc.session.list.pathFilter(), {
-          cancelRefetch: false,
-        }),
+        refreshSessionList(queryClient, trpc.session.list.pathFilter()),
       ),
     [queryClient, trpc],
   );
