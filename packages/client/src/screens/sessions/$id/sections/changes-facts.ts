@@ -3,10 +3,21 @@ import type { SessionPullRequest } from '#features/sessions';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import type { SectionFacts } from './session-section';
 
-export const summaryOf = ({
+// The Checkout's totals as the Session's snapshot last carried them.
+const snapshotTotals = ({
   header,
 }: SessionInspectorContent): ChangesSummary | undefined =>
   header?.changes?.summary;
+
+/*
+ * The one reading of the Checkout every Changes surface summarises: the totals the Inspector loaded (ADR-0039). The
+ * snapshot's stand in only until that first read settles, because they follow the Feed rather than the Checkout and
+ * so lag it while a Turn runs (#1480).
+ */
+export const summaryOf = (
+  content: SessionInspectorContent,
+): ChangesSummary | undefined =>
+  content.changes?.summary ?? snapshotTotals(content);
 
 const changedFiles = (content: SessionInspectorContent): number =>
   summaryOf(content)?.files ?? 0;

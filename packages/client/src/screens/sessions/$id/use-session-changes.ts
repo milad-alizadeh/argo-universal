@@ -2,6 +2,7 @@ import type { SessionSnapshot } from '@repo/contracts';
 import { useMemo } from 'react';
 import {
   type ChangesRevision,
+  type ChangesSource,
   type ChangesViewProps,
   useChanges,
 } from '#features/changes';
@@ -16,6 +17,15 @@ type CheckoutSignals = {
   snapshot: SessionSnapshot | null;
   revision: number;
 };
+
+// A Session page and what its Changes are read from.
+export interface ChangedSession {
+  sessionId: string;
+  props: SessionDetailViewProps;
+  feed: CheckoutSignals;
+  // The Server, unless a story passes an in-memory stand-in.
+  source?: ChangesSource;
+}
 
 const changesHeader = (
   panels: SessionPanels,
@@ -40,29 +50,32 @@ interface OpenChanges {
 }
 
 function useOpenChanges(
-  sessionId: string,
+  { sessionId, feed, source }: ChangedSession,
   panels: SessionPanels,
-  feed: CheckoutSignals,
+  open: boolean,
 ): OpenChanges {
-  const header = changesHeader(panels, feed);
   const revision = useCheckoutRevision(feed);
 
   return {
-    header,
-    changes: useChanges({ sessionId, open: header.open, revision }),
+    header: changesHeader(panels, feed),
+    changes: useChanges({ sessionId, open, revision }, source),
   };
 }
 
-// The open Session's Changes, loaded while its Changes tab is shown.
+/*
+ * The open Session's Changes, loaded while its page is. Every Changes surface summarises this one reading of the
+ * Checkout (ADR-0039): the Workbench card and the Session's ⋯ menu as much as the Inspector, so the page loads them
+ * whether or not the Inspector's Changes tab is shown.
+ */
 export function useChangedSession(
-  sessionId: string,
-  props: SessionDetailViewProps,
-  feed: CheckoutSignals,
+  session: ChangedSession,
 ): SessionDetailViewProps {
-  const panels = useInspectorPanels(props.state === 'open' ? props : {});
-  const { header, changes } = useOpenChanges(sessionId, panels, feed);
+  const { props } = session;
+  const open = props.state === 'open';
+  const panels = useInspectorPanels(open ? props : {});
+  const { header, changes } = useOpenChanges(session, panels, open);
 
-  if (props.state !== 'open') return props;
+  if (!open) return props;
 
   return {
     ...props,
