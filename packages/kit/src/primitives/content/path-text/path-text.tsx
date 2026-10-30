@@ -100,10 +100,13 @@ function cutContent(
   );
 }
 
+// One accessible element named by the whole path, as the wide line is: the drawn folder and name are not read apart.
 function ScrollingLine({ path }: PathTextProps): React.JSX.Element {
   return (
     <ScrollFadeView
       horizontal
+      accessible
+      accessibilityLabel={path}
       showsHorizontalScrollIndicator={false}
       className="flex-1"
     >
