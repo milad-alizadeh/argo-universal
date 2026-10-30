@@ -412,6 +412,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
       },
       initial: 'active',
       on: {
+        // Try again in the App when the Server has gone: make sure a Supervisor runs again, exactly as at launch. One still listening is reused, never replaced.
+        'server.retry': { target: 'locating' },
         'counts.changed': {
           actions: [
             assign({ running: ({ event }): number => event.counts.running }),

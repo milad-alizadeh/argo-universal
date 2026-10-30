@@ -1,7 +1,11 @@
 import type { ServerAddress } from '@repo/contracts';
 import type { DelayEvent, Vertex } from '@repo/vitest/model-test';
 import type { ServerEvent } from './server-machine-model-events.mocks';
-import { type ServerSnapshot, staleAddress } from './server-machine.mocks';
+import {
+  retryServerEvent,
+  type ServerSnapshot,
+  staleAddress,
+} from './server-machine.mocks';
 
 // Never the address itself, only whose it is.
 export const vertex = (snapshot: ServerSnapshot): Vertex => ({
@@ -20,11 +24,13 @@ export const permitsStaleAddress = (
   !('output' in event && event.output === staleAddress) ||
   snapshot.matches({ starting: { answering: 'checking' } });
 
-// A walk with the polling loops gives thousands of simple paths, so the counts are left to the shortest ones.
-export const ignoresCounts = (
-  _: ServerSnapshot,
+// A walk with the polling loops gives thousands of simple paths, so the counts are left to the shortest ones. Try again from `ready` leads back to `locating`, and that cycle multiplies them again; the shortest paths still walk it.
+export const ignoresCountsAndRetryFromReady = (
+  snapshot: ServerSnapshot,
   event: ServerEvent | DelayEvent,
-): boolean => !event.type.startsWith('counts.');
+): boolean =>
+  !event.type.startsWith('counts.') &&
+  !(event.type === retryServerEvent && snapshot.matches('ready'));
 
 // Labels what an event carries, so its path reads without the data.
 const addressLabel = (value: { pid: number } | null | undefined): string => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { fixtures } from './server-machine-model-events.mocks';
 import { executors } from './server-machine-model-executors.mocks';
 import {
-  ignoresCounts,
+  ignoresCountsAndRetryFromReady,
   label,
   permitsStaleAddress,
   vertex,
@@ -24,7 +24,7 @@ const model = modelTest(
         name: 'simple path',
         search: 'simple',
         arrivals: false,
-        permits: ignoresCounts,
+        permits: ignoresCountsAndRetryFromReady,
       },
     ],
   },

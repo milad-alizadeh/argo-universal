@@ -1,5 +1,6 @@
 import { expect } from 'vitest';
 import {
+  failures,
   latest,
   readyAddresses,
   runningAddress,
@@ -33,13 +34,14 @@ export const always = (snapshot: ServerSnapshot): void => {
 
 export const states = {
   ready: (snapshot: ServerSnapshot): void => {
-    // `ready` hands its address to the main process once, never a stale one.
-    expect(readyAddresses).toEqual([snapshot.context.address]);
+    // Try again from `ready` leads back to it, so each entry hands the main process the address it holds, never a stale one.
+    expect(latest(readyAddresses)).toEqual(snapshot.context.address);
     expect(snapshot.context.address).not.toEqual(staleAddress);
   },
   failed: (snapshot: ServerSnapshot): void => {
     expect(snapshot.context.failure).not.toBeNull();
-    expect(readyAddresses).toEqual([]);
+    // A failure can now follow a Try again from `ready`, so each entry announces the failure it holds.
+    expect(latest(failures)).toBe(snapshot.context.failure);
   },
   abandoning: (): void => {
     expect(latest(stoppedPids)).toBe(startedAddress.pid);

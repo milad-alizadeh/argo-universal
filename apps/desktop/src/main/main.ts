@@ -11,6 +11,7 @@ import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
+import { handleServerRetry } from './server-retry';
 import { handleShareMenu } from './share-menu';
 import { handleSymbolImages } from './symbol-images';
 import { handleWindowBackground } from './window-background';
@@ -87,6 +88,10 @@ handleWindowBackground(windowOrigin);
 handleShareMenu(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
+
+handleServerRetry(windowOrigin, (): void =>
+  server.send({ type: 'server.retry' }),
+);
 
 let serverStarted = false;
 

@@ -10,6 +10,9 @@ import {
 import {
   checkRunningCalls,
   latest,
+  readAddressCalls,
+  readyAddresses,
+  reportSpawned,
   retryServerEvent,
   server,
   settle,
@@ -55,6 +58,37 @@ describe('server connection', (): void => {
 
     expect(value()).toBe('failed');
     expect(context().ownedPid).toBe(startedAddress.pid);
+    expect(spawnCalls).toHaveLength(1);
+  });
+
+  it('makes sure a Supervisor runs again when Try again follows a Server that died', async (): Promise<void> => {
+    await startSupervisor();
+    // The Supervisor was killed and took server.json with it.
+    server.send({ type: retryServerEvent });
+
+    expect(value()).toBe('locating');
+    await settle((): void => latest(readAddressCalls).resolve(null));
+    expect(value()).toEqual({ starting: 'spawning' });
+    // Nothing is left to stop, so Try again stops no one.
+    expect(stoppedPids).toEqual([]);
+
+    reportSpawned();
+    await vi.advanceTimersByTimeAsync(pollIntervalMs);
+    await settle((): void => latest(readAddressCalls).resolve(startedAddress));
+
+    expect(value()).toEqual({ ready: 'active' });
+    expect(readyAddresses).toEqual([startedAddress, startedAddress]);
+  });
+
+  it('reuses the Supervisor that is still listening when Try again arrives', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: retryServerEvent });
+    await settle((): void => latest(readAddressCalls).resolve(startedAddress));
+
+    expect(value()).toEqual({ ready: 'active' });
+    expect(stoppedPids).toEqual([]);
+    expect(context().ownedPid).toBe(startedAddress.pid);
+    // Only the launch spawned a Supervisor; Try again found the same one.
     expect(spawnCalls).toHaveLength(1);
   });
 
