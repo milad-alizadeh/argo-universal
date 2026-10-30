@@ -52,6 +52,5 @@ export function hasSectionHeader(props: ListSectionProps): boolean {
     props.trailing,
     hasActions(props.actions),
     props.onExpandedChange,
-    props.isLoading,
   ].some(Boolean);
 }

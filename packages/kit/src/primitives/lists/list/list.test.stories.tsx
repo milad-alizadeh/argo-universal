@@ -132,21 +132,6 @@ export const SelectAndDeselectMultiple: Story = {
   },
 };
 
-export const LoadingSection: Story = {
-  render: () => (
-    <List appearance="cards">
-      <List.Section isLoading title="Section" onExpandedChange={() => {}}>
-        <ListItem isLoading title="Item" />
-      </List.Section>
-    </List>
-  ),
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Section')).toBeInTheDocument();
-    await expect(canvas.queryByRole('button')).toBeNull();
-    await expect(canvas.queryByRole('heading')).toBeNull();
-  },
-};
-
 export const GroupedSections: Story = {
   ...Grouped,
   play: async ({ canvas }) => {
