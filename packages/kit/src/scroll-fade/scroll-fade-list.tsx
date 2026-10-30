@@ -3,19 +3,16 @@ import {
   type LegendListRef,
 } from '@legendapp/list/react-native';
 import type * as React from 'react';
-import {
-  type Ref,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type Ref, type RefObject, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useClaimColumn } from '#kit/content-column/content-column';
-import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 import { assignRef, useLegendScrollRef } from './legend-scroll-ref';
 import { MeasuredLegendList } from './remeasure-after-entrance';
+import {
+  type FrameCaps,
+  type FrameSize,
+  useFrameSize,
+} from './scroll-fade-frame-size';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
@@ -63,65 +60,6 @@ const platformListProps = <P extends NativeOnlyListProps>(
   props: P,
 ): P | WebListProps<P> => (Platform.OS === 'web' ? webListProps(props) : props);
 
-const sizeSignals = ['totalSize', 'headerSize', 'footerSize'] as const;
-
-// Reports the list's content length now and whenever it changes; returns how to stop.
-function followContentLength(
-  list: LegendListRef,
-  report: (length: number) => void,
-): () => void {
-  const update = (): void => report(list.getState().contentLength);
-  update();
-  const stops = sizeSignals.map((size) => list.getState().listen(size, update));
-
-  return (): void => {
-    for (const stop of stops) stop();
-  };
-}
-
-// The list's content length, followed only while capped: Legend List's web build never calls onContentSizeChange.
-function useContentLength(
-  list: RefObject<LegendListRef | null>,
-  follow: boolean,
-): number | undefined {
-  const [length, setLength] = useState<number>();
-  useEffect(() => {
-    if (!follow || !list.current) return;
-
-    return followContentLength(list.current, setLength);
-  }, [list, follow]);
-
-  return length;
-}
-
-interface FrameSize {
-  className?: string;
-  style?: { height: number; maxHeight: number };
-}
-
-/*
- * As tall as the content, up to the window's size class's cap, in a parent that grows with it; with
- * no cap the frame fills its parent. A bounded parent's free space still goes to the frame: iOS
- * insets the content under a see-through header, which a content-tall frame would cut off.
- * The content's length is a height, not a flex basis: in a phone sheet, whose React Native content
- * is hosted at its own size (RNHostView `matchContents`), Yoga gave a frame sized by its basis no
- * height at all, so a fitted List in a PopoverContent drew nothing.
- */
-function useFrameSize(
-  list: RefObject<LegendListRef | null>,
-  cap: ScrollFadeListProps<unknown>['maxHeight'],
-): FrameSize {
-  const maxHeight = useSizeClassValue(cap);
-  const length = useContentLength(list, maxHeight !== undefined);
-
-  if (maxHeight === undefined) return { className: 'min-h-0 flex-1' };
-
-  return {
-    className: 'min-h-0 grow',
-    style: { height: Math.min(length ?? maxHeight, maxHeight), maxHeight },
-  };
-}
-
 // One ref that sets both; the second may hold more than `T`.
 function useBothRefs<T extends Wider, Wider>(
   first: Ref<T> | undefined,
@@ -145,7 +83,10 @@ interface FadingList<T> {
 function useFadingList<T>({
   refScrollView,
   ...props
-}: Omit<ScrollFadeListProps<T>, 'ref' | 'maxHeight'>): FadingList<T> {
+}: Omit<
+  ScrollFadeListProps<T>,
+  'ref' | 'maxHeight' | 'fitHeight'
+>): FadingList<T> {
   const fade = useScrollFade(useSizeClassListProps(props));
   const scrollRef = useLegendScrollRef(fade.attachScrollView, refScrollView);
   const scroll = { ...fade.scroll, refScrollView: scrollRef };
@@ -156,21 +97,34 @@ function useFadingList<T>({
   };
 }
 
+const capped = (caps: FrameCaps): boolean =>
+  caps.maxHeight !== undefined || caps.fitHeight !== undefined;
+
+// The frame's size, and the column it claims on the way: a list keeps to the Screen's column itself, its own inset inside it; only a vertical one under no cap at all fills it.
+function useFrame(
+  list: RefObject<LegendListRef | null>,
+  caps: FrameCaps,
+  horizontal: ScrollFadeListProps<unknown>['horizontal'],
+): FrameSize {
+  useClaimColumn(horizontal || capped(caps) ? 'keep' : 'fill');
+
+  return useFrameSize(list, caps);
+}
+
 // A Legend List whose content fades under each edge that hides more of it.
 export function ScrollFadeList<T>({
   ref,
   maxHeight,
+  fitHeight,
   ...props
 }: ScrollFadeListProps<T>): React.JSX.Element {
   const list = useRef<LegendListRef>(null);
-  const listRef = useBothRefs(list, ref);
   const fading = useFadingList(props);
-  // A list keeps to the Screen's column itself, its own inset inside it; only a vertical one not held to a height fills it.
-  useClaimColumn(props.horizontal || maxHeight !== undefined ? 'keep' : 'fill');
+  const frame = useFrame(list, { maxHeight, fitHeight }, props.horizontal);
 
   return (
-    <ScrollFadeFrame {...fading.frame} {...useFrameSize(list, maxHeight)}>
-      <MeasuredLegendList {...fading.list} ref={listRef} />
+    <ScrollFadeFrame {...fading.frame} {...frame}>
+      <MeasuredLegendList {...fading.list} ref={useBothRefs(list, ref)} />
     </ScrollFadeFrame>
   );
 }

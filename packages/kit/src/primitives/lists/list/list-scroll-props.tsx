@@ -40,6 +40,7 @@ function scrollBounds<Item>(
     edges: props.edges ?? (look.edgeFades ? undefined : noEdgeFades),
     ref: props.ref,
     maxHeight: props.maxHeight,
+    fitHeight: props.fitHeight,
   };
 }
 

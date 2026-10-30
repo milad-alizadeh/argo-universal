@@ -23,6 +23,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'contentInsetAdjustmentBehavior'
     | 'edges'
     | 'maxHeight'
+    | 'fitHeight'
     | 'testID'
     | 'depth'
     | 'inset'
