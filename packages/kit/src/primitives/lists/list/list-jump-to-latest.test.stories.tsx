@@ -66,10 +66,11 @@ export const UnsupportedPlatformDrawsTheSharedFallback: Story = {
 };
 
 export const InheritsAParentThatOwnsTheMaterial: Story = {
+  args: { hasNewRows: false },
   render: (args): ReactElement => (
     <LiquidGlassPlatform value={native.platform}>
       <LiquidGlass corners="sheet">
-        <JumpToLatestButton {...args} hasNewRows={false} />
+        <JumpToLatestButton {...args} />
       </LiquidGlass>
     </LiquidGlassPlatform>
   ),
