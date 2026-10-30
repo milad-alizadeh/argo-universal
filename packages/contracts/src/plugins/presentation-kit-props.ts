@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { iconSymbol, iconSize } from '../kit-symbols/icon-schema';
-import { iconButtonDefaults, iconButtonSizes, tones } from '../kit-tokens';
+import {
+  avatarDefaults,
+  iconButtonDefaults,
+  iconButtonSizes,
+  tones,
+} from '../kit-tokens';
 import { handler } from './kit-component-props';
 import { imageAsset } from './media-kit-props';
 import { perSizeClass } from './schema-size-class';
@@ -35,6 +40,7 @@ export const avatarProps = z.object({
   size: z
     .enum(['xs', 'sm', 'md', 'lg', 'xl'])
     .optional()
+    .meta({ default: avatarDefaults.size })
     .describe('Avatar size.'),
   accessibilityLabel: z.string().describe('Spoken identity.'),
   status: statusMark

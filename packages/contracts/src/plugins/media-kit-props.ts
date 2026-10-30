@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { imageDefaults, videoDefaults } from '../kit-tokens';
 import { PluginAssetRef } from './assets';
 import { stringLabel } from './kit-component-props';
 
@@ -42,10 +43,12 @@ export const imageProps = z.object({
   fit: z
     .enum(['cover', 'contain'])
     .optional()
+    .meta({ default: imageDefaults.fit })
     .describe('Fill and crop, or show the whole image.'),
   radius: z
     .enum(['none', 'control', 'container'])
     .optional()
+    .meta({ default: imageDefaults.radius })
     .describe('Semantic frame radius.'),
   accessibilityLabel: stringLabel.describe('Spoken description of the image.'),
 });
@@ -72,12 +75,14 @@ export const videoProps = z.object({
   aspect: z
     .enum(['landscape', 'square', 'portrait'])
     .optional()
+    .meta({ default: videoDefaults.aspect })
     .describe(
       'Frame aspect: landscape 16:9 (default), square 1:1, portrait 9:16.',
     ),
   radius: z
     .enum(['control', 'none'])
     .optional()
+    .meta({ default: videoDefaults.radius })
     .describe('Corner radius token: control (default) or none.'),
   autoPlay: z
     .boolean()

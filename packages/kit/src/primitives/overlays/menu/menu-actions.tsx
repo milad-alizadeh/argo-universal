@@ -1,4 +1,5 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
+import { menuDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
@@ -44,7 +45,7 @@ function actionContentProps(
   props: MenuActionsProps,
 ): RadixMenu.DropdownMenuContentProps {
   return {
-    align: props.align ?? 'end',
+    align: props.align ?? menuDefaults.align,
     loop: true,
     className: 'z-50',
     ...contentFocus(props.focus),

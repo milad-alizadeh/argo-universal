@@ -1,3 +1,4 @@
+import { avatarDefaults } from '@repo/contracts/kit-tokens';
 import { useContext } from 'react';
 import { View } from 'react-native';
 import { StatusDot } from '#primitives/status/status-dot';
@@ -53,7 +54,7 @@ export function AvatarStatus(props: StatusProps): React.JSX.Element | null {
 function useStatusPosition(size: AvatarProps['size']): StatusPosition {
   const wide = useSizeClass() === 'wide';
   const diameter = avatarDiameter(size, wide);
-  const slot = dotDiameters[size ?? 'lg'] + ringWidth * 2;
+  const slot = dotDiameters[size ?? avatarDefaults.size] + ringWidth * 2;
   const inset = (diameter * (1 - Math.SQRT1_2) - slot) / 2;
 
   return { top: inset, right: inset };
@@ -78,9 +79,9 @@ function statusClass(surface: AvatarProps['statusSurface']): string {
 }
 
 function defaultDiameter(size: AvatarProps['size']): number {
-  return diameters[size ?? 'lg'];
+  return diameters[size ?? avatarDefaults.size];
 }
 
 function dotClass(size: AvatarProps['size']): string {
-  return dotClasses[size ?? 'lg'];
+  return dotClasses[size ?? avatarDefaults.size];
 }

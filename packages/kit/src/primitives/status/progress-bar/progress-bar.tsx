@@ -1,3 +1,4 @@
+import { progressBarDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement, ComponentProps } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -37,7 +38,7 @@ function Fill(props: FillProps): ReactElement {
 
   const className = cn(
     'h-full overflow-hidden',
-    progressColors[props.tone ?? 'neutral'].fill,
+    progressColors[props.tone ?? progressBarDefaults.tone].fill,
     props.track === 'hairline' && 'rounded-full',
   );
 
@@ -81,7 +82,7 @@ function trackProps(
 function trackColor({ track, tone }: ProgressBarProps): string {
   return track === 'hairline'
     ? 'rounded-full bg-hairline'
-    : progressColors[tone ?? 'neutral'].track;
+    : progressColors[tone ?? progressBarDefaults.tone].track;
 }
 
 function clampedValue(value: number): number {

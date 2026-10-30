@@ -1,3 +1,4 @@
+import { imageDefaults } from '@repo/contracts/kit-tokens';
 import { useContext, useState, type ComponentProps } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { Icon } from '#primitives/content/icon';
@@ -93,7 +94,9 @@ function imageFrameClass(radius: ImageProps['radius']): string {
   );
 }
 
-function imageRadius(radius: ImageProps['radius'] = 'none'): string {
+function imageRadius(
+  radius: ImageProps['radius'] = imageDefaults.radius,
+): string {
   return radii[radius];
 }
 

@@ -4,6 +4,7 @@ import { Drawer } from 'vaul';
 import { cn } from '#kit/utils';
 import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
 import { useWide } from '../../../use-wide/use-wide';
+import { isDismissible } from './sheet-dismissible';
 import { ModalSheet } from './sheet-modal';
 import {
   openChange,
@@ -127,7 +128,7 @@ function drawerProps(props: PresentationProps): DrawerProps {
   return {
     open: props.open,
     onOpenChange: openChange(props),
-    dismissible: props.dismissible !== false,
+    dismissible: isDismissible(props.dismissible),
   };
 }
 

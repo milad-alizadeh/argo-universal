@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { cardDefaults, spacingSteps } from '../kit-tokens';
+import { cardDefaults, scrollViewDefaults, spacingSteps } from '../kit-tokens';
 import { onPress } from './kit-component-props';
 import { openStateProps } from './overlay-kit-props';
 import { perSizeClass } from './schema-size-class';
@@ -85,5 +85,6 @@ export const scrollViewProps = z.object({
   direction: z
     .enum(['vertical', 'horizontal'])
     .optional()
+    .meta({ default: scrollViewDefaults.direction })
     .describe('Scroll direction.'),
 });

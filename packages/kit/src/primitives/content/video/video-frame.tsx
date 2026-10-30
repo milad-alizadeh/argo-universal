@@ -1,3 +1,4 @@
+import { videoDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import { Image, Pressable, View } from 'react-native';
 import { cn } from '#kit/utils';
@@ -20,8 +21,8 @@ const radii = { control: 'rounded-control', none: 'rounded-none' } as const;
 function frameClass(props: FrameProps): string {
   return cn(
     'w-full overflow-hidden',
-    aspects[props.aspect ?? 'landscape'],
-    radii[props.radius ?? 'control'],
+    aspects[props.aspect ?? videoDefaults.aspect],
+    radii[props.radius ?? videoDefaults.radius],
   );
 }
 

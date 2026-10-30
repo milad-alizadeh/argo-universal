@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tones } from '../../kit-tokens';
+import { statusDotDefaults, tones } from '../../kit-tokens';
 import { emptyStateProps } from '../core-kit-props';
 import { defineKitComponent } from '../define-kit-component';
 import { optionalLabel, stringLabel } from '../kit-component-props';
@@ -50,10 +50,15 @@ export const statusComponents = {
     'A compact semantic status mark with an optional pulse.',
     z.object({
       tone: z.enum(tones).describe('The Argo semantic status tone.'),
-      size: z.enum(['sm', 'md']).optional().describe('The status mark size.'),
+      size: z
+        .enum(['sm', 'md'])
+        .optional()
+        .meta({ default: statusDotDefaults.size })
+        .describe('The status mark size.'),
       pulse: z
         .boolean()
         .optional()
+        .meta({ default: statusDotDefaults.pulse })
         .describe('Whether to animate the status pulse.'),
       accessibilityLabel: optionalLabel,
     }),

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { iconName, iconSymbol } from '../kit-symbols/icon-schema';
-import { buttonDefaults } from '../kit-tokens';
+import { buttonDefaults, menuDefaults } from '../kit-tokens';
 import { echoes, handler } from './kit-component-props';
 import { selectionValue } from './selection-value';
 
@@ -53,7 +53,11 @@ const groupedMenu = actionMenu.omit({ actions: true, groups: true }).extend({
 const menuBase = z.object({
   accessibilityLabel: z.string().describe('Spoken menu name.'),
   disabled: z.boolean().optional().describe(disabledDescription),
-  align: z.enum(['start', 'end']).optional().describe('Web alignment.'),
+  align: z
+    .enum(['start', 'end'])
+    .optional()
+    .meta({ default: menuDefaults.align })
+    .describe('Web alignment.'),
   loading: z.boolean().optional().describe('Choices are loading.'),
 });
 

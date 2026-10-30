@@ -1,3 +1,4 @@
+import { stackDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { gapClass } from '#primitives/layout/spacing';
@@ -18,8 +19,8 @@ const alignClass = {
 
 const classesOf = ({
   direction,
-  gap = 0,
-  align = 'stretch',
+  gap = stackDefaults.gap,
+  align = stackDefaults.align,
 }: StackProps): string =>
   cn(directionClass[direction], gapClass[gap], alignClass[align]);
 

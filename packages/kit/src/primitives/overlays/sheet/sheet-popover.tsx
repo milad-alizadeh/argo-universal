@@ -4,6 +4,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '#primitives/overlays/popover';
+import { isDismissible } from './sheet-dismissible';
 import { openChange, SheetPanel, type PresentationProps } from './sheet-panel';
 
 // A wide window opens the sheet as a popover on its trigger.
@@ -45,6 +46,6 @@ function popoverChange(props: PresentationProps): (open: boolean) => void {
   const change = openChange(props);
 
   return (open) => {
-    if (open || props.dismissible !== false) change(open);
+    if (open || isDismissible(props.dismissible)) change(open);
   };
 }
