@@ -29,6 +29,12 @@ export interface Covered {
   notApplicable?: readonly string[];
 }
 
+// A run that planned nothing measured nothing, whatever its empty `missing` list suggests.
+const complete = (
+  planned: readonly string[],
+  missing: readonly string[],
+): boolean => planned.length > 0 && missing.length === 0;
+
 export function runCompleteness(
   planned: readonly string[],
   { measured, notApplicable = [] }: Covered,
@@ -37,7 +43,7 @@ export function runCompleteness(
   const missing = planned.filter((scenario) => !accounted.has(scenario));
 
   return {
-    status: missing.length ? 'partial' : 'complete',
+    status: complete(planned, missing) ? 'complete' : 'partial',
     planned: [...planned],
     measured: [...measured],
     notApplicable: [...notApplicable],
@@ -46,11 +52,13 @@ export function runCompleteness(
 }
 
 const partialNotice = ({ planned, missing }: RunCompleteness): string =>
-  [
-    `INCOMPLETE RUN: ${missing.length} of ${planned.length} scenarios produced no measurement.`,
-    `Never measured: ${missing.join(', ')}.`,
-    'This report is partial. The missing scenarios have no result here, measured or otherwise.',
-  ].join('\n');
+  planned.length === 0
+    ? 'INCOMPLETE RUN: the run planned no scenarios at all, so this report measures nothing. Check PERF_ONLY against the scenario names.'
+    : [
+        `INCOMPLETE RUN: ${missing.length} of ${planned.length} scenarios produced no measurement.`,
+        `Never measured: ${missing.join(', ')}.`,
+        'This report is partial. The missing scenarios have no result here, measured or otherwise.',
+      ].join('\n');
 
 // What the run prints about its own completeness, whichever way it went.
 export const completenessNotice = (run: RunCompleteness): string =>

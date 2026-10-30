@@ -46,6 +46,14 @@ Each suite declares its tests from that same list, so the plan cannot drift from
 A run with anything in `missing` writes `"status": "partial"`, prints `INCOMPLETE RUN` with every missing scenario, and fails.
 
 **A scenario in `missing` was not measured.** It is not a passing result, a zero, or an absent regression.
+A run that planned no scenarios at all, which an unmatched `PERF_ONLY` produces, is partial for the same reason.
+For the elapsed suite, a scenario whose every trial failed or timed out is `missing`: it recorded what happened, but it timed nothing.
+
+## Not yet verified
+
+No run of these suites has been taken on a quiet machine.
+The `sidebar` and `sessions` scenarios have never been verified end to end, and no `PERF_HEADED=1` cross-check against the headless collector has been done.
+Both are outstanding from PR #1482 and need a quiet measurement window, not a code change.
 
 ## What the numbers do not say
 

@@ -44,6 +44,18 @@ describe('a performance run accounting for the scenarios it planned', () => {
     expect(notice).toContain(`Never measured: ${drawer}.`);
   });
 
+  it('refuses to call a run that planned nothing complete', () => {
+    expect(runCompleteness([], { measured: [] })).toMatchObject({
+      status: 'partial',
+    });
+  });
+
+  it('says a run that planned nothing measured nothing', () => {
+    expect(completenessNotice(runCompleteness([], { measured: [] }))).toContain(
+      'INCOMPLETE RUN: the run planned no scenarios at all',
+    );
+  });
+
   it('says a complete run is complete', () => {
     expect(
       completenessNotice(

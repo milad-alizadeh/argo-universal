@@ -1,10 +1,10 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { z } from 'zod';
 import { plannedCases, report, type Result } from './results.mts';
 import { sample } from './results.test.mocks.mts';
+import { writtenRun, type WrittenRun } from './run-completeness.test.mocks.mts';
 
 let directory: string;
 
@@ -20,22 +20,8 @@ afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
 });
 
-const reportSchema = z.object({
-  run: z.object({
-    status: z.enum(['complete', 'partial']),
-    planned: z.array(z.string()),
-    measured: z.array(z.string()),
-    notApplicable: z.array(z.string()),
-    missing: z.array(z.string()),
-  }),
-});
-
-const written = async (): Promise<z.infer<typeof reportSchema>> =>
-  reportSchema.parse(
-    JSON.parse(
-      await readFile(path.join(directory, 'completeness.json'), 'utf8'),
-    ),
-  );
+const written = (): Promise<WrittenRun> =>
+  writtenRun(directory, 'completeness.json');
 
 const measured = (interaction: string): Result => ({
   interaction,
@@ -53,7 +39,7 @@ it('marks a report whose scenarios all ran as complete', async () => {
     seeded,
   });
 
-  expect((await written()).run).toMatchObject({
+  expect(await written()).toMatchObject({
     status: 'complete',
     planned: ['sidebar at 1x CPU', 'sessions at 1x CPU'],
     missing: [],
@@ -69,7 +55,7 @@ it('records the scenarios that never ran instead of reporting a partial run as w
     }),
   ).rejects.toThrow(/INCOMPLETE RUN/u);
 
-  expect((await written()).run).toMatchObject({
+  expect(await written()).toMatchObject({
     status: 'partial',
     measured: ['sidebar at 1x CPU'],
     missing: ['sessions at 1x CPU', 'drawer at 1x CPU'],

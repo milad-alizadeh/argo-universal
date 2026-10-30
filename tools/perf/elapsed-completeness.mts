@@ -5,11 +5,16 @@ import {
   type RunCompleteness,
 } from './run-completeness.mts';
 
-// A trial that produced no sample measured nothing, whatever else its result records about it.
-const sampled = (results: readonly ElapsedResult[]): string[] =>
-  results.flatMap((result) =>
-    result.samples.length ? [caseName(result)] : [],
-  );
+/*
+ * A scenario measured something only once one of its trials completed. No sample at all, or
+ * nothing but failures and timeouts, leaves it with no timing, and `measured` must never name a
+ * scenario whose numbers a reader would then go looking for.
+ */
+const timed = (result: ElapsedResult): boolean =>
+  result.samples.some(({ driver }) => driver.status === 'completed');
+
+const measuredNames = (results: readonly ElapsedResult[]): string[] =>
+  results.flatMap((result) => (timed(result) ? [caseName(result)] : []));
 
 // A scenario the dataset cannot exercise carries its own reason, so it is accounted for, not missing.
 const inapplicable = (results: readonly ElapsedResult[]): string[] =>
@@ -22,6 +27,6 @@ export const elapsedCompleteness = (
   results: readonly ElapsedResult[],
 ): RunCompleteness =>
   runCompleteness(planned, {
-    measured: sampled(results),
+    measured: measuredNames(results),
     notApplicable: inapplicable(results),
   });

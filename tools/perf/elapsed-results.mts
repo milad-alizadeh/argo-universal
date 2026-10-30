@@ -158,11 +158,12 @@ export async function reportElapsed({
 }: ElapsedRun): Promise<void> {
   const file = await reportFile();
   const reported = results.map(summarized);
-  const run = elapsedCompleteness(planned, results);
+  const completeness = elapsedCompleteness(planned, results);
 
-  await writeFile(file, reportData(reported, run, metadata));
+  await writeFile(file, reportData(reported, completeness, metadata));
   print(file, reported);
-  console.log(completenessNotice(run));
+  console.log(completenessNotice(completeness));
 
-  if (run.status === 'partial') throw new Error(completenessNotice(run));
+  if (completeness.status === 'partial')
+    throw new Error(completenessNotice(completeness));
 }

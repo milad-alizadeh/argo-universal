@@ -177,15 +177,16 @@ export async function report(frames: FrameReport): Promise<void> {
 
   const file = output(suite ? `${label()}-${suite}.json` : `${label()}.json`);
 
-  const run = runCompleteness(planned.map(caseName), {
+  const completeness = runCompleteness(planned.map(caseName), {
     measured: results.map(caseName),
   });
 
   await mkdir(outputDirectory(), { recursive: true });
-  await writeFile(file, reportData(run, frames));
+  await writeFile(file, reportData(completeness, frames));
   console.log(`\nResults: ${file}`);
   console.table(results.map(medianRow));
-  console.log(completenessNotice(run));
+  console.log(completenessNotice(completeness));
 
-  if (run.status === 'partial') throw new Error(completenessNotice(run));
+  if (completeness.status === 'partial')
+    throw new Error(completenessNotice(completeness));
 }
