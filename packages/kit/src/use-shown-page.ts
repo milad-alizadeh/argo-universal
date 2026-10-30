@@ -1,35 +1,18 @@
+import { useIsFocused } from 'expo-router';
 import { NavigationContext } from 'expo-router/react-navigation';
-import { use, useMemo, useSyncExternalStore } from 'react';
+import { use } from 'react';
 import { useWide } from './use-wide/use-wide';
 
-type Navigation = NonNullable<React.ContextType<typeof NavigationContext>>;
-
-const idle = (): void => {};
-
-const never = (): (() => void) => idle;
-
-function subscriberTo(
-  navigation: Navigation | undefined,
-): (notify: () => void) => () => void {
-  if (!navigation) return never;
-
-  return (notify) => {
-    const offFocus = navigation.addListener('focus', notify);
-    const offBlur = navigation.addListener('blur', notify);
-
-    return (): void => {
-      offFocus();
-      offBlur();
-    };
-  };
-}
-
-// A page its navigator keeps behind the shown one is not focused. Without a navigator, as in a preview, a page always is.
+/*
+ * A page its navigator keeps behind the shown one is not focused. Without a navigator, as in a preview, a page always is.
+ * The navigator's own focus state is read, never `navigation.isFocused()`, which React Navigation warns about during render.
+ * A page is mounted inside its navigator for good, so the branch below never changes between renders.
+ */
 export function usePageFocused(): boolean {
-  const navigation = use(NavigationContext);
-  const subscribe = useMemo(() => subscriberTo(navigation), [navigation]);
+  const navigator = use(NavigationContext) !== undefined;
 
-  return useSyncExternalStore(subscribe, () => navigation?.isFocused() ?? true);
+  // oxlint-disable-next-line react/rules-of-hooks
+  return navigator ? useIsFocused() : true;
 }
 
 // The one rule for every Place: only the shown page may hold it, and only on a wide window.
