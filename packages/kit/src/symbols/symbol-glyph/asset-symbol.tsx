@@ -1,5 +1,6 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import {
+  accessibilityHidden,
   aspectRatio,
   font,
   foregroundStyle,
@@ -33,6 +34,8 @@ function symbolModifiers({
   tintColor,
 }: AssetSymbolProps): ImageProps['modifiers'] {
   return [
+    // Hidden here as well as on the Host, which draws nothing of its own inside another Host (decorative-glyph.ts).
+    accessibilityHidden(),
     resizable(),
     font({ size: pixels, weight: 'regular' }),
     aspectRatio({ contentMode: 'fit' }),

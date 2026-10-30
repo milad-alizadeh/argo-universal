@@ -26,8 +26,9 @@ export const ShowsCornerStatus: Story = {
 };
 
 /*
- * A drawn symbol is decoration and never a stop of its own (decorative-glyph.ts, #1505). The web has always drawn
- * it `aria-hidden`; this holds that contract for the whole kit, which native now shares.
+ * A drawn symbol is decoration and never a stop of its own (decorative-glyph.ts, #1505). This holds the web half of
+ * that contract; the iOS and Android drawings carry the same rule and no CI draws them (ADR-0011), so VoiceOver and
+ * TalkBack are the only check on those.
  */
 export const HidesTheSymbolFromScreenReaders: Story = {
   render: () => <Icon name="sessions" size="sm" testID="sessions-icon" />,

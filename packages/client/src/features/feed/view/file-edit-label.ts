@@ -18,7 +18,7 @@ const countWords = (file: FileDiff): string[] => [
 ];
 
 // A move draws both names, the old one first, as the row does.
-const fileWords = (file: FileDiff): string =>
+const spokenFiles = (file: FileDiff): string =>
   file.oldPath
     ? `${fileName(file.oldPath)} to ${fileName(file.path)}`
     : fileName(file.path);
@@ -28,7 +28,7 @@ const fileWords = (file: FileDiff): string =>
  * reader says nothing at all for "+" and "−".
  */
 export function fileEditLabel(file: FileDiff): string {
-  const head = `${editVerbs[file.operation]} ${fileWords(file)}`;
+  const head = `${editVerbs[file.operation]} ${spokenFiles(file)}`;
 
   return [head, ...countWords(file)].join(', ');
 }
