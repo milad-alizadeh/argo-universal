@@ -9,11 +9,13 @@ import {
 import { type LayoutChangeEvent, View, type ViewInstance } from 'react-native';
 import { sideColumn } from '#kit/content-column/column-layout';
 import { useClaimSide } from '#kit/content-column/content-column';
+import { ListPlaceContext } from '#kit/list-place';
 import {
   MetadataWidthContext,
   useResolvedMetadataDrawing,
 } from '../metadata/metadata-drawing-context';
 import type { DetailColumnsProps } from './detail-props';
+import { stickyColumnStyle } from './detail-sticky';
 
 // The narrowest container that holds the content beside the 280 Metadata column.
 const splitWidth = 720;
@@ -24,7 +26,7 @@ const layouts = {
     row: 'flex-row items-start',
     content: 'min-w-0 flex-1',
     metadata: 'shrink-0',
-    metadataStyle: { width: sideColumn.width },
+    metadataStyle: { width: sideColumn.width, ...stickyColumnStyle },
     width: 'column',
   },
   stacked: {
@@ -51,19 +53,21 @@ type Layout = (typeof layouts)[keyof typeof layouts];
 /*
  * Metadata in a side column; in a narrow container a phone moves it below the content, and desktop and web draw it
  * inline above. A container that narrow is already inside the Screen's reading width, so reporting the side column
- * then widens nothing.
+ * then widens nothing. Both columns are the padded place: a List in either starts on the column's edge.
  */
 export function DetailColumns(props: DetailColumnsProps): ReactElement {
   const { ref, layout, onLayout } = useColumnsLayout();
   useClaimSide(Boolean(props.metadata));
 
   return (
-    <View ref={ref} onLayout={onLayout} className={layout.row} style={rowGap}>
-      <View className={layout.content}>{props.children}</View>
-      {props.metadata ? (
-        <MetadataColumn layout={layout}>{props.metadata}</MetadataColumn>
-      ) : null}
-    </View>
+    <ListPlaceContext value="detail">
+      <View ref={ref} onLayout={onLayout} className={layout.row} style={rowGap}>
+        <View className={layout.content}>{props.children}</View>
+        {props.metadata ? (
+          <MetadataColumn layout={layout}>{props.metadata}</MetadataColumn>
+        ) : null}
+      </View>
+    </ListPlaceContext>
   );
 }
 

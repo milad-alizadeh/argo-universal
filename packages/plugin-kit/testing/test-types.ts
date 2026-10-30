@@ -1,3 +1,4 @@
+import type { OperationRow } from '@repo/contracts/operations';
 import type {
   HookEventName,
   PluginProjectInfo,
@@ -6,6 +7,7 @@ import type {
 import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { JsonObject, Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
 import type {
   PluginBadge,
   PluginFailure,
@@ -56,6 +58,16 @@ export interface PluginTest {
     input: SlotItemsInput,
     options: SlotItemsOptions,
   ) => AsyncGenerator<SlotItems>;
+  // The Operations the Plugin declares, and one run of one as an Agent's `argo run` would (ADR-0044).
+  operations: {
+    list: () => Promise<OperationRow[]>;
+    run: (input: {
+      name: string;
+      params?: JsonObject;
+      caller?: PluginOperationCaller;
+      pluginId?: string;
+    }) => Promise<Json>;
+  };
   close: () => Promise<void>;
   mount: (input: PluginMount) => Promise<PluginTestView>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;

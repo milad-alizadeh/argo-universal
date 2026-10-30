@@ -4,6 +4,8 @@ export { createPluginRuntime } from './runtime/create-runtime';
 
 export { PluginService } from './service';
 
+export { PluginOperationService } from './operations';
+
 export type { PluginServiceDeps } from './located-plugins';
 
 export { discoverPlugins } from './discovery/loader';

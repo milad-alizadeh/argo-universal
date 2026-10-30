@@ -12,6 +12,12 @@ export const screenProps = z.object({
     .string()
     .optional()
     .describe('A muted line under the title on wide windows; phones hide it.'),
+  captionHref: z
+    .string()
+    .optional()
+    .describe(
+      'Makes the caption a link, with a link glyph after it: an http, https or mailto URL, or an absolute route within the App.',
+    ),
   search: z
     .object({
       label: stringLabel.describe('The search label and placeholder.'),

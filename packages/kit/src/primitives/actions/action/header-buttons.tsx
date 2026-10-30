@@ -16,6 +16,7 @@ import {
   type HeaderEntry,
   type IconAction,
 } from './header-actions';
+import { HeaderButtonTooltip } from './header-button-tooltip';
 import { ActionMenu, overflowIcon } from './header-menu';
 import { HeaderTrigger } from './header-trigger';
 import { submenuLabel } from './submenu-badge';
@@ -126,17 +127,23 @@ function submenuTrigger(
   );
 }
 
+/*
+ * The Tooltip carries the Action's own label, not its spoken name: the subject the spoken name repeats is already on
+ * the screen the pointer is over. A menu trigger takes none, since its own popover opens from the same press.
+ */
 function HeaderAction(props: LookProps & { action: IconAction }): ReactElement {
   const { action, look } = props;
 
   return (
-    <IconButton
-      icon={action.icon}
-      accessibilityLabel={spokenLabel(action.label, look)}
-      disabled={action.disabled}
-      onPress={action.onPress}
-      size={look.size}
-      variant="ghost"
-    />
+    <HeaderButtonTooltip label={action.label}>
+      <IconButton
+        icon={action.icon}
+        accessibilityLabel={spokenLabel(action.label, look)}
+        disabled={action.disabled}
+        onPress={action.onPress}
+        size={look.size}
+        variant="ghost"
+      />
+    </HeaderButtonTooltip>
   );
 }

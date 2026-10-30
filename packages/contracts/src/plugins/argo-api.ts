@@ -21,6 +21,7 @@ import {
 import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
 import type { PluginRenderContext } from './kit';
+import type { OperationsApi } from './operations-api';
 import { PluginSettingValue } from './plugin-settings';
 import type { QueryResult } from './query-results';
 import { sessionApiCalls } from './session-api';
@@ -166,6 +167,7 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: Readonly<{ register: (path: string, page: Page) => void }>;
     slots: SlotsApi;
+    operations: OperationsApi;
     on: <Name extends HookEventName>(
       name: Name,
       ...args: HookArgs<Hook<Name>>

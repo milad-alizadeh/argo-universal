@@ -3,6 +3,8 @@ import { expect, it } from 'vitest';
 import {
   chooseGithub,
   chosen,
+  follow,
+  issuesRoot,
   issueTitle,
   openIssue,
   project,
@@ -72,4 +74,40 @@ it("starts a Session with the Issue's reference, title and link in the Composer"
     draft:
       '#42 Fixture issue from GitHub\nhttps://github.com/owner/repository/issues/42',
   });
+}, 20_000);
+
+it("lists an Issue's sub-Issues under its description, with GitHub's tally", async () => {
+  const page = await openIssue(issueTitle);
+
+  await expect.poll(() => page.findText('Sub-Issues'), wait).toBeDefined();
+  expect(page.findText('Sub-Issues')?.node.props.subtitle).toBe(
+    '0 of 1 closed',
+  );
+  expect(page.findText(refusedTitle)?.node.props.onPress).toMatchObject({
+    action: 'navigate',
+  });
+}, 20_000);
+
+const isBlocker = (node: WireNode): boolean =>
+  node.type === 'Metadata.Label' && node.props.title === 'Blocked by';
+
+it('names an open blocker in the Properties beside the Issue', async () => {
+  const page = await openIssue(refusedTitle);
+
+  await expect
+    .poll(() => page.tree && findWireNodeEntry(page.tree, isBlocker), wait)
+    .toBeDefined();
+
+  const entry = page.tree && findWireNodeEntry(page.tree, isBlocker);
+
+  expect(entry && textOf(entry.node)).toBe('#42 Fixture issue from GitHub');
+}, 20_000);
+
+it('marks a blocked row and a parent row’s progress in the list', async () => {
+  const { test, root } = await issuesRoot();
+  const list = await follow(test, root, 'Open');
+
+  await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
+  expect(list.findText('Blocked')).toBeDefined();
+  expect(list.findText('0 / 1')).toBeDefined();
 }, 20_000);

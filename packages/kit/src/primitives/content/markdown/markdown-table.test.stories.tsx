@@ -66,7 +66,7 @@ function horizontalScroller(element: HTMLElement | null): HTMLElement {
 
 export const WideTablesKeepEveryColumnReachable: Story = {
   args: {
-    text: '| A | B | C | D | E | F | G |\n| --- | --- | --- | --- | --- | --- | --- |\n| First | Two | Three | Four | Five | Six | Last column |',
+    text: '| Component | Platform | Status | Owner | Updated | Coverage | Notes |\n| --- | --- | --- | --- | --- | --- | --- |\n| Table primitive row | iOS and Android both | Waiting on review | Design systems team | Three days ago | Partially covered | Last column |',
   },
   play: async ({ canvas }) => {
     await settleLayout('tablet');
@@ -75,6 +75,6 @@ export const WideTablesKeepEveryColumnReachable: Story = {
     scroller.scrollLeft = scroller.scrollWidth;
     await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(0));
     await waitFor(() => expect(canPointAt(last)).toBe(true));
-    await expect(canvas.getByText('First')).toBeVisible();
+    await expect(canvas.getByText('Table primitive row')).toBeVisible();
   },
 };

@@ -18,9 +18,50 @@
         "path": "/"
       }
     ],
-    "slots": ["argo/project/details/v1"]
+    "slots": ["argo/project/details/v1"],
+    "operations": [
+      {
+        "name": "attach",
+        "label": "Attach Issue to Session",
+        "description": "Connect the calling Session to an Issue it is implementing, so the Issue's page lists it.",
+        "tier": "act",
+        "keywords": ["issue", "session", "connect"],
+        "params": {
+          "number": {
+            "type": "number",
+            "description": "The Issue number to attach.",
+            "required": true
+          },
+          "projectId": {
+            "type": "string",
+            "description": "The Project the Issue belongs to; the caller's own Project by default."
+          }
+        }
+      },
+      {
+        "name": "detach",
+        "label": "Detach Issue from Session",
+        "description": "Disconnect the calling Session from an Issue it is no longer working on.",
+        "tier": "act",
+        "keywords": ["issue", "session", "disconnect"],
+        "params": {
+          "number": {
+            "type": "number",
+            "description": "The Issue number to detach.",
+            "required": true
+          },
+          "projectId": {
+            "type": "string",
+            "description": "The Project the Issue belongs to; the caller's own Project by default."
+          }
+        }
+      }
+    ]
   },
   "capabilities": [
+    {
+      "kind": "sessions:read"
+    },
     {
       "kind": "process:exec",
       "command": "gh",

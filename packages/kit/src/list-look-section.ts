@@ -66,6 +66,8 @@ const choosingMenu = { ...menu, inset: 'pl-8 pr-2' } satisfies SectionDrawing;
 
 export interface SectionCase {
   menu: boolean;
+  // A Detail's content column: a block's heading starts on the column's edge, with the page's title and its body.
+  padded: boolean;
   sidebar: boolean;
   choosing: boolean;
   // The List's rows draw as one line.
@@ -93,5 +95,13 @@ function popover(state: SectionCase): SectionDrawing {
   return state.choosing ? choosingMenu : menu;
 }
 
-export const sectionDrawing = (state: SectionCase): SectionDrawing =>
-  state.sidebar ? sidebar : popover(state);
+const flush = (drawing: SectionDrawing): SectionDrawing => ({
+  ...drawing,
+  inset: 'px-0',
+});
+
+export function sectionDrawing(state: SectionCase): SectionDrawing {
+  const drawing = state.sidebar ? sidebar : popover(state);
+
+  return state.padded ? flush(drawing) : drawing;
+}

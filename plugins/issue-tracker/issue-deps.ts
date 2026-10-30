@@ -12,9 +12,11 @@ export type IssuePages = {
   issuePagePath: (project: Project, number: number) => string;
 };
 
-// What every Issues page shares: one Plugin's storage, Trackers, open pages and status changes.
+// What every Issues page shares: one Plugin's storage, Trackers, open pages, Sessions and status changes.
 export type IssueDeps = {
   listProjects: Argo['projects']['list'];
+  // One Session's title and branch, for the Sessions an Agent attached to an Issue.
+  getSession: Argo['sessions']['get'];
   storage: TrackerStorage;
   trackers: TrackerRegistry;
   changes: IssueChanges;

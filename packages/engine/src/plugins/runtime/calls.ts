@@ -1,6 +1,7 @@
 import { replyFailure } from '../access/capability-refusal';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
+import type { PluginOperations } from '../operations';
 import type {
   HostMessage,
   PluginReply,
@@ -11,12 +12,14 @@ import type { PluginServices } from '../services/plugin-services';
 import type { PluginSlotItems } from '../slots/plugin-slot-items';
 import type { PluginViews } from '../views/plugin-views';
 
-type RuntimeCalls = {
+// What answers one worker call: the runtime's own resources, with the Hooks and services beside them.
+export type RuntimeCalls = {
   hooks: PluginHooks;
   services: PluginServices;
   views: PluginViews;
   data: PluginData;
   items: PluginSlotItems;
+  operations: PluginOperations;
 };
 
 type Call = Extract<HostMessage, { type: 'call' }>;
@@ -51,6 +54,9 @@ const runtimeCalls: RuntimeAnswers = {
   // A Plugin's batched items answer, failure or change signal (ADR-0035); it waits for nothing.
   slots: ({ items }, { pluginId, generation, request }) =>
     items.receive({ pluginId, generation }, request.call),
+  // A Plugin's answer to one of its own Operations (ADR-0044); it waits for nothing.
+  operations: ({ operations }, { pluginId, generation, request }) =>
+    operations.receive({ pluginId, generation }, request.call),
 };
 
 export async function answerPluginCall(

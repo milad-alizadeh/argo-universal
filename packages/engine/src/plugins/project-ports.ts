@@ -39,7 +39,13 @@ function pluginSession(
     sessionId,
   );
 
-  return row ? { projectId: row.projectId, branch: row.checkoutBranch } : null;
+  if (!row) return null;
+
+  return {
+    projectId: row.projectId,
+    branch: row.checkoutBranch,
+    title: row.title,
+  };
 }
 
 function pluginProjectPath(options: ProjectSources, projectId: string): string {

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { trayClassName } from '../../../tray-surface';
 import { useSpacing } from '../../../use-spacing';
-import { CellContent, columnClass } from './table-cell';
+import { CellContent, columnClass, scrolledColumnStyle } from './table-cell';
 import { HeaderCell } from './table-header';
 import type { TableColumn, TableProps } from './table-props';
 import { cellOf, type TableRow } from './table-rows';
@@ -62,7 +62,10 @@ type ColumnProps = ScrollProps & { column: TableColumn };
 
 function PinnedColumn(props: ColumnProps): ReactElement {
   return (
-    <View className={columnClass(props.column, false)}>
+    <View
+      className={columnClass(props.column, false)}
+      style={scrolledColumnStyle(props.column)}
+    >
       <HeaderCell {...props} className="h-8 justify-center pl-3" />
       {props.rows.map((row) => (
         <PinnedCell key={row.key} column={props.column} row={row} />
@@ -129,6 +132,7 @@ function ScrolledHeader(props: ScrollProps): ReactElement {
           {...props}
           column={column}
           className={columnClass(column, false)}
+          style={scrolledColumnStyle(column)}
         />
       ))}
     </View>
@@ -143,7 +147,7 @@ function ScrolledRow(props: {
     <MeasuredScrollRow
       row={props.row.key}
       side="scrolled"
-      contentClassName="min-h-12 shrink-0 flex-row items-center gap-4 py-3"
+      contentClassName="min-h-12 shrink-0 flex-row items-start gap-4 py-3"
     >
       {scrolledCells(props.columns, props.row)}
     </MeasuredScrollRow>
@@ -152,7 +156,10 @@ function ScrolledRow(props: {
 
 function ScrolledCell({ column, row }: CellRowProps): ReactElement {
   return (
-    <View className={columnClass(column, false)}>
+    <View
+      className={columnClass(column, false)}
+      style={scrolledColumnStyle(column)}
+    >
       <CellContent cell={cellOf(row, column)} column={column} first={false} />
     </View>
   );

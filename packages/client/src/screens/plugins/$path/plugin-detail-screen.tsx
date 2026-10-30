@@ -1,6 +1,6 @@
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
-import { Redirect } from 'expo-router';
+import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
@@ -50,23 +50,35 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
+type PluginPageProps = PluginDetailScreenProps & { section: PluginSection };
+
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
-function PluginPage({
-  section,
-  path,
-  sessionId,
-}: PluginDetailScreenProps & {
-  section: PluginSection;
-}): React.JSX.Element {
+function PluginPage(props: PluginPageProps): React.JSX.Element {
+  const { section } = props;
+
   const view = usePluginView({
     pluginId: section.pluginId,
-    path: pluginPagePath(path),
-    sessionId,
+    path: pluginPagePath(props.path),
+    sessionId: props.sessionId,
   });
 
-  const onOpenPage = usePluginOpener()(section.pluginId);
+  return (
+    <PluginDetailView
+      {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
+      onBack={usePushedBack()}
+    />
+  );
+}
 
-  return <PluginDetailView {...pluginPageProps(section, view, onOpenPage)} />;
+/*
+ * Every Plugin page gets the App's Back when the stack can go back, so a drill-in page is always reversible and no
+ * Plugin declares navigation. A landing page, which nothing pushed, gets none.
+ */
+function usePushedBack(): (() => void) | null {
+  // The path is what changes as the stack moves, so reading it keeps this answer current.
+  usePathname();
+
+  return router.canGoBack() ? () => router.back() : null;
 }
 
 function PluginUnavailable(): React.JSX.Element {

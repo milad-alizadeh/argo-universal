@@ -6,6 +6,7 @@ import { Table, type TableProps } from '#primitives/lists/table';
 import { ClampedBlock } from './clamped-block';
 import { InlineTokens } from './inline-tokens';
 import type { BlockTokenProps } from './markdown-tokens';
+import { columnWidths } from './table-widths';
 
 const rowKey = (cells: Tokens.TableCell[]): string =>
   cells.map((cell) => cell.text).join('|');
@@ -22,12 +23,20 @@ function Cells({ cells }: { cells: Tokens.TableCell[] }): ReactElement[] {
   );
 }
 
+// A pipe table names no widths, so its own text decides each column's share.
+const tableTexts = (token: Tokens.Table): string[][] => [
+  token.header.map((cell) => cell.text),
+  ...token.rows.map((row) => row.map((cell) => cell.text)),
+];
+
 function tableColumns(token: Tokens.Table): TableProps['columns'] {
+  const widths = columnWidths(tableTexts(token));
+
   return token.header.map((cell, index) => ({
     id: String(index),
     title: inlineText(cell.tokens),
     header: <InlineTokens tokens={cell.tokens} />,
-    width: 'lg' as const,
+    ...widths[index],
     align:
       token.align[index] === 'right' ? ('end' as const) : ('start' as const),
   }));
