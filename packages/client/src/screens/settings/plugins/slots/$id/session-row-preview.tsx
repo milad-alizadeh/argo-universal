@@ -4,21 +4,22 @@ import { useClock } from '@repo/kit/use-clock';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
-import { type PluginLookup, SessionRow } from '#features/sessions';
+import { SessionRow } from '#features/sessions';
 import type { SlotVisibility } from '#features/settings';
-import {
-  rowDrawing,
-  type SessionRowAnswer,
-} from '../../../../plugins/session-row-answers';
+import { rowDrawing } from '../../../../plugins/session-row-drawing';
+import type { PluginLookup } from '../../../../plugins/slot-items';
 import { usePluginLookup } from '../../../../plugins/use-plugin-names';
-import { useSessionRowAnswer } from '../../../../plugins/use-session-row-answers';
+import {
+  type SentRowItems,
+  useSentRowItems,
+} from '../../../../plugins/use-session-row-answers';
 import type { SlotPreviewProps } from './slot-detail';
 
 // What the preview draws: a Session and the Plugins' answers for it, before this page's choices apply.
 export interface SessionRowPreviewData {
   session: SessionInfo;
   age: string;
-  answer: SessionRowAnswer;
+  sent: SentRowItems;
   lookup: PluginLookup;
 }
 
@@ -36,7 +37,10 @@ export const SessionRowPreview = ({
     session={data.session}
     logo=""
     age={data.age}
-    plugins={rowDrawing(visibility, data.lookup)(data.answer)}
+    plugins={rowDrawing(visibility, data.lookup)(
+      data.sent.items,
+      data.sent.lines,
+    )}
     onSelect={ignore}
   />
 );
@@ -57,7 +61,7 @@ function usePreviewData(
     session,
     age: formatAge(useClock(true) - session.activityAt),
     // The stand-in is never asked about, so it has no answers.
-    answer: useSessionRowAnswer(latest),
+    sent: useSentRowItems(latest),
     lookup: usePluginLookup(),
   };
 }

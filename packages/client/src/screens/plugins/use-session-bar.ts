@@ -1,36 +1,49 @@
-import { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
+import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import {
-  mergedItems,
   type SlotItemsInput,
   sessionBarSlotId,
 } from '@repo/contracts/plugins/wire';
 import type { SessionBarProps } from '#features/sessions';
-import { type SplitItems, useSlotVisibility } from '#features/settings';
+import { type SlotVisibility, useSlotVisibility } from '#features/settings';
 import { sessionBarLines } from './session-bar-lines';
-import { usePluginNames } from './use-plugin-names';
+import {
+  itemsSlotEntry,
+  readSlotItems,
+  type SentItems,
+  type SlotReading,
+} from './slot-items';
+import { usePluginLookup } from './use-plugin-names';
 import { usePluginOpener } from './use-plugin-opener';
 import { useSlotItems } from './use-slot-items';
 
-// A Server that sent no answer for the Session, or something else, gives none.
-const BarAnswer = mergedItems(SessionBarItem).catch({
-  items: [],
-  overflow: [],
-});
-
 export type SessionContext = SlotItemsInput['contexts'][number];
+
+const barSlot = itemsSlotEntry(sessionBarSlotId);
 
 const inputOf = (
   session: SessionContext | undefined,
 ): SlotItemsInput | undefined =>
   session && { slotId: sessionBarSlotId, contexts: [session] };
 
-// What the Plugins answer for one Session's bar, live, in Slot order; none until the Session has loaded.
-export function useSessionBarAnswer(
-  session: SessionContext | undefined,
-): SplitItems<SessionBarItem> {
+// What the Plugins answer for one Session's bar, as the Server sent it; none until the Session has loaded.
+function useSessionBarItems(session: SessionContext | undefined): SentItems {
   const { items } = useSlotItems(inputOf(session));
 
-  return BarAnswer.parse(session && items[session.sessionId]);
+  return session && items[session.sessionId];
+}
+
+/*
+ * One Session's bar as the reader reads it: the Session page passes this Device's choices, and the Slot's Settings
+ * page the choices on the page.
+ */
+export function useSessionBarReading(
+  session: SessionContext | undefined,
+  visibility: SlotVisibility,
+): SlotReading<SessionBarItem> {
+  return readSlotItems(barSlot, useSessionBarItems(session), {
+    visibility,
+    lookup: usePluginLookup(),
+  });
 }
 
 // The Session page's bar under this Device's choices; its lines open their Plugin's page.
@@ -38,9 +51,7 @@ export function useSessionBar(
   session: SessionContext | undefined,
 ): SessionBarProps | undefined {
   const lines = sessionBarLines(
-    useSessionBarAnswer(session),
-    useSlotVisibility(sessionBarSlotId),
-    usePluginNames(),
+    useSessionBarReading(session, useSlotVisibility(sessionBarSlotId)),
   );
 
   const onOpen = useOpenLine();

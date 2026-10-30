@@ -61,7 +61,7 @@ export const sessionRowPreviewData: SessionRowPreviewData = {
       pluginId,
     icon: pluginSymbol({}),
   }),
-  answer: {
+  sent: {
     items: {
       items: [
         {
@@ -91,7 +91,7 @@ export const coverageBar = '78% covered';
 
 // What the three Plugins answer for the preview's Session bar, as the Server sends it: one fits, the rest overflow.
 export const sessionBarPreviewData: SessionBarPreviewData = {
-  answer: {
+  sent: {
     items: [
       {
         pluginId: issueTracker.pluginId,
@@ -114,5 +114,5 @@ export const sessionBarPreviewData: SessionBarPreviewData = {
       { pluginId: coverage.pluginId, item: { text: coverageBar } },
     ],
   },
-  pluginName: (pluginId) => sessionRowPreviewData.lookup(pluginId).name,
+  lookup: (pluginId) => sessionRowPreviewData.lookup(pluginId),
 };
