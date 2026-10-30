@@ -8,7 +8,7 @@ const drawerTypes = {
   wide: 'permanent',
 } as const satisfies Record<SizeClass, DrawerNavigationOptions['drawerType']>;
 
-// The scrim's own name, else the library's English default; it pairs with the "Open navigation" button.
+// The backdrop's own name, else the library's English default; it pairs with the "Open navigation" button.
 const scrimLabel = 'Close navigation';
 
 export function composeDrawerOptions(
