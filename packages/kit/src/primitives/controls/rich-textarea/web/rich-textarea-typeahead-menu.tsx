@@ -1,116 +1,84 @@
 import type { MenuRenderFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import type * as React from 'react';
-import { useRef } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  menuInsetClassName,
-  menuRowsClassName,
-  menuSurfaceClassName,
-} from '#kit/menu-surface';
+import { menuInsetClassName, menuSurfaceClassName } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
+import {
+  SuggestionMenu,
+  type SuggestionMenuProps,
+} from '../rich-textarea-suggestion-menu';
 import type { TypeaheadOption } from './rich-textarea-typeahead-option';
-import { useTypeaheadViewport } from './rich-textarea-typeahead-viewport';
+import { useMenuMaxHeight } from './rich-textarea-typeahead-viewport';
 
 type MenuProps = Parameters<MenuRenderFn<TypeaheadOption>>[1];
 
-type RowProps = Pick<
-  MenuProps,
-  'setHighlightedIndex' | 'selectOptionAndCleanUp'
-> & {
-  option: TypeaheadOption;
-  index: number;
-  selected: boolean;
+type TypeaheadMenuProps = MenuProps & { anchor: HTMLElement };
+
+type MenuSurface = {
+  menu: RefObject<HTMLDivElement | null>;
+  maxHeight: number;
 };
 
 const menuClassName = cn(
   menuSurfaceClassName,
   menuInsetClassName,
-  menuRowsClassName,
-  'absolute bottom-full left-0 mb-7 flex w-100 flex-col overflow-x-hidden overflow-y-auto overscroll-contain',
+  'absolute bottom-full left-0 mb-7 flex w-100 flex-col',
 );
 
-const rowClassName =
-  'flex shrink-0 cursor-default rounded-xl p-2 text-start outline-none';
+const keepFocus = (event: MouseEvent): void => event.preventDefault();
 
-const keepFocus = (event: React.MouseEvent): void => event.preventDefault();
+// A press chooses a row without taking focus from the field.
+function useKeepFocus(menu: RefObject<HTMLDivElement | null>): void {
+  useEffect(() => {
+    const element = menu.current;
+    element?.addEventListener('mousedown', keepFocus);
 
-const rowAttributesBase = {
-  type: 'button',
-  role: 'option',
-  tabIndex: -1,
-} as const;
+    return (): void => element?.removeEventListener('mousedown', keepFocus);
+  }, [menu]);
+}
 
-function rowAttributes(props: RowProps): React.ComponentProps<'button'> {
+// Lexical's options as the menu takes them: rows highlighted from the field and chosen through Lexical.
+function menuContent(props: MenuProps): Omit<SuggestionMenuProps, 'maxHeight'> {
   return {
-    ...rowAttributesBase,
-    id: `typeahead-item-${props.index}`,
-    ref: (element) => props.option.setRefElement(element),
-    'aria-selected': props.selected,
-    className: cn(
-      rowClassName,
-      props.option.display.className,
-      props.selected && 'bg-selected',
-    ),
-    ...rowEvents(props),
+    rows: props.options.map((option) => option.display),
+    onChoose: (index) => {
+      const option = props.options[index];
+
+      if (option) props.selectOptionAndCleanUp(option);
+    },
+    listbox: {
+      highlighted: props.selectedIndex,
+      onHighlight: props.setHighlightedIndex,
+    },
   };
 }
 
-const groupTitleClassName =
-  'shrink-0 px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground';
-
-function MenuRow(props: RowProps): React.JSX.Element {
-  return (
-    <button {...rowAttributes(props)}>{props.option.display.content}</button>
-  );
-}
-
-function startsGroup(props: MenuProps, index: number): boolean {
-  return (
-    props.options[index - 1]?.display.group !==
-    props.options[index]?.display.group
-  );
-}
-
-function rowsOf(
-  props: MenuProps,
-  option: TypeaheadOption,
-  index: number,
-): React.JSX.Element {
-  const selected = props.selectedIndex === index;
-
-  return (
-    <MenuRow key={option.key} {...props} {...{ option, index, selected }} />
-  );
-}
-
-// Each group's title heads its options, which sit together in the order the sources are given.
-function MenuRows(props: MenuProps): React.JSX.Element[] {
-  return props.options.flatMap((option, index) => [
-    ...(startsGroup(props, index)
-      ? [
-          <div key={`${option.key}-title`} className={groupTitleClassName}>
-            {option.display.title}
-          </div>,
-        ]
-      : []),
-    rowsOf(props, option, index),
-  ]);
-}
-
-function TypeaheadMenu(
-  props: MenuProps & { anchor: HTMLElement },
-): React.JSX.Element {
+// The menu's surface above the field, and the height the window leaves it.
+function useMenuSurface(anchor: HTMLElement): MenuSurface {
   const menu = useRef<HTMLDivElement>(null);
-  useTypeaheadViewport(props.anchor, menu, props.selectedIndex);
-  const title = props.options[0]?.display.title;
+  useKeepFocus(menu);
+
+  return { menu, maxHeight: useMenuMaxHeight(anchor, menu) };
+}
+
+function TypeaheadMenu(props: TypeaheadMenuProps): React.JSX.Element {
+  const { menu, maxHeight } = useMenuSurface(props.anchor);
+  const content = menuContent(props);
 
   return (
-    <div ref={menu} role="group" aria-label={title} className={menuClassName}>
-      {MenuRows(props)}
+    <div
+      ref={menu}
+      role="group"
+      aria-label={content.rows[0]?.groupTitle}
+      className={menuClassName}
+    >
+      <SuggestionMenu {...content} maxHeight={maxHeight} />
     </div>
   );
 }
 
+// Both triggers draw their results in the one suggestion menu, above the field.
 export const renderTypeaheadMenu: MenuRenderFn<TypeaheadOption> = (
   anchorRef,
   menu,
@@ -121,16 +89,3 @@ export const renderTypeaheadMenu: MenuRenderFn<TypeaheadOption> = (
 
   return createPortal(<TypeaheadMenu {...menu} anchor={anchor} />, anchor);
 };
-
-function rowEvents(
-  props: RowProps,
-): Pick<
-  React.ComponentProps<'button'>,
-  'onMouseDown' | 'onMouseEnter' | 'onClick'
-> {
-  return {
-    onMouseDown: keepFocus,
-    onMouseEnter: () => props.setHighlightedIndex(props.index),
-    onClick: () => props.selectOptionAndCleanUp(props.option),
-  };
-}

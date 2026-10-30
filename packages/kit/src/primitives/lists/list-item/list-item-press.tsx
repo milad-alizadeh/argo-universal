@@ -11,6 +11,7 @@ import { BesidePress, useBesidePress } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
 import { interactive, usePressClass } from './list-item-press-class';
+import { rowState, selectedState } from './list-item-press-state';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
 import { ItemContentSlots } from './list-item-slots';
@@ -39,7 +40,7 @@ function pressHandlers(props: ListItemProps): RowPressProps {
 
 function rowRole(
   props: DrawingProps,
-): 'button' | 'link' | 'switch' | 'radio' | 'group' | undefined {
+): 'button' | 'link' | 'switch' | 'radio' | 'group' | 'option' | undefined {
   if (props.checked !== undefined) return 'switch';
 
   return explicitRole(props) ?? pressRole(props.onPress);
@@ -53,14 +54,6 @@ const explicitRole = (
 const pressRole = (onPress: ListItemProps['onPress']): 'button' | 'group' =>
   onPress ? 'button' : 'group';
 
-const rowState = (
-  props: DrawingProps,
-): NonNullable<ComponentProps<typeof Pressable>['accessibilityState']> => ({
-  selected: props.selected,
-  disabled: props.disabled,
-  checked: props.checked,
-});
-
 function accessibilityProps(props: DrawingProps): RowPressProps {
   return {
     role: rowRole(props),
@@ -68,7 +61,7 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
     accessibilityState: rowState(props),
     accessibilityHint: props.description,
     'aria-checked': props.checked,
-    'aria-pressed': props.selected,
+    ...selectedState(props),
     'aria-current': currentPage(props),
     accessible: props.accessible ?? props.content === undefined,
     disabled: props.disabled,
@@ -98,6 +91,7 @@ function triggerProps(props: DrawingProps): RowPressProps {
   return {
     onPointerDown: props.onPointerDown,
     ref: props.ref,
+    nativeID: props.nativeID,
     href: props.href,
     'aria-haspopup': props['aria-haspopup'],
     'aria-expanded': props['aria-expanded'],
@@ -157,10 +151,13 @@ function currentPage(props: DrawingProps): 'page' | undefined {
   return props.selected && rowRole(props) === 'link' ? 'page' : undefined;
 }
 
+// A group has no press to tab to, and a listbox's option is reached from the field that owns the keyboard.
+const outsideTabOrder = new Set(['group', 'option']);
+
 function focusProps(props: DrawingProps): RowPressProps {
   return {
     accessibilityLabel: spokenRowLabel(props),
-    tabIndex: rowRole(props) === 'group' ? -1 : undefined,
+    tabIndex: outsideTabOrder.has(rowRole(props) ?? '') ? -1 : undefined,
   };
 }
 

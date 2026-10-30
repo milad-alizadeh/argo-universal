@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useLayoutEffect, useState, type RefObject } from 'react';
 
 const viewportInset = 8;
 
@@ -8,31 +8,14 @@ function viewportTop(): number {
   return window.visualViewport?.offsetTop ?? 0;
 }
 
-function fitMenu(menu: HTMLDivElement | null): void {
-  if (!menu?.isConnected) return;
-  const top = viewportTop();
-  const available = menu.getBoundingClientRect().bottom - top - viewportInset;
-  menu.style.maxHeight = `${Math.max(0, Math.min(menuMaxHeight, available))}px`;
-  revealSelection(menu);
-}
+// The menu's rows grow up from the field: as tall as the room above it, to 350 at most.
+function fitMenu(menu: HTMLDivElement | null): number | undefined {
+  if (!menu?.isConnected) return undefined;
 
-function selectionOffset(menu: DOMRect, selected: DOMRect): number {
-  const top = menu.top + viewportInset;
-  const bottom = menu.bottom - viewportInset;
+  const available =
+    menu.getBoundingClientRect().bottom - viewportTop() - viewportInset;
 
-  if (selected.top < top) return selected.top - top;
-
-  return Math.max(0, selected.bottom - bottom);
-}
-
-function revealSelection(menu: HTMLDivElement): void {
-  const selected = menu.querySelector('[aria-selected="true"]');
-
-  if (!selected) return;
-  menu.scrollTop += selectionOffset(
-    menu.getBoundingClientRect(),
-    selected.getBoundingClientRect(),
-  );
+  return Math.max(0, Math.min(menuMaxHeight, available));
 }
 
 function observeViewport(anchor: HTMLElement, update: () => void): () => void {
@@ -41,25 +24,35 @@ function observeViewport(anchor: HTMLElement, update: () => void): () => void {
   window.addEventListener('resize', update);
   window.addEventListener('scroll', update, true);
   window.visualViewport?.addEventListener('resize', update);
-  const frame = requestAnimationFrame(update);
 
   return () => {
     observer.disconnect();
-    cancelAnimationFrame(frame);
     window.removeEventListener('resize', update);
     window.removeEventListener('scroll', update, true);
     window.visualViewport?.removeEventListener('resize', update);
   };
 }
 
-export function useTypeaheadViewport(
+/*
+ * How tall the menu's rows may grow, kept up to date as the window and the field move. It measures before the
+ * first paint, so a window with less room than 350 above the field never draws the menu past its top.
+ */
+export function useMenuMaxHeight(
   anchor: HTMLElement,
   menu: RefObject<HTMLDivElement | null>,
-  selectedIndex: number | null,
-): void {
-  useEffect(() => fitMenu(menu.current), [menu, selectedIndex]);
-  useEffect(
-    () => observeViewport(anchor, () => fitMenu(menu.current)),
-    [anchor, menu],
-  );
+): number {
+  const [maxHeight, setMaxHeight] = useState(menuMaxHeight);
+  useLayoutEffect(() => {
+    const update = (): void => {
+      const fitted = fitMenu(menu.current);
+
+      if (fitted !== undefined) setMaxHeight(fitted);
+    };
+
+    update();
+
+    return observeViewport(anchor, update);
+  }, [anchor, menu]);
+
+  return maxHeight;
 }

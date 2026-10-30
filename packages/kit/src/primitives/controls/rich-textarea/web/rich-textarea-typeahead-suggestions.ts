@@ -1,7 +1,6 @@
 import { $createTextNode, type TextNode } from 'lexical';
-import type * as React from 'react';
-import { Text } from '#primitives/content/text';
 import { Listeners } from '../rich-textarea-listeners';
+import { suggestionRow } from '../rich-textarea-suggestion-row';
 import { SuggestionRun } from '../rich-textarea-suggestion-run';
 import {
   findCommand,
@@ -15,19 +14,6 @@ import {
   TypeaheadOption,
   type TypeaheadAdapter,
 } from './rich-textarea-typeahead-option';
-
-function SuggestionContent({
-  suggestion,
-}: {
-  suggestion: ComposerSuggestion;
-}): React.JSX.Element {
-  return (
-    <>
-      <span className="type-control text-foreground">{suggestion.label}</span>
-      <SuggestionDetail detail={suggestion.detail} />
-    </>
-  );
-}
 
 function $insertText(node: TextNode, text: string): void {
   const inserted = $createTextNode(text);
@@ -66,31 +52,15 @@ interface Menu {
   choose: Choose | undefined;
 }
 
-function optionDisplay(
-  source: SuggestionSource,
-  suggestion: ComposerSuggestion,
-): TypeaheadOption['display'] {
-  return {
-    group: source.id,
-    title: source.title,
-    content: <SuggestionContent suggestion={suggestion} />,
-    className: 'flex-col gap-0.5',
-  };
-}
-
 function suggestionOption(
   menu: Menu,
   source: SuggestionSource,
   suggestion: ComposerSuggestion,
 ): TypeaheadOption {
-  return new TypeaheadOption(
-    `${source.id}-${suggestion.id}`,
-    optionDisplay(source, suggestion),
-    (node) => {
-      insertSuggestion(node, menu.sources, suggestion);
-      menu.choose?.(suggestion);
-    },
-  );
+  return new TypeaheadOption(suggestionRow(source, suggestion), (node) => {
+    insertSuggestion(node, menu.sources, suggestion);
+    menu.choose?.(suggestion);
+  });
 }
 
 const groupOptions =
@@ -149,14 +119,4 @@ export function suggestionAdapter(
     pending: (query) => answers.recall(query).pending(),
     subscribe: answers.subscribe,
   };
-}
-
-function SuggestionDetail({
-  detail,
-}: Pick<ComposerSuggestion, 'detail'>): React.JSX.Element | null {
-  return detail ? (
-    <Text role="secondary" tone="muted" numberOfLines={2}>
-      {detail}
-    </Text>
-  ) : null;
 }

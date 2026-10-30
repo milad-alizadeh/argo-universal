@@ -210,3 +210,20 @@ export const Loading: Story = {
     await expect(args.onPress).not.toHaveBeenCalled();
   },
 };
+
+/*
+ * A listbox's row: a field elsewhere owns the keyboard and names the highlighted row by its id, so the row
+ * reads as selected rather than pressed and keeps nothing of a button's own pressed state.
+ */
+export const Option: Story = {
+  args: { role: 'option', selected: true, nativeID: 'option-1' },
+  play: async ({ args, canvas, userEvent }) => {
+    const row = canvas.getByRole('option', { name: title });
+    await expect(row).toHaveAttribute('aria-selected', 'true');
+    await expect(row).not.toHaveAttribute('aria-pressed');
+    await expect(row.id).toBe('option-1');
+    await expect(canvas.queryByRole('button', { name: title })).toBeNull();
+    await userEvent.click(row);
+    await expect(args.onPress).toHaveBeenCalledOnce();
+  },
+};
