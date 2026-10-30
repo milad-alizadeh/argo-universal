@@ -10,6 +10,7 @@ export {
   listBranches,
   readRepository,
   type Checkout,
+  type Repository,
   type CheckoutChoice,
 } from './repository';
 

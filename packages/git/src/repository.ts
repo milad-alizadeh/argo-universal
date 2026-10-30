@@ -62,38 +62,40 @@ export type CheckoutChoice =
   | { type: 'worktree'; baseBranch: string }
   | { type: 'main' };
 
-// Resolves a repository through any working tree or nested directory (ADR-0008).
-export async function readRepository(
-  path: string,
-): Promise<{ root: string; commonDirectory: string }> {
+// A repository: the common directory that names it, and the main checkout it is registered at.
+export interface Repository {
+  mainCheckout: string;
+  commonDirectory: string;
+}
+
+// Resolves a repository through any working tree or nested directory, at its main checkout (ADR-0008).
+export async function readRepository(path: string): Promise<Repository> {
   const directory = await realpath(path);
 
-  const responses = await Promise.all([
-    git(directory, ['rev-parse', '--show-toplevel']),
+  const [checkouts, commonDirectory] = await Promise.all([
+    git(directory, ['worktree', 'list', '--porcelain', '-z']),
     git(directory, ['rev-parse', '--git-common-dir']),
   ]);
 
-  return parseRepositoryPaths(directory, responses);
+  return {
+    mainCheckout: readMainCheckout(checkouts).path,
+    commonDirectory: await readCommonDirectory(directory, commonDirectory),
+  };
 }
 
-const repositoryPaths = z.tuple([
-  z.string().trim().min(1).refine(isAbsolute),
-  z.string().trim().min(1),
-]);
+const commonDirectoryResponse = z.string().trim().min(1);
 
-async function parseRepositoryPaths(
+// `--git-common-dir` answers relative to the directory it was asked in.
+async function readCommonDirectory(
   directory: string,
-  responses: string[],
-): Promise<{ root: string; commonDirectory: string }> {
-  const paths = repositoryPaths.safeParse(responses);
+  response: string,
+): Promise<string> {
+  const parsed = commonDirectoryResponse.safeParse(response);
 
-  if (!paths.success)
-    return rejectResponse('repository paths', paths.error.message);
+  if (!parsed.success)
+    return rejectResponse('repository paths', parsed.error.message);
 
-  return {
-    root: paths.data[0],
-    commonDirectory: await realpath(resolve(directory, paths.data[1])),
-  };
+  return realpath(resolve(directory, parsed.data));
 }
 
 // The Project's local branches, and the branch HEAD is on, or null when detached.

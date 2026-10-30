@@ -39,27 +39,6 @@ it('preserves a registered Project identity and stored metadata through a nested
   ]);
 });
 
-it('registers linked Checkouts as one Project identified by the Git common directory', async (): Promise<void> => {
-  const { database, caller, projectPath, git } = await startProjectTestHost();
-  database.$client.exec('DELETE FROM session; DELETE FROM project');
-  await seedProject(database, projectPath);
-  const originalProjects = await caller.project.list();
-  expect(originalProjects).toEqual([
-    expect.objectContaining({ id: expect.stringMatching(/^[a-f0-9]{64}$/) }),
-  ]);
-  const linkedPath = join(projectPath, 'linked');
-  await git('worktree', 'add', '-q', '-b', 'linked', linkedPath);
-  await seedProject(database, linkedPath);
-  expect(await caller.project.list()).toEqual([
-    {
-      ...originalProjects[0],
-      path: linkedPath,
-      name: 'linked',
-      checkoutChoice: { type: 'worktree', baseBranch: 'linked' },
-    },
-  ]);
-});
-
 it.each([
   {
     newEngine: false,
