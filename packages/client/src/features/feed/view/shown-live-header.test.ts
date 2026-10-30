@@ -34,21 +34,24 @@ describe('shownLiveHeader', () => {
     { source: { type: 'tool_call', toolCallId: 'tool' } as const },
     { source: { type: 'working' } as const },
   ])(
-    'leaves a $source.type header out while an open Exploration draws the work',
+    'leaves a $source.type header out while open work names itself',
     ({ source }) => {
+      expect(shownLiveHeader([openGroup], header(source))).toBeNull();
       expect(shownLiveHeader([exploring], header(source))).toBeNull();
     },
   );
 
-  // A group takes the header as its title (#1405), so the Feed says what the Session row's activity line says (#1410).
+  // A settled group has only a counts summary, so it takes the header as its title and says what the Session row's activity line says (#1410).
   it.each([
     { source: { type: 'tool_call', toolCallId: 'tool' } as const },
     { source: { type: 'working' } as const },
-  ])('keeps a $source.type header for a group to title', ({ source }) => {
-    const value = header(source);
-    expect(shownLiveHeader([openGroup], value)).toBe(value);
-    expect(shownLiveHeader([settledGroup], value)).toBe(value);
-  });
+  ])(
+    'keeps a $source.type header for a settled group to title',
+    ({ source }) => {
+      const value = header(source);
+      expect(shownLiveHeader([settledGroup], value)).toBe(value);
+    },
+  );
 
   it.each([
     { source: { type: 'request' } as const },

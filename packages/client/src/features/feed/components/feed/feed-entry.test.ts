@@ -9,6 +9,12 @@ const thought: LiveHeader = {
   startedAt: 1_000,
 };
 
+const toolCallHeader: LiveHeader = {
+  text: 'Creating empty config',
+  source: { type: 'tool_call', toolCallId: 'tool-1' },
+  startedAt: 1_000,
+};
+
 const openGroup: FeedViewItem = {
   type: 'group',
   id: 'group',
@@ -33,20 +39,17 @@ describe('withLiveHeader', () => {
     ]);
   });
 
-  it('titles the newest group with the same line the Session row shows', () => {
-    const live: LiveHeader = {
-      text: 'Creating empty config',
-      source: { type: 'tool_call', toolCallId: 'tool-1' },
-      startedAt: 1_000,
-    };
-
+  it('titles a settled group with the same line the Session row shows', () => {
     const settled: FeedViewItem = { ...openGroup, state: 'settled' };
-    const cases = [[openGroup], [settled]];
 
-    for (const items of cases)
-      expect(withLiveHeader(items, live)).toEqual([
-        { ...items[0], liveHeader: live },
-      ]);
+    expect(withLiveHeader([settled], toolCallHeader)).toEqual([
+      { ...settled, liveHeader: toolCallHeader },
+    ]);
+  });
+
+  // An open group is already titled by the Tool call running in it, which names the Agent's own Tool call; the Server's line would say less.
+  it('leaves an open group titled by its own running Tool call', () => {
+    expect(withLiveHeader([openGroup], toolCallHeader)).toEqual([openGroup]);
   });
 
   it('draws the live header as its own row after an Agent message', () => {
