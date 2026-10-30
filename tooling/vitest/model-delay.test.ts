@@ -3,10 +3,7 @@ import { type Actor, assign, createActor, setup } from 'xstate';
 import { describeModel, modelTest, type Vertex } from './model-test';
 
 // A delay that re-enters its own state leaves the state value as it was.
-const machine = setup({
-  types: { context: {} as { ticks: number } },
-  delays: { tick: 1000 },
-}).createMachine({
+const machine = setup({ delays: { tick: 1000 } }).createMachine({
   id: 'clock',
   context: { ticks: 0 },
   initial: 'ticking',

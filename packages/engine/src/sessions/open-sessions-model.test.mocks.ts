@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import type { DelayEvent, Vertex } from '@repo/vitest/model-test';
 import { createActor, type EventFromLogic, type SnapshotFrom } from 'xstate';
-import { TestModel } from 'xstate/graph';
 import { seedAgentFixtures } from '#mocks/agent-fixtures';
 import { coreOnlyHooks } from '#mocks/core-hooks';
 import { openTestDatabase } from '#mocks/database';
@@ -13,7 +13,7 @@ import { sessionMachine } from './session-machine';
 
 export const openSessionsModelMachine = createOpenSessionsModelMachine(false);
 
-const openSessionsGraphMachine = createOpenSessionsModelMachine(true);
+export const openSessionsGraphMachine = createOpenSessionsModelMachine(true);
 
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 
@@ -88,11 +88,14 @@ export const events: OpenSessionsEvent[] = [
   },
 ];
 
-type OpenSessionsSnapshot = SnapshotFrom<typeof openSessionsModelMachine>;
+export type OpenSessionsSnapshot = SnapshotFrom<
+  typeof openSessionsModelMachine
+>;
 
-const actorBelongsToModel = (
+// One pair of Sessions covers the branches; repeating an id adds no new lifecycle behavior.
+export const actorBelongsToModel = (
   snapshot: OpenSessionsSnapshot,
-  event: OpenSessionsEvent,
+  event: OpenSessionsEvent | DelayEvent,
 ): boolean => {
   if (!('actorId' in event)) return true;
 
@@ -103,25 +106,10 @@ const actorBelongsToModel = (
   );
 };
 
-export const key = (snapshot: OpenSessionsSnapshot): string =>
-  JSON.stringify({
-    value: snapshot.value,
-    sessions: Object.keys(snapshot.context.sessions).sort(),
-  });
-
-export const model = new TestModel(openSessionsGraphMachine, {
-  input,
-  events,
-  // One pair of Sessions covers the branches; repeating an id adds no new lifecycle behavior.
-  filterEvents: (snapshot, event): boolean =>
-    snapshot.status === 'active' &&
-    snapshot.can(event) &&
-    actorBelongsToModel(snapshot, event),
-  serializeState: (snapshot, event, previous): string =>
-    JSON.stringify({
-      key: key(snapshot),
-      via: event && `${previous && key(previous)} ${event.type}`,
-    }),
+export const vertex = (snapshot: OpenSessionsSnapshot): Vertex => ({
+  value: snapshot.value,
+  sessions: Object.keys(snapshot.context.sessions).sort(),
 });
 
-export const paths = model.getShortestPaths();
+export const key = (snapshot: OpenSessionsSnapshot): string =>
+  JSON.stringify(vertex(snapshot));

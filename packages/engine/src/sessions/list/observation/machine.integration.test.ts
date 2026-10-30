@@ -1,21 +1,28 @@
-import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import {
-  type GraphEventFromLogic,
-  getAdjacencyMap,
-  getShortestPaths,
-} from '@repo/vitest/model-graph';
-import { terminalPaths } from '@repo/vitest/model-paths';
-import { afterAll, expect, it } from 'vitest';
-import { fromCallback } from 'xstate';
-import { createActor, SimulatedClock, type SnapshotFrom } from 'xstate';
-import type { AdjacencyMap } from 'xstate/graph';
+  describeModel,
+  type ModelFixture,
+  modelTest,
+  type Vertex,
+} from '@repo/vitest/model-test';
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
+import {
+  type Actor,
+  createActor,
+  fromCallback,
+  type SnapshotFrom,
+} from 'xstate';
 import { openSessionListModel } from '#mocks/session-list-model';
 import { sessionListMachine } from './machine';
 
 const refreshListEvent = 'list.refresh';
-
-const refreshDelayEvent =
-  'xstate.after.listRefreshDelay.sessionList.active.pending';
 
 const { input, remove } = openSessionListModel();
 
@@ -27,81 +34,70 @@ const machine = sessionListMachine.provide({
 
 type ListSnapshot = SnapshotFrom<typeof machine>;
 
-// The model drives the pending state's named delay event as well as public events.
-const events = [
+const fixtures = [
   { type: refreshListEvent },
   { type: 'list.failed', error: 'Unavailable database' },
   { type: 'list.stop' },
   { type: 'list.flush' },
-  { type: refreshDelayEvent },
-] satisfies GraphEventFromLogic<typeof machine>[];
+] satisfies ModelFixture<typeof machine>[];
 
-type ListEvent = (typeof events)[number];
+type ListEvent = (typeof fixtures)[number];
 
-const key = (snapshot: ListSnapshot): string => JSON.stringify(snapshot.value);
+let list: Actor<typeof machine> | undefined;
 
-const options = {
-  input,
-  events,
-  filterEvents: (snapshot: ListSnapshot, event: ListEvent): boolean =>
-    snapshot.status === 'active' && permittedEvent(snapshot, event),
-  serializeState: (
-    snapshot: ListSnapshot,
-    event: ListEvent | undefined,
-    previous?: ListSnapshot,
-  ): string =>
-    JSON.stringify({
-      value: snapshot.value,
-      via: event && `${previous && key(previous)} ${event.type}`,
-    }),
-};
+const running = (): Actor<typeof machine> =>
+  list ?? expect.unreachable('The list subscription has not started');
 
-const paths = terminalPaths(getShortestPaths(machine, options));
-
-it.each(
-  paths.map(
-    (path, index): readonly [number, typeof path] => [index, path] as const,
-  ),
-)('walks list subscription model path %i', async (_, path): Promise<void> => {
-  const clock = new SimulatedClock();
-  const actor = createActor(machine, { input, clock }).start();
-
-  const execute = (event: ListEvent): void => {
-    if (event.type === refreshDelayEvent) clock.increment(100);
-    else actor.send(event);
-  };
-
-  try {
-    for (const [index, step] of path.steps.entries()) {
-      if (index > 0) execute(step.event);
-      expect(key(actor.getSnapshot())).toBe(key(step.state));
-      expect(actor.getSnapshot().status).toBe(step.state.status);
-    }
-  } finally {
-    actor.stop();
-  }
+beforeEach((): void => {
+  vi.useFakeTimers();
 });
 
-it('the generated list subscription paths walk every transition', (): void => {
-  expect(
-    unwalkedTransitions({
-      models: [
-        {
-          getAdjacencyMap: (): AdjacencyMap<ListSnapshot, ListEvent> =>
-            getAdjacencyMap(machine, options),
-        },
-      ],
-      paths,
-      stateKey: key,
-      eventKey: (event): typeof event.type => event.type,
-    }),
-  ).toEqual([]);
+afterEach((): void => {
+  list?.stop();
+  vi.useRealTimers();
 });
 
-function permittedEvent(snapshot: ListSnapshot, event: ListEvent): boolean {
-  if (event.type === refreshListEvent) return true;
+// A refresh is sent in every state, including those that ignore it.
+const accepts = (snapshot: ListSnapshot, event: ListEvent): boolean =>
+  event.type === refreshListEvent || snapshot.can(event);
 
-  return event.type === refreshDelayEvent
-    ? snapshot.matches({ active: 'pending' })
-    : snapshot.can(event);
+// Each executor sends its own fixture.
+const send = (fixture: ListEvent): [string, () => void] => [
+  fixture.type,
+  (): void => running().send(fixture),
+];
+
+function expectSameState(snapshot: ListSnapshot): void {
+  expect(running().getSnapshot().value).toEqual(snapshot.value);
+  expect(running().getSnapshot().status).toBe(snapshot.status);
 }
+
+const model = modelTest(
+  machine,
+  {
+    input,
+    fixtures,
+    vertex: (snapshot): Vertex => ({ value: snapshot.value }),
+    accepts,
+    walks: [{ name: 'shortest path', search: 'shortest' }],
+  },
+  {
+    start: (): Actor<typeof machine> => {
+      list = createActor(machine, { input }).start();
+
+      return list;
+    },
+    executors: Object.fromEntries(fixtures.map(send)),
+    delays: { listRefreshDelay: 100 },
+    always: expectSameState,
+    states: {},
+  },
+);
+
+describe('list subscription model', (): void => {
+  describeModel(model);
+
+  it('the generated paths walk every transition', (): void => {
+    expect(model.unwalked()).toEqual([]);
+  });
+});

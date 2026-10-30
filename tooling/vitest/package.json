@@ -5,9 +5,6 @@
   "type": "module",
   "exports": {
     "./model-audit": "./model-audit.ts",
-    "./model-coverage": "./model-coverage.ts",
-    "./model-graph": "./model-graph.ts",
-    "./model-paths": "./model-paths.ts",
     "./model-test": "./model-test.ts",
     "./node": "./node.ts"
   },

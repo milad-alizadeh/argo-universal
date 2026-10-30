@@ -1,4 +1,4 @@
-import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
+import type { ModelFixture } from '@repo/vitest/model-test';
 import { readError } from './server-machine-data.mocks';
 import {
   countsChangedEvent,
@@ -61,6 +61,6 @@ export const fixtures = [
     actorId: 'askQuit',
     error: readError,
   },
-] satisfies GraphEventFromLogic<typeof machine>[];
+] satisfies ModelFixture<typeof machine>[];
 
 export type ServerEvent = (typeof fixtures)[number];

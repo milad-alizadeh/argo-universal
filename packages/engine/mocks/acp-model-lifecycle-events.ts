@@ -50,7 +50,6 @@ export const modelLifecycleEvents = [
     actorId: 'removeCheckout',
     error: new Error('removal failed'),
   },
-  { type: 'xstate.after.checkoutRemovalDelay.session.archived' },
   { type: 'session.cancel' },
   {
     type: 'xstate.done.actor.cancelAcp',

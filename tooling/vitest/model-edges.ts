@@ -27,6 +27,10 @@ export const isDelayEvent = (event: EventObject): event is DelayEvent =>
 export const delayName = (type: string): string =>
   type.slice(delayPrefix.length).split('.').at(0) ?? '';
 
+// The delay a delayed event fires for, as the machine's `delays` name it.
+export const firedDelay = (event: EventObject): string | undefined =>
+  isDelayEvent(event) ? delayName(event.type) : undefined;
+
 const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge): string => edge.label.text),
   ...node.children.flatMap(eventTypes),
@@ -42,18 +46,36 @@ export const graphEventTypes = (machine: AnyStateMachine): string[] =>
     (type): boolean => !isRaised(type),
   );
 
-// One fixture list names the events a machine's edges need; delayed events need none, their delay names them.
-export function modelEvents<TEvent extends EventObject>(
-  machine: AnyStateMachine,
+// An edge's event descriptor: the type itself, `*`, or a wildcard such as `xstate.done.actor.*`.
+const isWildcardOf = (descriptor: string, type: string): boolean =>
+  descriptor.endsWith('.*') && type.startsWith(descriptor.slice(0, -1));
+
+const describes = (descriptor: string, type: string): boolean =>
+  descriptor === type || descriptor === '*' || isWildcardOf(descriptor, type);
+
+// The fixtures an edge needs; a delayed event needs none, its delay names it.
+function edgeEvents<TEvent extends EventObject>(
+  descriptor: string,
   fixtures: TEvent[],
 ): (TEvent | DelayEvent)[] {
-  return graphEventTypes(machine).flatMap((type): (TEvent | DelayEvent)[] => {
-    const matching = fixtures.filter((event): boolean => event.type === type);
-    const delayed = { type };
+  const matching = fixtures.filter(({ type }) => describes(descriptor, type));
+  const delayed = { type: descriptor };
 
-    if (matching.length > 0) return matching;
+  if (matching.length > 0) return matching;
 
-    if (isDelayEvent(delayed)) return [delayed];
-    throw new Error(`Missing graph fixture for ${type}`);
-  });
+  if (isDelayEvent(delayed)) return [delayed];
+  throw new Error(`Missing graph fixture for ${descriptor}`);
 }
+
+// One fixture list names the events a machine's edges need, each once, but those the model omits.
+export const modelEvents = <TEvent extends EventObject>(
+  machine: AnyStateMachine,
+  fixtures: TEvent[],
+  omitted: string[] = [],
+): (TEvent | DelayEvent)[] => [
+  ...new Set(
+    graphEventTypes(machine)
+      .filter((type) => !omitted.includes(type))
+      .flatMap((type) => edgeEvents(type, fixtures)),
+  ),
+];

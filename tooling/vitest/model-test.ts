@@ -1,24 +1,24 @@
 import type { AnyStateMachine, EventObject } from 'xstate';
 import { modelCase } from './model-case';
-import { unwalkedTransitions } from './model-coverage';
-import { traversalOptions, walkEvents } from './model-options';
+import { eventKeyOf, traversalOptions, walkEvents } from './model-options';
 import { adjacencyOf, searchPaths } from './model-search';
 import { stateKey } from './model-state';
 import type {
   Model,
   Modelled,
   ModelActor,
-  ModelEvent,
-  ModelGraph,
   ModelOptions,
   ModelPaths,
   ModelSuite,
-  ModelWalk,
-  Walked,
+  WalkedGraph,
 } from './model-types';
+import { unwalkedTransitions } from './model-unwalked';
 import { requireDrivers } from './model-validate';
+import type { ModelEvent, ModelGraph, ModelWalk, Walked } from './model-walk';
 
 export { describeModel } from './model-describe';
+
+export { firedDelay } from './model-edges';
 
 export type { DelayEvent, ModelFixture } from './model-edges';
 
@@ -27,11 +27,17 @@ export type {
   Model,
   ModelActor,
   ModelCase,
-  ModelGraph,
   ModelSuite,
-  ModelWalk,
-  Vertex,
+  WalkedGraph,
 } from './model-types';
+
+export type {
+  Arrival,
+  ModelGraph,
+  ModelWalk,
+  SnapshotOf,
+  Vertex,
+} from './model-walk';
 
 interface Search<TMachine extends AnyStateMachine, TEvent extends EventObject> {
   walk: ModelWalk<TMachine, TEvent>;
@@ -51,16 +57,19 @@ function search<TMachine extends AnyStateMachine, TEvent extends EventObject>(
 }
 
 function unwalked<TMachine extends AnyStateMachine, TEvent extends EventObject>(
-  machine: TMachine,
+  { machine, graph }: Omit<Walked<TMachine, TEvent>, 'walk'>,
   searches: Search<TMachine, TEvent>[],
 ): string[] {
+  const { stateKey: key = (snapshot): string => stateKey(snapshot.value) } =
+    graph;
+
   return unwalkedTransitions({
     models: searches.map(({ options }) => ({
       getAdjacencyMap: () => adjacencyOf(machine, options),
     })),
     paths: searches.flatMap(({ paths }) => paths),
-    stateKey: (snapshot): string => stateKey(snapshot.value),
-    eventKey: (event): string => event.type,
+    stateKey: key,
+    eventKey: eventKeyOf(graph),
   });
 }
 
@@ -84,7 +93,7 @@ function modelOf<TMachine extends AnyStateMachine, TEvent extends EventObject>(
 
   return {
     suites: searches.map((found) => suiteOf(modelled, found)),
-    unwalked: (): string[] => unwalked(machine, searches),
+    unwalked: (): string[] => unwalked(modelled, searches),
   };
 }
 
@@ -98,4 +107,20 @@ export function modelTest<
   actor: ModelActor<TMachine, TEvent>,
 ): Model {
   return modelOf({ machine, graph, actor });
+}
+
+// Walks the machine's graph without an actor, for a test that checks the generated paths themselves. A missing fixture throws here.
+export function walkGraph<
+  TMachine extends AnyStateMachine,
+  TEvent extends EventObject,
+>(
+  machine: TMachine,
+  graph: ModelGraph<TMachine, TEvent>,
+): WalkedGraph<TMachine, TEvent> {
+  const searches = graph.walks.map((walk) => search({ machine, graph, walk }));
+
+  return {
+    paths: searches.flatMap(({ paths }) => paths),
+    unwalked: (): string[] => unwalked({ machine, graph }, searches),
+  };
 }

@@ -1,5 +1,4 @@
-import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
-import type { DelayEvent, Vertex } from '@repo/vitest/model-test';
+import type { DelayEvent, ModelFixture, Vertex } from '@repo/vitest/model-test';
 import {
   drainWriterEvent,
   isRefusable,
@@ -26,7 +25,7 @@ export const fixtures = [
     error: writeError,
     actorId: 'writeBatch',
   },
-] satisfies GraphEventFromLogic<typeof machine>[];
+] satisfies ModelFixture<typeof machine>[];
 
 export type WriterEvent = (typeof fixtures)[number];
 

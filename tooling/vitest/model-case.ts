@@ -8,9 +8,9 @@ import type {
   ModelPaths,
   ModelStep,
   PathRun,
-  SnapshotOf,
 } from './model-types';
 import { executorFor } from './model-validate';
+import type { SnapshotOf } from './model-walk';
 
 const initType: string = 'xstate.init';
 

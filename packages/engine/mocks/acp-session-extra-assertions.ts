@@ -1,3 +1,4 @@
+import { firedDelay } from '@repo/vitest/model-test';
 import { expect } from 'vitest';
 import { getNextSnapshot, type EventFromLogic } from 'xstate';
 import { sessionMachine } from '../src/sessions';
@@ -126,7 +127,7 @@ const expectStorageFailure = (step: ModelStep): void => {
 };
 
 const expectCheckoutTimeout = (step: ModelStep, limit: number): void => {
-  if (step.event.type !== 'xstate.after.checkoutLimit.session.creating') return;
+  if (firedDelay(step.event) !== 'checkoutLimit') return;
   expect(step.state.status).toBe('done');
   expect(step.state.output).toEqual({
     failure: expect.stringContaining(`${limit} ms`),
@@ -134,9 +135,7 @@ const expectCheckoutTimeout = (step: ModelStep, limit: number): void => {
 };
 
 const expectFeedTimeout = (step: ModelStep): void => {
-  if (
-    step.event.type === 'xstate.after.feedFlushLimit.session.open.acp.flushing'
-  )
+  if (firedDelay(step.event) === 'feedFlushLimit')
     expect(step.state.context.failure).not.toBeNull();
 };
 

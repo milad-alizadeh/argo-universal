@@ -1,5 +1,5 @@
 import type { FeedChange } from '@repo/contracts';
-import type { GraphEventFromLogic } from '@repo/vitest/model-graph';
+import type { ModelFixture } from '@repo/vitest/model-test';
 import type { SnapshotFrom } from 'xstate';
 import {
   feedMachine,
@@ -68,14 +68,8 @@ const settleMessage = change({
   set: { state: 'settled' },
 });
 
-export const streamBatchDelayEvent =
-  'xstate.after.streamBatchDelay.feed.active.stream.batching';
-
-export const storeDelayEvent =
-  'xstate.after.storeDelay.feed.active.store.dirty';
-
-// Done events of states are left out: the model would send them before the regions are done.
-export const events = [
+// The machine raises the done events of its states, and its delays need no fixture.
+export const fixtures = [
   openMessage,
   appendText,
   settleMessage,
@@ -150,8 +144,6 @@ export const events = [
     reason: 'model reason',
   },
   { type: 'feed.flush' },
-  { type: streamBatchDelayEvent },
-  { type: storeDelayEvent },
-] satisfies GraphEventFromLogic<typeof machine>[];
+] satisfies ModelFixture<typeof machine>[];
 
-export type FeedMachineEvent = (typeof events)[number];
+export type FeedMachineEvent = (typeof fixtures)[number];

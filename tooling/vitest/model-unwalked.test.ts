@@ -5,7 +5,7 @@ import {
   type EventObject,
 } from 'xstate';
 import { TestModel } from 'xstate/graph';
-import { unwalkedTransitions } from './model-coverage';
+import { unwalkedTransitions } from './model-unwalked';
 
 const machine = createMachine({
   initial: 'idle',

@@ -6,64 +6,7 @@ import type {
   InputFrom,
 } from 'xstate';
 import type { EventExecutor, StatePath, TraversalOptions } from 'xstate/graph';
-import type { DelayEvent } from './model-edges';
-
-// The snapshot the graph search produces, as the model-graph wrappers type it.
-export type SnapshotOf<TMachine extends AnyStateMachine> = ReturnType<
-  TMachine['transition']
->;
-
-// What makes two snapshots one vertex of the graph; two snapshots with the same vertex are explored once.
-export type Vertex = string | object;
-
-export type Check<
-  TMachine extends AnyStateMachine,
-  TEvent extends EventObject,
-> = (snapshot: SnapshotOf<TMachine>, event: TEvent | DelayEvent) => boolean;
-
-// One way to walk the machine: the graph search and what it distinguishes, permits and stops at.
-export interface ModelWalk<
-  TMachine extends AnyStateMachine,
-  TEvent extends EventObject,
-> {
-  name: string;
-  search: 'shortest' | 'simple';
-  // Each step into a state gets its own vertex by default, so shortest paths walk every transition; polling loops give thousands of simple paths that way.
-  arrivals?: boolean;
-  // Events this walk drives besides the model's.
-  fixtures?: TEvent[];
-  // The model's own by default.
-  vertex?: (snapshot: SnapshotOf<TMachine>) => Vertex;
-  permits?: Check<TMachine, TEvent>;
-  stopWhen?: (snapshot: SnapshotOf<TMachine>) => boolean;
-}
-
-// What builds the graph: the events a machine's edges need, what its states are, and the ways to walk it.
-export interface ModelGraph<
-  TMachine extends AnyStateMachine,
-  TEvent extends EventObject,
-> {
-  input: InputFrom<TMachine>;
-  fixtures: TEvent[];
-  vertex: (snapshot: SnapshotOf<TMachine>) => Vertex;
-  // Beyond what the machine itself accepts through `snapshot.can`.
-  permits?: Check<TMachine, TEvent>;
-  limit?: number;
-  walks: ModelWalk<TMachine, TEvent>[];
-}
-
-// What one walk of a model searches with.
-export interface Walked<
-  TMachine extends AnyStateMachine,
-  TEvent extends EventObject,
-> {
-  machine: TMachine;
-  graph: ModelGraph<TMachine, TEvent>;
-  walk: ModelWalk<TMachine, TEvent>;
-}
-
-// The fixtures, and the delayed events the machine names itself.
-export type ModelEvent<TEvent extends EventObject> = TEvent | DelayEvent;
+import type { ModelEvent, ModelGraph, SnapshotOf } from './model-walk';
 
 export type ModelPaths<
   TMachine extends AnyStateMachine,
@@ -144,6 +87,15 @@ export interface ModelCase {
 export interface ModelSuite {
   name: string;
   cases: ModelCase[];
+}
+
+// A graph walked without an actor: its generated paths, and the transitions of the machine they miss.
+export interface WalkedGraph<
+  TMachine extends AnyStateMachine,
+  TEvent extends EventObject,
+> {
+  paths: ModelPaths<TMachine, TEvent>;
+  unwalked: () => string[];
 }
 
 export interface Model {

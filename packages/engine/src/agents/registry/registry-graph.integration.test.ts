@@ -1,12 +1,11 @@
-import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import {
-  getAdjacencyMap,
-  getShortestPaths,
-  type GraphEventFromLogic,
-} from '@repo/vitest/model-graph';
+  type Arrival,
+  type ModelFixture,
+  type Vertex,
+  walkGraph,
+} from '@repo/vitest/model-test';
 import { afterAll, expect, it } from 'vitest';
-import { createActor, type SnapshotFrom } from 'xstate';
-import type { StatePath, AdjacencyMap } from 'xstate/graph';
+import { createActor, type InputFrom, type SnapshotFrom } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { writerMachine } from '../../storage';
 import { registryMachine } from './registry-machine';
@@ -38,7 +37,6 @@ const events = [
     actorId: 'fetchRegistry',
     error: new Error('offline'),
   },
-  { type: 'xstate.after.fetchLimit.registry.fetching' },
   {
     type: 'xstate.done.actor.saveRegistry',
     actorId: 'saveRegistry',
@@ -49,18 +47,18 @@ const events = [
     actorId: 'saveRegistry',
     error: new Error('storage'),
   },
-] satisfies GraphEventFromLogic<typeof registryMachine>[];
+] satisfies ModelFixture<typeof registryMachine>[];
 
 type GraphEvent = (typeof events)[number];
 
-const stateKey = (snapshot: RegistrySnapshot): string =>
-  JSON.stringify({
-    state: snapshot.value,
-    attempted: snapshot.context.lastAttemptAt !== null,
-    error: snapshot.context.error,
-  });
+const vertex = (snapshot: RegistrySnapshot): Vertex => ({
+  state: snapshot.value,
+  attempted: snapshot.context.lastAttemptAt !== null,
+  error: snapshot.context.error,
+});
 
-const eventKey = (event: GraphEvent): string => event.type;
+const stateKey = (snapshot: RegistrySnapshot): string =>
+  JSON.stringify(vertex(snapshot));
 
 const canApply = (snapshot: RegistrySnapshot, event: GraphEvent): boolean => {
   if (isFetchEvent(event)) return snapshot.matches('fetching');
@@ -70,63 +68,51 @@ const canApply = (snapshot: RegistrySnapshot, event: GraphEvent): boolean => {
   return publicEventAllowed(snapshot, event);
 };
 
-const filterEvents = (snapshot: RegistrySnapshot, event: GraphEvent): boolean =>
-  snapshot.status === 'active' && canApply(snapshot, event);
-
 const isPublic = (
   event: GraphEvent,
 ): event is Extract<GraphEvent, { type: 'REFRESH' | 'STALE' | 'STOP' }> =>
   ['REFRESH', 'STALE', 'STOP'].includes(event.type);
 
 const isFetchEvent = (event: GraphEvent): boolean =>
-  event.type.endsWith('fetchRegistry') || event.type.includes('fetchLimit');
+  event.type.endsWith('fetchRegistry');
 
 const publicEventAllowed = (
   snapshot: RegistrySnapshot,
   event: GraphEvent,
 ): boolean => isPublic(event) && snapshot.can(event);
 
-type Model = {
-  paths: StatePath<RegistrySnapshot, GraphEvent>[];
-  getAdjacencyMap: () => AdjacencyMap<RegistrySnapshot, GraphEvent>;
-};
+const inputOf = ({
+  database,
+}: typeof stored): InputFrom<typeof registryMachine> => ({
+  database,
+  writer: createActor(writerMachine, {
+    input: { database, now: (): number => 0 },
+  }),
+  now: (): number => 0,
+});
 
-const models = [stored, empty].map(({ database }): Model => {
-  const options = {
-    input: {
-      database,
-      writer: createActor(writerMachine, {
-        input: { database, now: (): number => 0 },
-      }),
-      now: (): number => 0,
-    },
-    events,
-    filterEvents,
-    serializeState: (
-      snapshot: RegistrySnapshot,
-      event?: GraphEvent,
-      previous?: RegistrySnapshot,
-    ): string =>
-      JSON.stringify({
-        state: stateKey(snapshot),
-        via: event && `${previous && stateKey(previous)} ${event.type}`,
-      }),
-  };
+// The vertex the step came from, so each way into a vertex is its own.
+const cameFrom: Arrival<typeof registryMachine, GraphEvent> = (
+  _,
+  event,
+  previous,
+): string => `${stateKey(previous)} ${event.type}`;
 
-  return {
-    paths: getShortestPaths(registryMachine, options),
-    getAdjacencyMap: (): AdjacencyMap<RegistrySnapshot, GraphEvent> =>
-      getAdjacencyMap(registryMachine, options),
-  };
+const walk = { search: 'shortest', prefixes: true, arrival: cameFrom } as const;
+
+// One walk from a stored Registry and one from an empty cache; coverage is over both.
+const { unwalked } = walkGraph(registryMachine, {
+  input: inputOf(stored),
+  fixtures: events,
+  vertex,
+  stateKey,
+  accepts: canApply,
+  walks: [
+    { name: 'stored', ...walk },
+    { name: 'empty', input: inputOf(empty), ...walk },
+  ],
 });
 
 it('structurally walks Registry fetch, save, failure, timeout, throttle and STOP transitions', () => {
-  expect(
-    unwalkedTransitions({
-      models,
-      paths: models.flatMap(({ paths }) => paths),
-      stateKey,
-      eventKey,
-    }),
-  ).toEqual([]);
+  expect(unwalked()).toEqual([]);
 });

@@ -9,23 +9,25 @@ function actorOf(run: PathRun): Running {
 
 const reached = (actor: Running): string => stateKey(actor.getSnapshot().value);
 
+const isSent = (
+  inspected: InspectionEvent,
+  actor: Running,
+  type: string,
+): boolean =>
+  inspected.type === '@xstate.event' &&
+  inspected.actorRef === actor &&
+  inspected.event.type === type;
+
 // Counts the delayed events the actor is sent; a delay that re-enters its own state shows nowhere else.
 function countDelivered(actor: Running, type: string): () => number {
   let delivered = 0;
 
-  const { unsubscribe } = actor.system.inspect(
-    (inspected: InspectionEvent): void => {
-      if (
-        inspected.type === '@xstate.event' &&
-        inspected.actorRef === actor &&
-        inspected.event.type === type
-      )
-        delivered += 1;
-    },
-  );
+  const subscription = actor.system.inspect((inspected: InspectionEvent) => {
+    if (isSent(inspected, actor, type)) delivered += 1;
+  });
 
   return (): number => {
-    unsubscribe();
+    subscription.unsubscribe();
 
     return delivered;
   };
