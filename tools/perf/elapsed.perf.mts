@@ -2,6 +2,7 @@ import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, type Page, test } from '@playwright/test';
+import { caseScenarios } from './elapsed-registry.mts';
 import {
   type BenchmarkMetadata,
   type ElapsedResult,
@@ -13,6 +14,7 @@ import {
   readinessTimeout,
   repetitions,
   type ScenarioFactory,
+  scenarioNotes,
   warmups,
 } from './elapsed-scenario.mts';
 import { runElapsed } from './elapsed-trial.mts';
@@ -107,6 +109,7 @@ const scenarios = new Map<string, ScenarioFactory>(
       wheel(page, server, sessionsScroll),
     'composer-type-ready': (page: Page): Promise<ElapsedScenario> =>
       typing(page, server),
+    ...caseScenarios(() => server),
   }),
 );
 
@@ -117,6 +120,15 @@ function datasetLimit(
     ? { notApplicable: 'The 100-row tier fits in the initial App history page' }
     : {};
 }
+
+const notes = (
+  interaction: string,
+  scenario: ElapsedScenario,
+  cpu: number,
+): Pick<ElapsedResult, 'driverOnly' | 'notApplicable'> => ({
+  ...datasetLimit(interaction),
+  ...scenarioNotes(scenario, cpu),
+});
 
 function resultFor(
   interaction: string,
@@ -130,7 +142,7 @@ function resultFor(
     boundary: scenario.boundary,
     warmups: [],
     samples: [],
-    ...datasetLimit(interaction),
+    ...notes(interaction, scenario, cpu),
   };
 }
 
@@ -152,7 +164,7 @@ for (const planCase of planned)
 
     const result = resultFor(interaction, cpu, scenario);
     results.push(result);
-    // The 100-row tier fits in the initial page, so it cannot measure older-history pagination.
+    // A tier the dataset cannot exercise, or a slowdown the scenario is not subject to, carries its reason.
     test.skip(result.notApplicable !== undefined, result.notApplicable);
     await runElapsed(page, scenario, result);
     expect(

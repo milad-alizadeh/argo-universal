@@ -92,7 +92,7 @@ async function prepareWheel(page: Page, testId: string): Promise<TimedAction> {
   };
 }
 
-async function openWheel(
+export async function openWheel(
   page: Page,
   server: SeededServer,
   testId: string,

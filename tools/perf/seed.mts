@@ -32,7 +32,12 @@ export interface SeededServer extends SeedCounts {
   shortSessionTitle: string;
   sessionCount: number;
   requested: SeedConfiguration;
+  httpUrl: string;
+  // The Project's git repository, which the diff scenarios write their changes into.
+  projectPath: string;
   stop: () => Promise<GroupRelease>;
+  // Stops the Server, awaits `whileStopped`, then starts it again on the same port and data.
+  restart: (whileStopped: () => Promise<void>) => Promise<void>;
 }
 
 const feedCopies = 14;
@@ -120,21 +125,20 @@ async function seedDatabase(
 
 type ServerProcess = Pick<
   Awaited<ReturnType<typeof startOwnServer>>,
-  'serverUrl' | 'stop'
+  'serverUrl' | 'httpUrl' | 'stop' | 'restart'
 >;
 
 function serverView(
   server: ServerProcess,
   counts: SeedCounts,
   requested: SeedConfiguration,
-): SeededServer {
+): Omit<SeededServer, 'projectPath'> {
   return {
-    serverUrl: server.serverUrl,
+    ...server,
     ...benchmarkTitles,
     sessionCount: requested.sessions,
     requested,
     ...counts,
-    stop: server.stop,
   };
 }
 
@@ -149,5 +153,8 @@ export async function startSeededServer(
   const counts = await seedDatabase(databasePath, requested);
   const server = await startOwnServer(directory, {});
 
-  return serverView(server, counts, requested);
+  return {
+    ...serverView(server, counts, requested),
+    projectPath: path.join(directory, 'project'),
+  };
 }

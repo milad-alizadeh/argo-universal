@@ -18,8 +18,10 @@ export interface ObservedTrial {
 export interface ElapsedResult {
   interaction: string;
   cpu: number;
-  condition: 'warm' | 'document-reload';
+  condition: 'warm' | 'document-reload' | 'cold-cache' | 'server-restart';
   boundary: string;
+  // Timed on the driver's clock alone, so there is no browser observation to summarise.
+  driverOnly?: true;
   notApplicable?: string;
   warmups: ObservedTrial[];
   samples: ObservedTrial[];
@@ -69,8 +71,8 @@ type Summary = ReturnType<typeof summarizeElapsed>;
 interface ElapsedReport extends ElapsedResult {
   summary: {
     driver: Summary;
-    browserFirstReady: Summary;
-    browserSettled: Summary;
+    browserFirstReady?: Summary;
+    browserSettled?: Summary;
   };
 }
 
@@ -81,12 +83,14 @@ const summarized = (result: ElapsedResult): ElapsedReport => ({
   ...result,
   summary: {
     driver: summarizeElapsed(result.samples.map(({ driver }) => driver)),
-    browserFirstReady: summarizeElapsed(
-      result.samples.map((sample) => browserSample(sample, 'firstReadyMs')),
-    ),
-    browserSettled: summarizeElapsed(
-      result.samples.map((sample) => browserSample(sample, 'settledMs')),
-    ),
+    ...(!result.driverOnly && {
+      browserFirstReady: summarizeElapsed(
+        result.samples.map((sample) => browserSample(sample, 'firstReadyMs')),
+      ),
+      browserSettled: summarizeElapsed(
+        result.samples.map((sample) => browserSample(sample, 'settledMs')),
+      ),
+    }),
   },
 });
 
@@ -115,7 +119,7 @@ const rows = (results: ElapsedReport[]): SummaryRow[] =>
     interaction,
     cpu,
     condition,
-    ...summary.browserSettled,
+    ...(summary.browserSettled ?? summary.driver),
   }));
 
 export interface ElapsedRun {

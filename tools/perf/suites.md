@@ -7,7 +7,8 @@ They are frame and latency instruments: none of them asserts a speed budget.
 | --- | --- | --- |
 | Frames | `interactions.perf.mts` | `sidebar`, `sessions`, `drawer`, and the Feed scenarios (`feed`, `expand`, `paging`, `streaming`) |
 | Frames | `agents.perf.mts` | `agents`, `agents-phone`, against a 200-Agent registry |
-| Elapsed | `elapsed.perf.mts` | `session-open-warm`, `session-open-reload`, `feed-page-ready`, `tool-expand-ready`, `feed-wheel-ready`, `sessions-wheel-ready`, `composer-type-ready` |
+| Elapsed | `elapsed.perf.mts` | `session-open-warm`, `session-open-reload`, `feed-page-ready`, `tool-expand-ready`, `feed-wheel-ready`, `sessions-wheel-ready`, `composer-type-ready`, and the scenarios under "Elapsed scenarios by case" |
+| Soak | `soak.perf.mts` | One test, `soak for N minutes`, declared only when `PERF_SOAK_MINUTES` is set |
 | Collector | `collector.perf.mts` | The frame collector's own sensitivity checks; no product scenario |
 
 ## Run them
@@ -29,6 +30,54 @@ Reserve a quiet measurement window first: a run taken under load measures the ma
 | `PERF_OUT` | Where the reports and screenshots go; default `$TMPDIR/argo-perf` |
 | `PERF_HEADED=1` | Runs with a visible browser, as a cross-check against the headless collector |
 | `PERF_TRACE=1`, `PERF_PROFILE=1` | Save one trace or CPU profile per scenario; these artefacts are large |
+
+## Elapsed scenarios by case
+
+None of these has been measured. Each was authored and type-checked; a run on a quiet machine is what measures it.
+Scenarios marked **driver** have no browser observation: the page is replaced, or the Server restarted, under the probe.
+They are timed on the driver's clock alone, which includes automation round trips, and their report carries `summary.driver` only.
+
+| Case | Scenario | Clock | Boundary |
+| --- | --- | --- | --- |
+| PF-01 App | `app-launch-list-ready` | driver | Navigation commit from a blank document with the HTTP cache and stored data cleared → first Sessions row drawn. Browser and Server stay warm |
+| PF-01 App | `app-launch-composer-ready` | driver | The same start → the long Session opened from its row, latest Feed text drawn, Composer enabled |
+| PF-01 Server, PF-03 | `server-restart-ready` | driver | Server process launch → it publishes its address on the same port and data. The stop before it is not timed; filesystem cache is warm; browser CPU slowdown does not apply, so only 1x runs |
+| PF-03 | `server-restart-reconnected` | driver | Server ready → the Connection banner (`Reconnecting…` or `Can't reach …`) is gone |
+| PF-03 | `server-restart-usable` | driver | Server ready → banner gone, latest Feed text drawn, Composer enabled |
+| PF-02 | `window-reopen-ready` | driver | Navigation commit after the document closed with a draft typed → long Session reopened, Feed drawn, Composer enabled and holding the draft exactly |
+| PF-20 touch | `feed-touch-ready`, `sessions-touch-ready` | browser | Touch swipe from `Input.synthesizeScrollGesture` → changed scroll position. Desktop-width viewport; no inertia read |
+| PF-21 diff | `diff-small-ready`, `diff-large-ready` | browser | Changes overview press → first changed line drawn in the Changes list. One 8-line changed file, or one 2,000-line changed file (every line changed), written into the Project's git repository by `diff-fixture.mts` |
+| PF-23 search | `sessions-search-ready` | browser | Sessions search `input` event → a matching title drawn and a non-matching one gone, over the seeded Sessions |
+| PF-13, scripted only | `turns-concurrent-1-scripted`, `-2-`, `-4-` | driver | Send pressed together in N Sessions → Stop drawn then gone on every page. Only the slowest Session's finish; 1x only |
+| PF-14 | `attachment-{preview,upload}-{text,image}-{small,large}-ready` | driver | Preview: file chooser selection → preview in the Composer. Upload: Send → the Server answers the Blob with every byte. Files are random synthetic content, new each trial |
+
+Server restart scenarios restart the one Server of the run and leave it on the same port.
+Browser CPU slowdown reaches only the first page. A scenario it cannot reach (`server-restart-ready`, `turns-concurrent-*-scripted`) is recorded `notApplicable`, with its reason, at any slowdown other than 1x, and never as a measurement.
+An unset `PERF_ONLY` plans all of them, so a default elapsed run is now much longer; name the scenarios to run fewer.
+
+## What these scenarios do not cover
+
+- **PF-01 first frame** and **PF-02 native foreground resume** have no web equivalent here. The native half needs a device run.
+- **PF-13** with a real Agent: queue delay, provider contention, and per-Session CPU and memory. `turns-concurrent-*-scripted` uses the fixture Agent and is not PF-13 evidence.
+- **PF-14** Agent receipt of the file, and a file the App rejects as too large: a rejected file shows as a timed-out preview, not as a size limit.
+- **PF-21** Back and tab switching, and the phone's changed-files sheet.
+- **PF-17** and **PF-04 to PF-12** need a real Agent. The `streaming` scenario uses a scripted Agent and is not PF-17.
+
+## Soak (PF-24)
+
+```sh
+PERF_SOAK_MINUTES=30 PERF_LABEL=soak PERF_OUT=/tmp/argo-perf-soak pnpm --filter @repo/tools perf soak.perf.mts
+```
+
+The soak repeats one cycle: scroll the Sessions list, open and scroll the long Feed, open another Session, send a prompt to the scripted Agent and, on every second cycle, press Stop.
+It takes the Session-open probe at the start, every `PERF_SOAK_PROBE_MINUTES` (default 5) and at the end, and samples every `PERF_SOAK_SAMPLE_SECONDS` (default 60):
+
+- App: Chromium JS heap, DOM nodes, event listeners and documents.
+- Server: process count, summed resident memory and CPU of the listening process and everything below it, from `ps`.
+
+`<label>-soak.json` holds the raw probes and samples and counts cancellations whose Stop button actually appeared.
+It states no verdict: raw growth alone does not prove a leak, and Server reads and subscriptions are not observed.
+The test's own timeout is the soak plus ten minutes; no other timeout changes.
 
 ## Read the report
 

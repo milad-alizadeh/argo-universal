@@ -20,7 +20,7 @@ const feedSettleMilliseconds = 1500;
 const streamedPrompt = 'Run the checks';
 
 // Far longer than a Turn takes, even at the heaviest CPU slowdown.
-const turnTimeoutMilliseconds = 120_000;
+export const turnTimeoutMilliseconds = 120_000;
 
 // The long Session, and how to open it on a page.
 export interface FeedTarget {
