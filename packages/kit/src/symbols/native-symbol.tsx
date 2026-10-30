@@ -2,12 +2,12 @@ import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { Icon, IconSlot, useIconSize } from '#primitives/content/icon';
-import { glyphForegroundClass } from './row-glyph';
 import { NativeIcon } from './native-icon';
 import type {
   NativeSymbolProps,
   NativeSymbolTone,
 } from './native-symbol-props';
+import { glyphForegroundClass } from './row-glyph';
 
 function toneClassName(tone: NativeSymbolTone | undefined): string | undefined {
   if (tone === 'muted') return 'text-muted-foreground';

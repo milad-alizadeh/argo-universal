@@ -3,10 +3,10 @@ import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText, useTextColor } from '#primitives/content/native-text';
-import { rowGlyphSize } from '../../../symbols/row-glyph';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { iosImage } from '../../../symbols/ios-image';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { RowLogo } from './field-row-logo';
 import type { RowTextProps } from './field-row-text';
 

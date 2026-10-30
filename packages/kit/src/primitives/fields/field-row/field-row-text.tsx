@@ -4,9 +4,9 @@ import { AgentLogo } from '#primitives/content/agent-logo';
 import { IconSlot } from '#primitives/content/icon';
 import { NativeText } from '#primitives/content/native-text';
 import type { Tone } from '#primitives/content/text';
-import { rowGlyphSize } from '../../../symbols/row-glyph';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
 
 // What every row but a Button shares with Expo UI's universal ListItem: an icon before the title.

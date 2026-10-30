@@ -7,7 +7,6 @@ import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
-import { glyphForegroundClass } from '../../../symbols/row-glyph';
 import {
   type IconSizeValue,
   useIconBox,
@@ -20,6 +19,7 @@ import {
 } from '../../../symbols/icon-symbol';
 import { LogoGlyph } from '../../../symbols/logo-glyph';
 import type { LogoSource } from '../../../symbols/logo-source';
+import { glyphForegroundClass } from '../../../symbols/row-glyph';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps } from './icon-props';
 import { useIconSize } from './icon-size-context';

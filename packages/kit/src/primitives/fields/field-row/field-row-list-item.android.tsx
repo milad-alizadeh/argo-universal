@@ -9,9 +9,9 @@ import {
 import { type ReactElement, type ReactNode, useContext } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
-import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { useIconPixels } from '../../../symbols/icon-size';
 import { nativeIconName } from '../../../symbols/native-icon-name';
+import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
 import { RowLogo } from './field-row-logo';
 import {
