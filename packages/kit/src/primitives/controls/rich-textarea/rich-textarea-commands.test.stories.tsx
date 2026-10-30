@@ -203,6 +203,30 @@ export const ACommandWithoutAHintShowsNone: Story = {
   },
 };
 
+// The last letter and Enter arrive before the editor has told the menu about that letter.
+export const EnterRightAfterTheLastLetterAcceptsTheWholeCommand: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: label });
+    await userEvent.type(field, '/in');
+    await waitFor(() =>
+      expect(
+        within(document.body).getByRole('option', { name: /init/ }),
+      ).toBeVisible(),
+    );
+    document.execCommand('insertText', false, 'i');
+    field.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await waitFor(() =>
+      expect(args.onChangeText).toHaveBeenLastCalledWith('/init '),
+    );
+  },
+};
+
 export const APluginResultThatInsertsSlashNameStaysPlainText: Story = {
   args: { suggestions: [source, pluginSource] },
   play: async ({ canvas, args }) => {
