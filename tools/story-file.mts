@@ -1,13 +1,12 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { type ArgsBlock, argsBlocks, bare } from './story-blocks.mts';
-import { root, trackedFiles } from './tracked-files.mts';
 
 /*
  * The one place that knows how a story file is spelled. The gates, the title check, the render
  * planner and `pnpm new:story` all ask what a story file holds through `readStory`, so they cannot
  * disagree on what a story is. The reading is text-based, not an AST: the gates also read the
- * snippets their tests write, and a snippet that does not parse whole still has to be read.
+ * snippets their tests write, and a snippet that does not parse whole still has to be read. It
+ * imports nothing from Node, because the render gates' browser suite reads stories through it;
+ * `story-files.mts` loads them off disk.
  */
 
 // A story file as the checkers read it off disk.
@@ -101,18 +100,3 @@ export const readStory = ({ source }: StoryFile): StoryRead => {
     argsBlocks: argsBlocks(source, storyExports(bare(source))),
   };
 };
-
-/*
- * Every file the pathspecs match in the working tree, tracked or not. A story written but not yet
- * `git add`ed is checked as the commit will hold it, so a gate cannot pass locally and fail once
- * the file is added.
- */
-export const loadSources = (pathspecs: readonly string[]): StoryFile[] =>
-  trackedFiles(pathspecs, { untracked: true }).map((file): StoryFile => ({
-    file,
-    source: readFileSync(resolve(root, file), 'utf8'),
-  }));
-
-export const loadStoryFiles = (
-  pathspecs: readonly string[] = [`*${storySuffix}`],
-): StoryFile[] => loadSources(pathspecs);

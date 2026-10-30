@@ -1,4 +1,4 @@
-import { loadStoryFiles } from './story-file.mts';
+import { loadStoryFiles } from './story-files.mts';
 import {
   duplicateTitleProblems,
   presentationTitles,

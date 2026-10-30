@@ -8,12 +8,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { lockBrowserSuite } from '@repo/browser-suite-lock';
-import {
-  loadStoryFiles,
-  readStory,
-  testStory,
-  type StoryFile,
-} from './story-file.mts';
+import { readStory, testStory, type StoryFile } from './story-file.mts';
+import { loadStoryFiles } from './story-files.mts';
 import {
   childStateProblems,
   duplicateRenderProblems,

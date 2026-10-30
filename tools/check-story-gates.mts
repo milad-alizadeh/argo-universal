@@ -1,4 +1,4 @@
-import { loadSources, loadStoryFiles } from './story-file.mts';
+import { loadSources, loadStoryFiles } from './story-files.mts';
 import { gateProblems, type Sources } from './story-gate-rules.mts';
 
 const files = loadStoryFiles();
