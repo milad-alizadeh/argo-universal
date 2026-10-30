@@ -24,6 +24,7 @@ export function Lens(props: MorphState): React.JSX.Element {
 
   return (
     <Animated.View
+      testID="search-lens"
       pointerEvents="none"
       className="absolute inset-y-0 right-0 items-center justify-center"
       style={[lensBox(props.geometry), style]}

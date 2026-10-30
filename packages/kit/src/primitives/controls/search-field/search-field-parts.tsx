@@ -10,6 +10,7 @@ import {
   useSurfaceStyle,
   useTextStyle,
 } from './search-field-motion';
+import type { LayoutHandler } from './search-field-props';
 
 export interface MorphState {
   open: boolean;
@@ -26,6 +27,7 @@ export type RestRowProps = MorphState & {
 
 type RestGroupProps = Pick<MorphState, 'open' | 'progress'> & {
   className: string;
+  onLayout?: LayoutHandler;
   children: ReactNode;
 };
 
@@ -37,6 +39,7 @@ function RestGroup(props: RestGroupProps): React.JSX.Element {
       accessibilityElementsHidden={props.open}
       inert={props.open}
       className={props.className}
+      onLayout={props.onLayout}
       style={useRestStyle(props.progress)}
     >
       {props.children}
@@ -57,9 +60,19 @@ export function RestRow(props: RestRowProps): React.JSX.Element {
   );
 }
 
-// A sidebar's actions, after its search button; they leave with the title.
-export function TrailingActions(props: RestRowProps): ReactNode {
-  if (!props.sidebar || !props.actions) return null;
+// Whether the row draws its actions after the search button rather than beside the title.
+export const hasTrailingActions = (
+  props: Pick<RestRowProps, 'sidebar' | 'actions'>,
+): boolean => Boolean(props.sidebar && props.actions);
+
+/*
+ * A sidebar's actions, after its search button; they leave with the title. The group reports its own width, which is
+ * what the search button sits in from the row's end.
+ */
+export function TrailingActions(
+  props: RestRowProps & { onLayout: LayoutHandler },
+): ReactNode {
+  if (!hasTrailingActions(props)) return null;
 
   return (
     <RestGroup {...props} className="shrink-0 flex-row items-center gap-1">
