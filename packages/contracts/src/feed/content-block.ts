@@ -34,6 +34,8 @@ export type TextContent = z.infer<typeof TextContent>;
 
 export const ImageContent = z.strictObject({
   type: z.literal('image'),
+  // The filename it was attached under, shown in the Feed as an uploaded file's `name` is.
+  name: z.string().optional(),
   mimeType: z.string(),
   blob: BlobRef,
   _meta: AttachmentMeta,
