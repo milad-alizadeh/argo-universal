@@ -4,7 +4,6 @@ import { ContextActions } from '#primitives/actions/action';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { useSectionDrawing } from '../../../list-look-context';
 import type { SectionDrawing } from '../../../list-look-section';
-import { SkeletonBar } from '../../../list-skeleton';
 import { SizeClass } from '../../../size-class/size-class';
 import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
@@ -28,9 +27,6 @@ const titleLook = (
 });
 
 function HeaderTitle(props: DrawnHeaderProps): ReactNode {
-  if (props.isLoading)
-    return <SkeletonBar kind="title" text={props.title} textRole="heading" />;
-
   return (
     <Text
       role="heading"
@@ -69,7 +65,7 @@ const labelClassName = (props: DrawnHeaderProps): string =>
 
 // A collapsible section's whole label toggles it; its actions stay their own buttons beside it.
 function HeaderToggle(props: DrawnHeaderProps): ReactElement {
-  if (!props.onExpandedChange || props.isLoading)
+  if (!props.onExpandedChange)
     return (
       <View className={labelClassName(props)}>
         <HeaderLabel {...props} />

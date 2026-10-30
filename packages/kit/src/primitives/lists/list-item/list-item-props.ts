@@ -65,8 +65,6 @@ export type ListItemProps = KitProps<'ListItem'> & {
   subtitleDimmed?: boolean;
   // A role avatar occupies its own 36px lane instead of the icon lane.
   leadingSize?: 'avatar';
-  // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
-  isLoading?: boolean;
   /*
    * A choice that has been made but has not taken effect yet: the row's mark is a spinner until it has. The
    * list stays as it is, so the wait happens where the reader is looking rather than on the page they go to.

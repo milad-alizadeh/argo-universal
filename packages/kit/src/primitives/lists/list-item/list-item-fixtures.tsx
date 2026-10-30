@@ -33,14 +33,6 @@ export const controlListItem = {
   value: 'High',
 } satisfies ListItemProps;
 
-export const loadingListItem = {
-  title: 'Item one',
-  isLoading: true,
-  leading: null,
-  subtitle: 'Subtitle',
-  meta: 'Meta',
-} satisfies ListItemProps;
-
 export const mutedListItem = {
   title: 'No items',
   tone: 'muted',

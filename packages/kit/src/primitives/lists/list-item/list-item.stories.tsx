@@ -12,7 +12,6 @@ import {
   controlListItem,
   defaultListItem,
   disabledListItem,
-  loadingListItem,
   mutedListItem,
   progressListItem,
   selectedListItem,
@@ -59,18 +58,6 @@ export const Control: Story = {
     control: (
       <Slider {...effortSlider} onValueChange={action('change effort')} />
     ),
-  },
-};
-
-export const Loading: Story = {
-  args: loadingListItem,
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'A loading row keeps the lines it stands in for, each a bar as wide as its placeholder text.',
-      },
-    },
   },
 };
 
