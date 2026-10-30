@@ -18,6 +18,7 @@ import {
   activityKey,
   liveHeaderOf,
   liveToolCall,
+  openLive,
   showsDuration,
   visibleActivities,
 } from './group-activities';
@@ -87,16 +88,21 @@ function GroupActivities({
   );
 }
 
-function liveHeaderDisclosureProps(
-  { source }: LiveHeader,
-  title: string,
-): Pick<
+type LiveHeaderDisclosureProps = Pick<
   React.ComponentProps<typeof ToolCallDisclosure>,
   'label' | 'leading' | 'title'
-> {
+>;
+
+function liveHeaderDisclosureProps(
+  group: FeedGroup,
+  { source }: LiveHeader,
+  title: string,
+): LiveHeaderDisclosureProps {
   return {
     label: title,
-    leading: <SourceIcon source={source} />,
+    leading: (
+      <SourceIcon source={source} toolCall={openLive(group)?.toolCall} />
+    ),
     title: <LiveTitle title={title} source={source} />,
   };
 }
@@ -110,7 +116,7 @@ function LiveHeaderGroup({
 
   return (
     <ToolCallDisclosure
-      {...liveHeaderDisclosureProps(liveHeader, title)}
+      {...liveHeaderDisclosureProps(props.group, liveHeader, title)}
       initialOpen={props.initialOpen}
     >
       <GroupActivities {...activities} renderActivity={props.renderActivity} />
