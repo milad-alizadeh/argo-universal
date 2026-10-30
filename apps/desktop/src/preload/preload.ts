@@ -49,6 +49,7 @@ const argo = {
     process.platform === 'darwin'
       ? (content): Promise<void> => ipcRenderer.invoke('share:open', content)
       : undefined,
+  retryServer: (): void => ipcRenderer.send('server:retry'),
   window: {
     show: (): void => ipcRenderer.send('window:show'),
     minimize: (): void => ipcRenderer.send('window:minimize'),

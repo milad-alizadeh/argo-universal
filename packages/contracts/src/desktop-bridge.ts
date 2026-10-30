@@ -3,6 +3,8 @@ import type { DesktopShare } from './desktop-share';
 export interface DesktopBridge {
   serverUrl: string | null;
   share?: (content: DesktopShare) => Promise<void>;
+  // Asks the desktop App to make sure a Supervisor runs, because a Server it started can be gone rather than out of reach.
+  retryServer: () => void;
   window: {
     show(): void;
     minimize(): void;

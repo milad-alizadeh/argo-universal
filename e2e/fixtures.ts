@@ -27,7 +27,10 @@ export const serverVersion = ServerPackage.parse(
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
 const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
   page.addInitScript((url): void => {
-    Object.assign(globalThis, { argo: { serverUrl: url } });
+    // A web page has no desktop App, so asking for a Supervisor does nothing.
+    Object.assign(globalThis, {
+      argo: { serverUrl: url, retryServer: () => {} },
+    });
   }, serverUrl);
 
 export type ServerOptions = {

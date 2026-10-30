@@ -226,6 +226,10 @@ const start = (): void => {
         .then((): void => app.quit());
     },
   });
+  ipcMain.on('server:retry', (event): void => {
+    if (event.senderFrame?.origin !== windowOrigin) return;
+    server.send({ type: 'server.retry' });
+  });
   server.start();
   serverStarted = true;
 

@@ -9,6 +9,8 @@ export { ConnectionContext, useConnection } from './stores/connection-context';
 
 export { openConnection } from './api/open-connection';
 
+export { retryServer } from './api/retry-server';
+
 export {
   BlobUrlContext,
   createServerBlobUrl,

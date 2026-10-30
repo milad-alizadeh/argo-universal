@@ -1,25 +1,37 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
+import { useCallback } from 'react';
 import { Animated, View } from 'react-native';
 import {
   ConnectionBanner,
+  retryServer,
   useConnection,
   useConnectionState,
   useTRPC,
 } from '#features/connection';
 
+// A Server the desktop App started may be gone, not only out of reach, so Try again asks for one again as well.
+function useRetry(): () => void {
+  const connection = useConnection();
+
+  return useCallback((): void => {
+    retryServer();
+    connection.retry();
+  }, [connection]);
+}
+
 // The App's Connection banner: the live state, the Server's name from its last system.info, and Try again. A wide window floats it over the panes.
 export function LiveConnectionBanner(): React.JSX.Element | null {
-  const connection = useConnection();
   const state = useConnectionState();
   const trpc = useTRPC();
   const info = useQuery(trpc.system.info.queryOptions());
+  const retry = useRetry();
 
   return (
     <ConnectionBanner
       state={state}
       serverName={info.data?.name}
-      onRetry={connection.retry}
+      onRetry={retry}
     />
   );
 }
