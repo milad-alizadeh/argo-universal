@@ -63,7 +63,7 @@ export const PluginBadgeShowsOnItsRow: Story = {
   args: {
     pluginBadges: [
       { pluginId: 'issue-tracker', id: 'issues', count: 12 },
-      { pluginId: 'hello', id: 'hello', count: 100 },
+      { pluginId: 'example', id: 'example', count: 100 },
     ],
   },
   play: async ({ canvas }) => {
@@ -97,13 +97,13 @@ export const SessionsSelected = selectedRow('sessions');
 
 export const SettingsSelected = selectedRow('settings');
 
-export const PluginSelected = selectedRow('plugins/hello/hello');
+export const PluginSelected = selectedRow('plugins/example/example');
 
 // Core sections first, then each Plugin nav item in manifest order.
 export const ListsCoreSectionsBeforePluginItems: Story = {
   play: async ({ canvas }) => {
     const rows = canvas.getAllByRole('button', {
-      name: /^(Sessions|Settings|Issues|Hello)$/,
+      name: /^(Sessions|Settings|Issues|Example)$/,
     });
 
     await expect(rows).toHaveLength(pluginNavigationItems.length);

@@ -3,7 +3,7 @@ import { sectionBadge } from './section-badge';
 
 const pluginBadges = [
   { pluginId: 'issue-tracker', id: 'issues', count: 12 },
-  { pluginId: 'hello', id: 'hello', count: 150 },
+  { pluginId: 'example', id: 'example', count: 150 },
 ];
 
 describe('sectionBadge', () => {
@@ -22,7 +22,7 @@ describe('sectionBadge', () => {
   });
 
   it('keeps the real count so the badge caps it', () => {
-    expect(sectionBadge('plugins/hello/hello', 0, pluginBadges).count).toBe(
+    expect(sectionBadge('plugins/example/example', 0, pluginBadges).count).toBe(
       150,
     );
   });

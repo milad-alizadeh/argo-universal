@@ -17,7 +17,7 @@ import {
 } from './frame-list-detail';
 import type { SectionLists } from './section-lists';
 
-const section = pluginSectionId('hello', 'hello');
+const section = pluginSectionId('example', 'example');
 
 const lists: SectionLists = {
   sessions: { list: null },

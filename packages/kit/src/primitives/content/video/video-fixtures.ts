@@ -2,9 +2,9 @@ import type { VideoProps } from './video-props';
 
 const hash = 'a'.repeat(64);
 
-const source = { pluginId: 'hello', hash, format: 'mp4' } as const;
+const source = { pluginId: 'example', hash, format: 'mp4' } as const;
 
-const poster = { pluginId: 'hello', hash, format: 'jpeg' } as const;
+const poster = { pluginId: 'example', hash, format: 'jpeg' } as const;
 
 export const stillFrameVideo = {
   source,

@@ -16,7 +16,9 @@ vi.setConfig({ testTimeout: journeyMs });
 // Starting a dev Plugin bundles it first, which is slow on a busy machine.
 const pollOptions = { timeout: 30_000 };
 
-const hello = { id: 'hello', fixture: 'storage' };
+const storageId = 'storage-plugin';
+
+const storagePlugin = { id: storageId, fixture: 'storage' };
 
 const notesIn = (home: string, pluginId: string): unknown[] => {
   const database = openReadOnlyDatabase(
@@ -33,7 +35,7 @@ const notesIn = (home: string, pluginId: string): unknown[] => {
 it('creates a Plugin file only when the Plugin first uses storage', async () => {
   const home = await createRuntimePlugins([
     { id: 'idle', fixture: 'healthy' },
-    hello,
+    storagePlugin,
   ]);
 
   const { caller } = await startEngineTestHost({
@@ -44,23 +46,25 @@ it('creates a Plugin file only when the Plugin first uses storage', async () => 
   await caller.plugin.activate({ pluginId: 'idle' });
 
   expect(existsSync(join(home, 'plugin-data'))).toBe(false);
-  expect(await caller.plugin.activate({ pluginId: 'hello' })).toMatchObject({
+  expect(await caller.plugin.activate({ pluginId: storageId })).toMatchObject({
     state: 'running',
     error: null,
   });
-  expect(existsSync(join(home, 'plugin-data/hello/plugin.db'))).toBe(true);
+  expect(existsSync(join(home, `plugin-data/${storageId}/plugin.db`))).toBe(
+    true,
+  );
   expect(existsSync(join(home, 'plugin-data/idle'))).toBe(false);
 });
 
 it('keeps Plugin storage across Engine restarts', async () => {
-  const home = await createRuntimePlugins([hello]);
+  const home = await createRuntimePlugins([storagePlugin]);
 
   const first = await startEngineTestHost({
     home,
     keychain: new MemoryKeychain(),
   });
 
-  await first.caller.plugin.activate({ pluginId: 'hello' });
+  await first.caller.plugin.activate({ pluginId: storageId });
   await first.stop();
 
   const second = await startEngineTestHost({
@@ -68,9 +72,9 @@ it('keeps Plugin storage across Engine restarts', async () => {
     keychain: new MemoryKeychain(),
   });
 
-  await second.caller.plugin.activate({ pluginId: 'hello' });
+  await second.caller.plugin.activate({ pluginId: storageId });
 
-  expect(notesIn(home, 'hello')).toEqual([
+  expect(notesIn(home, storageId)).toEqual([
     { body: 'hello' },
     { body: 'rejected' },
     { body: 'hello' },
@@ -79,20 +83,20 @@ it('keeps Plugin storage across Engine restarts', async () => {
 });
 
 it('stores secrets in the Keychain keyed by Plugin and account, and deletes them', async () => {
-  const home = await createRuntimePlugins([hello]);
+  const home = await createRuntimePlugins([storagePlugin]);
   const keychain = new MemoryKeychain();
   const { caller } = await startEngineTestHost({ home, keychain });
 
-  await caller.plugin.activate({ pluginId: 'hello' });
+  await caller.plugin.activate({ pluginId: storageId });
 
-  expect(await keychain.get('argo.plugin.hello', 'token')).toBe(
+  expect(await keychain.get(`argo.plugin.${storageId}`, 'token')).toBe(
     'plugin-secret',
   );
-  expect(await keychain.get('argo.plugin.hello', 'temp')).toBeNull();
+  expect(await keychain.get(`argo.plugin.${storageId}`, 'temp')).toBeNull();
 });
 
 it('keeps Argo own database unchanged when a Plugin stores data', async () => {
-  const home = await createRuntimePlugins([hello]);
+  const home = await createRuntimePlugins([storagePlugin]);
 
   const { caller } = await startEngineTestHost({
     home,
@@ -107,7 +111,7 @@ it('keeps Argo own database unchanged when a Plugin stores data', async () => {
 
   const before = schema();
 
-  await caller.plugin.activate({ pluginId: 'hello' });
+  await caller.plugin.activate({ pluginId: storageId });
 
   expect(schema()).toEqual(before);
 });

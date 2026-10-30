@@ -13,8 +13,8 @@ export const pluginNavigationItems: readonly NavigationSection[] = [
     icon: { sf: 'ticket', material: 'confirmation_number' },
   },
   {
-    id: 'plugins/hello/hello',
-    title: 'Hello',
+    id: 'plugins/example/example',
+    title: 'Example',
     icon: { sf: 'powerplug', material: 'power' },
   },
 ];

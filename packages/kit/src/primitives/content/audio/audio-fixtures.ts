@@ -1,7 +1,7 @@
 import type { AudioProps } from './audio-props';
 
 const chime = {
-  pluginId: 'hello',
+  pluginId: 'example',
   hash: 'a'.repeat(64),
   format: 'mp3',
 } as const;

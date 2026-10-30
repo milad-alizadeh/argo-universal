@@ -12,8 +12,8 @@ export const githubPlugin: PluginRow = {
 };
 
 export const helloPlugin: PluginRow = {
-  pluginId: 'hello',
-  name: 'Hello',
+  pluginId: 'example',
+  name: 'Example',
   icon: pluginSymbol({}),
 };
 

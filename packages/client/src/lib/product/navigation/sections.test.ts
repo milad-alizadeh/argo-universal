@@ -19,8 +19,8 @@ const sectionCases: [string | undefined, string][] = [
   ['/toString', 'sessions'],
   ['/constructor', 'sessions'],
   ['/plugins', 'sessions'],
-  ['/plugins/hello', 'sessions'],
-  ['/plugins/hello/hello', 'plugins/hello/hello'],
+  ['/plugins/example', 'sessions'],
+  ['/plugins/example/example', 'plugins/example/example'],
   [`/${issues}/42`, issues],
   [issues, issues],
 ];
@@ -32,7 +32,7 @@ describe('sectionOf', () => {
 });
 
 describe('isPage', () => {
-  it.each(['/sessions', '/settings', '/plugins/hello/hello'])(
+  it.each(['/sessions', '/settings', '/plugins/example/example'])(
     'reads the list %s as no page',
     (path) => {
       expect(isPage(path)).toBe(false);

@@ -37,7 +37,7 @@ const sidebarToggle = /^(Hide|Show) sidebar$/;
 export const ListsAndPicksPluginItems: Story = {
   play: async ({ args, canvas, userEvent }) => {
     const tiles = canvas.getAllByRole('button', {
-      name: /^(Sessions|Settings|Issues|Hello)$/,
+      name: /^(Sessions|Settings|Issues|Example)$/,
     });
 
     await expect(tiles).toHaveLength(pluginNavigationItems.length);
@@ -110,12 +110,11 @@ export const ManySectionsScrollToTheLastItem: Story = {
 
 // A Plugin page has no list beside it, so nothing to toggle.
 export const PluginPageHasNoSidebarToggle: Story = {
-  args: { selectedSection: 'plugins/hello/hello', hasSidebar: false },
+  args: { selectedSection: 'plugins/example/example', hasSidebar: false },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: 'Hello' })).toHaveAttribute(
-      ariaCurrent,
-      'page',
-    );
+    await expect(
+      canvas.getByRole('button', { name: 'Example' }),
+    ).toHaveAttribute(ariaCurrent, 'page');
     await expect(
       canvas.queryByRole('button', { name: sidebarToggle }),
     ).toBeNull();
@@ -127,7 +126,7 @@ export const PluginBadgeShowsOnItsTile: Story = {
   args: {
     pluginBadges: [
       { pluginId: 'issue-tracker', id: 'issues', count: 12 },
-      { pluginId: 'hello', id: 'hello', count: 100 },
+      { pluginId: 'example', id: 'example', count: 100 },
     ],
   },
   play: async ({ canvas }) => {

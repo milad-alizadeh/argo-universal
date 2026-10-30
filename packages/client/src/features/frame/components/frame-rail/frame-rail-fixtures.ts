@@ -37,6 +37,6 @@ export const pluginBadgeRail = {
   items: pluginNavigationItems,
   pluginBadges: [
     { pluginId: 'issue-tracker', id: 'issues', count: 12 },
-    { pluginId: 'hello', id: 'hello', count: 100 },
+    { pluginId: 'example', id: 'example', count: 100 },
   ],
 } satisfies FrameRailFixture;

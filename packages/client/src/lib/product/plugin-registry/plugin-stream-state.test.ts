@@ -80,13 +80,13 @@ describe('reducePluginSlot', () => {
 
   const listed = reducePluginSlot([], {
     type: 'contributors',
-    pluginIds: ['hello'],
+    pluginIds: ['example'],
   });
 
   it('draws a contributor from its snapshot', () => {
-    expect(reducePluginSlot(listed, view('hello'))).toEqual([
+    expect(reducePluginSlot(listed, view('example'))).toEqual([
       {
-        pluginId: 'hello',
+        pluginId: 'example',
         path,
         view: { root: slotCounterRoot, revision: 1, viewId: null },
       },
@@ -94,13 +94,13 @@ describe('reducePluginSlot', () => {
   });
 
   it('redraws a contributor from its patch', () => {
-    const drawn = reducePluginSlot(listed, view('hello'));
+    const drawn = reducePluginSlot(listed, view('example'));
 
     expect(
-      reducePluginSlot(drawn, view('hello', slotCounterWavePatch)),
+      reducePluginSlot(drawn, view('example', slotCounterWavePatch)),
     ).toEqual([
       {
-        pluginId: 'hello',
+        pluginId: 'example',
         path,
         view: { root: slotCounterTree('argo', 1), revision: 2, viewId: null },
       },
@@ -113,14 +113,14 @@ describe('reducePluginSlot', () => {
 
   it('keeps what a contributor drew when a reconnect lists it again', () => {
     const drawn = reducePluginSlot(
-      reducePluginSlot([], { type: 'contributors', pluginIds: ['hello'] }),
-      view('hello'),
+      reducePluginSlot([], { type: 'contributors', pluginIds: ['example'] }),
+      view('example'),
     );
 
     expect(
       reducePluginSlot(drawn, {
         type: 'contributors',
-        pluginIds: ['hello', 'other'],
+        pluginIds: ['example', 'other'],
       }),
     ).toEqual([
       drawn[0],
@@ -134,7 +134,7 @@ describe('reducePluginSlot', () => {
 });
 
 const replacement = (message = slotCounterSnapshot) =>
-  ({ type: 'replacement', pluginId: 'hello', path, message }) as const;
+  ({ type: 'replacement', pluginId: 'example', path, message }) as const;
 
 describe('reduceReplaceable', () => {
   const core = coreSlotState(messageSlotFixture);
@@ -143,7 +143,7 @@ describe('reduceReplaceable', () => {
     expect(reduceReplaceable(core, replacement())).toEqual({
       input: messageSlotFixture,
       replacement: {
-        pluginId: 'hello',
+        pluginId: 'example',
         path,
         view: { root: slotCounterRoot, revision: 1, viewId: null },
       },
@@ -157,7 +157,7 @@ describe('reduceReplaceable', () => {
       {
         input: messageSlotFixture,
         replacement: {
-          pluginId: 'hello',
+          pluginId: 'example',
           path,
           view: { root: slotCounterTree('argo', 1), revision: 2, viewId: null },
         },

@@ -20,7 +20,7 @@ const image: WireNode = {
   type: 'Image',
   key: 'image',
   props: {
-    source: { pluginId: 'hello', hash: 'a'.repeat(64), format: 'jpeg' },
+    source: { pluginId: 'example', hash: 'a'.repeat(64), format: 'jpeg' },
     accessibilityLabel: 'Thumbnail',
   },
   children: [],

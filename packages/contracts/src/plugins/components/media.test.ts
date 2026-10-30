@@ -7,9 +7,9 @@ const audio = kitComponentSchemas.Audio.props;
 
 const hash = 'a'.repeat(64);
 
-const clip = { pluginId: 'hello', hash, format: 'mp4' };
+const clip = { pluginId: 'example', hash, format: 'mp4' };
 
-const sound = { pluginId: 'hello', hash, format: 'm4a' };
+const sound = { pluginId: 'example', hash, format: 'm4a' };
 
 describe('media prop boundary', () => {
   it.each([
@@ -48,7 +48,7 @@ describe('media prop boundary', () => {
   });
 });
 
-const picture = { pluginId: 'hello', hash, format: 'jpeg' };
+const picture = { pluginId: 'example', hash, format: 'jpeg' };
 
 it('accepts Image and Avatar assets resolved by the Server', () => {
   expect(

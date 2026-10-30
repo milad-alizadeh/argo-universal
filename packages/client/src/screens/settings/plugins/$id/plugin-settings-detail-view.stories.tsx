@@ -37,7 +37,7 @@ export const SecretSaved: Story = { args: { plugin: pluginWithSecret } };
 export const TurnedOff: Story = { args: { plugin: turnedOffPlugin } };
 
 export const NoSettings: Story = {
-  args: { title: 'Hello', plugin: pluginWithoutSettings },
+  args: { title: 'Example', plugin: pluginWithoutSettings },
 };
 
 export const Loading: Story = { args: { plugin: { status: 'loading' } } };

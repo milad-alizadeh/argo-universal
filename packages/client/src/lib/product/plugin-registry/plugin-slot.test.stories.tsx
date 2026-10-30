@@ -17,9 +17,9 @@ const trackerRoot: WireNode = {
   slots: {},
 };
 
-const hello: PluginSlotContribution = {
-  pluginId: 'hello',
-  name: 'Hello',
+const example: PluginSlotContribution = {
+  pluginId: 'example',
+  name: 'Example',
   root: slotCounterRoot,
   onEvent: fn(),
 };
@@ -58,21 +58,21 @@ export const NoContributions: Story = {
 };
 
 export const OneContribution: Story = {
-  args: { contributions: [hello] },
+  args: { contributions: [example] },
   play: async ({ canvas, userEvent }) => {
-    await expect(sectionTitles(canvas)).toEqual(['Hello']);
+    await expect(sectionTitles(canvas)).toEqual(['Example']);
     await expect(canvas.getByText('Hello from argo')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Wave' }));
-    await expect(hello.onEvent).toHaveBeenCalledWith('0/1', {
+    await expect(example.onEvent).toHaveBeenCalledWith('0/1', {
       event: slotCounterWaveEvent,
     });
   },
 };
 
 export const TwoContributions: Story = {
-  args: { contributions: [hello, tracker] },
+  args: { contributions: [example, tracker] },
   play: async ({ canvas }) => {
-    await expect(sectionTitles(canvas)).toEqual(['Hello', 'Issue tracker']);
+    await expect(sectionTitles(canvas)).toEqual(['Example', 'Issue tracker']);
     await expect(canvas.getByText('No Tracker chosen')).toBeVisible();
   },
 };

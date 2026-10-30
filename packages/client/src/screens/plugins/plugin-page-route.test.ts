@@ -22,7 +22,7 @@ const nav = (pluginId: string, navId: string, path: string): PluginSection => ({
 const sections = [
   nav('tracker', 'issues', '/issues'),
   nav('tracker', 'boards', '/boards'),
-  nav('hello', 'hello', '/'),
+  nav('example', 'example', '/'),
 ];
 
 const inIssues = pluginSectionId('tracker', 'issues');
@@ -62,10 +62,10 @@ describe('pluginPageRoute', () => {
     expect(
       pluginPageRoute(
         sections,
-        { pluginId: 'hello', current: 'sessions' },
+        { pluginId: 'example', current: 'sessions' },
         '/builds/web',
       ),
-    ).toEqual(['hello', 'hello', 'builds', 'web']);
+    ).toEqual(['example', 'example', 'builds', 'web']);
   });
 
   it.each([
@@ -86,6 +86,6 @@ describe('pluginPagePath', () => {
   });
 
   it('names a nav item with a root path `/`', () => {
-    expect(pluginPagePath(['hello', 'hello'])).toBe('/');
+    expect(pluginPagePath(['example', 'example'])).toBe('/');
   });
 });

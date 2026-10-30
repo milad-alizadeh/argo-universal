@@ -9,7 +9,7 @@ export const sections = {
 
 export type CoreSection = keyof typeof sections;
 
-// A Plugin nav item's section: its route segment, the Plugin id and the nav item id, as in `/plugins/hello/hello`.
+// A Plugin nav item's section: its route segment, the Plugin id and the nav item id, as in `/plugins/example/example`.
 export type PluginSectionId = `plugins/${string}/${string}`;
 
 export type Section = CoreSection | PluginSectionId;

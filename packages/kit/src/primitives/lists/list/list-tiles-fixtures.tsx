@@ -7,7 +7,7 @@ import type { ListProps } from './list-props';
 const headingRole = 'heading';
 
 export const image = {
-  pluginId: 'hello',
+  pluginId: 'example',
   hash: 'a'.repeat(64),
   format: 'jpeg',
 } as const;
