@@ -100,17 +100,16 @@ function PathToggle(
   );
 }
 
+const pathLabel = (path: string, oldPath?: string): string =>
+  oldPath === undefined ? path : `${oldPath} → ${path}`;
+
 function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
   const [pathCut, setPathCut] = React.useState(false);
   const path = props.file.path;
   const oldPath = movedFrom(props.file);
 
   return (
-    <Tooltip
-      label={oldPath === undefined ? path : `${oldPath} → ${path}`}
-      active={pathCut}
-      frameless
-    >
+    <Tooltip label={pathLabel(path, oldPath)} active={pathCut} frameless>
       <FileHeaderToggle {...toggleOf(props)}>
         {oldPath !== undefined && <RenamedFrom path={oldPath} />}
         <PathText path={path} showTooltip={false} onCutChange={setPathCut} />
