@@ -5,8 +5,6 @@ import { dataFixture } from './data-fixture';
 
 export const webSurface = { platform: 'web' as const };
 
-export const mountTimeout = 20_000;
-
 export function keyOf(page: PluginTestView, label: string): string {
   const entry = page.findText(label);
 

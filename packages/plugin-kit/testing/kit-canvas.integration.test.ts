@@ -1,6 +1,6 @@
 import type { PluginTestView } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
-import { mountTimeout, startKit } from '../mocks/kit-page-helpers';
+import { startKit } from '../mocks/kit-page-helpers';
 
 type Node = NonNullable<PluginTestView['tree']>;
 
@@ -48,52 +48,44 @@ function canvases(node: Node | null): Node[] {
 }
 
 for (const platform of ['ios', 'android', 'desktop'] as const)
-  it(
-    `mounts Canvas.Rect shapes and selects one on press on ${platform}`,
-    async () => {
-      const kit = await startKit(source);
-      const page = await kit.mount({ page: '/', surface: { platform } });
-      expect((await page.find('Day 0')).type).toBe('Canvas.Rect');
-      expect((await page.find('packages/file-1.ts')).type).toBe('Canvas.Rect');
-
-      const selectedKey = (): string => {
-        const canvas = canvases(page.tree).find(
-          (node) => node.props.label === 'Project files',
-        );
-
-        return JSON.stringify(canvas?.props.selectedKey);
-      };
-
-      expect(selectedKey()).toBe('"packages-0"');
-      await page.press('packages/file-1.ts');
-      await kit.clock.advance(16);
-      await page.waitFor(() => selectedKey() === '"packages-1"');
-    },
-    mountTimeout,
-  );
-
-it(
-  'sends one keyed patch when one shape changes',
-  async () => {
+  it(`mounts Canvas.Rect shapes and selects one on press on ${platform}`, async () => {
     const kit = await startKit(source);
+    const page = await kit.mount({ page: '/', surface: { platform } });
+    expect((await page.find('Day 0')).type).toBe('Canvas.Rect');
+    expect((await page.find('packages/file-1.ts')).type).toBe('Canvas.Rect');
 
-    const page = await kit.mount({
-      page: '/',
-      surface: { platform: 'desktop' },
-    });
+    const selectedKey = (): string => {
+      const canvas = canvases(page.tree).find(
+        (node) => node.props.label === 'Project files',
+      );
 
-    await page.find('Day 2: 0.5');
-    await page.press('Change one shape');
+      return JSON.stringify(canvas?.props.selectedKey);
+    };
+
+    expect(selectedKey()).toBe('"packages-0"');
+    await page.press('packages/file-1.ts');
     await kit.clock.advance(16);
-    await page.find('Day 2: 1');
+    await page.waitFor(() => selectedKey() === '"packages-1"');
+  });
 
-    const op = soleSetProps(page);
+it('sends one keyed patch when one shape changes', async () => {
+  const kit = await startKit(source);
 
-    expect(op.props).toEqual({ intensity: 1, label: 'Day 2: 1' });
-    expect(op.key.at(-1)).toBe('day-2');
-  },
-  mountTimeout,
-);
+  const page = await kit.mount({
+    page: '/',
+    surface: { platform: 'desktop' },
+  });
+
+  await page.find('Day 2: 0.5');
+  await page.press('Change one shape');
+  await kit.clock.advance(16);
+  await page.find('Day 2: 1');
+
+  const op = soleSetProps(page);
+
+  expect(op.props).toEqual({ intensity: 1, label: 'Day 2: 1' });
+  expect(op.key.at(-1)).toBe('day-2');
+});
 
 function patchOps(page: PluginTestView): Patch['ops'] {
   const { message } = page;
