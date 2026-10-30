@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { createContext, useCallback, useContext, useRef } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import type { TextLayoutEvent, ViewInstance } from 'react-native';
 import { type TextRole, useTextStyle } from '#primitives/content/text';
 
@@ -55,31 +55,38 @@ type LeafSlot = React.RefObject<ClampLeaf | null>;
 interface Binding {
   registry: ClampLeafRegistry | undefined;
   slot: LeafSlot;
+  // The height the text drew, kept apart from the style's, which a narrower or wider layout changes.
+  drawn: React.RefObject<number | null>;
+}
+
+function heightOf(
+  drawn: Binding['drawn'],
+  styled: number | undefined,
+): number | undefined {
+  return drawn.current ?? styled;
 }
 
 // A leaf registered again keeps the height its text drew, which a layout that did not change would not report anew.
-function carriedHeight(
-  slot: LeafSlot,
-  lineHeight: number | undefined,
-): number | undefined {
-  return slot.current?.lineHeight ?? lineHeight;
-}
-
 function registerLeaf(
-  { registry, slot }: Binding,
+  { registry, slot, drawn }: Binding,
   node: MeasurableNode | null,
-  lineHeight: number | undefined,
+  styled: number | undefined,
 ): (() => void) | undefined {
   if (!node || !registry) return;
+  const leaf: ClampLeaf = { node, lineHeight: heightOf(drawn, styled) };
 
-  const leaf: ClampLeaf = { node, lineHeight: carriedHeight(slot, lineHeight) };
   slot.current = leaf;
 
   return registry.register(leaf);
 }
 
-function setDrawn(slot: LeafSlot, drawn: number): void {
-  if (slot.current) slot.current.lineHeight = drawn;
+function setDrawn(
+  { slot, drawn }: Pick<Binding, 'slot' | 'drawn'>,
+  height: number,
+): void {
+  drawn.current = height;
+
+  if (slot.current) slot.current.lineHeight = height;
 }
 
 function shortestLine(
@@ -101,22 +108,24 @@ function reportBodyLine(
 interface BoundLeaf {
   ref: LeafRef;
   slot: LeafSlot;
+  drawn: Binding['drawn'];
 }
 
 function useLeafRef(lineHeight: number | undefined): BoundLeaf {
   const registry = useContext(ClampLeaves);
   const slot = useRef<ClampLeaf>(null);
+  const drawn = useRef<number | null>(null);
 
   const ref = useCallback<LeafRef>(
-    (node) => registerLeaf({ registry, slot }, node, lineHeight),
+    (node) => registerLeaf({ registry, slot, drawn }, node, lineHeight),
     [registry, lineHeight],
   );
 
-  return { ref, slot };
+  return { ref, slot, drawn };
 }
 
 function useDrawnLine(
-  slot: LeafSlot,
+  bound: Pick<Binding, 'slot' | 'drawn'>,
   role: TextRole,
 ): ClampText['onTextLayout'] {
   const registry = useContext(ClampLeaves);
@@ -128,10 +137,10 @@ function useDrawnLine(
 
       if (drawn === undefined) return;
 
-      setDrawn(slot, drawn);
+      setDrawn(bound, drawn);
       reportBodyLine(registry, role, drawn);
     },
-    [registry, slot, role],
+    [registry, bound, role],
   );
 }
 
@@ -140,7 +149,8 @@ function useDrawnLine(
  * and Android does so by a curve rather than a factor, so native text says what its first line drew.
  */
 export function useClampText(role: TextRole): ClampText {
-  const { ref, slot } = useLeafRef(useLineHeight(role));
+  const { ref, slot, drawn } = useLeafRef(useLineHeight(role));
+  const bound = useMemo(() => ({ slot, drawn }), [slot, drawn]);
 
-  return { ref, onTextLayout: useDrawnLine(slot, role) };
+  return { ref, onTextLayout: useDrawnLine(bound, role) };
 }
