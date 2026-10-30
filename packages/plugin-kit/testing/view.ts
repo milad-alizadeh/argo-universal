@@ -10,7 +10,7 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { nextRoot } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 import { testConnection } from './test-connection';
-import { pollUntil, viewTimeoutMessage } from './view-timeout';
+import { ViewChanges } from './view-changes';
 
 // A test mount chooses the platform; the test App always speaks the current wire version.
 type MountSurface = Pick<PluginSurface, 'platform'>;
@@ -30,12 +30,6 @@ export type PluginMount = {
   connectionId?: string;
 } & ({ page: string } | { slot: PluginSlotInput });
 
-// A slow machine can lengthen this for one run, as ARGO_VIEW_LIMIT_MS=20000; nothing else changes it.
-const defaultViewLimitMs = 3000;
-
-const viewLimitMs =
-  Number(process.env.ARGO_VIEW_LIMIT_MS) || defaultViewLimitMs;
-
 type Event = ComponentEvent & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
@@ -46,6 +40,7 @@ export class PluginTestView {
   private readonly history: WireNode[] = [];
   private latest: ViewMessage | null = null;
   private failure: Error | null = null;
+  private readonly changes = new ViewChanges();
   private path: string;
   private readonly projectId: string | undefined;
 
@@ -57,9 +52,7 @@ export class PluginTestView {
     this.connection = testConnection(this.controller.signal, opening);
     this.path = opening.path;
     this.projectId = opening.projectId;
-    void this.receive(opening).catch((error: Error) => {
-      this.failure = error;
-    });
+    this.watch(opening);
   }
 
   public get tree(): WireNode | null {
@@ -102,15 +95,30 @@ export class PluginTestView {
     return entry.node;
   }
 
+  /*
+   * Waits for what must happen, not for a time. A view that never comes is the test runner's timeout
+   * to end, because only it knows how long this machine and this test are worth waiting.
+   */
   public async waitFor(ready: () => boolean, what?: string): Promise<void> {
-    await pollUntil(ready, viewLimitMs, (waited) =>
-      viewTimeoutMessage({
-        ...waited,
-        what,
-        limitMs: viewLimitMs,
-        trees: this.latest ? this.history.length : undefined,
-      }),
-    );
+    await this.changes.until(ready, () => this.closedMessage(what));
+  }
+
+  private watch(opening: Opening): void {
+    void this.receive(opening)
+      .catch((error: Error) => {
+        this.failure = error;
+      })
+      .finally(() => this.changes.end());
+  }
+
+  private closedMessage(what: string | undefined): string {
+    const waiting = what ? ` (waiting for ${what})` : '';
+
+    const arrived = this.latest
+      ? `the view had rendered ${this.history.length} tree(s)`
+      : 'no view message had arrived';
+
+    return `Plugin view closed before it reached the expected state${waiting}; ${arrived}.`;
   }
 
   public async dispatch(event: Event): Promise<void> {
@@ -169,5 +177,6 @@ export class PluginTestView {
 
     if (this.root) this.history.push(this.root);
     this.latest = message;
+    this.changes.announce();
   }
 }
