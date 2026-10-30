@@ -100,8 +100,11 @@ function renamedFile(width: number): Story {
       const header = await findFileHeader(movedTo);
 
       await expect(header).toBeVisible();
-      // A phone's scrolling path carries no accessibility label, and a wide one wraps its folder in direction marks, so
-      // each path is read by the name it draws.
+
+      /*
+       * A phone's scrolling path carries no accessibility label, and a wide one wraps its folder in direction marks,
+       * so each path is read by the name it draws.
+       */
       for (const path of [movedFrom, movedTo]) {
         await expect(
           within(header).getByText(path.slice(path.lastIndexOf('/') + 1)),
