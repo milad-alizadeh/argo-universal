@@ -1,21 +1,14 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import type { CDPSession, Page } from '@playwright/test';
 import { measure } from './frames.mts';
-import { medianRow } from './results-table.mts';
-import {
-  caseName,
-  completenessNotice,
-  type PerfCase,
-  runCompleteness,
-  type RunCompleteness,
-} from './run-completeness.mts';
+import { frameSuite, keepResult, outputDirectory } from './kept-results.mts';
+import { caseName, type PerfCase } from './run-completeness.mts';
 import { median, type Sample } from './sample.mts';
 import { hotspots, trace } from './trace.mts';
 
 // PERF_LABEL names the run (before, after-…); PERF_CPU lists CPU slowdowns; PERF_RUNS repeats each measurement; PERF_TRACE=1 saves one trace and PERF_PROFILE=1 one CPU profile per interaction; PERF_ONLY picks interactions; PERF_OUT is where results go.
-const label = (): string => process.env.PERF_LABEL ?? 'current';
+export const label = (): string => process.env.PERF_LABEL ?? 'current';
 
 const cpuRates = (): number[] =>
   (process.env.PERF_CPU ?? '1,4').split(',').map(Number);
@@ -26,8 +19,11 @@ const runs = (): number => Number(process.env.PERF_RUNS ?? 3);
 const only = (): string[] =>
   (process.env.PERF_ONLY ?? '').split(',').filter(Boolean);
 
-const outputDirectory = (): string =>
-  process.env.PERF_OUT ?? path.join(os.tmpdir(), 'argo-perf');
+// Keeps a result the moment it is measured, so a later worker restart cannot lose it.
+export const keepFrameResult = (
+  result: Result,
+  suite = frameSuite,
+): Promise<void> => keepResult(suite, caseName(result), result);
 
 const wanted = (interaction: string): boolean => {
   const chosen = only();
@@ -66,7 +62,8 @@ export interface Measurement {
   before?: () => Promise<void>;
 }
 
-const output = (file: string): string => path.join(outputDirectory(), file);
+export const output = (file: string): string =>
+  path.join(outputDirectory(), file);
 
 // Saves one full trace of `once`, and returns where the main thread spent its time.
 async function traceOnce({
@@ -147,46 +144,4 @@ export async function run(measurement: Measurement): Promise<Result> {
     median: median(measured),
     ...more,
   };
-}
-
-export interface FrameReport {
-  results: readonly Result[];
-  // Every scenario the run set out to measure, from `plannedCases`.
-  planned: readonly PerfCase[];
-  seeded: Record<string, number>;
-  suite?: string;
-}
-
-const reportData = (
-  run: RunCompleteness,
-  { results, seeded }: FrameReport,
-): string =>
-  JSON.stringify(
-    { label: label(), date: new Date().toISOString(), run, ...seeded, results },
-    null,
-    2,
-  );
-
-/*
- * Writes every result to `<label>.json`, or `<label>-<suite>.json`, prints their medians, and
- * fails the run when a planned scenario produced no measurement: a report that quietly omits a
- * scenario reads as a clean one, and its absent numbers as measured.
- */
-export async function report(frames: FrameReport): Promise<void> {
-  const { results, planned, suite } = frames;
-
-  const file = output(suite ? `${label()}-${suite}.json` : `${label()}.json`);
-
-  const completeness = runCompleteness(planned.map(caseName), {
-    measured: results.map(caseName),
-  });
-
-  await mkdir(outputDirectory(), { recursive: true });
-  await writeFile(file, reportData(completeness, frames));
-  console.log(`\nResults: ${file}`);
-  console.table(results.map(medianRow));
-  console.log(completenessNotice(completeness));
-
-  if (completeness.status === 'partial')
-    throw new Error(completenessNotice(completeness));
 }

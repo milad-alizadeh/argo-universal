@@ -4,6 +4,7 @@ import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
 import { startOwnServer } from '@repo/e2e/own-server';
 import { publishedRegistry } from '../../mocks/registry/catalog.ts';
+import { report } from './frame-report.mts';
 import {
   desktop,
   jump,
@@ -12,7 +13,7 @@ import {
   scrollDownAndUp,
   type Viewport,
 } from './page.mts';
-import { plannedCases, report, type Result, run } from './results.mts';
+import { keepFrameResult, plannedCases, run } from './results.mts';
 import { caseName } from './run-completeness.mts';
 
 // The Agents page against a registry long enough that its list must virtualise.
@@ -27,8 +28,6 @@ type Server = Awaited<ReturnType<typeof startOwnServer>>;
 type Registry = typeof publishedRegistry;
 
 type RegistryAgent = Registry['agents'][number];
-
-const results: Result[] = [];
 
 let server: Server;
 
@@ -94,7 +93,6 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await server.stop();
   await report({
-    results,
     planned,
     seeded: { agents: agentCount },
     suite: 'agents',
@@ -153,6 +151,6 @@ for (const planCase of planned)
     const once = (): Promise<void> => scrollDownAndUp(page, catalogScroll);
     await once();
     const result = await run({ interaction, cpu, session, page, once });
-    results.push(result);
+    await keepFrameResult(result, 'agents');
     expect(result.median.fps).toBeGreaterThan(0);
   });
