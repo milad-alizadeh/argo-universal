@@ -9,7 +9,26 @@ export type LayoutName = keyof typeof layoutWidths;
 
 const viewportHeight = 844;
 
-// Sizes the viewport to a named layout, or to an exact width, and waits for fonts and two frames.
+/*
+ * `page.viewport` resolves once the runner has been told the size, not once the story's frame has it, so a loaded
+ * machine can run on at the old width and switch layouts mid-play. Waits for the frame to be the width it was asked for.
+ */
+async function viewportApplied(width: number): Promise<void> {
+  if (window.innerWidth === width) return;
+
+  await new Promise<void>((resolve) => {
+    const onResize = (): void => {
+      if (window.innerWidth !== width) return;
+
+      window.removeEventListener('resize', onResize);
+      resolve();
+    };
+
+    window.addEventListener('resize', onResize);
+  });
+}
+
+// Sizes the viewport to a named layout, or to an exact width, and waits for the frame to take it, then for fonts and two frames.
 export async function settleLayout(
   layout: LayoutName | number,
   height = viewportHeight,
@@ -17,6 +36,7 @@ export async function settleLayout(
   const width = typeof layout === 'number' ? layout : layoutWidths[layout];
 
   await page.viewport(width, height);
+  await viewportApplied(width);
   await document.fonts.ready;
   await nextFrames();
 }
