@@ -97,14 +97,14 @@ function renamedFile(width: number): Story {
     args: { catalog: renamedChanges },
     beforeEach: (): Promise<void> => settleLayout(width),
     play: async () => {
-      const header = await findFileHeader(movedTo);
+      // The header's name says both paths, so a screen reader is told of the rename a sighted reader is shown.
+      const header = await screen.findByRole('button', {
+        name: `Diff for ${movedTo}, renamed from ${movedFrom}`,
+      });
 
       await expect(header).toBeVisible();
 
-      /*
-       * A phone's scrolling path carries no accessibility label, and a wide one wraps its folder in direction marks,
-       * so each path is read by the name it draws.
-       */
+      // Each drawn path is also found by its name, which a wide path draws between direction marks.
       for (const path of [movedFrom, movedTo]) {
         await expect(
           within(header).getByText(path.slice(path.lastIndexOf('/') + 1)),
