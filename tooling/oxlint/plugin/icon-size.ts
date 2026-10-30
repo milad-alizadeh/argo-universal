@@ -72,10 +72,8 @@ const nativeSymbolNames = new Set(['systemName', 'systemImage']);
 const isSystemName = (node: ESTree.JSXAttribute): boolean =>
   nativeSymbolNames.has(attributeName(node));
 
-type KeyedProperty = { key: { type: string; name?: string } };
-
-const isSystemImageProperty = (node: KeyedProperty): boolean =>
-  node.key.type === 'Identifier' && nativeSymbolNames.has(node.key.name ?? '');
+const isSystemImageProperty = (node: ESTree.ObjectProperty): boolean =>
+  node.key.type === 'Identifier' && nativeSymbolNames.has(node.key.name);
 
 const reportNativeSymbol =
   <Node extends ESTree.Node>(context: Context, test: (node: Node) => boolean) =>
