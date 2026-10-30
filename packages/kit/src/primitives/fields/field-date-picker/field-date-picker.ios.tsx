@@ -4,6 +4,7 @@ import {
   datePickerStyle,
   disabled,
 } from '@expo/ui/swift-ui/modifiers';
+import { datePickerDefaults } from '@repo/contracts/kit-tokens';
 import { type ReactElement, useState } from 'react';
 import { RowTitle } from '#primitives/fields/field-row';
 import { isoValue, valueDate } from '#primitives/native/date-value';
@@ -24,7 +25,7 @@ const components = {
  * until it is changed.
  */
 export function FieldDatePicker(props: FieldDatePickerProps): ReactElement {
-  const mode = props.mode ?? 'date';
+  const mode = props.mode ?? datePickerDefaults.mode;
 
   return (
     <DatePicker

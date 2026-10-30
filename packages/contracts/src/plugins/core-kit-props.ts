@@ -5,7 +5,9 @@ import {
   buttonSizes,
   buttonVariants,
   stackAlignments,
+  stackDefaults,
   spacingSteps,
+  svgDefaults,
   textDefaults,
   textRoles,
   tones,
@@ -67,8 +69,13 @@ const layoutProps = z.object({
   gap: z
     .enum(spacingSteps)
     .optional()
+    .meta({ default: stackDefaults.gap })
     .describe('A spacing token between children.'),
-  align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
+  align: z
+    .enum(stackAlignments)
+    .optional()
+    .meta({ default: stackDefaults.align })
+    .describe('Cross-axis alignment.'),
 });
 
 export const svgProps = z.object({
@@ -77,7 +84,11 @@ export const svgProps = z.object({
     .max(svgCharacterLimit)
     .describe('Sanitized SVG markup to draw.'),
   label: z.string().min(1).describe('The accessible name of the artwork.'),
-  tone: z.enum(tones).optional().describe('The semantic artwork color.'),
+  tone: z
+    .enum(tones)
+    .optional()
+    .meta({ default: svgDefaults.tone })
+    .describe('The semantic artwork color.'),
   aspectRatio: z
     .number()
     .finite()

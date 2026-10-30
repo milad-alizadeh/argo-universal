@@ -40,7 +40,7 @@ function pillClassName(tone: Tone | undefined): string {
   return cn(
     pillGeometry('label'),
     'shrink-0 self-start',
-    fills[tone ?? 'muted'],
+    fills[tone ?? pillDefaults.tone],
   );
 }
 
@@ -53,7 +53,7 @@ const PillText = ({
 }: Pick<PillProps, 'text' | 'tone'> & Label): ReactElement => (
   <Text
     role="badge"
-    tone={textTones[tone ?? 'muted']}
+    tone={textTones[tone ?? pillDefaults.tone]}
     numberOfLines={1}
     style={label ? { color: label.text } : undefined}
   >
@@ -84,7 +84,7 @@ function useLabel(color: string | undefined): LabelColours | undefined {
 
 function LabelPill({
   text,
-  tone = 'muted',
+  tone = pillDefaults.tone,
   color,
   variant: _variant,
   appearance: _appearance,

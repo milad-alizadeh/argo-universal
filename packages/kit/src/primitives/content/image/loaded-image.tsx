@@ -1,3 +1,4 @@
+import { imageDefaults } from '@repo/contracts/kit-tokens';
 import { Image as ExpoImage } from 'expo-image';
 import type { ComponentProps } from 'react';
 import { withUniwind } from 'uniwind';
@@ -21,7 +22,7 @@ function pictureProps(props: LoadedProps): ComponentProps<typeof Picture> {
   return {
     source: props.uri,
     className: 'size-full',
-    contentFit: props.fit ?? 'cover',
+    contentFit: props.fit ?? imageDefaults.fit,
     accessible: false,
     recyclingKey: String(props.uri),
     onError: props.onError,

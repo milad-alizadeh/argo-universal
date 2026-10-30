@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { Host, InsideHostContext } from '#primitives/native/host';
+import { isDismissible } from './sheet-dismissible';
 import type { SheetProps } from './sheet-props';
 import {
   SheetLink,
@@ -88,7 +89,7 @@ function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
     skipPartiallyExpanded: !restsHalfOpen(props),
     // ModalBottomSheet/index.d.ts: ignored when skipPartiallyExpanded, so only a half-open sheet opens full.
     initialFullyExpanded: props.initialDetent === 'large',
-    ...dismissal(props.dismissible !== false),
+    ...dismissal(isDismissible(props.dismissible)),
   };
 }
 

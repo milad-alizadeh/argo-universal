@@ -1,3 +1,5 @@
+import { datePickerDefaults } from '@repo/contracts/kit-tokens';
+
 // Local ISO date, time and datetime values, shared by the DatePicker row and the DatePicker input.
 export type DateMode = 'date' | 'time' | 'datetime';
 
@@ -8,7 +10,7 @@ const inputTypes = {
   datetime: 'datetime-local',
 } as const satisfies Record<DateMode, string>;
 
-export function inputType(mode: DateMode = 'date'): string {
+export function inputType(mode: DateMode = datePickerDefaults.mode): string {
   return inputTypes[mode];
 }
 
@@ -26,7 +28,10 @@ const isoParts = {
   datetime: (date: Date): string => `${datePart(date)}T${timePart(date)}`,
 } satisfies Record<DateMode, (date: Date) => string>;
 
-export function isoValue(date: Date, mode: DateMode = 'date'): string {
+export function isoValue(
+  date: Date,
+  mode: DateMode = datePickerDefaults.mode,
+): string {
   return isoParts[mode](date);
 }
 
@@ -68,7 +73,7 @@ const readers = {
 // The local Date a value names; a value that does not write back the same (2026-02-30, 25:99) names none.
 export function valueDate(
   value: string | undefined,
-  mode: DateMode = 'date',
+  mode: DateMode = datePickerDefaults.mode,
 ): Date | undefined {
   if (!value) return undefined;
 
@@ -104,7 +109,7 @@ const displays = {
 // How Android's read-only field shows the value, in the device's locale.
 export function displayValue(
   value: string | undefined,
-  mode: DateMode = 'date',
+  mode: DateMode = datePickerDefaults.mode,
 ): string {
   const date = valueDate(value, mode);
 

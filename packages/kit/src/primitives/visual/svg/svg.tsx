@@ -1,3 +1,4 @@
+import { svgDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import { useContext } from 'react';
 import { Platform, Pressable, type ViewStyle } from 'react-native';
@@ -116,7 +117,7 @@ function toneClass(tone: Tone | undefined): string {
     done: 'text-done',
   } satisfies Record<Tone, string>;
 
-  return classes[tone ?? 'neutral'];
+  return classes[tone ?? svgDefaults.tone];
 }
 
 function viewBoxRatio(xml: string): number | null {

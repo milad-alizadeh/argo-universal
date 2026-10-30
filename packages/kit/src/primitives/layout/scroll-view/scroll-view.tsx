@@ -1,3 +1,4 @@
+import { scrollViewDefaults } from '@repo/contracts/kit-tokens';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import type { KitProps } from '../../kit-props';
 
@@ -26,7 +27,7 @@ const directionProps = (
       };
 
 export function ScrollView({
-  direction = 'vertical',
+  direction = scrollViewDefaults.direction,
   children,
   accessibilityLabel,
 }: ScrollViewProps): React.JSX.Element {

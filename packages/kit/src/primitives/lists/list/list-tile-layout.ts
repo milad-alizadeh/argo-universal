@@ -1,3 +1,4 @@
+import { listDefaults } from '@repo/contracts/kit-tokens';
 import type { SizeClass } from '../../../use-size-class/size-class';
 import type { ListProps } from './list-props';
 
@@ -37,7 +38,7 @@ interface TileLayout {
 function minimumWidth(props: Options, sizeClass: SizeClass): number {
   const sizes = sizeClass === 'compact' ? compactMinimums : minimums;
 
-  return sizes[props.tileSize ?? 'md'];
+  return sizes[props.tileSize ?? listDefaults.tileSize];
 }
 
 function columnCount(

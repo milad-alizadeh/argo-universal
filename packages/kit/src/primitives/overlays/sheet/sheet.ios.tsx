@@ -11,6 +11,7 @@ import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
+import { isDismissible } from './sheet-dismissible';
 import { SheetFrame } from './sheet-frame.ios';
 import type { SheetDetent, SheetProps } from './sheet-props';
 import {
@@ -103,7 +104,9 @@ function PopoverSheet(props: PresentationProps): ReactElement {
 function PopoverScreens(props: PresentationProps): ReactElement {
   return (
     <Group
-      modifiers={[interactiveDismissDisabled(props.dismissible === false)]}
+      modifiers={[
+        interactiveDismissDisabled(!isDismissible(props.dismissible)),
+      ]}
     >
       <CompactScope>
         <SheetScreens {...props} popoverWidth={popoverWidth} />
@@ -150,7 +153,7 @@ function useSheetModifiers(props: PresentationProps): ModifierConfig[] {
     ...(detents ? [detentsModifier(detents, props.initialDetent)] : []),
     ...(colors.content ? [presentationBackground(colors.content)] : []),
     presentationDragIndicator('visible'),
-    interactiveDismissDisabled(props.dismissible === false),
+    interactiveDismissDisabled(!isDismissible(props.dismissible)),
     preferredColorScheme(colorScheme),
   ];
 }

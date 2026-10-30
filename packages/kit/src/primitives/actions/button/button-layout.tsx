@@ -3,6 +3,7 @@ import {
   createModifier,
   fillMaxWidth,
 } from '@expo/ui/jetpack-compose/modifiers';
+import { buttonDefaults } from '@repo/contracts/kit-tokens';
 import type { IconSize } from '../../../symbols/icon-size';
 import type { ButtonProps } from './button';
 
@@ -53,7 +54,8 @@ export const widths = {
 
 export const variantOf = (
   props: ButtonProps,
-): NonNullable<ButtonProps['variant']> => props.variant ?? 'primary';
+): NonNullable<ButtonProps['variant']> =>
+  props.variant ?? buttonDefaults.variant;
 
 export const widthOf = (
   props: ButtonProps,

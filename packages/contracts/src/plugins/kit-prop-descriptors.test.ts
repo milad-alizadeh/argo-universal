@@ -67,6 +67,20 @@ describe('a kit prop default', () => {
     ['IconButton', 'size', "'md'"],
     ['IconButton', 'variant', "'primary'"],
     ['Text', 'role', "'body'"],
+    ['Stack', 'align', "'stretch'"],
+    ['ScrollView', 'direction', "'vertical'"],
+    ['Label', 'tone', "'muted'"],
+    ['ProgressBar', 'tone', "'neutral'"],
+    ['Pill', 'tone', "'muted'"],
+    ['Avatar', 'size', "'lg'"],
+    ['Image', 'fit', "'cover'"],
+    ['Video', 'aspect', "'landscape'"],
+    ['Sheet', 'dismissible', 'true'],
+    ['Svg', 'tone', "'neutral'"],
+    ['Menu', 'align', "'end'"],
+    ['List', 'tileSize', "'md'"],
+    ['StatusDot', 'size', "'md'"],
+    ['FieldGroup.DatePicker', 'mode', "'date'"],
   ] as const)('reads %s %s as %s', (component, name, defaultValue) => {
     expect(prop(component, name).defaultValue).toBe(defaultValue);
   });

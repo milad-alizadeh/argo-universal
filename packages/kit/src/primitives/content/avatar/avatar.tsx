@@ -1,3 +1,4 @@
+import { avatarDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Image, type ViewProps, View } from 'react-native';
@@ -70,7 +71,7 @@ function avatarSizeClass(size: AvatarProps['size']): string {
     md: 'size-8',
     lg: 'size-10',
     xl: 'size-14',
-  }[size ?? 'lg'];
+  }[size ?? avatarDefaults.size];
 }
 
 // Avatar's own content sits on tint (Paper Avatar master); hosted content, the Session row's logo, keeps muted.
@@ -169,5 +170,5 @@ function AvatarInitials({
 function initialRole(
   size: AvatarProps['size'],
 ): (typeof initialRoles)[keyof typeof initialRoles] {
-  return initialRoles[size ?? 'lg'];
+  return initialRoles[size ?? avatarDefaults.size];
 }

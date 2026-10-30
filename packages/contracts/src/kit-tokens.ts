@@ -71,7 +71,38 @@ export const iconButtonDefaults = { variant: 'primary', size: 'md' } as const;
 
 export const textDefaults = { role: 'body' } as const;
 
-export const pillDefaults = { variant: 'label', appearance: 'plain' } as const;
+export const pillDefaults = {
+  variant: 'label',
+  appearance: 'plain',
+  tone: 'muted',
+} as const;
+
+export const stackDefaults = { gap: 0, align: 'stretch' } as const;
+
+export const scrollViewDefaults = { direction: 'vertical' } as const;
+
+export const labelDefaults = { tone: 'muted' } as const;
+
+export const progressBarDefaults = { tone: 'neutral' } as const;
+
+export const avatarDefaults = { size: 'lg' } as const;
+
+export const imageDefaults = { fit: 'cover', radius: 'none' } as const;
+
+export const videoDefaults = {
+  aspect: 'landscape',
+  radius: 'control',
+} as const;
+
+export const sheetDefaults = { dismissible: true } as const;
+
+export const svgDefaults = { tone: 'neutral' } as const;
+
+export const statusDotDefaults = { size: 'md', pulse: false } as const;
+
+export const datePickerDefaults = { mode: 'date' } as const;
+
+export const menuDefaults = { align: 'end' } as const;
 
 export const chartDefaults = { grid: false } as const;
 
@@ -85,4 +116,5 @@ export const screenDefaults = { width: 'content' } as const;
 export const listDefaults = {
   appearance: 'cards',
   density: 'regular',
+  tileSize: 'md',
 } as const;

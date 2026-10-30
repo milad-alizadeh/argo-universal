@@ -68,6 +68,7 @@ export const contentListProps = z.object({
   tileSize: z
     .enum(['sm', 'md', 'lg'])
     .optional()
+    .meta({ default: listDefaults.tileSize })
     .describe(
       'Minimum tile width; phones cap grids at two columns, lg at one.',
     ),

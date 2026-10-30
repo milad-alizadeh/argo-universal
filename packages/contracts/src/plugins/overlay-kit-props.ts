@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sheetDefaults } from '../kit-tokens';
 import { builtInPress, echoes, handler } from './kit-component-props';
 
 // The App flips its open state at once and tells the Plugin without waiting.
@@ -45,6 +46,7 @@ export const sheetProps = z.object({
   dismissible: z
     .boolean()
     .optional()
+    .meta({ default: sheetDefaults.dismissible })
     .describe('Allow dismissal by system gestures.'),
 });
 

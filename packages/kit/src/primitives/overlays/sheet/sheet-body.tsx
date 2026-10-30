@@ -3,6 +3,7 @@ import { Platform, ScrollView, View, type ViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollEndGapContext } from '#kit/scroll-surface';
 import { cn } from '#kit/utils';
+import { isDismissible } from './sheet-dismissible';
 import { sheetInsetClass } from './sheet-inset';
 import type { SheetProps } from './sheet-props';
 import { ReactContent } from './sheet-react-content';
@@ -73,7 +74,7 @@ function bodyProps(props: BodyProps): Omit<ViewProps, 'style'> {
 }
 
 function escape(props: Pick<BodyProps, 'dismissible' | 'onOpenChange'>): void {
-  if (props.dismissible !== false) props.onOpenChange(false);
+  if (isDismissible(props.dismissible)) props.onOpenChange(false);
 }
 
 // A page that scrolls itself, such as a long list, gets no second scroller around it.

@@ -1,3 +1,4 @@
+import { statusDotDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { cn } from '#kit/utils';
 import type { Tone } from '#primitives/content/text';
@@ -26,11 +27,16 @@ function blinkingDotProps(
     testID: props.testID,
     accessibilityLabel: props.accessibilityLabel,
     colorClassName: toneFill[props.tone],
-    blinking: props.pulse ?? false,
+    blinking: props.pulse ?? statusDotDefaults.pulse,
     className: cn(statusDotSizeClass(props.size), props.className),
   };
 }
 
+const sizeClass = {
+  sm: 'size-1.5 shrink-0',
+  md: 'size-2 shrink-0',
+} as const satisfies Record<NonNullable<StatusDotProps['size']>, string>;
+
 function statusDotSizeClass(size: StatusDotProps['size']): string {
-  return size === 'sm' ? 'size-1.5 shrink-0' : 'size-2 shrink-0';
+  return sizeClass[size ?? statusDotDefaults.size];
 }

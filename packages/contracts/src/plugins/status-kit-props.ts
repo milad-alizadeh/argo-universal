@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { iconSymbol } from '../kit-symbols/icon-schema';
-import { pillDefaults, tones } from '../kit-tokens';
+import {
+  labelDefaults,
+  pillDefaults,
+  progressBarDefaults,
+  tones,
+} from '../kit-tokens';
 import { handler } from './kit-component-props';
 
 const semanticTone = z
@@ -10,7 +15,7 @@ const semanticTone = z
 
 export const progressBarProps = z.object({
   value: z.number().min(0).max(1).describe('Progress from zero to one.'),
-  tone: semanticTone,
+  tone: semanticTone.meta({ default: progressBarDefaults.tone }),
   active: z
     .boolean()
     .optional()
@@ -28,7 +33,7 @@ export const labelProps = z.object({
       'An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text.',
     ),
   text: z.string().describe('The text displayed by the kit component.'),
-  tone: semanticTone,
+  tone: semanticTone.meta({ default: labelDefaults.tone }),
   accessibilityLabel: z
     .string()
     .optional()
@@ -82,7 +87,7 @@ export const pillProps = z.object({
     .optional()
     .describe('Spoken control name; defaults to its text.'),
   onPress: handler('onPress').optional().describe('Control activation.'),
-  tone: semanticTone,
+  tone: semanticTone.meta({ default: pillDefaults.tone }),
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)

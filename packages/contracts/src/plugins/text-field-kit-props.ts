@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { datePickerDefaults } from '../kit-tokens';
 import { echoes, handler } from './kit-component-props';
 
 type TextProps = Record<string, z.ZodType> & { value: z.ZodType };
@@ -25,6 +26,7 @@ export const datePickerProps = z.object({
   mode: z
     .enum(['date', 'time', 'datetime'])
     .optional()
+    .meta({ default: datePickerDefaults.mode })
     .describe('Pick a date, a time, or both.'),
   onValueChange: handler('onValueChange').describe('Reports a picked value.'),
   required: z.boolean().optional().describe('The field requires a value.'),

@@ -1,3 +1,4 @@
+import { labelDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Icon, SecondaryGlyphs } from '#primitives/content/icon';
@@ -16,7 +17,7 @@ const labelClass = (props: LabelProps): string =>
   );
 
 export function Label(props: LabelProps): ReactElement {
-  const tone = props.tone ?? 'muted';
+  const tone = props.tone ?? labelDefaults.tone;
 
   return (
     <View
