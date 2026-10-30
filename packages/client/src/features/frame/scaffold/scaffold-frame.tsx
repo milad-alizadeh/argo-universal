@@ -9,7 +9,7 @@ import {
 import { shownInspectorState } from './inspector-column';
 import { isFramed } from './is-framed';
 import { ScaffoldBand } from './scaffold-band';
-import { PaneBanner } from './scaffold-chrome';
+import { PaneBanner, type PaneBannerProps } from './scaffold-chrome';
 import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import { ScaffoldWorkbench } from './scaffold-workbench';
@@ -74,13 +74,28 @@ function inspectorPosition({ layout }: InspectorReads): ViewStyle {
   return { left: layout.inspector.offset, bottom: layout.measures.inset };
 }
 
+type BannerPlacement = Pick<PaneBannerProps, 'left' | 'width'>;
+
+/*
+ * The banner centres on the content column, as the Feed and the Composer do, so it floats over the column's quiet
+ * middle and not over a Session bar's action at the column's trailing edge. With no column on show, an expanded
+ * Inspector or the dedicated Workbench, it centres over every pane.
+ */
+function bannerPlacement({
+  layout,
+}: Pick<ScaffoldParts, 'layout'>): BannerPlacement {
+  if (layout.page.hidden) return { left: layout.sidebarWidth };
+
+  return { left: layout.content.offset, width: layout.content.width };
+}
+
 function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
       <FramedInspector {...parts} />
       <ScaffoldWorkbench {...parts} />
       <ScaffoldResizeHandles {...parts} />
-      <PaneBanner left={parts.layout.sidebarWidth}>
+      <PaneBanner {...bannerPlacement(parts)}>
         {parts.scaffold.banner}
       </PaneBanner>
     </>
