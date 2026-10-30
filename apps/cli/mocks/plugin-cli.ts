@@ -1,9 +1,12 @@
 import { execFile, type ExecFileException } from 'node:child_process';
-import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PluginManifest } from '@repo/contracts/plugins';
 import { onTestFinished } from 'vitest';
+
+export const manifestFile = 'plugin.json';
 
 // The shipped example a fixture is scaffolded from, and the real Plugin the example-run tests use.
 export const githubSignIn = fileURLToPath(
@@ -48,3 +51,11 @@ export function run(
 function errorCode(error: ExecFileException | null): string | number {
   return error ? (error.code ?? 1) : 0;
 }
+
+// Every fixture is scaffolded from the example, so a test that wants its own manifest reads that one first.
+export const readManifest = async (
+  directory: string,
+): Promise<PluginManifest> =>
+  PluginManifest.parse(
+    JSON.parse(await readFile(join(directory, manifestFile), 'utf8')),
+  );

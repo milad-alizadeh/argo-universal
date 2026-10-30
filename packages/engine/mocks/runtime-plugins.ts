@@ -12,7 +12,7 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import { makeResolvedTempFolder } from '@repo/mocks/fs/resolved-temp-folder';
 import { onTestFinished } from 'vitest';
-import { manifestTemplate } from './plugin-manifests';
+import { manifestTemplate } from './plugin-manifest-template';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
 export const shippedFolder = 'shipped';

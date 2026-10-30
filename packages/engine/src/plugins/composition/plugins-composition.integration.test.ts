@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { manifestTemplate, rejectedManifests } from '#mocks/plugin-manifests';
+import { manifestTemplate } from '#mocks/plugin-manifest-template';
+import { rejectedManifests } from '#mocks/plugin-manifests';
 
 it('lists first-party Plugin manifests without starting their code, and reports user Plugins without loading them', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'argo-plugins-'));

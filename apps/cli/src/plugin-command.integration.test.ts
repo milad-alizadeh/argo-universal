@@ -1,19 +1,16 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { fixture, githubSignIn, run } from '../mocks/plugin-cli';
+import {
+  fixture,
+  githubSignIn,
+  manifestFile,
+  readManifest,
+  run,
+} from '../mocks/plugin-cli';
 
 // The example starts a separate worker for each of its tests.
 const exampleTestLimitMs = 60_000;
-
-const manifestFile = 'plugin.json';
-
-// Every fixture is scaffolded from the example, so a test that needs its own manifest reads this one first.
-const readManifest = async (directory: string): Promise<PluginManifest> =>
-  PluginManifest.parse(
-    JSON.parse(await readFile(join(directory, manifestFile), 'utf8')),
-  );
 
 it.each([
   ['process.cwd();', 'Node global process'],
@@ -113,57 +110,6 @@ it(
       output: expect.stringContaining(
         'PASS the provider is registered for the Account host with the Authorization header',
       ),
-    });
-  },
-  exampleTestLimitMs + 10_000,
-);
-
-it(
-  'test runs a Plugin’s interaction test in its worker',
-  async () => {
-    const directory =
-      await fixture(`import { Action, Screen, Text, useState } from '@argo/plugin-kit';
-
-function Page() {
-  const [tapped, setTapped] = useState(false);
-  return (
-    <Screen title="Tap" primaryAction={<Action key="tap" label="Tap me" icon="add" onPress={() => setTapped(true)} />}>
-      <Text>{tapped ? 'Tapped' : 'Not tapped'}</Text>
-    </Screen>
-  );
-}
-
-export function register(argo) {
-  argo.pages.register('/', Page);
-}
-`);
-
-    // The fixture draws one page of its own, so it keeps none of the example's contributions.
-    await writeFile(
-      join(directory, manifestFile),
-      JSON.stringify({
-        ...(await readManifest(directory)),
-        contributes: { nav: [] },
-      }),
-    );
-
-    await writeFile(
-      join(directory, 'tap.test.ts'),
-      `
-    import assert from 'node:assert/strict';
-    import { test } from '@argo/plugin-kit/testing';
-    test('pressing Tap me', async ({ mount }) => {
-      const page = await mount({ page: '/', surface: { platform: 'web' } });
-      await page.find('Not tapped');
-      await page.press('Tap me');
-      assert.equal((await page.find('Tapped')).type, 'Text');
-    });
-  `,
-    );
-
-    expect(await run('test', directory, exampleTestLimitMs)).toMatchObject({
-      code: 0,
-      output: expect.stringContaining('PASS pressing Tap me'),
     });
   },
   exampleTestLimitMs + 10_000,
