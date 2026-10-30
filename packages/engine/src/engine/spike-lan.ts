@@ -18,6 +18,6 @@ export function startSpikeAdvertising(port: number): void {
   createServer((socket) => {
     socket.write('argo-spike-tcp-hello\n');
     socket.on('data', (data) => socket.write(data));
-    socket.on('error', () => undefined);
+    socket.on('error', () => socket.destroy());
   }).listen(port + 1, spikeBind);
 }

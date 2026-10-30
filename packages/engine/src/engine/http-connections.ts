@@ -4,7 +4,7 @@ import { WebSocketServer, type VerifyClientCallbackAsync } from 'ws';
 import { createRpcContext } from '../rpc';
 import type { RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
-import { spikeBind } from './spike-lan';
+import { spikeBind, startSpikeAdvertising } from './spike-lan';
 
 const forbiddenStatus = 403;
 
@@ -13,6 +13,7 @@ export const listenOnLoopback = (server: Server, port: number): Promise<void> =>
     server.once('error', reject);
     server.listen(port, spikeBind ?? '127.0.0.1', (): void => {
       server.off('error', reject);
+      startSpikeAdvertising(port);
       resolve();
     });
   });
