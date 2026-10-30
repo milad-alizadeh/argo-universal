@@ -2,6 +2,7 @@ import { Skia } from '@shopify/react-native-skia';
 import type { NativeTheme } from '../../../native-theme';
 import { drawingColor } from './canvas-colors';
 import { leafEntry, disposeEntries } from './canvas-entry';
+import { assignLabelContainers } from './canvas-label-containers';
 import { canvasMatrix, type Matrix } from './canvas-matrix';
 import { groupMatrix } from './canvas-paths';
 import type { Bounds, CanvasDrawing } from './canvas-props';
@@ -80,6 +81,7 @@ function recordedScene(
 ): CanvasScene {
   try {
     recordDrawings(drawings, context);
+    assignLabelContainers(context.entries);
 
     const picture = recorder.finishRecordingAsPicture();
 

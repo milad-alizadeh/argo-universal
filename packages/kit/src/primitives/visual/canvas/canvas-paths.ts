@@ -85,9 +85,3 @@ function linePath(
     { x: props.x2, y: props.y2 },
   );
 }
-
-export const drawingFill = (drawing: CanvasDrawing): boolean =>
-  drawing.props.fill ?? drawing.kind !== 'line';
-
-export const drawingStroke = (drawing: CanvasDrawing): boolean =>
-  drawing.props.stroke ?? drawing.kind === 'line';

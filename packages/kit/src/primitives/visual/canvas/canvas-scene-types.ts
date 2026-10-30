@@ -16,6 +16,8 @@ export interface SceneEntry {
   label?: string;
   onPress?: () => void;
   hitBounds?: Bounds;
+  // For a text, the rectangle it sits in, found once when the scene is compiled.
+  container?: Bounds;
 }
 
 export interface CanvasScene {
