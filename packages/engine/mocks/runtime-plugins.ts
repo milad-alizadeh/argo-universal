@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import {
   PluginManifest,
@@ -12,6 +12,7 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import { makeResolvedTempFolder } from '@repo/mocks/fs/resolved-temp-folder';
 import { onTestFinished } from 'vitest';
+import { manifestTemplate } from './plugin-manifest-template';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
 export const shippedFolder = 'shipped';
@@ -74,18 +75,9 @@ const copyPluginFixture = async (
 type ManifestInput = FixturePlugin & { folder: string; main: string };
 
 async function writeManifest(plugin: ManifestInput): Promise<void> {
-  const template = PluginManifest.parse(
-    JSON.parse(
-      await readFile(
-        new URL('./plugins/first-party/tracker/plugin.json', import.meta.url),
-        'utf8',
-      ),
-    ),
-  );
-
   await writeFile(
     join(plugin.folder, 'plugin.json'),
-    JSON.stringify(pluginManifest(template, plugin)),
+    JSON.stringify(pluginManifest(manifestTemplate, plugin)),
   );
 }
 
