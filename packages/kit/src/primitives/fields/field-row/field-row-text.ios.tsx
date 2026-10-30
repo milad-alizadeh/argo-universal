@@ -118,6 +118,7 @@ function RowGlyph(props: {
     <NativeSymbol
       name={props.leading}
       size={rowGlyphSize}
+      lane="row"
       tone={props.tone === 'danger' ? undefined : 'foreground'}
     />
   );

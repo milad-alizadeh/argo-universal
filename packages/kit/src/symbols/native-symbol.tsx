@@ -24,8 +24,15 @@ function useToneColor(tone: NativeSymbolTone | undefined): string | undefined {
   return tone === 'muted' ? mutedForeground : undefined;
 }
 
-// An Argo icon inside a Compose tree: Expo UI's Icon in the token the tone names, or the control's content colour.
-export function NativeSymbol(props: NativeSymbolProps): React.JSX.Element {
+/*
+ * An Argo icon inside a Compose tree: Expo UI's Icon in the token the tone names, or the control's content colour.
+ * A row's lane needs no share here — stock Android Settings draws the standard 24dp Material box, which is what the
+ * size table already gives a row (glyph-sizing.ts) — so the lane is dropped rather than passed on.
+ */
+export function NativeSymbol({
+  lane: _lane,
+  ...props
+}: NativeSymbolProps): React.JSX.Element {
   return (
     <NativeIcon
       {...props}

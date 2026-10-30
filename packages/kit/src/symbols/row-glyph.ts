@@ -8,8 +8,10 @@ import type { IconSize } from './icon-size';
  * never decides it, and accent fill is left to a row genuinely in an accent state. `useRowGlyphColor` resolves the
  * same token for a SwiftUI or Compose tree, which cannot hold a class.
  *
- * Size: one role, `md`, in every FieldGroup row and every kit ListItem row. ADR-0019: iOS list rows draw at the same
- * fixed sizes as every other icon, never at their row's text size.
+ * Size: the lane is one role, `md`, in every FieldGroup row and every kit ListItem row, which lands a title 72.7pt
+ * from the screen's edge — exactly where stock iOS Settings starts one. ADR-0019: iOS list rows draw at the same
+ * fixed sizes as every other icon, never at their row's text size. What the symbol draws at inside that lane is a
+ * platform's own business, and `appleRowSymbolPixels` holds the measurement for iOS (#1452).
  */
 export const glyphForegroundClass = 'text-foreground';
 

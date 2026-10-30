@@ -4,6 +4,7 @@ import { frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { useIconSize } from '#primitives/content/icon';
+import { appleRowSymbolPixels } from './glyph-sizing';
 import { useIconPixels } from './icon-size';
 import { iosImage } from './ios-image';
 import type {
@@ -41,17 +42,19 @@ function useToneColor(tone: NativeSymbolTone | undefined): string | undefined {
 /*
  * An Argo icon inside a SwiftUI tree, which cannot hold a React Native view. SF Symbols fill their point size to
  * different widths, so the symbol sits in a square frame of its own size: every title beside one starts on the same
- * line whichever symbol its row names.
+ * line whichever symbol its row names. A row's glyph keeps that frame as its lane and draws smaller inside it, at
+ * the size stock iOS Settings draws a row's mark (appleRowSymbolPixels).
  */
 export function NativeSymbol(props: NativeSymbolProps): React.JSX.Element {
-  const pixels = useIconPixels(useIconSize(props.size));
+  const lane = useIconPixels(useIconSize(props.size));
+  const pixels = props.lane === 'row' ? appleRowSymbolPixels(lane) : lane;
 
   return (
     <Image
       {...imageSource(props.name, props.filled)}
       size={pixels}
       color={useToneColor(props.tone)}
-      modifiers={[frame({ width: pixels, height: pixels })]}
+      modifiers={[frame({ width: lane, height: lane })]}
     />
   );
 }

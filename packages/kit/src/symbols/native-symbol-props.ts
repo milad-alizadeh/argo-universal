@@ -15,4 +15,9 @@ export interface NativeSymbolProps {
   filled?: boolean;
   // Unset, the symbol takes the colour its surroundings give it (iOS: the SwiftUI tint; Compose: the content colour).
   tone?: NativeSymbolTone;
+  /*
+   * Set on a row's leading glyph, which sits in a lane rather than drawing at its own size: the lane keeps the
+   * width `size` gives it and each platform draws the symbol at what its own Settings app draws (row-glyph.ts).
+   */
+  lane?: 'row';
 }
