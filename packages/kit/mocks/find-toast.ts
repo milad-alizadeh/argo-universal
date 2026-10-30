@@ -6,7 +6,7 @@ type WaitOptions = Parameters<typeof waitFor>[1];
 
 // A toast's text once it has faded in, inside the live region that announces it.
 export async function findToast(
-  text: string,
+  text: string | RegExp,
   // The wait, for a toast something holds back, such as a choice the Server never confirms.
   options?: WaitOptions,
 ): Promise<HTMLElement> {
@@ -21,7 +21,7 @@ export async function findToast(
 }
 
 // Every toast that shows this text, to prove a failure toasts only once.
-export async function allToasts(text: string): Promise<HTMLElement[]> {
+export async function allToasts(text: string | RegExp): Promise<HTMLElement[]> {
   const region = await screen.findByRole('region', notifications);
 
   return within(region).queryAllByText(text);

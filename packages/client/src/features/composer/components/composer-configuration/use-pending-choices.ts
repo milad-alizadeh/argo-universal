@@ -48,19 +48,6 @@ export function usePendingChoices(
   };
 }
 
-/*
- * A control that reports a dropped choice without drawing the choice itself: the Mode pill reads the Mode
- * the Session is in and nothing else, so a change it never made is said rather than shown (#1481).
- */
-export function useReportedConfig(
-  configuration: ComposerConfigurationProps,
-): ComposerConfigurationProps {
-  return {
-    ...configuration,
-    onConfigChange: usePendingChoices(configuration).choose,
-  };
-}
-
 // A choice the options now carry is no longer this hook's to hold: the subscription speaks for it again.
 function unconfirmed(
   pending: Pending,

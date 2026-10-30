@@ -44,12 +44,14 @@ const currentMode = foundCurrent;
 
 const otherMode = foundOther;
 
-const dropTitle = "Couldn't change Mode";
-
-const dropMessage = 'The Server did not confirm the change.';
+/*
+ * The toast is found by the option it names, not by its whole copy: the words themselves are the pure
+ * builder's to settle, and `dropped-choice-toast.test.ts` holds them.
+ */
+const namesTheMode = /change Mode$/;
 
 // Longer than the wait a choice stands, so each story sees that wait end.
-const pastTheHold = holdChoice + 2500;
+const pastTheHold = holdChoice + 1500;
 
 const unresponsive = fn();
 
@@ -108,8 +110,9 @@ export const UnansweredModeChangeIsSaid: Story = {
       expect(unresponsive).toHaveBeenCalledWith('mode', otherMode.value),
     );
 
-    await findToast(dropTitle, { timeout: pastTheHold });
-    await expect(await findToast(dropMessage)).toBeVisible();
+    await expect(
+      await findToast(namesTheMode, { timeout: pastTheHold }),
+    ).toBeVisible();
     // The pill never read a Mode the Session was not in, before the toast or after it.
     await expect(
       within(modePill(canvas)).getByText(currentMode.name),
@@ -160,8 +163,8 @@ export const AnsweredModeChangeIsSilent: Story = {
       expect(within(modePill(canvas)).getByText(otherMode.name)).toBeVisible(),
     );
 
+    // Absence has nothing to await, so the story stands past the wait and then looks.
     await new Promise((resolve) => setTimeout(resolve, pastTheHold));
-    await expect(await allToasts(dropTitle)).toHaveLength(0);
-    await expect(await allToasts(dropMessage)).toHaveLength(0);
+    await expect(await allToasts(namesTheMode)).toHaveLength(0);
   },
 };
