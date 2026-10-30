@@ -93,16 +93,16 @@ function inertLink(href: string): Story {
   };
 }
 
-export const AbsolutePathLinkIsInert = inertLink('/tmp/checkout/qa-note.txt');
+export const AbsolutePathLinkIsInert = inertLink('/work/checkout/qa-note.txt');
 
 export const RelativePathLinkIsInert = inertLink('src/qa-note.txt');
 
 export const PathWithEncodedSpacesLinkIsInert = inertLink(
-  '/tmp/my%20checkout/qa%20note.txt',
+  '/work/my%20checkout/qa%20note.txt',
 );
 
 export const UnicodePathLinkIsInert = inertLink(
-  '/tmp/caf%C3%A9/note-%E6%97%A5.txt',
+  '/work/caf%C3%A9/note-%E6%97%A5.txt',
 );
 
 export const AppRouteLookingLinkIsInert = inertLink('/settings');
