@@ -27,7 +27,7 @@ function HiddenText({ text }: SkeletonBarProps): ReactElement {
   );
 }
 
-// A muted bar as wide as its hidden placeholder text, so each loading row can differ.
+// A muted bar as wide as its hidden placeholder text, so each loading field can differ.
 export function SkeletonBar(props: SkeletonBarProps): ReactNode {
   if (props.text === undefined) return null;
 

@@ -64,7 +64,7 @@ export type MovesOrItems =
   | { items?: undefined; layout?: 'list' | 'lanes'; direction?: 'vertical' }
   | { onMove?: undefined };
 
-// Kit-only: native selection, and controlled section expansion.
+// Kit-only: native selection and controlled section expansion.
 export type ListSectionProps = KitProps<'List.Section'> &
   ListSelection & {
     count?: number;
