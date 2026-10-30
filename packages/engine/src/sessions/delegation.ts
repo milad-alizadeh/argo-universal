@@ -1,33 +1,46 @@
 import type { SessionRecord } from '@repo/contracts';
-import type { SessionRowSources } from './router-deps';
+import type { HandlerSources } from './session-sources';
 import { readLatestTurns } from './session-storage';
-import { readOpenSession } from './session-system';
 import { readChildSessions } from './subagents/children';
 
-export function runningStartedSessions(
-  deps: SessionRowSources,
-  callerId: string,
-): string[] {
-  const sources = { database: deps.database, writer: deps.findWriter() };
+type DelegationSources = HandlerSources<'database' | 'findWriter', 'context'>;
 
-  const children = readChildSessions(sources, callerId)
+const startedChildren = (
+  sources: Parameters<typeof readChildSessions>[0],
+  callerId: string,
+): SessionRecord[] =>
+  readChildSessions(sources, callerId)
     .map((read) => read())
     .filter(
       (row): row is SessionRecord => row?.startedBySessionId === callerId,
     );
 
+const isRunning = (
+  sources: DelegationSources,
+  latest: ReturnType<typeof readLatestTurns>,
+  sessionId: string,
+): boolean => {
+  const live = sources.open.context(sessionId);
+
+  return live
+    ? live.activeTurnId !== null
+    : latest(sessionId)?.status === 'running';
+};
+
+export function runningStartedSessions(
+  sources: DelegationSources,
+  callerId: string,
+): string[] {
+  const rows = { database: sources.database, writer: sources.findWriter() };
+
+  const children = startedChildren(rows, callerId);
+
   const latest = readLatestTurns(
-    sources,
+    rows,
     children.map((child) => child.id),
   );
 
   return children
-    .filter((child) => {
-      const live = readOpenSession(deps.sessions, child.id);
-
-      return live
-        ? live.activeTurnId !== null
-        : latest(child.id)?.status === 'running';
-    })
+    .filter((child) => isRunning(sources, latest, child.id))
     .map((child) => child.id);
 }

@@ -1,8 +1,7 @@
 import type { Database } from '@repo/db';
-import type { FeedDeps } from '../feed';
+import { feedMachine, type FeedActorRef, type FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
 import {
-  findSessionFeed,
   type OpenSessionsActorRef,
   type SessionActorRef,
   sessionActorId,
@@ -19,7 +18,7 @@ export type FeedSources = FeedSourcesInput &
     findSession: (sessionId: string) => SessionActorRef | undefined;
   };
 
-const findLiveSession =
+const findOpenSession =
   (sessions: OpenSessionsActorRef) =>
   (sessionId: string): SessionActorRef | undefined =>
     findMachineActor(
@@ -28,12 +27,23 @@ const findLiveSession =
       sessionMachine,
     );
 
+// An open Session's Feed, or a Subagent's, which its parent Session runs.
+const findSessionFeed =
+  (sessions: OpenSessionsActorRef) =>
+  (sessionId: string): FeedActorRef | undefined =>
+    findOpenSession(sessions)(sessionId)?.getSnapshot().children.feed ??
+    findMachineActor(
+      sessions.system,
+      `subagent-feed:${sessionId}`,
+      feedMachine,
+    );
+
 // Where the Feed finds the live Session, its feed actor and the Writer.
 export function createFeedSources(input: FeedSourcesInput): FeedSources {
   return {
     ...input,
-    findSession: findLiveSession(input.sessions),
-    findFeed: (sessionId) => findSessionFeed(input.sessions.system, sessionId),
+    findSession: findOpenSession(input.sessions),
+    findFeed: findSessionFeed(input.sessions),
     findWriter: () => input.sessions.getSnapshot().context.writer,
   };
 }

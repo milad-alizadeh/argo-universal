@@ -55,44 +55,25 @@ export async function writePlugin(
 
   await mkdir(folder, { recursive: true });
   await writeManifest({ ...plugin, folder, main });
-  await cp(
-    new URL(
-      `./plugin-runtime/${plugin.fixture}${extname(main)}`,
-      import.meta.url,
-    ),
-    join(folder, main),
-  );
+  await copyPluginFixture(plugin.fixture, folder, main);
 
   if (plugin.dev) await addDevSource(folder);
 }
 
-async function writeManifest({
-  folder,
-  id,
-  main,
-  capabilities,
-  hooks,
-  slots,
-  renders,
-  settings,
-  accounts,
-  order,
-  declared,
-}: Pick<
-  FixturePlugin,
-  | 'id'
-  | 'capabilities'
-  | 'hooks'
-  | 'slots'
-  | 'renders'
-  | 'settings'
-  | 'accounts'
-  | 'order'
-  | 'declared'
-> & {
-  folder: string;
-  main: string;
-}): Promise<void> {
+const copyPluginFixture = async (
+  fixture: string,
+  folder: string,
+  main: string,
+): Promise<void> => {
+  await cp(
+    new URL(`./plugin-runtime/${fixture}${extname(main)}`, import.meta.url),
+    join(folder, main),
+  );
+};
+
+type ManifestInput = FixturePlugin & { folder: string; main: string };
+
+async function writeManifest(plugin: ManifestInput): Promise<void> {
   const template = PluginManifest.parse(
     JSON.parse(
       await readFile(
@@ -103,25 +84,35 @@ async function writeManifest({
   );
 
   await writeFile(
-    join(folder, 'plugin.json'),
-    JSON.stringify({
-      ...template,
-      id,
-      main,
-      capabilities,
-      contributes: {
-        ...template.contributes,
-        hooks,
-        slots,
-        renders,
-        settings,
-        accounts,
-        order,
-        declared,
-      },
-    }),
+    join(plugin.folder, 'plugin.json'),
+    JSON.stringify(pluginManifest(template, plugin)),
   );
 }
+
+const pluginManifest = (
+  template: PluginManifest,
+  plugin: ManifestInput,
+): PluginManifest => ({
+  ...template,
+  id: plugin.id,
+  main: plugin.main,
+  capabilities: plugin.capabilities,
+  contributes: pluginContributions(template, plugin),
+});
+
+const pluginContributions = (
+  template: PluginManifest,
+  plugin: ManifestInput,
+): PluginManifest['contributes'] => ({
+  ...template.contributes,
+  hooks: plugin.hooks,
+  slots: plugin.slots,
+  renders: plugin.renders,
+  settings: plugin.settings,
+  accounts: plugin.accounts,
+  order: plugin.order,
+  declared: plugin.declared,
+});
 
 // A dev Plugin's entry imports a TypeScript source the Server bundles.
 async function addDevSource(folder: string): Promise<void> {

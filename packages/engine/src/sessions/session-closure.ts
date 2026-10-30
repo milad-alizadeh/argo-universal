@@ -2,49 +2,30 @@ import type { SessionCancelOutput, SessionCloseOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { readSessionCloseTarget } from './close-target';
-import type { SessionRouterDeps } from './router-deps';
-import {
-  sendSessionCommand,
-  validateSessionCommandAdmission,
-} from './session-command';
+import type { OpenSessions } from './open-sessions';
+import { requireWritableSession, sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
-import { readWritableSession } from './session-opening';
-import { createQueuedSessionReader } from './session-record';
-import { requireLiveSessionActor } from './session-system';
+
+type ClosingSessions = Pick<
+  OpenSessions,
+  'admit' | 'live' | 'queued' | 'context'
+>;
 
 const isClosing = (actor: SessionActorRef): boolean => {
   const snapshot = actor.getSnapshot();
 
-  return (
-    snapshot.matches({ open: { acp: 'closing' } }) ||
-    snapshot.matches({ open: { acp: 'flushing' } }) ||
-    snapshot.matches('archived')
-  );
+  return snapshot.hasTag('closing') || snapshot.hasTag('archived');
 };
 
-export const closeSession = async (
-  deps: Pick<
-    SessionRouterDeps,
-    | 'sessions'
-    | 'readSession'
-    | 'sessionCommandSignal'
-    | 'database'
-    | 'findWriter'
-  >,
-  sessionId: string,
-): Promise<SessionCloseOutput> => {
-  validateSessionCommandAdmission(deps);
-
-  if (readSessionCloseTarget(deps, sessionId).parentSessionId !== null)
+function requireClosable(sessions: ClosingSessions, sessionId: string): void {
+  if (readSessionCloseTarget(sessions, sessionId).parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',
     });
+}
 
-  const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
-
-  if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
-
+async function awaitClosure(actor: SessionActorRef): Promise<void> {
   const outcome = await waitFor(
     actor,
     (snapshot) => snapshot.status !== 'active',
@@ -56,23 +37,31 @@ export const closeSession = async (
       code: 'INTERNAL_SERVER_ERROR',
       message: outcome.context.failure,
     });
+}
+
+export const closeSession = async (
+  sessions: ClosingSessions,
+  sessionId: string,
+): Promise<SessionCloseOutput> => {
+  sessions.admit();
+  requireClosable(sessions, sessionId);
+  const actor = sessions.live(sessionId);
+
+  if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
+
+  await awaitClosure(actor);
 
   return {};
 };
 
 // Reads the Session as a Session caller's scope does, with the Writer's queued rows.
 export const cancelSession = (
-  deps: Pick<
-    SessionRouterDeps,
-    'sessions' | 'database' | 'findWriter' | 'sessionCommandSignal'
-  >,
+  sessions: ClosingSessions,
   sessionId: string,
 ): SessionCancelOutput => {
-  validateSessionCommandAdmission(deps);
-  readWritableSession(createQueuedSessionReader(deps), sessionId);
-  sendSessionCommand(requireLiveSessionActor(deps.sessions.system, sessionId), {
-    type: 'session.cancel',
-  });
+  sessions.admit();
+  requireWritableSession(sessions.queued(sessionId));
+  sendSessionCommand(sessions.live(sessionId), { type: 'session.cancel' });
 
   return {};
 };

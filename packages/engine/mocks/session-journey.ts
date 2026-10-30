@@ -7,6 +7,7 @@ import type {
   SessionConfigOption,
 } from '@agentclientprotocol/sdk';
 import type { SessionNewInput } from '@repo/contracts';
+import { resolveExecutable } from '@repo/executables';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { startAcpEngine } from './acp-engine';
 
@@ -78,7 +79,7 @@ const journeyScenario = (
 export const sessionJourneyGit =
   (directory: string): SessionJourney['git'] =>
   (...arguments_) =>
-    execFileSync('git', arguments_, {
+    execFileSync(resolveExecutable('git'), arguments_, {
       cwd: directory,
       encoding: 'utf8',
     }).trim();

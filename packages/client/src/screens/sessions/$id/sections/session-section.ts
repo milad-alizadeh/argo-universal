@@ -47,7 +47,7 @@ export interface SectionPhonePage {
   body: ReactNode;
 }
 
-export type SectionDraw<Drawn> = (
+type SectionDraw<Drawn> = (
   content: SessionInspectorContent,
   tab: SectionTabHandle,
 ) => Drawn;

@@ -4,18 +4,19 @@ import { createActor, waitFor } from 'xstate';
 import { coreOnlyHooks } from '#mocks/core-hooks';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
+import { sessionSources } from '#mocks/session-sources';
 import { createAcpResources } from '../agents';
 import { writerMachine } from '../storage';
 import { openSessionsMachine } from './open-sessions-machine';
-import { createSessionDirectory } from './session-directory';
 import { createSessionReader } from './session-record';
 import { SessionInsertJob } from './session-storage';
+import { Sessions } from './sessions';
 
 const notFound = expect.objectContaining({ code: 'NOT_FOUND' });
 
 // The Writer keeps a started Session's insert queued, as it does until the commit lands.
 async function queuedStart(): Promise<
-  Parameters<typeof createSessionDirectory>[0]
+  ConstructorParameters<typeof Sessions>[0]
 > {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
@@ -60,12 +61,12 @@ async function queuedStart(): Promise<
   });
   await waitFor(writer, (snapshot) => snapshot.matches('waitingToRetry'));
 
-  return { database, findWriter: () => writer, sessions };
+  return sessionSources(sessions);
 }
 
 it('reads a Session whose row the Writer has queued but not committed, which the stored reader misses', async () => {
   const sources = await queuedStart();
-  const directory = createSessionDirectory(sources);
+  const { directory } = new Sessions(sources);
 
   expect(directory.session('started')).toEqual({
     projectId: 'project-1',

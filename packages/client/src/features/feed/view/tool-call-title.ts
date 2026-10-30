@@ -1,9 +1,9 @@
 import {
   type CommandAction,
   isToolCallRunning,
-  knownCommandActions,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { toolCallFacts } from './feed-row-facts';
 
 function actionPaths(action: CommandAction): string[] {
   if (!['read', 'search', 'list'].includes(action.type)) return [];
@@ -14,7 +14,7 @@ function actionPaths(action: CommandAction): string[] {
 function readPath(row: ToolCallUpdate): string | undefined {
   if (row.kind !== 'read') return undefined;
 
-  return firstLocation(row);
+  return toolCallFacts(row).location;
 }
 
 export function toolCallTitlePaths(
@@ -27,7 +27,7 @@ export function toolCallTitlePaths(
 }
 
 function pathsFor(row: ToolCallUpdate): string[] {
-  const actions = knownCommandActions(row);
+  const { actions } = toolCallFacts(row);
 
   return actions.length ? actions.flatMap(actionPaths) : impliedReadPaths(row);
 }
@@ -94,13 +94,9 @@ export function toolCallTitle(
 }
 
 function titleFor(row: ToolCallUpdate): string {
-  const actions = knownCommandActions(row);
+  const { actions } = toolCallFacts(row);
 
   return actions.length
     ? actions.map((action) => actionTitle(action, row.title)).join(', ')
     : impliedToolTitle(row);
-}
-
-function firstLocation(row: ToolCallUpdate): string | undefined {
-  return row.locations?.[0]?.path;
 }

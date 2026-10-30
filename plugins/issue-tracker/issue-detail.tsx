@@ -36,7 +36,7 @@ const statuses = {
   closed: {
     text: 'Closed',
     tone: 'done',
-    change: { label: 'Reopen Issue', icon: 'issue-open', to: 'open' },
+    change: { label: 'Reopen Issue', icon: 'issue', to: 'open' },
   },
 } as const satisfies Record<IssueStatus, StatusView>;
 

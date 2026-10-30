@@ -1,10 +1,17 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import clientManifest from '../packages/client/package.json' with { type: 'json' };
-import kitManifest from '../packages/kit/package.json' with { type: 'json' };
 
 const repoRoot = join(import.meta.dirname, '..');
+
+const readManifest = (
+  packageRoot: string,
+): { imports: Record<string, Target> } =>
+  JSON.parse(readFileSync(join(repoRoot, packageRoot, 'package.json'), 'utf8'));
+
+const clientManifest = readManifest('packages/client');
+
+const kitManifest = readManifest('packages/kit');
 
 type Target = string | { default?: string };
 

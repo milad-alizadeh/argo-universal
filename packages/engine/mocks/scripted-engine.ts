@@ -4,6 +4,10 @@ import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import type { EngineInput } from '../src/engine/machine';
 import { createScriptedAgentProcess } from './scripted-agent';
 
+const cliEntry = fileURLToPath(
+  new URL('../../../apps/cli/bin/argo.mjs', import.meta.url),
+);
+
 export const scriptedEngineInput = (
   scenario: ScriptedScenario = { steps: [] },
   identity = 'mock',
@@ -14,9 +18,7 @@ export const scriptedEngineInput = (
   const agent = createScriptedAgentProcess(scenario);
 
   return {
-    cliEntry: fileURLToPath(
-      new URL('../../../apps/cli/bin/argo.mjs', import.meta.url),
-    ),
+    cliEntry,
     agent,
     fixtureAgents: [createAgentMetadata(identity)],
     acp: agent,

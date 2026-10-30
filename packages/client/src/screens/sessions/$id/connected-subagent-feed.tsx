@@ -9,7 +9,7 @@ export type ConnectedSubagentFeedProps = Pick<
 >;
 
 // A child transcript uses the same paging and live subscription as the parent, with read-only presentation.
-export function ConnectedSubagentFeed(
+function ConnectedSubagentFeed(
   props: ConnectedSubagentFeedProps,
 ): ReactElement {
   const source = useSessionFeed(props.subagent.sessionId, toSubagentFeedView);

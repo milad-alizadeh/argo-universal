@@ -3,7 +3,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { z } from 'zod';
 
-export const runtimeCases = ['sentinel', 'command', 'delay', 'cancel'] as const;
+const runtimeCases = ['sentinel', 'command', 'delay', 'cancel'] as const;
 
 export type RuntimeCase = (typeof runtimeCases)[number];
 

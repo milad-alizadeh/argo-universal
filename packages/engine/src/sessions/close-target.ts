@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server';
-import type { SessionRowSources } from './router-deps';
-import { createQueuedSessionReader } from './session-record';
-import { readOpenSession } from './session-system';
+import type { OpenSessions } from './open-sessions';
+import type { SessionContext, SessionMachineInput } from './session-context';
+
+type TargetSessions = Pick<OpenSessions, 'queued' | 'context'>;
 
 type SessionCloseTarget = {
   projectId: string;
@@ -9,33 +10,44 @@ type SessionCloseTarget = {
   startedBySessionId: string | null;
 };
 
+type NewSessionContext = SessionContext & {
+  input: Extract<SessionMachineInput, { kind: 'new' }>;
+};
+
 // A native opening can be closed before the Agent makes its first stored Session row.
 export function readSessionCloseTarget(
-  deps: SessionRowSources,
+  sessions: TargetSessions,
   sessionId: string,
 ): SessionCloseTarget {
   try {
-    return createQueuedSessionReader(deps)(sessionId);
+    return sessions.queued(sessionId);
   } catch (cause) {
-    return openingTarget(deps, { sessionId, cause });
+    return openingTarget(sessions, { sessionId, cause });
   }
 }
 
 function openingTarget(
-  deps: SessionRowSources,
+  sessions: TargetSessions,
   { sessionId, cause }: { sessionId: string; cause: unknown },
 ): SessionCloseTarget {
   requireMissingSession(cause);
 
-  const context = readOpenSession(deps.sessions, sessionId);
+  const context = sessions.context(sessionId);
 
-  if (!context || context.input.kind !== 'new') throw cause;
+  requireNewSession(context, cause);
 
   return {
     projectId: context.input.projectId,
     parentSessionId: null,
     startedBySessionId: context.input.startedBySessionId ?? null,
   };
+}
+
+function requireNewSession(
+  context: SessionContext | undefined,
+  cause: unknown,
+): asserts context is NewSessionContext {
+  if (!context || context.input.kind !== 'new') throw cause;
 }
 
 function requireMissingSession(cause: unknown): void {

@@ -5,7 +5,7 @@ import { FieldGroup } from '#primitives/fields/field-group';
 import { withScreenStack } from '#story-stack';
 
 // A row's stories draw it as the one row of a FieldGroup section, where Expo UI draws it.
-export const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
+const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
   <FieldGroup>
     <FieldGroup.Section title="Section">
       <Story />

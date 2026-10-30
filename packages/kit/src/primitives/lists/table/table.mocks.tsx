@@ -39,7 +39,7 @@ type Run = readonly [
   number,
 ];
 
-export const runs: readonly Run[] = [
+const runs: readonly Run[] = [
   [
     'typecheck',
     'Typecheck',

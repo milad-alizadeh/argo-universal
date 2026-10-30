@@ -1,12 +1,19 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
-import { feedRowColumns, shellColumns } from '../columns';
+import { shellColumns } from '../columns';
 import { OperationWorkTarget } from '../operations/work';
 import { TurnEnd } from '../sessions/turn';
+import { CompactionUpdate } from './compaction';
 import { BlobRef, ContentBlock } from './content-block';
+import {
+  AgentMessage,
+  AgentThought,
+  PromptMessage,
+  SessionMessage,
+  UserMessage,
+} from './messages';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
-import { NonUserPromptSender } from './prompt-sender';
 import {
   CommandAction,
   PermissionOutcome,
@@ -15,6 +22,11 @@ import {
   ToolCallStatus,
   ToolKind,
 } from './tool-call';
+import { envelope, kind, noExtensionMeta } from './update-fields';
+
+export * from './compaction';
+
+export * from './messages';
 
 export const SessionUpdateKind = z.enum(sessionUpdateKinds);
 
@@ -23,87 +35,6 @@ export type SessionUpdateKind = z.infer<typeof SessionUpdateKind>;
 export const SessionUpdateState = z.enum(sessionUpdateStates);
 
 export type SessionUpdateState = z.infer<typeof SessionUpdateState>;
-
-// Fields every Feed row carries, from the `feed_row` table (ADR-0007).
-const envelope = feedRowColumns.pick({
-  id: true,
-  sessionId: true,
-  position: true,
-  revision: true,
-  turnId: true,
-  state: true,
-}).shape;
-
-// One value of the `sessionUpdate` column, so a kind the table does not list fails `tsc`.
-const kind = <Kind extends SessionUpdateKind>(
-  value: Kind,
-): z.ZodEnum<{ [Key in Kind]: Key }> =>
-  feedRowColumns.shape.sessionUpdate.extract([value]);
-
-// `_meta` is ACP's extension slot; Argo's own fields live under `_meta.argo` (ADR-0006).
-const noExtensionMeta = createFeedMetadataSchema(z.strictObject({}));
-
-const message = {
-  messageId: z.string(),
-  content: z.array(ContentBlock),
-  _meta: noExtensionMeta,
-};
-
-export const UserMessage = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('user_message'),
-  ...message,
-  _meta: createFeedMetadataSchema(
-    z.strictObject({
-      sender: z.strictObject({ type: z.literal('user') }).optional(),
-    }),
-  ),
-});
-
-// Argo-owned Prompt provenance is separate from ACP-reported Session messages (ADR-0044).
-export const PromptMessage = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('prompt_message'),
-  ...message,
-  _meta: z.strictObject({
-    argo: z.strictObject({ sender: NonUserPromptSender }),
-  }),
-});
-
-export type PromptMessage = z.infer<typeof PromptMessage>;
-
-export const SessionMessage = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('session_message'),
-  messageId: z.string(),
-  content: z.array(ContentBlock),
-  _meta: createFeedMetadataSchema(
-    z.strictObject({
-      senderSessionId: z.string().optional(),
-      recipientSessionId: z.string().optional(),
-    }),
-  ),
-});
-
-export type SessionMessage = z.infer<typeof SessionMessage>;
-
-export type UserMessage = z.infer<typeof UserMessage>;
-
-export const AgentMessage = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('agent_message'),
-  ...message,
-});
-
-export type AgentMessage = z.infer<typeof AgentMessage>;
-
-export const AgentThought = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('agent_thought'),
-  ...message,
-});
-
-export type AgentThought = z.infer<typeof AgentThought>;
 
 export const ToolCallUpdate = z.strictObject({
   ...envelope,
@@ -154,27 +85,6 @@ export const PlanUpdate = z.strictObject({
 });
 
 export type PlanUpdate = z.infer<typeof PlanUpdate>;
-
-export const knownCompactionStatuses = [
-  'in_progress',
-  'completed',
-  'failed',
-  'cancelled',
-] as const;
-
-const CompactionStatus = z.string();
-
-export const CompactionUpdate = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('compaction_update'),
-  compactionId: z.string(),
-  status: CompactionStatus,
-  summary: z.array(ContentBlock).optional(),
-  error: z.string().optional(),
-  _meta: noExtensionMeta,
-});
-
-export type CompactionUpdate = z.infer<typeof CompactionUpdate>;
 
 export const SubagentState = z.enum(['running', 'idle', 'requires_action']);
 

@@ -1,4 +1,5 @@
 import type { SessionNewInput } from '@repo/contracts';
+import { StoreListeners } from '../../../lib/store-listeners';
 import type { OpenAgain } from '../types/new-session-attempt';
 import {
   failedOpen,
@@ -40,7 +41,7 @@ export class EmptySessionStore {
   private pending: FirstPrompt | undefined;
   private outcome = settledOpen;
   private stopped = false;
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new StoreListeners();
   private state: EmptySessionState = this.currentState();
 
   public constructor(private ports: EmptySessionPorts) {}
@@ -50,11 +51,7 @@ export class EmptySessionStore {
     this.ports = ports;
   }
 
-  public readonly subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => void this.listeners.delete(listener);
-  };
+  public readonly subscribe = this.listeners.subscribe;
 
   public readonly getState = (): EmptySessionState => this.state;
 
@@ -143,6 +140,6 @@ export class EmptySessionStore {
     if (sameEmptySessionState(next, this.state)) return;
     this.state = next;
 
-    for (const listener of this.listeners) listener();
+    this.listeners.notify();
   }
 }

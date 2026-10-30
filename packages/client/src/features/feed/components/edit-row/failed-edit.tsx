@@ -3,8 +3,8 @@ import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { toolCallFacts } from '../../view/feed-row-facts';
 import type { FileDiff } from '../../view/file-diff';
-import { firstLocationPath } from '../tool-call-meta';
 import { FileName } from './file-name';
 
 interface FailedEditProps {
@@ -13,7 +13,7 @@ interface FailedEditProps {
 }
 
 const failedPath = ({ row, files }: FailedEditProps): string | undefined =>
-  files[0]?.path ?? firstLocationPath(row);
+  files[0]?.path ?? toolCallFacts(row).location;
 
 const errorText = (row: ToolCallUpdate): string =>
   row.content

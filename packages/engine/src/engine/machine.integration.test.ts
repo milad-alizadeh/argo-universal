@@ -1,26 +1,40 @@
-import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import { getAdjacencyMap } from '@repo/vitest/model-graph';
+import { describeModel, modelTest } from '@repo/vitest/model-test';
 import { describe, expect, it, vi } from 'vitest';
-import type { StatePath, AdjacencyMap } from 'xstate/graph';
-import { type EngineEvent } from '#mocks/engine-model-events';
-import { latest, settle } from '#mocks/engine-model-executors';
+import { states } from '#mocks/engine-model-assertions';
+import {
+  executors,
+  latest,
+  settle,
+  startEngine,
+} from '#mocks/engine-model-executors';
 import {
   stopAllSessionsEvent,
   drainWriterEvent,
   stopEngineEvent,
+  heartbeatIntervalMs,
   mockHttpServer,
 } from '#mocks/engine-model-fixtures';
-import { options } from '#mocks/engine-model-graph';
-import {
-  machineWithExternalMocks,
-  machine,
-  type EngineSnapshot,
-} from '#mocks/engine-model-logic';
-import { paths, title } from '#mocks/engine-model-paths';
+import { graph } from '#mocks/engine-model-graph';
+import { machineWithExternalMocks, machine } from '#mocks/engine-model-logic';
 import * as model from '#mocks/engine-model-state';
 import { startModelEngine } from '#mocks/engine-model-state';
-import { executeStep } from '#mocks/engine-model-walk';
-import { sessionStopLimit } from './setup.machine';
+import {
+  httpCloseLimit,
+  sessionStopLimit,
+  writerDrainLimit,
+} from './setup.machine';
+
+const engineModel = modelTest(machine, graph, {
+  start: startEngine,
+  executors,
+  delays: {
+    heartbeatInterval: heartbeatIntervalMs,
+    httpCloseLimit,
+    sessionStopLimit,
+    writerDrainLimit,
+  },
+  states,
+});
 
 const startRunningEngine = async (logic = machine): Promise<void> => {
   startModelEngine(logic);
@@ -75,31 +89,9 @@ it('closes Agent resources before draining the writer when Sessions exceed their
 });
 
 describe('engine model', (): void => {
-  it.each(
-    paths.map(
-      (path): [string, StatePath<EngineSnapshot, EngineEvent>] =>
-        [title(path), path] as const,
-    ),
-  )('%s', async (_, path): Promise<void> => {
-    for (const step of path.steps) {
-      await executeStep(step);
-      expect(model.engine.getSnapshot().value).toEqual(step.state.value);
-    }
-  });
+  describeModel(engineModel);
 
   it('the generated paths walk every transition', (): void => {
-    expect(
-      unwalkedTransitions({
-        models: [
-          {
-            getAdjacencyMap: (): AdjacencyMap<EngineSnapshot, EngineEvent> =>
-              getAdjacencyMap(machine, options),
-          },
-        ],
-        paths,
-        stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (event): typeof event.type => event.type,
-      }),
-    ).toEqual([]);
+    expect(engineModel.unwalked()).toEqual([]);
   });
 });

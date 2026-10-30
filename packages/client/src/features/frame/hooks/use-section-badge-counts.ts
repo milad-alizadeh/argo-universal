@@ -7,7 +7,7 @@ import { useAttentionCount } from './use-attention-count';
 const noBadges: readonly PluginBadge[] = [];
 
 // Each Plugin nav item's badge count, live from the Server; none until the first snapshot arrives.
-export function usePluginBadges(): readonly PluginBadge[] {
+function usePluginBadges(): readonly PluginBadge[] {
   const trpc = useTRPC();
   const badges = useSubscription(trpc.plugins.badges.subscriptionOptions());
   useResubscribeOnReconnect(badges);

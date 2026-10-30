@@ -1,4 +1,7 @@
-import type { SessionSetConfigOptionInput } from '@repo/contracts';
+import type {
+  SessionSetConfigOptionInput,
+  SessionSnapshot,
+} from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
@@ -53,6 +56,16 @@ const questions: { name: string; step: ScriptedStep }[] = [
   },
 ];
 
+const pendingFor = (
+  snapshot: SessionSnapshot,
+  name: string,
+):
+  | SessionSnapshot['pendingPermission']
+  | SessionSnapshot['pendingElicitation'] =>
+  name === 'Permission'
+    ? snapshot.pendingPermission
+    : snapshot.pendingElicitation;
+
 it.each(questions)(
   'rejects a stale $name identity without consuming its current request',
   async ({ name, step }) => {
@@ -68,10 +81,7 @@ it.each(questions)(
         : current.pendingElicitation !== null,
     );
 
-    const pending =
-      name === 'Permission'
-        ? snapshot.pendingPermission
-        : snapshot.pendingElicitation;
+    const pending = pendingFor(snapshot, name);
 
     const answer =
       name === 'Permission'
@@ -92,10 +102,6 @@ it.each(questions)(
       message: 'already answered',
     });
     const current = await waitForAcpSnapshot(host, 'session-1', () => true);
-    expect(
-      name === 'Permission'
-        ? current.pendingPermission
-        : current.pendingElicitation,
-    ).toEqual(pending);
+    expect(pendingFor(current, name)).toEqual(pending);
   },
 );

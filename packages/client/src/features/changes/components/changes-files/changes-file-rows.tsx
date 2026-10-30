@@ -30,7 +30,7 @@ interface RowProps<Kind extends ChangesItem['kind']> {
   context: RowContext;
 }
 
-export const loadingDiffLabel = (path: string): string =>
+const loadingDiffLabel = (path: string): string =>
   `Loading the diff for ${path}`;
 
 const assertNever = (value: never): never => {

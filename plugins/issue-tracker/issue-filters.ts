@@ -29,7 +29,7 @@ const statusGroup: FilterGroup = {
       id: 'open',
       title: 'Open',
       search: 'is:open',
-      icon: 'issue-open',
+      icon: 'issue',
     }),
     filter({
       id: 'closed',

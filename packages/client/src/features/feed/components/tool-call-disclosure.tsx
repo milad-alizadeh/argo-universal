@@ -4,10 +4,10 @@ import type {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { toolCallFacts } from '../view/feed-row-facts';
 import { toolCallTitle, toolCallTitlePaths } from '../view/tool-call-title';
 import { FeedDisclosure, type FeedDisclosureProps } from './feed-disclosure';
 import { chosenPermissionKind, PermissionOutcome } from './permission-outcome';
-import { argoMeta } from './tool-call-meta';
 
 type ToolCallDisclosureProps = Omit<FeedDisclosureProps, 'denied'> & {
   permissionOutcome?: Outcome;
@@ -24,7 +24,7 @@ export function toolCallDisclosureProps(
     label: toolCallTitle(row, awaitingApproval),
     paths: toolCallTitlePaths(row, awaitingApproval),
     awaitingApproval,
-    permissionOutcome: argoMeta(row)?.permissionOutcome,
+    permissionOutcome: toolCallFacts(row).permissionOutcome,
   };
 }
 

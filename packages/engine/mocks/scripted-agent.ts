@@ -1,116 +1,10 @@
-import {
-  ndJsonStream,
-  type AnyMessage,
-  type AnyRequest,
-  type AgentConnection,
-  type Stream,
-} from '@agentclientprotocol/sdk';
-import { createScriptedAgent } from '@repo/mocks/agent/scripted-agent';
-import type {
-  ScriptedScenario,
-  ScriptedStep,
-} from '@repo/mocks/agent/scripted-scenario';
+import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import type { AgentLaunch } from '../src/agents';
 import { AgentProcessExitError } from '../src/agents';
 import type { AcpProcess } from '../src/agents';
+import { createScriptedAgentWire } from './scripted-agent-wire';
 
-type Observation = {
-  messages: AnyMessage[];
-  changed: PromiseWithResolvers<void>;
-};
-
-const recordMessage = (observation: Observation, message: AnyMessage): void => {
-  observation.messages.push(message);
-  observation.changed.resolve();
-  observation.changed = Promise.withResolvers<void>();
-};
-
-const receiveMessage = async (
-  observation: Observation,
-): Promise<AnyMessage> => {
-  while (!observation.messages.length) await observation.changed.promise;
-  const message = observation.messages.shift();
-
-  if (!message) throw new Error('Scripted Agent observation is missing');
-
-  return message;
-};
-
-const observeMessages = async (
-  readable: ReadableStream<Uint8Array>,
-  observation: Observation,
-): Promise<void> => {
-  const reader = ndJsonStream(
-    new WritableStream(),
-    readable,
-  ).readable.getReader();
-
-  while (true) {
-    const next = await reader.read();
-
-    if (next.done) return;
-    recordMessage(observation, next.value);
-  }
-};
-
-interface ScriptedAgentWire {
-  stream: Stream;
-  connection: AgentConnection;
-  play: (steps: readonly ScriptedStep[], sessionId: string) => Promise<void>;
-  sendRaw: (frame: string) => Promise<void>;
-  send: (messages: readonly AnyMessage[]) => Promise<void>;
-  receive: () => Promise<AnyMessage>;
-  readRequest: () => Promise<AnyRequest>;
-  disconnect: () => void;
-}
-
-export const createScriptedAgentWire = (
-  scenario: ScriptedScenario,
-  nextSessionId = (): string => 'owned-1',
-  exit?: (code: number, stderr: string) => Promise<void>,
-): ScriptedAgentWire => {
-  const toAgent = new TransformStream<Uint8Array, Uint8Array>();
-  const fromAgent = new TransformStream<Uint8Array, Uint8Array>();
-  const agent = createScriptedAgent(scenario, nextSessionId, exit && { exit });
-  const [input, observed] = toAgent.readable.tee();
-  const connection = agent.connect(fromAgent.writable, input);
-
-  const observation: Observation = {
-    messages: [],
-    changed: Promise.withResolvers<void>(),
-  };
-
-  void observeMessages(observed, observation).catch(() => {});
-  const transport = new AbortController();
-
-  const stream = ndJsonStream(
-    toAgent.writable,
-    fromAgent.readable.pipeThrough(new TransformStream(), {
-      signal: transport.signal,
-    }),
-  );
-
-  return {
-    stream,
-    connection,
-    play: agent.play,
-    sendRaw: agent.sendRaw,
-    send: (messages) =>
-      agent.sendRaw(
-        messages.map((message) => JSON.stringify(message)).join('\n'),
-      ),
-    receive: () => receiveMessage(observation),
-    readRequest: async () => {
-      const message = await receiveMessage(observation);
-
-      if (!('method' in message && 'id' in message))
-        throw new Error('Expected an ACP request');
-
-      return message;
-    },
-    disconnect: () => transport.abort(new Error('ACP transport broke')),
-  };
-};
+export { createScriptedAgentWire } from './scripted-agent-wire';
 
 export type ScriptedProcess = ReturnType<typeof createScriptedAgentWire> & {
   launch: AgentLaunch;
@@ -138,47 +32,70 @@ export const createScriptedAgentProcess = (
   scenario: ScriptedScenario & { autoExit?: boolean } = { steps: [] },
 ): ScriptedAgentProcesses => {
   const processes: ScriptedProcess[] = [];
-  let opened = 0;
+  const nextSessionId = sessionIds();
 
   return {
     processes,
-    launchProcess: async (launch) => {
-      let exitError: Error | undefined;
-      const exited = Promise.withResolvers<void>();
+    launchProcess: async (launch): Promise<AcpProcess> => {
+      const run = new ScriptedRun(scenario, launch, nextSessionId);
+      processes.push(run.process);
 
-      const wire = createScriptedAgentWire(
-        scenario,
-        () => `owned-${++opened}`,
-        async (code, stderr) => {
-          exitError = new AgentProcessExitError(code, null, stderr);
-          exited.resolve();
-          wire.connection.close();
-        },
-      );
-
-      const process = {
-        ...wire,
-        launch,
-        exited,
-        terminations: 0,
-      };
-
-      processes.push(process);
-
-      return {
-        stream: wire.stream,
-        exited: process.exited.promise,
-        exitError: () => exitError ?? new Error('ACP transport broke'),
-        terminate: async () => {
-          process.terminations += 1;
-          wire.connection.close();
-
-          if (scenario.autoExit !== false) process.exited.resolve();
-        },
-      };
+      return run.asProcess();
     },
   };
 };
+
+const sessionIds = (): (() => string) => {
+  let opened = 0;
+
+  return (): string => `owned-${++opened}`;
+};
+
+class ScriptedRun {
+  public readonly process: ScriptedProcess;
+  private exitError: Error | undefined;
+  private readonly wire: ReturnType<typeof createScriptedAgentWire>;
+  private readonly exited = Promise.withResolvers<void>();
+
+  public constructor(
+    private readonly scenario: ScriptedScenario & { autoExit?: boolean },
+    launch: AgentLaunch,
+    nextSessionId: () => string,
+  ) {
+    this.wire = createScriptedAgentWire(scenario, nextSessionId, this.onExit);
+    this.process = {
+      ...this.wire,
+      launch,
+      exited: this.exited,
+      terminations: 0,
+    };
+  }
+
+  private readonly onExit = async (
+    code: number,
+    stderr: string,
+  ): Promise<void> => {
+    this.exitError = new AgentProcessExitError(code, null, stderr);
+    this.exited.resolve();
+    this.wire.connection.close();
+  };
+
+  public asProcess(): AcpProcess {
+    return {
+      stream: this.wire.stream,
+      exited: this.exited.promise,
+      exitError: () => this.exitError ?? new Error('ACP transport broke'),
+      terminate: this.terminate,
+    };
+  }
+
+  private readonly terminate = async (): Promise<void> => {
+    this.process.terminations += 1;
+    this.wire.connection.close();
+
+    if (this.scenario.autoExit !== false) this.exited.resolve();
+  };
+}
 
 export const createScriptedAgentLauncher =
   (

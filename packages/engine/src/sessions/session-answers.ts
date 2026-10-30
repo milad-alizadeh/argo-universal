@@ -4,45 +4,32 @@ import type {
   SessionAnswerPermissionInput,
   SessionAnswerPermissionOutput,
 } from '@repo/contracts';
-import { findMachineActor } from '../lib/machine-actor';
-import type { SessionRouterDeps } from './router-deps';
 import {
   acceptedElicitationContent,
   validateElicitationAnswer,
   validatePermissionAnswer,
 } from './session-admission';
-import {
-  sendSessionCommand,
-  validateSessionCommandAdmission,
-} from './session-command';
-import { type SessionActorRef, sessionMachine } from './session-machine';
-import { readWritableSession } from './session-opening';
-import { sessionActorId } from './session-system';
+import { requireWritableSession, sendSessionCommand } from './session-command';
+import type { SessionActorRef } from './session-machine';
+import type { HandlerSources } from './session-sources';
 
-type AnswerDeps = Pick<
-  SessionRouterDeps,
-  'sessions' | 'readSession' | 'sessionCommandSignal'
->;
+type AnswerSources = HandlerSources<'readSession', 'admit' | 'session'>;
 
 const findAnsweredSession = (
-  deps: AnswerDeps,
+  sources: AnswerSources,
   sessionId: string,
 ): SessionActorRef | undefined => {
-  validateSessionCommandAdmission(deps);
-  readWritableSession(deps.readSession, sessionId);
+  sources.open.admit();
+  requireWritableSession(sources.readSession(sessionId));
 
-  return findMachineActor(
-    deps.sessions.system,
-    sessionActorId(sessionId),
-    sessionMachine,
-  );
+  return sources.open.session(sessionId);
 };
 
 export const answerSessionPermission = (
-  deps: AnswerDeps,
+  sources: AnswerSources,
   input: SessionAnswerPermissionInput,
 ): SessionAnswerPermissionOutput => {
-  const sessionActor = findAnsweredSession(deps, input.sessionId);
+  const sessionActor = findAnsweredSession(sources, input.sessionId);
   validatePermissionAnswer(sessionActor, input);
   sendSessionCommand(sessionActor, {
     type: 'session.answerPermission',
@@ -54,10 +41,10 @@ export const answerSessionPermission = (
 };
 
 export const answerSessionElicitation = (
-  deps: AnswerDeps,
+  sources: AnswerSources,
   input: SessionAnswerElicitationInput,
 ): SessionAnswerElicitationOutput => {
-  const sessionActor = findAnsweredSession(deps, input.sessionId);
+  const sessionActor = findAnsweredSession(sources, input.sessionId);
   validateElicitationAnswer(sessionActor, input);
   sendSessionCommand(sessionActor, {
     type: 'session.answerElicitation',

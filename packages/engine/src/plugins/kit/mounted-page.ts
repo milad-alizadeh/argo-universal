@@ -103,6 +103,7 @@ function pageView(content: Content): OpenView {
     replaceable: content.replaceable,
     background: content.background,
     frame: undefined,
+    sentWaiters: [],
     tree: null,
     revision: 0,
     handlers: new Map(),

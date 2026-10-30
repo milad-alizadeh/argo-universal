@@ -31,7 +31,7 @@ export interface FrameMeasures {
 }
 
 // What the person asked for; the layout grants it as far as the window's width allows.
-export interface FrameIntent {
+interface FrameIntent {
   sidebarShown: boolean;
   // The sidebar toggle was pressed, so the list takes the Workbench's room instead of folding first.
   sidebarRequested?: boolean;

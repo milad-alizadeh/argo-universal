@@ -110,11 +110,6 @@ export function LinkAccessory(): ReactElement | null {
   );
 }
 
-// A desktop sidebar's rows push no chevron, so its accessory lane stays empty.
-export function useLinkAccessory(): ReactElement | undefined {
-  return useListLook().sidebar ? undefined : <LinkAccessory />;
-}
-
 // Paper: a control under the row's title and value spans the row's content width, on its own line.
 export function Control({ children }: { children?: ReactNode }): ReactNode {
   return children ? <View className="w-full">{children}</View> : null;

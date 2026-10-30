@@ -4,8 +4,6 @@ import type { OnboardingViewProps } from './onboarding-props';
 
 export const serverName = 'Studio Mac mini';
 
-export const agentName = 'Claude';
-
 export const githubLogin = 'octocat';
 
 export const githubSteps = {

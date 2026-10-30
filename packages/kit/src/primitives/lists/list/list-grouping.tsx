@@ -127,7 +127,7 @@ const FixedCell = ({ item }: FixedRowProps): ReactElement => (
   </MovableRow>
 );
 
-export function FixedListRow({ item }: FixedRowProps): ReactElement {
+function FixedListRow({ item }: FixedRowProps): ReactElement {
   const position = useFixedPosition(item);
 
   return (

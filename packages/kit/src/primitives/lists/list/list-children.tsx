@@ -29,7 +29,7 @@ export interface PreparedChildren {
 }
 
 // Lanes are drawn only where a tree is: on a wide desktop or web window, outside a menu. Elsewhere the Sections stack as a List's do.
-export const drawsLanes = (
+const drawsLanes = (
   layout: ChildrenOptions['layout'],
   look: Pick<ListLook, 'treeDrawn'>,
 ): boolean => layout === 'lanes' && look.treeDrawn;

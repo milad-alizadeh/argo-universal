@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { createActor } from 'xstate';
+import { createActor, type InputFrom } from 'xstate';
 import { createAcpResources } from '../src/agents';
 import { openSessionsMachine } from '../src/sessions';
 import { coreOnlyHooks } from './core-hooks';
@@ -40,18 +40,22 @@ function modelSessions(
   runtime: ReturnType<typeof openTestDatabase>,
 ): ListInput['sessions'] {
   return createActor(openSessionsMachine, {
-    input: {
-      now: (): number => Date.now(),
-      createId: randomUUID,
-      hooks: coreOnlyHooks,
-      database: runtime.database,
-      runtimeDirectory: runtime.directory,
-      acpResources: createAcpResources(),
-      installedAgents: unlaunchedInstalledAgents(
-        runtime.database,
-        runtime.directory,
-      ),
-      writer: unstartedWriter(runtime.database),
-    },
+    input: modelSessionInput(runtime),
   });
 }
+
+const modelSessionInput = (
+  runtime: ReturnType<typeof openTestDatabase>,
+): InputFrom<typeof openSessionsMachine> => ({
+  now: (): number => Date.now(),
+  createId: randomUUID,
+  hooks: coreOnlyHooks,
+  database: runtime.database,
+  runtimeDirectory: runtime.directory,
+  acpResources: createAcpResources(),
+  installedAgents: unlaunchedInstalledAgents(
+    runtime.database,
+    runtime.directory,
+  ),
+  writer: unstartedWriter(runtime.database),
+});

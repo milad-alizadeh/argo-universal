@@ -47,7 +47,7 @@ export function useItemSelection(props: ListItemProps): ListItemProps {
     : controlledSelection(props, props.id, context);
 }
 
-export function ChoiceAccessory(props: ListItemProps): ReactNode {
+function ChoiceAccessory(props: ListItemProps): ReactNode {
   const { selectionMode } = useContext(ListSelectionContext);
 
   if (!selectionMode) return null;

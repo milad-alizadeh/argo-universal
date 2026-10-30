@@ -1,6 +1,8 @@
-// Table definitions only: no Node APIs, so contracts and the Apps can import this file.
-// Each file under `schema/` holds one module's tables (ADR-0016 §9); a foreign key may import the table it points at.
-// JSON columns are text; the Server validates them on write and read.
+/*
+ * Table definitions only: no Node APIs, so contracts and the Apps can import this file.
+ * Each file under `schema/` holds one module's tables (ADR-0016 §9); a foreign key may import the table it points at.
+ * JSON columns are text; the Server validates them on write and read.
+ */
 
 export * from '#schema-blob';
 

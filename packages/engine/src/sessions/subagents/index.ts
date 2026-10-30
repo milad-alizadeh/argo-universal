@@ -1,7 +1,6 @@
 export { createSubagentsReader } from './reader';
 
 export {
-  crashedSubagentTurns,
   flushSubagents,
   hasRunningSubagentTurn,
   noSubagents,

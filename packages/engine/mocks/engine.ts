@@ -1,21 +1,17 @@
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
-import { openDatabase } from '@repo/db';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
 import { findFreePort } from '@repo/mocks/network/free-port';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
 import { onTestFinished } from 'vitest';
-import { waitFor, type ActorRefFrom } from 'xstate';
+import { waitFor } from 'xstate';
 import { composeEngine, type EngineActor } from '../src/engine/compose';
-import type { HttpServer } from '../src/engine/http-server';
 import type { EngineInput } from '../src/engine/machine';
-import { findMachineActor } from '../src/lib/machine-actor';
-import type { OpenSessionsActorRef } from '../src/sessions';
-import { openSessionsId, openSessionsMachine } from '../src/sessions';
-import { databaseWriterId, writerMachine } from '../src/storage';
-import { fixtureRegistry, seedAgentFixtures } from './agent-fixtures';
+import { fixtureRegistry } from './agent-fixtures';
 import { openTestDatabase } from './database';
+import { readEngineTestHost, type EngineConnections } from './engine-read';
+import { seedTestCommands } from './engine-seed';
 import { MemoryKeychain } from './memory-keychain';
 import { shippedFolder } from './runtime-plugins';
 import { scriptedEngineInput } from './scripted-engine';
@@ -33,16 +29,6 @@ export type EngineTestOptions = Partial<EngineInput> & {
   storedRegistry?: boolean;
 };
 
-type EngineConnections = {
-  engine: EngineActor;
-  database: Database;
-  openSessions: OpenSessionsActorRef;
-  databaseWriter: ActorRefFrom<typeof writerMachine>;
-  notifications: HttpServer['notifications'];
-  createCaller: HttpServer['createCaller'];
-  caller: ReturnType<HttpServer['createCaller']>;
-};
-
 type EngineTestHost = EngineConnections & {
   home: string;
   blobsFolder: string;
@@ -54,84 +40,125 @@ type EngineTestHost = EngineConnections & {
 export async function startEngineTestHost(
   options: EngineTestOptions = {},
 ): Promise<EngineTestHost> {
-  const storage =
-    options.database || options.home || options.runtimeDirectory
-      ? undefined
-      : openTestDatabase();
-
-  const home =
-    options.home ??
-    (options.database
-      ? dirname(options.database.$client.location() ?? '')
-      : (options.runtimeDirectory ?? storage?.directory));
-
-  if (!home) throw new Error('Engine test storage is missing');
+  const { home, storage } = resolveTestStorage(options);
   const port = options.port ?? (await findFreePort());
   seedTestCommands(options, home, storage);
 
-  const engine = composeEngine({
-    version: '1.2.3',
-    startedAt: '2026-10-03T00:00:00.000Z',
-    now: Date.now,
-    createId: randomUUID,
-    ...scriptedEngineInput(),
-    fetchAgents: async () =>
-      JSON.stringify(
-        fixtureRegistry(
-          options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
-        ),
-      ),
-    installationPorts: createInstallationPorts(),
-    // Fixture Plugins are first-party: only that root loads (ADR-0030).
-    firstPartyPluginsDirectory: join(home, shippedFolder),
-    // Tests never reach the Mac's Keychain, which CI's Linux runners don't have.
-    keychain: new MemoryKeychain(),
-    userHome: join(home, 'user-home'),
-    ...options,
-    home,
-    port,
-  }).start();
+  const engine = composeEngine(testEngineInput(options, home, port)).start();
 
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
 
-  return {
-    ...readEngineTestHost(engine),
-    home,
-    blobsFolder: join(home, 'blobs'),
-    url: `http://127.0.0.1:${port}`,
-    stop,
-  };
+  return engineTestHost(engine, home, { port, stop });
 }
 
-function readEngineTestHost(engine: EngineActor): EngineConnections {
-  const { database, server } = engine.getSnapshot().context;
+const engineTestHost = (
+  engine: EngineActor,
+  home: string,
+  control: { port: number; stop: () => Promise<void> },
+): EngineTestHost => ({
+  ...readEngineTestHost(engine),
+  home,
+  blobsFolder: join(home, 'blobs'),
+  url: `http://127.0.0.1:${control.port}`,
+  stop: control.stop,
+});
 
-  const openSessions = findMachineActor(
-    engine.system,
-    openSessionsId,
-    openSessionsMachine,
-  );
+type TestStorage = {
+  home: string;
+  storage: ReturnType<typeof openTestDatabase> | undefined;
+};
 
-  const databaseWriter = findMachineActor(
-    engine.system,
-    databaseWriterId,
-    writerMachine,
-  );
+const resolveTestStorage = (options: EngineTestOptions): TestStorage => {
+  const storage = chooseTestStorage(options);
+  const home = testHome(options, storage);
 
-  if (!database || !server || !openSessions || !databaseWriter)
-    throw new Error('Engine is not ready');
+  if (!home) throw new Error('Engine test storage is missing');
 
-  return {
-    engine,
-    database,
-    openSessions,
-    databaseWriter,
-    notifications: server.notifications,
-    createCaller: server.createCaller,
-    caller: server.createCaller(),
-  };
-}
+  return { home, storage };
+};
+
+const chooseTestStorage = (
+  options: EngineTestOptions,
+): ReturnType<typeof openTestDatabase> | undefined =>
+  hasStorage(options) ? undefined : openTestDatabase();
+
+const hasStorage = (options: EngineTestOptions): boolean =>
+  [options.database, options.home, options.runtimeDirectory].some(Boolean);
+
+const testHome = (
+  options: EngineTestOptions,
+  storage: TestStorage['storage'],
+): string | undefined => options.home ?? fallbackHome(options, storage);
+
+const fallbackHome = (
+  options: EngineTestOptions,
+  storage: TestStorage['storage'],
+): string | undefined =>
+  options.database
+    ? databaseHome(options.database)
+    : otherHome(options, storage);
+
+const databaseHome = (database: Database): string =>
+  dirname(database.$client.location() ?? '');
+
+const otherHome = (
+  options: EngineTestOptions,
+  storage: TestStorage['storage'],
+): string | undefined => options.runtimeDirectory ?? storage?.directory;
+
+const testEngineInput = (
+  options: EngineTestOptions,
+  home: string,
+  port: number,
+): EngineInput => ({
+  ...baseInput(options, home),
+  ...options,
+  home,
+  port,
+});
+
+const baseInput = (
+  options: EngineTestOptions,
+  home: string,
+): Omit<EngineInput, 'port'> => ({
+  version: '1.2.3',
+  startedAt: '2026-10-03T00:00:00.000Z',
+  now: Date.now,
+  createId: randomUUID,
+  ...scriptedEngineInput(),
+  ...fixtureServices(options, home),
+  home,
+});
+
+type FixtureServices = Pick<
+  EngineInput,
+  | 'fetchAgents'
+  | 'installationPorts'
+  | 'firstPartyPluginsDirectory'
+  | 'keychain'
+  | 'userHome'
+>;
+
+const fixtureServices = (
+  options: EngineTestOptions,
+  home: string,
+): FixtureServices => ({
+  fetchAgents: fetchFixtureRegistry(options),
+  installationPorts: createInstallationPorts(),
+  firstPartyPluginsDirectory: join(home, shippedFolder),
+  keychain: new MemoryKeychain(),
+  userHome: join(home, 'user-home'),
+});
+
+const fetchFixtureRegistry =
+  (options: EngineTestOptions): NonNullable<EngineInput['fetchAgents']> =>
+  async () =>
+    JSON.stringify(
+      fixtureRegistry(
+        options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
+      ),
+    );
 
 function registerEngineCleanup(
   engine: EngineActor,
@@ -150,33 +177,3 @@ function registerEngineCleanup(
 
   return stop;
 }
-
-function seedTestCommands(
-  options: EngineTestOptions,
-  home: string,
-  storage: ReturnType<typeof openTestDatabase> | undefined,
-): void {
-  const seeded =
-    options.database ??
-    storage?.database ??
-    openDatabase(join(home, 'argo.db'));
-
-  seedAgentFixtures(
-    seeded,
-    options.fixtureAgents ?? defaultFixtureAgents(options),
-  );
-
-  if (options.storedRegistry)
-    seeded.$client
-      .prepare(
-        'INSERT OR IGNORE INTO registry_cache (id, json, fetched_at) VALUES (1, ?, 0)',
-      )
-      .run(JSON.stringify({ version: '1.0.0', agents: [], extensions: [] }));
-
-  if (!options.database && !storage) seeded.$client.close();
-}
-
-const defaultFixtureAgents = (
-  options: EngineTestOptions,
-): readonly AgentIdentity[] =>
-  options.fetchAgents ? [] : [{ agent: 'mock', label: 'mock', logo: '' }];

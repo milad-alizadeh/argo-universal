@@ -1,7 +1,7 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 
-export interface ProjectAccountChoice {
+interface ProjectAccountChoice {
   id: string;
   label: string;
   // The Plugin that signed the Account in, named under its label.

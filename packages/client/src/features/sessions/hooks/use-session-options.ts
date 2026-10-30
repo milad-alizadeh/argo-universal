@@ -21,7 +21,7 @@ import {
 } from '../utils/session-options-state';
 import { useConnectionDropped } from './use-connection-dropped';
 
-export type OptionsDiscovery = OptionsSnapshot & { retry: () => void };
+type OptionsDiscovery = OptionsSnapshot & { retry: () => void };
 
 export interface SessionOptionsRead extends OptionsDiscovery {
   pick: (configId: string, value: string | boolean) => void;

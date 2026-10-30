@@ -1,19 +1,14 @@
-import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import {
-  getShortestPaths,
-  getSimplePaths,
-  getAdjacencyMap,
-} from '@repo/vitest/model-graph';
-import { terminalPaths } from '@repo/vitest/model-paths';
+  type ModelWalk,
+  type Vertex,
+  walkGraph,
+} from '@repo/vitest/model-test';
 import { describe, expect, it } from 'vitest';
-import type { AdjacencyMap } from 'xstate/graph';
 import {
   machine,
-  events,
+  fixtures,
   acpUpdateEventType,
   modelInput,
-  streamBatchDelayEvent,
-  storeDelayEvent,
   type FeedSnapshot,
   type FeedMachineEvent,
 } from '#mocks/feed-model';
@@ -24,65 +19,14 @@ import {
   permissionSelectedEvent,
 } from './turn-ending';
 
-const vertex = (of: FeedSnapshot | undefined): string | undefined =>
-  of && JSON.stringify({ value: of.value, open: Object.keys(of.context.rows) });
+// The message's place, and the state value.
+const vertex = (snapshot: FeedSnapshot): Vertex => ({
+  value: snapshot.value,
+  open: Object.keys(snapshot.context.rows),
+});
 
-const previousValue = (
-  snapshot: FeedSnapshot | undefined,
-): string | undefined => JSON.stringify(snapshot?.value);
-
-// The message's place, and the state value; `via` names how a vertex was reached.
-const serializeWith =
-  (
-    via: (sameAsPrevious: boolean) => boolean,
-  ): ((
-    snapshot: FeedSnapshot,
-    event: FeedMachineEvent | undefined,
-    previous: FeedSnapshot | undefined,
-  ) => string) =>
-  (
-    snapshot: FeedSnapshot,
-    event: FeedMachineEvent | undefined,
-    previous: FeedSnapshot | undefined,
-  ): string => {
-    const key = vertex(snapshot);
-
-    return JSON.stringify({
-      key,
-      via:
-        event && via(key === vertex(previous))
-          ? `${previousValue(previous)} ${JSON.stringify(event)}`
-          : undefined,
-    });
-  };
-
-const canGraphEvent = (
-  snapshot: FeedSnapshot,
-  event: FeedMachineEvent,
-): boolean => {
-  switch (event.type) {
-    case streamBatchDelayEvent:
-      return snapshot.matches({ active: { stream: 'batching' } });
-    case storeDelayEvent:
-      return snapshot.matches({ active: { store: 'dirty' } });
-    default:
-      return snapshot.can(event);
-  }
-};
-
-const modelOptions = {
-  input: modelInput,
-  events,
-  // A done actor ignores events, so the model must not send any.
-  filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent): boolean =>
-    snapshot.status === 'active' && canGraphEvent(snapshot, event),
-};
-
-// A vertex for each transition, so shortest paths reach back edges too.
-const transitionOptions = {
-  ...modelOptions,
-  serializeState: serializeWith((): true => true),
-};
+const sameVertex = (left: FeedSnapshot, right: FeedSnapshot): boolean =>
+  JSON.stringify(vertex(left)) === JSON.stringify(vertex(right));
 
 const excludedOrderingEvents = new Set<string>([
   acpUpdateEventType,
@@ -93,37 +37,48 @@ const excludedOrderingEvents = new Set<string>([
   messageRejectedEvent,
 ]);
 
-// A vertex only for each self-transition keeps simple paths below 1,000.
-const orderingOptions = {
-  ...modelOptions,
-  events: events.filter((event) => !excludedOrderingEvents.has(event.type)),
-  serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
+// The machine sends the first two itself; the structural model has never sent the rest.
+const omitted = [
+  'feed.refreshChanges',
+  'feed.changesRefreshed',
+  'feed.nativePermissionOutcome',
+  'feed.changeRejected',
+  'feed.publish',
+  'feed.changeApplied',
+];
+
+// Every arrival gets its own vertex, so shortest paths reach back edges too.
+const transitions: ModelWalk<typeof machine, FeedMachineEvent> = {
+  name: 'shortest path',
+  search: 'shortest',
 };
 
-const shortestPaths = terminalPaths(
-  getShortestPaths(machine, transitionOptions),
-);
+// An arrival gets its own vertex only for a self-transition, which keeps simple paths below 1,000.
+const ordering: ModelWalk<typeof machine, FeedMachineEvent> = {
+  name: 'simple path',
+  search: 'simple',
+  permits: (_, event): boolean => !excludedOrderingEvents.has(event.type),
+  arrival: (snapshot, event, previous): string =>
+    sameVertex(snapshot, previous)
+      ? `${JSON.stringify(previous.value)} ${JSON.stringify(event)}`
+      : '',
+};
 
-const simplePaths = terminalPaths(getSimplePaths(machine, orderingOptions));
+const { paths, unwalked } = walkGraph(machine, {
+  input: modelInput,
+  fixtures,
+  omitted,
+  vertex,
+  eventKey: (event): string => JSON.stringify(event),
+  walks: [transitions, ordering],
+});
 
 describe('Feed structural graph', (): void => {
   it('walks every transition with symbolic stream and storage timer events', (): void => {
-    expect(
-      unwalkedTransitions({
-        models: [
-          {
-            getAdjacencyMap: (): AdjacencyMap<FeedSnapshot, FeedMachineEvent> =>
-              getAdjacencyMap(machine, transitionOptions),
-          },
-        ],
-        paths: [...shortestPaths, ...simplePaths],
-        stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (event): string => JSON.stringify(event),
-      }),
-    ).toEqual([]);
+    expect(unwalked()).toEqual([]);
   });
   it('structurally flushes both parallel regions before reaching the final state', (): void => {
-    const flushed = shortestPaths
+    const flushed = paths
       .flatMap((path) => path.steps)
       .filter((step) => step.state.status === 'done');
 

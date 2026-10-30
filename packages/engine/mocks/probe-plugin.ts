@@ -17,7 +17,7 @@ import type { PluginNetwork } from '../src/plugins';
 import { fixtureTls } from './fixture-tls';
 import { createRuntimePlugins } from './runtime-plugins';
 
-export const outFile = 'out.json';
+const outFile = 'out.json';
 
 export async function scratch(): Promise<string> {
   const directory = await realpath(
@@ -32,22 +32,22 @@ export async function scratch(): Promise<string> {
 type Probe = { home: string; entry: string; code: string; data: string };
 
 // A Plugin is a fixture whose source the test writes, so each scenario names the paths it touches.
+type ProbeOptions = {
+  dev?: boolean;
+  capabilities?: PluginCapability[];
+  settings?: PluginSettingField[];
+  accounts?: PluginManifest['contributes']['accounts'];
+};
+
 export async function installed(
   source: string,
-  options: {
-    dev?: boolean;
-    capabilities?: PluginCapability[];
-    settings?: PluginSettingField[];
-    accounts?: PluginManifest['contributes']['accounts'];
-  } = {},
+  options: ProbeOptions = {},
 ): Promise<Probe> {
   const home = await createRuntimePlugins([
     { id: 'probe', fixture: 'healthy', ...options },
   ]);
 
-  const code = join(home, 'shipped/probe');
-  const entry = join(code, 'index.mjs');
-  const data = join(await realpath(home), 'plugin-data/probe');
+  const { code, entry, data } = await probePaths(home);
 
   await writeFile(
     entry,
@@ -56,6 +56,16 @@ export async function installed(
 
   return { home, entry, code, data };
 }
+
+const probePaths = async (home: string): Promise<Omit<Probe, 'home'>> => {
+  const code = join(home, 'shipped/probe');
+
+  return {
+    code,
+    entry: join(code, 'index.mjs'),
+    data: join(await realpath(home), 'plugin-data/probe'),
+  };
+};
 
 /*
  * A probe that makes each named call, then writes every value or error to its data folder.

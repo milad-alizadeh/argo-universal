@@ -66,31 +66,35 @@ export async function expectDangerousMode({
 }: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
   const { planning, dangerous } = catalog;
+  const wide = width >= wideBreakpoint();
+  const role = wide ? 'menuitemradio' : 'radio';
   await userEvent.click(await canvas.findByRole('button', { name: 'Mode' }));
 
-  const planMode = await overlay.findByRole('radio', {
+  const planMode = await overlay.findByRole(role, {
     name: new RegExp('^' + planning.name),
   });
 
   await waitFor(() => expect(planMode).toBeVisible());
   await expect(
-    overlay.getByRole('radio', { name: new RegExp('^' + dangerous.name) }),
+    overlay.getByRole(role, { name: new RegExp('^' + dangerous.name) }),
   ).toHaveAttribute('aria-checked', 'false');
 
   await userEvent.click(
-    overlay.getByRole('radio', { name: new RegExp('^' + dangerous.name) }),
+    overlay.getByRole(role, { name: new RegExp('^' + dangerous.name) }),
   );
   await waitFor(() =>
-    expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+    expect(
+      overlay.queryByRole(wide ? 'menu' : 'dialog', { name: 'Mode' }),
+    ).not.toBeInTheDocument(),
   );
 
-  if (width >= wideBreakpoint())
+  if (wide)
     await expect(
       canvas.getByRole('button', { name: 'Mode' }),
     ).toHaveTextContent(dangerous.name);
   await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
   await expect(
-    await overlay.findByRole('radio', {
+    await overlay.findByRole(role, {
       name: new RegExp('^' + dangerous.name),
     }),
   ).toHaveAttribute('aria-checked', 'true');

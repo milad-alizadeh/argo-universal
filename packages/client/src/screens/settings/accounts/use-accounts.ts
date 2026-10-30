@@ -4,8 +4,6 @@ import { useTRPC } from '#features/connection';
 import { usePluginEntries } from '../plugins/use-plugins';
 import type { AccountRow, AccountsLoad } from './account-list-view';
 
-export type { AccountRow };
-
 // Each Plugin's name by id, falling back to the id while the Plugin list loads or if it has been removed.
 export function usePluginNames(): (pluginId: string) => string {
   const { plugins } = usePluginEntries();

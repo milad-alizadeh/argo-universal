@@ -6,6 +6,12 @@ export type SessionOrigin = {
   sender: PromptSender;
 };
 
+// A caller's origin, with a new Session's pre-allocated id and the signal that stops its admission.
+export type NativeStartRequest = SessionOrigin & {
+  sessionId?: string;
+  signal?: AbortSignal;
+};
+
 // One Session's start or Prompt: its ids exist before it is admitted, so a caller can follow it.
 export type NativeStart<Accepted> = {
   sessionId: string;

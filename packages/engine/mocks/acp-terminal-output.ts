@@ -50,27 +50,30 @@ export const completedTerminal: Update[] = [
   },
 ];
 
+const malformedTerminal = (): ToolPatch => ({
+  sessionUpdate: terminalUpdate,
+  toolCallId: 'exec-a',
+  _meta: { terminal_output_delta: { terminal_id: 'exec-a', data: 7 } },
+});
+
+const initialTerminalSteps = (): ScriptedScenario['steps'] => [
+  { type: 'update', update: start('exec-a', 'printf A') },
+  { type: 'update', update: start('exec-b', 'printf B') },
+  { type: 'update', update: chunk('exec-a', 'A') },
+  { type: 'update', update: chunk('exec-b', 'B') },
+  { type: 'update', update: chunk('exec-a', 'A') },
+  {
+    type: 'update',
+    update: { ...chunk('exec-b', 'wrong terminal'), toolCallId: 'exec-a' },
+  },
+  { type: 'update', update: malformedTerminal() },
+];
+
 export const streamedTerminals = (
   waitFor: Promise<void>,
 ): ScriptedScenario => ({
   steps: [
-    { type: 'update', update: start('exec-a', 'printf A') },
-    { type: 'update', update: start('exec-b', 'printf B') },
-    { type: 'update', update: chunk('exec-a', 'A') },
-    { type: 'update', update: chunk('exec-b', 'B') },
-    { type: 'update', update: chunk('exec-a', 'A') },
-    {
-      type: 'update',
-      update: { ...chunk('exec-b', 'wrong terminal'), toolCallId: 'exec-a' },
-    },
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: terminalUpdate,
-        toolCallId: 'exec-a',
-        _meta: { terminal_output_delta: { terminal_id: 'exec-a', data: 7 } },
-      },
-    },
+    ...initialTerminalSteps(),
     { type: 'gate', waitFor },
     { type: 'update', update: end('exec-a') },
     { type: 'update', update: end('exec-b') },

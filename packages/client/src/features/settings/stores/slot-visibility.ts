@@ -15,7 +15,7 @@ export function slotVisibility({ hidden, owner }: SlotChoices): SlotVisibility {
   return { shows, owner: owner !== null && shows(owner) ? owner : null };
 }
 
-export type Attributed<Item> = { pluginId: string; item: Item };
+type Attributed<Item> = { pluginId: string; item: Item };
 
 // A context's merged items as the Server splits them: what fits, then the rest.
 export type SplitItems<Item> = {

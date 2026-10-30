@@ -4,10 +4,14 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { readFeedRow } from '../../feed';
-import type { SessionWorkSources } from '../router-deps';
-import { requireLiveSessionActor } from '../session-system';
+import type { HandlerSources } from '../session-sources';
 import { CallingSession } from './calling-session';
 import { operationRowId } from './rows';
+
+type CallSources = HandlerSources<
+  'database' | 'readSession' | 'findFeed' | 'findWriter',
+  'live'
+>;
 
 // Where an Operation Tool call is: running, waiting for the user's answer, or settled one of three ways.
 type CallState =
@@ -23,16 +27,16 @@ export type OperationCallRead = CallState & { work?: OperationWorkTarget };
 type ArgoMeta = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
 export function readOperationCall(
-  deps: SessionWorkSources,
+  sources: CallSources,
   sessionId: string,
   toolCallId: string,
 ): OperationCallRead {
   const row = requireCallRow(
-    readFeedRow(deps, { sessionId, id: operationRowId(toolCallId) }),
+    readFeedRow(sources, { sessionId, id: operationRowId(toolCallId) }),
     toolCallId,
   );
 
-  const state = rowState(deps, sessionId, row);
+  const state = rowState(sources, sessionId, row);
   const work = startedWork(row);
 
   return work ? { ...state, work } : state;
@@ -60,15 +64,13 @@ const startedWork = (row: ToolCallUpdate): OperationWorkTarget | undefined =>
   argoMeta(row)?.operationWork;
 
 function rowState(
-  deps: SessionWorkSources,
+  sources: CallSources,
   sessionId: string,
   row: ToolCallUpdate,
 ): CallState {
   if (row.state === 'settled') return settledState(row);
 
-  const session = new CallingSession(
-    requireLiveSessionActor(deps.sessions.system, sessionId),
-  );
+  const session = new CallingSession(sources.open.live(sessionId));
 
   const waiting = session.awaitsAnswer(row.toolCallId);
 

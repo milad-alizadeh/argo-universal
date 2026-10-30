@@ -30,15 +30,22 @@ export function applyUpsert(
   feed: FeedState,
   event: Upsert,
 ): SubscriptionEventResult {
-  const beforeWindow = isBeforeWindow(feed, event.row);
+  return { feed: upsertRow(feed, event.row, event.rev) };
+}
+
+// A whole row, from a `row.upsert` or fetched with `feed.row` at its own revision.
+export function upsertRow(
+  feed: FeedState,
+  row: SessionUpdate,
+  rev = row.revision,
+): FeedState {
+  const beforeWindow = isBeforeWindow(feed, row);
 
   return {
-    feed: {
-      ...feed,
-      revision: Math.max(feed.revision, event.rev),
-      rows: upsertRows(feed, event.row, beforeWindow),
-      startCursor: upsertCursor(feed, event.row, beforeWindow),
-    },
+    ...feed,
+    revision: Math.max(feed.revision, rev),
+    rows: upsertRows(feed, row, beforeWindow),
+    startCursor: upsertCursor(feed, row, beforeWindow),
   };
 }
 

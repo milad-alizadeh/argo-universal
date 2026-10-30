@@ -48,7 +48,7 @@ function recordedOptions(agent: HeldAgent): RecordedOptions {
   };
 }
 
-export function levelsForChoice(
+function levelsForChoice(
   choice: SessionConfigSelectOption | undefined,
 ): string[] {
   return recordedMetadata(choice)?.supportedEffortLevels ?? [];

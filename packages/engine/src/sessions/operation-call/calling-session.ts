@@ -19,7 +19,7 @@ export class CallingSession {
     return this.actor.getSnapshot().status === 'active';
   }
   public get inTurn(): boolean {
-    return this.actor.getSnapshot().matches({ open: { acp: 'activeTurn' } });
+    return this.actor.getSnapshot().hasTag('turn');
   }
   public get activeTurnId(): string | null {
     return this.context.activeTurnId;

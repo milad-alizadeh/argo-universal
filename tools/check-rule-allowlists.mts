@@ -2,8 +2,10 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveExecutable } from '@repo/executables';
 import { z } from 'zod';
-import { measureFindings } from './not-yet-cleared/measure.mts';
+import { formatFinding, unlistedFindings } from './lint-findings.mts';
+import { measureFindings } from './measure-allowlist.mts';
 import { allowlistProblems, readAllowlist } from './rule-allowlist.mts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -23,7 +25,7 @@ const reportSchema = z.object({
 });
 
 const git = (args: string[]): string =>
-  execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+  execFileSync(resolveExecutable('git'), args, { cwd: root, encoding: 'utf8' });
 
 const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
 
@@ -72,11 +74,15 @@ function flaggedFiles({ rule }: Allowlist, report: string): Set<string> {
   );
 }
 
-function check(allowlist: Allowlist, report: string): number {
-  const current = readAllowlist(
+function currentAllowlist(allowlist: Allowlist): string[] {
+  return readAllowlist(
     readFileSync(join(root, allowlist.path), 'utf8'),
     allowlist.rule,
   );
+}
+
+function check(allowlist: Allowlist, report: string): number {
+  const current = currentAllowlist(allowlist);
 
   const problems = allowlistProblems({
     rule: allowlist.rule,
@@ -95,8 +101,8 @@ function check(allowlist: Allowlist, report: string): number {
   return problems.length;
 }
 
-// Checks every allowlist against a report that tools/check-lint-waivers.mts shares with the waiver check.
-export function checkRuleAllowlists(report: string): number {
+// Check the findings for each allowlist.
+function checkRuleAllowlists(report: string): number {
   const problemCount = allowlists
     .map((allowlist): number => check(allowlist, report))
     .reduce((sum, count): number => sum + count, 0);
@@ -104,4 +110,28 @@ export function checkRuleAllowlists(report: string): number {
   return problemCount > 0 ? 1 : 0;
 }
 
-if (import.meta.main) process.exit(checkRuleAllowlists(measureFindings(root)));
+const waivedFiles = (): Map<string, ReadonlySet<string>> =>
+  new Map(
+    allowlists.map((allowlist): [string, ReadonlySet<string>] => [
+      findingCode(allowlist.rule),
+      new Set(currentAllowlist(allowlist)),
+    ]),
+  );
+
+// The lint gate: what the full config reports, warnings included, from the same run.
+function checkLint(report: string): number {
+  const findings = unlistedFindings(report, waivedFiles());
+
+  for (const finding of findings) console.error(formatFinding(finding));
+
+  console.log(`oxlint: ${findings.length} findings outside the allowlists`);
+
+  return findings.length > 0 ? 1 : 0;
+}
+
+// One type-aware oxlint run, with each allowlisted rule on in its files, serves the lint gate and the allowlist checks.
+if (import.meta.main) {
+  const report = measureFindings(root);
+
+  process.exit(Math.max(checkLint(report), checkRuleAllowlists(report)));
+}

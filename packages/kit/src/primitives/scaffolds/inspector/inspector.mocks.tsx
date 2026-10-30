@@ -136,7 +136,7 @@ const paneOf = (props: ExamplePaneProps): InspectorPaneProps => ({
   actions: props.actions && copyPath,
 });
 
-export const exampleTabs: readonly InspectorTab[] = [
+const exampleTabs: readonly InspectorTab[] = [
   { key: 'changes', label: 'Changes', icon: 'diff' },
   {
     key: 'subagents',

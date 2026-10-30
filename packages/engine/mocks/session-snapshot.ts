@@ -12,46 +12,71 @@ interface WatchedSnapshots {
   errors: unknown[];
 }
 
-// `project-1` and its closed Session `session-1` on a real database and Writer; no Session or Feed actor is open.
-export function startSnapshotHost(): ReturnType<typeof openTestDatabase> & {
+type SnapshotHost = ReturnType<typeof openTestDatabase> & {
   writer: ReturnType<typeof startWriter>;
   sources: Parameters<typeof createSessionSnapshotWatcher>[0];
   write: (job: WriterJob) => void;
   watch: (sessionId: string) => WatchedSnapshots;
   failWrites: (table: string) => Promise<void>;
-} {
+};
+
+// `project-1` and its closed Session `session-1` on a real database and Writer; no Session or Feed actor is open.
+export function startSnapshotHost(): SnapshotHost {
   const storage = openTestDatabase();
   onTestFinished(storage.remove);
   const writer = startWriter(storage.database);
 
-  const sources = {
-    database: storage.database,
-    findFeed: (): undefined => undefined,
-    findWriter: (): typeof writer => writer,
-    findSession: (): undefined => undefined,
-  };
+  return makeSnapshotHost(storage, writer);
+}
 
+const makeSnapshotHost = (
+  storage: ReturnType<typeof openTestDatabase>,
+  writer: ReturnType<typeof startWriter>,
+): SnapshotHost => {
+  const sources = snapshotSources(storage.database, writer);
   const watchSnapshot = createSessionSnapshotWatcher(sources);
 
   return {
     ...storage,
     writer,
     sources,
-    write: (job): void => {
-      writer.send({ type: 'writer.write', job });
-    },
-    watch: (sessionId): WatchedSnapshots =>
-      watchSnapshots(watchSnapshot, sessionId),
-    // Makes every insert or update of `table` fail, then waits for the Writer to keep its jobs for a retry.
-    failWrites: async (table): Promise<void> => {
-      for (const write of ['INSERT', 'UPDATE'])
-        storage.database.$client.exec(
-          `CREATE TEMP TRIGGER fail_${write}_${table} BEFORE ${write} ON ${table} BEGIN SELECT RAISE(FAIL, 'storage failing'); END`,
-        );
-      await waitFor(writer, (snapshot) => snapshot.matches('waitingToRetry'));
-    },
+    ...snapshotOperations(storage, writer, watchSnapshot),
   };
-}
+};
+
+const snapshotOperations = (
+  storage: ReturnType<typeof openTestDatabase>,
+  writer: ReturnType<typeof startWriter>,
+  watchSnapshot: SnapshotWatch,
+): Pick<SnapshotHost, 'write' | 'watch' | 'failWrites'> => ({
+  write: (job): void => writer.send({ type: 'writer.write', job }),
+  watch: (sessionId): WatchedSnapshots =>
+    watchSnapshots(watchSnapshot, sessionId),
+  failWrites: (table): Promise<void> =>
+    failWrites(storage.database, writer, table),
+});
+
+const snapshotSources = (
+  database: ReturnType<typeof openTestDatabase>['database'],
+  writer: ReturnType<typeof startWriter>,
+): SnapshotHost['sources'] => ({
+  database,
+  findFeed: (): undefined => undefined,
+  findWriter: (): typeof writer => writer,
+  findSession: (): undefined => undefined,
+});
+
+const failWrites = async (
+  database: ReturnType<typeof openTestDatabase>['database'],
+  writer: ReturnType<typeof startWriter>,
+  table: string,
+): Promise<void> => {
+  for (const write of ['INSERT', 'UPDATE'])
+    database.$client.exec(
+      `CREATE TEMP TRIGGER fail_${write}_${table} BEFORE ${write} ON ${table} BEGIN SELECT RAISE(FAIL, 'storage failing'); END`,
+    );
+  await waitFor(writer, (snapshot) => snapshot.matches('waitingToRetry'));
+};
 
 function startWriter(
   database: ReturnType<typeof openTestDatabase>['database'],
@@ -74,9 +99,7 @@ function watchSnapshots(
   const observed: WatchedSnapshots = { snapshots: [], errors: [] };
 
   const subscription = watch(sessionId, {
-    next: (event): void => {
-      if (event.type === 'snapshot') observed.snapshots.push(event.snapshot);
-    },
+    next: (event): void => observeSnapshot(observed, event),
     error: (error): void => {
       observed.errors.push(error);
     },
@@ -86,3 +109,10 @@ function watchSnapshots(
 
   return observed;
 }
+
+const observeSnapshot = (
+  observed: WatchedSnapshots,
+  event: Parameters<NonNullable<Parameters<SnapshotWatch>[1]['next']>>[0],
+): void => {
+  if (event.type === 'snapshot') observed.snapshots.push(event.snapshot);
+};

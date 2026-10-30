@@ -14,6 +14,9 @@ type PermissionsCancelled = Extract<
   { type: 'feed.permissionsCancelled' }
 >;
 
+const feedSessionId = (context: SessionContext): string =>
+  context.acpLease?.sessionId ?? '';
+
 const headPermission = (context: SessionContext): PendingPermission => {
   const request = context.permissionQueue[0];
 
@@ -29,8 +32,20 @@ const cancelledPermissions = (
 ): PermissionsCancelled => ({
   type: permissionsCancelledEvent,
   turnId: context.activeTurnId,
-  acpSessionId: context.acpLease?.sessionId ?? '',
+  acpSessionId: feedSessionId(context),
   toolCallIds: requests.map((request) => request.toolCallId),
+});
+
+const selectedPermission = (
+  context: SessionContext,
+  request: PendingPermission,
+  option: NonNullable<ReturnType<typeof chosenOption>>,
+): FeedEvent => ({
+  type: permissionSelectedEvent,
+  turnId: context.activeTurnId,
+  acpSessionId: feedSessionId(context),
+  toolCallId: request.toolCallId,
+  option,
 });
 
 // Whether an answer to the first queued request denies it with a reject option.
@@ -57,13 +72,7 @@ export const permissionOutcome = (
 
   if (option === null) return cancelledPermissions(context, [request]);
 
-  return {
-    type: permissionSelectedEvent,
-    turnId: context.activeTurnId,
-    acpSessionId: context.acpLease?.sessionId ?? '',
-    toolCallId: request.toolCallId,
-    option,
-  };
+  return selectedPermission(context, request, option);
 };
 
 // A Hook's answer for a request still queued waits until the request is first.
@@ -92,9 +101,14 @@ export const hookedAnswer = (
 
   return {
     requestId: request.requestId,
-    optionId: context.hookedPermissions[request.requestId] ?? null,
+    optionId: hookedOption(context, request.requestId),
   };
 };
+
+const hookedOption = (
+  context: SessionContext,
+  requestId: string,
+): string | null => context.hookedPermissions[requestId] ?? null;
 
 // The Agent withdrew a request: its Tool call shows the cancellation.
 type WithdrawnRequest = {
@@ -102,24 +116,50 @@ type WithdrawnRequest = {
   queues: Pick<SessionContext, 'permissionQueue' | 'elicitationQueue'>;
 };
 
+type RequestQueues = WithdrawnRequest['queues'];
+
+const remainingRequests = (
+  context: SessionContext,
+  requestId: string,
+): RequestQueues => ({
+  permissionQueue: context.permissionQueue.filter(
+    (request) => request.requestId !== requestId,
+  ),
+  elicitationQueue: context.elicitationQueue.filter(
+    (request) => request.requestId !== requestId,
+  ),
+});
+
 export const withdrawRequest = (
   context: SessionContext,
   requestId: string,
 ): WithdrawnRequest => {
-  const isOther = (request: { requestId: string }): boolean =>
-    request.requestId !== requestId;
-
   return {
     cancelled: cancelledPermissions(
       context,
-      context.permissionQueue.filter((request): boolean => !isOther(request)),
+      context.permissionQueue.filter(
+        (request) => request.requestId === requestId,
+      ),
     ),
-    queues: {
-      permissionQueue: context.permissionQueue.filter(isOther),
-      elicitationQueue: context.elicitationQueue.filter(isOther),
-    },
+    queues: remainingRequests(context, requestId),
   };
 };
+
+const pendingToolCalls = (context: SessionContext): string[] =>
+  context.permissionQueue.flatMap((request) =>
+    request.operation ? [] : [request.toolCallId],
+  );
+
+const endingAfterCancellation = (context: SessionContext): FeedTurnEnding => ({
+  ...context.turnEnding,
+  waitingPermissions: {
+    acpSessionId: feedSessionId(context),
+    toolCallIds: [
+      ...(context.turnEnding.waitingPermissions?.toolCallIds ?? []),
+      ...pendingToolCalls(context),
+    ],
+  },
+});
 
 // The Turn's end remembers the Permission requests it left unanswered.
 export const cancelRequests = (
@@ -128,20 +168,9 @@ export const cancelRequests = (
   SessionContext,
   'turnEnding' | 'permissionQueue' | 'elicitationQueue'
 > => {
-  const pending = context.turnEnding.waitingPermissions?.toolCallIds ?? [];
-
-  const turnEnding: FeedTurnEnding = {
-    ...context.turnEnding,
-    waitingPermissions: {
-      acpSessionId: context.acpLease?.sessionId ?? '',
-      toolCallIds: [
-        ...pending,
-        ...context.permissionQueue
-          .filter((request) => !request.operation)
-          .map((request) => request.toolCallId),
-      ],
-    },
+  return {
+    turnEnding: endingAfterCancellation(context),
+    permissionQueue: [],
+    elicitationQueue: [],
   };
-
-  return { turnEnding, permissionQueue: [], elicitationQueue: [] };
 };

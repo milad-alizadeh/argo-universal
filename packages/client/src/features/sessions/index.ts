@@ -7,7 +7,6 @@ export { type SubagentListProps } from './components/subagent-list/subagent-list
 export {
   SubagentSheet,
   type SubagentFeedPage,
-  type SubagentSheetProps,
 } from './components/subagent-list/subagent-sheet';
 
 export {
@@ -189,7 +188,6 @@ export {
 export { openCallout, openProblem, signsIn } from './utils/session-callouts';
 
 export {
-  type AfterSignIn,
   type PastSessionAnswers,
   type PastSessionSignIn,
   pastSessionCallout,
@@ -214,15 +212,9 @@ export { archivedToast } from './components/archive-session/archived-toast';
 
 export { SessionChangeDetail } from './components/session-change-detail';
 
-export {
-  SessionRow,
-  type SessionRowProps,
-} from './components/session-row/session-row';
+export { SessionRow } from './components/session-row/session-row';
 
-export {
-  type OpenPluginItemPage,
-  type SessionRowPlugins,
-} from './components/session-row/session-row-props';
+export { type SessionRowPlugins } from './components/session-row/session-row-props';
 
 export {
   type PluginIdentity,

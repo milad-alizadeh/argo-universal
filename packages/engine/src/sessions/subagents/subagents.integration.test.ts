@@ -3,11 +3,7 @@ import { feedRow, session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { openMemorySubagents } from '#mocks/memory-subagents';
-import {
-  crashedSubagentTurns,
-  hasRunningSubagentTurn,
-  ownsSubagentUpdate,
-} from '.';
+import { ownsSubagentUpdate } from '.';
 
 const vendorChild = 'vendor-child';
 
@@ -67,20 +63,4 @@ it('owns the updates of a Subagent it knows and nothing else', (): void => {
   expect(ownsSubagentUpdate(state(), association)).toBe(true);
   route(association);
   expect(ownsSubagentUpdate(state(), message)).toBe(true);
-});
-
-it('ends the running Turn of each Subagent when the Agent crashes', (): void => {
-  const { route, state } = openMemorySubagents();
-
-  route(association);
-  expect(hasRunningSubagentTurn(state())).toBe(true);
-
-  const crashes = crashedSubagentTurns(state(), {
-    kind: 'agent_crash',
-    title: 'Agent crashed',
-    occurredAt: 5,
-  });
-
-  expect(crashes).toHaveLength(1);
-  expect(crashes[0]?.event).toMatchObject({ type: 'feed.completeTurn' });
 });

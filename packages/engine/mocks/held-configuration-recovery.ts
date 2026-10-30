@@ -26,6 +26,60 @@ export function heldRecoveryScenario(
   const prompted = Promise.withResolvers<PromptRequest>();
   const commands: HeldRecoveryScenario['commands'] = [];
 
+  const scenario = recoveryScenario(
+    { finish, prompted, commands },
+    rejectFirst,
+  );
+
+  return { scenario, finish, prompted, commands };
+}
+
+type RecoveryEvents = Omit<HeldRecoveryScenario, 'scenario'>;
+
+const recoveryScenario = (
+  events: RecoveryEvents,
+  rejectFirst: boolean,
+): ScriptedScenario => ({
+  configOptions: acpConfiguration,
+  steps: [],
+  responses: {
+    'session/close': closeResponses(),
+    'session/prompt': promptResponses(events),
+    'session/set_config_option': configResponses(events.commands, rejectFirst),
+  },
+});
+
+const closeResponses = (): NonNullable<
+  ScriptedScenario['responses']
+>['session/close'] => [
+  {
+    steps: [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'config_option_update',
+          configOptions: acpConfiguration,
+        },
+      },
+    ],
+  },
+];
+
+const promptResponses = (
+  events: RecoveryEvents,
+): NonNullable<ScriptedScenario['responses']>['session/prompt'] => [
+  {
+    requests: events.commands,
+    received: events.prompted,
+    waitFor: events.finish.promise,
+  },
+  { requests: events.commands },
+];
+
+const configResponses = (
+  commands: RecoveryEvents['commands'],
+  rejectFirst: boolean,
+): NonNullable<ScriptedScenario['responses']>['session/set_config_option'] => {
   const accepted = {
     requests: commands,
     result: { configOptions: configuration },
@@ -35,30 +89,5 @@ export function heldRecoveryScenario(
     ? { requests: commands, error: 'Configuration temporarily unavailable' }
     : accepted;
 
-  const scenario: ScriptedScenario = {
-    configOptions: acpConfiguration,
-    steps: [],
-    responses: {
-      'session/close': [
-        {
-          steps: [
-            {
-              type: 'update',
-              update: {
-                sessionUpdate: 'config_option_update',
-                configOptions: acpConfiguration,
-              },
-            },
-          ],
-        },
-      ],
-      'session/prompt': [
-        { requests: commands, received: prompted, waitFor: finish.promise },
-        { requests: commands },
-      ],
-      'session/set_config_option': [initial, accepted],
-    },
-  };
-
-  return { scenario, finish, prompted, commands };
-}
+  return [initial, accepted];
+};

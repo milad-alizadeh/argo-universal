@@ -65,30 +65,6 @@ function restrictChoice(
   if (metadata.supportsEffort) metadata.supportedEffortLevels = [level];
 }
 
-export function accepted(
-  agent: RecordedSession,
-  choices: Record<string, string>,
-): SessionConfigOption[] {
-  return agent.configOptions.map((option) => acceptedOption(option, choices));
-}
-
-function acceptedOption(
-  option: SessionConfigOption,
-  choices: Record<string, string>,
-): SessionConfigOption {
-  if (option.type !== 'select' || !option.category) return option;
-  const value = choices[option.category];
-
-  return withAcceptedValue(option, value);
-}
-
-function withAcceptedValue(
-  option: Extract<SessionConfigOption, { type: 'select' }>,
-  value: string | undefined,
-): SessionConfigOption {
-  return value ? { ...option, currentValue: value } : option;
-}
-
 function choiceMetadata(
   choice: SessionConfigSelectOption,
 ): NonNullable<SessionConfigSelectOption['_meta']>['argo'] {
