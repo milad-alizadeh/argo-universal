@@ -11,7 +11,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import { isSessionBranch, readRepository, sessionBranch } from './index';
 import { initTestRepository } from './test-git.test.mocks';
 
-it('reads the repository root and common directory from a nested path', async (): Promise<void> => {
+it('reads the main checkout and common directory from a nested path', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'repository-read-\n')),
   );
@@ -23,7 +23,7 @@ it('reads the repository root and common directory from a nested path', async ()
   const nested = join(directory, 'nested folder');
   mkdirSync(nested);
   expect(await readRepository(nested)).toEqual({
-    root: directory,
+    mainCheckout: directory,
     commonDirectory: join(directory, '.git'),
   });
 });
@@ -44,7 +44,7 @@ it.each([
   },
 );
 
-it('reads a linked worktree through its nested directory alias', async (): Promise<void> => {
+it('reads a linked worktree as the main checkout of its repository', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'repository-worktree-')),
   );
@@ -62,7 +62,7 @@ it('reads a linked worktree through its nested directory alias', async (): Promi
   const alias = join(directory, 'alias');
   symlinkSync(nested, alias, 'dir');
   expect(await readRepository(alias)).toEqual({
-    root: worktree,
+    mainCheckout: root,
     commonDirectory: join(root, '.git'),
   });
 });

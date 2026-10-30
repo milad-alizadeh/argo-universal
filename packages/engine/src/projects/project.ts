@@ -9,20 +9,26 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
-import { listBranches, readOriginHost, readRepository } from '@repo/git';
+import {
+  listBranches,
+  readOriginHost,
+  readRepository,
+  type Repository,
+} from '@repo/git';
 import type { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { notifyProjectChanges } from './changes';
 
+// One git common directory is one Project, whichever of its checkouts registered it.
 function readProjectIdentity(
   database: Database,
-  repository: Awaited<ReturnType<typeof readRepository>>,
+  repository: Repository,
 ): string {
   const existing = database
     .select()
     .from(project)
-    .where(eq(project.path, repository.root))
+    .where(eq(project.path, repository.mainCheckout))
     .get();
 
   return (
@@ -36,7 +42,8 @@ export async function seedProject(
   path = process.env.ARGO_PROJECT_PATH ?? process.cwd(),
 ): Promise<void> {
   const repository = await readRepository(path);
-  const metadata = { path: repository.root, name: basename(repository.root) };
+  const { mainCheckout } = repository;
+  const metadata = { path: mainCheckout, name: basename(mainCheckout) };
   database
     .insert(project)
     .values({ id: readProjectIdentity(database, repository), ...metadata })
