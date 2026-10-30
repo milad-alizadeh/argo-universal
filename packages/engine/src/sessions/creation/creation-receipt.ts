@@ -15,14 +15,18 @@ export type SessionCreationSettled = {
 
 type CreationFailure = { cause: unknown };
 
+// Ends a Session its creation failed, after the receipt that says why.
+type CloseFailedCreation = (session: SessionActorRef) => void;
+
 // A specific Session owns this result even when its original HTTP caller detaches.
 export function observeSessionCreation(
   session: SessionActorRef,
   completion: Promise<AcceptedSessionStart>,
+  closeFailed: CloseFailedCreation,
 ): Promise<AcceptedSessionStart> {
   const result = completion.then(
     (value) => accepted(session, value),
-    (cause) => failed(session, { cause }),
+    (cause) => failed(session, { cause }, closeFailed),
   );
 
   void result.catch(() => {});
@@ -39,9 +43,15 @@ function accepted(
   return start;
 }
 
-function failed(session: SessionActorRef, { cause }: CreationFailure): never {
+// A caller waiting on this Session reads the receipt first, and its own failure never waits for the closing.
+function failed(
+  session: SessionActorRef,
+  { cause }: CreationFailure,
+  closeFailed: CloseFailedCreation,
+): never {
   const message = cause instanceof Error ? cause.message : String(cause);
   publishReceipt(session, { status: 'failed', message });
+  closeFailed(session);
   throw cause;
 }
 
