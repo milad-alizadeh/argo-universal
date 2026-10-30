@@ -2,7 +2,10 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
-import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
+import type {
+  PlayContext,
+  Story,
+} from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import {
   agentModelLabel,
@@ -94,55 +97,56 @@ async function expectWithin(
 }
 
 /*
+ * One Composer at the largest text sizes: the tokens are raised on the story's own root for as long as the
+ * story runs, and put back after it, so the next story reads the Composer at the reader's ordinary size.
+ */
+const atScaledType = (
+  check: (context: PlayContext) => Promise<void>,
+): Story => ({
+  args: composerArgs,
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  play: async (context): Promise<void> => {
+    const restore = scaleControlType(context.canvasElement);
+
+    try {
+      await settleLayout(layoutWidths.phone);
+      await check(context);
+    } finally {
+      restore();
+    }
+  },
+});
+
+/*
  * The Composer's own controls stay where a reader can reach them at the largest text sizes: each is drawn
  * inside the phone's width, Attach keeps its own box instead of being squeezed out of it and painted over the
  * pill beside it, and each pill stays wide enough for the words naming what it opens.
  */
-export const ControlsStayReachableAtScaledType: Story = {
-  args: composerArgs,
-  render: (args) => (
-    <Composer {...composerProps({ ...args, sessionStarted: true })} />
-  ),
-  play: async ({ canvas, canvasElement }) => {
-    const restore = scaleControlType(canvasElement);
+export const ControlsStayReachableAtScaledType = atScaledType(
+  async ({ canvas }) => {
+    const attach = canvas.getByRole('button', { name: 'Attach' });
+    const agent = canvas.getByRole('button', { name: agentModelLabel });
+    const mode = canvas.getByRole('button', { name: 'Mode' });
+    const send = canvas.getByRole('button', { name: 'Send' });
 
-    try {
-      await settleLayout(layoutWidths.phone);
-      const attach = canvas.getByRole('button', { name: 'Attach' });
-      const agent = canvas.getByRole('button', { name: agentModelLabel });
-      const mode = canvas.getByRole('button', { name: 'Mode' });
-      const send = canvas.getByRole('button', { name: 'Send' });
+    for (const control of [attach, agent, mode, send])
+      await expectWithin(control, layoutWidths.phone);
 
-      for (const control of [attach, agent, mode, send])
-        await expectWithin(control, layoutWidths.phone);
-
-      await expect(overlaps(boxOf(attach), boxOf(agent))).toBe(false);
-      await expect(clipsItsWords(agent)).toBe(false);
-      await expect(clipsItsWords(mode)).toBe(false);
-    } finally {
-      restore();
-    }
+    await expect(overlaps(boxOf(attach), boxOf(agent))).toBe(false);
+    await expect(clipsItsWords(agent)).toBe(false);
+    await expect(clipsItsWords(mode)).toBe(false);
   },
-};
+);
 
 // Mode still opens at the largest text sizes: the pill takes the press and its page comes up.
-export const ModeOpensAtScaledType: Story = {
-  args: composerArgs,
-  render: (args) => (
-    <Composer {...composerProps({ ...args, sessionStarted: true })} />
-  ),
-  play: async ({ canvas, canvasElement, userEvent }) => {
-    const restore = scaleControlType(canvasElement);
-
-    try {
-      await settleLayout(layoutWidths.phone);
-      await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
-      await expect(
-        await within(document.body).findByRole('heading', { name: 'Mode' }),
-      ).toBeVisible();
-      await userEvent.keyboard('{Escape}');
-    } finally {
-      restore();
-    }
+export const ModeOpensAtScaledType = atScaledType(
+  async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+    await expect(
+      await within(document.body).findByRole('heading', { name: 'Mode' }),
+    ).toBeVisible();
+    await userEvent.keyboard('{Escape}');
   },
-};
+);

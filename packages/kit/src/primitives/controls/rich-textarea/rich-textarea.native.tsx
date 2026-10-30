@@ -61,8 +61,11 @@ const plainFieldProps = (props: RichTextareaProps): TextInputProps => ({
 
 const fieldClassName = (props: RichTextareaProps): string =>
   cn(
-    // Clipped, so the lines scrolled past the six it shows stay inside the card instead of painting over its edge.
-    'w-full overflow-hidden text-foreground',
+    /*
+     * Clipped, so the lines scrolled past the six it shows stay inside the card instead of painting over its
+     * edge, and shrinkable, so the field is what gives way when the card has less room than six lines (#1529).
+     */
+    'w-full min-h-0 shrink overflow-hidden text-foreground',
     plainFieldClassName,
     props.fieldClassName,
     props.disabled === true && 'opacity-50',
