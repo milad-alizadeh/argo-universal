@@ -24,12 +24,11 @@ export const entryType = (
 export const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
 
-const isOpenGroup = (
+const isGroup = (
   item: FeedViewItem | undefined,
-): item is Extract<FeedViewItem, { type: 'group'; state: 'open' }> =>
-  item?.type === 'group' && item.state === 'open';
+): item is Extract<FeedViewItem, { type: 'group' }> => item?.type === 'group';
 
-// The drawn items, then the live header while it shows; an open group last takes it as its title.
+// The drawn items, then the live header while it shows; a group last takes it as its title, so the Feed and the Session row say one line.
 export function withLiveHeader(
   drawnItems: FeedViewItem[],
   liveHeader: LiveHeaderValue | null,
@@ -40,7 +39,7 @@ export function withLiveHeader(
 
   if (!shown) return drawnItems;
 
-  if (isOpenGroup(newest))
+  if (isGroup(newest))
     return [...drawnItems.slice(0, -1), { ...newest, liveHeader: shown }];
 
   return [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }];

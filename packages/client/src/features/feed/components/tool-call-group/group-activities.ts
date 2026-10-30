@@ -12,7 +12,7 @@ const openLive = (group: FeedGroup): LiveToolCall =>
   group.state === 'open' ? group.live : undefined;
 
 export const liveHeaderOf = (group: FeedGroup): LiveHeader | undefined =>
-  group.state === 'open' ? group.liveHeader : undefined;
+  group.liveHeader;
 
 // A group titled by the live header lists its live Tool call like any other.
 export const liveToolCall = (group: FeedGroup): LiveToolCall =>
