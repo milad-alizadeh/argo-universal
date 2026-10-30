@@ -4,7 +4,7 @@ import { type ComponentType, createElement, type ReactNode } from 'react';
 import { Text as Span } from 'react-native';
 import { markdownMarkClassNames } from '#kit/markdown-marks';
 import { withOccurrenceKeys } from '#kit/occurrence-keys';
-import { Link, isRoute } from '#primitives/content/link';
+import { Link } from '#primitives/content/link';
 import { byType } from './markdown-tokens';
 
 interface InlineTokenProps<T extends Token = Token> {
@@ -48,11 +48,8 @@ function LinkToken({
   codeClassName,
 }: InlineTokenProps<Tokens.Link>): React.JSX.Element {
   return (
-    <Link
-      href={token.href}
-      route={isRoute(token.href) ? token.href : undefined}
-      label={token.text}
-    >
+    // The href is the Agent's text, never an App route: a path such as /tmp/a.txt is not a page.
+    <Link href={token.href} label={token.text}>
       <InlineTokens tokens={token.tokens} codeClassName={codeClassName} />
     </Link>
   );
