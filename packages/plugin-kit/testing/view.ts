@@ -32,6 +32,7 @@ export type PluginMount = {
 
 // A slow machine can lengthen this for one run, as ARGO_VIEW_LIMIT_MS=20000; nothing else changes it.
 const defaultViewLimitMs = 3000;
+
 const viewLimitMs =
   Number(process.env.ARGO_VIEW_LIMIT_MS) || defaultViewLimitMs;
 
