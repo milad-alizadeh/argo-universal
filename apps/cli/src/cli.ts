@@ -1,6 +1,7 @@
 import { runPluginCommand } from '@argo/plugin-kit/cli';
 import { commandExitCode, usageExitCode } from './command-error';
 import type { CommandIo } from './control-client';
+import { runMcp } from './mcp-command';
 import { runOperations } from './operations-command';
 import { runOperation } from './run-command';
 import { waitOperation } from './wait-command';
@@ -11,6 +12,7 @@ Commands:
   operations [filter] [--json]  Find available Operations
   run <id> [--params '<json>'] [--wait]  Run an Operation
   wait <id>                   Wait for native Session work
+  mcp                         Serve Argo tools over MCP on stdio
   server [--watch]            Start the Server
   plugin <validate|test> <dir>  Validate or test a Plugin`;
 
@@ -25,6 +27,7 @@ const commands = new Map<string, Command>([
   ['operations', runOperations],
   ['run', runOperation],
   ['wait', waitOperation],
+  ['mcp', runMcp],
   [
     'plugin',
     (args, io): Promise<number> =>

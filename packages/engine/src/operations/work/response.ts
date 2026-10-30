@@ -2,14 +2,14 @@ import type { OperationId } from '@repo/contracts/operations';
 import type { OperationRunResult } from '../implementations';
 import { isNativeStartOperation } from '../native-start';
 import type { SessionCaller, TokenCaller } from '../session-tokens';
+import type { ObservationOptions } from './clock';
 import type { WorkObservation } from './observation';
 
 // A Session caller's run: its Tool call observes the work it starts.
-export type SessionObservation = {
+export type SessionObservation = ObservationOptions & {
   caller: SessionCaller;
   token?: string;
   wait: boolean;
-  signal?: AbortSignal;
   id: OperationId;
 };
 

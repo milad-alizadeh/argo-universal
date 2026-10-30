@@ -141,6 +141,7 @@ it.each([
   [['run', '']],
   [['operations', 'first', 'second']],
   [['wait', 'not-a-wait-id']],
+  [['mcp', 'unexpected']],
   [['nope']],
 ])('exits 2 for invalid usage %j without reaching the Server', async (argv) => {
   const { client, runs } = fakeClient();
