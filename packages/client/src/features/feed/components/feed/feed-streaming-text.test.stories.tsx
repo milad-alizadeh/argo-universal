@@ -68,10 +68,13 @@ const answerSoFar = (length: number): SessionUpdate => ({
   content: [{ type: 'text', text: answerText.slice(0, length) }],
 });
 
-// How much of the answer has streamed; none until the prompt is sent.
-let streamed = 0;
+// What the story and its Feed share. A mounted Feed fills it in and an unmounted one empties it, so one visit never reads another's.
+interface Stream {
+  streamed: number;
+  send: (() => void) | null;
+}
 
-let send = (): void => {};
+const stream: Stream = { streamed: 0, send: null };
 
 const sentRows = (length: number): SessionUpdate[] =>
   length ? [sentPrompt, answerSoFar(length)] : [];
@@ -82,10 +85,12 @@ const nextLength = (length: number): number =>
 function useStreamedLength(): number {
   const [length, setLength] = useState(0);
   useEffect(() => {
-    send = (): void => setLength(1);
+    stream.streamed = 0;
+    stream.send = (): void => setLength(1);
 
     return (): void => {
-      send = (): void => {};
+      stream.send = null;
+      stream.streamed = 0;
     };
   }, []);
   useEffect(() => {
@@ -95,7 +100,7 @@ function useStreamedLength(): number {
     return (): void => clearTimeout(timer);
   }, [length]);
   useEffect(() => {
-    streamed = length;
+    stream.streamed = length;
   }, [length]);
 
   return length;
@@ -119,19 +124,38 @@ function StreamingFeed(): React.JSX.Element {
 const topInView = (row: HTMLElement, scroll: HTMLElement): number =>
   row.getBoundingClientRect().top - scroll.getBoundingClientRect().top;
 
-// Reads the prompt's place in the view on every frame until the answer has streamed in full.
+// Longest the answer may take to stream in, under load, before the story gives up.
+const streamDeadlineMs = 20_000;
+
+// Reads the prompt's place in the view on every frame until the answer has streamed in full. The deadline is a timer, so it still fires when frames stop, and the failure says how far the stream and the frames had got.
 function promptTopsWhileStreaming(
   prompt: HTMLElement,
   scroll: HTMLElement,
 ): Promise<number[]> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const tops: number[] = [];
+    let done = false;
+
+    const deadline = setTimeout(() => {
+      done = true;
+      reject(
+        new Error(
+          `Answer streamed ${stream.streamed} of ${answerText.length} characters in ${streamDeadlineMs}ms; ${tops.length} frames were read`,
+        ),
+      );
+    }, streamDeadlineMs);
 
     const step = (): void => {
+      if (done) return;
       tops.push(topInView(prompt, scroll));
 
-      if (streamed < answerText.length) requestAnimationFrame(step);
-      else resolve(tops);
+      if (stream.streamed < answerText.length) {
+        requestAnimationFrame(step);
+      } else {
+        done = true;
+        clearTimeout(deadline);
+        resolve(tops);
+      }
     };
 
     requestAnimationFrame(step);
@@ -148,7 +172,9 @@ export const PinsPromptWhileAnswerStreams: Story = {
     await settleLayout('wide');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
-    send();
+    // The Feed's mount effect hands over `send`; wait for it rather than assume it ran.
+    await waitFor(() => expect(stream.send).not.toBeNull(), settleWait);
+    stream.send?.();
     const prompt = await canvas.findByText(promptText);
     await waitFor(
       () => expect(topInView(prompt, scroll)).toBeLessThan(nearTop),
