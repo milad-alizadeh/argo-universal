@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, screen, waitFor } from 'storybook/test';
+import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
 import { settleLayout } from '#mocks/story-layout';
 import {
@@ -52,6 +52,20 @@ export const ReturnChoosesAndLeavesTheCaretAfterTheSpace: Story = {
     );
     await userEvent.keyboard('{Enter}');
     await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const RowsShowTheTypeIconAndTheBareName: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: exampleLabel }),
+      '/',
+    );
+    const first = await screen.findByRole('option', { name: firstOptionName });
+    await expect(within(first).getByTestId('icon-code')).toBeInTheDocument();
+    await expect(within(first).getByText('first')).toBeVisible();
+    await expect(within(first).queryByText('/first')).not.toBeInTheDocument();
+    await expect(within(first).getByText('First option')).toBeVisible();
   },
 };
 
