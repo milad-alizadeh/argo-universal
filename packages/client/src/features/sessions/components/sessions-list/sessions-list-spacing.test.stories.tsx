@@ -8,7 +8,9 @@ import { orphanSessions } from './sessions-list-nested-fixtures';
 import {
   compactStatusSessions,
   flatSessions,
+  mixedParent,
   mixedSessions,
+  standaloneSession,
   statusSessions,
 } from './sessions-list-spacing-fixtures';
 
@@ -41,13 +43,15 @@ if (!selected) throw new Error('The spacing fixture needs a selected Session');
 
 const selectedTitle = selected.title;
 
-type Fixture = typeof statusSessions | typeof compactStatusSessions;
-
 /*
  * Every row's logo sits `expectedGap` from its title, whatever its status, Agent or title length, and its content stays
  * inside the row. The age ends each row, so a long title truncates instead of pushing it out.
  */
-function rowsAt(args: Fixture, width: number, expectedGap: number): Story {
+function rowsAt(
+  args: typeof statusSessions,
+  width: number,
+  expectedGap: number,
+): Story {
   return {
     args,
     beforeEach: () => settleLayout(width),
@@ -109,8 +113,8 @@ export const MixedTreeRows: Story = {
   args: mixedSessions,
   beforeEach: () => settleLayout('wide'),
   play: async ({ canvas }) => {
-    const parent = await canvas.findByText('Investigate the regression');
-    const leaf = await canvas.findByText('Standalone Session');
+    const parent = await canvas.findByText(mixedParent.title);
+    const leaf = await canvas.findByText(standaloneSession.title);
 
     await waitFor(() =>
       expect(leaf.getBoundingClientRect().left).toBeCloseTo(
