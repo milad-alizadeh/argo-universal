@@ -21,8 +21,18 @@ describe('draftPrompt', () => {
       ]),
     ).toEqual([
       { type: 'text', text: '  Fix this  ' },
-      { type: 'image', mimeType: 'image/png', blob: screenshot },
-      { type: 'image', mimeType: 'image/jpeg', blob: photo },
+      {
+        type: 'image',
+        name: screenshotName,
+        mimeType: 'image/png',
+        blob: screenshot,
+      },
+      {
+        type: 'image',
+        name: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        blob: photo,
+      },
     ]);
   });
 
@@ -42,14 +52,26 @@ describe('draftPrompt', () => {
     ).toEqual([
       { type: 'text', text: 'See ITEM-7 ' },
       resource,
-      { type: 'image', mimeType: 'image/png', blob: screenshot },
+      {
+        type: 'image',
+        name: screenshotName,
+        mimeType: 'image/png',
+        blob: screenshot,
+      },
     ]);
   });
 
   it('leaves out blank text', () => {
     expect(
       draftPrompt(' \n', [{ name: screenshotName, blob: screenshot }]),
-    ).toEqual([{ type: 'image', mimeType: 'image/png', blob: screenshot }]);
+    ).toEqual([
+      {
+        type: 'image',
+        name: screenshotName,
+        mimeType: 'image/png',
+        blob: screenshot,
+      },
+    ]);
   });
 
   it.each([

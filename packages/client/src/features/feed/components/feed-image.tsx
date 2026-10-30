@@ -26,7 +26,7 @@ function sizeLabel({ width, height }: BlobRef): string | undefined {
 }
 
 const imageLabel = (image: ImageContent): string | undefined =>
-  isPasted(image) ? 'Pasted' : sizeLabel(image.blob);
+  image.name ?? (isPasted(image) ? 'Pasted' : sizeLabel(image.blob));
 
 function aspectRatioOf({ width, height }: BlobRef): number {
   if (!width || !height) return 1;

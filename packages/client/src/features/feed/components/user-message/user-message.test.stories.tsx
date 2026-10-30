@@ -74,9 +74,11 @@ export const InlineCode: Story = {
   },
 };
 
+const imageRecording = 'image-prompt';
+
 function opensImage(agent: MockAgent, width: number): Story {
   return {
-    args: { row: recordedUserMessage(agent, 'image-prompt') },
+    args: { row: recordedUserMessage(agent, imageRecording) },
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
       await expect(within(document.body).queryByRole('dialog')).toBeNull();
@@ -120,6 +122,36 @@ export const SecondAgentOpensImageWide = opensImage(
   'agent-2',
   layoutWidths.wide,
 );
+
+// A sent image keeps the name it was attached under, on its button and in its viewer.
+const namedImage = 'qa-red.png';
+
+export const NamedImageOpensWithItsName: Story = {
+  args: {
+    row: {
+      ...recordedUserMessage('agent-1', imageRecording),
+      content: recordedUserMessage('agent-1', imageRecording).content.map(
+        (block) =>
+          block.type === 'image' ? { ...block, name: namedImage } : block,
+      ),
+    },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: `Open image, ${namedImage}` }),
+    );
+
+    const dialog = await within(document.body).findByRole('dialog', {
+      name: namedImage,
+    });
+
+    await waitFor(() => expect(dialog).toBeVisible());
+
+    await expect(
+      within(dialog).getByRole('img', { name: namedImage }),
+    ).toBeInTheDocument();
+  },
+};
 
 // A long markdown prompt shows only whole lines above Show more, then every line once expanded.
 function showsMore(agent: MockAgent, width: number): Story {
