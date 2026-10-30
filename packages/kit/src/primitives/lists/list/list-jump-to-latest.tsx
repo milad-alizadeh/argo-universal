@@ -32,14 +32,14 @@ export function useNewestKeyWhenLeftEnd(
 }
 
 const jumpToLatestClassName =
-  'size-8 items-center justify-center rounded-full active:opacity-70';
+  'size-8 items-center justify-center rounded-full border border-border active:opacity-70';
 
-// The same Pill surface as the Composer's status controls: glass where the system draws it, a bordered raised card elsewhere.
+// The shared floating material, as the Composer's status Pills draw it: system glass where supported, the shared readable fallback elsewhere and under Reduce Transparency. It inherits a parent that already owns the material instead of nesting another effect.
 const jumpToLatestSurface = {
   corners: 'pill',
   interactive: true,
+  inherit: true,
   className: 'size-8',
-  fallbackClassName: 'rounded-full border border-border bg-card shadow-raised',
 } as const;
 
 const newRowsDot = (
