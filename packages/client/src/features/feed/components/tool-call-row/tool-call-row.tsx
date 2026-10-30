@@ -3,6 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { toolCallFacts } from '../../view/feed-row-facts';
+import { fileName } from '../../view/file-edit-label';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
@@ -35,6 +36,12 @@ function SettledStatus({
   ) : null;
 }
 
+const toolCallPath = (row: ToolCallUpdate): string | undefined => {
+  const path = toolCallFacts(row).path;
+
+  return path ? fileName(path) : undefined;
+};
+
 function ToolCallRowOutput({
   row,
 }: {
@@ -42,10 +49,7 @@ function ToolCallRowOutput({
 }): React.JSX.Element {
   return (
     <>
-      <ToolOutput
-        content={row.content}
-        fileName={toolCallFacts(row).path?.split('/').at(-1)}
-      />
+      <ToolOutput content={row.content} fileName={toolCallPath(row)} />
       <SettledStatus status={row.status} />
     </>
   );

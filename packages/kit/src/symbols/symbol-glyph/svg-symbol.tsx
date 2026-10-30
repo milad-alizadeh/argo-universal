@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { type ColorValue, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '../../utils';
+import { decorativeGlyph } from '../decorative-glyph';
 import { type SvgSymbolName, svgSymbols } from '../svg-symbols';
 
 export interface SvgSymbolGlyphProps {
@@ -19,6 +20,7 @@ function SvgSymbolDrawing(props: SvgSymbolGlyphProps): React.JSX.Element {
 
   return (
     <View
+      {...decorativeGlyph}
       testID={props.testID}
       style={{ width: props.pixels, height: props.pixels }}
       className={cn('items-center justify-center', props.colorClassName)}

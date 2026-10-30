@@ -16,8 +16,8 @@ interface EditPlay {
 
 export type RecordedEdit = {
   row: ToolCallUpdate;
-  path: string;
-  verb: string;
+  // What the row's disclosure is called: the name a screen reader reads, counts and all (#1504).
+  name: string;
   added: string | null;
   removed: string | null;
   line: string;
@@ -86,8 +86,7 @@ async function expectDiffToggles(
 
 async function playEditRow(play: EditPlay, edit: RecordedEdit): Promise<void> {
   await expectSummary(play, edit.summary);
-  const name = `${edit.verb} ${edit.path}`;
-  const button = play.feed.getByRole('button', { name });
+  const button = play.feed.getByRole('button', { name: edit.name });
   await expectInsideFeed(play, button);
   await expectCount(button, edit.added, /^\+\d+$/u);
   await expectCount(button, edit.removed, /^−\d+$/u);

@@ -1,5 +1,6 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type * as React from 'react';
+import { decorativeGlyph } from '../decorative-glyph';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { symbolWeight } from './symbol-weight';
 
@@ -16,6 +17,7 @@ export function NativeSymbolView(
 ): React.JSX.Element {
   return (
     <SymbolView
+      {...decorativeGlyph}
       key={String(props.filled)}
       name={props.name}
       size={props.pixels}
