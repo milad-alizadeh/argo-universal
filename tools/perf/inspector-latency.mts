@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import {
-  changedMarker,
+  firstDiffRowMarker,
   changeOnly,
   diffFile,
   diffCounts,
@@ -40,7 +40,7 @@ async function prepareDiff(
   size: DiffSize,
 ): Promise<TimedAction> {
   const overview = await reopenChanged(page, server, size);
-  const text = changedMarker(size);
+  const text = firstDiffRowMarker(size);
 
   return {
     event: 'pointerdown',
@@ -64,7 +64,7 @@ export async function inspectorDiff(
 
   return {
     condition: 'document-reload',
-    boundary: `Changes overview pointerdown → first changed line of ${diffFile(size)} (${changedLines} changed lines, ${bytes} bytes) drawn in the Changes list with unchanged geometry; the Session is reloaded and reopened before each trial; Back and tab switches are not timed`,
+    boundary: `Changes overview pointerdown → first row of the diff of ${diffFile(size)}, its first changed line (${changedLines} changed lines, ${bytes} bytes), drawn in the Changes list with unchanged geometry; the Session is reloaded and reopened before each trial; Back and tab switches are not timed`,
     prepare: () => prepareDiff(page, server, size),
   };
 }

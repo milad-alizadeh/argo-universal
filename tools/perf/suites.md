@@ -46,9 +46,9 @@ They are timed on the driver's clock alone, which includes automation round trip
 | PF-03 | `server-restart-usable` | driver | Server ready → banner gone, latest Feed text drawn, Composer enabled |
 | PF-02 | `window-reopen-ready` | driver | Navigation commit after the document closed with a draft typed → long Session reopened, Feed drawn, Composer enabled and holding the draft exactly |
 | PF-20 touch | `feed-touch-ready`, `sessions-touch-ready` | browser | Touch swipe from `Input.synthesizeScrollGesture` → changed scroll position. Desktop-width viewport; no inertia read |
-| PF-21 diff | `diff-small-ready`, `diff-large-ready` | browser | Changes overview press → first changed line drawn in the Changes list. One 8-line changed file, or one 2,000-line changed file (every line changed), written into the Project's git repository by `diff-fixture.mts` |
+| PF-21 diff | `diff-small-ready`, `diff-large-ready` | browser | Changes overview press → first row of the diff drawn in the Changes list: the first removed line, since every line changes and git lists removed lines before added ones. One 8-line changed file, or one 2,000-line changed file (every line changed), written into the Project's git repository by `diff-fixture.mts` |
 | PF-23 search | `sessions-search-ready` | browser | Sessions search `input` event → a matching title drawn and a non-matching one gone, over the seeded Sessions |
-| PF-13, scripted only | `turns-concurrent-1-scripted`, `-2-`, `-4-` | driver | Send pressed together in N Sessions → Stop drawn then gone on every page. Only the slowest Session's finish; 1x only |
+| PF-13, scripted only | `turns-concurrent-1-scripted`, `-2-`, `-4-` | driver | Send pressed together in N Sessions → this Turn's prompt answered with the fixture's reply in each Feed and Stop not drawn, on every page. Only the slowest Session's finish; 1x only |
 | PF-14 | `attachment-{preview,upload}-{text,image}-{small,large}-ready` | driver | Preview: file chooser selection → preview in the Composer. Upload: Send → the Server answers the Blob with every byte. Files are random synthetic content, new each trial |
 
 Server restart scenarios restart the one Server of the run and leave it on the same port.
