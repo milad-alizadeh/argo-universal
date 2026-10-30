@@ -49,6 +49,20 @@ const launchSupervisor = (paths: SupervisorPaths): ChildHandle =>
     supervisorCommand(paths.cliDirectory, { ARGO_HOME: paths.home }),
   );
 
+// A Supervisor that cannot launch, as with no Node in PATH, is reported as one that exited, so its failure offers Retry.
+function tryLaunch(
+  paths: SupervisorPaths,
+  report: SpawnReport,
+): ChildHandle | undefined {
+  try {
+    return launchSupervisor(paths);
+  } catch (error) {
+    report.exited(error instanceof Error ? error.message : String(error));
+
+    return undefined;
+  }
+}
+
 function reportMessages(
   child: ChildHandle,
   report: SpawnReport,
@@ -72,17 +86,17 @@ function reportMessages(
 const exitMessage = (home: string, exit: Exit): string =>
   `The Supervisor exited while starting (${describeExit(exit)}); see ${join(home, 'logs')}`;
 
-// Starts the CLI and reports the pids it learns, then an exit while the Supervisor starts. The returned function stops reporting.
-export function spawnSupervisor(
-  paths: SupervisorPaths,
+// Reports the pids a launched CLI learns, then an exit while the Supervisor starts. The returned function stops reporting.
+function followSupervisor(
+  child: ChildHandle,
+  home: string,
   report: SpawnReport,
 ): () => void {
-  const child = launchSupervisor(paths);
   let listening = true;
   reportMessages(child, report, () => listening);
 
   void child.exited.then((exit): void => {
-    if (listening) report.exited(exitMessage(paths.home, exit));
+    if (listening) report.exited(exitMessage(home, exit));
   });
 
   // Report the CLI pid synchronously so quitting before its Supervisor starts still stops both.
@@ -91,4 +105,14 @@ export function spawnSupervisor(
   return (): void => {
     listening = false;
   };
+}
+
+// Starts the CLI and follows it; a CLI that cannot launch is reported as exited. The returned function stops reporting.
+export function spawnSupervisor(
+  paths: SupervisorPaths,
+  report: SpawnReport,
+): () => void {
+  const child = tryLaunch(paths, report);
+
+  return child ? followSupervisor(child, paths.home, report) : (): void => {};
 }
