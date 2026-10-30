@@ -83,3 +83,20 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     ]);
   },
 );
+
+it('refuses a first choice the Agent did not offer as a bad request', async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    configOptions: acpConfiguration,
+  });
+
+  await expect(
+    host.caller.session.new({
+      ...emptySessionInput,
+      configOptions: [{ configId: 'mode', value: 'review' }],
+    }),
+  ).rejects.toMatchObject({
+    code: 'BAD_REQUEST',
+    message: 'The Agent did not offer mode=review',
+  });
+});

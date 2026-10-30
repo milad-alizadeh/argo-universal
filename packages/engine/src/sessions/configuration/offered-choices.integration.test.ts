@@ -86,5 +86,8 @@ it.each([
       ...created,
       ...choice(configId, value),
     }),
-  ).rejects.toThrow(`The Agent did not offer ${configId}=${String(value)}`);
+  ).rejects.toMatchObject({
+    code: 'BAD_REQUEST',
+    message: `The Agent did not offer ${configId}=${String(value)}`,
+  });
 });

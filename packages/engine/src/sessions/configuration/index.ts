@@ -10,10 +10,8 @@ export { sessionConfiguration } from './session-steps';
 
 export type { ConfigurationStep } from './values';
 
-// Session commands, and the refusal their handlers turn into a request error.
+// Session commands; a choice the Agent did not offer refuses them as a bad request.
 export { applyInitialConfiguration, applySessionConfig } from './commands';
-
-export { ChoiceNotOffered } from './offered';
 
 // Readers.
 export { currentModel } from './option-values';

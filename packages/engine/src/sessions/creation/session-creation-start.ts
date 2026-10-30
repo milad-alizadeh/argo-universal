@@ -1,6 +1,5 @@
 import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
-import { asRequestError } from '../admission/refused-choice';
 import { applyInitialConfiguration } from '../configuration';
 import { submitSessionPrompt } from '../session-command';
 import type { SessionContext } from '../session-context';
@@ -41,9 +40,7 @@ export async function startSession(
   session: SessionActorRef,
   { input, sender }: { input: SessionNewInput; sender: PromptSender },
 ): Promise<string | undefined> {
-  await applyInitialConfiguration(session, input.configOptions).catch(
-    asRequestError,
-  );
+  await applyInitialConfiguration(session, input.configOptions);
 
   return submitInitialAcpPrompt(session, hooks, sender);
 }

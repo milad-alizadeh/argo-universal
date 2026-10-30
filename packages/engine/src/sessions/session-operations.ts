@@ -9,7 +9,6 @@ import type {
 } from '@repo/contracts/operations';
 import type { z } from 'zod';
 import { createAgentMessageReader } from '../feed';
-import { asRequestError } from './admission/refused-choice';
 import { archiveSession, unarchiveSession } from './archive/archive-commands';
 import { readSessionChanges, readSessionDiff } from './change-readers';
 import { applySessionConfig } from './configuration';
@@ -100,9 +99,7 @@ async function configureSession(
 
   open.admit();
 
-  const configOptions = await applySessionConfig(session, input).catch(
-    asRequestError,
-  );
+  const configOptions = await applySessionConfig(session, input);
 
   return { configOptions };
 }

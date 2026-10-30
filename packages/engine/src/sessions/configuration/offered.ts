@@ -2,10 +2,15 @@ import {
   configurationChoices,
   type SessionConfigOption,
 } from '@repo/contracts';
+import { TRPCError } from '@trpc/server';
 import type { AgentConfigValue } from './values';
 
-// A choice the Agent does not offer: the caller's mistake, not the Session's.
-export class ChoiceNotOffered extends Error {}
+// A choice the Agent does not offer: the caller's mistake, a bad request, wherever the Session finds it.
+class ChoiceNotOffered extends TRPCError {
+  constructor(message: string) {
+    super({ code: 'BAD_REQUEST', message });
+  }
+}
 
 export const findOption = (
   options: readonly SessionConfigOption[],
