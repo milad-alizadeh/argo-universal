@@ -159,6 +159,8 @@ export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
 
 export { createCoalescedRefetch } from './api/coalesced-refetch';
 
+export { refreshSessionList } from './api/refresh-session-list';
+
 export { ConfigurationStatus } from './components/session-callout/configuration-status';
 
 export { SessionCallout } from './components/session-callout/session-callout';
