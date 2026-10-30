@@ -62,8 +62,10 @@ Then(
   },
 );
 
-// A phone goes back to its list; a wide Frame shows the list beside New Session. Neither page owns a Session, so the
-// band draws no Session controls, and a page with no Screen Actions of its own leaves no "More" at any width.
+/*
+ * A phone goes back to its list; a wide Frame shows the list beside New Session. Neither page owns a Session, so the
+ * band draws no Session controls, and a page with no Screen Actions of its own leaves no "More" at any width.
+ */
 Then('no Session page is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions(\/new)?$/);
   await expect(
