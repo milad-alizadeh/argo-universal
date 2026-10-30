@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
 import {
+  driftWhileUntouched,
   earlierFeedLoadingLabel,
   feedScrollId,
   fullyInViewport,
@@ -17,6 +18,7 @@ import {
 } from './feed-reader.mocks';
 import {
   longRows,
+  olderPromptRows,
   oldestMessage,
   splitGroupRows,
   splitGroupLastStep,
@@ -92,6 +94,35 @@ export const KeepsPlaceWhenOlderRowsLoad: Story = {
     await expect(
       Math.abs(marked.element.getBoundingClientRect().top - marked.top),
     ).toBeLessThan(2);
+    // And they leave it there: nothing scrolls the Feed back to its newest row once the page has landed.
+    await expect(await driftWhileUntouched(marked)).toBeLessThan(2);
+    await expect(scrolledToEnd(scroll)).toBe(false);
+  },
+};
+
+// The Feed opens on a newest page with no prompt in it, so the older page carries the Turn's one prompt in from history.
+export const KeepsPlaceWhenAnOlderPromptLoads: Story = {
+  render: (args) => (
+    <PagedFeed {...args} rows={olderPromptRows} holdOlderPages />
+  ),
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    await scrollToTop(scroll);
+    // A screen down from the top, where an older page draws above what is being read.
+    scroll.scrollTop = scroll.clientHeight;
+    scroll.dispatchEvent(new Event('scroll'));
+
+    const marked = await markSettledMiddleOfView(scroll);
+    const heightBefore = scroll.scrollHeight;
+    sendOlderPage();
+    await waitFor(() =>
+      expect(scroll.scrollHeight).toBeGreaterThan(heightBefore),
+    );
+    // The prompt that arrived is history, not one the reader sent: it pins nothing and the Feed stays where it was.
+    await expect(await driftWhileUntouched(marked)).toBeLessThan(2);
+    await expect(scrolledToEnd(scroll)).toBe(false);
   },
 };
 

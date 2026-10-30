@@ -100,6 +100,23 @@ export function markSettledMiddleOfView(
   }, settleWait);
 }
 
+// How long the Feed is watched for a scroll nobody asked for: the slide recorded in #1543 took about 1.5 seconds.
+const untouchedWindow = 2000;
+
+// The furthest a marked row moves while nothing touches the Feed.
+export async function driftWhileUntouched(mark: ViewMark): Promise<number> {
+  const until = performance.now() + untouchedWindow;
+  let furthest = 0;
+
+  while (performance.now() < until) {
+    await afterTwoFrames();
+    const drift = Math.abs(mark.element.getBoundingClientRect().top - mark.top);
+    furthest = Math.max(furthest, drift);
+  }
+
+  return furthest;
+}
+
 // The pill that says earlier rows are loading floats centred over the first row, so a row is pointed at near its leading edge, clear of it.
 const leadingInset = 8;
 

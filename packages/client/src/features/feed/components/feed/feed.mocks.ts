@@ -104,6 +104,24 @@ export const splitGroupRows: readonly SessionUpdate[] = [
   ...longRows.slice(-(pageSize - splitGroupRowsInTail)),
 ].map((row, index) => ({ ...row, position: index + 1 }));
 
+// How many rows sit above the newest page in the one-prompt Feed: one older page brings all of them, the prompt among them.
+const olderPromptPageSize = 40;
+
+const answersWithoutPrompts = longRows.filter(
+  (row) => row.sessionUpdate !== 'user_message',
+);
+
+/*
+ * One long Turn: the reader's prompt, then a page and more of answers. The Feed opens on a newest page
+ * that holds no prompt at all, so the only prompt reaches it from older history.
+ */
+export const olderPromptRows: readonly SessionUpdate[] = [
+  recordedUserMessage('agent-2', 'compaction'),
+  ...answersWithoutPrompts,
+]
+  .slice(0, pageSize + olderPromptPageSize)
+  .map((row, index) => ({ ...row, position: index + 1 }));
+
 export const splitGroupStepInTail = `Step ${splitGroupSize - 2}`;
 
 export const splitGroupLastStep = `Step ${splitGroupSize}`;

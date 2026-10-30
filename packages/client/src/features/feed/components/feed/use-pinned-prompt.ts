@@ -14,10 +14,18 @@ type FeedList = RefObject<LegendListRef | null>;
 // Whether a prompt keeps room below it, and whether it moves into place or is there already.
 type Room = 'none' | 'lands' | 'moves';
 
-// The newest prompt when the Feed opened, and whether its turn was still running.
+// The newest prompt when the Feed opened, whether its turn was still running, and every row it opened on.
 interface OpenedOn {
   key: string | undefined;
   live: boolean;
+  keys: ReadonlySet<string>;
+}
+
+// Where the newest prompt sits among the rows now, against what the Feed opened on.
+interface PromptPlace {
+  rows: readonly FeedRowData[];
+  index: number;
+  opened: OpenedOn;
 }
 
 const isPrompt = ({ entry }: FeedRowData): boolean =>
@@ -29,18 +37,44 @@ const isLive = ({ entry }: FeedRowData): boolean =>
 function openedOn(rows: readonly FeedRowData[]): OpenedOn {
   const prompt = rows.findLast(isPrompt);
 
-  return { key: prompt && rowKey(prompt), live: rows.some(isLive) };
+  return {
+    key: prompt && rowKey(prompt),
+    live: rows.some(isLive),
+    keys: new Set(rows.map(rowKey)),
+  };
 }
 
-// A prompt sent since the Feed opened moves into place; the one it opened on lands there while its turn runs, and keeps no room once settled.
-function roomOf(key: string, opened: OpenedOn): Room {
-  if (key !== opened.key) return 'moves';
+/*
+ * A prompt with a row the Feed opened on below it paged in from older history, however new it is to the
+ * list. A Turn longer than a page keeps its prompt back there, and the reader reading back to it never
+ * sent it here. A prompt they did send stands below every row the Feed opened on.
+ */
+const fromHistory = ({ rows, index, opened }: PromptPlace): boolean =>
+  rows.some((row, at) => at > index && opened.keys.has(rowKey(row)));
 
-  return opened.live ? 'lands' : 'none';
+// The prompt the Feed opened on lands in place while its turn runs, and keeps no room once settled.
+const roomAtOpen = (opened: OpenedOn): Room => (opened.live ? 'lands' : 'none');
+
+// A prompt sent since the Feed opened moves into place; one that paged in from history keeps no room.
+function roomSince(place: PromptPlace): Room {
+  return fromHistory(place) ? 'none' : 'moves';
 }
 
-const roomFor = (prompt: FeedRowData | undefined, opened?: OpenedOn): Room =>
-  prompt && opened ? roomOf(rowKey(prompt), opened) : 'none';
+function roomOf(key: string, place: PromptPlace): Room {
+  return key === place.opened.key ? roomAtOpen(place.opened) : roomSince(place);
+}
+
+function roomFor(
+  rows: readonly FeedRowData[],
+  index: number,
+  opened?: OpenedOn,
+): Room {
+  const prompt = rows[index];
+
+  if (!prompt || !opened) return 'none';
+
+  return roomOf(rowKey(prompt), { rows, index, opened });
+}
 
 // What the Feed opened on, read once from its first rows.
 function useOpenedOn(rows: readonly FeedRowData[]): OpenedOn | undefined {
@@ -70,6 +104,7 @@ function useScrollIntoPlace(list: FeedList, animated: boolean): OnReady {
  * answer, so the answer writes downward into that room and the Feed never scrolls while it streams.
  * It scrolls up into place once its answer's rows have measured. A turn still running when the Feed
  * opens lands in place without motion; a settled one keeps no room, so the Feed ends above the Composer.
+ * A prompt that pages in above, from a Turn longer than a page, is history and pins nothing.
  */
 export function usePinnedPrompt(
   list: FeedList,
@@ -77,7 +112,7 @@ export function usePinnedPrompt(
 ): PinnedPrompt {
   const anchorIndex = rows.findLastIndex(isPrompt);
   const anchorOffset = useFeedTopClearance();
-  const room = roomFor(rows[anchorIndex], useOpenedOn(rows));
+  const room = roomFor(rows, anchorIndex, useOpenedOn(rows));
   const reduced = useReducedMotionNow();
   const onReady = useScrollIntoPlace(list, room === 'moves' && !reduced);
 
