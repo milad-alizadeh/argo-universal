@@ -1,3 +1,4 @@
+import type { ChildProcess } from 'node:child_process';
 import { type ElectronApplication } from '@playwright/test';
 import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import { readServerAddress } from '@repo/engine/server-runtime';
@@ -20,12 +21,18 @@ export type ElectronInput = {
   use: (app: App) => Promise<void>;
 };
 
+type LaunchedElectron = {
+  application: ElectronApplication;
+  // Read at launch: Playwright cannot hand it out once the App has quit.
+  child: ChildProcess;
+};
+
 async function cleanElectron(
   server: DesktopServer,
-  application: ElectronApplication | undefined,
+  launched: LaunchedElectron | undefined,
 ): Promise<void> {
   try {
-    await closeElectron(application, server.mode);
+    await closeElectron(launched, server.mode);
   } finally {
     await stopDesktopServer(server);
   }
@@ -42,6 +49,15 @@ async function assertSupervisorStopped(server: DesktopServer): Promise<void> {
   );
 }
 
+async function launch(
+  input: ElectronInput,
+  server: DesktopServer,
+): Promise<LaunchedElectron> {
+  const application = await launchElectron(input, server);
+
+  return { application, child: application.process() };
+}
+
 export async function useElectronApp(input: ElectronInput): Promise<void> {
   const server = await prepareDesktopServer({
     directory: input.directory,
@@ -49,25 +65,25 @@ export async function useElectronApp(input: ElectronInput): Promise<void> {
     mode: input.mode,
   });
 
-  let application: ElectronApplication | undefined;
+  let launched: LaunchedElectron | undefined;
 
   try {
-    application = await launchElectron(input, server);
-    await input.use(await appForElectron(input, server, application));
+    launched = await launch(input, server);
+    await input.use(await appForElectron(input, server, launched.application));
   } finally {
-    await cleanElectron(server, application);
+    await cleanElectron(server, launched);
   }
 
   await assertSupervisorStopped(server);
 }
 
 async function closeElectron(
-  application: ElectronApplication | undefined,
+  launched: LaunchedElectron | undefined,
   mode: SupervisorMode,
 ): Promise<void> {
-  if (!application || hasExited(application.process())) return;
+  if (!launched || hasExited(launched.child)) return;
 
-  await shutdownElectron(application, mode);
+  await shutdownElectron(launched.application, mode);
 }
 
 async function shutdownElectron(

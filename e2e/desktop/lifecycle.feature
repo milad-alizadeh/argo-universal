@@ -16,6 +16,9 @@ Feature: Desktop attention and quit
       | platform |
       | macOS    |
 
+  # Manual-only on a Mac: the native Keep / Stop prompt is clicked through macOS accessibility, so it takes focus
+  # (@needs-focus, skipped unless ARGO_E2E_FOCUS=1) and cannot run on Linux CI (@mac-only). CI never runs it.
+  # Run it by hand: ARGO_E2E_FOCUS=1 pnpm exec turbo run test:electron --filter=@repo/e2e
   @supervisor @owned-supervisor @needs-focus
   Scenario Outline: Quitting an App that started its Supervisor
     Given a wide Frame
