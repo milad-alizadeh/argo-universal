@@ -8,7 +8,10 @@ export interface NetworkAccessDeps {
 
 const State = z.object({ enabled: z.boolean() });
 
-// Server-Device-only (ADR-0022, ADR-0045): deciding who may reach the Server is the owner's alone, so `serverDeviceProcedure` refuses a Paired Device here and the App's hidden switch is not the check.
+/*
+ * Both halves of the switch are Server-Device-only. Deciding who may reach the Server is the owner's alone (ADR-0045), and ADR-0022's reason is the Server Device's configuration being no business of a Paired Device's, which reading it is as much as changing it.
+ * So the Server refuses the question as well as the change, rather than leaving the App's hidden switch as the check. ADR-0045 names this setting and keep-running-after-quit as one pair, and `system.keepRunning` is gated the same way.
+ */
 export const createNetworkRouter = routerFactory((deps: NetworkAccessDeps) =>
   router({
     localAccess: serverDeviceProcedure

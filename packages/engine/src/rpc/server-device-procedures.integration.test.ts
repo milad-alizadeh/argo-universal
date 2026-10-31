@@ -47,18 +47,28 @@ it('keeps the Local network access switch out of a Paired Device’s reach', asy
   });
 });
 
-it('lets the Server Device alone say whether the Server keeps running', async (): Promise<void> => {
+it('tells a Paired Device neither whether the Server keeps running nor otherwise', async (): Promise<void> => {
   const { host, paired } = await serverWithPairedDevice();
 
+  await expect(paired.caller.system.keepRunning.query()).rejects.toMatchObject(
+    forbidden,
+  );
   await expect(
     paired.caller.system.setKeepRunning.mutate({ enabled: true }),
   ).rejects.toMatchObject(forbidden);
   expect(await host.caller.system.setKeepRunning({ enabled: true })).toEqual({
     enabled: true,
   });
-  expect(await paired.caller.system.keepRunning.query()).toEqual({
-    enabled: true,
-  });
+  expect(await host.caller.system.keepRunning()).toEqual({ enabled: true });
+});
+
+// The Server Device's own settings are the narrow list; what a Paired Device is for still answers it.
+it('still tells a Paired Device about the Server it is paired to', async (): Promise<void> => {
+  const { host, paired } = await serverWithPairedDevice();
+
+  expect(await paired.caller.system.info.query()).toEqual(
+    await host.caller.system.info(),
+  );
 });
 
 it('answers a Paired Device’s Agents and Projects calls as it answers the Server Device’s', async (): Promise<void> => {
