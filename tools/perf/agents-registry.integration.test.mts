@@ -30,5 +30,10 @@ it('reads the catalog size back from the file the Server starts from', async () 
 it('refuses a Server still holding the scripted registry', async () => {
   await expect(
     requireCatalog(await registryFile(publishedRegistry)),
-  ).rejects.toThrow(/claims 200 Agents.*lists 4/u);
+  ).rejects.toThrow(
+    new RegExp(
+      `claims ${agentCount} Agents.*lists ${publishedRegistry.agents.length}`,
+      'u',
+    ),
+  );
 });
