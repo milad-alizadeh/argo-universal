@@ -30,7 +30,9 @@ export function DeviceListScreen(): React.JSX.Element {
 function ServerDeviceList(): React.JSX.Element {
   const { onOpen, ...sheet } = usePairDevice();
 
-  return <DeviceListView {...useLocalNetworkAccess()} {...pairing(onOpen, sheet)} />;
+  return (
+    <DeviceListView {...useLocalNetworkAccess()} {...pairing(onOpen, sheet)} />
+  );
 }
 
 type Pairing = Pick<
