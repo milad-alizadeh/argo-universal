@@ -12,8 +12,8 @@ import type { Activity, Probe, Soak } from './soak-state.mts';
 
 const stopName = 'Stop';
 
-// How long a cancellation waits for the Stop button before the cycle records that it could not cancel.
-const stopAppearsMs = 5000;
+// How long one press waits for Stop to appear and take the click before the cycle records that the Turn finished first.
+const stopPressWindowMs = 5000;
 
 async function timedOpen(page: Page, soak: Soak): Promise<number> {
   const { longSessionTitle } = soak.server;
@@ -65,7 +65,7 @@ async function finishedFirst(stop: StopButton, error: Error): Promise<false> {
 
 // One press that waits for Stop and clicks it, so a Turn finishing between a check and the click cannot fail the soak.
 const pressStop = (stop: StopButton): Promise<boolean> =>
-  stop.click({ timeout: stopAppearsMs }).then(
+  stop.click({ timeout: stopPressWindowMs }).then(
     () => true,
     (error: Error) => finishedFirst(stop, error),
   );
