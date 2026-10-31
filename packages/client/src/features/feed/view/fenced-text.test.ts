@@ -26,6 +26,26 @@ describe('unfencedText', () => {
     );
   });
 
+  it('takes the text out of a fence closed by a longer one', () => {
+    expect(unfencedText('```console\nfoo\nbar\n````')).toBe('foo\nbar');
+    expect(unfencedText('```console\nfoo\nbar\n`````')).toBe('foo\nbar');
+    expect(unfencedText('```\nfoo\n``````````')).toBe('foo');
+  });
+
+  it('keeps a shorter fence-like line inside a longer fence', () => {
+    expect(unfencedText('````\nfoo\n```\nbar\n````')).toBe('foo\n```\nbar');
+  });
+
+  it('leaves text whose last line only ends in backticks', () => {
+    expect(unfencedText('```console\nfoo\nbar```')).toBe(
+      '```console\nfoo\nbar```',
+    );
+  });
+
+  it('takes an empty fence to empty text', () => {
+    expect(unfencedText('```\n```')).toBe('');
+  });
+
   it('keeps an empty line the output ends with', () => {
     expect(unfencedText('```console\nfirst\n\n```')).toBe('first\n');
   });
