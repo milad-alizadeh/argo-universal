@@ -1,4 +1,3 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 import {
@@ -31,11 +30,11 @@ function phoneAttachItem(
   close: AttachMenuProps['close'],
 ): React.JSX.Element {
   return (
-    <Button
+    <FieldGroup.Link
       key={item.label}
-      label={item.label}
-      icon={item.icon}
-      variant="text"
+      title={item.label}
+      leading={item.icon}
+      action
       disabled={!item.onPress}
       onPress={() => close(item.onPress)}
     />

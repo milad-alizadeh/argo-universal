@@ -25,6 +25,14 @@ export const drawerRootOptions: DrawerNavigationOptions = {
   swipeEnabled: edgeSwipeOpens,
 };
 
+/*
+ * A section's stack is mounted with the Frame, not when the section is first shown. Expo Router builds the stack of a
+ * section that is not mounted when a link arrives with only the linked page in it (`withAnchor` is off for a link from
+ * outside), so a page opened by a deep link had no root below it and no Back. A mounted stack holds its root, and the
+ * link pushes the page over it.
+ */
+const mountedWithFrame = { lazy: false };
+
 // Each section's options on the Frame's drawer: only its root keeps the edge swipe that opens the drawer.
 export const drawerScreenOptions =
   (framed: boolean) =>
@@ -32,5 +40,7 @@ export const drawerScreenOptions =
     route,
   }: {
     route: DescriptorRouteProp<ParamListBase>;
-  }): DrawerNavigationOptions =>
-    framed || !atSectionRoot(route) ? stackOwnsHeader : drawerRootOptions;
+  }): DrawerNavigationOptions => ({
+    ...mountedWithFrame,
+    ...(framed || !atSectionRoot(route) ? stackOwnsHeader : drawerRootOptions),
+  });

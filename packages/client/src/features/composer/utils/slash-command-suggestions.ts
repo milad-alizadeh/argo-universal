@@ -4,10 +4,9 @@ import type {
   SlashCommandEntry,
   SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
-import type { IconName } from '@repo/kit/symbols/icon-names';
 
 // The Agent reports no kind for a command (its `_meta` carries one only to JetBrains AIR clients), so every command draws this glyph.
-export const slashCommandIcon: IconName = 'code';
+export const slashCommandIcon = 'code';
 
 const nameStartsWith = (command: SlashCommand, needle: string): boolean =>
   command.name.toLowerCase().startsWith(needle);
