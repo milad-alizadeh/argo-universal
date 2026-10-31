@@ -1,5 +1,13 @@
 import { Server } from 'node:http';
 import { networkInterfaces } from 'node:os';
+import {
+  type DiscoveredServer,
+  type Announced,
+  HeardServers,
+  discoveryProtocol,
+  discoveryServiceType,
+} from '@repo/contracts';
+import { Bonjour, type Browser, type Service } from 'bonjour-service';
 import { vi } from 'vitest';
 import { WebSocket } from 'ws';
 
@@ -85,3 +93,37 @@ export const closed = (socket: WebSocket): Promise<void> =>
   new Promise<void>((resolve): void => {
     socket.once('close', (): void => resolve());
   });
+
+const asAnnounced = (service: Service): Announced => ({
+  name: service.name,
+  txt: service.txt,
+  addresses: service.addresses ?? [],
+  port: service.port,
+});
+
+const browseArgo = (bonjour: Bonjour): Browser =>
+  bonjour.find({ type: discoveryServiceType, protocol: discoveryProtocol });
+
+// Another Device's mDNS browser, as an App on the same network runs one: told no address, it reports every Argo Server it hears.
+export function watchAnnouncedServers(
+  listener: (servers: readonly DiscoveredServer[]) => void,
+): () => void {
+  const bonjour = new Bonjour();
+  const heard = new HeardServers(listener);
+  const browser = browseArgo(bonjour);
+
+  browser.on('up', (service: Service): void =>
+    heard.up(service.fqdn, asAnnounced(service)),
+  );
+  browser.on('down', (service: Service): void => heard.down(service.fqdn));
+
+  return (): void => {
+    browser.stop();
+    bonjour.destroy();
+  };
+}
+
+// Every address this computer has, on any interface.
+export const ownAddresses = Object.values(networkInterfaces())
+  .flat()
+  .flatMap((entry) => (entry ? [entry.address] : []));
