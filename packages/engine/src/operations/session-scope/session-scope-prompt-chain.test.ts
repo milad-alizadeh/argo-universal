@@ -17,6 +17,23 @@ const cascade = (chains: PromptChains) => {
     (await scoped(promptTo(to), sessionCaller(from), scope)).outcome;
 };
 
+// Two Sessions prompting each other back and forth, with no user in it.
+const backAndForth = async (
+  send: (from: string, to: string) => Promise<string>,
+  hops: number,
+): Promise<string[]> => {
+  const outcomes: string[] = [];
+
+  for (let hop = 0; hop < hops; hop += 1)
+    outcomes.push(
+      await (hop % 2 === 0
+        ? send('caller', 'unrelated')
+        : send('unrelated', 'caller')),
+    );
+
+  return outcomes;
+};
+
 it('prompts the Session that started it, which delegation ran only the other way', async () => {
   expect(
     (await scoped(promptTo('caller'), sessionCaller('started'))).outcome,
@@ -27,16 +44,7 @@ it('prompts the Session that started it, which delegation ran only the other way
 });
 
 it('asks once a Prompt chain has run ten deep with no user in it', async () => {
-  const chains = new PromptChains();
-  const send = cascade(chains);
-  const outcomes: string[] = [];
-
-  for (let hop = 0; hop < 11; hop += 1)
-    outcomes.push(
-      await (hop % 2 === 0
-        ? send('caller', 'unrelated')
-        : send('unrelated', 'caller')),
-    );
+  const outcomes = await backAndForth(cascade(new PromptChains()), 11);
 
   expect(outcomes).toEqual([...Array.from({ length: 10 }, () => runs), asks]);
 });
@@ -45,19 +53,19 @@ it('starts the chain again when the user prompts the Session themselves', async 
   const chains = new PromptChains();
   const send = cascade(chains);
 
-  for (let hop = 0; hop < 10; hop += 1)
-    await (hop % 2 === 0
-      ? send('caller', 'unrelated')
-      : send('unrelated', 'caller'));
+  await backAndForth(send, 10);
 
   expect(await send('caller', 'unrelated')).toBe(asks);
   chains.cleared('unrelated');
   expect(await send('unrelated', 'caller')).toBe(runs);
 });
 
-it('leaves a Session answering the user one Prompt deep', async () => {
+it('leaves a Session the owner kept a Prompt from serving the chain it had', async () => {
   const chains = new PromptChains();
+  const send = cascade(chains);
 
-  expect(chains.next('caller')).toBe(1);
-  expect(chains.exceeded(1)).toBe(false);
+  await backAndForth(send, 4);
+
+  expect(await send('caller', 'foreign')).toBe(asks);
+  expect(chains.sentFrom('foreign')).toBe(1);
 });

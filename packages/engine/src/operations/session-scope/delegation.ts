@@ -32,13 +32,16 @@ type DelegationRules = {
   ) => Promise<OperationResult<Id>>;
 };
 
-// The reservation, whether the target is in the caller's reach, the Prompt chain behind this call, and the card to show otherwise.
+// The reservation, whether the target is in the caller's reach, the Prompt chain this call carries, and the card to show otherwise.
 type Delegated = {
   reserved: StartReservation;
-  owned: () => boolean;
-  chain: number;
+  inReach: () => boolean;
+  chain: PromptChain;
   card: OperationCard;
 };
+
+// The length this call carries, and the Session that serves it once the call is admitted.
+type PromptChain = { length: number; prompted: string | null };
 
 // What a Session may start and prompt, under the delegation limits and the Prompt chain (ADR-0044).
 export class Delegation {
@@ -79,11 +82,12 @@ export class Delegation {
   ): Delegated {
     const { target } = scopeTarget('session.new', input, caller);
     const start = { kind: 'new' as const, input, sessionId };
+    const prompted = input.prompt.length > 0 ? sessionId : null;
 
     return {
       reserved: this.starts.reserve(caller, start),
-      owned: () => this.coverage.inProject(caller, target),
-      chain: this.chainTo(caller, sessionId, input.prompt.length > 0),
+      inReach: () => this.coverage.inProject(caller, target),
+      chain: this.chainFrom(caller, prompted),
       card: startCard,
     };
   }
@@ -107,41 +111,43 @@ export class Delegation {
 
     return {
       reserved: this.starts.reserve(caller, { kind: 'prompt', sessionId }),
-      owned: () => this.coverage.mayPrompt(caller, target),
-      chain: this.chainTo(caller, sessionId, true),
+      inReach: () => this.coverage.mayPrompt(caller, target),
+      chain: this.chainFrom(caller, sessionId),
       card: promptCard,
     };
   }
-  /*
-   * The chain this call carries, which the Session it prompts then serves. It is counted before the Prompt is
-   * sent, so one the Agent is refused or a Hook drops still lengthens it: that can only make Argo ask sooner.
-   */
-  private chainTo(
+  // The chain this call carries, read from the Turn the caller is serving.
+  private chainFrom(
     caller: SessionCaller,
-    sessionId: string,
-    prompts: boolean,
-  ): number {
-    const chain = this.ports.chains.next(caller.sessionId);
-
-    if (prompts) this.ports.chains.received(sessionId, chain);
-
-    return chain;
+    prompted: string | null,
+  ): PromptChain {
+    return { length: this.ports.chains.sentFrom(caller.sessionId), prompted };
   }
   private admit<Result>(
     context: ScopedRun,
-    { reserved, owned, chain, card }: Delegated,
+    { reserved, inReach, chain, card }: Delegated,
     invoke: () => Promise<Result>,
   ): Promise<Result> {
     const within = (): boolean =>
-      !reserved.exceedsLimits && !this.ports.chains.exceeded(chain);
+      !reserved.exceedsLimits && !this.ports.chains.exceeded(chain.length);
 
     const chosen = (): OperationCard | undefined =>
-      cardUnless(owned() && within(), card);
+      cardUnless(inReach() && within(), card);
 
-    return confirmed(
-      context,
-      { card: chosen, release: reserved.release },
-      invoke,
+    return confirmed(context, { card: chosen, release: reserved.release }, () =>
+      this.serving(chain, invoke),
     );
+  }
+  /*
+   * The Prompt is going now, so the Session it reaches serves its chain from here. A Prompt the owner refused or
+   * the scope turned back never gets this far, and leaves that Session serving the chain it is serving already.
+   */
+  private serving<Result>(
+    { length, prompted }: PromptChain,
+    invoke: () => Promise<Result>,
+  ): Promise<Result> {
+    if (prompted !== null) this.ports.chains.serving(prompted, length);
+
+    return invoke();
   }
 }
