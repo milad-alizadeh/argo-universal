@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { composerUsable, feedShows } from './driver-wait.mts';
 import { latestMessage } from './elapsed-scenario.mts';
-import { streamedPrompt, turnTimeoutMilliseconds } from './feed-scenarios.mts';
+import { turnTimeoutMilliseconds } from './feed-scenarios.mts';
+import { soakPrompt } from './held-prompt.mts';
 import {
   feedScroll,
   openSession,
@@ -65,7 +66,7 @@ async function cancelTurn(page: Page, soak: Soak): Promise<void> {
 
 async function turn(page: Page, soak: Soak, cancel: boolean): Promise<void> {
   await composerUsable(page);
-  await page.getByRole('textbox', { name: 'Message' }).fill(streamedPrompt);
+  await page.getByRole('textbox', { name: 'Message' }).fill(soakPrompt(cancel));
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   soak.activity.turns += 1;
 
