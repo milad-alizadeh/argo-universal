@@ -82,6 +82,7 @@
     "check:plugin-kit": "tsx tools/generate-plugin-kit.mts --check"
   },
   "dependencies": {
+    "@noble/hashes": "catalog:",
     "@repo/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"

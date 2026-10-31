@@ -1,22 +1,21 @@
-import { createHash } from 'node:crypto';
 import {
-  discoveryKeyField,
+  discoveryKeyHashField,
   discoveryProtocol,
   discoveryServiceType,
+  keyHashOf,
+  keyHostLabelOf,
 } from '@repo/contracts';
 import type makeMdns from 'multicast-dns';
 
 export interface Announcement {
   // The computer's name, what an App lists the Server by.
   name: string;
-  // The Server's static public key; an App recognises its Server by it even after a rename.
+  // The Server's static public key. Only its hash is announced, so an App that already knows the key recognises its Server even after a rename, and a Device that does not know it learns nothing.
   key: string;
   port: number;
 }
 
 const labelLimit = 50;
-
-const hostDigits = 12;
 
 // A DNS label holds no dot and is short.
 const labelOf = (name: string): string =>
@@ -40,9 +39,7 @@ export class Identity {
   ) {
     this.instance = `${labelOf(announcement.name)}.${listing}`;
 
-    const digest = createHash('sha256').update(announcement.key).digest('hex');
-
-    this.host = `argo-${digest.slice(0, hostDigits)}.local`;
+    this.host = `argo-${keyHostLabelOf(announcement.key)}.local`;
   }
 
   // Everything an App needs to reach the Server from this interface, and only this interface's address: another subnet's address is no use to the phone asking.
@@ -66,7 +63,11 @@ export class Identity {
   }
 
   private txt(): Buffer[] {
-    return [Buffer.from(`${discoveryKeyField}=${this.announcement.key}`)];
+    return [
+      Buffer.from(
+        `${discoveryKeyHashField}=${keyHashOf(this.announcement.key)}`,
+      ),
+    ];
   }
 }
 
