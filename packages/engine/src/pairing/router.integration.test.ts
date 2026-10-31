@@ -94,11 +94,25 @@ it('leaves a declined Device off the Devices list and with no way back in', asyn
   ).rejects.toMatchObject({ refusal: 'ticket-required' });
 });
 
-it('declines nothing when asked for the Server Device, so the owner cannot lock themselves out', async (): Promise<void> => {
+it('declines nothing when asked for a Device that is not asking to pair', async (): Promise<void> => {
   const { caller } = await startEngineTestHost();
   const [serverDevice] = await caller.devices.list();
 
-  await caller.pairing.decline({ deviceId: serverDevice?.id ?? '' });
+  await expect(
+    caller.pairing.decline({ deviceId: serverDevice?.id ?? '' }),
+  ).rejects.toThrow('That Device is not asking to pair');
 
   expect(await caller.devices.list()).toEqual([serverDevice]);
+});
+
+it('declines nothing twice, so No answers one prompt and unpairs nothing after it', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const { invite } = await host.caller.pairing.mint();
+  const device = await connectAsDevice(host, { ticket: invite.ticket });
+
+  await host.caller.pairing.decline({ deviceId: device.deviceId });
+
+  await expect(
+    host.caller.pairing.decline({ deviceId: device.deviceId }),
+  ).rejects.toThrow('That Device is not asking to pair');
 });

@@ -7,16 +7,27 @@ import type { PairingRegistration } from '@repo/contracts';
  */
 export class PairingRegistrations {
   private readonly waiting: PairingRegistration[] = [];
+  private readonly asking = new Set<string>();
   private readonly arrivals = new EventEmitter<{ registered: [] }>();
 
   public record(registration: PairingRegistration): void {
     this.waiting.push(registration);
+    this.asking.add(registration.deviceId);
     this.arrivals.emit('registered');
+  }
+
+  /*
+   * The owner answering the prompt about one Device, which that Device's registration does not outlive.
+   * It says whether there was a prompt to answer at all, so that answering No stays an answer to this sheet's question rather than a way to unpair any Device the caller can name (ADR-0045).
+   */
+  public answer(deviceId: string): boolean {
+    return this.asking.delete(deviceId);
   }
 
   // Forgets what the sheet has already asked about; a sheet that opens later starts from the Devices list, not from a prompt about a Device the owner has answered for.
   public clear(): void {
     this.waiting.length = 0;
+    this.asking.clear();
   }
 
   public async *stream(

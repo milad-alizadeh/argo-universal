@@ -89,10 +89,21 @@ const deviceRouter = routerFactory((deps: PairingDeps) =>
       .input(Declined)
       .output(z.void())
       .mutation(async ({ input }): Promise<void> => {
-        await forgetPairedDevice(deps.databaseWriter, input.deviceId);
+        await declined(deps, input.deviceId);
       }),
   }),
 );
+
+// No to a question nobody asked is not an answer: a Device the sheet is not prompting about keeps its place, so this stays the prompt's No and never a way to unpair whatever Device the caller can name.
+async function declined(deps: PairingDeps, deviceId: string): Promise<void> {
+  if (!deps.registrations.answer(deviceId))
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'That Device is not asking to pair',
+    });
+
+  await forgetPairedDevice(deps.databaseWriter, deviceId);
+}
 
 /*
  * Minting on demand is what makes possession of a live Ticket the owner's consent, since nothing else can ask for one, and it is why the "wants to pair" prompt belongs with the open sheet rather than with the handshake.
