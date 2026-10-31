@@ -1,5 +1,8 @@
 import { afterAll, beforeEach } from 'vitest';
 import { cdp, page, server } from 'vitest/browser';
+import { installShardProbe } from './shard-probe';
+
+installShardProbe();
 
 afterAll(async () => {
   await cdp().send('HeapProfiler.collectGarbage');
