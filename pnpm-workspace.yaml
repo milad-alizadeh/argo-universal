@@ -187,6 +187,7 @@ catalog:
   "@babel/types": 7.29.8
   expo-image: ~58.0.16
   "@modelcontextprotocol/sdk": 1.32.2
+  '@noble/hashes': 2.4.0
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict

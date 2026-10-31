@@ -1,5 +1,6 @@
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 import { z } from 'zod';
-import { sha256 } from './sha256';
 
 // A Server announces itself as `_argo._tcp` while Local network access is on (ADR-0045). The type is declared in the App's iOS config too.
 export const discoveryServiceType = 'argo';
@@ -11,18 +12,24 @@ export const discoveryKeyHashField = 'keyhash';
 
 const keyHashBytes = 16;
 
+// One digest of the key, the source of everything an announcement derives from it, so the Server and the App cannot disagree.
+const keyDigest = (publicKey: string): Uint8Array =>
+  sha256(utf8ToBytes(publicKey)).subarray(0, keyHashBytes);
+
 /*
  * What an announcement carries in place of the Server's static public key: the first 16 bytes of its SHA-256, base64url.
- * Both sides call this, so they cannot disagree. A matching hint only: the handshake, not this, proves who answers.
+ * A matching hint only: the handshake, not this, proves who answers.
  */
 export function keyHashOf(publicKey: string): string {
-  const digest = sha256(new TextEncoder().encode(publicKey));
-
-  return btoa(String.fromCharCode(...digest.subarray(0, keyHashBytes)))
+  return btoa(String.fromCharCode(...keyDigest(publicKey)))
     .replaceAll('+', '-')
     .replaceAll('/', '_')
     .replaceAll('=', '');
 }
+
+// The same digest in hex, for the Server's mDNS host label: base64url can hold `_`, which a DNS label cannot. 32 digits fit the 63 a label allows.
+export const keyHostLabelOf = (publicKey: string): string =>
+  bytesToHex(keyDigest(publicKey));
 
 // What an App sees of a Server on the local network. Unauthenticated: the handshake, not this record, proves who answers.
 export const DiscoveredServer = z.strictObject({

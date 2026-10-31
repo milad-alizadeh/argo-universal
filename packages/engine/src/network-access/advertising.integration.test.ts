@@ -6,6 +6,7 @@ import {
   ownAddresses,
   watchAnnouncedServers,
 } from '#mocks/engine-network';
+import { Identity } from './service-identity';
 
 const heardWithin = 8000;
 
@@ -67,20 +68,28 @@ describe.skipIf(!lanAddress)(
       expect(ownAddresses).toEqual(expect.arrayContaining(addresses));
     });
 
-    it('announces a hash of its key and never the key, so a Device that was not given the key learns nothing', async (): Promise<void> => {
-      const { caller } = await startEngineTestHost();
-      const key = await keyOf(caller);
-      const network = browseTheNetwork();
+    it('puts nothing derived from its key on the wire but the hash and the host label', (): void => {
+      const key = 'a-static-public-key';
 
-      await caller.network.setLocalAccess({ enabled: true });
-      await vi.waitFor(() => expect(network.announced(key)).toBeDefined(), {
-        timeout: heardWithin,
-      });
+      const records = new Identity(
+        { name: 'Studio Mac', key, port: 4000 },
+        '192.0.2.7',
+      ).records(120);
 
-      const record = JSON.stringify(network.announced(key));
+      const wire = records.flatMap((record) =>
+        Array.isArray(record.data)
+          ? record.data.map(String)
+          : [JSON.stringify(record.data)],
+      );
 
-      expect(record).toContain(keyHashOf(key));
-      expect(record).not.toContain(key);
+      expect(wire).toContain(`keyhash=${keyHashOf(key)}`);
+      expect(wire.filter((line) => line.includes(key))).toEqual([]);
+      expect(wire.filter((line) => line.startsWith('keyhash='))).toHaveLength(
+        1,
+      );
+      expect(wire.join('\n')).not.toContain(
+        Buffer.from(key).toString('base64'),
+      );
     });
 
     it('stays off the network while Local network access is off', async (): Promise<void> => {

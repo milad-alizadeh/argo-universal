@@ -1,9 +1,9 @@
-import { createHash } from 'node:crypto';
 import {
   discoveryKeyHashField,
   discoveryProtocol,
   discoveryServiceType,
   keyHashOf,
+  keyHostLabelOf,
 } from '@repo/contracts';
 import type makeMdns from 'multicast-dns';
 
@@ -16,8 +16,6 @@ export interface Announcement {
 }
 
 const labelLimit = 50;
-
-const hostDigits = 12;
 
 // A DNS label holds no dot and is short.
 const labelOf = (name: string): string =>
@@ -41,9 +39,7 @@ export class Identity {
   ) {
     this.instance = `${labelOf(announcement.name)}.${listing}`;
 
-    const digest = createHash('sha256').update(announcement.key).digest('hex');
-
-    this.host = `argo-${digest.slice(0, hostDigits)}.local`;
+    this.host = `argo-${keyHostLabelOf(announcement.key)}.local`;
   }
 
   // Everything an App needs to reach the Server from this interface, and only this interface's address: another subnet's address is no use to the phone asking.
