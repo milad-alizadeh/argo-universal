@@ -1,4 +1,4 @@
-import type { DiscoveredServer } from '@repo/contracts';
+import { type DiscoveredServer, keyHashOf } from '@repo/contracts';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
@@ -14,7 +14,7 @@ const settle = (milliseconds: number): Promise<void> =>
     setTimeout(resolve, milliseconds);
   });
 
-// A browser on the same network, told nothing about any Server; `announced` finds one by the key it was given at pairing.
+// A browser on the same network, told nothing about any Server; `announced` finds one by the key it was given at pairing, as the hash the announcement carries.
 interface Browser {
   announced: (key: string) => DiscoveredServer | undefined;
 }
@@ -30,7 +30,7 @@ function browseTheNetwork(): Browser {
 
   return {
     announced: (key: string): DiscoveredServer | undefined =>
-      heard.find((server) => server.key === key),
+      heard.find((server) => server.keyHash === keyHashOf(key)),
   };
 }
 
@@ -65,6 +65,22 @@ describe.skipIf(!lanAddress)(
 
       expect(addresses.length).toBeGreaterThan(0);
       expect(ownAddresses).toEqual(expect.arrayContaining(addresses));
+    });
+
+    it('announces a hash of its key and never the key, so a Device that was not given the key learns nothing', async (): Promise<void> => {
+      const { caller } = await startEngineTestHost();
+      const key = await keyOf(caller);
+      const network = browseTheNetwork();
+
+      await caller.network.setLocalAccess({ enabled: true });
+      await vi.waitFor(() => expect(network.announced(key)).toBeDefined(), {
+        timeout: heardWithin,
+      });
+
+      const record = JSON.stringify(network.announced(key));
+
+      expect(record).toContain(keyHashOf(key));
+      expect(record).not.toContain(key);
     });
 
     it('stays off the network while Local network access is off', async (): Promise<void> => {

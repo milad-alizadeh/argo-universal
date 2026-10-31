@@ -1,15 +1,16 @@
 import { createHash } from 'node:crypto';
 import {
-  discoveryKeyField,
+  discoveryKeyHashField,
   discoveryProtocol,
   discoveryServiceType,
+  keyHashOf,
 } from '@repo/contracts';
 import type makeMdns from 'multicast-dns';
 
 export interface Announcement {
   // The computer's name, what an App lists the Server by.
   name: string;
-  // The Server's static public key; an App recognises its Server by it even after a rename.
+  // The Server's static public key. Only its hash is announced, so an App that already knows the key recognises its Server even after a rename, and a Device that does not know it learns nothing.
   key: string;
   port: number;
 }
@@ -66,7 +67,11 @@ export class Identity {
   }
 
   private txt(): Buffer[] {
-    return [Buffer.from(`${discoveryKeyField}=${this.announcement.key}`)];
+    return [
+      Buffer.from(
+        `${discoveryKeyHashField}=${keyHashOf(this.announcement.key)}`,
+      ),
+    ];
   }
 }
 
