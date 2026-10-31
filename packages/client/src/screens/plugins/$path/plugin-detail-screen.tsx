@@ -22,20 +22,20 @@ interface PluginDetailScreenProps {
   path: readonly string[];
   // The Session the page opened for, such as from a Session header action.
   sessionId: string | undefined;
+  // The Project the page opened for, such as from a Project details row (ADR-0046).
+  projectId: string | undefined;
 }
 
 const unavailable = { title: 'This Plugin is not available' };
 
 // A Plugin page from the connected Server's list: blank until the list arrives; a Plugin the Server no longer lists says so and returns to Sessions.
-export function PluginDetailScreen({
-  path,
-  sessionId,
-}: PluginDetailScreenProps): React.JSX.Element {
-  const { section, loaded } = usePluginAt(pluginPath(path));
+export function PluginDetailScreen(
+  props: PluginDetailScreenProps,
+): React.JSX.Element {
+  const { section, loaded } = usePluginAt(pluginPath(props.path));
   useKeepSidebarWhileOpening();
 
-  if (section)
-    return <PluginPage section={section} path={path} sessionId={sessionId} />;
+  if (section) return <PluginPage {...props} section={section} />;
 
   return loaded ? <PluginUnavailable /> : <PluginLoading />;
 }
@@ -60,6 +60,7 @@ function PluginPage(props: PluginPageProps): React.JSX.Element {
     pluginId: section.pluginId,
     path: pluginPagePath(props.path),
     sessionId: props.sessionId,
+    projectId: props.projectId,
   });
 
   return (
