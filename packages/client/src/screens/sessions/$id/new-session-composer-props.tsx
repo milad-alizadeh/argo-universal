@@ -3,7 +3,11 @@ import type {
   ComposerProps,
   ComposerConfigurationProps,
 } from '#features/composer';
-import { SessionCallout, ConfigurationStatus } from '#features/sessions';
+import {
+  SessionCallout,
+  ConfigurationStatus,
+  newSessionQuestion,
+} from '#features/sessions';
 import { composerDraftProps } from './new-session-draft';
 import type { ReadySessionNewViewProps } from './session-new-view';
 
@@ -14,8 +18,13 @@ const calloutOf = ({
 }: ReadySessionNewViewProps): React.ReactNode =>
   callout && <SessionCallout key={String(opening)} {...callout} />;
 
+// A wide window already asks the question as the page's heading, so only a phone's empty field asks it.
+const placeholderOf = (wide: boolean): string | undefined =>
+  wide ? undefined : newSessionQuestion;
+
 export const promptComposerProps = (
   props: ReadySessionNewViewProps,
+  wide: boolean,
 ): ComposerProps => ({
   ...composerDraftProps(props),
   slashCommands: props.slashCommands,
@@ -23,9 +32,15 @@ export const promptComposerProps = (
   onAttachFiles: props.onAttachFiles,
   onSend: props.onSend,
   configuration: configurationOf(props),
-  placeholder: '',
+  placeholder: placeholderOf(wide),
   sendable: props.canOpen,
   callout: props.calloutInConfiguration ? undefined : calloutOf(props),
+  ...attachmentErrorOf(props),
+});
+
+const attachmentErrorOf = (
+  props: ReadySessionNewViewProps,
+): Pick<ComposerProps, 'error' | 'errorKey'> => ({
   error: props.attachmentError,
   errorKey: props.attachmentErrorKey,
 });

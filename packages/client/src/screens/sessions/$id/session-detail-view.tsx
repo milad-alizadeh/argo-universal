@@ -26,9 +26,9 @@ import {
   type TerminalSignInProps,
 } from '#features/sessions';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
-import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
+import { BlankSession } from './blank-session';
 import { composerUnderQuestion } from './composer-under-question';
 import { sessionWorkbench } from './sections/session-sections';
 import {
@@ -61,6 +61,8 @@ export type SessionDetailViewProps =
   | { state: 'opening' }
   // The Session couldn't load or open; the reason is the Server's, when it gave one.
   | { state: 'failed'; reason?: string }
+  // The Server has no Session with the id: the page says so and leads back to the Sessions list.
+  | { state: 'missing'; onLeave: () => void }
   | ({ state: 'open' } & OpenSessionViewProps);
 
 // A failed Session stays on its blank opening page: the toast says why, and the Session retries when the Connection reopens.
@@ -85,7 +87,7 @@ export function SessionDetailView(
 
   if (props.state === 'open') return <OpenSessionView {...props} />;
 
-  return <Screen edges={['bottom']}>{null}</Screen>;
+  return <BlankSession {...props} />;
 }
 
 // The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.

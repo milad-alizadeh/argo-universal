@@ -32,6 +32,10 @@ export function decodeOpenFailure(
 const unanswered = (cause: unknown): boolean =>
   cause instanceof TRPCClientError && cause.shape === undefined;
 
+// The Server answered that no Session has the id: a link to a deleted Session, or a mistyped one.
+export const sessionMissing = (cause: unknown): boolean =>
+  cause instanceof TRPCClientError && cause.data?.code === 'NOT_FOUND';
+
 /*
  * The Connection dropped the call: it was down when the call failed with no answer. A call
  * that fails with no answer while the Connection is up failed, and shows Failed to Launch.

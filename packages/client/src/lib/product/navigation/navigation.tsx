@@ -52,6 +52,8 @@ export const slotDetailHref = (id: string): Href => ({
 interface NavigateOptions {
   // Swaps out the current page, so Back skips it.
   replace?: boolean;
+  // Opens the section's root list under the page when the section has no stack yet, so the page has a Back and ☰ and the section opens at its list later.
+  withAnchor?: boolean;
 }
 
 export type Navigate = (href: Href, options?: NavigateOptions) => void;
@@ -73,19 +75,16 @@ function swapsPage({ shown, wide }: Place, next: string): boolean {
   return wide && isPage(next) && samePageSection(shown, next);
 }
 
-function go(href: Href, swaps: boolean): void {
-  if (swaps) router.replace(href);
-  else router.navigate(href);
+function go(href: Href, place: Place, options: NavigateOptions): void {
+  if (options.replace || swapsPage(place, pathOf(href))) router.replace(href);
+  else router.navigate(href, { withAnchor: options.withAnchor });
 }
 
 // Opens a page: pushed over the shown one on a narrow window, beside the list on a wide one.
 export function useNavigate(): Navigate {
   const place = { shown: usePathname(), wide: useWide() };
 
-  return (href, options) => {
-    if (options?.replace) router.replace(href);
-    else go(href, swapsPage(place, pathOf(href)));
-  };
+  return (href, options) => go(href, place, options ?? {});
 }
 
 // The page a section opens at its root when its list sits beside the pages: a route of the section's stack, such as `accounts` or `[id]`, and that route's params.
