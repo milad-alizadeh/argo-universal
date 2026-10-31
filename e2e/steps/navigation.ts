@@ -6,9 +6,11 @@ import {
   onPhone,
   openConnection,
   phone,
+  serveOnePage,
   wide,
   wideFrame,
 } from './frame';
+import { sessionOpenTimeout } from './new-session';
 
 export async function expectSettingsList(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/settings$/);
@@ -16,6 +18,18 @@ export async function expectSettingsList(page: Page): Promise<void> {
     page.getByRole('heading', { name: 'Settings', level: 1 }),
   ).toBeVisible();
 }
+
+// A reload or a shared link opens New Session by its URL, so the Sessions list below it is built from that same path.
+When('I open New Session by its URL', async ({ page }): Promise<void> => {
+  await serveOnePage(page);
+  await page.goto('/sessions/new');
+  await expect(page).toHaveURL(/\/sessions\/new$/);
+  // The load opens its own Connection, as the App's first load did.
+  await expect(page.getByRole('button', { name: /^Project: / })).toBeVisible(
+    sessionOpenTimeout,
+  );
+  await expect(page.getByText('Reconnecting…')).toHaveCount(0);
+});
 
 When('the Frame becomes a phone Frame', async ({ page }): Promise<void> => {
   await page.setViewportSize(phone);

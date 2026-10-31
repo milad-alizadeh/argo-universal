@@ -28,6 +28,22 @@ export async function openAppOnce(page: Page): Promise<void> {
   if (isBlank(page)) await page.goto('/');
 }
 
+/*
+ * The web export is one page, and the test host answers a deeper path with Not Found: it serves that
+ * page instead, as a real host does, so a step can open the App on any URL.
+ */
+export async function serveOnePage(page: Page): Promise<void> {
+  const root = new URL('/', page.url()).href;
+
+  await page.route(
+    (url) => url.href.startsWith(root) && url.pathname !== '/',
+    (route) =>
+      route.request().resourceType() === 'document'
+        ? route.fallback({ url: root })
+        : route.fallback(),
+  );
+}
+
 export async function openConnection(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('link', { name: /^Connection(?:,|$)/ }).click();

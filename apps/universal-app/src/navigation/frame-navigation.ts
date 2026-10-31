@@ -61,12 +61,16 @@ function openSection(
   else openCore(destination);
 }
 
+/*
+ * The section is named, never handed its own pages: Expo Router 58 drops state an action carries and
+ * warns, and the section's pages are in the Frame's state already.
+ */
 function openCore({ drawer, section }: Destination): void {
   const route = drawer.state.routes.find((item) => item.name === section);
 
   if (route)
     drawer.navigation.dispatch({
-      ...CommonActions.navigate(route),
+      ...CommonActions.navigate({ name: route.name, params: route.params }),
       target: drawer.state.key,
     });
 }
