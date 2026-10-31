@@ -36,7 +36,7 @@ export function ScreenHeaderItems(
 
   return (
     <>
-      <Stack.Screen options={toolbarOptions(props, headerRight, leading)} />
+      <Stack.Screen options={toolbarOptions(headerRight, leading)} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
@@ -46,22 +46,20 @@ export function ScreenHeaderItems(
  * The toolbar's own title is a native TextView that grows little or not at all with the system font scale, while the
  * page's text and the root's heading do, so a pushed page's title is the kit's title Text, which scales with them.
  */
-const titleOf = (title: string | undefined) =>
-  function ToolbarTitle(): ReactElement {
-    return (
-      <Text role="title" accessibilityRole="heading" numberOfLines={1}>
-        {title}
-      </Text>
-    );
-  };
+function ToolbarTitle(props: { children?: string }): ReactElement {
+  return (
+    <Text role="title" accessibilityRole="heading" numberOfLines={1}>
+      {props.children}
+    </Text>
+  );
+}
 
 const toolbarOptions = (
-  props: ScreenHeaderInput,
   headerRight: () => ReactElement,
   leading: ReturnType<typeof drawerLeading>,
 ): NativeStackNavigationOptions => ({
   headerRight,
-  headerTitle: titleOf(props.title),
+  headerTitle: ToolbarTitle,
   ...leading,
 });
 

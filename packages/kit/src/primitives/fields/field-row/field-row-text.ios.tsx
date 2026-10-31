@@ -53,7 +53,7 @@ const subtitleModifiers = (
 // The Label's title view: the title and any subtitle under it, so the subtitle starts where the title does.
 function TitleLines(props: RowTitleProps): ReactElement {
   const warning = useTextColor(props.subtitleTone);
-  const title = <OneLine tone={props.tone}>{props.title}</OneLine>;
+  const title = <TitleText tone={props.tone}>{props.title}</TitleText>;
 
   if (!props.subtitle) return title;
 
@@ -68,15 +68,14 @@ function TitleLines(props: RowTitleProps): ReactElement {
 }
 
 // A row's title keeps to one line, truncating a long one, until the text is enlarged; then it wraps.
-function OneLine(props: {
+function TitleText(props: {
   tone: RowTextProps['tone'];
   children: string;
 }): ReactElement {
+  const lines = useEnlargedText() ? undefined : 1;
+
   return (
-    <NativeText
-      tone={props.tone}
-      numberOfLines={useEnlargedText() ? undefined : 1}
-    >
+    <NativeText tone={props.tone} numberOfLines={lines}>
       {props.children}
     </NativeText>
   );
