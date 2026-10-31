@@ -100,11 +100,8 @@ export const NavigatesLinkRoute: Story = {
   },
 };
 
-/*
- * A link the page already carries in its Screen's caption: the field draws it wherever the caption does not, and stands
- * down where the caption has it.
- */
-const captionedLink: Story = {
+// A linked field is the page's one carrier of that link, so it draws at every width.
+const linkedField: Story = {
   args: {
     title: 'Details',
     children: [
@@ -119,36 +116,31 @@ const captionedLink: Story = {
         title="Repository"
         text={repoName}
         href="https://example.com/repo"
-        whenNarrow
       />,
     ],
   },
 };
 
-export const NarrowKeepsTheCaptionsLink: Story = {
-  ...captionedLink,
-  beforeEach: () => settleLayout('phone'),
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('link', { name: repoName })).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: 'Repository, argo-universal' }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: 'Status, Open' }),
-    ).toBeVisible();
-  },
+const drawsTheLink: Story['play'] = async ({ canvas }) => {
+  await expect(canvas.getByRole('link', { name: repoName })).toBeVisible();
+  await expect(
+    canvas.getByRole('group', { name: 'Repository, argo-universal' }),
+  ).toBeVisible();
+  await expect(
+    canvas.getByRole('group', { name: 'Status, Open' }),
+  ).toBeVisible();
 };
 
-export const WideLeavesTheCaptionsLinkOut: Story = {
-  ...captionedLink,
+export const NarrowDrawsTheLink: Story = {
+  ...linkedField,
+  beforeEach: () => settleLayout('phone'),
+  play: drawsTheLink,
+};
+
+export const WideDrawsTheLink: Story = {
+  ...linkedField,
   beforeEach: () => settleLayout('wide'),
-  play: async ({ canvas }) => {
-    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
-    await expect(canvas.queryByText(repoName)).not.toBeInTheDocument();
-    await expect(
-      canvas.getByRole('group', { name: 'Status, Open' }),
-    ).toBeVisible();
-  },
+  play: drawsTheLink,
 };
 
 export const UnsupportedLinkStaysText: Story = {
