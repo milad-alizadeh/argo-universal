@@ -1,10 +1,13 @@
 import path from 'node:path';
-import { startOwnServer } from '@repo/e2e/own-server';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import type { GroupRelease } from '@repo/process';
 import { seedDatabase } from './seed-database.mts';
 import type { SeedCounts } from './seed-dataset.mts';
-import { fixtureLauncher, type SeedLauncher } from './seed-launcher.mts';
+import {
+  fixtureLauncher,
+  type SeedLauncher,
+  type ServerProcess,
+} from './seed-launcher.mts';
 import {
   environmentSeedOptions,
   seedConfiguration,
@@ -29,11 +32,6 @@ export interface SeededServer extends SeedCounts {
   // Stops the Server, awaits `whileStopped`, then starts it again on the same port and data.
   restart: (whileStopped: () => Promise<void>) => Promise<void>;
 }
-
-export type ServerProcess = Pick<
-  Awaited<ReturnType<typeof startOwnServer>>,
-  'serverUrl' | 'httpUrl' | 'stop' | 'restart'
->;
 
 interface SeedOutcome {
   counts: SeedCounts;

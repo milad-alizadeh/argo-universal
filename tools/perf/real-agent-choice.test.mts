@@ -4,6 +4,12 @@ import { realAgentChoice } from './real-agent-choice.mts';
 const pin = 'model=cheapest,effort=low';
 
 describe('choosing the real Agent a perf run drives', () => {
+  it('keeps a value that contains its own equals sign', () => {
+    expect(
+      realAgentChoice({ agent: 'an-agent', options: 'model=a=b' })?.pin,
+    ).toEqual([{ configId: 'model', value: 'a=b' }]);
+  });
+
   it('drives no real Agent when no Agent is named', () => {
     expect(realAgentChoice({ agent: undefined, options: pin })).toBeUndefined();
   });

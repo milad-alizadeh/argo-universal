@@ -110,7 +110,8 @@ export async function newPinnedSession(
     projectId,
     agent: id,
     checkout: { type: 'main' },
-    configOptions: pin.map(({ configId, value }) => ({ configId, value })),
+    // Copied because the contract takes a mutable array, not because the shape differs.
+    configOptions: [...pin],
     prompt: [],
   });
 
@@ -132,12 +133,7 @@ const reportedOptions = (
     return options.length ? options : undefined;
   }, `Session ${sessionId} reported no Agent options`);
 
-/*
- * Pins the Session to the cheapest model at the lowest effort and proves it took: the Agent is
- * asked through the operation the App uses, then the Session's own `currentValue`s are read back.
- * A run whose read-back disagrees throws here, before it prompts, rather than billing the owner at
- * the adapter's default.
- */
+// Asks the Agent for each pinned option, through the operation the App's own controls use.
 async function applyPin(
   httpUrl: string,
   pin: readonly PinnedOption[],
@@ -152,7 +148,12 @@ async function applyPin(
     });
 }
 
-export async function pinCostOrFail(
+/*
+ * Pins the Session to the options the run named, and proves it took: the Agent is asked, then the
+ * Session's own `currentValue`s are read back. A run whose read-back disagrees throws here, before
+ * it prompts, rather than billing the owner at the adapter's default.
+ */
+export async function pinBeforePrompting(
   httpUrl: string,
   pin: readonly PinnedOption[],
   sessionId: string,

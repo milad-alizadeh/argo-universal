@@ -140,9 +140,10 @@ Session's own `currentValue`s, and the run throws before it prompts if any optio
 request that was accepted is not evidence the Agent took it, and a silent fall back to the default
 would bill the owner at the dearest model for frame timings that do not depend on the model at all.
 
-The harness names no Agent and no model of its own, because ADR-0004 keeps vendor names inside the
-vendor module. That is why the cheap pin is a knob the caller sets rather than a table of Agents and
-their cheapest models held here.
+The harness code names no Agent and no model of its own — ADR-0004 keeps vendor names inside the
+vendor module — which is why the cheap pin is a knob the caller sets rather than a table of Agents
+and their cheapest models held here. The names in this section are worked examples for the caller,
+not values the harness falls back to.
 
 **Isolation.** The run gets a fresh `ARGO_HOME` under `$TMPDIR` and always sets `ARGO_PROJECT_PATH`
 to a disposable git repository it creates there. Both are required, not defaults: the Engine seeds
@@ -160,6 +161,11 @@ provider for a reason that is not the App's. Each pass's rate is recorded in the
 `agent` condition — which names the Agent and the model it was pinned to rather than inheriting the
 fixture's wording. A pass in which nothing streamed fails: it measured scrolling over a still Feed,
 which the `feed` scenario already measures.
+
+The window opens once the Turn is demonstrably running — Stop on screen and the prompt in the Feed —
+not at the click. Opening it at the click would count the reader's own prompt row as output, so a
+Turn that streamed nothing would still read as output arriving, and the flicking could start before
+Stop had rendered, which ends the window before it began.
 
 **What it does not measure.** PF-17 asks for four things. This measures scroll frame times. Stream
 presentation delay, typing latency during output, and movement of the reading anchor while output

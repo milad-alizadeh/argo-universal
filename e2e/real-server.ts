@@ -37,7 +37,6 @@ export interface RealServer {
   port: number;
   serverUrl: string;
   httpUrl: string;
-  home: string;
   projectPath: string;
   stop: () => Promise<GroupRelease>;
   // Stops the Engine, awaits `whileStopped`, then starts it again on the same port, home and data.
@@ -140,21 +139,14 @@ export async function prepareRealProject(directory: string): Promise<string> {
   return projectPath;
 }
 
-/*
- * Starts a real Engine in `directory`, with its disposable home and the Project repository
- * `prepareRealProject` made there. It is startable more than once over the same home and data.
- */
+// Where the Engine is reachable, and the disposable paths it was given.
 const serverAddresses = (
   paths: ServerPaths,
   port: number,
-): Pick<
-  RealServer,
-  'port' | 'serverUrl' | 'httpUrl' | 'home' | 'projectPath'
-> => ({
+): Pick<RealServer, 'port' | 'serverUrl' | 'httpUrl' | 'projectPath'> => ({
   port,
   serverUrl: serverUrlFor(port),
   httpUrl: serverHttpUrl(port),
-  home: paths.home,
   projectPath: paths.projectPath,
 });
 
@@ -184,6 +176,10 @@ const realServer = (
   ...engineControls(paths, port, started),
 });
 
+/*
+ * Starts a real Engine in `directory`, with its disposable home and the Project repository
+ * `prepareRealProject` made there. It is startable more than once over the same home and data.
+ */
 export async function startRealServer(directory: string): Promise<RealServer> {
   const paths = serverPaths(directory);
   await requireProject(paths.projectPath);

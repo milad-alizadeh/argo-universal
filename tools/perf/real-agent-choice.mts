@@ -32,12 +32,15 @@ const refuse = (reason: string): never => {
   );
 };
 
+/*
+ * One `configId=value` pair. The value keeps any later `=`, because splitting on every one would
+ * pin a prefix of what the caller asked for and bill the owner for a model they did not name.
+ */
 function pinnedOption(pair: string): PinnedOption {
-  const [configId, value] = pair.split('=');
+  const at = pair.indexOf('=');
+  const option = { configId: pair.slice(0, at), value: pair.slice(at + 1) };
 
-  if (!configId || !value) return refuse(`has no value for ${pair}`);
-
-  return { configId, value };
+  return at > 0 && option.value ? option : refuse(`has no value for ${pair}`);
 }
 
 const duplicated = (pin: readonly PinnedOption[]): string | undefined => {

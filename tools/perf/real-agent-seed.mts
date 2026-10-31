@@ -4,7 +4,7 @@ import type { RealAgentChoice } from './real-agent-choice.mts';
 import {
   installRealAgent,
   newPinnedSession,
-  pinCostOrFail,
+  pinBeforePrompting,
   realProjectId,
 } from './real-agent-session.mts';
 import type { SeedLauncher } from './seed-launcher.mts';
@@ -34,7 +34,7 @@ async function pinnedTemplateSession(
   await installRealAgent(httpUrl, choice);
   const projectId = await realProjectId(httpUrl);
   const sessionId = await newPinnedSession(httpUrl, choice, projectId);
-  await pinCostOrFail(httpUrl, choice.pin, sessionId);
+  await pinBeforePrompting(httpUrl, choice.pin, sessionId);
 }
 
 const templateLauncher = (choice: RealAgentChoice) =>

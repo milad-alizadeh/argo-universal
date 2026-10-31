@@ -21,7 +21,7 @@ import {
   outputRate,
 } from './real-agent-output.mts';
 import { startRealAgentServer } from './real-agent-seed.mts';
-import { pinCostOrFail, sessionRevision } from './real-agent-session.mts';
+import { pinBeforePrompting, sessionRevision } from './real-agent-session.mts';
 import { keepFrameResult, plannedCases, type Result, run } from './results.mts';
 import { caseName } from './run-completeness.mts';
 import { longSessionId } from './seed-sessions.mts';
@@ -57,6 +57,9 @@ const suite = 'real-agent';
 
 // One line, and enough output to still be arriving after several flicks through the Feed.
 const livePrompt = 'List the numbers from 1 to 150, one per line.';
+
+// Enough of the prompt to find its own row in the Feed, however the row wraps or truncates it.
+const promptEcho = 'List the numbers from 1 to 150';
 
 // Far longer than this prompt takes, even at the heaviest CPU slowdown.
 const turnTimeoutMilliseconds = 180_000;
@@ -108,6 +111,25 @@ const stopButton = (page: Page): ReturnType<Page['getByRole']> =>
   page.getByRole('button', { name: 'Stop', exact: true });
 
 /*
+ * Sends the prompt and waits until the Turn is demonstrably running: Stop on screen, and the
+ * prompt itself in the Feed. Both have to be true before the window opens. Measuring from the
+ * click would count the reader's own prompt row as output, so `rows > 0` would hold for a Turn
+ * that streamed nothing; and flicking from the click can find Stop not yet rendered, which ends
+ * the window before it began and measures a still Feed.
+ */
+async function turnUnderway(page: Page): Promise<void> {
+  await stopButton(page).waitFor({
+    state: 'visible',
+    timeout: turnTimeoutMilliseconds,
+  });
+  await page
+    .getByTestId(feedScroll)
+    .getByText(promptEcho)
+    .first()
+    .waitFor({ timeout: turnTimeoutMilliseconds });
+}
+
+/*
  * Flicks the Feed for as long as the Turn is running, then stops: the measured window is the
  * streaming, not the still Feed after it. A flick pair outlasts a short Turn, so the window can
  * overrun the Turn's end by one pair, which the recorded rate accounts for.
@@ -124,21 +146,28 @@ async function scrollWhileStreaming(page: Page): Promise<void> {
   });
 }
 
-// Sends one prompt, scrolls the Feed while the answer streams, and records what arrived.
-async function promptAndScroll(page: Page, httpUrl: string): Promise<void> {
+// Sends one prompt, scrolls the Feed while the answer streams, and records what the Agent added.
+async function scrollThroughOutput(
+  page: Page,
+  httpUrl: string,
+): Promise<OutputRate> {
   const revisionBefore = await sessionRevision(httpUrl, longSessionId);
   const startedAt = Date.now();
-
-  await page.getByRole('textbox', { name: 'Message' }).fill(livePrompt);
-  await page.getByRole('button', { name: 'Send', exact: true }).click();
   await scrollWhileStreaming(page);
 
-  const rate = outputRate({
+  return outputRate({
     revisionBefore,
     revisionAfter: await sessionRevision(httpUrl, longSessionId),
     durationMs: Date.now() - startedAt,
   });
+}
 
+async function promptAndScroll(page: Page, httpUrl: string): Promise<void> {
+  await page.getByRole('textbox', { name: 'Message' }).fill(livePrompt);
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await turnUnderway(page);
+
+  const rate = await scrollThroughOutput(page, httpUrl);
   rates.push(rate);
   const failure = noOutputFailure(rate);
 
@@ -157,7 +186,7 @@ const liveScroll =
     await page.getByTestId(feedScroll).waitFor();
     await page.waitForTimeout(feedSettleMilliseconds);
     // Before the first prompt: the open Session, pinned and proved pinned.
-    await pinCostOrFail(server.httpUrl, chosen.pin, longSessionId);
+    await pinBeforePrompting(server.httpUrl, chosen.pin, longSessionId);
 
     return { session, once: () => promptAndScroll(page, server.httpUrl) };
   };
@@ -179,7 +208,6 @@ const declareScenarios = (chosen: RealAgentChoice): void => {
       const result = await measureScenario(page, chosen, planCase.cpu);
       await keepFrameResult(result, suite);
       expect(result.median.fps).toBeGreaterThan(0);
-      expect(rates.every(({ rows }) => rows > 0)).toBe(true);
     });
 };
 

@@ -1,8 +1,13 @@
 import { startOwnServer } from '@repo/e2e/own-server';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { fixtureAgentCondition } from './manifest.mts';
-import type { ServerProcess } from './seed.mts';
 import { withTemplateSession } from './template-session.mts';
+
+// All a seeded run needs of the Server it started, fixture or real.
+export type ServerProcess = Pick<
+  Awaited<ReturnType<typeof startOwnServer>>,
+  'serverUrl' | 'httpUrl' | 'stop' | 'restart'
+>;
 
 /*
  * How a seeded run gets its Server. Seeding is the same work either way — one real Session, cloned
