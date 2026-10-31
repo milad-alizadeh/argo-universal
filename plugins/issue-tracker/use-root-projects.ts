@@ -19,25 +19,40 @@ export function useRootProjects(
 ): RootProjects {
   const { value, error } = useAsync(deps.listProjects);
   const projects = value ?? [];
+  const project = chosenProject(projects, selectedId);
 
   return {
     projects,
-    project:
-      selectedId === undefined
-        ? projects[0]
-        : projects.find(({ id }) => id === selectedId),
-    message: projectsMessage(value, error),
+    project,
+    message: projectsMessage(value, error, selectedId),
   };
 }
+
+const chosenProject = (
+  projects: Project[],
+  selectedId: string | undefined,
+): Project | undefined =>
+  selectedId === undefined
+    ? projects[0]
+    : projects.find(({ id }) => id === selectedId);
 
 function projectsMessage(
   rows: Project[] | undefined,
   error: string | undefined,
+  selectedId: string | undefined,
 ): string {
   if (error !== undefined) return 'Could not load Projects.';
 
-  return rows ? loadedMessage(rows) : 'Loading Projects…';
+  return rows ? loadedMessage(rows, selectedId) : 'Loading Projects…';
 }
 
-const loadedMessage = (rows: Project[]): string =>
-  rows.length === 0 ? 'No Projects yet.' : loadingIssues;
+function loadedMessage(
+  rows: Project[],
+  selectedId: string | undefined,
+): string {
+  if (rows.length === 0) return 'No Projects yet.';
+
+  return chosenProject(rows, selectedId) ? loadingIssues : goneMessage;
+}
+
+const goneMessage = 'This Project no longer exists.';
