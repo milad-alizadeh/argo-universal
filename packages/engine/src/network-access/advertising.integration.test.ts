@@ -10,6 +10,8 @@ import { Identity } from './service-identity';
 
 const heardWithin = 8000;
 
+const computerName = 'Studio Mac';
+
 const settle = (milliseconds: number): Promise<void> =>
   new Promise<void>((resolve): void => {
     setTimeout(resolve, milliseconds);
@@ -47,7 +49,7 @@ describe.skipIf(!lanAddress)(
   () => {
     it('announces itself by name once Local network access is on, with no address given to the browser', async (): Promise<void> => {
       const { caller, url } = await startEngineTestHost({
-        discoveryName: 'Studio Mac',
+        discoveryName: computerName,
       });
 
       const key = await keyOf(caller);
@@ -59,7 +61,7 @@ describe.skipIf(!lanAddress)(
         timeout: heardWithin,
       });
       expect(network.announced(key)).toMatchObject({
-        name: 'Studio Mac',
+        name: computerName,
         port: Number(new URL(url).port),
       });
       const { addresses } = network.announced(key) ?? { addresses: [] };
@@ -72,7 +74,7 @@ describe.skipIf(!lanAddress)(
       const key = 'a-static-public-key';
 
       const records = new Identity(
-        { name: 'Studio Mac', key, port: 4000 },
+        { name: computerName, key, port: 4000 },
         '192.0.2.7',
       ).records(120);
 
