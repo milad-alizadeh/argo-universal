@@ -1,6 +1,8 @@
+import type { ProjectInfo } from '@repo/contracts';
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
 import canvasScene from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
+import { worktreeProject } from '../../../../features/settings/components/settings-pages.mocks';
 import type { PluginSlotContribution } from '../../../../lib/product/plugin-registry';
 
 const row = (key: string, title: string): WireNode => ({
@@ -61,4 +63,10 @@ export const codeMapContribution: Omit<PluginSlotContribution, 'onEvent'> = {
   pluginId: 'code-map',
   name: 'Code Map',
   root: codeMapRoot,
+};
+
+// A Project whose folder path is as long as a deep checkout's.
+export const longPathProject: ProjectInfo = {
+  ...worktreeProject,
+  path: '/Users/milad/Developer/clients/acme-corporation/platform/services/billing-and-invoicing/checkout-worktree',
 };

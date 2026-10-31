@@ -11,7 +11,10 @@ import {
   chosenAccounts,
   unchosenAccounts,
 } from './project-detail-accounts-fixtures';
-import { pluginContributions } from './project-detail-plugins-fixtures';
+import {
+  longPathProject,
+  pluginContributions,
+} from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -65,16 +68,10 @@ export const OffersNoUnbuiltChanges: Story = {
   },
 };
 
-// #1725: beside a long value the title keeps its width, so it is never cut down to a letter.
+// Beside a long value the title keeps its width, so it is never cut down to a letter.
 export const ALongPathLeavesTheTitleItsFullWidth: Story = {
   args: {
-    project: {
-      status: 'loaded',
-      project: {
-        ...worktreeProject,
-        path: '/Users/milad/Developer/clients/acme-corporation/platform/services/billing-and-invoicing/checkout-worktree',
-      },
-    },
+    project: { status: 'loaded', project: longPathProject },
   },
   play: async ({ canvas }) => {
     const title = await canvas.findByText('Path');

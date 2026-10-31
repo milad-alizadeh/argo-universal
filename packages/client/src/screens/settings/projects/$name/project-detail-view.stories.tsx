@@ -9,6 +9,7 @@ import {
 import { chosenAccounts } from './project-detail-accounts-fixtures';
 import {
   codeMapContribution,
+  longPathProject,
   pluginContributions,
 } from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
@@ -45,13 +46,7 @@ export const NewWorktree: Story = {};
 // A path as long as a deep checkout's: it wraps beside the "Path" title, which keeps its own width.
 export const LongPath: Story = {
   args: {
-    project: {
-      status: 'loaded',
-      project: {
-        ...worktreeProject,
-        path: '/Users/milad/Developer/clients/acme-corporation/platform/services/billing-and-invoicing/checkout-worktree',
-      },
-    },
+    project: { status: 'loaded', project: longPathProject },
   },
 };
 

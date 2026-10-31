@@ -14,10 +14,9 @@ import { cornerRadii, PositionContext } from '#primitives/fields/field-row';
 import { InsideHostContext } from '#primitives/native/host';
 
 /*
- * Android: React Native content in a section, in a card of its own as every row of the section has. A FieldGroup is
- * one Compose tree and draws only Compose views, so React Native views put in it are measured outside the column and
- * draw past its edge or not at all. The card takes the column's width and keeps its content a row's inset from the rounded edge; the content is laid out at that width, read from
- * the card, and gives the card its height. Inside it Compose has ended, so a kit Host draws a Host of its own again.
+ * Android: React Native content in a section, in a card like its rows. A FieldGroup is one Compose tree, so React
+ * Native views put straight in it are measured outside the column and draw past its edge or not at all. The content
+ * is laid out at the card's measured width; inside it a kit Host draws a Host of its own again.
  */
 export function HostedSectionContent(props: {
   children: ReactNode;
