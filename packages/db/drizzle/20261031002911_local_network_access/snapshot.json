@@ -1,7 +1,7 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "a0034d95-b690-418b-84df-333e1bc346be",
+  "id": "943829ca-bc40-4710-a110-a318c2335666",
   "prevIds": [
     "d9750209-42dd-495c-8852-3f12ba39221f"
   ],
@@ -75,7 +75,7 @@
       "entityType": "tables"
     },
     {
-      "name": "server_settings",
+      "name": "local_network_access",
       "entityType": "tables"
     },
     {
@@ -1106,7 +1106,7 @@
       "generated": null,
       "name": "singleton",
       "entityType": "columns",
-      "table": "server_settings"
+      "table": "local_network_access"
     },
     {
       "type": "integer",
@@ -1114,9 +1114,9 @@
       "autoincrement": false,
       "default": "false",
       "generated": null,
-      "name": "keep_running_after_quit",
+      "name": "enabled",
       "entityType": "columns",
-      "table": "server_settings"
+      "table": "local_network_access"
     },
     {
       "columns": [
@@ -1497,8 +1497,8 @@
         "singleton"
       ],
       "nameExplicit": false,
-      "name": "server_settings_pk",
-      "table": "server_settings",
+      "name": "local_network_access_pk",
+      "table": "local_network_access",
       "entityType": "pks"
     },
     {
@@ -1639,9 +1639,9 @@
     },
     {
       "value": "\"singleton\" = 1",
-      "name": "server_settings_singleton",
+      "name": "local_network_access_singleton",
       "entityType": "checks",
-      "table": "server_settings"
+      "table": "local_network_access"
     }
   ],
   "renames": []

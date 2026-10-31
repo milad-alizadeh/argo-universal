@@ -1,6 +1,7 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
+import type { LocalNetworkAccess } from '../network-access';
 import { requestHostAllowed } from '../rpc/request-host';
 
 // No Origin (the native Apps), the desktop app, or a web App on this machine on any port.
@@ -25,23 +26,33 @@ export interface RequestGuard {
 }
 
 // Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
-export function createRequestGuard(port: number): RequestGuard {
-  const AllowedHost = z.custom<string>(
-    (host) => typeof host === 'string' && requestHostAllowed(port, host),
-  );
-
+export function createRequestGuard(
+  port: number,
+  access: Pick<LocalNetworkAccess, 'enabled'>,
+): RequestGuard {
   const report = createReporter();
-  const allowsHost = allowHeader(AllowedHost, 'Host', report);
+  const allowsHost = allowHeader(allowedHost(port, access), 'Host', report);
   const allowsOrigin = allowHeader(AllowedOrigin, 'Origin', report);
 
   return {
-    allowsRequest: (headers): boolean => allowsHost(headers.host),
-    allowsUpgrade: (headers): boolean =>
+    allowsRequest: (headers) => allowsHost(headers.host),
+    allowsUpgrade: (headers) =>
       allowsHost(headers.host) && allowsOrigin(headers.origin),
     allowsOrigin,
     report,
   };
 }
+
+// Beyond loopback a Device reaches the Server by any name or address it has; ADR-0045 deletes this check for the handshake.
+const allowedHost = (
+  port: number,
+  networkAccess: Pick<LocalNetworkAccess, 'enabled'>,
+): z.ZodType =>
+  z.custom<string>(
+    (host) =>
+      networkAccess.enabled ||
+      (typeof host === 'string' && requestHostAllowed(port, host)),
+  );
 
 function createReporter(): RequestGuard['report'] {
   const rejections = createRejectionCounter('engine');

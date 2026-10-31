@@ -6,13 +6,14 @@ export function httpRouterInput(
   setup: HttpSetup,
   controlToken: string,
 ): Omit<AppRouterInput, 'serverPublicKey'> {
+  const { commandAdmission, plugins, ...shared } = setup;
+
   return {
     ...options,
+    ...shared,
     controlToken,
-    blobsFolder: setup.blobsFolder,
-    sessionCommandSignal: setup.commandAdmission.signal,
-    notifications: setup.notifications,
-    hooks: setup.plugins.hooks,
-    plugins: setup.plugins.router,
+    sessionCommandSignal: commandAdmission.signal,
+    hooks: plugins.hooks,
+    plugins: plugins.router,
   };
 }

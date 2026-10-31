@@ -15,6 +15,8 @@ const retained = new Map<string, readonly string[]>([
   // The Server Device's own setting, never an Agent's: ADR-0044's exception for what is the user's alone, which ADR-0045 extends.
   ['system/router.ts', ['setKeepRunning']],
   ['operations/router.ts', ['run', 'wait']],
+  // Deciding who can reach the Server is the owner's alone, never an Agent's (ADR-0045).
+  ['network-access/router.ts', ['setLocalAccess']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {

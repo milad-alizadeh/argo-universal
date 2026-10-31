@@ -8,6 +8,7 @@ import {
   createFeedSources,
 } from '../src/engine/router-deps';
 import type { FeedActorRef } from '../src/feed';
+import { LocalNetworkAccess } from '../src/network-access';
 import { Plugins } from '../src/plugins';
 import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
@@ -118,7 +119,12 @@ const feedPlugins = (
 
 type RouterRuntime = Pick<
   AppRouterInput,
-  'blobsFolder' | 'version' | 'startedAt' | 'sessionCommandSignal' | 'registry'
+  | 'blobsFolder'
+  | 'version'
+  | 'startedAt'
+  | 'sessionCommandSignal'
+  | 'registry'
+  | 'localNetworkAccess'
 >;
 
 const routerRuntime = (
@@ -130,6 +136,7 @@ const routerRuntime = (
   startedAt: '2026-10-03T00:00:00.000Z',
   sessionCommandSignal: signal,
   registry: host.engine.system.get('registry'),
+  localNetworkAccess: networkAccessOf(host),
 });
 
 // The router reads the module's own feed actor for session-1.
@@ -148,3 +155,8 @@ export const createFeedModuleCaller = (
     createAppRouterDeps(input, { ...sources, findFeed }),
   ).createCaller({}, { signal });
 };
+
+const networkAccessOf = (
+  host: Awaited<ReturnType<typeof startEngineTestHost>>,
+): LocalNetworkAccess =>
+  new LocalNetworkAccess(host.database, host.databaseWriter);
