@@ -1,4 +1,4 @@
-import type { ToolCallUpdate } from '@repo/contracts';
+import type { DiffChange, ToolCallUpdate } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { toolCalls, workMocks } from '../../../../mocks/feed-view.mocks';
@@ -34,4 +34,30 @@ it.each(workMocks)('names the files an edit changes for $agent', ({ rows }) => {
   expect(paths.length).toBeGreaterThan(0);
 
   for (const path of paths) expect(input).toContain(path);
+});
+
+const recordedCall = (): ToolCallUpdate => {
+  const [recorded] = toolCalls(workMocks.flatMap(({ rows }) => rows));
+
+  if (!recorded) throw new Error('Recording needs a Tool call');
+
+  return recorded;
+};
+
+const editOf = (changes: DiffChange[]): ToolCallUpdate => ({
+  ...recordedCall(),
+  rawInput: { ignored: true },
+  content: [{ type: 'diff', changes, _meta: {} }],
+});
+
+it('names every file a diff changes ahead of the raw input, and a move by both paths', () => {
+  const { input } = permissionDetails(
+    permission,
+    editOf([
+      { operation: 'add', path: 'a.txt' },
+      { operation: 'move', path: 'c.txt', oldPath: 'b.txt' },
+    ]),
+  );
+
+  expect(input).toBe('add a.txt\nb.txt -> c.txt');
 });

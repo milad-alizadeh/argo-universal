@@ -33,7 +33,6 @@ const rawInput = (tool: ToolCallUpdate): string | undefined =>
 const toolReason = (tool: ToolCallUpdate): string | undefined =>
   tool._meta?.argo?.description;
 
-// An edit has no command; what it changes is the files its diff names.
 function changedFiles(tool: ToolCallUpdate): string | undefined {
   const lines = tool.content.flatMap((block) =>
     block.type === 'diff' ? block.changes.map(changeLine) : [],
