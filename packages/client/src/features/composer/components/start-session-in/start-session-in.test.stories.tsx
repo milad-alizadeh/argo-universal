@@ -177,3 +177,79 @@ export const PairedToAnotherComputer: Story = {
     await expect(canvas.getByRole('img', { name: 'Connected' })).toBeVisible();
   },
 };
+
+const rect = (element: Element): DOMRect => element.getBoundingClientRect();
+
+// How far a control sits from each edge of the row it is laid out in.
+type Insets = { leading: number; trailing: number };
+
+function insets(row: Element, control: Element): Insets {
+  const rowBox = rect(row),
+    controlBox = rect(control);
+
+  return {
+    leading: controlBox.left - rowBox.left,
+    trailing: rowBox.right - controlBox.right,
+  };
+}
+
+type Canvas = ReturnType<typeof within>;
+
+const startRow = (canvas: Canvas): Element =>
+  canvas.getByLabelText('Start the Session in');
+
+/*
+ * A pill's touch target is larger than the pill and stretches to the column it sits in, so neither it nor the
+ * drawn pill is where a reader sees the control begin. Its words are, and both pills lead with an icon of one
+ * size, so two labels share an x exactly when the pills they sit in do.
+ */
+const projectLabel = (canvas: Canvas): Element =>
+  canvas.getByText(exampleProject.name);
+
+// Only a phone draws the Checkout control; a wide row leaves that to the Composer.
+const checkoutLabel = (canvas: Canvas): Element =>
+  canvas.getByText('New worktree');
+
+function control(found: Element | null): Element {
+  if (!found)
+    throw new Error('The row draws a Server and a Project to lay out.');
+
+  return found;
+}
+
+/*
+ * A phone stacks the two pills on the page's content inset, so they begin at one x and each sits far nearer the
+ * row's leading edge than its trailing one. Centred, pills of different widths begin at different x.
+ */
+export const PillsOnTheContentInsetPhone: Story = {
+  decorators: onPageInStack,
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.phone);
+
+    const row = startRow(canvas),
+      project = projectLabel(canvas),
+      checkout = checkoutLabel(canvas);
+
+    await expect(rect(project).left).toBe(rect(checkout).left);
+
+    for (const label of [project, checkout]) {
+      const { leading, trailing } = insets(row, label);
+
+      await expect(leading).toBeLessThan(trailing);
+    }
+  },
+};
+
+// Wide lays the Server and the Project out as one centred group, which the phone fix leaves alone.
+export const RowStaysCentredWide: Story = {
+  decorators: onPageInStack,
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    const row = startRow(canvas);
+
+    const { leading } = insets(row, control(row.firstElementChild)),
+      { trailing } = insets(row, control(row.lastElementChild));
+
+    await expect(Math.abs(leading - trailing)).toBeLessThan(1);
+  },
+};
