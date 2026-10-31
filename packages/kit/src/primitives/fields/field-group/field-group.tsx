@@ -6,7 +6,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { ViewStyle } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import {
   fieldGroupColumnStyle,
   OutsideColumn,
@@ -42,21 +42,25 @@ function FieldGroupRoot(props: FieldGroupProps): ReactElement {
   );
 }
 
-// Grouped cards claim the Screen's column and keep to it themselves; their rows are outside it.
+/*
+ * Grouped cards claim the Screen's column and keep to it themselves; their rows are outside it. A View is the column,
+ * as Android's is: SwiftUI's Form takes only a numeric width and padding from a style, so on iOS a maxWidth on the
+ * group itself is dropped and the cards run the pane's full width (#1748). The View around the Host honours the cap
+ * and the padding on every platform.
+ */
 function PageFieldGroup(props: FieldGroupProps): ReactElement {
-  const style = {
-    ...transparent,
-    ...fieldGroupColumnStyle(useClaimColumn('grouped')),
-  };
+  const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
 
   return (
-    <Host style={{ flex: 1 }}>
-      <InsideHostContext.Provider value>
-        <OutsideColumn>
-          <ColumnFieldGroup {...props} style={style} />
-        </OutsideColumn>
-      </InsideHostContext.Provider>
-    </Host>
+    <View style={{ flex: 1, ...column }}>
+      <Host style={{ flex: 1 }}>
+        <InsideHostContext.Provider value>
+          <OutsideColumn>
+            <ColumnFieldGroup {...props} style={transparent} />
+          </OutsideColumn>
+        </InsideHostContext.Provider>
+      </Host>
+    </View>
   );
 }
 
