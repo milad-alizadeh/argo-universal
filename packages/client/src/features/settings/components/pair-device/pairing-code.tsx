@@ -69,7 +69,7 @@ function TypedCode(props: { ticket: string }): React.JSX.Element {
       <Text role="badge" tone="muted">
         {typeLabel}
       </Text>
-      <Text role="title" selectable>
+      <Text role="title-code" selectable>
         {spaced(props.ticket)}
       </Text>
     </View>
