@@ -4,6 +4,7 @@ import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
+import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
@@ -65,20 +66,22 @@ function PluginPage(props: PluginPageProps): React.JSX.Element {
   return (
     <PluginDetailView
       {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
-      onBack={usePushedBack()}
+      onBack={usePushedBack(props.path)}
     />
   );
 }
 
 /*
- * Every Plugin page gets the App's Back when the stack can go back, so a drill-in page is always reversible and no
- * Plugin declares navigation. A landing page, which nothing pushed, gets none.
+ * Every Plugin page above its nav item's root gets the App's Back when the stack can go back, so a drill-in page is
+ * always reversible and no Plugin declares navigation. The root is a rail section's root, which draws none.
  */
-function usePushedBack(): (() => void) | null {
+function usePushedBack(path: readonly string[]): (() => void) | null {
+  const { root } = usePluginAt(pluginPath(path));
+
   // The path is what changes as the stack moves, so reading it keeps this answer current.
   usePathname();
 
-  return router.canGoBack() ? () => router.back() : null;
+  return showsBack(root, router.canGoBack()) ? () => router.back() : null;
 }
 
 function PluginUnavailable(): React.JSX.Element {
