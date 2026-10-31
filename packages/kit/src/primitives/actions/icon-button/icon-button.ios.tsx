@@ -64,7 +64,7 @@ function modifiers(props: IconButtonProps): SwiftProps['modifiers'] {
     controlSize(controlSizes[sizeOf(props)]),
     labelStyle('iconOnly'),
     buttonBorderShape('circle'),
-    // Dynamic Type would grow the circle past the 44 band and the 40 heading row it sits in; an icon-only control keeps the size its Control size names, as a stock toolbar button does.
+    // Dynamic Type grows an icon-only circle past the fixed row it sits in; it keeps the size its control size names, as a stock toolbar button does.
     dynamicTypeSize('large'),
     disabled(props.disabled ?? false),
   ];
