@@ -126,3 +126,38 @@ Then(
     ).toBeVisible();
   },
 );
+
+// A stale or mistyped link is the normal way to an unknown address.
+When('I open an address no page answers', async ({ page }): Promise<void> => {
+  await serveOnePage(page);
+  await page.goto('/nonsense');
+  await expect(page).toHaveURL(/\/nonsense$/);
+});
+
+const notFoundPage = (page: Page): Locator =>
+  page.getByText("This page doesn't exist", { exact: true });
+
+Then(
+  'the wide Frame shows Not found beside the Sessions list',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByTestId(wideFrame)).toBeVisible();
+    await expect(notFoundPage(page)).toBeVisible();
+    // The sidebar's list heading: the Frame's Sessions section is open beside the page.
+    await expect(
+      page.getByRole('heading', { name: 'Sessions', level: 2 }),
+    ).toBeVisible();
+  },
+);
+
+Then('the phone Frame shows Not found', async ({ page }): Promise<void> => {
+  await expect(page.getByTestId(compactFrame)).toBeVisible();
+  await expect(notFoundPage(page)).toBeVisible();
+  // The page's own header, with ☰ to the Drawer, as a section's root has.
+  await expect(
+    page.getByRole('button', { name: 'Show navigation menu' }),
+  ).toBeVisible();
+});
+
+When('I leave Not found for Sessions', async ({ page }): Promise<void> => {
+  await page.getByRole('button', { name: 'Back to Sessions' }).click();
+});

@@ -26,6 +26,8 @@ export {
   useOnboardingShown,
 } from './screens/onboarding/onboarding-layout';
 
+export { NotFoundScreen } from './screens/not-found/not-found-screen';
+
 export { SessionDetailScreen } from './screens/sessions/$id/session-detail-screen';
 
 export { AccountListScreen } from './screens/settings/accounts/account-list-screen';

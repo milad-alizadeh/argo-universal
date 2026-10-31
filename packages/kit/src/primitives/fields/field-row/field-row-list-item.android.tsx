@@ -10,10 +10,13 @@ import { type ReactElement, type ReactNode, useContext } from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import { useEnlargedText } from '#kit/enlarged-text';
 import { NativeText } from '#primitives/content/native-text';
+import { drawnSymbol } from '../../../symbols/drawn-symbol';
 import { useIconPixels } from '../../../symbols/icon-size';
+import { resolveIcon } from '../../../symbols/icon-symbol';
 import { nativeIconName } from '../../../symbols/native-icon-name';
 import { rowGlyphSize } from '../../../symbols/row-glyph';
 import { useRowGlyphColor } from '../../../symbols/row-glyph-color';
+import { svgDrawing } from '../../../symbols/svg-drawings.android';
 import { RowLogo } from './field-row-logo';
 import {
   cornerRadii,
@@ -132,13 +135,25 @@ function IconSlot(props: Pick<RowTextProps, 'leading' | 'tone'>): ReactNode {
   );
 }
 
-// The Material XML drawing of a leading icon; a name with none, or an SF Symbol name, draws nothing.
+// The Android drawing of a leading icon: Material's XML, or the vector drawable of an SVG icon (ADR-0041); a name with none, or an SF Symbol name, draws nothing.
 function leadingSource(
   leading: RowTextProps['leading'],
 ): ImageSourcePropType | undefined {
-  const name = leading ? nativeIconName(leading) : undefined;
+  const name = leading ? drawingOf(leading) : undefined;
 
   return isDrawing(name) ? name : undefined;
+}
+
+const drawingOf = (leading: NonNullable<RowTextProps['leading']>): IconName =>
+  nativeIconName(leading) ?? svgSource(leading);
+
+function svgSource(
+  leading: NonNullable<RowTextProps['leading']>,
+): ImageSourcePropType | undefined {
+  const { symbol, materialFill } = resolveIcon(leading);
+  const drawn = drawnSymbol(symbol, false, materialFill);
+
+  return drawn.kind === 'svg' ? svgDrawing(drawn.svg) : undefined;
 }
 
 type IconName = ReturnType<typeof nativeIconName>;
