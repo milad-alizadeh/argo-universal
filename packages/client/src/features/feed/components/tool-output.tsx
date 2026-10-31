@@ -54,21 +54,18 @@ function ToolContentOrPlaceholder({
   );
 }
 
-// The Agent wrote the text as Markdown, so a fence round all of it is not part of the output.
 interface ToolTextProps {
   text: string;
   fileName?: string;
 }
 
 function ToolText({ text, fileName }: ToolTextProps): React.JSX.Element {
-  const { code, language } = unfencedText(text);
-
   // The file's name titles the block and, by its extension, decides the highlighting.
   return (
     <FeedCodeBlock
-      code={code}
+      code={unfencedText(text)}
       title={fileName ?? 'Output'}
-      language={fileName ?? language}
+      language={fileName}
     />
   );
 }

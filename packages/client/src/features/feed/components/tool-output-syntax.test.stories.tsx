@@ -68,7 +68,7 @@ export const ConsumesTheFenceAroundCommandOutput: Story = {
   },
   play: async ({ canvas }) => {
     await settleLayout('wide');
-    await expect(canvas.getByText(/hello-from-qa/)).toBeVisible();
+    await expect(canvas.getByText(/qa-token-file PLUM-7314/)).toBeVisible();
     await expect(canvas.queryByText(/```/)).toBeNull();
     await expect(canvas.queryByText(/console/)).toBeNull();
   },
