@@ -76,6 +76,10 @@
   /* A modal backdrop in both themes, the overlay setting its opacity; and the
      letterbox behind a video. */
   --color-scrim: var(--color-black);
+  /* A QR code's own two colours, the same in both themes: a camera reads a code
+     by contrast, so it stays black on white wherever Argo draws it. */
+  --color-code-light: var(--color-white);
+  --color-code-dark: var(--color-black);
   /* The centred content column: Feed, Composer and request cards. */
   --container-column: 800px;
   /* The desktop Composer floor used to derive frame thresholds. */

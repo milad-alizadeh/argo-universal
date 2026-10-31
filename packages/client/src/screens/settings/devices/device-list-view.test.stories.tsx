@@ -5,6 +5,8 @@ import { DeviceListView } from './device-list-view';
 
 const switchName = 'Local network access';
 
+const pairButton = { name: 'Pair a Device' };
+
 const meta = {
   title: 'Tests/Screens/Settings/Devices',
   component: DeviceListView,
@@ -12,6 +14,7 @@ const meta = {
   args: {
     localNetworkAccess: { status: 'loaded', enabled: false },
     onLocalNetworkAccessChange: fn(),
+    onPairDevice: fn(),
     onRetry: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
@@ -26,9 +29,7 @@ export const StartsOffAndPairingSaysWhyItIsUnavailable: Story = {
     await expect(
       canvas.getByRole('switch', { name: switchName }),
     ).not.toBeChecked();
-    await expect(
-      canvas.getByRole('button', { name: 'Pair a Device' }),
-    ).toBeDisabled();
+    await expect(canvas.getByRole('button', pairButton)).toBeDisabled();
     await expect(
       canvas.getByText(
         /Pairing is unavailable while Local network access is off/,
@@ -57,6 +58,30 @@ export const TurnsOffAndNoLongerSaysPairingIsUnavailable: Story = {
     await userEvent.click(canvas.getByRole('switch', { name: switchName }));
     await expect(args.onLocalNetworkAccessChange).toHaveBeenCalledOnce();
     await expect(args.onLocalNetworkAccessChange).toHaveBeenCalledWith(false);
+  },
+};
+
+export const OffersPairingOnceLocalNetworkAccessIsOn: Story = {
+  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
+  play: async ({ canvas, args, userEvent }) => {
+    const pair = canvas.getByRole('button', pairButton);
+
+    await expect(pair).toBeEnabled();
+    await userEvent.click(pair);
+    await expect(args.onPairDevice).toHaveBeenCalledOnce();
+  },
+};
+
+export const OffersPairingToNoBrowser: Story = {
+  args: {
+    localNetworkAccess: { status: 'loaded', enabled: true },
+    pairingOffered: false,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', pairButton)).toBeDisabled();
+    await expect(
+      canvas.getByText(/Pairing is unavailable in a browser/),
+    ).toBeVisible();
   },
 };
 

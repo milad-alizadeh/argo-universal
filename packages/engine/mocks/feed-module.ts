@@ -9,6 +9,8 @@ import {
 } from '../src/engine/router-deps';
 import type { FeedActorRef } from '../src/feed';
 import { LocalNetworkAccess } from '../src/network-access';
+import { PairingRegistrations } from '../src/pairing/registrations';
+import { PairingTickets } from '../src/pairing/tickets';
 import { Plugins } from '../src/plugins';
 import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
@@ -89,6 +91,10 @@ const feedIds = (): FeedIds => {
 const feedModuleSecrets = {
   controlToken: 'feed-module-test-token',
   serverPublicKey: 'feed-module-test-public-key',
+  // The Feed module draws no pair sheet; every router shares one dependency bag.
+  discoveryName: 'Feed module test Server',
+  tickets: new PairingTickets(),
+  registrations: new PairingRegistrations(),
 };
 
 const feedModuleRouterInput = (

@@ -4,6 +4,7 @@ import type { DeviceAdmission } from '../devices/admit-device';
 import type { LocalNetworkAccess } from '../network-access';
 import type { Notifications, NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
+import type { PairingRegistrations } from '../pairing/registrations';
 import type { PairingTickets } from '../pairing/tickets';
 import type { Keypair } from '../pairing/x25519';
 import type { HookPort, PluginServerOptions, Plugins } from '../plugins';
@@ -69,6 +70,8 @@ export type RoutedSetup = HttpSetup & {
   // The private half the handshake runs on; it never leaves the Server.
   staticKey: Keypair;
   tickets: PairingTickets;
+  // Where a Device that has just registered is reported, so an open pair sheet can name it.
+  registrations: PairingRegistrations;
   admission: DeviceAdmission;
 };
 

@@ -27,3 +27,9 @@ export {
 } from './stores/slot-visibility';
 
 export { SettingsLoading } from './components/settings-loading/settings-loading';
+
+export { PairDeviceSheet } from './components/pair-device/pair-device-sheet';
+
+export { pairingOffered } from './utils/pairing-offered';
+
+export { usePairDevice } from './hooks/use-pair-device';

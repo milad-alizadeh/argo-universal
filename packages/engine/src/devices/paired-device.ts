@@ -1,7 +1,7 @@
 import type { PairingClaim } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { device } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
   writeDatabaseJobAndWaitForCommit,
   type StorageTransaction,
@@ -38,6 +38,21 @@ class LastSeenJob implements WriterJob {
       .update(device)
       .set({ lastSeenAt: this.now })
       .where(eq(device.id, this.id))
+      .run();
+  }
+}
+
+class ForgetDeviceJob implements WriterJob {
+  public constructor(private readonly id: string) {}
+
+  public describe(): string {
+    return 'forget a paired Device';
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    transaction
+      .delete(device)
+      .where(and(eq(device.id, this.id), eq(device.serverDevice, false)))
       .run();
   }
 }
@@ -80,3 +95,13 @@ export const followLastSeen = (
   now: number,
 ): Promise<void> =>
   writeDatabaseJobAndWaitForCommit(writer, new LastSeenJob(id, now));
+
+/*
+ * Unpairing a Device is that one row deleted (ADR-0045). The Server Device's own row is left alone, so the owner cannot lock themselves out of their own Server.
+ * Closing a Connection the forgotten Device already holds open is `serverDeviceProcedure`'s side of unpairing (#1497); until that lands, this takes effect on the Device's next connect.
+ */
+export const forgetPairedDevice = (
+  writer: WriterActorRef,
+  id: string,
+): Promise<void> =>
+  writeDatabaseJobAndWaitForCommit(writer, new ForgetDeviceJob(id));

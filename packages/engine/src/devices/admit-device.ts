@@ -1,5 +1,10 @@
-import type { PairingClaim, PairingWelcome } from '@repo/contracts';
+import type {
+  PairingClaim,
+  PairingRegistration,
+  PairingWelcome,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
+import type { PairingRegistrations } from '../pairing/registrations';
 import type { PairingTickets } from '../pairing/tickets';
 import { storedPublicKey } from '../pairing/x25519';
 import { serverDeviceIdentity, type RpcIdentity } from '../rpc/identity';
@@ -14,6 +19,8 @@ export interface DeviceAdmissionDeps {
   readonly database: Database;
   readonly databaseWriter: WriterActorRef;
   readonly tickets: PairingTickets;
+  // Where a Device that has just registered is reported, so the open pair sheet can name it.
+  readonly registrations: PairingRegistrations;
   readonly createId: () => string;
   readonly now: () => number;
 }
@@ -80,10 +87,21 @@ export class DeviceAdmission {
       claim,
       now,
     });
+    this.deps.registrations.record(registration(id, claim));
 
     return paired(id);
   }
 }
+
+// What the open pair sheet names in its prompt: the Device's own claim about itself, which decides nothing.
+const registration = (
+  deviceId: string,
+  claim: PairingClaim,
+): PairingRegistration => ({
+  deviceId,
+  claimedName: claim.name,
+  claimedPlatform: claim.platform,
+});
 
 // From here on this Device authenticates with its own key, and the Ticket it spent is spent.
 const paired = (deviceId: string): Admission => ({

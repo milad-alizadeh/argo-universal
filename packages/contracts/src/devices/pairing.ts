@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DevicePlatform } from './device';
 
 // The Pairing Ticket the owner reads off the QR or types in: six digits, as the pair sheet draws it.
 export const pairingTicketDigits = 6;
@@ -42,7 +43,7 @@ export type PairingInvite = z.infer<typeof PairingInvite>;
 export const PairingClaim = z.strictObject({
   ticket: z.string().optional(),
   name: z.string(),
-  platform: z.enum(['macos', 'windows', 'linux', 'ios', 'android']),
+  platform: DevicePlatform,
 });
 
 export type PairingClaim = z.infer<typeof PairingClaim>;
@@ -54,3 +55,43 @@ export const PairingWelcome = z.discriminatedUnion('paired', [
 ]);
 
 export type PairingWelcome = z.infer<typeof PairingWelcome>;
+
+/*
+ * What `pairing.mint` hands the pair sheet: the invite the QR carries, and when the Ticket inside it stops being good.
+ * The sheet redraws before then, so the code on screen is still valid when the owner finally gets their phone out (ADR-0045).
+ */
+export const MintedPairingTicket = z.strictObject({
+  invite: PairingInvite,
+  expiresAt: z.iso.datetime(),
+});
+
+export type MintedPairingTicket = z.infer<typeof MintedPairingTicket>;
+
+/*
+ * A Device that has just registered with a Ticket the open pair sheet minted, which the sheet names in its prompt.
+ * The name and the platform are the Device's own claim: pre-authentication and untrusted, shown for recognition and never used for a decision (ADR-0045).
+ */
+export const PairingRegistration = z.strictObject({
+  deviceId: z.string(),
+  claimedName: z.string(),
+  claimedPlatform: DevicePlatform,
+});
+
+export type PairingRegistration = z.infer<typeof PairingRegistration>;
+
+/*
+ * The QR's own bytes: the invite as compact JSON. One writer and one reader, so the Server Device drawing the code and the Device scanning it cannot disagree about the format.
+ */
+export const writePairingInvite = (invite: PairingInvite): string =>
+  JSON.stringify(invite);
+
+// Whatever a camera read, as an invite, or nothing: a scan is untrusted input and most of what a camera sees is not an Argo code at all.
+export function readPairingInvite(scanned: string): PairingInvite | undefined {
+  try {
+    const parsed = PairingInvite.safeParse(JSON.parse(scanned));
+
+    return parsed.success ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
+}

@@ -6,6 +6,7 @@ import { createServerLinkPreviewRouter } from '../link-preview';
 import { createNetworkRouter } from '../network-access';
 import { createNotificationsRouter } from '../notifications';
 import { createOperationProcedures } from '../operations';
+import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createShellRouter, Sessions } from '../sessions';
@@ -24,6 +25,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     feed: createFeedRouter(deps),
     notifications: createNotificationsRouter(deps),
     network: createNetworkRouter(deps),
+    pairing: createPairingRouter(deps),
   }),
 );
 
