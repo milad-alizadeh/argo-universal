@@ -43,29 +43,29 @@ export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
   );
 }
 
-const isOn = (access: LocalNetworkAccessLoad): boolean =>
-  access.status === 'loaded' && access.enabled;
-
-function accessSection(props: DeviceListViewProps): React.JSX.Element {
+// Until the Server has answered, the view claims neither state: the switch and the Pairing row wait, and the message below says why.
+function accessSection(props: DeviceListViewProps): React.JSX.Element | null {
   const access = props.localNetworkAccess;
 
+  if (access.status !== 'loaded') return null;
+
   return (
-    <FieldGroup.Section footer={isOn(access) ? footers.on : footers.off}>
+    <FieldGroup.Section footer={access.enabled ? footers.on : footers.off}>
       <FieldGroup.Toggle
         title="Local network access"
-        value={isOn(access)}
-        disabled={access.status !== 'loaded' || props.saving}
+        value={access.enabled}
+        disabled={props.saving}
         onValueChange={props.onLocalNetworkAccessChange}
       />
     </FieldGroup.Section>
   );
 }
 
-// Pairing itself is built after this switch (Spec 0025); until the switch is on, the row says why it cannot be used.
+// Pairing itself is built after this switch (Spec 0025); while the switch is off, the row says why it cannot be used.
 function pairingSection(
   access: LocalNetworkAccessLoad,
 ): React.JSX.Element | null {
-  if (isOn(access)) return null;
+  if (access.status !== 'loaded' || access.enabled) return null;
 
   return (
     <FieldGroup.Section footer={pairingReason}>
