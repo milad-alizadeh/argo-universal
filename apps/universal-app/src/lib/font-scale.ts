@@ -11,7 +11,8 @@ import type { DimensionsPayload, DisplayMetrics } from 'react-native';
  */
 export const fontScaleEvent = 'argoFontScaleChange';
 
-type Metrics = { window: DisplayMetrics; screen: DisplayMetrics };
+// What `Dimensions` holds: the window and the screen it sits on.
+export type Metrics = { window: DisplayMetrics; screen: DisplayMetrics };
 
 /*
  * What `Dimensions` should now say: the scale the person has just chosen, against the sizes it already holds, since
@@ -28,4 +29,20 @@ export function fontScaleUpdate(
     window: { ...metrics.window, fontScale },
     screen: { ...metrics.screen, fontScale },
   };
+}
+
+// Where a font scale arrives from and where it has to be reported; React Native supplies both on a phone.
+export type FontScaleDevice = {
+  onFontScale: (listener: (fontScale: number) => void) => void;
+  metrics: () => Metrics;
+  report: (update: DimensionsPayload) => void;
+};
+
+// Takes the font scale the Android Activity hands over and puts it where React Native keeps it.
+export function watchFontScaleOn(device: FontScaleDevice): void {
+  device.onFontScale((fontScale) => {
+    const update = fontScaleUpdate(device.metrics(), fontScale);
+
+    if (update) device.report(update);
+  });
 }

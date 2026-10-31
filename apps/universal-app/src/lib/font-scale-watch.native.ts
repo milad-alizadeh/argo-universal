@@ -1,16 +1,22 @@
 import { DeviceEventEmitter, Dimensions } from 'react-native';
-import { fontScaleEvent, fontScaleUpdate } from './font-scale';
+import {
+  fontScaleEvent,
+  watchFontScaleOn,
+  type FontScaleDevice,
+} from './font-scale';
 
-// Takes the font scale the Android Activity hands over and puts it where React Native keeps it (font-scale.ts).
+// React Native's side of the hand-over; what it carries, and why, is in font-scale.ts.
+const reactNative: FontScaleDevice = {
+  onFontScale: (listener) => {
+    DeviceEventEmitter.addListener(fontScaleEvent, listener);
+  },
+  metrics: () => ({
+    window: Dimensions.get('window'),
+    screen: Dimensions.get('screen'),
+  }),
+  report: (update) => Dimensions.set(update),
+};
+
 export function watchFontScale(): void {
-  DeviceEventEmitter.addListener(fontScaleEvent, (fontScale: number) => {
-    const metrics = {
-      window: Dimensions.get('window'),
-      screen: Dimensions.get('screen'),
-    };
-
-    const update = fontScaleUpdate(metrics, fontScale);
-
-    if (update) Dimensions.set(update);
-  });
+  watchFontScaleOn(reactNative);
 }
