@@ -13,3 +13,11 @@ Feature: Sections
     Then the wide Frame shows Accounts beside the Settings list
     When I return to Sessions
     Then the wide Frame shows no Session beside the Sessions list
+
+  Scenario: Leaving New Session opened by its URL through the rail keeps the rail working
+    Given a wide Frame
+    When I open New Session by its URL
+    And I open Settings
+    Then the wide Frame shows Accounts beside the Settings list
+    When I return to Sessions
+    Then the wide Frame shows no Session beside the Sessions list
