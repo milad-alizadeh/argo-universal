@@ -1,6 +1,9 @@
 import { useMemo, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { useClaimColumn } from '#kit/content-column/content-column';
+import {
+  fieldGroupColumnStyle,
+  useClaimColumn,
+} from '#kit/content-column/content-column';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import { ListEmpty } from './list-data';
 import { useMovableReading } from './list-movable-reading';
@@ -25,16 +28,20 @@ const fill = { flex: 1 };
 /*
  * The one Host of a native grouped List; its rows are FieldGroup rows, which draw into it. Its cards keep the
  * platform's own inset, so it claims the Screen's column as grouped cards, and the Screen adds no gutter of its own.
+ * It keeps to the column itself, as a FieldGroup does: a View is the column, capped, centred and padded, because
+ * Compose's Host ignores padding and honours the cap.
  */
 function NativeHost(props: { children: ReactNode }): ReactElement {
-  useClaimColumn('grouped');
+  const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
 
   return (
-    <Host style={fill}>
-      <InsideHostContext.Provider value>
-        {props.children}
-      </InsideHostContext.Provider>
-    </Host>
+    <View style={{ ...fill, ...column }}>
+      <Host style={fill}>
+        <InsideHostContext.Provider value>
+          {props.children}
+        </InsideHostContext.Provider>
+      </Host>
+    </View>
   );
 }
 
