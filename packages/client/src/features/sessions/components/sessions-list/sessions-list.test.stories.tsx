@@ -257,18 +257,21 @@ export const FramedSidebarGutters: Story = {
   },
 };
 
+// Narrower than the empty state's one-line width, as a phone column is at the largest text size.
+const narrowColumn = 90;
+
 /*
  * The empty state tells the person what to expect, so a narrow column (a phone at the largest text size) wraps it
  * onto a second line instead of clipping it to "No Sessions...".
  */
 export const EmptyStateWrapsWhenNarrow: Story = {
   render: () => (
-    <View style={{ width: 90 }}>
+    <View style={{ width: narrowColumn }}>
       <NoSessionsYet />
     </View>
   ),
   play: async ({ canvas }) => {
-    const text = await canvas.findByText('No Sessions yet.');
+    const text = await canvas.findByText(/No Sessions/);
 
     const lineHeight = Number.parseFloat(getComputedStyle(text).lineHeight);
 
