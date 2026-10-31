@@ -9,7 +9,7 @@ const drawerTypes = {
 } as const satisfies Record<SizeClass, DrawerNavigationOptions['drawerType']>;
 
 // The backdrop's own name, else the library's English default; it pairs with the "Open navigation" button.
-const scrimLabel = 'Close navigation';
+export const drawerScrimLabel = 'Close navigation';
 
 export function composeDrawerOptions(
   sizeClass: SizeClass,
@@ -21,7 +21,7 @@ export function composeDrawerOptions(
   return {
     ...(sizeClass === 'wide' ? parts.framed : parts.narrow),
     drawerType: drawerTypes[sizeClass],
-    overlayAccessibilityLabel: scrimLabel,
+    overlayAccessibilityLabel: drawerScrimLabel,
     // A hidden section keeps its stack but skips renders.
     freezeOnBlur: true,
   };

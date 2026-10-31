@@ -13,10 +13,11 @@ const column = {
 // A plain element so focus can be managed on it: closed it is `inert` and hidden, open it takes focus and holds it.
 export function DrawerFocusScope({
   open,
+  scrimLabel,
   children,
 }: DrawerFocusScopeProps): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
-  useDrawerFocus(ref, open);
+  useDrawerFocus(ref, scrimLabel, open);
 
   return (
     <div ref={ref} aria-hidden={!open} style={column}>

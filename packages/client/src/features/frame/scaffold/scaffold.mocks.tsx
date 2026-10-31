@@ -28,6 +28,8 @@ export type ScaffoldMockProps = Partial<ScaffoldState> & {
   onSectionChange?: (section: Section) => void;
   // The Inspector's content, under its header.
   inspector?: ReactNode;
+  // Whether the window has an Inspector to offer, as a Session's page gives it; false for a page that owns no Session.
+  inspectorAvailable?: boolean;
   // What the page claims in the band; null for a page that owns no Session, as Settings and the other sections do.
   band?: ScaffoldProps['band'];
   // The page; a stand-in page names the section when there is none.
@@ -71,14 +73,16 @@ const mockState = (props: ScaffoldMockProps): ScaffoldState => ({
   ...mockInspectorState(props),
 });
 
-const mockWorkbench: Pick<
+const mockWorkbench = ({
+  inspectorAvailable = true,
+}: ScaffoldMockProps): Pick<
   ScaffoldProps,
   'inspectorAvailable' | 'workbenchIntent' | 'onWorkbenchIntentChange'
-> = {
-  inspectorAvailable: true,
+> => ({
+  inspectorAvailable,
   workbenchIntent: 'auto',
   onWorkbenchIntentChange: ignore,
-};
+});
 
 function MockRail(
   props: ScaffoldMockProps & ScaffoldState & { section: Section },
@@ -154,7 +158,7 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
     <View className="flex-1">
       <Scaffold
         {...state}
-        {...mockWorkbench}
+        {...mockWorkbench(props)}
         {...mockPanes(props, state)}
         band={mockBand(props)}
       />

@@ -10,6 +10,8 @@ import {
   type PhoneDrawerContentProps,
 } from './phone-drawer-content';
 
+const scrimLabel = 'Close navigation';
+
 const meta = {
   title: 'Tests/Frame/PhoneDrawerContent',
   component: PhoneDrawerContent,
@@ -18,6 +20,7 @@ const meta = {
     selectedSection: 'sessions',
     attentionCount: 0,
     open: true,
+    scrimLabel,
     onSectionChange: fn(),
   },
 } satisfies Meta<typeof PhoneDrawerContent>;
@@ -141,25 +144,63 @@ interface DrawerAndPageProps extends Omit<PhoneDrawerContentProps, 'open'> {
 
 const openerName = 'Open navigation';
 
-// The pieces a real window puts around the drawer: the opener in the page's header, the page's own controls, and the scrim's dismiss. Navigation's own wiring is not drawn here; the drawer takes only `open`.
-function DrawerAndPage({
-  startsOpen,
-  ...drawer
-}: DrawerAndPageProps): React.JSX.Element {
-  const [open, setOpen] = useState(startsOpen);
-
+// A page of the window: its header's opener, its own control, and the stand-ins for the navigator's drawer and scrim, which sit beside the page as the navigator's do. A page is replaced when a row is picked, and draws its own opener.
+function PageOf({
+  section,
+  onOpen,
+  scrim,
+}: {
+  section: string;
+  onOpen: () => void;
+  scrim: React.ReactNode;
+}): React.JSX.Element {
   return (
-    <View>
-      <Pressable role="button" onPress={() => setOpen(true)}>
+    <View key={section}>
+      <Pressable role="button" aria-label={openerName} onPress={onOpen}>
         <Text>{openerName}</Text>
       </Pressable>
-      <PhoneDrawerContent {...drawer} open={open} />
       <Pressable role="button">
         <Text>Page control</Text>
       </Pressable>
-      <Pressable role="button" onPress={() => setOpen(false)}>
-        <Text>Dismiss</Text>
-      </Pressable>
+      {scrim}
+    </View>
+  );
+}
+
+function DrawerAndPage({
+  startsOpen,
+  onSectionChange,
+  ...drawer
+}: DrawerAndPageProps): React.JSX.Element {
+  const [open, setOpen] = useState(startsOpen);
+  const [section, setSection] = useState('first');
+
+  return (
+    <View>
+      <PhoneDrawerContent
+        {...drawer}
+        open={open}
+        onSectionChange={(next) => {
+          onSectionChange(next);
+          setSection(next);
+          setOpen(false);
+        }}
+      />
+      <PageOf
+        section={section}
+        onOpen={() => setOpen(true)}
+        scrim={
+          <View aria-hidden={!open}>
+            <Pressable
+              role="button"
+              aria-label={scrimLabel}
+              onPress={() => setOpen(false)}
+            >
+              <Text>Backdrop</Text>
+            </Pressable>
+          </View>
+        }
+      />
     </View>
   );
 }
@@ -245,7 +286,79 @@ export const ClosingReturnsFocusToTheOpener: Story = {
     await userEvent.click(opener);
     await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
 
-    await userEvent.click(canvas.getByText('Dismiss'));
+    await userEvent.click(canvas.getByText('Backdrop'));
     await waitFor(() => expect(opener).toHaveFocus());
+  },
+};
+
+interface TabbedStop {
+  role: string | null;
+  name: string | null;
+}
+
+// Tab from the opener to the end of the page, naming each stop; stops at the body, where focus leaves the controls.
+async function tabStopsFromOpener(canvas: Canvas): Promise<TabbedStop[]> {
+  canvas.getByRole('button', { name: openerName }).focus();
+  const stops: TabbedStop[] = [];
+
+  for (let press = 0; press < 20; press += 1) {
+    await browserKeyboard.tab();
+    const { activeElement } = document;
+
+    if (!activeElement || activeElement === document.body) break;
+    stops.push({
+      role: activeElement.getAttribute('role'),
+      name: activeElement.getAttribute('aria-label'),
+    });
+  }
+
+  return stops;
+}
+
+// Closed, nothing the drawer draws is reachable: not its rows, and not the backdrop that closes it.
+export const ClosedDrawerLeavesNoBackdropTabStop: Story = {
+  ...drawerAndPage(false),
+  play: async ({ canvas }) => {
+    const stops = await tabStopsFromOpener(canvas);
+
+    await expect(stops.some((stop) => stop.name === scrimLabel)).toBe(false);
+    await expect(stops).toHaveLength(1);
+  },
+};
+
+// The backdrop closes the drawer, and the drawer opened again takes focus as it did the first time.
+export const ReopeningAfterTheBackdropClosesTakesFocusAgain: Story = {
+  ...drawerAndPage(false),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: openerName }));
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+    await userEvent.click(canvas.getByText('Backdrop'));
+    await waitFor(() =>
+      expect(canvas.queryByRole('button', { name: firstSection })).toBeNull(),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: openerName }));
+
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+  },
+};
+
+// Picking a row replaces the page that held the opener; focus lands on the new page's opener, not the body.
+export const PickingARowLandsFocusOnTheNewPage: Story = {
+  ...drawerAndPage(false),
+  play: async ({ canvas }) => {
+    const opener = canvas.getByRole('button', { name: openerName });
+
+    opener.focus();
+    await browserKeyboard.keyboard('{Enter}');
+    await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
+    await browserKeyboard.tab();
+    await browserKeyboard.keyboard('{Enter}');
+
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: openerName })).toHaveFocus(),
+    );
+    await expect(canvas.getByRole('button', { name: openerName })).not.toBe(
+      opener,
+    );
   },
 };

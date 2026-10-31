@@ -9,7 +9,7 @@ import {
   type ResizeOutcome,
   resizeOutcome,
 } from './frame-layout';
-import { moveInspector } from './inspector-column';
+import { inspectorOffered, moveInspector } from './inspector-column';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
 type ListHandleReads = PartReads<
@@ -18,8 +18,8 @@ type ListHandleReads = PartReads<
 >;
 
 type InspectorHandleReads = PartReads<
-  'inspectorState' | 'onInspectorStateChange' | 'band',
-  'handles' | 'setPreferredInspectorWidth' | 'setResizing'
+  'inspectorState' | 'onInspectorStateChange' | 'band' | 'inspectorAvailable',
+  'handles' | 'inspector' | 'setPreferredInspectorWidth' | 'setResizing'
 >;
 
 // The list never expands, so any outcome other than a width closes it.
@@ -108,7 +108,13 @@ function ListResizeHandle(parts: ListHandleReads): React.JSX.Element | null {
   );
 }
 
-function InspectorResizeHandle(parts: InspectorHandleReads): React.JSX.Element {
+// A window with no Session has no Inspector to resize, so it draws no handle for one, and the handle takes no Tab stop.
+function InspectorResizeHandle(
+  parts: InspectorHandleReads,
+): React.JSX.Element | null {
+  if (!parts.layout.inspector.open && !inspectorOffered(parts.scaffold))
+    return null;
+
   return (
     <View
       className="absolute top-0 bottom-0 z-30"
