@@ -3,18 +3,19 @@ import { type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { InsideHostContext } from '#primitives/native/host';
 
+const heightFromContent = { vertical: true };
+
 /*
  * iOS: React Native content in a section. A FieldGroup is SwiftUI's Form, which draws only SwiftUI views, so a React
- * Native view put in a section as it is has no size SwiftUI can see: a List drew an empty card (#1763) and a Canvas
- * a flat bar with no caption beside it (#1761). RNHostView hosts the content as the section's one row: the row takes
- * its width from the Form, which gives the content its width to lay out in, and the content gives the row its height.
- * Inside the row SwiftUI has ended, so a kit Host draws a Host of its own again.
+ * Native view put in a section as it is has no size the Form can see and draws as an empty card or a collapsed bar.
+ * Only the height is matched: the width comes from the Form's row, which the content needs to lay out in. Inside the
+ * row SwiftUI has ended, so a kit Host draws a Host of its own again.
  */
 export function HostedSectionContent(props: {
   children: ReactNode;
 }): ReactElement {
   return (
-    <RNHostView matchContents={{ vertical: true }}>
+    <RNHostView matchContents={heightFromContent}>
       <View collapsable={false}>
         <InsideHostContext.Provider value={false}>
           {props.children}
