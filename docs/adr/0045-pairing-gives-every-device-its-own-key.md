@@ -82,8 +82,6 @@ They belong there for the exception's own reason, and more plainly than anything
 
 So `pairing.*` and `devices.*`, and those two settings, are Server-Device-only and hand-written, never Operations, with no tier that could make them askable. A `serverDeviceProcedure` sits beside `publicProcedure` in `packages/engine/src/rpc/trpc.ts` and backs every one of them; the Server checks the list itself, from the authenticated context, because hiding a row in the App is not the check. The CI check from Spec 0022 (#1312) that refuses new hand-written tRPC mutations gets these added to its allowlist with the reason recorded.
 
-`serverDeviceProcedure` does not exist yet either; it lands with #1497. #1495 built `publicProcedure`, which requires a proved identity and nothing more, so **until #1497 a paired Device can call `devices.list` and `system.setKeepRunning`** along with every other procedure. The identity it would narrow on is already carried in the context, so #1497 adds the procedure and the list rather than new plumbing.
-
 ## Still open
 
 - **Whether a workable raw socket exists for React Native.** `react-native-tcp-socket` carried the spike, but a shim that tRPC's `wsLink` accepts over our channel is unverified, as is the socket surviving app backgrounding and Wi-Fi changes, which a phone does constantly. Settling this is the **first** job of #1495, before the protocol is built on top of it. If no workable socket module exists, this transport decision has to be revisited rather than worked around.
