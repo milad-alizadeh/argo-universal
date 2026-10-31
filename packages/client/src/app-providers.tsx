@@ -46,7 +46,9 @@ function AppServers({ store, children }: AppServersProps): React.JSX.Element {
   return (
     <ServersContext.Provider value={{ ...servers, look: store.look }}>
       <ServerConnectionsContext.Provider value={connections}>
-        {lookedAtServer({ servers, connections, children })}
+        {servers.read
+          ? lookedAtServer({ servers, connections, children })
+          : null}
       </ServerConnectionsContext.Provider>
     </ServersContext.Provider>
   );
@@ -60,7 +62,9 @@ interface LookedAtProps {
 
 /*
  * Looking at another Server starts its screens again on a QueryClient of its own — a new key, so a new client — and
- * no answer from one Server is ever shown for another; the Connections themselves stay open either way.
+ * no answer from one Server is ever shown for another; the Connections themselves stay open either way. Nothing is
+ * drawn until the kept list has been read, so the App opens on the Server it was last looking at rather than showing
+ * its own Server's Sessions and moving off them.
  */
 const lookedAtServer = ({
   servers,

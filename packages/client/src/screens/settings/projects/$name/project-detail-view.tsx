@@ -18,7 +18,6 @@ export type ProjectLoad =
 export interface ProjectDetailViewProps {
   // The name the page was opened with; the title until the Project loads.
   name: string;
-  caption?: string;
   project: ProjectLoad;
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
@@ -46,7 +45,7 @@ export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Screen title={props.name} caption={props.caption} onBack={props.onBack}>
+    <Screen title={props.name} onBack={props.onBack}>
       <ProjectBody {...props} />
     </Screen>
   );

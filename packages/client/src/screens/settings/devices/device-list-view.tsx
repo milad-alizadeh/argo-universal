@@ -8,7 +8,6 @@ export type LocalNetworkAccessLoad =
   | { status: 'loaded'; enabled: boolean };
 
 export interface DeviceListViewProps {
-  caption?: string;
   localNetworkAccess: LocalNetworkAccessLoad;
   saving?: boolean;
   error?: string;
@@ -33,7 +32,7 @@ const pairingReason =
 
 export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
   return (
-    <Screen title="Devices" caption={props.caption} onBack={props.onBack}>
+    <Screen title="Devices" onBack={props.onBack}>
       <FieldGroup>
         {accessSection(props)}
         {pairingSection(props.localNetworkAccess)}

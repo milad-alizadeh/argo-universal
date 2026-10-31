@@ -1,5 +1,7 @@
 export type { Connection, ConnectionState } from './stores/connection';
 
+export { holdCacheOnline } from './stores/cache-online';
+
 export {
   useConnectionState,
   useResubscribeOnReconnect,

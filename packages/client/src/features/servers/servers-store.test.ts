@@ -70,7 +70,43 @@ describe("the App's list of Servers", () => {
     expect(createServersStore(ownUrl).getSnapshot()).toEqual({
       servers: [{ id: ownId, name: ownName, serverDevice: true, url: ownUrl }],
       lookingAt: ownId,
+      // Nothing is drawn for a Server until this is true, so the App never opens on one and moves off it.
+      read: false,
     });
+  });
+
+  it('says the kept list has been read once it arrives', async () => {
+    const store = await readingServers([studio], studioKey);
+
+    expect(store.getSnapshot().read).toBe(true);
+  });
+
+  it('lists a Server kept twice once, so one Connection is ever held to it', async () => {
+    const store = await readingServers([studio, { ...studio, name: 'Again' }]);
+
+    expect(store.getSnapshot().servers.map((server) => server.id)).toEqual([
+      ownId,
+      studioKey,
+    ]);
+  });
+
+  // A kept Server claiming this id would shadow the own Server's Connection and the preferences kept under it.
+  it('refuses a kept Server that claims the id of the Server on this Device', async () => {
+    const store = await readingServers([{ ...studio, key: ownId }]);
+
+    expect(store.getSnapshot().servers).toHaveLength(1);
+    expect(store.getSnapshot().servers[0]?.name).toBe(ownName);
+  });
+
+  it('lists a Server whose kept address does not read as one, with nowhere to connect', async () => {
+    const store = await readingServers([
+      { ...studio, address: { host: 'studio.local', port: 70_000 } },
+    ]);
+
+    const listed = store.getSnapshot().servers[1];
+
+    expect(listed?.name).toBe('Studio');
+    expect(listed?.url).toBeUndefined();
   });
 
   it('lists every Server this Device has paired with, its own first', async () => {

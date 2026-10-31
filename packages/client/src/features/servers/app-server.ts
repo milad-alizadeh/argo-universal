@@ -25,12 +25,18 @@ export const ownAppServer = (url: string): AppServer => ({
   url,
 });
 
+// An IPv6 address needs brackets in a URL; a name or an IPv4 address is written as it is kept.
+const hostInUrl = (host: string): string =>
+  host.includes(':') ? `[${host}]` : host;
+
 // A Server this Device paired with. Its address is a fallback only, and the discovery name is what is re-resolved.
 export const pairedAppServer = (known: KnownServer): AppServer => ({
   id: known.key,
   name: known.name,
   serverDevice: false,
-  url: known.address && `ws://${known.address.host}:${known.address.port}`,
+  url:
+    known.address &&
+    `ws://${hostInUrl(known.address.host)}:${known.address.port}`,
 });
 
 // A Connection still trying reads as connecting; one that has given up is what the owner reads as unreachable.

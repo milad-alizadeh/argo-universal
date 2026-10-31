@@ -5,6 +5,8 @@ import { mockWebSocket } from './websocket-report.mocks';
 
 const oneOpenConnection = 'Open Connections: 1';
 
+const noClosedConnections = 'Closed Connections: 0';
+
 // AppProviders opens a real Connection, so these stories swap the browser's WebSocket for a mock.
 const meta = {
   title: 'Tests/AppProviders',
@@ -54,7 +56,31 @@ export const HoldsAConnectionToEachServer: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Mount' }));
     await expect(await canvas.findByText('Open Connections: 2')).toBeVisible();
-    await expect(canvas.getByText('Closed Connections: 0')).toBeVisible();
+    await expect(canvas.getByText(noClosedConnections)).toBeVisible();
+  },
+};
+
+/*
+ * Looking at another Server gives its screens a cache of their own, so no answer from one Server is ever shown for
+ * another, and the Connections to both stay open while it happens (ADR-0022).
+ */
+export const GivesEachServerItsOwnCache: Story = {
+  beforeEach: keepPairedServer,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Mount' }));
+    await expect(
+      await canvas.findByText('Caches the screens saw: 1'),
+    ).toBeVisible();
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Look at Studio' }),
+    );
+
+    await expect(
+      await canvas.findByText('Caches the screens saw: 2'),
+    ).toBeVisible();
+    await expect(canvas.getByText('Open Connections: 2')).toBeVisible();
+    await expect(canvas.getByText(noClosedConnections)).toBeVisible();
   },
 };
 
@@ -72,7 +98,7 @@ export const GivesScreensAnOpenConnectionUnderStrictMode: Story = {
     await expect(canvas.getByText(oneOpenConnection)).toBeVisible();
     // StrictMode repeats the subscription; the first Connection closes before it allows a WebSocket.
     await expect(canvas.getByText('Screen subscriptions: 2')).toBeVisible();
-    await expect(canvas.getByText('Closed Connections: 0')).toBeVisible();
+    await expect(canvas.getByText(noClosedConnections)).toBeVisible();
   },
 };
 

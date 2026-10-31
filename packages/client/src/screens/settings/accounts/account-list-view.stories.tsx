@@ -7,7 +7,6 @@ const meta = {
   title: 'Screens/Settings/Accounts',
   component: AccountListView,
   argTypes: {
-    caption: { control: 'text' },
     accounts: { control: false },
   },
   parameters: { screenPreview: true },

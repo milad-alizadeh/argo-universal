@@ -11,6 +11,8 @@ export interface ServersSnapshot {
   servers: readonly AppServer[];
   // The id of the Server the App is showing: whose Sessions, Projects and Feed it reads.
   lookingAt: string;
+  // False until this Device's kept Servers have been read, so the App never opens on its own Server and then moves.
+  read: boolean;
 }
 
 export interface ServersStore {
@@ -32,7 +34,11 @@ class AppServersStore implements ServersStore {
 
   public constructor(ownServerUrl: string) {
     this.own = ownAppServer(ownServerUrl);
-    this.snapshot = { servers: [this.own], lookingAt: ownServerId };
+    this.snapshot = {
+      servers: [this.own],
+      lookingAt: ownServerId,
+      read: false,
+    };
   }
 
   public readonly getSnapshot = (): ServersSnapshot => this.snapshot;
@@ -68,7 +74,11 @@ class AppServersStore implements ServersStore {
 
     const servers = [this.own, ...known.map(pairedAppServer)];
 
-    this.set({ servers, lookingAt: shownOrOwn(servers, lookedAt) });
+    this.set({
+      servers,
+      lookingAt: shownOrOwn(servers, lookedAt),
+      read: true,
+    });
   }
 }
 

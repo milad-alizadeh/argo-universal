@@ -1,4 +1,8 @@
-import type { AppServer, AppServerState } from '#features/servers';
+import type {
+  AppServer,
+  AppServerState,
+  ServerStates,
+} from '#features/servers';
 
 // One Server in the list: what it is called, whether this Device runs it, and its own state.
 export interface ServerRow {
@@ -7,8 +11,6 @@ export interface ServerRow {
   serverDevice: boolean;
   state: AppServerState;
 }
-
-export type ServerStates = ReadonlyMap<string, AppServerState>;
 
 /*
  * One Server's row. A Server with no state of its own is one no Connection was opened to, because this Device has no

@@ -9,9 +9,12 @@ export {
 export {
   ServerConnectionsContext,
   type ServerConnections,
-  useAppServerStates,
   useServerConnections,
 } from './server-connections';
+
+export { type ServerStates } from './server-states-store';
+
+export { useAppServerStates } from './server-states';
 
 export {
   type AppServers,

@@ -2,9 +2,9 @@ import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
-import { type ReactNode, useMemo, useState } from 'react';
-import type { OpenConnection } from '#features/connection';
-import { ConnectionContext } from '#features/connection';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import type { Connection, OpenConnection } from '#features/connection';
+import { ConnectionContext, holdCacheOnline } from '#features/connection';
 import {
   BlobUrlContext,
   createServerBlobUrl,
@@ -71,6 +71,11 @@ interface ConnectionProvidersProps extends ServerProvidersProps {
   queryClient: QueryClient;
 }
 
+// Only this Server drives the cache's online flag, so another Server being unreachable never pauses these queries.
+const useCacheOnline = (connection: Connection): void => {
+  useEffect(() => holdCacheOnline(connection), [connection]);
+};
+
 function ConnectionProviders({
   queryClient,
   ...props
@@ -92,6 +97,8 @@ function ServerProviders({
   connection,
   children,
 }: ServerProvidersProps): React.JSX.Element {
+  useCacheOnline(connection.connection);
+
   return (
     <ServerScopeProvider server={server}>
       <ConnectionContext.Provider value={connection.connection}>
