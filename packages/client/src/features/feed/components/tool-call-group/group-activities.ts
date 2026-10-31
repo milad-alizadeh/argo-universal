@@ -54,7 +54,10 @@ export function visibleActivities(group: FeedGroup): FeedActivity[] {
 
   if (!live) return drawn;
 
-  return drawn.flatMap((activity) =>
+  const others = drawn.flatMap((activity) =>
     activityWithout(activity, live.toolCall.id),
   );
+
+  // A lone live Tool call keeps its row, or the open group would show nothing.
+  return others.length ? others : drawn;
 }
