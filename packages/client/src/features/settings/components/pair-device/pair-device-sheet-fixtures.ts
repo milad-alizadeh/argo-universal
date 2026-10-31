@@ -2,6 +2,15 @@ import type { PairDeviceSheetProps } from './pair-device-sheet';
 
 type Shown = Pick<PairDeviceSheetProps, 'open' | 'code'>;
 
+/*
+ * The countdown reads what is left against the clock, so a fixed date would draw every story at 0:00.
+ * A code with most of its two minutes to run is what the sheet is drawn for, and this is that code.
+ */
+const mostOfItsLife = 108_000;
+
+const runsOut = (): string =>
+  new Date(Date.now() + mostOfItsLife).toISOString();
+
 // A code the Server has handed out, with most of its two minutes still to run.
 export const live = {
   open: true,
@@ -12,7 +21,7 @@ export const live = {
       server: 'Studio Mac',
       ticket: '048213',
     },
-    expiresAt: '2026-10-31T12:02:00.000Z',
+    expiresAt: runsOut(),
   },
 } satisfies Shown;
 

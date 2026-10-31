@@ -1,17 +1,12 @@
-import {
-  pairingTicketDigits,
-  type MintedPairingTicket,
-  type PairingRegistration,
-} from '@repo/contracts';
+import type { MintedPairingTicket, PairingRegistration } from '@repo/contracts';
 import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
-import { Stack } from '@repo/kit/primitives/layout/stack';
 import { useCentresOverlays } from '@repo/kit/primitives/overlays/centred-overlay';
 import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PairingQrCode } from './pairing-qr-code';
+import { PairingCode } from './pairing-code';
 
 // Where the Server's answer has got to. A sheet holds at most one live code, and never two at once.
 export type PairingCodeLoad =
@@ -34,7 +29,7 @@ export interface PairDeviceSheetProps {
 
 const title = 'Pair a Device';
 
-const codeSize = 220;
+const doneLabel = 'Done';
 
 const messages = {
   minting: 'Getting a code…',
@@ -42,9 +37,6 @@ const messages = {
     'This code has expired. A code lasts about two minutes, so a photograph of your screen is not a lasting key.',
   error: 'Could not get a code from the Server.',
 };
-
-const scanInstruction =
-  'Open Argo on the other Device and scan this code, or type the digits into it.';
 
 /*
  * The one place a Device is paired (ADR-0045). Opening the sheet is what mints a Pairing Ticket, so the owner asking for a code is the consent, and the sheet stays where they answer for the Device that turns up.
@@ -55,19 +47,10 @@ export function PairDeviceSheet(
 ): React.JSX.Element {
   return (
     <Sheet {...sheetProps(props)}>
-      <Sheet.Screen name="pair" title={screenTitle(props.asking)}>
-        <CodePage {...props} />
-      </Sheet.Screen>
+      <CodePage {...props} />
     </Sheet>
   );
 }
-
-/*
- * The sheet's one title, drawn by its title row: the Device that turned up while the code was up, else the sheet's own name.
- * The page draws no heading of its own under it, so nothing competes with the title row for the top of the sheet.
- */
-const screenTitle = (asking: PairingRegistration | undefined): string =>
-  asking ? `${asking.claimedName} wants to pair` : title;
 
 const sheetProps = (
   props: PairDeviceSheetProps,
@@ -75,53 +58,69 @@ const sheetProps = (
   open: props.open,
   onOpenChange: props.onOpenChange,
   label: title,
-  inset: true,
+  wide: true,
   footer: <SheetActions {...props} />,
 });
 
-// The page under the title row: the Device's claim while one is asking, else the code or why there is none.
+/*
+ * The sheet's one title: the Device that turned up while the code was up, else the sheet's own name.
+ * The page carries it rather than a title row of the kit's, because the design sets it on the page's
+ * leading edge with Done opposite it, where the kit's row centres a title over a close button.
+ */
+const screenTitle = (asking: PairingRegistration | undefined): string =>
+  asking ? `${asking.claimedName} wants to pair` : title;
+
+/*
+ * The sheet's one page: its title row, then the Device's claim while one is asking, else the code or why
+ * there is none. It pads itself rather than taking the sheet's standard inset, because the design gives a
+ * card this wide more room around its two columns than a form page needs; the footer keeps to the same edge.
+ */
 function CodePage(props: PairDeviceSheetProps): React.JSX.Element {
-  const { asking, code } = props;
-
-  if (asking) return <AskingClaim asking={asking} />;
-
-  if (code.status === 'live') return <LiveCode code={code} />;
-
-  return <Text role="secondary">{messages[code.status]}</Text>;
-}
-
-type LiveCode = Extract<PairingCodeLoad, { status: 'live' }>;
-
-// The code, and the digits that stand for it so a Device with no camera has something to type (#1502).
-function LiveCode(props: { code: LiveCode }): React.JSX.Element {
   return (
-    <Stack direction="column" gap={4}>
-      <CodeFigure code={props.code} />
-      <Text role="secondary">{scanInstruction}</Text>
-    </Stack>
+    <View className="gap-6 px-6 pt-6">
+      <TitleRow {...props} />
+      <PageBody {...props} />
+    </View>
   );
 }
 
 /*
- * The code and its digits are one figure, centred on the page as a picture is; the words around it stay on the
- * page's leading edge, where the rest of the App puts them.
+ * Done is the way out of a sheet the owner opened to read something. A Device that is asking takes it
+ * away, because the answer is then Allow or Don't allow and a third way out would say nothing about it.
  */
-function CodeFigure(props: { code: LiveCode }): React.JSX.Element {
+function TitleRow(props: PairDeviceSheetProps): React.JSX.Element {
   return (
-    <Stack direction="column" gap={3} align="center">
-      <PairingQrCode invite={props.code.invite} size={codeSize} />
-      <Text role="title" selectable>
-        {spaced(props.code.invite.ticket)}
-      </Text>
-    </Stack>
+    <View className="flex-row items-center gap-4">
+      <View className="min-w-0 flex-1">
+        <Text role="title" accessibilityRole="heading" numberOfLines={1}>
+          {screenTitle(props.asking)}
+        </Text>
+      </View>
+      {props.asking ? null : <DoneButton {...props} />}
+    </View>
   );
 }
 
-// Half the digits, a gap, the other half: the way someone reads a code aloud and the way they type it.
-const halfOfATicket = pairingTicketDigits / 2;
+function DoneButton(props: PairDeviceSheetProps): React.JSX.Element {
+  return (
+    <Button
+      label={doneLabel}
+      variant="secondary"
+      size="sm"
+      onPress={() => props.onOpenChange(false)}
+    />
+  );
+}
 
-const spaced = (ticket: string): string =>
-  `${ticket.slice(0, halfOfATicket)} ${ticket.slice(halfOfATicket)}`;
+function PageBody(props: PairDeviceSheetProps): React.JSX.Element {
+  const { asking, code } = props;
+
+  if (asking) return <AskingClaim asking={asking} />;
+
+  if (code.status === 'live') return <PairingCode code={code} />;
+
+  return <Text role="secondary">{messages[code.status]}</Text>;
+}
 
 /*
  * The claim the Device made for itself, which is all the owner has to recognise it by: the handshake has already run on a Ticket this sheet minted, so what they decide in the footer is whether that Device keeps what it got.
@@ -163,7 +162,7 @@ function SheetFooter(props: { children: React.ReactNode }): React.JSX.Element {
   return (
     <View
       className={cn(
-        'gap-2 px-4 pt-4 pb-2',
+        'gap-2 px-6 pt-4 pb-2',
         centred ? 'flex-row justify-end' : 'flex-col-reverse',
       )}
     >

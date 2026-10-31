@@ -42,9 +42,35 @@ const shown = async (text: RegExp | string): Promise<void> => {
 
 export const ShowsTheCodeAndTheDigitsThatStandForIt: Story = {
   play: async () => {
-    await shown('048 213');
+    await shown('048 · 213');
     await expect(sheet.getByLabelText(qrCode)).toBeVisible();
+    await expect(sheet.getByText(/No camera\?/)).toBeVisible();
     await expect(sheet.queryByText(/has expired/)).toBeNull();
+  },
+};
+
+// The code runs out, so the sheet says how long is left and how much of the Ticket's life that is.
+export const CountsTheCodeDown: Story = {
+  play: async () => {
+    await shown('048 · 213');
+    await expect(sheet.getByText(/^\d:\d\d$/)).toBeVisible();
+    await expect(sheet.getByText(/A new code appears/)).toBeVisible();
+
+    const bar = sheet.getByRole('progressbar', {
+      name: 'Time left on this code',
+    });
+
+    await expect(Number(bar.getAttribute('aria-valuenow'))).toBeGreaterThan(0);
+  },
+};
+
+// Done is the way out of a sheet that is only read; it closes and grants nothing.
+export const DoneClosesTheSheet: Story = {
+  play: async ({ args, userEvent }) => {
+    await shown('048 · 213');
+    await userEvent.click(sheet.getByRole('button', { name: 'Done' }));
+    await expect(args.onOpenChange).toHaveBeenCalledWith(false);
+    await expect(args.onAllow).not.toHaveBeenCalled();
   },
 };
 
@@ -92,6 +118,6 @@ export const AClosedSheetShowsNoCode: Story = {
   args: { open: false },
   play: async () => {
     await expect(sheet.queryByLabelText(qrCode)).toBeNull();
-    await expect(sheet.queryByText('048 213')).toBeNull();
+    await expect(sheet.queryByText('048 · 213')).toBeNull();
   },
 };

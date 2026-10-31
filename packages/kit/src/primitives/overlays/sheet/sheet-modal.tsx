@@ -33,10 +33,11 @@ export function ModalSheet(props: PresentationProps): ReactElement {
   );
 }
 
-// The drawer's surface and heights, as a card no wider than a form.
+// The drawer's surface and heights, as a card no wider than a form, or as the wider card a two-column page asks for.
 function modalClass(props: PresentationProps): string {
   return cn(
-    'sheet z-50 flex w-lg flex-col overflow-hidden rounded-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border web:animate-in web:fade-in-0 web:zoom-in-95 web:duration-200',
+    'sheet z-50 flex flex-col overflow-hidden rounded-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border web:animate-in web:fade-in-0 web:zoom-in-95 web:duration-200',
+    props.wide ? 'sheet-wide' : 'w-lg',
     sheetHeightClass(props),
   );
 }
