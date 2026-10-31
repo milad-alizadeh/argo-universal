@@ -36,6 +36,6 @@ export const fieldGroupLinkRowProps = fieldGroupFieldProps.extend({
     .boolean()
     .optional()
     .describe(
-      'The row performs an action rather than opening a page: no disclosure chevron on iOS and the web, and a button rather than a link to assistive technology.',
+      'The row performs an action rather than opening a page: no disclosure chevron on iOS and the web (Android draws none on any row), and a button rather than a link to assistive technology on the web.',
     ),
 });

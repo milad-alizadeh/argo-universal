@@ -70,6 +70,7 @@ export const ActionTitlesShareOneX: Story = {
       </FieldGroup.Section>
     </FieldGroup>
   ),
+  // The story draws its own FieldGroup around three rows, so the meta's one-row wrapper is dropped.
   decorators: [],
   play: async ({ canvas }) => {
     const lefts = ['Photos', 'Files', 'Slash Commands'].map(
@@ -77,5 +78,15 @@ export const ActionTitlesShareOneX: Story = {
     );
 
     await expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThan(0.5);
+  },
+};
+
+export const ActionWithoutAnIconKeepsItsValue: Story = {
+  args: { title: 'Sort', value: 'Newest', action: true },
+  play: async ({ canvas }) => {
+    const row = canvas.getByRole('button', { name: 'Sort, Newest' });
+
+    await expect(canvas.getByText('Newest')).toBeVisible();
+    await expect(row.querySelector('svg')).toBeNull();
   },
 };
