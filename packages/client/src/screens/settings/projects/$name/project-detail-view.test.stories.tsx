@@ -28,6 +28,11 @@ const meta = {
 
 export default meta;
 
+const withSpies = pluginContributions.map((contribution) => ({
+  ...contribution,
+  onEvent: fn(),
+}));
+
 type Story = StoryObj<typeof meta>;
 
 const githubHost = 'api.github.com';
@@ -103,7 +108,7 @@ export const SaysWhenTheProjectIsMissing: Story = {
 
 // ADR-0035: each Plugin in the Project details Slot is a section of its own, a card beside Folder's, in the Server's order.
 export const EachPluginIsASectionOfItsOwn: Story = {
-  args: { pluginContributions },
+  args: { pluginContributions: withSpies },
   play: async ({ canvas }) => {
     const folder = sectionOf(await canvas.findByText('Folder'));
     const example = sectionOf(await canvas.findByText('Example'));

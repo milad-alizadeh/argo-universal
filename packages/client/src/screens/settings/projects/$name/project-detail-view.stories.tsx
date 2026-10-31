@@ -31,6 +31,11 @@ const meta = {
 
 export default meta;
 
+const withSpies = pluginContributions.map((contribution) => ({
+  ...contribution,
+  onEvent: fn(),
+}));
+
 type Story = StoryObj<typeof meta>;
 
 export const NewWorktree: Story = {};
@@ -44,7 +49,7 @@ export const Local: Story = {
 
 // Two Plugins in the Project details Slot, each in a section and card of its own.
 export const PluginSections: Story = {
-  args: { pluginContributions },
+  args: { pluginContributions: withSpies },
 };
 
 // Each host's chosen Account, below Folder.

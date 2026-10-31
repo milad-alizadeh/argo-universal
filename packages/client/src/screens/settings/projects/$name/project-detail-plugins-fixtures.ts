@@ -1,6 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
-import { fn } from 'storybook/test';
 import type { PluginSlotContribution } from '../../../../lib/product/plugin-registry';
 
 const row = (key: string, title: string): WireNode => ({
@@ -19,18 +18,16 @@ const trackerRoot: WireNode = {
   slots: {},
 };
 
-// Two Plugins that contribute to Project details, in the Server's order.
-export const pluginContributions: PluginSlotContribution[] = [
+// Two Plugins that contribute to Project details, in the Server's order; a story adds the `onEvent` spy.
+export const pluginContributions: Omit<PluginSlotContribution, 'onEvent'>[] = [
   {
     pluginId: 'example',
     name: 'Example',
     root: slotCounterRoot,
-    onEvent: fn(),
   },
   {
     pluginId: 'issue-tracker',
     name: 'Issue tracker',
     root: trackerRoot,
-    onEvent: fn(),
   },
 ];

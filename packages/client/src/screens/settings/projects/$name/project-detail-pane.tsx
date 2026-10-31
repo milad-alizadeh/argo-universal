@@ -52,14 +52,17 @@ export function ProjectDetailPane({
   const detail = useProjectDetail(name);
 
   return detail.project.status === 'loaded' ? (
-    <WithPluginSections detail={detail} projectId={detail.project.project.id} />
+    <LoadedProjectDetail
+      detail={detail}
+      projectId={detail.project.project.id}
+    />
   ) : (
     <ProjectDetailView {...detail} />
   );
 }
 
 // Watches the Slot only for a loaded Project, as the Server has no Project to answer for before then.
-function WithPluginSections({
+function LoadedProjectDetail({
   detail,
   projectId,
 }: {
