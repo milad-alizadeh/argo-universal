@@ -1,6 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Project } from './issue-client';
 import type { IssueDeps, IssuePages } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { FilterPage } from './issue-filter-page';
@@ -30,17 +29,17 @@ export function createIssuePages(
 type Register = (path: string, page: Page) => string;
 
 const pagePaths = (register: Register, deps: () => IssueDeps): IssuePages => ({
-  projectPagePath: (project) =>
-    register(projectPath(project.id), projectPage(project, deps())),
-  filterPagePath: (project, filter) =>
+  projectPagePath: ({ id }) =>
+    register(projectPath(id), projectPage(id, deps())),
+  filterPagePath: ({ id }, filter) =>
     register(
-      filterPath(project.id, filter),
-      filterPage({ project, filter, deps: deps() }),
+      filterPath(id, filter),
+      filterPage({ projectId: id, filter, deps: deps() }),
     ),
-  issuePagePath: (project, number) =>
+  issuePagePath: ({ id }, number) =>
     register(
-      issuePath(project.id, number),
-      issuePage({ project, number, deps: deps() }),
+      issuePath(id, number),
+      issuePage({ projectId: id, number, deps: deps() }),
     ),
 });
 
@@ -67,21 +66,39 @@ async function registerBuiltIns(deps: IssueDeps): Promise<void> {
   }
 }
 
-const projectPage = (project: Project, deps: IssueDeps): Page =>
+// A page keeps only its Project's id: the Project itself, remote and all, is read each time the page opens.
+const projectPage = (projectId: string, deps: IssueDeps): Page =>
   function IssueProjectPage(): JSX.Element {
-    return <IssuesRoot deps={deps} project={project} />;
+    return <IssuesRoot deps={deps} projectId={projectId} />;
   };
 
-type FilterInput = { project: Project; filter: IssueFilter; deps: IssueDeps };
+type FilterInput = { projectId: string; filter: IssueFilter; deps: IssueDeps };
 
-const filterPage = (source: FilterInput): Page =>
+const filterPage = ({ projectId, filter, deps }: FilterInput): Page =>
   function IssueFilterPage(): JSX.Element {
-    return <IssuesRoot {...source} detail={<FilterPage {...source} />} />;
+    return (
+      <IssuesRoot
+        deps={deps}
+        projectId={projectId}
+        filter={filter}
+        detail={(project) => (
+          <FilterPage project={project} filter={filter} deps={deps} />
+        )}
+      />
+    );
   };
 
-type IssueInput = { project: Project; number: number; deps: IssueDeps };
+type IssueInput = { projectId: string; number: number; deps: IssueDeps };
 
-const issuePage = (source: IssueInput): Page =>
+const issuePage = ({ projectId, number, deps }: IssueInput): Page =>
   function IssuePage(): JSX.Element {
-    return <IssuesRoot {...source} detail={<IssueDetailPage {...source} />} />;
+    return (
+      <IssuesRoot
+        deps={deps}
+        projectId={projectId}
+        detail={(project) => (
+          <IssueDetailPage project={project} number={number} deps={deps} />
+        )}
+      />
+    );
   };
