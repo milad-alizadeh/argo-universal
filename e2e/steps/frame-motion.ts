@@ -109,13 +109,15 @@ Then('the Feed never moved', async ({ page }): Promise<void> => {
   await assertStill(page, [feed]);
 });
 
-// Frames the page pane drew with more elements below full opacity than it settles with.
+// Frames the page pane drew with more faded elements than it has at rest. Rest is the lower of the first and last reading: the first may already be mid-fade, the last is after the page settled.
 async function fadedFrames(page: Page): Promise<number[]> {
   await settle(page);
-  const fades = await page.evaluate<number[]>('window.paneFades');
-  const settled = fades.at(-1) ?? 0;
+  const counts = await page.evaluate<number[]>('window.paneFades');
 
-  return fades.filter((count) => count > settled);
+  expect(counts.length, 'the page pane was never read').toBeGreaterThan(0);
+  const rest = Math.min(counts[0] ?? 0, counts.at(-1) ?? 0);
+
+  return counts.filter((count) => count > rest);
 }
 
 /*
