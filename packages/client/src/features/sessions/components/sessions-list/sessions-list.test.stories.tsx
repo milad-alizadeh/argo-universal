@@ -270,7 +270,7 @@ export const EmptyStateWrapsWhenNarrow: Story = {
   play: async ({ canvas }) => {
     const text = await canvas.findByText('No Sessions yet.');
 
-    const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
+    const lineHeight = Number.parseFloat(getComputedStyle(text).lineHeight);
 
     // Wrapped, the copy is taller than one line; clipped to one line it is one line and overflows sideways.
     await expect(text.getBoundingClientRect().height).toBeGreaterThan(

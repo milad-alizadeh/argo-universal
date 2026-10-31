@@ -47,29 +47,30 @@ export function ScreenRow(props: ScreenRowProps): ReactElement {
  * under the title, as stock Settings stacks them, so neither is squeezed to a few letters or broken mid-word.
  */
 function TitleAndSummary(props: ScreenRowProps): ReactElement {
+  const enlarged = useEnlargedText();
   const title = <RowTitle {...titleProps(props)} />;
   const summary = <NativeText tone="muted">{props.summary}</NativeText>;
 
-  if (useEnlargedText()) {
-    return (
-      <>
-        <VStack alignment="leading">
-          {title}
-          {summary}
-        </VStack>
-        <Spacer />
-      </>
-    );
-  }
-
-  return (
-    <>
-      {title}
-      <Spacer />
-      {summary}
-    </>
-  );
+  return enlarged ? stacked(title, summary) : beside(title, summary);
 }
+
+const stacked = (title: ReactElement, summary: ReactElement): ReactElement => (
+  <>
+    <VStack alignment="leading">
+      {title}
+      {summary}
+    </VStack>
+    <Spacer />
+  </>
+);
+
+const beside = (title: ReactElement, summary: ReactElement): ReactElement => (
+  <>
+    {title}
+    <Spacer />
+    {summary}
+  </>
+);
 
 // The chosen option's logo leads the row where it has one, the row's own icon otherwise.
 const titleProps = (
