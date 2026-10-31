@@ -48,3 +48,15 @@ function touchedFolders(changed: string[], root: string): string[] {
     ...new Set(changed.map((file) => path.join(root, path.dirname(file)))),
   ].filter((folder): boolean => folder !== root);
 }
+
+const LISTED_PATHS = 3;
+
+// An empty change and a change verify does not read both exit 0, so the words must tell them apart.
+export function nothingChecked(paths: string[]): string {
+  if (paths.length === 0) return 'nothing changed since main.';
+
+  const listed = paths.slice(0, LISTED_PATHS).join(', ');
+  const more = paths.length > LISTED_PATHS ? ', ...' : '';
+
+  return `nothing checked. None of the changed paths (${listed}${more}) is an existing file verify reads, so no format, lint, type or test check ran. This is not a pass.`;
+}

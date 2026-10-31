@@ -126,19 +126,24 @@ export function checkTypes(): Result {
   return run(binary('turbo'), args);
 }
 
-// Changed and untracked files since `base` that the checks read and that still exist.
-export function changedFiles(base: string): string[] {
+// Every path changed or untracked since `base`, whether or not the checks read it.
+export function changedPaths(base: string): string[] {
   const tracked = run('git', ['diff', '--name-only', base]).output;
   const untracked = run('git', ['ls-files', '--others', '--exclude-standard']);
+  const names = `${tracked}\n${untracked.output}`.split('\n');
 
-  const names = `${tracked}\n${untracked.output}`
-    .split('\n')
-    .filter((name): boolean => FORMATTED_FILE.test(name));
-
-  return [...new Set(names)].filter((name): boolean =>
-    existsSync(path.join(root, name)),
-  );
+  return [...new Set(names)].filter(Boolean);
 }
+
+// The changed paths that the checks read and that still exist.
+export const readableFiles = (paths: string[]): string[] =>
+  paths.filter(
+    (name): boolean =>
+      FORMATTED_FILE.test(name) && existsSync(path.join(root, name)),
+  );
+
+export const changedFiles = (base: string): string[] =>
+  readableFiles(changedPaths(base));
 
 // Type-aware lint on the changed files, and the affected type checks when TypeScript changed.
 export function checkChanged(files: string[]): Result[] {
