@@ -84,6 +84,13 @@ function usePaneMotion(values: PaneMotionValues, props: FramePaneProps): void {
   }, [values, props]);
 }
 
+/*
+ * A closed pane is 0 wide and waits at the window's edge, but a native Surface's shadow is not clipped by its box, so it
+ * would bleed back across the content (#1703). Once the width reaches 0 nothing of it is drawn; while it animates the
+ * shadow goes with the edge, as on the web.
+ */
+const drawn = (width: number): number => (width > 0 ? 1 : 0);
+
 interface PaneStyles {
   // The pane's clip, and its content's slide.
   widthStyle: AnimatedViewStyle;
@@ -97,7 +104,7 @@ function usePaneStyles(props: FramePaneProps): PaneStyles {
 
   return {
     widthStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ width: width.get() }),
+      () => ({ width: width.get(), opacity: drawn(width.get()) }),
       [width],
     ),
     shiftStyle: useAnimatedStyle<ViewStyle>(
