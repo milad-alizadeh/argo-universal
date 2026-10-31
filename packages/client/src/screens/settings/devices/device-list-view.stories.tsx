@@ -6,7 +6,6 @@ const meta = {
   title: 'Screens/Settings/Devices',
   component: DeviceListView,
   argTypes: {
-    caption: { control: 'text' },
     localNetworkAccess: { control: false },
     saving: { control: 'boolean' },
     error: { control: 'text' },

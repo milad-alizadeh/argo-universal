@@ -1,4 +1,3 @@
-import { onlineManager } from '@tanstack/react-query';
 import type { TRPCConnectionState } from '@trpc/client/unstable-internals';
 import type { Unsubscribable } from '@trpc/server/observable';
 
@@ -56,7 +55,8 @@ interface ConnectionLink {
   stopWatching: () => void;
 }
 
-const isDown = (state: ConnectionState): boolean =>
+// Down to the cache as well as to the owner: a Connection reconnecting has nowhere to send a query.
+export const isDown = (state: ConnectionState): boolean =>
   state === 'reconnecting' || state === 'offline';
 
 function setState(link: ConnectionLink, state: ConnectionState): void {
@@ -66,12 +66,10 @@ function setState(link: ConnectionLink, state: ConnectionState): void {
       ? setTimeout(() => setState(link, 'offline'), offlineDelayMs)
       : undefined;
   link.state = state;
-  onlineManager.setOnline(!isDown(state));
 
   for (const listener of link.listeners) listener();
 }
 
-// Queries refetch through onlineManager when it comes back online.
 function opened(link: ConnectionLink): void {
   link.attempts = 0;
 
@@ -139,7 +137,6 @@ function stop(link: ConnectionLink): void {
   }
 
   link.listeners.clear();
-  onlineManager.setOnline(true);
 }
 
 const newLink = (): ConnectionLink => ({

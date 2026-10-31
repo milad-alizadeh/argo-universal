@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { useServerPaired } from '#lib/product/server-place';
+import { useServerPaired } from '#lib/product/server-scope';
 import type { KeepRunningSetting } from './connection-detail-view';
 import { keepRunningSetting } from './keep-running-setting';
 

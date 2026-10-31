@@ -1,9 +1,8 @@
 import type { PlaceholderDetailViewProps } from './placeholder-detail-view';
 
-// Settings pages the App cannot show yet; the title, caption and note are copy, not states.
+// Settings pages the App cannot show yet; the title and the note are copy, not states.
 export const accountsPlaceholder = {
   title: 'Accounts',
-  caption: 'What this App is talking to',
   description: 'Accounts will appear here.',
 } satisfies PlaceholderDetailViewProps;
 

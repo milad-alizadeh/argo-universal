@@ -10,7 +10,7 @@ import type {
   LocalNetworkAccessLoad,
 } from './device-list-view';
 
-type Controls = Omit<DeviceListViewProps, 'caption' | 'onBack'>;
+type Controls = Omit<DeviceListViewProps, 'onBack'>;
 
 interface AccessQuery {
   data?: { enabled: boolean };

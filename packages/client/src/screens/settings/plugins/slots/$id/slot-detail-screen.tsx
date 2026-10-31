@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import {
   PlaceholderDetailView,
-  useServerPageCaption,
   useSlotChoices,
   useSlotChoosers,
 } from '#features/settings';
@@ -49,7 +48,6 @@ function DeclaredSlot({
   return (
     <SlotDetailView
       settings={settings}
-      caption={useServerPageCaption()}
       {...useSlotState(settings)}
       onBack={() => navigate('/settings/plugins')}
     />

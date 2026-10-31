@@ -1,32 +1,27 @@
 import type * as React from 'react';
-import {
-  PlaceholderDetailView,
-  useServerPageCaption,
-} from '#features/settings';
-import { useServerPaired } from '#lib/product/server-place';
+import { PlaceholderDetailView } from '#features/settings';
+import { useServerPaired } from '#lib/product/server-scope';
 import { DeviceListView } from './device-list-view';
 import { useLocalNetworkAccess } from './use-local-network-access';
 
-// Local network access is Server-Device-only (ADR-0022), so a Device paired to another computer's Server is not shown the switch, and the Server refuses it with `serverDeviceProcedure` whatever the App draws.
+/*
+ * The Devices of the Server being looked at. A paired Device never sees the other Devices, and Local network access is
+ * Server-Device-only (ADR-0022), so it is shown neither: the Settings list leaves the row out, and a link straight to
+ * the page lands here. The reads live in the child so a paired Device never even asks; hiding a row in the App is not
+ * the check either way, since the Server refuses the call with `serverDeviceProcedure`.
+ */
 export function DeviceListScreen(): React.JSX.Element {
-  const caption = useServerPageCaption();
-
   if (useServerPaired())
     return (
       <PlaceholderDetailView
         title="Devices"
-        caption={caption}
-        description="Devices will appear here."
+        description="Only the computer this Server runs on lists its Devices."
       />
     );
 
-  return <ServerDeviceList caption={caption} />;
+  return <ServerDeviceList />;
 }
 
-function ServerDeviceList({
-  caption,
-}: {
-  caption: string | undefined;
-}): React.JSX.Element {
-  return <DeviceListView {...useLocalNetworkAccess()} caption={caption} />;
+function ServerDeviceList(): React.JSX.Element {
+  return <DeviceListView {...useLocalNetworkAccess()} />;
 }

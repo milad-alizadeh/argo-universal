@@ -6,7 +6,6 @@ const meta = {
   title: 'Screens/Settings/AgentAccess',
   component: AgentAccessDetailView,
   argTypes: {
-    caption: { control: 'text' },
     access: { control: false },
     saving: { control: 'boolean' },
     installing: { control: 'boolean' },

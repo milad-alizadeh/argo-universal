@@ -6,6 +6,7 @@ import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import { useProjects, useThemeChoice } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
+import { type ServerScope, useServerScope } from '#lib/product/server-scope';
 import { sections } from '../../lib/product/navigation/sections';
 import { usePluginEntries } from './plugins/use-plugins';
 import { connectionStatus } from './settings-connection-status';
@@ -51,8 +52,17 @@ function useSettingsList(query?: string): SettingsListViewProps {
     status: connectionStatus(useConnectionState()),
     theme: theme.choice,
     onThemeChange: theme.choose,
+    ...lookedAtServer(useServerScope()),
   };
 }
+
+// Which Server the pages are of: a Server this Device paired with has Settings of its own (ADR-0022).
+const lookedAtServer = (
+  server: ServerScope,
+): Pick<SettingsListViewProps, 'serverName' | 'paired'> => ({
+  serverName: server.name,
+  paired: !server.serverDevice,
+});
 
 export interface SettingsListScreenProps {
   query: string;

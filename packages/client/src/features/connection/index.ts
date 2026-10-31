@@ -1,5 +1,7 @@
 export type { Connection, ConnectionState } from './stores/connection';
 
+export { holdCacheOnline } from './stores/cache-online';
+
 export {
   useConnectionState,
   useResubscribeOnReconnect,
@@ -7,7 +9,7 @@ export {
 
 export { ConnectionContext, useConnection } from './stores/connection-context';
 
-export { openConnection } from './api/open-connection';
+export { type OpenConnection, openConnection } from './api/open-connection';
 
 export { retryServer } from './api/retry-server';
 

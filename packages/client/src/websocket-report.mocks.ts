@@ -1,14 +1,20 @@
+import type { QueryClient } from '@tanstack/react-query';
+
 export interface ConnectionReport {
   serverUrl: string;
   open: number;
   closed: number;
   screenSubscriptions: number;
   statesScreensSaw: string[];
+  // How many caches the screens have been given: one per Server the App has looked at.
+  cachesScreensSaw: number;
 }
 
 const sockets: WebSocketMock[] = [];
 
 const statesScreensSaw = new Set<string>();
+
+const cachesScreensSaw = new Set<QueryClient>();
 
 let screenSubscriptions = 0;
 
@@ -28,6 +34,12 @@ export function recordScreenState(state: string): void {
   changed();
 }
 
+// The cache a screen reads through, so a Server switch is seen to give the screens a cache of its own.
+export function recordScreenCache(cache: QueryClient): void {
+  cachesScreensSaw.add(cache);
+  changed();
+}
+
 function buildReport(): ConnectionReport {
   const serverUrl = sockets.at(-1)?.url;
   const closed = sockets.filter((socket) => socket.isClosed()).length;
@@ -39,6 +51,7 @@ function buildReport(): ConnectionReport {
     closed,
     screenSubscriptions,
     statesScreensSaw: [...statesScreensSaw],
+    cachesScreensSaw: cachesScreensSaw.size,
   };
 }
 
@@ -150,6 +163,7 @@ export function mockWebSocket(): () => void {
   sockets.splice(0);
   screenSubscriptions = 0;
   statesScreensSaw.clear();
+  cachesScreensSaw.clear();
   changed();
   globalThis.WebSocket = WebSocketMock;
 

@@ -27,7 +27,6 @@ export interface SlotLink {
 }
 
 export interface PluginListViewProps {
-  caption?: string;
   plugins: PluginsLoad;
   // The Slots some Plugin fills; a Slot no Plugin fills has no row.
   slots: readonly SlotLink[];
@@ -42,7 +41,7 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
   useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
 
   return (
-    <Screen title={pluginsTitle} caption={props.caption}>
+    <Screen title={pluginsTitle}>
       <List appearance="grouped">
         <ListSection>{pluginRows(props)}</ListSection>
         {slotsSection(props)}
