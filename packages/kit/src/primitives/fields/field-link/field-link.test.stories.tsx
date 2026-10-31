@@ -96,6 +96,7 @@ export const DisabledDoesNothing: Story = {
   play: async ({ canvas, userEvent, args }) => {
     const row = canvas.getByRole('button', { name: 'Goal' });
 
+    // The click is forced through so a row that swallows it, rather than one the browser refuses, is what is tested.
     await userEvent.click(row, { pointerEventsCheck: 0 });
     await expect(args.onPress).not.toHaveBeenCalled();
   },
