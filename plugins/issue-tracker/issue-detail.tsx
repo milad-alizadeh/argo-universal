@@ -51,11 +51,7 @@ function IssueDetail(props: IssueDetailProps): JSX.Element {
   const { issue } = props;
 
   return (
-    <Screen
-      title={issue.title}
-      caption={`#${issue.number}`}
-      captionHref={issue.url}
-    >
+    <Screen title={issue.title}>
       <IssueBody {...props} />
     </Screen>
   );
