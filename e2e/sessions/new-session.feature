@@ -173,6 +173,19 @@ Feature: New Session
       | wide   |
       | phone  |
 
+  Scenario: Back from the Agents page opened through Add Agents returns to New Session
+    Given a phone Frame
+    And no Agents are installed
+    When I open a New Session
+    And I type "Keep this draft" and open Add Agents
+    Then the Agents page is open
+    When I press Back in the page header
+    Then New Session is open
+    And the Message box still holds "Keep this draft"
+    When I press Back in the page header
+    And I open Settings
+    Then the phone Frame shows the Settings list without Accounts detail
+
   Scenario Outline: A first launch waits for the download and then shows options
     Given a <layout> Frame
     And the Agent download is held

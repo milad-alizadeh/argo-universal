@@ -21,3 +21,15 @@ Feature: Sections
     Then the wide Frame shows Accounts beside the Settings list
     When I return to Sessions
     Then the wide Frame shows no Session beside the Sessions list
+
+  Scenario: An unknown address opens inside the wide Frame
+    Given a wide Frame
+    When I open an address no page answers
+    Then the wide Frame shows Not found beside the Sessions list
+    When I leave Not found for Sessions
+    Then the wide Frame shows no Session beside the Sessions list
+
+  Scenario: An unknown address opens inside the phone Frame
+    Given a phone Frame
+    When I open an address no page answers
+    Then the phone Frame shows Not found

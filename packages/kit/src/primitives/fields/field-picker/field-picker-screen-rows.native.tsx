@@ -3,7 +3,7 @@ import { List, NativeGroupedList } from '#primitives/lists/list';
 import { OptionRow } from './field-picker-inline-row';
 import { optionSections, type OptionSection } from './field-picker-model';
 import type { FieldPickerScreenProps } from './field-picker-screen';
-import { EmptyState } from './field-picker-screen-parts';
+import { screenEmpty } from './field-picker-screen-parts';
 
 /*
  * The options of a `page` on iOS and Android (ADR-0042): the native grouped list, so the page is virtualised and drawn in
@@ -12,7 +12,7 @@ import { EmptyState } from './field-picker-screen-parts';
  */
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
-    <NativeGroupedList empty={<EmptyState />}>
+    <NativeGroupedList empty={screenEmpty(props)}>
       {optionSections(props.shown ?? props.options).map((section) =>
         screenSection(props, section),
       )}

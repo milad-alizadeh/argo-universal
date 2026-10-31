@@ -52,6 +52,13 @@ Feature: Plugin navigation
     When I reload the App and open New Session
     Then the Message box is empty
 
+  Scenario: Back from New Session started on a Plugin page returns to that page
+    Given a phone Frame
+    When I open the Counter Plugin
+    And I press "Start Session" on the Plugin page
+    And I press Back in the page header
+    Then the Plugin page shows Counter
+
   Scenario Outline: The phone drawer opens Plugins and returns to core sections
     Given a phone Frame
     When I open the <first> Plugin

@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { expect, fn } from 'storybook/test';
+import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { Screen } from '#primitives/scaffolds/screen';
 import { FieldGroup } from './field-group';
 
 const pressed = fn();
 
 const meta = {
   title: 'Tests/Design System/Primitives/Forms/FieldGroup',
-  render: (): ReactElement => <Screen />,
+  render: (): ReactElement => <Settings />,
   beforeEach: (): void => {
     pressed.mockClear();
   },
@@ -42,7 +44,39 @@ export const TextFieldTypes: Story = {
   },
 };
 
-function Screen(): ReactElement {
+const columnToken = (): number =>
+  Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(
+      '--container-column',
+    ),
+  );
+
+// On a wide window the group's cards keep to the Screen's content column (#1748, #1702).
+export const CardsKeepToColumnWide: Story = {
+  parameters: { screenPreview: true },
+  beforeEach: () => settleLayout(layoutWidths.wide),
+  render: (): ReactElement => (
+    <Screen title="Accounts">
+      <Settings />
+    </Screen>
+  ),
+  play: async ({ canvas }) => {
+    const first = canvas.getByText('Licences');
+    const last = canvas.getByDisplayValue('Argo');
+    let card: Element = first;
+
+    // The nearest element holding every row of the section: the card.
+    while (!card.contains(last) && card.parentElement)
+      card = card.parentElement;
+    const heading = canvas.getByRole('heading', { level: 1, name: 'Accounts' });
+
+    await expect(
+      card.getBoundingClientRect().right - heading.getBoundingClientRect().left,
+    ).toBeLessThanOrEqual(columnToken());
+  },
+};
+
+function Settings(): ReactElement {
   const [on, setOn] = useState(true);
   const [name, setName] = useState('Argo');
 

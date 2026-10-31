@@ -18,6 +18,8 @@ import { scopeTarget, type ScopeTarget } from './targets';
 
 export { scopedOperations } from './listing';
 
+export { PromptChains } from './prompt-chain';
+
 export type { ScopedRun } from './confirmation';
 
 type TargetedId = Exclude<OperationId, NativeStartId>;

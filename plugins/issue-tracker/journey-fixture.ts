@@ -6,7 +6,9 @@ import {
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
 
-export const project = {
+type FixtureProject = { id: string; name: string; originUrl: string | null };
+
+export const project: FixtureProject = {
   id: 'project-1',
   name: 'Fixture Project',
   originUrl: 'git@github.com:owner/repository.git',

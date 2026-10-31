@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
 import { startOwnServer } from '@repo/e2e/own-server';
-import { longRegistry, requireCatalog } from './agents-registry.mts';
+import { longRegistry, requireServedCatalog } from './agents-registry.mts';
 import { report } from './frame-report.mts';
 import {
   desktop,
@@ -24,7 +24,8 @@ type Server = Awaited<ReturnType<typeof startOwnServer>>;
 
 let server: Server;
 
-let seededAgents = 0;
+// Unset until the Server has been asked, so a run that fails before that publishes no count rather than a zero.
+let seededAgents: number | undefined;
 
 /*
  * The Agents page lists the catalog in name order (`byName`, installed-agents.ts, applied in
@@ -63,15 +64,14 @@ test.beforeAll(async () => {
     {},
     { registry: longRegistry() },
   );
-  // The count the Server was started with, read back, not the one this file claims.
-  seededAgents = await requireCatalog(server.registryPath);
+  seededAgents = await requireServedCatalog(server.httpUrl);
 });
 
 test.afterAll(async () => {
   await server.stop();
   await report({
     planned,
-    seeded: { agents: seededAgents },
+    seeded: seededAgents === undefined ? {} : { agents: seededAgents },
     suite: 'agents',
   });
 });

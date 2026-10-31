@@ -24,11 +24,16 @@ export function DrawerItem(props: DrawerItemProps): React.JSX.Element {
   );
 }
 
+/*
+ * The row is at least 48 high and grows with its label, which an enlarged text size makes taller than 48. The
+ * minimum repeats under `web:sm:` because `contentActionClass` resets `web:sm:min-h-0`, which would otherwise win
+ * there.
+ */
 const drawerItemClass = (selected: boolean): string =>
   contentActionClass({
     variant: 'ghost',
     className: cn(
-      'h-12 sm:h-12 justify-start gap-1.5 rounded-lg px-3',
+      'min-h-12 web:sm:min-h-12 justify-start gap-1.5 rounded-lg px-3 py-2',
       selected && 'bg-selected',
     ),
   });

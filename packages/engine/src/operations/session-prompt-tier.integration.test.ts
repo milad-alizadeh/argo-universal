@@ -1,13 +1,13 @@
+import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { askOperation } from '#mocks/operation-permissions';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
 const promptOperation = 'session.prompt';
 
-it('asks before prompting an unrelated Session, denies without a target Turn, then allows with the caller sender', async () => {
+it('prompts an unrelated Session in its own Project without asking, as the calling Session', async () => {
   const journey = await delegationJourney();
 
   const target = await journey.host.caller.session.new({
@@ -17,50 +17,18 @@ it('asks before prompting an unrelated Session, denies without a target Turn, th
 
   await holdSession(journey, journey.caller.sessionId);
 
-  const reviewPrompt = 'Review the change';
-
-  const operation = {
+  const sent = await runOperation(journey.caller.caller.operations, {
+    wait: true,
     id: promptOperation,
     params: {
       ...target,
-      prompt: [{ type: 'text', text: reviewPrompt }],
+      prompt: [{ type: 'text', text: 'Review the change' }],
     },
-  } satisfies Parameters<typeof askOperation>[1];
+  });
 
-  const calling = { host: journey.host, session: journey.caller };
-  const denied = await askOperation(calling, operation);
-  expect(
-    (await journey.host.caller.feed.page({ ...target, direction: 'tail' }))
-      .rows,
-  ).toEqual([]);
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: denied.request.requestId,
-    optionId: 'reject_once',
+  expect(OperationExecution.parse(sent)).toMatchObject({
+    turn: { sessionId: target.sessionId },
   });
-  expect(await denied.outcome).toMatchObject([
-    { status: 'rejected', reason: { message: 'The user refused' } },
-  ]);
-  expect(
-    (await journey.host.caller.feed.page({ ...target, direction: 'tail' }))
-      .rows,
-  ).toEqual([]);
-  const allowed = await askOperation(calling, operation);
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: allowed.request.requestId,
-    optionId: 'allow_once',
-  });
-  expect(await allowed.outcome).toMatchObject([
-    {
-      status: 'fulfilled',
-      value: {
-        kind: 'operation_execution',
-        status: 'settled',
-        turn: { sessionId: target.sessionId },
-      },
-    },
-  ]);
   await waitForAcpSessionIdle(journey.host, target.sessionId);
   expect(
     (await journey.host.caller.feed.page({ ...target, direction: 'tail' }))
@@ -81,7 +49,7 @@ it('asks before prompting an unrelated Session, denies without a target Turn, th
   );
 }, 30_000);
 
-it('does not treat the calling Session itself as a Session it started', async () => {
+it('asks before a Session prompts itself, which its own live Turn cannot answer', async () => {
   const journey = await delegationJourney();
   await expect(
     runOperation(journey.caller.caller.operations, {

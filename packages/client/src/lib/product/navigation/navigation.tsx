@@ -10,13 +10,28 @@ import { usePreventRemove } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { createContext, type ReactNode, use } from 'react';
 import { newSessionId } from './new-session';
+import { returnParams } from './return-to';
 import { isPage, sectionOf } from './sections';
+import { pageShown } from './shown-page';
 
 // New Session, in the Project it was opened from when there is one, with a draft a Plugin hands it: one route draws it and the Session it becomes.
-type NewSessionParams = { id: string; projectId?: string; draft?: string };
+type NewSessionParams = {
+  id: string;
+  projectId?: string;
+  draft?: string;
+  returnTo?: string;
+};
 
-export function newSessionHref(projectId?: string, draft?: string): Href {
-  const params: NewSessionParams = { id: newSessionId };
+// `from` is the page shown, which Back returns to when it is in another section.
+export function newSessionHref(
+  projectId?: string,
+  draft?: string,
+  from?: string,
+): Href {
+  const params: NewSessionParams = {
+    id: newSessionId,
+    ...returnParams('/sessions/new', from),
+  };
 
   if (projectId !== undefined) params.projectId = projectId;
 
@@ -32,9 +47,20 @@ export const sessionHref = (id: string): Href => ({
   params: { id },
 });
 
+// The Agents page in Settings; Back from it returns to the page shown when that is in another section, such as New Session.
+export const agentsHref = (): Href => ({
+  pathname: '/settings/agents',
+  params: returnParams('/settings/agents', pageShown()),
+});
+
 // Back to the Sessions list, as Back from a Session's page goes; a wide window then shows the list with no Session open.
 export function leaveForSessions(): void {
   router.dismissTo('/sessions');
+}
+
+// Sessions from a page no route answers: nothing is under it to go back to, so the list replaces it.
+export function replaceWithSessions(): void {
+  router.replace('/sessions');
 }
 
 // A Project's page in Settings.
