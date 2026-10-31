@@ -22,6 +22,12 @@ const escapeRegExp = (text: string): string =>
 export const sessionRow = (page: Page, title: string): Locator =>
   page.getByRole('button', { name: new RegExp(`^${escapeRegExp(title)}, `) });
 
+// An archived Session's row: its name ends on Archived, the state its lanes draw as a pill beside the press target.
+export const archivedSessionRow = (page: Page, title: string): Locator =>
+  sessionRow(page, title).and(
+    page.getByRole('button', { name: /, Archived$/ }),
+  );
+
 export const openSessionUrl = /\/sessions\/(?!new)[^/]+$/;
 
 // A swallowed row press leaves the App where it was, so name the press before the destination is blamed.
