@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 export const BadgeHoldsItsWholeCount: Story = {
   play: async ({ canvas }) => {
     const badge = canvas
-      .getByLabelText('3 items need attention')
+      .getByLabelText(countCountBadge.badge.label)
       .getBoundingClientRect();
 
     const count = canvas.getByText('3').getBoundingClientRect();
