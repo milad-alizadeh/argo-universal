@@ -1,11 +1,14 @@
 import type { Database } from '@repo/db';
 import { localNetworkAccess } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import {
   writeDatabaseJobAndWaitForCommit,
   type StorageTransaction,
   type WriterActorRef,
   type WriterJob,
 } from '../storage';
+
+const rejections = createRejectionCounter('engine');
 
 export type NetworkAccessListener = (enabled: boolean) => void;
 
@@ -61,10 +64,7 @@ export class LocalNetworkAccess {
     if (enabled === this.current) return;
     await this.rebind(enabled);
     await this.store(enabled);
-
-    this.current = enabled;
-
-    for (const listener of this.listeners) listener(enabled);
+    this.adopt(enabled);
   }
 
   // A choice that cannot be stored is not kept: the listener goes back to where it was.
@@ -75,9 +75,37 @@ export class LocalNetworkAccess {
         new NetworkAccessJob(enabled),
       );
     } catch (error) {
-      await this.rebind(this.current);
+      await this.revert(enabled, error);
       throw error;
     }
+  }
+
+  // If the listener cannot go back either, what the Engine reports follows where it really is, so the two never disagree. The stored choice is then the old one, and the next start binds by it.
+  private async revert(bound: boolean, cause: unknown): Promise<void> {
+    try {
+      await this.rebind(this.current);
+    } catch (revertError) {
+      this.adopt(bound);
+      throw new AggregateError(
+        [cause, revertError],
+        'Local network access could not be stored or undone',
+      );
+    }
+  }
+
+  // A subscriber that throws is reported and skipped: the change is already made.
+  private adopt(enabled: boolean): void {
+    this.current = enabled;
+
+    for (const listener of this.listeners) notify(listener, enabled);
+  }
+}
+
+function notify(listener: NetworkAccessListener, enabled: boolean): void {
+  try {
+    listener(enabled);
+  } catch (error) {
+    rejections.report('Local network access subscriber failed', error);
   }
 }
 

@@ -11,7 +11,12 @@ export interface ServerListener {
   readonly where: () => string;
   // Moves to the local network (true) or back to loopback (false) without closing the Server. Back to loopback drops every Connection that came in from the network.
   readonly rebind: (network: boolean) => Promise<void>;
+  // After this the listener never binds again, so a change racing the Server's close cannot reopen the port.
+  readonly stop: () => void;
 }
+
+const addressFor = (network: boolean): string =>
+  network ? networkAddress : loopbackAddress;
 
 const listenAt = (
   server: Server,
@@ -28,7 +33,7 @@ const listenAt = (
 
 const loopbackPattern = /^(::1|(::ffff:)?127\.)/;
 
-const isLoopback = (address: string | undefined): boolean =>
+export const isLoopback = (address: string | undefined): boolean =>
   loopbackPattern.test(address ?? '');
 
 // Keeps the open sockets, upgraded WebSockets included, so a narrower bind can drop the ones that came from the network.
@@ -60,11 +65,13 @@ export async function listenForNetworkAccess(
   return {
     where: (): string => listener.where(),
     rebind: (next): Promise<void> => listener.rebind(next),
+    stop: (): void => listener.stop(),
   };
 }
 
 class NetworkListener {
   private address: string;
+  private stopped = false;
   private readonly dropNetworkConnections: () => void;
 
   public constructor(
@@ -72,7 +79,7 @@ class NetworkListener {
     private readonly port: number,
     network: boolean,
   ) {
-    this.address = network ? networkAddress : loopbackAddress;
+    this.address = addressFor(network);
     this.dropNetworkConnections = trackConnections(server);
   }
 
@@ -84,28 +91,50 @@ class NetworkListener {
     return `${this.address}:${this.port}`;
   }
 
-  public async rebind(network: boolean): Promise<void> {
-    const target = network ? networkAddress : loopbackAddress;
+  public stop(): void {
+    this.stopped = true;
+  }
 
-    if (target === this.address) return;
+  public async rebind(network: boolean): Promise<void> {
+    const target = addressFor(network);
+
+    if (!this.movesTo(target)) return;
     // Stops accepting at once and leaves the Connections already open alone.
     this.server.close();
     await this.moveTo(target);
-    this.settle(network);
-  }
 
-  private settle(network: boolean): void {
     if (!network) this.dropNetworkConnections();
   }
 
-  // A listener that cannot move stays where it was, so a failed switch never leaves the Server unreachable.
+  // A listener that lost both addresses (see moveTo) is moved even when it is asked for the one it names.
+  private movesTo(target: string): boolean {
+    if (this.stopped) throw new Error('The Server is closing');
+
+    return target !== this.address || !this.server.listening;
+  }
+
+  // A listener that cannot move goes back to where it was and reports why it could not; if it cannot go back either, the error carries both.
   private async moveTo(target: string): Promise<void> {
     try {
       await listenAt(this.server, this.port, target);
       this.address = target;
     } catch (error) {
+      const moveError =
+        error instanceof Error ? error : new Error(String(error));
+
+      await this.listenAgain(moveError);
+      throw moveError;
+    }
+  }
+
+  private async listenAgain(moveError: Error): Promise<void> {
+    try {
       await listenAt(this.server, this.port, this.address);
-      throw error;
+    } catch (backError) {
+      throw new AggregateError(
+        [moveError, backError],
+        'The Server could not move its listener or go back',
+      );
     }
   }
 }

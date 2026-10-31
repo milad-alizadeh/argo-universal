@@ -1,4 +1,6 @@
+import { Server } from 'node:http';
 import { networkInterfaces } from 'node:os';
+import { vi } from 'vitest';
 import { WebSocket } from 'ws';
 
 // An address of this computer on the local network, the way another Device would reach it; undefined when it is offline.
@@ -10,10 +12,11 @@ export const lanAddress = Object.values(networkInterfaces())
 export function connect(
   host: string | undefined,
   port: number,
+  headers: Record<string, string> = {},
 ): Promise<WebSocket> {
   return new Promise<WebSocket>((resolve, reject): void => {
-    const socket = new WebSocket(`ws://${host}:${port}`);
-    socket.once('open', (): void => resolve(socket));
+    const socket = new WebSocket(`ws://${host}:${port}`, { headers });
+    socket.once('open', (): void => resolve(keepQuiet(socket)));
 
     socket.once('unexpected-response', (_request, response): void => {
       response.resume();
@@ -24,6 +27,13 @@ export function connect(
   });
 }
 
+// A Server that drops this Connection resets it; a test reads that as the socket closing, not as a failure.
+function keepQuiet(socket: WebSocket): WebSocket {
+  socket.on('error', (): void => undefined);
+
+  return socket;
+}
+
 export async function reachable(
   host: string | undefined,
   port: number,
@@ -32,6 +42,43 @@ export async function reachable(
   socket?.close();
 
   return socket !== null;
+}
+
+// The HTTP status of the upgrade: 101 when it opens, 0 when nothing answers.
+export async function upgradeStatus(
+  host: string | undefined,
+  port: number,
+  headers: Record<string, string> = {},
+): Promise<number> {
+  const opened = await connect(host, port, headers).then(
+    (socket) => socket,
+    (error: Error) => error,
+  );
+
+  if (opened instanceof Error) return refusalStatus(opened);
+  opened.close();
+
+  return 101;
+}
+
+const refusalStatus = (error: Error): number =>
+  Number(/upgrade refused: (\d+)/.exec(error.message)?.[1] ?? 0);
+
+// Makes the next `times` binds of `target` fail the way a taken port does; later binds work. `vi.restoreAllMocks` undoes it.
+export function refuseBinds(target: Server, times = 1): void {
+  const listen = vi.spyOn(target, 'listen');
+
+  for (let refused = 0; refused < times; refused++)
+    listen.mockImplementationOnce(takenPort);
+}
+
+function takenPort(this: Server, ...args: unknown[]): Server {
+  queueMicrotask((): void => {
+    const error = new Error(`${String(args[1])} is in use`);
+    this.emit('error', Object.assign(error, { code: 'EADDRINUSE' }));
+  });
+
+  return this;
 }
 
 export const closed = (socket: WebSocket): Promise<void> =>

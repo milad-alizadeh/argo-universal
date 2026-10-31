@@ -73,10 +73,17 @@ function createWebSocketServer(
   server: Server,
   guard: RequestGuard,
 ): WebSocketServer {
-  return new WebSocketServer({
+  const webSocketServer = new WebSocketServer({
     server,
     verifyClient: verifyUpgrade(guard),
   });
+
+  // ws forwards the HTTP server's 'error' here, and an emitter with no listener throws it: a listen that fails after start-up (the switch moving the bind) must reach the caller that awaits it instead.
+  webSocketServer.on('error', (error): void => {
+    guard.report('Server error', error.message);
+  });
+
+  return webSocketServer;
 }
 
 function verifyUpgrade(guard: RequestGuard): VerifyClientCallbackAsync {
@@ -85,6 +92,7 @@ function verifyUpgrade(guard: RequestGuard): VerifyClientCallbackAsync {
       guard.allowsUpgrade({
         host: req.headers.host,
         origin: req.headers.origin,
+        remoteAddress: req.socket.remoteAddress,
       }),
       forbiddenStatus,
       'Forbidden',

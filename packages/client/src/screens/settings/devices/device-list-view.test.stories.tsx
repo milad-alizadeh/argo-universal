@@ -60,22 +60,33 @@ export const TurnsOffAndNoLongerSaysPairingIsUnavailable: Story = {
   },
 };
 
-export const DisconnectedKeepsTheSwitchInactive: Story = {
+const claimsOff = /Only this computer|Pairing is unavailable/;
+
+export const DisconnectedClaimsNeitherState: Story = {
   args: { localNetworkAccess: { status: 'disconnected' } },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('switch', { name: switchName }),
-    ).toBeDisabled();
+    await expect(canvas.queryByRole('switch')).toBeNull();
+    await expect(canvas.queryByText(claimsOff)).toBeNull();
     await expect(canvas.getByText(/Connect to the Server/)).toBeVisible();
   },
 };
 
-export const RetriesLoading: Story = {
+export const LoadingClaimsNeitherState: Story = {
+  args: { localNetworkAccess: { status: 'loading' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('switch')).toBeNull();
+    await expect(canvas.queryByText(claimsOff)).toBeNull();
+    await expect(
+      canvas.getByText(/Loading Local network access/),
+    ).toBeVisible();
+  },
+};
+
+export const RetriesLoadingWithoutClaimingOff: Story = {
   args: { localNetworkAccess: { status: 'error' } },
   play: async ({ canvas, args, userEvent }) => {
-    await expect(
-      canvas.getByRole('switch', { name: switchName }),
-    ).toBeDisabled();
+    await expect(canvas.queryByRole('switch')).toBeNull();
+    await expect(canvas.queryByText(claimsOff)).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();
   },
