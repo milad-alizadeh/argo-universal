@@ -4,12 +4,14 @@ const MS_PER_SECOND = 1000;
 
 const SECONDS_PER_MINUTE = 60;
 
+const MINUTES_PER_HOUR = 60;
+
 const SECONDS_PER_HOUR = 3600;
 
 // "4h 3m", "2m 5s" or "9s": whole units, so a line says whether to wait seconds or hours.
 export function formatDuration(ms: number): string {
   const seconds = Math.max(0, Math.round(ms / MS_PER_SECOND));
-  const minutes = Math.floor(seconds / SECONDS_PER_MINUTE) % SECONDS_PER_MINUTE;
+  const minutes = Math.floor(seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
   const hours = Math.floor(seconds / SECONDS_PER_HOUR);
 
   if (hours > 0) return `${hours}h ${minutes}m`;

@@ -19,7 +19,8 @@ const READ_TIMEOUT_MS = 1000;
 const holderSchema = z.object({
   pid: z.number(),
   cwd: z.string(),
-  since: z.string(),
+  // A date the waiter can subtract from, never text that prints as NaN.
+  since: z.iso.datetime(),
   // What the holder runs, so a waiter can tell one test file from the whole suite; absent from a holder that predates it.
   command: z.string().optional(),
 });
