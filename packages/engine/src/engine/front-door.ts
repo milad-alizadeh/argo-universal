@@ -21,7 +21,22 @@ export interface FrontDoorDeps {
  * So a Device on the local network reaches no router, no Blob and no Plugin asset without the handshake, and there is no plain-HTTP side door beside it.
  */
 export const createFrontDoor = (deps: FrontDoorDeps): Server =>
-  createServer((socket): void => peek(deps, socket, Buffer.alloc(0)));
+  createServer((socket): void => knock(deps, socket));
+
+/*
+ * The socket's own errors are this door's to handle, from before the first byte of it is read.
+ * A raw socket with no `'error'` listener raises an uncaught exception when its peer resets the connection, and that ends the whole Server. Resetting a connection takes no Pairing Ticket and no knowledge of the Server's static key, so until this listener is attached, anyone who can reach the port can stop Argo.
+ */
+function knock(deps: FrontDoorDeps, socket: Socket): void {
+  socket.on('error', (cause: Error): void => broke(deps, socket, cause));
+  peek(deps, socket, Buffer.alloc(0));
+}
+
+// Whatever went wrong with the socket, there is nothing left to answer on it.
+function broke(deps: FrontDoorDeps, socket: Socket, cause: Error): void {
+  deps.report('Connection that failed', String(cause));
+  socket.destroy();
+}
 
 function peek(deps: FrontDoorDeps, socket: Socket, received: Buffer): void {
   const chunk: unknown = socket.read();

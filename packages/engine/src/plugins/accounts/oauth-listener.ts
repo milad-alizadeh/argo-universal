@@ -7,7 +7,10 @@ import {
 
 const oauthPort = 51789;
 
-// This listener is the owner's browser coming back from a sign-in on loopback, and nothing else: it accepts the two spellings of its own address. The tRPC API's own `Host` allowlist is gone, where the handshake is the gate instead (ADR-0045).
+/*
+ * This listener is the owner's browser coming back from a sign-in on loopback, and nothing else: it accepts the two spellings of its own address.
+ * It is a separate `http.Server` of its own, bound to 127.0.0.1 on its own port, and not a route behind the Server's front door: the redirect arrives from the system browser, which cannot speak the encrypted channel. So it keeps the `Host` allowlist that the tRPC API gave up when the handshake became the gate there (ADR-0045).
+ */
 const callbackHostAllowed = (host: string | undefined): boolean =>
   host === `127.0.0.1:${oauthPort}` || host === `localhost:${oauthPort}`;
 

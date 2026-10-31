@@ -1,12 +1,8 @@
 import { ChannelCipher } from './channel-cipher';
 import { tagBytes } from './cipher-state';
+import { ephemeralOf, type HandshakeVector } from './handshake-vector';
 import { SymmetricState } from './symmetric-state';
-import {
-  generateKeypair,
-  keyBytes,
-  sharedSecret,
-  type Keypair,
-} from './x25519';
+import { keyBytes, sharedSecret, type Keypair } from './x25519';
 
 const deviceKeyRecordBytes = keyBytes + tagBytes;
 
@@ -33,27 +29,29 @@ export interface ReceivedHandshake {
 export function receiveHandshake(
   staticKey: Keypair,
   message: Buffer,
+  vector?: HandshakeVector,
 ): ReceivedHandshake {
   if (message.length < smallestFirstMessage)
     throw new Error('A Device opened with too short a message');
 
-  const state = new SymmetricState(staticKey.publicKey);
+  const state = new SymmetricState(staticKey.publicKey, vector?.prologue);
   const ephemeral = message.subarray(0, keyBytes);
   const deviceKey = readDeviceKey({ state, staticKey, ephemeral }, message);
 
-  return received({ state, ephemeral, deviceKey }, message);
+  return received({ state, ephemeral, deviceKey }, message, vector);
 }
 
 const received = (
   answering: AnsweringState,
   message: Buffer,
+  vector: HandshakeVector | undefined,
 ): ReceivedHandshake => ({
   deviceKey: answering.deviceKey,
   ephemeral: answering.ephemeral,
   claim: answering.state.decryptAndHash(
     message.subarray(keyBytes + deviceKeyRecordBytes),
   ),
-  answer: (welcome): AnsweredChannel => answerWith(answering, welcome),
+  answer: (welcome): AnsweredChannel => answerWith(answering, welcome, vector),
 });
 
 interface ReadingState {
@@ -88,8 +86,9 @@ interface AnsweringState {
 function answerWith(
   { state, ephemeral, deviceKey }: AnsweringState,
   welcome: Buffer,
+  vector: HandshakeVector | undefined,
 ): AnsweredChannel {
-  const own = generateKeypair();
+  const own = ephemeralOf(vector);
 
   state.mixHash(own.publicKey);
   state.mixKey(sharedSecret(own.privateKey, ephemeral));

@@ -33,7 +33,11 @@ A ticket lives about two minutes and is good once. The pair sheet mints a new on
 
 **The owner confirms on the Server Device.** The handshake completes, the claimed name arrives, and the Server holds the registration until the owner allows it ("iPhone 15 Pro wants to pair"). Scanning the code is not by itself enough. The claimed name is pre-authentication and untrusted: it is shown for recognition, as Syncthing shows one, and never used for a decision.
 
-**Replay and impersonation are refused by construction,** not by a check someone has to remember: a fresh ephemeral key per handshake, records numbered by a monotonic counter that never repeats, and an App that aborts when the Server's static key is not the one it stored. A computer that answers to the right discovery name with the wrong key gets nowhere.
+This confirmation is not built yet; it lands with the pair sheet in #1497. #1495 spends the Ticket inside the handshake, because admitting a Device and then asking would let it reach the API while the owner was still deciding. So until #1497, **holding a live Pairing Ticket is the whole gate**, and a Device that spends one is a paired Device at once.
+
+**Replay and impersonation are refused by construction,** not by a check someone has to remember: a fresh ephemeral key per handshake, a record nonce each side takes from its own count of the records it has handled, and an App that aborts when the Server's static key is not the one it stored. A computer that answers to the right discovery name with the wrong key gets nowhere.
+
+The record number is not a field on the wire and nothing checks it on receive. Both sides simply count, and a record that does not decrypt under the number the receiver has reached fails its authentication tag and ends the Connection — so a reordered or replayed record is refused without a counter ever being compared.
 
 **`serverDevice` comes from the credential, not from the socket.** `RpcContext` today derives it from `socket.remoteAddress === socket.localAddress`. That comparison goes. The context carries the authenticated identity: the Server Device itself, or a paired Device with its id. Loopback stays a recognised identity — the Server Device's App does not pair with itself.
 
@@ -77,6 +81,8 @@ ADR-0044 establishes one Operation registry, and that whatever a user can do an 
 They belong there for the exception's own reason, and more plainly than anything already in it. An Agent calling `pairing.*` would be deciding who may reach the Server — a consent that is the owner's by definition, since the whole protocol exists so that a Device is trusted only when the person at the Server Device says so. An Agent that could mint a ticket or allow a registration would make the confirmation prompt theatre. One that could unpair would be able to cut the owner off from their own Server. And an Agent runs *inside* a Session on a Server a Device has already been trusted to reach: letting it widen that trust would let any paired Device pair another, which ADR-0022 forbids for the lost-phone reason.
 
 So `pairing.*` and `devices.*`, and those two settings, are Server-Device-only and hand-written, never Operations, with no tier that could make them askable. A `serverDeviceProcedure` sits beside `publicProcedure` in `packages/engine/src/rpc/trpc.ts` and backs every one of them; the Server checks the list itself, from the authenticated context, because hiding a row in the App is not the check. The CI check from Spec 0022 (#1312) that refuses new hand-written tRPC mutations gets these added to its allowlist with the reason recorded.
+
+`serverDeviceProcedure` does not exist yet either; it lands with #1497. #1495 built `publicProcedure`, which requires a proved identity and nothing more, so **until #1497 a paired Device can call `devices.list` and `system.setKeepRunning`** along with every other procedure. The identity it would narrow on is already carried in the context, so #1497 adds the procedure and the list rather than new plumbing.
 
 ## Still open
 
