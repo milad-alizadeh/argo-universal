@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Button } from '#primitives/actions/button';
-import { IconButton } from '#primitives/actions/icon-button';
+import { ChromeIconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import type { SheetScreenAction } from './sheet-props';
 import { drawnAsIcon, type TitleRowProps } from './sheet-title-row-props';
@@ -72,7 +72,7 @@ function HeaderIcon(props: {
   onPress: () => void;
 }): ReactElement {
   return (
-    <IconButton
+    <ChromeIconButton
       variant="ghost"
       icon={props.icon}
       accessibilityLabel={props.label}

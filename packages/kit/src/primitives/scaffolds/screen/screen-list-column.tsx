@@ -67,13 +67,13 @@ const startsOnFrameRowText = 'pl-4';
 
 const endsClearOfScrollbar = 'pr-3.5';
 
-const rowClassName = `h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar}`;
+const rowClassName = `min-h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar}`;
 
 /*
  * Under the band the heading is centred on the rail's first tile, which the desktop rail draws 8 below the band and
  * 40 tall (`web:pt-2` and `size-10` in the Frame's rail), so the row is that tile with 8 above and below it.
  */
-const bandRowClassName = `web:h-14 native:h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar} native:mt-4 native:pt-1`;
+const bandRowClassName = `web:h-14 native:min-h-frame-control flex-row items-center ${startsOnRowText} ${endsClearOfScrollbar} native:mt-4 native:pt-1`;
 
 const rowClass = (underBand: boolean | undefined, held: boolean): string => {
   const original = underBand ? bandRowClassName : rowClassName;
