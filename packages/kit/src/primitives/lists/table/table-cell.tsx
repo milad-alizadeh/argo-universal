@@ -34,13 +34,19 @@ export function columnStyle(column: TableColumn): ViewStyle | undefined {
   return { flexGrow: column.grow, flexBasis: 0, minWidth: column.minWidth };
 }
 
-// The same column where a Table scrolls sideways, where a share has nothing to divide: it takes the width it keeps.
+/*
+ * The same column where a Table scrolls sideways, where a share has nothing to divide: it takes the width it keeps for
+ * its text, plus the padding its own box spends before the text starts. The pinned column pads its leading edge, so
+ * without `inset` its text would have that much less than the width the column kept for it, and a heading as long as
+ * the column's longest text would be cut.
+ */
 export function scrolledColumnStyle(
   column: TableColumn,
+  inset = 0,
 ): ViewStyle | undefined {
-  if (column.grow === undefined) return undefined;
+  if (column.minWidth === undefined) return undefined;
 
-  return { width: column.minWidth };
+  return { width: column.minWidth + inset };
 }
 
 // A drawn cell on a ListItem: Android writes it under the title, as its other ListItems do; elsewhere it trails.
