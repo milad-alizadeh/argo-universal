@@ -54,6 +54,7 @@ describe.skipIf(!lanAddress)(
   () => {
     it('finds a Server whose address changed, by asking the network for it', async (): Promise<void> => {
       const server = await startOnTheNetwork({ discoveryName: computerName });
+
       const known = {
         name: computerName,
         key: await keyOf(server),
@@ -73,6 +74,7 @@ describe.skipIf(!lanAddress)(
 
     it('finds the same Server after a rename and a move to another port', async (): Promise<void> => {
       const before = await startEngineTestHost({ discoveryName: 'Old name' });
+
       const known = {
         name: 'Old name',
         key: await keyOf(before),
@@ -108,6 +110,7 @@ describe.skipIf(!lanAddress)(
 
     it('falls back to the stored address when nothing announces itself', async (): Promise<void> => {
       const server = await startEngineTestHost();
+
       const known = {
         name: computerName,
         key: await keyOf(server),

@@ -49,7 +49,6 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   hookPort: context.hookPort,
   operationWaitClock: context.operationWaitClock,
   slashCommandsWaitMs: context.slashCommandsWaitMs,
-  discoveryName: context.discoveryName,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });
@@ -66,21 +65,31 @@ type ServerConfiguration = Pick<
   | 'pluginNetwork'
   | 'pluginOAuth'
   | 'pluginClock'
+  | 'discoveryName'
 >;
 
 function serverConfiguration(
   context: ServerConfiguration,
 ): ServerConfiguration {
   return {
-    home: context.home,
-    port: context.port,
-    version: context.version,
-    startedAt: context.startedAt,
+    ...whereAndWhat(context),
     notificationOptions: context.notificationOptions,
+    discoveryName: context.discoveryName,
     firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
     keychain: context.keychain,
     pluginNetwork: context.pluginNetwork,
     ...pluginFlowOptions(context),
+  };
+}
+
+function whereAndWhat(
+  context: ServerConfiguration,
+): Pick<ServerConfiguration, 'home' | 'port' | 'version' | 'startedAt'> {
+  return {
+    home: context.home,
+    port: context.port,
+    version: context.version,
+    startedAt: context.startedAt,
   };
 }
 

@@ -35,6 +35,11 @@ const labelOf = (name: string): string =>
 const listing = `_${discoveryServiceType}._${discoveryProtocol}.local`;
 
 // What a Server says about itself on one interface. Its own host name, made from the key, never the computer's: the system already answers for that one, with an address of its own choosing.
+interface ServiceTarget {
+  port: number;
+  target: string;
+}
+
 class Identity {
   public readonly instance: string;
   public readonly host: string;
@@ -66,7 +71,7 @@ class Identity {
     );
   }
 
-  private srv() {
+  private srv(): ServiceTarget {
     return { port: this.announcement.port, target: this.host };
   }
 
@@ -90,7 +95,7 @@ const repeatAfter = 1000;
 class Responder {
   private readonly identity: Identity;
   private readonly socket: ReturnType<typeof makeMdns>;
-  private readonly repeat: NodeJS.Timeout;
+  private readonly repeat: ReturnType<typeof setTimeout>;
 
   public constructor(
     address: string,
@@ -106,7 +111,7 @@ class Responder {
     });
     this.socket.on('query', (query): void => this.answer(query.questions));
     this.announce();
-    this.repeat = setTimeout(() => this.announce(), repeatAfter).unref();
+    this.repeat = setTimeout(() => this.announce(), repeatAfter);
   }
 
   public async withdraw(): Promise<void> {

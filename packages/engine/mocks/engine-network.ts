@@ -137,6 +137,7 @@ class Heard {
 export function watchAnnouncedServers(listener: Listener): () => void {
   const bonjour = new Bonjour();
   const heard = new Heard(listener);
+
   const browser = bonjour.find({
     type: discoveryServiceType,
     protocol: discoveryProtocol,

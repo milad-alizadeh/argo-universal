@@ -35,6 +35,12 @@ export class ServerNotFoundError extends Error {
   }
 }
 
+const release =
+  (timer: ReturnType<typeof setTimeout>, stop: () => void) => (): void => {
+    clearTimeout(timer);
+    stop();
+  };
+
 // Waits for the Server with this key to announce itself, or gives up. A computer that answers to the right name with another key is not the Server.
 function waitForAnnouncement(
   browse: BrowseServers,
@@ -50,10 +56,7 @@ function waitForAnnouncement(
     if (found) heard.resolve(found);
   });
 
-  return heard.promise.finally((): void => {
-    clearTimeout(timer);
-    stop();
-  });
+  return heard.promise.finally(release(timer, stop));
 }
 
 const announced = (found: DiscoveredServer): ServerLocation => ({

@@ -11,7 +11,11 @@ const settle = (milliseconds: number): Promise<void> =>
   });
 
 // A browser on the same network, told nothing about any Server; `announced` finds one by the key it was given at pairing.
-function browseTheNetwork() {
+interface Browser {
+  announced: (key: string) => DiscoveredServer | undefined;
+}
+
+function browseTheNetwork(): Browser {
   let heard: readonly DiscoveredServer[] = [];
 
   const stop = watchAnnouncedServers((servers): void => {
@@ -40,6 +44,7 @@ describe.skipIf(!lanAddress)(
       const { caller, url } = await startEngineTestHost({
         discoveryName: 'Studio Mac',
       });
+
       const key = await keyOf(caller);
       const network = browseTheNetwork();
 
