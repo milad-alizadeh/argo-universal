@@ -41,6 +41,7 @@ const summary = (result: AnchorResult) => {
     endReached: good.filter((trial) => trial.endReached).length,
     maxDriftPxMedian: middle(column((trial) => trial.maxDriftPx)),
     maxDriftPxWorst: Math.max(0, ...column((trial) => trial.maxDriftPx)),
+    driftedFramesMedian: middle(column((trial) => trial.driftedFrames)),
     finalDriftPxMedian: middle(column((trial) => trial.finalDriftPx)),
     extentGrowthPxMedian: middle(column((trial) => trial.extentGrowthPx)),
   };

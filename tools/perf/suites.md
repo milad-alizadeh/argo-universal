@@ -38,19 +38,20 @@ Reserve a quiet measurement window first: a run taken under load measures the ma
 
 Two QA clauses that had no instrument now have one. Neither asserts a budget.
 
-**PF-16, blank content.** `PERF_FEED_CONTENT=blank` seeds the long Session with 1,000 messages (`PERF_FEED_ROWS` picks 100, 1000 or 10000) whose text is empty: prompts, thoughts and answers in turn, one Turn of each, with no Tool calls and no compaction rows. Run the frame scenarios against it:
+**PF-16, blank content.** `PERF_FEED_CONTENT=blank` seeds the long Session with the recorded Feed (at `PERF_FEED_ROWS` rows when set) with the text of every prompt, thought and answer emptied; Tool calls and compaction rows stay as recorded. Run the frame scenarios against it:
 
 ```sh
-PERF_FEED_CONTENT=blank PERF_ONLY=feed,paging,streaming PERF_LABEL=pf16-blank pnpm --filter @repo/tools perf interactions.perf.mts
+PERF_FEED_CONTENT=blank PERF_ONLY=feed,expand,paging,streaming PERF_LABEL=pf16-blank pnpm --filter @repo/tools perf interactions.perf.mts
 ```
 
-The report's `seeded` block names the Feed rows that were seeded. `expand` and every Elapsed scenario that waits for the recorded text or a Tool disclosure (`hasLatestMessage`, `tool-expand-ready`) cannot run against a blank Feed: there is nothing to find. Run only the frame scenarios on it.
+A Session whose every row is blank cannot be seeded for this: the App draws it as an empty Session ("What should we build?") with no `feed-scroll` to measure, so the blank rows are mixed in among rows that draw. The report's `feedContent` names the seed. Elapsed scenarios that wait for the recorded text (`hasLatestMessage`, `feed-page-ready`, `tool-expand-ready`) cannot run against a blank Feed; run only the frame scenarios on it.
 
 **PF-18, anchor stability.** `feed-anchor-drift` (`anchor.perf.mts`, report `<label>-anchor.json`) opens the long Session from cold, reads back with the wheel to a screen below its oldest loaded row, and marks the row at the middle of the view once the rows in view stop measuring. While it marks, it holds back what the Server sends the page, so the older page cannot land first; it then lets the page through and watches the marked row every frame, until two seconds after the older page has landed. Per trial it reports:
 
 | Field | Meaning |
 | --- | --- |
 | `maxDriftPx` | The furthest the marked row's top moved from where it was marked, from the mark to the end of the window |
+| `driftedFrames` | Frames the marked row sat more than 2 px from where it was marked: one is a flicker, many is a slide |
 | `finalDriftPx` | How far it had moved when the window ended |
 | `anchorKept` | Whether the marked row is still in the document |
 | `extentGrowthPx` | How much taller the Feed's scrollable extent became: proof an older page landed |

@@ -91,12 +91,17 @@ it.each([
   },
 );
 
-it('serves a blank Feed of 1,000 rows whose messages hold no text', async () => {
+it('serves the recorded Feed with its messages emptied of text', async () => {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), 'argo-blank-regression-'),
   );
 
-  const options = { sessions: 100, feedContent: 'blank' } as const;
+  const options = {
+    sessions: 100,
+    feedRows: 1000,
+    feedContent: 'blank',
+  } as const;
+
   const server = await startSeededServer(directory, options);
 
   try {
@@ -111,17 +116,15 @@ it('serves a blank Feed of 1,000 rows whose messages hold no text', async () => 
     const rows = await history(server.serverUrl, long.sessionId);
 
     expect(rows).toHaveLength(1000);
-    expect(server.feedRowCount).toBe(1000);
-    expect(server.requested).toEqual({ ...options });
+    expect(server.requested).toEqual(options);
+    expect(JSON.stringify(rows)).toContain('tool_call_update');
+    expect(
+      rows.filter((row) => row.sessionUpdate === 'agent_message'),
+    ).not.toHaveLength(0);
 
     for (const row of rows)
-      expect(
-        'content' in row
-          ? row.content.flatMap((block) =>
-              block.type === 'text' ? [block.text] : [],
-            )
-          : [],
-      ).toEqual(['']);
+      if (row.sessionUpdate === 'agent_message')
+        expect(JSON.stringify(row.content)).not.toMatch(/"text":"[^"]/u);
   } finally {
     await server.stop();
     await rm(directory, { recursive: true, force: true });

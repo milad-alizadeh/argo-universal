@@ -124,54 +124,47 @@ export async function shortRecordedFeeds(
   return combineFeeds(sessionIds.map((id) => oneRecordedFeed(id, first, now)));
 }
 
-// The message kinds a blank Feed cycles through, one Turn of each.
-const blankKinds = ['user_message', 'agent_thought', 'agent_message'] as const;
+const messageKinds = new Set<string>([
+  'user_message',
+  'agent_thought',
+  'agent_message',
+]);
 
-const blankContent = [{ type: 'text', text: '' }];
-
-function blankRow(
-  sessionId: string,
-  index: number,
-): SeededFeed['rows'][number] {
-  const sessionUpdate =
-    blankKinds[index % blankKinds.length] ?? 'agent_message';
-  const id = `blank-${index}`;
+// A message's text blocks with their text emptied; every other block and field stays.
+function blankedPayload(payload: unknown): unknown {
+  const fields = typeof payload === 'object' && payload ? payload : {};
+  const content =
+    'content' in fields && Array.isArray(fields.content) ? fields.content : [];
 
   return {
-    sessionId,
-    position: index + 1,
-    id,
-    sessionUpdate,
-    revision: index + 1,
-    turnId: `blank-turn-${Math.floor(index / blankKinds.length)}`,
-    state: 'settled',
-    payload: { messageId: id, content: blankContent },
-    payloadVersion: 1,
+    ...fields,
+    content: content.map((block: unknown) =>
+      typeof block === 'object' && block && 'text' in block
+        ? { ...block, text: '' }
+        : block,
+    ),
   };
 }
 
 /*
- * A Feed of `count` messages whose text is empty: prompts, thoughts and answers with nothing in them.
- * It measures how the Feed lays out and scrolls rows that have no content to size them by.
+ * The recorded Feed with every prompt, thought and answer emptied of text, its Tool calls and compaction
+ * rows left as recorded. The Session still has rows to draw, so it measures how the Feed lays out and
+ * scrolls message rows that have nothing in them to size them by. A Feed of nothing but blank messages
+ * is not this: the App draws a Session like that as an empty one, with no Feed to scroll.
  */
-export function blankFeed(
+export async function blankedFeed(
   sessionId: string,
-  count: number,
+  size: FeedSize,
   now: number,
-): SeededFeed {
-  const rows = Array.from({ length: count }, (_, index) =>
-    blankRow(sessionId, index),
-  );
+): Promise<SeededFeed> {
+  const feed = await seededFeed(sessionId, size, now);
 
   return {
-    turns: [...new Set(rows.flatMap((row) => row.turnId ?? []))].map((id) => ({
-      id,
-      sessionId,
-      status: 'ended',
-      stopReason: 'end_turn',
-      startedAt: now - 1000,
-      endedAt: now - 500,
-    })),
-    rows,
+    turns: feed.turns,
+    rows: feed.rows.map((row) =>
+      messageKinds.has(row.sessionUpdate)
+        ? { ...row, payload: blankedPayload(row.payload) }
+        : row,
+    ),
   };
 }

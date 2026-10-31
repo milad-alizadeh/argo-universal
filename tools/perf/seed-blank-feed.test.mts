@@ -1,30 +1,39 @@
 import { expect, it } from 'vitest';
-import { blankFeed } from './seed-feed.mts';
+import { blankedFeed, seededFeed } from './seed-feed.mts';
 
-const feed = blankFeed('session-1', 7, 10_000);
+const size = { rows: 40 };
 
-it('seeds the requested number of rows, each in order and with its own id', () => {
-  expect(feed.rows.map((row) => row.position)).toEqual([1, 2, 3, 4, 5, 6, 7]);
-  expect(new Set(feed.rows.map((row) => row.id)).size).toBe(7);
+it('keeps every row and Turn of the recorded Feed', async () => {
+  const recorded = await seededFeed('session-1', size, 10_000);
+  const blank = await blankedFeed('session-1', size, 10_000);
+
+  expect(blank.turns).toEqual(recorded.turns);
+  expect(
+    blank.rows.map(({ id, sessionUpdate, position }) => [
+      id,
+      sessionUpdate,
+      position,
+    ]),
+  ).toEqual(
+    recorded.rows.map(({ id, sessionUpdate, position }) => [
+      id,
+      sessionUpdate,
+      position,
+    ]),
+  );
 });
 
-it('holds only messages, every one of them with empty text', () => {
-  expect(new Set(feed.rows.map((row) => row.sessionUpdate))).toEqual(
-    new Set(['user_message', 'agent_thought', 'agent_message']),
-  );
+it('empties the text of every message and leaves other rows as recorded', async () => {
+  const recorded = await seededFeed('session-1', size, 10_000);
+  const blank = await blankedFeed('session-1', size, 10_000);
+  const messages = ['user_message', 'agent_thought', 'agent_message'];
 
-  for (const row of feed.rows)
-    expect(row.payload).toEqual({
-      messageId: row.id,
-      content: [{ type: 'text', text: '' }],
-    });
-});
-
-it('gives every row a Turn that ended', () => {
-  const turnIds = new Set(feed.turns.map((turn) => turn.id));
-
-  expect(feed.rows.every((row) => row.turnId && turnIds.has(row.turnId))).toBe(
-    true,
-  );
-  expect(feed.turns.every((turn) => turn.status === 'ended')).toBe(true);
+  blank.rows.forEach((row, index) => {
+    if (messages.includes(row.sessionUpdate))
+      expect(JSON.stringify(row.payload)).not.toMatch(/"text":"[^"]/u);
+    else expect(row.payload).toEqual(recorded.rows[index]?.payload);
+  });
+  expect(
+    new Set(blank.rows.map((row) => row.sessionUpdate)).size,
+  ).toBeGreaterThan(3);
 });

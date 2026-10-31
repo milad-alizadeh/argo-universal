@@ -10,6 +10,8 @@ export interface AnchorReading {
   anchorKept: boolean;
   // The furthest the marked row's top moved from where it was marked, in px, from the mark to the end of the window.
   maxDriftPx: number;
+  // How many frames it sat more than 2 px from where it was marked: one is a flicker, many is a slide.
+  driftedFrames: number;
   // How far it had moved when the window ended.
   finalDriftPx: number;
   // How much taller the Feed's scrollable extent became: the older page's rows.
@@ -93,11 +95,13 @@ export async function startAnchorWatch(options: AnchorOptions): Promise<void> {
   const probe: AnchorProbe = {};
   window.argoAnchor = probe;
   let furthest = 0;
+  let drifted = 0;
   let landedAt: number | undefined;
 
   const reading = (): AnchorReading => ({
     anchorKept: marked.element.isConnected,
     maxDriftPx: furthest,
+    driftedFrames: drifted,
     finalDriftPx: Math.abs(
       marked.element.getBoundingClientRect().top - marked.top,
     ),
@@ -107,10 +111,11 @@ export async function startAnchorWatch(options: AnchorOptions): Promise<void> {
   });
 
   const watch = (now: number): void => {
-    furthest = Math.max(
-      furthest,
-      Math.abs(marked.element.getBoundingClientRect().top - marked.top),
+    const drift = Math.abs(
+      marked.element.getBoundingClientRect().top - marked.top,
     );
+    furthest = Math.max(furthest, drift);
+    if (drift > 2) drifted += 1;
 
     if (
       landedAt === undefined &&
