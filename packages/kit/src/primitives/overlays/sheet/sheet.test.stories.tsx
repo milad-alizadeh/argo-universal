@@ -121,6 +121,9 @@ export const TriggerlessModalKeepsInput: Story = {
   },
 };
 
+// The sheet's own bottom padding is about 40px; the dead space this guards against was over 250px.
+const maxPadding = 64;
+
 const rows = ['Row one', 'Row two', 'Row three'];
 
 // A sheet of one Sheet.Screen, its content a few short rows.
@@ -160,7 +163,7 @@ export const OnePageWrapsItsContent: Story = {
     const last = await body.findByText('Row three');
     await waitFor(() => expect(dialog).toBeVisible());
     await waitFor(() =>
-      expect(spaceBelow(dialog, last)).toBeLessThan(window.innerHeight / 8),
+      expect(spaceBelow(dialog, last)).toBeLessThan(maxPadding),
     );
   },
 };
