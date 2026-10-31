@@ -12,7 +12,7 @@ export interface PointerSighting {
   x: number;
   y: number;
   type: string;
-  at: number;
+  atEpochMs: number;
   ordinal: number;
 }
 
@@ -91,7 +91,13 @@ export function noteTest(file: string, name: string): PageRecord {
 export function notePointer(x: number, y: number, type: string): void {
   const record = pageRecord();
   record.trustedPointerEvents += 1;
-  record.pointer = { x, y, type, at: Date.now(), ordinal: record.ordinal };
+  record.pointer = {
+    x,
+    y,
+    type,
+    atEpochMs: Date.now(),
+    ordinal: record.ordinal,
+  };
 }
 
 export function noteSighting(kind: string): void {

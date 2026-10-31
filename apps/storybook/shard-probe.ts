@@ -1,11 +1,8 @@
 import { afterAll, beforeEach } from 'vitest';
-import {
-  listenForInput,
-  listenForMessages,
-  trackFrames,
-} from './shard-probe-input';
+import { trackFrames } from './shard-probe-frames';
+import { listenForInput, listenForMessages } from './shard-probe-input';
 import { noteTest } from './shard-probe-page';
-import { formatReport, snapshotStart } from './shard-probe-report';
+import { formatReport, safeSnapshot } from './shard-probe-report';
 import { observeMutations, startTimeline } from './shard-probe-timeline';
 
 function watchPage(): () => void {
@@ -32,7 +29,7 @@ export function installShardProbe(): void {
   afterAll(stop);
   beforeEach(({ task, onTestFailed }): void => {
     const record = noteTest(task.file.name, task.name);
-    const start = snapshotStart(record);
+    const start = safeSnapshot(record);
     startTimeline();
     onTestFailed((): void => {
       console.error(formatReport(record, start));

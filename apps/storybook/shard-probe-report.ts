@@ -1,19 +1,14 @@
-import { pendingFrames } from './shard-probe-input';
+import { pendingFrames } from './shard-probe-frames';
 import { iframesInPage, type PageRecord } from './shard-probe-page';
+import { REPORT_PREFIX } from './shard-probe-report-prefix';
 import { elapsed, timelineEvents } from './shard-probe-timeline';
 
 const NAMED_ANIMATIONS = 5;
 
 const MS_PER_SECOND = 1000;
 
-// What the page looked like when the story started, taken before the story draws anything.
-export interface StartSnapshot {
-  lines: string[];
-}
-
-function animationNames(): string {
-  return document
-    .getAnimations()
+function animationNames(animations: Animation[]): string {
+  return animations
     .slice(0, NAMED_ANIMATIONS)
     .map((animation) =>
       animation instanceof CSSAnimation
@@ -30,24 +25,24 @@ function pointerLine(record: PageRecord): string {
     return 'pointer at story start: no trusted pointer event has reached this page yet';
   }
 
-  const age = Date.now() - pointer.at;
+  const age = Date.now() - pointer.atEpochMs;
 
   return `pointer at story start: last trusted ${pointer.type} at (${pointer.x}, ${pointer.y}), ${age}ms ago, during test #${pointer.ordinal}`;
 }
 
-export function snapshotStart(record: PageRecord): StartSnapshot {
+// What the page looked like when the story started, taken before the story draws anything.
+export function snapshotStart(record: PageRecord): string[] {
   const active = document.activeElement?.tagName ?? 'none';
-  const animations = `${document.getAnimations().length} [${animationNames()}]`;
+  const running = document.getAnimations();
+  const animations = `${running.length} [${animationNames(running)}]`;
 
-  return {
-    lines: [
-      pointerLine(record),
-      `trusted pointer events this page has had: ${record.trustedPointerEvents}`,
-      `active element: ${active}; viewport ${innerWidth}x${innerHeight}`,
-      `animations running: ${animations}; frames pending: ${pendingFrames()}`,
-      `iframes in the page: ${iframesInPage()}`,
-    ],
-  };
+  return [
+    pointerLine(record),
+    `trusted pointer events this page has had: ${record.trustedPointerEvents}`,
+    `active element: ${active}; viewport ${innerWidth}x${innerHeight}`,
+    `animations running: ${animations}; frames pending: ${pendingFrames()}`,
+    `iframes in the page: ${iframesInPage()}`,
+  ];
 }
 
 function sightingLines(record: PageRecord): string[] {
@@ -67,17 +62,26 @@ function pageLines(record: PageRecord): string[] {
   ];
 }
 
-export function formatReport(record: PageRecord, start: StartSnapshot): string {
+export function formatReport(record: PageRecord, start: string[]): string {
   const timeline = timelineEvents().map(
     (event) => `  +${event.at}ms ${event.kind} ${event.detail}`,
   );
 
   return [
-    `[shard-probe] ${record.current} failed at +${elapsed()}ms`,
+    `${REPORT_PREFIX} ${record.current} failed at +${elapsed()}ms`,
     ...pageLines(record),
-    ...start.lines,
+    ...start,
     ...sightingLines(record),
     'timeline since story start:',
     ...timeline,
   ].join('\n');
+}
+
+// A probe that throws fails every story, so a snapshot that cannot be taken is reported instead.
+export function safeSnapshot(record: PageRecord): string[] {
+  try {
+    return snapshotStart(record);
+  } catch (error) {
+    return [`start snapshot failed: ${String(error)}`];
+  }
 }
