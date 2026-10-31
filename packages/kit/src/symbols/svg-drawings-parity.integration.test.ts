@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { expect, test } from 'vitest';
 
 const here = import.meta.dirname;
+
 const componentsDirectory = join(here, 'svg-symbols');
+
 const drawingsDirectory = join(here, 'assets', 'svg-drawings');
 
 const read = (path: string): string => readFileSync(path, 'utf8');
