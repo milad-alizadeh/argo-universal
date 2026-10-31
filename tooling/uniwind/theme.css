@@ -494,9 +494,10 @@
          this one token to SwiftUI and Compose as the tint every stock control
          draws itself from, so a blue one put system blue on the switch's on
          track, the slider, a checkmark, a picker's value and the filter pill
-         at once (#1663). Light pairs accent with primary; dark pairs it the
-         same way, so a hue here belongs to a tone token instead. */
-      --color-accent: var(--color-neutral-200);
+         at once (#1663). A hue here belongs to a tone token instead. Dark takes
+         neutral-400, not primary's neutral-200: the web and iOS switch draws a
+         white thumb, and a near-white on track left it nothing to read against. */
+      --color-accent: var(--color-neutral-400);
       --color-muted: var(--color-neutral-800);
       --color-muted-foreground: var(--color-neutral-400);
       /* iOS's tertiary label on a dark card, a step up so it clears 3:1. */
