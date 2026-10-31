@@ -1,4 +1,3 @@
-import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { fn } from 'storybook/test';
@@ -7,8 +6,8 @@ import {
   otherDeviceName,
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
-import { PluginSlot } from '../../../../lib/product/plugin-registry';
 import { chosenAccounts } from './project-detail-accounts-fixtures';
+import { pluginContributions } from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -19,7 +18,7 @@ const meta = {
     caption: { control: 'text' },
     otherDevice: { control: 'text' },
     project: { control: false },
-    renderPluginSlot: { control: false },
+    pluginContributions: { control: false },
     accounts: { control: false },
   },
   parameters: { screenPreview: true },
@@ -43,22 +42,9 @@ export const Local: Story = {
   },
 };
 
-// A Plugin's content in the Project details Slot, in its own titled section.
-export const PluginSection: Story = {
-  args: {
-    renderPluginSlot: () => (
-      <PluginSlot
-        contributions={[
-          {
-            pluginId: 'example',
-            name: 'Example',
-            root: slotCounterRoot,
-            onEvent: action('plugin event'),
-          },
-        ]}
-      />
-    ),
-  },
+// Two Plugins in the Project details Slot, each in a section and card of its own.
+export const PluginSections: Story = {
+  args: { pluginContributions },
 };
 
 // Each host's chosen Account, below Folder.

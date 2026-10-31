@@ -1,5 +1,4 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { homePath } from '#features/settings';
@@ -12,6 +11,7 @@ import {
   chosenAccounts,
   unchosenAccounts,
 } from './project-detail-accounts-fixtures';
+import { pluginContributions } from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -101,21 +101,36 @@ export const SaysWhenTheProjectIsMissing: Story = {
   },
 };
 
-// ADR-0035: the Project details Slot sits between Folder and New Sessions.
-export const ThePluginSlotSitsBetweenFolderAndNewSessions: Story = {
-  args: { renderPluginSlot: () => <Text>Plugin slot content</Text> },
+// ADR-0035: each Plugin in the Project details Slot is a section of its own, a card beside Folder's, in the Server's order.
+export const EachPluginIsASectionOfItsOwn: Story = {
+  args: { pluginContributions },
   play: async ({ canvas }) => {
-    const folder = await canvas.findByText('Folder');
-    const slot = await canvas.findByText('Plugin slot content');
-    const newSessions = await canvas.findByText('New Sessions');
+    const folder = sectionOf(await canvas.findByText('Folder'));
+    const example = sectionOf(await canvas.findByText('Example'));
+    const tracker = sectionOf(await canvas.findByText('Issue tracker'));
+    const newSessions = sectionOf(await canvas.findByText('New Sessions'));
 
-    await expect(
-      folder.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    await expect(
-      slot.compareDocumentPosition(newSessions) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    await expect(new Set([folder, example, tracker, newSessions]).size).toBe(4);
+    await expect(example.parentElement).toBe(folder.parentElement);
+    await expect(tracker.parentElement).toBe(folder.parentElement);
+
+    const order = [folder, example, tracker, newSessions].map((section) =>
+      Array.prototype.indexOf.call(folder.parentElement?.children, section),
+    );
+
+    await expect(order).toEqual([...order].sort((a, b) => a - b));
+    await expect(example).toContainElement(canvas.getByText('Hello from argo'));
+    await expect(example).not.toContainElement(
+      canvas.getByText('GitHub Issues'),
+    );
+    await expect(tracker).toContainElement(canvas.getByText('GitHub Issues'));
+  },
+};
+
+export const NoPluginsAddNoSection: Story = {
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Folder')).toBeVisible();
+    await expect(canvas.queryByText('Example')).not.toBeInTheDocument();
   },
 };
 
@@ -193,3 +208,16 @@ export const NoAccountsDrawsNoSection: Story = {
     await expect(canvas.queryByText('Accounts')).not.toBeInTheDocument();
   },
 };
+
+// A section is the Folder-level ancestor of its title: the highest one that holds no other section's title.
+function sectionOf(title: HTMLElement): HTMLElement {
+  let section = title;
+
+  while (
+    section.parentElement &&
+    section.parentElement.querySelectorAll('[role="heading"]').length === 1
+  )
+    section = section.parentElement;
+
+  return section;
+}

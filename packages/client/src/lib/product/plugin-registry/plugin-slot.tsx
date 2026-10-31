@@ -19,13 +19,40 @@ export interface PluginSlotProps {
   contributions: readonly PluginSlotContribution[];
 }
 
-// A core page's Slot: one titled section per Plugin, the Plugin's tree inside it. Core owns the frame, so a Plugin never sizes or styles it.
+// A section the host draws around one Plugin's tree: the host's own section kind, titled with the Plugin's name.
+export type PluginSectionFrame = (frame: {
+  key: string;
+  title: string;
+  children: React.ReactNode;
+}) => React.ReactElement;
+
+/*
+ * A core page's Slot as one titled section per Plugin, the Plugin's tree inside it. Core owns the frame, so a Plugin
+ * never sizes or styles it, and the host picks the section kind: a FieldGroup finds its sections by element type, so
+ * `frame` is called here, not rendered, and what it returns is the host's own section element.
+ */
+export function pluginSlotSections(
+  contributions: readonly PluginSlotContribution[],
+  frame: PluginSectionFrame,
+): React.ReactElement[] {
+  return contributions.map(({ pluginId, name, viewId, ...tree }) =>
+    frame({
+      key: pluginId,
+      title: name,
+      children: <PluginTree key={viewId} {...tree} />,
+    }),
+  );
+}
+
+const listSection: PluginSectionFrame = ({ key, title, children }) => (
+  <List.Section key={key} title={title}>
+    {children}
+  </List.Section>
+);
+
+// The Slot in a List host: each Plugin is a `List.Section`.
 export function PluginSlot({
   contributions,
 }: PluginSlotProps): React.ReactNode {
-  return contributions.map(({ pluginId, name, viewId, ...tree }) => (
-    <List.Section key={pluginId} title={name}>
-      <PluginTree key={viewId} {...tree} />
-    </List.Section>
-  ));
+  return pluginSlotSections(contributions, listSection);
 }
