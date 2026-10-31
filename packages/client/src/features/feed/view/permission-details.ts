@@ -1,4 +1,4 @@
-import type { DiffChange, ToolCallUpdate } from '@repo/contracts';
+import type { ToolCallUpdate } from '@repo/contracts';
 import type { PermissionRequestProps } from '#features/requests';
 import { fileEditHead } from './file-edit-label';
 
@@ -36,10 +36,8 @@ const toolReason = (tool: ToolCallUpdate): string | undefined =>
 
 function changedFiles(tool: ToolCallUpdate): string | undefined {
   const lines = tool.content.flatMap((block) =>
-    block.type === 'diff' ? block.changes.map(changeLine) : [],
+    block.type === 'diff' ? block.changes.map(fileEditHead) : [],
   );
 
   return lines.length > 0 ? lines.join('\n') : undefined;
 }
-
-const changeLine = (change: DiffChange): string => fileEditHead(change);
