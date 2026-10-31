@@ -28,15 +28,13 @@ interface PluginDetailScreenProps {
 const unavailable = { title: 'This Plugin is not available' };
 
 // A Plugin page from the connected Server's list: blank until the list arrives; a Plugin the Server no longer lists says so and returns to Sessions.
-export function PluginDetailScreen({
-  path,
-  sessionId,
-}: PluginDetailScreenProps): React.JSX.Element {
-  const { section, loaded } = usePluginAt(pluginPath(path));
+export function PluginDetailScreen(
+  props: PluginDetailScreenProps,
+): React.JSX.Element {
+  const { section, root, loaded } = usePluginAt(pluginPath(props.path));
   useKeepSidebarWhileOpening();
 
-  if (section)
-    return <PluginPage section={section} path={path} sessionId={sessionId} />;
+  if (section) return <PluginPage {...props} section={section} root={root} />;
 
   return loaded ? <PluginUnavailable /> : <PluginLoading />;
 }
@@ -51,7 +49,11 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
-type PluginPageProps = PluginDetailScreenProps & { section: PluginSection };
+type PluginPageProps = PluginDetailScreenProps & {
+  section: PluginSection;
+  // The page is its nav item's root.
+  root: boolean;
+};
 
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
 function PluginPage(props: PluginPageProps): React.JSX.Element {
@@ -66,7 +68,7 @@ function PluginPage(props: PluginPageProps): React.JSX.Element {
   return (
     <PluginDetailView
       {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
-      onBack={usePushedBack(props.path)}
+      onBack={usePushedBack(props.root)}
     />
   );
 }
@@ -75,9 +77,7 @@ function PluginPage(props: PluginPageProps): React.JSX.Element {
  * Every Plugin page above its nav item's root gets the App's Back when the stack can go back, so a drill-in page is
  * always reversible and no Plugin declares navigation. The root is a rail section's root, which draws none.
  */
-function usePushedBack(path: readonly string[]): (() => void) | null {
-  const { root } = usePluginAt(pluginPath(path));
-
+function usePushedBack(root: boolean): (() => void) | null {
   // The path is what changes as the stack moves, so reading it keeps this answer current.
   usePathname();
 
