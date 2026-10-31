@@ -28,6 +28,7 @@
     "zod": "catalog:"
   },
   "exports": {
-    "./own-server": "./own-server.ts"
+    "./own-server": "./own-server.ts",
+    "./real-server": "./real-server.ts"
   }
 }

@@ -1,4 +1,4 @@
-import { Button, Detail, EmptyState, Screen, Stack } from '@argo/plugin-kit';
+import { Action, Detail, EmptyState, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { IssueMetadata } from './issue-metadata';
@@ -53,8 +53,8 @@ function IssueDetail(props: IssueDetailProps): JSX.Element {
   return (
     <Screen
       title={issue.title}
-      caption={`#${issue.number}`}
-      captionHref={issue.url}
+      primaryAction={<StartSessionAction {...props} />}
+      actions={<StatusAction {...props} />}
     >
       <IssueBody {...props} />
     </Screen>
@@ -70,28 +70,9 @@ function IssueBody(props: IssueDetailProps): JSX.Element {
       markdown={issue.body || 'No description.'}
       metadata={<IssueMetadata issue={issue} />}
     >
-      <IssueCalls {...props} />
       <SubIssues issue={issue} issuePath={props.issuePath} />
       <AttachedSessions sessions={props.sessions} />
     </Detail>
-  );
-}
-
-type IssueCallsProps = Pick<
-  IssueDetailProps,
-  'issue' | 'onStatus' | 'projectId'
->;
-
-/*
- * What the Issue asks of the reader, under its description: start work on it, or settle it. They are
- * buttons on the page, not header icons, because they are the page's point and need their own words.
- */
-function IssueCalls(props: IssueCallsProps): JSX.Element {
-  return (
-    <Stack direction="row" gap={2} align="center">
-      <StartSessionButton {...props} />
-      <StatusButton {...props} />
-    </Stack>
   );
 }
 
@@ -101,12 +82,17 @@ const issueDraft = (issue: Issue): string =>
 
 type StartSessionProps = Pick<IssueDetailProps, 'issue' | 'projectId'>;
 
-function StartSessionButton({
+/*
+ * What the Issue asks of the reader, on its title's line: start work on it, or settle it. They are the Screen's
+ * header Actions, inside the pane the Issue is read in, so the page's verbs sit with what they act on.
+ */
+function StartSessionAction({
   issue,
   projectId,
 }: StartSessionProps): JSX.Element {
   return (
-    <Button
+    <Action
+      key="start-session"
       label="Start Session"
       icon="new-session"
       onPress={{ action: 'newSession', projectId, draft: issueDraft(issue) }}
@@ -114,16 +100,16 @@ function StartSessionButton({
   );
 }
 
-type StatusButtonProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
 
-function StatusButton({ issue, onStatus }: StatusButtonProps): JSX.Element {
+function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
   const { label, icon, to } = statuses[issue.status].change;
 
   return (
-    <Button
+    <Action
+      key="status"
       label={label}
       icon={icon}
-      variant="secondary"
       onPress={() => onStatus(to)}
     />
   );

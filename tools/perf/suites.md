@@ -1,7 +1,8 @@
 # Browser performance suites
 
-Three Playwright suites measure the production web export against a seeded Server.
+Playwright suites measure the production web export against a seeded Server.
 They are frame and latency instruments: none of them asserts a speed budget.
+All but one drive a scripted ACP fixture Agent; `real-agent.perf.mts` drives an Agent the owner is signed in to.
 
 | Suite | File | Scenarios |
 | --- | --- | --- |
@@ -9,6 +10,7 @@ They are frame and latency instruments: none of them asserts a speed budget.
 | Frames | `agents.perf.mts` | `agents`, `agents-phone`, against a 200-Agent registry |
 | Elapsed | `elapsed.perf.mts` | `session-open-warm`, `session-open-reload`, `feed-page-ready`, `tool-expand-ready`, `feed-wheel-ready`, `sessions-wheel-ready`, `composer-type-ready`, and the scenarios under "Elapsed scenarios by case" |
 | Anchor | `anchor.perf.mts` | `feed-anchor-drift` (PF-18, anchor stability) |
+| Real Agent | `real-agent.perf.mts` | `live-scroll` (PF-17, scroll during live output), declared only when `PERF_AGENT` is set |
 | Soak | `soak.perf.mts` | One test, `soak for N minutes`, declared only when `PERF_SOAK_MINUTES` is set |
 | Collector | `collector.perf.mts` | The frame collector's own sensitivity checks; no product scenario |
 
@@ -31,6 +33,8 @@ Reserve a quiet measurement window first: a run taken under load measures the ma
 | `PERF_FEED_CONTENT` | `blank` seeds the long Session with messages whose text is empty (PF-16, blank content); default `recorded`. See "Blank content and anchor drift" |
 | `PERF_ONLY` | Scenario names to measure, comma separated; empty or unset measures all |
 | `PERF_OUT` | Where the reports and screenshots go; default `$TMPDIR/argo-perf` |
+| `PERF_AGENT` | The Registry Agent `real-agent.perf.mts` installs and drives, for example `claude-acp`. Unset, that suite declares no scenarios. See "A real Agent (PF-17)" |
+| `PERF_AGENT_OPTIONS` | The Session options that run is pinned to before its first prompt, as `configId=value` pairs, comma separated. Required whenever `PERF_AGENT` is set |
 | `PERF_HEADED=1` | Runs with a visible browser, as a cross-check against the headless collector |
 | `PERF_TRACE=1`, `PERF_PROFILE=1` | Save one trace or CPU profile per scenario; these artefacts are large |
 
@@ -92,6 +96,7 @@ An unset `PERF_ONLY` plans all of them, so a default elapsed run is now much lon
 - `server-restart-reconnected` and `-usable` start their clock when the restart call returns, because the restart cannot be hooked at its ready instant. A near-zero sample can mean the App reconnected before the clock started.
 - The touch scenarios' raw `driver` samples include the whole swipe gesture, about 400 ms. Read the browser summary, which the table prints.
 - `turns-concurrent-*-scripted` and the soak use the scripted fixture Agent. They are App and Server evidence only, not PF-13 or real-Turn soak evidence.
+- Every suite but `real-agent.perf.mts` records `agent` as the scripted fixture. A report's `agent` condition is what says which it was; do not read a real-Agent claim into a fixture report.
 - Soak `cpuPercent` is `ps pcpu`, which on macOS is a decayed average over the process's life, not current CPU. Use the heap, node and process counts for growth, and treat CPU as indicative.
 - PF-03 was designed around #1434 (desktop "Try again"). These scenarios restart the Server by supervising the process, not through the App's retry button, so they do not exercise that fix.
 - The diff scenarios commit two files to the seeded Project's git repository and set `refs/remotes/origin/main`; later scenarios in the same run see that repository.
@@ -106,7 +111,84 @@ An unset `PERF_ONLY` plans all of them, so a default elapsed run is now much lon
 - **PF-24** App CPU, and Server reads and subscriptions.
 - **PF-23** stale results while typing: the whole query is filled at once.
 - **PF-21** Back and tab switching, and the phone's changed-files sheet.
-- **PF-17** and **PF-04 to PF-12** need a real Agent. The `streaming` scenario uses a scripted Agent and is not PF-17.
+- **PF-17**'s other three measures: stream presentation delay, typing latency during output, and movement of the reading anchor while output streams. `live-scroll` measures scroll frame times only. See "A real Agent (PF-17)".
+- **PF-04 to PF-12** need a real Agent. `real-agent.perf.mts` can install and drive one, but no scenario measures these cases; PF-10's throughput clauses are partly unmeasurable through this adapter, which "A real Agent (PF-17)" explains.
+- The `streaming` scenario uses a scripted Agent at a fixed rate and is not PF-17 evidence.
+
+## A real Agent (PF-17)
+
+```sh
+PERF_AGENT=claude-acp PERF_AGENT_OPTIONS=model=haiku,effort=low \
+  PERF_LABEL=pf17 PERF_CPU=1 PERF_RUNS=3 PERF_OUT=/tmp/argo-perf-pf17 \
+  pnpm --filter @repo/tools perf real-agent.perf.mts
+```
+
+`live-scroll` opens the long Session against a real Agent, sends one one-line prompt, and flicks the
+Feed back and forth for as long as the Turn runs. It stops scrolling when the Turn ends, so the
+measured window is the streaming and not the still Feed after it.
+
+**This is the only suite that bills the owner.** Neither knob has a default, and the suite never
+falls back to the fixture: without `PERF_AGENT` it declares no scenarios and says so, and with
+`PERF_AGENT` but no `PERF_AGENT_OPTIONS` it refuses to run at all.
+
+**Cost.** An adapter opens a Session at its own default model and effort, which is its most
+expensive: `claude-acp`, for instance, defaults to `claude-opus-5` at `medium`. So the run states
+what to pin instead of trusting a default. Every Session this suite creates is pinned to
+`PERF_AGENT_OPTIONS` twice over: at creation, through `session.new`'s initial choices, and again on
+the Session that is prompted, through `session.setConfigOption`. The pin is then read back from the
+Session's own `currentValue`s, and the run throws before it prompts if any option disagrees. A
+request that was accepted is not evidence the Agent took it, and a silent fall back to the default
+would bill the owner at the dearest model for frame timings that do not depend on the model at all.
+
+The harness code names no Agent and no model of its own — ADR-0004 keeps vendor names inside the
+vendor module — which is why the cheap pin is a knob the caller sets rather than a table of Agents
+and their cheapest models held here. The names in this section are worked examples for the caller,
+not values the harness falls back to.
+
+**Isolation.** The run gets a fresh `ARGO_HOME` under `$TMPDIR` and always sets `ARGO_PROJECT_PATH`
+to a disposable git repository it creates there. Both are required, not defaults: the Engine seeds
+its first Project from `ARGO_PROJECT_PATH` and falls back to the working directory when it is unset,
+which has resolved to the owner's own checkout before now. The Engine inherits `PATH` and `HOME`,
+because an npm-launched Agent needs Node and authenticates by reading the owner's signed-in
+credentials; nothing else of the owner's is reached, and no credential is read or logged by the
+harness. The suite starts the shipped Engine entry rather than the fixture Engine, so the published
+Registry and the real installer are what answer.
+
+**What it asserts.** That frames were measured, and that the Agent added Feed rows while they were.
+No budget: a real Agent's output rate is not reproducible, and a fixed budget would fail a slow
+provider for a reason that is not the App's. Each pass's rate is recorded in the report's
+`conditions.output` as rows, window and rows per second, beside the build, the machine and the
+`agent` condition — which names the Agent and the model it was pinned to rather than inheriting the
+fixture's wording. A pass in which nothing streamed fails: it measured scrolling over a still Feed,
+which the `feed` scenario already measures.
+
+The window opens once the Turn is demonstrably running — Stop on screen and the prompt in the Feed —
+not at the click. Opening it at the click would count the reader's own prompt row as output, so a
+Turn that streamed nothing would still read as output arriving, and the flicking could start before
+Stop had rendered, which ends the window before it began.
+
+**What it does not measure.** PF-17 asks for four things. This measures scroll frame times. Stream
+presentation delay, typing latency during output, and movement of the reading anchor while output
+streams have no instrument here; `feed-anchor-drift` watches an anchor against a landing history
+page, not against streaming output.
+
+**PF-10 overlap.** Almost none. PF-10 asks for bounded stdout generated at fixed line counts and
+rates inside the Project, measured as produced bytes per second, visible bytes per second, output
+delay, final catch-up time and input responsiveness. `claude-acp` sends Tool output in one block at
+completion and never incrementally, so through this adapter there is no incremental visible rate and
+no per-chunk output delay to measure, and the harness cannot make one: produced bytes per second is
+not observable through an Agent at all. What this scenario does serve is input responsiveness while
+output arrives, and it records the Agent's own message rate — which is assistant text, not command
+stdout, so it is not PF-10's throughput clause under another name. PF-10 needs either an adapter
+that streams Tool output or a measurement taken outside the Agent.
+
+**No number has been published from this suite.** PF-17's number needs a quiet machine.
+
+**The scenario is unproven at the Playwright level.** Everything under it has unit tests, and the
+install, Project, Session and pin read-back paths were proved against a real Agent by hand, but no
+end-to-end run has completed: two attempts were starved by the browser-suite lock (#1680) at 39 and
+29 minutes and were abandoned, not failed. Whoever runs this next should expect to be its first
+end-to-end run, and to find whatever a first run finds.
 
 ## Soak (PF-24)
 
@@ -128,7 +210,7 @@ The test's own timeout is the soak plus ten minutes; no other timeout changes.
 
 ## Read the report
 
-`<label>.json` holds the frame scenarios, `<label>-agents.json` the Agents suite, and `<label>-elapsed.json` the elapsed suite.
+`<label>.json` holds the frame scenarios, `<label>-agents.json` the Agents suite, `<label>-real-agent.json` the real-Agent suite, and `<label>-elapsed.json` the elapsed suite.
 
 Every report carries a `run` block:
 

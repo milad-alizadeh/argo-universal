@@ -9,29 +9,50 @@ export type RootProjects = {
   message: string;
 };
 
-// Loads the Projects once and opens the first.
+/*
+ * Loads the Projects each time a page opens, so a Project's remote is never older than the page, and
+ * opens the one a page names, or the first.
+ */
 export function useRootProjects(
   deps: IssueDeps,
-  selected?: Project,
+  selectedId?: string,
 ): RootProjects {
   const { value, error } = useAsync(deps.listProjects);
   const projects = value ?? [];
+  const project = chosenProject(projects, selectedId);
 
   return {
     projects,
-    project: selected ?? projects[0],
-    message: projectsMessage(value, error),
+    project,
+    message: projectsMessage(value, error, selectedId),
   };
 }
+
+const chosenProject = (
+  projects: Project[],
+  selectedId: string | undefined,
+): Project | undefined =>
+  selectedId === undefined
+    ? projects[0]
+    : projects.find(({ id }) => id === selectedId);
 
 function projectsMessage(
   rows: Project[] | undefined,
   error: string | undefined,
+  selectedId: string | undefined,
 ): string {
   if (error !== undefined) return 'Could not load Projects.';
 
-  return rows ? loadedMessage(rows) : 'Loading Projects…';
+  return rows ? loadedMessage(rows, selectedId) : 'Loading Projects…';
 }
 
-const loadedMessage = (rows: Project[]): string =>
-  rows.length === 0 ? 'No Projects yet.' : loadingIssues;
+function loadedMessage(
+  rows: Project[],
+  selectedId: string | undefined,
+): string {
+  if (rows.length === 0) return 'No Projects yet.';
+
+  return chosenProject(rows, selectedId) ? loadingIssues : goneMessage;
+}
+
+const goneMessage = 'This Project no longer exists.';

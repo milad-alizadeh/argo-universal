@@ -6,9 +6,9 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { ViewStyle } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import {
-  type ContentColumn,
+  fieldGroupColumnStyle,
   OutsideColumn,
   useClaimColumn,
 } from '#kit/content-column/content-column';
@@ -42,18 +42,25 @@ function FieldGroupRoot(props: FieldGroupProps): ReactElement {
   );
 }
 
-// Grouped cards claim the Screen's column and keep to it themselves; their rows are outside it.
+/*
+ * Grouped cards claim the Screen's column and keep to it themselves; their rows are outside it. A View is the column,
+ * as Android's is: SwiftUI's Form takes only a numeric width and padding from a style, so on iOS a maxWidth on the
+ * group itself is dropped and the cards run the pane's full width (#1748). The View around the Host honours the cap
+ * and the padding on every platform.
+ */
 function PageFieldGroup(props: FieldGroupProps): ReactElement {
-  const style = columnStyle(useClaimColumn('grouped'));
+  const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
 
   return (
-    <Host style={{ flex: 1 }}>
-      <InsideHostContext.Provider value>
-        <OutsideColumn>
-          <ColumnFieldGroup {...props} style={style} />
-        </OutsideColumn>
-      </InsideHostContext.Provider>
-    </Host>
+    <View style={{ flex: 1, ...column }}>
+      <Host style={{ flex: 1 }}>
+        <InsideHostContext.Provider value>
+          <OutsideColumn>
+            <ColumnFieldGroup {...props} style={transparent} />
+          </OutsideColumn>
+        </InsideHostContext.Provider>
+      </Host>
+    </View>
   );
 }
 
@@ -70,27 +77,6 @@ function ColumnFieldGroup(
     </ExpoFieldGroup>
   );
 }
-
-/*
- * A wide pane's column, as its header keeps to: the FieldGroup scrolls itself and takes no content style, so the
- * scroll view is the column. The cards' edges start on the page title's line, as every desktop page's content does;
- * Expo's web FieldGroup pads its content 16 on its own, so the column gives that up.
- */
-function columnStyle(column: ContentColumn | undefined): ViewStyle {
-  if (!column) return transparent;
-
-  return {
-    ...transparent,
-    width: '100%',
-    maxWidth: column.maxWidth,
-    alignSelf: 'center',
-    paddingLeft: Math.max(0, column.paddingLeft - columnGivenUp),
-    paddingRight: Math.max(0, column.paddingRight - columnGivenUp),
-  };
-}
-
-// Expo's own content padding.
-const columnGivenUp = 16;
 
 /*
  * No background of its own, so the page's shows between the section cards. SwiftUI's Form draws its grouped

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { contentActionClass, Pressable } from '#primitives/actions/pressable';
@@ -130,3 +131,35 @@ function loadingMenu(kind: StatesProps['kind']): Story {
 export const LoadingChoices = loadingMenu('choice');
 
 export const LoadingActions = loadingMenu('action');
+
+// The window frame's 8px inset, written out so the test does not read the value it checks.
+const edgeMargin = 8;
+
+// A menu aligned to a trigger against the window's right edge shifts left and stops short of that edge.
+export const StaysInsideTheWindowEdge: Story = {
+  render: ({ onChoose }) => (
+    <View className="fixed top-6 right-0">
+      <Menu
+        accessibilityLabel="Permissions"
+        align="start"
+        trigger={trigger}
+        actions={answers.map((answer) => ({
+          label: answer.label,
+          onPress: () => onChoose(answer.value),
+        }))}
+      />
+    </View>
+  ),
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Permissions' }));
+
+    const menu = await within(canvasElement.ownerDocument.body).findByRole(
+      'menu',
+    );
+
+    await expect(menu.getBoundingClientRect().right).toBeLessThanOrEqual(
+      window.innerWidth - edgeMargin,
+    );
+  },
+};

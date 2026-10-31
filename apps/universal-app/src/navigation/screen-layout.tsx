@@ -5,6 +5,7 @@ import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
+import { ReturnToOrigin } from './return-destination';
 
 type ScreenLayout = NonNullable<ComponentProps<typeof Stack>['screenLayout']>;
 
@@ -32,10 +33,16 @@ function NarrowBanner(props: BannerProps): React.JSX.Element | null {
 const nestedScreen = (route: { name: string }): boolean =>
   route.name.includes('/') && !route.name.endsWith('/index');
 
+// A wide window shows a page beside its list with no Back to return with.
+function NarrowReturn(): React.JSX.Element | null {
+  return useWide() ? null : <ReturnToOrigin />;
+}
+
 // The screen keeps its place in the tree at every width.
 export const screenLayout: ScreenLayout = ({ children, options, route }) => (
   <View className="flex-1">
     <ScreenBesideList value={!nestedScreen(route)}>{children}</ScreenBesideList>
     <NarrowBanner overHeader={options.headerTransparent === true} />
+    <NarrowReturn />
   </View>
 );

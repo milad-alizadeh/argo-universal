@@ -1,6 +1,6 @@
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { z } from 'zod';
-import { expect } from '../fixtures';
+import { expect, test } from '../fixtures';
 import { expectReply } from './feed';
 import { Given, When, Then } from './fixtures';
 import { openWidePage } from './frame';
@@ -17,6 +17,9 @@ interface HeldUpdates {
   held: boolean;
   subscriptionIds: Set<number>;
   waiting: (() => void)[];
+  // One line per subscribe call and Server message, timed from the page's start, so a late first Session snapshot shows as a gap.
+  arrivalLog: string[];
+  startedAt: number;
 }
 
 interface OtherPage {
@@ -38,11 +41,30 @@ function connect(route: WebSocketRoute, updates: HeldUpdates): void {
   // Each WebSocket numbers its calls afresh.
   updates.subscriptionIds = new Set();
   route.onMessage((message) => {
-    for (const { id } of framesMatching(message, Subscription))
+    for (const { id } of framesMatching(message, Subscription)) {
       updates.subscriptionIds.add(id);
+      updates.arrivalLog.push(
+        `+${Date.now() - updates.startedAt}ms subscribe ${id}`,
+      );
+    }
+
     server.send(message);
   });
   server.onMessage((message) => deliver(route, updates, message));
+}
+
+function recordArrival(
+  updates: HeldUpdates,
+  ids: number[],
+  message: string | Buffer,
+): boolean {
+  const update = ids.some((id) => updates.subscriptionIds.has(id));
+
+  updates.arrivalLog.push(
+    `+${Date.now() - updates.startedAt}ms ${update ? 'update' : 'reply'} ${ids.join(',')} ${message.length}B`,
+  );
+
+  return update;
 }
 
 function deliver(
@@ -50,9 +72,7 @@ function deliver(
   updates: HeldUpdates,
   message: string | Buffer,
 ): void {
-  const update = responseIds(message).some((id) =>
-    updates.subscriptionIds.has(id),
-  );
+  const update = recordArrival(updates, responseIds(message), message);
 
   if (updates.held && update)
     updates.waiting.push((): void => route.send(message));
@@ -74,6 +94,8 @@ When(
       held: false,
       subscriptionIds: new Set(),
       waiting: [],
+      arrivalLog: [],
+      startedAt: Date.now(),
     };
 
     const other = await openWidePage(app, (opened) =>
@@ -89,7 +111,17 @@ Then(
   'both pages show the Permission request {string}',
   async ({ page }, title: string): Promise<void> => {
     await expectOverComposer(page, title);
-    await expectOverComposer(otherPage(page).page, title);
+    const { page: other, updates } = otherPage(page);
+
+    try {
+      await expectOverComposer(other, title);
+    } catch (error) {
+      await test.info().attach('other-page-arrivalLog', {
+        body: updates.arrivalLog.join('\n') || 'No message reached the page',
+        contentType: 'text/plain',
+      });
+      throw error;
+    }
   },
 );
 

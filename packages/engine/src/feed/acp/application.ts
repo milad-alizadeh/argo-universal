@@ -1,10 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
-import {
-  applyFeedChange,
-  changedRowId,
-  type Feed,
-  type FeedChangeResult,
-} from '../feed-change';
+import { changedRowId, type Feed, type FeedChangeResult } from '../feed-change';
 import type {
   FeedContext,
   FeedEvent,
@@ -16,6 +11,7 @@ import type {
   AssembledContent,
 } from './assembly';
 import { acceptedStreams } from './assembly-state';
+import { applyAcpContentChange } from './content-change';
 import { assembleContentChange } from './content-dispatch';
 import { settledUpdateRejection } from './update-admission';
 
@@ -68,7 +64,7 @@ const applyAssembledChange = (
 
   const { change, ...content } = assembled;
 
-  return { ...content, ...applyFeedChange(input.feed, change, input.turnId) };
+  return { ...content, ...applyAcpContentChange(input, previous, change) };
 };
 
 const contentFailure = (

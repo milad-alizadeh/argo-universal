@@ -96,8 +96,11 @@ function NewSessionStartIn(props: ReadySessionNewViewProps): React.JSX.Element {
   );
 }
 
-function PromptComposer(props: ReadySessionNewViewProps): React.JSX.Element {
-  return <Composer {...promptComposerProps(props)} />;
+function PromptComposer({
+  wide,
+  ...props
+}: ReadySessionNewViewProps & { wide: boolean }): React.JSX.Element {
+  return <Composer {...promptComposerProps(props, wide)} />;
 }
 
 function NewSessionComposer(
@@ -111,7 +114,7 @@ function NewSessionComposer(
         // A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off.
         above={!wide && !props.starting && <NewSessionStartIn {...props} />}
       >
-        <PromptComposer {...props} />
+        <PromptComposer {...props} wide={wide} />
       </ComposerStack>
     </View>
   );

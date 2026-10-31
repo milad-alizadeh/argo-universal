@@ -16,14 +16,16 @@ export function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
       <IssueLabels labels={issue.labels} />
       <Blockers issue={issue} />
       <Assignees assignees={issue.assignees} />
-      <GitHubLink url={issue.url} />
+      <GitHubLink issue={issue} />
     </Metadata>
   );
 }
 
-// The Issue's own link, which the header's number carries while there is room for it.
-function GitHubLink({ url }: { url: string }): JSX.Element {
-  return <Metadata.Link title="GitHub" text={url} href={url} whenNarrow />;
+// The Issue's number is its link out: a property of the Issue, so it sits with the rest of them.
+function GitHubLink({ issue }: { issue: Issue }): JSX.Element {
+  return (
+    <Metadata.Link title="GitHub" text={`#${issue.number}`} href={issue.url} />
+  );
 }
 
 function IssueLabels({ labels }: { labels: IssueLabel[] }): JSX.Element {

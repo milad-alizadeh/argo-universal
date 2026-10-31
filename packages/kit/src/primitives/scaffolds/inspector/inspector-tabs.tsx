@@ -2,7 +2,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
-import { IconButton } from '#primitives/actions/icon-button';
+import { ChromeIconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
@@ -45,7 +45,7 @@ function CloseTab({ tab, selected, focus }: TabProps): ReactElement | null {
   if (!selected) return null;
 
   return (
-    <IconButton
+    <ChromeIconButton
       variant="ghost"
       size="sm"
       accessibilityLabel={`Close ${tab.label}`}

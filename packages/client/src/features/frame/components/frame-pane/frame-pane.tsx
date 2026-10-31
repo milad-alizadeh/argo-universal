@@ -90,6 +90,11 @@ interface PaneStyles {
   shiftStyle: AnimatedViewStyle;
 }
 
+/*
+ * A closed pane is 0 wide, but a native Surface's shadow is not clipped by its box and would bleed back across the
+ * content (#1703): at 0 nothing of it is drawn. While the width animates the shadow is still drawn. The opacity is
+ * written inline: a helper called from the style worklet is not itself a worklet.
+ */
 function usePaneStyles(props: FramePaneProps): PaneStyles {
   const width = useSharedValue(props.width);
   const shift = useSharedValue(0);
@@ -97,7 +102,7 @@ function usePaneStyles(props: FramePaneProps): PaneStyles {
 
   return {
     widthStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ width: width.get() }),
+      () => ({ width: width.get(), opacity: width.get() > 0 ? 1 : 0 }),
       [width],
     ),
     shiftStyle: useAnimatedStyle<ViewStyle>(

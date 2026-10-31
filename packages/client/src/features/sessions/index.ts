@@ -66,6 +66,7 @@ export { startingFeed } from './utils/starting-feed';
 export {
   decodeOpenFailure,
   openFailureText,
+  sessionMissing,
   serverSilentMessage,
   sessionOpenFailedTitle,
 } from './utils/open-failure';
@@ -220,7 +221,10 @@ export {
   type SessionRowPlugins,
 } from './components/session-row/session-row-props';
 
-export { NewSessionQuestion } from './components/new-session-question/new-session-question';
+export {
+  NewSessionQuestion,
+  newSessionQuestion,
+} from './components/new-session-question/new-session-question';
 
 export {
   SessionBar,

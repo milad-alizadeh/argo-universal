@@ -4,6 +4,7 @@ import {
   heldModeSteps,
   smallModelUpdate,
 } from './acp-configuration.ts';
+import { cancellableScenarios } from './cancellable-scenarios.ts';
 import { changedFilesSteps } from './changed-files-scenario.ts';
 import { contextUsageScenarios } from './context-usage.ts';
 import { delegationSteps } from './delegation-scenario.ts';
@@ -72,6 +73,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 export const scenarios = {
   reply: scenario([reply]),
   'session-delegation': scenario(delegationSteps),
+  ...cancellableScenarios(scenario, reply),
   ...notificationScenarios,
   ...shellScenarios,
   ...subagentScenarios,

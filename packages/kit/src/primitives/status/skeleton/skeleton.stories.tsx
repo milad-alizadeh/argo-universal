@@ -5,6 +5,7 @@ import {
   loadingSkeleton,
   stillSkeleton,
 } from './skeleton-fixtures';
+import { SkeletonLabels } from './skeleton-labels';
 import { SkeletonNoData, SkeletonWithRows } from './skeleton-no-data';
 import { SkeletonSample } from './skeleton-sample';
 
@@ -38,4 +39,10 @@ export const NoData: Story = {
 export const SomeData: Story = {
   args: loadingSkeleton,
   render: (args): ReactElement => <SkeletonWithRows {...args} />,
+};
+
+// Content that labels itself: a drawer destination, a metadata field and a folded parent row say nothing here.
+export const LabelledContent: Story = {
+  args: loadingSkeleton,
+  render: (args): ReactElement => <SkeletonLabels {...args} />,
 };

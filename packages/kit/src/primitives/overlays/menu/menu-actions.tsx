@@ -3,6 +3,7 @@ import { menuDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
+import { windowEdgeInset } from '#kit/menu-surface';
 import { IconSlot } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
@@ -47,6 +48,7 @@ function actionContentProps(
   return {
     align: props.align ?? menuDefaults.align,
     loop: true,
+    collisionPadding: windowEdgeInset,
     className: 'z-50',
     ...contentFocus(props.focus),
   };

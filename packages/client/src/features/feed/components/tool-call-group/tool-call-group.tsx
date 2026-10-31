@@ -23,6 +23,12 @@ import {
 } from './group-activities';
 import { useGrowthAbove } from './use-growth-above';
 
+const idleHeader: LiveHeader = {
+  text: '',
+  startedAt: null,
+  source: { type: 'working' },
+};
+
 export interface ToolCallGroupProps {
   group: FeedGroup;
   renderActivity: (activity: FeedActivity) => ReactNode;
@@ -101,42 +107,30 @@ function liveHeaderDisclosureProps(
   };
 }
 
-function LiveHeaderGroup({
-  liveHeader,
-  ...props
-}: ToolCallGroupProps & { liveHeader: LiveHeader }): React.JSX.Element {
-  const title = useLiveHeaderTitle(liveHeader, props.now);
-  const activities = useGroupActivities(props.group);
-
-  return (
-    <ToolCallDisclosure
-      {...liveHeaderDisclosureProps(liveHeader, title)}
-      initialOpen={props.initialOpen}
-    >
-      <GroupActivities {...activities} renderActivity={props.renderActivity} />
-    </ToolCallDisclosure>
-  );
+function groupHeaderProps(
+  group: FeedGroup,
+  liveHeader: LiveHeader | undefined,
+  title: string,
+):
+  | ReturnType<typeof groupDisclosureProps>
+  | ReturnType<typeof liveHeaderDisclosureProps> {
+  return liveHeader
+    ? liveHeaderDisclosureProps(liveHeader, title)
+    : groupDisclosureProps(group);
 }
 
+// One component whether or not a live header titles the group, so the header coming and going keeps the open state.
 export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
   const liveHeader = liveHeaderOf(props.group);
-
-  return liveHeader ? (
-    <LiveHeaderGroup {...props} liveHeader={liveHeader} />
-  ) : (
-    <SettledOrLiveCallGroup {...props} />
-  );
-}
-
-function SettledOrLiveCallGroup(props: ToolCallGroupProps): React.JSX.Element {
+  const title = useLiveHeaderTitle(liveHeader ?? idleHeader, props.now);
   const trailing = useGroupTrailing(props.group, props.now);
   const activities = useGroupActivities(props.group);
 
   return (
     <ToolCallDisclosure
-      {...groupDisclosureProps(props.group)}
+      {...groupHeaderProps(props.group, liveHeader, title)}
       initialOpen={props.initialOpen}
-      trailing={trailing}
+      trailing={liveHeader ? undefined : trailing}
     >
       <GroupActivities {...activities} renderActivity={props.renderActivity} />
     </ToolCallDisclosure>

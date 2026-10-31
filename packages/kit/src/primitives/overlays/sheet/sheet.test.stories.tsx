@@ -120,3 +120,64 @@ export const TriggerlessModalKeepsInput: Story = {
     await expect(canvas.queryByText('Closed')).toBeNull();
   },
 };
+
+// The sheet's own bottom padding is about 40px; the dead space this guards against was over 250px.
+const maxPadding = 64;
+
+const rows = ['Row one', 'Row two', 'Row three'];
+
+// A sheet of one Sheet.Screen, its content a few short rows.
+function OnePageSheet(): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <View>
+      <Button label="Open" onPress={() => setOpen(true)} />
+      <Sheet open={open} onOpenChange={setOpen} label="Only">
+        <Sheet.Screen name="only" title="Only">
+          <View className="gap-3 p-4">
+            {rows.map((row) => (
+              <Text key={row}>{row}</Text>
+            ))}
+          </View>
+        </Sheet.Screen>
+      </Sheet>
+    </View>
+  );
+}
+
+// What the sheet draws below its last row, which is empty space.
+function spaceBelow(dialog: HTMLElement, last: HTMLElement): number {
+  return (
+    dialog.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom
+  );
+}
+
+// A sheet of one page is as tall as what it holds; it has no pages to keep a steady height between.
+export const OnePageWrapsItsContent: Story = {
+  render: () => <OnePageSheet />,
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
+    const dialog = await body.findByRole('dialog', { name: 'Only' });
+    const last = await body.findByText('Row three');
+    await waitFor(() => expect(dialog).toBeVisible());
+    await waitFor(() =>
+      expect(spaceBelow(dialog, last)).toBeLessThan(maxPadding),
+    );
+  },
+};
+
+// Pages keep one height as the reader moves between them, so a short first page is not shorter than the sheet's floor.
+export const PagesKeepAFloor: Story = {
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
+    const dialog = await body.findByRole('dialog', { name: 'Settings' });
+    await waitFor(() =>
+      expect(dialog.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+        window.innerHeight / 2 - 1,
+      ),
+    );
+  },
+};
