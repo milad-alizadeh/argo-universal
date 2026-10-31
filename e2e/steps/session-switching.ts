@@ -8,7 +8,7 @@ import { agentModelLabel } from './new-session';
 
 const feed = (page: Page): Locator => page.getByTestId('feed-scroll');
 
-// The row press is checked where every step checks it, so a swallowed press is named before the Feed is blamed.
+// The press is checked by the shared helper, so the Feed is asked for its content only once the Session is open.
 export async function openSession(page: Page, title: string): Promise<void> {
   await openSessionRow(page, sessionRow(page, title), title);
   await expect(feed(page)).toContainText(title);
