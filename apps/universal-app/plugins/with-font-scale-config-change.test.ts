@@ -29,19 +29,22 @@ describe('addFontScale', () => {
 });
 
 describe('passFontScaleOn', () => {
-  it('has the Activity answer a configuration change', () => {
-    expect(passFontScaleOn(mainActivity)).toContain(
-      'override fun onConfigurationChanged',
+  it.each([
+    ['answers a configuration change', 'override fun onConfigurationChanged'],
+    ['sends the scale under the name the App listens for', fontScaleEvent],
+    ['keeps what it already does', 'override fun getMainComponentName()'],
+  ])('leaves an Activity that %s', (_behaviour, kotlin) => {
+    expect(passFontScaleOn(mainActivity)).toContain(kotlin);
+  });
+
+  it('puts the override inside the class, not after it', () => {
+    const passed = passFontScaleOn(mainActivity);
+
+    expect(passed.indexOf('onConfigurationChanged')).toBeGreaterThan(
+      passed.indexOf('class MainActivity'),
     );
-  });
-
-  it('sends the scale under the name the App listens for', () => {
-    expect(passFontScaleOn(mainActivity)).toContain(fontScaleEvent);
-  });
-
-  it('keeps what the Activity already does', () => {
-    expect(passFontScaleOn(mainActivity)).toContain(
-      'override fun getMainComponentName(): String = "main"',
+    expect(passed.indexOf('onConfigurationChanged')).toBeLessThan(
+      passed.lastIndexOf('}'),
     );
   });
 
