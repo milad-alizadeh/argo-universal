@@ -5,6 +5,8 @@ import { defineProject } from 'vitest/config';
 export default defineProject({
   test: {
     passWithNoTests: true,
-    projects: createNodeTestProjects({ include: ['src/**/*.test.ts'] }),
+    projects: createNodeTestProjects({
+      include: ['src/**/*.test.ts', 'plugins/**/*.test.ts'],
+    }),
   },
 });
