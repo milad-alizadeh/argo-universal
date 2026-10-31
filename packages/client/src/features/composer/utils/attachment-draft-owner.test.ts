@@ -6,6 +6,7 @@ import {
   secondProject,
   withText,
 } from '../../../../mocks/composer-attachment-draft-mock';
+import { noKeptAttachments } from '../stores/kept-attachments';
 import {
   emptyAttachmentDraft,
   attachmentDraftReducer,
@@ -26,6 +27,7 @@ describe('attachmentDraftReducer', () => {
     const next = attachmentDraftReducer(failed, {
       type: 'ownerChanged',
       key: secondProject,
+      kept: noKeptAttachments,
     });
 
     expect(next.draft).toEqual({ text: '', attachments: [] });
@@ -38,6 +40,7 @@ describe('attachmentDraftReducer', () => {
     const owned = attachmentDraftReducer(emptyAttachmentDraft, {
       type: 'ownerChanged',
       key: secondProject,
+      kept: noKeptAttachments,
     });
 
     const typed = attachmentDraftReducer(owned, {
@@ -58,6 +61,7 @@ describe('attachmentDraftReducer', () => {
     const owned = attachmentDraftReducer(withText, {
       type: 'ownerChanged',
       key: secondProject,
+      kept: noKeptAttachments,
     });
 
     const next = attachmentDraftReducer(owned, {
@@ -73,11 +77,13 @@ describe('attachmentDraftReducer', () => {
     const first = attachmentDraftReducer(emptyAttachmentDraft, {
       type: 'ownerChanged',
       key: firstProject,
+      kept: noKeptAttachments,
     });
 
     const second = attachmentDraftReducer(first, {
       type: 'ownerChanged',
       key: secondProject,
+      kept: noKeptAttachments,
     });
 
     const next = attachmentDraftReducer(second, {

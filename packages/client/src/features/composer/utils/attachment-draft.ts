@@ -2,6 +2,7 @@ import type {
   ComposerAttachment,
   ComposerDraft,
 } from '../components/composer/composer';
+import type { KeptAttachmentsOfDraft } from '../stores/kept-attachments';
 import type { DraftKey } from './draft-key';
 
 export interface PickedAttachment {
@@ -17,6 +18,8 @@ export interface AttachmentDraftState {
   selectionErrorKey?: string;
   // The owner whose kept text may still replace the empty draft; gone once the person edits it.
   awaitedKey?: DraftKey;
+  // Whose draft this is, from the last change of owner; the draft is kept for it only while it matches.
+  ownerKey?: DraftKey;
 }
 
 export type AttachmentDraftEvent =
@@ -24,13 +27,9 @@ export type AttachmentDraftEvent =
   | { type: 'pickFailed'; key: string }
   | { type: 'folderDropped'; key: string }
   | { type: 'changed'; draft: ComposerDraft }
-  | { type: 'ownerChanged'; key: DraftKey }
+  | { type: 'ownerChanged'; key: DraftKey; kept: KeptAttachmentsOfDraft }
   | { type: 'restored'; key: DraftKey; text: string }
   | { type: 'cleared' };
-
-export type AttachmentError =
-  | { kind: 'selection' | 'upload'; message: string; key?: string }
-  | undefined;
 
 export const attachmentSelectionFailureMessage =
   "Couldn't select files. Try again.";
@@ -67,6 +66,20 @@ function restore(
   if (key !== state.awaitedKey) return state;
 
   return { ...state, draft: { ...state.draft, text }, awaitedKey: undefined };
+}
+
+// A new owner's draft starts with the Attachments kept for it; its kept text follows.
+function ownerChanged(
+  key: DraftKey,
+  kept: KeptAttachmentsOfDraft,
+): AttachmentDraftState {
+  return {
+    ...emptyAttachmentDraft,
+    draft: { text: '', attachments: kept.attachments },
+    files: kept.files,
+    awaitedKey: key,
+    ownerKey: key,
+  };
 }
 
 function attach(
@@ -122,11 +135,11 @@ const draftTransitions: Record<AttachmentDraftEvent['type'], DraftTransition> =
       event.type === 'changed' ? changeDraft(state, event.draft) : state,
     ownerChanged: (state, event) =>
       event.type === 'ownerChanged'
-        ? { ...emptyAttachmentDraft, awaitedKey: event.key }
+        ? ownerChanged(event.key, event.kept)
         : state,
     restored: (state, event) =>
       event.type === 'restored' ? restore(state, event) : state,
-    cleared: () => emptyAttachmentDraft,
+    cleared: (state) => ({ ...emptyAttachmentDraft, ownerKey: state.ownerKey }),
   };
 
 // A Composer draft with attachments: what each pick, drop, edit, send and change of owner does to it.
@@ -135,41 +148,4 @@ export function attachmentDraftReducer(
   event: AttachmentDraftEvent,
 ): AttachmentDraftState {
   return draftTransitions[event.type](state, event);
-}
-
-export interface UploadForm {
-  name: string;
-  form: FormData;
-}
-
-export function toUploadForms(
-  sent: ComposerDraft,
-  files: ReadonlyMap<string, Blob>,
-): UploadForm[] {
-  return sent.attachments.map(({ id, name }) => {
-    const file = files.get(id);
-
-    if (!file) throw new Error(`No file for the attached ${name}`);
-    const form = new FormData();
-    form.append('file', file, name);
-
-    return { name, form };
-  });
-}
-
-// A failed selection shows before a failed upload.
-export function toAttachmentError(
-  selection: string | undefined,
-  upload: Error | null,
-  key?: string,
-): AttachmentError {
-  if (selection) return { kind: 'selection', message: selection, key };
-
-  if (upload)
-    return {
-      kind: 'upload',
-      message: `Couldn't upload the attachment. ${upload.message}`,
-    };
-
-  return undefined;
 }
