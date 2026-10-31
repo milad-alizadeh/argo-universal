@@ -12,7 +12,7 @@ export function WindowDragStrip(): React.JSX.Element {
   );
 }
 
-// Floats over the top of the panes, centred on the span it is given (the content column on the full Frame, the whole window on Onboarding); touches outside the banner reach the page.
+// Floats over the top of the panes, centred on the span it is given; touches outside the banner reach the page.
 export interface PaneBannerProps {
   // Where the panes start, when the sidebar beside them is not in the same row.
   left?: number;

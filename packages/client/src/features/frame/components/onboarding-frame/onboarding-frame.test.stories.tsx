@@ -53,10 +53,12 @@ export const ShowsTheConnectionBanner: Story = {
 export const CentresTheConnectionBanner: Story = {
   args: { banner: <Text>Reconnecting…</Text> },
   play: async ({ canvas }) => {
-    const banner = canvas.getByText('Reconnecting…').getBoundingClientRect();
-    const window = canvas.getByTestId('window').getBoundingClientRect();
-    await expect(banner.x + banner.width / 2).toBeCloseTo(
-      window.x + window.width / 2,
+    const bannerRect = canvas
+      .getByText('Reconnecting…')
+      .getBoundingClientRect();
+    const windowRect = canvas.getByTestId('window').getBoundingClientRect();
+    await expect(bannerRect.x + bannerRect.width / 2).toBeCloseTo(
+      windowRect.x + windowRect.width / 2,
       0,
     );
   },
