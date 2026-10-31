@@ -219,15 +219,25 @@ function control(found: Element | null): Element {
 
 /*
  * These two stories measure the row's own layout, so they render it bare, not in `onPageInStack`: on web the stack
- * centres its card and shrinks it to its content, which leaves the row zero wide, so every inset it reads is the
- * label's offset into nothing (CI read leading 53, trailing -53).
+ * centres its card and shrinks it to its content, which leaves the row zero wide (CI read leading 53, trailing -53).
+ * Bare, the canvas still centres and shrinks the row to its widest pill, so every inset is the label's offset
+ * inside that pill and reads the same on both sides (leading 53, trailing 53). A page gives the row its column's
+ * whole width, so these give it that.
  */
+const fullWidth: NonNullable<Story['decorators']> = [
+  (Story): React.JSX.Element => (
+    <View className="w-full">
+      <Story />
+    </View>
+  ),
+];
 
 /*
  * A phone stacks the two pills on the page's content inset, so they begin at one x and each sits far nearer the
  * row's leading edge than its trailing one. Centred, pills of different widths begin at different x.
  */
 export const PillsOnTheContentInsetPhone: Story = {
+  decorators: fullWidth,
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.phone);
 
@@ -250,6 +260,7 @@ export const PillsOnTheContentInsetPhone: Story = {
 
 // Wide lays the Server and the Project out as one centred group, which the phone fix leaves alone.
 export const RowStaysCentredWide: Story = {
+  decorators: fullWidth,
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
     const row = startRow(canvas);
