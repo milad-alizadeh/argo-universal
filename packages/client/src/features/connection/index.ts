@@ -7,7 +7,7 @@ export {
 
 export { ConnectionContext, useConnection } from './stores/connection-context';
 
-export { openConnection } from './api/open-connection';
+export { type OpenConnection, openConnection } from './api/open-connection';
 
 export { retryServer } from './api/retry-server';
 

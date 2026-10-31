@@ -26,6 +26,7 @@ const phonePages = [
   'Agent access',
   'Plugins',
   'Accounts',
+  'Servers',
   'Connection',
 ];
 
@@ -35,6 +36,7 @@ const widePages = [
   'Agent access',
   'Plugins',
   'Accounts',
+  'Servers',
   'Connection',
   'Devices',
   'Notifications',

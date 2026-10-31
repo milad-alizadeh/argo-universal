@@ -4,7 +4,6 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
-import { useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import {
   type PluginEntry,
@@ -86,7 +85,6 @@ function usePluginDetail(pluginId: string): PluginSettingsDetailViewProps {
 
   return {
     title: name ?? pluginId,
-    caption: useServerPageCaption(),
     plugin,
     onEnabledChange: usePluginEnabledChange(pluginId),
     onSettingChange: usePluginSettingChange(pluginId),

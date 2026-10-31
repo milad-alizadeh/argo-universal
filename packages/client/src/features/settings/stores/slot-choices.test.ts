@@ -18,10 +18,18 @@ function useMemoryStorage(): ReturnType<typeof memoryStorage> {
 
 const slotId = 'argo/session/row/v1';
 
-const keptKey = `slot-choices:${slotId}`;
+// The Server the choices are about, and where this Device keeps them.
+const serverId = 'server-device';
 
-const loadChoices = (client = new QueryClient()): Promise<SlotChoices> =>
-  client.query(slotChoicesQuery(slotId));
+const server = { serverId, slotId };
+
+const keptKey = `${serverId}:slot-choices:${slotId}`;
+
+const loadChoices = (
+  client = new QueryClient(),
+  of = server,
+): Promise<SlotChoices> =>
+  client.query(slotChoicesQuery(of.serverId, of.slotId));
 
 const loadHidden = async (client?: QueryClient): Promise<readonly string[]> =>
   (await loadChoices(client)).hidden;
@@ -37,7 +45,7 @@ describe('the Plugins hidden in a Slot on this Device', () => {
 
   it('keeps a Plugin turned off for the next App start', async () => {
     useMemoryStorage();
-    await chooseSlotPluginShown(new QueryClient(), slotId, {
+    await chooseSlotPluginShown(new QueryClient(), server, {
       pluginId: 'deploys',
       shown: false,
     });
@@ -50,15 +58,15 @@ describe('the Plugins hidden in a Slot on this Device', () => {
   it('shows a Plugin again once it is turned back on', async () => {
     useMemoryStorage();
     const client = new QueryClient();
-    await chooseSlotPluginShown(client, slotId, {
+    await chooseSlotPluginShown(client, server, {
       pluginId: 'deploys',
       shown: false,
     });
-    await chooseSlotPluginShown(client, slotId, {
+    await chooseSlotPluginShown(client, server, {
       pluginId: 'coverage',
       shown: false,
     });
-    await chooseSlotPluginShown(client, slotId, {
+    await chooseSlotPluginShown(client, server, {
       pluginId: 'deploys',
       shown: true,
     });
@@ -86,11 +94,11 @@ describe('the Plugins hidden in a Slot on this Device', () => {
   it('keeps the Single-owner Slot owner beside the switches', async () => {
     useMemoryStorage();
     const client = new QueryClient();
-    await chooseSlotPluginShown(client, slotId, {
+    await chooseSlotPluginShown(client, server, {
       pluginId: 'coverage',
       shown: false,
     });
-    await chooseSlotOwner(client, slotId, 'issue-tracker');
+    await chooseSlotOwner(client, server, 'issue-tracker');
 
     await expect(loadChoices()).resolves.toEqual({
       hidden: ['coverage'],
@@ -103,7 +111,7 @@ describe('the Plugins hidden in a Slot on this Device', () => {
       keptKey,
       JSON.stringify({ hidden: ['coverage'], owner: null }),
     );
-    await chooseSlotPluginShown(new QueryClient(), slotId, {
+    await chooseSlotPluginShown(new QueryClient(), server, {
       pluginId: 'deploys',
       shown: false,
     });
@@ -113,11 +121,28 @@ describe('the Plugins hidden in a Slot on this Device', () => {
 
   it('keeps each Slot apart', async () => {
     useMemoryStorage();
-    await chooseSlotPluginShown(new QueryClient(), 'other/slot/v1', {
+    await chooseSlotPluginShown(
+      new QueryClient(),
+      { serverId, slotId: 'other/slot/v1' },
+      { pluginId: 'deploys', shown: false },
+    );
+
+    await expect(loadHidden()).resolves.toEqual([]);
+  });
+
+  it('keeps each Server apart, so a Plugin turned off on one stays on in the other', async () => {
+    useMemoryStorage();
+    await chooseSlotPluginShown(new QueryClient(), server, {
       pluginId: 'deploys',
       shown: false,
     });
 
-    await expect(loadHidden()).resolves.toEqual([]);
+    const other = await loadChoices(new QueryClient(), {
+      serverId: 'other-computer',
+      slotId,
+    });
+
+    expect(other.hidden).toEqual([]);
+    await expect(loadHidden()).resolves.toEqual(['deploys']);
   });
 });

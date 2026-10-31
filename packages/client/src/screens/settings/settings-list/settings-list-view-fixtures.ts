@@ -33,3 +33,14 @@ export const disconnectedSettings: SettingsListViewState = {
   ...base,
   status: 'disconnected',
 };
+
+/*
+ * The Server being looked at is another computer's. The Devices row goes, and Appearance, which belongs to this
+ * Device rather than to that Server, sits under its own heading (ADR-0022).
+ */
+export const pairedSettings: SettingsListViewState = {
+  ...base,
+  status: 'ready',
+  paired: true,
+  serverName: 'Studio',
+};

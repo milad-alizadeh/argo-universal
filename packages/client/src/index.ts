@@ -52,6 +52,8 @@ export { ProjectListScreen } from './screens/settings/projects/project-list-scre
 
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
+export { ServerListScreen } from './screens/settings/servers/server-list-screen';
+
 export { hasLiquidGlass } from '@repo/kit/native-header';
 
 export {
