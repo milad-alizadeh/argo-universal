@@ -78,3 +78,24 @@ export const WideTablesKeepEveryColumnReachable: Story = {
     await expect(canvas.getByText('Table primitive row')).toBeVisible();
   },
 };
+
+// Whether a header's drawn text is cut short: text that overflows its own box is what an ellipsis hides.
+function truncatedTexts(header: HTMLElement): HTMLElement[] {
+  return [header, ...header.querySelectorAll<HTMLElement>('*')].filter(
+    (element) => element.scrollWidth > element.clientWidth,
+  );
+}
+
+export const ShortHeadersAreNeverCut: Story = {
+  args: {
+    text: '| Column A | Column B | Column C |\n| --- | --- | --- |\n| one | two | three |',
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    const headers = canvas.getAllByRole('columnheader');
+    await expect(headers).toHaveLength(3);
+    await waitFor(() =>
+      expect(headers.flatMap((header) => truncatedTexts(header))).toEqual([]),
+    );
+  },
+};
