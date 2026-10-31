@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { operations } from '@repo/contracts/operations';
 import { z } from 'zod';
 import { publishedRegistry } from '../../mocks/registry/catalog.ts';
 
@@ -32,35 +32,50 @@ export const longRegistry = (count: number = agentCount): Registry => {
   };
 };
 
-const listing = z.object({ agents: z.array(z.object({ id: z.string() })) });
+type Listing = { agents: readonly { id: string }[] };
 
-type Listing = z.infer<typeof listing>;
-
-// How many distinct Agents a registry lists; a repeated id would collapse in the Server's catalog.
+// How many distinct Agents a listing holds; a repeated id would collapse in the Server's catalog.
 export function distinctAgents({ agents }: Listing): number {
   const ids = new Set(agents.map(({ id }) => id));
 
   if (ids.size !== agents.length)
     throw new Error(
-      `The registry lists ${agents.length} Agents but ${ids.size} ids`,
+      `The listing holds ${agents.length} Agents but ${ids.size} ids`,
     );
 
   return agents.length;
 }
 
-/*
- * The scenario reports the count read back from the registry file the Server starts from, not
- * `agentCount`, so a catalog that is not the size it claims fails the run instead of being measured.
- */
-export async function requireCatalog(registryPath: string): Promise<number> {
-  const seeded = distinctAgents(
-    listing.parse(JSON.parse(await readFile(registryPath, 'utf8'))),
-  );
+const served = z.object({
+  result: z.object({ data: operations['registry.get'].result }),
+});
 
-  if (seeded !== agentCount)
+/*
+ * The scenario reports the count the running Server serves, asked over the wire as the App asks
+ * (`registry.get`), not the registry file this run wrote and not `agentCount`. A Server that ignored,
+ * cached or failed to reload that file serves a different catalog, and that fails the run here
+ * instead of being measured.
+ */
+export async function requireServedCatalog(httpUrl: string): Promise<number> {
+  const count = distinctAgents(await readServedCatalog(httpUrl));
+
+  if (count !== agentCount)
     throw new Error(
-      `The agents scenario claims ${agentCount} Agents but the Server's registry lists ${seeded}`,
+      `The agents scenario claims ${agentCount} Agents but the Server serves ${count}`,
     );
 
-  return seeded;
+  return count;
+}
+
+async function readServedCatalog(httpUrl: string): Promise<Listing> {
+  const response = await fetch(`${httpUrl}/trpc/registry.get?input=%7B%7D`);
+
+  if (!response.ok)
+    throw new Error(
+      `The Server answered registry.get with ${response.status}, so the agents scenario cannot tell what catalog it serves`,
+    );
+
+  const { data } = served.parse(await response.json()).result;
+
+  return { agents: data.agents.map(({ entry }) => ({ id: entry.id })) };
 }
