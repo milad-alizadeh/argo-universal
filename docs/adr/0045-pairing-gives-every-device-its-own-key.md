@@ -33,7 +33,7 @@ A ticket lives about two minutes and is good once. The pair sheet mints a new on
 
 **The owner confirms on the Server Device.** The handshake completes, the claimed name arrives, and the Server holds the registration until the owner allows it ("iPhone 15 Pro wants to pair"). Scanning the code is not by itself enough. The claimed name is pre-authentication and untrusted: it is shown for recognition, as Syncthing shows one, and never used for a decision.
 
-This confirmation is not built yet; it lands with the pair sheet in #1497. #1495 spends the Ticket inside the handshake, because admitting a Device and then asking would let it reach the API while the owner was still deciding. So until #1497, **holding a live Pairing Ticket is the whole gate**, and a Device that spends one is a paired Device at once.
+This confirmation is not built yet; it lands with the pair sheet in #1496. #1495 spends the Ticket inside the handshake, because admitting a Device and then asking would let it reach the API while the owner was still deciding. So until #1496, **holding a live Pairing Ticket is the whole gate**, and a Device that spends one is a paired Device at once.
 
 **Replay and impersonation are refused by construction,** not by a check someone has to remember: a fresh ephemeral key per handshake, a record nonce each side takes from its own count of the records it has handled, and an App that aborts when the Server's static key is not the one it stored. A computer that answers to the right discovery name with the wrong key gets nowhere.
 
