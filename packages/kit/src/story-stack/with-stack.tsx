@@ -1,5 +1,6 @@
 import { ExpoRoot, Stack, useLocalSearchParams } from 'expo-router';
 import { use, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { Text } from '#primitives/content/text';
 import { ScreenNavigationEnabled } from '#primitives/scaffolds/screen';
 import { PushedScreenRoute } from '../pushed-screen/routes';
 import { StackScreensContext, type StoryScreens } from './stack-story-context';
@@ -59,6 +60,11 @@ function ScreenRoute(): React.JSX.Element | null {
   );
 }
 
+// The App's `+not-found` stands in the stack as a page that says so.
+function NotFoundRoute(): React.JSX.Element {
+  return <Text>Not found</Text>;
+}
+
 function StackLayout(): React.JSX.Element {
   return <Stack />;
 }
@@ -72,6 +78,7 @@ function routes(): ExpoRootContext {
     ['./index.js', { default: RootRoute }],
     ['./screen/[id].js', { default: PushedScreenRoute }],
     ['./[screen].js', { default: ScreenRoute }],
+    ['./+not-found.js', { default: NotFoundRoute }],
   ]);
 
   return Object.assign((key: string) => files.get(key), {
