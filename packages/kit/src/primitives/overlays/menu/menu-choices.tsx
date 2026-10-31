@@ -3,7 +3,7 @@ import { menuDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { menuGroupGapClassName } from '#kit/menu-surface';
+import { menuGroupGapClassName, windowEdgeInset } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
 import { Text } from '#primitives/content/text';
 import { contentFocus } from './menu-content-focus';
@@ -41,6 +41,7 @@ function choiceContentProps<Value extends string>(
   return {
     align: props.align ?? menuDefaults.align,
     loop: true,
+    collisionPadding: windowEdgeInset,
     className: 'z-50',
     ...contentFocus(props.focus),
   };
