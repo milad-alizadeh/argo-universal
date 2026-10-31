@@ -22,6 +22,7 @@ import { usePathname } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
+import { drawerScrimLabel } from './compose-drawer-options';
 import { useDrawerOptions } from './frame-drawer-options';
 import {
   usePickSection,
@@ -46,6 +47,7 @@ function NarrowDrawerContent({
       selectedSection={frame.section}
       items={frame.items}
       open={useDrawerStatus() === 'open'}
+      scrimLabel={drawerScrimLabel}
       onSectionChange={(section) => pick(drawer, section)}
     />
   );

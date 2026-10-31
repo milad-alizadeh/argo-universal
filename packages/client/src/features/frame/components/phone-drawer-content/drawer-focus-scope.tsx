@@ -3,6 +3,8 @@ import { View } from 'react-native';
 
 export interface DrawerFocusScopeProps {
   open: boolean;
+  // The name of the backdrop that closes the drawer; only the web scope reads it, to take the backdrop out of the Tab order with the drawer.
+  scrimLabel: string;
   children: React.ReactNode;
 }
 
