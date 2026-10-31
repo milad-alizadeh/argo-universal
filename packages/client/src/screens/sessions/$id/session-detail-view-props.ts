@@ -2,13 +2,17 @@ import type { SessionSnapshot } from '@repo/contracts';
 import type { FeedProps, useSessionFeed } from '#features/feed';
 import {
   openFailureText,
+  sessionMissing,
   type SessionHeaderProps,
   type SessionHeaderStatus,
   type ShellPanelProps,
   type SessionPanels,
 } from '#features/sessions';
 import type { SessionCallouts } from '#features/sessions';
-import { sessionHref } from '#lib/product/navigation/navigation';
+import {
+  leaveForSessions,
+  sessionHref,
+} from '#lib/product/navigation/navigation';
 import {
   type OpenSession,
   sessionComposerProps,
@@ -49,10 +53,18 @@ function failedSession(
   failure: FeedFailure,
   opened: OpenFeed | undefined,
 ): SessionDetailViewProps | undefined {
-  if (failure.feed.error) return { state: 'failed' };
+  if (failure.feed.error) return failedRead(failure.feed.error);
 
   return opened ? undefined : unopened(failure);
 }
+
+// The Server named no Session by the id, or never answered the read.
+const failedRead = (
+  error: NonNullable<SessionFeed['error']>,
+): SessionDetailViewProps =>
+  sessionMissing(error)
+    ? { state: 'missing', onLeave: leaveForSessions }
+    : { state: 'failed' };
 
 // An open the Agent refused fails the page with its reason; one the Connection dropped keeps opening, and a toast says why.
 function unopened({

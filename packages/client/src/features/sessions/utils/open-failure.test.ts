@@ -9,12 +9,14 @@ import {
   dropped,
   openFailure,
   serverError,
+  sessionNotFound,
 } from '../../../../mocks/sessions/open-failure.mocks';
 import {
   connectionDropped,
   decodeOpenFailure,
   openErrorOf,
   openFailureText,
+  sessionMissing,
 } from './open-failure';
 
 const authRequiredOpen: SessionOpenError = { type: 'auth-required' };
@@ -130,4 +132,16 @@ it.each([
   { cause: null, text: undefined },
 ])('reads $text from a failed open', ({ cause, text }) => {
   expect(openFailureText(cause)).toBe(text);
+});
+
+it("reads the Server's NOT_FOUND as a Session that does not exist", () => {
+  expect(sessionMissing(sessionNotFound)).toBe(true);
+});
+
+it.each([
+  { case: 'a dropped Connection', cause: dropped },
+  { case: 'a Server error', cause: serverError },
+  { case: 'no error', cause: null },
+])('does not read $case as a missing Session', ({ cause }) => {
+  expect(sessionMissing(cause)).toBe(false);
 });
