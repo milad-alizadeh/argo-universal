@@ -11,10 +11,43 @@ export async function settleChanges(width: number): Promise<void> {
 
   if (width !== layoutWidths.phone) return;
 
-  const sheet = await screen.findByRole('dialog');
+  const sheet = await sheetArrived();
 
   await nextFrames();
   await sheetStopped(sheet);
+}
+
+const sheetIsIn = (): boolean => screen.queryAllByRole('dialog').length > 0;
+
+/*
+ * Waits for the sheet to be in the page, however long a loaded machine takes to mount it: its arrival is a state of the
+ * page, so it is watched for rather than given a clock (Testing Library's `findBy` gives up after a second). The check and
+ * the observer start in one step, so a sheet that lands between them is not missed.
+ */
+async function sheetArrived(): Promise<HTMLElement> {
+  await new Promise<void>((resolve) => {
+    if (sheetIsIn()) {
+      resolve();
+
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      if (!sheetIsIn()) return;
+
+      observer.disconnect();
+      resolve();
+    });
+
+    observer.observe(document.body, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+  });
+
+  // Throws if more than one dialog is open: a phone's Changes story opens only the sheet.
+  return screen.getByRole('dialog');
 }
 
 // Waits on the sheet's own slide, however long a loaded machine takes to run it; the spinners inside it never end.
