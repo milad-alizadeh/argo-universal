@@ -2,6 +2,7 @@ import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
+import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { ListTileContext, RowPositionContext } from '../../../list-context';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { nestedRows, nestsChildren } from '../../../list-tree';
@@ -84,13 +85,21 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   );
 }
 
+/*
+ * A row a loading Skeleton holds is a placeholder: its title is only a width, and the row's own label (the title)
+ * would otherwise be read beside the Skeleton's one "Loading". The Skeleton hides the text views it draws a bar over,
+ * not the row that labels itself, so the row hides itself. A row inside Skeleton.Ignore is outside that context.
+ */
 // A chosen row shows its check only, with no selected fill; a selected row without a check keeps its tint.
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing(props);
   const tile = useContext(ListTileContext);
 
   return (
-    <View className={tile ? tileSurface : itemSurface(drawing, props)}>
+    <View
+      className={tile ? tileSurface : itemSurface(drawing, props)}
+      aria-hidden={useSkeletonLoading() || undefined}
+    >
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
       <RowDetails tile={tile !== null} props={props} />
       <RowMovePicker id={props.id} Row={ListItem} />
