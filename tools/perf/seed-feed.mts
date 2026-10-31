@@ -1,4 +1,5 @@
 import type { feedRow, turn } from '@repo/db/schema';
+import { z } from 'zod';
 import { copyRow, recordings, type RecordedRow } from './recorded-feed.mts';
 
 const columnFields = new Set([
@@ -122,4 +123,51 @@ export async function shortRecordedFeeds(
   if (!first) throw new Error('Recorded catalog needs a short Feed');
 
   return combineFeeds(sessionIds.map((id) => oneRecordedFeed(id, first, now)));
+}
+
+const messageKinds = new Set<string>([
+  'user_message',
+  'agent_thought',
+  'agent_message',
+]);
+
+const textBlock = z.looseObject({ text: z.string().optional() });
+
+const messagePayload = z.looseObject({ content: z.array(textBlock) });
+
+type TextBlock = z.infer<typeof textBlock>;
+
+const blankedBlock = (block: TextBlock): TextBlock =>
+  block.text === undefined ? block : { ...block, text: '' };
+
+// A message's text blocks with their text emptied; every other block and field stays.
+function blankedPayload(
+  payload: SeededFeed['rows'][number]['payload'],
+): z.infer<typeof messagePayload> {
+  const message = messagePayload.parse(payload);
+
+  return { ...message, content: message.content.map(blankedBlock) };
+}
+
+/*
+ * The recorded Feed with every prompt, thought and answer emptied of text, its Tool calls and compaction
+ * rows left as recorded. The Session still has rows to draw, so it measures how the Feed lays out and
+ * scrolls message rows that have nothing in them to size them by. A Feed of nothing but blank messages
+ * is not this: the App draws a Session like that as an empty one, with no Feed to scroll.
+ */
+export async function blankedFeed(
+  sessionId: string,
+  size: FeedSize,
+  now: number,
+): Promise<SeededFeed> {
+  const feed = await seededFeed(sessionId, size, now);
+
+  return {
+    turns: feed.turns,
+    rows: feed.rows.map((row) =>
+      messageKinds.has(row.sessionUpdate)
+        ? { ...row, payload: blankedPayload(row.payload) }
+        : row,
+    ),
+  };
 }
