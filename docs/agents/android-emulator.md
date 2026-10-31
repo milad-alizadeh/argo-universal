@@ -26,32 +26,33 @@ A headless launch skips that dialog and deletes the pending dumps.
 
 Stop with `adb -s <serial> emu kill`, never a signal. Measured in #1651:
 
-- SIGTERM while the quickboot snapshot is saving crashes the emulator and writes a new dump, about 3 MB. The next boot then hits the dialog again. This is why retries kept failing.
-- SIGTERM of an emulator hung in the dialog also writes a dump.
+- SIGTERM while the quickboot snapshot is saving crashes the emulator and writes a new dump, about 3 MB. The next boot then hits the dialog again.
+- SIGTERM of an emulator hung in the dialog also writes a dump. Killing a hung emulator is how the retries kept re-poisoning the next boot.
 - `emu kill`, headless or windowed, writes no dump.
 
 ## Workarounds that do not help
 
-Cloning the AVD, `-wipe-data` and `-gpu swiftshader_indirect` all leave the crash database untouched, so each one fails the same way. Do not use them to get around the hang.
+Cloning the AVD, `-wipe-data` and `-gpu swiftshader_indirect` all leave the crash database untouched, so none of them clears the dialog's cause.
 
 ## Recovering a stuck emulator
 
-1. Kill the stuck process by the PID in your `emu.pid`. Do not use `pkill -f`.
+1. Kill the stuck process by the PID in your `emu.pid`.
 2. Run one headless launch. It clears the pending dumps.
 3. Stop that launch with `adb -s emulator-<port> emu kill`.
 
-After that, windowed launches work again. The issue also lists answering the dialog on the owner's desktop as an alternative. That is the owner's call.
+After that, windowed launches work again.
 
 ## Ports and sharing
 
 - Use a port no other agent is using. Two emulators must never share one.
-- Boot one emulator at a time and no more than two, named after yourself. Delete your own AVD when you are done.
-- Never delete another AVD's `hardware-qemu.ini.lock` or `multiinstance.lock`. Deleting them fixed nothing. A clone that still carries a stale `hardware-qemu.ini.lock` boots fine, so stale locks are not the cause.
+- Boot one emulator at a time, two at most. Delete your own AVD when you are done.
+- Do not delete another AVD's `hardware-qemu.ini.lock` or `multiinstance.lock`. A clone that still carries a stale `hardware-qemu.ini.lock` boots fine, so stale locks are not the cause.
 
 ## Open questions
 
-These are not settled. Do not present them as known.
+Not settled. Each is unknown until measured.
 
-- Why SIGTERM during a quickboot snapshot save crashes the emulator. It is an emulator bug, not tied to Argo's code.
+- Why SIGTERM during a quickboot snapshot save crashes the emulator.
 - Whether every earlier hang was this dialog. The symptom matches, but the launch flags were not recorded.
+- The dialog window itself was never seen; the cause is inferred from the stack trace and the dump behaviour.
 - Whether two agents booting the same AVD break each other. It was not reproduced, and the behaviour of `multiinstance.lock` under that case is unmeasured.
