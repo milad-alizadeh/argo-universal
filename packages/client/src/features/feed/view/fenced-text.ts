@@ -1,4 +1,4 @@
-// An opening fence of three or more backticks with an optional tag, the text, then a closing fence alone on the last line, at least as long as the opening one (CommonMark).
+// An opening fence of three or more backticks with an optional tag, the text, then a closing fence at the start of the last line, at least as long as the opening one (CommonMark). The lookbehind lets an empty text or a blank last line sit before the closing fence. Trailing whitespace is ignored.
 const fence =
   /^(?<open>`{3,})[^\r\n`]*\r?\n(?<body>[\s\S]*?)(?:(?<=\n)|\r?\n)\k<open>`*\s*$/;
 

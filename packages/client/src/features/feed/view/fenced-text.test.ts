@@ -42,6 +42,12 @@ describe('unfencedText', () => {
     );
   });
 
+  it('reads a fence written with CRLF line ends and trailing whitespace', () => {
+    expect(unfencedText('```console\r\nfoo\r\nbar\r\n````  \r\n\r\n')).toBe(
+      'foo\r\nbar',
+    );
+  });
+
   it('takes an empty fence to empty text', () => {
     expect(unfencedText('```\n```')).toBe('');
   });
