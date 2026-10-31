@@ -16,3 +16,12 @@ export const serverError: Error = Object.assign(closed(), {
 
 // The error a tRPC call or subscription gets when its WebSocket closes under it: no answer from the Server.
 export const dropped = TRPCClientError.from(new Error('WebSocket closed'));
+
+// The answer a read gets for an id no Session has, as the tRPC client carries it.
+export const sessionNotFound = TRPCClientError.from({
+  error: {
+    message: 'No Session does-not-exist',
+    code: -32_004,
+    data: { code: 'NOT_FOUND', httpStatus: 404, path: 'feed.page' },
+  },
+});

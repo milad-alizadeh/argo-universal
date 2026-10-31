@@ -6,6 +6,7 @@ import { authenticationRequired } from '../../../../mocks/session-view/session-v
 import {
   failedWithoutReason,
   failedWithReason,
+  missing,
 } from '../../../../mocks/session-view/session-view-failure.test.mocks';
 import { lastRowRestsAboveTheComposer } from '../../../../mocks/session-view/session-view-feed-end.test.mocks';
 import { feedReflowsAfterThePaneCollapses } from '../../../../mocks/session-view/session-view-pane.test.mocks';
@@ -152,6 +153,8 @@ export const Opening: Story = {
 export const FailedWithReason = failedWithReason;
 
 export const FailedWithoutReason = failedWithoutReason;
+
+export const MissingSession = missing;
 
 export const ConfigurationFirstAgent = configuration(0);
 

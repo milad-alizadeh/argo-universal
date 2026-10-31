@@ -51,7 +51,8 @@ const agentChoiceProps = (
   agents,
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
-  onAddAgents: () => wiring.navigate('/settings/agents'),
+  // Settings has no stack until it is first opened, and a page opened first would have no list under it.
+  onAddAgents: () => wiring.navigate('/settings/agents', { withAnchor: true }),
 });
 
 // The chosen Agent is the one New Session's choices already found among the Installed Agents.
