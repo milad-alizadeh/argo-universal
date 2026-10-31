@@ -90,3 +90,13 @@ export const ActionWithoutAnIconKeepsItsValue: Story = {
     await expect(row.querySelector('svg')).toBeNull();
   },
 };
+
+export const DisabledDoesNothing: Story = {
+  args: { title: 'Goal', action: true, disabled: true },
+  play: async ({ canvas, userEvent, args }) => {
+    const row = canvas.getByRole('button', { name: 'Goal' });
+
+    await userEvent.click(row, { pointerEventsCheck: 0 });
+    await expect(args.onPress).not.toHaveBeenCalled();
+  },
+};
