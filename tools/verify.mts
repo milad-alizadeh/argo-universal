@@ -16,7 +16,11 @@ import {
   root,
   run,
 } from './hook-checks.mts';
-import { chooseTests, nothingChecked, type TestScope } from './verify-scope.mts';
+import {
+  chooseTests,
+  nothingChecked,
+  type TestScope,
+} from './verify-scope.mts';
 
 const vitest = path.join(root, 'node_modules/.bin/vitest');
 
