@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';
-import { inRoomAboveKeyboard } from '../../../../mocks/composer/scaled-type.test.mocks';
+import {
+  inRoomAboveKeyboard,
+  wrappingDraft,
+} from '../../../../mocks/composer/scaled-type.test.mocks';
 import { SessionNewView } from './session-new-view';
 import { exampleProject, readyNewSession } from './session-new-view.mocks';
-
-const wrappingDraft =
-  'please fix the failing build now okay and then also update the tests for the login flow thanks';
 
 const meta = {
   title: 'Tests/Screens/Sessions/New Session/DynamicType',

@@ -22,7 +22,9 @@ export function scaleControlType(root: HTMLElement): () => void {
   };
 }
 
-export const phoneWidth = 390;
+// A draft long enough to wrap to several lines on a phone.
+export const wrappingDraft =
+  'please fix the failing build now okay and then also update the tests for the login flow thanks';
 
 /*
  * The room an iPhone leaves a page once the keyboard is up, as a viewport height, at the reader's ordinary text size
@@ -41,7 +43,7 @@ export async function inRoomAboveKeyboard(
   const restore = scaled ? scaleControlType(canvasElement) : () => {};
 
   try {
-    await settleLayout(phoneWidth, room);
+    await settleLayout('phone', room);
     await waitFor(async () => check(room));
   } finally {
     restore();

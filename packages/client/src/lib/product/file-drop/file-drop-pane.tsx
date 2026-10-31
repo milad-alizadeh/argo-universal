@@ -42,13 +42,13 @@ function FadingFeed({
  * The Composer reaches `composerOverlap` up over the Feed's end, so the Feed keeps that much height: a Composer
  * that has to give height up then stops at the pane's top rather than running on past it (#1606).
  */
-const feedKeeps = { minHeight: composerOverlap };
+const feedMinHeight = { minHeight: composerOverlap };
 
 function FeedPart({ hidden, ...feed }: FeedPartProps): React.JSX.Element {
   return (
     <View
       className={cn('relative flex-1', hidden && 'hidden')}
-      style={feedKeeps}
+      style={feedMinHeight}
     >
       <FadingFeed {...feed} />
     </View>
