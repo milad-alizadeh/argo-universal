@@ -2,6 +2,7 @@ import path from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { startOwnServer } from '@repo/e2e/own-server';
+import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import type { GroupRelease } from '@repo/process';
 import { writeBatches } from './seed-batches.mts';
 import {
@@ -148,16 +149,20 @@ function serverView(
   };
 }
 
-// Starts a fixture Server, gives it one real Session, then clones it into many Sessions and copies of the recorded Feeds.
+/*
+ * Starts a fixture Server, gives it one real Session, then clones it into many Sessions and copies of the recorded Feeds.
+ * `agents` sets the scenario the Server's Agents play; the template Session always runs the default.
+ */
 export async function startSeededServer(
   directory: string,
   options: SeedOptions = environmentSeedOptions(),
+  agents: AppFixtureAgents = {},
 ): Promise<SeededServer> {
   const requested = seedConfiguration(options);
   await withTemplateSession(directory);
   const databasePath = path.join(directory, 'server-home', 'argo.db');
   const counts = await seedDatabase(databasePath, requested);
-  const server = await startOwnServer(directory, {});
+  const server = await startOwnServer(directory, agents);
 
   return {
     ...serverView(server, counts, requested),

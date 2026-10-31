@@ -2,6 +2,10 @@ import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import {
+  type AppFixtureAgents,
+  appFixtureAgentIds,
+} from '@repo/mocks/agent/app-fixtures';
 import { startSeededServer } from './seed.mts';
 import { writeReport } from './soak-report.mts';
 import { soakFor } from './soak-run.mts';
@@ -17,6 +21,14 @@ import { type Soak, startSoak } from './soak-state.mts';
  */
 const minutes = Number(process.env.PERF_SOAK_MINUTES ?? 0);
 
+// Plays the shared reply for every prompt but the cancelling cycles' own, which it holds until Stop.
+const cancellableAgents: AppFixtureAgents = Object.fromEntries(
+  appFixtureAgentIds.map((agent) => [
+    agent,
+    { scenario: 'reply-or-hold' as const },
+  ]),
+);
+
 let soak: Soak | undefined;
 
 if (minutes > 0) {
@@ -25,7 +37,10 @@ if (minutes > 0) {
   test.beforeAll(async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), 'argo-soak-'));
 
-    soak = startSoak(await startSeededServer(directory), minutes);
+    soak = startSoak(
+      await startSeededServer(directory, undefined, cancellableAgents),
+      minutes,
+    );
   });
 
   test.afterAll(async () => {
