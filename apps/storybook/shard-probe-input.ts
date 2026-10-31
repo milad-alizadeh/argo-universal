@@ -115,8 +115,8 @@ function countingRequest(
 function countingCancel(
   cancel: typeof window.cancelAnimationFrame,
 ): typeof window.cancelAnimationFrame {
-  return (id: number): void => {
-    pending.delete(id);
+  return (id: number | null | undefined): void => {
+    pending.delete(Number(id));
     cancel(id);
   };
 }
