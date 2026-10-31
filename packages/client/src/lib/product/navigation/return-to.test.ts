@@ -43,3 +43,9 @@ describe('returnToOf', () => {
     },
   );
 });
+
+describe('returnToOf with a malformed link', () => {
+  it('has no page to return to', () => {
+    expect(returnToOf({ returnTo: '%E0%A4%A' })).toBeUndefined();
+  });
+});

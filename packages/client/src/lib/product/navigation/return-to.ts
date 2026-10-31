@@ -22,9 +22,18 @@ interface Carried {
   returnTo?: unknown;
 }
 
+function decoded(link: string): string | undefined {
+  try {
+    return decodeURIComponent(link);
+  } catch {
+    // A hand-edited link with a stray `%` has no page to go back to.
+    return undefined;
+  }
+}
+
 // The page a page was opened from, when it was opened from another section.
 export function returnToOf(params?: Carried): string | undefined {
   const link = params?.returnTo;
 
-  return typeof link === 'string' ? decodeURIComponent(link) : undefined;
+  return typeof link === 'string' ? decoded(link) : undefined;
 }

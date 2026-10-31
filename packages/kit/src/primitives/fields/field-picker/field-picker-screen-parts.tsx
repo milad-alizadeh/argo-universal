@@ -56,18 +56,28 @@ export function ScreenStatus(
 }
 
 // A search that leaves nothing says so; a picker with no options at all says what is missing.
-const emptyMessage = (props: FieldPickerScreenProps): string =>
-  props.options.length === 0
-    ? (props.emptyText ?? 'No options')
-    : 'No matching options';
+const emptyMessage = (hasOptions: boolean, emptyText?: string): string =>
+  hasOptions ? 'No matching options' : (emptyText ?? 'No options');
 
-export function EmptyState(props: FieldPickerScreenProps): ReactElement {
+interface EmptyStateProps {
+  hasOptions: boolean;
+  emptyText?: string;
+}
+
+export function EmptyState(props: EmptyStateProps): ReactElement {
   return (
     <Text accessibilityRole="status" role="secondary" className="px-4 py-3">
-      {emptyMessage(props)}
+      {emptyMessage(props.hasOptions, props.emptyText)}
     </Text>
   );
 }
+
+export const screenEmpty = (props: FieldPickerScreenProps): ReactElement => (
+  <EmptyState
+    hasOptions={props.options.length > 0}
+    emptyText={props.emptyText}
+  />
+);
 
 export function ScreenFooter(props: FieldPickerScreenProps): ReactNode {
   if (!props.footerAction) return null;

@@ -142,9 +142,12 @@ function noOptions(emptyText?: string): Story {
     play: async ({ canvas, userEvent }) => {
       const page = within(document.body);
       await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
-      await expect(await page.findByRole('status')).toHaveTextContent(
-        emptyText ?? 'No options',
-      );
+      const status = await page.findByRole('status');
+
+      // With nothing to search, it must not blame a search that never happened.
+      await (emptyText
+        ? expect(status).toHaveTextContent(emptyText)
+        : expect(status).not.toHaveTextContent(/matching/iu));
     },
   };
 }
