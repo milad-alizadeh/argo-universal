@@ -1,4 +1,5 @@
 import { startEngineTestHost } from '@repo/engine/mocks';
+import { AppPageSocket } from '@repo/engine/mocks/app-socket';
 import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { TRPCClientError, type TRPCClientErrorLike } from '@trpc/client';
@@ -9,6 +10,8 @@ import { openConnection } from './open-connection';
 const closers: (() => Promise<void> | void)[] = [];
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
+
   for (const close of closers.splice(0).reverse()) await close();
 });
 
@@ -16,6 +19,9 @@ afterEach(async () => {
 async function startServer(
   options: { port?: number; version?: string } = {},
 ): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
+  // Node writes no Origin, so the App stands in for its own page, which is what proves the Server Device (#1696).
+  vi.stubGlobal('WebSocket', AppPageSocket);
+
   const host = await startEngineTestHost({ version: '1.2.3', ...options });
   const url = new URL(host.url);
   url.protocol = 'ws:';

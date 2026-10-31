@@ -7,6 +7,7 @@ import { beforeAll, expect, it } from 'vitest';
 import { z } from 'zod';
 import bundleEngine from '../../e2e/engine-bundle.ts';
 import { startOwnServer } from '../../e2e/own-server.ts';
+import { asTheApp } from './app-origin.mts';
 import { withTemplateSession } from './template-session.mts';
 
 beforeAll(bundleEngine);
@@ -21,6 +22,7 @@ async function readStoredSessions(directory: string): Promise<SessionInfo[]> {
   try {
     const response = await fetch(
       `${server.httpUrl}/trpc/session.list?input=%7B%7D`,
+      { headers: asTheApp },
     );
 
     expect(response.ok).toBe(true);

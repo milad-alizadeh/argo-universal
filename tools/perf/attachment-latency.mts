@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { setTimeout as pause } from 'node:timers/promises';
 import type { FileChooser, Page } from '@playwright/test';
+import { asTheApp } from './app-origin.mts';
 import {
   type AttachmentFile,
   attachmentFile,
@@ -55,7 +56,9 @@ async function stored(
   server: SeededServer,
   file: AttachmentFile,
 ): Promise<boolean> {
-  const response = await fetch(`${server.httpUrl}/blobs/${file.blobId}`);
+  const response = await fetch(`${server.httpUrl}/blobs/${file.blobId}`, {
+    headers: asTheApp,
+  });
 
   if (!response.ok) return false;
   const body = Buffer.from(await response.arrayBuffer());
