@@ -9,16 +9,19 @@ import type { OperationCard, SessionDirectory } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
 import type { NativeStartId } from '../native-start';
 import { validateParams } from '../params';
+import type { SessionCaller } from '../session-tokens';
 import { cardUnless, confirmed, type ScopedRun } from './confirmation';
 import { ScopeCoverage } from './coverage';
+import type { PromptChains } from './prompt-chain';
 import { promptCard, startCard } from './rules';
 import { SessionStarts, type StartReservation } from './starts';
 import { scopeTarget } from './targets';
 
-// The Session directory the scope reads, and the ids a new Session takes before its start.
+// The Session directory the scope reads, the ids a new Session takes before its start, and the live Prompt chains.
 export type ScopePorts = {
   directory: SessionDirectory;
   createId: () => string;
+  chains: PromptChains;
 };
 
 // Each native start's own delegation rule, keyed by the one list of native starts.
@@ -29,14 +32,18 @@ type DelegationRules = {
   ) => Promise<OperationResult<Id>>;
 };
 
-// The reservation, whether the target is the caller's own, and the card to show otherwise.
+// The reservation, whether the target is in the caller's reach, the Prompt chain this call carries, and the card to show otherwise.
 type Delegated = {
   reserved: StartReservation;
-  owned: () => boolean;
+  inReach: () => boolean;
+  chain: PromptChain;
   card: OperationCard;
 };
 
-// A caller's own Agents: the Sessions it starts and prompts, under the delegation limits (ADR-0044).
+// The length this call carries, and the Session that serves it once the call is admitted.
+type PromptChain = { length: number; prompted: string | null };
+
+// What a Session may start and prompt, under the delegation limits and the Prompt chain (ADR-0044).
 export class Delegation {
   private readonly starts: SessionStarts;
   private readonly coverage: ScopeCoverage;
@@ -60,44 +67,87 @@ export class Delegation {
     context: ScopedRun,
     input: SessionNewInput,
   ): Promise<SessionNewOutput> {
-    const { caller } = context;
     const sessionId = this.ports.createId();
-    const start = { kind: 'new' as const, input, sessionId };
-    const reserved = this.starts.reserve(caller, start);
-    const { target } = scopeTarget('session.new', input, caller);
-    const owned = (): boolean => this.coverage.inProject(caller, target);
 
-    return this.admit(context, { reserved, owned, card: startCard }, () =>
-      context.invoke({ id: 'session.new', params: input }, { sessionId }),
+    return this.admit(
+      context,
+      this.startDelegated(context.caller, input, sessionId),
+      () => context.invoke({ id: 'session.new', params: input }, { sessionId }),
     );
   }
-  // session.prompt: one of the caller's Agents, within the limits.
+  private startDelegated(
+    caller: SessionCaller,
+    input: SessionNewInput,
+    sessionId: string,
+  ): Delegated {
+    const { target } = scopeTarget('session.new', input, caller);
+    const start = { kind: 'new' as const, input, sessionId };
+    const prompted = input.prompt.length > 0 ? sessionId : null;
+
+    return {
+      reserved: this.starts.reserve(caller, start),
+      inReach: () => this.coverage.inProject(caller, target),
+      chain: this.chainFrom(caller, prompted),
+      card: startCard,
+    };
+  }
+  // session.prompt: any Session in the caller's Project, within the limits and the Prompt chain.
   private prompt(
     context: ScopedRun,
     input: SessionPromptInput,
   ): Promise<SessionPromptOutput> {
-    const { caller } = context;
+    return this.admit(
+      context,
+      this.promptDelegated(context.caller, input),
+      () => context.invoke({ id: 'session.prompt', params: input }),
+    );
+  }
+  private promptDelegated(
+    caller: SessionCaller,
+    input: SessionPromptInput,
+  ): Delegated {
     const { target } = scopeTarget('session.prompt', input, caller);
     const { sessionId } = input;
-    const reserved = this.starts.reserve(caller, { kind: 'prompt', sessionId });
-    const owned = (): boolean => this.coverage.ownsAgent(caller, target);
 
-    return this.admit(context, { reserved, owned, card: promptCard }, () =>
-      context.invoke({ id: 'session.prompt', params: input }),
-    );
+    return {
+      reserved: this.starts.reserve(caller, { kind: 'prompt', sessionId }),
+      inReach: () => this.coverage.mayPrompt(caller, target),
+      chain: this.chainFrom(caller, sessionId),
+      card: promptCard,
+    };
+  }
+  // The chain this call carries, read from the Turn the caller is serving.
+  private chainFrom(
+    caller: SessionCaller,
+    prompted: string | null,
+  ): PromptChain {
+    return { length: this.ports.chains.sentFrom(caller.sessionId), prompted };
   }
   private admit<Result>(
     context: ScopedRun,
-    { reserved, owned, card }: Delegated,
+    { reserved, inReach, chain, card }: Delegated,
     invoke: () => Promise<Result>,
   ): Promise<Result> {
-    const chosen = (): OperationCard | undefined =>
-      cardUnless(owned() && !reserved.exceedsLimits, card);
+    const within = (): boolean =>
+      !reserved.exceedsLimits && !this.ports.chains.exceeded(chain.length);
 
-    return confirmed(
-      context,
-      { card: chosen, release: reserved.release },
-      invoke,
+    const chosen = (): OperationCard | undefined =>
+      cardUnless(inReach() && within(), card);
+
+    return confirmed(context, { card: chosen, release: reserved.release }, () =>
+      this.serving(chain, invoke),
     );
+  }
+  /*
+   * The Prompt is going now, so the Session it reaches serves its chain from here. A Prompt the owner refused or
+   * the scope turned back never gets this far, and leaves that Session serving the chain it is serving already.
+   */
+  private serving<Result>(
+    { length, prompted }: PromptChain,
+    invoke: () => Promise<Result>,
+  ): Promise<Result> {
+    if (prompted !== null) this.ports.chains.serving(prompted, length);
+
+    return invoke();
   }
 }

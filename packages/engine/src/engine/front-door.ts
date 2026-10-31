@@ -1,7 +1,6 @@
 import type { Server as RequestServer } from 'node:http';
 import { createServer, type Server, type Socket } from 'node:net';
 import { channelMagic } from '../pairing/channel-door';
-import { admitAs, serverDeviceIdentity } from '../rpc/identity';
 import { isLoopback } from './network-listener';
 
 export interface ChannelDoorPort {
@@ -17,7 +16,8 @@ export interface FrontDoorDeps {
 
 /*
  * The one door into the Server, and the only place that decides who may knock (ADR-0002 as ADR-0045 amends it).
- * A socket that opens with the channel's first bytes goes to the handshake and is admitted as whichever Device it proves to be. Anything else is plain HTTP, which only this computer's own App speaks, on loopback, as the Server Device.
+ * A socket that opens with the channel's first bytes goes to the handshake and is admitted as whichever Device it proves to be. Anything else is plain HTTP, which only this computer's own App and tooling speak, and only on loopback.
+ * Arriving on loopback is not itself a proof, because a web page on a name that resolves to this computer arrives there too, so a plain-HTTP socket is admitted as nothing: each request on it proves the Server Device for itself (#1696).
  * So a Device on the local network reaches no router, no Blob and no Plugin asset without the handshake, and there is no plain-HTTP side door beside it.
  */
 export const createFrontDoor = (deps: FrontDoorDeps): Server =>
@@ -56,7 +56,6 @@ function admit(deps: FrontDoorDeps, socket: Socket, opening: Buffer): void {
 
   if (!isLoopback(socket.remoteAddress)) return refuse(deps, socket);
   socket.unshift(opening);
-  admitAs(socket, serverDeviceIdentity);
   deps.requests.emit('connection', socket);
 }
 

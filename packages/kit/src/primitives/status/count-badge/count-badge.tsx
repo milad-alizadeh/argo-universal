@@ -11,7 +11,7 @@ const tones = {
   muted: 'bg-muted-foreground',
 } as const;
 
-// Argo's count capsule: attention red by default; running and finished counts use their status tone.
+// Argo's count capsule: attention red by default; running and finished counts use their status tone. It is at least 16 high and grows with its count, which an enlarged text size makes taller than 16.
 export function CountBadge(props: CountBadgeProps): React.JSX.Element | null {
   const badge = countBadge(props.badge);
 
@@ -28,6 +28,6 @@ export function CountBadge(props: CountBadgeProps): React.JSX.Element | null {
 
 const badgeClass = (tone: CountBadgeProps['tone']): string =>
   cn(
-    'h-4 min-w-4 items-center justify-center rounded-full px-1',
+    'min-h-4 min-w-4 items-center justify-center rounded-full px-1',
     tones[tone ?? 'danger'],
   );

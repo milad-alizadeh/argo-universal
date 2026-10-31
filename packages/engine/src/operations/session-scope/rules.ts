@@ -16,6 +16,20 @@ export const startedByCaller = (
   session: DirectorySession,
 ): boolean => session.startedBySessionId === caller.sessionId;
 
+/*
+ * session.prompt: any other Session in the caller's Project, whichever started which (owner, 2026-10-31).
+ * A Session prompting itself is not one of these: it would queue a Prompt behind its own Turn, so it asks.
+ */
+export function mayPrompt(
+  caller: SessionCaller,
+  target: TargetSession,
+): boolean {
+  return (
+    target.sessionId !== caller.sessionId &&
+    inCallerProject(caller, target.projectId)
+  );
+}
+
 // act: the caller itself, or a Session it started, in the caller's Project. ACP's parent link grants nothing.
 export function ownsSession(
   caller: SessionCaller,
@@ -25,17 +39,6 @@ export function ownsSession(
     session.sessionId === caller.sessionId || startedByCaller(caller, session);
 
   return owned && inCallerProject(caller, session.projectId);
-}
-
-// session.prompt: a Session the caller started, in its Project; the caller is not one of its own Agents.
-export function ownsAgent(
-  caller: SessionCaller,
-  session: DirectorySession,
-): boolean {
-  return (
-    startedByCaller(caller, session) &&
-    inCallerProject(caller, session.projectId)
-  );
 }
 
 // The Permission request card: the Operation's label, and its description.
@@ -53,5 +56,5 @@ export const startCard: OperationCard = {
 export const promptCard: OperationCard = {
   title: operations['session.prompt'].label,
   description:
-    'Send a prompt outside the calling Session’s Agents or delegation limits.',
+    'Send a prompt outside the calling Session’s Project or delegation limits.',
 };

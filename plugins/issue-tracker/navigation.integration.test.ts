@@ -90,8 +90,8 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
       wait,
     )
     .toBe(true);
-  // The Issue's one link out is its caption: the ticket number goes to GitHub.
-  expect(detail.findText(issueTitle)?.node.props.captionHref).toBe(
+  // The Issue's one link out is a property beside its description: the number goes to GitHub.
+  expect(detail.findText('#42')?.node.props.href).toBe(
     'https://github.com/owner/repository/issues/42',
   );
   expect(await test.log()).not.toContain('refused');

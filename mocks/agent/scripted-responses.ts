@@ -10,6 +10,11 @@ import {
   type ErrorResponse,
 } from '@agentclientprotocol/sdk';
 import {
+  keyedResponse,
+  sessionIdOf,
+  unkeyed,
+} from './scripted-prompt-responses.ts';
+import {
   runTurn,
   type ScriptedStep,
   type ScriptedTurn,
@@ -22,6 +27,8 @@ export type ScriptedResponse<Method extends AgentRequestMethod> = {
   rawResult?: unknown;
   error?: string | ErrorResponse;
   sessionId?: string;
+  // Plays only for a prompt containing this text; the other responses play the rest, in sequence.
+  prompt?: string;
   steps?: readonly ScriptedStep[];
   waitFor?: Promise<void>;
   received?: { resolve: (params: AgentRequestParamsByMethod[Method]) => void };
@@ -65,9 +72,12 @@ const selectResponse = <Method extends AgentRequestMethod>({
   positions,
   params,
 }: ResponseSelection<Method>): ScriptedResponse<Method> | undefined => {
-  const sessionId = 'sessionId' in params ? String(params['sessionId']) : '';
+  const sessionId = sessionIdOf(params);
+  const keyed = keyedResponse(responses, params);
 
-  const matched = responses.filter(
+  if (keyed) return keyed;
+
+  const matched = unkeyed(responses).filter(
     (response) => !response.sessionId || response.sessionId === sessionId,
   );
 

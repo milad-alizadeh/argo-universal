@@ -25,6 +25,7 @@ type FieldLinkProps = FieldGroupKitProps<'FieldGroup.Link'> & Anchor;
 /*
  * A row that opens a page ends in what the page holds, muted, then the kit's disclosure chevron, which the web draws
  * itself (ADR-0041). Expo's web Row presses without a role, so the whole row is a link named by its title and value.
+ * A row with `action` opens no page: it is a button and ends in no chevron.
  * A popover's Trigger may anchor on it, so the web row passes the anchor ref and popup state on to its Pressable.
  */
 export function FieldLink(props: FieldLinkProps): ReactElement {
@@ -44,7 +45,7 @@ const linkProps = (props: FieldLinkProps): Attributes => ({
   'aria-haspopup': props['aria-haspopup'],
   'aria-expanded': props['aria-expanded'],
   'aria-controls': props['aria-controls'],
-  role: 'link',
+  role: props.action ? 'button' : 'link',
   'aria-label': spokenLabel(props),
   disabled: props.disabled,
   onPress: props.onPress,
@@ -57,7 +58,7 @@ const LinkRow = (props: FieldLinkProps): ReactElement => (
     <RowTitle {...props} />
     <Spacer flexible />
     {props.value ? <NativeText tone="muted">{props.value}</NativeText> : null}
-    <Chevron />
+    {props.action ? null : <Chevron />}
   </Row>
 );
 

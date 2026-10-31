@@ -24,6 +24,7 @@ import {
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
 import { SidebarFrame } from '../../../../../mocks/sessions-list/sidebar-frame.test.mocks';
 import { SessionsList } from './sessions-list';
+import { NoSessionsYet } from './sessions-list-rows';
 import { largeSessions, sessionsListProps } from './sessions-list.mocks';
 
 const expandedAttribute = 'aria-expanded';
@@ -253,5 +254,31 @@ export const FramedSidebarGutters: Story = {
       await expect(left).toBeLessThan(16);
       await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
     });
+  },
+};
+
+// Narrower than the empty state's one-line width, as a phone column is at the largest text size.
+const narrowColumn = 90;
+
+/*
+ * The empty state tells the person what to expect, so a narrow column (a phone at the largest text size) wraps it
+ * onto a second line instead of clipping it to "No Sessions...".
+ */
+export const EmptyStateWrapsWhenNarrow: Story = {
+  render: () => (
+    <View style={{ width: narrowColumn }}>
+      <NoSessionsYet />
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    const text = await canvas.findByText(/No Sessions/);
+
+    const lineHeight = Number.parseFloat(getComputedStyle(text).lineHeight);
+
+    // Wrapped, the copy is taller than one line; clipped to one line it is one line and overflows sideways.
+    await expect(text.getBoundingClientRect().height).toBeGreaterThan(
+      lineHeight * 1.5,
+    );
+    await expect(text.scrollWidth).toBeLessThanOrEqual(text.clientWidth);
   },
 };

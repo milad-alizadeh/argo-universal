@@ -21,3 +21,9 @@ export const menuRowsClassName = 'gap-0.5';
 
 // With the rows' 2px gap on each side, groups sit 8px apart.
 export const menuGroupGapClassName = 'h-1';
+
+/*
+ * How far a web or desktop popover or menu stays from the window's edge when it shifts to fit: the window frame's own
+ * inset (`--spacing-frame-inset`, 8), so an overlay clears the edge as the panes do. Radix's collision padding is 0.
+ */
+export const windowEdgeInset = 8;

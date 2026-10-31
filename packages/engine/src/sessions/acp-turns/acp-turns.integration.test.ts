@@ -28,6 +28,8 @@ async function idleRowId(
   throw new Error('Idle output is missing');
 }
 
+const idleText = 'Idle output';
+
 const turnIdOf = (row: SessionUpdate | undefined): string | null | undefined =>
   row?.turnId;
 
@@ -82,7 +84,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           type: 'update',
           update: {
             sessionUpdate: 'agent_message_chunk',
-            content: { type: 'text', text: 'Idle output' },
+            content: { type: 'text', text: idleText },
           },
         },
       ],
@@ -119,12 +121,14 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         content: [{ text: 'Reply 2' }],
       },
       { kind: 'notice', turn: expect.any(String) },
+      { kind: 'agent_message', turn: null, content: [{ text: idleText }] },
     ]);
     expect(
       await host.caller.feed.row({ ...created, id: idleId }),
     ).toMatchObject({
       turnId: null,
-      content: [{ text: 'Idle output' }],
+      state: 'settled',
+      content: [{ text: idleText }],
     });
     expect(
       host.database.$client.prepare('SELECT COUNT(*) AS count FROM turn').get(),

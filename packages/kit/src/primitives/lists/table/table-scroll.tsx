@@ -60,11 +60,14 @@ function CardBackground(): ReactElement {
 
 type ColumnProps = ScrollProps & { column: TableColumn };
 
+// The pinned column's leading padding, `pl-3` on its header and cells: 12px.
+const pinnedInset = 12;
+
 function PinnedColumn(props: ColumnProps): ReactElement {
   return (
     <View
       className={columnClass(props.column, false)}
-      style={scrolledColumnStyle(props.column)}
+      style={scrolledColumnStyle(props.column, pinnedInset)}
     >
       <HeaderCell {...props} className="h-8 justify-center pl-3" />
       {props.rows.map((row) => (

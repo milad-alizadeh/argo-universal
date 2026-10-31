@@ -13,7 +13,7 @@ import {
 } from './button-looks';
 
 /*
- * The web draws its own Pressable, since Expo's web Button takes one static `style` and so cannot swap the lit look
+ * The web draws its own Pressable, since Expo's web Button takes one static `style` and so cannot swap the resting fill
  * for a hovered or pressed one. It keeps Expo's box: 40px high (32 small), 16px padding, 8px radius.
  */
 export function WebButton(props: ButtonProps): ReactElement {
@@ -58,7 +58,7 @@ export const joinedClasses = {
 };
 
 export const webClass =
-  'h-10 shrink-0 items-center justify-center rounded-lg px-4 web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
+  'h-10 shrink-0 items-center justify-center rounded-lg px-4 web:whitespace-nowrap web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
 
 interface WebState {
   pressed: boolean;
@@ -72,7 +72,7 @@ export function webStyle(props: ButtonProps, state: WebState): ViewStyle {
   };
 }
 
-// Hovered and pressed spread after the lit look; a disabled button takes neither.
+// Hovered and pressed spread after the resting look; a disabled button takes neither.
 function webLook(props: ButtonProps, state: WebState): ViewStyle {
   const name = variantOf(props);
   const disabled = props.disabled ?? false;

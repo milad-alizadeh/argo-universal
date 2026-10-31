@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ServerRow } from './server-rows';
-import { serverRow, serverRowName, serverStateLabel } from './server-rows';
+import { serverRow, serverStateLabel } from './server-rows';
 
 const ownId = 'server-device';
 
@@ -24,11 +24,6 @@ describe("a Server's row", () => {
   it("says that Server's state and not the list's", () => {
     expect(serverStateLabel(own.state)).toBe('Connected');
     expect(serverStateLabel(studio.state)).toBe('Unreachable');
-  });
-
-  it('is spoken as the Server and its state', () => {
-    expect(serverRowName(studio)).toBe('Studio, Unreachable');
-    expect(serverRowName(own)).toBe('This computer, Connected');
   });
 
   it('reads the state of its own Server and no other', () => {

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import type { RealAgentChoice } from './real-agent-choice.mts';
 
 const root = path.resolve(import.meta.dirname, '../..');
 
@@ -99,12 +100,31 @@ function machine(): Machine {
   };
 }
 
+/*
+ * What a run records about the Agent it drove. The fixture suites replay a scripted ACP Agent at a
+ * fixed rate; a real-Agent run states its Agent and the model it was pinned to, since the pin is
+ * what makes the run affordable and a reader cannot tell from frame timings which model answered.
+ */
+export const fixtureAgentCondition =
+  'scripted ACP fixture; no authenticated upstream Agent';
+
+export const realAgentCondition = ({ id, pin }: RealAgentChoice): string => {
+  const pinned = pin
+    .map(({ configId, value }): string => `${configId} ${value}`)
+    .join(' and ');
+
+  return `installed Registry Agent ${id}, pinned to ${pinned} before its first prompt; authenticated by the owner's own signed-in Agent credentials`;
+};
+
 const conditions = (): Conditions => ({
   refreshHz: process.env.PERF_REFRESH_HZ ?? 'not supplied',
   note: process.env.PERF_NOTE ?? '',
 });
 
-export async function renderingManifest(): Promise<RenderingManifest> {
+// `agent` is the run's own Agent condition: a suite that drives a real Agent passes its own.
+export async function renderingManifest(
+  agent: string = fixtureAgentCondition,
+): Promise<RenderingManifest> {
   return {
     ...revision(),
     build: {
@@ -112,7 +132,7 @@ export async function renderingManifest(): Promise<RenderingManifest> {
       ...(await exportFingerprint()),
     },
     track: 'controlled-rendering' as const,
-    agent: 'scripted ACP fixture; no authenticated upstream Agent',
+    agent,
     system: machine(),
     ...conditions(),
   };

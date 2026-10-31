@@ -8,7 +8,12 @@ const agents = newSessionCatalogs.bothAvailable;
 
 const onAgentChange = fn();
 
+const agentAndModel = 'Agent and model';
+
 const onAddAgents = fn();
+
+// Whether the Agent and model sheet was still on screen each time the Agents page was asked for.
+const sheetOpenWhenAsked: boolean[] = [];
 
 const meta = {
   title: 'Tests/Composer/StartSessionIn/AgentPicker',
@@ -38,7 +43,7 @@ function selectAgent(width: number): Story {
 
       if (!first || !second) throw new Error('Picker fixture needs two Agents');
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Agent and model' }),
+        canvas.getByRole('button', { name: agentAndModel }),
       );
       const overlay = within(document.body);
       await userEvent.click(
@@ -75,12 +80,16 @@ function addAgents(width: number): Story {
     },
     beforeEach: (): Promise<void> => settleLayout(width),
     play: async ({ canvas, userEvent }) => {
-      const trigger = canvas.getByRole('button', { name: 'Agent and model' });
+      const trigger = canvas.getByRole('button', { name: agentAndModel });
       await expect(trigger).toHaveTextContent('Choose Agent');
       await userEvent.click(trigger);
       const overlay = within(document.body);
       await userEvent.click(
         await overlay.findByRole('button', { name: /^Agent,/ }),
+      );
+      // There is no search here, so the page says what is missing and how to add it.
+      await expect(await overlay.findByRole('status')).toHaveTextContent(
+        /Add Agents/u,
       );
       await userEvent.click(
         await overlay.findByRole('button', { name: 'Add Agents' }),
@@ -97,3 +106,44 @@ export const SelectPhone = selectAgent(layoutWidths.phone);
 export const AddWithZeroAgentsWide = addAgents(layoutWidths.wide);
 
 export const AddWithZeroAgentsPhone = addAgents(layoutWidths.phone);
+
+/*
+ * The Agents page opens once the sheet has closed, not while it is still presented: SwiftUI's sheet sits over the
+ * screen, and a route that mounts under it for the first time never shows (#1738). What a story can see of that is
+ * the order, so the sheet is read at the moment the Agents page is asked for.
+ */
+export const AddOpensTheAgentsPageAfterTheSheetCloses: Story = {
+  args: {
+    configuration: {
+      ...meta.args.configuration,
+      agent: undefined,
+      agentChoices: {
+        agents: [],
+        onChange: onAgentChange,
+        onAdd: () => {
+          sheetOpenWhenAsked.push(
+            within(document.body).queryByRole('dialog', {
+              name: agentAndModel,
+            }) !== null,
+          );
+        },
+      },
+    },
+  },
+  beforeEach: async (): Promise<void> => {
+    sheetOpenWhenAsked.length = 0;
+    await settleLayout(layoutWidths.phone);
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: agentAndModel }));
+    const overlay = within(document.body);
+    await userEvent.click(
+      await overlay.findByRole('button', { name: /^Agent,/ }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Add Agents' }),
+    );
+    await waitFor(() => expect(sheetOpenWhenAsked).toHaveLength(1));
+    await expect(sheetOpenWhenAsked).toEqual([false]);
+  },
+};

@@ -1,15 +1,20 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
+import { useEnlargedText } from '#kit/enlarged-text';
 import { useWide } from '#kit/use-wide/use-wide';
 import type { ScreenHeader } from '#primitives/actions/action';
-import type { IconButtonSize } from '#primitives/actions/icon-button';
+import {
+  FixedSizeChrome,
+  type IconButtonSize,
+} from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Link, isRoute } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { ScreenBack } from './screen-back';
 import { ScreenColumn } from './screen-column';
 import { HeadingActions } from './screen-heading-actions';
+import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 
@@ -87,8 +92,6 @@ function CaptionLink(props: { caption: string; href: string }): ReactNode {
 const captionTarget = (href: string): { href: string } | { route: string } =>
   isRoute(href) ? { route: href } : { href };
 
-type HeadingContent = { title: ReactNode; actions: ReactNode };
-
 /*
  * A page's heading sits in its own column; a list column's is denser, its title one level down, its buttons small and
  * its search the sidebar's, since it sits above a list beside its page. A List that is selecting replaces it with its
@@ -101,7 +104,13 @@ type HeadingRowProps = ScreenHeaderInput & { placement?: HeadingPlacement };
 export function HeadingRow(props: HeadingRowProps): ReactNode {
   const header = props.headers.heading;
 
-  return header.selecting ?? <DeclaredHeading {...props} header={header} />;
+  return (
+    header.selecting ?? (
+      <FixedSizeChrome>
+        <DeclaredHeading {...props} header={header} />
+      </FixedSizeChrome>
+    )
+  );
 }
 
 type DeclaredHeadingProps = HeadingRowProps & { header: ScreenHeader };
@@ -150,12 +159,7 @@ function Heading(props: {
 }
 
 function PlainHeading(props: HeadingContent): ReactElement {
-  return (
-    <View className="h-10 flex-row items-center gap-1">
-      <View className="min-w-0 flex-1">{props.title}</View>
-      {props.actions}
-    </View>
-  );
+  return <HeadingLayout {...props} stacked={useEnlargedText()} />;
 }
 
 const titleProps = {

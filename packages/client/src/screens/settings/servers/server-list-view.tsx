@@ -1,10 +1,8 @@
-import { List, ListSection } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
   type ServerRow,
-  serverRowName,
   serverStateLabel,
   shownServerFooter,
 } from './server-rows';
@@ -24,9 +22,9 @@ export interface ServerListViewProps {
 export function ServerListView(props: ServerListViewProps): React.JSX.Element {
   return (
     <Screen title="Servers" caption="The Argo Servers this App can show.">
-      <List appearance="grouped">
+      <FieldGroup>
         <ServerSection {...props} />
-      </List>
+      </FieldGroup>
     </Screen>
   );
 }
@@ -34,31 +32,32 @@ export function ServerListView(props: ServerListViewProps): React.JSX.Element {
 // The page's title names the section, so the section carries its footer alone.
 function ServerSection(props: ServerListViewProps): React.JSX.Element {
   return (
-    <ListSection
-      footer={shownServerFooter}
-      selectionMode="single"
-      selection={[props.lookingAt]}
-      onSelectionChange={(ids) => look(props, ids)}
-    >
-      {props.servers.map((server) => (
-        <ServerListRow key={server.id} {...server} />
-      ))}
-    </ListSection>
+    <FieldGroup.Section footer={shownServerFooter}>
+      <FieldGroup.Picker
+        title="Servers"
+        presentation="inline"
+        value={props.lookingAt}
+        options={serverOptions(props.servers)}
+        onValueChange={(id) => look(props, id)}
+      />
+    </FieldGroup.Section>
   );
 }
 
-// The section reports every chosen id; only a Server it holds can have been pressed, and the shown one stays shown.
-function look(props: ServerListViewProps, ids: readonly string[]): void {
-  const chosen = ids.find((id) => id !== props.lookingAt);
-
-  if (chosen) props.onLookAt(chosen);
+// The picker reports the row pressed, the shown one included; looking at the Server already shown is no change.
+function look(props: ServerListViewProps, id: string): void {
+  if (id !== props.lookingAt) props.onLookAt(id);
 }
 
-const ServerListRow = (row: ServerRow): React.JSX.Element => (
-  <ListItem
-    id={row.id}
-    title={row.name}
-    value={serverStateLabel(row.state)}
-    accessibilityLabel={serverRowName(row)}
-  />
-);
+/*
+ * One option per Server, its state under its name. An unreachable Server can still be chosen: choosing it is how the
+ * owner asks to see it again once it answers.
+ */
+const serverOptions = (
+  servers: readonly ServerRow[],
+): { value: string; label: string; subtitle: string }[] =>
+  servers.map((server) => ({
+    value: server.id,
+    label: server.name,
+    subtitle: serverStateLabel(server.state),
+  }));

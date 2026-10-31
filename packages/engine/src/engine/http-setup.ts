@@ -20,17 +20,26 @@ export async function prepareHttpServer(
 ): Promise<RoutedSetup> {
   const setup = await prepareHttpSetup(options);
   const controlToken = await ensureControlToken(options.home);
-  const { keypair, publicKey } = await ensureServerIdentity(options);
+  const identity = await ensureServerIdentity(options);
   const pairing = preparePairing(options);
 
-  return {
-    ...setup,
-    ...pairing,
-    serverPublicKey: publicKey,
-    staticKey: keypair,
-    appRouter: routerFor({ options, setup, controlToken, publicKey, pairing }),
-  };
+  return routed({ options, setup, controlToken, pairing }, identity);
 }
+
+type ServerIdentity = Awaited<ReturnType<typeof ensureServerIdentity>>;
+
+// What the Server's own identity adds to the setup: the key the handshake runs on, and the router built over both.
+const routed = (
+  sources: Omit<RouterSources, 'publicKey'>,
+  { keypair, publicKey }: ServerIdentity,
+): RoutedSetup => ({
+  ...sources.setup,
+  ...sources.pairing,
+  controlToken: sources.controlToken,
+  serverPublicKey: publicKey,
+  staticKey: keypair,
+  appRouter: routerFor({ ...sources, publicKey }),
+});
 
 interface RouterSources {
   readonly options: HttpServerOptions;

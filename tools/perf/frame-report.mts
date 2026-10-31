@@ -10,23 +10,40 @@ import {
   type RunCompleteness,
 } from './run-completeness.mts';
 
+/*
+ * A suite's recorded conditions, carried through to its report untouched. Every suite's conditions
+ * are its own shape, so the report writes the object and never reads a key out of it.
+ */
+export type RunConditions = object;
+
 export interface FrameReport {
   // Every scenario the run set out to measure, from `plannedCases`.
   planned: readonly PerfCase[];
   seeded: Record<string, number | string>;
+  /*
+   * What the run cannot hold constant and records instead: its build and machine, the Agent it
+   * drove, and anything a scenario observed about its own conditions. A reader compares two reports
+   * knowing these, rather than assuming they matched. A suite's own condition type is its own, so
+   * this is the suite's object rather than a dictionary the report reaches into.
+   */
+  conditions?: RunConditions;
   suite?: string;
 }
 
 const reportData = (
   run: RunCompleteness,
-  { seeded }: FrameReport,
+  { seeded, conditions }: FrameReport,
   results: readonly Result[],
-): string =>
-  JSON.stringify(
-    { label: label(), date: new Date().toISOString(), run, ...seeded, results },
+): string => {
+  const date = new Date().toISOString();
+  const recorded = conditions && { conditions };
+
+  return JSON.stringify(
+    { label: label(), date, run, ...seeded, ...recorded, results },
     null,
     2,
   );
+};
 
 const fileName = (suite?: string): string =>
   suite ? `${label()}-${suite}.json` : `${label()}.json`;

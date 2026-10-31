@@ -39,10 +39,6 @@ const stateLabels = {
 export const serverStateLabel = (state: AppServerState): string =>
   stateLabels[state];
 
-// The whole row, spoken: the Server and its state.
-export const serverRowName = (row: ServerRow): string =>
-  `${row.name}, ${stateLabels[row.state]}`;
-
 /*
  * What choosing a row does. The check beside a row already says which Server is shown, so the footer says what being
  * shown means rather than naming that Server again.

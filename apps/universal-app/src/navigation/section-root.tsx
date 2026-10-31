@@ -27,24 +27,48 @@ interface OpenFirstPageProps {
   useFirstPage: NonNullable<SectionList['useFirstPage']>;
 }
 
+type StackNavigation = NavigationProp<ParamListBase>;
+
+function resetOverIndex(navigation: StackNavigation, first: FirstPage): void {
+  const routes = [
+    { name: 'index' },
+    { name: first.page, params: first.params },
+  ];
+
+  // The router no longer completes a partial state, so the stack's own state carries the new routes.
+  const stack = navigation.getState();
+
+  navigation.dispatch(CommonActions.reset({ ...stack, index: 1, routes }));
+}
+
+/*
+ * Not from the focus effect itself: a section's stack is mounted before it is shown (`lazy: false`), so the effect runs in the
+ * commit that shows it, and a reset dispatched there is dropped by the router. One microtask later it lands.
+ */
+function resetOverIndexSoon(
+  navigation: StackNavigation,
+  first: FirstPage,
+): () => void {
+  let current = true;
+
+  queueMicrotask(() => {
+    if (current) resetOverIndex(navigation, first);
+  });
+
+  return () => {
+    current = false;
+  };
+}
+
 // Opens `first` over the section's index each time the index is focused; the index stays below it for a narrow window's Back.
 function useOpenOverIndex(first: FirstPage | undefined): void {
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const navigation = useNavigation<StackNavigation>();
 
   useFocusEffect(
-    useCallback(() => {
-      if (!first) return;
-
-      const routes = [
-        { name: 'index' },
-        { name: first.page, params: first.params },
-      ];
-
-      // The router no longer completes a partial state, so the stack's own state carries the new routes.
-      const stack = navigation.getState();
-
-      navigation.dispatch(CommonActions.reset({ ...stack, index: 1, routes }));
-    }, [navigation, first]),
+    useCallback(
+      () => (first ? resetOverIndexSoon(navigation, first) : undefined),
+      [navigation, first],
+    ),
   );
 }
 

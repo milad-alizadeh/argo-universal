@@ -1,5 +1,6 @@
 import type {
   FeedChange,
+  FeedUpdate,
   Notice,
   SessionUpdate,
   TurnEnd,
@@ -59,7 +60,8 @@ export const restartTurnError = {
   message: 'The Server stopped during the Turn',
 } as const;
 
-const unfinishedTool = (row: SessionUpdate): boolean =>
+// A Tool call that reports its own ending, so settling it early would read as cancelled while it runs.
+export const unfinishedTool = (row: SessionUpdate | FeedUpdate): boolean =>
   row.sessionUpdate === 'tool_call_update' &&
   (row.status === 'pending' || row.status === 'in_progress');
 

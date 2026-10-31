@@ -7,7 +7,11 @@ export {
   zAsyncIterable,
 } from './trpc';
 
-export { createRpcContext, type RpcConnection } from './connection';
+export {
+  createRpcContext,
+  type RpcConnection,
+  type RpcContext,
+} from './connection';
 
 export {
   admitAs,

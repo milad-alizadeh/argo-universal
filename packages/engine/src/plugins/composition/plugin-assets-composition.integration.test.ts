@@ -2,7 +2,12 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { assetProbe, image, imageReference } from '#mocks/plugin-assets';
+import {
+  appOrigin,
+  assetProbe,
+  image,
+  imageReference,
+} from '#mocks/plugin-assets';
 import { probeResult } from '#mocks/probe-plugin';
 
 it('serves a Plugin file as immutable bytes from its content-hash URL', async () => {
@@ -11,7 +16,7 @@ it('serves a Plugin file as immutable bytes from its content-hash URL', async ()
     image: { value: imageReference },
   });
 
-  const response = await fetch(assetUrl);
+  const response = await fetch(assetUrl, { headers: appOrigin });
   expect(response.status).toBe(200);
   expect(response.headers.get('content-type')).toBe('image/png');
   const cacheControl = response.headers.get('cache-control');
@@ -37,7 +42,11 @@ it('keeps an old hash immutable after the file changes and the Server restarts',
       },
     },
   });
-  const response = await fetch(`${url}${new URL(assetUrl).pathname}`);
+
+  const response = await fetch(`${url}${new URL(assetUrl).pathname}`, {
+    headers: appOrigin,
+  });
+
   expect(Buffer.from(await response.arrayBuffer())).toEqual(image);
 });
 
@@ -45,7 +54,7 @@ it('answers a matching content hash without retransmitting the body', async () =
   const { assetUrl } = await assetProbe();
 
   const response = await fetch(assetUrl, {
-    headers: { 'if-none-match': `"${imageReference.hash}"` },
+    headers: { ...appOrigin, 'if-none-match': `"${imageReference.hash}"` },
   });
 
   expect(response.status).toBe(304);

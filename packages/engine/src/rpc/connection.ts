@@ -21,26 +21,32 @@ export interface RpcContext {
   connection?: RpcConnection;
 }
 
+/*
+ * The Connection a call arrived on. `identity` is whatever admitted the socket, unless the caller names one: a plain-HTTP request proves the Server Device per request, not per socket (#1696).
+ */
 export function createRpcContext(
   socket: RpcSocket,
   params?: Record<string, string | undefined> | null,
+  identity: RpcIdentity | undefined = identityOf(socket),
 ): RpcContext {
   const controller = new AbortController();
   socket.once('close', () => controller.abort());
 
-  return { connection: socketConnection(socket, params, controller.signal) };
+  return {
+    connection: socketConnection(params, controller.signal, identity),
+  };
 }
 
 function socketConnection(
-  socket: RpcSocket,
   params: Record<string, string | undefined> | null | undefined,
   signal: AbortSignal,
+  identity: RpcIdentity | undefined,
 ): RpcConnection {
   return {
     id: randomUUID(),
     signal,
     surface: reportedSurface(params?.['pluginSurface']),
-    identity: identityOf(socket),
+    identity,
   };
 }
 

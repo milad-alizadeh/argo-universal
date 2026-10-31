@@ -20,7 +20,7 @@ import {
 export function NoSessionsYet(): React.JSX.Element {
   return (
     <View className={emptyRowClassName}>
-      <ListItem title="No Sessions yet." tone="muted" />
+      <ListItem title="No Sessions yet." tone="muted" multiline />
     </View>
   );
 }

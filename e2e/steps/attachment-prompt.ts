@@ -113,6 +113,7 @@ Then(
 
     const stored = await page.request.get(
       `${server.httpUrl}/blobs/${blob.blobId}`,
+      { headers: { origin: 'app://app' } },
     );
 
     expect(Buffer.from(await stored.body())).toEqual(bytes);

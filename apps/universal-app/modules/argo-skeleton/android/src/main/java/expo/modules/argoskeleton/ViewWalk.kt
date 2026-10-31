@@ -24,7 +24,16 @@ class ComposeContent(val root: ViewRootForTest, val local: List<SkeletonPlacehol
   val placeholders: List<SkeletonPlaceholder> get() = local.map { it.translated(origin.left, origin.top) }
 }
 
-class Collected(val leaves: List<SkeletonLeaf>, val compose: List<ComposeContent>, val ignored: List<View>)
+/*
+ * What one walk found: the drawn leaves the Skeleton stands in for, the Compose trees it covers, the ignore views
+ * it skipped, and `muted`, the views it hides from accessibility.
+ */
+class Collected(
+  val leaves: List<SkeletonLeaf>,
+  val compose: List<ComposeContent>,
+  val ignored: List<View>,
+  val muted: List<View>,
+)
 
 /*
  * Walks every descendant of a Skeleton, however deep, and says which views draw content: a paragraph gives one
@@ -40,8 +49,44 @@ class ViewWalk(private val root: ViewGroup) {
 
   fun collect(): Collected {
     for (index in 0 until root.childCount) walk(root.getChildAt(index))
-    return Collected(withoutCoveredBars(leaves), compose, ignored)
+    return Collected(withoutCoveredBars(leaves), compose, ignored, muteRoots(root))
   }
+
+  /*
+   * The highest views under the Skeleton that hold no ignore view. The Skeleton hides these from accessibility, so
+   * everything beneath them is hidden too, whatever labels itself: a row, a drawer item, a fold button, a metadata
+   * field or its group, an avatar. Hiding the leaves the Skeleton draws over is not enough, since a container that
+   * carries its own label is not one of them. A view that holds an ignore view stays exposed and its own children
+   * are muted one by one, because no-hide-descendants cannot be undone further down. The web Skeleton walks the
+   * same way (skeleton-aria.ts).
+   */
+  private fun muteRoots(parent: ViewGroup): List<View> = mutesUnder(parent).roots
+
+  // The views to mute under one parent, and whether that parent holds an ignore view anywhere beneath it.
+  private class Mutes(val roots: List<View>, val holdsIgnore: Boolean)
+
+  private fun mutesUnder(parent: ViewGroup): Mutes {
+    val roots = mutableListOf<View>()
+    var holdsIgnore = false
+    for (child in childrenOf(parent)) {
+      if (child is ArgoSkeletonIgnoreView) {
+        holdsIgnore = true
+        continue
+      }
+      // A child that holds an ignore view somewhere below gives the roots found under it instead of itself.
+      val below = (child as? ViewGroup)?.let { mutesUnder(it) }?.takeIf { it.holdsIgnore }
+      if (below != null) {
+        holdsIgnore = true
+        roots += below.roots
+      } else if (child.visibility == View.VISIBLE) {
+        roots += child
+      }
+    }
+    return Mutes(roots, holdsIgnore)
+  }
+
+  private fun childrenOf(parent: ViewGroup): List<View> =
+    (0 until parent.childCount).map { parent.getChildAt(it) }
 
   /*
    * A control's own placeholder stands for what is inside it. React Native can lay a pill's text out beside its fill

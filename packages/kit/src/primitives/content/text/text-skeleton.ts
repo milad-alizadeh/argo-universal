@@ -10,6 +10,7 @@ export const skeletonWords = {
   heading: 'Placeholder heading',
   body: 'Placeholder words of a body line',
   'body-code': 'placeholder/path.ts',
+  'title-code': '000 \u00b7 000',
   secondary: 'Placeholder detail',
   'secondary-code': 'placeholder.ts',
   control: 'Placeholder',

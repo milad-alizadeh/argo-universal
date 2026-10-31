@@ -33,7 +33,7 @@ const cases: [ScopedOperation, string][] = [
   [operation('agent.install', { id: 'mock' }), asks],
   [promptTo('started'), runs],
   [promptTo('caller'), asks],
-  [promptTo('unrelated'), asks],
+  [promptTo('unrelated'), runs],
   [promptTo('foreign'), asks],
   [startIn('p1'), runs],
   [startIn('p2'), asks],

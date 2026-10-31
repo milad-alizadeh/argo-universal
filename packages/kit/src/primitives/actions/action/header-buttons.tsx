@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import {
+  FixedSizeChrome,
   IconButton,
   type IconButtonSize,
 } from '#primitives/actions/icon-button';
@@ -60,10 +61,16 @@ export function HeaderButtons(props: HeaderButtonsProps): ReactElement {
   const look = props.look ?? {};
 
   return (
-    <View className="flex-row items-center gap-1">
-      {props.direct.map((entry) => headerEntry(entry, look))}
-      <HeaderOverflow groups={props.overflow} label={props.label} look={look} />
-    </View>
+    <FixedSizeChrome>
+      <View className="flex-row items-center gap-1">
+        {props.direct.map((entry) => headerEntry(entry, look))}
+        <HeaderOverflow
+          groups={props.overflow}
+          label={props.label}
+          look={look}
+        />
+      </View>
+    </FixedSizeChrome>
   );
 }
 

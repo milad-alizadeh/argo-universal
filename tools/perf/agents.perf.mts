@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { type CDPSession, expect, type Page, test } from '@playwright/test';
 import { startOwnServer } from '@repo/e2e/own-server';
-import { publishedRegistry } from '../../mocks/registry/catalog.ts';
+import { longRegistry, requireServedCatalog } from './agents-registry.mts';
 import { report } from './frame-report.mts';
 import {
   desktop,
@@ -16,40 +16,16 @@ import {
 import { keepFrameResult, plannedCases, run } from './results.mts';
 import { caseName } from './run-completeness.mts';
 
-// The Agents page against a registry long enough that its list must virtualise.
-const agentCount = 200;
-
 const catalogScroll = 'agents-catalog';
 
 const settleMilliseconds = 1000;
 
 type Server = Awaited<ReturnType<typeof startOwnServer>>;
 
-type Registry = typeof publishedRegistry;
-
-type RegistryAgent = Registry['agents'][number];
-
 let server: Server;
 
-const numbered = (agent: RegistryAgent, number: number): RegistryAgent => ({
-  ...agent,
-  id: `${agent.id}-${number}`,
-  name: `${agent.name} ${number}`,
-});
-
-// The published registry's Agents copied and numbered until it lists `agentCount`.
-const longRegistry = (): Registry => {
-  const { agents } = publishedRegistry;
-
-  return {
-    ...publishedRegistry,
-    agents: Array.from({ length: agentCount / agents.length }, (_, round) =>
-      agents.map((agent, index) =>
-        numbered(agent, round * agents.length + index + 1),
-      ),
-    ).flat(),
-  };
-};
+// Unset until the Server has been asked, so a run that fails before that publishes no count rather than a zero.
+let seededAgents: number | undefined;
 
 /*
  * The Agents page lists the catalog in name order (`byName`, installed-agents.ts, applied in
@@ -88,13 +64,14 @@ test.beforeAll(async () => {
     {},
     { registry: longRegistry() },
   );
+  seededAgents = await requireServedCatalog(server.httpUrl);
 });
 
 test.afterAll(async () => {
   await server.stop();
   await report({
     planned,
-    seeded: { agents: agentCount },
+    seeded: seededAgents === undefined ? {} : { agents: seededAgents },
     suite: 'agents',
   });
 });

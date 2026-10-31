@@ -26,6 +26,47 @@ function handleFontScale(config) {
   return config;
 }
 
+/*
+ * An Activity that handles `fontScale` itself has to pass the new scale on, because React Native never re-reads it.
+ * `src/lib/font-scale.ts` records why, and `watchFontScale` puts what this sends into `Dimensions` (#1657).
+ *
+ * The event's name is written out here as well as in `src/lib/font-scale.ts`. A prebuild plugin and the App it
+ * builds are separate contexts, so the name is duplicated with the seam left visible (Prickles F3, A6); the test
+ * beside this file imports the App's name and holds the two together.
+ */
+const fontScaleEvent = 'argoFontScaleChange';
+
+const onConfigurationChangedKotlin = `  override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+    super.onConfigurationChanged(newConfig)
+    val host = (application as? com.facebook.react.ReactApplication)?.reactHost
+    host?.currentReactContext?.emitDeviceEvent(
+      "${fontScaleEvent}",
+      newConfig.fontScale.toDouble()
+    )
+  }`;
+
+export function passFontScaleOn(mainActivity) {
+  return configPlugins.CodeGenerator.mergeContents({
+    tag: 'argo-font-scale',
+    src: mainActivity,
+    newSrc: onConfigurationChangedKotlin,
+    anchor: /^class MainActivity\s*:/m,
+    offset: 1,
+    comment: '//',
+  }).contents;
+}
+
+function passOnFontScale(config) {
+  config.modResults.contents = passFontScaleOn(config.modResults.contents);
+
+  return config;
+}
+
 export default function withFontScaleConfigChange(config) {
-  return configPlugins.withAndroidManifest(config, handleFontScale);
+  return configPlugins.withPlugins(config, [
+    (withManifest) =>
+      configPlugins.withAndroidManifest(withManifest, handleFontScale),
+    (withActivity) =>
+      configPlugins.withMainActivity(withActivity, passOnFontScale),
+  ]);
 }

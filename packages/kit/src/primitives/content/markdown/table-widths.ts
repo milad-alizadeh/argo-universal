@@ -20,7 +20,7 @@ const mostChars = 44;
 // The characters a column keeps room for before it wraps, and the average width of one at body size.
 const keptChars = 18;
 
-const charWidth = 7.5;
+const charWidth = 8.5;
 
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low), high);

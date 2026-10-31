@@ -76,11 +76,11 @@ it('shows the delegation text on a start or Prompt card', async () => {
         'Start a Session outside the calling Session’s Project or delegation limits.',
     },
   ]);
-  expect((await scoped(promptTo('unrelated'))).cards).toEqual([
+  expect((await scoped(promptTo('foreign'))).cards).toEqual([
     {
       title: 'Prompt Session',
       description:
-        'Send a prompt outside the calling Session’s Agents or delegation limits.',
+        'Send a prompt outside the calling Session’s Project or delegation limits.',
     },
   ]);
 });

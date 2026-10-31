@@ -8,7 +8,7 @@ import {
 import type { OperationCard } from '../../sessions';
 import type { SessionInvoke } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
-import { SessionScope, type ScopedRun } from '.';
+import { PromptChains, SessionScope, type ScopedRun } from '.';
 
 export const runs = 'runs';
 
@@ -48,8 +48,8 @@ const directory = memorySessionDirectory({
   ...runningAgents('full', atLimit),
 });
 
-export const newScope = (): SessionScope =>
-  new SessionScope({ directory, createId: () => 'new-session' });
+export const newScope = (chains = new PromptChains()): SessionScope =>
+  new SessionScope({ directory, createId: () => 'new-session', chains });
 
 export const sessionCaller = (sessionId: string): SessionCaller => ({
   kind: 'session',

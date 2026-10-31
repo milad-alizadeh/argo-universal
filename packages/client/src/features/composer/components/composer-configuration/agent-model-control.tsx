@@ -3,12 +3,10 @@ import {
   MenuTrigger,
   type MenuTriggerProps,
 } from '@repo/kit/primitives/overlays/menu';
-import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import {
   ChipTrigger,
@@ -16,6 +14,7 @@ import {
 } from '../composer-status/chip-trigger';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu } from './agent-model-menu';
+import { AgentModelSheet } from './agent-model-sheet';
 import { AgentModelTrailing, agentModelEffort } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -66,11 +65,14 @@ function nothingToConfigure(
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
 function AgentModelOverlay(props: TriggerProps): React.JSX.Element {
-  if (Platform.OS !== 'web') return <AgentModelSheet {...props} />;
+  if (Platform.OS !== 'web')
+    return <AgentModelSheet {...props} trigger={agentModelTrigger(props)} />;
 
   return (
     <SizeClass
-      compact={<AgentModelSheet {...props} />}
+      compact={
+        <AgentModelSheet {...props} trigger={agentModelTrigger(props)} />
+      }
       wide={<AgentModelPopover {...props} />}
     />
   );
@@ -92,34 +94,6 @@ function AgentModelPopover(props: TriggerProps): React.JSX.Element {
     >
       {() => <AgentModelMenu configuration={props.configuration} wide />}
     </ComposerPopover>
-  );
-}
-
-// Elsewhere Configure is a sheet whose Model and option rows push their choices as pages.
-function AgentModelSheet(props: TriggerProps): React.JSX.Element {
-  const [open, setOpen] = useComposerOverlay(props.disabled);
-
-  return (
-    <Sheet
-      open={open}
-      onOpenChange={setOpen}
-      label="Agent and model"
-      trigger={agentModelTrigger(props)}
-      contentScrolls
-    >
-      {configurePage(props.configuration)}
-    </Sheet>
-  );
-}
-
-// Sheet reads the page declaration from its direct children.
-function configurePage(
-  configuration: ComposerConfigurationProps,
-): React.JSX.Element {
-  return (
-    <Sheet.Screen name="configure" title="Agent and model">
-      <AgentModelMenu configuration={configuration} wide={false} />
-    </Sheet.Screen>
   );
 }
 

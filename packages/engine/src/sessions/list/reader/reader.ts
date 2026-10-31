@@ -111,7 +111,7 @@ class ListReader {
 
     const turns = familyTurns(input, row.id, children);
 
-    if (!visibleSession(input, row.id, turns)) return [];
+    if (!visibleSession(input, row, turns)) return [];
 
     const result = this.project(input, row, { children, turns });
 
@@ -139,12 +139,20 @@ function includesId(ids: Set<string> | undefined, id: string): boolean {
   return !ids || ids.has(id);
 }
 
+/*
+ * An empty Session waits for its first Turn, so an abandoned New Session draft never reaches the list.
+ * A Session an Agent started has no draft behind it: it lists at once, or the user cannot open what their Agent made.
+ */
 function visibleSession(
   input: ListReadInput,
-  id: string,
+  row: SessionRecord,
   turns: Parameters<typeof latestTurnOf>[0],
 ): boolean {
-  return !input.rejectedSessions.has(id) && Boolean(latestTurnOf(turns, id));
+  if (input.rejectedSessions.has(row.id)) return false;
+
+  return (
+    row.startedBySessionId !== null || Boolean(latestTurnOf(turns, row.id))
+  );
 }
 
 function familyTurns(

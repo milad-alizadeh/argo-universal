@@ -10,13 +10,28 @@ import { usePreventRemove } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { createContext, type ReactNode, use } from 'react';
 import { newSessionId } from './new-session';
+import { returnParams } from './return-to';
 import { isPage, sectionOf } from './sections';
+import { pageShown } from './shown-page';
 
 // New Session, in the Project it was opened from when there is one, with a draft a Plugin hands it: one route draws it and the Session it becomes.
-type NewSessionParams = { id: string; projectId?: string; draft?: string };
+type NewSessionParams = {
+  id: string;
+  projectId?: string;
+  draft?: string;
+  returnTo?: string;
+};
 
-export function newSessionHref(projectId?: string, draft?: string): Href {
-  const params: NewSessionParams = { id: newSessionId };
+// `from` is the page shown, which Back returns to when it is in another section.
+export function newSessionHref(
+  projectId?: string,
+  draft?: string,
+  from?: string,
+): Href {
+  const params: NewSessionParams = {
+    id: newSessionId,
+    ...returnParams('/sessions/new', from),
+  };
 
   if (projectId !== undefined) params.projectId = projectId;
 
@@ -32,9 +47,20 @@ export const sessionHref = (id: string): Href => ({
   params: { id },
 });
 
+// The Agents page in Settings; Back from it returns to the page shown when that is in another section, such as New Session.
+export const agentsHref = (): Href => ({
+  pathname: '/settings/agents',
+  params: returnParams('/settings/agents', pageShown()),
+});
+
 // Back to the Sessions list, as Back from a Session's page goes; a wide window then shows the list with no Session open.
 export function leaveForSessions(): void {
   router.dismissTo('/sessions');
+}
+
+// Sessions from a page no route answers: nothing is under it to go back to, so the list replaces it.
+export function replaceWithSessions(): void {
+  router.replace('/sessions');
 }
 
 // A Project's page in Settings.
@@ -52,6 +78,8 @@ export const slotDetailHref = (id: string): Href => ({
 interface NavigateOptions {
   // Swaps out the current page, so Back skips it.
   replace?: boolean;
+  // Opens the section's root list under the page when the section has no stack yet, so the page has a Back and ☰ and the section opens at its list later.
+  withAnchor?: boolean;
 }
 
 export type Navigate = (href: Href, options?: NavigateOptions) => void;
@@ -73,19 +101,16 @@ function swapsPage({ shown, wide }: Place, next: string): boolean {
   return wide && isPage(next) && samePageSection(shown, next);
 }
 
-function go(href: Href, swaps: boolean): void {
-  if (swaps) router.replace(href);
-  else router.navigate(href);
+function go(href: Href, place: Place, options: NavigateOptions): void {
+  if (options.replace || swapsPage(place, pathOf(href))) router.replace(href);
+  else router.navigate(href, { withAnchor: options.withAnchor });
 }
 
 // Opens a page: pushed over the shown one on a narrow window, beside the list on a wide one.
 export function useNavigate(): Navigate {
   const place = { shown: usePathname(), wide: useWide() };
 
-  return (href, options) => {
-    if (options?.replace) router.replace(href);
-    else go(href, swapsPage(place, pathOf(href)));
-  };
+  return (href, options) => go(href, place, options ?? {});
 }
 
 // The page a section opens at its root when its list sits beside the pages: a route of the section's stack, such as `accounts` or `[id]`, and that route's params.
