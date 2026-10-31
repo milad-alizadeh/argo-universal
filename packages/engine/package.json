@@ -24,6 +24,7 @@
     "@trpc/server": "catalog:",
     "ajv": "catalog:",
     "ajv-formats": "catalog:",
+    "bonjour-service": "catalog:",
     "drizzle-orm": "catalog:",
     "esbuild": "catalog:",
     "fflate": "catalog:",

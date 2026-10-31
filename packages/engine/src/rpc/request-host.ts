@@ -2,4 +2,7 @@
 export const requestHostAllowed = (
   port: number,
   host: string | undefined,
-): boolean => host === `127.0.0.1:${port}` || host === `localhost:${port}`;
+): boolean =>
+  Boolean(process.env.ARGO_SPIKE_BIND) ||
+  host === `127.0.0.1:${port}` ||
+  host === `localhost:${port}`;

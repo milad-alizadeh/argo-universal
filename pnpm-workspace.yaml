@@ -181,6 +181,9 @@ catalog:
   "@babel/types": 7.29.8
   expo-image: ~58.0.16
   "@modelcontextprotocol/sdk": 1.32.2
+  bonjour-service: 1.4.4
+  react-native-tcp-socket: 6.4.3
+  react-native-zeroconf: 0.17.7
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict
@@ -228,6 +231,7 @@ minimumReleaseAgeExclude:
   - expo-router@58.0.25
   - expo-splash-screen@58.0.11
   - expo-status-bar@58.0.4
+  - react-native-zeroconf@0.17.7
 
 # drizzle-kit pulls esbuild; `drizzle-kit generate` works without its install script.
 allowBuilds:
