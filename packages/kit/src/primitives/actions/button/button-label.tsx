@@ -10,7 +10,7 @@ import { type LabelColor, labelColors } from './button-labels';
 import { sizes, variantOf, widthOf } from './button-layout';
 
 /*
- * Expo UI's documented custom content: its Icon, in a square slot so labels beside different icons start on one line, before its Text, the Text in the variant's colour, since the web's
+ * Expo UI's documented custom content: its Icon (in a square slot) before its Text, the Text in the variant's colour, since the web's
  * Text draws in the foreground colour and Expo has no danger look.
  */
 export function ButtonLabel(props: ButtonProps): ReactElement {
