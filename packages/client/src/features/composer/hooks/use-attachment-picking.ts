@@ -5,7 +5,6 @@ import type {
   PickedAttachment,
 } from '../utils/attachment-draft';
 import { droppedFiles, pickFiles, pickImages } from './pick-attachments';
-import type { AttachmentDraft } from './use-attachment-draft';
 
 let selectionFailures = 0;
 
@@ -15,12 +14,15 @@ function selectionFailureKey(): string {
   return `attachment-selection:${selectionFailures}`;
 }
 
+export interface PickActions {
+  attachImages: () => Promise<void>;
+  attachFiles: () => Promise<void>;
+  attachDroppedFiles: (dropped: DroppedFiles) => Promise<void>;
+}
+
 export function pickActions(
   dispatch: Dispatch<AttachmentDraftEvent>,
-): Pick<
-  AttachmentDraft,
-  'attachImages' | 'attachFiles' | 'attachDroppedFiles'
-> {
+): PickActions {
   return {
     attachImages: () => attach(pickImages, dispatch),
     attachFiles: () => attach(pickFiles, dispatch),

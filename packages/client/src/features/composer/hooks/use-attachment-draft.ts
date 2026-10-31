@@ -4,6 +4,7 @@ import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import type { ComposerDraft } from '../components/composer/composer';
+import { keptAttachments } from '../stores/kept-attachments';
 import { keptDrafts } from '../stores/kept-draft';
 import {
   type AttachmentDraftEvent,
@@ -93,6 +94,12 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
   };
 }
 
+// Forgets at once, since the page may unmount before a render could.
+function forgetDraft(key: DraftKey): void {
+  keptDrafts.keep(key, '');
+  keptAttachments.keep(key, [], new Map());
+}
+
 type EditableDraft = Pick<DraftActions, 'dispatch' | 'key'>;
 
 type DraftChanges = Pick<AttachmentDraft, 'changeDraft' | 'clearDraft'>;
@@ -107,7 +114,7 @@ function editActions({ dispatch, key }: EditableDraft): DraftChanges {
     clearDraft: () => {
       dispatch({ type: 'cleared' });
 
-      if (key) keptDrafts.keep(key, '');
+      if (key) forgetDraft(key);
     },
   };
 }
