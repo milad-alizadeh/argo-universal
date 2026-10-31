@@ -14,8 +14,6 @@ export interface NativeIconProps {
   // A native theme colour; unset, the icon takes the Compose control's content colour (iOS: the tint).
   color: ColorValue | undefined;
   filled?: boolean;
-  // Draws the icon centred in a square box of its own size, so rows of icons that fill their size to different widths (SF Symbols do) start their labels on one line.
-  slot?: boolean;
   // Argo's own drawing for an icon Expo UI's Icon cannot draw; unset, the web draws Argo's Icon and native draws nothing.
   fallback?: ReactElement;
 }
@@ -28,18 +26,5 @@ export function NativeIcon(props: NativeIconProps): ReactElement | null {
   if (name === undefined)
     return props.fallback ?? <NativeIconFallback {...props} />;
 
-  return (
-    <Icon
-      name={name}
-      size={pixels}
-      color={props.color}
-      style={slotBox(props.slot, pixels)}
-    />
-  );
+  return <Icon name={name} size={pixels} color={props.color} />;
 }
-
-const slotBox = (
-  slot: boolean | undefined,
-  pixels: number,
-): { width: number; height: number } | undefined =>
-  slot ? { width: pixels, height: pixels } : undefined;

@@ -1,11 +1,12 @@
-import type { IconName } from '@repo/kit/symbols/icon-names';
+import type { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import type * as React from 'react';
 import { slashCommandIcon } from '../../utils/slash-command-suggestions';
 import type { AttachLayout } from './composer-toolbar-types';
 
 // One row of the Attach menu; without onPress it is disabled.
 export interface AttachChoice {
   label: string;
-  icon: IconName;
+  icon: NonNullable<React.ComponentProps<typeof FieldGroup.Link>['leading']>;
   onPress?: () => void;
 }
 

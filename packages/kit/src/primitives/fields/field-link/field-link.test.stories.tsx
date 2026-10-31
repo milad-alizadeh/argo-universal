@@ -40,3 +40,42 @@ export const ShowsItsValue: Story = {
     await expect(canvas.getByText('3')).toBeVisible();
   },
 };
+
+export const LinkIsALinkWithAChevron: Story = {
+  play: async ({ canvas }) => {
+    const row = canvas.getByRole('link', { name: 'Licences' });
+    await expect(row.querySelector('svg')).not.toBeNull();
+  },
+};
+
+export const ActionIsAButtonWithoutAChevron: Story = {
+  args: { title: 'Photos', action: true },
+  play: async ({ canvas, userEvent, args }) => {
+    const row = canvas.getByRole('button', { name: 'Photos' });
+    await expect(canvas.queryByRole('link')).toBeNull();
+    await expect(row.querySelector('svg')).toBeNull();
+    await userEvent.click(row);
+    await expect(args.onPress).toHaveBeenCalledTimes(1);
+  },
+};
+
+// Rows whose icons differ in width still start their titles on one x (#1760).
+export const ActionTitlesShareOneX: Story = {
+  render: (args): React.JSX.Element => (
+    <FieldGroup>
+      <FieldGroup.Section>
+        <FieldLink {...args} title="Photos" leading="photos" action />
+        <FieldLink {...args} title="Files" leading="folder" action />
+        <FieldLink {...args} title="Slash Commands" leading="code" action />
+      </FieldGroup.Section>
+    </FieldGroup>
+  ),
+  decorators: [],
+  play: async ({ canvas }) => {
+    const lefts = ['Photos', 'Files', 'Slash Commands'].map(
+      (title) => canvas.getByText(title).getBoundingClientRect().left,
+    );
+
+    await expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThan(0.5);
+  },
+};
