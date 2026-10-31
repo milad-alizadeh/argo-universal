@@ -98,12 +98,13 @@ export function register(argo) {
   argo.slots.register('argo/session/bar/v1', barLines);
 }
 
-// One Project details row for every Project the items Slot asks about (ADR-0046).
+// One Project details row for every Project the items Slot asks about (ADR-0046). A row's title is capped at 40
+// characters, so it cannot carry a Project id; the id would push it over and Argo would drop the row.
 const projectRows = ({ contexts }) =>
   Object.fromEntries(
     contexts.map(({ projectId }) => [
       projectId,
-      [{ title: `Fixture Slot for ${projectId}` }],
+      [{ title: 'Fixture Slot for this Project' }],
     ]),
   );
 
