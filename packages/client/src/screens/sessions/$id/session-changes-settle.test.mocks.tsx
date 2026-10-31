@@ -17,13 +17,13 @@ export async function settleChanges(width: number): Promise<void> {
   await sheetStopped(sheet);
 }
 
+const sheetIsIn = (): boolean => screen.queryAllByRole('dialog').length > 0;
+
 /*
  * Waits for the sheet to be in the page, however long a loaded machine takes to mount it: its arrival is a state of the
  * page, so it is watched for rather than given a clock (Testing Library's `findBy` gives up after a second). The check and
  * the observer start in one step, so a sheet that lands between them is not missed.
  */
-const sheetIsIn = (): boolean => screen.queryAllByRole('dialog').length > 0;
-
 async function sheetArrived(): Promise<HTMLElement> {
   await new Promise<void>((resolve) => {
     if (sheetIsIn()) {
