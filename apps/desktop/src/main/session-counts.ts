@@ -66,21 +66,19 @@ function watchCounts(client: Client, report: Report): Subscription {
   });
 }
 
-// A Server that cannot answer keeps today's behaviour: the App stops the Supervisor it started.
+// A Server that cannot answer reports nothing, so the machine reads the setting stored on disk instead of guessing.
 function releaseAfterReading(
   client: Client,
   report: Report,
   close: () => void,
 ): () => void {
-  const keepRunning = (enabled: boolean): void =>
-    report({ type: 'keepRunning.changed', enabled });
-
   return (): void => {
     void client.system.keepRunning
       .query()
-      .then(({ enabled }): void => keepRunning(enabled))
-      // A safeguard: the machine already clears the setting as it releases, so a rejected read says what it assumes.
-      .catch((): void => keepRunning(false))
+      .then(({ enabled }): void =>
+        report({ type: 'keepRunning.changed', enabled }),
+      )
+      .catch((): void => {})
       .finally(close);
   };
 }

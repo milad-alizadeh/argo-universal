@@ -6,6 +6,8 @@ import {
   readAddressDoneEvent,
   readAddressErrorEvent,
   readError,
+  readStoredDoneEvent,
+  readStoredErrorEvent,
   type ServerEvent,
 } from './server-machine-model-events.mocks';
 import {
@@ -17,6 +19,7 @@ import {
   quitDoneEvent,
   quitErrorEvent,
   readAddressCalls,
+  readStoredCalls,
   reportExited,
   reportSpawned,
   retryServerEvent,
@@ -52,6 +55,14 @@ export const executors = {
 
     return settle((): void => latest(checkRunningCalls).resolve(event.output));
   },
+  [readStoredDoneEvent]: ({ event }): Promise<void> => {
+    if (event.type !== readStoredDoneEvent)
+      throw new Error('Expected stored setting');
+
+    return settle((): void => latest(readStoredCalls).resolve(event.output));
+  },
+  [readStoredErrorEvent]: (): Promise<void> =>
+    settle((): void => latest(readStoredCalls).reject(readError)),
   'server.spawned': reportSpawned,
   'server.exited': reportExited,
   'server.retry': (): void => server.send({ type: retryServerEvent }),

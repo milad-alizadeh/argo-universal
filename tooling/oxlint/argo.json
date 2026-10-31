@@ -2360,13 +2360,14 @@
                   "!@repo/contracts",
                   "!@repo/contracts/**",
                   "!@repo/engine/server-runtime",
+                  "!@repo/engine/stored-keep-running",
                   "!@repo/engine/router",
                   "!@repo/machine-log",
                   "!@repo/process",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts, machine-log, process, the CLI's Supervisor command and the Node-only Engine server-runtime subpath from the workspace."
+                "message": "desktop imports only contracts, machine-log, process, the CLI's Supervisor command and the Node-only Engine server-runtime and stored-keep-running subpaths from the workspace."
               }
             ]
           }

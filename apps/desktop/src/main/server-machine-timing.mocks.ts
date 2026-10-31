@@ -10,6 +10,7 @@ import {
   startServerMachine,
   startedAddress,
 } from './server-machine.mocks';
+import { releaseLimitMs } from './session-counts';
 
 export const value = (): ServerSnapshot['value'] => server.getSnapshot().value;
 
@@ -29,10 +30,11 @@ export const startSupervisor = async (): Promise<void> => {
   expect(value()).toEqual({ ready: 'active' });
 };
 
-// Quits the App: the Server Connection lets go first, and answers that it has.
+// Quits the App: the Server Connection lets go first, after the Server has said it does not keep running.
 export const quitTheApp = (): void => {
   server.send({ type: 'app.quit' });
-  server.send({ type: 'counts.released' });
+  serverSays(false);
+  server.send(released);
 };
 
 // Reaches `failed` with the spawned Supervisor still owned, as when it ignores SIGTERM.
@@ -40,4 +42,17 @@ export const abandonStuckSupervisor = async (): Promise<void> => {
   await spawnSupervisor();
   await vi.advanceTimersByTimeAsync(startLimitMs + stopLimitMs);
   expect(value()).toBe('failed');
+};
+
+export const released = { type: 'counts.released' } as const;
+
+export const runningSessions = { running: 1, attention: 0 };
+
+// The Server answers the App's question as it lets go.
+export const serverSays = (enabled: boolean): void =>
+  server.send({ type: 'keepRunning.changed', enabled });
+
+// The Server never answers: the App waits out its release limit.
+export const waitOutRelease = async (): Promise<void> => {
+  await vi.advanceTimersByTimeAsync(releaseLimitMs);
 };
