@@ -24,7 +24,6 @@ afterAll(async () => {
   );
 });
 
-// Starts a real Server from `registry`, asks it what it serves, and stops it.
 async function servedCatalog(registry: Registry): Promise<number> {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), 'argo-agents-registry-'),

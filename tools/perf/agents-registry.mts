@@ -1,6 +1,6 @@
 import { operations } from '@repo/contracts/operations';
-import { z } from 'zod';
 import { publishedRegistry } from '../../mocks/registry/catalog.ts';
+import { query } from './trpc-http.mts';
 
 // The Agents page against a registry long enough that its list must virtualise.
 export const agentCount = 200;
@@ -46,9 +46,11 @@ export function distinctAgents({ agents }: Listing): number {
   return agents.length;
 }
 
-const served = z.object({
-  result: z.object({ data: operations['registry.get'].result }),
-});
+const registryGet = {
+  path: 'registry.get',
+  input: operations['registry.get'].params,
+  output: operations['registry.get'].result,
+} as const;
 
 /*
  * The scenario reports the count the running Server serves, asked over the wire as the App asks
@@ -68,14 +70,7 @@ export async function requireServedCatalog(httpUrl: string): Promise<number> {
 }
 
 async function readServedCatalog(httpUrl: string): Promise<Listing> {
-  const response = await fetch(`${httpUrl}/trpc/registry.get?input=%7B%7D`);
+  const { agents } = await query(httpUrl, registryGet);
 
-  if (!response.ok)
-    throw new Error(
-      `The Server answered registry.get with ${response.status}, so the agents scenario cannot tell what catalog it serves`,
-    );
-
-  const { data } = served.parse(await response.json()).result;
-
-  return { agents: data.agents.map(({ entry }) => ({ id: entry.id })) };
+  return { agents: agents.map(({ entry }) => ({ id: entry.id })) };
 }
