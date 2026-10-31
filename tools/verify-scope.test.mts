@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chooseTests } from './verify-scope.mts';
+import { chooseTests, nothingChecked } from './verify-scope.mts';
 
 const root = '/repo';
 
@@ -64,5 +64,27 @@ describe('chooseTests', () => {
     });
 
     expect(scope.files).toEqual([]);
+  });
+});
+
+describe('nothingChecked', (): void => {
+  it('calls an empty change empty', (): void => {
+    expect(nothingChecked([])).toBe('nothing changed since main.');
+  });
+
+  it('says a change it does not read was not checked and is not a pass', (): void => {
+    const message = nothingChecked(['docs/agents/storybook.md']);
+
+    expect(message).toContain('nothing checked');
+    expect(message).toContain('docs/agents/storybook.md');
+    expect(message).toContain('not a pass');
+    expect(message).not.toContain('nothing changed');
+  });
+
+  it('names the first paths and elides the rest', (): void => {
+    const message = nothingChecked(['a.md', 'b.md', 'c.md', 'd.md']);
+
+    expect(message).toContain('a.md, b.md, c.md, ...');
+    expect(message).not.toContain('d.md');
   });
 });

@@ -5,17 +5,18 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
 import {
-  changedFiles,
+  changedPaths,
   checkChanged,
   checkFormat,
   failedChecks,
   joinOutput,
   parseJson,
+  readableFiles,
   type Result,
   root,
   run,
 } from './hook-checks.mts';
-import { chooseTests, type TestScope } from './verify-scope.mts';
+import { chooseTests, nothingChecked, type TestScope } from './verify-scope.mts';
 
 const vitest = path.join(root, 'node_modules/.bin/vitest');
 
@@ -137,10 +138,12 @@ const base = mergeBase();
 // Turbo's --affected compares with local main; this keeps the type checks on the same base as the tests.
 process.env.TURBO_SCM_BASE = base;
 
-const changed = changedFiles(base);
+const paths = changedPaths(base);
+
+const changed = readableFiles(paths);
 
 if (changed.length === 0) {
-  say('nothing changed since main.');
+  say(nothingChecked(paths));
   process.exit(0);
 }
 
