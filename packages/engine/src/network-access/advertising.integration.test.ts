@@ -78,11 +78,11 @@ describe.skipIf(!lanAddress)(
         '192.0.2.7',
       ).records(120);
 
-      const wire = records.flatMap((record) =>
-        Array.isArray(record.data)
-          ? record.data.map(String)
-          : [JSON.stringify(record.data)],
-      );
+      const wire = records.flatMap((record) => {
+        const data: unknown = 'data' in record ? record.data : undefined;
+
+        return Array.isArray(data) ? data.map(String) : [JSON.stringify(data)];
+      });
 
       expect(wire).toContain(`keyhash=${keyHashOf(key)}`);
       expect(wire.filter((line) => line.includes(key))).toEqual([]);
