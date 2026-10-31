@@ -1,6 +1,7 @@
 import { Label, VStack } from '@expo/ui/swift-ui';
 import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
+import { useEnlargedText } from '#kit/enlarged-text';
 import { useNativeTheme } from '#kit/native-theme';
 import { NativeText, useTextColor } from '#primitives/content/native-text';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
@@ -66,15 +67,20 @@ function TitleLines(props: RowTitleProps): ReactElement {
   );
 }
 
-// A row's title keeps to one line, truncating a long one.
-const OneLine = (props: {
+// A row's title keeps to one line, truncating a long one, until the text is enlarged; then it wraps.
+function OneLine(props: {
   tone: RowTextProps['tone'];
   children: string;
-}): ReactElement => (
-  <NativeText tone={props.tone} numberOfLines={1}>
-    {props.children}
-  </NativeText>
-);
+}): ReactElement {
+  return (
+    <NativeText
+      tone={props.tone}
+      numberOfLines={useEnlargedText() ? undefined : 1}
+    >
+      {props.children}
+    </NativeText>
+  );
+}
 
 // A Label's title is a plain string, so the destructive tone colours the whole label.
 function useDangerStyle(
