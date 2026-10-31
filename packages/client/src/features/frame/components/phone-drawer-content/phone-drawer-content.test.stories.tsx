@@ -286,7 +286,7 @@ export const ClosingReturnsFocusToTheOpener: Story = {
     await userEvent.click(opener);
     await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
 
-    await userEvent.click(canvas.getByText('Backdrop'));
+    await userEvent.click(canvas.getByRole('button', { name: scrimLabel }));
     await waitFor(() => expect(opener).toHaveFocus());
   },
 };
@@ -330,7 +330,7 @@ export const ReopeningAfterTheBackdropClosesTakesFocusAgain: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: openerName }));
     await waitFor(() => expect(rowNamed(canvas, firstSection)).toHaveFocus());
-    await userEvent.click(canvas.getByText('Backdrop'));
+    await userEvent.click(canvas.getByRole('button', { name: scrimLabel }));
     await waitFor(() =>
       expect(canvas.queryByRole('button', { name: firstSection })).toBeNull(),
     );
