@@ -7,5 +7,9 @@ import { readControlToken } from '../src/server-runtime';
 export const userTokenHeaders = async (
   home: string,
 ): Promise<{ authorization: string }> => ({
-  authorization: `Bearer ${await readControlToken(home)}`,
+  authorization: `Bearer ${await userToken(home)}`,
 });
+
+// The token itself, for a caller that sends it in a WebSocket's connection parameters rather than a header.
+export const userToken = (home: string): Promise<string> =>
+  readControlToken(home);

@@ -13,14 +13,18 @@ const ProcedureFailure = z.object({
   error: z.object({ data: z.object({ code: z.string() }) }),
 });
 
+// The Origin the App's own page sends, which is what proves the call is the Server Device's (#1696).
+const appOrigin = 'app://app';
+
 const procedureRequest = (url: string, call: RawProcedureCall): Request =>
   call.type === 'query'
     ? new Request(
         `${url}/trpc/${call.path}?input=${encodeURIComponent(call.input)}`,
+        { headers: { origin: appOrigin } },
       )
     : new Request(`${url}/trpc/${call.path}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', origin: appOrigin },
         body: call.input,
       });
 

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { AppRouter } from '@repo/engine/router';
+import { readControlToken } from '@repo/engine/server-runtime';
 import { startLimitMs, stopProcess } from '@repo/process';
 import { createTRPCClient, createWSClient, wsLink } from '@trpc/client';
 import { afterEach, beforeEach, vi } from 'vitest';
@@ -145,11 +146,16 @@ const clientOf = (socket: ReturnType<typeof createWSClient>): Client =>
     links: [wsLink<AppRouter>({ client: socket })],
   });
 
-// What another App sees: whether the Server answers, and which process answers.
+// What another App sees: whether the Server answers, and which process answers. It shows the user token, as a caller with no page of its own must (#1696).
 export async function askServer<TResult>(
   ask: (client: Client) => Promise<TResult>,
 ): Promise<TResult> {
-  const socket = createWSClient({ url: `ws://127.0.0.1:${port}` });
+  const socket = createWSClient({
+    url: `ws://127.0.0.1:${port}`,
+    connectionParams: async (): Promise<{ token: string }> => ({
+      token: await readControlToken(home),
+    }),
+  });
 
   try {
     return await ask(clientOf(socket));

@@ -10,6 +10,9 @@ import { installed, probeSource } from './probe-plugin';
 // The App asking for media, which is how everything but a web page elsewhere reaches a Plugin asset (#1696).
 export const appOrigin = { origin: 'app://app' };
 
+// The same App loading the media in a page, where a browser sends the page it came from rather than an Origin (#1696).
+export const appMediaLoad = { referer: 'app://app/sessions' };
+
 export const image = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+c4V0AAAAASUVORK5CYII=',
   'base64',

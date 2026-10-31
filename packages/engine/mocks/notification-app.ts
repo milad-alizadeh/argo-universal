@@ -10,6 +10,7 @@ import {
 } from '@trpc/client';
 import { onTestFinished } from 'vitest';
 import type { AppRouter } from '../src/engine/router';
+import { AppPageSocket } from './app-socket';
 
 type Ready = Extract<NotificationStreamEvent, { type: 'ready' }>;
 
@@ -26,7 +27,10 @@ export function connectNotificationApp(
   url: string,
   deliver = true,
 ): NotificationApp {
-  const socket = createWSClient({ url: url.replace('http:', 'ws:') });
+  const socket = createWSClient({
+    url: url.replace('http:', 'ws:'),
+    WebSocket: AppPageSocket,
+  });
 
   const client = createTRPCClient<AppRouter>({
     links: [wsLink({ client: socket })],

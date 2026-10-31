@@ -1,15 +1,10 @@
-import type { Server } from 'node:http';
-import type { Socket } from 'node:net';
+import type { IncomingMessage, Server } from 'node:http';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer, type VerifyClientCallbackAsync } from 'ws';
-import {
-  admitAs,
-  createRpcContext,
-  identityOf,
-  serverDeviceIdentity,
-} from '../rpc';
+import { createRpcContext, type RpcContext } from '../rpc';
 import type { ServerListener } from './network-listener';
-import type { RequestGuard } from './request-guard';
+import { provenIdentity } from './proven-caller';
+import { bearerToken, type RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
 
 const forbiddenStatus = 403;
@@ -31,7 +26,7 @@ export function connectWebSockets(
     wss: webSocketServer,
     router: input.router,
     createContext: ({ req, info }) =>
-      createRpcContext(req.socket, info.connectionParams),
+      connectionContext(input.guard, req, info.connectionParams),
     keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 
@@ -93,20 +88,31 @@ function createWebSocketServer({
   return webSocketServer;
 }
 
-/*
- * A WebSocket is this computer's own App or nothing: a browser attaches `Origin` to every upgrade, so an upgrade the allowlist takes came from a page on this computer, and one from a page elsewhere is refused whatever name it dialled (ADR-0045).
- * That is what admits the Connection as the Server Device, in place of the address it came from (#1696).
- */
+// A browser attaches `Origin` to every upgrade, so a page elsewhere is refused at the handshake whatever name it dialled (ADR-0045). The upgrade admits nobody: the address it arrived on proves nothing (#1696).
 function verifyUpgrade(guard: RequestGuard): VerifyClientCallbackAsync {
   return ({ req }, callback): void => {
-    const allowed = guard.allowsUpgrade(req.headers.origin);
-
-    if (allowed) admitUpgrade(req.socket);
-    callback(allowed, forbiddenStatus, 'Forbidden');
+    callback(
+      guard.allowsHandshake(req.headers.origin),
+      forbiddenStatus,
+      'Forbidden',
+    );
   };
 }
 
-// A Connection that proved a Device at the handshake keeps that identity: an upgrade inside a channel never widens it to the Server Device.
-function admitUpgrade(socket: Socket): void {
-  if (!identityOf(socket)) admitAs(socket, serverDeviceIdentity);
+/*
+ * Who the Connection is, decided once its parameters have arrived, which is the first point at which a caller with no page of its own can have shown a token (ADR-0044).
+ * A Connection that proved a paired Device at the handshake keeps that Device; one that proved nothing reaches no procedure, so a caller that sends neither an Origin this Server serves nor a token the Server issued is served nothing.
+ */
+function connectionContext(
+  guard: RequestGuard,
+  request: IncomingMessage,
+  params: Record<string, string | undefined> | null | undefined,
+): RpcContext {
+  const token = bearerToken(request.headers) ?? params?.['token'];
+
+  const identity = provenIdentity(request.socket, (): boolean =>
+    guard.allowsConnection({ origin: request.headers.origin, token }),
+  );
+
+  return { ...createRpcContext(request.socket, params, identity), token };
 }

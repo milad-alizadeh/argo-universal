@@ -4,18 +4,14 @@ import type {
   ServerResponse,
 } from 'node:http';
 import { maxBlobUploadBytes } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
 import type { CreateHTTPContextOptions } from '@trpc/server/adapters/standalone';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { createRpcContext, type RpcContext } from '../rpc/connection';
-import {
-  identityOf,
-  serverDeviceIdentity,
-  type RpcIdentity,
-} from '../rpc/identity';
+import type { RpcIdentity } from '../rpc/identity';
 import { handleAsset, type AssetReader } from './asset-response';
 import { streamBlob } from './blob-response';
 import { answerError, httpStatus, reportHttpFailure } from './http-response';
+import { provenIdentity, refuseUnknownToken } from './proven-caller';
 import { bearerToken, type RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
 
@@ -71,7 +67,7 @@ function answerBytes(
   route: RequestListener,
   { request, response }: { request: IncomingMessage; response: ServerResponse },
 ): void {
-  if (provenIdentity(options, request)) return route(request, response);
+  if (requestIdentity(options, request)) return route(request, response);
   answerError(response, httpStatus.forbidden, 'Forbidden');
 }
 
@@ -137,20 +133,17 @@ function httpContext(
   request: IncomingMessage,
 ): RpcContext {
   const token = bearerToken(request.headers);
-  const identity = provenIdentity(options, request);
+  const identity = requestIdentity(options, request);
 
-  if (!identity && token !== undefined)
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'An Argo token is required',
-    });
+  refuseUnknownToken(identity, token);
 
   return { ...createRpcContext(request.socket, undefined, identity), token };
 }
 
-const provenIdentity = (
+const requestIdentity = (
   options: RequestListenerOptions,
   request: IncomingMessage,
 ): RpcIdentity | undefined =>
-  identityOf(request.socket) ??
-  (options.guard.allowsRequest(request) ? serverDeviceIdentity : undefined);
+  provenIdentity(request.socket, (): boolean =>
+    options.guard.allowsRequest(request),
+  );

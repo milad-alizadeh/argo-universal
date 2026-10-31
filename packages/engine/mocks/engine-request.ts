@@ -3,8 +3,11 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { request, type RequestOptions } from 'node:http';
 import { join } from 'node:path';
 import { makeResolvedTempFolderSync } from '@repo/mocks/fs/resolved-temp-folder';
+import { createTRPCClient, createWSClient, wsLink } from '@trpc/client';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
+import { headerSocket } from '#mocks/app-socket';
 import { startEngineTestHost } from '#mocks/engine';
+import type { AppRouter } from '../src/engine/router';
 import { userTokenHeaders } from './engine-proof';
 import { readHttpResponse, type HttpResponse } from './http-response';
 
@@ -74,6 +77,51 @@ export async function sendFormRequest(
     // A browser's upload proves itself by its Origin, so the token would hide what the Origin check does.
     unproved: true,
   });
+}
+
+// What a WebSocket Connection shows for itself: the headers the page that opened it would carry, and the token a caller with no page sends in the connection's parameters.
+export interface SocketProof {
+  headers?: Record<string, string>;
+  token?: string;
+}
+
+/*
+ * Asks system.info over a WebSocket and answers with the version, or with the refusal the caller was given.
+ * A Connection proves itself the same two ways a plain-HTTP request does, so a test can show one, the other, or nothing.
+ */
+export async function askOverSocket(proof: SocketProof): Promise<string> {
+  const socket = proofSocket(proof);
+
+  try {
+    return await askedVersion(socket);
+  } finally {
+    await socket.close();
+  }
+}
+
+// A Connection that shows what the test gave it: the headers a page's upgrade would carry, or a token in the connection's parameters.
+const proofSocket = ({
+  headers,
+  token,
+}: SocketProof): ReturnType<typeof createWSClient> =>
+  createWSClient({
+    url: `ws://127.0.0.1:${port}`,
+    WebSocket: headerSocket(headers ?? {}),
+    connectionParams: token === undefined ? {} : { token },
+  });
+
+async function askedVersion(
+  socket: ReturnType<typeof createWSClient>,
+): Promise<string> {
+  const client = createTRPCClient<AppRouter>({
+    links: [wsLink<AppRouter>({ client: socket })],
+  });
+
+  try {
+    return (await client.system.info.query()).version;
+  } catch (failure) {
+    return failure instanceof Error ? failure.message : String(failure);
+  }
 }
 
 export const createUploadForm = (): FormData => {
