@@ -1,6 +1,6 @@
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { z } from 'zod';
-import { expect } from '../fixtures';
+import { expect, test } from '../fixtures';
 import { expectReply } from './feed';
 import { Given, When, Then } from './fixtures';
 import { openWidePage } from './frame';
@@ -17,6 +17,9 @@ interface HeldUpdates {
   held: boolean;
   subscriptionIds: Set<number>;
   waiting: (() => void)[];
+  // When each Server message reached the page, in ms since it opened, so a late first Snapshot shows as a gap (#1693).
+  arrivals: string[];
+  openedAt: number;
 }
 
 interface OtherPage {
@@ -45,14 +48,26 @@ function connect(route: WebSocketRoute, updates: HeldUpdates): void {
   server.onMessage((message) => deliver(route, updates, message));
 }
 
+function recordArrival(
+  updates: HeldUpdates,
+  ids: number[],
+  message: string | Buffer,
+): boolean {
+  const update = ids.some((id) => updates.subscriptionIds.has(id));
+
+  updates.arrivals.push(
+    `+${Date.now() - updates.openedAt}ms ${update ? 'update' : 'reply'} ${ids.join(',')} ${message.length}B`,
+  );
+
+  return update;
+}
+
 function deliver(
   route: WebSocketRoute,
   updates: HeldUpdates,
   message: string | Buffer,
 ): void {
-  const update = responseIds(message).some((id) =>
-    updates.subscriptionIds.has(id),
-  );
+  const update = recordArrival(updates, responseIds(message), message);
 
   if (updates.held && update)
     updates.waiting.push((): void => route.send(message));
@@ -74,6 +89,8 @@ When(
       held: false,
       subscriptionIds: new Set(),
       waiting: [],
+      arrivals: [],
+      openedAt: Date.now(),
     };
 
     const other = await openWidePage(app, (opened) =>
@@ -89,7 +106,17 @@ Then(
   'both pages show the Permission request {string}',
   async ({ page }, title: string): Promise<void> => {
     await expectOverComposer(page, title);
-    await expectOverComposer(otherPage(page).page, title);
+    const { page: other, updates } = otherPage(page);
+
+    try {
+      await expectOverComposer(other, title);
+    } catch (error) {
+      await test.info().attach('other-page-arrivals', {
+        body: updates.arrivals.join('\n') || 'No message reached the page',
+        contentType: 'text/plain',
+      });
+      throw error;
+    }
   },
 );
 
