@@ -14,7 +14,7 @@ const headerFloats = (wide: boolean): boolean => hasLiquidGlass && !wide;
  * The bar moves down by a floating header's height. Below the bar, the Feed no longer meets the header, so it takes
  * no inset of its own.
  */
-function useFloatingHeaderHeight(): number {
+export function useFloatingHeaderHeight(): number {
   const headerHeight = useContext(HeaderHeightContext);
 
   return headerFloats(useWide()) ? (headerHeight ?? 0) : 0;
