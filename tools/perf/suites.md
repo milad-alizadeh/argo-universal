@@ -182,9 +182,13 @@ output arrives, and it records the Agent's own message rate — which is assista
 stdout, so it is not PF-10's throughput clause under another name. PF-10 needs either an adapter
 that streams Tool output or a measurement taken outside the Agent.
 
-**No number has been published from this suite.** It has been run end to end once against
-`claude-acp`, to prove it runs; that run was taken on a host at a 1-minute load average above 100
-and is not a measurement. PF-17's number needs a quiet machine.
+**No number has been published from this suite.** PF-17's number needs a quiet machine.
+
+**The scenario is unproven at the Playwright level.** Everything under it has unit tests, and the
+install, Project, Session and pin read-back paths were proved against a real Agent by hand, but no
+end-to-end run has completed: two attempts were starved by the browser-suite lock (#1680) at 39 and
+29 minutes and were abandoned, not failed. Whoever runs this next should expect to be its first
+end-to-end run, and to find whatever a first run finds.
 
 ## Soak (PF-24)
 
