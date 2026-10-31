@@ -12,6 +12,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "dev.argo.app",
       "infoPlist": {
+        "NSBonjourServices": ["_argo._tcp"],
+        "NSLocalNetworkUsageDescription": "Argo finds your Server on the local network.",
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
         "UISupportedInterfaceOrientations~ipad": [
           "UIInterfaceOrientationPortrait",

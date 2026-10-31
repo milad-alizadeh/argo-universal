@@ -30,6 +30,7 @@ type ServerSource = {
     | 'hookPort'
     | 'operationWaitClock'
     | 'slashCommandsWaitMs'
+    | 'discoveryName'
   >;
   self: Pick<AnyActorRef, 'system'>;
 };
@@ -48,6 +49,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   hookPort: context.hookPort,
   operationWaitClock: context.operationWaitClock,
   slashCommandsWaitMs: context.slashCommandsWaitMs,
+  discoveryName: context.discoveryName,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });

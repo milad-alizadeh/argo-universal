@@ -12,6 +12,20 @@ export { openConnection } from './api/open-connection';
 export { retryServer } from './api/retry-server';
 
 export {
+  askForLocalNetworkAccess,
+  browseServers,
+} from './discovery/browse-servers';
+
+export {
+  type BrowseServers,
+  type KnownServer,
+  resolveServer,
+  type ServerAddress,
+  ServerNotFoundError,
+  type ServerLocation,
+} from './discovery/resolve-server';
+
+export {
   BlobUrlContext,
   createServerBlobUrl,
   createServerMediaUrl,
