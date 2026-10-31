@@ -1,5 +1,6 @@
 import type { DiffChange, ToolCallUpdate } from '@repo/contracts';
 import type { PermissionRequestProps } from '#features/requests';
+import { fileEditHead } from './file-edit-label';
 
 // Argo Operations carry their own details; Agent requests use their matching Tool's input.
 export function permissionDetails(
@@ -41,7 +42,4 @@ function changedFiles(tool: ToolCallUpdate): string | undefined {
   return lines.length > 0 ? lines.join('\n') : undefined;
 }
 
-const changeLine = (change: DiffChange): string =>
-  change.operation === 'move' && change.oldPath
-    ? `${change.oldPath} -> ${change.path}`
-    : `${change.operation} ${change.path}`;
+const changeLine = (change: DiffChange): string => fileEditHead(change);

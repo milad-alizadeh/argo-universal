@@ -1,10 +1,9 @@
-import type { useSessionFeed } from '#features/feed';
+import { permissionDetails, type useSessionFeed } from '#features/feed';
 import {
   useSessionElicitation,
   useSessionPermission,
   useSessionPlanActions,
 } from '#features/sessions';
-import { permissionDetails } from './permission-details';
 import type { SessionDetailViewSources } from './session-detail-view-props';
 
 type FeedRequests = Pick<

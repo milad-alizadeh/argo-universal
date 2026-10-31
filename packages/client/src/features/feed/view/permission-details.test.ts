@@ -33,7 +33,7 @@ it.each(workMocks)('names the files an edit changes for $agent', ({ rows }) => {
 
   expect(paths.length).toBeGreaterThan(0);
 
-  for (const path of paths) expect(input).toContain(path);
+  for (const path of paths) expect(input).toContain(path.split('/').at(-1));
 });
 
 const recordedCall = (): ToolCallUpdate => {
@@ -50,14 +50,22 @@ const editOf = (changes: DiffChange[]): ToolCallUpdate => ({
   content: [{ type: 'diff', changes, _meta: {} }],
 });
 
-it('names every file a diff changes ahead of the raw input, and a move by both paths', () => {
+it('names every file a diff changes as the Feed does, ahead of the raw input, and a move by both names', () => {
   const { input } = permissionDetails(
     permission,
     editOf([
-      { operation: 'add', path: 'a.txt' },
-      { operation: 'move', path: 'c.txt', oldPath: 'b.txt' },
+      { operation: 'add', path: '/work/tree/src/a.txt' },
+      { operation: 'modify', path: '/work/tree/d.txt' },
+      { operation: 'delete', path: 'e.txt' },
+      {
+        operation: 'move',
+        path: '/work/tree/c.txt',
+        oldPath: '/work/tree/b.txt',
+      },
     ]),
   );
 
-  expect(input).toBe('add a.txt\nb.txt -> c.txt');
+  expect(input).toBe(
+    'Added a.txt\nEdited d.txt\nDeleted e.txt\nMoved b.txt to c.txt',
+  );
 });
