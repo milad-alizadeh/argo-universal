@@ -1,7 +1,7 @@
 import { operations, type OperationId } from '@repo/contracts/operations';
 import type { DirectorySession, SessionDirectory } from '../../sessions';
 import type { SessionCaller } from '../session-tokens';
-import { inCallerProject, ownsAgent, ownsSession } from './rules';
+import { inCallerProject, mayPrompt, ownsSession } from './rules';
 import type { ScopeTarget } from './targets';
 
 type SessionTarget = Extract<ScopeTarget, { kind: 'session' }>;
@@ -30,8 +30,10 @@ export class ScopeCoverage {
 
     return inCallerProject(caller, this.read(target).projectId);
   }
-  public ownsAgent(caller: SessionCaller, target: ScopeTarget): boolean {
-    return target.kind === 'session' && ownsAgent(caller, this.read(target));
+  public mayPrompt(caller: SessionCaller, target: ScopeTarget): boolean {
+    if (target.kind !== 'session') return false;
+
+    return mayPrompt(caller, { ...this.read(target), ...target });
   }
   private ownsSession(caller: SessionCaller, target: ScopeTarget): boolean {
     if (target.kind !== 'session') return false;
