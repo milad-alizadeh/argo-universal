@@ -1,5 +1,11 @@
 import { ClockTick, KeepRunning, SystemInfo } from '@repo/contracts';
-import { publicProcedure, router, routerFactory, zAsyncIterable } from '../rpc';
+import {
+  publicProcedure,
+  router,
+  routerFactory,
+  serverDeviceProcedure,
+  zAsyncIterable,
+} from '../rpc';
 import { streamClock } from './clock';
 import { readSystemInfo, type SystemDeps } from './info';
 import { readKeepRunning, setKeepRunning } from './keep-running';
@@ -19,8 +25,8 @@ export const createSystemRouter = routerFactory((deps: SystemDeps) =>
     keepRunning: publicProcedure
       .output(KeepRunning)
       .query((): KeepRunning => readKeepRunning(deps.database)),
-    // Server Device only. The Server will refuse a paired Device with `serverDeviceProcedure` (#1497); until then the App hides the row from one.
-    setKeepRunning: publicProcedure
+    // Server-Device-only (ADR-0022, ADR-0045): how the Server Device runs is its own, so `serverDeviceProcedure` refuses a Paired Device rather than leaving the hidden row as the check.
+    setKeepRunning: serverDeviceProcedure
       .input(KeepRunning)
       .output(KeepRunning)
       .mutation(({ input }) => setKeepRunning(deps, input.enabled)),

@@ -12,10 +12,10 @@ const retained = new Map<string, readonly string[]>([
   ['plugins/router.ts', ['dispatch', 'renderFailed']],
   ['notifications/router.ts', ['attention', 'acknowledge']],
   ['blob/router.ts', ['upload']],
-  // The Server Device's own setting, never an Agent's: ADR-0044's exception for what is the user's alone, which ADR-0045 extends.
+  // How the Server Device runs is the owner's alone, never an Agent's: ADR-0044's exception for what is the user's alone, which ADR-0045 extends. It is `serverDeviceProcedure`, so a Paired Device is refused as well (#1497).
   ['system/router.ts', ['setKeepRunning']],
   ['operations/router.ts', ['run', 'wait']],
-  // Deciding who can reach the Server is the owner's alone (ADR-0045), so it is not an Operation and has no tier. Today nothing server-side stops a caller on the Server Device, an Agent included, from calling it; `serverDeviceProcedure` (#1497) is what will.
+  // Deciding who can reach the Server is the owner's alone (ADR-0045), so it is not an Operation and has no tier. It is `serverDeviceProcedure`, which refuses every Paired Device (#1497); an Agent's Session runs on a Device that is already trusted, so the registry is what keeps it out of an Agent's reach.
   ['network-access/router.ts', ['setLocalAccess']],
 ]);
 

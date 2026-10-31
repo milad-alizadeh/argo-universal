@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure, router, routerFactory } from '../rpc';
+import { router, routerFactory, serverDeviceProcedure } from '../rpc';
 import type { LocalNetworkAccess } from './local-network-access';
 
 export interface NetworkAccessDeps {
@@ -8,13 +8,13 @@ export interface NetworkAccessDeps {
 
 const State = z.object({ enabled: z.boolean() });
 
-// Server-Device-only (ADR-0022, ADR-0045). The App hides the switch from a paired Device; the Server's own refusal is `serverDeviceProcedure` in #1497, which swaps in here.
+// Server-Device-only (ADR-0022, ADR-0045): deciding who may reach the Server is the owner's alone, so `serverDeviceProcedure` refuses a Paired Device here and the App's hidden switch is not the check.
 export const createNetworkRouter = routerFactory((deps: NetworkAccessDeps) =>
   router({
-    localAccess: publicProcedure
+    localAccess: serverDeviceProcedure
       .output(State)
       .query(() => ({ enabled: deps.localNetworkAccess.enabled })),
-    setLocalAccess: publicProcedure
+    setLocalAccess: serverDeviceProcedure
       .input(State)
       .output(State)
       .mutation(async ({ input }) => {
