@@ -33,3 +33,16 @@ export const rejectedProcedureCode = async (
 
   return ProcedureFailure.parse(await response.json()).error.data.code;
 };
+
+// A yes-or-no answer as the HTTP transport encodes it.
+const ProcedureFlag = z.object({ result: z.object({ data: z.boolean() }) });
+
+// What the real HTTP transport answers a call whose procedure returns yes or no.
+export const procedureFlag = async (
+  url: string,
+  call: RawProcedureCall,
+): Promise<boolean> => {
+  const response = await fetch(procedureRequest(url, call));
+
+  return ProcedureFlag.parse(await response.json()).result.data;
+};

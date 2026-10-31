@@ -32,7 +32,10 @@ async function startOnTheNetwork(
 const keyOf = async (server: TestServer): Promise<string> =>
   (await server.caller.devices.serverKey()).publicKey;
 
-// What a connect then does with the answer: opens the Connection and asks the Server who it is.
+/*
+ * What a connect then does with the answer: opens the Connection and asks the Server who it is.
+ * Only from this computer; a Server announcing itself on the local network answers a paired Device over the encrypted channel and nothing else (ADR-0045).
+ */
 async function nameReachedAt(location: ServerLocation): Promise<string> {
   const { client, close } = openConnection(
     `ws://${location.hosts[0]}:${location.port}`,
@@ -65,11 +68,10 @@ describe.skipIf(!lanAddress)(
 
       expect(location).toMatchObject({
         source: 'discovery',
+        name: computerName,
         port: portOf(server),
       });
-      expect(await nameReachedAt(location)).toBe(
-        (await server.caller.system.info()).name,
-      );
+      expect(location.hosts).toContain(lanAddress);
     });
 
     it('finds the same Server after a rename and a move to another port', async (): Promise<void> => {

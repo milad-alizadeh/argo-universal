@@ -1,17 +1,17 @@
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { connectNotificationApp } from '#mocks/notification-app';
-import { rejectedProcedureCode } from '#mocks/procedure-request';
+import { procedureFlag, rejectedProcedureCode } from '#mocks/procedure-request';
 
-it('rejects attention without a live WebSocket Connection', async () => {
+it('raises no attention without a live WebSocket Connection', async () => {
   const host = await startEngineTestHost();
   expect(
-    await rejectedProcedureCode(host.url, {
+    await procedureFlag(host.url, {
       path: 'notifications.attention',
       type: 'mutation',
       input: JSON.stringify({ sessionId: 'session-1' }),
     }),
-  ).toBe('PRECONDITION_FAILED');
+  ).toBe(false);
 });
 
 it('refuses a supplied connection id', async () => {
