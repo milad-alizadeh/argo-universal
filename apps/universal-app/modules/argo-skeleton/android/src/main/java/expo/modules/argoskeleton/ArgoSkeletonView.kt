@@ -17,15 +17,18 @@ import expo.modules.kotlin.views.ExpoView
 /*
  * The Skeleton's native view. While `loading` it walks the views under it (ViewWalk) before every frame, sets
  * each content view's alpha to 0, covers Compose content (ComposeCover), and draws one rounded placeholder per text
- * line, image or control above its children. It restores every view when loading ends and when it leaves the
- * window, since Fabric recycles views.
+ * line, image or control above its children. It hides everything under it from accessibility except what a
+ * Skeleton.Ignore holds, so its own "Loading" is the one announcement. It restores every view when loading ends
+ * and when it leaves the window, since Fabric recycles views.
  */
 @OptIn(InternalComposeUiApi::class)
 class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  private class Hidden(val alpha: Float, val importance: Int)
-
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-  private val hidden = LinkedHashMap<View, Hidden>()
+
+  // The views the Skeleton drew over, by the alpha each had; and the views it hid from accessibility, by the
+  // importance each had. The two sets differ: a card stays drawn and still says nothing.
+  private val faded = LinkedHashMap<View, Float>()
+  private val muted = LinkedHashMap<View, Int>()
   private val covered = mutableListOf<ViewRootForTest>()
   private var loading = false
   private var animation = "pulse"
@@ -175,7 +178,8 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   private fun refresh() {
     val found = ViewWalk(this).collect()
-    hide(found.leaves.map { it.view })
+    drawOver(found.leaves.map { it.view })
+    hideFromAccessibility(found.muted)
     cover(found.compose)
     val next = found.leaves.flatMap { it.placeholders } + found.compose.flatMap { it.placeholders }
     if (next == placeholders) return
@@ -183,15 +187,25 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     invalidate()
   }
 
-  // Hides what the walk found, and shows again what it no longer finds.
-  private fun hide(views: List<View>) {
+  // Takes the pixels of what the walk draws a placeholder for, and gives them back to what it no longer finds.
+  private fun drawOver(views: List<View>) {
     for (view in views) {
-      if (view !in hidden) hidden[view] = Hidden(view.alpha, view.importantForAccessibility)
+      if (view !in faded) faded[view] = view.alpha
       view.alpha = 0f
+    }
+    for (view in faded.keys.filter { it !in views }) showAgain(view, faded.remove(view), animated = false)
+  }
+
+  /*
+   * Hides every subtree the walk muted, so a container that labels itself says nothing through the Skeleton and the
+   * Skeleton's own "Loading" is the one announcement. Views it no longer mutes get their own importance back.
+   */
+  private fun hideFromAccessibility(views: List<View>) {
+    for (view in views) {
+      if (view !in muted) muted[view] = view.importantForAccessibility
       view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
     }
-    val gone = hidden.keys.filter { it !in views }
-    for (view in gone) restore(view, hidden.remove(view), animated = false)
+    for (view in muted.keys.filter { it !in views }) speakAgain(view, muted.remove(view))
   }
 
   private fun cover(contents: List<ComposeContent>) {
@@ -200,7 +214,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
         ComposeCover.apply(content.root, content.local)
         coverPlaceholders[content.root] = content.local
       }
-      content.root.view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+      // Its semantics say nothing through the Skeleton because a muted view above it hides the whole subtree.
       if (content.root !in covered) covered += content.root
     }
     val gone = covered.filter { root -> contents.none { it.root === root } }
@@ -210,21 +224,32 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
   private fun uncover(root: ViewRootForTest) {
     ComposeCover.clear(root)
     coverPlaceholders.remove(root)
-    root.view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
     covered.remove(root)
   }
 
   private fun restoreAll(animated: Boolean) {
-    val entries = hidden.toMap()
-    hidden.clear()
-    for ((view, entry) in entries) restore(view, entry, animated)
+    val alphas = faded.toMap()
+    faded.clear()
+    for ((view, alpha) in alphas) showAgain(view, alpha, animated)
+    val importances = muted.toMap()
+    muted.clear()
+    for ((view, importance) in importances) speakAgain(view, importance)
     for (root in covered.toList()) uncover(root)
   }
 
-  private fun restore(view: View, entry: Hidden?, animated: Boolean) {
-    if (entry == null) return
-    view.importantForAccessibility = entry.importance
-    if (animated) view.animate().alpha(entry.alpha).setDuration(FADE_MS).start() else view.alpha = entry.alpha
+  private fun showAgain(view: View, alpha: Float?, animated: Boolean) {
+    if (alpha == null) return
+    if (animated) view.animate().alpha(alpha).setDuration(FADE_MS).start() else view.alpha = alpha
+  }
+
+  /*
+   * Puts back the importance the view had, unless something else has written one since: React Native sets this from
+   * `aria-hidden`, and a row that hides itself while loading gets its own value back from React, not from here.
+   */
+  private fun speakAgain(view: View, importance: Int?) {
+    if (importance == null) return
+    if (view.importantForAccessibility != View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS) return
+    view.importantForAccessibility = importance
   }
 
   private companion object {

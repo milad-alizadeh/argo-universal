@@ -40,7 +40,8 @@ function NativeSkeletonView({
 
 /*
  * The native view (apps/universal-app/modules/argo-skeleton) walks the views under it while loading: text becomes
- * one bar per laid-out line, and an image, svg, field or small control becomes a bar of its size and radius.
+ * one bar per laid-out line, and an image, svg, field or small control becomes a bar of its size and radius. It
+ * also hides every subtree it holds from TalkBack, bar a Skeleton.Ignore, so its own "Loading" is all that speaks.
  * Expo UI's SwiftUI content redacts itself instead (the kit Host reads the context below), and Compose content
  * is read through its semantics tree.
  */

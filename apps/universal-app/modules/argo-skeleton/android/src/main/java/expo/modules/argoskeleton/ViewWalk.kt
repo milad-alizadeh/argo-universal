@@ -24,7 +24,16 @@ class ComposeContent(val root: ViewRootForTest, val local: List<SkeletonPlacehol
   val placeholders: List<SkeletonPlaceholder> get() = local.map { it.translated(origin.left, origin.top) }
 }
 
-class Collected(val leaves: List<SkeletonLeaf>, val compose: List<ComposeContent>, val ignored: List<View>)
+/*
+ * What one walk found: the drawn leaves the Skeleton stands in for, the Compose trees it covers, the ignore views
+ * it skipped, and `muted`, the views it hides from accessibility.
+ */
+class Collected(
+  val leaves: List<SkeletonLeaf>,
+  val compose: List<ComposeContent>,
+  val ignored: List<View>,
+  val muted: List<View>,
+)
 
 /*
  * Walks every descendant of a Skeleton, however deep, and says which views draw content: a paragraph gives one
@@ -40,7 +49,44 @@ class ViewWalk(private val root: ViewGroup) {
 
   fun collect(): Collected {
     for (index in 0 until root.childCount) walk(root.getChildAt(index))
-    return Collected(withoutCoveredBars(leaves), compose, ignored)
+    return Collected(withoutCoveredBars(leaves), compose, ignored, muteRoots(root))
+  }
+
+  /*
+   * The highest views under the Skeleton that hold no ignore view. The Skeleton hides these from accessibility, so
+   * everything beneath them is hidden too, whatever labels itself: a row, a drawer item, a fold button, a metadata
+   * field or its group, an avatar. Hiding the leaves the Skeleton draws over is not enough, since a container that
+   * carries its own label is not one of them. A view that holds an ignore view stays exposed and its own children
+   * are muted one by one, because no-hide-descendants cannot be undone further down. The web Skeleton walks the
+   * same way (skeleton-aria.ts).
+   */
+  private fun muteRoots(parent: ViewGroup): List<View> {
+    val roots = mutableListOf<View>()
+    collectMuteRoots(parent, roots)
+    return roots
+  }
+
+  // One pass: a child goes in whole, or, when it holds an ignore view, gives the roots found under it instead.
+  private fun collectMuteRoots(parent: ViewGroup, into: MutableList<View>): Boolean {
+    var holdsIgnore = false
+    val found = mutableListOf<View>()
+    for (index in 0 until parent.childCount) {
+      val child = parent.getChildAt(index)
+      if (child is ArgoSkeletonIgnoreView) {
+        holdsIgnore = true
+        continue
+      }
+      if (child.visibility != View.VISIBLE) continue
+      val below = mutableListOf<View>()
+      if (child is ViewGroup && collectMuteRoots(child, below)) {
+        holdsIgnore = true
+        found += below
+      } else {
+        found += child
+      }
+    }
+    into += found
+    return holdsIgnore
   }
 
   /*

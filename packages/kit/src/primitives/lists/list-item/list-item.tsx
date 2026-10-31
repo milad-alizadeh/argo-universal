@@ -89,7 +89,7 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing(props);
   const tile = useContext(ListTileContext);
-  // A row a Skeleton holds is a placeholder whose title is a width, so the row hides its own label; the native Skeleton only hides text and control leaves, and Skeleton.Ignore sets the context false.
+  // A row a Skeleton holds is a placeholder whose title is a width, so the row hides its own label. Both Skeletons hide everything they hold as well; this says it on the row itself, which is where the web story can see it. Skeleton.Ignore sets the context false.
   const loading = useSkeletonLoading();
 
   return (
