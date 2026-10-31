@@ -1,5 +1,6 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import {
+  readControlToken,
   readServerAddress,
   resolveRuntimeDirectory,
 } from '@repo/engine/server-runtime';
@@ -37,8 +38,13 @@ const isRecognised = <Schema extends z.ZodType>(
   return false;
 };
 
-async function fetchSystemInfo(port: number): Promise<boolean> {
+/*
+ * Every Connection now says which Device it is, and this script has no page of its own to be recognised by, so it shows the user token the Server minted (ADR-0044, #1696).
+ * Without it the Server answers 401 and `pnpm dev` waits for a Server that is already running.
+ */
+async function fetchSystemInfo(home: string, port: number): Promise<boolean> {
   const response = await fetch(`http://127.0.0.1:${port}/trpc/system.info`, {
+    headers: { authorization: `Bearer ${await readControlToken(home)}` },
     signal: AbortSignal.timeout(requestTimeoutMs),
   });
 
@@ -58,7 +64,7 @@ export async function serverAnswers(home: string): Promise<boolean> {
   if (!address) return false;
 
   try {
-    return await fetchSystemInfo(address.port);
+    return await fetchSystemInfo(home, address.port);
   } catch {
     return false;
   }

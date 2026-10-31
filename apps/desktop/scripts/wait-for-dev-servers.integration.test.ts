@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { controlTokenPath } from '@repo/engine/server-runtime';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { serverAnswers } from './wait-for-dev-servers.mjs';
 
@@ -12,6 +13,13 @@ let mockServer: Server | undefined;
 
 const serverFile = (): string => join(home, 'server.json');
 
+const token = 'a-user-token';
+
+const startedAt = '2026-10-03T00:00:00.000Z';
+
+const writeControlToken = (): void =>
+  writeFileSync(controlTokenPath(home), `${token}\n`);
+
 const writeServerFile = (port: number): void =>
   writeFileSync(
     serverFile(),
@@ -19,15 +27,24 @@ const writeServerFile = (port: number): void =>
       pid: 4242,
       port,
       version: '1.2.3',
-      startedAt: '2026-10-03T00:00:00.000Z',
+      startedAt,
     }),
   );
 
-// Starts an HTTP server whose tRPC system.info answers with the JSON text `body`, and returns its port.
+/*
+ * Starts an HTTP server whose tRPC system.info answers with the JSON text `body`, and returns its port.
+ * It refuses an unproved request the way the Server does (#1696), so a script that stops showing its token fails here rather than in `pnpm dev`.
+ */
 async function startMockServer(body: string): Promise<number> {
   mockServer = createServer((request, response): void => {
     if (request.url !== '/trpc/system.info') {
       response.writeHead(404).end();
+
+      return;
+    }
+
+    if (request.headers.authorization !== `Bearer ${token}`) {
+      response.writeHead(401).end();
 
       return;
     }
@@ -50,6 +67,7 @@ async function startMockServer(body: string): Promise<number> {
 
 beforeEach((): void => {
   home = mkdtempSync(join(tmpdir(), 'desktop-dev-servers-'));
+  writeControlToken();
 });
 
 afterEach((): void => {
@@ -86,7 +104,7 @@ describe('serverAnswers', (): void => {
           result: {
             data: {
               version: '1.2.3',
-              startedAt: '2026-10-03T00:00:00.000Z',
+              startedAt,
               pid: 4242,
             },
           },
@@ -95,5 +113,25 @@ describe('serverAnswers', (): void => {
     );
 
     expect(await serverAnswers(home)).toBe(true);
+  });
+
+  // A Server that is up but refuses this script reads as not up, which is what made `pnpm dev` wait out its five minutes.
+  it('is false when the Server refuses an unproved request', async (): Promise<void> => {
+    rmSync(controlTokenPath(home));
+    writeServerFile(
+      await startMockServer(
+        JSON.stringify({
+          result: {
+            data: {
+              version: '1.2.3',
+              startedAt,
+              pid: 4242,
+            },
+          },
+        }),
+      ),
+    );
+
+    expect(await serverAnswers(home)).toBe(false);
   });
 });

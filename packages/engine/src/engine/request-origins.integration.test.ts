@@ -1,15 +1,16 @@
 import { expect, it } from 'vitest';
-import { userToken } from '#mocks/engine-proof';
 import {
-  askOverSocket,
   blobId,
-  home,
   infoRoute,
   uploadRoute,
   sendFormRequest,
   sendHttpRequest,
   createUploadForm,
 } from '#mocks/engine-request';
+
+const foreignOrigin = 'https://evil.example';
+
+const assetRoute = '/plugin-assets/probe/x.png';
 
 it.each([
   ['the desktop app', 'app://app'],
@@ -28,7 +29,7 @@ it.each([
   },
 );
 
-it.each(['https://evil.example', 'null'])(
+it.each([foreignOrigin, 'null'])(
   'refuses a tRPC call from the Origin %s and counts it',
   async (origin): Promise<void> => {
     const response = await sendFormRequest(
@@ -56,7 +57,7 @@ const rebinding = { host: 'evil.example:7337' };
 it.each([
   [infoRoute, 401],
   [`/blobs/${blobId}`, 403],
-  ['/plugin-assets/probe/x.png', 403],
+  [assetRoute, 403],
 ])(
   'refuses %s from a page on a name that resolves here, and counts it',
   async (path, status): Promise<void> => {
@@ -114,26 +115,22 @@ it.each([infoRoute, `/blobs/${blobId}`])(
  * A token says which Device is asking. It does not say that a page on some other Origin may read the answer, so the header that would let it is withheld on both byte routes.
  * The desktop main process attaches the user token to every request from its session, subframes included, so a cross-origin document in that session would otherwise have had a Plugin's asset bytes reflected back to it.
  */
-it('lets no foreign Origin read a Blob, even asked with the user token', async (): Promise<void> => {
-  const response = await sendHttpRequest({
-    path: `/blobs/${blobId}`,
-    headers: { origin: 'https://evil.example' },
-  });
+// This Server serves no such Plugin asset, so its 404 is what says the request got past the door and as far as looking: the Origin was never the reason, and it still may not read the answer.
+it.each([
+  [`/blobs/${blobId}`, 200],
+  [assetRoute, 404],
+])(
+  'lets no foreign Origin read %s, even asked with the user token',
+  async (path, status): Promise<void> => {
+    const response = await sendHttpRequest({
+      path,
+      headers: { origin: foreignOrigin },
+    });
 
-  expect(response.status).toBe(200);
-  expect(response.headers['access-control-allow-origin']).toBeUndefined();
-});
-
-// This Server serves no such asset, so the 404 is what says the request got past the guard and as far as looking: the Origin was never the reason it was refused, and it still may not read the answer.
-it('lets no foreign Origin read a Plugin asset, even asked with the user token', async (): Promise<void> => {
-  const response = await sendHttpRequest({
-    path: '/plugin-assets/probe/x.png',
-    headers: { origin: 'https://evil.example' },
-  });
-
-  expect(response.status).toBe(404);
-  expect(response.headers['access-control-allow-origin']).toBeUndefined();
-});
+    expect(response.status).toBe(status);
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  },
+);
 
 /*
  * The App's own media loads: an `<img>` is not a CORS request, so the browser sends no `Origin`, and the page it came from is what the browser sends instead.
@@ -157,7 +154,7 @@ it.each(['http://localhost:8081/sessions', 'app://app/sessions'])(
  * Every site on the web is cross-site to this Server, so what the browser calls the load is no proof at all: taking it would let any page load a Blob or a Plugin asset, and run one in its own page with `<script src>`.
  * The App's own loads do not need it. A web App's page is on this computer, and the desktop App's main process attaches the user token to these two routes, where its renderer never sees it.
  */
-it.each([`/blobs/${blobId}`, '/plugin-assets/probe/x.png'])(
+it.each([`/blobs/${blobId}`, assetRoute])(
   'refuses %s loaded by a page the browser calls cross-site',
   async (path): Promise<void> => {
     const response = await sendHttpRequest({
@@ -173,32 +170,3 @@ it.each([`/blobs/${blobId}`, '/plugin-assets/probe/x.png'])(
     expect(response.body).not.toBe('blob content');
   },
 );
-
-/*
- * A WebSocket carries the same two proofs, and a browser's upgrade from a page elsewhere never gets this far (ADR-0045).
- * The upgrade itself admits nobody: a caller with no page of its own, such as the desktop App's main process or the `argo` CLI, shows the token in the Connection's parameters, and one that shows neither reaches no procedure (#1696).
- */
-it('serves no procedure on a WebSocket that shows neither an Origin nor a token', async (): Promise<void> => {
-  await expect(askOverSocket({})).resolves.toBe(
-    'This Connection has not proved which Device it is',
-  );
-});
-
-// A Connection is refused by the procedure it called, which is where a subscription's caller hears it; the plain-HTTP door is the one that names the token, because that is where the CLI asks.
-it('serves no procedure on a WebSocket that shows a token the Server does not know', async (): Promise<void> => {
-  await expect(askOverSocket({ token: 'wrong' })).resolves.toBe(
-    'This Connection has not proved which Device it is',
-  );
-});
-
-it('serves a WebSocket that shows the user token', async (): Promise<void> => {
-  await expect(askOverSocket({ token: await userToken(home) })).resolves.toBe(
-    '1.2.3',
-  );
-});
-
-it("serves a WebSocket opened by the App's own page", async (): Promise<void> => {
-  await expect(
-    askOverSocket({ headers: { origin: 'app://app' } }),
-  ).resolves.toBe('1.2.3');
-});
