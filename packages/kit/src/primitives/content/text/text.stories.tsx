@@ -6,6 +6,7 @@ import {
   headingText,
   bodyText,
   bodyCodeText,
+  titleCodeText,
   secondaryText,
   secondaryCodeText,
   controlText,
@@ -34,6 +35,8 @@ export const Heading: Story = { args: headingText };
 export const Body: Story = { args: bodyText };
 
 export const BodyCode: Story = { args: bodyCodeText };
+
+export const TitleCode: Story = { args: titleCodeText };
 
 export const Secondary: Story = { args: secondaryText };
 

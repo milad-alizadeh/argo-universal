@@ -169,6 +169,11 @@
 .sheet-edge {
   max-width: none;
 }
+/* A centred sheet whose page sets two columns beside each other is wider than a form, and never wider than the window. */
+.sheet-wide {
+  width: var(--container-sheet-wide);
+  max-width: 100%;
+}
 /* vaul's grab handle takes Paper's neutral-200; vaul's own 70% opacity makes it neutral-200/70. */
 .sheet [data-vaul-handle] {
   background: var(--color-neutral-200);

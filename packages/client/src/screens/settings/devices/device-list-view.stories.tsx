@@ -9,12 +9,15 @@ const meta = {
     localNetworkAccess: { control: false },
     saving: { control: 'boolean' },
     error: { control: 'text' },
+    pairingOffered: { control: 'boolean' },
+    pairDeviceSheet: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
     localNetworkAccess: { status: 'loaded', enabled: false },
     onLocalNetworkAccessChange: action('change Local network access'),
     onRetry: action('retry loading Local network access'),
+    onPairDevice: action('open the pair sheet'),
   },
 } satisfies Meta<typeof DeviceListView>;
 
@@ -40,6 +43,13 @@ export const LoadError: Story = {
 
 export const Disconnected: Story = {
   args: { localNetworkAccess: { status: 'disconnected' } },
+};
+
+export const InABrowser: Story = {
+  args: {
+    localNetworkAccess: { status: 'loaded', enabled: true },
+    pairingOffered: false,
+  },
 };
 
 export const ChangeError: Story = {

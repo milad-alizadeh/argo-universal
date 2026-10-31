@@ -15,6 +15,8 @@ export interface TestDevice {
   deviceId: string;
   caller: TRPCClient<AppRouter>;
   deviceKey: Keypair;
+  // What it takes to open another channel as this Device, for a test that sends its own request.
+  channel: ChannelInput;
 }
 
 export interface TestDeviceOptions {
@@ -54,10 +56,13 @@ export async function connectAsDevice(
 
   opened.socket.destroy();
 
+  const later = { ...input, claim: claimFrom({}) };
+
   return {
     deviceId: opened.deviceId,
     deviceKey: input.deviceKey,
-    caller: callerOverChannel({ ...input, claim: claimFrom({}) }),
+    channel: later,
+    caller: callerOverChannel(later),
   };
 }
 
