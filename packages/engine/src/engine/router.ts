@@ -3,6 +3,7 @@ import { createBlobRouter } from '../blob';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
+import { createNetworkRouter } from '../network-access';
 import { createNotificationsRouter } from '../notifications';
 import { createOperationProcedures } from '../operations';
 import { createPluginsRouter } from '../plugins';
@@ -22,6 +23,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     devices: createDevicesRouter(deps),
     feed: createFeedRouter(deps),
     notifications: createNotificationsRouter(deps),
+    network: createNetworkRouter(deps),
   }),
 );
 

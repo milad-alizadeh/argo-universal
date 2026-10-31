@@ -13,6 +13,8 @@ const retained = new Map<string, readonly string[]>([
   ['notifications/router.ts', ['attention', 'acknowledge']],
   ['blob/router.ts', ['upload']],
   ['operations/router.ts', ['run', 'wait']],
+  // Deciding who can reach the Server is the owner's alone, never an Agent's (ADR-0045).
+  ['network-access/router.ts', ['setLocalAccess']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {
