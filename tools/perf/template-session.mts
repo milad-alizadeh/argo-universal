@@ -6,19 +6,16 @@ import {
   SessionNewInput,
   SessionNewOutput,
 } from '@repo/contracts';
-import type { OperationId } from '@repo/contracts/operations';
 import { startOwnServer } from '@repo/e2e/own-server';
 import { pollUntil } from '@repo/process';
 import { z } from 'zod';
+import { mutate, query } from './trpc-http.mts';
 
-// Gives a fresh fixture Server one real Session through the router's own contract schemas, so the perf seed clones only columns the Server wrote.
-interface Procedure<Input extends z.ZodType, Output extends z.ZodType> {
-  path: OperationId;
-  input: Input;
-  output: Output;
-}
-
-const procedures = {
+/*
+ * Gives a fresh Server one real Session through the router's own contract schemas, so the perf seed
+ * clones only columns the Server wrote.
+ */
+export const procedures = {
   projects: {
     path: 'project.list',
     input: z.strictObject({}).default({}),
@@ -40,54 +37,6 @@ const procedures = {
     output: SessionNewOutput,
   },
 } as const;
-
-async function answer<Output extends z.ZodType>(
-  response: Response,
-  output: Output,
-): Promise<z.output<Output>> {
-  if (!response.ok)
-    throw new Error(
-      `${response.url} answered ${response.status}: ${await response.text()}`,
-    );
-  const envelope = z.object({ result: z.object({ data: z.unknown() }) });
-
-  return output.parse(envelope.parse(await response.json()).result.data);
-}
-
-const encodedInput = <Input extends z.ZodType>(
-  input: Input,
-  value: z.input<Input> | undefined,
-): string => {
-  const parsed = input.parse(value);
-
-  return parsed === undefined
-    ? ''
-    : `?input=${encodeURIComponent(JSON.stringify(parsed))}`;
-};
-
-async function query<Input extends z.ZodType, Output extends z.ZodType>(
-  httpUrl: string,
-  { path, input, output }: Procedure<Input, Output>,
-  value?: z.input<Input>,
-): Promise<z.output<Output>> {
-  const search = encodedInput(input, value);
-
-  return answer(await fetch(`${httpUrl}/trpc/${path}${search}`), output);
-}
-
-async function mutate<Input extends z.ZodType, Output extends z.ZodType>(
-  httpUrl: string,
-  { path, input, output }: Procedure<Input, Output>,
-  value: z.input<Input>,
-): Promise<z.output<Output>> {
-  const response = await fetch(`${httpUrl}/trpc/${path}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(input.parse(value)),
-  });
-
-  return answer(response, output);
-}
 
 async function firstProjectId(httpUrl: string): Promise<string> {
   const projectId = (await query(httpUrl, procedures.projects)).at(0)?.id;
