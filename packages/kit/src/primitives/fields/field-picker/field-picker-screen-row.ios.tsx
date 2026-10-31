@@ -1,4 +1,4 @@
-import { Button, HStack, Image, Spacer } from '@expo/ui/swift-ui';
+import { Button, HStack, Image, Spacer, VStack } from '@expo/ui/swift-ui';
 import {
   buttonStyle,
   contentShape,
@@ -8,6 +8,7 @@ import {
   shapes,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
+import { useEnlargedText } from '#kit/enlarged-text';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import type { PickerRowProps } from './field-picker-kind';
@@ -34,12 +35,39 @@ export function ScreenRow(props: ScreenRowProps): ReactElement {
       modifiers={[buttonStyle('plain'), disabled(props.disabled ?? false)]}
     >
       <HStack modifiers={[wholeRowPress]}>
-        <RowTitle {...titleProps(props)} />
-        <Spacer />
-        <NativeText tone="muted">{props.summary}</NativeText>
+        <TitleAndSummary {...props} />
         <Image systemName="chevron.forward" modifiers={disclosureStyle} />
       </HStack>
     </Button>
+  );
+}
+
+/*
+ * The title and the chosen value share the row's width side by side, until the text is enlarged: then the value goes
+ * under the title, as stock Settings stacks them, so neither is squeezed to a few letters or broken mid-word.
+ */
+function TitleAndSummary(props: ScreenRowProps): ReactElement {
+  const title = <RowTitle {...titleProps(props)} />;
+  const summary = <NativeText tone="muted">{props.summary}</NativeText>;
+
+  if (useEnlargedText()) {
+    return (
+      <>
+        <VStack alignment="leading">
+          {title}
+          {summary}
+        </VStack>
+        <Spacer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {title}
+      <Spacer />
+      {summary}
+    </>
   );
 }
 
