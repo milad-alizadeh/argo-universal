@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
-import { app, BrowserWindow, dialog, Menu } from 'electron';
+import { app, BrowserWindow, dialog, Menu, session } from 'electron';
 import { createActor } from 'xstate';
 import {
   appOrigin,
@@ -9,9 +9,14 @@ import {
 } from './app-protocol';
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
+import {
+  reportFailure,
+  reportUnexpectedFailure,
+} from './server-failure-dialog';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleServerRetry } from './server-retry';
+import { attachServerToken } from './server-token';
 import { handleShareMenu } from './share-menu';
 import { handleSymbolImages } from './symbol-images';
 import { handleWindowBackground } from './window-background';
@@ -89,54 +94,37 @@ handleShareMenu(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 
-handleServerRetry(windowOrigin, (): void =>
-  server.send({ type: 'server.retry' }),
-);
+const retryServer = (): void => server.send({ type: 'server.retry' });
+
+handleServerRetry(windowOrigin, retryServer);
 
 let serverStarted = false;
 
 let currentUrl: string | null = null;
 
-function reportFailure(failure: string | null): void {
-  void dialog
-    .showMessageBox({
-      type: 'error',
-      message: 'Argo could not start the Server',
-      detail: failure ?? undefined,
-      buttons: ['Retry', 'Quit'],
-      defaultId: 0,
-      cancelId: 1,
-    })
-    .then(({ response }): void => {
-      if (response === 0) server.send({ type: 'server.retry' });
-      else app.quit();
-    });
+// The Server is listening: its page's media loads carry no Origin, so this process proves them with the user token (#1696).
+function serverReady(address: ServerAddress): void {
+  currentUrl = serverUrl(address);
+  void attachServerToken({
+    session: session.defaultSession,
+    home,
+    port: address.port,
+  });
+
+  if (BrowserWindow.getAllWindows().length === 0) showAppWindow(currentUrl);
 }
 
 function listenToServer(): void {
-  server.on('server.ready', ({ address }): void => {
-    currentUrl = serverUrl(address);
-
-    if (BrowserWindow.getAllWindows().length === 0) showAppWindow(currentUrl);
-  });
+  server.on('server.ready', ({ address }): void => serverReady(address));
   server.on('badge.changed', ({ attention }): void => {
     app.dock?.setBadge(attention > 0 ? String(attention) : '');
   });
-  server.on('server.failed', ({ failure }): void => reportFailure(failure));
+  server.on('server.failed', ({ failure }): void =>
+    reportFailure(failure, retryServer),
+  );
   server.subscribe({
     error: (error): void => reportUnexpectedFailure(String(error)),
   });
-}
-
-function reportUnexpectedFailure(error: string): void {
-  void dialog
-    .showMessageBox({
-      type: 'error',
-      message: 'Argo could not start the Server',
-      detail: error,
-      buttons: ['Quit'],
-    })
-    .then((): void => app.quit());
 }
 
 const start = (): void => {

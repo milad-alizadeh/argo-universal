@@ -1,15 +1,18 @@
 import { startEngineTestHost } from '@repo/engine/mocks';
+import { AppPageSocket } from '@repo/engine/mocks/app-socket';
 import {
   lanAddress,
   watchAnnouncedServers,
 } from '@repo/engine/mocks/engine-network';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { openConnection } from '../api/open-connection';
 import { resolveServer, type ServerLocation } from './resolve-server';
 
 const closers: (() => Promise<void> | void)[] = [];
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
+
   for (const close of closers.splice(0).reverse()) await close();
 });
 
@@ -37,6 +40,9 @@ const keyOf = async (server: TestServer): Promise<string> =>
  * Only from this computer; a Server announcing itself on the local network answers a paired Device over the encrypted channel and nothing else (ADR-0045).
  */
 async function nameReachedAt(location: ServerLocation): Promise<string> {
+  // Node writes no Origin, so the App stands in for its own page, which is what proves the Server Device (#1696).
+  vi.stubGlobal('WebSocket', AppPageSocket);
+
   const { client, close } = openConnection(
     `ws://${location.hosts[0]}:${location.port}`,
   );

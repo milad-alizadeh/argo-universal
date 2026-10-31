@@ -1,9 +1,16 @@
 import { expect, it } from 'vitest';
 import {
+  blobId,
+  infoRoute,
   uploadRoute,
   sendFormRequest,
+  sendHttpRequest,
   createUploadForm,
 } from '#mocks/engine-request';
+
+const foreignOrigin = 'https://evil.example';
+
+const assetRoute = '/plugin-assets/probe/x.png';
 
 it.each([
   ['the desktop app', 'app://app'],
@@ -22,7 +29,7 @@ it.each([
   },
 );
 
-it.each(['https://evil.example', 'null'])(
+it.each([foreignOrigin, 'null'])(
   'refuses a tRPC call from the Origin %s and counts it',
   async (origin): Promise<void> => {
     const response = await sendFormRequest(
@@ -31,10 +38,135 @@ it.each(['https://evil.example', 'null'])(
       origin,
     );
 
-    expect(response.status).toBe(403);
+    // A page from elsewhere proves nothing, so it reaches no procedure and is not addressed in the answer either.
+    expect(response.status).toBe(401);
     expect(response.headers['access-control-allow-origin']).toBeUndefined();
     expect(console.error).toHaveBeenCalledExactlyOnceWith(
       `engine: rejected Origin ${JSON.stringify(origin)} #1`,
     );
+  },
+);
+
+/*
+ * A page on a name that resolves to this computer: its requests arrive on the loopback door, same-origin to the page, so a browser sends no `Origin` on them and the page reads every answer.
+ * It has no token, because the file a token lives in is not something a page can read, so the door answers it nothing (#1696).
+ */
+const rebinding = { host: 'evil.example:7337' };
+
+// A route that answers bytes has no procedure behind it, so the refusal is the door's; a tRPC query reaches no procedure and tRPC says so.
+it.each([
+  [infoRoute, 401],
+  [`/blobs/${blobId}`, 403],
+  [assetRoute, 403],
+])(
+  'refuses %s from a page on a name that resolves here, and counts it',
+  async (path, status): Promise<void> => {
+    const response = await sendHttpRequest({
+      path,
+      headers: rebinding,
+      unproved: true,
+    });
+
+    expect(response.status).toBe(status);
+    expect(response.body).not.toContain('1.2.3');
+    expect(console.error).toHaveBeenCalledExactlyOnceWith(
+      `engine: rejected unproved request ${JSON.stringify(path)} #1`,
+    );
+  },
+);
+
+it('refuses a tRPC query whose own page is where it came from', async (): Promise<void> => {
+  const response = await sendHttpRequest({
+    path: infoRoute,
+    headers: {
+      ...rebinding,
+      referer: 'http://evil.example/',
+      'sec-fetch-site': 'same-origin',
+    },
+    unproved: true,
+  });
+
+  expect(response.status).toBe(401);
+  expect(response.body).not.toContain('1.2.3');
+});
+
+// A token the Server never issued proves nothing either, and the caller is told which refusal this is.
+it('refuses a tRPC query that shows a token the Server does not know', async (): Promise<void> => {
+  const response = await sendHttpRequest({
+    path: infoRoute,
+    headers: { ...rebinding, authorization: 'Bearer wrong' },
+    unproved: true,
+  });
+
+  expect(response.status).toBe(401);
+  expect(response.body).toContain('An Argo token is required');
+});
+
+it.each([infoRoute, `/blobs/${blobId}`])(
+  'answers %s asked with the user token, whatever Host it names',
+  async (path): Promise<void> => {
+    const response = await sendHttpRequest({ path, headers: rebinding });
+
+    expect(response.status).toBe(200);
+  },
+);
+
+/*
+ * A token says which Device is asking. It does not say that a page on some other Origin may read the answer, so the header that would let it is withheld on both byte routes.
+ * The desktop main process attaches the user token to every request from its session, subframes included, so a cross-origin document in that session would otherwise have had a Plugin's asset bytes reflected back to it.
+ */
+// This Server serves no such Plugin asset, so its 404 is what says the request got past the door and as far as looking: the Origin was never the reason, and it still may not read the answer.
+it.each([
+  [`/blobs/${blobId}`, 200],
+  [assetRoute, 404],
+])(
+  'lets no foreign Origin read %s, even asked with the user token',
+  async (path, status): Promise<void> => {
+    const response = await sendHttpRequest({
+      path,
+      headers: { origin: foreignOrigin },
+    });
+
+    expect(response.status).toBe(status);
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  },
+);
+
+/*
+ * The App's own media loads: an `<img>` is not a CORS request, so the browser sends no `Origin`, and the page it came from is what the browser sends instead.
+ * A page that rebinds a name cannot forge that: the attack is same-origin, so its own name is what the browser reports.
+ */
+it.each(['http://localhost:8081/sessions', 'app://app/sessions'])(
+  'serves a Blob to a media load from the App page %s',
+  async (referer): Promise<void> => {
+    const response = await sendHttpRequest({
+      path: `/blobs/${blobId}`,
+      headers: { referer },
+      unproved: true,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBe('blob content');
+  },
+);
+
+/*
+ * Every site on the web is cross-site to this Server, so what the browser calls the load is no proof at all: taking it would let any page load a Blob or a Plugin asset, and run one in its own page with `<script src>`.
+ * The App's own loads do not need it. A web App's page is on this computer, and the desktop App's main process attaches the user token to these two routes, where its renderer never sees it.
+ */
+it.each([`/blobs/${blobId}`, assetRoute])(
+  'refuses %s loaded by a page the browser calls cross-site',
+  async (path): Promise<void> => {
+    const response = await sendHttpRequest({
+      path,
+      headers: {
+        referer: 'http://evil.example/',
+        'sec-fetch-site': 'cross-site',
+      },
+      unproved: true,
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body).not.toBe('blob content');
   },
 );

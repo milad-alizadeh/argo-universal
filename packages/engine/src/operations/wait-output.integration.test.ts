@@ -46,8 +46,9 @@ it('keeps the native full JSON Blob reference when a resumed Operation result ne
   });
   assert(settled.fullResult);
   const url = `${host.url}/blobs/${settled.fullResult.blobId}`;
-  await expect.poll(async () => (await fetch(url)).status).toBe(200);
-  const response = await fetch(url);
+  const read = { headers: { origin: 'app://app' } };
+  await expect.poll(async () => (await fetch(url, read)).status).toBe(200);
+  const response = await fetch(url, read);
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual(await host.caller.registry.get());
 }, 30_000);

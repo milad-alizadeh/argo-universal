@@ -1,5 +1,11 @@
 import { expect, it } from 'vitest';
-import { port, upgradeStatus, systemInfoStatus } from '#mocks/engine-http';
+import {
+  home,
+  port,
+  upgradeStatus,
+  systemInfoStatus,
+} from '#mocks/engine-http';
+import { userTokenHeaders } from '#mocks/engine-proof';
 
 it.each([
   ['no Origin', {}],
@@ -22,6 +28,7 @@ it('answers feed.page from the database', async (): Promise<void> => {
 
   const response = await fetch(
     `http://127.0.0.1:${port}/trpc/feed.page?input=${input}`,
+    { headers: await userTokenHeaders(home) },
   );
 
   expect(await response.json()).toMatchObject({
@@ -36,7 +43,7 @@ it.each(['https://evil.example', 'http://localhost.evil.example', 'null'])(
   },
 );
 
-// The Host allowlist went with ADR-0045: on loopback the front door has already said which Device this is, and Host is a header anyone can write.
+// The Host allowlist went with ADR-0045, and nothing replaced it: Host is a header anyone can write, so the handshake asks only for an Origin and the Connection proves which Device it is afterwards (#1696).
 it('asks nothing of the Host a Connection from this computer sends', async (): Promise<void> => {
   expect(await upgradeStatus({ host: 'evil.example:7337' })).toBe(101);
   expect(await upgradeStatus({ host: `127.0.0.1:${port + 1}` })).toBe(101);

@@ -23,6 +23,7 @@ export async function prepareHttpServer(
   return {
     ...setup,
     ...pairing(options),
+    controlToken,
     serverPublicKey: publicKey,
     staticKey: keypair,
     appRouter: routerFor({ options, setup, controlToken, publicKey }),

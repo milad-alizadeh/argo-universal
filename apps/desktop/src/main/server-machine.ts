@@ -27,6 +27,7 @@ import {
 } from './server-process';
 import {
   type CountsReport,
+  type CountsTarget,
   countsReleaseEvent,
   releaseLimitMs,
   watchSessionCounts,
@@ -496,10 +497,10 @@ export const serverConnectionMachine = serverSetup.createMachine({
       invoke: {
         id: countsActorId,
         src: 'watchCounts',
-        input: ({ context }): Pick<ServerAddress, 'port'> => {
+        input: ({ context }): CountsTarget => {
           if (!context.address) throw new Error('The Server has no address');
 
-          return { port: context.address.port };
+          return { port: context.address.port, home: context.home };
         },
       },
       // A remembered answer never keeps a Server alive: it is gone with the Connection that gave it.

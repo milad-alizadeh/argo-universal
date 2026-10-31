@@ -24,8 +24,9 @@ it('caps a large Operation result in the Feed and stores its complete JSON in a 
   assert(blob);
   const url = `${fixture.host.url}/blobs/${blob.blobId}`;
 
-  await expect.poll(async () => (await fetch(url)).status).toBe(200);
-  expect(await (await fetch(url)).json()).toEqual(result);
+  const read = { headers: { origin: 'app://app' } };
+  await expect.poll(async () => (await fetch(url, read)).status).toBe(200);
+  expect(await (await fetch(url, read)).json()).toEqual(result);
 }, 30_000);
 
 async function operationOutput(

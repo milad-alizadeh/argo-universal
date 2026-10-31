@@ -6,6 +6,7 @@ import {
   fromPromise,
   type PromiseActorLogic,
 } from 'xstate';
+import type { CountsTarget } from './session-counts';
 
 // What the machine sent the Server Connection, such as a quit's release.
 export const sentToCounts: string[] = [];
@@ -15,11 +16,9 @@ beforeEach((): void => {
 });
 
 // A Server Connection that holds on to what it is told until the test answers for it.
-export const watchCountsDouble = fromCallback<
-  EventObject,
-  Pick<ServerAddress, 'port'>
->(({ receive }): void =>
-  receive((event): void => void sentToCounts.push(event.type)),
+export const watchCountsDouble = fromCallback<EventObject, CountsTarget>(
+  ({ receive }): void =>
+    receive((event): void => void sentToCounts.push(event.type)),
 );
 
 export const supervisorExitedEvent = 'server.exited';

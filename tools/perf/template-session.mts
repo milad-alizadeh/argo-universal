@@ -10,6 +10,7 @@ import type { OperationId } from '@repo/contracts/operations';
 import { startOwnServer } from '@repo/e2e/own-server';
 import { pollUntil } from '@repo/process';
 import { z } from 'zod';
+import { asTheApp } from './app-origin.mts';
 
 // Gives a fresh fixture Server one real Session through the router's own contract schemas, so the perf seed clones only columns the Server wrote.
 interface Procedure<Input extends z.ZodType, Output extends z.ZodType> {
@@ -72,7 +73,10 @@ async function query<Input extends z.ZodType, Output extends z.ZodType>(
 ): Promise<z.output<Output>> {
   const search = encodedInput(input, value);
 
-  return answer(await fetch(`${httpUrl}/trpc/${path}${search}`), output);
+  return answer(
+    await fetch(`${httpUrl}/trpc/${path}${search}`, { headers: asTheApp }),
+    output,
+  );
 }
 
 async function mutate<Input extends z.ZodType, Output extends z.ZodType>(
@@ -82,7 +86,7 @@ async function mutate<Input extends z.ZodType, Output extends z.ZodType>(
 ): Promise<z.output<Output>> {
   const response = await fetch(`${httpUrl}/trpc/${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { ...asTheApp, 'content-type': 'application/json' },
     body: JSON.stringify(input.parse(value)),
   });
 

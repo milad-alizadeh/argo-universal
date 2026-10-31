@@ -67,6 +67,7 @@
     "./plugins": "./src/plugins/index.ts",
     "./plugin-validation": "./src/plugins/authoring/validate.ts",
     "./mocks/engine-network": "./mocks/engine-network.ts",
+    "./mocks/app-socket": "./mocks/app-socket.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts",
     "./mocks/data-fixture": "./mocks/data-fixture.ts"
   }
