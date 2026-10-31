@@ -1,17 +1,13 @@
 // What a settle helper says when it gives up, naming the one condition that failed so a reader looks at the right thing.
 
-// A top that has not been read twice yet has not held still, so a first poll reads as moving.
-const stoppedMoving = (top: number, lastTop: number | undefined): boolean =>
-  top === lastTop;
-
 const stableFor = (top: number, lastTop: number | undefined): string =>
-  stoppedMoving(top, lastTop)
+  top === lastTop
     ? `its top is stable at ${top}`
     : `its top moved from ${lastTop ?? 'no reading'} to ${top}`;
 
 // No point on the element can be hit, which is clipping or covering and has nothing to do with motion.
 const unpointableMessage = (top: number, lastTop: number | undefined): string =>
-  `No point on the element can be hit: it is clipped or covered, and ${stableFor(top, lastTop)}`;
+  `The point at the element's leading edge cannot be hit: it is clipped or covered, and ${stableFor(top, lastTop)}`;
 
 // The element's reading, such as its top or its bottom, has not held for two frames.
 export const movingMessage = (

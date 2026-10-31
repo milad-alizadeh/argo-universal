@@ -5,7 +5,9 @@ describe('settleFailure', () => {
   it('says a clipped element is clipped, and that its top is stable', () => {
     const message = settleFailure(false, -726, -726);
 
-    expect(message).toContain('No point on the element can be hit');
+    expect(message).toContain(
+      "The point at the element's leading edge cannot be hit",
+    );
     expect(message).toContain('stable at -726');
     expect(message).not.toContain('moving');
   });
@@ -22,7 +24,9 @@ describe('settleFailure', () => {
   it('says a clipped element that also moves is both', () => {
     const message = settleFailure(false, -272, -127);
 
-    expect(message).toContain('No point on the element can be hit');
+    expect(message).toContain(
+      "The point at the element's leading edge cannot be hit",
+    );
     expect(message).toContain('moved from -127 to -272');
   });
 
