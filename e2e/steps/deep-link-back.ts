@@ -60,3 +60,20 @@ Then(
 When('I go Back from the page', async ({ page }): Promise<void> => {
   await page.getByRole('link', { name: /back/i }).click();
 });
+
+// The fixture Issues Plugin's row, at the address the list pushes it at.
+Given(
+  'the Plugin row {string} was opened on its own in a phone Frame',
+  async ({ page }, name: string): Promise<void> => {
+    await openOnItsOwn(page, '/plugins/lists/issues/issues/418');
+    await expect(page.getByRole('link', { name: /back/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+  },
+);
+
+Then(
+  'the phone Frame shows the Issues list with a clean address',
+  async ({ page }): Promise<void> => {
+    await expectCleanAddress(page, '/plugins/lists/issues/issues');
+  },
+);

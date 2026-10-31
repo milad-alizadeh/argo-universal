@@ -10,3 +10,9 @@ Feature: Back from a deep-linked page
     Given a missing Session was opened on its own in a phone Frame
     When I go Back from the page
     Then the phone Frame shows the Sessions list with a clean address
+
+  @web-only
+  Scenario: Back from a Plugin row opened on its own returns to its list with a clean address
+    Given the Plugin row "Add CSV export" was opened on its own in a phone Frame
+    When I go Back from the page
+    Then the phone Frame shows the Issues list with a clean address
