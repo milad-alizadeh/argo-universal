@@ -12,6 +12,7 @@ import {
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import {
+  archivedSession,
   coverageItem,
   issueItem,
   lintItem,
@@ -49,6 +50,43 @@ export const ArchivedPhone = archived(layoutWidths.phone);
 
 export const ArchivedWide = archived(layoutWidths.wide);
 
+// A screen reader reads a row through its press target's name, so the name carries what the row's lanes only draw.
+const archivedName = { name: /, Archived$/ };
+
+// The row draws its Plugin items as accessories, which leaves its press target without any content of its own.
+function namedArchived(
+  width: number,
+  items: typeof archivedSession | typeof pluginItemsSession,
+): Story {
+  return {
+    args: { ...items, session: sessionRows.archived },
+    play: async ({ canvas }) => {
+      await settleLayout(width);
+      await expect(canvas.getByRole('button', archivedName)).toBeVisible();
+    },
+  };
+}
+
+export const ArchivedNameWithItemsPhone = namedArchived(
+  layoutWidths.phone,
+  pluginItemsSession,
+);
+
+export const ArchivedNameWithItemsWide = namedArchived(
+  layoutWidths.wide,
+  pluginItemsSession,
+);
+
+export const ArchivedNamePhone = namedArchived(
+  layoutWidths.phone,
+  archivedSession,
+);
+
+export const ArchivedNameWide = namedArchived(
+  layoutWidths.wide,
+  archivedSession,
+);
+
 export const PluginItemTooltipWide: Story = {
   args: pluginItemsSession,
   play: async ({ canvas, userEvent }) => {
@@ -72,6 +110,18 @@ const rowName = (session: SessionRowProps['session']): RowName => ({
 });
 
 const idleRow = rowName(pluginItemsSession.session);
+
+// Only an archived Session's row says so: a live row's name stops at its status.
+export const LiveRowNameDoesNotSayArchived: Story = {
+  args: pluginItemsSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(canvas.getByRole('button', idleRow)).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', archivedName),
+    ).not.toBeInTheDocument();
+  },
+};
 
 const morePluginItems = { name: /^\d+ more items? from Plugins$/ };
 

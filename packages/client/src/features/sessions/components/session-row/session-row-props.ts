@@ -51,5 +51,15 @@ export interface SessionRowActivity {
 
 export type OpenPluginItemPage = (pluginId: string, path: string) => void;
 
+/*
+ * What a screen reader says for the row: its press target is named by this label and reads no text from its lanes, so
+ * the Archived pill that the meta line draws is said here too.
+ */
 export const sessionRowLabel = (session: SessionInfo): string =>
-  `${session.title}, ${sessionStatusLabels[session.status]}`;
+  [
+    session.title,
+    sessionStatusLabels[session.status],
+    session.archivedAt === null ? undefined : 'Archived',
+  ]
+    .filter(Boolean)
+    .join(', ');
