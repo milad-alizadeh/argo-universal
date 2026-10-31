@@ -61,6 +61,11 @@ export const executors = {
     server.send(event);
     expectBadge(event.counts.attention);
   },
+  'keepRunning.changed': ({ event }): void => {
+    if (event.type !== 'keepRunning.changed')
+      throw new Error('Expected keep running');
+    server.send(event);
+  },
   // On the way out a disconnect answers the App's own release, so it clears no badge and keeps the Session count the question needs.
   'counts.disconnected': (): void =>
     sendAndExpectBadge(

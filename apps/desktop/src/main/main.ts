@@ -49,7 +49,7 @@ registerAppScheme();
 const serverUrl = (address: ServerAddress): string =>
   `ws://127.0.0.1:${address.port}`;
 
-// Makes sure a Supervisor runs; on quit it stops only one that it started.
+// Makes sure a Supervisor runs, adopting one that already runs; on quit it stops only one that it started, and none when the Server is set to keep running.
 const home = resolveHome();
 
 const server = createActor(serverConnectionMachine, {

@@ -5,6 +5,9 @@ import {
   countsChangedEvent,
   latest,
   quitCalls,
+  readAddressCalls,
+  reportSpawned,
+  retryServerEvent,
   server,
   settle,
   startedAddress,
@@ -13,6 +16,8 @@ import {
 import { countsReleaseEvent, releaseLimitMs } from './session-counts';
 
 const released = { type: 'counts.released' } as const;
+
+const keepRunningChanged = 'keepRunning.changed';
 
 const runningSessions = { running: 1, attention: 0 };
 
@@ -66,5 +71,61 @@ describe('quitting the App', (): void => {
 
     expect(value()).toBe('stopped');
     expect(stoppedPids).toEqual([]);
+  });
+
+  it('leaves the Supervisor running, and asks nothing, when the Server answers that it keeps running', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: countsChangedEvent, counts: runningSessions });
+
+    server.send({ type: 'app.quit' });
+    server.send({ type: keepRunningChanged, enabled: true });
+    server.send(released);
+
+    expect(value()).toBe('stopped');
+    expect(stoppedPids).toEqual([]);
+    expect(quitCalls).toHaveLength(0);
+  });
+
+  it('stops the Supervisor as before when the Server answers that it does not keep running', async (): Promise<void> => {
+    await startSupervisor();
+
+    server.send({ type: 'app.quit' });
+    server.send({ type: keepRunningChanged, enabled: false });
+    server.send(released);
+
+    expect(stoppedPids).toEqual([startedAddress.pid]);
+  });
+
+  it('stops the Supervisor when the Server never answers the question before the Connection is let go', async (): Promise<void> => {
+    await startSupervisor();
+
+    server.send({ type: 'app.quit' });
+    await vi.advanceTimersByTimeAsync(releaseLimitMs);
+
+    expect(stoppedPids).toEqual([startedAddress.pid]);
+  });
+
+  it('does not let an answer heard earlier keep a Server the owner no longer asked to keep', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: keepRunningChanged, enabled: true });
+
+    server.send({ type: 'app.quit' });
+    await vi.advanceTimersByTimeAsync(releaseLimitMs);
+
+    expect(stoppedPids).toEqual([startedAddress.pid]);
+  });
+
+  it('does not let an answer from a lost Connection keep a Supervisor that is still starting', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: keepRunningChanged, enabled: true });
+    server.send({ type: retryServerEvent });
+    await settle((): void => latest(readAddressCalls).resolve(null));
+    reportSpawned();
+    expect(value()).toEqual({ starting: { answering: 'waiting' } });
+
+    server.send({ type: 'app.quit' });
+
+    expect(value()).toEqual({ stopping: 'waiting' });
+    expect(stoppedPids).toEqual([startedAddress.pid]);
   });
 });
