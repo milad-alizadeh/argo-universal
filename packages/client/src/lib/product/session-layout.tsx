@@ -110,7 +110,7 @@ function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   return (
     <View
       className={cn(
-        'relative z-10',
+        'relative z-10 min-h-0 shrink',
         composerBottomGap,
         filled && `${filledClass} pt-4`,
       )}

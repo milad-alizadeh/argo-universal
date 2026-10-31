@@ -106,7 +106,7 @@ function NewSessionComposer(
   const wide = useContentWide();
 
   return (
-    <View className="w-full self-center">
+    <View className="w-full min-h-0 shrink self-center">
       <ComposerStack
         // A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off.
         above={!wide && !props.starting && <NewSessionStartIn {...props} />}
