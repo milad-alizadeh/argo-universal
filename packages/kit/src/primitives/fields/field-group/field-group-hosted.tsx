@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-// The web and iOS draw a section's React Native content as it is; only Android's Compose column needs it hosted.
+// The web draws a section's React Native content as it is; iOS's SwiftUI Form and Android's Compose column host it.
 export function HostedSectionContent(props: {
   children: ReactNode;
 }): ReactNode {

@@ -102,7 +102,7 @@ function ProjectSections(props: SectionsProps): React.JSX.Element {
   );
 }
 
-// One Plugin's tree is the one row of a section of its own, titled with the Plugin's name. It is React Native content, which Android's FieldGroup hosts.
+// One Plugin's tree is the one row of a section of its own, titled with the Plugin's name. It is React Native content, which the native FieldGroups (iOS and Android) host.
 const pluginSection: PluginSectionFrame = ({ key, title, children }) => (
   <FieldGroup.Section key={key} title={title}>
     <HostedSectionContent>{children}</HostedSectionContent>
