@@ -5,8 +5,8 @@ import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
+import { RepairDeepLinkStack } from './repair-deep-link-stack';
 import { ReturnToOrigin } from './return-destination';
-import { RepairDeepLinkStack } from './section-root';
 
 type ScreenLayout = NonNullable<ComponentProps<typeof Stack>['screenLayout']>;
 

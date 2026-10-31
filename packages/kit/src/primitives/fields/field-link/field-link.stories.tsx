@@ -37,3 +37,8 @@ export const Default: Story = {};
 export const Counted: Story = {
   args: { title: 'Projects', leading: 'folder', value: '3' },
 };
+
+// A row that performs an action, as the Attach Sheet's choices do: no chevron, and a button to assistive technology.
+export const Action: Story = {
+  args: { title: 'Photos', leading: 'photos', action: true },
+};

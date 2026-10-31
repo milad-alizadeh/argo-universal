@@ -12,7 +12,7 @@ import {
   type ScreenMenu,
 } from '@repo/kit/primitives/scaffolds/screen';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
-import { useFocusEffect, useNavigation, useRoute } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import {
   CommonActions,
   DrawerActions,
@@ -20,31 +20,55 @@ import {
   type ParamListBase,
 } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useCallback, useLayoutEffect, type PropsWithChildren } from 'react';
+import { useCallback, type PropsWithChildren } from 'react';
 import { View } from 'react-native';
 
 interface OpenFirstPageProps {
   useFirstPage: NonNullable<SectionList['useFirstPage']>;
 }
 
+type StackNavigation = NavigationProp<ParamListBase>;
+
+function resetOverIndex(navigation: StackNavigation, first: FirstPage): void {
+  const routes = [
+    { name: 'index' },
+    { name: first.page, params: first.params },
+  ];
+
+  // The router no longer completes a partial state, so the stack's own state carries the new routes.
+  const stack = navigation.getState();
+
+  navigation.dispatch(CommonActions.reset({ ...stack, index: 1, routes }));
+}
+
+/*
+ * Not from the focus effect itself: a section's stack is mounted before it is shown (`lazy: false`), so the effect runs in the
+ * commit that shows it, and a reset dispatched there is dropped by the router. One microtask later it lands.
+ */
+function resetOverIndexSoon(
+  navigation: StackNavigation,
+  first: FirstPage,
+): () => void {
+  let current = true;
+
+  queueMicrotask(() => {
+    if (current) resetOverIndex(navigation, first);
+  });
+
+  return () => {
+    current = false;
+  };
+}
+
 // Opens `first` over the section's index each time the index is focused; the index stays below it for a narrow window's Back.
 function useOpenOverIndex(first: FirstPage | undefined): void {
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const navigation = useNavigation<StackNavigation>();
 
   useFocusEffect(
-    useCallback(() => {
-      if (!first) return;
-
-      const routes = [
-        { name: 'index' },
-        { name: first.page, params: first.params },
-      ];
-
-      // The router no longer completes a partial state, so the stack's own state carries the new routes.
-      const stack = navigation.getState();
-
-      navigation.dispatch(CommonActions.reset({ ...stack, index: 1, routes }));
-    }, [navigation, first]),
+    useCallback(
+      () => (first ? resetOverIndexSoon(navigation, first) : undefined),
+      [navigation, first],
+    ),
   );
 }
 
@@ -57,74 +81,6 @@ function OpenFirstPage({ useFirstPage }: OpenFirstPageProps): React.ReactNode {
 
 interface SectionRootProps {
   section: CoreSection;
-}
-
-/*
- * A page opened by its address has this root added below it so Back has somewhere to go, and the router gives the root
- * the page's params (`name`, `id`). The root has no such param, so its address would show it as a query string. It also
- * skips the page's own list (Projects between Settings and a Project). The stack is reset without the params and with
- * the list in between, once, as the page opens. It is placed in the page's own layout, not in the root: the root below
- * a page mounts later, and a reset made then, from the stack as it was, put back a page that a quick Back had just
- * left. From the page's first commit, the reset is queued before any Back can be.
- */
-export function RepairDeepLinkStack(): null {
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
-  const { key } = useRoute();
-
-  useLayoutEffect(() => {
-    const stack = navigation.getState();
-    const routes = repairedRoutes(stack, key);
-
-    if (!routes) return;
-
-    navigation.dispatch(
-      CommonActions.reset({ ...stack, index: routes.length - 1, routes }),
-    );
-  }, [navigation, key]);
-
-  return null;
-}
-
-type Stack = ReturnType<NavigationProp<ParamListBase>['getState']>;
-
-type Route = Stack['routes'][number];
-
-const hasParams = (route: Route | undefined): boolean =>
-  Object.keys({ ...route?.params }).length > 0;
-
-// A core section's own `index` root, and a page of another name. A Plugin's root is `[...path]`, as is each page it pushes.
-const indexAndPage = (routes: Stack['routes']): boolean =>
-  /^index,(?!index$)[^,]+$/.test(routes.map(({ name }) => name).join(','));
-
-// Only that stack, the root carrying the page's params, is one opened by its address.
-const openedByAddress = (routes: Stack['routes']): routes is [Route, Route] =>
-  indexAndPage(routes) && hasParams(routes[0]);
-
-// Only for the page itself: the root below it mounts later, from a stack that may be stale by then.
-function repairedRoutes(
-  stack: Stack,
-  pageKey: string,
-): Stack['routes'] | undefined {
-  const { routes } = stack;
-
-  if (!openedByAddress(routes) || routes[1].key !== pageKey) return undefined;
-
-  const [root, page] = routes;
-
-  return [{ name: root.name, key: root.key }, ...listBelow(stack, page), page];
-}
-
-// The list a dynamic page belongs to, such as `projects/index` for `projects/[name]`, when the stack has it.
-function listBelow(
-  stack: Stack,
-  page: Stack['routes'][number],
-): Stack['routes'] {
-  const folder = page.name.split('/').slice(0, -1);
-  const list = [...folder, 'index'].join('/');
-
-  return folder.length > 0 && stack.routeNames.includes(list)
-    ? [{ key: `${list}-below`, name: list }]
-    : [];
 }
 
 // ☰ opens the Frame's drawer, which the action reaches from a section's stack, with a light tap and a badge while Sessions need attention.

@@ -32,4 +32,10 @@ export const fieldGroupLinkRowProps = fieldGroupFieldProps.extend({
     .describe(
       'A leading icon: one of Argo’s symbols, or an SF Symbol and Material Symbol pair of the page’s own.',
     ),
+  action: z
+    .boolean()
+    .optional()
+    .describe(
+      'The row performs an action rather than opening a page: no disclosure chevron on iOS and the web (Android draws none on any row), and a button rather than a link to assistive technology on the web.',
+    ),
 });
