@@ -28,4 +28,6 @@ export * from '#schema-agent-access';
 
 export * from '#schema-devices';
 
+export * from '#schema-server-settings';
+
 export * from '#schema-local-network-access';

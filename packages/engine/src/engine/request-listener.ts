@@ -34,7 +34,12 @@ export function createRequestListener(
   const handleTRPC = createGuardedTrpc(options);
 
   return (request, response): void => {
-    if (!options.guard.allowsRequest({ host: request.headers.host }))
+    if (
+      !options.guard.allowsRequest({
+        host: request.headers.host,
+        remoteAddress: request.socket.remoteAddress,
+      })
+    )
       return answerError(response, httpStatus.forbidden, 'Forbidden');
     dispatchRequest({ options, handleTRPC }, request, response);
   };

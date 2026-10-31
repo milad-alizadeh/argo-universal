@@ -113,15 +113,32 @@ function connectHttpServer(
 ): HttpServer {
   const closeConnections = connectWebSockets(server, setup.appRouter, guard);
 
+  // The goodbye goes out before the Connections close, so no App is offered a Server that is going.
+  const closeNetwork = async (): Promise<void> => {
+    await stopAnnouncing();
+    await closeConnections();
+  };
+
   return {
-    ...setup,
+    localNetworkAccess: setup.localNetworkAccess,
+    notifications: setup.notifications,
     listeningOn: listener.where,
-    close: admitClose(setup.commandAdmission, async () => {
-      await stopAnnouncing();
-      await closeHttpServices(setup, closeConnections);
-    }),
+    close: closeWith(setup, listener, closeNetwork),
     createCaller: createHttpCaller(setup),
   };
+}
+
+// After the close starts the listener never binds again, so a change racing it cannot reopen the port.
+function closeWith(
+  setup: RoutedSetup,
+  listener: ServerListener,
+  closeConnections: () => Promise<void>,
+): () => Promise<void> {
+  return admitClose(setup.commandAdmission, () => {
+    listener.stop();
+
+    return closeHttpServices(setup, closeConnections);
+  });
 }
 
 async function closeHttpServices(

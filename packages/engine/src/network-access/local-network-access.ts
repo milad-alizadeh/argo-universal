@@ -1,11 +1,14 @@
 import type { Database } from '@repo/db';
 import { localNetworkAccess } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import {
   writeDatabaseJobAndWaitForCommit,
   type StorageTransaction,
   type WriterActorRef,
   type WriterJob,
 } from '../storage';
+
+const rejections = createRejectionCounter('engine');
 
 export type NetworkAccessListener = (enabled: boolean) => void;
 
@@ -21,6 +24,8 @@ export const readLocalNetworkAccess = (database: Database): boolean =>
  */
 export class LocalNetworkAccess {
   private current: boolean;
+  // What the database holds; it differs from `current` only after a failed revert, until a later change stores it.
+  private stored: boolean;
   private rebind: Rebind = () => Promise.resolve();
   private pending: Promise<unknown> = Promise.resolve();
   private readonly listeners = new Set<NetworkAccessListener>();
@@ -30,6 +35,7 @@ export class LocalNetworkAccess {
     private readonly writer: WriterActorRef,
   ) {
     this.current = readLocalNetworkAccess(database);
+    this.stored = this.current;
   }
 
   public get enabled(): boolean {
@@ -57,14 +63,12 @@ export class LocalNetworkAccess {
     return applied;
   }
 
+  // Binding comes first and does nothing when the listener is already there and listening, so setting the value again repairs a listener that lost its address.
   private async apply(enabled: boolean): Promise<void> {
-    if (enabled === this.current) return;
     await this.rebind(enabled);
-    await this.store(enabled);
 
-    this.current = enabled;
-
-    for (const listener of this.listeners) listener(enabled);
+    if (enabled !== this.stored) await this.store(enabled);
+    this.adopt(enabled);
   }
 
   // A choice that cannot be stored is not kept: the listener goes back to where it was.
@@ -74,10 +78,42 @@ export class LocalNetworkAccess {
         this.writer,
         new NetworkAccessJob(enabled),
       );
+      this.stored = enabled;
     } catch (error) {
-      await this.rebind(this.current);
+      await this.revert(enabled, error);
       throw error;
     }
+  }
+
+  // If the listener cannot go back either, what the Engine reports follows where it really is, so the two never disagree. The database keeps the old choice, so the error says so: a restart returns to it until the owner sets this again.
+  private async revert(bound: boolean, cause: unknown): Promise<void> {
+    try {
+      await this.rebind(this.current);
+    } catch (revertError) {
+      this.adopt(bound);
+      throw new AggregateError(
+        [cause, revertError],
+        `Local network access is ${state(bound)} now but could not be stored or undone; a restart returns it to ${state(this.stored)}`,
+      );
+    }
+  }
+
+  // A subscriber that throws is reported and skipped: the change is already made.
+  private adopt(enabled: boolean): void {
+    if (enabled === this.current) return;
+    this.current = enabled;
+
+    for (const listener of this.listeners) notify(listener, enabled);
+  }
+}
+
+const state = (enabled: boolean): string => (enabled ? 'on' : 'off');
+
+function notify(listener: NetworkAccessListener, enabled: boolean): void {
+  try {
+    listener(enabled);
+  } catch (error) {
+    rejections.report('Local network access subscriber failed', error);
   }
 }
 
