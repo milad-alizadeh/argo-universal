@@ -6,7 +6,9 @@ import {
   imePadding,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { View } from 'react-native';
 import {
+  fieldGroupColumnStyle,
   OutsideColumn,
   useClaimColumn,
 } from '#kit/content-column/content-column';
@@ -31,9 +33,21 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * each row as itself. It goes when Expo fixes the headline wrapping (expo/expo#50086).
  */
 function FieldGroupRoot(props: FieldGroupProps): ReactElement {
-  // Its cards keep Material's own inset, so the Screen adds no gutter of its own; its rows are outside the column.
-  useClaimColumn('grouped');
+  /*
+   * Its cards keep Material's own inset, so the Screen adds no gutter beyond the column's own; its rows are outside the column.
+   * A View is the column, as the web's scroll view is: capped, centred and padded, so the cards start on the title's line.
+   * Compose's Host ignores the padding and honours the cap, so the padding sits on the View around it.
+   */
+  const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
 
+  return (
+    <View style={{ flex: 1, ...column }}>
+      <HostedGroup {...props} />
+    </View>
+  );
+}
+
+function HostedGroup(props: FieldGroupProps): ReactElement {
   return (
     <Host style={{ flex: 1 }}>
       <GroupDisabledContext.Provider value={props.disabled ?? false}>

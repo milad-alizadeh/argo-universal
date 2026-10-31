@@ -26,6 +26,8 @@ export type { ColumnClaim, ContentColumn, PartLayout };
 
 export { inColumn } from './column-style';
 
+export { fieldGroupColumnStyle } from './column-layout';
+
 /*
  * Who keeps to a Screen's content column. A Screen part offers its column; a scroll view or grouped cards claim it and
  * keep to it themselves, and the part pads anything else; a popover, a sheet's page or a FieldGroup's rows are outside
