@@ -6,6 +6,7 @@ import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { ReturnToOrigin } from './return-destination';
+import { RepairDeepLinkStack } from './section-root';
 
 type ScreenLayout = NonNullable<ComponentProps<typeof Stack>['screenLayout']>;
 
@@ -44,5 +45,6 @@ export const screenLayout: ScreenLayout = ({ children, options, route }) => (
     <ScreenBesideList value={!nestedScreen(route)}>{children}</ScreenBesideList>
     <NarrowBanner overHeader={options.headerTransparent === true} />
     <NarrowReturn />
+    <RepairDeepLinkStack />
   </View>
 );

@@ -12,7 +12,7 @@ import {
   type ScreenMenu,
 } from '@repo/kit/primitives/scaffolds/screen';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
-import { useFocusEffect, useNavigation } from 'expo-router';
+import { useFocusEffect, useNavigation, useRoute } from 'expo-router';
 import {
   CommonActions,
   DrawerActions,
@@ -20,7 +20,7 @@ import {
   type ParamListBase,
 } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useCallback, useEffect, type PropsWithChildren } from 'react';
+import { useCallback, useLayoutEffect, type PropsWithChildren } from 'react';
 import { View } from 'react-native';
 
 interface OpenFirstPageProps {
@@ -63,21 +63,26 @@ interface SectionRootProps {
  * A page opened by its address has this root added below it so Back has somewhere to go, and the router gives the root
  * the page's params (`name`, `id`). The root has no such param, so its address would show it as a query string. It also
  * skips the page's own list (Projects between Settings and a Project). The stack is reset without the params and with
- * the list in between, once, as the page opens.
+ * the list in between, once, as the page opens. It is placed in the page's own layout, not in the root: the root below
+ * a page mounts later, and a reset made then, from the stack as it was, put back a page that a quick Back had just
+ * left. From the page's first commit, the reset is queued before any Back can be.
  */
-function useRepairedDeepLinkStack(): void {
+export function RepairDeepLinkStack(): null {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const { key } = useRoute();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stack = navigation.getState();
-    const routes = repairedRoutes(stack);
+    const routes = repairedRoutes(stack, key);
 
     if (!routes) return;
 
     navigation.dispatch(
       CommonActions.reset({ ...stack, index: routes.length - 1, routes }),
     );
-  }, [navigation]);
+  }, [navigation, key]);
+
+  return null;
 }
 
 type Stack = ReturnType<NavigationProp<ParamListBase>['getState']>;
@@ -88,10 +93,14 @@ type Route = Stack['routes'][number];
 const openedByAddress = (routes: Stack['routes']): routes is [Route, Route] =>
   routes.length === 2 && Object.keys({ ...routes[0]?.params }).length > 0;
 
-function repairedRoutes(stack: Stack): Stack['routes'] | undefined {
+// Only for the page itself: the root below it mounts later, from a stack that may be stale by then.
+function repairedRoutes(
+  stack: Stack,
+  pageKey: string,
+): Stack['routes'] | undefined {
   const { routes } = stack;
 
-  if (!openedByAddress(routes)) return undefined;
+  if (!openedByAddress(routes) || routes[1].key !== pageKey) return undefined;
 
   const [root, page] = routes;
 
@@ -158,7 +167,6 @@ export function NarrowRoot({
  * else the section's first page, which the section's list names.
  */
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
-  useRepairedDeepLinkStack();
   const wide = useWide();
   const besidePages = useBesidePages(section, wide);
 
