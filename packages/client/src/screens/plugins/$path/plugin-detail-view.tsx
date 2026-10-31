@@ -40,12 +40,12 @@ export function PluginDetailView(
   );
 }
 
-// A List scrolls and insets itself, so it fills the body; anything else scrolls in a Detail.
+// A List scrolls and insets itself, so a page that is one fills the body; anything else scrolls in a Detail.
 function PageHolder(props: {
   root: WireNode | null;
   children: React.ReactNode;
 }): React.ReactNode {
-  if (props.root?.type !== 'List')
+  if (!isListPage(props.root))
     return <Detail testID="plugin-page">{props.children}</Detail>;
 
   return (
@@ -53,6 +53,19 @@ function PageHolder(props: {
       {props.children}
     </View>
   );
+}
+
+// A List alone on the page, bare or inside Stacks that hold nothing else, which add no inset of their own.
+function isListPage(node: WireNode | null | undefined): boolean {
+  return node?.type === 'List' || isLone(stackChildren(node));
+}
+
+function stackChildren(node: WireNode | null | undefined): WireNode[] {
+  return node?.type === 'Stack' ? node.children : [];
+}
+
+function isLone(children: WireNode[]): boolean {
+  return children.length === 1 && isListPage(children[0]);
 }
 
 // A root-only kit component, Screen or ListDetail, draws its own screen and header.
