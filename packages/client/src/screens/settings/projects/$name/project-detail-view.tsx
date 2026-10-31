@@ -4,6 +4,11 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { homePath, SettingsLoading } from '#features/settings';
 import {
+  pluginSlotSections,
+  type PluginSectionFrame,
+  type PluginSlotContribution,
+} from '../../../../lib/product/plugin-registry';
+import {
   accountsSection,
   type ProjectAccountsProps,
 } from './project-detail-accounts';
@@ -23,20 +28,20 @@ export interface ProjectDetailViewProps {
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
   onBack?: () => void;
-  // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn between Folder and New Sessions.
-  renderPluginSlot?: (project: ProjectInfo) => React.ReactNode;
+  // What Plugins add to this Project (the `argo/project/details/v1` Slot), one section each between Accounts and New Sessions.
+  pluginContributions?: readonly PluginSlotContribution[];
   // The Accounts this Project chose per host, drawn below Folder; omitted until the Server has answered.
   accounts?: ProjectAccountsProps;
 }
 
 type BodyProps = Pick<
   ProjectDetailViewProps,
-  'project' | 'name' | 'otherDevice' | 'renderPluginSlot' | 'accounts'
+  'project' | 'name' | 'otherDevice' | 'pluginContributions' | 'accounts'
 >;
 
 type SectionsProps = Pick<
   ProjectDetailViewProps,
-  'otherDevice' | 'renderPluginSlot' | 'accounts'
+  'otherDevice' | 'pluginContributions' | 'accounts'
 > & {
   project: ProjectInfo;
 };
@@ -81,18 +86,25 @@ const UnloadedProject = ({ status, name }: UnloadedProps): React.JSX.Element =>
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 function ProjectSections(props: SectionsProps): React.JSX.Element {
-  const { project, otherDevice, renderPluginSlot, accounts } = props;
+  const { project, otherDevice, pluginContributions = [], accounts } = props;
 
   return (
     <FieldGroup>
       {folderSection(project, otherDevice)}
       {accountsSection(accounts)}
-      {renderPluginSlot?.(project)}
+      {pluginSlotSections(pluginContributions, pluginSection)}
       {newSessionsSections(project)}
       {removeSection()}
     </FieldGroup>
   );
 }
+
+// One Plugin's tree is the one row of a section of its own, titled with the Plugin's name.
+const pluginSection: PluginSectionFrame = ({ key, title, children }) => (
+  <FieldGroup.Section key={key} title={title}>
+    {children}
+  </FieldGroup.Section>
+);
 
 function folderSection(
   project: ProjectInfo,

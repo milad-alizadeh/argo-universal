@@ -1,8 +1,9 @@
 import type { ProjectInfo } from '@repo/contracts';
+import { projectDetailsSlotId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { useProjects, useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { ProjectDetailsSlot } from '../../../plugins/project-details-slot';
+import { usePluginSlot } from '../../../plugins/use-plugin-slot';
 import {
   type ProjectDetailViewProps,
   type ProjectLoad,
@@ -29,7 +30,6 @@ function useProjectDetail(name: string): ProjectDetailViewProps {
     project,
     accounts: useProjectAccounts(loadedId(project)),
     onBack: useBackToProjects(),
-    renderPluginSlot: (loaded) => <ProjectDetailsSlot projectId={loaded.id} />,
   };
 }
 
@@ -49,5 +49,32 @@ export function ProjectDetailPane({
 }: {
   name: string;
 }): React.JSX.Element {
-  return <ProjectDetailView {...useProjectDetail(name)} />;
+  const detail = useProjectDetail(name);
+
+  return detail.project.status === 'loaded' ? (
+    <LoadedProjectDetail
+      detail={detail}
+      projectId={detail.project.project.id}
+    />
+  ) : (
+    <ProjectDetailView {...detail} />
+  );
+}
+
+// Watches the Slot only for a loaded Project, as the Server has no Project to answer for before then.
+function LoadedProjectDetail({
+  detail,
+  projectId,
+}: {
+  detail: ProjectDetailViewProps;
+  projectId: string;
+}): React.JSX.Element {
+  const pluginContributions = usePluginSlot({
+    slotId: projectDetailsSlotId,
+    context: { projectId },
+  });
+
+  return (
+    <ProjectDetailView {...detail} pluginContributions={pluginContributions} />
+  );
 }
