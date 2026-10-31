@@ -46,26 +46,42 @@ function PluginPageBody(props: PluginDetailViewProps): React.ReactNode {
 
   return (
     <Screen title={props.title ?? 'Plugin'}>
-      <PageHolder root={props.root}>
-        <PluginContent {...props} />
-      </PageHolder>
+      <PageHolder {...props} />
     </Screen>
   );
 }
 
 // A List scrolls and insets itself, so it fills the body; anything else scrolls in a Detail.
-function PageHolder(props: {
-  root: WireNode | null;
-  children: React.ReactNode;
-}): React.ReactNode {
-  if (props.root?.type !== 'List')
-    return <Detail testID="plugin-page">{props.children}</Detail>;
+function PageHolder(props: PluginDetailViewProps): React.ReactNode {
+  const list = soleList(props.root);
+
+  if (!list)
+    return (
+      <Detail testID="plugin-page">
+        <PluginContent {...props} />
+      </Detail>
+    );
 
   return (
     <View testID="plugin-page" className="min-h-0 flex-1">
-      {props.children}
+      <PluginContent {...props} root={list} />
     </View>
   );
+}
+
+// The List a page is made of: the root itself, or the one a chain of Stacks holds with nothing beside it. Such a Stack draws what its List would draw alone, so the page drops it and the List fills the body as a root List does.
+function soleList(node: WireNode | null): WireNode | null {
+  if (node?.type === 'List') return node;
+
+  return soleOf(stackChildren(node));
+}
+
+function stackChildren(node: WireNode | null): WireNode[] {
+  return node?.type === 'Stack' ? node.children : [];
+}
+
+function soleOf(children: WireNode[]): WireNode | null {
+  return children.length === 1 ? soleList(children[0] ?? null) : null;
 }
 
 // A root-only kit component, Screen or ListDetail, draws its own screen and header.
