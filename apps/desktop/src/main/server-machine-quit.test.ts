@@ -1,25 +1,23 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { sentToCounts } from './server-machine-data.mocks';
-import { startSupervisor, value } from './server-machine-timing.mocks';
+import {
+  released,
+  runningSessions,
+  serverSays,
+  startSupervisor,
+  value,
+} from './server-machine-timing.mocks';
 import {
   countsChangedEvent,
   latest,
   quitCalls,
-  readAddressCalls,
-  reportSpawned,
-  retryServerEvent,
+  readStoredCalls,
   server,
   settle,
   startedAddress,
   stoppedPids,
 } from './server-machine.mocks';
-import { countsReleaseEvent, releaseLimitMs } from './session-counts';
-
-const released = { type: 'counts.released' } as const;
-
-const keepRunningChanged = 'keepRunning.changed';
-
-const runningSessions = { running: 1, attention: 0 };
+import { countsReleaseEvent } from './session-counts';
 
 describe('quitting the App', (): void => {
   it('tells the Server Connection to let go before it quits', async (): Promise<void> => {
@@ -36,16 +34,8 @@ describe('quitting the App', (): void => {
     await startSupervisor();
 
     server.send({ type: 'app.quit' });
+    serverSays(false);
     server.send(released);
-
-    expect(stoppedPids).toEqual([startedAddress.pid]);
-  });
-
-  it('quits anyway when the Server Connection does not close', async (): Promise<void> => {
-    await startSupervisor();
-
-    server.send({ type: 'app.quit' });
-    await vi.advanceTimersByTimeAsync(releaseLimitMs);
 
     expect(stoppedPids).toEqual([startedAddress.pid]);
   });
@@ -55,6 +45,7 @@ describe('quitting the App', (): void => {
     server.send({ type: countsChangedEvent, counts: runningSessions });
 
     server.send({ type: 'app.quit' });
+    serverSays(false);
 
     expect(quitCalls).toHaveLength(0);
     server.send(released);
@@ -65,6 +56,7 @@ describe('quitting the App', (): void => {
     await startSupervisor();
     server.send({ type: countsChangedEvent, counts: runningSessions });
     server.send({ type: 'app.quit' });
+    serverSays(false);
     server.send(released);
 
     await settle((): void => latest(quitCalls).resolve(true));
@@ -78,7 +70,7 @@ describe('quitting the App', (): void => {
     server.send({ type: countsChangedEvent, counts: runningSessions });
 
     server.send({ type: 'app.quit' });
-    server.send({ type: keepRunningChanged, enabled: true });
+    serverSays(true);
     server.send(released);
 
     expect(value()).toBe('stopped');
@@ -90,42 +82,19 @@ describe('quitting the App', (): void => {
     await startSupervisor();
 
     server.send({ type: 'app.quit' });
-    server.send({ type: keepRunningChanged, enabled: false });
+    serverSays(false);
     server.send(released);
 
     expect(stoppedPids).toEqual([startedAddress.pid]);
   });
 
-  it('stops the Supervisor when the Server never answers the question before the Connection is let go', async (): Promise<void> => {
+  it('reads nothing off the disk when the Server answers', async (): Promise<void> => {
     await startSupervisor();
 
     server.send({ type: 'app.quit' });
-    await vi.advanceTimersByTimeAsync(releaseLimitMs);
+    serverSays(true);
+    server.send(released);
 
-    expect(stoppedPids).toEqual([startedAddress.pid]);
-  });
-
-  it('does not let an answer heard earlier keep a Server the owner no longer asked to keep', async (): Promise<void> => {
-    await startSupervisor();
-    server.send({ type: keepRunningChanged, enabled: true });
-
-    server.send({ type: 'app.quit' });
-    await vi.advanceTimersByTimeAsync(releaseLimitMs);
-
-    expect(stoppedPids).toEqual([startedAddress.pid]);
-  });
-
-  it('does not let an answer from a lost Connection keep a Supervisor that is still starting', async (): Promise<void> => {
-    await startSupervisor();
-    server.send({ type: keepRunningChanged, enabled: true });
-    server.send({ type: retryServerEvent });
-    await settle((): void => latest(readAddressCalls).resolve(null));
-    reportSpawned();
-    expect(value()).toEqual({ starting: { answering: 'waiting' } });
-
-    server.send({ type: 'app.quit' });
-
-    expect(value()).toEqual({ stopping: 'waiting' });
-    expect(stoppedPids).toEqual([startedAddress.pid]);
+    expect(readStoredCalls).toHaveLength(0);
   });
 });

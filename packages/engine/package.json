@@ -62,6 +62,7 @@
     "./mocks/operation-waits": "./mocks/operation-waits.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
+    "./stored-keep-running": "./src/system/stored-keep-running.ts",
     "./shell-runtime": "./src/sessions/shells/server-exports.ts",
     "./plugins": "./src/plugins/index.ts",
     "./plugin-validation": "./src/plugins/authoring/validate.ts",

@@ -23,6 +23,10 @@ export const readAddressErrorEvent = 'xstate.error.actor.readAddress';
 
 export const checkRunningDoneEvent = 'xstate.done.actor.checkRunning';
 
+export const readStoredDoneEvent = 'xstate.done.actor.readStored';
+
+export const readStoredErrorEvent = 'xstate.error.actor.readStored';
+
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them. Its delayed transitions need no fixture.
 export const fixtures = [
   ...[runningAddress, null, startedAddress, staleAddress].map(
@@ -46,6 +50,15 @@ export const fixtures = [
         actorId: 'checkRunning',
       }) as const,
   ),
+  ...[true, false].map(
+    (output) =>
+      ({
+        type: readStoredDoneEvent,
+        output,
+        actorId: 'readStored',
+      }) as const,
+  ),
+  { type: readStoredErrorEvent, error: readError, actorId: 'readStored' },
   { type: supervisorSpawnedEvent, pid: startedAddress.pid, at: spawnedAt },
   { type: supervisorExitedEvent, reason: exitReason },
   { type: retryServerEvent },

@@ -1,6 +1,9 @@
 import type { ServerAddress } from '@repo/contracts';
 import type { DelayEvent, Vertex } from '@repo/vitest/model-test';
-import type { ServerEvent } from './server-machine-model-events.mocks';
+import {
+  readStoredDoneEvent,
+  type ServerEvent,
+} from './server-machine-model-events.mocks';
 import {
   retryServerEvent,
   type ServerSnapshot,
@@ -51,5 +54,11 @@ const outputLabel = (
   return addressLabel(output);
 };
 
-export const label = (event: ServerEvent | DelayEvent): string | undefined =>
-  'output' in event ? outputLabel(event.output) : undefined;
+const storedLabel = (stored: boolean): string =>
+  stored ? 'stored on' : 'stored off';
+
+export const label = (event: ServerEvent | DelayEvent): string | undefined => {
+  if (event.type === readStoredDoneEvent) return storedLabel(event.output);
+
+  return 'output' in event ? outputLabel(event.output) : undefined;
+};
