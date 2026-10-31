@@ -10,17 +10,20 @@ interface TabStop {
   hidden: boolean;
 }
 
-const focused = (page: Page): Promise<TabStop | null> =>
-  page.evaluate((): TabStop | null => {
-    const { activeElement } = document;
+async function focused(page: Page): Promise<TabStop | null> {
+  const focus = page.locator(':focus');
 
-    if (!activeElement || activeElement === document.body) return null;
+  if ((await focus.count()) === 0) return null;
 
-    return {
-      name: activeElement.getAttribute('aria-label') ?? '',
-      hidden: activeElement.closest('[aria-hidden="true"]') !== null,
-    };
-  });
+  return focus.evaluate((element) =>
+    element.tagName === 'BODY'
+      ? null
+      : {
+          name: element.getAttribute('aria-label') ?? '',
+          hidden: element.closest('[aria-hidden="true"]') !== null,
+        },
+  );
+}
 
 // Tab from the top of the page until focus leaves its controls, keeping each stop.
 async function tabOrder(page: Page): Promise<TabStop[]> {
