@@ -1,14 +1,11 @@
 import { useQueries } from '@tanstack/react-query';
 import type * as React from 'react';
-import {
-  slotChoicesQuery,
-  slotVisibility,
-  useServerPageCaption,
-} from '#features/settings';
+import { slotChoicesQuery, slotVisibility } from '#features/settings';
 import {
   slotDetailHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
+import { useServerScope } from '#lib/product/server-scope';
 import { PluginListView, type SlotLink } from './plugin-list-view';
 import type { SlotDetail } from './slots/$id/slot-detail';
 import { fillingPlugins, shownCount } from './slots/$id/slot-detail-model';
@@ -43,8 +40,12 @@ const pick = ({ slotId, title }: SlotDetail): Omit<SlotLink, 'count'> => ({
 function useSlotLinks(): SlotLink[] {
   const { plugins = [] } = usePluginEntries();
 
+  const serverId = useServerScope().id;
+
   const choices = useQueries({
-    queries: slotDetails.map(({ slotId }) => slotChoicesQuery(slotId)),
+    queries: slotDetails.map(({ slotId }) =>
+      slotChoicesQuery(serverId, slotId),
+    ),
   });
 
   return slotDetails.flatMap((settings, index) =>
@@ -57,7 +58,6 @@ export function PluginListScreen(): React.JSX.Element {
 
   return (
     <PluginListView
-      caption={useServerPageCaption()}
       plugins={usePluginsLoad()}
       slots={useSlotLinks()}
       onOpenPlugin={(pluginId) => navigate(`/settings/plugins/${pluginId}`)}

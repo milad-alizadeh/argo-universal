@@ -3,6 +3,7 @@ import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { TRPCClientError, type TRPCClientErrorLike } from '@trpc/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { holdCacheOnline } from '../stores/cache-online';
 import type { Connection, ConnectionState } from '../stores/connection';
 import { openConnection } from './open-connection';
 
@@ -22,6 +23,11 @@ async function startServer(
 
   return { url: url.toString(), port: Number(url.port), stop: host.stop };
 }
+
+// The Server being looked at drives the cache's online flag, so its queries pause and refetch with it.
+const lookedAt = (connection: Connection): void => {
+  closers.push(holdCacheOnline(connection));
+};
 
 // A mounted client, as QueryClientProvider mounts it, refetches when onlineManager comes back online.
 function mountedQueryClient(): QueryClient {
@@ -86,6 +92,7 @@ describe('openConnection', (): void => {
     const { client, connection, close } = openConnection(server.url);
 
     closers.push(close);
+    lookedAt(connection);
     await waitForConnectionLink(connection, 'open');
 
     // An observed query, as a mounted screen has; invalidation refetches only those.

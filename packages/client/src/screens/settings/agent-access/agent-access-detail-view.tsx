@@ -8,7 +8,6 @@ export type AgentAccessLoad =
   | { status: 'loaded'; enabled: boolean };
 
 export interface AgentAccessDetailViewProps {
-  caption?: string;
   access: AgentAccessLoad;
   saving?: boolean;
   installing?: boolean;
@@ -24,7 +23,7 @@ export function AgentAccessDetailView(
   props: AgentAccessDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Screen title="Agent access" caption={props.caption} onBack={props.onBack}>
+    <Screen title="Agent access" onBack={props.onBack}>
       <FieldGroup>
         {accessSection(props)}
         {instructionsSection(props)}

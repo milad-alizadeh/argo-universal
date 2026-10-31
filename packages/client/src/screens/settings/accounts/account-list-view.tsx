@@ -18,7 +18,6 @@ export type AccountsLoad =
   | { status: 'loaded'; accounts: AccountRow[] };
 
 export interface AccountListViewProps {
-  caption?: string;
   accounts: AccountsLoad;
   onOpenAccount: (accountId: string) => void;
 }
@@ -37,7 +36,7 @@ export function AccountListView(
   useErrorToast(props.accounts.status === 'error' ? loadFailed : undefined);
 
   return (
-    <Screen title={accountsTitle} caption={props.caption}>
+    <Screen title={accountsTitle}>
       <FieldGroup>
         <FieldGroup.Section footer={emptyFooter(props.accounts)}>
           {accountRows(props)}

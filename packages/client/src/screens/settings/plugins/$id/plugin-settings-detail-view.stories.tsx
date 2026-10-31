@@ -13,7 +13,6 @@ const meta = {
   component: PluginSettingsDetailView,
   argTypes: {
     title: { control: 'text' },
-    caption: { control: 'text' },
     plugin: { control: false },
   },
   parameters: { screenPreview: true },

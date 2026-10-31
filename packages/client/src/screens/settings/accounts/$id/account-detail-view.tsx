@@ -31,7 +31,6 @@ const accountDetailTitle = 'Account detail';
 export interface AccountDetailViewProps {
   // The Account's label, or its id until the Account loads; it heads the Account's first section.
   title: string;
-  caption?: string;
   account: AccountDetailLoad;
   onRevoke: (pluginId: string) => void;
   onAllow: (pluginId: string) => void;
@@ -44,11 +43,7 @@ export function AccountDetailView(
   props: AccountDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Screen
-      title={accountDetailTitle}
-      caption={props.caption}
-      onBack={props.onBack}
-    >
+    <Screen title={accountDetailTitle} onBack={props.onBack}>
       <AccountBody {...props} />
     </Screen>
   );

@@ -22,7 +22,6 @@ export type PluginLoad =
 export interface PluginSettingsDetailViewProps {
   // The Plugin's name, or its id until the Plugin loads.
   title: string;
-  caption?: string;
   plugin: PluginLoad;
   onEnabledChange: (enabled: boolean) => void;
   onSettingChange: (key: string, value: PluginSettingValue) => void;
@@ -35,16 +34,16 @@ export const enabledLabel = 'Enabled';
 export function PluginSettingsDetailView(
   props: PluginSettingsDetailViewProps,
 ): React.JSX.Element {
-  const { caption, onBack, ...body } = props;
+  const { onBack, ...body } = props;
 
   return (
-    <Screen title={props.title} caption={caption} onBack={onBack}>
+    <Screen title={props.title} onBack={onBack}>
       <PluginBody {...body} />
     </Screen>
   );
 }
 
-type BodyProps = Omit<PluginSettingsDetailViewProps, 'caption' | 'onBack'>;
+type BodyProps = Omit<PluginSettingsDetailViewProps, 'onBack'>;
 
 function PluginBody(props: BodyProps): React.JSX.Element {
   const { plugin } = props;
