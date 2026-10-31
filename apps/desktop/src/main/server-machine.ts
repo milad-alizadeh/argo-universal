@@ -41,6 +41,7 @@ const stoppingTarget = '#serverConnection.stopping';
 
 // Where a quit goes once the App has let go of its Server Connection.
 const quitAfterRelease = [
+  { guard: 'keepsRunning', target: stoppedTarget },
   { guard: 'ownsRunningSessions', target: 'confirming' },
   { guard: 'ownsSupervisor', target: stoppingTarget },
   { target: stoppedTarget },
@@ -77,6 +78,8 @@ interface ServerContext extends ServerInput {
   spawnedAt: number | null;
   failure: string | null;
   running: number;
+  // The Server's own setting, as it last said: it outlives this app, so quitting leaves it alone (ADR-0022).
+  keepRunning: boolean;
 }
 
 type SupervisorReport =
@@ -191,7 +194,11 @@ const serverSetup = setup({
     namesOwnedSupervisor: ({ context }, params: AddressParameters): boolean =>
       params.address !== null && addressMatchesOwner(context, params.address),
     stillRunning: (_, params: RunningParameters): boolean => params.running,
+    keepsRunning: ({ context }): boolean => context.keepRunning,
     ownsSupervisor: ({ context }): boolean => context.ownedPid !== null,
+    // Outside `ready` the setting is what the Server last said, on connecting or as the App let go; one that never answered has said nothing.
+    stopsSupervisor: ({ context }): boolean =>
+      context.ownedPid !== null && !context.keepRunning,
     ownsRunningSessions: ({ context }): boolean =>
       context.ownedPid !== null && context.running > 0,
   },
@@ -324,11 +331,12 @@ export const serverConnectionMachine = serverSetup.createMachine({
     spawnedAt: null,
     failure: null,
     running: 0,
+    keepRunning: false,
   }),
   initial: 'locating',
   on: {
     'app.quit': [
-      { guard: 'ownsSupervisor', target: '.stopping' },
+      { guard: 'stopsSupervisor', target: '.stopping' },
       { target: '.stopped' },
     ],
   },
@@ -445,6 +453,11 @@ export const serverConnectionMachine = serverSetup.createMachine({
               });
             }),
           ],
+        },
+        'keepRunning.changed': {
+          actions: assign({
+            keepRunning: ({ event }): boolean => event.enabled,
+          }),
         },
         'counts.disconnected': {
           actions: [

@@ -5,6 +5,9 @@ import {
   countsChangedEvent,
   latest,
   quitCalls,
+  readAddressCalls,
+  reportSpawned,
+  retryServerEvent,
   server,
   settle,
   startedAddress,
@@ -13,6 +16,8 @@ import {
 import { countsReleaseEvent, releaseLimitMs } from './session-counts';
 
 const released = { type: 'counts.released' } as const;
+
+const keepRunningChanged = 'keepRunning.changed';
 
 const runningSessions = { running: 1, attention: 0 };
 
@@ -63,6 +68,44 @@ describe('quitting the App', (): void => {
     server.send(released);
 
     await settle((): void => latest(quitCalls).resolve(true));
+
+    expect(value()).toBe('stopped');
+    expect(stoppedPids).toEqual([]);
+  });
+
+  it('leaves the Supervisor running, and asks nothing, when the Server is set to keep running', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: countsChangedEvent, counts: runningSessions });
+    server.send({ type: keepRunningChanged, enabled: true });
+
+    server.send({ type: 'app.quit' });
+    server.send(released);
+
+    expect(value()).toBe('stopped');
+    expect(stoppedPids).toEqual([]);
+    expect(quitCalls).toHaveLength(0);
+  });
+
+  it('stops the Supervisor as before when the Server is set not to keep running', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: keepRunningChanged, enabled: true });
+    server.send({ type: keepRunningChanged, enabled: false });
+
+    server.send({ type: 'app.quit' });
+    server.send(released);
+
+    expect(stoppedPids).toEqual([startedAddress.pid]);
+  });
+
+  it('leaves a Supervisor it is still starting running, once the Server has said to keep it', async (): Promise<void> => {
+    await startSupervisor();
+    server.send({ type: keepRunningChanged, enabled: true });
+    server.send({ type: retryServerEvent });
+    await settle((): void => latest(readAddressCalls).resolve(null));
+    reportSpawned();
+    expect(value()).toEqual({ starting: { answering: 'waiting' } });
+
+    server.send({ type: 'app.quit' });
 
     expect(value()).toBe('stopped');
     expect(stoppedPids).toEqual([]);

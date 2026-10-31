@@ -6,6 +6,8 @@ import { type EventObject, fromCallback } from 'xstate';
 
 export type CountsReport =
   | { type: 'counts.changed'; counts: SessionCounts }
+  // The Server's setting for whether it outlives this App, read as the App lets go.
+  | { type: 'keepRunning.changed'; enabled: boolean }
   // The Server stopped answering, by its own going or by this Connection letting go.
   | { type: 'counts.disconnected' }
   // The socket is closed, so nothing of this Connection is left to hold the App open.
@@ -44,51 +46,90 @@ function openSocket(
   });
 }
 
-function observeCounts(
-  socket: ReturnType<typeof createWSClient>,
-  report: Report,
-): () => void {
-  const client = createTRPCClient<AppRouter>({
-    links: [wsLink<AppRouter>({ client: socket })],
-  });
+interface CountsConnection {
+  // Reads the keep-running setting, reports it, then lets go of the Server.
+  release: () => void;
+  close: () => void;
+}
 
+type Client = ReturnType<typeof createTRPCClient<AppRouter>>;
+
+type Subscription = { unsubscribe: () => void };
+
+function watchCounts(client: Client, report: Report): Subscription {
   const disconnected = disconnect(report);
 
-  const subscription = client.session.counts.subscribe(undefined, {
+  return client.session.counts.subscribe(undefined, {
     onData: (counts): void => report({ type: 'counts.changed', counts }),
     onError: disconnected,
     onComplete: disconnected,
   });
+}
 
-  return (): void => closeCounts(socket, subscription);
+// Tells the machine what the Server says; `fallback` is what it is told when the Server cannot answer, and none tells it nothing.
+function readKeepRunning(
+  client: Client,
+  report: Report,
+  fallback?: boolean,
+): Promise<void> {
+  const tell = (enabled: boolean | undefined): void => {
+    if (enabled !== undefined) report({ type: 'keepRunning.changed', enabled });
+  };
+
+  return client.system.keepRunning
+    .query()
+    .then(({ enabled }): void => tell(enabled))
+    .catch((): void => tell(fallback));
+}
+
+// A Server that cannot answer keeps today's behaviour: the App stops the Supervisor it started.
+const releaseAfterReading =
+  (client: Client, report: Report, close: () => void) => (): void => {
+    void readKeepRunning(client, report, false).finally(close);
+  };
+
+function observeCounts(
+  socket: ReturnType<typeof createWSClient>,
+  report: Report,
+): CountsConnection {
+  const client = createTRPCClient<AppRouter>({
+    links: [wsLink<AppRouter>({ client: socket })],
+  });
+
+  const subscription = watchCounts(client, report);
+  // Asked on connecting too, so a quit before the Connection is let go of already knows it.
+  void readKeepRunning(client, report);
+  const close = once((): void => closeCounts(socket, subscription));
+
+  return { release: releaseAfterReading(client, report, close), close };
 }
 
 function closeCounts(
   socket: ReturnType<typeof createWSClient>,
-  subscription: { unsubscribe: () => void },
+  subscription: Subscription,
 ): void {
   subscription.unsubscribe();
   void socket.close();
 }
 
-function subscribeCounts(port: number, report: Report): () => void {
+function subscribeCounts(port: number, report: Report): CountsConnection {
   return observeCounts(openSocket(port, report), report);
 }
 
 /*
  * This Connection observes Sessions only. The Supervisor owns Engine recovery.
- * `counts.release` closes the socket while the App still runs its loop: Electron tears its Node
+ * `counts.release` first reads whether the Server keeps running after the App quits, then closes the socket while the App still runs its loop: Electron tears its Node
  * environment down with the App, and a socket left closing then keeps the process alive long after the window goes.
  */
 export const watchSessionCounts = fromCallback<
   EventObject,
   Pick<ServerAddress, 'port'>
 >(({ input, sendBack, receive }): (() => void) => {
-  const close = once(subscribeCounts(input.port, sendBack));
+  const connection = subscribeCounts(input.port, sendBack);
 
   receive((event): void => {
-    if (event.type === countsReleaseEvent) close();
+    if (event.type === countsReleaseEvent) connection.release();
   });
 
-  return close;
+  return connection.close;
 });
