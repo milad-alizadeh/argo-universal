@@ -4,6 +4,7 @@ import {
   buttonStyle,
   controlSize,
   disabled,
+  dynamicTypeSize,
   labelStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import type { IconButtonSize } from '@repo/contracts/kit-tokens';
@@ -63,6 +64,8 @@ function modifiers(props: IconButtonProps): SwiftProps['modifiers'] {
     controlSize(controlSizes[sizeOf(props)]),
     labelStyle('iconOnly'),
     buttonBorderShape('circle'),
+    // Dynamic Type would grow the circle past the 44 band and the 40 heading row it sits in; an icon-only control keeps the size its Control size names, as a stock toolbar button does.
+    dynamicTypeSize('large'),
     disabled(props.disabled ?? false),
   ];
 }

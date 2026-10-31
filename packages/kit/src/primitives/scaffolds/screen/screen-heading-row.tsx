@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
+import { useEnlargedText } from '#kit/enlarged-text';
 import { useWide } from '#kit/use-wide/use-wide';
 import type { ScreenHeader } from '#primitives/actions/action';
 import type { IconButtonSize } from '#primitives/actions/icon-button';
@@ -150,10 +151,22 @@ function Heading(props: {
 }
 
 function PlainHeading(props: HeadingContent): ReactElement {
+  if (useEnlargedText()) return <StackedHeading {...props} />;
+
   return (
     <View className="h-10 flex-row items-center gap-1">
       <View className="min-w-0 flex-1">{props.title}</View>
       {props.actions}
+    </View>
+  );
+}
+
+// Larger text grows the title past the row's height and past the width a narrow column leaves beside its buttons, so the buttons take a row of their own below it.
+function StackedHeading(props: HeadingContent): ReactElement {
+  return (
+    <View className="items-start gap-1">
+      <View className="min-w-0 self-stretch">{props.title}</View>
+      <View className="flex-row items-center gap-1">{props.actions}</View>
     </View>
   );
 }
