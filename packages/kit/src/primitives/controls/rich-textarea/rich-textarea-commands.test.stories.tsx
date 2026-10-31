@@ -69,8 +69,10 @@ const unlistedSource: SuggestionSource = {
       : [],
 };
 
-// Enter chooses the highlighted suggestion and is spent if none exists yet, so wait for its row
-// (the list is portalled outside the canvas, hence document.body).
+/*
+ * Enter chooses the highlighted suggestion and is spent if none exists yet, so wait for its row
+ * (the list is portalled outside the canvas, hence document.body).
+ */
 const chooseSuggestion = async (
   field: HTMLElement,
   typed: string,
