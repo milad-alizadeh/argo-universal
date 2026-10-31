@@ -9,17 +9,23 @@ export type RootProjects = {
   message: string;
 };
 
-// Loads the Projects once and opens the first.
+/*
+ * Loads the Projects each time a page opens, so a Project's remote is never older than the page, and
+ * opens the one a page names, or the first.
+ */
 export function useRootProjects(
   deps: IssueDeps,
-  selected?: Project,
+  selectedId?: string,
 ): RootProjects {
   const { value, error } = useAsync(deps.listProjects);
   const projects = value ?? [];
 
   return {
     projects,
-    project: selected ?? projects[0],
+    project:
+      selectedId === undefined
+        ? projects[0]
+        : projects.find(({ id }) => id === selectedId),
     message: projectsMessage(value, error),
   };
 }
