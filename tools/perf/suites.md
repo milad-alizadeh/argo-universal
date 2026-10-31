@@ -38,7 +38,7 @@ Reserve a quiet measurement window first: a run taken under load measures the ma
 
 Two QA clauses that had no instrument now have one. Neither asserts a budget.
 
-**PF-16, blank content.** `PERF_FEED_CONTENT=blank` seeds the long Session with the recorded Feed (at `PERF_FEED_ROWS` rows when set) with the text of every prompt, thought and answer emptied; Tool calls and compaction rows stay as recorded. Run the frame scenarios against it:
+**PF-16, blank content.** What this makes measurable is Feed rows whose messages hold empty text. `PERF_FEED_CONTENT=blank` seeds the long Session with the recorded Feed (at `PERF_FEED_ROWS` rows when set) with the text of every prompt, thought and answer emptied; Tool calls and compaction rows stay as recorded. Run the frame scenarios against it:
 
 ```sh
 PERF_FEED_CONTENT=blank PERF_ONLY=feed,expand,paging,streaming PERF_LABEL=pf16-blank pnpm --filter @repo/tools perf interactions.perf.mts

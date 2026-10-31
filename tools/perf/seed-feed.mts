@@ -1,4 +1,5 @@
 import type { feedRow, turn } from '@repo/db/schema';
+import { z } from 'zod';
 import { copyRow, recordings, type RecordedRow } from './recorded-feed.mts';
 
 const columnFields = new Set([
@@ -130,20 +131,22 @@ const messageKinds = new Set<string>([
   'agent_message',
 ]);
 
-// A message's text blocks with their text emptied; every other block and field stays.
-function blankedPayload(payload: unknown): unknown {
-  const fields = typeof payload === 'object' && payload ? payload : {};
-  const content =
-    'content' in fields && Array.isArray(fields.content) ? fields.content : [];
+const textBlock = z.looseObject({ text: z.string().optional() });
 
-  return {
-    ...fields,
-    content: content.map((block: unknown) =>
-      typeof block === 'object' && block && 'text' in block
-        ? { ...block, text: '' }
-        : block,
-    ),
-  };
+const messagePayload = z.looseObject({ content: z.array(textBlock) });
+
+type TextBlock = z.infer<typeof textBlock>;
+
+const blankedBlock = (block: TextBlock): TextBlock =>
+  block.text === undefined ? block : { ...block, text: '' };
+
+// A message's text blocks with their text emptied; every other block and field stays.
+function blankedPayload(
+  payload: SeededFeed['rows'][number]['payload'],
+): z.infer<typeof messagePayload> {
+  const message = messagePayload.parse(payload);
+
+  return { ...message, content: message.content.map(blankedBlock) };
 }
 
 /*

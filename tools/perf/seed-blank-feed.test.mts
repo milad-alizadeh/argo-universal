@@ -1,39 +1,46 @@
-import { expect, it } from 'vitest';
-import { blankedFeed, seededFeed } from './seed-feed.mts';
+import { describe, expect, it } from 'vitest';
+import { blankedFeed, seededFeed, type SeededFeed } from './seed-feed.mts';
 
 const size = { rows: 40 };
 
-it('keeps every row and Turn of the recorded Feed', async () => {
+const messages = new Set(['user_message', 'agent_thought', 'agent_message']);
+
+const messageRows = (feed: SeededFeed): SeededFeed['rows'] =>
+  feed.rows.filter((row) => messages.has(row.sessionUpdate));
+
+const otherRows = (feed: SeededFeed): SeededFeed['rows'] =>
+  feed.rows.filter((row) => !messages.has(row.sessionUpdate));
+
+type Row = SeededFeed['rows'][number];
+
+const identity = ({
+  id,
+  sessionUpdate,
+  position,
+}: Row): (string | number)[] => [id, sessionUpdate, position];
+
+const payload = (row: Row): Row['payload'] => row.payload;
+
+describe('a blanked Feed', async () => {
   const recorded = await seededFeed('session-1', size, 10_000);
   const blank = await blankedFeed('session-1', size, 10_000);
 
-  expect(blank.turns).toEqual(recorded.turns);
-  expect(
-    blank.rows.map(({ id, sessionUpdate, position }) => [
-      id,
-      sessionUpdate,
-      position,
-    ]),
-  ).toEqual(
-    recorded.rows.map(({ id, sessionUpdate, position }) => [
-      id,
-      sessionUpdate,
-      position,
-    ]),
-  );
-});
-
-it('empties the text of every message and leaves other rows as recorded', async () => {
-  const recorded = await seededFeed('session-1', size, 10_000);
-  const blank = await blankedFeed('session-1', size, 10_000);
-  const messages = ['user_message', 'agent_thought', 'agent_message'];
-
-  blank.rows.forEach((row, index) => {
-    if (messages.includes(row.sessionUpdate))
-      expect(JSON.stringify(row.payload)).not.toMatch(/"text":"[^"]/u);
-    else expect(row.payload).toEqual(recorded.rows[index]?.payload);
+  it('keeps every row and Turn of the recorded Feed', () => {
+    expect(blank.turns).toEqual(recorded.turns);
+    expect(blank.rows.map(identity)).toEqual(recorded.rows.map(identity));
   });
-  expect(
-    new Set(blank.rows.map((row) => row.sessionUpdate)).size,
-  ).toBeGreaterThan(3);
+
+  it('holds no text in any prompt, thought or answer', () => {
+    expect(messageRows(blank)).not.toHaveLength(0);
+    expect(JSON.stringify(messageRows(blank).map(payload))).not.toMatch(
+      /"text":"[^"]/u,
+    );
+  });
+
+  it('leaves Tool calls and compaction rows as recorded', () => {
+    expect(otherRows(blank)).not.toHaveLength(0);
+    expect(otherRows(blank).map(payload)).toEqual(
+      otherRows(recorded).map(payload),
+    );
+  });
 });

@@ -7,6 +7,7 @@ import {
   completenessNotice,
   type PerfCase,
   runCompleteness,
+  type RunCompleteness,
 } from './run-completeness.mts';
 
 // The suite anchor results are kept under.
@@ -23,29 +24,109 @@ type Measured = Extract<AnchorTrial, { status: 'measured' }>;
 const measured = ({ trials }: AnchorResult): Measured[] =>
   trials.filter((trial): trial is Measured => trial.status === 'measured');
 
-const middle = (values: number[]): number => {
-  const sorted = values.toSorted((a, b) => a - b);
+const median = (values: number[]): number =>
+  values.toSorted((a, b) => a - b)[Math.floor(values.length / 2)] ?? 0;
 
-  return sorted[Math.floor(sorted.length / 2)] ?? 0;
-};
+interface AnchorSummary {
+  trials: number;
+  measured: number;
+  anchorLost: number;
+  endReached: number;
+  maxDriftPxMedian: number;
+  maxDriftPxWorst: number;
+  driftedFramesMedian: number;
+  finalDriftPxMedian: number;
+  extentGrowthPxMedian: number;
+}
 
-const summary = (result: AnchorResult) => {
-  const good = measured(result);
-  const column = (pick: (trial: Measured) => number): number[] =>
-    good.map(pick);
+const columnOf = (
+  result: AnchorResult,
+  pick: (trial: Measured) => number,
+): number[] => measured(result).map(pick);
+
+const countOf = (
+  result: AnchorResult,
+  has: (trial: Measured) => boolean,
+): number => measured(result).filter(has).length;
+
+const counts = (
+  result: AnchorResult,
+): Pick<
+  AnchorSummary,
+  'trials' | 'measured' | 'anchorLost' | 'endReached'
+> => ({
+  trials: result.trials.length,
+  measured: measured(result).length,
+  anchorLost: countOf(result, (trial) => !trial.anchorKept),
+  endReached: countOf(result, (trial) => trial.endReached),
+});
+
+const medianOf = (
+  result: AnchorResult,
+  pick: (trial: Measured) => number,
+): number => median(columnOf(result, pick));
+
+function medians(
+  result: AnchorResult,
+): Omit<AnchorSummary, keyof ReturnType<typeof counts>> {
+  const drift = columnOf(result, (trial) => trial.maxDriftPx);
 
   return {
-    trials: result.trials.length,
-    measured: good.length,
-    anchorLost: good.filter((trial) => !trial.anchorKept).length,
-    endReached: good.filter((trial) => trial.endReached).length,
-    maxDriftPxMedian: middle(column((trial) => trial.maxDriftPx)),
-    maxDriftPxWorst: Math.max(0, ...column((trial) => trial.maxDriftPx)),
-    driftedFramesMedian: middle(column((trial) => trial.driftedFrames)),
-    finalDriftPxMedian: middle(column((trial) => trial.finalDriftPx)),
-    extentGrowthPxMedian: middle(column((trial) => trial.extentGrowthPx)),
+    maxDriftPxMedian: median(drift),
+    maxDriftPxWorst: Math.max(0, ...drift),
+    driftedFramesMedian: medianOf(result, (trial) => trial.driftedFrames),
+    finalDriftPxMedian: medianOf(result, (trial) => trial.finalDriftPx),
+    extentGrowthPxMedian: medianOf(result, (trial) => trial.extentGrowthPx),
   };
+}
+
+const summary = (result: AnchorResult): AnchorSummary => ({
+  ...counts(result),
+  ...medians(result),
+});
+
+const namesWhere = (
+  results: readonly AnchorResult[],
+  has: (result: AnchorResult) => boolean,
+): string[] =>
+  results.flatMap((result) => (has(result) ? [caseName(result)] : []));
+
+const completeness = (
+  planned: readonly PerfCase[],
+  results: readonly AnchorResult[],
+): RunCompleteness =>
+  runCompleteness(planned.map(caseName), {
+    measured: namesWhere(results, (result) => measured(result).length > 0),
+    notApplicable: namesWhere(results, ({ notApplicable }) => !!notApplicable),
+  });
+
+const summarized = (results: readonly AnchorResult[]): object[] =>
+  results.map((result) => ({ ...result, summary: summary(result) }));
+
+const reportData = (
+  run: RunCompleteness,
+  results: readonly AnchorResult[],
+): string => {
+  const date = new Date().toISOString();
+
+  return JSON.stringify(
+    { label: label(), date, run, results: summarized(results) },
+    null,
+    2,
+  );
 };
+
+function print(file: string, results: readonly AnchorResult[]): void {
+  console.log(
+    `\nAnchor results: ${file}. Drift is measured; no budget is asserted.`,
+  );
+  console.table(
+    results.map((result) => ({
+      scenario: caseName(result),
+      ...summary(result),
+    })),
+  );
+}
 
 /*
  * Writes every result this run kept to `<label>-anchor.json` and prints the drift of each. The drift is
@@ -56,45 +137,13 @@ export async function reportAnchor(
   planned: readonly PerfCase[],
 ): Promise<void> {
   const results = await keptResults<AnchorResult>(anchorSuite);
-
-  const completeness = runCompleteness(planned.map(caseName), {
-    measured: results
-      .filter((result) => measured(result).length > 0)
-      .map(caseName),
-    notApplicable: results
-      .filter(({ notApplicable }) => notApplicable)
-      .map(caseName),
-  });
-
+  const run = completeness(planned, results);
   const file = output(`${label()}-anchor.json`);
-  await mkdir(outputDirectory(), { recursive: true });
-  await writeFile(
-    file,
-    JSON.stringify(
-      {
-        label: label(),
-        date: new Date().toISOString(),
-        run: completeness,
-        results: results.map((result) => ({
-          ...result,
-          summary: summary(result),
-        })),
-      },
-      null,
-      2,
-    ),
-  );
-  console.log(
-    `\nAnchor results: ${file}. Drift is measured; no budget is asserted.`,
-  );
-  console.table(
-    results.map((result) => ({
-      scenario: caseName(result),
-      ...summary(result),
-    })),
-  );
-  console.log(completenessNotice(completeness));
 
-  if (completeness.status === 'partial')
-    throw new Error(completenessNotice(completeness));
+  await mkdir(outputDirectory(), { recursive: true });
+  await writeFile(file, reportData(run, results));
+  print(file, results);
+  console.log(completenessNotice(run));
+
+  if (run.status === 'partial') throw new Error(completenessNotice(run));
 }

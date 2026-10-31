@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { AgentMessage, type SessionUpdate } from '@repo/contracts';
-import { beforeAll, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import bundleEngine from '../../e2e/engine-bundle.ts';
 import { expectHistoryIdentities } from './seed-identities.test.mocks.mts';
 import { history, listed } from './seed-public.test.mocks.mts';
@@ -91,20 +91,20 @@ it.each([
   },
 );
 
-it('serves the recorded Feed with its messages emptied of text', async () => {
-  const directory = await mkdtemp(
-    path.join(os.tmpdir(), 'argo-blank-regression-'),
-  );
-
+describe('the recorded Feed with its messages emptied of text', () => {
   const options = {
     sessions: 100,
     feedRows: 1000,
     feedContent: 'blank',
   } as const;
 
-  const server = await startSeededServer(directory, options);
+  let server: Awaited<ReturnType<typeof startSeededServer>>;
+  let directory: string;
+  let rows: SessionUpdate[];
 
-  try {
+  beforeAll(async () => {
+    directory = await mkdtemp(path.join(os.tmpdir(), 'argo-blank-regression-'));
+    server = await startSeededServer(directory, options);
     const sessions = await listed(server.serverUrl);
 
     const long = sessions.find(
@@ -113,20 +113,27 @@ it('serves the recorded Feed with its messages emptied of text', async () => {
 
     if (!long)
       throw new Error('The seeded long Session must be publicly listed');
-    const rows = await history(server.serverUrl, long.sessionId);
+    rows = await history(server.serverUrl, long.sessionId);
+  });
 
-    expect(rows).toHaveLength(1000);
-    expect(server.requested).toEqual(options);
-    expect(JSON.stringify(rows)).toContain('tool_call_update');
-    expect(
-      rows.filter((row) => row.sessionUpdate === 'agent_message'),
-    ).not.toHaveLength(0);
-
-    for (const row of rows)
-      if (row.sessionUpdate === 'agent_message')
-        expect(JSON.stringify(row.content)).not.toMatch(/"text":"[^"]/u);
-  } finally {
+  afterAll(async () => {
     await server.stop();
     await rm(directory, { recursive: true, force: true });
-  }
+  });
+
+  it('serves the requested rows and records the request', () => {
+    expect(rows).toHaveLength(1000);
+    expect(server.requested).toEqual(options);
+  });
+
+  it('serves every answer without text', () => {
+    const answers = rows.filter((row) => row.sessionUpdate === 'agent_message');
+
+    expect(answers).not.toHaveLength(0);
+    expect(JSON.stringify(answers)).not.toMatch(/"text":"[^"]/u);
+  });
+
+  it('still serves the Tool calls', () => {
+    expect(rows.map((row) => row.sessionUpdate)).toContain('tool_call_update');
+  });
 });
