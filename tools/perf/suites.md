@@ -8,6 +8,7 @@ They are frame and latency instruments: none of them asserts a speed budget.
 | Frames | `interactions.perf.mts` | `sidebar`, `sessions`, `drawer`, and the Feed scenarios (`feed`, `expand`, `paging`, `streaming`) |
 | Frames | `agents.perf.mts` | `agents`, `agents-phone`, against a 200-Agent registry |
 | Elapsed | `elapsed.perf.mts` | `session-open-warm`, `session-open-reload`, `feed-page-ready`, `tool-expand-ready`, `feed-wheel-ready`, `sessions-wheel-ready`, `composer-type-ready`, and the scenarios under "Elapsed scenarios by case" |
+| Anchor | `anchor.perf.mts` | `feed-anchor-drift` (PF-18, anchor stability) |
 | Soak | `soak.perf.mts` | One test, `soak for N minutes`, declared only when `PERF_SOAK_MINUTES` is set |
 | Collector | `collector.perf.mts` | The frame collector's own sensitivity checks; no product scenario |
 
@@ -26,10 +27,37 @@ Reserve a quiet measurement window first: a run taken under load measures the ma
 | `PERF_LABEL` | Names the run and its result files; default `current` |
 | `PERF_CPU` | CPU slowdowns to measure at, comma separated; default `1,4` |
 | `PERF_RUNS` | Measured windows per scenario; default `3` |
+| `PERF_FEED_ROWS` | Feed rows of the long Session: 100, 1000 or 10000; default the recorded Feed's 644 |
+| `PERF_FEED_CONTENT` | `blank` seeds the long Session with messages whose text is empty (PF-16, blank content); default `recorded`. See "Blank content and anchor drift" |
 | `PERF_ONLY` | Scenario names to measure, comma separated; empty or unset measures all |
 | `PERF_OUT` | Where the reports and screenshots go; default `$TMPDIR/argo-perf` |
 | `PERF_HEADED=1` | Runs with a visible browser, as a cross-check against the headless collector |
 | `PERF_TRACE=1`, `PERF_PROFILE=1` | Save one trace or CPU profile per scenario; these artefacts are large |
+
+## Blank content and anchor drift
+
+Two QA clauses that had no instrument now have one. Neither asserts a budget.
+
+**PF-16, blank content.** `PERF_FEED_CONTENT=blank` seeds the long Session with 1,000 messages (`PERF_FEED_ROWS` picks 100, 1000 or 10000) whose text is empty: prompts, thoughts and answers in turn, one Turn of each, with no Tool calls and no compaction rows. Run the frame scenarios against it:
+
+```sh
+PERF_FEED_CONTENT=blank PERF_ONLY=feed,paging,streaming PERF_LABEL=pf16-blank pnpm --filter @repo/tools perf interactions.perf.mts
+```
+
+The report's `seeded` block names the Feed rows that were seeded. `expand` and every Elapsed scenario that waits for the recorded text or a Tool disclosure (`hasLatestMessage`, `tool-expand-ready`) cannot run against a blank Feed: there is nothing to find. Run only the frame scenarios on it.
+
+**PF-18, anchor stability.** `feed-anchor-drift` (`anchor.perf.mts`, report `<label>-anchor.json`) opens the long Session from cold, reads back with the wheel to a screen below its oldest loaded row, and marks the row at the middle of the view once the rows in view stop measuring. While it marks, it holds back what the Server sends the page, so the older page cannot land first; it then lets the page through and watches the marked row every frame, until two seconds after the older page has landed. Per trial it reports:
+
+| Field | Meaning |
+| --- | --- |
+| `maxDriftPx` | The furthest the marked row's top moved from where it was marked, from the mark to the end of the window |
+| `finalDriftPx` | How far it had moved when the window ended |
+| `anchorKept` | Whether the marked row is still in the document |
+| `extentGrowthPx` | How much taller the Feed's scrollable extent became: proof an older page landed |
+| `scrollTopShiftPx` | How far the Feed's scroll position moved |
+| `endReached` | Whether the Feed ended at its newest row, which is the slide #1543 recorded |
+
+The drift is reported, not judged: a run in which the anchor holds reads `maxDriftPx` near zero, and a regression reads as a number. `PERF_RUNS` sets the trials (default 3) and `PERF_CPU` the slowdowns. A trial where the older page lands before the row is marked, or never lands, is `failed` and stays in the report. The 100-row tier fits one page, so there is no older page and the scenario is `notApplicable` there. The hold delays every Server message for under a second, so the older page's latency is not what this measures; `feed-page-ready` measures that.
 
 ## Elapsed scenarios by case
 

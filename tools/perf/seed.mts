@@ -10,7 +10,12 @@ import {
   seededDataset,
   type SeededDataset,
 } from './seed-dataset.mts';
-import { type FeedSize, type SeededFeed, seededFeed } from './seed-feed.mts';
+import {
+  blankFeed,
+  type FeedSize,
+  type SeededFeed,
+  seededFeed,
+} from './seed-feed.mts';
 import {
   environmentSeedOptions,
   seedConfiguration,
@@ -72,6 +77,9 @@ function readTemplate(database: Database): SessionRow {
   return template;
 }
 
+// A blank Feed holds the 1,000-row tier unless another is asked for.
+const blankFeedRows = 1000;
+
 const feedSize = (options: SeedConfiguration): FeedSize =>
   options.feedRows ? { rows: options.feedRows } : { copies: feedCopies };
 
@@ -102,7 +110,10 @@ async function prepareDataset(
     now: Date.now(),
   };
 
-  const feed = await seededFeed(longSessionId, feedSize(options), context.now);
+  const feed =
+    options.feedContent === 'blank'
+      ? blankFeed(longSessionId, options.feedRows ?? blankFeedRows, context.now)
+      : await seededFeed(longSessionId, feedSize(options), context.now);
 
   return datasetFrom(context, feed);
 }

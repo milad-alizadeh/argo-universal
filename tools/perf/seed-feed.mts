@@ -123,3 +123,55 @@ export async function shortRecordedFeeds(
 
   return combineFeeds(sessionIds.map((id) => oneRecordedFeed(id, first, now)));
 }
+
+// The message kinds a blank Feed cycles through, one Turn of each.
+const blankKinds = ['user_message', 'agent_thought', 'agent_message'] as const;
+
+const blankContent = [{ type: 'text', text: '' }];
+
+function blankRow(
+  sessionId: string,
+  index: number,
+): SeededFeed['rows'][number] {
+  const sessionUpdate =
+    blankKinds[index % blankKinds.length] ?? 'agent_message';
+  const id = `blank-${index}`;
+
+  return {
+    sessionId,
+    position: index + 1,
+    id,
+    sessionUpdate,
+    revision: index + 1,
+    turnId: `blank-turn-${Math.floor(index / blankKinds.length)}`,
+    state: 'settled',
+    payload: { messageId: id, content: blankContent },
+    payloadVersion: 1,
+  };
+}
+
+/*
+ * A Feed of `count` messages whose text is empty: prompts, thoughts and answers with nothing in them.
+ * It measures how the Feed lays out and scrolls rows that have no content to size them by.
+ */
+export function blankFeed(
+  sessionId: string,
+  count: number,
+  now: number,
+): SeededFeed {
+  const rows = Array.from({ length: count }, (_, index) =>
+    blankRow(sessionId, index),
+  );
+
+  return {
+    turns: [...new Set(rows.flatMap((row) => row.turnId ?? []))].map((id) => ({
+      id,
+      sessionId,
+      status: 'ended',
+      stopReason: 'end_turn',
+      startedAt: now - 1000,
+      endedAt: now - 500,
+    })),
+    rows,
+  };
+}

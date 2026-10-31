@@ -90,3 +90,40 @@ it.each([
     }
   },
 );
+
+it('serves a blank Feed of 1,000 rows whose messages hold no text', async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'argo-blank-regression-'),
+  );
+
+  const options = { sessions: 100, feedContent: 'blank' } as const;
+  const server = await startSeededServer(directory, options);
+
+  try {
+    const sessions = await listed(server.serverUrl);
+
+    const long = sessions.find(
+      ({ title }) => title === server.longSessionTitle,
+    );
+
+    if (!long)
+      throw new Error('The seeded long Session must be publicly listed');
+    const rows = await history(server.serverUrl, long.sessionId);
+
+    expect(rows).toHaveLength(1000);
+    expect(server.feedRowCount).toBe(1000);
+    expect(server.requested).toEqual({ ...options });
+
+    for (const row of rows)
+      expect(
+        'content' in row
+          ? row.content.flatMap((block) =>
+              block.type === 'text' ? [block.text] : [],
+            )
+          : [],
+      ).toEqual(['']);
+  } finally {
+    await server.stop();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
