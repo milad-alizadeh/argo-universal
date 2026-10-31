@@ -56,7 +56,9 @@ export const CentresTheConnectionBanner: Story = {
     const bannerRect = canvas
       .getByText('Reconnecting…')
       .getBoundingClientRect();
+
     const windowRect = canvas.getByTestId('window').getBoundingClientRect();
+
     await expect(bannerRect.x + bannerRect.width / 2).toBeCloseTo(
       windowRect.x + windowRect.width / 2,
       0,
