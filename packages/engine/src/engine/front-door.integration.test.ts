@@ -1,4 +1,5 @@
 import { request } from 'node:http';
+import { connect, type Socket } from 'node:net';
 import { describe, expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
@@ -7,6 +8,7 @@ import {
   openChannel,
 } from '#mocks/engine-channel';
 import { lanAddress } from '#mocks/engine-network';
+import { channelMagic } from '../pairing/channel-door';
 
 const portOf = (url: string): number => Number(new URL(url).port);
 
@@ -37,6 +39,52 @@ it('serves this computer own App over plain HTTP, as the Server Device', async (
   const { url } = await startEngineTestHost();
 
   expect(await plainStatus('127.0.0.1', portOf(url), apiPath)).toBe(200);
+});
+
+const opened = (port: number): Promise<Socket> =>
+  new Promise<Socket>((resolve): void => {
+    const socket = connect(port, '127.0.0.1', (): void => resolve(socket));
+  });
+
+const arrived = (): Promise<void> =>
+  new Promise<void>((resolve): void => void setTimeout(resolve, 50));
+
+// Opens a raw socket on the front door, says `opening` and nothing more, then vanishes the way a peer that resets its connection does.
+async function resetAfter(port: number, opening: Buffer): Promise<void> {
+  const socket = await opened(port);
+
+  if (opening.length > 0) socket.write(opening);
+  await arrived();
+  socket.resetAndDestroy();
+  await arrived();
+}
+
+/*
+ * How far into its arrival a socket can be when its peer resets it. Nothing here needs a Pairing Ticket or the Server's static key, so each one is what anybody who can reach the port could send.
+ * A raw socket with no `'error'` listener raises an uncaught exception when it is reset, which ends the Server: the Server still answering afterwards is the whole point of these.
+ */
+const resets: readonly [string, Buffer][] = [
+  ['before it says anything at all', Buffer.alloc(0)],
+  [
+    'part way through the bytes the door reads first',
+    channelMagic.subarray(0, 2),
+  ],
+  ['once it has said it wants a channel, and no more', channelMagic],
+  [
+    'having claimed a handshake of 65535 bytes it never sends',
+    Buffer.concat([channelMagic, Buffer.from([0xff, 0xff])]),
+  ],
+];
+
+describe.each(resets)('a Connection reset %s', (_name, opening) => {
+  it('leaves the Server answering', async (): Promise<void> => {
+    const { url } = await startEngineTestHost();
+    const port = portOf(url);
+
+    await resetAfter(port, opening);
+
+    expect(await plainStatus('127.0.0.1', port, apiPath)).toBe(200);
+  });
 });
 
 // A computer with no network has no address another Device could use.

@@ -1,12 +1,8 @@
 import { ChannelCipher } from './channel-cipher';
 import { tagBytes } from './cipher-state';
+import { ephemeralOf, type HandshakeVector } from './handshake-vector';
 import { SymmetricState } from './symmetric-state';
-import {
-  generateKeypair,
-  keyBytes,
-  sharedSecret,
-  type Keypair,
-} from './x25519';
+import { keyBytes, sharedSecret, type Keypair } from './x25519';
 
 export interface InitiatorInput {
   // The Device's own long-term key; its public half is what the Server stores for this Device.
@@ -27,9 +23,12 @@ export interface InitiatorHandshake {
 }
 
 // The App's side of the exchange: the first message to send, and what to do with the answer (ADR-0045).
-export function startHandshake(input: InitiatorInput): InitiatorHandshake {
-  const state = new SymmetricState(input.serverPublicKey);
-  const ephemeral = generateKeypair();
+export function startHandshake(
+  input: InitiatorInput,
+  vector?: HandshakeVector,
+): InitiatorHandshake {
+  const state = new SymmetricState(input.serverPublicKey, vector?.prologue);
+  const ephemeral = ephemeralOf(vector);
 
   return {
     message: firstMessage(state, input, ephemeral),
