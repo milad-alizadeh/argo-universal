@@ -1,5 +1,6 @@
 import { createAgentsRouter } from '../agents';
 import { createBlobRouter } from '../blob';
+import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
 import { createNetworkRouter } from '../network-access';
@@ -19,6 +20,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     plugins: createPluginsRouter(deps.plugins),
     agents: createAgentsRouter(deps),
     system: createSystemRouter(deps),
+    devices: createDevicesRouter(deps),
     feed: createFeedRouter(deps),
     notifications: createNotificationsRouter(deps),
     network: createNetworkRouter(deps),

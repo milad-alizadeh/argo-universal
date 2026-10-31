@@ -1,24 +1,28 @@
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
-import type { LocalNetworkAccess } from '../network-access';
-import type { NotificationOptions, Notifications } from '../notifications';
+import { blobsFolderIn } from '../blob';
+import { ensureServerIdentity } from '../devices';
+import { LocalNetworkAccess } from '../network-access';
+import { Notifications, type NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
-import type { HookPort, PluginServerOptions } from '../plugins';
+import { ensureControlToken } from '../operations';
+import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
+import { readServerId } from '../system';
 import { createHttpCaller, type HttpCaller } from './http-callers';
 import { admitClose, connectWebSockets } from './http-connections';
-import { prepareHttpServer, type RoutedSetup } from './http-setup';
-import {
-  listenForNetworkAccess,
-  type ServerListener,
-} from './network-listener';
+import { listenWithPlugins } from './http-listen';
+import { httpRouterInput } from './http-router-input';
+import type { ServerListener } from './network-listener';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
   type RequestListenerOptions,
 } from './request-listener';
+import { type AppRouter, createAppRouter } from './router';
+import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
@@ -49,6 +53,16 @@ export interface HttpServer {
   createCaller: HttpCaller;
   close: () => Promise<void>;
 }
+
+export type HttpSetup = {
+  plugins: Plugins;
+  blobsFolder: string;
+  commandAdmission: AbortController;
+  notifications: Notifications;
+  localNetworkAccess: LocalNetworkAccess;
+};
+
+export type RoutedSetup = HttpSetup & { appRouter: AppRouter };
 
 type Listening = {
   guard: ReturnType<typeof createRequestGuard>;
@@ -97,36 +111,38 @@ async function closeHttpServices(
   await Promise.all([closeConnections(), setup.plugins.close()]);
 }
 
-// Binding the port is all the Supervisor waits for, so a slow background Plugin delays no App.
-async function listenWithPlugins(
-  server: Server,
-  port: number,
-  setup: RoutedSetup,
-): Promise<ServerListener> {
-  const listener = await bindOrCleanUp(server, port, setup);
-  setup.plugins.listening();
+async function prepareHttpServer(
+  options: HttpServerOptions,
+): Promise<RoutedSetup> {
+  const serverId = await readServerId(options.database, options.databaseWriter);
+  const setup = prepareHttpSetup(options, serverId);
 
-  return listener;
+  const controlToken = await ensureControlToken(options.home);
+  const serverPublicKey = await ensureServerIdentity(options);
+  const input = httpRouterInput(options, setup, controlToken);
+
+  return {
+    ...setup,
+    appRouter: createAppRouter(
+      createAppRouterDeps({ ...input, serverPublicKey }),
+    ),
+  };
 }
 
-async function bindOrCleanUp(
-  server: Server,
-  port: number,
-  setup: RoutedSetup,
-): Promise<ServerListener> {
-  const { enabled } = setup.localNetworkAccess;
-
-  try {
-    return await listenForNetworkAccess(server, port, enabled);
-  } catch (error) {
-    await abandon(setup);
-    throw error;
-  }
-}
-
-async function abandon(setup: RoutedSetup): Promise<void> {
-  setup.notifications.close();
-  await setup.plugins.close();
+function prepareHttpSetup(
+  options: HttpServerOptions,
+  serverId: string,
+): HttpSetup {
+  return {
+    blobsFolder: blobsFolderIn(options.home),
+    commandAdmission: options.commandAdmission ?? new AbortController(),
+    notifications: new Notifications({ ...options, serverId }),
+    plugins: new Plugins(options),
+    localNetworkAccess: new LocalNetworkAccess(
+      options.database,
+      options.databaseWriter,
+    ),
+  };
 }
 
 function listenerOptions(

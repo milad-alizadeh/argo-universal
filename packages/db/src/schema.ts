@@ -26,4 +26,6 @@ export * from '#schema-plugins';
 
 export * from '#schema-agent-access';
 
+export * from '#schema-devices';
+
 export * from '#schema-local-network-access';

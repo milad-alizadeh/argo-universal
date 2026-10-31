@@ -4,6 +4,7 @@ import { readChangesSummary } from '@repo/git';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
+import type { DevicesDeps } from '../devices';
 import { type FeedDeps } from '../feed';
 import type { NetworkAccessDeps } from '../network-access';
 import type { NotificationsDeps } from '../notifications';
@@ -29,6 +30,7 @@ export type AppRouterDeps = SessionSources &
   AgentsRouterDeps &
   BlobUploadDeps &
   SystemDeps &
+  DevicesDeps &
   FeedDeps &
   NotificationsDeps &
   NetworkAccessDeps & {

@@ -1,10 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "9b800700-18cb-4e7e-9ca2-7128afc0b3d2",
+  "id": "943829ca-bc40-4710-a110-a318c2335666",
   "prevIds": [
-    "ccd63fbf-9e03-47ed-9342-f8f8e9c0d6c6",
-    "e8d83704-c58e-41f3-9a53-9977314b0262"
+    "d9750209-42dd-495c-8852-3f12ba39221f"
   ],
   "ddl": [
     {
@@ -69,6 +68,10 @@
     },
     {
       "name": "agent_access",
+      "entityType": "tables"
+    },
+    {
+      "name": "device",
       "entityType": "tables"
     },
     {
@@ -1026,6 +1029,76 @@
       "table": "agent_access"
     },
     {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "public_key",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "platform",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "server_device",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "paired_at",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "table": "device"
+    },
+    {
       "type": "integer",
       "notNull": false,
       "autoincrement": false,
@@ -1412,6 +1485,15 @@
     },
     {
       "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "device_pk",
+      "table": "device",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
         "singleton"
       ],
       "nameExplicit": false,
@@ -1497,6 +1579,20 @@
     },
     {
       "columns": [
+        {
+          "value": "server_device",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": "\"device\".\"server_device\" = 1",
+      "origin": "manual",
+      "name": "device_one_server_device",
+      "entityType": "indexes",
+      "table": "device"
+    },
+    {
+      "columns": [
         "host",
         "id"
       ],
@@ -1513,6 +1609,15 @@
       "name": "project_path_unique",
       "entityType": "uniques",
       "table": "project"
+    },
+    {
+      "columns": [
+        "public_key"
+      ],
+      "nameExplicit": false,
+      "name": "device_public_key_unique",
+      "entityType": "uniques",
+      "table": "device"
     },
     {
       "value": "\"id\" = 1",

@@ -85,11 +85,16 @@ const feedIds = (): FeedIds => {
   };
 };
 
+const feedModuleSecrets = {
+  controlToken: 'feed-module-test-token',
+  serverPublicKey: 'feed-module-test-public-key',
+};
+
 const feedModuleRouterInput = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
 ): AppRouterInput => ({
-  controlToken: 'feed-module-test-token',
+  ...feedModuleSecrets,
   userHome: join(host.home, 'user-home'),
   sessionTokens: host.engine.getSnapshot().context.sessionTokens,
   database: host.database,
