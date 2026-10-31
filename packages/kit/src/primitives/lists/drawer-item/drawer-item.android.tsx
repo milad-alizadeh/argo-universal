@@ -3,6 +3,7 @@ import { RNHostView, Row } from '@expo/ui';
 import { Badge, Text } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
+  defaultMinSize,
   fillMaxWidth,
   padding,
   selectable,
@@ -20,8 +21,10 @@ import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
 
-// Material 3's navigation drawer item: a 56dp pill, tinted when selected.
-const itemHeight = 56;
+// Material 3's navigation drawer item: a pill at least 56dp high, tinted when selected. It grows with its label, which an enlarged font size wraps onto more lines.
+const itemMinHeight = 56;
+
+const verticalPadding = 8;
 
 const startPadding = 16;
 
@@ -62,13 +65,12 @@ function usePillStyle(
   const highlight = useMaterialPalette().roles.selected;
 
   return {
-    height: itemHeight,
-    borderRadius: itemHeight / 2,
+    borderRadius: itemMinHeight / 2,
     backgroundColor: selected ? highlight : 'transparent',
   };
 }
 
-// The press ripple fills the pill, so the padding comes after the selectable.
+// The press ripple fills the pill, so the padding comes after the selectable. The minimum height is a modifier because the universal style has a height but no minimum.
 function tabModifiers(
   { label, selected, onPress }: DrawerItemProps,
   badge: CountBadge | undefined,
@@ -77,9 +79,10 @@ function tabModifiers(
 
   return [
     fillMaxWidth(),
+    defaultMinSize({ minHeight: itemMinHeight }),
     selectable(selected, onPress, 'tab'),
     semantics({ contentDescription: description }),
-    padding(startPadding, 0, endPadding, 0),
+    padding(startPadding, verticalPadding, endPadding, verticalPadding),
   ];
 }
 
@@ -116,7 +119,7 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
 
 function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   return (
-    <NativeText role="control" numberOfLines={1} modifiers={[weight(1)]}>
+    <NativeText role="control" modifiers={[weight(1)]}>
       {label}
     </NativeText>
   );
