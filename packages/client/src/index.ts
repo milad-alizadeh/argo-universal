@@ -85,6 +85,10 @@ export {
 
 export { withoutNewSession } from './lib/product/navigation/new-session';
 
+export { returnToOf } from './lib/product/navigation/return-to';
+
+export { useRememberShownPage } from './lib/product/navigation/shown-page';
+
 export { AppProviders } from './app-providers';
 
 export { PortalProvider } from '@repo/kit/primitives/overlays/portal';

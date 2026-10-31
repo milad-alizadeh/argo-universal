@@ -44,7 +44,7 @@ function listProps(props: FieldPickerScreenProps): Omit<ListProps, 'onMove'> {
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
     <ListPlaceContext value={choosingPlace(useListPlace())}>
-      <List {...listProps(props)} empty={<EmptyState />}>
+      <List {...listProps(props)} empty={<EmptyState {...props} />}>
         {optionSections(props.shown ?? props.options).map((section) => (
           <ChoiceSection key={section.key} {...props} section={section} />
         ))}

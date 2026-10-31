@@ -4,6 +4,7 @@ import {
   chooseAnotherProject,
   openProblem,
 } from '#features/sessions';
+import { agentsHref } from '#lib/product/navigation/navigation';
 import type {
   SessionNewViewProps,
   ReadySessionNewViewProps,
@@ -51,8 +52,8 @@ const agentChoiceProps = (
   agents,
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
-  // Settings has no stack until it is first opened, and a page opened first would have no list under it.
-  onAddAgents: () => wiring.navigate('/settings/agents', { withAnchor: true }),
+  // Settings has no stack until it is first opened, and a page opened first would have no list under it; Back returns here, not to that list.
+  onAddAgents: () => wiring.navigate(agentsHref(), { withAnchor: true }),
 });
 
 // The chosen Agent is the one New Session's choices already found among the Installed Agents.

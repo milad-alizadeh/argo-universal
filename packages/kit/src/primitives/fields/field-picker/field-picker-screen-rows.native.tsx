@@ -12,7 +12,7 @@ import { EmptyState } from './field-picker-screen-parts';
  */
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
-    <NativeGroupedList empty={<EmptyState />}>
+    <NativeGroupedList empty={<EmptyState {...props} />}>
       {optionSections(props.shown ?? props.options).map((section) =>
         screenSection(props, section),
       )}
