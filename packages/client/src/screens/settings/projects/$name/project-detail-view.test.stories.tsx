@@ -110,10 +110,15 @@ export const SaysWhenTheProjectIsMissing: Story = {
 export const EachPluginIsASectionOfItsOwn: Story = {
   args: { pluginContributions: withSpies },
   play: async ({ canvas }) => {
-    const folder = sectionOf(await canvas.findByText('Folder'));
-    const example = sectionOf(await canvas.findByText('Example'));
-    const tracker = sectionOf(await canvas.findByText('Issue tracker'));
-    const newSessions = sectionOf(await canvas.findByText('New Sessions'));
+    const folderTitle = await canvas.findByText('Folder');
+    const exampleTitle = await canvas.findByText('Example');
+    const trackerTitle = await canvas.findByText('Issue tracker');
+    const newSessionsTitle = await canvas.findByText('New Sessions');
+    const titles = [folderTitle, exampleTitle, trackerTitle, newSessionsTitle];
+    const folder = sectionOf(folderTitle, titles);
+    const example = sectionOf(exampleTitle, titles);
+    const tracker = sectionOf(trackerTitle, titles);
+    const newSessions = sectionOf(newSessionsTitle, titles);
 
     await expect(new Set([folder, example, tracker, newSessions]).size).toBe(4);
     await expect(example.parentElement).toBe(folder.parentElement);
@@ -214,13 +219,14 @@ export const NoAccountsDrawsNoSection: Story = {
   },
 };
 
-// A section is the Folder-level ancestor of its title: the highest one that holds no other section's title.
-function sectionOf(title: HTMLElement): HTMLElement {
+// A section is the highest ancestor of its title that holds no other section's title.
+function sectionOf(title: HTMLElement, titles: HTMLElement[]): HTMLElement {
+  const others = titles.filter((other) => other !== title);
   let section = title;
 
   while (
     section.parentElement &&
-    section.parentElement.querySelectorAll('[role="heading"]').length === 1
+    !others.some((other) => section.parentElement?.contains(other))
   )
     section = section.parentElement;
 
