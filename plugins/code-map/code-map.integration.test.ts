@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
 import { expect, it, onTestFinished } from 'vitest';
 
-type View = ReturnType<PluginTest['slot']>;
+type View = ReturnType<PluginTest['page']>;
 
 type Node = NonNullable<View['tree']>;
 
@@ -45,10 +45,8 @@ async function codeMap(marker?: string): Promise<View> {
     await test.close();
   });
 
-  return test.slot({
-    slotId: 'argo/project/details/v1',
-    context: { projectId: 'project-1' },
-  });
+  // The map is a page now, opened for the Project whose details row drilled into it (ADR-0046).
+  return test.page('/map', undefined, 'project-1');
 }
 
 function descendants(node: Node, type: string): Node[] {

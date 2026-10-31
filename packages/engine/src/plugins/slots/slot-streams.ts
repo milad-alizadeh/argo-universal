@@ -1,17 +1,14 @@
 import { drawsPluginWire } from '@repo/contracts/plugins/kit';
 import type {
   AddOnlySlotId,
-  PluginSlotInput,
   SlotItems,
   SlotItemsInput,
-  SlotMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { fillsSlot } from '../discovery/plugin-contributions';
 import type { PluginServiceDeps } from '../located-plugins';
 import { startOrderedPlugins } from '../plugin-order';
 import { watchSlotItems, type Contributors } from './slot-items';
-import { slotViews } from './slot-views';
 
 type Failed = Contributors['failed'];
 
@@ -30,22 +27,6 @@ async function fillingPlugins(
   );
 
   return running;
-}
-
-// Every enabled Plugin that declares the Slot fills it; one that fails to start is left out, and its failure is reported like any other.
-export async function* slotFor(
-  deps: PluginServiceDeps,
-  slot: PluginSlotInput,
-  connection: RpcConnection,
-): AsyncGenerator<SlotMessage> {
-  const pluginIds = await fillingPlugins(deps, slot);
-
-  yield { type: 'contributors', pluginIds };
-  yield* slotViews(
-    deps.pluginRuntime.views,
-    { pluginIds, slot, failed: failedOf(deps) },
-    connection,
-  );
 }
 
 /*

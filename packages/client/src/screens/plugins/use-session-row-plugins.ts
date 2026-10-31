@@ -16,6 +16,7 @@ import {
   noKeptAnswers,
   redrawnRows,
   type RowCache,
+  type RowSnapshot,
 } from './session-row-cache';
 import { sentDrawing } from './session-row-drawing';
 import { useDrawnSessions } from './use-drawn-sessions';
@@ -27,7 +28,6 @@ import {
   useKeyed,
   useRowSnapshots,
 } from './use-session-row-answers';
-import type { SlotItemsSnapshot } from './use-slot-items';
 
 const bySessionId = (a: RowSession, b: RowSession): number =>
   a.sessionId.localeCompare(b.sessionId);
@@ -71,7 +71,7 @@ function useFolded<Input, Value>(
   return next.value;
 }
 
-const useKept = (snapshot: SlotItemsSnapshot): KeptRowAnswers['items'] =>
+const useKept = (snapshot: RowSnapshot): KeptRowAnswers['items'] =>
   useFolded(snapshot, keptAnswers, noKeptAnswers);
 
 // This Device's choices and the Plugins' names: a change to either redraws every row.

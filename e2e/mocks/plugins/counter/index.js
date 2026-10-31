@@ -92,13 +92,23 @@ export function register(argo) {
     <Card sessionId={context.sessionId} />
   ));
   argo.pages.register('/card/full', () => <Text>Counter card in full</Text>);
-  argo.slots.register('argo/project/details/v1', ({ context }) => (
-    <Text>{`Fixture Slot for ${context.projectId}`}</Text>
-  ));
+  argo.slots.register('argo/project/details/v1', projectRows);
   argo.slots.register('argo/session/row/v1', rowItems);
   argo.slots.register('argo/session/activity/v1', activityLines);
   argo.slots.register('argo/session/bar/v1', barLines);
 }
+
+/*
+ * One Project details row for every Project the items Slot asks about (ADR-0046). A row's title is capped at 40
+ * characters, so it cannot carry a Project id; the id would push it over and Argo would drop the row.
+ */
+const projectRows = ({ contexts }) =>
+  Object.fromEntries(
+    contexts.map(({ projectId }) => [
+      projectId,
+      [{ title: 'Fixture Slot for this Project' }],
+    ]),
+  );
 
 // The same one item for every Session an items Slot asks about.
 const everySession =

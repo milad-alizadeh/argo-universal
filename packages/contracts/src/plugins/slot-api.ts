@@ -1,11 +1,4 @@
-import type { ComponentType } from 'react';
-import type { PluginRenderContext } from './kit';
-import type { PluginSlotInput, SlotItems, SlotItemsInput } from './wire';
-
-// What a Plugin registers in a Slot: a component for a Slot that holds a page, a provider for an items Slot.
-export type SlotContent = ComponentType<{
-  context: PluginSlotInput['context'] & PluginRenderContext;
-}>;
+import type { SlotItems, SlotItemsInput } from './wire';
 
 type ItemsSlotId = SlotItemsInput['slotId'];
 
@@ -27,10 +20,11 @@ export type SlotItemsProvider<Id extends ItemsSlotId = ItemsSlotId> = (
   request: Readonly<{ contexts: readonly Readonly<ItemsContext<Id>>[] }>,
 ) => SlotItemsAnswer | Promise<SlotItemsAnswer>;
 
-type SlotRegistration = {
-  (slotId: PluginSlotInput['slotId'], content: SlotContent): void;
-  <Id extends ItemsSlotId>(slotId: Id, provider: SlotItemsProvider<Id>): void;
-};
+// Every add-only Slot is an items Slot (ADR-0046): a Plugin registers a provider, never a component.
+type SlotRegistration = <Id extends ItemsSlotId>(
+  slotId: Id,
+  provider: SlotItemsProvider<Id>,
+) => void;
 
 export type SlotsApi = Readonly<{
   register: SlotRegistration;

@@ -12,11 +12,7 @@ import type {
   PluginBadge,
   PluginFailure,
 } from '@repo/contracts/plugins/runtime';
-import type {
-  PluginSlotInput,
-  SlotItems,
-  SlotItemsInput,
-} from '@repo/contracts/plugins/wire';
+import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
@@ -52,7 +48,6 @@ export interface PluginTest {
     pluginId?: string,
     projectId?: string,
   ) => PluginTestView;
-  slot: (slot: PluginSlotInput, pluginId?: string) => PluginTestView;
   // One list's merged items, sent again each time a Plugin says its items changed.
   slotItems: (
     input: SlotItemsInput,

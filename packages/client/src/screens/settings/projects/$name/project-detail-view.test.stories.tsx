@@ -11,7 +11,10 @@ import {
   chosenAccounts,
   unchosenAccounts,
 } from './project-detail-accounts-fixtures';
-import { pluginContributions } from './project-detail-plugins-fixtures';
+import {
+  longPathProject,
+  pluginItems,
+} from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -28,14 +31,26 @@ const meta = {
 
 export default meta;
 
-const withSpies = pluginContributions.map((contribution) => ({
-  ...contribution,
-  onEvent: fn(),
-}));
-
 type Story = StoryObj<typeof meta>;
 
 const githubHost = 'api.github.com';
+
+/*
+ * The Issue tracker Plugin names its section and its one row the same, as the real Plugin does, so its section
+ * title is the first of the two in the page's order.
+ */
+const trackerName = 'Issue tracker';
+
+// The value the Tracker row shows, and the text a press of that row aims at.
+const chosenTracker = 'GitHub Issues';
+
+type Canvas = ReturnType<typeof within>;
+
+const trackerSectionTitle = async (canvas: Canvas): Promise<HTMLElement> => {
+  const [title] = await canvas.findAllByText(trackerName);
+
+  return title ?? canvas.getByText(trackerName);
+};
 
 export const ShowsTheFolderAndCheckout: Story = {
   play: async ({ canvas }) => {
@@ -62,6 +77,19 @@ export const OffersNoUnbuiltChanges: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Remove Project' }),
     ).toBeDisabled();
+  },
+};
+
+// Beside a long value the title keeps its width, so it is never cut down to a letter.
+export const ALongPathLeavesTheTitleItsFullWidth: Story = {
+  args: {
+    project: { status: 'loaded', project: longPathProject },
+  },
+  play: async ({ canvas }) => {
+    const title = await canvas.findByText('Path');
+
+    await expect(title).toBeVisible();
+    await expect(title.scrollWidth).toBeLessThanOrEqual(title.clientWidth);
   },
 };
 
@@ -108,11 +136,11 @@ export const SaysWhenTheProjectIsMissing: Story = {
 
 // ADR-0035: each Plugin in the Project details Slot is a section of its own, a card beside Folder's, in the Server's order.
 export const EachPluginIsASectionOfItsOwn: Story = {
-  args: { pluginContributions: withSpies },
+  args: { pluginItems },
   play: async ({ canvas }) => {
     const folderTitle = await canvas.findByText('Folder');
     const exampleTitle = await canvas.findByText('Example');
-    const trackerTitle = await canvas.findByText('Issue tracker');
+    const trackerTitle = await trackerSectionTitle(canvas);
     const newSessionsTitle = await canvas.findByText('New Sessions');
     const titles = [folderTitle, exampleTitle, trackerTitle, newSessionsTitle];
     const folder = sectionOf(folderTitle, titles);
@@ -129,13 +157,51 @@ export const EachPluginIsASectionOfItsOwn: Story = {
     );
 
     await expect(order).toEqual([...order].sort((a, b) => a - b));
-    await expect(example).toContainElement(canvas.getByText('Hello from argo'));
-    await expect(example).not.toContainElement(
-      canvas.getByText('GitHub Issues'),
-    );
-    await expect(tracker).toContainElement(canvas.getByText('GitHub Issues'));
+    await expect(example).toContainElement(canvas.getByText('Pull requests'));
+    await expect(example).not.toContainElement(canvas.getByText(chosenTracker));
+    await expect(tracker).toContainElement(canvas.getByText(chosenTracker));
   },
 };
+
+/*
+ * ADR-0046: one item is one row. A whole contribution in a single row frame was the bug (#1761, #1763): the rows ran
+ * together with no separators, so each row has to be a child of the section of its own.
+ */
+export const EachPluginItemIsARowOfItsOwn: Story = {
+  args: { pluginItems },
+  play: async ({ canvas }) => {
+    const pulls = await canvas.findByText('Pull requests');
+    const sync = await canvas.findByText('Last sync');
+    const first = rowApartFrom(pulls, sync);
+    const second = rowApartFrom(sync, pulls);
+
+    await expect(first).not.toBe(second);
+    await expect(first.parentElement).toBe(second.parentElement);
+  },
+};
+
+// A row that drills into a Plugin page opens it for this Project.
+export const PressingAPluginRowOpensItsPage: Story = {
+  args: { pluginItems, onOpenPluginPage: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByText(chosenTracker));
+
+    await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
+      'issue-tracker',
+      '/tracker',
+    );
+  },
+};
+
+// The row one item got: the highest ancestor of its text that the other item's row sits outside of.
+function rowApartFrom(text: HTMLElement, other: HTMLElement): HTMLElement {
+  let row = text;
+
+  while (row.parentElement && !row.parentElement.contains(other))
+    row = row.parentElement;
+
+  return row;
+}
 
 export const NoPluginsAddNoSection: Story = {
   play: async ({ canvas }) => {

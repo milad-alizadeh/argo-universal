@@ -2,7 +2,8 @@ import type { SessionInfo } from '@repo/contracts';
 import {
   sessionActivitySlotId,
   sessionRowSlotId,
-  type SlotItemsInput,
+  type SlotContextOf,
+  type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
 import { useState } from 'react';
 import type { SentItems } from './slot-items';
@@ -10,18 +11,21 @@ import { type SlotItemsSnapshot, useSlotItems } from './use-slot-items';
 
 export type RowSession = Pick<SessionInfo, 'sessionId' | 'projectId'>;
 
-export type RowContexts = SlotItemsInput['contexts'];
+// The Sessions both Session row Slots are asked about; each takes the same context.
+export type RowSlotId = typeof sessionRowSlotId | typeof sessionActivitySlotId;
+
+export type RowContexts = SlotContextOf<RowSlotId>[];
 
 // Both Session row Slots' latest snapshots for the same contexts.
 export interface RowSnapshots {
-  items: SlotItemsSnapshot;
-  lines: SlotItemsSnapshot;
+  items: SlotItemsSnapshot<RowContexts[number]>;
+  lines: SlotItemsSnapshot<RowContexts[number]>;
 }
 
 const inputOf = (
-  slotId: SlotItemsInput['slotId'],
+  slotId: RowSlotId,
   contexts: RowContexts | undefined,
-): SlotItemsInput | undefined => contexts && { slotId, contexts };
+): SlotInputOf<RowSlotId> | undefined => contexts && { slotId, contexts };
 
 // One batched call per Slot for the contexts, live from the Server; none while there are none to ask about.
 export function useRowSnapshots(

@@ -7,7 +7,6 @@ import type {
 import {
   createOpenView,
   createPluginViewId,
-  projectOfOpening,
   type OpenView,
   type Opening,
 } from './open-view';
@@ -81,7 +80,7 @@ export class ViewRegistry {
       this.page(connectionId, {
         pluginId,
         path: opening.path,
-        projectId: projectOfOpening(opening),
+        projectId: opening.projectId,
         sessionId: opening.sessionId,
       }) ?? this.open(pluginId, opening, connectionId);
 

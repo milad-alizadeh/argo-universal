@@ -39,7 +39,7 @@ const pressTarget = (
   target: SessionHeaderTarget,
 ): void => {
   if (target.type === 'card') toggleCard(pluginId, target.cardId);
-  else open(pluginId, sessionId)(target.path);
+  else open(pluginId, { sessionId })(target.path);
 };
 
 const withPress =
