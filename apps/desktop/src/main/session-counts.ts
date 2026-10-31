@@ -79,6 +79,7 @@ function releaseAfterReading(
     void client.system.keepRunning
       .query()
       .then(({ enabled }): void => keepRunning(enabled))
+      // A safeguard: the machine already clears the setting as it releases, so a rejected read says what it assumes.
       .catch((): void => keepRunning(false))
       .finally(close);
   };
