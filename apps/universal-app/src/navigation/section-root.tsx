@@ -89,9 +89,16 @@ type Stack = ReturnType<NavigationProp<ParamListBase>['getState']>;
 
 type Route = Stack['routes'][number];
 
-// Only a stack of the root and one page, the root carrying that page's params, is one opened by its address.
+const hasParams = (route: Route | undefined): boolean =>
+  Object.keys({ ...route?.params }).length > 0;
+
+// A core section's own `index` root, and a page of another name. A Plugin's root is `[...path]`, as is each page it pushes.
+const indexAndPage = (routes: Stack['routes']): boolean =>
+  /^index,(?!index$)[^,]+$/.test(routes.map(({ name }) => name).join(','));
+
+// Only that stack, the root carrying the page's params, is one opened by its address.
 const openedByAddress = (routes: Stack['routes']): routes is [Route, Route] =>
-  routes.length === 2 && Object.keys({ ...routes[0]?.params }).length > 0;
+  indexAndPage(routes) && hasParams(routes[0]);
 
 // Only for the page itself: the root below it mounts later, from a stack that may be stale by then.
 function repairedRoutes(
