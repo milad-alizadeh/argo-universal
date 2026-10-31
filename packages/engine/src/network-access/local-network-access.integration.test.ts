@@ -1,5 +1,5 @@
 import { Server } from 'node:http';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { startEngineTestHost } from '#mocks/engine';
 import {
@@ -12,6 +12,10 @@ import {
 } from '#mocks/engine-network';
 
 const portOf = (url: string): number => Number(new URL(url).port);
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const foreignHost = 'rebound.example';
 
@@ -26,12 +30,12 @@ it('rejects turning it on when the Server cannot bind, and stays on loopback and
   const { caller, url } = await startEngineTestHost();
   const port = portOf(url);
   const own = await connect('127.0.0.1', port);
+  onTestFinished(() => own.close());
   refuseBinds(Server.prototype);
 
   await expect(
     caller.network.setLocalAccess({ enabled: true }),
   ).rejects.toThrow('in use');
-  vi.restoreAllMocks();
 
   expect(await caller.network.localAccess()).toEqual({ enabled: false });
   expect(own.readyState).toBe(WebSocket.OPEN);

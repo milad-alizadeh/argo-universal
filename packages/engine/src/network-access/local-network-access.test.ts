@@ -76,8 +76,24 @@ it('follows where the listener really is when it cannot go back, and reports bot
     'Database Writer is not available',
   );
   expect(failure).toHaveProperty('errors.1.message', 'cannot go back');
+  expect(failure.message).toBe(
+    'Local network access is on now but could not be stored or undone; a restart returns it to off',
+  );
   expect(access.enabled).toBe(true);
   expect(listener).toHaveBeenCalledWith(true);
+});
+
+it('binds again when set to the value it already has, so a listener that lost its address is repaired', async (): Promise<void> => {
+  const access = create(true);
+  const rebind = binding();
+  const listener = vi.fn<(enabled: boolean) => void>();
+  access.useBinding(rebind);
+  access.subscribe(listener);
+
+  await access.set(false);
+
+  expect(rebind).toHaveBeenCalledExactlyOnceWith(false);
+  expect(listener).not.toHaveBeenCalled();
 });
 
 it('does not fail the change or skip the other subscribers when one throws', async (): Promise<void> => {

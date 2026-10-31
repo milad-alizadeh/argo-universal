@@ -99,7 +99,10 @@ class NetworkListener {
     const target = addressFor(network);
 
     if (!this.movesTo(target)) return;
-    // Stops accepting at once and leaves the Connections already open alone.
+    /*
+     * Stops accepting at once and leaves the Connections already open alone.
+     * close(), the listen in moveTo and its error callback all run in this tick, so stop() cannot land between the check above and the bind. If listen ever became asynchronous, check `stopped` again here.
+     */
     this.server.close();
     await this.moveTo(target);
 
