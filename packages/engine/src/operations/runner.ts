@@ -29,7 +29,7 @@ import {
   type StartedWork,
 } from './native-start';
 import { parseResult, validateParams } from './params';
-import type { SessionScope } from './session-scope';
+import type { PromptChains, SessionScope } from './session-scope';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import type { UserAdmission } from './work';
 
@@ -50,7 +50,11 @@ export type SessionRun = SessionCaller &
 
 type SessionContext = { caller: SessionCaller; call: SessionOperationCall };
 
-type RunnerPorts = { scope: SessionScope; directory: SessionDirectory };
+type RunnerPorts = {
+  scope: SessionScope;
+  directory: SessionDirectory;
+  chains: PromptChains;
+};
 
 // Every caller runs an Operation here; its kind picks its steps before the implementation runs and its result is parsed.
 export class OperationRunner {
@@ -79,15 +83,21 @@ export class OperationRunner {
   public run<Id extends OperationId>(
     run: AppRun<Id> | UserRun | SessionRun,
   ): Promise<OperationResult<Id> | OperationRunResult> {
-    if (run.kind === 'app') return this.app[run.id](run.params);
+    if (run.kind === 'app') return this.runApp(run);
 
     return run.kind === 'user' ? this.runUser(run) : this.runSession(run);
   }
-  private async runUser({
-    id,
-    params,
-    admission,
-  }: UserRun): Promise<OperationRunResult> {
+  private runApp<Id extends OperationId>(
+    run: AppRun<Id>,
+  ): Promise<OperationResult<Id>> {
+    this.ports.chains.clearedByUser(run);
+
+    return this.app[run.id](run.params);
+  }
+  private async runUser(run: UserRun): Promise<OperationRunResult> {
+    const { id, params, admission } = run;
+    this.ports.chains.clearedByUser(run);
+
     if (!isNativeStartOperation(id))
       return answer(await this.invoke(id, params));
 
