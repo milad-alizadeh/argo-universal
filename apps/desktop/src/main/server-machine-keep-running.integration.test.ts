@@ -171,3 +171,19 @@ it(
   },
   startLimitMs,
 );
+
+it(
+  'still quits when the Server has gone, so the setting it once gave cannot hold the app open',
+  async (): Promise<void> => {
+    const app = await launchApp();
+    await askServer((client) =>
+      client.system.setKeepRunning.mutate({ enabled: true }),
+    );
+    await stopProcess(app.serverPid(), supervisorStopGraceMs);
+
+    await app.quit();
+
+    expect(isAlive(app.serverPid())).toBe(false);
+  },
+  startLimitMs,
+);

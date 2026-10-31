@@ -66,27 +66,23 @@ function watchCounts(client: Client, report: Report): Subscription {
   });
 }
 
-// Tells the machine what the Server says; `fallback` is what it is told when the Server cannot answer, and none tells it nothing.
-function readKeepRunning(
+// A Server that cannot answer keeps today's behaviour: the App stops the Supervisor it started.
+function releaseAfterReading(
   client: Client,
   report: Report,
-  fallback?: boolean,
-): Promise<void> {
-  const tell = (enabled: boolean | undefined): void => {
-    if (enabled !== undefined) report({ type: 'keepRunning.changed', enabled });
-  };
+  close: () => void,
+): () => void {
+  const keepRunning = (enabled: boolean): void =>
+    report({ type: 'keepRunning.changed', enabled });
 
-  return client.system.keepRunning
-    .query()
-    .then(({ enabled }): void => tell(enabled))
-    .catch((): void => tell(fallback));
+  return (): void => {
+    void client.system.keepRunning
+      .query()
+      .then(({ enabled }): void => keepRunning(enabled))
+      .catch((): void => keepRunning(false))
+      .finally(close);
+  };
 }
-
-// A Server that cannot answer keeps today's behaviour: the App stops the Supervisor it started.
-const releaseAfterReading =
-  (client: Client, report: Report, close: () => void) => (): void => {
-    void readKeepRunning(client, report, false).finally(close);
-  };
 
 function observeCounts(
   socket: ReturnType<typeof createWSClient>,
@@ -97,8 +93,6 @@ function observeCounts(
   });
 
   const subscription = watchCounts(client, report);
-  // Asked on connecting too, so a quit before the Connection is let go of already knows it.
-  void readKeepRunning(client, report);
   const close = once((): void => closeCounts(socket, subscription));
 
   return { release: releaseAfterReading(client, report, close), close };
