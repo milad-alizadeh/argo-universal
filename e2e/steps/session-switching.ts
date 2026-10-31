@@ -2,26 +2,15 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
-import { sessionRow, startSession } from './live-session';
+import { openSessionRow, sessionRow, startSession } from './live-session';
 import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
 
 const feed = (page: Page): Locator => page.getByTestId('feed-scroll');
 
-const openSessionUrl = /\/sessions\/(?!new)[^/]+$/;
-
+// The press is checked by the shared helper, so the Feed is asked for its content only once the Session is open.
 export async function openSession(page: Page, title: string): Promise<void> {
-  const row = sessionRow(page, title);
-  await row.click();
-  // A swallowed row press leaves the App on its page; name that before the Feed's content is blamed.
-  const notOpened = `the Session "${title}" did not open`;
-  await expect(page, notOpened).toHaveURL(openSessionUrl);
-
-  // A wide Frame keeps the list beside the page, so the row itself says which Session is open.
-  if (!onPhone(page)) {
-    await expect(row, notOpened).toHaveAttribute('aria-pressed', 'true');
-  }
-
+  await openSessionRow(page, sessionRow(page, title), title);
   await expect(feed(page)).toContainText(title);
 }
 
