@@ -14,6 +14,8 @@ export {
   SlotItems,
   SlotItemsInput,
   itemsSlot,
+  ProjectDetailsItem,
+  projectDetailsRowLimit,
   projectDetailsSlotId,
   sessionActivitySlotId,
   SessionActivityItem,
@@ -21,9 +23,12 @@ export {
   sessionRowSlotId,
   slotItemsListLimit,
   slotRegistry,
+  withContexts,
   type AnyItemsSlot,
   type ItemsContext,
   type ItemsSlotItem,
+  type SlotContextOf,
+  type SlotInputOf,
   type SlotLimit,
 } from '#plugin-wire-slot';
 

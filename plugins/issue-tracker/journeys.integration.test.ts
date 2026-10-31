@@ -1,5 +1,9 @@
-import { findWireNodeEntry, type WireNode } from '@argo/plugin-kit/testing';
-import { expect, it } from 'vitest';
+import {
+  findWireNodeEntry,
+  projectDetailsSlotId,
+  type WireNode,
+} from '@argo/plugin-kit/testing';
+import { expect, it, onTestFinished } from 'vitest';
 import {
   chooseGithub,
   chosen,
@@ -9,21 +13,58 @@ import {
   openIssue,
   project,
   refusedTitle,
-  slot,
   tracker,
+  trackerPage,
   wait,
 } from './journey-fixture';
 
 const closeIssue = 'Close Issue';
 
-it('persists a Tracker chosen in the Project details Slot across views', async () => {
+it('persists a Tracker chosen on the choice page across views', async () => {
   const test = await tracker();
-  const first = test.slot(slot);
+  const first = trackerPage(test);
   await chooseGithub(first);
   first.close();
 
-  const reopened = test.slot(slot);
+  const reopened = trackerPage(test);
   await expect.poll(() => chosen(reopened), wait).toBe(true);
+}, 20_000);
+
+/*
+ * ADR-0046: Project details takes one row per Plugin, so the row names the chosen Tracker and says its items changed
+ * once the page has saved a choice.
+ */
+it('answers the Project details row with the Tracker the choice page saved', async () => {
+  const test = await tracker();
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+
+  const rows = test.slotItems(
+    { slotId: projectDetailsSlotId, contexts: [{ projectId: project.id }] },
+    { signal: controller.signal },
+  );
+
+  expect((await rows.next()).value).toEqual({
+    [project.id]: {
+      items: [
+        {
+          pluginId: 'issue-tracker',
+          item: {
+            title: 'Issue tracker',
+            value: 'None',
+            action: { path: '/tracker' },
+          },
+        },
+      ],
+      overflow: [],
+    },
+  });
+
+  await chooseGithub(trackerPage(test));
+
+  expect((await rows.next()).value).toMatchObject({
+    [project.id]: { items: [{ item: { value: 'GitHub Issues' } }] },
+  });
 }, 20_000);
 
 const isStatus = (node: WireNode): boolean =>

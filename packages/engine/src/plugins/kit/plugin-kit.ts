@@ -119,13 +119,12 @@ export function createKit(
     data.ready(viewId, background),
   );
 
-  return pageKit({ data, pages, ...providers(calls, pages) });
+  return pageKit({ data, pages, ...providers(calls) });
 }
 
-// What a Plugin registers against its own pages: the Slots it fills and the Operations it declares.
+// What a Plugin registers besides its pages: the Slots it answers and the Operations it declares.
 const providers = (
   calls: KitCalls,
-  pages: Pages,
 ): Pick<KitParts, 'slots' | 'operations'> => ({
   slots: slotProviders(calls.slots),
   operations: operationHandlers(calls.operations),

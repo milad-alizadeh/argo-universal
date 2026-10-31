@@ -13,7 +13,7 @@ function useAnswer(
   return useMemo(() => ({ data, error }), [data, error]);
 }
 
-// The Project details Slot's view belongs to the Project, so each Query runs in its folder.
+// The map's page belongs to the Project its row drilled in from, so each Query runs in that folder.
 function useReading(): Reading {
   const lines = useAnswer(fileQueries.lines);
   const branches = useAnswer(fileQueries.branches);

@@ -1,4 +1,8 @@
-import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
+import {
+  sessionRowSlotId,
+  type SlotContextOf,
+  type SlotItems,
+} from '@repo/contracts/plugins/wire';
 import { describe, expect, it, vi } from 'vitest';
 import {
   cachedRows,
@@ -9,7 +13,9 @@ import {
   type RowCache,
 } from './session-row-cache';
 
-const context = (sessionId: string): SlotItemsInput['contexts'][number] => ({
+const context = (
+  sessionId: string,
+): SlotContextOf<typeof sessionRowSlotId> => ({
   sessionId,
   projectId: 'argo',
 });

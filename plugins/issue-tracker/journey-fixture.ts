@@ -1,9 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import {
   Action,
-  projectDetailsSlotId,
   startPluginTest,
-  type PluginSlotInput,
   type PluginTest,
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
@@ -21,22 +19,26 @@ export const refusedTitle = 'Fixture issue gh cannot change';
 
 const trackerName = 'GitHub Issues';
 
-export type SlotView = ReturnType<PluginTest['slot']>;
+// The Tracker choice page, which a Project details row drills into (ADR-0046).
+export const trackerPath = '/tracker';
+
+export type ChoiceView = ReturnType<PluginTest['page']>;
 
 export type PageView = Awaited<ReturnType<PluginTest['mount']>>;
 
 export const wait = { timeout: 10_000 };
 
-export const slot: PluginSlotInput = {
-  slotId: projectDetailsSlotId,
-  context: { projectId: project.id },
-};
+// The Tracker choice page for one Project, as the row that drilled in opens it.
+export const trackerPage = (
+  test: PluginTest,
+  projectId = project.id,
+): ChoiceView => test.page(trackerPath, undefined, projectId);
 
 // A check marks the chosen row; its press is held until the stored choice arrives.
-export const chosen = (view: SlotView): boolean =>
+export const chosen = (view: ChoiceView): boolean =>
   view.findText(trackerName)?.node.props.selected === true;
 
-export async function chooseGithub(view: SlotView): Promise<void> {
+export async function chooseGithub(view: ChoiceView): Promise<void> {
   await expect
     .poll(() => view.findText(trackerName)?.node.props.disabled, wait)
     .toBe(false);
@@ -64,7 +66,7 @@ export async function issuesRoot(): Promise<{
 }> {
   const test = await tracker();
 
-  await chooseGithub(test.slot(slot));
+  await chooseGithub(trackerPage(test));
 
   const root = await test.mount({ page: '/', surface: { platform: 'web' } });
 

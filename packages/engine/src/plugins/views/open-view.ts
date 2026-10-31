@@ -49,16 +49,12 @@ export function createOpenView(
   return {
     pluginId,
     draws: drawsFor(opening),
-    projectId: projectOfOpening(opening),
+    projectId: opening.projectId,
     connectionId,
     events: viewEvents(),
     opening: { ...opening, type: 'open', viewId: createPluginViewId() },
     ...blankView(),
   };
-}
-
-export function projectOfOpening(opening: Opening): string | undefined {
-  return opening.slot?.context.projectId ?? opening.projectId;
 }
 
 function viewEvents(): ViewEvents {

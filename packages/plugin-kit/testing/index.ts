@@ -6,11 +6,11 @@ export { PluginTestView } from './view';
 
 export { test, collectPluginTests, type PluginTestCase } from './test-cases';
 
-// What a Plugin's own tests read in the trees and Slot inputs the harness hands back.
+// What a Plugin's own tests read in the trees and Slot items the harness hands back.
 export {
   Action,
   projectDetailsSlotId,
-  type PluginSlotInput,
+  type ProjectDetailsItem,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
 

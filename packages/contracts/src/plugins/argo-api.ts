@@ -27,10 +27,7 @@ import type { QueryResult } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
 
-export type {
-  SlotItemsAnswer,
-  SlotItemsProvider,
-} from './slot-api';
+export type { SlotItemsAnswer, SlotItemsProvider, SlotsApi } from './slot-api';
 
 /*
  * The Plugin API's calls to the Server: each method's arguments come from the call schema it sends, and

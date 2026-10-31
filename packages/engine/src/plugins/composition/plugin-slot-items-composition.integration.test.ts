@@ -28,12 +28,14 @@ const provider = (body: string): string => `
     argo.slots.register('${sessionRowSlotId}', ${body});
   }`;
 
-type Merged = SlotItems[string];
+// One Session row Slot item as the App reads it back, with the Plugin that sent it.
+type Attributed = { pluginId: string; item: { text: string } };
 
-const row = (pluginId: string, texts: string[]): Merged['items'] =>
+const row = (pluginId: string, texts: string[]): Attributed[] =>
   texts.map((text) => ({ pluginId, item: { text } }));
 
-// The counter's items after `counter` calls, then `second`'s first answer, past the desktop limit of 3.
+type Merged = { items: Attributed[]; overflow: Attributed[] };
+
 const merged = (counter: number): Merged => ({
   items: [
     ...row('counter', [`a${counter}`, `b${counter}`]),

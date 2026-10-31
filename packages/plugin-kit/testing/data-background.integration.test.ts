@@ -27,10 +27,7 @@ it.each([299999, 300000, 300001])(
     await expect.poll(() => fixture.requests(), processWait).toHaveLength(2);
     await expect.poll(() => kit.log(), processWait).toContain(completedLine);
 
-    const page = kit.slot({
-      slotId: 'argo/project/details/v1',
-      context: { projectId: 'one' },
-    });
+    const page = kit.page('/', undefined, 'one');
 
     await page.find('2');
     expect(JSON.stringify(page.trees[0])).toContain('"children":"2"');
@@ -80,10 +77,7 @@ it('starts one drifting pass for each added Project and releases a removed Proje
     path: one,
   });
 
-  const readded = kit.slot({
-    slotId: 'argo/project/details/v1',
-    context: { projectId: 'one' },
-  });
+  const readded = kit.page('/', undefined, 'one');
 
   await readded.find('5');
   expect(JSON.stringify(readded.trees)).not.toContain('"children":"3"');

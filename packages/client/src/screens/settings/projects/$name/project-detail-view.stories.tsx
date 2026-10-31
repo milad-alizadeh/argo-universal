@@ -8,9 +8,8 @@ import {
 } from '../../../../features/settings/components/settings-pages.mocks';
 import { chosenAccounts } from './project-detail-accounts-fixtures';
 import {
-  codeMapContribution,
   longPathProject,
-  pluginContributions,
+  pluginItems,
 } from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
@@ -22,7 +21,7 @@ const meta = {
     caption: { control: 'text' },
     otherDevice: { control: 'text' },
     project: { control: false },
-    pluginContributions: { control: false },
+    pluginItems: { control: false },
     accounts: { control: false },
   },
   parameters: { screenPreview: true },
@@ -34,10 +33,6 @@ const meta = {
 } satisfies Meta<typeof ProjectDetailView>;
 
 export default meta;
-
-const withSpies = [...pluginContributions, codeMapContribution].map(
-  (contribution) => ({ ...contribution, onEvent: fn() }),
-);
 
 type Story = StoryObj<typeof meta>;
 
@@ -57,9 +52,9 @@ export const Local: Story = {
   },
 };
 
-// Three Plugins in the Project details Slot, each in a section and card of its own.
+// Two Plugins in the Project details Slot, each in a section and card of its own, their rows drawn by Argo.
 export const PluginSections: Story = {
-  args: { pluginContributions: withSpies },
+  args: { pluginItems, onOpenPluginPage: fn() },
 };
 
 // Each host's chosen Account, below Folder.

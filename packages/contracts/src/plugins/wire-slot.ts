@@ -12,6 +12,8 @@ export {
   mergedItems,
   replaceableSlots,
   messageSlotId,
+  ProjectDetailsItem,
+  projectDetailsRowLimit,
   projectDetailsSlotId,
   sessionActivitySlotId,
   SessionActivityItem,
@@ -134,3 +136,24 @@ export type SlotId = z.infer<typeof SlotId>;
 export type SlotItemsInput = z.infer<typeof SlotItemsInput>;
 
 export type SlotItems = z.infer<typeof SlotItems>;
+
+// One items Slot's own batched call: a Slot takes only the contexts its own entry declares.
+export type SlotInputOf<Id extends AddOnlySlotId> = Extract<
+  SlotItemsInput,
+  { slotId: Id }
+>;
+
+// One context of one items Slot, such as a Session for the Session row Slots and a Project for Project details.
+export type SlotContextOf<Id extends AddOnlySlotId> =
+  SlotInputOf<Id>['contexts'][number];
+
+/*
+ * The same batched call for fewer contexts, such as the ones no answer is held for yet. The Slot id stays
+ * the one it was, so the contexts stay the ones that Slot takes.
+ */
+export function withContexts<Input extends SlotItemsInput>(
+  input: Input,
+  contexts: Input['contexts'],
+): Input {
+  return { ...input, contexts };
+}

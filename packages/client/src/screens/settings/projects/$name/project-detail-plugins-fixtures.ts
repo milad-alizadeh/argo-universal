@@ -1,69 +1,38 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { WireNode } from '@repo/contracts/plugins/wire';
-import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
-import canvasScene from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
+import type { ProjectDetailsItem } from '@repo/contracts/plugins/wire';
+import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { worktreeProject } from '../../../../features/settings/components/settings-pages.mocks';
-import type { PluginSlotContribution } from '../../../../lib/product/plugin-registry';
+import type { ReadItem } from '../../../plugins/slot-items';
 
-const row = (key: string, title: string): WireNode => ({
-  type: 'ListItem',
-  key,
-  props: { title },
-  children: [],
-  slots: {},
+const read = (
+  pluginId: string,
+  pluginName: string,
+  item: ProjectDetailsItem,
+): ReadItem<ProjectDetailsItem> => ({
+  pluginId,
+  pluginName,
+  pluginIcon: iconSymbols.plug,
+  item,
 });
 
-const trackerRoot: WireNode = {
-  type: 'List',
-  key: 'tracker',
-  props: {},
-  children: [row('none', 'None'), row('github', 'GitHub Issues')],
-  slots: {},
-};
-
-// What the Code Map draws: a Canvas, then a caption as long as its legend, which wraps rather than runs on.
-const codeMapRoot: WireNode = {
-  type: 'Stack',
-  key: 'map',
-  props: { direction: 'column', gap: 4 },
-  children: [
-    WireNode.parse(canvasScene),
-    {
-      type: 'Text',
-      key: 'legend',
-      props: {
-        children:
-          'Area: lines · Colour: branching lines · Shade: changes in the last 1,000 commits',
-        role: 'secondary',
-        tone: 'muted',
-      },
-      children: [],
-      slots: {},
-    },
-  ],
-  slots: {},
-};
-
-// Two Plugins that contribute to Project details, in the Server's order; a story adds the `onEvent` spy.
-export const pluginContributions: Omit<PluginSlotContribution, 'onEvent'>[] = [
-  {
-    pluginId: 'example',
-    name: 'Example',
-    root: slotCounterRoot,
-  },
-  {
-    pluginId: 'issue-tracker',
-    name: 'Issue tracker',
-    root: trackerRoot,
-  },
+/*
+ * What two Plugins answer for this Project (ADR-0046), in the Server's order: the first sends two rows, which the
+ * section separates as it does Argo's own, and the second one row naming the Tracker it opens a page to change.
+ */
+export const pluginItems: ReadItem<ProjectDetailsItem>[] = [
+  read('example', 'Example', {
+    title: 'Pull requests',
+    value: '3 open',
+    action: { path: '/pull-requests' },
+  }),
+  read('example', 'Example', { title: 'Last sync', value: '2 minutes ago' }),
+  read('issue-tracker', 'Issue tracker', {
+    title: 'Issue tracker',
+    value: 'GitHub Issues',
+    icon: { sf: 'smallcircle.circle', material: 'adjust' },
+    action: { path: '/tracker' },
+  }),
 ];
-
-// The Code Map's section, held apart because its Canvas draws on CanvasKit, which a story that does not look at it should not wait for.
-export const codeMapContribution: Omit<PluginSlotContribution, 'onEvent'> = {
-  pluginId: 'code-map',
-  name: 'Code Map',
-  root: codeMapRoot,
-};
 
 // A Project whose folder path is as long as a deep checkout's.
 export const longPathProject: ProjectInfo = {

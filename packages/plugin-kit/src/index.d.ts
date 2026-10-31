@@ -130,6 +130,13 @@ declare global {
 // The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
 export type { Argo } from '@repo/contracts/plugins/argo-api';
 
+// The items a Plugin answers an add-only Slot with: Argo draws each one as a row (ADR-0046).
+export type {
+  ProjectDetailsItem,
+  SessionActivityItem,
+  SessionRowItem,
+} from '@repo/contracts/plugins/wire';
+
 // The List's move rule: applies a move its `onMove` reports, so the board draws the order the List showed.
 export {
   applyListMove,
