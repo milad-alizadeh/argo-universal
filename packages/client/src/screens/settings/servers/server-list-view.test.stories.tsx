@@ -38,9 +38,6 @@ export const OneServerReadsAsTheOrdinaryCase: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('button', { name: ownRow })).toBeVisible();
     await expect(
-      canvas.getByText('Argo is showing the Server on this computer.'),
-    ).toBeVisible();
-    await expect(
       canvas.queryByText(/no Servers|Pair|empty|unavailable/i),
     ).toBeNull();
   },
@@ -61,9 +58,15 @@ export const PressingTheShownServerLeavesItShown: Story = {
   },
 };
 
-export const SaysWhichServerItIsShowing: Story = {
+// The row's own check is what says which Server is being shown; no line of copy repeats it.
+export const TheShownServersRowIsTheChosenOne: Story = {
   args: { lookingAt: 'studio' },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Argo is showing Studio\./)).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: studioRow, pressed: true }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: ownRow, pressed: false }),
+    ).toBeVisible();
   },
 };

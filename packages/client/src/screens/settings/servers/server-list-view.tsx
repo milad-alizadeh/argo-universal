@@ -4,7 +4,6 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
   type ServerRow,
-  serverBadge,
   serverRowName,
   serverStateLabel,
   shownServerFooter,
@@ -24,10 +23,7 @@ export interface ServerListViewProps {
  */
 export function ServerListView(props: ServerListViewProps): React.JSX.Element {
   return (
-    <Screen
-      title="Servers"
-      caption="The Argo Servers this App can show. Choose one to read its Sessions."
-    >
+    <Screen title="Servers" caption="The Argo Servers this App can show.">
       <List appearance="grouped">
         <ServerSection {...props} />
       </List>
@@ -35,11 +31,11 @@ export function ServerListView(props: ServerListViewProps): React.JSX.Element {
   );
 }
 
+// The page's title names the section, so the section carries its footer alone.
 function ServerSection(props: ServerListViewProps): React.JSX.Element {
   return (
     <ListSection
-      title="Servers"
-      footer={shownServerFooter(props.servers, props.lookingAt)}
+      footer={shownServerFooter}
       selectionMode="single"
       selection={[props.lookingAt]}
       onSelectionChange={(ids) => look(props, ids)}
@@ -63,7 +59,6 @@ const ServerListRow = (row: ServerRow): React.JSX.Element => (
     id={row.id}
     title={row.name}
     value={serverStateLabel(row.state)}
-    badge={serverBadge(row.state)}
     accessibilityLabel={serverRowName(row)}
   />
 );

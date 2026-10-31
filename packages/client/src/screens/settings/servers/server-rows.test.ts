@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ServerRow } from './server-rows';
-import {
-  serverBadge,
-  serverRow,
-  serverRowName,
-  shownServerFooter,
-} from './server-rows';
+import { serverRow, serverRowName, serverStateLabel } from './server-rows';
 
 const ownId = 'server-device';
 
@@ -27,8 +22,8 @@ const studio: ServerRow = {
 
 describe("a Server's row", () => {
   it("says that Server's state and not the list's", () => {
-    expect(serverBadge(own.state).label).toBe('Connected');
-    expect(serverBadge(studio.state).label).toBe('Unreachable');
+    expect(serverStateLabel(own.state)).toBe('Connected');
+    expect(serverStateLabel(studio.state)).toBe('Unreachable');
   });
 
   it('is spoken as the Server and its state', () => {
@@ -52,18 +47,5 @@ describe("a Server's row", () => {
     expect(serverRow(studio, new Map())).toMatchObject({
       state: 'unreachable',
     });
-  });
-});
-
-describe('what the list says it is showing', () => {
-  // One Server is the ordinary case, so the footer reads the same for one as for several.
-  it('reads the same with one Server as with several', () => {
-    expect(shownServerFooter([own], ownId)).toBe(
-      shownServerFooter([own, studio], ownId),
-    );
-  });
-
-  it('names the paired Server whose Sessions are the ones shown', () => {
-    expect(shownServerFooter([own, studio], studioId)).toContain('Studio');
   });
 });
