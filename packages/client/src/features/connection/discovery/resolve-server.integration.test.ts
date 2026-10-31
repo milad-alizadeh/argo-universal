@@ -13,24 +13,24 @@ afterEach(async () => {
   for (const close of closers.splice(0).reverse()) await close();
 });
 
-type Host = Awaited<ReturnType<typeof startEngineTestHost>>;
+type TestServer = Awaited<ReturnType<typeof startEngineTestHost>>;
 
-const portOf = (host: Host): number => Number(new URL(host.url).port);
+const portOf = (server: TestServer): number => Number(new URL(server.url).port);
 
 // The Server on the local network, as the owner leaves it after pairing: reachable beyond this computer and announcing itself.
 async function startOnTheNetwork(
   options: Parameters<typeof startEngineTestHost>[0] = {},
-): Promise<Host> {
-  const host = await startEngineTestHost(options);
+): Promise<TestServer> {
+  const server = await startEngineTestHost(options);
 
-  closers.push(host.stop);
-  await host.caller.network.setLocalAccess({ enabled: true });
+  closers.push(server.stop);
+  await server.caller.network.setLocalAccess({ enabled: true });
 
-  return host;
+  return server;
 }
 
-const keyOf = async (host: Host): Promise<string> =>
-  (await host.caller.devices.serverKey()).publicKey;
+const keyOf = async (server: TestServer): Promise<string> =>
+  (await server.caller.devices.serverKey()).publicKey;
 
 // What a connect then does with the answer: opens the Connection and asks the Server who it is.
 async function nameReachedAt(location: ServerLocation): Promise<string> {
@@ -98,14 +98,23 @@ describe.skipIf(!lanAddress)(
       expect(portOf(after)).not.toBe(known.address.port);
     });
 
-    it('does not take a computer that answers to the right name with the wrong key', async (): Promise<void> => {
-      await startOnTheNetwork({ discoveryName: computerName });
+    it('takes the Server by its key and refuses the same name under another key', async (): Promise<void> => {
+      const server = await startOnTheNetwork({ discoveryName: computerName });
+      const key = await keyOf(server);
 
-      const known = { name: computerName, key: 'not-its-key' };
+      const right = await resolveServer(
+        { name: computerName, key },
+        watchAnnouncedServers,
+      );
 
-      await expect(
-        resolveServer(known, watchAnnouncedServers, 1500),
-      ).rejects.toThrow(computerName);
+      const wrong = resolveServer(
+        { name: computerName, key: 'not-its-key' },
+        watchAnnouncedServers,
+        1500,
+      );
+
+      expect(right).toMatchObject({ source: 'discovery' });
+      await expect(wrong).rejects.toThrow(computerName);
     });
 
     it('falls back to the stored address when nothing announces itself', async (): Promise<void> => {
@@ -126,5 +135,26 @@ describe.skipIf(!lanAddress)(
       });
       expect(await nameReachedAt(location)).toBeTruthy();
     });
+
+    it('uses the stored address when the browser cannot start', async (): Promise<void> => {
+      const known = { name: computerName, key: 'k', address: nothingThere };
+
+      const location = await resolveServer(known, () => {
+        throw new Error('native module is not linked');
+      });
+
+      expect(location).toMatchObject({ source: 'address', port: 9 });
+    });
   },
 );
+
+it('answers from the stored address at once where nothing can browse', async (): Promise<void> => {
+  const known = { name: computerName, key: 'k', address: nothingThere };
+
+  expect(await resolveServer(known, null)).toMatchObject({
+    source: 'address',
+  });
+  await expect(
+    resolveServer({ name: computerName, key: 'k' }, null),
+  ).rejects.toThrow(computerName);
+});

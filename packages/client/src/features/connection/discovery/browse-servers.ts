@@ -1,8 +1,4 @@
 import type { BrowseServers } from './resolve-server';
 
-// A browser cannot listen for mDNS, and a web App is never a paired Device (ADR-0045): nothing is ever heard here, and a stored address answers.
-export const browseServers: BrowseServers = () => (): void => undefined;
-
-export const askForLocalNetworkAccess = (): Promise<
-  'granted' | 'denied' | 'unknown'
-> => Promise.resolve('granted');
+// A browser cannot listen for mDNS, and a web App is never a paired Device (ADR-0045): there is nothing to browse with, so a stored address is the only answer and nothing waits for one.
+export const browseServers: BrowseServers | null = null;

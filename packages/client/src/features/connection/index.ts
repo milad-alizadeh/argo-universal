@@ -11,10 +11,8 @@ export { openConnection } from './api/open-connection';
 
 export { retryServer } from './api/retry-server';
 
-export {
-  askForLocalNetworkAccess,
-  browseServers,
-} from './discovery/browse-servers';
+// The connect step passes this as `browse`; null where the platform cannot browse.
+export { browseServers } from './discovery/browse-servers';
 
 export {
   type BrowseServers,

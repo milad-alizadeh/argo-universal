@@ -2,11 +2,12 @@ import { Server } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import {
   type DiscoveredServer,
-  discoveryKeyField,
+  type Announced,
+  HeardServers,
   discoveryProtocol,
   discoveryServiceType,
 } from '@repo/contracts';
-import { Bonjour, type Service } from 'bonjour-service';
+import { Bonjour, type Browser, type Service } from 'bonjour-service';
 import { vi } from 'vitest';
 import { WebSocket } from 'ws';
 
@@ -93,61 +94,36 @@ export const closed = (socket: WebSocket): Promise<void> =>
     socket.once('close', (): void => resolve());
   });
 
-const isAddress = (address: string): boolean =>
-  /^\d+\.\d+\.\d+\.\d+$/.test(address);
+const asAnnounced = (service: Service): Announced => ({
+  name: service.name,
+  txt: service.txt,
+  addresses: service.addresses ?? [],
+  port: service.port,
+});
 
-const keyOf = (service: Service): string =>
-  String(service.txt?.[discoveryKeyField] ?? '');
-
-function toServer(service: Service): DiscoveredServer | undefined {
-  const key = keyOf(service);
-
-  return key
-    ? {
-        name: service.name,
-        key,
-        addresses: (service.addresses ?? []).filter(isAddress),
-        port: service.port,
-      }
-    : undefined;
-}
-
-type Listener = (servers: readonly DiscoveredServer[]) => void;
-
-// Every Argo Server heard so far, by the name of its announcement; one that says goodbye is dropped.
-class Heard {
-  private readonly servers = new Map<string, DiscoveredServer>();
-
-  public constructor(private readonly listener: Listener) {}
-
-  public up(service: Service): void {
-    const server = toServer(service);
-
-    if (server) this.servers.set(service.fqdn, server);
-    this.listener([...this.servers.values()]);
-  }
-
-  public down(service: Service): void {
-    this.servers.delete(service.fqdn);
-    this.listener([...this.servers.values()]);
-  }
-}
+const browseArgo = (bonjour: Bonjour): Browser =>
+  bonjour.find({ type: discoveryServiceType, protocol: discoveryProtocol });
 
 // Another Device's mDNS browser, as an App on the same network runs one: told no address, it reports every Argo Server it hears.
-export function watchAnnouncedServers(listener: Listener): () => void {
+export function watchAnnouncedServers(
+  listener: (servers: readonly DiscoveredServer[]) => void,
+): () => void {
   const bonjour = new Bonjour();
-  const heard = new Heard(listener);
+  const heard = new HeardServers(listener);
+  const browser = browseArgo(bonjour);
 
-  const browser = bonjour.find({
-    type: discoveryServiceType,
-    protocol: discoveryProtocol,
-  });
-
-  browser.on('up', (service: Service): void => heard.up(service));
-  browser.on('down', (service: Service): void => heard.down(service));
+  browser.on('up', (service: Service): void =>
+    heard.up(service.fqdn, asAnnounced(service)),
+  );
+  browser.on('down', (service: Service): void => heard.down(service.fqdn));
 
   return (): void => {
     browser.stop();
     bonjour.destroy();
   };
 }
+
+// Every address this computer has, on any interface.
+export const ownAddresses = Object.values(networkInterfaces())
+  .flat()
+  .flatMap((entry) => (entry ? [entry.address] : []));

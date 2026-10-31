@@ -18,3 +18,56 @@ export const DiscoveredServer = z.strictObject({
 });
 
 export type DiscoveredServer = z.infer<typeof DiscoveredServer>;
+
+// What a platform's mDNS browser hands over about one announcement. The peer is unauthenticated: every field is untrusted.
+export interface Announced {
+  name: string;
+  txt: unknown;
+  addresses: string[];
+  port: number;
+}
+
+const ipv4 = /^\d+\.\d+\.\d+\.\d+$/;
+
+const Txt = z.looseObject({ [discoveryKeyField]: z.coerce.string() });
+
+const keyOf = (found: Announced): string => {
+  const parsed = Txt.safeParse(found.txt);
+
+  return parsed.success ? (parsed.data[discoveryKeyField] ?? '') : '';
+};
+
+// An announcement worth listing: it names a key and parses as a `DiscoveredServer`. IPv6 is left out.
+export function toDiscoveredServer(
+  found: Announced,
+): DiscoveredServer | undefined {
+  const parsed = DiscoveredServer.safeParse({
+    name: found.name,
+    key: keyOf(found),
+    addresses: found.addresses.filter((address) => ipv4.test(address)),
+    port: found.port,
+  });
+
+  return parsed.success && parsed.data.key ? parsed.data : undefined;
+}
+
+// Every Argo Server heard so far, by whatever identifies an announcement to the platform; one that is removed is dropped. Each change reports the whole list.
+export class HeardServers {
+  private readonly servers = new Map<string, DiscoveredServer>();
+
+  public constructor(
+    private readonly listener: (servers: readonly DiscoveredServer[]) => void,
+  ) {}
+
+  public up(id: string, found: Announced): void {
+    const server = toDiscoveredServer(found);
+
+    if (server) this.servers.set(id, server);
+    this.listener([...this.servers.values()]);
+  }
+
+  public down(id: string): void {
+    this.servers.delete(id);
+    this.listener([...this.servers.values()]);
+  }
+}

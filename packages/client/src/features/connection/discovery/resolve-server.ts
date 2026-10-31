@@ -41,20 +41,49 @@ const release =
     stop();
   };
 
-// Waits for the Server with this key to announce itself, or gives up. A computer that answers to the right name with another key is not the Server.
-function waitForAnnouncement(
+const nothingToStop = (): void => undefined;
+
+type Heard = PromiseWithResolvers<DiscoveredServer | null>;
+
+// Listens for the Server with this key. Where nothing can listen, or the browser cannot start (a native module that is not linked), nothing is awaited and the stored address answers.
+function startBrowsing(
+  browse: BrowseServers | null,
+  key: string,
+  heard: Heard,
+): () => void {
+  try {
+    return browse ? listen(browse, key, heard) : giveUp(heard);
+  } catch {
+    return giveUp(heard);
+  }
+}
+
+const listen = (
   browse: BrowseServers,
   key: string,
-  timeoutMs: number,
-): Promise<DiscoveredServer | null> {
-  const heard = Promise.withResolvers<DiscoveredServer | null>();
-  const timer = setTimeout((): void => heard.resolve(null), timeoutMs);
-
-  const stop = browse((servers): void => {
+  heard: Heard,
+): (() => void) =>
+  browse((servers): void => {
     const found = servers.find((server) => server.key === key);
 
     if (found) heard.resolve(found);
   });
+
+function giveUp(heard: Heard): () => void {
+  heard.resolve(null);
+
+  return nothingToStop;
+}
+
+// Waits for the Server with this key to announce itself, or gives up. A computer that answers to the right name with another key is not the Server.
+function waitForAnnouncement(
+  browse: BrowseServers | null,
+  key: string,
+  timeoutMs: number,
+): Promise<DiscoveredServer | null> {
+  const heard = Promise.withResolvers<DiscoveredServer | null>();
+  const stop = startBrowsing(browse, key, heard);
+  const timer = setTimeout((): void => heard.resolve(null), timeoutMs);
 
   return heard.promise.finally(release(timer, stop));
 }
@@ -84,7 +113,7 @@ function remembered(known: KnownServer): ServerLocation {
  */
 export async function resolveServer(
   known: KnownServer,
-  browse: BrowseServers,
+  browse: BrowseServers | null,
   timeoutMs: number = defaultTimeoutMs,
 ): Promise<ServerLocation> {
   const found = await waitForAnnouncement(browse, known.key, timeoutMs);

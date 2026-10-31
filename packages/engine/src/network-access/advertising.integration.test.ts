@@ -1,7 +1,11 @@
 import type { DiscoveredServer } from '@repo/contracts';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { lanAddress, watchAnnouncedServers } from '#mocks/engine-network';
+import {
+  lanAddress,
+  ownAddresses,
+  watchAnnouncedServers,
+} from '#mocks/engine-network';
 
 const heardWithin = 8000;
 
@@ -30,9 +34,9 @@ function browseTheNetwork(): Browser {
   };
 }
 
-type Host = Awaited<ReturnType<typeof startEngineTestHost>>;
+type TestServer = Awaited<ReturnType<typeof startEngineTestHost>>;
 
-const keyOf = async (caller: Host['caller']): Promise<string> =>
+const keyOf = async (caller: TestServer['caller']): Promise<string> =>
   (await caller.devices.serverKey()).publicKey;
 
 // A computer with no network has no interface to announce on.
@@ -57,7 +61,10 @@ describe.skipIf(!lanAddress)(
         name: 'Studio Mac',
         port: Number(new URL(url).port),
       });
-      expect(network.announced(key)?.addresses).toContain(lanAddress);
+      const { addresses } = network.announced(key) ?? { addresses: [] };
+
+      expect(addresses.length).toBeGreaterThan(0);
+      expect(ownAddresses).toEqual(expect.arrayContaining(addresses));
     });
 
     it('stays off the network while Local network access is off', async (): Promise<void> => {
