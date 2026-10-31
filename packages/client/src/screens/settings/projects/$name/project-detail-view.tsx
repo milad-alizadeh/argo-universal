@@ -1,5 +1,8 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import {
+  FieldGroup,
+  HostedSectionContent,
+} from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { homePath, SettingsLoading } from '#features/settings';
@@ -99,10 +102,10 @@ function ProjectSections(props: SectionsProps): React.JSX.Element {
   );
 }
 
-// One Plugin's tree is the one row of a section of its own, titled with the Plugin's name.
+// One Plugin's tree is the one row of a section of its own, titled with the Plugin's name. It is React Native content, which Android's FieldGroup hosts.
 const pluginSection: PluginSectionFrame = ({ key, title, children }) => (
   <FieldGroup.Section key={key} title={title}>
-    {children}
+    <HostedSectionContent>{children}</HostedSectionContent>
   </FieldGroup.Section>
 );
 

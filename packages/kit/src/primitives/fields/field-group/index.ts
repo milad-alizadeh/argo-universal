@@ -12,3 +12,5 @@ export {
   sectionBreakHeight,
   titleInsets,
 } from './field-group-caption-insets';
+
+export { HostedSectionContent } from './field-group-hosted';

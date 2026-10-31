@@ -65,6 +65,25 @@ export const OffersNoUnbuiltChanges: Story = {
   },
 };
 
+// #1725: beside a long value the title keeps its width, so it is never cut down to a letter.
+export const ALongPathLeavesTheTitleItsFullWidth: Story = {
+  args: {
+    project: {
+      status: 'loaded',
+      project: {
+        ...worktreeProject,
+        path: '/Users/milad/Developer/clients/acme-corporation/platform/services/billing-and-invoicing/checkout-worktree',
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    const title = await canvas.findByText('Path');
+
+    await expect(title).toBeVisible();
+    await expect(title.scrollWidth).toBeLessThanOrEqual(title.clientWidth);
+  },
+};
+
 export const BackLeavesTheProject: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
