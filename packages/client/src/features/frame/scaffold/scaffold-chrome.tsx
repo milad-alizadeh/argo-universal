@@ -12,7 +12,7 @@ export function WindowDragStrip(): React.JSX.Element {
   );
 }
 
-// Floats over the top of the detail and Inspector, so an expanded Inspector still shows it; touches outside the banner reach the page.
+// Floats over the top of the panes, centred on the span it is given (the content column on the full Frame, the whole window on Onboarding); touches outside the banner reach the page.
 export interface PaneBannerProps {
   // Where the panes start, when the sidebar beside them is not in the same row.
   left?: number;
@@ -36,6 +36,6 @@ export function PaneBanner({
   );
 }
 
-// With no width the banner runs to the window's right edge.
+// With no width the banner spans from `left` (the window's left edge by default) to the window's right edge.
 const bannerStyle = (left?: number, width?: number): ViewStyle =>
-  width === undefined ? { left, right: 0 } : { left, width };
+  width === undefined ? { left: left ?? 0, right: 0 } : { left, width };
