@@ -8,6 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { type ReactElement, type ReactNode, useContext } from 'react';
 import type { ImageSourcePropType } from 'react-native';
+import { useEnlargedText } from '#kit/enlarged-text';
 import { NativeText } from '#primitives/content/native-text';
 import { useIconPixels } from '../../../symbols/icon-size';
 import { nativeIconName } from '../../../symbols/native-icon-name';
@@ -57,10 +58,13 @@ export function RowListItem(props: RowListItemProps): ReactElement {
   );
 }
 
+// One line, truncating a long title, until the text is enlarged; then it wraps.
 function Headline(props: RowListItemProps): ReactNode {
+  const lines = useEnlargedText() ? undefined : 1;
+
   return (
     props.headline ?? (
-      <NativeText tone={props.tone} numberOfLines={1}>
+      <NativeText tone={props.tone} numberOfLines={lines}>
         {props.title}
       </NativeText>
     )

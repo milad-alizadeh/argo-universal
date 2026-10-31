@@ -39,7 +39,9 @@ export function AccountListView(
   return (
     <Screen title={accountsTitle} caption={props.caption}>
       <FieldGroup>
-        <FieldGroup.Section>{accountRows(props)}</FieldGroup.Section>
+        <FieldGroup.Section footer={emptyFooter(props.accounts)}>
+          {accountRows(props)}
+        </FieldGroup.Section>
       </FieldGroup>
     </Screen>
   );
@@ -62,12 +64,13 @@ function accountRows({
 
 const loadingAccounts = <FieldGroup.Value title="Loading Accounts…" value="" />;
 
-const noAccounts = (
-  <FieldGroup.Value
-    title="No Accounts yet. Sign in from a Plugin's page."
-    value=""
-  />
-);
+// A row is one line, so the empty row only says so; where to sign in is the Section's footer.
+const noAccounts = <FieldGroup.Value title="No Accounts yet." value="" />;
+
+const emptyFooter = (accounts: AccountsLoad): string | undefined =>
+  accounts.status === 'loaded' && accounts.accounts.length === 0
+    ? "Sign in from a Plugin's page."
+    : undefined;
 
 const accountRow = (
   account: AccountRow,

@@ -53,6 +53,8 @@ export const SaysWhenThereAreNoAccounts: Story = {
   args: { accounts: { status: 'loaded', accounts: [] } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/No Accounts/)).toBeVisible();
+    // The one-line row says so; the Section's footer says where to sign in, so no line is cut.
+    await expect(canvas.getByText(/Sign in from/)).toBeVisible();
   },
 };
 
