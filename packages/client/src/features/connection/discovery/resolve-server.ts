@@ -1,4 +1,4 @@
-import type { DiscoveredServer } from '@repo/contracts';
+import { type DiscoveredServer, keyHashOf } from '@repo/contracts';
 
 // Starts listening for Argo Servers on the local network and reports every one heard so far each time that changes; answers a function that stops. The platform supplies it: mDNS on a phone, a browser of its own on a desktop.
 export type BrowseServers = (
@@ -45,7 +45,7 @@ const nothingToStop = (): void => undefined;
 
 type Heard = PromiseWithResolvers<DiscoveredServer | null>;
 
-// Listens for the Server with this key. Where nothing can listen, or the browser cannot start (a native module that is not linked), nothing is awaited and the stored address answers.
+// Listens for the Server whose announced hash is this key's. Where nothing can listen, or the browser cannot start (a native module that is not linked), nothing is awaited and the stored address answers.
 function startBrowsing(
   browse: BrowseServers | null,
   key: string,
@@ -58,16 +58,15 @@ function startBrowsing(
   }
 }
 
-const listen = (
-  browse: BrowseServers,
-  key: string,
-  heard: Heard,
-): (() => void) =>
-  browse((servers): void => {
-    const found = servers.find((server) => server.key === key);
+function listen(browse: BrowseServers, key: string, heard: Heard): () => void {
+  const keyHash = keyHashOf(key);
+
+  return browse((servers): void => {
+    const found = servers.find((server) => server.keyHash === keyHash);
 
     if (found) heard.resolve(found);
   });
+}
 
 function giveUp(heard: Heard): () => void {
   heard.resolve(null);
@@ -108,8 +107,8 @@ function remembered(known: KnownServer): ServerLocation {
 
 /*
  * Where the Server is now, asked of the network on every connect and never taken from the last connect (ADR-0045).
- * The announcement is matched by key, so a renamed computer is still found; the stored address answers only when nothing announces itself.
- * Which of the addresses is the Server is for the handshake to prove, not this.
+ * The announcement is matched by the hash of the key, so a renamed computer is still found; the stored address answers only when nothing announces itself.
+ * A matching hash is a hint, not proof: the announcement is unauthenticated, and which of the addresses is the Server is for the handshake to prove, not this.
  */
 export async function resolveServer(
   known: KnownServer,
