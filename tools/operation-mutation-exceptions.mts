@@ -13,7 +13,7 @@ const retained = new Map<string, readonly string[]>([
   ['notifications/router.ts', ['attention', 'acknowledge']],
   ['blob/router.ts', ['upload']],
   ['operations/router.ts', ['run', 'wait']],
-  // Deciding who can reach the Server is the owner's alone, never an Agent's (ADR-0045).
+  // Deciding who can reach the Server is the owner's alone (ADR-0045), so it is not an Operation and has no tier. Today nothing server-side stops a caller on the Server Device, an Agent included, from calling it; `serverDeviceProcedure` (#1497) is what will.
   ['network-access/router.ts', ['setLocalAccess']],
 ]);
 

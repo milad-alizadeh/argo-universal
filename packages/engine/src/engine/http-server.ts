@@ -94,13 +94,25 @@ function connectHttpServer(
   const closeConnections = connectWebSockets(server, setup.appRouter, guard);
 
   return {
-    ...setup,
+    localNetworkAccess: setup.localNetworkAccess,
+    notifications: setup.notifications,
     listeningOn: listener.where,
-    close: admitClose(setup.commandAdmission, () =>
-      closeHttpServices(setup, closeConnections),
-    ),
+    close: closeWith(setup, listener, closeConnections),
     createCaller: createHttpCaller(setup),
   };
+}
+
+// After the close starts the listener never binds again, so a change racing it cannot reopen the port.
+function closeWith(
+  setup: RoutedSetup,
+  listener: ServerListener,
+  closeConnections: () => Promise<void>,
+): () => Promise<void> {
+  return admitClose(setup.commandAdmission, () => {
+    listener.stop();
+
+    return closeHttpServices(setup, closeConnections);
+  });
 }
 
 async function closeHttpServices(
