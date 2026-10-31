@@ -58,6 +58,8 @@ A Session whose every row is blank cannot be seeded for this: the App draws it a
 | `scrollTopShiftPx` | How far the Feed's scroll position moved |
 | `endReached` | Whether the Feed ended at its newest row, which is the slide #1543 recorded |
 
+First observations (`PERF_RUNS=5`, 1x CPU, 241 Sessions, 644 recorded rows, run on a contended machine: load average 29 at the start and 21 at the end, so not a quiet-machine baseline). In four of five trials the marked row jumped about 312 px for one or two frames while the older page landed, then returned to within a pixel. The first trial after a cold open differed in kind: the row stayed off its mark for 123 frames and ended 30 px away. Read that as an observed characteristic of a cold first landing, not as a flake, and look at `driftedFrames` before `maxDriftPx`.
+
 The drift is reported, not judged: a run in which the anchor holds reads `maxDriftPx` near zero, and a regression reads as a number. `PERF_RUNS` sets the trials (default 3) and `PERF_CPU` the slowdowns. A trial where the older page lands before the row is marked, or never lands, is `failed` and stays in the report. The 100-row tier fits one page, so there is no older page and the scenario is `notApplicable` there. The hold delays every Server message for under a second, so the older page's latency is not what this measures; `feed-page-ready` measures that.
 
 ## Elapsed scenarios by case
