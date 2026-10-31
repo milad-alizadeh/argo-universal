@@ -58,6 +58,11 @@ export function leaveForSessions(): void {
   router.dismissTo('/sessions');
 }
 
+// Sessions from a page no route answers: nothing is under it to go back to, so the list replaces it.
+export function replaceWithSessions(): void {
+  router.replace('/sessions');
+}
+
 // A Project's page in Settings.
 export const projectHref = (name: string): Href => ({
   pathname: '/settings/projects/[name]',

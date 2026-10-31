@@ -48,7 +48,7 @@ export interface SheetScreenEntry {
   standby?: boolean;
 }
 
-// The sheet's Sheet.Screen children, the first one its root; none when the sheet has a single page.
+// The sheet's Sheet.Screen children, the first one its root, so a sheet of one Sheet.Screen has one page, which carries the title the stack draws.
 function sheetScreens(children: ReactNode): SheetScreenEntry[] {
   return Children.toArray(children)
     .filter(isScreen)

@@ -1,6 +1,7 @@
 import { Switch } from '@expo/ui';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
+import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { expect, fireEvent, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
@@ -194,5 +195,44 @@ export const ButtonsOutsideAListKeepTheirKeysWide: Story = {
 
     await userEvent.keyboard(down);
     await expect(copy).toHaveFocus();
+  },
+};
+
+// The window frame's 8px inset, written out so the test does not read the value it checks.
+const edgeMargin = 8;
+
+// A popover whose trigger sits against the window's right edge shifts left and stops short of that edge.
+export const StaysInsideTheWindowEdgeWide: Story = {
+  render: () => (
+    <View className="fixed top-6 right-0">
+      <Popover>
+        <Trigger />
+        <PopoverContent
+          accessibilityLabel="Edge"
+          align="start"
+          style={{ width: 320 }}
+          className="p-0 overflow-hidden"
+        >
+          <Text>{'Edge'}</Text>
+        </PopoverContent>
+      </Popover>
+    </View>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Open' }));
+
+    const popover = await within(document.body).findByRole('dialog', {
+      name: 'Edge',
+    });
+
+    // Radix places its popper wrapper, the dialog's parent; the dialog fills it in the app.
+    const placed = popover.parentElement;
+
+    if (!placed) throw new Error('Popover has no popper wrapper');
+
+    await expect(placed.getBoundingClientRect().right).toBeLessThanOrEqual(
+      window.innerWidth - edgeMargin,
+    );
   },
 };

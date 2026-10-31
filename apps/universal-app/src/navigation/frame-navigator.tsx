@@ -96,10 +96,11 @@ function SectionsDrawer({
   return <Drawer {...props}>{sectionScreens(options)}</Drawer>;
 }
 
+// `+not-found` is the Frame's own page for an unknown path: left out, the drawer keeps no options for it and its sidebar never draws.
 function sectionScreens(
   options: ReturnType<typeof frameDrawerOptions>,
 ): React.ReactNode {
-  return [...sectionOrder, 'plugins'].map((name) => (
+  return [...sectionOrder, 'plugins', '+not-found'].map((name) => (
     <Drawer.Screen
       key={name}
       name={name}
