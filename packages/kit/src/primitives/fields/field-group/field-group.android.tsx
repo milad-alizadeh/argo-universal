@@ -6,6 +6,7 @@ import {
   imePadding,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { View } from 'react-native';
 import {
   fieldGroupColumnStyle,
   OutsideColumn,
@@ -34,20 +35,23 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
 function FieldGroupRoot(props: FieldGroupProps): ReactElement {
   /*
    * Its cards keep Material's own inset, so the Screen adds no gutter beyond the column's own; its rows are outside the column.
-   * The Host is the column, as the web's scroll view is: capped and centred, so the cards start on the title's line.
+   * A View is the column, as the web's scroll view is: capped, centred and padded, so the cards start on the title's line.
+   * Compose's Host ignores the padding and honours the cap, so the padding sits on the View around it.
    */
   const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
 
   return (
-    <Host style={{ flex: 1, ...column }}>
-      <GroupDisabledContext.Provider value={props.disabled ?? false}>
-        <InsideHostContext.Provider value>
-          <OutsideColumn>
-            <Column>{props.children}</Column>
-          </OutsideColumn>
-        </InsideHostContext.Provider>
-      </GroupDisabledContext.Provider>
-    </Host>
+    <View style={{ flex: 1, ...column }}>
+      <Host style={{ flex: 1 }}>
+        <GroupDisabledContext.Provider value={props.disabled ?? false}>
+          <InsideHostContext.Provider value>
+            <OutsideColumn>
+              <Column>{props.children}</Column>
+            </OutsideColumn>
+          </InsideHostContext.Provider>
+        </GroupDisabledContext.Provider>
+      </Host>
+    </View>
   );
 }
 
