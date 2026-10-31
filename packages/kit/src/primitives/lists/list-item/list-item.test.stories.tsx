@@ -5,6 +5,7 @@ import { expect, fn, within } from 'storybook/test';
 import { pressTarget } from '#mocks/press-target';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
+import { SkeletonLoadingContext } from '#primitives/status/skeleton';
 import { ListItem, ListItemInert, useListItemPress } from './index';
 
 const title = 'Item one';
@@ -247,5 +248,27 @@ export const Option: Story = {
     await expect(canvas.queryByRole('button', { name: title })).toBeNull();
     await userEvent.click(row);
     await expect(args.onPress).toHaveBeenCalledOnce();
+  },
+};
+
+// A row a loading Skeleton holds is a placeholder: its title is a width, so the row's own label must not be read.
+export const HiddenWhileSkeletonLoads: Story = {
+  render: (args) => (
+    <>
+      <SkeletonLoadingContext value>
+        <ListItem {...args} title="Placeholder title" />
+      </SkeletonLoadingContext>
+      <SkeletonLoadingContext value={false}>
+        <ListItem {...args} title="Ignored row" />
+      </SkeletonLoadingContext>
+    </>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: 'Ignored row' }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Placeholder title' }),
+    ).toBeNull();
   },
 };

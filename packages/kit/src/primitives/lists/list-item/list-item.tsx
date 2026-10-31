@@ -2,6 +2,7 @@ import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
 import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
+import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { ListTileContext, RowPositionContext } from '../../../list-context';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { nestedRows, nestsChildren } from '../../../list-tree';
@@ -88,9 +89,14 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing(props);
   const tile = useContext(ListTileContext);
+  // A row a Skeleton holds is a placeholder whose title is a width, so the row hides its own label; the native Skeleton only hides text and control leaves, and Skeleton.Ignore sets the context false.
+  const loading = useSkeletonLoading();
 
   return (
-    <View className={tile ? tileSurface : itemSurface(drawing, props)}>
+    <View
+      className={tile ? tileSurface : itemSurface(drawing, props)}
+      aria-hidden={loading || undefined}
+    >
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
       <RowDetails tile={tile !== null} props={props} />
       <RowMovePicker id={props.id} Row={ListItem} />
