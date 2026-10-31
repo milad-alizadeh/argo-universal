@@ -52,3 +52,24 @@ export const DrawsAnUnknownFilePlain: Story = {
     await expect(await codeRuns(canvas)).toHaveLength(0);
   },
 };
+
+// The Claude Agent writes a command's output as Markdown, in a console fence; the fence is not output.
+export const ConsumesTheFenceAroundCommandOutput: Story = {
+  args: {
+    content: [
+      {
+        type: 'content',
+        content: {
+          type: 'text',
+          text: '```console\nqa-token-file PLUM-7314\nhello-from-qa\n```',
+        },
+      },
+    ],
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(canvas.getByText(/qa-token-file PLUM-7314/)).toBeVisible();
+    await expect(canvas.queryByText(/```/)).toBeNull();
+    await expect(canvas.queryByText(/console/)).toBeNull();
+  },
+};
