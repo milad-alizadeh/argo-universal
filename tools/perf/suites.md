@@ -90,6 +90,8 @@ It takes the Session-open probe at the start, every `PERF_SOAK_PROBE_MINUTES` (d
 - Server: process count, summed resident memory and CPU of the listening process and everything below it, from `ps`.
 
 `<label>-soak.json` holds the raw probes and samples and counts cancellations whose Stop button actually appeared.
+The scripted Turn often finishes before Stop can be pressed; the soak records that as an attempt without an observed cancellation and carries on.
+A Stop that stays drawn but cannot be pressed, or any other error, still fails the run.
 It states no verdict: raw growth alone does not prove a leak, and Server reads and subscriptions are not observed.
 The test's own timeout is the soak plus ten minutes; no other timeout changes.
 
