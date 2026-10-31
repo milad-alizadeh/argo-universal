@@ -7,15 +7,6 @@ import type { AppRouter } from './router';
 
 const forbiddenStatus = 403;
 
-export const listenOnLoopback = (server: Server, port: number): Promise<void> =>
-  new Promise<void>((resolve, reject): void => {
-    server.once('error', reject);
-    server.listen(port, '127.0.0.1', (): void => {
-      server.off('error', reject);
-      resolve();
-    });
-  });
-
 const closeServer = (server: Server): Promise<void> =>
   new Promise<void>((resolve, reject): Server =>
     server.close((error): void => (error ? reject(error) : resolve())),

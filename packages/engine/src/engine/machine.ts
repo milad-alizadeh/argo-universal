@@ -125,8 +125,8 @@ export const engineMachine = engineSetup.createMachine({
                 assign({ server: ({ event }): HttpServer => event.output }),
                 {
                   type: 'log',
-                  params: ({ context }): EngineLogParameters => ({
-                    line: `listening on 127.0.0.1:${context.port}`,
+                  params: ({ event }): EngineLogParameters => ({
+                    line: `listening on ${event.output.listeningOn()}`,
                   }),
                 },
                 {

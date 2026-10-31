@@ -5,6 +5,7 @@ import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import { type FeedDeps } from '../feed';
+import type { NetworkAccessDeps } from '../network-access';
 import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PluginsRouterDeps } from '../plugins';
@@ -29,7 +30,8 @@ export type AppRouterDeps = SessionSources &
   BlobUploadDeps &
   SystemDeps &
   FeedDeps &
-  NotificationsDeps & {
+  NotificationsDeps &
+  NetworkAccessDeps & {
     userHome: string;
     sessionTokens: SessionTokens;
     controlToken: string;
