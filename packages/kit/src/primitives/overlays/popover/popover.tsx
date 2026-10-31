@@ -4,7 +4,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 import { OutsideColumn } from '#kit/content-column/content-column';
 import { ListPlaceContext, popoverPlace, useListPlace } from '#kit/list-place';
-import { menuSurfaceClassName } from '#kit/menu-surface';
+import { menuSurfaceClassName, windowEdgeInset } from '#kit/menu-surface';
 import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { InsideHostContext } from '#primitives/native/host';
@@ -134,6 +134,7 @@ function webContentProps(
   return {
     ...contentPlacement(props),
     side: props.side,
+    collisionPadding: windowEdgeInset,
     'aria-label': props.accessibilityLabel,
     onEscapeKeyDown: props.onEscapeKeyDown,
   };
@@ -177,15 +178,13 @@ function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
 }
 
 // The Portal's direct child stays the content: its Presence needs that child's ref to wait out the close animation.
-function PopoverContent(props: ContentProps): React.JSX.Element {
+export function PopoverContent(props: ContentProps): React.JSX.Element {
   return (
     <WebPopover.Portal>
       <PopoverBody {...props} />
     </WebPopover.Portal>
   );
 }
-
-export { PopoverContent };
 
 Popover satisfies React.ComponentType<PopoverProps>;
 
