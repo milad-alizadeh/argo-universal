@@ -22,8 +22,9 @@ const settingOf = (
 });
 
 /*
- * The Server Device's own setting. A paired Device gets none: the App hides the row now, and the Server will refuse
- * the change itself (#1497). Nor does a Device get one before the Server has said what it is.
+ * The Server Device's own setting. A Paired Device gets none: it never asks the Server what the setting is, and the
+ * Server refuses both the question and the change with `serverDeviceProcedure`. Nor does a Device get one before the
+ * Server has said what it is.
  */
 export function keepRunningSetting(
   paired: boolean,
