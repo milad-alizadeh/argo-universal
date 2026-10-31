@@ -17,9 +17,9 @@ interface HeldUpdates {
   held: boolean;
   subscriptionIds: Set<number>;
   waiting: (() => void)[];
-  // When each Server message reached the page, in ms since it opened, so a late first Snapshot shows as a gap (#1693).
-  arrivals: string[];
-  openedAt: number;
+  // One line per subscribe call and Server message, timed from the page's start, so a late first Session snapshot shows as a gap.
+  arrivalLog: string[];
+  startedAt: number;
 }
 
 interface OtherPage {
@@ -41,8 +41,13 @@ function connect(route: WebSocketRoute, updates: HeldUpdates): void {
   // Each WebSocket numbers its calls afresh.
   updates.subscriptionIds = new Set();
   route.onMessage((message) => {
-    for (const { id } of framesMatching(message, Subscription))
+    for (const { id } of framesMatching(message, Subscription)) {
       updates.subscriptionIds.add(id);
+      updates.arrivalLog.push(
+        `+${Date.now() - updates.startedAt}ms subscribe ${id}`,
+      );
+    }
+
     server.send(message);
   });
   server.onMessage((message) => deliver(route, updates, message));
@@ -55,8 +60,8 @@ function recordArrival(
 ): boolean {
   const update = ids.some((id) => updates.subscriptionIds.has(id));
 
-  updates.arrivals.push(
-    `+${Date.now() - updates.openedAt}ms ${update ? 'update' : 'reply'} ${ids.join(',')} ${message.length}B`,
+  updates.arrivalLog.push(
+    `+${Date.now() - updates.startedAt}ms ${update ? 'update' : 'reply'} ${ids.join(',')} ${message.length}B`,
   );
 
   return update;
@@ -89,8 +94,8 @@ When(
       held: false,
       subscriptionIds: new Set(),
       waiting: [],
-      arrivals: [],
-      openedAt: Date.now(),
+      arrivalLog: [],
+      startedAt: Date.now(),
     };
 
     const other = await openWidePage(app, (opened) =>
@@ -111,8 +116,8 @@ Then(
     try {
       await expectOverComposer(other, title);
     } catch (error) {
-      await test.info().attach('other-page-arrivals', {
-        body: updates.arrivals.join('\n') || 'No message reached the page',
+      await test.info().attach('other-page-arrivalLog', {
+        body: updates.arrivalLog.join('\n') || 'No message reached the page',
         contentType: 'text/plain',
       });
       throw error;
