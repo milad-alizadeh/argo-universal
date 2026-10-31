@@ -58,5 +58,5 @@ export function nothingChecked(paths: string[]): string {
   const listed = paths.slice(0, LISTED_PATHS).join(', ');
   const more = paths.length > LISTED_PATHS ? ', ...' : '';
 
-  return `nothing checked. None of the changed paths (${listed}${more}) is a file verify reads (JavaScript, TypeScript, JSON, CSS, YAML), so no format, lint, type or test check ran. This is not a pass.`;
+  return `nothing checked. None of the changed paths (${listed}${more}) is an existing file verify reads, so no format, lint, type or test check ran. This is not a pass.`;
 }
