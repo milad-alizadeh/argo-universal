@@ -111,6 +111,31 @@ it.each([infoRoute, `/blobs/${blobId}`])(
 );
 
 /*
+ * A token says which Device is asking. It does not say that a page on some other Origin may read the answer, so the header that would let it is withheld on both byte routes.
+ * The desktop main process attaches the user token to every request from its session, subframes included, so a cross-origin document in that session would otherwise have had a Plugin's asset bytes reflected back to it.
+ */
+it('lets no foreign Origin read a Blob, even asked with the user token', async (): Promise<void> => {
+  const response = await sendHttpRequest({
+    path: `/blobs/${blobId}`,
+    headers: { origin: 'https://evil.example' },
+  });
+
+  expect(response.status).toBe(200);
+  expect(response.headers['access-control-allow-origin']).toBeUndefined();
+});
+
+// This Server serves no such asset, so the 404 is what says the request got past the guard and as far as looking: the Origin was never the reason it was refused, and it still may not read the answer.
+it('lets no foreign Origin read a Plugin asset, even asked with the user token', async (): Promise<void> => {
+  const response = await sendHttpRequest({
+    path: '/plugin-assets/probe/x.png',
+    headers: { origin: 'https://evil.example' },
+  });
+
+  expect(response.status).toBe(404);
+  expect(response.headers['access-control-allow-origin']).toBeUndefined();
+});
+
+/*
  * The App's own media loads: an `<img>` is not a CORS request, so the browser sends no `Origin`, and the page it came from is what the browser sends instead.
  * A page that rebinds a name cannot forge that: the attack is same-origin, so its own name is what the browser reports.
  */
