@@ -1,8 +1,9 @@
 import type { Database } from '@repo/db';
+import type { Keypair } from '../pairing/x25519';
 import type { WriterActorRef } from '../storage';
 import { readSystemInfo } from '../system';
 import { ensureServerDevice } from './server-device';
-import { ensureServerPublicKey } from './static-key';
+import { ensureServerKeypair, serverPublicKey } from './static-key';
 
 type ServerIdentityOptions = {
   home: string;
@@ -13,17 +14,24 @@ type ServerIdentityOptions = {
   startedAt: string;
 };
 
+export interface ServerIdentity {
+  readonly keypair: Keypair;
+  readonly publicKey: string;
+}
+
 function serverPlatform(): 'macos' | 'windows' | 'linux' {
   if (process.platform === 'darwin') return 'macos';
 
   return process.platform === 'win32' ? 'windows' : 'linux';
 }
 
-// The static key and the Server Device's row are made together, once, and kept; answers the public key.
+// The static key and the Server Device's row are made together, once, and kept; answers the keypair the handshake runs on and the public half the QR carries.
 export async function ensureServerIdentity(
   options: ServerIdentityOptions,
-): Promise<string> {
-  const publicKey = await ensureServerPublicKey(options.home);
+): Promise<ServerIdentity> {
+  const keypair = await ensureServerKeypair(options.home);
+  const publicKey = serverPublicKey(keypair);
+
   await ensureServerDevice(options.database, options.databaseWriter, {
     createId: options.createId,
     publicKey,
@@ -32,5 +40,5 @@ export async function ensureServerIdentity(
     now: Date.now(),
   });
 
-  return publicKey;
+  return { keypair, publicKey };
 }

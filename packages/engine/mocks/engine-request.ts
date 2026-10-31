@@ -30,7 +30,7 @@ let stopEngine: () => Promise<void>;
 
 let port: number;
 
-export let host: string;
+let host: string;
 
 interface HttpRequest {
   path: string;

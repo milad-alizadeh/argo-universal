@@ -175,6 +175,6 @@ export function connectionOpening(
   return {
     ...opening,
     surface: connection.surface,
-    serverDevice: connection.serverDevice === true,
+    serverDevice: connection.identity?.serverDevice === true,
   };
 }

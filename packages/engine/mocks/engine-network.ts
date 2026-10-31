@@ -1,4 +1,4 @@
-import { Server } from 'node:http';
+import type { Server } from 'node:net';
 import { networkInterfaces } from 'node:os';
 import {
   type DiscoveredServer,
@@ -88,11 +88,6 @@ function takenPort(this: Server, ...args: unknown[]): Server {
 
   return this;
 }
-
-export const closed = (socket: WebSocket): Promise<void> =>
-  new Promise<void>((resolve): void => {
-    socket.once('close', (): void => resolve());
-  });
 
 const asAnnounced = (service: Service): Announced => ({
   name: service.name,

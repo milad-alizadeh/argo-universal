@@ -11,6 +11,7 @@ import {
 type ServerSource = {
   context: Pick<
     EngineContext,
+    | 'now'
     | 'sessionTokens'
     | 'createId'
     | 'commandAdmission'
@@ -57,6 +58,7 @@ type ServerConfiguration = Pick<
   HttpServerOptions,
   | 'home'
   | 'port'
+  | 'now'
   | 'version'
   | 'startedAt'
   | 'notificationOptions'
@@ -84,8 +86,12 @@ function serverConfiguration(
 
 function whereAndWhat(
   context: ServerConfiguration,
-): Pick<ServerConfiguration, 'home' | 'port' | 'version' | 'startedAt'> {
+): Pick<
+  ServerConfiguration,
+  'home' | 'port' | 'version' | 'startedAt' | 'now'
+> {
   return {
+    now: context.now,
     home: context.home,
     port: context.port,
     version: context.version,

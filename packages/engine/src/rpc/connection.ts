@@ -2,21 +2,18 @@ import { randomUUID } from 'node:crypto';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { PluginSurface } from '@repo/contracts/plugins/kit';
 import { createRejectionCounter } from '@repo/machine-log';
+import { identityOf, type RpcIdentity, type RpcSocket } from './identity';
 
 const rejections = createRejectionCounter('Plugin surface header');
+
+export type { RpcSocket } from './identity';
 
 export interface RpcConnection {
   id: string;
   signal: AbortSignal;
   surface?: PluginSurface;
-  serverDevice?: boolean;
-}
-
-// The part of a Connection's socket the context reads: when it closes, and whether both ends are on one device.
-export interface RpcSocket {
-  once(event: 'close', listener: () => void): void;
-  readonly remoteAddress?: string;
-  readonly localAddress?: string;
+  // Who this Connection proved to be; absent when nothing admitted it, which every procedure refuses.
+  identity?: RpcIdentity;
 }
 
 export interface RpcContext {
@@ -43,13 +40,9 @@ function socketConnection(
     id: randomUUID(),
     signal,
     surface: reportedSurface(params?.['pluginSurface']),
-    serverDevice: sameDeviceSocket(socket),
+    identity: identityOf(socket),
   };
 }
-
-const sameDeviceSocket = (socket: RpcSocket): boolean =>
-  socket.remoteAddress !== undefined &&
-  socket.remoteAddress === socket.localAddress;
 
 // A missing surface reports no wire version, and that App sees "Update Argo", not a broken Connection. A surface that is present but not JSON or not recognised does too, and is reported.
 const reportedSurface = (

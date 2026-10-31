@@ -1,29 +1,23 @@
-import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
-import { blobsFolderIn } from '../blob';
-import { ensureServerIdentity } from '../devices';
-import { LocalNetworkAccess } from '../network-access';
-import { Notifications, type NotificationOptions } from '../notifications';
+import type { DeviceAdmission } from '../devices/admit-device';
+import type { LocalNetworkAccess } from '../network-access';
+import type { Notifications, NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
-import { ensureControlToken } from '../operations';
-import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
+import type { PairingTickets } from '../pairing/tickets';
+import type { Keypair } from '../pairing/x25519';
+import type { HookPort, PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
-import { readServerId } from '../system';
 import { announceServer } from './announce-server';
+import { createDoors, type Doors } from './doors';
 import { createHttpCaller, type HttpCaller } from './http-callers';
 import { closeWith, type Listening } from './http-close';
 import { connectWebSockets } from './http-connections';
 import { listenWithPlugins } from './http-listen';
-import { httpRouterInput } from './http-router-input';
+import { prepareHttpServer } from './http-setup';
 import { createRequestGuard } from './request-guard';
-import {
-  createRequestListener,
-  type RequestListenerOptions,
-} from './request-listener';
-import { type AppRouter, createAppRouter } from './router';
-import { createAppRouterDeps } from './router-deps';
+import { type AppRouter } from './router';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
@@ -31,6 +25,8 @@ export interface HttpServerOptions extends PluginServerOptions {
   sessionTokens: SessionTokens;
   registry: RegistryActor;
   createId: () => string;
+  // What the Server calls the time; a test moves it to let a Pairing Ticket expire.
+  now?: () => number;
   port: number;
   version: string;
   startedAt: string;
@@ -54,6 +50,8 @@ export interface HttpServer {
   listeningOn: () => string;
   notifications: Notifications;
   createCaller: HttpCaller;
+  // The Pairing Tickets this Server has outstanding; the pair sheet mints one and a connecting Device spends it.
+  pairing: PairingTickets;
   close: () => Promise<void>;
 }
 
@@ -68,82 +66,62 @@ export type HttpSetup = {
 export type RoutedSetup = HttpSetup & {
   appRouter: AppRouter;
   serverPublicKey: string;
+  // The private half the handshake runs on; it never leaves the Server.
+  staticKey: Keypair;
+  tickets: PairingTickets;
+  admission: DeviceAdmission;
 };
 
-// Serves tRPC and blobs on loopback, or on the local network once the owner turns that on (ADR 0002, ADR 0045); resolves once the port is bound.
+// Serves tRPC and blobs to this computer's own App, and to a paired Device on the local network through the encrypted channel (ADR 0002, ADR 0045); resolves once the port is bound.
 export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
   const setup = await prepareHttpServer(options);
-  const guard = createRequestGuard(options.port, setup.localNetworkAccess);
+  const guard = createRequestGuard();
+  const doors = createDoors(setup, guard);
 
-  const server = createServer(
-    createRequestListener(listenerOptions(setup, guard)),
+  const listener = await listenWithPlugins(
+    doors.frontDoor,
+    options.port,
+    setup,
   );
 
-  const listener = await listenWithPlugins(server, options.port, setup);
   setup.localNetworkAccess.useBinding(listener.rebind);
 
   const stopAnnouncing = announceServer(options, setup);
 
-  return connectHttpServer(setup, server, { guard, listener, stopAnnouncing });
+  return connectHttpServer(setup, doors, { guard, listener, stopAnnouncing });
 }
 
 function connectHttpServer(
   setup: RoutedSetup,
-  server: Server,
+  doors: Doors,
   listening: Listening,
 ): HttpServer {
-  const { guard, listener } = listening;
-  const closeConnections = connectWebSockets(server, setup.appRouter, guard);
+  const connections = connectionsOf(setup, doors, listening);
 
   return {
-    localNetworkAccess: setup.localNetworkAccess,
-    notifications: setup.notifications,
-    listeningOn: listener.where,
-    close: closeWith(setup, listening, closeConnections),
-    createCaller: createHttpCaller(setup),
+    ...served(setup),
+    listeningOn: listening.listener.where,
+    close: closeWith(setup, listening, connectWebSockets(connections)),
   };
 }
 
-async function prepareHttpServer(
-  options: HttpServerOptions,
-): Promise<RoutedSetup> {
-  const serverId = await readServerId(options.database, options.databaseWriter);
-  const setup = prepareHttpSetup(options, serverId);
-
-  const controlToken = await ensureControlToken(options.home);
-  const serverPublicKey = await ensureServerIdentity(options);
-  const input = httpRouterInput(options, setup, controlToken);
-  const deps = createAppRouterDeps({ ...input, serverPublicKey });
-
-  return { ...setup, serverPublicKey, appRouter: createAppRouter(deps) };
-}
-
-function prepareHttpSetup(
-  options: HttpServerOptions,
-  serverId: string,
-): HttpSetup {
-  return {
-    blobsFolder: blobsFolderIn(options.home),
-    commandAdmission: options.commandAdmission ?? new AbortController(),
-    notifications: new Notifications({ ...options, serverId }),
-    plugins: new Plugins(options),
-    localNetworkAccess: new LocalNetworkAccess(
-      options.database,
-      options.databaseWriter,
-    ),
-  };
-}
-
-function listenerOptions(
+const connectionsOf = (
   setup: RoutedSetup,
-  guard: ReturnType<typeof createRequestGuard>,
-): RequestListenerOptions {
-  return {
-    guard,
-    blobsFolder: setup.blobsFolder,
-    router: setup.appRouter,
-    readAsset: setup.plugins.openAsset,
-  };
-}
+  doors: Doors,
+  listening: Listening,
+): Parameters<typeof connectWebSockets>[0] => ({
+  ...listening,
+  requests: doors.requests,
+  router: setup.appRouter,
+});
+
+const served = (
+  setup: RoutedSetup,
+): Omit<HttpServer, 'listeningOn' | 'close'> => ({
+  localNetworkAccess: setup.localNetworkAccess,
+  notifications: setup.notifications,
+  pairing: setup.tickets,
+  createCaller: createHttpCaller(setup),
+});

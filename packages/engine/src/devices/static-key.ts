@@ -1,10 +1,11 @@
-import {
-  createPrivateKey,
-  createPublicKey,
-  generateKeyPairSync,
-} from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import {
+  keypairFromPem,
+  storedPublicKey,
+  type Keypair,
+} from '../pairing/x25519';
 
 const keyFile = 'server.key';
 
@@ -29,14 +30,15 @@ async function createStaticKey(path: string): Promise<void> {
   }
 }
 
-// Makes the Server's static keypair on its first start, keeps its file private and answers the public half (ADR-0045).
-export async function ensureServerPublicKey(home: string): Promise<string> {
+// Makes the Server's static keypair on its first start and keeps its file private; the handshake runs on the private half and the QR carries the public one (ADR-0045).
+export async function ensureServerKeypair(home: string): Promise<Keypair> {
   const path = keyPath(home);
 
   await createStaticKey(path);
   await chmod(path, privateFileMode);
 
-  return createPublicKey(createPrivateKey(await readFile(path)))
-    .export({ type: 'spki', format: 'der' })
-    .toString('base64url');
+  return keypairFromPem(await readFile(path));
 }
+
+export const serverPublicKey = (keypair: Keypair): string =>
+  storedPublicKey(keypair.publicKey);
