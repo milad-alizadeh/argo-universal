@@ -60,34 +60,33 @@ class ViewWalk(private val root: ViewGroup) {
    * are muted one by one, because no-hide-descendants cannot be undone further down. The web Skeleton walks the
    * same way (skeleton-aria.ts).
    */
-  private fun muteRoots(parent: ViewGroup): List<View> {
-    val roots = mutableListOf<View>()
-    collectMuteRoots(parent, roots)
-    return roots
-  }
+  private fun muteRoots(parent: ViewGroup): List<View> = mutesUnder(parent).roots
 
-  // One pass: a child goes in whole, or, when it holds an ignore view, gives the roots found under it instead.
-  private fun collectMuteRoots(parent: ViewGroup, into: MutableList<View>): Boolean {
+  // The views to mute under one parent, and whether that parent holds an ignore view anywhere beneath it.
+  private class Mutes(val roots: List<View>, val holdsIgnore: Boolean)
+
+  private fun mutesUnder(parent: ViewGroup): Mutes {
+    val roots = mutableListOf<View>()
     var holdsIgnore = false
-    val found = mutableListOf<View>()
-    for (index in 0 until parent.childCount) {
-      val child = parent.getChildAt(index)
+    for (child in childrenOf(parent)) {
       if (child is ArgoSkeletonIgnoreView) {
         holdsIgnore = true
         continue
       }
-      if (child.visibility != View.VISIBLE) continue
-      val below = mutableListOf<View>()
-      if (child is ViewGroup && collectMuteRoots(child, below)) {
+      // A child that holds an ignore view somewhere below gives the roots found under it instead of itself.
+      val below = (child as? ViewGroup)?.let { mutesUnder(it) }?.takeIf { it.holdsIgnore }
+      if (below != null) {
         holdsIgnore = true
-        found += below
-      } else {
-        found += child
+        roots += below.roots
+      } else if (child.visibility == View.VISIBLE) {
+        roots += child
       }
     }
-    into += found
-    return holdsIgnore
+    return Mutes(roots, holdsIgnore)
   }
+
+  private fun childrenOf(parent: ViewGroup): List<View> =
+    (0 until parent.childCount).map { parent.getChildAt(it) }
 
   /*
    * A control's own placeholder stands for what is inside it. React Native can lay a pill's text out beside its fill
