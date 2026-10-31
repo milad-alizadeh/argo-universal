@@ -40,7 +40,7 @@ export async function inRoomAboveKeyboard(
   check: (room: number) => Promise<void>,
 ): Promise<void> {
   const room = scaled ? roomAboveKeyboard.scaled : roomAboveKeyboard.default;
-  const restore = scaled ? scaleControlType(canvasElement) : () => {};
+  const restore = scaled ? scaleControlType(canvasElement) : (): void => {};
 
   try {
     await settleLayout('phone', room);
