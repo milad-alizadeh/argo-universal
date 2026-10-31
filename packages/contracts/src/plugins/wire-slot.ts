@@ -4,7 +4,6 @@ import {
   replaceableSlots,
   type ItemsSlot,
   type ReplaceableSlot,
-  type TreeSlot,
 } from '#plugin-slot-registry';
 
 export {
@@ -25,8 +24,6 @@ export {
   type SlotLimit,
 } from '#plugin-slot-registry';
 
-type AnyTreeSlot = TreeSlot<string, z.ZodObject>;
-
 // An items Slot as the registry holds it, whatever its context and item.
 export type AnyItemsSlot = ItemsSlot<string, z.ZodObject, string, z.ZodObject>;
 
@@ -35,16 +32,11 @@ export type ItemsContext = z.output<AnyItemsSlot['context']>;
 
 export type ItemsSlotItem = z.output<AnyItemsSlot['content']['item']>;
 
-type AddOnlyEntries = readonly (AnyTreeSlot | AnyItemsSlot)[];
+type AddOnlyEntries = readonly AnyItemsSlot[];
 
 type ReplaceableEntries = readonly ReplaceableSlot<string>[];
 
 type Ids<Entries extends readonly { id: string }[]> = Entries[number]['id'];
-
-type TreesOf<Entries extends AddOnlyEntries> = Extract<
-  Entries[number],
-  AnyTreeSlot
->;
 
 type ItemsOf<Entries extends AddOnlyEntries> = Extract<
   Entries[number],
@@ -58,8 +50,6 @@ export type SlotSchemas<
   AddOnlySlotId: z.ZodLiteral<Ids<AddOnly>>;
   ReplaceableSlotId: z.ZodLiteral<Ids<Replaceable>>;
   SlotId: z.ZodLiteral<Ids<AddOnly> | Ids<Replaceable>>;
-  // What an App asks a Slot that holds a Plugin page with.
-  PluginSlotInput: z.ZodUnion<TreesOf<AddOnly>['input'][]>;
   // What an App asks an items Slot with: one batched call per list.
   SlotItemsInput: z.ZodUnion<ItemsOf<AddOnly>['input'][]>;
   // What an items Slot answers, by each context's key.
@@ -70,10 +60,6 @@ export type SlotSchemas<
 const ids = <Entries extends readonly { id: string }[]>(
   entries: Entries,
 ): Ids<Entries>[] => entries.map(({ id }) => id);
-
-const isTree = <Entries extends AddOnlyEntries>(
-  entry: Entries[number],
-): entry is TreesOf<Entries> => entry.content.type === 'tree';
 
 const isItems = <Entries extends AddOnlyEntries>(
   entry: Entries[number],
@@ -106,11 +92,9 @@ function idSchemas<
 function entrySchemas<const AddOnly extends AddOnlyEntries>(
   addOnly: AddOnly,
 ): EntrySchemas<AddOnly> {
-  const trees = addOnly.filter(isTree<AddOnly>);
   const items = addOnly.filter(isItems<AddOnly>);
 
   return {
-    PluginSlotInput: z.union(trees.map(({ input }) => input)),
     SlotItemsInput: z.union(items.map(({ input }) => input)),
     SlotItems: z.record(z.string(), z.union(items.map(({ merged }) => merged))),
     itemsSlot: (slotId) => items.find(({ id }) => id === slotId),
@@ -136,7 +120,6 @@ export const {
   AddOnlySlotId,
   ReplaceableSlotId,
   SlotId,
-  PluginSlotInput,
   SlotItemsInput,
   SlotItems,
   itemsSlot,
@@ -148,13 +131,6 @@ export type ReplaceableSlotId = z.infer<typeof ReplaceableSlotId>;
 
 export type SlotId = z.infer<typeof SlotId>;
 
-export type PluginSlotInput = z.infer<typeof PluginSlotInput>;
-
 export type SlotItemsInput = z.infer<typeof SlotItemsInput>;
 
 export type SlotItems = z.infer<typeof SlotItems>;
-
-// Where a Slot's contribution lives inside its Plugin; page paths start with `/`, so the two never meet.
-export function slotPath({ slotId, context }: PluginSlotInput): string {
-  return `slot:${slotId}:${JSON.stringify(context)}`;
-}
