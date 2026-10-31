@@ -14,8 +14,8 @@ import {
   scrollToTop,
   scrollUp,
   openedRow,
-  settledTopOf,
 } from './feed-reader.mocks';
+import { settledTopOf } from './feed-settled-top.mocks';
 import {
   longRows,
   olderPromptRows,

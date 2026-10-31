@@ -11,9 +11,9 @@ import {
   scrolledToEnd,
   scrollToEnd,
   scrollUp,
-  settledTopOf,
   settleWait,
 } from './feed-reader.mocks';
+import { settledTopOf } from './feed-settled-top.mocks';
 import { longRows } from './feed.mocks';
 import { feedArgs, PagedFeed } from './paged-feed.mocks';
 

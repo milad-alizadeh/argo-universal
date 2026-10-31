@@ -9,9 +9,9 @@ import {
   openedRow,
   openRow,
   readBackToSplitGroup,
-  settledTopOf,
   settleWait,
 } from './feed-reader.mocks';
+import { settledTopOf } from './feed-settled-top.mocks';
 import {
   splitGroupFirstStepInTail,
   splitGroupLastStep,
