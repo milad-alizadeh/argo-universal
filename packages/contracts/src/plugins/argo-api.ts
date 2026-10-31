@@ -28,7 +28,6 @@ import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
 
 export type {
-  SlotContent,
   SlotItemsAnswer,
   SlotItemsProvider,
 } from './slot-api';

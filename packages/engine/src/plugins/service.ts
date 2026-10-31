@@ -22,10 +22,8 @@ import type {
 import {
   type PluginDispatchInput,
   type PluginViewInput,
-  type PluginSlotInput,
   type SlotItems,
   type SlotItemsInput,
-  type SlotMessage,
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
@@ -47,7 +45,7 @@ import {
 import { startOrderedPlugins } from './plugin-order';
 import { declaredItems } from './slots/declared-items';
 import { renderSlot } from './slots/render-slot';
-import { slotFor, slotItemsFor } from './slots/slot-streams';
+import { slotItemsFor } from './slots/slot-streams';
 
 export type { PluginServiceDeps } from './located-plugins';
 
@@ -136,13 +134,6 @@ export class PluginService {
       { path, projectId, sessionId },
       connection,
     );
-  }
-
-  slot(
-    slot: PluginSlotInput,
-    connection: RpcConnection,
-  ): AsyncGenerator<SlotMessage> {
-    return slotFor(this.deps, slot, connection);
   }
 
   slotItems(

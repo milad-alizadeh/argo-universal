@@ -7,11 +7,7 @@ import {
 } from '#plugin-operations';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
-import {
-  PluginSlotInput,
-  ReplaceableSlotId,
-  SlotItemsInput,
-} from '#plugin-wire-slot';
+import { ReplaceableSlotId, SlotItemsInput } from '#plugin-wire-slot';
 
 export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
 
@@ -111,7 +107,6 @@ export const PluginEvent = z.union([
     path: z.string(),
     projectId: z.string().min(1).optional(),
     sessionId: z.string().min(1).optional(),
-    slot: PluginSlotInput.optional(),
     renderSlot: ReplaceableSlotId.optional(),
     surface: PluginSurface.optional(),
   }),

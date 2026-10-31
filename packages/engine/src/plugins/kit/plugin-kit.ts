@@ -127,7 +127,7 @@ const providers = (
   calls: KitCalls,
   pages: Pages,
 ): Pick<KitParts, 'slots' | 'operations'> => ({
-  slots: slotProviders(calls.slots, pages),
+  slots: slotProviders(calls.slots),
   operations: operationHandlers(calls.operations),
 });
 
