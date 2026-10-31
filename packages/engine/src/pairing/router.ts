@@ -8,9 +8,9 @@ import { z } from 'zod';
 import { forgetPairedDevice } from '../devices/paired-device';
 import {
   mergeRouters,
-  publicProcedure,
   router,
   routerFactory,
+  serverDeviceProcedure,
   zAsyncIterable,
   type RpcConnection,
 } from '../rpc';
@@ -63,10 +63,10 @@ function requireConnection(
  */
 const ticketRouter = routerFactory((deps: PairingDeps) =>
   router({
-    mint: publicProcedure
+    mint: serverDeviceProcedure
       .output(MintedPairingTicket)
       .mutation((): MintedPairingTicket => mintedTicket(deps)),
-    revoke: publicProcedure.output(z.void()).mutation((): void => {
+    revoke: serverDeviceProcedure.output(z.void()).mutation((): void => {
       deps.tickets.revoke();
       deps.registrations.clear();
     }),
@@ -79,13 +79,13 @@ const ticketRouter = routerFactory((deps: PairingDeps) =>
  */
 const deviceRouter = routerFactory((deps: PairingDeps) =>
   router({
-    registered: publicProcedure
+    registered: serverDeviceProcedure
       .output(zAsyncIterable({ yield: PairingRegistration }))
       .subscription(async function* ({ signal, ctx }) {
         const connection = requireConnection(ctx.connection);
         yield* deps.registrations.stream(signal ?? connection.signal);
       }),
-    decline: publicProcedure
+    decline: serverDeviceProcedure
       .input(Declined)
       .output(z.void())
       .mutation(async ({ input }): Promise<void> => {
@@ -108,7 +108,7 @@ async function declined(deps: PairingDeps, deviceId: string): Promise<void> {
 /*
  * Minting on demand is what makes possession of a live Ticket the owner's consent, since nothing else can ask for one, and it is why the "wants to pair" prompt belongs with the open sheet rather than with the handshake.
  *
- * Server Device only (ADR-0022, ADR-0045): deciding who may reach the Server is the owner's alone, so none of these is an Operation and none has a tier. The Server's own refusal is `serverDeviceProcedure` in #1497, which swaps in here.
+ * Server Device only (ADR-0022, ADR-0045): deciding who may reach the Server is the owner's alone, so the Server refuses every one of these to a Paired Device, and none of them is an Operation or has a tier. Letting a Paired Device pair another is the lost-phone case ADR-0022 forbids.
  */
 export const createPairingRouter = routerFactory((deps: PairingDeps) =>
   mergeRouters(ticketRouter(deps), deviceRouter(deps)),

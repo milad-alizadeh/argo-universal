@@ -25,6 +25,21 @@ export const callerOverChannel = (input: ChannelInput): TRPCClient<AppRouter> =>
     ],
   });
 
+/*
+ * What the Server answers a request the tRPC client will not send: `httpLink` refuses a subscription in the App, so a test that wants the Server's own answer has to ask over the channel itself.
+ */
+export async function answerOverChannel(
+  input: ChannelInput,
+  url: string,
+  init: FetchInit,
+): Promise<string> {
+  const { socket } = await connectChannel(input);
+  const answered = await answerOver(socket, url, init);
+  socket.destroy();
+
+  return answered.text();
+}
+
 const channelFetch =
   (input: ChannelInput): ChannelFetch =>
   async (url, init) => {

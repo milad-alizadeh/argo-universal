@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
+import { answerOverChannel } from '#mocks/channel-fetch';
 import { startEngineTestHost } from '#mocks/engine';
-import { connectAsDevice } from '#mocks/engine-channel';
+import { connectAsDevice, type TestDevice } from '#mocks/engine-channel';
 import { PairingRefused } from './connect-channel';
 
 it('carries the key, the name and the Ticket a Device needs to find and prove this Server', async (): Promise<void> => {
@@ -116,3 +117,31 @@ it('declines nothing twice, so No answers one prompt and unpairs nothing after i
     host.caller.pairing.decline({ deviceId: device.deviceId }),
   ).rejects.toThrow('That Device is not asking to pair');
 });
+
+// Pairing is the Server Device's alone: a Paired Device that could mint a Ticket could pair another Device, which is the lost-phone case ADR-0022 forbids.
+it('lets no Paired Device pair another, watch who is pairing, or decline one', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const { ticket } = host.pairing.mint();
+  const paired = await connectAsDevice(host, { ticket });
+  const forbidden = { data: { code: 'FORBIDDEN' } };
+
+  await expect(paired.caller.pairing.mint.mutate()).rejects.toMatchObject(
+    forbidden,
+  );
+  await expect(paired.caller.pairing.revoke.mutate()).rejects.toMatchObject(
+    forbidden,
+  );
+  await expect(
+    paired.caller.pairing.decline.mutate({ deviceId: paired.deviceId }),
+  ).rejects.toMatchObject(forbidden);
+  expect(await watching(host, paired)).toContain('FORBIDDEN');
+});
+
+/*
+ * Asking to watch the registrations, as its own request over the Device's channel: `httpLink` refuses a subscription in the App, so a test that wants the Server's answer has to send one.
+ */
+const watching = (host: { url: string }, paired: TestDevice): Promise<string> =>
+  answerOverChannel(paired.channel, `${host.url}/trpc/pairing.registered`, {
+    method: 'GET',
+    headers: { accept: 'text/event-stream' },
+  });
