@@ -71,3 +71,42 @@ const story = (root: WireNode): Story => ({
 export const RootList: Story = story(runListRoot);
 
 export const ListInAStack: Story = story(stacked);
+
+// More rows than the window holds, as a page of runs has.
+const wire = (
+  type: string,
+  key: string,
+  props: WireNode['props'],
+): WireNode => ({
+  type,
+  key,
+  props,
+  children: [],
+  slots: {},
+});
+
+const manyRows: WireNode = {
+  ...wire('List', 'many', { appearance: 'cards' }),
+  children: Array.from({ length: 40 }, (_, index) =>
+    wire('ListItem', `row-${index}`, { title: `Row ${index}` }),
+  ),
+};
+
+/*
+ * A Stack that holds the List must pass the page's height on to it, or the List grows past the window
+ * and nothing scrolls.
+ */
+export const ListInAStackScrolls: Story = {
+  args: {
+    root: { ...stacked, children: [manyRows] },
+  },
+  play: async ({ canvas }) => {
+    const first = await canvas.findByText('Row 0');
+    const scroller = scrollerOf(first);
+
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+    await expect(scroller.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      window.innerHeight,
+    );
+  },
+};
