@@ -25,7 +25,6 @@ import type {
   RowPressProps,
 } from './list-item-press-props';
 
-// Only the title and value: what the row's other lanes draw is not in it (see `metaAccessories`).
 function rowLabel(props: ListItemProps): string {
   return [props.title, props.value]
     .filter((value) => value !== undefined)

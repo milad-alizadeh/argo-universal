@@ -123,21 +123,17 @@ const drawnState = {
   metaAccessories: issueLink,
 };
 
-// A row with accessories is named by its title alone: its meta line is drawn but a screen reader skips it.
 export const AccessoryRowNameLeavesOutItsLanes: Story = {
   args: drawnState,
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('button', { name: title })).toBeVisible();
-    await expect(
-      canvas.getByText('Meta').closest('[aria-hidden="true"]'),
-    ).not.toBeNull();
+    await expect(canvas.queryByRole('button', { name: /Meta/ })).toBeNull();
     await expect(
       canvas.getByRole('link', { name: openIssueName }),
     ).toBeVisible();
   },
 };
 
-// Naming the state its lanes draw is the row's own work: the label replaces the title, and the accessory keeps its name.
 export const AccessoryRowLabelNamesItsLanes: Story = {
   args: { ...drawnState, accessibilityLabel: `${title}, Meta` },
   play: async ({ canvas }) => {

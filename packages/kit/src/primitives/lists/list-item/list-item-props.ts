@@ -57,11 +57,11 @@ export type ListItemProps = KitProps<'ListItem'> & {
    * items. They sit beside the row's press rather than inside it, so pressing one never presses the row and a screen
    * reader reaches each after the row. A part among them that should press the row instead is a `ListItemInert`.
    *
-   * The row's accessible name is its `accessibilityLabel`, else its title and value, and nothing else: what the row
-   * draws in its meta line, subtitle, trailing items, pills and `ListItemInert` parts is hidden from a screen reader
-   * (inside the press it is folded into the label; beside it, the lane is `aria-hidden`). A row that draws a state
-   * there, such as an Archived pill, says it in its own `accessibilityLabel`. An accessory announces itself, so its
-   * text stays out of the label.
+   * The row's accessible name, with or without accessories, is its `accessibilityLabel`, else its title and value, and
+   * nothing else: what it draws in its meta line, subtitle, trailing items, pills and `ListItemInert` parts is not in
+   * the name. In a row with accessories those lanes are also `aria-hidden`. A row that draws a state there, such as an
+   * Archived pill, says it in its own `accessibilityLabel`. An accessory announces itself, so its text stays out of
+   * the label. This holds for `trailingAccessories` too.
    */
   metaAccessories?: ReactNode;
   trailingAccessories?: ReactNode;
