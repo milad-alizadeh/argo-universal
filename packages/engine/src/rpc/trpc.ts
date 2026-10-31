@@ -1,5 +1,5 @@
 import { SessionOpenFailure } from '@repo/contracts';
-import { type AnyTRPCRouter, initTRPC } from '@trpc/server';
+import { type AnyTRPCRouter, initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { RpcContext } from './connection';
 
@@ -21,7 +21,21 @@ export const router = t.router;
 
 export const mergeRouters = t.mergeRouters;
 
-export const publicProcedure = t.procedure;
+/*
+ * Every procedure of every router, behind the one question the handshake answers: which Device is this (ADR-0045)?
+ * "Public" means any Device this Server trusts, the Server Device included, as against `serverDeviceProcedure`, which narrows it to the Server Device alone (#1497). A Connection that proved nothing reaches none of them, whichever router it asks for.
+ */
+export const publicProcedure = t.procedure.use(async ({ ctx, next }) => {
+  const identity = ctx.connection?.identity;
+
+  if (!identity)
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'This Connection has not proved which Device it is',
+    });
+
+  return next({ ctx: { identity } });
+});
 
 // A module's router, built from the dependencies it names; its type is the build's.
 export const routerFactory = <Deps, Built extends AnyTRPCRouter>(

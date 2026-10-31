@@ -1,5 +1,4 @@
-import type { Server } from 'node:http';
-import type { Socket } from 'node:net';
+import type { Server, Socket } from 'node:net';
 
 const loopbackAddress = '127.0.0.1';
 
@@ -13,6 +12,8 @@ export interface ServerListener {
   readonly rebind: (network: boolean) => Promise<void>;
   // After this the listener never binds again, so a change racing the Server's close cannot reopen the port.
   readonly stop: () => void;
+  // Stops accepting and waits for the sockets already open to go.
+  readonly close: () => Promise<void>;
 }
 
 const addressFor = (network: boolean): string =>
@@ -66,8 +67,15 @@ export async function listenForNetworkAccess(
     where: (): string => listener.where(),
     rebind: (next): Promise<void> => listener.rebind(next),
     stop: (): void => listener.stop(),
+    close: (): Promise<void> => closed(server),
   };
 }
+
+const closed = (server: Server): Promise<void> =>
+  new Promise<void>((resolve, reject): void => {
+    if (!server.listening) return resolve();
+    server.close((error): void => (error ? reject(error) : resolve()));
+  });
 
 class NetworkListener {
   private address: string;

@@ -6,7 +6,7 @@ import type {
 import { maxBlobUploadBytes } from '@repo/contracts';
 import type { CreateHTTPContextOptions } from '@trpc/server/adapters/standalone';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
-import type { RpcContext } from '../rpc/connection';
+import { createRpcContext, type RpcContext } from '../rpc/connection';
 import { handleAsset, type AssetReader } from './asset-response';
 import { streamBlob } from './blob-response';
 import { answerError, httpStatus, reportHttpFailure } from './http-response';
@@ -27,22 +27,16 @@ const multipartHeaderBytes = 65_536;
 
 const maxBodySize = maxBlobUploadBytes + multipartHeaderBytes;
 
-// Plain HTTP serves only GET /blobs/:id; every other request is a tRPC call at /trpc/ (ADR 0002).
+/*
+ * Serves GET /blobs/:id, Plugin assets and the tRPC calls at /trpc/ (ADR 0002). Whoever is asking was decided at the front door: this listener answers the Server Device on loopback and a paired Device inside its channel, and nothing else reaches it (ADR-0045).
+ */
 export function createRequestListener(
   options: RequestListenerOptions,
 ): RequestListener {
   const handleTRPC = createGuardedTrpc(options);
 
-  return (request, response): void => {
-    if (
-      !options.guard.allowsRequest({
-        host: request.headers.host,
-        remoteAddress: request.socket.remoteAddress,
-      })
-    )
-      return answerError(response, httpStatus.forbidden, 'Forbidden');
+  return (request, response): void =>
     dispatchRequest({ options, handleTRPC }, request, response);
-  };
 }
 
 function dispatchRequest(
@@ -113,5 +107,8 @@ function matchedBlobId(match: RegExpExecArray): string {
 }
 
 function httpContext({ req }: CreateHTTPContextOptions): RpcContext {
-  return { token: req.headers.authorization?.replace(/^Bearer /, '') };
+  return {
+    ...createRpcContext(req.socket),
+    token: req.headers.authorization?.replace(/^Bearer /, ''),
+  };
 }

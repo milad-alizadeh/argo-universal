@@ -13,6 +13,7 @@ import { Plugins } from '../src/plugins';
 import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
 import { openFeedForModule } from './feed-module-actor';
+import { serverDeviceContext } from './rpc-context';
 import { scriptedEngineInput } from './scripted-engine';
 
 type FeedModuleOptions = {
@@ -153,7 +154,7 @@ export const createFeedModuleCaller = (
 
   return createAppRouter(
     createAppRouterDeps(input, { ...sources, findFeed }),
-  ).createCaller({}, { signal });
+  ).createCaller(serverDeviceContext(signal), { signal });
 };
 
 const networkAccessOf = (

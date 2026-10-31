@@ -36,7 +36,8 @@ it.each(['https://evil.example', 'http://localhost.evil.example', 'null'])(
   },
 );
 
-it('rejects a WebSocket with another Host', async (): Promise<void> => {
-  expect(await upgradeStatus({ host: 'evil.example:7337' })).toBe(403);
-  expect(await upgradeStatus({ host: `127.0.0.1:${port + 1}` })).toBe(403);
+// The Host allowlist went with ADR-0045: on loopback the front door has already said which Device this is, and Host is a header anyone can write.
+it('asks nothing of the Host a Connection from this computer sends', async (): Promise<void> => {
+  expect(await upgradeStatus({ host: 'evil.example:7337' })).toBe(101);
+  expect(await upgradeStatus({ host: `127.0.0.1:${port + 1}` })).toBe(101);
 });

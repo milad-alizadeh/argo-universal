@@ -1,10 +1,6 @@
 import { expect, it } from 'vitest';
 import {
-  blobId,
-  infoRoute,
   uploadRoute,
-  host,
-  sendHttpRequest,
   sendFormRequest,
   createUploadForm,
 } from '#mocks/engine-request';
@@ -42,27 +38,3 @@ it.each(['https://evil.example', 'null'])(
     );
   },
 );
-
-it.each([`/blobs/${blobId}`, infoRoute])(
-  'answers 403 to %s from another Host and counts it',
-  async (path): Promise<void> => {
-    const response = await sendHttpRequest({
-      path,
-      headers: { host: 'evil.example:7337' },
-    });
-
-    expect(response.status).toBe(403);
-    expect(console.error).toHaveBeenCalledExactlyOnceWith(
-      'engine: rejected Host "evil.example:7337" #1',
-    );
-  },
-);
-
-it('answers 403 to a Host that is not a plain host and port', async (): Promise<void> => {
-  const response = await sendHttpRequest({
-    path: infoRoute,
-    headers: { host: `evil.example@${host}` },
-  });
-
-  expect(response.status).toBe(403);
-});
