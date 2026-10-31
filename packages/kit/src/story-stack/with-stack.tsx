@@ -46,12 +46,13 @@ function RootRoute(): React.JSX.Element {
   );
 }
 
-function ScreenRoute(): React.JSX.Element | null {
+function ScreenRoute(): React.JSX.Element {
   const { pages } = use(StackScreensContext);
   const { screen } = useLocalSearchParams<{ screen: string }>();
   const Component = pages[screen];
 
-  if (!Component) return null;
+  // A name the story registered no page under is an address no route answers, as in the App.
+  if (!Component) return <NotFoundRoute />;
 
   return (
     <ScreenNavigationEnabled value>
