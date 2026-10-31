@@ -85,20 +85,17 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   );
 }
 
-/*
- * A row a loading Skeleton holds is a placeholder: its title is only a width, and the row's own label (the title)
- * would otherwise be read beside the Skeleton's one "Loading". The Skeleton hides the text views it draws a bar over,
- * not the row that labels itself, so the row hides itself. A row inside Skeleton.Ignore is outside that context.
- */
 // A chosen row shows its check only, with no selected fill; a selected row without a check keeps its tint.
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing(props);
   const tile = useContext(ListTileContext);
+  // A row a Skeleton holds is a placeholder whose title is a width, so the row hides its own label; the native Skeleton only hides text and control leaves, and Skeleton.Ignore sets the context false.
+  const loading = useSkeletonLoading();
 
   return (
     <View
       className={tile ? tileSurface : itemSurface(drawing, props)}
-      aria-hidden={useSkeletonLoading() || undefined}
+      aria-hidden={loading || undefined}
     >
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
       <RowDetails tile={tile !== null} props={props} />
