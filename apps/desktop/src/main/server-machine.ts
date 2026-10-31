@@ -41,6 +41,7 @@ const stoppingTarget = '#serverConnection.stopping';
 
 // Where a quit goes once the App has let go of its Server Connection.
 const quitAfterRelease = [
+  { guard: 'keepsRunning', target: stoppedTarget },
   { guard: 'ownsRunningSessions', target: 'confirming' },
   { guard: 'ownsSupervisor', target: stoppingTarget },
   { target: stoppedTarget },
@@ -77,6 +78,8 @@ interface ServerContext extends ServerInput {
   spawnedAt: number | null;
   failure: string | null;
   running: number;
+  // The Server's own setting, trusted only while the Connection that reported it lives: it outlives this app, so quitting leaves it alone (ADR-0022).
+  keepRunning: boolean;
 }
 
 type SupervisorReport =
@@ -191,6 +194,7 @@ const serverSetup = setup({
     namesOwnedSupervisor: ({ context }, params: AddressParameters): boolean =>
       params.address !== null && addressMatchesOwner(context, params.address),
     stillRunning: (_, params: RunningParameters): boolean => params.running,
+    keepsRunning: ({ context }): boolean => context.keepRunning,
     ownsSupervisor: ({ context }): boolean => context.ownedPid !== null,
     ownsRunningSessions: ({ context }): boolean =>
       context.ownedPid !== null && context.running > 0,
@@ -324,6 +328,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
     spawnedAt: null,
     failure: null,
     running: 0,
+    keepRunning: false,
   }),
   initial: 'locating',
   on: {
@@ -431,6 +436,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
           return { port: context.address.port };
         },
       },
+      // A remembered answer never keeps a Server alive: it is gone with the Connection that gave it.
+      exit: assign({ keepRunning: false }),
       initial: 'active',
       on: {
         // Try again in the App when the Server has gone: make sure a Supervisor runs again, exactly as at launch. One still listening is reused, never replaced.
@@ -445,6 +452,11 @@ export const serverConnectionMachine = serverSetup.createMachine({
               });
             }),
           ],
+        },
+        'keepRunning.changed': {
+          actions: assign({
+            keepRunning: ({ event }): boolean => event.enabled,
+          }),
         },
         'counts.disconnected': {
           actions: [
@@ -461,7 +473,11 @@ export const serverConnectionMachine = serverSetup.createMachine({
         },
         // Lets go of the Server Connection first; `watchSessionCounts` says why that has to happen before the App quits.
         releasing: {
-          entry: sendTo(countsActorId, { type: countsReleaseEvent }),
+          // The answer to keep running comes from this release, not from the one heard on connecting.
+          entry: [
+            assign({ keepRunning: false }),
+            sendTo(countsActorId, { type: countsReleaseEvent }),
+          ],
           on: {
             'counts.released': quitAfterRelease,
             // The App is on its way out, so a disconnect no longer clears the badge or the Session count the question needs.

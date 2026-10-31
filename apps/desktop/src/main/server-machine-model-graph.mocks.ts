@@ -14,6 +14,7 @@ export const vertex = (snapshot: ServerSnapshot): Vertex => ({
   ownedPid: snapshot.context.ownedPid,
   failure: snapshot.context.failure !== null,
   running: snapshot.context.running,
+  keepRunning: snapshot.context.keepRunning,
 });
 
 // A stale server.json only matters while the spawned Supervisor answers.
@@ -25,11 +26,14 @@ export const permitsStaleAddress = (
   snapshot.matches({ starting: { answering: 'checking' } });
 
 // A walk with the polling loops gives thousands of simple paths, so the counts are left to the shortest ones. Try again from `ready` leads back to `locating`, and that cycle multiplies them again; the shortest paths still walk it.
+const isCountsEvent = (event: ServerEvent | DelayEvent): boolean =>
+  ['counts.', 'keepRunning.'].some((prefix) => event.type.startsWith(prefix));
+
 export const ignoresCountsAndRetryFromReady = (
   snapshot: ServerSnapshot,
   event: ServerEvent | DelayEvent,
 ): boolean =>
-  !event.type.startsWith('counts.') &&
+  !isCountsEvent(event) &&
   !(event.type === retryServerEvent && snapshot.matches('ready'));
 
 // Labels what an event carries, so its path reads without the data.

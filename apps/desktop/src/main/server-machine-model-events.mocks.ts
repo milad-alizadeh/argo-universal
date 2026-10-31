@@ -53,6 +53,8 @@ export const fixtures = [
   { type: countsChangedEvent, counts: { running: 2, attention: 1 } },
   { type: countsChangedEvent, counts: { running: 0, attention: 0 } },
   { type: countsChangedEvent, counts: { running: 0, attention: 3 } },
+  { type: 'keepRunning.changed', enabled: true },
+  { type: 'keepRunning.changed', enabled: false },
   { type: 'counts.disconnected' },
   { type: 'counts.released' },
   { type: quitDoneEvent, actorId: 'askQuit', output: true },

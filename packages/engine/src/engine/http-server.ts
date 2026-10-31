@@ -2,6 +2,8 @@ import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
+import { ensureServerIdentity } from '../devices';
+import { LocalNetworkAccess } from '../network-access';
 import { Notifications, type NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import { ensureControlToken } from '../operations';
@@ -9,19 +11,19 @@ import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
+import { announceServer } from './announce-server';
 import { createHttpCaller, type HttpCaller } from './http-callers';
-import {
-  admitClose,
-  connectWebSockets,
-  listenOnLoopback,
-} from './http-connections';
+import { closeWith, type Listening } from './http-close';
+import { connectWebSockets } from './http-connections';
+import { listenWithPlugins } from './http-listen';
+import { httpRouterInput } from './http-router-input';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
   type RequestListenerOptions,
 } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
-import { createAppRouterDeps, type AppRouterInput } from './router-deps';
+import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
@@ -41,61 +43,67 @@ export interface HttpServerOptions extends PluginServerOptions {
   operationWaitClock?: OperationWaitClock;
   // Where Sessions reach Plugin Hooks; the Plugin runtime attaches to it while the server runs.
   hookPort?: HookPort;
+  // What an App lists this Server by; the computer's name unless a test says otherwise.
+  discoveryName?: string;
 }
 
 export interface HttpServer {
+  // Whether the Server is reachable beyond this computer; the Engine reads it and subscribes to change.
+  localNetworkAccess: LocalNetworkAccess;
+  // Where the Server is listening now, as `address:port`.
+  listeningOn: () => string;
   notifications: Notifications;
   createCaller: HttpCaller;
   close: () => Promise<void>;
 }
 
-type HttpSetup = {
+export type HttpSetup = {
   plugins: Plugins;
   blobsFolder: string;
   commandAdmission: AbortController;
   notifications: Notifications;
+  localNetworkAccess: LocalNetworkAccess;
 };
 
-type RoutedSetup = HttpSetup & { appRouter: AppRouter };
+export type RoutedSetup = HttpSetup & {
+  appRouter: AppRouter;
+  serverPublicKey: string;
+};
 
-// Serves tRPC and blobs on loopback (ADR 0002); resolves once the port is bound.
+// Serves tRPC and blobs on loopback, or on the local network once the owner turns that on (ADR 0002, ADR 0045); resolves once the port is bound.
 export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
   const setup = await prepareHttpServer(options);
-  const guard = createRequestGuard(options.port);
+  const guard = createRequestGuard(options.port, setup.localNetworkAccess);
 
   const server = createServer(
     createRequestListener(listenerOptions(setup, guard)),
   );
 
-  await listenWithPlugins(server, options.port, setup);
+  const listener = await listenWithPlugins(server, options.port, setup);
+  setup.localNetworkAccess.useBinding(listener.rebind);
 
-  return connectHttpServer(setup, server, guard);
+  const stopAnnouncing = announceServer(options, setup);
+
+  return connectHttpServer(setup, server, { guard, listener, stopAnnouncing });
 }
 
 function connectHttpServer(
   setup: RoutedSetup,
   server: Server,
-  guard: ReturnType<typeof createRequestGuard>,
+  listening: Listening,
 ): HttpServer {
+  const { guard, listener } = listening;
   const closeConnections = connectWebSockets(server, setup.appRouter, guard);
 
   return {
+    localNetworkAccess: setup.localNetworkAccess,
     notifications: setup.notifications,
-    close: admitClose(setup.commandAdmission, () =>
-      closeHttpServices(setup, closeConnections),
-    ),
+    listeningOn: listener.where,
+    close: closeWith(setup, listening, closeConnections),
     createCaller: createHttpCaller(setup),
   };
-}
-
-async function closeHttpServices(
-  setup: RoutedSetup,
-  closeConnections: () => Promise<void>,
-): Promise<void> {
-  setup.notifications.close();
-  await Promise.all([closeConnections(), setup.plugins.close()]);
 }
 
 async function prepareHttpServer(
@@ -105,13 +113,11 @@ async function prepareHttpServer(
   const setup = prepareHttpSetup(options, serverId);
 
   const controlToken = await ensureControlToken(options.home);
+  const serverPublicKey = await ensureServerIdentity(options);
+  const input = httpRouterInput(options, setup, controlToken);
+  const deps = createAppRouterDeps({ ...input, serverPublicKey });
 
-  return {
-    ...setup,
-    appRouter: createAppRouter(
-      createAppRouterDeps(httpRouterInput(options, setup, controlToken)),
-    ),
-  };
+  return { ...setup, serverPublicKey, appRouter: createAppRouter(deps) };
 }
 
 function prepareHttpSetup(
@@ -123,40 +129,11 @@ function prepareHttpSetup(
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
     plugins: new Plugins(options),
+    localNetworkAccess: new LocalNetworkAccess(
+      options.database,
+      options.databaseWriter,
+    ),
   };
-}
-
-function httpRouterInput(
-  options: HttpServerOptions,
-  setup: HttpSetup,
-  controlToken: string,
-): AppRouterInput {
-  return {
-    ...options,
-    controlToken,
-    blobsFolder: setup.blobsFolder,
-    sessionCommandSignal: setup.commandAdmission.signal,
-    notifications: setup.notifications,
-    hooks: setup.plugins.hooks,
-    plugins: setup.plugins.router,
-  };
-}
-
-// Binding the port is all the Supervisor waits for, so a slow background Plugin delays no App.
-async function listenWithPlugins(
-  server: Server,
-  port: number,
-  setup: RoutedSetup,
-): Promise<void> {
-  try {
-    await listenOnLoopback(server, port);
-  } catch (error) {
-    setup.notifications.close();
-    await setup.plugins.close();
-    throw error;
-  }
-
-  setup.plugins.listening();
 }
 
 function listenerOptions(

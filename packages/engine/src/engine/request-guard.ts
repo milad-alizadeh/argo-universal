@@ -1,7 +1,9 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
+import type { LocalNetworkAccess } from '../network-access';
 import { requestHostAllowed } from '../rpc/request-host';
+import { isLoopback } from './network-listener';
 
 // No Origin (the native Apps), the desktop app, or a web App on this machine on any port.
 const AllowedOrigin = z.union([
@@ -12,7 +14,8 @@ const AllowedOrigin = z.union([
 
 const headerExcerptLength = 100;
 
-type RequestHeaders = Record<'host', IncomingHttpHeaders['host']>;
+type RequestHeaders = Record<'host', IncomingHttpHeaders['host']> &
+  Record<'remoteAddress', string | undefined>;
 
 type UpgradeHeaders = RequestHeaders &
   Record<'origin', IncomingHttpHeaders['origin']>;
@@ -25,23 +28,39 @@ export interface RequestGuard {
 }
 
 // Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
-export function createRequestGuard(port: number): RequestGuard {
-  const AllowedHost = z.custom<string>(
-    (host) => typeof host === 'string' && requestHostAllowed(port, host),
-  );
-
+export function createRequestGuard(
+  port: number,
+  access: Pick<LocalNetworkAccess, 'enabled'>,
+): RequestGuard {
   const report = createReporter();
-  const allowsHost = allowHeader(AllowedHost, 'Host', report);
   const allowsOrigin = allowHeader(AllowedOrigin, 'Origin', report);
+  const allowsHost = hostCheck(port, access, report);
 
   return {
-    allowsRequest: (headers): boolean => allowsHost(headers.host),
-    allowsUpgrade: (headers): boolean =>
-      allowsHost(headers.host) && allowsOrigin(headers.origin),
+    allowsRequest: (headers) => allowsHost(headers),
+    allowsUpgrade: (headers) =>
+      allowsHost(headers) && allowsOrigin(headers.origin),
     allowsOrigin,
     report,
   };
 }
+
+// A Device on the network arrives by whatever name or address it has, so while Local network access is on its Host is not matched (ADR-0045 deletes this check for the handshake). A Connection from loopback keeps the check on or off, or a web page could rebind a name to this computer.
+function hostCheck(
+  port: number,
+  access: Pick<LocalNetworkAccess, 'enabled'>,
+  report: RequestGuard['report'],
+): (headers: RequestHeaders) => boolean {
+  const allowsHost = allowHeader(AllowedHost(port), 'Host', report);
+
+  return ({ host, remoteAddress }): boolean =>
+    (access.enabled && !isLoopback(remoteAddress)) || allowsHost(host);
+}
+
+const AllowedHost = (port: number): z.ZodType =>
+  z.custom<string>(
+    (host) => typeof host === 'string' && requestHostAllowed(port, host),
+  );
 
 function createReporter(): RequestGuard['report'] {
   const rejections = createRejectionCounter('engine');
