@@ -1,4 +1,7 @@
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import {
+  FixedSizeChrome,
+  IconButton,
+} from '@repo/kit/primitives/actions/icon-button';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { bandToggleAppearance } from './band-control-appearance';
@@ -55,14 +58,16 @@ function BandLeading(parts: BandLeadingReads): ReactElement {
 
 export function ScaffoldBand(parts: ScaffoldPartProps): ReactElement {
   return (
-    <View
-      testID="window-band"
-      className="absolute inset-x-0 top-0 z-50 flex-row items-center web:[app-region:drag]"
-      style={{ top: parts.layout.safeTop, height: parts.layout.panesTop }}
-    >
-      <BandLeading {...parts} />
-      <BandTitle {...parts} />
-      <BandTrailing {...parts} />
-    </View>
+    <FixedSizeChrome>
+      <View
+        testID="window-band"
+        className="absolute inset-x-0 top-0 z-50 flex-row items-center web:[app-region:drag]"
+        style={{ top: parts.layout.safeTop, height: parts.layout.panesTop }}
+      >
+        <BandLeading {...parts} />
+        <BandTitle {...parts} />
+        <BandTrailing {...parts} />
+      </View>
+    </FixedSizeChrome>
   );
 }

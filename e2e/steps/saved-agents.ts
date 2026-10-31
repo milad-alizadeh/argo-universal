@@ -61,7 +61,8 @@ When('I type {string} and open Add Agents', async ({ page }, text: string) => {
 });
 
 Then('the Agents page is open', async ({ page }) => {
-  await expect(page).toHaveURL(/\/settings\/agents$/);
+  // Opened over New Session on a phone, the page carries it to return to.
+  await expect(page).toHaveURL(/\/settings\/agents(\?returnTo=[^&]+)?$/);
   await expect(
     page.getByRole('heading', { name: 'Agents', exact: true }),
   ).toBeVisible();

@@ -44,13 +44,19 @@ interface PickerContext {
   picking: AgentPick;
 }
 
+// A page of its own; with no Agents installed it says so and where they are added, which the page's one action opens.
+const pickerLook = {
+  title: 'Agent',
+  leading: 'agent',
+  presentation: 'page',
+  emptyText: 'No Agents installed. Use Add Agents to install one.',
+} as const;
+
 function agentPicker(context: PickerContext): ReactElement {
   return (
     <FieldGroup.Picker
       key="agent"
-      title="Agent"
-      leading="agent"
-      presentation="page"
+      {...pickerLook}
       value={context.configuration.agent?.id ?? ''}
       summary={agentSummary(context.configuration)}
       options={agentOptions(context)}

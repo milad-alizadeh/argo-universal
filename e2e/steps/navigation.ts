@@ -161,3 +161,12 @@ Then('the phone Frame shows Not found', async ({ page }): Promise<void> => {
 When('I leave Not found for Sessions', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Back to Sessions' }).click();
 });
+
+// The stack header's own Back, whatever page it is titled for.
+When('I press Back in the page header', async ({ page }): Promise<void> => {
+  await page.getByRole('link', { name: /, back$/ }).click();
+});
+
+Then('New Session is open', async ({ page }): Promise<void> => {
+  await expect(page).toHaveURL(/\/sessions\/new(\?|$)/);
+});

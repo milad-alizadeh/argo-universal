@@ -8,6 +8,8 @@ const flatRow = {
   headerStatusBarHeight: 0,
   headerShadowVisible: false,
   headerStyle: { backgroundColor: 'transparent' },
+  // The stock header gives its title 16dp each side; the page's title starts on its column's line, as a page with no search does.
+  headerTitleContainerStyle: { marginHorizontal: 0 },
 } as const;
 
 /*

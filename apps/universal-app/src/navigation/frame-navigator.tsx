@@ -15,6 +15,7 @@ import {
   type PluginSection,
   useSectionLists,
   useNotifications,
+  useRememberShownPage,
   type SizeClass,
 } from '@repo/client';
 import { useSizeClass } from '@repo/client/size-class';
@@ -139,6 +140,7 @@ const pluginRouteId = (
 // One drawer of sections at every width, so a width change keeps each section's pages; on a wide window the rail and the list sit beside the pages. Each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {
   useNotifications(usePathname());
+  useRememberShownPage();
   // A Plugin turned off elsewhere leaves the rail and its open page, as it does when the App reloads.
   usePluginListChanges();
   const sizeClass = useSizeClass();

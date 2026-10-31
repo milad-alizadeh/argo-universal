@@ -87,6 +87,10 @@ function addAgents(width: number): Story {
       await userEvent.click(
         await overlay.findByRole('button', { name: /^Agent,/ }),
       );
+      // There is no search here, so the page says what is missing and how to add it.
+      await expect(await overlay.findByRole('status')).toHaveTextContent(
+        /Add Agents/u,
+      );
       await userEvent.click(
         await overlay.findByRole('button', { name: 'Add Agents' }),
       );

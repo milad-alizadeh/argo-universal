@@ -1,3 +1,7 @@
+export { ChromeIconButton } from './chrome-icon-button';
+
+export { FixedSizeChrome } from './fixed-size-chrome';
+
 export {
   IconButton,
   type IconButtonDataProps,

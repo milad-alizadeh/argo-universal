@@ -127,6 +127,35 @@ export const SearchFiltersAndShowsEmptyState: Story = {
   },
 };
 
+// A page with no options at all is not a search with no matches, so it does not say so.
+function noOptions(emptyText?: string): Story {
+  return {
+    beforeEach: (): Promise<void> => settleLayout('wide'),
+    render: () => (
+      <ControlledPicker
+        {...screenWithSearch}
+        options={[]}
+        emptyText={emptyText}
+        onValueChange={changed}
+      />
+    ),
+    play: async ({ canvas, userEvent }) => {
+      const page = within(document.body);
+      await userEvent.click(canvas.getByRole('button', { name: /^Label/ }));
+      const status = await page.findByRole('status');
+
+      // With nothing to search, it must not blame a search that never happened.
+      await (emptyText
+        ? expect(status).toHaveTextContent(emptyText)
+        : expect(status).not.toHaveTextContent(/matching/iu));
+    },
+  };
+}
+
+export const NoOptionsSaysSo = noOptions();
+
+export const NoOptionsNamesWhatIsMissing = noOptions('Nothing installed yet');
+
 export const ArrowKeysAndEnterChoose: Story = {
   beforeEach: (): Promise<void> => settleLayout('wide'),
   render: () => (

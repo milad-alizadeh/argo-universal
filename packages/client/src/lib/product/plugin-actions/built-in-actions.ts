@@ -4,6 +4,7 @@ import { setStringAsync } from 'expo-clipboard';
 import { router } from 'expo-router';
 import { Linking } from 'react-native';
 import { newSessionHref, sessionHref } from '../navigation/navigation';
+import { pageShown } from '../navigation/shown-page';
 import { shareContent } from './share';
 import { mayRun } from './web-action';
 
@@ -29,7 +30,7 @@ const runners: Runners = {
   toast: ({ message }) => showToast({ title: message, tone: 'success' }),
   navigate: ({ path }, openPage) => openPage(path),
   newSession: ({ projectId, draft }) =>
-    router.navigate(newSessionHref(projectId, draft)),
+    router.navigate(newSessionHref(projectId, draft, pageShown())),
   openSession: ({ sessionId }) => router.navigate(sessionHref(sessionId)),
   openUrl: async ({ url }) => {
     await Linking.openURL(url);

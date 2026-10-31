@@ -5,7 +5,7 @@ import { InspectorActions } from './inspector-actions';
 
 export { InspectorActions } from './inspector-actions';
 
-import { IconButton } from '#primitives/actions/icon-button';
+import { ChromeIconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { InspectorControlsContext } from './inspector-controls-context';
 import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
@@ -56,7 +56,7 @@ function ExpandControl({
   const control = expandControl[expanded ? 'expanded' : 'restored'];
 
   return (
-    <IconButton
+    <ChromeIconButton
       {...controlProps}
       accessibilityLabel={control.label}
       onPress={() => onExpandedChange(!expanded)}
@@ -67,7 +67,7 @@ function ExpandControl({
 
 function CloseButton(props: InspectorPaneProps): ReactElement {
   return (
-    <IconButton
+    <ChromeIconButton
       {...controlProps}
       accessibilityLabel="Close Inspector"
       onPress={() => props.onOpenChange(false)}

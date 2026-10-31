@@ -11,7 +11,7 @@ import {
 } from './field-picker-model';
 import type { FieldPickerScreenProps } from './field-picker-screen';
 import { change } from './field-picker-screen-choice';
-import { EmptyState } from './field-picker-screen-parts';
+import { screenEmpty } from './field-picker-screen-parts';
 
 type ListProps = Omit<
   React.ComponentProps<typeof List>,
@@ -44,7 +44,7 @@ function listProps(props: FieldPickerScreenProps): Omit<ListProps, 'onMove'> {
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
     <ListPlaceContext value={choosingPlace(useListPlace())}>
-      <List {...listProps(props)} empty={<EmptyState />}>
+      <List {...listProps(props)} empty={screenEmpty(props)}>
         {optionSections(props.shown ?? props.options).map((section) => (
           <ChoiceSection key={section.key} {...props} section={section} />
         ))}

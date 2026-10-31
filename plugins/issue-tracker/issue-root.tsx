@@ -20,32 +20,44 @@ type RootView = {
 
 type RootProps = {
   deps: IssueDeps;
-  project?: Project;
+  projectId?: string;
   filter?: IssueFilter;
-  detail?: JSX.Element;
+  // The page beside the list, drawn for the Project as it is now.
+  detail?: (project: Project) => JSX.Element;
 };
 
 /*
  * The Issues section's landing page: GitHub's own ways to group a repository's Issues, by status, by
  * you and by label. Each row opens that filter's list.
  */
-export function IssuesRoot({ detail, ...props }: RootProps): JSX.Element {
+export function IssuesRoot({
+  detail,
+  projectId,
+  ...props
+}: RootProps): JSX.Element {
+  const choice = useRootProjects(props.deps, projectId);
+
   return (
     <ListDetail
       title="Issues"
-      list={<RootList {...props} reload={detail === undefined} />}
-      detail={detail}
-      empty={
-        <EmptyState
-          title="Select a filter"
-          description="Choose a group from the sidebar."
-        />
-      }
+      list={<RootList {...props} choice={choice} reload={!detail} />}
+      detail={choice.project && detail?.(choice.project)}
+      empty={<SelectFilter />}
     />
   );
 }
 
-type RootListProps = Omit<RootProps, 'detail'> & { reload: boolean };
+const SelectFilter = (): JSX.Element => (
+  <EmptyState
+    title="Select a filter"
+    description="Choose a group from the sidebar."
+  />
+);
+
+type RootListProps = Pick<RootProps, 'deps' | 'filter'> & {
+  choice: RootProjects;
+  reload: boolean;
+};
 
 type RootRowsProps = {
   deps: IssueDeps;
@@ -55,8 +67,7 @@ type RootRowsProps = {
 };
 
 function RootList(props: RootListProps): JSX.Element {
-  const { deps, project, filter, reload } = props;
-  const choice = useRootProjects(deps, project);
+  const { deps, choice, filter, reload } = props;
   const state = useOverview(deps, choice.project, reload);
 
   return (
