@@ -20,7 +20,7 @@ import {
   type ParamListBase,
 } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useCallback, type PropsWithChildren } from 'react';
+import { useCallback, useEffect, type PropsWithChildren } from 'react';
 import { View } from 'react-native';
 
 interface OpenFirstPageProps {
@@ -57,6 +57,58 @@ function OpenFirstPage({ useFirstPage }: OpenFirstPageProps): React.ReactNode {
 
 interface SectionRootProps {
   section: CoreSection;
+}
+
+/*
+ * A page opened by its address has this root added below it so Back has somewhere to go, and the router gives the root
+ * the page's params (`name`, `id`). The root has no such param, so its address would show it as a query string. It also
+ * skips the page's own list (Projects between Settings and a Project). The stack is reset without the params and with
+ * the list in between, once, as the page opens.
+ */
+function useRepairedDeepLinkStack(): void {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+
+  useEffect(() => {
+    const stack = navigation.getState();
+    const routes = repairedRoutes(stack);
+
+    if (!routes) return;
+
+    navigation.dispatch(
+      CommonActions.reset({ ...stack, index: routes.length - 1, routes }),
+    );
+  }, [navigation]);
+}
+
+type Stack = ReturnType<NavigationProp<ParamListBase>['getState']>;
+
+type Route = Stack['routes'][number];
+
+// Only a stack of the root and one page, the root carrying that page's params, is one opened by its address.
+const openedByAddress = (routes: Stack['routes']): routes is [Route, Route] =>
+  routes.length === 2 && Object.keys({ ...routes[0]?.params }).length > 0;
+
+function repairedRoutes(stack: Stack): Stack['routes'] | undefined {
+  const { routes } = stack;
+
+  if (!openedByAddress(routes)) return undefined;
+
+  const [root, page] = routes;
+
+  return [{ name: root.name, key: root.key }, ...listBelow(stack, page), page];
+}
+
+// The list a dynamic page belongs to, such as `projects/index` for `projects/[name]`, when the stack has it.
+function listBelow(
+  stack: Stack,
+  page: Stack['routes'][number],
+): Stack['routes'] {
+  const folder = page.name.split('/').slice(0, -1);
+  const list = [...folder, 'index'].join('/');
+
+  return folder.length > 0 && stack.routeNames.includes(list)
+    ? [{ key: `${list}-below`, name: list }]
+    : [];
 }
 
 // ☰ opens the Frame's drawer, which the action reaches from a section's stack, with a light tap and a badge while Sessions need attention.
@@ -106,6 +158,7 @@ export function NarrowRoot({
  * else the section's first page, which the section's list names.
  */
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
+  useRepairedDeepLinkStack();
   const wide = useWide();
   const besidePages = useBesidePages(section, wide);
 
