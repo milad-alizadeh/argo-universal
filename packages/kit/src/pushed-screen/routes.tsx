@@ -13,6 +13,9 @@ import {
   subscribePushedScreens,
 } from './pushed-screen-store';
 
+// An address no route answers, so the router's own not-found page takes it.
+const unknownAddress = '/screen-not-found';
+
 /*
  * The one route (`/screen/[id]`) every pushed page uses: the App's `app/screen/[id].tsx` and a story's `withStack` both
  * render it. An id no opener has pushed (a link, a reload) names no page, so it goes where any unknown address goes.
@@ -20,15 +23,12 @@ import {
 export function PushedScreenRoute(): ReactNode {
   const { id } = useLocalSearchParams<{ id: string }>();
   // Read once, as the page mounts: an opener that unmounts while its page leaves must not send the leaving page away.
-  const [pushed] = useState(() => hasPushedScreen(id));
+  const [isPushed] = useState(() => hasPushedScreen(id));
 
-  if (!pushed) return <Redirect href={unknownAddress} />;
+  if (!isPushed) return <Redirect href={unknownAddress} />;
 
   return <PushedPage id={id} />;
 }
-
-// An address no route answers, so the router's own not-found page takes it.
-const unknownAddress = '/screen-not-found';
 
 function PushedPage({ id }: { id: string }): ReactNode {
   const content = useSyncExternalStore(subscribePushedScreens, () =>

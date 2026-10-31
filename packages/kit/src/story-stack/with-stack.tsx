@@ -60,7 +60,7 @@ function ScreenRoute(): React.JSX.Element | null {
   );
 }
 
-// The App's `+not-found` stands in the stack as a page that says so.
+// Stands in for the not-found page the App's Frame draws for an address no route answers.
 function NotFoundRoute(): React.JSX.Element {
   return <Text>Not found</Text>;
 }
