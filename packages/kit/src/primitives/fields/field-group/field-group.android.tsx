@@ -42,16 +42,22 @@ function FieldGroupRoot(props: FieldGroupProps): ReactElement {
 
   return (
     <View style={{ flex: 1, ...column }}>
-      <Host style={{ flex: 1 }}>
-        <GroupDisabledContext.Provider value={props.disabled ?? false}>
-          <InsideHostContext.Provider value>
-            <OutsideColumn>
-              <Column>{props.children}</Column>
-            </OutsideColumn>
-          </InsideHostContext.Provider>
-        </GroupDisabledContext.Provider>
-      </Host>
+      <HostedGroup {...props} />
     </View>
+  );
+}
+
+function HostedGroup(props: FieldGroupProps): ReactElement {
+  return (
+    <Host style={{ flex: 1 }}>
+      <GroupDisabledContext.Provider value={props.disabled ?? false}>
+        <InsideHostContext.Provider value>
+          <OutsideColumn>
+            <Column>{props.children}</Column>
+          </OutsideColumn>
+        </InsideHostContext.Provider>
+      </GroupDisabledContext.Provider>
+    </Host>
   );
 }
 
