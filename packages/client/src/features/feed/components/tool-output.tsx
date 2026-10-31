@@ -7,6 +7,7 @@ import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { unfencedText } from '../view/fenced-text';
 import { toFileDiffs } from '../view/file-diff';
 import { DiffView } from './diff-view/diff-view';
 import { FeedContent } from './feed-content/feed-content';
@@ -53,21 +54,35 @@ function ToolContentOrPlaceholder({
   );
 }
 
+// The Agent wrote the text as Markdown, so a fence round all of it is not part of the output.
+interface ToolTextProps {
+  text: string;
+  fileName?: string;
+}
+
+function ToolText({ text, fileName }: ToolTextProps): React.JSX.Element {
+  const { code, language } = unfencedText(text);
+
+  // The file's name titles the block and, by its extension, decides the highlighting.
+  return (
+    <FeedCodeBlock
+      code={code}
+      title={fileName ?? 'Output'}
+      language={fileName ?? language}
+    />
+  );
+}
+
 function ToolContentBlock(props: {
   block: ContentBlock;
   fileName?: string;
 }): React.JSX.Element {
   const { block, fileName } = props;
 
-  if (block.type !== 'text') return <FeedContent content={[block]} />;
-
-  // The file's name titles the block and, by its extension, decides the highlighting.
-  return (
-    <FeedCodeBlock
-      code={block.text}
-      title={fileName ?? 'Output'}
-      language={fileName}
-    />
+  return block.type === 'text' ? (
+    <ToolText text={block.text} fileName={fileName} />
+  ) : (
+    <FeedContent content={[block]} />
   );
 }
 
