@@ -129,9 +129,14 @@ function sessionIdentity(row: SessionRecord): SessionIdentity {
   };
 }
 
-// A Session an Agent started lists before any prompt named it, so the row says what it is until the first prompt does.
+/*
+ * A Session an Agent started lists before any prompt named it, so the row says what it is until the first prompt does.
+ * Every other untitled row keeps its empty title: the App's own New Session draft is named by its first prompt.
+ */
 function listedTitle(row: SessionRecord): string {
-  return row.title === '' ? 'New Session' : row.title;
+  return row.startedBySessionId !== null && row.title === ''
+    ? 'New Session'
+    : row.title;
 }
 
 function sessionDetails(
