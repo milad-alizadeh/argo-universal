@@ -12,6 +12,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { liquidGlassAvailable } from '#primitives/content/liquid-glass';
 import { Host } from '#primitives/native/host';
 import { nativeIconName } from '../../../symbols/native-icon-name';
+import { useFixedSizeChrome } from './fixed-size-chrome';
 import type { IconButtonProps } from './icon-button';
 import { sizeOf, variantOf } from './icon-button-defaults';
 
@@ -46,27 +47,31 @@ const styles = liquidGlassAvailable ? glassStyles : borderedStyles;
 
 // Expo UI's icon button: the label is the spoken name, the system image the glyph, and the control size the size.
 export function IconButton(props: IconButtonProps): ReactElement {
+  const fixed = useFixedSizeChrome();
+
   return (
     <Host seed="primary" matchContents>
       <SwiftButton
         label={props.accessibilityLabel}
         systemImage={systemImage(props)}
-        modifiers={modifiers(props)}
+        modifiers={modifiers(props, fixed)}
         onPress={props.onPress}
       />
     </Host>
   );
 }
 
-function modifiers(props: IconButtonProps): SwiftProps['modifiers'] {
+function modifiers(
+  props: IconButtonProps,
+  fixed: boolean,
+): SwiftProps['modifiers'] {
   return [
     buttonStyle(styles[variantOf(props)]),
     controlSize(controlSizes[sizeOf(props)]),
     labelStyle('iconOnly'),
     buttonBorderShape('circle'),
-    // Dynamic Type grows an icon-only circle past the fixed row it sits in; it keeps the size its control size names, as a stock toolbar button does.
-    dynamicTypeSize('large'),
     disabled(props.disabled ?? false),
+    ...(fixed ? [dynamicTypeSize('large')] : []),
   ];
 }
 
