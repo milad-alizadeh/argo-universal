@@ -11,6 +11,7 @@ import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
+import { useClosedAfterOpen } from './sheet-closed-after-open';
 import { isDismissible } from './sheet-dismissible';
 import { SheetFrame } from './sheet-frame.ios';
 import type { SheetDetent, SheetProps } from './sheet-props';
@@ -86,6 +87,12 @@ function SystemSheetScreens(props: PresentationProps): ReactElement {
 }
 
 function PopoverSheet(props: PresentationProps): ReactElement {
+  useClosedAfterOpen(props);
+
+  return <PopoverPresentation {...props} />;
+}
+
+function PopoverPresentation(props: PresentationProps): ReactElement {
   return (
     <Popover
       isPresented={props.open}
