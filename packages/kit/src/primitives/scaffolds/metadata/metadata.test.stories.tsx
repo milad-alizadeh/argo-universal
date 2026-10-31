@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
 import { Component, type ReactNode } from 'react';
 import { expect, spyOn } from 'storybook/test';
+import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';
@@ -96,6 +97,57 @@ export const NavigatesLinkRoute: Story = {
     } finally {
       navigate.mockRestore();
     }
+  },
+};
+
+/*
+ * A link the page already carries in its Screen's caption: the field draws it wherever the caption does not, and stands
+ * down where the caption has it.
+ */
+const captionedLink: Story = {
+  args: {
+    title: 'Details',
+    children: [
+      <Metadata.StatusDot
+        key="status"
+        title="Status"
+        text="Open"
+        tone="info"
+      />,
+      <Metadata.Link
+        key="repo"
+        title="Repository"
+        text={repoName}
+        href="https://example.com/repo"
+        whenNarrow
+      />,
+    ],
+  },
+};
+
+export const NarrowKeepsTheCaptionsLink: Story = {
+  ...captionedLink,
+  beforeEach: () => settleLayout('phone'),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('link', { name: repoName })).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Repository, argo-universal' }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Status, Open' }),
+    ).toBeVisible();
+  },
+};
+
+export const WideLeavesTheCaptionsLinkOut: Story = {
+  ...captionedLink,
+  beforeEach: () => settleLayout('wide'),
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+    await expect(canvas.queryByText(repoName)).not.toBeInTheDocument();
+    await expect(
+      canvas.getByRole('group', { name: 'Status, Open' }),
+    ).toBeVisible();
   },
 };
 

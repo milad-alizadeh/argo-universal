@@ -6,6 +6,7 @@ import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
+import { canPointAt } from '../../../../mocks/point-hit';
 import { Detail } from './detail';
 import type { DetailProps } from './detail-props';
 import { issue } from './detail.mocks';
@@ -223,5 +224,42 @@ export const PhoneWidthDrawsMetadataInline: Story = {
   play: async ({ canvas }) => {
     await expectMetadata(canvas);
     await waitFor(() => expect(metadataPlace(canvas)).toBe('above'));
+  },
+};
+
+const scrollId = 'detail-scroll';
+
+// Enough description to scroll a 640-tall container well past the Metadata column.
+const longBody = [
+  body,
+  ...Array.from(
+    { length: 20 },
+    (_, step) => `Step ${step + 1}: fetch, then read the Server log again.`,
+  ),
+].join('\n\n');
+
+/*
+ * The Metadata column keeps its place while the content scrolls under it, so a long description can be read with the
+ * Issue's properties still in view.
+ */
+export const MetadataColumnStaysWhileContentScrolls: Story = {
+  args: { ...issue.detail, markdown: longBody, testID: scrollId },
+  render: (args) => (
+    <View className="h-160 w-200">
+      <Screen title={issue.title}>
+        <Detail {...args} />
+      </Screen>
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+    const scroll = canvas.getByTestId(scrollId);
+    const status = canvas.getByRole('group', { name: statusGroup });
+    const { top } = rect(status);
+
+    scroll.scrollTop = scroll.scrollHeight;
+    await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));
+    await expect(sameEdge(rect(status).top, top)).toBe(true);
+    await expect(canPointAt(status)).toBe(true);
   },
 };
