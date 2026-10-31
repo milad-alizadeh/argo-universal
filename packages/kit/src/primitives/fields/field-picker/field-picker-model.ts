@@ -1,6 +1,9 @@
 import type { FieldGroupKitProps } from '../../kit-props';
 
-export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'>;
+export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
+  // What the page says when there are no options at all, such as "No Agents installed"; a search that leaves none says so itself. The App's own: a Plugin's wire has no such prop.
+  emptyText?: string;
+};
 
 /*
  * What a caller writes: a single Picker holds one value and a `multiple` one a list, so a handler takes the value it
