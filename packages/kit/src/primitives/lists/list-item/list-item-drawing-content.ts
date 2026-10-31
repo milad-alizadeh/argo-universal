@@ -9,6 +9,7 @@ export function drawingContent(
 ): DrawingProps {
   const content = tile ? props : placedContent(props, placement);
 
+  // The same title and value as `rowLabel`; see `metaAccessories` for what the name leaves out.
   return {
     ...content,
     accessibilityLabel:
