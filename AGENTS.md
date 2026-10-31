@@ -11,6 +11,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Storybook owns how built UI looks; Paper is for exploring a design before it is built, and its board is deleted once the design ships. Before drawing in Paper, read `docs/agents/paper.md`.
 - Layout: before changing the rail, the content column, the Workbench or the Inspector, read `docs/agents/layout.md`. It holds the regions, the widths they give up in order, and the phone model.
+- Android emulator: before booting or driving an Android emulator, read `docs/agents/android-emulator.md`.
 
 ## Agent skills
 
