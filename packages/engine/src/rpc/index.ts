@@ -3,6 +3,7 @@ export {
   publicProcedure,
   router,
   routerFactory,
+  serverDeviceProcedure,
   zAsyncIterable,
 } from './trpc';
 

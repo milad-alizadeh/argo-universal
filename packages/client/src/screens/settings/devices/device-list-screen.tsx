@@ -7,7 +7,7 @@ import { useServerPaired } from '#lib/product/server-place';
 import { DeviceListView } from './device-list-view';
 import { useLocalNetworkAccess } from './use-local-network-access';
 
-// Local network access is Server-Device-only (ADR-0022), so a Device paired to another computer's Server is not shown the switch. The Server refuses it too once #1497 lands.
+// Local network access is Server-Device-only (ADR-0022), so a Device paired to another computer's Server is not shown the switch, and the Server refuses it with `serverDeviceProcedure` whatever the App draws.
 export function DeviceListScreen(): React.JSX.Element {
   const caption = useServerPageCaption();
 

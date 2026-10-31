@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import { device } from '@repo/db/schema';
 import { asc, desc } from 'drizzle-orm';
 import { z } from 'zod';
-import { publicProcedure, router, routerFactory } from '../rpc';
+import { router, routerFactory, serverDeviceProcedure } from '../rpc';
 
 export type DevicesDeps = { database: Database; serverPublicKey: string };
 
@@ -26,12 +26,15 @@ const listDevices = (database: Database): ServerDevice[] =>
     .all()
     .map(toServerDevice);
 
+/*
+ * Server-Device-only (ADR-0022, ADR-0045): a Paired Device never sees the other Devices, and the Server refuses to tell it rather than trusting the App to hide the page.
+ */
 export const createDevicesRouter = routerFactory((deps: DevicesDeps) =>
   router({
-    list: publicProcedure
+    list: serverDeviceProcedure
       .output(z.array(ServerDevice))
       .query(() => listDevices(deps.database)),
-    serverKey: publicProcedure
+    serverKey: serverDeviceProcedure
       .output(ServerKey)
       .query(() => ({ publicKey: deps.serverPublicKey })),
   }),
