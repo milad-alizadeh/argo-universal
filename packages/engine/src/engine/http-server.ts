@@ -3,7 +3,11 @@ import type { AcpResourceInput, RegistryActor } from '../agents';
 import type { DeviceAdmission } from '../devices/admit-device';
 import type { LocalNetworkAccess } from '../network-access';
 import type { Notifications, NotificationOptions } from '../notifications';
-import type { OperationWaitClock, SessionTokens } from '../operations';
+import {
+  tokensMatch,
+  type OperationWaitClock,
+  type SessionTokens,
+} from '../operations';
 import type { PairingTickets } from '../pairing/tickets';
 import type { Keypair } from '../pairing/x25519';
 import type { HookPort, PluginServerOptions, Plugins } from '../plugins';
@@ -65,6 +69,8 @@ export type HttpSetup = {
 
 export type RoutedSetup = HttpSetup & {
   appRouter: AppRouter;
+  // The user token, which a request on the loopback door shows to prove it is the Server Device's (ADR-0044).
+  controlToken: string;
   serverPublicKey: string;
   // The private half the handshake runs on; it never leaves the Server.
   staticKey: Keypair;
@@ -77,7 +83,7 @@ export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
   const setup = await prepareHttpServer(options);
-  const guard = createRequestGuard();
+  const guard = createRequestGuard(recognisedTokens(setup, options));
   const doors = createDoors(setup, guard);
 
   const listener = await listenWithPlugins(
@@ -92,6 +98,20 @@ export async function startHttpServer(
 
   return connectHttpServer(setup, doors, { guard, listener, stopAnnouncing });
 }
+
+/*
+ * The tokens this Server issued: the user token in `~/.argo/control.token`, which the `argo` CLI and the Supervisor read, and the token each Session gives its Agent (ADR-0044).
+ * A process that holds either read a file or an environment variable only this computer has, so a request carrying one is the Server Device's (#1696).
+ */
+const recognisedTokens = (
+  setup: RoutedSetup,
+  options: HttpServerOptions,
+): Parameters<typeof createRequestGuard>[0] => ({
+  recognisesToken: (token): boolean =>
+    token !== undefined &&
+    (tokensMatch(setup.controlToken, token) ||
+      options.sessionTokens.recognises(token)),
+});
 
 function connectHttpServer(
   setup: RoutedSetup,

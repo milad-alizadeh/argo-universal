@@ -1,5 +1,11 @@
 import { expect, it } from 'vitest';
-import { port, upgradeStatus, systemInfoStatus } from '#mocks/engine-http';
+import {
+  home,
+  port,
+  upgradeStatus,
+  systemInfoStatus,
+} from '#mocks/engine-http';
+import { userTokenHeaders } from '#mocks/engine-proof';
 
 it.each([
   ['no Origin', {}],
@@ -22,6 +28,7 @@ it('answers feed.page from the database', async (): Promise<void> => {
 
   const response = await fetch(
     `http://127.0.0.1:${port}/trpc/feed.page?input=${input}`,
+    { headers: await userTokenHeaders(home) },
   );
 
   expect(await response.json()).toMatchObject({

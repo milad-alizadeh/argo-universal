@@ -1,7 +1,13 @@
 import type { Server } from 'node:http';
+import type { Socket } from 'node:net';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer, type VerifyClientCallbackAsync } from 'ws';
-import { createRpcContext } from '../rpc';
+import {
+  admitAs,
+  createRpcContext,
+  identityOf,
+  serverDeviceIdentity,
+} from '../rpc';
 import type { ServerListener } from './network-listener';
 import type { RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
@@ -87,12 +93,20 @@ function createWebSocketServer({
   return webSocketServer;
 }
 
-// Whose Connection this is was settled at the front door; the upgrade checks only that a web page in a browser is not the one asking (ADR-0045).
+/*
+ * A WebSocket is this computer's own App or nothing: a browser attaches `Origin` to every upgrade, so an upgrade the allowlist takes came from a page on this computer, and one from a page elsewhere is refused whatever name it dialled (ADR-0045).
+ * That is what admits the Connection as the Server Device, in place of the address it came from (#1696).
+ */
 function verifyUpgrade(guard: RequestGuard): VerifyClientCallbackAsync {
-  return ({ req }, callback): void =>
-    callback(
-      guard.allowsOrigin(req.headers.origin),
-      forbiddenStatus,
-      'Forbidden',
-    );
+  return ({ req }, callback): void => {
+    const allowed = guard.allowsUpgrade(req.headers.origin);
+
+    if (allowed) admitUpgrade(req.socket);
+    callback(allowed, forbiddenStatus, 'Forbidden');
+  };
+}
+
+// A Connection that proved a Device at the handshake keeps that identity: an upgrade inside a channel never widens it to the Server Device.
+function admitUpgrade(socket: Socket): void {
+  if (!identityOf(socket)) admitAs(socket, serverDeviceIdentity);
 }

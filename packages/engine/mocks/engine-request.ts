@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { makeResolvedTempFolderSync } from '@repo/mocks/fs/resolved-temp-folder';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { userTokenHeaders } from './engine-proof';
 import { readHttpResponse, type HttpResponse } from './http-response';
 
 export const binaryMime = 'application/octet-stream';
@@ -24,7 +25,7 @@ export const systemInfo = {
   name: expect.stringMatching(/\S/),
 };
 
-let home: string;
+export let home: string;
 
 let stopEngine: () => Promise<void>;
 
@@ -37,17 +38,25 @@ interface HttpRequest {
   method?: string;
   headers?: Record<string, string>;
   body?: string | Uint8Array;
+  /** Sends nothing that proves the Server Device, the way a web page cannot. */
+  unproved?: boolean;
 }
 
-export const sendHttpRequest = (input: HttpRequest): Promise<HttpResponse> =>
-  new Promise<HttpResponse>((resolve, reject): void => {
-    const outgoing = request(requestOptions(input), (response): void => {
+// Asks the Server as this computer's own tooling does: with the user token, unless the test is standing in for something that has none.
+export const sendHttpRequest = async (
+  input: HttpRequest,
+): Promise<HttpResponse> => {
+  const proof = input.unproved ? {} : await userTokenHeaders(home);
+
+  return new Promise<HttpResponse>((resolve, reject): void => {
+    const outgoing = request(requestOptions(input, proof), (response): void => {
       void readHttpResponse(response).then(resolve, reject);
     });
 
     outgoing.once('error', reject);
     outgoing.end(input.body);
   });
+};
 
 // Encodes a form the way a browser's fetch does, so the request goes through node:http as bytes.
 export async function sendFormRequest(
@@ -62,6 +71,8 @@ export async function sendFormRequest(
     method: 'POST',
     headers: uploadHeaders(encoded, origin),
     body: new Uint8Array(await encoded.arrayBuffer()),
+    // A browser's upload proves itself by its Origin, so the token would hide what the Origin check does.
+    unproved: true,
   });
 }
 
@@ -105,17 +116,16 @@ function uploadHeaders(encoded: Request, origin?: string): UploadHeaders {
   return headers;
 }
 
-function requestOptions({
-  path,
-  method = 'GET',
-  headers = {},
-}: HttpRequest): RequestOptions {
+function requestOptions(
+  { path, method = 'GET', headers = {} }: HttpRequest,
+  proof: Record<string, string>,
+): RequestOptions {
   return {
     host: '127.0.0.1',
     port,
     method,
     path,
-    headers: { host, ...headers },
+    headers: { host, ...proof, ...headers },
   };
 }
 

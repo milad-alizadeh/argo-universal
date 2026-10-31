@@ -7,6 +7,9 @@ import {
 import { startEngineTestHost } from './engine';
 import { installed, probeSource } from './probe-plugin';
 
+// The App asking for media, which is how everything but a web page elsewhere reaches a Plugin asset (#1696).
+export const appOrigin = { origin: 'app://app' };
+
 export const image = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+c4V0AAAAASUVORK5CYII=',
   'base64',

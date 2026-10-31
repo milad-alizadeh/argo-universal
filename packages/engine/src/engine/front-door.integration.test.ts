@@ -8,18 +8,22 @@ import {
   openChannel,
 } from '#mocks/engine-channel';
 import { lanAddress } from '#mocks/engine-network';
+import { userTokenHeaders } from '#mocks/engine-proof';
 import { channelMagic } from '../pairing/channel-door';
 
 const portOf = (url: string): number => Number(new URL(url).port);
 
+type PlainRequest = {
+  host: string | undefined;
+  port: number;
+  path: string;
+  headers?: Record<string, string>;
+};
+
 // The HTTP status of a plain request, or 0 when the Server closed the socket instead of answering.
-const plainStatus = (
-  host: string | undefined,
-  port: number,
-  path: string,
-): Promise<number> =>
+const plainStatus = (asked: PlainRequest): Promise<number> =>
   new Promise<number>((resolve, reject): void => {
-    const outgoing = request({ host, port, path }, (response): void => {
+    const outgoing = request(asked, (response): void => {
       resolve(response.statusCode ?? 0);
       response.resume();
     });
@@ -35,10 +39,21 @@ const apiPath = '/trpc/system.info';
 
 const paths = [apiPath, '/blobs/anything', '/plugin-assets/probe/x'];
 
-it('serves this computer own App over plain HTTP, as the Server Device', async (): Promise<void> => {
-  const { url } = await startEngineTestHost();
+// What this computer's own tooling shows on the plain-HTTP door: arriving on loopback proves nothing by itself (#1696).
+const asServerDevice = (home: string): Promise<Record<string, string>> =>
+  userTokenHeaders(home);
 
-  expect(await plainStatus('127.0.0.1', portOf(url), apiPath)).toBe(200);
+it('serves this computer own tooling over plain HTTP, as the Server Device', async (): Promise<void> => {
+  const { url, home } = await startEngineTestHost();
+
+  expect(
+    await plainStatus({
+      host: '127.0.0.1',
+      port: portOf(url),
+      path: apiPath,
+      headers: await asServerDevice(home),
+    }),
+  ).toBe(200);
 });
 
 const opened = (port: number): Promise<Socket> =>
@@ -78,12 +93,19 @@ const resets: readonly [string, Buffer][] = [
 
 describe.each(resets)('a Connection reset %s', (_name, opening) => {
   it('leaves the Server answering', async (): Promise<void> => {
-    const { url } = await startEngineTestHost();
+    const { url, home } = await startEngineTestHost();
     const port = portOf(url);
 
     await resetAfter(port, opening);
 
-    expect(await plainStatus('127.0.0.1', port, apiPath)).toBe(200);
+    expect(
+      await plainStatus({
+        host: '127.0.0.1',
+        port,
+        path: apiPath,
+        headers: await asServerDevice(home),
+      }),
+    ).toBe(200);
   });
 });
 
@@ -91,15 +113,25 @@ describe.each(resets)('a Connection reset %s', (_name, opening) => {
 describe.skipIf(!lanAddress)(
   'reached the way another Device reaches it',
   () => {
-    it('answers nothing at all over plain HTTP, however the Server is bound', async (): Promise<void> => {
+    it('answers nothing at all over plain HTTP, however the Server is bound and whatever it shows', async (): Promise<void> => {
       const host = await startEngineTestHost();
       const port = portOf(host.url);
+      const proof = await asServerDevice(host.home);
       await host.caller.network.setLocalAccess({ enabled: true });
 
       for (const path of paths)
-        expect(await plainStatus(lanAddress, port, path)).toBe(0);
+        expect(
+          await plainStatus({ host: lanAddress, port, path, headers: proof }),
+        ).toBe(0);
 
-      expect(await plainStatus('127.0.0.1', port, apiPath)).toBe(200);
+      expect(
+        await plainStatus({
+          host: '127.0.0.1',
+          port,
+          path: apiPath,
+          headers: proof,
+        }),
+      ).toBe(200);
     });
 
     it('answers a Device that handshakes, and only while the owner leaves the network on', async (): Promise<void> => {

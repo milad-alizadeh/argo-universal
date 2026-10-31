@@ -4,13 +4,19 @@ import type {
   ServerResponse,
 } from 'node:http';
 import { maxBlobUploadBytes } from '@repo/contracts';
+import { TRPCError } from '@trpc/server';
 import type { CreateHTTPContextOptions } from '@trpc/server/adapters/standalone';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { createRpcContext, type RpcContext } from '../rpc/connection';
+import {
+  identityOf,
+  serverDeviceIdentity,
+  type RpcIdentity,
+} from '../rpc/identity';
 import { handleAsset, type AssetReader } from './asset-response';
 import { streamBlob } from './blob-response';
 import { answerError, httpStatus, reportHttpFailure } from './http-response';
-import type { RequestGuard } from './request-guard';
+import { bearerToken, type RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
 
 export interface RequestListenerOptions {
@@ -27,50 +33,68 @@ const multipartHeaderBytes = 65_536;
 
 const maxBodySize = maxBlobUploadBytes + multipartHeaderBytes;
 
+type Dispatch = {
+  options: RequestListenerOptions;
+  handleTRPC: RequestListener;
+};
+
 /*
- * Serves GET /blobs/:id, Plugin assets and the tRPC calls at /trpc/ (ADR 0002). Whoever is asking was decided at the front door: this listener answers the Server Device on loopback and a paired Device inside its channel, and nothing else reaches it (ADR-0045).
+ * Serves GET /blobs/:id, Plugin assets and the tRPC calls at /trpc/ (ADR 0002), to a paired Device inside its channel and to the Server Device on loopback (ADR-0045).
+ * Nothing is served to a Connection that proved neither. A route that answers bytes refuses it here, since nothing behind the route would; a tRPC call goes to the router with no identity, which no procedure serves, so the refusal comes back in tRPC's own shape (#1696).
  */
 export function createRequestListener(
   options: RequestListenerOptions,
 ): RequestListener {
-  const handleTRPC = createGuardedTrpc(options);
+  const handleTRPC = createTrpcHandler(options);
 
   return (request, response): void =>
     dispatchRequest({ options, handleTRPC }, request, response);
 }
 
+/*
+ * A Connection inside a channel proved its Device at the handshake; one on the loopback plain-HTTP door proved nothing by arriving there, because a web page on a name that resolves to this computer arrives there too (#1696).
+ * A route that answers bytes therefore asks here, since no procedure behind it would.
+ */
 function dispatchRequest(
-  sources: { options: RequestListenerOptions; handleTRPC: RequestListener },
+  sources: Dispatch,
   request: IncomingMessage,
   response: ServerResponse,
 ): void {
-  const path = request.url ?? '';
+  const bytes = bytesRoute(sources.options, request.url ?? '');
 
+  if (!bytes) return sources.handleTRPC(request, response);
+  answerBytes(sources.options, bytes, { request, response });
+}
+
+function answerBytes(
+  options: RequestListenerOptions,
+  route: RequestListener,
+  { request, response }: { request: IncomingMessage; response: ServerResponse },
+): void {
+  if (provenIdentity(options, request)) return route(request, response);
+  answerError(response, httpStatus.forbidden, 'Forbidden');
+}
+
+// The two routes that answer bytes rather than a procedure's result: a Plugin's asset, and a Blob by its id.
+function bytesRoute(
+  options: RequestListenerOptions,
+  path: string,
+): RequestListener | undefined {
   if (path.startsWith('/plugin-assets/'))
-    return handleAsset(sources.options, request, response);
-  dispatchCoreRequest(sources, request, response);
+    return (request, response): void => handleAsset(options, request, response);
+  const blob = blobUrlPattern.exec(path);
+
+  if (!blob) return undefined;
+
+  return (request, response): void =>
+    handleBlob({ ...options, id: matchedBlobId(blob) }, request, response);
 }
 
-function dispatchCoreRequest(
-  sources: { options: RequestListenerOptions; handleTRPC: RequestListener },
-  request: IncomingMessage,
-  response: ServerResponse,
-): void {
-  const blob = blobUrlPattern.exec(request.url ?? '');
-
-  if (blob)
-    return handleBlob(
-      { ...sources.options, id: matchedBlobId(blob) },
-      request,
-      response,
-    );
-  sources.handleTRPC(request, response);
-}
-
-function createGuardedTrpc(options: RequestListenerOptions): RequestListener {
+function createTrpcHandler(options: RequestListenerOptions): RequestListener {
   const handleTRPC = createHTTPHandler({
     router: options.router,
-    createContext: httpContext,
+    createContext: ({ req }: CreateHTTPContextOptions): RpcContext =>
+      httpContext(options, req),
     basePath: '/trpc/',
     maxBodySize,
   });
@@ -78,11 +102,9 @@ function createGuardedTrpc(options: RequestListenerOptions): RequestListener {
   return (request, response): void => {
     const { origin } = request.headers;
 
-    if (!options.guard.allowsOrigin(origin))
-      return answerError(response, httpStatus.forbidden, 'Forbidden');
-
-    // A web App or desktop app on another origin may read the answer only with this header.
-    if (origin) response.setHeader('access-control-allow-origin', origin);
+    // A web App or desktop app on an Origin of its own may read the answer only with this header, and only an Origin this Server serves gets it.
+    if (origin !== undefined && options.guard.allowsOrigin(origin))
+      response.setHeader('access-control-allow-origin', origin);
     handleTRPC(request, response);
   };
 }
@@ -106,9 +128,29 @@ function matchedBlobId(match: RegExpExecArray): string {
   return match[1] ?? '';
 }
 
-function httpContext({ req }: CreateHTTPContextOptions): RpcContext {
-  return {
-    ...createRpcContext(req.socket),
-    token: req.headers.authorization?.replace(/^Bearer /, ''),
-  };
+/*
+ * The Device this call is from: the one the handshake named, or the Server Device when the request itself proved it.
+ * A call that proved neither carries no identity and reaches no procedure (ADR-0045), except that a caller who showed a token the Server does not know is told that instead, as the CLI tells the user.
+ */
+function httpContext(
+  options: RequestListenerOptions,
+  request: IncomingMessage,
+): RpcContext {
+  const token = bearerToken(request.headers);
+  const identity = provenIdentity(options, request);
+
+  if (!identity && token !== undefined)
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'An Argo token is required',
+    });
+
+  return { ...createRpcContext(request.socket, undefined, identity), token };
 }
+
+const provenIdentity = (
+  options: RequestListenerOptions,
+  request: IncomingMessage,
+): RpcIdentity | undefined =>
+  identityOf(request.socket) ??
+  (options.guard.allowsRequest(request) ? serverDeviceIdentity : undefined);

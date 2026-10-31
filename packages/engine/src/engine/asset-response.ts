@@ -6,11 +6,10 @@ import {
 import type { OpenedAsset, PluginRuntime } from '../plugins';
 import { transferAsset } from './asset-transfer';
 import { answerError, httpStatus, reportHttpFailure } from './http-response';
-import type { RequestGuard } from './request-guard';
 
 export type AssetReader = PluginRuntime['openAsset'];
 
-type AssetServices = { guard: RequestGuard; readAsset: AssetReader };
+type AssetServices = { readAsset: AssetReader };
 
 type AssetHeaders = {
   'content-type': string;
@@ -25,14 +24,12 @@ const assetRoute = /^\/plugin-assets\/([^/]+)\/([^.]+)\.([^/?]+)$/;
 
 const readMethods = new Set(['GET', 'HEAD']);
 
+// Whoever is asking was settled by the listener, which admits no request this route would have to turn away itself (#1696).
 export function handleAsset(
   options: AssetServices,
   request: IncomingMessage,
   response: ServerResponse,
 ): void {
-  if (!options.guard.allowsOrigin(request.headers.origin))
-    return answerError(response, httpStatus.forbidden, 'Forbidden');
-
   if (!isReadMethod(request.method)) return methodNotAllowed(response);
 
   allowOrigin(request.headers.origin, response);

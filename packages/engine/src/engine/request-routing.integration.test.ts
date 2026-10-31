@@ -16,7 +16,12 @@ it('answers a tRPC query over HTTP at /trpc/', async (): Promise<void> => {
 });
 
 it('hands an upload body to tRPC unread', async (): Promise<void> => {
-  const response = await sendFormRequest(uploadRoute, createUploadForm());
+  const response = await sendFormRequest(
+    uploadRoute,
+    createUploadForm(),
+    'app://app',
+  );
+
   expect(response.status).toBe(200);
   expect(JSON.parse(response.body)).toEqual({
     result: {
