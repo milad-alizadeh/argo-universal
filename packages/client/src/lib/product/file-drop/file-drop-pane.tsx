@@ -2,6 +2,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type ReactNode, useId } from 'react';
 import { View } from 'react-native';
+import { composerOverlap } from '../composer-cover';
 import { FileDropLabel, FileDropZone } from './file-drop-zone';
 import { type DroppedFiles, useFileDrop } from './use-file-drop';
 
@@ -37,9 +38,18 @@ function FadingFeed({
   );
 }
 
+/*
+ * The Composer reaches `composerOverlap` up over the Feed's end, so the Feed keeps that much height: a Composer
+ * that has to give height up then stops at the pane's top rather than running on past it (#1606).
+ */
+const feedKeeps = { minHeight: composerOverlap };
+
 function FeedPart({ hidden, ...feed }: FeedPartProps): React.JSX.Element {
   return (
-    <View className={cn('relative min-h-0 flex-1', hidden && 'hidden')}>
+    <View
+      className={cn('relative flex-1', hidden && 'hidden')}
+      style={feedKeeps}
+    >
       <FadingFeed {...feed} />
     </View>
   );
