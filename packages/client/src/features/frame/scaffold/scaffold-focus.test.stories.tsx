@@ -28,27 +28,44 @@ interface TabStop {
   focusVisible: boolean;
 }
 
-// Tab from the top of the page until focus leaves the document's controls or the limit is hit; what each stop was named and whether it showed focus.
+const isControl = (element: Element | null): element is Element =>
+  element !== null && element !== document.body;
+
+function stopOf(element: Element | null): TabStop | null {
+  if (!isControl(element)) return null;
+
+  return {
+    name: element.getAttribute('aria-label') ?? '',
+    focusVisible: element.matches(':focus-visible'),
+  };
+}
+
+function clearFocus(): void {
+  if (document.activeElement instanceof HTMLElement)
+    document.activeElement.blur();
+}
+
+// Tab from the top of the page until focus leaves its controls or the limit is hit; what each stop was named and whether it showed focus.
 async function tabOrder(): Promise<TabStop[]> {
   const stops: TabStop[] = [];
-  (document.activeElement as HTMLElement | null)?.blur();
+
+  clearFocus();
 
   for (let press = 0; press < tabLimit; press += 1) {
     await browserKeyboard.tab();
-    const { activeElement } = document;
+    const stop = stopOf(document.activeElement);
 
-    if (!activeElement || activeElement === document.body) break;
-    stops.push({
-      name: activeElement.getAttribute('aria-label') ?? '',
-      focusVisible: activeElement.matches(':focus-visible'),
-    });
+    if (!stop) break;
+    stops.push(stop);
   }
 
   return stops;
 }
 
-const stopNamed = (stops: readonly TabStop[], name: string) =>
-  stops.find((stop) => stop.name === name);
+const stopNamed = (
+  stops: readonly TabStop[],
+  name: string,
+): TabStop | undefined => stops.find((stop) => stop.name === name);
 
 // A resize handle takes Tab, and takes it as keyboard focus, which is what the focus ring is drawn from.
 export const SidebarHandleTakesKeyboardFocus: ScaffoldStory = {

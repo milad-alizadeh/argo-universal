@@ -29,38 +29,34 @@ function trapTab(drawer: HTMLElement, event: KeyboardEvent): void {
   tabTarget(tabStops(drawer), document.activeElement, stepOf(event))?.focus();
 }
 
-const focusTaken = (element: HTMLElement): boolean => {
+const noop = (): void => {};
+
+function focusTaken(element: HTMLElement): boolean {
   element.focus();
 
   return document.activeElement === element;
-};
+}
 
-// The controls that can stand for the opener: itself while it is still the page's, else the controls of the same name. A row picked in the drawer navigates, and the page that held the opener gives way to the next, which draws its own.
-function openerCandidates(opener: HTMLElement): HTMLElement[] {
-  const label = opener.getAttribute('aria-label');
-  const named = label
-    ? document.querySelectorAll<HTMLElement>(
-        `[aria-label="${CSS.escape(label)}"]`,
-      )
+const named = (label: string | null): HTMLElement[] =>
+  label
+    ? [
+        ...document.querySelectorAll<HTMLElement>(
+          `[aria-label="${CSS.escape(label)}"]`,
+        ),
+      ]
     : [];
 
-  return [opener, ...named];
-}
+// The controls that can stand for the opener: itself while it is still the page's, else the controls of the same name. A row picked in the drawer navigates, and the page that held the opener gives way to the next, which draws its own.
+const openerCandidates = (opener: HTMLElement): HTMLElement[] => [
+  opener,
+  ...named(opener.getAttribute('aria-label')),
+];
 
 const refocusOpener = (opener: HTMLElement): boolean =>
   openerCandidates(opener).some(focusTaken);
 
-// A page that is opening may not have drawn its opener yet, so the wait follows the page's own changes and ends at the first input of the person's: focus is theirs again from then on. Returns what ends the wait.
-function awaitOpener(opener: HTMLElement): () => void {
-  const observer = new MutationObserver(() => {
-    if (refocusOpener(opener)) stop();
-  });
-  const inputs = ['keydown', 'pointerdown', 'focusin'] as const;
-
-  function stop(): void {
-    observer.disconnect();
-    for (const input of inputs) document.removeEventListener(input, stop, true);
-  }
+function observePage(onChange: () => void): () => void {
+  const observer = new MutationObserver(onChange);
 
   observer.observe(document.body, {
     subtree: true,
@@ -68,14 +64,42 @@ function awaitOpener(opener: HTMLElement): () => void {
     attributes: true,
     attributeFilter: ['style', 'class', 'inert', 'aria-hidden'],
   });
-  for (const input of inputs) document.addEventListener(input, stop, true);
+
+  return (): void => observer.disconnect();
+}
+
+const personInputs = ['keydown', 'pointerdown', 'focusin'] as const;
+
+function untilInput(onInput: () => void): () => void {
+  for (const input of personInputs)
+    document.addEventListener(input, onInput, true);
+
+  return (): void => {
+    for (const input of personInputs)
+      document.removeEventListener(input, onInput, true);
+  };
+}
+
+// A page that is opening may not have drawn its opener yet, so the wait follows the page's own changes and ends at the first input of the person's: focus is theirs again from then on. Returns what ends the wait.
+function awaitOpener(opener: HTMLElement): () => void {
+  const ends: (() => void)[] = [];
+
+  const stop = (): void => {
+    for (const end of ends) end();
+  };
+
+  ends.push(
+    observePage(() => {
+      if (refocusOpener(opener)) stop();
+    }),
+    untilInput(stop),
+  );
 
   return stop;
 }
 
 function returnFocus(opener: Element | null): () => void {
-  if (!(opener instanceof HTMLElement) || refocusOpener(opener))
-    return () => {};
+  if (!(opener instanceof HTMLElement) || refocusOpener(opener)) return noop;
 
   return awaitOpener(opener);
 }
@@ -108,6 +132,10 @@ function findScrim(drawer: HTMLElement, label: string): HTMLElement | null {
   return null;
 }
 
+function setInert(element: HTMLElement | null, inert: boolean): void {
+  if (element) element.inert = inert;
+}
+
 // The drawer and its scrim leave the Tab order together while it is closed.
 function useInert(
   ref: RefObject<HTMLElement | null>,
@@ -116,18 +144,38 @@ function useInert(
 ): void {
   useLayoutEffect(() => {
     const drawer = ref.current;
+    const scrim = drawer && findScrim(drawer, scrimLabel);
 
-    if (!drawer) return undefined;
+    setInert(drawer, inert);
+    setInert(scrim, inert);
 
-    const scrim = findScrim(drawer, scrimLabel);
-
-    drawer.inert = inert;
-    if (scrim) scrim.inert = inert;
-
-    return (): void => {
-      if (scrim) scrim.inert = false;
-    };
+    return (): void => setInert(scrim, false);
   }, [ref, scrimLabel, inert]);
+}
+
+interface Waiting {
+  current: () => void;
+}
+
+function holdThenWait(drawer: HTMLElement, waiting: Waiting): () => void {
+  waiting.current();
+  const release = holdFocus(drawer);
+
+  return (): void => {
+    waiting.current = release();
+  };
+}
+
+function useHeldFocus(ref: RefObject<HTMLElement | null>, open: boolean): void {
+  const waiting = useRef<() => void>(noop);
+
+  useEffect(() => {
+    const drawer = open ? ref.current : null;
+
+    return drawer ? holdThenWait(drawer, waiting) : noop;
+  }, [ref, open]);
+
+  useEffect(() => (): void => waiting.current(), []);
 }
 
 // An open drawer sits in front of the page: focus moves into it and stays while it is open, then returns to the control that opened it. `scrimLabel` is the name the navigator gave the backdrop that closes it.
@@ -137,26 +185,5 @@ export function useDrawerFocus(
   open: boolean,
 ): void {
   useInert(ref, scrimLabel, !open);
-
-  const waiting = useRef<() => void>(() => {});
-
-  useEffect(() => {
-    const drawer = open ? ref.current : null;
-
-    if (!drawer) return undefined;
-
-    waiting.current();
-    const release = holdFocus(drawer);
-
-    return (): void => {
-      waiting.current = release();
-    };
-  }, [ref, open]);
-
-  useEffect(
-    () => (): void => {
-      waiting.current();
-    },
-    [],
-  );
+  useHeldFocus(ref, open);
 }

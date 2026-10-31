@@ -291,38 +291,36 @@ export const ClosingReturnsFocusToTheOpener: Story = {
   },
 };
 
-interface TabbedStop {
-  role: string | null;
-  name: string | null;
-}
+const isControl = (element: Element | null): element is Element =>
+  element !== null && element !== document.body;
+
+const labelOf = (element: Element | null): string | null =>
+  isControl(element) ? (element.getAttribute('aria-label') ?? '') : null;
 
 // Tab from the opener to the end of the page, naming each stop; stops at the body, where focus leaves the controls.
-async function tabStopsFromOpener(canvas: Canvas): Promise<TabbedStop[]> {
+async function tabStopsFromOpener(canvas: Canvas): Promise<string[]> {
   canvas.getByRole('button', { name: openerName }).focus();
-  const stops: TabbedStop[] = [];
+  const names: string[] = [];
 
   for (let press = 0; press < 20; press += 1) {
     await browserKeyboard.tab();
-    const { activeElement } = document;
+    const name = labelOf(document.activeElement);
 
-    if (!activeElement || activeElement === document.body) break;
-    stops.push({
-      role: activeElement.getAttribute('role'),
-      name: activeElement.getAttribute('aria-label'),
-    });
+    if (name === null) break;
+    names.push(name);
   }
 
-  return stops;
+  return names;
 }
 
 // Closed, nothing the drawer draws is reachable: not its rows, and not the backdrop that closes it.
 export const ClosedDrawerLeavesNoBackdropTabStop: Story = {
   ...drawerAndPage(false),
   play: async ({ canvas }) => {
-    const stops = await tabStopsFromOpener(canvas);
+    const names = await tabStopsFromOpener(canvas);
 
-    await expect(stops.some((stop) => stop.name === scrimLabel)).toBe(false);
-    await expect(stops).toHaveLength(1);
+    await expect(names).not.toContain(scrimLabel);
+    await expect(names).toHaveLength(1);
   },
 };
 

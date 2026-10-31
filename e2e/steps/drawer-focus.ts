@@ -5,6 +5,8 @@ import { Then, When } from './fixtures';
 // More presses than the phone Sessions page has stops, so one full cycle fits.
 const tabLimit = 30;
 
+const opener = 'Open navigation';
+
 interface TabStop {
   name: string;
   hidden: boolean;
@@ -43,9 +45,8 @@ async function tabOrder(page: Page): Promise<TabStop[]> {
 Then(
   'the Tab order holds nothing hidden from assistive technology',
   async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('button', { name: 'Open navigation' }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: opener })).toBeVisible();
+
     const stops = await tabOrder(page);
 
     expect(stops.length).toBeGreaterThan(0);
@@ -57,8 +58,9 @@ Then(
 When(
   'I open the Drawer and choose Settings with the keyboard',
   async ({ page }): Promise<void> => {
-    await page.getByRole('button', { name: 'Open navigation' }).focus();
+    await page.getByRole('button', { name: opener }).focus();
     await page.keyboard.press('Enter');
+
     const settings = page.getByRole('button', {
       name: 'Settings',
       exact: true,
@@ -73,8 +75,6 @@ When(
 Then(
   'focus is on the Open navigation button of the Settings page',
   async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('button', { name: 'Open navigation' }),
-    ).toBeFocused();
+    await expect(page.getByRole('button', { name: opener })).toBeFocused();
   },
 );
