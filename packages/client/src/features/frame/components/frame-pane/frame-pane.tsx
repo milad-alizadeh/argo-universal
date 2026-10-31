@@ -89,7 +89,7 @@ function usePaneMotion(values: PaneMotionValues, props: FramePaneProps): void {
  * would bleed back across the content (#1703). Once the width reaches 0 nothing of it is drawn; while it animates the
  * shadow goes with the edge, as on the web.
  */
-const drawn = (width: number): number => (width > 0 ? 1 : 0);
+const paneOpacity = (width: number): number => (width > 0 ? 1 : 0);
 
 interface PaneStyles {
   // The pane's clip, and its content's slide.
@@ -104,7 +104,11 @@ function usePaneStyles(props: FramePaneProps): PaneStyles {
 
   return {
     widthStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ width: width.get(), opacity: drawn(width.get()) }),
+      () => {
+        const now = width.get();
+
+        return { width: now, opacity: paneOpacity(now) };
+      },
       [width],
     ),
     shiftStyle: useAnimatedStyle<ViewStyle>(

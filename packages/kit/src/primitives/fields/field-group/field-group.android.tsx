@@ -33,7 +33,7 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  */
 function FieldGroupRoot(props: FieldGroupProps): ReactElement {
   /*
-   * Its cards keep Material's own inset, so the Screen adds no gutter of its own; its rows are outside the column.
+   * Its cards keep Material's own inset, so the Screen adds no gutter beyond the column's own; its rows are outside the column.
    * The Host is the column, as the web's scroll view is: capped and centred, so the cards start on the title's line.
    */
   const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
