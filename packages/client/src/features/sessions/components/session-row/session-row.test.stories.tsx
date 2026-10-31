@@ -111,6 +111,18 @@ const rowName = (session: SessionRowProps['session']): RowName => ({
 
 const idleRow = rowName(pluginItemsSession.session);
 
+// Only an archived Session's row says so: a live row's name stops at its status.
+export const LiveRowNameDoesNotSayArchived: Story = {
+  args: pluginItemsSession,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(canvas.getByRole('button', idleRow)).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', archivedName),
+    ).not.toBeInTheDocument();
+  },
+};
+
 const morePluginItems = { name: /^\d+ more items? from Plugins$/ };
 
 function pluginItems(width: number): Story {
