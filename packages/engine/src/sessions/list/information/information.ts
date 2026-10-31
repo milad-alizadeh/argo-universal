@@ -124,9 +124,14 @@ function sessionIdentity(row: SessionRecord): SessionIdentity {
     cwd: row.checkoutPath,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    title: row.title,
+    title: listedTitle(row),
     titleSource: row.titleSource,
   };
+}
+
+// A Session an Agent started lists before any prompt named it, so the row says what it is until the first prompt does.
+function listedTitle(row: SessionRecord): string {
+  return row.title === '' ? 'New Session' : row.title;
 }
 
 function sessionDetails(
