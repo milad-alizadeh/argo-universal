@@ -1,14 +1,16 @@
 import {
   EmptyState,
-  Icon,
+  Label,
   List,
   ListItem,
+  Pill,
   Screen,
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { repositoryText } from './issue-client';
+import { statusMark } from './issue-status-mark';
 import { issueTree, type IssueNode } from './issue-tree';
 import { rowLabelPills } from './label-pills';
 import {
@@ -72,16 +74,46 @@ const rowProps = ({ project, deps }: FilterSource, issue: Issue): RowProps => ({
     action: 'navigate',
     path: deps.pages.issuePagePath(project, issue.number),
   },
-  meta: rowLabelPills(issue.labels),
+  meta: [...rowMarks(issue), ...rowLabelPills(issue.labels)],
 });
 
-// GitHub has no workflow, so its states take the tracker types' default marks: open, done, and closed with a reason.
-function statusMark({ status, closedAs }: Issue): JSX.Element {
-  if (status === 'open') return <Icon name="pending" tone="muted" size="sm" />;
+/*
+ * What the row says about the Issue's relations before its labels: that open blockers hold it up, and
+ * how far its sub-Issues have come. An Issue with neither shows neither.
+ */
+function rowMarks(issue: Issue): JSX.Element[] {
+  return [...blockedMark(issue), ...progressMark(issue)];
+}
 
-  return closedAs === 'not-planned' ? (
-    <Icon name="failed" tone="muted" size="sm" filled />
-  ) : (
-    <Icon name="passed" tone="done" size="sm" filled />
-  );
+function blockedMark(issue: Issue): JSX.Element[] {
+  const open = openBlockers(issue);
+
+  if (open === 0) return [];
+
+  return [
+    <Label
+      key="blocked"
+      icon="refused"
+      text={blockedText(open)}
+      tone="warning"
+    />,
+  ];
+}
+
+const openBlockers = ({ blockedBy }: Issue): number =>
+  (blockedBy ?? []).filter((blocker) => blocker.status === 'open').length;
+
+const blockedText = (open: number): string =>
+  open === 1 ? 'Blocked' : `Blocked by ${open}`;
+
+function progressMark({ progress }: Issue): JSX.Element[] {
+  if (!progress) return [];
+
+  return [
+    <Pill
+      key="progress"
+      text={`${progress.completed} / ${progress.total}`}
+      tone="muted"
+    />,
+  ];
 }

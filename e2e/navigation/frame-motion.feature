@@ -21,3 +21,11 @@ Feature: Frame motion
     And I open the Session "Fix the login test"
     Then the Frame panes never moved
     And the Feed never moved
+
+  Scenario: Opening another Session fades the page for no more than one frame
+    Given a wide Frame
+    And Sessions named "Plan the release" and "Fix the login test"
+    When I open the Session "Plan the release"
+    And I watch the Frame panes
+    And I open the Session "Fix the login test"
+    Then the page pane faded for at most one frame

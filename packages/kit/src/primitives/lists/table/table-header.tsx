@@ -1,9 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type ViewStyle } from 'react-native';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { alignClass, columnClass } from './table-cell';
+import { alignClass, columnClass, columnStyle } from './table-cell';
 import type { TableColumn, TableProps, TableSort } from './table-props';
 import { nextSort, sortLabel } from './table-sort';
 
@@ -19,18 +19,24 @@ export function TableHeader(props: HeaderProps): ReactElement {
           {...props}
           column={column}
           className={columnClass(column, index === 0)}
+          style={columnStyle(column)}
         />
       ))}
     </View>
   );
 }
 
-export function HeaderCell(
-  props: HeaderProps & { column: TableColumn; className: string },
-): ReactElement {
+type HeaderCellProps = HeaderProps & {
+  column: TableColumn;
+  className: string;
+  style?: ViewStyle;
+};
+
+export function HeaderCell(props: HeaderCellProps): ReactElement {
   return (
     <View
       role="columnheader"
+      style={props.style}
       className={cn(props.className, alignClass(props.column))}
     >
       <HeaderTitle {...props} />

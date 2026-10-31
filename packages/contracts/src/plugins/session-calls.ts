@@ -13,6 +13,8 @@ export type PluginProjectInfo = z.infer<typeof PluginProjectInfo>;
 export const PluginSessionInfo = z.object({
   projectId: z.string(),
   branch: z.string().nullable(),
+  // The Session's own title, so a Plugin's page can name a Session it points at.
+  title: z.string(),
 });
 
 export type PluginSessionInfo = z.infer<typeof PluginSessionInfo>;

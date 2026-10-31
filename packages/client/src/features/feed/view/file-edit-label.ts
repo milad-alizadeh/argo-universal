@@ -1,5 +1,7 @@
 import type { FileDiff } from './file-diff';
 
+type ChangedFile = Pick<FileDiff, 'path' | 'oldPath' | 'operation'>;
+
 // The verb a change to one file reads as, drawn at the head of its row and spoken at the head of its label.
 export const editVerbs = {
   modify: 'Edited',
@@ -18,17 +20,21 @@ const countWords = (file: FileDiff): string[] => [
 ];
 
 // A move draws both names, the old one first, as the row does.
-const spokenFiles = (file: FileDiff): string =>
+const spokenFiles = (file: ChangedFile): string =>
   file.oldPath
     ? `${fileName(file.oldPath)} to ${fileName(file.path)}`
     : fileName(file.path);
+
+// The verb and the file name(s) of one change: "Added notes.md". The Feed's label and the Permission sheet's file line both read it.
+export const fileEditHead = (file: ChangedFile): string =>
+  `${editVerbs[file.operation]} ${spokenFiles(file)}`;
 
 /*
  * What a Feed row saying "Added notes.md +1" announces (#1504). The drawn signs are read as words, since a screen
  * reader says nothing at all for "+" and "−".
  */
 export function fileEditLabel(file: FileDiff): string {
-  const head = `${editVerbs[file.operation]} ${spokenFiles(file)}`;
+  const head = fileEditHead(file);
 
   return [head, ...countWords(file)].join(', ');
 }

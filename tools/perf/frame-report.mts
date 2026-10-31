@@ -13,7 +13,7 @@ import {
 export interface FrameReport {
   // Every scenario the run set out to measure, from `plannedCases`.
   planned: readonly PerfCase[];
-  seeded: Record<string, number>;
+  seeded: Record<string, number | string>;
   suite?: string;
 }
 

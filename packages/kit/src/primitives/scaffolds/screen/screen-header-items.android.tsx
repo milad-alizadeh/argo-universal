@@ -1,5 +1,5 @@
 // Android keeps the stock Toolbar and search; its primary Action is the Material FAB (page-accessory).
-import { Stack } from 'expo-router';
+import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import {
@@ -7,6 +7,7 @@ import {
   type HeaderEntry,
   type ScreenHeader,
 } from '#primitives/actions/action';
+import { Text } from '#primitives/content/text';
 import { ScreenActionButton } from './screen-action-button.android';
 import { drawerLeading } from './screen-drawer-button';
 import {
@@ -35,11 +36,32 @@ export function ScreenHeaderItems(
 
   return (
     <>
-      <Stack.Screen options={{ headerRight, ...leading }} />
+      <Stack.Screen options={toolbarOptions(headerRight, leading)} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
 }
+
+/*
+ * The toolbar's own title is a native TextView that grows little or not at all with the system font scale, while the
+ * page's text and the root's heading do, so a pushed page's title is the kit's title Text, which scales with them.
+ */
+function ToolbarTitle(props: { children?: string }): ReactElement {
+  return (
+    <Text role="title" accessibilityRole="heading" numberOfLines={1}>
+      {props.children}
+    </Text>
+  );
+}
+
+const toolbarOptions = (
+  headerRight: () => ReactElement,
+  leading: ReturnType<typeof drawerLeading>,
+): NativeStackNavigationOptions => ({
+  headerRight,
+  headerTitle: ToolbarTitle,
+  ...leading,
+});
 
 // Direct Actions, submenus and the overflow menu are all stock Compose icon buttons, the menus stock DropdownMenus.
 function ToolbarActions({ header }: { header: ScreenHeader }): ReactElement {

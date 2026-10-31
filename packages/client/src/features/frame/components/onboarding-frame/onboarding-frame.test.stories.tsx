@@ -48,3 +48,20 @@ export const ShowsTheConnectionBanner: Story = {
     await expect(canvas.getByText('Reconnecting…')).toBeVisible();
   },
 };
+
+// Centred across the window, not against one edge of it (#1659).
+export const CentresTheConnectionBanner: Story = {
+  args: { banner: <Text>Reconnecting…</Text> },
+  play: async ({ canvas }) => {
+    const bannerRect = canvas
+      .getByText('Reconnecting…')
+      .getBoundingClientRect();
+
+    const windowRect = canvas.getByTestId('window').getBoundingClientRect();
+
+    await expect(bannerRect.x + bannerRect.width / 2).toBeCloseTo(
+      windowRect.x + windowRect.width / 2,
+      0,
+    );
+  },
+};

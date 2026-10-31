@@ -1,6 +1,8 @@
 import { connect, createServer, type Server, type Socket } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
+import { describeCommand } from './describe-command.ts';
+import { printWaiting } from './wait-message.ts';
 
 // The kernel frees a listening port when its process ends however it ends, so a crashed suite never leaves the lock behind; below macOS's ephemeral range.
 const LOCK_PORT = 47_291;
@@ -9,12 +11,18 @@ const HOST = '127.0.0.1';
 
 const POLL_MS = 2000;
 
+// A waiting run says again how long it has waited, so a long queue never reads as a hang.
+const REPORT_MS = 60_000;
+
 const READ_TIMEOUT_MS = 1000;
 
 const holderSchema = z.object({
   pid: z.number(),
   cwd: z.string(),
-  since: z.string(),
+  // A date the waiter can subtract from, never text that prints as NaN.
+  since: z.iso.datetime(),
+  // What the holder runs, so a waiter can tell one test file from the whole suite; absent from a holder that predates it.
+  command: z.string().optional(),
 });
 
 export type BrowserSuiteHolder = z.infer<typeof holderSchema>;
@@ -25,11 +33,15 @@ const portInUseSchema = z.object({ code: z.literal('EADDRINUSE') });
 export const HELD_VARIABLE = 'ARGO_BROWSER_SUITE_LOCK_HELD';
 
 // Undefined when whatever holds the port does not say who it is.
-export type WaitReport = (holder: BrowserSuiteHolder | undefined) => void;
+export type WaitReport = (
+  holder: BrowserSuiteHolder | undefined,
+  waitedMs: number,
+) => void;
 
 interface LockSettings {
   port: number;
   pollMs: number;
+  reportMs: number;
   onWait?: WaitReport;
 }
 
@@ -48,6 +60,7 @@ function serveHolder(): Server {
     pid: process.pid,
     cwd: process.cwd(),
     since: new Date().toISOString(),
+    command: describeCommand(process.argv),
   });
 
   return createServer((socket): void => {
@@ -117,32 +130,37 @@ async function readHolder(
   return parseHolder(await readAll(socket));
 }
 
-function onlyOnce(onWait: WaitReport | undefined): WaitReport {
-  let reported = false;
+// Reports at once, then again each `reportMs`, however often the port is polled.
+function spaced(settings: LockSettings): WaitReport {
+  const onWait = settings.onWait ?? ((): void => undefined);
+  let last = -Infinity;
 
-  return (holder): void => {
-    if (reported) return;
-    reported = true;
-    onWait?.(holder);
+  return (holder, waitedMs): void => {
+    if (waitedMs - last < settings.reportMs) return;
+    last = waitedMs;
+    onWait(holder, waitedMs);
   };
 }
 
 async function waitForPort(
   settings: LockSettings,
   report: WaitReport,
+  started: number,
 ): Promise<Server> {
   const server = await tryTake(settings.port);
 
   if (server) return server;
-  report(await readHolder(settings.port));
+  report(await readHolder(settings.port), Date.now() - started);
   await delay(settings.pollMs);
 
-  return waitForPort(settings, report);
+  return waitForPort(settings, report, started);
 }
 
 function newHold(settings: LockSettings): SharedHold {
-  const report = onlyOnce(settings.onWait);
-  const hold = { server: waitForPort(settings, report), holders: 0 };
+  const hold = {
+    server: waitForPort(settings, spaced(settings), Date.now()),
+    holders: 0,
+  };
 
   holds.set(settings.port, hold);
 
@@ -167,23 +185,19 @@ function releaser(port: number, hold: SharedHold, server: Server): () => void {
 export async function acquireBrowserSuiteLock(
   options: Partial<LockSettings> = {},
 ): Promise<() => void> {
-  const settings = { port: LOCK_PORT, pollMs: POLL_MS, ...options };
+  const settings = {
+    port: LOCK_PORT,
+    pollMs: POLL_MS,
+    reportMs: REPORT_MS,
+    ...options,
+  };
+
   const hold = holds.get(settings.port) ?? newHold(settings);
 
   hold.holders += 1;
 
   return releaser(settings.port, hold, await hold.server);
 }
-
-const describeHolder = (holder: BrowserSuiteHolder | undefined): string =>
-  holder
-    ? `the browser suite in ${holder.cwd} (pid ${holder.pid}, since ${holder.since})`
-    : `whatever holds port ${LOCK_PORT}`;
-
-const printWaiting = (holder: BrowserSuiteHolder | undefined): boolean =>
-  process.stdout.write(
-    `Waiting for ${describeHolder(holder)} to finish; one browser suite runs at a time on this Mac.\n`,
-  );
 
 // CI runs one suite per runner, so only local runs queue, and a run inside a held `pnpm quality` is already in its turn.
 export const lockBrowserSuite = async (): Promise<(() => void) | undefined> =>

@@ -3,7 +3,7 @@ import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { setStringAsync } from 'expo-clipboard';
 import { router } from 'expo-router';
 import { Linking } from 'react-native';
-import { newSessionHref } from '../navigation/navigation';
+import { newSessionHref, sessionHref } from '../navigation/navigation';
 import { shareContent } from './share';
 import { mayRun } from './web-action';
 
@@ -30,6 +30,7 @@ const runners: Runners = {
   navigate: ({ path }, openPage) => openPage(path),
   newSession: ({ projectId, draft }) =>
     router.navigate(newSessionHref(projectId, draft)),
+  openSession: ({ sessionId }) => router.navigate(sessionHref(sessionId)),
   openUrl: async ({ url }) => {
     await Linking.openURL(url);
   },

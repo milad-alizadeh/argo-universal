@@ -28,6 +28,7 @@ interface DrawerNavigation {
 
 export interface PhoneDrawerContentProps extends DrawerNavigation {
   open: boolean;
+  scrimLabel: string;
 }
 
 function sectionItem(
@@ -102,10 +103,11 @@ function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
 // The phone's drawer of sections: the title, then a row per section, on the window surface.
 export function PhoneDrawerContent({
   open,
+  scrimLabel,
   ...glass
 }: PhoneDrawerContentProps): React.JSX.Element {
   return (
-    <DrawerFocusScope open={open}>
+    <DrawerFocusScope open={open} scrimLabel={scrimLabel}>
       <DrawerGlass {...glass} />
     </DrawerFocusScope>
   );

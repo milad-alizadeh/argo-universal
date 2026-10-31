@@ -1,7 +1,8 @@
-import { canPointAt, centreOf, topmostAt } from '@repo/kit/mocks/point-hit';
+import { centreOf, topmostAt } from '@repo/kit/mocks/point-hit';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, type within } from 'storybook/test';
 import { splitGroupHeader } from './feed.mocks';
+import { movingMessage, rememberReadings } from './settle-failure';
 
 export const feedScrollId = 'feed-scroll';
 
@@ -74,7 +75,7 @@ export function markMiddleOfView(feedScroll: HTMLElement): ViewMark {
 }
 
 // After two frames, the browser has sent its scroll and resize events and the Feed has answered them.
-const afterTwoFrames = (): Promise<void> =>
+export const afterTwoFrames = (): Promise<void> =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
@@ -117,38 +118,16 @@ export async function driftWhileUntouched(mark: ViewMark): Promise<number> {
   return furthest;
 }
 
-// The pill that says earlier rows are loading floats centred over the first row, so a row is pointed at near its leading edge, clear of it.
-const leadingInset = 8;
-
-// Where an element's top settles once it shows at its leading edge, unclipped, and holds still for two frames.
-export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
-  let lastTop: number | undefined;
-
-  return waitFor(async () => {
-    await afterTwoFrames();
-    const box = findElement().getBoundingClientRect();
-    const point = { ...centreOf(box), x: box.left + leadingInset };
-    const settled = canPointAt(findElement(), point) && box.top === lastTop;
-
-    lastTop = box.top;
-
-    if (!settled) throw new Error('The element is still moving');
-
-    return box.top;
-  }, settleWait);
-}
-
 // Waits until a reading of an element holds for two frames.
 function restingOf(read: () => number): Promise<number> {
-  let last: number | undefined;
+  const remember = rememberReadings();
 
   return waitFor(async () => {
     await afterTwoFrames();
     const value = read();
-    const resting = value === last;
-    last = value;
+    const last = remember(value);
 
-    if (!resting) throw new Error('The element is still moving');
+    if (value !== last) throw new Error(movingMessage('reading', value, last));
 
     return value;
   }, settleWait);

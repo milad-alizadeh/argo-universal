@@ -1,8 +1,9 @@
 import type { IssueStatus } from './github-issues';
 
-const listFields = 'number,title,state,stateReason,labels,assignees,parent,url';
+const listFields =
+  'number,title,state,stateReason,labels,assignees,parent,url,blockedBy,subIssuesSummary';
 
-const issueFields = `${listFields},body`;
+const issueFields = `${listFields},body,subIssues`;
 
 // The most labels a repository's grouping shows.
 const labelLimit = '100';

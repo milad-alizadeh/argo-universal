@@ -2,6 +2,7 @@ import type { Argo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
+import { registerIssueOperations } from './issue-operations';
 import { createIssuePages } from './issue-pages';
 import { IssuesRoot } from './issue-root';
 import { ProjectDetails, type ProjectDetailsProps } from './project-details';
@@ -15,6 +16,7 @@ function createDeps(api: Argo): IssueDeps {
 
   const shared = {
     listProjects: api.projects.list,
+    getSession: api.sessions.get,
     storage: createTrackerStorage(api, trackers.has),
     trackers,
     changes: createIssueChanges(),
@@ -37,6 +39,7 @@ export function register(api: Argo): void {
     );
   }
 
+  registerIssueOperations(api, { storage });
   api.pages.register('/', IssuesPage);
   api.slots.register('argo/project/details/v1', ProjectDetailsSlot);
 }

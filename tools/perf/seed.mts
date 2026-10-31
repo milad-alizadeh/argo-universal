@@ -10,7 +10,12 @@ import {
   seededDataset,
   type SeededDataset,
 } from './seed-dataset.mts';
-import { type FeedSize, type SeededFeed, seededFeed } from './seed-feed.mts';
+import {
+  blankedFeed,
+  type FeedSize,
+  type SeededFeed,
+  seededFeed,
+} from './seed-feed.mts';
 import {
   environmentSeedOptions,
   seedConfiguration,
@@ -102,7 +107,8 @@ async function prepareDataset(
     now: Date.now(),
   };
 
-  const feed = await seededFeed(longSessionId, feedSize(options), context.now);
+  const seed = options.feedContent === 'blank' ? blankedFeed : seededFeed;
+  const feed = await seed(longSessionId, feedSize(options), context.now);
 
   return datasetFrom(context, feed);
 }

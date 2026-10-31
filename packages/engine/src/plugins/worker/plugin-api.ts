@@ -59,6 +59,8 @@ const kit = createKit(
   {
     data: (request) => call(request),
     slots: (slotCall) => call({ api: 'slots', call: slotCall }),
+    operations: (operationCall) =>
+      call({ api: 'operations', call: operationCall }),
   },
 );
 
@@ -90,6 +92,7 @@ const spawned = (id: string): PluginProcess =>
   });
 
 const argo: Argo = frozen({
+  operations: frozen({ register: kit.operations.register }),
   accounts: frozen({
     add: (host, options) =>
       call({ api: 'accounts', call: { action: 'add', host, ...options } }),

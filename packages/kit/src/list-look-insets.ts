@@ -37,14 +37,24 @@ export interface InsetCase {
   phone: boolean;
   appearance: ListAppearance;
   fit?: boolean;
+  // A Detail's content column pads what it holds, so the List adds nothing around its rows.
+  padded?: boolean;
+}
+
+// Where the List sits decides on its own: a padded column holds nothing around the rows, a menu holds its own.
+function placeInsets(state: InsetCase): ListInsets | undefined {
+  if (state.padded) return {};
+
+  return state.menu ? menuInsets : undefined;
 }
 
 export function insetsOf(state: InsetCase): ListInsets {
-  if (state.menu) return menuInsets;
-
-  return state.phone
-    ? phoneInsets(state.fit)
-    : insetsByAppearance[state.appearance];
+  return (
+    placeInsets(state) ??
+    (state.phone
+      ? phoneInsets(state.fit)
+      : insetsByAppearance[state.appearance])
+  );
 }
 
 // How far a Screen heading over grouped cards moves in so it starts on their rows' text: only a narrow web window.

@@ -9,6 +9,7 @@ import {
   type PluginValue,
   type SecretCall,
 } from '../protocol/runtime';
+import type { RuntimeApiName } from '../protocol/runtime-apis';
 import {
   answerAsset,
   answerFetch,
@@ -22,11 +23,8 @@ import type { PluginServiceOptions } from './plugin-services';
 import { answerSession } from './session-calls';
 import type { PluginStorage } from './storage';
 
-// Pages, Hooks and Slot items are the runtime's own; every other call is answered by PluginServices.
-export type StateRequest = Exclude<
-  PluginRequest,
-  { api: 'view' | 'hooks' | 'dispatchResult' | 'data' | 'nav' | 'slots' }
->;
+// Every call PluginServices answers: what the runtime does not answer itself.
+export type StateRequest = Exclude<PluginRequest, { api: RuntimeApiName }>;
 
 type Api = StateRequest['api'];
 

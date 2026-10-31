@@ -62,13 +62,17 @@ function StackedGroup(props: FieldProps): ReactElement {
   );
 }
 
-// Inline, the value stands alone; the label stays its spoken name.
+/*
+ * Inline, a field is its name and its value on one line: a value such as a blocker's number says nothing on its own,
+ * and the line is read left to right, so each pair names itself as the stacked column's label does.
+ */
 function InlineField(props: FieldProps): ReactElement {
   return (
     <View
       {...groupProps(props)}
-      className="min-w-0 max-w-full flex-row items-center select-none"
+      className="min-w-0 max-w-full flex-row items-center gap-1.5 select-none"
     >
+      <StackedLabel title={props.title} />
       {props.children}
     </View>
   );

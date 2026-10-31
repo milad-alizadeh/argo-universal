@@ -49,6 +49,7 @@
         }
       ],
       "./plugins/with-custom-symbols.mjs",
+      "./plugins/with-font-scale-config-change.mjs",
       [
         "expo-splash-screen",
         {

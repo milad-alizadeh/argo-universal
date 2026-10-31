@@ -11,12 +11,8 @@ import {
 import { toFeedView } from '../../view/to-feed-view';
 import { liveHeaderNow, workingHeader } from '../live-header/live-header.mocks';
 import { Feed } from './feed';
-import {
-  feedScrollId,
-  scrolledToEnd,
-  settledTopOf,
-  settleWait,
-} from './feed-reader.mocks';
+import { feedScrollId, scrolledToEnd, settleWait } from './feed-reader.mocks';
+import { settledTopOf } from './feed-settled-top.mocks';
 import { longSnapshot, longTail } from './feed.mocks';
 import { feedArgs } from './paged-feed.mocks';
 

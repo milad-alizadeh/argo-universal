@@ -33,7 +33,19 @@ const sampleScript = `() => {
     const at = place(name);
     if (at !== null || places[name].length > 0) places[name].push(at);
   }
+  if (places[fadeWatched].length > 0) fades.push(faded());
   requestAnimationFrame(sample);
+}`;
+
+// How many elements inside the page pane draw below full opacity right now. A position check cannot see a fade, so this is read on the same frame as the places.
+const fadedScript = `() => {
+  const pane = document.querySelector('[data-testid="' + fadeWatched + '"]');
+  if (!pane) return 0;
+  let count = 0;
+  for (const node of pane.querySelectorAll('*')) {
+    if (Number(getComputedStyle(node).opacity) < 1) count += 1;
+  }
+  return count;
 }`;
 
 const watchPanes = (names: readonly string[]): string => `{
@@ -41,6 +53,9 @@ const watchPanes = (names: readonly string[]): string => `{
   const places = (window.panePlaces = Object.fromEntries(
     names.map((name) => [name, []]),
   ));
+  const fadeWatched = ${JSON.stringify(pagePane)};
+  const fades = (window.paneFades = []);
+  const faded = ${fadedScript};
   const place = ${placeScript};
   const sample = ${sampleScript};
   sample();
@@ -93,3 +108,33 @@ Then('the Frame panes never moved', async ({ page }): Promise<void> => {
 Then('the Feed never moved', async ({ page }): Promise<void> => {
   await assertStill(page, [feed]);
 });
+
+// Frames the page pane drew with more faded elements than it has at rest. Rest is the lower of the first and last reading: the first may already be mid-fade, the last is after the page settled.
+async function fadedFrames(page: Page): Promise<number[]> {
+  await settle(page);
+  const counts = await page.evaluate<number[]>('window.paneFades');
+
+  expect(counts.length, 'the page pane was never read').toBeGreaterThan(0);
+  const rest = Math.min(counts[0] ?? 0, counts.at(-1) ?? 0);
+
+  return counts.filter((count) => count > rest);
+}
+
+/*
+ * A Session switch mounts a new page, and LegendList draws a freshly mounted list at opacity 0 until it is ready to
+ * render (#1444). That is a library behaviour the Frame accepts, so this pins its bound rather than its absence: the
+ * page pane may be faded for one frame, never more. A frame is one requestAnimationFrame callback, which the browser
+ * calls at most once per frame, so a window of a few milliseconds cannot be counted twice; a window that outlasts
+ * a frame is the regression this catches.
+ */
+Then(
+  'the page pane faded for at most one frame',
+  async ({ page }): Promise<void> => {
+    const faded = await fadedFrames(page);
+
+    expect(
+      faded.length,
+      `the page pane was faded on ${faded.length} frames`,
+    ).toBeLessThanOrEqual(1);
+  },
+);

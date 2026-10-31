@@ -89,7 +89,7 @@ function feedRowOpens(width: number): Story {
         name: new RegExp(`^Started ${runningSubagent.title}`),
       });
 
-      await waitFor(() => userEvent.click(started));
+      await userEvent.click(started);
 
       await assertOpened(canvas, width === layoutWidths.wide);
       await assertFeedShown(canvas, width === layoutWidths.wide);

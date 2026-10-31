@@ -1,7 +1,10 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
-import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import {
+  Screen,
+  ScreenDefaultBack,
+} from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhilePending } from '#features/frame';
@@ -23,36 +26,62 @@ export interface PluginDetailViewProps {
   title?: string;
   viewId?: PluginViewId | null;
   callbacks: PluginPageCallbacks;
+  // The App's own Back for a pushed page; a Plugin declares no navigation (`ScreenDefaultBack`).
+  onBack?: (() => void) | null;
 }
 
 // A Plugin's page, drawn by the App's registry; one that is not a Screen of its own scrolls in the kit's Detail, in the Screen's column.
 export function PluginDetailView(
   props: PluginDetailViewProps,
 ): React.ReactNode {
+  return (
+    <ScreenDefaultBack value={props.onBack ?? null}>
+      <PluginPageBody {...props} />
+    </ScreenDefaultBack>
+  );
+}
+
+function PluginPageBody(props: PluginDetailViewProps): React.ReactNode {
   if (ownsPage(props.root)) return <PluginContent {...props} />;
 
   return (
     <Screen title={props.title ?? 'Plugin'}>
-      <PageHolder root={props.root}>
-        <PluginContent {...props} />
-      </PageHolder>
+      <PageHolder {...props} />
     </Screen>
   );
 }
 
 // A List scrolls and insets itself, so it fills the body; anything else scrolls in a Detail.
-function PageHolder(props: {
-  root: WireNode | null;
-  children: React.ReactNode;
-}): React.ReactNode {
-  if (props.root?.type !== 'List')
-    return <Detail testID="plugin-page">{props.children}</Detail>;
+function PageHolder(props: PluginDetailViewProps): React.ReactNode {
+  const list = soleList(props.root);
+
+  if (!list)
+    return (
+      <Detail testID="plugin-page">
+        <PluginContent {...props} />
+      </Detail>
+    );
 
   return (
     <View testID="plugin-page" className="min-h-0 flex-1">
-      {props.children}
+      <PluginContent {...props} root={list} />
     </View>
   );
+}
+
+// The List a page is made of: the root itself, or the one a chain of Stacks holds with nothing beside it. Such a Stack draws what its List would draw alone, so the page drops it and the List fills the body as a root List does.
+function soleList(node: WireNode | null): WireNode | null {
+  if (node?.type === 'List') return node;
+
+  return soleOf(stackChildren(node));
+}
+
+function stackChildren(node: WireNode | null): WireNode[] {
+  return node?.type === 'Stack' ? node.children : [];
+}
+
+function soleOf(children: WireNode[]): WireNode | null {
+  return children.length === 1 ? soleList(children[0] ?? null) : null;
 }
 
 // A root-only kit component, Screen or ListDetail, draws its own screen and header.

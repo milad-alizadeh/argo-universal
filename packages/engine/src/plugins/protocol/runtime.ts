@@ -15,6 +15,7 @@ import {
   HostHookCommand,
   WorkerHookCommand,
 } from '@repo/contracts/plugins/hook-protocol';
+import { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import * as wire from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
@@ -47,6 +48,7 @@ export const PluginRequest = z.discriminatedUnion('api', [
     requestId: wire.PluginDispatchId,
     result: wire.PluginDispatchResult,
   }),
+  z.object({ api: z.literal('operations'), call: PluginOperationCall }),
   z.object({
     api: z.literal('view'),
     viewId: wire.PluginViewId,

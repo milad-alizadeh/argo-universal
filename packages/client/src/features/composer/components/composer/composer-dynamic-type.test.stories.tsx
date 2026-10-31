@@ -12,6 +12,7 @@ import {
   missingAvailableAgentFailure,
 } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { pickerCatalogs } from '../../../../../mocks/composer/recorded-catalog.test.mocks';
+import { scaleControlType } from '../../../../../mocks/composer/scaled-type.test.mocks';
 import { Composer } from './composer';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/DynamicType' };
@@ -21,26 +22,6 @@ export default meta;
 const [catalog] = pickerCatalogs;
 
 if (!catalog) throw new Error(missingAvailableAgentFailure);
-
-/*
- * The largest text sizes, as the Composer meets them. Dynamic Type raises the type tokens each kit role reads,
- * and the Composer's pills and Send are set in the control role, so the story raises that role's tokens on the
- * story's own root. iOS applies the reader's size itself; this pins what the layout does with it (#1529).
- */
-const scaledControlType = {
-  '--text-control': '36px',
-  '--leading-control': '44px',
-};
-
-function scaleControlType(root: HTMLElement): () => void {
-  for (const [token, size] of Object.entries(scaledControlType))
-    root.style.setProperty(token, size);
-
-  return (): void => {
-    for (const token of Object.keys(scaledControlType))
-      root.style.removeProperty(token);
-  };
-}
 
 const composerArgs = {
   configuration: {

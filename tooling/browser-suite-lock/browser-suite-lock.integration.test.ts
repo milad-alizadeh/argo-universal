@@ -1,76 +1,17 @@
-import { type ChildProcessByStdio, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { connect, createServer } from 'node:net';
-import type { Readable, Writable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { acquireBrowserSuiteLock, type WaitReport } from './browser-suite-lock';
+import {
+  freePort,
+  HOST,
+  holdInAnotherProcess,
+  isHeld,
+  POLL_MS,
+  stopOtherSuites,
+} from './other-suite';
 
-const POLL_MS = 10;
-
-const HOST = '127.0.0.1';
-
-const lockModule = new URL('browser-suite-lock.ts', import.meta.url).href;
-
-type OtherSuite = ChildProcessByStdio<Writable, Readable, null>;
-
-const others: OtherSuite[] = [];
-
-// Another suite: holds the lock, says so on stdout, and releases when its stdin closes.
-const holdInAnotherProcess = (port: number): OtherSuite => {
-  const other = spawn(
-    process.execPath,
-    [
-      '--input-type=module',
-      '-e',
-      `const { acquireBrowserSuiteLock } = await import(${JSON.stringify(lockModule)});
-       const release = await acquireBrowserSuiteLock({ port: ${port} });
-       process.stdout.write('held');
-       process.stdin.on('end', release).resume();`,
-    ],
-    { stdio: ['pipe', 'pipe', 'inherit'] },
-  );
-
-  others.push(other);
-
-  return other;
-};
-
-async function freePort(): Promise<number> {
-  const server = createServer().listen(0, HOST);
-  await once(server, 'listening');
-  const address = server.address();
-  server.close();
-
-  return typeof address === 'object' && address ? address.port : 0;
-}
-
-async function isHeld(port: number): Promise<boolean> {
-  const socket = connect({ port, host: HOST });
-
-  const connected = await new Promise<boolean>((resolve): void => {
-    socket.once('connect', (): void => {
-      resolve(true);
-    });
-    socket.once('error', (): void => {
-      resolve(false);
-    });
-  });
-
-  socket.destroy();
-
-  return connected;
-}
-
-afterEach(async (): Promise<void> => {
-  const running = others
-    .splice(0)
-    .filter(
-      (other): boolean => other.exitCode === null && other.signalCode === null,
-    );
-
-  for (const other of running) other.kill();
-  await Promise.all(running.map((other) => once(other, 'exit')));
-});
+afterEach(stopOtherSuites);
 
 describe('acquireBrowserSuiteLock on a real port', () => {
   it('makes a suite wait until the other process holding it releases', async () => {
@@ -111,6 +52,7 @@ describe('acquireBrowserSuiteLock on a real port', () => {
     await vi.waitFor((): void =>
       expect(onWait).toHaveBeenCalledWith(
         expect.objectContaining({ pid: other.pid }),
+        expect.any(Number),
       ),
     );
 
@@ -131,7 +73,7 @@ describe('acquireBrowserSuiteLock on a real port', () => {
     const acquired = acquireBrowserSuiteLock({ port, pollMs: POLL_MS, onWait });
 
     await vi.waitFor((): void =>
-      expect(onWait).toHaveBeenCalledWith(undefined),
+      expect(onWait).toHaveBeenCalledWith(undefined, expect.any(Number)),
     );
 
     program.close();

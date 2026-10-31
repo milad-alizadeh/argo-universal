@@ -4,6 +4,7 @@ import { type ReactNode, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  type GlassCover,
   GlassCoverProvider,
   composerOverlap,
   useGlassBarSpace,
@@ -13,7 +14,7 @@ import {
 import { type DroppedFiles, FileDropPane } from './file-drop/file-drop-pane';
 import { GlassComposer } from './glass-composer';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
-import { SessionBarRow } from './session-bar-row';
+import { SessionBarRow, useFloatingHeaderHeight } from './session-bar-row';
 import { ComposerColumn, sessionSurface } from './session-column';
 import {
   filledClass,
@@ -110,7 +111,7 @@ function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   return (
     <View
       className={cn(
-        'relative z-10',
+        'relative z-10 min-h-0 shrink',
         composerBottomGap,
         filled && `${filledClass} pt-4`,
       )}
@@ -121,34 +122,57 @@ function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   );
 }
 
+// A Session bar already sits below the floating header, so the stage starts under both.
+function useStageTop(bar: ReactNode): number {
+  const headerHeight = useFloatingHeaderHeight();
+
+  return bar ? 0 : headerHeight;
+}
+
 // The Feed runs to the screen's bottom edge behind the glass Composer, which keeps the stock glass bars' space below it until the keyboard opens.
 function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
+  const top = useStageTop(props.bar);
+
   return (
     <Screen testID="session-layout" edges={[]} className={sessionSurface}>
       {props.header}
       <SessionBarRow>{props.bar}</SessionBarRow>
       <KeyboardAvoidingContent>
-        <GlassComposerStage feed={props.feed} composer={props.composer} />
+        <GlassComposerStage {...props} top={top} />
         {props.panel}
       </KeyboardAvoidingContent>
     </Screen>
   );
 }
 
-type SessionStageProps = Pick<SessionLayoutProps, 'feed' | 'composer'>;
+type SessionStageProps = Pick<SessionLayoutProps, 'feed' | 'composer'> & {
+  // How far down the stage a floating header still reaches.
+  top: number;
+};
+
+function StageComposer(
+  props: SessionStageProps & { glass: GlassCover },
+): React.JSX.Element {
+  return (
+    <GlassComposer
+      top={props.top}
+      measure={props.glass.measureComposer}
+      onLayout={props.glass.onComposerLayout}
+    >
+      {props.composer}
+    </GlassComposer>
+  );
+}
 
 // Its own box, so the Composer laid over its end stays above the keyboard's padding.
 function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
-  const { cover, measureComposer, onComposerLayout } =
-    useGlassCover(useGlassBarSpace());
+  const glass = useGlassCover(useGlassBarSpace());
 
   return (
     <View className="relative min-h-0 flex-1">
-      <GlassCoverProvider cover={cover}>
+      <GlassCoverProvider cover={glass.cover}>
         {props.feed}
-        <GlassComposer measure={measureComposer} onLayout={onComposerLayout}>
-          {props.composer}
-        </GlassComposer>
+        <StageComposer {...props} glass={glass} />
       </GlassCoverProvider>
     </View>
   );

@@ -28,6 +28,7 @@ export class PluginRuntime {
   readonly views: RuntimeResources['views'];
   readonly data: RuntimeResources['data'];
   readonly items: RuntimeResources['items'];
+  readonly operations: RuntimeResources['operations'];
   readonly background: RuntimeResources['background'];
   private readonly plugins: RuntimePlugins;
   private readonly resources: RuntimeResources;
@@ -46,6 +47,7 @@ export class PluginRuntime {
     this.resources = new RuntimeResources(this.resourceInput());
     ({ views: this.views, data: this.data } = this.resources);
     ({ items: this.items, background: this.background } = this.resources);
+    this.operations = this.resources.operations;
     this.plugins = new RuntimePlugins(this.pluginInput());
   }
 
@@ -115,16 +117,9 @@ export class PluginRuntime {
   private answer(
     message: Extract<HostMessage, { type: 'call' }>,
   ): Promise<PluginReply> {
-    return answerPluginCall(
-      {
-        hooks: this.hooks,
-        services: this.services,
-        views: this.views,
-        data: this.data,
-        items: this.items,
-      },
-      message,
-    );
+    const { hooks, services } = this;
+
+    return answerPluginCall(this.resources.calls({ hooks, services }), message);
   }
 
   waiting(pluginId: string, generation: number): () => void {

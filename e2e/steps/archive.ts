@@ -6,7 +6,12 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { localRequests } from './agent-requests';
 import { Given, When, Then } from './fixtures';
-import { liveSessionRow, openSessionRow, sessionRow } from './live-session';
+import {
+  archivedSessionRow,
+  liveSessionRow,
+  openSessionRow,
+  sessionRow,
+} from './live-session';
 
 const archivedToastTitle = /session archived/i;
 
@@ -93,9 +98,10 @@ When('I undo the archive', async ({ page }): Promise<void> => {
 Then(
   'the Archived filter shows the Session {string}',
   async ({ page }, title: string): Promise<void> => {
-    const row = sessionRow(page, title);
+    // A row's text lives in lanes beside its press target, which a Plugin item can empty, so its name says Archived.
+    const row = archivedSessionRow(page, title);
+
     await expect(row).toBeVisible();
-    await expect(row).toContainText('Archived');
   },
 );
 

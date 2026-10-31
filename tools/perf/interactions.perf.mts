@@ -69,6 +69,7 @@ test.afterAll(async () => {
     seeded: {
       sessions: server.sessionCount,
       feedRows: server.feedRowCount,
+      feedContent: server.requested.feedContent ?? 'recorded',
     },
   });
 });

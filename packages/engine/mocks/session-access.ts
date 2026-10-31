@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
@@ -73,9 +73,11 @@ export function readAgentIdentity(
 export async function addOtherProject(
   host: AccessHost['host'],
 ): Promise<string> {
-  const path = join(host.home, 'other-project');
-  await mkdir(path);
-  await initTestRepository(path);
+  const made = join(host.home, 'other-project');
+  await mkdir(made);
+  await initTestRepository(made);
+  // A Project is stored under the path git answers with, which a symlinked temporary home is not.
+  const path = await realpath(made);
   await seedProject(host.database, path);
 
   const project = (await host.caller.project.list()).find(

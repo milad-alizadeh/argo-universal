@@ -24,6 +24,7 @@ import type { RpcContext } from '../rpc/connection';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
 import type { PluginListChanges } from './list-changes';
+import type { PluginOperationService } from './operations';
 import type { PluginService } from './service';
 
 function requireSignal(signal: AbortSignal | undefined): AbortSignal {
@@ -137,6 +138,7 @@ export type PluginsRouterDeps = {
   plugins: PluginService;
   accounts: PluginAccounts;
   listChanges: PluginListChanges;
+  operations: PluginOperationService;
 };
 
 export const createPluginsRouter = routerFactory(

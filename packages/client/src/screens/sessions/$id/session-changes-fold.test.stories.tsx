@@ -2,6 +2,7 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
+import { settleChanges } from './session-changes-settle.test.mocks';
 import {
   fewChanges,
   fileHeader,
@@ -91,7 +92,7 @@ export const OpensExpandedWide = opensExpanded(layoutWidths.wide);
 function viewedFolds(width: number): Story {
   return {
     play: async ({ userEvent }) => {
-      await settleLayout(width);
+      await settleChanges(width);
       await findFileHeader(largeFile);
 
       const mark = await viewedMark(0);
@@ -124,7 +125,7 @@ export const ViewedFoldsWide = viewedFolds(layoutWidths.wide);
 function foldLeavesNoGap(width: number): Story {
   return {
     play: async ({ userEvent }) => {
-      await settleLayout(width);
+      await settleChanges(width);
       await userEvent.click(await findFileHeader(largeFile));
       await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
       await expect(screen.queryByText(lastAddedLine)).toBeNull();

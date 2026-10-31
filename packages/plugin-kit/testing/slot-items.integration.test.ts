@@ -9,8 +9,8 @@ const contexts = [
 ];
 
 const sessions = {
-  first: { projectId: 'one', branch: 'issue-412' },
-  second: { projectId: 'one', branch: null },
+  first: { projectId: 'one', branch: 'issue-412', title: 'First Session' },
+  second: { projectId: 'one', branch: null, title: 'Second Session' },
 };
 
 it('answers a whole Session list in one call, reading each branch through argo.sessions.get', async () => {

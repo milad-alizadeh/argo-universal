@@ -23,9 +23,9 @@ const tint = (color: string, percent: string): string =>
  * A background-image swap cannot transition, but a box-shadow can, so hovered and pressed lift the primary's near-black
  * fill with a white wash: an inset shadow spread past the button. It sits last, under the other shadows.
  */
-// The primary at a low strength over white.
-const primaryTint = (percent: string): string =>
-  `color-mix(in srgb, var(--color-primary) ${percent}, var(--color-white))`;
+// The foreground at a low strength over the card: a quiet fill that keeps the label's contrast in both appearances.
+const quietFill = (percent: string): string =>
+  `color-mix(in srgb, var(--color-foreground) ${percent}, var(--color-card))`;
 
 const wash = (percent: string): string =>
   `inset 0 0 0 100px ${tint('white', percent)}`;
@@ -44,11 +44,11 @@ const lit: WebStyle = {
 };
 
 /*
- * The web's lit secondary: the primary lightened. The same gradient and shadow family, with the fill mixed toward
- * white so it reads as a lighter primary, and no border ring.
+ * The web's lit secondary: a quiet fill. The same gradient and shadow family, with the fill the foreground at a low
+ * strength over the card, so the label keeps its contrast in light and dark, and no border ring.
  */
 const litSecondary: WebStyle = {
-  backgroundImage: `linear-gradient(to bottom, ${primaryTint('6%')}, ${primaryTint('12%')})`,
+  backgroundImage: `linear-gradient(to bottom, ${quietFill('6%')}, ${quietFill('12%')})`,
   boxShadow: [
     `inset 0 1px 0 ${tint('white', '60%')}`,
     `inset 0 -2px 0 ${tint('black', '6%')}`,

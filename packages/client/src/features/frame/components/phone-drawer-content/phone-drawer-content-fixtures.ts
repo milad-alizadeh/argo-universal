@@ -11,4 +11,5 @@ export const openPhoneDrawer = {
   attentionCount: 1,
   pluginBadges: [{ pluginId: 'issue-tracker', id: 'issues', count: 12 }],
   open: true,
+  scrimLabel: 'Close navigation',
 } satisfies PhoneDrawerFixture;

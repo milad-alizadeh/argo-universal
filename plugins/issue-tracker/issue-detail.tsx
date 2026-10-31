@@ -1,85 +1,98 @@
-import {
-  Action,
-  Detail,
-  EmptyState,
-  Metadata,
-  Pill,
-  Screen,
-} from '@argo/plugin-kit';
+import { Button, Detail, EmptyState, Screen, Stack } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue, IssueLabel, IssueStatus } from './github-issues';
-import { labelPills } from './label-pills';
+import type { Issue } from './github-issues';
+import { IssueMetadata } from './issue-metadata';
+import { AttachedSessions, SubIssues } from './issue-sections';
+import { statuses } from './issue-status-view';
 import {
   useIssueDetail,
   type DetailSource,
   type IssueDetailState,
 } from './use-issue-detail';
 
-type IssueDetailProps = Pick<IssueDetailState, 'onStatus'> & {
+type IssueDetailProps = Pick<IssueDetailState, 'onStatus' | 'sessions'> & {
   issue: Issue;
   projectId: string;
+  // The page path of another Issue in the same Project, for a relation's row.
+  issuePath: (number: number) => string;
 };
-
-type StatusView = {
-  text: string;
-  tone: string;
-  change: { label: string; icon: string; to: IssueStatus };
-};
-
-// How each status reads, and the press that moves the Issue to the other one.
-const statuses = {
-  open: {
-    text: 'Open',
-    tone: 'success',
-    change: { label: 'Close Issue', icon: 'check', to: 'closed' },
-  },
-  closed: {
-    text: 'Closed',
-    tone: 'done',
-    change: { label: 'Reopen Issue', icon: 'issue', to: 'open' },
-  },
-} as const satisfies Record<IssueStatus, StatusView>;
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
 export function IssueDetailPage(source: DetailSource): JSX.Element {
-  const { issue, message, onStatus } = useIssueDetail(source);
-  const projectId = source.project.id;
+  const { issue, message, ...state } = useIssueDetail(source);
 
-  if (!issue)
-    return (
-      <Screen title={`#${source.number}`}>
-        <EmptyState title={message} />
-      </Screen>
-    );
+  if (!issue) return <Loading source={source} message={message} />;
 
-  return (
-    <IssueDetail issue={issue} projectId={projectId} onStatus={onStatus} />
-  );
+  return <IssueDetail {...state} {...pageProps(source)} issue={issue} />;
 }
 
-function IssueDetail(props: IssueDetailProps): JSX.Element {
+// What the page reads from the Project it is in: the Issue's Project, and its siblings' paths.
+const pageProps = (
+  source: DetailSource,
+): Pick<IssueDetailProps, 'projectId' | 'issuePath'> => ({
+  projectId: source.project.id,
+  issuePath: (number) =>
+    source.deps.pages.issuePagePath(source.project, number),
+});
+
+// Until the Issue loads, and when it cannot, the page says so under its number.
+function Loading(props: {
+  source: DetailSource;
+  message: string;
+}): JSX.Element {
   return (
-    <Screen
-      title={props.issue.title}
-      caption={`#${props.issue.number}`}
-      primaryAction={<StartSessionAction {...props} />}
-      actions={<IssueActions {...props} />}
-    >
-      <Detail
-        markdown={props.issue.body || 'No description.'}
-        metadata={<IssueMetadata issue={props.issue} />}
-      />
+    <Screen title={`#${props.source.number}`}>
+      <EmptyState title={props.message} />
     </Screen>
   );
 }
 
-type IssueActionsProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+function IssueDetail(props: IssueDetailProps): JSX.Element {
+  const { issue } = props;
 
-function IssueActions({ issue, onStatus }: IssueActionsProps): JSX.Element[] {
-  return [
-    <StatusAction key="status" issue={issue} onStatus={onStatus} />,
-    <OpenAction key="open" url={issue.url} />,
-  ];
+  return (
+    <Screen
+      title={issue.title}
+      caption={`#${issue.number}`}
+      captionHref={issue.url}
+    >
+      <IssueBody {...props} />
+    </Screen>
+  );
+}
+
+// The description, the Issue's own properties beside it, and the work under both.
+function IssueBody(props: IssueDetailProps): JSX.Element {
+  const { issue } = props;
+
+  return (
+    <Detail
+      markdown={issue.body || 'No description.'}
+      metadata={<IssueMetadata issue={issue} />}
+    >
+      <IssueCalls {...props} />
+      <SubIssues issue={issue} issuePath={props.issuePath} />
+      <AttachedSessions sessions={props.sessions} />
+    </Detail>
+  );
+}
+
+type IssueCallsProps = Pick<
+  IssueDetailProps,
+  'issue' | 'onStatus' | 'projectId'
+>;
+
+/*
+ * What the Issue asks of the reader, under its description: start work on it, or settle it. They are
+ * buttons on the page, not header icons, because they are the page's point and need their own words.
+ */
+function IssueCalls(props: IssueCallsProps): JSX.Element {
+  return (
+    <Stack direction="row" gap={2} align="center">
+      <StartSessionButton {...props} />
+      <StatusButton {...props} />
+    </Stack>
+  );
 }
 
 // The Issue's reference, title and link, as the prompt that starts work on it.
@@ -88,12 +101,12 @@ const issueDraft = (issue: Issue): string =>
 
 type StartSessionProps = Pick<IssueDetailProps, 'issue' | 'projectId'>;
 
-function StartSessionAction({
+function StartSessionButton({
   issue,
   projectId,
 }: StartSessionProps): JSX.Element {
   return (
-    <Action
+    <Button
       label="Start Session"
       icon="new-session"
       onPress={{ action: 'newSession', projectId, draft: issueDraft(issue) }}
@@ -101,60 +114,17 @@ function StartSessionAction({
   );
 }
 
-type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+type StatusButtonProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
 
-function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
+function StatusButton({ issue, onStatus }: StatusButtonProps): JSX.Element {
   const { label, icon, to } = statuses[issue.status].change;
 
-  return <Action label={label} icon={icon} onPress={() => onStatus(to)} />;
-}
-
-function OpenAction({ url }: { url: string }): JSX.Element {
   return (
-    <Action
-      label="Open in GitHub"
-      icon="external-link"
-      onPress={{ action: 'openUrl', url }}
+    <Button
+      label={label}
+      icon={icon}
+      variant="secondary"
+      onPress={() => onStatus(to)}
     />
-  );
-}
-
-function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
-  return (
-    <Metadata>
-      <Metadata.StatusDot
-        title="Status"
-        text={statuses[issue.status].text}
-        tone={statuses[issue.status].tone}
-      />
-      <IssueLabels labels={issue.labels} />
-      <Assignees assignees={issue.assignees} />
-      <Metadata.Link title="GitHub" text={issue.url} href={issue.url} />
-    </Metadata>
-  );
-}
-
-function IssueLabels({ labels }: { labels: IssueLabel[] }): JSX.Element {
-  return (
-    <Metadata.Pills title="Labels">
-      {labels.length === 0 ? (
-        <Pill text="None" tone="muted" />
-      ) : (
-        labelPills(labels)
-      )}
-    </Metadata.Pills>
-  );
-}
-
-function Assignees({ assignees }: { assignees: string[] }): JSX.Element {
-  if (assignees.length === 0)
-    return <Metadata.Label title="Assignees" text="None" />;
-
-  return (
-    <>
-      {assignees.map((name) => (
-        <Metadata.Avatar key={name} title="Assignee" name={name} />
-      ))}
-    </>
   );
 }

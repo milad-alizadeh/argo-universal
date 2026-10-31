@@ -2,7 +2,10 @@ import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { useWide } from '#kit/use-wide/use-wide';
 import { IconButton } from '#primitives/actions/icon-button';
-import { ScreenBesideList } from './screen-navigation-context';
+import {
+  ScreenBesideList,
+  ScreenDefaultBack,
+} from './screen-navigation-context';
 import type { ScreenProps } from './screen-props';
 
 /*
@@ -12,23 +15,37 @@ import type { ScreenProps } from './screen-props';
 export function ScreenBack({
   onBack,
 }: Pick<ScreenProps, 'onBack'>): ReactElement | null {
-  const shown = useBackShown();
+  const back = useBack(onBack);
 
-  if (!onBack || !shown) return null;
+  if (!back) return null;
 
   return (
     <View className="absolute inset-y-0 -left-8 justify-center">
-      <BackButton onBack={onBack} />
+      <BackButton onBack={back} />
     </View>
   );
 }
 
-function useBackShown(): boolean {
+/*
+ * A Screen's own Back on a wide drill-in page, as before; otherwise the host's default, which is there only for a page
+ * the host pushed, so it is drawn beside a list too — drilling inside the detail pane is still something to come back
+ * from. A phone's stack header draws its own either way.
+ */
+function useBack(onBack: ScreenProps['onBack']): (() => void) | null {
   const wide = useWide();
   const besideList = use(ScreenBesideList);
+  const host = use(ScreenDefaultBack);
 
-  return wide && !besideList;
+  if (!wide) return null;
+
+  return onBack ? ownBack(onBack, besideList) : host;
 }
+
+// Beside a list, a page's own Back belongs to the list, so the page draws none of its own.
+const ownBack = (
+  onBack: () => void,
+  besideList: boolean,
+): (() => void) | null => (besideList ? null : onBack);
 
 // A back glyph, not a chevron: a disclosure chevron draws smaller, and this is the page's one Back.
 function BackButton({ onBack }: { onBack: () => void }): ReactElement {

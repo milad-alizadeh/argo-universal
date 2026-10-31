@@ -69,6 +69,20 @@ const unlistedSource: SuggestionSource = {
       : [],
 };
 
+/*
+ * Enter chooses the highlighted suggestion and is spent if none exists yet, so wait for its row
+ * (the list is portalled outside the canvas, hence document.body).
+ */
+const chooseSuggestion = async (
+  field: HTMLElement,
+  typed: string,
+  option: RegExp,
+): Promise<void> => {
+  await userEvent.type(field, typed);
+  await within(document.body).findByRole('option', { name: option });
+  await userEvent.keyboard('{Enter}');
+};
+
 const meta = {
   title: 'Tests/Design System/Primitives/Controls/RichTextarea/Commands',
   component: RichTextareaExample,
@@ -85,8 +99,7 @@ type Story = StoryObj<typeof meta>;
 export const AChosenCommandIsATokenAndTheTextIsNameAndSpace: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, '/rev');
-    await userEvent.keyboard('{Enter}');
+    await chooseSuggestion(field, '/rev', /review/);
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/review '),
     );
@@ -155,8 +168,7 @@ export const ARestoredDraftRebuildsTheTokenAndKeepsItsText: Story = {
 export const TheHintShowsAfterTheCommandUntilAnArgumentIsTyped: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, '/rev');
-    await userEvent.keyboard('{Enter}');
+    await chooseSuggestion(field, '/rev', /review/);
     await waitFor(() =>
       expect(field).toHaveTextContent(`/${reviewName}${hintText}`),
     );
@@ -194,8 +206,7 @@ export const APastedKnownCommandBecomesAToken: Story = {
 export const ACommandWithoutAHintShowsNone: Story = {
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, '/ini');
-    await userEvent.keyboard('{Enter}');
+    await chooseSuggestion(field, '/ini', /init/);
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/init '),
     );
@@ -231,8 +242,7 @@ export const APluginResultThatInsertsSlashNameStaysPlainText: Story = {
   args: { suggestions: [source, pluginSource] },
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, '/pla');
-    await userEvent.keyboard('{Enter}');
+    await chooseSuggestion(field, '/pla', /plan/i);
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/plan '),
     );
@@ -247,8 +257,7 @@ export const AResultNamingAnUnlistedCommandStaysPlainText: Story = {
   args: { suggestions: [unlistedSource] },
   play: async ({ canvas, args }) => {
     const field = canvas.getByRole('textbox', { name: label });
-    await userEvent.type(field, '/gho');
-    await userEvent.keyboard('{Enter}');
+    await chooseSuggestion(field, '/gho', /ghost/);
     await waitFor(() =>
       expect(args.onChangeText).toHaveBeenLastCalledWith('/ghost '),
     );

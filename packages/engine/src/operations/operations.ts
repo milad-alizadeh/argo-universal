@@ -20,19 +20,17 @@ import {
   recordedOutput,
   recordOperation,
 } from './call-recording';
-import {
-  createImplementations,
-  type OperationRunResult,
-} from './implementations';
+import type { OperationRunResult } from './implementations';
 import {
   operationConnection,
   type OperationConnection,
 } from './operation-connection';
 import { requireOperationId } from './params';
+import { PluginOperationRouter } from './plugin-run';
 import { OperationResponses, storedOutputBlobs } from './responses';
-import { OperationRunner } from './runner';
+import type { OperationRunner } from './runner';
 import { listOperations } from './search';
-import { scopedOperations, SessionScope } from './session-scope';
+import { scopedOperations } from './session-scope';
 import type {
   SessionCaller,
   SessionTokens,
@@ -71,44 +69,62 @@ export class Operations {
   private readonly work: OperationWork;
   private readonly sessions: Sessions;
   private readonly responses: OperationResponses;
+  private readonly pluginOperations: PluginOperationRouter;
   public constructor(
     private readonly deps: OperationsDeps,
     private readonly runner: OperationRunner,
   ) {
     this.sessions = deps.sessions;
+    this.pluginOperations = new PluginOperationRouter(
+      deps.plugins,
+      deps.sessions,
+    );
     this.work = new OperationWork(liveWorkDeps(deps), (token) =>
       this.caller(token),
     );
     this.responses = new OperationResponses(storedOutputBlobs(deps));
   }
+  /*
+   * The core registry, then the Operations running Plugins add to it. A Plugin's Operation reaches only
+   * the caller's own Project, so a Session sees it as it is.
+   */
   public async list(
     token: string | undefined,
     filter = '',
   ): Promise<OperationRow[]> {
     const caller = this.caller(token);
+    const plugins = await this.pluginOperations.listed(filter);
 
-    if (caller.kind === 'user') return listOperations(filter);
+    if (caller.kind === 'user') return [...listOperations(filter), ...plugins];
     const call = this.sessions.call(caller.sessionId, discoveryCall(filter));
 
-    const listed = async (): Promise<OperationRow[]> =>
-      scopedOperations(listOperations(filter), call);
+    const listed = async (): Promise<OperationRow[]> => [
+      ...scopedOperations(listOperations(filter), call),
+      ...plugins,
+    ];
 
     return recordOperation(call, listed, listedOutput).result;
   }
+
   public async run(
     token: string | undefined,
     request: RunRequest,
     signal?: AbortSignal,
   ): Promise<OperationRunResponse> {
-    const id = requireOperationId(request.id);
-    const operation = { id, params: request.params };
+    const caller = this.caller(token);
+    const { params } = request;
+    const plugin = await this.pluginOperations.find(request.id);
 
+    // One of a running Plugin's own Operations, which the Plugin answers itself (ADR-0044).
+    if (plugin) return this.pluginOperations.runFor(caller, plugin, params);
+
+    const operation = { id: requireOperationId(request.id), params };
     const connection = operationConnection(token, request, signal);
-
-    const value = await this.answer(this.caller(token), connection, operation);
+    const value = await this.answer(caller, connection, operation);
 
     return this.responses.run(value, signal);
   }
+
   public async wait(
     request: OperationWaitRequest,
     token: string | undefined,
@@ -156,14 +172,4 @@ export class Operations {
 
     return this.deps.sessionTokens.require(token);
   }
-}
-
-// Every caller's one runner, reading Sessions through the Session directory.
-export function createRunner(deps: OperationsDeps): OperationRunner {
-  const { directory } = deps.sessions;
-
-  return new OperationRunner(createImplementations(deps), {
-    directory,
-    scope: new SessionScope({ directory, createId: deps.createId }),
-  });
 }

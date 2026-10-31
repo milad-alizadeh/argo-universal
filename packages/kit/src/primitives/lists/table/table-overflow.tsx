@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { useSpacing } from '../../../use-spacing';
-import { columnWidthSteps } from './table-cell';
+import { columnLeastWidth } from './table-cell';
 import { TableGrid } from './table-grid';
 import type { GridProps } from './table-grid-row';
 import type { TableColumn } from './table-props';
@@ -31,9 +31,9 @@ function useGridWidth(columns: readonly TableColumn[]): number {
   const padding = gap * 2;
 
   const widths = columns.reduce(
-    (sum, column) => sum + columnWidthSteps(column),
+    (sum, column) => sum + columnLeastWidth(column, step),
     0,
   );
 
-  return step * widths + gap * Math.max(0, columns.length - 1) + padding;
+  return widths + gap * Math.max(0, columns.length - 1) + padding;
 }

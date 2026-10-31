@@ -97,6 +97,19 @@ export const BackAndCaptionPhone = atWidth(widths.Phone, {
   },
 });
 
+const captionUrl = 'https://example.com/repo';
+
+// A caption that goes somewhere carries the page's one link out, in place of its text.
+export const LinkedCaptionWide = atWidth(widths.Wide, {
+  args: { ...drillIn, captionHref: captionUrl },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('link', { name: caption })).toHaveAttribute(
+      'href',
+      captionUrl,
+    );
+  },
+});
+
 const searchAndClear: Story = {
   render: () => <SearchableScreen />,
   play: async ({ canvas, userEvent }) => {
