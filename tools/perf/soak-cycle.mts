@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { errors, type Locator, type Page } from '@playwright/test';
 import { composerUsable, feedShows } from './driver-wait.mts';
 import { latestMessage } from './elapsed-scenario.mts';
 import { streamedPrompt, turnTimeoutMilliseconds } from './feed-scenarios.mts';
@@ -8,12 +8,12 @@ import {
   scrollDownAndUp,
   sessionsScroll,
 } from './page.mts';
-import type { Probe, Soak } from './soak-state.mts';
+import type { Activity, Probe, Soak } from './soak-state.mts';
 
 const stopName = 'Stop';
 
-// How long a cancellation waits for the Stop button before the cycle records that it could not cancel.
-const stopAppearsMs = 5000;
+// How long one press waits for Stop to appear and take the click before the cycle records that the Turn finished first.
+const stopPressWindowMs = 5000;
 
 async function timedOpen(page: Page, soak: Soak): Promise<number> {
   const { longSessionTitle } = soak.server;
@@ -46,21 +46,37 @@ export async function probe(page: Page, soak: Soak): Promise<void> {
   soak.probes.push(entry);
 }
 
-const appeared = (page: Page): Promise<boolean> =>
-  page
-    .getByRole('button', { name: stopName, exact: true })
-    .waitFor({ state: 'attached', timeout: stopAppearsMs })
-    .then(
-      () => true,
-      () => false,
-    );
+const stopButton = (page: Page): Locator =>
+  page.getByRole('button', { name: stopName, exact: true });
 
-async function cancelTurn(page: Page, soak: Soak): Promise<void> {
-  soak.activity.cancellationsAttempted += 1;
+export type StopButton = Pick<Locator, 'click' | 'count'>;
 
-  if (!(await appeared(page))) return;
-  await page.getByRole('button', { name: stopName, exact: true }).click();
-  soak.activity.cancellationsObserved += 1;
+/*
+ * A timeout with Stop gone means the Turn finished first, which is normal.
+ * Stop still drawn, or any other error, is a real failure.
+ */
+async function finishedFirst(stop: StopButton, error: Error): Promise<false> {
+  if (!(error instanceof errors.TimeoutError)) throw error;
+
+  if ((await stop.count()) > 0) throw error;
+
+  return false;
+}
+
+// One press that waits for Stop and clicks it, so a Turn finishing between a check and the click cannot fail the soak.
+const pressStop = (stop: StopButton): Promise<boolean> =>
+  stop.click({ timeout: stopPressWindowMs }).then(
+    () => true,
+    (error: Error) => finishedFirst(stop, error),
+  );
+
+export async function cancelTurn(
+  stop: StopButton,
+  activity: Activity,
+): Promise<void> {
+  activity.cancellationsAttempted += 1;
+
+  if (await pressStop(stop)) activity.cancellationsObserved += 1;
 }
 
 async function turn(page: Page, soak: Soak, cancel: boolean): Promise<void> {
@@ -69,10 +85,11 @@ async function turn(page: Page, soak: Soak, cancel: boolean): Promise<void> {
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   soak.activity.turns += 1;
 
-  if (cancel) await cancelTurn(page, soak);
-  await page
-    .getByRole('button', { name: stopName, exact: true })
-    .waitFor({ state: 'detached', timeout: turnTimeoutMilliseconds });
+  if (cancel) await cancelTurn(stopButton(page), soak.activity);
+  await stopButton(page).waitFor({
+    state: 'detached',
+    timeout: turnTimeoutMilliseconds,
+  });
 }
 
 async function browse(page: Page, soak: Soak): Promise<void> {
