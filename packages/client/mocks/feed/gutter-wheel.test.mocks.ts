@@ -5,6 +5,10 @@ import {
   markSettledMiddleOfView,
 } from '../../src/features/feed/components/feed/feed-reader.mocks';
 
+// How far the view sits above the Feed's end. Older rows landing above the view lift every scrollTop by their height, so only this stays true to where the reader is.
+const distanceFromEnd = (scroll: HTMLElement): number =>
+  scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight;
+
 const gutterOffset = (edge: 'left' | 'right', width: number): number =>
   edge === 'left' ? 12 : width - 12;
 
@@ -23,7 +27,7 @@ export async function gesture(
 
   const view = scroll.getBoundingClientRect();
   const x = view.left + gutterOffset(edge, view.width);
-  const before = scroll.scrollTop;
+  const before = distanceFromEnd(scroll);
   const marked = markMiddleOfView(scroll);
   const point = { x, y: view.top + view.height / 2 };
   const hit = document.elementFromPoint(point.x, point.y);
@@ -46,7 +50,8 @@ export async function gesture(
   }
 
   await waitFor(async () => {
-    await expect(scroll.scrollTop).toBeLessThan(before - 2);
+    // Measured from the end: older rows landing above the view lift scrollTop past where it began.
+    await expect(distanceFromEnd(scroll)).toBeGreaterThan(before + 2);
     const current = markMiddleOfView(scroll);
     // Virtualization can unmount the earlier mark after the wheel reveals older rows.
     await expect(
