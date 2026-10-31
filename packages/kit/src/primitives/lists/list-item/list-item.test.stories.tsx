@@ -9,6 +9,8 @@ import { ListItem, ListItemInert, useListItemPress } from './index';
 
 const title = 'Item one';
 
+const openIssueName = 'Open issue';
+
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/ListItem',
   component: ListItem,
@@ -82,7 +84,7 @@ export const Value: Story = {
 const openIssue = fn();
 
 const issueLink = (
-  <Pressable role="link" accessibilityLabel="Open issue" onPress={openIssue}>
+  <Pressable role="link" accessibilityLabel={openIssueName} onPress={openIssue}>
     <Text>Issue</Text>
   </Pressable>
 );
@@ -94,7 +96,7 @@ function accessoryPress(args: Story['args']): Story {
     play: async ({ args: { onPress }, canvas, userEvent }) => {
       openIssue.mockClear();
       const row = canvas.getByRole('button', { name: title });
-      const link = canvas.getByRole('link', { name: 'Open issue' });
+      const link = canvas.getByRole('link', { name: openIssueName });
 
       await expect(within(row).queryByRole('link')).toBeNull();
       await userEvent.click(link);
@@ -115,6 +117,35 @@ export const TrailingAccessory = accessoryPress({
   trailing: <Text>now</Text>,
   trailingAccessories: issueLink,
 });
+
+const drawnState = {
+  meta: <Pill text="Meta" />,
+  metaAccessories: issueLink,
+};
+
+export const AccessoryRowNameLeavesOutItsLanes: Story = {
+  args: drawnState,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: title })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /Meta/ })).toBeNull();
+    await expect(
+      canvas.getByRole('link', { name: openIssueName }),
+    ).toBeVisible();
+  },
+};
+
+export const AccessoryRowLabelNamesItsLanes: Story = {
+  args: { ...drawnState, accessibilityLabel: `${title}, Meta` },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: `${title}, Meta` }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: title })).toBeNull();
+    await expect(
+      canvas.getByRole('link', { name: openIssueName }),
+    ).toBeVisible();
+  },
+};
 
 function AccessoryArrivesDuringPress({
   onPress,
