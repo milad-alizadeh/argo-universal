@@ -5,9 +5,10 @@ import { ownServerId } from '#lib/product/server-scope';
 import { ServerListView } from './server-list-view';
 import { oneServer, severalServers } from './server-list-view-fixtures';
 
-const ownRow = 'This computer, Connected';
+// A row is spoken as its Server and that Server's state, which the picker reads from the option's label and subtitle.
+const ownRow = 'This computer Connected';
 
-const studioRow = 'Studio, Connected';
+const studioRow = 'Studio Connected';
 
 const meta = {
   title: 'Tests/Screens/Settings/Servers',
@@ -27,8 +28,8 @@ type Story = StoryObj<typeof meta>;
 
 export const EachServerSaysItsOwnState: Story = {
   play: async ({ canvas }) => {
-    for (const name of [ownRow, studioRow, 'Workshop bench, Unreachable'])
-      await expect(canvas.getByRole('button', { name })).toBeVisible();
+    for (const name of [ownRow, studioRow, 'Workshop bench Unreachable'])
+      await expect(canvas.getByRole('radio', { name })).toBeVisible();
   },
 };
 
@@ -36,7 +37,7 @@ export const EachServerSaysItsOwnState: Story = {
 export const OneServerReadsAsTheOrdinaryCase: Story = {
   args: { servers: oneServer },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: ownRow })).toBeVisible();
+    await expect(canvas.getByRole('radio', { name: ownRow })).toBeVisible();
     await expect(
       canvas.queryByText(/no Servers|Pair|empty|unavailable/i),
     ).toBeNull();
@@ -45,7 +46,7 @@ export const OneServerReadsAsTheOrdinaryCase: Story = {
 
 export const ShowsAnotherServerWhenItsRowIsPressed: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: studioRow }));
+    await userEvent.click(canvas.getByRole('radio', { name: studioRow }));
     await expect(args.onLookAt).toHaveBeenCalledOnce();
     await expect(args.onLookAt).toHaveBeenCalledWith('studio');
   },
@@ -53,7 +54,7 @@ export const ShowsAnotherServerWhenItsRowIsPressed: Story = {
 
 export const PressingTheShownServerLeavesItShown: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: ownRow }));
+    await userEvent.click(canvas.getByRole('radio', { name: ownRow }));
     await expect(args.onLookAt).not.toHaveBeenCalled();
   },
 };
@@ -63,10 +64,10 @@ export const TheShownServersRowIsTheChosenOne: Story = {
   args: { lookingAt: 'studio' },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('button', { name: studioRow, pressed: true }),
+      canvas.getByRole('radio', { name: studioRow, checked: true }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: ownRow, pressed: false }),
+      canvas.getByRole('radio', { name: ownRow, checked: false }),
     ).toBeVisible();
   },
 };
