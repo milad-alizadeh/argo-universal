@@ -138,3 +138,12 @@ export const OpeningAPairedDeviceShowsItsPage: Story = {
     await expect(args.onOpenDevice).toHaveBeenCalledWith('phone');
   },
 };
+
+// A phone never offers pairing: it is a Server Device action.
+export const APhoneDoesNotOfferPairing: Story = {
+  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('button', pairButton)).toBeNull();
+  },
+};

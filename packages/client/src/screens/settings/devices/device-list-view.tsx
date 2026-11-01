@@ -1,7 +1,9 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
+import { pairingSection } from './device-pairing-section';
 import { type DeviceRow, platformName } from './device-rows';
 
 export type LocalNetworkAccessLoad =
@@ -36,20 +38,24 @@ const messages = {
   disconnected: 'Connect to the Server to change Local network access.',
 };
 
-const pairingReasons = {
-  off: 'Pairing is unavailable while Local network access is off. Turn it on above to pair a Device.',
-  browser:
-    'Pairing is unavailable in a browser, which has no secure place for a Device Key. Pair from the desktop app instead.',
-  on: 'Show a code on this computer and scan it with Argo on the other Device.',
-};
-
 export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
+  return (
+    <SizeClass
+      compact={<DevicesScreen {...props} wide={false} />}
+      wide={<DevicesScreen {...props} wide />}
+    />
+  );
+}
+
+function DevicesScreen(
+  props: DeviceListViewProps & { wide: boolean },
+): React.JSX.Element {
   return (
     <Screen title="Devices" onBack={props.onBack}>
       <FieldGroup>
         {accessSection(props)}
         {devicesSection(props)}
-        {pairingSection(props)}
+        {props.wide ? pairingSection(props) : null}
         {statusSection(props)}
       </FieldGroup>
     </Screen>
@@ -73,45 +79,6 @@ function accessSection(props: DeviceListViewProps): React.JSX.Element | null {
     </FieldGroup.Section>
   );
 }
-
-/*
- * Pairing a Device, and the one place it is offered (ADR-0045). The row says why it cannot be used rather than disappearing: a switch that hides its consequence teaches nothing.
- * The sheet behind it is what mints a Pairing Ticket, so a code only ever exists while the owner is looking at one.
- */
-function pairingSection(props: DeviceListViewProps): React.JSX.Element | null {
-  const access = props.localNetworkAccess;
-
-  if (access.status !== 'loaded') return null;
-
-  return pairingRow(props, pairingReasonFor(props, access.enabled));
-}
-
-type PairingReason = keyof typeof pairingReasons;
-
-const pairingRow = (
-  props: DeviceListViewProps,
-  reason: PairingReason,
-): React.JSX.Element => (
-  <FieldGroup.Section footer={pairingReasons[reason]}>
-    <FieldGroup.Link
-      title="Pair a Device"
-      leading={{ sf: 'qrcode', material: 'qr_code' }}
-      action
-      disabled={reason !== 'on'}
-      onPress={() => props.onPairDevice?.()}
-    />
-    {reason === 'on' ? props.pairDeviceSheet : null}
-  </FieldGroup.Section>
-);
-
-const pairingReasonFor = (
-  props: DeviceListViewProps,
-  enabled: boolean,
-): PairingReason => {
-  if (props.pairingOffered === false) return 'browser';
-
-  return enabled ? 'on' : 'off';
-};
 
 const deviceFooter =
   'Paired Devices can see your Projects and Sessions. Only this computer can pair or unpair Devices.';

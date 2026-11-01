@@ -9,6 +9,8 @@ import {
   unpairedServers,
 } from './server-list-view-fixtures';
 
+const addServer = { name: 'Add a Server' };
+
 const meta = {
   title: 'Tests/Screens/Settings/Servers',
   component: ServerListView,
@@ -79,9 +81,9 @@ export const AServerThatUnpairedThisDeviceNeedsPairingAgain: Story = {
   },
 };
 
-export const AddAServerIsTheLastRow: Story = {
+export const AddAServerIsARowBelowTheListWhenWide: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Add a Server' }));
+    await userEvent.click(canvas.getByRole('button', addServer));
     await expect(args.onAddServer).toHaveBeenCalledOnce();
     await expect(args.onOpenServer).not.toHaveBeenCalled();
   },
@@ -90,6 +92,16 @@ export const AddAServerIsTheLastRow: Story = {
 export const NoAddRowWhereAnAppCannotPair: Story = {
   args: { onAddServer: undefined },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByText('Add a Server')).toBeNull();
+    await expect(canvas.queryByText(addServer.name)).toBeNull();
+  },
+};
+
+// On a phone, Add a Server is the header's call to action, not a row.
+export const AddAServerIsAHeaderActionOnAPhone: Story = {
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', addServer));
+    await expect(args.onAddServer).toHaveBeenCalledOnce();
+    await expect(canvas.queryByText(addServer.name)).toBeNull();
   },
 };
