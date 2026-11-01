@@ -55,7 +55,7 @@ _Avoid_: Remote Device, guest, client
 Server Device and Paired Device describe a Device's relationship to one Server, not a kind of computer, so one Device can be both at once for different Servers: a laptop is the Server Device for its own Server and a Paired Device for the desktop's.
 
 **Pairing Ticket**:
-The short-lived, single-use code in a Server's QR that lets one Device start Pairing. The same code is shown as ten characters (two groups of five, Crockford base32) for a Device with no camera to type. It is not the credential: the Device sends its own Device Key during Pairing and authenticates with that afterwards, and the ticket is spent.
+The short-lived, single-use code in a Server's QR that lets one Device start Pairing. The same code is six digits (two groups of three, `482-915`) for a Device with no camera to type. It is not the credential: the Device sends its own Device Key during Pairing and authenticates with that afterwards, and the ticket is spent.
 _Avoid_: Pairing code (in code), token, invite, key
 
 **Device Key**:
