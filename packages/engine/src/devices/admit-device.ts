@@ -41,11 +41,14 @@ export class DeviceAdmission {
   public async admit(
     deviceKey: Buffer,
     claim: PairingClaim,
+    source: string,
   ): Promise<Admission> {
     const publicKey = storedPublicKey(deviceKey);
     const known = readDeviceByPublicKey(this.deps.database, publicKey);
 
-    return known ? this.welcomeBack(known) : this.pair(publicKey, claim);
+    return known
+      ? this.welcomeBack(known)
+      : this.pair(publicKey, claim, source);
   }
 
   private async welcomeBack(
@@ -64,10 +67,11 @@ export class DeviceAdmission {
   private async pair(
     publicKey: string,
     claim: PairingClaim,
+    source: string,
   ): Promise<Admission> {
     if (claim.ticket === undefined)
       return refused({ paired: false, refusal: 'ticket-required' });
-    const refusal = this.deps.tickets.spend(claim.ticket);
+    const refusal = this.deps.tickets.spend(claim.ticket, source);
 
     return refusal
       ? refused({ paired: false, refusal })

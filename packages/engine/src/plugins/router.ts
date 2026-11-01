@@ -12,9 +12,9 @@ import {
   PluginViewInput,
   SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
-import { TRPCError } from '@trpc/server';
 import {
   mergeRouters,
+  liveConnection,
   publicProcedure,
   router,
   routerFactory,
@@ -33,17 +33,8 @@ function requireSignal(signal: AbortSignal | undefined): AbortSignal {
   return signal;
 }
 
-function requireConnection(
-  connection: RpcConnection | undefined,
-): RpcConnection {
-  if (!connection || connection.signal.aborted)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'Plugin views require a live App Connection',
-    });
-
-  return connection;
-}
+const viewConnection = (ctx: RpcContext): RpcConnection =>
+  liveConnection(ctx.connection, 'Plugin views require a live App Connection');
 
 // A view lives while both the App Connection and its subscription are open.
 function connectionOf({
@@ -53,7 +44,7 @@ function connectionOf({
   ctx: RpcContext;
   signal?: AbortSignal;
 }): RpcConnection {
-  const live = requireConnection(ctx.connection);
+  const live = viewConnection(ctx);
 
   return {
     ...live,
@@ -120,14 +111,14 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
     dispatch: publicProcedure
       .input(PluginDispatchInput)
       .mutation(async ({ input, ctx }) => {
-        await plugins.dispatch(requireConnection(ctx.connection), input);
+        await plugins.dispatch(viewConnection(ctx), input);
 
         return { ok: true as const };
       }),
     renderFailed: publicProcedure
       .input(RenderFailureInput)
       .mutation(({ input, ctx }) => {
-        plugins.renderFailed(requireConnection(ctx.connection), input);
+        plugins.renderFailed(viewConnection(ctx), input);
 
         return { ok: true as const };
       }),

@@ -2,15 +2,23 @@ import type { Server as RequestServer } from 'node:http';
 import { createServer, type Server, type Socket } from 'node:net';
 import { channelMagic } from '../pairing/channel-door';
 import { isLoopback } from './network-listener';
+import type { SocketGuard } from './socket-guard';
 
 export interface ChannelDoorPort {
-  readonly accept: (socket: Socket, opening: Buffer) => void;
+  // `proven` is for the channel to call once the socket's first handshake message has all arrived, which is when the door stops timing it.
+  readonly accept: (
+    socket: Socket,
+    opening: Buffer,
+    proven: () => void,
+  ) => void;
 }
 
 export interface FrontDoorDeps {
   // The Server's own request listener, which serves tRPC, Blobs and Plugin assets to whatever is admitted.
   readonly requests: RequestServer;
   readonly channel: ChannelDoorPort;
+  // Times and counts the sockets that have not yet said what they are, so one that says nothing cannot sit there for good.
+  readonly unproven: SocketGuard;
   readonly report: (subject: string, value: string | undefined) => void;
 }
 
@@ -29,7 +37,9 @@ export const createFrontDoor = (deps: FrontDoorDeps): Server =>
  */
 function knock(deps: FrontDoorDeps, socket: Socket): void {
   socket.on('error', (cause: Error): void => broke(deps, socket, cause));
-  peek(deps, socket, Buffer.alloc(0));
+  const proven = deps.unproven.hold(socket);
+
+  if (proven) peek({ deps, socket, proven }, Buffer.alloc(0));
 }
 
 // Whatever went wrong with the socket, there is nothing left to answer on it.
@@ -38,23 +48,34 @@ function broke(deps: FrontDoorDeps, socket: Socket, cause: Error): void {
   socket.destroy();
 }
 
-function peek(deps: FrontDoorDeps, socket: Socket, received: Buffer): void {
+type Knocking = {
+  deps: FrontDoorDeps;
+  socket: Socket;
+  proven: () => void;
+};
+
+function peek(knocking: Knocking, received: Buffer): void {
+  const { socket } = knocking;
   const chunk: unknown = socket.read();
 
   const opening = Buffer.isBuffer(chunk)
     ? Buffer.concat([received, chunk])
     : received;
 
-  if (opening.length >= channelMagic.length)
-    return admit(deps, socket, opening);
-  socket.once('readable', (): void => peek(deps, socket, opening));
+  if (opening.length >= channelMagic.length) return admit(knocking, opening);
+  socket.once('readable', (): void => peek(knocking, opening));
 }
 
-function admit(deps: FrontDoorDeps, socket: Socket, opening: Buffer): void {
+function admit({ deps, socket, proven }: Knocking, opening: Buffer): void {
   if (opening.subarray(0, channelMagic.length).equals(channelMagic))
-    return deps.channel.accept(socket, opening.subarray(channelMagic.length));
+    return deps.channel.accept(
+      socket,
+      opening.subarray(channelMagic.length),
+      proven,
+    );
 
   if (!isLoopback(socket.remoteAddress)) return refuse(deps, socket);
+  proven();
   socket.unshift(opening);
   deps.requests.emit('connection', socket);
 }

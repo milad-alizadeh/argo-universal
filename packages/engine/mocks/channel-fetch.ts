@@ -7,7 +7,7 @@ import {
   type ChannelInput,
 } from '../src/pairing/connect-channel';
 
-type ChannelFetch = NonNullable<Parameters<typeof httpLink>[0]['fetch']>;
+export type ChannelFetch = NonNullable<Parameters<typeof httpLink>[0]['fetch']>;
 
 type FetchInit = Parameters<ChannelFetch>[1];
 
@@ -34,7 +34,7 @@ export async function getOverChannel(
 ): Promise<Response> {
   const { socket } = await connectChannel(input);
   const url = `http://${input.address.host}:${input.address.port}${path}`;
-  const response = await answerOver(socket, url, {});
+  const response = await answerOver(url, {}, connectionOn(socket));
 
   socket.destroy();
 
@@ -50,7 +50,7 @@ export async function answerOverChannel(
   init: FetchInit,
 ): Promise<string> {
   const { socket } = await connectChannel(input);
-  const answered = await answerOver(socket, url, init);
+  const answered = await answerOver(url, init, connectionOn(socket));
   socket.destroy();
 
   return answered.text();
@@ -60,36 +60,49 @@ const channelFetch =
   (input: ChannelInput): ChannelFetch =>
   async (url, init) => {
     const { socket } = await connectChannel(input);
-    const response = await answerOver(socket, String(url), init);
+    const response = await answerOver(String(url), init, connectionOn(socket));
     socket.destroy();
 
     return response;
   };
 
-function answerOver(
-  socket: Duplex,
-  url: string,
-  init: FetchInit,
-): Promise<Response> {
-  return new Promise<Response>((resolve, reject): void => {
-    const answered = (incoming: NodeJS.ReadableStream): void => {
-      resolve(answer(incoming));
-    };
-
-    const outgoing = request(url, requestOptions(socket, init), answered);
-
-    outgoing.once('error', reject);
-    outgoing.end(init?.body ?? undefined);
-  });
-}
+export type Connection = Pick<RequestOptions, 'agent' | 'createConnection'>;
 
 /*
  * No agent at all: Node only honours `createConnection` when there is none, and an agent of its own would open a second, plain TCP connection beside the channel.
  */
-const requestOptions = (socket: Duplex, init: FetchInit): RequestOptions => ({
+export const connectionOn = (socket: Duplex): Connection => ({
+  createConnection: (): Duplex => socket,
+});
+
+// One request, sent on whatever connection it is given, and the whole of its answer.
+export function answerOver(
+  url: string,
+  init: FetchInit,
+  connection: Connection,
+): Promise<Response> {
+  return new Promise<Response>((resolve, reject): void => {
+    const outgoing = request(
+      url,
+      requestOptions(init, connection),
+      (incoming) => resolve(answer(incoming)),
+    );
+
+    outgoing.once('error', reject);
+    outgoing.end(bodyOf(init));
+  });
+}
+
+const bodyOf = (init: FetchInit): NonNullable<FetchInit>['body'] =>
+  init?.body ?? undefined;
+
+const requestOptions = (
+  init: FetchInit,
+  connection: Connection,
+): RequestOptions => ({
   method: init?.method ?? 'GET',
   headers: requestHeaders(init),
-  createConnection: (): Duplex => socket,
+  ...connection,
 });
 
 const requestHeaders = (init: FetchInit): Record<string, string> =>

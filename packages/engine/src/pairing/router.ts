@@ -7,12 +7,12 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { forgetPairedDevice } from '../devices/paired-device';
 import {
+  liveConnection,
   mergeRouters,
   router,
   routerFactory,
   serverDeviceProcedure,
   zAsyncIterable,
-  type RpcConnection,
 } from '../rpc';
 import type { WriterActorRef } from '../storage';
 import type { PairingRegistrations } from './registrations';
@@ -44,19 +44,6 @@ const mintedTicket = (deps: PairingDeps): MintedPairingTicket => {
   };
 };
 
-// A subscription needs something that says when the App has gone, or the stream it opens outlives the sheet that asked for it.
-function requireConnection(
-  connection: RpcConnection | undefined,
-): RpcConnection {
-  if (!connection)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'Watching for a Device needs a live App Connection',
-    });
-
-  return connection;
-}
-
 /*
  * `mint` is the only way a Pairing Ticket comes into being: the pair sheet asks for one while the owner is watching it, and the Server hands out exactly that one (ADR-0045).
  * `revoke` is the sheet closing, so what it put on screen stops working at once rather than outliving the owner's attention by up to two minutes.
@@ -73,6 +60,8 @@ const ticketRouter = routerFactory((deps: PairingDeps) =>
   }),
 );
 
+const watchingNeeds = 'Watching for a Device needs a live App Connection';
+
 /*
  * `registered` is the Devices that have registered while the sheet has been open, which it draws as "<name> wants to pair". Each has already authenticated with its own Device Key; what it claims about itself is untrusted, and shown only so that the owner recognises it.
  * `decline` is the owner answering that prompt with No: the Device's row goes, so it reaches nothing on its next connect and has no Ticket left to pair with again.
@@ -82,7 +71,7 @@ const deviceRouter = routerFactory((deps: PairingDeps) =>
     registered: serverDeviceProcedure
       .output(zAsyncIterable({ yield: PairingRegistration }))
       .subscription(async function* ({ signal, ctx }) {
-        const connection = requireConnection(ctx.connection);
+        const connection = liveConnection(ctx.connection, watchingNeeds);
         yield* deps.registrations.stream(signal ?? connection.signal);
       }),
     decline: serverDeviceProcedure

@@ -5,6 +5,7 @@ import { createFrontDoor } from './front-door';
 import type { RoutedSetup } from './http-server';
 import type { RequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
+import { SocketGuard } from './socket-guard';
 
 export interface Doors {
   // The port every Device knocks on, which decides what each socket is before anything else reads it.
@@ -17,16 +18,20 @@ export interface Doors {
 export function createDoors(setup: RoutedSetup, guard: RequestGuard): Doors {
   const requests = createServer(createRequestListener(listening(setup, guard)));
 
+  const { report } = guard;
+
   const channel = new ChannelDoor({
     staticKey: setup.staticKey,
     admission: setup.admission,
     serve: (socket): void => void requests.emit('connection', socket),
-    report: guard.report,
+    report,
   });
+
+  const unproven = new SocketGuard({ report });
 
   return {
     requests,
-    frontDoor: createFrontDoor({ requests, channel, report: guard.report }),
+    frontDoor: createFrontDoor({ requests, channel, unproven, report }),
   };
 }
 

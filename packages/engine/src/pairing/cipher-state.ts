@@ -25,6 +25,9 @@ export function deriveKeys(
   return [first, hmac(temporary, Buffer.concat([first, Buffer.of(2)]))];
 }
 
+// The Noise spec reserves the largest 64-bit number, so a state stops one short of it with an error of its own.
+const recordLimit = 2n ** 64n - 1n;
+
 const nonceFor = (records: bigint): Buffer => {
   const nonce = Buffer.alloc(nonceBytes);
   nonce.writeBigUInt64LE(records, counterOffset);
@@ -39,12 +42,13 @@ const nonceFor = (records: bigint): Buffer => {
 export class CipherState {
   private records = 0n;
 
-  public constructor(private key?: Buffer) {}
-
-  public rekey(key: Buffer): void {
-    this.key = key;
-    this.records = 0n;
-  }
+  /*
+   * A key is fixed for the life of its state, and a fresh key means a fresh state, so a counter can never go back to zero under a key it has already used. Nonce reuse under one key is the one failure that breaks this design outright.
+   */
+  public constructor(
+    private readonly key?: Buffer,
+    private readonly limit: bigint = recordLimit,
+  ) {}
 
   public seal(associated: Buffer, plaintext: Buffer): Buffer {
     const cipher = createCipheriv(algorithm, this.readKey(), this.nextNonce(), {
@@ -83,6 +87,11 @@ export class CipherState {
   }
 
   private nextNonce(): Buffer {
+    if (this.records >= this.limit)
+      throw new Error(
+        'The channel has used every record number its key allows',
+      );
+
     const nonce = nonceFor(this.records);
     this.records += 1n;
 
