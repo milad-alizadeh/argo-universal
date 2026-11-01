@@ -98,9 +98,8 @@ const feedModuleSecrets = {
   tickets: new PairingTickets(),
   registrations: new PairingRegistrations(),
   channels: new OpenChannels(),
+  appNavigation: new AppNavigation({ serverId: 'feed-module-test' }),
 };
-
-const appNavigation = new AppNavigation({ serverId: 'feed-module-test' });
 
 const feedModuleRouterInput = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
@@ -131,7 +130,6 @@ const feedPlugins = (
 
 type RouterRuntime = Pick<
   AppRouterInput,
-  | 'appNavigation'
   | 'blobsFolder'
   | 'version'
   | 'startedAt'
@@ -144,7 +142,6 @@ const routerRuntime = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
 ): RouterRuntime => ({
-  appNavigation,
   blobsFolder: host.blobsFolder,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
