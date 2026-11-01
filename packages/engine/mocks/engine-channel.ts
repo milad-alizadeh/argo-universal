@@ -8,7 +8,7 @@ import {
   type OpenedChannel,
 } from '../src/pairing/connect-channel';
 import { generateKeypair, type Keypair } from '../src/pairing/x25519';
-import { callerOverChannel } from './channel-fetch';
+import { callerOverChannel, getOverChannel } from './channel-fetch';
 
 export interface TestDevice {
   // The row the Server made for this Device, or the one it already had.
@@ -92,3 +92,11 @@ const claimFrom = (options: TestDeviceOptions): PairingClaim => ({
   name: options.name ?? 'Test iPhone',
   platform: options.platform ?? 'ios',
 });
+
+// The same Device reading a path the Server answers with bytes, such as a Blob, inside a channel of its own.
+export async function readAsDevice(
+  host: ChannelTestHost,
+  options: TestDeviceOptions & { path: string },
+): Promise<Response> {
+  return getOverChannel(await channelInput(host, options), options.path);
+}
