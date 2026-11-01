@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PairDeps } from './pair-with-invite';
 import { pairWithTypedCode, type TypedDeps } from './pair-with-typed-code';
 
-const code = '7KQ4M-9XD2B';
+const code = '482-915';
 
-const ticket = '7KQ4M9XD2B';
+const ticket = '482915';
 
 const studioKey = 'studio-key';
 
@@ -111,7 +111,7 @@ describe('pairing with a code that was typed', () => {
     const requestKey = vi.fn<Ask>();
 
     await expect(
-      pairWithTypedCode('7KQ4', depsFor({ requestKey })),
+      pairWithTypedCode('4829', depsFor({ requestKey })),
     ).resolves.toEqual({ kind: 'mistyped' });
     expect(requestKey).not.toHaveBeenCalled();
   });

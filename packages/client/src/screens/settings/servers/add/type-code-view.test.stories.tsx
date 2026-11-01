@@ -18,19 +18,19 @@ type Story = StoryObj<typeof meta>;
 // What was typed goes out as its characters: whether they are a code is the caller's, so a mistake is told one way whatever it was.
 export const ConnectSendsWhatWasTyped: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.type(canvas.getByLabelText('Code'), '7kq4m 9xd2b');
+    await userEvent.type(canvas.getByLabelText('Code'), '482 915');
     await userEvent.click(canvas.getByRole('button', { name: 'Connect' }));
     await expect(args.onSubmit).toHaveBeenCalledOnce();
-    await expect(args.onSubmit).toHaveBeenCalledWith('7KQ4M9XD2B');
+    await expect(args.onSubmit).toHaveBeenCalledWith('482915');
   },
 };
 
 // Return in the field is Connect.
 export const ReturnSendsIt: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.type(canvas.getByLabelText('Code'), '7KQ4M-9XD2B{Enter}');
+    await userEvent.type(canvas.getByLabelText('Code'), '482-915{Enter}');
     await expect(args.onSubmit).toHaveBeenCalledOnce();
-    await expect(args.onSubmit).toHaveBeenCalledWith('7KQ4M9XD2B');
+    await expect(args.onSubmit).toHaveBeenCalledWith('482915');
   },
 };
 

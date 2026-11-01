@@ -4,13 +4,13 @@ import { TextInput, type TextInputProps, View } from 'react-native';
 import { Text } from '#primitives/content/text';
 
 export interface CodeFieldProps {
-  // What has been typed so far: the code's own characters, as many as it has.
+  // What has been typed so far: the code's own digits, as many as it has.
   value: string;
-  // How many characters the code has, one box each.
+  // How many digits the code has, one box each.
   length: number;
   // How many boxes sit together before a gap; a code read aloud is said in groups.
   groupSize: number;
-  // The code's own characters as they are typed or pasted, with whatever else was in them (spaces, a dash) already dropped.
+  // The code's own digits as they are typed or pasted, with whatever else was in them (spaces, a dash) already dropped.
   onChangeText: (value: string) => void;
   // Return in the field.
   onSubmit?: () => void;
@@ -20,12 +20,9 @@ export interface CodeFieldProps {
   label: string;
 }
 
-// Only the code's own characters stay: a pasted "7KQ4M-9XD2B" or "7kq4m 9xd2b" lands as ten.
-export const codeCharacters = (typed: string, length: number): string =>
-  typed
-    .replaceAll(/[^0-9A-Za-z]/g, '')
-    .toUpperCase()
-    .slice(0, length);
+// Only the code's digits stay: a pasted "482-915" or "482 915" lands as six.
+const codeCharacters = (typed: string, length: number): string =>
+  typed.replaceAll(/\D/g, '').slice(0, length);
 
 /*
  * One box per character (#1490, "Enter the code by hand"). A single bare input lies over the boxes and takes the typing, the pasting and the autofill, so the boxes only draw what it holds; the box the next character lands in carries the focus ring. App-only: a Plugin has no code to take.
@@ -61,7 +58,7 @@ function BoxGroup(
   const first = props.group * props.groupSize;
 
   return (
-    <View className="max-w-68 min-w-0 flex-1 flex-row gap-2">
+    <View className="max-w-40 min-w-0 flex-1 flex-row gap-2">
       {Array.from({ length: props.groupSize }, (_, offset) => (
         <CodeBox key={first + offset} {...boxOf(props, first + offset)} />
       ))}
@@ -102,7 +99,8 @@ const valueProps = (props: CodeFieldProps): TextInputProps => ({
   editable: !props.disabled,
   'aria-disabled': props.disabled,
   autoFocus: props.autoFocus,
-  autoCapitalize: 'characters',
+  inputMode: 'numeric',
+  keyboardType: 'number-pad',
   autoCorrect: false,
   autoComplete: 'one-time-code',
 });

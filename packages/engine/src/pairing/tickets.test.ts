@@ -2,7 +2,7 @@ import {
   pairingTicketAttempts,
   pairingTicketLifetimeMs,
 } from '@repo/contracts';
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { PairingTickets } from './tickets';
 
 const offender = 'offender';
@@ -108,4 +108,66 @@ it('names a spent Ticket while it could still have been live, and forgets it aft
   tickets.mint();
 
   expect(tickets.spend(ticket, another)).toBe(unknownTicket);
+});
+
+describe('a run for the Server key', () => {
+  const holder = 'holder';
+
+  it('costs its source nothing when the Device proves it holds a code', () => {
+    const { tickets } = clockedTickets();
+    tickets.mint();
+
+    for (let run = 0; run < pairingTicketAttempts * 2; run += 1) {
+      expect(tickets.offering(holder)).toBeDefined();
+      tickets.settled(holder, true);
+    }
+  });
+
+  it('counts as a wrong Ticket when the Device proves nothing', () => {
+    const { tickets } = clockedTickets();
+
+    for (let run = 0; run < pairingTicketAttempts; run += 1) {
+      expect(tickets.offering(offender)).toBeDefined();
+      tickets.settled(offender, false);
+    }
+
+    expect(tickets.offering(offender)).toBeUndefined();
+    expect(tickets.offering(owner)).toBeDefined();
+  });
+
+  it('is held against its source until it ends, so many at once are not free', () => {
+    const { tickets } = clockedTickets();
+
+    for (let run = 0; run < pairingTicketAttempts; run += 1)
+      expect(tickets.offering(offender)).toBeDefined();
+
+    expect(tickets.offering(offender)).toBeUndefined();
+  });
+
+  it('cannot be started from many sources at once to outrun the total', () => {
+    const { tickets } = clockedTickets();
+
+    const started = Array.from(
+      { length: pairingTicketAttempts * 20 },
+      (_, at) => tickets.offering(`source-${at % 40}`),
+    ).filter(Boolean);
+
+    expect(started.length).toBeLessThanOrEqual(pairingTicketAttempts * 10);
+  });
+
+  it('offers the Tickets that are live first, and says which have been spent or ran out', () => {
+    const { tickets, pass } = clockedTickets();
+    const late = tickets.mint().ticket;
+    pass(60_000);
+    const spent = tickets.mint().ticket;
+    tickets.spend(spent, owner);
+    pass(61_000);
+    const fresh = tickets.mint().ticket;
+
+    expect(tickets.offering(owner)).toEqual([
+      { code: fresh, status: 'live' },
+      { code: spent, status: 'spent' },
+      { code: late, status: 'expired' },
+    ]);
+  });
 });

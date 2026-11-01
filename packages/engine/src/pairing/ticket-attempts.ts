@@ -15,6 +15,8 @@ interface Tally {
   lockouts: number;
   blockedUntil: number;
   lastAt: number;
+  // Runs for a key that have not ended yet, which count against the source as if each were refused, so many at once cannot outrun the count.
+  pending: number;
 }
 
 /*
@@ -27,12 +29,28 @@ export class TicketAttempts {
   public constructor(private readonly now: () => number) {}
 
   public blocked(source: string): boolean {
-    return (this.sources.get(source)?.blockedUntil ?? 0) > this.now();
+    const record = this.sources.get(source);
+
+    return record !== undefined && this.turnedAway(record);
+  }
+
+  public started(source: string): void {
+    this.forgetStale();
+    const record = this.tally(source);
+
+    record.pending += 1;
+    record.lastAt = this.now();
+  }
+
+  public ended(source: string): void {
+    const record = this.sources.get(source);
+
+    if (record) record.pending = Math.max(0, record.pending - 1);
   }
 
   public refused(source: string): void {
     this.forgetStale();
-    const record = this.sources.get(source) ?? this.fresh(source);
+    const record = this.tally(source);
 
     record.refusals += 1;
     record.lastAt = this.now();
@@ -49,8 +67,25 @@ export class TicketAttempts {
       Math.min(firstBackoffMs * 2 ** (record.lockouts - 1), longestBackoffMs);
   }
 
-  private fresh(source: string): Tally {
-    const record = { refusals: 0, lockouts: 0, blockedUntil: 0, lastAt: 0 };
+  private turnedAway(record: Tally): boolean {
+    return (
+      record.blockedUntil > this.now() ||
+      record.refusals + record.pending >= pairingTicketAttempts
+    );
+  }
+
+  private tally(source: string): Tally {
+    const known = this.sources.get(source);
+
+    if (known) return known;
+
+    const record = {
+      refusals: 0,
+      lockouts: 0,
+      blockedUntil: 0,
+      lastAt: 0,
+      pending: 0,
+    };
 
     this.sources.set(source, record);
 
@@ -78,6 +113,6 @@ export class TicketAttempts {
   private quiet(record: Tally): boolean {
     const last = Math.max(record.blockedUntil, record.lastAt);
 
-    return last + pairingTicketLifetimeMs <= this.now();
+    return record.pending === 0 && last + pairingTicketLifetimeMs <= this.now();
   }
 }

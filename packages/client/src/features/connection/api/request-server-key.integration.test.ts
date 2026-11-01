@@ -22,10 +22,10 @@ it("is given the Server's key by a code that App and Server both hold", async ()
 it('is refused by a Server that was never told the code', async () => {
   const host = await startEngineTestHost();
   const endpoint = await endpointOf(host);
+  const { ticket } = host.pairing.mint();
+  const wrong = ticket === '000000' ? '111111' : '000000';
 
-  host.pairing.mint();
-
-  await expect(
-    requestServerKey(endpoint, 'ZZZZZZZZZZ', { platform }),
-  ).rejects.toEqual(new PairingRefused('ticket-unknown'));
+  await expect(requestServerKey(endpoint, wrong, { platform })).rejects.toEqual(
+    new PairingRefused('ticket-unknown'),
+  );
 });

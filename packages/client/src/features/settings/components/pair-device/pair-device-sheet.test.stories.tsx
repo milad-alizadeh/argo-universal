@@ -10,7 +10,7 @@ import {
   wantsToPair,
 } from './pair-device-sheet-fixtures';
 
-const typedCode = '7KQ4M-9XD2B';
+const typedCode = '482-915';
 
 const meta = {
   title: 'Tests/Settings/PairDeviceSheet',
