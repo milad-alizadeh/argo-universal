@@ -2,33 +2,24 @@ import { z } from 'zod';
 import { DevicePlatform } from './device';
 
 /*
- * The Pairing Ticket the owner reads off the QR or types in: ten characters of Crockford base32, which is 50 bits.
- * A typed code is the only thing that proves to a Device with no QR which computer it is talking to (ADR-0045), so it has to be too large to guess in the two minutes it lives; six digits were not.
+ * The Pairing Ticket the owner reads off the QR or types in: six digits.
+ * Six digits are about 20 bits, which anyone could try in full offline, so a typed code is never checked against anything a watcher can record. It is the password of a password-authenticated key exchange (`pake`), where each wrong guess takes a whole run against the Server and is counted against its source (ADR-0045).
  */
-export const pairingTicketLength = 10;
+export const pairingTicketLength = 6;
 
-// Crockford's base32: no I, L, O or U, so nothing in a code can be mistaken for another character when it is read aloud or retyped.
-export const pairingTicketAlphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+export const pairingTicketAlphabet = '0123456789';
 
 const groupLength = pairingTicketLength / 2;
 
-// The Ticket as it is drawn for reading aloud: two groups of five.
+// The Ticket as it is drawn for reading aloud: two groups of three.
 export const formatPairingTicket = (ticket: string): string =>
   `${ticket.slice(0, groupLength)}-${ticket.slice(groupLength)}`;
 
-const ticketPattern = new RegExp(
-  `^[${pairingTicketAlphabet}]{${pairingTicketLength}}$`,
-);
+const ticketPattern = new RegExp(`^[0-9]{${pairingTicketLength}}$`);
 
-/*
- * What the owner typed, as a Ticket, or nothing when it cannot be one. Case, spaces, dashes and dots are free, and the letters Crockford folds into digits are folded, so a code read aloud and typed back loses nothing to the way it was said.
- */
+// What the owner typed, as a Ticket, or nothing when it cannot be one. Spaces, dashes and dots are free, so a code read aloud and typed back loses nothing to the way it was said.
 export function readTypedTicket(typed: string): string | undefined {
-  const ticket = typed
-    .toUpperCase()
-    .replaceAll(/[\s\-·.]/g, '')
-    .replaceAll('O', '0')
-    .replaceAll(/[IL]/g, '1');
+  const ticket = typed.replaceAll(/[\s\-·.]/g, '');
 
   return ticketPattern.test(ticket) ? ticket : undefined;
 }
