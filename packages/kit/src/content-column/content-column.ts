@@ -26,7 +26,7 @@ export type { ColumnClaim, ContentColumn, PartLayout };
 
 export { inColumn } from './column-style';
 
-export { fieldGroupColumnStyle } from './column-layout';
+export { fieldGroupColumnStyle } from './grouped-column-style';
 
 /*
  * Who keeps to a Screen's content column. A Screen part offers its column; a scroll view or grouped cards claim it and
