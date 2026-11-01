@@ -11,6 +11,7 @@ import {
   transitionKeyOf,
 } from '../utils/frame-timing';
 import { type BandLeading, useBandLeading } from './band-leading';
+import { listWidthForText } from './frame-layout-measures';
 import {
   type FrameLayout,
   type FrameMeasures,
@@ -86,9 +87,12 @@ function useFrameMeasures(bandLeading: BandLeading): FrameMeasures {
 }
 
 function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
-  const [preferredListWidth, setPreferredListWidth] = useState(
-    measures.listWidth,
-  );
+  // Until the person drags the list, it is as wide as the text size asks; the text size is read live, not at mount.
+  const [draggedListWidth, setPreferredListWidth] = useState<number>();
+  const fontScale = useWindowDimensions().fontScale;
+
+  const preferredListWidth =
+    draggedListWidth ?? listWidthForText(measures.listWidth, fontScale);
 
   const [preferredInspectorWidth, setPreferredInspectorWidth] = useState(
     measures.inspectorWidth,
