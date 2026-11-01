@@ -8,6 +8,7 @@ export {
 
 export {
   ServerConnectionsContext,
+  type OpenServerConnection,
   type ServerConnections,
   useServerConnections,
 } from './server-connections';

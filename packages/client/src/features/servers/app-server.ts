@@ -1,4 +1,8 @@
-import type { ConnectionState, KnownServer } from '#features/connection';
+import type {
+  ConnectionState,
+  KnownServer,
+  PairedEndpoint,
+} from '#features/connection';
 import {
   ownServerId,
   ownServerName,
@@ -11,8 +15,10 @@ import {
  * entry and false on the entry for another computer's.
  */
 export interface AppServer extends ServerScope {
-  // Where the Connection opens; absent for a paired Server whose address this Device has not learned yet.
+  // Where the Server on this Device answers; a paired Server has none, since nothing is ever opened to it by URL.
   url?: string;
+  // Where a paired Server's channel opens; absent for a Server whose address this Device has not learned yet.
+  channel?: PairedEndpoint;
 }
 
 // What the list says of one Server. There is no offline copy: unreachable is a drawn state (ADR-0045).
@@ -25,18 +31,16 @@ export const ownAppServer = (url: string): AppServer => ({
   url,
 });
 
-// An IPv6 address needs brackets in a URL; a name or an IPv4 address is written as it is kept.
-const hostInUrl = (host: string): string =>
-  host.includes(':') ? `[${host}]` : host;
-
 // A Server this Device paired with. Its address is a fallback only, and the discovery name is what is re-resolved.
 export const pairedAppServer = (known: KnownServer): AppServer => ({
   id: known.key,
   name: known.name,
   serverDevice: false,
-  url:
-    known.address &&
-    `ws://${hostInUrl(known.address.host)}:${known.address.port}`,
+  channel: known.address && {
+    host: known.address.host,
+    port: known.address.port,
+    serverPublicKey: known.key,
+  },
 });
 
 // A Connection still trying reads as connecting; one that has given up is what the owner reads as unreachable.

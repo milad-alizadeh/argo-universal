@@ -26,8 +26,8 @@ function watching(connections: ReadonlyMap<string, TestConnection>): Watched {
 
 describe("each Server's own state", () => {
   it('is read from that Server alone, so one unreachable Server says nothing about the next', () => {
-    const own = testConnection(testServerUrl('this-device.local'));
-    const studio = testConnection(testServerUrl('studio.local'));
+    const own = testConnection({ url: testServerUrl('this-device.local') });
+    const studio = testConnection({ url: testServerUrl('studio.local') });
 
     const { states, changed, stop } = watching(
       new Map([
@@ -46,7 +46,9 @@ describe("each Server's own state", () => {
 
   it('is absent for a Server no Connection was opened to, which reads as unreachable', () => {
     const { states, stop } = watching(
-      new Map([[ownId, testConnection(testServerUrl('this-device.local'))]]),
+      new Map([
+        [ownId, testConnection({ url: testServerUrl('this-device.local') })],
+      ]),
     );
 
     expect(states.getSnapshot().get('bench-key')).toBeUndefined();

@@ -43,9 +43,9 @@ async function nameReachedAt(location: ServerLocation): Promise<string> {
   // Node writes no Origin, so the App stands in for its own page, which is what proves the Server Device (#1696).
   vi.stubGlobal('WebSocket', AppPageSocket);
 
-  const { client, close } = openConnection(
-    `ws://${location.hosts[0]}:${location.port}`,
-  );
+  const { client, close } = openConnection({
+    url: `ws://${location.hosts[0]}:${location.port}`,
+  });
 
   closers.push(close);
 

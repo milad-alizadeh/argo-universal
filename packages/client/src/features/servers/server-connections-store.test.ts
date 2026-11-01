@@ -25,11 +25,15 @@ function holding(servers: readonly AppServer[]): Opened {
   };
 }
 
+const studioHost = 'studio.local';
+
 const ownUrl = testServerUrl('this-device.local');
 
-const studioUrl = testServerUrl('studio.local');
+const studioUrl = testServerUrl(studioHost);
 
 const ownId = 'server-device';
+
+const studioId = 'studio-key';
 
 const own: AppServer = {
   id: ownId,
@@ -39,7 +43,7 @@ const own: AppServer = {
 };
 
 const studio: AppServer = {
-  id: 'studio-key',
+  id: studioId,
   name: 'Studio',
   serverDevice: false,
   url: studioUrl,
@@ -56,14 +60,30 @@ describe("the App's Connections", () => {
   it('holds one to each Server it has an address for', () => {
     const { store, held } = holding([own, studio]);
 
-    expect([...store.getSnapshot().keys()]).toEqual([
-      'server-device',
-      'studio-key',
-    ]);
+    expect([...store.getSnapshot().keys()]).toEqual([ownId, studioId]);
     expect(held().map((connection) => connection.url)).toEqual([
       ownUrl,
       studioUrl,
     ]);
+  });
+
+  it('opens a paired Server on its channel, and opens it again when it moves', () => {
+    const channel = {
+      host: studioHost,
+      port: 4000,
+      serverPublicKey: studioId,
+    };
+
+    const paired: AppServer = { ...studio, url: undefined, channel };
+
+    const { store, open, held } = holding([paired]);
+    const first = held()[0];
+
+    store.hold([{ ...paired, channel: { ...channel, port: 4100 } }]);
+
+    expect(open).toHaveBeenNthCalledWith(1, channel);
+    expect(first?.closed()).toBe(true);
+    expect(held()).toHaveLength(1);
   });
 
   it('holds none to a Server it has no address for', () => {
