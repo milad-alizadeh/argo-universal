@@ -34,3 +34,21 @@ export const RefusedLeadsToSettings: Story = {
     await expect(args.onOpenSettings).toHaveBeenCalledOnce();
   },
 };
+
+export const EnterCodeInsteadOpensTheTypedPage: Story = {
+  args: { onEnterCode: fn() },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Enter code instead' }),
+    );
+    await expect(args.onEnterCode).toHaveBeenCalledOnce();
+  },
+};
+
+export const NoEnterCodeButtonWithoutTheWay: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.queryByRole('button', { name: 'Enter code instead' }),
+    ).toBeNull();
+  },
+};

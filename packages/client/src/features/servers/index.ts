@@ -29,10 +29,8 @@ export {
   type ServersStore,
 } from './servers-store';
 
-export {
-  type PairPhase,
-  type PairServer,
-  usePairServer,
-} from './pairing/use-pair-server';
+export type { PairPhase } from './pairing/pair-hook';
+
+export { type PairServer, usePairServer } from './pairing/use-pair-server';
 
 export type { PairFailure } from './pairing/pair-with-invite';

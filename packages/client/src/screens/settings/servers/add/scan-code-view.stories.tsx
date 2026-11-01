@@ -28,3 +28,8 @@ export const CameraRefused: Story = { args: { access: 'refused' } };
 export const CameraOn: Story = {
   args: { access: 'allowed', camera: cameraFixture },
 };
+
+// A phone can type the code instead; the button sits at the foot, as in the approved Scanning design.
+export const CanEnterCodeInstead: Story = {
+  args: { access: 'allowed', camera: cameraFixture, onEnterCode: fn() },
+};

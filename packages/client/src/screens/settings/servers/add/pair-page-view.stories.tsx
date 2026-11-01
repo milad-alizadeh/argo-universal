@@ -35,3 +35,12 @@ export const Declined: Story = { args: { kind: 'declined' } };
 export const Unanswered: Story = { args: { kind: 'unanswered' } };
 
 export const ServerNotFound: Story = { args: { kind: 'not-found' } };
+
+// A code that was typed names no camera: the way on is a new code to type.
+export const TypedCodeExpired: Story = {
+  args: { kind: 'expired', way: 'type' },
+};
+
+export const TypedServerNotFound: Story = {
+  args: { kind: 'not-found', way: 'type' },
+};
