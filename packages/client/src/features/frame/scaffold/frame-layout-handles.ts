@@ -1,5 +1,5 @@
 import type { PaneSpan } from '../utils/pane-shift';
-import { contentFloor, railZone } from './frame-layout-measures';
+import { contentFloor, listMaximum, railZone } from './frame-layout-measures';
 import { inspectorLimit } from './frame-layout-trailing';
 import type {
   FrameLayout,
@@ -8,8 +8,6 @@ import type {
   ResizeHandle,
   ResizeOutcome,
 } from './frame-layout-types';
-
-const listMaximum = 460;
 
 interface PlacedPanes {
   list: PaneSpan;

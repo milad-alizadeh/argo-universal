@@ -16,6 +16,7 @@ import {
   type FrameMeasures,
   frameLayout,
 } from './frame-layout';
+import { listWidthForText } from './frame-layout-measures';
 import { isFramed } from './is-framed';
 import type { ScaffoldProps } from './scaffold-props';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
@@ -86,9 +87,11 @@ function useFrameMeasures(bandLeading: BandLeading): FrameMeasures {
 }
 
 function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
-  const [preferredListWidth, setPreferredListWidth] = useState(
-    measures.listWidth,
-  );
+  const [draggedListWidth, setPreferredListWidth] = useState<number>();
+  const fontScale = useWindowDimensions().fontScale;
+
+  const preferredListWidth =
+    draggedListWidth ?? listWidthForText(measures.listWidth, fontScale);
 
   const [preferredInspectorWidth, setPreferredInspectorWidth] = useState(
     measures.inspectorWidth,
