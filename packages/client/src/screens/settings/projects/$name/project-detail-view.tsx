@@ -26,7 +26,7 @@ export interface ProjectDetailViewProps {
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
   onBack?: () => void;
-  // What Plugins add to this Project (the `argo/project/details/v1` Slot), one titled section each between Accounts and New Sessions.
+  // What Plugins add to this Project (the `argo/project/details/v1` Slot), one titled section each, after Argo's own Folder, Accounts and New Sessions (ADR-0046).
   pluginItems?: readonly ReadItem<ProjectDetailsItem>[];
   // Opens the Plugin page a row drills into (ADR-0046); a row with no action never calls it.
   onOpenPluginPage?: OpenPluginPage;
@@ -51,7 +51,7 @@ type SectionsProps = Pick<
   project: ProjectInfo;
 };
 
-// One Project: its folder, its Accounts, what Plugins add, where its new Sessions start, and Remove.
+// One Project: its folder, its Accounts, where its new Sessions start, what Plugins add, and Remove.
 export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
@@ -97,8 +97,8 @@ function ProjectSections(props: SectionsProps): React.JSX.Element {
     <FieldGroup>
       {folderSection(project, otherDevice)}
       {accountsSection(accounts)}
-      {pluginSections(pluginItems, props.onOpenPluginPage)}
       {newSessionsSections(project)}
+      {pluginSections(pluginItems, props.onOpenPluginPage)}
       {removeSection()}
     </FieldGroup>
   );

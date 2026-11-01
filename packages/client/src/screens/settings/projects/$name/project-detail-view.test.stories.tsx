@@ -134,7 +134,7 @@ export const SaysWhenTheProjectIsMissing: Story = {
   },
 };
 
-// ADR-0035: each Plugin in the Project details Slot is a section of its own, a card beside Folder's, in the Server's order.
+// ADR-0035, ADR-0046: each Plugin in the Project details Slot is a section of its own, a card beside Folder's, in the Server's order and after Argo's own Folder, Accounts and New Sessions.
 export const EachPluginIsASectionOfItsOwn: Story = {
   args: { pluginItems },
   play: async ({ canvas }) => {
@@ -142,7 +142,7 @@ export const EachPluginIsASectionOfItsOwn: Story = {
     const exampleTitle = await canvas.findByText('Example');
     const trackerTitle = await trackerSectionTitle(canvas);
     const newSessionsTitle = await canvas.findByText('New Sessions');
-    const titles = [folderTitle, exampleTitle, trackerTitle, newSessionsTitle];
+    const titles = [folderTitle, newSessionsTitle, exampleTitle, trackerTitle];
     const folder = sectionOf(folderTitle, titles);
     const example = sectionOf(exampleTitle, titles);
     const tracker = sectionOf(trackerTitle, titles);
@@ -152,7 +152,7 @@ export const EachPluginIsASectionOfItsOwn: Story = {
     await expect(example.parentElement).toBe(folder.parentElement);
     await expect(tracker.parentElement).toBe(folder.parentElement);
 
-    const order = [folder, example, tracker, newSessions].map((section) =>
+    const order = [folder, newSessions, example, tracker].map((section) =>
       Array.prototype.indexOf.call(folder.parentElement?.children, section),
     );
 
