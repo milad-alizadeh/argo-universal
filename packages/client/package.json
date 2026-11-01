@@ -33,6 +33,7 @@
     "@xterm/xterm": "catalog:",
     "diff": "catalog:",
     "expo": "catalog:",
+    "expo-camera": "catalog:",
     "expo-clipboard": "catalog:",
     "expo-crypto": "catalog:",
     "expo-document-picker": "catalog:",

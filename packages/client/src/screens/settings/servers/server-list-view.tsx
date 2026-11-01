@@ -13,6 +13,8 @@ export interface ServerListViewProps {
   // The id of the Server the App is showing.
   lookingAt: string;
   onLookAt: (id: string) => void;
+  // The last row, which opens Add a Server. Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
+  onAddServer?: () => void;
 }
 
 /*
@@ -40,9 +42,23 @@ function ServerSection(props: ServerListViewProps): React.JSX.Element {
         options={serverOptions(props.servers)}
         onValueChange={(id) => look(props, id)}
       />
+      {props.onAddServer && <AddServerRow onPress={props.onAddServer} />}
     </FieldGroup.Section>
   );
 }
+
+const AddServerRow = ({
+  onPress,
+}: {
+  onPress: () => void;
+}): React.JSX.Element => (
+  <FieldGroup.Link
+    title="Add a Server"
+    leading={{ sf: 'plus', material: 'add' }}
+    action
+    onPress={onPress}
+  />
+);
 
 // The picker reports the row pressed, the shown one included; looking at the Server already shown is no change.
 function look(props: ServerListViewProps, id: string): void {

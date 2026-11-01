@@ -1,6 +1,8 @@
+import type { KnownServer } from '#features/connection';
 import { ownServerId } from '#lib/product/server-scope';
 import { type AppServer, ownAppServer, pairedAppServer } from './app-server';
 import {
+  keepKnownServer,
   keepLookedAtServer,
   loadKnownServers,
   loadLookedAtServer,
@@ -20,6 +22,8 @@ export interface ServersStore {
   getSnapshot: () => ServersSnapshot;
   // Shows another Server's Sessions. An id the App cannot show is ignored.
   look: (id: string) => void;
+  // Lists a Server this Device has just paired with, keeps it, and shows it; its Connection opens at once.
+  add: (server: KnownServer) => void;
 }
 
 /*
@@ -58,6 +62,19 @@ class AppServersStore implements ServersStore {
 
     this.set({ ...this.snapshot, lookingAt: id });
     keepLookedAtServer(id);
+  };
+
+  public readonly add = (known: KnownServer): void => {
+    const added = pairedAppServer(known);
+    const others = this.snapshot.servers.filter(({ id }) => id !== added.id);
+
+    this.set({
+      servers: [...others, added],
+      lookingAt: added.id,
+      read: true,
+    });
+    keepLookedAtServer(added.id);
+    void keepKnownServer(known);
   };
 
   private set(next: ServersSnapshot): void {

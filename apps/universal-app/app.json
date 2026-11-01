@@ -41,6 +41,13 @@
       "expo-router",
       "expo-dev-client",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Argo uses the camera to read the code on your computer.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

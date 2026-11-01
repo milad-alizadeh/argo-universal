@@ -28,3 +28,11 @@ export {
   type ServersSnapshot,
   type ServersStore,
 } from './servers-store';
+
+export {
+  type PairPhase,
+  type PairServer,
+  usePairServer,
+} from './pairing/use-pair-server';
+
+export type { PairFailure } from './pairing/pair-with-invite';

@@ -43,7 +43,7 @@ export const appChannelPlatform: ChannelPlatform = {
     }),
   randomBytes: getRandomBytes,
   deviceKey: loadDeviceKey,
-  // After pairing a Device says only what it is; the ticket belongs to the one Connection that spends it (#1496).
+  // A Device says only what it is; the Ticket belongs to the one Connection that spends it.
   claim: () => ({
     name: Platform.OS === 'ios' ? 'iPhone' : 'Android phone',
     platform: Platform.OS === 'ios' ? 'ios' : 'android',

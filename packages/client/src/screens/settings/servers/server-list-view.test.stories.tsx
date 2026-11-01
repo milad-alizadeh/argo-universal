@@ -18,6 +18,7 @@ const meta = {
     servers: severalServers,
     lookingAt: ownServerId,
     onLookAt: fn(),
+    onAddServer: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof ServerListView>;
@@ -69,5 +70,20 @@ export const TheShownServersRowIsTheChosenOne: Story = {
     await expect(
       canvas.getByRole('radio', { name: ownRow, checked: false }),
     ).toBeVisible();
+  },
+};
+
+export const AddAServerIsTheLastRow: Story = {
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Add a Server' }));
+    await expect(args.onAddServer).toHaveBeenCalledOnce();
+    await expect(args.onLookAt).not.toHaveBeenCalled();
+  },
+};
+
+export const NoAddRowWhereAnAppCannotPair: Story = {
+  args: { onAddServer: undefined },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText('Add a Server')).toBeNull();
   },
 };

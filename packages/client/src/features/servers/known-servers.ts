@@ -95,14 +95,38 @@ function loadFailed(cause: unknown): null {
   return null;
 }
 
-/*
- * Pairing writes this list; the App only reads it. A Server paired while the App is running is therefore absent until
- * the list is read again, which #1496 owns along with the write.
- */
 export function keepLookedAtServer(id: string): void {
   writes = writes
     .then(() => AsyncStorage.setItem(lookingAtKey, id))
     .catch(keepFailed);
+}
+
+/*
+ * Writes a Server that has just paired: its key, its discovery name and the address it answered on (ADR-0045). A Server paired again replaces its own entry, so a new address or name never lists it twice.
+ * Entries this file cannot read are kept as they are, so one bad entry never costs the Servers beside it.
+ */
+export function keepKnownServer(server: KnownServer): Promise<void> {
+  writes = writes.then(() => writeServer(server)).catch(keepFailed);
+
+  return writes;
+}
+
+async function writeServer(server: KnownServer): Promise<void> {
+  const kept = await AsyncStorage.getItem(serversKey);
+
+  const entries = keptEntries(kept).filter(
+    (entry) => Kept.safeParse(entry).data?.key !== server.key,
+  );
+
+  await AsyncStorage.setItem(serversKey, JSON.stringify([...entries, server]));
+}
+
+function keptEntries(saved: string | null): unknown[] {
+  try {
+    return saved === null ? [] : KeptServers.parse(JSON.parse(saved));
+  } catch {
+    return [];
+  }
 }
 
 function keepFailed(cause: unknown): void {

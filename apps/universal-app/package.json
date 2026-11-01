@@ -33,6 +33,7 @@
     "expo-asset": "catalog:",
     "expo-audio": "catalog:",
     "expo-build-properties": "catalog:",
+    "expo-camera": "catalog:",
     "expo-clipboard": "catalog:",
     "expo-constants": "catalog:",
     "expo-crypto": "catalog:",

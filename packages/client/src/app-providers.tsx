@@ -52,7 +52,9 @@ function AppServers({ store, ...props }: AppServersProps): React.JSX.Element {
   const connections = useServerConnections(servers.servers, props.openServer);
 
   return (
-    <ServersContext.Provider value={{ ...servers, look: store.look }}>
+    <ServersContext.Provider
+      value={{ ...servers, look: store.look, add: store.add }}
+    >
       <ServerConnectionsContext.Provider value={connections}>
         {servers.read
           ? lookedAtServer({ servers, connections, ...props })
