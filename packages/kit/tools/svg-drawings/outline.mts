@@ -54,10 +54,10 @@ export const drawingFile = (name: string): URL =>
     ? new URL('assets/file-diff.xml', symbolsDirectory)
     : new URL(`assets/svg-drawings/${name}.xml`, symbolsDirectory);
 
-const places = 100;
+const roundingFactor = 100;
 
 const roundNumber = (number: string): string =>
-  String(Math.round(Number(number) * places) / places);
+  String(Math.round(Number(number) * roundingFactor) / roundingFactor);
 
 const rounded = (outline: string): string =>
   outline
@@ -85,7 +85,7 @@ export async function componentPaths(name: string): Promise<string[]> {
   return [...source.matchAll(/<Path d="([^"]*)"/gu)].map(([, d]) => d ?? '');
 }
 
-function parsed(kit: CanvasKit, d: string): SourcePath {
+function readPath(kit: CanvasKit, d: string): SourcePath {
   const path = kit.Path.MakeFromSVGString(d);
 
   if (!path) throw new Error(`Cannot read the path ${d}`);
@@ -95,8 +95,16 @@ function parsed(kit: CanvasKit, d: string): SourcePath {
 
 // One path widened to the outline of a 2-point round stroke.
 function widen(kit: CanvasKit, d: string): string {
-  const path = parsed(kit, d);
+  const path = readPath(kit, d);
 
+  try {
+    return rounded(strokedSvg(kit, path, d));
+  } finally {
+    path.delete();
+  }
+}
+
+function strokedSvg(kit: CanvasKit, path: SourcePath, d: string): string {
   const widened = path.makeStroked({
     width: 2,
     cap: kit.StrokeCap.Round,
@@ -105,18 +113,24 @@ function widen(kit: CanvasKit, d: string): string {
 
   if (!widened) throw new Error(`Cannot outline the path ${d}`);
 
-  const svg = widened.toSVGString();
-
-  path.delete();
-  widened.delete();
-
-  return rounded(svg);
+  try {
+    return widened.toSVGString();
+  } finally {
+    widened.delete();
+  }
 }
 
 export async function outlineOf(paths: string[]): Promise<string> {
   const kit = await canvasKit();
 
   return paths.map((d) => widen(kit, d)).join('');
+}
+
+// The outline a drawing file fills, or undefined when the file has none.
+export async function drawnOutline(name: string): Promise<string | undefined> {
+  const xml = await readFile(drawingFile(name), 'utf8');
+
+  return /android:pathData="([^"]+)"/u.exec(xml)?.[1];
 }
 
 export const drawingXml = (

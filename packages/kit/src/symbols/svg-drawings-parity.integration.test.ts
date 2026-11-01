@@ -1,37 +1,29 @@
-import { readFile } from 'node:fs/promises';
+import { readdirSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import {
   componentNames,
   componentPaths,
-  drawingFile,
+  drawnOutline,
   outlineOf,
 } from '../../tools/svg-drawings/outline.mts';
 
-const drawnPaths = async (name: string): Promise<string | undefined> =>
-  /android:pathData="([^"]+)"/u.exec(
-    await readFile(drawingFile(name), 'utf8'),
-  )?.[1];
+const names = await componentNames();
 
-test('every SVG icon has an Android drawing', async () => {
-  const names = await componentNames();
+test.each(names)(
+  '%s has a drawing that fills the outline its component strokes',
+  async (name) => {
+    expect(await drawnOutline(name)).toBe(
+      await outlineOf(await componentPaths(name)),
+    );
+  },
+);
 
-  expect(names.length).toBeGreaterThan(0);
+test('every drawing but file-diff belongs to an SVG icon', () => {
+  const drawings = readdirSync(
+    new URL('assets/svg-drawings/', import.meta.url),
+  ).map((file) => file.replace(/\.xml$/u, ''));
 
-  const drawings = await Promise.all(names.map(drawnPaths));
-
-  expect(drawings.map((drawing) => drawing !== undefined)).toEqual(
-    names.map(() => true),
+  expect(drawings.toSorted()).toEqual(
+    names.filter((name) => name !== 'file-diff'),
   );
-});
-
-test('each drawing fills the outline its component strokes', async () => {
-  const names = await componentNames();
-
-  const drawn = await Promise.all(names.map(drawnPaths));
-
-  const expected = await Promise.all(
-    names.map(async (name) => outlineOf(await componentPaths(name))),
-  );
-
-  expect(drawn).toEqual(expected);
 });
