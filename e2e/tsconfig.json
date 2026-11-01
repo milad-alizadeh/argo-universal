@@ -2,6 +2,8 @@
   "extends": "@repo/typescript/node.json",
   // The fixtures import the mock CLIs, whose relative imports end in `.ts`.
   "compilerOptions": {
+    // The Engine's router types pull in React's DOM globals, so the DOM lib is on and a page callback narrows its element.
+    "lib": ["es2025", "DOM"],
     "allowImportingTsExtensions": true
   },
   "include": ["**/*.ts"],
