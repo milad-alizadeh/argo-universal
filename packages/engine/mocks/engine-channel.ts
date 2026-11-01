@@ -7,6 +7,7 @@ import {
   type ChannelInput,
   type OpenedChannel,
 } from '../src/pairing/connect-channel';
+import { requestServerKey } from '../src/pairing/request-server-key';
 import { generateKeypair, type Keypair } from '../src/pairing/x25519';
 import { callerOverChannel, getOverChannel } from './channel-fetch';
 
@@ -167,3 +168,34 @@ export async function readAsDevice(
 
   return answered(host, options, getOverChannel(input, options.path));
 }
+
+/*
+ * A Device that was typed the Ticket's code rather than shown the QR: it asks the Server for its key with the code, then spends the same Ticket in the same handshake as a scanned one (ADR-0045).
+ * The key it was given is the one it pairs with, so a Server that is not the one the code belongs to gets nowhere.
+ */
+export async function connectWithTypedCode(
+  host: ChannelTestHost,
+  options: TestDeviceOptions & { ticket: string; typed?: string },
+): Promise<TestDevice> {
+  const address = {
+    host: options.host ?? '127.0.0.1',
+    port: Number(new URL(host.url).port),
+  };
+
+  const serverPublicKey = await requestServerKey(
+    address,
+    options.typed ?? options.ticket,
+  );
+
+  return connectAsDevice(host, { ...options, serverPublicKey });
+}
+
+// What a Device asks the Server for with a typed code, and nothing more: the key, or the Server's refusal.
+export const askForServerKey = (
+  host: ChannelTestHost,
+  typed: string,
+): Promise<string> =>
+  requestServerKey(
+    { host: '127.0.0.1', port: Number(new URL(host.url).port) },
+    typed,
+  );

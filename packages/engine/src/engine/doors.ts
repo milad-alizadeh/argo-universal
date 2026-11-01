@@ -1,6 +1,7 @@
 import { createServer, type Server as RequestServer } from 'node:http';
 import type { Server } from 'node:net';
 import { ChannelDoor } from '../pairing/channel-door';
+import { KeyDoor } from '../pairing/key-door';
 import { createFrontDoor } from './front-door';
 import type { RoutedSetup } from './http-server';
 import type { RequestGuard } from './request-guard';
@@ -14,19 +15,29 @@ export interface Doors {
   readonly requests: RequestServer;
 }
 
-// The Server's two doors: the channel for a paired Device, and plain HTTP for this computer's own App (ADR-0045).
+// The Server's doors: the channel for a paired Device, the key a typed code asks for, and plain HTTP for this computer's own App (ADR-0045).
 export function createDoors(setup: RoutedSetup, guard: RequestGuard): Doors {
   const requests = createServer(createRequestListener(listening(setup, guard)));
-
   const { report } = guard;
-  const channel = channelDoor(setup, requests, report);
-  const unproven = new SocketGuard({ report });
 
   return {
     requests,
-    frontDoor: createFrontDoor({ requests, channel, unproven, report }),
+    frontDoor: createFrontDoor({
+      requests,
+      channel: channelDoor(setup, requests, report),
+      key: keyDoor(setup, report),
+      unproven: new SocketGuard({ report }),
+      report,
+    }),
   };
 }
+
+const keyDoor = (setup: RoutedSetup, report: RequestGuard['report']): KeyDoor =>
+  new KeyDoor({
+    publicKey: setup.staticKey.publicKey,
+    offer: (source, holds) => setup.tickets.offer(source, holds),
+    report,
+  });
 
 const channelDoor = (
   setup: RoutedSetup,

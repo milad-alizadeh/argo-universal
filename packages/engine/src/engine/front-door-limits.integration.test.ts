@@ -38,6 +38,7 @@ async function stalledDoor(limits: {
   const door = createFrontDoor({
     requests: createRequests(),
     channel: { accept: (): void => {} },
+    key: { accept: (): void => {} },
     unproven: new SocketGuard({ report, ...limits }),
     report,
   });
