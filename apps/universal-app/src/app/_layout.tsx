@@ -23,6 +23,7 @@ import { watchFontScale } from '@/lib/font-scale-watch';
 import { holdPhonesInPortrait } from '@/lib/phone-orientation';
 import { useNavigationTheme } from '@/lib/theme';
 import { useWindowBackground } from '@/lib/window-background';
+import { pushedScreen, rootScreenLayout } from '@/navigation/section-stack';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -113,9 +114,12 @@ function RootNavigator(): React.JSX.Element {
 // Storybook stays outside the Frame.
 function RootStack(): React.JSX.Element {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{ headerShown: false }}
+      screenLayout={rootScreenLayout}
+    >
       <Stack.Screen name="(frame)" />
-      <Stack.Screen name="screen" />
+      <Stack.Screen {...pushedScreen} />
       <Stack.Screen
         name="(dev)/storybook"
         options={{ fullScreenGestureEnabled: false }}
