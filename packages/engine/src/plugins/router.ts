@@ -8,7 +8,6 @@ import {
 } from '@repo/contracts/plugins/replaceable';
 import {
   PluginDispatchInput,
-  PluginSlotInput,
   PluginViewInput,
   SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
@@ -87,9 +86,6 @@ const createViewsRouter = routerFactory((plugins: PluginService) =>
     view: publicProcedure
       .input(PluginViewInput)
       .subscription((call) => plugins.view(call.input, connectionOf(call))),
-    slot: publicProcedure
-      .input(PluginSlotInput)
-      .subscription((call) => plugins.slot(call.input, connectionOf(call))),
     render: publicProcedure
       .input(ReplaceableInput)
       .subscription((call) => plugins.render(call.input, connectionOf(call))),

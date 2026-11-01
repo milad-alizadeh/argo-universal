@@ -7,7 +7,6 @@ import {
   type PluginSettingValue,
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
-import { slotPath, type PluginSlotInput } from '@repo/contracts/plugins/wire';
 import {
   PluginService,
   PluginStorage,
@@ -132,13 +131,6 @@ class HostedPlugin implements PluginTest {
     projectId?: string,
   ): PluginTestView {
     return this.open({ path, projectId }, pluginId);
-  }
-
-  public slot(
-    slot: PluginSlotInput,
-    pluginId = this.options.pluginId,
-  ): PluginTestView {
-    return this.open({ path: slotPath(slot), slot }, pluginId);
   }
 
   public readonly slotItems: PluginTest['slotItems'] = (input, options) =>

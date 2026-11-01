@@ -1,5 +1,6 @@
 import {
   itemsSlot,
+  withContexts,
   type AnyItemsSlot,
   type ItemsContext,
   type ItemsSlotItem,
@@ -134,12 +135,11 @@ const missingOf = (
   entry: AnyItemsSlot,
   kept: Kept,
   input: SlotItemsInput,
-): SlotItemsInput => ({
-  ...input,
-  contexts: input.contexts.filter(
-    (context) => !kept.has(contextKey(entry, context)),
-  ),
-});
+): SlotItemsInput =>
+  withContexts(
+    input,
+    input.contexts.filter((context) => !kept.has(contextKey(entry, context))),
+  );
 
 function remember(
   worker: SlotWorker,

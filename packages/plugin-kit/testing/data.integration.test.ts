@@ -3,23 +3,15 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { dataFixture, dataPage, processPage } from '../mocks/data-fixture';
 
-const projectSlot = 'argo/project/details/v1';
-
-it('shares a process Query between two Slots in one Project', async () => {
+it('shares a process Query between two pages of one Project', async () => {
   const fixture = await dataFixture(processPage);
   const kit = await fixture.start();
 
-  const first = kit.slot({
-    slotId: projectSlot,
-    context: { projectId: 'one' },
-  });
+  const first = kit.page('/', undefined, 'one');
 
   await first.find('1');
 
-  const second = kit.slot({
-    slotId: projectSlot,
-    context: { projectId: 'one' },
-  });
+  const second = kit.page('/', undefined, 'one');
 
   await second.find('1');
   expect(await fixture.requests()).toHaveLength(1);
@@ -66,17 +58,11 @@ it('separates Projects and runs the Query in each declaring Project folder', asy
   await mkdir(two);
   const kit = await fixture.start({ projectPaths: { one, two } });
 
-  const first = kit.slot({
-    slotId: projectSlot,
-    context: { projectId: 'one' },
-  });
+  const first = kit.page('/', undefined, 'one');
 
   await first.find('1');
 
-  const second = kit.slot({
-    slotId: projectSlot,
-    context: { projectId: 'two' },
-  });
+  const second = kit.page('/', undefined, 'two');
 
   await second.find('2');
   expect(

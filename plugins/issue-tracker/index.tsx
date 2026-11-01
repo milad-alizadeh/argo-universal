@@ -1,15 +1,21 @@
-import type { Argo } from '@argo/plugin-kit';
+import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
 import { createIssuePages } from './issue-pages';
 import { IssuesRoot } from './issue-root';
-import { ProjectDetails, type ProjectDetailsProps } from './project-details';
+import {
+  ProjectDetails,
+  projectDetailsItems,
+  trackerPath,
+} from './project-details';
 import { createTrackerRegistry } from './tracker-registry';
 import { createTrackerStorage } from './tracker-storage';
 
-type SlotProps = Pick<ProjectDetailsProps, 'context'>;
+const projectDetails = 'argo/project/details/v1';
+
+type TrackerPage = (props: { context: PluginRenderContext }) => JSX.Element;
 
 function createDeps(api: Argo): IssueDeps {
   const trackers = createTrackerRegistry(api);
@@ -25,21 +31,35 @@ function createDeps(api: Argo): IssueDeps {
   return { ...shared, pages: createIssuePages(api, shared) };
 }
 
+/*
+ * The Tracker choice page: it draws for the Project its view opened for, which is the Project whose details row
+ * drilled into it (ADR-0046), and tells Argo the row's value changed once a choice is saved.
+ */
+function trackerPage(api: Argo, deps: IssueDeps): TrackerPage {
+  const { storage, trackers } = deps;
+
+  return ({ context }) => (
+    <ProjectDetails
+      context={context}
+      storage={storage}
+      trackers={trackers}
+      changed={() => api.slots.changed(projectDetails)}
+    />
+  );
+}
+
 export function register(api: Argo): void {
   const deps = createDeps(api);
-  const { storage, trackers } = deps;
 
   function IssuesPage(): JSX.Element {
     return <IssuesRoot deps={deps} />;
   }
 
-  function ProjectDetailsSlot(props: SlotProps): JSX.Element {
-    return (
-      <ProjectDetails {...props} storage={storage} trackers={trackers.list()} />
-    );
-  }
-
-  registerIssueOperations(api, { storage });
+  registerIssueOperations(api, { storage: deps.storage });
   api.pages.register('/', IssuesPage);
-  api.slots.register('argo/project/details/v1', ProjectDetailsSlot);
+  api.pages.register(trackerPath, trackerPage(api, deps));
+
+  api.slots.register(projectDetails, (request) =>
+    projectDetailsItems(deps, request),
+  );
 }

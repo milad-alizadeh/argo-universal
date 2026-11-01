@@ -1,9 +1,9 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { projectDetailsSlotId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { useProjects, useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { usePluginSlot } from '../../../plugins/use-plugin-slot';
+import { usePluginOpener } from '../../../plugins/use-plugin-opener';
+import { useProjectDetailsItems } from '../../../plugins/use-project-details';
 import {
   type ProjectDetailViewProps,
   type ProjectLoad,
@@ -61,20 +61,20 @@ export function ProjectDetailPane({
   );
 }
 
-// Watches the Slot only for a loaded Project, as the Server has no Project to answer for before then.
+type LoadedProps = { detail: ProjectDetailViewProps; projectId: string };
+
+// Asks the Slot only for a loaded Project, as the Server has no Project to answer for before then.
 function LoadedProjectDetail({
   detail,
   projectId,
-}: {
-  detail: ProjectDetailViewProps;
-  projectId: string;
-}): React.JSX.Element {
-  const pluginContributions = usePluginSlot({
-    slotId: projectDetailsSlotId,
-    context: { projectId },
-  });
+}: LoadedProps): React.JSX.Element {
+  const open = usePluginOpener();
 
   return (
-    <ProjectDetailView {...detail} pluginContributions={pluginContributions} />
+    <ProjectDetailView
+      {...detail}
+      pluginItems={useProjectDetailsItems(projectId)}
+      onOpenPluginPage={(pluginId, path) => open(pluginId, { projectId })(path)}
+    />
   );
 }

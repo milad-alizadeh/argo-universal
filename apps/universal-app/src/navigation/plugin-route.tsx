@@ -39,21 +39,20 @@ interface PluginRootProps {
   path: readonly string[];
   // The Session the page opened for, from the route's params.
   sessionId: string | undefined;
+  // The Project the page opened for, such as from a Project details row (ADR-0046).
+  projectId: string | undefined;
 }
 
 /*
  * A Plugin page with, at a narrow root, ☰ in its Screen's header, as a section root has. A ListDetail page puts its
  * list in the Frame's sidebar on a wide window.
  */
-export function PluginRoot({
-  path,
-  sessionId,
-}: PluginRootProps): React.JSX.Element {
+export function PluginRoot(props: PluginRootProps): React.JSX.Element {
   return (
-    <NarrowRoot root={useNarrowRoot(path)}>
+    <NarrowRoot root={useNarrowRoot(props.path)}>
       <SectionListDetail>
         <PluginRowDetails>
-          <PluginDetailScreen path={path} sessionId={sessionId} />
+          <PluginDetailScreen {...props} />
         </PluginRowDetails>
       </SectionListDetail>
     </NarrowRoot>

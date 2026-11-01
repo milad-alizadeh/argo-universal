@@ -27,12 +27,9 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
     expect.objectContaining({ kind: 'drawing', message: 'cannot draw' }),
   ]);
 
-  const slot = kit.slot({
-    slotId: 'argo/project/details/v1',
-    context: { projectId: 'one' },
-  });
+  const project = kit.page('/', undefined, 'one');
 
-  await slot.find('1');
+  await project.find('1');
   const prompt = [{ type: 'text', text: 'Hello' }];
   expect(
     await kit.emit('prompt.submit', {
@@ -45,7 +42,7 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
   await page.find('3');
   await kit.clock.advance(300000);
   await expect.poll(() => fixture.requests(), processWait).toHaveLength(4);
-  await slot.find('4');
+  await project.find('4');
   expect(broken.trees).toEqual([]);
   controller.abort();
   await failures.return([]);

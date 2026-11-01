@@ -1,33 +1,41 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
-import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
-import type { PluginSlotContribution } from '../../../../lib/product/plugin-registry';
+import type { ProjectInfo } from '@repo/contracts';
+import type { ProjectDetailsItem } from '@repo/contracts/plugins/wire';
+import { iconSymbols } from '@repo/kit/symbols/icon-names';
+import { worktreeProject } from '../../../../features/settings/components/settings-pages.mocks';
+import type { ReadItem } from '../../../plugins/slot-items';
 
-const row = (key: string, title: string): WireNode => ({
-  type: 'ListItem',
-  key,
-  props: { title },
-  children: [],
-  slots: {},
+const read = (
+  pluginId: string,
+  pluginName: string,
+  item: ProjectDetailsItem,
+): ReadItem<ProjectDetailsItem> => ({
+  pluginId,
+  pluginName,
+  pluginIcon: iconSymbols.plug,
+  item,
 });
 
-const trackerRoot: WireNode = {
-  type: 'List',
-  key: 'tracker',
-  props: {},
-  children: [row('none', 'None'), row('github', 'GitHub Issues')],
-  slots: {},
-};
-
-// Two Plugins that contribute to Project details, in the Server's order; a story adds the `onEvent` spy.
-export const pluginContributions: Omit<PluginSlotContribution, 'onEvent'>[] = [
-  {
-    pluginId: 'example',
-    name: 'Example',
-    root: slotCounterRoot,
-  },
-  {
-    pluginId: 'issue-tracker',
-    name: 'Issue tracker',
-    root: trackerRoot,
-  },
+/*
+ * What two Plugins answer for this Project (ADR-0046), in the Server's order: the first sends two rows, which the
+ * section separates as it does Argo's own, and the second one row naming the Tracker it opens a page to change.
+ */
+export const pluginItems: ReadItem<ProjectDetailsItem>[] = [
+  read('example', 'Example', {
+    title: 'Pull requests',
+    value: '3 open',
+    action: { path: '/pull-requests' },
+  }),
+  read('example', 'Example', { title: 'Last sync', value: '2 minutes ago' }),
+  read('issue-tracker', 'Issue tracker', {
+    title: 'Issue tracker',
+    value: 'GitHub Issues',
+    icon: { sf: 'smallcircle.circle', material: 'adjust' },
+    action: { path: '/tracker' },
+  }),
 ];
+
+// A Project whose folder path is as long as a deep checkout's.
+export const longPathProject: ProjectInfo = {
+  ...worktreeProject,
+  path: '/Users/milad/Developer/clients/acme-corporation/platform/services/billing-and-invoicing/checkout-worktree',
+};

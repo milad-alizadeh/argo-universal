@@ -23,6 +23,8 @@ interface PluginDetailScreenProps {
   path: readonly string[];
   // The Session the page opened for, such as from a Session header action.
   sessionId: string | undefined;
+  // The Project the page opened for, such as from a Project details row (ADR-0046).
+  projectId: string | undefined;
 }
 
 const unavailable = { title: 'This Plugin is not available' };
@@ -63,6 +65,7 @@ function PluginPage(props: PluginPageProps): React.JSX.Element {
     pluginId: section.pluginId,
     path: pluginPagePath(props.path),
     sessionId: props.sessionId,
+    projectId: props.projectId,
   });
 
   return (

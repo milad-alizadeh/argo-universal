@@ -8,24 +8,27 @@ export {
   mergedItems,
   replaceableSlots,
   slotSchemas,
-  PluginSlotInput,
   ReplaceableSlotId,
   SessionRowItem,
   SlotId,
   SlotItems,
   SlotItemsInput,
   itemsSlot,
+  ProjectDetailsItem,
+  projectDetailsRowLimit,
   projectDetailsSlotId,
   sessionActivitySlotId,
   SessionActivityItem,
   sessionBarSlotId,
   sessionRowSlotId,
   slotItemsListLimit,
-  slotPath,
   slotRegistry,
+  withContexts,
   type AnyItemsSlot,
   type ItemsContext,
   type ItemsSlotItem,
+  type SlotContextOf,
+  type SlotInputOf,
   type SlotLimit,
 } from '#plugin-wire-slot';
 
@@ -119,23 +122,6 @@ export {
   componentEventRules,
   type ComponentEventRules,
 } from '#plugin-wire-events';
-
-// A Slot's stream: the Plugins that fill it, in list order, then each one's view as it arrives.
-export const SlotMessage = z.discriminatedUnion('type', [
-  z.strictObject({
-    type: z.literal('contributors'),
-    pluginIds: z.array(z.string()),
-  }),
-  z.strictObject({
-    type: z.literal('view'),
-    pluginId: z.string(),
-    // What `plugins.dispatch` takes as `path` for this contribution's events.
-    path: z.string(),
-    message: ViewMessage,
-  }),
-]);
-
-export type SlotMessage = z.infer<typeof SlotMessage>;
 
 export {
   componentEventHandler,

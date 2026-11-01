@@ -3,7 +3,6 @@ import { PluginManifest } from './plugins';
 import { ReplaceableInput } from './replaceable-input';
 import {
   AddOnlySlotId,
-  PluginSlotInput,
   projectDetailsSlotId,
   ReplaceableSlotId,
   sessionActivitySlotId,
@@ -43,15 +42,6 @@ it('keeps every Slot id with its kind', () => {
   ]);
 });
 
-it('opens Project details with its context', () => {
-  const input = {
-    slotId: projectDetailsSlotId,
-    context: { projectId: 'argo' },
-  };
-
-  expect(PluginSlotInput.parse(input)).toEqual(input);
-});
-
 it('asks the Session row for a whole list keyed by Session id', () => {
   const input = {
     slotId: sessionRowSlotId,
@@ -67,13 +57,6 @@ it.each([
 ])('refuses a Session row context with %s', (_name, context) => {
   expect(
     SlotItemsInput.safeParse({ slotId: sessionRowSlotId, contexts: [context] })
-      .success,
-  ).toBe(false);
-});
-
-it('refuses a Session row as a Plugin page', () => {
-  expect(
-    PluginSlotInput.safeParse({ slotId: sessionRowSlotId, context: rowContext })
       .success,
   ).toBe(false);
 });

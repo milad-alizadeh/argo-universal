@@ -1,7 +1,8 @@
 import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import {
-  type SlotItemsInput,
   sessionBarSlotId,
+  type SlotContextOf,
+  type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
 import type { SessionBarProps } from '#features/sessions';
 import { type SlotVisibility, useSlotVisibility } from '#features/settings';
@@ -16,13 +17,13 @@ import { usePluginLookup } from './use-plugin-names';
 import { usePluginOpener } from './use-plugin-opener';
 import { useSlotItems } from './use-slot-items';
 
-export type SessionContext = SlotItemsInput['contexts'][number];
+export type SessionContext = SlotContextOf<typeof sessionBarSlotId>;
 
 const barSlot = itemsSlotEntry(sessionBarSlotId);
 
 const inputOf = (
   session: SessionContext | undefined,
-): SlotItemsInput | undefined =>
+): SlotInputOf<typeof sessionBarSlotId> | undefined =>
   session && { slotId: sessionBarSlotId, contexts: [session] };
 
 // What the Plugins answer for one Session's bar, as the Server sent it; none until the Session has loaded.

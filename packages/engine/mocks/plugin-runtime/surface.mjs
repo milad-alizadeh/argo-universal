@@ -20,5 +20,4 @@ function content({ context: ctx }) {
 
 export function register(argo) {
   argo.pages.register('/', content);
-  argo.slots.register('argo/project/details/v1', content);
 }
