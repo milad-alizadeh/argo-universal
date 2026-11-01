@@ -88,14 +88,28 @@ function useOpenedOn(rows: readonly FeedRowData[]): OpenedOn | undefined {
 const isNewKey = (key: string | undefined, last: string): key is string =>
   key !== undefined && key !== last;
 
-// Scrolls each prompt into place once, the first time its answer's rows have measured.
-function useScrollIntoPlace(list: FeedList, animated: boolean): OnReady {
+/*
+ * Scrolls each prompt into place once, the first time its answer's rows have measured. It scrolls to the
+ * prompt itself, not to the end: while a scroll to the end is under way the list holds the end still, so
+ * an answer that grows meanwhile pushes the prompt up out of the view, and the Feed rests clipped or
+ * following the end instead of pinned.
+ */
+function useScrollIntoPlace(
+  list: FeedList,
+  animated: boolean,
+  clearance: number,
+): OnReady {
   const pinned = useRef('');
 
-  return ({ anchorKey }) => {
+  return ({ anchorKey, anchorIndex }) => {
     if (!isNewKey(anchorKey, pinned.current)) return;
     pinned.current = anchorKey;
-    void list.current?.scrollToEnd({ animated });
+    void list.current?.scrollToIndex({
+      index: anchorIndex,
+      viewPosition: 0,
+      viewOffset: clearance,
+      animated,
+    });
   };
 }
 
@@ -114,7 +128,11 @@ export function usePinnedPrompt(
   const anchorOffset = useFeedTopClearance();
   const room = roomFor(rows, anchorIndex, useOpenedOn(rows));
   const reduced = useReducedMotionNow();
-  const onReady = useScrollIntoPlace(list, room === 'moves' && !reduced);
+  const onReady = useScrollIntoPlace(
+    list,
+    room === 'moves' && !reduced,
+    anchorOffset,
+  );
 
   if (room === 'none') return undefined;
 
