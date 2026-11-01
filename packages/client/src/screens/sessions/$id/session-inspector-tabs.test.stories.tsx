@@ -58,7 +58,7 @@ export const RemembersFoldedFilesAcrossTabs: Story = {
     ).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    // The returning panel turns visible with its rows mid-transition, hidden to assistive queries until the next frame.
+    // The returning panel's rows can be briefly hidden to assistive queries right after the tab flips back.
     await expect(
       await canvas.findByRole('button', fileHeader(firstFile)),
     ).toHaveAttribute('aria-expanded', 'false');
