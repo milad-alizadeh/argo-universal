@@ -1,6 +1,5 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
-import { ChoiceRow, isChoice } from './elicitation-choice-row';
 import { DateRow, isDate } from './elicitation-date-row';
 import {
   rowTitle,
@@ -22,12 +21,11 @@ type Schema = ElicitationFieldProps['property'];
 
 const rows: [(property: Schema) => boolean, typeof TextRow][] = [
   [(property) => property.type === 'boolean', ToggleRow],
-  [isChoice, ChoiceRow],
   [isDate, DateRow],
 ];
 
 /*
- * One schema property as a FieldGroup row: a Toggle for a boolean, a Picker for choices, a DatePicker for a date
+ * One schema property as a FieldGroup row: a Toggle for a boolean, a DatePicker for a date
  * format, and a TextField for text or a number.
  */
 export function FieldRow(props: ElicitationFieldProps): ReactElement {

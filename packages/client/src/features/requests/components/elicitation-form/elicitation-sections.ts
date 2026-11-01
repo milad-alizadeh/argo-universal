@@ -1,14 +1,34 @@
+import { isChoice } from './elicitation-choice-row';
 import type { ElicitationEntry } from './elicitation-form-body';
 
 export type FieldSection = {
   entries: ElicitationEntry[];
 };
 
-// A field's description is its section's footer, so the section ends there; fields without one share a card.
+const choiceAt = (
+  index: number,
+  entries: readonly ElicitationEntry[],
+): boolean => {
+  const entry = entries[index];
+
+  return entry !== undefined && isChoice(entry.property);
+};
+
+/*
+ * A field's description is its section's footer, so the section ends there; fields without one share a card. A choice
+ * is a section of its own, headed by its title, since its options are rows that would run into its neighbours'.
+ */
 const startsSection = (
   index: number,
   entries: readonly ElicitationEntry[],
-): boolean => index === 0 || Boolean(entries[index - 1]?.property.description);
+): boolean =>
+  index === 0 || endsSection(index - 1, entries) || choiceAt(index, entries);
+
+const endsSection = (
+  index: number,
+  entries: readonly ElicitationEntry[],
+): boolean =>
+  Boolean(entries[index]?.property.description) || choiceAt(index, entries);
 
 // The fields as sections: they run on in one until a field has a footer.
 export function fieldSections(

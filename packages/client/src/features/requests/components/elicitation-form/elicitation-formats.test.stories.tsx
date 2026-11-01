@@ -1,5 +1,5 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { expect, fireEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
   type Story,
@@ -20,17 +20,9 @@ export default meta;
 function emptyAnswers(width: number): Story {
   return {
     args: { request: emptyAnswersRequest },
-    play: async ({ canvas, canvasElement, userEvent, args }) => {
+    play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
-      await userEvent.click(canvas.getByRole('button', { name: /^Choice/ }));
-      const page = within(canvasElement.ownerDocument.body);
-      await userEvent.click(await page.findByRole('option', { name: 'None' }));
-      // The open menu blocks the page until it has closed.
-      await waitFor(() =>
-        expect(canvasElement.ownerDocument.body).not.toHaveStyle({
-          pointerEvents: 'none',
-        }),
-      );
+      await userEvent.click(canvas.getByRole('radio', { name: /^None/ }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
