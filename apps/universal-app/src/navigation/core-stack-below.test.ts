@@ -38,6 +38,12 @@ describe('repairedCoreRoutes', () => {
     expect(repairedCoreRoutes({ routes, routeNames }, 'page')).toBeUndefined();
   });
 
+  it('leaves a list opened over the root, as a wide window does', () => {
+    const routes = [root, { key: 'list', name: list }];
+
+    expect(repairedCoreRoutes({ routes, routeNames }, 'list')).toBeUndefined();
+  });
+
   it('leaves another page than the one asking', () => {
     const routes = [root, page];
 

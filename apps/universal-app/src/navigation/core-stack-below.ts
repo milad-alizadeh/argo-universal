@@ -11,6 +11,15 @@ type Route = Stack['routes'][number];
 const indexAndPage = (routes: Stack['routes']): routes is [Route, Route] =>
   /^index,(?!index$)[^,]+$/.test(routes.map(({ name }) => name).join(','));
 
+// The page asking is a dynamic one: a list opened over the root, as a wide window does, has no list of its own below it.
+const belowsAPage = (
+  routes: Stack['routes'],
+  pageKey: string,
+): routes is [Route, Route] =>
+  indexAndPage(routes) &&
+  routes[1].key === pageKey &&
+  !routes[1].name.endsWith('/index');
+
 /*
  * A page opened by its address is the root and the page, and nothing between. A cold start seeds the root with the
  * page's params; an address delivered to a running App pushes the page over the root the section already has, with none.
@@ -23,7 +32,7 @@ export function repairedCoreRoutes(
 ): Stack['routes'] | undefined {
   const { routes } = stack;
 
-  if (!indexAndPage(routes) || routes[1].key !== pageKey) return undefined;
+  if (!belowsAPage(routes, pageKey)) return undefined;
 
   const [root, page] = routes;
 
