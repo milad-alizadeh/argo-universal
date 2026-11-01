@@ -5,6 +5,7 @@
     "**/*.test.ts",
     "**/node_modules",
     "journey-fixture.ts",
+    "session-slot-fixture.ts",
     "vitest.config.ts"
   ]
 }

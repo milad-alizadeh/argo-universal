@@ -1,9 +1,7 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
 import {
-  attachSession,
-  detachSession,
-  issueSessions,
   issueSessionsTable,
+  sessionMethods,
   type IssueLink,
   type IssueSession,
 } from './issue-sessions-store';
@@ -25,6 +23,8 @@ export type TrackerStorage = {
   issueSessions: (
     issue: Omit<IssueLink, 'sessionId'>,
   ) => Promise<IssueSession[]>;
+  // The Issues these Sessions are attached to, the most recent first.
+  sessionLinks: (sessionIds: readonly string[]) => Promise<IssueLink[]>;
 };
 
 type Store = {
@@ -44,9 +44,7 @@ export function createTrackerStorage(
     chooseTracker: (projectId, id) => chooseTracker(store, projectId, id),
     readCache: (key) => readCache(store, key),
     writeCache: (key, value) => writeCache(store, key, value),
-    attachSession: (link) => attachSession(store, link),
-    detachSession: (link) => detachSession(store, link),
-    issueSessions: (issue) => issueSessions(store, issue),
+    ...sessionMethods(store),
   };
 }
 

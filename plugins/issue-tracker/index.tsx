@@ -10,6 +10,7 @@ import {
   projectDetailsItems,
   trackerPath,
 } from './project-details';
+import { registerSessionFills } from './session-slots';
 import { createTrackerRegistry } from './tracker-registry';
 import { createTrackerStorage } from './tracker-storage';
 
@@ -55,7 +56,7 @@ export function register(api: Argo): void {
     return <IssuesRoot deps={deps} />;
   }
 
-  registerIssueOperations(api, { storage: deps.storage });
+  registerIssueOperations(api, { storage: registerSessionFills(api, deps) });
   api.pages.register('/', IssuesPage);
   api.pages.register(trackerPath, trackerPage(api, deps));
 
