@@ -39,20 +39,18 @@ const answering = (
   asking: Asking,
   setOpen: (open: boolean) => void,
 ): Answering => ({
-  onAllow: asking.answered,
+  onAllow: asking.allow,
   onOpenChange: (next): void => {
     setOpen(next);
     asking.answered();
   },
-  onDecline: (registration): void => {
-    asking.answered();
-    asking.decline(registration);
-  },
+  onDecline: asking.decline,
 });
 
 interface Asking {
   registration: PairingRegistration | undefined;
   answered: () => void;
+  allow: (registration: PairingRegistration) => void;
   decline: (registration: PairingRegistration) => void;
 }
 
@@ -62,10 +60,13 @@ function useRegistrations(open: boolean): Asking {
 
   useRegistered(open, setRegistration);
 
+  const answered = useCallback((): void => setRegistration(undefined), []);
+
   return {
     registration,
-    answered: useCallback((): void => setRegistration(undefined), []),
-    decline: useDecline(),
+    answered,
+    allow: useAnswer('allow', answered),
+    decline: useAnswer('decline', answered),
   };
 }
 
@@ -75,38 +76,32 @@ function useRegistered(
 ): void {
   const trpc = useTRPC();
   const watching = open ? undefined : skipToken;
-  const onData = useRegistration(setRegistration);
 
   useResubscribeOnReconnect(
     useSubscription(
-      trpc.pairing.registered.subscriptionOptions(watching, { onData }),
+      trpc.pairing.registered.subscriptionOptions(watching, {
+        onData: setRegistration,
+      }),
     ),
   );
 }
 
-// A Device that registered is a Device the Server has written down, so the Devices list has something new to say.
-function useRegistration(
-  setRegistration: (registration: PairingRegistration) => void,
-): (next: PairingRegistration) => void {
-  const refreshed = useRefreshedDevices();
-
-  return (next: PairingRegistration): void => {
-    setRegistration(next);
-    refreshed();
-  };
-}
-
-// Declining deletes the Device's row, so it reaches nothing on its next connect and has no Ticket left to pair with again.
-function useDecline(): (registration: PairingRegistration) => void {
+// Allow is what writes the Device down and lets it in, and Don't allow is what it never is: either way the Devices list may have changed.
+function useAnswer(
+  answer: 'allow' | 'decline',
+  answered: () => void,
+): (registration: PairingRegistration) => void {
   const trpc = useTRPC();
   const refreshed = useRefreshedDevices();
 
-  const { mutate } = useMutation(
-    trpc.pairing.decline.mutationOptions({ onSuccess: refreshed }),
-  );
+  const options = trpc.pairing[answer].mutationOptions({
+    onSuccess: refreshed,
+  });
 
-  return useCallback(
-    (registration): void => mutate({ deviceId: registration.deviceId }),
-    [mutate],
-  );
+  const { mutate } = useMutation(options);
+
+  return (registration): void => {
+    answered();
+    mutate({ deviceId: registration.deviceId });
+  };
 }

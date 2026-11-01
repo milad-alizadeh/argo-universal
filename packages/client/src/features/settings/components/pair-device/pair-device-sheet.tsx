@@ -123,7 +123,7 @@ function PageBody(props: PairDeviceSheetProps): React.JSX.Element {
 }
 
 /*
- * The claim the Device made for itself, which is all the owner has to recognise it by: the handshake has already run on a Ticket this sheet minted, so what they decide in the footer is whether that Device keeps what it got.
+ * The claim the Device made for itself, which is all the owner has to recognise it by: the Device has spent a Ticket this sheet minted and the Server is holding its registration, so what they decide in the footer is whether that Device is let in at all.
  * The sheet asks rather than the handshake, because this is where the owner is already present and watching the code they asked for.
  */
 function AskingClaim(props: {
