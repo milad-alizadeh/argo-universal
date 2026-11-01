@@ -8,7 +8,7 @@ const flatRow = {
   headerStatusBarHeight: 0,
   headerShadowVisible: false,
   headerStyle: { backgroundColor: 'transparent' },
-  // The stock header gives its title 16dp each side; this starts it on its column's line.
+  // The stock header gives its title 16dp each side; this starts the title on its column's line.
   headerTitleContainerStyle: { marginHorizontal: 0 },
 } as const;
 
