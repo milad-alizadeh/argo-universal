@@ -14,7 +14,16 @@ declare global {
   }
 }
 
-const desktopBridge = (): DesktopBridge | undefined => globalThis.window?.argo;
+// A browser page, and the web e2e harness, may set a partial `argo`; only the desktop App's preload listens for links.
+const isDesktopApp = (
+  bridge: DesktopBridge | undefined,
+): bridge is DesktopBridge => typeof bridge?.links?.onOpen === 'function';
+
+const desktopBridge = (): DesktopBridge | undefined => {
+  const bridge = globalThis.window?.argo;
+
+  return isDesktopApp(bridge) ? bridge : undefined;
+};
 
 /*
  * The desktop App opens Screens when asked, from two places that share one path: the Server's `app.open`, through
