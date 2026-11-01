@@ -17,7 +17,7 @@ it("shows the Session's Issue on the Workbench card", async () => {
   const card = await mountFor(test, cardPage, sessionId);
   const row = await card.find('Fixture issue from GitHub');
 
-  expect(row.props.value).toBe('#42 · Open');
+  expect(row.props.subtitle).toBe('#42 · Open');
 }, 20_000);
 
 it('says when the Session has no Issue, or the card has no Session', async () => {

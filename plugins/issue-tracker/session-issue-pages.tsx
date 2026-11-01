@@ -137,7 +137,7 @@ const bare: Frame = (children) => children;
 
 const titled: Frame = (children) => <Screen title="Issue">{children}</Screen>;
 
-// The card: a summary of the Session's Issue, one row. Argo opens the full view when the card's body is pressed.
+// The card: a summary of the Session's Issue, one row. The number and state are the subtitle, not a value, which would claim width first and cut the title. Argo opens the full view when the card's body is pressed.
 function SessionIssueCard(props: PageProps): JSX.Element {
   return (
     <SessionIssuePage
@@ -158,7 +158,7 @@ function CardRow(found: Found): JSX.Element {
       <ListItem
         key="issue"
         title={issue.title}
-        value={`#${issue.number} · ${statuses[issue.status].text}`}
+        subtitle={`#${issue.number} · ${statuses[issue.status].text}`}
         leading={statusMark(issue)}
       />
     </List>
