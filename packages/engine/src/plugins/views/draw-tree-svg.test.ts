@@ -45,7 +45,7 @@ it('sends canonical SVG markup', () => {
   ]);
 });
 
-it('drops refused SVG nodes from an ordinary Slot without refusing its view', () => {
+it("drops refused SVG nodes from a component's own slot without refusing the view", () => {
   const root = {
     ...stack([]),
     slots: { leading: [svg('<svg><path d="M0 0"/></svg>', 'valid'), unsafe] },
@@ -53,13 +53,7 @@ it('drops refused SVG nodes from an ordinary Slot without refusing its view', ()
 
   const { view, sent, logs } = drawn(
     [{ type: 'snapshot', revision: 1, root }],
-    {
-      ...map,
-      slot: {
-        slotId: 'argo/project/details/v1',
-        context: { projectId: 'argo' },
-      },
-    },
+    map,
   );
 
   expect(view.refused).toBe(false);

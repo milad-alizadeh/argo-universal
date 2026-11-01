@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { expect, fn } from 'storybook/test';
-import { layoutWidths, settleLayout } from '#mocks/story-layout';
+import { columnWidth, layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Screen } from '#primitives/scaffolds/screen';
 import { FieldGroup } from './field-group';
 
@@ -44,13 +44,6 @@ export const TextFieldTypes: Story = {
   },
 };
 
-const columnToken = (): number =>
-  Number.parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue(
-      '--container-column',
-    ),
-  );
-
 // On a wide window the group's cards keep to the Screen's content column (#1748, #1702).
 export const CardsKeepToColumnWide: Story = {
   parameters: { screenPreview: true },
@@ -72,7 +65,7 @@ export const CardsKeepToColumnWide: Story = {
 
     await expect(
       card.getBoundingClientRect().right - heading.getBoundingClientRect().left,
-    ).toBeLessThanOrEqual(columnToken());
+    ).toBeLessThanOrEqual(columnWidth());
   },
 };
 

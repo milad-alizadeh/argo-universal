@@ -27,7 +27,7 @@ import { useSlide, type Slide } from './sheet-slide.android';
 export function SheetScreens(props: ScreensProps): ReactElement {
   const sizing = sheetSizing({
     detents: props.detents,
-    paged: props.stack.pages.length > 0,
+    paged: props.stack.paged,
     window: useWindowDimensions().height,
   });
 

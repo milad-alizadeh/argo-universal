@@ -3,14 +3,13 @@ import type {
   ReplaceableMessage,
 } from '@repo/contracts/plugins/replaceable';
 import type {
-  SlotMessage,
   ViewMessage,
   WireNode,
   PluginViewId,
 } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 
-// What each Plugin stream draws: a page's view, a Slot's contributions, or a Replaceable Slot's replacement.
+// What each Plugin stream draws: a page's view, or a Replaceable Slot's replacement.
 
 export interface PluginViewState {
   root: WireNode | null;
@@ -50,10 +49,10 @@ function patched(
   return { ...state, root: applyPatch(state.root, ops), revision };
 }
 
-// One Plugin's view in a Slot or Replaceable Slot, and the path its events dispatch to.
-export interface ContributedView<Path = string> {
+// One Plugin's view in a Replaceable Slot, and the path its events dispatch to.
+export interface ContributedView {
   pluginId: string;
-  path: Path;
+  path: string;
   view: PluginViewState;
 }
 
@@ -71,38 +70,6 @@ const contributed = (
   path,
   view: reducePluginView(view, message),
 });
-
-export type PluginSlotState = readonly ContributedView<string | null>[];
-
-export const emptyPluginSlot: PluginSlotState = [];
-
-export function reducePluginSlot(
-  state: PluginSlotState,
-  message: SlotMessage,
-): PluginSlotState {
-  if (message.type === 'contributors')
-    return message.pluginIds.map((pluginId) => listed(state, pluginId));
-
-  return state.map((contribution) =>
-    contribution.pluginId === message.pluginId
-      ? contributed(contribution.view, message)
-      : contribution,
-  );
-}
-
-// A contributor keeps what it drew when the Server lists it again; a new one is blank until its snapshot.
-function listed(
-  state: PluginSlotState,
-  pluginId: string,
-): ContributedView<string | null> {
-  return (
-    state.find((contribution) => contribution.pluginId === pluginId) ?? {
-      pluginId,
-      path: null,
-      view: emptyPluginView,
-    }
-  );
-}
 
 export type ReplaceableState = {
   input: ReplaceableInput;

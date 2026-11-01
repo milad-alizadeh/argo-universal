@@ -26,6 +26,9 @@ export const newScreenId = (): string => String(++counter);
 export const pushedContent = (id: string): ReactNode =>
   pushed.get(id)?.content ?? null;
 
+// False for an id no opener has pushed, such as one arriving in a link.
+export const hasPushedScreen = (id: string): boolean => pushed.has(id);
+
 export const isRouted = (id: string): boolean =>
   pushed.get(id)?.routed ?? false;
 

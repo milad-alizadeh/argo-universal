@@ -6,8 +6,8 @@ import {
   linkedPage,
   chooseGithub,
   project,
-  slot,
   tracker,
+  trackerPage,
   wait,
   type PageView,
 } from './journey-fixture';
@@ -105,7 +105,7 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
 it('keeps the selected Project in the sidebar across filter and Issue routes', async () => {
   const other = { ...project, id: 'project-2', name: 'Other Project' };
   const test = await tracker([project, other]);
-  await chooseGithub(test.slot({ ...slot, context: { projectId: other.id } }));
+  await chooseGithub(trackerPage(test, other.id));
   const root = await test.mount({ page: '/', surface: { platform: 'web' } });
   await expect.poll(() => root.findText(other.name), wait).toBeDefined();
 

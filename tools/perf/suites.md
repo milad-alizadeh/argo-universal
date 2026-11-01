@@ -112,7 +112,7 @@ An unset `PERF_ONLY` plans all of them, so a default elapsed run is now much lon
 - **PF-23** stale results while typing: the whole query is filled at once.
 - **PF-21** Back and tab switching, and the phone's changed-files sheet.
 - **PF-17**'s other three measures: stream presentation delay, typing latency during output, and movement of the reading anchor while output streams. `live-scroll` measures scroll frame times only. See "A real Agent (PF-17)".
-- **PF-04 to PF-12** need a real Agent. `real-agent.perf.mts` can install and drive one, but no scenario measures these cases; PF-10's throughput clauses are partly unmeasurable through this adapter, which "A real Agent (PF-17)" explains.
+- **PF-04 to PF-12** need a real Agent. `real-agent.perf.mts` can install and drive one, but no scenario measures these cases. PF-10 is scoped, not unmeasured: only its input-responsiveness clause is measurable through `claude-acp` (`live-scroll` serves it), and its throughput clauses are blocked on an owner decision, both in "A real Agent (PF-17)" (#1688).
 - The `streaming` scenario uses a scripted Agent at a fixed rate and is not PF-17 evidence.
 
 ## A real Agent (PF-17)
@@ -179,8 +179,15 @@ completion and never incrementally, so through this adapter there is no incremen
 no per-chunk output delay to measure, and the harness cannot make one: produced bytes per second is
 not observable through an Agent at all. What this scenario does serve is input responsiveness while
 output arrives, and it records the Agent's own message rate — which is assistant text, not command
-stdout, so it is not PF-10's throughput clause under another name. PF-10 needs either an adapter
-that streams Tool output or a measurement taken outside the Agent.
+stdout, so it is not PF-10's throughput clause under another name.
+
+Read PF-10 as two parts. **Measurable now:** input responsiveness while output arrives (`live-scroll`).
+**Not measurable through `claude-acp`:** produced bytes per second, visible bytes per second, output
+delay and final catch-up. Those need an adapter that streams Tool output incrementally, or a measurement
+taken outside the Agent (which measures Argo's rendering path, not an Agent). The first is an owner
+decision, #1642 section 9: Argo's `initialize.ts` advertises only `terminal: true`, and advertising
+`_meta.terminal_output` moves every Claude Agent onto a structured terminal channel. Until the owner
+takes it, do not file the throughput clauses as "unmeasured"; they are unmeasurable here (#1688).
 
 **No number has been published from this suite.** PF-17's number needs a quiet machine.
 

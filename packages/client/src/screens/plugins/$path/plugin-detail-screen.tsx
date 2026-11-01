@@ -4,6 +4,7 @@ import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
+import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
@@ -22,20 +23,20 @@ interface PluginDetailScreenProps {
   path: readonly string[];
   // The Session the page opened for, such as from a Session header action.
   sessionId: string | undefined;
+  // The Project the page opened for, such as from a Project details row (ADR-0046).
+  projectId: string | undefined;
 }
 
 const unavailable = { title: 'This Plugin is not available' };
 
 // A Plugin page from the connected Server's list: blank until the list arrives; a Plugin the Server no longer lists says so and returns to Sessions.
-export function PluginDetailScreen({
-  path,
-  sessionId,
-}: PluginDetailScreenProps): React.JSX.Element {
-  const { section, loaded } = usePluginAt(pluginPath(path));
+export function PluginDetailScreen(
+  props: PluginDetailScreenProps,
+): React.JSX.Element {
+  const { section, root, loaded } = usePluginAt(pluginPath(props.path));
   useKeepSidebarWhileOpening();
 
-  if (section)
-    return <PluginPage section={section} path={path} sessionId={sessionId} />;
+  if (section) return <PluginPage {...props} section={section} root={root} />;
 
   return loaded ? <PluginUnavailable /> : <PluginLoading />;
 }
@@ -50,7 +51,11 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
-type PluginPageProps = PluginDetailScreenProps & { section: PluginSection };
+type PluginPageProps = PluginDetailScreenProps & {
+  section: PluginSection;
+  // The page is its nav item's root.
+  root: boolean;
+};
 
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
 function PluginPage(props: PluginPageProps): React.JSX.Element {
@@ -60,25 +65,26 @@ function PluginPage(props: PluginPageProps): React.JSX.Element {
     pluginId: section.pluginId,
     path: pluginPagePath(props.path),
     sessionId: props.sessionId,
+    projectId: props.projectId,
   });
 
   return (
     <PluginDetailView
       {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
-      onBack={usePushedBack()}
+      onBack={usePushedBack(props.root)}
     />
   );
 }
 
 /*
- * Every Plugin page gets the App's Back when the stack can go back, so a drill-in page is always reversible and no
- * Plugin declares navigation. A landing page, which nothing pushed, gets none.
+ * Every Plugin page above its nav item's root gets the App's Back when the stack can go back, so a drill-in page is
+ * always reversible and no Plugin declares navigation. The root is a rail section's root, which draws none.
  */
-function usePushedBack(): (() => void) | null {
+function usePushedBack(root: boolean): (() => void) | null {
   // The path is what changes as the stack moves, so reading it keeps this answer current.
   usePathname();
 
-  return router.canGoBack() ? () => router.back() : null;
+  return showsBack(root, router.canGoBack()) ? () => router.back() : null;
 }
 
 function PluginUnavailable(): React.JSX.Element {

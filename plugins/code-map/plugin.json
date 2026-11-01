@@ -12,8 +12,7 @@
     "material": "view_quilt"
   },
   "contributes": {
-    "nav": [],
-    "slots": ["argo/project/details/v1"]
+    "nav": []
   },
   "capabilities": [
     {

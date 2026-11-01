@@ -95,9 +95,9 @@ export const invalidPropsSnapshot: ViewMessage = {
 };
 
 // The event name carried by the Wave button.
-export const slotCounterWaveEvent = 'onPress';
+export const waveCounterWaveEvent = 'onPress';
 
-export const slotCounterTree = (projectId: string, waves: number): WireNode =>
+export const waveCounterTree = (projectId: string, waves: number): WireNode =>
   withChildren(node('Stack', '0', { direction: 'column', gap: 2 }), [
     node('Text', '0', {
       children:
@@ -108,21 +108,21 @@ export const slotCounterTree = (projectId: string, waves: number): WireNode =>
     node('Button', '1', {
       label: 'Wave',
       variant: 'secondary',
-      onPress: { $event: slotCounterWaveEvent },
+      onPress: { $event: waveCounterWaveEvent },
     }),
   ]);
 
-// The slot-counter fixture Plugin in Project details for the Project `argo`.
-export const slotCounterRoot: WireNode = slotCounterTree('argo', 0);
+// The wave-counter fixture Plugin's page for the Project `argo`.
+export const waveCounterRoot: WireNode = waveCounterTree('argo', 0);
 
-export const slotCounterSnapshot: ViewMessage = {
+export const waveCounterSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: slotCounterRoot,
+  root: waveCounterRoot,
 };
 
 // What one tap on "Wave" changes.
-export const slotCounterWavePatch: ViewMessage = {
+export const waveCounterWavePatch: ViewMessage = {
   type: 'patch',
   revision: 2,
   ops: [

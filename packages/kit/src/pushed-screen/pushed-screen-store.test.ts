@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasPushedScreen,
   newScreenId,
   pushedContent,
   releasePushedScreen,
@@ -27,5 +28,19 @@ describe('a pushed screen whose opener unmounts', () => {
 
     routePushedScreen(id, false);
     expect(pushedContent(id)).toBeNull();
+  });
+});
+
+describe('an id no opener has pushed', () => {
+  it('names no pushed screen', () => {
+    expect(hasPushedScreen('zzz')).toBe(false);
+  });
+
+  it('names one once its opener has shown it', () => {
+    const id = newScreenId();
+
+    showPushedScreen(id, 'page');
+
+    expect(hasPushedScreen(id)).toBe(true);
   });
 });

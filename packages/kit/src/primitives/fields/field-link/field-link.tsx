@@ -2,6 +2,7 @@ import { Row, Spacer } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
+import { cn } from '#kit/utils';
 import { NativeText } from '#primitives/content/native-text';
 import {
   RowTitle,
@@ -50,16 +51,30 @@ const linkProps = (props: FieldLinkProps): Attributes => ({
   disabled: props.disabled,
   onPress: props.onPress,
   onKeyDown: (event) => followOnEnter(event, props),
-  className: rowPressTargetClassName,
+  className: cn(rowPressTargetClassName, props.disabled && disabledClassName),
 });
+
+// A disabled row dims to half, as the web menu's disabled items do.
+const disabledClassName = 'opacity-50';
 
 const LinkRow = (props: FieldLinkProps): ReactElement => (
   <Row alignment="center">
-    <RowTitle {...props} />
+    <View className="min-w-0 shrink">
+      <RowTitle {...props} />
+    </View>
     <Spacer flexible />
-    {props.value ? <NativeText tone="muted">{props.value}</NativeText> : null}
+    {props.value ? <LinkValue value={props.value} /> : null}
     {props.action ? null : <Chevron />}
   </Row>
+);
+
+// A long value takes one line and truncates before the title does (#1750): its shrink factor outweighs the title's 1, so the row squeezes the value first.
+const LinkValue = (props: { value: string }): ReactElement => (
+  <View className="min-w-0 shrink-99">
+    <NativeText tone="muted" numberOfLines={1}>
+      {props.value}
+    </NativeText>
+  </View>
 );
 
 // React Native Web leaves Enter on a link to the browser, which follows only an anchor's href; this row has none.

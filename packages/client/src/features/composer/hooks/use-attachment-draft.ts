@@ -4,19 +4,22 @@ import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import type { ComposerDraft } from '../components/composer/composer';
+import { keptAttachments } from '../stores/kept-attachments';
 import { keptDrafts } from '../stores/kept-draft';
 import {
   type AttachmentDraftEvent,
-  type AttachmentError,
   attachmentDraftReducer,
   emptyAttachmentDraft,
-  type PickedAttachment,
+} from '../utils/attachment-draft';
+import {
+  type AttachmentError,
   toAttachmentError,
   toUploadForms,
-} from '../utils/attachment-draft';
+} from '../utils/attachment-upload';
 import { type DraftKey, type DraftOwner, draftKey } from '../utils/draft-key';
 import { draftPrompt, uploadedAttachments } from '../utils/draft-prompt';
-import { droppedFiles, pickFiles, pickImages } from './pick-attachments';
+import { pickActions } from './use-attachment-picking';
+import { useKeptAttachments } from './use-kept-attachments';
 import { useKeptDraft } from './use-kept-draft';
 
 export interface AttachmentDraft {
@@ -58,14 +61,6 @@ interface DraftActions {
   key: DraftKey | undefined;
 }
 
-let selectionFailures = 0;
-
-function selectionFailureKey(): string {
-  selectionFailures += 1;
-
-  return `attachment-selection:${selectionFailures}`;
-}
-
 // `seed` stands in for the text kept for the owner, and is kept only once the person edits it.
 export function useAttachmentDraft(
   owner: DraftOwner | undefined,
@@ -79,6 +74,7 @@ export function useAttachmentDraft(
   const upload = useAttachmentUpload();
   const key = owner && draftKey(owner);
   useKeptDraft(key, dispatch, seed);
+  useKeptAttachments(key, state);
 
   return attachmentDraftActions({ state, dispatch, upload, key });
 }
@@ -98,6 +94,12 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
   };
 }
 
+// Forgets at once, since the page may unmount before a render could.
+function forgetDraft(key: DraftKey): void {
+  keptDrafts.keep(key, '');
+  keptAttachments.keep(key, [], new Map());
+}
+
 type EditableDraft = Pick<DraftActions, 'dispatch' | 'key'>;
 
 type DraftChanges = Pick<AttachmentDraft, 'changeDraft' | 'clearDraft'>;
@@ -112,43 +114,9 @@ function editActions({ dispatch, key }: EditableDraft): DraftChanges {
     clearDraft: () => {
       dispatch({ type: 'cleared' });
 
-      if (key) keptDrafts.keep(key, '');
+      if (key) forgetDraft(key);
     },
   };
-}
-
-function pickActions(
-  dispatch: Dispatch<AttachmentDraftEvent>,
-): Pick<
-  AttachmentDraft,
-  'attachImages' | 'attachFiles' | 'attachDroppedFiles'
-> {
-  return {
-    attachImages: () => attach(pickImages, dispatch),
-    attachFiles: () => attach(pickFiles, dispatch),
-    attachDroppedFiles: (dropped) => attachDropped(dropped, dispatch),
-  };
-}
-
-async function attach(
-  pick: () => Promise<PickedAttachment[]>,
-  dispatch: Dispatch<AttachmentDraftEvent>,
-): Promise<void> {
-  try {
-    dispatch({ type: 'picked', picked: await pick() });
-  } catch {
-    dispatch({ type: 'pickFailed', key: selectionFailureKey() });
-  }
-}
-
-async function attachDropped(
-  { files, folders }: DroppedFiles,
-  dispatch: Dispatch<AttachmentDraftEvent>,
-): Promise<void> {
-  if (files.length > 0) await attach(() => droppedFiles(files), dispatch);
-
-  if (folders > 0)
-    dispatch({ type: 'folderDropped', key: selectionFailureKey() });
 }
 
 async function uploadDraftAsPrompt(

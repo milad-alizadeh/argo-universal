@@ -22,9 +22,6 @@ export const messageSlotId = 'argo/feed/message/v1';
  */
 export type SlotLimit = { phone: number; desktop: number; perPlugin: number };
 
-// A Plugin page drawn with any kit components, as on the Plugin's own pages.
-type TreeContent = { type: 'tree' };
-
 /*
  * Items of a fixed shape, asked for once per list in one batched call keyed by `key` (ADR-0035). Argo
  * draws them after its own, in declared Plugin order, up to `limit`.
@@ -59,17 +56,6 @@ export type MergedItems<Item extends z.ZodObject> = Strict<{
   overflow: z.ZodArray<AttributedItem<Item>>;
 }>;
 
-/*
- * An add-only Slot: every Plugin that declares it adds its own content, Argo's comes first and no
- * Plugin sees or changes another's (ADR-0035). `input` is what the App asks with.
- */
-export type TreeSlot<Id extends string, Context extends z.ZodObject> = {
-  id: Id;
-  kind: 'add-only';
-  content: TreeContent;
-  input: Strict<{ slotId: z.ZodLiteral<Id>; context: Context }>;
-};
-
 export type ItemsSlot<
   Id extends string,
   Context extends z.ZodObject,
@@ -88,18 +74,6 @@ export type ReplaceableSlot<Id extends string> = {
   id: Id;
   kind: 'replaceable';
 };
-
-export function treeSlotEntry<Id extends string, Context extends z.ZodObject>(
-  id: Id,
-  context: Context,
-): TreeSlot<Id, Context> {
-  return {
-    id,
-    kind: 'add-only',
-    content: { type: 'tree' },
-    input: z.strictObject({ slotId: z.literal(id), context }),
-  };
-}
 
 type ItemsSlotEntry = <
   Id extends string,
@@ -178,12 +152,45 @@ const SessionRowContext = z.strictObject({
   projectId: z.string().min(1),
 });
 
+// A Project details row's label and its trailing value both stay short: it is a settings row, not a paragraph.
+export const projectDetailsTextLimit = 40;
+
+// How many rows one Plugin may add to a Project.
+export const projectDetailsRowLimit = 6;
+
+/*
+ * One row a Plugin adds to Project details. Argo draws it; a Plugin never sends a kit tree here (ADR-0046).
+ * A row that writes carries an `action` and the Plugin draws the choice on the page it opens.
+ */
+export const ProjectDetailsItem = z.strictObject({
+  icon: PluginIcon.optional(),
+  title: z.string().trim().min(1).max(projectDetailsTextLimit),
+  // The trailing value a settings row shows, such as the Tracker this Project chose.
+  value: z.string().trim().min(1).max(projectDetailsTextLimit).optional(),
+  tone: z.enum(tones).optional(),
+  // Opens this Plugin page when the row is pressed.
+  action: z.strictObject({ path: PluginPath }).optional(),
+});
+
+export type ProjectDetailsItem = z.infer<typeof ProjectDetailsItem>;
+
+// A Project details context: the Project's id, which is also the key one batched call answers by.
+const ProjectDetailsContext = z.strictObject({
+  projectId: z.string().min(1),
+});
+
 // Every Slot is one entry: adding an entry is the whole job of adding a Slot.
 export const addOnlySlots = [
-  treeSlotEntry(
-    projectDetailsSlotId,
-    z.strictObject({ projectId: z.string().min(1) }),
-  ),
+  // Every row is the Plugin's own data and Argo draws it; the choice behind a row is a Plugin page (ADR-0046).
+  itemsSlotEntry(projectDetailsSlotId, ProjectDetailsContext, {
+    key: 'projectId',
+    item: ProjectDetailsItem,
+    limit: {
+      phone: projectDetailsRowLimit,
+      desktop: projectDetailsRowLimit,
+      perPlugin: projectDetailsRowLimit,
+    },
+  }),
   itemsSlotEntry(sessionRowSlotId, SessionRowContext, {
     key: 'sessionId',
     item: SessionRowItem,

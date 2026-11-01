@@ -7,16 +7,15 @@ import {
   counterSnapshot,
   counterTapPatch,
   counterTappedRoot,
-  slotCounterRoot,
-  slotCounterSnapshot,
-  slotCounterTree,
-  slotCounterWavePatch,
+  waveCounterRoot,
+  waveCounterSnapshot,
+  waveCounterTree,
+  waveCounterWavePatch,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { describe, expect, it } from 'vitest';
 import {
   coreSlotState,
   emptyPluginView,
-  reducePluginSlot,
   reducePluginView,
   reduceReplaceable,
 } from './plugin-stream-state';
@@ -55,85 +54,10 @@ describe('reducePluginView', () => {
   });
 });
 
-const path = 'slot:argo/project/details/v1:{"projectId":"argo"}';
+// A Replaceable Slot's replacement names the Plugin page it was drawn from.
+const path = '/wave';
 
-const view = (pluginId: string, message = slotCounterSnapshot) =>
-  ({ type: 'view', pluginId, path, message }) as const;
-
-describe('reducePluginSlot', () => {
-  it('lists the contributors in the order the Server sends, each blank until its snapshot', () => {
-    expect(
-      reducePluginSlot([], { type: 'contributors', pluginIds: ['a', 'b'] }),
-    ).toEqual([
-      {
-        pluginId: 'a',
-        path: null,
-        view: { root: null, revision: 0, viewId: null },
-      },
-      {
-        pluginId: 'b',
-        path: null,
-        view: { root: null, revision: 0, viewId: null },
-      },
-    ]);
-  });
-
-  const listed = reducePluginSlot([], {
-    type: 'contributors',
-    pluginIds: ['example'],
-  });
-
-  it('draws a contributor from its snapshot', () => {
-    expect(reducePluginSlot(listed, view('example'))).toEqual([
-      {
-        pluginId: 'example',
-        path,
-        view: { root: slotCounterRoot, revision: 1, viewId: null },
-      },
-    ]);
-  });
-
-  it('redraws a contributor from its patch', () => {
-    const drawn = reducePluginSlot(listed, view('example'));
-
-    expect(
-      reducePluginSlot(drawn, view('example', slotCounterWavePatch)),
-    ).toEqual([
-      {
-        pluginId: 'example',
-        path,
-        view: { root: slotCounterTree('argo', 1), revision: 2, viewId: null },
-      },
-    ]);
-  });
-
-  it('ignores a view from a Plugin the Server did not list', () => {
-    expect(reducePluginSlot([], view('stranger'))).toEqual([]);
-  });
-
-  it('keeps what a contributor drew when a reconnect lists it again', () => {
-    const drawn = reducePluginSlot(
-      reducePluginSlot([], { type: 'contributors', pluginIds: ['example'] }),
-      view('example'),
-    );
-
-    expect(
-      reducePluginSlot(drawn, {
-        type: 'contributors',
-        pluginIds: ['example', 'other'],
-      }),
-    ).toEqual([
-      drawn[0],
-      {
-        pluginId: 'other',
-        path: null,
-        view: { root: null, revision: 0, viewId: null },
-      },
-    ]);
-  });
-});
-
-const replacement = (message = slotCounterSnapshot) =>
+const replacement = (message = waveCounterSnapshot) =>
   ({ type: 'replacement', pluginId: 'example', path, message }) as const;
 
 describe('reduceReplaceable', () => {
@@ -145,7 +69,7 @@ describe('reduceReplaceable', () => {
       replacement: {
         pluginId: 'example',
         path,
-        view: { root: slotCounterRoot, revision: 1, viewId: null },
+        view: { root: waveCounterRoot, revision: 1, viewId: null },
       },
     });
   });
@@ -153,13 +77,13 @@ describe('reduceReplaceable', () => {
   it('redraws a replacement from its patch', () => {
     const drawn = reduceReplaceable(core, replacement());
 
-    expect(reduceReplaceable(drawn, replacement(slotCounterWavePatch))).toEqual(
+    expect(reduceReplaceable(drawn, replacement(waveCounterWavePatch))).toEqual(
       {
         input: messageSlotFixture,
         replacement: {
           pluginId: 'example',
           path,
-          view: { root: slotCounterTree('argo', 1), revision: 2, viewId: null },
+          view: { root: waveCounterTree('argo', 1), revision: 2, viewId: null },
         },
       },
     );

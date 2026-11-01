@@ -42,3 +42,13 @@ export const Counted: Story = {
 export const Action: Story = {
   args: { title: 'Photos', leading: 'photos', action: true },
 };
+
+// A row that does nothing, as the Attach Sheet's Slash Commands when the Agent has none.
+export const Disabled: Story = {
+  args: {
+    title: 'Slash Commands',
+    leading: 'code',
+    action: true,
+    disabled: true,
+  },
+};

@@ -1,8 +1,6 @@
 import { type PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   ComponentEvent,
-  PluginSlotInput,
-  SlotMessage,
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
@@ -17,7 +15,6 @@ type MountSurface = Pick<PluginSurface, 'platform'>;
 
 export type Opening = {
   path: string;
-  slot?: PluginSlotInput;
   surface?: MountSurface;
   projectId?: string;
   connectionId?: string;
@@ -25,10 +22,12 @@ export type Opening = {
 
 export type PluginMount = {
   surface: MountSurface;
+  page: string;
   pluginId?: string;
+  // The Project the page opens for, which it reads from its render context (ADR-0046).
   projectId?: string;
   connectionId?: string;
-} & ({ page: string } | { slot: PluginSlotInput });
+};
 
 type Event = ComponentEvent & { key: string };
 
@@ -41,7 +40,7 @@ export class PluginTestView {
   private latest: ViewMessage | null = null;
   private failure: Error | null = null;
   private readonly changes = new ViewChanges();
-  private path: string;
+  private readonly path: string;
   private readonly projectId: string | undefined;
 
   public constructor(
@@ -153,30 +152,12 @@ export class PluginTestView {
     this.controller.abort();
   }
 
-  private receive({ path, slot }: Opening): Promise<void> {
-    return slot ? this.receiveSlot(slot) : this.receivePage(path);
-  }
-
-  private async receivePage(path: string): Promise<void> {
+  private async receive({ path }: Opening): Promise<void> {
     for await (const message of this.service.view(
       { pluginId: this.pluginId, path, projectId: this.projectId },
       this.connection,
     ))
       this.update(message);
-  }
-
-  private async receiveSlot(slot: PluginSlotInput): Promise<void> {
-    for await (const message of this.service.slot(slot, this.connection)) {
-      if (!this.contributes(message)) continue;
-      this.path = message.path;
-      this.update(message.message);
-    }
-  }
-
-  private contributes(
-    message: SlotMessage,
-  ): message is Extract<SlotMessage, { type: 'view' }> {
-    return message.type === 'view' && message.pluginId === this.pluginId;
   }
 
   private update(message: ViewMessage): void {

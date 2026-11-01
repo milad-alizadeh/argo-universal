@@ -1,8 +1,6 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp"
     android:viewportWidth="24" android:viewportHeight="24">
-  <path android:fillColor="@android:color/transparent"
-      android:strokeColor="@android:color/white" android:strokeWidth="2"
-      android:strokeLineCap="round" android:strokeLineJoin="round"
-      android:pathData="M9 6l6 6l-6 6" />
+  <path android:fillColor="@android:color/white"
+      android:pathData="M9.71 5.29L15.71 11.29Q15.78 11.36 15.83 11.44Q15.89 11.53 15.92 11.62Q15.96 11.71 15.98 11.8Q16 11.9 16 12Q16 12.1 15.98 12.2Q15.96 12.29 15.92 12.38Q15.89 12.47 15.83 12.56Q15.78 12.64 15.71 12.71L9.71 18.71Q9.64 18.78 9.56 18.83Q9.47 18.89 9.38 18.92Q9.29 18.96 9.2 18.98Q9.1 19 9 19Q8.9 19 8.8 18.98Q8.71 18.96 8.62 18.92Q8.53 18.89 8.44 18.83Q8.36 18.78 8.29 18.71Q8.22 18.64 8.17 18.56Q8.11 18.47 8.08 18.38Q8.04 18.29 8.02 18.2Q8 18.1 8 18Q8 17.9 8.02 17.8Q8.04 17.71 8.08 17.62Q8.11 17.53 8.17 17.44Q8.22 17.36 8.29 17.29L14.29 11.29L15 12L14.29 12.71L8.29 6.71Q8.22 6.64 8.17 6.56Q8.11 6.47 8.08 6.38Q8.04 6.29 8.02 6.2Q8 6.1 8 6Q8 5.9 8.02 5.8Q8.04 5.71 8.08 5.62Q8.11 5.53 8.17 5.44Q8.22 5.36 8.29 5.29Q8.36 5.22 8.44 5.17Q8.53 5.11 8.62 5.08Q8.71 5.04 8.8 5.02Q8.9 5 9 5Q9.1 5 9.2 5.02Q9.29 5.04 9.38 5.08Q9.47 5.11 9.56 5.17Q9.64 5.22 9.71 5.29Z" />
 </vector>
