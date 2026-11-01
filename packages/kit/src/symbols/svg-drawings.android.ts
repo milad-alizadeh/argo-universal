@@ -11,9 +11,10 @@ import gitPullRequest from './assets/svg-drawings/git-pull-request.xml';
 import type { SvgSymbolName } from './svg-symbols';
 
 /*
- * An SVG icon as an Android vector drawable, the same paths as its component in svg-symbols. A Compose row cannot
- * hold the component, and a row's leading lane shows nothing without a drawing, so its title would start left of
- * its neighbours' (#1757). Keep each file's paths equal to its component's.
+ * An SVG icon as an Android vector drawable. A Compose row cannot hold the component, and a row's leading lane
+ * shows nothing without a drawing, so its title would start left of its neighbours' (#1757). Expo UI reads a
+ * drawable's fill and ignores its stroke (expo/expo ImageLoader.kt), so each file fills the outline its component
+ * strokes; `pnpm generate:svg-drawings` in the kit writes them and the parity test checks them.
  */
 const drawings = {
   'chevron-right': chevronRight,
