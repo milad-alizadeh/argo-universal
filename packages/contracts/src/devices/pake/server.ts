@@ -4,6 +4,7 @@ import {
   elementBytes,
   generator,
   type GroupElement,
+  randomElement,
   randomScalar,
   readElement,
   sidBytes,
@@ -86,11 +87,15 @@ function askedOf(ask: Uint8Array, random: RandomBytes): Asked {
   };
 }
 
-// Always as many entries as a reply can hold, so how many Tickets are outstanding, and whether the pair sheet is open, is not something to read off its length. A pad is noise to a Device, like any entry made for a code it does not hold.
+// An entry no Device can open, made like the real ones: an element, then bytes that look sealed.
+const pad = (random: RandomBytes): Uint8Array =>
+  concatBytes(randomElement(random), random(entryBytes - elementBytes));
+
+// Always as many entries as a reply can hold, so how many Tickets are outstanding, and whether the pair sheet is open, is not something to read off its length. A pad is noise to a Device, like any entry made for a code it does not hold, and decodes like one.
 const entries = (made: readonly Made[], random: RandomBytes): Uint8Array[] =>
   Array.from(
     { length: mostOffered },
-    (_, at) => made[at]?.entry ?? random(entryBytes),
+    (_, at) => made[at]?.entry ?? pad(random),
   );
 
 // Only a live Ticket's entry carries the key; the others only say what became of the Ticket.

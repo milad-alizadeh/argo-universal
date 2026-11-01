@@ -21,7 +21,7 @@ export interface CodeFieldProps {
 }
 
 // Only the code's digits stay: a pasted "482-915" or "482 915" lands as six.
-export const codeCharacters = (typed: string, length: number): string =>
+const codeCharacters = (typed: string, length: number): string =>
   typed.replaceAll(/\D/g, '').slice(0, length);
 
 /*

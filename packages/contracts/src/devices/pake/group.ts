@@ -52,3 +52,7 @@ export function readElement(bytes: Uint8Array): GroupElement {
 
   return element;
 }
+
+// An element nobody has a use for, so a pad in a reply decodes as an element like the real entries do.
+export const randomElement = (random: RandomBytes): Uint8Array =>
+  Point.BASE.multiply(randomScalar(random)).toBytes();

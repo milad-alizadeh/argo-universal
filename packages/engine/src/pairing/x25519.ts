@@ -20,7 +20,7 @@ export interface Keypair {
   readonly publicKey: Buffer;
 }
 
-export const rawPublicKey = (key: KeyObject): Buffer =>
+const rawPublicKey = (key: KeyObject): Buffer =>
   Buffer.from(key.export({ type: 'spki', format: 'der' })).subarray(
     spkiPrefix.length,
   );

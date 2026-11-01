@@ -1,6 +1,6 @@
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { describe, expect, it } from 'vitest';
-import { generator } from './group';
+import { generator, readElement } from './group';
 import {
   answerRun,
   refuseRun,
@@ -12,6 +12,7 @@ import {
   type ServerRun,
   type RandomBytes,
 } from './index';
+import { entryBytes, mostOffered } from './wire';
 
 const random: RandomBytes = (length): Uint8Array =>
   crypto.getRandomValues(new Uint8Array(length));
@@ -120,6 +121,16 @@ describe('a Device that does not hold the code', () => {
 });
 
 describe('a transcript a watcher recorded', () => {
+  it('has every entry decode as an element, so none can be told for a pad', () => {
+    const { server } = run(code, [live(code)]);
+
+    const entries = Array.from({ length: mostOffered }, (_, at) =>
+      server.reply.subarray(1 + at * entryBytes, 1 + at * entryBytes + 32),
+    );
+
+    expect(entries.every((entry) => readElement(entry))).toBe(true);
+  });
+
   it('holds neither the Server key nor anything the code makes by itself', () => {
     const { device, server } = run(code, [live(code)]);
     const sid = device.ask.subarray(0, 16);
