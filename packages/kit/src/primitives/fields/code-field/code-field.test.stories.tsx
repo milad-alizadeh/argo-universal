@@ -17,8 +17,8 @@ const meta = {
   args: {
     label: 'Code',
     value: '',
-    length: 10,
-    groupSize: 5,
+    length: 6,
+    groupSize: 3,
     onChangeText: fn(),
   },
   render: (args): React.JSX.Element => <Typing {...args} />,
@@ -28,23 +28,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Case, spaces and a dash are not part of the code, so a code read aloud lands as its characters.
-export const KeepsOnlyTheCharacters: Story = {
+// Spaces and a dash are not part of the code, so a code read aloud lands as its digits.
+export const KeepsOnlyTheDigits: Story = {
   play: async ({ canvas, userEvent }) => {
     const field = canvas.getByLabelText('Code');
 
-    await userEvent.type(field, '7kq4m-9xd 2b');
-    await expect(field).toHaveValue('7KQ4M9XD2B');
+    await userEvent.type(field, '482-9 15');
+    await expect(field).toHaveValue('482915');
   },
 };
 
-// A paste longer than the code fills the code and no more.
+// A paste longer than the code fills the code and no more; a letter is not a digit and lands nowhere.
 export const StopsAtTheLength: Story = {
   play: async ({ canvas, userEvent }) => {
     const field = canvas.getByLabelText('Code');
 
-    await userEvent.type(field, '7KQ4M9XD2BZZZ');
-    await expect(field).toHaveValue('7KQ4M9XD2B');
+    await userEvent.type(field, '48291577');
+    await expect(field).toHaveValue('482915');
   },
 };
 
@@ -54,7 +54,7 @@ export const DisabledTakesNothing: Story = {
   play: async ({ canvas, userEvent }) => {
     const field = canvas.getByLabelText('Code');
 
-    await userEvent.type(field, '7KQ');
+    await userEvent.type(field, '482');
     await expect(field).toHaveValue('');
   },
 };
