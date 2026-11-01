@@ -82,3 +82,57 @@ describe('a form read where code generation is unavailable', () => {
     });
   });
 });
+
+// The Elicitation Claude sends for AskUserQuestion: the choices, and an optional Other answer.
+const askedQuestion: PendingElicitation['requestedSchema'] = {
+  type: 'object',
+  properties: {
+    question_0: {
+      title: 'Color',
+      type: 'string',
+      oneOf: [
+        { const: 'Red', title: 'Red' },
+        { const: 'Blue', title: 'Blue' },
+      ],
+    },
+    question_0_custom: { title: 'Other', type: 'string' },
+  },
+};
+
+describe('a form whose every answer is optional', () => {
+  const form = createElicitationSchema(askedQuestion);
+  const validate = (values: ElicitationValues): FormErrors =>
+    form.validate({ value: form.defaultValues(values) });
+
+  it('cannot be submitted with nothing answered', () => {
+    expect(validate({})?.form).toBe('Answer at least one to submit.');
+  });
+
+  it('counts blank text as nothing answered', () => {
+    expect(validate({ question_0_custom: '  ' })?.form).toBeDefined();
+  });
+
+  it('can be submitted once one answer is given', () => {
+    expect(validate({ question_0: 'Red' })).toBeUndefined();
+    expect(validate({ question_0_custom: 'Green' })).toBeUndefined();
+  });
+
+  it('leaves a form with a required answer to that rule', () => {
+    const required = createElicitationSchema({
+      ...askedQuestion,
+      required: ['question_0_custom'],
+    });
+
+    expect(
+      required.validate({ value: required.defaultValues({}) })?.form,
+    ).toBeUndefined();
+  });
+});
+
+describe('a form with nothing to answer', () => {
+  it('can be submitted', () => {
+    const form = createElicitationSchema({ type: 'object', properties: {} });
+
+    expect(form.validate({ value: form.defaultValues({}) })).toBeUndefined();
+  });
+});
