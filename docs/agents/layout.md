@@ -101,7 +101,7 @@ Compact has no column, so the Workbench is a menu and a sheet. Every card and ev
 
 **The Session header carries a Workbench IconButton beside its "…".** Pressing it opens a nav menu — the same component as the "…" menu that holds Archive and Rename — listing the Workbench's sections in the order the desktop cards take, each with its icon and its muted count: Changes, Agents, Shells, then the sections Plugins add through the Slot.
 
-**Picking a section opens it as a bottom sheet over the Session,** built on Argo's `Sheet` primitive. That sheet is the phone's Inspector tab: its root page lists the section's items. The root page carries a ✕ in its title row; a page pushed inside it carries Back.
+**Picking a section opens it as a bottom sheet over the Session,** built on Argo's `Sheet` primitive. That sheet is the phone's Inspector tab: its root page lists the section's items. The root page carries a ✕ in its title row; a page pushed inside it carries Back. On Android, system Back closes the whole sheet instead of popping the pushed page; the page's own Back control pops one level. Material's dialog window consumes Back before React Native's `BackHandler` sees it, and props alone cannot change that.
 
 **Pressing a row inside a sheet pushes that item's detail as a page in the same sheet:** an Agent's Feed, a Shell's output, a Change's detail. The list and the pushed page are the tab's two levels, as they are on a desktop Inspector tab.
 
