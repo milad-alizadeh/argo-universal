@@ -101,7 +101,12 @@ const deviceRow = (
   device.serverDevice ? thisComputer(device) : pairedDevice(device, onOpen);
 
 const thisComputer = (device: DeviceRow): React.JSX.Element => (
-  <FieldGroup.Value key={device.id} title={device.name} value="This computer" />
+  <FieldGroup.Value
+    key={device.id}
+    title={device.name}
+    value="This computer"
+    leading={leadingFor(device)}
+  />
 );
 
 const pairedDevice = (
@@ -117,12 +122,13 @@ const pairedDevice = (
   />
 );
 
-type Leading = React.ComponentProps<typeof FieldGroup.Link>['leading'];
+type Leading = React.ComponentProps<typeof FieldGroup.Value>['leading'];
 
+// A phone-class Device draws the phone glyph, any other the computer's; the Server says only the platform, so no tablet.
 const leadingFor = (device: DeviceRow): Leading =>
   device.platform === 'ios' || device.platform === 'android'
-    ? ({ sf: 'iphone', material: 'smartphone' } as const)
-    : ({ sf: 'desktopcomputer', material: 'computer' } as const);
+    ? 'phone'
+    : 'computer';
 
 function statusSection(props: DeviceListViewProps): React.JSX.Element | null {
   const access = props.localNetworkAccess;
