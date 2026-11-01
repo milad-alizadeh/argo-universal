@@ -18,15 +18,3 @@ export function reportFailure(failure: string | null, retry: () => void): void {
       else app.quit();
     });
 }
-
-// A failure the Server machine itself did not expect: there is nothing to retry, so the App goes.
-export function reportUnexpectedFailure(error: string): void {
-  void dialog
-    .showMessageBox({
-      type: 'error',
-      message: 'Argo could not start the Server',
-      detail: error,
-      buttons: ['Quit'],
-    })
-    .then((): void => app.quit());
-}

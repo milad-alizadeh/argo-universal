@@ -52,6 +52,10 @@ export { PluginSettingsDetailScreen } from './screens/settings/plugins/$id/plugi
 
 export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
 
+export { OpenLinkScreen } from './screens/open/open-link-screen';
+
+export { useDesktopNavigation } from './features/app-navigation';
+
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
 export { AddServerScreen } from './screens/settings/servers/add/add-server-screen';
