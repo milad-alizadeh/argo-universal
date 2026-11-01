@@ -12,36 +12,32 @@ const choiceName = (option: SelectOption, value: string): string =>
   configurationChoices(option).find((choice) => choice.value === value)?.name ??
   value;
 
-const isPicked = (sent: InitialConfigOption): boolean => !sent.optional;
-
-const sentFor = (
-  initial: readonly InitialConfigOption[],
-  option: SelectOption,
-): InitialConfigOption | undefined =>
-  initial.find(
-    (entry) => entry.configId === option.configId && isPicked(entry),
-  );
-
-const toast = (option: SelectOption, chosen: string): ErrorToast => ({
-  title: `The Agent changed the ${option.name}`,
-  message: `It runs ${choiceName(option, option.currentValue)} instead of ${choiceName(option, chosen)}.`,
-});
-
 const isModelSelect = (option: SessionConfigOption): option is SelectOption =>
   option.type === 'select' && isModelOption(option);
 
-const differs = (sent: InitialConfigOption, option: SelectOption): boolean =>
-  sent.value !== option.currentValue;
+const sentModel = (
+  initial: readonly InitialConfigOption[],
+  option: SelectOption,
+): string | undefined => {
+  const sent = initial.find(
+    (entry) => entry.configId === option.configId && !entry.optional,
+  );
+
+  return typeof sent?.value === 'string' ? sent.value : undefined;
+};
 
 const correction = (
   initial: readonly InitialConfigOption[],
   option: SelectOption,
 ): ErrorToast | undefined => {
-  const sent = sentFor(initial, option);
+  const sent = sentModel(initial, option);
 
-  return sent && differs(sent, option)
-    ? toast(option, String(sent.value))
-    : undefined;
+  if (sent === undefined || sent === option.currentValue) return undefined;
+
+  return {
+    title: `The Agent changed the ${option.name}`,
+    message: `It runs ${choiceName(option, option.currentValue)} instead of ${choiceName(option, sent)}.`,
+  };
 };
 
 /*

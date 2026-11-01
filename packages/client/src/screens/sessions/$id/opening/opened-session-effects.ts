@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { useSessionFeed } from '#features/feed';
+import type { SessionFeed } from '#features/feed';
 import { type EmptySessionConfiguration } from '#features/sessions';
 import type { OpenedSession } from './opened-session';
 import { useModelCorrection } from './use-model-correction';
@@ -25,10 +25,9 @@ export function useConfigureStore(
   }, [session.store, configuration]);
 }
 
-// What the opened Session's Feed tells the screen: its prompt is shown, and the Agent may have changed a choice.
 export function useFeedEffects(
   opened: OpenedSession,
-  feed: ReturnType<typeof useSessionFeed>,
+  feed: SessionFeed,
   configuration: EmptySessionConfiguration,
 ): void {
   useShowsPrompt(opened, feed.view?.items.length);

@@ -1,5 +1,5 @@
 import type { InitialConfigOption, SessionConfigOption } from '@repo/contracts';
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { modelCorrectionToast } from './model-correction-toast';
 
 const model = (currentValue: string): SessionConfigOption => ({
@@ -23,36 +23,61 @@ const mode: SessionConfigOption = {
   options: [{ value: 'default', name: 'Ask first' }],
 };
 
-const chosen = (value: string, optional = false): InitialConfigOption => ({
+const modelSwitch: SessionConfigOption = {
+  type: 'boolean',
   configId: 'model',
-  value,
-  optional,
-});
+  name: 'Model',
+  category: 'model',
+  currentValue: true,
+};
 
-it('says nothing when the Agent runs the model the reader chose', () => {
-  expect(
-    modelCorrectionToast([chosen('haiku')], [model('haiku')]),
-  ).toBeUndefined();
-});
+const chosen = (
+  value: string | boolean,
+  optional = false,
+): InitialConfigOption => ({ configId: 'model', value, optional });
 
-it('names the model the Agent runs instead of the one chosen', () => {
-  expect(modelCorrectionToast([chosen('haiku')], [model('sonnet')])).toEqual({
-    title: 'The Agent changed the Model',
-    message: 'It runs Sonnet 5.5 instead of Haiku 5.5.',
+describe('modelCorrectionToast', () => {
+  it('names the model the Agent runs instead of the one chosen', () => {
+    expect(modelCorrectionToast([chosen('haiku')], [model('sonnet')])).toEqual({
+      title: 'The Agent changed the Model',
+      message: 'It runs Sonnet 5.5 instead of Haiku 5.5.',
+    });
   });
-});
 
-it('says nothing about a model the reader never picked', () => {
-  expect(
-    modelCorrectionToast([chosen('haiku', true)], [model('sonnet')]),
-  ).toBeUndefined();
-});
+  it('names a model the options do not list by its value', () => {
+    expect(modelCorrectionToast([chosen('opus')], [model('sonnet')])).toEqual({
+      title: 'The Agent changed the Model',
+      message: 'It runs Sonnet 5.5 instead of opus.',
+    });
+  });
 
-it('says nothing about an option that is not the model', () => {
-  expect(
-    modelCorrectionToast(
-      [{ configId: 'mode', value: 'plan', optional: false }],
-      [mode],
-    ),
-  ).toBeUndefined();
+  it.each([
+    {
+      case: 'the Agent runs the model the reader chose',
+      initial: [chosen('haiku')],
+      live: [model('haiku')],
+    },
+    {
+      case: 'a model the reader never picked',
+      initial: [chosen('haiku', true)],
+      live: [model('sonnet')],
+    },
+    {
+      case: 'an option that is not the model',
+      initial: [{ configId: 'mode', value: 'plan', optional: false }],
+      live: [mode],
+    },
+    {
+      case: 'options with no model',
+      initial: [chosen('haiku')],
+      live: [mode],
+    },
+    {
+      case: 'a model option that is a switch',
+      initial: [chosen(true)],
+      live: [modelSwitch],
+    },
+  ])('says nothing for $case', ({ initial, live }) => {
+    expect(modelCorrectionToast(initial, live)).toBeUndefined();
+  });
 });
