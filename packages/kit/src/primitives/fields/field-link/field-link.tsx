@@ -2,6 +2,7 @@ import { Row, Spacer } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
+import { cn } from '#kit/utils';
 import { NativeText } from '#primitives/content/native-text';
 import {
   RowTitle,
@@ -50,8 +51,11 @@ const linkProps = (props: FieldLinkProps): Attributes => ({
   disabled: props.disabled,
   onPress: props.onPress,
   onKeyDown: (event) => followOnEnter(event, props),
-  className: rowPressTargetClassName,
+  className: cn(rowPressTargetClassName, props.disabled && disabledClassName),
 });
+
+// A disabled row dims to half, as the web menu's disabled items do.
+const disabledClassName = 'opacity-50';
 
 const LinkRow = (props: FieldLinkProps): ReactElement => (
   <Row alignment="center">
