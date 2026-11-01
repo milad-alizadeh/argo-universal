@@ -143,21 +143,18 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     contentDescription = LOADING_LABEL
     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
     accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = "Busy"
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = BUSY_LABEL
   }
 
   /*
-   * While the Skeleton holds a Skeleton.Ignore its own node is not an accessibility node, so the Ignore content
-   * gets a stop of its own. "Loading" is then said once, as an announcement, when this first happens in a loading
-   * state; it leaves the Skeleton as a screen reader sees it without the "Busy" status.
+   * "Loading" is said once, as an announcement, the first time the Skeleton steps aside in a loading state; there is
+   * no "Busy" status on the screen after it. A Skeleton.Ignore that is not shown does not count: it has no stop to give.
    */
   private fun stepAsideForIgnored() {
     if (steppedAside) return
     steppedAside = true
-    contentDescription = null
-    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_NONE
-    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = null
+    clearBusyStatus(View.IMPORTANT_FOR_ACCESSIBILITY_NO)
+    // announceForAccessibility is deprecated in API 36 and has no replacement that speaks without a node.
     @Suppress("DEPRECATION")
     announceForAccessibility(LOADING_LABEL)
   }
@@ -169,10 +166,12 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     exposeBusyToAccessibility()
   }
 
-  private fun hideBusyFromAccessibility() {
+  private fun hideBusyFromAccessibility() = clearBusyStatus(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO)
+
+  private fun clearBusyStatus(importance: Int) {
     contentDescription = null
     accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_NONE
-    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+    importantForAccessibility = importance
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = null
   }
 
@@ -206,7 +205,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   private fun refresh() {
     val found = ViewWalk(this).collect()
-    if (found.ignored.isEmpty()) stepBackIn() else stepAsideForIgnored()
+    if (found.ignored.any { it.isShown }) stepAsideForIgnored() else stepBackIn()
     drawOver(found.leaves.map { it.view })
     hideFromAccessibility(found.muted)
     cover(found.compose)
@@ -283,6 +282,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   private companion object {
     const val LOADING_LABEL = "Loading"
+    const val BUSY_LABEL = "Busy"
     const val REFRESH_MS = 100L
     const val FADE_MS = 200L
     const val PULSE_MS = 900L
