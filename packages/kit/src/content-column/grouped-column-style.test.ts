@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldGroupColumnStyle } from './column-layout';
+import { fieldGroupColumnStyle } from './grouped-column-style';
 
 describe('fieldGroupColumnStyle', () => {
   it('leaves a group with no column to fill its pane', () => {

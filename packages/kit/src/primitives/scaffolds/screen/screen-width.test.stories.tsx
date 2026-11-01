@@ -1,6 +1,7 @@
 import type { ScreenWidth } from '@repo/contracts/kit-tokens';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
+import { columnWidth } from '#mocks/story-layout';
 import { Screen } from './index';
 import { widthContent, WidthExample } from './screen-width.mocks';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
@@ -16,14 +17,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const left = (element: Element): number => element.getBoundingClientRect().left;
-
-// The reading column's width, read off the page so the test never copies the token.
-const columnToken = (): number =>
-  Number.parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue(
-      '--container-column',
-    ),
-  );
 
 // The heading and the content start on one edge at every width.
 function sharedEdge(width: ScreenWidth): Story {
@@ -61,7 +54,7 @@ function columnCap(width: ScreenWidth, capped: boolean): Story {
         .getByTestId(widthContent)
         .getBoundingClientRect().width;
 
-      await expect(runs <= columnToken()).toBe(capped);
+      await expect(runs <= columnWidth()).toBe(capped);
     },
   });
 }

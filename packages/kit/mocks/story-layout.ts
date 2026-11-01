@@ -80,6 +80,10 @@ export function wideBreakpoint(): number {
   return tokenWidth('--breakpoint-wide');
 }
 
+export function columnWidth(): number {
+  return tokenWidth('--container-column');
+}
+
 export function contentWideMin(): number {
   return tokenWidth('--container-content-wide');
 }
