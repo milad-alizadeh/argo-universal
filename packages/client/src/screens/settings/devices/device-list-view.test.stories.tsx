@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { DeviceListView } from './device-list-view';
+import { threeDevices } from './device-list-view-fixtures';
 
 const switchName = 'Local network access';
 
@@ -16,6 +17,7 @@ const meta = {
     onLocalNetworkAccessChange: fn(),
     onPairDevice: fn(),
     onRetry: fn(),
+    onOpenDevice: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof DeviceListView>;
@@ -114,5 +116,34 @@ export const RetriesLoadingWithoutClaimingOff: Story = {
     await expect(canvas.queryByText(claimsOff)).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();
+  },
+};
+
+export const ThisComputerHasNoWayToBeUnpaired: Story = {
+  args: { devices: threeDevices },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('This computer')).toBeVisible();
+    await expect(
+      canvas.queryByRole('link', { name: /Milad’s Studio/ }),
+    ).toBeNull();
+    await expect(canvas.queryByText(/Unpair/)).toBeNull();
+  },
+};
+
+export const OpeningAPairedDeviceShowsItsPage: Story = {
+  args: { devices: threeDevices },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('link', { name: /iPhone 15 Pro/ }));
+    await expect(args.onOpenDevice).toHaveBeenCalledOnce();
+    await expect(args.onOpenDevice).toHaveBeenCalledWith('phone');
+  },
+};
+
+// A phone never offers pairing: it is a Server Device action.
+export const APhoneDoesNotOfferPairing: Story = {
+  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('button', pairButton)).toBeNull();
   },
 };

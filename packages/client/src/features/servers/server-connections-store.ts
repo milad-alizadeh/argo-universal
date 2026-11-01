@@ -13,6 +13,10 @@ interface HeldConnection<Held extends HeldServer> {
   open: Held;
 }
 
+// A Connection the Server refused is opened again whenever the list is held again, which is how pairing again reaches it.
+const refused = (held: HeldServer): boolean =>
+  held.connection.state() === 'not-allowed';
+
 type ServerEndpoints = ReadonlyMap<string, ServerEndpoint>;
 
 /*
@@ -60,7 +64,11 @@ export class ServerConnectionsStore<Held extends HeldServer> {
     const gone = [...this.held].filter(([id, held]) => {
       const endpoint = endpoints.get(id);
 
-      return endpoint === undefined || endpointKey(endpoint) !== held.at;
+      return (
+        endpoint === undefined ||
+        endpointKey(endpoint) !== held.at ||
+        refused(held.open)
+      );
     });
 
     for (const [id] of gone) this.closeHeld(id);

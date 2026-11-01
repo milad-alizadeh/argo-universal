@@ -2,6 +2,7 @@ import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import type { AppNavigation } from '../app-navigation';
 import type { DeviceAdmission } from '../devices/admit-device';
+import type { OpenChannels } from '../devices/open-channels';
 import type { LocalNetworkAccess } from '../network-access';
 import type { Notifications, NotificationOptions } from '../notifications';
 import {
@@ -81,6 +82,8 @@ export type RoutedSetup = HttpSetup & {
   // Where a Device that has just registered is reported, so an open pair sheet can name it.
   registrations: PairingRegistrations;
   admission: DeviceAdmission;
+  // The channels Paired Devices have open, which unpairing one ends.
+  channels: OpenChannels;
 };
 
 // Serves tRPC and blobs to this computer's own App, and to a paired Device on the local network through the encrypted channel (ADR 0002, ADR 0045); resolves once the port is bound.

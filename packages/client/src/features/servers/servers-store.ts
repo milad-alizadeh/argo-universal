@@ -2,6 +2,7 @@ import type { KnownServer } from '#features/connection';
 import { ownServerId } from '#lib/product/server-scope';
 import { type AppServer, ownAppServer, pairedAppServer } from './app-server';
 import {
+  forgetKnownServer,
   keepKnownServer,
   keepLookedAtServer,
   loadKnownServers,
@@ -24,6 +25,8 @@ export interface ServersStore {
   look: (id: string) => void;
   // Lists a Server this Device has just paired with, keeps it, and shows it; its Connection opens at once.
   add: (server: KnownServer) => void;
+  // Forgets a Server this Device has unpaired from; the App looks at its own Server if it was showing that one. The own Server cannot be removed.
+  remove: (id: string) => void;
 }
 
 /*
@@ -75,6 +78,21 @@ class AppServersStore implements ServersStore {
     });
     keepLookedAtServer(added.id);
     void keepKnownServer(known);
+  };
+
+  public readonly remove = (id: string): void => {
+    const servers = this.snapshot.servers.filter(
+      (server) => server.id !== id || server.serverDevice,
+    );
+
+    if (servers.length === this.snapshot.servers.length) return;
+
+    this.set({
+      servers,
+      lookingAt: shownOrOwn(servers, this.snapshot.lookingAt),
+      read: true,
+    });
+    void forgetKnownServer(id);
   };
 
   private set(next: ServersSnapshot): void {

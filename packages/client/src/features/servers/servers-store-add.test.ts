@@ -66,3 +66,45 @@ describe('adding a Server that has just paired', () => {
     });
   });
 });
+
+describe('removing a Server this Device has unpaired from', () => {
+  it('drops it from the list and from what is kept, and shows the own Server instead', async () => {
+    const store = await readingServers();
+
+    store.add(studio);
+    store.add(bench);
+    store.remove(bench.key);
+
+    const { servers, lookingAt } = store.getSnapshot();
+
+    expect(servers.map((server) => server.id)).toEqual([ownId, studio.key]);
+    expect(lookingAt).toBe(ownId);
+    await vi.waitFor(async () => {
+      expect(await loadKnownServers()).toEqual([studio]);
+      expect(await loadLookedAtServer()).toBe(ownId);
+    });
+  });
+
+  it('never removes the Server on this Device', async () => {
+    const store = await readingServers();
+
+    store.remove(ownId);
+
+    expect(store.getSnapshot().servers.map((server) => server.id)).toEqual([
+      ownId,
+    ]);
+  });
+
+  it('lists a Server paired again after it was removed', async () => {
+    const store = await readingServers();
+
+    store.add(studio);
+    store.remove(studio.key);
+    store.add(studio);
+
+    expect(store.getSnapshot().servers.map((server) => server.id)).toEqual([
+      ownId,
+      studio.key,
+    ]);
+  });
+});

@@ -23,7 +23,8 @@ const studio: ServerRow = {
 describe("a Server's row", () => {
   it("says that Server's state and not the list's", () => {
     expect(serverStateLabel(own.state)).toBe('Connected');
-    expect(serverStateLabel(studio.state)).toBe('Unreachable');
+    expect(serverStateLabel(studio.state)).toBe('Not found on this network');
+    expect(serverStateLabel('not-allowed')).toBe('Needs pairing again');
   });
 
   it('reads the state of its own Server and no other', () => {

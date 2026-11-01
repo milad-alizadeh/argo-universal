@@ -32,6 +32,13 @@ export function createDoors(setup: RoutedSetup, guard: RequestGuard): Doors {
   };
 }
 
+const keyDoor = (setup: RoutedSetup, report: RequestGuard['report']): KeyDoor =>
+  new KeyDoor({
+    publicKey: setup.staticKey.publicKey,
+    offer: (source, holds) => setup.tickets.offer(source, holds),
+    report,
+  });
+
 const channelDoor = (
   setup: RoutedSetup,
   requests: RequestServer,
@@ -40,14 +47,8 @@ const channelDoor = (
   new ChannelDoor({
     staticKey: setup.staticKey,
     admission: setup.admission,
+    channels: setup.channels,
     serve: (socket): void => void requests.emit('connection', socket),
-    report,
-  });
-
-const keyDoor = (setup: RoutedSetup, report: RequestGuard['report']): KeyDoor =>
-  new KeyDoor({
-    publicKey: setup.staticKey.publicKey,
-    offer: (source, holds) => setup.tickets.offer(source, holds),
     report,
   });
 

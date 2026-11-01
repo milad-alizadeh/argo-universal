@@ -1,7 +1,7 @@
 import type { PairingClaim } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { device } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
   writeDatabaseJobAndWaitForCommit,
   type StorageTransaction,
@@ -42,6 +42,28 @@ class LastSeenJob implements WriterJob {
   }
 }
 
+class UnpairJob implements WriterJob {
+  public constructor(private readonly id: string) {}
+
+  public describe(): string {
+    return 'unpair a Device';
+  }
+
+  // The Server Device's own row is never deleted here, whichever id is named.
+  public commit(transaction: StorageTransaction): void {
+    transaction
+      .delete(device)
+      .where(and(eq(device.id, this.id), eq(device.serverDevice, false)))
+      .run();
+  }
+}
+
+export const readDeviceById = (
+  database: Database,
+  id: string,
+): DeviceRow | undefined =>
+  database.select().from(device).where(eq(device.id, id)).get();
+
 export const readDeviceByPublicKey = (
   database: Database,
   publicKey: string,
@@ -80,3 +102,9 @@ export const followLastSeen = (
   now: number,
 ): Promise<void> =>
   writeDatabaseJobAndWaitForCommit(writer, new LastSeenJob(id, now));
+
+// Unpairing is that one row deleted (ADR-0045): the Device Key it held is a stranger's from the next handshake on.
+export const unpairDevice = (
+  writer: WriterActorRef,
+  id: string,
+): Promise<void> => writeDatabaseJobAndWaitForCommit(writer, new UnpairJob(id));
