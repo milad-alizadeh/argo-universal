@@ -113,8 +113,8 @@
       ]
     },
     "tools": {
-      // Each script runs by path from a package script, a hook config or by hand; `pnpm perf` runs the perf suites.
-      "entry": ["*.{mts,mjs}", "perf/*.perf.mts", "storybook-sync-port.d.ts"]
+      // Each script runs by path from a package script, a hook config or by hand.
+      "entry": ["*.{mts,mjs}", "storybook-sync-port.d.ts"]
     }
   }
 }
