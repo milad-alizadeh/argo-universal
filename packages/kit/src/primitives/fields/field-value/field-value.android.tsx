@@ -32,14 +32,18 @@ export function FieldValue(props: Props): ReactElement {
   return (
     <RowListItem
       {...rowListItemProps(props)}
-      trailing={
-        <Box contentAlignment="centerEnd" modifiers={valueModifiers}>
-          <NativeText tone="muted">{props.value}</NativeText>
-        </Box>
-      }
+      trailing={trailing(props.value)}
     />
   );
 }
+
+// An empty value has no trailing content: a ListItem gives it the width its Box asks for, whether or not it holds text, which would squeeze the title (a missing page's message).
+const trailing = (value: string): ReactElement | undefined =>
+  value ? (
+    <Box contentAlignment="centerEnd" modifiers={valueModifiers}>
+      <NativeText tone="muted">{value}</NativeText>
+    </Box>
+  ) : undefined;
 
 // The width a title's letter takes, which sets how long the bar standing in for it is.
 const barPerCharacter = 8;
