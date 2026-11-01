@@ -2,6 +2,7 @@ import type { operations, OperationId } from '@repo/contracts/operations';
 import type { z } from 'zod';
 import type { NativeStartRequest } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
+import { createAppOperations } from './app';
 import type { NativeStartId, StartedWork } from './native-start';
 import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
@@ -67,6 +68,7 @@ export function createImplementations(
 ): OperationImplementations {
   return {
     ...createAgentAccessOperations(deps),
+    ...createAppOperations(deps),
     ...sessionImplementations(deps.sessions),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),

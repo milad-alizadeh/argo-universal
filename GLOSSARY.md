@@ -84,6 +84,10 @@ _Avoid_: Permission level, risk level
 How many Prompts stand behind the one a Session is serving: the user's Prompt is 0, and a Prompt an Agent sends from its Turn is one more than the Prompt that started that Turn. Sessions in one Project prompt each other without asking, and past ten the call is `confirm`, so no cascade runs on forever with no user in it.
 _Avoid_: Prompt depth, delegation depth (the cap on which Sessions exist), Hook chain
 
+**Screen link**:
+A typed link to a Screen on one Server, such as `argo://open/<Server id>/session/<Session id>`, or `/open/...` on the web's own origin. It names a destination by stable ids, never by an address of the App's routes, and only navigates: it never prompts, pairs, grants access or runs an Operation. The `app.open` Operation sends a destination to the one desktop App on the Server Device and answers `delivered` or `not_opened`; `delivered` never claims the Screen opened.
+_Avoid_: Deep link (for the typed form), URL scheme, route
+
 **Operation work**:
 What an Operation started that its caller can wait for by a wait id: a Session opening, a Turn, or the Operation's own Tool call. A wait gives up after ninety seconds and never stops the work.
 _Avoid_: Job, task

@@ -47,6 +47,14 @@ export function generatedOperations(runner: OperationRunner) {
           runner.run({ kind: 'app', id: 'agent.remove', params: input }),
         ),
     }),
+    app: router({
+      open: publicProcedure
+        .input(operations['app.open'].params)
+        .output(operations['app.open'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'app.open', params: input }),
+        ),
+    }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)

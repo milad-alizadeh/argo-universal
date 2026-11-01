@@ -19,6 +19,9 @@ const branches = (projectId: string): ScopedOperation =>
 const list = (params: Json): ScopedOperation =>
   operation('session.list', params);
 
+const open = (destination: Json): ScopedOperation =>
+  operation('app.open', { destination });
+
 const cases: [ScopedOperation, string][] = [
   [operation('project.list', {}), runs],
   [operation('agent.list', {}), runs],
@@ -38,6 +41,16 @@ const cases: [ScopedOperation, string][] = [
   [startIn('p1'), runs],
   [startIn('p2'), asks],
   [operation('session.cancel', { sessionId: 7 }), 'BAD_REQUEST'],
+  [open({ screen: 'session', sessionId: 'unrelated' }), runs],
+  [open({ screen: 'session', sessionId: 'foreign' }), asks],
+  [open({ screen: 'session', sessionId: 'missing' }), 'NOT_FOUND'],
+  [open({ screen: 'project', projectId: 'p1' }), runs],
+  [open({ screen: 'project', projectId: 'p2' }), asks],
+  [open({ screen: 'sessions' }), asks],
+  [open({ screen: 'agents' }), asks],
+  [open({ screen: 'settings' }), asks],
+  [open({ screen: 'plugin', pluginId: 'a', navId: 'b', page: [] }), asks],
+  [open({ screen: 'route', href: '/settings' }), 'BAD_REQUEST'],
 ];
 
 it.each(cases)('%j %s', async (scopedOperation, outcome) => {

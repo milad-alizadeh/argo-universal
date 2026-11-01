@@ -10,6 +10,7 @@ import type {
 } from '@repo/contracts/operations/control';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
+import type { AppNavigation } from '../app-navigation';
 import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
 import type { Sessions } from '../sessions';
@@ -48,6 +49,7 @@ export type {
 export type OperationsDeps = RegistryDeps &
   Pick<FeedDeps, 'findWriter'> & {
     sessions: Sessions;
+    appNavigation: AppNavigation;
     controlToken: string;
     userHome: string;
     sessionTokens: SessionTokens;

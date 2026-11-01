@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { readChangesSummary } from '@repo/git';
 import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
+import type { AppNavigationDeps } from '../app-navigation';
 import type { BlobUploadDeps } from '../blob';
 import { type FeedDeps } from '../feed';
 import type { NotificationsDeps } from '../notifications';
@@ -29,7 +30,8 @@ export type AppRouterDeps = SessionSources &
   BlobUploadDeps &
   SystemDeps &
   FeedDeps &
-  NotificationsDeps & {
+  NotificationsDeps &
+  AppNavigationDeps & {
     userHome: string;
     sessionTokens: SessionTokens;
     controlToken: string;

@@ -1,4 +1,5 @@
 import { createAgentsRouter } from '../agents';
+import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
@@ -20,6 +21,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     system: createSystemRouter(deps),
     feed: createFeedRouter(deps),
     notifications: createNotificationsRouter(deps),
+    navigation: createAppNavigationRouter(deps),
   }),
 );
 
