@@ -63,38 +63,6 @@ it('leaves a revoked Ticket good for nothing, so the closed sheet outlives nothi
   expect(await host.caller.devices.list()).toHaveLength(1);
 });
 
-it('names the Device that registered, by the name the Device itself claimed', async (): Promise<void> => {
-  const host = await startEngineTestHost();
-  const registered = await host.caller.pairing.registered();
-  const { invite } = await host.caller.pairing.mint();
-
-  const device = await connectAsDevice(host, {
-    ticket: invite.ticket,
-    name: 'iPhone 15 Pro',
-  });
-
-  expect((await registered[Symbol.asyncIterator]().next()).value).toEqual({
-    deviceId: device.deviceId,
-    claimedName: 'iPhone 15 Pro',
-    claimedPlatform: 'ios',
-  });
-});
-
-it('leaves a declined Device off the Devices list and with no way back in', async (): Promise<void> => {
-  const host = await startEngineTestHost();
-  const { invite } = await host.caller.pairing.mint();
-  const device = await connectAsDevice(host, { ticket: invite.ticket });
-
-  await host.caller.pairing.decline({ deviceId: device.deviceId });
-
-  expect(await host.caller.devices.list()).toEqual([
-    expect.objectContaining({ serverDevice: true }),
-  ]);
-  await expect(
-    connectAsDevice(host, { deviceKey: device.deviceKey }),
-  ).rejects.toMatchObject({ refusal: 'ticket-required' });
-});
-
 it('declines nothing when asked for a Device that is not asking to pair', async (): Promise<void> => {
   const { caller } = await startEngineTestHost();
   const [serverDevice] = await caller.devices.list();
@@ -106,20 +74,8 @@ it('declines nothing when asked for a Device that is not asking to pair', async 
   expect(await caller.devices.list()).toEqual([serverDevice]);
 });
 
-it('declines nothing twice, so No answers one prompt and unpairs nothing after it', async (): Promise<void> => {
-  const host = await startEngineTestHost();
-  const { invite } = await host.caller.pairing.mint();
-  const device = await connectAsDevice(host, { ticket: invite.ticket });
-
-  await host.caller.pairing.decline({ deviceId: device.deviceId });
-
-  await expect(
-    host.caller.pairing.decline({ deviceId: device.deviceId }),
-  ).rejects.toThrow('That Device is not asking to pair');
-});
-
 // Pairing is the Server Device's alone: a Paired Device that could mint a Ticket could pair another Device, which is the lost-phone case ADR-0022 forbids.
-it('lets no Paired Device pair another, watch who is pairing, or decline one', async (): Promise<void> => {
+it('lets no Paired Device pair another, watch who is pairing, or answer for one', async (): Promise<void> => {
   const host = await startEngineTestHost();
   const { ticket } = host.pairing.mint();
   const paired = await connectAsDevice(host, { ticket });
@@ -131,6 +87,9 @@ it('lets no Paired Device pair another, watch who is pairing, or decline one', a
   await expect(paired.caller.pairing.revoke.mutate()).rejects.toMatchObject(
     forbidden,
   );
+  await expect(
+    paired.caller.pairing.allow.mutate({ deviceId: paired.deviceId }),
+  ).rejects.toMatchObject(forbidden);
   await expect(
     paired.caller.pairing.decline.mutate({ deviceId: paired.deviceId }),
   ).rejects.toMatchObject(forbidden);

@@ -1,4 +1,4 @@
-import type { PairingClaim } from '@repo/contracts';
+import type { PairingClaim, PairingRegistration } from '@repo/contracts';
 import type { TRPCClient } from '@trpc/client';
 import type { AppRouter } from '../src/engine/router';
 import type { ChannelSocket } from '../src/pairing/channel-socket';
@@ -28,11 +28,25 @@ export interface TestDeviceOptions {
   host?: string;
   // What the App was told the Server's static public key is; the Server's own unless a test gives it another.
   serverPublicKey?: string;
+  /*
+   * What the owner does on the pair sheet when a Device spends a Ticket: allow it (the default, so a test that only needs a Paired Device gets one),
+   * refuse it, or say nothing and leave the Server holding the registration. A Device with no Ticket has nobody to answer for it.
+   */
+  answer?: Owner;
+}
+
+interface OwnerCaller {
+  registered: () => Promise<AsyncIterable<PairingRegistration>>;
+  allow: (input: { deviceId: string }) => Promise<void>;
+  decline: (input: { deviceId: string }) => Promise<void>;
 }
 
 export interface ChannelTestHost {
   url: string;
-  caller: { devices: { serverKey: () => Promise<{ publicKey: string }> } };
+  caller: {
+    devices: { serverKey: () => Promise<{ publicKey: string }> };
+    pairing: OwnerCaller;
+  };
 }
 
 /*
@@ -43,7 +57,9 @@ export async function openChannel(
   host: ChannelTestHost,
   options: TestDeviceOptions = {},
 ): Promise<OpenedChannel> {
-  return connectChannel(await channelInput(host, options));
+  const input = await channelInput(host, options);
+
+  return answered(host, options, connectChannel(input));
 }
 
 // The same, as the caller every Engine test reads the Server through; its handshake is spent, so later calls authenticate with the Device Key alone.
@@ -52,7 +68,7 @@ export async function connectAsDevice(
   options: TestDeviceOptions = {},
 ): Promise<TestDevice> {
   const input = await channelInput(host, options);
-  const opened = await connectChannel(input);
+  const opened = await answered(host, options, connectChannel(input));
 
   opened.socket.destroy();
 
@@ -64,6 +80,50 @@ export async function connectAsDevice(
     channel: later,
     caller: callerOverChannel(later),
   };
+}
+
+type Owner = 'allow' | 'decline' | 'none';
+
+// A Device with no Ticket has nobody to answer for it.
+const ownerFor = (options: TestDeviceOptions): Owner =>
+  options.ticket ? (options.answer ?? 'allow') : 'none';
+
+const nobodyAsking = (): IteratorResult<PairingRegistration, undefined> => ({
+  done: true,
+  value: undefined,
+});
+
+/*
+ * The owner answering the Device while it waits: the Server holds a Device's registration until they do, so the connection a test is waiting on only settles after this.
+ * A Device the Server refuses outright never registers, so there is nothing to answer and the refusal is what comes back.
+ * The stream it watches is left open: it ends with the host, and it only ever tells a watcher about a registration once.
+ */
+export async function answered<T>(
+  host: ChannelTestHost,
+  options: TestDeviceOptions,
+  connecting: Promise<T>,
+): Promise<T> {
+  const owner = ownerFor(options);
+
+  if (owner === 'none') return connecting;
+  const first = await firstAsking(host, connecting);
+
+  if (!first.done)
+    await host.caller.pairing[owner]({ deviceId: first.value.deviceId });
+
+  return connecting;
+}
+
+async function firstAsking(
+  host: ChannelTestHost,
+  connecting: Promise<unknown>,
+): Promise<IteratorResult<PairingRegistration, undefined>> {
+  const stream = await host.caller.pairing.registered();
+
+  return Promise.race([
+    stream[Symbol.asyncIterator]().next(),
+    connecting.then(nobodyAsking, nobodyAsking),
+  ]);
 }
 
 export const channelClosed = (socket: ChannelSocket): Promise<void> =>
@@ -103,5 +163,7 @@ export async function readAsDevice(
   host: ChannelTestHost,
   options: TestDeviceOptions & { path: string },
 ): Promise<Response> {
-  return getOverChannel(await channelInput(host, options), options.path);
+  const input = await channelInput(host, options);
+
+  return answered(host, options, getOverChannel(input, options.path));
 }

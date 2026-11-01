@@ -2,7 +2,7 @@ import { connect } from 'node:net';
 import { PairingWelcome } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { connectAsDevice } from '#mocks/engine-channel';
+import { answered, connectAsDevice } from '#mocks/engine-channel';
 import { channelMagic } from './channel-door';
 import { FrameReader, frameRecord } from './frames';
 import { startHandshake } from './handshake-initiator';
@@ -43,7 +43,8 @@ it('refuses a first message it has already answered, and the same Device on a fr
     ),
   });
 
-  await sendHandshake(port, handshake.message);
+  // The Server holds the first until the owner allows it, so it is the owner's Allow that lets this one finish.
+  await answered(host, { ticket }, sendHandshake(port, handshake.message));
   const answer = handshake.accept(await sendHandshake(port, handshake.message));
 
   expect(PairingWelcome.parse(JSON.parse(answer.welcome.toString()))).toEqual({

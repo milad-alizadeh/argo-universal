@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { connect } from 'node:net';
-import type { PairingClaim } from '@repo/contracts';
+import type { PairingClaim, PairingRegistration } from '@repo/contracts';
 import type { ByteSocket } from '../src/features/connection/api/channel/byte-socket';
 import type { ChannelPlatform } from '../src/features/connection/api/channel/channel-transport';
 import {
@@ -71,7 +71,13 @@ export const nodeChannelPlatform = (
 // The slice of a started Engine a Device pairs with.
 export interface PairableHost {
   url: string;
-  caller: { devices: { serverKey: () => Promise<{ publicKey: string }> } };
+  caller: {
+    devices: { serverKey: () => Promise<{ publicKey: string }> };
+    pairing: {
+      registered: () => Promise<AsyncIterable<PairingRegistration>>;
+      allow: (input: { deviceId: string }) => Promise<void>;
+    };
+  };
   pairing: { mint: () => { ticket: string } };
 }
 
@@ -107,7 +113,41 @@ export async function openAs(
     await endpointOf(serverHost),
   );
 
-  return openChannel(input, platform.openSocket);
+  return allowed(host, openChannel(input, platform.openSocket), input.claim);
+}
+
+/*
+ * The owner pressing Allow: the Server holds a Device that spends a Pairing Ticket until they do, so a test that pairs is waiting on this.
+ * A Device with no Ticket never waits, and one the Server refuses outright has nobody to answer.
+ */
+async function allowed<T>(
+  host: PairableHost,
+  connecting: Promise<T>,
+  claim: PairingClaim,
+): Promise<T> {
+  if (claim.ticket) await allowFirst(host, connecting);
+
+  return connecting;
+}
+
+const nobodyAsking = (): IteratorResult<PairingRegistration> => ({
+  done: true,
+  value: undefined,
+});
+
+async function allowFirst(
+  host: PairableHost,
+  connecting: Promise<unknown>,
+): Promise<void> {
+  const stream = await host.caller.pairing.registered();
+
+  const first = await Promise.race([
+    stream[Symbol.asyncIterator]().next(),
+    connecting.then(nobodyAsking, nobodyAsking),
+  ]);
+
+  if (!first.done)
+    await host.caller.pairing.allow({ deviceId: first.value.deviceId });
 }
 
 // A Device that has paired: its first Connection spent a Pairing Ticket, and every one after it is the Device Key alone.
