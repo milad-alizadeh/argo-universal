@@ -11,6 +11,12 @@ export { ConnectionContext, useConnection } from './stores/connection-context';
 
 export { type OpenConnection, openConnection } from './api/open-connection';
 
+export {
+  isPaired,
+  type PairedEndpoint,
+  type ServerEndpoint,
+} from './api/server-endpoint';
+
 export { retryServer } from './api/retry-server';
 
 // The connect step passes this as `browse`; null where the platform cannot browse.
@@ -30,6 +36,7 @@ export {
   createServerBlobUrl,
   createServerMediaUrl,
   useBlobUrl,
+  useChannelUrls,
 } from './api/trpc/blob-url';
 
 export {

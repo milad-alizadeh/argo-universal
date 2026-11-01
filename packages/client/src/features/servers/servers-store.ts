@@ -90,7 +90,11 @@ export const createServersStore = (ownServerUrl: string): ServersStore =>
  * Device has not learned has none, so it stays in the list, reading as unreachable, rather than showing a blank App.
  */
 const canShow = (servers: readonly AppServer[], id: string): boolean =>
-  servers.some((server) => server.id === id && server.url !== undefined);
+  servers.some(
+    (server) =>
+      server.id === id &&
+      (server.url !== undefined || server.channel !== undefined),
+  );
 
 /*
  * A kept Server the App cannot show — one this Device has since unpaired, or one whose address it has not learned —

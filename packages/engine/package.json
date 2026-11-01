@@ -69,6 +69,9 @@
     "./mocks/engine-network": "./mocks/engine-network.ts",
     "./mocks/app-socket": "./mocks/app-socket.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts",
-    "./mocks/data-fixture": "./mocks/data-fixture.ts"
+    "./mocks/data-fixture": "./mocks/data-fixture.ts",
+    "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
+    "./mocks/acp-engine": "./mocks/acp-engine.ts",
+    "./mocks/acp-feed": "./mocks/acp-feed.ts"
   }
 }

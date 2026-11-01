@@ -1,17 +1,19 @@
+import type { ServerEndpoint } from '#features/connection';
 import type { AppServer } from './app-server';
 import {
   connectableServers,
+  endpointKey,
   type HeldServer,
   type OpenServerConnection,
 } from './open-server-connections';
 
 // One Connection and the address it was opened to, so a Server that moves is reopened and one that has not is left alone.
 interface HeldConnection<Held extends HeldServer> {
-  url: string;
+  at: string;
   open: Held;
 }
 
-type ServerUrls = ReadonlyMap<string, string>;
+type ServerEndpoints = ReadonlyMap<string, ServerEndpoint>;
 
 /*
  * The App's Connection to each Server it holds one for (ADR-0022). The Connections outlive the list: holding a list
@@ -39,9 +41,9 @@ export class ServerConnectionsStore<Held extends HeldServer> {
 
   // One Connection per Server with an address, whatever else the list has done since it was last held.
   public readonly hold = (servers: readonly AppServer[]): void => {
-    const urls = connectableServers(servers);
-    const closed = this.closeGone(urls);
-    const opened = this.openMissing(urls);
+    const endpoints = connectableServers(servers);
+    const closed = this.closeGone(endpoints);
+    const opened = this.openMissing(endpoints);
 
     if (closed || opened) this.publish();
   };
@@ -54,21 +56,26 @@ export class ServerConnectionsStore<Held extends HeldServer> {
     this.publish();
   };
 
-  private closeGone(urls: ServerUrls): boolean {
-    const gone = [...this.held].filter(
-      ([id, held]) => urls.get(id) !== held.url,
-    );
+  private closeGone(endpoints: ServerEndpoints): boolean {
+    const gone = [...this.held].filter(([id, held]) => {
+      const endpoint = endpoints.get(id);
+
+      return endpoint === undefined || endpointKey(endpoint) !== held.at;
+    });
 
     for (const [id] of gone) this.closeHeld(id);
 
     return gone.length > 0;
   }
 
-  private openMissing(urls: ServerUrls): boolean {
-    const missing = [...urls].filter(([id]) => !this.held.has(id));
+  private openMissing(endpoints: ServerEndpoints): boolean {
+    const missing = [...endpoints].filter(([id]) => !this.held.has(id));
 
-    for (const [id, url] of missing)
-      this.held.set(id, { url, open: this.open(url) });
+    for (const [id, endpoint] of missing)
+      this.held.set(id, {
+        at: endpointKey(endpoint),
+        open: this.open(endpoint),
+      });
 
     return missing.length > 0;
   }

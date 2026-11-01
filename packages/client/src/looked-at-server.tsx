@@ -1,20 +1,14 @@
-import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import type { Connection, OpenConnection } from '#features/connection';
 import { ConnectionContext, holdCacheOnline } from '#features/connection';
-import {
-  BlobUrlContext,
-  createServerBlobUrl,
-  createServerMediaUrl,
-} from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import type { AppServer, ServerConnections } from '#features/servers';
 import { ServerScopeProvider } from '#lib/product/server-scope';
-import { LinkPreviewProvider } from './link-preview-provider';
 import { createQueryClient } from './query-cache';
+import { ServerUrls } from './server-urls';
 
 export interface LookedAtServerProps {
   servers: readonly AppServer[];
@@ -44,19 +38,12 @@ export function LookedAtServer(
 
 // A Server with somewhere to open a Connection, and the Connection opened to it.
 interface LookedAtConnection {
-  server: AppServer & { url: string };
+  server: AppServer;
   connection: OpenConnection;
 }
 
-const reachable = (
-  server: AppServer | undefined,
-): LookedAtConnection['server'] | undefined =>
-  server?.url === undefined ? undefined : { ...server, url: server.url };
-
 function lookedAt(props: LookedAtServerProps): LookedAtConnection | undefined {
-  const server = reachable(
-    props.servers.find(({ id }) => id === props.lookingAt),
-  );
+  const server = props.servers.find(({ id }) => id === props.lookingAt);
 
   const connection = props.connections.get(props.lookingAt);
 
@@ -92,37 +79,24 @@ function ConnectionProviders({
   );
 }
 
-function ServerProviders({
-  server,
-  connection,
-  children,
-}: ServerProvidersProps): React.JSX.Element {
-  useCacheOnline(connection.connection);
+function ServerProviders(props: ServerProvidersProps): React.JSX.Element {
+  useCacheOnline(props.connection.connection);
 
-  return (
-    <ServerScopeProvider server={server}>
-      <ConnectionContext.Provider value={connection.connection}>
-        <ServerUrls serverUrl={server.url}>{children}</ServerUrls>
-      </ConnectionContext.Provider>
-    </ServerScopeProvider>
-  );
+  return <ServerContexts {...props} />;
 }
 
-type ServerUrlsProps = { serverUrl: string; children: ReactNode };
-
-// Images and Plugin media load over HTTP from the Server's own routes.
-function ServerUrls({
-  serverUrl,
+function ServerContexts({
+  server,
+  connection: { connection, fetch },
   children,
-}: ServerUrlsProps): React.JSX.Element {
-  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
-  const mediaUrl = useMemo(() => createServerMediaUrl(serverUrl), [serverUrl]);
-
+}: ServerProvidersProps): React.JSX.Element {
   return (
-    <BlobUrlContext.Provider value={blobUrl}>
-      <MediaUrlContext.Provider value={mediaUrl}>
-        <LinkPreviewProvider>{children}</LinkPreviewProvider>
-      </MediaUrlContext.Provider>
-    </BlobUrlContext.Provider>
+    <ServerScopeProvider server={server}>
+      <ConnectionContext.Provider value={connection}>
+        <ServerUrls server={server} read={fetch}>
+          {children}
+        </ServerUrls>
+      </ConnectionContext.Provider>
+    </ServerScopeProvider>
   );
 }
