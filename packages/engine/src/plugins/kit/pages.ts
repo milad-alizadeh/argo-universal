@@ -1,4 +1,4 @@
-import type { Page, SlotContent } from '@repo/contracts/plugins/argo-api';
+import type { Page } from '@repo/contracts/plugins/argo-api';
 import type {
   PluginEvent,
   PluginViewId,
@@ -32,7 +32,6 @@ type PageEvent = Exclude<
 
 export interface Pages {
   register: (path: string, page: Page) => void;
-  registerSlot: (slotId: string, content: SlotContent) => void;
   receive: (event: PageEvent) => void;
   registerReplacement: (path: string, element: ReactNode) => void;
   requirePage: (path: string, contribution?: string) => void;
@@ -43,7 +42,6 @@ interface Hub {
   send: ViewSender;
   settle: DispatchSender;
   pages: Map<string, Page>;
-  slots: Map<string, SlotContent>;
   views: Map<PluginViewId, OpenView>;
   replacements: ReplacementPages;
 }
@@ -106,7 +104,7 @@ function receive(hub: Hub, event: PageEvent): void {
   else receiveDrawing(hub, event);
 }
 
-// A page or Slot content a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
+// A page a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
 export function mountPages(
   send: ViewSender,
   settle: DispatchSender,
@@ -116,7 +114,6 @@ export function mountPages(
 
   return {
     register: (path, page) => void hub.pages.set(path, page),
-    registerSlot: (slotId, content) => void hub.slots.set(slotId, content),
     receive: (event) => receive(hub, event),
     registerReplacement: (path, element) =>
       hub.replacements.register(path, element),
@@ -143,7 +140,6 @@ function pageHub(
     send,
     settle,
     pages: new Map(),
-    slots: new Map(),
     views: new Map(),
     replacements: new ReplacementPages(),
   };

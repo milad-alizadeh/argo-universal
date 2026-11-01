@@ -7,8 +7,8 @@ import {
   follow,
   issueTitle,
   project,
-  slot,
   tracker,
+  trackerPage,
   type PageView,
   wait,
 } from './journey-fixture';
@@ -27,7 +27,7 @@ async function setRemote(test: Test, originUrl: string | null): Promise<void> {
 
 async function openList(originUrl: string | null): Promise<Test> {
   const test = await tracker([{ ...project, originUrl }]);
-  await chooseGithub(test.slot(slot));
+  await chooseGithub(trackerPage(test));
 
   return test;
 }

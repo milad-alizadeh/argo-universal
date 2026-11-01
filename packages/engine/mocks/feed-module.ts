@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
+import { AppNavigation } from '../src/app-navigation';
 import { OpenChannels } from '../src/devices/open-channels';
 import { type AppRouter, createAppRouter } from '../src/engine/router';
 import {
@@ -99,6 +100,8 @@ const feedModuleSecrets = {
   channels: new OpenChannels(),
 };
 
+const appNavigation = new AppNavigation({ serverId: 'feed-module-test' });
+
 const feedModuleRouterInput = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
@@ -128,6 +131,7 @@ const feedPlugins = (
 
 type RouterRuntime = Pick<
   AppRouterInput,
+  | 'appNavigation'
   | 'blobsFolder'
   | 'version'
   | 'startedAt'
@@ -140,6 +144,7 @@ const routerRuntime = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
 ): RouterRuntime => ({
+  appNavigation,
   blobsFolder: host.blobsFolder,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',

@@ -1,5 +1,6 @@
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
+import type { AppNavigation } from '../app-navigation';
 import type { DeviceAdmission } from '../devices/admit-device';
 import type { OpenChannels } from '../devices/open-channels';
 import type { LocalNetworkAccess } from '../network-access';
@@ -67,6 +68,7 @@ export type HttpSetup = {
   commandAdmission: AbortController;
   notifications: Notifications;
   localNetworkAccess: LocalNetworkAccess;
+  appNavigation: AppNavigation;
 };
 
 export type RoutedSetup = HttpSetup & {

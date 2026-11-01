@@ -1,18 +1,16 @@
 import type { ProjectInfo } from '@repo/contracts';
+import type { ProjectDetailsItem } from '@repo/contracts/plugins/wire';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { homePath, SettingsLoading } from '#features/settings';
-import {
-  pluginSlotSections,
-  type PluginSectionFrame,
-  type PluginSlotContribution,
-} from '../../../../lib/product/plugin-registry';
+import type { ReadItem } from '../../../plugins/slot-items';
 import {
   accountsSection,
   type ProjectAccountsProps,
 } from './project-detail-accounts';
 import { newSessionsSections } from './project-detail-new-sessions';
+import { pluginSections, type OpenPluginPage } from './project-detail-plugins';
 import { removeSection } from './project-detail-remove';
 
 export type ProjectLoad =
@@ -27,25 +25,32 @@ export interface ProjectDetailViewProps {
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
   onBack?: () => void;
-  // What Plugins add to this Project (the `argo/project/details/v1` Slot), one section each between Accounts and New Sessions.
-  pluginContributions?: readonly PluginSlotContribution[];
+  // What Plugins add to this Project (the `argo/project/details/v1` Slot), one titled section each, after Argo's own Folder, Accounts and New Sessions (ADR-0046).
+  pluginItems?: readonly ReadItem<ProjectDetailsItem>[];
+  // Opens the Plugin page a row drills into (ADR-0046); a row with no action never calls it.
+  onOpenPluginPage?: OpenPluginPage;
   // The Accounts this Project chose per host, drawn below Folder; omitted until the Server has answered.
   accounts?: ProjectAccountsProps;
 }
 
 type BodyProps = Pick<
   ProjectDetailViewProps,
-  'project' | 'name' | 'otherDevice' | 'pluginContributions' | 'accounts'
+  | 'project'
+  | 'name'
+  | 'otherDevice'
+  | 'pluginItems'
+  | 'onOpenPluginPage'
+  | 'accounts'
 >;
 
 type SectionsProps = Pick<
   ProjectDetailViewProps,
-  'otherDevice' | 'pluginContributions' | 'accounts'
+  'otherDevice' | 'pluginItems' | 'onOpenPluginPage' | 'accounts'
 > & {
   project: ProjectInfo;
 };
 
-// One Project: its folder, its Accounts, what Plugins add, where its new Sessions start, and Remove.
+// One Project: its folder, its Accounts, where its new Sessions start, what Plugins add, and Remove.
 export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
@@ -85,25 +90,18 @@ const UnloadedProject = ({ status, name }: UnloadedProps): React.JSX.Element =>
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 function ProjectSections(props: SectionsProps): React.JSX.Element {
-  const { project, otherDevice, pluginContributions = [], accounts } = props;
+  const { project, otherDevice, pluginItems = [], accounts } = props;
 
   return (
     <FieldGroup>
       {folderSection(project, otherDevice)}
       {accountsSection(accounts)}
-      {pluginSlotSections(pluginContributions, pluginSection)}
       {newSessionsSections(project)}
+      {pluginSections(pluginItems, props.onOpenPluginPage)}
       {removeSection()}
     </FieldGroup>
   );
 }
-
-// One Plugin's tree is the one row of a section of its own, titled with the Plugin's name.
-const pluginSection: PluginSectionFrame = ({ key, title, children }) => (
-  <FieldGroup.Section key={key} title={title}>
-    {children}
-  </FieldGroup.Section>
-);
 
 function folderSection(
   project: ProjectInfo,

@@ -3,7 +3,7 @@ import { ActionShortcutScope } from '@repo/kit/primitives/actions/action';
 import { List } from '@repo/kit/primitives/lists/list';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PluginSlot } from './plugin-slot';
+import { PluginTree } from './plugin-registry';
 
 function actions(label: string): WireNode {
   return {
@@ -34,19 +34,10 @@ const first = fn();
 
 const later = fn();
 
-const contributions = [
-  {
-    pluginId: 'first',
-    name: 'First',
-    root: actions('First row'),
-    onEvent: first,
-  },
-  {
-    pluginId: 'later',
-    name: 'Later',
-    root: actions('Later row'),
-    onEvent: later,
-  },
+// Two Plugins' trees in one List, as a page that draws more than one Plugin's tree does.
+const trees = [
+  { key: 'first', root: actions('First row'), onEvent: first },
+  { key: 'later', root: actions('Later row'), onEvent: later },
 ];
 
 const meta = {
@@ -61,7 +52,9 @@ export const FirstContributionOwnsShortcut: Story = {
   render: () => (
     <ActionShortcutScope>
       <List appearance="plain">
-        <PluginSlot contributions={contributions} />
+        {trees.map(({ key, ...tree }) => (
+          <PluginTree key={key} {...tree} />
+        ))}
       </List>
     </ActionShortcutScope>
   ),

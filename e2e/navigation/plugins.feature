@@ -161,3 +161,10 @@ Feature: Plugin navigation
     And I pick the "Counter" Plugin to write the Activity line
     And I return to Sessions
     Then the Session row "Check the Activity line" shows the Activity line "Counter line"
+
+  Scenario: Back from a Plugin ListDetail row on a phone Frame returns to its list
+    Given a phone Frame
+    When I open the Issues Plugin
+    And I open the Plugin row "Add CSV export"
+    And I press Back in the page header
+    Then the Plugin row "Sync fails on large repos" is shown

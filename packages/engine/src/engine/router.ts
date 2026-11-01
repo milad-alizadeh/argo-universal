@@ -1,4 +1,5 @@
 import { createAgentsRouter } from '../agents';
+import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
@@ -26,6 +27,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     notifications: createNotificationsRouter(deps),
     network: createNetworkRouter(deps),
     pairing: createPairingRouter(deps),
+    navigation: createAppNavigationRouter(deps),
   }),
 );
 

@@ -7,9 +7,8 @@ import {
 import {
   attachmentDraftReducer,
   attachmentSelectionFailureMessage,
-  toAttachmentError,
-  toUploadForms,
 } from './attachment-draft';
+import { toAttachmentError, toUploadForms } from './attachment-upload';
 
 describe('toUploadForms', () => {
   it('names each upload after its attachment, in draft order', () => {

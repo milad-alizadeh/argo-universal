@@ -44,6 +44,13 @@ ipcRenderer
   // The Storybook window has no handler; it is never minimized to the App.
   .catch((): void => undefined);
 
+// Main sends each Screen link the system opens; the first listener tells main the page can take the ones held.
+const linkListeners = new Set<(link: string) => void>();
+
+ipcRenderer.on('links:open', (_event, link: string): void => {
+  for (const listener of linkListeners) listener(link);
+});
+
 // ADR-0002 permits native sharing of text and URLs alongside window controls and system symbols.
 const argo = {
   serverUrl,
@@ -65,6 +72,16 @@ const argo = {
 
       return (): void => {
         minimizedListeners.delete(listener);
+      };
+    },
+  },
+  links: {
+    onOpen: (listener): (() => void) => {
+      linkListeners.add(listener);
+      ipcRenderer.send('links:ready');
+
+      return (): void => {
+        linkListeners.delete(listener);
       };
     },
   },

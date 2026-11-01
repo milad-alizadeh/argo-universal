@@ -104,7 +104,7 @@ function manifest(
 function contributions(
   contributes: Contributions,
 ): PluginManifest['contributes'] {
-  return { nav: [], slots: ['argo/project/details/v1'], ...contributes };
+  return { nav: [], ...contributes };
 }
 
 // Booting a worker, bundling its page and running a real process outlast the one second `poll` waits by default.
@@ -120,7 +120,6 @@ export function register(argo) {
     const { data, error, stale, refresh } = useData(${queryArguments(query, options)});
     return <Stack direction="column"><Text>{data ? data.stdout : error ? 'error:' + error : 'empty'}</Text><Text>{stale ? 'stale' : 'settled'}</Text><Button label="Refresh" onPress={refresh} /></Stack>;
   }
-  argo.slots.register('argo/project/details/v1', Data);
   argo.pages.register('/', Data);
 }`;
 }

@@ -1,5 +1,6 @@
 import { ExpoRoot, Stack, useLocalSearchParams } from 'expo-router';
 import { use, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { Text } from '#primitives/content/text';
 import { ScreenNavigationEnabled } from '#primitives/scaffolds/screen';
 import { PushedScreenRoute } from '../pushed-screen/routes';
 import { StackScreensContext, type StoryScreens } from './stack-story-context';
@@ -45,18 +46,24 @@ function RootRoute(): React.JSX.Element {
   );
 }
 
-function ScreenRoute(): React.JSX.Element | null {
+function ScreenRoute(): React.JSX.Element {
   const { pages } = use(StackScreensContext);
   const { screen } = useLocalSearchParams<{ screen: string }>();
   const Component = pages[screen];
 
-  if (!Component) return null;
+  // A name the story registered no page under is an address no route answers, as in the App.
+  if (!Component) return <NotFoundRoute />;
 
   return (
     <ScreenNavigationEnabled value>
       <Component />
     </ScreenNavigationEnabled>
   );
+}
+
+// Stands in for the not-found page the App's Frame draws for an address no route answers.
+function NotFoundRoute(): React.JSX.Element {
+  return <Text>Not found</Text>;
 }
 
 function StackLayout(): React.JSX.Element {
@@ -72,6 +79,7 @@ function routes(): ExpoRootContext {
     ['./index.js', { default: RootRoute }],
     ['./screen/[id].js', { default: PushedScreenRoute }],
     ['./[screen].js', { default: ScreenRoute }],
+    ['./+not-found.js', { default: NotFoundRoute }],
   ]);
 
   return Object.assign((key: string) => files.get(key), {

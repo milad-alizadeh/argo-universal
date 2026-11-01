@@ -204,3 +204,5 @@ export const lockBrowserSuite = async (): Promise<(() => void) | undefined> =>
   process.env.CI || process.env[HELD_VARIABLE] === '1'
     ? undefined
     : acquireBrowserSuiteLock({ onWait: printWaiting });
+
+export { releaseAtRunEnd, runHostSchema } from './release-at-run-end.ts';

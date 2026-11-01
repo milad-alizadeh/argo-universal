@@ -14,6 +14,7 @@ import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import type * as React from 'react';
+import type { ComponentProps } from 'react';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -23,6 +24,7 @@ import { watchFontScale } from '@/lib/font-scale-watch';
 import { holdPhonesInPortrait } from '@/lib/phone-orientation';
 import { useNavigationTheme } from '@/lib/theme';
 import { useWindowBackground } from '@/lib/window-background';
+import { pushedScreen, rootScreenLayout } from '@/navigation/section-stack';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -110,16 +112,22 @@ function RootNavigator(): React.JSX.Element {
   );
 }
 
+const storybookScreen = {
+  name: '(dev)/storybook',
+  options: { fullScreenGestureEnabled: false },
+} satisfies ComponentProps<typeof Stack.Screen>;
+
 // Storybook stays outside the Frame.
 function RootStack(): React.JSX.Element {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{ headerShown: false }}
+      screenLayout={rootScreenLayout}
+    >
       <Stack.Screen name="(frame)" />
-      <Stack.Screen name="screen" />
-      <Stack.Screen
-        name="(dev)/storybook"
-        options={{ fullScreenGestureEnabled: false }}
-      />
+      <Stack.Screen {...pushedScreen} />
+      <Stack.Screen name="open/[...link]" />
+      <Stack.Screen {...storybookScreen} />
     </Stack>
   );
 }

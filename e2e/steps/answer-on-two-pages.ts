@@ -1,6 +1,7 @@
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { z } from 'zod';
-import { expect, test } from '../fixtures';
+import { expect } from '../fixtures';
+import { attachArrivalLog } from './attach-arrival-log';
 import { expectReply } from './feed';
 import { Given, When, Then } from './fixtures';
 import { openWidePage } from './frame';
@@ -116,10 +117,7 @@ Then(
     try {
       await expectOverComposer(other, title);
     } catch (error) {
-      await test.info().attach('other-page-arrivalLog', {
-        body: updates.arrivalLog.join('\n') || 'No message reached the page',
-        contentType: 'text/plain',
-      });
+      await attachArrivalLog(updates.arrivalLog);
       throw error;
     }
   },

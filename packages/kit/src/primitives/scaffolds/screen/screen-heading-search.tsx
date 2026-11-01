@@ -15,7 +15,7 @@ interface SearchHeadingProps {
 
 export function SearchHeading(props: SearchHeadingProps): ReactElement {
   return (
-    <View className="h-10 flex-row items-center">
+    <View className="min-h-10 flex-row items-center">
       <SearchField
         {...searchQuery(props.page)}
         sidebar={props.sidebar && Platform.OS === 'web'}

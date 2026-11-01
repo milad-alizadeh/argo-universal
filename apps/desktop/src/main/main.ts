@@ -9,10 +9,9 @@ import {
 } from './app-protocol';
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
-import {
-  reportFailure,
-  reportUnexpectedFailure,
-} from './server-failure-dialog';
+import { handleExternalLinks } from './handle-external-links';
+import { reportUnexpectedFailure } from './report-unexpected-failure';
+import { reportFailure } from './server-failure-dialog';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleServerRetry } from './server-retry';
@@ -102,6 +101,12 @@ let serverStarted = false;
 
 let currentUrl: string | null = null;
 
+// Screen links the system opens in this app (`argo://`), kept apart from `app://app`, which serves its assets.
+const links = handleExternalLinks(windowOrigin, (): void => {
+  if (currentUrl && BrowserWindow.getAllWindows().length === 0)
+    showAppWindow(currentUrl);
+});
+
 // The Server is listening: its page's media loads carry no Origin, so this process proves them with the user token (#1696).
 function serverReady(address: ServerAddress): void {
   currentUrl = serverUrl(address);
@@ -147,7 +152,10 @@ const start = (): void => {
 
 // A second launch hands over to the first one, which shows its window, and quits.
 if (app.requestSingleInstanceLock()) {
-  app.on('second-instance', (): void => {
+  links.receiveLaunch(process.argv);
+
+  app.on('second-instance', (_event, argv): void => {
+    links.receiveLaunch(argv);
     const window = BrowserWindow.getAllWindows()[0];
 
     if (!window) return;

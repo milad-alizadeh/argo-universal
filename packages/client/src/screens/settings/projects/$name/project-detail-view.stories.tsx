@@ -7,7 +7,10 @@ import {
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
 import { chosenAccounts } from './project-detail-accounts-fixtures';
-import { pluginContributions } from './project-detail-plugins-fixtures';
+import {
+  longPathProject,
+  pluginItems,
+} from './project-detail-plugins-fixtures';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -17,7 +20,7 @@ const meta = {
     name: { control: 'text' },
     otherDevice: { control: 'text' },
     project: { control: false },
-    pluginContributions: { control: false },
+    pluginItems: { control: false },
     accounts: { control: false },
   },
   parameters: { screenPreview: true },
@@ -30,14 +33,16 @@ const meta = {
 
 export default meta;
 
-const withSpies = pluginContributions.map((contribution) => ({
-  ...contribution,
-  onEvent: fn(),
-}));
-
 type Story = StoryObj<typeof meta>;
 
 export const NewWorktree: Story = {};
+
+// A path as long as a deep checkout's: it wraps beside the "Path" title, which keeps its own width.
+export const LongPath: Story = {
+  args: {
+    project: { status: 'loaded', project: longPathProject },
+  },
+};
 
 export const Local: Story = {
   args: {
@@ -46,9 +51,9 @@ export const Local: Story = {
   },
 };
 
-// Two Plugins in the Project details Slot, each in a section and card of its own.
+// Two Plugins in the Project details Slot, each in a section and card of its own, their rows drawn by Argo.
 export const PluginSections: Story = {
-  args: { pluginContributions: withSpies },
+  args: { pluginItems, onOpenPluginPage: fn() },
 };
 
 // Each host's chosen Account, below Folder.

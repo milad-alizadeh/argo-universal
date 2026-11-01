@@ -8,36 +8,59 @@ import {
 import { pluginPageRoute } from './plugin-page-route';
 import { usePluginSections } from './use-plugin-sections';
 
-// The Session a page opens for rides in the route's params, so the page's view names it to the Plugin.
-const routeParams = (
-  route: string[],
-  sessionId: string | undefined,
-): { path: string[]; sessionId?: string } =>
-  sessionId === undefined ? { path: route } : { path: route, sessionId };
+/*
+ * What a page opens for: the Session behind a Session header action, or the Project behind a Project details row
+ * (ADR-0046). It rides in the route's params, so the page's view names it to the Plugin.
+ */
+export interface PluginOpening {
+  sessionId?: string;
+  projectId?: string;
+}
 
-const pushPage = (route: string[], sessionId: string | undefined): void =>
+type RouteParams = {
+  path: string[];
+  sessionId?: string;
+  projectId?: string;
+};
+
+function routeParams(
+  route: string[],
+  { sessionId, projectId }: PluginOpening,
+): RouteParams {
+  const params: RouteParams = { path: route };
+
+  if (sessionId !== undefined) params.sessionId = sessionId;
+
+  if (projectId !== undefined) params.projectId = projectId;
+
+  return params;
+}
+
+const pushPage = (route: string[], opening: PluginOpening): void =>
   router.push({
     pathname: '/plugins/[...path]',
-    params: routeParams(route, sessionId),
+    params: routeParams(route, opening),
   });
 
 /*
  * Opens a Plugin's pages for the Plugin whose tree fired the event, from whatever the App is showing. A page opened
- * from a Session, such as by a Session header action, opens for that Session.
+ * from a Session, such as by a Session header action, opens for that Session; one opened from a Project details row
+ * opens for that Project.
  */
 export function usePluginOpener(): (
   pluginId: string,
-  sessionId?: string,
+  opening?: PluginOpening,
 ) => OpenPluginPage {
   const sections = usePluginSections();
   const current = sectionOf(usePathname());
 
-  return (pluginId, sessionId) => (path) => {
-    const route = pluginPageRoute(sections, { pluginId, current }, path);
+  return (pluginId, opening = {}) =>
+    (path) => {
+      const route = pluginPageRoute(sections, { pluginId, current }, path);
 
-    if (route) pushPage(route, sessionId);
-    else pageUnavailable(path);
-  };
+      if (route) pushPage(route, opening);
+      else pageUnavailable(path);
+    };
 }
 
 /*

@@ -36,7 +36,7 @@ export const oneList: Story = {
       await expect(
         canvas.queryByRole('button', { name: exampleProjectName }),
       ).not.toBeInTheDocument();
-      await expect(canvas.getAllByText(/^(now|\d+[mhdw])$/).length).toBe(
+      await expect(canvas.getAllByText(/^(now|\d+[mhdw])$/)).toHaveLength(
         sessionsListProps.sessions.length,
       );
     }),

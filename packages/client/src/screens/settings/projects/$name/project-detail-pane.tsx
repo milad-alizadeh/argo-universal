@@ -1,28 +1,33 @@
 import type { ProjectInfo } from '@repo/contracts';
-import { projectDetailsSlotId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { useProjects } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { usePluginSlot } from '../../../plugins/use-plugin-slot';
+import { usePluginOpener } from '../../../plugins/use-plugin-opener';
+import { useProjectDetailsItems } from '../../../plugins/use-project-details';
 import {
   type ProjectDetailViewProps,
   type ProjectLoad,
   ProjectDetailView,
 } from './project-detail-view';
+import { selectProject } from './select-project';
 import { useProjectAccounts } from './use-project-accounts';
 
 function toProjectLoad(
   projects: ProjectInfo[] | undefined,
   name: string,
+  projectId: string | undefined,
 ): ProjectLoad {
   if (!projects) return { status: 'loading' };
-  const project = projects.find((entry) => entry.name === name);
+  const project = selectProject(projects, name, projectId);
 
   return project ? { status: 'loaded', project } : { status: 'missing' };
 }
 
-function useProjectDetail(name: string): ProjectDetailViewProps {
-  const project = toProjectLoad(useProjects().data, name);
+function useProjectDetail(
+  name: string,
+  projectId: string | undefined,
+): ProjectDetailViewProps {
+  const project = toProjectLoad(useProjects().data, name, projectId);
 
   return {
     name,
@@ -43,12 +48,11 @@ function useBackToProjects(): () => void {
 }
 
 // One Project's page, beside the Projects list on a wide window.
-export function ProjectDetailPane({
-  name,
-}: {
+export function ProjectDetailPane(props: {
   name: string;
+  projectId?: string;
 }): React.JSX.Element {
-  const detail = useProjectDetail(name);
+  const detail = useProjectDetail(props.name, props.projectId);
 
   return detail.project.status === 'loaded' ? (
     <LoadedProjectDetail
@@ -60,20 +64,20 @@ export function ProjectDetailPane({
   );
 }
 
-// Watches the Slot only for a loaded Project, as the Server has no Project to answer for before then.
+type LoadedProps = { detail: ProjectDetailViewProps; projectId: string };
+
+// Asks the Slot only for a loaded Project, as the Server has no Project to answer for before then.
 function LoadedProjectDetail({
   detail,
   projectId,
-}: {
-  detail: ProjectDetailViewProps;
-  projectId: string;
-}): React.JSX.Element {
-  const pluginContributions = usePluginSlot({
-    slotId: projectDetailsSlotId,
-    context: { projectId },
-  });
+}: LoadedProps): React.JSX.Element {
+  const open = usePluginOpener();
 
   return (
-    <ProjectDetailView {...detail} pluginContributions={pluginContributions} />
+    <ProjectDetailView
+      {...detail}
+      pluginItems={useProjectDetailsItems(projectId)}
+      onOpenPluginPage={(pluginId, path) => open(pluginId, { projectId })(path)}
+    />
   );
 }

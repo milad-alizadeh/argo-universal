@@ -116,8 +116,36 @@ function validatorOf(
 
   if (!validate) return () => ({ form: checked.error, fields: {} });
 
-  return ({ value }) => formErrors(fields, validate(content(value)));
+  return ({ value }) => {
+    const answers = content(value);
+
+    return (
+      requireAnAnswer(fields, answers) ?? formErrors(fields, validate(answers))
+    );
+  };
 }
+
+const noAnswer = 'Answer at least one to submit.';
+
+const hasAnswer = (value: ElicitationValue | number): boolean =>
+  typeof value === 'string'
+    ? value.trim() !== ''
+    : !Array.isArray(value) || value.length > 0;
+
+const allOptional = (fields: ElicitationField[]): boolean =>
+  fields.length > 0 && fields.every(({ required }) => !required);
+
+const unanswered = (answers: ElicitationContent): boolean =>
+  !Object.values(answers).some(hasAnswer);
+
+// A form that asks for nothing in particular still needs something said, or there is nothing to send.
+const requireAnAnswer = (
+  fields: ElicitationField[],
+  answers: ElicitationContent,
+): { form: string; fields: Record<string, string> } | undefined =>
+  allOptional(fields) && unanswered(answers)
+    ? { form: noAnswer, fields: {} }
+    : undefined;
 
 const formErrors = (
   fields: ElicitationField[],

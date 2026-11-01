@@ -1,41 +1,29 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync } from 'node:fs';
 import { expect, test } from 'vitest';
+import {
+  componentNames,
+  componentPaths,
+  drawnOutline,
+  outlineOf,
+} from '../../tools/svg-drawings/outline.mts';
 
-const here = import.meta.dirname;
+const names = await componentNames();
 
-const componentsDirectory = join(here, 'svg-symbols');
-
-const drawingsDirectory = join(here, 'assets', 'svg-drawings');
-
-const read = (path: string): string => readFileSync(path, 'utf8');
-
-const componentPaths = (name: string): string =>
-  [
-    ...read(join(componentsDirectory, `${name}.tsx`)).matchAll(
-      /<Path d="([^"]+)"/gu,
-    ),
-  ]
-    .map((match) => match[1])
-    .join(' ');
-
-const drawnPaths = (file: string): string | undefined =>
-  /android:pathData="([^"]+)"/u.exec(read(join(drawingsDirectory, file)))?.[1];
-
-const drawings = readdirSync(drawingsDirectory).filter((file) =>
-  file.endsWith('.xml'),
+test.each(names)(
+  '%s has a drawing that fills the outline its component strokes',
+  async (name) => {
+    expect(await drawnOutline(name)).toBe(
+      await outlineOf(await componentPaths(name)),
+    );
+  },
 );
 
-test.each(drawings)('%s draws the paths of its SVG component', (file) => {
-  expect(drawnPaths(file)).toBe(componentPaths(file.replace(/\.xml$/u, '')));
-});
+test('every drawing but file-diff belongs to an SVG icon', () => {
+  const drawings = readdirSync(
+    new URL('assets/svg-drawings/', import.meta.url),
+  ).map((file) => file.replace(/\.xml$/u, ''));
 
-test('every SVG component but file-diff has a drawing here', () => {
-  const components = readdirSync(componentsDirectory)
-    .filter((file) => file.endsWith('.tsx') && !file.startsWith('svg-symbol-'))
-    .map((file) => file.replace(/\.tsx$/u, ''));
-
-  expect(drawings.map((file) => file.replace(/\.xml$/u, ''))).toEqual(
-    components.filter((name) => name !== 'file-diff'),
+  expect(drawings.toSorted()).toEqual(
+    names.filter((name) => name !== 'file-diff'),
   );
 });

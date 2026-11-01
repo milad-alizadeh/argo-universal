@@ -1,3 +1,4 @@
+import { AppNavigation } from '../app-navigation';
 import { blobsFolderIn } from '../blob';
 import { ensureServerIdentity } from '../devices';
 import { DeviceAdmission } from '../devices/admit-device';
@@ -115,9 +116,10 @@ async function prepareHttpSetup(
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
     plugins: new Plugins(options),
-    localNetworkAccess: new LocalNetworkAccess(
-      options.database,
-      options.databaseWriter,
-    ),
+    appNavigation: new AppNavigation({ serverId }),
+    localNetworkAccess: networkAccessOf(options),
   };
 }
+
+const networkAccessOf = (options: HttpServerOptions): LocalNetworkAccess =>
+  new LocalNetworkAccess(options.database, options.databaseWriter);
