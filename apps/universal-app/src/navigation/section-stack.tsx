@@ -78,7 +78,18 @@ function rootScreen(
   };
 }
 
-// The stack for pages a component pushes over the Frame (`app/screen`): a narrow window's stock header, with Back.
-export function PushedStack(): React.JSX.Element {
-  return <Stack screenOptions={narrowOptions} screenLayout={screenLayout} />;
-}
+/*
+ * The route for pages a component pushes over the Frame (`app/screen/[id]`): a narrow window's stock header, with Back.
+ * It is a screen of the root stack, not of a stack of its own: the first screen of a nested stack has nothing below it
+ * to go back to, so its header drew a title and no Back (#1740).
+ */
+export const pushedScreen = {
+  name: 'screen/[id]',
+  options: { ...narrowOptions, headerShown: true },
+} satisfies ComponentProps<typeof Stack.Screen>;
+
+// The root stack's layout: a pushed page gets the section screens' (Connection banner, return to origin); every other root screen draws itself.
+export const rootScreenLayout: NonNullable<StackProps['screenLayout']> = (
+  props,
+) =>
+  props.route.name === pushedScreen.name ? screenLayout(props) : props.children;
