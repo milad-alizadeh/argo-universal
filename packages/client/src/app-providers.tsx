@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { type ReactNode, useMemo, useSyncExternalStore } from 'react';
 import {
   createServersStore,
+  type OpenServerConnection,
   type ServerConnections,
   ServerConnectionsContext,
   ServersContext,
@@ -14,6 +15,8 @@ import { LookedAtServer } from './looked-at-server';
 export interface AppProvidersProps {
   // The Server on this Device: the one the App opens on, and the only one on a Device that has paired with none.
   serverUrl: string;
+  // How a Connection to a Server is opened; a story stands in for the network here.
+  openServer?: OpenServerConnection;
   children: ReactNode;
 }
 
@@ -27,7 +30,11 @@ export function AppProviders(props: AppProvidersProps): React.JSX.Element {
     [props.serverUrl],
   );
 
-  return <AppServers store={store}>{props.children}</AppServers>;
+  return (
+    <AppServers store={store} openServer={props.openServer}>
+      {props.children}
+    </AppServers>
+  );
 }
 
 const useServers = (store: ServersStore): ServersSnapshot =>
@@ -35,19 +42,20 @@ const useServers = (store: ServersStore): ServersSnapshot =>
 
 interface AppServersProps {
   store: ServersStore;
+  openServer?: OpenServerConnection;
   children: ReactNode;
 }
 
 // Every Server the App holds, each with its own Connection, and the one it is looking at.
-function AppServers({ store, children }: AppServersProps): React.JSX.Element {
+function AppServers({ store, ...props }: AppServersProps): React.JSX.Element {
   const servers = useServers(store);
-  const connections = useServerConnections(servers.servers);
+  const connections = useServerConnections(servers.servers, props.openServer);
 
   return (
     <ServersContext.Provider value={{ ...servers, look: store.look }}>
       <ServerConnectionsContext.Provider value={connections}>
         {servers.read
-          ? lookedAtServer({ servers, connections, children })
+          ? lookedAtServer({ servers, connections, ...props })
           : null}
       </ServerConnectionsContext.Provider>
     </ServersContext.Provider>

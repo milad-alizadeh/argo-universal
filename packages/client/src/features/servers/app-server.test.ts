@@ -21,7 +21,7 @@ describe("a Server's own state", () => {
 });
 
 describe('a Server this Device paired with', () => {
-  it('is listed by the key it paired on, with the address to try', () => {
+  it('is listed by the key it paired on, with the channel to open', () => {
     expect(
       pairedAppServer({
         name: 'Studio',
@@ -32,24 +32,24 @@ describe('a Server this Device paired with', () => {
       id: studioKey,
       name: 'Studio',
       serverDevice: false,
-      url: `ws://${host}:${port}`,
+      channel: { host, port, serverPublicKey: studioKey },
     });
   });
 
-  // A URL needs an IPv6 address in brackets, or the port reads as part of the address.
-  it('opens its Connection to an IPv6 address in brackets', () => {
+  // No URL is ever built for a paired Server: not a ws:// address, and not an http:// one for its Blobs (ADR-0045).
+  it('has no URL to open', () => {
     expect(
       pairedAppServer({
         name: 'Studio',
         key: studioKey,
         address: { host: '::1', port },
       }).url,
-    ).toBe(`ws://[::1]:${port}`);
+    ).toBeUndefined();
   });
 
   it('is listed with nowhere to open a Connection when no address is kept', () => {
     expect(
-      pairedAppServer({ name: 'Workshop bench', key: 'bench-key' }).url,
+      pairedAppServer({ name: 'Workshop bench', key: 'bench-key' }).channel,
     ).toBeUndefined();
   });
 });

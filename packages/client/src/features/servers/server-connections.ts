@@ -3,11 +3,15 @@ import { openConnection } from '#features/connection';
 import type { AppServer } from './app-server';
 import {
   noConnections,
+  type OpenServerConnection,
   type ServerConnections,
 } from './open-server-connections';
 import { ServerConnectionsStore } from './server-connections-store';
 
-export type { ServerConnections } from './open-server-connections';
+export type {
+  OpenServerConnection,
+  ServerConnections,
+} from './open-server-connections';
 
 /*
  * One Connection per Server, held for as long as the App is mounted. The list is held again whenever it changes —
@@ -17,8 +21,9 @@ export type { ServerConnections } from './open-server-connections';
  */
 export function useServerConnections(
   servers: readonly AppServer[],
+  open: OpenServerConnection = openConnection,
 ): ServerConnections {
-  const store = useMemo(() => new ServerConnectionsStore(openConnection), []);
+  const store = useMemo(() => new ServerConnectionsStore(open), [open]);
 
   const connections = useSyncExternalStore(
     store.subscribe,

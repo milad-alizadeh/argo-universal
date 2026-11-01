@@ -84,10 +84,15 @@ describe('createTRPCClient', () => {
     const server = await startTransportTestServer();
     const send = vi.spyOn(nativeSocketPrototype, 'send');
     let surface: PluginSurface = { platform: 'ios', wireVersion: 1 };
-    const app = createTRPCClient(server.url, undefined, () => surface);
+
+    const app = createTRPCClient(server.url, undefined, {
+      surface: () => surface,
+    });
+
     closers.push(app.close);
 
     await app.client.system.info.query();
+
     surface = { platform: 'ios', wireVersion: 2 };
     app.webSocketClient.connection?.ws?.close();
 

@@ -4,6 +4,11 @@ import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { TRPCClientError, type TRPCClientErrorLike } from '@trpc/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  endpointOf,
+  nodeChannelPlatform,
+  pairedNodeDevice,
+} from '../../../../mocks/node-channel-platform';
 import { holdCacheOnline } from '../stores/cache-online';
 import type { Connection, ConnectionState } from '../stores/connection';
 import { openConnection } from './open-connection';
@@ -60,7 +65,7 @@ interface DroppedCall {
 // What a live subscription, such as a Session's Feed, hears when the Server goes, and the Connection's state then.
 async function droppedSubscription(): Promise<DroppedCall> {
   const server = await startServer();
-  const { client, connection, close } = openConnection(server.url);
+  const { client, connection, close } = openConnection({ url: server.url });
 
   closers.push(close);
   const live = Promise.withResolvers<void>();
@@ -95,7 +100,7 @@ describe('openConnection', (): void => {
     const server = await startServer();
     const queryClient = mountedQueryClient();
 
-    const { client, connection, close } = openConnection(server.url);
+    const { client, connection, close } = openConnection({ url: server.url });
 
     closers.push(close);
     lookedAt(connection);
@@ -128,7 +133,7 @@ describe('openConnection', (): void => {
     await stopped.stop();
     const queryClient = mountedQueryClient();
 
-    const { client, connection, close } = openConnection(stopped.url);
+    const { client, connection, close } = openConnection({ url: stopped.url });
 
     closers.push(close);
 
@@ -152,9 +157,28 @@ describe('openConnection', (): void => {
   it('closes while an attempt waits for its retry delay', async () => {
     const unused = await startServer();
     await unused.stop();
-    const { connection, close } = openConnection(unused.url);
+    const { connection, close } = openConnection({ url: unused.url });
     await waitForConnectionLink(connection, 'reconnecting');
 
     await expect(close()).resolves.toBeUndefined();
+  });
+});
+
+describe('openConnection to a paired Server', () => {
+  it('reads the Server inside the channel, and gives its Blobs a fetch instead of a URL', async () => {
+    const host = await startEngineTestHost({ version: '1.2.3' });
+    const device = await pairedNodeDevice(host);
+
+    const { client, fetch, close } = openConnection(
+      await endpointOf(host),
+      nodeChannelPlatform(device),
+    );
+
+    closers.push(close);
+
+    expect(await client.system.info.query()).toMatchObject({
+      version: '1.2.3',
+    });
+    expect(fetch).toBeDefined();
   });
 });

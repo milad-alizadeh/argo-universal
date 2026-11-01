@@ -1,4 +1,8 @@
-import type { Connection, OpenConnection } from '#features/connection';
+import type {
+  Connection,
+  OpenConnection,
+  ServerEndpoint,
+} from '#features/connection';
 import type { AppServer } from './app-server';
 
 /*
@@ -16,7 +20,7 @@ export const noConnections: ServerConnections = new Map();
 
 // Opens the App's Connection to one Server; `openConnection` is the only one in the App, and a test gives its own.
 export type OpenServerConnection<Held extends HeldServer = OpenConnection> = (
-  serverUrl: string,
+  endpoint: ServerEndpoint,
 ) => Held;
 
 /*
@@ -25,20 +29,35 @@ export type OpenServerConnection<Held extends HeldServer = OpenConnection> = (
  */
 export function connectableServers(
   servers: readonly AppServer[],
-): ReadonlyMap<string, string> {
-  const urls = new Map<string, string>();
+): ReadonlyMap<string, ServerEndpoint> {
+  const endpoints = new Map<string, ServerEndpoint>();
 
-  for (const server of servers) keepFirstUrl(urls, server);
+  for (const server of servers) keepFirstEndpoint(endpoints, server);
 
-  return urls;
+  return endpoints;
 }
 
-// A Server kept twice keeps its first entry, so the second never shadows a Connection the App would then never close.
-const keepFirstUrl = (
-  urls: Map<string, string>,
-  { id, url }: AppServer,
-): void => {
-  if (url === undefined || urls.has(id)) return;
+// Two endpoints with the same key are the same place, so a Server that has not moved keeps the Connection it has.
+export const endpointKey = (endpoint: ServerEndpoint): string =>
+  'serverPublicKey' in endpoint
+    ? `channel://${endpoint.host}:${endpoint.port}#${endpoint.serverPublicKey}`
+    : endpoint.url;
 
-  urls.set(id, url);
+// Where a Server answers: the loopback address of the one on this Device, or the channel of one it paired with.
+export const endpointOf = ({
+  url,
+  channel,
+}: AppServer): ServerEndpoint | undefined =>
+  channel ?? (url === undefined ? undefined : { url });
+
+// A Server kept twice keeps its first entry, so the second never shadows a Connection the App would then never close.
+const keepFirstEndpoint = (
+  endpoints: Map<string, ServerEndpoint>,
+  server: AppServer,
+): void => {
+  const endpoint = endpointOf(server);
+
+  if (endpoint === undefined || endpoints.has(server.id)) return;
+
+  endpoints.set(server.id, endpoint);
 };

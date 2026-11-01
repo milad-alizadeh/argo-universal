@@ -1,5 +1,5 @@
-import type { Connection } from '#features/connection';
-import type { HeldServer } from './open-server-connections';
+import type { Connection, ServerEndpoint } from '#features/connection';
+import { endpointKey, type HeldServer } from './open-server-connections';
 
 export interface TestConnection extends HeldServer {
   url: string;
@@ -31,12 +31,12 @@ const testLink = (link: LinkState): Connection => ({
 });
 
 // A Connection to nowhere: held, closed, read for its state and listened to, which is all the stores do with a real one.
-export function testConnection(url: string): TestConnection {
+export function testConnection(endpoint: ServerEndpoint): TestConnection {
   const link: LinkState = { reachable: true, listeners: new Set() };
   let open = true;
 
   return {
-    url,
+    url: endpointKey(endpoint),
     connection: testLink(link),
     closed: () => !open,
     // The Server stops answering, as a Server that is switched off does.
