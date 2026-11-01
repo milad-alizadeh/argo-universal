@@ -78,14 +78,15 @@ function Typing({ pairing, onTyping }: EntryProps): React.JSX.Element {
   );
 }
 
-// A paired Server is listed and shown at once, and the page leaves for its Sessions.
+// A paired Server is listed and shown at once, and the page leaves for its Sessions. The Settings stack is emptied first: `dismissTo('/')` left the page standing when it had been opened from a Server's own page (Pair again), so it showed "Waiting for approval" for good after the Server had let this Device in.
 function useAddServer(): (server: KnownServer) => void {
   const router = useRouter();
   const { add } = useAppServers();
 
   return (server) => {
     add(server);
-    router.dismissTo('/');
+    router.dismissAll();
+    router.navigate('/');
   };
 }
 
