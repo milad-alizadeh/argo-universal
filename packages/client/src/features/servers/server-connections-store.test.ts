@@ -156,3 +156,16 @@ describe("the App's Connections", () => {
     expect(store.getSnapshot().size).toBe(0);
   });
 });
+
+describe('a Server that unpaired this Device', () => {
+  // Pairing again lists the Server again, and a Connection the Server refused is opened afresh rather than left refused.
+  it('opens its Connection again when the list is held again', () => {
+    const { store, open, held } = holding([own, studio]);
+
+    held()[1]?.refuse();
+    store.hold([own, studio]);
+
+    expect(open).toHaveBeenCalledTimes(3);
+    expect(held()[1]?.connection.state()).toBe('open');
+  });
+});

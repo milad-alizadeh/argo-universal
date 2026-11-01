@@ -1,6 +1,6 @@
 import { bytesText, concatBytes, bytesBase64, textBytes } from './bytes';
 import { readHead, type HeadAndRest } from './http-exchange';
-import type { OpenedChannel } from './open-channel';
+import { PairingRefused, type OpenedChannel } from './open-channel';
 import {
   encodeClientFrame,
   FrameParser,
@@ -26,6 +26,8 @@ type Listener = (event: { data?: string; code?: number }) => void;
 export interface ChannelSocketDeps {
   readonly openChannel: () => Promise<OpenedChannel>;
   readonly randomBytes: (length: number) => Uint8Array;
+  // The Server answered and does not know this Device's key: it was unpaired there. Reconnecting would only be refused again.
+  readonly onRefused?: () => void;
 }
 
 const closeBody = (code: number): Uint8Array =>
@@ -149,6 +151,7 @@ export class ChannelWebSocket {
   }
 
   private fail(cause: unknown): void {
+    if (isUnknownDevice(cause)) this.deps.onRefused?.();
     console.error('The channel to the Server failed', cause);
     this.emit('error', {});
     this.shutdown(abnormalClosure);
@@ -165,6 +168,10 @@ export class ChannelWebSocket {
       listener.call(this, event);
   }
 }
+
+// A Device with a row and a key does not meet this: the Server asks for a Ticket only of a Device it has no row for.
+const isUnknownDevice = (cause: unknown): boolean =>
+  cause instanceof PairingRefused && cause.refusal === 'ticket-required';
 
 const pathOf = (url: string): string =>
   url.replace(/^wss?:\/\/[^/?]+/, '') || '/';

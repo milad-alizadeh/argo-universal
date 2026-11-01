@@ -1,6 +1,7 @@
 import type { Socket } from 'node:net';
 import { PairingClaim } from '@repo/contracts';
 import type { Admission, DeviceAdmission } from '../devices/admit-device';
+import type { OpenChannels } from '../devices/open-channels';
 import { admitAs, type RpcIdentity } from '../rpc/identity';
 import { ChannelSocket } from './channel-socket';
 import { frameRecord } from './frames';
@@ -20,6 +21,8 @@ export const channelMagic = Buffer.concat([
 export interface ChannelDoorDeps {
   readonly staticKey: Keypair;
   readonly admission: DeviceAdmission;
+  // Where each Paired Device's open channel is kept, so unpairing it can end the channel.
+  readonly channels: OpenChannels;
   // Where an authenticated channel's plaintext goes: the Server's own request listener, which serves it the same tRPC it serves on loopback.
   readonly serve: (socket: ChannelSocket) => void;
   readonly report: (subject: string, value: string | undefined) => void;
@@ -106,8 +109,15 @@ export class ChannelDoor {
     if (message.rest.length > 0) socket.unshift(message.rest);
     const channel = new ChannelSocket(socket, answered.cipher);
     admitAs(channel, identity);
+    this.track(identity, channel);
     this.deps.serve(channel);
     socket.resume();
+  }
+
+  // Only a Paired Device can be unpaired, so only its channels are kept to be ended.
+  private track(identity: RpcIdentity, channel: ChannelSocket): void {
+    if (!identity.serverDevice)
+      this.deps.channels.track(identity.deviceId, channel);
   }
 
   private refuseSocket(socket: Socket, cause: unknown): void {

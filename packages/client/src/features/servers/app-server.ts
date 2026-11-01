@@ -22,7 +22,12 @@ export interface AppServer extends ServerScope {
 }
 
 // What the list says of one Server. There is no offline copy: unreachable is a drawn state (ADR-0045).
-export type AppServerState = 'connected' | 'connecting' | 'unreachable';
+export type AppServerState =
+  | 'connected'
+  | 'connecting'
+  | 'unreachable'
+  // The Server answered and no longer knows this Device: it was unpaired there.
+  | 'not-allowed';
 
 export const ownAppServer = (url: string): AppServer => ({
   id: ownServerId,
@@ -49,6 +54,7 @@ const states: Record<ConnectionState, AppServerState> = {
   connecting: 'connecting',
   reconnecting: 'connecting',
   offline: 'unreachable',
+  'not-allowed': 'not-allowed',
 };
 
 /*

@@ -21,3 +21,9 @@ export const severalServers: readonly ServerRow[] = [
     state: 'unreachable',
   },
 ];
+
+// A Server that answered and no longer knows this Device: it was unpaired there.
+export const unpairedServers: readonly ServerRow[] = [
+  own('connected'),
+  { id: 'studio', name: 'Studio', serverDevice: false, state: 'not-allowed' },
+];

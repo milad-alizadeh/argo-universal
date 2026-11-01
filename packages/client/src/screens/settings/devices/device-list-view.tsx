@@ -2,6 +2,7 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { type DeviceRow, platformName } from './device-rows';
 
 export type LocalNetworkAccessLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
@@ -11,6 +12,9 @@ export interface DeviceListViewProps {
   localNetworkAccess: LocalNetworkAccessLoad;
   saving?: boolean;
   error?: string;
+  // This computer first, then each Paired Device; absent until the Server has answered.
+  devices?: readonly DeviceRow[];
+  onOpenDevice?: (id: string) => void;
   // Whether this App can hold a Device Key at all; a browser tab cannot, so it is never offered Pairing (ADR-0045).
   pairingOffered?: boolean;
   // The pair sheet itself, which mints a Pairing Ticket of its own; the row above opens it.
@@ -45,6 +49,7 @@ export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
       <FieldGroup>
         {accessSection(props)}
         {pairingSection(props)}
+        {devicesSection(props)}
         {statusSection(props)}
       </FieldGroup>
     </Screen>
@@ -106,6 +111,50 @@ const pairingReasonFor = (
 
   return enabled ? 'on' : 'off';
 };
+
+const deviceFooter =
+  'Paired Devices can see your Projects and Sessions. Only this computer can pair or unpair Devices.';
+
+// This computer is marked and has no way in to an unpair; each Paired Device opens its own page, where the red row is.
+function devicesSection(props: DeviceListViewProps): React.JSX.Element | null {
+  if (!props.devices) return null;
+
+  return (
+    <FieldGroup.Section title="Devices" footer={deviceFooter}>
+      {props.devices.map((device) => deviceRow(device, props.onOpenDevice))}
+    </FieldGroup.Section>
+  );
+}
+
+const deviceRow = (
+  device: DeviceRow,
+  onOpen?: (id: string) => void,
+): React.JSX.Element =>
+  device.serverDevice ? thisComputer(device) : pairedDevice(device, onOpen);
+
+const thisComputer = (device: DeviceRow): React.JSX.Element => (
+  <FieldGroup.Value key={device.id} title={device.name} value="This computer" />
+);
+
+const pairedDevice = (
+  device: DeviceRow,
+  onOpen?: (id: string) => void,
+): React.JSX.Element => (
+  <FieldGroup.Link
+    key={device.id}
+    title={device.name}
+    value={`${platformName(device.platform)} · ${device.seen}`}
+    leading={leadingFor(device)}
+    onPress={() => onOpen?.(device.id)}
+  />
+);
+
+type Leading = React.ComponentProps<typeof FieldGroup.Link>['leading'];
+
+const leadingFor = (device: DeviceRow): Leading =>
+  device.platform === 'ios' || device.platform === 'android'
+    ? ({ sf: 'iphone', material: 'smartphone' } as const)
+    : ({ sf: 'desktopcomputer', material: 'computer' } as const);
 
 function statusSection(props: DeviceListViewProps): React.JSX.Element | null {
   const access = props.localNetworkAccess;

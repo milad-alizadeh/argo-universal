@@ -40,6 +40,8 @@ export { useRestoredThemeChoice } from '#features/settings';
 
 export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
 
+export { DeviceDetailScreen } from './screens/settings/devices/device-detail-screen';
+
 export { DeviceListScreen } from './screens/settings/devices/device-list-screen';
 
 export { NotificationsDetailScreen } from './screens/settings/notifications/notifications-detail-screen';
@@ -55,6 +57,8 @@ export { ProjectListScreen } from './screens/settings/projects/project-list-scre
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
 export { AddServerScreen } from './screens/settings/servers/add/add-server-screen';
+
+export { ServerDetailScreen } from './screens/settings/servers/server-detail-screen';
 
 export { ServerListScreen } from './screens/settings/servers/server-list-screen';
 

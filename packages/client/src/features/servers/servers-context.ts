@@ -7,6 +7,7 @@ export interface AppServers {
   lookingAt: string;
   look: (id: string) => void;
   add: (server: KnownServer) => void;
+  remove: (id: string) => void;
 }
 
 export const ServersContext = createContext<AppServers | null>(null);

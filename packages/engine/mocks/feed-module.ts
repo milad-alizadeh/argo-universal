@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
+import { OpenChannels } from '../src/devices/open-channels';
 import { type AppRouter, createAppRouter } from '../src/engine/router';
 import {
   type AppRouterInput,
@@ -95,6 +96,7 @@ const feedModuleSecrets = {
   discoveryName: 'Feed module test Server',
   tickets: new PairingTickets(),
   registrations: new PairingRegistrations(),
+  channels: new OpenChannels(),
 };
 
 const feedModuleRouterInput = (

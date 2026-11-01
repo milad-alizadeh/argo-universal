@@ -4,7 +4,7 @@ import type { AppRouterInput } from './router-deps';
 // What the Server's own identity supplies instead: its static public key, the name it is announced by, and the Pairing Tickets and registrations the channel shares with the router.
 type HttpRouterInput = Omit<
   AppRouterInput,
-  'serverPublicKey' | 'discoveryName' | 'tickets' | 'registrations'
+  'serverPublicKey' | 'discoveryName' | 'tickets' | 'registrations' | 'channels'
 >;
 
 export function httpRouterInput(

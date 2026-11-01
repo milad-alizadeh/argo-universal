@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { ownServerId } from '#lib/product/server-scope';
 import { ServerListView } from './server-list-view';
-import { oneServer, severalServers } from './server-list-view-fixtures';
+import {
+  oneServer,
+  severalServers,
+  unpairedServers,
+} from './server-list-view-fixtures';
 
 const meta = {
   title: 'Screens/Settings/Servers',
@@ -12,7 +16,7 @@ const meta = {
   args: {
     servers: severalServers,
     lookingAt: ownServerId,
-    onLookAt: action('look at a Server'),
+    onOpenServer: action('open a Server'),
     onAddServer: action('add a Server'),
   },
 } satisfies Meta<typeof ServerListView>;
@@ -34,6 +38,11 @@ export const AServerStillConnecting: Story = {
       server.id === 'studio' ? { ...server, state: 'connecting' } : server,
     ),
   },
+};
+
+// The Server said it no longer knows this Device: its row says so and the page behind it says what to do.
+export const AServerThatUnpairedThisDevice: Story = {
+  args: { servers: unpairedServers },
 };
 
 // A web page cannot pair, so its list has no way to add a Server.
