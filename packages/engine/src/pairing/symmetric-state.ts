@@ -20,7 +20,7 @@ const sha256 = (data: Buffer): Buffer =>
 export class SymmetricState {
   private hash: Buffer = Buffer.from(protocolName);
   private chainingKey: Buffer = Buffer.from(protocolName);
-  private readonly cipher = new CipherState();
+  private cipher = new CipherState();
 
   public constructor(serverPublicKey: Buffer, prologue: Buffer = argoPrologue) {
     this.mixHash(prologue);
@@ -34,7 +34,7 @@ export class SymmetricState {
   public mixKey(material: Buffer): void {
     const [chainingKey, key] = deriveKeys(this.chainingKey, material);
     this.chainingKey = chainingKey;
-    this.cipher.rekey(key);
+    this.cipher = new CipherState(key);
   }
 
   public encryptAndHash(plaintext: Buffer): Buffer {

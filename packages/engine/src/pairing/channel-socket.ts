@@ -40,6 +40,15 @@ export class ChannelSocket extends Duplex {
     return this;
   }
 
+  // What a keep-alive HTTP client calls on the socket it parks between requests; the channel's lifetime is the socket underneath's.
+  public ref(): this {
+    return this;
+  }
+
+  public unref(): this {
+    return this;
+  }
+
   public override _read(): void {
     this.socket.resume();
   }

@@ -9,6 +9,7 @@ export {
 
 export {
   createRpcContext,
+  liveConnection,
   type RpcConnection,
   type RpcContext,
 } from './connection';

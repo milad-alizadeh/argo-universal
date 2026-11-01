@@ -6,12 +6,12 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
+  liveConnection,
   mergeRouters,
   router,
   routerFactory,
   serverDeviceProcedure,
   zAsyncIterable,
-  type RpcConnection,
 } from '../rpc';
 import type { WriterActorRef } from '../storage';
 import type { PairingRegistrations } from './registrations';
@@ -43,19 +43,6 @@ const mintedTicket = (deps: PairingDeps): MintedPairingTicket => {
   };
 };
 
-// A subscription needs something that says when the App has gone, or the stream it opens outlives the sheet that asked for it.
-function requireConnection(
-  connection: RpcConnection | undefined,
-): RpcConnection {
-  if (!connection)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'Watching for a Device needs a live App Connection',
-    });
-
-  return connection;
-}
-
 /*
  * `mint` is the only way a Pairing Ticket comes into being: the pair sheet asks for one while the owner is watching it, and the Server hands out exactly that one (ADR-0045).
  * `revoke` is the sheet closing, so what it put on screen stops working at once rather than outliving the owner's attention by up to two minutes.
@@ -72,6 +59,8 @@ const ticketRouter = routerFactory((deps: PairingDeps) =>
   }),
 );
 
+const watchingNeeds = 'Watching for a Device needs a live App Connection';
+
 /*
  * `registered` is the Devices that are waiting while the sheet has been open, which it draws as "<name> wants to pair". Each has proved its own Device Key and spent a Ticket; what it claims about itself is untrusted, and shown only so that the owner recognises it.
  * `allow` is the owner answering that prompt with Yes: the Device is written down and let in. `decline` is No: the Server never wrote it down, so it has no row, and its Ticket is spent.
@@ -81,7 +70,10 @@ const registeredRouter = routerFactory((deps: PairingDeps) =>
     registered: serverDeviceProcedure
       .output(zAsyncIterable({ yield: PairingRegistration }))
       .subscription(({ signal, ctx }) =>
-        watching(deps, signal ?? requireConnection(ctx.connection).signal),
+        watching(
+          deps,
+          signal ?? liveConnection(ctx.connection, watchingNeeds).signal,
+        ),
       ),
   }),
 );

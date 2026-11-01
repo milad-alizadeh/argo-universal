@@ -26,7 +26,7 @@ export const mergeRouters = t.mergeRouters;
  * "Public" means any Device this Server trusts, the Server Device included, as against `serverDeviceProcedure` below, which narrows it to the Server Device alone. A Connection that proved nothing reaches none of them, whichever router it asks for.
  */
 export const publicProcedure = t.procedure.use(async ({ ctx, next }) => {
-  const identity = ctx.connection?.identity;
+  const identity = ctx.connection.identity;
 
   if (!identity)
     throw new TRPCError({

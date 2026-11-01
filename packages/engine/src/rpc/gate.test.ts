@@ -32,11 +32,8 @@ it('answers the Server Device and a paired Device alike', async (): Promise<void
   );
 });
 
-it('refuses a Connection that has proved nothing, and one with no Connection at all', async (): Promise<void> => {
+it('refuses a Connection that has proved nothing', async (): Promise<void> => {
   await expect(ask()).rejects.toThrow(/proved which Device/);
-  await expect(probe.createCaller({}).answer()).rejects.toThrow(
-    /proved which Device/,
-  );
 });
 
 it("answers the Server Device alone when a procedure is the Server Device's", async (): Promise<void> => {

@@ -32,7 +32,9 @@ const listenAt = (
     });
   });
 
-const loopbackPattern = /^(::1|(::ffff:)?127\.)/;
+// Anchored at both ends, because this one spelling decides trust: `::1234:5678` is a routable address, not `::1`.
+const loopbackPattern =
+  /^(?:::1|(?:::ffff:)?127(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3})$/i;
 
 export const isLoopback = (address: string | undefined): boolean =>
   loopbackPattern.test(address ?? '');

@@ -4,6 +4,7 @@ import type { Admission, DeviceAdmission } from '../devices/admit-device';
 import { admitAs, type RpcIdentity } from '../rpc/identity';
 import { ChannelSocket } from './channel-socket';
 import { frameRecord } from './frames';
+import { HandshakeBuffer, type FirstMessage } from './handshake-buffer';
 import { receiveHandshake } from './handshake-responder';
 import { SeenHandshakes } from './seen-handshakes';
 import type { Keypair } from './x25519';
@@ -33,29 +34,38 @@ export class ChannelDoor {
 
   public constructor(private readonly deps: ChannelDoorDeps) {}
 
-  public accept(socket: Socket, opening: Buffer): void {
-    const received: Buffer[] = [opening];
+  public accept(socket: Socket, opening: Buffer, proven: () => void): void {
+    const buffer = new HandshakeBuffer();
 
     const read = (chunk: Buffer): void => {
-      received.push(chunk);
-      void this.shakeHands(socket, Buffer.concat(received), read);
+      const message = this.received(socket, buffer, chunk);
+
+      if (!message) return;
+
+      if (message === 'waiting') return void socket.once('data', read);
+      proven();
+      socket.pause();
+      void this.answer(socket, message).catch((cause: unknown): void =>
+        this.refuseSocket(socket, cause),
+      );
     };
 
-    read(Buffer.alloc(0));
+    read(opening);
   }
 
-  private async shakeHands(
+  // A first message that is too large is refused where it stands, so the Server never waits for bytes that were claimed and will not come.
+  private received(
     socket: Socket,
-    received: Buffer,
-    read: (chunk: Buffer) => void,
-  ): Promise<void> {
-    const message = firstMessage(received);
+    buffer: HandshakeBuffer,
+    chunk: Buffer,
+  ): FirstMessage | 'waiting' | undefined {
+    try {
+      return buffer.push(chunk) ?? 'waiting';
+    } catch (cause) {
+      this.refuseSocket(socket, cause);
 
-    if (!message) return void socket.once('data', read);
-    socket.pause();
-    await this.answer(socket, message).catch((cause: unknown): void =>
-      this.refuseSocket(socket, cause),
-    );
+      return undefined;
+    }
   }
 
   private async answer(socket: Socket, message: FirstMessage): Promise<void> {
@@ -63,7 +73,7 @@ export class ChannelDoor {
     const claim = PairingClaim.parse(JSON.parse(received.claim.toString()));
 
     const admission = this.seen.accept(received.ephemeral)
-      ? await this.deps.admission.admit(received.deviceKey, claim)
+      ? await this.admit(received.deviceKey, claim, socket)
       : replayed;
 
     const answered = received.answer(
@@ -72,6 +82,19 @@ export class ChannelDoor {
 
     socket.write(frameRecord(answered.message));
     this.open({ socket, message, answered }, admission.identity);
+  }
+
+  // The address a Device knocks from is the one thing about it the Server learns before it proves anything, and what a Ticket's wrong guesses are held against.
+  private admit(
+    deviceKey: Buffer,
+    claim: PairingClaim,
+    socket: Socket,
+  ): Promise<Admission> {
+    return this.deps.admission.admit(
+      deviceKey,
+      claim,
+      socket.remoteAddress ?? 'unknown',
+    );
   }
 
   private open(
@@ -102,20 +125,3 @@ type AnsweredSocket = {
 const replayed: Admission = {
   welcome: { paired: false, refusal: 'replayed' },
 };
-
-type FirstMessage = { handshake: Buffer; rest: Buffer };
-
-const headerBytes = 2;
-
-// The handshake message, once all of it has arrived; whatever follows it is the first of the channel's records.
-function firstMessage(received: Buffer): FirstMessage | undefined {
-  if (received.length < headerBytes) return undefined;
-  const length = received.readUInt16BE(0);
-
-  if (received.length < headerBytes + length) return undefined;
-
-  return {
-    handshake: received.subarray(headerBytes, headerBytes + length),
-    rest: received.subarray(headerBytes + length),
-  };
-}
