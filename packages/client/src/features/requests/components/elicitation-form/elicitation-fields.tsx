@@ -2,6 +2,8 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useStore } from '@tanstack/react-form';
 import type { ReactElement } from 'react';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
+import { choicePicker, isChoice } from './elicitation-choice-row';
+import type { ElicitationFieldProps } from './elicitation-field-props';
 import { FieldRow } from './elicitation-field-rows';
 import {
   ElicitationFormField,
@@ -20,6 +22,9 @@ type ModelProps = { model: ElicitationModel };
 // The form's fields on one page: a FieldGroup, its rows grouped in sections that end at a field's description.
 export function ElicitationFields({ model }: ModelProps): ReactElement {
   const meta = useStore(model.form.store, (state) => state.fieldMeta);
+
+  // Choices are drawn from the values, so a change redraws them.
+  useStore(model.form.store, (state) => state.values);
 
   return (
     <FieldGroup disabled={model.inactive}>
@@ -49,11 +54,34 @@ function fieldsSection({ model, section, meta }: SectionProps): ReactElement {
   );
 }
 
+/*
+ * A choice is drawn straight from the form's values, not inside a Field: its options are rows of the Section, which
+ * reads a Picker by element type. The form validates as a whole, so no Field is needed to check it.
+ */
 const fieldRow = (
   model: ModelProps['model'],
   entry: ElicitationEntry,
-): ReactElement => (
-  <ElicitationFormField key={entry.key} model={model} entry={entry}>
-    {(field) => <FieldRow {...field} />}
-  </ElicitationFormField>
-);
+): ReactElement =>
+  isChoice(entry.property) ? (
+    choicePicker(choiceProps(model, entry))
+  ) : (
+    <ElicitationFormField key={entry.key} model={model} entry={entry}>
+      {(field) => <FieldRow {...field} />}
+    </ElicitationFormField>
+  );
+
+const noop = (): void => {};
+
+const choiceProps = (
+  model: ModelProps['model'],
+  entry: ElicitationEntry,
+): ElicitationFieldProps => ({
+  name: entry.name,
+  property: entry.property,
+  required: entry.required,
+  value: model.form.getFieldValue(entry.key),
+  showError: false,
+  inactive: model.inactive,
+  onChange: (value) => model.form.setFieldValue(entry.key, value),
+  onBlur: noop,
+});
