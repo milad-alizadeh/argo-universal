@@ -75,7 +75,7 @@ export interface PairableHost {
     devices: { serverKey: () => Promise<{ publicKey: string }> };
     pairing: {
       registered: () => Promise<AsyncIterable<PairingRegistration>>;
-      allow: (input: { deviceId: string }) => Promise<unknown>;
+      allow: (input: { deviceId: string }) => Promise<void>;
     };
   };
   pairing: { mint: () => { ticket: string } };
@@ -125,20 +125,29 @@ async function allowed<T>(
   connecting: Promise<T>,
   claim: PairingClaim,
 ): Promise<T> {
-  if (!claim.ticket) return connecting;
-  const stream = await host.caller.pairing.registered();
-  const asking = await Promise.race([
-    stream[Symbol.asyncIterator]().next(),
-    connecting.then(
-      () => undefined,
-      () => undefined,
-    ),
-  ]);
-
-  if (asking?.done === false)
-    await host.caller.pairing.allow({ deviceId: asking.value.deviceId });
+  if (claim.ticket) await allowFirst(host, connecting);
 
   return connecting;
+}
+
+const nobodyAsking = (): IteratorResult<PairingRegistration> => ({
+  done: true,
+  value: undefined,
+});
+
+async function allowFirst(
+  host: PairableHost,
+  connecting: Promise<unknown>,
+): Promise<void> {
+  const stream = await host.caller.pairing.registered();
+
+  const first = await Promise.race([
+    stream[Symbol.asyncIterator]().next(),
+    connecting.then(nobodyAsking, nobodyAsking),
+  ]);
+
+  if (!first.done)
+    await host.caller.pairing.allow({ deviceId: first.value.deviceId });
 }
 
 // A Device that has paired: its first Connection spent a Pairing Ticket, and every one after it is the Device Key alone.
