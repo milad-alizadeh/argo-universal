@@ -2,7 +2,10 @@ import { randomBytes } from 'node:crypto';
 import { connect } from 'node:net';
 import type { PairingClaim, PairingRegistration } from '@repo/contracts';
 import type { ByteSocket } from '../src/features/connection/api/channel/byte-socket';
-import type { ChannelPlatform } from '../src/features/connection/api/channel/channel-transport';
+import type {
+  ChannelPlatform,
+  DeviceClaim,
+} from '../src/features/connection/api/channel/channel-transport';
 import {
   openChannel,
   type ChannelInput,
@@ -49,7 +52,7 @@ const openSocket: ChannelPlatform['openSocket'] = (address) =>
 
 export interface NodeDevice {
   deviceKey?: Keypair;
-  claim?: Partial<PairingClaim>;
+  claim?: Partial<DeviceClaim>;
 }
 
 /*
@@ -89,29 +92,34 @@ export const endpointOf = async (
   serverPublicKey: (await host.caller.devices.serverKey()).publicKey,
 });
 
-const inputFor = async (
-  platform: ChannelPlatform,
-  { port }: PairedEndpoint,
-  { serverPublicKey }: PairedEndpoint,
-): Promise<ChannelInput> => ({
-  address: { host: '127.0.0.1', port },
-  serverPublicKey,
-  deviceKey: await platform.deviceKey(),
-  claim: platform.claim(),
-  randomBytes: platform.randomBytes,
+interface Inputs {
+  platform: ChannelPlatform;
+  // Where the channel is opened, and the Server whose key it expects: the same unless a test opens to one Server with another's key.
+  at: PairedEndpoint;
+  expecting: PairedEndpoint;
+  ticket?: string;
+}
+
+const inputFor = async (inputs: Inputs): Promise<ChannelInput> => ({
+  address: { host: '127.0.0.1', port: inputs.at.port },
+  serverPublicKey: inputs.expecting.serverPublicKey,
+  deviceKey: await inputs.platform.deviceKey(),
+  claim: { ...inputs.platform.claim(), ticket: inputs.ticket },
+  randomBytes: inputs.platform.randomBytes,
 });
 
 // Opens a channel as `platform` says this Device is, to the Server at `host`.
 export async function openAs(
   host: PairableHost,
   platform: ChannelPlatform,
-  serverHost: PairableHost = host,
+  options: { serverHost?: PairableHost; ticket?: string } = {},
 ): ReturnType<typeof openChannel> {
-  const input = await inputFor(
+  const input = await inputFor({
     platform,
-    await endpointOf(host),
-    await endpointOf(serverHost),
-  );
+    at: await endpointOf(host),
+    expecting: await endpointOf(options.serverHost ?? host),
+    ticket: options.ticket,
+  });
 
   return allowed(host, openChannel(input, platform.openSocket), input.claim);
 }
@@ -157,9 +165,7 @@ export async function pairedNodeDevice(
   const device = { deviceKey: newDeviceKey() };
   const { ticket } = host.pairing.mint();
 
-  (
-    await openAs(host, nodeChannelPlatform({ ...device, claim: { ticket } }))
-  ).stream.close();
+  (await openAs(host, nodeChannelPlatform(device), { ticket })).stream.close();
 
   return device;
 }

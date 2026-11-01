@@ -136,23 +136,21 @@ it('gives nothing to an App holding a Server key that is not the Server answerin
   const host = await startEngineTestHost();
   const impostor = await startEngineTestHost();
   const ticket = host.pairing.mint().ticket;
-  const platform = nodeChannelPlatform({ claim: { ticket } });
+  const platform = nodeChannelPlatform();
 
-  await expect(openAs(host, platform, impostor)).rejects.toBeDefined();
+  await expect(
+    openAs(host, platform, { serverHost: impostor, ticket }),
+  ).rejects.toBeDefined();
   expect(await host.caller.devices.list()).toHaveLength(1);
 });
 
 it('names the reason when the Pairing Ticket was already spent', async () => {
   const host = await startEngineTestHost();
   const { ticket } = host.pairing.mint();
-  const platform = nodeChannelPlatform({ claim: { ticket } });
-
-  (await openAs(host, platform)).stream.close();
+  (await openAs(host, nodeChannelPlatform(), { ticket })).stream.close();
 
   // A second Device, with a key of its own, brings the same code.
-  const second = nodeChannelPlatform({ claim: { ticket } });
-
-  await expect(openAs(host, second)).rejects.toEqual(
+  await expect(openAs(host, nodeChannelPlatform(), { ticket })).rejects.toEqual(
     new PairingRefused('ticket-spent'),
   );
 });

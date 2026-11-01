@@ -17,6 +17,10 @@ export {
   type ServerEndpoint,
 } from './api/server-endpoint';
 
+export { pairWithServer } from './api/pair-with-server';
+
+export { PairingRefused } from './api/channel/open-channel';
+
 export { retryServer } from './api/retry-server';
 
 // The connect step passes this as `browse`; null where the platform cannot browse.

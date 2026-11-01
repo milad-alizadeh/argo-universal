@@ -13,6 +13,7 @@ const meta = {
     servers: severalServers,
     lookingAt: ownServerId,
     onLookAt: action('look at a Server'),
+    onAddServer: action('add a Server'),
   },
 } satisfies Meta<typeof ServerListView>;
 
@@ -34,3 +35,6 @@ export const AServerStillConnecting: Story = {
     ),
   },
 };
+
+// A web page cannot pair, so its list has no way to add a Server.
+export const ServersOnly: Story = { args: { onAddServer: undefined } };
