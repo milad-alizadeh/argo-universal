@@ -10,6 +10,11 @@ export const bodyText = { children, role: 'body' } satisfies TextProps;
 
 export const bodyCodeText = { children, role: 'body-code' } satisfies TextProps;
 
+export const titleCodeText = {
+  children: '428 \u00b7 619',
+  role: 'title-code',
+} satisfies TextProps;
+
 export const secondaryText = {
   children,
   role: 'secondary',

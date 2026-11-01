@@ -14,6 +14,7 @@ export const textRoles = [
   'heading',
   'body',
   'body-code',
+  'title-code',
   'secondary',
   'secondary-code',
   'control',

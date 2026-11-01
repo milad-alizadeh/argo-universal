@@ -1,5 +1,10 @@
 import type * as React from 'react';
-import { PlaceholderDetailView } from '#features/settings';
+import {
+  PairDeviceSheet,
+  pairingOffered,
+  PlaceholderDetailView,
+  usePairDevice,
+} from '#features/settings';
 import { useServerPaired } from '#lib/product/server-scope';
 import { DeviceListView } from './device-list-view';
 import { useLocalNetworkAccess } from './use-local-network-access';
@@ -23,5 +28,23 @@ export function DeviceListScreen(): React.JSX.Element {
 }
 
 function ServerDeviceList(): React.JSX.Element {
-  return <DeviceListView {...useLocalNetworkAccess()} />;
+  const { onOpen, ...sheet } = usePairDevice();
+
+  return (
+    <DeviceListView {...useLocalNetworkAccess()} {...pairing(onOpen, sheet)} />
+  );
 }
+
+type Pairing = Pick<
+  React.ComponentProps<typeof DeviceListView>,
+  'pairingOffered' | 'pairDeviceSheet' | 'onPairDevice'
+>;
+
+const pairing = (
+  onPairDevice: () => void,
+  sheet: React.ComponentProps<typeof PairDeviceSheet>,
+): Pairing => ({
+  pairingOffered: pairingOffered(),
+  onPairDevice,
+  pairDeviceSheet: <PairDeviceSheet {...sheet} />,
+});

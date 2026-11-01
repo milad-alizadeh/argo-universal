@@ -9,6 +9,7 @@ import { type FeedDeps } from '../feed';
 import type { NetworkAccessDeps } from '../network-access';
 import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
+import type { PairingDeps } from '../pairing/router';
 import type { PluginsRouterDeps } from '../plugins';
 import {
   createSessionConnections,
@@ -33,7 +34,8 @@ export type AppRouterDeps = SessionSources &
   DevicesDeps &
   FeedDeps &
   NotificationsDeps &
-  NetworkAccessDeps & {
+  NetworkAccessDeps &
+  PairingDeps & {
     userHome: string;
     sessionTokens: SessionTokens;
     controlToken: string;

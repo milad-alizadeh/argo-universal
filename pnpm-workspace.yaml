@@ -143,6 +143,8 @@ catalog:
   react-native-safe-area-context: ~5.10.1
   react-native-screens: ~4.30.0
   react-native-svg: 15.16.0
+  # Encodes a Pairing Ticket's invite as QR modules, which the pair sheet draws with react-native-svg. Pure JavaScript, so one encoder serves web, iOS and Android.
+  qrcode-generator: 2.0.4
   # Imports a logo SVG as a react-native-svg component in Metro (ADR-0019).
   react-native-svg-transformer: 1.5.3
   # ~0.21.4 excludes 0.21.3: Uniwind 1.12.1 crashes on web start with it (uni-stack/uniwind#704).

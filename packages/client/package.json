@@ -37,6 +37,7 @@
     "expo-router": "catalog:",
     "expo-symbols": "catalog:",
     "marked": "catalog:",
+    "qrcode-generator": "catalog:",
     "react-native-gesture-handler": "catalog:",
     "react-native-keyboard-controller": "catalog:",
     "react-native-reanimated": "catalog:",
