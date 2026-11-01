@@ -95,8 +95,17 @@ ruleTester.run('static-imports', staticImports, {
       code: "await import('./orb-renderer');",
       filename: orbLoader,
     },
+    {
+      code: "await import('./run.ts');",
+      filename: '/repo/packages/engine/src/plugins/worker/process.ts',
+    },
   ],
   invalid: [
+    {
+      code: "await import('./other.ts');",
+      filename: '/repo/packages/engine/src/plugins/worker/process.ts',
+      errors: [{ messageId: 'staticImports' }],
+    },
     {
       code: canvasImport,
       filename: orbLoader,

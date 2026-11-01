@@ -2,7 +2,7 @@ import { defineRule } from '@oxlint/plugins';
 import type { ESTree, Visitor } from '@oxlint/plugins';
 import { stringValue } from './syntax.ts';
 
-// Each kit loader may import only its own renderer, after `WithSkiaWeb` initializes CanvasKit.
+// Each kit loader may import only its own renderer, after `WithSkiaWeb` initializes CanvasKit; the Plugin worker entry may import only `./run.ts`.
 const skiaLoaders = new Map([
   [
     '/packages/kit/src/primitives/visual/canvas/canvas-loader.web.tsx',
@@ -16,6 +16,7 @@ const skiaLoaders = new Map([
     '/packages/kit/src/primitives/status/orb/orb-loader.web.tsx',
     './orb-renderer',
   ],
+  ['/packages/engine/src/plugins/worker/process.ts', './run.ts'],
 ]);
 
 function isSkiaLoaderImport(
@@ -42,7 +43,7 @@ export const staticImports = defineRule({
   },
   create: (context): Visitor => ({
     ImportExpression: (node): void => {
-      // ADR-0017 permits only each Skia loader's own deferred renderer.
+      // ADR-0017 permits only each Skia loader's own deferred renderer and the Plugin worker's run module.
       if (isSkiaLoaderImport(context.filename, node)) return;
       context.report({ node, messageId: 'staticImports' });
     },

@@ -3,7 +3,7 @@
 The Prickles pack uses ESLint rules. oxlint runs them, mostly natively and the rest through the pack's own ESLint plugins, so oxlint does all linting and oxfmt all formatting (owner, 2026-10-07). This amends ADR-0001’s lint and format choice and ADR-0015’s adapter import enforcement: oxlint enforces the boundary.
 
 - `.oxlintrc.json` extends two files in `tooling/oxlint/`. `prickles.json` is the pack as `@oxlint/migrate@1.87.0 --type-aware` writes it, with the pack's comments. `argo.json` adds Argo's rules: oxlint's correctness category, the existing lint rules, the import boundaries D1 to D11, the zod and tRPC blocks, ADR-0016's test cap and machine exception, and the `argo` JS plugin, which ports eight GritQL plugins and has RuleTester tests. `unicorn/consistent-function-scoping` and `import/no-nodejs-modules` replace the other two. Argo is stricter than the pack on T2: no `!` and no `as` other than `as const`. `argo.json` also registers [anti-slop](https://github.com/dmmulroy/anti-slop), vendored in `tooling/oxlint/anti-slop/` with its source commit in `UPSTREAM.md`, with every generic rule on except `no-runtime-typeof` (owner, 2026-10-13). `argo.json` extends the kit-styling allowlist.
-- `argo/static-imports` rejects runtime `import()` and inline TypeScript `import(...)` types in owned source. Dependencies use top-level static `import` or `import type` declarations (owner, 2026-10-10). Generated files retain their existing exclusions. The Canvas and Orb deferred renderer imports below are owner-approved exceptions.
+- `argo/static-imports` rejects runtime `import()` and inline TypeScript `import(...)` types in owned source. Dependencies use top-level static `import` or `import type` declarations (owner, 2026-10-10). Generated files retain their existing exclusions. The Canvas and Orb deferred renderer imports and the Plugin worker entry import below are owner-approved exceptions.
 - The folder waiver list and its checks were removed on 2026-10-29 after all folders met the rules.
 - `pnpm quality` runs type-aware oxlint and treats warnings as errors. The kit-styling allowlist check measures that rule without its exception.
 - oxlint reports unused disable directives. `tools/check-comments.mts` refuses a directive without exact rule names, or on a cap rule.
@@ -45,3 +45,10 @@ The lint rule checks both literal paths. It still refuses other runtime imports 
 The owner approved both on 2026-10-22.
 `packages/kit/src/primitives/status/orb/orb-loader.web.tsx` may import only `./orb-renderer` at runtime, after `WithSkiaWeb` initializes CanvasKit, under the same check as Canvas.
 `packages/kit/src/primitives/status/orb/engine/` is ported line for line from [RareFormLabs/thinking-orbs](https://github.com/RareFormLabs/thinking-orbs) (MIT, licence beside it), so `.oxlintrc.json` and `.jscpd.json` ignore it to keep it diffable against the original. `orb-engine.test.ts`, which is linted, pins its output to the original's frames instead. The rest of the orb folder takes the full rules.
+
+## Plugin worker entry
+
+The owner approved this on 2026-11-01 (#1473).
+`packages/engine/src/plugins/worker/process.ts` may import only `./run.ts` at runtime, after it posts `alive` to the host.
+The host's liveness deadline ends at that message, so a loaded machine's module load no longer counts against the Plugin answer limit. A static import cannot do this: the worker loads and links its whole graph before any of its code runs, and measured under load that took longer than the limit.
+The lint rule checks the literal path and still refuses other runtime imports in that file and a `run.ts` import elsewhere.
