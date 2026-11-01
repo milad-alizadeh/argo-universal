@@ -88,14 +88,49 @@ function useOpenedOn(rows: readonly FeedRowData[]): OpenedOn | undefined {
 const isNewKey = (key: string | undefined, last: string): key is string =>
   key !== undefined && key !== last;
 
-// Scrolls each prompt into place once, the first time its answer's rows have measured.
-function useScrollIntoPlace(list: FeedList, animated: boolean): OnReady {
-  const pinned = useRef('');
+interface Landing {
+  room: Room;
+  index: number;
+  clearance: number;
+  animated: boolean;
+}
 
-  return ({ anchorKey }) => {
-    if (!isNewKey(anchorKey, pinned.current)) return;
+const riseTo = (
+  list: FeedList,
+  { index, clearance, animated }: Landing,
+): void =>
+  void list.current?.scrollToIndex({
+    index,
+    viewPosition: 0,
+    viewOffset: clearance,
+    animated,
+  });
+
+// A prompt just sent scrolls to itself, at the top of the view clear of the header's fade; one already running lands at the end.
+const land = (list: FeedList, landing: Landing): void =>
+  landing.room === 'moves'
+    ? riseTo(list, landing)
+    : void list.current?.scrollToEnd({ animated: false });
+
+/*
+ * Scrolls each prompt into place once, the first time its answer's rows have measured. A prompt just sent
+ * scrolls to itself rather than to the end: measured, an animated scroll to the end let the answer growing
+ * meanwhile push the prompt up out of the view, so the Feed rested clipped or following the end. A turn
+ * already running when the Feed opened lands without motion at the end, as it always did.
+ */
+function useScrollIntoPlace(
+  list: FeedList,
+  clearance: number,
+  room: Room,
+): OnReady {
+  const pinned = useRef('');
+  const reduced = useReducedMotionNow();
+
+  return ({ anchorKey, anchorIndex }) => {
+    if (anchorIndex === undefined || !isNewKey(anchorKey, pinned.current))
+      return;
     pinned.current = anchorKey;
-    void list.current?.scrollToEnd({ animated });
+    land(list, { room, index: anchorIndex, clearance, animated: !reduced });
   };
 }
 
@@ -113,8 +148,7 @@ export function usePinnedPrompt(
   const anchorIndex = rows.findLastIndex(isPrompt);
   const anchorOffset = useFeedTopClearance();
   const room = roomFor(rows, anchorIndex, useOpenedOn(rows));
-  const reduced = useReducedMotionNow();
-  const onReady = useScrollIntoPlace(list, room === 'moves' && !reduced);
+  const onReady = useScrollIntoPlace(list, anchorOffset, room);
 
   if (room === 'none') return undefined;
 
