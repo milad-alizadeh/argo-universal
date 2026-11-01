@@ -8,6 +8,7 @@ import { useWide } from '@repo/client/size-class';
 import { useLocalSearchParams, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { hasRowDetail, PluginRowDetails } from './plugin-row-detail';
+import { useRepairPluginStack } from './repair-plugin-stack';
 import { NarrowRoot } from './section-root';
 import { ScreenStack } from './section-stack';
 
@@ -48,6 +49,8 @@ interface PluginRootProps {
  * list in the Frame's sidebar on a wide window.
  */
 export function PluginRoot(props: PluginRootProps): React.JSX.Element {
+  useRepairBelow(props.path);
+
   return (
     <NarrowRoot root={useNarrowRoot(props.path)}>
       <SectionListDetail>
@@ -56,6 +59,16 @@ export function PluginRoot(props: PluginRootProps): React.JSX.Element {
         </PluginRowDetails>
       </SectionListDetail>
     </NarrowRoot>
+  );
+}
+
+// The page's nav item is known once the Server's list of Plugins arrives.
+function useRepairBelow(path: readonly string[]): void {
+  const { section } = usePluginAt(pluginPath(path));
+
+  useRepairPluginStack(
+    path,
+    section && [section.pluginId, section.navId, ...section.navPath],
   );
 }
 
