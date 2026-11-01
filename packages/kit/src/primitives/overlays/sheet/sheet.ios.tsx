@@ -147,7 +147,7 @@ function HostedTrigger(props: SheetProps): ReactElement {
 function detentsOf(props: PresentationProps): SheetProps['detents'] {
   return sheetDetents({
     detents: props.detents,
-    paged: props.stack.pages.length > 0,
+    paged: props.stack.paged,
   });
 }
 

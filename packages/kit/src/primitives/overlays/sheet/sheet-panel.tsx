@@ -15,7 +15,7 @@ export function openChange(props: PresentationProps): (open: boolean) => void {
   };
 }
 
-// A sheet with several pages keeps a steady height as they change, as does one whose content scrolls itself at detents, which has no height of its own to take; one that rests only at its full height fills the window.
+// A sheet that declares several pages keeps a steady height as they change, as does one whose content scrolls itself at detents, which has no height of its own to take; one that rests only at its full height fills the window. A page pushed onto a sheet of one is not declared, so it is as tall as what it holds.
 export function sheetHeightClass(props: PresentationProps): string | false {
   if (fullHeight(props.detents)) return 'sheet-full';
 
@@ -23,7 +23,7 @@ export function sheetHeightClass(props: PresentationProps): string | false {
 }
 
 const keepsHeight = (props: PresentationProps): boolean =>
-  props.stack.pages.length > 1 || scrollsAtDetents(props);
+  props.stack.paged || scrollsAtDetents(props);
 
 const scrollsAtDetents = (props: PresentationProps): boolean =>
   props.contentScrolls === true && props.detents !== undefined;
