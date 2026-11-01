@@ -14,7 +14,7 @@ export interface ServerListViewProps {
   lookingAt: string;
   // Opens a Server's own page: its state, showing it, and unpairing from it.
   onOpenServer: (id: string) => void;
-  // The last row, which opens Add a Server. Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
+  // The row below the list, which opens Add a Server. Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
   onAddServer?: () => void;
 }
 
@@ -28,8 +28,8 @@ export function ServerListView(props: ServerListViewProps): React.JSX.Element {
       <FieldGroup>
         <FieldGroup.Section footer={serverListFooter}>
           {props.servers.map((server) => serverLink(server, props))}
-          {props.onAddServer && <AddServerRow onPress={props.onAddServer} />}
         </FieldGroup.Section>
+        {addServerSection(props.onAddServer)}
       </FieldGroup>
     </Screen>
   );
@@ -54,15 +54,17 @@ const rowValue = (server: ServerRow, lookingAt: string): string =>
     ? `Showing · ${serverStateLabel(server.state)}`
     : serverStateLabel(server.state);
 
-const AddServerRow = ({
-  onPress,
-}: {
-  onPress: () => void;
-}): React.JSX.Element => (
-  <FieldGroup.Link
-    title="Add a Server"
-    leading={{ sf: 'plus', material: 'add' }}
-    action
-    onPress={onPress}
-  />
-);
+// FieldGroup finds its sections by element type, so this is an element built here, not a component.
+const addServerSection = (
+  onPress: (() => void) | undefined,
+): React.JSX.Element | null =>
+  onPress ? (
+    <FieldGroup.Section>
+      <FieldGroup.Link
+        title="Add a Server"
+        leading={{ sf: 'plus', material: 'add' }}
+        action
+        onPress={onPress}
+      />
+    </FieldGroup.Section>
+  ) : null;

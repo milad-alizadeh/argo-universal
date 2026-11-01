@@ -48,8 +48,8 @@ export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
     <Screen title="Devices" onBack={props.onBack}>
       <FieldGroup>
         {accessSection(props)}
-        {pairingSection(props)}
         {devicesSection(props)}
+        {pairingSection(props)}
         {statusSection(props)}
       </FieldGroup>
     </Screen>
@@ -93,11 +93,12 @@ const pairingRow = (
   reason: PairingReason,
 ): React.JSX.Element => (
   <FieldGroup.Section footer={pairingReasons[reason]}>
-    <Button
-      label="Pair a Device"
-      variant="text"
+    <FieldGroup.Link
+      title="Pair a Device"
+      leading={{ sf: 'qrcode', material: 'qr_code' }}
+      action
       disabled={reason !== 'on'}
-      onPress={props.onPairDevice}
+      onPress={() => props.onPairDevice?.()}
     />
     {reason === 'on' ? props.pairDeviceSheet : null}
   </FieldGroup.Section>
