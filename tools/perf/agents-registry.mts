@@ -2,8 +2,14 @@ import { operations } from '@repo/contracts/operations';
 import { publishedRegistry } from '../../mocks/registry/catalog.ts';
 import { query } from './trpc-http.mts';
 
-// The Agents page against a registry long enough that its list must virtualise.
-export const agentCount = 200;
+/*
+ * The Agents page against a registry long enough that its list must virtualise.
+ * `PERF_AGENT_COUNT` shrinks or grows it for a catalog-size comparison (#1731); unset is 200.
+ */
+export const agentCount = Number(process.env.PERF_AGENT_COUNT ?? 200);
+
+if (!Number.isInteger(agentCount) || agentCount < 1)
+  throw new Error(`PERF_AGENT_COUNT must be a positive integer: ${agentCount}`);
 
 export type Registry = typeof publishedRegistry;
 
