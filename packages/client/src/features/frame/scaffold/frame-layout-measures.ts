@@ -15,8 +15,11 @@ export const railZone = ({ railWidth, inset }: FrameMeasures): number =>
 // The widest the list is dragged to, and the widest it opens to for large text.
 export const listMaximum = 460;
 
-// The list's width for the person's text size: it grows with the text so a row title keeps about the characters per line it has at the default, up to what a drag allows.
-export const listWidthForText = (listWidth: number, fontScale: number): number =>
+// Until a drag sets it, the list is as wide as the text size asks, up to the widest a drag allows.
+export const listWidthForText = (
+  listWidth: number,
+  fontScale: number,
+): number =>
   Math.min(listMaximum, Math.round(listWidth * Math.max(1, fontScale)));
 
 export const preferredListWidth = (input: FrameLayoutInput): number =>

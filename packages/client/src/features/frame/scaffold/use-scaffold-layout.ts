@@ -11,12 +11,12 @@ import {
   transitionKeyOf,
 } from '../utils/frame-timing';
 import { type BandLeading, useBandLeading } from './band-leading';
-import { listWidthForText } from './frame-layout-measures';
 import {
   type FrameLayout,
   type FrameMeasures,
   frameLayout,
 } from './frame-layout';
+import { listWidthForText } from './frame-layout-measures';
 import { isFramed } from './is-framed';
 import type { ScaffoldProps } from './scaffold-props';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
@@ -87,7 +87,6 @@ function useFrameMeasures(bandLeading: BandLeading): FrameMeasures {
 }
 
 function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
-  // Until the person drags the list, it is as wide as the text size asks; the text size is read live, not at mount.
   const [draggedListWidth, setPreferredListWidth] = useState<number>();
   const fontScale = useWindowDimensions().fontScale;
 
