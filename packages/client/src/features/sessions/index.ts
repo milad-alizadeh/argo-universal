@@ -97,6 +97,8 @@ export type {
 
 export { useSessionOptions } from './hooks/use-session-options';
 
+export { modelCorrectionToast } from './utils/model-correction-toast';
+
 export { useSessionWork } from './hooks/use-session-work';
 
 export {
