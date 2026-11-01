@@ -129,7 +129,10 @@ async function allowed<T>(
   const stream = await host.caller.pairing.registered();
   const asking = await Promise.race([
     stream[Symbol.asyncIterator]().next(),
-    connecting.then(() => undefined, () => undefined),
+    connecting.then(
+      () => undefined,
+      () => undefined,
+    ),
   ]);
 
   if (asking?.done === false)
