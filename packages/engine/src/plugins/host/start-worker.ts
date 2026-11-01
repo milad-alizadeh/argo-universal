@@ -6,7 +6,8 @@ const heapLimitMb = 64;
 export type WorkerRecord = {
   generation: number;
   worker: Worker;
-  deadline: ReturnType<typeof setTimeout>;
+  // Unset until the thread is running, so the time a loaded machine takes to start it is not counted.
+  deadline?: ReturnType<typeof setTimeout>;
   heartbeat: ReturnType<typeof setTimeout> | null;
 };
 

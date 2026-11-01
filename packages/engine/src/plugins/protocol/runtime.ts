@@ -143,7 +143,7 @@ export const WorkerCall = z.object({
 export type WorkerCall = z.infer<typeof WorkerCall>;
 
 export const WorkerMessage = z.union([
-  z.enum(['ready', 'pong']),
+  z.enum(['alive', 'executing', 'ready', 'pong']),
   WorkerCall,
   TestReply,
 ]);

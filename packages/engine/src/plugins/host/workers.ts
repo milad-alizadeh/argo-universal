@@ -1,7 +1,6 @@
 import type { Worker } from 'node:worker_threads';
 import {
   pluginAnswerLimitMs,
-  running,
   runtimeError,
   WorkerMessage,
   type HostMessage,
@@ -14,8 +13,11 @@ import {
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
 import { startWorker, type WorkerRecord } from './start-worker.ts';
+import { crashedStatus, runningStatus } from './worker-status.ts';
 
 const heartbeatIntervalMs = 1000;
+
+type WorkerAnswer = 'alive' | 'executing' | 'ready' | 'pong';
 
 export class HostWorkers {
   private readonly workers = new Map<string, WorkerRecord>();
@@ -72,12 +74,12 @@ export class HostWorkers {
     return {
       generation: entry.generation,
       worker,
-      deadline: this.deadline(entry.pluginId),
       heartbeat: null,
     };
   }
 
   private listen(pluginId: string, record: WorkerRecord): void {
+    record.worker.once('online', () => this.online(pluginId, record));
     record.worker.on('message', (message) => {
       if (this.workers.get(pluginId) === record)
         this.parsed(pluginId, record, WorkerMessage.safeParse(message));
@@ -88,6 +90,12 @@ export class HostWorkers {
     record.worker.on('exit', (code) =>
       this.workerCrashed(pluginId, record, `Worker exited (${code})`),
     );
+  }
+
+  // The liveness deadline starts when the thread runs, so thread scheduling under load is not counted.
+  private online(pluginId: string, record: WorkerRecord): void {
+    if (this.workers.get(pluginId) === record)
+      record.deadline = this.deadline(pluginId);
   }
 
   private workerCrashed(
@@ -121,15 +129,24 @@ export class HostWorkers {
     this.report({ ...call, pluginId, generation: record.generation });
   }
 
-  private answer(pluginId: string, answer: 'ready' | 'pong'): void {
+  private answer(pluginId: string, answer: WorkerAnswer): void {
     const record = this.workers.get(pluginId);
 
     if (!record) return;
     clearTimeout(record.deadline);
 
-    if (answer === 'ready') this.ready(pluginId, record);
-    else this.beat(pluginId, record);
+    // Loading the worker's own code has no deadline: the answer limit counts from the moment Plugin code starts.
+    if (answer !== 'alive') this.answers[answer](pluginId, record);
   }
+
+  private readonly answers: Record<
+    Exclude<WorkerAnswer, 'alive'>,
+    (pluginId: string, record: WorkerRecord) => void
+  > = {
+    executing: (pluginId, record) => this.arm(pluginId, record),
+    ready: (pluginId, record) => this.ready(pluginId, record),
+    pong: (pluginId, record) => this.beat(pluginId, record),
+  };
 
   private beat(pluginId: string, record: WorkerRecord): void {
     record.heartbeat = setTimeout(
@@ -139,12 +156,7 @@ export class HostWorkers {
   }
 
   private ready(pluginId: string, record: WorkerRecord): void {
-    this.report({
-      type: 'status',
-      pluginId,
-      generation: record.generation,
-      ...running,
-    });
+    this.report(runningStatus(pluginId, record.generation));
     this.beat(pluginId, record);
   }
 
@@ -167,14 +179,7 @@ export class HostWorkers {
 
     if (!record) return;
     this.stop(pluginId);
-    this.report({
-      type: 'status',
-      pluginId,
-      generation: record.generation,
-      state: 'crashed',
-      hanging,
-      error,
-    });
+    this.report(crashedStatus(pluginId, record.generation, { error, hanging }));
   }
 
   private hang(pluginId: string): void {

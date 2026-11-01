@@ -12,6 +12,9 @@ import {
   type PluginRealm,
 } from './realm.ts';
 
+// `executing` runs once Argo's own loading is done and Plugin code is about to run, where the host's answer deadline starts.
+type PluginStart = { clock: PluginClock | undefined; executing: () => void };
+
 /*
  * The context deliberately has no Node globals; the frozen `argo` object, built inside the context, is its only way out. This is a
  * first-party execution boundary, not a security boundary for untrusted code.
@@ -19,7 +22,7 @@ import {
 export async function registerPlugin(
   entry: PluginEntry,
   bridge: ArgoBridge,
-  clock?: PluginClock,
+  { clock, executing }: PluginStart,
 ): Promise<PluginInboxes> {
   const { context, inboxes, modules, validateBackground } = createPluginRealm(
     bridge,
@@ -27,6 +30,7 @@ export async function registerPlugin(
     clock,
   );
 
+  executing();
   await bootstrap(context, new PluginModules(entry, context, modules));
 
   validatePaths(entry, validateBackground);
