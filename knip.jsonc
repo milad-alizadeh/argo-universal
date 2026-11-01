@@ -13,8 +13,11 @@
   },
   "workspaces": {
     ".": {
-      // The Expo UI skill invokes this script directly by path.
-      "entry": [".agents/skills/expo-ui/scripts/list-components.js"]
+      // Skills invoke these scripts directly by path.
+      "entry": [
+        ".agents/skills/expo-ui/scripts/list-components.js",
+        ".agents/skills/apple-design/scripts/pull-hig.mjs"
+      ]
     },
     "packages/client": {
       // Metro selects platform modules by filename rather than by a literal import.

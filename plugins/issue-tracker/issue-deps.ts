@@ -9,7 +9,7 @@ import type { TrackerStorage } from './tracker-storage';
 export type IssuePages = {
   projectPagePath: (project: Project) => string;
   filterPagePath: (project: Project, filter: IssueFilter) => string;
-  issuePagePath: (project: Project, number: number) => string;
+  issuePagePath: (project: Pick<Project, 'id'>, number: number) => string;
 };
 
 // What every Issues page shares: one Plugin's storage, Trackers, open pages, Sessions and status changes.

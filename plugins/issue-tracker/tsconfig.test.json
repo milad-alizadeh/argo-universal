@@ -1,4 +1,9 @@
 {
   "extends": "@argo/plugin-kit/tsconfig.test.json",
-  "include": ["**/*.test.ts", "journey-fixture.ts", "vitest.config.ts"]
+  "include": [
+    "**/*.test.ts",
+    "journey-fixture.ts",
+    "session-slot-fixture.ts",
+    "vitest.config.ts"
+  ]
 }

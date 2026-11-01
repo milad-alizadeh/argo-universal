@@ -73,3 +73,59 @@ const isSessionRow = (row: unknown): row is [string, string] =>
   Array.isArray(row) &&
   typeof row[0] === 'string' &&
   typeof row[1] === 'string';
+
+// The Issues these Sessions work on, the most recently attached first; a Session with none has no link.
+export async function sessionLinks(
+  store: SessionStore,
+  sessionIds: readonly string[],
+): Promise<IssueLink[]> {
+  if (sessionIds.length === 0) return [];
+
+  await store.ensureTables();
+
+  const marks = sessionIds.map(() => '?').join(', ');
+
+  const result = await store.argo.storage.execute({
+    sql: `SELECT project_id, issue_number, session_id FROM issue_sessions WHERE session_id IN (${marks}) ORDER BY attached_at DESC`,
+    params: [...sessionIds],
+    method: 'all',
+  });
+
+  return result.rows.flatMap((row) => (isLinkRow(row) ? [linkOf(row)] : []));
+}
+
+// Each row is `[project_id, issue_number, session_id]`, as this Plugin's own INSERT wrote it.
+const linkOf = ([projectId, number, sessionId]: LinkRow): IssueLink => ({
+  projectId,
+  number,
+  sessionId,
+});
+
+type LinkRow = [string, number, string];
+
+const isLinkRow = (row: unknown): row is LinkRow =>
+  Array.isArray(row) &&
+  [
+    typeof row[0] === 'string',
+    Number.isSafeInteger(row[1]),
+    typeof row[2] === 'string',
+  ].every(Boolean);
+
+// The attachments as the Plugin's storage hands them out, each bound to the store.
+type SessionMethods = {
+  attachSession: (link: IssueLink) => Promise<void>;
+  detachSession: (link: IssueLink) => Promise<void>;
+  issueSessions: (
+    issue: Omit<IssueLink, 'sessionId'>,
+  ) => Promise<IssueSession[]>;
+  sessionLinks: (sessionIds: readonly string[]) => Promise<IssueLink[]>;
+};
+
+export const sessionMethods = (store: SessionStore): SessionMethods => ({
+  attachSession: (link: IssueLink) => attachSession(store, link),
+  detachSession: (link: IssueLink) => detachSession(store, link),
+  issueSessions: (issue: Omit<IssueLink, 'sessionId'>) =>
+    issueSessions(store, issue),
+  sessionLinks: (sessionIds: readonly string[]) =>
+    sessionLinks(store, sessionIds),
+});

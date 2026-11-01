@@ -34,6 +34,7 @@ Reserve a quiet measurement window first: a run taken under load measures the ma
 | `PERF_ONLY` | Scenario names to measure, comma separated; empty or unset measures all |
 | `PERF_OUT` | Where the reports and screenshots go; default `$TMPDIR/argo-perf` |
 | `PERF_AGENT` | The Registry Agent `real-agent.perf.mts` installs and drives, for example `claude-acp`. Unset, that suite declares no scenarios. See "A real Agent (PF-17)" |
+| `PERF_AGENT_COUNT` | Agents in the registry `agents.perf.mts` seeds and the Server must serve; default 200. The published catalog holds 4, which leaves the list nothing to scroll (#1731) |
 | `PERF_AGENT_OPTIONS` | The Session options that run is pinned to before its first prompt, as `configId=value` pairs, comma separated. Required whenever `PERF_AGENT` is set |
 | `PERF_HEADED=1` | Runs with a visible browser, as a cross-check against the headless collector |
 | `PERF_TRACE=1`, `PERF_PROFILE=1` | Save one trace or CPU profile per scenario; these artefacts are large |
