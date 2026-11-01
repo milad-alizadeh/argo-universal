@@ -1,17 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor } from 'storybook/test';
+import { widePages as everyPage } from './settings-list-navigation.test.mocks';
 import type { Story } from './settings-list-story.test.mocks';
-
-const everyPage = [
-  'Projects',
-  'Agents',
-  'Agent access',
-  'Plugins',
-  'Accounts',
-  'Connection',
-  'Devices',
-  'Notifications',
-];
 
 // A tablet held in portrait is medium and not a phone: every page stays, as it does in landscape.
 export function tabletPortraitKeepsEveryPage(
