@@ -38,7 +38,9 @@ export const UnpairAsksFirstAndCancelKeepsTheDevice: Story = {
 
     const alert = await openAlert();
 
-    await expect(alert.getByText(/even mid-Session/)).toBeVisible();
+    await waitFor(() =>
+      expect(alert.getByText(/even mid-Session/)).toBeVisible(),
+    );
     await userEvent.click(alert.getByRole('button', { name: 'Cancel' }));
     await expect(args.onUnpair).not.toHaveBeenCalled();
   },

@@ -37,7 +37,9 @@ export const UnpairAsksFirstAndCancelKeepsTheServer: Story = {
 
     const alert = within(await body.findByRole('dialog'));
 
-    await expect(alert.getByText(/loses access straight away/)).toBeVisible();
+    await waitFor(() =>
+      expect(alert.getByText(/loses access straight away/)).toBeVisible(),
+    );
     await userEvent.click(alert.getByRole('button', { name: 'Cancel' }));
     await expect(args.onUnpair).not.toHaveBeenCalled();
   },
