@@ -1,4 +1,3 @@
-import type { Worker } from 'node:worker_threads';
 import {
   pluginAnswerLimitMs,
   runtimeError,
@@ -12,7 +11,12 @@ import {
   type HostCommand,
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
-import { startWorker, type WorkerRecord } from './start-worker.ts';
+import {
+  startWorker,
+  type StartWorker,
+  type WorkerPort,
+  type WorkerRecord,
+} from './start-worker.ts';
 import { crashedStatus, runningStatus } from './worker-status.ts';
 
 const heartbeatIntervalMs = 1000;
@@ -49,10 +53,10 @@ export class HostWorkers {
     this.workers.get(pluginId)?.worker.postMessage(command);
   }
 
-  activate(entry: PluginEntry): void {
+  activate(entry: PluginEntry, start: StartWorker = startWorker): void {
     if (this.workers.has(entry.pluginId)) return;
 
-    const worker = startWorker(entry);
+    const worker = start(entry);
 
     const record = this.record(entry, worker);
     this.workers.set(entry.pluginId, record);
@@ -70,7 +74,7 @@ export class HostWorkers {
     void record.worker.terminate();
   }
 
-  private record(entry: PluginEntry, worker: Worker): WorkerRecord {
+  private record(entry: PluginEntry, worker: WorkerPort): WorkerRecord {
     return {
       generation: entry.generation,
       worker,
@@ -94,8 +98,7 @@ export class HostWorkers {
 
   // The liveness deadline starts when the thread runs, so thread scheduling under load is not counted.
   private online(pluginId: string, record: WorkerRecord): void {
-    if (this.workers.get(pluginId) === record)
-      record.deadline = this.deadline(pluginId);
+    if (this.workers.get(pluginId) === record) this.arm(pluginId, record);
   }
 
   private workerCrashed(
