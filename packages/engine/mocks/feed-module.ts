@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { AppNavigation } from '../src/app-navigation';
+import { OpenChannels } from '../src/devices/open-channels';
 import { type AppRouter, createAppRouter } from '../src/engine/router';
 import {
   type AppRouterInput,
@@ -9,10 +10,14 @@ import {
   createFeedSources,
 } from '../src/engine/router-deps';
 import type { FeedActorRef } from '../src/feed';
+import { LocalNetworkAccess } from '../src/network-access';
+import { PairingRegistrations } from '../src/pairing/registrations';
+import { PairingTickets } from '../src/pairing/tickets';
 import { Plugins } from '../src/plugins';
 import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
 import { openFeedForModule } from './feed-module-actor';
+import { serverDeviceContext } from './rpc-context';
 import { scriptedEngineInput } from './scripted-engine';
 
 type FeedModuleOptions = {
@@ -85,13 +90,22 @@ const feedIds = (): FeedIds => {
   };
 };
 
-const appNavigation = new AppNavigation({ serverId: 'feed-module-test' });
+const feedModuleSecrets = {
+  controlToken: 'feed-module-test-token',
+  serverPublicKey: 'feed-module-test-public-key',
+  // The Feed module draws no pair sheet; every router shares one dependency bag.
+  discoveryName: 'Feed module test Server',
+  tickets: new PairingTickets(),
+  registrations: new PairingRegistrations(),
+  channels: new OpenChannels(),
+  appNavigation: new AppNavigation({ serverId: 'feed-module-test' }),
+};
 
 const feedModuleRouterInput = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
 ): AppRouterInput => ({
-  controlToken: 'feed-module-test-token',
+  ...feedModuleSecrets,
   userHome: join(host.home, 'user-home'),
   sessionTokens: host.engine.getSnapshot().context.sessionTokens,
   database: host.database,
@@ -116,24 +130,24 @@ const feedPlugins = (
 
 type RouterRuntime = Pick<
   AppRouterInput,
-  | 'appNavigation'
   | 'blobsFolder'
   | 'version'
   | 'startedAt'
   | 'sessionCommandSignal'
   | 'registry'
+  | 'localNetworkAccess'
 >;
 
 const routerRuntime = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   signal: AbortSignal,
 ): RouterRuntime => ({
-  appNavigation,
   blobsFolder: host.blobsFolder,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
   sessionCommandSignal: signal,
   registry: host.engine.system.get('registry'),
+  localNetworkAccess: networkAccessOf(host),
 });
 
 // The router reads the module's own feed actor for session-1.
@@ -150,5 +164,10 @@ export const createFeedModuleCaller = (
 
   return createAppRouter(
     createAppRouterDeps(input, { ...sources, findFeed }),
-  ).createCaller({}, { signal });
+  ).createCaller(serverDeviceContext(signal), { signal });
 };
+
+const networkAccessOf = (
+  host: Awaited<ReturnType<typeof startEngineTestHost>>,
+): LocalNetworkAccess =>
+  new LocalNetworkAccess(host.database, host.databaseWriter);

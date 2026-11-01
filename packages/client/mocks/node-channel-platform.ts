@@ -1,0 +1,171 @@
+import { randomBytes } from 'node:crypto';
+import { connect } from 'node:net';
+import type { PairingClaim, PairingRegistration } from '@repo/contracts';
+import type { ByteSocket } from '../src/features/connection/api/channel/byte-socket';
+import type {
+  ChannelPlatform,
+  DeviceClaim,
+} from '../src/features/connection/api/channel/channel-transport';
+import {
+  openChannel,
+  type ChannelInput,
+} from '../src/features/connection/api/channel/open-channel';
+import {
+  keypairFromPrivateKey,
+  type Keypair,
+} from '../src/features/connection/api/channel/x25519';
+import type { PairedEndpoint } from '../src/features/connection/api/server-endpoint';
+
+const keyBytes = 32;
+
+export const nodeRandomBytes = (length: number): Uint8Array =>
+  new Uint8Array(randomBytes(length));
+
+export const newDeviceKey = (): Keypair =>
+  keypairFromPrivateKey(nodeRandomBytes(keyBytes));
+
+type Socket = ReturnType<typeof connect>;
+
+function adapter(socket: Socket): ByteSocket {
+  const bytes: ByteSocket = {
+    write: (data) => void socket.write(data),
+    close: () => void socket.destroy(),
+    onData: () => {},
+    onClose: () => {},
+  };
+
+  socket.on('data', (chunk) => bytes.onData(new Uint8Array(chunk)));
+  socket.on('close', () => bytes.onClose());
+  socket.on('error', (error) => bytes.onClose(error));
+
+  return bytes;
+}
+
+const openSocket: ChannelPlatform['openSocket'] = (address) =>
+  new Promise((resolve, reject) => {
+    const socket = connect(address.port, address.host, () =>
+      resolve(adapter(socket)),
+    );
+
+    socket.once('error', reject);
+  });
+
+export interface NodeDevice {
+  deviceKey?: Keypair;
+  claim?: Partial<DeviceClaim>;
+}
+
+/*
+ * The App's sockets and randomness, taken from Node: a real TCP socket to a real Engine, which is as close to a phone as a test here gets. Only the socket module differs on a phone.
+ */
+export const nodeChannelPlatform = (
+  device: NodeDevice = {},
+): ChannelPlatform => {
+  const key = device.deviceKey ?? newDeviceKey();
+
+  return {
+    openSocket,
+    randomBytes: nodeRandomBytes,
+    deviceKey: async () => key,
+    claim: () => ({ name: 'Test phone', platform: 'android', ...device.claim }),
+  };
+};
+
+// The slice of a started Engine a Device pairs with.
+export interface PairableHost {
+  url: string;
+  caller: {
+    devices: { serverKey: () => Promise<{ publicKey: string }> };
+    pairing: {
+      registered: () => Promise<AsyncIterable<PairingRegistration>>;
+      allow: (input: { deviceId: string }) => Promise<void>;
+    };
+  };
+  pairing: { mint: () => { ticket: string } };
+}
+
+export const endpointOf = async (
+  host: PairableHost,
+): Promise<PairedEndpoint> => ({
+  host: '127.0.0.1',
+  port: Number(new URL(host.url).port),
+  serverPublicKey: (await host.caller.devices.serverKey()).publicKey,
+});
+
+interface Inputs {
+  platform: ChannelPlatform;
+  // Where the channel is opened, and the Server whose key it expects: the same unless a test opens to one Server with another's key.
+  at: PairedEndpoint;
+  expecting: PairedEndpoint;
+  ticket?: string;
+}
+
+const inputFor = async (inputs: Inputs): Promise<ChannelInput> => ({
+  address: { host: '127.0.0.1', port: inputs.at.port },
+  serverPublicKey: inputs.expecting.serverPublicKey,
+  deviceKey: await inputs.platform.deviceKey(),
+  claim: { ...inputs.platform.claim(), ticket: inputs.ticket },
+  randomBytes: inputs.platform.randomBytes,
+});
+
+// Opens a channel as `platform` says this Device is, to the Server at `host`.
+export async function openAs(
+  host: PairableHost,
+  platform: ChannelPlatform,
+  options: { serverHost?: PairableHost; ticket?: string } = {},
+): ReturnType<typeof openChannel> {
+  const input = await inputFor({
+    platform,
+    at: await endpointOf(host),
+    expecting: await endpointOf(options.serverHost ?? host),
+    ticket: options.ticket,
+  });
+
+  return allowed(host, openChannel(input, platform.openSocket), input.claim);
+}
+
+/*
+ * The owner pressing Allow: the Server holds a Device that spends a Pairing Ticket until they do, so a test that pairs is waiting on this.
+ * A Device with no Ticket never waits, and one the Server refuses outright has nobody to answer.
+ */
+async function allowed<T>(
+  host: PairableHost,
+  connecting: Promise<T>,
+  claim: PairingClaim,
+): Promise<T> {
+  if (claim.ticket) await allowFirst(host, connecting);
+
+  return connecting;
+}
+
+const nobodyAsking = (): IteratorResult<PairingRegistration> => ({
+  done: true,
+  value: undefined,
+});
+
+async function allowFirst(
+  host: PairableHost,
+  connecting: Promise<unknown>,
+): Promise<void> {
+  const stream = await host.caller.pairing.registered();
+
+  const first = await Promise.race([
+    stream[Symbol.asyncIterator]().next(),
+    connecting.then(nobodyAsking, nobodyAsking),
+  ]);
+
+  if (!first.done)
+    await host.caller.pairing.allow({ deviceId: first.value.deviceId });
+}
+
+// A Device that has paired: its first Connection spent a Pairing Ticket, and every one after it is the Device Key alone.
+export async function pairedNodeDevice(
+  host: PairableHost,
+): Promise<NodeDevice> {
+  const device = { deviceKey: newDeviceKey() };
+  const { ticket } = host.pairing.mint();
+
+  (await openAs(host, nodeChannelPlatform(device), { ticket })).stream.close();
+
+  return device;
+}

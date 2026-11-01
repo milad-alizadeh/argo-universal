@@ -1,7 +1,7 @@
 import { findToast } from '@repo/kit/mocks/find-toast';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { ConnectionDetailView } from './connection-detail-view';
 import { loadedServer } from './connection-detail-view.fixtures';
 
@@ -88,5 +88,51 @@ export const ShowsPlaceholderBeforeFirstClockTick: Story = {
   args: { server: { ...loadedServer, clock: undefined } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('…')).toBeVisible();
+  },
+};
+
+const keepRunningName = 'Keep the Server running';
+
+export const TurnsKeepRunningOn: Story = {
+  args: { keepRunning: { enabled: false, onChange: fn() } },
+  play: async ({ canvas, args, userEvent }) => {
+    const row = await canvas.findByRole('switch', { name: keepRunningName });
+    await expect(row).not.toBeChecked();
+    await userEvent.click(row);
+    await expect(args.keepRunning?.onChange).toHaveBeenCalledWith(true);
+  },
+};
+
+export const TurnsKeepRunningOff: Story = {
+  args: { keepRunning: { enabled: true, onChange: fn() } },
+  play: async ({ canvas, args, userEvent }) => {
+    const row = await canvas.findByRole('switch', { name: keepRunningName });
+    await expect(row).toBeChecked();
+    await userEvent.click(row);
+    await expect(args.keepRunning?.onChange).toHaveBeenCalledWith(false);
+  },
+};
+
+// A paired Device is handed no setting, so the row is not there to press.
+export const OmitsKeepRunningForAPairedDevice: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('1.2.3')).toBeVisible();
+    await expect(canvas.queryByText(keepRunningName)).toBeNull();
+  },
+};
+
+export const ShowsAFailedChangeAsAToast: Story = {
+  args: {
+    keepRunning: {
+      enabled: false,
+      error: 'Server is down',
+      onChange: fn(),
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await findToast('Could not change the Server')).toBeVisible();
+    await expect(
+      canvas.getByRole('switch', { name: keepRunningName }),
+    ).not.toBeChecked();
   },
 };

@@ -1,5 +1,6 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { holdCacheOnline } from './cache-online.ts';
 import { type FakeLink, fakeLink } from './connection.mocks.ts';
 
 let link: FakeLink;
@@ -9,6 +10,8 @@ const closers: (() => void)[] = [];
 beforeEach(() => {
   vi.useFakeTimers();
   link = fakeLink();
+  // The Server being looked at drives the cache's online flag; nothing refetches without that hold.
+  closers.push(holdCacheOnline(link.connection));
 });
 
 afterEach(() => {

@@ -15,11 +15,15 @@ function useMemoryStorage(): ReturnType<typeof memoryStorage> {
   return storage;
 }
 
-// Where this Device keeps the view.
-const viewKey = 'sessions-view';
+// The Server whose Sessions the view is for, and where this Device keeps it.
+const serverId = 'server-device';
 
-const loadView = (client = new QueryClient()): Promise<SessionsView> =>
-  client.fetchQuery(sessionsViewQuery());
+const viewKey = `${serverId}:sessions-view`;
+
+const loadView = (
+  client = new QueryClient(),
+  server = serverId,
+): Promise<SessionsView> => client.fetchQuery(sessionsViewQuery(server));
 
 const defaults: SessionsView = {
   group: 'project',
@@ -41,7 +45,7 @@ describe('the Sessions view on this Device', () => {
 
   it('keeps a choice for the next App start', async () => {
     useMemoryStorage();
-    chooseSessionsView(new QueryClient(), chosen);
+    chooseSessionsView(new QueryClient(), serverId, chosen);
     await expect(loadView()).resolves.toEqual(chosen);
   });
 
@@ -67,10 +71,22 @@ describe('the Sessions view on this Device', () => {
     const olderRead = Promise.withResolvers<string | null>();
     vi.spyOn(AsyncStorage, 'getItem').mockReturnValue(olderRead.promise);
     const loading = loadView(client).catch(() => null);
-    chooseSessionsView(client, chosen);
+    chooseSessionsView(client, serverId, chosen);
     olderRead.resolve(JSON.stringify(defaults));
     await loading;
-    expect(client.getQueryData(sessionsViewQuery().queryKey)).toEqual(chosen);
+    expect(client.getQueryData(sessionsViewQuery(serverId).queryKey)).toEqual(
+      chosen,
+    );
+  });
+
+  it('keeps a view for each Server, so one Server does not change the other', async () => {
+    useMemoryStorage();
+    chooseSessionsView(new QueryClient(), serverId, chosen);
+
+    await expect(
+      loadView(new QueryClient(), 'other-computer'),
+    ).resolves.toEqual(defaults);
+    await expect(loadView()).resolves.toEqual(chosen);
   });
 
   it('keeps the default view when the kept view cannot be read', async () => {

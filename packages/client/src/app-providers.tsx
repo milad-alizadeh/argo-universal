@@ -1,133 +1,97 @@
-import { MediaUrlContext } from '@repo/kit/primitives/content/media-url';
-import type { QueryClient } from '@tanstack/react-query';
-import { QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
-import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
-import { ConnectionContext } from '#features/connection';
-import { openConnection } from '#features/connection';
+import { type ReactNode, useMemo, useSyncExternalStore } from 'react';
 import {
-  BlobUrlContext,
-  createServerBlobUrl,
-  createServerMediaUrl,
-} from '#features/connection';
-import { TRPCProvider } from '#features/connection';
-import { LinkPreviewProvider } from './link-preview-provider';
-import { createQueryClient } from './query-cache';
+  createServersStore,
+  type OpenServerConnection,
+  type ServerConnections,
+  ServerConnectionsContext,
+  ServersContext,
+  type ServersSnapshot,
+  type ServersStore,
+  useServerConnections,
+} from '#features/servers';
+import { LookedAtServer } from './looked-at-server';
 
 export interface AppProvidersProps {
+  // The Server on this Device: the one the App opens on, and the only one on a Device that has paired with none.
   serverUrl: string;
+  // How a Connection to a Server is opened; a story stands in for the network here.
+  openServer?: OpenServerConnection;
   children: ReactNode;
 }
 
-type Connection = ReturnType<typeof openConnection>;
-
-// One QueryClient and one Connection for the App's lifetime; give it a new key to switch Servers.
-export function AppProviders(
-  props: AppProvidersProps,
-): React.JSX.Element | null {
-  const [queryClient] = useState(createQueryClient);
-  const connection = useServerConnection(props.serverUrl);
-
-  if (!connection) return null;
+/*
+ * The App's Servers: a Connection to each one it holds (ADR-0022), and the Sessions, Projects and Feed of the one it
+ * is looking at.
+ */
+export function AppProviders(props: AppProvidersProps): React.JSX.Element {
+  const store = useMemo(
+    () => createServersStore(props.serverUrl),
+    [props.serverUrl],
+  );
 
   return (
-    <ConnectionProviders
-      {...props}
-      queryClient={queryClient}
-      connection={connection}
-    />
+    <AppServers store={store} openServer={props.openServer}>
+      {props.children}
+    </AppServers>
   );
 }
 
-interface ServerProvidersProps extends AppProvidersProps {
-  connection: Connection;
+const useServers = (store: ServersStore): ServersSnapshot =>
+  useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+
+interface AppServersProps {
+  store: ServersStore;
+  openServer?: OpenServerConnection;
+  children: ReactNode;
 }
 
-interface ConnectionProvidersProps extends ServerProvidersProps {
-  queryClient: QueryClient;
-}
+const serversActions = (
+  store: ServersStore,
+): Pick<ServersStore, 'look' | 'add' | 'remove'> => ({
+  look: store.look,
+  add: store.add,
+  remove: store.remove,
+});
 
-function ConnectionProviders({
-  queryClient,
-  ...props
-}: ConnectionProvidersProps): React.JSX.Element {
+// Every Server the App holds, each with its own Connection, and the one it is looking at.
+function AppServers({ store, ...props }: AppServersProps): React.JSX.Element {
+  const servers = useServers(store);
+  const connections = useServerConnections(servers.servers, props.openServer);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <TRPCProvider
-        trpcClient={props.connection.client}
-        queryClient={queryClient}
-      >
-        <ServerProviders {...props} />
-      </TRPCProvider>
-    </QueryClientProvider>
+    <ServersContext.Provider value={{ ...servers, ...serversActions(store) }}>
+      <ServerConnectionsContext.Provider value={connections}>
+        {servers.read
+          ? lookedAtServer({ servers, connections, ...props })
+          : null}
+      </ServerConnectionsContext.Provider>
+    </ServersContext.Provider>
   );
 }
 
-function ServerProviders({
-  serverUrl,
-  connection,
+interface LookedAtProps {
+  servers: ServersSnapshot;
+  connections: ServerConnections;
+  children: ReactNode;
+}
+
+/*
+ * Looking at another Server starts its screens again on a QueryClient of its own — a new key, so a new client — and
+ * no answer from one Server is ever shown for another; the Connections themselves stay open either way. Nothing is
+ * drawn until the kept list has been read, so the App opens on the Server it was last looking at rather than showing
+ * its own Server's Sessions and moving off them.
+ */
+const lookedAtServer = ({
+  servers,
+  connections,
   children,
-}: ServerProvidersProps): React.JSX.Element {
-  return (
-    <ConnectionContext.Provider value={connection.connection}>
-      <ServerUrls serverUrl={serverUrl}>{children}</ServerUrls>
-    </ConnectionContext.Provider>
-  );
-}
-
-type ServerUrlsProps = { serverUrl: string; children: ReactNode };
-
-// Images and Plugin media load over HTTP from the Server's own routes.
-function ServerUrls({
-  serverUrl,
-  children,
-}: ServerUrlsProps): React.JSX.Element {
-  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
-  const mediaUrl = useMemo(() => createServerMediaUrl(serverUrl), [serverUrl]);
-
-  return (
-    <BlobUrlContext.Provider value={blobUrl}>
-      <MediaUrlContext.Provider value={mediaUrl}>
-        <LinkPreviewProvider>{children}</LinkPreviewProvider>
-      </MediaUrlContext.Provider>
-    </BlobUrlContext.Provider>
-  );
-}
-
-function emptyConnection(): null {
-  return null;
-}
-
-function useServerConnection(serverUrl: string): Connection | null {
-  const store = useMemo(() => new ConnectionStore(serverUrl), [serverUrl]);
-
-  return useSyncExternalStore(
-    store.subscribe,
-    store.getSnapshot,
-    emptyConnection,
-  );
-}
-
-class ConnectionStore {
-  private opened: Connection | null = null;
-  private readonly serverUrl: string;
-
-  public constructor(serverUrl: string) {
-    this.serverUrl = serverUrl;
-  }
-
-  public readonly getSnapshot = (): Connection | null => this.opened;
-
-  public readonly subscribe = (changed: () => void): (() => void) => {
-    const connection = openConnection(this.serverUrl);
-    this.opened = connection;
-    changed();
-
-    return () => this.close(connection);
-  };
-
-  private close(connection: Connection): void {
-    this.opened = null;
-    void connection.close();
-  }
-}
+}: LookedAtProps): React.JSX.Element => (
+  <LookedAtServer
+    key={servers.lookingAt}
+    {...servers}
+    connections={connections}
+  >
+    {children}
+  </LookedAtServer>
+);

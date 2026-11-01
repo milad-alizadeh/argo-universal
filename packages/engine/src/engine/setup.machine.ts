@@ -87,6 +87,8 @@ export interface EngineInput extends Pick<
   installationPorts?: InstallPorts;
   caffeinate?: Caffeinate;
   notificationOptions?: NotificationOptions;
+  // What an App lists this Server by; the computer's name unless a test says otherwise.
+  discoveryName?: string;
 }
 
 export interface EngineContext extends EngineInput {

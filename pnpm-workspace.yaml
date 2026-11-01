@@ -98,6 +98,7 @@ catalog:
   "@trpc/client": 11.19.0
   "@trpc/server": 11.19.0
   "@trpc/tanstack-react-query": 11.19.0
+  "@types/multicast-dns": 7.2.4
   "@types/node": 24.19.1
   "@types/react": ~19.3.0
   "@types/react-dom": 19.2.3
@@ -142,11 +143,15 @@ catalog:
   react-native-safe-area-context: ~5.10.1
   react-native-screens: ~4.30.0
   react-native-svg: 15.16.0
+  # Encodes a Pairing Ticket's invite as QR modules, which the pair sheet draws with react-native-svg. Pure JavaScript, so one encoder serves web, iOS and Android.
+  qrcode-generator: 2.0.4
   # Imports a logo SVG as a react-native-svg component in Metro (ADR-0019).
   react-native-svg-transformer: 1.5.3
   # ~0.21.4 excludes 0.21.3: Uniwind 1.12.1 crashes on web start with it (uni-stack/uniwind#704).
   react-native-web: ~0.21.4
   react-native-worklets: 0.13.0
+  # Finds the Server on the local network by name, over Bonjour on iOS and NSD on Android (ADR-0045).
+  react-native-zeroconf: 0.17.7
   sf-symbols-typescript: 2.2.0
   sherif: 1.13.0
   storybook: 10.6.1
@@ -160,6 +165,9 @@ catalog:
   # The same SVG import in Storybook's Vite build, with SVGR's native output.
   vite-plugin-svgr: 5.2.0
   vitest: 5.0.3
+  # mDNS for the Server (ADR-0045): multicast-dns answers for it, one responder per network interface; bonjour-service is the browser tests and a desktop App use. Pure JS.
+  bonjour-service: 1.4.4
+  multicast-dns: 7.2.5
   ws: 8.22.0
   # Exact pin: XState may change types in minor releases.
   xstate: 5.33.2
@@ -181,6 +189,13 @@ catalog:
   "@babel/types": 7.29.8
   expo-image: ~58.0.16
   "@modelcontextprotocol/sdk": 1.32.2
+  "@noble/hashes": 2.4.0
+  "@noble/ciphers": 2.4.0
+  "@noble/curves": 2.4.0
+  react-native-tcp-socket: 6.4.3
+  expo-crypto: ~58.0.7
+  expo-secure-store: ~58.0.2
+  expo-camera: ~58.0.14
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict
@@ -224,6 +239,7 @@ minimumReleaseAgeExclude:
   - "@expo/ui@58.0.22"
   - expo-audio@58.0.10
   - expo-clipboard@58.0.4
+  - expo-camera@58.0.14
   - expo-linking@58.0.14
   - expo-router@58.0.25
   - expo-splash-screen@58.0.11

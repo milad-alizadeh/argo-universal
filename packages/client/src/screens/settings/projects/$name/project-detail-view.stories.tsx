@@ -18,7 +18,6 @@ const meta = {
   component: ProjectDetailView,
   argTypes: {
     name: { control: 'text' },
-    caption: { control: 'text' },
     otherDevice: { control: 'text' },
     project: { control: false },
     pluginItems: { control: false },

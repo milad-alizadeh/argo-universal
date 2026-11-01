@@ -16,6 +16,7 @@ import {
   themeChoosesInPlace,
 } from '../../../../mocks/settings/settings-list-theme.test.mocks';
 import { SettingsListView } from './settings-list-view';
+import { pairedSettings } from './settings-list-view-fixtures';
 
 const meta = { ...settingsListTestMeta, title: 'Tests/Screens/Settings' };
 
@@ -126,6 +127,26 @@ export const TheSearchFindsAppearancePhone = searchFindsAppearance(
 export const TheSearchFindsAppearanceWide = searchFindsAppearance(
   layoutWidths.wide,
 );
+
+/*
+ * Looking at a Server this Device paired with: no Devices row, and Appearance under a heading that names this Device
+ * rather than under Theme (ADR-0022).
+ */
+export const APairedServerHasNoDevicesAndNamesThisDevice: Story = {
+  args: pairedSettings,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('link', { name: /^Servers, Studio/ }),
+      ).toBeVisible(),
+    );
+    await expect(canvas.queryByRole('link', { name: /^Devices/ })).toBeNull();
+    await expect(
+      canvas.getAllByRole('heading').map((heading) => heading.textContent),
+    ).toEqual(['Workspace', 'Account', 'Connection', 'This Device']);
+  },
+};
 
 // The Frame supplies one equal inset for selected and unselected Settings rows.
 export const FramedSidebarGutters: Story = {

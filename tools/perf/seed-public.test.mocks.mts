@@ -5,6 +5,7 @@ import {
   type SessionUpdate,
 } from '@repo/contracts';
 import { z } from 'zod';
+import { asTheApp } from './app-origin.mts';
 
 const sessionsEnvelope = z.object({
   result: z.object({ data: SessionListOutput }),
@@ -20,7 +21,9 @@ async function pageOf(
     JSON.stringify({ ...(cursor && { cursor }) }),
   );
 
-  const response = await fetch(`${httpUrl}/trpc/session.list?input=${input}`);
+  const response = await fetch(`${httpUrl}/trpc/session.list?input=${input}`, {
+    headers: asTheApp,
+  });
 
   return sessionsEnvelope.parse(await response.json()).result.data;
 }
@@ -59,6 +62,7 @@ async function feedPage(
 
   const response = await fetch(
     `${serverUrl.replace('ws:', 'http:')}/trpc/feed.page?input=${input}`,
+    { headers: asTheApp },
   );
 
   return feedEnvelope.parse(await response.json()).result.data;

@@ -8,6 +8,7 @@ import {
 } from '@trpc/client';
 import { onTestFinished } from 'vitest';
 import type { AppRouter } from '../src/engine/router';
+import { AppPageSocket } from './app-socket';
 
 type Ready = Extract<NavigationStreamEvent, { type: 'ready' }>;
 
@@ -27,6 +28,7 @@ const socketTo = (
   createWSClient({
     url: url.replace('http:', 'ws:'),
     connectionParams: { pluginSurface: JSON.stringify(surface) },
+    WebSocket: AppPageSocket,
   });
 
 interface Listening {

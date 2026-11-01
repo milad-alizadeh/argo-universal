@@ -1,14 +1,23 @@
 import { startEngineTestHost } from '@repo/engine/mocks';
+import { AppPageSocket } from '@repo/engine/mocks/app-socket';
 import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { TRPCClientError, type TRPCClientErrorLike } from '@trpc/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  endpointOf,
+  nodeChannelPlatform,
+  pairedNodeDevice,
+} from '../../../../mocks/node-channel-platform';
+import { holdCacheOnline } from '../stores/cache-online';
 import type { Connection, ConnectionState } from '../stores/connection';
 import { openConnection } from './open-connection';
 
 const closers: (() => Promise<void> | void)[] = [];
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
+
   for (const close of closers.splice(0).reverse()) await close();
 });
 
@@ -16,12 +25,20 @@ afterEach(async () => {
 async function startServer(
   options: { port?: number; version?: string } = {},
 ): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
+  // Node writes no Origin, so the App stands in for its own page, which is what proves the Server Device (#1696).
+  vi.stubGlobal('WebSocket', AppPageSocket);
+
   const host = await startEngineTestHost({ version: '1.2.3', ...options });
   const url = new URL(host.url);
   url.protocol = 'ws:';
 
   return { url: url.toString(), port: Number(url.port), stop: host.stop };
 }
+
+// The Server being looked at drives the cache's online flag, so its queries pause and refetch with it.
+const lookedAt = (connection: Connection): void => {
+  closers.push(holdCacheOnline(connection));
+};
 
 // A mounted client, as QueryClientProvider mounts it, refetches when onlineManager comes back online.
 function mountedQueryClient(): QueryClient {
@@ -48,7 +65,7 @@ interface DroppedCall {
 // What a live subscription, such as a Session's Feed, hears when the Server goes, and the Connection's state then.
 async function droppedSubscription(): Promise<DroppedCall> {
   const server = await startServer();
-  const { client, connection, close } = openConnection(server.url);
+  const { client, connection, close } = openConnection({ url: server.url });
 
   closers.push(close);
   const live = Promise.withResolvers<void>();
@@ -83,9 +100,10 @@ describe('openConnection', (): void => {
     const server = await startServer();
     const queryClient = mountedQueryClient();
 
-    const { client, connection, close } = openConnection(server.url);
+    const { client, connection, close } = openConnection({ url: server.url });
 
     closers.push(close);
+    lookedAt(connection);
     await waitForConnectionLink(connection, 'open');
 
     // An observed query, as a mounted screen has; invalidation refetches only those.
@@ -115,7 +133,7 @@ describe('openConnection', (): void => {
     await stopped.stop();
     const queryClient = mountedQueryClient();
 
-    const { client, connection, close } = openConnection(stopped.url);
+    const { client, connection, close } = openConnection({ url: stopped.url });
 
     closers.push(close);
 
@@ -139,9 +157,28 @@ describe('openConnection', (): void => {
   it('closes while an attempt waits for its retry delay', async () => {
     const unused = await startServer();
     await unused.stop();
-    const { connection, close } = openConnection(unused.url);
+    const { connection, close } = openConnection({ url: unused.url });
     await waitForConnectionLink(connection, 'reconnecting');
 
     await expect(close()).resolves.toBeUndefined();
+  });
+});
+
+describe('openConnection to a paired Server', () => {
+  it('reads the Server inside the channel, and gives its Blobs a fetch instead of a URL', async () => {
+    const host = await startEngineTestHost({ version: '1.2.3' });
+    const device = await pairedNodeDevice(host);
+
+    const { client, fetch, close } = openConnection(
+      await endpointOf(host),
+      nodeChannelPlatform(device),
+    );
+
+    closers.push(close);
+
+    expect(await client.system.info.query()).toMatchObject({
+      version: '1.2.3',
+    });
+    expect(fetch).toBeDefined();
   });
 });

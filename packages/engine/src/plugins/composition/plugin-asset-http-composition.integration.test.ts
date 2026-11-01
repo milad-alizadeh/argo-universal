@@ -1,5 +1,10 @@
 import { expect, it } from 'vitest';
-import { assetProbe, image, imageReference } from '#mocks/plugin-assets';
+import {
+  appOrigin,
+  assetProbe,
+  image,
+  imageReference,
+} from '#mocks/plugin-assets';
 
 it.each([
   { name: 'web', origin: 'http://localhost:8081' },
@@ -28,7 +33,7 @@ it('refuses a foreign Origin before serving an asset', async () => {
 it('stops serving a Plugin asset when the Plugin is turned off', async () => {
   const { caller, assetUrl } = await assetProbe();
   await caller.plugin.setEnabled({ pluginId: 'probe', enabled: false });
-  const response = await fetch(assetUrl);
+  const response = await fetch(assetUrl, { headers: appOrigin });
 
   expect(response.status).toBe(404);
 });
@@ -41,7 +46,10 @@ it.each([
   'serves $range for native media seeking',
   async ({ range, expected, bounds }) => {
     const { assetUrl } = await assetProbe();
-    const response = await fetch(assetUrl, { headers: { range } });
+
+    const response = await fetch(assetUrl, {
+      headers: { ...appOrigin, range },
+    });
 
     expect(response.status).toBe(206);
     expect(response.headers.get('content-range')).toBe(`bytes ${bounds}/68`);
@@ -51,7 +59,7 @@ it.each([
 
 it('answers HEAD without sending bytes', async () => {
   const { assetUrl } = await assetProbe();
-  const head = await fetch(assetUrl, { method: 'HEAD' });
+  const head = await fetch(assetUrl, { method: 'HEAD', headers: appOrigin });
 
   expect(head.status).toBe(200);
   expect(head.headers.get('content-length')).toBe('68');
@@ -61,7 +69,10 @@ it('answers HEAD without sending bytes', async () => {
 
 it('rejects an unsatisfiable range', async () => {
   const { assetUrl } = await assetProbe();
-  const response = await fetch(assetUrl, { headers: { range: 'bytes=999-' } });
+
+  const response = await fetch(assetUrl, {
+    headers: { ...appOrigin, range: 'bytes=999-' },
+  });
 
   expect(response.status).toBe(416);
   expect(response.headers.get('content-range')).toBe('bytes */68');

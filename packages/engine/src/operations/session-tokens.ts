@@ -35,6 +35,10 @@ export class SessionTokens {
       },
     };
   }
+  // Whether this is a token a live Session holds, which only a process on this computer was given (#1696).
+  public recognises(token: string): boolean {
+    return this.callers.has(token);
+  }
   public require(token: string | undefined): SessionCaller {
     const caller = token === undefined ? undefined : this.callers.get(token);
 

@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import {
   AccountDetailView,
@@ -23,7 +22,6 @@ function useAccountDetailProps(accountId: string): AccountDetailViewProps {
 
   return {
     title,
-    caption: useServerPageCaption(),
     account,
     onRevoke: useGrantAccess(accountId, host, false),
     onAllow: useGrantAccess(accountId, host, true),

@@ -1,6 +1,12 @@
 import type { ServerAddress } from '@repo/contracts';
 import { beforeEach } from 'vitest';
-import { type EventObject, fromCallback } from 'xstate';
+import {
+  type EventObject,
+  fromCallback,
+  fromPromise,
+  type PromiseActorLogic,
+} from 'xstate';
+import type { CountsTarget } from './session-counts';
 
 // What the machine sent the Server Connection, such as a quit's release.
 export const sentToCounts: string[] = [];
@@ -10,11 +16,9 @@ beforeEach((): void => {
 });
 
 // A Server Connection that holds on to what it is told until the test answers for it.
-export const watchCountsDouble = fromCallback<
-  EventObject,
-  Pick<ServerAddress, 'port'>
->(({ receive }): void =>
-  receive((event): void => void sentToCounts.push(event.type)),
+export const watchCountsDouble = fromCallback<EventObject, CountsTarget>(
+  ({ receive }): void =>
+    receive((event): void => void sentToCounts.push(event.type)),
 );
 
 export const supervisorExitedEvent = 'server.exited';
@@ -55,3 +59,20 @@ export const staleAddress: ServerAddress = {
 export const exitReason = 'The Supervisor exited while starting (1)';
 
 export const readError = new Error('EACCES');
+
+export interface PendingCall<TInput, TOutput> {
+  input: TInput;
+  resolve: (output: TOutput) => void;
+  reject: (error: Error) => void;
+}
+
+// A promise actor that records each call in `calls()` and settles only when an executor says so.
+export const createPromiseMock = <TOutput, TInput>(
+  calls: () => PendingCall<TInput, TOutput>[],
+): PromiseActorLogic<TOutput, TInput, EventObject> =>
+  fromPromise<TOutput, TInput>(
+    ({ input }): Promise<TOutput> =>
+      new Promise<TOutput>((resolve, reject): void => {
+        calls().push({ input, resolve, reject });
+      }),
+  );

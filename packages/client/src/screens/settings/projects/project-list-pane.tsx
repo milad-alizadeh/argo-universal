@@ -1,7 +1,7 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useProjects, useServerPageCaption } from '#features/settings';
+import { useProjects } from '#features/settings';
 import { projectHref, useNavigate } from '#lib/product/navigation/navigation';
 import type { ProjectsLoad } from './project-list-props';
 import { ProjectListView } from './project-list-view';
@@ -22,7 +22,6 @@ export function ProjectListPane(): React.JSX.Element {
 
   return (
     <ProjectListView
-      caption={useServerPageCaption()}
       projects={toProjectsLoad(useProjects())}
       onOpenProject={(name) => navigate(projectHref(name))}
     />

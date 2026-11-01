@@ -1,11 +1,15 @@
 import type { OperationId } from '@repo/contracts/operations';
 import { z } from 'zod';
+import { asTheApp } from './app-origin.mts';
 
 /*
  * The Server's own tRPC procedures over HTTP, through the router's contract schemas.
  *
  * The seeds and the real-Agent scenarios talk to the Server the App talks to, so what they ask for
  * and read back is the same shape the product uses rather than a hand-written JSON body.
+ *
+ * Every request carries the App's Origin, because the Server admits a caller on the loopback door only
+ * when it proves itself the way the App does (#1696).
  */
 export interface Procedure<Input extends z.ZodType, Output extends z.ZodType> {
   path: OperationId;
@@ -44,7 +48,10 @@ export async function query<Input extends z.ZodType, Output extends z.ZodType>(
 ): Promise<z.output<Output>> {
   const search = encodedInput(input, value);
 
-  return answer(await fetch(`${httpUrl}/trpc/${path}${search}`), output);
+  return answer(
+    await fetch(`${httpUrl}/trpc/${path}${search}`, { headers: asTheApp }),
+    output,
+  );
 }
 
 export async function mutate<Input extends z.ZodType, Output extends z.ZodType>(
@@ -54,7 +61,7 @@ export async function mutate<Input extends z.ZodType, Output extends z.ZodType>(
 ): Promise<z.output<Output>> {
   const response = await fetch(`${httpUrl}/trpc/${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { ...asTheApp, 'content-type': 'application/json' },
     body: JSON.stringify(input.parse(value)),
   });
 

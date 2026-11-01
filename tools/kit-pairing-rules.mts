@@ -22,6 +22,10 @@ export const exemptFolders = {
   native: 'Platform-fork helpers for the drawings, not kit components.',
   'actions/check-button':
     'App-only drawing of a check beside a label; a Plugin sends a FieldGroup.Toggle.',
+  'fields/code-field':
+    'App-only: one box per character for the code typed into Add a Server (#1502); a Plugin has no code to take.',
+  'scaffolds/pinned-footer':
+    'App-only: holds one button at the foot of a Screen body; a Plugin has no footer to pin.',
   'actions/pressable':
     'The press and hover primitive the other actions are built on.',
   'content/agent-logo':

@@ -1,14 +1,36 @@
+import { useQueryClient } from '@tanstack/react-query';
 import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppProviders } from './app-providers';
+import {
+  isPaired,
+  openConnection,
+  type OpenConnection,
+  type ServerEndpoint,
+} from './features/connection';
 import { useTRPCClient } from './features/connection/api/trpc/context';
+import { useAppServers } from './features/servers';
 import {
   currentReport,
+  recordScreenCache,
   recordScreenState,
   recordScreenSubscription,
   subscribe,
 } from './websocket-report.mocks';
+
+// A paired Server is reached inside an encrypted channel, which a story has no network for; it is opened over the mock socket instead, since what these stories show is how many Connections the App holds.
+const openOverMockSocket = (endpoint: ServerEndpoint): OpenConnection => {
+  const open = openConnection(
+    isPaired(endpoint)
+      ? { url: `ws://${endpoint.host}:${endpoint.port}` }
+      : endpoint,
+  );
+
+  return isPaired(endpoint)
+    ? { ...open, fetch: async () => new Response() }
+    : open;
+};
 
 export interface ConnectionMockProps {
   strictMode?: boolean;
@@ -76,7 +98,8 @@ type ProvidersMockProps = ConnectionMockProps &
 
 function ProvidersMock(props: ProvidersMockProps): React.JSX.Element | null {
   const providers = props.mounted ? (
-    <AppProviders serverUrl={props.serverUrl}>
+    <AppProviders serverUrl={props.serverUrl} openServer={openOverMockSocket}>
+      <LookAtKeptServerMock />
       <ScreenMock />
     </AppProviders>
   ) : null;
@@ -85,6 +108,15 @@ function ProvidersMock(props: ProvidersMockProps): React.JSX.Element | null {
     <StrictMode>{providers}</StrictMode>
   ) : (
     providers
+  );
+}
+
+// Looks at the Server this Device paired with, as the Servers page does.
+function LookAtKeptServerMock(): React.JSX.Element {
+  const { look } = useAppServers();
+
+  return (
+    <ButtonMock label="Look at Studio" onPress={() => look('studio-key')} />
   );
 }
 
@@ -100,6 +132,7 @@ function ConnectionReportMock(): React.JSX.Element {
       <Text>
         {`Connection states the screens saw: ${current.statesScreensSaw.join(', ')}`}
       </Text>
+      <Text>{`Caches the screens saw: ${current.cachesScreensSaw}`}</Text>
     </>
   );
 }
@@ -107,6 +140,9 @@ function ConnectionReportMock(): React.JSX.Element {
 // Stands in for a screen: subscribes over the Connection from context and records its states; a closed one reads idle.
 function ScreenMock(): null {
   const client = useTRPCClient();
+  const cache = useQueryClient();
+
+  useEffect(() => recordScreenCache(cache), [cache]);
   useEffect(() => {
     recordScreenSubscription();
 

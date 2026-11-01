@@ -1,6 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { useProjects, useServerPageCaption } from '#features/settings';
+import { useProjects } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { usePluginOpener } from '../../../plugins/use-plugin-opener';
 import { useProjectDetailsItems } from '../../../plugins/use-project-details';
@@ -31,7 +31,6 @@ function useProjectDetail(
 
   return {
     name,
-    caption: useServerPageCaption(),
     project,
     accounts: useProjectAccounts(loadedId(project)),
     onBack: useBackToProjects(),

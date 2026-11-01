@@ -1,5 +1,7 @@
 export type { Connection, ConnectionState } from './stores/connection';
 
+export { holdCacheOnline } from './stores/cache-online';
+
 export {
   useConnectionState,
   useResubscribeOnReconnect,
@@ -7,15 +9,40 @@ export {
 
 export { ConnectionContext, useConnection } from './stores/connection-context';
 
-export { openConnection } from './api/open-connection';
+export { type OpenConnection, openConnection } from './api/open-connection';
+
+export {
+  isPaired,
+  type PairedEndpoint,
+  type ServerEndpoint,
+} from './api/server-endpoint';
+
+export { pairWithServer } from './api/pair-with-server';
+
+export { requestServerKey } from './api/request-server-key';
+
+export { PairingRefused } from './api/channel/open-channel';
 
 export { retryServer } from './api/retry-server';
+
+// The connect step passes this as `browse`; null where the platform cannot browse.
+export { browseServers } from './discovery/browse-servers';
+
+export {
+  type BrowseServers,
+  type KnownServer,
+  resolveServer,
+  type ServerAddress,
+  ServerNotFoundError,
+  type ServerLocation,
+} from './discovery/resolve-server';
 
 export {
   BlobUrlContext,
   createServerBlobUrl,
   createServerMediaUrl,
   useBlobUrl,
+  useChannelUrls,
 } from './api/trpc/blob-url';
 
 export {

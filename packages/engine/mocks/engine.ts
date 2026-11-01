@@ -123,6 +123,8 @@ const baseInput = (
   home: string,
 ): Omit<EngineInput, 'port'> => ({
   version: '1.2.3',
+  // Servers in tests share one computer's name; each announces under its own.
+  discoveryName: `Test Server ${randomUUID()}`,
   startedAt: '2026-10-03T00:00:00.000Z',
   now: Date.now,
   createId: randomUUID,

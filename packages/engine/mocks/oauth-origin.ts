@@ -99,7 +99,9 @@ const originContext = (
   id: randomUUID(),
   signal: controller.signal,
   surface: currentPluginSurface('web'),
-  serverDevice,
+  identity: serverDevice
+    ? { serverDevice: true }
+    : { serverDevice: false, deviceId: 'paired-device' },
 });
 
 type Browser = { opened: string[]; oauth: OAuthOptions };

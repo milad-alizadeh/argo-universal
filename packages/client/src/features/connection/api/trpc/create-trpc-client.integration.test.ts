@@ -4,6 +4,7 @@ import {
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import { startEngineTestHost } from '@repo/engine/mocks';
+import { AppPageSocket, appPageFetch } from '@repo/engine/mocks/app-socket';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTRPCClient } from './create-trpc-client';
 
@@ -23,6 +24,9 @@ const systemInfo = {
   name: expect.stringMatching(/\S/),
 };
 
+// Taken before a test stands in for the page, whose stand-in is a different constructor over this same prototype.
+const nativeSocketPrototype = WebSocket.prototype;
+
 const closers: (() => Promise<void> | void)[] = [];
 
 afterEach(async () => {
@@ -36,11 +40,15 @@ async function startTransportTestServer(): Promise<{
   httpRequests: () => number;
 }> {
   const host = await startEngineTestHost({ startedAt: serverStartedAt });
+  // Node writes no Origin, so the caller stands in for the App's own page, which is what proves the Server Device (#1696).
+  vi.stubGlobal('WebSocket', AppPageSocket);
+  vi.stubGlobal('fetch', appPageFetch(fetch));
   const sockets = vi.spyOn(globalThis, 'WebSocket');
   const requests = vi.spyOn(globalThis, 'fetch');
   closers.push(() => {
     sockets.mockRestore();
     requests.mockRestore();
+    vi.unstubAllGlobals();
   });
 
   return {
@@ -53,7 +61,7 @@ async function startTransportTestServer(): Promise<{
 describe('createTRPCClient', () => {
   it('reports the Plugin wire version in the WebSocket handshake', async () => {
     const server = await startTransportTestServer();
-    const send = vi.spyOn(WebSocket.prototype, 'send');
+    const send = vi.spyOn(nativeSocketPrototype, 'send');
     const { client, close } = createTRPCClient(server.url);
     closers.push(close);
 
@@ -74,12 +82,17 @@ describe('createTRPCClient', () => {
 
   it('reports an updated surface when the App reconnects', async () => {
     const server = await startTransportTestServer();
-    const send = vi.spyOn(WebSocket.prototype, 'send');
+    const send = vi.spyOn(nativeSocketPrototype, 'send');
     let surface: PluginSurface = { platform: 'ios', wireVersion: 1 };
-    const app = createTRPCClient(server.url, undefined, () => surface);
+
+    const app = createTRPCClient(server.url, undefined, {
+      surface: () => surface,
+    });
+
     closers.push(app.close);
 
     await app.client.system.info.query();
+
     surface = { platform: 'ios', wireVersion: 2 };
     app.webSocketClient.connection?.ws?.close();
 

@@ -2,54 +2,83 @@ import { randomUUID } from 'node:crypto';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { PluginSurface } from '@repo/contracts/plugins/kit';
 import { createRejectionCounter } from '@repo/machine-log';
+import { TRPCError } from '@trpc/server';
+import { identityOf, type RpcIdentity, type RpcSocket } from './identity';
 
 const rejections = createRejectionCounter('Plugin surface header');
+
+export type { RpcSocket } from './identity';
 
 export interface RpcConnection {
   id: string;
   signal: AbortSignal;
   surface?: PluginSurface;
-  serverDevice?: boolean;
-}
-
-// The part of a Connection's socket the context reads: when it closes, and whether both ends are on one device.
-export interface RpcSocket {
-  once(event: 'close', listener: () => void): void;
-  readonly remoteAddress?: string;
-  readonly localAddress?: string;
+  // Who this Connection proved to be; absent when nothing admitted it, which every procedure refuses.
+  identity?: RpcIdentity;
 }
 
 export interface RpcContext {
   token?: string;
-  connection?: RpcConnection;
+  connection: RpcConnection;
 }
 
+/*
+ * The Connection a call arrived on. `identity` is whatever admitted the socket, unless the caller names one: a plain-HTTP request proves the Server Device per request, not per socket (#1696).
+ */
 export function createRpcContext(
   socket: RpcSocket,
   params?: Record<string, string | undefined> | null,
+  identity: RpcIdentity | undefined = identityOf(socket),
 ): RpcContext {
+  return {
+    connection: socketConnection(params, abortOnClose(socket), identity),
+  };
+}
+
+const aborters = new WeakMap<RpcSocket, AbortController>();
+
+/*
+ * One controller and one `close` listener per socket, however many requests it carries: a keep-alive socket, and the paired Device's one channel for its whole run, would otherwise add a listener for every request.
+ */
+function abortOnClose(socket: RpcSocket): AbortSignal {
+  const known = aborters.get(socket);
+
+  if (known) return known.signal;
   const controller = new AbortController();
   socket.once('close', () => controller.abort());
+  aborters.set(socket, controller);
 
-  return { connection: socketConnection(socket, params, controller.signal) };
+  return controller.signal;
+}
+
+/*
+ * What a call needs of its Connection once it is in hand: that the socket it arrived on has not closed since. A stream started on a socket that is already gone would otherwise run with nothing to say when to stop.
+ */
+export function liveConnection(
+  connection: RpcConnection,
+  message: string,
+): RpcConnection {
+  if (connection.signal.aborted)
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message,
+    });
+
+  return connection;
 }
 
 function socketConnection(
-  socket: RpcSocket,
   params: Record<string, string | undefined> | null | undefined,
   signal: AbortSignal,
+  identity: RpcIdentity | undefined,
 ): RpcConnection {
   return {
     id: randomUUID(),
     signal,
     surface: reportedSurface(params?.['pluginSurface']),
-    serverDevice: sameDeviceSocket(socket),
+    identity,
   };
 }
-
-const sameDeviceSocket = (socket: RpcSocket): boolean =>
-  socket.remoteAddress !== undefined &&
-  socket.remoteAddress === socket.localAddress;
 
 // A missing surface reports no wire version, and that App sees "Update Argo", not a broken Connection. A surface that is present but not JSON or not recognised does too, and is reported.
 const reportedSurface = (

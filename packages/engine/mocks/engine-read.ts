@@ -16,6 +16,8 @@ export type EngineConnections = {
   openSessions: OpenSessionsActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
   notifications: HttpServer['notifications'];
+  // The Pairing Tickets this Server has outstanding; a test mints one to pair a Device.
+  pairing: HttpServer['pairing'];
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
@@ -30,6 +32,7 @@ export function readEngineTestHost(engine: EngineActor): EngineConnections {
     openSessions: sessionActor(engine),
     databaseWriter: writerActor(engine),
     notifications: readyServer.notifications,
+    pairing: readyServer.pairing,
     createCaller: readyServer.createCaller,
     caller: readyServer.createCaller(),
   };

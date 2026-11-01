@@ -13,14 +13,18 @@ const ProcedureFailure = z.object({
   error: z.object({ data: z.object({ code: z.string() }) }),
 });
 
+// The Origin the App's own page sends, which is what proves the call is the Server Device's (#1696).
+const appOrigin = 'app://app';
+
 const procedureRequest = (url: string, call: RawProcedureCall): Request =>
   call.type === 'query'
     ? new Request(
         `${url}/trpc/${call.path}?input=${encodeURIComponent(call.input)}`,
+        { headers: { origin: appOrigin } },
       )
     : new Request(`${url}/trpc/${call.path}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', origin: appOrigin },
         body: call.input,
       });
 
@@ -32,4 +36,17 @@ export const rejectedProcedureCode = async (
   const response = await fetch(procedureRequest(url, call));
 
   return ProcedureFailure.parse(await response.json()).error.data.code;
+};
+
+// A yes-or-no answer as the HTTP transport encodes it.
+const ProcedureFlag = z.object({ result: z.object({ data: z.boolean() }) });
+
+// What the real HTTP transport answers a call whose procedure returns yes or no.
+export const procedureFlag = async (
+  url: string,
+  call: RawProcedureCall,
+): Promise<boolean> => {
+  const response = await fetch(procedureRequest(url, call));
+
+  return ProcedureFlag.parse(await response.json()).result.data;
 };

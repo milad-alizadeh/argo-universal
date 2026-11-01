@@ -7,7 +7,6 @@ const meta = {
   title: 'Screens/Settings/Projects',
   component: ProjectListView,
   argTypes: {
-    caption: { control: 'text' },
     initialSearch: { control: 'text' },
     projects: { control: false },
   },

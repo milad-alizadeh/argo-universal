@@ -11,6 +11,7 @@ import {
   type TRPCClient,
 } from '@trpc/client';
 import { expect, it, onTestFinished } from 'vitest';
+import { AppPageSocket } from '#mocks/app-socket';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 import type { AppRouter } from './router';
@@ -33,6 +34,7 @@ function app(url: string, initial?: Reported): App {
     url: url.replace(/^http/, 'ws'),
     connectionParams: () =>
       surface ? { pluginSurface: encoded(surface) } : {},
+    WebSocket: AppPageSocket,
   });
 
   const client = createTRPCClient<AppRouter>({
