@@ -17,6 +17,7 @@ export type Opening = {
   path: string;
   surface?: MountSurface;
   projectId?: string;
+  sessionId?: string;
   connectionId?: string;
 };
 
@@ -26,6 +27,8 @@ export type PluginMount = {
   pluginId?: string;
   // The Project the page opens for, which it reads from its render context (ADR-0046).
   projectId?: string;
+  // The Session the page opens for, as a Session header action or a Workbench card opens it; read from its context.
+  sessionId?: string;
   connectionId?: string;
 };
 
@@ -42,6 +45,7 @@ export class PluginTestView {
   private readonly changes = new ViewChanges();
   private readonly path: string;
   private readonly projectId: string | undefined;
+  private readonly sessionId: string | undefined;
 
   public constructor(
     private readonly service: PluginService,
@@ -51,6 +55,7 @@ export class PluginTestView {
     this.connection = testConnection(this.controller.signal, opening);
     this.path = opening.path;
     this.projectId = opening.projectId;
+    this.sessionId = opening.sessionId;
     this.watch(opening);
   }
 
@@ -154,7 +159,12 @@ export class PluginTestView {
 
   private async receive({ path }: Opening): Promise<void> {
     for await (const message of this.service.view(
-      { pluginId: this.pluginId, path, projectId: this.projectId },
+      {
+        pluginId: this.pluginId,
+        path,
+        projectId: this.projectId,
+        sessionId: this.sessionId,
+      },
       this.connection,
     ))
       this.update(message);

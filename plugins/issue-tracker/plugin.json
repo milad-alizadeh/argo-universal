@@ -18,7 +18,40 @@
         "path": "/"
       }
     ],
-    "slots": ["argo/project/details/v1"],
+    "slots": [
+      "argo/project/details/v1",
+      "argo/session/row/v1",
+      "argo/session/bar/v1"
+    ],
+    "declared": {
+      "argo/session/header/v1": [
+        {
+          "id": "issue",
+          "label": "Issue",
+          "icon": {
+            "sf": "record.circle",
+            "material": "adjust"
+          },
+          "placement": "header",
+          "target": {
+            "type": "card",
+            "cardId": "issue"
+          }
+        }
+      ],
+      "argo/session/workbench/v1": [
+        {
+          "id": "issue",
+          "title": "Issue",
+          "icon": {
+            "sf": "record.circle",
+            "material": "adjust"
+          },
+          "page": "/session-issue",
+          "tab": "/session-issue/full"
+        }
+      ]
+    },
     "operations": [
       {
         "name": "attach",
