@@ -18,8 +18,8 @@ import {
   attachmentDraftReducer,
   attachmentSelectionFailureMessage,
   emptyAttachmentDraft,
-  toAttachmentError,
 } from '../../utils/attachment-draft';
+import { toAttachmentError } from '../../utils/attachment-upload';
 
 const keptText = 'Keep editing.';
 
