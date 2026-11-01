@@ -11,8 +11,10 @@ function host(): RunHost {
   return { reporters: [], config: { teardownTimeout: TEARDOWN_MS } };
 }
 
-function endRun(runHost: RunHost): void {
-  for (const reporter of runHost.reporters) reporter.onTestRunEnd?.();
+function endRun(runHost: RunHost, states: string[]): void {
+  const modules = states.map((state) => ({ state: (): string => state }));
+
+  for (const reporter of runHost.reporters) reporter.onTestRunEnd?.(modules);
 }
 
 describe('releaseAtRunEnd', () => {
@@ -30,7 +32,7 @@ describe('releaseAtRunEnd', () => {
     const release = vi.fn<() => void>();
 
     releaseAtRunEnd(runHost, release, vi.fn<() => void>());
-    endRun(runHost);
+    endRun(runHost, ['passed']);
 
     expect(release).toHaveBeenCalledOnce();
   });
@@ -40,14 +42,28 @@ describe('releaseAtRunEnd', () => {
     const exit = vi.fn<() => void>();
 
     releaseAtRunEnd(runHost, vi.fn<() => void>(), exit);
-    endRun(runHost);
+    endRun(runHost, ['passed']);
 
     expect(exit).not.toHaveBeenCalled();
     await vi.waitFor((): void => expect(exit).toHaveBeenCalledOnce());
   });
 
-  it('rejects a Vitest that stops exposing what it needs, rather than holding the lock unguarded', () => {
+  it('marks the process failed when a test module failed, so ending it never reads as a pass', () => {
+    const runHost = host();
+    process.exitCode = undefined;
+
+    releaseAtRunEnd(runHost, vi.fn<() => void>(), vi.fn<() => void>());
+    endRun(runHost, ['passed', 'failed']);
+
+    expect(process.exitCode).toBe(1);
+    process.exitCode = undefined;
+  });
+
+  it('rejects a Vitest that stops exposing what it needs', () => {
     expect(runHostSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('accepts what Vitest exposes', () => {
     expect(runHostSchema.safeParse(host()).success).toBe(true);
   });
 });

@@ -2,7 +2,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
 
 interface Reporter {
-  onTestRunEnd?: () => void;
+  onTestRunEnd?: (modules: { state: () => string }[]) => void;
 }
 
 // The part of Vitest this reads.
@@ -25,10 +25,16 @@ export const runHostSchema = z.custom<RunHost>(
   'Vitest no longer exposes its reporters and teardown timeout, which the browser-suite lock reads to hand itself back when the tests end.',
 );
 
+function failIfAnyFailed(modules: { state: () => string }[]): void {
+  if (modules.some((module) => module.state() === 'failed')) {
+    process.exitCode = 1;
+  }
+}
+
 /*
  * Vitest hands the lock back in its global teardown, which only runs once everything before it has settled, and arms its own exit timer only after the whole close finishes.
  * A run that has passed but then stalls anywhere in between (#1680) would hold the lock, and idle browsers, until someone kills it.
- * So the lock goes back when the tests end, and a process still alive a teardown timeout later is ended, as Vitest's own timer would have done.
+ * So the lock goes back when the tests end, and a process still alive a teardown timeout later is ended, as Vitest's own timer would, only armed from the end of the tests rather than the end of the close.
  */
 export function releaseAtRunEnd(
   host: RunHost,
@@ -36,9 +42,10 @@ export function releaseAtRunEnd(
   exit: () => void,
 ): void {
   host.reporters.push({
-    onTestRunEnd(): void {
+    onTestRunEnd(modules): void {
+      // Ending the process must never turn a red run green, whatever Vitest has set by then.
+      failIfAnyFailed(modules);
       release();
-      // Unref'd, so a process that is already ending is never held up by it.
       void delay(host.config.teardownTimeout, undefined, { ref: false }).then(
         exit,
       );
