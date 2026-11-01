@@ -101,6 +101,7 @@ const askedQuestion: PendingElicitation['requestedSchema'] = {
 
 describe('a form whose every answer is optional', () => {
   const form = createElicitationSchema(askedQuestion);
+
   const validate = (values: ElicitationValues): FormErrors =>
     form.validate({ value: form.defaultValues(values) });
 

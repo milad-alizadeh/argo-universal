@@ -132,18 +132,20 @@ const hasAnswer = (value: ElicitationValue | number): boolean =>
     ? value.trim() !== ''
     : !Array.isArray(value) || value.length > 0;
 
+const allOptional = (fields: ElicitationField[]): boolean =>
+  fields.length > 0 && fields.every(({ required }) => !required);
+
+const unanswered = (answers: ElicitationContent): boolean =>
+  !Object.values(answers).some(hasAnswer);
+
 // A form that asks for nothing in particular still needs something said, or there is nothing to send.
-function requireAnAnswer(
+const requireAnAnswer = (
   fields: ElicitationField[],
   answers: ElicitationContent,
-): { form: string; fields: Record<string, string> } | undefined {
-  const allOptional =
-    fields.length > 0 && fields.every(({ required }) => !required);
-
-  return allOptional && !Object.values(answers).some(hasAnswer)
+): { form: string; fields: Record<string, string> } | undefined =>
+  allOptional(fields) && unanswered(answers)
     ? { form: noAnswer, fields: {} }
     : undefined;
-}
 
 const formErrors = (
   fields: ElicitationField[],
