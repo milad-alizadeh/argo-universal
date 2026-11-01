@@ -35,7 +35,8 @@ export function createDoors(setup: RoutedSetup, guard: RequestGuard): Doors {
 const keyDoor = (setup: RoutedSetup, report: RequestGuard['report']): KeyDoor =>
   new KeyDoor({
     publicKey: setup.staticKey.publicKey,
-    offer: (source, holds) => setup.tickets.offer(source, holds),
+    offering: (source) => setup.tickets.offering(source),
+    settled: (source, proved) => setup.tickets.settled(source, proved),
     report,
   });
 
