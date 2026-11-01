@@ -18,7 +18,9 @@ import expo.modules.kotlin.views.ExpoView
  * The Skeleton's native view. While `loading` it walks the views under it (ViewWalk) before every frame, sets
  * each content view's alpha to 0, covers Compose content (ComposeCover), and draws one rounded placeholder per text
  * line, image or control above its children. It hides everything under it from accessibility except what a
- * Skeleton.Ignore holds, so its own "Loading" is the one announcement. It restores every view when loading ends
+ * Skeleton.Ignore holds, so its own "Loading" is the one announcement. While it holds a Skeleton.Ignore its own node
+ * steps aside, because TalkBack gives a labelled node every view under it and the Ignore content would never be a
+ * stop of its own; a one-off announcement says "Loading" in its place. It restores every view when loading ends
  * and when it leaves the window, since Fabric recycles views.
  */
 @OptIn(InternalComposeUiApi::class)
@@ -31,6 +33,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
   private val muted = LinkedHashMap<View, Int>()
   private val covered = mutableListOf<ViewRootForTest>()
   private var loading = false
+  private var steppedAside = false
   private var animation = "pulse"
   private var placeholderColor: Int? = null
   private var placeholders: List<SkeletonPlaceholder> = emptyList()
@@ -105,6 +108,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     if (!isAttachedToWindow) return
     viewTreeObserver.removeOnPreDrawListener(preDraw)
     viewTreeObserver.addOnPreDrawListener(preDraw)
+    steppedAside = false
     exposeBusyToAccessibility()
     animateFade(1f)
     applyAnimation()
@@ -117,6 +121,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
     pulse = 1f
     removeCallbacks(refreshTask)
     pending = false
+    steppedAside = false
     hideBusyFromAccessibility()
     restoreAll(animated = true)
     animateFade(0f)
@@ -135,10 +140,33 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   // A busy status for TalkBack, there from the first frame of loading even when the walk finds no placeholder.
   private fun exposeBusyToAccessibility() {
-    contentDescription = "Loading"
+    contentDescription = LOADING_LABEL
     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
     accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = "Busy"
+  }
+
+  /*
+   * While the Skeleton holds a Skeleton.Ignore its own node is not an accessibility node, so the Ignore content
+   * gets a stop of its own. "Loading" is then said once, as an announcement, when this first happens in a loading
+   * state; it leaves the Skeleton as a screen reader sees it without the "Busy" status.
+   */
+  private fun stepAsideForIgnored() {
+    if (steppedAside) return
+    steppedAside = true
+    contentDescription = null
+    accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_NONE
+    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) stateDescription = null
+    @Suppress("DEPRECATION")
+    announceForAccessibility(LOADING_LABEL)
+  }
+
+  // The Ignore content went away while still loading: the Skeleton is its own busy status again.
+  private fun stepBackIn() {
+    if (!steppedAside) return
+    steppedAside = false
+    exposeBusyToAccessibility()
   }
 
   private fun hideBusyFromAccessibility() {
@@ -178,6 +206,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
 
   private fun refresh() {
     val found = ViewWalk(this).collect()
+    if (found.ignored.isEmpty()) stepBackIn() else stepAsideForIgnored()
     drawOver(found.leaves.map { it.view })
     hideFromAccessibility(found.muted)
     cover(found.compose)
@@ -253,6 +282,7 @@ class ArgoSkeletonView(context: Context, appContext: AppContext) : ExpoView(cont
   }
 
   private companion object {
+    const val LOADING_LABEL = "Loading"
     const val REFRESH_MS = 100L
     const val FADE_MS = 200L
     const val PULSE_MS = 900L
