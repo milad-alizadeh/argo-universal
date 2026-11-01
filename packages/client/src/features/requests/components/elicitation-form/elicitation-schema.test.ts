@@ -112,12 +112,14 @@ describe('a form whose every answer is optional', () => {
     expect(validate({ question_0_custom: '  ' })?.form).toBeDefined();
   });
 
-  it('can be submitted once one answer is given', () => {
-    expect(validate({ question_0: 'Red' })).toBeUndefined();
-    expect(validate({ question_0_custom: 'Green' })).toBeUndefined();
+  it.each([
+    ['a choice', { question_0: 'Red' }],
+    ['an Other answer', { question_0_custom: 'Green' }],
+  ])('can be submitted once %s is given', (_name, values) => {
+    expect(validate(values)).toBeUndefined();
   });
 
-  it('leaves a form with a required answer to that rule', () => {
+  it('does not demand an answer when a field is required', () => {
     const required = createElicitationSchema({
       ...askedQuestion,
       required: ['question_0_custom'],

@@ -120,27 +120,27 @@ function validatorOf(
     const answers = content(value);
 
     return (
-      unansweredForm(fields, answers) ?? formErrors(fields, validate(answers))
+      requireAnAnswer(fields, answers) ?? formErrors(fields, validate(answers))
     );
   };
 }
 
 const noAnswer = 'Answer at least one to submit.';
 
-const given = (value: ElicitationValue | number): boolean =>
+const hasAnswer = (value: ElicitationValue | number): boolean =>
   typeof value === 'string'
     ? value.trim() !== ''
     : !Array.isArray(value) || value.length > 0;
 
 // A form that asks for nothing in particular still needs something said, or there is nothing to send.
-function unansweredForm(
+function requireAnAnswer(
   fields: ElicitationField[],
   answers: ElicitationContent,
 ): { form: string; fields: Record<string, string> } | undefined {
-  const optional =
+  const allOptional =
     fields.length > 0 && fields.every(({ required }) => !required);
 
-  return optional && !Object.values(answers).some(given)
+  return allOptional && !Object.values(answers).some(hasAnswer)
     ? { form: noAnswer, fields: {} }
     : undefined;
 }
