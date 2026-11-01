@@ -14,9 +14,15 @@ const { withUniwindConfig } = require('uniwind/metro');
 /** @type {MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
+// `build:profiling`: a production web build whose Profiler still reports timings, which plain react-dom/client strips.
+const profiling = process.env.ARGO_PROFILING_BUILD === '1';
+
+const isWebRoot = (moduleName, platform) =>
+  profiling && platform === 'web' && moduleName === 'react-dom/client';
+
 // #primitives/<group>/<name> is that folder's index; its extensionless relative imports let Metro choose each platform's drawing.
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  const primitivePath = moduleName.startsWith('#primitives/')
+const withoutAlias = (moduleName) =>
+  moduleName.startsWith('#primitives/')
     ? path.resolve(
         __dirname,
         '../../packages/kit/src/primitives',
@@ -25,8 +31,14 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       )
     : moduleName;
 
-  return context.resolveRequest(context, primitivePath, platform);
-};
+config.resolver.resolveRequest = (context, moduleName, platform) =>
+  context.resolveRequest(
+    context,
+    isWebRoot(moduleName, platform)
+      ? 'react-dom/profiling'
+      : withoutAlias(moduleName),
+    platform,
+  );
 
 // A logo SVG imports as a react-native-svg component on every platform, so `Icon` draws it with one renderer (ADR-0019).
 config.transformer.babelTransformerPath =
