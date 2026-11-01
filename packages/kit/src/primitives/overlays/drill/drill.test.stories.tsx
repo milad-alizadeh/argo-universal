@@ -51,9 +51,12 @@ export const KeepOpenKeepsBothOpenAfterAPick: Story = {
     );
 
     await expect(picked.mock.calls).toEqual([['Banana'], ['Cherry']]);
-    await expect(
-      within(menu).getByRole('link', { name: 'Fruit, Cherry' }),
-    ).toBeVisible();
+    // The menu fades in from transparent, so its row shows once the entrance starts.
+    await waitFor(() =>
+      expect(
+        within(menu).getByRole('link', { name: 'Fruit, Cherry' }),
+      ).toBeVisible(),
+    );
     await expect(choices).toHaveAttribute(openState, 'open');
     await expect(menu).toHaveAttribute(openState, 'open');
 

@@ -91,6 +91,27 @@ export const ActionWithoutAnIconKeepsItsValue: Story = {
   },
 };
 
+// A long value gives way before the title does, in a list pane as narrow as the Settings list's (#1750).
+export const LongValueLeavesTheTitleWhole: Story = {
+  args: { title: 'Connection', value: 'This Mac, available, over the network' },
+  decorators: [
+    (Story): React.JSX.Element => (
+      <div style={{ width: 312 }}>
+        <FieldGroup>
+          <FieldGroup.Section>
+            <Story />
+          </FieldGroup.Section>
+        </FieldGroup>
+      </div>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    const title = canvas.getByText('Connection');
+
+    await expect(title.scrollWidth).toBeLessThanOrEqual(title.clientWidth);
+  },
+};
+
 export const DisabledDoesNothing: Story = {
   args: { title: 'Goal', action: true, disabled: true },
   play: async ({ canvas, args }) => {
