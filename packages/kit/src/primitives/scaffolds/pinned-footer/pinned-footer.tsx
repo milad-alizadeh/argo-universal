@@ -14,8 +14,8 @@ export interface PinnedFooterProps {
 export function PinnedFooter(props: PinnedFooterProps): React.JSX.Element {
   return (
     <View className="min-h-0 flex-1 justify-between gap-4 p-4">
-      <View className="gap-2">{props.children}</View>
-      {props.footer}
+      <View className="min-h-0 flex-1 gap-2">{props.children}</View>
+      <View className="gap-2">{props.footer}</View>
     </View>
   );
 }

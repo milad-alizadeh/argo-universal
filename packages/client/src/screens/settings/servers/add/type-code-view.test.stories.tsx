@@ -44,3 +44,12 @@ export const LookingCannotBeSentTwice: Story = {
     await expect(canvas.getByLabelText('Code')).toBeDisabled();
   },
 };
+
+export const ScanInsteadGoesBackToTheCamera: Story = {
+  args: { onScan: fn() },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Scan instead' }));
+    await expect(args.onScan).toHaveBeenCalledOnce();
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};

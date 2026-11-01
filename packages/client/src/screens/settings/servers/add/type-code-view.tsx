@@ -12,6 +12,8 @@ export interface TypeCodeViewProps {
   looking?: boolean;
   // What the owner typed, as its characters. Whether they are a code is for the caller to say, so a mistyped one is told the same way whatever the mistake.
   onSubmit: (typed: string) => void;
+  // The way back to the camera, offered where the Device has one.
+  onScan?: () => void;
 }
 
 const instruction =
@@ -48,7 +50,7 @@ function CodeForm(props: TypeCodeViewProps): React.JSX.Element {
   const submit = (): void => void form.handleSubmit();
 
   return (
-    <PinnedFooter footer={connectButton(props, submit)}>
+    <PinnedFooter footer={footerOf(props, submit)}>
       <form.Field name="code">
         {(field) => codeField(props, field, submit)}
       </form.Field>
@@ -72,6 +74,26 @@ const codeField = (
     autoFocus
     onChangeText={field.handleChange}
     onSubmit={submit}
+  />
+);
+
+const footerOf = (
+  props: TypeCodeViewProps,
+  submit: () => void,
+): React.JSX.Element => (
+  <>
+    {connectButton(props, submit)}
+    {props.onScan ? scanButton(props) : null}
+  </>
+);
+
+const scanButton = (props: TypeCodeViewProps): React.JSX.Element => (
+  <Button
+    label="Scan instead"
+    variant="text"
+    fullWidth
+    disabled={props.looking}
+    onPress={props.onScan}
   />
 );
 

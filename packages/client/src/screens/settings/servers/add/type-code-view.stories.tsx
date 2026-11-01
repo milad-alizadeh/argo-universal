@@ -22,3 +22,6 @@ export const AsksForTheCode: Story = {};
 
 // The code has gone out to the Servers on the network, and the field keeps what was typed.
 export const Looking: Story = { args: { looking: true } };
+
+// On a phone the way back to the camera sits under Connect.
+export const CanScanInstead: Story = { args: { onScan: fn() } };
