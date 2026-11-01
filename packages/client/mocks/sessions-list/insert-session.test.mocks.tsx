@@ -17,6 +17,7 @@ const insertedSession = {
   title: 'New Session 1',
   activity: 'Session created',
   activityAt: 3000,
+  createdAt: 3000,
 };
 
 // A list whose rows change when the story adds a Session, as a live update does.
