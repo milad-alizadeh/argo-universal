@@ -1,4 +1,4 @@
-import { pairingTicketDigits, type MintedPairingTicket } from '@repo/contracts';
+import { formatPairingTicket, type MintedPairingTicket } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Stack } from '@repo/kit/primitives/layout/stack';
 import type * as React from 'react';
@@ -60,7 +60,7 @@ function CodeTile(props: { code: MintedPairingTicket }): React.JSX.Element {
 }
 
 /*
- * The digits that stand for the code, for a Device whose camera cannot be used (#1502): a tile of its own,
+ * The characters that stand for the code, for a Device whose camera cannot be used (#1502): a tile of its own,
  * so the thing to type is the thing that is boxed.
  */
 function TypedCode(props: { ticket: string }): React.JSX.Element {
@@ -70,14 +70,8 @@ function TypedCode(props: { ticket: string }): React.JSX.Element {
         {typeLabel}
       </Text>
       <Text role="title-code" selectable>
-        {spaced(props.ticket)}
+        {formatPairingTicket(props.ticket)}
       </Text>
     </View>
   );
 }
-
-// Half the digits, a dot, the other half: the way someone reads a code aloud and the way they type it.
-const halfOfATicket = pairingTicketDigits / 2;
-
-const spaced = (ticket: string): string =>
-  `${ticket.slice(0, halfOfATicket)} · ${ticket.slice(halfOfATicket)}`;

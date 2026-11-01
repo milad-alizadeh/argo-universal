@@ -19,6 +19,8 @@ export {
 
 export { pairWithServer } from './api/pair-with-server';
 
+export { requestServerKey } from './api/request-server-key';
+
 export { PairingRefused } from './api/channel/open-channel';
 
 export { retryServer } from './api/retry-server';

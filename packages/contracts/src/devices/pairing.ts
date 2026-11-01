@@ -1,8 +1,37 @@
 import { z } from 'zod';
 import { DevicePlatform } from './device';
 
-// The Pairing Ticket the owner reads off the QR or types in: six digits, as the pair sheet draws it.
-export const pairingTicketDigits = 6;
+/*
+ * The Pairing Ticket the owner reads off the QR or types in: ten characters of Crockford base32, which is 50 bits.
+ * A typed code is the only thing that proves to a Device with no QR which computer it is talking to (ADR-0045), so it has to be too large to guess in the two minutes it lives; six digits were not.
+ */
+export const pairingTicketLength = 10;
+
+// Crockford's base32: no I, L, O or U, so nothing in a code can be mistaken for another character when it is read aloud or retyped.
+export const pairingTicketAlphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+const groupLength = pairingTicketLength / 2;
+
+// The Ticket as it is drawn for reading aloud: two groups of five.
+export const formatPairingTicket = (ticket: string): string =>
+  `${ticket.slice(0, groupLength)}-${ticket.slice(groupLength)}`;
+
+const ticketPattern = new RegExp(
+  `^[${pairingTicketAlphabet}]{${pairingTicketLength}}$`,
+);
+
+/*
+ * What the owner typed, as a Ticket, or nothing when it cannot be one. Case, spaces, dashes and dots are free, and the letters Crockford folds into digits are folded, so a code read aloud and typed back loses nothing to the way it was said.
+ */
+export function readTypedTicket(typed: string): string | undefined {
+  const ticket = typed
+    .toUpperCase()
+    .replaceAll(/[\s\-·.]/g, '')
+    .replaceAll('O', '0')
+    .replaceAll(/[IL]/g, '1');
+
+  return ticketPattern.test(ticket) ? ticket : undefined;
+}
 
 // About two minutes, so a photograph of the screen is not a lasting key (ADR-0045).
 export const pairingTicketLifetimeMs = 120_000;

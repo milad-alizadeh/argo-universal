@@ -1,21 +1,41 @@
 import { randomInt } from 'node:crypto';
 import {
+  pairingTicketAlphabet,
   pairingTicketAttempts,
-  pairingTicketDigits,
+  pairingTicketLength,
   pairingTicketLifetimeMs,
   type PairingRefusal,
 } from '@repo/contracts';
 import { TicketAttempts } from './ticket-attempts';
-
-const codes = 10 ** pairingTicketDigits;
 
 export interface MintedTicket {
   readonly ticket: string;
   readonly expiresAt: number;
 }
 
-const sixDigits = (): string =>
-  String(randomInt(codes)).padStart(pairingTicketDigits, '0');
+const randomCode = (): string =>
+  Array.from(
+    { length: pairingTicketLength },
+    () => pairingTicketAlphabet[randomInt(pairingTicketAlphabet.length)],
+  ).join('');
+
+const unknownTicket = 'ticket-unknown';
+
+const spentTicket = 'ticket-spent';
+
+const tooManyAttempts = 'ticket-attempts';
+
+const refusedOffer = (refusal: PairingRefusal): KeyOffer => ({
+  offered: false,
+  refusal,
+});
+
+const turnedAway = refusedOffer(tooManyAttempts);
+
+// A holder of a live Ticket's code is offered the Server's key, or told why not; asking spends nothing.
+export type KeyOffer =
+  | { offered: true; ticket: string }
+  | { offered: false; refusal: PairingRefusal };
 
 // Across every source, so many addresses cannot guess one Ticket between them: a source gets `pairingTicketAttempts` on its own, and the Ticket survives ten sources' worth.
 const mostRefusals = pairingTicketAttempts * 10;
@@ -47,10 +67,50 @@ export class PairingTickets {
 
   // Answers why a Ticket was refused, or nothing when it was good and is now spent.
   public spend(ticket: string, source: string): PairingRefusal | undefined {
-    if (this.attempts.blocked(source)) return 'ticket-attempts';
+    if (this.attempts.blocked(source)) return tooManyAttempts;
     const refusal = this.check(ticket);
 
     return refusal ? this.refuse(source, refusal) : undefined;
+  }
+
+  /*
+   * Whether someone who can prove they hold a Ticket's code may be told the Server's key, for a Device that was typed the code instead of shown the QR (ADR-0045).
+   * `proves` is the caller's test of a code against what the Device sent, so the code itself never crosses the wire. Nothing is spent: the Ticket is spent by the handshake that follows, on the same terms as a scanned one.
+   * A code that matches nothing is held against the source like any wrong Ticket, and one that matches a Ticket past its time or already spent says so, because only a holder of the code can hear it.
+   */
+  public offer(source: string, proves: (ticket: string) => boolean): KeyOffer {
+    if (this.attempts.blocked(source)) return turnedAway;
+    const held = this.holding(proves);
+
+    return held ?? refusedOffer(this.refuse(source, unknownTicket));
+  }
+
+  private holding(proves: (ticket: string) => boolean): KeyOffer | undefined {
+    return this.holdingLive(proves) ?? this.holdingSpent(proves);
+  }
+
+  private holdingLive(
+    proves: (ticket: string) => boolean,
+  ): KeyOffer | undefined {
+    const held = [...this.live].find(([ticket]) => proves(ticket));
+
+    return held ? this.offerFor(...held) : undefined;
+  }
+
+  private holdingSpent(
+    proves: (ticket: string) => boolean,
+  ): KeyOffer | undefined {
+    const held = [...this.spent].find(
+      ([ticket, expiresAt]) => expiresAt > this.now() && proves(ticket),
+    );
+
+    return held ? refusedOffer(spentTicket) : undefined;
+  }
+
+  private offerFor(ticket: string, expiresAt: number): KeyOffer {
+    return expiresAt > this.now()
+      ? { offered: true, ticket }
+      : refusedOffer('ticket-expired');
   }
 
   // Spends the Ticket if it is good, and says why not if it is not.
@@ -74,8 +134,8 @@ export class PairingTickets {
 
   private unknown(ticket: string): PairingRefusal {
     return (this.spent.get(ticket) ?? 0) > this.now()
-      ? 'ticket-spent'
-      : 'ticket-unknown';
+      ? spentTicket
+      : unknownTicket;
   }
 
   private refuse(source: string, refusal: PairingRefusal): PairingRefusal {
@@ -85,14 +145,14 @@ export class PairingTickets {
     if (this.refusals < mostRefusals) return refusal;
     this.revoke();
 
-    return 'ticket-attempts';
+    return tooManyAttempts;
   }
 
   private unusedCode(): string {
-    let ticket = sixDigits();
+    let ticket = randomCode();
 
     while (this.live.has(ticket) || this.spent.has(ticket))
-      ticket = sixDigits();
+      ticket = randomCode();
 
     return ticket;
   }
