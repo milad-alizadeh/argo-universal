@@ -26,6 +26,22 @@ export const callerOverChannel = (input: ChannelInput): TRPCClient<AppRouter> =>
   });
 
 /*
+ * One GET for a path on the Server, sent inside a fresh channel: how a paired Device reads a Blob or a Plugin asset (ADR-0045).
+ */
+export async function getOverChannel(
+  input: ChannelInput,
+  path: string,
+): Promise<Response> {
+  const { socket } = await connectChannel(input);
+  const url = `http://${input.address.host}:${input.address.port}${path}`;
+  const response = await answerOver(socket, url, {});
+
+  socket.destroy();
+
+  return response;
+}
+
+/*
  * What the Server answers a request the tRPC client will not send: `httpLink` refuses a subscription in the App, so a test that wants the Server's own answer has to ask over the channel itself.
  */
 export async function answerOverChannel(
