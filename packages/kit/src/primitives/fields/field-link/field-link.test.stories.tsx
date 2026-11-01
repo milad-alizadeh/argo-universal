@@ -4,7 +4,7 @@ import type {
   StoryObj,
 } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, userEvent } from 'storybook/test';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { FieldLink } from './field-link';
 
@@ -93,11 +93,12 @@ export const ActionWithoutAnIconKeepsItsValue: Story = {
 
 export const DisabledDoesNothing: Story = {
   args: { title: 'Goal', action: true, disabled: true },
-  play: async ({ canvas, userEvent, args }) => {
+  play: async ({ canvas, args }) => {
     const row = canvas.getByRole('button', { name: 'Goal' });
+    // pointerEventsCheck is a setup option, not a click option. It is switched off so a row that swallows the press, rather than one the browser refuses, is what is tested.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
 
-    // The click is forced through so a row that swallows it, rather than one the browser refuses, is what is tested.
-    await userEvent.click(row, { pointerEventsCheck: 0 });
+    await user.click(row);
     await expect(args.onPress).not.toHaveBeenCalled();
   },
 };
