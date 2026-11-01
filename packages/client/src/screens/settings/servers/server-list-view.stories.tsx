@@ -27,11 +27,6 @@ type Story = StoryObj<typeof meta>;
 
 export const SeveralServers: Story = {};
 
-// On a phone, Add a Server is a call to action in the header, not a row.
-export const OnAPhone: Story = {
-  globals: { viewport: { value: 'phone' } },
-};
-
 // One Server reads as a Server chosen, not as a list with something missing.
 export const OneServer: Story = { args: { servers: oneServer } };
 
