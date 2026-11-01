@@ -1,18 +1,26 @@
-import { connect } from 'node:net';
+import { randomBytes } from 'node:crypto';
 import { pairingTicketAttempts } from '@repo/contracts';
+import { startRun } from '@repo/contracts/pake';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { askForServerKey, connectWithTypedCode } from '#mocks/engine-channel';
-import { frameRecord } from './frames';
-import { askForKey, keyMagic } from './key-offer';
+import type { ChannelAddress } from './connect-channel';
+import { exchange } from './request-server-key';
 
-const wrong = 'ZZZZZZZZZZ';
+// Never a Ticket the host minted, however it came out.
+const wrongFor = (ticket: string): string =>
+  ticket === '000000' ? '111111' : '000000';
 
 const studioMac = 'Studio Mac';
 
 const unknown = 'ticket-unknown';
 
 const ignore = (): void => {};
+
+const addressOf = (host: { url: string }): ChannelAddress => ({
+  host: '127.0.0.1',
+  port: Number(new URL(host.url).port),
+});
 
 it('pairs a Device that was typed the code, and ends in the same Allow', async (): Promise<void> => {
   const host = await startEngineTestHost();
@@ -66,7 +74,7 @@ it('says a mistyped code is wrong, and takes the right one next without a new co
   const host = await startEngineTestHost();
   const { ticket } = host.pairing.mint();
 
-  await expect(askForServerKey(host, wrong)).rejects.toMatchObject({
+  await expect(askForServerKey(host, wrongFor(ticket))).rejects.toMatchObject({
     refusal: unknown,
   });
 
@@ -115,20 +123,41 @@ it('turns a source away once it has been wrong as often as a Ticket allows', asy
   const { ticket } = host.pairing.mint();
 
   for (let time = 0; time < pairingTicketAttempts; time += 1)
-    await askForServerKey(host, wrong).catch(ignore);
+    await askForServerKey(host, wrongFor(ticket)).catch(ignore);
 
   await expect(askForServerKey(host, ticket)).rejects.toMatchObject({
     refusal: 'ticket-attempts',
   });
 });
 
-it('does not hand the key to a question someone watched go by and repeated', async (): Promise<void> => {
+it('counts nothing against a Device that proves it holds the code', async (): Promise<void> => {
   const host = await startEngineTestHost();
   const { ticket } = host.pairing.mint();
-  const question = frameRecord(askForKey(ticket));
 
-  expect((await replied(host, question)).length).toBeGreaterThan(0);
-  expect(await replied(host, question)).toHaveLength(0);
+  for (let time = 0; time < pairingTicketAttempts * 2; time += 1)
+    expect(await askForServerKey(host, ticket)).toEqual(expect.any(String));
+});
+
+it('gives nothing to someone who repeats what they watched go by, and counts them', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const { ticket } = host.pairing.mint();
+  const device = startRun(ticket, randomBytes);
+  const address = addressOf(host);
+
+  const first = await exchange(
+    address,
+    device.ask,
+    (reply) => device.read(reply).confirm,
+  );
+
+  const watched = device.read(first).confirm;
+
+  for (let time = 0; time < pairingTicketAttempts; time += 1)
+    await exchange(address, device.ask, () => watched);
+
+  await expect(askForServerKey(host, ticket)).rejects.toMatchObject({
+    refusal: 'ticket-attempts',
+  });
 });
 
 it('does not put the Server key on the wire where a watcher could read it', async (): Promise<void> => {
@@ -140,25 +169,21 @@ it('does not put the Server key on the wire where a watcher could read it', asyn
     'base64url',
   ).subarray(-32);
 
-  const reply = await replied(host, frameRecord(askForKey(ticket)));
+  const reply = await exchange(
+    addressOf(host),
+    startRun(ticket, randomBytes).ask,
+  );
 
+  expect(reply.length).toBeGreaterThan(0);
   expect(reply.includes(key)).toBe(false);
 });
 
-// Whatever the Server sent back to a question sent as it was, before it closed the socket.
-function replied(
-  host: Awaited<ReturnType<typeof startEngineTestHost>>,
-  question: Buffer,
-): Promise<Buffer> {
-  return new Promise<Buffer>((resolve): void => {
-    const chunks: Buffer[] = [];
+it('answers the same size whether or not any Ticket is outstanding', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const ask = startRun('123456', randomBytes).ask;
+  const none = await exchange(addressOf(host), ask);
 
-    const socket = connect(Number(new URL(host.url).port), '127.0.0.1', () =>
-      socket.write(Buffer.concat([keyMagic, question])),
-    );
+  host.pairing.mint();
 
-    socket.on('data', (chunk) => chunks.push(chunk));
-    socket.on('error', ignore);
-    socket.on('close', () => resolve(Buffer.concat(chunks)));
-  });
-}
+  expect(await exchange(addressOf(host), ask)).toHaveLength(none.length);
+});

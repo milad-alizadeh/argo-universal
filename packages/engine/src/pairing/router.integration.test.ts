@@ -12,7 +12,7 @@ it('carries the key, the name and the Ticket a Device needs to find and prove th
   expect(minted.invite).toEqual({
     key: (await caller.devices.serverKey()).publicKey,
     server: 'Studio Mac',
-    ticket: expect.stringMatching(/^[0-9A-HJKMNP-TV-Z]{10}$/),
+    ticket: expect.stringMatching(/^\d{6}$/),
   });
   expect(Date.parse(minted.expiresAt)).toBeGreaterThan(Date.now());
 });

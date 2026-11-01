@@ -1,27 +1,37 @@
+import { randomBytes } from 'node:crypto';
 import type { Socket } from 'node:net';
+import {
+  answerRun,
+  refuseRun,
+  type OfferedTicket,
+  type ServerRun,
+} from '@repo/contracts/pake';
 import { frameRecord } from './frames';
 import { HandshakeBuffer } from './handshake-buffer';
-import { offerKey, readQuestion, refuseKey } from './key-offer';
-import { SeenHandshakes } from './seen-handshakes';
-import type { KeyOffer } from './tickets';
+import { KeyRun } from './key-run';
 
 export interface KeyDoorDeps {
   readonly publicKey: Buffer;
-  // Whether the Device holds a live Ticket's code, counted against the address it knocked from.
-  readonly offer: (
-    source: string,
-    holds: (ticket: string) => boolean,
-  ) => KeyOffer;
+  // Starts a run from this source for the Tickets the Server can say something about, or nothing when the source has been turned away.
+  readonly offering: (source: string) => OfferedTicket[] | undefined;
+  // Ends that run, and whether the Device proved it holds one of the codes.
+  readonly settled: (source: string, proved: boolean) => void;
   readonly report: (subject: string, value: string | undefined) => void;
 }
 
+interface Asked {
+  readonly source: string;
+  readonly ask: Buffer;
+  readonly offered: OfferedTicket[];
+}
+
+const turnedAway = frameRecord(Buffer.from(refuseRun('ticket-attempts')));
+
 /*
- * The Server's side of a typed code (ADR-0045): one question, one answer, and the socket is closed. Nothing here spends a Ticket and nothing here admits a Device; the handshake that follows does both, on the same terms as a scanned code.
- * A question that repeats one already asked is someone repeating what they watched on the network, and gets nothing.
+ * The Server's side of a typed code (ADR-0045): the Device opens a password-authenticated key exchange keyed by its code, the Server answers with one entry per outstanding Ticket, and the Device proves it opened one. Nothing here spends a Ticket and nothing here admits a Device; the handshake that follows does both, on the same terms as a scanned code.
+ * What the Server answers carries nothing a watcher can test a guessed code against, so the only way to learn a code is to run this against the Server, and each run that does not end in a proof is counted against its source.
  */
 export class KeyDoor {
-  private readonly seen = new SeenHandshakes();
-
   public constructor(private readonly deps: KeyDoorDeps) {}
 
   public accept(socket: Socket, opening: Buffer, proven: () => void): void {
@@ -44,21 +54,37 @@ export class KeyDoor {
   }
 
   private answer(socket: Socket, ask: Buffer): void {
-    const question = readQuestion(ask);
+    const source = socket.remoteAddress ?? 'unknown';
+    const offered = this.deps.offering(source);
 
-    if (!this.seen.accept(question.nonce)) return void socket.destroy();
-    socket.end(frameRecord(this.reply(socket, question)));
+    if (offered) this.begin(socket, { source, ask, offered });
+    else socket.end(turnedAway);
   }
 
-  private reply(
-    socket: Socket,
-    question: ReturnType<typeof readQuestion>,
-  ): Buffer {
-    const source = socket.remoteAddress ?? 'unknown';
-    const offer = this.deps.offer(source, question.holds);
+  private begin(socket: Socket, asked: Asked): void {
+    const settle = (proved: boolean): void =>
+      this.deps.settled(asked.source, proved);
 
-    return offer.offered
-      ? offerKey(question, offer.ticket, this.deps.publicKey)
-      : refuseKey(offer.refusal);
+    const run = this.run(asked, settle);
+
+    if (!run) return void socket.destroy();
+    new KeyRun(socket, run, settle).start(frameRecord(Buffer.from(run.reply)));
+  }
+
+  // A run whose opening is no opening is a guess like any other.
+  private run(
+    { ask, offered }: Asked,
+    settle: (proved: boolean) => void,
+  ): ServerRun | undefined {
+    const offering = { tickets: offered, publicKey: this.deps.publicKey };
+
+    try {
+      return answerRun(ask, offering, randomBytes);
+    } catch (cause) {
+      this.deps.report('key question', String(cause));
+      settle(false);
+
+      return undefined;
+    }
   }
 }
