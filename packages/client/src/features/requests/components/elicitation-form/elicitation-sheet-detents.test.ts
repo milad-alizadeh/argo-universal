@@ -3,7 +3,7 @@ import { elicitationSheetLayout } from './elicitation-sheet-detents';
 
 // A sheet whose content scrolls itself is given no height to fill unless it names its detents.
 describe('the Elicitation sheet layout', () => {
-  it.each(['ios', 'android'])(
+  it.each(['ios', 'android'] as const)(
     'names a height on %s when its fields scroll themselves',
     (os) => {
       const layout = elicitationSheetLayout(os);

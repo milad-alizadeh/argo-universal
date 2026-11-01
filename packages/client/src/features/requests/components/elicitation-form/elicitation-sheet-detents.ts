@@ -1,4 +1,5 @@
 import type { SheetProps } from '@repo/kit/primitives/overlays/sheet';
+import type { PlatformOSType } from 'react-native';
 
 export type SheetLayout = Pick<
   SheetProps,
@@ -15,7 +16,7 @@ export type SheetLayout = Pick<
  * that fills a wrapped sheet is zero tall, which drew the question and its buttons with no option (#1676). Material's
  * half-open stop would cut the footer, so Android rests only at its full height, as a Dialog's fields sheet does.
  */
-export function elicitationSheetLayout(os: string): SheetLayout {
+export function elicitationSheetLayout(os: PlatformOSType): SheetLayout {
   if (os === 'ios') {
     return {
       detents: ['medium', 'large'],
