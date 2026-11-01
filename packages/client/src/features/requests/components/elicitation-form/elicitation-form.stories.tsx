@@ -5,6 +5,7 @@ import { RequestFrame } from '../../../../lib/product/request-frame';
 import { ElicitationForm } from './elicitation-form';
 import {
   answeredElicitation,
+  choiceFieldsElicitation,
   formFieldsElicitation,
   multipleChoiceElicitation,
   severalQuestionsElicitation,
@@ -68,6 +69,8 @@ export const SeveralQuestions: Story = { args: severalQuestionsElicitation };
 export const TextField: Story = { args: textFieldElicitation };
 
 export const FormFields: Story = { args: formFieldsElicitation };
+
+export const ChoiceFields: Story = { args: choiceFieldsElicitation };
 
 export const Submitting: Story = { args: submittingElicitation };
 

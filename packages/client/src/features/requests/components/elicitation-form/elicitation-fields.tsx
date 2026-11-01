@@ -1,9 +1,12 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useStore } from '@tanstack/react-form';
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import { choicePicker, isChoice } from './elicitation-choice-row';
-import type { ElicitationFieldProps } from './elicitation-field-props';
+import {
+  rowTitle,
+  type ElicitationFieldProps,
+} from './elicitation-field-props';
 import { FieldRow } from './elicitation-field-rows';
 import {
   ElicitationFormField,
@@ -38,26 +41,46 @@ export function ElicitationFields({ model }: ModelProps): ReactElement {
 type SectionProps = ModelProps & { section: FieldSection; meta: FieldMeta };
 
 // Called, not rendered: a FieldGroup reads its sections by element type.
-function fieldsSection({ model, section, meta }: SectionProps): ReactElement {
-  const footer = sectionFooter(
-    {
-      entries: section.entries,
-      initial: (entry) => hasInitialValue({ model, entry }),
-    },
-    meta,
-  );
-
-  return (
-    <FieldGroup.Section key={section.entries[0]?.key} footer={footer}>
-      {section.entries.map((entry) => fieldRow(model, entry))}
-    </FieldGroup.Section>
-  );
-}
+const fieldsSection = (props: SectionProps): ReactElement => (
+  <FieldGroup.Section
+    key={props.section.entries[0]?.key}
+    {...sectionProps(props)}
+  >
+    {props.section.entries.map((entry) => fieldRow(props.model, entry))}
+  </FieldGroup.Section>
+);
 
 /*
  * A choice is drawn straight from the form's values, not inside a Field: its options are rows of the Section, which
  * reads a Picker by element type. The form validates as a whole, so no Field is needed to check it.
  */
+const sectionProps = ({
+  model,
+  section,
+  meta,
+}: SectionProps): ComponentProps<typeof FieldGroup.Section> => ({
+  title: sectionTitle(model, section),
+  footer: sectionFooter(
+    {
+      entries: section.entries,
+      initial: (entry) => hasInitialValue({ model, entry }),
+    },
+    meta,
+  ),
+});
+
+// A section of one choice is headed by the choice's title.
+function sectionTitle(
+  model: ModelProps['model'],
+  section: FieldSection,
+): string | undefined {
+  const [entry] = section.entries;
+
+  return entry && isChoice(entry.property)
+    ? rowTitle(choiceProps(model, entry))
+    : undefined;
+}
+
 const fieldRow = (
   model: ModelProps['model'],
   entry: ElicitationEntry,
