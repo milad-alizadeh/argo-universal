@@ -5,8 +5,10 @@ import {
   PlaceholderDetailView,
   usePairDevice,
 } from '#features/settings';
+import { useNavigate } from '#lib/product/navigation/navigation';
 import { useServerPaired } from '#lib/product/server-scope';
 import { DeviceListView } from './device-list-view';
+import { useDeviceRows } from './use-devices';
 import { useLocalNetworkAccess } from './use-local-network-access';
 
 /*
@@ -29,9 +31,15 @@ export function DeviceListScreen(): React.JSX.Element {
 
 function ServerDeviceList(): React.JSX.Element {
   const { onOpen, ...sheet } = usePairDevice();
+  const navigate = useNavigate();
 
   return (
-    <DeviceListView {...useLocalNetworkAccess()} {...pairing(onOpen, sheet)} />
+    <DeviceListView
+      {...useLocalNetworkAccess()}
+      {...pairing(onOpen, sheet)}
+      devices={useDeviceRows()}
+      onOpenDevice={(id) => navigate(`/settings/devices/${id}`)}
+    />
   );
 }
 

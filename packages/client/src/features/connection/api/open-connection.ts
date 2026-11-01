@@ -23,16 +23,14 @@ export interface OpenConnection {
 function channelOf(
   endpoint: ServerEndpoint,
   platform: ChannelPlatform,
+  onRefused: () => void,
 ): ChannelTransport | undefined {
-  return isPaired(endpoint)
-    ? createChannelTransport(
-        {
-          address: { host: endpoint.host, port: endpoint.port },
-          serverPublicKey: endpoint.serverPublicKey,
-        },
-        platform,
-      )
-    : undefined;
+  if (!isPaired(endpoint)) return undefined;
+
+  const { host, port, serverPublicKey } = endpoint;
+  const target = { address: { host, port }, serverPublicKey };
+
+  return createChannelTransport(target, platform, onRefused);
 }
 
 interface Wiring {
@@ -43,9 +41,13 @@ interface Wiring {
 const wiredTo = (
   endpoint: ServerEndpoint,
   platform: ChannelPlatform,
+  connection: Connection,
 ): Wiring =>
   isPaired(endpoint)
-    ? { url: channelServerUrl, channel: channelOf(endpoint, platform) }
+    ? {
+        url: channelServerUrl,
+        channel: channelOf(endpoint, platform, connection.refuse),
+      }
     : { url: endpoint.url, channel: undefined };
 
 const closing =
@@ -62,7 +64,7 @@ export function openConnection(
   platform: ChannelPlatform = appChannelPlatform,
 ): OpenConnection {
   const connection = createConnection();
-  const { url, channel } = wiredTo(endpoint, platform);
+  const { url, channel } = wiredTo(endpoint, platform, connection);
   const trpc = createTRPCClient(url, connection.nextAttempt, { channel });
 
   connection.watch(trpc.webSocketClient.connectionState);

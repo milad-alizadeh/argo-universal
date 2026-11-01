@@ -16,14 +16,15 @@ function useAddServer(): (() => void) | undefined {
 
 // The App's list of Servers, each with its own state, and which one it is showing.
 export function ServerListScreen(): React.JSX.Element {
-  const { servers, lookingAt, look } = useAppServers();
+  const { servers, lookingAt } = useAppServers();
   const states = useAppServerStates();
+  const router = useRouter();
 
   return (
     <ServerListView
       servers={servers.map((server) => serverRow(server, states))}
       lookingAt={lookingAt}
-      onLookAt={look}
+      onOpenServer={(id) => router.push(`/settings/servers/${id}`)}
       onAddServer={useAddServer()}
     />
   );

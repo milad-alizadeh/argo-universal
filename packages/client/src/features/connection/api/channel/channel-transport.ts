@@ -80,6 +80,7 @@ function once<T>(read: () => Promise<T>): () => Promise<T> {
 export function createChannelTransport(
   target: ChannelTarget,
   platform: ChannelPlatform,
+  onRefused?: () => void,
 ): ChannelTransport {
   const open = opener(target, platform);
 
@@ -87,6 +88,7 @@ export function createChannelTransport(
     WebSocket: channelWebSocket({
       openChannel: open,
       randomBytes: platform.randomBytes,
+      onRefused,
     }),
     fetch: channelFetch({ openChannel: open }),
   };

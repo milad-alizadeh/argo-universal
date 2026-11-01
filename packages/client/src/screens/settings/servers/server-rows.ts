@@ -29,7 +29,8 @@ export const serverRow = (
 const stateLabels = {
   connected: 'Connected',
   connecting: 'Connecting…',
-  unreachable: 'Unreachable',
+  unreachable: 'Not found on this network',
+  'not-allowed': 'Needs pairing again',
 } as const satisfies Record<AppServerState, string>;
 
 /*
@@ -39,9 +40,6 @@ const stateLabels = {
 export const serverStateLabel = (state: AppServerState): string =>
   stateLabels[state];
 
-/*
- * What choosing a row does. The check beside a row already says which Server is shown, so the footer says what being
- * shown means rather than naming that Server again.
- */
-export const shownServerFooter =
-  'Argo shows one Server at a time. Its Sessions, Projects and Feed are the ones you see.';
+// Opening a row is where a Server is shown, fixed or unpaired from; the row itself says which one is shown.
+export const serverListFooter =
+  'Argo shows one Server at a time: its Sessions, Projects and Feed. Open a Server to show it, or to unpair from it.';

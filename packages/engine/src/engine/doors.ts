@@ -19,14 +19,7 @@ export function createDoors(setup: RoutedSetup, guard: RequestGuard): Doors {
   const requests = createServer(createRequestListener(listening(setup, guard)));
 
   const { report } = guard;
-
-  const channel = new ChannelDoor({
-    staticKey: setup.staticKey,
-    admission: setup.admission,
-    serve: (socket): void => void requests.emit('connection', socket),
-    report,
-  });
-
+  const channel = channelDoor(setup, requests, report);
   const unproven = new SocketGuard({ report });
 
   return {
@@ -34,6 +27,19 @@ export function createDoors(setup: RoutedSetup, guard: RequestGuard): Doors {
     frontDoor: createFrontDoor({ requests, channel, unproven, report }),
   };
 }
+
+const channelDoor = (
+  setup: RoutedSetup,
+  requests: RequestServer,
+  report: RequestGuard['report'],
+): ChannelDoor =>
+  new ChannelDoor({
+    staticKey: setup.staticKey,
+    admission: setup.admission,
+    channels: setup.channels,
+    serve: (socket): void => void requests.emit('connection', socket),
+    report,
+  });
 
 const listening = (
   setup: RoutedSetup,

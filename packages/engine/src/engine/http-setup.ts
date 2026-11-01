@@ -2,6 +2,7 @@ import { AppNavigation } from '../app-navigation';
 import { blobsFolderIn } from '../blob';
 import { ensureServerIdentity } from '../devices';
 import { DeviceAdmission } from '../devices/admit-device';
+import { OpenChannels } from '../devices/open-channels';
 import { LocalNetworkAccess } from '../network-access';
 import { Notifications } from '../notifications';
 import { ensureControlToken } from '../operations';
@@ -66,9 +67,13 @@ const routerInput = ({
   discoveryName: discoveryNameOf(options),
   tickets: pairing.tickets,
   registrations: pairing.registrations,
+  channels: pairing.channels,
 });
 
-type Pairing = Pick<RoutedSetup, 'tickets' | 'registrations' | 'admission'>;
+type Pairing = Pick<
+  RoutedSetup,
+  'tickets' | 'registrations' | 'admission' | 'channels'
+>;
 
 /*
  * The one set of Pairing Tickets a Server has outstanding, and the one place a registration is reported to.
@@ -82,6 +87,7 @@ function preparePairing(options: HttpServerOptions): Pairing {
   return {
     tickets,
     registrations,
+    channels: new OpenChannels(),
     admission: admitting(options, { tickets, registrations }, now),
   };
 }

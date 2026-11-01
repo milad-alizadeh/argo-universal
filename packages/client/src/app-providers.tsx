@@ -46,15 +46,21 @@ interface AppServersProps {
   children: ReactNode;
 }
 
+const serversActions = (
+  store: ServersStore,
+): Pick<ServersStore, 'look' | 'add' | 'remove'> => ({
+  look: store.look,
+  add: store.add,
+  remove: store.remove,
+});
+
 // Every Server the App holds, each with its own Connection, and the one it is looking at.
 function AppServers({ store, ...props }: AppServersProps): React.JSX.Element {
   const servers = useServers(store);
   const connections = useServerConnections(servers.servers, props.openServer);
 
   return (
-    <ServersContext.Provider
-      value={{ ...servers, look: store.look, add: store.add }}
-    >
+    <ServersContext.Provider value={{ ...servers, ...serversActions(store) }}>
       <ServerConnectionsContext.Provider value={connections}>
         {servers.read
           ? lookedAtServer({ servers, connections, ...props })

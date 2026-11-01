@@ -121,6 +121,26 @@ async function writeServer(server: KnownServer): Promise<void> {
   await AsyncStorage.setItem(serversKey, JSON.stringify([...entries, server]));
 }
 
+// Forgets a Server this Device has unpaired from: its entry goes, and so does the choice to look at it.
+export function forgetKnownServer(key: string): Promise<void> {
+  writes = writes.then(() => removeServer(key)).catch(keepFailed);
+
+  return writes;
+}
+
+async function removeServer(key: string): Promise<void> {
+  const kept = await AsyncStorage.getItem(serversKey);
+
+  const entries = keptEntries(kept).filter(
+    (entry) => Kept.safeParse(entry).data?.key !== key,
+  );
+
+  await AsyncStorage.setItem(serversKey, JSON.stringify(entries));
+
+  if ((await AsyncStorage.getItem(lookingAtKey)) === key)
+    await AsyncStorage.setItem(lookingAtKey, ownServerId);
+}
+
 function keptEntries(saved: string | null): unknown[] {
   try {
     return saved === null ? [] : KeptServers.parse(JSON.parse(saved));

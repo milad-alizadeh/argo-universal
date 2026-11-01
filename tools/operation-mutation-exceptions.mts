@@ -19,6 +19,8 @@ const retained = new Map<string, readonly string[]>([
   ['network-access/router.ts', ['setLocalAccess']],
   // Minting a Pairing Ticket, revoking one, and allowing or declining a Device are the owner's consent itself (ADR-0045): an Agent that could mint one would make the pair sheet's prompt theatre, so none of them is an Operation.
   ['pairing/router.ts', ['mint', 'revoke', 'allow', 'decline']],
+  // Unpairing is taking access away, the owner's consent undone (ADR-0045): the Server Device removes any Paired Device, and a Paired Device removes only itself. An Agent that could unpair would let it cut off the owner's own phone, so neither is an Operation.
+  ['devices/router.ts', ['unpair', 'unpairSelf']],
 ]);
 
 export function permittedMutation(file: string, name: string): boolean {
