@@ -46,6 +46,8 @@
     "check-types": "tsc --noEmit",
     "generate:material-images": "tsx tools/material-images/generate.mts",
     "check:material-images": "tsx tools/material-images/generate.mts --check",
+    "generate:svg-drawings": "tsx tools/svg-drawings/generate.mts",
+    "check:svg-drawings": "tsx tools/svg-drawings/generate.mts --check",
     "generate:plugin-symbol-names": "node tools/plugin-symbol-names/generate.mts",
     "test": "vitest run"
   },
