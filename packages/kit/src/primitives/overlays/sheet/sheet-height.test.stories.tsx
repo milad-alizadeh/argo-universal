@@ -11,8 +11,7 @@ import { PagedSheet } from './sheet.stories';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Overlays/Sheet/Height',
-  component: PagedSheet,
-} satisfies Meta<typeof PagedSheet>;
+} satisfies Meta;
 
 export default meta;
 
@@ -91,6 +90,7 @@ export const PushedPageWrapsItsContent: Story = {
 
 // Declared pages hold one height as the reader moves between them, whichever page is showing.
 export const PagedSheetKeepsOneHeight: Story = {
+  render: () => <PagedSheet />,
   beforeEach: (): Promise<void> => settleLayout('phone'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));

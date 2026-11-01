@@ -23,7 +23,7 @@ export function sheetHeightClass(props: PresentationProps): string | false {
 }
 
 const keepsHeight = (props: PresentationProps): boolean =>
-  props.stack.declared > 1 || scrollsAtDetents(props);
+  props.stack.paged || scrollsAtDetents(props);
 
 const scrollsAtDetents = (props: PresentationProps): boolean =>
   props.contentScrolls === true && props.detents !== undefined;

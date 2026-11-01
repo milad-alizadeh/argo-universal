@@ -97,8 +97,8 @@ export function SheetLink(props: SheetLinkProps): ReactElement {
 
 export interface SheetStack {
   pages: SheetScreenEntry[];
-  // How many pages the sheet's children declare; a page pushed at runtime is not one of them.
-  declared: number;
+  // Whether the sheet's children declare several pages; a page pushed at runtime does not make it so.
+  paged: boolean;
   // The pages pushed over the root, in order.
   path: string[];
   setPath: Dispatch<SetStateAction<string[]>>;
@@ -120,7 +120,7 @@ export function useSheetStack(props: SheetProps): SheetStack {
   const pages = [...declared, ...presentation.destinations];
   useScreenExits(props.open, presentation.path, pages);
 
-  return { ...presentation, pages, declared: declared.length, navigation };
+  return { ...presentation, pages, paged: declared.length > 1, navigation };
 }
 
 type NavigationOwners = {
