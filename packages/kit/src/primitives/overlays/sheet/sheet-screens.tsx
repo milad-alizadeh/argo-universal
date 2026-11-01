@@ -4,7 +4,6 @@ import {
   isValidElement,
   useContext,
   useMemo,
-  useState,
   type Dispatch,
   type ReactElement,
   type ReactNode,
@@ -17,6 +16,7 @@ import {
   updateDestination,
   useScreenExits,
 } from './sheet-destinations';
+import { usePresentation } from './sheet-presentation';
 import type {
   SheetLinkProps,
   SheetNavigation,
@@ -24,12 +24,7 @@ import type {
   SheetScreenProps,
   SheetProps,
 } from './sheet-props';
-import {
-  popScreen,
-  sheetReports,
-  useLatest,
-  type SheetReports,
-} from './sheet-state';
+import { popScreen, useLatest, type SheetReports } from './sheet-state';
 
 // Marks one page of a sheet; each platform's stack draws it.
 export function SheetScreen(props: SheetScreenProps): ReactNode {
@@ -102,6 +97,8 @@ export function SheetLink(props: SheetLinkProps): ReactElement {
 
 export interface SheetStack {
   pages: SheetScreenEntry[];
+  // How many pages the sheet's children declare; a page pushed at runtime is not one of them.
+  declared: number;
   // The pages pushed over the root, in order.
   path: string[];
   setPath: Dispatch<SetStateAction<string[]>>;
@@ -119,45 +116,11 @@ export function useSheetStack(props: SheetProps): SheetStack {
     setDestinations: presentation.setDestinations,
   });
 
-  const pages = [...sheetScreens(props.children), ...presentation.destinations];
+  const declared = sheetScreens(props.children);
+  const pages = [...declared, ...presentation.destinations];
   useScreenExits(props.open, presentation.path, pages);
 
-  return { ...presentation, pages, navigation };
-}
-
-type Presentation = Pick<SheetStack, 'path' | 'setPath' | 'reports'> & {
-  destinations: SheetScreenEntry[];
-  setDestinations: Dispatch<SetStateAction<SheetScreenEntry[]>>;
-};
-
-/*
- * Each opening starts on the root page and reports its own close; the old page stays while the sheet slides
- * away. Screens pushed during an opening go with it, since a sheet that kept them would count pages it no
- * longer draws — which is what decides whether Android's sheet fills the window or wraps (owner, 2026-10-20).
- */
-function usePresentation(
-  open: boolean,
-  latest: () => SheetProps,
-): Presentation {
-  const [path, setPath] = useState<string[]>([]);
-  const [destinations, setDestinations] = useState<SheetScreenEntry[]>([]);
-  const [reports, setReports] = useState(() => sheetReports(latest));
-
-  if (useOpening(open)) {
-    setPath([]);
-    setDestinations([]);
-    setReports(sheetReports(latest));
-  }
-
-  return { path, setPath, destinations, setDestinations, reports };
-}
-
-function useOpening(open: boolean): boolean {
-  const [shownOpen, setShownOpen] = useState(open);
-
-  if (open !== shownOpen) setShownOpen(open);
-
-  return open && !shownOpen;
+  return { ...presentation, pages, declared: declared.length, navigation };
 }
 
 type NavigationOwners = {

@@ -56,7 +56,7 @@ const pushedScreen = (
 function SingleScreen(props: ScreensProps): ReactElement {
   const detents = sheetDetents({
     detents: props.detents,
-    paged: props.stack.pages.length > 0,
+    paged: props.stack.declared > 1,
   });
 
   return (
