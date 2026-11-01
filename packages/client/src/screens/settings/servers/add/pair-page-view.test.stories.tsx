@@ -43,3 +43,17 @@ export const NamesTheServer: Story = {
     await expect(canvas.getByText(/Studio PC/)).toBeVisible();
   },
 };
+
+// A typed code's expired page leads back to typing, not to a camera.
+export const TypedCodeOffersANewCode: Story = {
+  args: { way: 'type' },
+  play: async ({ canvas, args, userEvent }) => {
+    await expect(
+      canvas.queryByRole('button', { name: 'Scan again' }),
+    ).toBeNull();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Type a new code' }),
+    );
+    await expect(args.onAction).toHaveBeenCalledOnce();
+  },
+};
