@@ -5,6 +5,7 @@ import {
   disabled,
   font,
   foregroundStyle,
+  layoutPriority,
   shapes,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
@@ -44,8 +45,15 @@ const Disclosure = (props: { action?: boolean }): ReactElement | null =>
     <Image systemName="chevron.forward" modifiers={disclosureStyle} />
   );
 
+// A long value gives way before the title does: it takes one line and truncates, so the title stays whole (#1750).
+const valueModifiers = [layoutPriority(-1)];
+
 const LinkValue = (props: { value?: string }): ReactElement | null =>
-  props.value ? <NativeText tone="muted">{props.value}</NativeText> : null;
+  props.value ? (
+    <NativeText tone="muted" numberOfLines={1} modifiers={valueModifiers}>
+      {props.value}
+    </NativeText>
+  ) : null;
 
 const pressing = (off: boolean | undefined): ModifierConfig[] => [
   buttonStyle('plain'),
