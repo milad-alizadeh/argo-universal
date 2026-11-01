@@ -273,7 +273,7 @@ Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `can
 _Avoid_: Exit status, finish reason, interrupted (as a Stop reason)
 
 **Settled**:
-A Session update that will not change again. Every Turn ending settles its Turn's Session updates, and a Tool call still running then is settled as cancelled.
+A Session update that a Turn ending has closed. Every Turn ending settles its Turn's Session updates, which will not change again, and a Tool call still running then is settled as cancelled. A row that belongs to no Turn is written settled at once, because no Turn ending will come for it, and it may still grow.
 _Avoid_: Closed, finalised
 
 ## What a Session shows
