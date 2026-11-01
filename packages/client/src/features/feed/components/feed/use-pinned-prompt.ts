@@ -118,7 +118,8 @@ function useScrollIntoPlace(
   const animated = moves && !reduced;
 
   return ({ anchorKey, anchorIndex }) => {
-    if (!isNewKey(anchorKey, pinned.current)) return;
+    if (anchorIndex === undefined || !isNewKey(anchorKey, pinned.current))
+      return;
     pinned.current = anchorKey;
     scrollToPrompt(list, anchorIndex, { clearance, animated });
   };
