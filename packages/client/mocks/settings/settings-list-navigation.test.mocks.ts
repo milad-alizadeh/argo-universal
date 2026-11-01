@@ -29,7 +29,7 @@ const phonePages = [
   'Connection',
 ];
 
-const widePages = [
+export const widePages = [
   'Projects',
   'Agents',
   'Agent access',

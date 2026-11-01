@@ -10,6 +10,7 @@ import {
   meta as settingsListTestMeta,
   type Story,
 } from '../../../../mocks/settings/settings-list-story.test.mocks';
+import { tabletPortraitKeepsEveryPage } from '../../../../mocks/settings/settings-list-tablet.test.mocks';
 import {
   searchFindsAppearance,
   themeChoosesInPlace,
@@ -23,6 +24,15 @@ export default meta;
 export const AllPagesNavigatePhone = allPagesNavigate(layoutWidths.phone);
 
 export const AllPagesNavigateWide = allPagesNavigate(layoutWidths.wide);
+
+// iPad Pro 11in and iPad Air, held in portrait: medium, not a phone.
+export const AllPagesStayOnATabletInPortrait = tabletPortraitKeepsEveryPage(
+  834,
+  1194,
+);
+
+export const AllPagesStayOnASmallerTabletInPortrait =
+  tabletPortraitKeepsEveryPage(820, 1180);
 
 export const WaitingForData: Story = {
   args: { projectCount: 0, agentCount: 0 },
