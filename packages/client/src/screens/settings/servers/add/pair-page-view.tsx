@@ -2,14 +2,12 @@ import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type * as React from 'react';
-import { type PairPageKind, type PairWay, pairCopy } from './pair-copy';
+import { type PairPageKind, pairCopy } from './pair-copy';
 
 export interface PairPageViewProps {
   kind: PairPageKind;
   // The discovery name the code carried, for the pages that must say which computer they mean.
   serverName: string;
-  // Whether the code was scanned or typed, for the pages whose words name the camera.
-  way?: PairWay;
   // The page's one action: Cancel while it waits, then scan again or try again. The way back is the header's.
   onAction: () => void;
 }
@@ -18,7 +16,7 @@ export interface PairPageViewProps {
  * One page of Add a Server that says where it stands and gives the owner the one way on. The same page draws the wait and every way it can end (ADR-0045).
  */
 export function PairPageView(props: PairPageViewProps): React.JSX.Element {
-  const copy = pairCopy(props.kind, props.serverName, props.way);
+  const copy = pairCopy(props.kind, props.serverName);
 
   return (
     <Screen title="Add a Server">

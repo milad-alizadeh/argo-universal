@@ -23,33 +23,8 @@ const tryAgain = 'Try again';
 /*
  * The words of each page, from the approved designs (#1490). The Server is named wherever the owner might otherwise not know which computer is meant, and "Allow this Device?" is quoted because it is what the other computer's own prompt says.
  */
-export const pairCopy = (
-  kind: PairPageKind,
-  serverName: string,
-  way: PairWay = 'scan',
-): PairCopy => ({ ...copies[kind](serverName), ...typedCopies[way][kind] });
-
-// How the code reached this Device: read off the other computer's screen, or typed from it (#1502). The pages are the same; only the words that name the camera change.
-export type PairWay = 'scan' | 'type';
-
-const typedCopies: Record<
-  PairWay,
-  Partial<Record<PairPageKind, Partial<PairCopy>>>
-> = {
-  scan: {},
-  type: {
-    expired: { action: 'Type a new code' },
-    declined: {
-      description:
-        'The other computer did not allow this Device, so it is not paired. Type a new code to try again.',
-    },
-    'not-found': {
-      title: 'Can’t find that computer',
-      description:
-        'It may be asleep or turned off, or this computer may be on a different network. The code works until it changes.',
-    },
-  },
-};
+export const pairCopy = (kind: PairPageKind, serverName: string): PairCopy =>
+  copies[kind](serverName);
 
 const copies: Record<PairPageKind, (serverName: string) => PairCopy> = {
   waiting: (serverName) => ({

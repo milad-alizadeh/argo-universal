@@ -2,18 +2,17 @@ import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import type * as React from 'react';
 import { useEffect, useRef } from 'react';
-import { Linking, Platform } from 'react-native';
+import { Linking } from 'react-native';
 import type { KnownServer, ServerAddress } from '#features/connection';
 import {
   type PairPhase,
   useAppServers,
   usePairServer,
 } from '#features/servers';
-import type { PairPageKind, PairWay } from './pair-copy';
+import type { PairPageKind } from './pair-copy';
 import { PairPageView } from './pair-page-view';
 import { ScanCamera } from './scan-camera';
 import { ScanCodeView } from './scan-code-view';
-import { TypeCodeView } from './type-code-view';
 
 type Pairing = ReturnType<typeof usePairServer>;
 
@@ -32,32 +31,10 @@ export function AddServerScreen(
 
   useLink(props.link, pairing.read);
 
-  return idle(pairing.state) ? (
-    <Entry pairing={pairing} />
+  return pairing.state.phase === 'scanning' ? (
+    <Scanning onRead={pairing.read} />
   ) : (
     <Outcome pairing={pairing} />
-  );
-}
-
-// Nothing has been tried yet, or a typed code is out being asked: the page that takes the code.
-const idle = (
-  state: PairPhase,
-): state is Extract<PairPhase, { phase: 'scanning' | 'looking' }> =>
-  state.phase === 'scanning' || state.phase === 'looking';
-
-// A browser-shaped App has no camera: the desktop app takes the code typed, and a phone reads it (#1502).
-const typesTheCode = Platform.OS === 'web';
-
-const way: PairWay = typesTheCode ? 'type' : 'scan';
-
-function Entry({ pairing }: { pairing: Pairing }): React.JSX.Element {
-  return typesTheCode ? (
-    <TypeCodeView
-      looking={pairing.state.phase === 'looking'}
-      onSubmit={pairing.type}
-    />
-  ) : (
-    <Scanning onRead={pairing.read} />
   );
 }
 
@@ -120,14 +97,14 @@ function accessOf(permission: Permission): 'ask' | 'refused' | 'allowed' {
 }
 
 const kindOf = (
-  state: Exclude<PairPhase, { phase: 'scanning' | 'looking' }>,
+  state: Exclude<PairPhase, { phase: 'scanning' }>,
 ): PairPageKind => (state.phase === 'waiting' ? 'waiting' : state.outcome.kind);
 
 // Cancelling the wait and scanning again are one thing, as is trying a Server that was not found once more; every other page leads back to the scanner.
 function Outcome({ pairing }: { pairing: Pairing }): React.JSX.Element | null {
   const { state } = pairing;
 
-  if (idle(state)) return null;
+  if (state.phase === 'scanning') return null;
 
   const kind = kindOf(state);
 
@@ -135,7 +112,6 @@ function Outcome({ pairing }: { pairing: Pairing }): React.JSX.Element | null {
     <PairPageView
       kind={kind}
       serverName={state.serverName}
-      way={way}
       onAction={kind === 'not-found' ? pairing.retry : pairing.back}
     />
   );

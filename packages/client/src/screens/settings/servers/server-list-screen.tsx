@@ -1,17 +1,17 @@
 import { useRouter } from 'expo-router';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { useAppServers, useAppServerStates } from '#features/servers';
-import { pairingOffered } from '#features/settings';
 import { ServerListView } from './server-list-view';
 import { serverRow } from './server-rows';
 
-// A browser tab has no secure storage, so it cannot pair and the list has no way to add a Server; the desktop app can, and types the code (ADR-0045).
+// A web page has no camera and no secure storage, so it cannot pair and the list has no way to add a Server (ADR-0045).
 function useAddServer(): (() => void) | undefined {
   const router = useRouter();
 
-  return pairingOffered()
-    ? () => router.push('/settings/servers/add')
-    : undefined;
+  return Platform.OS === 'web'
+    ? undefined
+    : () => router.push('/settings/servers/add');
 }
 
 // The App's list of Servers, each with its own state, and which one it is showing.
