@@ -58,8 +58,30 @@ const listedProject: TargetRule<OperationParams<'session.list'>> = (
   };
 };
 
+type OpenedDestination = OperationParams<'app.open'>['destination'];
+
+// A Session's or a Project's Screen reaches that one; the lists, Agents, Settings and Plugin Pages reach nothing in particular.
+const openedTarget = (destination: OpenedDestination): ScopeTarget => {
+  if (destination.screen === 'session')
+    return {
+      kind: 'session',
+      sessionId: destination.sessionId,
+      opening: false,
+    };
+
+  return destination.screen === 'project'
+    ? { kind: 'project', projectId: destination.projectId }
+    : { kind: 'global' };
+};
+
+const openedScreen: TargetRule<OperationParams<'app.open'>> = (params) => ({
+  target: openedTarget(params.destination),
+  params,
+});
+
 // Every Operation names its target when it enters the registry.
 const targetRules = {
+  'app.open': openedScreen,
   'project.list': global,
   'project.listBranches': projectParam,
   'session.list': listedProject,

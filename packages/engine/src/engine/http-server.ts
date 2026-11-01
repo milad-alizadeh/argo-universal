@@ -1,11 +1,10 @@
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
-import { blobsFolderIn } from '../blob';
-import { Notifications, type NotificationOptions } from '../notifications';
+import type { Notifications, NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import { ensureControlToken } from '../operations';
-import { type HookPort, type PluginServerOptions, Plugins } from '../plugins';
+import type { HookPort, PluginServerOptions } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
@@ -15,13 +14,18 @@ import {
   connectWebSockets,
   listenOnLoopback,
 } from './http-connections';
+import {
+  type HttpSetup,
+  httpRouterInput,
+  prepareHttpSetup,
+} from './http-setup';
 import { createRequestGuard } from './request-guard';
 import {
   createRequestListener,
   type RequestListenerOptions,
 } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
-import { createAppRouterDeps, type AppRouterInput } from './router-deps';
+import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions extends PluginServerOptions {
   home: string;
@@ -48,13 +52,6 @@ export interface HttpServer {
   createCaller: HttpCaller;
   close: () => Promise<void>;
 }
-
-type HttpSetup = {
-  plugins: Plugins;
-  blobsFolder: string;
-  commandAdmission: AbortController;
-  notifications: Notifications;
-};
 
 type RoutedSetup = HttpSetup & { appRouter: AppRouter };
 
@@ -111,34 +108,6 @@ async function prepareHttpServer(
     appRouter: createAppRouter(
       createAppRouterDeps(httpRouterInput(options, setup, controlToken)),
     ),
-  };
-}
-
-function prepareHttpSetup(
-  options: HttpServerOptions,
-  serverId: string,
-): HttpSetup {
-  return {
-    blobsFolder: blobsFolderIn(options.home),
-    commandAdmission: options.commandAdmission ?? new AbortController(),
-    notifications: new Notifications({ ...options, serverId }),
-    plugins: new Plugins(options),
-  };
-}
-
-function httpRouterInput(
-  options: HttpServerOptions,
-  setup: HttpSetup,
-  controlToken: string,
-): AppRouterInput {
-  return {
-    ...options,
-    controlToken,
-    blobsFolder: setup.blobsFolder,
-    sessionCommandSignal: setup.commandAdmission.signal,
-    notifications: setup.notifications,
-    hooks: setup.plugins.hooks,
-    plugins: setup.plugins.router,
   };
 }
 

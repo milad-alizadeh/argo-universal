@@ -17,6 +17,11 @@ export interface DesktopBridge {
     // Calls the listener on each minimize and restore; returns the unsubscribe.
     onMinimizedChange(listener: (minimized: boolean) => void): () => void;
   };
+  // Screen links the system opens in this app (`argo://`), which the desktop app has already checked for shape.
+  links: {
+    // Calls the listener with each link, the ones that arrived before the page could listen first; returns the unsubscribe.
+    onOpen(listener: (link: string) => void): () => void;
+  };
   symbols?: {
     render: (request: {
       name: string;

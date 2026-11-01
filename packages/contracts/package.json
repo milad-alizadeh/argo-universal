@@ -32,6 +32,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./operations": "./src/operations/index.ts",
+    "./navigation": "./src/navigation/index.ts",
     "./operations/control": "./src/operations/control.ts",
     "./operations/registry": "./src/operations/registry.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
