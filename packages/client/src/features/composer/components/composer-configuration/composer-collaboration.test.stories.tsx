@@ -63,7 +63,20 @@ function collaboration(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
       await expect(onConfigChange).not.toHaveBeenCalled();
-      await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+      const mode = canvas.getByRole('button', { name: 'Mode' });
+
+      if (width === layoutWidths.wide) {
+        /*
+         * Playwright's mouse is page-level and outlives the story file before this one, so it can
+         * be resting where this menu's rows will draw. Chromium then re-fires a pointer move over
+         * the row under it once the menu opens, and Radix focuses the menu above, which closes the
+         * Plan submenu before the click lands (#1772, #1626). Park the real pointer on the Mode
+         * button, outside the menu, so where it rests no longer depends on the story before.
+         */
+        await browserUserEvent.hover(mode);
+      }
+
+      await userEvent.click(mode);
       const overlay = within(document.body);
       await expect(onConfigChange).not.toHaveBeenCalled();
 
