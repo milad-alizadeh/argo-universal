@@ -7,11 +7,15 @@ export const pairingTicketDigits = 6;
 // About two minutes, so a photograph of the screen is not a lasting key (ADR-0045).
 export const pairingTicketLifetimeMs = 120_000;
 
+// How long a Device that has spent a Ticket waits for the owner to answer on the pair sheet before the Server stops holding its registration (ADR-0045).
+export const pairingAnswerLifetimeMs = 120_000;
+
 // How many codes may be presented and refused before the outstanding Tickets are revoked and the sheet mints another.
 export const pairingTicketAttempts = 10;
 
 /*
  * Why a Server refused to pair with a Device or to recognise one. The App draws `ticket-expired` and `ticket-spent` as "This code has expired" and offers a new one; the rest it cannot resolve by itself.
+ * `declined` and `unanswered` are the owner's No and the owner's silence: the Server held this Device's registration, and never wrote it down.
  * `ticket-required` answers a Device this Server has no row for that brought no Ticket, and `replayed` one that repeats an exchange someone watched.
  */
 export const PairingRefusal = z.enum([
@@ -20,6 +24,8 @@ export const PairingRefusal = z.enum([
   'ticket-spent',
   'ticket-expired',
   'ticket-attempts',
+  'declined',
+  'unanswered',
   'replayed',
 ]);
 

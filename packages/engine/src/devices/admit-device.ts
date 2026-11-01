@@ -13,13 +13,14 @@ import {
   followLastSeen,
   readDeviceByPublicKey,
   recordPairedDevice,
+  type PairedDeviceInput,
 } from './paired-device';
 
 export interface DeviceAdmissionDeps {
   readonly database: Database;
   readonly databaseWriter: WriterActorRef;
   readonly tickets: PairingTickets;
-  // Where a Device that has just registered is reported, so the open pair sheet can name it.
+  // Where a Device that has just spent a Ticket is held until the owner answers, and reported so the open pair sheet can name it.
   readonly registrations: PairingRegistrations;
   readonly createId: () => string;
   readonly now: () => number;
@@ -33,7 +34,7 @@ export interface Admission {
 
 /*
  * Whether a Device Key that has just authenticated itself belongs to a Device this Server trusts, and what to do when it does not (ADR-0045).
- * A Device the Server already has a row for authenticates as itself; one it does not must spend a Pairing Ticket to get a row, and from then on the Ticket is spent and the key is the credential.
+ * A Device the Server already has a row for authenticates as itself; one it does not must spend a Pairing Ticket and then be allowed by the owner to get a row, and from then on the Ticket is spent and the key is the credential.
  */
 export class DeviceAdmission {
   public constructor(private readonly deps: DeviceAdmissionDeps) {}
@@ -78,22 +79,31 @@ export class DeviceAdmission {
       : this.register(publicKey, claim);
   }
 
+  /*
+   * The Ticket got this Device a place in the owner's queue, not a row: the Device waits, with no identity, until the owner allows it on the pair sheet (ADR-0045).
+   * Writing it down is the Allow, so a Device that is declined or never answered leaves nothing behind.
+   */
   private async register(
     publicKey: string,
     claim: PairingClaim,
   ): Promise<Admission> {
     const id = this.deps.createId();
-    const now = this.deps.now();
 
-    await recordPairedDevice(this.deps.databaseWriter, {
-      id,
-      publicKey,
-      claim,
-      now,
-    });
-    this.deps.registrations.record(registration(id, claim));
+    const write = (): Promise<void> =>
+      this.writeDown({ id, publicKey, claim, now: this.deps.now() });
 
-    return paired(id);
+    const answer = await this.deps.registrations.ask(
+      registration(id, claim),
+      write,
+    );
+
+    return answer === 'allowed'
+      ? paired(id)
+      : refused({ paired: false, refusal: answer });
+  }
+
+  private writeDown(input: PairedDeviceInput): Promise<void> {
+    return recordPairedDevice(this.deps.databaseWriter, input);
   }
 }
 

@@ -5,7 +5,6 @@ import {
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { forgetPairedDevice } from '../devices/paired-device';
 import {
   liveConnection,
   mergeRouters,
@@ -27,7 +26,7 @@ export interface PairingDeps {
   readonly discoveryName: string;
 }
 
-const Declined = z.strictObject({ deviceId: z.string() });
+const Answered = z.strictObject({ deviceId: z.string() });
 
 const inviteFor = (deps: PairingDeps, minted: MintedTicket): PairingInvite => ({
   key: deps.serverPublicKey,
@@ -63,35 +62,51 @@ const ticketRouter = routerFactory((deps: PairingDeps) =>
 const watchingNeeds = 'Watching for a Device needs a live App Connection';
 
 /*
- * `registered` is the Devices that have registered while the sheet has been open, which it draws as "<name> wants to pair". Each has already authenticated with its own Device Key; what it claims about itself is untrusted, and shown only so that the owner recognises it.
- * `decline` is the owner answering that prompt with No: the Device's row goes, so it reaches nothing on its next connect and has no Ticket left to pair with again.
+ * `registered` is the Devices that are waiting while the sheet has been open, which it draws as "<name> wants to pair". Each has proved its own Device Key and spent a Ticket; what it claims about itself is untrusted, and shown only so that the owner recognises it.
+ * `allow` is the owner answering that prompt with Yes: the Device is written down and let in. `decline` is No: the Server never wrote it down, so it has no row, and its Ticket is spent.
  */
-const deviceRouter = routerFactory((deps: PairingDeps) =>
+const registeredRouter = routerFactory((deps: PairingDeps) =>
   router({
     registered: serverDeviceProcedure
       .output(zAsyncIterable({ yield: PairingRegistration }))
-      .subscription(async function* ({ signal, ctx }) {
-        const connection = liveConnection(ctx.connection, watchingNeeds);
-        yield* deps.registrations.stream(signal ?? connection.signal);
-      }),
-    decline: serverDeviceProcedure
-      .input(Declined)
+      .subscription(({ signal, ctx }) =>
+        watching(
+          deps,
+          signal ?? liveConnection(ctx.connection, watchingNeeds).signal,
+        ),
+      ),
+  }),
+);
+
+const answerRouter = routerFactory((deps: PairingDeps) =>
+  router({
+    allow: serverDeviceProcedure
+      .input(Answered)
       .output(z.void())
       .mutation(async ({ input }): Promise<void> => {
-        await declined(deps, input.deviceId);
+        notAsking(await deps.registrations.allow(input.deviceId));
+      }),
+    decline: serverDeviceProcedure
+      .input(Answered)
+      .output(z.void())
+      .mutation(({ input }): void => {
+        notAsking(deps.registrations.decline(input.deviceId));
       }),
   }),
 );
 
-// No to a question nobody asked is not an answer: a Device the sheet is not prompting about keeps its place, so this stays the prompt's No and never a way to unpair whatever Device the caller can name.
-async function declined(deps: PairingDeps, deviceId: string): Promise<void> {
-  if (!deps.registrations.answer(deviceId))
+const watching = (
+  deps: PairingDeps,
+  signal: AbortSignal,
+): AsyncGenerator<PairingRegistration> => deps.registrations.stream(signal);
+
+// An answer to a question nobody asked is not an answer: it never touches a Device the sheet is not prompting about, so it stays the prompt's own and never a way to pair or unpair whatever Device the caller can name.
+function notAsking(asking: boolean): void {
+  if (!asking)
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'That Device is not asking to pair',
     });
-
-  await forgetPairedDevice(deps.databaseWriter, deviceId);
 }
 
 /*
@@ -100,5 +115,5 @@ async function declined(deps: PairingDeps, deviceId: string): Promise<void> {
  * Server Device only (ADR-0022, ADR-0045): deciding who may reach the Server is the owner's alone, so the Server refuses every one of these to a Paired Device, and none of them is an Operation or has a tier. Letting a Paired Device pair another is the lost-phone case ADR-0022 forbids.
  */
 export const createPairingRouter = routerFactory((deps: PairingDeps) =>
-  mergeRouters(ticketRouter(deps), deviceRouter(deps)),
+  mergeRouters(ticketRouter(deps), registeredRouter(deps), answerRouter(deps)),
 );
