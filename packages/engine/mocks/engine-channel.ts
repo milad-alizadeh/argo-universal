@@ -163,5 +163,7 @@ export async function readAsDevice(
   host: ChannelTestHost,
   options: TestDeviceOptions & { path: string },
 ): Promise<Response> {
-  return getOverChannel(await channelInput(host, options), options.path);
+  const input = await channelInput(host, options);
+
+  return answered(host, options, getOverChannel(input, options.path));
 }
