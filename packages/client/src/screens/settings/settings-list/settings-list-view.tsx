@@ -51,10 +51,17 @@ const sectionsOf = (groups: SettingsGroup[]): SettingsLayoutSections =>
 function settingsPagesProps(
   props: SettingsListViewProps,
 ): Pick<SettingsPagesProps, 'sections' | 'selected' | 'onSelect'> {
+  const everyPage = sectionsOf(settingsGroups(props, true));
+
   return {
+    /*
+     * Only a phone leaves out Devices and Notifications, and a phone is always compact. A tablet in portrait is medium,
+     * and it keeps both, as it does in landscape: medium takes the wide list (#1705; the 600 to 1099 range is #927).
+     */
     sections: {
       compact: sectionsOf(settingsGroups(props, false)),
-      wide: sectionsOf(settingsGroups(props, true)),
+      medium: everyPage,
+      wide: everyPage,
     },
     selected: shownRow(settingsRows(props, true), props.selectedPath)?.href,
     onSelect: selectPage(props),
