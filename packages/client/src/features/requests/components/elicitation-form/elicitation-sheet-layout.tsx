@@ -13,30 +13,11 @@ import {
   type ElicitationView,
 } from './elicitation-body';
 import type { ElicitationFormProps } from './elicitation-form-props';
+import { elicitationSheetLayout } from './elicitation-sheet-detents';
 
 type ViewProps = { view: ElicitationView };
 
-/*
- * The fields' FieldGroup scrolls its own rows and fills the sheet on iOS (SwiftUI's Form, at the system heights) and
- * Android (a LazyColumn); elsewhere the sheet fits them.
- * iOS opens large: under the heading and the footer's two buttons, medium leaves room for about one
- * option and the custom answer, and SwiftUI grows a sheet only on the first upward scroll, so no
- * answer may wait below medium. The person may still drag the sheet down to medium.
- */
-type SheetLayout = Pick<
-  SheetProps,
-  'detents' | 'initialDetent' | 'contentScrolls'
->;
-
-const sheetLayout: SheetLayout = Platform.select<SheetLayout>({
-  ios: {
-    detents: ['medium', 'large'],
-    initialDetent: 'large',
-    contentScrolls: true,
-  },
-  android: { contentScrolls: true },
-  default: {},
-});
+const sheetLayout = elicitationSheetLayout(Platform.OS);
 
 const fillsSheet = sheetLayout.contentScrolls === true;
 
