@@ -16,6 +16,8 @@ export type ShellCaptureInput = {
   id: string;
   sessionId: string;
   request: CreateTerminalRequest;
+  // The command line as the Agent ran it, where `request` holds no argv to quote.
+  command?: string;
   cwd: string;
   path: string;
   writer: WriterActorRef;
@@ -42,7 +44,7 @@ export class ShellCapture {
   public associate(toolCallId: string): void {
     if (this.record) return;
 
-    this.record = shellFromTerminal(
+    const record = shellFromTerminal(
       this.input.request,
       { type: 'terminal', terminalId: this.input.id },
       {
@@ -52,6 +54,9 @@ export class ShellCapture {
         startedAt: this.startedAt,
       },
     );
+
+    this.record = { ...record, command: this.input.command ?? record.command };
+
     this.enqueue(() => this.save());
   }
   public end(
