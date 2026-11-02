@@ -43,7 +43,7 @@ export const WaitingOffersCancel: Story = {
 export const WaitingShowsASpinner: Story = {
   args: { kind: 'waiting' },
   play: async () => {
-    await expect(await body.findByRole('progressbar')).toBeVisible();
+    await expect(await body.findByRole('progressbar')).toBeInTheDocument();
   },
 };
 

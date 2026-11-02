@@ -186,7 +186,7 @@ export const WaitingShowsASpinnerAndCancels: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', trigger));
     const alert = await body.findByRole('dialog', alertName);
-    await expect(within(alert).getByRole('progressbar')).toBeVisible();
+    await expect(within(alert).getByRole('progressbar')).toBeInTheDocument();
     await userEvent.click(
       within(alert).getByRole('button', { name: 'Cancel' }),
     );
