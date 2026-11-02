@@ -1,4 +1,5 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
+import { ResourceCode } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -42,6 +43,43 @@ const toolCallPath = (row: ToolCallUpdate): string | undefined => {
   return path ? fileName(path) : undefined;
 };
 
+// A string stays as the Agent sent it; any other value is shown as JSON.
+const rawText = (
+  row: ToolCallUpdate,
+  field: 'rawInput' | 'rawOutput',
+): string | undefined => {
+  const value = row[field];
+
+  if (value == null) return undefined;
+
+  return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+};
+
+// An MCP or Operation call reports its input and result only raw, with no content blocks.
+function RawToolOutput({ row }: { row: ToolCallUpdate }): React.JSX.Element {
+  const input = rawText(row, 'rawInput');
+  const output = rawText(row, 'rawOutput');
+
+  return (
+    <View className="gap-2">
+      {input !== undefined && (
+        <ResourceCode code={input} title="Input" language="json" />
+      )}
+      {output !== undefined && (
+        <ResourceCode code={output} title="Output" language="json" />
+      )}
+    </View>
+  );
+}
+
+function ToolCallBody({ row }: { row: ToolCallUpdate }): React.JSX.Element {
+  return row.content.length > 0 ? (
+    <ToolOutput content={row.content} fileName={toolCallPath(row)} />
+  ) : (
+    <RawToolOutput row={row} />
+  );
+}
+
 function ToolCallRowOutput({
   row,
 }: {
@@ -49,7 +87,7 @@ function ToolCallRowOutput({
 }): React.JSX.Element {
   return (
     <>
-      <ToolOutput content={row.content} fileName={toolCallPath(row)} />
+      <ToolCallBody row={row} />
       <SettledStatus status={row.status} />
     </>
   );

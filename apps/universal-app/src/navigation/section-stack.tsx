@@ -3,6 +3,7 @@ import { useWide } from '@repo/client/size-class';
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
+import { useCSSVariable } from 'uniwind';
 import { screenLayout } from './screen-layout';
 
 type StackProps = ComponentProps<typeof Stack>;
@@ -18,6 +19,13 @@ const narrowOptions = {
   // A page below the shown one keeps its state but skips renders.
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
+
+// A native header draws Back in the system tint, which stays dark in dark mode, so the stack names the foreground colour.
+export function useHeaderTint(): string | undefined {
+  const tint = useCSSVariable('--color-foreground');
+
+  return typeof tint === 'string' ? tint : undefined;
+}
 
 // A wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
 const framedOptions = {
@@ -49,9 +57,11 @@ interface ScreenStackProps extends PropsWithChildren {
 // Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
 export function ScreenStack(props: ScreenStackProps): React.JSX.Element {
   const wide = useWide();
+  const headerTintColor = useHeaderTint();
 
   const screenOptions = {
     ...(wide ? framedOptions : narrowOptions),
+    headerTintColor,
     fullScreenGestureEnabled: props.fullScreenGestureEnabled,
   };
 

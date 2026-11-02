@@ -24,7 +24,11 @@ import { watchFontScale } from '@/lib/font-scale-watch';
 import { holdPhonesInPortrait } from '@/lib/phone-orientation';
 import { useNavigationTheme } from '@/lib/theme';
 import { useWindowBackground } from '@/lib/window-background';
-import { pushedScreen, rootScreenLayout } from '@/navigation/section-stack';
+import {
+  pushedScreen,
+  rootScreenLayout,
+  useHeaderTint,
+} from '@/navigation/section-stack';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -119,9 +123,11 @@ const storybookScreen = {
 
 // Storybook stays outside the Frame.
 function RootStack(): React.JSX.Element {
+  const headerTintColor = useHeaderTint();
+
   return (
     <Stack
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, headerTintColor }}
       screenLayout={rootScreenLayout}
     >
       <Stack.Screen name="(frame)" />

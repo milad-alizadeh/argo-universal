@@ -15,7 +15,7 @@ import { mutate, query } from './trpc-http.mts';
  * Gives a fresh Server one real Session through the router's own contract schemas, so the perf seed
  * clones only columns the Server wrote.
  */
-export const procedures = {
+const procedures = {
   projects: {
     path: 'project.list',
     input: z.strictObject({}).default({}),

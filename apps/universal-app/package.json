@@ -7,6 +7,7 @@
     "postinstall": "setup-skia-web public",
     "android": "expo run:android",
     "build": "expo export --platform web",
+    "build:profiling": "ARGO_PROFILING_BUILD=1 expo export --platform web --no-minify",
     "check-types": "tsc --noEmit",
     "dev": "expo start",
     "ios": "expo run:ios",

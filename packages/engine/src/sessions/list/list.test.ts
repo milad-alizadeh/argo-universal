@@ -14,7 +14,7 @@ it.each([
 it.each([
   { direction: 'backward' },
   { unexpected: true },
-  // The list always orders by last activity, so it takes no order.
+  // The list always orders by creation time, so it takes no order.
   { order: 'created' },
 ])('rejects unsupported paging mock fields %j', (pagingInput): void => {
   expect(
@@ -22,7 +22,7 @@ it.each([
   ).toBe(false);
 });
 
-// A listed Session; the later its index, the earlier its last activity.
+// A listed Session; the later its index, the earlier its creation.
 function listedSession(index: number): SessionInfo {
   const id = `session-${String(index).padStart(2, '0')}`;
 
@@ -32,14 +32,14 @@ function listedSession(index: number): SessionInfo {
     agent: 'mock',
     parentSessionId: null,
     startedBySessionId: null,
-    createdAt: index,
     updatedAt: index,
     cwd: '/project',
     status: 'idle',
     title: id,
     titleSource: 'agent',
     activity: '',
-    activityAt: 100 - index,
+    activityAt: index,
+    createdAt: 100 - index,
     checkout: { type: 'main', path: '/project', branch: null },
     plan: null,
     subagents: { running: 0, total: 0 },

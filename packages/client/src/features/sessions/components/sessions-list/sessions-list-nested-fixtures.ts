@@ -6,6 +6,7 @@ export const parent = {
   sessionId: 'parent',
   title: 'Investigate the regression',
   activityAt: 100,
+  createdAt: 100,
 };
 
 const child = {
@@ -14,6 +15,7 @@ const child = {
   title: 'Review the change',
   startedBySessionId: parent.sessionId,
   activityAt: 300,
+  createdAt: 300,
 };
 
 const descendant = {
@@ -22,6 +24,7 @@ const descendant = {
   title: 'Check the edge cases',
   startedBySessionId: child.sessionId,
   activityAt: 200,
+  createdAt: 200,
 };
 
 export const nestedSessions = {
