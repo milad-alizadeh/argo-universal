@@ -1,17 +1,10 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { type JSX, useState } from 'react';
-import { expect, screen, within } from 'storybook/test';
-import { useSessionPanels } from '#features/sessions';
-import { pluginCardKey } from './sections/plugin-card-section';
-import {
-  coverageCard,
-  coverageCardSummary,
-} from './sections/plugin-card.mocks';
+import type { JSX } from 'react';
+import { expect, within } from 'storybook/test';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { panelsSession } from './session-detail-view-panels.test.mocks';
-import { emptySession } from './session-detail-view.mocks';
 
 const desktopWithInspector = 1920;
 
@@ -131,61 +124,5 @@ export const CloseInspector: Story = {
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
     );
-  },
-};
-
-// A card without a full view stays in the Workbench; the band's Inspector action cannot open it as a tab.
-export const CardWithoutFullViewDoesNotOpenInspector: Story = {
-  args: {
-    view: { state: 'open', ...emptySession, pluginCards: [coverageCard] },
-  },
-  play: async ({ canvas, userEvent }) => {
-    await expect(await canvas.findByText(coverageCardSummary)).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Show Inspector' }),
-    );
-    await expect(
-      canvas.queryByRole('tab', { name: 'Coverage' }),
-    ).not.toBeInTheDocument();
-    await expect(canvas.getByRole('tab', { name: 'Changes' })).toBeVisible();
-  },
-};
-
-// A connected Session supplies remembered panels independently of the view's layout.
-function RememberedCardSession(): JSX.Element {
-  const key = pluginCardKey(coverageCard.pluginId, coverageCard.card.id);
-  const panels = useSessionPanels([key]);
-  const [seeded, setSeeded] = useState(false);
-
-  if (!seeded) {
-    panels.select(key);
-    setSeeded(true);
-  }
-
-  return (
-    <FramedSessionPreview
-      state="open"
-      {...emptySession}
-      pluginCards={[coverageCard]}
-      inspectorPanels={panels}
-    />
-  );
-}
-
-export const RememberedCardHasNoWideTab: Story = {
-  render: () => <RememberedCardSession />,
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText(coverageCardSummary)).toBeVisible();
-    await expect(
-      canvas.queryByRole('tab', { name: 'Coverage' }),
-    ).not.toBeInTheDocument();
-  },
-};
-
-export const RememberedCardOpensPhoneSheet: Story = {
-  render: () => <RememberedCardSession />,
-  beforeEach: (): Promise<void> => settleLayout('phone'),
-  play: async () => {
-    await expect(await screen.findByText(coverageCardSummary)).toBeVisible();
   },
 };

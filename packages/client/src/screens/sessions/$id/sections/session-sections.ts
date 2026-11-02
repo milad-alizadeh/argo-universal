@@ -43,19 +43,15 @@ export const sessionSections = (
 ];
 
 /*
- * The Sections a Session offers: Plugin cards need a full view for a wide tab; phones can also show the card itself.
+ * The Sections a Session offers Inspector tabs: Argo's, by what its work holds, and the Plugin cards it has open. A
+ * card that closes takes its tab with it.
  */
 export const offeredSections = (
   items: SessionItems,
   cards: readonly SessionPluginCard[] = [],
-  includeCardSheets = false,
 ): string[] => [
   ...offeredKeys(builtInSections, items),
-  ...cards.flatMap((card) =>
-    includeCardSheets || card.tab != null
-      ? [pluginCardKey(card.pluginId, card.card.id)]
-      : [],
-  ),
+  ...cards.map((card) => pluginCardKey(card.pluginId, card.card.id)),
 ];
 
 export const sectionOf = (

@@ -1,5 +1,4 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type JSX, useState } from 'react';
 import { View } from 'react-native';
@@ -12,7 +11,7 @@ import {
   issueCardFullView,
   issueTrackerCard,
 } from './sections/plugin-card.mocks';
-import { offeredSessionPanels, SessionInspector } from './session-inspector';
+import { SessionInspector } from './session-inspector';
 
 const issueKey = pluginCardKey(
   issueTrackerCard.pluginId,
@@ -22,25 +21,12 @@ const issueKey = pluginCardKey(
 const coverageKey = pluginCardKey(coverageCard.pluginId, coverageCard.card.id);
 
 // A phone has no Workbench column: a Plugin card opens as the Inspector's sheet, as Argo's Sections do.
-function CardSheet({
-  open,
-  compact,
-}: {
-  open: readonly string[];
-  compact: boolean;
-}): JSX.Element {
-  const panels = useSessionPanels(
-    offeredSessionPanels(
-      { pluginCards: [issueTrackerCard, coverageCard] },
-      compact,
-    ),
-  );
-
+function CardSheet({ open }: { open: readonly string[] }): JSX.Element {
+  const panels = useSessionPanels([issueKey, coverageKey]);
   const [opened, setOpened] = useState(false);
 
   if (!opened) {
     for (const key of open) panels.select(key);
-
     setOpened(true);
   }
 
@@ -56,12 +42,7 @@ function CardSheet({
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/InspectorPluginCard',
-  render: ({ open }): JSX.Element => (
-    <SizeClass
-      compact={<CardSheet open={open} compact />}
-      wide={<CardSheet open={open} compact={false} />}
-    />
-  ),
+  render: ({ open }): JSX.Element => <CardSheet open={open} />,
   args: { open: [issueKey] },
   beforeEach: (): Promise<void> => settleLayout('phone'),
 } satisfies Meta<{ open: readonly string[] }>;
@@ -93,8 +74,6 @@ export const TabsNameEachCard: Story = {
     const tabs = within(await canvas.findByRole('tablist'));
 
     await expect(tabs.getByRole('tab', { name: 'Issue' })).toBeVisible();
-    await expect(
-      tabs.queryByRole('tab', { name: 'Coverage' }),
-    ).not.toBeInTheDocument();
+    await expect(tabs.getByRole('tab', { name: 'Coverage' })).toBeVisible();
   },
 };
