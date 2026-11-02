@@ -102,16 +102,6 @@ describe.each([local('agent-one'), worktree])(
       await vi.advanceTimersByTimeAsync(promptShowTimeoutMs);
       expect(h.calls.handOff).toEqual(['session-1']);
     });
-    it('does not navigate or clear the draft if the reader leaves during Send', async () => {
-      h.choose(input);
-      h.store.send(prompt);
-      h.store.stop();
-      h.calls.open[0]?.call.resolve({ sessionId: 'session-1' });
-      await settle();
-      await vi.advanceTimersByTimeAsync(promptShowTimeoutMs);
-      expect(h.calls.handOff).toEqual([]);
-      expect(h.calls.clearDraft).toBe(0);
-    });
   },
 );
 

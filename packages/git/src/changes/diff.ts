@@ -1,13 +1,9 @@
-import { comparisonBase, type ChangesSelection } from './comparison';
+import type { ChangesSelection } from './comparison';
+import { readTrackedComparison, readUntrackedPaths } from './comparison-reads';
 import { defaultPatchLimit, pageWindow, type ChangesPage } from './paging';
-import {
-  trackedFiles,
-  untrackedPaths,
-  withCounts,
-  type CheckoutFile,
-} from './parse';
+import type { CheckoutFile } from './parse';
 import { pagePatch } from './patch-page';
-import { readNameStatus, readNumstat, readPatch, readWorktree } from './status';
+import { readPatch } from './status';
 import { untrackedDiff } from './untracked';
 
 type WholeDiff = { file: CheckoutFile; patch: string };
@@ -19,36 +15,17 @@ export type FileDiff = WholeDiff & { nextCursor: number | null };
 const leavesCheckout = (path: string): boolean =>
   path.startsWith('/') || path.split('/').includes('..');
 
-async function isUntracked(checkout: string, path: string): Promise<boolean> {
-  return untrackedPaths(await readWorktree(checkout, [path])).includes(path);
-}
-
-// Renames are found across the whole comparison; the counts and the patch are read for this file's paths alone.
-async function trackedDiff(
-  checkout: string,
-  base: string,
+async function readTrackedDiff(
+  selection: ChangesSelection,
   path: string,
 ): Promise<WholeDiff | null> {
-  const entry = trackedFiles(await readNameStatus(checkout, base)).find(
-    (item) => item.path === path,
-  );
+  const { base, files } = await readTrackedComparison(selection);
+  const file = files.get(path);
 
-  return entry ? readTrackedPatch(checkout, base, entry) : null;
-}
+  if (!file) return null;
+  const paths = [...new Set([file.oldPath ?? file.path, file.path])];
 
-async function readTrackedPatch(
-  checkout: string,
-  base: string,
-  entry: CheckoutFile,
-): Promise<WholeDiff> {
-  const paths = [...new Set([entry.oldPath ?? entry.path, entry.path])];
-
-  const [numstat, patch] = await Promise.all([
-    readNumstat(checkout, base, paths),
-    readPatch(checkout, base, paths),
-  ]);
-
-  return { file: withCounts(entry, numstat), patch };
+  return { file, patch: await readPatch(selection.checkout, base, paths) };
 }
 
 async function readWholeDiff(
@@ -58,13 +35,13 @@ async function readWholeDiff(
 
   if (leavesCheckout(path)) return null;
 
-  if (await isUntracked(checkout, path)) return untrackedDiff(checkout, path);
-  const { base } = await comparisonBase(selection);
+  if ((await readUntrackedPaths(checkout)).has(path))
+    return untrackedDiff(checkout, path);
 
-  return trackedDiff(checkout, base, path);
+  return readTrackedDiff(selection, path);
 }
 
-// One file's patch, or null when the path is not a changed file. An untracked path never resolves a base; a tracked one reads the comparison's names, to pair renames, but counts and patch for its own paths.
+// One file's patch, or null when the path is not a changed file. An untracked path never resolves a base; a tracked one shares the comparison's names and counts with the files asked for alongside it, and reads only its patch alone.
 export async function readFileDiff(
   selection: ChangesSelection & { path: string },
   page: ChangesPage = {},

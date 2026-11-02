@@ -1,6 +1,5 @@
 import { DiffScroll } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
-import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -11,7 +10,6 @@ import type {
   ChangesViewProps,
   FileDiffPages,
 } from '../../view/changes-view-props';
-import { idle, settled } from '../../view/diff-pages-state';
 import type { OpenFiles } from './use-open-files';
 
 export type RowContext = Pick<
@@ -29,9 +27,6 @@ interface RowProps<Kind extends ChangesItem['kind']> {
   item: ItemOf<Kind>;
   context: RowContext;
 }
-
-const loadingDiffLabel = (path: string): string =>
-  `Loading the diff for ${path}`;
 
 const assertNever = (value: never): never => {
   throw new Error(`Unhandled Changes row: ${JSON.stringify(value)}`);
@@ -66,24 +61,51 @@ function FileRow({
 function DiffRow({
   item,
   context,
-}: RowProps<'page' | 'status'>): React.JSX.Element {
-  switch (item.kind) {
-    case 'page':
-      return <PageRow item={item} />;
-    case 'status':
-      return <StatusRow item={item} context={context} />;
-    default:
-      return assertNever(item);
-  }
+}: RowProps<'page' | 'more' | 'status'>): React.JSX.Element {
+  return item.kind === 'status' ? (
+    <StatusRow item={item} />
+  ) : (
+    <LinesRow item={item} context={context} />
+  );
+}
+
+function LinesRow({
+  item,
+  context,
+}: RowProps<'page' | 'more'>): React.JSX.Element {
+  return item.kind === 'page' ? (
+    <PageRow item={item} />
+  ) : (
+    <MoreRow item={item} context={context} />
+  );
 }
 
 function SeparatorRow(): React.JSX.Element {
   return <View className="h-px bg-border" />;
 }
 
+// A drawn row asks for what its item wants, so a diff loads as its place nears the viewport.
+function useNextPages(
+  { file, nextPages }: { file: ChangedFile; nextPages?: number },
+  onLoadDiff: RowContext['onLoadDiff'],
+): void {
+  useEffect(() => {
+    if (nextPages !== undefined) onLoadDiff(file.path, nextPages);
+  }, [file.path, onLoadDiff, nextPages]);
+}
+
 // Marking a file Viewed folds it; clearing the mark opens it again.
+const viewedChange =
+  (path: string, context: Pick<RowContext, 'setOpen' | 'onViewedChange'>) =>
+  (viewed: boolean): void => {
+    context.setOpen(path, !viewed);
+    context.onViewedChange(path, viewed);
+  };
+
 function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
   const { path } = item.file;
+
+  useNextPages(item, context.onLoadDiff);
 
   return (
     <DiffFileHeader
@@ -91,10 +113,7 @@ function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
       open={!context.folded.has(path)}
       onOpenChange={(open) => context.setOpen(path, open)}
       viewed={context.viewed.includes(path)}
-      onViewedChange={(viewed) => {
-        context.setOpen(path, !viewed);
-        context.onViewedChange(path, viewed);
-      }}
+      onViewedChange={viewedChange(path, context)}
     />
   );
 }
@@ -107,45 +126,12 @@ function PageRow({ item }: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
   );
 }
 
-const morePages = (diff: FileDiffPages): number | undefined =>
-  idle(diff) && diff.more ? diff.pages.length + 1 : undefined;
+// Holds a place at the end of the pages so far, so the next is asked for only once the reader nears it.
+function MoreRow({ item, context }: RowProps<'more'>): React.JSX.Element {
+  useNextPages(item, context.onLoadDiff);
 
-// The next page a file's diff wants, once its status row is drawn; none while one loads or after a failure.
-const wantedPages = (diff: FileDiffPages | undefined): number | undefined =>
-  diff ? morePages(diff) : 1;
-
-function useNextPage(
-  file: ChangedFile,
-  context: RowContext,
-  diff?: FileDiffPages,
-): void {
-  const pages = wantedPages(diff);
-  const { onLoadDiff } = context;
-
-  useEffect(() => {
-    if (pages !== undefined) onLoadDiff(file.path, pages);
-  }, [file.path, onLoadDiff, pages]);
+  return <View className="h-px bg-card medium:bg-content" />;
 }
-
-/*
- * Drawn under an opened file while its diff has more to say. The list draws it only near the viewport, so a long diff
- * asks for its next page as its end scrolls into view.
- */
-function StatusRow({ item, context }: RowProps<'status'>): React.JSX.Element {
-  useNextPage(item.file, context, item.diff);
-
-  return (
-    <View className="items-center bg-card px-4 py-3 medium:bg-content">
-      <StatusContent file={item.file} diff={item.diff} />
-    </View>
-  );
-}
-
-const loadErrorOf = (diff: FileDiffPages | undefined): string | undefined =>
-  diff?.loadError;
-
-const hasNothingToShow = (diff: FileDiffPages | undefined): boolean =>
-  diff !== undefined && settled(diff);
 
 function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
   return (
@@ -158,16 +144,23 @@ function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
 const emptyDiffText = (file: ChangedFile): string =>
   file.binary ? "Binary file, can't be previewed" : 'No lines to show';
 
+// Drawn under an opened file whose load failed or that has no lines to show.
+function StatusRow({
+  item,
+}: Pick<RowProps<'status'>, 'item'>): React.JSX.Element {
+  return (
+    <View className="items-center bg-card px-4 py-3 medium:bg-content">
+      <StatusContent file={item.file} diff={item.diff} />
+    </View>
+  );
+}
+
 function StatusContent(props: {
   file: ChangedFile;
-  diff?: FileDiffPages;
+  diff: FileDiffPages;
 }): React.JSX.Element {
-  const loadError = loadErrorOf(props.diff);
+  if (props.diff.loadError !== undefined)
+    return statusText(props.diff.loadError, 'danger');
 
-  if (loadError !== undefined) return statusText(loadError, 'danger');
-
-  if (hasNothingToShow(props.diff))
-    return statusText(emptyDiffText(props.file), 'muted');
-
-  return <Spinner accessibilityLabel={loadingDiffLabel(props.file.path)} />;
+  return statusText(emptyDiffText(props.file), 'muted');
 }

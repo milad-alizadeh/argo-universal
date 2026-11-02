@@ -8,15 +8,18 @@ import {
   EmptySessionStore,
   opensOnReconnect,
 } from '#features/sessions';
-import { useEmptySessionPorts } from './empty-session-adapters';
+import {
+  type EmptySessionDraftPorts,
+  useEmptySessionPorts,
+} from './empty-session-adapters';
 
 export interface EmptySession extends EmptySessionState {
   store: EmptySessionStore;
 }
 
 // One store for the screen's life, given the screen's latest ports.
-function useStore(clearDraft: () => void): EmptySessionStore {
-  const ports = useEmptySessionPorts(clearDraft);
+function useStore(draftPorts: EmptySessionDraftPorts): EmptySessionStore {
+  const ports = useEmptySessionPorts(draftPorts);
   const [store] = useState(() => new EmptySessionStore(ports));
   useEffect(() => {
     store.setPorts(ports);
@@ -50,9 +53,9 @@ function useChooseInStore(
 // Keep unsent choices and hand off the Session created by Send.
 export function useEmptySession(
   choices: EmptySessionChoices,
-  clearDraft: () => void,
+  draftPorts: EmptySessionDraftPorts,
 ): EmptySession {
-  const store = useStore(clearDraft);
+  const store = useStore(draftPorts);
   useChooseInStore(store, choices);
   const state = useSyncExternalStore(store.subscribe, store.getState);
   useErrorToast(droppedOpenToast({ open: state.connectionError }));

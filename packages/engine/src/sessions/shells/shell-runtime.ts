@@ -6,6 +6,7 @@ import type { ShellRecord } from '@repo/contracts';
 import type { AcpSessionDestination, AgentLaunch } from '../../agents';
 import type { WriterActorRef } from '../../storage';
 import type { SessionData, SessionInput } from '../session-data';
+import { AdapterShells } from './adapter-shells';
 import { shellOutputPath } from './files';
 import { attachShellRuntime } from './shell-acp';
 import type { ShellCaptureInput } from './shell-capture';
@@ -39,7 +40,16 @@ export class ShellRuntime implements Shells {
   private launch?: AgentLaunch;
   private cwd = '';
   private closed = false;
-  public constructor(private readonly input: ShellRuntimeInput) {}
+  private readonly adapterShells: AdapterShells;
+  public constructor(private readonly input: ShellRuntimeInput) {
+    this.adapterShells = new AdapterShells({
+      ...input,
+      outputPath: (id: string): string => this.outputPath(id),
+    });
+  }
+  public observe(notification: Parameters<AdapterShells['observe']>[0]): void {
+    if (!this.closed) this.adapterShells.observe(notification);
+  }
   public configure(session: SessionData, launch: AgentLaunch): void {
     this.launch = launch;
     this.cwd = session.checkout.path;
@@ -135,9 +145,10 @@ export class ShellRuntime implements Shells {
   public async close(status: 'lost' | 'stopped'): Promise<void> {
     this.closed = true;
 
-    const closed = await Promise.allSettled(
-      [...this.terminals.values()].map((terminal) => terminal.close(status)),
-    );
+    const closed = await Promise.allSettled([
+      this.adapterShells.close(status),
+      ...[...this.terminals.values()].map((terminal) => terminal.close(status)),
+    ]);
 
     const failure = closed.find((result) => result.status === 'rejected');
 

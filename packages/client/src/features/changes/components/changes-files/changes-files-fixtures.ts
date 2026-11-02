@@ -47,3 +47,19 @@ export const binaryFile = {
   ],
   diffs: { 'assets/logo.png': { pages: [[]] } },
 } satisfies ChangesViewProps;
+
+// Diffs still on their way: their files show as headers alone, over one spinner at the end of the list.
+export const loadingDiffs = {
+  ...base,
+  files: ['src/app.ts', 'src/list.ts', 'src/row.ts'].map((path) => ({
+    path,
+    operation: 'modify' as const,
+    added: 4,
+    removed: 2,
+  })),
+  diffs: {
+    'src/app.ts': { pages: [], loading: true },
+    'src/list.ts': { pages: [], loading: true },
+    'src/row.ts': { pages: [], loading: true },
+  },
+} satisfies ChangesViewProps;

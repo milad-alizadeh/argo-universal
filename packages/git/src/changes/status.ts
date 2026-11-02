@@ -10,22 +10,9 @@ export const readNameStatus = (
 ): Promise<string> =>
   git(checkout, ['diff', '--name-status', '-z', '-M', base]);
 
-// Line counts against the base, for every path or for the given ones.
-export const readNumstat = (
-  checkout: string,
-  base: string,
-  paths: string[] = [],
-): Promise<string> =>
-  git(checkout, [
-    literalPathspecs,
-    'diff',
-    '--numstat',
-    '-z',
-    '-M',
-    base,
-    '--',
-    ...paths,
-  ]);
+// Line counts against the base, for every path, renames paired.
+export const readNumstat = (checkout: string, base: string): Promise<string> =>
+  git(checkout, ['diff', '--numstat', '-z', '-M', base]);
 
 export const readPatch = (
   checkout: string,
