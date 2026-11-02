@@ -60,14 +60,26 @@ function actionTitle(action: CommandAction, fallback: string): string {
   return actionTitles[action.type]?.(action) ?? fallback;
 }
 
-function hasDescription(row: ToolCallUpdate): boolean {
+// claude-agent-acp titles a command "Terminal"; the Agent's own words are in the description.
+function describedTitle(row: ToolCallUpdate): string | undefined {
+  return agentDescription(row) || adapterTitle(row);
+}
+
+const agentDescription = (row: ToolCallUpdate): string | undefined =>
+  row._meta?.argo?.description;
+
+function adapterTitle(row: ToolCallUpdate): string | undefined {
   const terminal = row.content.find((content) => content.type === 'terminal');
 
-  return Boolean(row.title) && row.title !== terminal?.command;
+  return [terminal?.command, 'Terminal', ''].includes(row.title)
+    ? undefined
+    : row.title;
 }
 
 function commandTitle(row: ToolCallUpdate): string {
-  if (hasDescription(row)) return row.title;
+  const described = describedTitle(row);
+
+  if (described) return described;
 
   if (isToolCallRunning(row)) return 'Running command';
 
