@@ -41,29 +41,26 @@ export async function start(
 
 const clockStep = 5_000;
 
+const nextReadStep = 61_000;
+
 export type View = Awaited<ReturnType<PluginTest['mount']>>;
 
-export async function clockUntil(
-  test: PluginTest,
-  view: View,
-  text: string,
-  step = clockStep,
-): Promise<void> {
-  await expect
-    .poll(async () => {
-      await test.clock.advance(step);
+const stepUntil =
+  (step: number) =>
+  async (test: PluginTest, view: View, text: string): Promise<void> => {
+    await expect
+      .poll(async () => {
+        await test.clock.advance(step);
 
-      return JSON.stringify(view.trees.at(-1));
-    }, wait)
-    .toContain(text);
-}
+        return JSON.stringify(view.trees.at(-1));
+      }, wait)
+      .toContain(text);
+  };
+
+export const clockUntil = stepUntil(clockStep);
 
 // Past a page's next read, each time, so a loaded Mac still gets there inside the wait.
-export const nextReadUntil = (
-  test: PluginTest,
-  view: View,
-  text: string,
-): Promise<void> => clockUntil(test, view, text, 61_000);
+export const nextReadUntil = stepUntil(nextReadStep);
 
 export const surface = { platform: 'web' } as const;
 
