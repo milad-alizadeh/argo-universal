@@ -9,7 +9,7 @@ const parent = 'owned-1';
 
 const method = 'session/update';
 
-// Claude ACP 0.97.0's simulated subagent-transcript-extension fixture sends the reply only on the parent transcript.
+// Claude ACP 0.97.0's simulated fixture sends the reply only on the parent transcript; extra blocks exercise the same boundary.
 it('stores the actual parent-reported result for the Agent’s Inspector', async () => {
   const host = await startAcpEngine({
     steps: [],
@@ -44,7 +44,11 @@ it('stores the actual parent-reported result for the Agent’s Inspector', async
           messageId: 'toolu_transcript:reply',
           senderSessionId: child,
           recipientSessionId: parent,
-          content: [{ type: 'text', text: 'Two packages.' }],
+          content: [
+            { type: 'text', text: 'Two packages.' },
+            { type: 'resource_link', name: 'Source', uri: 'file:///source.ts' },
+            { type: 'text', text: 'Review complete.' },
+          ],
         },
       },
     },
@@ -80,7 +84,19 @@ it('stores the actual parent-reported result for the Agent’s Inspector', async
     expect(page.rows).toEqual([
       expect.objectContaining({
         sessionUpdate: 'subagent_update',
-        _meta: { argo: { result: [{ type: 'text', text: 'Two packages.' }] } },
+        _meta: {
+          argo: {
+            result: [
+              { type: 'text', text: 'Two packages.' },
+              {
+                type: 'resource_link',
+                name: 'Source',
+                uri: 'file:///source.ts',
+              },
+              { type: 'text', text: 'Review complete.' },
+            ],
+          },
+        },
       }),
     ]);
   });

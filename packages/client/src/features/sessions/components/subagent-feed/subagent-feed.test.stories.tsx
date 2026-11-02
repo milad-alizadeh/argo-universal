@@ -194,6 +194,8 @@ export const ParentReportedResult: Story = {
       canvas.getByText('Reported to the parent Session'),
     ).toBeVisible();
     await expect(canvas.getByText(reportedText)).toBeVisible();
+    await expect(canvas.getByText('Review complete.')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Source' })).toBeVisible();
   },
 };
 

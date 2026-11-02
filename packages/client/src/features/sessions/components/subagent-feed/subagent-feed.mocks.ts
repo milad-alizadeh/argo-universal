@@ -114,7 +114,15 @@ const parentResult: SubagentUpdate = {
   sessionId: parentSessionId,
   sessionUpdate: 'subagent_update',
   subagentSessionId,
-  _meta: { argo: { result: [{ type: 'text', text: 'Two packages.' }] } },
+  _meta: {
+    argo: {
+      result: [
+        { type: 'text', text: 'Two packages.' },
+        { type: 'resource_link', name: 'Source', uri: 'file:///source.ts' },
+        { type: 'text', text: 'Review complete.' },
+      ],
+    },
+  },
 };
 
 export const reportedFeed: FeedProps = {
