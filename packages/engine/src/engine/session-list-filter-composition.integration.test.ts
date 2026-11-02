@@ -7,10 +7,11 @@ import {
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
-it('lists only top-level Sessions, searches literal titles, filters archives, lists both with no filter and pages tied activity', async (): Promise<void> => {
+it('lists only top-level Sessions, searches literal titles, filters archives, lists both with no filter and pages tied creation times', async (): Promise<void> => {
   const { database, remove } = openTestDatabase({
     title: 'Earlier',
     activityAt: 1,
+    createdAt: 1,
   });
 
   insertEndedTurn(database);
@@ -22,6 +23,7 @@ it('lists only top-level Sessions, searches literal titles, filters archives, li
       id,
       title: 'Search %_ title',
       activityAt: 10,
+      createdAt: 10,
     });
     insertEndedTurn(database, id);
   }
@@ -31,6 +33,7 @@ it('lists only top-level Sessions, searches literal titles, filters archives, li
     title: 'Archived title',
     archivedAt: 2,
     activityAt: 20,
+    createdAt: 20,
   });
   insertEndedTurn(database, 'archived');
   insertSession(database, {
@@ -38,6 +41,7 @@ it('lists only top-level Sessions, searches literal titles, filters archives, li
     parentSessionId: 'session-1',
     title: 'Search %_ title',
     activityAt: 30,
+    createdAt: 30,
   });
   insertEndedTurn(database, 'subagent');
 
