@@ -1,5 +1,6 @@
 import { lstat } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { productName } from '@repo/contracts/product-identity';
 import { z } from 'zod';
 import type { InstallInstructionsInput } from './install';
 
@@ -19,7 +20,7 @@ export async function validateTargets(
   for (const path of targets) {
     if (input.projectPaths.some((project) => contains(resolve(project), path)))
       throw new Error(
-        'Argo instructions cannot be installed inside a Project.',
+        `${productName} instructions cannot be installed inside a Project.`,
       );
     await validateAncestors(path, resolve(input.userHome));
   }
@@ -42,13 +43,15 @@ async function validateEntry(path: string): Promise<void> {
   const entry = await optionalEntry(path);
 
   if (entry?.isSymbolicLink())
-    throw new Error(`Argo instructions cannot follow a symbolic link: ${path}`);
+    throw new Error(
+      `${productName} instructions cannot follow a symbolic link: ${path}`,
+    );
 }
 
 async function rejectGitCheckout(path: string): Promise<void> {
   if (await optionalEntry(join(path, '.git')))
     throw new Error(
-      'Argo instructions cannot be installed inside a git Checkout.',
+      `${productName} instructions cannot be installed inside a git Checkout.`,
     );
 }
 

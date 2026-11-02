@@ -38,9 +38,9 @@ const roleOf = (update: Association): string | undefined => {
 };
 
 const wrappedMeta = (
-  argo: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>,
+  extension: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>,
 ): Pick<SubagentUpdate, '_meta'> =>
-  Object.keys(argo).length ? { _meta: { argo } } : {};
+  Object.keys(extension).length ? { _meta: { argo: extension } } : {};
 
 // The first update for a new child is its `spawn` (#930).
 const associationMeta = (
@@ -48,13 +48,15 @@ const associationMeta = (
   update: Association,
 ): Pick<SubagentUpdate, '_meta'> => {
   const role = roleOf(update);
-  const argo: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']> = {};
 
-  if (spawned) argo.action = 'spawn';
+  const extension: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']> =
+    {};
 
-  if (role) argo.role = role;
+  if (spawned) extension.action = 'spawn';
 
-  return wrappedMeta(argo);
+  if (role) extension.role = role;
+
+  return wrappedMeta(extension);
 };
 
 const associationRow = (

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { iconName, iconSymbol } from '../kit-symbols/icon-schema';
+import { productName } from '../product-identity';
 import { pressHandler } from './kit-event-props';
 import { rowBadgeProps } from './status-kit-props';
 
@@ -17,7 +18,7 @@ export const actionProps = z.object({
   icon: iconSymbol
     .optional()
     .describe(
-      'The leading icon: one of Argo’s, or an SF Symbol and Material Symbol pair, such as a Plugin’s own; a Screen header shows only Actions with one as buttons.',
+      `The leading icon: one of ${productName}’s, or an SF Symbol and Material Symbol pair, such as a Plugin’s own; a Screen header shows only Actions with one as buttons.`,
     ),
   shortcut: shortcutProps
     .optional()
@@ -49,7 +50,7 @@ export const actionProps = z.object({
 export const submenuActionProps = z.object({
   label: actionProps.shape.label,
   icon: iconName.describe(
-    'The leading Argo icon; a Screen header shows only Actions with one as buttons, and a submenu needs one.',
+    `The leading ${productName} icon; a Screen header shows only Actions with one as buttons, and a submenu needs one.`,
   ),
   badge: rowBadgeProps
     .optional()

@@ -3,6 +3,7 @@ import {
   ProcessResult,
   type PluginQuery,
 } from '@repo/contracts/plugins/argo-calls';
+import { productName } from '@repo/contracts/product-identity';
 import type { PluginReply } from '../protocol/runtime';
 import type { StateRequest } from '../services/plugin-calls';
 import type { QueryOwner, QueryServices } from './query-types';
@@ -33,7 +34,7 @@ export async function readQuery(
   );
 
   if (timedOut(owner.query, reply))
-    return { ok: false, error: 'Argo Query timed out' };
+    return { ok: false, error: `${productName} Query timed out` };
 
   return reply;
 }

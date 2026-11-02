@@ -1,7 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 import { confineAccountHeaders } from '../accounts/account-headers';
 import type { PluginValue } from '../protocol/runtime';
-import { argoFetchLimitBytes } from './plugin-limits';
+import { pluginFetchLimitBytes } from './plugin-limits';
 
 // One request `argo.fetch` sends: the first, or one a redirect leads to.
 export type Hop = {
@@ -106,7 +106,7 @@ export async function responseValue(
     statusText: response.statusMessage ?? '',
     headers: headersOf(response),
     body: Buffer.concat(chunks).toString('utf8'),
-    truncated: size > argoFetchLimitBytes,
+    truncated: size > pluginFetchLimitBytes,
   };
 }
 
@@ -122,11 +122,11 @@ async function readCapped(response: IncomingMessage): Promise<Received> {
 // Keeps what fits under the cap; false once the body is past it.
 function appendUnderCap(received: Received, chunk: Buffer): boolean {
   received.chunks.push(
-    chunk.subarray(0, Math.max(argoFetchLimitBytes - received.size, 0)),
+    chunk.subarray(0, Math.max(pluginFetchLimitBytes - received.size, 0)),
   );
   received.size += chunk.length;
 
-  return received.size <= argoFetchLimitBytes;
+  return received.size <= pluginFetchLimitBytes;
 }
 
 const headersOf = (response: IncomingMessage): Record<string, string> =>

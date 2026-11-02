@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { productName } from '@repo/contracts/product-identity';
 import { TRPCError } from '@trpc/server';
 
 export type SessionCaller = {
@@ -45,7 +46,7 @@ export class SessionTokens {
     if (caller) return caller;
     throw new TRPCError({
       code: 'UNAUTHORIZED',
-      message: 'An Argo token is required',
+      message: `An ${productName} token is required`,
     });
   }
 }

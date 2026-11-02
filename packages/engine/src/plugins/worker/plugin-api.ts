@@ -12,8 +12,8 @@ import { createKit, type Kit } from '../kit/plugin-kit';
 import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';
 import { accountDispatcher } from './accounts';
-import type { ArgoBridge } from './argo';
 import { hookDispatcher } from './hooks';
+import type { PluginBridge } from './plugin-bridge';
 
 /*
  * The Plugin API, bundled with the kit (`bundleKit`) and run inside each Plugin's realm before any
@@ -21,7 +21,7 @@ import { hookDispatcher } from './hooks';
  * object, and leaves the worker its inboxes and the modules `@argo/plugin-kit` serves.
  */
 declare global {
-  var __argoBridge: ArgoBridge | undefined;
+  var __argoBridge: PluginBridge | undefined;
 }
 
 type PluginInbox = (json: string) => void;
@@ -91,7 +91,7 @@ const spawned = (id: string): PluginProcess =>
     },
   });
 
-const argo: Argo = frozen({
+const pluginApi: Argo = frozen({
   operations: frozen({ register: kit.operations.register }),
   accounts: frozen({
     add: (host, options) =>
@@ -163,7 +163,7 @@ const argo: Argo = frozen({
 });
 
 Object.assign(globalThis, {
-  argo,
+  argo: pluginApi,
   __argoRealm: {
     validateBackground: kit.requirePage,
     inboxes: { pages: kit.inbox, hooks: hooks.inbox, accounts: accounts.inbox },

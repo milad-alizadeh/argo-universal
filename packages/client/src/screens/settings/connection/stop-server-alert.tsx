@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { Alert, type AlertAction } from '@repo/kit/primitives/overlays/alert';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -18,7 +19,7 @@ export const StopServerAlert = (props: {
     open={props.open}
     onOpenChange={props.onOpenChange}
     title="Stop the Server?"
-    message="Paired Devices lose their Sessions, and anything running on them stops. Argo starts the Server again the next time you open it."
+    message={`Paired Devices lose their Sessions, and anything running on them stops. ${productName} starts the Server again the next time you open it.`}
     actions={actions(props.onStop)}
   />
 );

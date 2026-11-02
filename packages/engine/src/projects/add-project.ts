@@ -2,6 +2,7 @@ import { rm, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import type { ProjectAdded } from '@repo/contracts/operations';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { Database } from '@repo/db';
 import { cloneRepository, initRepository } from '@repo/git';
 import { TRPCError } from '@trpc/server';
@@ -12,7 +13,8 @@ const badRequest = (message: string): TRPCError =>
 
 // Where cloned and new Projects go: the owner's choice, or an Argo folder in their home.
 const projectsFolder = (): string =>
-  process.env.ARGO_PROJECTS_DIR ?? join(homedir(), 'Argo');
+  process.env[productCompatibility.environment.projectsDirectory] ??
+  join(homedir(), productCompatibility.projectsDirectory);
 
 const notARepository = /not a git repository/i;
 

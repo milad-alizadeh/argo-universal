@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { systemSymbolSource } from '../kit-symbols/icon-schema';
 import { stockIcon } from '../kit-symbols/stock-icon-schema';
+import { productName } from '../product-identity';
 
 /*
  * Every row mirrors Expo UI's universal ListItem: a `title`, a `leading` icon, and
@@ -30,7 +31,7 @@ export const fieldGroupLinkRowProps = fieldGroupFieldProps.extend({
     .union([stockIcon, systemSymbolSource])
     .optional()
     .describe(
-      'A leading icon: one of Argo’s symbols, or an SF Symbol and Material Symbol pair of the page’s own.',
+      `A leading icon: one of ${productName}’s symbols, or an SF Symbol and Material Symbol pair of the page’s own.`,
     ),
   action: z
     .boolean()
