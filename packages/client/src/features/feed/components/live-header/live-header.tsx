@@ -59,10 +59,9 @@ function useRetryRotation(): RotationStyle {
     return (): void => cancelAnimation(rotation);
   }, [reducedMotion, rotation]);
 
-  return useAnimatedStyle(
-    () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
-    [rotation],
-  );
+  return useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.get()}deg` }],
+  }));
 }
 
 // The retry arrow turns once a second, and holds still under reduced motion.

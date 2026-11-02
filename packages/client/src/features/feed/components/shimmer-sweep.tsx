@@ -147,10 +147,9 @@ function useShimmerStyle(
 ): ReturnType<typeof useAnimatedStyle<{ opacity: number }>> {
   const { centre, opacity, sweep } = props;
 
-  return useAnimatedStyle(
-    () => ({ opacity: bandOpacity(opacity, centre, bandCentre(sweep)) }),
-    [opacity, centre, sweep],
-  );
+  return useAnimatedStyle(() => ({
+    opacity: bandOpacity(opacity, centre, bandCentre(sweep)),
+  }));
 }
 
 interface ShimmerPieceProps {

@@ -101,14 +101,13 @@ function usePaneStyles(props: FramePaneProps): PaneStyles {
   usePaneMotion({ width, shift }, props);
 
   return {
-    widthStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ width: width.get(), opacity: width.get() > 0 ? 1 : 0 }),
-      [width],
-    ),
-    shiftStyle: useAnimatedStyle<ViewStyle>(
-      () => ({ transform: [{ translateX: shift.get() }] }),
-      [shift],
-    ),
+    widthStyle: useAnimatedStyle<ViewStyle>(() => ({
+      width: width.get(),
+      opacity: width.get() > 0 ? 1 : 0,
+    })),
+    shiftStyle: useAnimatedStyle<ViewStyle>(() => ({
+      transform: [{ translateX: shift.get() }],
+    })),
   };
 }
 

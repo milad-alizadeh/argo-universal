@@ -23,10 +23,9 @@ export function PinnedFooterKeyboard({
   const { bottom } = useSafeAreaInsets();
   const { height } = useReanimatedKeyboardAnimation();
 
-  const lift = useAnimatedStyle(
-    () => ({ paddingBottom: keyboardSpace(height.get(), bottom) }),
-    [bottom],
-  );
+  const lift = useAnimatedStyle(() => ({
+    paddingBottom: keyboardSpace(height.get(), bottom),
+  }));
 
   return <Animated.View style={[fill, lift]}>{children}</Animated.View>;
 }

@@ -44,8 +44,7 @@ function useHomeIndicatorSpace(): ReturnType<
   const bottom = useGlassBarSpace();
   const { progress } = useReanimatedKeyboardAnimation();
 
-  return useAnimatedStyle(
-    () => ({ paddingBottom: bottom * (1 - progress.get()) }),
-    [bottom, progress],
-  );
+  return useAnimatedStyle(() => ({
+    paddingBottom: bottom * (1 - progress.get()),
+  }));
 }

@@ -36,13 +36,10 @@ interface PlanReveal {
 function useRevealStyle(
   revealHeight: SharedValue<number>,
 ): ReturnType<typeof useAnimatedStyle<{ height: number; opacity: number }>> {
-  return useAnimatedStyle(
-    () => ({
-      height: revealHeight.get(),
-      opacity: revealHeight.get() === 0 ? 0 : 1,
-    }),
-    [revealHeight],
-  );
+  return useAnimatedStyle(() => ({
+    height: revealHeight.get(),
+    opacity: revealHeight.get() === 0 ? 0 : 1,
+  }));
 }
 
 export function usePlanReveal(): PlanReveal {

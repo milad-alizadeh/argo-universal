@@ -73,7 +73,7 @@ function useGlintStyle({
       width: glintWidth,
       transform: [{ translateX: travelled - bandWidth + glintInset }],
     };
-  }, [progress, fillWidth]);
+  });
 }
 
 // FBShimmering.h's shimmeringAnimationOpacity 0.5: the highlight peaks at half strength, clear at both ends.
