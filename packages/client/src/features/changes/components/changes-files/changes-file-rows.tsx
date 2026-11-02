@@ -84,16 +84,6 @@ function SeparatorRow(): React.JSX.Element {
   return <View className="h-px bg-border" />;
 }
 
-// A drawn row asks for what its item wants, so a diff loads as its place nears the viewport.
-function useNextPages(
-  { file, nextPages }: { file: ChangedFile; nextPages?: number },
-  onLoadDiff: RowContext['onLoadDiff'],
-): void {
-  useEffect(() => {
-    if (nextPages !== undefined) onLoadDiff(file.path, nextPages);
-  }, [file.path, onLoadDiff, nextPages]);
-}
-
 // Marking a file Viewed folds it; clearing the mark opens it again.
 const viewedChange =
   (path: string, context: Pick<RowContext, 'setOpen' | 'onViewedChange'>) =>
@@ -104,8 +94,6 @@ const viewedChange =
 
 function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
   const { path } = item.file;
-
-  useNextPages(item, context.onLoadDiff);
 
   return (
     <DiffFileHeader
@@ -126,9 +114,14 @@ function PageRow({ item }: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
   );
 }
 
-// Holds a place at the end of the pages so far, so the next is asked for only once the reader nears it.
+// Holds a place at the end of the pages so far, so the next is asked for only once the list draws it near the reader.
 function MoreRow({ item, context }: RowProps<'more'>): React.JSX.Element {
-  useNextPages(item, context.onLoadDiff);
+  const { file, nextPages } = item;
+  const { onLoadDiff } = context;
+
+  useEffect(() => {
+    onLoadDiff(file.path, nextPages);
+  }, [file.path, onLoadDiff, nextPages]);
 
   return <View className="h-px bg-card medium:bg-content" />;
 }

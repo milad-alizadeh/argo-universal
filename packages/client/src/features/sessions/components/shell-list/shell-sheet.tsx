@@ -6,6 +6,7 @@ import {
   useSheet,
 } from '@repo/kit/primitives/overlays/sheet';
 import type { JSX } from 'react';
+import { shellTitle } from './shell-format';
 import { ShellList } from './shell-list';
 import type {
   ShellEntry,
@@ -56,14 +57,14 @@ function OutputPage(
   return <ShellOutput shell={shell} output={props.output} now={props.now} />;
 }
 
-// The output page's header: the command as its title, and Stop while the Shell runs.
+// The output page's header: the Shell's title, and Stop while the Shell runs.
 function outputHeading(
   shell: ShellEntry | undefined,
   onStop: ShellSheetProps['onStop'],
   onExit: () => void,
 ): Pick<SheetScreenProps, 'title' | 'action' | 'onExit'> {
   return {
-    title: shell?.command,
+    title: shell && shellTitle(shell),
     action: shell && stopAction(shell, onStop),
     onExit,
   };

@@ -14,6 +14,7 @@ const second = 1000;
 const shellBase = {
   sessionId: 'session-shells',
   canStop: false,
+  description: null,
   endedAt: null,
   exitCode: null,
 } as const;
@@ -29,6 +30,13 @@ export const runningShell: ShellEntry = {
   durationMs: 4 * minute + 12 * second,
   canStop: true,
   lastLine: 'ready on localhost:8081',
+};
+
+// A Shell whose Tool call carried a description: its row is titled by that, not the command.
+export const describedShell: ShellEntry = {
+  ...runningShell,
+  id: 'shell-described',
+  description: 'Run the app dev server',
 };
 
 export const passedShell: ShellEntry = {

@@ -5,12 +5,12 @@ import { idle, settled } from './diff-pages-state';
 /*
  * The Changes list as one flat list, so each file's header can stick to the top while its own diff scrolls under it:
  * a header per file, a separator between files, and under an opened file each loaded page of its diff, then a status
- * row when the load failed or the file has no lines to show. A drawn header asks for its file's first page, and a
- * drawn `more` row, at the end of the pages so far, for the next: the list draws rows only near the viewport.
+ * row when the load failed or the file has no lines to show. A drawn `more` row, where a file's next page would go,
+ * asks for that page: the list draws rows only near the viewport. Headers are always drawn, so they ask for nothing.
  */
 export type ChangesItem =
   | { kind: 'separator'; key: string }
-  | { kind: 'header'; key: string; file: ChangedFile; nextPages?: number }
+  | { kind: 'header'; key: string; file: ChangedFile }
   | { kind: 'page'; key: string; file: ChangedFile; hunks: FileDiff['hunks'] }
   | { kind: 'more'; key: string; file: ChangedFile; nextPages: number }
   | { kind: 'status'; key: string; file: ChangedFile; diff: FileDiffPages };
@@ -28,6 +28,8 @@ export interface ChangesItems {
   items: ChangesItem[];
   // The headers' places in `items`.
   sticky: number[];
+  // The headers' keys.
+  headers: string[];
 }
 
 type Diffs = Readonly<Record<string, FileDiffPages>>;
@@ -66,6 +68,14 @@ const statusItems = (file: ChangedFile, diff: FileDiffPages): ChangesItem[] =>
     ? [{ kind: 'status', key: `status:${file.path}`, file, diff }]
     : [];
 
+// A file not asked for yet holds its place with a `more` row, which asks for its first page.
+const firstPageItem = (file: ChangedFile): ChangesItem => ({
+  kind: 'more',
+  key: `more:${file.path}`,
+  file,
+  nextPages: 1,
+});
+
 const diffItems = (file: ChangedFile, diff?: FileDiffPages): ChangesItem[] =>
   diff
     ? [
@@ -73,38 +83,66 @@ const diffItems = (file: ChangedFile, diff?: FileDiffPages): ChangesItem[] =>
         ...moreItems(file, diff),
         ...statusItems(file, diff),
       ]
-    : [];
+    : [firstPageItem(file)];
 
 export const headerKey = (path: string): string => `header:${path}`;
 
 const separatorBefore = (file: ChangedFile, index: number): ChangesItem[] =>
   index > 0 ? [{ kind: 'separator', key: `separator:${file.path}` }] : [];
 
-const isUnasked = ({ path }: ChangedFile, lists: Lists): boolean =>
-  !lists.folded.has(path) && !lists.diffs[path];
-
-const headerItem = (file: ChangedFile, lists: Lists): ChangesItem => ({
+const headerItem = (file: ChangedFile): ChangesItem => ({
   kind: 'header',
   key: headerKey(file.path),
   file,
-  nextPages: isUnasked(file, lists) ? 1 : undefined,
 });
 
 const openedItems = (file: ChangedFile, lists: Lists): ChangesItem[] =>
   lists.folded.has(file.path) ? [] : diffItems(file, lists.diffs[file.path]);
+
+const allItems = (files: readonly ChangedFile[], lists: Lists): ChangesItem[] =>
+  files.flatMap((file, index): ChangesItem[] => [
+    ...separatorBefore(file, index),
+    headerItem(file),
+    ...openedItems(file, lists),
+  ]);
 
 export function changesItems(
   files: readonly ChangedFile[],
   folded: ReadonlySet<string>,
   diffs: Diffs,
 ): ChangesItems {
-  const items = files.flatMap((file, index): ChangesItem[] => [
-    ...separatorBefore(file, index),
-    headerItem(file, { folded, diffs }),
-    ...openedItems(file, { folded, diffs }),
-  ]);
+  const items = allItems(files, { folded, diffs });
 
-  return { items, sticky: headerIndices(items) };
+  return {
+    items,
+    sticky: headerIndices(items),
+    headers: files.map((file) => headerKey(file.path)),
+  };
+}
+
+function sameItem(kept: ChangesItem, item: ChangesItem): boolean {
+  const fields = new Map(Object.entries(kept));
+
+  return Object.entries(item).every(
+    ([field, value]) => fields.get(field) === value,
+  );
+}
+
+// The last draw's item for any key whose fields are unchanged, so a diff page landing redraws only its own file's rows.
+export function itemKeeper(): (items: ChangesItem[]) => ChangesItem[] {
+  let last = new Map<string, ChangesItem>();
+
+  return (items) => {
+    const kept = items.map((item) => {
+      const previous = last.get(item.key);
+
+      return previous && sameItem(previous, item) ? previous : item;
+    });
+
+    last = new Map(kept.map((item) => [item.key, item]));
+
+    return kept;
+  };
 }
 
 const headerIndices = (items: readonly ChangesItem[]): number[] =>

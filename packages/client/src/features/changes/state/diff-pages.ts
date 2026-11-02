@@ -58,3 +58,52 @@ export function diffsByFile(
     ]),
   );
 }
+
+const sameFlags = (kept: FileDiffPages, diff: FileDiffPages): boolean =>
+  kept.loading === diff.loading &&
+  kept.more === diff.more &&
+  kept.loadError === diff.loadError;
+
+const samePages = (kept: FileDiffPages, diff: FileDiffPages): boolean =>
+  kept.pages.length === diff.pages.length &&
+  kept.pages.every((page, index) => page === diff.pages[index]);
+
+type Diffs = ChangesViewProps['diffs'];
+
+const sameDiff = (kept: FileDiffPages, diff: FileDiffPages): boolean =>
+  sameFlags(kept, diff) && samePages(kept, diff);
+
+const keptDiff = (
+  last: Diffs,
+  path: string,
+  diff: FileDiffPages,
+): FileDiffPages => {
+  const kept = last[path];
+
+  return kept && sameDiff(kept, diff) ? kept : diff;
+};
+
+const sameDiffs = (last: Diffs, next: Diffs): boolean =>
+  Object.keys(next).length === Object.keys(last).length &&
+  Object.entries(next).every(([path, diff]) => last[path] === diff);
+
+/*
+ * The last draw's diff for any file whose pages and flags are unchanged, and the last draw's whole object when no
+ * file changed, so a page landing for one file leaves every other file's rows, and the list's items, as they were.
+ */
+export function diffsKeeper(): (diffs: Diffs) => Diffs {
+  let last: Diffs = {};
+
+  return (diffs) => {
+    const next = Object.fromEntries(
+      Object.entries(diffs).map(([path, diff]) => [
+        path,
+        keptDiff(last, path, diff),
+      ]),
+    );
+
+    if (!sameDiffs(last, next)) last = next;
+
+    return last;
+  };
+}
