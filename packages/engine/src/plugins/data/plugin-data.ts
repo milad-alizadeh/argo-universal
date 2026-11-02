@@ -1,5 +1,4 @@
 import type {
-  PluginQuery,
   PluginDataRequest,
   PluginDataState,
 } from '@repo/contracts/plugins/argo-calls';
@@ -23,6 +22,12 @@ import {
   type QueryServices,
   type QueryWatch,
 } from './query-types';
+
+const refusedProject: PluginDataState = {
+  error: 'Refused: Project is unavailable',
+  stale: false,
+  revision: 0,
+};
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
 
@@ -57,11 +62,30 @@ export class PluginData {
   ): Promise<PluginReply> {
     const view = this.views.dataView(caller.pluginId, request.viewId);
 
-    if (request.action === 'watch')
-      return { ok: true, value: this.watch(caller, view, request) };
+    if (request.action === 'watch') return this.watchReply(caller, view, request);
     await this.update(caller.pluginId, request);
 
     return { ok: true };
+  }
+
+  // A Query may name its Project (ADR-0037); one that is not registered is refused as any refused call is.
+  private async watchReply(
+    caller: Caller,
+    view: OpenView,
+    request: QueryWatch,
+  ): Promise<PluginReply> {
+    if (!(await this.registered(request.projectId)))
+      return { ok: true, value: refusedProject };
+
+    return { ok: true, value: this.watch(caller, view, request) };
+  }
+
+  private async registered(projectId: string | undefined): Promise<boolean> {
+    if (projectId === undefined) return true;
+
+    const projects = await this.services.services.projectInfo();
+
+    return projects.some(({ id }) => id === projectId);
   }
 
   // The watcher is registered before the map is bounded, so this answer is never the entry dropped.
@@ -71,7 +95,7 @@ export class PluginData {
     request: QueryWatch,
   ): PluginDataState {
     const entries = this.entriesOf(caller.pluginId);
-    const state = this.entry(caller, view, request.query).watch(view, request);
+    const state = this.entry(caller, view, request).watch(view, request);
 
     this.bound(caller.pluginId, entries);
 
@@ -81,10 +105,9 @@ export class PluginData {
   private entry(
     caller: Caller,
     view: OpenView,
-    query: PluginQuery,
+    { query, projectId = view.projectId }: QueryWatch,
   ): QueryEntry {
     const entries = this.entriesOf(caller.pluginId);
-    const { projectId } = view;
     const key = queryKey(projectId, query);
 
     const existing = entries.get(key);

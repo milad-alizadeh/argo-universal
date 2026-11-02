@@ -18,6 +18,7 @@ export type DataTarget = {
   watchId: string;
   identity: string | null;
   every?: number;
+  projectId?: string;
 };
 
 type SubscribedTarget = DataTarget & { viewId: PluginViewId; identity: string };
@@ -42,7 +43,7 @@ export class DataSubscription {
   }
 
   start(): void {
-    const { viewId, watchId, every, identity } = this.target;
+    const { viewId, watchId, every, identity, projectId } = this.target;
 
     void this.call({
       api: 'data',
@@ -50,6 +51,7 @@ export class DataSubscription {
       viewId,
       watchId,
       every,
+      projectId,
       /*
        * The identity is this Query's own canonical text, so reading it back is the Query itself. It is
        * not checked against the schema here: a Query a Plugin should not have asked for is the Engine's

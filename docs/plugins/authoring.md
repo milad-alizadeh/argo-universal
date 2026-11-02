@@ -169,6 +169,7 @@ The hook returns `{ data, error, stale, refresh }`:
 - `refresh()` runs the Query now and joins a call already in flight.
 
 `useData(null)` creates no entry. Without `every`, a Query runs once per mount.
+`useData(query, { projectId })` and `argo.fetch(url, { projectId })` read for another registered Project than the view's, such as a Project the page lists; the Account a borrow uses is that Project's. An unregistered Project is refused.
 Argo clamps `every` to ten seconds and logs the clamp once. Shared viewers use their smallest interval.
 Storage Queries are never polled. A committed Plugin storage write marks them due.
 

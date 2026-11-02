@@ -146,9 +146,12 @@ export type UseDataResult<Query extends PluginQuery> = {
   refresh: () => Promise<void>;
 };
 
+// `projectId` names the Project the Query reads for, such as a Project the page lists; it defaults to the view's.
+export type UseDataOptions = { every?: number; projectId?: string };
+
 export type UseData = <Query extends PluginQuery>(
   query: Query | null,
-  options?: { every?: number },
+  options?: UseDataOptions,
 ) => UseDataResult<Query>;
 
 export type Page = ComponentType<{ context: PluginRenderContext }>;

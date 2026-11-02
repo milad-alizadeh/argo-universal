@@ -1,18 +1,26 @@
 import { delimiter } from 'node:path';
 import type { PluginProjectInfo } from '@repo/contracts/plugins';
-import { MemoryKeychain } from '@repo/engine/mocks/keychain';
+import type { MemoryKeychain } from '@repo/engine/mocks/keychain';
+import type { TestAccounts } from '@repo/engine/mocks/test-accounts';
 import { createPluginRuntime, type PluginRuntime } from '@repo/engine/plugins';
 import type { ConfiguredTest } from './test-configuration';
 import type { PluginTestOptions } from './test-types';
 
 export { configureTest, type ConfiguredTest } from './test-configuration';
 
+export type RuntimeParts = {
+  keychain: MemoryKeychain;
+  accounts: TestAccounts['accounts'];
+};
+
 export function runtimeFor(
   home: string,
   options: ConfiguredTest,
+  { keychain, accounts }: RuntimeParts,
 ): PluginRuntime {
   return createPluginRuntime(home, {
-    keychain: new MemoryKeychain(),
+    keychain,
+    accounts,
     clockStart: options.clockStart,
     network: options.network,
     settings: async (id, key) =>

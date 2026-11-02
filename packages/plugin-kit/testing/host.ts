@@ -1,6 +1,6 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import {
   hookEvents,
   type HookEventName,
@@ -12,6 +12,8 @@ import {
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
+import { MemoryKeychain } from '@repo/engine/mocks/keychain';
+import { testAccounts, type TestAccounts } from '@repo/engine/mocks/test-accounts';
 import { itemsConnection } from './test-connection';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
 import { testOperations } from './test-operations';
@@ -51,6 +53,7 @@ class HostedPlugin implements PluginTest {
   readonly failures: PluginTest['failures'] = (signal) =>
     this.service.failures(signal);
   private readonly runtime: PluginRuntime;
+  private readonly accountStore: TestAccounts;
   private readonly service: PluginService;
   readonly projects;
   private readonly views = new Set<PluginTestView>();
@@ -70,10 +73,28 @@ class HostedPlugin implements PluginTest {
   public constructor(
     private readonly home: string,
     private readonly options: ConfiguredTest,
+    keychain = new MemoryKeychain(),
   ) {
-    this.runtime = runtimeFor(home, options);
-    this.projects = new TestProjects(options, this.runtime);
-    this.service = serviceFor(home, options, this.runtime);
+    this.accountStore = testAccounts({
+      home,
+      version: options.version,
+      firstPartyPluginsDirectory: resolve(options.directory),
+      keychain,
+    });
+    this.accountStore.syncProjects(options.projects);
+    this.runtime = runtimeFor(home, options, {
+      keychain,
+      accounts: this.accountStore.accounts,
+    });
+    this.projects = new TestProjects(options, this.runtime, () =>
+      this.accountStore.syncProjects(options.projects),
+    );
+    this.service = serviceFor(
+      home,
+      options,
+      this.runtime,
+      this.accountStore.accounts,
+    );
   }
 
   get settings(): Map<string, PluginSettingValue> {
@@ -159,6 +180,7 @@ class HostedPlugin implements PluginTest {
     try {
       await this.runtime.close();
     } finally {
+      this.accountStore.close();
       await rm(this.home, { recursive: true, force: true });
     }
   }

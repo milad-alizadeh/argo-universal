@@ -52,12 +52,18 @@ export const ProcessCall = z.discriminatedUnion('action', [
 
 export type ProcessCall = z.infer<typeof ProcessCall>;
 
-export const FetchCall = z.object({
+// What a fetch asks for; a Query is this and nothing more, as its Project is a `useData` option.
+export const FetchRead = z.object({
   url: z.string(),
   method: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   body: z.string().optional(),
   account: z.string().optional(),
+});
+
+// A call may name its Project; it defaults to the Project of the view that made the call (ADR-0037).
+export const FetchCall = FetchRead.extend({
+  projectId: z.string().optional(),
 });
 
 export type FetchCall = z.infer<typeof FetchCall>;
@@ -90,7 +96,7 @@ export const StorageRead = StorageQuery.extend({
 
 // Queries describe only repeatable reads, using the imperative calls' member schemas.
 export const PluginQuery = z.discriminatedUnion('api', [
-  FetchCall.extend({ api: z.literal('fetch') }),
+  FetchRead.extend({ api: z.literal('fetch') }),
   ProcessRun.extend({ api: z.literal('process') }),
   z.object({ api: z.literal('storage'), queries: z.array(StorageRead) }),
 ]);
@@ -117,6 +123,8 @@ export const PluginDataRequest = z.discriminatedUnion('action', [
     action: z.literal('watch'),
     query: PluginQuery,
     every: z.number().finite().nonnegative().optional(),
+    // The Project the Query reads for; the view's own when absent.
+    projectId: z.string().optional(),
   }),
   dataTarget.extend({ action: z.literal('release') }),
   dataTarget.extend({ action: z.literal('refresh') }),

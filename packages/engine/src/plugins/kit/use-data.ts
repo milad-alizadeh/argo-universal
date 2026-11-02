@@ -1,4 +1,8 @@
-import type { UseData, UseDataResult } from '@repo/contracts/plugins/argo-api';
+import type {
+  UseData,
+  UseDataOptions,
+  UseDataResult,
+} from '@repo/contracts/plugins/argo-api';
 import {
   serialisePluginQuery,
   type PluginQuery,
@@ -45,14 +49,14 @@ export function dataClient(call: DataCall): KitDataClient {
 export function useQueryData<Query extends PluginQuery>(
   client: PluginDataClient,
   query: Query | null,
-  options?: { every?: number },
+  options?: UseDataOptions,
 ): UseDataResult<Query>;
 export function useQueryData(
   client: PluginDataClient,
   query: PluginQuery | null,
-  { every }: { every?: number } = {},
+  { every, projectId }: UseDataOptions = {},
 ): UseDataResult<PluginQuery> {
-  const { target, error } = useTarget(client, query, every);
+  const { target, error } = useTarget(client, query, { every, projectId });
   const state = useSubscription(client, target);
 
   const refresh = useCallback(() => client.refresh(target), [client, target]);
@@ -99,14 +103,14 @@ function useResult(
 function useTarget(
   client: PluginDataClient,
   query: PluginQuery | null,
-  every: number | undefined,
+  { every, projectId }: UseDataOptions,
 ): QueryTarget {
   const viewId = useContext(QueryViewContext);
   const { identity, error } = identityOf(query);
 
   const target = useMemo(
-    () => ({ viewId, watchId: client.nextId(), identity, every }),
-    [client, viewId, identity, every],
+    () => ({ viewId, watchId: client.nextId(), identity, every, projectId }),
+    [client, viewId, identity, every, projectId],
   );
 
   return { target, error };
