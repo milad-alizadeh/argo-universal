@@ -102,6 +102,7 @@ function tokenAnswerer(state: ServiceState): () => FixtureAnswer {
 
   return () => {
     if (state.tokenEndpoint.refusing) return refusal;
+
     if (state.approval.pending) return stillPending;
 
     issued += 1;
