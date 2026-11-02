@@ -7,6 +7,7 @@ import {
   configurationRequest,
   configurationValues,
   elicitationRequest,
+  emptyAnswersRequest,
   functionNameRequest,
   refactorRequest,
 } from '../request.mocks';
@@ -47,6 +48,12 @@ export const formFieldsElicitation = {
   ...open,
   request: configurationRequest,
   initialValues: configurationValues,
+} satisfies ElicitationFixture;
+
+// A form whose fields include a choice: its options show in place.
+export const choiceFieldsElicitation = {
+  ...open,
+  request: emptyAnswersRequest,
 } satisfies ElicitationFixture;
 
 // The recorded Elicitation, its answer on its way to the Agent.
