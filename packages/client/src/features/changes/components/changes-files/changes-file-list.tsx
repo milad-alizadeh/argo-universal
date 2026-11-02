@@ -50,7 +50,7 @@ const identity = {
  */
 export function FileList(props: FileListProps): React.JSX.Element {
   return (
-    <List<ChangesItem> {...useRows(props)} {...identity} {...more(props)} />
+    <List<ChangesItem> {...useRows(props)} {...identity} {...listEnd(props)} />
   );
 }
 
@@ -87,15 +87,17 @@ function useListItems(
   );
 }
 
-const loadingMore = (props: FileListProps): boolean | undefined =>
+type EndProps = Pick<FileListProps, 'moreFiles' | 'onLoadMoreFiles' | 'diffs'>;
+
+const isLoadingMore = (props: EndProps): boolean | undefined =>
   props.moreFiles || diffsLoading(props.diffs);
 
-function more(
-  props: FileListProps,
+function listEnd(
+  props: EndProps,
 ): Pick<ListProps<ChangesItem>, 'onEndReached' | 'endContent'> {
   return {
     onEndReached: props.moreFiles ? props.onLoadMoreFiles : undefined,
-    endContent: loadingMore(props) ? <LoadingMore /> : undefined,
+    endContent: isLoadingMore(props) ? <LoadingMore /> : undefined,
   };
 }
 

@@ -27,7 +27,7 @@ function scrollToHeader(list: LegendListRef, path: string): void {
     void list.scrollToOffset({ offset, animated: false });
 }
 
-const scrollToFolding = (list: ListRef | null, path: string): void => {
+const scrollToFoldingHeader = (list: ListRef | null, path: string): void => {
   if (list && isLegendList(list)) scrollToHeader(list, path);
 };
 
@@ -41,7 +41,7 @@ export function useFoldScroll(setOpen: OpenFiles['setOpen']): FoldScroll {
   return {
     ref,
     setOpen: (path, open) => {
-      if (!open) scrollToFolding(ref.current, path);
+      if (!open) scrollToFoldingHeader(ref.current, path);
       setOpen(path, open);
     },
   };

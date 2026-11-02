@@ -5,26 +5,21 @@ import { idle, settled } from './diff-pages-state';
 /*
  * The Changes list as one flat list, so each file's header can stick to the top while its own diff scrolls under it:
  * a header per file, a separator between files, and under an opened file each loaded page of its diff, then a status
- * row when the load failed or the file has no lines to show. A row that is drawn asks for `nextPages`, so a diff loads
- * as its file's header comes near the viewport, and its next page as its last page does.
+ * row when the load failed or the file has no lines to show. A drawn header asks for its file's first page, and a
+ * drawn `more` row, at the end of the pages so far, for the next: the list draws rows only near the viewport.
  */
 export type ChangesItem =
   | { kind: 'separator'; key: string }
   | { kind: 'header'; key: string; file: ChangedFile; nextPages?: number }
-  | {
-      kind: 'page';
-      key: string;
-      file: ChangedFile;
-      hunks: FileDiff['hunks'];
-      nextPages?: number;
-    }
+  | { kind: 'page'; key: string; file: ChangedFile; hunks: FileDiff['hunks'] }
+  | { kind: 'more'; key: string; file: ChangedFile; nextPages: number }
   | { kind: 'status'; key: string; file: ChangedFile; diff: FileDiffPages };
 
-export type DiffItem = Extract<ChangesItem, { kind: 'page' | 'status' }>;
+export type DiffItem = Extract<ChangesItem, { kind: 'page' | 'more' | 'status' }>;
 
 // The items under a file's header; the rest are the list's own parts.
 export const isDiffItem = (item: ChangesItem): item is DiffItem =>
-  item.kind === 'page' || item.kind === 'status';
+  item.kind === 'page' || item.kind === 'more' || item.kind === 'status';
 
 export interface ChangesItems {
   items: ChangesItem[];
@@ -43,30 +38,39 @@ const hasLines = (diff: FileDiffPages): boolean =>
 const needsStatus = (diff: FileDiffPages): boolean =>
   diff.loadError !== undefined || (settled(diff) && !hasLines(diff));
 
-const morePages = (diff: FileDiffPages): number | undefined =>
-  idle(diff) && diff.more ? diff.pages.length + 1 : undefined;
-
 const pageItems = (file: ChangedFile, diff: FileDiffPages): ChangesItem[] =>
   diff.pages.map((hunks, page) => ({
     kind: 'page',
     key: `page:${file.path}:${page}`,
     file,
     hunks,
-    nextPages: page === diff.pages.length - 1 ? morePages(diff) : undefined,
   }));
 
-function diffItems(file: ChangedFile, diff?: FileDiffPages): ChangesItem[] {
-  if (!diff) return [];
+const moreItems = (file: ChangedFile, diff: FileDiffPages): ChangesItem[] =>
+  idle(diff) && diff.more
+    ? [
+        {
+          kind: 'more',
+          key: `more:${file.path}`,
+          file,
+          nextPages: diff.pages.length + 1,
+        },
+      ]
+    : [];
 
-  const status: ChangesItem = {
-    kind: 'status',
-    key: `status:${file.path}`,
-    file,
-    diff,
-  };
+const statusItems = (file: ChangedFile, diff: FileDiffPages): ChangesItem[] =>
+  needsStatus(diff)
+    ? [{ kind: 'status', key: `status:${file.path}`, file, diff }]
+    : [];
 
-  return [...pageItems(file, diff), ...(needsStatus(diff) ? [status] : [])];
-}
+const diffItems = (file: ChangedFile, diff?: FileDiffPages): ChangesItem[] =>
+  diff
+    ? [
+        ...pageItems(file, diff),
+        ...moreItems(file, diff),
+        ...statusItems(file, diff),
+      ]
+    : [];
 
 export const headerKey = (path: string): string => `header:${path}`;
 

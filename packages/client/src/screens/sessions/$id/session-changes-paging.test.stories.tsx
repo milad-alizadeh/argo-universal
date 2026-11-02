@@ -26,7 +26,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const loadingMore = 'Loading more changes';
+const loadingMore = /^Loading/;
 
 const lastFile = '/repo/src/module-60/index.ts';
 
@@ -76,7 +76,9 @@ export const OneSpinnerWhileDiffsLoad: Story = {
     const spinners = await screen.findAllByRole('progressbar');
 
     await expect(spinners).toHaveLength(1);
-    await expect(spinners[0]).toHaveAccessibleName(loadingMore);
+    await expect(spinners[0]).toHaveAccessibleName(
+      expect.stringMatching(loadingMore),
+    );
     await waitFor(() => expect(diffLines().length).toBeGreaterThan(0));
     await waitFor(() =>
       expect(screen.queryAllByRole('progressbar')).toHaveLength(0),

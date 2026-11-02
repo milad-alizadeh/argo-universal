@@ -2,7 +2,7 @@ import { nextFrames } from '@repo/kit/mocks/next-frames';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, screen, waitFor } from 'storybook/test';
+import { expect, screen, waitFor, within } from 'storybook/test';
 import { settleChanges } from './session-changes-settle.test.mocks';
 import {
   fewChanges,
@@ -10,6 +10,7 @@ import {
   fileHeaders,
   findFileHeader,
   largeFile,
+  longFileInMiddle,
   MemoryChangesInspector,
   scrollToFile,
   shortFile,
@@ -149,46 +150,60 @@ export const FoldLeavesNoGapPhone = foldLeavesNoGap(layoutWidths.phone);
 
 export const FoldLeavesNoGapWide = foldLeavesNoGap(layoutWidths.wide);
 
-const listTop = (): number =>
-  screen.getByTestId('changes-files').getBoundingClientRect().top;
+const topOf = (element: HTMLElement): number =>
+  element.getBoundingClientRect().top;
 
-// Scrolls well into the long file's diff, so its header is stuck and its top has left the viewport.
-async function scrollIntoLargeFile(): Promise<void> {
+// Scrolls well into the long file's diff, so its header is stuck and its top has left the viewport; the header's place then is where it should end.
+async function scrollIntoLargeFile(): Promise<number> {
   const line = await screen.findByText(midLine);
 
   line.scrollIntoView({ block: 'start' });
-  await nextFrames();
+  await waitFor(() =>
+    expect(topOf(line)).toBeLessThan(topOf(fileHeader(largeFile)) + 100),
+  );
+
+  return topOf(fileHeader(largeFile));
 }
 
-type Fold = () => Promise<void>;
+type Press = (element: HTMLElement) => Promise<void>;
 
-const foldByChevron =
-  (click: (element: HTMLElement) => Promise<void>): Fold =>
-  () =>
-    click(fileHeader(largeFile));
+const foldByChevron = (press: Press): Promise<void> =>
+  press(fileHeader(largeFile));
 
-const foldByMark =
-  (click: (element: HTMLElement) => Promise<void>): Fold =>
-  async () =>
-    click(await viewedMark(0));
+function foldByMark(press: Press): Promise<void> {
+  const row = fileHeader(largeFile).parentElement;
 
-// Folding a file scrolled part way leaves its header at the top, with the next file directly under it.
+  if (!row) throw new Error('Missing file row');
+
+  return press(within(row).getByRole('checkbox', { name: 'Viewed' }));
+}
+
+// Folding a file scrolled part way leaves its header where it was stuck, with the next file directly under it.
 function foldReturnsToHeader(
   width: number,
   foldWith: typeof foldByChevron,
 ): Story {
   return {
+    args: { catalog: longFileInMiddle },
     play: async ({ userEvent }) => {
       await settleChanges(width);
-      await scrollIntoLargeFile();
-      await foldWith((element) => userEvent.click(element))();
 
+      const stuckAt = await scrollIntoLargeFile();
+
+      await foldWith((element) => userEvent.click(element));
+      await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
       await waitFor(async () => {
-        const top = fileHeader(largeFile).getBoundingClientRect();
-        const next = (await findFileHeader(shortFile)).getBoundingClientRect();
+        const header = fileHeader(largeFile).getBoundingClientRect();
 
-        await expect(top.top).toBeCloseTo(listTop(), 0);
-        await expect(next.top - top.bottom).toBeLessThan(2);
+        const below = fileHeaders()
+          .map((row) => row.getBoundingClientRect())
+          .find((row) => row.top > header.top);
+
+        await expect(header.top).toBeCloseTo(stuckAt, 0);
+        // Only the rows' own padding between them: none of the folded diff is left.
+        await expect((below?.top ?? Infinity) - header.bottom).toBeLessThan(
+          header.height * 2,
+        );
       });
     },
   };
@@ -204,6 +219,11 @@ export const FoldByChevronReturnsToHeaderWide = foldReturnsToHeader(
   foldByChevron,
 );
 
+export const FoldByMarkReturnsToHeaderPhone = foldReturnsToHeader(
+  layoutWidths.phone,
+  foldByMark,
+);
+
 export const FoldByMarkReturnsToHeaderWide = foldReturnsToHeader(
   layoutWidths.wide,
   foldByMark,
@@ -216,14 +236,12 @@ export const FoldInViewStaysPut: Story = {
     await userEvent.click(await findFileHeader(largeFile));
 
     const header = await findFileHeader(shortFile);
-    const before = header.getBoundingClientRect().top;
+    const before = topOf(header);
 
     await userEvent.click(header);
+    await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'false');
     await nextFrames();
-    await expect(fileHeader(shortFile).getBoundingClientRect().top).toBeCloseTo(
-      before,
-      0,
-    );
+    await expect(topOf(fileHeader(shortFile))).toBeCloseTo(before, 0);
   },
 };
 

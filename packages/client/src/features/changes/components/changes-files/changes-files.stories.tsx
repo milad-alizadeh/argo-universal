@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ChangesFiles } from './changes-files';
-import { binaryFile, renamedFile } from './changes-files-fixtures';
+import { binaryFile, loadingDiffs, renamedFile } from './changes-files-fixtures';
 
 const meta = {
   title: 'Changes/ChangesFiles',
@@ -36,3 +36,6 @@ export const RenamedFile: Story = {};
 
 // A binary file says it cannot be previewed, not that it has no lines.
 export const BinaryFile: Story = { args: binaryFile };
+
+// One spinner at the end of the list says diffs are coming, however many files wait for one.
+export const LoadingDiffs: Story = { args: loadingDiffs };

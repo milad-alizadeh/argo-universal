@@ -61,10 +61,12 @@ function FileRow({
 function DiffRow({
   item,
   context,
-}: RowProps<'page' | 'status'>): React.JSX.Element {
+}: RowProps<'page' | 'more' | 'status'>): React.JSX.Element {
   switch (item.kind) {
     case 'page':
-      return <PageRow item={item} context={context} />;
+      return <PageRow item={item} />;
+    case 'more':
+      return <MoreRow item={item} context={context} />;
     case 'status':
       return <StatusRow item={item} />;
     default:
@@ -76,10 +78,10 @@ function SeparatorRow(): React.JSX.Element {
   return <View className="h-px bg-border" />;
 }
 
-// A row that is drawn asks for what its item wants; the list draws only rows near the viewport, so a diff loads on the way.
+// A drawn row asks for what its item wants, so a diff loads as its place nears the viewport.
 function useNextPages(
   { file, nextPages }: { file: ChangedFile; nextPages?: number },
-  { onLoadDiff }: RowContext,
+  onLoadDiff: RowContext['onLoadDiff'],
 ): void {
   useEffect(() => {
     if (nextPages !== undefined) onLoadDiff(file.path, nextPages);
@@ -88,7 +90,7 @@ function useNextPages(
 
 // Marking a file Viewed folds it; clearing the mark opens it again.
 const viewedChange =
-  (path: string, context: RowContext) =>
+  (path: string, context: Pick<RowContext, 'setOpen' | 'onViewedChange'>) =>
   (viewed: boolean): void => {
     context.setOpen(path, !viewed);
     context.onViewedChange(path, viewed);
@@ -97,7 +99,7 @@ const viewedChange =
 function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
   const { path } = item.file;
 
-  useNextPages(item, context);
+  useNextPages(item, context.onLoadDiff);
 
   return (
     <DiffFileHeader
@@ -110,14 +112,19 @@ function HeaderRow({ item, context }: RowProps<'header'>): React.JSX.Element {
   );
 }
 
-function PageRow({ item, context }: RowProps<'page'>): React.JSX.Element {
-  useNextPages(item, context);
-
+function PageRow({ item }: Pick<RowProps<'page'>, 'item'>): React.JSX.Element {
   return (
     <View className="bg-card medium:bg-content">
       <DiffScroll hunks={item.hunks} inline={false} path={item.file.path} />
     </View>
   );
+}
+
+// Holds a place at the end of the pages so far, so the next is asked for only once the reader nears it.
+function MoreRow({ item, context }: RowProps<'more'>): React.JSX.Element {
+  useNextPages(item, context.onLoadDiff);
+
+  return <View className="h-px bg-card medium:bg-content" />;
 }
 
 function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {

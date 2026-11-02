@@ -79,7 +79,7 @@ export const readTrackedComparison = (
     JSON.stringify([
       selection.checkout,
       selection.projectCheckout,
-      selection.comparison ?? 'main',
+      selection.comparison,
     ]),
     () => readTrackedChanges(selection),
   );
