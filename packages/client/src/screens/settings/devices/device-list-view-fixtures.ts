@@ -25,6 +25,13 @@ export const threeDevices: readonly DeviceRow[] = [
     serverDevice: false,
     seen: 'Last seen yesterday',
   },
+  {
+    id: 'laptop',
+    name: 'Work laptop',
+    platform: 'windows',
+    serverDevice: false,
+    seen: 'Last seen 12 Oct',
+  },
 ];
 
 export const onlyThisComputer: readonly DeviceRow[] = [thisComputer];

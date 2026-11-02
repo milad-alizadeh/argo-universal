@@ -1,23 +1,25 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { DeviceListView } from './device-list-view';
-import { threeDevices } from './device-list-view-fixtures';
+import { onlyThisComputer, threeDevices } from './device-list-view-fixtures';
 
-const switchName = 'Local network access';
+const body = within(document.body);
 
 const pairButton = { name: 'Pair a Device' };
+
+const unpairPixel = { name: 'Unpair Pixel 9' };
 
 const meta = {
   title: 'Tests/Screens/Settings/Devices',
   component: DeviceListView,
   parameters: { screenPreview: true },
   args: {
-    localNetworkAccess: { status: 'loaded', enabled: false },
-    onLocalNetworkAccessChange: fn(),
+    accessEnabled: true,
+    devices: threeDevices,
     onPairDevice: fn(),
-    onRetry: fn(),
-    onOpenDevice: fn(),
+    onUnpairDevice: fn(),
+    onGoToConnection: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof DeviceListView>;
@@ -26,123 +28,70 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const StartsOffAndPairingSaysWhyItIsUnavailable: Story = {
-  play: async ({ canvas, args }) => {
-    await expect(
-      canvas.getByRole('switch', { name: switchName }),
-    ).not.toBeChecked();
-    await expect(canvas.getByRole('button', pairButton)).toBeDisabled();
-    await expect(
-      canvas.getByText(
-        /Pairing is unavailable while Local network access is off/,
-      ),
-    ).toBeVisible();
-    await expect(args.onLocalNetworkAccessChange).not.toHaveBeenCalled();
-  },
-};
+const openAlert = async (): Promise<ReturnType<typeof within>> =>
+  within(await body.findByRole('dialog', { name: /Unpair “Pixel 9”\?/ }));
 
-export const TurnsOnOnlyWhenTheOwnerPressesTheSwitch: Story = {
+export const PairingOpensFromTheHeader: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await expect(args.onLocalNetworkAccessChange).not.toHaveBeenCalled();
-    await userEvent.click(canvas.getByRole('switch', { name: switchName }));
-    await expect(args.onLocalNetworkAccessChange).toHaveBeenCalledOnce();
-    await expect(args.onLocalNetworkAccessChange).toHaveBeenCalledWith(true);
-  },
-};
-
-export const TurnsOffAndNoLongerSaysPairingIsUnavailable: Story = {
-  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
-  play: async ({ canvas, args, userEvent }) => {
-    await expect(
-      canvas.getByRole('switch', { name: switchName }),
-    ).toBeChecked();
-    await expect(canvas.queryByText(/Pairing is unavailable/)).toBeNull();
-    await userEvent.click(canvas.getByRole('switch', { name: switchName }));
-    await expect(args.onLocalNetworkAccessChange).toHaveBeenCalledOnce();
-    await expect(args.onLocalNetworkAccessChange).toHaveBeenCalledWith(false);
-  },
-};
-
-export const OffersPairingOnceLocalNetworkAccessIsOn: Story = {
-  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
-  play: async ({ canvas, args, userEvent }) => {
-    const pair = canvas.getByRole('button', pairButton);
-
-    await expect(pair).toBeEnabled();
-    await userEvent.click(pair);
+    await userEvent.click(canvas.getByRole('button', pairButton));
     await expect(args.onPairDevice).toHaveBeenCalledOnce();
   },
 };
 
-export const OffersPairingToNoBrowser: Story = {
-  args: {
-    localNetworkAccess: { status: 'loaded', enabled: true },
-    pairingOffered: false,
-  },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', pairButton)).toBeDisabled();
-    await expect(
-      canvas.getByText(/Pairing is unavailable in a browser/),
-    ).toBeVisible();
-  },
-};
-
-const claimsOff = /Only this computer|Pairing is unavailable/;
-
-export const DisconnectedClaimsNeitherState: Story = {
-  args: { localNetworkAccess: { status: 'disconnected' } },
-  play: async ({ canvas }) => {
-    await expect(canvas.queryByRole('switch')).toBeNull();
-    await expect(canvas.queryByText(claimsOff)).toBeNull();
-    await expect(canvas.getByText(/Connect to the Server/)).toBeVisible();
-  },
-};
-
-export const LoadingClaimsNeitherState: Story = {
-  args: { localNetworkAccess: { status: 'loading' } },
-  play: async ({ canvas }) => {
-    await expect(canvas.queryByRole('switch')).toBeNull();
-    await expect(canvas.queryByText(claimsOff)).toBeNull();
-    await expect(
-      canvas.getByText(/Loading Local network access/),
-    ).toBeVisible();
-  },
-};
-
-export const RetriesLoadingWithoutClaimingOff: Story = {
-  args: { localNetworkAccess: { status: 'error' } },
-  play: async ({ canvas, args, userEvent }) => {
-    await expect(canvas.queryByRole('switch')).toBeNull();
-    await expect(canvas.queryByText(claimsOff)).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
-    await expect(args.onRetry).toHaveBeenCalledOnce();
-  },
-};
-
-export const ThisComputerHasNoWayToBeUnpaired: Story = {
-  args: { devices: threeDevices },
+export const ThisComputerHasNoUnpair: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('This computer')).toBeVisible();
     await expect(
-      canvas.queryByRole('link', { name: /Milad’s Studio/ }),
-    ).toBeNull();
-    await expect(canvas.queryByText(/Unpair/)).toBeNull();
+      canvas.getAllByRole('button', { name: /^Unpair / }),
+    ).toHaveLength(3);
   },
 };
 
-export const OpeningAPairedDeviceShowsItsPage: Story = {
-  args: { devices: threeDevices },
+export const UnpairAsksFirstAndCancelKeepsTheDevice: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('link', { name: /iPhone 15 Pro/ }));
-    await expect(args.onOpenDevice).toHaveBeenCalledOnce();
-    await expect(args.onOpenDevice).toHaveBeenCalledWith('phone');
+    await userEvent.click(canvas.getByRole('button', unpairPixel));
+
+    const alert = await openAlert();
+
+    await userEvent.click(alert.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
+    await expect(args.onUnpairDevice).not.toHaveBeenCalled();
   },
 };
 
-// A phone never offers pairing: it is a Server Device action.
-export const APhoneDoesNotOfferPairing: Story = {
-  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
-  beforeEach: (): Promise<void> => settleLayout('phone'),
+export const ConfirmingUnpairsThatDevice: Story = {
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', unpairPixel));
+
+    const alert = await openAlert();
+
+    await userEvent.click(alert.getByRole('button', { name: 'Unpair' }));
+    await expect(args.onUnpairDevice).toHaveBeenCalledWith('pixel');
+  },
+};
+
+export const WithNoPairedDeviceItSaysSo: Story = {
+  args: { devices: onlyThisComputer },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('No other Devices yet')).toBeVisible();
+    await expect(canvas.getByRole('button', pairButton)).toBeEnabled();
+  },
+};
+
+export const PairingIsOffSendsTheOwnerToConnection: Story = {
+  args: { accessEnabled: false, devices: onlyThisComputer },
+  play: async ({ canvas, args, userEvent }) => {
+    await expect(canvas.getByText('Pairing is off')).toBeVisible();
+    await expect(canvas.getByRole('button', pairButton)).toBeDisabled();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Go to Connection' }),
+    );
+    await expect(args.onGoToConnection).toHaveBeenCalledOnce();
+  },
+};
+
+export const ABrowserIsNeverOfferedPairing: Story = {
+  args: { pairingOffered: false, devices: onlyThisComputer },
   play: async ({ canvas }) => {
     await expect(canvas.queryByRole('button', pairButton)).toBeNull();
   },
