@@ -7,20 +7,18 @@ const meta = {
   title: 'Screens/Settings/Devices',
   component: DeviceListView,
   argTypes: {
-    localNetworkAccess: { control: false },
-    saving: { control: 'boolean' },
-    error: { control: 'text' },
+    accessEnabled: { control: 'boolean' },
     pairingOffered: { control: 'boolean' },
     pairDeviceSheet: { control: false },
     devices: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
-    localNetworkAccess: { status: 'loaded', enabled: false },
-    onLocalNetworkAccessChange: action('change Local network access'),
-    onRetry: action('retry loading Local network access'),
+    accessEnabled: true,
+    devices: threeDevices,
     onPairDevice: action('open the pair sheet'),
-    onOpenDevice: action('open a Device'),
+    onUnpairDevice: action('unpair a Device'),
+    onGoToConnection: action('go to Connection'),
   },
 } satisfies Meta<typeof DeviceListView>;
 
@@ -28,48 +26,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Off: Story = {};
+// This computer is first and marked; each Paired Device has its own red Unpair.
+export const ThreeDevices: Story = {};
 
-export const On: Story = {
-  args: { localNetworkAccess: { status: 'loaded', enabled: true } },
-};
+export const NoOtherDevices: Story = { args: { devices: onlyThisComputer } };
 
-export const Saving: Story = { args: { saving: true } };
-
-export const Loading: Story = {
-  args: { localNetworkAccess: { status: 'loading' } },
-};
-
-export const LoadError: Story = {
-  args: { localNetworkAccess: { status: 'error' } },
-};
-
-export const Disconnected: Story = {
-  args: { localNetworkAccess: { status: 'disconnected' } },
+export const PairingIsOff: Story = {
+  args: { accessEnabled: false, devices: onlyThisComputer },
 };
 
 export const InABrowser: Story = {
-  args: {
-    localNetworkAccess: { status: 'loaded', enabled: true },
-    pairingOffered: false,
-  },
+  args: { pairingOffered: false, devices: onlyThisComputer },
 };
 
-export const ChangeError: Story = {
-  args: { error: 'Could not turn on Local network access: port in use.' },
-};
-
-// This computer is first and marked; each Paired Device is a chevron row that opens its page, where Unpair is.
-export const ThreeDevices: Story = {
-  args: {
-    localNetworkAccess: { status: 'loaded', enabled: true },
-    devices: threeDevices,
-  },
-};
-
-export const NoPairedDevices: Story = {
-  args: {
-    localNetworkAccess: { status: 'loaded', enabled: true },
-    devices: onlyThisComputer,
-  },
+export const Loading: Story = {
+  args: { accessEnabled: undefined, devices: undefined },
 };

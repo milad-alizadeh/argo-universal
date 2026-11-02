@@ -1,4 +1,3 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
@@ -8,10 +7,13 @@ import { serverUnpairCopy, useUnpairAsk } from './server-unpair-alert';
 
 export type ServerDetailLoad =
   | { status: 'missing' }
-  | ({ status: 'loaded'; showing: boolean } & Pick<
-      ServerRow,
-      'name' | 'serverDevice' | 'state'
-    >);
+  | ({
+      status: 'loaded';
+      showing: boolean;
+      // When it last answered and when this Device paired with it, already said in words; absent when not known.
+      lastConnected?: string;
+      paired?: string;
+    } & Pick<ServerRow, 'name' | 'serverDevice' | 'state'>);
 
 export interface ServerDetailViewProps {
   server: ServerDetailLoad;
@@ -86,8 +88,14 @@ function LoadedServerPage(props: LoadedProps): React.JSX.Element {
 const statusSection = (server: LoadedServer): React.JSX.Element => (
   <FieldGroup.Section footer={explanations[server.state]?.(server.name)}>
     <FieldGroup.Value title="Status" value={statusLabels[server.state]} />
+    {timeRow('Last connected', server.lastConnected)}
+    {timeRow('Paired', server.paired)}
   </FieldGroup.Section>
 );
+
+// A time this Device has not kept, such as a Server paired before it kept them, is left out rather than guessed.
+const timeRow = (title: string, value?: string): React.JSX.Element | null =>
+  value ? <FieldGroup.Value title={title} value={value} /> : null;
 
 // FieldGroup finds its sections by element type, so each is an element built here, not a component.
 const nextStep = (props: LoadedProps): React.JSX.Element | null =>
@@ -131,9 +139,10 @@ const step = (
 
 const unpairSection = (onPress: () => void): React.JSX.Element => (
   <FieldGroup.Section>
-    <Button
-      label={serverUnpairCopy.action}
-      variant="danger"
+    <FieldGroup.Link
+      title={serverUnpairCopy.action}
+      action
+      destructive
       onPress={onPress}
     />
   </FieldGroup.Section>

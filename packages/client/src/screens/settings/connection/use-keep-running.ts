@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import { useServerPaired } from '#lib/product/server-scope';
-import type { KeepRunningSetting } from './connection-detail-view';
+import type { KeepRunningSetting } from './connection-controls';
 import { keepRunningSetting } from './keep-running-setting';
 
 // The Server answers the setting to the Server Device alone, so a Paired Device never asks.

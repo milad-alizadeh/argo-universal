@@ -1,7 +1,10 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { PairPageView } from './pair-page-view';
+
+// The wait is a card over the page, drawn in a portal.
+const body = within(document.body);
 
 const meta = {
   title: 'Tests/Screens/Settings/PairPageView',
@@ -30,8 +33,8 @@ export const OffersTheWayOn: Story = {
 // The wait has nothing to retry, so its one action is Cancel.
 export const WaitingOffersCancel: Story = {
   args: { kind: 'waiting' },
-  play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+  play: async ({ args, userEvent }) => {
+    await userEvent.click(await body.findByRole('button', { name: 'Cancel' }));
     await expect(args.onAction).toHaveBeenCalledOnce();
   },
 };

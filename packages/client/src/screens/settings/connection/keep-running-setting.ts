@@ -1,4 +1,4 @@
-import type { KeepRunningSetting } from './connection-detail-view';
+import type { KeepRunningSetting } from './connection-controls';
 
 // The slice of the change mutation that the setting reads.
 export interface KeepRunningChange {

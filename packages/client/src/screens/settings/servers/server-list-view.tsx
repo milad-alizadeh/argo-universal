@@ -1,12 +1,16 @@
-import { Action } from '@repo/kit/primitives/actions/action';
-import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
+import {
+  FieldList,
+  type FieldListSection,
+} from '#lib/product/field-list/field-list';
 import {
   type ServerRow,
   serverListFooter,
   serverStateLabel,
+  serverStateTone,
 } from './server-rows';
 
 export interface ServerListViewProps {
@@ -16,7 +20,7 @@ export interface ServerListViewProps {
   lookingAt: string;
   // Opens a Server's own page: its state, showing it, and unpairing from it.
   onOpenServer: (id: string) => void;
-  // On a phone, Add a Server is the header's call to action; wide, a row below the list. Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
+  // Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
   onAddServer?: () => void;
 }
 
@@ -26,77 +30,46 @@ export interface ServerListViewProps {
  */
 export function ServerListView(props: ServerListViewProps): React.JSX.Element {
   return (
-    <SizeClass
-      compact={<ServerScreen {...props} wide={false} />}
-      wide={<ServerScreen {...props} wide />}
-    />
-  );
-}
-
-function ServerScreen(
-  props: ServerListViewProps & { wide: boolean },
-): React.JSX.Element {
-  return (
-    <Screen
-      title="Servers"
-      caption="The Argo Servers this App can show."
-      actions={props.wide ? undefined : addServerAction(props.onAddServer)}
-    >
-      {serverGroup(props)}
+    <Screen title="Servers" caption="The Argo Servers this App can show.">
+      <FieldList sections={sections(props)} />
     </Screen>
   );
 }
 
-const serverGroup = (
-  props: ServerListViewProps & { wide: boolean },
-): React.JSX.Element => (
-  <FieldGroup>
-    {serverSection(props)}
-    {props.wide ? addServerSection(props.onAddServer) : null}
-  </FieldGroup>
-);
+const sections = (props: ServerListViewProps): FieldListSection[] => [
+  {
+    rows: props.servers.map((server) => serverItem(server, props)),
+    footer: serverListFooter,
+  },
+  ...addServerSection(props.onAddServer),
+];
 
-const serverSection = (props: ServerListViewProps): React.JSX.Element => (
-  <FieldGroup.Section footer={serverListFooter}>
-    {props.servers.map((server) => serverLink(server, props))}
-  </FieldGroup.Section>
-);
-
-const serverLink = (
+// Each row says its own state in the subtitle, in the tone of the state: grey for a computer that did not answer, red for one that no longer knows this Device.
+const serverItem = (
   server: ServerRow,
   props: ServerListViewProps,
 ): React.JSX.Element => (
-  <FieldGroup.Link
+  <ListItem
     key={server.id}
     title={server.name}
-    value={rowValue(server, props.lookingAt)}
-    leading={{ sf: 'desktopcomputer', material: 'computer' }}
+    subtitle={serverStateLabel(server.state)}
+    subtitleTone={serverStateTone(server.state)}
+    value={server.id === props.lookingAt ? 'Showing' : undefined}
+    leading={<Icon name="computer" />}
+    disclosure
     onPress={() => props.onOpenServer(server.id)}
   />
 );
 
-// The row says what the Server is doing, and which one is on show.
-const rowValue = (server: ServerRow, lookingAt: string): string =>
-  server.id === lookingAt
-    ? `Showing · ${serverStateLabel(server.state)}`
-    : serverStateLabel(server.state);
+const addServerRow = (onPress: () => void): React.JSX.Element => (
+  <ListItem
+    key="add"
+    title="Add a Server"
+    leading={<Icon name="add" />}
+    onPress={onPress}
+  />
+);
 
-const addServerAction = (
-  onPress: (() => void) | undefined,
-): React.JSX.Element | undefined =>
-  onPress && <Action label="Add a Server" icon="add" onPress={onPress} />;
-
-// FieldGroup finds its sections by element type, so this is an element built here, not a component.
 const addServerSection = (
   onPress: (() => void) | undefined,
-): React.JSX.Element | null =>
-  onPress ? (
-    <FieldGroup.Section>
-      <FieldGroup.Link
-        title="Add a Server"
-        leading={{ sf: 'plus', material: 'add' }}
-        action
-        onPress={onPress}
-      />
-    </FieldGroup.Section>
-  ) : null;
+): FieldListSection[] => (onPress ? [{ rows: [addServerRow(onPress)] }] : []);

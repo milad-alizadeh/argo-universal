@@ -8,6 +8,7 @@ import {
   loadKnownServers,
   loadLookedAtServer,
 } from './known-servers';
+import { forgetServerHistory, notePaired } from './server-history';
 
 export interface ServersSnapshot {
   // The own Server first, then each Server this Device has paired with, in the order Pairing kept them.
@@ -78,6 +79,7 @@ class AppServersStore implements ServersStore {
     });
     keepLookedAtServer(added.id);
     void keepKnownServer(known);
+    void notePaired(known.key, Date.now());
   };
 
   public readonly remove = (id: string): void => {
@@ -93,6 +95,7 @@ class AppServersStore implements ServersStore {
       read: true,
     });
     void forgetKnownServer(id);
+    void forgetServerHistory(id);
   };
 
   private set(next: ServersSnapshot): void {

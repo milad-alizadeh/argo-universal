@@ -30,14 +30,8 @@ type Story = StoryObj<typeof meta>;
 
 export const EachServerSaysItsOwnState: Story = {
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('link', { name: /Studio, Connected/ }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('link', {
-        name: /Workshop bench, Not found on this network/,
-      }),
-    ).toBeVisible();
+    await expect(canvas.getByText('Not found on this network')).toBeVisible();
+    await expect(canvas.getAllByText('Connected')).toHaveLength(2);
   },
 };
 
@@ -45,9 +39,7 @@ export const EachServerSaysItsOwnState: Story = {
 export const OneServerReadsAsTheOrdinaryCase: Story = {
   args: { servers: oneServer },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('link', { name: /Showing · Connected/ }),
-    ).toBeVisible();
+    await expect(canvas.getByText('Showing')).toBeVisible();
     await expect(
       canvas.queryByText(/no Servers|pair this|empty|unavailable/i),
     ).toBeNull();
@@ -56,7 +48,7 @@ export const OneServerReadsAsTheOrdinaryCase: Story = {
 
 export const OpensAServersPageWhenItsRowIsPressed: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('link', { name: /Studio/ }));
+    await userEvent.click(canvas.getByText('Studio'));
     await expect(args.onOpenServer).toHaveBeenCalledOnce();
     await expect(args.onOpenServer).toHaveBeenCalledWith('studio');
   },
@@ -65,9 +57,7 @@ export const OpensAServersPageWhenItsRowIsPressed: Story = {
 export const SaysWhichServerIsShown: Story = {
   args: { lookingAt: 'studio' },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('link', { name: /Studio, Showing · Connected/ }),
-    ).toBeVisible();
+    await expect(canvas.getByText('Showing')).toBeVisible();
   },
 };
 
@@ -75,15 +65,13 @@ export const SaysWhichServerIsShown: Story = {
 export const AServerThatUnpairedThisDeviceNeedsPairingAgain: Story = {
   args: { servers: unpairedServers },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('link', { name: /Studio, Needs pairing again/ }),
-    ).toBeVisible();
+    await expect(canvas.getByText('Needs pairing again')).toBeVisible();
   },
 };
 
-export const AddAServerIsARowBelowTheListWhenWide: Story = {
+export const AddAServerIsARowBelowTheList: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', addServer));
+    await userEvent.click(canvas.getByText(addServer.name));
     await expect(args.onAddServer).toHaveBeenCalledOnce();
     await expect(args.onOpenServer).not.toHaveBeenCalled();
   },
@@ -96,12 +84,11 @@ export const NoAddRowWhereAnAppCannotPair: Story = {
   },
 };
 
-// On a phone, Add a Server is the header's call to action, not a row.
-export const AddAServerIsAHeaderActionOnAPhone: Story = {
+// A phone has the same row, below the list, as the approved design has it.
+export const AddAServerIsTheSameRowOnAPhone: Story = {
   beforeEach: (): Promise<void> => settleLayout('phone'),
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', addServer));
+    await userEvent.click(canvas.getByText(addServer.name));
     await expect(args.onAddServer).toHaveBeenCalledOnce();
-    await expect(canvas.queryByText(addServer.name)).toBeNull();
   },
 };

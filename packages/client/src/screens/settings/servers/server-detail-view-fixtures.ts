@@ -9,6 +9,8 @@ const paired = {
 
 export const connectedServer = {
   ...paired,
+  paired: '3 October',
+  lastConnected: 'Now',
   state: 'connected',
 } satisfies ServerDetailLoad;
 
@@ -20,6 +22,8 @@ export const shownServer = {
 // The computer did not answer: nothing is wrong with the pairing.
 export const unreachableServer = {
   ...paired,
+  paired: '3 October',
+  lastConnected: 'Today, 09:12',
   state: 'unreachable',
 } satisfies ServerDetailLoad;
 
@@ -27,6 +31,8 @@ export const unreachableServer = {
 export const notAllowedServer = {
   ...paired,
   name: 'Office laptop',
+  paired: '28 September',
+  lastConnected: 'Yesterday, 18:40',
   state: 'not-allowed',
 } satisfies ServerDetailLoad;
 

@@ -1,6 +1,5 @@
 import { Alert, type AlertAction } from '@repo/kit/primitives/overlays/alert';
 import type * as React from 'react';
-import { useState } from 'react';
 
 export interface DeviceUnpairAlertProps {
   open: boolean;
@@ -10,11 +9,7 @@ export interface DeviceUnpairAlertProps {
   onUnpair: () => void;
 }
 
-export const unpairCopy = {
-  action: 'Unpair',
-  cancel: 'Cancel',
-  row: 'Unpair this Device',
-};
+const unpairCopy = { action: 'Unpair', cancel: 'Cancel' };
 
 // Asks first and offers no Undo: pairing again needs the other Device in hand. The answer is red text only.
 export const DeviceUnpairAlert = (
@@ -33,16 +28,3 @@ const actions = (onUnpair: () => void): AlertAction[] => [
   { label: unpairCopy.cancel, role: 'cancel' },
   { label: unpairCopy.action, tone: 'danger', onPress: onUnpair },
 ];
-
-// The question and the press that opens it, so a page keeps one handle and one element.
-export function useUnpairAsk(
-  props: Omit<DeviceUnpairAlertProps, 'open' | 'onOpenChange'>,
-): readonly [() => void, React.JSX.Element] {
-  const [open, onOpenChange] = useState(false);
-
-  const alert = (
-    <DeviceUnpairAlert {...props} open={open} onOpenChange={onOpenChange} />
-  );
-
-  return [() => onOpenChange(true), alert];
-}
