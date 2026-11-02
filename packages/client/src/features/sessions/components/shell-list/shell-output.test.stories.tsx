@@ -202,7 +202,14 @@ export const LongOutputLineRemainsReadable: Story = {
   play: async ({ canvas }) => {
     await settleLayout('phone');
     const line = await canvas.findByText(longOutputLine);
-    await expect(line.scrollWidth).toBeLessThanOrEqual(line.clientWidth);
+    const row = line.parentElement;
+
+    await expect(row).not.toBeNull();
+
+    if (!row) throw new Error('Output row is missing');
+
+    await expect(row.clientWidth).toBeGreaterThan(0);
+    await expect(row.scrollWidth).toBeLessThanOrEqual(row.clientWidth);
   },
 };
 
