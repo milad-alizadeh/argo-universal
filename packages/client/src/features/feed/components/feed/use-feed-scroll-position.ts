@@ -2,6 +2,7 @@ import type { LegendListRef } from '@legendapp/list/react-native';
 import { useNewestKeyWhenLeftEnd } from '@repo/kit/primitives/lists/list';
 import {
   type RefObject,
+  useCallback,
   useEffect,
   useEffectEvent,
   useRef,
@@ -10,34 +11,10 @@ import {
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry, entryKey } from './feed-entry';
 import { type FeedAnchor, scrollMemory } from './feed-scroll-memory';
+import { useRestoreFeedAnchor } from './use-restore-feed-anchor';
 import { useSeekFeedAnchor } from './use-seek-feed-anchor';
 
 type ListRef = RefObject<LegendListRef | null>;
-
-// A frame after the page is first shown, once, scrolls to the very end. A page preloaded out of sight, as behind iOS's long-press preview, gains its header's inset only once shown.
-function showAnchor(list: ListRef, anchor: FeedAnchor | null): void {
-  const current = list.current;
-
-  if (!current) return;
-
-  if (anchor === null) void current.scrollToEnd({ animated: false });
-  else
-    void current.scrollToKey({
-      key: anchor.key,
-      viewPosition: 0,
-      viewOffset: -anchor.offset,
-      animated: false,
-    });
-}
-
-const isSameAnchor = (list: ListRef, anchor: FeedAnchor): boolean =>
-  list.current?.anchorVisibleContent({ hold: false })?.key === anchor.key;
-
-function settleAnchor(list: ListRef, anchor: FeedAnchor | null): void {
-  if (!anchor) return;
-
-  if (isSameAnchor(list, anchor)) showAnchor(list, anchor);
-}
 
 const containsAnchor = (
   entries: FeedEntry[],
@@ -45,58 +22,67 @@ const containsAnchor = (
 ): boolean =>
   anchor === null || entries.some((entry) => entryKey(entry) === anchor.key);
 
-const seekActions = (
-  list: ListRef,
-  anchor: FeedAnchor | null,
-  input: PositionInput,
-): Pick<
-  Parameters<typeof useSeekFeedAnchor>[0],
-  'requestOlder' | 'open' | 'settle'
-> => ({
-  requestOlder: input.onStartReached,
-  open: (present: boolean): void => showAnchor(list, present ? anchor : null),
-  settle: (): void => settleAnchor(list, anchor),
-});
-
 function seekInput(
-  list: ListRef,
-  anchor: FeedAnchor | null,
   input: PositionInput & { shown: boolean },
+  anchor: FeedAnchor | null,
+  open: (anchor: FeedAnchor | null) => void,
 ): Parameters<typeof useSeekFeedAnchor>[0] {
   return {
-    ...seekActions(list, anchor, input),
     shown: input.shown,
     found: containsAnchor(input.entries, anchor),
     oldest: keyOf(input.entries[0]),
     hasOlder: input.hasOlder,
     loadingOlder: input.loadingOlder,
+    requestOlder: input.onStartReached,
+    open: (present): void => open(present ? anchor : null),
   };
+}
+
+function useCancelRestoration(
+  cancelSeek: () => void,
+  cancelRestoration: () => void,
+): () => void {
+  return useCallback(() => {
+    cancelSeek();
+    cancelRestoration();
+  }, [cancelSeek, cancelRestoration]);
 }
 
 function useScrollsToEndWhenShown(
   list: ListRef,
   anchor: FeedAnchor | null,
   input: PositionInput,
-): void {
+): () => void {
   const shown = useScreenFocused() && !input.opensAtStart;
+  const restoration = useRestoreFeedAnchor(list, shown);
+  const { cancel: cancelRestoration } = restoration;
 
-  useSeekFeedAnchor(seekInput(list, anchor, { ...input, shown }));
+  const cancelSeek = useSeekFeedAnchor(
+    seekInput({ ...input, shown }, anchor, restoration.open),
+  );
+
+  return useCancelRestoration(cancelSeek, cancelRestoration);
+}
+
+interface Opening {
+  initialIndex: number;
+  cancelRestore: () => void;
 }
 
 function useOpensAtEnd(
   list: ListRef,
   lastIndex: number,
   input: PositionInput,
-): number {
+): Opening {
   const [initialIndex] = useState(input.opensAtStart ? 0 : lastIndex);
 
   const [anchor] = useState(() =>
     input.sessionId ? scrollMemory.read(input.sessionId) : null,
   );
 
-  useScrollsToEndWhenShown(list, anchor, input);
+  const cancelRestore = useScrollsToEndWhenShown(list, anchor, input);
 
-  return initialIndex;
+  return { initialIndex, cancelRestore };
 }
 
 const keyOf = (entry: FeedEntry | undefined): string | undefined =>
@@ -134,13 +120,14 @@ export interface FeedScrollPosition {
   initialIndex: number;
   newestKeyWhenLeftEnd: string | null;
   atEnd: boolean;
+  cancelRestore: () => void;
 }
 
 const positionAt = (
-  initialIndex: number,
+  opening: Opening,
   newestKeyWhenLeftEnd: string | null,
 ): FeedScrollPosition => ({
-  initialIndex,
+  ...opening,
   newestKeyWhenLeftEnd,
   atEnd: newestKeyWhenLeftEnd === null,
 });
@@ -162,9 +149,9 @@ export function useFeedScrollPosition(
 ): FeedScrollPosition {
   const { entries, newestKey } = input;
 
-  const initialIndex = useOpensAtEnd(list, entries.length - 1, input);
+  const opening = useOpensAtEnd(list, entries.length - 1, input);
 
   useRequestsOlderNearTop(list, keyOf(entries[0]), input.onStartReached);
 
-  return positionAt(initialIndex, useNewestKeyWhenLeftEnd(list, newestKey));
+  return positionAt(opening, useNewestKeyWhenLeftEnd(list, newestKey));
 }

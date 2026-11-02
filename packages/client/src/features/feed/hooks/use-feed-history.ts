@@ -15,12 +15,7 @@ type HistoryCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
 
 type FeedHistory = Pick<
   UseInfiniteQueryResult<InfiniteData<FeedPageOutput>>,
-  | 'data'
-  | 'error'
-  | 'refetch'
-  | 'isFetchNextPageError'
-  | 'isFetchingNextPage'
-  | 'hasNextPage'
+  'data' | 'error' | 'refetch' | 'isFetchNextPageError' | 'isFetchingNextPage'
 > & { loadOlder: () => Promise<void> };
 
 const initialPageParam: HistoryCursor = { direction: 'tail' };

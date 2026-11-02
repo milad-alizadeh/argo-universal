@@ -9,6 +9,7 @@ import type { EntryDrawing } from './feed-row';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
 import { useFeedGrowth } from './use-feed-growth';
 import {
+  type FeedScrollPosition,
   useFeedScrollPosition,
   useReportsAtEnd,
 } from './use-feed-scroll-position';
@@ -44,8 +45,21 @@ export function FeedList(props: FeedListProps): React.JSX.Element {
   useReportsAtEnd(position.atEnd, props.onAtEndChange);
   const shared = { list, ...props, ...position };
 
+  return <FeedBodyLayout {...shared} />;
+}
+
+type FeedBodyLayoutProps = FeedScrollProps &
+  Pick<FeedScrollPosition, 'cancelRestore' | 'newestKeyWhenLeftEnd'> & {
+    newestKey: string;
+  };
+
+function FeedBodyLayout(shared: FeedBodyLayoutProps): React.JSX.Element {
   return (
-    <View style={fillShrinkable} className="web:select-text">
+    <View
+      style={fillShrinkable}
+      className="web:select-text"
+      onTouchStart={shared.cancelRestore}
+    >
       <FeedBody {...shared} />
       <JumpToLatestWhenAway {...shared} />
     </View>

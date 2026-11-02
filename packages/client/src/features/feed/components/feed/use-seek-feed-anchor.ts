@@ -1,4 +1,11 @@
-import { useEffect, useEffectEvent, useRef } from 'react';
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from 'react';
+import { inputGuard } from './use-restore-feed-anchor';
 
 interface SeekInput {
   shown: boolean;
@@ -8,23 +15,17 @@ interface SeekInput {
   loadingOlder: boolean;
   requestOlder: () => void;
   open: (found: boolean) => void;
-  settle: () => void;
 }
 
 interface Asked {
   oldest: string | undefined;
   pages: number;
   opened: boolean;
+  cancelled: boolean;
   frame?: number;
-  fallback?: ReturnType<typeof setTimeout>;
-  settle?: ReturnType<typeof setTimeout>;
 }
 
 const maxRestorePages = 100;
-
-const settleHistoryMs = 1000;
-
-const settleLayoutMs = 300;
 
 const exhausted = (input: SeekInput, asked: Asked): boolean =>
   input.hasOlder === false || asked.pages >= maxRestorePages;
@@ -37,35 +38,25 @@ function requestPage(input: SeekInput, asked: Asked): void {
   input.requestOlder();
 }
 
+const available = (asked: Asked): boolean => !asked.opened && !asked.cancelled;
+
 const canAdvance = (input: SeekInput, asked: Asked): boolean =>
-  input.shown && !asked.opened && !!input.oldest;
+  input.shown && available(asked) && !!input.oldest;
 
 const needsPage = (input: SeekInput, asked: Asked): boolean =>
   !input.found && !exhausted(input, asked);
 
-function scheduleFallback(input: SeekInput, asked: Asked): void {
-  asked.fallback = setTimeout(() => {
-    asked.fallback = undefined;
-    input.open(false);
-  }, settleHistoryMs);
-}
-
 function scheduleFrame(input: SeekInput, asked: Asked): void {
   asked.frame = requestAnimationFrame(() => {
     asked.frame = undefined;
-    input.open(true);
-    asked.settle = setTimeout(() => {
-      asked.settle = undefined;
-      input.settle();
-    }, settleLayoutMs);
+    input.open(input.found);
   });
 }
 
 function scheduleOpen(input: SeekInput, asked: Asked): void {
   asked.opened = true;
 
-  if (input.found) scheduleFrame(input, asked);
-  else scheduleFallback(input, asked);
+  scheduleFrame(input, asked);
 }
 
 function advance(input: SeekInput, asked: Asked): void {
@@ -77,15 +68,6 @@ function advance(input: SeekInput, asked: Asked): void {
 }
 
 function cancelPending(asked: Asked): void {
-  clearTimeout(asked.settle);
-  asked.settle = undefined;
-
-  if (asked.fallback !== undefined) {
-    clearTimeout(asked.fallback);
-    asked.fallback = undefined;
-    asked.opened = false;
-  }
-
   if (asked.frame === undefined) return;
 
   cancelAnimationFrame(asked.frame);
@@ -93,9 +75,15 @@ function cancelPending(asked: Asked): void {
   asked.opened = false;
 }
 
-// Load a bounded amount of history before asking the list to show an older row.
-export function useSeekFeedAnchor(input: SeekInput): void {
-  const asked = useRef<Asked>({ oldest: undefined, pages: 0, opened: false });
+function useInputGuard(shown: boolean, cancel: () => void): void {
+  useEffect(() => {
+    if (!shown) return;
+
+    return inputGuard(cancel);
+  }, [shown, cancel]);
+}
+
+function useSeekUpdates(input: SeekInput, asked: RefObject<Asked>): void {
   const next = useEffectEvent(() => advance(input, asked.current));
 
   useEffect(() => {
@@ -110,5 +98,27 @@ export function useSeekFeedAnchor(input: SeekInput): void {
     input.oldest,
     input.hasOlder,
     input.loadingOlder,
+    asked,
   ]);
+}
+
+// Load a bounded amount of history before asking the list to show an older row.
+export function useSeekFeedAnchor(input: SeekInput): () => void {
+  const asked = useRef<Asked>({
+    oldest: undefined,
+    pages: 0,
+    opened: false,
+    cancelled: false,
+  });
+
+  const cancel = useCallback(() => {
+    asked.current.cancelled = true;
+    cancelPending(asked.current);
+  }, []);
+
+  useInputGuard(input.shown, cancel);
+
+  useSeekUpdates(input, asked);
+
+  return cancel;
 }

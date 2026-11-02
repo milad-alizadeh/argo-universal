@@ -159,7 +159,11 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
   },
 };
 
-function ReopenedFeed(): React.JSX.Element {
+function ReopenedFeed({
+  sessionId = 'restored-feed-test',
+}: {
+  sessionId?: string;
+}): React.JSX.Element {
   const [open, setOpen] = useState(true);
 
   return (
@@ -168,7 +172,7 @@ function ReopenedFeed(): React.JSX.Element {
         label={switchSessionLabel}
         onPress={() => setOpen((current) => !current)}
       />
-      {open && <Feed {...feedArgs} sessionId="restored-feed-test" />}
+      {open && <Feed {...feedArgs} sessionId={sessionId} />}
     </>
   );
 }
@@ -202,6 +206,31 @@ export const RestoresReadingAfterRemount: Story = {
         ).toBeLessThan(50),
       scrollAwayWait,
     );
+  },
+};
+
+export const UserScrollStopsRestoring: Story = {
+  render: () => <ReopenedFeed sessionId="restore-user-scroll-test" />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const original = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(scrolledToEnd(original)).toBe(true),
+      scrollAwayWait,
+    );
+    scrollUp(original, original.clientHeight);
+    await afterTwoFrames();
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await afterTwoFrames();
+    scrollUp(restored, restored.clientHeight);
+    const chosen = await markSettledMiddleOfView(restored);
+    await expect(await driftWhileUntouched(chosen)).toBeLessThan(3);
   },
 };
 
