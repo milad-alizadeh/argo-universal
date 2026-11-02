@@ -35,7 +35,9 @@ export async function expectMessage(
   const box = page.getByRole('textbox', { name: messageLabel, includeHidden });
 
   const shown = (): Promise<string> =>
-    box.evaluate((e) => ('value' in e ? String(e.value) : e.innerText.trim()));
+    box.evaluate<string, void, HTMLElement>((e) =>
+      'value' in e ? String(e.value) : e.innerText.trim(),
+    );
 
   await expect.poll(shown).toBe(text);
 }

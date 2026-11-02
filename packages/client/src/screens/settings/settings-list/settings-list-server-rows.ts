@@ -1,4 +1,5 @@
 import type { RowBadge } from '@repo/kit/primitives/lists/list-item';
+import { ownServerName } from '#lib/product/server-scope';
 import {
   connectionValue,
   countValue,
@@ -73,15 +74,22 @@ const connectionStatuses: Record<
   ready: { tone: 'success', label: 'available' },
 };
 
-export function connectionRow(
-  props: SettingsListViewProps,
-  wide: boolean,
-): SettingsRow {
+// Every Server this App holds a Connection to. One Server is the ordinary case, so the row reads the same with one.
+export function serversRow(props: SettingsListViewProps): SettingsRow {
+  return {
+    label: 'Servers',
+    icon: 'server',
+    href: '/settings/servers',
+    value: props.serverName ?? ownServerName,
+  };
+}
+
+export function connectionRow(props: SettingsListViewProps): SettingsRow {
   return {
     label: 'Connection',
-    icon: 'server',
+    icon: 'connection',
     href: '/settings/connection',
-    value: connectionValue(props, wide),
+    value: connectionValue(props),
     status: connectionStatuses[props.status ?? 'ready'],
   };
 }

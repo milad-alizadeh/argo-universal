@@ -11,6 +11,7 @@ import {
 type ServerSource = {
   context: Pick<
     EngineContext,
+    | 'now'
     | 'sessionTokens'
     | 'createId'
     | 'commandAdmission'
@@ -30,6 +31,7 @@ type ServerSource = {
     | 'hookPort'
     | 'operationWaitClock'
     | 'slashCommandsWaitMs'
+    | 'discoveryName'
   >;
   self: Pick<AnyActorRef, 'system'>;
 };
@@ -56,6 +58,7 @@ type ServerConfiguration = Pick<
   HttpServerOptions,
   | 'home'
   | 'port'
+  | 'now'
   | 'version'
   | 'startedAt'
   | 'notificationOptions'
@@ -64,21 +67,35 @@ type ServerConfiguration = Pick<
   | 'pluginNetwork'
   | 'pluginOAuth'
   | 'pluginClock'
+  | 'discoveryName'
 >;
 
 function serverConfiguration(
   context: ServerConfiguration,
 ): ServerConfiguration {
   return {
-    home: context.home,
-    port: context.port,
-    version: context.version,
-    startedAt: context.startedAt,
+    ...whereAndWhat(context),
     notificationOptions: context.notificationOptions,
+    discoveryName: context.discoveryName,
     firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
     keychain: context.keychain,
     pluginNetwork: context.pluginNetwork,
     ...pluginFlowOptions(context),
+  };
+}
+
+function whereAndWhat(
+  context: ServerConfiguration,
+): Pick<
+  ServerConfiguration,
+  'home' | 'port' | 'version' | 'startedAt' | 'now'
+> {
+  return {
+    now: context.now,
+    home: context.home,
+    port: context.port,
+    version: context.version,
+    startedAt: context.startedAt,
   };
 }
 

@@ -3,6 +3,7 @@ import { BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { home, port, readdirSafe } from '#mocks/engine-http';
+import { appOrigin } from '#mocks/plugin-assets';
 
 it('stores an upload sent as multipart FormData over HTTP', async (): Promise<void> => {
   const form = new FormData();
@@ -10,6 +11,7 @@ it('stores an upload sent as multipart FormData over HTTP', async (): Promise<vo
 
   const response = await fetch(`http://127.0.0.1:${port}/trpc/blob.upload`, {
     method: 'POST',
+    headers: appOrigin,
     body: form,
   });
 
@@ -23,6 +25,7 @@ it('stores an upload sent as multipart FormData over HTTP', async (): Promise<vo
 
   const stored = await fetch(
     `http://127.0.0.1:${port}/blobs/${result.data.blobId}`,
+    { headers: appOrigin },
   );
 
   expect(await stored.text()).toBe('png');
@@ -34,6 +37,7 @@ it('refuses an upload over 20 MB before reading all of it', async (): Promise<vo
 
   const response = await fetch(`http://127.0.0.1:${port}/trpc/blob.upload`, {
     method: 'POST',
+    headers: appOrigin,
     body: form,
   });
 

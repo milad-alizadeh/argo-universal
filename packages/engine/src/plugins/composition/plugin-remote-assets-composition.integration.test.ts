@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { localhost } from '#mocks/fetch-fixture-server';
 import { journeyMs } from '#mocks/journey-budget';
+import { appMediaLoad } from '#mocks/plugin-assets';
 import {
   fixtureNetwork,
   httpsServer,
@@ -72,6 +73,7 @@ it.each([
 
     const response = await fetch(
       `${url}/plugin-assets/probe/5240672d7b51756b829ad0ef8d9468b7a078afa2f410484fd3892dab47becb72.${format}`,
+      { headers: appMediaLoad },
     );
 
     expect(response.status).toBe(200);

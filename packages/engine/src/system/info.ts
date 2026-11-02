@@ -1,8 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { hostname } from 'node:os';
 import type { SystemInfo } from '@repo/contracts';
+import type { KeepRunningDeps } from './keep-running';
 
-export type SystemDeps = Pick<SystemInfo, 'version' | 'startedAt'>;
+export type SystemDeps = Pick<SystemInfo, 'version' | 'startedAt'> &
+  KeepRunningDeps;
 
 // macOS keeps the name people gave the computer apart from its network host name.
 function readComputerName(): string {

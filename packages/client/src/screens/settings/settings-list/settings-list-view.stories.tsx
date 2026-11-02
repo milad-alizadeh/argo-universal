@@ -11,6 +11,7 @@ import {
 import {
   disconnectedSettings,
   loadingSettings,
+  pairedSettings,
   readySettings,
 } from './settings-list-view-fixtures';
 
@@ -77,3 +78,5 @@ export const Settings: Story = {
 export const Loading: Story = { args: loadingSettings };
 
 export const Disconnected: Story = { args: disconnectedSettings };
+
+export const OnAPairedDevice: Story = { args: pairedSettings };

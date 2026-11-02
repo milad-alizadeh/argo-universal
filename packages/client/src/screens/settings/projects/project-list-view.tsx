@@ -39,7 +39,6 @@ function ProjectsPage(props: SearchedProps): React.JSX.Element {
 function screenProps(props: SearchedProps): ScreenProps {
   return {
     title: projectsTitle,
-    caption: props.caption,
     primaryAction: addProject,
     search: { label: searchLabel },
     value: props.search,

@@ -1,7 +1,5 @@
 export { PlaceholderDetailView } from './components/placeholder-detail-view/placeholder-detail-view';
 
-export { useServerPageCaption } from './hooks/use-server-caption';
-
 export { useProjects } from './hooks/use-projects';
 
 export { homePath } from './utils/home-path';
@@ -27,3 +25,9 @@ export {
 } from './stores/slot-visibility';
 
 export { SettingsLoading } from './components/settings-loading/settings-loading';
+
+export { PairDeviceSheet } from './components/pair-device/pair-device-sheet';
+
+export { pairingOffered } from './utils/pairing-offered';
+
+export { usePairDevice } from './hooks/use-pair-device';

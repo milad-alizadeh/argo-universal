@@ -7,7 +7,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { ServerPlaceProvider } from '../../../../lib/product/server-place';
+import { ServerScopeProvider } from '#lib/product/server-scope';
 import { StartSessionIn, type StartSessionInProps } from './start-session-in';
 
 const searchName = 'Search Project';
@@ -168,9 +168,15 @@ export const ReconnectingOnThisComputer: Story = {
 // A device paired to a Server on another computer names that computer.
 export const PairedToAnotherComputer: Story = {
   render: (args): React.JSX.Element => (
-    <ServerPlaceProvider paired>
+    <ServerScopeProvider
+      server={{
+        id: 'other-computer',
+        name: serverInfo.name,
+        serverDevice: false,
+      }}
+    >
       <ChoosingProject {...args} />
-    </ServerPlaceProvider>
+    </ServerScopeProvider>
   ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText(serverInfo.name)).toBeVisible();

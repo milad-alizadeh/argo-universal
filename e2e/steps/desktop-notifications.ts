@@ -67,7 +67,7 @@ When(
     // A hidden window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click as the other background steps do.
     await page
       .getByRole('button', { name: 'Settings', exact: true })
-      .evaluate((button) => button.click());
+      .evaluate<void, void, HTMLElement>((button) => button.click());
     await expect(page).toHaveURL(/\/settings\//);
     await expect.poll(() => windowState(application)).toEqual(background);
     await page.evaluate(() => globalThis.notificationProbe.click());
@@ -112,7 +112,7 @@ When(
   async ({ page }): Promise<void> => {
     const send = page.getByRole('button', { name: 'Send', exact: true });
     await expect(send).toBeEnabled();
-    await send.evaluate((button) => button.click());
+    await send.evaluate<void, void, HTMLElement>((button) => button.click());
     await expect(page).toHaveURL(
       /\/sessions\/(?!new)[^/]+$/,
       sessionOpenTimeout,
@@ -126,7 +126,7 @@ When(
   async ({ page }): Promise<void> => {
     await page
       .getByRole('button', { name: 'Stop', exact: true })
-      .evaluate((button) => button.click());
+      .evaluate<void, void, HTMLElement>((button) => button.click());
     await expect(
       page.getByRole('button', { name: 'Stop', exact: true }),
     ).toHaveCount(0);
@@ -148,7 +148,7 @@ When(
     await page
       .getByRole('region', { name: 'Elicitation questions' })
       .getByRole('button', { name: 'Skip', exact: true })
-      .evaluate((button) => button.click());
+      .evaluate<void, void, HTMLElement>((button) => button.click());
   },
 );
 

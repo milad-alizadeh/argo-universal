@@ -19,6 +19,7 @@
     "@repo/server": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/universal-app": "workspace:*",
+    "@trpc/client": "catalog:",
     "@types/node": "catalog:",
     "esbuild": "catalog:",
     "node-pty": "catalog:",

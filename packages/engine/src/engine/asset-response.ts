@@ -10,7 +10,10 @@ import type { RequestGuard } from './request-guard';
 
 export type AssetReader = PluginRuntime['openAsset'];
 
-type AssetServices = { guard: RequestGuard; readAsset: AssetReader };
+type AssetServices = {
+  readAsset: AssetReader;
+  guard: Pick<RequestGuard, 'allowsOrigin'>;
+};
 
 type AssetHeaders = {
   'content-type': string;
@@ -25,17 +28,15 @@ const assetRoute = /^\/plugin-assets\/([^/]+)\/([^.]+)\.([^/?]+)$/;
 
 const readMethods = new Set(['GET', 'HEAD']);
 
+// Whoever is asking was settled by the listener, which admits no request this route would have to turn away itself (#1696).
 export function handleAsset(
   options: AssetServices,
   request: IncomingMessage,
   response: ServerResponse,
 ): void {
-  if (!options.guard.allowsOrigin(request.headers.origin))
-    return answerError(response, httpStatus.forbidden, 'Forbidden');
-
   if (!isReadMethod(request.method)) return methodNotAllowed(response);
 
-  allowOrigin(request.headers.origin, response);
+  allowOrigin(options.guard, request.headers.origin, response);
   serveAsset(options.readAsset, request, response).catch(
     (cause: unknown): void => reportHttpFailure(response, cause),
   );
@@ -50,11 +51,17 @@ function methodNotAllowed(response: ServerResponse): void {
   });
 }
 
+/*
+ * Only an Origin this Server serves may read a Plugin's asset cross-origin, exactly as on the tRPC path.
+ * A recognised token says which Device is asking; it is not a reason to answer a page on an Origin this Server never serves, which is how a request that proves by token and carries a foreign Origin used to get the bytes reflected back to it.
+ */
 function allowOrigin(
+  guard: Pick<RequestGuard, 'allowsOrigin'>,
   origin: string | undefined,
   response: ServerResponse,
 ): void {
-  if (origin) response.setHeader('access-control-allow-origin', origin);
+  if (origin !== undefined && guard.allowsOrigin(origin))
+    response.setHeader('access-control-allow-origin', origin);
 }
 
 function assetReference(path: string): PluginAssetRef | null {

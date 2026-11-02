@@ -4,9 +4,15 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http';
-import { requestHostAllowed } from '../../rpc/request-host';
 
 const oauthPort = 51789;
+
+/*
+ * This listener is the owner's browser coming back from a sign-in on loopback, and nothing else: it accepts the two spellings of its own address.
+ * It is a separate `http.Server` of its own, bound to 127.0.0.1 on its own port, and not a route behind the Server's front door: the redirect arrives from the system browser, which cannot speak the encrypted channel. So it keeps the `Host` allowlist that the tRPC API gave up when the handshake became the gate there (ADR-0045).
+ */
+const callbackHostAllowed = (host: string | undefined): boolean =>
+  host === `127.0.0.1:${oauthPort}` || host === `localhost:${oauthPort}`;
 
 // Naming the port is how a person learns what to free; the Plugin shows this message.
 export const portTakenMessage = `Port ${oauthPort} is already in use. Free the port, then try again.`;
@@ -83,7 +89,7 @@ export class OAuthListener {
   }
 
   private callback(request: IncomingMessage, response: ServerResponse): void {
-    if (!requestHostAllowed(oauthPort, request.headers.host)) {
+    if (!callbackHostAllowed(request.headers.host)) {
       response.writeHead(forbidden).end();
 
       return;

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
-import type { RpcConnection } from '../rpc';
+import { serverDeviceIdentity, type RpcConnection } from '../rpc';
 import type { AppRouter } from './router';
 
 export type HttpCaller = (
@@ -27,6 +27,6 @@ function connectionOf(signal: AbortSignal): RpcConnection {
     id: randomUUID(),
     signal,
     surface: currentPluginSurface('web'),
-    serverDevice: true,
+    identity: serverDeviceIdentity,
   };
 }

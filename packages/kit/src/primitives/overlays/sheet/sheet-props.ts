@@ -21,6 +21,11 @@ export type SheetProps = KitProps<'Sheet'> & {
   footer?: ReactNode;
   // Pads composed content, such as a form or a Plugin's, with the standard sheet inset; lists and pages that draw their own margins, a FieldGroup among them, leave it off.
   inset?: boolean;
+  /*
+   * A centred card wide enough for a page that sets two columns beside each other, as Pair a Device does;
+   * a window too narrow for it keeps the card to the window, and a drawer has no width of its own to widen.
+   */
+  wide?: boolean;
 };
 
 export interface SheetScreenProps {

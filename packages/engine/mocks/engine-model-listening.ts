@@ -30,6 +30,7 @@ function listeningInput(): HttpServerOptions {
 
 const listenerIdentity = {
   createId: input.createId,
+  now: input.now,
   home: input.home,
   port: 7337,
   version: '1.2.3',

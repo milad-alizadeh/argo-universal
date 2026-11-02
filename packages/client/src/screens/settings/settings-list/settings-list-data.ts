@@ -11,6 +11,7 @@ import {
   devicesRow,
   pluginsRow,
   projectsRow,
+  serversRow,
 } from './settings-list-server-rows';
 
 const wideOnly = (wide: boolean, row: SettingsRow): SettingsRow[] =>
@@ -23,16 +24,21 @@ const notificationsRow = (props: SettingsListViewProps): SettingsRow => ({
   value: props.notificationsState ?? 'On',
 });
 
+/*
+ * A paired Device never sees the other Devices (ADR-0022), so its list leaves the row out; the page guards itself
+ * too, and the Server is what refuses the call.
+ */
 const connectionRows = (
   props: SettingsListViewProps,
   wide: boolean,
 ): SettingsRow[] => [
-  connectionRow(props, wide),
-  ...wideOnly(wide, devicesRow(props)),
+  serversRow(props),
+  connectionRow(props),
+  ...wideOnly(wide && !props.paired, devicesRow(props)),
   ...wideOnly(wide, notificationsRow(props)),
 ];
 
-// Paper's SettingsList: the pages in three groups; a phone leaves out Devices and Notifications.
+// The pages in three groups; a phone leaves out Devices and Notifications.
 function pageGroups(
   props: SettingsListViewProps,
   wide: boolean,

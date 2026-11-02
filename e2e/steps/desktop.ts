@@ -100,14 +100,23 @@ async function expectRunningSession(
 ): Promise<void> {
   const { home, supervisorPid } = desktop(app);
   expect(readServerAddress(home)?.pid).toBe(supervisorPid);
+  const listed = await listedSessions(app, request);
 
+  expect(listed.result.data.sessions.map((session) => session.status)).toEqual([
+    'needs_input',
+  ]);
+}
+
+async function listedSessions(
+  app: Pick<App, 'desktop' | 'httpUrl'>,
+  request: APIRequestContext,
+): Promise<z.infer<typeof SessionStates>> {
   const response = await request.get(
     `${app.httpUrl}/trpc/session.list?input=${encodeURIComponent(JSON.stringify({ archived: false }))}`,
+    { headers: { origin: 'app://app' } },
   );
 
   expect(response.ok()).toBe(true);
-  const result = SessionStates.parse(await response.json());
-  expect(result.result.data.sessions.map((session) => session.status)).toEqual([
-    'needs_input',
-  ]);
+
+  return SessionStates.parse(await response.json());
 }

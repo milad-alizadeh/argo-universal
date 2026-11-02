@@ -18,8 +18,10 @@ export interface AppNavigationInput {
 
 // Only the App on the Server Device's own desktop is driven from here: never a phone, a browser or a paired Device (ADR-0022).
 const isLocalDesktop = (connection: RpcConnection): boolean =>
-  connection.serverDevice === true &&
-  connection.surface?.platform === 'desktop';
+  isServerDevice(connection) && connection.surface?.platform === 'desktop';
+
+const isServerDevice = ({ identity }: RpcConnection): boolean =>
+  identity?.serverDevice === true;
 
 /*
  * Sends a destination to at most one live desktop App Connection on the Server Device, the one that listened most

@@ -28,6 +28,7 @@
     "esbuild": "catalog:",
     "fflate": "catalog:",
     "jsonc-parser": "catalog:",
+    "multicast-dns": "catalog:",
     "node-pty": "catalog:",
     "oxc-parser": "catalog:",
     "parse5": "catalog:",
@@ -44,11 +45,13 @@
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@trpc/client": "catalog:",
+    "@types/multicast-dns": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-reconciler": "catalog:",
     "@types/semver": "catalog:",
     "@types/ws": "catalog:",
+    "bonjour-service": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
@@ -59,10 +62,17 @@
     "./mocks/operation-waits": "./mocks/operation-waits.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
+    "./stored-keep-running": "./src/system/stored-keep-running.ts",
     "./shell-runtime": "./src/sessions/shells/server-exports.ts",
     "./plugins": "./src/plugins/index.ts",
     "./plugin-validation": "./src/plugins/authoring/validate.ts",
+    "./mocks/engine-network": "./mocks/engine-network.ts",
+    "./mocks/engine-channel": "./mocks/engine-channel.ts",
+    "./mocks/app-socket": "./mocks/app-socket.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts",
-    "./mocks/data-fixture": "./mocks/data-fixture.ts"
+    "./mocks/data-fixture": "./mocks/data-fixture.ts",
+    "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
+    "./mocks/acp-engine": "./mocks/acp-engine.ts",
+    "./mocks/acp-feed": "./mocks/acp-feed.ts"
   }
 }

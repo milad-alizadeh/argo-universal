@@ -6,6 +6,8 @@ import {
   readAddressDoneEvent,
   readAddressErrorEvent,
   readError,
+  readStoredDoneEvent,
+  readStoredErrorEvent,
   type ServerEvent,
 } from './server-machine-model-events.mocks';
 import {
@@ -17,6 +19,7 @@ import {
   quitDoneEvent,
   quitErrorEvent,
   readAddressCalls,
+  readStoredCalls,
   reportExited,
   reportSpawned,
   retryServerEvent,
@@ -52,6 +55,14 @@ export const executors = {
 
     return settle((): void => latest(checkRunningCalls).resolve(event.output));
   },
+  [readStoredDoneEvent]: ({ event }): Promise<void> => {
+    if (event.type !== readStoredDoneEvent)
+      throw new Error('Expected stored setting');
+
+    return settle((): void => latest(readStoredCalls).resolve(event.output));
+  },
+  [readStoredErrorEvent]: (): Promise<void> =>
+    settle((): void => latest(readStoredCalls).reject(readError)),
   'server.spawned': reportSpawned,
   'server.exited': reportExited,
   'server.retry': (): void => server.send({ type: retryServerEvent }),
@@ -60,6 +71,11 @@ export const executors = {
     if (event.type !== countsChangedEvent) throw new Error('Expected counts');
     server.send(event);
     expectBadge(event.counts.attention);
+  },
+  'keepRunning.changed': ({ event }): void => {
+    if (event.type !== 'keepRunning.changed')
+      throw new Error('Expected keep running');
+    server.send(event);
   },
   // On the way out a disconnect answers the App's own release, so it clears no badge and keeps the Session count the question needs.
   'counts.disconnected': (): void =>

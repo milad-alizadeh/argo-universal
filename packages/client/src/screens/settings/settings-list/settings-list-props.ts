@@ -17,7 +17,10 @@ export interface SettingsListViewProps {
   onSelect: (href: SettingsHref) => void;
   projectsNeedAttention?: boolean;
   accountState?: string;
-  connectionState?: string;
+  // What the Server being looked at is called; its own Server reads as this computer.
+  serverName?: string;
+  // Whether the Server being looked at is another computer's, which this Device paired with (ADR-0022).
+  paired?: boolean;
   deviceCount?: number;
   // This Device's theme, chosen in place from the Theme group's Appearance row.
   theme?: ThemeChoice;

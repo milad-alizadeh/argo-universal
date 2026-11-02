@@ -7,7 +7,6 @@ const meta = {
   title: 'Screens/Settings/Plugins',
   component: PluginListView,
   argTypes: {
-    caption: { control: 'text' },
     plugins: { control: false },
   },
   parameters: { screenPreview: true },
