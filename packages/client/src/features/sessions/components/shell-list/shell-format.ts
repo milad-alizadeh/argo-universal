@@ -41,6 +41,10 @@ export function shellOutcome(shell: Shell): ShellOutcome {
   return outcomes[shell.status](shell.exitCode);
 }
 
+// What a row calls the Shell: the Agent's own words for it, else the command line.
+export const shellTitle = (shell: Shell): string =>
+  shell.description ?? shell.command;
+
 // A running Shell's time so far; an ended one's whole run.
 export function shellElapsed(shell: Shell, now: number): string {
   return formatElapsed(

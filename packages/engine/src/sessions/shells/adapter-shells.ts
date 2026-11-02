@@ -16,6 +16,7 @@ const Output = z.object({ data: z.string() });
 // Only a command the Agent put in the background outlives its Tool call, so only that is a Shell.
 const Background = z.object({
   command: z.string(),
+  description: z.string().trim().min(1).nullable().catch(null),
   run_in_background: z.literal(true),
 });
 
@@ -34,6 +35,8 @@ const ToolUpdate = z.object({
     .catch(null),
 });
 
+type Background = z.infer<typeof Background>;
+
 type Update = z.infer<typeof ToolUpdate>;
 
 const outputOf = ({ _meta }: Update): string | undefined =>
@@ -47,7 +50,7 @@ const reportsEnd = ({ _meta }: Update): boolean =>
 
 type Input = Omit<
   ShellCaptureInput,
-  'id' | 'request' | 'command' | 'cwd' | 'path'
+  'id' | 'request' | 'command' | 'description' | 'cwd' | 'path'
 > & {
   outputPath: (id: string) => string;
   // The Session's Checkout, known only once the Session is configured: claude-agent-acp names no cwd for its terminals.
@@ -71,14 +74,15 @@ export class AdapterShells {
     return this.end(update);
   }
   private start({ toolCallId: id, rawInput }: Update): void {
-    if (rawInput && !this.shells.has(id)) this.open(id, rawInput.command);
+    if (rawInput && !this.shells.has(id)) this.open(id, rawInput);
   }
-  private open(id: string, command: string): void {
+  private open(id: string, { command, description }: Background): void {
     const shell = new AdapterShell({
       ...this.input,
       id,
       cwd: this.input.cwd(),
       command,
+      description,
       path: this.input.outputPath(id),
       request: { sessionId: '', command },
     });

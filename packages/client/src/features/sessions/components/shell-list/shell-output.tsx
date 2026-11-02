@@ -3,6 +3,7 @@ import { List } from '@repo/kit/primitives/lists/list';
 import { useClock } from '@repo/kit/use-clock';
 import { type JSX, useMemo } from 'react';
 import { View } from 'react-native';
+import { shellTitle } from './shell-format';
 import type { ShellEntry, ShellOutputText } from './shell-list-types';
 import { type ShellSpan, shellOutputLines } from './shell-output-lines';
 import { CommandLine, DroppedLines, ExitLine } from './shell-output-parts';
@@ -77,7 +78,7 @@ function OutputLines({ lines, ...props }: LinesProps): JSX.Element {
   return (
     <List
       {...outputListProps}
-      accessibilityLabel={`${props.shell.command} output`}
+      accessibilityLabel={`${shellTitle(props.shell)} output`}
       items={lines}
       header={<DroppedLines count={ownOutput(props)?.droppedLines} />}
       endContent={<ExitLine shell={props.shell} now={now} />}
