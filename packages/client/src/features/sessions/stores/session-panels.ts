@@ -1,4 +1,5 @@
 import { type Dispatch, type SetStateAction, useState } from 'react';
+import { SessionMemory, useSessionMemory } from './session-memory';
 
 // The open tabs, each a section's key, in the order they opened, and the one shown; no tabs means the Inspector is closed.
 export interface SessionPanelsState {
@@ -85,14 +86,27 @@ const changeWith =
   (panel: string): void =>
     setState((current) => change(current, panel));
 
+const panelMemory = new SessionMemory(noPanels);
+
+// A Session's tabs, remembered while the person opens another; without a Session, the page's own.
+function usePanelState(
+  sessionId: string | undefined,
+): [SessionPanelsState, Dispatch<SetStateAction<SessionPanelsState>>] {
+  const own = useState(noPanels);
+  const remembered = useSessionMemory(panelMemory, sessionId ?? '');
+
+  return sessionId === undefined ? own : remembered;
+}
+
 // The Inspector's tabs for one open Session, limited to the sections it offers.
-export function useSessionPanels(offered: readonly string[]): SessionPanels {
-  const [state, setState] = useState(noPanels);
-  const available = offeredPanels(state, offered);
+export function useSessionPanels(
+  offered: readonly string[],
+  sessionId?: string,
+): SessionPanels {
+  const [state, setState] = usePanelState(sessionId);
 
-  if (available !== state) setState(available);
-
-  return panelActions(available, setState);
+  // Only drawn limited to what is offered: a tab whose section is not yet offered, as on a page that has just opened, stays remembered.
+  return panelActions(offeredPanels(state, offered), setState);
 }
 
 function panelActions(

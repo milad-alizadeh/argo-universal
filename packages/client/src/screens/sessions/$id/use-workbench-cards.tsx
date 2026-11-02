@@ -2,8 +2,12 @@ import {
   type DeclaredItemOf,
   sessionWorkbenchSlot,
 } from '@repo/contracts/plugins/declared-slots';
-import { type ReactNode, useState } from 'react';
-import type { SessionPanels } from '#features/sessions';
+import { type ReactNode } from 'react';
+import {
+  type SessionPanels,
+  SessionMemory,
+  useSessionMemory,
+} from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
 import { PluginTree } from '../../../lib/product/plugin-registry';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
@@ -29,6 +33,9 @@ export interface WorkbenchCards {
 const keyOf = ({ pluginId, item }: DeclaredCard): string =>
   pluginCardKey(pluginId, item.id);
 
+// The cards each Session has closed, kept while the person is in another Session.
+const closedCards = new SessionMemory<readonly string[]>([]);
+
 const without = (keys: readonly string[], key: string): string[] =>
   keys.filter((closed) => closed !== key);
 
@@ -42,7 +49,7 @@ const toggled = (keys: readonly string[], key: string): string[] =>
  */
 export function useWorkbenchCards(sessionId: string): WorkbenchCards {
   const declared = useDeclaredWorkbenchCards();
-  const [closed, setClosed] = useState<readonly string[]>([]);
+  const [closed, setClosed] = useSessionMemory(closedCards, sessionId);
 
   return {
     open: declared
