@@ -36,7 +36,7 @@ export const Running: Story = {
       await expect(canvas.getByText(/4m 12s/)).toBeVisible();
       await expect(canvas.getByText(/Exit 0/)).toBeVisible();
       await expect(canvas.getByText(/Exit 1/)).toBeVisible();
-      await expect(canvas.queryByText('Stopped')).toBeNull();
+      await expect(canvas.queryByText(/Stopped/)).toBeNull();
     }),
 };
 

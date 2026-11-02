@@ -20,6 +20,7 @@ export function FieldLink(
       {...rowListItemProps(props)}
       tone={linkTone(props)}
       supporting={summary(props)}
+      trailing={trailingValue(props)}
       leadingContent={leadingMark(props.leadingMark)}
       onPress={props.onPress}
     />
@@ -37,10 +38,25 @@ const summary = (
   const text = props.subtitle ?? props.value;
 
   return text ? (
-    <NativeText tone={supportTone(props.subtitleTone)}>{text}</NativeText>
+    <NativeText
+      role={summaryRole(props.subtitle)}
+      tone={supportTone(props.subtitleTone)}
+    >
+      {text}
+    </NativeText>
   ) : undefined;
 };
 
 const supportTone = (
   tone: 'muted' | 'danger' | undefined,
 ): 'muted' | 'danger' => tone ?? 'muted';
+
+const trailingValue = (
+  props: FieldGroupKitProps<'FieldGroup.Link'>,
+): ReactElement | undefined =>
+  props.subtitle && props.value ? (
+    <NativeText tone="muted">{props.value}</NativeText>
+  ) : undefined;
+
+const summaryRole = (subtitle: string | undefined): 'secondary' | undefined =>
+  subtitle ? 'secondary' : undefined;

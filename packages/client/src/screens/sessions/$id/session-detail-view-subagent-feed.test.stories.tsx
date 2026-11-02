@@ -117,7 +117,7 @@ function listRowOpensFeed(width: number): Story {
           await canvas.findByRole('button', { name: 'Agents: 1' }),
         );
         await userEvent.click(
-          await within(document.body).findByRole('button', {
+          await within(document.body).findByRole('link', {
             name: new RegExp(`^${runningSubagent.title},`),
           }),
         );
