@@ -6,6 +6,7 @@ import type {
   ReactNode,
   HTMLAttributes,
 } from 'react';
+import TextAncestorContext from 'react-native-web/dist/exports/Text/TextAncestorContext';
 import { Text } from '#primitives/content/text';
 import { Popover, PopoverContent } from '#primitives/overlays/popover';
 import type { LinkPreviewProps } from './link-preview-props';
@@ -63,10 +64,25 @@ function PreviewContent({
 }): ReactElement {
   return (
     <PopoverContent {...contentProps(href, state)}>
+      <PreviewBody href={href} state={state} />
+    </PopoverContent>
+  );
+}
+
+// The Link sits inside a Text; the portal keeps that React context, which would draw the card's Views and Texts inline.
+function PreviewBody({
+  href,
+  state,
+}: {
+  href: string;
+  state: PreviewState;
+}): ReactElement {
+  return (
+    <TextAncestorContext.Provider value={false}>
       <div onPointerEnter={state.clear} onPointerLeave={state.leave}>
         {state.data || <UrlTooltip href={href} />}
       </div>
-    </PopoverContent>
+    </TextAncestorContext.Provider>
   );
 }
 
