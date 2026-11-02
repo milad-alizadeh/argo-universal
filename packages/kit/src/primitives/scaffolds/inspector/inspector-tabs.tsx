@@ -17,7 +17,7 @@ const tabState = {
   selected: { className: 'bg-card pr-1 shadow-control', tone: 'neutral' },
   unselected: {
     className: cn(
-      'pr-2 web:hover:bg-hover web:active:bg-pressed',
+      'pr-1 web:hover:bg-hover web:active:bg-pressed',
       tintTransitionClassName,
     ),
     tone: 'muted',
@@ -40,10 +40,8 @@ interface TabProps {
   focus: TabFocus;
 }
 
-// Closes the selected tab; a sibling of the tab's own button, never inside it.
-function CloseTab({ tab, selected, focus }: TabProps): ReactElement | null {
-  if (!selected) return null;
-
+// A sibling of the tab's own button, never inside it.
+function CloseTab({ tab, focus }: TabProps): ReactElement {
   return (
     <ChromeIconButton
       variant="ghost"
