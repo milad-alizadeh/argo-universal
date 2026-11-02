@@ -91,7 +91,7 @@ export const RemembersShellOutputPosition: Story = {
     ).toBeNull();
     await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
     await expect(
-      canvas.getByRole('button', { name: 'Back to Shells' }),
+      await canvas.findByRole('button', { name: 'Back to Shells' }),
     ).toBeVisible();
     await expect(canvas.getByTestId('shell-output').scrollTop).toBeCloseTo(
       shellOutputOffset,
@@ -123,7 +123,7 @@ export const RemembersAgentFeedPosition: Story = {
     ).toBeNull();
     await userEvent.click(canvas.getByRole('tab', { name: /Agents/ }));
     await expect(
-      canvas.getByRole('button', { name: 'Back to Agents' }),
+      await canvas.findByRole('button', { name: 'Back to Agents' }),
     ).toBeVisible();
     await expect(canvas.getByTestId('feed-scroll').scrollTop).toBeCloseTo(
       10,
