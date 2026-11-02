@@ -7,7 +7,10 @@ export type PairPageKind =
   | 'unanswered'
   | 'not-found';
 
-// What a page of Add a Server says. `action` is the one thing the owner can do from the page: Cancel while it waits, and the way on once it has ended. The way back is the header's.
+// Every page but the wait is a page of its own; the wait is a card over the scanner.
+export type EndedKind = Exclude<PairPageKind, 'waiting'>;
+
+// What a page of Add a Server says. `action` is the way on once the page has ended. The way back is the header's.
 export interface PairCopy {
   icon: IconName;
   title: string;
@@ -24,7 +27,7 @@ const tryAgain = 'Try again';
  * The words of each page, from the approved designs (#1490). The Server is named wherever the owner might otherwise not know which computer is meant, and "Allow this Device?" is quoted because it is what the other computer's own prompt says.
  */
 export const pairCopy = (
-  kind: PairPageKind,
+  kind: EndedKind,
   serverName: string,
   way: PairWay = 'scan',
 ): PairCopy => ({ ...copies[kind](serverName), ...typedCopies[way][kind] });
@@ -34,7 +37,7 @@ export type PairWay = 'scan' | 'type';
 
 const typedCopies: Record<
   PairWay,
-  Partial<Record<PairPageKind, Partial<PairCopy>>>
+  Partial<Record<EndedKind, Partial<PairCopy>>>
 > = {
   scan: {},
   type: {
@@ -51,13 +54,7 @@ const typedCopies: Record<
   },
 };
 
-const copies: Record<PairPageKind, (serverName: string) => PairCopy> = {
-  waiting: (serverName) => ({
-    icon: 'waiting',
-    title: 'Waiting for approval',
-    description: `${serverName} is asking whether to allow this Device. On that computer, press Allow on “Allow this Device?”. It stays here until someone answers.`,
-    action: 'Cancel',
-  }),
+const copies: Record<EndedKind, (serverName: string) => PairCopy> = {
   expired: () => ({
     icon: 'clock',
     title: 'This code has expired',
