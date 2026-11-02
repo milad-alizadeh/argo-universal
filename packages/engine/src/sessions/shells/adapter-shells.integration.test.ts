@@ -24,6 +24,23 @@ it('records a command the Agent ran in the background as a running Shell in its 
   );
 });
 
+it('keeps the description the Agent gave the command, and none when it gave none', async (): Promise<void> => {
+  const { notify, changes } = openMemoryShells();
+  const send = sender(notify);
+
+  send(reportedCommand(call, { ...background, description: 'Run verify' }));
+  send(reportedCommand('toolu-2', { ...background, description: '  ' }));
+
+  await vi.waitFor(() =>
+    expect(changes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: call, description: 'Run verify' }),
+        expect.objectContaining({ id: 'toolu-2', description: null }),
+      ]),
+    ),
+  );
+});
+
 it('ends that Shell when the Agent reports the command finished, with no code when nothing says one', async (): Promise<void> => {
   const { notify, changes, database } = openMemoryShells();
   const send = sender(notify);

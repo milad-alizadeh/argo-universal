@@ -7,6 +7,7 @@ import {
   shellPassed,
   shellsSummary,
   shellSupporting,
+  shellTitle,
 } from './shell-format';
 import {
   failedShell,
@@ -98,5 +99,12 @@ describe('shellPassed', () => {
     expect(
       [passedShell, failedShell, noCodeShell, lostShell].map(shellPassed),
     ).toEqual([true, false, false, false]);
+  });
+});
+
+describe('shellTitle', () => {
+  it('is the description the Agent gave, else the command', () => {
+    expect(shellTitle(runningShell)).toBe('Run the app dev server');
+    expect(shellTitle(passedShell)).toBe('pnpm e2e');
   });
 });

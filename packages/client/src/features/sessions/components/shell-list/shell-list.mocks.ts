@@ -14,6 +14,7 @@ const second = 1000;
 const shellBase = {
   sessionId: 'session-shells',
   canStop: false,
+  description: null,
   endedAt: null,
   exitCode: null,
 } as const;
@@ -23,6 +24,7 @@ export const runningShell: ShellEntry = {
   id: 'shell-dev',
   toolCallId: 'tool-dev',
   command: 'pnpm dev',
+  description: 'Run the app dev server',
   cwd: '~/argo-universal/apps/app',
   status: 'running',
   startedAt: shellNow - 4 * minute - 12 * second,

@@ -48,6 +48,7 @@ const shellRecord = {
   exitCode: 0,
   startedAt: 1,
   endedAt: 2,
+  description: null,
   outputBlobId: null,
 } as const;
 

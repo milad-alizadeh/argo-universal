@@ -6,6 +6,7 @@ import {
   shellOutcome,
   shellPassed,
   shellSupporting,
+  shellTitle,
 } from './shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list-types';
 import { ShellMark } from './shell-mark';
@@ -35,7 +36,7 @@ function RowText({ shell }: { shell: ShellEntry }): JSX.Element {
         tone={shellPassed(shell) ? 'muted' : 'neutral'}
         numberOfLines={1}
       >
-        {shell.command}
+        {shellTitle(shell)}
       </Text>
       <Text {...supportingProps(shell)}>{shellSupporting(shell)}</Text>
     </View>
@@ -69,7 +70,7 @@ type RowPressable = Pick<
 // The row reads out as its three lanes do: the command, how it stands, and how long it has run.
 const rowPressable = ({ shell, onSelect, now }: RowProps): RowPressable => ({
   role: 'button',
-  accessibilityLabel: `${shell.command}, ${shellSupporting(shell)}, ${shellElapsed(shell, now)}`,
+  accessibilityLabel: `${shellTitle(shell)}, ${shellSupporting(shell)}, ${shellElapsed(shell, now)}`,
   onPress: onSelect ? () => onSelect(shell) : undefined,
   disabled: !onSelect,
   className: rowClasses,
