@@ -328,3 +328,77 @@ export const RestoresOlderReadingAfterRemount: Story = {
     }, scrollAwayWait);
   },
 };
+
+const deepMessage = 'The first message in the deep Feed.';
+
+const firstDeepRow = longRows.find(
+  (row) => row.sessionUpdate === 'user_message',
+);
+
+if (!firstDeepRow) throw new Error('The long Feed needs a prompt');
+
+const deepRows = Array.from({ length: 105 }, (_, index) => ({
+  ...firstDeepRow,
+  id: `deep-${index}`,
+  messageId: `deep-message-${index}`,
+  turnId: `deep-turn-${index}`,
+  position: index,
+  revision: index + 1,
+  content: [
+    {
+      type: 'text' as const,
+      text: index === 0 ? deepMessage : `Message ${index}`,
+    },
+  ],
+}));
+
+function DeepReopenedFeed(): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+  const [reopened, setReopened] = useState(false);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => {
+          if (open) setReopened(true);
+          setOpen((current) => !current);
+        }}
+      />
+      {open && (
+        <PagedFeed
+          {...feedArgs}
+          rows={deepRows}
+          opensAtStart={!reopened}
+          pageLength={reopened ? 1 : deepRows.length}
+          sessionId="deep-restored-feed-test"
+        />
+      )}
+    </>
+  );
+}
+
+export const RestoresBeyondOneHundredPages: Story = {
+  render: () => <DeepReopenedFeed />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(within(scroll).getByText(deepMessage)).toBeVisible(),
+      scrollAwayWait,
+    );
+    scrollUp(scroll, -1);
+    await afterTwoFrames();
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(within(restored).getByText(deepMessage)).toBeVisible(),
+      { timeout: 20_000 },
+    );
+  },
+};

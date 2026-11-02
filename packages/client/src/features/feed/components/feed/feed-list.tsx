@@ -23,6 +23,7 @@ export interface FeedListProps extends EntryDrawing {
   newestKey: string;
   loadingOlder: boolean;
   hasOlder?: boolean;
+  historyCursor?: number | null;
   onStartReached: () => void;
   onAtEndChange?: (atEnd: boolean) => void;
   // The Feed opens on the first row and pins no prompt, for a Feed read without a Composer.

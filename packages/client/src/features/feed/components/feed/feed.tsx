@@ -24,6 +24,7 @@ export interface FeedProps {
   liveToolCall?: ToolCallUpdate;
   loadingOlder: boolean;
   hasOlder?: boolean;
+  historyCursor?: number | null;
   // Asks for older rows when the reader nears the top.
   onStartReached: () => void;
   imageUrl: (blob: BlobRef) => string;

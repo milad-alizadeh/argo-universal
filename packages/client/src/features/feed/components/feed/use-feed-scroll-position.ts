@@ -22,6 +22,18 @@ const containsAnchor = (
 ): boolean =>
   anchor === null || entries.some((entry) => entryKey(entry) === anchor.key);
 
+const seekWindow = (
+  input: PositionInput,
+): Pick<
+  Parameters<typeof useSeekFeedAnchor>[0],
+  'oldest' | 'cursor' | 'hasOlder' | 'loadingOlder'
+> => ({
+  oldest: keyOf(input.entries[0]),
+  cursor: input.historyCursor,
+  hasOlder: input.hasOlder,
+  loadingOlder: input.loadingOlder,
+});
+
 function seekInput(
   input: PositionInput & { shown: boolean },
   anchor: FeedAnchor | null,
@@ -30,9 +42,7 @@ function seekInput(
   return {
     shown: input.shown,
     found: containsAnchor(input.entries, anchor),
-    oldest: keyOf(input.entries[0]),
-    hasOlder: input.hasOlder,
-    loadingOlder: input.loadingOlder,
+    ...seekWindow(input),
     requestOlder: input.onStartReached,
     open: (present): void => open(present ? anchor : null),
   };
@@ -138,6 +148,7 @@ interface PositionInput {
   onStartReached: () => void;
   loadingOlder: boolean;
   hasOlder?: boolean;
+  historyCursor?: number | null;
   opensAtStart?: boolean;
   sessionId?: string;
 }

@@ -11,6 +11,7 @@ interface SeekInput {
   shown: boolean;
   found: boolean;
   oldest: string | undefined;
+  cursor: number | null | undefined;
   hasOlder: boolean | undefined;
   loadingOlder: boolean;
   requestOlder: () => void;
@@ -18,23 +19,23 @@ interface SeekInput {
 }
 
 interface Asked {
-  oldest: string | undefined;
-  pages: number;
+  requested: string | undefined;
   opened: boolean;
   cancelled: boolean;
   frame?: number;
 }
 
-const maxRestorePages = 100;
+const exhausted = (input: SeekInput): boolean => input.hasOlder === false;
 
-const exhausted = (input: SeekInput, asked: Asked): boolean =>
-  input.hasOlder === false || asked.pages >= maxRestorePages;
+const pageKey = (input: SeekInput): string | undefined =>
+  input.cursor === undefined ? input.oldest : `cursor:${input.cursor}`;
 
 function requestPage(input: SeekInput, asked: Asked): void {
-  if (input.loadingOlder || input.oldest === asked.oldest) return;
+  const key = pageKey(input);
 
-  asked.oldest = input.oldest;
-  asked.pages += 1;
+  if (input.loadingOlder || key === asked.requested) return;
+
+  asked.requested = key;
   input.requestOlder();
 }
 
@@ -43,8 +44,8 @@ const available = (asked: Asked): boolean => !asked.opened && !asked.cancelled;
 const canAdvance = (input: SeekInput, asked: Asked): boolean =>
   input.shown && available(asked) && !!input.oldest;
 
-const needsPage = (input: SeekInput, asked: Asked): boolean =>
-  !input.found && !exhausted(input, asked);
+const needsPage = (input: SeekInput): boolean =>
+  !input.found && !exhausted(input);
 
 function scheduleFrame(input: SeekInput, asked: Asked): void {
   asked.frame = requestAnimationFrame(() => {
@@ -62,7 +63,7 @@ function scheduleOpen(input: SeekInput, asked: Asked): void {
 function advance(input: SeekInput, asked: Asked): void {
   if (!canAdvance(input, asked)) return;
 
-  if (needsPage(input, asked)) return requestPage(input, asked);
+  if (needsPage(input)) return requestPage(input, asked);
 
   scheduleOpen(input, asked);
 }
@@ -83,30 +84,33 @@ function useInputGuard(shown: boolean, cancel: () => void): void {
   }, [shown, cancel]);
 }
 
+function runSeek(next: () => void, current: Asked): () => void {
+  next();
+
+  return (): void => cancelPending(current);
+}
+
 function useSeekUpdates(input: SeekInput, asked: RefObject<Asked>): void {
   const next = useEffectEvent(() => advance(input, asked.current));
 
-  useEffect(() => {
-    const current = asked.current;
-
-    next();
-
-    return (): void => cancelPending(current);
-  }, [
-    input.shown,
-    input.found,
-    input.oldest,
-    input.hasOlder,
-    input.loadingOlder,
-    asked,
-  ]);
+  useEffect(
+    () => runSeek(next, asked.current),
+    [
+      input.shown,
+      input.found,
+      input.oldest,
+      input.cursor,
+      input.hasOlder,
+      input.loadingOlder,
+      asked,
+    ],
+  );
 }
 
-// Load a bounded amount of history before asking the list to show an older row.
+// Request one page at a time until the remembered row is available.
 export function useSeekFeedAnchor(input: SeekInput): () => void {
   const asked = useRef<Asked>({
-    oldest: undefined,
-    pages: 0,
+    requested: undefined,
     opened: false,
     cancelled: false,
   });

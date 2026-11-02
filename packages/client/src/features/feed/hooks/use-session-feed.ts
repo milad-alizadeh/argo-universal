@@ -71,6 +71,7 @@ type FeedDisplay = Pick<
   | 'snapshot'
   | 'ready'
   | 'hasOlder'
+  | 'historyCursor'
 >;
 
 function feedDisplay(
@@ -80,6 +81,7 @@ function feedDisplay(
   return {
     view,
     hasOlder: feed.epoch === null || feed.hasOlder,
+    historyCursor: feed.startCursor,
     revision: feed.revision,
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
     permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),

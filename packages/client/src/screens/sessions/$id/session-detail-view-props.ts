@@ -75,6 +75,18 @@ const loadedFeed = ({ snapshot, view }: SessionFeed): OpenFeed | undefined =>
 const openFeed = (feed: SessionFeed): OpenFeed | undefined =>
   feed.ready ? loadedFeed(feed) : undefined;
 
+const pagingProps = (
+  feed: SessionFeed,
+): Pick<
+  FeedProps,
+  'loadingOlder' | 'hasOlder' | 'historyCursor' | 'onStartReached'
+> => ({
+  loadingOlder: feed.loadingOlder,
+  hasOlder: feed.hasOlder,
+  historyCursor: feed.historyCursor,
+  onStartReached: (): void => void feed.loadOlder(),
+});
+
 const sessionFeedProps = (
   open: OpenSession,
   stoppedEnding: StoppedTurn['ending'] | undefined,
@@ -83,9 +95,7 @@ const sessionFeedProps = (
   items: open.view.items.filter((item) => item !== stoppedEnding),
   liveHeader: open.snapshot.liveHeader,
   liveToolCall: open.feed.liveToolCall,
-  loadingOlder: open.feed.loadingOlder,
-  hasOlder: open.feed.hasOlder,
-  onStartReached: () => void open.feed.loadOlder(),
+  ...pagingProps(open.feed),
   imageUrl: open.imageUrl,
   checkoutBranch: open.snapshot.checkout.branch ?? undefined,
   onAtEndChange: open.onAtEndChange,
