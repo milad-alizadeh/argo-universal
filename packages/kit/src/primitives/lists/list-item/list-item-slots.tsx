@@ -37,11 +37,22 @@ function RowContentSlots(props: DrawingProps): ReactElement {
       {compact ? null : <TreeLane title={props.title} compact={false} />}
       <Leading {...props} />
       <RowContent props={props} compact={compact} />
-      {!compact && trailsTitle(props) ? null : <Trailing {...props} />}
+      <RowTrailing props={props} compact={compact} />
       <Accessory>{props.accessory}</Accessory>
       <Control>{props.control}</Control>
     </TextClassContext>
   );
+}
+
+// A regular row's trailing mark joins its title when the title trails; otherwise it has its own lane.
+function RowTrailing({
+  props,
+  compact,
+}: {
+  props: DrawingProps;
+  compact: boolean;
+}): ReactNode {
+  return !compact && trailsTitle(props) ? null : <Trailing {...props} />;
 }
 
 // A compact row draws its tree lane inside its one line; a regular row draws it before its leading mark.
