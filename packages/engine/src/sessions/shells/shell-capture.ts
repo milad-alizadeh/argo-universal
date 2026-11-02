@@ -18,6 +18,8 @@ export type ShellCaptureInput = {
   request: CreateTerminalRequest;
   // The command line as the Agent ran it, where `request` holds no argv to quote.
   command?: string;
+  // What the Agent said the command does, where its Tool call carried that.
+  description?: string | null;
   cwd: string;
   path: string;
   writer: WriterActorRef;
@@ -44,20 +46,23 @@ export class ShellCapture {
   public associate(toolCallId: string): void {
     if (this.record) return;
 
-    const record = shellFromTerminal(
+    this.record = shellFromTerminal(
       this.input.request,
       { type: 'terminal', terminalId: this.input.id },
       {
         sessionId: this.input.sessionId,
         toolCallId,
-        cwd: this.input.cwd,
-        startedAt: this.startedAt,
+        ...this.origin(),
       },
     );
 
-    this.record = { ...record, command: this.input.command ?? record.command };
-
     this.enqueue(() => this.save());
+  }
+  private origin(): Pick<ShellCaptureInput, 'command' | 'cwd'> &
+    Pick<ShellRecord, 'startedAt' | 'description'> {
+    const { command, cwd, description = null } = this.input;
+
+    return { command, cwd, description, startedAt: this.startedAt };
   }
   public end(
     status: ShellRecord['status'],

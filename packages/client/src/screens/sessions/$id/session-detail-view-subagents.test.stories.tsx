@@ -16,12 +16,31 @@ import { runningSession } from './session-detail-view.mocks';
 
 const subagentsName = 'Agents';
 
-const agentsOverview = 'Open Agents overview';
+const agentsCard = 'workbench-subagents';
+
+const cardRow = /^(Open (?!.*overview)|Show )/;
 
 const selected = ['aria-selected', 'true'] as const;
 
-const triggerName = (wide: boolean, count: number): string =>
-  wide ? agentsOverview : `Agents: ${count}`;
+// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; below wide the Composer's pill opens the list.
+async function openList(
+  { canvas, userEvent }: Interaction,
+  wide: boolean,
+  count: number,
+): Promise<void> {
+  if (!wide) {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: `Agents: ${count}` }),
+    );
+
+    return;
+  }
+
+  const card = within(await canvas.findByTestId(agentsCard));
+  const [row] = card.getAllByRole('button', { name: cardRow });
+
+  await userEvent.click(row ?? card.getByRole('button'));
+}
 
 const meta = {
   ...sessionDetailViewTestMeta,
@@ -51,7 +70,10 @@ async function assertPresentation(
     await userEvent.click(
       canvas.getByRole('button', { name: 'Toggle Workbench' }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: agentsOverview }));
+    const card = within(canvas.getByTestId(agentsCard));
+    const [row] = card.getAllByRole('button', { name: cardRow });
+
+    await userEvent.click(row ?? card.getByRole('button'));
     await expect(tab).toHaveAttribute(...selected);
     await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
 
@@ -83,7 +105,6 @@ function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
   const onSelect = fn();
   const wide = width === layoutWidths.wide;
-  const absentTrigger = wide ? agentsOverview : /^Subagents/;
 
   return {
     beforeEach: () => settleLayout(width),
@@ -96,27 +117,19 @@ function subagentsAt(width: number, state: State): Story {
     },
     play: async ({ canvas, userEvent }) => {
       await expect(
-        canvas.queryByRole('button', { name: 'Shells' }),
+        canvas.queryByRole('button', { name: 'Background Tasks' }),
       ).not.toBeInTheDocument();
       await expect(
         canvas.queryByRole('tab', { name: /^Agents:/ }),
       ).not.toBeInTheDocument();
 
       if (!subagents.length) {
-        await expect(
-          canvas.queryByRole('button', {
-            name: absentTrigger,
-          }),
-        ).not.toBeInTheDocument();
+        await expect(canvas.queryByTestId(agentsCard)).not.toBeInTheDocument();
 
         return;
       }
 
-      const trigger = triggerName(wide, subagents.length);
-
-      await userEvent.click(
-        await canvas.findByRole('button', { name: trigger }),
-      );
+      await openList({ canvas, userEvent }, wide, subagents.length);
 
       const page = await subagentsPage(canvas, wide);
 

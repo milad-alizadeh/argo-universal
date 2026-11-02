@@ -105,19 +105,23 @@ function listRowOpensFeed(width: number): Story {
     beforeEach: () => settleLayout(width),
     args: { view: sessionWithSubagentFeed() },
     play: async ({ canvas, userEvent }) => {
-      await userEvent.click(
-        await canvas.findByRole('button', {
-          name: wide ? 'Open Agents overview' : 'Agents: 1',
-        }),
-      );
-
-      const list = wide ? canvas : within(document.body);
-
-      await userEvent.click(
-        await list.findByRole('button', {
-          name: new RegExp(`^${runningSubagent.title},`),
-        }),
-      );
+      // Wide, the card's row opens the Feed itself; below wide the Composer's pill opens the Sheet's list.
+      if (wide)
+        await userEvent.click(
+          await canvas.findByRole('button', {
+            name: `Open ${runningSubagent.title}`,
+          }),
+        );
+      else {
+        await userEvent.click(
+          await canvas.findByRole('button', { name: 'Agents: 1' }),
+        );
+        await userEvent.click(
+          await within(document.body).findByRole('button', {
+            name: new RegExp(`^${runningSubagent.title},`),
+          }),
+        );
+      }
 
       await assertFeedShown(canvas, wide);
       await assertOpened(canvas, wide);

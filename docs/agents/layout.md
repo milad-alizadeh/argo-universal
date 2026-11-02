@@ -47,7 +47,7 @@ These thresholds use default pane widths with an available Workbench.
 Three regions compete with the content column for width: the Sessions list, the Workbench, and the Inspector while it is open. The main content comes first, so narrowing the window gives width up in a fixed order.
 
 1. **The Sessions list collapses first**, folding into the rail. The rail itself never collapses.
-2. **Then the Workbench gives up its separate region.** It auto-hides rather than squeezing the content. An explicit Show uses the dedicated Workbench view described below.
+2. **Then the Workbench gives up its separate region.** It auto-hides rather than squeezing the content. An explicit Show floats it over the content, as described below.
 3. **The content column gives last**, and is capped at 800 however much room there is.
 
 **The Sessions list folds into the rail below 1768 with the Inspector open, and below 1400 without it.** Those are the widths everything docked needs: the rail's 56, the list's 312, the content column, the Workbench's 312 and, when it is open, the Inspector's 352, with the 8 frame insets and the 16 gutters between the regions (board `1RKK-0`). Folding the list frees its 312 and nothing else, because it sits inside the glass panel and has no gutter of its own.
@@ -61,7 +61,7 @@ The Workbench has five effective states. One toggle drives the person’s Show o
 - **Docked** — its own 312 column beside the content, and beside the Inspector when the Inspector is open.
 - **Auto-hidden** — below the undock threshold, with the toggle unpressed: the Workbench is not drawn and the content column keeps its full width.
 - **Independent** — when both gutters beside the centered, capped content fit a card and its gaps, the cards use the right gutter. Showing or hiding them does not move the Feed or Composer.
-- **Dedicated view** — below the docking budget with explicit Show intent, the Workbench replaces the primary view. The Feed and draft stay mounted but become hidden and inaccessible. The same band toggle restores them. No persistent card overlaps readable Feed content or Composer controls.
+- **Overlay** — below the docking budget with explicit Show intent, the Workbench is drawn absolutely over the trailing edge of the content region, left of the Inspector when it is open. The page keeps its width and stays mounted and interactive underneath; the same band toggle hides it.
 - **Hidden** — explicit Hide persists across resize. An expanded Inspector temporarily hides the Workbench without changing that intent.
 
 The independent placement uses the measured host after effective navigation and the Inspector. Its two gutters each need `workbenchWidth + paneGap + inset`, so the default host threshold is `800 + 2 × (312 + 16 + 8) = 1472`. This threshold describes the host, not the window. Navigation and Inspector widths are added by their actual placement. Below it, the existing docked budget protects the content floor of `640 + 2 × 24 = 688`.

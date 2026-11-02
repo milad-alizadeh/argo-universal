@@ -83,6 +83,9 @@ const openedScreen: TargetRule<OperationParams<'app.open'>> = (params) => ({
 const targetRules = {
   'app.open': openedScreen,
   'project.list': global,
+  'project.add': global,
+  'project.clone': global,
+  'project.create': global,
   'project.listBranches': projectParam,
   'session.list': listedProject,
   'session.get': sessionParam,

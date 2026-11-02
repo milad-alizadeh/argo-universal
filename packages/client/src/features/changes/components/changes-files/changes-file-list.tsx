@@ -86,7 +86,7 @@ const useRenderItem = (context: RowContext): Rows['renderItem'] =>
   );
 
 function useRows(props: FileListProps): Rows {
-  const open = useOpenFiles();
+  const open = useOpenFiles(props);
   const { ref, setOpen } = useFoldScroll(open.setOpen);
   const lists = useListItems(props, open.folded);
   const context = useRowContext({ ...props, folded: open.folded, setOpen });

@@ -82,8 +82,11 @@ const splitGroupSize = 20;
 const splitGroupRowsInTail = splitGroupSize / 2;
 
 // One Turn of numbered commands, which the Feed draws as one Tool call group.
-const { commandActions: _, ...commandArgo } =
-  completedCommand._meta?.argo ?? {};
+const {
+  commandActions: _,
+  description: __,
+  ...commandArgo
+} = completedCommand._meta?.argo ?? {};
 
 const splitGroupSteps = Array.from(
   { length: splitGroupSize },

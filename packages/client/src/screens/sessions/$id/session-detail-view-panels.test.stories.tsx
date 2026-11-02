@@ -34,7 +34,7 @@ const changesName = { name: 'Changes' };
 
 const changesEntry = { name: 'Open Changes overview' };
 
-const subagentsEntry = { name: 'Open Agents overview' };
+const subagentsEntry = { name: `Open ${firstTitle}` };
 
 async function openBoth({ canvas, userEvent }: Context): Promise<void> {
   await userEvent.click(await canvas.findByRole('button', changesEntry));

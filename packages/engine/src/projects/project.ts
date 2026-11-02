@@ -37,19 +37,29 @@ function readProjectIdentity(
   );
 }
 
-export async function seedProject(
-  database: Database,
-  path = process.env.ARGO_PROJECT_PATH ?? process.cwd(),
-): Promise<void> {
-  const repository = await readRepository(path);
+function storeProject(database: Database, repository: Repository): string {
+  const id = readProjectIdentity(database, repository);
   const { mainCheckout } = repository;
   const metadata = { path: mainCheckout, name: basename(mainCheckout) };
+
   database
     .insert(project)
-    .values({ id: readProjectIdentity(database, repository), ...metadata })
+    .values({ id, ...metadata })
     .onConflictDoUpdate({ target: project.id, set: metadata })
     .run();
+
+  return id;
+}
+
+export async function seedProject(
+  database: Database,
+  path: string,
+): Promise<string> {
+  const id = storeProject(database, await readRepository(path));
+
   notifyProjectChanges(database);
+
+  return id;
 }
 
 async function readDefaultCheckoutChoice(
@@ -93,7 +103,7 @@ const readRemoteHost = (projectPath: string): Promise<string | null> =>
     (): null => null,
   );
 
-const isFolder = (path: string): Promise<boolean> =>
+export const isFolder = (path: string): Promise<boolean> =>
   stat(path).then(
     (found): boolean => found.isDirectory(),
     (): boolean => false,

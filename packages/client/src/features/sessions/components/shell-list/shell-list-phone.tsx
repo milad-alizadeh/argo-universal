@@ -9,6 +9,7 @@ import {
   shellOutcome,
   shellsSummary,
   shellSupporting,
+  shellTitle,
 } from './shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list-types';
 import { ShellMark } from './shell-mark';
@@ -28,11 +29,11 @@ function rowText({ shell, now }: RowProps): ListItemProps {
   const elapsed = shellElapsed(shell, now);
 
   return {
-    title: shell.command,
+    title: shellTitle(shell),
     subtitle: supporting,
     subtitleTone: supportingTone(shell),
     value: elapsed,
-    accessibilityLabel: `${shell.command}, ${supporting}, ${elapsed}`,
+    accessibilityLabel: `${shellTitle(shell)}, ${supporting}, ${elapsed}`,
   };
 }
 
@@ -53,7 +54,7 @@ const listProps = {
   appearance: 'cards',
   onPhones: phonesGrouped,
   fit: false,
-  accessibilityLabel: 'Shells',
+  accessibilityLabel: 'Background Tasks',
 } as const;
 
 // The Session's background Shells under a count of the running ones.

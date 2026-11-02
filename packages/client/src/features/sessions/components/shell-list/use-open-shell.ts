@@ -9,10 +9,12 @@ type OpenShell = [
 
 // Which Shell's output the sheet or panel shows; opening one tells the caller to load its output.
 export function useOpenShell(
-  props: Pick<ShellViewProps, 'shells' | 'onSelect' | 'onDeselect'>,
+  props: Pick<ShellViewProps, 'shells' | 'onSelect' | 'onDeselect' | 'openId'>,
 ): OpenShell {
   const [openId, setOpenId] = useState<string>();
-  const shell = props.shells.find((entry) => entry.id === openId);
+  const shownId = props.openId ?? openId;
+  const shell = props.shells.find((entry) => entry.id === shownId);
+
   const close = useDeselect(setOpenId, props.onDeselect);
 
   const open = (entry: ShellEntry): void => {

@@ -7,7 +7,7 @@ import type {
 
 // Drawn placements keep the same cards mounted; hidden states wait at the trailing edge.
 export const workbenchDrawn = (state: WorkbenchState): boolean =>
-  state === 'gutter' || state === 'docked' || state === 'dedicated';
+  state === 'gutter' || state === 'docked' || state === 'overlay';
 
 const unavailable = (input: FrameLayoutInput): boolean =>
   !input.workbenchAvailable || input.inspectorState === 'expanded';
@@ -25,7 +25,7 @@ const unavailableOrHidden = (input: FrameLayoutInput): boolean =>
   unavailable(input) || input.workbenchIntent === 'hidden';
 
 const requestedState = (intent: WorkbenchIntent): WorkbenchState =>
-  intent === 'shown' ? 'dedicated' : 'auto-hidden';
+  intent === 'shown' ? 'overlay' : 'auto-hidden';
 
 function fittedState(
   input: FrameLayoutInput,
