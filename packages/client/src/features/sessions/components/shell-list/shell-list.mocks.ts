@@ -24,13 +24,19 @@ export const runningShell: ShellEntry = {
   id: 'shell-dev',
   toolCallId: 'tool-dev',
   command: 'pnpm dev',
-  description: 'Run the app dev server',
   cwd: '~/argo-universal/apps/app',
   status: 'running',
   startedAt: shellNow - 4 * minute - 12 * second,
   durationMs: 4 * minute + 12 * second,
   canStop: true,
   lastLine: 'ready on localhost:8081',
+};
+
+// A Shell whose Tool call carried a description: its row is titled by that, not the command.
+export const describedShell: ShellEntry = {
+  ...runningShell,
+  id: 'shell-described',
+  description: 'Run the app dev server',
 };
 
 export const passedShell: ShellEntry = {

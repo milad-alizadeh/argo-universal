@@ -10,6 +10,7 @@ import {
   shellTitle,
 } from './shell-format';
 import {
+  describedShell,
   failedShell,
   lostShell,
   noCodeShell,
@@ -104,7 +105,7 @@ describe('shellPassed', () => {
 
 describe('shellTitle', () => {
   it('is the description the Agent gave', () => {
-    expect(shellTitle(runningShell)).toBe('Run the app dev server');
+    expect(shellTitle(describedShell)).toBe('Run the app dev server');
   });
 
   it('is the command when the Agent gave no description', () => {
