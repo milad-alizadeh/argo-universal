@@ -1,12 +1,5 @@
-import type {
-  HookEventName,
-  PluginList,
-  PluginManifest,
-} from '@repo/contracts/plugins';
-import type {
-  AddOnlySlotId,
-  ReplaceableSlotId,
-} from '@repo/contracts/plugins/wire';
+import type { PluginList, PluginManifest } from '@repo/contracts/plugins';
+import type { AddOnlySlotId } from '@repo/contracts/plugins/wire';
 
 type PluginDescriptor = PluginList['plugins'][number];
 
@@ -23,17 +16,3 @@ export const fillsSlot = (
   plugin: PluginDescriptor,
   slot: { slotId: AddOnlySlotId },
 ): boolean => plugin.enabled && declaresSlot(plugin.manifest, slot.slotId);
-
-export const hooksEvent = (
-  plugin: PluginDescriptor,
-  name: HookEventName,
-): boolean =>
-  plugin.enabled && (plugin.manifest.contributes.hooks ?? []).includes(name);
-
-// A Replaceable Slot is drawn only by a `ui.render` Hook whose manifest names it in `renders`.
-export const rendersSlot = (
-  plugin: PluginDescriptor,
-  slotId: ReplaceableSlotId,
-): boolean =>
-  hooksEvent(plugin, 'ui.render') &&
-  (plugin.manifest.contributes.renders ?? []).includes(slotId);
