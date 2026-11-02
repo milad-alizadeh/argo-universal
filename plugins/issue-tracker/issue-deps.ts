@@ -17,7 +17,7 @@ export type IssueDeps = {
   listProjects: Argo['projects']['list'];
   // One Session's title and branch, for the Sessions an Agent attached to an Issue.
   getSession: Argo['sessions']['get'];
-  // A call that borrows the GitHub Account: a status change, or a Slot's summary.
+  // A write that borrows the GitHub Account: a status change.
   fetch: Argo['fetch'];
   storage: TrackerStorage;
   changes: IssueChanges;

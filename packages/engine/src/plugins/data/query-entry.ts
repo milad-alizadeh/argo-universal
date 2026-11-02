@@ -24,7 +24,7 @@ export class QueryEntry {
   constructor(
     readonly owner: QueryOwner,
     private readonly services: QueryServices,
-    intervals: QueryIntervals,
+    private readonly intervals: QueryIntervals,
   ) {
     this.watchers = new QueryWatchers(owner, services, intervals);
     this.timing = new QueryTiming(services.clock, () => {
@@ -38,6 +38,16 @@ export class QueryEntry {
 
     if (this.shouldRefresh(background)) void this.refresh(background);
     else this.schedule();
+
+    return this.state;
+  }
+
+  // Joins a call in flight, uses an answer young enough, and otherwise runs. A failed answer is never young enough.
+  async read(every: number): Promise<PluginDataState> {
+    const period = this.intervals.mounted(this.owner.pluginId, every) ?? every;
+    const usable = this.timing.fresh(period) && this.state.error === undefined;
+
+    if (this.flight || !usable) await this.refresh();
 
     return this.state;
   }

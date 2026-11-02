@@ -124,6 +124,14 @@ export const PluginDataRequest = z.discriminatedUnion('action', [
   }),
   dataTarget.extend({ action: z.literal('release') }),
   dataTarget.extend({ action: z.literal('refresh') }),
+  // Answers once from the Query's entry, for code with no view to watch it from, such as an items Slot's provider.
+  z.object({
+    api: z.literal('data'),
+    action: z.literal('read'),
+    query: PluginQuery,
+    every: z.number().finite().nonnegative(),
+    projectId: z.string().optional(),
+  }),
 ]);
 
 export type PluginDataRequest = z.infer<typeof PluginDataRequest>;

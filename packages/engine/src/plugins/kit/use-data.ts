@@ -1,4 +1,7 @@
 import type {
+  ReadData,
+  ReadDataOptions,
+  ReadDataResult,
   UseData,
   UseDataOptions,
   UseDataResult,
@@ -33,6 +36,7 @@ export type KitDataClient = {
   ready: PluginDataClient['ready'];
   receive: PluginDataClient['receive'];
   useData: UseData;
+  read: ReadData;
 };
 
 export function dataClient(call: DataCall): KitDataClient {
@@ -42,7 +46,29 @@ export function dataClient(call: DataCall): KitDataClient {
     ready: (viewId, background) => client.ready(viewId, background),
     receive: (event) => client.receive(event),
     useData: (query, options) => useQueryData(client, query, options),
+    read: (query, options) => readQueryData(call, query, options),
   };
+}
+
+function readQueryData<Query extends PluginQuery>(
+  call: DataCall,
+  query: Query,
+  options: ReadDataOptions,
+): Promise<ReadDataResult<Query>>;
+async function readQueryData(
+  call: DataCall,
+  query: PluginQuery,
+  { every, projectId }: ReadDataOptions,
+): Promise<ReadDataResult<PluginQuery>> {
+  const { data, error, errorKind } = await call({
+    api: 'data',
+    action: 'read',
+    query,
+    every,
+    projectId,
+  });
+
+  return { data: queryResult(query.api, data), error, errorKind };
 }
 
 // A Query with no normal form never ran, so it answers for itself over what the entry says.

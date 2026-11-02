@@ -18,8 +18,15 @@ import type { SignInNeed } from './steps';
 // A read through the Account: what `useData` takes for a fetch, less what the Account already says.
 export type AccountRead = Omit<FetchQuery, 'api' | 'account'>;
 
+// The one Query a read through an Account is, so `useData` and `read` land on one entry (ADR-0037).
+export const accountQuery = (host: string, read: AccountRead): FetchQuery => ({
+  ...read,
+  api: 'fetch',
+  account: host,
+});
+
 const queryOf = (host: string, read: AccountRead | null): FetchQuery | null =>
-  read && { ...read, api: 'fetch', account: host };
+  read && accountQuery(host, read);
 
 const blockedOf = (
   query: FetchQuery | null,

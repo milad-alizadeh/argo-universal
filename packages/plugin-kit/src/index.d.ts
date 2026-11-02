@@ -161,6 +161,8 @@ export type {
 import type { UseData } from '@repo/contracts/plugins/argo-api';
 
 export type {
+  ReadDataOptions,
+  ReadDataResult,
   UseDataOptions,
   UseDataResult,
 } from '@repo/contracts/plugins/argo-api';

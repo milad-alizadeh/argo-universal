@@ -19,6 +19,7 @@ import { QueryIntervals } from './query-intervals';
 import {
   watchKey,
   type QueryOwner,
+  type QueryRead,
   type QueryServices,
   type QueryWatch,
 } from './query-types';
@@ -55,6 +56,8 @@ export class PluginData {
     caller: Caller,
     request: PluginDataRequest,
   ): Promise<PluginReply> {
+    if (request.action === 'read') return this.readReply(caller, request);
+
     const view = this.views.dataView(caller.pluginId, request.viewId);
 
     if (request.action === 'watch')
@@ -76,6 +79,22 @@ export class PluginData {
     return { ok: true, value: this.watch(caller, view, request) };
   }
 
+  // A read has no view: it answers from the entry a view of this Plugin and Project would watch (ADR-0037).
+  private async readReply(
+    caller: Caller,
+    request: QueryRead,
+  ): Promise<PluginReply> {
+    if (!(await projectRegistered(this.services.services, request.projectId)))
+      return { ok: true, value: refusedProject };
+
+    const entries = this.entriesOf(caller.pluginId);
+    const entry = this.entry(caller, request);
+
+    this.bound(caller.pluginId, entries);
+
+    return { ok: true, value: await entry.read(request.every) };
+  }
+
   // The watcher is registered before the map is bounded, so this answer is never the entry dropped.
   private watch(
     caller: Caller,
@@ -83,7 +102,8 @@ export class PluginData {
     request: QueryWatch,
   ): PluginDataState {
     const entries = this.entriesOf(caller.pluginId);
-    const state = this.entry(caller, view, request).watch(view, request);
+    const { query, projectId = view.projectId } = request;
+    const state = this.entry(caller, { query, projectId }).watch(view, request);
 
     this.bound(caller.pluginId, entries);
 
@@ -92,8 +112,7 @@ export class PluginData {
 
   private entry(
     caller: Caller,
-    view: OpenView,
-    { query, projectId = view.projectId }: QueryWatch,
+    { query, projectId }: Pick<QueryOwner, 'query' | 'projectId'>,
   ): QueryEntry {
     const entries = this.entriesOf(caller.pluginId);
     const key = queryKey(projectId, query);
@@ -135,7 +154,7 @@ export class PluginData {
 
   private async update(
     pluginId: string,
-    request: Exclude<PluginDataRequest, { action: 'watch' }>,
+    request: Exclude<PluginDataRequest, { action: 'watch' | 'read' }>,
   ): Promise<void> {
     const key = watchKey(request);
 

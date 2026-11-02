@@ -159,6 +159,7 @@ const argo: Argo = frozen({
       (await call<PluginSettingValue | null>({ api: 'settings', key })) ?? null,
   }),
   pages: frozen({ register: kit.registerPage }),
+  data: frozen({ read: kit.readData }),
   slots: frozen({ register: kit.slots.register, changed: kit.slots.changed }),
   on: hooks.on,
 });

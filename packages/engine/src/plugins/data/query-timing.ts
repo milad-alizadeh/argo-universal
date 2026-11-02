@@ -6,6 +6,7 @@ export class QueryTiming {
   private lastAt: number | null = null;
   private dueAt = 0;
   private remountDue = false;
+  private readPeriod = Number.POSITIVE_INFINITY;
 
   constructor(
     private readonly clock: PluginClock,
@@ -17,6 +18,17 @@ export class QueryTiming {
   }
   get ran(): boolean {
     return this.lastAt !== null;
+  }
+
+  // Whether the answer is younger than a read asks. That read's period also ends the answer for a view mounting later.
+  fresh(period: number): boolean {
+    this.readPeriod = period;
+
+    return (
+      this.lastAt !== null &&
+      !this.overdue &&
+      this.clock.now() - this.lastAt < period
+    );
   }
 
   makeDue(): void {
@@ -36,7 +48,7 @@ export class QueryTiming {
 
     if (this.remountDue && !active) return;
     this.remountDue = false;
-    this.dueAt = this.lastAt + backgroundPeriod;
+    this.dueAt = this.lastAt + Math.min(backgroundPeriod, this.readPeriod);
   }
 
   schedule(watchers: QueryWatchers): void {

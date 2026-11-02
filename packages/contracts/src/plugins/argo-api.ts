@@ -157,6 +157,19 @@ export type UseData = <Query extends PluginQuery>(
   options?: UseDataOptions,
 ) => UseDataResult<Query>;
 
+// `every` is how old an answer may be and still be used. A read has no clock of its own: it runs only when asked.
+export type ReadDataOptions = { every: number; projectId?: string };
+
+export type ReadDataResult<Query extends PluginQuery> = Pick<
+  UseDataResult<Query>,
+  'data' | 'error' | 'errorKind'
+>;
+
+export type ReadData = <Query extends PluginQuery>(
+  query: Query,
+  options: ReadDataOptions,
+) => Promise<ReadDataResult<Query>>;
+
 export type Page = ComponentType<{ context: PluginRenderContext }>;
 
 /*
@@ -168,6 +181,7 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
   Readonly<{
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: Readonly<{ register: (path: string, page: Page) => void }>;
+    data: Readonly<{ read: ReadData }>;
     slots: SlotsApi;
     operations: OperationsApi;
     on: <Name extends HookEventName>(
