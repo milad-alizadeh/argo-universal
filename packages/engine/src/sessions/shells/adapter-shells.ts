@@ -37,7 +37,7 @@ type Input = Omit<
 
 // Shells of an Agent that runs its own terminals and reports them in Tool call metadata, as claude-agent-acp does. It owns no process, so a Shell here cannot be stopped from Argo.
 export class AdapterShells {
-  private readonly seen = new Set<string>();
+  private readonly opened = new Set<string>();
   private readonly running = new Map<string, ShellCapture>();
   public constructor(private readonly input: Input) {}
   public observe({ update }: Notification): void {
@@ -52,13 +52,13 @@ export class AdapterShells {
     this.end(id, update._meta?.terminal_exit);
   }
   private start(id: string, input: z.infer<typeof Background> | null): void {
-    if (input && !this.seen.has(id)) this.open(id, input.command);
+    if (input && !this.opened.has(id)) this.open(id, input.command);
   }
   private open(id: string, command: string): void {
     const path = this.input.outputPath(id);
     const capture = this.capture(id, command, path);
 
-    this.seen.add(id);
+    this.opened.add(id);
     this.running.set(id, capture);
     void createShellOutput(path)
       .then(() => capture.associate(id))
