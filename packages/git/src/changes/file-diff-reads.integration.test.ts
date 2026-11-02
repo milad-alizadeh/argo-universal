@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { expect, it, onTestFinished, vi } from 'vitest';
+import { commit } from '../test-git.test.mocks';
 import { repository } from '../test-repository.test.mocks';
 import { readFileDiff, type FileDiff } from '.';
 
@@ -50,7 +51,7 @@ async function changedCheckout(): Promise<string> {
   for (const path of paths) writeFileSync(join(directory, path), 'old\n');
 
   await git('add', '.');
-  await git('commit', '-qm', 'Files');
+  await commit(git, 'Files');
 
   for (const path of paths) writeFileSync(join(directory, path), 'new\n');
 
