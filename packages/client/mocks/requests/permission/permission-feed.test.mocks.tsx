@@ -59,9 +59,14 @@ function outcomeFeed(width: number, mock: RequestMock): Story {
       const canvas = within(document.body);
       await settleLayout(width);
       await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
-      await userEvent.click(canvas.getByRole('button'));
+      const group = canvas.getByRole('button', { expanded: false });
+
+      await userEvent.click(group);
+      await expect(group).toHaveAttribute('aria-expanded', 'true');
+      await expect(canvas.getAllByRole('button').length).toBeGreaterThan(1);
       await expect(canvas.getAllByText(allowedOnceAnswer)).toHaveLength(1);
-      await userEvent.click(canvas.getByRole('button'));
+      await userEvent.click(group);
+      await expect(group).toHaveAttribute('aria-expanded', 'false');
       await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
     },
   };
