@@ -40,3 +40,18 @@ Feature: Session switching
     Then the remembered Feed remains mounted and hidden
     When I open the Session "Plan the release"
     Then the remembered Feed is shown
+
+  @web-only
+  Scenario: A Session restores its reading place after its Feed cache expires
+    Given a wide Frame
+    And the browser clock can advance for Feed expiration
+    And Agent 1 supplies a long Feed history
+    And a New Session with Agent 1
+    When I send the prompt "Build a long history"
+    And I reopen the stored long Feed
+    And I scroll the Feed to its oldest message
+    And I remember the oldest Feed message's position
+    And I create three other Sessions
+    And the Feed cache expires
+    And I return to the long Feed
+    Then the oldest Feed message returns to its remembered position

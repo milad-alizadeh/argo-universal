@@ -271,6 +271,8 @@ export const RestoresOlderReadingAfterRemount: Story = {
     );
     scrollUp(scroll, -300);
     await afterTwoFrames();
+    const before = await markSettledMiddleOfView(scroll);
+    const text = before.element.textContent;
     await userEvent.click(
       canvas.getByRole('button', { name: switchSessionLabel }),
     );
@@ -290,5 +292,10 @@ export const RestoresOlderReadingAfterRemount: Story = {
       scrollAwayWait,
     );
     await expect(restored.scrollTop).toBeLessThan(350);
+    await waitFor(async () => {
+      const after = await markSettledMiddleOfView(restored);
+      await expect(after.element.textContent).toBe(text);
+      await expect(Math.abs(after.top - before.top)).toBeLessThan(3);
+    }, scrollAwayWait);
   },
 };
