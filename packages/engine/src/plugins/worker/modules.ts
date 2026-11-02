@@ -19,14 +19,15 @@ import {
 export async function registerPlugin(
   entry: PluginEntry,
   bridge: PluginBridge,
-  clock?: PluginClock,
+  startup: { initialized: () => void; clock?: PluginClock },
 ): Promise<PluginInboxes> {
   const { context, inboxes, modules, validateBackground } = createPluginRealm(
     bridge,
     await bundleKit(),
-    clock,
+    startup.clock,
   );
 
+  startup.initialized();
   await bootstrap(context, new PluginModules(entry, context, modules));
 
   validatePaths(entry, validateBackground);

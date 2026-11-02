@@ -9,8 +9,9 @@ import { registerPlugin, type PluginInboxes } from './modules.ts';
 import { createPluginBridge, WorkerCalls } from './plugin-bridge.ts';
 import { answerTest, PluginTestClock } from './test-clock.ts';
 
-const post = (message: WorkerCall | TestReply | 'pong' | 'ready'): void =>
-  parentPort?.postMessage(message);
+const post = (
+  message: WorkerCall | TestReply | 'bootstrap-ready' | 'pong' | 'ready',
+): void => parentPort?.postMessage(message);
 
 const calls = new WorkerCalls(post);
 
@@ -59,7 +60,11 @@ parentPort?.on('message', (message) => {
   else deliver(command);
 });
 
-inboxes = await registerPlugin(entry, bridge, clock);
+// Start the Plugin execution deadline after trusted imports, kit bundling and realm setup.
+inboxes = await registerPlugin(entry, bridge, {
+  initialized: () => post('bootstrap-ready'),
+  clock,
+});
 
 post('ready');
 
