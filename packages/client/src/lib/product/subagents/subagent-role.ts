@@ -18,7 +18,14 @@ const namedRole = (name: string): SubagentRoleMark | undefined =>
   Object.entries(roles).find(([key]) => key === name)?.[1];
 
 // Agents name their roles as they please, so Argo matches them case for case.
-const roleKey = (role: string | null): string => role?.toLowerCase() ?? '';
+const normalisedRole = (role: string | null): string =>
+  role?.trim().toLowerCase() ?? '';
+
+const roleKey = (role: string | null): string => {
+  const key = normalisedRole(role);
+
+  return key === 'general-purpose' ? 'general' : key;
+};
 
 // A role Argo does not know, and a child with none, take the General mark.
 export const subagentRoleMark = (role: string | null): SubagentRoleMark =>
