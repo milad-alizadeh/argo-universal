@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import {
   addAccount,
-  clockUntil,
+  nextReadUntil,
   hasText,
   itemsText,
   labels,
@@ -30,7 +30,7 @@ async function rejectsTokens(
   page: View,
 ): Promise<void> {
   service.accepted.clear();
-  await clockUntil(test, page, rejectedText);
+  await nextReadUntil(test, page, rejectedText);
 }
 
 it('gives a different person a new row with their label, moves the Project to it and keeps the old row', async () => {
@@ -130,7 +130,7 @@ it('gives a second Plugin signing in to the same host its own row, and moves the
 
   await expect.poll(() => hasText(page, itemsText), wait).toBe(true);
   service.accepted.clear();
-  await clockUntil(test, page, rejectedText);
+  await nextReadUntil(test, page, rejectedText);
   await signInOn(run, page, 'person-1');
 
   const [first, second] = test.accounts.list();
@@ -168,7 +168,7 @@ it('recovers from a missing secret by signing in again, with no duplicate row', 
   });
 
   await lose.press('Lose the token');
-  await clockUntil(test, page, signInLabel);
+  await nextReadUntil(test, page, signInLabel);
   expect(hasText(page, rejectedText)).toBe(false);
 
   await signInOn(run, page, 'person-1');

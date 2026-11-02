@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import {
   addAccount,
-  clockUntil,
+  nextReadUntil,
   hasText,
   itemsText,
   items,
@@ -56,7 +56,7 @@ it('draws the message and no sign-in for several Accounts and no Project, until 
   const [first] = test.accounts.list();
 
   await test.accounts.signOut(first?.id ?? '');
-  await clockUntil(test, page, itemsText);
+  await nextReadUntil(test, page, itemsText);
 }, 60_000);
 
 it('refuses a read with several Accounts and no Project, naming `projectId` to the author', async () => {

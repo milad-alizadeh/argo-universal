@@ -47,15 +47,23 @@ export async function clockUntil(
   test: PluginTest,
   view: View,
   text: string,
+  step = clockStep,
 ): Promise<void> {
   await expect
     .poll(async () => {
-      await test.clock.advance(clockStep);
+      await test.clock.advance(step);
 
       return JSON.stringify(view.trees.at(-1));
     }, wait)
     .toContain(text);
 }
+
+// Past a page's next read, each time, so a loaded Mac still gets there inside the wait.
+export const nextReadUntil = (
+  test: PluginTest,
+  view: View,
+  text: string,
+): Promise<void> => clockUntil(test, view, text, 61_000);
 
 export const surface = { platform: 'web' } as const;
 

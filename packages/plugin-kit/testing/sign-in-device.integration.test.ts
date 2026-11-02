@@ -4,6 +4,7 @@ import {
   clockUntil,
   hasText,
   itemsText,
+  nextReadUntil,
   rejectedText,
   signInLabel,
   started,
@@ -56,8 +57,7 @@ it('leaves another Project on its own Account when a sign-in moves this one', as
 
   // The second Account's token dies; a read on the first Account's Project has no part in this.
   service.accepted.delete('token-2');
-  await test.clock.advance(61_000);
-  await expect.poll(() => hasText(page, rejectedText), wait).toBe(true);
+  await nextReadUntil(test, page, rejectedText);
 
   service.person.login = 'person-3';
   await page.press(signInLabel);
@@ -108,8 +108,7 @@ it('sends the person to sign in again when a refresh is refused and the token ru
   await expect.poll(() => hasText(page, itemsText), wait).toBe(true);
   service.accepted.clear();
   await test.clock.advance(3_600_000);
-
-  await expect.poll(() => hasText(page, rejectedText), wait).toBe(true);
+  await nextReadUntil(test, page, rejectedText);
 }, 40_000);
 
 it('copies the code and opens the service on one press, and ends in the expired step when the countdown runs out', async () => {
