@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
+import { LineEnd } from './list-item-line-end';
 import { CompactMeta, Meta } from './list-item-meta';
 import {
   hasAccessories,
@@ -79,17 +80,8 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
 }
 
 // A regular sidebar row ends its title line with its trailing item, 8 after the title, so the lines below run the full width.
-function TitleLine(props: ListItemProps): ReactElement {
-  if (!trailsTitle(props) || props.trailing === undefined)
-    return <Title {...props} />;
-
-  return (
-    <View className="min-w-0 flex-row items-center gap-2">
-      <Title {...props} inLine />
-      <View className="shrink-0 flex-row items-center">{props.trailing}</View>
-    </View>
-  );
-}
+const titleLineEnd = (props: ListItemProps): ReactNode =>
+  props.titleEnd ?? (trailsTitle(props) ? props.trailing : undefined);
 
 // Trailing accessories keep the trailing lane, so a row with them never moves its trailing item onto the title line.
 export const trailsTitle = (
@@ -111,13 +103,23 @@ const subtitleOf = (props: PlacedContentProps): SubtitleProps => ({
   subtitleIcon: props.subtitleIcon,
 });
 
+function TextLines(props: PlacedContentProps): ReactElement {
+  return (
+    <InertLane className="min-w-0 gap-0.5">
+      <LineEnd end={titleLineEnd(props)}>
+        <Title {...props} />
+      </LineEnd>
+      <LineEnd end={props.subtitleEnd}>
+        <Subtitle {...subtitleOf(props)} />
+      </LineEnd>
+    </InertLane>
+  );
+}
+
 export function ItemContent(props: PlacedContentProps): ReactElement {
   return (
     <View {...useOpenLane()} className="min-w-0 flex-1 gap-0.5">
-      <InertLane className="min-w-0 gap-0.5">
-        <TitleLine {...props} />
-        <Subtitle {...subtitleOf(props)} />
-      </InertLane>
+      <TextLines {...props} />
       <Meta
         sidebar={props.sidebar === true}
         meta={props.meta}

@@ -1,3 +1,8 @@
+import type { ContentBlock } from '@repo/contracts';
+import {
+  type ErrorToast,
+  useErrorToast,
+} from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
 import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
 import { type ServerMutation, type TRPC, useTRPC } from '#features/connection';
@@ -21,6 +26,8 @@ export type SessionCommands = Omit<
   setConfigOption: SessionConfigChange['setConfigOption'];
   changeConfig: SessionConfigChange['change'];
   sendDraft: (sent: ComposerDraft) => Promise<void>;
+  // Sends a stopped Turn's prompt again and leaves the draft as it is.
+  retryPrompt: (prompt: ContentBlock[]) => void;
 };
 
 interface SessionCommandTarget {
@@ -76,8 +83,9 @@ function useDraftCommands({
 
   const promptSession = usePromptSession({ clearDraft, resumeAfterCommand });
   const sendDraft = draftSender(sessionId, promptSession, uploadDraftAsPrompt);
+  const retryPrompt = useRetryPrompt(sessionId, resumeAfterCommand);
 
-  return { ...draft, promptSession, sendDraft };
+  return { ...draft, promptSession, sendDraft, retryPrompt };
 }
 
 function usePromptSession({
@@ -92,6 +100,25 @@ function usePromptSession({
   };
 
   return useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
+}
+
+const retryFailed: ErrorToast = {
+  title: "Couldn't retry",
+  message: 'Check the Connection, then try again.',
+};
+
+function useRetryPrompt(
+  sessionId: string,
+  onSuccess: () => void,
+): SessionCommands['retryPrompt'] {
+  const trpc = useTRPC();
+  const retry = useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
+
+  useErrorToast(retry.isError ? retryFailed : undefined);
+
+  return (prompt) => {
+    if (!retry.isPending) retry.mutate({ sessionId, prompt });
+  };
 }
 
 function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {

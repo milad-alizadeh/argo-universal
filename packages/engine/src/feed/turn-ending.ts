@@ -61,8 +61,7 @@ const crashNotice = (
 const interruptionNotice = (turnId: string | null): NoticeFields => ({
   id: interruptionDisclosureId(turnId ?? ''),
   title: 'Output may be missing',
-  description:
-    'The Turn was interrupted, so its output may be missing. Argo did not resend the prompt.',
+  description: 'The Turn was interrupted, so its output may be missing.',
 });
 
 const endingNoticeFields = (

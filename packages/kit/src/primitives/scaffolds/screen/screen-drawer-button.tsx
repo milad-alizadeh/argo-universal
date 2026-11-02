@@ -14,10 +14,10 @@ export function drawerLeading(menu: ScreenMenu | null): DrawerLeading {
   return { headerLeft: () => <ScreenDrawerButton menu={menu} /> };
 }
 
-// ☰ in a JS header: Android's top app bar and the web's stack header. iOS declares a stock bar button item instead.
+// ☰ in a JS header: Android's top app bar and the web's stack header, its glyph on the page's left edge. iOS declares a stock bar button item instead.
 function ScreenDrawerButton({ menu }: { menu: ScreenMenu }): ReactElement {
   return (
-    <View>
+    <View className="ml-2 android:-ml-3">
       <IconButton
         variant="ghost"
         icon="menu"

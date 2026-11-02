@@ -80,7 +80,7 @@ async function expectComposerTextSize(element: HTMLElement): Promise<void> {
     await expect(
       getComputedStyle(child).fontSize,
       child.textContent ?? '',
-    ).toBe('14px');
+    ).toBe('13px');
 }
 
 function visibleText(element: HTMLElement): boolean {

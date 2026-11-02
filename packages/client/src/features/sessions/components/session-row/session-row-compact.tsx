@@ -66,7 +66,7 @@ function compactEnd(
   };
 }
 
-const endParts = (
+export const endParts = (
   detail: React.ReactNode,
   status: React.ReactNode,
 ): React.ReactNode =>

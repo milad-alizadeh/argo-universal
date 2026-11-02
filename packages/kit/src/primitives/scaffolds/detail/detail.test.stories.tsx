@@ -202,6 +202,9 @@ const onWide = (story: Story): Story => ({
  * Metadata beside the content widens the Screen's column rather than taking from the content: the heading starts on the
  * content's edge and its Actions end on the Metadata's.
  */
+// A header icon's button stands this far past the page's edge, so its glyph ends on it.
+const iconButtonInset = 8;
+
 export const MetadataWidensTheColumnNotTheText: Story = onWide({
   render: ScreenActionsLeadTheContent.render,
   play: async ({ canvas }) => {
@@ -213,7 +216,9 @@ export const MetadataWidensTheColumnNotTheText: Story = onWide({
     const status = rect(canvas.getByRole('group', { name: statusGroup }));
 
     await expect(sameEdge(title.left, content.left)).toBe(true);
-    await expect(sameEdge(action.right, status.right)).toBe(true);
+    await expect(sameEdge(action.right - iconButtonInset, status.right)).toBe(
+      true,
+    );
   },
 });
 

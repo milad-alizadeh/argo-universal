@@ -18,16 +18,17 @@ function leadingIcon(props: HeaderProps): ReactNode {
   return props.leading === undefined ? disclosure(props) : props.leading;
 }
 
-// The leading icon sits 8 before the title, in the label's colour, the actions' size; a sidebar's 16 glyph sits 6 before it.
-const leadingSlot = (sidebar?: boolean): string =>
-  sidebar
-    ? 'mr-1.5 h-6 w-4 shrink-0 items-center justify-center'
+// The sidebar's 16 glyph and the rows' 24 lane each match their rows, so the icon and title share their edges; otherwise the icon sits 8 before the title.
+const leadingSlot = ({ sidebar, rowLanes }: HeaderProps): string => {
+  if (sidebar) return 'mr-2.5 h-6 w-4 shrink-0 items-center justify-center';
+
+  return rowLanes
+    ? 'mr-3 h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center'
     : 'h-6 wide-type:h-5 shrink-0 flex-row items-center pr-1';
+};
 
 export function HeaderLeading(props: HeaderProps): ReactNode {
   const icon = leadingIcon(props);
 
-  return icon ? (
-    <View className={leadingSlot(props.sidebar)}>{icon}</View>
-  ) : null;
+  return icon ? <View className={leadingSlot(props)}>{icon}</View> : null;
 }

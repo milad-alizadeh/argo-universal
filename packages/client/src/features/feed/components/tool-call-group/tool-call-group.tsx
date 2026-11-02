@@ -62,7 +62,7 @@ function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
         icon: toolCallIcon(live.toolCall),
         running,
       }
-    : { label: group.title, paths: [], icon: 'read' as const, running };
+    : { label: group.title, paths: [], icon: 'terminal' as const, running };
 }
 
 function useGroupTrailing(group: FeedGroup, now?: number): string | undefined {

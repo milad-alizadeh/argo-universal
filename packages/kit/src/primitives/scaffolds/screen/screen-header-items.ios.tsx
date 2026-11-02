@@ -28,11 +28,19 @@ export function ScreenHeaderItems(
 
   return (
     <>
+      <RootTitle />
       <MenuItem />
       <HeaderItems header={header} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
+}
+
+// A narrow root, which ☰ opens from, has the system's large title; pushed pages keep the inline one.
+function RootTitle(): ReactElement | null {
+  if (useScreenMenu() === null) return null;
+
+  return <Stack.Screen options={{ headerLargeTitleEnabled: true }} />;
 }
 
 // A narrow root leads with ☰ as a stock bar button item, which the system places like the back chevron, with the stock badge.

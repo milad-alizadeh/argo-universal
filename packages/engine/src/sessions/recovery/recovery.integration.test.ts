@@ -105,7 +105,7 @@ describe('Engine restart recovery', (): void => {
               stopReason: 'error',
               error: {
                 code: 'interrupted',
-                message: 'The Server stopped during the Turn',
+                message: 'The Server restarted during this Turn',
               },
               durationMs: expect.any(Number),
             },

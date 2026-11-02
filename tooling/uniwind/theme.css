@@ -128,13 +128,16 @@
   --leading-body: var(--leading-6);
   --leading-body-wide: var(--leading-5);
   --font-weight-body: var(--font-weight-normal);
+  --tracking-body: 0px;
   --text-secondary: var(--text-sm);
   --text-secondary-wide: var(--text-xs);
   --leading-secondary: var(--leading-5);
   --leading-secondary-wide: var(--leading-4);
   --font-weight-secondary: var(--font-weight-normal);
+  --tracking-secondary: 0px;
   /* Roles below are the same on every width. */
   --text-control: var(--text-sm);
+  --text-control-wide: var(--text-sm);
   --leading-control: var(--leading-5);
   --font-weight-control: var(--font-weight-medium);
   --text-badge: var(--text-xs);
@@ -145,6 +148,9 @@
   --text-code: var(--text-xs);
   --leading-code: var(--leading-5);
   --font-weight-code: var(--font-weight-normal);
+  /* Code inside a sentence stays one point under the text around it. */
+  --text-code-inline: 15px;
+  --text-code-inline-wide: 13px;
   /* The gap between paragraphs, wherever text runs to more than one. */
   --spacing-paragraph: var(--spacing-3);
   --spacing-paragraph-wide: var(--spacing-2_5);
@@ -157,8 +163,8 @@
   --leading-nav-action: var(--leading-5_5);
   --font-weight-nav-action: var(--font-weight-normal);
   /* A row Argo draws: Material's bodyLarge title (16/24, +0.5) and
-     bodyMedium detail (14/20, +0.25). iOS takes the same sizes, without the
-     tracking, so phone type never differs. The wide step is Body and Secondary. */
+     bodyMedium detail (14/20, +0.25). iOS moves it with the roles above. The
+     wide step is Body and Secondary. */
   --text-row: var(--text-base);
   --leading-row: var(--leading-6);
   --tracking-row: 0px;
@@ -240,17 +246,34 @@
     @variant web {
       /* Paper "Rail · narrow variants", Variant B: the desktop's tinted rail. A tablet keeps Material's 80 rail. */
       --spacing-frame-rail: 56px;
+      /* The HIG's macOS Body and Headline, on the same loose 20 line as long passages take; Secondary is its Callout. */
+      --text-heading-wide: 13px;
+      --text-body-wide: 13px;
+      --text-control-wide: 13px;
+      --text-code-inline-wide: 12px;
     }
     @variant ios {
       --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
       --radius-grouped: 26px;
+      /* The HIG's Headline, Body and Subhead. Body and Headline keep the 24 line, the HIG's loose leading
+         for long passages, so every lane and row height holds. A code block stays 4 under Body. */
+      --text-heading: 17px;
+      --text-body: 17px;
+      --text-secondary: 15px;
+      --text-code: 13px;
+      --text-code-inline: 16px;
+      --text-row: 17px;
+      --text-row-detail: 15px;
     }
     @variant android {
       --font-sans: sans-serif;
       --font-mono: monospace;
       --radius-grouped-inner: 4px;
+      /* Material's bodyLarge and bodyMedium: the role sizes already match, the tracking is Android's own. */
+      --tracking-body: 0.5px;
+      --tracking-secondary: 0.25px;
       --tracking-row: 0.5px;
       --tracking-row-detail: 0.25px;
       /* A tablet's rail and list sit flat on the window, with no glass panel to inset (#927). */
@@ -355,7 +378,7 @@
       /* A step quieter than muted-foreground: a grouped row's disclosure chevron,
          a diff's line numbers. Only ever marks that repeat an adjacent label. */
       --color-tertiary: var(--color-neutral-500);
-      --color-danger: var(--color-red-500);
+      --color-danger: var(--color-red-700);
       /* One step darker than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-300);
       /* A focus ring and a link's underline are the only affordance they carry,
@@ -365,7 +388,7 @@
       --color-done: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
-      --color-warning: var(--color-amber-600);
+      --color-warning: var(--color-amber-700);
       /* The window and page ground (Paper's Rail B and Porcelain screens). */
       --color-content: var(--color-neutral-50);
       /* Glass: the sidebar panel, straight on the window surface. */
@@ -582,6 +605,7 @@
   font-size: var(--text-body);
   line-height: var(--leading-body);
   font-weight: var(--font-weight-body);
+  letter-spacing: var(--tracking-body);
   color: var(--color-foreground);
 
   @variant wide-type {
@@ -594,6 +618,7 @@
   font-size: var(--text-secondary);
   line-height: var(--leading-secondary);
   font-weight: var(--font-weight-secondary);
+  letter-spacing: var(--tracking-secondary);
   color: var(--color-muted-foreground);
   /* Durations, counts and timestamps live in this role and change in place as a
      turn runs, so the figures have to hold one width. */
@@ -624,6 +649,10 @@
   font-size: var(--text-control);
   line-height: var(--leading-control);
   font-weight: var(--font-weight-control);
+
+  @variant wide-type {
+    font-size: var(--text-control-wide);
+  }
 }
 
 @utility type-badge {
@@ -638,6 +667,17 @@
   font-size: var(--text-code);
   line-height: var(--leading-code);
   font-weight: var(--font-weight-code);
+}
+
+@utility type-code-inline {
+  font-family: var(--font-mono);
+  font-size: var(--text-code-inline);
+  line-height: var(--leading-code);
+  font-weight: var(--font-weight-code);
+
+  @variant wide-type {
+    font-size: var(--text-code-inline-wide);
+  }
 }
 
 /* Code set as a secondary line, such as a path under a name: the Secondary role's
@@ -688,6 +728,7 @@
   line-height: var(--leading-row-detail);
   letter-spacing: var(--tracking-row-detail);
   font-weight: var(--font-weight-secondary);
+  letter-spacing: var(--tracking-secondary);
   color: var(--color-muted-foreground);
 
   @variant wide-type {

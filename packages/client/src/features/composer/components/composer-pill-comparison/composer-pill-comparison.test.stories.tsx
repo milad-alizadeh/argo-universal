@@ -42,18 +42,21 @@ const names = [
   'Context window',
 ];
 
-function sharedGeometry(width: number): Story {
+function sharedGeometry(width: number, fontSize: string): Story {
   return {
     ...SharedControls,
     beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
       for (const name of names)
-        await expectControlGeometry(canvas.getByRole('button', { name }));
+        await expectControlGeometry(
+          canvas.getByRole('button', { name }),
+          fontSize,
+        );
       await expectMaterialPolicy(canvas);
 
       if (width !== 390) {
         const usage = canvas.getByRole('button', { name: 'Usage' });
-        await expectControlGeometry(usage);
+        await expectControlGeometry(usage, fontSize);
         await expect(within(usage).queryByRole('group')).toBeNull();
       }
 
@@ -62,20 +65,26 @@ function sharedGeometry(width: number): Story {
   };
 }
 
-async function expectControlGeometry(button: HTMLElement): Promise<void> {
+async function expectControlGeometry(
+  button: HTMLElement,
+  fontSize: string,
+): Promise<void> {
   await expect(button.getBoundingClientRect().height).toBeCloseTo(28, 0);
   await expect(within(button).queryAllByRole('button')).toHaveLength(0);
 
   for (const text of within(button)
     .queryAllByText(/\S/)
     .filter((element) => !isInaccessible(element)))
-    await expectTextGeometry(text);
+    await expectTextGeometry(text, fontSize);
 }
 
-async function expectTextGeometry(element: HTMLElement): Promise<void> {
+async function expectTextGeometry(
+  element: HTMLElement,
+  fontSize: string,
+): Promise<void> {
   const style = getComputedStyle(element);
 
-  await expect(style.fontSize).toBe('14px');
+  await expect(style.fontSize).toBe(fontSize);
   await expect(style.lineHeight).toBe('20px');
 }
 
@@ -91,9 +100,9 @@ async function expectLabelInset(button: HTMLElement): Promise<void> {
   ).toBeCloseTo(11, 0);
 }
 
-export const CompactGeometry = sharedGeometry(390);
+export const CompactGeometry = sharedGeometry(390, '14px');
 
-export const DesktopGeometry = sharedGeometry(1440);
+export const DesktopGeometry = sharedGeometry(1440, '13px');
 
 const openAgents = fn();
 

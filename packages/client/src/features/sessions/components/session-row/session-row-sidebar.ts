@@ -18,6 +18,12 @@ const activityTones = {
   idle: 'muted',
 } satisfies Record<SessionInfo['status'], Tone>;
 
+// A phone's running Session reads muted, so colour on its grouped rows means something needs you.
+const phoneActivityTones = {
+  ...activityTones,
+  running: 'muted',
+} satisfies Record<SessionInfo['status'], Tone>;
+
 type SidebarDrawing = Pick<
   ListItemProps,
   'sidebar' | 'emphasized' | 'subtitleTone'
@@ -25,7 +31,7 @@ type SidebarDrawing = Pick<
 
 // A sidebar row's title is semibold while unread; a Regular row's activity takes the status's colour.
 export function sidebarDrawing(status: SessionInfo['status']): SidebarDrawing {
-  if (!sidebarRows) return {};
+  if (!sidebarRows) return { subtitleTone: phoneActivityTones[status] };
 
   return {
     sidebar: true,

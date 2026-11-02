@@ -44,7 +44,7 @@ const requestTrayClass = cn(
 );
 
 const requestClass = (wide: boolean, filled: boolean): string =>
-  cn(wide && requestTrayClass, filled && filledClass);
+  cn('w-full', wide && requestTrayClass, filled && filledClass);
 
 const attachmentLimitMessage = `Attachment exceeds ${maxBlobUploadMebibytes} MB.`;
 

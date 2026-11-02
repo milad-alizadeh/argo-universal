@@ -21,6 +21,7 @@ import type {
   OpenSessionViewProps,
   SessionDetailViewProps,
 } from './session-detail-view';
+import { type StoppedTurn, stoppedTurn } from './stopped-turn';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
@@ -93,8 +94,11 @@ const sessionHeaderProps = ({ snapshot }: OpenSession): SessionHeaderProps => ({
   },
 });
 
-const sessionFeedProps = (open: OpenSession): FeedProps => ({
-  items: open.view.items,
+const sessionFeedProps = (
+  open: OpenSession,
+  stoppedEnding: StoppedTurn['ending'] | undefined,
+): FeedProps => ({
+  items: open.view.items.filter((item) => item !== stoppedEnding),
   liveHeader: open.snapshot.liveHeader,
   liveToolCall: open.feed.liveToolCall,
   loadingOlder: open.feed.loadingOlder,
@@ -104,11 +108,43 @@ const sessionFeedProps = (open: OpenSession): FeedProps => ({
   onAtEndChange: open.onAtEndChange,
 });
 
+const canRetry = (open: OpenSessionSources): boolean =>
+  [
+    open.connected,
+    open.snapshot.state === 'idle',
+    open.snapshot.archivedAt === null,
+    // Sign-in and launch trouble goes first: until it clears, a retried Turn could not run.
+    !open.callouts.callout,
+  ].every(Boolean);
+
+const retryableTurn = (open: OpenSessionSources): StoppedTurn | undefined =>
+  canRetry(open) ? stoppedTurn(open.view.items) : undefined;
+
+const stoppedTurnProps = (
+  open: OpenSession,
+  { ending, prompt }: StoppedTurn,
+): OpenSessionViewProps['stoppedTurn'] => ({
+  reason: ending.end.error?.message,
+  onRetry: () => open.commands.retryPrompt(prompt),
+});
+
+// The card above the Composer says how the Turn ended, so the Feed leaves its own line out.
+function feedAndRetry(
+  open: OpenSessionSources,
+): Pick<OpenSessionViewProps, 'feed' | 'stoppedTurn'> {
+  const stopped = retryableTurn(open);
+
+  return {
+    feed: sessionFeedProps(open, stopped?.ending),
+    stoppedTurn: stopped && stoppedTurnProps(open, stopped),
+  };
+}
+
 const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   ...open.callouts,
+  ...feedAndRetry(open),
   elicitation: open.elicitation,
   header: sessionHeaderProps(open),
-  feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),
   subagents: sessionAgents(open),
   shells: open.shells,
