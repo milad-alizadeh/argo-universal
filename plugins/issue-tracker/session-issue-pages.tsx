@@ -1,29 +1,16 @@
-import {
-  EmptyState,
-  List,
-  ListItem,
-  Screen,
-  useCallback,
-} from '@argo/plugin-kit';
+import { EmptyState, List, ListItem, useCallback } from '@argo/plugin-kit';
 import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import { IssueDetailPage } from './issue-detail';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueLink } from './tracker-storage';
 import { useAsync } from './use-async';
 import { useIssueDetail } from './use-issue-detail';
 
-/*
- * The Issue tracker's Workbench card and its Inspector tab (ADR-0035, ADR-0039). Both are declared in the manifest,
- * Argo draws the card around the first and opens the second when the card's body is pressed, and both open for the
- * Session whose Workbench they are in.
- */
+// The Issue tracker's Session Workbench summary.
 export const sessionCardPath = '/session-issue';
-
-export const sessionTabPath = '/session-issue/full';
 
 type PageProps = {
   deps: IssueDeps;
@@ -46,10 +33,6 @@ type PageKind = { draw: Draw; frame: Frame };
 export function registerSessionPages(api: Argo, deps: IssueDeps): void {
   api.pages.register(sessionCardPath, ({ context }) => (
     <SessionIssueCard deps={deps} context={context} />
-  ));
-
-  api.pages.register(sessionTabPath, ({ context }) => (
-    <SessionIssueTab deps={deps} context={context} />
   ));
 }
 
@@ -135,9 +118,7 @@ function SessionIssuePage(props: PageProps & PageKind): JSX.Element {
 
 const bare: Frame = (children) => children;
 
-const titled: Frame = (children) => <Screen title="Issue">{children}</Screen>;
-
-// The card: a summary of the Session's Issue, one row. The number and state are the subtitle, not a value, which would claim width first and cut the title. Argo opens the full view when the card's body is pressed.
+// The card summarizes the Issue and opens its own page.
 function SessionIssueCard(props: PageProps): JSX.Element {
   return (
     <SessionIssuePage
@@ -147,6 +128,13 @@ function SessionIssueCard(props: PageProps): JSX.Element {
     />
   );
 }
+
+type NavigateIssue = { action: 'navigate'; path: string };
+
+const issueAction = (found: Found): NavigateIssue => ({
+  action: 'navigate' as const,
+  path: found.deps.pages.issuePagePath(found.project, found.number),
+});
 
 function CardRow(found: Found): JSX.Element {
   const { issue } = useIssueDetail(found);
@@ -160,18 +148,8 @@ function CardRow(found: Found): JSX.Element {
         title={issue.title}
         subtitle={`#${issue.number} · ${statuses[issue.status].text}`}
         leading={statusMark(issue)}
+        onPress={issueAction(found)}
       />
     </List>
-  );
-}
-
-// The Inspector tab: the whole Issue, as its own page draws it.
-function SessionIssueTab(props: PageProps): JSX.Element {
-  return (
-    <SessionIssuePage
-      {...props}
-      frame={titled}
-      draw={(found) => <IssueDetailPage {...found} />}
-    />
   );
 }

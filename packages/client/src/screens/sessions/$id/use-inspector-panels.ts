@@ -1,4 +1,8 @@
-import { type SessionPanels, useSessionPanels } from '#features/sessions';
+import {
+  type SessionPanels,
+  offeredPanels,
+  useSessionPanels,
+} from '#features/sessions';
 import {
   offeredSessionPanels,
   type SessionInspectorContent,
@@ -6,8 +10,13 @@ import {
 
 export function useInspectorPanels(
   props: SessionInspectorContent & { inspectorPanels?: SessionPanels },
+  includeCardSheets = true,
 ): SessionPanels {
-  const panels = useSessionPanels(offeredSessionPanels(props));
+  const offered = offeredSessionPanels(props, includeCardSheets);
+  const panels = useSessionPanels(offered);
+  const supplied = props.inspectorPanels;
 
-  return props.inspectorPanels ?? panels;
+  return supplied
+    ? { ...supplied, state: offeredPanels(supplied.state, offered) }
+    : panels;
 }

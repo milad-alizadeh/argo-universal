@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
 import { tracker } from './journey-fixture';
 import {
+  issuePage,
   mountFor,
   sessionId,
   trackerWithAttachedIssue,
@@ -10,14 +11,18 @@ import {
 
 const cardPage = '/session-issue';
 
-const tabPage = '/session-issue/full';
-
 it("shows the Session's Issue on the Workbench card", async () => {
   const test = await trackerWithAttachedIssue();
   const card = await mountFor(test, cardPage, sessionId);
   const row = await card.find('Fixture issue from GitHub');
 
   expect(row.props.subtitle).toBe('#42 · Open');
+  expect(row.props.onPress).toEqual({ action: 'navigate', path: issuePage });
+
+  const issue = await mountFor(test, issuePage, sessionId);
+  expect(await issue.find('Start Session')).toBeDefined();
+  expect(await issue.find('fixture')).toBeDefined();
+  expect(issue.findText('Fixture issue from GitHub')).toBeDefined();
 }, 20_000);
 
 it('says when the Session has no Issue, or the card has no Session', async () => {
@@ -29,18 +34,9 @@ it('says when the Session has no Issue, or the card has no Session', async () =>
   expect(await none.find('No Session')).toBeDefined();
 }, 20_000);
 
-it("opens the Session's full Issue as the Inspector tab", async () => {
-  const test = await trackerWithAttachedIssue();
-  const tab = await mountFor(test, tabPage, sessionId);
-
-  expect(await tab.find('Start Session')).toBeDefined();
-  expect(await tab.find('fixture')).toBeDefined();
-  expect(tab.findText('Fixture issue from GitHub')).toBeDefined();
-}, 20_000);
-
 type Declared = {
   header: { target: { type: string; cardId: string } }[];
-  cards: { id: string; page: string; tab: string }[];
+  cards: { id: string; page: string; tab?: string }[];
 };
 
 function declared(): Declared {
@@ -59,7 +55,7 @@ function declared(): Declared {
   };
 }
 
-it("declares a header action that opens the Issue tracker's Workbench card, and draws the card's page and tab", async () => {
+it("declares a header action that opens the Issue tracker's Workbench card, and draws only the card's page", async () => {
   const { header, cards } = declared();
   const test = await tracker();
 
@@ -67,10 +63,10 @@ it("declares a header action that opens the Issue tracker's Workbench card, and 
     { type: 'card', cardId: cards[0]?.id },
   ]);
   expect(cards.map(({ page, tab }) => [page, tab])).toEqual([
-    [cardPage, tabPage],
+    [cardPage, undefined],
   ]);
 
-  for (const path of [cardPage, tabPage]) {
+  for (const path of [cardPage]) {
     const view = await mountFor(test, path, sessionId);
 
     await view.ready();

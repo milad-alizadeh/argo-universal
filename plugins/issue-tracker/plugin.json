@@ -47,8 +47,7 @@
             "sf": "record.circle",
             "material": "adjust"
           },
-          "page": "/session-issue",
-          "tab": "/session-issue/full"
+          "page": "/session-issue"
         }
       ]
     },
