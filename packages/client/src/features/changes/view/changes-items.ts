@@ -15,7 +15,10 @@ export type ChangesItem =
   | { kind: 'more'; key: string; file: ChangedFile; nextPages: number }
   | { kind: 'status'; key: string; file: ChangedFile; diff: FileDiffPages };
 
-export type DiffItem = Extract<ChangesItem, { kind: 'page' | 'more' | 'status' }>;
+export type DiffItem = Extract<
+  ChangesItem,
+  { kind: 'page' | 'more' | 'status' }
+>;
 
 // The items under a file's header; the rest are the list's own parts.
 export const isDiffItem = (item: ChangesItem): item is DiffItem =>

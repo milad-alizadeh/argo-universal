@@ -62,16 +62,22 @@ function DiffRow({
   item,
   context,
 }: RowProps<'page' | 'more' | 'status'>): React.JSX.Element {
-  switch (item.kind) {
-    case 'page':
-      return <PageRow item={item} />;
-    case 'more':
-      return <MoreRow item={item} context={context} />;
-    case 'status':
-      return <StatusRow item={item} />;
-    default:
-      return assertNever(item);
-  }
+  return item.kind === 'status' ? (
+    <StatusRow item={item} />
+  ) : (
+    <LinesRow item={item} context={context} />
+  );
+}
+
+function LinesRow({
+  item,
+  context,
+}: RowProps<'page' | 'more'>): React.JSX.Element {
+  return item.kind === 'page' ? (
+    <PageRow item={item} />
+  ) : (
+    <MoreRow item={item} context={context} />
+  );
 }
 
 function SeparatorRow(): React.JSX.Element {

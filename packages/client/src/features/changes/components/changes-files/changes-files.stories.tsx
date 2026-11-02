@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ChangesFiles } from './changes-files';
-import { binaryFile, loadingDiffs, renamedFile } from './changes-files-fixtures';
+import {
+  binaryFile,
+  loadingDiffs,
+  renamedFile,
+} from './changes-files-fixtures';
 
 const meta = {
   title: 'Changes/ChangesFiles',
