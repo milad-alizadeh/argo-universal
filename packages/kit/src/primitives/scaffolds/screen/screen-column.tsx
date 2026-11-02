@@ -20,32 +20,34 @@ import { useWide } from '#kit/use-wide/use-wide';
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
 ): ContentColumn {
-  const wide = useWide();
+  const capped = useWide() && width === 'content';
   const side = sideColumnExtra(useSideColumn());
   const { column, narrow, inset } = useColumnTokens();
-  const cap = columnCap(width, wide, { column: column + side, narrow });
+  const cap = columnCap(width, capped, { column: column + side, narrow });
 
   return useMemo(() => columnStyle(cap, inset), [cap, inset]);
 }
 
-function useColumnTokens(): { column: number; narrow: number; inset: number } {
-  const [column = 0, narrow = 0, inset = 0] = useCSSVariable([
-    '--container-column',
-    '--container-narrow',
-    usePaddingToken(),
-  ]).map(tokenNumber);
+type ColumnWidths = { column: number; narrow: number };
 
-  return { column, narrow, inset };
+type ColumnTokens = ColumnWidths & { inset: number };
+
+function useColumnTokens(): ColumnTokens {
+  return {
+    column: tokenNumber(useCSSVariable('--container-column')),
+    narrow: tokenNumber(useCSSVariable('--container-narrow')),
+    inset: tokenNumber(useCSSVariable(usePaddingToken())),
+  };
 }
 
 function columnCap(
   width: ScreenWidth,
-  wide: boolean,
-  { column, narrow }: { column: number; narrow: number },
+  capped: boolean,
+  { column, narrow }: ColumnWidths,
 ): number | undefined {
   if (width === 'narrow') return narrow;
 
-  return wide && width === 'content' ? column : undefined;
+  return capped ? column : undefined;
 }
 
 const columnStyle = (

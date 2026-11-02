@@ -92,22 +92,27 @@ function withRecentStatus(
     : summary;
 }
 
-async function summaryOf(
-  source: Source,
-  target: Target,
-): Promise<IssueSummary> {
-  const { projectId, number } = target;
-  const repository = await repositoryOf(source, projectId);
-
+async function readIssue(
+  repository: string,
+  { projectId, number }: Target,
+): Promise<ReturnType<typeof readGraphql<Issue>>> {
   const { data, error } = await github.read(issueQuery(repository, number), {
     projectId,
     every: freshForMs,
   });
 
-  const read = readGraphql(
+  return readGraphql(
     { data: data && { status: data.status, body: data.body }, error },
     mapIssueDetail,
   );
+}
+
+async function summaryOf(
+  source: Source,
+  target: Target,
+): Promise<IssueSummary> {
+  const repository = await repositoryOf(source, target.projectId);
+  const read = await readIssue(repository, target);
 
   if (read.kind !== 'ok') throw new Error('The Issue could not be read.');
 

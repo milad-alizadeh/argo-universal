@@ -1,7 +1,5 @@
 import type {
   ReadData,
-  ReadDataOptions,
-  ReadDataResult,
   UseData,
   UseDataOptions,
   UseDataResult,
@@ -29,6 +27,7 @@ import {
   type DataSnapshot,
 } from './data-subscription';
 import { queryResult } from './query-result';
+import { readQueryData } from './read-data';
 
 export const QueryViewContext = createContext<PluginViewId | null>(null);
 
@@ -48,27 +47,6 @@ export function dataClient(call: DataCall): KitDataClient {
     useData: (query, options) => useQueryData(client, query, options),
     read: (query, options) => readQueryData(call, query, options),
   };
-}
-
-function readQueryData<Query extends PluginQuery>(
-  call: DataCall,
-  query: Query,
-  options: ReadDataOptions,
-): Promise<ReadDataResult<Query>>;
-async function readQueryData(
-  call: DataCall,
-  query: PluginQuery,
-  { every, projectId }: ReadDataOptions,
-): Promise<ReadDataResult<PluginQuery>> {
-  const { data, error, errorKind } = await call({
-    api: 'data',
-    action: 'read',
-    query,
-    every,
-    projectId,
-  });
-
-  return { data: queryResult(query.api, data), error, errorKind };
 }
 
 // A Query with no normal form never ran, so it answers for itself over what the entry says.

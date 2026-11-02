@@ -20,10 +20,12 @@ const source = (options: string): string =>
     });
   }`;
 
+const everyMinute = '{ every: 60000 }';
+
 const untilText = { timeout: 10_000 };
 
 it('answers a read from one call, and a page opened after it makes none', async () => {
-  const fixture = await dataFixture(source('{ every: 60000 }'));
+  const fixture = await dataFixture(source(everyMinute));
   const kit = await fixture.start();
   const page = kit.page();
 
@@ -42,7 +44,7 @@ it('answers a read from one call, and a page opened after it makes none', async 
 });
 
 it('answers a read from what a page already watches', async () => {
-  const fixture = await dataFixture(source('{ every: 60000 }'));
+  const fixture = await dataFixture(source(everyMinute));
   const kit = await fixture.start();
 
   const watching = await kit.mount({
@@ -61,7 +63,7 @@ it('answers a read from what a page already watches', async () => {
 });
 
 it('runs the Query again once the answer is older than `every`', async () => {
-  const fixture = await dataFixture(source('{ every: 60000 }'));
+  const fixture = await dataFixture(source(everyMinute));
   const kit = await fixture.start();
   const page = kit.page();
 

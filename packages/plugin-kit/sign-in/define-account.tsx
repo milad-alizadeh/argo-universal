@@ -144,6 +144,11 @@ function registeredArgo(host: string): Registered {
   };
 }
 
+const readThrough =
+  (argo: Registered, host: string): DefinedAccount['read'] =>
+  (read, options) =>
+    argo.get().data.read(accountQuery(host, read), options);
+
 /*
  * One service's sign-in, declared once. Everything runs in the Plugin's own worker through the public API (ADR-0036):
  * Argo holds no provider list and no secret, and the Plugin's own code never sees a token.
@@ -160,8 +165,7 @@ export function defineAccount(declaration: AccountDeclaration): DefinedAccount {
       await provideAccount(given, account);
     },
     useData: (read, options) => useAccountRead(declaration.host, read, options),
-    read: (read, options) =>
-      argo.get().data.read(accountQuery(declaration.host, read), options),
+    read: readThrough(argo, declaration.host),
     signIn: (run) => runSignIn(argo.get, declaration, run),
   };
 
