@@ -50,7 +50,8 @@ Feature: Drafts kept on this Device
   Scenario: A first prompt is not restored in New Session after leaving while its Session opens
     Given a wide Frame
     And a New Session
-    When I send the prompt "Tidy the README" and return to Sessions at once
+    When I send the prompt "Tidy the README" and open Settings at once
+    And I return to Sessions
     And I open the Session "Tidy the README"
     And the Agent replies "The shared fixture completed this Turn."
     And I open a New Session

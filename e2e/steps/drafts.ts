@@ -2,7 +2,6 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
-import { returnToSessions } from './navigation';
 import { expectMessage, messageLabel, openNewSession } from './new-session';
 import { openSession } from './session-switching';
 
@@ -72,10 +71,11 @@ Then('the Message box is empty', async ({ page }): Promise<void> => {
 });
 
 When(
-  'I send the prompt {string} and return to Sessions at once',
+  'I send the prompt {string} and open Settings at once',
   async ({ page }, prompt: string): Promise<void> => {
     await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
     await page.getByRole('button', { name: 'Send', exact: true }).click();
-    await returnToSessions(page);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page).toHaveURL(/\/settings/);
   },
 );
