@@ -101,6 +101,21 @@ it('says why GitHub refused the sign-in', async () => {
   expect(page.findText('Couldn’t sign in')).toBeDefined();
 }, 30_000);
 
+it('says what GitHub answered when it does not say who signed in', async () => {
+  const tracked = await tracker();
+
+  tracked.github.accepted.clear();
+
+  const page = await showsCode(tracked);
+
+  await clockUntil(
+    tracked.test,
+    page,
+    'GitHub answered 401 and did not say who signed in.',
+  );
+  expect(page.findText('Couldn’t sign in')).toBeDefined();
+}, 30_000);
+
 it('lets the person give up waiting', async () => {
   const tracked = await tracker();
   const page = await showsCode(tracked);

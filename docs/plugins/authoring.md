@@ -161,7 +161,7 @@ export function register(argo: Argo): void {
 ```
 
 Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
-A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
+A fetch Query accepts the same fields as `argo.fetch`, including POST requests. `argo.fetch` sends `user-agent: Argo` on every request, redirects included, unless your Plugin sets its own `User-Agent` in any casing, as a browser's fetch always sends one and services such as GitHub's API refuse a request without it. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
 The hook returns `{ data, error, stale, refresh }`:

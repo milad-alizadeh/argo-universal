@@ -54,6 +54,10 @@ const answerOf = async (
 ): Promise<Json | undefined> =>
   response ? parseJson(await response.text()) : undefined;
 
+// Names a refusal, so the person sees the status and not only that no name came back.
+const answered = (response: Awaited<ReturnType<Argo['fetch']>>): string =>
+  response && !response.ok ? ` answered ${response.status} and` : '';
+
 // Only the Plugin's service knows whose token this is, and Argo stores that as the Account's label (ADR-0036).
 async function labelOf(
   { fetch }: Calls,
@@ -64,7 +68,7 @@ async function labelOf(
   const value = fieldOf(await answerOf(response), label.field);
 
   if (typeof value !== 'string' || value === '')
-    throw new Error(`${name} did not say who signed in.`);
+    throw new Error(`${name}${answered(response)} did not say who signed in.`);
 
   return value;
 }

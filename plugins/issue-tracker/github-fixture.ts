@@ -16,6 +16,8 @@ const slowRefusalMs = 1000;
 
 const unauthorized = 401;
 
+const forbidden = 403;
+
 const unprocessable = 422;
 
 const textOf = (value: Json | undefined): string =>
@@ -144,10 +146,20 @@ const githubCom = (state: State, request: FixtureRequest): FixtureAnswer =>
 const apiWithToken = (
   accepted: Set<string>,
   request: FixtureRequest,
-): FixtureAnswer | Promise<FixtureAnswer> =>
-  accepted.has(tokenOf(request))
+): FixtureAnswer | Promise<FixtureAnswer> => {
+  // GitHub's API refuses a request with no User-Agent before it looks at the token.
+  if (!request.headers['user-agent'])
+    return answer(
+      JSON.stringify({
+        message: 'Please make sure your request has a User-Agent header',
+      }),
+      forbidden,
+    );
+
+  return accepted.has(tokenOf(request))
     ? api(request)
     : answer(JSON.stringify({ message: 'Bad credentials' }), unauthorized);
+};
 
 const handle =
   (state: State, accepted: Set<string>) =>
@@ -158,7 +170,7 @@ const handle =
 
 /*
  * GitHub as the tracker meets it: the device-flow endpoints on `github.com`, and the user, GraphQL and Issue endpoints
- * on `api.github.com`, over a certificate the test trusts. A call with a token it does not accept is a 401.
+ * on `api.github.com`, over a certificate the test trusts. A call with no User-Agent is a 403, and one with a token it does not accept a 401.
  */
 export async function githubFixture(): Promise<GitHubFixture> {
   const state: State = { replies: [{ access_token: 'token-1' }], polled: 0 };
