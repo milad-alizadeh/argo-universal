@@ -31,14 +31,6 @@ export const WideLight: Story = {
   globals: { mode: 'light', viewport: { value: 'desktop' } },
 };
 
-export const WideDark: Story = {
-  globals: { mode: 'dark', viewport: { value: 'desktop' } },
-};
-
-export const NarrowLight: Story = {
-  globals: { mode: 'light', viewport: { value: 'phone' } },
-};
-
 export const NarrowDark: Story = {
   globals: { mode: 'dark', viewport: { value: 'phone' } },
 };
