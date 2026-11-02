@@ -20,10 +20,13 @@ export class QueryTiming {
     return this.lastAt !== null;
   }
 
-  // Whether the answer is younger than a read asks. That read's period also ends the answer for a view mounting later.
-  fresh(period: number): boolean {
+  // A read's period also ends the answer for a view mounting later.
+  readEvery(period: number): void {
     this.readPeriod = period;
+  }
 
+  // Whether the answer is younger than a read asks.
+  fresh(period: number): boolean {
     return (
       this.lastAt !== null &&
       !this.overdue &&

@@ -1,4 +1,6 @@
+import type { ServerResponse } from 'node:http';
 import { expect, it } from 'vitest';
+import { fixtureNetwork, httpsServer } from '../../engine/mocks/probe-plugin';
 import { dataFixture } from '../mocks/data-fixture';
 
 const query = "{api:'process',action:'run',argv:['query-fixture']}";
@@ -75,6 +77,42 @@ it('runs the Query again once the answer is older than `every`', async () => {
   await page.find('read:2');
 
   await expect.poll(() => fixture.requests(), untilText).toHaveLength(2);
+});
+
+it('runs the Query again after a failed answer, however young', async () => {
+  const requests: ServerResponse[] = [];
+
+  const port = await httpsServer((_request, response) => {
+    requests.push(response);
+
+    if (requests.length === 1) response.destroy();
+    else response.end('answered');
+  });
+
+  const fixture = await dataFixture(
+    `import {Button,Stack,Text,useState} from '@argo/plugin-kit';
+    export function register(argo) {
+      argo.pages.register('/', () => {
+        const [read, setRead] = useState('unread');
+        const press = () => argo.data.read({ api: 'fetch', url: 'https://localhost:${port}/data', method: 'POST', body: '{}' }, { every: 60000 }).then(
+          ({ data, errorKind }) => setRead(errorKind ?? data.body),
+        );
+        return <Stack direction="column"><Text>{read}</Text><Button label="Read" onPress={press} /></Stack>;
+      });
+    }`,
+    {},
+    [{ kind: 'fetch', host: `localhost:${port}`, reason: 'Fixture' }],
+  );
+
+  const kit = await fixture.start({ network: await fixtureNetwork() });
+  const page = kit.page();
+
+  await page.find('Read');
+  await page.press('Read');
+  await page.find('failed');
+  await page.press('Read');
+  await page.find('answered');
+  expect(requests).toHaveLength(2);
 });
 
 it('refuses a read for a Project that is not registered, and runs nothing', async () => {

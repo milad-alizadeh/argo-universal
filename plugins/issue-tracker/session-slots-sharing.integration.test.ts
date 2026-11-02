@@ -80,6 +80,8 @@ it('reads the Issue again for a Slot once its answer is past the freshness windo
   expect(issueReads(github)).toBe(1);
 
   await test.clock.advance(pastFresh);
+  // Argo keeps a Slot's answer until the Plugin says its items changed, so only that asks the provider again.
+  await attach(test, 'attach');
   await until(watch(test, rowSlot), loaded);
 
   await expect.poll(() => issueReads(github), wait).toBe(2);

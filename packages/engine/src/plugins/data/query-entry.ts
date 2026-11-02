@@ -44,14 +44,20 @@ export class QueryEntry {
 
   // Joins a call in flight, uses an answer young enough, and otherwise runs. A failed answer is never young enough.
   async read(every: number): Promise<PluginDataState> {
-    if (this.flight || !this.usable(every)) await this.refresh();
+    const period = this.readPeriod(every);
+
+    this.timing.readEvery(period);
+
+    if (this.flight || !this.usable(period)) await this.refresh();
 
     return this.state;
   }
 
-  private usable(every: number): boolean {
-    const period = this.intervals.mounted(this.owner.pluginId, every) ?? every;
+  private readPeriod(every: number): number {
+    return this.intervals.mounted(this.owner.pluginId, every) ?? every;
+  }
 
+  private usable(period: number): boolean {
     return this.timing.fresh(period) && this.state.error === undefined;
   }
 
