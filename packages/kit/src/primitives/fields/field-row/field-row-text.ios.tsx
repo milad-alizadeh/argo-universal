@@ -15,6 +15,7 @@ type RowTitleProps = RowTextProps & {
   title: string;
   subtitle?: string;
   subtitleTone?: 'warning' | 'muted' | 'danger';
+  subtitleLines?: number;
 };
 
 /*
@@ -60,10 +61,27 @@ function TitleLines(props: RowTitleProps): ReactElement {
   return (
     <VStack alignment="leading">
       {title}
-      <NativeText numberOfLines={1} modifiers={subtitleModifiers(warning)}>
-        {props.subtitle}
-      </NativeText>
+      <Subtitle
+        text={props.subtitle}
+        lines={props.subtitleLines}
+        color={warning}
+      />
     </VStack>
+  );
+}
+
+function Subtitle(props: {
+  text: string;
+  lines?: number;
+  color?: string;
+}): ReactElement {
+  return (
+    <NativeText
+      numberOfLines={props.lines}
+      modifiers={subtitleModifiers(props.color)}
+    >
+      {props.text}
+    </NativeText>
   );
 }
 

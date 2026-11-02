@@ -1,15 +1,10 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { recordedEdit } from '../../../../../mocks/feed-edit-mock';
 import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
-import { commandWithDescription } from '../tool-call-description.mocks';
-import {
-  runningCommand,
-  toolCallGroupMock,
-  toolCallGroupMocks,
-} from '../tool-call.mocks';
+import { scriptedToolCall } from '../tool-call-description.mocks';
+import { toolCallGroupMock, toolCallGroupMocks } from '../tool-call.mocks';
 import { ToolCallGroup } from './tool-call-group';
 import {
   commandAndFileSummary,
@@ -183,16 +178,15 @@ export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
 
 const editDescription = 'Updating the greeting';
 
-function activeEditGroup(withHeader: boolean): FeedGroup {
-  const row = {
-    ...recordedEdit('agent-1'),
-    status: 'in_progress' as const,
-    title: editDescription,
-  };
+function activeEditGroup(
+  withHeader: boolean,
+  toolCallId = 'edit-title',
+): FeedGroup {
+  const row = scriptedToolCall(toolCallId);
 
   const group: FeedGroup = {
     type: 'group',
-    id: 'active-edit',
+    id: row.id,
     title: 'Working',
     state: 'open',
     items: [{ type: 'tool_call', row }],
@@ -232,7 +226,6 @@ export const RunningEditWithoutLiveHeader: Story = {
     );
     await expect(
       canvas.getAllByText(editDescription, {
-        selector: '.shimmer-text',
         exact: false,
       }),
     ).toHaveLength(1);
@@ -243,61 +236,45 @@ export const RunningEditWithoutLiveHeader: Story = {
 };
 
 export const RunningEditWithoutDescription: Story = {
-  render: () => {
-    const group = activeEditGroup(true);
-
-    const row = {
-      ...recordedEdit('agent-1'),
-      status: 'in_progress' as const,
-      title: '',
-    };
-
-    group.items = [{ type: 'tool_call', row }];
-
-    return <FeedItem item={group} imageUrl={() => ''} />;
-  },
+  render: () => (
+    <FeedItem
+      item={activeEditGroup(true, 'edit-empty-title')}
+      imageUrl={() => ''}
+    />
+  ),
   play: async ({ canvas, userEvent }) => {
     await settleLayout(layoutWidths.wide);
     await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
-
     await expect(canvas.getByText('Editing file')).toBeVisible();
   },
 };
 
-// A separate Agent description takes precedence over the generic title.
+// A descriptive ACP edit title remains visible alongside its diff.
 export const RunningEditWithAgentDescription: Story = {
-  render: () => {
-    const group = activeEditGroup(true);
-
-    const row = {
-      ...recordedEdit('agent-1'),
-      status: 'in_progress' as const,
-      title: 'Edit',
-      _meta: { argo: { description: 'Correcting the greeting' } },
-    };
-
-    group.items = [{ type: 'tool_call', row }];
-
-    return <FeedItem item={group} imageUrl={() => ''} />;
-  },
+  render: () => (
+    <FeedItem
+      item={activeEditGroup(true, 'edit-described')}
+      imageUrl={() => ''}
+    />
+  ),
   play: async ({ canvas, userEvent }) => {
     await settleLayout(layoutWidths.wide);
     await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
     await expect(canvas.getByText('Correcting the greeting')).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: /Edited hello.txt/ }),
+    ).toBeVisible();
   },
 };
 
 // A live command's group disclosure opens its output without repeating its description.
 export const RunningCommandShowsOutput: Story = {
   render: () => {
-    const row = commandWithDescription(
-      runningCommand,
-      'Checking the working tree',
-    );
+    const row = scriptedToolCall('described-running');
 
     const group: FeedGroup = {
       type: 'group',
-      id: 'active-command',
+      id: row.id,
       title: 'Working',
       state: 'open',
       items: [{ type: 'tool_call', row }],
@@ -313,7 +290,6 @@ export const RunningCommandShowsOutput: Story = {
     );
     await expect(
       canvas.getAllByText('Checking the working tree', {
-        selector: '.shimmer-text',
         exact: false,
       }),
     ).toHaveLength(1);

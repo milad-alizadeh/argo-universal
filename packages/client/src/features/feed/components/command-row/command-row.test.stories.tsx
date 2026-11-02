@@ -1,7 +1,7 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { commandWithDescription } from '../tool-call-description.mocks';
+import { scriptedToolCall } from '../tool-call-description.mocks';
 import {
   completedCommand,
   failedCommand,
@@ -151,7 +151,7 @@ const longTitle =
   'Inspect a very long command description that must remain on a single line when the available space is narrow';
 
 export const LongDisclosureHeader: Story = {
-  args: { row: commandWithDescription(completedCommand, longTitle) },
+  args: { row: scriptedToolCall('described-long') },
   play: async ({ canvas, userEvent }) => {
     await settleLayout(layoutWidths.phone);
     const row = canvas.getByRole('button', { name: longTitle });

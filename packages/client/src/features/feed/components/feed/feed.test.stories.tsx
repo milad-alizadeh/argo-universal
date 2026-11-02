@@ -1,5 +1,6 @@
 import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
+import { recordedDeepFeed } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
@@ -311,26 +312,7 @@ export const RestoresOlderReadingAfterRemount: Story = {
 
 const deepMessage = 'The first message in the deep Feed.';
 
-const firstDeepRow = longRows.find(
-  (row) => row.sessionUpdate === 'user_message',
-);
-
-if (!firstDeepRow) throw new Error('The long Feed needs a prompt');
-
-const deepRows = Array.from({ length: 105 }, (_, index) => ({
-  ...firstDeepRow,
-  id: `deep-${index}`,
-  messageId: `deep-message-${index}`,
-  turnId: `deep-turn-${index}`,
-  position: index,
-  revision: index + 1,
-  content: [
-    {
-      type: 'text' as const,
-      text: index === 0 ? deepMessage : `Message ${index}`,
-    },
-  ],
-}));
+const deepRows = recordedDeepFeed;
 
 function DeepReopenedFeed(): React.JSX.Element {
   const [open, setOpen] = useState(true);

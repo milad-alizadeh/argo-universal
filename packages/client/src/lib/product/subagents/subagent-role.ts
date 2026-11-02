@@ -1,3 +1,4 @@
+import type { Subagent } from '@repo/contracts';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 
 export interface SubagentRoleMark {
@@ -30,3 +31,25 @@ const roleKey = (role: string | null): string => {
 // A role Argo does not know, and a child with none, take the General mark.
 export const subagentRoleMark = (role: string | null): SubagentRoleMark =>
   namedRole(roleKey(role)) ?? roles.general;
+
+const statusMarks = {
+  running: { tone: 'success', label: 'Running' },
+  requires_action: { tone: 'warning', label: 'Needs input' },
+  idle: undefined,
+} as const;
+
+type AgentMark = SubagentRoleMark & {
+  label: string;
+  dimmed: boolean;
+  status: { tone: 'success' | 'warning'; label: string } | undefined;
+};
+
+// Both Agent row renderers use the same role, status and emphasis.
+export function subagentMarkDescriptor(subagent: Subagent): AgentMark {
+  return {
+    ...subagentRoleMark(subagent.role),
+    label: `${subagent.role ?? 'General'} Agent`,
+    status: statusMarks[subagent.state],
+    dimmed: subagent.state === 'idle',
+  };
+}

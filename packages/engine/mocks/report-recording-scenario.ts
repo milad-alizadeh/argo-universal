@@ -1,4 +1,5 @@
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
+import { toolRecordingSteps } from './report-tool-recording-scenario';
 
 // Scripted ACP traffic, recorded through the real Engine; this is not a Claude capture.
 const reply = {
@@ -55,5 +56,6 @@ export const reportRecordingScenario: ScriptedScenario = {
         content: [],
       },
     },
+    ...toolRecordingSteps,
   ],
 };
