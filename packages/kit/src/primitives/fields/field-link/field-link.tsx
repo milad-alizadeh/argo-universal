@@ -73,8 +73,9 @@ const LinkRow = (props: FieldLinkProps): ReactElement => (
 
 const LinkLeading = ({
   mark,
-}: { mark: FieldLinkProps['leadingMark'] }): ReactElement | null =>
-  mark ? <FieldLinkMark mark={mark} /> : null;
+}: {
+  mark: FieldLinkProps['leadingMark'];
+}): ReactElement | null => (mark ? <FieldLinkMark mark={mark} /> : null);
 
 const LinkDisclosure = ({
   action,
