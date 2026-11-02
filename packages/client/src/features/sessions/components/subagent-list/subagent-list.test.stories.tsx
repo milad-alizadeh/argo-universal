@@ -129,6 +129,7 @@ export const StatusOnLeadingMark: Story = {
       const mark = canvas
         .getByLabelText('Explore Agent')
         .getBoundingClientRect();
+
       const dot = status.getBoundingClientRect();
 
       await expect(dot.width).toBeGreaterThan(0);

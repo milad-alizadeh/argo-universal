@@ -16,12 +16,12 @@ const tabClassName =
 
 const tabState = {
   selected: {
-    className: 'border-border bg-card shadow-control',
+    className: 'border-border bg-card shadow-control dark:bg-muted',
     tone: 'neutral',
   },
   unselected: {
     className: cn(
-      'border-border bg-card/50 web:hover:bg-hover web:active:bg-pressed',
+      'border-border bg-card/50 dark:bg-card web:hover:bg-hover web:active:bg-pressed',
       tintTransitionClassName,
     ),
     tone: 'muted',
