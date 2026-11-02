@@ -6,15 +6,6 @@
  * scenarios the run intended beside the ones it covered, and any gap between the two is loud.
  */
 
-// One scenario of a run: an interaction at a CPU slowdown, named the way its test is named.
-export interface PerfCase {
-  interaction: string;
-  cpu: number;
-}
-
-export const caseName = ({ interaction, cpu }: PerfCase): string =>
-  `${interaction} at ${cpu}x CPU`;
-
 export interface RunCompleteness {
   status: 'complete' | 'partial';
   planned: string[];

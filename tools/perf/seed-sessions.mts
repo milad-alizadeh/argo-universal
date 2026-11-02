@@ -14,7 +14,7 @@ const titles = [
 ];
 
 // The title of the Session at `index` in the seeded list, which holds at least as many as the run asked for.
-export const sessionTitle = (index: number): string =>
+const sessionTitle = (index: number): string =>
   `${titles[index % titles.length]} ${index}`;
 
 const longSessionTitle = `${titles[0]} 0`;
