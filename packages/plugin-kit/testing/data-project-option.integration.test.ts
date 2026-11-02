@@ -26,7 +26,9 @@ it('reads a Query for the Project it names, in that Project’s folder, as separ
     .poll(() => JSON.stringify(page.trees.at(-1)), { timeout: 10_000 })
     .toMatch(/one:\d.*two:\d/s);
   expect(
-    (await fixture.requests()).map((line) => JSON.parse(line).cwd).sort(),
+    (await fixture.requests())
+      .map((line) => JSON.parse(line).cwd)
+      .sort((a, b) => a.localeCompare(b)),
   ).toEqual([one, two]);
 });
 
@@ -47,8 +49,8 @@ it('refuses a Query for a Project that is not registered, and runs nothing', asy
 });
 
 it('refuses a fetch that names a Project that is not registered', async () => {
-  const fixture =
-    await dataFixture(`import {Text,useEffect,useState} from '@argo/plugin-kit';
+  const fixture = await dataFixture(
+    `import {Text,useEffect,useState} from '@argo/plugin-kit';
   export function register(argo) {
     argo.pages.register('/', () => {
       const [answer, setAnswer] = useState('waiting');
@@ -58,7 +60,10 @@ it('refuses a fetch that names a Project that is not registered', async () => {
       }, []);
       return <Text>{answer}</Text>;
     });
-  }`, {}, [{ kind: 'fetch', host: 'api.github.com', reason: 'Fixture' }]);
+  }`,
+    {},
+    [{ kind: 'fetch', host: 'api.github.com', reason: 'Fixture' }],
+  );
 
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 

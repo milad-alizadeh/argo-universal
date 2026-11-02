@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { openDatabase } from '@repo/db';
+import { openDatabase, type Database } from '@repo/db';
 import { project } from '@repo/db/schema';
 import { createActor } from 'xstate';
 import { PluginAccounts } from '../src/plugins/accounts/plugin-accounts';
 import { discoverPlugins } from '../src/plugins/discovery/loader';
 import { pluginManifest } from '../src/plugins/located-plugins';
 import type { Keychain } from '../src/plugins/services/keychain';
-import { writerMachine } from '../src/storage';
+import { writerMachine, type WriterActorRef } from '../src/storage';
 
 type Source = {
   home: string;
@@ -22,44 +22,64 @@ export type TestAccounts = {
   close: () => void;
 };
 
-// The real Account inventory over a throwaway database and Writer, so a Plugin's own tests sign in and borrow as the Engine does.
-export function testAccounts(source: Source): TestAccounts {
-  const database = openDatabase(join(source.home, 'accounts.db'));
-  const databaseWriter = createActor(writerMachine, {
+type Store = { database: Database; writer: WriterActorRef };
+
+function openStore(home: string): Store {
+  const database = openDatabase(join(home, 'accounts.db'));
+
+  const writer = createActor(writerMachine, {
     input: { database, now: Date.now, log: () => {} },
   }).start();
 
-  const discovery = {
-    home: source.home,
-    version: source.version,
-    firstPartyPluginsDirectory: source.firstPartyPluginsDirectory,
-  };
+  return { database, writer };
+}
 
-  const accounts = new PluginAccounts({
-    database,
-    databaseWriter,
+type Discovery = Parameters<typeof discoverPlugins>[0];
+
+function firstPartyIn(
+  discovery: Discovery,
+): (pluginId: string) => Promise<boolean> {
+  return async (pluginId) =>
+    (await discoverPlugins(discovery)).plugins.some(
+      (plugin) => plugin.manifest.id === pluginId && plugin.firstParty,
+    );
+}
+
+function accountsOver(store: Store, source: Source): PluginAccounts {
+  const { home, version, firstPartyPluginsDirectory } = source;
+  const discovery = { home, version, firstPartyPluginsDirectory };
+
+  return new PluginAccounts({
+    database: store.database,
+    databaseWriter: store.writer,
     keychain: source.keychain,
     manifest: (pluginId) => pluginManifest(discovery, pluginId),
-    firstParty: async (pluginId) =>
-      (await discoverPlugins(discovery)).plugins.some(
-        (plugin) => plugin.manifest.id === pluginId && plugin.firstParty,
-      ),
+    firstParty: firstPartyIn(discovery),
   });
+}
+
+function projectsIn(database: Database): TestAccounts['syncProjects'] {
+  return (projects): void => {
+    database.delete(project).run();
+
+    for (const { id, name } of projects)
+      database
+        .insert(project)
+        .values({ id, name, path: `/test-projects/${id}` })
+        .run();
+  };
+}
+
+// The real Account inventory over a throwaway database and Writer, so a Plugin's own tests sign in and borrow as the Engine does.
+export function testAccounts(source: Source): TestAccounts {
+  const store = openStore(source.home);
 
   return {
-    accounts,
-    syncProjects: (projects) => {
-      database.delete(project).run();
-
-      for (const { id, name } of projects)
-        database
-          .insert(project)
-          .values({ id, name, path: `/test-projects/${id}` })
-          .run();
-    },
-    close: () => {
-      databaseWriter.stop();
-      database.$client.close();
+    accounts: accountsOver(store, source),
+    syncProjects: projectsIn(store.database),
+    close: (): void => {
+      store.writer.stop();
+      store.database.$client.close();
     },
   };
 }

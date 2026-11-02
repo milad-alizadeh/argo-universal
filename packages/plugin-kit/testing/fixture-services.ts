@@ -1,4 +1,8 @@
-import type { IncomingHttpHeaders, ServerResponse } from 'node:http';
+import type {
+  IncomingHttpHeaders,
+  IncomingMessage,
+  ServerResponse,
+} from 'node:http';
 import { request } from 'node:https';
 import { fixtureNetwork, httpsServer } from '../../engine/mocks/probe-plugin';
 import type { PluginNetwork } from '../../engine/src/plugins';
@@ -35,36 +39,46 @@ async function bodyOf(
   return body;
 }
 
-function answer(
-  response: ServerResponse,
-  { status = 200, json, text }: FixtureAnswer,
-): void {
-  response.writeHead(status, {
-    'content-type': text === undefined ? 'application/json' : 'text/plain',
-  });
-  response.end(text ?? JSON.stringify(json ?? {}));
+function routeOf(
+  incoming: IncomingMessage,
+): Pick<FixtureRequest, 'method' | 'path'> {
+  return { method: incoming.method ?? 'GET', path: incoming.url ?? '/' };
 }
 
-/*
- * Stands in for the public services a Plugin reaches, such as `github.com` and `api.github.com`: the Plugin uses their
- * real names, and the Server's network sends them all to one local server whose handler plays every service.
- */
-export async function fixtureServices(
-  handler: (request: FixtureRequest) => FixtureAnswer | Promise<FixtureAnswer>,
-): Promise<FixtureServices> {
-  const requests: FixtureRequest[] = [];
+async function recorded(incoming: IncomingMessage): Promise<FixtureRequest> {
+  return {
+    ...routeOf(incoming),
+    host: incoming.headers.host ?? '',
+    headers: incoming.headers,
+    body: await bodyOf(incoming),
+  };
+}
 
-  const port = await httpsServer((incoming, response) => {
-    void bodyOf(incoming)
-      .then(async (body) => {
-        const seen = {
-          host: incoming.headers.host ?? '',
-          method: incoming.method ?? 'GET',
-          path: incoming.url ?? '/',
-          headers: incoming.headers,
-          body,
-        };
+const okStatus = 200;
 
+type Rendered = { type: string; body: string };
+
+function rendered({ json, text }: FixtureAnswer): Rendered {
+  if (text !== undefined) return { type: 'text/plain', body: text };
+
+  return { type: 'application/json', body: JSON.stringify(json ?? {}) };
+}
+
+function answer(response: ServerResponse, given: FixtureAnswer): void {
+  const { type, body } = rendered(given);
+
+  response.writeHead(given.status ?? okStatus, { 'content-type': type });
+  response.end(body);
+}
+
+type Handler = (
+  request: FixtureRequest,
+) => FixtureAnswer | Promise<FixtureAnswer>;
+
+function serve(handler: Handler, requests: FixtureRequest[]): Promise<number> {
+  return httpsServer((incoming, response) => {
+    void recorded(incoming)
+      .then(async (seen) => {
         requests.push(seen);
         answer(response, await handler(seen));
       })
@@ -72,8 +86,10 @@ export async function fixtureServices(
         answer(response, { status: 500, text: String(cause) });
       });
   });
+}
 
-  const network: PluginNetwork = {
+async function networkFor(port: number): Promise<PluginNetwork> {
+  return {
     ...(await fixtureNetwork()),
     request: (url, options) =>
       request(
@@ -85,6 +101,17 @@ export async function fixtureServices(
         },
       ),
   };
+}
 
-  return { network, requests };
+/*
+ * Stands in for the public services a Plugin reaches, such as `github.com` and `api.github.com`: the Plugin uses their
+ * real names, and the Server's network sends them all to one local server whose handler plays every service.
+ */
+export async function fixtureServices(
+  handler: Handler,
+): Promise<FixtureServices> {
+  const requests: FixtureRequest[] = [];
+  const port = await serve(handler, requests);
+
+  return { network: await networkFor(port), requests };
 }

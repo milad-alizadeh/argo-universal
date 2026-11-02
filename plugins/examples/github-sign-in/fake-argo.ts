@@ -128,16 +128,23 @@ type Fake = {
   log: Log;
 };
 
+const valueOr = (
+  given: string | null | undefined,
+  fallback: string,
+): string | null => (given === undefined ? fallback : given);
+
+const settingsOf = (world: World): Argo['settings'] => {
+  const values = new Map([
+    ['client-id', valueOr(world.clientId, 'client-1')],
+    ['client-secret', valueOr(world.clientSecret, 'secret-1')],
+  ]);
+
+  return { get: (key) => Promise.resolve(values.get(key) ?? null) };
+};
+
 // The calls a sign-in makes, faked, with a log of what went through them.
 export function fakeArgo(world: World = {}): Fake {
   const log = emptyLog();
-  const settings = new Map([
-    ['client-id', world.clientId === undefined ? 'client-1' : world.clientId],
-    [
-      'client-secret',
-      world.clientSecret === undefined ? 'secret-1' : world.clientSecret,
-    ],
-  ]);
 
   return {
     log,
@@ -145,7 +152,7 @@ export function fakeArgo(world: World = {}): Fake {
       accounts: accountsOf(log),
       oauth: oauthOf(world, log),
       secrets: secretsOf(log),
-      settings: { get: (key) => Promise.resolve(settings.get(key) ?? null) },
+      settings: settingsOf(world),
       fetch: fetchOf(repliesOf(world), log),
     },
   };

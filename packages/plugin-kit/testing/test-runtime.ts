@@ -16,11 +16,10 @@ export type RuntimeParts = {
 export function runtimeFor(
   home: string,
   options: ConfiguredTest,
-  { keychain, accounts }: RuntimeParts,
+  parts: RuntimeParts,
 ): PluginRuntime {
   return createPluginRuntime(home, {
-    keychain,
-    accounts,
+    ...parts,
     clockStart: options.clockStart,
     network: options.network,
     settings: async (id, key) =>

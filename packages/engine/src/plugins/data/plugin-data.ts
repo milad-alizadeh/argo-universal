@@ -22,12 +22,7 @@ import {
   type QueryServices,
   type QueryWatch,
 } from './query-types';
-
-const refusedProject: PluginDataState = {
-  error: 'Refused: Project is unavailable',
-  stale: false,
-  revision: 0,
-};
+import { projectRegistered, refusedProject } from './registered-project';
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
 
@@ -62,7 +57,8 @@ export class PluginData {
   ): Promise<PluginReply> {
     const view = this.views.dataView(caller.pluginId, request.viewId);
 
-    if (request.action === 'watch') return this.watchReply(caller, view, request);
+    if (request.action === 'watch')
+      return this.watchReply(caller, view, request);
     await this.update(caller.pluginId, request);
 
     return { ok: true };
@@ -74,18 +70,10 @@ export class PluginData {
     view: OpenView,
     request: QueryWatch,
   ): Promise<PluginReply> {
-    if (!(await this.registered(request.projectId)))
+    if (!(await projectRegistered(this.services.services, request.projectId)))
       return { ok: true, value: refusedProject };
 
     return { ok: true, value: this.watch(caller, view, request) };
-  }
-
-  private async registered(projectId: string | undefined): Promise<boolean> {
-    if (projectId === undefined) return true;
-
-    const projects = await this.services.services.projectInfo();
-
-    return projects.some(({ id }) => id === projectId);
   }
 
   // The watcher is registered before the map is bounded, so this answer is never the entry dropped.

@@ -1,26 +1,26 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import {
   hookEvents,
   type HookEventName,
   type PluginSettingValue,
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
+import { MemoryKeychain } from '@repo/engine/mocks/keychain';
+import type { TestAccounts } from '@repo/engine/mocks/test-accounts';
 import {
   PluginService,
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
-import { MemoryKeychain } from '@repo/engine/mocks/keychain';
-import { testAccounts, type TestAccounts } from '@repo/engine/mocks/test-accounts';
 import { itemsConnection } from './test-connection';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
 import { testOperations } from './test-operations';
 import { TestProjects } from './test-projects';
-import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
-import { serviceFor } from './test-services';
+import { configureTest, type ConfiguredTest } from './test-runtime';
 import type { PluginTest, PluginTestOptions } from './test-types';
+import { wireTest } from './test-wiring';
 import { PluginTestView, type Opening, type PluginMount } from './view';
 
 export type { PluginTest, PluginTestOptions } from './test-types';
@@ -75,25 +75,13 @@ class HostedPlugin implements PluginTest {
     private readonly options: ConfiguredTest,
     keychain = new MemoryKeychain(),
   ) {
-    this.accountStore = testAccounts({
-      home,
-      version: options.version,
-      firstPartyPluginsDirectory: resolve(options.directory),
-      keychain,
-    });
-    this.accountStore.syncProjects(options.projects);
-    this.runtime = runtimeFor(home, options, {
-      keychain,
-      accounts: this.accountStore.accounts,
-    });
+    const wired = wireTest(home, options, keychain);
+
+    this.accountStore = wired.accountStore;
+    this.runtime = wired.runtime;
+    this.service = wired.service;
     this.projects = new TestProjects(options, this.runtime, () =>
       this.accountStore.syncProjects(options.projects),
-    );
-    this.service = serviceFor(
-      home,
-      options,
-      this.runtime,
-      this.accountStore.accounts,
     );
   }
 

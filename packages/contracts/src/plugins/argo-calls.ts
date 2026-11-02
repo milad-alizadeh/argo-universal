@@ -4,6 +4,7 @@ import { PluginAssetRequest } from '#plugin-assets';
 import { SessionGet } from '#plugin-session-calls';
 import { SlotCall } from '#plugin-slot-calls';
 import { WireJson } from '#plugin-wire-json';
+import { FetchCall, FetchRead } from './fetch-call';
 
 export {
   PluginProjectInfo,
@@ -52,21 +53,7 @@ export const ProcessCall = z.discriminatedUnion('action', [
 
 export type ProcessCall = z.infer<typeof ProcessCall>;
 
-// What a fetch asks for; a Query is this and nothing more, as its Project is a `useData` option.
-export const FetchRead = z.object({
-  url: z.string(),
-  method: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  body: z.string().optional(),
-  account: z.string().optional(),
-});
-
-// A call may name its Project; it defaults to the Project of the view that made the call (ADR-0037).
-export const FetchCall = FetchRead.extend({
-  projectId: z.string().optional(),
-});
-
-export type FetchCall = z.infer<typeof FetchCall>;
+export { FetchCall };
 
 export const SecretSet = z.object({
   action: z.literal('set'),

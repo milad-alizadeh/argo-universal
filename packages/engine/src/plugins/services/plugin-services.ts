@@ -97,16 +97,22 @@ export class PluginServices {
   }
 
   // A fetch may name its Project, which then decides the Account it borrows (ADR-0037).
-  private async projectOf(request: ServiceRequest): Promise<string | undefined> {
+  private async projectOf(
+    request: ServiceRequest,
+  ): Promise<string | undefined> {
     const named = request.api === 'fetch' ? request.call.projectId : undefined;
 
     if (named === undefined) return request.projectId;
-    const projects = await this.options.projectInfo();
-
-    if (!projects.some(({ id }) => id === named))
-      throw new CapabilityRefusal('Project is unavailable');
+    await this.requireProject(named);
 
     return named;
+  }
+
+  private async requireProject(id: string): Promise<void> {
+    const projects = await this.options.projectInfo();
+
+    if (!projects.some((project) => project.id === id))
+      throw new CapabilityRefusal('Project is unavailable');
   }
 
   private async attempt(

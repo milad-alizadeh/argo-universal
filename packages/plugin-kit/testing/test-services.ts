@@ -18,11 +18,15 @@ const unmanagedSettings: PluginServiceDeps['pluginSettings'] = {
   change: unavailable,
 };
 
+export type ServiceParts = {
+  runtime: PluginRuntime;
+  accounts: PluginServiceDeps['pluginAccounts'];
+};
+
 export function serviceFor(
   home: string,
   options: ConfiguredTest,
-  runtime: PluginRuntime,
-  accounts: PluginServiceDeps['pluginAccounts'],
+  { runtime, accounts }: ServiceParts,
 ): PluginService {
   return new PluginService({
     home,

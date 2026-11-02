@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
-import { account, fakeArgo, reply } from './fake-argo';
+import { account, fakeArgo, reply, type World } from './fake-argo';
 import { createSignIn, provideAccount } from './github-oauth';
 
 const portMessage =
@@ -50,13 +50,19 @@ test('a denied or timed out exchange is cancelled, not failed', async () => {
   assert.equal(log.requests.length, 0);
 });
 
-test('a missing client ID or client secret fails before Argo is asked to start', async () => {
-  for (const world of [{ clientId: null }, { clientSecret: null }]) {
-    const { calls, log } = fakeArgo(world);
+async function startWith(world: World): Promise<[string, number]> {
+  const { calls, log } = fakeArgo(world);
+  const { kind } = await createSignIn(calls)();
 
-    assert.equal((await createSignIn(calls)()).kind, 'failed');
-    assert.equal(log.authorize.length, 0);
-  }
+  return [kind, log.authorize.length];
+}
+
+test('a missing client ID fails before Argo is asked to start', async () => {
+  assert.deepEqual(await startWith({ clientId: null }), ['failed', 0]);
+});
+
+test('a missing client secret fails before Argo is asked to start', async () => {
+  assert.deepEqual(await startWith({ clientSecret: null }), ['failed', 0]);
 });
 
 test('the token exchange sends the client secret GitHub requires', async () => {
@@ -65,9 +71,12 @@ test('the token exchange sends the client secret GitHub requires', async () => {
   await createSignIn(calls)();
 
   const exchange = log.requests.find(({ url }) => url.endsWith('access_token'));
+  const body = exchange?.body ?? '';
 
-  assert.match(exchange?.body ?? '', /client_id=client-1/);
-  assert.match(exchange?.body ?? '', /client_secret=secret-1/);
+  assert.match(
+    body,
+    /client_id=client-1.*client_secret=secret-1|client_secret=secret-1.*client_id=client-1/,
+  );
 });
 
 test('a refused token exchange fails without adding an Account', async () => {
