@@ -47,6 +47,16 @@ Feature: Drafts kept on this Device
     And I open a New Session
     Then the Message box is empty
 
+  Scenario: A first prompt is not restored in New Session after leaving while its Session opens
+    Given a wide Frame
+    And a New Session
+    When I send the prompt "Tidy the README" and open Settings at once
+    And I return to Sessions
+    And I open the Session "Tidy the README"
+    And the Agent replies "The shared fixture completed this Turn."
+    And I open a New Session
+    Then the Message box is empty
+
   Scenario: A first prompt whose Session failed to open is restored after a reload
     Given a phone Frame
     And Agent 1 refuses to open a Session

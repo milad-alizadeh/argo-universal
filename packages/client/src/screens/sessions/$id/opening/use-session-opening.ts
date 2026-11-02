@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { type RefObject, useMemo, useRef, useState } from 'react';
 import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
 import {
   type EmptySessionStore,
@@ -31,6 +31,8 @@ interface FirstPromptSend {
   attachmentDraft: AttachmentDraft;
   store: EmptySessionStore;
   sent: SentFirstPrompt;
+  // Forgets the draft as sent and for the owner it was sent from, even once the page has gone.
+  forgetSent: RefObject<(() => void) | null>;
 }
 
 // The first prompt as sent, shown in the Feed until the Session has it; a failure clears it and keeps the draft.
@@ -60,10 +62,11 @@ const isSending = (
 
 // Uploads the draft's images, then queues the draft as the first prompt until the Session is ready.
 async function sendFirstPrompt(
-  { attachmentDraft, store, sent }: FirstPromptSend,
+  { attachmentDraft, store, sent, forgetSent }: FirstPromptSend,
   draft: ComposerDraft,
 ): Promise<void> {
   sent.show(draft);
+  forgetSent.current = (): void => attachmentDraft.forgetSentDraft(draft);
   const prompt = await attachmentDraft.uploadDraftAsPrompt(draft);
 
   if (prompt?.length) store.send(prompt);
@@ -80,10 +83,11 @@ const openAgain = (send: FirstPromptSend): void =>
 function useFirstPrompt(
   attachmentDraft: AttachmentDraft,
   session: EmptySession,
+  forgetSent: FirstPromptSend['forgetSent'],
 ): Omit<SessionOpening, 'session'> {
   const sending = isSending(attachmentDraft, session);
   const sent = useSentFirstPrompt(sending);
-  const send = { attachmentDraft, store: session.store, sent };
+  const send = { attachmentDraft, store: session.store, sent, forgetSent };
 
   return {
     sending,
@@ -99,10 +103,15 @@ export function useSessionOpening(
   data: NewSessionData,
   connected: boolean,
 ): SessionOpening {
+  const forgetSent = useRef<(() => void) | null>(null);
+
   const session = useEmptySession(
     { input: toNewSessionInput(data.choices), connected },
-    attachmentDraft.clearDraft,
+    {
+      clearDraft: attachmentDraft.clearDraft,
+      forgetSentDraft: () => forgetSent.current?.(),
+    },
   );
 
-  return { session, ...useFirstPrompt(attachmentDraft, session) };
+  return { session, ...useFirstPrompt(attachmentDraft, session, forgetSent) };
 }

@@ -4,6 +4,7 @@ import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import type { ComposerDraft } from '../components/composer/composer';
+import { forgetSentDraft } from '../stores/forget-sent-draft';
 import { keptAttachments } from '../stores/kept-attachments';
 import { keptDrafts } from '../stores/kept-draft';
 import {
@@ -32,6 +33,7 @@ export interface AttachmentDraft {
     sent: ComposerDraft,
   ) => Promise<SessionNewInput['prompt'] | undefined>;
   clearDraft: () => void;
+  forgetSentDraft: (sent: ComposerDraft) => void;
   uploading: boolean;
   attachmentError: AttachmentError;
 }
@@ -84,6 +86,7 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
     ...editActions(actions),
     ...pickActions(actions.dispatch),
     draft: actions.state.draft,
+    forgetSentDraft: (sent) => void forgetSentDraft(actions.key, sent),
     uploadDraftAsPrompt: (sent) => uploadDraftAsPrompt(sent, actions),
     uploading: actions.upload.isPending,
     attachmentError: toAttachmentError(

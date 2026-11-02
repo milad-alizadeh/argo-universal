@@ -15,6 +15,8 @@ export interface EmptySessionPorts {
   handOff: (sessionId: string) => void;
   // Composer clears the kept Project draft before the Session page takes over.
   clearDraft: () => void;
+  // The reader left before the hand-off: Composer forgets what was sent, unless it has been edited since.
+  forgetSentDraft: () => void;
   // The Connection's state as it is now, which tells a dropped open from a failed one.
   connectionState: () => ConnectionState;
 }
