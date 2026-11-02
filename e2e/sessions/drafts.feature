@@ -57,6 +57,32 @@ Feature: Drafts kept on this Device
     And I open a New Session
     Then the Message box is empty
 
+  Scenario: A sent prompt leaves the open New Session once its Session exists
+    Given a wide Frame
+    And the App's Connection can be dropped
+    And a New Session
+    And the Server's answer to a Session open is held
+    When I send the prompt "Tidy the README" and open Settings at once
+    And I return to Sessions
+    And I open a New Session
+    Then the Message box shows "Tidy the README"
+    When the Server answers the Session open
+    Then the Message box is empty
+
+  Scenario: A draft changed since Send stays in the open New Session once the Session exists
+    Given a wide Frame
+    And the App's Connection can be dropped
+    And a New Session
+    And the Server's answer to a Session open is held
+    When I send the prompt "Tidy the README" and open Settings at once
+    And I return to Sessions
+    And I open a New Session
+    And I change the draft to "Tidy the docs"
+    And the Server answers the Session open
+    And I open the Session "Tidy the README"
+    And I open a New Session
+    Then the Message box shows "Tidy the docs"
+
   Scenario: A first prompt whose Session failed to open is restored after a reload
     Given a phone Frame
     And Agent 1 refuses to open a Session

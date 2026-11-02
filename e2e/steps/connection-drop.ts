@@ -16,6 +16,9 @@ const unansweredOpens = new WeakMap<Page, Set<number>>();
 const unansweredOf = (page: Page): Set<number> =>
   unansweredOpens.get(page) ?? new Set();
 
+// Pages whose Server answers to Session opens wait to be sent, with the answers waiting.
+const heldOpenAnswers = new WeakMap<Page, (() => void)[]>();
+
 // The App's call that opens a Session.
 const SessionOpen = z.looseObject({
   id: z.number(),
@@ -53,8 +56,11 @@ function relay(page: Page, route: WebSocketRoute): void {
     server.send(frame);
   });
   server.onMessage((frame) => {
-    for (const id of idsIn(frame, Answer)) unanswered.delete(id);
-    route.send(frame);
+    const answered = idsIn(frame, Answer).filter((id) => unanswered.delete(id));
+    const held = heldOpenAnswers.get(page);
+
+    if (held && answered.length > 0) held.push(() => route.send(frame));
+    else route.send(frame);
   });
 }
 
@@ -111,4 +117,18 @@ When('the Connection drops and stays down', async ({ page }): Promise<void> => {
 When('the Connection comes back', async ({ page }): Promise<void> => {
   heldDown.delete(page);
   await awaitReconnection(page);
+});
+
+Given("the Server's answer to a Session open is held", ({ page }): void => {
+  heldOpenAnswers.set(page, []);
+});
+
+When('the Server answers the Session open', async ({ page }): Promise<void> => {
+  await expect
+    .poll(() => heldOpenAnswers.get(page)?.length ?? 0)
+    .toBeGreaterThan(0);
+  const held = heldOpenAnswers.get(page) ?? [];
+  heldOpenAnswers.delete(page);
+
+  for (const send of held) send();
 });
