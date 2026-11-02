@@ -14,3 +14,5 @@ Feature: Agent reports
     Then the open reviewer shows the revised finding
     When I switch to the other reviewer
     Then the other reviewer shows only its own finding
+    When I return to the Agents list
+    Then the Agents list shows both reviewers

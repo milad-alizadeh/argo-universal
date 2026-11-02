@@ -1,3 +1,4 @@
+import type { ContentBlock } from '@agentclientprotocol/sdk';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
 const parent = 'reports-parent';
@@ -16,6 +17,19 @@ const association = (id: string, title: string): ScriptedStep => ({
   },
 });
 
+const content = (id: string, text: string): ContentBlock[] =>
+  id === 'report-0'
+    ? [
+        { type: 'text' as const, text },
+        {
+          type: 'resource_link' as const,
+          name: 'Source',
+          uri: 'file:///source.ts',
+        },
+        { type: 'text' as const, text: 'Review complete.' },
+      ]
+    : [{ type: 'text' as const, text }];
+
 const report = (id: string, text: string, sender = child): ScriptedStep => ({
   type: 'update',
   update: {
@@ -23,7 +37,7 @@ const report = (id: string, text: string, sender = child): ScriptedStep => ({
     messageId: id,
     senderSessionId: sender,
     recipientSessionId: parent,
-    content: [{ type: 'text', text }],
+    content: content(id, text),
   },
 });
 

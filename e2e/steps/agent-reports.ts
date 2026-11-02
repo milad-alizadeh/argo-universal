@@ -42,6 +42,10 @@ When('I load all earlier reports', async ({ page }) => {
 
 Then('the reviewer shows its oldest report', async ({ page }) => {
   await expect(page.getByText('Finding 0', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Review complete.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Source' })).toBeVisible();
 });
 
 Then('the open reviewer shows the revised finding', async ({ page }) => {
@@ -72,4 +76,20 @@ Then('the other reviewer shows only its own finding', async ({ page }) => {
     page.getByText('Other Agent finding', { exact: true }),
   ).toBeVisible();
   await expect(page.getByText('Finding 0', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Finding updated', { exact: true })).toHaveCount(
+    0,
+  );
+});
+
+When('I return to the Agents list', async ({ page }) => {
+  await page.getByRole('button', { name: 'Back to Agents' }).click();
+});
+
+Then('the Agents list shows both reviewers', async ({ page }) => {
+  await expect(
+    page.getByRole('button', { name: /^Report reviewer,/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /^Other reviewer,/ }),
+  ).toBeVisible();
 });

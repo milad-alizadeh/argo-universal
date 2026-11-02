@@ -96,4 +96,6 @@ function childFeed(
 
 export const renderSubagentFeed = (
   props: ConnectedSubagentFeedProps,
-): ReactElement => <ConnectedSubagentFeed {...props} />;
+): ReactElement => (
+  <ConnectedSubagentFeed key={props.subagent.sessionId} {...props} />
+);
