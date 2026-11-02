@@ -1,17 +1,9 @@
 import type { ContentBlock, SessionRecord } from '@repo/contracts';
 import { titleFromPrompt } from '../../../feed/prompt-title';
-import type { OpenSessionsActorRef } from '../../open-sessions-machine';
 import type { SessionInput } from '../../session-data';
 import { latestTurnOf } from '../../stored-turn';
-import type { ListReadInput } from './input';
 
 type Turns = Parameters<typeof latestTurnOf>[0];
-
-const inputOf = (
-  sessions: OpenSessionsActorRef,
-  id: string,
-): SessionInput | undefined =>
-  sessions.getSnapshot().context.sessions[id]?.getSnapshot().context.input;
 
 // The first prompt a New Session was sent with, which it holds from Send until its Turn commits.
 const promptOf = (input: SessionInput | undefined): ContentBlock[] =>
@@ -41,13 +33,13 @@ const hasTurn = (row: SessionRecord, turns: Turns): boolean =>
  * A Session an Agent started has no draft behind it: it lists at once, or the user cannot open what their Agent made.
  */
 export function listedSession(
-  input: ListReadInput,
-  sessions: OpenSessionsActorRef,
+  rejected: ReadonlySet<string>,
+  inputOf: (sessionId: string) => SessionInput | undefined,
   { row, turns }: { row: SessionRecord; turns: Turns },
 ): SessionRecord | undefined {
-  if (input.rejectedSessions.has(row.id)) return undefined;
+  if (rejected.has(row.id)) return undefined;
 
-  const prompt = promptOf(inputOf(sessions, row.id));
+  const prompt = promptOf(inputOf(row.id));
 
   const listed = listsBeforeTurn(row, prompt) || hasTurn(row, turns);
 

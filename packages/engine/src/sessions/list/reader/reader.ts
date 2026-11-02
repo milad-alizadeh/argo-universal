@@ -1,6 +1,7 @@
 import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createLiveHeaderReader } from '../../live-header';
+import type { SessionInput } from '../../session-data';
 import { readQueuedSessionRows } from '../../session-storage';
 import { latestTurnOf } from '../../stored-turn';
 import type { WriterChange } from '../observation';
@@ -111,11 +112,28 @@ class ListReader {
     );
 
     const turns = familyTurns(input, row.id, children);
-
-    const listed = listedSession(input, this.options.sessions, { row, turns });
+    const listed = this.listed(input, { row, turns });
     const result = listed && this.project(input, listed, { children, turns });
 
     return result ? [result] : [];
+  }
+
+  private listed(
+    input: ListReadInput,
+    { row, turns }: Pick<FamilyTurns, 'turns'> & { row: SessionRecord },
+  ): SessionRecord | undefined {
+    return listedSession(
+      input.rejectedSessions,
+      (id): SessionInput | undefined => this.inputOf(id),
+      { row, turns },
+    );
+  }
+
+  // The input an open Session was created with, which holds its first prompt.
+  private inputOf(sessionId: string): SessionInput | undefined {
+    const open = this.options.sessions.getSnapshot().context.sessions;
+
+    return open[sessionId]?.getSnapshot().context.input;
   }
 
   private project(
