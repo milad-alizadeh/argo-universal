@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { AccountCall, OAuthCall } from '#plugin-account-calls';
 import { PluginAssetRequest } from '#plugin-assets';
+import { FetchCall, FetchRead } from '#plugin-fetch-call';
 import { SessionGet } from '#plugin-session-calls';
 import { SlotCall } from '#plugin-slot-calls';
 import { WireJson } from '#plugin-wire-json';
-import { FetchCall, FetchRead } from './fetch-call';
 
 export {
   PluginProjectInfo,

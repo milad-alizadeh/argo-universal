@@ -16,6 +16,7 @@
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
     "#plugin-kit-component-events": "./src/plugins/kit-component-events.ts",
     "#plugin-surface": "./src/plugins/surface.ts",
+    "#plugin-fetch-call": "./src/plugins/fetch-call.ts",
     "#plugin-wire-json": "./src/plugins/wire-json.ts",
     "#plugin-operations": "./src/plugins/plugin-operations.ts",
     "#plugin-query-normalisation": "./src/plugins/query-normalisation.ts",

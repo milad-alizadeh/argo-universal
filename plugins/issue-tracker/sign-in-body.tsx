@@ -124,7 +124,6 @@ function Step(props: BodyProps): JSX.Element {
 export function SignInBody(props: BodyProps): JSX.Element {
   return (
     <Stack direction="column" gap={6}>
-      <Text role="title">GitHub</Text>
       <Step {...props} />
     </Stack>
   );
