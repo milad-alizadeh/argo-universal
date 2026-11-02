@@ -93,7 +93,7 @@ const statusSection = (server: LoadedServer): React.JSX.Element => (
   </FieldGroup.Section>
 );
 
-// A time this Device has not kept, such as a Server paired before it kept them, is left out rather than guessed.
+// A row is left out only when there is nothing to say yet or ever, as for the own Server; a time not kept says Unknown.
 const timeRow = (title: string, value?: string): React.JSX.Element | null =>
   value ? <FieldGroup.Value title={title} value={value} /> : null;
 
