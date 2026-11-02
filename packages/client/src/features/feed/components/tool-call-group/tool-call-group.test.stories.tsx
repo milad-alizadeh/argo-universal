@@ -4,6 +4,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { recordedEdit } from '../../../../../mocks/feed-edit-mock';
 import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
+import { commandWithDescription } from '../tool-call-description.mocks';
 import {
   runningCommand,
   toolCallGroupMock,
@@ -289,7 +290,10 @@ export const RunningEditWithAgentDescription: Story = {
 // A live command's group disclosure opens its output without repeating its description.
 export const RunningCommandShowsOutput: Story = {
   render: () => {
-    const row = { ...runningCommand, title: 'Checking the working tree' };
+    const row = commandWithDescription(
+      runningCommand,
+      'Checking the working tree',
+    );
 
     const group: FeedGroup = {
       type: 'group',
