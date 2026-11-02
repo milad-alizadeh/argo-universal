@@ -44,3 +44,12 @@ export const runningAnswerAlert = {
     { label: 'Cancel', role: 'cancel' },
   ],
 } satisfies AlertFixture;
+
+// Nothing to decide, only Cancel while another computer answers.
+export const waitingAlert = {
+  open: false,
+  busy: true,
+  title: 'Waiting for approval',
+  message: 'On Studio Server, press Allow on "Allow this Device?"',
+  actions: [{ label: 'Cancel', role: 'cancel' }],
+} satisfies AlertFixture;

@@ -2,15 +2,13 @@ import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import type * as React from 'react';
 import {
-  type AppServerState,
-  type ServerHistory,
   ServerConnectionsContext,
   useAppServers,
   useAppServerStates,
   useServerHistory,
 } from '#features/servers';
 import { ServerDetailView, type ServerDetailLoad } from './server-detail-view';
-import { dateLabel, whenLabel } from './server-times';
+import { serverTimes } from './server-times';
 import { useUnpairServer } from './use-unpair-server';
 
 export interface ServerDetailScreenProps {
@@ -76,26 +74,6 @@ function useServerDetail(serverId: string): ServerDetailLoad {
     serverDevice: server.serverDevice,
     state,
     showing: lookingAt === serverId,
-    ...times(server.serverDevice, history, state),
-  };
-}
-
-const said = (
-  at: number | undefined,
-  say: (at: number, now: number) => string,
-): string | undefined => (at === undefined ? undefined : say(at, Date.now()));
-
-// The own Server is never paired with, so it has neither; a connected Server is reached now.
-function times(
-  own: boolean,
-  history: ServerHistory,
-  state: AppServerState,
-): Pick<ServerDetailLoad & { status: 'loaded' }, 'lastConnected' | 'paired'> {
-  if (own) return {};
-
-  return {
-    lastConnected:
-      state === 'connected' ? 'Now' : said(history.lastConnectedAt, whenLabel),
-    paired: said(history.pairedAt, dateLabel),
+    ...serverTimes(server.serverDevice, history, state),
   };
 }

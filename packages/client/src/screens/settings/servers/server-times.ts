@@ -1,3 +1,5 @@
+import type { AppServerState, ServerHistory } from '#features/servers';
+
 const dayMs = 86_400_000;
 
 const clock = (at: Date): string =>
@@ -33,3 +35,35 @@ export function whenLabel(at: number, now: number): string {
 
   return days === 1 ? `Yesterday, ${clock(new Date(at))}` : dateLabel(at, now);
 }
+
+export const unknownTime = 'Unknown';
+
+export interface ServerTimes {
+  lastConnected?: string;
+  paired?: string;
+}
+
+const said = (
+  at: number | undefined,
+  say: (at: number, now: number) => string,
+): string => (at === undefined ? unknownTime : say(at, Date.now()));
+
+/*
+ * The own Server is never paired with, so it has neither, and nothing is said while the history is being read. A
+ * Server paired before times were kept says Unknown rather than hiding the row; one that is connected is reached now.
+ */
+export function serverTimes(
+  own: boolean,
+  history: ServerHistory | undefined,
+  state: AppServerState,
+): ServerTimes {
+  if (own || !history) return {};
+
+  return {
+    lastConnected: lastReached(history, state),
+    paired: said(history.pairedAt, dateLabel),
+  };
+}
+
+const lastReached = (history: ServerHistory, state: AppServerState): string =>
+  state === 'connected' ? 'Now' : said(history.lastConnectedAt, whenLabel);

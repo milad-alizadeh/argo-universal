@@ -74,6 +74,7 @@ export const NotFoundOffersTryAgain: Story = {
   args: { server: unreachableServer },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getByText('Not found')).toBeVisible();
+    await expect(canvas.getByTestId('icon-dot')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
     await expect(args.onTryAgain).toHaveBeenCalledOnce();
     await expect(
@@ -122,17 +123,25 @@ export const SaysWhenItLastAnsweredAndWhenItWasPaired: Story = {
   },
 };
 
-// A Server paired before times were kept has none to say, and the page leaves the rows out rather than guess.
+// The own Server is never paired with, so the page has no times to say and leaves the rows out.
 export const LeavesOutTimesItDoesNotHave: Story = {
-  args: {
-    server: {
-      ...unreachableServer,
-      lastConnected: undefined,
-      paired: undefined,
-    },
-  },
+  args: { server: ownServer },
   play: async ({ canvas }) => {
     await expect(canvas.queryByText('Last connected')).toBeNull();
     await expect(canvas.queryByText('Paired')).toBeNull();
+  },
+};
+
+// A Server paired before times were kept says Unknown rather than hiding the rows.
+export const SaysUnknownForTimesItDidNotKeep: Story = {
+  args: {
+    server: {
+      ...unreachableServer,
+      lastConnected: 'Unknown',
+      paired: 'Unknown',
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByText('Unknown')).toHaveLength(2);
   },
 };

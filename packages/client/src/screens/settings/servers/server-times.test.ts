@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dateLabel, whenLabel } from './server-times';
+import { dateLabel, serverTimes, whenLabel } from './server-times';
 
 const now = new Date(2026, 10, 2, 14, 30).getTime();
 
@@ -20,5 +20,26 @@ describe('when a Server was last reached', () => {
     expect(dateLabel(new Date(2025, 8, 28).getTime(), now)).toBe(
       '28 September 2025',
     );
+  });
+});
+
+describe('the times a Server page says', () => {
+  it('says Unknown for a Server paired before times were kept', () => {
+    expect(serverTimes(false, {}, 'unreachable')).toEqual({
+      lastConnected: 'Unknown',
+      paired: 'Unknown',
+    });
+  });
+
+  it('says nothing while the history is being read', () => {
+    expect(serverTimes(false, undefined, 'unreachable')).toEqual({});
+  });
+
+  it('says nothing for the own Server', () => {
+    expect(serverTimes(true, {}, 'connected')).toEqual({});
+  });
+
+  it('says a connected Server was reached now', () => {
+    expect(serverTimes(false, {}, 'connected').lastConnected).toBe('Now');
   });
 });

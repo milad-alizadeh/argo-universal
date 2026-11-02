@@ -10,9 +10,10 @@ export type AlertAction = Pick<PressActionProps, 'label'> &
     loading?: boolean;
   };
 
-// Kit-only: `actions` for Argo's own callers.
+// Kit-only: `actions` for Argo's own callers; `busy` for an alert that only waits, which draws a spinner beside its title.
 export type AlertProps = KitProps<'Alert'> & {
   actions?: readonly AlertAction[];
+  busy?: boolean;
 };
 
 // What every platform draws: the answers, whichever way they were given.

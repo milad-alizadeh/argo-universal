@@ -13,13 +13,15 @@ export interface TypeCodeViewProps {
   looking?: boolean;
   // What the owner typed, as its characters, and the address if they gave one. Whether the characters are a code is for the caller to say, so a mistyped one is told the same way whatever the mistake.
   onSubmit: (typed: string, host?: string) => void;
+  // The way back to the camera, for a Device that has one: a text control under Connect, since Back leaves Add a Server altogether.
+  onScan?: () => void;
 }
 
 const instruction =
   'On the other computer, open Settings › Devices › Pair a Device. The code is under the QR code. Both must be on the same Wi-Fi.';
 
 /*
- * The way into Add a Server for a Device with no camera (#1502), from the "Enter code" page of the approved designs (#1490, option B): the code the other computer shows under its picture, an optional Server address, and Connect held at the foot of the page. The way back to the camera is the header's.
+ * The way into Add a Server for a Device with no camera (#1502), from the "Enter code" page of the approved designs (#1490, option B): the code the other computer shows under its picture, an optional Server address as `host:port`, and Connect held at the foot of the page, with a way back to the camera under it where there is one.
  */
 export function TypeCodeView(props: TypeCodeViewProps): React.JSX.Element {
   return (
@@ -50,7 +52,7 @@ function CodeForm(props: TypeCodeViewProps): React.JSX.Element {
   const submit = (): void => void form.handleSubmit();
 
   return (
-    <PinnedFooter footer={connectButton(props, submit)}>
+    <PinnedFooter footer={footerOf(props, submit)}>
       <form.Field name="code">
         {(field) => codeField(props, field, submit)}
       </form.Field>
@@ -93,6 +95,27 @@ const codeField = (
     onSubmit={submit}
   />
 );
+
+const footerOf = (
+  props: TypeCodeViewProps,
+  submit: () => void,
+): React.JSX.Element => (
+  <>
+    {connectButton(props, submit)}
+    {scanButton(props)}
+  </>
+);
+
+const scanButton = (props: TypeCodeViewProps): React.JSX.Element | null =>
+  props.onScan ? (
+    <Button
+      label="Scan instead"
+      variant="text"
+      fullWidth
+      disabled={props.looking}
+      onPress={props.onScan}
+    />
+  ) : null;
 
 const connectButton = (
   props: TypeCodeViewProps,

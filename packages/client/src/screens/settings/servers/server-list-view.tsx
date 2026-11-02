@@ -1,5 +1,8 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  ListItem,
+  type ListItemProps,
+} from '@repo/kit/primitives/lists/list-item';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
@@ -16,8 +19,6 @@ import {
 export interface ServerListViewProps {
   // The Server on this Device first, then the Servers it has paired with.
   servers: readonly ServerRow[];
-  // The id of the Server the App is showing.
-  lookingAt: string;
   // Opens a Server's own page: its state, showing it, and unpairing from it.
   onOpenServer: (id: string) => void;
   // Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
@@ -44,7 +45,15 @@ const sections = (props: ServerListViewProps): FieldListSection[] => [
   ...addServerSection(props.onAddServer),
 ];
 
-// Each row says its own state in the subtitle, in the tone of the state: grey for a computer that did not answer, red for one that no longer knows this Device.
+// Each row says its own state in the subtitle after a dot in the tone of the state, the words staying muted: grey for a computer that did not answer, red for one that no longer knows this Device.
+const stateSubtitle = (
+  state: ServerRow['state'],
+): Pick<ListItemProps, 'subtitle' | 'subtitleIcon' | 'subtitleIconTone'> => ({
+  subtitle: serverStateLabel(state),
+  subtitleIcon: 'dot',
+  subtitleIconTone: serverStateTone(state),
+});
+
 const serverItem = (
   server: ServerRow,
   props: ServerListViewProps,
@@ -52,9 +61,7 @@ const serverItem = (
   <ListItem
     key={server.id}
     title={server.name}
-    subtitle={serverStateLabel(server.state)}
-    subtitleTone={serverStateTone(server.state)}
-    value={server.id === props.lookingAt ? 'Showing' : undefined}
+    {...stateSubtitle(server.state)}
     leading={<Icon name="computer" />}
     disclosure
     onPress={() => props.onOpenServer(server.id)}

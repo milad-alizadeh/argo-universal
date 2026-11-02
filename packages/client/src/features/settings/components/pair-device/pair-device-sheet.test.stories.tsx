@@ -51,6 +51,23 @@ export const ShowsTheCodeAndTheDigitsThatStandForIt: Story = {
   },
 };
 
+// A Device that cannot find this computer is told where to knock: the address and port sit with the code to type.
+export const ShowsTheAddressToTypeBesideTheCode: Story = {
+  play: async () => {
+    await shown(typedCode);
+    await expect(sheet.getByText('192.168.1.20:4000')).toBeVisible();
+  },
+};
+
+// A computer on no network has no address to show, and the sheet says nothing rather than an empty one.
+export const ShowsNoAddressWhenThereIsNone: Story = {
+  args: { code: { ...live.code, addresses: [] } },
+  play: async () => {
+    await shown(typedCode);
+    await expect(sheet.queryByText('Address')).toBeNull();
+  },
+};
+
 // The code runs out, so the sheet says how long is left and how much of the Ticket's life that is.
 export const CountsTheCodeDown: Story = {
   play: async () => {

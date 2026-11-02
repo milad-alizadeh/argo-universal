@@ -89,6 +89,8 @@ export type PairingWelcome = z.infer<typeof PairingWelcome>;
 export const MintedPairingTicket = z.strictObject({
   invite: PairingInvite,
   expiresAt: z.iso.datetime(),
+  // Where this computer answers on its networks, one `host:port` each, which the sheet shows beside the code for a Device that cannot find it by itself (#1490, Enter code). Empty when it is on no network.
+  addresses: z.array(z.string()),
 });
 
 export type MintedPairingTicket = z.infer<typeof MintedPairingTicket>;

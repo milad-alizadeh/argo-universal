@@ -61,10 +61,34 @@ export const AnAddressGoesWithTheCode: Story = {
   },
 };
 
-export const ThereIsNoWayBackToTheCameraBesideConnect: Story = {
+// A Device with a camera can go back to it from the typed page without leaving Add a Server.
+export const ScanInsteadGoesBackToTheCamera: Story = {
+  args: { onScan: fn() },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Scan instead' }));
+    await expect(args.onScan).toHaveBeenCalledOnce();
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+// A Device with no camera has nothing to go back to, so the page offers no way.
+export const NoCameraOffersNoWayBack: Story = {
   play: async ({ canvas }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Scan instead' }),
     ).toBeNull();
+  },
+};
+
+// A host and a port typed in the field go out as typed, for the pairing to knock at that address alone.
+export const AHostAndPortGoWithTheCode: Story = {
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.type(canvas.getByLabelText('Code'), '482915');
+    await userEvent.type(canvas.getByLabelText('Address'), 'desk.local:4000');
+    await userEvent.click(canvas.getByRole('button', { name: 'Connect' }));
+    await expect(args.onSubmit).toHaveBeenCalledWith(
+      '482915',
+      'desk.local:4000',
+    );
   },
 };

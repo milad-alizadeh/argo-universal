@@ -18,6 +18,7 @@ export function WaitingAlert(props: WaitingAlertProps): React.JSX.Element {
   return (
     <Alert
       open
+      busy
       onOpenChange={stays}
       title="Waiting for approval"
       message={`On ${props.serverName}, press Allow on “Allow this Device?”`}

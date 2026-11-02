@@ -43,3 +43,17 @@ export const LoadingHidesTheRowFromReaders: Story = {
     );
   },
 };
+
+export const DrawsADotBesideTheValue: Story = {
+  args: { title: 'Status', value: 'Not found', dot: 'danger' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Not found')).toBeVisible();
+    await expect(canvas.getByTestId('icon-dot')).toBeVisible();
+  },
+};
+
+export const DrawsNoDotUnlessAsked: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByTestId('icon-dot')).toBeNull();
+  },
+};

@@ -24,6 +24,8 @@ export interface PairingDeps {
   readonly serverPublicKey: string;
   // What an App lists this Server by, and what a paired Device re-resolves to an address on each connect.
   readonly discoveryName: string;
+  // Where this computer answers on its networks now, one `host:port` each; read at each mint, since a laptop changes network.
+  readonly addresses: () => string[];
 }
 
 const Answered = z.strictObject({ deviceId: z.string() });
@@ -40,6 +42,7 @@ const mintedTicket = (deps: PairingDeps): MintedPairingTicket => {
   return {
     invite: inviteFor(deps, minted),
     expiresAt: new Date(minted.expiresAt).toISOString(),
+    addresses: deps.addresses(),
   };
 };
 

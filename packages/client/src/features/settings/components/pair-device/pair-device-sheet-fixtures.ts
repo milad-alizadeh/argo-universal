@@ -22,6 +22,7 @@ export const live = {
       ticket: '482915',
     },
     expiresAt: runsOut(),
+    addresses: ['192.168.1.20:4000'],
   },
 } satisfies Shown;
 
