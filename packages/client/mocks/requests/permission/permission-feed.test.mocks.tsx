@@ -147,7 +147,7 @@ function withOutcome(
   row: ToolCallUpdate,
   option: ChosenOption,
 ): ToolCallUpdate {
-  const argo = argoMeta(row);
+  const argo = extensionMetadata(row);
 
   if (!argo?.permissionOutcome) return row;
 
@@ -163,6 +163,6 @@ function withOutcome(
   };
 }
 
-function argoMeta(row: ToolCallUpdate): ArgoMeta | undefined {
+function extensionMetadata(row: ToolCallUpdate): ArgoMeta | undefined {
   return row._meta?.argo;
 }

@@ -1,4 +1,5 @@
 import type { DesktopBridge } from '@repo/contracts';
+import { productCompatibility } from '@repo/contracts/product-identity';
 /*
  * See the Electron documentation for details on how to use preload scripts:
  * https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
@@ -52,7 +53,7 @@ ipcRenderer.on('links:open', (_event, link: string): void => {
 });
 
 // ADR-0002 permits native sharing of text and URLs alongside window controls and system symbols.
-const argo = {
+const desktopBridge = {
   serverUrl,
   share:
     process.platform === 'darwin'
@@ -88,4 +89,7 @@ const argo = {
   symbols,
 } satisfies DesktopBridge;
 
-contextBridge.exposeInMainWorld('argo', argo);
+contextBridge.exposeInMainWorld(
+  productCompatibility.desktopBridge,
+  desktopBridge,
+);

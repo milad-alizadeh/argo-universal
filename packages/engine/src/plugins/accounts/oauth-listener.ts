@@ -4,6 +4,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http';
+import { productName } from '@repo/contracts/product-identity';
 
 const oauthPort = 51789;
 
@@ -33,14 +34,14 @@ const closeTabPage = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Argo</title>
+<title>${productName}</title>
 <style>
 html, body { height: 100%; margin: 0; }
 body { display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; background: #fff; color: #0a0a0a; font: 14px/20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; }
 </style>
 </head>
 <body>
-<p>You can close this tab and return to Argo.</p>
+<p>You can close this tab and return to ${productName}.</p>
 </body>
 </html>
 `;

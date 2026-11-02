@@ -1,4 +1,8 @@
 import { runPluginCommand } from '@argo/plugin-kit/cli';
+import {
+  productName,
+  productCompatibility,
+} from '@repo/contracts/product-identity';
 import { commandExitCode, usageExitCode } from './command-error';
 import type { CommandIo } from './control-client';
 import { runMcp } from './mcp-command';
@@ -6,13 +10,13 @@ import { runOperations } from './operations-command';
 import { runOperation } from './run-command';
 import { waitOperation } from './wait-command';
 
-const help = `Usage: argo <command>
+const help = `Usage: ${productCompatibility.command} <command>
 
 Commands:
   operations [filter] [--json]  Find available Operations
   run <id> [--params '<json>'] [--wait]  Run an Operation
   wait <id>                   Wait for native Session work
-  mcp                         Serve Argo tools over MCP on stdio
+  mcp                         Serve ${productName} tools over MCP on stdio
   server [--watch]            Start the Server
   plugin <validate|test> <dir>  Validate or test a Plugin`;
 
@@ -31,12 +35,16 @@ const commands = new Map<string, Command>([
   [
     'plugin',
     (args, io): Promise<number> =>
-      runPluginCommand(args, io.write, 'argo plugin'),
+      runPluginCommand(
+        args,
+        io.write,
+        `${productCompatibility.command} plugin`,
+      ),
   ],
 ]);
 
 // Runs one `argo` command line and answers its exit code; a failure is written to standard error.
-export async function runArgo(argv: string[], io: CliIo): Promise<number> {
+export async function runCli(argv: string[], io: CliIo): Promise<number> {
   try {
     return await dispatch(argv, io);
   } catch (error) {

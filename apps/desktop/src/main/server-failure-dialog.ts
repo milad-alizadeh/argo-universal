@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { app, dialog } from 'electron';
 
 const retryChoice = 0;
@@ -7,7 +8,7 @@ export function reportFailure(failure: string | null, retry: () => void): void {
   void dialog
     .showMessageBox({
       type: 'error',
-      message: 'Argo could not start the Server',
+      message: `${productName} could not start the Server`,
       detail: failure ?? undefined,
       buttons: ['Retry', 'Quit'],
       defaultId: retryChoice,

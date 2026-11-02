@@ -6,7 +6,7 @@ import {
   type TurnEnd,
 } from '@repo/contracts';
 
-type ToolCallArgo = NonNullable<ToolCallUpdate['_meta']>['argo'];
+type ToolMetadata = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
 /*
  * What the Feed view needs to know about a Tool call, decoded from the row's wire details once.
@@ -46,10 +46,10 @@ const editKinds = new Set<ToolCallUpdate['kind']>(['edit', 'delete', 'move']);
 const firstLocation = (row: ToolCallUpdate): string | undefined =>
   row.locations?.[0]?.path;
 
-const argoOf = (row: ToolCallUpdate): ToolCallArgo => row._meta?.argo;
+const extensionOf = (row: ToolCallUpdate): ToolMetadata => row._meta?.argo;
 
 const reportedActions = (row: ToolCallUpdate): readonly CommandAction[] =>
-  argoOf(row)?.commandActions ?? [];
+  extensionOf(row)?.commandActions ?? [];
 
 const classified = (
   reported: readonly CommandAction[],
@@ -103,7 +103,7 @@ function decodeActions(
 }
 
 const descriptionOf = (row: ToolCallUpdate): string | undefined =>
-  argoOf(row)?.description?.trim();
+  extensionOf(row)?.description?.trim();
 
 const isPlaceholder = (row: ToolCallUpdate): boolean =>
   [commandOf(row), adapterPlaceholderTitle, ''].includes(row.title);
@@ -115,7 +115,7 @@ const titleOf = (row: ToolCallUpdate): string | undefined =>
   isPlaceholder(row) ? undefined : row.title;
 
 const agentTitleOf = (row: ToolCallUpdate): string | undefined =>
-  argoOf(row)?.description || titleOf(row);
+  extensionOf(row)?.description || titleOf(row);
 
 const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   ...decodeActions(row),
@@ -124,8 +124,8 @@ const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   isCommand: row.kind === 'execute',
   description: descriptionOf(row),
   location: firstLocation(row),
-  permissionOutcome: argoOf(row)?.permissionOutcome,
-  startedAt: argoOf(row)?.startedAt,
+  permissionOutcome: extensionOf(row)?.permissionOutcome,
+  startedAt: extensionOf(row)?.startedAt,
   agentTitle: agentTitleOf(row),
 });
 

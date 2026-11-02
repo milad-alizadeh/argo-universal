@@ -6,7 +6,7 @@ import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
 import { realClock, type PluginClock } from '../clock';
 import type { ProcessCall } from '../protocol/runtime';
-import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
+import { pluginContentLimitBytes, pluginTimeoutMs } from './plugin-limits';
 
 // A run or spawn reaches here only after the checker gave it its working directory and environment.
 export type CheckedProcessCall =
@@ -41,7 +41,7 @@ export class PluginProcesses {
 
   // Core callers use the same bounded argv runner for fixed Server commands.
   public async run(command: CheckedCommand): Promise<ProcessResult> {
-    return this.start(await withLoginPath(command), argoTimeoutMs).done;
+    return this.start(await withLoginPath(command), pluginTimeoutMs).done;
   }
 
   private control(call: Control): Promise<ProcessResult> | null {
@@ -170,7 +170,7 @@ function capture(stream: NodeJS.ReadableStream | null, run: Run): () => string {
   let size = 0;
 
   stream?.on('data', (chunk: Buffer) => {
-    const room = Math.max(argoLimitBytes - size, 0);
+    const room = Math.max(pluginContentLimitBytes - size, 0);
 
     if (chunk.length > room) run.truncated = true;
     chunks.push(chunk.subarray(0, room));

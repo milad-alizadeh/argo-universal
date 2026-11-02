@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { errorToast } from '@repo/kit/error-toast';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
@@ -46,7 +47,7 @@ export function ConnectionDetailView(
 const captionOf = (props: OwnerControls): string =>
   props.localAccess || props.keepRunning
     ? 'This computer'
-    : 'The Argo Server this App is talking to.';
+    : `The ${productName} Server this App is talking to.`;
 
 function ServerForm(props: ConnectionDetailViewProps): React.JSX.Element {
   useErrorToast(

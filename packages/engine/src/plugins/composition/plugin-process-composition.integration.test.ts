@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest';
 import { journeyMs } from '#mocks/journey-budget';
 import { registeredProject } from '#mocks/probe-plugin';
 import { refusal, refusedLines, runProbe } from '#mocks/probe-run';
-import { argoLimitBytes } from '../services/plugin-limits';
+import { pluginContentLimitBytes } from '../services/plugin-limits';
 
 // Plugin workers start a real process: budget this file's tests for startup.
 vi.setConfig({ testTimeout: journeyMs });
@@ -43,7 +43,7 @@ it('runs a declared command by argv with no shell, in the data folder by default
         truncated: false,
       },
     },
-    loud: { value: { truncated: true, stdout: argoLimitBytes } },
+    loud: { value: { truncated: true, stdout: pluginContentLimitBytes } },
     slow: { value: { timedOut: true } },
     missing: { error: expect.stringContaining('ENOENT') },
     here: { value: { stdout: `${data}\n` } },

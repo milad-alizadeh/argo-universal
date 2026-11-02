@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 
@@ -29,13 +30,12 @@ export interface OwnerControls {
   stopServer?: StopServerSetting;
 }
 
-const localAccessOff =
-  'Off. Only this computer can reach Argo, and Devices can’t be paired. Turn it on to let other Devices on your network find this computer; each one still has to be paired and allowed here first.';
+const localAccessOff = `Off. Only this computer can reach ${productName}, and Devices can’t be paired. Turn it on to let other Devices on your network find this computer; each one still has to be paired and allowed here first.`;
 
 const asName = (name?: string): string => (name ? ` as “${name}”` : '');
 
 const localAccessOn = (name?: string): string =>
-  `On. Devices on this network can find this computer${asName(name)}. Nothing connects until you pair it in Devices and allow it here. Turn this off and no other Device can reach Argo, paired or not.`;
+  `On. Devices on this network can find this computer${asName(name)}. Nothing connects until you pair it in Devices and allow it here. Turn this off and no other Device can reach ${productName}, paired or not.`;
 
 const localAccessFooter = (setting: LocalAccessSetting): string =>
   setting.enabled ? localAccessOn(setting.computerName) : localAccessOff;
@@ -57,7 +57,9 @@ export const keepRunningSection = (
   setting?: KeepRunningSetting,
 ): React.JSX.Element | null =>
   setting ? (
-    <FieldGroup.Section footer="On. Quitting Argo leaves the Server running, so a paired Device keeps working.">
+    <FieldGroup.Section
+      footer={`On. Quitting ${productName} leaves the Server running, so a paired Device keeps working.`}
+    >
       <FieldGroup.Toggle
         title="Keep the Server running"
         value={setting.enabled}
@@ -71,7 +73,9 @@ export const stopServerSection = (
   ask?: () => void,
 ): React.JSX.Element | null =>
   ask ? (
-    <FieldGroup.Section footer="Stops the Server on this computer. Paired Devices lose their Sessions until it starts again. Argo starts it again the next time you open the app.">
+    <FieldGroup.Section
+      footer={`Stops the Server on this computer. Paired Devices lose their Sessions until it starts again. ${productName} starts it again the next time you open the app.`}
+    >
       <FieldGroup.Link title="Stop Server" action destructive onPress={ask} />
     </FieldGroup.Section>
   ) : null;

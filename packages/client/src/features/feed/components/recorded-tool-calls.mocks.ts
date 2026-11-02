@@ -33,13 +33,13 @@ const isToolCallUpdate = (row: RecordedRow): row is ToolCallUpdate =>
 export const toolCallRows = (rows: readonly RecordedRow[]): ToolCallUpdate[] =>
   rows.filter(isToolCallUpdate);
 
-const argoOf = (
+const extensionOf = (
   row: ToolCallUpdate,
 ): NonNullable<ToolCallUpdate['_meta']>['argo'] => row._meta?.argo;
 
 // Any reported read, even beside an action the Agent could not classify, which the Feed's facts leave out.
 const reportedActions = (row: ToolCallUpdate): readonly CommandAction[] =>
-  argoOf(row)?.commandActions ?? [];
+  extensionOf(row)?.commandActions ?? [];
 
 const readsFiles = (row: ToolCallUpdate): boolean =>
   reportedActions(row).some((action) => action.type === 'read');
