@@ -15,7 +15,7 @@ export function useTabFocus(tabs: InspectorTabsProps): TabFocus {
   useLayoutEffect(() => {
     if (closing.current) selected.current?.focus();
     closing.current = false;
-  }, [tabs.selected]);
+  }, [tabs.items, tabs.selected]);
 
   return {
     selected,
