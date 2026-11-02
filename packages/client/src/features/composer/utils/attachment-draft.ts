@@ -3,6 +3,7 @@ import type {
   ComposerDraft,
 } from '../components/composer/composer';
 import type { KeptAttachmentsOfDraft } from '../stores/kept-attachments';
+import { holdsSentDraft } from './draft-as-sent';
 import type { DraftKey } from './draft-key';
 
 export interface PickedAttachment {
@@ -29,6 +30,7 @@ export type AttachmentDraftEvent =
   | { type: 'changed'; draft: ComposerDraft }
   | { type: 'ownerChanged'; key: DraftKey; kept: KeptAttachmentsOfDraft }
   | { type: 'restored'; key: DraftKey; text: string }
+  | { type: 'sentForgotten'; key: DraftKey; sent: ComposerDraft }
   | { type: 'cleared' };
 
 export const attachmentSelectionFailureMessage =
@@ -81,6 +83,11 @@ function ownerChanged(
     ownerKey: key,
   };
 }
+
+const cleared = ({ ownerKey }: AttachmentDraftState): AttachmentDraftState => ({
+  ...emptyAttachmentDraft,
+  ownerKey,
+});
 
 function attach(
   state: AttachmentDraftState,
@@ -139,7 +146,11 @@ const draftTransitions: Record<AttachmentDraftEvent['type'], DraftTransition> =
         : state,
     restored: (state, event) =>
       event.type === 'restored' ? restore(state, event) : state,
-    cleared: (state) => ({ ...emptyAttachmentDraft, ownerKey: state.ownerKey }),
+    sentForgotten: (state, event) =>
+      event.type === 'sentForgotten' && holdsSentDraft(state, event)
+        ? cleared(state)
+        : state,
+    cleared,
   };
 
 // A Composer draft with attachments: what each pick, drop, edit, send and change of owner does to it.
