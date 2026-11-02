@@ -62,7 +62,7 @@ function useSessionSurroundings(
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     ...useFeedRequests(sessionId, feed),
-    ...useSessionWork(sessionId, feed.snapshot, offeredWith(cards)),
+    ...useSessionWork(sessionId, feed.snapshot, offeredWith(cards, true)),
     agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),

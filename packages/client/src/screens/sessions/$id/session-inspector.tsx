@@ -25,7 +25,9 @@ export type { SessionInspectorContent } from './session-inspector-content';
 
 export const offeredSessionPanels = (
   content: SessionInspectorContent,
-): string[] => offeredSections(itemsOf(content), content.pluginCards);
+  includeCardSheets = false,
+): string[] =>
+  offeredSections(itemsOf(content), content.pluginCards, includeCardSheets);
 
 type SessionInspectorProps = SessionInspectorContent & {
   panels: SessionPanels;
