@@ -12,7 +12,7 @@ const exitLineReads = 4;
 export class AdapterShell {
   private readonly capture: ShellCapture;
   private task?: AdapterTaskOutput;
-  private timer?: NodeJS.Timeout;
+  private timer?: ReturnType<typeof setInterval>;
   private reading: Promise<void>;
   private ended?: Promise<void>;
   public constructor(private readonly input: ShellCaptureInput) {
@@ -28,7 +28,6 @@ export class AdapterShell {
       this.capture.append(chunk),
     );
     this.timer = setInterval(() => this.poll(), readInterval);
-    this.timer.unref();
     this.poll();
   }
   private poll(): void {
