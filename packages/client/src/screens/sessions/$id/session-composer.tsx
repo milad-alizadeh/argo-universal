@@ -21,14 +21,19 @@ function QuestionSheet({
 function composerCallout({
   callout,
   stoppedTurn,
-}: OpenSessionViewProps): React.ReactNode {
+}: Pick<OpenSessionViewProps, 'callout' | 'stoppedTurn'>): React.ReactNode {
   if (callout) return <SessionCallout {...callout} />;
 
   return stoppedTurn && <StoppedTurnCallout {...stoppedTurn} />;
 }
 
+type SessionComposerProps = Pick<
+  OpenSessionViewProps,
+  'elicitation' | 'composer' | 'callout' | 'stoppedTurn'
+>;
+
 export function SessionComposer(
-  props: OpenSessionViewProps,
+  props: SessionComposerProps,
 ): React.JSX.Element {
   const filled = useSessionFill().filled;
 

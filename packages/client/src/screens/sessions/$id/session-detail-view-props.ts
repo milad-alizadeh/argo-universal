@@ -129,7 +129,7 @@ const stoppedTurnProps = (
 });
 
 // The card above the Composer says how the Turn ended, so the Feed leaves its own line out.
-function feedAndRetry(
+function feedAndStoppedTurn(
   open: OpenSessionSources,
 ): Pick<OpenSessionViewProps, 'feed' | 'stoppedTurn'> {
   const stopped = retryableTurn(open);
@@ -142,7 +142,7 @@ function feedAndRetry(
 
 const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   ...open.callouts,
-  ...feedAndRetry(open),
+  ...feedAndStoppedTurn(open),
   elicitation: open.elicitation,
   header: sessionHeaderProps(open),
   composer: sessionComposerProps(open),

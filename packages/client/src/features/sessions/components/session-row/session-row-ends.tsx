@@ -1,12 +1,23 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { endParts } from './session-row-compact';
+import { View } from 'react-native';
 import type { SessionRowProps } from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';
 import { rowStatusDot } from './session-row-status';
 
 type RegularEnds = Pick<ListItemProps, 'trailing' | 'titleEnd' | 'subtitleEnd'>;
+
+export const endParts = (
+  detail: React.ReactNode,
+  status: React.ReactNode,
+): React.ReactNode =>
+  [detail, status].some((part) => part !== undefined) ? (
+    <View className="flex-row items-center gap-1.5">
+      {detail}
+      {status}
+    </View>
+  ) : undefined;
 
 const timeOf = (age: string | undefined): React.ReactNode =>
   age === undefined ? undefined : <Text role="row-detail">{age}</Text>;

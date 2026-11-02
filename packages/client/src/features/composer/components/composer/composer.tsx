@@ -40,11 +40,11 @@ function useComposerClass(): string {
 
 const requestTrayClass = cn(
   composerTrayClass,
-  '-mb-3 pb-3 rounded-t-xl overflow-hidden',
+  '-mb-3 pb-3 rounded-t-2xl overflow-hidden',
 );
 
 const requestClass = (wide: boolean, filled: boolean): string =>
-  cn('w-full', wide && requestTrayClass, filled && filledClass);
+  cn(wide ? requestTrayClass : 'w-full', filled && filledClass);
 
 const attachmentLimitMessage = `Attachment exceeds ${maxBlobUploadMebibytes} MB.`;
 

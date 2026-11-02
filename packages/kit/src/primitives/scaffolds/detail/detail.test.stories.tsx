@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
@@ -202,9 +202,6 @@ const onWide = (story: Story): Story => ({
  * Metadata beside the content widens the Screen's column rather than taking from the content: the heading starts on the
  * content's edge and its Actions end on the Metadata's.
  */
-// A header icon's button stands this far past the page's edge, so its glyph ends on it.
-const iconButtonInset = 8;
-
 export const MetadataWidensTheColumnNotTheText: Story = onWide({
   render: ScreenActionsLeadTheContent.render,
   play: async ({ canvas }) => {
@@ -212,13 +209,17 @@ export const MetadataWidensTheColumnNotTheText: Story = onWide({
 
     const content = rect(canvas.getByText(body));
     const title = rect(canvas.getByRole('heading', { name: issue.title }));
-    const action = rect(canvas.getByRole('button', { name: closeLabel }));
+
+    const glyph = rect(
+      within(canvas.getByRole('button', { name: closeLabel })).getByTestId(
+        'icon-check',
+      ),
+    );
+
     const status = rect(canvas.getByRole('group', { name: statusGroup }));
 
     await expect(sameEdge(title.left, content.left)).toBe(true);
-    await expect(sameEdge(action.right - iconButtonInset, status.right)).toBe(
-      true,
-    );
+    await expect(sameEdge(glyph.right, status.right)).toBe(true);
   },
 });
 

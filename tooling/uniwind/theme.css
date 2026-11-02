@@ -728,7 +728,6 @@
   line-height: var(--leading-row-detail);
   letter-spacing: var(--tracking-row-detail);
   font-weight: var(--font-weight-secondary);
-  letter-spacing: var(--tracking-secondary);
   color: var(--color-muted-foreground);
 
   @variant wide-type {
