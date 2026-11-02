@@ -30,7 +30,6 @@ describe.each(liveHeaderMocks)(
             {
               ...tool,
               _meta: undefined,
-              title: '',
               content: [
                 { type: 'terminal', command: 'cat spec.md', output: '' },
               ],
