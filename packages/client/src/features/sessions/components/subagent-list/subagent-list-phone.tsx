@@ -6,7 +6,7 @@ import type { ComponentProps, JSX } from 'react';
 import { Platform } from 'react-native';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
-import { SubagentMark } from './subagent-mark';
+import { SubagentMark, SubagentStatus } from './subagent-mark';
 
 type PhoneProps = SubagentListProps & { now: number };
 
@@ -40,6 +40,7 @@ function phoneRowProps(props: RowProps): ComponentProps<typeof ListItem> {
     subtitle: supporting,
     disclosure: Boolean(onSelect),
     trailing: disclosure(onSelect),
+    titleEnd: <SubagentStatus subagent={subagent} />,
     onPress: rowPress(props),
     accessibilityLabel: `${subagent.title}, ${supporting}`,
   };

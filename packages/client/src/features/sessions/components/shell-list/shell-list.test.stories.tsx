@@ -54,3 +54,14 @@ const opensARow = (width: number): Story => ({
 export const OpensAShellOnAPhone: Story = opensARow(layoutWidths.phone);
 
 export const OpensAShellWhenWide: Story = opensARow(layoutWidths.wide);
+
+export const StatusAtRowEnd: Story = {
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      const status = canvas.getByRole('img', { name: 'Running' });
+      const command = canvas.getByText('pnpm dev');
+      await expect(status.getBoundingClientRect().left).toBeGreaterThan(
+        command.getBoundingClientRect().right,
+      );
+    }),
+};

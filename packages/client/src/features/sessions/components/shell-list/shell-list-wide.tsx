@@ -42,7 +42,7 @@ function RowText({ shell }: { shell: ShellEntry }): JSX.Element {
   );
 }
 
-// The mark keeps its own lane, so every row's command starts at the same place.
+// The outcome keeps its own lane at the end of the row.
 function RowMark({ shell }: { shell: ShellEntry }): JSX.Element {
   return (
     <View className="h-5 w-4 shrink-0 items-center justify-center">
@@ -78,9 +78,9 @@ const rowPressable = ({ shell, onSelect, now }: RowProps): RowPressable => ({
 function WideShellRow(props: RowProps): JSX.Element {
   return (
     <Pressable {...rowPressable(props)}>
-      <RowMark shell={props.shell} />
       <RowText shell={props.shell} />
       <RowElapsed elapsed={shellElapsed(props.shell, props.now)} />
+      <RowMark shell={props.shell} />
     </Pressable>
   );
 }
