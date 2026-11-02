@@ -2,7 +2,6 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import type { ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
@@ -83,22 +82,14 @@ export function SessionDetailView(
 ): React.JSX.Element {
   useErrorToast(failureToast(props));
 
-  if (props.state === 'open')
-    return (
-      <SizeClass
-        compact={<OpenSessionView {...props} phoneCards />}
-        wide={<OpenSessionView {...props} phoneCards={false} />}
-      />
-    );
+  if (props.state === 'open') return <OpenSessionView {...props} />;
 
   return <BlankSession {...props} />;
 }
 
 // The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.
-function OpenSessionView(
-  props: OpenSessionViewProps & { phoneCards: boolean },
-): React.JSX.Element {
-  const phone = usePhoneSheet(useInspectorPanels(props, props.phoneCards));
+function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
+  const phone = usePhoneSheet(useInspectorPanels(props));
   const { panels } = phone;
   const work = useWorkPanels(props, panels, phone.visible);
 
