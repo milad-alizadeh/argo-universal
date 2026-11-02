@@ -10,10 +10,10 @@ import {
 } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
-import { hasAccount, hasProject } from './account-records';
+import { hasAccount, hasProject, sameAccount } from './account-records';
 
 export type AccountChange =
-  | { action: 'add'; account: PluginAccount }
+  | { action: 'save'; account: PluginAccount; projectId?: string }
   | { action: 'grant'; grant: PluginAccountGrant }
   | { action: 'defaultGrant'; grant: PluginAccountGrant }
   | ({ action: 'choose' } & AccountChoice)
@@ -32,6 +32,33 @@ const grantKey = [
 
 const choiceKey = [projectAccount.projectId, projectAccount.host];
 
+// The row for this person from this Plugin when there is one, so signing in again adds none.
+function savedId(
+  transaction: StorageTransaction,
+  account: PluginAccount,
+): string {
+  const saved = sameAccount(transaction, account);
+
+  if (saved) return saved.id;
+  transaction.insert(pluginAccount).values(account).run();
+
+  return account.id;
+}
+
+function recordChoice(
+  transaction: StorageTransaction,
+  { projectId, host, account }: AccountChoice,
+): void {
+  if (!hasAccount(transaction, host, account)) return;
+
+  if (!hasProject(transaction, projectId)) return;
+  transaction
+    .insert(projectAccount)
+    .values({ projectId, host, account })
+    .onConflictDoUpdate({ target: choiceKey, set: { account } })
+    .run();
+}
+
 type Commits = {
   [Name in Action]: (
     transaction: StorageTransaction,
@@ -40,8 +67,11 @@ type Commits = {
 };
 
 const commits: Commits = {
-  add: (transaction, { account }) => {
-    transaction.insert(pluginAccount).values(account).run();
+  save: (transaction, { account, projectId }) => {
+    const id = savedId(transaction, account);
+
+    if (projectId === undefined) return;
+    recordChoice(transaction, { projectId, host: account.host, account: id });
   },
   grant: (transaction, { grant }) => {
     if (!hasAccount(transaction, grant.host, grant.account)) return;
@@ -59,16 +89,7 @@ const commits: Commits = {
       .onConflictDoNothing()
       .run();
   },
-  choose: (transaction, { projectId, host, account }) => {
-    if (!hasAccount(transaction, host, account)) return;
-
-    if (!hasProject(transaction, projectId)) return;
-    transaction
-      .insert(projectAccount)
-      .values({ projectId, host, account })
-      .onConflictDoUpdate({ target: choiceKey, set: { account } })
-      .run();
-  },
+  choose: recordChoice,
   signOut: (transaction, { id }) => {
     transaction.delete(pluginAccount).where(eq(pluginAccount.id, id)).run();
   },

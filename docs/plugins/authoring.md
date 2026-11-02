@@ -168,7 +168,7 @@ The hook returns `{ data, error, stale, refresh }`:
 
 - `data` contains the call's answer and retains the last successful value.
 - `error` describes a refused call, transport failure, or Argo timeout, for a person to read. An HTTP 401 remains fetch data. An unavailable Account Borrow reports an error and retains the last successful data.
-- `errorKind` says why, for code to read, and is set exactly when `error` is: `'no-account'` when a borrow found no token, `'refused'` when Argo refused the call, or `'failed'` when it was tried and did not answer. Branch on this, never on the words in `error`.
+- `errorKind` says why, for code to read, and is set exactly when `error` is: `'no-account'` when a borrow found no token, `'refused'` when Argo refused the call, which includes a borrow with several Accounts and no Project, or `'failed'` when it was tried and did not answer. Branch on this, never on the words in `error`.
 - `stale` is true only while refreshing an existing answer.
 - `refresh()` runs the Query now and joins a call already in flight.
 
@@ -382,9 +382,11 @@ export async function register(argo: Argo) {
 }
 ```
 
-`register` provides the Account and registers its sign-in page, `/sign-in` unless `page` says otherwise; `plugin.json` still declares the Account and a `fetch` Capability for each host the flow reaches, as below. `label` is the call that names the person: `url` on the Account's host, `field` a dotted path into its JSON answer, and `body` when it is a JSON POST.
+`register` provides the Account and registers its sign-in page, `/sign-in` unless `page` says otherwise; `plugin.json` still declares the Account and a `fetch` Capability for each host the flow reaches, as below. `label` is the call that names the person: `url` on the Account's host, `field` a dotted path into its JSON answer, and `body` when it is a JSON POST. `field` must identify one person: a login or an email works and a display name does not, as signing in with the same label reuses that Account's row.
 
-`account.useData` is `useData` for a read through that Account. Inside the gate, a read with no Account or a 401 draws the sign-in in place of the gate's children, and they come back once a read answers. Your code handles no token and no sign-in state. After a 401 the sign-in rewrites the token of the Account that read's Project uses; from `/sign-in`, which is what "Add account" opens, it adds an Account. An Account another Plugin provides cannot be rewritten here, so the page says to sign in there. Outside a gate `account.useData` answers as `useData` does, and `errorKind` and the status say why.
+`account.useData` is `useData` for a read through that Account. Inside the gate, a read with no Account or a 401 draws the sign-in in place of the gate's children, and they come back once a read answers. Your code handles no token and no sign-in state. A sign-in from the gate names the read's Project, so that Project moves to the Account it just saved, even when it had another; from `/sign-in`, which is what "Add account" opens, it names no Project and records nothing. Signing in again as the same person reuses the row. Signing in as someone else adds one, and the old row stays listed, with its dead token, until someone signs out of it.
+
+With several Accounts and no Project, Argo cannot tell which to use, and signing in would not help. The read is `refused`, and the gate says so with no sign-in: "Several {name} Accounts are signed in. Open this from a Project, or sign out of one in Settings." On a Project's page, several Accounts and no choice is the normal sign-in; the picker in the Project's settings changes the choice later. Outside a gate `account.useData` answers as `useData` does, and `errorKind` and the status say why.
 
 The device flow's page shows the code on a tile with a copy button and a countdown from the service's `expires_in`, and its primary button copies the code and opens the service on one press. That press is a `sequence` Action: `onPress={{ action: 'sequence', steps: [{ action: 'copy', text }, { action: 'openUrl', url }] }}` runs built-in Actions in order in the App, and a step that fails does not stop the next.
 
@@ -419,12 +421,18 @@ Argo wakes the provider when another Plugin borrows its Account.
 The whole provider call has a three-second deadline, including activation.
 A failed, disabled, stopped, or slow provider makes the borrow return `null`.
 
-After sign-in, create the Account and store its token under the returned id:
+After sign-in, save the Account and store its token under the returned id:
 
 ```ts
-const id = await argo.accounts.add('api.github.com', { label: 'Work' });
+const id = await argo.accounts.save('api.github.com', {
+  label: login,
+  projectId,
+});
 await argo.secrets.set(id, token);
 ```
+
+`save` reuses the row with the same host, providing Plugin and label, and otherwise adds one. `label` must identify one person: a login or an email works and a display name does not.
+Pass `projectId` when the sign-in is for a Project, as a page reading for it is, and that Account becomes the Project's choice even over an existing one. A `save` that names no Project records nothing, whatever Project the page carries. An unregistered Project is refused.
 
 Argo stores Accounts, Grants, and each Project’s choice in its database.
 Tokens stay in the provider’s Keychain namespace, keyed by Account id.
@@ -432,9 +440,9 @@ Sign-out deletes the token, Account, Grants, and Project mappings.
 Plugin removal also deletes its Accounts and dependent records when discovery succeeds.
 
 `argo.accounts.get(host)` returns the current Project’s Account or `null`; `argo.accounts.get(host, { projectId })` names another registered Project, as `argo.fetch` does.
-One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
+One available Account becomes the Project’s choice automatically. With several, a Project uses the one signing in recorded or the Project's settings picked.
 Page effects, Component event handlers, and Hooks carry their Project context across awaited calls.
-A call without a Project returns no Account.
+A call without a Project uses the only Account and records no choice. With several Accounts it is refused, and the refusal names `projectId`: pass it, as a page listing Projects does.
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
 A fetch Query uses the same field and the declaring view’s Project.

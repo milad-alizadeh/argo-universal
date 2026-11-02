@@ -4,11 +4,7 @@ import { runDeviceFlow } from './device-flow';
 import type { Settled } from './device-poll';
 import type { FetchQuery } from './gate-context';
 import { runRedirectFlow } from './redirect-flow';
-import {
-  accountToRewrite,
-  saveAccount,
-  type LabelSource,
-} from './save-account';
+import { saveAccount, type LabelSource } from './save-account';
 import { SignInPage } from './sign-in-page';
 import { failed, type StartedRun } from './steps';
 import { createTokenSource } from './tokens';
@@ -40,7 +36,7 @@ export type DefinedAccount = {
   declaration: AccountDeclaration;
   // Call once inside the Plugin's `register`: it provides the Account and registers its sign-in page.
   register: (argo: Argo) => Promise<void>;
-  // `useData` for a page inside a `SignInGate`: no Account or a 401 draws the sign-in, so the page sees neither.
+  // `useData` for a page inside a `SignInGate`: no Account, a 401 or several Accounts with no Project draw in its place.
   useData: (
     query: AccountRead | null,
     options?: UseDataOptions,
@@ -73,7 +69,6 @@ async function attempt(
   declaration: AccountDeclaration,
   run: StartedRun,
 ): Promise<void> {
-  const id = await accountToRewrite(argo, declaration, run);
   const settled = await flowOf(argo, declaration, run);
 
   if (run.cancelled()) return;
@@ -81,7 +76,8 @@ async function attempt(
   if (settled.kind !== 'token') return run.show(settled);
 
   const { tokens } = settled;
-  const label = await saveAccount(argo, declaration, { tokens, id });
+  const { projectId } = run;
+  const label = await saveAccount(argo, declaration, { tokens, projectId });
 
   run.show({ kind: 'signed-in', label });
 }

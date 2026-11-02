@@ -11,7 +11,10 @@ const AccountFields = pluginAccountColumns
 
 const AccountHostField = AccountFields.pick({ host: true });
 
-export const AccountAdd = AccountFields;
+// `projectId` names the Project whose choice this Account becomes; a sign-in that names none records none.
+export const AccountSave = AccountFields.extend({
+  projectId: z.string().optional(),
+});
 
 export const AccountProvider = AccountHostField.extend({
   header: z.string().regex(/^[!#$%&'*+.^`|~\w-]+$/),
@@ -25,7 +28,7 @@ export const AccountGet = z.object({
 });
 
 export const AccountCall = z.discriminatedUnion('action', [
-  AccountAdd.extend({ action: z.literal('add') }),
+  AccountSave.extend({ action: z.literal('save') }),
   AccountHostField.extend(AccountGet.shape),
   AccountProvider.extend({ action: z.literal('provide') }),
   z.object({

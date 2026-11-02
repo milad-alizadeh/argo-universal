@@ -16,7 +16,7 @@ type AccountPlugins = Awaited<ReturnType<typeof installed>> & {
 const providerSource = `export async function register(argo) {
     argo.pages.register('/', () => null);
     let id = await argo.secrets.get('account-id');
-    if (!id) { id = await argo.accounts.add('${accountHost}', { label: 'Milad' });
+    if (!id) { id = await argo.accounts.save('${accountHost}', { label: 'Milad' });
       await argo.secrets.set('account-id', id); await argo.secrets.set(id, 'synthetic-token'); }
     await argo.accounts.provide('${accountHost}', { header: 'X-Api-Key', prefix: '' }, (account) => argo.secrets.get(account.id));
   }`;

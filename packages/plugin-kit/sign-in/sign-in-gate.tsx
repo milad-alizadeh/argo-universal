@@ -1,4 +1,6 @@
 import {
+  Screen,
+  Text,
   useCallback,
   useData,
   useEffect,
@@ -12,6 +14,7 @@ import type { DefinedAccount } from './define-account';
 import {
   GateContext,
   needOf,
+  readProject,
   type Blocked,
   type FetchQuery,
 } from './gate-context';
@@ -42,9 +45,12 @@ const hasAnswered = (read: Read, need: SignInNeed | null): boolean =>
 
 type HeldRead = { need: SignInNeed; refresh: () => Promise<void> };
 
-function useHeldRead({ blocked, answered }: InPlaceProps): HeldRead {
+function useHeldRead(
+  { blocked, answered }: InPlaceProps,
+  projectId: string | undefined,
+): HeldRead {
   const read = useData(blocked.query, { every: recheckMs, ...blocked.options });
-  const need = needOf(read);
+  const need = needOf(read, projectId);
   const back = hasAnswered(read, need);
 
   useEffect(() => {
@@ -54,20 +60,32 @@ function useHeldRead({ blocked, answered }: InPlaceProps): HeldRead {
   return { need: need ?? blocked.need, refresh: read.refresh };
 }
 
+// Signing in cannot say which of several Accounts a page with no Project means, so this offers no sign-in (ADR-0036).
+const SeveralAccounts = ({ name }: { name: string }): JSX.Element => (
+  <Screen title={name}>
+    <Text role="secondary">
+      {`Several ${name} Accounts are signed in. Open this from a Project, or sign out of one in Settings.`}
+    </Text>
+  </Screen>
+);
+
 /*
  * Holds the read that could not answer while the sign-in is up. Its answer is what the page's own read will find, so the
  * page returns only once that answer is good and never bounces back on the old one. It is the same Query entry, so this
  * makes no call the page would not have made.
  */
 function SignInInPlace(props: InPlaceProps): JSX.Element {
-  const { need, refresh } = useHeldRead(props);
-  const page = usePageContext();
+  const projectId = readProject(props.blocked.options, usePageContext());
+  const { need, refresh } = useHeldRead(props, projectId);
+
+  if (need === 'several-accounts')
+    return <SeveralAccounts name={props.account.declaration.name} />;
 
   return (
     <SignInPage
       account={props.account}
-      need={need}
-      projectId={props.blocked.options?.projectId ?? page.projectId}
+      rejected={need === 'rejected'}
+      projectId={projectId}
       onSignedIn={refresh}
     />
   );
@@ -93,7 +111,7 @@ function useBlocked(): BlockedState {
 
 /*
  * Draws its children until a read inside them, through `account.useData`, has no Account or a rejected token; then the
- * sign-in takes their place until a read answers again.
+ * sign-in takes their place until a read answers again. Several Accounts and no Project draw a message there instead.
  */
 export function SignInGate({ account, children }: GateProps): JSX.Element {
   const { blocked, report, answered } = useBlocked();

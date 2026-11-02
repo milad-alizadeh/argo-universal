@@ -2,12 +2,12 @@ import { Screen, useEffect, usePageContext, useState } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { DefinedAccount } from './define-account';
 import { SignInBody } from './sign-in-body';
-import type { SignInNeed, SignInStep, StartedRun } from './steps';
+import type { SignInStep, StartedRun } from './steps';
 
 type PageProps = {
   account: DefinedAccount;
-  // Why the page is up, when a read sent the person here; "Add account" opens it without one and adds an Account.
-  need?: SignInNeed;
+  // The service refused the saved token, which the page says.
+  rejected?: boolean;
   projectId?: string;
   onSignedIn?: () => void | Promise<void>;
 };
@@ -42,11 +42,6 @@ function useAttempts(): Attempts {
 
 type Flow = { step: SignInStep; start: () => void; cancel: () => void };
 
-const runOf = (
-  { need = 'no-account', projectId }: PageProps,
-  run: Pick<StartedRun, 'show' | 'cancelled'>,
-): StartedRun => ({ need, projectId, ...run });
-
 function useShow(
   { onSignedIn }: PageProps,
   setStep: (step: SignInStep) => void,
@@ -64,9 +59,11 @@ function useFlow(props: PageProps): Flow {
   const show = useShow(props, setStep);
 
   const start = (): void => {
-    const run = runOf(props, { show, cancelled: attempts.begin() });
-
-    void props.account.signIn(run);
+    void props.account.signIn({
+      projectId: props.projectId,
+      show,
+      cancelled: attempts.begin(),
+    });
   };
 
   const cancel = (): void => {
@@ -92,7 +89,7 @@ export function SignInPage(props: PageProps): JSX.Element {
       <SignInBody
         {...flow}
         name={name}
-        rejected={props.need === 'rejected'}
+        rejected={props.rejected === true}
         // `argo.oauth` is refused away from the Server Device (ADR-0036), whose browser the redirect needs.
         elsewhere={kind === 'redirect' && !serverDevice}
       />

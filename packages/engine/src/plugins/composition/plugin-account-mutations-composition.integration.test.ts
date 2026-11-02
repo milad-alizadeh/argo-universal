@@ -90,7 +90,7 @@ async function accountProvider(): Promise<
   const { home } = await installed(
     `export async function register(argo) {
     argo.pages.register('/', () => null);
-    await argo.accounts.add('api.github.com', {label:'Milad'});
+    await argo.accounts.save('api.github.com', {label:'Milad'});
   }`,
     {
       accounts: [{ host: accountHost, page: '/' }],

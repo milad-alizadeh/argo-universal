@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { PluginManifest } from '@repo/contracts/plugins';
+import type { AccountSave } from '@repo/contracts/plugins/account-calls';
 import {
   PluginAccount,
   PluginAccountGrant,
@@ -12,13 +13,17 @@ import {
   projectAccount,
 } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
+import type { z } from 'zod';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
+import { CapabilityRefusal } from '../access/capability-refusal';
 import { pluginKeychainService, type Keychain } from '../services/keychain';
 import { AccountJob, type AccountChange } from './account-job';
-import { requireAccount, requireChoice } from './account-records';
+import { requireAccount, requireChoice, sameAccount } from './account-records';
+
+type SavedAccount = z.infer<typeof AccountSave>;
 
 type Dependencies = {
   database: Database;
@@ -60,21 +65,29 @@ export class PluginAccounts {
       );
   }
 
-  async add(pluginId: string, host: string, label: string): Promise<string> {
-    await this.requireProvider(pluginId, host);
-    const id = randomUUID();
-    await this.write({
-      action: 'add',
-      account: { id, host, label, providedBy: pluginId },
-    });
+  async save(pluginId: string, saved: SavedAccount): Promise<string> {
+    const { host, label, projectId } = saved;
 
-    return id;
+    await this.requireProvider(pluginId, host);
+    const fields = { host, label, providedBy: pluginId };
+
+    await this.write({
+      action: 'save',
+      account: { id: randomUUID(), ...fields },
+      projectId,
+    });
+    const account = sameAccount(this.deps.database, fields);
+
+    if (!account) throw new Error('Account is unavailable');
+
+    return account.id;
   }
 
   async get(host: string, projectId?: string): Promise<PluginAccount | null> {
-    if (!projectId) return null;
-
     const accounts = this.list().filter((account) => account.host === host);
+
+    if (!projectId) return onlyAccount(accounts, host);
+
     const chosen = this.choice(host, projectId);
 
     if (chosen) return chosenAccount(accounts, chosen.account);
@@ -171,3 +184,18 @@ const chosenAccount = (
   id: string,
 ): PluginAccount | null =>
   accounts.find((account) => account.id === id) ?? null;
+
+// With no Project there is no choice to read. Signing in cannot settle several, so this is a refusal and not `no-account`.
+function onlyAccount(
+  accounts: PluginAccount[],
+  host: string,
+): PluginAccount | null {
+  const [only, another] = accounts;
+
+  if (another)
+    throw new CapabilityRefusal(
+      `Several ${host} Accounts are signed in and this call has no Project. Name one with \`projectId\`.`,
+    );
+
+  return only ?? null;
+}

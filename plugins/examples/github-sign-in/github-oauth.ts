@@ -19,7 +19,8 @@ type Calls = Pick<
 
 type Start = { redirectUri: string; state: string; codeChallenge: string };
 
-type Client = { clientId: string; clientSecret: string };
+// `projectId` is the Project this sign-in is for, whose choice the Account becomes; "Add account" names none.
+type Client = { clientId: string; clientSecret: string; projectId?: string };
 
 type Grant = Start & Client & { code: string; verifier: string };
 
@@ -86,12 +87,16 @@ function authorizeLocation(clientId: string, start: Start): string {
   })}`;
 }
 
-// Argo mints the Account id; the token lives in this Plugin's own secrets under it.
-async function identify(calls: Calls, token: string): Promise<SignInResult> {
+// Argo finds or mints the Account id; the token lives in this Plugin's own secrets under it. A login names one person.
+async function identify(
+  calls: Calls,
+  token: string,
+  projectId: string | undefined,
+): Promise<SignInResult> {
   const label = await loginOf(calls, token);
 
   if (!label) return failed('GitHub did not say who signed in.');
-  const id = await calls.accounts.add(accountHost, { label });
+  const id = await calls.accounts.save(accountHost, { label, projectId });
 
   await calls.secrets.set(id, token);
 
@@ -102,7 +107,7 @@ async function complete(calls: Calls, grant: Grant): Promise<SignInResult> {
   const token = await exchange(calls, grant);
 
   return token
-    ? identify(calls, token)
+    ? identify(calls, token, grant.projectId)
     : failed('GitHub did not return a token.');
 }
 
@@ -138,8 +143,10 @@ async function secretSetting(
   return typeof value === 'string' && value !== '' ? value : null;
 }
 
-export function createSignIn(calls: Calls): () => Promise<SignInResult> {
-  return async () => {
+export function createSignIn(
+  calls: Calls,
+): (projectId?: string) => Promise<SignInResult> {
+  return async (projectId) => {
     const clientId = await secretSetting(calls, 'client-id');
     const clientSecret = await secretSetting(calls, 'client-secret');
 
@@ -148,7 +155,7 @@ export function createSignIn(calls: Calls): () => Promise<SignInResult> {
         'Set the OAuth client ID and client secret in this Plugin’s settings first.',
       );
 
-    return run(calls, { clientId, clientSecret }).catch(outcome);
+    return run(calls, { clientId, clientSecret, projectId }).catch(outcome);
   };
 }
 

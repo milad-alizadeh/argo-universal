@@ -6,15 +6,24 @@ import { createSignIn, provideAccount } from './github-oauth';
 const portMessage =
   'Port 51789 is already in use. Free the port, then try again.';
 
-test('signing in exchanges the code, adds the Account and keeps the token under its id', async () => {
+test('signing in exchanges the code, saves the Account and keeps the token under its id', async () => {
   const { calls, log } = fakeArgo();
 
   assert.deepEqual(await createSignIn(calls)(), {
     kind: 'signed-in',
     label: 'octocat',
   });
-  assert.deepEqual(log.added, [{ host: 'api.github.com', label: 'octocat' }]);
+  assert.deepEqual(log.saved, [
+    { host: 'api.github.com', label: 'octocat', projectId: undefined },
+  ]);
   assert.equal(log.secrets.get('account-1'), 'token-1');
+});
+
+test('signing in for a Project names it in the save', async () => {
+  const { calls, log } = fakeArgo();
+
+  await createSignIn(calls)('project-1');
+  assert.equal(log.saved[0]?.projectId, 'project-1');
 });
 
 test('the authorize URL carries the PKCE challenge, S256 and Argo state, and the exchange the verifier', async () => {
@@ -40,7 +49,7 @@ test('a taken port is reported as such and nothing is stored', async () => {
     kind: 'port-in-use',
     message: portMessage,
   });
-  assert.equal(log.added.length, 0);
+  assert.equal(log.saved.length, 0);
 });
 
 test('a denied or timed out exchange is cancelled, not failed', async () => {
@@ -79,11 +88,11 @@ test('the token exchange sends the client secret GitHub requires', async () => {
   );
 });
 
-test('a refused token exchange fails without adding an Account', async () => {
+test('a refused token exchange fails without saving an Account', async () => {
   const { calls, log } = fakeArgo({ token: reply(false, {}) });
 
   assert.equal((await createSignIn(calls)()).kind, 'failed');
-  assert.equal(log.added.length, 0);
+  assert.equal(log.saved.length, 0);
 });
 
 test('the provider is registered for the Account host with the Authorization header', async () => {

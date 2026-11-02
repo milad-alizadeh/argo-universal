@@ -94,8 +94,8 @@ const spawned = (id: string): PluginProcess =>
 const argo: Argo = frozen({
   operations: frozen({ register: kit.operations.register }),
   accounts: frozen({
-    add: (host, options) =>
-      call({ api: 'accounts', call: { action: 'add', host, ...options } }),
+    save: (host, options) =>
+      call({ api: 'accounts', call: { action: 'save', host, ...options } }),
     get: (host, options) =>
       call({ api: 'accounts', call: { action: 'get', host, ...options } }),
     provide: accounts.provide,

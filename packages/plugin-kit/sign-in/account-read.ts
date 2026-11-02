@@ -2,12 +2,14 @@ import {
   useContext,
   useData,
   useEffect,
+  usePageContext,
   type UseDataOptions,
   type UseDataResult,
 } from '@argo/plugin-kit';
 import {
   GateContext,
   needOf,
+  readProject,
   type Blocked,
   type FetchQuery,
 } from './gate-context';
@@ -44,7 +46,8 @@ export function useAccountRead(
   const query = queryOf(host, read);
   const result = useData(query, options);
   const report = useContext(GateContext);
-  const blocked = blockedOf(query, options, needOf(result));
+  const projectId = readProject(options, usePageContext());
+  const blocked = blockedOf(query, options, needOf(result, projectId));
 
   useEffect(() => {
     if (report && blocked) report(blocked);

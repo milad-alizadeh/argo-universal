@@ -16,8 +16,8 @@ export async function accountCall(
   const accounts = requireAccounts(call);
   const input = request.call;
 
-  if (input.action === 'add')
-    return accounts.add(call.pluginId, input.host, input.label);
+  // Only the Project the call names becomes the choice, never the one a page's context carries.
+  if (input.action === 'save') return accounts.save(call.pluginId, input);
 
   if (input.action === 'get') return accounts.get(input.host, call.projectId);
 

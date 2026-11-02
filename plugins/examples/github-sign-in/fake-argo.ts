@@ -49,7 +49,7 @@ const started: Start = {
 type Log = {
   authorize: string[];
   requests: { url: string; body: string | undefined }[];
-  added: { host: string; label: string }[];
+  saved: { host: string; label: string; projectId?: string }[];
   secrets: Map<string, string>;
   provided: { host: string; header: string; prefix: string }[];
   handler: Provided | undefined;
@@ -81,8 +81,8 @@ const fetchOf =
   };
 
 const accountsOf = (log: Log): Argo['accounts'] => ({
-  add: (host, { label }) => {
-    log.added.push({ host, label });
+  save: (host, { label, projectId }) => {
+    log.saved.push({ host, label, projectId });
 
     return Promise.resolve('account-1');
   },
@@ -112,7 +112,7 @@ const secretsOf = (log: Log): Argo['secrets'] => ({
 const emptyLog = (): Log => ({
   authorize: [],
   requests: [],
-  added: [],
+  saved: [],
   secrets: new Map(),
   provided: [],
   handler: undefined,

@@ -15,25 +15,33 @@ import { chooseView, flowOf, type Account, type Flow } from './sign-in-view';
 type Props = {
   context: PluginRenderContext;
   accounts: Pick<Argo['accounts'], 'get'>;
-  signIn: () => Promise<SignInResult>;
+  signIn: (projectId?: string) => Promise<SignInResult>;
 };
 
 type AccountState = { account: Account | null; refresh: () => void };
 
 type FlowState = { flow: Flow; actions: Actions };
 
-// This Project's Account, read again each time `reload` changes.
-function useAccount(accounts: Props['accounts']): AccountState {
+/*
+ * This Project's Account, read again each time `reload` changes. With no Project this is "Add account", which always
+ * offers a sign-in: `get` would answer with the only Account there, and leave no way to add a second.
+ */
+function useAccount(
+  accounts: Props['accounts'],
+  projectId: string | undefined,
+): AccountState {
   const [account, setAccount] = useState<Account | null>(null);
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    if (projectId === undefined) return;
+
     // A failed read is the same as no Account: signing in is the way forward.
     void accounts
       .get(accountHost)
       .catch(() => null)
       .then(setAccount);
-  }, [accounts, reload]);
+  }, [accounts, projectId, reload]);
 
   return { account, refresh: () => setReload((count) => count + 1) };
 }
@@ -44,7 +52,10 @@ const settle =
   (now: Flow): Flow =>
     now.kind === 'waiting' && now.attempt === attempt ? flowOf(result) : now;
 
-function useFlow(signIn: Props['signIn'], refresh: () => void): FlowState {
+function useFlow(
+  signIn: () => Promise<SignInResult>,
+  refresh: () => void,
+): FlowState {
   const [flow, setFlow] = useState<Flow>({ kind: 'idle' });
 
   const start = (): void => {
@@ -61,9 +72,9 @@ function useFlow(signIn: Props['signIn'], refresh: () => void): FlowState {
 }
 
 export function SignInPage({ context, accounts, signIn }: Props): JSX.Element {
-  const { account, refresh } = useAccount(accounts);
-  const { flow, actions } = useFlow(signIn, refresh);
-  const { serverDevice } = context;
+  const { projectId, serverDevice } = context;
+  const { account, refresh } = useAccount(accounts, projectId);
+  const { flow, actions } = useFlow(() => signIn(projectId), refresh);
   const view = chooseView({ account, serverDevice, flow });
 
   return (

@@ -42,8 +42,8 @@ export const failed = (detail: string): Ended => ({
   detail,
 });
 
-// Why a page cannot read: no Account answered, or the service refused the token it was given.
-export type SignInNeed = 'no-account' | 'rejected';
+// Why a page cannot read: no Account answered, the service refused the token, or no Project says which of several.
+export type SignInNeed = 'no-account' | 'rejected' | 'several-accounts';
 
 export type FlowRun = {
   show: (step: SignInStep) => void;
@@ -51,7 +51,6 @@ export type FlowRun = {
 };
 
 export type StartedRun = FlowRun & {
-  need: SignInNeed;
-  // The Project whose read was rejected, which says whose token to rewrite.
+  // The Project whose read sent the person here, whose choice the sign-in becomes. "Add account" names none.
   projectId?: string;
 };

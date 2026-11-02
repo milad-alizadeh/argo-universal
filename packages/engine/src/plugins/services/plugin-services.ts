@@ -97,7 +97,7 @@ export class PluginServices {
     this.storage.close();
   }
 
-  // A fetch or an Account lookup may name its Project, which then decides the Account it reaches (ADR-0037).
+  // A fetch or an Account call may name its Project, which then decides the Account it reaches (ADR-0037).
   private async projectOf(
     request: ServiceRequest,
   ): Promise<string | undefined> {
@@ -182,4 +182,4 @@ function namedProject(request: ServiceRequest): string | undefined {
 type AccountsCall = Extract<ServiceRequest, { api: 'accounts' }>['call'];
 
 const accountsProject = (call: AccountsCall): string | undefined =>
-  call.action === 'get' ? call.projectId : undefined;
+  call.action === 'get' || call.action === 'save' ? call.projectId : undefined;

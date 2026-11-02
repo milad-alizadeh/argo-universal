@@ -11,7 +11,7 @@ it(
   async () => {
     const { home } = await installed(
       probeSource({
-        added: "argo.accounts.add('api.github.com', { label: 'Milad' })",
+        added: "argo.accounts.save('api.github.com', { label: 'Milad' })",
       }).replace(
         'const results = {};',
         "argo.pages.register('/', () => null); const results = {};",
