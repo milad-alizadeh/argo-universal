@@ -20,3 +20,23 @@ Feature: Session switching
     And I left an open Agent and model for Settings
     When I return to the Session "Plan the release"
     Then the Message box shows "Ship on Friday"
+
+  Scenario: Each Session keeps its Workbench visibility
+    Given a wide Frame
+    And Sessions named "Plan the release" and "Fix the login test"
+    When I open the Session "Plan the release"
+    And I hide the Workbench
+    And I open the Session "Fix the login test"
+    Then the Workbench is shown
+    When I open the Session "Plan the release"
+    Then the Workbench is hidden
+
+  Scenario: A recently visited Session keeps its Feed mounted
+    Given a wide Frame
+    And Sessions named "Plan the release" and "Fix the login test"
+    When I open the Session "Plan the release"
+    And I remember the current Feed
+    And I open the Session "Fix the login test"
+    Then the remembered Feed remains mounted and hidden
+    When I open the Session "Plan the release"
+    Then the remembered Feed is shown

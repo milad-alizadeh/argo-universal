@@ -16,6 +16,7 @@ import { FeedList, type FeedListProps } from './feed-list';
 import { useReportsAtEnd } from './use-feed-scroll-position';
 
 export interface FeedProps {
+  sessionId?: string;
   items: readonly FeedViewItem[];
   // The Turn's live line, drawn last while a Turn runs and no open group already draws the work.
   liveHeader: LiveHeaderValue | null;

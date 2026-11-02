@@ -1,8 +1,11 @@
 import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
 import {
+  afterTwoFrames,
   driftWhileUntouched,
   earlierFeedLoadingLabel,
   feedScrollId,
@@ -153,5 +156,139 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
       await canvas.findByRole('button', { name: 'Step 1' }),
     ).toBeVisible();
     await expect(Math.abs((await settledTopOf(step)) - top)).toBeLessThan(2);
+  },
+};
+
+function ReopenedFeed(): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => setOpen((current) => !current)}
+      />
+      {open && <Feed {...feedArgs} sessionId="restored-feed-test" />}
+    </>
+  );
+}
+
+export const RestoresReadingAfterRemount: Story = {
+  render: () => <ReopenedFeed />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(scrolledToEnd(scroll)).toBe(true),
+      scrollAwayWait,
+    );
+    await waitFor(async () => {
+      scrollUp(scroll, scroll.clientHeight);
+      await expect(scrolledToEnd(scroll)).toBe(false);
+    }, scrollAwayWait);
+    await afterTwoFrames();
+    const distance = scroll.scrollHeight - scroll.scrollTop;
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () =>
+        expect(
+          Math.abs(restored.scrollHeight - restored.scrollTop - distance),
+        ).toBeLessThan(50),
+      scrollAwayWait,
+    );
+  },
+};
+
+const copyRow = (
+  row: (typeof longRows)[number],
+  copy: number,
+): (typeof longRows)[number] => {
+  const copied = {
+    ...row,
+    id: `${copy}-${row.id}`,
+    position: copy * 100000 + row.position,
+  };
+
+  if ('toolCallId' in row)
+    return {
+      ...row,
+      id: copied.id,
+      position: copied.position,
+      toolCallId: `${copy}-${row.toolCallId}`,
+    };
+
+  return copied;
+};
+
+const switchSessionLabel = 'Switch Session';
+
+const manyRows = Array.from({ length: 3 }, (_, copy) =>
+  longRows.map((row) => copyRow(row, copy)),
+).flat();
+
+function ReopenedPagedFeed(): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => setOpen((current) => !current)}
+      />
+      {open && (
+        <PagedFeed
+          {...feedArgs}
+          rows={manyRows}
+          sessionId="restored-older-feed-test"
+        />
+      )}
+    </>
+  );
+}
+
+export const RestoresOlderReadingAfterRemount: Story = {
+  render: () => <ReopenedPagedFeed />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(scrolledToEnd(scroll)).toBe(true),
+      scrollAwayWait,
+    );
+    await scrollToTop(scroll);
+    await waitFor(
+      () =>
+        expect(
+          within(scroll).getAllByText(oldestMessage).length,
+        ).toBeGreaterThan(0),
+      scrollAwayWait,
+    );
+    scrollUp(scroll, -300);
+    await afterTwoFrames();
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () =>
+        expect(
+          within(restored).getAllByText(oldestMessage).length,
+        ).toBeGreaterThan(0),
+      scrollAwayWait,
+    );
+    await waitFor(
+      () => expect(restored.scrollTop).toBeGreaterThan(250),
+      scrollAwayWait,
+    );
+    await expect(restored.scrollTop).toBeLessThan(350);
   },
 };

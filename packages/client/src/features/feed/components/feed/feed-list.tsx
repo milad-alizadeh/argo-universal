@@ -16,6 +16,7 @@ import {
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
 export interface FeedListProps extends EntryDrawing {
+  sessionId?: string;
   entries: FeedEntry[];
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
   newestKey: string;

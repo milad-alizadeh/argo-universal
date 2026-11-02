@@ -1,10 +1,7 @@
-import type { SessionSnapshot } from '@repo/contracts';
 import type { FeedProps, useSessionFeed } from '#features/feed';
 import {
   openFailureText,
   sessionMissing,
-  type SessionHeaderProps,
-  type SessionHeaderStatus,
   type ShellPanelProps,
   type SessionPanels,
 } from '#features/sessions';
@@ -21,6 +18,7 @@ import type {
   OpenSessionViewProps,
   SessionDetailViewProps,
 } from './session-detail-view';
+import { sessionHeaderProps } from './session-header-props-source';
 import { type StoppedTurn, stoppedTurn } from './stopped-turn';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -42,12 +40,6 @@ type OpenSessionSources = OpenSession &
   Pick<SessionDetailViewSources, 'callouts' | 'shells' | 'inspectorPanels'>;
 
 type FeedFailure = Pick<SessionDetailViewSources, 'feed' | 'feedDropped'>;
-
-const headerStatus = {
-  running: 'running',
-  requires_action: 'needs_input',
-  idle: 'idle',
-} satisfies Record<SessionSnapshot['state'], SessionHeaderStatus>;
 
 // A failed first page refetches by itself when the Connection reopens or the window regains focus. An open Session keeps its Feed and Composer when its Agent fails: the callout says why.
 function failedSession(
@@ -83,21 +75,11 @@ const loadedFeed = ({ snapshot, view }: SessionFeed): OpenFeed | undefined =>
 const openFeed = (feed: SessionFeed): OpenFeed | undefined =>
   feed.ready ? loadedFeed(feed) : undefined;
 
-// The menu's Rename and Archive come from the page, which also draws the dialogs they open.
-const sessionHeaderProps = ({ snapshot }: OpenSession): SessionHeaderProps => ({
-  title: snapshot.title,
-  status: headerStatus[snapshot.state],
-  startedAt: snapshot.liveHeader?.startedAt ?? null,
-  menu: {
-    archived: snapshot.archivedAt !== null,
-    status: headerStatus[snapshot.state],
-  },
-});
-
 const sessionFeedProps = (
   open: OpenSession,
   stoppedEnding: StoppedTurn['ending'] | undefined,
 ): FeedProps => ({
+  sessionId: open.sessionId,
   items: open.view.items.filter((item) => item !== stoppedEnding),
   liveHeader: open.snapshot.liveHeader,
   liveToolCall: open.feed.liveToolCall,

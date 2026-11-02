@@ -1,5 +1,5 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import { List, type ListProps } from '@repo/kit/primitives/lists/list';
+import { type ListProps } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
@@ -13,6 +13,7 @@ import {
   rowType,
   useFeedRowData,
 } from './feed-row-data';
+import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 
@@ -61,7 +62,7 @@ const keyboardProps = Platform.select({
 } as const);
 
 // What the Feed's list takes whatever the Session draws.
-const feedListProps = {
+export const feedListProps = {
   testID: 'feed-scroll',
   // SessionColumn owns each row's side gutter; the generic List adds none.
   padding: 0,
@@ -118,9 +119,10 @@ export interface FeedScrollProps extends EntryDrawing {
   atEnd: boolean;
   // The Feed does not follow its end, for a Feed read without a Composer.
   opensAtStart?: boolean;
+  sessionId?: string;
 }
 
-type FeedListProps = Pick<
+export type FeedListProps = Pick<
   Extract<ListProps<FeedRowData>, { items: readonly FeedRowData[] }>,
   | 'items'
   | 'renderItem'
@@ -159,19 +161,18 @@ function useFeedListProps(
   };
 }
 
-export function FeedScroll({
-  list,
-  atEnd,
-  ...props
-}: FeedScrollProps): React.JSX.Element {
-  const listProps = useFeedListProps(list, props);
+export function FeedScroll(props: FeedScrollProps): React.JSX.Element {
+  const { list, atEnd, sessionId, ...rest } = props;
+  const listProps = useFeedListProps(list, rest);
+  const onScroll = useFeedOnScroll(sessionId, list);
 
-  return (
-    <List
-      ref={list}
-      {...feedListProps}
-      {...listProps}
-      {...useFeedFade(atEnd)}
-    />
-  );
+  const drawing = {
+    base: feedListProps,
+    list,
+    listProps,
+    fade: useFeedFade(atEnd),
+    onScroll,
+  };
+
+  return <DrawFeedScroll {...drawing} />;
 }
