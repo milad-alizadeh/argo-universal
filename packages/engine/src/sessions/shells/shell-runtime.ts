@@ -48,8 +48,10 @@ export class ShellRuntime implements Shells {
       cwd: (): string => this.cwd,
     });
   }
-  public observe(notification: Parameters<AdapterShells['observe']>[0]): void {
-    if (!this.closed) this.adapterShells.observe(notification);
+  public observe(
+    notification: Parameters<AdapterShells['observe']>[0],
+  ): boolean {
+    return !this.closed && this.adapterShells.observe(notification);
   }
   public configure(session: SessionData, launch: AgentLaunch): void {
     this.launch = launch;

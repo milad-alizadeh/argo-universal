@@ -41,17 +41,14 @@ export const readTerminalMetadata = (
   };
 };
 
-// claude-agent-acp's terminal: no cwd, so nothing to draw a terminal from; its output comes as deltas.
-export const isOutputOnlyTerminal = (
+// claude-agent-acp names only the terminal, with no cwd to draw one from, and sends its output as deltas. Any other shape stays unsupported, which the Feed reports.
+export const namesOnlyTerminal = (
   metadata: ToolUpdate['_meta'],
   terminalId: string,
-): boolean => {
-  const info = z
-    .object({ terminal_id: z.literal(terminalId), cwd: z.never().optional() })
-    .safeParse(metadata?.terminal_info);
-
-  return info.success;
-};
+): boolean =>
+  z
+    .strictObject({ terminal_id: z.literal(terminalId) })
+    .safeParse(metadata?.terminal_info).success;
 
 export const terminalIdOf = (block: ToolCallContent): string | undefined =>
   accepted(z.string().safeParse(block._meta?.acp?.terminalId));

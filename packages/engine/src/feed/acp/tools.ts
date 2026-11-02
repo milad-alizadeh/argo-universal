@@ -16,7 +16,7 @@ import {
 import { nameToolCall } from './tool-names';
 import { applyToolTerminalUpdate, mapToolTerminal } from './tool-terminal';
 import {
-  isOutputOnlyTerminal,
+  namesOnlyTerminal,
   readTerminalMetadata,
   retainedTerminalMetadata,
 } from './tool-terminal-metadata';
@@ -93,7 +93,7 @@ const replaceToolContent = (
     ?.filter(
       (block) =>
         block.type !== 'terminal' ||
-        !isOutputOnlyTerminal(update._meta, block.terminalId),
+        !namesOnlyTerminal(update._meta, block.terminalId),
     )
     .map((block) => mapToolContent(block, row)) ?? row.content;
 

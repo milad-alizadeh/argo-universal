@@ -80,32 +80,47 @@ export const streamedTerminals = (
   ],
 });
 
-// claude-agent-acp 0.99.1, as captured: its terminal_info names no cwd, and the command follows the first report.
+const firstReport = (id: string): Update => ({
+  sessionUpdate: 'tool_call',
+  toolCallId: id,
+  title: 'Terminal',
+  kind: 'execute',
+  status: 'pending',
+  rawInput: {},
+  content: [{ type: 'terminal', terminalId: id }],
+  _meta: { terminal_info: { terminal_id: id } },
+});
+
+// claude-agent-acp 0.99.1, as captured: the first report has an empty input and a terminal_info with no cwd; the input follows in updates.
+export const reportedCommand = (
+  id: string,
+  rawInput: ToolPatch['rawInput'],
+): Update[] => [
+  firstReport(id),
+  { sessionUpdate: terminalUpdate, toolCallId: id, rawInput },
+];
+
+export const backgroundResult = (id: string, path: string): Update[] => [
+  chunk(
+    id,
+    `Command running in background with ID: b1. Output is being written to: ${path}. You will be notified when it finishes.`,
+  ),
+  { sessionUpdate: terminalUpdate, toolCallId: id, status: 'completed' },
+];
+
+// It can come long after the Tool call completed, carrying nothing else.
+export const reportedEnd = (id: string): Update => ({
+  sessionUpdate: terminalUpdate,
+  toolCallId: id,
+  _meta: {
+    terminal_exit: { terminal_id: id, exit_code: null, signal: null },
+  },
+});
+
 export const commandWithoutCwd: Update[] = [
-  {
-    sessionUpdate: 'tool_call',
-    toolCallId: 'bash-a',
-    title: 'Terminal',
-    kind: 'execute',
-    status: 'pending',
-    rawInput: {},
-    content: [{ type: 'terminal', terminalId: 'bash-a' }],
-    _meta: { terminal_info: { terminal_id: 'bash-a' } },
-  },
-  {
-    sessionUpdate: terminalUpdate,
-    toolCallId: 'bash-a',
-    rawInput: { command: 'echo A' },
-  },
+  ...reportedCommand('bash-a', { command: 'echo A' }),
   chunk('bash-a', 'A\n'),
-  {
-    sessionUpdate: terminalUpdate,
-    toolCallId: 'bash-a',
-    status: 'completed',
-    _meta: {
-      terminal_exit: { terminal_id: 'bash-a', exit_code: 0, signal: null },
-    },
-  },
+  end('bash-a'),
 ];
 
 export const readCommand: Update[] = [
