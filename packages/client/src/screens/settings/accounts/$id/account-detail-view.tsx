@@ -1,4 +1,3 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
@@ -154,6 +153,11 @@ const signOutSection = (
   <FieldGroup.Section
     footer={`Sign out also removes access for ${account.provider} and every Plugin using this Account.`}
   >
-    <Button label={signOutCopy.signOut} variant="danger" onPress={onPress} />
+    <FieldGroup.Link
+      title={signOutCopy.signOut}
+      action
+      destructive
+      onPress={onPress}
+    />
   </FieldGroup.Section>
 );
