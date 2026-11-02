@@ -7,21 +7,23 @@ import {
   type AccountChoice,
 } from '@repo/contracts/plugins/accounts';
 import type { Database } from '@repo/db';
-import {
-  pluginAccount,
-  pluginAccountGrant,
-  projectAccount,
-} from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { pluginAccount, pluginAccountGrant } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
 import type { z } from 'zod';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import { CapabilityRefusal } from '../access/capability-refusal';
 import { pluginKeychainService, type Keychain } from '../services/keychain';
 import { AccountJob, type AccountChange } from './account-job';
-import { requireAccount, requireChoice, sameAccount } from './account-records';
+import {
+  chosenAccount,
+  onlyAccount,
+  projectChoice,
+  requireAccount,
+  requireChoice,
+  sameAccount,
+} from './account-records';
 
 type SavedAccount = z.infer<typeof AccountSave>;
 
@@ -88,24 +90,11 @@ export class PluginAccounts {
 
     if (!projectId) return onlyAccount(accounts, host);
 
-    const chosen = this.choice(host, projectId);
+    const chosen = projectChoice(this.deps.database, host, projectId);
 
     if (chosen) return chosenAccount(accounts, chosen.account);
 
     return this.chooseOnly(accounts, projectId);
-  }
-
-  private choice(host: string, projectId: string): AccountChoice | undefined {
-    return this.deps.database
-      .select()
-      .from(projectAccount)
-      .where(
-        and(
-          eq(projectAccount.projectId, projectId),
-          eq(projectAccount.host, host),
-        ),
-      )
-      .get();
   }
 
   private async chooseOnly(
@@ -177,25 +166,4 @@ export class PluginAccounts {
       true,
     );
   }
-}
-
-const chosenAccount = (
-  accounts: PluginAccount[],
-  id: string,
-): PluginAccount | null =>
-  accounts.find((account) => account.id === id) ?? null;
-
-// With no Project there is no choice to read. Signing in cannot settle several, so this is a refusal and not `no-account`.
-function onlyAccount(
-  accounts: PluginAccount[],
-  host: string,
-): PluginAccount | null {
-  const [only, another] = accounts;
-
-  if (another)
-    throw new CapabilityRefusal(
-      `Several ${host} Accounts are signed in and this call has no Project. Name one with \`projectId\`.`,
-    );
-
-  return only ?? null;
 }

@@ -138,8 +138,7 @@ it('draws the sign-in again after the token is rejected, and signing in as the s
 
   // GitHub revokes the token; the next read after the freshness window is a 401.
   github.accepted.clear();
-  await test.clock.advance(61_000);
-  await expect.poll(() => root.findText(signInLabel), wait).toBeDefined();
+  await clockUntil(test, root, signInLabel);
   expect(shown(root)).toContain('no longer accepts');
 
   github.accepted.add('token-2');

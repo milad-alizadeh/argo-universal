@@ -5,8 +5,10 @@ import type { Tokens } from './tokens';
 // Where the Account's label comes from: a call the token opens, and the field of its JSON answer that names the person.
 export type LabelSource = {
   url: string;
-  // A dotted path into the answer, such as `login` or `data.viewer.email`. It must identify one person, so a login or
-  // an email works and a display name does not: signing in with the same label reuses that Account's row.
+  /*
+   * A dotted path into the answer, such as `login` or `data.viewer.email`. It must identify one person, so a login or an
+   * email works and a display name does not: signing in with the same label reuses that Account's row.
+   */
   field: string;
   // Sent as a JSON POST, for a service such as a GraphQL one that reads that way.
   body?: string;

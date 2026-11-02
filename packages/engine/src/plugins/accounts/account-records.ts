@@ -3,8 +3,9 @@ import type {
   PluginAccount,
 } from '@repo/contracts/plugins/accounts';
 import type { Database } from '@repo/db';
-import { pluginAccount, project } from '@repo/db/schema';
+import { pluginAccount, project, projectAccount } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
+import { CapabilityRefusal } from '../access/capability-refusal';
 
 type AccountDatabase = Pick<Database, 'select'>;
 
@@ -22,22 +23,63 @@ export function hasAccount(
   );
 }
 
+type AccountFields = Omit<PluginAccount, 'id'>;
+
+const sameFields = ({
+  host,
+  providedBy,
+  label,
+}: AccountFields): ReturnType<typeof and> =>
+  and(
+    eq(pluginAccount.host, host),
+    eq(pluginAccount.providedBy, providedBy),
+    eq(pluginAccount.label, label),
+  );
+
 // One row per host, providing Plugin and label: a label names one person (ADR-0036).
 export function sameAccount(
   database: AccountDatabase,
-  { host, providedBy, label }: Omit<PluginAccount, 'id'>,
+  fields: AccountFields,
 ): PluginAccount | undefined {
+  return database.select().from(pluginAccount).where(sameFields(fields)).get();
+}
+
+export function projectChoice(
+  database: AccountDatabase,
+  host: string,
+  projectId: string,
+): AccountChoice | undefined {
   return database
     .select()
-    .from(pluginAccount)
+    .from(projectAccount)
     .where(
       and(
-        eq(pluginAccount.host, host),
-        eq(pluginAccount.providedBy, providedBy),
-        eq(pluginAccount.label, label),
+        eq(projectAccount.projectId, projectId),
+        eq(projectAccount.host, host),
       ),
     )
     .get();
+}
+
+export const chosenAccount = (
+  accounts: PluginAccount[],
+  id: string,
+): PluginAccount | null =>
+  accounts.find((account) => account.id === id) ?? null;
+
+// With no Project there is no choice to read. Signing in cannot settle several, so this is a refusal and not `no-account`.
+export function onlyAccount(
+  accounts: PluginAccount[],
+  host: string,
+): PluginAccount | null {
+  const [only, another] = accounts;
+
+  if (another)
+    throw new CapabilityRefusal(
+      `Several ${host} Accounts are signed in and this call has no Project. Name one with \`projectId\`.`,
+    );
+
+  return only ?? null;
 }
 
 export function hasProject(

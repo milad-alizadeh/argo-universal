@@ -33,19 +33,29 @@ export const readProject = (
 const isRejected = (data: Read['data']): boolean =>
   data?.status === unauthorized;
 
+type ErrorKind = Read['errorKind'];
+
 /*
- * A borrow that returned nothing, or a token the service refused; a 401 is data the Plugin reads (ADR-0037). An Account's
- * read refused with no Project is several Accounts and nothing to choose between them (ADR-0036): a page's own Capabilities
- * cover its Account's host, and only a read that names a Project can be refused for that Project.
+ * An Account's read refused with no Project is several Accounts and nothing to choose between them (ADR-0036): the page's
+ * Capabilities cover its Account's host, and only a read that names a Project can be refused for that Project.
  */
-export function needOf(
-  { data, errorKind }: Read,
+const severalAccounts = (
+  errorKind: ErrorKind,
+  projectId: string | undefined,
+): boolean => errorKind === 'refused' && projectId === undefined;
+
+function needOfError(
+  errorKind: ErrorKind,
   projectId: string | undefined,
 ): SignInNeed | null {
   if (errorKind === 'no-account') return 'no-account';
 
-  if (errorKind === 'refused' && projectId === undefined)
-    return 'several-accounts';
-
-  return isRejected(data) ? 'rejected' : null;
+  return severalAccounts(errorKind, projectId) ? 'several-accounts' : null;
 }
+
+// A borrow that returned nothing, several Accounts, or a token the service refused; a 401 is data the Plugin reads (ADR-0037).
+export const needOf = (
+  { data, errorKind }: Read,
+  projectId: string | undefined,
+): SignInNeed | null =>
+  needOfError(errorKind, projectId) ?? (isRejected(data) ? 'rejected' : null);

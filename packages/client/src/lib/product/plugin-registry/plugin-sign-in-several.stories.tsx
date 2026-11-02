@@ -14,7 +14,7 @@ const viewId = PluginViewId.parse('sign-in-several');
 const meta = {
   title: 'Design System/Patterns/PluginSignInSeveral',
   parameters: { screenPreview: true },
-  render: () => (
+  render: (): React.JSX.Element => (
     <PluginDetailView
       viewId={viewId}
       root={severalAccounts}

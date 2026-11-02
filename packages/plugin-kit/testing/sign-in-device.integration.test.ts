@@ -4,15 +4,14 @@ import {
   clockUntil,
   hasText,
   itemsText,
+  rejectedText,
   signInLabel,
   started,
   surface,
   wait,
   type View,
-} from './sign-in-fixture';
+} from './sign-in-run';
 import type { PluginTest } from './test-types';
-
-const rejectedText = 'no longer accepts';
 
 const items = (test: PluginTest, projectId: string): Promise<View> =>
   test.mount({ page: '/', surface, projectId });

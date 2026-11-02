@@ -1,21 +1,9 @@
-import { fileURLToPath } from 'node:url';
-import { expect, onTestFinished } from 'vitest';
 import {
   fixtureServices,
   type FixtureAnswer,
   type FixtureRequest,
 } from './fixture-services';
-import { startPluginTest } from './index';
-import type { PluginTest, PluginTestOptions } from './test-types';
-
-export const projects = [
-  { id: 'one', name: 'One', originUrl: null },
-  { id: 'two', name: 'Two', originUrl: null },
-];
-
-export const wait = { timeout: 15_000 };
-
-export const signInLabel = 'Sign in to Service';
+import type { PluginTestOptions } from './test-types';
 
 export const itemsText = 'the items';
 
@@ -158,73 +146,4 @@ export async function serviceFixture(): Promise<
     tokenBodies: () => bodiesOf(requests),
     readTokens: () => readTokensOf(requests),
   };
-}
-
-const directory = fileURLToPath(
-  new URL('../mocks/sign-in-plugins', import.meta.url),
-);
-
-export async function start(
-  plugin: 'device' | 'redirect',
-  options: Pick<PluginTestOptions, 'network' | 'openBrowser'>,
-): Promise<PluginTest> {
-  const test = await startPluginTest({
-    directory,
-    pluginId: `sign-in-${plugin}`,
-    version: '0.0.0',
-    clockStart: 1_000_000,
-    projects,
-    ...options,
-  });
-
-  onTestFinished(() => test.close());
-
-  return test;
-}
-
-const clockStep = 5_000;
-
-export type View = Awaited<ReturnType<PluginTest['mount']>>;
-
-export async function clockUntil(
-  test: PluginTest,
-  view: View,
-  text: string,
-): Promise<void> {
-  await expect
-    .poll(async () => {
-      await test.clock.advance(clockStep);
-
-      return JSON.stringify(view.trees.at(-1));
-    }, wait)
-    .toContain(text);
-}
-
-export const surface = { platform: 'web' } as const;
-
-export const hasText = (view: View, text: string): boolean =>
-  JSON.stringify(view.trees.at(-1)).includes(text);
-
-export type Service = Awaited<ReturnType<typeof serviceFixture>>;
-
-export async function started(): Promise<{
-  test: PluginTest;
-  service: Service;
-}> {
-  const service = await serviceFixture();
-  const test = await start('device', { network: service.network });
-
-  return { test, service };
-}
-
-// What "Add account" opens: the sign-in page with no Project, finished as this person.
-export async function addAccount(
-  { test, service }: { test: PluginTest; service: Service },
-  login: string,
-): Promise<void> {
-  const page = await test.mount({ page: '/sign-in', surface });
-
-  service.person.login = login;
-  await page.press(signInLabel);
-  await clockUntil(test, page, 'Signed in as');
 }

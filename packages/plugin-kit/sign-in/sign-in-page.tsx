@@ -42,6 +42,11 @@ function useAttempts(): Attempts {
 
 type Flow = { step: SignInStep; start: () => void; cancel: () => void };
 
+const runOf = (
+  { projectId }: PageProps,
+  run: Pick<StartedRun, 'show' | 'cancelled'>,
+): StartedRun => ({ projectId, ...run });
+
 function useShow(
   { onSignedIn }: PageProps,
   setStep: (step: SignInStep) => void,
@@ -59,11 +64,9 @@ function useFlow(props: PageProps): Flow {
   const show = useShow(props, setStep);
 
   const start = (): void => {
-    void props.account.signIn({
-      projectId: props.projectId,
-      show,
-      cancelled: attempts.begin(),
-    });
+    const run = runOf(props, { show, cancelled: attempts.begin() });
+
+    void props.account.signIn(run);
   };
 
   const cancel = (): void => {

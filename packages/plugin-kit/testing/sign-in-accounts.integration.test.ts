@@ -4,27 +4,19 @@ import {
   clockUntil,
   hasText,
   itemsText,
+  labels,
+  items,
+  rejectedText,
   signInLabel,
+  signInOn,
   started,
   surface,
   wait,
-  type Service,
+  type Run,
   type View,
-} from './sign-in-fixture';
-import type { PluginTest } from './test-types';
+} from './sign-in-run';
 
 const host = 'api.service.example';
-
-const severalText =
-  'Several Service Accounts are signed in. Open this from a Project, or sign out of one in Settings.';
-
-type Run = { test: PluginTest; service: Service };
-
-const items = (test: PluginTest, projectId?: string): Promise<View> =>
-  test.mount({ page: '/', surface, projectId });
-
-const labels = ({ test }: Run): string[] =>
-  test.accounts.list().map(({ label }) => label);
 
 const chosen = async (
   { test }: Run,
@@ -33,42 +25,13 @@ const chosen = async (
   (await test.accounts.get(host, projectId))?.label;
 
 // The service stops taking every token it has given out, and the page's next read finds out.
-async function rejectsTokens({ test, service }: Run, page: View): Promise<void> {
-  service.accepted.clear();
-  await test.clock.advance(61_000);
-  await expect.poll(() => hasText(page, 'no longer accepts'), wait).toBe(true);
-}
-
-async function signInOn(
+async function rejectsTokens(
   { test, service }: Run,
   page: View,
-  login: string,
 ): Promise<void> {
-  service.person.login = login;
-  await page.press(signInLabel);
-  await clockUntil(test, page, itemsText);
+  service.accepted.clear();
+  await clockUntil(test, page, rejectedText);
 }
-
-async function showingItems(run: Run, projectId?: string): Promise<View> {
-  const page = await items(run.test, projectId);
-
-  await expect.poll(() => hasText(page, itemsText), wait).toBe(true);
-
-  return page;
-}
-
-it('reaches the items after signing in on a page with no Project, and records no choice', async () => {
-  const run = await started();
-  const page = await items(run.test);
-
-  await expect.poll(() => page.findText(signInLabel), wait).toBeDefined();
-  await signInOn(run, page, 'person-1');
-
-  expect(labels(run)).toEqual(['person-1']);
-
-  await addAccount(run, 'person-2');
-  expect(await chosen(run, 'one')).toBeUndefined();
-}, 40_000);
 
 it('gives a different person a new row with their label, moves the Project to it and keeps the old row', async () => {
   const run = await started();
@@ -167,8 +130,7 @@ it('gives a second Plugin signing in to the same host its own row, and moves the
 
   await expect.poll(() => hasText(page, itemsText), wait).toBe(true);
   service.accepted.clear();
-  await test.clock.advance(61_000);
-  await expect.poll(() => hasText(page, 'no longer accepts'), wait).toBe(true);
+  await clockUntil(test, page, rejectedText);
   await signInOn(run, page, 'person-1');
 
   const [first, second] = test.accounts.list();
@@ -180,69 +142,6 @@ it('gives a second Plugin signing in to the same host its own row, and moves the
   });
   expect((await test.accounts.get(host, 'one'))?.id).toBe(second?.id);
 }, 60_000);
-
-it('draws the message and no sign-in for several Accounts and no Project, until one is signed out', async () => {
-  const run = await started();
-  const { test, service } = run;
-
-  await addAccount(run, 'person-1');
-  await addAccount(run, 'person-2');
-
-  const asked = service.requests.length;
-  const page = await items(test);
-
-  await expect.poll(() => hasText(page, severalText), wait).toBe(true);
-  expect(page.findText(signInLabel)).toBeUndefined();
-  expect(service.requests).toHaveLength(asked);
-
-  const [first] = test.accounts.list();
-
-  await test.accounts.signOut(first?.id ?? '');
-  await clockUntil(test, page, itemsText);
-}, 60_000);
-
-it('refuses a read with several Accounts and no Project, naming `projectId` to the author', async () => {
-  const run = await started();
-
-  await addAccount(run, 'person-1');
-  await addAccount(run, 'person-2');
-
-  const answer = await run.test.mount({ page: '/answer', surface });
-
-  await expect.poll(() => hasText(answer, 'refused: '), wait).toBe(true);
-  expect(hasText(answer, 'projectId')).toBe(true);
-
-  const account = await run.test.mount({ page: '/account', surface });
-
-  await expect.poll(() => hasText(account, 'refused: '), wait).toBe(true);
-  expect(hasText(account, 'projectId')).toBe(true);
-}, 40_000);
-
-it('answers `accounts.get` with the only Account when there is no Project', async () => {
-  const run = await started();
-
-  await addAccount(run, 'person-1');
-
-  const account = await run.test.mount({ page: '/account', surface });
-
-  await expect
-    .poll(() => hasText(account, 'account: person-1'), wait)
-    .toBe(true);
-}, 40_000);
-
-it('still refuses a read naming an unregistered Project, in the page and not as the message', async () => {
-  const run = await started();
-
-  await addAccount(run, 'person-1');
-  await addAccount(run, 'person-2');
-
-  const page = await run.test.mount({ page: '/gated-answer', surface });
-
-  await expect
-    .poll(() => hasText(page, 'refused: Refused: Project is unavailable'), wait)
-    .toBe(true);
-  expect(hasText(page, severalText)).toBe(false);
-}, 40_000);
 
 it('recovers from a rejected token by signing in again, with no duplicate row', async () => {
   const run = await started();
@@ -269,37 +168,10 @@ it('recovers from a missing secret by signing in again, with no duplicate row', 
   });
 
   await lose.press('Lose the token');
-  await test.clock.advance(61_000);
-  await expect.poll(() => page.findText(signInLabel), wait).toBeDefined();
-  expect(hasText(page, 'no longer accepts')).toBe(false);
+  await clockUntil(test, page, signInLabel);
+  expect(hasText(page, rejectedText)).toBe(false);
 
   await signInOn(run, page, 'person-1');
 
   expect(labels(run)).toEqual(['person-1']);
-}, 40_000);
-
-it('shares one call between two reads with no Project', async () => {
-  const run = await started();
-
-  await addAccount(run, 'person-1');
-  await showingItems(run);
-
-  const reads = run.service.readTokens().length;
-
-  await showingItems(run);
-
-  expect(run.service.readTokens()).toHaveLength(reads);
-}, 40_000);
-
-it('never shares an entry between a read with no Project and a Project’s', async () => {
-  const run = await started();
-
-  await addAccount(run, 'person-1');
-  await showingItems(run);
-
-  const reads = run.service.readTokens().length;
-
-  await showingItems(run, 'one');
-
-  expect(run.service.readTokens()).toHaveLength(reads + 1);
 }, 40_000);

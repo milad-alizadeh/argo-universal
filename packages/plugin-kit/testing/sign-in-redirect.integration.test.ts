@@ -1,14 +1,8 @@
 import { createHash } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { serialiseOnOAuthPort } from '../../engine/mocks/oauth-port-lock';
-import {
-  clockUntil,
-  itemsText,
-  serviceFixture,
-  signInLabel,
-  start,
-  wait,
-} from './sign-in-fixture';
+import { serviceFixture } from './sign-in-fixture';
+import { clockUntil, itemsText, signInLabel, start, wait } from './sign-in-run';
 
 serialiseOnOAuthPort();
 

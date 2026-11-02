@@ -19,7 +19,10 @@ const service = defineAccount({
   label: { url: 'https://api.service.example/me', field: 'login' },
 });
 
-const read = { url: 'https://api.service.example/items', method: 'GET' } as const;
+const read = {
+  url: 'https://api.service.example/items',
+  method: 'GET',
+} as const;
 
 function Items(): JSX.Element {
   const { data } = service.useData(read, { every: 60_000 });
@@ -31,13 +34,17 @@ function Items(): JSX.Element {
   );
 }
 
+const bodyOf = (data: { body: string } | undefined): string =>
+  data?.body ?? 'Loading';
+
 // A read with no gate, or one naming a Project no one registered: what the author sees.
 function Answer({ projectId }: { projectId?: string }): JSX.Element {
   const { data, error, errorKind } = service.useData(read, { projectId });
+  const body = bodyOf(data);
 
   return (
     <Screen title="Answer">
-      <Text>{errorKind ? `${errorKind}: ${error}` : (data?.body ?? 'Loading')}</Text>
+      <Text>{errorKind ? `${errorKind}: ${error}` : body}</Text>
     </Screen>
   );
 }
@@ -50,7 +57,7 @@ function AccountAnswer({ argo }: { argo: Argo }): JSX.Element {
       (account) => setAnswer(`account: ${account?.label ?? 'none'}`),
       (cause: Error) => setAnswer(`refused: ${cause.message}`),
     );
-  }, []);
+  }, [argo.accounts]);
 
   return (
     <Screen title="Account">
@@ -74,8 +81,7 @@ function LoseToken({ argo }: { argo: Argo }): JSX.Element {
   );
 }
 
-export async function register(argo: Argo): Promise<void> {
-  await service.register(argo);
+function registerAnswers(argo: Argo): void {
   argo.pages.register('/answer', () => <Answer />);
   argo.pages.register('/gated-answer', () => (
     <SignInGate account={service}>
@@ -84,6 +90,11 @@ export async function register(argo: Argo): Promise<void> {
   ));
   argo.pages.register('/account', () => <AccountAnswer argo={argo} />);
   argo.pages.register('/lose-token', () => <LoseToken argo={argo} />);
+}
+
+export async function register(argo: Argo): Promise<void> {
+  await service.register(argo);
+  registerAnswers(argo);
   argo.pages.register('/', () => (
     <SignInGate account={service}>
       <Items />
