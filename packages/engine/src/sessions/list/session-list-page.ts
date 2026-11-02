@@ -7,16 +7,16 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { jsonCodec } from '../../lib/json-codec';
 
-// Where a row sits in the list: its last activity, then its id.
+// Where a row sits in the list: its creation time, then its id.
 const cursorSchema = jsonCodec(
-  z.strictObject({ activityAt: z.int(), sessionId: z.string() }),
+  z.strictObject({ createdAt: z.int(), sessionId: z.string() }),
 );
 
 type Cursor = z.infer<typeof cursorSchema>;
 
 const pageSize = 50;
 
-// Sessions page most recently active first.
+// Sessions page newest created first.
 export function sessionListPage(
   input: SessionListInput,
   readRows: () => SessionInfo[],
@@ -80,10 +80,10 @@ function afterCursor(row: SessionInfo, cursor: Cursor | undefined): boolean {
   return !cursor || compareRows(cursor, row) < 0;
 }
 
-// Most recently active first; ties break by `sessionId`, highest first.
+// Newest created first; ties break by `sessionId`, highest first.
 function compareRows(first: Cursor, second: Cursor): number {
   return (
-    second.activityAt - first.activityAt ||
+    second.createdAt - first.createdAt ||
     compareIds(first.sessionId, second.sessionId)
   );
 }
@@ -101,7 +101,7 @@ function nextCursor(
   return rows.length > pageSize && last
     ? Buffer.from(
         z.encode(cursorSchema, {
-          activityAt: last.activityAt,
+          createdAt: last.createdAt,
           sessionId: last.sessionId,
         }),
       ).toString('base64url')

@@ -22,8 +22,8 @@
       {
         "key": "client-id",
         "type": "secret",
-        "label": "OAuth client ID",
-        "description": "From your GitHub OAuth app, whose callback URL is http://127.0.0.1:51789/callback."
+        "label": "Client ID",
+        "description": "The OAuth client ID from your GitHub OAuth app, whose callback URL is http://127.0.0.1:51789/callback."
       }
     ]
   },

@@ -37,8 +37,10 @@ const endThreshold = 0.02;
  */
 const followComposer = { on: { layout: true, footerLayout: true } };
 
-// With no prompt pinned, the Feed also follows rows that load after it opens, so a settled Session ends above the Composer.
-const followLoadedRows = { on: { ...followComposer.on, dataChange: true } };
+// With no prompt pinned, the Feed also follows rows that load or measure after it opens, so a settled Session ends above the Composer (#1811).
+const followLoadedRows = {
+  on: { ...followComposer.on, dataChange: true, itemLayout: true },
+};
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
