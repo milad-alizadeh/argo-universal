@@ -109,6 +109,11 @@ function go(href: Href, place: Place, options: NavigateOptions): void {
   else router.navigate(href, { withAnchor: options.withAnchor });
 }
 
+// Back to the page below the shown one, as the header's Back goes.
+export function goBack(): void {
+  router.back();
+}
+
 // Opens a page: pushed over the shown one on a narrow window, beside the list on a wide one.
 export function useNavigate(): Navigate {
   const place = { shown: usePathname(), wide: useWide() };
