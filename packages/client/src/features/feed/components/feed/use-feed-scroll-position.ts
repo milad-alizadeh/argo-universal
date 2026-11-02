@@ -8,16 +8,13 @@ import {
   useState,
 } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import { SessionMemory } from '../../../../lib/session-memory';
 import { type FeedEntry, entryKey } from './feed-entry';
+import { type FeedAnchor, scrollMemory } from './feed-scroll-memory';
+import { useSeekFeedAnchor } from './use-seek-feed-anchor';
 
 type ListRef = RefObject<LegendListRef | null>;
 
 // A frame after the page is first shown, once, scrolls to the very end. A page preloaded out of sight, as behind iOS's long-press preview, gains its header's inset only once shown.
-type FeedAnchor = { key: string; offset: number };
-
-const scrollMemory = new SessionMemory<FeedAnchor | null>(null);
-
 function showAnchor(list: ListRef, anchor: FeedAnchor | null): void {
   const current = list.current;
 
@@ -33,32 +30,57 @@ function showAnchor(list: ListRef, anchor: FeedAnchor | null): void {
     });
 }
 
-function openAtAnchor(
+const isSameAnchor = (list: ListRef, anchor: FeedAnchor): boolean =>
+  list.current?.anchorVisibleContent({ hold: false })?.key === anchor.key;
+
+function settleAnchor(list: ListRef, anchor: FeedAnchor | null): void {
+  if (!anchor) return;
+
+  if (isSameAnchor(list, anchor)) showAnchor(list, anchor);
+}
+
+const containsAnchor = (
+  entries: FeedEntry[],
+  anchor: FeedAnchor | null,
+): boolean =>
+  anchor === null || entries.some((entry) => entryKey(entry) === anchor.key);
+
+const seekActions = (
   list: ListRef,
   anchor: FeedAnchor | null,
-  opened: { current: boolean },
-): void {
-  opened.current = true;
-  showAnchor(list, anchor);
+  input: PositionInput,
+): Pick<
+  Parameters<typeof useSeekFeedAnchor>[0],
+  'requestOlder' | 'open' | 'settle'
+> => ({
+  requestOlder: input.onStartReached,
+  open: (present: boolean): void => showAnchor(list, present ? anchor : null),
+  settle: (): void => settleAnchor(list, anchor),
+});
+
+function seekInput(
+  list: ListRef,
+  anchor: FeedAnchor | null,
+  input: PositionInput & { shown: boolean },
+): Parameters<typeof useSeekFeedAnchor>[0] {
+  return {
+    ...seekActions(list, anchor, input),
+    shown: input.shown,
+    found: containsAnchor(input.entries, anchor),
+    oldest: keyOf(input.entries[0]),
+    hasOlder: input.hasOlder,
+    loadingOlder: input.loadingOlder,
+  };
 }
 
 function useScrollsToEndWhenShown(
   list: ListRef,
-  enabled: boolean,
   anchor: FeedAnchor | null,
+  input: PositionInput,
 ): void {
-  const shown = useScreenFocused() && enabled;
-  const opened = useRef(false);
+  const shown = useScreenFocused() && !input.opensAtStart;
 
-  useEffect(() => {
-    if (!shown || opened.current) return;
-
-    const frame = requestAnimationFrame(() =>
-      openAtAnchor(list, anchor, opened),
-    );
-
-    return (): void => cancelAnimationFrame(frame);
-  }, [list, shown, anchor]);
+  useSeekFeedAnchor(seekInput(list, anchor, { ...input, shown }));
 }
 
 function useOpensAtEnd(
@@ -72,7 +94,7 @@ function useOpensAtEnd(
     input.sessionId ? scrollMemory.read(input.sessionId) : null,
   );
 
-  useScrollsToEndWhenShown(list, !input.opensAtStart, anchor);
+  useScrollsToEndWhenShown(list, anchor, input);
 
   return initialIndex;
 }
@@ -127,6 +149,8 @@ interface PositionInput {
   entries: FeedEntry[];
   newestKey: string;
   onStartReached: () => void;
+  loadingOlder: boolean;
+  hasOlder?: boolean;
   opensAtStart?: boolean;
   sessionId?: string;
 }
@@ -143,23 +167,4 @@ export function useFeedScrollPosition(
   useRequestsOlderNearTop(list, keyOf(entries[0]), input.onStartReached);
 
   return positionAt(initialIndex, useNewestKeyWhenLeftEnd(list, newestKey));
-}
-
-function currentAnchor(current: LegendListRef): FeedAnchor | null | undefined {
-  return current.getState().isAtEnd
-    ? null
-    : current.anchorVisibleContent({ hold: false });
-}
-
-const listAnchor = (list: ListRef): FeedAnchor | null | undefined =>
-  list.current ? currentAnchor(list.current) : undefined;
-
-export function rememberFeedPosition(
-  sessionId: string | undefined,
-  list: ListRef,
-): void {
-  if (!sessionId) return;
-  const anchor = listAnchor(list);
-
-  if (anchor !== undefined) scrollMemory.write(sessionId, anchor);
 }

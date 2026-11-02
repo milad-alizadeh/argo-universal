@@ -84,6 +84,7 @@ const sessionFeedProps = (
   liveHeader: open.snapshot.liveHeader,
   liveToolCall: open.feed.liveToolCall,
   loadingOlder: open.feed.loadingOlder,
+  hasOlder: open.feed.hasOlder,
   onStartReached: () => void open.feed.loadOlder(),
   imageUrl: open.imageUrl,
   checkoutBranch: open.snapshot.checkout.branch ?? undefined,

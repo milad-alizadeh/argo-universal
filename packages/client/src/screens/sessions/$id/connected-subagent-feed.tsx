@@ -35,6 +35,7 @@ function childFeed(
     liveHeader: childHeader(source),
     liveToolCall: source.liveToolCall,
     loadingOlder: source.loadingOlder,
+    hasOlder: source.hasOlder,
     onStartReached: () => void source.loadOlder(),
     imageUrl,
   };

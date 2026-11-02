@@ -23,6 +23,7 @@ export interface FeedProps {
   // The Feed row a `tool_call` live header names, for its icon.
   liveToolCall?: ToolCallUpdate;
   loadingOlder: boolean;
+  hasOlder?: boolean;
   // Asks for older rows when the reader nears the top.
   onStartReached: () => void;
   imageUrl: (blob: BlobRef) => string;

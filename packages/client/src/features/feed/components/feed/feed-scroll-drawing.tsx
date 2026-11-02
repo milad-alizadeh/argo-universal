@@ -5,7 +5,7 @@ import type * as React from 'react';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { FeedListProps, feedListProps } from './feed-scroll';
-import { rememberFeedPosition } from './use-feed-scroll-position';
+import { rememberFeedPosition } from './feed-scroll-memory';
 
 type ListRef = RefObject<LegendListRef | null>;
 

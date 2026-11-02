@@ -88,11 +88,15 @@ function feedDisplay(
 
 function feedPaging(
   history: FeedHistory,
-): Pick<SessionFeed, 'error' | 'retry' | 'loadingOlder' | 'loadOlder'> {
+): Pick<
+  SessionFeed,
+  'error' | 'retry' | 'loadingOlder' | 'hasOlder' | 'loadOlder'
+> {
   return {
     error: history.isFetchNextPageError ? null : history.error,
     retry: () => void history.refetch(),
     loadingOlder: history.isFetchingNextPage,
+    hasOlder: history.hasNextPage ?? true,
     loadOlder: history.loadOlder,
   };
 }

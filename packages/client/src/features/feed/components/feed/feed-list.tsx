@@ -21,6 +21,7 @@ export interface FeedListProps extends EntryDrawing {
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
   newestKey: string;
   loadingOlder: boolean;
+  hasOlder?: boolean;
   onStartReached: () => void;
   onAtEndChange?: (atEnd: boolean) => void;
   // The Feed opens on the first row and pins no prompt, for a Feed read without a Composer.
