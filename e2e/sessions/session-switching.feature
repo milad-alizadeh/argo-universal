@@ -43,8 +43,8 @@ Feature: Session switching
 
   @web-only
   Scenario: A Session restores its reading place after its Feed cache expires
-    Given a wide Frame
-    And the browser clock can advance for Feed expiration
+    Given the browser clock can advance for Feed expiration
+    And a wide Frame
     And Agent 1 supplies a long Feed history
     And a New Session with Agent 1
     When I send the prompt "Build a long history"
