@@ -108,6 +108,7 @@ export const StatusAtRowEnd: Story = {
       const row = canvas.getByRole('button', {
         name: /Find every Feed reader/,
       });
+
       const status = canvas.getByRole('img', { name: 'Running' });
       const title = canvas.getByText('Find every Feed reader');
       await expect(row.contains(status)).toBe(true);
