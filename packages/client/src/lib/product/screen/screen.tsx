@@ -1,9 +1,10 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import {
   type Edge,
   type EdgeInsets,
@@ -46,9 +47,12 @@ function useKeyboardSpace(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const { height, progress } = useReanimatedKeyboardAnimation();
 
-  return useAnimatedStyle(() => ({
-    paddingBottom: keyboardSpace(height.get(), inset, progress.get()),
-  }));
+  return useAnimatedStyle(
+    () => ({
+      paddingBottom: keyboardSpace(height.get(), inset, progress.get()),
+    }),
+    [inset],
+  );
 }
 
 // A screen's content, following the keyboard frame by frame on both phones.

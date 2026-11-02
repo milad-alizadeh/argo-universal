@@ -4,11 +4,11 @@ import {
   Easing,
   ReduceMotion,
   runOnJS,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 type AnimatedStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
 
@@ -139,5 +139,5 @@ export function useScreenSlide(
 
     // The pages are laid out side by side, so a page's own place in the row comes off where it is to stand.
     return { transform: [{ translateX: (offset - index) * width }] };
-  });
+  }, [motion, index, width]);
 }

@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import type { LayoutChangeEvent, ViewStyle } from 'react-native';
 import {
   type SharedValue,
-  useAnimatedStyle,
-  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { useAnimatedStyle, useDerivedValue } from '../../../animated-hooks';
 
 /*
  * Material 3's ProgressIndicatorDefaults.ProgressAnimationSpec: a spring with dampingRatio 1 (no bounce)
@@ -48,7 +47,10 @@ export function useProgressFillWidth(share: number): ProgressFillWidth {
   const trackWidth = useSharedValue(0);
   const shown = useShownShare(share);
 
-  const fillWidth = useDerivedValue(() => trackWidth.get() * shown.get());
+  const fillWidth = useDerivedValue(
+    () => trackWidth.get() * shown.get(),
+    [trackWidth, shown],
+  );
 
   return {
     fillWidth,
@@ -60,5 +62,5 @@ export function useProgressFillWidth(share: number): ProgressFillWidth {
 export function useProgressFillStyle(
   fillWidth: SharedValue<number>,
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
-  return useAnimatedStyle(() => ({ width: fillWidth.get() }));
+  return useAnimatedStyle(() => ({ width: fillWidth.get() }), [fillWidth]);
 }

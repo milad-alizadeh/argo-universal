@@ -4,12 +4,12 @@ import type { ViewStyle } from 'react-native';
 import Animated, {
   type SharedValue,
   cancelAnimation,
-  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 import { cn } from '#kit/utils';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 const dimmedOpacity = 0.45;
 
@@ -71,7 +71,7 @@ function useBlinkingStyle(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const opacity = useBlinkingOpacity(blinking);
 
-  return useAnimatedStyle(() => ({ opacity: opacity.get() }));
+  return useAnimatedStyle(() => ({ opacity: opacity.get() }), [opacity]);
 }
 
 function useBlinkingOpacity(blinking: boolean): SharedValue<number> {

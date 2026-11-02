@@ -3,6 +3,7 @@ import type {
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { formatElapsed, millisecondsPerSecond } from '@repo/kit/format-elapsed';
 import { fullTurnDegrees } from '@repo/kit/motion';
 import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
@@ -17,7 +18,6 @@ import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
-  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withRepeat,
@@ -59,9 +59,10 @@ function useRetryRotation(): RotationStyle {
     return (): void => cancelAnimation(rotation);
   }, [reducedMotion, rotation]);
 
-  return useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.get()}deg` }],
-  }));
+  return useAnimatedStyle(
+    () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
+    [rotation],
+  );
 }
 
 // The retry arrow turns once a second, and holds still under reduced motion.

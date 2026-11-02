@@ -1,7 +1,8 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import type * as React from 'react';
 import type { ViewProps, ViewStyle, ViewInstance } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useGlassBarSpace } from './composer-cover';
 import { ComposerColumn } from './session-column';
 
@@ -44,7 +45,8 @@ function useHomeIndicatorSpace(): ReturnType<
   const bottom = useGlassBarSpace();
   const { progress } = useReanimatedKeyboardAnimation();
 
-  return useAnimatedStyle(() => ({
-    paddingBottom: bottom * (1 - progress.get()),
-  }));
+  return useAnimatedStyle(
+    () => ({ paddingBottom: bottom * (1 - progress.get()) }),
+    [bottom, progress],
+  );
 }

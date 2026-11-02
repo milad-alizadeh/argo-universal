@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 const fill = { flex: 1, minHeight: 0 };
 
@@ -23,9 +24,10 @@ export function PinnedFooterKeyboard({
   const { bottom } = useSafeAreaInsets();
   const { height } = useReanimatedKeyboardAnimation();
 
-  const lift = useAnimatedStyle(() => ({
-    paddingBottom: keyboardSpace(height.get(), bottom),
-  }));
+  const lift = useAnimatedStyle(
+    () => ({ paddingBottom: keyboardSpace(height.get(), bottom) }),
+    [bottom],
+  );
 
   return <Animated.View style={[fill, lift]}>{children}</Animated.View>;
 }

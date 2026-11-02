@@ -1,10 +1,10 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { bezierEasing } from '@repo/kit/bezier-easing';
 import { useLayoutEffect, useRef } from 'react';
 import type { ViewStyle } from 'react-native';
 import {
   ReduceMotion,
   type SharedValue,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -80,8 +80,11 @@ export function useFrameOffset(
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   const { shift, opacity } = useOffsetValues(props);
 
-  return useAnimatedStyle<ViewStyle>(() => ({
-    transform: [{ translateX: shift.get() }],
-    opacity: opacity.get(),
-  }));
+  return useAnimatedStyle<ViewStyle>(
+    () => ({
+      transform: [{ translateX: shift.get() }],
+      opacity: opacity.get(),
+    }),
+    [shift, opacity],
+  );
 }

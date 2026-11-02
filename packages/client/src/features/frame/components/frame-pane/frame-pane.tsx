@@ -1,3 +1,4 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { bezierEasing } from '@repo/kit/bezier-easing';
 import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
@@ -6,7 +7,6 @@ import { View, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   ReduceMotion,
   type SharedValue,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -101,13 +101,14 @@ function usePaneStyles(props: FramePaneProps): PaneStyles {
   usePaneMotion({ width, shift }, props);
 
   return {
-    widthStyle: useAnimatedStyle<ViewStyle>(() => ({
-      width: width.get(),
-      opacity: width.get() > 0 ? 1 : 0,
-    })),
-    shiftStyle: useAnimatedStyle<ViewStyle>(() => ({
-      transform: [{ translateX: shift.get() }],
-    })),
+    widthStyle: useAnimatedStyle<ViewStyle>(
+      () => ({ width: width.get(), opacity: width.get() > 0 ? 1 : 0 }),
+      [width],
+    ),
+    shiftStyle: useAnimatedStyle<ViewStyle>(
+      () => ({ transform: [{ translateX: shift.get() }] }),
+      [shift],
+    ),
   };
 }
 

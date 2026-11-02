@@ -3,11 +3,11 @@ import type { ViewStyle } from 'react-native';
 import Animated, {
   type FrameInfo,
   type SharedValue,
-  useAnimatedStyle,
   useFrameCallback,
   useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 /*
  * Every pass takes the same time on any bar, as in shimmer-android (Shimmer.java, github.com/facebookarchive/shimmer-android),
@@ -73,7 +73,7 @@ function useGlintStyle({
       width: glintWidth,
       transform: [{ translateX: travelled - bandWidth + glintInset }],
     };
-  });
+  }, [progress, fillWidth]);
 }
 
 // FBShimmering.h's shimmeringAnimationOpacity 0.5: the highlight peaks at half strength, clear at both ends.

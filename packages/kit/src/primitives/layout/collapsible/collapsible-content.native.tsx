@@ -1,6 +1,7 @@
 import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAnimatedStyle } from '../../../animated-hooks';
 import {
   CollapsibleLayoutSyncContext,
   contentAccessibility,
@@ -40,10 +41,10 @@ function useNativeHeightStyle({
   height,
   progress,
 }: NativeMotion): ReturnType<typeof useAnimatedStyle<NativeHeightStyle>> {
-  return useAnimatedStyle(() => ({
-    height: height.get() * progress.get(),
-    overflow: 'hidden',
-  }));
+  return useAnimatedStyle(
+    () => ({ height: height.get() * progress.get(), overflow: 'hidden' }),
+    [height, progress],
+  );
 }
 
 type NativeMeasuredContentProps = {

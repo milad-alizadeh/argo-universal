@@ -1,4 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { fullTurnDegrees } from '@repo/kit/motion';
 import { useIconBox } from '@repo/kit/symbols/icon-size';
 import type * as React from 'react';
@@ -7,7 +8,6 @@ import type { ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
-  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -36,9 +36,10 @@ function useLogoRotation(
     return (): void => cancelAnimation(logoRotation);
   }, [status, logoRotation]);
 
-  return useAnimatedStyle(() => ({
-    transform: [{ rotate: `${logoRotation.get()}deg` }],
-  }));
+  return useAnimatedStyle(
+    () => ({ transform: [{ rotate: `${logoRotation.get()}deg` }] }),
+    [logoRotation],
+  );
 }
 
 interface SessionLogoProps {

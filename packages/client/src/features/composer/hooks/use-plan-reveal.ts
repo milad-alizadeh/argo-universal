@@ -1,9 +1,9 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { useEffect, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import {
   cancelAnimation,
   Easing,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -36,10 +36,13 @@ interface PlanReveal {
 function useRevealStyle(
   revealHeight: SharedValue<number>,
 ): ReturnType<typeof useAnimatedStyle<{ height: number; opacity: number }>> {
-  return useAnimatedStyle(() => ({
-    height: revealHeight.get(),
-    opacity: revealHeight.get() === 0 ? 0 : 1,
-  }));
+  return useAnimatedStyle(
+    () => ({
+      height: revealHeight.get(),
+      opacity: revealHeight.get() === 0 ? 0 : 1,
+    }),
+    [revealHeight],
+  );
 }
 
 export function usePlanReveal(): PlanReveal {

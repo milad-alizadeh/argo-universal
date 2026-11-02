@@ -1,12 +1,8 @@
 import type * as React from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
-import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  useDerivedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { ReduceMotion, withTiming } from 'react-native-reanimated';
 import { Icon } from '#primitives/content/icon';
+import { useAnimatedStyle, useDerivedValue } from '../../../animated-hooks';
 import { motionDuration, quarterTurnDegrees } from '../../../motion';
 import { iosChevronScale } from '../../../symbols/chevron-scale';
 import { useIconBox } from '../../../symbols/icon-size';
@@ -79,14 +75,17 @@ function Turning({
 type TurnStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
 
 function useTurn(open: boolean): TurnStyle {
-  const rotation = useDerivedValue(() =>
-    withTiming(open ? quarterTurnDegrees : 0, {
-      duration: motionDuration.enter,
-      reduceMotion: ReduceMotion.System,
-    }),
+  const rotation = useDerivedValue(
+    () =>
+      withTiming(open ? quarterTurnDegrees : 0, {
+        duration: motionDuration.enter,
+        reduceMotion: ReduceMotion.System,
+      }),
+    [open],
   );
 
-  return useAnimatedStyle<ViewStyle>(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  return useAnimatedStyle<ViewStyle>(
+    () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
+    [rotation],
+  );
 }
