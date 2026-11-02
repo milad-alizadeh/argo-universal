@@ -234,32 +234,7 @@ export const UserScrollStopsRestoring: Story = {
   },
 };
 
-const copyRow = (
-  row: (typeof longRows)[number],
-  copy: number,
-): (typeof longRows)[number] => {
-  const copied = {
-    ...row,
-    id: `${copy}-${row.id}`,
-    position: copy * 100000 + row.position,
-  };
-
-  if ('toolCallId' in row)
-    return {
-      ...row,
-      id: copied.id,
-      position: copied.position,
-      toolCallId: `${copy}-${row.toolCallId}`,
-    };
-
-  return copied;
-};
-
 const switchSessionLabel = 'Switch Session';
-
-const manyRows = Array.from({ length: 3 }, (_, copy) =>
-  longRows.map((row) => copyRow(row, copy)),
-).flat();
 
 function ReopenedPagedFeed(): React.JSX.Element {
   const [open, setOpen] = useState(true);
@@ -273,7 +248,8 @@ function ReopenedPagedFeed(): React.JSX.Element {
       {open && (
         <PagedFeed
           {...feedArgs}
-          rows={manyRows}
+          rows={longRows}
+          pageLength={60}
           sessionId="restored-older-feed-test"
         />
       )}
@@ -290,14 +266,16 @@ export const RestoresOlderReadingAfterRemount: Story = {
       () => expect(scrolledToEnd(scroll)).toBe(true),
       scrollAwayWait,
     );
-    await scrollToTop(scroll);
-    await waitFor(
-      () =>
-        expect(
-          within(scroll).getAllByText(oldestMessage).length,
-        ).toBeGreaterThan(0),
-      scrollAwayWait,
-    );
+    // Jump to the top of each loaded page, as a reader can with the scrollbar.
+    // Each prepend moves the viewport down, so continue until the oldest row arrives.
+    await waitFor(async () => {
+      scrollUp(scroll, scroll.scrollHeight);
+      await afterTwoFrames();
+      await expect(scroll.scrollTop).toBe(0);
+      await expect(
+        within(scroll).getAllByText(oldestMessage).length,
+      ).toBeGreaterThan(0);
+    }, scrollAwayWait);
     scrollUp(scroll, -300);
     await afterTwoFrames();
     const before = await markSettledMiddleOfView(scroll);
