@@ -5,7 +5,6 @@ import {
   shellHeading,
   shellOutcome,
   shellPassed,
-  shellsSummary,
   shellSupporting,
   shellTitle,
 } from './shell-format';
@@ -16,7 +15,6 @@ import {
   noCodeShell,
   passedShell,
   runningShell,
-  sessionShells,
   shellNow,
   stoppedShell,
 } from './shell-list.mocks';
@@ -63,13 +61,6 @@ describe('shellSupporting', () => {
 
   it('shows how an ended Shell ended', () => {
     expect(shellSupporting(failedShell)).toBe('Exit 1');
-  });
-});
-
-describe('shellsSummary', () => {
-  it('counts the running Shells and all of them', () => {
-    expect(shellsSummary(sessionShells)).toBe('1 running · 3 in this Session');
-    expect(shellsSummary([passedShell])).toBe('1 in this Session');
   });
 });
 

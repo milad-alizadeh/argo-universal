@@ -54,9 +54,7 @@ const rowPressable = ({ shell, onOpen }: RowProps) =>
 function TaskRow(props: RowProps): ReactElement {
   return (
     <Pressable {...rowPressable(props)}>
-      <View className="h-5 w-6 shrink-0 items-center justify-center">
-        <ShellMark shell={props.shell} />
-      </View>
+      <ShellMark shell={props.shell} />
       <TaskText shell={props.shell} />
       <Text role="secondary" tone="muted">
         {shellElapsed(props.shell, props.now)}

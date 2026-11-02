@@ -18,8 +18,10 @@ export const None: Story = {
   args: { subagents: subagentStates.none },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.queryByText('Running')).toBeNull();
-      await expect(canvas.queryByText('Finished')).toBeNull();
+      await expect(
+        canvas.queryByRole('heading', { name: 'Running' }),
+      ).toBeNull();
+      await expect(canvas.queryByRole('heading', { name: 'Done' })).toBeNull();
     }),
 };
 
@@ -27,14 +29,17 @@ export const OneRunning: Story = {
   args: { subagents: subagentStates.oneRunning },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.queryByText('Running')).toBeNull();
+      await expect(
+        canvas.getByRole('heading', { name: 'Running' }),
+      ).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: /Find every Feed reader/ }),
       ).toBeVisible();
       await expect(
         canvas.getByText('Sonnet 4.5 · 34s · 8.2k tokens'),
       ).toBeVisible();
-      await expect(canvas.queryByText(/Finished/)).toBeNull();
+      await expect(canvas.queryByRole('heading', { name: 'Done' })).toBeNull();
+      await expect(canvas.getByText('1')).toBeVisible();
     }),
 };
 
@@ -42,10 +47,14 @@ export const SeveralMixed: Story = {
   args: { subagents: subagentStates.severalMixed },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.queryByText('Running')).toBeNull();
       await expect(
-        canvas.queryByRole('heading', { name: 'Finished' }),
-      ).toBeNull();
+        canvas.getByRole('heading', { name: 'Running' }),
+      ).toBeVisible();
+      await expect(canvas.getByRole('heading', { name: 'Done' })).toBeVisible();
+      await expect(canvas.getAllByText('2')).toHaveLength(2);
+      await expect(
+        canvas.getByRole('img', { name: 'Needs input' }),
+      ).toBeVisible();
       await expect(
         canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
@@ -71,7 +80,11 @@ export const AllFinished: Story = {
   args: { subagents: subagentStates.allFinished },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.queryByText(/Running/)).toBeNull();
+      await expect(
+        canvas.queryByRole('heading', { name: 'Running' }),
+      ).toBeNull();
+      await expect(canvas.getByRole('heading', { name: 'Done' })).toBeVisible();
+      await expect(canvas.getByText('2')).toBeVisible();
       await expect(
         canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
@@ -81,8 +94,8 @@ export const AllFinished: Story = {
     }),
 };
 
-// A finished Subagent stays between its neighbours; the component never regroups by state.
-export const SpawnOrder: Story = {
+// Running work comes first; spawn order remains stable within each section.
+export const SectionOrder: Story = {
   args: {
     subagents: interleavedSubagents,
   },
@@ -94,14 +107,14 @@ export const SpawnOrder: Story = {
           .map((row) => row.getAttribute('aria-label')?.split(',')[0]),
       ).toEqual([
         'Find every Feed reader',
-        'Draft the Plan schema',
         'Migrate tokens to kit roles',
+        'Draft the Plan schema',
         'Port the mock CLIs',
       ]);
     }),
 };
 
-export const StatusAtRowEnd: Story = {
+export const StatusOnLeadingMark: Story = {
   args: { subagents: subagentStates.oneRunning },
   play: async ({ canvas }) =>
     eachLayout(async () => {
@@ -112,8 +125,20 @@ export const StatusAtRowEnd: Story = {
       const status = canvas.getByRole('img', { name: 'Running' });
       const title = canvas.getByText('Find every Feed reader');
       await expect(row.contains(status)).toBe(true);
-      await expect(status.getBoundingClientRect().left).toBeGreaterThan(
-        title.getBoundingClientRect().right,
+
+      const mark = canvas
+        .getByLabelText('Explore Agent')
+        .getBoundingClientRect();
+
+      const dot = status.getBoundingClientRect();
+
+      await expect(dot.width).toBeGreaterThan(0);
+      await expect(dot.left).toBeGreaterThanOrEqual(mark.left);
+      await expect(dot.top).toBeGreaterThanOrEqual(mark.top);
+      await expect(dot.right).toBeLessThanOrEqual(mark.right);
+      await expect(dot.bottom).toBeLessThanOrEqual(mark.bottom);
+      await expect(status.getBoundingClientRect().right).toBeLessThan(
+        title.getBoundingClientRect().left,
       );
     }),
 };
