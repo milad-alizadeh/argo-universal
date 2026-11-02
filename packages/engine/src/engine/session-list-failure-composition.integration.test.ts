@@ -35,7 +35,7 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
         stopReason: 'error',
         error: {
           code: 'interrupted',
-          message: 'The Server stopped during the Turn',
+          message: 'The Server restarted during this Turn',
         },
         startedAt: 1,
       },

@@ -25,9 +25,9 @@ function archivedContent({
   );
 }
 
-// How long ago the Session was active leads the line.
+// How long ago the Session was active leads a sidebar row's line; a phone's row ends its title line with it.
 function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
-  return age === undefined ? null : (
+  return !sidebarRows || age === undefined ? null : (
     <Text role="secondary" tone="muted">
       {age}
     </Text>
@@ -40,7 +40,7 @@ function hasMetadata({
   age,
 }: SessionRowMetadataProps): boolean {
   return [
-    age !== undefined,
+    sidebarRows && age !== undefined,
     session.subagents.total > 0,
     sidebarRows && session.shells.total > 0,
     session.archivedAt !== null,

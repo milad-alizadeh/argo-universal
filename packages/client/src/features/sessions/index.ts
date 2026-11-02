@@ -170,6 +170,11 @@ export { ConfigurationStatus } from './components/session-callout/configuration-
 
 export { SessionCallout } from './components/session-callout/session-callout';
 
+export {
+  StoppedTurnCallout,
+  type StoppedTurnCalloutProps,
+} from './components/stopped-turn-callout/stopped-turn-callout';
+
 export { TerminalSignIn } from './components/terminal-sign-in/terminal-sign-in';
 
 export type {

@@ -13,7 +13,7 @@ export const markdownMarkClassNames = {
   bold: 'font-semibold',
   italic: 'italic',
   strikethrough: 'line-through',
-  code: 'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground',
+  code: 'rounded-sm bg-foreground/5 px-1.5 py-px type-code-inline text-foreground',
 } as const satisfies Record<MarkdownMark, string>;
 
 /*

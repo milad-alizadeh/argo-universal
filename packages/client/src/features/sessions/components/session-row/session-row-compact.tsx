@@ -5,12 +5,12 @@ import {
   type ListItemProps,
 } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import { View } from 'react-native';
 import {
   ChangeStageModifier,
   SecondaryChangeStageIcon,
 } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
+import { endParts } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import {
@@ -65,17 +65,6 @@ function compactEnd(
     ),
   };
 }
-
-const endParts = (
-  detail: React.ReactNode,
-  status: React.ReactNode,
-): React.ReactNode =>
-  [detail, status].some((part) => part !== undefined) ? (
-    <View className="flex-row items-center gap-1.5">
-      {detail}
-      {status}
-    </View>
-  ) : undefined;
 
 type CompactAccessoriesProps = CompactEndProps & {
   plugins: SessionRowPlugins;

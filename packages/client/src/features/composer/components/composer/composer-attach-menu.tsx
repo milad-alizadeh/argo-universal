@@ -29,6 +29,7 @@ const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
   size: 'sm',
+  control: true,
   accessibilityLabel: 'Attach',
 } as const;
 

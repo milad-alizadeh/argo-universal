@@ -28,7 +28,7 @@ What the native rows give that Argo's can't match is small:
 - **Appearances, not families.** `List appearance` is one of:
   - `plain`: full-width rows, as iOS's plain List and Material's list.
   - `grouped`: inset sections for settings, forms and sheet pages, as iOS 26 inset-grouped and Material's grouped list.
-  - `cards`: a separate card per item, as the Sessions list.
+  - `cards`: a separate card per item, as the Subagents list on phones. Amended by the owner on 2026-11-02: the Sessions list on phones is `grouped`, one card per Project, in both layouts. Its Regular row ends the title line on the time and the subtitle on the status dot, and keeps its meta line of Change, counts and Plugin items. On the web and desktop Regular stays two lines with every slot, and Compact is the one-line choice.
 
   The slots never change with the appearance. `layout="grid"`, `direction`, `columns` and the list behaviours of Spec 0017 apply to every appearance.
 - **One row anatomy.** Amended by the owner on 2026-10-18 after a council review of the first Paper master. `ListItem` is the only kit component that draws a row, in five lanes:

@@ -22,10 +22,10 @@ const inset = { web: 0, phone: 0 } as const;
 
 const compact = { density: 'compact', phones: 'grouped' } as const;
 
-const regular = { density: 'regular', phones: 'cards' } as const;
+const regular = { density: 'regular', phones: 'grouped' } as const;
 
 type Drawing = Required<Pick<SessionsListLook, 'density'>> & {
-  phones: 'grouped' | 'cards';
+  phones: 'grouped';
 };
 
 const looks = (
@@ -40,7 +40,7 @@ const looks = (
 
 /*
  * Web draws Session rows flat on the sidebar, with no card, edge or separator, and a Compact layout's rows as one line
- * each (the List's compact density); phones keep their cards and grouped lists.
+ * each (the List's compact density); phones draw a grouped list per Project in both layouts.
  * `inset` is for a list drawn inside another, whose sides already hold the inset.
  */
 const lookByLayout = {

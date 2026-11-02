@@ -5,6 +5,7 @@ import {
 import { memo } from 'react';
 import type * as React from 'react';
 import { CompactSessionRow } from './session-row-compact';
+import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import { sessionMetadata } from './session-row-metadata';
@@ -16,7 +17,6 @@ import {
 } from './session-row-plugin-items';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
-import { rowStatusDot } from './session-row-status';
 
 export type { SessionRowProps } from './session-row-props';
 
@@ -54,18 +54,18 @@ function rowIdentity(props: SessionRowProps): RowIdentity {
   };
 }
 
-// Regular: the time leads the meta line, and a status dot ends the title line.
+// Regular: two lines with the Session's status and time, then a meta line while it has anything to show.
 function RegularRow(props: SessionRowProps): React.JSX.Element {
-  const selected = props.selected ?? false;
+  const identity = rowIdentity(props);
 
   return (
     <ListItem
-      {...rowIdentity(props)}
+      {...identity}
       {...sessionRowMenu(props)}
       {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
-      trailing={rowStatusDot(props.session.status)}
-      meta={sessionMetadata({ ...props, selected })}
+      {...regularEnds(props, identity.subtitle)}
+      meta={sessionMetadata({ ...props, selected: props.selected ?? false })}
       metaAccessories={regularAccessories(props)}
       progress={sessionProgress(props.session)}
     />

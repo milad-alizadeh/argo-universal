@@ -14,6 +14,8 @@ import { HeaderTitleLine } from './list-section-title-line';
 // Kit-only, a data List's header: a desktop sidebar's section draws a muted title after a glyph; its caller spaces it.
 export type HeaderProps = Omit<ListSectionProps, 'children'> & {
   sidebar?: boolean;
+  // Its icon and title sit on the lanes of the rows below, whose leading items all share them.
+  rowLanes?: boolean;
 };
 
 type DrawnHeaderProps = HeaderProps & { drawing: SectionDrawing };

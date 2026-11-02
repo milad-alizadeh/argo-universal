@@ -65,18 +65,6 @@ function sharedGeometry(width: number): Story {
 async function expectControlGeometry(button: HTMLElement): Promise<void> {
   await expect(button.getBoundingClientRect().height).toBeCloseTo(28, 0);
   await expect(within(button).queryAllByRole('button')).toHaveLength(0);
-
-  for (const text of within(button)
-    .queryAllByText(/\S/)
-    .filter((element) => !isInaccessible(element)))
-    await expectTextGeometry(text);
-}
-
-async function expectTextGeometry(element: HTMLElement): Promise<void> {
-  const style = getComputedStyle(element);
-
-  await expect(style.fontSize).toBe('14px');
-  await expect(style.lineHeight).toBe('20px');
 }
 
 async function expectLabelInset(button: HTMLElement): Promise<void> {

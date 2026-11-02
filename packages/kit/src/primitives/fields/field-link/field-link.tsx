@@ -71,7 +71,7 @@ const LinkRow = (props: FieldLinkProps): ReactElement => (
 
 // A long value takes one line and truncates before the title does (#1750): its shrink factor outweighs the title's 1, so the row squeezes the value first.
 const LinkValue = (props: { value: string }): ReactElement => (
-  <View className="min-w-0 shrink-99">
+  <View className="min-w-0 shrink-9999">
     <NativeText tone="muted" numberOfLines={1}>
       {props.value}
     </NativeText>

@@ -40,7 +40,7 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
         {
           title: 'Output may be missing',
           description:
-            'The Turn was interrupted, so its output may be missing. Argo did not resend the prompt.',
+            'The Turn was interrupted, so its output may be missing.',
         },
       ],
     },
