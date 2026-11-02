@@ -67,6 +67,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   trailingAccessories?: ReactNode;
   // A glyph leading the subtitle in its tone, such as the Plugin that wrote a Session row's Activity line.
   subtitleIcon?: KitProps<'Icon'>['name'];
+  // The colour of the subtitle's glyph alone, as a state dot beside words that stay muted; else the subtitle's tone.
+  subtitleIconTone?: Tone;
   // De-emphasized secondary text on a completed row.
   subtitleDimmed?: boolean;
   // A role avatar occupies its own 36px lane instead of the icon lane.

@@ -2,7 +2,7 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { oneRow } from '../one-row';
-import type { ServerRow } from './server-rows';
+import { type ServerRow, serverStateTone } from './server-rows';
 import { serverUnpairCopy, useUnpairAsk } from './server-unpair-alert';
 
 export type ServerDetailLoad =
@@ -87,7 +87,11 @@ function LoadedServerPage(props: LoadedProps): React.JSX.Element {
 
 const statusSection = (server: LoadedServer): React.JSX.Element => (
   <FieldGroup.Section footer={explanations[server.state]?.(server.name)}>
-    <FieldGroup.Value title="Status" value={statusLabels[server.state]} />
+    <FieldGroup.Value
+      title="Status"
+      value={statusLabels[server.state]}
+      dot={serverStateTone(server.state)}
+    />
     {timeRow('Last connected', server.lastConnected)}
     {timeRow('Paired', server.paired)}
   </FieldGroup.Section>

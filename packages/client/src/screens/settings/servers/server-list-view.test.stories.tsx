@@ -32,6 +32,7 @@ export const EachServerSaysItsOwnState: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Not found on this network')).toBeVisible();
     await expect(canvas.getAllByText('Connected')).toHaveLength(2);
+    await expect(canvas.getAllByTestId('icon-dot')).toHaveLength(3);
   },
 };
 

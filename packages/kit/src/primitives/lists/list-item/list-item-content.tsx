@@ -15,7 +15,11 @@ import { TreeLane } from './list-item-tree';
 
 type SubtitleProps = Pick<
   ListItemProps,
-  'subtitleTone' | 'subtitleDimmed' | 'subtitleLines' | 'subtitleIcon'
+  | 'subtitleTone'
+  | 'subtitleDimmed'
+  | 'subtitleLines'
+  | 'subtitleIcon'
+  | 'subtitleIconTone'
 > & {
   text?: string;
   multiline?: boolean;
@@ -31,7 +35,7 @@ function Subtitle(props: SubtitleProps): ReactNode {
 
   return (
     <View className="min-w-0 flex-row items-center gap-1">
-      <Icon name={props.subtitleIcon} tone={props.subtitleTone} />
+      <Icon name={props.subtitleIcon} tone={props.subtitleIconTone} />
       <View className="min-w-0 flex-1">
         <SubtitleText {...props} />
       </View>
@@ -102,14 +106,19 @@ export const trailsTitle = (
 const subtitleWraps = (props: PlacedContentProps): boolean =>
   [props.description, props.multiline, props.subtitleWraps].some(Boolean);
 
-const subtitleOf = (props: PlacedContentProps): SubtitleProps => ({
-  text: props.subtitle,
-  multiline: subtitleWraps(props),
-  subtitleLines: props.subtitleLines,
-  subtitleTone: props.subtitleTone ?? 'muted',
-  subtitleDimmed: props.subtitleDimmed,
-  subtitleIcon: props.subtitleIcon,
-});
+const subtitleOf = (props: PlacedContentProps): SubtitleProps => {
+  const subtitleTone = props.subtitleTone ?? 'muted';
+
+  return {
+    text: props.subtitle,
+    multiline: subtitleWraps(props),
+    subtitleLines: props.subtitleLines,
+    subtitleTone,
+    subtitleDimmed: props.subtitleDimmed,
+    subtitleIcon: props.subtitleIcon,
+    subtitleIconTone: props.subtitleIconTone ?? subtitleTone,
+  };
+};
 
 export function ItemContent(props: PlacedContentProps): ReactElement {
   return (

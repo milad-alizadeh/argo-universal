@@ -1,6 +1,8 @@
 // Outcomes and states a row or mark reports.
 export const statusSymbols = {
   cancelled: { sf: 'stop', sfFilled: 'stop.fill', material: 'stop' },
+  // A plain filled dot, coloured by the tone beside a state's words rather than replacing them.
+  dot: { sf: 'circle.fill', material: 'circle' },
   error: { sf: 'exclamationmark.circle', material: 'error' },
   failed: {
     sf: 'xmark.circle',

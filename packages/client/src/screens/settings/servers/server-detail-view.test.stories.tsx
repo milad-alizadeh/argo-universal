@@ -74,6 +74,7 @@ export const NotFoundOffersTryAgain: Story = {
   args: { server: unreachableServer },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getByText('Not found')).toBeVisible();
+    await expect(canvas.getByTestId('icon-dot')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
     await expect(args.onTryAgain).toHaveBeenCalledOnce();
     await expect(

@@ -1,5 +1,8 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  ListItem,
+  type ListItemProps,
+} from '@repo/kit/primitives/lists/list-item';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import {
@@ -44,7 +47,15 @@ const sections = (props: ServerListViewProps): FieldListSection[] => [
   ...addServerSection(props.onAddServer),
 ];
 
-// Each row says its own state in the subtitle, in the tone of the state: grey for a computer that did not answer, red for one that no longer knows this Device.
+// Each row says its own state in the subtitle after a dot in the tone of the state, the words staying muted: grey for a computer that did not answer, red for one that no longer knows this Device.
+const stateSubtitle = (
+  state: ServerRow['state'],
+): Pick<ListItemProps, 'subtitle' | 'subtitleIcon' | 'subtitleIconTone'> => ({
+  subtitle: serverStateLabel(state),
+  subtitleIcon: 'dot',
+  subtitleIconTone: serverStateTone(state),
+});
+
 const serverItem = (
   server: ServerRow,
   props: ServerListViewProps,
@@ -52,8 +63,7 @@ const serverItem = (
   <ListItem
     key={server.id}
     title={server.name}
-    subtitle={serverStateLabel(server.state)}
-    subtitleTone={serverStateTone(server.state)}
+    {...stateSubtitle(server.state)}
     value={server.id === props.lookingAt ? 'Showing' : undefined}
     leading={<Icon name="computer" />}
     disclosure
