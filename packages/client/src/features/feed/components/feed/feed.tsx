@@ -87,7 +87,7 @@ function useFeedEntries({
 // What a Feed read without a Composer leaves for one at its end.
 const noComposerCover = 0;
 
-// A Session's rows, oldest first, from the top of the view: it opens at the newest, pins each new prompt to the top while its answer streams in below, and keeps the reader's place when older rows page in above.
+// A Session's rows, oldest first, from the top of the view: it opens at the newest, follows the end while an answer streams in, and keeps the reader's place when older rows page in above.
 export function Feed({
   checkoutBranch,
   ...props

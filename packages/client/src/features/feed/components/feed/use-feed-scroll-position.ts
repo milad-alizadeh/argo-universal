@@ -28,7 +28,7 @@ function useScrollsToEndWhenShown(list: ListRef, enabled: boolean): void {
   }, [list, shown]);
 }
 
-// Opens on the newest row by estimated sizes, then at the very end, with the newest prompt pinned at the top. A Feed that opens at its start opens on its first row and does not scroll.
+// Opens on the newest row by estimated sizes, then at the very end. A Feed that opens at its start opens on its first row and does not scroll.
 function useOpensAtEnd(
   list: ListRef,
   lastIndex: number,
