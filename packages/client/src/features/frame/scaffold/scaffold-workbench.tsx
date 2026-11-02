@@ -64,7 +64,7 @@ const visibilityProps = (visible: boolean): ViewProps & { inert: boolean } => ({
 });
 
 type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
-  motion: { offset: number; visible: boolean; replacesPrimary: boolean };
+  motion: { offset: number; visible: boolean };
 };
 
 // The panel keeps its full width while it slides out, so its cards never reflow.
@@ -80,7 +80,6 @@ function workbenchPlacement({
     motion: {
       offset,
       visible: workbench.width > 0,
-      replacesPrimary: workbench.state === 'dedicated',
     },
   };
 }

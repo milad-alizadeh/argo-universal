@@ -8,7 +8,7 @@ describe('Workbench states from one toggle', () => {
   it.each([
     { width: 1440, workbenchIntent: 'auto', state: 'docked' },
     { width: 900, workbenchIntent: 'auto', state: autoHidden },
-    { width: 900, workbenchIntent: 'shown', state: 'dedicated' },
+    { width: 900, workbenchIntent: 'shown', state: 'overlay' },
     { width: 900, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'shown', state: 'docked' },
@@ -21,23 +21,20 @@ describe('Workbench states from one toggle', () => {
     },
   );
 
-  it('replaces the primary view when explicit Show cannot fit a separate region', () => {
+  it('overlays the content when explicit Show cannot fit a separate region', () => {
     const layout = frameLayout({
       ...input,
       inspectorState: 'open',
       workbenchIntent: 'shown',
     });
 
-    expect(layout.workbench.state).toBe('dedicated');
-    expect(layout.page).toEqual({ offset: 72, width: 0, hidden: true });
-    expect(layout.workbench).toEqual({
-      state: 'dedicated',
-      offset: 416,
-      width: 312,
-    });
-    expect(layout.workbench.offset + layout.workbench.width).toBeLessThan(
-      layout.inspector.offset,
-    );
+    expect(layout.workbench.state).toBe('overlay');
+    expect(layout.page.hidden).toBe(false);
+    expect(layout.page.width).toBeGreaterThan(0);
+    expect(layout.workbench.offset).toBeGreaterThanOrEqual(layout.page.offset);
+    expect(
+      layout.workbench.offset + layout.workbench.width,
+    ).toBeLessThanOrEqual(layout.inspector.offset);
   });
 
   it('auto-hides beside an open Inspector at 1440', () => {

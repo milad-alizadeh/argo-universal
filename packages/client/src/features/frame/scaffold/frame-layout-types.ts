@@ -8,7 +8,7 @@ export type WorkbenchState =
   | 'gutter'
   | 'docked'
   | 'auto-hidden'
-  | 'dedicated'
+  | 'overlay'
   | 'hidden';
 
 // What the person asked of the Workbench's one toggle: nothing yet, so it docks when the window has room, or to show it or hide it.
