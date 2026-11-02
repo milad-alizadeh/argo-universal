@@ -1,7 +1,6 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { ownServerId } from '#lib/product/server-scope';
 import { ServerListView } from './server-list-view';
 import {
   oneServer,
@@ -17,7 +16,6 @@ const meta = {
   parameters: { screenPreview: true },
   args: {
     servers: severalServers,
-    lookingAt: ownServerId,
     onOpenServer: fn(),
     onAddServer: fn(),
   },
@@ -40,7 +38,6 @@ export const EachServerSaysItsOwnState: Story = {
 export const OneServerReadsAsTheOrdinaryCase: Story = {
   args: { servers: oneServer },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Showing')).toBeVisible();
     await expect(
       canvas.queryByText(/no Servers|pair this|empty|unavailable/i),
     ).toBeNull();
@@ -52,13 +49,6 @@ export const OpensAServersPageWhenItsRowIsPressed: Story = {
     await userEvent.click(canvas.getByText('Studio'));
     await expect(args.onOpenServer).toHaveBeenCalledOnce();
     await expect(args.onOpenServer).toHaveBeenCalledWith('studio');
-  },
-};
-
-export const SaysWhichServerIsShown: Story = {
-  args: { lookingAt: 'studio' },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('Showing')).toBeVisible();
   },
 };
 

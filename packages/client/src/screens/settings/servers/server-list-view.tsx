@@ -19,8 +19,6 @@ import {
 export interface ServerListViewProps {
   // The Server on this Device first, then the Servers it has paired with.
   servers: readonly ServerRow[];
-  // The id of the Server the App is showing.
-  lookingAt: string;
   // Opens a Server's own page: its state, showing it, and unpairing from it.
   onOpenServer: (id: string) => void;
   // Absent where an App cannot pair: a web page has no camera and no secure storage (ADR-0045).
@@ -64,7 +62,6 @@ const serverItem = (
     key={server.id}
     title={server.name}
     {...stateSubtitle(server.state)}
-    value={server.id === props.lookingAt ? 'Showing' : undefined}
     leading={<Icon name="computer" />}
     disclosure
     onPress={() => props.onOpenServer(server.id)}
