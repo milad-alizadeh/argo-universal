@@ -10,6 +10,7 @@ import {
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { handleExternalLinks } from './handle-external-links';
+import { handleProjectFolder } from './project-folder';
 import { reportUnexpectedFailure } from './report-unexpected-failure';
 import { reportFailure } from './server-failure-dialog';
 import { serverConnectionMachine } from './server-machine';
@@ -90,6 +91,8 @@ handleWindowMinimized(windowOrigin);
 handleWindowBackground(windowOrigin);
 
 handleShareMenu(windowOrigin);
+
+handleProjectFolder(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 

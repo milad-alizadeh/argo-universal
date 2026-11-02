@@ -6,16 +6,31 @@ const meta = {
   title: 'Screens/Settings/ProjectNewView',
   component: ProjectNewView,
   parameters: { screenPreview: true },
-  args: { onSubmit: fn() },
-  argTypes: { adding: { control: 'boolean' }, onSubmit: { control: false } },
+  args: {
+    onSubmit: fn(),
+    onCancel: fn(),
+    onChooseFolder: fn(async () => '/Users/you/Developer/argo-universal'),
+  },
+  argTypes: {
+    adding: { control: 'boolean' },
+    error: { control: 'text' },
+    onSubmit: { control: false },
+    onCancel: { control: false },
+    onChooseFolder: { control: false },
+  },
 } satisfies Meta<typeof ProjectNewView>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The page opens on a folder already on the Server; clone and new are the other two ways in.
+// The desktop page starts with the native folder chooser.
 export const AsksForAFolder: Story = {};
 
-// The Server is adding the Project: the form keeps what was typed and Add cannot be pressed again.
+// The Server is adding the Project; its controls cannot be pressed again.
 export const Adding: Story = { args: { adding: true } };
+
+// A Server failure stays beside the form, which can be tried again.
+export const Failed: Story = {
+  args: { error: 'The selected folder is not inside a git repository.' },
+};
