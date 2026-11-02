@@ -8,16 +8,17 @@ import {
   type FeedGroup,
   type FeedViewItem,
 } from '../view/feed-view';
+import { ChildReply, ParentResult } from './child-reply';
 import { CommandRow } from './command-row/command-row';
 import { EditRow } from './edit-row/edit-row';
 import { FeedImageUrlContext } from './feed-image';
+import { renderRow } from './feed-message-row';
 import { FeedNotice } from './feed-notice/feed-notice';
-import { renderToolCallSlot, renderMessageSlot } from './replaceable-feed-item';
+import { renderToolCallSlot } from './replaceable-feed-item';
 import { SubagentRow } from './subagent-row/subagent-row';
 import { ToolCallGroup } from './tool-call-group/tool-call-group';
 import { ToolCallRow } from './tool-call-row/tool-call-row';
 import { TurnEndRow } from './turn-end/turn-end';
-import { UserMessage } from './user-message/user-message';
 
 export interface FeedItemProps {
   item: FeedViewItem;
@@ -102,8 +103,6 @@ export const FeedItem = memo(function FeedItem({
 
 type GroupLike = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
 
-type FeedRowItem = Extract<FeedViewItem, { type: 'row' }>['row'];
-
 type Drawing = Omit<FeedItemProps, 'item'>;
 
 const isGroupLike = (item: FeedViewItem): item is GroupLike =>
@@ -121,47 +120,34 @@ const groupOf = (item: GroupLike): FeedGroup =>
         items: [item],
       };
 
-function noticeRow(
-  row: Exclude<
-    FeedRowItem,
-    { sessionUpdate: 'user_message' | 'agent_message' }
-  >,
-): React.JSX.Element | null {
-  return row.sessionUpdate === 'notice' ||
-    row.sessionUpdate === 'compaction_update' ? (
-    <FeedNotice row={row} />
-  ) : null;
-}
-
-function renderRow(
-  row: FeedRowItem,
-  drawing: Drawing,
-): React.JSX.Element | null {
-  if (row.sessionUpdate === 'prompt_message')
-    return <UserMessage row={row} imageUrl={drawing.imageUrl} />;
-
-  return renderStandardRow(row, drawing);
-}
-
-function renderStandardRow(
-  row: Exclude<FeedRowItem, { sessionUpdate: 'prompt_message' }>,
-  drawing: Drawing,
-): React.JSX.Element | null {
-  if (
-    row.sessionUpdate !== 'user_message' &&
-    row.sessionUpdate !== 'agent_message'
-  )
-    return noticeRow(row);
-
-  return renderMessageSlot(row, drawing);
-}
-
 function renderFeedItem(
   item: Exclude<FeedViewItem, { type: 'turn_end' }>,
   drawing: Drawing,
 ): React.JSX.Element | null {
   if (item.type === 'row') return renderRow(item.row, drawing);
 
+  return renderNonRow(item, drawing);
+}
+
+function renderNonRow(
+  item: Exclude<FeedViewItem, { type: 'turn_end' | 'row' }>,
+  drawing: Drawing,
+): React.JSX.Element | null {
+  if (item.type === 'child_reply') return <ChildReply row={item.row} />;
+
+  if (item.type === 'parent_result')
+    return <ParentResult content={item.content} />;
+
+  return renderRemaining(item, drawing);
+}
+
+function renderRemaining(
+  item: Exclude<
+    FeedViewItem,
+    { type: 'turn_end' | 'row' | 'child_reply' | 'parent_result' }
+  >,
+  drawing: Drawing,
+): React.JSX.Element | null {
   if (item.type === 'subagent')
     return <SubagentRow item={item} onOpen={drawing.onOpenSubagent} />;
 
@@ -175,7 +161,10 @@ function explorationRows(rows: ToolCall[]): React.JSX.Element[] {
 }
 
 function renderActivityItem(
-  item: Exclude<FeedViewItem, { type: 'turn_end' | 'row' | 'subagent' }>,
+  item: Exclude<
+    FeedViewItem,
+    { type: 'turn_end' | 'row' | 'subagent' | 'child_reply' | 'parent_result' }
+  >,
   now: number | undefined,
 ): React.JSX.Element {
   if (!isGroupLike(item)) return <FeedActivityRow activity={item} />;

@@ -1,11 +1,16 @@
 import type {
   LiveHeader,
+  SubagentUpdate,
   SessionMessage,
   SessionUpdate,
   Subagent,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { type FeedProps, toSubagentFeedView } from '#features/feed';
+import {
+  type FeedProps,
+  toParentResults,
+  toSubagentFeedView,
+} from '#features/feed';
 import {
   recordedFeedMock,
   recordedImageUrl,
@@ -69,7 +74,7 @@ const feedOf = (
   rows: readonly SessionUpdate[],
   liveHeader: LiveHeader | null,
 ): FeedProps => ({
-  items: toSubagentFeedView(rows, recording.snapshot).items,
+  items: toSubagentFeedView(rows, recording.snapshot, parentSessionId).items,
   liveHeader,
   liveToolCall:
     liveHeader?.source.type === 'tool_call' ? liveToolCall : undefined,
@@ -82,6 +87,43 @@ const feedOf = (
 export const runningFeed = feedOf([incoming, ...childRows], liveToolCallHeader);
 
 export const finishedFeed = feedOf([incoming, ...childRows], null);
+
+const ownReply: SessionMessage = {
+  ...incoming,
+  id: 'child-reply',
+  messageId: 'toolu_transcript:reply',
+  position: 999,
+  content: [{ type: 'text', text: 'Two packages.' }],
+  _meta: {
+    argo: {
+      senderSessionId: subagentSessionId,
+      recipientSessionId: parentSessionId,
+    },
+  },
+};
+
+export const ownReplyFeed = feedOf([incoming, ...childRows, ownReply], null);
+
+// The simulated Claude ACP 0.97.0 reply after it is stored on the parent Feed.
+const parentResult: SubagentUpdate = {
+  id: 'parent-result',
+  position: 10,
+  revision: 10,
+  turnId: null,
+  state: 'settled',
+  sessionId: parentSessionId,
+  sessionUpdate: 'subagent_update',
+  subagentSessionId,
+  _meta: { argo: { result: [{ type: 'text', text: 'Two packages.' }] } },
+};
+
+export const reportedFeed: FeedProps = {
+  ...finishedFeed,
+  items: [
+    ...finishedFeed.items,
+    ...toParentResults([parentResult], subagentSessionId).items,
+  ],
+};
 
 // Nothing reported yet: only the live row, which the Server names.
 const startingLiveHeader: LiveHeader = {

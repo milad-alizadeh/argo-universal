@@ -15,6 +15,8 @@ import {
   finishedSubagent,
   liveRowName,
   noIncomingFeed,
+  ownReplyFeed,
+  reportedFeed,
   startingSubagent,
 } from './subagent-feed.mocks';
 import feedMeta from './subagent-feed.stories';
@@ -30,6 +32,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const incomingMessage = /^Use apply_patch to change beta to gamma/;
+
+const reportedText = 'Two packages.';
 
 const childOutput = 'I’ll update both files and check their contents.';
 
@@ -176,5 +180,42 @@ export const StartsAtTheTopOnAPhone: Story = {
   play: async ({ canvas }) => {
     await settleLayout('phone');
     await startsAtTheTop(canvas);
+  },
+};
+
+export const ParentReportedResult: Story = {
+  args: {
+    subagent: finishedSubagent,
+    feed: reportedFeed,
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(
+      canvas.getByText('Reported to the parent Session'),
+    ).toBeVisible();
+    await expect(canvas.getByText(reportedText)).toBeVisible();
+  },
+};
+
+export const ChildReportedResult: Story = {
+  args: { subagent: finishedSubagent, feed: ownReplyFeed },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(canvas.getByText('Sent by this Agent')).toBeVisible();
+    await expect(canvas.getByText(reportedText)).toBeVisible();
+    await expect(
+      canvas.queryByText('Reported to the parent Session'),
+    ).toBeNull();
+  },
+};
+
+export const EarlierReports: Story = {
+  args: { feed: reportedFeed, loadEarlierReports: fn() },
+  play: async ({ canvas, userEvent, args }) => {
+    await settleLayout('wide');
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Load earlier reports' }),
+    );
+    await expect(args.loadEarlierReports).toHaveBeenCalled();
   },
 };
