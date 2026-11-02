@@ -104,11 +104,9 @@ export function useSessionPanels(
   sessionId?: string,
 ): SessionPanels {
   const [state, setState] = usePanelState(sessionId);
-  const available = offeredPanels(state, offered);
 
-  if (available !== state) setState(available);
-
-  return panelActions(available, setState);
+  // Only drawn limited to what is offered: a tab whose section is not yet offered, as on a page that has just opened, stays remembered.
+  return panelActions(offeredPanels(state, offered), setState);
 }
 
 function panelActions(
