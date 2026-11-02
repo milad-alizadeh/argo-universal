@@ -74,9 +74,9 @@ function useLoaded(
   const branches = source.useBranches(scope);
   const query = changesQuery(scope, state.comparison, branches.data);
   const keys = wantedPageKeys(state.wanted);
-  const [keep] = useState(diffsKeeper);
+  const [keepDiffs] = useState(diffsKeeper);
   const files = useFilesOf(source.useFiles(query));
-  const diffs = keep(diffsByFile(keys, source.useDiffPages(query, keys)));
+  const diffs = keepDiffs(diffsByFile(keys, source.useDiffPages(query, keys)));
 
   source.useRefresh(scope);
 

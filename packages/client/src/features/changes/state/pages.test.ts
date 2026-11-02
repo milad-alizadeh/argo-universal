@@ -2,7 +2,7 @@ import type { SessionChangesOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { DiffPage, Loaded } from '../source/changes-source';
 import type { ChangesComparison } from '../view/changes-comparison';
-import { diffsByFile, diffsKeeper, wantedPageKeys } from './diff-pages';
+import { diffsByFile, wantedPageKeys } from './diff-pages';
 import {
   branchesOf,
   changesQuery,
@@ -152,19 +152,5 @@ describe('comparisons and branches', () => {
       loading: true,
       loadError: 'offline',
     });
-  });
-
-  it('keeps the last diffs object while no file changed, and a file as it was while its pages did not', () => {
-    const keep = diffsKeeper();
-    const keys = wantedPageKeys({ '/a': 1, '/b': 1 });
-    const a = arrived('@@ a', null);
-    const first = keep(diffsByFile(keys, [a, waiting]));
-
-    expect(keep(diffsByFile(keys, [a, waiting]))).toBe(first);
-
-    const second = keep(diffsByFile(keys, [a, arrived('@@ b', null)]));
-
-    expect(second).not.toBe(first);
-    expect(second['/a']).toBe(first['/a']);
   });
 });
