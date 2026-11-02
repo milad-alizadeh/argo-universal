@@ -55,6 +55,8 @@ export type MemoryShells = {
   database: Database;
   terminal: TerminalCall;
   claim: (terminalId: string, toolCallId: string) => void;
+  // A notification from the Agent, as its Session receives it.
+  notify: (notification: SessionNotification) => void;
 };
 
 export const openMemoryShells = (): MemoryShells => {
@@ -86,6 +88,7 @@ const memoryShells = (
     database,
     terminal: agentSide(destination),
     claim: claimTerminal(destination),
+    notify: notifyAgent(destination),
   };
 };
 
@@ -133,6 +136,12 @@ const attachShells = (shells: Shells): ReturnType<Shells['attach']> =>
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
   });
+
+const notifyAgent =
+  (destination: ReturnType<Shells['attach']>): MemoryShells['notify'] =>
+  (notification): void => {
+    destination.update(notification);
+  };
 
 const claimTerminal =
   (destination: ReturnType<Shells['attach']>): MemoryShells['claim'] =>
