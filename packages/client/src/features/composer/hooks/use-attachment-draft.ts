@@ -32,6 +32,7 @@ export interface AttachmentDraft {
     sent: ComposerDraft,
   ) => Promise<SessionNewInput['prompt'] | undefined>;
   clearDraft: () => void;
+  forgetSentDraft: (sent: ComposerDraft) => void;
   uploading: boolean;
   attachmentError: AttachmentError;
 }
@@ -84,6 +85,7 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
     ...editActions(actions),
     ...pickActions(actions.dispatch),
     draft: actions.state.draft,
+    forgetSentDraft: (sent) => forgetSentDraft(actions.key, sent),
     uploadDraftAsPrompt: (sent) => uploadDraftAsPrompt(sent, actions),
     uploading: actions.upload.isPending,
     attachmentError: toAttachmentError(
@@ -98,6 +100,12 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
 function forgetDraft(key: DraftKey): void {
   keptDrafts.keep(key, '');
   keptAttachments.keep(key, [], new Map());
+}
+
+function forgetSentDraft(key: DraftKey | undefined, sent: ComposerDraft): void {
+  if (!key) return;
+  keptDrafts.forgetSent(key, sent.text);
+  keptAttachments.forgetSent(key, sent.attachments);
 }
 
 type EditableDraft = Pick<DraftActions, 'dispatch' | 'key'>;
