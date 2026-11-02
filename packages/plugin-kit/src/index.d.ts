@@ -15,6 +15,7 @@ import type {
   kitComponents,
   listComponentNames,
 } from '@repo/contracts/plugins/kit';
+import type { PluginRenderContext } from '@repo/contracts/plugins/kit';
 import type { ComponentType, ReactNode, ReactElement } from 'react';
 
 export {
@@ -159,9 +160,17 @@ export type {
 
 import type { UseData } from '@repo/contracts/plugins/argo-api';
 
+export type {
+  UseDataOptions,
+  UseDataResult,
+} from '@repo/contracts/plugins/argo-api';
+
 export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 
 // One definition, shared with the Engine's readers: what a Query answers comes from its api.
 export type { QueryResult } from '@repo/contracts/plugins/query-results';
 
 export declare const useData: UseData;
+
+// The page's own `context`, for a component deep in the page that was not handed it.
+export declare function usePageContext(): PluginRenderContext;

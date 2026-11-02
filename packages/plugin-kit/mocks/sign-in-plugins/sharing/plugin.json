@@ -1,0 +1,24 @@
+{
+  "id": "sign-in-sharing",
+  "name": "Sign-in sharing",
+  "version": "0.0.1",
+  "engines": { "argo": ">=0.0.0 <1.0.0" },
+  "main": "index.tsx",
+  "icon": { "sf": "key", "material": "key" },
+  "contributes": {
+    "nav": [{ "id": "items", "title": "Items", "path": "/" }],
+    "accounts": [{ "host": "api.service.example", "page": "/sign-in" }]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.service.example",
+      "reason": "Reads the fixture service."
+    },
+    {
+      "kind": "fetch",
+      "host": "auth.service.example",
+      "reason": "Signs in to the fixture service."
+    }
+  ]
+}

@@ -9,12 +9,7 @@ import {
   useAttachedSessions,
   type AttachedSession,
 } from './use-attached-sessions';
-import {
-  readMessage,
-  signInNeed,
-  useGitHub,
-  type SignInNeed,
-} from './use-github';
+import { readMessage, useGitHub } from './use-github';
 import { useStatusChange } from './use-status-change';
 
 export type DetailSource = {
@@ -33,13 +28,11 @@ export type IssueDetailState = {
   sessions: AttachedSession[];
   // Shows the new status at once, and the old one again when GitHub refuses it.
   onStatus: (status: IssueStatus) => Promise<void>;
-  signIn: SignInNeed | null;
   refresh: () => Promise<void>;
 };
 
 type DetailRead = {
   repository: string | null;
-  query: ReturnType<typeof issueQuery> | null;
   read: GitHubRead<Issue>;
   refresh: () => Promise<void>;
 };
@@ -54,7 +47,7 @@ function useDetailRead({ project, number }: DetailSource): DetailRead {
 
   const data = useGitHub({ projectId: project.id, query }, mapIssueDetail);
 
-  return { repository, query, ...data };
+  return { repository, ...data };
 }
 
 const baseOf = (
@@ -75,16 +68,11 @@ const messageOf = (
 
 const stateOf = ({
   read,
-  query,
   repository,
   refresh,
-}: DetailRead): Pick<
-  IssueDetailState,
-  'settled' | 'message' | 'signIn' | 'refresh'
-> => ({
+}: DetailRead): Pick<IssueDetailState, 'settled' | 'message' | 'refresh'> => ({
   settled: read.kind === 'ok',
   message: messageOf(repository, read),
-  signIn: query ? signInNeed(read) : null,
   refresh,
 });
 

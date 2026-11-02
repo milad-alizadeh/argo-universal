@@ -13,6 +13,7 @@ import type {
   PluginFailure,
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
+import type { PluginAccounts } from '@repo/engine/mocks/test-accounts';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
@@ -27,6 +28,8 @@ export interface PluginTestOptions {
   path?: string[];
   clockStart?: number;
   network?: PluginNetwork;
+  // Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL.
+  openBrowser?: (url: string) => Promise<void>;
   settings?: Map<string, PluginSettingValue>;
   // What `argo.sessions.get` answers, by Session id.
   sessions?: Record<string, PluginSessionInfo>;
@@ -40,6 +43,8 @@ type SlotItemsOptions = {
 
 export interface PluginTest {
   projects: TestProjects;
+  // The real Account inventory: what is signed in, and which Account each Project chose.
+  accounts: Pick<PluginAccounts, 'list' | 'choose'>;
   badges: (signal: AbortSignal) => AsyncGenerator<PluginBadge[]>;
   failures: (signal: AbortSignal) => AsyncGenerator<PluginFailure[]>;
   log: (pluginId?: string) => Promise<string>;

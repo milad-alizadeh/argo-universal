@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   AccountAdd,
+  AccountGet as AccountProject,
   AccountProvider,
   OAuthStart,
   OAuthResult,
@@ -16,7 +17,10 @@ export const accountApiCalls = {
         output: z.promise(z.string()),
       }),
       get: z.function({
-        input: [AccountAdd.shape.host],
+        input: [
+          AccountAdd.shape.host,
+          AccountProject.omit({ action: true }).optional(),
+        ],
         output: z.promise(PluginAccount.nullable()),
       }),
     })

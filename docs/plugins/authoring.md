@@ -98,6 +98,9 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | --- | --- |
 | `mount({ page, surface })` | Opens a page with the chosen App platform. |
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
+| `mount({ page, surface, serverDevice: true })` | Opens a page as the Server Device does. A mount is a paired Device without it. |
+| `accounts` | `list()` the Accounts signed in, and `choose({ host, projectId, account })` the one a Project uses. |
+| `openBrowser` option | Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
 | `view.find(text)` | Waits for a matching node and returns its wire data. |
 | `view.press(text)` | Sends `onPress` through the production dispatch path. |
@@ -164,7 +167,8 @@ Other `argo` calls are not Queries. Storage Queries use a read-only connection; 
 The hook returns `{ data, error, stale, refresh }`:
 
 - `data` contains the call's answer and retains the last successful value.
-- `error` describes a refused call, transport failure, or Argo timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow reports an error and retains the last successful data.
+- `error` describes a refused call, transport failure, or Argo timeout, for a person to read. An HTTP 401 remains fetch data. An unavailable Account Borrow reports an error and retains the last successful data.
+- `errorKind` says why, for code to read, and is set exactly when `error` is: `'no-account'` when a borrow found no token, `'refused'` when Argo refused the call, or `'failed'` when it was tried and did not answer. Branch on this, never on the words in `error`.
 - `stale` is true only while refreshing an existing answer.
 - `refresh()` runs the Query now and joins a call already in flight.
 
@@ -172,6 +176,8 @@ The hook returns `{ data, error, stale, refresh }`:
 `useData(query, { projectId })` and `argo.fetch(url, { projectId })` read for another registered Project than the view's, such as a Project the page lists; the Account a borrow uses is that Project's. An unregistered Project is refused.
 Argo clamps `every` to ten seconds and logs the clamp once. Shared viewers use their smallest interval.
 Storage Queries are never polled. A committed Plugin storage write marks them due.
+
+A component deep in a page reads the page's own `context` with `usePageContext()`.
 
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different Slots.
 Object key order and header name case do not change the entry.
@@ -343,9 +349,53 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service. GitHub's web flow needs the OAuth app's client secret even with PKCE, so the example keeps it in a `client-secret` secret setting beside `client-id`.
+Signing in is one declaration and one gate, from `@argo/plugin-kit/sign-in`:
 
-A service with a device flow needs no callback port, no secret and no Server Device. `plugins/issue-tracker` signs in to GitHub that way: the page shows a code, the person enters it at `github.com/login/device` on any device, and the Plugin polls for the token, honouring the `interval` and `slow_down` answers. A Plugin whose page reads through `useData` draws that sign-in whenever a borrow returns nothing, and again when the service answers 401. On a 401 it rewrites the token of the Account it last borrowed instead of adding a second one.
+```tsx
+import { Screen, Text, type Argo } from '@argo/plugin-kit';
+import { defineAccount, SignInGate } from '@argo/plugin-kit/sign-in';
+
+const linear = defineAccount({
+  host: 'api.linear.app',
+  name: 'Linear',
+  flow: 'redirect',
+  clientId: 'your-public-client-id',
+  scope: 'read',
+  authorizeUrl: 'https://linear.app/oauth/authorize',
+  tokenUrl: 'https://api.linear.app/oauth/token',
+  label: {
+    url: 'https://api.linear.app/graphql',
+    field: 'data.viewer.email',
+    body: '{"query":"{ viewer { email } }"}',
+  },
+});
+
+function Teams() {
+  const { data } = linear.useData({ url: 'https://api.linear.app/graphql', method: 'POST', body: '...' });
+
+  return <Screen title="Teams"><Text>{data?.body ?? 'Loading'}</Text></Screen>;
+}
+
+export async function register(argo: Argo) {
+  await linear.register(argo);
+  argo.pages.register('/', () => <SignInGate account={linear}><Teams /></SignInGate>);
+}
+```
+
+`register` provides the Account and registers its sign-in page, `/sign-in` unless `page` says otherwise; `plugin.json` still declares the Account and a `fetch` Capability for each host the flow reaches, as below. `label` is the call that names the person: `url` on the Account's host, `field` a dotted path into its JSON answer, and `body` when it is a JSON POST.
+
+`account.useData` is `useData` for a read through that Account. Inside the gate, a read with no Account or a 401 draws the sign-in in place of the gate's children, and they come back once a read answers. Your code handles no token and no sign-in state. After a 401 the sign-in rewrites the token of the Account that read's Project uses; from `/sign-in`, which is what "Add account" opens, it adds an Account. An Account another Plugin provides cannot be rewritten here, so the page says to sign in there. Outside a gate `account.useData` answers as `useData` does, and `errorKind` and the status say why.
+
+A token that comes with a refresh token and an expiry is refreshed before it runs out.
+
+`flow` is one of two:
+
+- `device` takes `deviceUrl` and `tokenUrl`. The page shows a code, the person enters it on any device, and the Plugin polls. It needs no callback port or Server Device, so it finishes from a paired phone.
+- `redirect` takes `authorizeUrl` and `tokenUrl`. Argo opens the browser on the Server Device and catches the code, with PKCE in place of a client secret. On any other Device the page says to continue on the Server Device.
+
+A `clientId` of `''` makes the page say sign-in is not set up yet. A service that demands a client secret fits neither flow: use the calls below. `plugins/examples/github-sign-in` is that example, with the secret in a secret setting beside `client-id`.
+
+Argo ships no list of providers and holds no secret, so this all runs in your Plugin's worker through the calls below. `@argo/plugin-kit/sign-in` is built with them alone; its bundle fails if it imports anything else.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Register that page with `argo.pages.register` before registration completes.
@@ -379,7 +429,7 @@ Tokens stay in the provider’s Keychain namespace, keyed by Account id.
 Sign-out deletes the token, Account, Grants, and Project mappings.
 Plugin removal also deletes its Accounts and dependent records when discovery succeeds.
 
-`argo.accounts.get(host)` returns the current Project’s Account or `null`.
+`argo.accounts.get(host)` returns the current Project’s Account or `null`; `argo.accounts.get(host, { projectId })` names another registered Project, as `argo.fetch` does.
 One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
 Page effects, Component event handlers, and Hooks carry their Project context across awaited calls.
 A call without a Project returns no Account.

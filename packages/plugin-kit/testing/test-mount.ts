@@ -1,9 +1,9 @@
 import type { Opening, PluginMount } from './view';
 
 export function mountOpening(input: PluginMount): Opening {
-  const { page, surface, projectId, sessionId, connectionId } = input;
+  const { page, ...opening } = input;
 
-  return { path: page, surface, projectId, sessionId, connectionId };
+  return { path: page, ...opening };
 }
 
 export function requireAccepted(

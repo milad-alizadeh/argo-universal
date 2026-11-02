@@ -54,6 +54,7 @@ class HostedPlugin implements PluginTest {
     this.service.failures(signal);
   private readonly runtime: PluginRuntime;
   private readonly accountStore: TestAccounts;
+  readonly accounts: PluginTest['accounts'];
   private readonly service: PluginService;
   readonly projects;
   private readonly views = new Set<PluginTestView>();
@@ -78,6 +79,7 @@ class HostedPlugin implements PluginTest {
     const wired = wireTest(home, options, keychain);
 
     this.accountStore = wired.accountStore;
+    this.accounts = wired.accountStore.accounts;
     this.runtime = wired.runtime;
     this.service = wired.service;
     this.projects = new TestProjects(options, this.runtime, () =>

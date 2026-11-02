@@ -4,7 +4,18 @@ import type {
   PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
-import { createElement, type ReactNode } from 'react';
+import {
+  createContext,
+  createElement,
+  useContext,
+  type ReactNode,
+} from 'react';
+
+const PageContext = createContext<PluginRenderContext>({ serverDevice: false });
+
+// The page's own `context`, for a component deep in the page that was not handed it.
+export const usePageContext = (): PluginRenderContext =>
+  useContext(PageContext);
 
 type Content = { pages: Map<string, Page> };
 
@@ -37,7 +48,15 @@ export function elementOf(content: Content, open: Open): ReactNode | null {
   const page = content.pages.get(open.path);
   const context = renderContext(open);
 
-  return page ? createElement(page, { context: Object.freeze(context) }) : null;
+  if (!page) return null;
+
+  const frozen = Object.freeze(context);
+
+  return createElement(
+    PageContext.Provider,
+    { value: frozen },
+    createElement(page, { context: frozen }),
+  );
 }
 
 function frozenSurface(surface: PluginSurface): Readonly<PluginSurface> {

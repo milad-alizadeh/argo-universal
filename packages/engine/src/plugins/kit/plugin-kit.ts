@@ -30,6 +30,7 @@ import {
   type SlotSend,
 } from './slot-providers';
 import { dataClient } from './use-data';
+import { usePageContext } from './view-content';
 import { viewEffects } from './view-scope';
 
 const hooks = {
@@ -42,6 +43,7 @@ const hooks = {
   useContext: React.useContext,
   createContext: React.createContext,
   memo: React.memo,
+  usePageContext,
 };
 
 // A kit component with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.

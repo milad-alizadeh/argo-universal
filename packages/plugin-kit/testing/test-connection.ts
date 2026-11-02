@@ -8,22 +8,28 @@ type TestConnection = {
   id: string;
   signal: AbortSignal;
   surface: PluginSurface;
+  identity?: { readonly serverDevice: true };
 };
 
 type ConnectionOptions = {
   surface?: Pick<PluginSurface, 'platform'>;
   connectionId?: string;
+  serverDevice?: boolean;
 };
 
 export function testConnection(
   signal: AbortSignal,
-  { surface, connectionId }: ConnectionOptions,
+  { surface, connectionId, serverDevice }: ConnectionOptions,
 ): TestConnection {
-  return {
+  const connection = {
     id: connectionId ?? randomUUID(),
     signal,
     surface: surfaceOf(surface),
   };
+
+  return serverDevice
+    ? { ...connection, identity: { serverDevice: true } }
+    : connection;
 }
 
 function surfaceOf(surface: ConnectionOptions['surface']): PluginSurface {

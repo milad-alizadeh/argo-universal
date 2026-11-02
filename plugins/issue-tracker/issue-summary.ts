@@ -1,4 +1,9 @@
-import { readGraphql, type GitHubQuery, type RawRead } from './github-api';
+import {
+  githubHost,
+  readGraphql,
+  type GitHubQuery,
+  type RawRead,
+} from './github-api';
 import { issueQuery, mapIssueDetail } from './github-documents';
 import type { Issue } from './github-issues';
 import { githubRepositoryFromOrigin } from './github-repository';
@@ -109,15 +114,17 @@ async function repositoryOf(
 }
 
 const requestOf = (
-  { method, headers, body, account }: GitHubQuery,
+  { method, headers, body }: GitHubQuery,
   projectId: string,
 ): Parameters<Source['fetch']>[1] => ({
   method,
   headers,
   body,
-  account,
+  account: githubHost,
   projectId,
 });
+
+const unreadable = 'The Issue could not be read.';
 
 async function rawIssue(
   source: Source,
@@ -127,12 +134,12 @@ async function rawIssue(
   const query = issueQuery(repository, number);
   const response = await source.fetch(query.url, requestOf(query, projectId));
 
-  return response
-    ? {
-        data: { status: response.status, body: await response.text() },
-        error: undefined,
-      }
-    : { data: undefined, error: 'Account is unavailable' };
+  if (!response) throw new Error(unreadable);
+
+  return {
+    data: { status: response.status, body: await response.text() },
+    error: undefined,
+  };
 }
 
 async function summaryOf(
@@ -143,7 +150,7 @@ async function summaryOf(
   const raw = await rawIssue(source, target, repository);
   const read = readGraphql(raw, mapIssueDetail);
 
-  if (read.kind !== 'ok') throw new Error('The Issue could not be read.');
+  if (read.kind !== 'ok') throw new Error(unreadable);
 
   const { title, status, closedAs } = read.value;
 

@@ -78,7 +78,11 @@ export class DataSubscription {
   }
 
   private failed(error: Error): void {
-    this.accept({ ...emptyData.state, error: error.message });
+    this.accept({
+      ...emptyData.state,
+      error: error.message,
+      errorKind: 'failed',
+    });
   }
 
   close(): void {

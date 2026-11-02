@@ -70,8 +70,8 @@ export const PluginReply = z.discriminatedUnion('ok', [
   z.object({
     ok: z.literal(false),
     error: z.string(),
-    // Set when the Capability checker refused the call, so a reader never parses the message.
-    refused: z.boolean().optional(),
+    // Set when the Capability checker refused the call or its borrow found no Account, so a reader never parses the message.
+    errorKind: z.enum(['refused', 'no-account']).optional(),
   }),
 ]);
 

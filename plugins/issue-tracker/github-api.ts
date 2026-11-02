@@ -5,36 +5,30 @@ export const githubHost = 'api.github.com';
 
 const graphqlUrl = `https://${githubHost}/graphql`;
 
-// A GraphQL call as a Query (ADR-0037): equal documents and variables share one entry.
+// A GraphQL call as a read through the Account (ADR-0037): equal documents and variables share one entry.
 export type GitHubQuery = {
-  api: 'fetch';
   url: string;
   method: 'POST';
   headers: Record<string, string>;
   body: string;
-  account: string;
 };
 
 export const graphqlQuery = (
   document: string,
   variables: Record<string, string | number>,
 ): GitHubQuery => ({
-  api: 'fetch',
   url: graphqlUrl,
   method: 'POST',
   headers: { 'content-type': 'application/json' },
   body: JSON.stringify({ query: document, variables }),
-  account: githubHost,
 });
 
 /*
- * What a page does with a GitHub read: wait, sign in (there is no Account, or GitHub rejected its token), say why it
- * failed, or use the value.
+ * What a page does with a GitHub read: wait, say why it failed, or use the value. A missing Account or a rejected token
+ * is the `SignInGate`'s to answer, so inside one a page never sees either.
  */
 export type GitHubRead<Value> =
   | { kind: 'loading' }
-  | { kind: 'signed-out' }
-  | { kind: 'unauthorized' }
   | { kind: 'failed'; message: string }
   | { kind: 'ok'; value: Value };
 
@@ -44,15 +38,9 @@ export type RawRead = {
   error: string | undefined;
 };
 
-// A borrow that returns nothing is an `error`; a 401 is data, which the Plugin reads (ADR-0037).
-const noAccount = 'Account is unavailable';
-
 export const unauthorizedStatus = 401;
 
 const okStatus = 200;
-
-const lacksAccount = (error: string | undefined): boolean =>
-  error !== undefined && error.includes(noAccount);
 
 const waiting = (error: string | undefined): GitHubRead<never> =>
   error === undefined
@@ -63,8 +51,6 @@ export function readGraphql<Value>(
   { data, error }: RawRead,
   map: (data: Json) => Value,
 ): GitHubRead<Value> {
-  if (lacksAccount(error)) return { kind: 'signed-out' };
-
   return data ? readReply(data, map) : waiting(error);
 }
 
@@ -72,8 +58,6 @@ function readReply<Value>(
   { status, body }: NonNullable<RawRead['data']>,
   map: (data: Json) => Value,
 ): GitHubRead<Value> {
-  if (status === unauthorizedStatus) return { kind: 'unauthorized' };
-
   if (status !== okStatus)
     return { kind: 'failed', message: `GitHub answered ${status}.` };
 

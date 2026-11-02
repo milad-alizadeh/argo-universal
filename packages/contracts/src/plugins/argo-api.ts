@@ -11,6 +11,7 @@ import {
   PluginFileEntry,
   PluginFileInfo,
   PluginNavBadge,
+  type PluginErrorKind,
   type PluginQuery,
   ProcessCommand,
   ProcessResult,
@@ -142,6 +143,8 @@ type PluginApiCalls = z.infer<typeof PluginApiCalls>;
 export type UseDataResult<Query extends PluginQuery> = {
   data: QueryResult<Query> | undefined;
   error: string | undefined;
+  // Set exactly when `error` is, and says why it is.
+  errorKind: PluginErrorKind | undefined;
   stale: boolean;
   refresh: () => Promise<void>;
 };

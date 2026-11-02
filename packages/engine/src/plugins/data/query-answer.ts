@@ -56,11 +56,21 @@ function processTimedOut(reply: PluginReply): boolean {
   return ProcessResult.parse(reply.value).timedOut;
 }
 
+const failedState = (
+  previous: PluginDataState,
+  reply: Extract<PluginReply, { ok: false }>,
+): PluginDataState => ({
+  ...previous,
+  error: reply.error,
+  errorKind: reply.errorKind ?? 'failed',
+  stale: false,
+});
+
 export function queryState(
   previous: PluginDataState,
   reply: PluginReply,
 ): PluginDataState {
-  if (!reply.ok) return { ...previous, error: reply.error, stale: false };
+  if (!reply.ok) return failedState(previous, reply);
 
   return PluginDataState.parse({
     // A round trip through JSON drops what the wire cannot carry, which the schema would reject outright.
@@ -78,5 +88,5 @@ export function backgroundRefusal(
 
   if (reply.ok) return false;
 
-  return reply.refused === true;
+  return reply.errorKind !== undefined;
 }

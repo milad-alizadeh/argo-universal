@@ -22,12 +22,58 @@ const options = {
   logLevel: 'silent',
 } satisfies BuildOptions;
 
-function textOf(result: BuildResult<typeof options>): string {
+function textOf(result: BuildResult<{ write: false }>): string {
   const output = result.outputFiles.at(0);
 
   if (!output) throw new Error('The Plugin kit did not build');
 
   return output.text;
+}
+
+const patternDirectory = fileURLToPath(
+  new URL('../../../../plugin-kit/sign-in', import.meta.url),
+);
+
+const patternOptions = {
+  entryPoints: ['index.ts'],
+  absWorkingDir: patternDirectory,
+  bundle: true,
+  write: false,
+  metafile: true,
+  format: 'esm',
+  platform: 'neutral',
+  external: ['@argo/plugin-kit', '@argo/plugin-kit/*'],
+  jsx: 'automatic',
+  jsxImportSource: '@argo/plugin-kit',
+  logLevel: 'silent',
+} satisfies BuildOptions;
+
+// Nothing outside its folder but the kit's public API may reach the pattern's bundle.
+function requireOnlyKit(inputs: string[]): void {
+  const outside = inputs.find((input) => input.startsWith('..'));
+
+  if (outside)
+    throw new Error(
+      `@argo/plugin-kit/sign-in may import only @argo/plugin-kit, not ${outside}`,
+    );
+}
+
+// A Plugin's build, with that one thing more.
+async function buildPattern(): Promise<string> {
+  const result = await build(patternOptions);
+
+  requireOnlyKit(Object.keys(result.metafile.inputs));
+
+  return textOf(result);
+}
+
+let signIn: Promise<string> | null = null;
+
+// `@argo/plugin-kit/sign-in`, which runs in a Plugin's context as the Plugin's own code does.
+export function bundleSignIn(): Promise<string> {
+  signIn ??= buildPattern();
+
+  return signIn;
 }
 
 export function bundleKit(): Promise<string> {

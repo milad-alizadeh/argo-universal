@@ -1,6 +1,9 @@
 import { sameHost } from '@repo/contracts/plugins';
 import type { PluginAccount } from '@repo/contracts/plugins/accounts';
-import { CapabilityRefusal } from '../access/capability-refusal';
+import {
+  AccountUnavailable,
+  CapabilityRefusal,
+} from '../access/capability-refusal';
 import type { PluginAccess } from '../access/plugin-access';
 import type { PluginValue } from '../protocol/runtime';
 import type { PluginCall } from '../services/plugin-calls';
@@ -55,7 +58,7 @@ const ownerOf = (options: BorrowOptions, call: BorrowCall): BorrowContext => ({
 });
 
 function unavailableBorrow(query: boolean | undefined): null {
-  if (query) throw new CapabilityRefusal('Account is unavailable');
+  if (query) throw new AccountUnavailable();
 
   return null;
 }

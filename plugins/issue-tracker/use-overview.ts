@@ -3,12 +3,7 @@ import type { GitHubRead } from './github-api';
 import { overviewQuery, mapOverview, type Overview } from './github-documents';
 import { githubRepositoryFromOrigin } from './github-repository';
 import { noRemoteMessage, type Project } from './issue-project';
-import {
-  readMessage,
-  signInNeed,
-  useGitHub,
-  type SignInNeed,
-} from './use-github';
+import { readMessage, useGitHub } from './use-github';
 
 export type { Overview } from './github-documents';
 
@@ -16,12 +11,10 @@ export type OverviewState = {
   overview: Overview | null;
   message: string;
   refresh: () => Promise<void>;
-  signIn: SignInNeed | null;
 };
 
 type OverviewRead = {
   repository: string | null;
-  query: ReturnType<typeof overviewQuery> | null;
   read: GitHubRead<Overview>;
   refresh: () => Promise<void>;
 };
@@ -42,7 +35,7 @@ function useOverviewRead(project: Project | undefined): OverviewRead {
   const projectId = projectIdOf(project);
   const data = useGitHub({ projectId, query }, mapOverview);
 
-  return { repository, query, ...data };
+  return { repository, ...data };
 }
 
 /*
@@ -50,13 +43,12 @@ function useOverviewRead(project: Project | undefined): OverviewRead {
  * freshness window makes none.
  */
 export function useOverview(project: Project | undefined): OverviewState {
-  const { repository, query, read, refresh } = useOverviewRead(project);
+  const { repository, read, refresh } = useOverviewRead(project);
 
   return {
     overview: read.kind === 'ok' ? read.value : null,
     message: overviewMessage(project, repository, readMessage(read)),
     refresh,
-    signIn: query ? signInNeed(read) : null,
   };
 }
 

@@ -45,6 +45,15 @@ export function dataClient(call: DataCall): KitDataClient {
   };
 }
 
+// A Query with no normal form never ran, so it answers for itself over what the entry says.
+const problemOf = (
+  error: string | undefined,
+  { error: answered, errorKind }: PluginDataState,
+): Pick<UseDataResult<PluginQuery>, 'error' | 'errorKind'> =>
+  error === undefined
+    ? { error: answered, errorKind }
+    : { error, errorKind: 'failed' };
+
 // A Query's api decides what its answer is (`QueryResult`); the readers behind `useResult` answer with that.
 export function useQueryData<Query extends PluginQuery>(
   client: PluginDataClient,
@@ -63,7 +72,7 @@ export function useQueryData(
 
   return {
     data: useResult(query, state.data),
-    error: error ?? state.error,
+    ...problemOf(error, state),
     stale: state.stale,
     refresh,
   };

@@ -96,7 +96,8 @@ const argo: Argo = frozen({
   accounts: frozen({
     add: (host, options) =>
       call({ api: 'accounts', call: { action: 'add', host, ...options } }),
-    get: (host) => call({ api: 'accounts', call: { action: 'get', host } }),
+    get: (host, options) =>
+      call({ api: 'accounts', call: { action: 'get', host, ...options } }),
     provide: accounts.provide,
   }),
   oauth: frozen({

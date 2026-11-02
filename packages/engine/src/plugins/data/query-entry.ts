@@ -95,7 +95,7 @@ export class QueryEntry {
     const error = runtimeError(cause);
 
     this.services.log(`Plugin ${this.owner.pluginId}: Query failed: ${error}`);
-    this.publish({ ...this.state, error, stale: false });
+    this.publish({ ...this.state, error, errorKind: 'failed', stale: false });
   }
 
   private finished(): void {

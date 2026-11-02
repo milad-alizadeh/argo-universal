@@ -4,7 +4,6 @@ import type { Issue } from './github-issues';
 import { IssueMetadata } from './issue-metadata';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
-import { SignIn } from './sign-in';
 import {
   useIssueDetail,
   type DetailSource,
@@ -23,16 +22,7 @@ type IssueDetailProps = Pick<
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
 export function IssueDetailPage(source: DetailSource): JSX.Element {
-  const { issue, message, signIn, refresh, ...state } = useIssueDetail(source);
-
-  if (signIn)
-    return (
-      <SignIn
-        signIn={source.deps.signIn}
-        reauthorize={signIn.reauthorize}
-        onSignedIn={() => void refresh()}
-      />
-    );
+  const { issue, message, ...state } = useIssueDetail(source);
 
   if (!issue) return <Loading source={source} message={message} />;
 

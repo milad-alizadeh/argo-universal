@@ -8,7 +8,7 @@ import { useRecentStatuses } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
 import { noRemoteMessage, type Project } from './issue-project';
-import { signInNeed, useGitHub, type SignInNeed } from './use-github';
+import { useGitHub } from './use-github';
 
 export type FilterSource = {
   project: Project;
@@ -22,12 +22,10 @@ export type FilterIssues = {
   hasMore: boolean;
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
-  signIn: SignInNeed | null;
 };
 
 type FilterRead = {
   repository: string | null;
-  query: ReturnType<typeof listQuery> | null;
   read: GitHubRead<Issue[]>;
   refresh: () => Promise<void>;
 };
@@ -45,7 +43,7 @@ function useFilterRead(
 
   const data = useGitHub({ projectId: project.id, query }, mapIssueList);
 
-  return { repository, query, ...data };
+  return { repository, ...data };
 }
 
 // The Issues already shown stay on screen while a longer search loads.
@@ -82,7 +80,7 @@ const hasMoreOf = (
  */
 export function useFilterIssues(source: FilterSource): FilterIssues {
   const [limit, loadMore] = useLimit();
-  const { repository, query, read, refresh } = useFilterRead(source, limit);
+  const { repository, read, refresh } = useFilterRead(source, limit);
   const recent = useRecentStatuses(source.deps.changes);
   const issues = useLastIssues(read).map((issue) => withRecent(issue, recent));
 
@@ -92,7 +90,6 @@ export function useFilterIssues(source: FilterSource): FilterIssues {
     hasMore: hasMoreOf(read, issues, limit),
     loadMore,
     refresh,
-    signIn: query ? signInNeed(read) : null,
   };
 }
 

@@ -1,11 +1,12 @@
 import { EmptyState, ListDetail } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { SignInGate } from '@argo/plugin-kit/sign-in';
+import { github } from './github-account';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
 import type { Project } from './issue-project';
 import { RootRows } from './issue-root-rows';
-import { SignInGate } from './sign-in';
-import { useOverview, type OverviewState } from './use-overview';
+import { useOverview } from './use-overview';
 import { useRootProjects, type RootProjects } from './use-root-projects';
 
 type RootProps = {
@@ -22,23 +23,16 @@ type RootProps = {
  */
 export function IssuesRoot(props: RootProps): JSX.Element {
   const choice = useRootProjects(props.deps, props.projectId);
-  const state = useOverview(choice.project);
-  const { signIn } = state;
 
-  return signIn ? (
-    <SignInGate
-      signIn={props.deps.signIn}
-      need={signIn}
-      refresh={state.refresh}
-    />
-  ) : (
-    <RootLayout {...props} choice={choice} state={state} />
+  return (
+    <SignInGate account={github}>
+      <RootLayout {...props} choice={choice} />
+    </SignInGate>
   );
 }
 
 type LayoutProps = Pick<RootProps, 'deps' | 'detail' | 'filter'> & {
   choice: RootProjects;
-  state: OverviewState;
 };
 
 const detailFor = (
@@ -47,10 +41,12 @@ const detailFor = (
 ): JSX.Element | undefined => (project && detail ? detail(project) : undefined);
 
 function RootLayout(props: LayoutProps): JSX.Element {
+  const state = useOverview(props.choice.project);
+
   return (
     <ListDetail
       title="Issues"
-      list={<RootRows {...props} selected={props.filter?.id} />}
+      list={<RootRows {...props} state={state} selected={props.filter?.id} />}
       detail={detailFor(props.detail, props.choice.project)}
       empty={<SelectFilter />}
     />

@@ -18,9 +18,15 @@ export const AccountProvider = AccountHostField.extend({
   prefix: z.string().refine((value) => !/[\r\n]/.test(value)),
 });
 
+// `projectId` names the Project whose Account this is, such as a Project the page lists; it defaults to the call's own.
+export const AccountGet = z.object({
+  action: z.literal('get'),
+  projectId: z.string().optional(),
+});
+
 export const AccountCall = z.discriminatedUnion('action', [
   AccountAdd.extend({ action: z.literal('add') }),
-  AccountHostField.extend({ action: z.literal('get') }),
+  AccountHostField.extend(AccountGet.shape),
   AccountProvider.extend({ action: z.literal('provide') }),
   z.object({
     action: z.literal('provided'),

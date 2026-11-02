@@ -1,5 +1,4 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { GitHubSignIn } from './github-sign-in';
 import type { IssueChanges } from './issue-changes';
 import type { IssueFilter } from './issue-filters';
 import type { Project } from './issue-project';
@@ -23,6 +22,5 @@ export type IssueDeps = {
   storage: TrackerStorage;
   changes: IssueChanges;
   seeds: IssueSeeds;
-  signIn: GitHubSignIn;
   pages: IssuePages;
 };

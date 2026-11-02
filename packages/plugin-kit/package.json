@@ -15,6 +15,9 @@
     "./jsx-runtime": {
       "types": "./src/jsx-runtime.d.ts"
     },
+    "./sign-in": {
+      "types": "./sign-in/index.ts"
+    },
     "./testing": "./testing/index.ts",
     "./tsconfig.json": "./tsconfig.plugin.json",
     "./tsconfig.test.json": "./tsconfig.plugin-test.json"
@@ -28,7 +31,7 @@
     "zod": "catalog:"
   },
   "scripts": {
-    "check-types": "node ../../tools/plugin-typecheck.mts 'tsc --noEmit && tsc --noEmit -p testing/tsconfig.json && tsc --noEmit -p cli/tsconfig.json'",
+    "check-types": "node ../../tools/plugin-typecheck.mts 'tsc --noEmit && tsc --noEmit -p testing/tsconfig.json && tsc --noEmit -p cli/tsconfig.json && tsc --noEmit -p sign-in/tsconfig.json'",
     "test": "vitest run"
   },
   "devDependencies": {

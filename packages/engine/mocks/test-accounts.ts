@@ -15,6 +15,8 @@ type Source = {
   keychain: Keychain;
 };
 
+export type { PluginAccounts };
+
 export type TestAccounts = {
   accounts: PluginAccounts;
   // Makes these the registered Projects: an Account can be chosen only for one the database holds.

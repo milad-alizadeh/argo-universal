@@ -1,4 +1,5 @@
-import { useData, useMemo } from '@argo/plugin-kit';
+import { useMemo } from '@argo/plugin-kit';
+import { github } from './github-account';
 import {
   readGraphql,
   type GitHubQuery,
@@ -22,13 +23,14 @@ export type GitHubData<Value> = {
 
 /*
  * A GitHub read through `useData`: the Project it reads for is named, as the tracker's pages have none of their own,
- * and the answer is shared with every other view that asks the same question.
+ * and the answer is shared with every other view that asks the same question. Inside a `SignInGate` it never sees
+ * a missing Account or a rejected token, which the gate answers with the sign-in.
  */
 export function useGitHub<Value>(
   { projectId, query }: Source,
   map: (data: Json) => Value,
 ): GitHubData<Value> {
-  const { data, error, refresh } = useData(query, {
+  const { data, error, refresh } = github.useData(query, {
     projectId,
     every: freshForMs,
   });
@@ -41,15 +43,6 @@ export function useGitHub<Value>(
   const read = useMemo(() => readGraphql(raw, map), [raw, map]);
 
   return { read, refresh };
-}
-
-// A read that wants the sign-in page instead of the page: no Account, or a token GitHub rejected.
-export type SignInNeed = { reauthorize: boolean };
-
-export function signInNeed(read: GitHubRead<unknown>): SignInNeed | null {
-  if (read.kind === 'signed-out') return { reauthorize: false };
-
-  return read.kind === 'unauthorized' ? { reauthorize: true } : null;
 }
 
 export const readMessage = (read: GitHubRead<unknown>): string | undefined =>

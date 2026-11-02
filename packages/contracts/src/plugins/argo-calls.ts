@@ -90,9 +90,18 @@ export const PluginQuery = z.discriminatedUnion('api', [
 
 export type PluginQuery = z.infer<typeof PluginQuery>;
 
+/*
+ * Why a read has an `error`, so no reader matches its wording: `no-account` is a borrow that returned nothing
+ * (ADR-0036), `refused` a call the Plugin may not make, and `failed` anything else.
+ */
+export const PluginErrorKind = z.enum(['no-account', 'refused', 'failed']);
+
+export type PluginErrorKind = z.infer<typeof PluginErrorKind>;
+
 export const PluginDataState = z.object({
   data: WireJson.optional(),
   error: z.string().optional(),
+  errorKind: PluginErrorKind.optional(),
   stale: z.boolean(),
   revision: z.number().int().nonnegative(),
 });

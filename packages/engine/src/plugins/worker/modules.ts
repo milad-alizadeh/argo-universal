@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { SourceTextModule, SyntheticModule, type Module } from 'node:vm';
 import { requirePluginFile } from '../access/plugin-files.ts';
-import { bundleKit } from '../kit/bundle.ts';
+import { bundleKit, bundleSignIn } from '../kit/bundle.ts';
 import type { PluginEntry } from '../protocol/runtime.ts';
 import { type ArgoBridge } from './argo.ts';
 import type { PluginRealmExports } from './plugin-api.ts';
@@ -61,6 +61,7 @@ const registrationModule = (context: PluginRealm): SourceTextModule =>
 
 class PluginModules {
   private readonly modules = new Map<string, Promise<SourceTextModule>>();
+  private signInModule: Promise<SourceTextModule> | undefined;
 
   private readonly entry: PluginEntry;
   private readonly context: PluginRealm;
@@ -113,6 +114,19 @@ class PluginModules {
     return builtModuleSource(await readFile(target, 'utf8'), target);
   }
 
+  // One instance per realm, so the pattern's state and its own imports of the kit are the Plugin's.
+  private signIn(): Promise<SourceTextModule> {
+    this.signInModule ??= bundleSignIn().then(
+      (source) =>
+        new SourceTextModule(source, {
+          context: this.context,
+          identifier: `${kitSpecifier}/sign-in`,
+        }),
+    );
+
+    return this.signInModule;
+  }
+
   private builtin(specifier: string): SyntheticModule | null {
     if (specifier === kitSpecifier) return this.synthetic(this.kit.exports);
 
@@ -121,10 +135,16 @@ class PluginModules {
       : null;
   }
 
-  async link(specifier: string, referencing: Module): Promise<Module> {
-    const builtin = this.builtin(specifier);
+  private kitModule(specifier: string): Promise<Module> | Module | null {
+    return specifier === `${kitSpecifier}/sign-in`
+      ? this.signIn()
+      : this.builtin(specifier);
+  }
 
-    if (builtin) return builtin;
+  async link(specifier: string, referencing: Module): Promise<Module> {
+    const kit = await this.kitModule(specifier);
+
+    if (kit) return kit;
 
     if (!isRelative(specifier))
       throw new Error(`Plugin imports must be built or relative: ${specifier}`);

@@ -1,9 +1,10 @@
 import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import { CapabilityRefusal, replyFailure } from '../access/capability-refusal';
+import { replyFailure } from '../access/capability-refusal';
 import type { PluginAccess, ActivatedPlugin } from '../access/plugin-access';
 import { AccountServices } from '../accounts/account-services';
 import type { OpenedAsset } from '../assets/plugin-assets';
+import { requireRegisteredProject } from '../data/registered-project';
 import type { SpawnCaller } from '../hooks/spawn-hooks';
 import type { PluginReply, PluginValue } from '../protocol/runtime';
 import type { Keychain } from './keychain';
@@ -96,23 +97,16 @@ export class PluginServices {
     this.storage.close();
   }
 
-  // A fetch may name its Project, which then decides the Account it borrows (ADR-0037).
+  // A fetch or an Account lookup may name its Project, which then decides the Account it reaches (ADR-0037).
   private async projectOf(
     request: ServiceRequest,
   ): Promise<string | undefined> {
-    const named = request.api === 'fetch' ? request.call.projectId : undefined;
+    const named = namedProject(request);
 
     if (named === undefined) return request.projectId;
-    await this.requireProject(named);
+    await requireRegisteredProject(this.options, named);
 
     return named;
-  }
-
-  private async requireProject(id: string): Promise<void> {
-    const projects = await this.options.projectInfo();
-
-    if (!projects.some((project) => project.id === id))
-      throw new CapabilityRefusal('Project is unavailable');
   }
 
   private async attempt(
@@ -178,3 +172,14 @@ export class PluginServices {
     return resources;
   }
 }
+
+function namedProject(request: ServiceRequest): string | undefined {
+  if (request.api === 'fetch') return request.call.projectId;
+
+  return request.api === 'accounts' ? accountsProject(request.call) : undefined;
+}
+
+type AccountsCall = Extract<ServiceRequest, { api: 'accounts' }>['call'];
+
+const accountsProject = (call: AccountsCall): string | undefined =>
+  call.action === 'get' ? call.projectId : undefined;

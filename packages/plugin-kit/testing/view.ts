@@ -19,6 +19,7 @@ export type Opening = {
   projectId?: string;
   sessionId?: string;
   connectionId?: string;
+  serverDevice?: boolean;
 };
 
 export type PluginMount = {
@@ -30,6 +31,8 @@ export type PluginMount = {
   // The Session the page opens for, as a Session header action or a Workbench card opens it; read from its context.
   sessionId?: string;
   connectionId?: string;
+  // Opens as the Server Device would; by default a mount behaves as a paired Device.
+  serverDevice?: boolean;
 };
 
 type Event = ComponentEvent & { key: string };
