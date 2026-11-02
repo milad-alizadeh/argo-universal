@@ -28,13 +28,30 @@ describe('Workbench states from one toggle', () => {
       workbenchIntent: 'shown',
     });
 
-    expect(layout.workbench.state).toBe('overlay');
-    expect(layout.page.hidden).toBe(false);
-    expect(layout.page.width).toBeGreaterThan(0);
-    expect(layout.workbench.offset).toBeGreaterThanOrEqual(layout.page.offset);
-    expect(
-      layout.workbench.offset + layout.workbench.width,
-    ).toBeLessThanOrEqual(layout.inspector.offset);
+    expect(layout.page).toEqual({ offset: 72, width: 1000, hidden: false });
+    expect(layout.workbench).toEqual({
+      state: 'overlay',
+      offset: 752,
+      width: 312,
+    });
+    expect(layout.workbench.offset + layout.workbench.width).toBeLessThan(
+      layout.inspector.offset,
+    );
+  });
+
+  it("overlays the content's trailing edge with the Inspector closed", () => {
+    const layout = frameLayout({
+      ...input,
+      width: 900,
+      workbenchIntent: 'shown',
+    });
+
+    expect(layout.page).toEqual({ offset: 72, width: 828, hidden: false });
+    expect(layout.workbench).toEqual({
+      state: 'overlay',
+      offset: 580,
+      width: 312,
+    });
   });
 
   it('auto-hides beside an open Inspector at 1440', () => {
