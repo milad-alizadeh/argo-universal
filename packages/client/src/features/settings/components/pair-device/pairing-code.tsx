@@ -18,7 +18,7 @@ const scanHeading = 'Scan with Argo on your phone';
 const scanInstruction =
   'Open Argo on the other Device, choose Add a Server, and point the camera here. You’ll confirm on this computer before anything is shared.';
 
-// The code in two groups of three with a dot between, the way the owner reads it out; entry still takes XXX-XXX.
+// The code in two groups of three with a dot between, the way the owner reads it out; entry still takes the dashed form.
 const spacedCode = (ticket: string): string =>
   formatPairingTicket(ticket).replace('-', ' · ');
 
