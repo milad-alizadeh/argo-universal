@@ -2,6 +2,7 @@ import type { Dirent } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
+import { productName } from '@repo/contracts/product-identity';
 import { z } from 'zod';
 import { notStarted } from '../protocol/runtime';
 import { readManifest } from './manifest';
@@ -175,7 +176,7 @@ function addManifest(
   // Third-party Plugins wait for consent and an operating-system boundary (ADR-0030), like Obsidian's Restricted mode.
   if (!firstParty)
     throw new Error(
-      'Plugin is not loaded: only Plugins shipped with Argo load until Argo asks for consent',
+      `Plugin is not loaded: only Plugins shipped with ${productName} load until ${productName} asks for consent`,
     );
   result.plugins.push({ manifest, firstParty, enabled: true, ...notStarted });
 }

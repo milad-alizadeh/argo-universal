@@ -51,7 +51,7 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
   else pending.reject(new Error(reply.error));
 }
 
-export type ArgoBridge = ((json: string) => Promise<string>) & {
+export type PluginBridge = ((json: string) => Promise<string>) & {
   inView?: <T>(viewId: string | null, run: () => T) => T;
   inProject?: <T>(projectId: string | undefined, run: () => T) => T;
 };
@@ -62,10 +62,10 @@ export type ArgoBridge = ((json: string) => Promise<string>) & {
  * reaches Plugin code (and with it no path to this realm's `Function`). The Plugin API
  * (`plugin-api.ts`) wraps it inside the context, then removes it.
  */
-export function argoBridge(calls: WorkerCalls): ArgoBridge {
+export function createPluginBridge(calls: WorkerCalls): PluginBridge {
   const scope = new AsyncLocalStorage<CallOrigin>();
 
-  const bridge: ArgoBridge = async (json) => {
+  const bridge: PluginBridge = async (json) => {
     const value = await calls.call(
       PluginRequest.parse(JSON.parse(json)),
       scope.getStore() ?? undefined,

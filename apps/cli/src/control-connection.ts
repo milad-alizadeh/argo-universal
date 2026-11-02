@@ -1,3 +1,4 @@
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { AppRouter } from '@repo/engine/router';
 import {
   readControlToken,
@@ -14,9 +15,14 @@ export async function connectControl(
   const home = resolveRuntimeDirectory();
   const address = readServerAddress(home);
 
-  if (!address) throw new Error('No Server found. Start it with argo server.');
+  if (!address)
+    throw new Error(
+      `No Server found. Start it with ${productCompatibility.command} server.`,
+    );
 
-  const token = process.env.ARGO_TOKEN ?? (await readControlToken(home));
+  const token =
+    process.env[productCompatibility.environment.token] ??
+    (await readControlToken(home));
 
   return createClient(address.port, token, timeoutMs);
 }

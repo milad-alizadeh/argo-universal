@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import {
   ListItem,
@@ -31,7 +32,10 @@ export interface ServerListViewProps {
  */
 export function ServerListView(props: ServerListViewProps): React.JSX.Element {
   return (
-    <Screen title="Servers" caption="The Argo Servers this App can show.">
+    <Screen
+      title="Servers"
+      caption={`The ${productName} Servers this App can show.`}
+    >
       <FieldList sections={sections(props)} />
     </Screen>
   );

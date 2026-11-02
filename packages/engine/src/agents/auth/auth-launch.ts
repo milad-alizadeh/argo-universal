@@ -31,6 +31,10 @@ export function sharedSessionAuthentication(
     agentId: launch.agentId,
     projectId: launch.projectId,
     version: launch.version,
-    resolve: async () => ({ ...launch, argo: undefined, release: undefined }),
+    resolve: async () => ({
+      ...launch,
+      sessionAccess: undefined,
+      release: undefined,
+    }),
   });
 }

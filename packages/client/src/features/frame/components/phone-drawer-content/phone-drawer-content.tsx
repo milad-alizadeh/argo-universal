@@ -1,4 +1,5 @@
 import type { PluginBadge } from '@repo/contracts/plugins/runtime';
+import { productName } from '@repo/contracts/product-identity';
 import type { BadgeCount } from '@repo/kit/badge-count';
 import { Text } from '@repo/kit/primitives/content/text';
 import {
@@ -68,7 +69,7 @@ function DrawerTitle(): React.JSX.Element {
   return (
     <View className="justify-center px-3 py-3">
       <Text role="heading" accessibilityRole="heading" aria-level={2}>
-        Argo
+        {productName}
       </Text>
     </View>
   );

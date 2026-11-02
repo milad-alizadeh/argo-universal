@@ -1,4 +1,5 @@
 import { delimiter } from 'node:path';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { AgentLaunch } from '../agent-launch';
 import { vendorEnvironment } from '../vendor';
 import { shellEnvironment } from './shell-env';
@@ -14,20 +15,29 @@ export const definedEnvironment = (
   );
 
 // Session identity is authoritative; discovery and sign-in never inherit Argo credentials.
-export function applyArgoEnvironment(
+export function applySessionEnvironment(
   launch: AgentLaunch,
   environment: NodeJS.ProcessEnv,
 ): NodeJS.ProcessEnv {
-  delete environment.ARGO_TOKEN;
-  delete environment.ARGO_HOME;
+  delete environment[productCompatibility.environment.token];
+  delete environment[productCompatibility.environment.home];
 
-  if (launch.argo) {
-    environment.ARGO_TOKEN = launch.argo.token;
-    environment.ARGO_HOME = launch.argo.home;
-    environment.PATH = [launch.argo.cliDirectory, environment.PATH]
-      .filter(Boolean)
-      .join(delimiter);
-  }
+  return addSessionAccess(launch, environment);
+}
+
+function addSessionAccess(
+  launch: AgentLaunch,
+  environment: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
+  const access = launch.sessionAccess;
+
+  if (!access) return environment;
+
+  environment[productCompatibility.environment.token] = access.token;
+  environment[productCompatibility.environment.home] = access.home;
+  environment.PATH = [access.cliDirectory, environment.PATH]
+    .filter(Boolean)
+    .join(delimiter);
 
   return environment;
 }
@@ -36,7 +46,7 @@ export const agentEnvironment = async (
   launch: AgentLaunch,
   defaults: Readonly<Record<string, string>> = {},
 ): Promise<NodeJS.ProcessEnv> =>
-  applyArgoEnvironment(launch, {
+  applySessionEnvironment(launch, {
     ...(await shellEnvironment(launch.cwd)),
     ...defaults,
     ...launch.env,

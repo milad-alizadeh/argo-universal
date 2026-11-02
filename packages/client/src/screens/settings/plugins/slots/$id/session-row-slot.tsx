@@ -6,7 +6,7 @@ import {
 import { livePreview } from './session-row-preview';
 import type { SlotDetail } from './slot-detail';
 
-export const argoActivity = 'Editing login.ts';
+export const builtInActivity = 'Editing login.ts';
 
 const startedAt = Date.parse('2026-01-01T09:00:00.000Z');
 
@@ -23,7 +23,7 @@ export const previewSession: SessionInfo = {
   status: 'running',
   title: 'Fix login redirect',
   titleSource: 'agent',
-  activity: argoActivity,
+  activity: builtInActivity,
   activityAt: startedAt + workingFor,
   checkout: { type: 'worktree', path: '', branch: 'fix-login-redirect' },
   plan: null,
