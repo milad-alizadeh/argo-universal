@@ -39,7 +39,7 @@ export function phoneStatusControls(agent: AgentServer): Story {
         canvas.getByRole('button', { name: subagentCountLabel }),
       ).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: 'Shells: 1' }),
+        canvas.getByRole('button', { name: 'Background Tasks: 1' }),
       ).toBeVisible();
     },
   };

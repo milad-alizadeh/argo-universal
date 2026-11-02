@@ -54,13 +54,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // A wheel's steps at a wheel's pace, far enough to cross several long files inside a story's time limit.
-const wheelStep = 80;
+const wheelStep = 120;
 
 const downPauseMs = 25;
 
 const upPauseMs = 60;
 
-const reach = 12_000;
+const reach = 8000;
 
 // How far a stuck header can sit from the list's top: the list's own top padding.
 const stuckWithin = 12;

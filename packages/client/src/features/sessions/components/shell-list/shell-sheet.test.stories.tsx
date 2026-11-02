@@ -87,7 +87,7 @@ export const ExitedShellShowsHowItEnded: Story = {
     await expect(await screen.findByText('after 8s')).toBeVisible();
     await expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Back to Shells' }),
+      screen.getByRole('button', { name: 'Back to Background Tasks' }),
     );
     await waitFor(() =>
       expect(screen.queryByText('312 earlier lines not kept')).toBeNull(),

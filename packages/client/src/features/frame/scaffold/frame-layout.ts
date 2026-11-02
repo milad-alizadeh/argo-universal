@@ -64,7 +64,7 @@ function pageRegion(
     dockedWorkbench(input, workbench.state) +
     occupied(inspector.width, input.measures.paneGap);
 
-  const hidden = inspector.expanded || workbench.state === 'dedicated';
+  const hidden = inspector.expanded;
 
   return {
     offset: contentStart,

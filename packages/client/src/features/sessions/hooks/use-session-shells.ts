@@ -34,7 +34,7 @@ function useShellOutput(
   );
 
   useResubscribeOnReconnect(stream);
-  useShellFailure("Couldn't read Shell output", stream.error);
+  useShellFailure("Couldn't read Background Task output", stream.error);
 
   return output;
 }
@@ -88,11 +88,11 @@ export function useSessionShells(
   active: boolean,
 ): ShellPanelProps {
   const [shellId, setShellId] = useState('');
-  const output = useShellOutput(sessionId, active ? shellId : '');
 
   return {
     shells,
-    output,
+    output: useShellOutput(sessionId, active ? shellId : ''),
+    openId: shellId || undefined,
     onSelect: (shell) => setShellId(shell.id),
     onStop: useStopShell(sessionId),
     onDeselect: useCallback(() => setShellId(''), []),
@@ -102,7 +102,7 @@ export function useSessionShells(
 function useStopShell(sessionId: string): ShellPanelProps['onStop'] {
   const trpc = useTRPC();
   const stop = useMutation(trpc.shell.stop.mutationOptions());
-  useShellFailure("Couldn't stop Shell", stop.error);
+  useShellFailure("Couldn't stop Background Task", stop.error);
 
   return (shell) => stop.mutate({ sessionId, shellId: shell.id });
 }

@@ -62,3 +62,21 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
       snapshot.status === 'done',
   );
 });
+
+it('starts with no Projects when ARGO_PROJECT_PATH is unset', async (): Promise<void> => {
+  const directory = realpathSync(
+    mkdtempSync(path.join(tmpdir(), 'argo-empty-')),
+  );
+
+  onTestFinished((): void =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
+  vi.stubEnv('ARGO_PROJECT_PATH', '');
+
+  const { createCaller } = await startEngineTestHost({
+    ...scriptedEngineInput(),
+    home: directory,
+  });
+
+  expect(await createCaller().project.list()).toEqual([]);
+});
