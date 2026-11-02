@@ -1,6 +1,7 @@
 import type { Argo, UseDataOptions, UseDataResult } from '@argo/plugin-kit';
 import { useAccountRead, type AccountRead } from './account-read';
-import { runDeviceFlow, type Settled } from './device-flow';
+import { runDeviceFlow } from './device-flow';
+import type { Settled } from './device-poll';
 import type { FetchQuery } from './gate-context';
 import { runRedirectFlow } from './redirect-flow';
 import {

@@ -77,6 +77,10 @@ function useFlow(props: PageProps): Flow {
   return { step, start, cancel };
 }
 
+// The code step says what it is for, as the person may have come here from anywhere.
+const titleOf = ({ kind }: SignInStep, name: string): string =>
+  kind === 'code' ? `Sign in to ${name}` : name;
+
 // The page that signs in. Argo opens it for "Add account"; a gate draws it in place of a page that cannot read.
 export function SignInPage(props: PageProps): JSX.Element {
   const flow = useFlow(props);
@@ -84,7 +88,7 @@ export function SignInPage(props: PageProps): JSX.Element {
   const { name, flow: kind } = props.account.declaration;
 
   return (
-    <Screen title={name}>
+    <Screen title={titleOf(flow.step, name)}>
       <SignInBody
         {...flow}
         name={name}

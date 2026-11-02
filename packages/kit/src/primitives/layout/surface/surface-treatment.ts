@@ -14,6 +14,7 @@ const treatments = {
     radius: 'rounded-xl',
     fill: 'bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180',
   },
+  tint: { radius: 'rounded-xl', fill: 'bg-tint' },
   glass: {
     radius: 'rounded-2xl',
     fill: 'bg-glass shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',

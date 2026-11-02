@@ -22,3 +22,23 @@ it.each(['https://github.com/milad', 'http://example.com/'])(
     ).toBe(true);
   },
 );
+
+const copy = { action: 'copy', text: 'WDJB-MJHT' };
+
+it.each([
+  ['https://example.com', true],
+  ['javascript:alert(1)', false],
+])('holds each step of a sequence to the URL rule: %s', (url, allowed) => {
+  const sequence = {
+    action: 'sequence',
+    steps: [copy, { action: 'openUrl', url }],
+  };
+
+  expect(Action.safeParse(sequence).success).toBe(allowed);
+});
+
+it('needs at least two steps for a sequence', () => {
+  const sequence = { action: 'sequence', steps: [copy] };
+
+  expect(Action.safeParse(sequence).success).toBe(false);
+});

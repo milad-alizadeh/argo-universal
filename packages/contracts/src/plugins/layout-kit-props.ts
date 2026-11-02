@@ -15,7 +15,7 @@ export const gridProps = z.object({
 
 export const surfaceProps = z.object({
   kind: z
-    .enum(['background', 'card', 'muted', 'glass'])
+    .enum(['background', 'card', 'muted', 'tint', 'glass'])
     .describe('Named Surface with its fill, radius and depth.'),
   padding: z
     .enum(spacingSteps)

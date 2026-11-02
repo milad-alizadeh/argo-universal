@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Linking } from 'react-native';
 import { newSessionHref, sessionHref } from '../navigation/navigation';
 import { pageShown } from '../navigation/shown-page';
+import { runSteps } from './run-steps';
 import { shareContent } from './share';
 import { mayRun } from './web-action';
 
@@ -40,6 +41,8 @@ const runners: Runners = {
   },
   share: shareContent,
   pop: () => router.back(),
+  sequence: ({ steps }, openPage) =>
+    runSteps(steps, (step) => runAction(step, openPage)),
 };
 
 async function dispatch<Each extends Name>(

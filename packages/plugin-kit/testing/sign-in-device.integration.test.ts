@@ -154,3 +154,31 @@ it('says where to sign in again when another Plugin provides the Account, before
     .toBe(true);
   expect(service.requests).toHaveLength(asked);
 }, 40_000);
+
+it('copies the code and opens the service on one press, and ends in the expired step when the countdown runs out', async () => {
+  const { test, service } = await started();
+  const page = await test.mount({ page: '/sign-in', surface });
+
+  service.approval.pending = true;
+  service.approval.lifetime = 60;
+  await page.press(signInLabel);
+  await expect.poll(() => hasText(page, '1:00'), wait).toBe(true);
+  await page.press('Copy code and open Service');
+
+  expect(page.actions).toEqual([
+    {
+      action: 'sequence',
+      steps: [
+        { action: 'copy', text: 'WDJB-MJHT' },
+        { action: 'openUrl', url: 'https://auth.service.example/activate' },
+      ],
+    },
+  ]);
+
+  await test.clock.advance(1_000);
+  await expect.poll(() => hasText(page, '0:59'), wait).toBe(true);
+  await clockUntil(test, page, 'The code expired');
+
+  expect(JSON.stringify(page.trees)).not.toMatch(/"-\d+:\d+"/);
+  expect(page.findText('Try again')).toBeDefined();
+}, 40_000);

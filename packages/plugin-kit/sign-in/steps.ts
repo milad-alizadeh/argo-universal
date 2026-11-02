@@ -1,10 +1,19 @@
 export type Ended = { kind: 'ended'; title: string; detail: string };
 
+export type CodeStep = {
+  kind: 'code';
+  userCode: string;
+  verificationUri: string;
+  // When the service stops taking this code, and how long it had from the start, for the countdown.
+  expiresAt: number;
+  lifetimeMs: number;
+};
+
 // What the sign-in page draws as a flow goes.
 export type SignInStep =
   | { kind: 'idle' }
   | { kind: 'requesting' }
-  | { kind: 'code'; userCode: string; verificationUri: string }
+  | CodeStep
   | { kind: 'browser' }
   | { kind: 'signed-in'; label: string }
   | Ended;

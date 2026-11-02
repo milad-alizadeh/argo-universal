@@ -485,7 +485,7 @@ One kind of a Session's work, such as Changes, Agents, Shells or a Plugin's. Eac
 _Avoid_: Panel, pane, Workbench card (for the whole kind)
 
 **Surface**:
-A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.
+A named background a kit component draws on: `background`, `card`, `muted`, `tint` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.
 _Avoid_: Panel, layer, tray
 
 **Slot**:

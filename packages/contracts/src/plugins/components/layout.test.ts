@@ -45,3 +45,15 @@ describe('layout prop boundary', () => {
     ).toBe(true);
   });
 });
+
+it('stacks by Size class and draws the tint Surface', () => {
+  const stack = kitComponentSchemas.Stack.props;
+
+  expect(
+    stack.safeParse({
+      direction: { compact: 'column-reverse', wide: 'row' },
+    }).success,
+  ).toBe(true);
+  expect(stack.safeParse({ direction: 'sideways' }).success).toBe(false);
+  expect(surface.safeParse({ kind: 'tint' }).success).toBe(true);
+});

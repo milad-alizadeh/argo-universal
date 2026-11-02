@@ -1,5 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { Settled } from './device-flow';
+import type { Settled } from './device-poll';
 import {
   form,
   postForm,

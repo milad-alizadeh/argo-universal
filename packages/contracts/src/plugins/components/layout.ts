@@ -45,7 +45,7 @@ export const layoutComponents = {
       children: true,
       slots: { actions: actionSlot },
       appearance:
-        'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
+        'background is flat content; card is flat card; muted is recessed tray; tint is a quiet tile for one thing to read, such as a code; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
     },
   ),
   Card: defineKitComponent(

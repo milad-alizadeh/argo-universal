@@ -26,6 +26,14 @@ export const textProps = z.object({
     .meta({ default: textDefaults.role })
     .describe('The typography role, optionally by Size class.'),
   tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
+  dimmed: z
+    .boolean()
+    .optional()
+    .describe('De-emphasized supporting text, quieter than any tone.'),
+  selectable: z
+    .boolean()
+    .optional()
+    .describe('Lets the person select the text, such as a code to copy.'),
   accessibilityLabel: z
     .string()
     .optional()
@@ -101,7 +109,9 @@ export const svgProps = z.object({
 });
 
 export const stackProps = layoutProps.extend({
-  direction: z.enum(['row', 'column']).describe('The direction of the layout.'),
+  direction: perSizeClass(z.enum(['row', 'column', 'column-reverse'])).describe(
+    'The direction of the layout, optionally by Size class. column-reverse sets the last child on top, as actions stacked on a phone put the primary one first.',
+  ),
 });
 
 export const emptyStateProps = z.object({

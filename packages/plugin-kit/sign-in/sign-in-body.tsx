@@ -1,5 +1,6 @@
-import { Button, Code, Link, Stack, Text } from '@argo/plugin-kit';
+import { Button, Stack, Text } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { CodeShown } from './code-step';
 import type { Ended, SignInStep } from './steps';
 
 type BodyProps = {
@@ -37,22 +38,6 @@ const Requesting = ({ name }: BodyProps): JSX.Element => (
   <>
     <Text role="secondary">{`Asking ${name} to start signing in…`}</Text>
     <Button label={`Sign in to ${name}`} loading disabled />
-  </>
-);
-
-type CodeStep = Extract<SignInStep, { kind: 'code' }>;
-
-const CodeShown = ({
-  step,
-  name,
-  cancel,
-}: BodyProps & { step: CodeStep }): JSX.Element => (
-  <>
-    <Text role="secondary">{`Enter this code on ${name} to finish signing in.`}</Text>
-    <Code code={step.userCode} />
-    <Link label={step.verificationUri} href={step.verificationUri} />
-    <Text role="secondary">Waiting for you to approve it…</Text>
-    <Button label="Cancel" variant="secondary" onPress={cancel} />
   </>
 );
 

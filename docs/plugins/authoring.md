@@ -386,6 +386,8 @@ export async function register(argo: Argo) {
 
 `account.useData` is `useData` for a read through that Account. Inside the gate, a read with no Account or a 401 draws the sign-in in place of the gate's children, and they come back once a read answers. Your code handles no token and no sign-in state. After a 401 the sign-in rewrites the token of the Account that read's Project uses; from `/sign-in`, which is what "Add account" opens, it adds an Account. An Account another Plugin provides cannot be rewritten here, so the page says to sign in there. Outside a gate `account.useData` answers as `useData` does, and `errorKind` and the status say why.
 
+The device flow's page shows the code on a tile with a copy button and a countdown from the service's `expires_in`, and its primary button copies the code and opens the service on one press. That press is a `sequence` Action: `onPress={{ action: 'sequence', steps: [{ action: 'copy', text }, { action: 'openUrl', url }] }}` runs built-in Actions in order in the App, and a step that fails does not stop the next.
+
 A token that comes with a refresh token and an expiry is refreshed before it runs out.
 
 `flow` is one of two:

@@ -8,8 +8,7 @@ export const WireEvent = z.strictObject({
 
 export type WireEvent = z.infer<typeof WireEvent>;
 
-// Built-in Actions run in the App without a round trip to the Server.
-export const Action = z.discriminatedUnion('action', [
+const singleActions = [
   z.strictObject({ action: z.literal('toast'), message: z.string() }),
   // Opens the Plugin's own page at `path`, the one it registered with `argo.pages.register`; the App finds the route.
   z.strictObject({ action: z.literal('navigate'), path: z.string() }),
@@ -32,6 +31,16 @@ export const Action = z.discriminatedUnion('action', [
     action: z.literal('newSession'),
     projectId: z.string().min(1),
     draft: z.string().min(1),
+  }),
+] as const;
+
+// Built-in Actions run in the App without a round trip to the Server.
+export const Action = z.discriminatedUnion('action', [
+  ...singleActions,
+  // One press that does several things, such as copying a code and opening where it goes. Every step runs, in order.
+  z.strictObject({
+    action: z.literal('sequence'),
+    steps: z.array(z.discriminatedUnion('action', singleActions)).min(2),
   }),
 ]);
 

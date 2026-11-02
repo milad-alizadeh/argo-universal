@@ -1,4 +1,5 @@
 import { type PluginSurface } from '@repo/contracts/plugins/kit';
+import { Action } from '@repo/contracts/plugins/wire';
 import type {
   ComponentEvent,
   ViewMessage,
@@ -44,6 +45,7 @@ export class PluginTestView {
   private root: WireNode | null = null;
   private readonly history: WireNode[] = [];
   private latest: ViewMessage | null = null;
+  private readonly ran: Action[] = [];
   private failure: Error | null = null;
   private readonly changes = new ViewChanges();
   private readonly path: string;
@@ -70,6 +72,11 @@ export class PluginTestView {
 
   public get message(): ViewMessage | null {
     return this.latest;
+  }
+
+  // The built-in Actions the presses in this test handed to the App, in order.
+  public get actions(): readonly Action[] {
+    return this.ran;
   }
 
   public get trees(): readonly WireNode[] {
@@ -153,7 +160,12 @@ export class PluginTestView {
     const entry = this.findText(text);
 
     if (!entry) throw new Error(`Plugin control not found: ${text}`);
-    await this.dispatch({ key: entry.key, event: 'onPress' });
+
+    const action = Action.safeParse(entry.node.props.onPress);
+
+    // A built-in Action runs in the App with no round trip, so a test reads what the App was told to do.
+    if (action.success) this.ran.push(action.data);
+    else await this.dispatch({ key: entry.key, event: 'onPress' });
   }
 
   public close(): void {

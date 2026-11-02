@@ -13,8 +13,6 @@ export type TextProps = Omit<
 > &
   React.RefAttributes<TextInstance> &
   KitProps<'Text'> & {
-    // De-emphasized supporting text, using the tertiary token.
-    dimmed?: boolean;
     // What the text is to assistive technology, such as a heading or an alert.
     accessibilityRole?: React.ComponentProps<typeof RNText>['role'];
     'aria-level'?: number;
