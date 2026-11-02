@@ -29,5 +29,6 @@ export function SubagentStatus({
   subagent: Subagent;
 }): JSX.Element | null {
   const status = statuses[subagent.state];
+
   return status ? <StatusDot {...status} /> : null;
 }
