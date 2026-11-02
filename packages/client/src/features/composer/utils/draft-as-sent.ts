@@ -13,7 +13,7 @@ export const sameAttachments = (
   first.every(({ id }, index) => id === second[index]?.id);
 
 // Kept text still loading counts as sent: this Device kept nothing newer, or the draft would not be forgotten.
-const textAsSent = (
+const heldTextAsSent = (
   { draft, awaitedKey }: AttachmentDraftState,
   key: DraftKey,
   sent: ComposerDraft,
@@ -25,5 +25,5 @@ export const holdsSentDraft = (
   { key, sent }: { key: DraftKey; sent: ComposerDraft },
 ): boolean =>
   key === state.ownerKey &&
-  textAsSent(state, key, sent) &&
+  heldTextAsSent(state, key, sent) &&
   sameAttachments(state.draft.attachments, sent.attachments);

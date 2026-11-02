@@ -16,7 +16,7 @@ const unansweredOpens = new WeakMap<Page, Set<number>>();
 const unansweredOf = (page: Page): Set<number> =>
   unansweredOpens.get(page) ?? new Set();
 
-// Pages whose Server answers to Session opens wait to be sent, with the answers waiting.
+// Each page's held answers to Session opens, sent to the App when the step lets them go.
 const heldOpenAnswers = new WeakMap<Page, (() => void)[]>();
 
 // The App's call that opens a Session.
@@ -56,6 +56,7 @@ function relay(page: Page, route: WebSocketRoute): void {
     server.send(frame);
   });
   server.onMessage((frame) => {
+    // `delete` says whether the id was an unanswered Session open.
     const answered = idsIn(frame, Answer).filter((id) => unanswered.delete(id));
     const held = heldOpenAnswers.get(page);
 
