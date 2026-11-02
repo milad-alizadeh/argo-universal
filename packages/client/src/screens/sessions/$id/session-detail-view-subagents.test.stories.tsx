@@ -206,7 +206,7 @@ export const PhoneSheetDismissesOnSwitch: Story = {
     await expect(
       await body.findByRole('dialog', { name: subagentsName }),
     ).toBeVisible();
-    fireEvent.click(
+    await fireEvent.click(
       canvas.getByRole('button', { name: 'Switch Session', hidden: true }),
     );
     await waitFor(() =>
@@ -214,7 +214,9 @@ export const PhoneSheetDismissesOnSwitch: Story = {
         body.queryByRole('dialog', { name: subagentsName }),
       ).not.toBeInTheDocument(),
     );
-    fireEvent.click(canvas.getByRole('button', { name: 'Switch Session' }));
+    await fireEvent.click(
+      canvas.getByRole('button', { name: 'Switch Session' }),
+    );
     await expect(
       body.queryByRole('dialog', { name: subagentsName }),
     ).not.toBeInTheDocument();

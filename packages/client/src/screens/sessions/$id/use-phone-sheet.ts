@@ -14,7 +14,10 @@ const visibleWhenFocused = (focused: boolean, allowed: boolean): boolean =>
 function useDismissOnBlur(dismiss: () => void): void {
   const navigation = use(NavigationContext);
 
-  useEffect(() => navigation?.addListener('blur', dismiss), [navigation, dismiss]);
+  useEffect(
+    () => navigation?.addListener('blur', dismiss),
+    [navigation, dismiss],
+  );
 }
 
 function useSheetAllowed(focused: boolean): [boolean, () => void] {
