@@ -4,53 +4,29 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
+import {
+  childIssue,
+  childNumber,
+  parentIssue,
+  parentNumber,
+} from './github-issue-nodes';
+import { isObject, parseJson, pick, type Json, type JsonObject } from './json';
 
-// Issue 43 is a sub-Issue of 42 and blocked by it. GitHub refuses to change issue 43's status. Closed searches find nothing.
-const url = (number: number): string =>
-  `https://github.com/owner/repository/issues/${number}`;
+const slowRefusalMs = 1000;
 
-const relation = (number: number, title: string): object => ({
-  number,
-  title,
-  state: 'OPEN',
-  url: url(number),
-});
+const unauthorized = 401;
 
-const parentTitle = 'Fixture issue from GitHub';
+const unprocessable = 422;
 
-export const refusedTitle = 'Fixture issue GitHub cannot change';
-
-const issue = (number: number, title: string, extra: object): object => ({
-  number,
-  title,
-  state: 'OPEN',
-  stateReason: null,
-  url: url(number),
-  labels: { nodes: [{ name: 'fixture', color: 'd73a4a' }] },
-  assignees: { nodes: [{ login: 'octocat' }] },
-  parent: null,
-  ...extra,
-});
-
-const issue42 = (): object =>
-  issue(42, parentTitle, {
-    blockedBy: { nodes: [] },
-    subIssues: { nodes: [relation(43, refusedTitle)] },
-    subIssuesSummary: { completed: 0, total: 1 },
-    body: 'This Issue came from the fixture GitHub.',
-  });
-
-const issue43 = (): object =>
-  issue(43, refusedTitle, {
-    parent: { number: 42 },
-    blockedBy: { nodes: [relation(42, parentTitle)] },
-    subIssues: { nodes: [] },
-    subIssuesSummary: { completed: 0, total: 0 },
-    body: 'This Issue came from the fixture GitHub.',
-  });
+const textOf = (value: Json | undefined): string =>
+  typeof value === 'string' ? value : '';
 
 // What the device flow's token endpoint answers, one reply for each poll.
-export type PollReply = Record<string, unknown>;
+export type PollReply = {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+};
 
 export type GitHubFixture = FixtureServices & {
   // The replies the token endpoint gives from now on, in order; the last repeats.
@@ -60,109 +36,140 @@ export type GitHubFixture = FixtureServices & {
   graphqlCalls: () => FixtureRequest[];
 };
 
-const json = (body: unknown, status = 200): FixtureAnswer => ({
+const answer = (body: string, status?: number): FixtureAnswer => ({
   status,
-  json: body,
+  text: body,
 });
 
-const variablesOf = (request: FixtureRequest): Record<string, string> => {
-  const { variables } = JSON.parse(request.body);
+const variablesOf = (body: Json): JsonObject => {
+  const variables = pick(body, 'variables');
 
-  return variables ?? {};
+  return isObject(variables) ? variables : {};
 };
 
-function overviewData(variables: Record<string, string>): object {
-  const counts = Object.entries(variables)
-    .filter(([key]) => key.startsWith('count'))
-    .map(([key, query]) => [
-      key,
-      { issueCount: query.includes('is:closed') ? 0 : 2 },
-    ]);
-
-  return {
+const overviewData = (variables: JsonObject): string =>
+  JSON.stringify({
     repository: {
       labels: { nodes: [{ name: 'fixture' }, { name: 'good first issue' }] },
     },
-    ...Object.fromEntries(counts),
-  };
-}
+    ...Object.fromEntries(
+      Object.entries(variables).flatMap(([key, query]) =>
+        key.startsWith('count')
+          ? [[key, { issueCount: textOf(query).includes('is:closed') ? 0 : 2 }]]
+          : [],
+      ),
+    ),
+  });
 
-function graphqlData(request: FixtureRequest): object {
-  const { query } = JSON.parse(request.body);
-  const variables = variablesOf(request);
+const issueData = (variables: JsonObject): string =>
+  JSON.stringify({
+    repository: {
+      issue:
+        Number(variables.number) === childNumber ? childIssue() : parentIssue(),
+    },
+  });
+
+const searchData = (variables: JsonObject): string => {
+  const closed = textOf(variables.query).includes('is:closed');
+
+  return JSON.stringify({
+    search: { nodes: closed ? [] : [parentIssue(), childIssue()] },
+  });
+};
+
+function dataOf(request: FixtureRequest): string {
+  const body = parseJson(request.body);
+  const variables = variablesOf(body);
 
   if ('count0' in variables) return overviewData(variables);
 
-  if (String(query).includes('issue(number:'))
-    return {
-      repository: {
-        issue: Number(variables.number) === 43 ? issue43() : issue42(),
-      },
-    };
+  if (textOf(pick(body, 'query')).includes('issue(number:'))
+    return issueData(variables);
 
-  const closed = String(variables.query).includes('is:closed');
-
-  return { search: { nodes: closed ? [] : [issue42(), issue43()] } };
+  return searchData(variables);
 }
 
-function tokenOf(request: FixtureRequest): string {
-  return String(request.headers.authorization ?? '').replace('Bearer ', '');
-}
+const tokenOf = (request: FixtureRequest): string =>
+  String(request.headers.authorization ?? '').replace('Bearer ', '');
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((done) => setTimeout(done, ms));
 
 async function patch(request: FixtureRequest): Promise<FixtureAnswer> {
-  if (!request.path.endsWith('/issues/43')) return json({ number: 42 });
+  if (!request.path.endsWith(`/issues/${childNumber}`))
+    return answer(JSON.stringify({ number: parentNumber }));
 
   // Slow enough for the App to draw the new status before it rolls back.
-  await sleep(1000);
+  await sleep(slowRefusalMs);
 
-  return json({ message: 'Could not close the issue.' }, 422);
+  return answer(
+    JSON.stringify({ message: 'Could not close the issue.' }),
+    unprocessable,
+  );
 }
+
+function api(request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> {
+  if (request.path === '/user')
+    return answer(JSON.stringify({ login: 'octocat' }));
+
+  if (request.method === 'PATCH') return patch(request);
+
+  return answer(`{"data":${dataOf(request)}}`);
+}
+
+type State = { replies: PollReply[]; polled: number };
+
+const deviceCode = (): FixtureAnswer =>
+  answer(
+    JSON.stringify({
+      device_code: 'device-1',
+      user_code: 'WDJB-MJHT',
+      verification_uri: 'https://github.com/login/device',
+      expires_in: 900,
+      interval: 1,
+    }),
+  );
+
+function tokenPoll(state: State): FixtureAnswer {
+  const reply = state.replies[Math.min(state.polled, state.replies.length - 1)];
+
+  state.polled += 1;
+
+  return answer(JSON.stringify(reply));
+}
+
+const githubCom = (state: State, request: FixtureRequest): FixtureAnswer =>
+  request.path === '/login/device/code' ? deviceCode() : tokenPoll(state);
+
+const apiWithToken = (
+  accepted: Set<string>,
+  request: FixtureRequest,
+): FixtureAnswer | Promise<FixtureAnswer> =>
+  accepted.has(tokenOf(request))
+    ? api(request)
+    : answer(JSON.stringify({ message: 'Bad credentials' }), unauthorized);
+
+const handle =
+  (state: State, accepted: Set<string>) =>
+  (request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> =>
+    request.host === 'github.com'
+      ? githubCom(state, request)
+      : apiWithToken(accepted, request);
 
 /*
  * GitHub as the tracker meets it: the device-flow endpoints on `github.com`, and the user, GraphQL and Issue endpoints
  * on `api.github.com`, over a certificate the test trusts. A call with a token it does not accept is a 401.
  */
 export async function githubFixture(): Promise<GitHubFixture> {
-  let replies: PollReply[] = [{ access_token: 'token-1' }];
-
+  const state: State = { replies: [{ access_token: 'token-1' }], polled: 0 };
   const accepted = new Set(['token-1', 'token-2']);
-  let polled = 0;
-
-  const services = await fixtureServices(async (request) => {
-    if (request.host === 'github.com') {
-      if (request.path === '/login/device/code')
-        return json({
-          device_code: 'device-1',
-          user_code: 'WDJB-MJHT',
-          verification_uri: 'https://github.com/login/device',
-          expires_in: 900,
-          interval: 1,
-        });
-
-      const reply = replies[Math.min(polled, replies.length - 1)];
-      polled += 1;
-
-      return json(reply);
-    }
-
-    if (!accepted.has(tokenOf(request)))
-      return json({ message: 'Bad credentials' }, 401);
-
-    if (request.path === '/user') return json({ login: 'octocat' });
-
-    if (request.method === 'PATCH') return patch(request);
-
-    return json({ data: graphqlData(request) });
-  });
+  const services = await fixtureServices(handle(state, accepted));
 
   return {
     ...services,
     script: (...next) => {
-      replies = next;
-      polled = 0;
+      state.replies = next;
+      state.polled = 0;
     },
     accepted,
     graphqlCalls: () =>

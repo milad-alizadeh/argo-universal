@@ -9,10 +9,11 @@ export type IssueSeeds = {
   of: (projectId: string, number: number) => Issue | undefined;
 };
 
+const key = (projectId: string, number: number): string =>
+  `${projectId}#${number}`;
+
 export function createIssueSeeds(): IssueSeeds {
   const seeds = new Map<string, Issue>();
-  const key = (projectId: string, number: number): string =>
-    `${projectId}#${number}`;
 
   return {
     remember: (projectId, issue) => {

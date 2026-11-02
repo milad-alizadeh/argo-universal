@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from '@argo/plugin-kit';
+import { useCallback, useMemo, useState } from '@argo/plugin-kit';
 import { filterMessage, loadingIssues, pageSize } from './filter-shown';
+import type { GitHubRead } from './github-api';
 import { listQuery, mapIssueList, searchLimit } from './github-documents';
 import type { Issue } from './github-issues';
 import { githubRepositoryFromOrigin } from './github-repository';
@@ -24,13 +25,17 @@ export type FilterIssues = {
   signIn: SignInNeed | null;
 };
 
-/*
- * One filter's Issues, newest first: a further page asks for a longer search, as a search has no cursor, and the Issues
- * already shown stay on screen while it loads.
- */
-export function useFilterIssues(source: FilterSource): FilterIssues {
-  const { project, filter, deps } = source;
-  const [limit, setLimit] = useState(pageSize);
+type FilterRead = {
+  repository: string | null;
+  query: ReturnType<typeof listQuery> | null;
+  read: GitHubRead<Issue[]>;
+  refresh: () => Promise<void>;
+};
+
+function useFilterRead(
+  { project, filter }: FilterSource,
+  limit: number,
+): FilterRead {
   const repository = githubRepositoryFromOrigin(project.originUrl);
 
   const query = useMemo(
@@ -38,27 +43,53 @@ export function useFilterIssues(source: FilterSource): FilterIssues {
     [repository, filter.search, limit],
   );
 
-  const { read, refresh } = useGitHub(
-    { projectId: project.id, query },
-    mapIssueList,
-  );
+  const data = useGitHub({ projectId: project.id, query }, mapIssueList);
 
-  const shown = useRef<Issue[]>([]);
-  const recent = useRecentStatuses(deps.changes);
+  return { repository, query, ...data };
+}
 
-  if (read.kind === 'ok') shown.current = read.value;
+// The Issues already shown stay on screen while a longer search loads.
+function useLastIssues(read: GitHubRead<Issue[]>): Issue[] {
+  const [last, setLast] = useState<Issue[]>([]);
+  const current = read.kind === 'ok' ? read.value : last;
 
-  const issues = shown.current.map((issue) => withRecent(issue, recent));
+  if (current !== last) setLast(current);
+
+  return current;
+}
+
+function useLimit(): [number, () => Promise<void>] {
+  const [limit, setLimit] = useState(pageSize);
 
   const loadMore = useCallback(async (): Promise<void> => {
     setLimit((now) => Math.min(now + pageSize, searchLimit));
   }, []);
 
+  return [limit, loadMore];
+}
+
+const hasMoreOf = (
+  read: GitHubRead<Issue[]>,
+  issues: Issue[],
+  limit: number,
+): boolean =>
+  [read.kind === 'ok', issues.length >= limit, limit < searchLimit].every(
+    Boolean,
+  );
+
+/*
+ * One filter's Issues, newest first: a further page asks for a longer search, as a search has no cursor.
+ */
+export function useFilterIssues(source: FilterSource): FilterIssues {
+  const [limit, loadMore] = useLimit();
+  const { repository, query, read, refresh } = useFilterRead(source, limit);
+  const recent = useRecentStatuses(source.deps.changes);
+  const issues = useLastIssues(read).map((issue) => withRecent(issue, recent));
+
   return {
     issues,
     message: repository ? messageOf(read, issues) : noRemoteMessage,
-    hasMore:
-      read.kind === 'ok' && issues.length >= limit && limit < searchLimit,
+    hasMore: hasMoreOf(read, issues, limit),
     loadMore,
     refresh,
     signIn: query ? signInNeed(read) : null,

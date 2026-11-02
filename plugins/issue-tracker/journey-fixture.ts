@@ -10,7 +10,7 @@ import {
 import { expect, onTestFinished } from 'vitest';
 import { githubFixture, type GitHubFixture } from './github-fixture';
 
-export { refusedTitle } from './github-fixture';
+export { refusedTitle } from './github-issue-nodes';
 
 type FixtureProject = { id: string; name: string; originUrl: string | null };
 
@@ -67,6 +67,8 @@ export async function tracker(projects = [project]): Promise<Tracked> {
 }
 
 // Moves the Plugin's clock on until the page shows `text`: the device flow waits GitHub's interval between polls.
+const clockTickMs = 1000;
+
 export async function clockUntil(
   test: PluginTest,
   view: PageView,
@@ -74,7 +76,7 @@ export async function clockUntil(
 ): Promise<void> {
   await expect
     .poll(async () => {
-      await test.clock.advance(1000);
+      await test.clock.advance(clockTickMs);
 
       return view.findText(text);
     }, wait)

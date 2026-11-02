@@ -1,20 +1,17 @@
-import type { Argo } from '@argo/plugin-kit';
+import {
+  pollOutcome,
+  post,
+  requestDevice,
+  tokenFields,
+  tokenUrl,
+  type Calls,
+  type Device,
+  type Poll,
+  type Settled,
+} from './device-requests';
 import { githubHost } from './github-api';
 import { githubClientId } from './github-client-id';
-
-type Calls = Pick<Argo, 'fetch' | 'accounts' | 'secrets'>;
-
-const codeUrl = 'https://github.com/login/device/code';
-
-const tokenUrl = 'https://github.com/login/oauth/access_token';
-
-const deviceGrant = 'urn:ietf:params:oauth:grant-type:device_code';
-
-// `repo` reads and changes the Issues of private repositories, which a Project often is.
-const scope = 'repo';
-
-// GitHub asks a client that polls too fast to wait this much longer each time (RFC 8628).
-const slowDownMs = 5000;
+import { nonEmpty, parseJson, pick } from './json';
 
 // What the sign-in page shows as the flow goes: the code to enter, then how it ended.
 export type FlowStep =
@@ -35,100 +32,30 @@ export type FlowRun = {
 // The Account id a borrow last reached, recorded as the provider hands out its token.
 export type Borrowed = { id: string | null };
 
-type Fields = Record<string, string>;
-
-const form = (fields: Fields): string =>
-  Object.entries(fields)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&');
-
-type Reply = Record<string, unknown>;
-
-// GitHub answers a form post with JSON when asked to, and with 200 even for "still waiting".
-async function post(calls: Calls, url: string, fields: Fields): Promise<Reply> {
-  const response = await calls.fetch(url, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: form(fields),
-  });
-
-  if (!response) throw new Error('GitHub could not be reached.');
-
-  return Object(JSON.parse(await response.text())) as Reply;
-}
-
-const text = (reply: Reply, key: string): string | null => {
-  const value = reply[key];
-
-  return typeof value === 'string' && value !== '' ? value : null;
+const cancelledStep: Settled = {
+  kind: 'failed',
+  message: 'Sign-in was cancelled.',
 };
-
-const seconds = (reply: Reply, key: string, fallback: number): number => {
-  const value = reply[key];
-
-  return typeof value === 'number' && value >= 0 ? value : fallback;
-};
-
-type Device = {
-  deviceCode: string;
-  userCode: string;
-  verificationUri: string;
-  intervalMs: number;
-  expiresAt: number;
-};
-
-function deviceOf(reply: Reply, now: number): Device | string {
-  const deviceCode = text(reply, 'device_code');
-  const userCode = text(reply, 'user_code');
-  const verificationUri = text(reply, 'verification_uri');
-
-  if (!deviceCode || !userCode || !verificationUri)
-    return text(reply, 'error_description') ?? 'GitHub sent no sign-in code.';
-
-  return {
-    deviceCode,
-    userCode,
-    verificationUri,
-    intervalMs: seconds(reply, 'interval', 5) * 1000,
-    expiresAt: now + seconds(reply, 'expires_in', 900) * 1000,
-  };
-}
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((done) => setTimeout(done, ms));
 
-type Poll =
-  | { kind: 'token'; token: string }
-  | { kind: 'wait'; intervalMs: number }
-  | Exclude<FlowStep, { kind: 'requesting' | 'code' | 'signed-in' }>;
+type Pace = { device: Device; intervalMs: number };
 
-const failures = {
-  access_denied: { kind: 'denied' },
-  expired_token: { kind: 'expired' },
-} as const;
+async function pollOnce(
+  calls: Calls,
+  run: FlowRun,
+  { device, intervalMs }: Pace,
+): Promise<Poll> {
+  await sleep(intervalMs);
 
-function pollOutcome(reply: Reply, intervalMs: number): Poll {
-  const token = text(reply, 'access_token');
+  if (run.cancelled()) return cancelledStep;
 
-  if (token) return { kind: 'token', token };
+  if (Date.now() > device.expiresAt) return { kind: 'expired' };
 
-  const error = text(reply, 'error');
+  const reply = await post(calls, tokenUrl, tokenFields(device));
 
-  if (error === 'authorization_pending') return { kind: 'wait', intervalMs };
-
-  if (error === 'slow_down')
-    return { kind: 'wait', intervalMs: intervalMs + slowDownMs };
-
-  if (error === 'access_denied' || error === 'expired_token')
-    return failures[error];
-
-  return {
-    kind: 'failed',
-    message: text(reply, 'error_description') ?? 'GitHub refused the sign-in.',
-  };
+  return pollOutcome(reply, intervalMs);
 }
 
 // Asks for the token at GitHub's pace until the person answers, the code runs out or the page stops waiting.
@@ -136,32 +63,21 @@ async function awaitToken(
   calls: Calls,
   device: Device,
   run: FlowRun,
-): Promise<Poll> {
-  let intervalMs = device.intervalMs;
+): Promise<Settled> {
+  let polled: Poll = { kind: 'wait', intervalMs: device.intervalMs };
 
-  while (!run.cancelled()) {
-    await sleep(intervalMs);
+  while (polled.kind === 'wait')
+    polled = await pollOnce(calls, run, {
+      device,
+      intervalMs: polled.intervalMs,
+    });
 
-    if (run.cancelled()) break;
-
-    if (Date.now() > device.expiresAt) return { kind: 'expired' };
-
-    const polled = pollOutcome(
-      await post(calls, tokenUrl, {
-        client_id: githubClientId,
-        device_code: device.deviceCode,
-        grant_type: deviceGrant,
-      }),
-      intervalMs,
-    );
-
-    if (polled.kind !== 'wait') return polled;
-
-    intervalMs = polled.intervalMs;
-  }
-
-  return { kind: 'failed', message: 'Sign-in was cancelled.' };
+  return polled;
 }
+
+const bodyOf = async (
+  response: Awaited<ReturnType<Calls['fetch']>>,
+): Promise<string> => (response ? response.text() : 'null');
 
 // GitHub's login names the Account: only the Plugin knows whose token this is.
 async function loginOf(calls: Calls, token: string): Promise<string> {
@@ -169,10 +85,9 @@ async function loginOf(calls: Calls, token: string): Promise<string> {
     headers: { authorization: `Bearer ${token}`, accept: 'application/json' },
   });
 
-  const login = Object(JSON.parse((await response?.text()) ?? 'null')).login;
+  const login = nonEmpty(pick(parseJson(await bodyOf(response)), 'login'));
 
-  if (typeof login !== 'string' || login === '')
-    throw new Error('GitHub did not say who signed in.');
+  if (!login) throw new Error('GitHub did not say who signed in.');
 
   return login;
 }
@@ -195,42 +110,62 @@ async function keep(
   return label;
 }
 
-async function finish(
+async function settle(
   calls: Calls,
   borrowed: Borrowed,
-  { token, run }: { token: string; run: FlowRun },
+  { run, polled }: { run: FlowRun; polled: Settled },
 ): Promise<FlowStep> {
+  if (polled.kind !== 'token') return polled;
+
   const label = await keep(calls, borrowed, {
-    token,
+    token: polled.token,
     reauthorize: run.reauthorize,
   });
 
   return { kind: 'signed-in', label };
 }
 
+const codeStep = ({ userCode, verificationUri }: Device): FlowStep => ({
+  kind: 'code',
+  userCode,
+  verificationUri,
+});
+
 async function authorize(
   calls: Calls,
   borrowed: Borrowed,
   run: FlowRun,
 ): Promise<FlowStep> {
-  const device = deviceOf(
-    await post(calls, codeUrl, { client_id: githubClientId, scope }),
-    Date.now(),
-  );
+  const device = await requestDevice(calls);
 
   if (typeof device === 'string') return { kind: 'failed', message: device };
 
-  run.show({
-    kind: 'code',
-    userCode: device.userCode,
-    verificationUri: device.verificationUri,
-  });
+  run.show(codeStep(device));
 
   const polled = await awaitToken(calls, device, run);
 
-  return polled.kind === 'token'
-    ? finish(calls, borrowed, { token: polled.token, run })
-    : (polled as FlowStep);
+  return settle(calls, borrowed, { run, polled });
+}
+
+const failedWith = (cause: unknown): FlowStep => ({
+  kind: 'failed',
+  message: cause instanceof Error ? cause.message : String(cause),
+});
+
+const showUnlessCancelled = (run: FlowRun, step: FlowStep): void => {
+  if (!run.cancelled()) run.show(step);
+};
+
+async function attempt(
+  calls: Calls,
+  borrowed: Borrowed,
+  run: FlowRun,
+): Promise<void> {
+  try {
+    showUnlessCancelled(run, await authorize(calls, borrowed, run));
+  } catch (cause) {
+    showUnlessCancelled(run, failedWith(cause));
+  }
 }
 
 /*
@@ -250,15 +185,5 @@ export async function runDeviceFlow(
 
   run.show({ kind: 'requesting' });
 
-  try {
-    const step = await authorize(calls, borrowed, run);
-
-    if (!run.cancelled()) run.show(step);
-  } catch (cause) {
-    if (!run.cancelled())
-      run.show({
-        kind: 'failed',
-        message: cause instanceof Error ? cause.message : String(cause),
-      });
-  }
+  await attempt(calls, borrowed, run);
 }

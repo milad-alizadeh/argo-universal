@@ -12,6 +12,8 @@ const surface = { platform: 'web' } as const;
 const shown = (view: PageView): string[] =>
   view.trees.map((tree) => JSON.stringify(tree));
 
+const closeLabel = 'Close Issue';
+
 it('makes one GitHub call to open the root, and none when it is opened again inside the freshness window', async () => {
   const { test, github, root } = await issuesRoot();
 
@@ -56,11 +58,11 @@ it('closes an Issue with four pages open and refetches only the page it was clos
   const issue = await follow(test, list, issueTitle);
   const other = await follow(test, list, 'Fixture issue GitHub cannot change');
 
-  await expect.poll(() => issue.findText('Close Issue'), wait).toBeDefined();
-  await expect.poll(() => other.findText('Close Issue'), wait).toBeDefined();
+  await expect.poll(() => issue.findText(closeLabel), wait).toBeDefined();
+  await expect.poll(() => other.findText(closeLabel), wait).toBeDefined();
   await expect.poll(() => github.graphqlCalls().length, wait).toBe(4);
 
-  await issue.press('Close Issue');
+  await issue.press(closeLabel);
   await expect
     .poll(
       () => github.requests.filter(({ method }) => method === 'PATCH').length,

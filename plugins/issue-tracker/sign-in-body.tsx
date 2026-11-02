@@ -17,7 +17,7 @@ const idleText = (reauthorize: boolean): string =>
 function Idle({
   start,
   reauthorize,
-}: Pick<BodyProps, 'start' | 'reauthorize'>) {
+}: Pick<BodyProps, 'start' | 'reauthorize'>): JSX.Element {
   return (
     <>
       <Text role="secondary">{idleText(reauthorize)}</Text>
@@ -58,7 +58,7 @@ type FailureProps = { title: string; detail: string; start: () => void };
 function Failure({ title, detail, start }: FailureProps): JSX.Element {
   return (
     <>
-      <Text role="heading" tone="danger">
+      <Text role="body" tone="danger">
         {title}
       </Text>
       <Text role="secondary">{detail}</Text>
@@ -67,39 +67,58 @@ function Failure({ title, detail, start }: FailureProps): JSX.Element {
   );
 }
 
-function Step(props: BodyProps): JSX.Element | null {
-  const { step, start } = props;
+type Progress = Extract<SignInStep, { kind: 'idle' | 'requesting' | 'code' }>;
 
-  switch (step.kind) {
-    case 'idle':
-      return <Idle start={start} reauthorize={props.reauthorize} />;
-    case 'requesting':
-      return <Requesting />;
-    case 'code':
-      return <CodeShown cancel={props.cancel} step={step} />;
-    case 'signed-in':
-      return <Text role="heading">Signed in as {step.label}</Text>;
-    case 'denied':
-      return (
-        <Failure
-          title="Sign-in was denied"
-          detail="You turned the request down on GitHub."
-          start={start}
-        />
-      );
-    case 'expired':
-      return (
-        <Failure
-          title="The code expired"
-          detail="GitHub codes last 15 minutes. Ask for a new one."
-          start={start}
-        />
-      );
-    case 'failed':
-      return (
-        <Failure title="Couldn’t sign in" detail={step.message} start={start} />
-      );
-  }
+type Outcome = Exclude<SignInStep, Progress>;
+
+const isProgress = (step: SignInStep): step is Progress =>
+  step.kind === 'idle' || step.kind === 'requesting' || step.kind === 'code';
+
+function ProgressView(props: BodyProps & { step: Progress }): JSX.Element {
+  const { step, start, cancel, reauthorize } = props;
+
+  if (step.kind === 'idle')
+    return <Idle start={start} reauthorize={reauthorize} />;
+
+  if (step.kind === 'requesting') return <Requesting />;
+
+  return <CodeShown cancel={cancel} step={step} />;
+}
+
+const endings = {
+  denied: {
+    title: 'Sign-in was denied',
+    detail: 'You turned the request down on GitHub.',
+  },
+  expired: {
+    title: 'The code expired',
+    detail: 'GitHub codes last 15 minutes. Ask for a new one.',
+  },
+} as const;
+
+function OutcomeView({
+  step,
+  start,
+}: Pick<BodyProps, 'start'> & { step: Outcome }): JSX.Element {
+  if (step.kind === 'signed-in')
+    return <Text role="body">Signed in as {step.label}</Text>;
+
+  if (step.kind === 'failed')
+    return (
+      <Failure title="Couldn’t sign in" detail={step.message} start={start} />
+    );
+
+  return <Failure {...endings[step.kind]} start={start} />;
+}
+
+function Step(props: BodyProps): JSX.Element {
+  const { step } = props;
+
+  return isProgress(step) ? (
+    <ProgressView {...props} step={step} />
+  ) : (
+    <OutcomeView step={step} start={props.start} />
+  );
 }
 
 export function SignInBody(props: BodyProps): JSX.Element {

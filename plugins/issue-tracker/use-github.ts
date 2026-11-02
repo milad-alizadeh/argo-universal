@@ -5,6 +5,7 @@ import {
   type GitHubRead,
   type RawRead,
 } from './github-api';
+import type { Json } from './json';
 
 /*
  * How long a GitHub answer is fresh. A page opened again inside it makes no call; a sign-out or a rejected token is
@@ -25,7 +26,7 @@ export type GitHubData<Value> = {
  */
 export function useGitHub<Value>(
   { projectId, query }: Source,
-  map: (data: unknown) => Value,
+  map: (data: Json) => Value,
 ): GitHubData<Value> {
   const { data, error, refresh } = useData(query, {
     projectId,

@@ -1,3 +1,5 @@
+import { isObject, item, parseJson, pick, type Json } from './json';
+
 // The one Account every read borrows, named by the API host its token opens (ADR-0036).
 export const githubHost = 'api.github.com';
 
@@ -45,28 +47,34 @@ export type RawRead = {
 // A borrow that returns nothing is an `error`; a 401 is data, which the Plugin reads (ADR-0037).
 const noAccount = 'Account is unavailable';
 
-type GraphqlBody = { data?: unknown; errors?: { message?: unknown }[] };
+export const unauthorizedStatus = 401;
+
+const okStatus = 200;
+
+const lacksAccount = (error: string | undefined): boolean =>
+  error !== undefined && error.includes(noAccount);
+
+const waiting = (error: string | undefined): GitHubRead<never> =>
+  error === undefined
+    ? { kind: 'loading' }
+    : { kind: 'failed', message: error };
 
 export function readGraphql<Value>(
   { data, error }: RawRead,
-  map: (data: unknown) => Value,
+  map: (data: Json) => Value,
 ): GitHubRead<Value> {
-  if (error?.includes(noAccount)) return { kind: 'signed-out' };
+  if (lacksAccount(error)) return { kind: 'signed-out' };
 
-  if (data) return readReply(data, map);
-
-  return error === undefined
-    ? { kind: 'loading' }
-    : { kind: 'failed', message: error };
+  return data ? readReply(data, map) : waiting(error);
 }
 
 function readReply<Value>(
   { status, body }: NonNullable<RawRead['data']>,
-  map: (data: unknown) => Value,
+  map: (data: Json) => Value,
 ): GitHubRead<Value> {
-  if (status === 401) return { kind: 'unauthorized' };
+  if (status === unauthorizedStatus) return { kind: 'unauthorized' };
 
-  if (status !== 200)
+  if (status !== okStatus)
     return { kind: 'failed', message: `GitHub answered ${status}.` };
 
   return readBody(body, map);
@@ -74,13 +82,14 @@ function readReply<Value>(
 
 function readBody<Value>(
   body: string,
-  map: (data: unknown) => Value,
+  map: (data: Json) => Value,
 ): GitHubRead<Value> {
   try {
-    const reply = Object(JSON.parse(body)) as GraphqlBody;
+    const reply = parseJson(body);
+    const data = pick(reply, 'data');
 
     // GitHub answers part of a query when some of it fails, such as one search; the rest is still the answer.
-    if (reply.data) return { kind: 'ok', value: map(reply.data) };
+    if (isObject(data)) return { kind: 'ok', value: map(data) };
 
     return { kind: 'failed', message: firstError(reply) };
   } catch (cause) {
@@ -88,8 +97,8 @@ function readBody<Value>(
   }
 }
 
-function firstError({ errors }: GraphqlBody): string {
-  const message = errors?.[0]?.message;
+function firstError(reply: Json): string {
+  const message = pick(item(pick(reply, 'errors'), 0), 'message');
 
   return typeof message === 'string' ? message : 'GitHub returned no data.';
 }

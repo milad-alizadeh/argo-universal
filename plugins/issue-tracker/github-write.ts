@@ -1,6 +1,7 @@
 import type { Argo } from '@argo/plugin-kit';
-import { githubHost } from './github-api';
+import { githubHost, unauthorizedStatus } from './github-api';
 import type { IssueStatus } from './github-issues';
+import { nonEmpty, parseJson, pick } from './json';
 
 type Fetch = Argo['fetch'];
 
@@ -24,19 +25,43 @@ function issueNumber(number: number): string {
   return String(number);
 }
 
-const reasonOf = async (
-  response: NonNullable<Awaited<ReturnType<Fetch>>>,
-): Promise<string> => {
+type Reply = NonNullable<Awaited<ReturnType<Fetch>>>;
+
+// GitHub's own words are better than ours, but its status is enough.
+async function messageOf(response: Reply): Promise<string | null> {
   try {
-    const { message } = Object(JSON.parse(await response.text()));
-
-    if (typeof message === 'string' && message !== '') return message;
+    return nonEmpty(pick(parseJson(await response.text()), 'message'));
   } catch {
-    // GitHub's own words are better than ours, but its status is enough.
+    return null;
   }
+}
 
-  return `GitHub answered ${response.status}.`;
+const reasonOf = async (response: Reply): Promise<string> =>
+  (await messageOf(response)) ?? `GitHub answered ${response.status}.`;
+
+const present = (response: Reply | null): Reply => {
+  if (!response) throw new Error('Sign in to GitHub to change this Issue.');
+
+  return response;
 };
+
+async function accept(response: Reply): Promise<void> {
+  if (response.status === unauthorizedStatus)
+    throw new Error('GitHub rejected the saved sign-in. Sign in again.');
+
+  if (!response.ok) throw new Error(await reasonOf(response));
+}
+
+const requestOf = ({ status, projectId }: Change): Parameters<Fetch>[1] => ({
+  method: 'PATCH',
+  headers: {
+    accept: 'application/vnd.github+json',
+    'content-type': 'application/json',
+  },
+  body: JSON.stringify(states[status]),
+  account: githubHost,
+  projectId,
+});
 
 /*
  * Closes or reopens an Issue as the signed-in person. It borrows the Account like a read does; the page refreshes its
@@ -44,26 +69,10 @@ const reasonOf = async (
  */
 export async function setIssueStatus(
   fetch: Fetch,
-  { repository, number, status, projectId }: Change,
+  change: Change,
 ): Promise<void> {
-  const response = await fetch(
-    `https://${githubHost}/repos/${repository}/issues/${issueNumber(number)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        accept: 'application/vnd.github+json',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(states[status]),
-      account: githubHost,
-      projectId,
-    },
-  );
+  const { repository, number } = change;
+  const url = `https://${githubHost}/repos/${repository}/issues/${issueNumber(number)}`;
 
-  if (!response) throw new Error('Sign in to GitHub to change this Issue.');
-
-  if (response.status === 401)
-    throw new Error('GitHub rejected the saved sign-in. Sign in again.');
-
-  if (!response.ok) throw new Error(await reasonOf(response));
+  await accept(present(await fetch(url, requestOf(change))));
 }

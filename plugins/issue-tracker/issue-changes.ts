@@ -18,29 +18,38 @@ export type IssueChanges = {
   recent: () => ReadonlyMap<number, IssueStatus>;
 };
 
+function subscription(listeners: Set<Listener>): IssueChanges['subscribe'] {
+  return (listener) => {
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+}
+
+const freshStatus = ([number, { status, at }]: [number, Change]): [
+  number,
+  IssueStatus,
+][] => (Date.now() - at < freshForMs ? [[number, status]] : []);
+
+const recentOf = (
+  changes: Map<number, Change>,
+): ReadonlyMap<number, IssueStatus> =>
+  new Map([...changes].flatMap(freshStatus));
+
 export function createIssueChanges(): IssueChanges {
   const listeners = new Set<Listener>();
   const changes = new Map<number, Change>();
 
   return {
-    subscribe: (listener) => {
-      listeners.add(listener);
-
-      return () => {
-        listeners.delete(listener);
-      };
-    },
+    subscribe: subscription(listeners),
     publish: (number, status) => {
       changes.set(number, { status, at: Date.now() });
 
       for (const listener of listeners) listener(number, status);
     },
-    recent: () =>
-      new Map(
-        [...changes]
-          .filter(([, { at }]) => Date.now() - at < freshForMs)
-          .map(([number, { status }]) => [number, status]),
-      ),
+    recent: () => recentOf(changes),
   };
 }
 

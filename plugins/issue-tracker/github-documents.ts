@@ -2,6 +2,7 @@ import { graphqlQuery, type GitHubQuery } from './github-api';
 import type { GitHubIssue, Issue } from './github-issues';
 import { mapIssue } from './github-issues';
 import { builtInFilters } from './issue-filters';
+import { isObject, pick, type Json } from './json';
 
 // The repository's labels and each counted filter's Issue count, by filter id.
 export type Overview = { labels: string[]; counts: Record<string, number> };
@@ -31,62 +32,65 @@ const countedFilters = builtInFilters().filter(({ counted }) => counted);
 
 const countAlias = (index: number): string => `count${index}`;
 
-/*
- * The labels and every count in one call: a count is a search that asks for no Issues, only how many there are.
- */
-export function overviewQuery(repository: string): GitHubQuery {
-  const [owner, name] = split(repository);
-  const counts = countedFilters.map((_, index) => countAlias(index));
+const declarationsOf = (aliases: string[]): string =>
+  aliases.map((alias) => `$${alias}: String!`).join(', ');
 
-  const declarations = counts.map((alias) => `$${alias}: String!`).join(', ');
-
-  const searches = counts
+const searchesOf = (aliases: string[]): string =>
+  aliases
     .map(
       (alias) =>
         `${alias}: search(query: $${alias}, type: ISSUE, first: 0) { issueCount }`,
     )
     .join('\n');
 
-  const variables = Object.fromEntries(
+const countVariables = (repository: string): Record<string, string> =>
+  Object.fromEntries(
     countedFilters.map(({ search }, index) => [
       countAlias(index),
       `repo:${repository} is:issue ${search}`,
     ]),
   );
 
-  return graphqlQuery(
-    `query ($owner: String!, $name: String!, ${declarations}) {
+const overviewDocument = (
+  aliases: string[],
+): string => `query ($owner: String!, $name: String!, ${declarationsOf(aliases)}) {
       repository(owner: $owner, name: $name) { labels(first: ${labelLimit}) { nodes { name } } }
-      ${searches}
-    }`,
-    { owner, name, ...variables },
-  );
+      ${searchesOf(aliases)}
+    }`;
+
+/*
+ * The labels and every count in one call: a count is a search that asks for no Issues, only how many there are.
+ */
+export function overviewQuery(repository: string): GitHubQuery {
+  const [owner, name] = split(repository);
+  const aliases = countedFilters.map((_, index) => countAlias(index));
+
+  return graphqlQuery(overviewDocument(aliases), {
+    owner,
+    name,
+    ...countVariables(repository),
+  });
 }
 
-type Count = { issueCount?: unknown } | null | undefined;
+const labelName = (node: Json): string[] => {
+  const name = pick(node, 'name');
 
-type OverviewData = {
-  repository?: { labels?: { nodes?: { name?: unknown }[] } } | null;
-} & Record<string, unknown>;
+  return typeof name === 'string' ? [name] : [];
+};
 
-export function mapOverview(data: unknown): Overview {
-  const { repository, ...rest } = Object(data) as OverviewData;
-  const nodes = repository?.labels?.nodes;
+export function mapOverview(data: Json): Overview {
+  const nodes = pick(pick(pick(data, 'repository'), 'labels'), 'nodes');
 
   if (!Array.isArray(nodes))
     throw new Error('GitHub returned an invalid label list.');
 
-  const labels = nodes.flatMap(({ name }) =>
-    typeof name === 'string' ? [name] : [],
-  );
-
-  return { labels, counts: countsOf(rest) };
+  return { labels: nodes.flatMap(labelName), counts: countsOf(data) };
 }
 
 // A count GitHub refused, such as past its search rate limit, only leaves its row without one.
-function countsOf(rest: Record<string, unknown>): Overview['counts'] {
+function countsOf(data: Json): Overview['counts'] {
   const entries = countedFilters.flatMap(({ id }, index) => {
-    const count = (rest[countAlias(index)] as Count)?.issueCount;
+    const count = pick(pick(data, countAlias(index)), 'issueCount');
 
     return Number.isSafeInteger(count) ? [[id, Number(count)] as const] : [];
   });
@@ -139,26 +143,22 @@ const flatten = ({
   assignees: assignees?.nodes,
 });
 
-export function mapIssueList(data: unknown): Issue[] {
-  const nodes = (data as { search?: { nodes?: unknown } } | null)?.search
-    ?.nodes;
+const issueNode = (node: Json): Issue[] =>
+  isObject(node) && 'number' in node ? [mapIssue(flatten(node))] : [];
+
+export function mapIssueList(data: Json): Issue[] {
+  const nodes = pick(pick(data, 'search'), 'nodes');
 
   if (!Array.isArray(nodes))
     throw new Error('GitHub returned an invalid Issue list.');
 
-  return nodes.flatMap((node: GraphqlIssue | null) =>
-    node && typeof node === 'object' && 'number' in node
-      ? [mapIssue(flatten(node))]
-      : [],
-  );
+  return nodes.flatMap(issueNode);
 }
 
-export function mapIssueDetail(data: unknown): Issue {
-  const issue = (
-    data as { repository?: { issue?: GraphqlIssue | null } | null } | null
-  )?.repository?.issue;
+export function mapIssueDetail(data: Json): Issue {
+  const issue = pick(pick(data, 'repository'), 'issue');
 
-  if (!issue) throw new Error('GitHub has no such Issue.');
+  if (!isObject(issue)) throw new Error('GitHub has no such Issue.');
 
   return mapIssue(flatten(issue));
 }

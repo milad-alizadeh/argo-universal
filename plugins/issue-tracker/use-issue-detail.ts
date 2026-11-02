@@ -1,30 +1,26 @@
-import { useCallback, useMemo, useState } from '@argo/plugin-kit';
+import { useMemo } from '@argo/plugin-kit';
+import type { GitHubRead } from './github-api';
 import { issueQuery, mapIssueDetail } from './github-documents';
 import type { Issue, IssueStatus } from './github-issues';
 import { githubRepositoryFromOrigin } from './github-repository';
-import { setIssueStatus } from './github-write';
-import { useRecentStatuses } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { noRemoteMessage, type Project } from './issue-project';
-import { useCall } from './use-call';
+import {
+  useAttachedSessions,
+  type AttachedSession,
+} from './use-attached-sessions';
 import {
   readMessage,
   signInNeed,
   useGitHub,
   type SignInNeed,
 } from './use-github';
+import { useStatusChange } from './use-status-change';
 
 export type DetailSource = {
   project: Project;
   number: number;
   deps: IssueDeps;
-};
-
-// A Session an Agent attached to this Issue, named as the App names it.
-export type AttachedSession = {
-  sessionId: string;
-  title: string;
-  branch: string | null;
 };
 
 export type IssueDetailState = {
@@ -41,8 +37,14 @@ export type IssueDetailState = {
   refresh: () => Promise<void>;
 };
 
-export function useIssueDetail(source: DetailSource): IssueDetailState {
-  const { project, number, deps } = source;
+type DetailRead = {
+  repository: string | null;
+  query: ReturnType<typeof issueQuery> | null;
+  read: GitHubRead<Issue>;
+  refresh: () => Promise<void>;
+};
+
+function useDetailRead({ project, number }: DetailSource): DetailRead {
   const repository = githubRepositoryFromOrigin(project.originUrl);
 
   const query = useMemo(
@@ -50,86 +52,55 @@ export function useIssueDetail(source: DetailSource): IssueDetailState {
     [repository, number],
   );
 
-  const { read, refresh } = useGitHub(
-    { projectId: project.id, query },
-    mapIssueDetail,
-  );
+  const data = useGitHub({ projectId: project.id, query }, mapIssueDetail);
 
-  const [shownStatus, showStatus] = useState<IssueStatus>();
-  const recent = useRecentStatuses(deps.changes);
-  const sessions = useAttachedSessions(source);
-
-  const onStatus = useCallback(
-    async (status: IssueStatus): Promise<void> => {
-      if (!repository) throw new Error(noRemoteMessage);
-
-      showStatus(status);
-
-      try {
-        await setIssueStatus(deps.fetch, {
-          repository,
-          number,
-          status,
-          projectId: project.id,
-        });
-      } catch (cause) {
-        showStatus(undefined);
-        throw cause;
-      }
-
-      deps.changes.publish(number, status);
-      await refresh().catch(() => undefined);
-      showStatus(undefined);
-    },
-    [deps, project.id, repository, number, refresh],
-  );
-
-  const base =
-    read.kind === 'ok' ? read.value : deps.seeds.of(project.id, number);
-  const status = shownStatus ?? recent.get(number);
-
-  return {
-    issue: base ? { ...base, status: status ?? base.status } : null,
-    settled: read.kind === 'ok',
-    message: repository ? (readMessage(read) ?? '') : noRemoteMessage,
-    sessions: sessions.value ?? [],
-    onStatus,
-    signIn: query ? signInNeed(read) : null,
-    refresh,
-  };
+  return { repository, query, ...data };
 }
 
-// The Sessions this Plugin stored for the Issue, each named by the App; one that has since gone is left out.
-function useAttachedSessions({
-  project,
-  number,
-  deps,
-}: DetailSource): ReturnType<typeof useCall<AttachedSession[]>> {
-  const { storage, getSession } = deps;
+const baseOf = (
+  read: GitHubRead<Issue>,
+  seed: Issue | undefined,
+): Issue | undefined => (read.kind === 'ok' ? read.value : seed);
 
-  return useCall(
-    useCallback(async () => {
-      const attached = await storage.issueSessions({
-        projectId: project.id,
-        number,
-      });
+const withStatus = (
+  issue: Issue | undefined,
+  ...statuses: (IssueStatus | null | undefined)[]
+): Issue | null =>
+  issue ? { ...issue, status: statuses.find(Boolean) ?? issue.status } : null;
 
-      const found = await Promise.all(
-        attached.map(({ sessionId }) => namedSession(getSession, sessionId)),
-      );
+const messageOf = (
+  repository: string | null,
+  read: GitHubRead<Issue>,
+): string => (repository ? (readMessage(read) ?? '') : noRemoteMessage);
 
-      return found.flat();
-    }, [storage, getSession, project.id, number]),
-  );
-}
+const stateOf = ({
+  read,
+  query,
+  repository,
+  refresh,
+}: DetailRead): Pick<
+  IssueDetailState,
+  'settled' | 'message' | 'signIn' | 'refresh'
+> => ({
+  settled: read.kind === 'ok',
+  message: messageOf(repository, read),
+  signIn: query ? signInNeed(read) : null,
+  refresh,
+});
 
-async function namedSession(
-  getSession: IssueDeps['getSession'],
-  sessionId: string,
-): Promise<AttachedSession[]> {
-  const session = await getSession(sessionId).catch(() => null);
+const issueOf = (
+  { project, number, deps }: DetailSource,
+  { read }: DetailRead,
+  status: IssueStatus | null | undefined,
+): Issue | null =>
+  withStatus(baseOf(read, deps.seeds.of(project.id, number)), status);
 
-  if (!session) return [];
+export function useIssueDetail(source: DetailSource): IssueDetailState {
+  const { project, number, deps } = source;
+  const detail = useDetailRead(source);
+  const { status, onStatus } = useStatusChange(source, detail);
+  const sessions = useAttachedSessions(deps, project.id, number);
+  const issue = issueOf(source, detail, status);
 
-  return [{ sessionId, title: session.title, branch: session.branch }];
+  return { ...stateOf(detail), issue, sessions, onStatus };
 }

@@ -1,4 +1,5 @@
 import { useMemo } from '@argo/plugin-kit';
+import type { GitHubRead } from './github-api';
 import { overviewQuery, mapOverview, type Overview } from './github-documents';
 import { githubRepositoryFromOrigin } from './github-repository';
 import { noRemoteMessage, type Project } from './issue-project';
@@ -18,22 +19,38 @@ export type OverviewState = {
   signIn: SignInNeed | null;
 };
 
-/*
- * A Project's filters to navigate by, and every count on them, from one GitHub call. A page opened again inside the
- * freshness window makes none.
- */
-export function useOverview(project: Project | undefined): OverviewState {
-  const repository = githubRepositoryFromOrigin(project?.originUrl);
+type OverviewRead = {
+  repository: string | null;
+  query: ReturnType<typeof overviewQuery> | null;
+  read: GitHubRead<Overview>;
+  refresh: () => Promise<void>;
+};
+
+const repositoryOf = (project: Project | undefined): string | null =>
+  githubRepositoryFromOrigin(project?.originUrl);
+
+const projectIdOf = (project: Project | undefined): string => project?.id ?? '';
+
+function useOverviewRead(project: Project | undefined): OverviewRead {
+  const repository = repositoryOf(project);
 
   const query = useMemo(
     () => (repository ? overviewQuery(repository) : null),
     [repository],
   );
 
-  const { read, refresh } = useGitHub(
-    { projectId: project?.id ?? '', query },
-    mapOverview,
-  );
+  const projectId = projectIdOf(project);
+  const data = useGitHub({ projectId, query }, mapOverview);
+
+  return { repository, query, ...data };
+}
+
+/*
+ * A Project's filters to navigate by, and every count on them, from one GitHub call. A page opened again inside the
+ * freshness window makes none.
+ */
+export function useOverview(project: Project | undefined): OverviewState {
+  const { repository, query, read, refresh } = useOverviewRead(project);
 
   return {
     overview: read.kind === 'ok' ? read.value : null,
@@ -43,12 +60,14 @@ export function useOverview(project: Project | undefined): OverviewState {
   };
 }
 
-function overviewMessage(
+const lacksRemote = (
+  project: Project | undefined,
+  repository: string | null,
+): boolean => Boolean(project) && !repository;
+
+const overviewMessage = (
   project: Project | undefined,
   repository: string | null,
   failure: string | undefined,
-): string {
-  if (project && !repository) return noRemoteMessage;
-
-  return failure ?? '';
-}
+): string =>
+  lacksRemote(project, repository) ? noRemoteMessage : (failure ?? '');

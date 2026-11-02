@@ -13,7 +13,7 @@ import { repositoryText } from './issue-project';
 import { statusMark } from './issue-status-mark';
 import { issueTree, type IssueNode } from './issue-tree';
 import { rowLabelPills } from './label-pills';
-import { SignIn } from './sign-in';
+import { SignInGate } from './sign-in';
 import {
   useFilterIssues,
   type FilterIssues,
@@ -23,17 +23,15 @@ import {
 // One filter's Issues, a page at a time; each row opens the Issue's own page.
 export function FilterPage(source: FilterSource): JSX.Element {
   const issues = useFilterIssues(source);
+  const { signIn } = issues;
 
-  if (issues.signIn)
-    return (
-      <SignIn
-        signIn={source.deps.signIn}
-        reauthorize={issues.signIn.reauthorize}
-        onSignedIn={() => void issues.refresh()}
-      />
-    );
-
-  return (
+  return signIn ? (
+    <SignInGate
+      signIn={source.deps.signIn}
+      need={signIn}
+      refresh={issues.refresh}
+    />
+  ) : (
     <Screen title={source.filter.title} caption={source.filter.search}>
       <IssueList source={source} issues={issues} />
     </Screen>

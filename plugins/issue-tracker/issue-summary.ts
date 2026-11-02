@@ -1,4 +1,4 @@
-import { readGraphql } from './github-api';
+import { readGraphql, type GitHubQuery, type RawRead } from './github-api';
 import { issueQuery, mapIssueDetail } from './github-documents';
 import type { Issue } from './github-issues';
 import { githubRepositoryFromOrigin } from './github-repository';
@@ -92,10 +92,10 @@ function forget(loadedAt: Loads['loadedAt'], number: number): void {
     if (key.endsWith(`#${number}`)) loadedAt.delete(key);
 }
 
-async function summaryOf(
+async function repositoryOf(
   source: Source,
-  { projectId, number }: Target,
-): Promise<IssueSummary> {
+  projectId: string,
+): Promise<string> {
   const projects = await source.listProjects();
   const project = projects.find(({ id }) => id === projectId);
 
@@ -105,25 +105,43 @@ async function summaryOf(
 
   if (!repository) throw new Error('This Project has no GitHub remote.');
 
+  return repository;
+}
+
+const requestOf = (
+  { method, headers, body, account }: GitHubQuery,
+  projectId: string,
+): Parameters<Source['fetch']>[1] => ({
+  method,
+  headers,
+  body,
+  account,
+  projectId,
+});
+
+async function rawIssue(
+  source: Source,
+  { projectId, number }: Target,
+  repository: string,
+): Promise<RawRead> {
   const query = issueQuery(repository, number);
+  const response = await source.fetch(query.url, requestOf(query, projectId));
 
-  const response = await source.fetch(query.url, {
-    method: query.method,
-    headers: query.headers,
-    body: query.body,
-    account: query.account,
-    projectId,
-  });
+  return response
+    ? {
+        data: { status: response.status, body: await response.text() },
+        error: undefined,
+      }
+    : { data: undefined, error: 'Account is unavailable' };
+}
 
-  const read = readGraphql(
-    {
-      data: response
-        ? { status: response.status, body: await response.text() }
-        : undefined,
-      error: response ? undefined : 'Account is unavailable',
-    },
-    mapIssueDetail,
-  );
+async function summaryOf(
+  source: Source,
+  target: Target,
+): Promise<IssueSummary> {
+  const repository = await repositoryOf(source, target.projectId);
+  const raw = await rawIssue(source, target, repository);
+  const read = readGraphql(raw, mapIssueDetail);
 
   if (read.kind !== 'ok') throw new Error('The Issue could not be read.');
 
