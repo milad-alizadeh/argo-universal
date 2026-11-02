@@ -4,11 +4,11 @@ import {
   Easing,
   ReduceMotion,
   runOnJS,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 type AnimatedStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
 

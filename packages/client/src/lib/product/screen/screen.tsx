@@ -1,9 +1,10 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import {
   type Edge,
   type EdgeInsets,

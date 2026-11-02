@@ -4,12 +4,12 @@ import type { ViewStyle } from 'react-native';
 import Animated, {
   type SharedValue,
   cancelAnimation,
-  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 import { cn } from '#kit/utils';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 const dimmedOpacity = 0.45;
 

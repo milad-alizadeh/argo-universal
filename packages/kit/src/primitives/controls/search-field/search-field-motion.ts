@@ -5,10 +5,10 @@ import {
   interpolate,
   ReduceMotion,
   type SharedValue,
-  useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { useAnimatedStyle } from '../../../animated-hooks';
 import { quarterTurnDegrees } from '../../../motion';
 
 // Paper's SearchField motion: one spring opens, a firmer one closes so the field settles without a bounce.

@@ -1,3 +1,4 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 // The sweep a platform with no mask to animate draws: one animated piece of text at a time, under ShimmerText.
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
 import type * as React from 'react';
@@ -6,7 +7,6 @@ import Animated, {
   cancelAnimation,
   Easing,
   type SharedValue,
-  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
