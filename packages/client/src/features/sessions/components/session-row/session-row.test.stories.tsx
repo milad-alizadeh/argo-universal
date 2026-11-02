@@ -326,11 +326,14 @@ export const PlanAndSubagents: Story = {
       // A running Plan sweeps; a Regular row's Plan is a bar, with no step count.
       await expect(canvas.getByTestId('session-plan-sweep')).toBeVisible();
       await expect(canvas.queryByText('2/5')).not.toBeInTheDocument();
-      await expect(canvas.getByLabelText('Agents: 3, 2 running')).toBeVisible();
-      // The web's sidebar row draws the count alone; its own status dot speaks for the Session.
       await expect(
-        canvas.queryByTestId('subagents-status'),
-      ).not.toBeInTheDocument();
+        canvas.getByLabelText('Agents: 2 running'),
+      ).toHaveTextContent('2');
+      await expect(canvas.getByTestId('subagents-status')).toBeVisible();
+      await expect(
+        canvas.getByLabelText('Background Tasks: 1 running'),
+      ).toHaveTextContent('1');
+      await expect(canvas.getByTestId('shells-status')).toBeVisible();
     }
   },
 };
@@ -361,7 +364,13 @@ export const FinishedSubagents: Story = {
       await settleLayout(width);
       // A finished Plan leaves no bar.
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
-      await expect(canvas.getByLabelText('Agents: 3, 0 running')).toBeVisible();
+      await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByLabelText(/^Background Tasks:/),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByTestId('shells-status'),
+      ).not.toBeInTheDocument();
       await expect(
         canvas.queryByTestId('subagents-status'),
       ).not.toBeInTheDocument();
