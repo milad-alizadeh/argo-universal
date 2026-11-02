@@ -67,7 +67,7 @@ type RowPressable = Pick<
   'role' | 'accessibilityLabel' | 'onPress' | 'disabled' | 'className'
 >;
 
-// The row reads out as its three lanes do: the command, how it stands, and how long it has run.
+// The row reads out as its three lanes do: the title, how it stands, and how long it has run.
 const rowPressable = ({ shell, onSelect, now }: RowProps): RowPressable => ({
   role: 'button',
   accessibilityLabel: `${shellTitle(shell)}, ${shellSupporting(shell)}, ${shellElapsed(shell, now)}`,

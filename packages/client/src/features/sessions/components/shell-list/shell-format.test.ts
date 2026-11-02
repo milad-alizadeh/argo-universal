@@ -103,8 +103,11 @@ describe('shellPassed', () => {
 });
 
 describe('shellTitle', () => {
-  it('is the description the Agent gave, else the command', () => {
+  it('is the description the Agent gave', () => {
     expect(shellTitle(runningShell)).toBe('Run the app dev server');
+  });
+
+  it('is the command when the Agent gave no description', () => {
     expect(shellTitle(passedShell)).toBe('pnpm e2e');
   });
 });

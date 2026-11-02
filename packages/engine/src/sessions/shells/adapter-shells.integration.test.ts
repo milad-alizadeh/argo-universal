@@ -24,20 +24,25 @@ it('records a command the Agent ran in the background as a running Shell in its 
   );
 });
 
-it('keeps the description the Agent gave the command, and none when it gave none', async (): Promise<void> => {
+it('keeps the description the Agent gave the command', async (): Promise<void> => {
   const { notify, changes } = openMemoryShells();
-  const send = sender(notify);
 
-  send(reportedCommand(call, { ...background, description: 'Run verify' }));
-  send(reportedCommand('toolu-2', { ...background, description: '  ' }));
+  sender(notify)(
+    reportedCommand(call, { ...background, description: 'Run verify' }),
+  );
 
   await vi.waitFor(() =>
-    expect(changes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: call, description: 'Run verify' }),
-        expect.objectContaining({ id: 'toolu-2', description: null }),
-      ]),
-    ),
+    expect(changes).toMatchObject([{ id: call, description: 'Run verify' }]),
+  );
+});
+
+it('records no description when the Agent gave a blank one', async (): Promise<void> => {
+  const { notify, changes } = openMemoryShells();
+
+  sender(notify)(reportedCommand(call, { ...background, description: '  ' }));
+
+  await vi.waitFor(() =>
+    expect(changes).toMatchObject([{ id: call, description: null }]),
   );
 });
 
