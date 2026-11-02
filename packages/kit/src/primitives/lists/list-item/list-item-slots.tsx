@@ -34,6 +34,7 @@ function RowContentSlots(props: DrawingProps): ReactElement {
   return (
     <TextClassContext value={undefined}>
       <InertLane>{props.choice}</InertLane>
+      {compact ? null : <TreeLane title={props.title} compact={false} />}
       <Leading {...props} />
       <RowContent props={props} compact={compact} />
       {!compact && trailsTitle(props) ? null : <Trailing {...props} />}
@@ -43,7 +44,7 @@ function RowContentSlots(props: DrawingProps): ReactElement {
   );
 }
 
-// A compact row draws its tree lane inside its one line; a regular row draws it before its content.
+// A compact row draws its tree lane inside its one line; a regular row draws it before its leading mark.
 function RowContent({
   props,
   compact,
@@ -57,14 +58,8 @@ function RowContent({
 const CompactRow = (props: DrawingProps): ReactNode =>
   props.content ?? <CompactContent {...props} />;
 
-function RegularRow(props: DrawingProps): ReactElement {
-  return (
-    <>
-      <TreeLane title={props.title} compact={false} />
-      {props.content ?? <ItemContent {...props} />}
-    </>
-  );
-}
+const RegularRow = (props: DrawingProps): ReactNode =>
+  props.content ?? <ItemContent {...props} />;
 
 type TileProps = { props: DrawingProps; aspect: number };
 
