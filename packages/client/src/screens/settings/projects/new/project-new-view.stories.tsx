@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Platform } from 'react-native';
 import { fn } from 'storybook/test';
 import { ProjectNewView } from './project-new-view';
 
@@ -9,7 +10,10 @@ const meta = {
   args: {
     onSubmit: fn(),
     onCancel: fn(),
-    onChooseFolder: fn(async () => '/Users/you/Developer/argo-universal'),
+    onChooseFolder:
+      Platform.OS === 'web'
+        ? fn(async () => '/Users/you/Developer/argo-universal')
+        : undefined,
   },
   argTypes: {
     adding: { control: 'boolean' },

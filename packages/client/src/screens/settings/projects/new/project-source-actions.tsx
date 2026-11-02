@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { sourceCopy } from './project-new-copy';
 import type { SourceFormProps } from './project-new-view';
 
-type ActionsProps = SourceFormProps & {
+type ActionsProps = Pick<SourceFormProps, 'source' | 'adding' | 'onCancel'> & {
   disabled?: boolean;
   value: string;
   submit: () => void;
@@ -36,6 +36,7 @@ function submitButton(props: ActionsProps): React.JSX.Element {
     <Button
       label={props.adding ? copy.pending : copy.action}
       loading={props.adding}
+      fullWidth="narrow"
       disabled={props.disabled || !props.value.trim()}
       onPress={props.submit}
     />

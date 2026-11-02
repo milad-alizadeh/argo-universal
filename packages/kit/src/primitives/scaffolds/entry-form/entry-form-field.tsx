@@ -43,9 +43,11 @@ function DesktopField(props: EntryFormFieldProps): ReactElement {
   );
 }
 
-function FieldInput(props: EntryFormFieldProps): ReactElement {
+function FieldInput(
+  props: React.ComponentProps<typeof FieldText>,
+): ReactElement {
   return (
-    <View className="min-h-11 justify-center rounded-lg border border-border bg-card px-3 py-2">
+    <View className="min-h-11 justify-center rounded-lg border border-border bg-card px-3 py-2 web:focus-within:ring-2 web:focus-within:ring-focus">
       <Host>
         <FieldText {...props} hideTitle />
       </Host>

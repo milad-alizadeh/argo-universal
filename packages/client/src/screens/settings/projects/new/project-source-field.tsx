@@ -23,12 +23,17 @@ export function ProjectSourceField(props: SourceFieldProps): React.JSX.Element {
   return <TypedSource {...props} />;
 }
 
-function FolderChoice(props: SourceFieldProps): React.JSX.Element {
+type FolderChoiceProps = Pick<
+  SourceFieldProps,
+  'value' | 'disabled' | 'onChooseFolder'
+>;
+
+function FolderChoice(props: FolderChoiceProps): React.JSX.Element {
   return <EntryFormSelection {...folderSelection(props)} />;
 }
 
 const folderSelection = (
-  props: SourceFieldProps,
+  props: FolderChoiceProps,
 ): React.ComponentProps<typeof EntryFormSelection> => ({
   title: 'Project Folder',
   name: props.value.split('/').findLast(Boolean) ?? props.value,

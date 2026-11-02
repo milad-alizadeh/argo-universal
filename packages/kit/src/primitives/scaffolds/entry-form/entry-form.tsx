@@ -48,6 +48,8 @@ export function EntryFormActions({
   children: ReactNode;
 }): ReactElement {
   return (
-    <View className="flex-row flex-wrap justify-end gap-2">{children}</View>
+    <View className="flex-row flex-wrap justify-end gap-2 native:flex-col">
+      {children}
+    </View>
   );
 }

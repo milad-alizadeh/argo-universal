@@ -5,3 +5,10 @@ Feature: Add a Project from the App
     And the fixture Server has no Projects
     When I add the fixture folder as a Project from Get started
     Then Get started no longer asks for a Project
+
+  @smoke @electron-only @mac-only @needs-focus
+  Scenario: Choose an existing repository with the native macOS folder picker
+    Given a wide Frame
+    And the fixture Server has no Projects
+    When I add the fixture folder as a Project from Get started
+    Then Get started no longer asks for a Project

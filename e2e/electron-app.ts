@@ -18,6 +18,7 @@ export type ElectronInput = {
   userDataDirectory: string;
   mockAgents: AppFixtureAgents;
   mode: SupervisorMode;
+  noProjects?: boolean;
   use: (app: App) => Promise<void>;
 };
 
@@ -59,11 +60,7 @@ async function launchWithChild(
 }
 
 export async function useElectronApp(input: ElectronInput): Promise<void> {
-  const server = await prepareDesktopServer({
-    directory: input.directory,
-    agents: input.mockAgents,
-    mode: input.mode,
-  });
+  const server = await prepareDesktopServer(desktopServerInput(input));
 
   let launched: LaunchedElectron | undefined;
 
@@ -98,3 +95,15 @@ async function exitElectron(application: ElectronApplication): Promise<void> {
     app.exit();
   });
 }
+
+const desktopServerInput = (
+  input: Pick<
+    ElectronInput,
+    'directory' | 'mockAgents' | 'mode' | 'noProjects'
+  >,
+): Parameters<typeof prepareDesktopServer>[0] => ({
+  directory: input.directory,
+  agents: input.mockAgents,
+  mode: input.mode,
+  noProjects: input.noProjects,
+});

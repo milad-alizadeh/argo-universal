@@ -11,6 +11,12 @@ const chooseLabel = 'Choose Folder…';
 
 const cloneAction = 'Clone Project';
 
+const cloneLabel = 'Clone Repository';
+
+const repositoryLabel = 'Repository URL';
+
+const repositoryUrl = 'https://github.com/owner/repo.git';
+
 const meta = {
   title: 'Tests/Screens/Settings/ProjectNewView',
   component: ProjectNewView,
@@ -79,45 +85,16 @@ export const PickerFailureCanBeRetried: Story = {
   },
 };
 
-// Clone sends the trimmed URL and clears it when the source changes.
+// Clone submits the trimmed repository URL.
 export const CloneSendsTheRepository: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Clone Repository' }),
-    );
-    await expect(
-      canvas.getByRole('button', { name: cloneAction }),
-    ).toBeDisabled();
+    await userEvent.click(canvas.getByRole('button', { name: cloneLabel }));
     await userEvent.type(
-      canvas.getByLabelText('Repository URL'),
+      canvas.getByLabelText(repositoryLabel),
       ' https://github.com/owner/repo.git ',
     );
     await userEvent.click(canvas.getByRole('button', { name: cloneAction }));
-    await expect(args.onSubmit).toHaveBeenCalledWith(
-      'clone',
-      'https://github.com/owner/repo.git',
-    );
-
-    const track = canvas
-      .getByRole('group', { name: 'Add a Project from' })
-      .getBoundingClientRect();
-
-    const input = canvas
-      .getByLabelText('Repository URL')
-      .getBoundingClientRect();
-
-    const action = canvas
-      .getByRole('button', { name: cloneAction })
-      .getBoundingClientRect();
-
-    await expect(track.width).toBeLessThanOrEqual(contentWideMin());
-    await expect(action.top - input.bottom).toBeLessThan(100);
-    await expect(Math.abs(action.right - track.right)).toBeLessThan(1);
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Existing Folder' }),
-    );
-    await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
+    await expect(args.onSubmit).toHaveBeenCalledWith('clone', repositoryUrl);
   },
 };
 
@@ -158,7 +135,42 @@ export const AddingCannotBeSentTwice: Story = {
       canvas.getByRole('button', { name: chooseLabel }),
     ).toBeDisabled();
     await expect(
-      canvas.getByRole('button', { name: 'Clone Repository' }),
+      canvas.getByRole('button', { name: cloneLabel }),
     ).toBeDisabled();
+  },
+};
+
+// The desktop action stays next to its bounded form instead of the window footer.
+export const CompactFormKeepsActionsBesideTheField: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: cloneLabel }));
+
+    const track = canvas
+      .getByRole('group', { name: 'Add a Project from' })
+      .getBoundingClientRect();
+
+    const input = canvas
+      .getByLabelText(repositoryLabel)
+      .getBoundingClientRect();
+
+    const action = canvas
+      .getByRole('button', { name: cloneAction })
+      .getBoundingClientRect();
+
+    await expect(track.width).toBeLessThanOrEqual(contentWideMin());
+    await expect(action.top - input.bottom).toBeLessThan(100);
+    await expect(Math.abs(action.right - track.right)).toBeLessThan(1);
+  },
+};
+
+// Switching source starts a fresh form instead of submitting a URL as a folder.
+export const SwitchingSourceClearsTheField: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: cloneLabel }));
+    await userEvent.type(canvas.getByLabelText(repositoryLabel), repositoryUrl);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Existing Folder' }),
+    );
+    await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
   },
 };

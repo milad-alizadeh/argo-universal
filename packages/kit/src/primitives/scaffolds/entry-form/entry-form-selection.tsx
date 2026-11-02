@@ -30,7 +30,9 @@ export function EntryFormSelection(
   );
 }
 
-function ChooseValue(props: EntryFormSelectionProps): ReactElement {
+function ChooseValue(
+  props: Pick<EntryFormSelectionProps, 'chooseLabel' | 'disabled' | 'onChoose'>,
+): ReactElement {
   return (
     <View className="items-start">
       <Button
@@ -43,7 +45,12 @@ function ChooseValue(props: EntryFormSelectionProps): ReactElement {
   );
 }
 
-function SelectedValue(props: EntryFormSelectionProps): ReactElement {
+type SelectedValueProps = Pick<
+  EntryFormSelectionProps,
+  'name' | 'value' | 'changeLabel' | 'disabled' | 'onChoose'
+>;
+
+function SelectedValue(props: SelectedValueProps): ReactElement {
   return (
     <View className="flex-row items-center gap-3 rounded-lg border border-border bg-card p-3">
       <SelectionText {...props} />
@@ -57,7 +64,9 @@ function SelectedValue(props: EntryFormSelectionProps): ReactElement {
   );
 }
 
-function SelectionText(props: EntryFormSelectionProps): ReactElement {
+function SelectionText(
+  props: Pick<EntryFormSelectionProps, 'name' | 'value'>,
+): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-1">
       <Text role="heading" aria-level={3} numberOfLines={1}>

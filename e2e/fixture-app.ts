@@ -109,6 +109,7 @@ async function useDesktopApp(input: AppInput): Promise<void> {
     userDataDirectory: testInfo.outputPath('user-data'),
     mockAgents,
     mode: supervisorMode(tags),
+    noProjects: tags.includes('@without-projects'),
     use,
   });
 }

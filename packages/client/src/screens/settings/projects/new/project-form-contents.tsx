@@ -10,7 +10,10 @@ import {
   type SourceFieldProps,
 } from './project-source-field';
 
-export interface FormDrawing extends SourceFormProps {
+export interface FormDrawing extends Omit<
+  SourceFormProps,
+  'onSubmit' | 'onChooseFolder'
+> {
   disabled?: boolean;
   pickerError?: string;
   chooseFolder?: () => void;
@@ -48,7 +51,7 @@ const sourceOptions = sources.map((value) => ({
 }));
 
 function SourceChoice(
-  props: SourceFormProps & { disabled?: boolean },
+  props: Pick<SourceFormProps, 'source' | 'onChoose'> & { disabled?: boolean },
 ): React.JSX.Element {
   return (
     <SegmentedControl
