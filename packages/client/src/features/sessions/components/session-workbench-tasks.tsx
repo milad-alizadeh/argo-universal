@@ -2,7 +2,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { shellElapsed } from './shell-list/shell-format';
+import { shellElapsed, shellTitle } from './shell-list/shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list/shell-list-types';
 import { ShellMark } from './shell-list/shell-mark';
 import { activePreview } from './workbench-preview';
@@ -45,7 +45,7 @@ export function WorkbenchMoreTasks({
 const rowPressable = ({ shell, onOpen }: RowProps) =>
   ({
     role: 'button',
-    accessibilityLabel: `Open ${shell.command}`,
+    accessibilityLabel: `Open ${shellTitle(shell)}`,
     onPress: () => onOpen(shell),
     className:
       'flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover web:focus-visible:bg-hover',
@@ -69,7 +69,7 @@ function TaskText({ shell }: { shell: ShellEntry }): ReactElement {
   return (
     <View className="min-w-0 flex-1">
       <Text role="secondary-code" numberOfLines={1}>
-        {shell.command}
+        {shellTitle(shell)}
       </Text>
     </View>
   );
