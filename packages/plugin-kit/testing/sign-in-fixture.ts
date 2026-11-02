@@ -17,6 +17,8 @@ export type ServiceFixture = {
   person: { login: string };
   // Set to make every token it issues run out, with a refresh token.
   expiresIn: { seconds: number | null };
+  // Set to answer every token request, a refresh included, with a refusal.
+  tokenEndpoint: { refusing: boolean };
   // `pending` while the person has not approved the code, so polling keeps waiting; `lifetime` is how long a code lasts.
   approval: { pending: boolean; lifetime: number };
   // Bodies of the token endpoint's requests.
@@ -87,7 +89,7 @@ function readReply(
 
 type ServiceState = Pick<
   ServiceFixture,
-  'accepted' | 'person' | 'expiresIn' | 'approval'
+  'accepted' | 'person' | 'expiresIn' | 'tokenEndpoint' | 'approval'
 >;
 
 const stillPending: FixtureAnswer = {
@@ -99,6 +101,7 @@ function tokenAnswerer(state: ServiceState): () => FixtureAnswer {
   let issued = 0;
 
   return () => {
+    if (state.tokenEndpoint.refusing) return refusal;
     if (state.approval.pending) return stillPending;
 
     issued += 1;
@@ -129,6 +132,7 @@ const emptyState = (): ServiceState => ({
   accepted: new Set(),
   person: { login: 'person-1' },
   expiresIn: { seconds: null },
+  tokenEndpoint: { refusing: false },
   approval: { pending: false, lifetime: 900 },
 });
 

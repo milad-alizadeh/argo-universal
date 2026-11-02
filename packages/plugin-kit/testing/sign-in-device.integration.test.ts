@@ -106,9 +106,11 @@ it('sends the person to sign in again when a refresh is refused and the token ru
   const page = await items(test, 'one');
 
   await expect.poll(() => hasText(page, itemsText), wait).toBe(true);
+  service.tokenEndpoint.refusing = true;
   service.accepted.clear();
   await test.clock.advance(3_600_000);
   await nextReadUntil(test, page, rejectedText);
+  expect(service.tokenBodies().at(-1)?.get('grant_type')).toBe('refresh_token');
 }, 40_000);
 
 it('copies the code and opens the service on one press, and ends in the expired step when the countdown runs out', async () => {
