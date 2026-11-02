@@ -21,6 +21,7 @@ import {
   showsDuration,
   visibleActivities,
 } from './group-activities';
+import { GroupLiveId } from './group-live-id';
 import { useGrowthAbove } from './use-growth-above';
 
 const idleHeader: LiveHeader = {
@@ -120,11 +121,21 @@ function groupHeaderProps(
 }
 
 // One component whether or not a live header titles the group, so the header coming and going keeps the open state.
+function GroupBody(props: ToolCallGroupProps): React.JSX.Element {
+  const activities = useGroupActivities(props.group);
+  const live = liveToolCall(props.group);
+
+  return (
+    <GroupLiveId value={live?.toolCall.id}>
+      <GroupActivities {...activities} renderActivity={props.renderActivity} />
+    </GroupLiveId>
+  );
+}
+
 export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
   const liveHeader = liveHeaderOf(props.group);
   const title = useLiveHeaderTitle(liveHeader ?? idleHeader, props.now);
   const trailing = useGroupTrailing(props.group, props.now);
-  const activities = useGroupActivities(props.group);
 
   return (
     <ToolCallDisclosure
@@ -132,7 +143,7 @@ export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
       initialOpen={props.initialOpen}
       trailing={liveHeader ? undefined : trailing}
     >
-      <GroupActivities {...activities} renderActivity={props.renderActivity} />
+      <GroupBody {...props} />
     </ToolCallDisclosure>
   );
 }
