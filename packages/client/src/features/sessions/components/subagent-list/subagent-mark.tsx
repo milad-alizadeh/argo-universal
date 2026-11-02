@@ -1,5 +1,4 @@
 import type { Subagent } from '@repo/contracts';
-import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import type { JSX } from 'react';
 import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
@@ -19,16 +18,7 @@ export function SubagentMark({
     <TintedAvatar
       {...subagentRoleMark(subagent.role)}
       dimmed={subagent.state === 'idle'}
+      status={statuses[subagent.state]}
     />
   );
-}
-
-export function SubagentStatus({
-  subagent,
-}: {
-  subagent: Subagent;
-}): JSX.Element | null {
-  const status = statuses[subagent.state];
-
-  return status ? <StatusDot {...status} /> : null;
 }

@@ -11,13 +11,17 @@ import type { InspectorTab, InspectorTabsProps } from './inspector-props';
 import { useTabFocus, type TabFocus } from './inspector-tab-focus';
 import { tabKeys } from './inspector-tab-keys';
 
-const tabClassName = 'h-7 flex-row items-center gap-1.5 rounded-md pl-2';
+const tabClassName =
+  'h-7 flex-row items-center gap-1.5 rounded-md border pl-2 pr-1';
 
 const tabState = {
-  selected: { className: 'bg-card pr-1 shadow-control', tone: 'neutral' },
+  selected: {
+    className: 'border-border bg-card shadow-control',
+    tone: 'neutral',
+  },
   unselected: {
     className: cn(
-      'pr-1 web:hover:bg-hover web:active:bg-pressed',
+      'border-border bg-card/50 web:hover:bg-hover web:active:bg-pressed',
       tintTransitionClassName,
     ),
     tone: 'muted',
@@ -132,7 +136,7 @@ function TabList({ tabs }: { tabs: InspectorTabsProps }): ReactElement {
   const focus = useTabFocus(tabs);
 
   return (
-    <View role="tablist" className="flex-row items-center gap-0.5">
+    <View role="tablist" className="flex-row items-center gap-1">
       {tabs.items.map((tab) => (
         <Tab
           key={tab.key}

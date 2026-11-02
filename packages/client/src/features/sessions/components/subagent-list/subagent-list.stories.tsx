@@ -29,7 +29,7 @@ const meta = {
     subagents: {
       control: false,
       description:
-        'The Session’s Subagents, kept in the order the Server spawned them.',
+        'The Session’s Subagents, grouped by activity, preserving spawn order in each section.',
     },
     onSelect: {
       control: false,
@@ -44,7 +44,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Spawn order, never regrouped: a running, a waiting, a finished and a cancelled Subagent.
+// Running and waiting Agents precede finished and cancelled Agents.
 export const SeveralMixed: Story = { args: severalMixedSubagents };
 
 export const OneRunning: Story = { args: oneRunningSubagent };

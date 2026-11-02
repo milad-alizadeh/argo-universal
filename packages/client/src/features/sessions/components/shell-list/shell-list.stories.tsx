@@ -24,7 +24,7 @@ const meta = {
     shells: {
       control: false,
       description:
-        'The Session\u2019s background Shells, in the order the Agent started them.',
+        'The Session\u2019s background Shells, grouped by activity, preserving start order in each section.',
     },
     onSelect: {
       control: false,

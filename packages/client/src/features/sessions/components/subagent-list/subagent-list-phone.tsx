@@ -4,9 +4,10 @@ import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import type { ComponentProps, JSX } from 'react';
 import { Platform } from 'react-native';
+import { workListSections } from '../work-list-sections';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
-import { SubagentMark, SubagentStatus } from './subagent-mark';
+import { SubagentMark } from './subagent-mark';
 
 type PhoneProps = SubagentListProps & { now: number };
 
@@ -40,7 +41,6 @@ function phoneRowProps(props: RowProps): ComponentProps<typeof ListItem> {
     subtitle: supporting,
     disclosure: Boolean(onSelect),
     trailing: disclosure(onSelect),
-    titleEnd: <SubagentStatus subagent={subagent} />,
     onPress: rowPress(props),
     accessibilityLabel: `${subagent.title}, ${supporting}`,
   };
@@ -56,26 +56,25 @@ function PhoneRow(props: RowProps): JSX.Element {
   );
 }
 
-function phoneRows(props: PhoneProps): JSX.Element[] {
-  return props.subagents.map((subagent) => (
-    <PhoneRow
-      key={subagent.sessionId}
-      subagent={subagent}
-      onSelect={props.onSelect}
-      now={props.now}
-    />
-  ));
-}
+const listProps = {
+  appearance: 'cards',
+  onPhones: phonesGrouped,
+  fit: false,
+  accessibilityLabel: 'Agents',
+} as const;
 
 export function PhoneSubagentList(props: PhoneProps): JSX.Element {
+  const row = (subagent: Subagent): JSX.Element => (
+    <PhoneRow key={subagent.sessionId} {...props} subagent={subagent} />
+  );
+
   return (
-    <List
-      appearance="cards"
-      onPhones={phonesGrouped}
-      fit={false}
-      accessibilityLabel="Agents"
-    >
-      <List.Section>{phoneRows(props)}</List.Section>
+    <List {...listProps}>
+      {workListSections(
+        props.subagents,
+        (agent) => agent.state !== 'idle',
+        row,
+      )}
     </List>
   );
 }
