@@ -69,6 +69,21 @@ function terminalLabel(tool: ToolCallUpdate): string {
     (block): block is ToolCallTerminal => block.type === 'terminal',
   );
 
+  return describedCommand(tool, terminal) ?? commandText(terminal);
+}
+
+function describedCommand(
+  tool: ToolCallUpdate,
+  terminal: ToolCallTerminal | undefined,
+): string | undefined {
+  const description = tool.title.trim();
+
+  return [terminal?.command, ''].includes(description)
+    ? undefined
+    : description;
+}
+
+function commandText(terminal: ToolCallTerminal | undefined): string {
   return terminal?.command ? `Running ${terminal.command}` : 'Running command';
 }
 

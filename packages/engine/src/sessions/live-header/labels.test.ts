@@ -26,6 +26,21 @@ describe.each(liveHeaderMocks)(
         ),
       ).toBe(expected);
     });
+    it('uses the Agent description of a command over the command', (): void => {
+      expect(
+        headerText(
+          toLiveHeader(running, [
+            {
+              ...command,
+              title: 'Run the viewed-file tests',
+              kind: 'execute',
+              content: [{ type: 'terminal', command: 'pnpm test', output: '' }],
+              _meta: undefined,
+            },
+          ]),
+        ),
+      ).toBe('Run the viewed-file tests');
+    });
     it.each(['search' as const, 'fetch' as const, 'other' as const])(
       'step 6: uses the Tool call title for a %s Tool call without a kind label',
       (kind): void => {
