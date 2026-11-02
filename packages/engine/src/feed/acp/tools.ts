@@ -16,6 +16,7 @@ import {
 import { nameToolCall } from './tool-names';
 import { applyToolTerminalUpdate, mapToolTerminal } from './tool-terminal';
 import {
+  isOutputOnlyTerminal,
   readTerminalMetadata,
   retainedTerminalMetadata,
 } from './tool-terminal-metadata';
@@ -88,7 +89,13 @@ const replaceToolContent = (
   row: ToolRow,
   update: ToolUpdate,
 ): ToolRow['content'] =>
-  update.content?.map((block) => mapToolContent(block, row)) ?? row.content;
+  update.content
+    ?.filter(
+      (block) =>
+        block.type !== 'terminal' ||
+        !isOutputOnlyTerminal(update._meta, block.terminalId),
+    )
+    .map((block) => mapToolContent(block, row)) ?? row.content;
 
 const mapToolContent = (
   block: NonNullable<ToolUpdate['content']>[number],

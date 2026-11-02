@@ -25,6 +25,7 @@ it('Session connections advertise terminal auth, the `subagents` capability and 
       session: { notices: {}, compaction: {} },
       elicitation: { form: {} },
       subagents: {},
+      _meta: { terminal_output_delta: true },
     },
   });
   expect(initialization.clientCapabilities?.elicitation).not.toHaveProperty(

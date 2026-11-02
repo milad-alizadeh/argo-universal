@@ -41,6 +41,18 @@ export const readTerminalMetadata = (
   };
 };
 
+// claude-agent-acp's terminal: no cwd, so nothing to draw a terminal from; its output comes as deltas.
+export const isOutputOnlyTerminal = (
+  metadata: ToolUpdate['_meta'],
+  terminalId: string,
+): boolean => {
+  const info = z
+    .object({ terminal_id: z.literal(terminalId), cwd: z.never().optional() })
+    .safeParse(metadata?.terminal_info);
+
+  return info.success;
+};
+
 export const terminalIdOf = (block: ToolCallContent): string | undefined =>
   accepted(z.string().safeParse(block._meta?.acp?.terminalId));
 

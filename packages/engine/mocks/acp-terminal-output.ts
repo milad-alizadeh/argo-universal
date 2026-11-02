@@ -80,6 +80,34 @@ export const streamedTerminals = (
   ],
 });
 
+// claude-agent-acp 0.99.1, as captured: its terminal_info names no cwd, and the command follows the first report.
+export const commandWithoutCwd: Update[] = [
+  {
+    sessionUpdate: 'tool_call',
+    toolCallId: 'bash-a',
+    title: 'Terminal',
+    kind: 'execute',
+    status: 'pending',
+    rawInput: {},
+    content: [{ type: 'terminal', terminalId: 'bash-a' }],
+    _meta: { terminal_info: { terminal_id: 'bash-a' } },
+  },
+  {
+    sessionUpdate: terminalUpdate,
+    toolCallId: 'bash-a',
+    rawInput: { command: 'echo A' },
+  },
+  chunk('bash-a', 'A\n'),
+  {
+    sessionUpdate: terminalUpdate,
+    toolCallId: 'bash-a',
+    status: 'completed',
+    _meta: {
+      terminal_exit: { terminal_id: 'bash-a', exit_code: 0, signal: null },
+    },
+  },
+];
+
 export const readCommand: Update[] = [
   {
     sessionUpdate: 'tool_call',

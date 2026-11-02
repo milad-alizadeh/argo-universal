@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { openAcpFeedSession } from '#mocks/acp-feed';
 import {
+  commandWithoutCwd,
   completedTerminal,
   readCommand,
   terminalCommand,
@@ -44,6 +45,24 @@ it('command output delivered at completion stays readable in the Feed after the 
   expect(
     stored.rows.find((candidate) => candidate.sessionUpdate === terminalUpdate),
   ).toMatchObject(expected);
+});
+
+it('a command whose terminal names no cwd shows its output as text', async () => {
+  const { host, sessionId } = await openAcpFeedSession(commandWithoutCwd);
+  const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
+
+  expect(page.rows).toContainEqual(
+    expect.objectContaining({
+      toolCallId: 'bash-a',
+      status: 'completed',
+      content: [
+        expect.objectContaining({
+          type: 'content',
+          content: { type: 'text', text: 'A\n' },
+        }),
+      ],
+    }),
+  );
 });
 
 it('read commands without terminal resources retain the adapter output chunks', async () => {

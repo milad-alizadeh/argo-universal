@@ -45,6 +45,7 @@ export class ShellRuntime implements Shells {
     this.adapterShells = new AdapterShells({
       ...input,
       outputPath: (id: string): string => this.outputPath(id),
+      cwd: (): string => this.cwd,
     });
   }
   public observe(notification: Parameters<AdapterShells['observe']>[0]): void {
