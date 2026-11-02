@@ -1,3 +1,4 @@
+import { nextFrames } from '@repo/kit/mocks/next-frames';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
@@ -31,6 +32,8 @@ const checked = 'aria-checked';
 
 // The last added line of the recorded long file: the list shows every line of a file's diff.
 const lastAddedLine = 'new value 60';
+
+const midLine = 'new value 30';
 
 const diffLines = (): HTMLElement[] => screen.queryAllByTestId('diff-line');
 
@@ -145,6 +148,84 @@ function foldLeavesNoGap(width: number): Story {
 export const FoldLeavesNoGapPhone = foldLeavesNoGap(layoutWidths.phone);
 
 export const FoldLeavesNoGapWide = foldLeavesNoGap(layoutWidths.wide);
+
+const listTop = (): number =>
+  screen.getByTestId('changes-files').getBoundingClientRect().top;
+
+// Scrolls well into the long file's diff, so its header is stuck and its top has left the viewport.
+async function scrollIntoLargeFile(): Promise<void> {
+  const line = await screen.findByText(midLine);
+
+  line.scrollIntoView({ block: 'start' });
+  await nextFrames();
+}
+
+type Fold = () => Promise<void>;
+
+const foldByChevron =
+  (click: (element: HTMLElement) => Promise<void>): Fold =>
+  () =>
+    click(fileHeader(largeFile));
+
+const foldByMark =
+  (click: (element: HTMLElement) => Promise<void>): Fold =>
+  async () =>
+    click(await viewedMark(0));
+
+// Folding a file scrolled part way leaves its header at the top, with the next file directly under it.
+function foldReturnsToHeader(
+  width: number,
+  foldWith: typeof foldByChevron,
+): Story {
+  return {
+    play: async ({ userEvent }) => {
+      await settleChanges(width);
+      await scrollIntoLargeFile();
+      await foldWith((element) => userEvent.click(element))();
+
+      await waitFor(async () => {
+        const top = fileHeader(largeFile).getBoundingClientRect();
+        const next = (await findFileHeader(shortFile)).getBoundingClientRect();
+
+        await expect(top.top).toBeCloseTo(listTop(), 0);
+        await expect(next.top - top.bottom).toBeLessThan(2);
+      });
+    },
+  };
+}
+
+export const FoldByChevronReturnsToHeaderPhone = foldReturnsToHeader(
+  layoutWidths.phone,
+  foldByChevron,
+);
+
+export const FoldByChevronReturnsToHeaderWide = foldReturnsToHeader(
+  layoutWidths.wide,
+  foldByChevron,
+);
+
+export const FoldByMarkReturnsToHeaderWide = foldReturnsToHeader(
+  layoutWidths.wide,
+  foldByMark,
+);
+
+// A file whose header is in view keeps its place when it folds: only the files below move.
+export const FoldInViewStaysPut: Story = {
+  play: async ({ userEvent }) => {
+    await settleChanges(layoutWidths.wide);
+    await userEvent.click(await findFileHeader(largeFile));
+
+    const header = await findFileHeader(shortFile);
+    const before = header.getBoundingClientRect().top;
+
+    await userEvent.click(header);
+    await nextFrames();
+    await expect(fileHeader(shortFile).getBoundingClientRect().top).toBeCloseTo(
+      before,
+      0,
+    );
+  },
+};
 
 interface Insets {
   left: number;

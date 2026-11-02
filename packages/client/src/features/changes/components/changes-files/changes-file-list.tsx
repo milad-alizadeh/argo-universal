@@ -7,6 +7,7 @@ import {
   type ChangesItem,
   type ChangesItems,
   changesItems,
+  diffsLoading,
   isDiffItem,
 } from '../../view/changes-items';
 import type {
@@ -14,11 +15,12 @@ import type {
   ChangesViewProps,
 } from '../../view/changes-view-props';
 import { ChangesRow, type RowContext } from './changes-file-rows';
+import { type FoldScroll, useFoldScroll } from './use-fold-scroll';
 import { useOpenFiles } from './use-open-files';
 
 const changedFilesLabel = 'Changed files';
 
-const loadingMoreFilesLabel = 'Loading more files';
+const loadingMoreLabel = 'Loading more changes';
 
 type FileListProps = ChangesViewProps & { files: readonly ChangedFile[] };
 
@@ -44,23 +46,35 @@ const identity = {
 
 /*
  * One flat list: each file's header sticks to the top while its diff scrolls under it. Files and each opened file's
- * diff arrive a page at a time, as the end of each comes into view.
+ * diff arrive a page at a time, as the end of each comes into view; one spinner at the list's end says more is coming.
  */
 export function FileList(props: FileListProps): React.JSX.Element {
-  const { folded, setOpen } = useOpenFiles();
-  const lists = useListItems(props, folded);
-  const context: RowContext = { ...props, folded, setOpen };
-
   return (
-    <List<ChangesItem>
-      items={lists.items}
-      stickyHeaderIndices={lists.sticky}
-      {...identity}
-      extraData={context}
-      renderItem={(item) => <ChangesRow item={item} context={context} />}
-      {...moreFiles(props)}
-    />
+    <List<ChangesItem> {...useRows(props)} {...identity} {...more(props)} />
   );
+}
+
+interface Rows {
+  ref: FoldScroll['ref'];
+  items: ChangesItem[];
+  stickyHeaderIndices: number[];
+  extraData: RowContext;
+  renderItem: (item: ChangesItem) => React.JSX.Element;
+}
+
+function useRows(props: FileListProps): Rows {
+  const open = useOpenFiles();
+  const { ref, setOpen } = useFoldScroll(open.setOpen);
+  const lists = useListItems(props, open.folded);
+  const context: RowContext = { ...props, folded: open.folded, setOpen };
+
+  return {
+    ref,
+    items: lists.items,
+    stickyHeaderIndices: lists.sticky,
+    extraData: context,
+    renderItem: (item) => <ChangesRow item={item} context={context} />,
+  };
 }
 
 function useListItems(
@@ -73,18 +87,22 @@ function useListItems(
   );
 }
 
-function moreFiles(
+const loadingMore = (props: FileListProps): boolean | undefined =>
+  props.moreFiles || diffsLoading(props.diffs);
+
+function more(
   props: FileListProps,
 ): Pick<ListProps<ChangesItem>, 'onEndReached' | 'endContent'> {
-  if (!props.moreFiles) return {};
-
-  return { onEndReached: props.onLoadMoreFiles, endContent: <MoreFiles /> };
+  return {
+    onEndReached: props.moreFiles ? props.onLoadMoreFiles : undefined,
+    endContent: loadingMore(props) ? <LoadingMore /> : undefined,
+  };
 }
 
-function MoreFiles(): React.JSX.Element {
+function LoadingMore(): React.JSX.Element {
   return (
     <View className="items-center py-4">
-      <Spinner accessibilityLabel={loadingMoreFilesLabel} />
+      <Spinner accessibilityLabel={loadingMoreLabel} />
     </View>
   );
 }
