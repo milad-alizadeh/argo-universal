@@ -4,16 +4,17 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
+import { workListSections } from '../work-list-sections';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
-import { SubagentMark, SubagentStatus } from './subagent-mark';
+import { SubagentMark } from './subagent-mark';
 
 type WideProps = SubagentListProps & { now: number };
 
 type RowProps = {
   subagent: Subagent;
   now: number;
-  onSelect: SubagentListProps['onSelect'];
+  onSelect?: SubagentListProps['onSelect'];
 };
 
 const rowClasses = cn(
@@ -53,23 +54,23 @@ function WideRow({ subagent, onSelect, now }: RowProps): JSX.Element {
     >
       <SubagentMark subagent={subagent} />
       <WideRowText subagent={subagent} now={now} />
-      <SubagentStatus subagent={subagent} />
     </Pressable>
   );
 }
 
-// Keep the Server's spawn order as rows change state; never regroup them.
+// Static sections share the Inspector's scroll viewport.
 export function WideSubagentList(props: WideProps): JSX.Element {
+  const row = (subagent: Subagent): JSX.Element => (
+    <WideRow key={subagent.sessionId} {...props} subagent={subagent} />
+  );
+
   return (
     <View className="p-2" accessibilityLabel="Agents">
-      {props.subagents.map((subagent) => (
-        <WideRow
-          key={subagent.sessionId}
-          subagent={subagent}
-          onSelect={props.onSelect}
-          now={props.now}
-        />
-      ))}
+      {workListSections(
+        props.subagents,
+        (agent) => agent.state !== 'idle',
+        row,
+      )}
     </View>
   );
 }

@@ -1,6 +1,7 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ComponentProps, JSX } from 'react';
 import { Pressable, View } from 'react-native';
+import { workListSections } from '../work-list-sections';
 import {
   shellElapsed,
   shellOutcome,
@@ -43,15 +44,6 @@ function RowText({ shell }: { shell: ShellEntry }): JSX.Element {
   );
 }
 
-// The outcome keeps its own lane at the end of the row.
-function RowMark({ shell }: { shell: ShellEntry }): JSX.Element {
-  return (
-    <View className="h-5 w-4 shrink-0 items-center justify-center">
-      <ShellMark shell={shell} />
-    </View>
-  );
-}
-
 function RowElapsed({ elapsed }: { elapsed: string }): JSX.Element {
   return (
     <View className="shrink-0">
@@ -79,9 +71,9 @@ const rowPressable = ({ shell, onSelect, now }: RowProps): RowPressable => ({
 function WideShellRow(props: RowProps): JSX.Element {
   return (
     <Pressable {...rowPressable(props)}>
+      <ShellMark shell={props.shell} />
       <RowText shell={props.shell} />
       <RowElapsed elapsed={shellElapsed(props.shell, props.now)} />
-      <RowMark shell={props.shell} />
     </Pressable>
   );
 }
@@ -92,9 +84,13 @@ export function WideShellList(
 ): JSX.Element {
   return (
     <View className="px-2 pt-2 pb-3" accessibilityLabel="Background Tasks">
-      {props.shells.map((shell) => (
-        <WideShellRow key={shell.id} {...props} shell={shell} />
-      ))}
+      {workListSections(
+        props.shells,
+        (shell) => shell.status === 'running',
+        (shell) => (
+          <WideShellRow key={shell.id} {...props} shell={shell} />
+        ),
+      )}
     </View>
   );
 }

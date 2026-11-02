@@ -4,10 +4,10 @@ import {
   type ListItemProps,
 } from '@repo/kit/primitives/lists/list-item';
 import type { JSX } from 'react';
+import { workListSections } from '../work-list-sections';
 import {
   shellElapsed,
   shellOutcome,
-  shellsSummary,
   shellSupporting,
   shellTitle,
 } from './shell-format';
@@ -43,7 +43,8 @@ function ShellRow(props: RowProps): JSX.Element {
   return (
     <ListItem
       {...rowText(props)}
-      trailing={<ShellMark shell={shell} />}
+      leading={<ShellMark shell={shell} />}
+      leadingSize="avatar"
       disclosure={Boolean(onSelect)}
       onPress={onSelect ? () => onSelect(shell) : undefined}
     />
@@ -63,11 +64,13 @@ export function PhoneShellList(
 ): JSX.Element {
   return (
     <List {...listProps}>
-      <List.Section title={shellsSummary(props.shells)}>
-        {props.shells.map((shell) => (
+      {workListSections(
+        props.shells,
+        (shell) => shell.status === 'running',
+        (shell) => (
           <ShellRow key={shell.id} {...props} shell={shell} />
-        ))}
-      </List.Section>
+        ),
+      )}
     </List>
   );
 }
