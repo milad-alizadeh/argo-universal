@@ -11,7 +11,7 @@ const meta = {
   parameters: { screenPreview: true },
   decorators: [
     (Story): JSX.Element => (
-      <View className="w-full max-w-96">
+      <View className="w-full max-w-96 flex-1">
         <Story />
       </View>
     ),
