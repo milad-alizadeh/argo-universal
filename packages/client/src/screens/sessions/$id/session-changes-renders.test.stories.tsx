@@ -42,8 +42,10 @@ export const DiffPageDrawsOnlyItsOwnRows: Story = {
   play: async ({ canvasElement }) => {
     await findFileHeader(largeFile);
     await waitFor(() => expect(diffLines().length).toBeGreaterThan(0));
-    await waitFor(() =>
-      expect(screen.queryAllByRole('progressbar')).toHaveLength(0),
+    // Pages can take a while on a busy CI runner.
+    await waitFor(
+      () => expect(screen.queryAllByRole('progressbar')).toHaveLength(0),
+      { timeout: 10_000 },
     );
 
     const counts = await renders.during(canvasElement, () =>

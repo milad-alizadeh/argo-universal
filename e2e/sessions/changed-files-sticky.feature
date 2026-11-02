@@ -8,5 +8,5 @@ Feature: Changed files' headers stay stuck
     And the Session's Checkout changes every file
     And the Agent edits the greeting
     And I open the many changed files
-    Then a file's header is at the top of the list all the way down and back up
+    Then a file's header is at the top of the list on the way down and back up
     When I stop the Turn

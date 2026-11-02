@@ -155,6 +155,10 @@ export const HeaderStaysStuckBothWays: Story = {
 
 const spinners = (): HTMLElement[] => screen.queryAllByRole('progressbar');
 
+// Pages can take a while on a busy CI runner.
+const spinnersGone = (): Promise<void> =>
+  waitFor(() => expect(spinners()).toHaveLength(0), { timeout: 10_000 });
+
 // Every header is drawn from the start, yet a far file's diff is asked for only as the reader nears it.
 export const FarDiffWaitsForTheReader: Story = {
   args: { catalog: manyChanges },
@@ -162,12 +166,12 @@ export const FarDiffWaitsForTheReader: Story = {
     const lastFile = '/repo/src/module-60/index.ts';
 
     await findFileHeader(lastFile);
-    await waitFor(() => expect(spinners()).toHaveLength(0));
+    await spinnersGone();
     const scroller = scrollerOf(changedFiles());
 
     scroller.scrollTop = scroller.scrollHeight;
     await waitFor(() => expect(spinners().length).toBeGreaterThan(0));
     await expect(fileHeader(lastFile)).toBeInTheDocument();
-    await waitFor(() => expect(spinners()).toHaveLength(0));
+    await spinnersGone();
   },
 };

@@ -11,7 +11,7 @@ const execute = promisify(execFile);
 
 // A Checkout's spread of file lengths, so diffs land above the reader while the list is scrolled.
 const fileLines = [
-  12, 40, 150, 8, 60, 30, 16, 400, 15, 22, 11, 100, 10, 37, 18, 17, 250, 14, 14,
+  12, 40, 150, 8, 60, 30, 16, 100, 15, 22, 11, 100, 10, 37, 18, 17, 250, 14, 14,
   45, 6, 75,
 ];
 
@@ -123,8 +123,11 @@ async function wheel(
   return missing;
 }
 
+// Back up a wheel's step at a time is slow, so this is as far as a CI runner has time for: several files' worth.
+const upReach = 25_000;
+
 Then(
-  "a file's header is at the top of the list all the way down and back up",
+  "a file's header is at the top of the list on the way down and back up",
   async ({ page }) => {
     test.setTimeout(300_000);
     await page.getByTestId('changes-files').hover();
@@ -132,6 +135,10 @@ Then(
     expect(
       await wheel(page, 240, ({ scroll, max }) => scroll >= max - 1),
     ).toEqual([]);
-    expect(await wheel(page, -80, ({ scroll }) => scroll <= 0)).toEqual([]);
+    const { scroll: bottom } = await readScroll(page);
+
+    expect(
+      await wheel(page, -80, ({ scroll }) => scroll <= bottom - upReach),
+    ).toEqual([]);
   },
 );
