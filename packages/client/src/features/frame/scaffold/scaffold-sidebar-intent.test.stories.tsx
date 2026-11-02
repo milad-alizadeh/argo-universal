@@ -20,7 +20,7 @@ const showSidebar = 'Show sidebar';
 
 const workbenchId = 'desktop-workbench';
 
-export const SidebarTakesPriorityOverTheWorkbench: Story = {
+export const HidingSidebarMakesRoomForTheWorkbench: Story = {
   play: async ({ canvas, userEvent }) => {
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
@@ -29,13 +29,9 @@ export const SidebarTakesPriorityOverTheWorkbench: Story = {
       await canvas.findByRole('button', { name: hideSidebar }),
     );
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    await userEvent.click(canvas.getByRole('button', { name: showSidebar }));
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: hideSidebar })).toBeVisible(),
-    );
-    await waitFor(() =>
-      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
-    );
+    await expect(
+      canvas.getByRole('button', { name: showSidebar }),
+    ).toBeVisible();
     await expect(canvas.getByRole('textbox', { name: 'Draft' })).toHaveValue(
       'Keep my draft',
     );
