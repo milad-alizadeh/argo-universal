@@ -1,9 +1,7 @@
 import type { Subagent } from '@repo/contracts';
 import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
-import { Chevron } from '@repo/kit/primitives/status/chevron';
 import type { ComponentProps, JSX } from 'react';
-import { Platform } from 'react-native';
 import { workListSections } from '../work-list-sections';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
@@ -18,12 +16,6 @@ const rowPress = ({
   onSelect,
 }: RowProps): (() => void) | undefined =>
   onSelect ? () => onSelect(subagent) : undefined;
-
-function disclosure(onSelect: RowProps['onSelect']): JSX.Element | undefined {
-  if (!onSelect || Platform.OS !== 'android') return undefined;
-
-  return <Chevron direction="right" />;
-}
 
 const rowTones = (finished: boolean) =>
   ({
@@ -40,7 +32,6 @@ function phoneRowProps(props: RowProps): ComponentProps<typeof ListItem> {
     title: subagent.title,
     subtitle: supporting,
     disclosure: Boolean(onSelect),
-    trailing: disclosure(onSelect),
     onPress: rowPress(props),
     accessibilityLabel: `${subagent.title}, ${supporting}`,
   };
