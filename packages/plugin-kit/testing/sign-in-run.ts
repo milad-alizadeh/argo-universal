@@ -74,6 +74,11 @@ export async function started(): Promise<{
   return { test, service };
 }
 
+async function pressSignIn(page: View): Promise<void> {
+  await expect.poll(() => page.findText(signInLabel), wait).toBeDefined();
+  await page.press(signInLabel);
+}
+
 // What "Add account" opens: the sign-in page with no Project, finished as this person.
 export async function addAccount(
   { test, service }: { test: PluginTest; service: Service },
@@ -82,7 +87,7 @@ export async function addAccount(
   const page = await test.mount({ page: '/sign-in', surface });
 
   service.person.login = login;
-  await page.press(signInLabel);
+  await pressSignIn(page);
   await clockUntil(test, page, 'Signed in as');
 }
 
@@ -101,6 +106,6 @@ export async function signInOn(
   login: string,
 ): Promise<void> {
   service.person.login = login;
-  await page.press(signInLabel);
+  await pressSignIn(page);
   await clockUntil(test, page, itemsText);
 }

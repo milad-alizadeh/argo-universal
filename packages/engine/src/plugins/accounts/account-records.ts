@@ -44,6 +44,9 @@ export function sameAccount(
   return database.select().from(pluginAccount).where(sameFields(fields)).get();
 }
 
+const choiceOf = (host: string, projectId: string): ReturnType<typeof and> =>
+  and(eq(projectAccount.projectId, projectId), eq(projectAccount.host, host));
+
 export function projectChoice(
   database: AccountDatabase,
   host: string,
@@ -52,12 +55,7 @@ export function projectChoice(
   return database
     .select()
     .from(projectAccount)
-    .where(
-      and(
-        eq(projectAccount.projectId, projectId),
-        eq(projectAccount.host, host),
-      ),
-    )
+    .where(choiceOf(host, projectId))
     .get();
 }
 
