@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export interface OpenFiles {
   // The files folded away; every other file, including one a later page brings, shows its diff.
@@ -25,8 +25,10 @@ function toggled(
 export function useOpenFiles(): OpenFiles {
   const [folded, update] = useState(none);
 
-  return {
-    folded,
-    setOpen: (path, opened) => update((last) => toggled(last, path, opened)),
-  };
+  const setOpen = useCallback<OpenFiles['setOpen']>(
+    (path, opened) => update((last) => toggled(last, path, opened)),
+    [],
+  );
+
+  return { folded, setOpen };
 }
