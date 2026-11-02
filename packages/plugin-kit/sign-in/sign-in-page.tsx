@@ -88,7 +88,7 @@ export function SignInPage(props: PageProps): JSX.Element {
   const { name, flow: kind } = props.account.declaration;
 
   return (
-    <Screen title={titleOf(flow.step, name)}>
+    <Screen title={titleOf(flow.step, name)} width="narrow">
       <SignInBody
         {...flow}
         name={name}

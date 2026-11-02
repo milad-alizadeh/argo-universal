@@ -82,6 +82,8 @@
   --color-code-dark: var(--color-black);
   /* The centred content column: Feed, Composer and request cards. */
   --container-column: 800px;
+  /* A centred column for one short task, such as signing in. */
+  --container-narrow: 448px;
   /* The desktop Composer floor used to derive frame thresholds. */
   --container-composer: 640px;
   /* A phone screen's side padding, the same on every screen and platform. */

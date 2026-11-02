@@ -39,6 +39,8 @@ export const ReadingColumnTablet = atWidth(
 
 export const ReadingColumnWide = atWidth(widths.Wide, sharedEdge('content'));
 
+export const NarrowWide = atWidth(widths.Wide, sharedEdge('narrow'));
+
 export const FullWidthPhone = atWidth(widths.Phone, sharedEdge('full'));
 
 export const FullWidthTablet = atWidth(widths.Tablet, sharedEdge('full'));
@@ -60,5 +62,7 @@ function columnCap(width: ScreenWidth, capped: boolean): Story {
 }
 
 export const ReadingColumnCapsWide = columnCap('content', true);
+
+export const NarrowKeepsInsideColumn = columnCap('narrow', true);
 
 export const FullWidthRunsPastColumn = columnCap('full', false);
