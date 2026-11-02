@@ -18,6 +18,15 @@ describe('the invite a QR code carries', () => {
     expect(readPairingInvite(writePairingInvite(invite))).toEqual(invite);
   });
 
+  it('reads the invite of a real Server: its key is a 59-character public key', (): void => {
+    const real = {
+      ...invite,
+      key: 'MCowBQYDK2VuAyEAfMxiVI7d_keEojIK-HuWdaUrpdJ35nh26YVaJxYKnY0',
+    };
+
+    expect(readPairingInvite(writePairingInvite(real))).toEqual(real);
+  });
+
   it.each([
     ['something that is not an Argo code', 'https://example.com/menu'],
     ['an invite with no Ticket in it', '{"key":"k","server":"s"}'],

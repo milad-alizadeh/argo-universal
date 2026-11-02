@@ -105,7 +105,7 @@ function useLink(
 }
 
 interface ScanningProps {
-  onRead: (scanned: string) => void;
+  onRead: (scanned: string) => boolean;
   onEnterCode: () => void;
 }
 

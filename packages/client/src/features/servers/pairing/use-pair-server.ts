@@ -15,8 +15,8 @@ import { typeCode } from './type-code';
 
 export interface PairServer {
   state: PairPhase;
-  // A code the camera read, or the one the owner was shown; anything that is not an Argo code is ignored.
-  read: (scanned: string, address?: ServerAddress) => void;
+  // A code the camera read, or the one the owner was shown; anything that is not an Argo code is ignored, and the answer says which it was so the scanner can show why nothing happened.
+  read: (scanned: string, address?: ServerAddress) => boolean;
   // A code the owner typed, for a Device with no camera to read the QR; anything that is not a code says so and stays.
   type: (typed: string, host?: string) => void;
   // Tries the code just read once more, for a Server that was not on the network a moment ago.
@@ -49,7 +49,7 @@ const actionsOf = (hook: Hook): Omit<PairServer, 'state'> => ({
   type: (code, host): void => typeCode({ code, host }, hook),
   retry: (): void => {
     if (hook.held.lastTyped !== null) typeCode(hook.held.lastTyped, hook);
-    else if (hook.held.last) readCode(hook.held.last, hook);
+    else if (hook.held.last) void readCode(hook.held.last, hook);
   },
   back: (): void => {
     hook.held.running?.abort();
@@ -58,14 +58,18 @@ const actionsOf = (hook: Hook): Omit<PairServer, 'state'> => ({
   },
 });
 
-function readCode(read: Read, hook: Hook): void {
+function readCode(read: Read, hook: Hook): boolean {
   const invite = readPairingInvite(read.scanned);
 
-  if (!invite || hook.held.running) return;
+  if (!invite) return false;
+
+  if (hook.held.running) return true;
 
   hook.held.last = read;
   hook.held.lastTyped = null;
   ask(invite, read, hook);
+
+  return true;
 }
 
 function ask(invite: PairingInvite, read: Read, hook: Hook): void {
