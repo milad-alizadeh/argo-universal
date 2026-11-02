@@ -97,13 +97,14 @@ function useLoaded(
   return { ...files, branches: branchesOf(branches), diffs };
 }
 
-const shown = (
+// The list is the same array until a mark changes, so rows that read it draw only when it does.
+function useShown(
   state: ChangesState,
-): Pick<ChangesViewProps, 'comparison' | 'viewed' | 'folded'> => ({
-  comparison: state.comparison,
-  viewed: Object.keys(state.viewed),
-  folded: state.folded,
-});
+): Pick<ChangesViewProps, 'comparison' | 'viewed' | 'folded'> {
+  const viewed = useMemo(() => Object.keys(state.viewed), [state.viewed]);
+
+  return { comparison: state.comparison, viewed, folded: state.folded };
+}
 
 // Marks learn the file as it is when made; one the Checkout has changed since is no longer Viewed, and opens again.
 function useRefreshedMarks(
@@ -133,5 +134,5 @@ export function useChanges(
 
   useRefreshedMarks(loaded.files, state, update);
 
-  return { ...actions, ...loaded, ...shown(state) };
+  return { ...actions, ...loaded, ...useShown(state) };
 }
