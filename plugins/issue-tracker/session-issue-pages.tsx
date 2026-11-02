@@ -7,13 +7,13 @@ import {
 } from '@argo/plugin-kit';
 import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
+import type { Project } from './issue-project';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueLink } from './tracker-storage';
-import { useAsync } from './use-async';
+import { useCall } from './use-call';
 import { useIssueDetail } from './use-issue-detail';
 
 /*
@@ -111,7 +111,7 @@ function messageFor(
 function useSessionIssue({ deps, context }: PageProps): Attached | Message {
   const { sessionId } = context;
 
-  const { value, error } = useAsync(
+  const { value, error } = useCall(
     useCallback(() => loadAttached(deps, sessionId), [deps, sessionId]),
   );
 

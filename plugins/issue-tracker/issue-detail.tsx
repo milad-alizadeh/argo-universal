@@ -4,13 +4,17 @@ import type { Issue } from './github-issues';
 import { IssueMetadata } from './issue-metadata';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
+import { SignIn } from './sign-in';
 import {
   useIssueDetail,
   type DetailSource,
   type IssueDetailState,
 } from './use-issue-detail';
 
-type IssueDetailProps = Pick<IssueDetailState, 'onStatus' | 'sessions'> & {
+type IssueDetailProps = Pick<
+  IssueDetailState,
+  'onStatus' | 'sessions' | 'settled'
+> & {
   issue: Issue;
   projectId: string;
   // The page path of another Issue in the same Project, for a relation's row.
@@ -19,7 +23,16 @@ type IssueDetailProps = Pick<IssueDetailState, 'onStatus' | 'sessions'> & {
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
 export function IssueDetailPage(source: DetailSource): JSX.Element {
-  const { issue, message, ...state } = useIssueDetail(source);
+  const { issue, message, signIn, refresh, ...state } = useIssueDetail(source);
+
+  if (signIn)
+    return (
+      <SignIn
+        signIn={source.deps.signIn}
+        reauthorize={signIn.reauthorize}
+        onSignedIn={() => void refresh()}
+      />
+    );
 
   if (!issue) return <Loading source={source} message={message} />;
 
@@ -35,14 +48,14 @@ const pageProps = (
     source.deps.pages.issuePagePath(source.project, number),
 });
 
-// Until the Issue loads, and when it cannot, the page says so under its number.
+// An Issue opened without a row to start from has only its number until GitHub answers, and says why when it cannot.
 function Loading(props: {
   source: DetailSource;
   message: string;
 }): JSX.Element {
   return (
     <Screen title={`#${props.source.number}`}>
-      <EmptyState title={props.message} />
+      <EmptyState title={props.message || 'Opening…'} />
     </Screen>
   );
 }
@@ -66,15 +79,16 @@ function IssueBody(props: IssueDetailProps): JSX.Element {
   const { issue } = props;
 
   return (
-    <Detail
-      markdown={issue.body || 'No description.'}
-      metadata={<IssueMetadata issue={issue} />}
-    >
+    <Detail markdown={bodyOf(props)} metadata={<IssueMetadata issue={issue} />}>
       <SubIssues issue={issue} issuePath={props.issuePath} />
       <AttachedSessions sessions={props.sessions} />
     </Detail>
   );
 }
+
+// A row's Issue has no description yet, so the page leaves it empty until GitHub's own arrives.
+const bodyOf = ({ issue, settled }: IssueDetailProps): string =>
+  settled ? issue.body || 'No description.' : '';
 
 // The Issue's reference, title and link, as the prompt that starts work on it.
 const issueDraft = (issue: Issue): string =>

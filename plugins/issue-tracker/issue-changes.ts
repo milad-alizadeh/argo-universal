@@ -1,16 +1,26 @@
-import { useEffect } from '@argo/plugin-kit';
+import { useEffect, useState } from '@argo/plugin-kit';
+import type { IssueStatus } from './github-issues';
+import { freshForMs } from './use-github';
 
-// The changed Issue's number.
-type Listener = (number: number) => void;
+// The changed Issue's number and the status it now has.
+type Listener = (number: number, status: IssueStatus) => void;
 
-// An Issue whose status changed on one page, told to the other open pages so their lists and counts load again.
+type Change = { status: IssueStatus; at: number };
+
+/*
+ * An Issue whose status changed on one page, told to the other pages so their rows show it at once. It reloads nothing:
+ * a page that is not on screen must not call GitHub for it, and the next fresh answer carries the status anyway.
+ */
 export type IssueChanges = {
   subscribe: (listener: Listener) => () => void;
-  publish: (number: number) => void;
+  publish: (number: number, status: IssueStatus) => void;
+  // The statuses changed here recently enough that GitHub's answers may not show them yet.
+  recent: () => ReadonlyMap<number, IssueStatus>;
 };
 
 export function createIssueChanges(): IssueChanges {
   const listeners = new Set<Listener>();
+  const changes = new Map<number, Change>();
 
   return {
     subscribe: (listener) => {
@@ -20,16 +30,30 @@ export function createIssueChanges(): IssueChanges {
         listeners.delete(listener);
       };
     },
-    publish: (number) => {
-      for (const listener of listeners) listener(number);
+    publish: (number, status) => {
+      changes.set(number, { status, at: Date.now() });
+
+      for (const listener of listeners) listener(number, status);
     },
+    recent: () =>
+      new Map(
+        [...changes]
+          .filter(([, { at }]) => Date.now() - at < freshForMs)
+          .map(([number, { status }]) => [number, status]),
+      ),
   };
 }
 
-// An Issue whose status changed on another page may have left a list or joined it, so it loads again.
-export function useReloadOnChange(
-  changes: IssueChanges | undefined,
-  reload: () => Promise<void>,
-): void {
-  useEffect(() => changes?.subscribe(() => void reload()), [changes, reload]);
+// Draws again whenever an Issue's status changes on another page; answers the statuses to show over the list.
+export function useRecentStatuses(
+  changes: IssueChanges,
+): ReadonlyMap<number, IssueStatus> {
+  const [, setVersion] = useState(0);
+
+  useEffect(
+    () => changes.subscribe(() => setVersion((version) => version + 1)),
+    [changes],
+  );
+
+  return changes.recent();
 }

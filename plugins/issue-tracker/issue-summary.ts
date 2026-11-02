@@ -1,17 +1,17 @@
+import { readGraphql } from './github-api';
+import { issueQuery, mapIssueDetail } from './github-documents';
 import type { Issue } from './github-issues';
-import { openClient } from './issue-client';
+import { githubRepositoryFromOrigin } from './github-repository';
 import type { IssueDeps } from './issue-deps';
-import type { IssueLink, TrackerStorage } from './tracker-storage';
+import type { IssueLink } from './tracker-storage';
+import { freshForMs } from './use-github';
 
 // What a Session row and the Session bar say about an Issue: its state, and its title for a tooltip.
 export type IssueSummary = Pick<Issue, 'title' | 'status' | 'closedAs'>;
 
-type Source = Pick<IssueDeps, 'storage' | 'trackers' | 'listProjects'>;
+type Source = Pick<IssueDeps, 'listProjects' | 'fetch'>;
 
 type Target = Pick<IssueLink, 'projectId' | 'number'>;
-
-// A Session list asks again whenever a Session changes; one Issue is not fetched twice inside this.
-const freshForMs = 60_000;
 
 export type IssueSummaries = {
   // The last summary this Plugin stored for the Issue; `null` until one has loaded.
@@ -27,29 +27,26 @@ type Loads = {
   load: (target: Target) => Promise<void>;
 };
 
-// A summary lives in the Plugin's view cache under the Issue's number.
-type CacheKey = Pick<Target, 'projectId'> & { view: string };
-
 const keyOf = ({ projectId, number }: Target): string =>
   `${projectId}#${number}`;
 
-const cacheKey = ({ projectId, number }: Target): CacheKey => ({
-  projectId,
-  view: `issue-summary-${number}`,
-});
-
 /*
- * The batched Slot call answers inside two seconds, and a Tracker call can take longer, so the Slots answer from the
- * stored summary and load a fresh one on the side. A summary that differs is stored and `changed` is called, which
- * asks the Slots again.
+ * The batched Slot call answers inside two seconds, and GitHub can take longer, so the Slots answer from the summary
+ * kept so far and load a fresh one on the side. A summary that differs is kept and `changed` is called, which asks the
+ * Slots again. A Slot is not a view, so it cannot watch a Query: it makes the same call a page's Query makes, kept in
+ * memory for a minute.
  */
 export function createIssueSummaries(
   source: Source,
   changed: () => Promise<void>,
 ): IssueSummaries {
   const loadedAt = new Map<string, number>();
-  const cached = storedSummary(source.storage);
-  const load = loadSummary(source, cached, changed);
+  const kept = new Map<string, IssueSummary>();
+
+  const cached: IssueSummaries['cached'] = (target) =>
+    Promise.resolve(kept.get(keyOf(target)) ?? null);
+
+  const load = loadSummary(source, kept, changed);
 
   return {
     cached,
@@ -58,23 +55,18 @@ export function createIssueSummaries(
   };
 }
 
-const storedSummary =
-  (storage: TrackerStorage): IssueSummaries['cached'] =>
-  (target) =>
-    storage.readCache<IssueSummary>(cacheKey(target)).catch(() => null);
-
 function loadSummary(
   source: Source,
-  cached: IssueSummaries['cached'],
+  kept: Map<string, IssueSummary>,
   changed: () => Promise<void>,
 ): Loads['load'] {
   return async (target) => {
     const summary = await summaryOf(source, target);
+    const key = keyOf(target);
 
-    if (JSON.stringify(summary) === JSON.stringify(await cached(target)))
-      return;
+    if (JSON.stringify(summary) === JSON.stringify(kept.get(key))) return;
 
-    await source.storage.writeCache(cacheKey(target), summary);
+    kept.set(key, summary);
     await changed();
   };
 }
@@ -109,8 +101,33 @@ async function summaryOf(
 
   if (!project) throw new Error('This Project no longer exists.');
 
-  const client = await openClient({ ...source, project });
-  const { title, status, closedAs } = await client.getIssue(number);
+  const repository = githubRepositoryFromOrigin(project.originUrl);
+
+  if (!repository) throw new Error('This Project has no GitHub remote.');
+
+  const query = issueQuery(repository, number);
+
+  const response = await source.fetch(query.url, {
+    method: query.method,
+    headers: query.headers,
+    body: query.body,
+    account: query.account,
+    projectId,
+  });
+
+  const read = readGraphql(
+    {
+      data: response
+        ? { status: response.status, body: await response.text() }
+        : undefined,
+      error: response ? undefined : 'Account is unavailable',
+    },
+    mapIssueDetail,
+  );
+
+  if (read.kind !== 'ok') throw new Error('The Issue could not be read.');
+
+  const { title, status, closedAs } = read.value;
 
   return { title, status, closedAs };
 }

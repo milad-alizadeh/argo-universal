@@ -1,87 +1,54 @@
-import { useCallback, useMemo } from '@argo/plugin-kit';
-import { useReloadOnChange } from './issue-changes';
-import type { Project } from './issue-client';
-import type { IssueDeps } from './issue-deps';
+import { useMemo } from '@argo/plugin-kit';
+import { overviewQuery, mapOverview, type Overview } from './github-documents';
+import { githubRepositoryFromOrigin } from './github-repository';
+import { noRemoteMessage, type Project } from './issue-project';
 import {
-  readOverview,
-  requestOverview,
-  type Overview,
-} from './overview-requests';
-import { useAsync, type Async, type Show } from './use-async';
+  readMessage,
+  signInNeed,
+  useGitHub,
+  type SignInNeed,
+} from './use-github';
 
-export type { Overview } from './overview-requests';
+export type { Overview } from './github-documents';
 
 export type OverviewState = {
   overview: Overview | null;
   message: string;
   refresh: () => Promise<void>;
+  signIn: SignInNeed | null;
 };
 
-type OverviewSource = { deps: IssueDeps; project: Project };
+/*
+ * A Project's filters to navigate by, and every count on them, from one GitHub call. A page opened again inside the
+ * freshness window makes none.
+ */
+export function useOverview(project: Project | undefined): OverviewState {
+  const repository = githubRepositoryFromOrigin(project?.originUrl);
 
-// A Project's filters to navigate by: the cached overview at once, then GitHub's, kept apart by Project.
-export function useOverview(
-  deps: IssueDeps,
-  project: Project | undefined,
-  shouldRefetch: boolean,
-): OverviewState {
-  const source = useOverviewSource(deps, project);
-  const loaded = useFirstOverview(source, shouldRefetch);
-  const refresh = useRefresh(source, loaded.reload);
+  const query = useMemo(
+    () => (repository ? overviewQuery(repository) : null),
+    [repository],
+  );
+
+  const { read, refresh } = useGitHub(
+    { projectId: project?.id ?? '', query },
+    mapOverview,
+  );
 
   return {
-    overview: loaded.value ?? null,
-    message: loaded.error ?? '',
+    overview: read.kind === 'ok' ? read.value : null,
+    message: overviewMessage(project, repository, readMessage(read)),
     refresh,
+    signIn: query ? signInNeed(read) : null,
   };
 }
 
-const useOverviewSource = (
-  deps: IssueDeps,
+function overviewMessage(
   project: Project | undefined,
-): OverviewSource | undefined =>
-  useMemo(() => project && { deps, project }, [deps, project]);
+  repository: string | null,
+  failure: string | undefined,
+): string {
+  if (project && !repository) return noRemoteMessage;
 
-function useFirstOverview(
-  source: OverviewSource | undefined,
-  shouldRefetch: boolean,
-): Async<Overview | null> {
-  return useAsync(
-    useCallback(
-      (show) =>
-        source
-          ? openOverview(source, shouldRefetch, show)
-          : Promise.resolve(null),
-      [source, shouldRefetch],
-    ),
-  );
-}
-
-async function openOverview(
-  { deps, project }: OverviewSource,
-  shouldRefetch: boolean,
-  show: Show<Overview | null>,
-): Promise<Overview> {
-  const cached = await readOverview(deps, project);
-
-  if (!cached) return requestOverview(deps, project, shouldRefetch);
-
-  show(cached);
-
-  return shouldRefetch ? requestOverview(deps, project, shouldRefetch) : cached;
-}
-
-// Loads again on a pull, and when an Issue's status changes on another page.
-function useRefresh(
-  source: OverviewSource | undefined,
-  reload: Async<Overview | null>['reload'],
-): () => Promise<void> {
-  const refresh = useCallback(async () => {
-    if (source)
-      await reload(() => requestOverview(source.deps, source.project, true));
-  }, [source, reload]);
-
-  useReloadOnChange(source?.deps.changes, refresh);
-
-  return refresh;
+  return failure ?? '';
 }

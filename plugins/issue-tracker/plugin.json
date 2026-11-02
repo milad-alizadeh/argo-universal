@@ -18,11 +18,13 @@
         "path": "/"
       }
     ],
-    "slots": [
-      "argo/project/details/v1",
-      "argo/session/row/v1",
-      "argo/session/bar/v1"
+    "accounts": [
+      {
+        "host": "api.github.com",
+        "page": "/sign-in"
+      }
     ],
+    "slots": ["argo/session/row/v1", "argo/session/bar/v1"],
     "declared": {
       "argo/session/header/v1": [
         {
@@ -96,68 +98,14 @@
       "kind": "sessions:read"
     },
     {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["auth", "status"],
-      "env": ["GH_HOST", "GH_TOKEN"]
+      "kind": "fetch",
+      "host": "api.github.com",
+      "reason": "Reads and changes the Project's Issues as the signed-in person, and is the host of the Account this Plugin provides."
     },
     {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": [
-        "issue",
-        "list",
-        "--repo",
-        "*",
-        "--state",
-        "all",
-        "--search",
-        "*",
-        "--limit",
-        "*",
-        "--json",
-        "*"
-      ],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": [
-        "api",
-        "-X",
-        "GET",
-        "search/issues",
-        "-f",
-        "*",
-        "-f",
-        "per_page=1"
-      ],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["label", "list", "--repo", "*", "--limit", "*", "--json", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "view", "*", "--repo", "*", "--json", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "close", "*", "--repo", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "reopen", "*", "--repo", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
+      "kind": "fetch",
+      "host": "github.com",
+      "reason": "Asks GitHub for a sign-in code and for the token once the person has approved it (device flow)."
     }
   ]
 }

@@ -1,6 +1,5 @@
 import { EmptyState, Icon, List, ListDetail, ListItem } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { repositoryText, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import {
   builtInGroups,
@@ -8,6 +7,8 @@ import {
   type FilterGroup,
   type IssueFilter,
 } from './issue-filters';
+import { repositoryText, type Project } from './issue-project';
+import { SignIn } from './sign-in';
 import { useOverview, type Overview, type OverviewState } from './use-overview';
 import { useRootProjects, type RootProjects } from './use-root-projects';
 
@@ -33,14 +34,32 @@ type RootProps = {
 export function IssuesRoot({
   detail,
   projectId,
-  ...props
+  deps,
+  filter,
 }: RootProps): JSX.Element {
-  const choice = useRootProjects(props.deps, projectId);
+  const choice = useRootProjects(deps, projectId);
+  const state = useOverview(choice.project);
+
+  if (state.signIn)
+    return (
+      <SignIn
+        signIn={deps.signIn}
+        reauthorize={state.signIn.reauthorize}
+        onSignedIn={() => void state.refresh()}
+      />
+    );
 
   return (
     <ListDetail
       title="Issues"
-      list={<RootList {...props} choice={choice} reload={!detail} />}
+      list={
+        <RootRows
+          deps={deps}
+          choice={choice}
+          state={state}
+          selected={filter?.id}
+        />
+      }
       detail={choice.project && detail?.(choice.project)}
       empty={<SelectFilter />}
     />
@@ -54,26 +73,12 @@ const SelectFilter = (): JSX.Element => (
   />
 );
 
-type RootListProps = Pick<RootProps, 'deps' | 'filter'> & {
-  choice: RootProjects;
-  reload: boolean;
-};
-
 type RootRowsProps = {
   deps: IssueDeps;
   choice: RootProjects;
   state: OverviewState;
   selected?: string;
 };
-
-function RootList(props: RootListProps): JSX.Element {
-  const { deps, choice, filter, reload } = props;
-  const state = useOverview(deps, choice.project, reload);
-
-  return (
-    <RootRows deps={deps} choice={choice} state={state} selected={filter?.id} />
-  );
-}
 
 function RootRows(props: RootRowsProps): JSX.Element {
   const { deps, choice, state } = props;

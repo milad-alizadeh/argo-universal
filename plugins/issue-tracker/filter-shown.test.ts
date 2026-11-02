@@ -1,27 +1,17 @@
 import { expect, it } from 'vitest';
-import {
-  filterMessage,
-  loadingIssues,
-  unloaded,
-  type ShownIssues,
-} from './filter-shown';
+import { filterMessage, loadingIssues } from './filter-shown';
 
-const cached: ShownIssues = { issues: [], limit: 30, fetched: false };
-
-const fetched: ShownIssues = { ...cached, fetched: true };
-
-it('says Issues are loading until GitHub answers, even over a cached list', () => {
-  expect(filterMessage(unloaded)).toBe(loadingIssues);
-  expect(filterMessage(cached)).toBe(loadingIssues);
+it('says Issues are loading until GitHub answers', () => {
+  expect(filterMessage({ kind: 'loading' })).toBe(loadingIssues);
 });
 
 it('says nothing once GitHub has answered', () => {
-  expect(filterMessage(fetched)).toBe('');
+  expect(filterMessage({ kind: 'ok', value: [] })).toBe('');
 });
 
-it('says why GitHub failed, over a cached list', () => {
-  const message = filterMessage(cached, 'gh is down');
+it('says why GitHub failed', () => {
+  const message = filterMessage({ kind: 'failed', message: 'GitHub is down' });
 
   expect(message).not.toBe(loadingIssues);
-  expect(message).toContain('gh is down');
+  expect(message).toContain('GitHub is down');
 });

@@ -1,9 +1,18 @@
-import { useCallback } from '@argo/plugin-kit';
-import { githubError } from './github-errors';
+import { useCallback, useMemo, useState } from '@argo/plugin-kit';
+import { issueQuery, mapIssueDetail } from './github-documents';
 import type { Issue, IssueStatus } from './github-issues';
-import { openDepsClient, type Project } from './issue-client';
+import { githubRepositoryFromOrigin } from './github-repository';
+import { setIssueStatus } from './github-write';
+import { useRecentStatuses } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
-import { useAsync, type Async } from './use-async';
+import { noRemoteMessage, type Project } from './issue-project';
+import { useCall } from './use-call';
+import {
+  readMessage,
+  signInNeed,
+  useGitHub,
+  type SignInNeed,
+} from './use-github';
 
 export type DetailSource = {
   project: Project;
@@ -19,46 +28,90 @@ export type AttachedSession = {
 };
 
 export type IssueDetailState = {
+  // The Issue as far as it is known: the row's title and status at once, the whole Issue once GitHub answers.
   issue: Issue | null;
+  // Whether `issue` is GitHub's own answer, or still only what the row said.
+  settled: boolean;
   message: string;
   // The Sessions attached to this Issue; empty until they load, and when none are.
   sessions: AttachedSession[];
-  // Shows the new status at once, and the old one again when the Tracker refuses it.
+  // Shows the new status at once, and the old one again when GitHub refuses it.
   onStatus: (status: IssueStatus) => Promise<void>;
+  signIn: SignInNeed | null;
+  refresh: () => Promise<void>;
 };
 
-type SetIssue = Async<Issue>['set'];
-
 export function useIssueDetail(source: DetailSource): IssueDetailState {
-  const { value, error, set } = useIssue(source);
+  const { project, number, deps } = source;
+  const repository = githubRepositoryFromOrigin(project.originUrl);
+
+  const query = useMemo(
+    () => (repository ? issueQuery(repository, number) : null),
+    [repository, number],
+  );
+
+  const { read, refresh } = useGitHub(
+    { projectId: project.id, query },
+    mapIssueDetail,
+  );
+
+  const [shownStatus, showStatus] = useState<IssueStatus>();
+  const recent = useRecentStatuses(deps.changes);
   const sessions = useAttachedSessions(source);
 
   const onStatus = useCallback(
-    (status: IssueStatus) => changeStatus(source, set, status),
-    [source, set],
+    async (status: IssueStatus): Promise<void> => {
+      if (!repository) throw new Error(noRemoteMessage);
+
+      showStatus(status);
+
+      try {
+        await setIssueStatus(deps.fetch, {
+          repository,
+          number,
+          status,
+          projectId: project.id,
+        });
+      } catch (cause) {
+        showStatus(undefined);
+        throw cause;
+      }
+
+      deps.changes.publish(number, status);
+      await refresh().catch(() => undefined);
+      showStatus(undefined);
+    },
+    [deps, project.id, repository, number, refresh],
   );
 
-  return { ...loaded(value, error), sessions: sessions.value ?? [], onStatus };
+  const base =
+    read.kind === 'ok' ? read.value : deps.seeds.of(project.id, number);
+  const status = shownStatus ?? recent.get(number);
+
+  return {
+    issue: base ? { ...base, status: status ?? base.status } : null,
+    settled: read.kind === 'ok',
+    message: repository ? (readMessage(read) ?? '') : noRemoteMessage,
+    sessions: sessions.value ?? [],
+    onStatus,
+    signIn: query ? signInNeed(read) : null,
+    refresh,
+  };
 }
 
-// The Issue once it loads; until then, and when it fails, the line the page shows instead.
-const loaded = (
-  value: Issue | undefined,
-  error: string | undefined,
-): Pick<IssueDetailState, 'issue' | 'message'> => ({
-  issue: value ?? null,
-  message: error ?? 'Loading Issue…',
-});
-
 // The Sessions this Plugin stored for the Issue, each named by the App; one that has since gone is left out.
-function useAttachedSessions(source: DetailSource): Async<AttachedSession[]> {
-  return useAsync(
-    useCallback(async () => {
-      const { storage, getSession } = source.deps;
+function useAttachedSessions({
+  project,
+  number,
+  deps,
+}: DetailSource): ReturnType<typeof useCall<AttachedSession[]>> {
+  const { storage, getSession } = deps;
 
+  return useCall(
+    useCallback(async () => {
       const attached = await storage.issueSessions({
-        projectId: source.project.id,
-        number: source.number,
+        projectId: project.id,
+        number,
       });
 
       const found = await Promise.all(
@@ -66,12 +119,12 @@ function useAttachedSessions(source: DetailSource): Async<AttachedSession[]> {
       );
 
       return found.flat();
-    }, [source]),
+    }, [storage, getSession, project.id, number]),
   );
 }
 
 async function namedSession(
-  getSession: DetailSource['deps']['getSession'],
+  getSession: IssueDeps['getSession'],
   sessionId: string,
 ): Promise<AttachedSession[]> {
   const session = await getSession(sessionId).catch(() => null);
@@ -79,42 +132,4 @@ async function namedSession(
   if (!session) return [];
 
   return [{ sessionId, title: session.title, branch: session.branch }];
-}
-
-function useIssue(source: DetailSource): Async<Issue> {
-  return useAsync(
-    useCallback(async () => {
-      const client = await openDepsClient(source);
-
-      return client.getIssue(source.number);
-    }, [source]),
-  );
-}
-
-async function changeStatus(
-  source: DetailSource,
-  setIssue: SetIssue,
-  status: IssueStatus,
-): Promise<void> {
-  const showStatus = (to: IssueStatus): void =>
-    setIssue((issue) => issue && { ...issue, status: to });
-
-  showStatus(status);
-
-  try {
-    await sendStatus(source, status);
-  } catch (error) {
-    showStatus(status === 'open' ? 'closed' : 'open');
-    throw new Error(githubError(error));
-  }
-}
-
-async function sendStatus(
-  source: DetailSource,
-  status: IssueStatus,
-): Promise<void> {
-  const client = await openDepsClient(source);
-
-  await client.setStatus(source.number, status);
-  source.deps.changes.publish(source.number);
 }

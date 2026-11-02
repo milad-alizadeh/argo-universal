@@ -4,10 +4,8 @@ import {
   issuesRoot,
   issueTitle,
   linkedPage,
-  chooseGithub,
   project,
-  tracker,
-  trackerPage,
+  signedIn,
   wait,
   type PageView,
 } from './journey-fixture';
@@ -53,7 +51,7 @@ it('nests a sub-Issue under its parent in a filter list', async () => {
   const parent = list.findText(issueTitle)?.node;
 
   expect(JSON.stringify(parent?.children)).toContain(
-    'Fixture issue gh cannot change',
+    'Fixture issue GitHub cannot change',
   );
 }, 20_000);
 
@@ -85,7 +83,7 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
     .poll(
       () =>
         JSON.stringify(detail.tree).includes(
-          'This Issue came from the fixture gh executable.',
+          'This Issue came from the fixture GitHub.',
         ),
       wait,
     )
@@ -95,17 +93,11 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
     'https://github.com/owner/repository/issues/42',
   );
   expect(await test.log()).not.toContain('refused');
-  expect(
-    (await test.log()).match(
-      /argo\.process\.run gh api -X GET search\/issues/g,
-    ),
-  ).toHaveLength(5);
 }, 20_000);
 
 it('keeps the selected Project in the sidebar across filter and Issue routes', async () => {
   const other = { ...project, id: 'project-2', name: 'Other Project' };
-  const test = await tracker([project, other]);
-  await chooseGithub(trackerPage(test, other.id));
+  const { test } = await signedIn([project, other]);
   const root = await test.mount({ page: '/', surface: { platform: 'web' } });
   await expect.poll(() => root.findText(other.name), wait).toBeDefined();
 

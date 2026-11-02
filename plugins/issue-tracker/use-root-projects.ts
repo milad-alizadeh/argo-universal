@@ -1,7 +1,7 @@
 import { loadingIssues } from './filter-shown';
-import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import { useAsync } from './use-async';
+import type { Project } from './issue-project';
+import { useCall } from './use-call';
 
 export type RootProjects = {
   projects: Project[];
@@ -17,7 +17,7 @@ export function useRootProjects(
   deps: IssueDeps,
   selectedId?: string,
 ): RootProjects {
-  const { value, error } = useAsync(deps.listProjects);
+  const { value, error } = useCall(deps.listProjects);
   const projects = value ?? [];
   const project = chosenProject(projects, selectedId);
 

@@ -65,7 +65,7 @@ it('leaves the row and the bar empty again once the Session is detached', async 
 }, 20_000);
 
 it('gives a Session with no Issue no row item and no bar line', async () => {
-  const test = await tracker();
+  const { test } = await tracker();
   const row = await watch(test, rowSlot).next();
   const bar = await watch(test, barSlot).next();
 

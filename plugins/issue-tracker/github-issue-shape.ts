@@ -1,6 +1,6 @@
 import type { GitHubRelations, GitHubSummary } from './github-relations';
 
-// What gh prints for an Issue, and the checks every reader runs before it trusts a field.
+// What GitHub answers for an Issue, and the checks every reader runs before it trusts a field.
 export type IssueStatus = 'open' | 'closed';
 
 export type GitHubName = { name?: string; login?: string; color?: string };

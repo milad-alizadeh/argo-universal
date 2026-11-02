@@ -3,17 +3,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import {
-  chooseGithub,
   follow,
   issueTitle,
   project,
-  tracker,
-  trackerPage,
+  signedIn,
   type PageView,
   wait,
 } from './journey-fixture';
 
-type Test = Awaited<ReturnType<typeof tracker>>;
+type Test = Awaited<ReturnType<typeof signedIn>>['test'];
 
 const testTimeout = 20_000;
 
@@ -26,8 +24,7 @@ async function setRemote(test: Test, originUrl: string | null): Promise<void> {
 }
 
 async function openList(originUrl: string | null): Promise<Test> {
-  const test = await tracker([{ ...project, originUrl }]);
-  await chooseGithub(trackerPage(test));
+  const { test } = await signedIn([{ ...project, originUrl }]);
 
   return test;
 }

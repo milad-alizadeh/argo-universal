@@ -19,7 +19,7 @@ export type IssueProgress = { completed: number; total: number };
 // GitHub answers a relation as a connection: the Issues it reached, closed ones included.
 export type GitHubRelations = { nodes?: (GitHubIssue | null)[] };
 
-// gh prints whatever the API sent, so the tally is checked before it is counted.
+// GitHub's API sends whatever it holds, so the tally is checked before it is counted.
 export type GitHubSummary = { completed?: unknown; total?: unknown };
 
 // An empty relation reads as none at all, so the page draws nothing for it.

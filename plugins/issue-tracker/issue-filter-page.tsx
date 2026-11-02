@@ -9,10 +9,11 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
-import { repositoryText } from './issue-client';
+import { repositoryText } from './issue-project';
 import { statusMark } from './issue-status-mark';
 import { issueTree, type IssueNode } from './issue-tree';
 import { rowLabelPills } from './label-pills';
+import { SignIn } from './sign-in';
 import {
   useFilterIssues,
   type FilterIssues,
@@ -22,6 +23,15 @@ import {
 // One filter's Issues, a page at a time; each row opens the Issue's own page.
 export function FilterPage(source: FilterSource): JSX.Element {
   const issues = useFilterIssues(source);
+
+  if (issues.signIn)
+    return (
+      <SignIn
+        signIn={source.deps.signIn}
+        reauthorize={issues.signIn.reauthorize}
+        onSignedIn={() => void issues.refresh()}
+      />
+    );
 
   return (
     <Screen title={source.filter.title} caption={source.filter.search}>
@@ -64,18 +74,23 @@ type RowProps = Pick<
   'id' | 'leading' | 'title' | 'subtitle' | 'finished' | 'onPress' | 'meta'
 >;
 
-const rowProps = ({ project, deps }: FilterSource, issue: Issue): RowProps => ({
-  id: String(issue.number),
-  leading: statusMark(issue),
-  title: issue.title,
-  subtitle: `#${issue.number}`,
-  finished: issue.status !== 'open',
-  onPress: {
-    action: 'navigate',
-    path: deps.pages.issuePagePath(project, issue.number),
-  },
-  meta: [...rowMarks(issue), ...rowLabelPills(issue.labels)],
-});
+const rowProps = ({ project, deps }: FilterSource, issue: Issue): RowProps => {
+  // The Issue's page opens with this row's title and status, and fills in the rest.
+  deps.seeds.remember(project.id, issue);
+
+  return {
+    id: String(issue.number),
+    leading: statusMark(issue),
+    title: issue.title,
+    subtitle: `#${issue.number}`,
+    finished: issue.status !== 'open',
+    onPress: {
+      action: 'navigate',
+      path: deps.pages.issuePagePath(project, issue.number),
+    },
+    meta: [...rowMarks(issue), ...rowLabelPills(issue.labels)],
+  };
+};
 
 /*
  * What the row says about the Issue's relations before its labels: that open blockers hold it up, and

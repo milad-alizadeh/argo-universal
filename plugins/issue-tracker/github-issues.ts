@@ -13,7 +13,7 @@ import {
   type IssueRelation,
 } from './github-relations';
 
-// What gh prints, checked and mapped to the Issues the Tracker shows.
+// What GitHub answers, checked and mapped to the Issues the Tracker shows.
 export type { GitHubIssue, IssueStatus } from './github-issue-shape';
 
 export type { IssueProgress, IssueRelation } from './github-relations';
@@ -43,27 +43,11 @@ export type Issue = {
   progress?: IssueProgress;
 };
 
-export type GitHubCount = { total_count?: number };
-
-export type GitHubLabel = Pick<GitHubName, 'name'>;
-
 const closedReasons = new Map<string, IssueClosedAs>([
   ['COMPLETED', 'completed'],
   ['NOT_PLANNED', 'not-planned'],
   ['DUPLICATE', 'not-planned'],
 ]);
-
-// Each reader names the shape it expects, and checks it before trusting a field.
-export function parseJson<Reply>(
-  output: string,
-  description: string,
-): Reply | null {
-  try {
-    return JSON.parse(output);
-  } catch {
-    throw new Error(`${description} was not valid JSON.`);
-  }
-}
 
 export function mapIssue(issue: GitHubIssue | null): Issue {
   if (!validIssue(issue)) throw new Error('GitHub returned an invalid Issue.');
@@ -108,23 +92,6 @@ function parentOf(parent: GitHubIssue['parent']): { parent?: number } {
   const number = parent?.number;
 
   return isIssueNumber(number) ? { parent: number } : {};
-}
-
-// The total a GitHub search reports, whatever page it sent.
-export function mapCount(result: GitHubCount | null): number {
-  const { total_count: count } = result ?? {};
-
-  if (!Number.isInteger(count))
-    throw new Error('GitHub returned an invalid count.');
-
-  return Number(count);
-}
-
-export function mapLabels(labels: GitHubLabel[] | null): string[] {
-  if (!Array.isArray(labels))
-    throw new Error('GitHub returned an invalid label list.');
-
-  return names(labels);
 }
 
 const hexColor = /^[0-9a-f]{6}$/i;

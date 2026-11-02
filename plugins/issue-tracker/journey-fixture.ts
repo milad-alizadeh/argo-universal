@@ -1,3 +1,6 @@
+import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   Action,
@@ -5,6 +8,9 @@ import {
   type PluginTest,
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
+import { githubFixture, type GitHubFixture } from './github-fixture';
+
+export { refusedTitle } from './github-fixture';
 
 type FixtureProject = { id: string; name: string; originUrl: string | null };
 
@@ -16,63 +22,93 @@ export const project: FixtureProject = {
 
 export const issueTitle = 'Fixture issue from GitHub';
 
-// The fixture gh refuses every status change to this Issue.
-export const refusedTitle = 'Fixture issue gh cannot change';
-
-const trackerName = 'GitHub Issues';
-
-// The Tracker choice page, which a Project details row drills into (ADR-0046).
-export const trackerPath = '/tracker';
-
-export type ChoiceView = ReturnType<PluginTest['page']>;
-
 export type PageView = Awaited<ReturnType<PluginTest['mount']>>;
 
 export const wait = { timeout: 10_000 };
 
-// The Tracker choice page for one Project, as the row that drilled in opens it.
-export const trackerPage = (
-  test: PluginTest,
-  projectId = project.id,
-): ChoiceView => test.page(trackerPath, undefined, projectId);
+export type Tracked = { test: PluginTest; github: GitHubFixture };
 
-// A check marks the chosen row; its press is held until the stored choice arrives.
-export const chosen = (view: ChoiceView): boolean =>
-  view.findText(trackerName)?.node.props.selected === true;
+/*
+ * The Plugin's own directory with a client ID in place, since the real one is not registered yet: the sign-in tests
+ * run the same code against a fixture GitHub that accepts it.
+ */
+async function withClientId(): Promise<string> {
+  const source = fileURLToPath(new URL('.', import.meta.url));
+  const directory = await mkdtemp(join(tmpdir(), 'argo-issue-tracker-'));
 
-export async function chooseGithub(view: ChoiceView): Promise<void> {
-  await expect
-    .poll(() => view.findText(trackerName)?.node.props.disabled, wait)
-    .toBe(false);
-  await view.press(trackerName);
-  await expect.poll(() => chosen(view), wait).toBe(true);
+  await cp(source, directory, {
+    recursive: true,
+    filter: (path) => !path.includes('node_modules'),
+  });
+  await writeFile(
+    join(directory, 'github-client-id.ts'),
+    "export const githubClientId = 'fixture-client-id';\n",
+  );
+  onTestFinished(() => rm(directory, { recursive: true, force: true }));
+
+  return directory;
 }
 
-export async function tracker(projects = [project]): Promise<PluginTest> {
+export async function tracker(projects = [project]): Promise<Tracked> {
+  const github = await githubFixture();
+
   const test = await startPluginTest({
-    directory: fileURLToPath(new URL('.', import.meta.url)),
+    directory: await withClientId(),
     pluginId: 'issue-tracker',
     version: '0.0.0',
     projects,
-    path: [fileURLToPath(new URL('./mocks', import.meta.url))],
+    network: github.network,
+    clockStart: Date.now(),
   });
 
   onTestFinished(() => test.close());
 
-  return test;
+  return { test, github };
 }
 
-export async function issuesRoot(): Promise<{
-  test: PluginTest;
-  root: PageView;
-}> {
-  const test = await tracker();
+// Moves the Plugin's clock on until the page shows `text`: the device flow waits GitHub's interval between polls.
+export async function clockUntil(
+  test: PluginTest,
+  view: PageView,
+  text: string,
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        await test.clock.advance(1000);
 
-  await chooseGithub(trackerPage(test));
+        return view.findText(text);
+      },
+      wait,
+    )
+    .toBeDefined();
+}
 
-  const root = await test.mount({ page: '/', surface: { platform: 'web' } });
+// Signs in through the Account's own page, as "Add account" opens it, and waits until the Account is saved.
+export async function signIn({ test }: Tracked): Promise<void> {
+  const page = await test.mount({ page: '/sign-in', surface: { platform: 'web' } });
 
-  return { test, root };
+  await page.press('Sign in to GitHub');
+  await clockUntil(test, page, 'Signed in as octocat');
+}
+
+export async function signedIn(projects = [project]): Promise<Tracked> {
+  const tracked = await tracker(projects);
+
+  await signIn(tracked);
+
+  return tracked;
+}
+
+export async function issuesRoot(): Promise<Tracked & { root: PageView }> {
+  const tracked = await signedIn();
+
+  const root = await tracked.test.mount({
+    page: '/',
+    surface: { platform: 'web' },
+  });
+
+  return { ...tracked, root };
 }
 
 // A row's `navigate` Action names the page's own path; the test mounts it as the App would.

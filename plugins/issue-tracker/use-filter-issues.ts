@@ -1,16 +1,13 @@
-import { useCallback } from '@argo/plugin-kit';
-import {
-  filterMessage,
-  pageSize,
-  unloaded,
-  type ShownIssues,
-} from './filter-shown';
+import { useCallback, useMemo, useRef, useState } from '@argo/plugin-kit';
+import { filterMessage, loadingIssues, pageSize } from './filter-shown';
+import { listQuery, mapIssueList, searchLimit } from './github-documents';
 import type { Issue } from './github-issues';
-import { useReloadOnChange } from './issue-changes';
-import { openDepsClient, type Project } from './issue-client';
+import { githubRepositoryFromOrigin } from './github-repository';
+import { useRecentStatuses } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
-import { useAsync, type Async, type Show } from './use-async';
+import { noRemoteMessage, type Project } from './issue-project';
+import { signInNeed, useGitHub, type SignInNeed } from './use-github';
 
 export type FilterSource = {
   project: Project;
@@ -24,78 +21,61 @@ export type FilterIssues = {
   hasMore: boolean;
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
+  signIn: SignInNeed | null;
 };
 
-type CacheKey = Parameters<IssueDeps['storage']['readCache']>[0];
-
-const cacheKey = ({ project, filter }: FilterSource): CacheKey => ({
-  projectId: project.id,
-  view: `filter:${filter.id}`,
-});
-
 /*
- * One filter's Issues, newest page first: the cached first page at once, then GitHub's. A further
- * page asks for a longer list, as gh has no cursor.
+ * One filter's Issues, newest first: a further page asks for a longer search, as a search has no cursor, and the Issues
+ * already shown stay on screen while it loads.
  */
 export function useFilterIssues(source: FilterSource): FilterIssues {
-  const { value, error, reload } = useFirstPage(source);
-  const page = value ?? unloaded;
-  const { issues, limit } = page;
-  const load = useLoad(source, reload);
-  const refresh = useCallback(() => load(limit), [load, limit]);
+  const { project, filter, deps } = source;
+  const [limit, setLimit] = useState(pageSize);
+  const repository = githubRepositoryFromOrigin(project.originUrl);
 
-  useReloadOnChange(source.deps.changes, refresh);
+  const query = useMemo(
+    () => (repository ? listQuery(repository, filter.search, limit) : null),
+    [repository, filter.search, limit],
+  );
+
+  const { read, refresh } = useGitHub(
+    { projectId: project.id, query },
+    mapIssueList,
+  );
+
+  const shown = useRef<Issue[]>([]);
+  const recent = useRecentStatuses(deps.changes);
+
+  if (read.kind === 'ok') shown.current = read.value;
+
+  const issues = shown.current.map((issue) => withRecent(issue, recent));
+
+  const loadMore = useCallback(async (): Promise<void> => {
+    setLimit((now) => Math.min(now + pageSize, searchLimit));
+  }, []);
 
   return {
     issues,
-    message: filterMessage(page, error),
-    hasMore: issues.length >= limit,
-    loadMore: () => load(limit + pageSize),
+    message: repository ? messageOf(read, issues) : noRemoteMessage,
+    hasMore:
+      read.kind === 'ok' && issues.length >= limit && limit < searchLimit,
+    loadMore,
     refresh,
+    signIn: query ? signInNeed(read) : null,
   };
 }
 
-function useFirstPage(source: FilterSource): Async<ShownIssues> {
-  return useAsync(
-    useCallback(
-      async (show) => {
-        const key = cacheKey(source);
-        const cached = await source.deps.storage.readCache<Issue[]>(key);
+// A status changed on another page shows here before GitHub's next answer carries it.
+const withRecent = (
+  issue: Issue,
+  recent: ReadonlyMap<number, Issue['status']>,
+): Issue => ({ ...issue, status: recent.get(issue.number) ?? issue.status });
 
-        if (cached) show({ issues: cached, limit: pageSize, fetched: false });
+function messageOf(
+  read: Parameters<typeof filterMessage>[0],
+  issues: Issue[],
+): string {
+  const message = filterMessage(read);
 
-        return fetchIssues(source, pageSize, show);
-      },
-      [source],
-    ),
-  );
-}
-
-// Loads again with a longer or the same list, keeping the Issues on screen.
-function useLoad(
-  source: FilterSource,
-  reload: Async<ShownIssues>['reload'],
-): (limit: number) => Promise<void> {
-  return useCallback(
-    (limit) => reload((show) => fetchIssues(source, limit, show)),
-    [reload, source],
-  );
-}
-
-async function fetchIssues(
-  source: FilterSource,
-  limit: number,
-  show: Show<ShownIssues>,
-): Promise<ShownIssues> {
-  const client = await openDepsClient(source);
-  const issues = await client.listIssues(source.filter.search, limit);
-  const page = { issues, limit, fetched: true };
-
-  show(page);
-  await source.deps.storage.writeCache(
-    cacheKey(source),
-    issues.slice(0, pageSize),
-  );
-
-  return page;
+  return message === loadingIssues && issues.length > 0 ? '' : message;
 }

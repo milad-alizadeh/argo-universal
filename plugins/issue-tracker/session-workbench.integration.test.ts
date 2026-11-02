@@ -21,7 +21,7 @@ it("shows the Session's Issue on the Workbench card", async () => {
 }, 20_000);
 
 it('says when the Session has no Issue, or the card has no Session', async () => {
-  const test = await tracker();
+  const { test } = await tracker();
   const empty = await mountFor(test, cardPage, sessionId);
   const none = await mountFor(test, cardPage);
 
@@ -61,7 +61,7 @@ function declared(): Declared {
 
 it("declares a header action that opens the Issue tracker's Workbench card, and draws the card's page and tab", async () => {
   const { header, cards } = declared();
-  const test = await tracker();
+  const { test } = await tracker();
 
   expect(header.map(({ target }) => target)).toEqual([
     { type: 'card', cardId: cards[0]?.id },
