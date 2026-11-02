@@ -52,6 +52,8 @@ export type MemoryShells = {
   shells: Shells;
   changes: ShellRecord[];
   commands: MemoryShellCommand[];
+  // What the Session's Feed went on to receive.
+  forwarded: SessionNotification[];
   database: Database;
   terminal: TerminalCall;
   claim: (terminalId: string, toolCallId: string) => void;
@@ -59,10 +61,16 @@ export type MemoryShells = {
   notify: (notification: SessionNotification) => void;
 };
 
+const newObservations = (): ShellObservations => ({
+  commands: [],
+  changes: [],
+  forwarded: [],
+});
+
 export const openMemoryShells = (): MemoryShells => {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
-  const observations: ShellObservations = { commands: [], changes: [] };
+  const observations = newObservations();
 
   const shells = fixtureShells(
     directory,
@@ -80,7 +88,7 @@ const memoryShells = (
   shells: Shells,
   observations: ShellObservations,
 ): MemoryShells => {
-  const destination = attachShells(shells);
+  const destination = attachShells(shells, observations.forwarded);
 
   return {
     shells,
@@ -95,6 +103,7 @@ const memoryShells = (
 type ShellObservations = {
   commands: MemoryShellCommand[];
   changes: ShellRecord[];
+  forwarded: SessionNotification[];
 };
 
 const fixtureShells = (
@@ -129,9 +138,14 @@ const shellPorts = (
   launch: memoryLauncher(observations.commands),
 });
 
-const attachShells = (shells: Shells): ReturnType<Shells['attach']> =>
+const attachShells = (
+  shells: Shells,
+  forwarded: SessionNotification[],
+): ReturnType<Shells['attach']> =>
   shells.attach({
-    update: () => {},
+    update: (notification) => {
+      forwarded.push(notification);
+    },
     failed: () => {},
     requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
     createElicitation: () => ({ action: 'cancel' }),
