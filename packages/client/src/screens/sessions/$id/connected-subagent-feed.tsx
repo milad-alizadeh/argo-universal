@@ -79,6 +79,20 @@ const childItems = (source: Source): SubagentFeedProps['feed']['items'] =>
 const childHeader = (source: Source): SubagentFeedProps['feed']['liveHeader'] =>
   source.snapshot?.liveHeader ?? null;
 
+function childPaging(
+  source: Source,
+): Pick<
+  SubagentFeedProps['feed'],
+  'loadingOlder' | 'hasOlder' | 'historyCursor' | 'onStartReached'
+> {
+  return {
+    loadingOlder: source.loadingOlder,
+    hasOlder: source.hasOlder,
+    historyCursor: source.historyCursor,
+    onStartReached: () => void source.loadOlder(),
+  };
+}
+
 function childFeed(
   source: Source,
   reports: SubagentFeedProps['feed']['items'],
@@ -88,10 +102,7 @@ function childFeed(
     items: [...childItems(source), ...reports],
     liveHeader: childHeader(source),
     liveToolCall: source.liveToolCall,
-    loadingOlder: source.loadingOlder,
-    hasOlder: source.hasOlder,
-    historyCursor: source.historyCursor,
-    onStartReached: () => void source.loadOlder(),
+    ...childPaging(source),
     imageUrl,
   };
 }

@@ -1,0 +1,151 @@
+{
+  "provenance": "Scripted ACP Agent through real Engine and feed.page; not a Claude capture",
+  "parentSessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4",
+  "childSessionId": "574d3302-2f41-4135-9a95-fb7d89453b19",
+  "parent": [
+    {
+      "id": "01b7636b-54de-41c1-834c-c1e522cbfa2d:user",
+      "sessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4",
+      "position": 0,
+      "revision": 1,
+      "turnId": "01b7636b-54de-41c1-834c-c1e522cbfa2d",
+      "state": "settled",
+      "sessionUpdate": "user_message",
+      "messageId": "01b7636b-54de-41c1-834c-c1e522cbfa2d:user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Show the result"
+        }
+      ],
+      "_meta": {
+        "argo": {
+          "sender": {
+            "type": "user"
+          }
+        }
+      }
+    },
+    {
+      "id": "0060c43b-a9a0-483b-ad8f-dca9607b1109",
+      "sessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4",
+      "position": 1,
+      "revision": 2,
+      "turnId": null,
+      "state": "settled",
+      "sessionUpdate": "subagent_update",
+      "subagentSessionId": "574d3302-2f41-4135-9a95-fb7d89453b19",
+      "_meta": {
+        "argo": {
+          "action": "spawn"
+        }
+      }
+    },
+    {
+      "id": "[\"subagent_update\",\"5c8c450e-64fb-473b-a24f-eb5eea1909f4\",\"reply\"]",
+      "sessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4",
+      "position": 2,
+      "revision": 3,
+      "turnId": null,
+      "state": "settled",
+      "sessionUpdate": "subagent_update",
+      "subagentSessionId": "574d3302-2f41-4135-9a95-fb7d89453b19",
+      "_meta": {
+        "argo": {
+          "result": [
+            {
+              "type": "text",
+              "text": "Two packages."
+            },
+            {
+              "type": "resource_link",
+              "name": "Source",
+              "uri": "file:///source.ts"
+            },
+            {
+              "type": "text",
+              "text": "Review complete."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"mcp-content\"]]",
+      "sessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4",
+      "position": 3,
+      "revision": 4,
+      "turnId": "01b7636b-54de-41c1-834c-c1e522cbfa2d",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "mcp-content",
+      "title": "Read the issue",
+      "kind": "other",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "content",
+          "content": {
+            "type": "text",
+            "text": "Issue details from MCP"
+          }
+        }
+      ],
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"mcp-raw\"]]",
+      "sessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4",
+      "position": 4,
+      "revision": 5,
+      "turnId": "01b7636b-54de-41c1-834c-c1e522cbfa2d",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "mcp-raw",
+      "title": "Look up the issue",
+      "kind": "other",
+      "status": "in_progress",
+      "content": [],
+      "rawInput": {
+        "issue": 1918
+      },
+      "rawOutput": {
+        "title": "Live detail"
+      },
+      "_meta": {}
+    }
+  ],
+  "child": [
+    {
+      "id": "[\"session_message\",\"574d3302-2f41-4135-9a95-fb7d89453b19\",\"reply\"]",
+      "sessionId": "574d3302-2f41-4135-9a95-fb7d89453b19",
+      "position": 0,
+      "revision": 1,
+      "turnId": null,
+      "state": "settled",
+      "sessionUpdate": "session_message",
+      "messageId": "reply",
+      "content": [
+        {
+          "type": "text",
+          "text": "Two packages."
+        },
+        {
+          "type": "resource_link",
+          "name": "Source",
+          "uri": "file:///source.ts"
+        },
+        {
+          "type": "text",
+          "text": "Review complete."
+        }
+      ],
+      "_meta": {
+        "argo": {
+          "senderSessionId": "574d3302-2f41-4135-9a95-fb7d89453b19",
+          "recipientSessionId": "5c8c450e-64fb-473b-a24f-eb5eea1909f4"
+        }
+      }
+    }
+  ]
+}

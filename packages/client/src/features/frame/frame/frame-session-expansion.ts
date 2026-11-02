@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { SessionMemory, useSessionMemory } from '../../../lib/session-memory';
+import {
+  SessionMemory,
+  useSessionMemory,
+} from '../../../lib/product/session-memory';
 
 const expansionMemory = new SessionMemory(false);
 

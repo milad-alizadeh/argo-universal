@@ -67,7 +67,28 @@ function hasTerminal(
 }
 
 function liveDetail(activity: FeedActivity): boolean {
-  return liveEdit(activity) || liveCommand(activity);
+  return liveEdit(activity) || liveCommand(activity) || liveGeneric(activity);
+}
+
+function genericOutput(
+  row: Extract<FeedActivity, { type: 'tool_call' }>['row'],
+): boolean {
+  return [
+    row.content.length > 0,
+    row.rawInput != null,
+    row.rawOutput != null,
+  ].some(Boolean);
+}
+
+function liveGeneric(activity: FeedActivity): boolean {
+  if (activity.type !== 'tool_call') return false;
+
+  const facts = toolCallFacts(activity.row);
+
+  return (
+    ![facts.isEdit, facts.isCommand].some(Boolean) &&
+    genericOutput(activity.row)
+  );
 }
 
 function keepActivity(activity: FeedActivity, liveId: string): boolean {

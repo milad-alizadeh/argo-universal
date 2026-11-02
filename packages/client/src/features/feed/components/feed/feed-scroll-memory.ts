@@ -1,6 +1,6 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import type { RefObject } from 'react';
-import { SessionMemory } from '../../../../lib/session-memory';
+import { SessionMemory } from '../../../../lib/product/session-memory';
 
 export type FeedAnchor = { key: string; offset: number };
 

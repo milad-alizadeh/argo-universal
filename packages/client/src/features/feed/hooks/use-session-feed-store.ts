@@ -23,17 +23,14 @@ interface SessionFeedHandle {
 export function useSessionFeedStore(
   sessionId: string | undefined,
   translate: FeedViewTranslator,
+  cacheId = sessionId,
 ): SessionFeedHandle {
-  const ports = useSessionFeedPorts(sessionId, translate);
-  const store = useStoreFor(sessionId, ports);
+  const ports = useSessionFeedPorts(sessionId, translate, cacheId);
+  const store = useStoreFor(cacheId, ports);
   useEffect(() => store.setPorts(ports));
   useEffect(() => store.start(), [store]);
 
-  const state = useSyncExternalStore(
-    store.subscribe,
-    store.getState,
-    store.getState,
-  );
+  const state = useFeedStoreState(store);
 
   return { store, state };
 }
@@ -59,8 +56,9 @@ function useStoreFor(
 function useSessionFeedPorts(
   sessionId: string | undefined,
   translate: FeedViewTranslator,
+  cacheId: string | undefined,
 ): SessionFeedPorts {
-  const kept = useKeptFeedSlot(sessionId);
+  const kept = useKeptFeedSlot(cacheId);
   const fetchRow = useFetchRow(sessionId);
   const resetHistory = useResetHistory(sessionId);
 
@@ -81,4 +79,8 @@ function useFetchRow(
       }),
     [queryClient, trpc, sessionId],
   );
+}
+
+function useFeedStoreState(store: SessionFeedStore): SessionFeedState {
+  return useSyncExternalStore(store.subscribe, store.getState, store.getState);
 }

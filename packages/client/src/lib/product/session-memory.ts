@@ -1,5 +1,5 @@
 import { type SetStateAction, useCallback, useSyncExternalStore } from 'react';
-import { StoreListeners } from './store-listeners';
+import { StoreListeners } from '../store-listeners';
 
 // Sessions remembered at once: the one shown, and the ones the person switched away from most recently.
 export const rememberedSessions = 20;

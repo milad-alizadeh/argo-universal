@@ -2,4 +2,4 @@ export {
   rememberedSessions,
   SessionMemory,
   useSessionMemory,
-} from '../../../lib/session-memory';
+} from '../../../lib/product/session-memory';
