@@ -8,6 +8,10 @@ Argo is a cockpit for coding agents. It runs Sessions with any Agent from the AC
 A registered git repository that Argo works in. One git common directory is one Project.
 _Avoid_: Repo, workspace
 
+**Projects folder**:
+The folder on the Server Device where Argo puts a Project it clones or starts, `~/Argo` unless `ARGO_PROJECTS_DIR` names another. A Project added from a folder stays where it is.
+_Avoid_: Workspace folder
+
 **Server**:
 The local program that owns Sessions, git work, and storage for its Server Device. It runs as a Supervisor and an Engine. It plays the role that ACP calls the Client.
 _Avoid_: Daemon, backend, host

@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
-import { AddProjectView } from './add-project-view';
+import { ProjectNewView } from './project-new-view';
 
 const meta = {
-  title: 'Screens/Settings/AddProjectView',
-  component: AddProjectView,
+  title: 'Screens/Settings/ProjectNewView',
+  component: ProjectNewView,
   parameters: { screenPreview: true },
   args: { onSubmit: fn() },
   argTypes: { adding: { control: 'boolean' }, onSubmit: { control: false } },
-} satisfies Meta<typeof AddProjectView>;
+} satisfies Meta<typeof ProjectNewView>;
 
 export default meta;
 

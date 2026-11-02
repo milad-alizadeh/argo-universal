@@ -1,16 +1,16 @@
-import { execFile } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
-import { promisify } from 'node:util';
+import { dirname } from 'node:path';
 import { git } from './git';
 
-const execute = promisify(execFile);
-
-// `git clone` has no `-C`: it makes the folder, so it runs from where the folder will go.
+// `git clone` makes the folder itself, so it runs from the folder the new one goes in.
 export async function cloneRepository(
   url: string,
   destination: string,
 ): Promise<void> {
-  await execute('git', ['clone', '--', url, destination]);
+  const parent = dirname(destination);
+
+  await mkdir(parent, { recursive: true });
+  await git(parent, ['clone', '--', url, destination]);
 }
 
 const author = ['-c', 'user.name=Argo', '-c', 'user.email=argo@localhost'];

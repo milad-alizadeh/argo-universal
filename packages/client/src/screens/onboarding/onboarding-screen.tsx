@@ -4,7 +4,7 @@ import { loadedAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import { agentStep } from '#features/setup';
 import {
-  addProjectHref,
+  projectNewHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
 import type { OnboardingViewProps } from './onboarding-props';
@@ -21,7 +21,7 @@ function useOnboarding(): OnboardingViewProps {
     agent: agentStep(installed),
     github: { status: 'not-connected' },
     onAddAgent: () => navigate('/settings/agents'),
-    onAddProject: () => navigate(addProjectHref()),
+    onAddProject: () => navigate(projectNewHref()),
   };
 }
 

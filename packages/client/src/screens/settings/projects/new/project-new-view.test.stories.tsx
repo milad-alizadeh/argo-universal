@@ -1,15 +1,15 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { AddProjectView } from './add-project-view';
+import { ProjectNewView } from './project-new-view';
 
 const meta = {
-  title: 'Tests/Screens/Settings/AddProjectView',
-  component: AddProjectView,
+  title: 'Tests/Screens/Settings/ProjectNewView',
+  component: ProjectNewView,
   parameters: { screenPreview: true },
   args: { onSubmit: fn() },
   beforeEach: (): Promise<void> => settleLayout('wide'),
-} satisfies Meta<typeof AddProjectView>;
+} satisfies Meta<typeof ProjectNewView>;
 
 export default meta;
 

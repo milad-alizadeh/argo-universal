@@ -3,7 +3,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useProjects } from '#features/settings';
 import {
-  addProjectHref,
+  projectNewHref,
   projectHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
@@ -28,7 +28,7 @@ export function ProjectListPane(): React.JSX.Element {
     <ProjectListView
       projects={toProjectsLoad(useProjects())}
       onOpenProject={(name) => navigate(projectHref(name))}
-      onAddProject={() => navigate(addProjectHref())}
+      onAddProject={() => navigate(projectNewHref())}
     />
   );
 }

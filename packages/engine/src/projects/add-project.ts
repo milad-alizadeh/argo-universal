@@ -1,6 +1,7 @@
-import { existsSync } from 'node:fs';
+import { rm, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
+import type { ProjectAdded } from '@repo/contracts/operations';
 import type { Database } from '@repo/db';
 import { cloneRepository, initRepository } from '@repo/git';
 import { TRPCError } from '@trpc/server';
@@ -13,28 +14,39 @@ const badRequest = (message: string): TRPCError =>
 const projectsFolder = (): string =>
   process.env.ARGO_PROJECTS_DIR ?? join(homedir(), 'Argo');
 
-// A folder that is not in a git repository is the caller's mistake, not the Server's.
+const notARepository = /not a git repository/i;
+
+// A folder outside any repository is the caller's mistake; any other failure is the Server's.
 export async function addProject(
   database: Database,
   path: string,
-): Promise<{ projectId: string }> {
+): Promise<ProjectAdded> {
   if (!(await isFolder(path))) throw badRequest(`No folder ${path}`);
 
-  try {
-    return { projectId: await seedProject(database, path) };
-  } catch {
-    throw badRequest(`${path} is not in a git repository`);
-  }
+  return seedProject(database, path)
+    .then((projectId): ProjectAdded => ({ projectId }))
+    .catch((error: Error): never => {
+      if (notARepository.test(error.message))
+        throw badRequest(`${path} is not in a git repository`);
+
+      throw error;
+    });
 }
 
 const folderName = /^\w[\w.-]*$/;
 
-function freeFolder(name: string): string {
+const exists = (path: string): Promise<boolean> =>
+  stat(path).then(
+    (): boolean => true,
+    (): boolean => false,
+  );
+
+async function freeFolder(name: string): Promise<string> {
   if (!folderName.test(name)) throw badRequest(`${name} is not a folder name`);
 
   const folder = join(projectsFolder(), name);
 
-  if (existsSync(folder)) throw badRequest(`${folder} already exists`);
+  if (await exists(folder)) throw badRequest(`${folder} already exists`);
 
   return folder;
 }
@@ -46,26 +58,42 @@ function cloneName(url: string): string {
   return basename(url.split(/[/:]/).findLast(Boolean) ?? '', '.git');
 }
 
+// A folder made for a Project that did not register is removed, so trying again does not meet it.
+async function registered(
+  database: Database,
+  folder: string,
+  made: Promise<void>,
+): Promise<ProjectAdded> {
+  try {
+    await made;
+
+    return { projectId: await seedProject(database, folder) };
+  } catch (error) {
+    await rm(folder, { recursive: true, force: true });
+    throw error;
+  }
+}
+
 export async function cloneProject(
   database: Database,
   url: string,
-): Promise<{ projectId: string }> {
-  const folder = freeFolder(cloneName(url));
+): Promise<ProjectAdded> {
+  const folder = await freeFolder(cloneName(url));
 
-  await cloneRepository(url, folder).catch((): never => {
-    throw badRequest(`Could not clone ${url}`);
-  });
-
-  return { projectId: await seedProject(database, folder) };
+  return registered(
+    database,
+    folder,
+    cloneRepository(url, folder).catch((error: Error): never => {
+      throw badRequest(`Could not clone ${url}: ${error.message}`);
+    }),
+  );
 }
 
 export async function createProject(
   database: Database,
   name: string,
-): Promise<{ projectId: string }> {
-  const folder = freeFolder(name);
+): Promise<ProjectAdded> {
+  const folder = await freeFolder(name);
 
-  await initRepository(folder);
-
-  return { projectId: await seedProject(database, folder) };
+  return registered(database, folder, initRepository(folder));
 }
