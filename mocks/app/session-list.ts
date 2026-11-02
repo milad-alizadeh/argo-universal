@@ -21,6 +21,7 @@ export const projectsList: ProjectsListOutput = [
     checkoutChoice: { type: 'worktree', baseBranch: 'main' },
     remoteHost: 'GitHub',
     folderExists: true,
+    deleteWorktreeOnArchive: true,
   },
 ];
 

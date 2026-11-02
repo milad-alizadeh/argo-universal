@@ -32,6 +32,7 @@ const cases: [ScopedOperation, string][] = [
   [list({ projectId: 'p2' }), asks],
   [branches('p1'), runs],
   [branches('p2'), asks],
+  [operation('project.update', { projectId: 'p1' }), asks],
   [operation('session.archive', { sessionId: 'started' }), asks],
   [operation('agent.install', { id: 'mock' }), asks],
   [promptTo('started'), runs],
