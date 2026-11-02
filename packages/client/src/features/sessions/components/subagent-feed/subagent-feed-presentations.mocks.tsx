@@ -31,12 +31,18 @@ const paneProps = {
   tabs,
 };
 
-// The Inspector's Subagents tab, drilled in to one Subagent's Feed.
-export function SubagentFeedInspector(
-  props: SubagentFeedProps,
-): React.JSX.Element {
+/*
+ * The Inspector's Subagents tab, drilled in to one Subagent's Feed. Expanded, it fills the Session's width and the
+ * Feed's column centres in the pane.
+ */
+export function SubagentFeedInspector({
+  expanded,
+  ...props
+}: SubagentFeedProps & { expanded?: boolean }): React.JSX.Element {
   return (
-    <View className="h-175 w-frame-inspector self-end">
+    <View
+      className={expanded ? 'h-175 w-full' : 'h-175 w-frame-inspector self-end'}
+    >
       <InspectorPane {...paneProps}>
         <SubagentFeed {...props} />
       </InspectorPane>

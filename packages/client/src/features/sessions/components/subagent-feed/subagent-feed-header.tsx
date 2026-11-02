@@ -3,6 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { useClock } from '@repo/kit/use-clock';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { SessionColumn } from '#lib/product/session-column';
 import { subagentFeedMeta } from './subagent-feed-meta';
 import type { SubagentFeedProps } from './subagent-feed-props';
 
@@ -10,17 +11,20 @@ type HeaderProps = Omit<SubagentFeedProps, 'feed'>;
 
 export const subagentFeedBackLabel = 'Back to Agents';
 
+// Back hangs in the column's 24 gutter, so the title starts where the Feed's rows do, at either Inspector width.
 function BackButton({
   onBack,
 }: Pick<HeaderProps, 'onBack'>): React.JSX.Element {
   return (
-    <IconButton
-      variant="ghost"
-      size="sm"
-      icon="chevron-left"
-      accessibilityLabel={subagentFeedBackLabel}
-      onPress={onBack}
-    />
+    <View className="absolute inset-y-0 -left-6 justify-center">
+      <IconButton
+        variant="ghost"
+        size="sm"
+        icon="back"
+        accessibilityLabel={subagentFeedBackLabel}
+        onPress={onBack}
+      />
+    </View>
   );
 }
 
@@ -54,17 +58,17 @@ function Meta({
   );
 }
 
-// The drilled-in Subagent's line in the Inspector: Back to the list, its title, and how it is doing.
+// The drilled-in Subagent's line in the Inspector, on the Feed's column: Back to the list, its title, and how it is doing.
 export function SubagentFeedHeader({
   subagent,
   onBack,
   now,
 }: HeaderProps): React.JSX.Element {
   return (
-    <View className="h-frame-control shrink-0 flex-row items-center gap-1.5 pl-1.5 pr-2">
+    <SessionColumn className="h-frame-control shrink-0 flex-row items-center gap-1.5">
       <BackButton onBack={onBack} />
       <Title title={subagent.title} />
       <Meta subagent={subagent} now={now} />
-    </View>
+    </SessionColumn>
   );
 }
