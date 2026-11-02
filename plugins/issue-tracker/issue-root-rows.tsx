@@ -4,6 +4,7 @@ import type { IssueDeps } from './issue-deps';
 import {
   builtInGroups,
   filterGroups,
+  openFilter,
   type FilterGroup,
   type IssueFilter,
 } from './issue-filters';
@@ -15,14 +16,12 @@ type RootView = {
   deps: IssueDeps;
   project: Project;
   overview: Overview | null;
-  selected?: string;
 };
 
 type RootRowsProps = {
   deps: IssueDeps;
   choice: RootProjects;
   state: OverviewState;
-  selected?: string;
 };
 
 export function RootRows(props: RootRowsProps): JSX.Element {
@@ -32,7 +31,9 @@ export function RootRows(props: RootRowsProps): JSX.Element {
     <List
       footer={rootFooter(choice, state.message)}
       empty={<EmptyState title={choice.message} />}
-      onRefresh={state.refresh}
+      onRefresh={async () => {
+        await Promise.all([deps.projects.refresh(), state.refresh()]);
+      }}
     >
       {projectSection(deps, choice)}
       {filterSections(props)}
@@ -65,7 +66,7 @@ function projectRow(
   choice: RootProjects,
   project: Project,
 ): JSX.Element {
-  const path = deps.pages.projectPagePath(project);
+  const path = deps.pages.filterPagePath(project, openFilter);
 
   return (
     <ListItem
@@ -78,12 +79,12 @@ function projectRow(
 }
 
 function filterSections(props: RootRowsProps): JSX.Element[] {
-  const { deps, choice, state, selected } = props;
+  const { deps, choice, state } = props;
   const project = choice.project;
 
   if (!project) return [];
 
-  const view = { deps, project, overview: state.overview, selected };
+  const view = { deps, project, overview: state.overview };
 
   return groupsOf(state.overview).map((group) => (
     <List.Section key={group.title} title={group.title}>
@@ -113,7 +114,6 @@ function filterRow(view: RootView, filter: IssueFilter): JSX.Element {
     <ListItem
       key={filter.id}
       title={filter.title}
-      selected={filter.id === view.selected}
       value={countText(view.overview, filter)}
       leading={<Icon name={filter.icon} size="md" />}
       onPress={{ action: 'navigate', path }}

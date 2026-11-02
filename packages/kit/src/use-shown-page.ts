@@ -43,12 +43,13 @@ function askerFor(
 /*
  * React Navigation warns when `navigation.isFocused()` runs during render, so the store never calls it there.
  * It holds the last answer and asks again only once subscribed, and on every focus and blur, none of which is a render.
- * A page is taken as focused until then.
+ * Until it has asked, focus is not known, so a page counts as not focused: a page mounted behind the shown one never
+ * takes a Place from it, not even for its first commit.
  */
 function focusStoreOf(navigation: Navigation | undefined): FocusStore {
   if (!navigation) return alwaysFocused;
 
-  const held = { focused: true };
+  const held = { focused: false };
 
   return {
     subscribe: (notify) => {

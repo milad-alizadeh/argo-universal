@@ -22,15 +22,18 @@ const filter = (
   fields: Omit<IssueFilter, 'counted'> & { counted?: boolean },
 ): IssueFilter => ({ counted: true, ...fields });
 
+// Where a Project's Issues open.
+export const openFilter: IssueFilter = filter({
+  id: 'open',
+  title: 'Open',
+  search: 'is:open',
+  icon: 'issue',
+});
+
 const statusGroup: FilterGroup = {
   title: 'Status',
   filters: [
-    filter({
-      id: 'open',
-      title: 'Open',
-      search: 'is:open',
-      icon: 'issue',
-    }),
+    openFilter,
     filter({
       id: 'closed',
       title: 'Closed',

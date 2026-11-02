@@ -2,8 +2,8 @@ import { listenerSet } from './listener-set';
 
 /*
  * The engine under a Place (see place.ts), which is the only module that uses it. By default the newest claim holds the
- * place and an older one is not given it back when the newer lets go. With a precedence, the first claim holds it and
- * the others wait in line, unless one shows a value that outranks the holder's.
+ * place and the one it displaced waits, so a claim that lets go never takes a live claim's place with it. With a
+ * precedence, the first claim holds it and the others wait in line, unless one shows a value that outranks the holder's.
  */
 export interface ClaimStore<Value> {
   claim: () => Claim<Value>;
@@ -32,14 +32,11 @@ interface Held<Value> {
 interface Line<Value> {
   holder: Held<Value> | undefined;
   waiting: Held<Value>[];
-  // Without a precedence the newest claim takes the place, and nothing waits.
+  // Without a precedence the newest claim takes the place, and the holder it displaced waits first in line.
   queues: boolean;
   precedence: Precedence<Value>;
   notify: () => void;
 }
-
-const waitsFor = <Value>(line: Line<Value>): boolean =>
-  line.queues && line.holder !== undefined;
 
 const holding = <Value>(line: Line<Value>): Value | undefined =>
   line.holder?.value;
@@ -84,8 +81,8 @@ function release<Value>(line: Line<Value>, own: Held<Value>): void {
 function claimIn<Value>(line: Line<Value>): Claim<Value> {
   const own: Held<Value> = { value: undefined };
 
-  if (waitsFor(line)) line.waiting.push(own);
-  else line.holder = own;
+  if (line.queues && line.holder) line.waiting.push(own);
+  else take(line, own);
 
   line.notify();
 

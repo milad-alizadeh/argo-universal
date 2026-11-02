@@ -7,12 +7,9 @@ import type { ScaffoldProps } from '../scaffold/scaffold';
 import type { FrameListDetail } from './frame-list-detail';
 import type { FrameSections } from './section-lists';
 
-// The list a Plugin page's ListDetail holds the Frame's sidebar with.
-function ClaimedList(props: {
-  sidebar: Place<ReactNode>;
-  kept?: ReactNode;
-}): ReactNode {
-  return useClaimed(props.sidebar) ?? props.kept;
+// The list a section's root ListDetail holds the Frame's sidebar with.
+function ClaimedList(props: { sidebar: Place<ReactNode> }): ReactNode {
+  return useClaimed(props.sidebar);
 }
 
 type SectionScaffold = Pick<ScaffoldProps, 'list'> &
@@ -29,7 +26,7 @@ const noList: SectionScaffold = {
   inspectorState: 'closed',
 };
 
-// A core section's own list; a Plugin section's only while its page's ListDetail holds the sidebar with its own.
+// A core section's own list; a Plugin section's only while its root's ListDetail holds the sidebar with its own.
 export function sectionScaffold(
   shown: SectionShown,
   listDetail: FrameListDetail,
@@ -42,15 +39,15 @@ export function sectionScaffold(
   return { list: lists[section].list };
 }
 
-// The list's own Screen, claimed with it, draws its heading, as a core section's list does. Only a wide window has a sidebar beside the pages, and only its shown page claims one, so a narrower one draws no list here.
+// The list's own Screen, claimed with it, draws its heading, as a core section's list does. Only a wide window has a sidebar beside the pages, so a narrower one draws no list here.
 function pluginSectionScaffold(
-  { sidebar, held, kept }: FrameListDetail,
+  { sidebar, held }: FrameListDetail,
   framed: boolean,
 ): SectionScaffold {
   if (!framed || !held) return noList;
 
   return {
-    list: <ClaimedList sidebar={sidebar} kept={kept} />,
+    list: <ClaimedList sidebar={sidebar} />,
     inspectorState: 'closed',
   };
 }

@@ -1,11 +1,14 @@
-import type { Argo } from '@argo/plugin-kit';
+import { EmptyState, Screen, type Argo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { SignInGate } from '@argo/plugin-kit/sign-in';
+import { github } from './github-account';
 import type { IssueDeps, IssuePages } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { FilterPage } from './issue-filter-page';
 import { builtInFilters, type IssueFilter } from './issue-filters';
-import { filterPath, issuePath, projectPath } from './issue-paths';
-import { IssuesRoot } from './issue-root';
+import { filterPath, issuePath } from './issue-paths';
+import type { Project } from './issue-project';
+import { usePageProject } from './use-root-projects';
 
 type Page = Parameters<Argo['pages']['register']>[1];
 
@@ -29,8 +32,6 @@ export function createIssuePages(
 type Register = (path: string, page: Page) => string;
 
 const pagePaths = (register: Register, deps: () => IssueDeps): IssuePages => ({
-  projectPagePath: ({ id }) =>
-    register(projectPath(id), projectPage(id, deps())),
   filterPagePath: ({ id }, filter) =>
     register(
       filterPath(id, filter),
@@ -56,32 +57,46 @@ function registrar(argo: Argo): Register {
 }
 
 async function registerBuiltIns(deps: IssueDeps): Promise<void> {
-  const projects = await deps.listProjects().catch(() => []);
+  const projects = await deps.projects.known();
 
   for (const project of projects) {
-    deps.pages.projectPagePath(project);
-
     for (const filter of builtInFilters())
       deps.pages.filterPagePath(project, filter);
   }
 }
 
-// A page keeps only its Project's id: the Project itself, remote and all, is read each time the page opens.
-const projectPage = (projectId: string, deps: IssueDeps): Page =>
-  function IssueProjectPage(): JSX.Element {
-    return <IssuesRoot deps={deps} projectId={projectId} />;
-  };
+type ProjectPageProps = {
+  deps: IssueDeps;
+  projectId: string;
+  draw: (project: Project) => JSX.Element;
+};
+
+// A page keeps only its Project's id, and is drawn for the Project as it is now. The section's one list sits beside it.
+function ProjectPage({ deps, projectId, draw }: ProjectPageProps): JSX.Element {
+  const { project, message } = usePageProject(deps, projectId);
+
+  return (
+    <SignInGate account={github}>
+      {project ? (
+        draw(project)
+      ) : (
+        <Screen title="Issues">
+          <EmptyState title={message} />
+        </Screen>
+      )}
+    </SignInGate>
+  );
+}
 
 type FilterInput = { projectId: string; filter: IssueFilter; deps: IssueDeps };
 
 const filterPage = ({ projectId, filter, deps }: FilterInput): Page =>
   function IssueFilterPage(): JSX.Element {
     return (
-      <IssuesRoot
+      <ProjectPage
         deps={deps}
         projectId={projectId}
-        filter={filter}
-        detail={(project) => (
+        draw={(project) => (
           <FilterPage project={project} filter={filter} deps={deps} />
         )}
       />
@@ -93,10 +108,10 @@ type IssueInput = { projectId: string; number: number; deps: IssueDeps };
 const issuePage = ({ projectId, number, deps }: IssueInput): Page =>
   function IssuePage(): JSX.Element {
     return (
-      <IssuesRoot
+      <ProjectPage
         deps={deps}
         projectId={projectId}
-        detail={(project) => (
+        draw={(project) => (
           <IssueDetailPage project={project} number={number} deps={deps} />
         )}
       />

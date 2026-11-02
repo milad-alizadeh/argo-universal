@@ -123,6 +123,7 @@ Feature: Plugin navigation
     When I open the Plugin row "Add CSV export"
     Then the Plugin page heading reads "Add CSV export"
     And the Plugin list shows "Sync fails on large repos" in the sidebar
+    And the page header has no Back
 
   Scenario: A Plugin's Session header action opens its page
     Given a Session named "Check the live list"

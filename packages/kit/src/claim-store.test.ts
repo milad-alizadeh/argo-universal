@@ -10,7 +10,7 @@ describe('a place where the newest claim wins', () => {
     expect(store.current()).toBe('band');
   });
 
-  it('gives the place to a newer claim and does not hand it back when that one lets go', () => {
+  it('gives the place to a newer claim and hands it back to the older one when that one lets go', () => {
     const store = createClaimStore<string>();
     const first = store.claim();
     const second = store.claim();
@@ -19,8 +19,18 @@ describe('a place where the newest claim wins', () => {
 
     second.release();
 
+    expect(store.current()).toBe('first');
+  });
+
+  it('frees the place once every claim has let go', () => {
+    const store = createClaimStore<string>();
+    const first = store.claim();
+    const second = store.claim();
+
+    second.release();
+    first.release();
+
     expect(store.isHeld()).toBe(false);
-    expect(store.current()).toBeUndefined();
   });
 
   it('ignores a claim that no longer holds the place', () => {

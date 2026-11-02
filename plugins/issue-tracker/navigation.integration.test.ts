@@ -16,8 +16,6 @@ const shownValue = (view: PageView, text: string): string => {
   return typeof value === 'string' ? value : '';
 };
 
-const listDetail = 'ListDetail';
-
 const assignedToYou = 'Assigned to you';
 
 const selected = (view: PageView, title: string): boolean =>
@@ -28,8 +26,8 @@ it('groups Issues by status, by you and by label, each with its own list', async
 
   await expect.poll(() => shownValue(root, 'Open'), wait).toBe('2');
   expect(root.tree).toMatchObject({
-    type: listDetail,
-    slots: { list: [{ type: 'List' }], empty: [{ type: 'EmptyState' }] },
+    type: 'ListDetail',
+    slots: { list: [{ type: 'List' }] },
   });
   expect(shownValue(root, 'Closed')).toBe('0');
   expect(root.findText(assignedToYou)).toBeDefined();
@@ -40,6 +38,15 @@ it('groups Issues by status, by you and by label, each with its own list', async
   expect(linkedPage(root, 'good first issue')).toBe(
     '/projects/project-1/filters/label-good_20_first_20_issue',
   );
+}, 20_000);
+
+it('declares the page the section opens on, with no empty landing', async () => {
+  const { root } = await issuesRoot();
+
+  await expect
+    .poll(() => root.tree?.props.landing, wait)
+    .toBe('/projects/project-1/filters/open');
+  expect(root.tree?.slots.empty).toBeUndefined();
 }, 20_000);
 
 it('nests a sub-Issue under its parent in a filter list', async () => {
@@ -55,28 +62,21 @@ it('nests a sub-Issue under its parent in a filter list', async () => {
   );
 }, 20_000);
 
-it('opens a filter list, then an Issue from it, on their own pages', async () => {
+it('opens a filter list, then an Issue from it, on pages beside the one list', async () => {
   const { test, root } = await issuesRoot();
   const list = await follow(test, root, 'Open');
 
   await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
   expect(list.tree).toMatchObject({
-    type: listDetail,
-    slots: {
-      list: [{ type: 'List' }],
-      detail: [{ type: 'Screen', props: { title: 'Open' } }],
-    },
+    type: 'Screen',
+    props: { title: 'Open' },
   });
-  expect(list.findText(assignedToYou)).toBeDefined();
-  expect(list.findText('Open')?.node.props.selected).toBe(true);
+  expect(list.findText(assignedToYou)).toBeUndefined();
   expect(JSON.stringify(list.tree)).toContain('"color":"#d73a4a"');
 
   const detail = await follow(test, list, issueTitle);
-  expect(detail.tree).toMatchObject({
-    type: listDetail,
-    slots: { list: [{ type: 'List' }], detail: [{ type: 'Screen' }] },
-  });
-  expect(detail.findText(assignedToYou)).toBeDefined();
+  expect(detail.tree).toMatchObject({ type: 'Screen' });
+  expect(detail.findText(assignedToYou)).toBeUndefined();
 
   // Detail draws the body as `markdown`, which `findText` does not read.
   await expect
@@ -95,27 +95,23 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
   expect(await test.log()).not.toContain('refused');
 }, 20_000);
 
-it('keeps the selected Project in the sidebar across filter and Issue routes', async () => {
+it('shows the Project the shown page belongs to in the one list', async () => {
   const other = { ...project, id: 'project-2', name: 'Other Project' };
   const { test } = await signedIn([project, other]);
   const root = await test.mount({ page: '/', surface: { platform: 'web' } });
   await expect.poll(() => root.findText(other.name), wait).toBeDefined();
+  expect(selected(root, project.name)).toBe(true);
+  expect(linkedPage(root, 'Open')).toBe('/projects/project-1/filters/open');
 
-  const projectPage = await follow(test, root, other.name);
-  await expect.poll(() => shownValue(projectPage, 'Open'), wait).toBe('2');
-  expect(selected(projectPage, other.name)).toBe(true);
-  expect(linkedPage(projectPage, 'Open')).toBe(
-    '/projects/project-2/filters/open',
-  );
-
-  const list = await follow(test, projectPage, 'Open');
+  const list = await follow(test, root, other.name);
   await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
-  expect(selected(list, other.name)).toBe(true);
+  await expect.poll(() => selected(root, other.name), wait).toBe(true);
+  expect(linkedPage(root, 'Open')).toBe('/projects/project-2/filters/open');
+  await expect.poll(() => shownValue(root, 'Open'), wait).toBe('2');
 
   const detail = await follow(test, list, issueTitle);
   await expect.poll(() => detail.findText('Start Session'), wait).toBeDefined();
-  expect(selected(detail, other.name)).toBe(true);
-  expect(linkedPage(detail, 'Open')).toBe('/projects/project-2/filters/open');
+  expect(selected(root, other.name)).toBe(true);
 }, 20_000);
 
 it('shows an empty list for a filter with no Issues', async () => {

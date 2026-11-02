@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useClaim, useOfferedPlace, type Place } from '#kit/place';
 import { useWide } from '#kit/use-wide/use-wide';
@@ -19,12 +19,13 @@ import { SidebarRows } from './sidebar-rows';
 export function ListDetail(props: ListDetailProps): ReactElement {
   const wide = useWide();
   const sidebar = useOfferedPlace(ListDetailSidebarPlaceOffer);
+  const split = !use(ListDetailSidebarPlaceOffer);
 
-  if (wide) return <WithDetail {...props} wide sidebar={sidebar} />;
+  if (wide) return <WithDetail {...props} split={split} sidebar={sidebar} />;
 
   if (props.detail == null) return <ListOnly {...props} />;
 
-  return <WithDetail {...props} wide={false} />;
+  return <WithDetail {...props} split={false} />;
 }
 
 // A list with a Screen is the screen's own: its Screen replaces the header an item's Screen left in the navigator, and on a wide window is the heading above the list.
@@ -42,16 +43,16 @@ function ListOnly(props: ListDetailProps): ReactElement {
 }
 
 /*
- * The detail, with the list in a pane of its own beside it when no sidebar takes the list, or in the App's sidebar
- * for as long as this ListDetail is shown. The detail keeps its place in the tree as the width or the sidebar changes.
+ * The detail, with the list in a pane of its own beside it when no sidebar is offered, or in the App's sidebar for as
+ * long as this ListDetail is shown. The detail keeps its place in the tree as the width or the sidebar changes.
  */
 type WithDetailProps = ListDetailProps & {
-  wide: boolean;
+  split: boolean;
   sidebar?: Place<ReactNode>;
 };
 
 function WithDetail({
-  wide,
+  split,
   sidebar,
   ...props
 }: WithDetailProps): ReactElement {
@@ -60,7 +61,7 @@ function WithDetail({
 
   return (
     <View testID={props.testID} className="flex-1 flex-row">
-      {wide && !sidebar && <ListPane list={list} />}
+      {split && <ListPane list={list} />}
       <DetailPane {...props} />
     </View>
   );

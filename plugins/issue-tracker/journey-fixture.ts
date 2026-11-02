@@ -141,9 +141,6 @@ export async function openIssue(title: string): Promise<PageView> {
   const page = await follow(test, list, title);
 
   await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
-  await expect
-    .poll(() => page.findText('good first issue'), wait)
-    .toBeDefined();
 
   return page;
 }

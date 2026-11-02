@@ -52,7 +52,7 @@ export interface FrameParts extends FrameSections {
   scaffold: ScaffoldParts;
   // The column the shown page's Inspector draws in on a wide window.
   inspectorPlace: FrameState['inspectorPlace'];
-  // The sidebar a Plugin page's ListDetail holds for its list.
+  // The sidebar a section's root ListDetail holds for its list.
   listDetail: FrameListDetail;
 }
 
@@ -84,7 +84,7 @@ const sectionsOf = ({
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
   const { scaffold, inspectorPlace, bandPlaces } = useFrameState();
-  const listDetail = useFrameListDetail(options.section);
+  const listDetail = useFrameListDetail();
 
   return {
     bandPlaces,

@@ -1,10 +1,11 @@
 import {
   PluginDetailScreen,
   pluginPath,
-  SectionListDetail,
+  SectionShown,
   usePluginAt,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
+import { usePageFocused } from '@repo/kit/use-shown-page';
 import { useLocalSearchParams, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { hasRowDetail, PluginRowDetails } from './plugin-row-detail';
@@ -27,12 +28,14 @@ export function PluginLayout(): React.JSX.Element {
   const { section } = usePluginAt(usePathname());
 
   return (
-    <ScreenStack
-      title={section?.title ?? ''}
-      rootName="[...path]"
-      singular
-      fullScreenGestureEnabled={false}
-    />
+    <SectionShown value={usePageFocused()}>
+      <ScreenStack
+        title={section?.title ?? ''}
+        rootName="[...path]"
+        singular
+        fullScreenGestureEnabled={false}
+      />
+    </SectionShown>
   );
 }
 
@@ -44,20 +47,15 @@ interface PluginRootProps {
   projectId: string | undefined;
 }
 
-/*
- * A Plugin page with, at a narrow root, ☰ in its Screen's header, as a section root has. A ListDetail page puts its
- * list in the Frame's sidebar on a wide window.
- */
+// A Plugin page with, at a narrow root, ☰ in its Screen's header, as a section root has.
 export function PluginRoot(props: PluginRootProps): React.JSX.Element {
   useRepairBelow(props.path);
 
   return (
     <NarrowRoot root={useNarrowRoot(props.path)}>
-      <SectionListDetail>
-        <PluginRowDetails>
-          <PluginDetailScreen {...props} />
-        </PluginRowDetails>
-      </SectionListDetail>
+      <PluginRowDetails>
+        <PluginDetailScreen {...props} />
+      </PluginRowDetails>
     </NarrowRoot>
   );
 }
@@ -69,6 +67,7 @@ function useRepairBelow(path: readonly string[]): void {
   useRepairPluginStack(
     path,
     section && [section.pluginId, section.navId, ...section.navPath],
+    useWide(),
   );
 }
 

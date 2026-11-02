@@ -11,7 +11,7 @@ export const pathSegment = (text: string): string =>
     (character) => `_${(character.codePointAt(0) ?? 0).toString(hex)}_`,
   );
 
-export const projectPath = (projectId: string): string =>
+const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
 
 export const filterPath = (projectId: string, filter: IssueFilter): string =>

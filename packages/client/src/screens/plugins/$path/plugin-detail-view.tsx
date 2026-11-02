@@ -7,7 +7,6 @@ import {
 } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useKeepSidebarWhilePending } from '#features/frame';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   PluginTree,
@@ -92,14 +91,5 @@ function ownsPage(root: WireNode | null): boolean {
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
     <PluginTree key={props.viewId} root={props.root} {...props.callbacks} />
-  ) : (
-    <PendingPage />
-  );
-}
-
-// A page waiting for its first snapshot draws nothing, but holds the sidebar as the page before it left it.
-function PendingPage(): null {
-  useKeepSidebarWhilePending();
-
-  return null;
+  ) : null;
 }

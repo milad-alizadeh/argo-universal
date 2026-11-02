@@ -17,7 +17,7 @@ import { useIsShownPage } from './use-shown-page';
 /*
  * A Place is somewhere in the App that a part elsewhere in the tree fills: the window's band, the Frame's sidebar or
  * its Inspector column. The part that draws it creates the Place and offers it to the pages under it; a page claims it
- * with the value to draw. The newest claim shows, and a claim that lets go does not hand the Place back to an older one.
+ * with the value to draw. The newest claim shows, and when it lets go the claim it displaced shows again.
  *
  * Only the shown page may hold a Place that is offered through `createPlaceOffer`, and only on a wide window, so a page the
  * navigator keeps behind the shown one gives up the Place itself and no caller has to remember to.

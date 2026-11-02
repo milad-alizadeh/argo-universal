@@ -5,6 +5,7 @@ import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
 import { createIssuePages } from './issue-pages';
+import { createIssueProjects } from './issue-projects';
 import { IssuesRoot } from './issue-root';
 import { createIssueSeeds } from './issue-seeds';
 import { registerSessionFills } from './session-slots';
@@ -12,6 +13,7 @@ import { createTrackerStorage } from './tracker-storage';
 
 function createDeps(api: Argo): IssueDeps {
   const shared = {
+    projects: createIssueProjects(api.projects.list),
     listProjects: api.projects.list,
     getSession: api.sessions.get,
     fetch: api.fetch,

@@ -167,6 +167,11 @@ When('I press Back in the page header', async ({ page }): Promise<void> => {
   await page.getByRole('link', { name: /, back$/ }).click();
 });
 
+Then('the page header has no Back', async ({ page }): Promise<void> => {
+  await expect(page.getByRole('link', { name: /, back$/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Back' })).toHaveCount(0);
+});
+
 Then('New Session is open', async ({ page }): Promise<void> => {
   await expect(page).toHaveURL(/\/sessions\/new(\?|$)/);
 });

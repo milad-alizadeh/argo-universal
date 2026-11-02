@@ -10,6 +10,7 @@ import {
   pluginPath,
   usePluginSections,
   PluginErrorToasts,
+  PluginSectionLists,
   coreNavigationSections,
   type PluginSection,
   useSectionLists,
@@ -146,7 +147,9 @@ export function FrameNavigator(): React.JSX.Element {
   return (
     <Frame frame={frame}>
       <PluginErrorToasts />
-      <SectionsDrawer framed={framed} frame={frame} plugins={plugins} />
+      <PluginSectionLists>
+        <SectionsDrawer framed={framed} frame={frame} plugins={plugins} />
+      </PluginSectionLists>
     </Frame>
   );
 }

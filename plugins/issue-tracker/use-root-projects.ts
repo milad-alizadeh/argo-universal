@@ -1,58 +1,100 @@
+import { useEffect, useState } from '@argo/plugin-kit';
 import { loadingIssues } from './filter-shown';
 import type { IssueDeps } from './issue-deps';
 import type { Project } from './issue-project';
-import { useCall } from './use-call';
+import type { IssueProjects, ProjectsRead } from './issue-projects';
+
+// Draws again whenever the Projects or the chosen one change.
+function useIssueProjects(projects: IssueProjects): ProjectsRead {
+  const [, setVersion] = useState(0);
+
+  useEffect(
+    () => projects.subscribe(() => setVersion((version) => version + 1)),
+    [projects],
+  );
+
+  return projects.read();
+}
 
 export type RootProjects = {
   projects: Project[];
   project: Project | undefined;
   message: string;
+  // The Projects' call has answered, so `project` says what there is to show.
+  settled: boolean;
 };
 
 /*
- * Loads the Projects each time a page opens, so a Project's remote is never older than the page, and
- * opens the one a page names, or the first.
+ * The live list loads the Projects when it opens and shows the one the shown page chose, or the first. The list keeps
+ * its place while pages change beside it, so a page's Project is never read by listing them again.
  */
-export function useRootProjects(
-  deps: IssueDeps,
-  selectedId?: string,
-): RootProjects {
-  const { value, error } = useCall(deps.listProjects);
-  const projects = value ?? [];
-  const project = chosenProject(projects, selectedId);
+export function useRootProjects(deps: IssueDeps): RootProjects {
+  const { projects: source } = deps;
+  const { projects, failed } = useIssueProjects(source);
+
+  useEffect(() => {
+    void source.refresh();
+  }, [source]);
+
+  const shown = projects ?? [];
 
   return {
-    projects,
-    project,
-    message: projectsMessage(value, error, selectedId),
+    projects: shown,
+    project: projectChosen(shown, source.chosenId()),
+    message: projectsMessage(projects, failed),
+    settled: projects !== undefined || failed === true,
   };
 }
 
-const chosenProject = (
+const projectChosen = (
   projects: Project[],
-  selectedId: string | undefined,
+  id: string | undefined,
 ): Project | undefined =>
-  selectedId === undefined
-    ? projects[0]
-    : projects.find(({ id }) => id === selectedId);
+  projects.find((project) => project.id === id) ?? projects[0];
 
 function projectsMessage(
-  rows: Project[] | undefined,
-  error: string | undefined,
-  selectedId: string | undefined,
+  projects: Project[] | undefined,
+  failed: boolean | undefined,
 ): string {
-  if (error !== undefined) return 'Could not load Projects.';
+  if (failed) return 'Could not load Projects.';
 
-  return rows ? loadedMessage(rows, selectedId) : 'Loading Projects…';
+  if (!projects) return 'Loading Projects…';
+
+  return projects.length === 0 ? 'No Projects yet.' : loadingIssues;
 }
 
-function loadedMessage(
-  rows: Project[],
-  selectedId: string | undefined,
-): string {
-  if (rows.length === 0) return 'No Projects yet.';
-
-  return chosenProject(rows, selectedId) ? loadingIssues : goneMessage;
-}
+export type PageProject = { project: Project | undefined; message: string };
 
 const goneMessage = 'This Project no longer exists.';
+
+/*
+ * The Project a page names, which the list then shows as chosen. One the known Projects lack is asked for once, as a
+ * Project added since they loaded may be what the page opened for.
+ */
+export function usePageProject(deps: IssueDeps, id: string): PageProject {
+  const { projects: source } = deps;
+  const { projects, failed } = useIssueProjects(source);
+  const project = projects?.find((candidate) => candidate.id === id);
+
+  useEffect(() => {
+    source.choose(id);
+    void source
+      .known()
+      .then((known) =>
+        known.some((candidate) => candidate.id === id)
+          ? undefined
+          : source.refresh(),
+      );
+  }, [source, id]);
+
+  return { project, message: pageMessage(projects, failed) };
+}
+
+function pageMessage(
+  projects: Project[] | undefined,
+  failed: boolean | undefined,
+): string {
+  if (failed) return 'Could not load Projects.';
+
+  return projects ? goneMessage : 'Loading Projects…';
+}

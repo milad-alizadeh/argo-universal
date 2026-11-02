@@ -17,11 +17,10 @@ const issuesPath = '/issues';
 // The same path registers an Issue's page and opens it.
 const issuePath = (issue) => `${issuesPath}/${issue.id}`;
 
-const renderIssue = (selected) => (issue) => (
+const renderIssue = (issue) => (
   <ListItem
     key={issue.id}
     title={issue.title}
-    selected={issue.id === selected?.id}
     onPress={{ action: 'navigate', path: issuePath(issue) }}
   />
 );
@@ -33,24 +32,11 @@ const noIssue = (
   />
 );
 
-const issueDetail = (issue) => (
-  <Screen title={issue.title}>
-    <Detail markdown={`Fixture Issue ${issue.id}.`} />
-  </Screen>
-);
-
-// The Issues beside the one the route names; the list moves to the Frame's sidebar on a wide window.
-function IssuesListDetail({ selected }) {
+// The section's one list, which moves to the Frame's sidebar on a wide window beside the page a row opens.
+function IssuesRoot() {
   return (
     <ListDetail
-      list={
-        <List
-          appearance="cards"
-          items={issues}
-          renderItem={renderIssue(selected)}
-        />
-      }
-      detail={selected ? issueDetail(selected) : undefined}
+      list={<List appearance="cards" items={issues} renderItem={renderIssue} />}
       empty={noIssue}
     />
   );
@@ -58,11 +44,15 @@ function IssuesListDetail({ selected }) {
 
 const issuePage = (issue) =>
   function IssuePage() {
-    return <IssuesListDetail selected={issue} />;
+    return (
+      <Screen title={issue.title}>
+        <Detail markdown={`Fixture Issue ${issue.id}.`} />
+      </Screen>
+    );
   };
 
 export function registerIssues(pages) {
-  pages.register(issuesPath, () => <IssuesListDetail />);
+  pages.register(issuesPath, IssuesRoot);
 
   for (const issue of issues)
     pages.register(issuePath(issue), issuePage(issue));

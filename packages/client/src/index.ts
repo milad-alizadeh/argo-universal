@@ -10,7 +10,6 @@ export {
   frameSidebarWidth,
   PhoneConnectionBanner,
   SectionDrawer,
-  SectionListDetail,
   type SectionList,
   type SectionLists,
   useFrame,
@@ -108,6 +107,10 @@ export { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
+
+export { SectionShown } from './screens/plugins/$path/use-section-stack';
+
+export { PluginSectionLists } from './screens/plugins/plugin-section-view';
 
 export { ScreenBesideList } from '@repo/kit/primitives/scaffolds/screen';
 

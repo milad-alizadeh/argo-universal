@@ -60,6 +60,12 @@ export const listDetailProps = z.object({
     .describe(
       'The list’s title: the list screen’s header on compact windows, where the list is the screen and the header returns to it when the item closes, and the heading above the list on wide windows.',
     ),
+  landing: z
+    .string()
+    .optional()
+    .describe(
+      'The page, by the path it was registered at, that a section whose root this is opens on when the list sits beside the pages. Without it a wide window shows `empty` until a row is picked. Compact windows open on the list.',
+    ),
 });
 
 export const inspectorProps = z.object({
