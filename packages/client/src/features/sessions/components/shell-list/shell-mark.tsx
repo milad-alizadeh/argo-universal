@@ -4,7 +4,7 @@ import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { JSX } from 'react';
 import { shellOutcome } from './shell-format';
 
-// A running Shell's row leads with a live dot; an ended one with the icon for how it ended.
+// A running Shell shows a live dot; an ended one shows the icon for how it ended.
 export function ShellMark({ shell }: { shell: Shell }): JSX.Element {
   const outcome = shellOutcome(shell);
 

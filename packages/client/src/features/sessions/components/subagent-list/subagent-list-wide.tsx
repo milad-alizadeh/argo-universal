@@ -6,7 +6,7 @@ import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
-import { SubagentMark } from './subagent-mark';
+import { SubagentMark, SubagentStatus } from './subagent-mark';
 
 type WideProps = SubagentListProps & { now: number };
 
@@ -53,6 +53,7 @@ function WideRow({ subagent, onSelect, now }: RowProps): JSX.Element {
     >
       <SubagentMark subagent={subagent} />
       <WideRowText subagent={subagent} now={now} />
+      <SubagentStatus subagent={subagent} />
     </Pressable>
   );
 }

@@ -7,7 +7,7 @@ import { StackedSummary } from '../../../lib/product/stacked-summary';
 import { subagentRoleMark } from '../../../lib/product/subagents/subagent-role';
 import { subagentSupporting } from './subagent-list/subagent-format';
 import type { SubagentListProps } from './subagent-list/subagent-list-types';
-import { SubagentMark } from './subagent-list/subagent-mark';
+import { SubagentMark, SubagentStatus } from './subagent-list/subagent-mark';
 
 type ActiveProps = { agent: Subagent; now: number };
 
@@ -31,6 +31,7 @@ function ActiveAgent({ agent, now }: ActiveProps): ReactElement {
     <View className="flex-row items-start gap-2 px-1 py-2">
       <SubagentMark subagent={agent} />
       <ActiveAgentText agent={agent} now={now} />
+      <SubagentStatus subagent={agent} />
     </View>
   );
 }

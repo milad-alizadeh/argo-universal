@@ -42,7 +42,7 @@ function ShellRow(props: RowProps): JSX.Element {
   return (
     <ListItem
       {...rowText(props)}
-      leading={<ShellMark shell={shell} />}
+      trailing={<ShellMark shell={shell} />}
       disclosure={Boolean(onSelect)}
       onPress={onSelect ? () => onSelect(shell) : undefined}
     />
