@@ -25,4 +25,4 @@ export const AsksForTheCode: Story = {};
 export const Looking: Story = { args: { looking: true } };
 
 // A Device with a camera can go back to it: a text control under Connect.
-export const WithCamera: Story = { args: { onScan: fn() } };
+export const OffersScanInstead: Story = { args: { onScan: fn() } };
