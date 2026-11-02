@@ -1,7 +1,17 @@
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { Given, Then, When } from './fixtures';
 import { reloadApp } from './frame';
+
+const reportFeed = (page: Page): Locator =>
+  page.getByRole('tabpanel', { name: 'Agent Feed' }).getByTestId('feed-scroll');
+
+async function scrollReports(page: Page, end: boolean): Promise<void> {
+  await reportFeed(page).evaluate((element, last) => {
+    element.scrollTop = last ? element.scrollHeight : 0;
+  }, end);
+}
 
 Given('Agent {int} supplies Agent reports', expectListedAgent);
 
@@ -15,9 +25,10 @@ When('I reopen the report Session', async ({ page }) => {
 
 When('I open the report reviewer', async ({ page }) => {
   await page
-    .getByRole('button', { name: /^Report reviewer replied/ })
-    .last()
+    .getByTestId('workbench-subagents')
+    .getByRole('button', { name: /Show/ })
     .click();
+  await page.getByRole('button', { name: /^Report reviewer,/ }).click();
 });
 
 Then('the reviewer shows recent reports', async ({ page }) => {
@@ -41,6 +52,8 @@ When('I load all earlier reports', async ({ page }) => {
 });
 
 Then('the reviewer shows its oldest report', async ({ page }) => {
+  await scrollReports(page, false);
+
   await expect(page.getByText('Finding 0', { exact: true })).toBeVisible();
   await expect(
     page.getByText('Review complete.', { exact: true }),
@@ -49,17 +62,18 @@ Then('the reviewer shows its oldest report', async ({ page }) => {
 });
 
 Then('the open reviewer shows the revised finding', async ({ page }) => {
-  const feed = page
-    .getByRole('tabpanel', { name: 'Agent Feed' })
-    .getByTestId('feed-scroll');
+  await scrollReports(page, true);
 
-  await feed.evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
   await expect(
     page.getByText('Finding updated', { exact: true }),
   ).toBeVisible();
   await expect(page.getByText('Finding 180', { exact: true })).toHaveCount(0);
+  await scrollReports(page, false);
+  await expect(
+    page.getByText('Old finding revised', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('and expanded', { exact: true })).toBeVisible();
+  await expect(page.getByText('Finding 0', { exact: true })).toHaveCount(0);
 });
 
 When('I switch to the other reviewer', async ({ page }) => {

@@ -48,6 +48,17 @@ const firstReports: ScriptedStep[] = [
     report(`report-${index}`, `Finding ${index}`),
   ),
   report('other-report', 'Other Agent finding', other),
+  ...Array.from({ length: 160 }, (_, index): ScriptedStep => ({
+    type: 'update',
+    update: {
+      sessionUpdate: 'tool_call',
+      toolCallId: `unrelated-${index}`,
+      title: `Unrelated update ${index}`,
+      kind: 'other',
+      status: 'completed',
+      content: [],
+    },
+  })),
 ];
 
 export const subagentReports: ScriptedScenario = {
@@ -56,7 +67,20 @@ export const subagentReports: ScriptedScenario = {
   responses: {
     'session/prompt': [
       { steps: firstReports },
-      { steps: [report('report-180', 'Finding updated')] },
+      {
+        steps: [
+          report('report-180', 'Finding updated'),
+          report('report-0', 'Old finding revised'),
+          {
+            type: 'update',
+            update: {
+              sessionUpdate: 'session_message_chunk',
+              messageId: 'report-0',
+              content: { type: 'text', text: ' and expanded' },
+            },
+          },
+        ],
+      },
     ],
   },
 };

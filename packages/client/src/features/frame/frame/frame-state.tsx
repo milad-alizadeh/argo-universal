@@ -11,7 +11,10 @@ import {
   type WindowBandView,
   useWindowBandView,
 } from '#lib/product/window-band';
-import { SessionMemory, useSessionMemory } from '../../../lib/session-memory';
+import {
+  SessionMemory,
+  useSessionMemory,
+} from '../../../lib/product/session-memory';
 import {
   hostedChange,
   hostedInspectorState,

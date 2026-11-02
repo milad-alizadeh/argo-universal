@@ -1,11 +1,11 @@
 import type {
   LiveHeader,
-  SubagentUpdate,
   SessionMessage,
   SessionUpdate,
   Subagent,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { recordedReports } from '@repo/mocks/app';
 import {
   type FeedProps,
   toParentResults,
@@ -19,9 +19,9 @@ import {
 
 const recording = recordedFeedMock('agent-2', 'edit-and-command');
 
-const parentSessionId = 'parent-session';
+const parentSessionId = recordedReports.parentSessionId;
 
-const subagentSessionId = 'subagent-readers';
+const subagentSessionId = recordedReports.childSessionId;
 
 const prompt = recordedUserMessage('agent-2', 'edit-and-command');
 
@@ -88,48 +88,16 @@ export const runningFeed = feedOf([incoming, ...childRows], liveToolCallHeader);
 
 export const finishedFeed = feedOf([incoming, ...childRows], null);
 
-const ownReply: SessionMessage = {
-  ...incoming,
-  id: 'child-reply',
-  messageId: 'toolu_transcript:reply',
-  position: 999,
-  content: [{ type: 'text', text: 'Two packages.' }],
-  _meta: {
-    argo: {
-      senderSessionId: subagentSessionId,
-      recipientSessionId: parentSessionId,
-    },
-  },
-};
-
-export const ownReplyFeed = feedOf([incoming, ...childRows, ownReply], null);
-
-// The simulated Claude ACP 0.97.0 reply after it is stored on the parent Feed.
-const parentResult: SubagentUpdate = {
-  id: 'parent-result',
-  position: 10,
-  revision: 10,
-  turnId: null,
-  state: 'settled',
-  sessionId: parentSessionId,
-  sessionUpdate: 'subagent_update',
-  subagentSessionId,
-  _meta: {
-    argo: {
-      result: [
-        { type: 'text', text: 'Two packages.' },
-        { type: 'resource_link', name: 'Source', uri: 'file:///source.ts' },
-        { type: 'text', text: 'Review complete.' },
-      ],
-    },
-  },
-};
+// The scripted ACP Agent's own reply and parent report, stored by the real Engine.
+export const ownReplyFeed = feedOf(recordedReports.child, null);
 
 export const reportedFeed: FeedProps = {
   ...finishedFeed,
   items: [
     ...finishedFeed.items,
-    ...toParentResults([parentResult], subagentSessionId).items,
+    ...toParentResults(recordedReports.parent, subagentSessionId).items.filter(
+      (item) => item.type === 'parent_result' && item.content.length > 0,
+    ),
   ],
 };
 

@@ -1,66 +1,20 @@
-import type { FeedPageOutput, SessionUpdate } from '@repo/contracts';
-import { useCallback, useMemo } from 'react';
+import type { SessionUpdate } from '@repo/contracts';
+import { useCallback } from 'react';
 import type { ClientError } from '#features/connection';
 import {
   toParentResults,
-  useSessionFeed,
+  useSessionFeedStore,
+  useFeedHistoryPages,
+  useFeedLiveChanges,
   type FeedViewItem,
 } from '#features/feed';
 import { useReportsPages, type ReportQuery } from './subagent-report-query';
 
 type ParentResult = Extract<FeedViewItem, { type: 'parent_result' }>;
 
-const isReport = (item: FeedViewItem): item is ParentResult =>
-  item.type === 'parent_result';
+type LiveReports = ReturnType<typeof useSessionFeedStore>;
 
-function reportsById(
-  items: readonly FeedViewItem[],
-): Map<string, ParentResult> {
-  const reports = new Map<string, ParentResult>();
-
-  for (const item of items.filter(isReport)) keepNewest(reports, item);
-
-  return reports;
-}
-
-function keepNewest(
-  reports: Map<string, ParentResult>,
-  item: ParentResult,
-): void {
-  const previous = reports.get(item.id);
-
-  if (!previous || item.revision >= previous.revision)
-    reports.set(item.id, item);
-}
-
-function mergeReports(
-  pages: readonly FeedPageOutput[],
-  live: readonly FeedViewItem[],
-  childId: string,
-): ParentResult[] {
-  const fromPages = toParentResults(
-    pages.flatMap((page) => page.rows),
-    childId,
-  ).items;
-
-  const unique = reportsById([...fromPages, ...live]);
-
-  return [...unique.values()]
-    .filter((item) => item.content.length > 0)
-    .sort((a, b) => a.position - b.position);
-}
-
-function useParentLive(
-  parentId: string,
-  childId: string,
-): ReturnType<typeof useSessionFeed> {
-  const translate = useCallback(
-    (rows: readonly SessionUpdate[]) => toParentResults(rows, childId),
-    [childId],
-  );
-
-  return useSessionFeed(parentId, translate);
-}
+type Changes = ReturnType<typeof useFeedLiveChanges>;
 
 type Reports = {
   items: ParentResult[];
@@ -71,63 +25,76 @@ type Reports = {
   retry: () => void;
 };
 
-const noPages: readonly FeedPageOutput[] = [];
+const isReport = (item: FeedViewItem): item is ParentResult =>
+  item.type === 'parent_result';
+
+function useReportFeed(parentId: string, childId: string): LiveReports {
+  const translate = useCallback(
+    (rows: readonly SessionUpdate[]) => toParentResults(rows, childId),
+    [childId],
+  );
+
+  const cacheId = JSON.stringify(['reports', parentId, childId]);
+
+  return useSessionFeedStore(parentId, translate, cacheId);
+}
 
 const noItems: readonly FeedViewItem[] = [];
 
-const reportError = (
-  pages: ReportQuery,
-  live: ReturnType<typeof useSessionFeed>,
-): Error | ClientError | null => pages.error ?? live.error ?? live.openError;
+function reportItems(live: LiveReports): ParentResult[] {
+  return (live.state.view?.items ?? noItems)
+    .filter(isReport)
+    .filter((item) => item.content.length > 0);
+}
 
-function reportControls(
+function useReportChanges(
+  parentId: string,
+  live: LiveReports,
   pages: ReportQuery,
-  live: ReturnType<typeof useSessionFeed>,
-  items: ParentResult[],
-): Reports {
-  return {
-    items,
-    hasOlder: pages.hasNextPage,
-    loading: pages.isFetchingNextPage,
-    loadOlder: () => void pages.fetchNextPage(),
-    error: reportError(pages, live),
-    retry: () => retryReports(pages, live),
-  };
+): Changes {
+  useFeedHistoryPages(live.store, pages.data);
+
+  return useFeedLiveChanges(parentId, live.store, live.state.syncPoint);
 }
 
 function retryReports(
   pages: ReportQuery,
-  live: ReturnType<typeof useSessionFeed>,
+  live: LiveReports,
+  changes: Changes,
 ): void {
   void pages.refetch();
-  live.retry();
-  live.retryOpen();
+
+  if (live.store.retryOpen()) changes.reset();
 }
 
-const reportEpoch = (
-  live: ReturnType<typeof useSessionFeed>,
-): number | undefined => live.snapshot?.epoch;
+const reportError = (live: LiveReports, changes: Changes): Reports['error'] =>
+  live.state.closure?.error ?? changes.error;
 
-const reportHistory = (pages: ReportQuery): readonly FeedPageOutput[] =>
-  pages.data?.pages ?? noPages;
-
-const liveUpdates = (
-  live: ReturnType<typeof useSessionFeed>,
-): readonly FeedViewItem[] => live.view?.items ?? noItems;
+function reportControls(
+  pages: ReportQuery,
+  live: LiveReports,
+  changes: Changes,
+): Reports {
+  return {
+    items: reportItems(live),
+    hasOlder: pages.hasNextPage,
+    loading: pages.isFetchingNextPage,
+    loadOlder: (): void => void pages.fetchNextPage(),
+    error: pages.error ?? reportError(live, changes),
+    retry: (): void => retryReports(pages, live, changes),
+  };
+}
 
 export function useSubagentReports(parentId: string, childId: string): Reports {
-  const live = useParentLive(parentId, childId);
+  const live = useReportFeed(parentId, childId);
 
-  const pages = useReportsPages(parentId, childId, reportEpoch(live));
-
-  const history = reportHistory(pages);
-
-  const updates = liveUpdates(live);
-
-  const items = useMemo(
-    () => mergeReports(history, updates, childId),
-    [history, updates, childId],
+  const pages = useReportsPages(
+    parentId,
+    childId,
+    live.state.feed.epoch ?? undefined,
   );
 
-  return reportControls(pages, live, items);
+  const changes = useReportChanges(parentId, live, pages);
+
+  return reportControls(pages, live, changes);
 }
