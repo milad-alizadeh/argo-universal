@@ -98,20 +98,37 @@ Given('the Feed history refresh can be delayed', async ({ page }) => {
   await reloadApp(page);
 });
 
+function preparedRefresh(page: Page): HeldRefresh {
+  const refresh = refreshes.get(page);
+
+  if (!refresh) throw new Error('The history transport was not prepared');
+
+  return refresh;
+}
+
+export const heldPrefetchCount = (page: Page): number =>
+  refreshes.get(page)?.heldPrefetches.length ?? 0;
+
+// Lets through the older pages held so far, and any asked for after.
+export function releasePrefetches(page: Page): void {
+  const refresh = preparedRefresh(page);
+
+  refresh.delayPrefetch = false;
+  refresh.prefetchIds.clear();
+
+  for (const release of refresh.heldPrefetches.splice(0)) release();
+}
+
 When(
   'the initial history prefetch finishes at the newest message',
   async ({ page }) => {
-    const refresh = refreshes.get(page);
+    const refresh = preparedRefresh(page);
 
-    if (!refresh) throw new Error('The history transport was not prepared');
     await expect.poll(() => refresh.heldPrefetches.length).toBeGreaterThan(0);
     await page.getByTestId(feedScroll).evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
-    refresh.delayPrefetch = false;
-    refresh.prefetchIds.clear();
-
-    for (const release of refresh.heldPrefetches.splice(0)) release();
+    releasePrefetches(page);
     await expect(
       page.getByRole('progressbar', { name: 'Loading earlier' }),
     ).toHaveCount(0);
@@ -121,9 +138,8 @@ When(
 When(
   'the Connection reconnects with its history refresh delayed',
   async ({ page }) => {
-    const refresh = refreshes.get(page);
+    const refresh = preparedRefresh(page);
 
-    if (!refresh) throw new Error('The history transport was not prepared');
     refresh.armed = true;
     refresh.delayPrefetch = false;
     const routes = refresh.routes;
