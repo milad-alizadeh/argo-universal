@@ -35,7 +35,7 @@ function PreviewAge({ createdAt }: { createdAt: string }): ReactElement {
   const now = useClock(false);
 
   return (
-    <Text role="secondary" tone="muted">
+    <Text role="secondary" tone="muted" className="shrink-0">
       {formatAge(now - Date.parse(createdAt))} ago
     </Text>
   );
@@ -92,10 +92,10 @@ function DiffTotals({ data }: { data: GitItemPreview }): ReactElement {
 
   return (
     <>
-      <Text role="secondary" tone="success">
+      <Text role="secondary" tone="success" className="shrink-0">
         {`+${totals.additions}`}
       </Text>
-      <Text role="secondary" tone="danger">
+      <Text role="secondary" tone="danger" className="shrink-0">
         {`−${totals.deletions}`}
       </Text>
     </>
