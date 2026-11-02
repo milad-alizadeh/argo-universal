@@ -19,7 +19,7 @@ export const live = {
     invite: {
       key: 'Zt1kZ4cXG1Aq3SfKk2o0y0m5wq0jW1u0m3b2L9vYQp8',
       server: 'Studio Mac',
-      ticket: '7KQ4M9XD2B',
+      ticket: '482915',
     },
     expiresAt: runsOut(),
   },

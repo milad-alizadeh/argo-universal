@@ -1,16 +1,22 @@
 import { PairingRefusal } from '@repo/contracts';
+import {
+  pakeMagic,
+  startRun,
+  type DeviceRun,
+  type Offer,
+  type Reading,
+} from '@repo/contracts/pake';
 import type { ByteSocket, ChannelAddress } from './channel/byte-socket';
 import { concatBytes } from './channel/bytes';
 import { appChannelPlatform } from './channel/channel-platform';
 import type { ChannelPlatform } from './channel/channel-transport';
 import { FrameReader, frameRecord } from './channel/frames';
-import { askForKey, keyMagic, type Offer } from './channel/key-offer';
 import { PairingRefused } from './channel/open-channel';
 import { storedPublicKey } from './channel/x25519';
 
 /*
  * Asks the Server at `address` for its key with the code the owner typed, and answers it as the QR would have carried it (ADR-0045).
- * A Server the code does not belong to refuses with `PairingRefused`, and one that cannot be reached throws something else: the first means the code is wrong, the second only that this is not where the Server is.
+ * The code is the password of a key exchange, so nothing on the wire lets a watcher test a guess of it. A Server the code does not belong to refuses with `PairingRefused`, and one that cannot be reached throws something else: the first means the code is wrong, the second only that this is not where the Server is.
  */
 export async function requestServerKey(
   address: ChannelAddress,
@@ -18,14 +24,10 @@ export async function requestServerKey(
   options: { platform?: ChannelPlatform } = {},
 ): Promise<string> {
   const platform = options.platform ?? appChannelPlatform;
-  const question = askForKey(ticket, platform.randomBytes);
+  const run = startRun(ticket, platform.randomBytes);
   const socket = await platform.openSocket(address);
 
-  try {
-    return keyOf(question.read(await ask(socket, question.ask)));
-  } finally {
-    socket.close();
-  }
+  return keyOf((await converse(socket, run)).offer);
 }
 
 // The key the Server offered as the QR would have carried it, or the Server's reason it will not.
@@ -36,27 +38,44 @@ function keyOf(offer: Offer): string {
   return storedPublicKey(offer.publicKey);
 }
 
-// One question out and the Server's one answer back.
-function ask(socket: ByteSocket, question: Uint8Array): Promise<Uint8Array> {
-  const answer = answerTo(socket);
+// What was heard of the Server's one reply, and the proof sent back when the Device has one; one that opened no entry has nothing to prove and leaves.
+class Hearing {
+  public reading: Reading | undefined;
+  private readonly frames = new FrameReader();
 
-  socket.write(concatBytes(keyMagic, frameRecord(question)));
+  public constructor(
+    private readonly socket: ByteSocket,
+    private readonly run: DeviceRun,
+  ) {}
 
-  return answer;
+  public hear(chunk: Uint8Array): void {
+    const [reply] = this.frames.push(chunk);
+
+    if (reply && !this.reading) this.respond(reply);
+  }
+
+  private respond(reply: Uint8Array): void {
+    this.reading = this.run.read(reply);
+
+    if (this.reading.confirm)
+      this.socket.write(frameRecord(this.reading.confirm));
+    else this.socket.close();
+  }
 }
 
-// The Server's one answer, or the error that ended the socket without one.
-function answerTo(socket: ByteSocket): Promise<Uint8Array> {
-  return new Promise<Uint8Array>((resolve, reject): void => {
-    const records = new FrameReader();
+// The opening out, the Server's reply in, and the proof back; then the Server closes, which is how this knows it was heard.
+function converse(socket: ByteSocket, run: DeviceRun): Promise<Reading> {
+  return new Promise<Reading>((resolve, reject): void => {
+    const hearing = new Hearing(socket, run);
 
+    socket.onData = (chunk): void => hearing.hear(chunk);
     socket.onClose = (error): void =>
-      reject(error ?? new Error('The Server closed without offering its key'));
+      hearing.reading
+        ? resolve(hearing.reading)
+        : reject(
+            error ?? new Error('The Server closed without offering its key'),
+          );
 
-    socket.onData = (chunk): void => {
-      const [record] = records.push(chunk);
-
-      if (record) resolve(record);
-    };
+    socket.write(concatBytes(pakeMagic, frameRecord(run.ask)));
   });
 }

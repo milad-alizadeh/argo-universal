@@ -68,6 +68,7 @@
     "./kit-props": "./src/kit-props.ts",
     "./kit-symbols": "./src/kit-symbols/index.ts",
     "./desktop-share": "./src/desktop-share.ts",
+    "./pake": "./src/devices/pake/index.ts",
     "./plugins/visual-props": "./src/plugins/visual-props.ts",
     "./plugins/accounts": "./src/plugins/accounts.ts",
     "./plugins/account-calls": "./src/plugins/account-calls.ts",
@@ -83,6 +84,8 @@
     "check:plugin-kit": "tsx tools/generate-plugin-kit.mts --check"
   },
   "dependencies": {
+    "@noble/ciphers": "catalog:",
+    "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
     "@repo/db": "workspace:*",
     "drizzle-orm": "catalog:",

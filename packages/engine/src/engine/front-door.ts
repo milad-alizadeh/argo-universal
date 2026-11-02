@@ -1,7 +1,7 @@
 import type { Server as RequestServer } from 'node:http';
 import { createServer, type Server, type Socket } from 'node:net';
+import { pakeMagic } from '@repo/contracts/pake';
 import { channelMagic } from '../pairing/channel-door';
-import { keyMagic } from '../pairing/key-offer';
 import { isLoopback } from './network-listener';
 import type { SocketGuard } from './socket-guard';
 
@@ -18,7 +18,7 @@ export interface FrontDoorDeps {
   // The Server's own request listener, which serves tRPC, Blobs and Plugin assets to whatever is admitted.
   readonly requests: RequestServer;
   readonly channel: ChannelDoorPort;
-  // A Device typed a Pairing Ticket and asks for the Server's key with it (ADR-0045).
+  // A Device typed a Pairing Ticket and runs a password-authenticated key exchange keyed by it to be given the Server's key (ADR-0045).
   readonly key: ChannelDoorPort;
   // Times and counts the sockets that have not yet said what they are, so one that says nothing cannot sit there for good.
   readonly unproven: SocketGuard;
@@ -84,6 +84,9 @@ function admit({ deps, socket, proven }: Knocking, opening: Buffer): void {
   socket.unshift(opening);
   deps.requests.emit('connection', socket);
 }
+
+// What a Device that holds only a typed code opens with.
+const keyMagic = Buffer.from(pakeMagic);
 
 const nameOf = (opening: Buffer): 'channel' | 'key' | undefined => {
   const first = opening.subarray(0, channelMagic.length);

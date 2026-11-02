@@ -6,7 +6,9 @@ import {
   pairingTicketLifetimeMs,
   type PairingRefusal,
 } from '@repo/contracts';
+import type { OfferedTicket } from '@repo/contracts/pake';
 import { TicketAttempts } from './ticket-attempts';
+import { offeredTickets } from './ticket-standing';
 
 export interface MintedTicket {
   readonly ticket: string;
@@ -25,18 +27,6 @@ const spentTicket = 'ticket-spent';
 
 const tooManyAttempts = 'ticket-attempts';
 
-const refusedOffer = (refusal: PairingRefusal): KeyOffer => ({
-  offered: false,
-  refusal,
-});
-
-const turnedAway = refusedOffer(tooManyAttempts);
-
-// A holder of a live Ticket's code is offered the Server's key, or told why not; asking spends nothing.
-export type KeyOffer =
-  | { offered: true; ticket: string }
-  | { offered: false; refusal: PairingRefusal };
-
 // Across every source, so many addresses cannot guess one Ticket between them: a source gets `pairingTicketAttempts` on its own, and the Ticket survives ten sources' worth.
 const mostRefusals = pairingTicketAttempts * 10;
 
@@ -51,6 +41,8 @@ export class PairingTickets {
   private readonly spent = new Map<string, number>();
   private readonly attempts: TicketAttempts;
   private refusals = 0;
+  // Runs for a key, from any source, that have not ended: each could be a guess, so they count against the Tickets' total before they settle.
+  private running = 0;
 
   public constructor(private readonly now: () => number = Date.now) {
     this.attempts = new TicketAttempts(now);
@@ -74,43 +66,27 @@ export class PairingTickets {
   }
 
   /*
-   * Whether someone who can prove they hold a Ticket's code may be told the Server's key, for a Device that was typed the code instead of shown the QR (ADR-0045).
-   * `proves` is the caller's test of a code against what the Device sent, so the code itself never crosses the wire. Nothing is spent: the Ticket is spent by the handshake that follows, on the same terms as a scanned one.
-   * A code that matches nothing is held against the source like any wrong Ticket, and one that matches a Ticket past its time or already spent says so, because only a holder of the code can hear it.
+   * Starts a run for the Server's key by a Device that was typed the code instead of shown the QR (ADR-0045). Answers the Tickets the Server can say something about, or nothing when this source has been turned away.
+   * The run is held against the source until it ends: a Device that proves it holds one of the codes costs its source nothing, and any other run is a wrong Ticket, so a code cannot be guessed here any faster than at the handshake. Nothing is spent: the handshake that follows spends the Ticket.
    */
-  public offer(source: string, proves: (ticket: string) => boolean): KeyOffer {
-    if (this.attempts.blocked(source)) return turnedAway;
-    const held = this.holding(proves);
+  public offering(source: string): OfferedTicket[] | undefined {
+    if (
+      this.attempts.blocked(source) ||
+      this.refusals + this.running >= mostRefusals
+    )
+      return undefined;
+    this.attempts.started(source);
+    this.running += 1;
 
-    return held ?? refusedOffer(this.refuse(source, unknownTicket));
+    return offeredTickets(this.live, this.spent, this.now());
   }
 
-  private holding(proves: (ticket: string) => boolean): KeyOffer | undefined {
-    return this.holdingLive(proves) ?? this.holdingSpent(proves);
-  }
+  // The run for a key ended, and whether the Device proved it holds a code the Server offered.
+  public settled(source: string, proved: boolean): void {
+    this.attempts.ended(source);
+    this.running -= 1;
 
-  private holdingLive(
-    proves: (ticket: string) => boolean,
-  ): KeyOffer | undefined {
-    const held = [...this.live].find(([ticket]) => proves(ticket));
-
-    return held ? this.offerFor(...held) : undefined;
-  }
-
-  private holdingSpent(
-    proves: (ticket: string) => boolean,
-  ): KeyOffer | undefined {
-    const held = [...this.spent].find(
-      ([ticket, expiresAt]) => expiresAt > this.now() && proves(ticket),
-    );
-
-    return held ? refusedOffer(spentTicket) : undefined;
-  }
-
-  private offerFor(ticket: string, expiresAt: number): KeyOffer {
-    return expiresAt > this.now()
-      ? { offered: true, ticket }
-      : refusedOffer('ticket-expired');
+    if (!proved) this.refuse(source, unknownTicket);
   }
 
   // Spends the Ticket if it is good, and says why not if it is not.

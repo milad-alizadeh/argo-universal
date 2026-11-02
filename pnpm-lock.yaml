@@ -1388,6 +1388,12 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@noble/ciphers':
+        specifier: 'catalog:'
+        version: 2.4.0
+      '@noble/curves':
+        specifier: 'catalog:'
+        version: 2.4.0
       '@noble/hashes':
         specifier: 'catalog:'
         version: 2.4.0

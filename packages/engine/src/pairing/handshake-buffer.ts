@@ -1,6 +1,6 @@
 const headerBytes = 2;
 
-// A real first message is a few hundred bytes: two keys, a tag, and a claim with a name and a ten-character code. Anything that claims more is not one, and the Server does not wait for the rest of it.
+// A real first message is a few hundred bytes: two keys, a tag, and a claim with a name and a six-digit code. Anything that claims more is not one, and the Server does not wait for the rest of it.
 export const maxFirstMessageBytes = 4096;
 
 export type FirstMessage = { handshake: Buffer; rest: Buffer };

@@ -10,8 +10,8 @@ const meta = {
   args: {
     label: 'Code',
     value: '',
-    length: 10,
-    groupSize: 5,
+    length: 6,
+    groupSize: 3,
     onChangeText: fn(),
   },
 } satisfies Meta<typeof CodeField>;
@@ -22,8 +22,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Empty: Story = {};
 
-export const PartlyTyped: Story = { args: { value: '7KQ4M9' } };
+export const PartlyTyped: Story = { args: { value: '482' } };
 
-export const Full: Story = { args: { value: '7KQ4M9XD2B' } };
+export const Full: Story = { args: { value: '482915' } };
 
-export const Disabled: Story = { args: { value: '7KQ4M9', disabled: true } };
+export const Disabled: Story = { args: { value: '482', disabled: true } };
