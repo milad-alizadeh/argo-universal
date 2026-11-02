@@ -31,8 +31,9 @@ function seekNearEnd(animation: Animation): void {
   animation.currentTime = timing.duration - 1;
 }
 
-function pauseAnimations(): void {
-  for (const animation of document.getAnimations()) animation.pause();
+function pauseAnimations(card: HTMLElement): void {
+  for (const animation of card.getAnimations({ subtree: true }))
+    animation.pause();
 }
 
 // Newly loaded content must be part of the animated target, rather than snapping into place at the end.
@@ -41,19 +42,20 @@ export const ContentArrivesWhileOpening: Story = {
     await settleLayout('wide');
     const trigger = canvas.getByRole('button', { name: 'Expand First' });
     const neighbour = canvas.getByRole('button', { name: 'Collapse Second' });
+    const card = canvas.getByRole('group', { name: 'First' });
 
     const initial = trigger.getBoundingClientRect();
 
     trigger.click();
     await waitFor(() =>
-      expect(document.getAnimations().length).toBeGreaterThan(0),
+      expect(card.getAnimations({ subtree: true }).length).toBeGreaterThan(0),
     );
-    pauseAnimations();
+    pauseAnimations(card);
     await userEvent.click(canvas.getByRole('button', { name: 'Load content' }));
     await expect(canvas.getByText(arrivingCopy.trim())).toBeInTheDocument();
     await nextFrame();
     await nextFrame();
-    const animations = document.getAnimations();
+    const animations = card.getAnimations({ subtree: true });
 
     await expect(animations.length).toBeGreaterThan(0);
 
