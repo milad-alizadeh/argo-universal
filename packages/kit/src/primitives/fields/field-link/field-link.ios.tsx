@@ -35,7 +35,7 @@ export function FieldLink(
     <Button onPress={props.onPress} modifiers={pressing(props.disabled)}>
       <HStack modifiers={[contentShape(shapes.rectangle())]}>
         {props.leadingMark ? <FieldLinkMark mark={props.leadingMark} /> : null}
-        <RowTitle {...props} tone={linkTone(props)} />
+        <RowTitle {...props} tone={linkTone(props)} subtitleLines={1} />
         <Spacer />
         <LinkValue value={props.value} />
         <Disclosure action={props.action} />

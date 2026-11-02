@@ -8,6 +8,14 @@ import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { FieldLink } from './field-link';
+import {
+  marked,
+  markedStatus,
+  markedWarning,
+  supportingValue,
+  mutedDanger,
+  plainMark,
+} from './field-link-fixtures';
 
 // A row's stories draw it as the one row of a FieldGroup section, where Expo UI draws it.
 const inFieldGroupSection: Decorator = (Story): React.JSX.Element => (
@@ -57,3 +65,21 @@ export const Disabled: Story = {
 export const Destructive: Story = {
   args: { title: 'Unpair', action: true, destructive: true },
 };
+
+// A labelled leading mark with no status.
+export const Marked: Story = { args: marked };
+
+// A status indicator and supporting line accompany an active mark.
+export const MarkedStatus: Story = { args: markedStatus };
+
+// The supporting line and trailing value can coexist.
+export const SupportingValue: Story = { args: supportingValue };
+
+// Muted title and mark with a danger-coloured supporting line.
+export const MutedDanger: Story = { args: mutedDanger };
+
+// A warning indicator marks a row waiting for input.
+export const MarkedWarning: Story = { args: markedWarning };
+
+// A plain outcome glyph has no tinted background.
+export const PlainMark: Story = { args: plainMark };

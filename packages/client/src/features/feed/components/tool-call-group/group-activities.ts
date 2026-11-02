@@ -1,5 +1,4 @@
 import type { LiveHeader } from '@repo/contracts';
-import { toolCallFacts } from '../../view/feed-row-facts';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 
 type LiveToolCall = Extract<FeedGroup, { state: 'open' }>['live'];
@@ -38,38 +37,6 @@ function explorationWithout(
 const isLiveToolCall = (activity: FeedActivity, liveId: string): boolean =>
   activity.type === 'tool_call' && activity.row.id === liveId;
 
-function liveEdit(activity: FeedActivity): boolean {
-  return (
-    activity.type === 'tool_call' &&
-    toolCallFacts(activity.row).isEdit &&
-    hasDiff(activity)
-  );
-}
-
-function hasDiff(
-  activity: Extract<FeedActivity, { type: 'tool_call' }>,
-): boolean {
-  return activity.row.content.some((block) => block.type === 'diff');
-}
-
-function liveCommand(activity: FeedActivity): boolean {
-  return (
-    activity.type === 'tool_call' &&
-    toolCallFacts(activity.row).isCommand &&
-    hasTerminal(activity)
-  );
-}
-
-function hasTerminal(
-  activity: Extract<FeedActivity, { type: 'tool_call' }>,
-): boolean {
-  return activity.row.content.some((block) => block.type === 'terminal');
-}
-
-function liveDetail(activity: FeedActivity): boolean {
-  return liveEdit(activity) || liveCommand(activity) || liveGeneric(activity);
-}
-
 function genericOutput(
   row: Extract<FeedActivity, { type: 'tool_call' }>['row'],
 ): boolean {
@@ -80,15 +47,9 @@ function genericOutput(
   ].some(Boolean);
 }
 
-function liveGeneric(activity: FeedActivity): boolean {
-  if (activity.type !== 'tool_call') return false;
-
-  const facts = toolCallFacts(activity.row);
-
-  return (
-    ![facts.isEdit, facts.isCommand].some(Boolean) &&
-    genericOutput(activity.row)
-  );
+// Any available detail stays visible under the live title, whatever the Tool call's semantic kind.
+function liveDetail(activity: FeedActivity): boolean {
+  return activity.type === 'tool_call' && genericOutput(activity.row);
 }
 
 function keepActivity(activity: FeedActivity, liveId: string): boolean {

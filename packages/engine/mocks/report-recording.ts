@@ -61,7 +61,7 @@ async function waitForRecordedTools(session: RecordedSession): Promise<void> {
     .toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          toolCallId: 'mcp-raw',
+          toolCallId: 'move-raw',
           status: 'in_progress',
         }),
       ]),

@@ -3,29 +3,17 @@ import { isStockIconName } from '@repo/contracts/kit-symbols';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
 import type { ComponentProps, JSX } from 'react';
-import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
+import { subagentMarkDescriptor } from '../../../../lib/product/subagents/subagent-role';
 import { workListSections } from '../work-list-sections';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
 
 type Mark = NonNullable<ComponentProps<typeof FieldGroup.Link>['leadingMark']>;
 
-const statuses = {
-  running: { tone: 'success', label: 'Running' },
-  requires_action: { tone: 'warning', label: 'Needs input' },
-  idle: undefined,
-} as const;
-
 function mark(subagent: Subagent): Mark {
-  const role = subagentRoleMark(subagent.role);
+  const { icon, ...descriptor } = subagentMarkDescriptor(subagent);
 
-  return {
-    icon: isStockIconName(role.icon) ? role.icon : 'sparkle',
-    tone: role.tone,
-    label: `${subagent.role ?? 'General'} Agent`,
-    status: statuses[subagent.state],
-    dimmed: subagent.state === 'idle',
-  };
+  return { ...descriptor, icon: isStockIconName(icon) ? icon : 'sparkle' };
 }
 
 type PhoneProps = SubagentListProps & { now: number };

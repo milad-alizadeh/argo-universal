@@ -32,6 +32,7 @@ type RowTitleProps = RowTextProps & {
   // A line under the title, such as a picker option's description, starting where the title starts.
   subtitle?: string;
   subtitleTone?: 'warning' | 'muted' | 'danger';
+  subtitleLines?: number;
 };
 
 export function RowTitle(props: RowTitleProps): ReactNode {

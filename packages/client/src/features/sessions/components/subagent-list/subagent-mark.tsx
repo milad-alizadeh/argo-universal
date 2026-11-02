@@ -1,25 +1,20 @@
 import type { Subagent } from '@repo/contracts';
 import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import type { JSX } from 'react';
-import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
-
-const statuses = {
-  running: { tone: 'success', accessibilityLabel: 'Running' },
-  requires_action: { tone: 'warning', accessibilityLabel: 'Needs input' },
-  idle: undefined,
-} as const;
+import { subagentMarkDescriptor } from '../../../../lib/product/subagents/subagent-role';
 
 export function SubagentMark({
   subagent,
 }: {
   subagent: Subagent;
 }): JSX.Element {
+  const { label, status, ...mark } = subagentMarkDescriptor(subagent);
+
   return (
     <TintedAvatar
-      accessibilityLabel={`${subagent.role ?? 'General'} Agent`}
-      {...subagentRoleMark(subagent.role)}
-      dimmed={subagent.state === 'idle'}
-      status={statuses[subagent.state]}
+      {...mark}
+      accessibilityLabel={label}
+      status={status && { tone: status.tone, accessibilityLabel: status.label }}
     />
   );
 }
