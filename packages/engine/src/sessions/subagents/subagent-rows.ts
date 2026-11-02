@@ -4,6 +4,7 @@ import {
   type FeedUpdate,
   type SubagentUpdate,
 } from '@repo/contracts';
+import { z } from 'zod';
 import { type FeedEvent } from '../../feed';
 import type { OpenedChildFeed } from './child-feed';
 import type { SubagentRouting } from './routing-types';
@@ -24,9 +25,37 @@ const titleField = (title: string | null | undefined): { title?: string } =>
 
 type AssociationChange = OpenedChildFeed & { update: Association };
 
+const ClaudeRole = z.object({
+  claudeCode: z.object({
+    subagentRole: z.string().refine((value) => value.trim().length > 0),
+  }),
+});
+
+const roleOf = (update: Association): string | undefined => {
+  const parsed = ClaudeRole.safeParse(update._meta);
+
+  return parsed.success ? parsed.data.claudeCode.subagentRole : undefined;
+};
+
+const wrappedMeta = (
+  argo: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>,
+): Pick<SubagentUpdate, '_meta'> =>
+  Object.keys(argo).length ? { _meta: { argo } } : {};
+
 // The first update for a new child is its `spawn` (#930).
-const spawnField = (spawned: boolean): Pick<SubagentUpdate, '_meta'> =>
-  spawned ? { _meta: { argo: { action: 'spawn' } } } : {};
+const associationMeta = (
+  spawned: boolean,
+  update: Association,
+): Pick<SubagentUpdate, '_meta'> => {
+  const role = roleOf(update);
+  const argo: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']> = {};
+
+  if (spawned) argo.action = 'spawn';
+
+  if (role) argo.role = role;
+
+  return wrappedMeta(argo);
+};
 
 const associationRow = (
   input: SubagentRouting,
@@ -38,7 +67,7 @@ const associationRow = (
   subagentSessionId: child.sessionId,
   ...titleField(update.title),
   ...stateField(update.state?.state),
-  ...spawnField(spawned),
+  ...associationMeta(spawned, update),
 });
 
 export const associationEvent = (

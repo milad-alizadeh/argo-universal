@@ -1,8 +1,11 @@
-import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type { AnyMessage, SessionNotification } from '@agentclientprotocol/sdk';
 import { feedRow, session } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { openMemorySubagents } from '#mocks/memory-subagents';
+import { createDraftSubagentTranslator } from '../../agents/acp/connection/draft-subagent-updates';
+import { createSessionSnapshotWatcher } from '../snapshot';
 import { ownsSubagentUpdate } from '.';
 
 const vendorChild = 'vendor-child';
@@ -63,4 +66,86 @@ it('owns the updates of a Subagent it knows and nothing else', (): void => {
   expect(ownsSubagentUpdate(state(), association)).toBe(true);
   route(association);
   expect(ownsSubagentUpdate(state(), message)).toBe(true);
+});
+
+it('keeps an explicitly reported Claude Agent role through partial updates and reload', async (): Promise<void> => {
+  const { database, route, settled } = openMemorySubagents();
+  const snapshot = (): string | null | undefined => {
+    let role: string | null | undefined;
+    const watch = createSessionSnapshotWatcher({
+      database,
+      findFeed: () => undefined,
+      findWriter: () => undefined,
+      findSession: () => undefined,
+    });
+    const subscription = watch('session-1', {
+      next: (event) => {
+        if (event.type === 'snapshot') role = event.snapshot.subagents[0]?.role;
+      },
+    });
+    subscription.unsubscribe();
+    return role;
+  };
+
+  route({
+    ...association,
+    update: {
+      ...association.update,
+      _meta: { claudeCode: { subagentRole: 'Explore' } },
+    },
+  });
+  route(association);
+  route({
+    ...association,
+    update: {
+      ...association.update,
+      _meta: { claudeCode: { subagentRole: '  custom-role  ' } },
+    },
+  });
+  route(association);
+  await settled();
+  expect(snapshot()).toBe('  custom-role  ');
+});
+
+it('preserves role metadata on a draft spawn through to the reloaded Session snapshot', async (): Promise<void> => {
+  const { database, route, settled } = openMemorySubagents();
+  const translate = createDraftSubagentTranslator(
+    createRejectionCounter('test'),
+  );
+  const draft: AnyMessage = {
+    jsonrpc: '2.0',
+    method: 'session/update',
+    params: {
+      sessionId: 'acp-session',
+      update: {
+        sessionUpdate: 'subagent_spawned',
+        subagentSessionId: vendorChild,
+        _meta: { claudeCode: { subagentRole: 'Plan' } },
+      },
+    },
+  };
+  for (const message of translate(draft)) {
+    if (
+      'params' in message &&
+      typeof message.params === 'object' &&
+      message.params !== null &&
+      'update' in message.params
+    )
+      route(message.params as SessionNotification);
+  }
+  await settled();
+  let role: string | null | undefined;
+  const watch = createSessionSnapshotWatcher({
+    database,
+    findFeed: () => undefined,
+    findWriter: () => undefined,
+    findSession: () => undefined,
+  });
+  const subscription = watch('session-1', {
+    next: (event) => {
+      if (event.type === 'snapshot') role = event.snapshot.subagents[0]?.role;
+    },
+  });
+  subscription.unsubscribe();
+  expect(role).toBe('Plan');
 });
