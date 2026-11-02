@@ -26,6 +26,8 @@ export interface FeedItemProps {
   onOpenSubagent?: (subagentSessionId: string) => void;
   // Fixes the clock a merged live header counts from, for stories and tests.
   now?: number;
+  // The Agent is writing into this item now, so an Agent message draws the caret.
+  streaming?: boolean;
 }
 
 type ToolCallActivity = Extract<
@@ -102,7 +104,7 @@ type GroupLike = Extract<FeedViewItem, { type: 'group' | 'exploration' }>;
 
 type FeedRowItem = Extract<FeedViewItem, { type: 'row' }>['row'];
 
-type Drawing = Pick<FeedItemProps, 'imageUrl' | 'onOpenSubagent' | 'now'>;
+type Drawing = Omit<FeedItemProps, 'item'>;
 
 const isGroupLike = (item: FeedViewItem): item is GroupLike =>
   item.type === 'group' || item.type === 'exploration';
@@ -133,17 +135,17 @@ function noticeRow(
 
 function renderRow(
   row: FeedRowItem,
-  imageUrl: FeedItemProps['imageUrl'],
+  drawing: Drawing,
 ): React.JSX.Element | null {
   if (row.sessionUpdate === 'prompt_message')
-    return <UserMessage row={row} imageUrl={imageUrl} />;
+    return <UserMessage row={row} imageUrl={drawing.imageUrl} />;
 
-  return renderStandardRow(row, imageUrl);
+  return renderStandardRow(row, drawing);
 }
 
 function renderStandardRow(
   row: Exclude<FeedRowItem, { sessionUpdate: 'prompt_message' }>,
-  imageUrl: FeedItemProps['imageUrl'],
+  drawing: Drawing,
 ): React.JSX.Element | null {
   if (
     row.sessionUpdate !== 'user_message' &&
@@ -151,14 +153,14 @@ function renderStandardRow(
   )
     return noticeRow(row);
 
-  return renderMessageSlot(row, imageUrl);
+  return renderMessageSlot(row, drawing);
 }
 
 function renderFeedItem(
   item: Exclude<FeedViewItem, { type: 'turn_end' }>,
   drawing: Drawing,
 ): React.JSX.Element | null {
-  if (item.type === 'row') return renderRow(item.row, drawing.imageUrl);
+  if (item.type === 'row') return renderRow(item.row, drawing);
 
   if (item.type === 'subagent')
     return <SubagentRow item={item} onOpen={drawing.onOpenSubagent} />;

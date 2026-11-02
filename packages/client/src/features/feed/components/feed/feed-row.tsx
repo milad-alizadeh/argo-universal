@@ -24,6 +24,8 @@ interface FeedRowProps extends RowMotion, EntryDrawing {
   entry: FeedEntry;
   // The gap travels with the row data so the virtualized cell observes changes.
   spaceBelow: string;
+  // So does whether the Agent is writing into this row.
+  streaming: boolean;
 }
 
 type LayoutSync = NonNullable<
@@ -49,6 +51,7 @@ function useLayoutSync(
 function entryContent(
   entry: FeedEntry,
   drawing: EntryDrawing,
+  streaming: boolean,
 ): React.JSX.Element {
   return entry.type === 'live_header' ? (
     <LiveHeader
@@ -57,23 +60,23 @@ function entryContent(
       now={drawing.now}
     />
   ) : (
-    <FeedItem item={entry} {...drawing} />
+    <FeedItem item={entry} {...drawing} streaming={streaming} />
   );
 }
 
 /*
  * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
- * same frame. The list data keeps unchanged entries and their gap, so a row draws again only
- * when its content or its space below changes.
+ * same frame. The list data keeps unchanged entries, their gap and their caret, so a row draws
+ * again only when one of those changes.
  */
 export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
-  const { entry, spaceBelow } = props;
+  const { entry, spaceBelow, streaming } = props;
   const layoutSync = useLayoutSync(entryKey(entry), props);
 
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <SessionColumn testID="feed-column" className={spaceBelow}>
-        {entryContent(entry, props)}
+        {entryContent(entry, props, streaming)}
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );

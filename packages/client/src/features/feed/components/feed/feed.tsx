@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { ComposerCover } from '#lib/product/composer-cover';
 import type { FeedViewItem } from '../../view/feed-view';
-import { isDrawnFeedItem } from '../drawn-feed-item';
+import { drawnFeedItems } from '../drawn-feed-item';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
@@ -72,7 +72,7 @@ function useFeedEntries({
   liveToolCall,
 }: FeedProps): Pick<FeedListProps, 'entries' | 'newestKey'> {
   const drawnItems = useMemo(
-    () => withoutDisclosedTurnEnds(items).filter(isDrawnFeedItem),
+    () => drawnFeedItems(withoutDisclosedTurnEnds(items)),
     [items],
   );
 

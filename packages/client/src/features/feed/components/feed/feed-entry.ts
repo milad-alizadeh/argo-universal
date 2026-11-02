@@ -46,6 +46,20 @@ export function withLiveHeader(
   return [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }];
 }
 
+/*
+ * Every message of a running Turn stays open until the Turn ends (ADR-0024), but the Agent writes
+ * only at the Feed's end: a message with anything but the live header after it is finished, so it
+ * draws no caret.
+ */
+export const isStreamingEntry = (entry: FeedEntry, next?: FeedEntry): boolean =>
+  isOpenAgentMessage(entry) && endsFeed(next);
+
+const isOpenAgentMessage = (entry: FeedEntry): boolean =>
+  isAgentMessage(entry) && entry.row.state === 'open';
+
+const endsFeed = (next?: FeedEntry): boolean =>
+  !next || next.type === 'live_header';
+
 export function newestKeyOf(drawnItems: readonly FeedViewItem[]): string {
   const newestItem = drawnItems.at(-1);
 
@@ -63,7 +77,9 @@ const isActivity = (entry: FeedEntry): boolean =>
 const drawsNotice = (row: SessionUpdate): boolean =>
   row.sessionUpdate === 'notice' || row.sessionUpdate === 'compaction_update';
 
-const isAgentMessage = (entry: FeedEntry): boolean =>
+const isAgentMessage = (
+  entry: FeedEntry,
+): entry is Extract<FeedEntry, { type: 'row' }> =>
   entry.type === 'row' && entry.row.sessionUpdate === 'agent_message';
 
 type RhythmKind = 'activity' | 'agentMessage' | 'other';

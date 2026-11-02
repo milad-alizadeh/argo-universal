@@ -12,4 +12,5 @@ export const answeredMessage = {
 
 export const streamingMessage = {
   row: streamingAgentMessage('agent-2', markdownAnswer),
+  streaming: true,
 } satisfies AgentMessageProps;
