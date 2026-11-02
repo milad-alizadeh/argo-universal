@@ -266,8 +266,10 @@ export const RestoresOlderReadingAfterRemount: Story = {
       () => expect(scrolledToEnd(scroll)).toBe(true),
       scrollAwayWait,
     );
-    // Jump to the top of each loaded page, as a reader can with the scrollbar.
-    // Each prepend moves the viewport down, so continue until the oldest row arrives.
+    /*
+     * Jump to the top of each loaded page, as a reader can with the scrollbar.
+     * Each prepend moves the viewport down, so continue until the oldest row arrives.
+     */
     await waitFor(async () => {
       scrollUp(scroll, scroll.scrollHeight);
       await afterTwoFrames();
