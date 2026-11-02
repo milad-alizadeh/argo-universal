@@ -82,16 +82,24 @@ function ServerRows(props: ConnectionDetailViewProps): React.JSX.Element {
 
   return (
     <>
-      <FieldGroup>
-        <FieldGroup.Section title="Server">
-          {detailRows(rowValues(props.server))}
-        </FieldGroup.Section>
-        {localAccessSection(props.localAccess)}
-        {keepRunningSection(props.keepRunning)}
-        {stopServerSection(ask)}
-      </FieldGroup>
+      <ServerGroup {...props} ask={ask} />
       {alert}
     </>
+  );
+}
+
+function ServerGroup(
+  props: ConnectionDetailViewProps & { ask?: () => void },
+): React.JSX.Element {
+  return (
+    <FieldGroup>
+      <FieldGroup.Section title="Server">
+        {detailRows(rowValues(props.server))}
+      </FieldGroup.Section>
+      {localAccessSection(props.localAccess)}
+      {keepRunningSection(props.keepRunning)}
+      {stopServerSection(props.ask)}
+    </FieldGroup>
   );
 }
 

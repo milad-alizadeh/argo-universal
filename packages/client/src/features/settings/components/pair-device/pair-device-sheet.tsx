@@ -1,17 +1,20 @@
 import type { MintedPairingTicket, PairingRegistration } from '@repo/contracts';
-import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
+import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
-import { useCentresOverlays } from '@repo/kit/primitives/overlays/centred-overlay';
 import { Sheet, type SheetProps } from '@repo/kit/primitives/overlays/sheet';
-import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { AskingClaim } from './pair-device-claim';
+import { SheetActions } from './pair-device-footer';
 import { PairingCode } from './pairing-code';
 
-// Where the Server's answer has got to. A sheet holds at most one live code, and never two at once.
+/*
+ * Where the Server's answer has got to. A sheet holds at most one live code, and never two at once.
+ * An expired code keeps the Ticket it had, so the sheet can show it dimmed rather than leave a hole where it was.
+ */
 export type PairingCodeLoad =
-  | { status: 'minting' | 'expired' | 'error' }
-  | ({ status: 'live' } & MintedPairingTicket);
+  | { status: 'minting' | 'error' }
+  | ({ status: 'live' | 'expired' } & MintedPairingTicket);
 
 export interface PairDeviceSheetProps {
   open: boolean;
@@ -33,8 +36,6 @@ const doneLabel = 'Done';
 
 const messages = {
   minting: 'Getting a code…',
-  expired:
-    'This code has expired. A code lasts about two minutes, so a photograph of your screen is not a lasting key.',
   error: 'Could not get a code from the Server.',
 };
 
@@ -68,7 +69,7 @@ const sheetProps = (
  * leading edge with Done opposite it, where the kit's row centres a title over a close button.
  */
 const screenTitle = (asking: PairingRegistration | undefined): string =>
-  asking ? `${asking.claimedName} wants to pair` : title;
+  asking ? 'Allow this Device?' : title;
 
 /*
  * The sheet's one page: its title row, then the Device's claim while one is asking, else the code or why
@@ -115,96 +116,18 @@ function DoneButton(props: PairDeviceSheetProps): React.JSX.Element {
 function PageBody(props: PairDeviceSheetProps): React.JSX.Element {
   const { asking, code } = props;
 
-  if (asking) return <AskingClaim asking={asking} />;
+  return asking ? (
+    <AskingClaim asking={asking} />
+  ) : (
+    <CodeOrMessage code={code} />
+  );
+}
 
-  if (code.status === 'live') return <PairingCode code={code} />;
+function CodeOrMessage(props: { code: PairingCodeLoad }): React.JSX.Element {
+  const { code } = props;
+
+  if (code.status === 'live' || code.status === 'expired')
+    return <PairingCode code={code} expired={code.status === 'expired'} />;
 
   return <Text role="secondary">{messages[code.status]}</Text>;
-}
-
-/*
- * The claim the Device made for itself, which is all the owner has to recognise it by: the Device has spent a Ticket this sheet minted and the Server is holding its registration, so what they decide in the footer is whether that Device is let in at all.
- * The sheet asks rather than the handshake, because this is where the owner is already present and watching the code they asked for.
- */
-function AskingClaim(props: {
-  asking: PairingRegistration;
-}): React.JSX.Element {
-  return (
-    <Text role="secondary">
-      {`This Device says it is ${props.asking.claimedName}. Allow it only if you recognise it.`}
-    </Text>
-  );
-}
-
-// Only a code that ran out or never arrived offers another: a live code and one still on its way need no answer.
-const offersANewCode = (code: PairingCodeLoad): boolean =>
-  code.status === 'expired' || code.status === 'error';
-
-// The sheet's actions sit at its foot, as a request sheet's do; the page above them holds only what is read.
-function SheetActions(props: PairDeviceSheetProps): React.JSX.Element | null {
-  const { asking, code } = props;
-
-  if (asking) return <AskingAnswers {...props} asking={asking} />;
-
-  if (!offersANewCode(code)) return null;
-
-  return (
-    <SheetFooter>
-      <NewCodeButton onNewCode={props.onNewCode} />
-    </SheetFooter>
-  );
-}
-
-// A sheet raised from the bottom edge stacks its actions full width; a centred one lines them up at its trailing edge, as a dialog's footer does.
-function SheetFooter(props: { children: React.ReactNode }): React.JSX.Element {
-  const centred = useCentresOverlays();
-
-  return (
-    <View
-      className={cn(
-        'gap-2 px-6 pt-4 pb-2',
-        centred ? 'flex-row justify-end' : 'flex-col-reverse',
-      )}
-    >
-      {props.children}
-    </View>
-  );
-}
-
-// Whether an action fills the width is the footer's own question, so every button in it asks the same way.
-const useActionWidth = (): boolean => !useCentresOverlays();
-
-function NewCodeButton(props: { onNewCode: () => void }): React.JSX.Element {
-  return (
-    <Button
-      label="New code"
-      variant="primary"
-      fullWidth={useActionWidth()}
-      onPress={props.onNewCode}
-    />
-  );
-}
-
-type Answers = {
-  asking: PairingRegistration;
-  onAllow: PairDeviceSheetProps['onAllow'];
-  onDecline: PairDeviceSheetProps['onDecline'];
-};
-
-// Don't allow leads Allow where they sit in a row, and sits under it where they stack, so the answer that grants nothing is never the harder one to reach.
-const answersFor = ({ asking, onAllow, onDecline }: Answers): ButtonProps[] => [
-  { label: "Don't allow", variant: 'danger', onPress: () => onDecline(asking) },
-  { label: 'Allow', variant: 'primary', onPress: () => onAllow(asking) },
-];
-
-function AskingAnswers(props: Answers): React.JSX.Element {
-  const fullWidth = useActionWidth();
-
-  return (
-    <SheetFooter>
-      {answersFor(props).map((answer) => (
-        <Button key={answer.label} {...answer} fullWidth={fullWidth} />
-      ))}
-    </SheetFooter>
-  );
 }

@@ -1,14 +1,14 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
-import { type DeviceRow, platformName } from './device-rows';
+import { platformIcon, platformName } from '#features/settings';
+import type { DeviceRow } from './device-rows';
 
-// A phone-class Device draws the phone glyph, any other the computer's; the Server says only the platform, so no tablet.
-const leadingFor = (device: DeviceRow): 'phone' | 'computer' =>
-  device.platform === 'ios' || device.platform === 'android'
-    ? 'phone'
-    : 'computer';
+const leadingFor = (device: DeviceRow): React.JSX.Element => (
+  <Icon name={platformIcon(device.platform)} />
+);
 
 // This computer is marked and has no unpair.
 const thisComputer = (device: DeviceRow): React.JSX.Element => (

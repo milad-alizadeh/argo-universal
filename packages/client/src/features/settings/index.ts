@@ -31,3 +31,5 @@ export { PairDeviceSheet } from './components/pair-device/pair-device-sheet';
 export { pairingOffered } from './utils/pairing-offered';
 
 export { usePairDevice } from './hooks/use-pair-device';
+
+export { platformIcon, platformName } from './utils/platform-name';

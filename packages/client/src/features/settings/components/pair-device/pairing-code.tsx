@@ -1,6 +1,7 @@
 import { formatPairingTicket, type MintedPairingTicket } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Stack } from '@repo/kit/primitives/layout/stack';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PairingCountdown } from './pairing-countdown';
@@ -17,6 +18,13 @@ const scanHeading = 'Scan with Argo on your phone';
 const scanInstruction =
   'Open Argo on the other Device, choose Add a Server, and point the camera here. You’ll confirm on this computer before anything is shared.';
 
+// The code in two groups of three with a dot between, the way the owner reads it out; entry still takes XXX-XXX.
+const spacedCode = (ticket: string): string =>
+  formatPairingTicket(ticket).replace('-', ' · ');
+
+// What stands where an expired code's digits were.
+const hiddenCode = '• • • • • •';
+
 const typeLabel = 'No camera? Type this code on the other Device';
 
 /*
@@ -25,13 +33,15 @@ const typeLabel = 'No camera? Type this code on the other Device';
  */
 export function PairingCode(props: {
   code: MintedPairingTicket;
+  // A code that ran out is still drawn, dimmed, so the sheet never leaves a stale one looking usable.
+  expired: boolean;
 }): React.JSX.Element {
   return (
     <View className="gap-6 medium:flex-row medium:items-center medium:gap-8">
-      <CodeTile code={props.code} />
+      <CodeTile {...props} />
       <View className="gap-5 medium:flex-1">
         <ScanInstruction />
-        <TypedCode ticket={props.code.invite.ticket} />
+        <TypedCode ticket={props.code.invite.ticket} hidden={props.expired} />
         <PairingCountdown expiresAt={props.code.expiresAt} />
       </View>
     </View>
@@ -51,10 +61,27 @@ function ScanInstruction(): React.JSX.Element {
 }
 
 // White under the code in both appearances, because a camera reads a code by contrast rather than by taste.
-function CodeTile(props: { code: MintedPairingTicket }): React.JSX.Element {
+function CodeTile(props: {
+  code: MintedPairingTicket;
+  expired: boolean;
+}): React.JSX.Element {
   return (
     <View className="shrink-0 self-center rounded-xl border border-hairline bg-code-light p-4 medium:self-auto">
-      <PairingQrCode invite={props.code.invite} size={codeSize} />
+      <View className={cn(props.expired && 'opacity-15')}>
+        <PairingQrCode invite={props.code.invite} size={codeSize} />
+      </View>
+      {props.expired ? <ExpiredNotice /> : null}
+    </View>
+  );
+}
+
+// Over the dimmed code, where the owner is already looking; the way to another is the sheet's footer.
+function ExpiredNotice(): React.JSX.Element {
+  return (
+    <View className="absolute inset-0 items-center justify-center">
+      <Text role="heading" accessibilityRole="heading" aria-level={2}>
+        This code has expired
+      </Text>
     </View>
   );
 }
@@ -63,14 +90,17 @@ function CodeTile(props: { code: MintedPairingTicket }): React.JSX.Element {
  * The characters that stand for the code, for a Device whose camera cannot be used (#1502): a tile of its own,
  * so the thing to type is the thing that is boxed.
  */
-function TypedCode(props: { ticket: string }): React.JSX.Element {
+function TypedCode(props: {
+  ticket: string;
+  hidden: boolean;
+}): React.JSX.Element {
   return (
     <View className="gap-2 rounded-xl bg-tint p-4">
       <Text role="badge" tone="muted">
         {typeLabel}
       </Text>
       <Text role="title-code" selectable>
-        {formatPairingTicket(props.ticket)}
+        {props.hidden ? hiddenCode : spacedCode(props.ticket)}
       </Text>
     </View>
   );

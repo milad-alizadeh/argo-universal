@@ -33,8 +33,6 @@ const canPair = (props: DeviceListViewProps): boolean =>
   props.accessEnabled === true && props.pairingOffered !== false;
 
 export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
-  const [asked, ask] = useState<DeviceRow>();
-
   return (
     <Screen
       title="Devices"
@@ -42,10 +40,25 @@ export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
       {...pairAction(props)}
       onBack={props.onBack}
     >
+      <DevicesBody {...props} />
+    </Screen>
+  );
+}
+
+// Which Paired Device the owner is being asked about, if any; the question is the list's, not each row's.
+function DevicesBody(props: DeviceListViewProps): React.JSX.Element {
+  const [asked, ask] = useState<DeviceRow | null>(null);
+
+  return (
+    <>
       <FieldList sections={sections(props, ask)} />
       {canPair(props) ? props.pairDeviceSheet : null}
-      <UnpairAsk {...props} device={asked} onClose={() => ask(undefined)} />
-    </Screen>
+      <UnpairAsk
+        device={asked}
+        onClose={() => ask(null)}
+        onUnpair={props.onUnpairDevice}
+      />
+    </>
   );
 }
 
@@ -58,6 +71,7 @@ const pairAction = (
 const pairButton = (props: DeviceListViewProps): React.JSX.Element => (
   <Action
     label="Pair a Device"
+    icon={{ sf: 'qrcode', material: 'qr_code' }}
     disabled={!canPair(props)}
     onPress={() => props.onPairDevice?.()}
   />
@@ -98,9 +112,13 @@ const panel = (row: React.ReactElement): FieldListSection => ({
   rows: [row],
 });
 
-function UnpairAsk(
-  props: DeviceListViewProps & { device?: DeviceRow; onClose: () => void },
-): React.JSX.Element | null {
+interface UnpairAskProps {
+  device: DeviceRow | null;
+  onClose: () => void;
+  onUnpair: (id: string) => void;
+}
+
+function UnpairAsk(props: UnpairAskProps): React.JSX.Element | null {
   const { device } = props;
 
   if (!device) return null;
@@ -108,9 +126,9 @@ function UnpairAsk(
   return (
     <DeviceUnpairAlert
       open
-      onOpenChange={(open) => (open ? undefined : props.onClose())}
+      onOpenChange={props.onClose}
       name={device.name}
-      onUnpair={() => props.onUnpairDevice(device.id)}
+      onUnpair={() => props.onUnpair(device.id)}
     />
   );
 }

@@ -8,7 +8,7 @@ const aSecond = 1000;
 
 const secondsInAMinute = 60;
 
-const note = 'Works once. A new code appears automatically.';
+const note = 'Codes work once, for about two minutes.';
 
 const barLabel = 'Time left on this code';
 
@@ -46,7 +46,7 @@ function CountdownLine(props: { left: number }): React.JSX.Element {
       <Text role="badge" dimmed>
         {note}
       </Text>
-      <Text role="badge" tone="muted">
+      <Text role="badge" tone={props.left === 0 ? 'danger' : 'muted'}>
         {clock(props.left)}
       </Text>
     </View>

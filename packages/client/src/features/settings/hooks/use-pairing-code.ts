@@ -50,15 +50,18 @@ type Minting = ServerMutation<TRPC['pairing']['mint']>;
 function codeLoad(minting: Minting, expired: boolean): PairingCodeLoad {
   if (minting.isPending) return { status: 'minting' };
 
-  if (expired) return { status: 'expired' };
-
-  return answered(minting);
+  return answered(minting, expired);
 }
 
-const answered = (minting: Minting): PairingCodeLoad =>
+// An expired code keeps what the Server minted, so the sheet can draw it dimmed.
+const answered = (minting: Minting, expired: boolean): PairingCodeLoad =>
   minting.data
-    ? { status: 'live', ...minting.data }
-    : { status: minting.isError ? 'error' : 'minting' };
+    ? { status: expired ? 'expired' : 'live', ...minting.data }
+    : unanswered(minting);
+
+const unanswered = (minting: Minting): PairingCodeLoad => ({
+  status: minting.isError ? 'error' : 'minting',
+});
 
 function useMintMutation(): Minting {
   const trpc = useTRPC();
