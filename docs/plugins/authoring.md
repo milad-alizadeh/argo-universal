@@ -397,7 +397,7 @@ A token that comes with a refresh token and an expiry is refreshed before it run
 - `device` takes `deviceUrl` and `tokenUrl`. The page shows a code, the person enters it on any device, and the Plugin polls. It needs no callback port or Server Device, so it finishes from a paired phone.
 - `redirect` takes `authorizeUrl` and `tokenUrl`. Argo opens the browser on the Server Device and catches the code, with PKCE in place of a client secret. On any other Device the page says to continue on the Server Device.
 
-A `clientId` of `''` makes the page say sign-in is not set up yet. A service that demands a client secret fits neither flow: use the calls below. `plugins/examples/github-sign-in` is that example, with the secret in a secret setting beside `client-id`.
+A service that demands a client secret fits neither flow: use the calls below. `plugins/examples/github-sign-in` is that example, with the secret in a secret setting beside `client-id`.
 
 Argo ships no list of providers and holds no secret, so this all runs in your Plugin's worker through the calls below. `@argo/plugin-kit/sign-in` is built with them alone; its bundle fails if it imports anything else.
 

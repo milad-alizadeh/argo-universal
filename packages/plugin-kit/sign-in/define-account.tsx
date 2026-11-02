@@ -90,9 +90,6 @@ async function runSignIn(
   declaration: AccountDeclaration,
   run: StartedRun,
 ): Promise<void> {
-  if (declaration.clientId === '')
-    return run.show(failed(`${declaration.name} sign-in is not set up yet.`));
-
   run.show({ kind: 'requesting' });
 
   await attempt(argo(), declaration, run).catch((cause: unknown) => {
