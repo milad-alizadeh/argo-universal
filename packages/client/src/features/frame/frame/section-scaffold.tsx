@@ -41,10 +41,10 @@ export function sectionScaffold(
 
 // The list's own Screen, claimed with it, draws its heading, as a core section's list does. Only a wide window has a sidebar beside the pages, so a narrower one draws no list here.
 function pluginSectionScaffold(
-  { sidebar, held }: FrameListDetail,
+  { sidebar, listed }: FrameListDetail,
   framed: boolean,
 ): SectionScaffold {
-  if (!framed || !held) return noList;
+  if (!framed || !listed) return noList;
 
   return {
     list: <ClaimedList sidebar={sidebar} />,

@@ -132,7 +132,7 @@ function LiveRail({
     <FrameRail
       selectedSection={frame.section}
       items={frame.items}
-      hasSidebar={isCoreSection(frame.section) || frame.listDetail.held}
+      hasSidebar={isCoreSection(frame.section) || frame.listDetail.listed}
       {...useSectionBadgeCounts()}
       {...{ sidebarShown, onSidebarShownChange, onSectionChange }}
     />

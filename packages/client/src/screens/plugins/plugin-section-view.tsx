@@ -1,9 +1,8 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { createPlace, useClaim, useClaimed, type Place } from '@repo/kit/place';
+import { createPlace, useClaim, useClaimed } from '@repo/kit/place';
 import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
 import { router, usePathname } from 'expo-router';
 import {
-  createContext,
   use,
   useMemo,
   useState,
@@ -11,10 +10,23 @@ import {
   type ReactNode,
 } from 'react';
 import { View } from 'react-native';
-import { FrameListDetailSidebar } from '#features/frame';
+import {
+  FrameListDetailSidebar,
+  FrameSectionWithoutList,
+} from '#features/frame';
+import {
+  isCoreSection,
+  sectionOf,
+} from '../../lib/product/navigation/sections';
 import { pageUnavailable } from '../../lib/product/plugin-actions';
 import { PluginTree } from '../../lib/product/plugin-registry';
 import { pluginPageRoute } from './plugin-page-route';
+import {
+  SectionPlacesContext,
+  useSectionPlaces,
+  type SectionPlaces,
+  type ShownSectionPage,
+} from './plugin-section-places';
 import { declaresList, listOnly, withSelectedRow } from './plugin-section-tree';
 import {
   usePluginAt,
@@ -22,45 +34,6 @@ import {
   type PluginSection,
 } from './use-plugin-sections';
 import { usePluginView, type PluginView } from './use-plugin-view';
-
-// What the shown page tells its section's list: the section's stack, shown page first, and how to make one page the whole of it.
-export interface ShownSectionPage {
-  pages: readonly string[];
-  showOnly: (route: readonly string[]) => void;
-}
-
-// The live root view, for the root's own page to draw instead of opening a second view of the same path.
-export interface SectionRoot {
-  section: PluginSection;
-  view: PluginView;
-}
-
-interface SectionPlaces {
-  root: Place<SectionRoot>;
-  shown: Place<ShownSectionPage>;
-}
-
-const SectionPlacesContext = createContext<SectionPlaces | undefined>(
-  undefined,
-);
-
-function useSectionPlaces(): SectionPlaces {
-  const places = use(SectionPlacesContext);
-
-  if (!places) throw new Error('A Plugin page sits outside PluginSectionLists');
-
-  return places;
-}
-
-export const useShownPagePlace = (): Place<ShownSectionPage> =>
-  useSectionPlaces().shown;
-
-// The section's live root view, while that section is the one a wide window shows.
-export function useSectionRoot(section: PluginSection): PluginView | undefined {
-  const shown = useClaimed(useSectionPlaces().root);
-
-  return shown?.section.id === section.id ? shown.view : undefined;
-}
 
 // The list as the section shows it now, its row marked from the pages the section is showing.
 function useMarkedList(section: PluginView['root']): PluginView['root'] {
@@ -99,12 +72,12 @@ function openRoute(
   else router.push({ pathname: '/plugins/[...path]', params: { path: route } });
 }
 
-const holdsSidebar = (root: PluginView['root']): boolean =>
-  !root || declaresList(root);
+const knownWithoutList = (root: PluginView['root']): boolean =>
+  Boolean(root) && !declaresList(root);
 
 // The view stays open for as long as the section is the one shown, and the pages beside it reach it through its Place.
 function useSectionRootView(section: PluginSection): PluginView {
-  const sidebar = use(FrameListDetailSidebar);
+  const withoutList = use(FrameSectionWithoutList);
 
   const view = usePluginView({
     pluginId: section.pluginId,
@@ -112,15 +85,14 @@ function useSectionRootView(section: PluginSection): PluginView {
   });
 
   useClaim(useSectionPlaces().root, { section, view });
-  useClaim(holdsSidebar(view.root) ? sidebar : undefined, null);
+  useClaim(knownWithoutList(view.root) ? withoutList : undefined, true);
 
   return view;
 }
 
 /*
  * The one live view of a section's root, open while the pages beside it change. Its ListDetail's list goes to the
- * Frame's sidebar, wherever this is drawn. The sidebar is held from the start, so its pane stays while the first
- * snapshot says whether there is a list at all, and while the ListDetail's own claim waits to know its page's focus.
+ * Frame's sidebar, wherever this is drawn. The pane is the section's until the first snapshot says there is no list.
  */
 function SectionRootView({ section }: { section: PluginSection }): ReactNode {
   const view = useSectionRootView(section);
@@ -154,12 +126,22 @@ function SectionList(props: SectionListProps): React.JSX.Element {
   );
 }
 
-function ShownSectionRoot(): ReactNode {
-  const { section } = usePluginAt(usePathname());
+// A path no Plugin answers has no root to ask, so nothing there can say the section has a list. A core section's list is its own.
+function SectionWithoutRoot({ path }: { path: string }): null {
+  const withoutList = use(FrameSectionWithoutList);
 
-  return section ? (
-    <SectionRootView key={section.id} section={section} />
-  ) : null;
+  useClaim(isCoreSection(sectionOf(path)) ? undefined : withoutList, true);
+
+  return null;
+}
+
+function ShownSectionRoot(): ReactNode {
+  const path = usePathname();
+  const { section, loaded } = usePluginAt(path);
+
+  if (section) return <SectionRootView key={section.id} section={section} />;
+
+  return loaded ? <SectionWithoutRoot path={path} /> : null;
 }
 
 type PluginSectionListsProps = PropsWithChildren<{

@@ -169,3 +169,11 @@ Feature: Plugin navigation
     And I open the Plugin row "Add CSV export"
     And I press Back in the page header
     Then the Plugin row "Sync fails on large repos" is shown
+
+  Scenario: Browser Back on a reloaded Plugin page on a phone Frame keeps the way back to its list
+    Given a phone Frame
+    When I open the Issues Plugin
+    And I open the Plugin row "Add CSV export"
+    And I reload the Plugin page and press the browser's Back
+    And I press Back in the page header
+    Then the Plugin row "Sync fails on large repos" is shown

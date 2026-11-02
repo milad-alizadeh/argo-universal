@@ -8,8 +8,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
+import { useSectionRoot } from '../plugin-section-places';
 import { withoutList } from '../plugin-section-tree';
-import { useSectionRoot } from '../plugin-section-view';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,

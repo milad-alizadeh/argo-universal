@@ -13,7 +13,7 @@ import { pluginPagePath } from '../plugin-page-route';
 import {
   useShownPagePlace,
   type ShownSectionPage,
-} from '../plugin-section-view';
+} from '../plugin-section-places';
 
 type Navigation = NavigationProp<ParamListBase>;
 

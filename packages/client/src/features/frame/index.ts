@@ -14,7 +14,10 @@ export {
   useSectionList,
 } from './frame/frame';
 
-export { FrameListDetailSidebar } from './frame/frame-list-detail';
+export {
+  FrameListDetailSidebar,
+  FrameSectionWithoutList,
+} from './frame/frame-list-detail';
 
 export { OnboardingFrame } from './components/onboarding-frame/onboarding-frame';
 

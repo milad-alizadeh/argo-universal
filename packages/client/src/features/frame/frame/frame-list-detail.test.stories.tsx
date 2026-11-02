@@ -11,26 +11,35 @@ import { use, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { expect } from 'storybook/test';
 import {
+  isCoreSection,
   pluginSectionId,
   type Section,
 } from '../../../lib/product/navigation/sections';
 import {
   FrameListDetailOffers,
   FrameListDetailSidebar,
+  FrameSectionWithoutList,
   useFrameListDetail,
 } from './frame-list-detail';
 import type { SectionLists } from './section-lists';
 import { sectionScaffold } from './section-scaffold';
 
 const lists: SectionLists = {
-  sessions: { list: null },
+  sessions: { list: <Text>Sessions list</Text> },
   settings: { list: null },
 };
 
 const sidebarPane = 'frame-sidebar';
 
+interface SidebarPaneProps {
+  list: React.ReactNode;
+  onGone: () => void;
+}
+
 // The Frame draws the sidebar's pane only while a list holds it; without one the pane is gone and the Frame reads the sidebar as closed.
-function SidebarPane({ list }: { list: React.ReactNode }): React.ReactNode {
+function SidebarPane({ list, onGone }: SidebarPaneProps): React.ReactNode {
+  if (list === null) onGone();
+
   return list === null ? null : (
     <View testID={sidebarPane} className="w-frame-list">
       {list}
@@ -38,7 +47,10 @@ function SidebarPane({ list }: { list: React.ReactNode }): React.ReactNode {
   );
 }
 
-// A section's root view: it holds the sidebar from the start, and its ListDetail fills it once its first snapshot arrives.
+const saysNoList = (name: string, drawn: boolean): boolean =>
+  drawn && name === listless;
+
+// A section's root view: its first snapshot either fills the sidebar through its ListDetail, or says it has no list.
 function SectionRoot({
   name,
   drawn,
@@ -47,8 +59,9 @@ function SectionRoot({
   drawn: boolean;
 }): React.ReactNode {
   const sidebar = use(FrameListDetailSidebar);
+  const withoutList = use(FrameSectionWithoutList);
 
-  useClaim(sidebar, null);
+  useClaim(saysNoList(name, drawn) ? withoutList : undefined, true);
 
   if (!drawn) return null;
 
@@ -80,9 +93,22 @@ const first = pluginSectionId('example', 'example');
 
 const second = pluginSectionId('other', 'other');
 
+const listless = pluginSectionId('plain', 'plain');
+
+const firstSnapshot = 'First snapshot';
+
+// Every render that drew the Frame without the pane, which starts its close motion even when the next commit reopens it.
+const goneCommits: Section[] = [];
+
+interface PluginSidebarProps {
+  start?: Section;
+}
+
 // The Frame's sidebar beside a Plugin section whose root view opens, and another section it can move to.
-function PluginSidebar(): React.JSX.Element {
-  const [shown, setShown] = useState<Section>(first);
+function PluginSidebar({
+  start = first,
+}: PluginSidebarProps): React.JSX.Element {
+  const [shown, setShown] = useState<Section>(start);
   const [drawn, setDrawn] = useState(false);
   const listDetail = useFrameListDetail();
 
@@ -92,18 +118,20 @@ function PluginSidebar(): React.JSX.Element {
   );
 
   const openOther = (): void => {
-    setShown(second);
+    setShown(shown === first ? second : first);
     setDrawn(false);
   };
 
   return (
     <View className="flex-1 flex-row">
-      <SidebarPane list={list} />
+      <SidebarPane list={list} onGone={() => goneCommits.push(shown)} />
       <View className="flex-1">
-        <Button label="First snapshot" onPress={() => setDrawn(true)} />
+        <Button label={firstSnapshot} onPress={() => setDrawn(true)} />
         <Button label="Open another section" onPress={openOther} />
         <FrameListDetailOffers listDetail={listDetail}>
-          <SectionRoot key={shown} name={shown} drawn={drawn} />
+          {isCoreSection(shown) ? null : (
+            <SectionRoot key={shown} name={shown} drawn={drawn} />
+          )}
         </FrameListDetailOffers>
       </View>
     </View>
@@ -128,9 +156,7 @@ export const PaneWaitsForTheFirstSnapshot: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByTestId(sidebarPane)).toBeVisible();
     await expect(canvas.queryByText(`${first} list`)).toBeNull();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'First snapshot' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: firstSnapshot }));
     await expect(await canvas.findByText(`${first} list`)).toBeVisible();
   },
 };
@@ -142,14 +168,36 @@ export const PaneWaitsForTheFirstSnapshot: Story = {
  */
 export const PaneStaysWhileAnotherSectionOpens: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'First snapshot' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: firstSnapshot }));
     await expect(await canvas.findByText(`${first} list`)).toBeVisible();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Open another section' }),
     );
     await expect(canvas.getByTestId(sidebarPane)).toBeVisible();
     await expect(canvas.queryByText(`${first} list`)).toBeNull();
+  },
+};
+
+// Coming from a core section, no render draws the Plugin section without its pane, though its root view has only just mounted.
+export const NoRenderWithoutThePaneFromACoreSection: Story = {
+  args: { start: 'sessions' },
+  play: async ({ canvas, userEvent }) => {
+    goneCommits.length = 0;
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open another section' }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: firstSnapshot }));
+    await expect(await canvas.findByText(`${first} list`)).toBeVisible();
+    await expect(goneCommits).toStrictEqual([]);
+  },
+};
+
+// The pane goes only when the first snapshot of a section's root says there is no list.
+export const PaneGoesWhenTheRootHasNoList: Story = {
+  args: { start: listless },
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByTestId(sidebarPane)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: firstSnapshot }));
+    await expect(canvas.queryByTestId(sidebarPane)).toBeNull();
   },
 };

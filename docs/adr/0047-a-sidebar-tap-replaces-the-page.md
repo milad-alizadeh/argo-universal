@@ -7,7 +7,7 @@ Every click on a Plugin's sidebar used to push a page, and every page drew its o
 ## Decision
 
 - **A sidebar tap replaces the detail page, and no Back is shown for it.** The page beside the list is where the person is, not one step on a path. A page's own links still push, and Back appears only after a push, or on a page opened for a Session or a Project.
-- **A section holds one live list.** The root's `ListDetail` declares it, the host keeps that one view alive for as long as the section is on screen, and detail pages change beside it. A Plugin writes one root and registers it once.
+- **A section holds one live list.** The root's `ListDetail` declares it, the host keeps that one view alive for as long as the section is on screen, and detail pages change beside it. A Plugin writes one root and registers it once. The sidebar's pane is the section's until the root's first snapshot says it has no list, because the root mounts a commit after the Frame reads the path, and a commit without the pane starts its close motion even if no frame paints it.
 - **The root's `ListDetail` also names where the section lands.** Its optional `landing` prop is the path of the page to open, so a section on a wide window opens on a page, not on an empty state. Without it the wide window shows `empty` until a row is picked. Compact windows open on the list.
 - **The host says which row is selected.** It derives the selected row from the current page, and a Plugin passes no selection per page.
 - **A view stays open only for a page on screen or the page directly below it.** A page further down the stack closes its `plugins.view` subscription, keeps its last tree and opens again when the person returns to it. The Plugin's local state on that page starts again.
