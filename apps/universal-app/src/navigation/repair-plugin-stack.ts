@@ -5,13 +5,7 @@ import {
   type ParamListBase,
 } from 'expo-router/react-navigation';
 import { useLayoutEffect } from 'react';
-import { repairedPluginRoutes } from './plugin-stack-below';
-
-interface PageAt {
-  path: readonly string[];
-  root: readonly string[];
-  wide: boolean;
-}
+import { repairedPluginRoutes, type PageAt } from './plugin-stack-below';
 
 type Navigation = NavigationProp<ParamListBase>;
 

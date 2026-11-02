@@ -41,7 +41,11 @@ export function useRootProjects(deps: IssueDeps): RootProjects {
   return {
     projects: shown,
     project: projectChosen(shown, source.chosenId()),
-    message: projectsMessage(projects, failed),
+    message: projectsMessage(
+      projects,
+      failed,
+      shown.length === 0 ? 'No Projects yet.' : loadingIssues,
+    ),
     settled: projects !== undefined || failed === true,
   };
 }
@@ -55,12 +59,11 @@ const projectChosen = (
 function projectsMessage(
   projects: Project[] | undefined,
   failed: boolean | undefined,
+  loaded: string,
 ): string {
   if (failed) return 'Could not load Projects.';
 
-  if (!projects) return 'Loading Projects…';
-
-  return projects.length === 0 ? 'No Projects yet.' : loadingIssues;
+  return projects ? loaded : 'Loading Projects…';
 }
 
 export type PageProject = { project: Project | undefined; message: string };
@@ -87,14 +90,5 @@ export function usePageProject(deps: IssueDeps, id: string): PageProject {
       );
   }, [source, id]);
 
-  return { project, message: pageMessage(projects, failed) };
-}
-
-function pageMessage(
-  projects: Project[] | undefined,
-  failed: boolean | undefined,
-): string {
-  if (failed) return 'Could not load Projects.';
-
-  return projects ? goneMessage : 'Loading Projects…';
+  return { project, message: projectsMessage(projects, failed, goneMessage) };
 }

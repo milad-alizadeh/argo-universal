@@ -77,6 +77,12 @@ describe('a section root', () => {
     expect(landingOf({ ...root, type: 'Screen' })).toBeUndefined();
   });
 
+  it('has no landing when it names the root itself, which is where it already is', () => {
+    expect(
+      landingOf({ ...root, props: { landing: '/' } }),
+    ).toBeUndefined();
+  });
+
   it('keeps only its list for the live view', () => {
     expect(Object.keys(listOnly(root).slots)).toEqual(['list']);
   });

@@ -23,7 +23,7 @@ const rootBelow = (page: Route, root: readonly string[]): Route => ({
   params: { path: root },
 });
 
-interface PageAt {
+export interface PageAt {
   path: readonly string[];
   root: readonly string[];
   wide: boolean;

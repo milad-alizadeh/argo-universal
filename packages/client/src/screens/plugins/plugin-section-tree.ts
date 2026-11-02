@@ -8,7 +8,7 @@ export const declaresList = (root: WireNode | null): root is WireNode =>
 export function landingOf(root: WireNode | null): string | undefined {
   const landing = declaresList(root) ? root.props.landing : undefined;
 
-  return typeof landing === 'string' ? landing : undefined;
+  return typeof landing === 'string' && landing !== '/' ? landing : undefined;
 }
 
 // The list alone, for the view that stays live beside the pages: its detail and empty state belong to the root's own page.
