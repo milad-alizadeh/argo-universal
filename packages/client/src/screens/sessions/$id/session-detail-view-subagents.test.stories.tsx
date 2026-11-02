@@ -1,7 +1,9 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import type { Meta } from '@storybook/react-native-web-vite';
-import type { JSX } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { useState, type JSX } from 'react';
+import { expect, fireEvent, fn, waitFor, within } from 'storybook/test';
 import {
   meta as sessionDetailViewTestMeta,
   type Story,
@@ -168,3 +170,59 @@ export const PhoneSubagentsOpenSheet = subagentsAt(
   layoutWidths.phone,
   'severalMixed',
 );
+
+function PhoneSessionFocus(): JSX.Element {
+  const [focused, setFocused] = useState(true);
+
+  return (
+    <>
+      <Button
+        label="Switch Session"
+        onPress={() => setFocused((value) => !value)}
+      />
+      <RetainedPageVisibility value={focused}>
+        <FramedSessionPreview
+          state="open"
+          {...runningSession}
+          subagents={{
+            subagents: subagentStates.oneRunning,
+            onSelect: fn(),
+            now: subagentNow,
+          }}
+        />
+      </RetainedPageVisibility>
+    </>
+  );
+}
+
+export const PhoneSheetDismissesOnSwitch: Story = {
+  render: () => <PhoneSessionFocus />,
+  beforeEach: () => settleLayout(layoutWidths.phone),
+  play: async ({ canvas, userEvent }) => {
+    const body = within(document.body);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Agents: 1' }),
+    );
+    await expect(
+      await body.findByRole('dialog', { name: subagentsName }),
+    ).toBeVisible();
+    await fireEvent.click(
+      canvas.getByRole('button', { name: 'Switch Session', hidden: true }),
+    );
+    await waitFor(() =>
+      expect(
+        body.queryByRole('dialog', { name: subagentsName }),
+      ).not.toBeInTheDocument(),
+    );
+    await fireEvent.click(
+      canvas.getByRole('button', { name: 'Switch Session' }),
+    );
+    await expect(
+      body.queryByRole('dialog', { name: subagentsName }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Agents: 1' }));
+    await expect(
+      await body.findByRole('dialog', { name: subagentsName }),
+    ).toBeVisible();
+  },
+};

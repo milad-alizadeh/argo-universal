@@ -18,6 +18,7 @@ import type { ReactNode } from 'react';
  * Plugins and a Plugin's own screens own no Session, claim nothing here, and the band draws without those controls.
  */
 export interface WindowBandSession {
+  sessionId?: string;
   workbench?: ReactNode;
   onInspectorToggle?: () => void;
 }

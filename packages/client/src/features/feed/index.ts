@@ -8,6 +8,8 @@ export type { SessionFeed } from './hooks/session-feed';
 
 export { toFeedView } from './view/to-feed-view';
 
+export { toParentResults } from './view/to-parent-results';
+
 export { toSubagentFeedView } from './view/to-subagent-feed-view';
 
 export { DiffView } from './components/diff-view/diff-view';

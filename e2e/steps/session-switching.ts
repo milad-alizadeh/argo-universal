@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { ElementHandle, Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
@@ -6,7 +6,8 @@ import { openSessionRow, sessionRow, startSession } from './live-session';
 import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
 
-const feed = (page: Page): Locator => page.getByTestId('feed-scroll');
+const feed = (page: Page): Locator =>
+  page.getByTestId('feed-scroll').filter({ visible: true });
 
 // The press is checked by the shared helper, so the Feed is asked for its content only once the Session is open.
 export async function openSession(page: Page, title: string): Promise<void> {
@@ -79,4 +80,57 @@ Then('no Agent and model overlay is shown', async ({ page }): Promise<void> => {
   await expect(page.getByRole('dialog', { name: agentModelLabel })).toHaveCount(
     0,
   );
+});
+
+const workbenchLabel = 'Toggle Workbench';
+
+const pressed = 'aria-pressed';
+
+When('I hide the Workbench', async ({ page }): Promise<void> => {
+  const toggle = page.getByRole('button', { name: workbenchLabel });
+  await expect(toggle).toHaveAttribute(pressed, 'true');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute(pressed, 'false');
+});
+
+Then('the Workbench is shown', async ({ page }): Promise<void> => {
+  await expect(
+    page.getByRole('button', { name: workbenchLabel }),
+  ).toHaveAttribute(pressed, 'true');
+});
+
+Then('the Workbench is hidden', async ({ page }): Promise<void> => {
+  await expect(
+    page.getByRole('button', { name: workbenchLabel }),
+  ).toHaveAttribute(pressed, 'false');
+});
+
+const rememberedFeeds = new WeakMap<Page, ElementHandle>();
+
+When('I remember the current Feed', async ({ page }): Promise<void> => {
+  const handle = await feed(page).elementHandle();
+
+  if (!handle) throw new Error('The Session Feed is missing');
+
+  rememberedFeeds.set(page, handle);
+});
+
+Then(
+  'the remembered Feed remains mounted and hidden',
+  async ({ page }): Promise<void> => {
+    const handle = rememberedFeeds.get(page);
+
+    if (!handle) throw new Error('No Feed was remembered');
+
+    expect(await handle.evaluate((element) => element.isConnected)).toBe(true);
+    expect(await handle.isVisible()).toBe(false);
+  },
+);
+
+Then('the remembered Feed is shown', async ({ page }): Promise<void> => {
+  const handle = rememberedFeeds.get(page);
+
+  if (!handle) throw new Error('No Feed was remembered');
+
+  expect(await handle.isVisible()).toBe(true);
 });

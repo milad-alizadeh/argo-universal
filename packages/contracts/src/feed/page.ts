@@ -17,6 +17,13 @@ export const FeedPageInput = z.strictObject({
 
 export type FeedPageInput = z.infer<typeof FeedPageInput>;
 
+// Reports live on the parent Feed, selected by the Agent they describe.
+export const FeedReportsInput = FeedPageInput.extend({
+  childSessionId: sessionColumns.shape.id,
+});
+
+export type FeedReportsInput = z.infer<typeof FeedReportsInput>;
+
 // Output of `feed.page`. `staleCursor` is true when the input's `epoch` is not the Session's; the page is then the tail.
 export const FeedPageOutput = z.strictObject({
   epoch: sessionColumns.shape.epoch,

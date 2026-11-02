@@ -9,6 +9,7 @@ import type { EntryDrawing } from './feed-row';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
 import { useFeedGrowth } from './use-feed-growth';
 import {
+  type FeedScrollPosition,
   useFeedScrollPosition,
   useReportsAtEnd,
 } from './use-feed-scroll-position';
@@ -16,10 +17,13 @@ import {
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
 export interface FeedListProps extends EntryDrawing {
+  sessionId?: string;
   entries: FeedEntry[];
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
   newestKey: string;
   loadingOlder: boolean;
+  hasOlder?: boolean;
+  historyCursor?: number | null;
   onStartReached: () => void;
   onAtEndChange?: (atEnd: boolean) => void;
   // The Feed opens on the first row and pins no prompt, for a Feed read without a Composer.
@@ -42,8 +46,21 @@ export function FeedList(props: FeedListProps): React.JSX.Element {
   useReportsAtEnd(position.atEnd, props.onAtEndChange);
   const shared = { list, ...props, ...position };
 
+  return <FeedBodyLayout {...shared} />;
+}
+
+type FeedBodyLayoutProps = FeedScrollProps &
+  Pick<FeedScrollPosition, 'cancelRestore' | 'newestKeyWhenLeftEnd'> & {
+    newestKey: string;
+  };
+
+function FeedBodyLayout(shared: FeedBodyLayoutProps): React.JSX.Element {
   return (
-    <View style={fillShrinkable} className="web:select-text">
+    <View
+      style={fillShrinkable}
+      className="web:select-text"
+      onTouchStart={shared.cancelRestore}
+    >
       <FeedBody {...shared} />
       <JumpToLatestWhenAway {...shared} />
     </View>

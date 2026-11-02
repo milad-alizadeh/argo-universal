@@ -22,23 +22,60 @@ function incomingMessage(row: SessionMessage): UserMessage {
   };
 }
 
-const isInitialMessage = (row: SessionUpdate): row is SessionMessage =>
-  row.sessionUpdate === 'session_message' && row.position === 0;
+const isFromChild = (row: SessionMessage): boolean =>
+  row._meta?.argo?.senderSessionId === row.sessionId;
 
-/*
- * A Subagent's Feed. A child transcript's `session_message` rows are only the ones the Agent
- * reported there, and the message that started the child is at transcript position zero; Argo never copies
- * the parent's outgoing message in. So only a leading one is drawn, as the child's own prompt,
- * and a message the child itself sent later stays undrawn, as it does on a Session's own Feed.
- * Where the Agent reported none, the Feed starts with the child's own output.
- */
+const recipient = (row: SessionMessage): string | undefined =>
+  row._meta?.argo?.recipientSessionId;
+
+const isReplyTo = (
+  row: SessionMessage,
+  parentId: string | undefined,
+): boolean =>
+  parentId !== undefined && isFromChild(row) && recipient(row) === parentId;
+
+const isInitialMessage = (row: SessionUpdate): row is SessionMessage =>
+  row.sessionUpdate === 'session_message' &&
+  row.position === 0 &&
+  !isFromChild(row);
+
+// The child's leading incoming message draws as its prompt. Explicit replies to its parent keep their provenance.
 export function toSubagentFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
+  parentId?: string,
 ): FeedView {
   const [first, ...rest] = rows;
 
-  if (!first || !isInitialMessage(first)) return toFeedView(rows, snapshot);
+  const presented =
+    first && isInitialMessage(first) ? [incomingMessage(first), ...rest] : rows;
 
-  return toFeedView([incomingMessage(first), ...rest], snapshot);
+  return showReplies(toFeedView(presented, snapshot), parentId);
+}
+
+function showReplies(view: FeedView, parentId: string | undefined): FeedView {
+  return {
+    ...view,
+    items: view.items.map((item) => replyItem(item, parentId)),
+  };
+}
+
+function replyItem(
+  item: FeedView['items'][number],
+  parentId: string | undefined,
+): FeedView['items'][number] {
+  if (item.type !== 'row') return item;
+
+  return messageItem(item, parentId);
+}
+
+function messageItem(
+  item: Extract<FeedView['items'][number], { type: 'row' }>,
+  parentId: string | undefined,
+): FeedView['items'][number] {
+  if (item.row.sessionUpdate !== 'session_message') return item;
+
+  if (!isReplyTo(item.row, parentId)) return item;
+
+  return { type: 'child_reply', row: item.row };
 }

@@ -29,6 +29,7 @@ export const offeredSessionPanels = (
 
 type SessionInspectorProps = SessionInspectorContent & {
   panels: SessionPanels;
+  phoneVisible?: boolean;
 };
 
 const tabOf = (
@@ -117,6 +118,7 @@ function phoneInspector(props: SessionInspectorProps): JSX.Element | null {
     Inspector,
     {
       ...inspectorProps(props),
+      open: props.phoneVisible !== false && inspectorProps(props).open,
       sheetHeader: page.sheetHeader,
       contentScrolls: true,
     },
