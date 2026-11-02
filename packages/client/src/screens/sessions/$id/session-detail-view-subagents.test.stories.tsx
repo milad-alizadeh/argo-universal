@@ -18,11 +18,11 @@ const subagentsName = 'Agents';
 
 const agentsCard = 'workbench-subagents';
 
-const cardRow = /^Open (?!.*overview)/;
+const cardRow = /^(Open (?!.*overview)|Show )/;
 
 const selected = ['aria-selected', 'true'] as const;
 
-// Wide, a card row opens the Agents tab; below wide the Composer's pill opens the list.
+// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; below wide the Composer's pill opens the list.
 async function openList(
   { canvas, userEvent }: Interaction,
   wide: boolean,

@@ -2,10 +2,10 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { shellElapsed, shellsRunning } from './shell-list/shell-format';
+import { shellElapsed } from './shell-list/shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list/shell-list-types';
 import { ShellMark } from './shell-list/shell-mark';
-import { hiddenCount, previewOf } from './workbench-preview';
+import { activePreview } from './workbench-preview';
 import { WorkbenchShowMore } from './workbench-show-more';
 
 type OpenTask = (shell: ShellEntry) => void;
@@ -14,34 +14,32 @@ type Props = Pick<ShellListProps, 'shells' | 'now'> & { onOpen: OpenTask };
 
 type RowProps = { shell: ShellEntry; now: number; onOpen: OpenTask };
 
-// Tasks that are still running lead, so the card shows what is live before what has ended.
-const previewable = (shells: readonly ShellEntry[]): ShellEntry[] => [
-  ...shells.filter((shell) => shell.status === 'running'),
-  ...shells.filter((shell) => shell.status !== 'running'),
-];
+const isRunning = (shell: ShellEntry): boolean => shell.status === 'running';
 
-// The Session's Background Tasks, up to the preview's limit; a running one leads with its live dot.
+// The Session's running Background Tasks, up to the preview's limit, each leading with its live dot.
 export function WorkbenchTasks(props: Props): ReactElement {
-  const shown = previewOf(previewable(props.shells));
-  const now = useClock(shellsRunning(shown), props.now);
+  const { rows } = activePreview(props.shells, isRunning);
+  const now = useClock(rows.length > 0, props.now);
 
   return (
     <View>
-      {shown.map((shell) => (
+      {rows.map((shell) => (
         <TaskRow key={shell.id} shell={shell} now={now} onOpen={props.onOpen} />
       ))}
     </View>
   );
 }
 
-// The footer of the Background Tasks card: absent when the preview already shows every task.
+// The footer of the Background Tasks card: the tasks it left out, absent when every one is a row.
 export function WorkbenchMoreTasks({
   shells,
   onOpen,
 }: Pick<ShellListProps, 'shells'> & {
   onOpen: () => void;
 }): ReactElement | null {
-  return <WorkbenchShowMore hidden={hiddenCount(shells)} onOpen={onOpen} />;
+  const { more, done } = activePreview(shells, isRunning);
+
+  return <WorkbenchShowMore more={more} done={done} onOpen={onOpen} />;
 }
 
 const rowPressable = ({ shell, onOpen }: RowProps) =>

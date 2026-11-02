@@ -6,7 +6,7 @@ import { Pressable, View } from 'react-native';
 import { subagentSupporting } from './subagent-list/subagent-format';
 import type { SubagentListProps } from './subagent-list/subagent-list-types';
 import { SubagentMark } from './subagent-list/subagent-mark';
-import { hiddenCount, previewOf } from './workbench-preview';
+import { activePreview } from './workbench-preview';
 import { WorkbenchShowMore } from './workbench-show-more';
 
 type OpenAgent = (agent: Subagent) => void;
@@ -15,32 +15,29 @@ type Props = SubagentListProps & { onOpen: OpenAgent };
 
 type RowProps = { agent: Subagent; now: number; onOpen: OpenAgent };
 
-// Agents that are working lead, so a Session with many finished ones still shows what is running.
-const previewable = (agents: readonly Subagent[]): Subagent[] => [
-  ...agents.filter((agent) => agent.state !== 'idle'),
-  ...agents.filter((agent) => agent.state === 'idle'),
-];
+const isWorking = (agent: Subagent): boolean => agent.state !== 'idle';
 
 export function WorkbenchAgents(props: Props): ReactElement {
-  const shown = previewOf(previewable(props.subagents));
-  const working = shown.some((agent) => agent.state !== 'idle');
-  const now = useClock(working, props.now);
+  const { rows } = activePreview(props.subagents, isWorking);
+  const now = useClock(rows.length > 0, props.now);
 
   const row = (agent: Subagent): ReactElement => (
     <AgentRow key={agent.sessionId} {...{ agent, now, onOpen: props.onOpen }} />
   );
 
-  return <View>{shown.map(row)}</View>;
+  return <View>{rows.map(row)}</View>;
 }
 
-// The footer of the Agents card: absent when the preview already shows every Agent.
+// The footer of the Agents card: the Agents it left out, absent when every one is a row.
 export function WorkbenchMoreAgents({
   subagents,
   onOpen,
 }: Pick<SubagentListProps, 'subagents'> & {
   onOpen: () => void;
 }): ReactElement | null {
-  return <WorkbenchShowMore hidden={hiddenCount(subagents)} onOpen={onOpen} />;
+  const { more, done } = activePreview(subagents, isWorking);
+
+  return <WorkbenchShowMore more={more} done={done} onOpen={onOpen} />;
 }
 
 const rowPressable = ({ agent, onOpen }: RowProps) =>

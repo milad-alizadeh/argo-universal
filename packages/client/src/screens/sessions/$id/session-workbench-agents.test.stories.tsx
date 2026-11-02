@@ -26,17 +26,24 @@ const cardId = 'workbench-subagents';
 
 const activeTitle = runningSubagent.title;
 
-export const PreviewsThreeAndShowsMore: Story = {
+const [completedAgent] = subagentStates.allFinished;
+
+if (!completedAgent) throw new Error('Agents fixture needs a completed Agent');
+
+const completedTitle = completedAgent.title;
+
+export const RunningAgentsGetRowsAndTheRestCountAsDone: Story = {
   play: async ({ canvas, userEvent }) => {
     const content = within(await canvas.findByTestId(cardId));
 
     await expect(content.getByText(activeTitle)).toBeVisible();
     await expect(content.getByLabelText('Running')).toBeVisible();
     await expect(content.getByLabelText('Needs input')).toBeVisible();
+    await expect(content.queryByText(completedTitle)).toBeNull();
     await expect(
       content.getAllByRole('button', { name: /^Open / }),
-    ).toHaveLength(3);
-    await userEvent.click(content.getByRole('button', { name: 'Show 1 more' }));
+    ).toHaveLength(2);
+    await userEvent.click(content.getByRole('button', { name: 'Show 2 done' }));
     await expect(canvas.getByRole('tab', { name: 'Agents: 4' })).toBeVisible();
   },
 };
@@ -57,7 +64,7 @@ export const DisclosureKeepsInspectorClosed: Story = {
   },
 };
 
-export const AFewAgentsHaveNoShowMore: Story = {
+export const FinishedAgentsAreOneDoneRow: Story = {
   args: {
     view: {
       ...subagentsSession,
@@ -71,10 +78,8 @@ export const AFewAgentsHaveNoShowMore: Story = {
     const content = within(await canvas.findByTestId(cardId));
 
     await expect(content.queryByLabelText('Running')).toBeNull();
-    await expect(content.queryByRole('button', { name: /^Show / })).toBeNull();
-    const [first] = content.getAllByRole('button', { name: /^Open / });
-
-    await userEvent.click(first ?? content.getByRole('button'));
+    await expect(content.queryByRole('button', { name: /^Open / })).toBeNull();
+    await userEvent.click(content.getByRole('button', { name: 'Show 2 done' }));
     await expect(canvas.getByRole('tab', { name: 'Agents: 2' })).toBeVisible();
   },
 };
