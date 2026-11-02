@@ -157,7 +157,7 @@ function useExampleTabs(): InspectorTabsProps {
 
     setItems(rest);
 
-    onSelect(rest[0]?.key ?? '');
+    if (selected === key) onSelect(rest[0]?.key ?? '');
   };
 
   return { items, selected, onSelect, onClose };
