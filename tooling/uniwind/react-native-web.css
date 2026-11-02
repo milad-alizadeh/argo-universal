@@ -195,6 +195,55 @@
     0 2px 6px var(--color-shadow);
 }
 
+/* ShimmerText: a band of brightness sweeps along a line while the Agent works.
+   Two mask layers add up: the line rests at --shimmer-rest, and a band as wide as
+   --shimmer-band carries it the rest of the way to whole as it passes. The browser
+   runs it, so a line costs one node and no JavaScript a frame. */
+.shimmer-text {
+  --shimmer-rest: 0.45;
+  /* Sixteen characters wide, as the native sweep's band is, at about half an em each. */
+  --shimmer-band: 8em;
+  mask-repeat: no-repeat;
+  mask-size:
+    var(--shimmer-band) 100%,
+    100% 100%;
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent,
+      rgb(0 0 0 / calc(1 - var(--shimmer-rest))) 50%,
+      transparent
+    ),
+    linear-gradient(
+      rgb(0 0 0 / var(--shimmer-rest)),
+      rgb(0 0 0 / var(--shimmer-rest))
+    );
+  animation: shimmer-text-sweep 1600ms linear infinite;
+}
+/* An emphasized line rests brighter, so its band carries it less far. */
+.shimmer-text-emphasized {
+  --shimmer-rest: 0.7;
+}
+@keyframes shimmer-text-sweep {
+  from {
+    mask-position:
+      calc(0px - var(--shimmer-band)) 0,
+      0 0;
+  }
+  to {
+    mask-position:
+      calc(100% + var(--shimmer-band)) 0,
+      0 0;
+  }
+}
+/* Reduced motion holds the line whole and still. */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text {
+    mask-image: none;
+    animation: none;
+  }
+}
+
 /* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with
    content past it, over whatever lies behind. The scroll view's own scroll
    position drives each depth, so scrolling runs no JavaScript. The frame sets
