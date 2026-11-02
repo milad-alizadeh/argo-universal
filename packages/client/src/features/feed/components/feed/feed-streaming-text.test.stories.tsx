@@ -26,6 +26,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const recording = 'edit-and-command';
+
 const promptText = 'Write three pages about the lighthouse keeper';
 
 const sentence =
@@ -48,7 +50,7 @@ const lastRow = longTail.at(-1);
 if (!lastRow) throw new Error('Recorded catalog needs a Long Feed');
 
 const sentPrompt: SessionUpdate = {
-  ...recordedUserMessage('agent-1', 'edit-and-command'),
+  ...recordedUserMessage('agent-1', recording),
   id: 'sent-prompt',
   position: lastRow.position + 1,
   revision: longSnapshot.maxRevision + 1,
@@ -56,7 +58,7 @@ const sentPrompt: SessionUpdate = {
 };
 
 const answerSoFar = (length: number): SessionUpdate => ({
-  ...recordedAgentMessage('agent-1', 'edit-and-command'),
+  ...recordedAgentMessage('agent-1', recording),
   id: 'streamed-answer',
   position: lastRow.position + 2,
   revision: longSnapshot.maxRevision + 2,
@@ -135,5 +137,39 @@ export const FollowsEndWhileAnswerStreams: Story = {
       timeout: streamDeadlineMs,
     });
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
+  },
+};
+
+const openMessage = (
+  id: string,
+  offset: number,
+  text: string,
+): SessionUpdate => ({
+  ...recordedAgentMessage('agent-1', recording),
+  id,
+  position: lastRow.position + offset,
+  revision: longSnapshot.maxRevision + offset,
+  state: 'open',
+  content: [{ type: 'text', text }],
+});
+
+// Every message of a running Turn stays open until the Turn ends; the Agent writes only into the newest.
+export const OneCaretAcrossOpenMessages: Story = {
+  args: {
+    items: toFeedView(
+      [
+        ...longTail,
+        openMessage('finished-answer', 1, 'Goal set'),
+        openMessage('streaming-answer', 2, 'Starting on the rest'),
+      ],
+      longSnapshot,
+    ).items,
+    liveHeader: workingHeader,
+    now: liveHeaderNow,
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(await canvas.findByText('Starting on the rest')).toBeVisible();
+    await expect(canvas.getAllByTestId('streaming-caret')).toHaveLength(1);
   },
 };
