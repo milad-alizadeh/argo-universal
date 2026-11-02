@@ -60,26 +60,10 @@ function actionTitle(action: CommandAction, fallback: string): string {
   return actionTitles[action.type]?.(action) ?? fallback;
 }
 
-// claude-agent-acp titles a command "Terminal"; the Agent's own words are in the description.
-function describedTitle(row: ToolCallUpdate): string | undefined {
-  return agentDescription(row) || adapterTitle(row);
-}
-
-const agentDescription = (row: ToolCallUpdate): string | undefined =>
-  row._meta?.argo?.description;
-
-function adapterTitle(row: ToolCallUpdate): string | undefined {
-  const terminal = row.content.find((content) => content.type === 'terminal');
-
-  return [terminal?.command, 'Terminal', ''].includes(row.title)
-    ? undefined
-    : row.title;
-}
-
 function commandTitle(row: ToolCallUpdate): string {
-  const described = describedTitle(row);
+  const { agentTitle } = toolCallFacts(row);
 
-  if (described) return described;
+  if (agentTitle) return agentTitle;
 
   if (isToolCallRunning(row)) return 'Running command';
 
@@ -96,13 +80,14 @@ function impliedToolTitle(row: ToolCallUpdate): string {
   return path ? `Read ${path}` : commandTitle(row);
 }
 
+const approvalTitle = (row: ToolCallUpdate): string =>
+  toolCallFacts(row).agentTitle ?? row.title;
+
 export function toolCallTitle(
   row: ToolCallUpdate,
   awaitingApproval = false,
 ): string {
-  if (awaitingApproval) return row.title;
-
-  return titleFor(row);
+  return awaitingApproval ? approvalTitle(row) : titleFor(row);
 }
 
 function titleFor(row: ToolCallUpdate): string {
