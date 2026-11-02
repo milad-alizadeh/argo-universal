@@ -68,6 +68,11 @@ export const manyChanges = catalog(always(manyFiles));
 // The few files against main, and nothing against anything else.
 export const changesOnMain = catalog(onMain(fewFiles));
 
+// The long file after a short one, with more below: folding it has somewhere to return to and files to pull up.
+export const longFileInMiddle = catalog(
+  always([...fewFiles.slice(0, 2).reverse(), ...manyFiles.slice(0, 10)]),
+);
+
 export const noChanges = catalog(always([]));
 
 // The same file twice, as two pages can send it: the list and its counts take it once.

@@ -1,7 +1,8 @@
+import { nextFrames } from '@repo/kit/mocks/next-frames';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, screen, waitFor } from 'storybook/test';
+import { expect, screen, waitFor, within } from 'storybook/test';
 import { settleChanges } from './session-changes-settle.test.mocks';
 import {
   fewChanges,
@@ -9,6 +10,7 @@ import {
   fileHeaders,
   findFileHeader,
   largeFile,
+  longFileInMiddle,
   MemoryChangesInspector,
   scrollToFile,
   shortFile,
@@ -31,6 +33,8 @@ const checked = 'aria-checked';
 
 // The last added line of the recorded long file: the list shows every line of a file's diff.
 const lastAddedLine = 'new value 60';
+
+const midLine = 'new value 30';
 
 const diffLines = (): HTMLElement[] => screen.queryAllByTestId('diff-line');
 
@@ -145,6 +149,101 @@ function foldLeavesNoGap(width: number): Story {
 export const FoldLeavesNoGapPhone = foldLeavesNoGap(layoutWidths.phone);
 
 export const FoldLeavesNoGapWide = foldLeavesNoGap(layoutWidths.wide);
+
+const topOf = (element: HTMLElement): number =>
+  element.getBoundingClientRect().top;
+
+// Scrolls well into the long file's diff, so its header is stuck and its top has left the viewport; the header's place then is where it should end.
+async function scrollIntoLargeFile(): Promise<number> {
+  const line = await screen.findByText(midLine);
+
+  line.scrollIntoView({ block: 'start' });
+  await waitFor(() =>
+    expect(topOf(line)).toBeLessThan(topOf(fileHeader(largeFile)) + 100),
+  );
+
+  return topOf(fileHeader(largeFile));
+}
+
+type Press = (element: HTMLElement) => Promise<void>;
+
+const foldByChevron = (press: Press): Promise<void> =>
+  press(fileHeader(largeFile));
+
+function foldByMark(press: Press): Promise<void> {
+  const row = fileHeader(largeFile).parentElement;
+
+  if (!row) throw new Error('Missing file row');
+
+  return press(within(row).getByRole('checkbox', { name: 'Viewed' }));
+}
+
+// Folding a file scrolled part way leaves its header where it was stuck, with the next file directly under it.
+function foldReturnsToHeader(
+  width: number,
+  foldWith: typeof foldByChevron,
+): Story {
+  return {
+    args: { catalog: longFileInMiddle },
+    play: async ({ userEvent }) => {
+      await settleChanges(width);
+
+      const stuckAt = await scrollIntoLargeFile();
+
+      await foldWith((element) => userEvent.click(element));
+      await expect(fileHeader(largeFile)).toHaveAttribute(expanded, 'false');
+      await waitFor(async () => {
+        const header = fileHeader(largeFile).getBoundingClientRect();
+
+        const below = fileHeaders()
+          .map((row) => row.getBoundingClientRect())
+          .find((row) => row.top > header.top);
+
+        await expect(header.top).toBeCloseTo(stuckAt, 0);
+        // Only the rows' own padding between them: none of the folded diff is left.
+        await expect((below?.top ?? Infinity) - header.bottom).toBeLessThan(
+          header.height * 2,
+        );
+      });
+    },
+  };
+}
+
+export const FoldByChevronReturnsToHeaderPhone = foldReturnsToHeader(
+  layoutWidths.phone,
+  foldByChevron,
+);
+
+export const FoldByChevronReturnsToHeaderWide = foldReturnsToHeader(
+  layoutWidths.wide,
+  foldByChevron,
+);
+
+export const FoldByMarkReturnsToHeaderPhone = foldReturnsToHeader(
+  layoutWidths.phone,
+  foldByMark,
+);
+
+export const FoldByMarkReturnsToHeaderWide = foldReturnsToHeader(
+  layoutWidths.wide,
+  foldByMark,
+);
+
+// A file whose header is in view keeps its place when it folds: only the files below move.
+export const FoldInViewStaysPut: Story = {
+  play: async ({ userEvent }) => {
+    await settleChanges(layoutWidths.wide);
+    await userEvent.click(await findFileHeader(largeFile));
+
+    const header = await findFileHeader(shortFile);
+    const before = topOf(header);
+
+    await userEvent.click(header);
+    await expect(fileHeader(shortFile)).toHaveAttribute(expanded, 'false');
+    await nextFrames();
+    await expect(topOf(fileHeader(shortFile))).toBeCloseTo(before, 0);
+  },
+};
 
 interface Insets {
   left: number;
