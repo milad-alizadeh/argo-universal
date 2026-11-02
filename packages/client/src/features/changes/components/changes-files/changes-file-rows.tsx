@@ -84,7 +84,7 @@ function SeparatorRow(): React.JSX.Element {
   return <View className="h-px bg-border" />;
 }
 
-// Marking a file Viewed folds it; clearing the mark opens it again.
+// Marking a file Viewed folds it; clearing the mark opens it again, as on GitHub.
 const viewedChange =
   (path: string, context: Pick<RowContext, 'setOpen' | 'onViewedChange'>) =>
   (viewed: boolean): void => {

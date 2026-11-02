@@ -43,7 +43,11 @@ export interface ChangesViewProps {
   onLoadDiff: (path: string, pages: number) => void;
   // The last load failed; files from an earlier load stay on screen.
   loadError?: string;
-  // The paths marked Viewed.
+  // The paths marked Viewed; a file that has changed since is no longer one of them.
   viewed: readonly string[];
+  // Marking a file Viewed folds it; clearing the mark opens it again.
   onViewedChange: (path: string, viewed: boolean) => void;
+  // The paths folded away, kept with the Session; without them the list keeps its own folds.
+  folded?: readonly string[];
+  onOpenChange?: (path: string, open: boolean) => void;
 }
