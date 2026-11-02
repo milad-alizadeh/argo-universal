@@ -92,3 +92,68 @@ it.each([
     ]);
   },
 );
+
+it.each([
+  {
+    form: 'standard',
+    updates: [
+      {
+        sessionUpdate: 'subagent_update',
+        sessionId: childThread,
+        _meta: { claudeCode: { subagentRole: 'Plan' } },
+        state: { state: 'running' },
+      },
+      {
+        sessionUpdate: 'subagent_update',
+        sessionId: childThread,
+        state: { state: 'idle', stopReason: 'end_turn' },
+      },
+    ],
+  },
+  {
+    form: 'draft',
+    updates: [
+      {
+        sessionUpdate: 'subagent_spawned',
+        subagentSessionId: childThread,
+        _meta: { claudeCode: { subagentRole: 'Plan' } },
+      },
+      {
+        sessionUpdate: 'subagent_state_update',
+        subagentSessionId: childThread,
+        state: 'completed',
+      },
+    ],
+  },
+])(
+  'carries explicit role metadata from a $form notification to the Session snapshot',
+  async ({ updates }) => {
+    const host = await startAcpEngine({
+      steps: [],
+      initialize: {
+        protocolVersion: 1,
+        agentCapabilities: { sessionCapabilities: { close: {} } },
+      },
+    });
+
+    const created = await host.caller.session.new(emptySessionInput);
+
+    await requireScriptedProcessAt(host.agent.processes).send(
+      updates.map((update) => ({
+        jsonrpc: '2.0' as const,
+        method: 'session/update',
+        params: { sessionId: 'owned-1', update },
+      })),
+    );
+
+    const snapshot = await waitForAcpSnapshot(
+      host,
+      created.sessionId,
+      (value) => value.subagents.some(({ state }) => state === 'idle'),
+    );
+
+    expect(snapshot.subagents).toEqual([
+      expect.objectContaining({ role: 'Plan', state: 'idle' }),
+    ]);
+  },
+);
