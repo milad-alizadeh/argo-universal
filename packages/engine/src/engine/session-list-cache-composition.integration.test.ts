@@ -21,7 +21,7 @@ function seedCachedSessions(
   insertEndedTurn(database);
   Array.from({ length: 59 }, (_, index): void => {
     const id = `session-${index + 2}`;
-    insertSession(database, { id });
+    insertSession(database, { id, createdAt: 1 });
     insertEndedTurn(database, id);
   });
 }

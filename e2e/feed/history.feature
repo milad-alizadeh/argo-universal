@@ -39,3 +39,16 @@ Feature: Feed history pagination
       | 1     | phone |
       | 2     | wide  |
       | 2     | phone |
+
+  # Wide only until #1861: at phone width the row sometimes slides.
+  Scenario: Keep the row being read still as older history lands
+    Given a wide Frame
+    And Agent 1 supplies a long Feed history
+    And the Feed history refresh can be delayed
+    And a New Session with Agent 1
+    When I send the prompt "Build a long history"
+    And I reopen the stored long Feed
+    Then the Feed opens at its newest history message
+    When I read back with an older history page held
+    And the older history page lands
+    Then the row I was reading stays where it was

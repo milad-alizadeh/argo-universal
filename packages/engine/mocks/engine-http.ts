@@ -9,6 +9,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { type HttpServerOptions } from '../src/engine/http-server';
 import { SessionTokens } from '../src/operations';
 import type { OpenSessionsActorRef } from '../src/sessions';
+import { userTokenHeaders } from './engine-proof';
 
 export let home: string;
 
@@ -41,23 +42,25 @@ export const upgradeStatus = (
     socket.once('error', reject);
   });
 
-// Resolves with the HTTP status of system.info over HTTP.
+// Resolves with the HTTP status of system.info over HTTP, asked as this computer's own tooling asks it.
 export async function systemInfoStatus(
   headers: Record<string, string> = {},
 ): Promise<number> {
-  return new Promise((resolve, reject): void => {
-    const outgoing = request(
-      systemRequestOptions(headers),
-      (response): void => {
-        resolve(response.statusCode ?? 0);
-        response.resume();
-      },
-    );
+  const proof = await userTokenHeaders(home);
+
+  return requestStatus(systemRequestOptions({ ...proof, ...headers }));
+}
+
+const requestStatus = (options: RequestOptions): Promise<number> =>
+  new Promise<number>((resolve, reject): void => {
+    const outgoing = request(options, (response): void => {
+      resolve(response.statusCode ?? 0);
+      response.resume();
+    });
 
     outgoing.once('error', reject);
     outgoing.end();
   });
-}
 
 function systemRequestOptions(headers: Record<string, string>): RequestOptions {
   return {

@@ -35,9 +35,9 @@ function groupByProject(sessions: SessionInfo[]): Map<string, SessionInfo[]> {
   return sessionsByProject;
 }
 
-// Most recently active first, ties by id.
+// Newest created first, ties by id.
 const newestFirst = (a: SessionInfo, b: SessionInfo): number =>
-  b.activityAt - a.activityAt || a.sessionId.localeCompare(b.sessionId);
+  b.createdAt - a.createdAt || a.sessionId.localeCompare(b.sessionId);
 
 function projectSessions(
   sessionsByProject: Map<string, SessionInfo[]>,
@@ -75,7 +75,7 @@ function projectEntries(
   return [heading, ...projectBody(project, projectSessions)];
 }
 
-// One list, or search results, most recently active first, with no Project headings; only listed Projects' Sessions show.
+// One list, or search results, newest created first, with no Project headings; only listed Projects' Sessions show.
 export function flatEntries({
   projects,
   sessions,
@@ -89,7 +89,7 @@ export function flatEntries({
   );
 }
 
-// The Sessions list's rows, in Project order: each Project's heading, then its Sessions, most recently active first, or an empty row.
+// The Sessions list's rows, in Project order: each Project's heading, then its Sessions, newest created first, or an empty row.
 export function listEntries({
   projects,
   sessions,

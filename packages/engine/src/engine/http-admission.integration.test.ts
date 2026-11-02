@@ -43,7 +43,7 @@ it.each(fixtureAgents.map((adapter): string => adapter.agent))(
 
     const response = fetch(`http://127.0.0.1:${port}/trpc/session.prompt`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', origin: 'app://app' },
       body: JSON.stringify({
         sessionId: 'session-1',
         prompt: [{ type: 'text', text: 'Too late' }],

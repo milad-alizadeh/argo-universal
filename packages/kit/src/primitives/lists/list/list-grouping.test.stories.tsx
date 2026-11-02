@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
+import { Profiler, useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { renderCounter } from '#mocks/render-counts';
 import { settleLayout, type LayoutName } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
@@ -184,5 +185,45 @@ export const DataRowsClearInheritedSelection: Story = {
     await expect(canvas.getByText('Pressed: second')).toBeVisible();
     await expect(canvas.getByText(firstSelected)).toBeVisible();
     await expect(canvas.queryByText('Selected: second')).toBeNull();
+  },
+};
+
+const rowTitles = ['First row', 'Second row', 'Third row'];
+
+const drawRowTitle = (title: string): React.JSX.Element => (
+  <ListItem title={title} />
+);
+
+const rowRenders = renderCounter();
+
+// A parent that draws again with the same rows, as a Session page does on each keystroke.
+function ParentDrawingAgain(): React.JSX.Element {
+  const [draws, draw] = useState(0);
+
+  return (
+    <Profiler id={rowRenders.id} onRender={rowRenders.onRender}>
+      <ListItem title={`Drawn ${draws}`} onPress={() => draw(draws + 1)} />
+      <View style={{ height: 300 }}>
+        <List
+          items={rowTitles}
+          keyExtractor={(title) => title}
+          renderItem={drawRowTitle}
+        />
+      </View>
+    </Profiler>
+  );
+}
+
+export const ParentDrawLeavesRowsAlone: Story = {
+  render: () => <ParentDrawingAgain />,
+  play: async ({ canvas, canvasElement }) => {
+    await canvas.findByText(rowTitles[2] ?? '');
+
+    const counts = await rowRenders.during(canvasElement, async () => {
+      (await canvas.findByText('Drawn 0')).click();
+      await canvas.findByText('Drawn 1');
+    });
+
+    await expect(counts.DataListRow).toBeUndefined();
   },
 };

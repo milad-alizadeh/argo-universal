@@ -5,10 +5,7 @@ import {
   type AnyEventObject,
   createActor,
   fromCallback,
-  fromPromise,
   type SnapshotFrom,
-  type PromiseActorLogic,
-  type EventObject,
 } from 'xstate';
 import {
   type CheckRunningInput,
@@ -17,7 +14,9 @@ import {
   serverConnectionMachine,
 } from './server-machine';
 import {
+  createPromiseMock,
   exitReason,
+  type PendingCall,
   spawnedAt,
   startedAddress,
   supervisorExitedEvent,
@@ -26,6 +25,7 @@ import {
 } from './server-machine-data.mocks';
 
 export {
+  type PendingCall,
   countsChangedEvent,
   exitReason,
   quitDoneEvent,
@@ -40,31 +40,16 @@ export {
   watchCountsDouble,
 } from './server-machine-data.mocks';
 
-export interface PendingCall<TInput, TOutput> {
-  input: TInput;
-  resolve: (output: TOutput) => void;
-  reject: (error: Error) => void;
-}
-
 export interface SpawnCall {
   input: SpawnInput;
   live: boolean;
 }
 
-// A promise actor that records each call in `calls()` and settles only when an executor says so.
-const createPromiseMock = <TOutput, TInput>(
-  calls: () => PendingCall<TInput, TOutput>[],
-): PromiseActorLogic<TOutput, TInput, EventObject> =>
-  fromPromise<TOutput, TInput>(
-    ({ input }): Promise<TOutput> =>
-      new Promise<TOutput>((resolve, reject): void => {
-        calls().push({ input, resolve, reject });
-      }),
-  );
-
 export let readAddressCalls: PendingCall<ServerInput, ServerAddress | null>[];
 
 export let checkRunningCalls: PendingCall<CheckRunningInput, boolean>[];
+
+export let readStoredCalls: PendingCall<ServerInput, boolean>[];
 
 export let spawnCalls: SpawnCall[];
 
@@ -89,6 +74,9 @@ export const machine = serverConnectionMachine.provide({
     askQuit: createPromiseMock(() => quitCalls),
     readAddress: createPromiseMock(
       (): PendingCall<ServerInput, ServerAddress | null>[] => readAddressCalls,
+    ),
+    readStored: createPromiseMock(
+      (): PendingCall<ServerInput, boolean>[] => readStoredCalls,
     ),
     checkRunning: createPromiseMock(
       (): PendingCall<CheckRunningInput, boolean>[] => checkRunningCalls,
@@ -163,6 +151,7 @@ beforeEach((): void => {
   vi.useFakeTimers();
   readAddressCalls = [];
   checkRunningCalls = [];
+  readStoredCalls = [];
   spawnCalls = [];
   quitCalls = [];
   badges = [];

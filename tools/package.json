@@ -6,7 +6,7 @@
   "scripts": {
     "check-types": "tsc --noEmit && tsc --noEmit -p perf",
     "test": "vitest run",
-    "perf": "playwright test -c perf/playwright.config.mts",
+    "perf:seed": "node --import tsx perf/seed-run.mts",
     "perf:runtime": "node --import tsx perf/runtime-run.mts"
   },
   "dependencies": {

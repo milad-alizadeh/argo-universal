@@ -32,5 +32,6 @@ export const largeSessions = Array.from(
     sessionId: `large-${index}`,
     title: `Large Session ${index}`,
     activityAt: largeSessionCount - index,
+    createdAt: largeSessionCount - index,
   }),
 );

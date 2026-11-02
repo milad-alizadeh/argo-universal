@@ -1,5 +1,6 @@
 import { supervisorStopGraceMs } from '@repo/cli/supervisor-command';
 import type { ServerAddress } from '@repo/contracts';
+import { readStoredKeepRunning } from '@repo/engine/stored-keep-running';
 import {
   isAlive,
   millisecondsPerSecond,
@@ -26,6 +27,7 @@ import {
 } from './server-process';
 import {
   type CountsReport,
+  type CountsTarget,
   countsReleaseEvent,
   releaseLimitMs,
   watchSessionCounts,
@@ -39,14 +41,29 @@ const stoppedTarget = '#serverConnection.stopped';
 
 const stoppingTarget = '#serverConnection.stopping';
 
-// Where a quit goes once the App has let go of its Server Connection.
-const quitAfterRelease = [
+// Where a quit goes when the Server did not say to keep running: ask about running Sessions, then stop the Supervisor this App started.
+const quitWithoutKeeping = [
   { guard: 'ownsRunningSessions', target: 'confirming' },
   { guard: 'ownsSupervisor', target: stoppingTarget },
   { target: stoppedTarget },
 ] as const;
 
+// Where a quit goes from a Supervisor that has not answered yet, so there are no Sessions to ask about.
+const quitStopping = [
+  { guard: 'ownsSupervisor', target: stoppingTarget },
+  { target: stoppedTarget },
+] as const;
+
+// Where a quit goes once the App has let go of its Server Connection. A Server that gave no answer is not guessed at: the setting stored on disk is read.
+const quitAfterRelease = [
+  { guard: 'keepsRunning', target: stoppedTarget },
+  { guard: 'gaveNoAnswer', target: 'readingStored' },
+  ...quitWithoutKeeping,
+] as const;
+
 type ServerStateConfig = ReturnType<typeof serverSetup.createStateConfig>;
+
+type ReadingStoredState = Required<Pick<ServerStateConfig, 'invoke' | 'on'>>;
 
 type ReadingAddressState = Required<Pick<ServerStateConfig, 'invoke'>>;
 
@@ -60,6 +77,8 @@ type WaitingForSupervisorExitState = Required<
 };
 
 type RunningParameters = { running: boolean };
+
+type KeepRunningParameters = { enabled: boolean };
 
 type ServerLogParameters = { line: string };
 
@@ -77,6 +96,8 @@ interface ServerContext extends ServerInput {
   spawnedAt: number | null;
   failure: string | null;
   running: number;
+  // The Server's own setting as the Connection that reported it heard it, or null when it gave no answer: it outlives this app, so quitting leaves it alone (ADR-0022).
+  keepRunning: boolean | null;
 }
 
 type SupervisorReport =
@@ -163,6 +184,10 @@ const serverSetup = setup({
             input.parent.send({ type: 'server.exited', reason }),
         }),
     ),
+    // The setting stored on disk, read-only; a missing, locked or damaged database rejects.
+    readStored: fromPromise<boolean, ServerInput>(
+      async ({ input }): Promise<boolean> => readStoredKeepRunning(input.home),
+    ),
     checkRunning: fromPromise<boolean, CheckRunningInput>(
       async ({ input }): Promise<boolean> => isAlive(input.pid),
     ),
@@ -191,6 +216,10 @@ const serverSetup = setup({
     namesOwnedSupervisor: ({ context }, params: AddressParameters): boolean =>
       params.address !== null && addressMatchesOwner(context, params.address),
     stillRunning: (_, params: RunningParameters): boolean => params.running,
+    keepsRunning: ({ context }): boolean => context.keepRunning === true,
+    gaveNoAnswer: ({ context }): boolean => context.keepRunning === null,
+    storedKeepsRunning: (_, params: KeepRunningParameters): boolean =>
+      params.enabled,
     ownsSupervisor: ({ context }): boolean => context.ownedPid !== null,
     ownsRunningSessions: ({ context }): boolean =>
       context.ownedPid !== null && context.running > 0,
@@ -239,6 +268,39 @@ const readingAddress = (noneTarget: string): ReadingAddressState =>
       onDone: [...readAddressTemplate.invoke.onDone, { target: noneTarget }],
     },
   });
+
+const readingStoredTemplate = serverSetup.createStateConfig({
+  invoke: {
+    id: 'readStored',
+    src: 'readStored',
+    input: serverInput,
+    onDone: [
+      {
+        guard: {
+          type: 'storedKeepsRunning',
+          params: ({ event }): KeepRunningParameters => ({
+            enabled: event.output,
+          }),
+        },
+        target: stoppedTarget,
+      },
+    ],
+  },
+  // Already quitting; a second quit waits for the same answer.
+  on: { 'app.quit': { actions: [] } },
+});
+
+// Reads the stored setting once on a quit that has no live answer: a stored true leaves the Supervisor running, and anything else, a failed read included, goes `otherwise`.
+const readingStored = (
+  otherwise: typeof quitWithoutKeeping | typeof quitStopping,
+): ReadingStoredState => ({
+  ...readingStoredTemplate,
+  invoke: {
+    ...readingStoredTemplate.invoke,
+    onDone: [...readingStoredTemplate.invoke.onDone, ...otherwise],
+    onError: otherwise,
+  },
+});
 
 const checkingTemplate = serverSetup.createStateConfig({
   invoke: {
@@ -324,6 +386,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
     spawnedAt: null,
     failure: null,
     running: 0,
+    keepRunning: null,
   }),
   initial: 'locating',
   on: {
@@ -348,6 +411,13 @@ export const serverConnectionMachine = serverSetup.createMachine({
       },
       initial: 'spawning',
       on: {
+        // It has had no Connection to ask, so the stored setting decides.
+        'app.quit': [
+          {
+            guard: 'ownsSupervisor',
+            target: '#serverConnection.readingStoredOnQuit',
+          },
+        ],
         'server.spawned': {
           target: '.answering',
           actions: assign({
@@ -416,6 +486,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
         },
       },
     },
+    // Quit while a Supervisor this App started has not answered: the setting stored on disk decides whether it stays.
+    readingStoredOnQuit: readingStored(quitStopping),
     // Its Supervisor exited while starting; another one may have won the race to start.
     rechecking: readingAddress(failedConnectionTarget),
     // Stops the Supervisor that did not answer, so a Retry begins from nothing.
@@ -425,12 +497,14 @@ export const serverConnectionMachine = serverSetup.createMachine({
       invoke: {
         id: countsActorId,
         src: 'watchCounts',
-        input: ({ context }): Pick<ServerAddress, 'port'> => {
+        input: ({ context }): CountsTarget => {
           if (!context.address) throw new Error('The Server has no address');
 
-          return { port: context.address.port };
+          return { port: context.address.port, home: context.home };
         },
       },
+      // A remembered answer never keeps a Server alive: it is gone with the Connection that gave it.
+      exit: assign({ keepRunning: null }),
       initial: 'active',
       on: {
         // Try again in the App when the Server has gone: make sure a Supervisor runs again, exactly as at launch. One still listening is reused, never replaced.
@@ -445,6 +519,11 @@ export const serverConnectionMachine = serverSetup.createMachine({
               });
             }),
           ],
+        },
+        'keepRunning.changed': {
+          actions: assign({
+            keepRunning: ({ event }): boolean => event.enabled,
+          }),
         },
         'counts.disconnected': {
           actions: [
@@ -461,7 +540,11 @@ export const serverConnectionMachine = serverSetup.createMachine({
         },
         // Lets go of the Server Connection first; `watchSessionCounts` says why that has to happen before the App quits.
         releasing: {
-          entry: sendTo(countsActorId, { type: countsReleaseEvent }),
+          // The answer to keep running comes from this release, not from the one heard on connecting.
+          entry: [
+            assign({ keepRunning: null }),
+            sendTo(countsActorId, { type: countsReleaseEvent }),
+          ],
           on: {
             'counts.released': quitAfterRelease,
             // The App is on its way out, so a disconnect no longer clears the badge or the Session count the question needs.
@@ -472,6 +555,8 @@ export const serverConnectionMachine = serverSetup.createMachine({
           // A Server that never answers may not hold the App open.
           after: { releaseLimit: quitAfterRelease },
         },
+        // No answer came from the Server, so the setting it stored is the owner's last recorded one.
+        readingStored: readingStored(quitWithoutKeeping),
         confirming: {
           invoke: {
             id: 'askQuit',

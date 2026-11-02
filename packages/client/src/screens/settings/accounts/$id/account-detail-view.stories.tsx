@@ -12,7 +12,6 @@ const meta = {
   component: AccountDetailView,
   argTypes: {
     title: { control: 'text' },
-    caption: { control: 'text' },
     account: { control: false },
   },
   parameters: { screenPreview: true },

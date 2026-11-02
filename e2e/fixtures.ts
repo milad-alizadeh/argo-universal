@@ -6,6 +6,7 @@ import type { GroupRelease } from '@repo/process';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
 import { useApp } from './fixture-app';
+import { SecondApp } from './second-app';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -53,7 +54,12 @@ function prepareTest(tags: string[]): void {
 }
 
 export const test = base.extend<
-  AppOptions & ServerOptions & { app: App; server: { httpUrl: string } }
+  AppOptions &
+    ServerOptions & {
+      app: App;
+      server: { httpUrl: string };
+      secondApp: SecondApp;
+    }
 >({
   appTarget: ['web', { option: true }],
   mockAgents: [{}, { option: true }],
@@ -73,6 +79,16 @@ export const test = base.extend<
       use,
       testInfo,
     });
+  },
+  // A second App on this computer, paired by the scenario that asks for it; whatever it opened is closed with the test.
+  secondApp: async ({ app }, use): Promise<void> => {
+    const secondApp = new SecondApp(app.httpUrl);
+
+    try {
+      await use(secondApp);
+    } finally {
+      secondApp.close();
+    }
   },
   page: async ({ app }, use): Promise<void> => {
     await use(app.page);

@@ -22,7 +22,6 @@ import { SlotPreview } from './slot-preview';
 
 export interface SlotDetailViewProps {
   settings: SlotDetail;
-  caption?: string;
   plugins: SlotPluginsLoad;
   // The Plugin that writes the Slot's Single-owner Slot, or null while it is Argo's.
   owner: SlotOwner;
@@ -44,11 +43,7 @@ export function SlotDetailView(props: SlotDetailViewProps): React.JSX.Element {
   useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
 
   return (
-    <Screen
-      title={props.settings.title}
-      caption={props.caption}
-      onBack={props.onBack}
-    >
+    <Screen title={props.settings.title} onBack={props.onBack}>
       {body(props)}
     </Screen>
   );

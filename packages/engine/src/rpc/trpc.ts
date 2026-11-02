@@ -1,5 +1,5 @@
 import { SessionOpenFailure } from '@repo/contracts';
-import { type AnyTRPCRouter, initTRPC } from '@trpc/server';
+import { type AnyTRPCRouter, initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { RpcContext } from './connection';
 
@@ -21,7 +21,37 @@ export const router = t.router;
 
 export const mergeRouters = t.mergeRouters;
 
-export const publicProcedure = t.procedure;
+/*
+ * Every procedure of every router, behind the one question the handshake answers: which Device is this (ADR-0045)?
+ * "Public" means any Device this Server trusts, the Server Device included, as against `serverDeviceProcedure` below, which narrows it to the Server Device alone. A Connection that proved nothing reaches none of them, whichever router it asks for.
+ */
+export const publicProcedure = t.procedure.use(async ({ ctx, next }) => {
+  const identity = ctx.connection.identity;
+
+  if (!identity)
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'This Connection has not proved which Device it is',
+    });
+
+  return next({ ctx: { identity } });
+});
+
+/*
+ * The actions that are the Server Device's alone (ADR-0022, ADR-0045): pairing a Device, unpairing another one, the Local network access switch, keeping the Server running after the desktop app quits, and the Devices list, which a Paired Device never sees.
+ * The Server decides this itself, from the identity the handshake proved rather than from the address a Connection came from, because hiding a row in the App is not the check. The refusal is a `FORBIDDEN` the App draws, the same shape as every other refusal it renders.
+ */
+export const serverDeviceProcedure = publicProcedure.use(
+  async ({ ctx, next }) => {
+    if (!ctx.identity.serverDevice)
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Only the Server Device may do this',
+      });
+
+    return next({ ctx: { identity: ctx.identity } });
+  },
+);
 
 // A module's router, built from the dependencies it names; its type is the build's.
 export const routerFactory = <Deps, Built extends AnyTRPCRouter>(

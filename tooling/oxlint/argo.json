@@ -1109,11 +1109,13 @@
                   "!@repo/mocks",
                   "!@repo/mocks/**",
                   "!@repo/engine/server-runtime",
+                  "!@repo/engine/mocks/app-socket",
+                  "!@repo/engine/mocks/engine-channel",
                   "!@repo/browser-suite-lock",
                   "!@repo/cli/supervisor-command",
                   "!@repo/process"
                 ],
-                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), reads server.json through the Engine server-runtime subpath, starts and stops processes through @repo/process with the CLI's Supervisor command, and queues through the browser-suite lock."
+                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), reads server.json through the Engine server-runtime subpath, plays the owner and a second App through the Engine's channel mocks, starts and stops processes through @repo/process with the CLI's Supervisor command, and queues through the browser-suite lock."
               }
             ]
           }
@@ -2360,13 +2362,14 @@
                   "!@repo/contracts",
                   "!@repo/contracts/**",
                   "!@repo/engine/server-runtime",
+                  "!@repo/engine/stored-keep-running",
                   "!@repo/engine/router",
                   "!@repo/machine-log",
                   "!@repo/process",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts, machine-log, process, the CLI's Supervisor command and the Node-only Engine server-runtime subpath from the workspace."
+                "message": "desktop imports only contracts, machine-log, process, the CLI's Supervisor command and the Node-only Engine server-runtime and stored-keep-running subpaths from the workspace."
               }
             ]
           }

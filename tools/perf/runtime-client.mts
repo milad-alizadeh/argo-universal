@@ -33,12 +33,24 @@ function controlLink(
   });
 }
 
+/*
+ * The harness is Node, so no browser writes this Connection an Origin: it shows the same token its HTTP half does.
+ * Without it the upgrade still succeeds and every subscription on it is refused, which the harness reads as a failed run (#1696).
+ */
+const subscriptionSocket = (
+  target: RuntimeTarget,
+): ReturnType<typeof createWSClient> =>
+  createWSClient({
+    url: socketUrl(target.httpUrl),
+    connectionParams: () => ({ token: target.token }),
+  });
+
 // The authenticated CLI control boundary and the App's public Feed subscription.
 export function runtimeClient(
   target: RuntimeTarget,
   signal: AbortSignal,
 ): RuntimeConnection {
-  const socket = createWSClient({ url: socketUrl(target.httpUrl) });
+  const socket = subscriptionSocket(target);
 
   const client = subscriptionClient(target, signal, socket);
 

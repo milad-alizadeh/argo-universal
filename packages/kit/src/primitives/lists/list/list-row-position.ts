@@ -1,6 +1,9 @@
 import { listPosition, type ListPosition } from '../../../list-context';
 import type { ListProps } from './list-props';
 
+// What a row's place in its section is read from.
+type RowGrouping<Item> = Pick<ListProps<Item>, 'items' | 'getSectionKey'>;
+
 function neighborSection<Item>(
   item: Item | undefined,
   getKey: (item: Item) => string | undefined,
@@ -9,7 +12,7 @@ function neighborSection<Item>(
 }
 
 function differentSection<Item>(
-  props: ListProps<Item>,
+  props: RowGrouping<Item>,
   index: number,
   neighbor: number,
 ): boolean {
@@ -23,11 +26,11 @@ function differentSection<Item>(
   );
 }
 
-function startsSection<Item>(props: ListProps<Item>, index: number): boolean {
+function startsSection<Item>(props: RowGrouping<Item>, index: number): boolean {
   return index === 0 || differentSection(props, index, index - 1);
 }
 
-function endsSection<Item>(props: ListProps<Item>, index: number): boolean {
+function endsSection<Item>(props: RowGrouping<Item>, index: number): boolean {
   const { items = [] } = props;
 
   return (
@@ -36,7 +39,7 @@ function endsSection<Item>(props: ListProps<Item>, index: number): boolean {
 }
 
 export function dataRowPosition<Item>(
-  props: ListProps<Item>,
+  props: RowGrouping<Item>,
   index: number,
 ): ListPosition {
   return listPosition(startsSection(props, index), endsSection(props, index));

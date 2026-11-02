@@ -1,10 +1,13 @@
 import { createAgentsRouter } from '../agents';
 import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
+import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
+import { createNetworkRouter } from '../network-access';
 import { createNotificationsRouter } from '../notifications';
 import { createOperationProcedures } from '../operations';
+import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createShellRouter, Sessions } from '../sessions';
@@ -19,8 +22,11 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     plugins: createPluginsRouter(deps.plugins),
     agents: createAgentsRouter(deps),
     system: createSystemRouter(deps),
+    devices: createDevicesRouter(deps),
     feed: createFeedRouter(deps),
     notifications: createNotificationsRouter(deps),
+    network: createNetworkRouter(deps),
+    pairing: createPairingRouter(deps),
     navigation: createAppNavigationRouter(deps),
   }),
 );

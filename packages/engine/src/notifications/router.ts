@@ -4,15 +4,16 @@ import {
   NotificationStreamEvent,
   NotificationSubscription,
 } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
+  liveConnection,
   mergeRouters,
   publicProcedure,
   router,
   routerFactory,
   zAsyncIterable,
   type RpcConnection,
+  type RpcContext,
 } from '../rpc';
 import type { Notifications } from './notifications';
 
@@ -20,17 +21,8 @@ export interface NotificationsDeps {
   notifications: Notifications;
 }
 
-function requireConnection(
-  connection: RpcConnection | undefined,
-): RpcConnection {
-  if (!connection || connection.signal.aborted)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'Notifications require a live App Connection',
-    });
-
-  return connection;
-}
+const liveNotifications = (ctx: RpcContext): RpcConnection =>
+  liveConnection(ctx.connection, 'Notifications require a live App Connection');
 
 const streamRouter = routerFactory((deps: NotificationsDeps) =>
   router({
@@ -38,7 +30,7 @@ const streamRouter = routerFactory((deps: NotificationsDeps) =>
       .input(NotificationSubscription)
       .output(zAsyncIterable({ yield: NotificationStreamEvent }))
       .subscription(async function* ({ input, ctx, signal }) {
-        const connection = requireConnection(ctx.connection);
+        const connection = liveNotifications(ctx);
         yield* deps.notifications.events(
           connection,
           input.deliver,
@@ -54,10 +46,7 @@ const attentionRouter = routerFactory((deps: NotificationsDeps) =>
       .input(NotificationAttention)
       .output(z.boolean())
       .mutation(({ input, ctx }) =>
-        deps.notifications.report(
-          requireConnection(ctx.connection),
-          input.sessionId,
-        ),
+        deps.notifications.report(liveNotifications(ctx), input.sessionId),
       ),
   }),
 );
@@ -68,10 +57,7 @@ const acknowledgementRouter = routerFactory((deps: NotificationsDeps) =>
       .input(NotificationAcknowledgement)
       .output(z.boolean())
       .mutation(({ input, ctx }) =>
-        deps.notifications.acknowledge(
-          requireConnection(ctx.connection),
-          input.id,
-        ),
+        deps.notifications.acknowledge(liveNotifications(ctx), input.id),
       ),
   }),
 );

@@ -30,9 +30,12 @@
     "#schema-projects": "./src/schema/projects.ts",
     "#schema-registry-cache": "./src/schema/registry-cache.ts",
     "#schema-server-identity": "./src/schema/server-identity.ts",
+    "#schema-devices": "./src/schema/devices.ts",
+    "#schema-server-settings": "./src/schema/server-settings.ts",
     "#schema-sessions": "./src/schema/sessions.ts",
     "#schema-shells": "./src/schema/shells.ts",
     "#schema-timestamp": "./src/schema/timestamp.ts",
-    "#schema-agent-access": "./src/schema/agent-access.ts"
+    "#schema-agent-access": "./src/schema/agent-access.ts",
+    "#schema-local-network-access": "./src/schema/local-network-access.ts"
   }
 }

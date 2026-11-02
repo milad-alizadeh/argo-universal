@@ -8,7 +8,6 @@ const meta = {
   title: 'Screens/Settings/Plugins/Workbench cards',
   component: SlotDetailView,
   argTypes: {
-    caption: { control: 'text' },
     plugins: { control: false },
     settings: { control: false },
     owner: { control: false },

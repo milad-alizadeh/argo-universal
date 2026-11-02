@@ -1,4 +1,3 @@
-import { onlineManager } from '@tanstack/react-query';
 import type { TRPCConnectionState } from '@trpc/client/unstable-internals';
 import type { Unsubscribable } from '@trpc/server/observable';
 
@@ -6,7 +5,9 @@ export type ConnectionState =
   | 'connecting'
   | 'open'
   | 'reconnecting'
-  | 'offline';
+  | 'offline'
+  // The Server answered and no longer knows this Device: it was unpaired there. Nothing reconnects it but pairing again.
+  | 'not-allowed';
 
 // Reconnecting turns to offline after this long without the WebSocket.
 export const offlineDelayMs = 10_000;
@@ -37,11 +38,13 @@ export interface Connection {
   foreground: () => void;
   // Try again: while offline, shows Reconnecting and lets a waiting attempt go at once.
   retry: () => void;
+  // The Server refused this Device's key: it stops trying, since another attempt would be refused the same way.
+  refuse: () => void;
   stop: () => void;
 }
 
 interface WaitingAttempt {
-  timer: ReturnType<typeof setTimeout>;
+  timer: ReturnType<typeof setTimeout> | undefined;
   allow: () => void;
   refuse: (cause: Error) => void;
 }
@@ -56,8 +59,11 @@ interface ConnectionLink {
   stopWatching: () => void;
 }
 
-const isDown = (state: ConnectionState): boolean =>
-  state === 'reconnecting' || state === 'offline';
+const isRefused = (state: ConnectionState): boolean => state === 'not-allowed';
+
+// Down to the cache as well as to the owner: a Connection reconnecting has nowhere to send a query.
+export const isDown = (state: ConnectionState): boolean =>
+  state === 'reconnecting' || state === 'offline' || isRefused(state);
 
 function setState(link: ConnectionLink, state: ConnectionState): void {
   clearTimeout(link.offlineTimer);
@@ -66,12 +72,10 @@ function setState(link: ConnectionLink, state: ConnectionState): void {
       ? setTimeout(() => setState(link, 'offline'), offlineDelayMs)
       : undefined;
   link.state = state;
-  onlineManager.setOnline(!isDown(state));
 
   for (const listener of link.listeners) listener();
 }
 
-// Queries refetch through onlineManager when it comes back online.
 function opened(link: ConnectionLink): void {
   link.attempts = 0;
 
@@ -105,7 +109,11 @@ function nextAttempt(link: ConnectionLink): Promise<void> {
   allowNow(link);
 
   return new Promise((allow, refuse) => {
-    const timer = setTimeout(() => allowNow(link), delay);
+    // A refused Device waits for good: only closing the Connection ends the wait.
+    const timer = isRefused(link.state)
+      ? undefined
+      : setTimeout(() => allowNow(link), delay);
+
     link.waiting = { timer, allow, refuse };
   });
 }
@@ -139,7 +147,6 @@ function stop(link: ConnectionLink): void {
   }
 
   link.listeners.clear();
-  onlineManager.setOnline(true);
 }
 
 const newLink = (): ConnectionLink => ({
@@ -158,7 +165,11 @@ function subscribe(link: ConnectionLink, listener: () => void): () => void {
 }
 
 function foreground(link: ConnectionLink): void {
-  if (isDown(link.state)) allowNow(link);
+  if (isDown(link.state) && !isRefused(link.state)) allowNow(link);
+}
+
+function refuse(link: ConnectionLink): void {
+  if (!isRefused(link.state)) setState(link, 'not-allowed');
 }
 
 function retry(link: ConnectionLink): void {
@@ -178,6 +189,7 @@ export function createConnection(): Connection {
     watch: (connectionState) => watch(link, connectionState),
     foreground: () => foreground(link),
     retry: () => retry(link),
+    refuse: () => refuse(link),
     stop: () => stop(link),
   };
 }

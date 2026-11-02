@@ -43,7 +43,7 @@ export function ListGrouping<Item>({
   list?: ListProps<Item>;
 }): ReactElement {
   const [ends] = useState(() => new ListGroupEnds());
-  const layout = useMemo(() => rowLayout(list), [list]);
+  const layout = useRowLayout(list);
 
   return (
     <RowLayoutContext value={layout}>
@@ -52,13 +52,23 @@ export function ListGrouping<Item>({
   );
 }
 
-function rowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
-  if (!list) return emptyLayout;
+// The list's props are a new object each time its parent draws; a row's layout changes only with what it reads from them, or every row draws again with the parent.
+function useRowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
+  const listed = list !== undefined;
 
-  return {
-    cell: list.renderItem !== childRenderer,
-    positionAt: (index) => dataRowPosition(list, index),
-  };
+  const { items, getSectionKey, renderItem }: Partial<ListProps<Item>> =
+    list ?? {};
+
+  const cell = renderItem !== childRenderer;
+
+  return useMemo(() => {
+    if (!listed) return emptyLayout;
+
+    return {
+      cell,
+      positionAt: (index) => dataRowPosition({ items, getSectionKey }, index),
+    };
+  }, [listed, cell, items, getSectionKey]);
 }
 
 // Data rows start their own context. Fixed children and standalone Sections adapt it below.

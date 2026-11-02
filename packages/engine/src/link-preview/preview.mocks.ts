@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { serverDeviceContext } from '#mocks/rpc-context';
 import { createLinkPreviewRouter } from './router';
 import type { PreviewSources } from './sources';
 
@@ -35,5 +36,7 @@ export class PreviewFixture {
       bytes: image.length,
     }),
   );
-  public readonly caller = createLinkPreviewRouter(this).createCaller({});
+  public readonly caller = createLinkPreviewRouter(this).createCaller(
+    serverDeviceContext(),
+  );
 }

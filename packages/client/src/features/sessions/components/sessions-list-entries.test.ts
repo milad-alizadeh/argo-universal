@@ -18,18 +18,18 @@ const otherProject = { ...exampleProject, id: 'project-2', name: 'Other' };
 
 const projects = [exampleProject, otherProject];
 
-const older = { ...sessionRows.running, activityAt: 1000 };
+const older = { ...sessionRows.running, createdAt: 1000 };
 
-const newer = { ...sessionRows.needsInput, activityAt: 2000 };
+const newer = { ...sessionRows.needsInput, createdAt: 2000 };
 
 // Ties with `newer`, and its id sorts first.
-const tiedEarlierId = { ...sessionRows.failed, activityAt: 2000 };
+const tiedEarlierId = { ...sessionRows.failed, createdAt: 2000 };
 
 const entryIds = (input: ListEntriesInput): string[] =>
   listEntries(input).map((entry) => entry.id);
 
 describe('listEntries', () => {
-  it("lists each Project's Sessions under its heading, newest activity first, ties by id", () => {
+  it("lists each Project's Sessions under its heading, newest created first, ties by id", () => {
     expect(
       entryIds({
         projects,
@@ -82,7 +82,7 @@ describe('listEntries', () => {
 });
 
 describe('flatEntries', () => {
-  it('lists Sessions across Projects with no headings, newest activity first, ties by id', () => {
+  it('lists Sessions across Projects with no headings, newest created first, ties by id', () => {
     expect(
       flatEntries({
         projects,

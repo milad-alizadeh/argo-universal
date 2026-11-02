@@ -8,8 +8,8 @@ import {
 import { elicitationChoices } from './elicitation-property';
 import type { ElicitationValue } from './elicitation-schema';
 
-// A short known list opens in place; a long one gets a page with a search field.
-const menuLimit = 6;
+// A short known list shows all its options in place; a long one gets a page with a search field.
+const inlineLimit = 6;
 
 type ChoiceProps = Omit<
   ComponentProps<typeof FieldGroup.Picker>,
@@ -23,12 +23,12 @@ function choiceProps(props: ElicitationFieldProps): ChoiceProps {
     subtitle: choice.description,
   }));
 
-  const long = options.length > menuLimit;
+  const long = options.length > inlineLimit;
 
   return {
     title: rowTitle(props),
     options,
-    presentation: long ? 'page' : 'menu',
+    presentation: long ? 'page' : 'inline',
     searchable: long,
   };
 }
@@ -39,11 +39,16 @@ const unanswered = '\u0000unanswered';
 export const isChoice = (props: ElicitationFieldProps['property']): boolean =>
   elicitationChoices(props) !== undefined;
 
-export function ChoiceRow(props: ElicitationFieldProps): ReactElement {
+/*
+ * The choice as a Picker. Called, not rendered: a FieldGroup Section opens an inline Picker into one row per option by
+ * its element type, so a component around it would hide the options.
+ */
+export function choicePicker(props: ElicitationFieldProps): ReactElement {
   return props.property.type === 'array' ? (
-    <MultipleRow {...props} />
+    multiplePicker(props)
   ) : (
     <FieldGroup.Picker
+      key={props.name}
       {...choiceProps(props)}
       value={selectedValues(props.value)[0] ?? unanswered}
       onValueChange={props.onChange}
@@ -51,11 +56,12 @@ export function ChoiceRow(props: ElicitationFieldProps): ReactElement {
   );
 }
 
-function MultipleRow(props: ElicitationFieldProps): ReactElement {
+function multiplePicker(props: ElicitationFieldProps): ReactElement {
   const selected = selectedValues(props.value);
 
   return (
     <FieldGroup.Picker
+      key={props.name}
       {...choiceProps(props)}
       multiple
       value={selected}

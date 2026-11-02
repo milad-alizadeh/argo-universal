@@ -3,7 +3,7 @@ import { Operations, type OperationsDeps } from './operations';
 import { createOperationsRouter } from './router';
 import { generatedOperations } from './router.gen';
 
-export { ensureControlToken } from './tokens';
+export { ensureControlToken, tokensMatch } from './tokens';
 
 export type { OperationsDeps } from './operations';
 

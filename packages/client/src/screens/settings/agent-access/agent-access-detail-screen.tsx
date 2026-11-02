@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { AgentAccessDetailView } from './agent-access-detail-view';
 import { useAgentAccess } from './use-agent-access';
@@ -10,7 +9,6 @@ export function AgentAccessDetailScreen(): React.JSX.Element {
   return (
     <AgentAccessDetailView
       {...useAgentAccess()}
-      caption={useServerPageCaption()}
       onBack={() => navigate('/settings')}
     />
   );

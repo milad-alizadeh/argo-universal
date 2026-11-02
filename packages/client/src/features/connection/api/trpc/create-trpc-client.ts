@@ -20,56 +20,80 @@ export function serverHttpUrl(serverUrl: string, path: string): string {
   return url.toString();
 }
 
+// How tRPC reaches a paired Server: a WebSocket and a fetch that both run inside the encrypted channel, not on an address (ADR-0045).
+export interface ChannelTransport {
+  WebSocket: typeof WebSocket;
+  fetch: typeof fetch;
+}
+
+// The address tRPC writes into a request that goes over a channel. The socket is already open to the one Server, so this names nothing.
+export const channelServerUrl = 'wss://argo.channel/';
+
+const appSurface = (): PluginSurface => currentPluginSurface(pluginPlatform());
+
+interface ClientOptions {
+  surface?: () => PluginSurface;
+  channel?: ChannelTransport;
+}
+
+// `beforeConnect` waits out the retry delay, so foreground and Try again can cut it short.
+const urlAfter =
+  (serverUrl: string, beforeConnect: () => Promise<void>) =>
+  async (): Promise<string> => {
+    await beforeConnect();
+
+    return serverUrl;
+  };
+
 function createWebSocketClient(
   serverUrl: string,
   beforeConnect: () => Promise<void>,
-  surface: () => PluginSurface,
+  { surface = appSurface, channel }: ClientOptions,
 ): ServerClient['webSocketClient'] {
   return trpc.createWSClient({
-    // `beforeConnect` waits out the retry delay, so foreground and Try again can cut it short.
-    url: async () => {
-      await beforeConnect();
-
-      return serverUrl;
-    },
+    ...(channel && { WebSocket: channel.WebSocket }),
+    url: urlAfter(serverUrl, beforeConnect),
     connectionParams: () => ({ pluginSurface: JSON.stringify(surface()) }),
     retryDelayMs: () => 0,
     keepAlive: { enabled: true, intervalMs: 5000, pongTimeoutMs: 1000 },
   });
 }
 
+const httpLink = (
+  serverUrl: string,
+  channel?: ChannelTransport,
+): ReturnType<typeof trpc.httpLink> =>
+  trpc.httpLink({
+    url: serverHttpUrl(serverUrl, '/trpc'),
+    ...(channel && { fetch: channel.fetch }),
+  });
+
 function createServerClient(
   serverUrl: string,
   webSocketClient: ServerClient['webSocketClient'],
+  channel?: ChannelTransport,
 ): ServerClient['client'] {
   return trpc.createTRPCClient<AppRouter>({
     links: [
       trpc.splitLink({
         condition: (operation) => trpc.isNonJsonSerializable(operation.input),
-        true: trpc.httpLink({ url: serverHttpUrl(serverUrl, '/trpc') }),
+        true: httpLink(serverUrl, channel),
         false: trpc.wsLink<AppRouter>({ client: webSocketClient }),
       }),
     ],
   });
 }
 
-const appSurface = (): PluginSurface => currentPluginSurface(pluginPlatform());
-
 // Every tRPC call goes over one WebSocket to the Server, except a call with a file, which goes over HTTP (ADR 0002).
 export function createTRPCClient(
   serverUrl: string,
   beforeConnect: () => Promise<void> = async (): Promise<void> => {},
-  surface: () => PluginSurface = appSurface,
+  options: ClientOptions = {},
 ): ServerClient {
-  const webSocketClient = createWebSocketClient(
-    serverUrl,
-    beforeConnect,
-    surface,
-  );
+  const ws = createWebSocketClient(serverUrl, beforeConnect, options);
+  const client = createServerClient(serverUrl, ws, options.channel);
 
-  const client = createServerClient(serverUrl, webSocketClient);
-
-  return { client, webSocketClient, close: () => webSocketClient.close() };
+  return { client, webSocketClient: ws, close: () => ws.close() };
 }
 
 export type ClientError = trpc.TRPCClientErrorLike<AppRouter>;

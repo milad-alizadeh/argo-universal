@@ -15,11 +15,15 @@ import { SessionRowUpdateJob } from '../sessions';
 
 const writerWriteEvent = 'writer.write';
 
-it('pages current queued activity before the list publication delay', async (): Promise<void> => {
+it('pages current queued activity in creation order before the list publication delay', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   insertEndedTurn(database);
   onTestFinished(remove);
-  insertSession(database, { id: 'session-2', activityAt: 10 });
+  insertSession(database, {
+    id: 'session-2',
+    activityAt: 10,
+    createdAt: 9_999_999_999_999,
+  });
   insertEndedTurn(database, 'session-2');
 
   const {
@@ -57,8 +61,8 @@ it('pages current queued activity before the list publication delay', async (): 
         (row): (string | number)[] => [row.sessionId, row.activityAt],
       ),
     ).toEqual([
-      ['session-1', 20],
       ['session-2', 10],
+      ['session-1', 20],
     ]);
     expect(
       database.select().from(session).where(eq(session.id, 'session-1')).get()
@@ -76,7 +80,7 @@ it('pages current queued activity before the list publication delay', async (): 
     expect(counted.metrics.sessionReads).toBe(1);
     expect(
       (await caller.session.list({ archived: false })).sessions[0],
-    ).toMatchObject({ sessionId: 'session-1', activityAt: 20 });
+    ).toMatchObject({ sessionId: 'session-2', activityAt: 10 });
     controller.abort();
     await finishSubscription(updates);
   } finally {
