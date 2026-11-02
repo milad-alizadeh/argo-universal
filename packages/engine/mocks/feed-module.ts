@@ -95,6 +95,7 @@ const feedModuleSecrets = {
   serverPublicKey: 'feed-module-test-public-key',
   // The Feed module draws no pair sheet; every router shares one dependency bag.
   discoveryName: 'Feed module test Server',
+  addresses: (): string[] => [],
   tickets: new PairingTickets(),
   registrations: new PairingRegistrations(),
   channels: new OpenChannels(),

@@ -17,6 +17,15 @@ it('carries the key, the name and the Ticket a Device needs to find and prove th
   expect(Date.parse(minted.expiresAt)).toBeGreaterThan(Date.now());
 });
 
+it('says where the computer answers, so a Device that cannot find it can be told the address to type', async (): Promise<void> => {
+  const { caller } = await startEngineTestHost();
+
+  const { addresses } = await caller.pairing.mint();
+
+  for (const address of addresses)
+    expect(address).toMatch(/^\d{1,3}(\.\d{1,3}){3}:\d+$/);
+});
+
 it('pairs a Device with a Ticket the sheet minted, and no Device without one', async (): Promise<void> => {
   const host = await startEngineTestHost();
 

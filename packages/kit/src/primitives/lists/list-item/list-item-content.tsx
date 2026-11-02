@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
+import { LineEnd } from './list-item-line-end';
 import { CompactMeta, Meta } from './list-item-meta';
 import {
   hasAccessories,
@@ -15,7 +16,11 @@ import { TreeLane } from './list-item-tree';
 
 type SubtitleProps = Pick<
   ListItemProps,
-  'subtitleTone' | 'subtitleDimmed' | 'subtitleLines' | 'subtitleIcon'
+  | 'subtitleTone'
+  | 'subtitleDimmed'
+  | 'subtitleLines'
+  | 'subtitleIcon'
+  | 'subtitleIconTone'
 > & {
   text?: string;
   multiline?: boolean;
@@ -31,7 +36,7 @@ function Subtitle(props: SubtitleProps): ReactNode {
 
   return (
     <View className="min-w-0 flex-row items-center gap-1">
-      <Icon name={props.subtitleIcon} tone={props.subtitleTone} />
+      <Icon name={props.subtitleIcon} tone={props.subtitleIconTone} />
       <View className="min-w-0 flex-1">
         <SubtitleText {...props} />
       </View>
@@ -79,17 +84,8 @@ function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
 }
 
 // A regular sidebar row ends its title line with its trailing item, 8 after the title, so the lines below run the full width.
-function TitleLine(props: ListItemProps): ReactElement {
-  if (!trailsTitle(props) || props.trailing === undefined)
-    return <Title {...props} />;
-
-  return (
-    <View className="min-w-0 flex-row items-center gap-2">
-      <Title {...props} inLine />
-      <View className="shrink-0 flex-row items-center">{props.trailing}</View>
-    </View>
-  );
-}
+const titleLineEnd = (props: ListItemProps): ReactNode =>
+  props.titleEnd ?? (trailsTitle(props) ? props.trailing : undefined);
 
 // Trailing accessories keep the trailing lane, so a row with them never moves its trailing item onto the title line.
 export const trailsTitle = (
@@ -102,22 +98,37 @@ export const trailsTitle = (
 const subtitleWraps = (props: PlacedContentProps): boolean =>
   [props.description, props.multiline, props.subtitleWraps].some(Boolean);
 
-const subtitleOf = (props: PlacedContentProps): SubtitleProps => ({
-  text: props.subtitle,
-  multiline: subtitleWraps(props),
-  subtitleLines: props.subtitleLines,
-  subtitleTone: props.subtitleTone ?? 'muted',
-  subtitleDimmed: props.subtitleDimmed,
-  subtitleIcon: props.subtitleIcon,
-});
+const subtitleOf = (props: PlacedContentProps): SubtitleProps => {
+  const subtitleTone = props.subtitleTone ?? 'muted';
+
+  return {
+    text: props.subtitle,
+    multiline: subtitleWraps(props),
+    subtitleLines: props.subtitleLines,
+    subtitleTone,
+    subtitleDimmed: props.subtitleDimmed,
+    subtitleIcon: props.subtitleIcon,
+    subtitleIconTone: props.subtitleIconTone ?? subtitleTone,
+  };
+};
+
+function TextLines(props: PlacedContentProps): ReactElement {
+  return (
+    <InertLane className="min-w-0 gap-0.5">
+      <LineEnd end={titleLineEnd(props)}>
+        <Title {...props} />
+      </LineEnd>
+      <LineEnd end={props.subtitleEnd}>
+        <Subtitle {...subtitleOf(props)} />
+      </LineEnd>
+    </InertLane>
+  );
+}
 
 export function ItemContent(props: PlacedContentProps): ReactElement {
   return (
     <View {...useOpenLane()} className="min-w-0 flex-1 gap-0.5">
-      <InertLane className="min-w-0 gap-0.5">
-        <TitleLine {...props} />
-        <Subtitle {...subtitleOf(props)} />
-      </InertLane>
+      <TextLines {...props} />
       <Meta
         sidebar={props.sidebar === true}
         meta={props.meta}

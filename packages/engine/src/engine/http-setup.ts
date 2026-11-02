@@ -3,7 +3,7 @@ import { blobsFolderIn } from '../blob';
 import { ensureServerIdentity } from '../devices';
 import { DeviceAdmission } from '../devices/admit-device';
 import { OpenChannels } from '../devices/open-channels';
-import { LocalNetworkAccess } from '../network-access';
+import { listeningAddresses, LocalNetworkAccess } from '../network-access';
 import { Notifications } from '../notifications';
 import { ensureControlToken } from '../operations';
 import { PairingRegistrations } from '../pairing/registrations';
@@ -65,6 +65,7 @@ const routerInput = ({
   ...httpRouterInput(options, setup, controlToken),
   serverPublicKey: publicKey,
   discoveryName: discoveryNameOf(options),
+  addresses: () => listeningAddresses(options.port),
   tickets: pairing.tickets,
   registrations: pairing.registrations,
   channels: pairing.channels,

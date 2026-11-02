@@ -106,3 +106,19 @@ export const Accessories: Story = {
     },
   },
 };
+
+export const StateDot: Story = {
+  args: {
+    title: 'Studio PC',
+    subtitle: 'Connected',
+    subtitleIcon: 'dot',
+    subtitleIconTone: 'success',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'A coloured dot leads the subtitle; its words stay muted.',
+      },
+    },
+  },
+};

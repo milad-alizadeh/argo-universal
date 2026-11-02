@@ -1,3 +1,4 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { bezierEasing } from '@repo/kit/bezier-easing';
 import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
@@ -6,7 +7,6 @@ import { View, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   ReduceMotion,
   type SharedValue,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';

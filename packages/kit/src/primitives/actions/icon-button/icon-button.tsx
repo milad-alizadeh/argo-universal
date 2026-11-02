@@ -23,6 +23,8 @@ export type IconButtonDataProps = KitProps<'IconButton'>;
 export type IconButtonProps = IconButtonDataProps & {
   testID?: string;
   muted?: boolean;
+  // On the web, a 28 box on a line of 28 controls, such as the Composer's beside its Pills.
+  control?: boolean;
 } & Omit<
     ComponentProps<typeof Pressable>,
     keyof IconButtonDataProps | 'children' | 'style' | 'className' | 'ref'

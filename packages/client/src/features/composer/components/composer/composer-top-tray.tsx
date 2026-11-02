@@ -44,7 +44,7 @@ function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
   if (hasRequest(layout) || !hasPlan(layout)) return null;
 
   return (
-    <View className={cn(composerTrayClass, '-mb-3 pb-3 rounded-t-xl')}>
+    <View className={cn(composerTrayClass, '-mb-3 pb-3 rounded-t-2xl')}>
       <ComposerPlans {...layout} />
     </View>
   );

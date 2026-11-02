@@ -55,7 +55,8 @@ const sessionsFade = {
 
 function surfaceClassName(glide: boolean): string {
   return cn(
-    'relative flex-1 overflow-hidden bg-content wide:bg-transparent web:select-none web:**:select-none!',
+    // iOS keeps this view out of the native tree, so the large title finds the list; the stack paints the page behind it.
+    'relative flex-1 overflow-hidden bg-content wide:bg-transparent ios:overflow-visible ios:bg-transparent web:select-none web:**:select-none!',
     // Rows glide to their new places only while the list reorders, never on first load, a tab switch or a scroll.
     glide &&
       'web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200',

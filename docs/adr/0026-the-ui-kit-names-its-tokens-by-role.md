@@ -53,7 +53,9 @@ Phones are always `compact`, even in landscape. Tablets, desktop and web take th
 
 Owner amendment, 2026-10-18 (decision B): `medium` uses the phone shell on every platform (iOS, Android, web and desktop): the drawer in front of the pages, stack navigation, native headers on native, sheets in place of trigger popovers (centred modals on the web), and the Workbench as a sheet. The sidebar beside the content starts at `wide`. The size-class widths are unchanged; only the shell switch moves from `medium` to `wide`. Text follows the platform, not the shell: at `medium` the web and desktop keep the desktop type scale and native keeps the phone scale. Tablets rotate (iPad and Android), and a tablet in landscape can reach `wide`; phones stay in portrait.
 
-Typography keeps its nine text roles and icons keep the roles of ADR-0019.
+Typography keeps its nine text roles, plus `code-inline`, and icons keep the roles of ADR-0019.
+
+Owner amendment, 2026-11-02: each platform takes its own scale through the same roles, set only as token overrides in the theme. Body, Heading and row titles are 17/24 on iOS, 16/24 on Android and 13/20 on the web and desktop; Secondary and row details are 15/20, 14/20 and 12/16. Android adds Material's tracking, +0.5 on Body and +0.25 on Secondary. `code-inline` is code inside a sentence, one point under the text around it. In light mode `danger` and `warning` text uses the 700 shades, so it reads at small sizes.
 
 ## Considered options
 

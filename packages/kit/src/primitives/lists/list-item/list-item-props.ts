@@ -48,6 +48,9 @@ export type ListItemProps = KitProps<'ListItem'> & {
   sidebar?: boolean;
   // A sidebar row that holds news for its reader, such as an unread Session: its title is semibold.
   emphasized?: boolean;
+  // Items ending the title line and the subtitle line of a two-line row, such as a phone Session row's time and status dot.
+  titleEnd?: ReactNode;
+  subtitleEnd?: ReactNode;
   // The subtitle's colour; muted unless the row says otherwise.
   subtitleTone?: Tone;
   // A subtitle that wraps onto a second line rather than truncating, such as a Mode's description.
@@ -67,6 +70,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   trailingAccessories?: ReactNode;
   // A glyph leading the subtitle in its tone, such as the Plugin that wrote a Session row's Activity line.
   subtitleIcon?: KitProps<'Icon'>['name'];
+  // The colour of the subtitle's glyph alone, as a state dot beside words that stay muted; else the subtitle's tone.
+  subtitleIconTone?: Tone;
   // De-emphasized secondary text on a completed row.
   subtitleDimmed?: boolean;
   // A role avatar occupies its own 36px lane instead of the icon lane.

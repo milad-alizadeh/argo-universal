@@ -25,10 +25,10 @@ import material_check_circle from '../assets/material-light/check_circle.xml';
 import material_checklist from '../assets/material-light/checklist.xml';
 import material_chevron_left from '../assets/material-light/chevron_left.xml';
 import material_chevron_right from '../assets/material-light/chevron_right.xml';
+import material_circle from '../assets/material-light/circle.xml';
 import material_close from '../assets/material-light/close.xml';
 import material_close_fullscreen from '../assets/material-light/close_fullscreen.xml';
 import material_code from '../assets/material-light/code.xml';
-import material_confirmation_number from '../assets/material-light/confirmation_number.xml';
 import material_content_copy from '../assets/material-light/content_copy.xml';
 import material_contrast from '../assets/material-light/contrast.xml';
 import material_crop_square from '../assets/material-light/crop_square.xml';
@@ -324,10 +324,10 @@ export const materialImages = {
   checklist: material_checklist,
   chevron_left: material_chevron_left,
   chevron_right: material_chevron_right,
+  circle: material_circle,
   close: material_close,
   close_fullscreen: material_close_fullscreen,
   code: material_code,
-  confirmation_number: material_confirmation_number,
   content_copy: material_content_copy,
   contrast: material_contrast,
   crop_square: material_crop_square,

@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import type { LayoutChangeEvent, ViewStyle } from 'react-native';
 import {
   type SharedValue,
-  useAnimatedStyle,
-  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { useAnimatedStyle, useDerivedValue } from '../../../animated-hooks';
 
 /*
  * Material 3's ProgressIndicatorDefaults.ProgressAnimationSpec: a spring with dampingRatio 1 (no bounce)

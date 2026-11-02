@@ -57,7 +57,7 @@ export const turnEndingsOf = (
 
 export const restartTurnError = {
   code: 'interrupted',
-  message: 'The Server stopped during the Turn',
+  message: 'The Server restarted during this Turn',
 } as const;
 
 // A Tool call that reports its own ending, so settling it early would read as cancelled while it runs.

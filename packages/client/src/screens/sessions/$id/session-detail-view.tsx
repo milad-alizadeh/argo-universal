@@ -2,23 +2,18 @@ import {
   type ErrorToast,
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
-import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Composer, type ComposerProps } from '#features/composer';
+import type { ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
-import {
-  ElicitationSheet,
-  type ElicitationFormProps,
-} from '#features/requests';
+import type { ElicitationFormProps } from '#features/requests';
 import {
   ArchivedBanner,
   serverSilentMessage,
   SessionBandClaim,
   SessionBar,
   type SessionBarProps,
-  SessionCallout,
   type SessionCalloutProps,
+  type StoppedTurnCalloutProps,
   sessionOpenFailedTitle,
   type SessionHeaderProps,
   type SessionPanels,
@@ -26,11 +21,10 @@ import {
   type TerminalSignInProps,
 } from '#features/sessions';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
-import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
-import { composerUnderQuestion } from './composer-under-question';
 import { sessionWorkbench } from './sections/session-sections';
+import { SessionComposer } from './session-composer';
 import {
   SessionInspector,
   type SessionInspectorContent,
@@ -49,6 +43,8 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   elicitation?: ElicitationFormProps;
   // Sign-in or launch trouble, drawn above the Composer.
   callout?: SessionCalloutProps;
+  // The Feed's last Turn ended in an error, drawn above the Composer with its Retry.
+  stoppedTurn?: StoppedTurnCalloutProps;
   // A terminal sign-in method's panel or sheet.
   signInTerminal?: TerminalSignInProps;
   // Drawn as iOS's long-press preview above a Session's menu: the Feed alone, with nothing to type into.
@@ -162,29 +158,4 @@ function sessionBottom(props: OpenSessionViewProps): React.ReactNode {
   if (props.archived) return <ArchivedBanner />;
 
   return <SessionComposer {...props} />;
-}
-
-function QuestionSheet({
-  elicitation,
-}: Pick<OpenSessionViewProps, 'elicitation'>): React.ReactNode {
-  if (!elicitation) return null;
-
-  return (
-    <ElicitationSheet key={elicitation.request.requestId} {...elicitation} />
-  );
-}
-
-function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
-  const filled = useSessionFill().filled;
-
-  return (
-    // As wide as the Feed: the SessionColumn around it sets the width.
-    <View className={cn('w-full items-center', filled && filledClass)}>
-      <QuestionSheet elicitation={props.elicitation} />
-      <Composer
-        {...composerUnderQuestion(props.composer, props.elicitation)}
-        callout={props.callout && <SessionCallout {...props.callout} />}
-      />
-    </View>
-  );
 }

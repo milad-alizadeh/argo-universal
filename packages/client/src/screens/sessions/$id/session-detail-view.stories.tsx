@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { fn } from 'storybook/test';
 import {
   elicitationProps,
   questionsRequest,
@@ -37,6 +38,19 @@ type Story = StoryObj<typeof meta>;
 
 // A Turn running: the header's clock, the Feed's live line, and the Composer offering Stop.
 export const Running: Story = { args: { state: 'open', ...runningSession } };
+
+// The last Turn ended in an error: the Retry card above the Composer, which keeps its prompt.
+export const StoppedTurn: Story = {
+  args: {
+    state: 'open',
+    ...longSession,
+    composer: { ...longSession.composer, placeholder: 'Message the Agent' },
+    stoppedTurn: {
+      reason: 'The Server restarted during this Turn',
+      onRetry: fn(),
+    },
+  },
+};
 
 // Every recording in turn, so the Feed scrolls under a pinned header and Composer.
 export const LongFeed: Story = { args: { state: 'open', ...longSession } };

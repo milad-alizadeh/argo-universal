@@ -43,7 +43,12 @@ export interface OpenSession {
 
 type DraftProps = Pick<
   ComposerProps,
-  'draft' | 'onDraftChange' | 'onAttachImages' | 'onAttachFiles' | 'onSend'
+  | 'placeholder'
+  | 'draft'
+  | 'onDraftChange'
+  | 'onAttachImages'
+  | 'onAttachFiles'
+  | 'onSend'
 >;
 
 const isTurnRunning = (snapshot: SessionSnapshot): boolean =>
@@ -107,6 +112,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
 }
 
 const draftProps = (commands: SessionCommands): DraftProps => ({
+  placeholder: 'Message the Agent',
   draft: commands.draft,
   onDraftChange: commands.changeDraft,
   onAttachImages: () => void commands.attachImages(),

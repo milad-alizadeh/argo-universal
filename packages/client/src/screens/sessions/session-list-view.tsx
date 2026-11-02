@@ -113,7 +113,7 @@ function SessionsLayout(props: SessionListViewProps): React.JSX.Element {
   return (
     <Screen
       edges={['bottom']}
-      className="relative flex-1 bg-content wide:bg-transparent"
+      className="relative flex-1 bg-content wide:bg-transparent ios:bg-transparent"
       style={fillStyle}
     >
       <SessionsContent {...props} />

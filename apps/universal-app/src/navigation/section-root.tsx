@@ -106,7 +106,7 @@ function RootList({ section, narrow }: RootListProps): React.JSX.Element {
   const { list } = useSectionList(section);
 
   return (
-    <View className="flex-1 bg-content">
+    <View className="flex-1 bg-content ios:bg-transparent">
       {narrow ? <NarrowRoot>{list}</NarrowRoot> : list}
     </View>
   );

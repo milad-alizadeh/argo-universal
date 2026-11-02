@@ -27,7 +27,7 @@ function ComposerWideStatus(
   if (!(layout.props.configuration || layout.props.status)) return null;
 
   return (
-    <View className={cn(composerTrayClass, 'h-11 -mt-3 pt-3 rounded-b-xl')}>
+    <View className={cn(composerTrayClass, 'h-11 -mt-3 pt-3 rounded-b-2xl')}>
       <View className="flex-1 min-h-0 flex-row items-center px-1.5 gap-1">
         <ComposerTrayStatus {...layout} />
         <View className="flex-1" />

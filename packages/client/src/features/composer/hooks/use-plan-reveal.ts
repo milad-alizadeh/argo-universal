@@ -1,9 +1,9 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { useEffect, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import {
   cancelAnimation,
   Easing,
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';

@@ -9,6 +9,7 @@ import {
   disabledAnswerAlert,
   questionAlert,
   runningAnswerAlert,
+  waitingAlert,
 } from './alert-fixtures';
 import type { AlertProps } from './alert-props';
 
@@ -53,6 +54,14 @@ export const RunningAnswer: Story = {
   args: runningAnswerAlert,
   render: (args): React.JSX.Element => (
     <AlertPreview trigger="Deleting" alert={args} />
+  ),
+};
+
+// iOS draws SwiftUI's stock alert, which holds no spinner, so only the title and message show there.
+export const Waiting: Story = {
+  args: waitingAlert,
+  render: (args): React.JSX.Element => (
+    <AlertPreview trigger="Connect" alert={args} />
   ),
 };
 

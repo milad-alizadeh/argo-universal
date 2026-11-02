@@ -1,12 +1,8 @@
 import type * as React from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
-import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  useDerivedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { ReduceMotion, withTiming } from 'react-native-reanimated';
 import { Icon } from '#primitives/content/icon';
+import { useAnimatedStyle, useDerivedValue } from '../../../animated-hooks';
 import { motionDuration, quarterTurnDegrees } from '../../../motion';
 import { iosChevronScale } from '../../../symbols/chevron-scale';
 import { useIconBox } from '../../../symbols/icon-size';

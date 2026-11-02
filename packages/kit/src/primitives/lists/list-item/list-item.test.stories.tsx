@@ -234,6 +234,20 @@ export const SubtitleIcon: Story = {
   },
 };
 
+// A state dot leads words that keep their own tone, and the row is still named by its title alone.
+export const SubtitleStateDot: Story = {
+  args: {
+    subtitle: 'Connected',
+    subtitleIcon: 'dot',
+    subtitleIconTone: 'success',
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: title })).toBeVisible();
+    await expect(canvas.getByText('Connected')).toBeVisible();
+    await expect(canvas.getByTestId('icon-dot')).toBeVisible();
+  },
+};
+
 /*
  * A listbox's row: a field elsewhere owns the keyboard and names the highlighted row by its id, so the row
  * reads as selected rather than pressed and keeps nothing of a button's own pressed state.

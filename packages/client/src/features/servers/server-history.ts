@@ -72,9 +72,9 @@ export const noteConnected = (key: string, at: number): Promise<void> =>
 export const forgetServerHistory = (key: string): Promise<void> =>
   edit(key, () => null);
 
-// The history of one Server; empty until it has been read, and for a Server with none.
-export function useServerHistory(key: string): ServerHistory {
-  const [history, setHistory] = useState<ServerHistory>({});
+// The history of one Server, empty for a Server with none; undefined until it has been read.
+export function useServerHistory(key: string): ServerHistory | undefined {
+  const [history, setHistory] = useState<ServerHistory>();
 
   useEffect(() => {
     void read().then((all) => setHistory(all[key] ?? {}));

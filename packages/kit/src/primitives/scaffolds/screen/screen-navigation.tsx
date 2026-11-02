@@ -13,10 +13,10 @@ export function ScreenNavigation(props: ScreenHeaderPlanned): ReactNode {
 
   if (!props.plan.stackEntry) return null;
 
-  const options = { ...headerLayout, title: props.title ?? '', headerTitle };
-
   const headerOptions = {
-    ...options,
+    ...headerLayout,
+    title: props.title ?? '',
+    headerTitle,
     ...selectionOptions(props.declaration.selection, leading),
     headerShown: props.plan.site === 'stack',
   };
@@ -29,7 +29,13 @@ function headerTitleOf(props: ScreenHeaderPlanned): () => React.ReactElement {
   return () => <HeadingRow {...props} />;
 }
 
+// The title's row takes the width the navigator reserves at the end, and its last icon's glyph ends on the page's right edge.
 const headerLayout = {
-  headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1 },
+  headerTitleContainerStyle: {
+    flexGrow: 1,
+    flexShrink: 1,
+    marginEnd: 8,
+    maxWidth: '100%',
+  },
   headerRightContainerStyle: { flexGrow: 0 },
 };

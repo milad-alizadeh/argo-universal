@@ -4,7 +4,7 @@ import {
   SuggestionListHost,
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
-import { View, ScrollView } from 'react-native';
+import { Platform, View, ScrollView } from 'react-native';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
@@ -21,7 +21,8 @@ import type { ComposerDraft } from './composer-types';
  * past it. Inside the card only the draft field gives any up; the toolbar keeps its own (#1529).
  */
 const cardGlass = {
-  corners: 'sheet',
+  // The web's card shares its trays' and the glass sidebar's radius; a phone keeps its sheet's.
+  corners: Platform.OS === 'web' ? 'container' : 'sheet',
   interactive: true,
   className: 'w-full min-h-0 shrink z-10',
 } as const;

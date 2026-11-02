@@ -23,6 +23,7 @@ const owned = new Set([
   'variant',
   'selected',
   'muted',
+  'control',
   'accessibilityLabel',
   'disabled',
   'onPress',
@@ -60,10 +61,13 @@ function pressableProps(
     disabled: props.disabled ?? false,
     onPress: props.onPress,
     testID: props.testID,
-    className: cn(webClass, webBoxOf(sizeOf(props)), ghostClass(props)),
+    className: cn(webClass, webBox(props), ghostClass(props)),
     style: (state) => webLook(props, state),
   };
 }
+
+const webBox = (props: IconButtonProps): string =>
+  props.control ? 'size-7' : webBoxOf(sizeOf(props));
 
 function WebGlyph(props: IconButtonProps): ReactElement {
   const glyph = props.disabled ? 'text-foreground/38' : webGlyph(props);

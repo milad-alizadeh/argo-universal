@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
+import { cn } from '#kit/utils';
 import {
   SearchField,
   type SearchFieldProps,
@@ -15,7 +16,7 @@ interface SearchHeadingProps {
 
 export function SearchHeading(props: SearchHeadingProps): ReactElement {
   return (
-    <View className="min-h-10 flex-row items-center">
+    <View className={rowClass(props.sidebar)}>
       <SearchField
         {...searchQuery(props.page)}
         sidebar={props.sidebar && Platform.OS === 'web'}
@@ -25,6 +26,10 @@ export function SearchHeading(props: SearchHeadingProps): ReactElement {
     </View>
   );
 }
+
+// As in a plain heading, the last icon's glyph ends on the page's right edge.
+const rowClass = (sidebar: boolean): string =>
+  cn('min-h-10 flex-row items-center', !sidebar && '-mr-2');
 
 function searchQuery(
   page: ScreenProps,

@@ -51,6 +51,7 @@ export const ProjectHeading = memo(function ProjectHeading(
       actions={projectActions(props)}
       isExpanded={!props.collapsed}
       sidebar={sidebarHeading}
+      rowLanes
       onExpandedChange={props.onToggle}
     />
   );

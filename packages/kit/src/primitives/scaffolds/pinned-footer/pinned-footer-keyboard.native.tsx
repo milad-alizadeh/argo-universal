@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAnimatedStyle } from '../../../animated-hooks';
 
 const fill = { flex: 1, minHeight: 0 };
 

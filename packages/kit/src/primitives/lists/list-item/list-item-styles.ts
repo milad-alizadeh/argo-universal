@@ -131,7 +131,7 @@ export function itemSeparator(
   if (!hasSeparator(drawing)) return undefined;
 
   return cn(
-    'absolute bottom-0 left-4',
+    'absolute bottom-px left-4',
     separatorDrawing.end,
     separatorDrawing.colour,
     leading && separatorDrawing.pastLeading,

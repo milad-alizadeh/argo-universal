@@ -1,12 +1,11 @@
 import { Row, Spacer } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { View, type ViewStyle } from 'react-native';
+import { Icon } from '#primitives/content/icon';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import { SkeletonBar } from '../../../list-skeleton';
-import type { FieldGroupKitProps } from '../../kit-props';
-
-type FieldValueProps = FieldGroupKitProps<'FieldGroup.Value'>;
+import type { FieldValueProps } from './field-value-props';
 
 // The spoken label of the pair, "<title>, <value>"; a row with no value yet is just its title.
 const spokenLabel = (props: FieldValueProps): string =>
@@ -41,7 +40,8 @@ function TitleAndValue(props: FieldValueProps): ReactElement {
         <RowTitle {...props} />
       </View>
       <Spacer flexible />
-      <View style={valueStyle}>
+      <View style={valueStyle} className="flex-row items-center gap-1.5">
+        {props.dot && <Icon name="dot" tone={props.dot} />}
         <NativeText tone="muted">{props.value}</NativeText>
       </View>
     </Row>

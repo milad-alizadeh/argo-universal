@@ -31,3 +31,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const StateDot: Story = {
+  args: { title: 'Status', value: 'Connected', dot: 'success' },
+};

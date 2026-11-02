@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo } from 'react';
 import {
   type FrameInfo,
   type SharedValue,
-  useAnimatedReaction,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
+import { useAnimatedReaction } from '../../../animated-hooks';
 import type { OrbFrame } from './orb-frame';
 
 interface Frames {

@@ -12,8 +12,12 @@ type LoadedProps = FrameProps & {
   onRatio: (ratio: number) => void;
 };
 
+// expo-image warns on an empty uri, which a media URL resolver can return.
+const hasSource = (uri: FrameProps['uri']): boolean =>
+  uri !== undefined && uri !== '';
+
 export function LoadedImage(props: LoadedProps): React.ReactNode {
-  if (props.uri === undefined || props.failed) return null;
+  if (!hasSource(props.uri) || props.failed) return null;
 
   return <Picture {...pictureProps(props)} />;
 }
