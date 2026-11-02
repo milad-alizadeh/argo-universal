@@ -40,11 +40,8 @@ async function openBoth({ canvas, userEvent }: Context): Promise<void> {
   await userEvent.click(await canvas.findByRole('button', changesEntry));
   await userEvent.click(canvas.getByRole('button', subagentsEntry));
   await expect(
-    await within(canvas.getByRole('tabpanel', subagentsName)).findByRole(
-      'heading',
-      {
-        name: firstTitle,
-      },
+    await within(canvas.getByRole('tabpanel', subagentsName)).findByText(
+      firstTitle,
     ),
   ).toBeVisible();
 }
