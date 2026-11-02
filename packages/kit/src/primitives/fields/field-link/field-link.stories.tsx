@@ -13,7 +13,9 @@ import {
   markedStatus,
   markedWarning,
   supportingValue,
-  mutedDanger,
+  mutedTitle,
+  dangerSubtitle,
+  dimmedMark,
   plainMark,
 } from './field-link-fixtures';
 
@@ -69,14 +71,20 @@ export const Destructive: Story = {
 // A labelled leading mark with no status.
 export const Marked: Story = { args: marked };
 
-// A status indicator and supporting line accompany an active mark.
+// A status indicator accompanies an active mark.
 export const MarkedStatus: Story = { args: markedStatus };
 
 // The supporting line and trailing value can coexist.
 export const SupportingValue: Story = { args: supportingValue };
 
-// Muted title and mark with a danger-coloured supporting line.
-export const MutedDanger: Story = { args: mutedDanger };
+// A muted title indicates a quieter row.
+export const MutedTitle: Story = { args: mutedTitle };
+
+// A supporting line can signal an error.
+export const DangerSubtitle: Story = { args: dangerSubtitle };
+
+// A leading mark can be dimmed.
+export const DimmedMark: Story = { args: dimmedMark };
 
 // A warning indicator marks a row waiting for input.
 export const MarkedWarning: Story = { args: markedWarning };

@@ -6,7 +6,6 @@ export const marked = {
 
 export const markedStatus = {
   title: 'Background activity',
-  subtitle: 'Processing items',
   leadingMark: {
     icon: 'sparkle',
     tone: 'neutral',
@@ -21,11 +20,19 @@ export const supportingValue = {
   value: '12',
 } as const;
 
-export const mutedDanger = {
+export const mutedTitle = {
   title: 'Previous attempt',
   titleTone: 'muted',
+} as const;
+
+export const dangerSubtitle = {
+  title: 'Upload',
   subtitle: 'Could not finish',
   subtitleTone: 'danger',
+} as const;
+
+export const dimmedMark = {
+  title: 'Completed review',
   leadingMark: {
     icon: 'flask',
     tone: 'success',
@@ -36,7 +43,6 @@ export const mutedDanger = {
 
 export const markedWarning = {
   title: 'Review required',
-  subtitle: 'Waiting for a choice',
   leadingMark: {
     icon: 'search',
     tone: 'warning',
@@ -47,7 +53,6 @@ export const markedWarning = {
 
 export const plainMark = {
   title: 'Completed task',
-  subtitle: 'Finished successfully',
   leadingMark: {
     icon: 'check',
     tone: 'success',
