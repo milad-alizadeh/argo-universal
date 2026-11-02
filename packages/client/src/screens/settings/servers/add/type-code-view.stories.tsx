@@ -10,6 +10,7 @@ const meta = {
   argTypes: {
     looking: { control: 'boolean' },
     onSubmit: { control: false },
+    onScan: { control: false },
   },
 } satisfies Meta<typeof TypeCodeView>;
 
@@ -22,3 +23,6 @@ export const AsksForTheCode: Story = {};
 
 // The code has gone out to the Servers on the network, and the field keeps what was typed.
 export const Looking: Story = { args: { looking: true } };
+
+// A Device with a camera can go back to it: a text control under Connect.
+export const WithCamera: Story = { args: { onScan: fn() } };

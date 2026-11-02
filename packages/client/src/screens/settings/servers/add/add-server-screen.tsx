@@ -68,11 +68,13 @@ function Entry(props: EntryProps): React.JSX.Element {
   );
 }
 
-function Typing({ pairing }: EntryProps): React.JSX.Element {
+// A phone that chose to type can go back to its camera; a browser has none to go back to.
+function Typing({ pairing, onTyping }: EntryProps): React.JSX.Element {
   return (
     <TypeCodeView
       looking={pairing.state.phase === 'looking'}
       onSubmit={pairing.type}
+      onScan={typesTheCode ? undefined : () => onTyping(false)}
     />
   );
 }

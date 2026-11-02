@@ -41,12 +41,21 @@ export function PairingCode(props: {
       <CodeTile {...props} />
       <View className="gap-5 medium:flex-1">
         <ScanInstruction />
-        <TypedCode ticket={props.code.invite.ticket} hidden={props.expired} />
+        <TypedCode {...typedFrom(props)} />
         <PairingCountdown expiresAt={props.code.expiresAt} />
       </View>
     </View>
   );
 }
+
+const typedFrom = (props: {
+  code: MintedPairingTicket;
+  expired: boolean;
+}): Parameters<typeof TypedCode>[0] => ({
+  ticket: props.code.invite.ticket,
+  address: props.code.addresses[0],
+  hidden: props.expired,
+});
 
 // What the code is for, in the words the owner needs before they pick their phone up.
 function ScanInstruction(): React.JSX.Element {
@@ -92,6 +101,8 @@ function ExpiredNotice(): React.JSX.Element {
  */
 function TypedCode(props: {
   ticket: string;
+  // Where this computer answers, as `host:port`, for a Device that cannot find it by itself (#1490, Enter code); none when it is on no network.
+  address?: string;
   hidden: boolean;
 }): React.JSX.Element {
   return (
@@ -99,8 +110,30 @@ function TypedCode(props: {
       <Text role="badge" tone="muted">
         {typeLabel}
       </Text>
-      <Text role="title-code" selectable>
-        {props.hidden ? hiddenCode : spacedCode(props.ticket)}
+      <TypedDigits {...props} />
+      {props.address ? <TypedAddress address={props.address} /> : null}
+    </View>
+  );
+}
+
+const TypedDigits = (props: {
+  ticket: string;
+  hidden: boolean;
+}): React.JSX.Element => (
+  <Text role="title-code" selectable>
+    {props.hidden ? hiddenCode : spacedCode(props.ticket)}
+  </Text>
+);
+
+// The address to type in the other Device's Address field, in the face a path or an address is set in.
+function TypedAddress(props: { address: string }): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-2">
+      <Text role="badge" tone="muted">
+        Address
+      </Text>
+      <Text role="secondary-code" selectable>
+        {props.address}
       </Text>
     </View>
   );

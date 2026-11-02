@@ -1,22 +1,21 @@
-import {
-  type DiscoveredServer,
-  PairingRefusal,
-  readTypedTicket,
-} from '@repo/contracts';
-import { z } from 'zod';
-import type { requestServerKey, ServerAddress } from '#features/connection';
+import { type DiscoveredServer, readTypedTicket } from '@repo/contracts';
+import type { requestServerKey } from '#features/connection';
 import { heardServers, type Timing } from './hear-servers';
+import { pairAtAddress } from './pair-at-address';
 import {
   type PairDeps,
   type PairOutcome,
   pairWithInvite,
 } from './pair-with-invite';
+import { readTypedAddress } from './typed-address';
+import {
+  type Asked,
+  Refused,
+  type TypedOutcome,
+  verdict,
+} from './typed-verdict';
 
-// How one try at pairing with a typed code ended. The ways a scanned code can end are the same; a typed one can also be wrong where a scanned one cannot be, and a Server can turn the source away for being wrong too often.
-export type TypedOutcome =
-  | PairOutcome
-  | { kind: 'mistyped' }
-  | { kind: 'turned-away' };
+export type { TypedOutcome } from './typed-verdict';
 
 export interface TypedDeps extends PairDeps {
   requestKey: typeof requestServerKey;
@@ -25,21 +24,13 @@ export interface TypedDeps extends PairDeps {
   settleMs?: number;
   // Called with the name of the Server that knew the code, before the wait on its owner begins, so the page can say whose approval it is waiting for.
   onFound?: (serverName: string) => void;
-  // An address the owner typed, tried before the addresses discovery gave: for a network that announces a name but not where it is.
+  // What the owner typed in the Address field: `host:port` is the place to knock with no discovery at all, and a bare name or address is tried first among the addresses discovery gave, for a network that announces a name but not where it is.
   host?: string;
 }
 
 const defaultTimeoutMs = 3000;
 
 const defaultSettleMs = 300;
-
-// What `PairingRefused` carries, read by shape as in `pair-with-invite.ts`.
-const Refused = z.object({ refusal: PairingRefusal });
-
-type Asked =
-  | { kind: 'key'; key: string; server: DiscoveredServer; at: ServerAddress }
-  | { kind: 'refused'; refusal: PairingRefusal }
-  | { kind: 'silent' };
 
 // One address of one Server: a refusal is its answer, and an address that does not answer is only the wrong address.
 async function askAt(
@@ -75,24 +66,6 @@ async function askServer(
   }
 
   return { kind: 'silent' };
-}
-
-// A Server that holds the code and will not pair with it says so, and that is the answer: the code is no good, or this source has been wrong too often.
-const decisive: Partial<Record<PairingRefusal, TypedOutcome>> = {
-  'ticket-expired': { kind: 'expired' },
-  'ticket-spent': { kind: 'expired' },
-  'ticket-attempts': { kind: 'turned-away' },
-};
-
-// Every Server that answered said the code is not its own: it was typed wrong. Nobody answering is a network that does not have the Server on it.
-function verdict(answers: readonly Asked[]): TypedOutcome {
-  const refusals = answers.flatMap((a) =>
-    a.kind === 'refused' ? [a.refusal] : [],
-  );
-
-  const ended = refusals.map((refusal) => decisive[refusal]).find(Boolean);
-
-  return ended ?? { kind: refusals.length > 0 ? 'mistyped' : 'not-found' };
 }
 
 const isKey = (asked: Asked): asked is Extract<Asked, { kind: 'key' }> =>
@@ -156,7 +129,17 @@ export async function pairWithTypedCode(
 ): Promise<TypedOutcome> {
   const ticket = readTypedTicket(typed);
 
-  if (!ticket) return { kind: 'mistyped' };
+  return ticket ? pairWithTicket(ticket, deps) : { kind: 'mistyped' };
+}
+
+// An address with a port is the Server asked for; otherwise each Server discovery heard is asked in turn.
+async function pairWithTicket(
+  ticket: string,
+  deps: TypedDeps,
+): Promise<TypedOutcome> {
+  const at = readTypedAddress(deps.host);
+
+  if (at) return pairAtAddress(ticket, at, deps);
   const found = await findServer(ticket, deps);
 
   return 'key' in found ? pairFound(found, ticket, deps) : found;
