@@ -33,7 +33,11 @@ export interface ToolCallFacts {
   permissionOutcome: PermissionOutcome | undefined;
   // When the call started, in milliseconds.
   startedAt: number | undefined;
+  // What the Agent called the command in its own words: its description, else a title that is not the command line or an adapter placeholder.
+  agentTitle: string | undefined;
 }
+
+const adapterPlaceholderTitle = 'Terminal';
 
 const editKinds = new Set<ToolCallUpdate['kind']>(['edit', 'delete', 'move']);
 
@@ -96,6 +100,18 @@ function decodeActions(
   };
 }
 
+const isPlaceholder = (row: ToolCallUpdate): boolean =>
+  [commandOf(row), adapterPlaceholderTitle, ''].includes(row.title);
+
+const commandOf = (row: ToolCallUpdate): string | undefined =>
+  row.content.find((block) => block.type === 'terminal')?.command;
+
+const titleOf = (row: ToolCallUpdate): string | undefined =>
+  isPlaceholder(row) ? undefined : row.title;
+
+const agentTitleOf = (row: ToolCallUpdate): string | undefined =>
+  argoOf(row)?.description || titleOf(row);
+
 const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   ...decodeActions(row),
   isEdit: editKinds.has(row.kind),
@@ -104,6 +120,7 @@ const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   location: firstLocation(row),
   permissionOutcome: argoOf(row)?.permissionOutcome,
   startedAt: argoOf(row)?.startedAt,
+  agentTitle: agentTitleOf(row),
 });
 
 /*
