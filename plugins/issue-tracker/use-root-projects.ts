@@ -30,25 +30,28 @@ export type RootProjects = {
  */
 export function useRootProjects(deps: IssueDeps): RootProjects {
   const { projects: source } = deps;
-  const { projects, failed } = useIssueProjects(source);
+  const read = useIssueProjects(source);
 
   useEffect(() => {
     void source.refresh();
   }, [source]);
 
-  const shown = projects ?? [];
+  const shown = read.projects ?? [];
 
   return {
     projects: shown,
     project: projectChosen(shown, source.chosenId()),
-    message: projectsMessage(
-      projects,
-      failed,
-      shown.length === 0 ? 'No Projects yet.' : loadingIssues,
-    ),
-    settled: projects !== undefined || failed === true,
+    message: rootMessage(read),
+    settled: read.projects !== undefined || read.failed === true,
   };
 }
+
+const rootMessage = ({ projects, failed }: ProjectsRead): string =>
+  projectsMessage(
+    projects,
+    failed,
+    projects?.length ? loadingIssues : 'No Projects yet.',
+  );
 
 const projectChosen = (
   projects: Project[],
@@ -81,14 +84,17 @@ export function usePageProject(deps: IssueDeps, id: string): PageProject {
 
   useEffect(() => {
     source.choose(id);
-    void source
-      .known()
-      .then((known) =>
-        known.some((candidate) => candidate.id === id)
-          ? undefined
-          : source.refresh(),
-      );
+    void listUnlessKnown(source, id);
   }, [source, id]);
 
   return { project, message: projectsMessage(projects, failed, goneMessage) };
+}
+
+async function listUnlessKnown(
+  source: IssueProjects,
+  id: string,
+): Promise<void> {
+  const known = await source.known();
+
+  if (!known.some((candidate) => candidate.id === id)) await source.refresh();
 }

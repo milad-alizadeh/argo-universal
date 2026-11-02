@@ -1,14 +1,24 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { z } from 'zod';
 
 // A section's list is declared by the ListDetail at the root of its nav item's page.
-export const declaresList = (root: WireNode | null): root is WireNode =>
-  root?.type === 'ListDetail';
+export const declaresList = (
+  root: WireNode | null | undefined,
+): root is WireNode => root?.type === 'ListDetail';
+
+// The root itself is where the section already is, so naming it lands nowhere.
+const isLanding = (landing: unknown): landing is string =>
+  typeof landing === 'string' && landing !== '/';
 
 // The page a section's root says it lands on, on a window with its list beside the pages.
-export function landingOf(root: WireNode | null): string | undefined {
-  const landing = declaresList(root) ? root.props.landing : undefined;
+export function landingOf(
+  root: WireNode | null | undefined,
+): string | undefined {
+  if (!declaresList(root)) return undefined;
 
-  return typeof landing === 'string' && landing !== '/' ? landing : undefined;
+  const { landing } = root.props;
+
+  return isLanding(landing) ? landing : undefined;
 }
 
 // The list alone, for the view that stays live beside the pages: its detail and empty state belong to the root's own page.
@@ -20,18 +30,20 @@ export function listOnly(root: WireNode): WireNode {
 
 // The root without its list, for the root's own page: the list is already in the sidebar.
 export function withoutList(root: WireNode): WireNode {
-  const { list: _list, ...slots } = root.slots;
+  const slots = Object.entries(root.slots).filter(([name]) => name !== 'list');
 
-  return { ...root, slots };
+  return { ...root, slots: Object.fromEntries(slots) };
 }
 
+const navigatePress = z.object({
+  action: z.literal('navigate'),
+  path: z.string(),
+});
+
 function linkedPage(node: WireNode): string | undefined {
-  const press = node.type === 'ListItem' ? node.props.onPress : undefined;
+  if (node.type !== 'ListItem') return undefined;
 
-  if (typeof press !== 'object' || press === null || !('action' in press))
-    return undefined;
-
-  return press.action === 'navigate' ? String(press.path) : undefined;
+  return navigatePress.safeParse(node.props.onPress).data?.path;
 }
 
 function linkedPages(nodes: readonly WireNode[]): string[] {
@@ -47,7 +59,9 @@ function marked(node: WireNode, page: string): WireNode {
     ...node,
     children: node.children.map((child) => marked(child, page)),
     props:
-      linkedPage(node) === page ? { ...node.props, selected: true } : node.props,
+      linkedPage(node) === page
+        ? { ...node.props, selected: true }
+        : node.props,
   };
 }
 

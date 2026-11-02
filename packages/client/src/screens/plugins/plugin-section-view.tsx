@@ -1,6 +1,6 @@
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { createPlace, useClaim, useClaimed, type Place } from '@repo/kit/place';
 import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
-import { useWide } from '@repo/kit/use-wide/use-wide';
 import { router, usePathname } from 'expo-router';
 import {
   createContext,
@@ -86,12 +86,35 @@ function useOpenFromSidebar(section: PluginSection): (path: string) => void {
 
     if (!route) return pageUnavailable(path);
 
-    const page = shown.claims.current();
-
-    if (page && route[1] === section.navId) page.showOnly(route);
-    else
-      router.push({ pathname: '/plugins/[...path]', params: { path: route } });
+    openRoute(route, section.navId, shown.claims.current());
   };
+}
+
+function openRoute(
+  route: string[],
+  navId: string,
+  page: ShownSectionPage | undefined,
+): void {
+  if (page && route[1] === navId) page.showOnly(route);
+  else router.push({ pathname: '/plugins/[...path]', params: { path: route } });
+}
+
+const holdsSidebar = (root: PluginView['root']): boolean =>
+  !root || declaresList(root);
+
+// The view stays open for as long as the section is the one shown, and the pages beside it reach it through its Place.
+function useSectionRootView(section: PluginSection): PluginView {
+  const sidebar = use(FrameListDetailSidebar);
+
+  const view = usePluginView({
+    pluginId: section.pluginId,
+    path: `/${section.navPath.join('/')}`,
+  });
+
+  useClaim(useSectionPlaces().root, { section, view });
+  useClaim(holdsSidebar(view.root) ? sidebar : undefined, null);
+
+  return view;
 }
 
 /*
@@ -100,27 +123,30 @@ function useOpenFromSidebar(section: PluginSection): (path: string) => void {
  * snapshot says whether there is a list at all, and while the ListDetail's own claim waits to know its page's focus.
  */
 function SectionRootView({ section }: { section: PluginSection }): ReactNode {
-  const sidebar = use(FrameListDetailSidebar);
-  const view = usePluginView({
-    pluginId: section.pluginId,
-    path: `/${section.navPath.join('/')}`,
-  });
-
-  useClaim(useSectionPlaces().root, { section, view });
-  useClaim(view.root && !declaresList(view.root) ? undefined : sidebar, null);
-
+  const view = useSectionRootView(section);
   const list = useMarkedList(view.root);
-  const onOpenPage = useOpenFromSidebar(section);
 
-  if (!list) return null;
+  return list ? (
+    <SectionList section={section} view={view} list={list} />
+  ) : null;
+}
+
+interface SectionListProps {
+  section: PluginSection;
+  view: PluginView;
+  list: WireNode;
+}
+
+function SectionList(props: SectionListProps): React.JSX.Element {
+  const onOpenPage = useOpenFromSidebar(props.section);
 
   return (
     <View className="hidden">
-      <ListDetailSidebarPlaceOffer value={sidebar}>
+      <ListDetailSidebarPlaceOffer value={use(FrameListDetailSidebar)}>
         <PluginTree
-          key={view.viewId}
-          root={list}
-          onEvent={view.dispatch}
+          key={props.view.viewId}
+          root={props.list}
+          onEvent={props.view.dispatch}
           onOpenPage={onOpenPage}
         />
       </ListDetailSidebarPlaceOffer>
@@ -128,19 +154,24 @@ function SectionRootView({ section }: { section: PluginSection }): ReactNode {
   );
 }
 
-// Only a wide window has a list beside its pages; below it the root is a page of the stack like any other.
 function ShownSectionRoot(): ReactNode {
   const { section } = usePluginAt(usePathname());
 
-  if (!useWide() || !section) return null;
-
-  return <SectionRootView key={section.id} section={section} />;
+  return section ? (
+    <SectionRootView key={section.id} section={section} />
+  ) : null;
 }
+
+type PluginSectionListsProps = PropsWithChildren<{
+  // Only a wide window has a list beside its pages; below it the root is a page of the stack like any other.
+  wide: boolean;
+}>;
 
 // The live section list around the Frame's pages; it and the pages reach each other only through these Places.
 export function PluginSectionLists({
+  wide,
   children,
-}: PropsWithChildren): React.JSX.Element {
+}: PluginSectionListsProps): React.JSX.Element {
   const [places] = useState<SectionPlaces>(() => ({
     root: createPlace(),
     shown: createPlace(),
@@ -148,7 +179,7 @@ export function PluginSectionLists({
 
   return (
     <SectionPlacesContext value={places}>
-      <ShownSectionRoot />
+      {wide ? <ShownSectionRoot /> : null}
       {children}
     </SectionPlacesContext>
   );

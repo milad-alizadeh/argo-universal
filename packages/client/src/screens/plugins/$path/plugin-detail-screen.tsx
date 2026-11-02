@@ -2,25 +2,27 @@ import { createPlace } from '@repo/kit/place';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
-import { useWide } from '@repo/kit/use-wide/use-wide';
 import { Redirect, router } from 'expo-router';
-import { useLayoutEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { showsBack } from '../plugin-back';
-import { pluginPagePath, pluginPageRoute } from '../plugin-page-route';
-import { landingOf, withoutList } from '../plugin-section-tree';
+import { pluginPagePath } from '../plugin-page-route';
+import { withoutList } from '../plugin-section-tree';
 import { useSectionRoot } from '../plugin-section-view';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
   usePluginAt,
-  usePluginSections,
   type PluginSection,
 } from '../use-plugin-sections';
 import { usePluginView, type PluginView } from '../use-plugin-view';
 import { PluginDetailView } from './plugin-detail-view';
-import { useSectionStackPage, type SectionStackPage } from './use-section-stack';
+import { useSectionLanding } from './use-section-landing';
+import {
+  useSectionStackPage,
+  type SectionStackPage,
+} from './use-section-stack';
 
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
@@ -29,6 +31,8 @@ interface PluginDetailScreenProps {
   sessionId: string | undefined;
   // The Project the page opened for, such as from a Project details row (ADR-0046).
   projectId: string | undefined;
+  // The window has its section's list beside its pages.
+  wide: boolean;
 }
 
 const unavailable = { title: 'This Plugin is not available' };
@@ -62,88 +66,76 @@ type PluginPageProps = PluginDetailScreenProps & {
 
 // On a wide window a section's root is already open beside its pages, so its page draws that view; any other page watches its own.
 function PluginPage(props: PluginPageProps): React.JSX.Element {
-  const openedForOne = Boolean(props.sessionId ?? props.projectId);
   const stack = useSectionStackPage();
 
-  if (useWide() && props.root && !openedForOne)
-    return <SectionRootPage {...props} stack={stack} />;
-
-  return <OwnViewPage {...props} stack={stack} openedForOne={openedForOne} />;
+  return drawsSectionRoot(props) ? (
+    <SectionRootPage section={props.section} stack={stack} />
+  ) : (
+    <OwnViewPage {...props} stack={stack} />
+  );
 }
+
+const openedForOne = (props: PluginPageProps): boolean =>
+  Boolean(props.sessionId ?? props.projectId);
+
+const drawsSectionRoot = (props: PluginPageProps): boolean =>
+  props.wide && props.root && !openedForOne(props);
 
 type StackPageProps = PluginPageProps & { stack: SectionStackPage };
 
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
-function OwnViewPage(
-  props: StackPageProps & { openedForOne: boolean },
-): React.JSX.Element {
+function OwnViewPage(props: StackPageProps): React.JSX.Element {
   const { section, stack } = props;
-
-  const view = usePluginView(
-    {
-      pluginId: section.pluginId,
-      path: pluginPagePath(props.path),
-      sessionId: props.sessionId,
-      projectId: props.projectId,
-    },
-    stack.needed,
-  );
+  const view = usePluginView(ownViewOf(props), stack.needed);
+  const onOpenPage = usePluginOpener()(section.pluginId);
 
   return (
     <PluginDetailView
-      {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
+      {...pluginPageProps(section, view, onOpenPage)}
       onBack={backFor(props)}
     />
   );
 }
 
+const ownViewOf = (
+  props: PluginPageProps,
+): Parameters<typeof usePluginView>[0] => ({
+  pluginId: props.section.pluginId,
+  path: pluginPagePath(props.path),
+  sessionId: props.sessionId,
+  projectId: props.projectId,
+});
+
 // The list is already in the sidebar, so the root's own page claims nowhere and draws what sits beside it.
 const listElsewhere = createPlace<ReactNode>();
 
-function SectionRootPage(props: StackPageProps): React.ReactNode {
-  const { section, stack } = props;
-  const view = useSectionRoot(section);
-  const onOpenPage = usePluginOpener()(section.pluginId);
-  const landing = useLanding(section, view?.root ?? null, stack);
+function SectionRootPage(props: {
+  section: PluginSection;
+  stack: SectionStackPage;
+}): React.ReactNode {
+  const view = useSectionRoot(props.section);
+  const landing = useSectionLanding(props.section, view, props.stack);
 
   if (!view || landing) return <PluginLoading />;
+
+  return <SectionRootDetail section={props.section} view={view} />;
+}
+
+function SectionRootDetail(props: {
+  section: PluginSection;
+  view: PluginView;
+}): React.JSX.Element {
+  const { section, view } = props;
+  const root = view.root && withoutList(view.root);
+  const onOpenPage = usePluginOpener()(section.pluginId);
 
   return (
     <ListDetailSidebarPlaceOffer value={listElsewhere}>
       <PluginDetailView
-        {...pluginPageProps(
-          section,
-          { ...view, root: view.root && withoutList(view.root) },
-          onOpenPage,
-        )}
+        {...pluginPageProps(section, { ...view, root }, onOpenPage)}
       />
     </ListDetailSidebarPlaceOffer>
   );
-}
-
-// The page a section's root declares takes the root's place in the stack as soon as the root is shown, so a wide window never lands on an empty detail.
-function useLanding(
-  section: PluginSection,
-  root: PluginView['root'],
-  { shown, showOnly }: SectionStackPage,
-): boolean {
-  const sections = usePluginSections();
-  const landing = landingOf(root);
-  const route =
-    landing === undefined
-      ? undefined
-      : pluginPageRoute(
-          sections,
-          { pluginId: section.pluginId, current: section.id },
-          landing,
-        );
-  const opening = route?.join('/');
-
-  useLayoutEffect(() => {
-    if (shown && opening !== undefined) showOnly(opening.split('/'));
-  }, [shown, opening, showOnly]);
-
-  return route !== undefined;
 }
 
 /*
@@ -151,8 +143,8 @@ function useLanding(
  * and no Plugin declares navigation; a page a Session or Project opened goes back there. The root is a rail section's
  * root, which draws none, and so does a page a sidebar tap opened, which is its stack's only page.
  */
-function backFor(props: StackPageProps & { openedForOne: boolean }) {
-  const pushed = props.stack.below > 0 || props.openedForOne;
+function backFor(props: StackPageProps): (() => void) | null {
+  const pushed = props.stack.below > 0 || openedForOne(props);
 
   return showsBack(props.root, pushed) ? () => router.back() : null;
 }

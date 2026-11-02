@@ -2,6 +2,10 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
 import { landingOf, listOnly, withSelectedRow } from './plugin-section-tree';
 
+const openPage = '/filters/open';
+
+const closedPage = '/filters/closed';
+
 const row = (key: string, path: string): WireNode => ({
   type: 'ListItem',
   key,
@@ -19,10 +23,7 @@ const list: WireNode = {
       type: 'List.Section',
       key: 'status',
       props: { title: 'Status' },
-      children: [
-        row('open', '/filters/open'),
-        row('closed', '/filters/closed'),
-      ],
+      children: [row('open', openPage), row('closed', closedPage)],
       slots: {},
     },
   ],
@@ -40,26 +41,31 @@ const empty: WireNode = {
 const root: WireNode = {
   type: 'ListDetail',
   key: 'issues',
-  props: { landing: '/filters/open' },
+  props: { landing: openPage },
   children: [],
   slots: { list: [list], empty: [empty] },
 };
 
+const rowsIn = (nodes: readonly WireNode[]): WireNode[] =>
+  nodes.flatMap((node) =>
+    node.type === 'ListItem' ? [node] : rowsIn(node.children),
+  );
+
 const selectedRows = (tree: WireNode): string[] =>
-  (tree.slots.list?.[0]?.children[0]?.children ?? [])
+  rowsIn(tree.slots.list ?? [])
     .filter((node) => node.props.selected === true)
     .map((node) => node.key);
 
 describe('a section list’s selected row', () => {
   it('is the row that links to the shown page', () => {
-    expect(selectedRows(withSelectedRow(root, ['/filters/closed']))).toEqual([
+    expect(selectedRows(withSelectedRow(root, [closedPage]))).toEqual([
       'closed',
     ]);
   });
 
   it('stays on the row a page was pushed from', () => {
     expect(
-      selectedRows(withSelectedRow(root, ['/issues/42', '/filters/open'])),
+      selectedRows(withSelectedRow(root, ['/issues/42', openPage])),
     ).toEqual(['open']);
   });
 
@@ -70,7 +76,7 @@ describe('a section list’s selected row', () => {
 
 describe('a section root', () => {
   it('names the page it lands on', () => {
-    expect(landingOf(root)).toBe('/filters/open');
+    expect(landingOf(root)).toBe(openPage);
   });
 
   it('has no landing when it is not a ListDetail', () => {
@@ -78,9 +84,7 @@ describe('a section root', () => {
   });
 
   it('has no landing when it names the root itself, which is where it already is', () => {
-    expect(
-      landingOf({ ...root, props: { landing: '/' } }),
-    ).toBeUndefined();
+    expect(landingOf({ ...root, props: { landing: '/' } })).toBeUndefined();
   });
 
   it('keeps only its list for the live view', () => {

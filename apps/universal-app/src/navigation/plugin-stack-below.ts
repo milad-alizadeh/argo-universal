@@ -38,16 +38,28 @@ export interface PageAt {
 export function repairedPluginRoutes(
   { routes }: Pick<Stack, 'routes'>,
   pageKey: string,
-  { path, root, wide }: PageAt,
+  where: PageAt,
 ): Stack['routes'] | undefined {
-  if (wide) {
-    const [first, ...rest] = routes;
+  return where.wide
+    ? withoutRootBelow(routes)
+    : withRootBelow(routes, pageKey, where);
+}
 
-    return first?.key === belowKey(first?.name ?? '') && rest.length > 0
-      ? rest
-      : undefined;
-  }
+const isRootBelow = (route: Route): boolean =>
+  route.key === belowKey(route.name);
 
+const withoutRootBelow = (
+  routes: Stack['routes'],
+): Stack['routes'] | undefined =>
+  routes.findIndex(isRootBelow) === 0 && routes.length > 1
+    ? routes.slice(1)
+    : undefined;
+
+function withRootBelow(
+  routes: Stack['routes'],
+  pageKey: string,
+  { path, root }: PageAt,
+): Stack['routes'] | undefined {
   const page = soleRoute(routes, pageKey);
 
   return page && sits(path, root) ? [rootBelow(page, root), page] : undefined;

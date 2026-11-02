@@ -26,16 +26,23 @@ export function IssuesRoot({ deps }: RootProps): JSX.Element {
 
 type LayoutProps = RootProps & { choice: RootProjects };
 
+const noProjects = ({
+  project,
+  settled,
+  message,
+}: RootProjects): JSX.Element | undefined =>
+  settled && !project ? <EmptyState title={message} /> : undefined;
+
 function RootLayout({ deps, choice }: LayoutProps): JSX.Element {
   const state = useOverview(choice.project);
-  const { project, settled, message } = choice;
+  const { project } = choice;
 
   return (
     <ListDetail
       title="Issues"
       landing={project && deps.pages.filterPagePath(project, openFilter)}
       list={<RootRows deps={deps} choice={choice} state={state} />}
-      empty={settled && !project ? <EmptyState title={message} /> : undefined}
+      empty={noProjects(choice)}
     />
   );
 }

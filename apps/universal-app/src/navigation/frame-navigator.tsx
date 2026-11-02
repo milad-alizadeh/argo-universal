@@ -147,7 +147,7 @@ export function FrameNavigator(): React.JSX.Element {
   return (
     <Frame frame={frame}>
       <PluginErrorToasts />
-      <PluginSectionLists>
+      <PluginSectionLists wide={framed}>
         <SectionsDrawer framed={framed} frame={frame} plugins={plugins} />
       </PluginSectionLists>
     </Frame>

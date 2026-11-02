@@ -51,10 +51,12 @@ interface PluginRootProps {
 export function PluginRoot(props: PluginRootProps): React.JSX.Element {
   useRepairBelow(props.path);
 
+  const wide = useWide();
+
   return (
     <NarrowRoot root={useNarrowRoot(props.path)}>
       <PluginRowDetails>
-        <PluginDetailScreen {...props} />
+        <PluginDetailScreen {...props} wide={wide} />
       </PluginRowDetails>
     </NarrowRoot>
   );

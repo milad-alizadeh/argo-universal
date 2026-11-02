@@ -18,43 +18,70 @@ export type IssueProjects = {
   subscribe: (listener: () => void) => () => void;
 };
 
-export function createIssueProjects(
-  list: Argo['projects']['list'],
-): IssueProjects {
-  const listeners = new Set<() => void>();
-  const tell = (): void => {
-    for (const listener of listeners) listener();
-  };
-  let read: ProjectsRead = {};
-  let chosen: string | undefined;
-  let call: Promise<Project[]> | undefined;
+type List = Argo['projects']['list'];
 
-  const answered = (next: ProjectsRead, projects: Project[]): Project[] => {
-    read = next;
-    call = undefined;
-    tell();
+// One call at a time: asking while one is on its way shares it.
+function sharedCall<T>(run: () => Promise<T>): () => Promise<T> {
+  let call: Promise<T> | undefined;
 
-    return projects;
-  };
-
-  const refresh = (): Promise<Project[]> => {
-    call ??= list().then(
-      (projects) => answered({ projects }, projects),
-      () => answered({ ...read, failed: true }, read.projects ?? []),
-    );
+  return () => {
+    call ??= run().finally(() => {
+      call = undefined;
+    });
 
     return call;
   };
+}
+
+const listed = (list: List, current: ProjectsRead): Promise<ProjectsRead> =>
+  list().then(
+    (projects) => ({ projects }),
+    () => ({ ...current, failed: true }),
+  );
+
+type ProjectsReader = Pick<IssueProjects, 'read' | 'refresh' | 'known'>;
+
+function createProjectsRead(list: List, tell: () => void): ProjectsReader {
+  let read: ProjectsRead = {};
+
+  const refresh = sharedCall(async () => {
+    read = await listed(list, read);
+    tell();
+
+    return read.projects ?? [];
+  });
 
   return {
     read: () => read,
-    chosenId: () => chosen,
     refresh,
     known: () => (read.projects ? Promise.resolve(read.projects) : refresh()),
+  };
+}
+
+function createProjectChoice(
+  tell: () => void,
+): Pick<IssueProjects, 'chosenId' | 'choose'> {
+  let chosen: string | undefined;
+
+  return {
+    chosenId: () => chosen,
     choose: (id) => {
       if (id === chosen) return;
+
       chosen = id;
       tell();
+    },
+  };
+}
+
+type Listeners = Pick<IssueProjects, 'subscribe'> & { tell: () => void };
+
+function createListeners(): Listeners {
+  const listeners = new Set<() => void>();
+
+  return {
+    tell: () => {
+      for (const listener of listeners) listener();
     },
     subscribe: (listener) => {
       listeners.add(listener);
@@ -63,5 +90,15 @@ export function createIssueProjects(
         listeners.delete(listener);
       };
     },
+  };
+}
+
+export function createIssueProjects(list: List): IssueProjects {
+  const { tell, subscribe } = createListeners();
+
+  return {
+    ...createProjectsRead(list, tell),
+    ...createProjectChoice(tell),
+    subscribe,
   };
 }
