@@ -68,6 +68,9 @@ export const ContentArrivesWhileOpening: Story = {
     const after = neighbour.getBoundingClientRect().top;
 
     await expect(Math.abs(after - before)).toBeLessThan(1);
+    await expect(
+      canvas.getByText(arrivingCopy.trim()).getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(card.getBoundingClientRect().bottom);
     await expect(trigger.getBoundingClientRect().top).toBe(initial.top);
     await expect(trigger.getBoundingClientRect().width).toBe(initial.width);
   },
