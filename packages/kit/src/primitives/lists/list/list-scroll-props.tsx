@@ -79,6 +79,7 @@ function listContents<Item>(
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
     stickyHeaderIndices: props.stickyHeaderIndices,
+    alwaysRender: props.alwaysRender,
     ListHeaderComponent: listStart(props),
     ListFooterComponent: <ListEnd {...props} />,
   };
