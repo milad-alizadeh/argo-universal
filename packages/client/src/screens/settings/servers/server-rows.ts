@@ -1,3 +1,4 @@
+import type { Tone } from '@repo/kit/primitives/content/text';
 import type {
   AppServer,
   AppServerState,
@@ -33,13 +34,21 @@ const stateLabels = {
   'not-allowed': 'Needs pairing again',
 } as const satisfies Record<AppServerState, string>;
 
-/*
- * Each Server says its own state in words, so one unreachable computer says nothing about the next. The word is the
- * whole of it: a toned dot beside it would say the same thing again, and this list carries no icon for one to sit on.
- */
+// Each Server says its own state in words, so one unreachable computer says nothing about the next.
 export const serverStateLabel = (state: AppServerState): string =>
   stateLabels[state];
 
-// Opening a row is where a Server is shown, fixed or unpaired from; the row itself says which one is shown.
+// Grey is a computer that did not answer, and red one that answered and no longer knows this Device.
+const stateTones = {
+  connected: 'success',
+  connecting: 'muted',
+  unreachable: 'muted',
+  'not-allowed': 'danger',
+} as const satisfies Record<AppServerState, Tone>;
+
+export const serverStateTone = (state: AppServerState): Tone =>
+  stateTones[state];
+
+// The footer says what the tone of a state means, which no other word on the page does.
 export const serverListFooter =
-  'Argo shows one Server at a time: its Sessions, Projects and Feed. Open a Server to show it, or to unpair from it.';
+  'Grey means the computer did not answer. Red means it no longer knows this phone.';

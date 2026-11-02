@@ -5,6 +5,7 @@ import {
   RowListItem,
   rowListItemProps,
 } from '../field-row/field-row-list-item.android';
+import { linkTone } from './field-link-tone';
 
 /*
  * A pressable ListItem with what the page holds as its supporting line, as Android Settings' Preference summary.
@@ -16,6 +17,7 @@ export function FieldLink(
   return (
     <RowListItem
       {...rowListItemProps(props)}
+      tone={linkTone(props)}
       supporting={summary(props.value)}
       onPress={props.onPress}
     />

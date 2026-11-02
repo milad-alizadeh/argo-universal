@@ -25,6 +25,29 @@ export const KeepRunningOn: Story = {
   args: { keepRunning: { enabled: true, onChange: fn() } },
 };
 
+// Off by default: only this computer reaches Argo, and Devices cannot be paired.
+export const LocalAccessOff: Story = {
+  args: { localAccess: { enabled: false, onChange: fn() } },
+};
+
+export const LocalAccessOn: Story = {
+  args: {
+    localAccess: {
+      enabled: true,
+      computerName: 'Studio Mac',
+      onChange: fn(),
+    },
+  },
+};
+
+// The red row asks first; the Server stops only when the owner answers.
+export const StopServer: Story = {
+  args: {
+    keepRunning: { enabled: true, onChange: fn() },
+    stopServer: { onStop: fn() },
+  },
+};
+
 export const Connecting: Story = {
   args: { server: { status: 'loading' } },
 };

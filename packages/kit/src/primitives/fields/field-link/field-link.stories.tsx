@@ -52,3 +52,8 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+// An action that ends something, as a Server page's Unpair: red text at the size of the rows beside it, with no fill or border.
+export const Destructive: Story = {
+  args: { title: 'Unpair', action: true, destructive: true },
+};

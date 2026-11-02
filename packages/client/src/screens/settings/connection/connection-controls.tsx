@@ -1,4 +1,3 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 
@@ -73,6 +72,6 @@ export const stopServerSection = (
 ): React.JSX.Element | null =>
   ask ? (
     <FieldGroup.Section footer="Stops the Server on this computer. Paired Devices lose their Sessions until it starts again. Argo starts it again the next time you open the app.">
-      <Button label="Stop Server" variant="danger" onPress={ask} />
+      <FieldGroup.Link title="Stop Server" action destructive onPress={ask} />
     </FieldGroup.Section>
   ) : null;
