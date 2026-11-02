@@ -23,6 +23,8 @@ export interface ToolCallFacts {
   isEdit: boolean;
   // The files an edit touches; empty for any other call, and for an edit that names none.
   editedPaths: ReadonlySet<string>;
+  // The Agent’s description, when supplied separately from the title.
+  description: string | undefined;
   // Whether the call runs a command.
   isCommand: boolean;
   // The file the call works on: the first action's path, else its first location; an unclassified action still names it.
@@ -96,11 +98,15 @@ function decodeActions(
   };
 }
 
+const descriptionOf = (row: ToolCallUpdate): string | undefined =>
+  argoOf(row)?.description?.trim();
+
 const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   ...decodeActions(row),
   isEdit: editKinds.has(row.kind),
   editedPaths: editedPathsOf(row),
   isCommand: row.kind === 'execute',
+  description: descriptionOf(row),
   location: firstLocation(row),
   permissionOutcome: argoOf(row)?.permissionOutcome,
   startedAt: argoOf(row)?.startedAt,
