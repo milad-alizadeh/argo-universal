@@ -1,4 +1,5 @@
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
+import { cn } from '@repo/kit/utils';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -35,7 +36,9 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchScroll>{children}</WorkbenchScroll>
+      <WorkbenchScroll overlay={layout.workbench.state === 'overlay'}>
+        {children}
+      </WorkbenchScroll>
     </Animated.View>
   );
 }
@@ -94,10 +97,18 @@ const shadowScrollProps = {
   contentContainerClassName: 'px-8 pt-8 pb-16',
 } satisfies ComponentProps<typeof ScrollFadeView>;
 
-function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
+type WorkbenchScrollProps = { children: ReactNode; overlay: boolean };
+
+function WorkbenchScroll({
+  children,
+  overlay,
+}: WorkbenchScrollProps): ReactElement {
   return (
     <ScrollFadeView {...shadowScrollProps}>
-      <View pointerEvents="auto" className="gap-2">
+      <View
+        pointerEvents="auto"
+        className={cn('gap-2', overlay && 'rounded-2xl bg-content')}
+      >
         {children}
       </View>
     </ScrollFadeView>
