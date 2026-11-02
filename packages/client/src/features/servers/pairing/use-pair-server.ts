@@ -18,7 +18,7 @@ export interface PairServer {
   // A code the camera read, or the one the owner was shown; anything that is not an Argo code is ignored.
   read: (scanned: string, address?: ServerAddress) => void;
   // A code the owner typed, for a Device with no camera to read the QR; anything that is not a code says so and stays.
-  type: (typed: string) => void;
+  type: (typed: string, host?: string) => void;
   // Tries the code just read once more, for a Server that was not on the network a moment ago.
   retry: () => void;
   // Stops waiting and goes back to reading a code.
@@ -46,7 +46,7 @@ export function usePairServer(
 
 const actionsOf = (hook: Hook): Omit<PairServer, 'state'> => ({
   read: (scanned, address) => readCode({ scanned, address }, hook),
-  type: (typed): void => typeCode(typed, hook),
+  type: (code, host): void => typeCode({ code, host }, hook),
   retry: (): void => {
     if (hook.held.lastTyped !== null) typeCode(hook.held.lastTyped, hook);
     else if (hook.held.last) readCode(hook.held.last, hook);

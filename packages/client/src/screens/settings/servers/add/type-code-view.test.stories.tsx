@@ -21,7 +21,7 @@ export const ConnectSendsWhatWasTyped: Story = {
     await userEvent.type(canvas.getByLabelText('Code'), '482 915');
     await userEvent.click(canvas.getByRole('button', { name: 'Connect' }));
     await expect(args.onSubmit).toHaveBeenCalledOnce();
-    await expect(args.onSubmit).toHaveBeenCalledWith('482915');
+    await expect(args.onSubmit).toHaveBeenCalledWith('482915', undefined);
   },
 };
 
@@ -30,7 +30,7 @@ export const ReturnSendsIt: Story = {
   play: async ({ canvas, args, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Code'), '482-915{Enter}');
     await expect(args.onSubmit).toHaveBeenCalledOnce();
-    await expect(args.onSubmit).toHaveBeenCalledWith('482915');
+    await expect(args.onSubmit).toHaveBeenCalledWith('482915', undefined);
   },
 };
 
@@ -45,11 +45,26 @@ export const LookingCannotBeSentTwice: Story = {
   },
 };
 
-export const ScanInsteadGoesBackToTheCamera: Story = {
-  args: { onScan: fn() },
+// An address typed beside the code goes with it, so the pairing tries it first.
+export const AnAddressGoesWithTheCode: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Scan instead' }));
-    await expect(args.onScan).toHaveBeenCalledOnce();
-    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await userEvent.type(canvas.getByLabelText('Code'), '482915');
+    await userEvent.type(
+      canvas.getByLabelText('Address'),
+      ' studio-mac.local ',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Connect' }));
+    await expect(args.onSubmit).toHaveBeenCalledWith(
+      '482915',
+      'studio-mac.local',
+    );
+  },
+};
+
+export const ThereIsNoWayBackToTheCameraBesideConnect: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.queryByRole('button', { name: 'Scan instead' }),
+    ).toBeNull();
   },
 };

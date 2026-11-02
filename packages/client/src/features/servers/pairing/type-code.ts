@@ -1,12 +1,12 @@
 import { requestServerKey } from '#features/connection';
-import { depsOf, type Hook, settle } from './pair-hook';
+import { depsOf, type Hook, settle, type Typed } from './pair-hook';
 import { pairWithTypedCode, type TypedDeps } from './pair-with-typed-code';
 
 /*
  * Pairs with the Server a typed code belongs to (#1502). The page is the entry while the Servers on the network are asked, then the wait on the owner once one has said the code is its own.
  * What the owner typed goes out as typed: whether it can be a code is the pairing's to say, so every mistake is told the same way and the entry stays.
  */
-export function typeCode(typed: string, hook: Hook): void {
+export function typeCode(typed: Typed, hook: Hook): void {
   if (hook.held.running) return;
 
   const controller = new AbortController();
@@ -20,10 +20,11 @@ export function typeCode(typed: string, hook: Hook): void {
 const typedDepsOf = (
   controller: AbortController,
   hook: Hook,
-  found: { name: string },
+  found: { name: string; host?: string },
 ): TypedDeps => ({
   ...depsOf(controller.signal),
   requestKey: requestServerKey,
+  host: found.host,
   onFound: (name) => {
     found.name = name;
 
@@ -33,14 +34,14 @@ const typedDepsOf = (
 });
 
 async function run(
-  typed: string,
+  typed: Typed,
   controller: AbortController,
   hook: Hook,
 ): Promise<void> {
-  const found = { name: '' };
+  const found = { name: '', host: typed.host };
 
   const outcome = await pairWithTypedCode(
-    typed,
+    typed.code,
     typedDepsOf(controller, hook, found),
   );
 
