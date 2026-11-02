@@ -44,7 +44,7 @@ type SlotItemsOptions = {
 export interface PluginTest {
   projects: TestProjects;
   // The real Account inventory: what is signed in, and which Account each Project chose.
-  accounts: Pick<PluginAccounts, 'list' | 'choose'>;
+  accounts: Pick<PluginAccounts, 'list' | 'get' | 'choose' | 'signOut'>;
   badges: (signal: AbortSignal) => AsyncGenerator<PluginBadge[]>;
   failures: (signal: AbortSignal) => AsyncGenerator<PluginFailure[]>;
   log: (pluginId?: string) => Promise<string>;

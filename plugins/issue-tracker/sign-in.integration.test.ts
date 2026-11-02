@@ -130,7 +130,7 @@ it('draws the sign-in in place of the Issues page when there is no Account', asy
   expect(tracked.github.requests).toHaveLength(0);
 }, 30_000);
 
-it('draws the sign-in again after the token is rejected, and signing in rewrites that Account', async () => {
+it('draws the sign-in again after the token is rejected, and signing in as the same person reuses that Account', async () => {
   const { test, github } = await signedIn();
   const root = await test.mount({ page: '/', surface });
 

@@ -68,6 +68,21 @@ it('signs in through the browser with PKCE and no secret on the Server Device', 
   expect(service.readTokens().at(-1)).toBe('token-1');
 }, 40_000);
 
+it('reaches the items from a page with no Project, as the authoring example does', async () => {
+  const service = await serviceFixture();
+
+  const test = await start('redirect', {
+    network: service.network,
+    openBrowser: approving([]),
+  });
+
+  const page = await test.mount({ page: '/', surface, serverDevice: true });
+
+  await expect.poll(() => page.findText(signInLabel), wait).toBeDefined();
+  await page.press(signInLabel);
+  await clockUntil(test, page, itemsText);
+}, 40_000);
+
 it('says to continue on the Server Device, on a paired Device, and asks nothing of the service', async () => {
   const service = await serviceFixture();
   const test = await start('redirect', { network: service.network });
