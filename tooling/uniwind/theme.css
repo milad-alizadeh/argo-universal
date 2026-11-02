@@ -788,3 +788,7 @@
 @utility shadow-hairline {
   box-shadow: var(--shadow-hairline);
 }
+
+@utility transition-height {
+  transition-property: height;
+}
