@@ -27,7 +27,7 @@ export { readerOperations } from './readers';
 
 export { sessionOperations } from './sessions';
 
-export { projectOperations } from './projects';
+export { ProjectAdded, projectOperations } from './projects';
 
 export interface OperationDefinition {
   id: string;

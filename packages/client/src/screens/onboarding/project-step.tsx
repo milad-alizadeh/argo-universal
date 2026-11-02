@@ -3,7 +3,6 @@ import { type StepMark } from '#features/setup';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep } from './setup-step';
 
-// `onAddProject` is unset until the App can add a Project.
 export type ProjectStepViewProps = Pick<OnboardingViewProps, 'onAddProject'> & {
   mark: StepMark;
 };

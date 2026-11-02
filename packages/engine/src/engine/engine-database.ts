@@ -10,7 +10,10 @@ export async function openEngineDatabase({
   const database = openDatabase(join(home, 'argo.db'));
 
   try {
-    await seedProject(database);
+    // A first run starts with no Projects; the App adds them. The variable seeds one for tests, e2e and development.
+    const seeded = process.env.ARGO_PROJECT_PATH;
+
+    if (seeded) await seedProject(database, seeded);
 
     return database;
   } catch (error) {
