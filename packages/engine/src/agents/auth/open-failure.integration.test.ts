@@ -70,7 +70,7 @@ it('a mid-Turn auth_required ends its Turn auth_required and tells watching Apps
   expect(page.rows.at(-1)).toMatchObject({
     sessionUpdate: 'notice',
     _meta: {
-      sessionAccess: {
+      argo: {
         turnEnd: {
           stopReason: 'auth_required',
           error: { code: RequestError.authRequired().code },
