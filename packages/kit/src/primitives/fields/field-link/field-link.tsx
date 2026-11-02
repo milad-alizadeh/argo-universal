@@ -11,6 +11,7 @@ import {
 } from '#primitives/fields/field-row';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { FieldLinkMark } from './field-link-mark';
 import { linkTone } from './field-link-tone';
 
 // Radix's Trigger hands its child the anchor ref and popup state, as a Drill's popover opens beside the row.
@@ -60,14 +61,25 @@ const disabledClassName = 'opacity-50';
 
 const LinkRow = (props: FieldLinkProps): ReactElement => (
   <Row alignment="center">
-    <View className="min-w-0 shrink">
+    <LinkLeading mark={props.leadingMark} />
+    <View className={cn('min-w-0 shrink', props.leadingMark && 'ml-3')}>
       <RowTitle {...props} tone={linkTone(props)} />
     </View>
     <Spacer flexible />
     {props.value ? <LinkValue value={props.value} /> : null}
-    {props.action ? null : <Chevron />}
+    <LinkDisclosure action={props.action} />
   </Row>
 );
+
+const LinkLeading = ({
+  mark,
+}: { mark: FieldLinkProps['leadingMark'] }): ReactElement | null =>
+  mark ? <FieldLinkMark mark={mark} /> : null;
+
+const LinkDisclosure = ({
+  action,
+}: Pick<FieldLinkProps, 'action'>): ReactElement | null =>
+  action ? null : <Chevron />;
 
 // A long value takes one line and truncates before the title does (#1750): its shrink factor outweighs the title's 1, so the row squeezes the value first.
 const LinkValue = (props: { value: string }): ReactElement => (
@@ -87,7 +99,7 @@ function followOnEnter(
 }
 
 const spokenLabel = (props: FieldLinkProps): string =>
-  props.value ? `${props.title}, ${props.value}` : props.title;
+  [props.title, props.subtitle, props.value].filter(Boolean).join(', ');
 
 function Chevron(): ReactElement {
   const color = useNativeTheme().colors.tertiary;

@@ -5,6 +5,7 @@ import {
   RowListItem,
   rowListItemProps,
 } from '../field-row/field-row-list-item.android';
+import { FieldLinkMark } from './field-link-mark';
 import { linkTone } from './field-link-tone';
 
 /*
@@ -18,11 +19,28 @@ export function FieldLink(
     <RowListItem
       {...rowListItemProps(props)}
       tone={linkTone(props)}
-      supporting={summary(props.value)}
+      supporting={summary(props)}
+      leadingContent={leadingMark(props.leadingMark)}
       onPress={props.onPress}
     />
   );
 }
 
-const summary = (value: string | undefined): ReactElement | undefined =>
-  value ? <NativeText tone="muted">{value}</NativeText> : undefined;
+const leadingMark = (
+  mark: FieldGroupKitProps<'FieldGroup.Link'>['leadingMark'],
+): ReactElement | undefined =>
+  mark ? <FieldLinkMark mark={mark} /> : undefined;
+
+const summary = (
+  props: FieldGroupKitProps<'FieldGroup.Link'>,
+): ReactElement | undefined => {
+  const text = props.subtitle ?? props.value;
+
+  return text ? (
+    <NativeText tone={supportTone(props.subtitleTone)}>{text}</NativeText>
+  ) : undefined;
+};
+
+const supportTone = (
+  tone: 'muted' | 'danger' | undefined,
+): 'muted' | 'danger' => tone ?? 'muted';

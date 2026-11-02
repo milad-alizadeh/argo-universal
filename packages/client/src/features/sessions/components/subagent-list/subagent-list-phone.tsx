@@ -1,51 +1,34 @@
 import type { Subagent } from '@repo/contracts';
+import { isStockIconName } from '@repo/contracts/kit-symbols';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
-import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ComponentProps, JSX } from 'react';
+import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
 import { workListSections } from '../work-list-sections';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
-import { SubagentMark } from './subagent-mark';
 
-type PhoneProps = SubagentListProps & { now: number };
+type Mark = NonNullable<ComponentProps<typeof FieldGroup.Link>['leadingMark']>;
 
-type RowProps = Omit<PhoneProps, 'subagents'> & { subagent: Subagent };
+const statuses = {
+  running: { tone: 'success', label: 'Running' },
+  requires_action: { tone: 'warning', label: 'Needs input' },
+  idle: undefined,
+} as const;
 
-const rowPress = ({
-  subagent,
-  onSelect,
-}: RowProps): (() => void) | undefined =>
-  onSelect ? () => onSelect(subagent) : undefined;
-
-const rowTones = (finished: boolean) =>
-  ({
-    titleTone: finished ? 'muted' : 'neutral',
-    subtitleDimmed: finished,
-  }) as const;
-
-function phoneRowProps(props: RowProps): ComponentProps<typeof ListItem> {
-  const { subagent, now, onSelect } = props;
-  const supporting = subagentSupporting(subagent, now);
+function mark(subagent: Subagent): Mark {
+  const role = subagentRoleMark(subagent.role);
 
   return {
-    ...rowTones(subagent.state === 'idle'),
-    title: subagent.title,
-    subtitle: supporting,
-    disclosure: Boolean(onSelect),
-    onPress: rowPress(props),
-    accessibilityLabel: `${subagent.title}, ${supporting}`,
+    icon: isStockIconName(role.icon) ? role.icon : 'sparkle',
+    tone: role.tone,
+    label: `${subagent.role ?? 'General'} Agent`,
+    status: statuses[subagent.state],
+    dimmed: subagent.state === 'idle',
   };
 }
 
-function PhoneRow(props: RowProps): JSX.Element {
-  return (
-    <ListItem
-      {...phoneRowProps(props)}
-      leading={<SubagentMark subagent={props.subagent} />}
-      leadingSize="avatar"
-    />
-  );
-}
+type PhoneProps = SubagentListProps & { now: number };
 
 const listProps = {
   appearance: 'cards',
@@ -54,18 +37,26 @@ const listProps = {
   accessibilityLabel: 'Agents',
 } as const;
 
-export function PhoneSubagentList(props: PhoneProps): JSX.Element {
-  const row = (subagent: Subagent): JSX.Element => (
-    <PhoneRow key={subagent.sessionId} {...props} subagent={subagent} />
-  );
+const row = (agent: Subagent, props: PhoneProps): JSX.Element => (
+  <FieldGroup.Link
+    key={agent.sessionId}
+    title={agent.title}
+    titleTone={agent.state === 'idle' ? 'muted' : 'neutral'}
+    subtitle={subagentSupporting(agent, props.now)}
+    leadingMark={mark(agent)}
+    disabled={!props.onSelect}
+    onPress={() => props.onSelect?.(agent)}
+  />
+);
 
-  return (
-    <List {...listProps}>
-      {workListSections(
-        props.subagents,
-        (agent) => agent.state !== 'idle',
-        row,
-      )}
-    </List>
+function rows(props: PhoneProps): JSX.Element[] {
+  return workListSections(
+    props.subagents,
+    (agent) => agent.state !== 'idle',
+    (agent) => row(agent, props),
   );
+}
+
+export function PhoneSubagentList(props: PhoneProps): JSX.Element {
+  return <List {...listProps}>{rows(props)}</List>;
 }
