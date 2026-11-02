@@ -5,7 +5,10 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readServerAddress } from '@repo/engine/server-runtime';
+import {
+  readControlToken,
+  readServerAddress,
+} from '@repo/engine/server-runtime';
 import { expect, it } from 'vitest';
 
 const bin = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
@@ -45,7 +48,11 @@ it('server publishes its address and shuts down with the CLI', async () => {
     await expect
       .poll(() => readServerAddress(home), { timeout: 20_000 })
       .toMatchObject({ port });
-    const response = await fetch(`http://127.0.0.1:${port}/trpc/system.info`);
+
+    const response = await fetch(`http://127.0.0.1:${port}/trpc/system.info`, {
+      headers: { authorization: `Bearer ${await readControlToken(home)}` },
+    });
+
     expect(response.ok).toBe(true);
   } finally {
     child.kill('SIGTERM');

@@ -1,0 +1,67 @@
+import type {
+  ConnectionState,
+  KnownServer,
+  PairedEndpoint,
+} from '#features/connection';
+import {
+  ownServerId,
+  ownServerName,
+  type ServerScope,
+} from '#lib/product/server-scope';
+
+/*
+ * One Server this App holds a Connection to; an App holds one to each of several (ADR-0022). `serverDevice` is this
+ * Device's relationship to this Server and not a kind of computer, so the same Device reads true on its own Server's
+ * entry and false on the entry for another computer's.
+ */
+export interface AppServer extends ServerScope {
+  // Where the Server on this Device answers; a paired Server has none, since nothing is ever opened to it by URL.
+  url?: string;
+  // Where a paired Server's channel opens; absent for a Server whose address this Device has not learned yet.
+  channel?: PairedEndpoint;
+}
+
+// What the list says of one Server. There is no offline copy: unreachable is a drawn state (ADR-0045).
+export type AppServerState =
+  | 'connected'
+  | 'connecting'
+  | 'unreachable'
+  // The Server answered and no longer knows this Device: it was unpaired there.
+  | 'not-allowed';
+
+export const ownAppServer = (url: string): AppServer => ({
+  id: ownServerId,
+  name: ownServerName,
+  serverDevice: true,
+  url,
+});
+
+// A Server this Device paired with. Its address is a fallback only, and the discovery name is what is re-resolved.
+export const pairedAppServer = (known: KnownServer): AppServer => ({
+  id: known.key,
+  name: known.name,
+  serverDevice: false,
+  channel: known.address && {
+    host: known.address.host,
+    port: known.address.port,
+    serverPublicKey: known.key,
+  },
+});
+
+// A Connection still trying reads as connecting; one that has given up is what the owner reads as unreachable.
+const states: Record<ConnectionState, AppServerState> = {
+  open: 'connected',
+  connecting: 'connecting',
+  reconnecting: 'connecting',
+  offline: 'unreachable',
+  'not-allowed': 'not-allowed',
+};
+
+/*
+ * One Server's own state, from its own Connection. A Server with no Connection at all — no address learned yet — is
+ * unreachable, which is what the owner needs to read, and the same word the Connection reaches after it gives up.
+ */
+export const serverStateOf = (
+  connection: ConnectionState | undefined,
+): AppServerState =>
+  connection === undefined ? 'unreachable' : states[connection];

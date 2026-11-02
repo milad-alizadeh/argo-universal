@@ -5,6 +5,13 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
+import {
+  keepRunningSection,
+  localAccessSection,
+  type OwnerControls,
+  stopServerSection,
+} from './connection-controls';
+import { useStopAsk } from './stop-server-alert';
 
 export type ServerDetails =
   | { status: 'loading' }
@@ -20,53 +27,81 @@ export type ServerDetails =
       clock?: string;
     };
 
-interface ConnectionDetailViewProps {
+interface ConnectionDetailViewProps extends OwnerControls {
   server: ServerDetails;
 }
 
 // The Server this App talks to: its details and live clock, or why they are missing.
-export function ConnectionDetailView({
-  server,
-}: ConnectionDetailViewProps): React.JSX.Element {
+export function ConnectionDetailView(
+  props: ConnectionDetailViewProps,
+): React.JSX.Element {
   return (
-    <Screen
-      title="Connection"
-      caption="The Argo Server this App is talking to."
-    >
-      <ServerForm server={server} />
+    <Screen title="Connection" caption={captionOf(props)}>
+      <ServerForm {...props} />
     </Screen>
   );
 }
 
-function ServerForm({ server }: { server: ServerDetails }): React.JSX.Element {
-  useErrorToast(errorToast('Could not load the Server', loadError(server)));
+// The Server Device's page is about the computer it runs on; a paired Device's is about the Server it reaches.
+const captionOf = (props: OwnerControls): string =>
+  props.localAccess || props.keepRunning
+    ? 'This computer'
+    : 'The Argo Server this App is talking to.';
 
-  return <ServerState server={server} />;
+function ServerForm(props: ConnectionDetailViewProps): React.JSX.Element {
+  useErrorToast(
+    errorToast('Could not load the Server', loadError(props.server)),
+  );
+  useErrorToast(
+    errorToast('Could not change the Server', props.keepRunning?.error),
+  );
+  useErrorToast(
+    errorToast(
+      'Could not change Local network access',
+      props.localAccess?.error,
+    ),
+  );
+
+  return <ServerState {...props} />;
 }
 
 const loadError = (server: ServerDetails): string | undefined =>
   server.status === 'error' ? server.message : undefined;
 
-function ServerState({ server }: { server: ServerDetails }): React.JSX.Element {
+function ServerState(props: ConnectionDetailViewProps): React.JSX.Element {
   // A down Connection or a failed load keeps the loading look, never a blank page: the banner or toast says why, and the query retries when the Connection reopens.
   return (
-    <Skeleton loading={server.status !== 'loaded'} fill>
-      <ServerRows server={server} />
+    <Skeleton loading={props.server.status !== 'loaded'} fill>
+      <ServerRows {...props} />
     </Skeleton>
   );
 }
 
-const ServerRows = ({
-  server,
-}: {
-  server: ServerDetails;
-}): React.JSX.Element => (
-  <FieldGroup>
-    <FieldGroup.Section title="Server">
-      {detailRows(rowValues(server))}
-    </FieldGroup.Section>
-  </FieldGroup>
-);
+function ServerRows(props: ConnectionDetailViewProps): React.JSX.Element {
+  const [ask, alert] = useStopAsk(props.stopServer);
+
+  return (
+    <>
+      <ServerGroup {...props} ask={ask} />
+      {alert}
+    </>
+  );
+}
+
+function ServerGroup(
+  props: ConnectionDetailViewProps & { ask?: () => void },
+): React.JSX.Element {
+  return (
+    <FieldGroup>
+      <FieldGroup.Section title="Server">
+        {detailRows(rowValues(props.server))}
+      </FieldGroup.Section>
+      {localAccessSection(props.localAccess)}
+      {keepRunningSection(props.keepRunning)}
+      {stopServerSection(props.ask)}
+    </FieldGroup>
+  );
+}
 
 interface RowValues {
   version?: string;

@@ -142,7 +142,8 @@ it('typed open failures survive HTTP serialization for an App', async () => {
 
   const response = await fetch(`${host.url}/trpc/session.new`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // The Origin the App's own page sends, which is what proves the call is the Server Device's (#1696).
+    headers: { 'Content-Type': 'application/json', origin: 'app://app' },
     body: JSON.stringify(emptySessionInput),
   });
 

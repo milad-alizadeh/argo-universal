@@ -43,6 +43,13 @@ export const mockHttpServer: HttpServer = {
       'Structural model does not deliver notifications',
     );
   },
+  get localNetworkAccess(): never {
+    return expect.unreachable('Structural model does not change the bind');
+  },
+  get pairing(): never {
+    return expect.unreachable('Structural model mints no Pairing Ticket');
+  },
+  listeningOn: (): string => '127.0.0.1:7337',
   createCaller: (): never =>
     expect.unreachable('Structural model does not call procedures'),
   close: (): never =>
@@ -50,6 +57,12 @@ export const mockHttpServer: HttpServer = {
 };
 
 Object.defineProperty(mockHttpServer, 'notifications', { enumerable: false });
+
+Object.defineProperty(mockHttpServer, 'pairing', { enumerable: false });
+
+Object.defineProperty(mockHttpServer, 'localNetworkAccess', {
+  enumerable: false,
+});
 
 export const input = {
   now: (): number => Date.now(),

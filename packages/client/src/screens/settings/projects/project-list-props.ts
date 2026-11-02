@@ -6,7 +6,6 @@ export type ProjectsLoad =
   | { status: 'loaded'; projects: ProjectInfo[] };
 
 export interface ProjectListViewProps {
-  caption?: string;
   projects: ProjectsLoad;
   onOpenProject: (name: string) => void;
   // Where the search starts, for stories.

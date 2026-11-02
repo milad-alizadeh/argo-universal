@@ -11,6 +11,7 @@ import {
 } from '#primitives/fields/field-row';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { linkTone } from './field-link-tone';
 
 // Radix's Trigger hands its child the anchor ref and popup state, as a Drill's popover opens beside the row.
 type Anchor = Pick<
@@ -60,7 +61,7 @@ const disabledClassName = 'opacity-50';
 const LinkRow = (props: FieldLinkProps): ReactElement => (
   <Row alignment="center">
     <View className="min-w-0 shrink">
-      <RowTitle {...props} />
+      <RowTitle {...props} tone={linkTone(props)} />
     </View>
     <Spacer flexible />
     {props.value ? <LinkValue value={props.value} /> : null}

@@ -69,3 +69,13 @@ Then('no image is attached', async ({ page }): Promise<void> => {
 Then('the Message box is empty', async ({ page }): Promise<void> => {
   await expectMessage(page, '');
 });
+
+When(
+  'I send the prompt {string} and open Settings at once',
+  async ({ page }, prompt: string): Promise<void> => {
+    await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
+    await page.getByRole('button', { name: 'Send', exact: true }).click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page).toHaveURL(/\/settings/);
+  },
+);

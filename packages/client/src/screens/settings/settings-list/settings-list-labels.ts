@@ -2,22 +2,19 @@ import type { SettingsListViewProps } from './settings-list-props';
 
 type ServerStatus = NonNullable<SettingsListViewProps['status']>;
 
-const connectionValues: Record<
-  ServerStatus,
-  (props: SettingsListViewProps, wide: boolean) => string
-> = {
-  loading: () => 'Connecting…',
-  disconnected: () => 'Disconnected',
-  ready: (props, wide) =>
-    props.connectionState ?? (wide ? 'This Mac' : 'Direct'),
+/*
+ * An open Connection has nothing to add: its badge says available, and the Servers row above it already names the
+ * Server being shown. No value says "Mac" either: the Server Device may be Windows or Linux (ADR-0045).
+ */
+const connectionValues: Record<ServerStatus, string | undefined> = {
+  loading: 'Connecting…',
+  disconnected: 'Disconnected',
+  ready: undefined,
 };
 
-export function connectionValue(
+export const connectionValue = (
   props: SettingsListViewProps,
-  wide: boolean,
-): string {
-  return connectionValues[props.status ?? 'ready'](props, wide);
-}
+): string | undefined => connectionValues[props.status ?? 'ready'];
 
 export function serverValue(
   props: SettingsListViewProps,

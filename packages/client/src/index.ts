@@ -58,6 +58,12 @@ export { useDesktopNavigation } from './features/app-navigation';
 
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
+export { AddServerScreen } from './screens/settings/servers/add/add-server-screen';
+
+export { ServerDetailScreen } from './screens/settings/servers/server-detail-screen';
+
+export { ServerListScreen } from './screens/settings/servers/server-list-screen';
+
 export { hasLiquidGlass } from '@repo/kit/native-header';
 
 export {

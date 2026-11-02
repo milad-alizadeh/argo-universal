@@ -76,6 +76,10 @@
   /* A modal backdrop in both themes, the overlay setting its opacity; and the
      letterbox behind a video. */
   --color-scrim: var(--color-black);
+  /* A QR code's own two colours, the same in both themes: a camera reads a code
+     by contrast, so it stays black on white wherever Argo draws it. */
+  --color-code-light: var(--color-white);
+  --color-code-dark: var(--color-black);
   /* The centred content column: Feed, Composer and request cards. */
   --container-column: 800px;
   /* The desktop Composer floor used to derive frame thresholds. */
@@ -87,6 +91,8 @@
   --breakpoint-wide: 1100px;
   /* A content column this wide or wider draws the desktop Composer and cards. */
   --container-content-wide: 480px;
+  /* A centred sheet whose page sets two columns beside each other, as Pair a Device does. */
+  --container-sheet-wide: 760px;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:
     "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -153,6 +159,7 @@
   --leading-nav-title: var(--leading-5_5);
   --font-weight-nav-title: var(--font-weight-semibold);
   --tracking-nav-title: -0.025em;
+  --tracking-title-code: 0.08em;
   --text-nav-action: 17px;
   --leading-nav-action: var(--leading-5_5);
   --font-weight-nav-action: var(--font-weight-normal);
@@ -617,6 +624,18 @@
     font-size: var(--text-body-wide);
     line-height: var(--leading-body-wide);
   }
+}
+
+/* A code the owner reads off the screen and types somewhere else, at the Title's size: wide
+   tracking so no two glyphs run together. */
+@utility type-title-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-title);
+  line-height: var(--leading-title);
+  font-weight: var(--font-weight-body);
+  letter-spacing: var(--tracking-title-code);
+  color: var(--color-foreground);
+  font-variant: tabular-nums;
 }
 
 /* Roles that look the same on every width and keep the colour they are given. */

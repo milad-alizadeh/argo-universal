@@ -12,7 +12,6 @@ import { toFeedView } from '../../view/to-feed-view';
 import { liveHeaderNow, workingHeader } from '../live-header/live-header.mocks';
 import { Feed } from './feed';
 import { feedScrollId, scrolledToEnd, settleWait } from './feed-reader.mocks';
-import { settledTopOf } from './feed-settled-top.mocks';
 import { longSnapshot, longTail } from './feed.mocks';
 import { feedArgs } from './paged-feed.mocks';
 
@@ -26,6 +25,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const recording = 'edit-and-command';
 
 const promptText = 'Write three pages about the lighthouse keeper';
 
@@ -49,7 +50,7 @@ const lastRow = longTail.at(-1);
 if (!lastRow) throw new Error('Recorded catalog needs a Long Feed');
 
 const sentPrompt: SessionUpdate = {
-  ...recordedUserMessage('agent-1', 'edit-and-command'),
+  ...recordedUserMessage('agent-1', recording),
   id: 'sent-prompt',
   position: lastRow.position + 1,
   revision: longSnapshot.maxRevision + 1,
@@ -57,7 +58,7 @@ const sentPrompt: SessionUpdate = {
 };
 
 const answerSoFar = (length: number): SessionUpdate => ({
-  ...recordedAgentMessage('agent-1', 'edit-and-command'),
+  ...recordedAgentMessage('agent-1', recording),
   id: 'streamed-answer',
   position: lastRow.position + 2,
   revision: longSnapshot.maxRevision + 2,
@@ -118,52 +119,11 @@ function StreamingFeed(): React.JSX.Element {
   );
 }
 
-const topInView = (row: HTMLElement, scroll: HTMLElement): number =>
-  row.getBoundingClientRect().top - scroll.getBoundingClientRect().top;
-
 // Longest the answer may take to stream in before the story gives up. The steps before it can spend 15s of the 30s test timeout, so this stays inside what is left.
 const streamDeadlineMs = 12_000;
 
-// Reads the prompt's place in the view on every frame until the answer has streamed in full. The deadline is a timer, so it still fires when frames stop, and the failure says how far the stream and the frames had got.
-function promptTopsWhileStreaming(
-  prompt: HTMLElement,
-  scroll: HTMLElement,
-): Promise<number[]> {
-  return new Promise((resolve, reject) => {
-    const tops: number[] = [];
-    let done = false;
-
-    const deadline = setTimeout(() => {
-      done = true;
-      reject(
-        new Error(
-          `Answer streamed ${stream.streamed} of ${answerText.length} characters in ${streamDeadlineMs}ms; ${tops.length} frames were read`,
-        ),
-      );
-    }, streamDeadlineMs);
-
-    const step = (): void => {
-      if (done) return;
-      tops.push(topInView(prompt, scroll));
-
-      if (stream.streamed < answerText.length) {
-        requestAnimationFrame(step);
-      } else {
-        done = true;
-        clearTimeout(deadline);
-        resolve(tops);
-      }
-    };
-
-    requestAnimationFrame(step);
-  });
-}
-
-// The top of the view, clear of the header's fade.
-const nearTop = 120;
-
-// A sent prompt rises to the top of the view, then holds still to the pixel while its answer streams in below, past the end of the view.
-export const PinsPromptWhileAnswerStreams: Story = {
+// A sent prompt and its answer streaming in below it: the Feed follows the end, so the newest text stays in view above the Composer.
+export const FollowsEndWhileAnswerStreams: Story = {
   render: () => <StreamingFeed />,
   play: async ({ canvas }) => {
     await settleLayout('wide');
@@ -172,15 +132,44 @@ export const PinsPromptWhileAnswerStreams: Story = {
     // The Feed's mount effect hands over `send`; wait for it rather than assume it ran.
     await waitFor(() => expect(stream.send).not.toBeNull(), settleWait);
     stream.send?.();
-    const prompt = await canvas.findByText(promptText);
-    await waitFor(
-      () => expect(topInView(prompt, scroll)).toBeLessThan(nearTop),
-      settleWait,
-    );
-    await settledTopOf(() => prompt);
-    const tops = await promptTopsWhileStreaming(prompt, scroll);
-    await expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
-    // The answer ran on below the view, where the Feed did not follow it.
-    await expect(scrolledToEnd(scroll)).toBe(false);
+    await canvas.findByText(promptText);
+    await waitFor(() => expect(stream.streamed).toBe(answerText.length), {
+      timeout: streamDeadlineMs,
+    });
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
+  },
+};
+
+const openMessage = (
+  id: string,
+  offset: number,
+  text: string,
+): SessionUpdate => ({
+  ...recordedAgentMessage('agent-1', recording),
+  id,
+  position: lastRow.position + offset,
+  revision: longSnapshot.maxRevision + offset,
+  state: 'open',
+  content: [{ type: 'text', text }],
+});
+
+// Every message of a running Turn stays open until the Turn ends; the Agent writes only into the newest.
+export const OneCaretAcrossOpenMessages: Story = {
+  args: {
+    items: toFeedView(
+      [
+        ...longTail,
+        openMessage('finished-answer', 1, 'Goal set'),
+        openMessage('streaming-answer', 2, 'Starting on the rest'),
+      ],
+      longSnapshot,
+    ).items,
+    liveHeader: workingHeader,
+    now: liveHeaderNow,
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(await canvas.findByText('Starting on the rest')).toBeVisible();
+    await expect(canvas.getAllByTestId('streaming-caret')).toHaveLength(1);
   },
 };

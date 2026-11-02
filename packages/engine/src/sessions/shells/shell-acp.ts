@@ -22,6 +22,8 @@ export const attachShellRuntime = (
   ...destination,
   terminalRequests: requests(shells),
   update: (notification) => {
+    shells.observe(notification);
+
     for (const reference of terminalReferences(notification.update))
       shells.associate(reference.terminalId, reference.toolCallId);
 

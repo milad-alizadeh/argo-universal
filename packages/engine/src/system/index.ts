@@ -1,4 +1,4 @@
-export type { SystemDeps } from './info';
+export { readSystemInfo, type SystemDeps } from './info';
 
 export { createSystemRouter } from './router';
 

@@ -40,6 +40,7 @@ export const standaloneSession = {
   ...sessionRows.unread,
   title: 'Standalone Session',
   activityAt: 400,
+  createdAt: 400,
 };
 
 // A group holding delegated work keeps one tree lane for every top-level row, so a childless Session lines up with a parent.

@@ -4,19 +4,17 @@ import type * as React from 'react';
 
 export interface PlaceholderDetailViewProps {
   title: string;
-  caption?: string;
   // What will appear here once the App can show it.
   description: string;
 }
 
-// A Settings page whose content the App cannot show yet: its title and caption, and a note where its rows will go.
+// A Settings page whose content the App cannot show yet: its title, and a note where its rows will go.
 export function PlaceholderDetailView({
   title,
-  caption,
   description,
 }: PlaceholderDetailViewProps): React.JSX.Element {
   return (
-    <Screen title={title} caption={caption}>
+    <Screen title={title}>
       <FieldGroup>
         <FieldGroup.Section>
           <FieldGroup.Value title={description} value="" />

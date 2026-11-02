@@ -38,4 +38,10 @@ export const fieldGroupLinkRowProps = fieldGroupFieldProps.extend({
     .describe(
       'The row performs an action rather than opening a page: no disclosure chevron on iOS and the web (Android draws none on any row), and a button rather than a link to assistive technology on the web.',
     ),
+  destructive: z
+    .boolean()
+    .optional()
+    .describe(
+      'The row ends something, such as unpairing: its title is drawn in the destructive tone, red text at the size of every other row, with no fill or border. Use it with `action`.',
+    ),
 });

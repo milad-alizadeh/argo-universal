@@ -2,6 +2,9 @@ import type { Page, APIResponse } from '@playwright/test';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 
+// A step reads and writes as the App does, from an Origin the Server serves: a plain-HTTP request that proves nothing is refused (#1696).
+const asTheApp = { origin: 'app://app' };
+
 type QueryInput<Output> = {
   page: Page;
   httpUrl: string;
@@ -18,7 +21,7 @@ export async function query<Output>(
 
   const response = await page.request.get(
     `${httpUrl}/trpc/${procedure}?input=${encoded}`,
-    { maxRetries: 2 },
+    { headers: asTheApp, maxRetries: 2 },
   );
 
   expect(response.ok()).toBe(true);
@@ -53,7 +56,7 @@ export async function mutateWithResult<Output>(
 async function requestMutation(input: MutationInput): Promise<APIResponse> {
   const response = await input.page.request.post(
     `${input.httpUrl}/trpc/${input.procedure}`,
-    { data: input.input },
+    { headers: asTheApp, data: input.input },
   );
 
   expect(response.ok()).toBe(true);

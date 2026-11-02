@@ -11,7 +11,15 @@ interface ClampProps {
   onOverflowChange?: (overflowing: boolean) => void;
 }
 
-export function MarkdownClamp({
+// With no limit and nobody asking about overflow there is nothing to measure, which would draw each message again once it has laid out, and again as it streams. A caller that asks keeps this tree when it lifts the limit, so "Show more" doesn't redraw the message from nothing.
+export function MarkdownClamp(props: ClampProps): ReactNode {
+  if (props.lines === undefined && !props.onOverflowChange)
+    return props.children;
+
+  return <LineClamp {...props} />;
+}
+
+function LineClamp({
   lines,
   onOverflowChange,
   children,

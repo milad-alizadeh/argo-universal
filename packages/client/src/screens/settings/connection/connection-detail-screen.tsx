@@ -4,6 +4,8 @@ import type * as React from 'react';
 import { useConnectionState, useTRPC } from '#features/connection';
 import { ConnectionDetailView } from './connection-detail-view';
 import { toServerDetails } from './to-server-details';
+import { useKeepRunning } from './use-keep-running';
+import { useLocalAccess } from './use-local-access';
 
 export function ConnectionDetailScreen(): React.JSX.Element {
   const trpc = useTRPC();
@@ -14,6 +16,8 @@ export function ConnectionDetailScreen(): React.JSX.Element {
   return (
     <ConnectionDetailView
       server={toServerDetails(info, clock.data?.now, connection)}
+      keepRunning={useKeepRunning()}
+      localAccess={useLocalAccess()}
     />
   );
 }

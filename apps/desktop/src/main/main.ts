@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
-import { app, BrowserWindow, dialog, Menu } from 'electron';
+import { app, BrowserWindow, dialog, Menu, session } from 'electron';
 import { createActor } from 'xstate';
 import {
   appOrigin,
@@ -11,9 +11,11 @@ import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { handleExternalLinks } from './handle-external-links';
 import { reportUnexpectedFailure } from './report-unexpected-failure';
+import { reportFailure } from './server-failure-dialog';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleServerRetry } from './server-retry';
+import { attachServerToken } from './server-token';
 import { handleShareMenu } from './share-menu';
 import { handleSymbolImages } from './symbol-images';
 import { handleWindowBackground } from './window-background';
@@ -51,7 +53,7 @@ registerAppScheme();
 const serverUrl = (address: ServerAddress): string =>
   `ws://127.0.0.1:${address.port}`;
 
-// Makes sure a Supervisor runs; on quit it stops only one that it started.
+// Makes sure a Supervisor runs, adopting one that already runs; on quit it stops only one that it started, and none when the Server is set to keep running.
 const home = resolveHome();
 
 const server = createActor(serverConnectionMachine, {
@@ -91,9 +93,9 @@ handleShareMenu(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 
-handleServerRetry(windowOrigin, (): void =>
-  server.send({ type: 'server.retry' }),
-);
+const retryServer = (): void => server.send({ type: 'server.retry' });
+
+handleServerRetry(windowOrigin, retryServer);
 
 let serverStarted = false;
 
@@ -105,32 +107,26 @@ const links = handleExternalLinks(windowOrigin, (): void => {
     showAppWindow(currentUrl);
 });
 
-function reportFailure(failure: string | null): void {
-  void dialog
-    .showMessageBox({
-      type: 'error',
-      message: 'Argo could not start the Server',
-      detail: failure ?? undefined,
-      buttons: ['Retry', 'Quit'],
-      defaultId: 0,
-      cancelId: 1,
-    })
-    .then(({ response }): void => {
-      if (response === 0) server.send({ type: 'server.retry' });
-      else app.quit();
-    });
+// The Server is listening: its page's media loads carry no Origin, so this process proves them with the user token (#1696).
+function serverReady(address: ServerAddress): void {
+  currentUrl = serverUrl(address);
+  void attachServerToken({
+    session: session.defaultSession,
+    home,
+    port: address.port,
+  });
+
+  if (BrowserWindow.getAllWindows().length === 0) showAppWindow(currentUrl);
 }
 
 function listenToServer(): void {
-  server.on('server.ready', ({ address }): void => {
-    currentUrl = serverUrl(address);
-
-    if (BrowserWindow.getAllWindows().length === 0) showAppWindow(currentUrl);
-  });
+  server.on('server.ready', ({ address }): void => serverReady(address));
   server.on('badge.changed', ({ attention }): void => {
     app.dock?.setBadge(attention > 0 ? String(attention) : '');
   });
-  server.on('server.failed', ({ failure }): void => reportFailure(failure));
+  server.on('server.failed', ({ failure }): void =>
+    reportFailure(failure, retryServer),
+  );
   server.subscribe({
     error: (error): void => reportUnexpectedFailure(String(error)),
   });

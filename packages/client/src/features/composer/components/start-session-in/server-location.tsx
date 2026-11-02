@@ -4,7 +4,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { useServerPaired } from '#lib/product/server-place';
+import { useServerPaired } from '#lib/product/server-scope';
 
 interface ServerLocationProps {
   name: string;

@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
 import {
   drawnRows,
+  fewChanges,
   fileHeader,
   findFileHeader,
   largeFile,
@@ -24,6 +25,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const loadingMore = /^Loading/;
 
 const lastFile = '/repo/src/module-60/index.ts';
 
@@ -51,7 +54,7 @@ export const FilesArriveInPages: Story = {
     ).toBeNull();
     await scrollUntil(
       drawnRows,
-      () => screen.queryByLabelText('Loading more files') !== null,
+      () => screen.queryByLabelText(loadingMore) !== null,
     );
     await scrollUntil(
       drawnRows,
@@ -59,7 +62,26 @@ export const FilesArriveInPages: Story = {
         screen.queryByRole('button', { name: `Diff for ${lastFile}` }) !== null,
     );
     await waitFor(() =>
-      expect(screen.queryByLabelText('Loading more files')).toBeNull(),
+      expect(screen.queryByLabelText(loadingMore)).toBeNull(),
+    );
+  },
+};
+
+// While diffs load, the list shows one spinner, after its files, and none under any file; the diffs appear as they land.
+export const OneSpinnerWhileDiffsLoad: Story = {
+  args: { catalog: fewChanges },
+  play: async () => {
+    await findFileHeader(largeFile);
+
+    const spinners = await screen.findAllByRole('progressbar');
+
+    await expect(spinners).toHaveLength(1);
+    await expect(spinners[0]).toHaveAccessibleName(
+      expect.stringMatching(loadingMore),
+    );
+    await waitFor(() => expect(diffLines().length).toBeGreaterThan(0));
+    await waitFor(() =>
+      expect(screen.queryAllByRole('progressbar')).toHaveLength(0),
     );
   },
 };

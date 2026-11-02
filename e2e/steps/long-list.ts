@@ -67,6 +67,7 @@ async function startSession(
   session: SeededSession,
 ): Promise<void> {
   const response = await page.request.post(`${httpUrl}/trpc/session.new`, {
+    headers: { origin: 'app://app' },
     data: newSessionInput(session),
   });
 

@@ -21,7 +21,7 @@ export function useSessionWork(
   offered: (work: Work) => readonly string[],
 ): SessionWork {
   const work = workOf(snapshot);
-  const panels = useSessionPanels(offered(work));
+  const panels = useSessionPanels(offered(work), sessionId);
   const shown = panels.state.shown === 'shells';
 
   return {

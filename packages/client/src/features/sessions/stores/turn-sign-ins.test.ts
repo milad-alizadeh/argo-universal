@@ -72,6 +72,7 @@ const serverConnection = (): Connection => ({
   watch: () => {},
   foreground: () => {},
   retry: () => {},
+  refuse: () => {},
   stop: () => {},
 });
 

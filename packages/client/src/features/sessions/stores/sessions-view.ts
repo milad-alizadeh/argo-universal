@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { z } from 'zod';
+import { useServerScope } from '#lib/product/server-scope';
 
 // By project lists each Project's Sessions under its heading; One list has no headings.
 export const sessionsGroupChoices = [
@@ -74,7 +75,10 @@ const isChoice = <Field extends ViewField>(
 ): value is SessionsView[Field] =>
   viewChoices[field].some((choice) => choice.value === value);
 
-const storageKey = 'sessions-view';
+/*
+ * The view is kept for one Server's Sessions, so a Device that looks at two Servers keeps a view for each (ADR-0022).
+ */
+const storageKey = (serverId: string): string => `${serverId}:sessions-view`;
 
 // A kept field that is none of its choices, or missing, falls back to that field's default.
 const keptField = <Field extends ViewField>(
@@ -105,10 +109,10 @@ function keptView(saved: string): SessionsView {
 // Writes run one after another, so the last choice is the one kept, and a read waits for them.
 let writes = Promise.resolve();
 
-async function load(): Promise<SessionsView> {
+async function load(serverId: string): Promise<SessionsView> {
   await writes;
 
-  const saved = await AsyncStorage.getItem(storageKey);
+  const saved = await AsyncStorage.getItem(storageKey(serverId));
 
   return saved === null ? defaultSessionsView : keptView(saved);
 }
@@ -119,7 +123,7 @@ function loadFailed(cause: unknown): SessionsView {
   return defaultSessionsView;
 }
 
-type SessionsViewKey = readonly ['sessions-view'];
+type SessionsViewKey = readonly ['sessions-view', string];
 
 type SessionsViewQuery = UnusedSkipTokenOptions<
   SessionsView,
@@ -129,10 +133,10 @@ type SessionsViewQuery = UnusedSkipTokenOptions<
 > & { queryKey: DataTag<SessionsViewKey, SessionsView, Error> };
 
 // The view this Device kept; a failed read keeps the default.
-export function sessionsViewQuery(): SessionsViewQuery {
+export function sessionsViewQuery(serverId: string): SessionsViewQuery {
   return queryOptions({
-    queryKey: ['sessions-view'] as const,
-    queryFn: () => load().catch(loadFailed),
+    queryKey: ['sessions-view', serverId] as const,
+    queryFn: () => load(serverId).catch(loadFailed),
     staleTime: Infinity,
     // This Device's storage answers while the Server is unreachable.
     networkMode: 'always',
@@ -142,13 +146,16 @@ export function sessionsViewQuery(): SessionsViewQuery {
 // Shows the choice at once, wins over a read still loading, and keeps it for the next App start.
 export function chooseSessionsView(
   client: QueryClient,
+  serverId: string,
   view: SessionsView,
 ): void {
-  const { queryKey } = sessionsViewQuery();
+  const { queryKey } = sessionsViewQuery(serverId);
   void client.cancelQueries({ queryKey, exact: true });
   client.setQueryData(queryKey, view);
   writes = writes
-    .then(() => AsyncStorage.setItem(storageKey, JSON.stringify(view)))
+    .then(() =>
+      AsyncStorage.setItem(storageKey(serverId), JSON.stringify(view)),
+    )
     .catch(keepFailed);
 }
 
@@ -162,11 +169,12 @@ export function useSessionsView(): [
   (view: SessionsView) => void,
 ] {
   const client = useQueryClient();
-  const { data = defaultSessionsView } = useQuery(sessionsViewQuery());
+  const serverId = useServerScope().id;
+  const { data = defaultSessionsView } = useQuery(sessionsViewQuery(serverId));
 
-  return [data, (view) => chooseSessionsView(client, view)];
+  return [data, (view) => chooseSessionsView(client, serverId, view)];
 }
 
 // Whether the view this Device kept has loaded, so the list asks the Server for it and not for the default first.
 export const useSessionsViewKept = (): boolean =>
-  useQuery(sessionsViewQuery()).isSuccess;
+  useQuery(sessionsViewQuery(useServerScope().id)).isSuccess;

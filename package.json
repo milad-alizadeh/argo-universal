@@ -14,7 +14,6 @@
     "format": "oxfmt",
     "postinstall": "sherif && pnpm generate:plugin-kit",
     "new:story": "node --import tsx tools/new-story.mts",
-    "perf": "pnpm --filter @repo/universal-app build && pnpm --filter @repo/tools perf",
     "check:story-renders": "node --import tsx tools/check-story-renders.mts",
     "quality:dead-code": "NODE_ENV=production knip --no-progress --max-issues 0",
     "quality:duplication": "jscpd --config .jscpd.json --baseline .jscpd-baseline.json --fail-on-new-clones=0 apps packages tooling tools e2e mocks",

@@ -1,9 +1,8 @@
 import type { Token } from 'marked';
 import type * as React from 'react';
 import { useContext } from 'react';
-import { Text, type TextProps } from '#primitives/content/text';
 import { Caret } from './caret';
-import { useClampText } from './clamp-leaves';
+import { ClampText } from './clamp-text';
 import { InlineTokens } from './inline-tokens';
 import { MarkdownTone } from './markdown-tone';
 
@@ -19,28 +18,19 @@ function proseRole(level: number | undefined): 'body' | 'title' | 'heading' {
   return level === 1 ? 'title' : 'heading';
 }
 
-function useProseProps(headingLevel?: number): TextProps {
-  const role = proseRole(headingLevel);
+export function Prose(props: ProseProps): React.JSX.Element {
+  const { headingLevel } = props;
 
-  return {
-    ...useClampText(role),
-    role,
-    tone: useContext(MarkdownTone),
-    accessibilityRole: headingLevel ? ('heading' as const) : undefined,
-    'aria-level': headingLevel,
-    className: 'min-w-0 max-w-full',
-  };
-}
-
-export function Prose({
-  tokens,
-  caret,
-  headingLevel,
-}: ProseProps): React.JSX.Element {
   return (
-    <Text {...useProseProps(headingLevel)}>
-      <InlineTokens tokens={tokens} />
-      {caret && <Caret />}
-    </Text>
+    <ClampText
+      role={proseRole(headingLevel)}
+      tone={useContext(MarkdownTone)}
+      accessibilityRole={headingLevel ? 'heading' : undefined}
+      aria-level={headingLevel}
+      className="min-w-0 max-w-full"
+    >
+      <InlineTokens tokens={props.tokens} />
+      {props.caret && <Caret />}
+    </ClampText>
   );
 }

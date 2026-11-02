@@ -3,6 +3,7 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { useState } from 'react';
+import { oneRow } from '../../one-row';
 import { AccountSignOutAlert, signOutCopy } from './account-sign-out-alert';
 
 export interface AccountBorrower {
@@ -31,7 +32,6 @@ const accountDetailTitle = 'Account detail';
 export interface AccountDetailViewProps {
   // The Account's label, or its id until the Account loads; it heads the Account's first section.
   title: string;
-  caption?: string;
   account: AccountDetailLoad;
   onRevoke: (pluginId: string) => void;
   onAllow: (pluginId: string) => void;
@@ -44,11 +44,7 @@ export function AccountDetailView(
   props: AccountDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Screen
-      title={accountDetailTitle}
-      caption={props.caption}
-      onBack={props.onBack}
-    >
+    <Screen title={accountDetailTitle} onBack={props.onBack}>
       <AccountBody {...props} />
     </Screen>
   );
@@ -64,15 +60,6 @@ function AccountBody(props: AccountDetailViewProps): React.JSX.Element {
 
   return <LoadedAccountBody {...props} account={account} />;
 }
-
-// While loading, or when the Account is gone, the page is one row saying so.
-const oneRow = (title: string): React.JSX.Element => (
-  <FieldGroup>
-    <FieldGroup.Section>
-      <FieldGroup.Value title={title} value="" />
-    </FieldGroup.Section>
-  </FieldGroup>
-);
 
 type LoadedProps = AccountDetailViewProps & { account: LoadedAccount };
 
