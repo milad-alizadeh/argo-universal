@@ -16,6 +16,38 @@ export const projectOperations = {
     tier: 'read',
     keywords: ['repositories', 'folders', 'workspaces'],
   },
+  'project.add': {
+    id: 'project.add',
+    label: 'Add Project',
+    description:
+      'Register the git repository that holds a folder on the Server as a Project.',
+    params: z.strictObject({
+      path: z.string().min(1).describe('A folder inside the repository.'),
+    }),
+    result: z.strictObject({ projectId: z.string() }),
+    tier: 'confirm',
+    keywords: ['register', 'repository', 'folder', 'new'],
+  },
+  'project.clone': {
+    id: 'project.clone',
+    label: 'Clone Project',
+    description:
+      "Clone a git repository from a URL into the Server's Projects folder and register it as a Project.",
+    params: z.strictObject({ url: z.string().min(1) }),
+    result: z.strictObject({ projectId: z.string() }),
+    tier: 'confirm',
+    keywords: ['github', 'git clone', 'repository', 'new'],
+  },
+  'project.create': {
+    id: 'project.create',
+    label: 'Create Project',
+    description:
+      "Start a new git repository in the Server's Projects folder and register it as a Project.",
+    params: z.strictObject({ name: z.string().min(1) }),
+    result: z.strictObject({ projectId: z.string() }),
+    tier: 'confirm',
+    keywords: ['new', 'init', 'repository', 'folder'],
+  },
   'project.listBranches': {
     id: 'project.listBranches',
     label: 'List Project branches',

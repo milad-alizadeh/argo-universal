@@ -69,6 +69,9 @@ export const projectHref = (name: string): Href => ({
   params: { name },
 });
 
+// Add a Project, a page in Settings.
+export const addProjectHref = (): Href => '/settings/projects/add';
+
 // A Slot's page in Settings › Plugins; a Slot id has slashes, so it travels as one param.
 export const slotDetailHref = (id: string): Href => ({
   pathname: '/settings/plugins/slots/[id]',
