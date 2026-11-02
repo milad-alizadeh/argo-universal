@@ -52,6 +52,16 @@ describe('forgetting a sent draft', () => {
     });
   });
 
+  it('keeps the whole draft when its text was removed', async () => {
+    keptDrafts.keep(key, '');
+    keptAttachments.keep(key, [image('sent')], new Map());
+    await forgetSentDraft(key, sent);
+    expect(await keptDraft()).toEqual({
+      text: '',
+      attachments: [image('sent')],
+    });
+  });
+
   it('keeps the whole draft when its Attachments changed', async () => {
     keepDraft(sent.text, 'newer');
     await forgetSentDraft(key, sent);

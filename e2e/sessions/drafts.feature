@@ -57,6 +57,17 @@ Feature: Drafts kept on this Device
     And I open a New Session
     Then the Message box is empty
 
+  Scenario: A prompt New Session opened with is not restored after leaving while its Session opens
+    Given a wide Frame
+    And a New Session
+    When New Session opens with the draft "Tidy the README"
+    And I press Send and open Settings at once
+    And I return to Sessions
+    And I open the Session "Tidy the README"
+    And the Agent replies "The shared fixture completed this Turn."
+    And I open a New Session
+    Then the Message box is empty
+
   Scenario: A sent prompt leaves the open New Session once its Session exists
     Given a wide Frame
     And the App's Connection can be dropped

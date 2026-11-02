@@ -19,17 +19,11 @@ function tellListeners(key: DraftKey, sent: ComposerDraft): void {
   for (const listener of listeners) listener(key, sent);
 }
 
-const textAsSent = (kept: string, sent: string): boolean =>
-  !kept || kept === sent;
-
 async function isAsSent(key: DraftKey, sent: ComposerDraft): Promise<boolean> {
   const text = await keptDrafts.load(key);
   const { attachments } = keptAttachments.load(key);
 
-  return (
-    textAsSent(text, sent.text) &&
-    sameAttachments(attachments, sent.attachments)
-  );
+  return text === sent.text && sameAttachments(attachments, sent.attachments);
 }
 
 // Forgets a draft whole once its Session exists; text or Attachments changed since the send make it a newer draft, which stays whole.
