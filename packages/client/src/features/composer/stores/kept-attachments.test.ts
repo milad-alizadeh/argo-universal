@@ -34,19 +34,4 @@ describe('kept Attachments', () => {
     expect(keptAttachments.load(firstProject).attachments).toEqual([]);
     expect(keptAttachments.load(firstProject).files.size).toBe(0);
   });
-
-  it('forgets the Attachments that were sent, and keeps ones changed since', () => {
-    const files = new Map([['first', file]]);
-    keptAttachments.keep(firstProject, [image('first')], files);
-    keptAttachments.keep(secondProject, [image('newer')], files);
-
-    keptAttachments.forgetSent(firstProject, [image('first')]);
-    keptAttachments.forgetSent(secondProject, [image('first')]);
-
-    expect(keptAttachments.load(firstProject).attachments).toEqual([]);
-    expect(keptAttachments.load(secondProject).attachments).toEqual([
-      image('newer'),
-    ]);
-    keptAttachments.keep(secondProject, [], new Map());
-  });
 });

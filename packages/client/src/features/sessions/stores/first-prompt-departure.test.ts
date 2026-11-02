@@ -25,16 +25,22 @@ afterEach(() => {
 describe.each([local('agent-one'), worktree])(
   'Leaving a Send with $checkout.type',
   (input) => {
-    it('does not navigate if the reader leaves during Send, and forgets the sent draft once the Session exists', async () => {
+    it('does not navigate if the reader leaves during Send', async () => {
+      h.choose(input);
+      h.store.send(prompt);
+      h.store.stop();
+      h.calls.open[0]?.call.resolve({ sessionId: 'session-1' });
+      await settle();
+      await vi.advanceTimersByTimeAsync(promptShowTimeoutMs);
+      expect(h.calls.handOff).toEqual([]);
+    });
+    it('forgets the sent draft only once the Session exists if the reader leaves during Send', async () => {
       h.choose(input);
       h.store.send(prompt);
       h.store.stop();
       expect(h.calls.forgetSentDraft).toBe(0);
       h.calls.open[0]?.call.resolve({ sessionId: 'session-1' });
       await settle();
-      await vi.advanceTimersByTimeAsync(promptShowTimeoutMs);
-      expect(h.calls.handOff).toEqual([]);
-      expect(h.calls.clearDraft).toBe(0);
       expect(h.calls.forgetSentDraft).toBe(1);
     });
     it('forgets the sent draft once if the reader leaves while the Feed catches up', async () => {

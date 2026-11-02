@@ -33,18 +33,6 @@ describe('kept drafts on this Device', () => {
     expect(await drafts.load(key)).toBe(lastDraft);
   });
 
-  it('forgets the text that was sent, and keeps a newer draft', async () => {
-    stubMemoryStorage();
-    const drafts = keptDraftsOnDevice();
-    drafts.keep(key, lastDraft);
-    drafts.forgetSent(key, lastDraft);
-    expect(await drafts.load(key)).toBe('');
-
-    drafts.keep(key, 'Ship on Monday');
-    drafts.forgetSent(key, lastDraft);
-    expect(await drafts.load(key)).toBe('Ship on Monday');
-  });
-
   it('forgets the draft once its text is empty', async () => {
     const storage = stubMemoryStorage();
     const drafts = keptDraftsOnDevice();

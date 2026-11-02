@@ -14,15 +14,7 @@ export interface KeptAttachments {
     attachments: ComposerAttachment[],
     files: ReadonlyMap<string, Blob>,
   ) => void;
-  forgetSent: (key: DraftKey, sent: readonly ComposerAttachment[]) => void;
 }
-
-const sameAttachments = (
-  first: readonly ComposerAttachment[],
-  second: readonly ComposerAttachment[],
-): boolean =>
-  first.length === second.length &&
-  first.every(({ id }, index) => id === second[index]?.id);
 
 export const noKeptAttachments: KeptAttachmentsOfDraft = {
   attachments: [],
@@ -41,12 +33,7 @@ export function keptAttachmentsInMemory(): KeptAttachments {
     else kept.set(key, { attachments, files });
   };
 
-  // Attachments changed since the send are a newer draft, and stay.
-  const forgetSent: KeptAttachments['forgetSent'] = (key, sent) => {
-    if (sameAttachments(load(key).attachments, sent)) kept.delete(key);
-  };
-
-  return { load, keep, forgetSent };
+  return { load, keep };
 }
 
 export const keptAttachments = keptAttachmentsInMemory();

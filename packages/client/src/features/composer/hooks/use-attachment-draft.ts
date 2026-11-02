@@ -4,6 +4,7 @@ import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import type { ComposerDraft } from '../components/composer/composer';
+import { forgetSentDraft } from '../stores/forget-sent-draft';
 import { keptAttachments } from '../stores/kept-attachments';
 import { keptDrafts } from '../stores/kept-draft';
 import {
@@ -85,7 +86,7 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
     ...editActions(actions),
     ...pickActions(actions.dispatch),
     draft: actions.state.draft,
-    forgetSentDraft: (sent) => forgetSentDraft(actions.key, sent),
+    forgetSentDraft: (sent) => void forgetSentDraft(actions.key, sent),
     uploadDraftAsPrompt: (sent) => uploadDraftAsPrompt(sent, actions),
     uploading: actions.upload.isPending,
     attachmentError: toAttachmentError(
@@ -100,12 +101,6 @@ function attachmentDraftActions(actions: DraftActions): AttachmentDraft {
 function forgetDraft(key: DraftKey): void {
   keptDrafts.keep(key, '');
   keptAttachments.keep(key, [], new Map());
-}
-
-function forgetSentDraft(key: DraftKey | undefined, sent: ComposerDraft): void {
-  if (!key) return;
-  keptDrafts.forgetSent(key, sent.text);
-  keptAttachments.forgetSent(key, sent.attachments);
 }
 
 type EditableDraft = Pick<DraftActions, 'dispatch' | 'key'>;
