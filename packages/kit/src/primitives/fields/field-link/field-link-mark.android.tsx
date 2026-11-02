@@ -21,18 +21,32 @@ import {
 type MarkProps = { mark: Mark };
 
 export function FieldLinkMark({ mark }: MarkProps): ReactElement {
+  if (!mark.status) return <UnbadgedMark mark={mark} />;
+
+  return <BadgedMark mark={mark} />;
+}
+
+function UnbadgedMark({ mark }: MarkProps): ReactElement {
   return (
-    <BadgedBox
-      modifiers={[
-        alpha(markOpacity(mark)),
-        semantics({ contentDescription: markLabel(mark) }),
-      ]}
-    >
+    <Box modifiers={markSemantics(mark)}>
+      <MarkFace mark={mark} />
+    </Box>
+  );
+}
+
+function BadgedMark({ mark }: MarkProps): ReactElement {
+  return (
+    <BadgedBox modifiers={markSemantics(mark)}>
       <MarkFace mark={mark} />
       <MarkStatus mark={mark} />
     </BadgedBox>
   );
 }
+
+const markSemantics = (mark: Mark): ReturnType<typeof alpha>[] => [
+  alpha(markOpacity(mark)),
+  semantics({ contentDescription: markLabel(mark) }),
+];
 
 function MarkFace({ mark }: MarkProps): ReactElement {
   const color = useMarkColors(mark);

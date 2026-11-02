@@ -13,7 +13,10 @@ import { iconSymbols } from '@repo/contracts/kit-symbols';
 const extraNames = ['more_vert'];
 
 // Argo's own drawings of names the package lacks (assets/README.md).
-const ownDrawings = new Map([['expand_more', '../assets/expand-more.xml']]);
+const ownDrawings = new Map([
+  ['expand_more', '../assets/expand-more.xml'],
+  ['auto_awesome', '../assets/material-light/auto_awesome.xml'],
+]);
 
 const output = new URL(
   '../../src/symbols/material-images/material-images.gen.ts',

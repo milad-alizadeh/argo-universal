@@ -73,17 +73,21 @@ function SubagentListPage({ feed, ...list }: PageProps): React.JSX.Element {
   return <SubagentList {...list} />;
 }
 
+const sheetProps = {
+  label: 'Agents',
+  detents: ['medium', 'large'],
+  contentScrolls: true,
+} satisfies Pick<
+  React.ComponentProps<typeof Sheet>,
+  'label' | 'detents' | 'contentScrolls'
+>;
+
 // The Composer's Subagents pill opens the list in the kit's platform Sheet.
 export function SubagentSheet(props: SubagentSheetProps): React.JSX.Element {
   const { open, onOpenChange, ...pages } = props;
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={onOpenChange}
-      label="Agents"
-      contentScrolls
-    >
+    <Sheet {...sheetProps} open={open} onOpenChange={onOpenChange}>
       <Sheet.Screen name="subagents" title="Agents">
         <SubagentListPage {...pages} />
       </Sheet.Screen>
