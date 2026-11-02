@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { subagentSupporting } from './subagent-list/subagent-format';
 import type { SubagentListProps } from './subagent-list/subagent-list-types';
-import { SubagentMark, SubagentStatus } from './subagent-list/subagent-mark';
+import { SubagentMark } from './subagent-list/subagent-mark';
 import { activePreview } from './workbench-preview';
 import { WorkbenchShowMore } from './workbench-show-more';
 
@@ -54,7 +54,6 @@ function AgentRow(props: RowProps): ReactElement {
     <Pressable {...rowPressable(props)}>
       <SubagentMark subagent={props.agent} />
       <AgentText agent={props.agent} now={props.now} />
-      <SubagentStatus subagent={props.agent} />
     </Pressable>
   );
 }

@@ -63,14 +63,6 @@ export function shellSupporting(shell: ShellEntry): string {
 export const shellsRunning = (shells: Shell[]): boolean =>
   shells.some((shell) => shell.status === 'running');
 
-// The list's heading: "1 running · 3 in this Session".
-export function shellsSummary(shells: Shell[]): string {
-  const count = shells.filter((shell) => shell.status === 'running').length;
-  const total = `${shells.length} in this Session`;
-
-  return count > 0 ? `${count} running · ${total}` : total;
-}
-
 // The word for how the Shell stands, as its output's header says it: "Exited", never the exit code.
 const statusWords = {
   running: 'Running',
