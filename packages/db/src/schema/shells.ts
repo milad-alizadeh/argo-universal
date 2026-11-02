@@ -19,6 +19,8 @@ export const shell = snakeCase.table(
     id: text().notNull(),
     toolCallId: text().notNull(),
     command: text().notNull(),
+    // The Agent's own words for what the command does, where it gave any.
+    description: text(),
     cwd: text().notNull(),
     status: text({ enum: shellStatuses }).notNull(),
     exitCode: integer(),

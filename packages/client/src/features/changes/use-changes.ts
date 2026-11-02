@@ -50,12 +50,18 @@ type FilesProps = Pick<
   | 'onLoadMoreFiles'
 >;
 
-const filesOf = (files: FilesPages): FilesProps => ({
-  ...filesFromPages(files.pages),
-  loadError: files.error,
-  moreFiles: files.more,
-  onLoadMoreFiles: files.loadMore,
-});
+// The files keep one identity until a page changes, however often the source's hook returns.
+function useFilesOf(files: FilesPages): FilesProps {
+  const { pages } = files;
+  const fromPages = useMemo(() => filesFromPages(pages), [pages]);
+
+  return {
+    ...fromPages,
+    loadError: files.error,
+    moreFiles: files.more,
+    onLoadMoreFiles: files.loadMore,
+  };
+}
 
 type LoadedProps = FilesProps & Pick<ChangesViewProps, 'branches' | 'diffs'>;
 
@@ -68,7 +74,7 @@ function useLoaded(
   const branches = source.useBranches(scope);
   const query = changesQuery(scope, state.comparison, branches.data);
   const keys = wantedPageKeys(state.wanted);
-  const files = filesOf(source.useFiles(query));
+  const files = useFilesOf(source.useFiles(query));
   const diffs = diffsByFile(keys, source.useDiffPages(query, keys));
 
   source.useRefresh(scope);
