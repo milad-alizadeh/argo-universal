@@ -28,12 +28,14 @@ export const None: Story = {
 export const OneRunning: Story = {
   args: { subagents: subagentStates.oneRunning },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
+    eachLayout(async (wide) => {
       await expect(
         canvas.getByRole('heading', { name: 'Running' }),
       ).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: /Find every Feed reader/ }),
+        canvas.getByRole(wide ? 'button' : 'link', {
+          name: /Find every Feed reader/,
+        }),
       ).toBeVisible();
       await expect(
         canvas.getByText('Sonnet 4.5 · 34s · 8.2k tokens'),
@@ -68,7 +70,7 @@ export const SelectFinished: Story = {
   play: async ({ canvas, userEvent, args }) => {
     await settleLayout('phone');
     await userEvent.click(
-      canvas.getByRole('button', { name: /Port the mock CLIs/ }),
+      canvas.getByRole('link', { name: /Port the mock CLIs/ }),
     );
     await expect(args.onSelect).toHaveBeenCalledWith(
       subagentStates.severalMixed[3],
@@ -79,7 +81,7 @@ export const SelectFinished: Story = {
 export const AllFinished: Story = {
   args: { subagents: subagentStates.allFinished },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
+    eachLayout(async (wide) => {
       await expect(
         canvas.queryByRole('heading', { name: 'Running' }),
       ).toBeNull();
@@ -89,7 +91,9 @@ export const AllFinished: Story = {
         canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: /Port the mock CLIs/ }),
+        canvas.getByRole(wide ? 'button' : 'link', {
+          name: /Port the mock CLIs/,
+        }),
       ).toBeVisible();
     }),
 };
@@ -100,10 +104,10 @@ export const SectionOrder: Story = {
     subagents: interleavedSubagents,
   },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
+    eachLayout(async (wide) => {
       await expect(
         canvas
-          .getAllByRole('button')
+          .getAllByRole(wide ? 'button' : 'link')
           .map((row) => row.getAttribute('aria-label')?.split(',')[0]),
       ).toEqual([
         'Find every Feed reader',
@@ -117,8 +121,8 @@ export const SectionOrder: Story = {
 export const StatusOnLeadingMark: Story = {
   args: { subagents: subagentStates.oneRunning },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
-      const row = canvas.getByRole('button', {
+    eachLayout(async (wide) => {
+      const row = canvas.getByRole(wide ? 'button' : 'link', {
         name: /Find every Feed reader/,
       });
 

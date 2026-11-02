@@ -1,6 +1,7 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { useClock } from '@repo/kit/use-clock';
 import type { JSX } from 'react';
+import { Platform } from 'react-native';
 import { shellsRunning } from './shell-format';
 import { PhoneShellList } from './shell-list-phone';
 import type { ShellListProps } from './shell-list-types';
@@ -12,6 +13,8 @@ export type { ShellListProps } from './shell-list-types';
 export function ShellList(props: ShellListProps): JSX.Element {
   const running = shellsRunning(props.shells);
   const now = useClock(running, props.now);
+
+  if (Platform.OS !== 'web') return <PhoneShellList {...props} now={now} />;
 
   return (
     <SizeClass

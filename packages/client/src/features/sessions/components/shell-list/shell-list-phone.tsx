@@ -1,9 +1,7 @@
+import { isStockIconName } from '@repo/contracts/kit-symbols';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
-import {
-  ListItem,
-  type ListItemProps,
-} from '@repo/kit/primitives/lists/list-item';
-import type { JSX } from 'react';
+import type { ComponentProps, JSX } from 'react';
 import { workListSections } from '../work-list-sections';
 import {
   shellElapsed,
@@ -12,44 +10,40 @@ import {
   shellTitle,
 } from './shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list-types';
-import { ShellMark } from './shell-mark';
 
-type RowProps = Pick<ShellListProps, 'onSelect'> & {
-  shell: ShellEntry;
-  now: number;
+type Mark = NonNullable<ComponentProps<typeof FieldGroup.Link>['leadingMark']>;
+
+const runningMark: Mark = {
+  icon: 'terminal',
+  tone: 'neutral',
+  label: 'Background Task',
+  status: { tone: 'success', label: 'Running' },
 };
 
-// A failed exit reads in the danger colour, as its mark does.
-const supportingTone = (shell: ShellEntry): 'danger' | undefined =>
-  shellOutcome(shell).tone === 'danger' ? 'danger' : undefined;
+function endedTone(tone: string): Mark['tone'] {
+  if (tone === 'danger') return 'danger';
 
-// The row's lines: the command, what it last printed or how it ended, and how long it has run.
-function rowText({ shell, now }: RowProps): ListItemProps {
-  const supporting = shellSupporting(shell);
-  const elapsed = shellElapsed(shell, now);
+  if (tone === 'warning') return 'warning';
+
+  return 'neutral';
+}
+
+function endedMark(shell: ShellEntry): Mark {
+  const outcome = shellOutcome(shell);
+  const icon = outcome.icon ?? 'terminal';
 
   return {
-    title: shellTitle(shell),
-    subtitle: supporting,
-    subtitleTone: supportingTone(shell),
-    value: elapsed,
-    accessibilityLabel: `${shellTitle(shell)}, ${supporting}, ${elapsed}`,
+    icon: isStockIconName(icon) ? icon : 'terminal',
+    tone: endedTone(outcome.tone),
+    label: outcome.label,
+    plain: true,
   };
 }
 
-function ShellRow(props: RowProps): JSX.Element {
-  const { shell, onSelect } = props;
+const mark = (shell: ShellEntry): Mark =>
+  shell.status === 'running' ? runningMark : endedMark(shell);
 
-  return (
-    <ListItem
-      {...rowText(props)}
-      leading={<ShellMark shell={shell} />}
-      leadingSize="avatar"
-      disclosure={Boolean(onSelect)}
-      onPress={onSelect ? () => onSelect(shell) : undefined}
-    />
-  );
-}
+type PhoneProps = ShellListProps & { now: number };
 
 const listProps = {
   appearance: 'cards',
@@ -58,19 +52,26 @@ const listProps = {
   accessibilityLabel: 'Background Tasks',
 } as const;
 
-// The Session's background Shells under a count of the running ones.
-export function PhoneShellList(
-  props: ShellListProps & { now: number },
-): JSX.Element {
-  return (
-    <List {...listProps}>
-      {workListSections(
-        props.shells,
-        (shell) => shell.status === 'running',
-        (shell) => (
-          <ShellRow key={shell.id} {...props} shell={shell} />
-        ),
-      )}
-    </List>
+const row = (shell: ShellEntry, props: PhoneProps): JSX.Element => (
+  <FieldGroup.Link
+    key={shell.id}
+    title={shellTitle(shell)}
+    subtitle={`${shellSupporting(shell)} · ${shellElapsed(shell, props.now)}`}
+    subtitleTone={shellOutcome(shell).tone === 'danger' ? 'danger' : 'muted'}
+    leadingMark={mark(shell)}
+    disabled={!props.onSelect}
+    onPress={() => props.onSelect?.(shell)}
+  />
+);
+
+function rows(props: PhoneProps): JSX.Element[] {
+  return workListSections(
+    props.shells,
+    (shell) => shell.status === 'running',
+    (shell) => row(shell, props),
   );
+}
+
+export function PhoneShellList(props: PhoneProps): JSX.Element {
+  return <List {...listProps}>{rows(props)}</List>;
 }

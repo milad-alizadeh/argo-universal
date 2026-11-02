@@ -88,7 +88,7 @@ export async function openRunningShell(page: Page): Promise<void> {
   // Wide, the card's row opens the output itself; on a phone the pill opens the list first.
   if (!onPhone(page)) return;
 
-  const shell = page.getByRole('button', { name: /Shell ready/ });
+  const shell = page.getByRole('link', { name: /Shell ready/ });
 
   await expect(shell).toBeVisible();
   await shell.click();

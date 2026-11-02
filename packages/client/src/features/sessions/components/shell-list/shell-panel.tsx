@@ -5,7 +5,7 @@ import {
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import { useClock } from '@repo/kit/use-clock';
 import type { JSX, ReactElement } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { ShellList } from './shell-list';
 import type { ShellEntry, ShellViewProps } from './shell-list-types';
 import { ShellOutput } from './shell-output';
@@ -77,7 +77,7 @@ function ShellPages(props: ShellPagesProps): ReactElement {
 function ShellPanelList(props: ShellPanelProps): JSX.Element {
   const list = <ShellList {...props} />;
 
-  return props.listScrolls ? (
+  return props.listScrolls && Platform.OS === 'web' ? (
     <ScrollFadeView
       testID="desktop-inspector-scroll"
       contentContainerClassName="grow"

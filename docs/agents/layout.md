@@ -74,7 +74,7 @@ The independent placement uses the measured host after effective navigation and 
 - **Argo's cards are Changes, Agents and Shells.** Each appears and disappears on its own. On desktop and web the column reorders them: a handle on the card's title line drags a card to a new place, and the arrow keys move a focused handle. The order lives in the column while it is drawn and is not stored. A lone card has no handle, and phones draw no column. The Agents card counts the Agents this Session started, not the installed Agents the Agents page lists.
 - **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Agents has no Agents card, as its header has no Agents button.
 - **A card is the kit's collapsible `Card`, and its title line holds the title, the disclosure chevron after it and, where it can be moved, the drag handle.** No icon and no summary sits on that line; a summary belongs in the body. The column only places, stacks and reorders the cards it is given.
-- **Cards are kit components, and the lists their Inspector tabs draw are `List` and `ListItem`** ([ADR-0032](../adr/0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)).
+- **Cards are kit components, and their Inspector tabs use the kit's `List`** ([ADR-0032](../adr/0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)). Agent and Background Task lists use `FieldGroup.Link` rows on native platforms; web and Electron wide lists use `ListItem`.
 - **Plugins contribute cards into the named Slot, add-only** ([ADR-0035](../adr/0035-plugins-add-to-named-slots-and-never-edit-core-screens.md)). The Plugin draws inside its own card; Argo decides where the card goes, in what order and how much fits. A Plugin never moves, hides, reorders or restyles Argo's cards or another Plugin's. A Plugin's `header` action may open its card.
 - **Each card uses glass and its own shadow.** The owner selected [WorkbenchGlass / Agents](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-4-0/21BX-0) on 2026-10-21. Use `--color-glass`, `--shadow-glass` and the sidebar's blur. The scroll viewport leaves room for each card's shadow without shrinking its content width.
 
@@ -107,7 +107,7 @@ Compact has no column, so the Workbench is a menu and a sheet. Every card and ev
 
 **A Change's detail page carries a SegmentedControl with two segments, Change and Files** — the Change's stage, its checks and its closing action, or its file changes.
 
-**A Change row's trailing slot is a "…", not a chevron,** and it opens the Change's actions. Every other row keeps its chevron.
+**A Change row's trailing slot is a "…", not a chevron,** and it opens the Change's actions. Other navigation rows follow the platform convention: iOS shows a disclosure chevron, and Android does not.
 
 ## Long sections
 

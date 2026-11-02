@@ -32,11 +32,11 @@ export const Running: Story = {
       await expect(canvas.getByRole('heading', { name: 'Done' })).toBeVisible();
       await expect(canvas.getByText('1')).toBeVisible();
       await expect(canvas.getByText('2')).toBeVisible();
-      await expect(canvas.getByText('ready on localhost:8081')).toBeVisible();
-      await expect(canvas.getByText('4m 12s')).toBeVisible();
-      await expect(canvas.getByText('Exit 0')).toBeVisible();
-      await expect(canvas.getByText('Exit 1')).toBeVisible();
-      await expect(canvas.queryByText('Stopped')).toBeNull();
+      await expect(canvas.getByText(/ready on localhost:8081/)).toBeVisible();
+      await expect(canvas.getByText(/4m 12s/)).toBeVisible();
+      await expect(canvas.getByText(/Exit 0/)).toBeVisible();
+      await expect(canvas.getByText(/Exit 1/)).toBeVisible();
+      await expect(canvas.queryByText(/Stopped/)).toBeNull();
     }),
 };
 
@@ -45,9 +45,9 @@ export const Ended: Story = {
   args: { shells: endedShells },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(canvas.getByText('Stopped')).toBeVisible();
-      await expect(canvas.getByText('Lost')).toBeVisible();
-      await expect(canvas.getByText('Exited')).toBeVisible();
+      await expect(canvas.getByText(/Stopped/)).toBeVisible();
+      await expect(canvas.getByText(/Lost/)).toBeVisible();
+      await expect(canvas.getByText(/Exited/)).toBeVisible();
       await expect(
         canvas.queryByRole('heading', { name: 'Running' }),
       ).toBeNull();
@@ -61,7 +61,11 @@ export const Ended: Story = {
 const opensARow = (width: number): Story => ({
   play: async ({ canvas, userEvent, args }) => {
     await settleLayout(width);
-    await userEvent.click(canvas.getByRole('button', { name: /pnpm dev/ }));
+    await userEvent.click(
+      canvas.getByRole(width === layoutWidths.wide ? 'button' : 'link', {
+        name: /pnpm dev/,
+      }),
+    );
     await expect(args.onSelect).toHaveBeenCalledWith(runningShell);
   },
 });
@@ -96,13 +100,13 @@ export const StatusOnLeadingMark: Story = {
 export const SectionOrder: Story = {
   args: { shells: interleavedShells },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
+    eachLayout(async (wide) => {
       await expect(
         canvas.getAllByRole('heading').map((heading) => heading.textContent),
       ).toEqual(['Running', 'Done']);
       await expect(
         canvas
-          .getAllByRole('button')
+          .getAllByRole(wide ? 'button' : 'link')
           .map((row) => row.getAttribute('aria-label')?.split(',')[0]),
       ).toEqual(['pnpm dev', 'pnpm e2e', 'pnpm storybook']);
     }),
@@ -129,5 +133,6 @@ export const Empty: Story = {
       ).toBeNull();
       await expect(canvas.queryByRole('heading', { name: 'Done' })).toBeNull();
       await expect(canvas.queryByRole('button')).toBeNull();
+      await expect(canvas.queryByRole('link')).toBeNull();
     }),
 };
