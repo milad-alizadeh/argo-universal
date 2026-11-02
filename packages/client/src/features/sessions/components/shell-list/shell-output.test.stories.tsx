@@ -10,6 +10,7 @@ import { expect, waitFor } from 'storybook/test';
 import {
   failedShell,
   lostShell,
+  runningShell,
   noCodeShell,
   stoppedShell,
 } from './shell-list.mocks';
@@ -167,4 +168,54 @@ export const Lost: Story = {
       await expect(canvas.getByText('when the Server restarted')).toBeVisible();
       await expect(canvas.queryByText(/^after /)).toBeNull();
     }),
+};
+
+const longCommand =
+  'pnpm run a-very-long-command-with-several-options --include-all-packages --verbose --no-cache';
+
+const longDirectory =
+  '/Users/example/Projects/a-very-long-project-name/packages/example-application';
+
+// A narrow Shell shows the entire command and folder instead of cutting either off.
+export const LongCommandAndFolderRemainReadable: Story = {
+  args: {
+    shell: { ...runningShell, command: longCommand, cwd: longDirectory },
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+
+    for (const text of [longCommand, longDirectory]) {
+      const element = canvas.getByText(text);
+
+      await expect(element.scrollWidth).toBeLessThanOrEqual(
+        element.clientWidth,
+      );
+    }
+  },
+};
+
+const longOutputLine =
+  'A-very-long-unbroken-output-line-that-keeps-going-without-spaces-and-should-remain-fully-readable-on-a-phone-width';
+
+export const LongOutputLineRemainsReadable: Story = {
+  args: { output: { ...longRunningOutput, text: `${longOutputLine}\n` } },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    const line = await canvas.findByText(longOutputLine);
+    await expect(line.scrollWidth).toBeLessThanOrEqual(line.clientWidth);
+  },
+};
+
+// Following the end shows newly arrived output without a jump action.
+export const FollowsNewOutputAtEnd: Story = {
+  args: { output: longRunningOutput },
+  render: (args) => <GrowingOutput {...args} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
+    await userEvent.click(canvas.getByRole('button', { name: 'Output more' }));
+    await expect(await canvas.findByText('later line')).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: /Jump to latest/ }),
+    ).not.toBeInTheDocument();
+  },
 };
