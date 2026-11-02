@@ -49,8 +49,8 @@ const agentChip = {
 } as const;
 
 const shellChip = {
-  label: 'Shells',
-  singular: 'Shell',
+  label: 'Background Tasks',
+  singular: 'Background Task',
   icon: 'terminal',
 } as const;
 

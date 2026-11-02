@@ -3,7 +3,10 @@ import type * as React from 'react';
 import { loadedAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import { agentStep } from '#features/setup';
-import { useNavigate } from '#lib/product/navigation/navigation';
+import {
+  projectNewHref,
+  useNavigate,
+} from '#lib/product/navigation/navigation';
 import type { OnboardingViewProps } from './onboarding-props';
 import { OnboardingView } from './onboarding-view';
 
@@ -18,6 +21,7 @@ function useOnboarding(): OnboardingViewProps {
     agent: agentStep(installed),
     github: { status: 'not-connected' },
     onAddAgent: () => navigate('/settings/agents'),
+    onAddProject: () => navigate(projectNewHref()),
   };
 }
 

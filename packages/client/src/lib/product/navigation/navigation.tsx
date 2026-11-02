@@ -72,6 +72,9 @@ export const projectHref = (name: string): Href => ({
   params: { name },
 });
 
+// A new Project's page in Settings.
+export const projectNewHref = (): Href => '/settings/projects/new';
+
 // A Slot's page in Settings › Plugins; a Slot id has slashes, so it travels as one param.
 export const slotDetailHref = (id: string): Href => ({
   pathname: '/settings/plugins/slots/[id]',
@@ -140,6 +143,11 @@ function go(href: Href, place: Place, options: NavigateOptions): void {
   if (canReuseSession(place, options) && isSessionHref(href))
     setSessionParams(href);
   else goToOtherPage(href, place, options);
+}
+
+// Back to the page below the shown one, as the header's Back goes.
+export function goBack(): void {
+  router.back();
 }
 
 // Opens a page: pushed over the shown one on a narrow window, beside the list on a wide one.

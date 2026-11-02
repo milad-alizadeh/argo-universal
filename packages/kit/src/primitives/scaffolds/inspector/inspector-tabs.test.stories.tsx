@@ -71,7 +71,7 @@ export const OverflowTabsStayReachable: Story = {
     const changes = await canvas.findByRole('tab', changesTab);
     changes.focus();
     await userEvent.keyboard('{End}');
-    const shells = canvas.getByRole('tab', { name: 'Shells: 2' });
+    const shells = canvas.getByRole('tab', { name: 'Background Tasks: 2' });
     await expect(shells).toHaveFocus();
     await expect(shells).toHaveAttribute(...selected);
     const close = canvas.getByRole('button', { name: closeLabel });

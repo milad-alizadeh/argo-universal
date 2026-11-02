@@ -29,13 +29,19 @@ export {
   type WorkbenchSection,
 } from './components/session-workbench';
 
-export { WorkbenchAgents } from './components/session-workbench-agents';
+export {
+  WorkbenchAgents,
+  WorkbenchMoreAgents,
+} from './components/session-workbench-agents';
 
 export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
 
 export { WorkbenchMoreChanges } from './components/session-workbench-changes';
 
-export { WorkbenchCountSummary } from './components/workbench-count-summary';
+export {
+  WorkbenchMoreTasks,
+  WorkbenchTasks,
+} from './components/session-workbench-tasks';
 
 export { type SessionPanels, useSessionPanels } from './stores/session-panels';
 
