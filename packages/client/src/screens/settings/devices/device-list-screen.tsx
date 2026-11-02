@@ -1,4 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
+import { useTRPC } from '#features/connection';
 import {
   PairDeviceSheet,
   pairingOffered,
@@ -8,8 +10,7 @@ import {
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { useServerPaired } from '#lib/product/server-scope';
 import { DeviceListView } from './device-list-view';
-import { useDeviceRows } from './use-devices';
-import { useLocalNetworkAccess } from './use-local-network-access';
+import { useDeviceRows, useUnpairDevice } from './use-devices';
 
 /*
  * The Devices of the Server being looked at. A paired Device never sees the other Devices, and Local network access is
@@ -29,30 +30,26 @@ export function DeviceListScreen(): React.JSX.Element {
   return <ServerDeviceList />;
 }
 
+// Pairing needs Local network access, which the Connection page switches; here it is only read.
+function useAccessEnabled(): boolean | undefined {
+  const trpc = useTRPC();
+
+  return useQuery(trpc.network.localAccess.queryOptions()).data?.enabled;
+}
+
 function ServerDeviceList(): React.JSX.Element {
   const { onOpen, ...sheet } = usePairDevice();
   const navigate = useNavigate();
 
   return (
     <DeviceListView
-      {...useLocalNetworkAccess()}
-      {...pairing(onOpen, sheet)}
       devices={useDeviceRows()}
-      onOpenDevice={(id) => navigate(`/settings/devices/${id}`)}
+      accessEnabled={useAccessEnabled()}
+      pairingOffered={pairingOffered()}
+      pairDeviceSheet={<PairDeviceSheet {...sheet} />}
+      onPairDevice={onOpen}
+      onUnpairDevice={useUnpairDevice()}
+      onGoToConnection={() => navigate('/settings/connection')}
     />
   );
 }
-
-type Pairing = Pick<
-  React.ComponentProps<typeof DeviceListView>,
-  'pairingOffered' | 'pairDeviceSheet' | 'onPairDevice'
->;
-
-const pairing = (
-  onPairDevice: () => void,
-  sheet: React.ComponentProps<typeof PairDeviceSheet>,
-): Pairing => ({
-  pairingOffered: pairingOffered(),
-  onPairDevice,
-  pairDeviceSheet: <PairDeviceSheet {...sheet} />,
-});

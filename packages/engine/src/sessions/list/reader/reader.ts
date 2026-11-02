@@ -1,12 +1,14 @@
 import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { createLiveHeaderReader } from '../../live-header';
+import type { SessionInput } from '../../session-data';
 import { readQueuedSessionRows } from '../../session-storage';
 import { latestTurnOf } from '../../stored-turn';
 import type { WriterChange } from '../observation';
 import type { SessionListState } from '../state';
 import { readSessionInformation } from './information';
 import type { ListReadInput, ListReaderOptions } from './input';
+import { listedSession } from './listed-session';
 import { SessionListParents } from './parents';
 import { readTurnSessionIds } from './turn-owner';
 import { readListTurns } from './turn-rows';
@@ -110,12 +112,28 @@ class ListReader {
     );
 
     const turns = familyTurns(input, row.id, children);
-
-    if (!visibleSession(input, row, turns)) return [];
-
-    const result = this.project(input, row, { children, turns });
+    const listed = this.listed(input, { row, turns });
+    const result = listed && this.project(input, listed, { children, turns });
 
     return result ? [result] : [];
+  }
+
+  private listed(
+    input: ListReadInput,
+    { row, turns }: Pick<FamilyTurns, 'turns'> & { row: SessionRecord },
+  ): SessionRecord | undefined {
+    return listedSession(
+      input.rejectedSessions,
+      (id): SessionInput | undefined => this.inputOf(id),
+      { row, turns },
+    );
+  }
+
+  // The input an open Session was created with, which holds its first prompt.
+  private inputOf(sessionId: string): SessionInput | undefined {
+    const open = this.options.sessions.getSnapshot().context.sessions;
+
+    return open[sessionId]?.getSnapshot().context.input;
   }
 
   private project(
@@ -137,22 +155,6 @@ class ListReader {
 
 function includesId(ids: Set<string> | undefined, id: string): boolean {
   return !ids || ids.has(id);
-}
-
-/*
- * An empty Session waits for its first Turn, so an abandoned New Session draft never reaches the list.
- * A Session an Agent started has no draft behind it: it lists at once, or the user cannot open what their Agent made.
- */
-function visibleSession(
-  input: ListReadInput,
-  row: SessionRecord,
-  turns: Parameters<typeof latestTurnOf>[0],
-): boolean {
-  if (input.rejectedSessions.has(row.id)) return false;
-
-  return (
-    row.startedBySessionId !== null || Boolean(latestTurnOf(turns, row.id))
-  );
 }
 
 function familyTurns(

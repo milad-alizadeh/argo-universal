@@ -5,6 +5,13 @@ import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { formatServerClock, formatServerStart } from '#features/connection';
+import {
+  keepRunningSection,
+  localAccessSection,
+  type OwnerControls,
+  stopServerSection,
+} from './connection-controls';
+import { useStopAsk } from './stop-server-alert';
 
 export type ServerDetails =
   | { status: 'loading' }
@@ -20,33 +27,26 @@ export type ServerDetails =
       clock?: string;
     };
 
-// Whether the Server outlives the desktop app that started it. Absent on a paired Device, which may not change it (Server Device only, ADR-0022).
-export interface KeepRunningSetting {
-  enabled: boolean;
-  // A change that failed shows its toast; the switch stays where the Server has it.
-  error?: string;
-  onChange: (enabled: boolean) => void;
-}
-
-interface ConnectionDetailViewProps {
+interface ConnectionDetailViewProps extends OwnerControls {
   server: ServerDetails;
-  keepRunning?: KeepRunningSetting;
 }
 
 // The Server this App talks to: its details and live clock, or why they are missing.
-export function ConnectionDetailView({
-  server,
-  keepRunning,
-}: ConnectionDetailViewProps): React.JSX.Element {
+export function ConnectionDetailView(
+  props: ConnectionDetailViewProps,
+): React.JSX.Element {
   return (
-    <Screen
-      title="Connection"
-      caption="The Argo Server this App is talking to."
-    >
-      <ServerForm server={server} keepRunning={keepRunning} />
+    <Screen title="Connection" caption={captionOf(props)}>
+      <ServerForm {...props} />
     </Screen>
   );
 }
+
+// The Server Device's page is about the computer it runs on; a paired Device's is about the Server it reaches.
+const captionOf = (props: OwnerControls): string =>
+  props.localAccess || props.keepRunning
+    ? 'This computer'
+    : 'The Argo Server this App is talking to.';
 
 function ServerForm(props: ConnectionDetailViewProps): React.JSX.Element {
   useErrorToast(
@@ -55,6 +55,12 @@ function ServerForm(props: ConnectionDetailViewProps): React.JSX.Element {
   useErrorToast(
     errorToast('Could not change the Server', props.keepRunning?.error),
   );
+  useErrorToast(
+    errorToast(
+      'Could not change Local network access',
+      props.localAccess?.error,
+    ),
+  );
 
   return <ServerState {...props} />;
 }
@@ -62,39 +68,40 @@ function ServerForm(props: ConnectionDetailViewProps): React.JSX.Element {
 const loadError = (server: ServerDetails): string | undefined =>
   server.status === 'error' ? server.message : undefined;
 
-function ServerState({
-  server,
-  keepRunning,
-}: ConnectionDetailViewProps): React.JSX.Element {
+function ServerState(props: ConnectionDetailViewProps): React.JSX.Element {
   // A down Connection or a failed load keeps the loading look, never a blank page: the banner or toast says why, and the query retries when the Connection reopens.
   return (
-    <Skeleton loading={server.status !== 'loaded'} fill>
-      <ServerRows server={server} keepRunning={keepRunning} />
+    <Skeleton loading={props.server.status !== 'loaded'} fill>
+      <ServerRows {...props} />
     </Skeleton>
   );
 }
 
-const ServerRows = ({
-  server,
-  keepRunning,
-}: ConnectionDetailViewProps): React.JSX.Element => (
-  <FieldGroup>
-    <FieldGroup.Section title="Server">
-      {detailRows(rowValues(server))}
-    </FieldGroup.Section>
-    {keepRunning ? keepRunningSection(keepRunning) : null}
-  </FieldGroup>
-);
+function ServerRows(props: ConnectionDetailViewProps): React.JSX.Element {
+  const [ask, alert] = useStopAsk(props.stopServer);
 
-const keepRunningSection = (setting: KeepRunningSetting): React.JSX.Element => (
-  <FieldGroup.Section footer="When on, quitting the desktop app leaves the Server running, so a paired Device keeps working. When off, quitting stops the Server the app started.">
-    <FieldGroup.Toggle
-      title="Keep the Server running"
-      value={setting.enabled}
-      onValueChange={setting.onChange}
-    />
-  </FieldGroup.Section>
-);
+  return (
+    <>
+      <ServerGroup {...props} ask={ask} />
+      {alert}
+    </>
+  );
+}
+
+function ServerGroup(
+  props: ConnectionDetailViewProps & { ask?: () => void },
+): React.JSX.Element {
+  return (
+    <FieldGroup>
+      <FieldGroup.Section title="Server">
+        {detailRows(rowValues(props.server))}
+      </FieldGroup.Section>
+      {localAccessSection(props.localAccess)}
+      {keepRunningSection(props.keepRunning)}
+      {stopServerSection(props.ask)}
+    </FieldGroup>
+  );
+}
 
 interface RowValues {
   version?: string;

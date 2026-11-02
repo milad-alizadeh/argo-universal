@@ -3,11 +3,14 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Link } from '#primitives/content/link';
+import { Text } from '#primitives/content/text';
 import { LinkPreviewCard } from './link-preview-card';
 import { LinkPreviewContext } from './link-preview-context';
-import { webPreview } from './link-preview.mocks';
+import { pullPreview, webPreview } from './link-preview.mocks';
 
 const href = 'https://example.com/guide';
+
+const cardName = 'Link preview';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Overlays/LinkPreview',
@@ -50,7 +53,7 @@ export const TooltipBecomesCardWhenReadyWide: Story = {
     // Complete the Server reply without moving focus or the pointer away from the Link.
     canvas.getByRole('button', { name: 'Finish loading' }).click();
     await expect(
-      await page.findByRole('dialog', { name: 'Link preview' }),
+      await page.findByRole('dialog', { name: cardName }),
     ).toHaveTextContent(webPreview.title);
     await expect(page.queryByRole('tooltip')).not.toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
@@ -102,7 +105,7 @@ export const KeyboardFocusKeepsNavigationWide: Story = {
     await expect(link).toHaveAttribute('href', href);
 
     const preview = await within(document.body).findByRole('dialog', {
-      name: 'Link preview',
+      name: cardName,
     });
 
     await waitFor(() => expect(preview).toBeVisible());
@@ -114,5 +117,38 @@ export const KeyboardFocusKeepsNavigationWide: Story = {
       ).not.toBeInTheDocument(),
     );
     await expect(link).toHaveFocus();
+  },
+};
+
+const pullReady = {
+  load: async (): Promise<ReactNode> => (
+    <LinkPreviewCard
+      data={{ ...pullPreview, state: 'open', additions: 238, deletions: 512 }}
+    />
+  ),
+};
+
+export const CardInsideTextKeepsItsRowsInsideWide: Story = {
+  render: () => (
+    <LinkPreviewContext value={pullReady}>
+      <Text role="body">
+        See <Link href={href} label="the pull request" />.
+      </Text>
+    </LinkPreviewContext>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.hover(canvas.getByRole('link'));
+
+    const card = await within(document.body).findByRole('dialog', {
+      name: cardName,
+    });
+
+    const edge = card.getBoundingClientRect().right;
+    const last = within(card).getByText(/^−/);
+
+    await waitFor(() =>
+      expect(last.getBoundingClientRect().right).toBeLessThan(edge),
+    );
   },
 };

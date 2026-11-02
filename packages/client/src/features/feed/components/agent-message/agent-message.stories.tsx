@@ -5,7 +5,7 @@ import { answeredMessage, streamingMessage } from './agent-message-fixtures';
 const meta = {
   title: 'Feed/AgentMessage',
   component: AgentMessage,
-  // The recorded `agent_message` row; its state decides whether the last block streams.
+  // The recorded `agent_message` row; `streaming` draws the caret after its last block.
   argTypes: { row: { control: false } },
   args: answeredMessage,
 } satisfies Meta<typeof AgentMessage>;

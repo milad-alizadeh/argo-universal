@@ -1,7 +1,7 @@
 import type * as React from 'react';
 
 export interface ScanCameraProps {
-  onRead: (scanned: string) => void;
+  onRead: (scanned: string) => boolean;
 }
 
 // A web App is never a Paired Device, and has no camera to read a code with (ADR-0045).

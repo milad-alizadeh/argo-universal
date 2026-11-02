@@ -10,17 +10,6 @@ export interface DeviceRow {
   seen: string;
 }
 
-const platformNames: Record<DevicePlatform, string> = {
-  macos: 'macOS',
-  windows: 'Windows',
-  linux: 'Linux',
-  ios: 'iOS',
-  android: 'Android',
-};
-
-export const platformName = (platform: DevicePlatform): string =>
-  platformNames[platform];
-
 // A Device that spoke in the last few minutes is active; any other is last seen on a day.
 const minuteMs = 60_000,
   minutesActive = 5;

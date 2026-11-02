@@ -15,9 +15,8 @@ import {
 } from './feed-row-data';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
-import { usePinnedPrompt } from './use-pinned-prompt';
 
-// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, so the room kept below the pinned prompt counts it.
+// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it.
 function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
 
@@ -30,16 +29,9 @@ const keepPosition = { data: true };
 // In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
 
-/*
- * The Feed follows its end only as the view and the Composer below it change size. Once a prompt is
- * pinned, streamed text and new rows never scroll it: they grow into the room kept below the prompt,
- * then on below the view, where Jump to latest offers them.
- */
-const followComposer = { on: { layout: true, footerLayout: true } };
-
-// With no prompt pinned, the Feed also follows rows that load or measure after it opens, so a settled Session ends above the Composer (#1811).
-const followLoadedRows = {
-  on: { ...followComposer.on, dataChange: true, itemLayout: true },
+// The Feed follows its end as the view and the Composer change size, and as rows load or measure, so a settled Session ends above the Composer (#1811) and a streaming answer stays in view until the reader scrolls up.
+const followEnd = {
+  on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
 };
 
 // In screens from the top: older rows load this far ahead of the reader.
@@ -124,7 +116,7 @@ export interface FeedScrollProps extends EntryDrawing {
   loadingOlder: boolean;
   // Whether the reader is at the Feed's end, where its bottom fade is shallower.
   atEnd: boolean;
-  // The Feed pins no prompt and does not follow its end, for a Feed read without a Composer.
+  // The Feed does not follow its end, for a Feed read without a Composer.
   opensAtStart?: boolean;
 }
 
@@ -135,33 +127,18 @@ type FeedListProps = Pick<
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
   | 'alignItemsAtEnd'
-  | 'anchoredEndSpace'
   | 'onStartReached'
   | 'header'
 >;
 
-const endFollowing = (
-  opensAtStart: boolean | undefined,
-  pinnedPrompt: FeedListProps['anchoredEndSpace'],
-): FeedListProps['maintainScrollAtEnd'] => {
-  if (opensAtStart) return false;
-
-  return pinnedPrompt ? followComposer : followLoadedRows;
-};
-
-// With no Composer below, the Feed stays where the reader is and pins no prompt.
+// With no Composer below, the Feed stays where the reader is.
 function anchorsOf(
   opensAtStart: boolean | undefined,
-  pinnedPrompt: FeedListProps['anchoredEndSpace'],
-): Pick<
-  FeedListProps,
-  'maintainScrollAtEnd' | 'alignItemsAtEnd' | 'anchoredEndSpace'
-> {
+): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
   return {
-    maintainScrollAtEnd: endFollowing(opensAtStart, pinnedPrompt),
+    maintainScrollAtEnd: opensAtStart ? false : followEnd,
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
-    anchoredEndSpace: opensAtStart ? undefined : pinnedPrompt,
   };
 }
 
@@ -176,7 +153,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...anchorsOf(props.opensAtStart, usePinnedPrompt(list, items)),
+    ...anchorsOf(props.opensAtStart),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

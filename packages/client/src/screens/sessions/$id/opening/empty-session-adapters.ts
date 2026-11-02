@@ -3,6 +3,11 @@ import { useEffect, useRef } from 'react';
 import { useConnection, useTRPCClient } from '#features/connection';
 import type { EmptySessionPorts } from '#features/sessions';
 
+export type EmptySessionDraftPorts = Pick<
+  EmptySessionPorts,
+  'clearDraft' | 'forgetSentDraft'
+>;
+
 // The store keeps its ports; Composer supplies the current Project draft operation.
 function useCurrentDraftClear(clearDraft: () => void): () => void {
   const current = useRef(clearDraft);
@@ -14,9 +19,10 @@ function useCurrentDraftClear(clearDraft: () => void): () => void {
 }
 
 // The Server calls, the Connection's state and the Composer/navigation effects New Session's Empty Session needs.
-export function useEmptySessionPorts(
-  clearDraft: () => void,
-): EmptySessionPorts {
+export function useEmptySessionPorts({
+  clearDraft,
+  forgetSentDraft,
+}: EmptySessionDraftPorts): EmptySessionPorts {
   const client = useTRPCClient();
 
   return {
@@ -25,6 +31,7 @@ export function useEmptySessionPorts(
     handOff: (id) =>
       router.setParams({ id, projectId: undefined, draft: undefined }),
     clearDraft: useCurrentDraftClear(clearDraft),
+    forgetSentDraft,
     connectionState: useConnection().state,
   };
 }

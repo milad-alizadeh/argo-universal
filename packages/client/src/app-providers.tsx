@@ -8,6 +8,7 @@ import {
   ServersContext,
   type ServersSnapshot,
   type ServersStore,
+  useRememberConnected,
   useServerConnections,
 } from '#features/servers';
 import { LookedAtServer } from './looked-at-server';
@@ -58,6 +59,8 @@ const serversActions = (
 function AppServers({ store, ...props }: AppServersProps): React.JSX.Element {
   const servers = useServers(store);
   const connections = useServerConnections(servers.servers, props.openServer);
+
+  useRememberConnected(connections);
 
   return (
     <ServersContext.Provider value={{ ...servers, ...serversActions(store) }}>

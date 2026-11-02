@@ -27,7 +27,13 @@ export interface Held {
   running: AbortController | null;
   last: Read | null;
   // The code typed last, kept so a Server that was not found can be asked again without typing it twice.
-  lastTyped: string | null;
+  lastTyped: Typed | null;
+}
+
+// What the owner typed on the Enter code page: the code, and an address when they gave one.
+export interface Typed {
+  code: string;
+  host?: string;
 }
 
 // What every step reaches for: what is held, the page to draw, and what to do once paired.

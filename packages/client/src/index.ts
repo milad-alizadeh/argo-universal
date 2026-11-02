@@ -40,8 +40,6 @@ export { useRestoredThemeChoice } from '#features/settings';
 
 export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
 
-export { DeviceDetailScreen } from './screens/settings/devices/device-detail-screen';
-
 export { DeviceListScreen } from './screens/settings/devices/device-list-screen';
 
 export { NotificationsDetailScreen } from './screens/settings/notifications/notifications-detail-screen';

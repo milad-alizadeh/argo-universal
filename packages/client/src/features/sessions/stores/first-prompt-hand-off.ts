@@ -5,8 +5,8 @@ import {
   promptShowTimeoutMs,
 } from './empty-session-types';
 
-// Choosing the reader's options; then the first prompt goes, the Feed shows it, and the Session page takes over.
-type Phase = 'choosing' | 'sending' | 'showing' | 'handedOff';
+// Choosing the reader's options; then the first prompt goes, the Feed shows it, and the Session page takes over, unless the reader left once the Session existed.
+type Phase = 'choosing' | 'sending' | 'showing' | 'handedOff' | 'left';
 
 export interface HandOffHost {
   ports: () => EmptySessionPorts;
@@ -72,6 +72,8 @@ export class FirstPromptHandOff {
   public stop(): void {
     this.stopped = true;
     clearTimeout(this.showTimer);
+
+    if (this.current === 'showing') this.leave();
   }
 
   private failed(cause: unknown): void {
@@ -85,7 +87,11 @@ export class FirstPromptHandOff {
   private showPrompt(): void {
     this.current = 'showing';
 
-    if (this.stopped) return;
+    if (this.stopped) {
+      this.leave();
+
+      return;
+    }
 
     if (this.promptShown) {
       this.handOff();
@@ -95,6 +101,12 @@ export class FirstPromptHandOff {
 
     this.showTimer = setTimeout(() => this.handOff(), promptShowTimeoutMs);
     this.host.emit();
+  }
+
+  // The Session has the prompt, so New Session must not offer it again; nothing navigates.
+  private leave(): void {
+    this.current = 'left';
+    this.host.ports().forgetSentDraft();
   }
 
   private handOff(): void {

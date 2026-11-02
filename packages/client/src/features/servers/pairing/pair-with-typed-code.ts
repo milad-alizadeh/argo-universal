@@ -25,6 +25,8 @@ export interface TypedDeps extends PairDeps {
   settleMs?: number;
   // Called with the name of the Server that knew the code, before the wait on its owner begins, so the page can say whose approval it is waiting for.
   onFound?: (serverName: string) => void;
+  // An address the owner typed, tried before the addresses discovery gave: for a network that announces a name but not where it is.
+  host?: string;
 }
 
 const defaultTimeoutMs = 3000;
@@ -58,11 +60,15 @@ async function askAt(
   }
 }
 
+// The owner's own address first, then what the Server announced.
+const hostsOf = (server: DiscoveredServer, deps: TypedDeps): string[] =>
+  deps.host ? [deps.host, ...server.addresses] : [...server.addresses];
+
 async function askServer(
   server: DiscoveredServer,
   asking: { ticket: string; deps: TypedDeps },
 ): Promise<Asked> {
-  for (const host of server.addresses) {
+  for (const host of hostsOf(server, asking.deps)) {
     const asked = await askAt(server, host, asking);
 
     if (asked) return asked;

@@ -66,7 +66,10 @@ export const SecondAgentMarkdown: Story = {
 };
 
 export const FirstAgentStreaming: Story = {
-  args: { row: streamingAgentMessage('agent-1', markdownAnswerId) },
+  args: {
+    row: streamingAgentMessage('agent-1', markdownAnswerId),
+    streaming: true,
+  },
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleLayout(width);
@@ -76,7 +79,10 @@ export const FirstAgentStreaming: Story = {
 };
 
 export const SecondAgentStreaming: Story = {
-  args: { row: streamingAgentMessage('agent-2', markdownAnswerId) },
+  args: {
+    row: streamingAgentMessage('agent-2', markdownAnswerId),
+    streaming: true,
+  },
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleLayout(width);

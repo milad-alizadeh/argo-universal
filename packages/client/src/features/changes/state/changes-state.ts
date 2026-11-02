@@ -45,7 +45,7 @@ export const markedViewed = (
     : withoutPath(state.viewed, path),
 });
 
-// Asking again for as many pages, or fewer, keeps the state, so a status row can ask on every draw.
+// Asking again for as many pages, or fewer, keeps the state, so a row can ask on every draw.
 export const wantedMore = (
   state: ChangesState,
   path: string,

@@ -27,12 +27,16 @@ const isBlankText = (block: ContentBlock): boolean =>
 
 type FeedRow = Extract<FeedViewItem, { type: 'row' }>['row'];
 
+const hasVisibleContent = (
+  row: Extract<FeedRow, { content: unknown }>,
+): boolean => row.content.some((block) => !isBlankText(block));
+
 /*
  * A message of nothing but blank text draws nothing, and the Feed's space sits between what is
  * drawn, so it is left out rather than leaving a gap. One still streaming draws its caret.
  */
 const drawsMessage = (row: Extract<FeedRow, { content: unknown }>): boolean =>
-  row.state === 'open' || row.content.some((block) => !isBlankText(block));
+  row.state === 'open' || hasVisibleContent(row);
 
 const isMessage = (
   row: FeedRow,
@@ -52,4 +56,16 @@ export function isDrawnFeedItem(item: FeedViewItem): boolean {
   if (item.type === 'turn_end') return turnEndNotice(item.end) !== null;
 
   return drawnItemTypes[item.type];
+}
+
+const isBlankMessage = (item: FeedViewItem): boolean =>
+  item.type === 'row' && isMessage(item.row) && !hasVisibleContent(item.row);
+
+// The items the Feed draws; only the newest can hold a caret, so an open blank message before it has nothing to show.
+export function drawnFeedItems(items: readonly FeedViewItem[]): FeedViewItem[] {
+  const drawn = items.filter(isDrawnFeedItem);
+
+  return drawn.filter(
+    (item, index) => index === drawn.length - 1 || !isBlankMessage(item),
+  );
 }

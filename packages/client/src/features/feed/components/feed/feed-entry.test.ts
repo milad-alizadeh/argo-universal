@@ -1,7 +1,7 @@
 import type { LiveHeader } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { FeedViewItem } from '../../view/feed-view';
-import { withLiveHeader } from './feed-entry';
+import { isStreamingEntry, withLiveHeader } from './feed-entry';
 
 const thought: LiveHeader = {
   text: 'Moving temp directory',
@@ -76,5 +76,53 @@ describe('withLiveHeader', () => {
 
   it('leaves an open group alone without a live header', () => {
     expect(withLiveHeader([openGroup], null)).toEqual([openGroup]);
+  });
+});
+
+const message = (
+  state: 'open' | 'settled',
+  id = 'message-1',
+): FeedViewItem => ({
+  type: 'row',
+  row: {
+    id,
+    sessionId: 'session-1',
+    turnId: 'turn-1',
+    position: 1,
+    revision: 1,
+    state,
+    sessionUpdate: 'agent_message',
+    messageId: id,
+    content: [{ type: 'text', text: 'Done' }],
+  },
+});
+
+describe('isStreamingEntry', () => {
+  it('holds for an open message at the end of the Feed', () => {
+    expect(isStreamingEntry(message('open'))).toBe(true);
+  });
+
+  it('holds for an open message with only the live header after it', () => {
+    expect(
+      isStreamingEntry(message('open'), {
+        type: 'live_header',
+        liveHeader: thought,
+      }),
+    ).toBe(true);
+  });
+
+  // Every message of a running Turn stays open until the Turn ends, so a Turn of two messages drew two carets.
+  it('does not hold for an open message with a newer message after it', () => {
+    expect(
+      isStreamingEntry(message('open'), message('open', 'message-2')),
+    ).toBe(false);
+  });
+
+  it('does not hold for an open message with a Tool call group after it', () => {
+    expect(isStreamingEntry(message('open'), openGroup)).toBe(false);
+  });
+
+  it('does not hold for a settled message', () => {
+    expect(isStreamingEntry(message('settled'))).toBe(false);
   });
 });

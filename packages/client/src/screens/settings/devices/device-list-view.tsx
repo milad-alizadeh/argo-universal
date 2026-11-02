@@ -1,155 +1,134 @@
-import { Button } from '@repo/kit/primitives/actions/button';
-import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { Action } from '@repo/kit/primitives/actions/action';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { pairingSection } from './device-pairing-section';
-import { type DeviceRow, platformName } from './device-rows';
-
-export type LocalNetworkAccessLoad =
-  | { status: 'loading' | 'error' | 'disconnected' }
-  | { status: 'loaded'; enabled: boolean };
+import { useState } from 'react';
+import {
+  FieldList,
+  type FieldListSection,
+} from '#lib/product/field-list/field-list';
+import { noOtherDevices, pairingOff } from './device-list-panels';
+import { deviceRow } from './device-list-rows';
+import type { DeviceRow } from './device-rows';
+import { DeviceUnpairAlert } from './device-unpair-alert';
 
 export interface DeviceListViewProps {
-  localNetworkAccess: LocalNetworkAccessLoad;
-  saving?: boolean;
-  error?: string;
   // This computer first, then each Paired Device; absent until the Server has answered.
   devices?: readonly DeviceRow[];
-  onOpenDevice?: (id: string) => void;
+  // Whether Local network access is on, which Pairing needs; absent until the Server has said.
+  accessEnabled?: boolean;
   // Whether this App can hold a Device Key at all; a browser tab cannot, so it is never offered Pairing (ADR-0045).
   pairingOffered?: boolean;
-  // The pair sheet itself, which mints a Pairing Ticket of its own; the row above opens it.
+  // The pair sheet itself, which mints a Pairing Ticket of its own; the header button opens it.
   pairDeviceSheet?: React.ReactNode;
-  onLocalNetworkAccessChange: (enabled: boolean) => void;
   onPairDevice?: () => void;
-  onRetry: () => void;
+  onUnpairDevice: (id: string) => void;
+  onGoToConnection?: () => void;
   onBack?: () => void;
 }
 
-const footers = {
-  off: 'Only this computer can reach the Server. Turn this on to let other Devices on your network reach it, which Pairing needs.',
-  on: 'Other Devices on your network can reach the Server. Turn this off and only this computer can.',
-};
+const footer =
+  'Paired Devices can see your Projects and Sessions. Only this computer can pair or unpair Devices.';
 
-const messages = {
-  loading: 'Loading Local network access…',
-  error: 'Could not load Local network access.',
-  disconnected: 'Connect to the Server to change Local network access.',
-};
+const canPair = (props: DeviceListViewProps): boolean =>
+  props.accessEnabled === true && props.pairingOffered !== false;
 
 export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
   return (
-    <SizeClass
-      compact={<DevicesScreen {...props} wide={false} />}
-      wide={<DevicesScreen {...props} wide />}
-    />
-  );
-}
-
-function DevicesScreen(
-  props: DeviceListViewProps & { wide: boolean },
-): React.JSX.Element {
-  return (
-    <Screen title="Devices" onBack={props.onBack}>
-      <FieldGroup>
-        {accessSection(props)}
-        {devicesSection(props)}
-        {props.wide ? pairingSection(props) : null}
-        {statusSection(props)}
-      </FieldGroup>
+    <Screen
+      title="Devices"
+      caption="Devices that can use Argo on this computer"
+      {...pairAction(props)}
+      onBack={props.onBack}
+    >
+      <DevicesBody {...props} />
     </Screen>
   );
 }
 
-// Until the Server has answered, the view claims neither state: the switch and the Pairing row wait, and the message below says why.
-function accessSection(props: DeviceListViewProps): React.JSX.Element | null {
-  const access = props.localNetworkAccess;
-
-  if (access.status !== 'loaded') return null;
+// Which Paired Device the owner is being asked about, if any; the question is the list's, not each row's.
+function DevicesBody(props: DeviceListViewProps): React.JSX.Element {
+  const [asked, ask] = useState<DeviceRow | null>(null);
 
   return (
-    <FieldGroup.Section footer={access.enabled ? footers.on : footers.off}>
-      <FieldGroup.Toggle
-        title="Local network access"
-        value={access.enabled}
-        disabled={props.saving}
-        onValueChange={props.onLocalNetworkAccessChange}
+    <>
+      <FieldList sections={sections(props, ask)} />
+      {canPair(props) ? props.pairDeviceSheet : null}
+      <UnpairAsk
+        device={asked}
+        onClose={() => ask(null)}
+        onUnpair={props.onUnpairDevice}
       />
-    </FieldGroup.Section>
+    </>
   );
 }
 
-const deviceFooter =
-  'Paired Devices can see your Projects and Sessions. Only this computer can pair or unpair Devices.';
+// A browser tab cannot hold a Device Key, so it is offered no way to pair at all.
+const pairAction = (
+  props: DeviceListViewProps,
+): { primaryAction?: React.ReactElement } =>
+  props.pairingOffered === false ? {} : { primaryAction: pairButton(props) };
 
-// This computer is marked and has no way in to an unpair; each Paired Device opens its own page, where the red row is.
-function devicesSection(props: DeviceListViewProps): React.JSX.Element | null {
-  if (!props.devices) return null;
-
-  return (
-    <FieldGroup.Section title="Devices" footer={deviceFooter}>
-      {props.devices.map((device) => deviceRow(device, props.onOpenDevice))}
-    </FieldGroup.Section>
-  );
-}
-
-const deviceRow = (
-  device: DeviceRow,
-  onOpen?: (id: string) => void,
-): React.JSX.Element =>
-  device.serverDevice ? thisComputer(device) : pairedDevice(device, onOpen);
-
-const thisComputer = (device: DeviceRow): React.JSX.Element => (
-  <FieldGroup.Value
-    key={device.id}
-    title={device.name}
-    value="This computer"
-    leading={leadingFor(device)}
+const pairButton = (props: DeviceListViewProps): React.JSX.Element => (
+  <Action
+    label="Pair a Device"
+    icon={{ sf: 'qrcode', material: 'qr_code' }}
+    disabled={!canPair(props)}
+    onPress={() => props.onPairDevice?.()}
   />
 );
 
-const pairedDevice = (
-  device: DeviceRow,
-  onOpen?: (id: string) => void,
-): React.JSX.Element => (
-  <FieldGroup.Link
-    key={device.id}
-    title={device.name}
-    value={`${platformName(device.platform)} · ${device.seen}`}
-    leading={leadingFor(device)}
-    onPress={() => onOpen?.(device.id)}
-  />
-);
+function sections(
+  props: DeviceListViewProps,
+  ask: (device: DeviceRow) => void,
+): FieldListSection[] {
+  if (!props.devices) return [];
 
-type Leading = React.ComponentProps<typeof FieldGroup.Value>['leading'];
+  const others = props.devices.some((device) => !device.serverDevice);
 
-// A phone-class Device draws the phone glyph, any other the computer's; the Server says only the platform, so no tablet.
-const leadingFor = (device: DeviceRow): Leading =>
-  device.platform === 'ios' || device.platform === 'android'
-    ? 'phone'
-    : 'computer';
-
-function statusSection(props: DeviceListViewProps): React.JSX.Element | null {
-  const access = props.localNetworkAccess;
-  const message = props.error ?? unloadedMessage(access);
-
-  if (!message) return null;
-
-  return (
-    <FieldGroup.Section footer={message}>
-      {retryButton(access.status, props.onRetry)}
-    </FieldGroup.Section>
-  );
+  return [
+    {
+      rows: props.devices.map((device) => deviceRow(device, ask)),
+      footer: others ? footer : undefined,
+    },
+    ...below(props, others),
+  ];
 }
 
-const retryButton = (
-  status: LocalNetworkAccessLoad['status'],
-  onRetry: () => void,
-): React.JSX.Element | null =>
-  status === 'error' ? (
-    <Button label="Retry" variant="text" onPress={onRetry} />
-  ) : null;
+// With no Paired Device the page says why, and where to go when Pairing is off.
+function below(
+  props: DeviceListViewProps,
+  others: boolean,
+): FieldListSection[] {
+  if (others) return [];
 
-const unloadedMessage = (access: LocalNetworkAccessLoad): string | undefined =>
-  access.status === 'loaded' ? undefined : messages[access.status];
+  return [panel(props.accessEnabled === false ? off(props) : noOtherDevices())];
+}
+
+const off = (props: DeviceListViewProps): React.ReactElement =>
+  pairingOff(props.onGoToConnection);
+
+const panel = (row: React.ReactElement): FieldListSection => ({
+  plain: true,
+  rows: [row],
+});
+
+interface UnpairAskProps {
+  device: DeviceRow | null;
+  onClose: () => void;
+  onUnpair: (id: string) => void;
+}
+
+function UnpairAsk(props: UnpairAskProps): React.JSX.Element | null {
+  const { device } = props;
+
+  if (!device) return null;
+
+  return (
+    <DeviceUnpairAlert
+      open
+      onOpenChange={props.onClose}
+      name={device.name}
+      onUnpair={() => props.onUnpair(device.id)}
+    />
+  );
+}

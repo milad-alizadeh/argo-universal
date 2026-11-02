@@ -112,3 +112,27 @@ export const TheOwnServerOffersNoUnpair: Story = {
     await expect(canvas.queryByRole('button', { name: 'Unpair' })).toBeNull();
   },
 };
+
+// Nothing is wrong with the pairing of a computer that is only asleep, so the page says when it last answered.
+export const SaysWhenItLastAnsweredAndWhenItWasPaired: Story = {
+  args: { server: unreachableServer },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Today, 09:12')).toBeVisible();
+    await expect(canvas.getByText('3 October')).toBeVisible();
+  },
+};
+
+// A Server paired before times were kept has none to say, and the page leaves the rows out rather than guess.
+export const LeavesOutTimesItDoesNotHave: Story = {
+  args: {
+    server: {
+      ...unreachableServer,
+      lastConnected: undefined,
+      paired: undefined,
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText('Last connected')).toBeNull();
+    await expect(canvas.queryByText('Paired')).toBeNull();
+  },
+};

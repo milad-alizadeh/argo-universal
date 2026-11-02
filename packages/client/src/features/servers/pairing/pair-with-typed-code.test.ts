@@ -9,10 +9,12 @@ const ticket = '482915';
 
 const studioKey = 'studio-key';
 
+const studioHost = 'studio.local';
+
 const studio: DiscoveredServer = {
   name: 'Studio',
   keyHash: keyHashOf(studioKey),
-  addresses: ['studio.local'],
+  addresses: [studioHost],
   port: 4000,
 };
 
@@ -68,7 +70,7 @@ describe('pairing with a code that was typed', () => {
     expect(onFound).toHaveBeenCalledWith('Studio');
 
     expect(requestKey).toHaveBeenCalledWith(
-      { host: 'studio.local', port: 4000 },
+      { host: studioHost, port: 4000 },
       ticket,
     );
     expect(pair).toHaveBeenCalledWith(
@@ -80,6 +82,26 @@ describe('pairing with a code that was typed', () => {
       kind: 'paired',
       server: { name: 'Studio', key: studioKey },
     });
+  });
+
+  it('tries an address the owner typed before the ones the network announced', async () => {
+    const requestKey = vi
+      .fn<Ask>()
+      .mockRejectedValueOnce(new Error('no answer'))
+      .mockResolvedValueOnce(studioKey);
+
+    await pairWithTypedCode(code, depsFor({ requestKey, host: 'typed.local' }));
+
+    expect(requestKey).toHaveBeenNthCalledWith(
+      1,
+      { host: 'typed.local', port: 4000 },
+      ticket,
+    );
+    expect(requestKey).toHaveBeenNthCalledWith(
+      2,
+      { host: studioHost, port: 4000 },
+      ticket,
+    );
   });
 
   it('finds the Server the code belongs to among those it does not', async () => {

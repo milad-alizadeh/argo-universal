@@ -10,7 +10,7 @@ import {
   wantsToPair,
 } from './pair-device-sheet-fixtures';
 
-const typedCode = '482-915';
+const typedCode = '482 · 915';
 
 const meta = {
   title: 'Tests/Settings/PairDeviceSheet',
@@ -56,7 +56,7 @@ export const CountsTheCodeDown: Story = {
   play: async () => {
     await shown(typedCode);
     await expect(sheet.getByText(/^\d:\d\d$/)).toBeVisible();
-    await expect(sheet.getByText(/A new code appears/)).toBeVisible();
+    await expect(sheet.getByText(/for about two minutes/)).toBeVisible();
 
     const bar = sheet.getByRole('progressbar', {
       name: 'Time left on this code',
@@ -80,8 +80,10 @@ export const AnExpiredCodeSaysSoAndOffersAnother: Story = {
   args: expired,
   play: async ({ args, userEvent }) => {
     await shown(/This code has expired/);
-    await expect(sheet.queryByLabelText(qrCode)).toBeNull();
-    await userEvent.click(sheet.getByRole('button', { name: 'New code' }));
+    await expect(sheet.queryByText(typedCode)).toBeNull();
+    await userEvent.click(
+      sheet.getByRole('button', { name: 'Show a new code' }),
+    );
     await expect(args.onNewCode).toHaveBeenCalledOnce();
   },
 };
@@ -90,7 +92,9 @@ export const ACodeTheServerCouldNotGiveOffersAnother: Story = {
   args: mintFailed,
   play: async ({ args, userEvent }) => {
     await shown(/Could not get a code/);
-    await userEvent.click(sheet.getByRole('button', { name: 'New code' }));
+    await userEvent.click(
+      sheet.getByRole('button', { name: 'Show a new code' }),
+    );
     await expect(args.onNewCode).toHaveBeenCalledOnce();
   },
 };
@@ -98,7 +102,9 @@ export const ACodeTheServerCouldNotGiveOffersAnother: Story = {
 export const NamesTheDeviceThatAskedAndAllowsIt: Story = {
   args: wantsToPair,
   play: async ({ args, userEvent }) => {
-    await shown('iPhone 15 Pro wants to pair');
+    await shown('Allow this Device?');
+    await expect(sheet.getByText('iPhone 15 Pro')).toBeVisible();
+    await expect(sheet.getByText('iOS · wants to pair')).toBeVisible();
     await expect(sheet.queryByLabelText(qrCode)).toBeNull();
     await userEvent.click(sheet.getByRole('button', { name: 'Allow' }));
     await expect(args.onAllow).toHaveBeenCalledWith(wantsToPair.asking);
@@ -109,7 +115,7 @@ export const NamesTheDeviceThatAskedAndAllowsIt: Story = {
 export const DecliningTheDeviceAllowsNothing: Story = {
   args: wantsToPair,
   play: async ({ args, userEvent }) => {
-    await shown('iPhone 15 Pro wants to pair');
+    await shown('Allow this Device?');
     await userEvent.click(sheet.getByRole('button', { name: "Don't allow" }));
     await expect(args.onDecline).toHaveBeenCalledWith(wantsToPair.asking);
     await expect(args.onAllow).not.toHaveBeenCalled();

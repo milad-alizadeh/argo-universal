@@ -9,10 +9,9 @@ import {
 import { View } from 'react-native';
 import { markdownBlockClassNames } from '#kit/markdown-marks';
 import { cn } from '#kit/utils';
-import { Text } from '#primitives/content/text';
 import { keyedBlocks, keyedTokens } from './block-keys';
 import { Caret } from './caret';
-import { useClampText } from './clamp-leaves';
+import { ClampText } from './clamp-text';
 import {
   CodeToken,
   DefToken,
@@ -60,17 +59,15 @@ function listItems(
 
 function ListMarker({ children }: { children: string }): ReactElement {
   const tone = useContext(MarkdownTone);
-  const clampText = useClampText('body');
 
   return (
-    <Text
-      {...clampText}
+    <ClampText
       role="body"
       tone={tone}
       className="min-w-4 shrink-0 font-sans text-muted-foreground"
     >
       {children}
-    </Text>
+    </ClampText>
   );
 }
 

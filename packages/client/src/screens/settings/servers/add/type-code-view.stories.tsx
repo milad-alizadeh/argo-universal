@@ -17,11 +17,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The page a desktop with no camera reaches from Add a Server: the code under the other computer's picture, typed.
+// The page a Device with no camera reaches from Add a Server: the code under the other computer's picture, typed, and an address only if the network does not show the computer.
 export const AsksForTheCode: Story = {};
 
 // The code has gone out to the Servers on the network, and the field keeps what was typed.
 export const Looking: Story = { args: { looking: true } };
-
-// On a phone the way back to the camera sits under Connect.
-export const CanScanInstead: Story = { args: { onScan: fn() } };

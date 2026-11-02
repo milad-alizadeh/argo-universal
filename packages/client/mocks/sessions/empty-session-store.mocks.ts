@@ -41,6 +41,7 @@ interface Calls {
   }[];
   handOff: string[];
   clearDraft: number;
+  forgetSentDraft: number;
   // The Connection's state, which the test drops and reopens.
   connection: ConnectionState;
 }
@@ -61,6 +62,9 @@ const fakePorts = (calls: Calls): EmptySessionPorts => ({
   handOff: (sessionId) => void calls.handOff.push(sessionId),
   clearDraft: () => {
     calls.clearDraft += 1;
+  },
+  forgetSentDraft: () => {
+    calls.forgetSentDraft += 1;
   },
   connectionState: () => calls.connection,
 });
@@ -87,6 +91,7 @@ const noCalls = (): Calls => ({
   open: [],
   handOff: [],
   clearDraft: 0,
+  forgetSentDraft: 0,
   connection: 'open',
 });
 

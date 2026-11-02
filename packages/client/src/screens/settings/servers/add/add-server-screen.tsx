@@ -68,12 +68,11 @@ function Entry(props: EntryProps): React.JSX.Element {
   );
 }
 
-function Typing({ pairing, onTyping }: EntryProps): React.JSX.Element {
+function Typing({ pairing }: EntryProps): React.JSX.Element {
   return (
     <TypeCodeView
       looking={pairing.state.phase === 'looking'}
       onSubmit={pairing.type}
-      onScan={typesTheCode ? undefined : () => onTyping(false)}
     />
   );
 }
@@ -106,7 +105,7 @@ function useLink(
 }
 
 interface ScanningProps {
-  onRead: (scanned: string) => void;
+  onRead: (scanned: string) => boolean;
   onEnterCode: () => void;
 }
 

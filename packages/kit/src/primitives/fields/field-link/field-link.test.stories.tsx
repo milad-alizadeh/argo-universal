@@ -123,3 +123,12 @@ export const DisabledDoesNothing: Story = {
     await expect(args.onPress).not.toHaveBeenCalled();
   },
 };
+
+// A destructive row is still a button, and presses like any other action row.
+export const DestructivePresses: Story = {
+  args: { title: 'Unpair', action: true, destructive: true },
+  play: async ({ canvas, userEvent, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Unpair' }));
+    await expect(args.onPress).toHaveBeenCalledTimes(1);
+  },
+};

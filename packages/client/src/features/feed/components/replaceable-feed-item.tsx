@@ -26,16 +26,21 @@ export function renderToolCallSlot(
   );
 }
 
+interface MessageDrawing {
+  imageUrl: (blob: BlobRef) => string;
+  streaming?: boolean;
+}
+
 export function renderMessageSlot(
   row: AgentMessageRow | UserMessageRow,
-  imageUrl: (blob: BlobRef) => string,
+  drawing: MessageDrawing,
 ): React.JSX.Element {
   return (
     <ReplaceableSlot
       input={{ slotId: messageSlotId, props: { row } }}
       renderCore={(input) =>
         input.slotId === messageSlotId
-          ? drawMessage(input.props.row, imageUrl)
+          ? drawMessage(input.props.row, drawing)
           : null
       }
     />
@@ -44,11 +49,11 @@ export function renderMessageSlot(
 
 function drawMessage(
   row: AgentMessageRow | UserMessageRow,
-  imageUrl: (blob: BlobRef) => string,
+  { imageUrl, streaming }: MessageDrawing,
 ): React.JSX.Element {
   return row.sessionUpdate === 'user_message' ? (
     <UserMessage row={row} imageUrl={imageUrl} />
   ) : (
-    <AgentMessage row={row} />
+    <AgentMessage row={row} streaming={streaming} />
   );
 }
