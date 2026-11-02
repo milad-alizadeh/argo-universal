@@ -23,4 +23,6 @@ export interface ShellViewProps extends ShellListProps {
   output?: ShellOutputText;
   onStop: (shell: ShellEntry) => void;
   onDeselect?: () => void;
+  // The Shell the caller has open, as when a Workbench card row picked it; absent, the view keeps its own.
+  openId?: string;
 }

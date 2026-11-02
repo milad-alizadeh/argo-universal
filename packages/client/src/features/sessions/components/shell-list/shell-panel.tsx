@@ -62,11 +62,11 @@ type ShellPagesProps = { list: ReactElement; detail: ReactElement | null };
 function ShellPages(props: ShellPagesProps): ReactElement {
   return (
     <InspectorScreens>
-      <InspectorScreen active={!props.detail} label="Shells list">
+      <InspectorScreen active={!props.detail} label="Background Tasks list">
         {props.list}
       </InspectorScreen>
       {props.detail && (
-        <InspectorScreen active label="Shell output">
+        <InspectorScreen active label="Background Task output">
           {props.detail}
         </InspectorScreen>
       )}

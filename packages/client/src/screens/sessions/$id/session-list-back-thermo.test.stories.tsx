@@ -68,7 +68,7 @@ export const AgentBackRetainsList = returnsToList(
 );
 
 export const ShellBackRetainsList = returnsToList(
-  'Shells',
+  'Background Tasks',
   /^pnpm check-module/,
-  'Back to Shells',
+  'Back to Background Tasks',
 );

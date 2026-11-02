@@ -111,7 +111,7 @@ const withOpenSubagent = (
   openSubagentFeed: work.openSubagentFeed,
 });
 
-// The Composer carries the work pills, and the Feed's Subagent rows open the Subagents panel.
+// The Composer carries the work pills, the Feed's Subagent rows open the Subagents panel, and the Workbench's Agent rows select the same Subagent.
 const withWork = (
   props: OpenSessionViewProps,
   work: ReturnType<typeof useWorkPanels>,
@@ -119,6 +119,7 @@ const withWork = (
   ...props,
   composer: work.composer,
   feed: work.feed,
+  subagents: work.subagents,
 });
 
 const sessionParts = (

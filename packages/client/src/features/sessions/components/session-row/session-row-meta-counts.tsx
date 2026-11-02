@@ -73,7 +73,7 @@ export function ShellsCount({
   if (!sidebarRows || total <= 0) return null;
 
   return (
-    <View accessibilityLabel={`Shells: ${total}, ${running} running`}>
+    <View accessibilityLabel={`Background Tasks: ${total}, ${running} running`}>
       <Label icon="terminal" text={String(total)} sidebar />
     </View>
   );

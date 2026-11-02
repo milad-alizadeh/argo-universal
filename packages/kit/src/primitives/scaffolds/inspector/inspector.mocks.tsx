@@ -145,7 +145,7 @@ const exampleTabs: readonly InspectorTab[] = [
     count: 3,
     countTone: 'success',
   },
-  { key: 'shells', label: 'Shells', icon: 'terminal', count: 2 },
+  { key: 'shells', label: 'Background Tasks', icon: 'terminal', count: 2 },
 ];
 
 function useExampleTabs(): InspectorTabsProps {
