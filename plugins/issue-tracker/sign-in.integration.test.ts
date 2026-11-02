@@ -118,7 +118,9 @@ it('draws the sign-in in place of the Issues page when there is no Account', asy
   const tracked = await tracker();
   const root = await tracked.test.mount({ page: '/', surface });
 
-  await expect.poll(() => root.findText('Sign in to GitHub'), wait).toBeDefined();
+  await expect
+    .poll(() => root.findText('Sign in to GitHub'), wait)
+    .toBeDefined();
   expect(tracked.github.graphqlCalls()).toHaveLength(0);
   expect(tracked.github.requests).toHaveLength(0);
 }, 30_000);

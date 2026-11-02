@@ -73,20 +73,20 @@ export async function clockUntil(
   text: string,
 ): Promise<void> {
   await expect
-    .poll(
-      async () => {
-        await test.clock.advance(1000);
+    .poll(async () => {
+      await test.clock.advance(1000);
 
-        return view.findText(text);
-      },
-      wait,
-    )
+      return view.findText(text);
+    }, wait)
     .toBeDefined();
 }
 
 // Signs in through the Account's own page, as "Add account" opens it, and waits until the Account is saved.
 export async function signIn({ test }: Tracked): Promise<void> {
-  const page = await test.mount({ page: '/sign-in', surface: { platform: 'web' } });
+  const page = await test.mount({
+    page: '/sign-in',
+    surface: { platform: 'web' },
+  });
 
   await page.press('Sign in to GitHub');
   await clockUntil(test, page, 'Signed in as octocat');

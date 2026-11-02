@@ -50,11 +50,24 @@ test('a denied or timed out exchange is cancelled, not failed', async () => {
   assert.equal(log.requests.length, 0);
 });
 
-test('a missing client ID fails before Argo is asked to start', async () => {
-  const { calls, log } = fakeArgo({ clientId: null });
+test('a missing client ID or client secret fails before Argo is asked to start', async () => {
+  for (const world of [{ clientId: null }, { clientSecret: null }]) {
+    const { calls, log } = fakeArgo(world);
 
-  assert.equal((await createSignIn(calls)()).kind, 'failed');
-  assert.equal(log.authorize.length, 0);
+    assert.equal((await createSignIn(calls)()).kind, 'failed');
+    assert.equal(log.authorize.length, 0);
+  }
+});
+
+test('the token exchange sends the client secret GitHub requires', async () => {
+  const { calls, log } = fakeArgo();
+
+  await createSignIn(calls)();
+
+  const exchange = log.requests.find(({ url }) => url.endsWith('access_token'));
+
+  assert.match(exchange?.body ?? '', /client_id=client-1/);
+  assert.match(exchange?.body ?? '', /client_secret=secret-1/);
 });
 
 test('a refused token exchange fails without adding an Account', async () => {

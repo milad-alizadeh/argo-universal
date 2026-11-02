@@ -24,6 +24,12 @@
         "type": "secret",
         "label": "Client ID",
         "description": "The OAuth client ID from your GitHub OAuth app, whose callback URL is http://127.0.0.1:51789/callback."
+      },
+      {
+        "key": "client-secret",
+        "type": "secret",
+        "label": "Client secret",
+        "description": "The client secret of the same GitHub OAuth app. GitHub's web flow requires it to exchange the code, even with PKCE."
       }
     ]
   },

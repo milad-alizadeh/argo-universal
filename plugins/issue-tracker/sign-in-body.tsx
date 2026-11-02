@@ -14,7 +14,10 @@ const idleText = (reauthorize: boolean): string =>
     ? 'GitHub no longer accepts the saved sign-in. Sign in again to keep reading and changing Issues.'
     : 'Sign in to GitHub to read and change this Project’s Issues.';
 
-function Idle({ start, reauthorize }: Pick<BodyProps, 'start' | 'reauthorize'>) {
+function Idle({
+  start,
+  reauthorize,
+}: Pick<BodyProps, 'start' | 'reauthorize'>) {
   return (
     <>
       <Text role="secondary">{idleText(reauthorize)}</Text>

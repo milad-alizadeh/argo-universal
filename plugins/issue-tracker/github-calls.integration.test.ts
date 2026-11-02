@@ -15,7 +15,9 @@ const shown = (view: PageView): string[] =>
 it('makes one GitHub call to open the root, and none when it is opened again inside the freshness window', async () => {
   const { test, github, root } = await issuesRoot();
 
-  await expect.poll(() => root.findText('good first issue'), wait).toBeDefined();
+  await expect
+    .poll(() => root.findText('good first issue'), wait)
+    .toBeDefined();
   expect(github.graphqlCalls()).toHaveLength(1);
   expect(github.requests.filter(({ path }) => path.includes('search'))).toEqual(
     [],
@@ -25,7 +27,9 @@ it('makes one GitHub call to open the root, and none when it is opened again ins
 
   const again = await test.mount({ page: '/', surface });
 
-  await expect.poll(() => again.findText('good first issue'), wait).toBeDefined();
+  await expect
+    .poll(() => again.findText('good first issue'), wait)
+    .toBeDefined();
   expect(github.graphqlCalls()).toHaveLength(1);
 }, 30_000);
 
@@ -39,7 +43,9 @@ it('opens an Issue from its row with the row’s title and status, never a loadi
   const page = await follow(test, list, issueTitle);
 
   await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
-  expect(shown(page).some((tree) => tree.includes('Loading Issue…'))).toBe(false);
+  expect(shown(page).some((tree) => tree.includes('Loading Issue…'))).toBe(
+    false,
+  );
   expect(shown(page)[0]).toContain(issueTitle);
   await expect.poll(() => github.graphqlCalls().length, wait).toBe(before + 1);
 }, 30_000);

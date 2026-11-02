@@ -8,6 +8,7 @@ type Start = NonNullable<Awaited<ReturnType<Argo['oauth']['start']>>>;
 
 export type World = {
   clientId?: string | null;
+  clientSecret?: string | null;
   start?: () => Promise<Start | null>;
   result?: { code: string; verifier: string } | null;
   token?: Reply;
@@ -130,7 +131,13 @@ type Fake = {
 // The calls a sign-in makes, faked, with a log of what went through them.
 export function fakeArgo(world: World = {}): Fake {
   const log = emptyLog();
-  const clientId = world.clientId === undefined ? 'client-1' : world.clientId;
+  const settings = new Map([
+    ['client-id', world.clientId === undefined ? 'client-1' : world.clientId],
+    [
+      'client-secret',
+      world.clientSecret === undefined ? 'secret-1' : world.clientSecret,
+    ],
+  ]);
 
   return {
     log,
@@ -138,7 +145,7 @@ export function fakeArgo(world: World = {}): Fake {
       accounts: accountsOf(log),
       oauth: oauthOf(world, log),
       secrets: secretsOf(log),
-      settings: { get: () => Promise.resolve(clientId) },
+      settings: { get: (key) => Promise.resolve(settings.get(key) ?? null) },
       fetch: fetchOf(repliesOf(world), log),
     },
   };

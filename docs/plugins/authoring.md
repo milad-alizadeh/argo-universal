@@ -343,7 +343,9 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service.
+`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service. GitHub's web flow needs the OAuth app's client secret even with PKCE, so the example keeps it in a `client-secret` secret setting beside `client-id`.
+
+A service with a device flow needs no callback port, no secret and no Server Device. `plugins/issue-tracker` signs in to GitHub that way: the page shows a code, the person enters it at `github.com/login/device` on any device, and the Plugin polls for the token, honouring the `interval` and `slow_down` answers. A Plugin whose page reads through `useData` draws that sign-in whenever a borrow returns nothing, and again when the service answers 401. On a 401 it rewrites the token of the Account it last borrowed instead of adding a second one.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Register that page with `argo.pages.register` before registration completes.

@@ -19,7 +19,9 @@ type Calls = Pick<
 
 type Start = { redirectUri: string; state: string; codeChallenge: string };
 
-type Grant = Start & { clientId: string; code: string; verifier: string };
+type Client = { clientId: string; clientSecret: string };
+
+type Grant = Start & Client & { code: string; verifier: string };
 
 const form = (fields: Record<string, string>): string =>
   Object.entries(fields)
@@ -51,6 +53,7 @@ const tokenRequest = (grant: Grant): Parameters<Calls['fetch']>[1] => ({
   },
   body: form({
     client_id: grant.clientId,
+    client_secret: grant.clientSecret,
     code: grant.code,
     code_verifier: grant.verifier,
     redirect_uri: grant.redirectUri,
@@ -103,16 +106,16 @@ async function complete(calls: Calls, grant: Grant): Promise<SignInResult> {
     : failed('GitHub did not return a token.');
 }
 
-async function run(calls: Calls, clientId: string): Promise<SignInResult> {
+async function run(calls: Calls, client: Client): Promise<SignInResult> {
   const start = await calls.oauth.start();
 
   if (!start) return failed('Couldn’t start sign-in.');
-  const url = authorizeLocation(clientId, start);
+  const url = authorizeLocation(client.clientId, start);
   const result = await calls.oauth.await(start.state, url);
 
   // A denial, the five-minute timeout and a reload all resolve to nothing.
   return result
-    ? complete(calls, { ...start, ...result, clientId })
+    ? complete(calls, { ...start, ...result, ...client })
     : { kind: 'cancelled' };
 }
 
@@ -125,14 +128,27 @@ function outcome(error: Error): SignInResult {
     : failed(error.message);
 }
 
+// A secret setting that is set: GitHub's web flow needs both the ID and the secret of the OAuth app.
+async function secretSetting(
+  calls: Calls,
+  key: string,
+): Promise<string | null> {
+  const value = await calls.settings.get(key);
+
+  return typeof value === 'string' && value !== '' ? value : null;
+}
+
 export function createSignIn(calls: Calls): () => Promise<SignInResult> {
   return async () => {
-    const clientId = await calls.settings.get('client-id');
+    const clientId = await secretSetting(calls, 'client-id');
+    const clientSecret = await secretSetting(calls, 'client-secret');
 
-    if (typeof clientId !== 'string' || !clientId)
-      return failed('Set the OAuth client ID in this Plugin’s settings first.');
+    if (clientId === null || clientSecret === null)
+      return failed(
+        'Set the OAuth client ID and client secret in this Plugin’s settings first.',
+      );
 
-    return run(calls, clientId).catch(outcome);
+    return run(calls, { clientId, clientSecret }).catch(outcome);
   };
 }
 

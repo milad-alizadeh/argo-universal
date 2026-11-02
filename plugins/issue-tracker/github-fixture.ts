@@ -80,7 +80,9 @@ function overviewData(variables: Record<string, string>): object {
     ]);
 
   return {
-    repository: { labels: { nodes: [{ name: 'fixture' }, { name: 'good first issue' }] } },
+    repository: {
+      labels: { nodes: [{ name: 'fixture' }, { name: 'good first issue' }] },
+    },
     ...Object.fromEntries(counts),
   };
 }
