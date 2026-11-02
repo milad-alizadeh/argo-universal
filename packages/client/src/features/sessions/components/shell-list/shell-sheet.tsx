@@ -75,7 +75,7 @@ const sheetFrame = (
 ): Pick<SheetProps, 'open' | 'onOpenChange' | 'label' | 'contentScrolls'> => ({
   open: props.open,
   onOpenChange: props.onOpenChange,
-  label: 'Shells',
+  label: 'Background Tasks',
   contentScrolls: true,
 });
 
@@ -86,7 +86,7 @@ export function ShellSheet(props: ShellSheetProps): JSX.Element {
 
   return (
     <Sheet {...sheetFrame(props)}>
-      <Sheet.Screen name="shells" title="Shells">
+      <Sheet.Screen name="shells" title="Background Tasks">
         <ShellRows shells={props.shells} now={props.now} onOpen={openShell} />
       </Sheet.Screen>
       <Sheet.Screen name="shell" {...heading}>

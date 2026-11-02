@@ -7,13 +7,12 @@ import {
 import { ChangeRow } from './change-row';
 import { resolveChangeStage } from './change-stage/change-stage-model';
 import type { SessionPullRequest } from './session-pull-request';
+import { previewLimit } from './workbench-preview';
 
 interface Props {
   changes: readonly SessionPullRequest[];
   onOpen: () => void;
 }
-
-const previewLimit = 3;
 
 // The open Changes the card previews, and the rest, which its footer groups by stage.
 interface ChangeSplit {

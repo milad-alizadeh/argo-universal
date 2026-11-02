@@ -204,9 +204,9 @@ _Avoid_: Draft Session, pending Session
 A Session that another Session started to do delegated work. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so.
 _Avoid_: Subagent, child agent, task agent
 
-**Shell**:
-A command an Agent started in the background, which keeps running while the Turn goes on.
-_Avoid_: Background task, terminal, process
+**Background Task**:
+A command an Agent started in the background, which keeps running while the Turn goes on. The owner renamed Shell to Background Task on 2026-11-02; the code still says `Shell`.
+_Avoid_: Shell, terminal, process
 
 **Goal**:
 An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
@@ -291,7 +291,7 @@ The ordered list of Session updates that Argo shows for one Session.
 _Avoid_: Timeline, transcript, log, history
 
 **Session snapshot**:
-Everything a Session shows that is not in its Feed, such as its title, state, Live header, Shells, and the Agents it started. It is sent whole on each change.
+Everything a Session shows that is not in its Feed, such as its title, state, Live header, Background Tasks, and the Agents it started. It is sent whole on each change.
 _Avoid_: Session state (one field of it), session details
 
 **Session update**:
@@ -481,11 +481,11 @@ Somewhere in the Frame that a page fills while it is shown: the window band, the
 _Avoid_: Host, slot (a Slot is a Plugin's)
 
 **Inspector**:
-The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Shell's output; the Workbench stays open beside it.
+The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Background Task's output; the Workbench stays open beside it.
 _Avoid_: Stage, detail pane, viewer
 
 **Section**:
-One kind of a Session's work, such as Changes, Agents, Shells or a Plugin's. Each has a Workbench card that summarises it and an Inspector tab that shows it in full. Changes is always offered; Agents and Shells are offered once the Session has some.
+One kind of a Session's work, such as Changes, Agents, Background Tasks or a Plugin's. Each has a Workbench card that summarises it and an Inspector tab that shows it in full. Changes is always offered; Agents and Background Tasks are offered once the Session has some.
 _Avoid_: Panel, pane, Workbench card (for the whole kind)
 
 **Surface**:

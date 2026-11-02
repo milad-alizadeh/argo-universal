@@ -54,7 +54,7 @@ const listProps = {
   appearance: 'cards',
   onPhones: phonesGrouped,
   fit: false,
-  accessibilityLabel: 'Shells',
+  accessibilityLabel: 'Background Tasks',
 } as const;
 
 // The Session's background Shells under a count of the running ones.

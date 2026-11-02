@@ -91,7 +91,7 @@ export function WideShellList(
   props: ShellListProps & { now: number },
 ): JSX.Element {
   return (
-    <View className="px-2 pt-2 pb-3" accessibilityLabel="Shells">
+    <View className="px-2 pt-2 pb-3" accessibilityLabel="Background Tasks">
       {props.shells.map((shell) => (
         <WideShellRow key={shell.id} {...props} shell={shell} />
       ))}
