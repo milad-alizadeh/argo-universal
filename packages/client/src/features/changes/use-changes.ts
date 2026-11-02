@@ -12,7 +12,7 @@ import {
   markedViewed,
   wantedMore,
 } from './state/changes-state';
-import { diffsByFile, wantedPageKeys } from './state/diff-pages';
+import { diffsByFile, diffsKeeper, wantedPageKeys } from './state/diff-pages';
 import { branchesOf, changesQuery, filesFromPages } from './state/files-pages';
 import type { ChangesViewProps } from './view/changes-view-props';
 
@@ -74,8 +74,9 @@ function useLoaded(
   const branches = source.useBranches(scope);
   const query = changesQuery(scope, state.comparison, branches.data);
   const keys = wantedPageKeys(state.wanted);
+  const [keepDiffs] = useState(diffsKeeper);
   const files = useFilesOf(source.useFiles(query));
-  const diffs = diffsByFile(keys, source.useDiffPages(query, keys));
+  const diffs = keepDiffs(diffsByFile(keys, source.useDiffPages(query, keys)));
 
   source.useRefresh(scope);
 
