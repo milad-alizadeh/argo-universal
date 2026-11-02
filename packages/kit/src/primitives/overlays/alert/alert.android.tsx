@@ -22,6 +22,7 @@ import {
   type AlertProps,
   type AnsweredAlertProps,
 } from './alert-props';
+import { AlertSpinner } from './alert-spinner.android';
 
 // Material's AlertDialog shows while it is drawn, so a closed alert draws nothing.
 export function Alert(props: AlertProps): React.JSX.Element | null {
@@ -38,6 +39,7 @@ function OpenAlert(props: AnsweredAlertProps): React.JSX.Element {
   return (
     <AlertDialog onDismissRequest={() => ignoreCloseWhileBusy(props)(false)}>
       <AlertTitle title={props.title} />
+      <AlertSpinner busy={props.busy} label={props.title} />
       <AlertMessage message={props.message} />
       <AlertAnswers {...props} />
       <AlertCancel actions={props.actions} onOpenChange={props.onOpenChange} />

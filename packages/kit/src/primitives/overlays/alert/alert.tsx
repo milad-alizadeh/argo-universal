@@ -7,6 +7,7 @@ import {
   CentredModalTitle,
 } from '#primitives/overlays/centred-overlay';
 import { Dialog } from '#primitives/overlays/dialog';
+import { Spinner } from '#primitives/status/spinner';
 import {
   alertActionPress,
   ignoreCloseWhileBusy,
@@ -36,25 +37,35 @@ export function Alert(input: AlertProps): React.JSX.Element {
 function AlertCard(props: AnsweredAlertProps): React.JSX.Element {
   return (
     <CentredModal className={contentClassName}>
-      <AlertHeading title={props.title} message={props.message} />
+      <AlertHeading {...props} />
       <AlertButtons {...props} />
     </CentredModal>
   );
 }
 
-type AlertHeadingProps = Pick<AnsweredAlertProps, 'title' | 'message'>;
+type AlertHeadingProps = Pick<AnsweredAlertProps, 'title' | 'message' | 'busy'>;
 
 function AlertHeading(props: AlertHeadingProps): React.JSX.Element {
   return (
     <View className="gap-2">
-      <CentredModalTitle className="type-heading text-foreground">
-        {props.title}
-      </CentredModalTitle>
+      <AlertTitleLine {...props} />
       {props.message ? (
         <CentredModalDescription className="type-secondary">
           {props.message}
         </CentredModalDescription>
       ) : null}
+    </View>
+  );
+}
+
+// A waiting alert's spinner sits beside its title.
+function AlertTitleLine(props: AlertHeadingProps): React.JSX.Element {
+  return (
+    <View className="flex-row items-center gap-3">
+      {props.busy ? <Spinner accessibilityLabel={props.title} /> : null}
+      <CentredModalTitle className="type-heading text-foreground">
+        {props.title}
+      </CentredModalTitle>
     </View>
   );
 }

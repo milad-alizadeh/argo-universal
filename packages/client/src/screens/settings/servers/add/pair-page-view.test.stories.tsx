@@ -39,6 +39,14 @@ export const WaitingOffersCancel: Story = {
   },
 };
 
+// The wait shows it is waiting, with a spinner in the card rather than silence.
+export const WaitingShowsASpinner: Story = {
+  args: { kind: 'waiting' },
+  play: async () => {
+    await expect(await body.findByRole('progressbar')).toBeVisible();
+  },
+};
+
 // A page that names a computer says which one, so two Servers are never confused.
 export const NamesTheServer: Story = {
   args: { kind: 'declined' },

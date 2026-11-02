@@ -1,14 +1,15 @@
 import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
+import { PinnedFooter } from '@repo/kit/primitives/scaffolds/pinned-footer';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type * as React from 'react';
-import { View } from 'react-native';
 import {
   type EndedKind,
   type PairPageKind,
   type PairWay,
   pairCopy,
 } from './pair-copy';
+import { ScannerFrame } from './scanner-frame';
 import { WaitingAlert } from './waiting-alert';
 
 export interface PairPageViewProps {
@@ -36,7 +37,9 @@ export function PairPageView(props: PairPageViewProps): React.JSX.Element {
 function WaitingScreen(props: PairPageViewProps): React.JSX.Element {
   return (
     <Screen title="Add a Server">
-      <View className="flex-1 bg-muted" />
+      <PinnedFooter footer={null}>
+        <ScannerFrame />
+      </PinnedFooter>
       <WaitingAlert {...props} />
     </Screen>
   );

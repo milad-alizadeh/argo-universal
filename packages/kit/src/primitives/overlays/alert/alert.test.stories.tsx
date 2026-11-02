@@ -15,6 +15,7 @@ interface AskAgentProps {
   actions: readonly AlertAction[];
   // Held open by the caller, as while an answer runs.
   held?: boolean;
+  busy?: boolean;
 }
 
 // A button that asks to remove or update Example ACP.
@@ -30,6 +31,7 @@ function AskAgent(props: AskAgentProps): React.JSX.Element {
         title={`${props.verb} Example ACP?`}
         message="Sessions that use it keep their history."
         actions={props.actions}
+        busy={props.busy}
       />
     </>
   );
@@ -168,5 +170,39 @@ export const RunningAnswer: Story = {
     ).toBeDisabled();
     await userEvent.keyboard('{Escape}');
     await expect(alert).toBeInTheDocument();
+  },
+};
+
+// A waiting alert shows a spinner beside its title and still lets Cancel close it.
+export const WaitingShowsASpinnerAndCancels: Story = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  render: () => (
+    <AskAgent
+      verb="Remove"
+      busy
+      actions={[{ label: 'Cancel', role: 'cancel', onPress: onAnswer }]}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', trigger));
+    const alert = await body.findByRole('dialog', alertName);
+    await expect(within(alert).getByRole('progressbar')).toBeVisible();
+    await userEvent.click(
+      within(alert).getByRole('button', { name: 'Cancel' }),
+    );
+    await waitFor(() =>
+      expect(body.queryByRole('dialog', alertName)).toBeNull(),
+    );
+    await expect(onAnswer).toHaveBeenCalledOnce();
+  },
+};
+
+// An alert that is not waiting draws no spinner.
+export const DrawsNoSpinnerUnlessWaiting: Story = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', trigger));
+    const alert = await body.findByRole('dialog', alertName);
+    await expect(within(alert).queryByRole('progressbar')).toBeNull();
   },
 };
