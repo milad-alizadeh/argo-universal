@@ -52,8 +52,26 @@ function hasDiff(
   return activity.row.content.some((block) => block.type === 'diff');
 }
 
+function liveCommand(activity: FeedActivity): boolean {
+  return (
+    activity.type === 'tool_call' &&
+    toolCallFacts(activity.row).isCommand &&
+    hasTerminal(activity)
+  );
+}
+
+function hasTerminal(
+  activity: Extract<FeedActivity, { type: 'tool_call' }>,
+): boolean {
+  return activity.row.content.some((block) => block.type === 'terminal');
+}
+
+function liveDetail(activity: FeedActivity): boolean {
+  return liveEdit(activity) || liveCommand(activity);
+}
+
 function keepActivity(activity: FeedActivity, liveId: string): boolean {
-  return !isLiveToolCall(activity, liveId) || liveEdit(activity);
+  return !isLiveToolCall(activity, liveId) || liveDetail(activity);
 }
 
 function activityWithout(

@@ -4,7 +4,11 @@ import { expect, waitFor, within } from 'storybook/test';
 import { recordedEdit } from '../../../../../mocks/feed-edit-mock';
 import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
-import { toolCallGroupMock, toolCallGroupMocks } from '../tool-call.mocks';
+import {
+  runningCommand,
+  toolCallGroupMock,
+  toolCallGroupMocks,
+} from '../tool-call.mocks';
 import { ToolCallGroup } from './tool-call-group';
 import {
   commandAndFileSummary,
@@ -90,7 +94,7 @@ function running(width: number): Story {
           name: commandTitle,
         }),
       ).toHaveLength(1);
-      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
+      await expect(canvas.getByText('Shell')).toBeVisible();
       await userEvent.click(group);
       await waitFor(() =>
         expect(
@@ -176,11 +180,13 @@ export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
 
 export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
 
+const editDescription = 'Updating the greeting';
+
 function activeEditGroup(withHeader: boolean): FeedGroup {
   const row = {
     ...recordedEdit('agent-1'),
     status: 'in_progress' as const,
-    title: 'Updating the greeting',
+    title: editDescription,
   };
 
   const group: FeedGroup = {
@@ -208,7 +214,7 @@ export const RunningEditWithLiveHeader: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout(layoutWidths.wide);
     await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
-    await expect(canvas.getByText('Updating the greeting')).toBeVisible();
+    await expect(canvas.getByText(editDescription)).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: /Edited hello.txt/ }),
     ).toBeVisible();
@@ -224,7 +230,10 @@ export const RunningEditWithoutLiveHeader: Story = {
       canvas.getByRole('button', { name: /Updating the greeting/ }),
     );
     await expect(
-      canvas.getAllByRole('button', { name: /Updating the greeting/ }),
+      canvas.getAllByText(editDescription, {
+        selector: '.shimmer-text',
+        exact: false,
+      }),
     ).toHaveLength(1);
     await expect(
       canvas.getByRole('button', { name: /Edited hello.txt/ }),
@@ -251,5 +260,59 @@ export const RunningEditWithoutDescription: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
 
     await expect(canvas.getByText('Editing file')).toBeVisible();
+  },
+};
+
+// A separate Agent description takes precedence over the generic title.
+export const RunningEditWithAgentDescription: Story = {
+  render: () => {
+    const group = activeEditGroup(true);
+
+    const row = {
+      ...recordedEdit('agent-1'),
+      status: 'in_progress' as const,
+      title: 'Edit',
+      _meta: { argo: { description: 'Correcting the greeting' } },
+    };
+
+    group.items = [{ type: 'tool_call', row }];
+
+    return <FeedItem item={group} imageUrl={() => ''} />;
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
+    await expect(canvas.getByText('Correcting the greeting')).toBeVisible();
+  },
+};
+
+// A live command's group disclosure opens its output without repeating its description.
+export const RunningCommandShowsOutput: Story = {
+  render: () => {
+    const row = { ...runningCommand, title: 'Checking the working tree' };
+
+    const group: FeedGroup = {
+      type: 'group',
+      id: 'active-command',
+      title: 'Working',
+      state: 'open',
+      items: [{ type: 'tool_call', row }],
+      live: { toolCall: row, awaitingApproval: false },
+    };
+
+    return <FeedItem item={group} imageUrl={() => ''} />;
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(
+      canvas.getByRole('button', { name: /Checking the working tree/ }),
+    );
+    await expect(
+      canvas.getAllByText('Checking the working tree', {
+        selector: '.shimmer-text',
+        exact: false,
+      }),
+    ).toHaveLength(1);
+    await expect(canvas.getByText('Shell')).toBeVisible();
   },
 };

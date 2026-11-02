@@ -8,12 +8,14 @@ import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
+import { use } from 'react';
 import { View } from 'react-native';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
+import { GroupLiveId } from '../tool-call-group/group-live-id';
 import { ToolOutput } from '../tool-output';
 import {
   type CommandFooterState,
@@ -88,6 +90,9 @@ function CommandOutput(
 
 function CommandDisclosure(props: CommandDisclosureProps): React.JSX.Element {
   const state = commandState(props);
+  const titleInGroup = use(GroupLiveId) === props.row.id;
+
+  if (titleInGroup) return <CommandOutput {...props} state={state} />;
 
   return (
     <ToolCallDisclosure
