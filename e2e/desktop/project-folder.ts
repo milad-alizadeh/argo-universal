@@ -46,7 +46,7 @@ const chooseScript = `on run argv
     keystroke folderPath
     key code 36
     delay 0.5
-    key code 36
+    click button "Choose Folder" of splitter group 1 of sheet 1 of front window
   end tell
 end run`;
 
