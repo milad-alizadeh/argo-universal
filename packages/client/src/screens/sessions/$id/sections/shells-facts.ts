@@ -3,7 +3,7 @@ import type { SectionFacts, SessionItems } from './session-section';
 
 export const shellsFacts = {
   key: 'shells',
-  title: 'Shells',
+  title: 'Background Tasks',
   icon: 'terminal',
   offered: ({ shells }: SessionItems): boolean => Boolean(shells?.length),
   count: ({ shells }: SessionInspectorContent): number =>

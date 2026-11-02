@@ -36,7 +36,7 @@ const modelLabel = 'Agent and model';
 const names = [
   'Plan',
   'Agents: 2',
-  'Shells: 1',
+  'Background Tasks: 1',
   modelLabel,
   'Mode',
   'Context window',
@@ -116,7 +116,7 @@ export const ModelRetainsItsConfigurationOverlay: Story = {
 async function expectMaterialPolicy(
   canvas: ReturnType<typeof within>,
 ): Promise<void> {
-  for (const name of ['Plan', 'Agents: 2', 'Shells: 1'])
+  for (const name of ['Plan', 'Agents: 2', 'Background Tasks: 1'])
     await expect(
       await within(canvas.getByRole('button', { name })).findByRole('group', {
         name: nativeMaterialLabel,

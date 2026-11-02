@@ -64,7 +64,7 @@ const backAppearance = {
   variant: 'ghost',
   size: 'md',
   icon: 'chevron-left',
-  accessibilityLabel: 'Back to Shells',
+  accessibilityLabel: 'Back to Background Tasks',
 } as const;
 
 // The wide panel's own header over a Shell's output: back to the list, the command, how it stands, and Stop.

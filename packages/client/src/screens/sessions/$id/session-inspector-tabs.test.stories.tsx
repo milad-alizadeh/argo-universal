@@ -35,7 +35,9 @@ export const RemembersListPositionAcrossTabs: Story = {
     await waitFor(() =>
       expect(list.scrollTop, 'initial scroll').toBeGreaterThan(400),
     );
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await waitFor(() =>
       expect(
@@ -56,7 +58,9 @@ export const RemembersFoldedFilesAcrossTabs: Story = {
     await expect(
       canvas.getByRole('button', fileHeader(firstFile)),
     ).toHaveAttribute('aria-expanded', 'false');
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     // The returning panel's rows can be briefly hidden to assistive queries right after the tab flips back.
     await expect(
@@ -67,7 +71,9 @@ export const RemembersFoldedFilesAcrossTabs: Story = {
 
 export const RemembersShellDetailAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      await canvas.findByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(
       await canvas.findByRole('button', { name: /^pnpm dev,/ }),
     );
@@ -75,7 +81,9 @@ export const RemembersShellDetailAcrossTabs: Story = {
       canvas.getByRole('button', { name: backToShells }),
     ).toBeVisible();
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await expect(
       await canvas.findByRole('button', { name: backToShells }),
     ).toBeVisible();
@@ -83,7 +91,7 @@ export const RemembersShellDetailAcrossTabs: Story = {
   },
 };
 
-const backToShells = 'Back to Shells';
+const backToShells = 'Back to Background Tasks';
 
 const backToAgents = 'Back to Agents';
 
@@ -141,7 +149,9 @@ export const HidesOpenAgentFeedBehindAnotherTab: Story = {
 
 export const HidesOpenShellBehindAnotherTab: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      await canvas.findByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(
       await canvas.findByRole('button', { name: /^pnpm dev,/ }),
     );

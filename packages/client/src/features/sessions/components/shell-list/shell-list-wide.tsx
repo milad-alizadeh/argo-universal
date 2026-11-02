@@ -1,11 +1,13 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ComponentProps, JSX } from 'react';
 import { Pressable, View } from 'react-native';
+import { workListSections } from '../work-list-sections';
 import {
   shellElapsed,
   shellOutcome,
   shellPassed,
   shellSupporting,
+  shellTitle,
 } from './shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list-types';
 import { ShellMark } from './shell-mark';
@@ -35,18 +37,9 @@ function RowText({ shell }: { shell: ShellEntry }): JSX.Element {
         tone={shellPassed(shell) ? 'muted' : 'neutral'}
         numberOfLines={1}
       >
-        {shell.command}
+        {shellTitle(shell)}
       </Text>
       <Text {...supportingProps(shell)}>{shellSupporting(shell)}</Text>
-    </View>
-  );
-}
-
-// The outcome keeps its own lane at the end of the row.
-function RowMark({ shell }: { shell: ShellEntry }): JSX.Element {
-  return (
-    <View className="h-5 w-4 shrink-0 items-center justify-center">
-      <ShellMark shell={shell} />
     </View>
   );
 }
@@ -66,10 +59,10 @@ type RowPressable = Pick<
   'role' | 'accessibilityLabel' | 'onPress' | 'disabled' | 'className'
 >;
 
-// The row reads out as its three lanes do: the command, how it stands, and how long it has run.
+// The row reads out as its three lanes do: the title, how it stands, and how long it has run.
 const rowPressable = ({ shell, onSelect, now }: RowProps): RowPressable => ({
   role: 'button',
-  accessibilityLabel: `${shell.command}, ${shellSupporting(shell)}, ${shellElapsed(shell, now)}`,
+  accessibilityLabel: `${shellTitle(shell)}, ${shellSupporting(shell)}, ${shellElapsed(shell, now)}`,
   onPress: onSelect ? () => onSelect(shell) : undefined,
   disabled: !onSelect,
   className: rowClasses,
@@ -78,9 +71,9 @@ const rowPressable = ({ shell, onSelect, now }: RowProps): RowPressable => ({
 function WideShellRow(props: RowProps): JSX.Element {
   return (
     <Pressable {...rowPressable(props)}>
+      <ShellMark shell={props.shell} />
       <RowText shell={props.shell} />
       <RowElapsed elapsed={shellElapsed(props.shell, props.now)} />
-      <RowMark shell={props.shell} />
     </Pressable>
   );
 }
@@ -90,10 +83,14 @@ export function WideShellList(
   props: ShellListProps & { now: number },
 ): JSX.Element {
   return (
-    <View className="px-2 pt-2 pb-3" accessibilityLabel="Shells">
-      {props.shells.map((shell) => (
-        <WideShellRow key={shell.id} {...props} shell={shell} />
-      ))}
+    <View className="px-2 pt-2 pb-3" accessibilityLabel="Background Tasks">
+      {workListSections(
+        props.shells,
+        (shell) => shell.status === 'running',
+        (shell) => (
+          <WideShellRow key={shell.id} {...props} shell={shell} />
+        ),
+      )}
     </View>
   );
 }
