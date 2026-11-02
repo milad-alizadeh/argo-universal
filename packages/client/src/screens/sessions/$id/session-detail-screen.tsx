@@ -1,8 +1,7 @@
 import { useIsPreview } from 'expo-router';
 import type * as React from 'react';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
-import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
-import { renderConnectedReplaceableSlot } from '../../plugins/connected-replaceable-slot';
+import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -28,13 +27,13 @@ export function SessionDetailScreen({
   draft,
 }: SessionDetailScreenProps): React.JSX.Element {
   return (
-    <ReplaceableSlotRenderer value={renderConnectedReplaceableSlot}>
+    <ConnectedReplaceableSlots>
       {id === newSessionId ? (
         <SessionNewScreen projectId={projectId} draft={draft} />
       ) : (
         <ConnectedSession key={id} sessionId={id} />
       )}
-    </ReplaceableSlotRenderer>
+    </ConnectedReplaceableSlots>
   );
 }
 

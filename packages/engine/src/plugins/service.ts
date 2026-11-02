@@ -10,6 +10,10 @@ import {
 } from '@repo/contracts/plugins/declared-slots';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import {
+  hooksEvent,
+  rendersSlot,
+} from '@repo/contracts/plugins/plugin-contributions';
+import {
   ReplaceableInput,
   type ReplaceableMessage,
   type RenderFailureInput,
@@ -28,11 +32,7 @@ import {
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
-import {
-  hooksEvent,
-  rendersSlot,
-  runsBackground,
-} from './discovery/plugin-contributions';
+import { runsBackground } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
 import {
   applyEnabled,

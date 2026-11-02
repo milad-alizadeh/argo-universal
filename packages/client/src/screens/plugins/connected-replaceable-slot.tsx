@@ -1,9 +1,13 @@
 import { renderReasonLimit } from '@repo/contracts/plugins/replaceable';
-import { useMutation } from '@tanstack/react-query';
+import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useTRPC } from '#features/connection';
 import {
   coreSlotState,
   reduceReplaceable,
+  ReplaceableSlotRenderer,
+  replacedSlots,
   type ReplaceableState,
 } from '../../lib/product/plugin-registry';
 import {
@@ -14,10 +18,40 @@ import {
 import { usePluginBinding } from './use-plugin-binding';
 import { usePluginStream } from './use-plugin-stream';
 
-export function renderConnectedReplaceableSlot(
+const noSlots: readonly ReplaceableSlotId[] = [];
+
+const renderConnectedSlot = (
   props: ReplaceableSlotProps,
-): React.JSX.Element {
-  return <ConnectedReplaceableSlot {...props} />;
+): React.JSX.Element => <ConnectedReplaceableSlot {...props} />;
+
+/*
+ * One check of the Plugin list for every Slot below it, so a row no Plugin can replace opens no stream and core draws
+ * it from the start. `select` keeps its answer's identity across rereads, so a reread that changes nothing draws no row.
+ */
+export function ConnectedReplaceableSlots({
+  children,
+}: React.PropsWithChildren): React.JSX.Element {
+  const replaced = useReplacedSlots();
+
+  const drawing = useMemo(
+    () => ({ replaced, render: renderConnectedSlot }),
+    [replaced],
+  );
+
+  return (
+    <ReplaceableSlotRenderer value={drawing}>
+      {children}
+    </ReplaceableSlotRenderer>
+  );
+}
+
+function useReplacedSlots(): readonly ReplaceableSlotId[] {
+  const { data } = useQuery({
+    ...useTRPC().plugin.list.queryOptions(),
+    select: replacedSlots,
+  });
+
+  return data?.length ? data : noSlots;
 }
 
 // A Replaceable Slot as the connected Server answers it; a failed stream leaves core's own drawing.
