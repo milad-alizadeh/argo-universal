@@ -10,6 +10,7 @@ export function ShellMark({ shell }: { shell: Shell }): JSX.Element {
   if (shell.status === 'running')
     return (
       <TintedAvatar
+        accessibilityLabel="Background Task"
         icon="terminal"
         tone="neutral"
         status={{ tone: 'success', accessibilityLabel: 'Running' }}

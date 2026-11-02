@@ -14,7 +14,7 @@ type WideProps = SubagentListProps & { now: number };
 type RowProps = {
   subagent: Subagent;
   now: number;
-  onSelect: SubagentListProps['onSelect'];
+  onSelect?: SubagentListProps['onSelect'];
 };
 
 const rowClasses = cn(

@@ -125,6 +125,17 @@ export const StatusOnLeadingMark: Story = {
       const status = canvas.getByRole('img', { name: 'Running' });
       const title = canvas.getByText('Find every Feed reader');
       await expect(row.contains(status)).toBe(true);
+
+      const mark = canvas
+        .getByLabelText('Explore Agent')
+        .getBoundingClientRect();
+      const dot = status.getBoundingClientRect();
+
+      await expect(dot.width).toBeGreaterThan(0);
+      await expect(dot.left).toBeGreaterThanOrEqual(mark.left);
+      await expect(dot.top).toBeGreaterThanOrEqual(mark.top);
+      await expect(dot.right).toBeLessThanOrEqual(mark.right);
+      await expect(dot.bottom).toBeLessThanOrEqual(mark.bottom);
       await expect(status.getBoundingClientRect().right).toBeLessThan(
         title.getBoundingClientRect().left,
       );

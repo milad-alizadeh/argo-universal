@@ -16,6 +16,7 @@ export function SubagentMark({
 }): JSX.Element {
   return (
     <TintedAvatar
+      accessibilityLabel={`${subagent.role ?? 'General'} Agent`}
       {...subagentRoleMark(subagent.role)}
       dimmed={subagent.state === 'idle'}
       status={statuses[subagent.state]}
