@@ -41,11 +41,9 @@ export function Meta(props: MetaProps & { sidebar: boolean }): ReactNode {
   );
 }
 
-const compactMetaClass = (props: MetaProps): string =>
-  cn(
-    'flex-row items-center gap-1',
-    props.metaAccessories === undefined ? 'shrink-0' : 'min-w-0 shrink',
-  );
+// The compact meta takes what the title's half leaves and clips the rest, as a row of many labels would overflow.
+const compactMetaClass =
+  'min-w-0 shrink flex-row items-center gap-1 overflow-hidden';
 
 export function CompactMeta(props: MetaProps): ReactNode {
   const open = useOpenLane();

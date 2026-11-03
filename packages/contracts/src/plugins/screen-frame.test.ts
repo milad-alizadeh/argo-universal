@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { kitComponent } from './kit';
 import { supportsWireNode } from './prepare-tree';
-import type { WireNode } from './wire';
+import type { WireJson, WireNode } from './wire';
 
 function node(
   type: string,
-  props: Record<string, unknown> = {},
+  props: Record<string, WireJson> = {},
   slots: Record<string, WireNode[]> = {},
 ): WireNode {
   return { type, key: type, props, children: [], slots };
@@ -52,7 +52,11 @@ describe('a multi-line field', () => {
   it('sends with an IconButton beside it', () => {
     const field = {
       ...textArea,
-      slots: { action: [node('IconButton', { icon: 'arrow-up', accessibilityLabel: 'Send' })] },
+      slots: {
+        action: [
+          node('IconButton', { icon: 'arrow-up', accessibilityLabel: 'Send' }),
+        ],
+      },
     };
 
     expect(supportsWireNode(field)).toBe(true);

@@ -9,6 +9,7 @@ import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
 import { ScreenAside, ScreenLead, useAsideFrame } from './screen-aside';
+import type { AsidePlace } from './screen-aside-place';
 import { ScreenBody } from './screen-body';
 import { ScreenFooterFrame } from './screen-footer';
 import { screenHeadersOf } from './screen-headers';
@@ -59,6 +60,24 @@ function ScreenHeaderSource(props: ScreenProps): ReactElement {
   return <ScreenDrawing {...drawing} />;
 }
 
+// The heading, then the body with the aside's Pills over it and the footer under it, beside the aside's column.
+function ScreenFrame(
+  props: ScreenHeaderPlanned & { place: AsidePlace },
+): ReactElement {
+  return (
+    <ScreenAside aside={props.aside} width={props.width} place={props.place}>
+      {props.plan.site === 'heading' ? <ScreenHeadingBody {...props} /> : null}
+      <ScreenFooterFrame footer={props.footer} width={props.width}>
+        <ScreenLead width={props.width} />
+        <ScreenBody {...props} />
+      </ScreenFooterFrame>
+    </ScreenAside>
+  );
+}
+
+const drawingClass =
+  'min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent ios:bg-transparent';
+
 // Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered. iOS: the stack paints it, as a painted view here would hide the list from the large title.
 function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
   const aside = useAsideFrame(props.width);
@@ -67,19 +86,21 @@ function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
     <View
       testID={props.testID}
       onLayout={aside.onLayout}
-      className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent ios:bg-transparent"
+      className={drawingClass}
     >
       <ShortcutAnchors anchors={props.declaration.anchors} />
-      <ScreenAside aside={props.aside} width={props.width} place={aside.place}>
-        {props.plan.site === 'heading' ? <ScreenHeadingBody {...props} /> : null}
-        <ScreenFooterFrame footer={props.footer} width={props.width}>
-          <ScreenLead width={props.width} />
-          <ScreenBody {...props} />
-        </ScreenFooterFrame>
-      </ScreenAside>
-      {/* After the body: iOS's docked search is a native view, and UIKit's large title only finds a scroll view that comes first. */}
+      <ScreenFrame {...props} place={aside.place} />
+      <ScreenEnd {...props} />
+    </View>
+  );
+}
+
+// After the body: iOS's docked search is a native view, and UIKit's large title only finds a scroll view that comes first.
+function ScreenEnd(props: ScreenHeaderPlanned): ReactElement {
+  return (
+    <>
       <ScreenNavigation {...props} />
       <ScreenAccessory {...props} />
-    </View>
+    </>
   );
 }

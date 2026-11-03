@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PinnedFooterKeyboard } from '../pinned-footer/pinned-footer-keyboard';
-import { ScreenColumn } from './screen-column';
+import { insetWidth, ScreenColumn } from './screen-column';
 import type { ScreenProps } from './screen-props';
 
 // What the footer leaves below itself: the home indicator or Android's navigation bar, and a little more.
@@ -25,16 +25,17 @@ export function ScreenFooterFrame(
   );
 }
 
-function ScreenFooter(props: {
-  width: ScreenProps['width'];
-  children: ReactNode;
-}): ReactElement {
+type FooterProps = { width: ScreenProps['width']; children: ReactNode };
+
+function ScreenFooter(props: FooterProps): ReactElement {
   const { bottom } = useSafeAreaInsets();
-  const width = props.width === 'bleed' ? 'full' : props.width;
 
   return (
-    <ScreenColumn width={width}>
-      <View className="gap-2 pt-2" style={{ paddingBottom: bottom + footerEnd }}>
+    <ScreenColumn width={insetWidth(props.width)}>
+      <View
+        className="gap-2 pt-2"
+        style={{ paddingBottom: bottom + footerEnd }}
+      >
         {props.children}
       </View>
     </ScreenColumn>

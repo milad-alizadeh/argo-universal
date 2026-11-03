@@ -1,10 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { ListPlaceContext } from '#kit/list-place';
 import { cn } from '#kit/utils';
 import { Markdown } from '#primitives/content/markdown';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
-import { ListPlaceContext } from '#kit/list-place';
 import { useAsideLead } from '../screen/screen-aside';
 import { screenContentEnds } from '../screen/screen-column';
 import type { DetailProps } from './detail-props';

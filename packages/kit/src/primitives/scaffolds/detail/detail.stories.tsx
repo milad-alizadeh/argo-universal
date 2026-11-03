@@ -8,6 +8,7 @@ import {
   agentDetail,
   contentAndMetadataDetail,
   emptyDetail,
+  errorDetail,
   loadingDetail,
 } from './detail-fixtures';
 import { agent, issue } from './detail.mocks';
@@ -51,4 +52,8 @@ export const Loading: Story = {
 
 export const Empty: Story = {
   args: emptyDetail,
+};
+
+export const Failed: Story = {
+  args: errorDetail,
 };

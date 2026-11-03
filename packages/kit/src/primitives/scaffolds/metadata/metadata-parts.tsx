@@ -27,8 +27,9 @@ function fieldProps(props: FieldOwnProps): FieldOwnProps {
   return { title: props.title, accessibilityLabel: props.accessibilityLabel };
 }
 
-const iconGlyph = (icon: IconProps['name'] | undefined): ReactElement | undefined =>
-  icon ? <Icon name={icon} /> : undefined;
+const iconGlyph = (
+  icon: IconProps['name'] | undefined,
+): ReactElement | undefined => (icon ? <Icon name={icon} /> : undefined);
 
 export function MetadataLabel(props: MetadataLabelProps): ReactElement {
   const glyph = iconGlyph(props.icon);
@@ -59,6 +60,7 @@ function follow(href: string): () => void {
 
 export function MetadataLink(props: MetadataLinkProps): ReactElement {
   const glyph = iconGlyph(props.icon);
+  const link = <Link label={props.text} {...destination(props.href)} />;
 
   return (
     <MetadataField
@@ -67,17 +69,15 @@ export function MetadataLink(props: MetadataLinkProps): ReactElement {
       grouped={false}
       face={{ glyph, onPress: follow(props.href) }}
     >
-      <MetadataText
-        text={<Link label={props.text} {...destination(props.href)} />}
-      >
-        {glyph}
-      </MetadataText>
+      <MetadataText text={link}>{glyph}</MetadataText>
     </MetadataField>
   );
 }
 
 export function MetadataStatus(props: MetadataStatusDotProps): ReactElement {
-  const glyph = <StatusDot tone={props.tone} size={useMetadataDrawing().dotSize} />;
+  const glyph = (
+    <StatusDot tone={props.tone} size={useMetadataDrawing().dotSize} />
+  );
 
   return (
     <MetadataField
@@ -100,16 +100,18 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
+const avatarGlyph = ({ name, src }: MetadataAvatarProps): ReactElement => (
+  <Avatar
+    size="sm"
+    initials={initials(name)}
+    accessibilityLabel={name}
+    source={src ? { uri: src } : undefined}
+    decorative
+  />
+);
+
 export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
-  const glyph = (
-    <Avatar
-      size="sm"
-      initials={initials(props.name)}
-      accessibilityLabel={props.name}
-      source={props.src ? { uri: props.src } : undefined}
-      decorative
-    />
-  );
+  const glyph = avatarGlyph(props);
 
   return (
     <MetadataField

@@ -21,7 +21,11 @@ const platforms: MetadataPlatform[] = ['ios', 'android', 'web'];
 
 const rowsOf = { ios: 'beside', android: 'under', web: 'stacked' } as const;
 
-const own = { ios: 'grouped-rows', android: 'grouped-rows', web: 'aside' } as const;
+const own = {
+  ios: 'grouped-rows',
+  android: 'grouped-rows',
+  web: 'aside',
+} as const;
 
 const on = (
   platform: MetadataPlatform,

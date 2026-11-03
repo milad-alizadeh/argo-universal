@@ -24,12 +24,16 @@ export interface AsideRoom {
  * page without one does, and the Pills that stand in for it sit inside the column.
  */
 export function asidePlace(room: AsideRoom): AsidePlace {
-  if (room.width === 0) return 'pills';
+  if (belowMedium(room)) return 'icons';
 
-  if (room.width < room.medium) return 'icons';
-
-  return room.wide && gutterHolds(room) ? 'aside' : 'pills';
+  return hasGutter(room) ? 'aside' : 'pills';
 }
+
+// An unmeasured Screen, width 0, draws Pills until it knows its width.
+const belowMedium = ({ width, medium }: AsideRoom): boolean =>
+  width > 0 && width < medium;
+
+const hasGutter = (room: AsideRoom): boolean => room.wide && gutterHolds(room);
 
 function gutterHolds({ width, column, inset }: AsideRoom): boolean {
   const gutter = (width - (column + inset * 2)) / 2;

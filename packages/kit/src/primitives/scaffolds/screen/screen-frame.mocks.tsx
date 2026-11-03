@@ -49,27 +49,8 @@ const messages = [
 
 // A chat: the messages scroll, the message field stays at the foot.
 export function FooterExample(): ReactElement {
-  const [draft, setDraft] = useState('');
-
   return (
-    <Screen
-      title="Chat"
-      footer={
-        <TextArea
-          label="Message"
-          value={draft}
-          onChangeText={setDraft}
-          onSubmit={() => setDraft('')}
-          action={
-            <IconButton
-              icon="arrow-up"
-              accessibilityLabel="Send"
-              onPress={() => setDraft('')}
-            />
-          }
-        />
-      }
-    >
+    <Screen title="Chat" footer={<MessageField />}>
       <ScrollView>
         <View className="gap-3">
           {messages.map((message) => (
@@ -78,5 +59,22 @@ export function FooterExample(): ReactElement {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+function MessageField(): ReactElement {
+  const [draft, setDraft] = useState('');
+  const send = (): void => setDraft('');
+
+  return (
+    <TextArea
+      label="Message"
+      value={draft}
+      onChangeText={setDraft}
+      onSubmit={send}
+      action={
+        <IconButton icon="arrow-up" accessibilityLabel="Send" onPress={send} />
+      }
+    />
   );
 }

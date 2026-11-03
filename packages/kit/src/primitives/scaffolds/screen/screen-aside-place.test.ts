@@ -30,9 +30,10 @@ describe('where a Screen draws its aside', () => {
   it('beside the column from the width where both gutters hold it', () => {
     const threshold = 800 + 2 * 32 + 2 * (280 + 32);
 
-    expect([threshold - 1, threshold].map((w) => asidePlace(room(w)))).toEqual(
-      ['pills', 'aside'],
-    );
+    expect([threshold - 1, threshold].map((w) => asidePlace(room(w)))).toEqual([
+      'pills',
+      'aside',
+    ]);
   });
 
   it('never beside the column below wide, however much room', () => {
