@@ -4,11 +4,12 @@ import type {
   SessionSavePlanInput,
   SessionSavePlanOutput,
 } from '@repo/contracts';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { OpenSessions } from './open-sessions';
 import { requireWritableSession } from './session-command';
 
 // Argo only: plans go under `.argo/plans` in the Session's Checkout.
-const savedPlansDirectory = join('.argo', 'plans');
+const savedPlansDirectory = join(productCompatibility.directory, 'plans');
 
 const fallbackName = 'plan';
 

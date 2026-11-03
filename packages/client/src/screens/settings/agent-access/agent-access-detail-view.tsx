@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
@@ -37,9 +38,11 @@ function accessSection(props: AgentAccessDetailViewProps): React.JSX.Element {
   const access = props.access;
 
   return (
-    <FieldGroup.Section footer="New Sessions receive Argo tools automatically, the Argo CLI and their own token. Existing Sessions keep their access.">
+    <FieldGroup.Section
+      footer={`New Sessions receive ${productName} tools automatically, the ${productName} CLI and their own token. Existing Sessions keep their access.`}
+    >
       <FieldGroup.Toggle
-        title="Agent access to Argo"
+        title={`Agent access to ${productName}`}
         value={access.status === 'loaded' && access.enabled}
         disabled={access.status !== 'loaded' || props.saving}
         onValueChange={props.onEnabledChange}
@@ -48,13 +51,15 @@ function accessSection(props: AgentAccessDetailViewProps): React.JSX.Element {
   );
 }
 
+const instructionsFooter = `For Agents you run outside ${productName}, optionally install CLI instructions and a Codex rule in your home folder on the Server.`;
+
 function instructionsSection(
   props: AgentAccessDetailViewProps,
 ): React.JSX.Element {
   return (
-    <FieldGroup.Section footer="For Agents you run outside Argo, optionally install CLI instructions and a Codex rule in your home folder on the Server.">
+    <FieldGroup.Section footer={instructionsFooter}>
       <Button
-        label="Add Argo to your Agents"
+        label={`Add ${productName} to your Agents`}
         variant="text"
         onPress={props.onInstall}
         disabled={props.access.status !== 'loaded'}
@@ -68,8 +73,8 @@ const messages = {
   loading: 'Loading Agent access…',
   error: 'Could not load Agent access.',
   disconnected: 'Connect to the Server to change Agent access.',
-  written: 'Argo instructions added to your Agents.',
-  updated: 'Argo instructions updated for your Agents.',
+  written: `${productName} instructions added to your Agents.`,
+  updated: `${productName} instructions updated for your Agents.`,
 };
 
 function statusSection(

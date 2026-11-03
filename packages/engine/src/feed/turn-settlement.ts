@@ -39,11 +39,13 @@ const turnEndChange = (turnId: string, end: TurnEnd): FeedChange => ({
 
 export type CommittedTurnEnding = { sessionId: string; turnId: string };
 
-const argoMeta = (notice: Notice): NonNullable<Notice['_meta']>['argo'] =>
-  notice._meta?.argo;
+const extensionMetadata = (
+  notice: Notice,
+): NonNullable<Notice['_meta']>['argo'] => notice._meta?.argo;
 
 const endsTurn = (row: SessionUpdate): boolean =>
-  row.sessionUpdate === 'notice' && argoMeta(row)?.turnEnd !== undefined;
+  row.sessionUpdate === 'notice' &&
+  extensionMetadata(row)?.turnEnd !== undefined;
 
 const endedTurnIds = (row: SessionUpdate): string[] =>
   endsTurn(row) && row.turnId ? [row.turnId] : [];

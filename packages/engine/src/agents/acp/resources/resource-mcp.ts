@@ -1,5 +1,9 @@
 import { join } from 'node:path';
 import type { McpServer } from '@agentclientprotocol/sdk';
+import {
+  productName,
+  productCompatibility,
+} from '@repo/contracts/product-identity';
 import type { AcpConnection } from '../connection/connection';
 import type {
   EntryKind,
@@ -14,19 +18,19 @@ export async function openResourceSession(
   input: AcpOpenInput,
   entry: EntryKind,
 ): Promise<AcpSessionLease> {
-  const lease = await connection.open(withArgoMcp(input, entry));
+  const lease = await connection.open(withSessionMcp(input, entry));
 
   return { ...lease, connectionKind: entry.kind };
 }
 
-function withArgoMcp(input: AcpOpenInput, entry: EntryKind): AcpOpenInput {
+function withSessionMcp(input: AcpOpenInput, entry: EntryKind): AcpOpenInput {
   if (entry.kind === 'shared') return input;
 
   return {
     ...input,
     opening: appendServer(
       input.opening,
-      argoServer(entry.access.environment, sessionId(input)),
+      sessionServer(entry.access.environment, sessionId(input)),
     ),
   };
 }
@@ -34,7 +38,7 @@ function withArgoMcp(input: AcpOpenInput, entry: EntryKind): AcpOpenInput {
 function sessionId(input: AcpOpenInput): string {
   if (input.sessionId !== undefined) return input.sessionId;
 
-  throw new Error('Argo MCP access requires a Session id');
+  throw new Error(`${productName} MCP access requires a Session id`);
 }
 
 function appendServer(
@@ -55,17 +59,17 @@ function appendServer(
   };
 }
 
-function argoServer(
+function sessionServer(
   { token, home, cliDirectory }: SessionProcessAccess['environment'],
   id: string,
 ): McpServer {
   return {
-    name: `argo-${id.replaceAll('-', '')}`,
-    command: join(cliDirectory, 'argo'),
+    name: `${productCompatibility.mcpServer}-${id.replaceAll('-', '')}`,
+    command: join(cliDirectory, productCompatibility.command),
     args: ['mcp'],
     env: [
-      { name: 'ARGO_HOME', value: home },
-      { name: 'ARGO_TOKEN', value: token },
+      { name: productCompatibility.environment.home, value: home },
+      { name: productCompatibility.environment.token, value: token },
     ],
   };
 }

@@ -13,12 +13,14 @@ import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { FieldLinkMark } from './field-link-mark';
 import { linkTone } from './field-link-tone';
 
 // Settings' disclosure: chevron.forward at footnote size, semibold, in the tertiary label colour.
 const disclosureStyle = [
   font({ textStyle: 'footnote', weight: 'semibold' }),
   foregroundStyle({ type: 'hierarchical', style: 'tertiary' }),
+  layoutPriority(1),
 ];
 
 /*
@@ -32,7 +34,8 @@ export function FieldLink(
   return (
     <Button onPress={props.onPress} modifiers={pressing(props.disabled)}>
       <HStack modifiers={[contentShape(shapes.rectangle())]}>
-        <RowTitle {...props} tone={linkTone(props)} />
+        {props.leadingMark ? <FieldLinkMark mark={props.leadingMark} /> : null}
+        <RowTitle {...props} tone={linkTone(props)} subtitleLines={1} />
         <Spacer />
         <LinkValue value={props.value} />
         <Disclosure action={props.action} />

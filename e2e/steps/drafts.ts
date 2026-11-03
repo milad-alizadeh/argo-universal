@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { reloadApp } from './frame';
+import { reloadApp, serveOnePage } from './frame';
 import { expectMessage, messageLabel, openNewSession } from './new-session';
 import { openSession } from './session-switching';
 
@@ -70,12 +70,31 @@ Then('the Message box is empty', async ({ page }): Promise<void> => {
   await expectMessage(page, '');
 });
 
+async function sendAndOpenSettings(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page).toHaveURL(/\/settings/);
+}
+
 When(
   'I send the prompt {string} and open Settings at once',
   async ({ page }, prompt: string): Promise<void> => {
     await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await expect(page).toHaveURL(/\/settings/);
+    await sendAndOpenSettings(page);
+  },
+);
+
+When('I press Send and open Settings at once', async ({ page }) =>
+  sendAndOpenSettings(page),
+);
+
+When(
+  'New Session opens with the draft {string}',
+  async ({ page }, draft: string): Promise<void> => {
+    const url = new URL(page.url());
+    url.searchParams.set('draft', draft);
+    await serveOnePage(page);
+    await page.goto(url.toString());
+    await expectMessage(page, draft);
   },
 );

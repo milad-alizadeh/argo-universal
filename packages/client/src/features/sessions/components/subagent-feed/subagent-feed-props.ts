@@ -8,6 +8,10 @@ export interface SubagentFeedProps {
   feed: FeedProps;
   // Back to the Subagents list, in the Inspector and in the Sheet.
   onBack: () => void;
+  // Earlier pages of the parent Feed may hold more reports.
+  loadEarlierReports?: () => void;
+  reportsLoading?: boolean;
+  retryReports?: () => void;
   // Fixes the meta line's clock, for stories and tests.
   now?: number;
 }

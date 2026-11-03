@@ -68,7 +68,7 @@ function PlainLabel(
 ): React.JSX.Element {
   return (
     <Text
-      numberOfLines={2}
+      numberOfLines={1}
       selectable={false}
       className={plainLabelClassName(props)}
     >

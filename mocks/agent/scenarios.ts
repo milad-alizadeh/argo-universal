@@ -21,6 +21,7 @@ import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
 import { signInScenarios } from './sign-in-scenarios.ts';
+import { subagentReports } from './subagent-reports-scenario.ts';
 import { subagentScenarios } from './subagent-scenarios.ts';
 import { terminalLogin } from './terminal-login.ts';
 import { titleScenarios } from './title-scenarios.ts';
@@ -77,6 +78,7 @@ export const scenarios = {
   ...notificationScenarios,
   ...shellScenarios,
   ...subagentScenarios,
+  'subagent-reports': subagentReports,
   'changed-files': scenario(changedFilesSteps),
   'feed-history': scenario(feedHistorySteps),
   'feed-work': scenario(feedWorkReplySteps),

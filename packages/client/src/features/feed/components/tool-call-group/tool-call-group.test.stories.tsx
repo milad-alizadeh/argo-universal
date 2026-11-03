@@ -1,6 +1,9 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import type { FeedGroup } from '../../view/feed-view';
+import { FeedItem } from '../feed-item';
+import { scriptedToolCall } from '../tool-call-description.mocks';
 import { toolCallGroupMock, toolCallGroupMocks } from '../tool-call.mocks';
 import { ToolCallGroup } from './tool-call-group';
 import {
@@ -87,7 +90,7 @@ function running(width: number): Story {
           name: commandTitle,
         }),
       ).toHaveLength(1);
-      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
+      await expect(canvas.getByText('Shell')).toBeVisible();
       await userEvent.click(group);
       await waitFor(() =>
         expect(
@@ -172,3 +175,124 @@ export const RunningWideDark: Story = { ...RunningWide, ...dark };
 export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
 
 export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
+
+const editDescription = 'Updating the greeting';
+
+function activeEditGroup(
+  withHeader: boolean,
+  toolCallId = 'edit-title',
+): FeedGroup {
+  const row = scriptedToolCall(toolCallId);
+
+  const group: FeedGroup = {
+    type: 'group',
+    id: row.id,
+    title: 'Working',
+    state: 'open',
+    items: [{ type: 'tool_call', row }],
+    live: { toolCall: row, awaitingApproval: false },
+  };
+
+  if (withHeader)
+    group.liveHeader = {
+      text: 'Working',
+      startedAt: null,
+      source: { type: 'working' },
+    };
+
+  return group;
+}
+
+// A running edit keeps its Agent description above the file disclosure in a live-header group.
+export const RunningEditWithLiveHeader: Story = {
+  render: () => <FeedItem item={activeEditGroup(true)} imageUrl={() => ''} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
+    await expect(canvas.getByText(editDescription)).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: /Edited hello.txt/ }),
+    ).toBeVisible();
+  },
+};
+
+// Without a Live header the group names the edit once, while its file remains available below.
+export const RunningEditWithoutLiveHeader: Story = {
+  render: () => <FeedItem item={activeEditGroup(false)} imageUrl={() => ''} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(
+      canvas.getByRole('button', { name: /Updating the greeting/ }),
+    );
+    await expect(
+      canvas.getAllByText(editDescription, {
+        exact: false,
+      }),
+    ).toHaveLength(1);
+    await expect(
+      canvas.getByRole('button', { name: /Edited hello.txt/ }),
+    ).toBeVisible();
+  },
+};
+
+export const RunningEditWithoutDescription: Story = {
+  render: () => (
+    <FeedItem
+      item={activeEditGroup(true, 'edit-empty-title')}
+      imageUrl={() => ''}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
+    await expect(canvas.getByText('Editing file')).toBeVisible();
+  },
+};
+
+// A descriptive ACP edit title remains visible alongside its diff.
+export const RunningEditWithAgentDescription: Story = {
+  render: () => (
+    <FeedItem
+      item={activeEditGroup(true, 'edit-described')}
+      imageUrl={() => ''}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(canvas.getByRole('button', { name: /Working/ }));
+    await expect(canvas.getByText('Correcting the greeting')).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: /Edited hello.txt/ }),
+    ).toBeVisible();
+  },
+};
+
+// A live command's group disclosure opens its output without repeating its description.
+export const RunningCommandShowsOutput: Story = {
+  render: () => {
+    const row = scriptedToolCall('described-running');
+
+    const group: FeedGroup = {
+      type: 'group',
+      id: row.id,
+      title: 'Working',
+      state: 'open',
+      items: [{ type: 'tool_call', row }],
+      live: { toolCall: row, awaitingApproval: false },
+    };
+
+    return <FeedItem item={group} imageUrl={() => ''} />;
+  },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(
+      canvas.getByRole('button', { name: /Checking the working tree/ }),
+    );
+    await expect(
+      canvas.getAllByText('Checking the working tree', {
+        exact: false,
+      }),
+    ).toHaveLength(1);
+    await expect(canvas.getByText('Shell')).toBeVisible();
+  },
+};

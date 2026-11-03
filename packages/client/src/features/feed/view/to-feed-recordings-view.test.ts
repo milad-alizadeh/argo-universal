@@ -23,7 +23,7 @@ it.each(recordedFeedMocks)(
       .flatMap((item) => {
         if (item.type === 'exploration') return item.toolCalls;
 
-        return item.type === 'subagent' ? [] : [item.row];
+        return 'row' in item ? [item.row] : [];
       })
       .sort((first, second) => first.position - second.position);
 

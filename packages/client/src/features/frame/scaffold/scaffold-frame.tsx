@@ -79,7 +79,7 @@ type BannerPlacement = Pick<PaneBannerProps, 'left' | 'width'>;
 /*
  * The banner centres on the content column, as the Feed and the Composer do, so it floats over the column's quiet
  * middle and not over a Session bar's action at the column's trailing edge. With no column on show, an expanded
- * Inspector or the dedicated Workbench, it centres over every pane.
+ * Inspector, it centres over every pane.
  */
 function bannerPlacement({
   layout,

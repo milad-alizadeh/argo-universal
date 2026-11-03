@@ -41,14 +41,14 @@ function hasMetadata({
 }: SessionRowMetadataProps): boolean {
   return [
     sidebarRows && age !== undefined,
-    session.subagents.total > 0,
-    sidebarRows && session.shells.total > 0,
+    session.subagents.running > 0,
+    session.shells.running > 0,
     session.archivedAt !== null,
     pullRequest !== undefined,
   ].some(Boolean);
 }
 
-// The time, the Change, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList"); the Plugins' items follow as the row's accessories.
+// Time and Change lead the active Background Task and Agent counts; Plugin items follow as row accessories.
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {

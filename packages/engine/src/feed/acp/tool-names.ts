@@ -71,8 +71,9 @@ function withSearchTitle(row: ToolRow): ToolRow {
   };
 }
 
-const argoMetadata = (row: ToolRow): NonNullable<ToolRow['_meta']>['argo'] =>
-  row._meta?.argo ?? {};
+const extensionMetadata = (
+  row: ToolRow,
+): NonNullable<ToolRow['_meta']>['argo'] => row._meta?.argo ?? {};
 
 function withDescription(row: ToolRow): ToolRow {
   const command = CommandCall.safeParse(row);
@@ -82,7 +83,7 @@ function withDescription(row: ToolRow): ToolRow {
 
   return {
     ...row,
-    _meta: { ...row._meta, argo: { ...argoMetadata(row), description } },
+    _meta: { ...row._meta, argo: { ...extensionMetadata(row), description } },
   };
 }
 

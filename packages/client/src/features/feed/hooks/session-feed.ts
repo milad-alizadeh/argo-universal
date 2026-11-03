@@ -4,6 +4,8 @@ import type { FeedView } from '../view/feed-view';
 
 export interface SessionFeed {
   loadingOlder: boolean;
+  hasOlder: boolean;
+  historyCursor: number | null;
   loadOlder: () => Promise<void>;
   view: FeedView | null;
   // The newest Feed revision held, which the reader has seen when the Feed's end is on screen.

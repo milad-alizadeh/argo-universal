@@ -1,7 +1,20 @@
 import { expect, it, vi } from 'vitest';
-import { trackedFiles, untrackedFile } from './parse';
+import { trackedFiles, untrackedFile, untrackedPaths } from './parse';
 
 const unknownStatus = 'Unrecognised git status response';
+
+it.each([
+  ['staged', 'R  new.ts\0README.md\0?? a.ts\0'],
+  ['staged copy', 'C  new.ts\0CHANGELOG.md\0?? a.ts\0'],
+  ['in the worktree', ' R new.ts\0README.md\0?? a.ts\0'],
+  ['copied in the worktree', ' C new.ts\0CHANGELOG.md\0?? a.ts\0'],
+])('keeps the untracked file after a rename %s', (_, status): void => {
+  expect(untrackedPaths(status)).toEqual(['a.ts']);
+});
+
+it('takes a moved file named like an untracked entry as its old path', (): void => {
+  expect(untrackedPaths('R  new.ts\0?? old.ts\0?? a.ts\0')).toEqual(['a.ts']);
+});
 
 const reportedLines = (log: { mock: { calls: unknown[][] } }): string[] =>
   log.mock.calls.map(([line]): string => String(line));

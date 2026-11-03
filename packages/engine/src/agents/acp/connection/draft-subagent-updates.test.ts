@@ -94,3 +94,18 @@ it('reports a disconnected child as unknown instead of idle', () => {
     }),
   ]);
 });
+
+it('preserves the Claude role metadata on the translated association', () => {
+  const draft = { ...spawn, _meta: { claudeCode: { subagentRole: 'Plan' } } };
+
+  expect(translate(notification(draft)).messages[0]).toEqual(
+    standard({
+      sessionUpdate: 'subagent_update',
+      sessionId: 'child',
+      title: 'naming_audit',
+      capabilities: {},
+      state: { state: 'running' },
+      _meta: { claudeCode: { subagentRole: 'Plan' } },
+    }),
+  );
+});

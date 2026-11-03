@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { ChildCommand } from '@repo/process';
 
 // How desktop and App E2E start a Supervisor: this package's `server` command, run as a service from the CLI's own directory.
@@ -7,7 +8,7 @@ export const supervisorCommand = (
   env: NodeJS.ProcessEnv,
 ): ChildCommand => ({
   label: 'Supervisor',
-  entry: join(cliDirectory, 'bin/argo.mjs'),
+  entry: join(cliDirectory, 'bin', `${productCompatibility.command}.mjs`),
   args: ['server'],
   cwd: cliDirectory,
   env,

@@ -4,11 +4,20 @@ import {
   type ChangesRevision,
   type ChangesSource,
   type ChangesViewProps,
+  initialChangesState,
   useChanges,
 } from '#features/changes';
-import type { SessionHeaderProps, SessionPanels } from '#features/sessions';
+import {
+  type SessionHeaderProps,
+  type SessionPanels,
+  SessionMemory,
+  useSessionMemory,
+} from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { useInspectorPanels } from './use-inspector-panels';
+
+// A Session's Changes marks and folds, kept while the person opens another Session, as its Inspector tabs are.
+const changesMemory = new SessionMemory(initialChangesState);
 
 type ChangesHeader = NonNullable<SessionHeaderProps['changes']>;
 
@@ -63,7 +72,11 @@ function useOpenChanges(
 
   return {
     header: changesHeader(panels, feed),
-    changes: useChanges({ sessionId, open: isOpen(session), revision }, source),
+    changes: useChanges(
+      { sessionId, open: isOpen(session), revision },
+      source,
+      useSessionMemory(changesMemory, sessionId),
+    ),
   };
 }
 

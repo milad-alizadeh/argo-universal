@@ -50,13 +50,14 @@ function useToneColor(tone: NativeSymbolTone | undefined): string | undefined {
  */
 export function NativeSymbol(props: NativeSymbolProps): React.JSX.Element {
   const lane = useIconPixels(useIconSize(props.size));
+  const toneColor = useToneColor(props.tone);
   const pixels = props.lane === 'row' ? appleRowSymbolPixels(lane) : lane;
 
   return (
     <Image
       {...imageSource(props.name, props.filled)}
       size={pixels}
-      color={useToneColor(props.tone)}
+      color={props.color ?? toneColor}
       modifiers={[frame({ width: lane, height: lane }), accessibilityHidden()]}
     />
   );

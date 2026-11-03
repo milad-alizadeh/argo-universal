@@ -14,6 +14,7 @@ const meta = {
   args: {
     projects: { status: 'loaded', projects: settingsProjects },
     onOpenProject: action('open Project'),
+    onAddProject: action('add Project'),
   },
 } satisfies Meta<typeof ProjectListView>;
 

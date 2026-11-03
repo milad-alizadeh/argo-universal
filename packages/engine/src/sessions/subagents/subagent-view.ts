@@ -22,7 +22,7 @@ export function toSubagent(
 
   return [
     {
-      ...childIdentity(child, parentId),
+      ...childIdentity(child, parentId, updates),
       ...turnDetails(latest),
       state: subagentState(latest, updateState(child.id, updates)),
     },
@@ -38,6 +38,21 @@ function updateState(
     .toSorted((first, second): number => second.position - first.position)
     .find((update): boolean => update.subagentState !== undefined)
     ?.subagentState;
+}
+
+const roleOf = (update: SubagentUpdate): string | undefined =>
+  update._meta?.argo?.role;
+
+function updateRole(
+  id: string,
+  updates: readonly SubagentUpdate[],
+): string | null {
+  const roles = updates
+    .filter((update) => update.subagentSessionId === id)
+    .toSorted((first, second) => second.position - first.position)
+    .map(roleOf);
+
+  return roles.find((role) => role !== undefined) ?? null;
 }
 
 type TurnDetails = Pick<
@@ -77,6 +92,7 @@ type ChildIdentity = Pick<
 function childIdentity(
   child: ChildSession,
   parentSessionId: string,
+  updates: readonly SubagentUpdate[],
 ): ChildIdentity {
   return {
     sessionId: child.id,
@@ -84,7 +100,7 @@ function childIdentity(
     readOnly: child.parentSessionId !== null,
     toolCallId: null,
     title: child.title,
-    role: null,
+    role: updateRole(child.id, updates),
   };
 }
 

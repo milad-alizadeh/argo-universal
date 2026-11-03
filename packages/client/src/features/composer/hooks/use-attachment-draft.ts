@@ -124,8 +124,10 @@ function editActions({ dispatch, key }: EditableDraft): DraftChanges {
 
 async function uploadDraftAsPrompt(
   sent: ComposerDraft,
-  { state, upload }: Pick<DraftActions, 'state' | 'upload'>,
+  { state, upload, key }: Pick<DraftActions, 'state' | 'upload' | 'key'>,
 ): Promise<SessionNewInput['prompt'] | undefined> {
+  // A seed is kept only once edited, so what was sent is kept here: forgetting it later tells it from a newer draft.
+  if (key) keptDrafts.keep(key, sent.text);
   upload.reset();
   const uploads = toUploadForms(sent, state.files);
 

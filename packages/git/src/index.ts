@@ -15,3 +15,5 @@ export {
 } from './repository';
 
 export * from './origin';
+
+export { cloneRepository, initRepository } from './start';

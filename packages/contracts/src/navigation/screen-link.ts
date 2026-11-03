@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { productName } from '../product-identity';
+import { productCompatibility } from '../product-identity';
 
 const maxSegmentLength = 128;
 
@@ -63,7 +65,7 @@ const segmentsOf = (destination: ScreenDestination): string[] =>
     ? ['plugin', destination.pluginId, destination.navId, ...destination.page]
     : idSegments(destination);
 
-const linkPrefix = 'argo://open';
+const linkPrefix = `${productCompatibility.linkScheme}://open`;
 
 const pathPrefix = '/open';
 
@@ -84,7 +86,7 @@ export const screenLinkPath = (
 
 const refused: ScreenLinkParse = {
   ok: false,
-  reason: 'Not a Screen link Argo can open',
+  reason: `Not a Screen link ${productName} can open`,
 };
 
 // A segment with no slash once decoded: `%2F` would otherwise smuggle a separator through.

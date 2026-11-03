@@ -1,10 +1,10 @@
 import * as RadixCollapsible from '@radix-ui/react-collapsible';
 import { type ComponentType, type ReactElement, useContext } from 'react';
-import { View } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import {
   CollapsibleLayoutSyncContext,
-  contentAccessibility,
   OpenContext,
+  contentAccessibility,
 } from './collapsible-context';
 import { LayoutSyncedContent } from './collapsible-layout-content';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
@@ -13,38 +13,61 @@ import {
   type WebContentMotion,
 } from './collapsible-web-motion';
 
-type MovingBoxProps = Omit<ContentProps, 'forceMount'> &
-  Pick<WebContentMotion, 'box' | 'content'>;
+type Drawing = Pick<WebContentMotion, 'mounted' | 'height' | 'measure'>;
 
-// The caller's padding sits inside the moving box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut. Closing content is already hidden from touches and assistive technology while it leaves.
-function MovingBox(props: MovingBoxProps): ReactElement {
-  const { className, children, box, content, ...rest } = props;
+type BodyProps = { content: ContentProps; motion: Drawing };
+
+function MeasuredBody({ content, motion }: BodyProps): ReactElement | null {
+  if (!motion.mounted) return null;
 
   return (
-    <RadixCollapsible.Content forceMount asChild>
-      <View {...rest} ref={box} className="overflow-hidden">
-        <View ref={content} className={className}>
-          {children}
-        </View>
-      </View>
+    <View className={content.className} onLayout={motion.measure}>
+      {content.children}
+    </View>
+  );
+}
+
+const bodyStyle = ({ content, motion }: BodyProps): StyleProp<ViewStyle> => [
+  motion.mounted ? content.style : undefined,
+  { height: motion.height },
+];
+
+// Caller padding is measured inside the moving box, so closing can reach zero.
+function WebBody(props: BodyProps): ReactElement {
+  const open = useContext(OpenContext);
+  const own = props.motion.mounted ? props.content : {};
+
+  return (
+    <View
+      {...own}
+      {...contentAccessibility(open)}
+      style={bodyStyle(props)}
+      className="overflow-hidden transition-height duration-200 ease-out motion-reduce:transition-none"
+    >
+      <MeasuredBody {...props} />
+    </View>
+  );
+}
+
+function WebContent({ forceMount, ...props }: ContentProps): ReactElement {
+  const { region, onTransitionEnd, ...motion } = useWebContentMotion({
+    open: useContext(OpenContext),
+    forceMount,
+  });
+
+  return (
+    <RadixCollapsible.Content
+      ref={region}
+      forceMount
+      onTransitionEnd={onTransitionEnd}
+    >
+      <WebBody content={props} motion={motion} />
     </RadixCollapsible.Content>
   );
 }
 
-function WebContent({
-  forceMount,
-  ...props
-}: ContentProps): ReactElement | null {
-  const open = useContext(OpenContext);
-  const { mounted, ...refs } = useWebContentMotion(open, forceMount);
-
-  if (!mounted) return null;
-
-  return <MovingBox {...props} {...contentAccessibility(open)} {...refs} />;
-}
-
-// The web moves the content's height with a CSS transition; a layout-synced list animates with its rows instead.
-export function CollapsibleContent(props: ContentProps): ReactElement | null {
+// The web animates with CSS; a layout-synced list animates with its rows instead.
+export function CollapsibleContent(props: ContentProps): ReactElement {
   const layoutSync = useContext(CollapsibleLayoutSyncContext);
 
   if (layoutSync)

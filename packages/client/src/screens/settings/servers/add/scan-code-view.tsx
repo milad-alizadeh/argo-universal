@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { PinnedFooter } from '@repo/kit/primitives/scaffolds/pinned-footer';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
@@ -19,15 +20,13 @@ export interface ScanCodeViewProps {
 const words = {
   ask: {
     title: 'Scan a code to connect',
-    description:
-      'On your computer, open Settings › Devices and press Pair a Device. Argo uses the camera only to read that code.',
+    description: `On your computer, open Settings › Devices and press Pair a Device. ${productName} uses the camera only to read that code.`,
     button: 'Continue',
     press: 'onContinue',
   },
   refused: {
     title: 'Camera access is off',
-    description:
-      'Argo needs the camera to read the code on your computer. Turn it on in Settings, then come back here.',
+    description: `${productName} needs the camera to read the code on your computer. Turn it on in Settings, then come back here.`,
     button: 'Open Settings',
     press: 'onOpenSettings',
   },

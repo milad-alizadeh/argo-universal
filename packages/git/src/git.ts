@@ -14,6 +14,8 @@ export async function git(
   const { stdout } = await execute('git', ['-C', directory, ...args], {
     maxBuffer: outputLimit,
     signal,
+    // No git command waits on a person: a remote that asks for a password fails instead of hanging.
+    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
   });
 
   return stdout;

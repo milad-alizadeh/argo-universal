@@ -31,7 +31,7 @@ export async function expectResponsiveFooter({
     });
 
     await expect(
-      canvas.getByRole('button', { name: 'Shells: 1' }),
+      canvas.getByRole('button', { name: 'Background Tasks: 1' }),
     ).toBeVisible();
     await expect(subagents).toBeVisible();
     await expectPhoneFooter({ canvas, card });
@@ -40,7 +40,7 @@ export async function expectResponsiveFooter({
       canvas.queryByRole('button', { name: subagentCountLabel }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.queryByRole('button', { name: 'Shells: 1' }),
+      canvas.queryByRole('button', { name: 'Background Tasks: 1' }),
     ).not.toBeInTheDocument();
     await expectWideFooter({ canvas });
   }

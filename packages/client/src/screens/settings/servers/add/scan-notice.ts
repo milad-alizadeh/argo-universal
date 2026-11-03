@@ -1,3 +1,5 @@
+import { productName } from '@repo/contracts/product-identity';
+
 // What the scanner says it is doing, so a code that is seen and not taken, or a camera that did not start, shows its reason on screen.
 export type ScanNotice =
   | { kind: 'looking' }
@@ -22,7 +24,7 @@ export const cameraFailed = (reason: string): ScanNotice => ({
 
 export function noticeText(notice: ScanNotice): string {
   if (notice.kind === 'foreign')
-    return `Read a code, but it is not an Argo code: ${shortened(notice.seen)}`;
+    return `Read a code, but it is not an ${productName} code: ${shortened(notice.seen)}`;
 
   if (notice.kind === 'camera-failed')
     return `The camera could not start: ${notice.reason}`;

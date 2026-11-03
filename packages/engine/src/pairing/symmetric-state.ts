@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import { CipherState, deriveKeys } from './cipher-state';
 
 /*
@@ -8,7 +9,9 @@ import { CipherState, deriveKeys } from './cipher-state';
 const protocolName = 'Noise_IK_25519_ChaChaPoly_SHA256';
 
 // Argo's own prologue, so an exchange meant for another protocol over the same bytes cannot be replayed into this one.
-export const argoPrologue = Buffer.from('argo-pairing/1');
+export const pairingPrologue = Buffer.from(
+  productCompatibility.pairingPrologue,
+);
 
 const sha256 = (data: Buffer): Buffer =>
   createHash('sha256').update(data).digest();
@@ -22,7 +25,10 @@ export class SymmetricState {
   private chainingKey: Buffer = Buffer.from(protocolName);
   private cipher = new CipherState();
 
-  public constructor(serverPublicKey: Buffer, prologue: Buffer = argoPrologue) {
+  public constructor(
+    serverPublicKey: Buffer,
+    prologue: Buffer = pairingPrologue,
+  ) {
     this.mixHash(prologue);
     this.mixHash(serverPublicKey);
   }

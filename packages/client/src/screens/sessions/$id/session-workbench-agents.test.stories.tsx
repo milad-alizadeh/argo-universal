@@ -32,20 +32,18 @@ if (!completedAgent) throw new Error('Agents fixture needs a completed Agent');
 
 const completedTitle = completedAgent.title;
 
-export const ActivePreviewAndDoneGroup: Story = {
+export const RunningAgentsGetRowsAndTheRestCountAsDone: Story = {
   play: async ({ canvas, userEvent }) => {
-    const card = await canvas.findByRole('button', {
-      name: 'Open Agents overview',
-    });
-
-    const content = within(canvas.getByTestId(cardId));
+    const content = within(await canvas.findByTestId(cardId));
 
     await expect(content.getByText(activeTitle)).toBeVisible();
-    await expect(content.getByText('2 done')).toBeVisible();
     await expect(content.getByLabelText('Running')).toBeVisible();
     await expect(content.getByLabelText('Needs input')).toBeVisible();
     await expect(content.queryByText(completedTitle)).toBeNull();
-    await userEvent.click(card);
+    await expect(
+      content.getAllByRole('button', { name: /^Open / }),
+    ).toHaveLength(2);
+    await userEvent.click(content.getByRole('button', { name: 'Show 2 done' }));
     await expect(canvas.getByRole('tab', { name: 'Agents: 4' })).toBeVisible();
   },
 };
@@ -56,7 +54,6 @@ export const DisclosureKeepsInspectorClosed: Story = {
       await canvas.findByRole('button', { name: 'Collapse Agents' }),
     );
     await waitFor(() => expect(canvas.queryByText(activeTitle)).toBeNull());
-    await expect(canvas.queryByText('2 done')).toBeNull();
     await expect(
       canvas.getByRole('button', { name: 'Show Inspector' }),
     ).toHaveAttribute('aria-pressed', 'false');
@@ -64,11 +61,10 @@ export const DisclosureKeepsInspectorClosed: Story = {
       canvas.getByRole('button', { name: 'Expand Agents' }),
     );
     await expect(canvas.getByText(activeTitle)).toBeVisible();
-    await expect(canvas.getByText('2 done')).toBeVisible();
   },
 };
 
-export const CompletedAgentsStayGrouped: Story = {
+export const FinishedAgentsAreOneDoneRow: Story = {
   args: {
     view: {
       ...subagentsSession,
@@ -79,20 +75,11 @@ export const CompletedAgentsStayGrouped: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    const card = await canvas.findByRole('button', {
-      name: 'Open Agents overview',
-    });
+    const content = within(await canvas.findByTestId(cardId));
 
-    await expect(
-      within(canvas.getByTestId(cardId)).getByText('2 done'),
-    ).toBeVisible();
-    await expect(
-      within(canvas.getByTestId(cardId)).queryByLabelText('Running'),
-    ).toBeNull();
-    await expect(
-      within(canvas.getByTestId(cardId)).queryByText(completedTitle),
-    ).toBeNull();
-    await userEvent.click(card);
+    await expect(content.queryByLabelText('Running')).toBeNull();
+    await expect(content.queryByRole('button', { name: /^Open / })).toBeNull();
+    await userEvent.click(content.getByRole('button', { name: 'Show 2 done' }));
     await expect(canvas.getByRole('tab', { name: 'Agents: 2' })).toBeVisible();
   },
 };

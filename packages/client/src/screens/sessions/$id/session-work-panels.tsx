@@ -20,6 +20,7 @@ import {
   type SubagentSelection,
   useSubagentSelection,
 } from './use-subagent-selection';
+import { bothSheets } from './work-sheets';
 
 interface WorkPanels {
   composer: ComposerProps;
@@ -64,11 +65,11 @@ const panelOpening =
 const workHome = (
   composer: ComposerProps,
   panels: SessionPanels,
-  panel: string,
+  { panel, phoneVisible }: { panel: string; phoneVisible: boolean },
 ): WorkHome => ({
   composer,
   sheet: {
-    open: panels.state.shown === panel,
+    open: phoneVisible && panels.state.shown === panel,
     onOpenChange: panelOpening(panels, panel),
   },
 });
@@ -97,16 +98,38 @@ interface SubagentParts {
 const listWithFeed = (selection: SubagentSelection): SubagentWork | undefined =>
   selection.list && { ...selection.list, feed: selection.page };
 
+function subagentHome(
+  composer: ComposerProps,
+  panels: SessionPanels,
+  { close, phoneVisible }: { close: () => void; phoneVisible: boolean },
+): WorkHome {
+  return closingFeed(
+    workHome(composer, panels, { panel: 'subagents', phoneVisible }),
+    close,
+  );
+}
+
 function useSubagentWork(
   props: WorkProps,
   panels: SessionPanels,
+  phoneVisible: boolean,
 ): SubagentParts {
   const selection = useSubagentSelection(props, () =>
     panels.close('subagents'),
   );
 
-  const plain = workHome(props.composer, panels, 'subagents');
-  const home = closingFeed(plain, selection.close);
+  const home = subagentHome(props.composer, panels, {
+    close: selection.close,
+    phoneVisible,
+  });
+
+  return useSubagentParts(selection, home);
+}
+
+function useSubagentParts(
+  selection: SubagentSelection,
+  home: WorkHome,
+): SubagentParts {
   const sheet = useWorkSheet(subagentsPanel, listWithFeed(selection), home);
   const open = useOpenSubagent(selectSubagent(selection.list, home.sheet));
 
@@ -120,27 +143,42 @@ function useSubagentWork(
 export function useWorkPanels(
   props: WorkProps,
   panels: SessionPanels,
+  phoneVisible: boolean,
 ): WorkPanels {
-  const { selection, open, sheet } = useSubagentWork(props, panels);
-  const next = workHome(sheet.composer, panels, 'shells');
-  const shells = useWorkSheet(shellsPanel, props.shells, next);
+  const { selection, open, sheet } = useSubagentWork(
+    props,
+    panels,
+    phoneVisible,
+  );
 
-  return {
-    composer: shells.composer,
-    feed: feedWithSubagents(props.feed, props.subagents, open),
-    subagents: selection.list,
-    openSubagentFeed: selection.open,
-    sheets: bothSheets(sheet, shells),
-  };
+  const shells = useShellWork(props, panels, { sheet, phoneVisible });
+
+  return workParts(props, { selection, open, sheet }, shells);
 }
 
-// Both work sheets mount together; each draws only at its own width and when its panel is shown.
-const bothSheets = (
-  subagents: WorkPresentation,
+function useShellWork(
+  props: WorkProps,
+  panels: SessionPanels,
+  { sheet, phoneVisible }: { sheet: WorkPresentation; phoneVisible: boolean },
+): WorkPresentation {
+  const home = workHome(sheet.composer, panels, {
+    panel: 'shells',
+    phoneVisible,
+  });
+
+  return useWorkSheet(shellsPanel, props.shells, home);
+}
+
+function workParts(
+  props: WorkProps,
+  subagent: SubagentParts,
   shells: WorkPresentation,
-): ReactNode => (
-  <>
-    {subagents.sheet}
-    {shells.sheet}
-  </>
-);
+): WorkPanels {
+  return {
+    composer: shells.composer,
+    feed: feedWithSubagents(props.feed, props.subagents, subagent.open),
+    subagents: subagent.selection.list,
+    openSubagentFeed: subagent.selection.open,
+    sheets: bothSheets(subagent.sheet, shells),
+  };
+}

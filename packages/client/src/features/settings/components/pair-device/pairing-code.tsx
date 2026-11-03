@@ -1,4 +1,5 @@
 import { formatPairingTicket, type MintedPairingTicket } from '@repo/contracts';
+import { productName } from '@repo/contracts/product-identity';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Stack } from '@repo/kit/primitives/layout/stack';
 import { cn } from '@repo/kit/utils';
@@ -13,10 +14,9 @@ import { PairingQrCode } from './pairing-qr-code';
  */
 const codeSize = 216;
 
-const scanHeading = 'Scan with Argo on your phone';
+const scanHeading = `Scan with ${productName} on your phone`;
 
-const scanInstruction =
-  'Open Argo on the other Device, choose Add a Server, and point the camera here. You’ll confirm on this computer before anything is shared.';
+const scanInstruction = `Open ${productName} on the other Device, choose Add a Server, and point the camera here. You’ll confirm on this computer before anything is shared.`;
 
 // The code in two groups of three with a dot between, the way the owner reads it out; entry still takes the dashed form.
 const spacedCode = (ticket: string): string =>

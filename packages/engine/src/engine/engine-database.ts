@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import { type Database, openDatabase } from '@repo/db';
 import { seedProject } from '../projects';
 
@@ -7,10 +8,13 @@ export type OpenDatabaseInput = { home: string };
 export async function openEngineDatabase({
   home,
 }: OpenDatabaseInput): Promise<Database> {
-  const database = openDatabase(join(home, 'argo.db'));
+  const database = openDatabase(join(home, productCompatibility.databaseFile));
 
   try {
-    await seedProject(database);
+    // A first run starts with no Projects; the App adds them. The variable seeds one for tests, e2e and development.
+    const seeded = process.env.ARGO_PROJECT_PATH;
+
+    if (seeded) await seedProject(database, seeded);
 
     return database;
   } catch (error) {
