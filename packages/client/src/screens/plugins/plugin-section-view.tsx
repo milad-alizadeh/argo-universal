@@ -4,6 +4,7 @@ import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list
 import { router, usePathname } from 'expo-router';
 import {
   use,
+  useCallback,
   useMemo,
   useState,
   type PropsWithChildren,
@@ -20,13 +21,13 @@ import {
 } from '../../lib/product/navigation/sections';
 import { pageUnavailable } from '../../lib/product/plugin-actions';
 import { PluginTree } from '../../lib/product/plugin-registry';
-import { pluginPageRoute } from './plugin-page-route';
+import { originOf, pluginPageRoute } from './plugin-page-route';
 import {
   SectionPlacesContext,
   useSectionPlaces,
   type SectionPlaces,
   type ShownSectionPage,
-} from './plugin-section-places';
+} from './plugin-section-stack';
 import { declaresList, listOnly, withSelectedRow } from './plugin-section-tree';
 import {
   usePluginAt,
@@ -36,15 +37,17 @@ import {
 import { usePluginView, type PluginView } from './use-plugin-view';
 
 // The list as the section shows it now, its row marked from the pages the section is showing.
-function useMarkedList(section: PluginView['root']): PluginView['root'] {
+function useMarkedList(root: PluginView['root']): PluginView['root'] {
   const pages = useClaimed(useSectionPlaces().shown)?.pages;
 
+  const list = useMemo(
+    () => (declaresList(root) ? listOnly(root) : null),
+    [root],
+  );
+
   return useMemo(
-    () =>
-      declaresList(section)
-        ? withSelectedRow(listOnly(section), pages ?? [])
-        : null,
-    [section, pages],
+    () => list && withSelectedRow(list, pages ?? []),
+    [list, pages],
   );
 }
 
@@ -53,14 +56,16 @@ function useOpenFromSidebar(section: PluginSection): (path: string) => void {
   const sections = usePluginSections();
   const { shown } = useSectionPlaces();
 
-  return (path) => {
-    const origin = { pluginId: section.pluginId, current: section.id };
-    const route = pluginPageRoute(sections, origin, path);
+  return useCallback(
+    (path) => {
+      const route = pluginPageRoute(sections, originOf(section), path);
 
-    if (!route) return pageUnavailable(path);
+      if (!route) return pageUnavailable(path);
 
-    openRoute(route, section.navId, shown.claims.current());
-  };
+      openRoute(route, section.navId, shown.claims.current());
+    },
+    [sections, section, shown],
+  );
 }
 
 function openRoute(
@@ -68,8 +73,13 @@ function openRoute(
   navId: string,
   page: ShownSectionPage | undefined,
 ): void {
-  if (page && route[1] === navId) page.showOnly(route);
-  else router.push({ pathname: '/plugins/[...path]', params: { path: route } });
+  const [, routeNavId] = route;
+  const href = { pathname: '/plugins/[...path]', params: { path: route } };
+
+  // A page that has not claimed yet, still waiting to learn it is shown, is replaced too, so the tap draws no Back.
+  if (routeNavId !== navId) router.push(href);
+  else if (page) page.showOnly(route);
+  else router.replace(href);
 }
 
 const knownWithoutList = (root: PluginView['root']): boolean =>
@@ -84,7 +94,9 @@ function useSectionRootView(section: PluginSection): PluginView {
     path: `/${section.navPath.join('/')}`,
   });
 
-  useClaim(useSectionPlaces().root, { section, view });
+  const root = useMemo(() => ({ section, view }), [section, view]);
+
+  useClaim(useSectionPlaces().root, root);
   useClaim(knownWithoutList(view.root) ? withoutList : undefined, true);
 
   return view;

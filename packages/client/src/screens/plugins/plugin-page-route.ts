@@ -11,6 +11,15 @@ export interface PluginPageOrigin {
 export const segmentsOf = (path: string): string[] =>
   path.split('/').filter(Boolean);
 
+// A section opening one of its own Plugin's pages.
+export const originOf = (section: PluginSection): PluginPageOrigin => ({
+  pluginId: section.pluginId,
+  current: section.id,
+});
+
+// A route as one string, to compare routes or keep one stable across renders.
+export const routeKey = (route: readonly string[]): string => route.join('/');
+
 // A Plugin page's route is `<Plugin id>/<nav id>/<the page's own path>`; the own path is what the Plugin registers. This is the one place the shape is built and read.
 export interface PluginRoute {
   pluginId: string;

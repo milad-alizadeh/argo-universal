@@ -1,6 +1,15 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { describe, expect, it } from 'vitest';
-import { landingOf, listOnly, withSelectedRow } from './plugin-section-tree';
+import { pluginSectionId } from '../../lib/product/navigation/sections';
+import { segmentsOf } from './plugin-page-route';
+import {
+  landingOf,
+  landingRoute,
+  listOnly,
+  withSelectedRow,
+} from './plugin-section-tree';
+import type { PluginSection } from './use-plugin-sections';
 
 const openPage = '/filters/open';
 
@@ -83,11 +92,44 @@ describe('a section root', () => {
     expect(landingOf({ ...root, type: 'Screen' })).toBeUndefined();
   });
 
-  it('has no landing when it names the root itself, which is where it already is', () => {
-    expect(landingOf({ ...root, props: { landing: '/' } })).toBeUndefined();
-  });
-
   it('keeps only its list for the live view', () => {
     expect(Object.keys(listOnly(root).slots)).toEqual(['list']);
+  });
+});
+
+const nav = (navId: string, path: string): PluginSection => ({
+  id: pluginSectionId('tracker', navId),
+  pluginId: 'tracker',
+  name: 'tracker',
+  title: navId,
+  icon: iconSymbols.plug,
+  navId,
+  navPath: segmentsOf(path),
+  rootPath: `/plugins/tracker/${navId}`,
+});
+
+const issues = nav('issues', '/issues');
+
+const sections = [issues, nav('boards', '/boards')];
+
+describe('a section landing', () => {
+  it('opens a page of its own nav item', () => {
+    expect(landingRoute(sections, issues, '/issues/open')).toEqual([
+      'tracker',
+      'issues',
+      'issues',
+      'open',
+    ]);
+  });
+
+  it.each(['/issues', '/issues/', '', '/'])(
+    'lands nowhere when %j names its root, which is where it already is',
+    (landing) => {
+      expect(landingRoute(sections, issues, landing)).toBeUndefined();
+    },
+  );
+
+  it('lands nowhere on another nav item’s page, which has its own stack', () => {
+    expect(landingRoute(sections, issues, '/boards/1')).toBeUndefined();
   });
 });

@@ -1,14 +1,12 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { originOf, pluginPageRoute } from './plugin-page-route';
+import type { PluginSection } from './use-plugin-sections';
 
 // A section's list is declared by the ListDetail at the root of its nav item's page.
 export const declaresList = (
   root: WireNode | null | undefined,
 ): root is WireNode => root?.type === 'ListDetail';
-
-// The root itself is where the section already is, so naming it lands nowhere.
-const isLanding = (landing: unknown): landing is string =>
-  typeof landing === 'string' && landing !== '/';
 
 // The page a section's root says it lands on, on a window with its list beside the pages.
 export function landingOf(
@@ -18,8 +16,28 @@ export function landingOf(
 
   const { landing } = root.props;
 
-  return isLanding(landing) ? landing : undefined;
+  return typeof landing === 'string' ? landing : undefined;
 }
+
+/*
+ * The route a section lands on, which replaces the section's own stack, so it must be a page of that nav item. Its root
+ * is where the section already is, and another nav item's page belongs to another stack, so naming either lands nowhere.
+ */
+export function landingRoute(
+  sections: readonly PluginSection[],
+  section: PluginSection,
+  landing: string,
+): string[] | undefined {
+  const route = pluginPageRoute(sections, originOf(section), landing);
+
+  return route && belowRootOf(section, route) ? route : undefined;
+}
+
+const belowRootOf = (section: PluginSection, route: string[]): boolean => {
+  const [, navId, ...page] = route;
+
+  return navId === section.navId && page.length > section.navPath.length;
+};
 
 // The list alone, for the view that stays live beside the pages: its detail and empty state belong to the root's own page.
 export function listOnly(root: WireNode): WireNode {
@@ -40,6 +58,7 @@ const navigatePress = z.object({
   path: z.string(),
 });
 
+// The page a row opens: a ListItem whose press navigates.
 function linkedPage(node: WireNode): string | undefined {
   if (node.type !== 'ListItem') return undefined;
 
@@ -54,16 +73,21 @@ function linkedPages(nodes: readonly WireNode[]): string[] {
   });
 }
 
+// The node with the row linking to `page` selected; a branch with no such row is the same node, so it draws no change.
 function marked(node: WireNode, page: string): WireNode {
-  return {
-    ...node,
-    children: node.children.map((child) => marked(child, page)),
-    props:
-      linkedPage(node) === page
-        ? { ...node.props, selected: true }
-        : node.props,
-  };
+  if (linkedPage(node) === page) {
+    return { ...node, props: { ...node.props, selected: true } };
+  }
+
+  const children = node.children.map((child) => marked(child, page));
+
+  return sameNodes(children, node.children) ? node : { ...node, children };
 }
+
+const sameNodes = (
+  nodes: readonly WireNode[],
+  others: readonly WireNode[],
+): boolean => nodes.every((node, index) => node === others[index]);
 
 /*
  * Marks the row of the page the section is showing, so a Plugin passes no selection on each page. `pages` is the

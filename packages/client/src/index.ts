@@ -108,7 +108,7 @@ export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
-export { SectionShown } from './screens/plugins/$path/use-section-stack';
+export { SectionShown } from './screens/plugins/plugin-section-stack';
 
 export { PluginSectionLists } from './screens/plugins/plugin-section-view';
 

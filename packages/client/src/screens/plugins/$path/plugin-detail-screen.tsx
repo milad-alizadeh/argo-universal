@@ -3,13 +3,17 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { ListDetailSidebarPlaceOffer } from '@repo/kit/primitives/scaffolds/list-detail';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect, router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
-import { useSectionRoot } from '../plugin-section-places';
+import {
+  useSectionRoot,
+  useSectionStackPage,
+  type SectionStackPage,
+} from '../plugin-section-stack';
 import { withoutList } from '../plugin-section-tree';
+import { showsBack } from '../plugin-stack-page';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
@@ -18,11 +22,6 @@ import {
 } from '../use-plugin-sections';
 import { usePluginView, type PluginView } from '../use-plugin-view';
 import { PluginDetailView } from './plugin-detail-view';
-import { useSectionLanding } from './use-section-landing';
-import {
-  useSectionStackPage,
-  type SectionStackPage,
-} from './use-section-stack';
 
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
@@ -86,7 +85,7 @@ type StackPageProps = PluginPageProps & { stack: SectionStackPage };
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
 function OwnViewPage(props: StackPageProps): React.JSX.Element {
   const { section, stack } = props;
-  const view = usePluginView(ownViewOf(props), stack.needed);
+  const view = usePluginView(ownViewOf(props), stack.live);
   const onOpenPage = usePluginOpener()(section.pluginId);
 
   return (
@@ -113,10 +112,9 @@ function SectionRootPage(props: {
   section: PluginSection;
   stack: SectionStackPage;
 }): React.ReactNode {
-  const view = useSectionRoot(props.section);
-  const landing = useSectionLanding(props.section, view, props.stack);
+  const view = useSectionRoot(props.section, props.stack);
 
-  if (!view || landing) return <PluginLoading />;
+  if (!view) return <PluginLoading />;
 
   return <SectionRootDetail section={props.section} view={view} />;
 }
@@ -126,7 +124,7 @@ function SectionRootDetail(props: {
   view: PluginView;
 }): React.JSX.Element {
   const { section, view } = props;
-  const root = view.root && withoutList(view.root);
+  const root = useMemo(() => view.root && withoutList(view.root), [view.root]);
   const onOpenPage = usePluginOpener()(section.pluginId);
 
   return (
@@ -140,11 +138,15 @@ function SectionRootDetail(props: {
 
 /*
  * A page draws the App's Back when something sits below it in its section's stack, so a pushed page is always reversible
- * and no Plugin declares navigation; a page a Session or Project opened goes back there. The root is a rail section's
- * root, which draws none, and so does a page a sidebar tap opened, which is its stack's only page.
+ * and no Plugin declares navigation; a page a Session or Project opened goes back there while there is somewhere to go,
+ * which a reload of it leaves none of. The root is a rail section's root, which draws none, and so does a page a sidebar
+ * tap opened, which is its stack's only page.
  */
+const goesBackToOne = (props: PluginPageProps): boolean =>
+  openedForOne(props) && router.canGoBack();
+
 function backFor(props: StackPageProps): (() => void) | null {
-  const pushed = props.stack.below > 0 || openedForOne(props);
+  const pushed = props.stack.below > 0 || goesBackToOne(props);
 
   return showsBack(props.root, pushed) ? () => router.back() : null;
 }
