@@ -80,6 +80,10 @@ _Avoid_: Ticket, task
 A named thing Argo can do, such as listing Projects or starting a Session, defined once with typed arguments and a tier. Agents, the command line and Apps all call the same Operation.
 _Avoid_: Command (a Slash command or a shell command), tool, action, capability
 
+**Caller**:
+Who an Operation runs for, with the scope it may act within: an Agent in its Session, the command line, or the person at an App. A person's tap on a Plugin page calls as that person, scoped to the page's Project and Session.
+_Avoid_: Actor, principal, user (for an Agent)
+
 **Operation tier**:
 How far an Operation may go without asking the user: `read` never asks, `act` stays within the caller's own scope and never asks, and `confirm` always asks first, whatever mode the Agent is in.
 _Avoid_: Permission level, risk level
@@ -151,8 +155,16 @@ The one version of the Plugin wire that an App reports when it connects. The Ser
 _Avoid_: Kit component version, kit version, protocol version
 
 **Page path**:
-The path a Plugin registers one of its pages at with `argo.pages.register`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
+The path a Plugin defines or registers one of its pages at, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
 _Avoid_: App path, route (for what a Plugin writes)
+
+**Page address**:
+What names one drawing of a Plugin page: the Plugin, the Page path, the Page state and the Project or Session it opened for. The App keeps one Plugin tree per Page address, so two addresses never share a tree.
+_Avoid_: Query key, cache key, URL
+
+**Stale mark**:
+The Server telling every connected App that a Plugin's pages may have changed, by their Page path patterns. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
+_Avoid_: Invalidation, refresh event, push update
 
 **Loader**:
 The read half of a Plugin page or Slot: it runs on the Server, takes the page's path, Page state and context, and answers the data the page draws from. It never writes.
