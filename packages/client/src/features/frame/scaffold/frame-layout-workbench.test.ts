@@ -28,7 +28,7 @@ describe('Workbench states from one toggle', () => {
       workbenchIntent: 'shown',
     });
 
-    expect(layout.page).toEqual({ offset: 72, width: 1000, hidden: false });
+    expect(layout.page).toEqual({ offset: 384, width: 688, hidden: false });
     expect(layout.workbench).toEqual({
       state: 'overlay',
       offset: 752,
@@ -92,8 +92,8 @@ describe('panes placed around the Workbench', () => {
       width: 1456,
       inspectorState: 'open',
       workbenchIntent: 'auto',
-      list: 0,
-      page: 688,
+      list: 312,
+      page: 704,
       handle: 1096,
       inspector: 352,
     },
@@ -101,8 +101,8 @@ describe('panes placed around the Workbench', () => {
       width: 1455,
       inspectorState: 'open',
       workbenchIntent: 'auto',
-      list: 0,
-      page: 1015,
+      list: 312,
+      page: 703,
       handle: 1095,
       inspector: 352,
     },
@@ -128,10 +128,10 @@ describe('panes placed around the Workbench', () => {
       width: 1440,
       inspectorState: 'expanded',
       workbenchIntent: 'auto',
-      list: 0,
+      list: 312,
       page: 0,
-      handle: 80,
-      inspector: 1360,
+      handle: 392,
+      inspector: 1048,
     },
   ] as const)(
     'places panes at $width with the Inspector $inspectorState and the Workbench intent $workbenchIntent',
