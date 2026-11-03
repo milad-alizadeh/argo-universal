@@ -156,10 +156,11 @@ it('marks a blocked row and a parent row’s progress in the list', async () => 
 it('closes an Issue from its filter row as an Operation, which makes the filter pages stale', async () => {
   const { test } = await issuesRoot();
   const path = '/projects/project-1/filters/open';
-  const before = await test.pages.draw({ path, pageState: { limit: 1 } });
+  const before = await test.pages.draw({ path, pageState: { pages: 1 } });
 
   if (!before.ok) throw new Error(before.error);
-  expect(JSON.stringify(before.root)).toContain('"pageState":{"limit":31}');
+  expect(JSON.stringify(before.root)).toContain('"pageState":{"pages":2}');
+  expect(JSON.stringify(before.root)).toContain('"key":"status-42"');
 
   const ran = await test.pages.run({
     operation: 'setStatus',

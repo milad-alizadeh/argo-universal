@@ -1,7 +1,7 @@
 import type { IssueStatus } from './github-issues';
 
 const listFields =
-  'number,title,state,stateReason,labels,assignees,parent,url,blockedBy,subIssuesSummary';
+  'number,title,state,stateReason,labels,assignees,parent,url,blockedBy,subIssuesSummary,createdAt';
 
 const issueFields = `${listFields},body,subIssues`;
 

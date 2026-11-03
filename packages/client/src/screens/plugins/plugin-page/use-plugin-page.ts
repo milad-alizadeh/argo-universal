@@ -12,10 +12,12 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useState } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import { drawStale, putBack, showOptimistic, type Answer } from './draw-cache';
+import { putBack, showOptimistic, type Answer } from './draw-cache';
+import { usePageStateMemory } from './page-state-memory';
+import { freshMs, usePrefetch } from './use-prefetch';
+import { useStaleMarks } from './use-stale-marks';
 
 // Which Loader page, and the Project or Session it opened for; the Page state is the page's own.
 export type PageOpening = {
@@ -33,16 +35,20 @@ export type PluginPageState = {
 /*
  * One Loader page on the connected Server (ADR-0050): its Plugin tree is a query keyed by its Page
  * address, so a revisit draws the kept tree at once and asks again behind it, and a Page state change
- * keeps the tree on screen until the next address has drawn. Only a focused screen asks again.
+ * keeps the tree on screen until the next address has drawn. Only a focused screen asks again, and the
+ * Loader pages its first links open are drawn ahead.
  */
 export function usePluginPage(opening: PageOpening): PluginPageState {
-  const [pageState, setPageState] = useState<PageState>({});
-  const answer = useDrawn({ ...opening, pageState });
+  const [pageState, setPageState] = usePageStateMemory(opening);
+  const root = rootOf(useDrawn({ ...opening, pageState }));
   const run = useOperationRun(opening);
   const change = usePageStateChange(opening, [pageState, setPageState]);
 
+  useStaleMarks();
+  usePrefetch(opening, root);
+
   return {
-    root: rootOf(answer),
+    root,
     onPageCall: (call) => ('operation' in call ? run(call) : change(call)),
   };
 }
@@ -56,6 +62,7 @@ function useDrawn(
   const { data } = useQuery({
     ...useTRPC().plugins.draw.queryOptions(address),
     placeholderData: keepPreviousData,
+    staleTime: freshMs,
     subscribed: useScreenFocused(),
   });
 
@@ -90,8 +97,9 @@ function usePageStateChange(
 }
 
 /*
- * An Operation call: the node it names shows its optimistic props at once, the Operation runs, and every
- * kept address the answer names stale is drawn again. A failure puts the trees back and says why.
+ * An Operation call: the nodes it names show their optimistic props at once and the Operation runs. Its
+ * settled trees come from the Server's stale mark (useStaleMarks), which also reaches the other Apps; a
+ * failure puts the trees back and says why.
  */
 function useOperationRun(
   opening: PageOpening,
@@ -104,7 +112,6 @@ function useOperationRun(
       run.mutate({ ...opening, operation, args }),
     onMutate: (call) => showOptimistic(cache, call),
     onError: (error, _call, before) => putBack(cache.client, error, before),
-    onSuccess: ({ stale }) => drawStale(cache, opening.pluginId, stale),
   });
 
   // The toast already said why a call failed.

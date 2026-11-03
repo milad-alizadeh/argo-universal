@@ -44,6 +44,17 @@ export const PageRunAnswer = z.strictObject({
 
 export type PageRunAnswer = z.infer<typeof PageRunAnswer>;
 
+/*
+ * A stale mark the Server pushes to every connected App after one of the Plugin's Operations ran, from
+ * a Component event, an Agent or the CLI: the App draws again the kept addresses it has on screen.
+ */
+export const StaleMark = z.strictObject({
+  pluginId: z.string().min(1),
+  stale: z.array(z.string()),
+});
+
+export type StaleMark = z.infer<typeof StaleMark>;
+
 // The worker's side of a draw: the tree it drew, why it could not, or a Page path pattern it defined.
 export const LoaderPageCall = z.discriminatedUnion('action', [
   z.strictObject({

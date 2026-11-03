@@ -1,4 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
+import { forgetPages } from './filter-paging';
 import type { IssueStatus } from './github-issues';
 import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -15,18 +16,24 @@ export function registerStatusOperation(
   argo: Pick<Argo, 'operations'>,
   deps: IssueDeps,
 ): void {
-  argo.operations.register('setStatus', async (params) => {
-    const number = Number(params.number);
-    const status = statusOf(params.status);
-    const project = await projectOf(deps, params.projectId);
-    const client = await openDepsClient({ project, deps });
+  argo.operations.register('setStatus', (params) => setStatus(deps, params));
+}
 
-    await client.setStatus(number, status);
-    deps.changes.publish(number);
-    await requestOverview(deps, project, true).catch(() => null);
+async function setStatus(
+  deps: IssueDeps,
+  params: Params,
+): Promise<{ number: number; status: IssueStatus }> {
+  const number = Number(params.number);
+  const status = statusOf(params.status);
+  const project = await projectOf(deps, params.projectId);
+  const client = await openDepsClient({ project, deps });
 
-    return { number, status };
-  });
+  await client.setStatus(number, status);
+  forgetPages();
+  deps.changes.publish(number);
+  await requestOverview(deps, project, true).catch(() => null);
+
+  return { number, status };
 }
 
 function statusOf(given: Params[string] | undefined): IssueStatus {

@@ -35,8 +35,8 @@ export type LoaderInput<State extends PageState> = Readonly<{
 /*
  * The values a Render puts in its Component events. `go` opens another Page path; `set` merges a change
  * into the Page state and draws the new address, and an empty change draws the same address again from
- * fresh reads; `run` runs one of the Plugin's declared Operations, and `optimistic` names the node, by its
- * key, and the props it shows until the Operation answers.
+ * fresh reads; `run` runs one of the Plugin's declared Operations, and `optimistic` names nodes, by their
+ * keys, and the props each shows until the Operation answers, so a row and its menu change together.
  */
 export type PageTo<State extends PageState> = Readonly<{
   go: (path: string) => { action: 'navigate'; path: string };

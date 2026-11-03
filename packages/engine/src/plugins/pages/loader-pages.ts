@@ -2,6 +2,7 @@ import type {
   PageAddress,
   PageRun,
   PageRunAnswer,
+  StaleMark,
 } from '@repo/contracts/plugins/page-address';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
@@ -10,6 +11,7 @@ import { pluginPageBytes } from '@repo/contracts/plugins/wire-limits';
 import type { PluginOperationService } from '../operations';
 import { sanitizeTree } from '../visual/sanitize-tree';
 import type { PluginDraws } from './plugin-draws';
+import { StaleMarks } from './stale-marks';
 
 export type PageAnswer =
   | { ok: true; root: WireNode }
@@ -23,11 +25,27 @@ export type PagesHost = {
 const failed = (error: string): PageAnswer => ({ ok: false, error });
 
 export class LoaderPages {
+  private readonly marks = new StaleMarks();
+  private readonly unwatch: () => void;
+
   public constructor(
     private readonly host: PagesHost,
     private readonly draws: PluginDraws,
     private readonly operations: PluginOperationService,
-  ) {}
+  ) {
+    this.unwatch = operations.onRan((pluginId) =>
+      this.marks.mark({ pluginId, stale: draws.patternsOf(pluginId) }),
+    );
+  }
+
+  public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {
+    return this.marks.watch(signal);
+  }
+
+  public close(): void {
+    this.unwatch();
+    this.marks.close();
+  }
 
   public async draw({
     pluginId,

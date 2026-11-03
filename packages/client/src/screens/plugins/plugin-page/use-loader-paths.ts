@@ -10,12 +10,18 @@ export function useIsLoaderPage(
   pluginId: string,
   path: string,
 ): boolean | undefined {
-  const { data, isError } = useQuery({
-    ...useTRPC().plugins.loaderPages.queryOptions({ pluginId }),
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const { data, isError } = useLoaderPatterns(pluginId);
 
   if (isError) return false;
 
   return data?.some((pattern) => matchPagePath(pattern, path) !== null);
 }
+
+// The Page path patterns of the Plugin's Loader pages.
+export const useLoaderPatterns = (
+  pluginId: string,
+): { data?: string[]; isError: boolean } =>
+  useQuery({
+    ...useTRPC().plugins.loaderPages.queryOptions({ pluginId }),
+    staleTime: Number.POSITIVE_INFINITY,
+  });

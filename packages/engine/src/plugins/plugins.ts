@@ -45,6 +45,7 @@ export class Plugins {
     this.unwatchTurns();
     this.parts.hookPort.detach();
     this.parts.listChanges.close();
+    this.router.pages.close();
     await this.parts.runtime.close();
   }
 

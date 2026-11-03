@@ -3,14 +3,14 @@ import {
   DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
 import {
-  ReplaceableInput,
-  RenderFailureInput,
-} from '@repo/contracts/plugins/replaceable';
-import {
   PageAddress,
   PageRun,
   PageRunAnswer,
 } from '@repo/contracts/plugins/page-address';
+import {
+  ReplaceableInput,
+  RenderFailureInput,
+} from '@repo/contracts/plugins/replaceable';
 import {
   PluginDispatchInput,
   PluginViewInput,
@@ -147,6 +147,15 @@ const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   }),
 );
 
+// After any Operation of a Plugin, its Loader pages are stale on every connected App.
+const createStaleRouter = routerFactory((pages: LoaderPages) =>
+  router({
+    stale: publicProcedure.subscription(({ signal }) =>
+      pages.stale(requireSignal(signal)),
+    ),
+  }),
+);
+
 export type PluginsRouterDeps = {
   plugins: PluginService;
   accounts: PluginAccounts;
@@ -165,5 +174,6 @@ export const createPluginsRouter = routerFactory(
       createSlotItemsRouter(plugins),
       createViewEventsRouter(plugins),
       createLoaderPagesRouter(pages),
+      createStaleRouter(pages),
     ),
 );

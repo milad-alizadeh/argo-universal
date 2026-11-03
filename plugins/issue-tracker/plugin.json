@@ -29,11 +29,7 @@
         "label": "Attach Issue to Session",
         "description": "Connect the calling Session to an Issue it is implementing, so the Issue's page lists it.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "session",
-          "connect"
-        ],
+        "keywords": ["issue", "session", "connect"],
         "params": {
           "number": {
             "type": "number",
@@ -51,11 +47,7 @@
         "label": "Detach Issue from Session",
         "description": "Disconnect the calling Session from an Issue it is no longer working on.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "session",
-          "disconnect"
-        ],
+        "keywords": ["issue", "session", "disconnect"],
         "params": {
           "number": {
             "type": "number",
@@ -73,12 +65,7 @@
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "close",
-          "reopen",
-          "status"
-        ],
+        "keywords": ["issue", "close", "reopen", "status"],
         "params": {
           "number": {
             "type": "number",
@@ -106,14 +93,8 @@
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": [
-        "auth",
-        "status"
-      ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "args": ["auth", "status"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
@@ -132,10 +113,7 @@
         "--json",
         "*"
       ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
@@ -150,75 +128,31 @@
         "-f",
         "per_page=1"
       ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": [
-        "label",
-        "list",
-        "--repo",
-        "*",
-        "--limit",
-        "*",
-        "--json",
-        "*"
-      ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "args": ["label", "list", "--repo", "*", "--limit", "*", "--json", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": [
-        "issue",
-        "view",
-        "*",
-        "--repo",
-        "*",
-        "--json",
-        "*"
-      ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "args": ["issue", "view", "*", "--repo", "*", "--json", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": [
-        "issue",
-        "close",
-        "*",
-        "--repo",
-        "*"
-      ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "args": ["issue", "close", "*", "--repo", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": [
-        "issue",
-        "reopen",
-        "*",
-        "--repo",
-        "*"
-      ],
-      "env": [
-        "GH_HOST",
-        "GH_TOKEN"
-      ]
+      "args": ["issue", "reopen", "*", "--repo", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     }
   ]
 }

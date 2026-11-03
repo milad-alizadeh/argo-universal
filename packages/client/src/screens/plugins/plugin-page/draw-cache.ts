@@ -17,18 +17,26 @@ export type DrawCache = {
 
 type Snapshot = [readonly unknown[], Answer | undefined][];
 
-// Every kept tree shows the call's optimistic props on the node it names; the trees before are kept to put back.
-export function showOptimistic(
+/*
+ * Every kept tree shows the call's optimistic props on the nodes it names, at once. Draws in flight are
+ * cancelled first, so an answer read before the Operation cannot paint over the patch; the trees before
+ * are kept to put back.
+ */
+export async function showOptimistic(
   { client, draws }: DrawCache,
   { optimistic }: OperationCall,
-): Snapshot {
+): Promise<Snapshot> {
   if (!optimistic) return [];
 
   const filter = draws.pathFilter();
+  const patches = new Map(optimistic.map(({ key, props }) => [key, props]));
+
+  await client.cancelQueries(filter);
+
   const before = client.getQueriesData<Answer>(filter);
 
   client.setQueriesData<Answer>(filter, (answer) =>
-    answer?.ok ? { ...answer, root: flipped(answer.root, optimistic) } : answer,
+    answer?.ok ? { ...answer, root: patched(answer.root, patches) } : answer,
   );
 
   return before;
@@ -47,31 +55,40 @@ export function putBack(
   });
 }
 
-type Optimistic = NonNullable<OperationCall['optimistic']>;
+type Patches = Map<string, WireNode['props']>;
 
-function flipped(node: WireNode, optimistic: Optimistic): WireNode {
-  const props =
-    node.key === optimistic.key
-      ? { ...node.props, ...optimistic.props }
-      : node.props;
-
+// A node's slots are walked as its children are: a row's menu Action sits in its `actions` slot.
+function patched(node: WireNode, patches: Patches): WireNode {
   return {
     ...node,
-    props,
-    children: node.children.map((child) => flipped(child, optimistic)),
+    props: { ...node.props, ...patches.get(node.key) },
+    children: node.children.map((child) => patched(child, patches)),
+    slots: Object.fromEntries(
+      Object.entries(node.slots).map(([name, nodes]) => [
+        name,
+        nodes.map((child) => patched(child, patches)),
+      ]),
+    ),
   };
 }
 
-// Every kept address of the Plugin whose path a stale pattern matches is drawn again.
+/*
+ * Every kept address of the Plugin whose path a stale pattern matches is marked stale; only those on a
+ * focused screen draw again now (a screen out of focus is not subscribed), the rest when they come back.
+ * A draw already running is left to finish rather than restarted.
+ */
 export function drawStale(
   { client, draws }: DrawCache,
   pluginId: string,
   stale: readonly string[],
 ): void {
-  void client.invalidateQueries({
-    ...draws.pathFilter(),
-    predicate: (query) => isStale(addressOf(query), pluginId, stale),
-  });
+  void client.invalidateQueries(
+    {
+      ...draws.pathFilter(),
+      predicate: (query) => isStale(addressOf(query), pluginId, stale),
+    },
+    { cancelRefetch: false },
+  );
 }
 
 type Address = { pluginId: string; path: string };

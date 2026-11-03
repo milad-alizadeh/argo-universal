@@ -18,6 +18,7 @@ export type GitHubIssue = {
   blockedBy?: GitHubRelations | null;
   subIssues?: GitHubRelations | null;
   subIssuesSummary?: GitHubSummary | null;
+  createdAt?: string;
 };
 
 export const statuses = { OPEN: 'open', CLOSED: 'closed' } as const;

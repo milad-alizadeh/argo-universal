@@ -15,7 +15,7 @@ import {
   type FilterState,
 } from './filter-loader';
 import { issueRow } from './filter-rows';
-import { loadingIssues, pageSize } from './filter-shown';
+import { loadingIssues } from './filter-shown';
 import { repositoryText, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
@@ -27,8 +27,8 @@ type To = PageTo<FilterState>;
 
 /*
  * One Project's filter list (ADR-0050): the Loader reads the Projects, the overview and up to the Page
- * state's limit of Issues at once; the Render draws the sidebar beside them. Load more asks for a
- * longer list, a pull asks again, and a row's Action closes or reopens its Issue as an Operation.
+ * state's pages of Issues at once; the Render draws the sidebar beside them. Load more asks for the
+ * next page, a pull starts again from the first, and a row's Action closes or reopens its Issue as an Operation.
  */
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   argo.pages.define(filterPattern, {
@@ -60,7 +60,7 @@ function sidebar({ deps, data, to }: PageProps): JSX.Element {
       deps={deps}
       choice={{ projects: data.projects, project: data.project, message }}
       state={{ overview: data.overview, message: '' }}
-      onRefresh={to.set({})}
+      onRefresh={to.set({ pages: 1 })}
       selected={data.filter?.id}
     />
   );
@@ -100,15 +100,15 @@ type ListProps = Pick<
 >;
 
 /*
- * The footer names the Project's repository, or why there are no Issues in its place. A full list may
- * have more: load more asks for a longer one, and a pull asks again.
+ * The footer names the Project's repository, or why there are no Issues in its place. Load more asks for
+ * one more page, read from the last one's cursor; a pull goes back to the first page, read again.
  */
 const listProps = (data: DetailProps['data'], to: To): ListProps => ({
   footer: data.message || repositoryText(data.project),
   empty: <EmptyState title={data.message || 'No Issues.'} />,
   pagination: {
-    hasMore: data.issues.length >= data.limit,
-    onLoadMore: to.set({ limit: data.limit + pageSize }),
+    hasMore: data.hasMore,
+    onLoadMore: to.set({ pages: data.pages + 1 }),
   },
-  onRefresh: to.set({}),
+  onRefresh: to.set({ pages: 1 }),
 });

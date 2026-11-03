@@ -12,6 +12,10 @@
  * manifest's params and tier, a running worker) and answers its result with the Page path patterns the
  * App draws again. It throws what the Operation throws, so the App rolls back and says why.
  *
+ * `stale(signal)` streams a stale mark after every Operation of a Plugin that answered, whoever ran it
+ * (a Component event, an Agent, the CLI), until the signal aborts or `close()`; the App draws again only
+ * the addresses it has on screen, so no App polls.
+ *
  * `patterns(pluginId)` lists the Page path patterns the running Plugin defined, so the App knows which
  * of its paths are Loader pages; it starts the Plugin first and throws when it cannot.
  */

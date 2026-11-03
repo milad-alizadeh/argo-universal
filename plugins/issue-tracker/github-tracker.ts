@@ -35,6 +35,21 @@ type Read = <Reply>(
   description: string,
 ) => Promise<Reply | null>;
 
+/*
+ * `gh auth status` is a check, not a read: one success holds for the worker's life, so later loads skip it
+ * (it took over a second before the first read). A failure is not kept, so the next load asks again.
+ */
+let authChecked: Promise<string> | null = null;
+
+function checkedAuth(argo: GitHub): Promise<string> {
+  authChecked ??= run(argo, ['gh', 'auth', 'status']).catch((error: Error) => {
+    authChecked = null;
+    throw error;
+  });
+
+  return authChecked;
+}
+
 // The Tracker talks to GitHub only through the Server-owned `argo` API.
 export function createGitHubTracker(
   argo: GitHub,
@@ -44,7 +59,7 @@ export function createGitHubTracker(
     parseJson(await run(argo, argv), description);
 
   return {
-    authStatus: () => run(argo, ['gh', 'auth', 'status']),
+    authStatus: () => checkedAuth(argo),
     ...searches(read, repository),
     ...issueCalls(argo, read, repository),
   };

@@ -41,6 +41,8 @@ export type Issue = {
   children?: IssueRelation[];
   // The sub-Issue tally, absent when this Issue has no sub-Issues.
   progress?: IssueProgress;
+  // When GitHub created it, as ISO 8601: a list's cursor; absent when gh did not send it.
+  createdAt?: string;
 };
 
 export type GitHubCount = { total_count?: number };
@@ -83,7 +85,11 @@ const issueFields = (issue: CheckedIssue): Omit<Issue, keyof IssueLinks> => ({
   labels: labels(issue.labels),
   assignees: names(issue.assignees, 'login'),
   ...closedAs(issue),
+  ...createdAt(issue),
 });
+
+const createdAt = ({ createdAt: at }: CheckedIssue): { createdAt?: string } =>
+  typeof at === 'string' ? { createdAt: at } : {};
 
 // The Issues around this one: its parent, its blockers, its sub-Issues and their tally.
 const issueLinks = (issue: CheckedIssue): IssueLinks => ({

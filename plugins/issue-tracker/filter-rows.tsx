@@ -45,7 +45,7 @@ const rowProps = (
   issue: Issue,
 ): RowProps => ({
   id: String(issue.number),
-  leading: statusMark(issue),
+  leading: statusMark(issue, `mark-${issue.number}`),
   title: issue.title,
   subtitle: `#${issue.number}`,
   finished: issue.status !== 'open',
@@ -69,7 +69,7 @@ function statusAction(source: RowSource, issue: Issue): JSX.Element {
 
   return (
     <Action
-      key="status"
+      key={`status-${issue.number}`}
       label={change.label}
       icon={change.icon}
       onPress={statusRun(source, issue, change.to)}
@@ -77,6 +77,7 @@ function statusAction(source: RowSource, issue: Issue): JSX.Element {
   );
 }
 
+// The call, and what the row, its mark and its menu show until it settles.
 const statusRun = (
   { project, to }: RowSource,
   { number }: Issue,
@@ -85,13 +86,28 @@ const statusRun = (
   to.run(
     'setStatus',
     { number, status, projectId: project.id },
-    {
-      optimistic: {
-        key: String(number),
-        props: { finished: status !== 'open' },
-      },
-    },
+    { optimistic: statusPatches(number, status) },
   );
+
+const statusPatches = (
+  number: number,
+  status: Issue['status'],
+): NonNullable<ReturnType<RowSource['to']['run']>['optimistic']> => [
+  { key: String(number), props: { finished: status !== 'open' } },
+  { key: `mark-${number}`, props: markProps[status] },
+  {
+    key: `status-${number}`,
+    props: {
+      label: statuses[status].change.label,
+      icon: statuses[status].change.icon,
+    },
+  },
+];
+
+const markProps = {
+  open: { name: 'pending', tone: 'muted', filled: false },
+  closed: { name: 'passed', tone: 'done', filled: true },
+};
 
 function blockedMark(issue: Issue): JSX.Element[] {
   const open = (issue.blockedBy ?? []).filter(
