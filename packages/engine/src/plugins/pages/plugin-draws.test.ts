@@ -1,3 +1,4 @@
+import type { WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { stack, svg } from '../views/draw-tree-fixtures';
 import { PluginDraws } from './plugin-draws';
@@ -21,7 +22,11 @@ it('draws a page without the SVG the sanitiser refused, and logs what it left ou
   pages.ran('atlas', 1);
 
   const drawn = pages.draw('atlas', at);
-  const root = stack([svg('<svg><script/></svg>', 'unsafe')]);
+
+  // The worker sends its tree as JSON.
+  const root: WireJson = JSON.parse(
+    JSON.stringify(stack([svg('<svg><script/></svg>', 'unsafe')])),
+  );
 
   pages.receive(
     { pluginId: 'atlas', generation: 1 },
