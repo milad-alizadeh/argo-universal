@@ -101,15 +101,18 @@ function usePageStateChange(
  * settled trees come from the Server's stale mark (useStaleMarks), which also reaches the other Apps; a
  * failure puts the trees back and says why.
  */
-function useOperationRun(
-  opening: PageOpening,
-): (call: OperationCall) => Promise<void> {
+function useOperationRun({
+  pluginId,
+  projectId,
+  sessionId,
+}: PageOpening): (call: OperationCall) => Promise<void> {
   const run = useTRPCClient().plugins.run;
   const cache = { client: useQueryClient(), draws: useTRPC().plugins.draw };
 
+  // An Operation belongs to the Plugin, not to the page it was called from.
   const { mutateAsync } = useMutation({
     mutationFn: ({ operation, args }: OperationCall) =>
-      run.mutate({ ...opening, operation, args }),
+      run.mutate({ pluginId, projectId, sessionId, operation, args }),
     onMutate: (call) => showOptimistic(cache, call),
     onError: (error, _call, before) => putBack(cache.client, error, before),
   });

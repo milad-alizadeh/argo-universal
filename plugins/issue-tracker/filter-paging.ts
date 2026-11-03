@@ -12,42 +12,81 @@ const keptMs = 60_000;
 
 const kept = new Map<string, Kept>();
 
+// A write makes every page kept before it stale; their cursors still say where the pages start.
+let writtenAt = 0;
+
 export type Paged = { issues: Issue[]; hasMore: boolean };
 
 /*
  * `gh issue list` has no cursor, so the cursor is a search qualifier: newest first, and each further page
  * from the last Issue's creation time on (inclusive, so a tie at the boundary is not lost; the repeat is
- * dropped). One page is a pull, so it is read again; more pages come from what was kept when they can.
+ * dropped). One page is a pull, so it is read again. More pages come from what was kept; the stale ones
+ * among them are read at once from their known cursors, and only the page after them waits on a cursor.
  */
 export async function readPages(
   client: TrackerClient,
   scope: Scope,
   pages: number,
 ): Promise<Paged> {
-  let page = await firstPage(client, scope, pages);
-  const issues = [...page.issues];
+  const source = { client, scope, pages };
 
-  for (let read = 1; read < pages && page.next !== null; read++) {
-    page = await keptPage(client, scope, page.next);
-    issues.push(...page.issues);
-  }
+  const known = await Promise.all(
+    knownCursors(source, [null], null).map((cursor) => pageAt(source, cursor)),
+  );
 
-  return { issues: once(issues), hasMore: page.next !== null };
+  return joined(await further(source, known));
 }
+
+type Source = { client: TrackerClient; scope: Scope; pages: number };
+
+const pageAt = (
+  { client, scope, pages }: Source,
+  cursor: string | null,
+): Promise<Page> =>
+  pages > 1
+    ? keptPage(client, scope, cursor)
+    : freshPage(client, scope, cursor);
 
 // An Operation that changed an Issue makes every kept page stale.
 export function forgetPages(): void {
-  kept.clear();
+  writtenAt = Date.now() + 1;
 }
 
-type Scope = { project: string; search: string };
+// The first page's cursor, then each kept page's next one, as far as the pages asked for.
+function knownCursors(
+  source: Source,
+  cursors: (string | null)[],
+  last: string | null,
+): (string | null)[] {
+  const next = nextOf(source.scope, last);
 
-const firstPage = (
-  client: TrackerClient,
-  scope: Scope,
-  pages: number,
-): Promise<Page> =>
-  pages > 1 ? keptPage(client, scope, null) : freshPage(client, scope, null);
+  if (next === null || cursors.length >= source.pages) return cursors;
+
+  return knownCursors(source, [...cursors, next], next);
+}
+
+const nextOf = (scope: Scope, cursor: string | null): string | null =>
+  kept.get(keyOf(scope, cursor))?.page.next ?? null;
+
+// Pages past the known ones wait on the one before for their cursor.
+async function further(source: Source, read: Page[]): Promise<Page[]> {
+  const next = lastNext(read);
+
+  if (next === null || read.length >= source.pages) return read;
+
+  const page = await keptPage(source.client, source.scope, next);
+
+  return further(source, [...read, page]);
+}
+
+const lastNext = (read: Page[]): string | null => read.at(-1)?.next ?? null;
+
+const joined = (read: Page[]): Paged => ({
+  issues: once(read.flatMap((page) => page.issues)),
+  hasMore: lastNext(read) !== null,
+});
+
+type Scope = { project: string; search: string };
 
 async function keptPage(
   client: TrackerClient,
@@ -56,10 +95,13 @@ async function keptPage(
 ): Promise<Page> {
   const hit = kept.get(keyOf(scope, cursor));
 
-  if (hit && Date.now() - hit.at < keptMs) return hit.page;
+  if (hit && fresh(hit)) return hit.page;
 
   return freshPage(client, scope, cursor);
 }
+
+const fresh = ({ at }: Kept): boolean =>
+  at >= writtenAt && Date.now() - at < keptMs;
 
 const keyOf = (scope: Scope, cursor: string | null): string =>
   `${scope.project}\n${scope.search}\n${cursor ?? ''}`;

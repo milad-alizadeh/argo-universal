@@ -9,8 +9,8 @@ type Params = Readonly<Record<string, string | number | boolean>>;
 
 /*
  * `setStatus` closes or reopens one Issue in a Project (ADR-0044), the write a filter list's row runs
- * (ADR-0050). The other open pages hear of it as they do of the Issue page's own change, and the
- * Project's counts are read again before the call answers, so the pages it makes stale draw them fresh.
+ * (ADR-0050). The other open pages hear of it as they do of the Issue page's own change. The Project's
+ * counts start to be read again as the call answers, so the pages it makes stale draw from that read.
  */
 export function registerStatusOperation(
   argo: Pick<Argo, 'operations'>,
@@ -31,7 +31,7 @@ async function setStatus(
   await client.setStatus(number, status);
   forgetPages();
   deps.changes.publish(number);
-  await requestOverview(deps, project, true).catch(() => null);
+  void requestOverview(deps, project, true).catch(() => null);
 
   return { number, status };
 }

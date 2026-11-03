@@ -5,10 +5,12 @@ import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
 
 // Issues 1..count, newest first, one minute apart; the fake gh answers `created:<=` as GitHub does.
-type Fake = { client: TrackerClient; searches: string[] };
+type Fake = { client: TrackerClient; searches: string[]; most: () => number };
 
 function tracker(count: number): Fake {
   const searches: string[] = [];
+  let reading = 0;
+  let most = 0;
 
   const issues = Array.from({ length: count }, (_, index) =>
     issueOf(count - index),
@@ -19,6 +21,10 @@ function tracker(count: number): Fake {
     limit: number,
   ): Promise<Issue[]> => {
     searches.push(search);
+    reading += 1;
+    most = Math.max(most, reading);
+    await new Promise((settle) => setTimeout(settle, 1));
+    reading -= 1;
 
     const until = /created:<=(\S+)/u.exec(search)?.[1];
 
@@ -29,7 +35,7 @@ function tracker(count: number): Fake {
       .slice(0, limit);
   };
 
-  return { client: { ...unused, listIssues }, searches };
+  return { client: { ...unused, listIssues }, searches, most: () => most };
 }
 
 const refuse = (): Promise<never> =>
@@ -94,4 +100,19 @@ it('has no more once a page comes back short', async () => {
   const { client } = tracker(pageSize - 1);
 
   expect((await readPages(client, scope, 1)).hasMore).toBe(false);
+});
+
+it('reads every shown page again at once after a write, from the cursors it already has', async () => {
+  const { client, searches, most } = tracker(pageSize * 4);
+  const written = { project: 'written', search: 'is:open' };
+
+  await readPages(client, written, 3);
+  forgetPages();
+  searches.length = 0;
+
+  const again = await readPages(client, written, 3);
+
+  expect(searches).toHaveLength(3);
+  expect(most()).toBe(3);
+  expect(again.issues).toHaveLength(pageSize * 3 - 2);
 });
