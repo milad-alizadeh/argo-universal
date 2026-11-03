@@ -33,6 +33,7 @@ type DesktopServerInput = {
   directory: string;
   agents: AppFixtureAgents;
   mode: SupervisorMode;
+  noProjects?: boolean;
 };
 
 type SupervisedInput = DesktopServerInput & { mode: 'reused' | 'owned' };
@@ -102,7 +103,8 @@ async function supervisedServer(
 export async function prepareDesktopServer(
   input: DesktopServerInput,
 ): Promise<DesktopServer> {
-  const fixtureServer = await startOwnServer(input.directory, input.agents);
+  const fixtureServer = await startDesktopFixture(input);
+
   const home = path.join(input.directory, 'server-home');
 
   if (input.mode === 'fixture')
@@ -132,3 +134,10 @@ export async function stopDesktopServer(server: DesktopServer): Promise<void> {
     await server.supervisor.stop(supervisorStopGraceMs);
   await server.fixtureServer.stop();
 }
+
+const startDesktopFixture = (
+  input: Pick<DesktopServerInput, 'directory' | 'agents' | 'noProjects'>,
+): Promise<FixtureServer> =>
+  startOwnServer(input.directory, input.agents, {
+    noProjects: input.noProjects,
+  });
