@@ -46,6 +46,23 @@ export const SaysWhatArchiveRemoves: Story = {
   },
 };
 
+// A Project that keeps worktrees has nothing on disk to warn about.
+export const SaysAKeptWorktreeIsKept: Story = {
+  args: { keepsWorktree: true },
+  beforeEach: atPhoneWidth,
+  play: async () => {
+    const alert = await openAlert();
+    await waitFor(() =>
+      expect(
+        alert.getByText(archiveSessionCopy.messageKeepsWorktree),
+      ).toBeVisible(),
+    );
+    await expect(
+      alert.queryByText(archiveSessionCopy.message),
+    ).not.toBeInTheDocument();
+  },
+};
+
 // Archive archives the Session and closes the alert.
 export const ArchiveArchives: Story = {
   beforeEach: atPhoneWidth,

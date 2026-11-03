@@ -71,6 +71,7 @@ export const newSessionProjects: ProjectsListOutput = [
     checkoutChoice: { type: 'main' },
     remoteHost: null,
     folderExists: true,
+    deleteWorktreeOnArchive: true,
   },
 ];
 

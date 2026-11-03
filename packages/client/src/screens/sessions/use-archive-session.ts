@@ -3,6 +3,7 @@ import type { ArchiveSessionAlertProps } from '#features/sessions';
 import { archiveAsksFirst } from './archive-asks-first';
 import { archiveSessions } from './archive-session-mutations';
 import { useArchivePort } from './use-archive-port';
+import { useKeepsWorktrees } from './use-keeps-worktrees';
 
 export interface ArchiveSession {
   // Archive in a row's or header's menu; it keeps one identity, so the rows it reaches stay memoised.
@@ -49,7 +50,8 @@ export function useArchiveSession(onArchived?: () => void): ArchiveSession {
     [onArchiveMany],
   );
 
-  const alert = alertProps(asking, archive, setAsking);
+  const keepsWorktree = useKeepsWorktrees(asking);
+  const alert = { ...alertProps(asking, archive, setAsking), keepsWorktree };
 
   return { onArchive, onArchiveMany, alert };
 }

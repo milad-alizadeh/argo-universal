@@ -252,6 +252,12 @@ export function generatedOperations(runner: OperationRunner) {
         .mutation(({ input }) =>
           runner.run({ kind: 'app', id: 'project.create', params: input }),
         ),
+      update: publicProcedure
+        .input(operations['project.update'].params)
+        .output(operations['project.update'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'project.update', params: input }),
+        ),
       listBranches: publicProcedure
         .input(operations['project.listBranches'].params)
         .output(operations['project.listBranches'].result)

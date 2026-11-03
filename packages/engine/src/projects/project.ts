@@ -141,7 +141,7 @@ async function readProjectDetail({
   return { checkoutChoice: choice, remoteHost, folderExists: true };
 }
 
-async function readStoredProject(
+export async function readStoredProject(
   storedProject: StoredProject,
   rejections: Rejections,
 ): Promise<ProjectInfo> {
