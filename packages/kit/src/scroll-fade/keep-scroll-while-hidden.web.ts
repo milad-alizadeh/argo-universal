@@ -35,15 +35,23 @@ function onceRowsMeasured(
   return () => cancelAnimationFrame(id);
 }
 
-// Follows the height the content has while shown, holds it while hidden, and lets go once the rows have measured again.
-function keepHeightWhileHidden(
+/*
+ * Follows the position and height the list has while shown. While hidden it holds the height; a resize observer runs
+ * before paint, so the frame the page shows in already has the position back. It lets go once the rows have measured.
+ */
+function keepScrollWhileHidden(
   scroller: Element,
   content: HTMLElement,
 ): () => void {
   const { minHeight } = content.style;
   let height = scroller.scrollHeight;
+  let position = scroller.scrollTop;
   let holding = false;
   let stopWaiting = (): void => {};
+
+  const remember = (): void => {
+    if (!holding && scroller.clientHeight > 0) position = scroller.scrollTop;
+  };
 
   const observer = new ResizeObserver(() => {
     stopWaiting();
@@ -52,6 +60,7 @@ function keepHeightWhileHidden(
       holding = true;
       content.style.minHeight = `${height}px`;
     } else if (holding) {
+      scroller.scrollTop = position;
       stopWaiting = onceRowsMeasured(scroller, content, () => {
         holding = false;
         content.style.minHeight = minHeight;
@@ -63,8 +72,10 @@ function keepHeightWhileHidden(
 
   observer.observe(scroller);
   observer.observe(content);
+  scroller.addEventListener('scroll', remember, { passive: true });
 
   return () => {
+    scroller.removeEventListener('scroll', remember);
     observer.disconnect();
     stopWaiting();
   };
@@ -72,9 +83,8 @@ function keepHeightWhileHidden(
 
 /*
  * The stack hides the page below a pushed one with display: none and keeps it mounted. Rows that draw while hidden
- * measure at zero, so Legend List gives its content no height, and when the page shows again the browser takes the
- * scroll position back to the top before the rows can measure themselves. The content keeps the height it had until
- * they have, so the browser's own scroll position holds.
+ * measure at zero, so Legend List gives its content no height and the scroll position goes back to the top. The
+ * content keeps the height it had until the rows have measured themselves again, and the position comes back with it.
  */
 export function useKeepScrollWhileHidden(
   list: RefObject<LegendListRef | null>,
@@ -87,7 +97,7 @@ export function useKeepScrollWhileHidden(
     const content = scroller.firstElementChild;
 
     return content instanceof HTMLElement
-      ? keepHeightWhileHidden(scroller, content)
+      ? keepScrollWhileHidden(scroller, content)
       : undefined;
   }, [list]);
 }
