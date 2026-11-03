@@ -205,9 +205,9 @@ An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 cha
 A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
 The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session.
 
-Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.slots.changed('argo/session/row/v1')`, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
+Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.changed()` or one of its Operations runs, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".
-A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.slots.changed` or restarts.
+A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.changed()`, one of its Operations runs, or it restarts.
 
 ## Session Activity line
 
@@ -278,27 +278,25 @@ A Plugin adds one card to a Session's Workbench under the Slot `argo/session/wor
 }
 ```
 
-A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters and names the card, its Inspector tab and its row in a phone's Workbench, and both paths are the Plugin's own. Argo draws the card and owns where it goes: its own cards (Changes, Agents, Shells) come first, then one card per Plugin in Slot order, each in a collapsible glass card the Plugin cannot restyle (ADR-0039). The Plugin draws `page` inside it with any kit components, as on its own pages, and keeps it to a summary — the Workbench shows summaries, not lists.
+A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters and names the card, its Inspector tab and its row in a phone's Workbench, and both paths are the Plugin's own. Argo draws the card and owns where it goes: its own cards (Changes, Agents, Shells) come first, then one card per Plugin in Slot order, each in a collapsible glass card the Plugin cannot restyle (ADR-0039). Both paths are Loader pages, defined with `argo.pages.define(path, { load, render })` (ADR-0050). The Plugin draws `page` inside it with any kit components, as on its own pages, and keeps it to a summary — the Workbench shows summaries, not lists.
 
 Give a card a `tab` and pressing its body opens that page in full as an Inspector tab; leave it out and the card stays a card. A phone has no Workbench column, so the card opens as the Inspector's sheet instead.
 
-Both pages open for the Session whose Workbench they are in, so they read `context.sessionId` as a header action's page does. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
+Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
 
 ## Background pages and badges
 
-Declare `contributes.background: { path, interval }` in `plugin.json`, and register that path as a page.
-Argo activates the Plugin and mounts the page once per registered Project, with `projectId` in its context.
+Declare `contributes.background: { path, interval }` in `plugin.json`, and define that path as a Loader page with `argo.pages.define`.
+On each interval Argo activates the Plugin and runs that page's `load` alone, once per registered Project, with `projectId` in its context. Nothing renders and no tree is kept.
 There is no Project-less pass. Each Plugin and Project pair owns an independent timer, with a five-minute minimum interval.
 Adding a Project starts its pass. Removing one releases its views, passes, and entries.
 
-Use the same Query in the background page and the mounted Slot to warm the same entry.
-A background pass ignores a Query's `every` option. It ends after the first render's Queries settle, or after sixty seconds, and discards its tree.
-A refused background Query stops retrying until the Plugin is next opened.
+A pass ends when `load` settles, or after sixty seconds. A `load` that throws fails that pass only; the next interval runs it again.
 The optional fetch `account` field borrows the Project’s Account for that host.
 An unavailable Borrow returns `null` from a direct `argo.fetch` call. A Query reports an error and retains its last successful data.
 
 A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id its own manifest declares. Zero clears the badge.
-A background page runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
+A background `load` runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
 Nav badges are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
 
 A drawing throw closes only the failed view. Other pages, Slots, Hooks, and background passes continue.
@@ -308,7 +306,7 @@ The failure subscription records one non-fatal drawing failure per Plugin.
 
 The core Hook events are `prompt.submit`, `tool.check`, and `process.spawn` (ADR-0038).
 Both `prompt.submit` and `tool.check` carry `sessionId` and `projectId`.
-The separate `ui.render` Hook draws Replaceable Slots with its existing payload and answer.
+The separate `ui.render` Hook draws Replaceable Slots with its existing payload. It returns a tree from a pure render, with no state or effects, or calls `next` to leave the row to the Plugins after it and core. `ctx.to.go(path)` and `ctx.to.run(operation, args)` give a Component event its value. Argo checks the tree as it checks a page's and answers the App once; a tree that throws, is refused, or needs a newer App leaves core to draw the row, logged once. New props ask the chain again.
 List the Replaceable Slots it draws in `contributes.renders`, which needs `ui.render` in `contributes.hooks`. `contributes.slots` and `argo.slots.register` take only add-only Slots.
 
 Order a Plugin with `contributes.order` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
