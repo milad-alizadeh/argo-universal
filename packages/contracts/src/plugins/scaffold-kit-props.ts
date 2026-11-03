@@ -37,7 +37,7 @@ export const screenProps = z.object({
     .optional()
     .meta({ default: screenDefaults.width })
     .describe(
-      'How wide the content runs on a window wider than the reading column: `content` keeps it to that centred column, `full` fills the screen, as a table, board or canvas wants. Both keep the screen’s side margins.',
+      'How wide the content runs on a window wider than the reading column: `content` keeps it to that centred column, `full` fills the screen, as a table, board or canvas wants, and `narrow` keeps one short task, such as signing in, to a small centred column on every window, starting close under its title. All keep the screen’s side margins.',
     ),
 });
 

@@ -1,4 +1,5 @@
 import type {
+  ReadData,
   UseData,
   UseDataOptions,
   UseDataResult,
@@ -26,6 +27,7 @@ import {
   type DataSnapshot,
 } from './data-subscription';
 import { queryResult } from './query-result';
+import { readQueryData } from './read-data';
 
 export const QueryViewContext = createContext<PluginViewId | null>(null);
 
@@ -33,6 +35,7 @@ export type KitDataClient = {
   ready: PluginDataClient['ready'];
   receive: PluginDataClient['receive'];
   useData: UseData;
+  read: ReadData;
 };
 
 export function dataClient(call: DataCall): KitDataClient {
@@ -42,6 +45,7 @@ export function dataClient(call: DataCall): KitDataClient {
     ready: (viewId, background) => client.ready(viewId, background),
     receive: (event) => client.receive(event),
     useData: (query, options) => useQueryData(client, query, options),
+    read: (query, options) => readQueryData(call, query, options),
   };
 }
 

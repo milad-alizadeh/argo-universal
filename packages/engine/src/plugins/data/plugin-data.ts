@@ -6,29 +6,20 @@ import type { PluginViewId } from '@repo/contracts/plugins/wire';
 import { runtimeError, type PluginReply } from '../protocol/runtime';
 import type { OpenView } from '../views/open-view';
 import type { PluginViews } from '../views/plugin-views';
-import {
-  dropOldest,
-  keepNewest,
-  queryKey,
-  removeProject,
-  retainedWarmEntries,
-} from './entry-map';
 import { PluginBadges } from './plugin-badges';
-import { QueryEntry } from './query-entry';
+import { QueryEntries, type QueryCaller } from './query-entries';
 import { QueryIntervals } from './query-intervals';
 import {
   watchKey,
-  type QueryOwner,
+  type QueryRead,
   type QueryServices,
   type QueryWatch,
 } from './query-types';
 import { projectRegistered, refusedProject } from './registered-project';
 
-type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
-
 export class PluginData {
   readonly badges;
-  private readonly plugins = new Map<string, Map<string, QueryEntry>>();
+  private readonly entries;
   private readonly intervals;
 
   constructor(
@@ -37,6 +28,7 @@ export class PluginData {
   ) {
     this.badges = new PluginBadges(services.log);
     this.intervals = new QueryIntervals(services.log);
+    this.entries = new QueryEntries(services, this.intervals);
   }
 
   async handle(
@@ -52,9 +44,11 @@ export class PluginData {
   }
 
   private async operate(
-    caller: Caller,
+    caller: QueryCaller,
     request: PluginDataRequest,
   ): Promise<PluginReply> {
+    if (request.action === 'read') return this.readReply(caller, request);
+
     const view = this.views.dataView(caller.pluginId, request.viewId);
 
     if (request.action === 'watch')
@@ -66,7 +60,7 @@ export class PluginData {
 
   // A Query may name its Project (ADR-0037); one that is not registered is refused as any refused call is.
   private async watchReply(
-    caller: Caller,
+    caller: QueryCaller,
     view: OpenView,
     request: QueryWatch,
   ): Promise<PluginReply> {
@@ -76,70 +70,44 @@ export class PluginData {
     return { ok: true, value: this.watch(caller, view, request) };
   }
 
+  // A read has no view: it answers from the entry a view of this Plugin and Project would watch (ADR-0037).
+  private async readReply(
+    caller: QueryCaller,
+    request: QueryRead,
+  ): Promise<PluginReply> {
+    if (!(await projectRegistered(this.services.services, request.projectId)))
+      return { ok: true, value: refusedProject };
+
+    const entry = this.entries.entry(caller, request);
+
+    this.entries.bound(caller.pluginId);
+
+    return { ok: true, value: await entry.read(request.every) };
+  }
+
   // The watcher is registered before the map is bounded, so this answer is never the entry dropped.
   private watch(
-    caller: Caller,
+    caller: QueryCaller,
     view: OpenView,
     request: QueryWatch,
   ): PluginDataState {
-    const entries = this.entriesOf(caller.pluginId);
-    const state = this.entry(caller, view, request).watch(view, request);
+    const { query, projectId = view.projectId } = request;
+    const entry = this.entries.entry(caller, { query, projectId });
+    const state = entry.watch(view, request);
 
-    this.bound(caller.pluginId, entries);
+    this.entries.bound(caller.pluginId);
 
     return state;
   }
 
-  private entry(
-    caller: Caller,
-    view: OpenView,
-    { query, projectId = view.projectId }: QueryWatch,
-  ): QueryEntry {
-    const entries = this.entriesOf(caller.pluginId);
-    const key = queryKey(projectId, query);
-
-    const existing = entries.get(key);
-
-    if (existing) return keepNewest(entries, key, existing);
-    const entry = this.createEntry({ ...caller, projectId, query });
-
-    entries.set(key, entry);
-
-    return entry;
-  }
-
-  // The warm path keeps answers no view holds, so only the oldest unwatched ones go.
-  private bound(pluginId: string, entries: Map<string, QueryEntry>): void {
-    if (entries.size <= retainedWarmEntries) return;
-    const dropped = dropOldest(entries);
-
-    if (dropped === 0) return;
-    this.services.log(
-      `Plugin ${pluginId}: dropped ${dropped} warm Query answers over the ${retainedWarmEntries} kept`,
-    );
-  }
-
-  private createEntry(owner: QueryOwner): QueryEntry {
-    return new QueryEntry(owner, this.services, this.intervals);
-  }
-
-  private entriesOf(pluginId: string): Map<string, QueryEntry> {
-    const existing = this.plugins.get(pluginId);
-
-    if (existing) return existing;
-    const entries = new Map<string, QueryEntry>();
-    this.plugins.set(pluginId, entries);
-
-    return entries;
-  }
-
   private async update(
     pluginId: string,
-    request: Exclude<PluginDataRequest, { action: 'watch' }>,
+    request: Exclude<PluginDataRequest, { action: 'watch' | 'read' }>,
   ): Promise<void> {
     const key = watchKey(request);
 
-    const entry = this.entriesOf(pluginId)
+    const entry = this.entries
+      .of(pluginId)
       .values()
       .find((entry) => entry.owns(key));
 
@@ -150,39 +118,33 @@ export class PluginData {
   }
 
   releaseView(viewId: PluginViewId): void {
-    for (const entry of this.entries()) entry.releaseView(viewId);
+    for (const entry of this.entries.all()) entry.releaseView(viewId);
   }
 
   release(pluginId: string): void {
     this.badges.release(pluginId);
     this.intervals.release(pluginId);
-
-    for (const entry of this.entriesOf(pluginId).values()) entry.close();
-    this.plugins.delete(pluginId);
+    this.entries.closePlugin(pluginId);
   }
 
   releaseProject(projectId: string): void {
-    for (const entries of this.plugins.values())
-      removeProject(entries, projectId);
+    this.entries.removeProject(projectId);
   }
 
   storageWritten(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values())
+    for (const entry of this.entries.of(pluginId).values())
       entry.storageWritten();
   }
 
   opened(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values()) entry.opened();
+    for (const entry of this.entries.of(pluginId).values()) entry.opened();
   }
 
   // Whether every Query the view has declared so far holds a value or an error.
   queriesSettled(viewId: PluginViewId): boolean {
-    return this.entries()
+    return this.entries
+      .all()
       .filter((entry) => entry.hasView(viewId))
       .every((entry) => entry.settled);
-  }
-
-  private entries(): IteratorObject<QueryEntry> {
-    return this.plugins.values().flatMap((entries) => entries.values());
   }
 }

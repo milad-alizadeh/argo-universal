@@ -1,6 +1,3 @@
-import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   Action,
@@ -28,32 +25,11 @@ export const wait = { timeout: 10_000 };
 
 export type Tracked = { test: PluginTest; github: GitHubFixture };
 
-/*
- * The Plugin's own directory with a client ID in place, since the real one is not registered yet: the sign-in tests
- * run the same code against a fixture GitHub that accepts it.
- */
-async function withClientId(): Promise<string> {
-  const source = fileURLToPath(new URL('.', import.meta.url));
-  const directory = await mkdtemp(join(tmpdir(), 'argo-issue-tracker-'));
-
-  await cp(source, directory, {
-    recursive: true,
-    filter: (path) => !path.includes('node_modules'),
-  });
-  await writeFile(
-    join(directory, 'github-client-id.ts'),
-    "export const githubClientId = 'fixture-client-id';\n",
-  );
-  onTestFinished(() => rm(directory, { recursive: true, force: true }));
-
-  return directory;
-}
-
 export async function tracker(projects = [project]): Promise<Tracked> {
   const github = await githubFixture();
 
   const test = await startPluginTest({
-    directory: await withClientId(),
+    directory: fileURLToPath(new URL('.', import.meta.url)),
     pluginId: 'issue-tracker',
     version: '0.0.0',
     projects,

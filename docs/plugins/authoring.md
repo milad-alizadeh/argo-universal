@@ -161,7 +161,7 @@ export function register(argo: Argo): void {
 ```
 
 Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
-A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
+A fetch Query accepts the same fields as `argo.fetch`, including POST requests. `argo.fetch` sends `user-agent: Argo` on every request, redirects included, unless your Plugin sets its own `User-Agent` in any casing, as a browser's fetch always sends one and services such as GitHub's API refuse a request without it. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
 The hook returns `{ data, error, stale, refresh }`:
@@ -178,6 +178,17 @@ Argo clamps `every` to ten seconds and logs the clamp once. Shared viewers use t
 Storage Queries are never polled. A committed Plugin storage write marks them due.
 
 A component deep in a page reads the page's own `context` with `usePageContext()`.
+
+Code with no view, such as an items Slot's provider, reads the same entry once:
+
+```ts
+const { data, error, errorKind } = await argo.data.read(query, {
+  every: 60_000,
+  projectId,
+});
+```
+
+It joins a call in flight, uses an answer younger than `every`, and otherwise runs the Query, so a page and a Slot describing the same Query in one Project make one call, whichever asks first. A failed answer is always run again. It starts no clock: nothing refreshes it until the next read or a page's `useData`. `every` is clamped to ten seconds. An unregistered Project answers `refused`.
 
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different Slots.
 Object key order and header name case do not change the entry.
@@ -384,7 +395,7 @@ export async function register(argo: Argo) {
 
 `register` provides the Account and registers its sign-in page, `/sign-in` unless `page` says otherwise; `plugin.json` still declares the Account and a `fetch` Capability for each host the flow reaches, as below. `label` is the call that names the person: `url` on the Account's host, `field` a dotted path into its JSON answer, and `body` when it is a JSON POST. `field` must identify one person: a login or an email works and a display name does not, as signing in with the same label reuses that Account's row.
 
-`account.useData` is `useData` for a read through that Account. Inside the gate, a read with no Account or a 401 draws the sign-in in place of the gate's children, and they come back once a read answers. Your code handles no token and no sign-in state. A sign-in from the gate names the read's Project, so that Project moves to the Account it just saved, even when it had another; from `/sign-in`, which is what "Add account" opens, it names no Project and records nothing. Signing in again as the same person reuses the row. Signing in as someone else adds one, and the old row stays listed, with its dead token, until someone signs out of it.
+`account.read` is `argo.data.read` through that Account, for an items Slot, and shares its entry with `account.useData`. `account.useData` is `useData` for a read through that Account. Inside the gate, a read with no Account or a 401 draws the sign-in in place of the gate's children, and they come back once a read answers. Your code handles no token and no sign-in state. A sign-in from the gate names the read's Project, so that Project moves to the Account it just saved, even when it had another; from `/sign-in`, which is what "Add account" opens, it names no Project and records nothing. Signing in again as the same person reuses the row. Signing in as someone else adds one, and the old row stays listed, with its dead token, until someone signs out of it.
 
 With several Accounts and no Project, Argo cannot tell which to use, and signing in would not help. The read is `refused`, and the gate says so with no sign-in: "Several {name} Accounts are signed in. Open this from a Project, or sign out of one in Settings." On a Project's page, several Accounts and no choice is the normal sign-in; the picker in the Project's settings changes the choice later. Outside a gate `account.useData` answers as `useData` does, and `errorKind` and the status say why.
 
@@ -397,7 +408,7 @@ A token that comes with a refresh token and an expiry is refreshed before it run
 - `device` takes `deviceUrl` and `tokenUrl`. The page shows a code, the person enters it on any device, and the Plugin polls. It needs no callback port or Server Device, so it finishes from a paired phone.
 - `redirect` takes `authorizeUrl` and `tokenUrl`. Argo opens the browser on the Server Device and catches the code, with PKCE in place of a client secret. On any other Device the page says to continue on the Server Device.
 
-A `clientId` of `''` makes the page say sign-in is not set up yet. A service that demands a client secret fits neither flow: use the calls below. `plugins/examples/github-sign-in` is that example, with the secret in a secret setting beside `client-id`.
+A service that demands a client secret fits neither flow: use the calls below. `plugins/examples/github-sign-in` is that example, with the secret in a secret setting beside `client-id`.
 
 Argo ships no list of providers and holds no secret, so this all runs in your Plugin's worker through the calls below. `@argo/plugin-kit/sign-in` is built with them alone; its bundle fails if it imports anything else.
 

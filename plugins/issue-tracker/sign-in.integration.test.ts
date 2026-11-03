@@ -1,4 +1,3 @@
-import { startPluginTest } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import {
   clockUntil,
@@ -102,6 +101,21 @@ it('says why GitHub refused the sign-in', async () => {
   expect(page.findText('Couldn’t sign in')).toBeDefined();
 }, 30_000);
 
+it('says what GitHub answered when it does not say who signed in', async () => {
+  const tracked = await tracker();
+
+  tracked.github.accepted.clear();
+
+  const page = await showsCode(tracked);
+
+  await clockUntil(
+    tracked.test,
+    page,
+    'GitHub answered 401 and did not say who signed in.',
+  );
+  expect(page.findText('Couldn’t sign in')).toBeDefined();
+}, 30_000);
+
 it('lets the person give up waiting', async () => {
   const tracked = await tracker();
   const page = await showsCode(tracked);
@@ -147,23 +161,3 @@ it('draws the sign-in again after the token is rejected, and signing in as the s
   await clockUntil(test, root, 'Open');
   expect(root.findText(signInLabel)).toBeUndefined();
 }, 40_000);
-
-it('says sign-in is not set up while no client ID is registered', async () => {
-  const test = await startPluginTest({
-    directory: new URL('.', import.meta.url).pathname,
-    pluginId: 'issue-tracker',
-    version: '0.0.0',
-  });
-
-  try {
-    const page = test.page('/sign-in');
-
-    await page.ready();
-    await page.press(signInLabel);
-    await expect
-      .poll(() => page.findText('GitHub sign-in is not set up yet.'), wait)
-      .toBeDefined();
-  } finally {
-    await test.close();
-  }
-}, 30_000);

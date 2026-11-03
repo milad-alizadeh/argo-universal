@@ -30,8 +30,10 @@ export type QueryPacing = {
 
 export type QueryWatch = Extract<PluginDataRequest, { action: 'watch' }>;
 
+export type QueryRead = Extract<PluginDataRequest, { action: 'read' }>;
+
 export function watchKey(
-  request: Pick<PluginDataRequest, 'viewId' | 'watchId'>,
+  request: Pick<QueryWatch, 'viewId' | 'watchId'>,
 ): string {
   return JSON.stringify([request.viewId, request.watchId]);
 }

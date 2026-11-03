@@ -21,7 +21,7 @@ import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 // The Screen's own heading, drawn where its plan puts the header there.
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
   return (
-    <View className="py-6">
+    <View className={props.width === 'narrow' ? 'pt-6' : 'py-6'}>
       <ScreenColumn width={props.width}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />

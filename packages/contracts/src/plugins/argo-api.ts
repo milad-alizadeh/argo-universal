@@ -11,8 +11,6 @@ import {
   PluginFileEntry,
   PluginFileInfo,
   PluginNavBadge,
-  type PluginErrorKind,
-  type PluginQuery,
   ProcessCommand,
   ProcessResult,
   SecretSet,
@@ -20,13 +18,22 @@ import {
   StorageResult,
 } from './argo-calls';
 import { PluginAssetRef, PluginAssetSource } from './assets';
+import type { ReadData } from './data-api';
 import type { Hook, HookArgs, HookEventName } from './hooks';
 import type { PluginRenderContext } from './kit';
 import type { OperationsApi } from './operations-api';
 import { PluginSettingValue } from './plugin-settings';
-import type { QueryResult } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
+
+export type {
+  ReadData,
+  ReadDataOptions,
+  ReadDataResult,
+  UseData,
+  UseDataOptions,
+  UseDataResult,
+} from './data-api';
 
 export type { SlotItemsAnswer, SlotItemsProvider, SlotsApi } from './slot-api';
 
@@ -139,24 +146,6 @@ export const PluginApiCalls = z
 
 type PluginApiCalls = z.infer<typeof PluginApiCalls>;
 
-// What `useData` hands a page for its Query, and the hook itself: the Engine's kit implements it, `@argo/plugin-kit` declares it.
-export type UseDataResult<Query extends PluginQuery> = {
-  data: QueryResult<Query> | undefined;
-  error: string | undefined;
-  // Set exactly when `error` is, and says why it is.
-  errorKind: PluginErrorKind | undefined;
-  stale: boolean;
-  refresh: () => Promise<void>;
-};
-
-// `projectId` names the Project the Query reads for, such as a Project the page lists; it defaults to the view's.
-export type UseDataOptions = { every?: number; projectId?: string };
-
-export type UseData = <Query extends PluginQuery>(
-  query: Query | null,
-  options?: UseDataOptions,
-) => UseDataResult<Query>;
-
 export type Page = ComponentType<{ context: PluginRenderContext }>;
 
 /*
@@ -168,6 +157,7 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
   Readonly<{
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: Readonly<{ register: (path: string, page: Page) => void }>;
+    data: Readonly<{ read: ReadData }>;
     slots: SlotsApi;
     operations: OperationsApi;
     on: <Name extends HookEventName>(

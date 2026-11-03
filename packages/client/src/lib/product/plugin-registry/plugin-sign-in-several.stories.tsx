@@ -5,7 +5,7 @@ import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-v
 // The tree the kit's `SignInGate` (@argo/plugin-kit/sign-in) sends for several Accounts and no Project, as the harness received it.
 const severalAccounts = WireNode.parse(
   JSON.parse(
-    `{"type":"Screen","key":"0","props":{"title":"GitHub"},"children":[{"type":"Text","key":"0","props":{"children":"Several GitHub Accounts are signed in. Open this from a Project, or sign out of one in Settings.","role":"secondary"},"children":[],"slots":{}}],"slots":{}}`,
+    `{"type":"Screen","key":"0","props":{"title":"GitHub","width":"narrow"},"children":[{"type":"Text","key":"0","props":{"children":"Several GitHub Accounts are signed in. Open this from a Project, or sign out of one in Settings.","role":"secondary"},"children":[],"slots":{}}],"slots":{}}`,
   ),
 );
 

@@ -79,6 +79,7 @@ export interface Kit {
   exports: typeof exportsOf & Pick<ReturnType<typeof dataClient>, 'useData'>;
   jsxRuntime: typeof jsxRuntime;
   registerPage: Pages['register'];
+  readData: Argo['data']['read'];
   // The worker's `argo.slots`; it also answers the batched items calls the inbox hands it.
   slots: Argo['slots'];
   // The worker's `argo.operations`; it also answers the Operation calls the inbox hands it.
@@ -142,6 +143,7 @@ function pageKit(parts: KitParts): Kit {
     exports: { ...exportsOf, useData: data.useData },
     jsxRuntime,
     registerPage: pages.register,
+    readData: data.read,
     slots,
     operations,
     inbox: inbox(parts),

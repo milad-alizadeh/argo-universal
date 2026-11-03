@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AccountCall, OAuthCall } from '#plugin-account-calls';
 import { PluginAssetRequest } from '#plugin-assets';
 import { FetchCall, FetchRead } from '#plugin-fetch-call';
+import { FsCall } from '#plugin-fs-calls';
 import { SessionGet } from '#plugin-session-calls';
 import { SlotCall } from '#plugin-slot-calls';
 import { WireJson } from '#plugin-wire-json';
@@ -14,23 +15,15 @@ export {
 
 export { SlotCall } from '#plugin-slot-calls';
 
-// What a Plugin's `argo` calls send to the Server, and what the Server answers.
-export const FsWrite = z.object({
-  action: z.literal('write'),
-  path: z.string(),
-  content: z.string(),
-});
-
-export const FsCall = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('read'), path: z.string() }),
+export {
+  FsCall,
   FsWrite,
-  z.object({ action: z.literal('list'), path: z.string() }),
-  z.object({ action: z.literal('stat'), path: z.string() }),
-]);
+  PluginFileEntry,
+  PluginFileInfo,
+  PluginFileKind,
+} from '#plugin-fs-calls';
 
-export type FsCall = z.infer<typeof FsCall>;
-
-// A command is its argv; there is no shell to interpret it.
+// What a Plugin's `argo` calls send to the Server, and what the Server answers. A command is its argv; there is no shell to interpret it.
 export const ProcessCommand = z.object({
   argv: z.array(z.string()).min(1),
   cwd: z.string().optional(),
@@ -124,6 +117,14 @@ export const PluginDataRequest = z.discriminatedUnion('action', [
   }),
   dataTarget.extend({ action: z.literal('release') }),
   dataTarget.extend({ action: z.literal('refresh') }),
+  // Answers once from the Query's entry, for code with no view to watch it from, such as an items Slot's provider.
+  z.object({
+    api: z.literal('data'),
+    action: z.literal('read'),
+    query: PluginQuery,
+    every: z.number().finite().nonnegative(),
+    projectId: z.string().optional(),
+  }),
 ]);
 
 export type PluginDataRequest = z.infer<typeof PluginDataRequest>;
@@ -154,19 +155,6 @@ export const ProcessResult = z.object({
 });
 
 export type ProcessResult = z.infer<typeof ProcessResult>;
-
-export const PluginFileKind = z.enum(['directory', 'file']);
-
-export const PluginFileEntry = z.object({
-  name: z.string(),
-  kind: PluginFileKind,
-});
-
-export const PluginFileInfo = z.object({
-  kind: PluginFileKind,
-  size: z.number(),
-  modified: z.number(),
-});
 
 // The body as the Server read it, capped at its limit.
 export const FetchReply = z.object({

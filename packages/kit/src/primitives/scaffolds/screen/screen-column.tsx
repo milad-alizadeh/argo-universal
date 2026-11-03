@@ -12,7 +12,8 @@ import { useWide } from '#kit/use-wide/use-wide';
 /*
  * The one column a Screen's heading and content keep to: on a wide window the reading width (`--container-column`)
  * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
- * Below wide the phone shell's header runs from the window's edge, so the content does too. A side column beside the
+ * Below wide the phone shell's header runs from the window's edge, so the content does too. `narrow` holds one short
+ * task to `--container-narrow` on every window, as it would otherwise stretch on a tablet. A side column beside the
  * content (a Detail's Metadata) widens the cap by itself, so the content keeps the reading width and the heading
  * spans both.
  */
@@ -21,29 +22,39 @@ export function useScreenColumn(
 ): ContentColumn {
   const capped = useWide() && width === 'content';
   const side = sideColumnExtra(useSideColumn());
-  const [column, inset] = useColumnTokens();
+  const { column, narrow, inset } = useColumnTokens();
+  const cap = columnCap(width, capped, { column: column + side, narrow });
 
-  return useMemo(
-    () => columnStyle(capped, column + side, inset),
-    [capped, column, side, inset],
-  );
+  return useMemo(() => columnStyle(cap, inset), [cap, inset]);
 }
 
-function useColumnTokens(): [column: number, inset: number] {
-  const [column = 0, inset = 0] = useCSSVariable([
-    '--container-column',
-    usePaddingToken(),
-  ]).map(tokenNumber);
+type ColumnWidths = { column: number; narrow: number };
 
-  return [column, inset];
+type ColumnTokens = ColumnWidths & { inset: number };
+
+function useColumnTokens(): ColumnTokens {
+  return {
+    column: tokenNumber(useCSSVariable('--container-column')),
+    narrow: tokenNumber(useCSSVariable('--container-narrow')),
+    inset: tokenNumber(useCSSVariable(usePaddingToken())),
+  };
+}
+
+function columnCap(
+  width: ScreenWidth,
+  capped: boolean,
+  { column, narrow }: ColumnWidths,
+): number | undefined {
+  if (width === 'narrow') return narrow;
+
+  return capped ? column : undefined;
 }
 
 const columnStyle = (
-  capped: boolean,
-  column: number,
+  cap: number | undefined,
   inset: number,
 ): ContentColumn => ({
-  maxWidth: capped ? column + inset * 2 : undefined,
+  maxWidth: cap === undefined ? undefined : cap + inset * 2,
   paddingLeft: inset,
   paddingRight: inset,
 });

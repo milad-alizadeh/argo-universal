@@ -1,5 +1,11 @@
-import type { Argo, UseDataOptions, UseDataResult } from '@argo/plugin-kit';
-import { useAccountRead, type AccountRead } from './account-read';
+import type {
+  Argo,
+  ReadDataOptions,
+  ReadDataResult,
+  UseDataOptions,
+  UseDataResult,
+} from '@argo/plugin-kit';
+import { accountQuery, useAccountRead, type AccountRead } from './account-read';
 import { runDeviceFlow } from './device-flow';
 import type { Settled } from './device-poll';
 import type { FetchQuery } from './gate-context';
@@ -16,7 +22,7 @@ type Common = {
   host: string;
   // The service's name, as the sign-in page says it.
   name: string;
-  // Public by design. While it is empty the page says sign-in is not set up yet and asks the service nothing.
+  // Public by design: a client ID is not a secret, and it ships in the Plugin.
   clientId: string;
   scope?: string;
   label: LabelSource;
@@ -41,6 +47,11 @@ export type DefinedAccount = {
     query: AccountRead | null,
     options?: UseDataOptions,
   ) => UseDataResult<FetchQuery>;
+  // The same read once, where no view can watch it, such as an items Slot's provider. A page's `useData` shares its entry.
+  read: (
+    query: AccountRead,
+    options: ReadDataOptions,
+  ) => Promise<ReadDataResult<FetchQuery>>;
   // Runs one sign-in for the page that asked; the sign-in page calls this.
   signIn: (run: StartedRun) => Promise<void>;
 };
@@ -90,9 +101,6 @@ async function runSignIn(
   declaration: AccountDeclaration,
   run: StartedRun,
 ): Promise<void> {
-  if (declaration.clientId === '')
-    return run.show(failed(`${declaration.name} sign-in is not set up yet.`));
-
   run.show({ kind: 'requesting' });
 
   await attempt(argo(), declaration, run).catch((cause: unknown) => {
@@ -136,6 +144,11 @@ function registeredArgo(host: string): Registered {
   };
 }
 
+const readThrough =
+  (argo: Registered, host: string): DefinedAccount['read'] =>
+  (read, options) =>
+    argo.get().data.read(accountQuery(host, read), options);
+
 /*
  * One service's sign-in, declared once. Everything runs in the Plugin's own worker through the public API (ADR-0036):
  * Argo holds no provider list and no secret, and the Plugin's own code never sees a token.
@@ -152,6 +165,7 @@ export function defineAccount(declaration: AccountDeclaration): DefinedAccount {
       await provideAccount(given, account);
     },
     useData: (read, options) => useAccountRead(declaration.host, read, options),
+    read: readThrough(argo, declaration.host),
     signIn: (run) => runSignIn(argo.get, declaration, run),
   };
 

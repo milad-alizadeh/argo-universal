@@ -26,9 +26,7 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   const changed = slotsChanged(api);
   const summaries = createIssueSummaries(deps, changed);
 
-  deps.changes.subscribe((number) =>
-    announceStatus(summaries, changed, number),
-  );
+  deps.changes.subscribe(() => void changed());
   registerSessionPages(api, deps);
   registerItems(api, { deps, summaries });
 
@@ -65,15 +63,6 @@ const slotsChanged = (api: Argo) => async (): Promise<void> => {
     api.slots.changed(sessionBarSlot),
   ]);
 };
-
-function announceStatus(
-  summaries: IssueSummaries,
-  changed: () => Promise<void>,
-  number: number,
-): void {
-  summaries.stale(number);
-  void changed();
-}
 
 const issuePathOf =
   (deps: IssueDeps): PathOf =>

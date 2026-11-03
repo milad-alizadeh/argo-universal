@@ -62,7 +62,7 @@ function useHeldRead(
 
 // Signing in cannot say which of several Accounts a page with no Project means, so this offers no sign-in (ADR-0036).
 const SeveralAccounts = ({ name }: { name: string }): JSX.Element => (
-  <Screen title={name}>
+  <Screen title={name} width="narrow">
     <Text role="secondary">
       {`Several ${name} Accounts are signed in. Open this from a Project, or sign out of one in Settings.`}
     </Text>
