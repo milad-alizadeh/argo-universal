@@ -11,6 +11,7 @@ import type {
   PageState,
   PageRunAnswer,
 } from '@repo/contracts/plugins/page-address';
+import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
 import type {
   PluginOperationCaller,
   PluginOperationParams,
@@ -20,11 +21,7 @@ import type {
   PluginFailure,
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
-import type {
-  PageAnswer,
-  PluginStorage,
-  PluginNetwork,
-} from '@repo/engine/plugins';
+import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
 
@@ -81,7 +78,9 @@ export interface PluginTest {
       pageState?: PageState;
       projectId?: string;
       sessionId?: string;
-    }) => Promise<PageAnswer>;
+      pages?: number;
+      known?: string;
+    }) => Promise<DrawAnswer>;
     run: (input: {
       operation: string;
       args: PluginOperationParams;

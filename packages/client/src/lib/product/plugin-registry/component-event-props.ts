@@ -108,20 +108,25 @@ async function deliver(
 ): Promise<void> {
   const { handler, name, schema } = event;
 
-  if (!handler || !('$event' in handler)) return runInApp(input, handler);
+  if (!handler || !('$event' in handler))
+    return runInApp(input, handler, payload);
   await send(input.context.key, { event: name, payload, schema });
 }
 
-// A built-in Action, or a Loader page's Page state change or Operation call: nothing goes to the Plugin.
+/*
+ * A built-in Action, or a Loader page's call: nothing goes to the Plugin. With no handler, as a Loader page's
+ * search or selection that is not Page state, the kit component's own state is all there is.
+ */
 async function runInApp(
   input: ControlInput,
   handler: Exclude<Handler, { $event: string }> | undefined,
+  payload?: WireJson,
 ): Promise<void> {
   if (!handler) return;
 
   if ('action' in handler) return runAction(handler, input.context.openPage);
 
-  return pageCallOf(input)(handler);
+  return pageCallOf(input)(handler, payload);
 }
 
 // Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.

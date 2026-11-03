@@ -61,9 +61,12 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
 export {
   Action,
   Handler,
+  LoadMore,
   OperationCall,
+  PageBind,
   PageCall,
   PageStateChange,
+  PageStateValue,
   PageValue,
   WireEvent,
 } from '#plugin-wire-action';

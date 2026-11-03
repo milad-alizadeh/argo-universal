@@ -1,4 +1,5 @@
 import {
+  LoaderPages,
   PluginOperationService,
   type PluginRuntime,
   type PluginService,
@@ -6,6 +7,8 @@ import {
 import type { PluginTest } from './test-types';
 
 type Operations = PluginTest['operations'];
+
+type Hosted = { service: PluginService; runtime: PluginRuntime };
 
 type RunInput = Parameters<Operations['run']>[0];
 
@@ -16,7 +19,7 @@ type Run = Parameters<PluginOperationService['run']>[0];
  * names the Operation; its Plugin, params and caller default to the Plugin under test and no Session.
  */
 export function testOperations(
-  { service, runtime }: { service: PluginService; runtime: PluginRuntime },
+  { service, runtime }: Hosted,
   pluginId: string,
 ): Operations {
   const operations = new PluginOperationService(service, runtime.operations);
@@ -24,6 +27,20 @@ export function testOperations(
   return {
     list: () => operations.rows(),
     run: (input) => operations.run(runInput(input, pluginId)),
+  };
+}
+
+// One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
+export function testPages(
+  { service, runtime }: Hosted,
+  pluginId: string,
+): PluginTest['pages'] {
+  const operations = new PluginOperationService(service, runtime.operations);
+  const pages = new LoaderPages(service, runtime.draws, operations);
+
+  return {
+    draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }),
+    run: (input) => pages.run({ pluginId, ...input }),
   };
 }
 

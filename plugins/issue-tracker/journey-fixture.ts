@@ -109,7 +109,9 @@ const filterPath = /^\/projects\/[^/]+\/filters\/[^/]+$/;
 async function drawn(test: PluginTest, path: string): Promise<ShownPage> {
   const answer = await test.pages.draw({ path });
 
-  if (!answer.ok) throw new Error(answer.error);
+  if (answer.kind === 'failed') throw new Error(answer.error);
+
+  if (answer.kind !== 'tree') throw new Error(`Answered ${answer.kind}`);
 
   const tree = answer.root;
 

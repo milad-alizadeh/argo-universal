@@ -5,7 +5,7 @@ import { productName } from '../product-identity';
 import { handler, stringLabel } from './kit-component-props';
 import { listItemProps } from './list-kit-props';
 import { perSizeClass } from './schema-size-class';
-import { WireEvent } from './wire';
+import { PageBind, WireEvent } from './wire';
 
 export const screenProps = z.object({
   title: stringLabel.describe('The single-line screen title.'),
@@ -29,8 +29,9 @@ export const screenProps = z.object({
     .string()
     .optional()
     .describe('The search query; drafts stay in the App.'),
-  // A Plugin event only: an App Action here would run on every keystroke.
-  onChangeText: WireEvent.extend({ $event: z.literal('onChangeText') })
+  // A Plugin event, or a Loader page's Page state the App sets once typing pauses; an App Action would run on every keystroke.
+  onChangeText: z
+    .union([WireEvent.extend({ $event: z.literal('onChangeText') }), PageBind])
     .optional()
     .describe('Receive the search query when it changes.'),
   width: z

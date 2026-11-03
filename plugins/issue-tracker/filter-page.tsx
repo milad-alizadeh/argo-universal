@@ -4,19 +4,22 @@ import {
   ListDetail,
   Screen,
   type Argo,
+  type LoaderPage,
+  type PagedList,
   type PageTo,
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import {
   filterState,
+  listFilter,
   loadFilter,
   type FilterData,
   type FilterState,
 } from './filter-loader';
-import { forgetPages } from './filter-paging';
 import { issueRow } from './filter-rows';
 import { loadingIssues } from './filter-shown';
+import type { Issue } from './github-issues';
 import { repositoryText, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueFilter } from './issue-filters';
@@ -28,25 +31,39 @@ import { reloadOverviews } from './overview-requests';
 type To = PageTo<FilterState>;
 
 /*
- * One Project's filter list (ADR-0050): the Loader reads the Projects, the overview and up to the Page
- * state's pages of Issues at once; the Render draws the sidebar beside them. Load more asks for the
- * next page, a pull starts again from the first, and a row's Action closes or reopens its Issue as an Operation.
+ * One Project's filter list (ADR-0050): the Loader reads the Projects and the overview while the kit reads
+ * the pages of Issues the App shows; the Render draws the sidebar beside them. The search narrows the Issues
+ * once typing pauses, load more appends the next page, a pull starts again from the first, and a row's
+ * Action closes or reopens its Issue as an Operation.
  */
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
-  // A status change on any page, the Issue page's own included, leaves the kept pages and drawn lists stale.
+  // A status change on any page, the Issue page's own included, leaves the counts and drawn lists stale.
   deps.changes.subscribe(() => {
-    forgetPages();
     reloadOverviews(deps);
     argo.pages.stale();
   });
-  argo.pages.define(filterPattern, {
-    state: filterState,
-    load: (input) => loadFilter({ ...deps, changed: argo.pages.stale }, input),
-    render: (data, to) => <FilterPage deps={deps} data={data} to={to} />,
-  });
+  argo.pages.define(filterPattern, filterPage(deps, argo.pages.stale));
 }
 
-type PageProps = { deps: IssueDeps; data: FilterData; to: To };
+const filterPage = (
+  deps: IssueDeps,
+  changed: () => void,
+): LoaderPage<FilterState, FilterData, Issue> => ({
+  state: filterState,
+  load: (input) => loadFilter({ ...deps, changed }, input),
+  list: (input, cursor) => listFilter(deps, input, cursor),
+  render: (data, to, { state, list }) => (
+    <FilterPage {...{ deps, data, to, list }} query={state.query} />
+  ),
+});
+
+type PageProps = {
+  deps: IssueDeps;
+  data: FilterData;
+  to: To;
+  query: string;
+  list: PagedList<Issue>;
+};
 
 function FilterPage(props: PageProps): JSX.Element {
   return (
@@ -68,39 +85,51 @@ function sidebar({ deps, data, to }: PageProps): JSX.Element {
       deps={deps}
       choice={{ projects: data.projects, project: data.project, message }}
       state={{ overview: data.overview, message: '' }}
-      onRefresh={to.set({ pages: 1 })}
+      onRefresh={to.set({})}
       selected={data.filter?.id}
     />
   );
 }
 
-function filterDetail({ deps, data, to }: PageProps): JSX.Element | null {
-  const { project, filter } = data;
+function filterDetail(props: PageProps): JSX.Element | null {
+  const { project, filter } = props.data;
 
   if (!project || !filter) return null;
 
-  return (
-    <FilterDetail deps={deps} data={{ ...data, project, filter }} to={to} />
-  );
+  return <FilterDetail {...props} data={{ ...props.data, project, filter }} />;
 }
 
-type DetailProps = {
-  deps: IssueDeps;
+type DetailProps = PageProps & {
   data: FilterData & { project: Project; filter: IssueFilter };
-  to: To;
 };
 
-function FilterDetail({ deps, data, to }: DetailProps): JSX.Element {
-  const { filter, issues, project } = data;
+// The search's text is the App's at once and the Page state's once typing pauses.
+function FilterDetail(props: DetailProps): JSX.Element {
+  const { deps, data, to, list } = props;
 
   return (
-    <Screen title={filter.title} caption={filter.search}>
-      <List appearance="plain" density="compact" {...listProps(data, to)}>
-        {issueTree(issues).map((node) => issueRow({ deps, project, to }, node))}
+    <Screen {...screenProps(props)}>
+      <List appearance="plain" density="compact" {...listProps(props)}>
+        {issueTree(list.items).map((node) =>
+          issueRow({ deps, project: data.project, to }, node),
+        )}
       </List>
     </Screen>
   );
 }
+
+type ScreenProps = Pick<
+  PluginProps['Screen'],
+  'title' | 'caption' | 'search' | 'value' | 'onChangeText'
+>;
+
+const screenProps = ({ data, to, query }: DetailProps): ScreenProps => ({
+  title: data.filter.title,
+  caption: data.filter.search,
+  search: { label: 'Search Issues' },
+  value: query,
+  onChangeText: to.bind('query'),
+});
 
 type ListProps = Pick<
   PluginProps['List'],
@@ -108,15 +137,12 @@ type ListProps = Pick<
 >;
 
 /*
- * The footer names the Project's repository, or why there are no Issues in its place. Load more asks for
+ * The footer names the Project's repository, or why there are no Issues in its place. Load more appends
  * one more page, read from the last one's cursor; a pull goes back to the first page, read again.
  */
-const listProps = (data: DetailProps['data'], to: To): ListProps => ({
+const listProps = ({ data, list, to }: DetailProps): ListProps => ({
   footer: data.message || repositoryText(data.project),
   empty: <EmptyState title={data.message || 'No Issues.'} />,
-  pagination: {
-    hasMore: data.hasMore,
-    onLoadMore: to.set({ pages: data.pages + 1 }),
-  },
-  onRefresh: to.set({ pages: 1 }),
+  pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
+  onRefresh: to.set({}),
 });

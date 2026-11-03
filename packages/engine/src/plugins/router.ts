@@ -2,11 +2,8 @@ import {
   DeclaredItems,
   DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
-import {
-  PageAddress,
-  PageRun,
-  PageRunAnswer,
-} from '@repo/contracts/plugins/page-address';
+import { PageRun, PageRunAnswer } from '@repo/contracts/plugins/page-address';
+import { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import {
   ReplaceableInput,
   RenderFailureInput,
@@ -135,7 +132,7 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
 const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   router({
     draw: publicProcedure
-      .input(PageAddress)
+      .input(DrawRequest)
       .query(({ input }) => pages.draw(input)),
     loaderPages: publicProcedure
       .input(z.strictObject({ pluginId: z.string().min(1) }))

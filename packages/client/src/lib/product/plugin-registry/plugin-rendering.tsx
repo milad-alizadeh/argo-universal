@@ -9,8 +9,11 @@ import type { OpenPluginPage } from '../plugin-actions';
 
 export type { PluginOnEvent } from './plugin-dispatcher';
 
-// What a Loader page does with a Page state change or an Operation call (ADR-0050); a view's tree has none.
-export type OnPageCall = (call: PageCall) => Promise<void>;
+/*
+ * What a Loader page does with a Page state change, an Operation call, a load more or a bound value
+ * (ADR-0050); `value` is the Component event's own, which a binding puts into the Page state. A view's tree has none.
+ */
+export type OnPageCall = (call: PageCall, value?: WireJson) => Promise<void>;
 
 export interface RenderContext {
   key: string;

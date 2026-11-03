@@ -127,14 +127,18 @@ export function createKit(
   return pageKit({ data, pages, ...providers(calls) });
 }
 
-// What a Plugin registers besides its pages: the Slots it answers and the Operations it declares.
-const providers = (
+/*
+ * What a Plugin registers besides its pages: the Slots it answers and the Operations it declares. An Operation
+ * has written by the time it answers, so the paged lists read before then are stale.
+ */
+function providers(
   calls: KitCalls,
-): Pick<KitParts, 'slots' | 'operations' | 'loaderPages'> => ({
-  slots: slotProviders(calls.slots),
-  operations: operationHandlers(calls.operations),
-  loaderPages: loader.loaderPages(calls.pages),
-});
+): Pick<KitParts, 'slots' | 'operations' | 'loaderPages'> {
+  const pages = loader.loaderPages(calls.pages);
+  const operations = operationHandlers(pages.forgetting(calls.operations));
+
+  return { slots: slotProviders(calls.slots), operations, loaderPages: pages };
+}
 
 function pageKit(parts: KitParts): Kit {
   const { data, pages, slots, operations, loaderPages } = parts;

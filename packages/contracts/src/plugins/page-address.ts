@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { PluginOperationName, PluginOperationParams } from '#plugin-operations';
-import { PageValue } from '#plugin-wire-action';
+import { PageStateValue } from '#plugin-wire-action';
 import { WireJson } from '#plugin-wire-json';
 
 /*
  * A Loader page's address (ADR-0050): the Plugin, the Page path, the Page state and the context it opens
  * for. One address always draws the same Plugin tree from the same reads, so the App keys its cache by it.
  */
-// Scalars only, so an address is a flat cache key.
-export const PageState = z.record(z.string(), PageValue);
+// Scalars and selections only, so an address stays a flat cache key.
+export const PageState = z.record(z.string(), PageStateValue);
 
 export type PageState = z.infer<typeof PageState>;
 
@@ -55,12 +55,13 @@ export const StaleMark = z.strictObject({
 
 export type StaleMark = z.infer<typeof StaleMark>;
 
-// The worker's side of a draw: the tree it drew, why it could not, or a Page path pattern it defined.
+// The worker's side of a draw: the tree it drew and the pages its list shows, why it could not, or a pattern it defined.
 export const LoaderPageCall = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('drawn'),
     id: z.number().int().nonnegative(),
     root: WireJson,
+    pages: z.number().int().nonnegative(),
   }),
   z.strictObject({
     action: z.literal('failed'),

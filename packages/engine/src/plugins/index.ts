@@ -6,7 +6,7 @@ export { PluginService } from './service';
 
 export { PluginOperationService } from './operations';
 
-export { LoaderPages, type PageAnswer } from './pages';
+export { LoaderPages } from './pages';
 
 export type { PluginServiceDeps } from './located-plugins';
 

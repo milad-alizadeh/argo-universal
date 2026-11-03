@@ -134,10 +134,11 @@ export const PluginEvent = z.union([
     params: PluginOperationParams,
     caller: PluginOperationCaller,
   }),
-  // One draw of a Loader page at its address (ADR-0050); it answers by `id` with the Plugin tree.
+  // One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050); it answers by `id`.
   PageAddress.omit({ pluginId: true }).extend({
     type: z.literal('draw'),
     id: z.number().int().nonnegative(),
+    pages: z.number().int().positive(),
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({

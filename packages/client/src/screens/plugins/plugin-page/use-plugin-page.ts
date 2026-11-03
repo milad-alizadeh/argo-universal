@@ -1,55 +1,44 @@
-import type { PageState } from '@repo/contracts/plugins/page-address';
-import type {
-  OperationCall,
-  PageCall,
-  PageStateChange,
-  WireNode,
-} from '@repo/contracts/plugins/wire';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useTRPC, useTRPCClient } from '#features/connection';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import { putBack, showOptimistic, type Answer } from './draw-cache';
+import {
+  drawOptions,
+  useDrawing,
+  type Address,
+  type Answer,
+  type Drawing,
+} from './draw-cache';
 import { usePageStateMemory } from './page-state-memory';
+import {
+  usePageCalls,
+  type OnPageCall,
+  type PageOpening,
+} from './use-page-calls';
 import { freshMs, usePrefetch } from './use-prefetch';
 
-// Which Loader page, and the Project or Session it opened for; the Page state is the page's own.
-export type PageOpening = {
-  pluginId: string;
-  path: string;
-  projectId?: string;
-  sessionId?: string;
-};
+export type { PageOpening } from './use-page-calls';
 
-export type PluginPageState = {
-  root: WireNode | null;
-  onPageCall: (call: PageCall) => Promise<void>;
-};
+export type PluginPageState = { root: WireNode | null; onPageCall: OnPageCall };
 
 /*
  * One Loader page on the connected Server (ADR-0050): its Plugin tree is a query keyed by its Page
- * address, so a revisit draws the kept tree at once and asks again behind it, and a Page state change
- * keeps the tree on screen until the next address has drawn. Only a focused screen asks again, and the
- * Loader pages its first links open are drawn ahead.
+ * address, so a revisit draws the kept tree at once and asks again behind it, naming what it keeps so an
+ * unchanged page costs no tree. A Page state change keeps the tree on screen until the next address has
+ * drawn; load more appends the next page's rows; a bound search or selection changes the Page state once
+ * the edits pause. Only a focused screen asks again, and the Loader pages its first links open are drawn ahead.
  */
 export function usePluginPage(opening: PageOpening): PluginPageState {
-  const [pageState, setPageState] = usePageStateMemory(opening);
-  const root = useLastDrawn(useDrawn({ ...opening, pageState }));
-  const run = useOperationRun(opening);
-  const change = usePageStateChange(opening, [pageState, setPageState]);
+  const drawing = useDrawing();
+  const memory = usePageStateMemory(opening);
+  const address = { ...opening, pageState: memory[0] };
+  const root = useLastDrawn(useDrawn(drawing, address));
+  const onPageCall = usePageCalls({ drawing, opening, memory });
 
   usePrefetch(opening, root);
 
-  return {
-    root,
-    onPageCall: (call) => ('operation' in call ? run(call) : change(call)),
-  };
+  return { root, onPageCall };
 }
 
 // A failed answer leaves the last tree on screen, with its toast, as an App offline draws its last answer.
@@ -68,11 +57,9 @@ const rootOf = (answer: Answer | undefined): WireNode | null =>
 const isNewer = (root: WireNode | null, last: WireNode | null): boolean =>
   root !== null && root !== last;
 
-function useDrawn(
-  address: PageOpening & { pageState: PageState },
-): Answer | undefined {
+function useDrawn(drawing: Drawing, address: Address): Answer | undefined {
   const { data } = useQuery({
-    ...useTRPC().plugins.draw.queryOptions(address),
+    ...drawOptions(drawing, address),
     placeholderData: keepPreviousData,
     staleTime: freshMs,
     subscribed: useScreenFocused(),
@@ -89,48 +76,3 @@ const failureOf = (
   answer?.ok === false
     ? { title: 'This page could not load', message: answer.error }
     : undefined;
-
-// The List keeps its spinner until the next address has drawn; an empty change asks again from fresh reads.
-function usePageStateChange(
-  opening: PageOpening,
-  [pageState, setPageState]: [PageState, (next: PageState) => void],
-): (call: PageStateChange) => Promise<void> {
-  const draws = useTRPC().plugins.draw;
-  const client = useQueryClient();
-
-  return async ({ pageState: change }) => {
-    const next = { ...pageState, ...change };
-
-    await client.fetchQuery(
-      draws.queryOptions({ ...opening, pageState: next }),
-    );
-    setPageState(next);
-  };
-}
-
-/*
- * An Operation call: the nodes it names show their optimistic props at once and the Operation runs. Its
- * settled trees come from the Server's stale mark (useStaleMarks), which also reaches the other Apps; a
- * failure puts the trees back and says why.
- */
-function useOperationRun({
-  pluginId,
-  projectId,
-  sessionId,
-}: PageOpening): (call: OperationCall) => Promise<void> {
-  const run = useTRPCClient().plugins.run;
-  const cache = { client: useQueryClient(), draws: useTRPC().plugins.draw };
-
-  // An Operation belongs to the Plugin, not to the page it was called from.
-  const { mutateAsync } = useMutation({
-    mutationFn: ({ operation, args }: OperationCall) =>
-      run.mutate({ pluginId, projectId, sessionId, operation, args }),
-    onMutate: (call) => showOptimistic(cache, call),
-    onError: (error, _call, before) => putBack(cache.client, error, before),
-  });
-
-  // The toast already said why a call failed.
-  return (call) => mutateAsync(call).then(noAnswer, noAnswer);
-}
-
-const noAnswer = (): void => undefined;

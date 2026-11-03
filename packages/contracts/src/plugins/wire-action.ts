@@ -54,8 +54,13 @@ export const PageValue = z.union([
 
 export type PageValue = z.infer<typeof PageValue>;
 
+// Page state also holds a selection, as the row ids a List or Table reports.
+export const PageStateValue = z.union([PageValue, z.array(z.string())]);
+
+export type PageStateValue = z.infer<typeof PageStateValue>;
+
 export const PageStateChange = z.strictObject({
-  pageState: z.record(z.string(), PageValue),
+  pageState: z.record(z.string(), PageStateValue),
 });
 
 export const OperationCall = z.strictObject({
@@ -75,7 +80,25 @@ export type PageStateChange = z.infer<typeof PageStateChange>;
 
 export type OperationCall = z.infer<typeof OperationCall>;
 
-export const PageCall = z.union([PageStateChange, OperationCall]);
+// A paged list's next page: the App asks for one more page of the address it shows and appends what comes back.
+export const LoadMore = z.strictObject({ loadMore: z.literal(true) });
+
+export type LoadMore = z.infer<typeof LoadMore>;
+
+/*
+ * A search's text or a selection that is Page state: the kit component holds what the person typed or chose at once,
+ * and the App puts the event's value into the Page state key `bind` names once the edits pause.
+ */
+export const PageBind = z.strictObject({ bind: z.string().min(1) });
+
+export type PageBind = z.infer<typeof PageBind>;
+
+export const PageCall = z.union([
+  PageStateChange,
+  OperationCall,
+  LoadMore,
+  PageBind,
+]);
 
 export type PageCall = z.infer<typeof PageCall>;
 

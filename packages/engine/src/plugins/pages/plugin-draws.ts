@@ -15,9 +15,14 @@ const drawLimitMs = 30_000;
 
 type Caller = { pluginId: string; generation: number };
 
-export type Drawn = { ok: true; root: WireJson } | { ok: false; error: string };
+export type Drawn =
+  | { ok: true; root: WireJson; pages: number }
+  | { ok: false; error: string };
 
 type Pending = Caller & { settle: (drawn: Drawn) => void };
+
+// An address and how many pages of its paged list the App shows.
+type DrawAt = Omit<PageAddress, 'pluginId'> & { pages: number };
 
 export type DrawTransport = {
   send: (pluginId: string, event: PluginEvent) => void;
@@ -31,7 +36,9 @@ type Answered = Extract<LoaderPageCall, { id: number }>;
 type StaleListener = (pluginId: string) => void;
 
 const drawnOf = (call: Answered): Drawn =>
-  call.action === 'drawn' ? { ok: true, root: call.root } : failed(call.error);
+  call.action === 'drawn'
+    ? { ok: true, root: call.root, pages: call.pages }
+    : failed(call.error);
 
 /*
  * The runtime side of Loader pages (ADR-0050): each draw is one call to the running worker generation,
@@ -60,10 +67,7 @@ export class PluginDraws {
     return [...(this.patterns.get(pluginId) ?? [])];
   }
 
-  public draw(
-    pluginId: string,
-    address: Omit<PageAddress, 'pluginId'>,
-  ): Promise<Drawn> {
+  public draw(pluginId: string, address: DrawAt): Promise<Drawn> {
     const generation = this.running.get(pluginId);
 
     if (generation === undefined)
@@ -72,10 +76,7 @@ export class PluginDraws {
     return this.call({ pluginId, generation }, address);
   }
 
-  private call(
-    caller: Caller,
-    address: Omit<PageAddress, 'pluginId'>,
-  ): Promise<Drawn> {
+  private call(caller: Caller, address: DrawAt): Promise<Drawn> {
     const id = this.next++;
     const { promise, resolve } = Promise.withResolvers<Drawn>();
     const cancel = this.deadline(address.path, resolve);

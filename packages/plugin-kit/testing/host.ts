@@ -8,15 +8,13 @@ import {
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
 import {
-  LoaderPages,
-  PluginOperationService,
   PluginService,
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
 import { itemsConnection } from './test-connection';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
-import { testOperations } from './test-operations';
+import { testOperations, testPages } from './test-operations';
 import { TestProjects } from './test-projects';
 import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
 import { serviceFor } from './test-services';
@@ -54,6 +52,7 @@ class HostedPlugin implements PluginTest {
     this.service.failures(signal);
   private readonly runtime: PluginRuntime;
   private readonly service: PluginService;
+  readonly pages: PluginTest['pages'];
   readonly projects;
   private readonly views = new Set<PluginTestView>();
   readonly session = testSession;
@@ -76,6 +75,10 @@ class HostedPlugin implements PluginTest {
     this.runtime = runtimeFor(home, options);
     this.projects = new TestProjects(options, this.runtime);
     this.service = serviceFor(home, options, this.runtime);
+    this.pages = testPages(
+      { service: this.service, runtime: this.runtime },
+      options.pluginId,
+    );
   }
 
   get settings(): Map<string, PluginSettingValue> {
@@ -142,18 +145,6 @@ class HostedPlugin implements PluginTest {
     const { service, runtime } = this;
 
     return testOperations({ service, runtime }, this.options.pluginId);
-  }
-
-  get pages(): PluginTest['pages'] {
-    const { service, runtime } = this;
-    const { pluginId } = this.options;
-    const operations = new PluginOperationService(service, runtime.operations);
-    const pages = new LoaderPages(service, runtime.draws, operations);
-
-    return {
-      draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }),
-      run: (input) => pages.run({ pluginId, ...input }),
-    };
   }
 
   private open(

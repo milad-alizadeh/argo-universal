@@ -132,9 +132,12 @@ export type { Argo } from '@repo/contracts/plugins/argo-api';
 
 // A Loader page and the values its Render puts in Component events (ADR-0050).
 export type {
+  ListPage,
   LoaderInput,
   LoaderPage,
+  PagedList,
   PageTo,
+  RenderInput,
 } from '@repo/contracts/plugins/loader-page-api';
 
 // The items a Plugin answers an add-only Slot with: Argo draws each one as a row (ADR-0046).

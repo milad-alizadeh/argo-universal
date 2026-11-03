@@ -1,19 +1,86 @@
 import { matchPagePath } from '@repo/contracts/plugins/page-address';
+import type { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import type { OperationCall, WireNode } from '@repo/contracts/plugins/wire';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
-import type { Query, QueryClient } from '@tanstack/react-query';
+import {
+  useQueryClient,
+  type Query,
+  type QueryClient,
+  type QueryKey,
+} from '@tanstack/react-query';
 import { z } from 'zod';
-import type { useTRPC } from '#features/connection';
+import { useTRPC, useTRPCClient } from '#features/connection';
+import { keptAfter, type Answer, type Kept } from './kept-tree';
 
-export type Answer =
-  | { ok: true; root: WireNode }
-  | { ok: false; error: string };
+export type { Answer } from './kept-tree';
 
 // The App's kept Plugin trees: every Loader page address drawn, under one tRPC query path.
 export type DrawCache = {
   client: QueryClient;
   draws: ReturnType<typeof useTRPC>['plugins']['draw'];
 };
+
+// The cache and the call that asks the Server for a draw.
+export type Drawing = DrawCache & {
+  ask: ReturnType<typeof useTRPCClient>['plugins']['draw']['query'];
+};
+
+export type Address = Omit<DrawRequest, 'pages' | 'known'>;
+
+export function useDrawing(): Drawing {
+  return {
+    client: useQueryClient(),
+    draws: useTRPC().plugins.draw,
+    ask: useTRPCClient().plugins.draw.query,
+  };
+}
+
+export type DrawOptions = {
+  queryKey: QueryKey;
+  queryFn: () => Promise<Answer>;
+};
+
+/*
+ * A draw's query, keyed by its address alone: the App sends the hash and page count of what it keeps, which
+ * are not part of the key, so an unchanged answer keeps the same tree, object and all.
+ */
+export const drawOptions = (
+  drawing: Drawing,
+  address: Address,
+): DrawOptions => ({
+  queryKey: drawing.draws.queryKey(address),
+  queryFn: () => drawFresh(drawing, address),
+});
+
+// The address drawn again, showing `pages` pages, or as many as it shows now; at least one.
+export async function drawFresh(
+  drawing: Drawing,
+  address: Address,
+  pages?: number,
+): Promise<Answer> {
+  const kept = keptAt(drawing, address);
+
+  const answer = await drawing.ask({
+    ...address,
+    pages: pages ?? shownOf(kept),
+    known: kept?.hash,
+  });
+
+  return keptAfter(kept, answer);
+}
+
+const keptAt = (
+  { client, draws }: Drawing,
+  address: Address,
+): Kept | undefined =>
+  treeOf(client.getQueryData<Answer>(draws.queryKey(address)));
+
+const treeOf = (answer: Answer | undefined): Kept | undefined =>
+  answer?.ok ? answer : undefined;
+
+// A page with no paged list shows none of its pages, but its draw still asks for one.
+const shownOf = (kept: Kept | undefined): number =>
+  Math.max(1, kept?.pages ?? 1);
 
 type Snapshot = [readonly unknown[], Answer | undefined][];
 
@@ -35,9 +102,7 @@ export async function showOptimistic(
 
   const before = client.getQueriesData<Answer>(filter);
 
-  client.setQueriesData<Answer>(filter, (answer) =>
-    answer?.ok ? { ...answer, root: patched(answer.root, patches) } : answer,
-  );
+  client.setQueriesData<Answer>(filter, patchedAnswer(patches));
 
   return before;
 }
@@ -56,6 +121,13 @@ export function putBack(
 }
 
 type Patches = Map<string, WireNode['props']>;
+
+const patchedAnswer =
+  (patches: Patches) =>
+  (answer: Answer | undefined): Answer | undefined =>
+    answer?.ok
+      ? { ...answer, root: patched(answer.root, patches), hash: undefined }
+      : answer;
 
 // A node's slots are walked as its children are: a row's menu Action sits in its `actions` slot.
 function patched(node: WireNode, patches: Patches): WireNode {
@@ -109,7 +181,7 @@ const markAgain =
       { cancelRefetch: false },
     );
 
-type Address = { pluginId: string; path: string };
+type Keyed = { pluginId: string; path: string };
 
 // A draw query's key holds its address as tRPC's input.
 const DrawKey = z.tuple([
@@ -117,14 +189,14 @@ const DrawKey = z.tuple([
   z.object({ input: z.object({ pluginId: z.string(), path: z.string() }) }),
 ]);
 
-const addressOf = (query: Query): Address | null => {
+const addressOf = (query: Query): Keyed | null => {
   const parsed = DrawKey.safeParse(query.queryKey);
 
   return parsed.success ? parsed.data[1].input : null;
 };
 
 const isStale = (
-  address: Address | null,
+  address: Keyed | null,
   pluginId: string,
   stale: readonly string[],
 ): boolean =>
