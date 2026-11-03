@@ -78,13 +78,16 @@ export async function signedIn(projects = [project]): Promise<Tracked> {
   return tracked;
 }
 
+// The one App every page of a journey opens on, as its list and pages share the Project it shows.
+export const onApp = {
+  surface: { platform: 'web' as const },
+  connectionId: 'one-app',
+};
+
 export async function issuesRoot(): Promise<Tracked & { root: PageView }> {
   const tracked = await signedIn();
 
-  const root = await tracked.test.mount({
-    page: '/',
-    surface: { platform: 'web' },
-  });
+  const root = await tracked.test.mount({ page: '/', ...onApp });
 
   return { ...tracked, root };
 }
@@ -108,7 +111,7 @@ export async function follow(
 
   const page = linkedPage(view, text);
 
-  return test.mount({ page, surface: { platform: 'web' } });
+  return test.mount({ page, ...onApp });
 }
 
 export async function openIssue(title: string): Promise<PageView> {

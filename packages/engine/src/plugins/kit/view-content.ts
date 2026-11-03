@@ -34,9 +34,11 @@ function withOpened(context: Context, { projectId, sessionId }: Open): Context {
   return context;
 }
 
-// What a page reads from its context: the Connection's surface, then what the view opened for.
+// What a page reads from its context: its Connection and that Connection's surface, then what the view opened for.
 function renderContext(open: Open): PluginRenderContext {
   const context: Context = { serverDevice: open.serverDevice === true };
+
+  if (open.connectionId !== undefined) context.connectionId = open.connectionId;
 
   if (open.surface) context.surface = frozenSurface(open.surface);
 

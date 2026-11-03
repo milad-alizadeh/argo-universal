@@ -99,6 +99,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `mount({ page, surface })` | Opens a page with the chosen App platform. |
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
 | `mount({ page, surface, serverDevice: true })` | Opens a page as the Server Device does. A mount is a paired Device without it. |
+| `mount({ page, surface, connectionId })` | Opens pages on one App's Connection. Each mount is its own Connection without it. |
 | `accounts` | `list()` the Accounts signed in, and `choose({ host, projectId, account })` the one a Project uses. |
 | `openBrowser` option | Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
@@ -178,6 +179,8 @@ Argo clamps `every` to ten seconds and logs the clamp once. Shared viewers use t
 Storage Queries are never polled. A committed Plugin storage write marks them due.
 
 A component deep in a page reads the page's own `context` with `usePageContext()`.
+
+Every connected App reaches the same worker, so state one App's pages share, such as which item its list shows, is keyed by `context.connectionId`. The id is opaque and new each time the App connects.
 
 Code with no view, such as an items Slot's provider, reads the same entry once:
 

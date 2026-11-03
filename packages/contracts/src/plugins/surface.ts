@@ -25,6 +25,12 @@ export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
 // Render context belongs to one App; a Connection that reports no surface draws no Plugin wire.
 export type PluginRenderContext = Readonly<{
   serverDevice: boolean;
+  /*
+   * The Connection the page's view belongs to: opaque, and new each time the App connects. Plugin state one App's
+   * pages share, such as which item its list shows, is kept per Connection, as every connected App reaches the same
+   * worker.
+   */
+  connectionId?: string;
   projectId?: string;
   sessionId?: string;
   surface?: Readonly<PluginSurface>;

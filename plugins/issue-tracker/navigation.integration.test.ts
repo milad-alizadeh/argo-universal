@@ -4,6 +4,7 @@ import {
   issuesRoot,
   issueTitle,
   linkedPage,
+  onApp,
   project,
   signedIn,
   wait,
@@ -98,7 +99,7 @@ it('opens a filter list, then an Issue from it, on pages beside the one list', a
 it('shows the Project the shown page belongs to in the one list', async () => {
   const other = { ...project, id: 'project-2', name: 'Other Project' };
   const { test } = await signedIn([project, other]);
-  const root = await test.mount({ page: '/', surface: { platform: 'web' } });
+  const root = await test.mount({ page: '/', ...onApp });
   await expect.poll(() => root.findText(other.name), wait).toBeDefined();
   expect(selected(root, project.name)).toBe(true);
   expect(linkedPage(root, 'Open')).toBe('/projects/project-1/filters/open');
@@ -112,6 +113,23 @@ it('shows the Project the shown page belongs to in the one list', async () => {
   const detail = await follow(test, list, issueTitle);
   await expect.poll(() => detail.findText('Start Session'), wait).toBeDefined();
   expect(selected(root, other.name)).toBe(true);
+}, 20_000);
+
+it('leaves another App’s list on its own Project', async () => {
+  const other = { ...project, id: 'project-2', name: 'Other Project' };
+  const { test } = await signedIn([project, other]);
+  const root = await test.mount({ page: '/', ...onApp });
+
+  const elsewhere = await test.mount({
+    page: '/',
+    surface: { platform: 'web' },
+    connectionId: 'another-app',
+  });
+
+  await follow(test, root, other.name);
+  await expect.poll(() => selected(root, other.name), wait).toBe(true);
+  expect(selected(elsewhere, project.name)).toBe(true);
+  expect(selected(elsewhere, other.name)).toBe(false);
 }, 20_000);
 
 it('shows an empty list for a filter with no Issues', async () => {

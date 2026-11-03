@@ -4,21 +4,26 @@ import type { Project } from './issue-project';
 export type ProjectsRead = { projects?: Project[]; failed?: boolean };
 
 /*
- * The Projects, and which of them the section is showing, shared by the one live list and the pages beside it. Opening a
- * page lists nothing: the list loads them, and a page that names a Project asks only when it does not know that one.
+ * The Projects, and which of them each App's section is showing, shared by its one live list and the pages beside it.
+ * Opening a page lists nothing: the list loads them, and a page that names a Project asks only when it does not know
+ * that one. Every connected App reaches this one store, so the choice is kept per Connection: one App's page never
+ * changes the Project another App's list shows.
  */
 export type IssueProjects = {
   read: () => ProjectsRead;
-  chosenId: () => string | undefined;
+  chosenId: (connection: Connection) => string | undefined;
   // The Projects as they are now, sharing a call already on its way.
   refresh: () => Promise<Project[]>;
   // The Projects known already, or the first call for them.
   known: () => Promise<Project[]>;
-  choose: (id: string) => void;
+  choose: (connection: Connection, id: string) => void;
   subscribe: (listener: () => void) => () => void;
 };
 
 type List = Argo['projects']['list'];
+
+// The Connection a page's view belongs to; a page opened with none shares the one choice such pages have.
+type Connection = string | undefined;
 
 // One call at a time: asking while one is on its way shares it.
 function sharedCall<T>(run: () => Promise<T>): () => Promise<T> {
@@ -61,14 +66,14 @@ function createProjectsRead(list: List, tell: () => void): ProjectsReader {
 function createProjectChoice(
   tell: () => void,
 ): Pick<IssueProjects, 'chosenId' | 'choose'> {
-  let chosen: string | undefined;
+  const chosen = new Map<Connection, string>();
 
   return {
-    chosenId: () => chosen,
-    choose: (id) => {
-      if (id === chosen) return;
+    chosenId: (connection) => chosen.get(connection),
+    choose: (connection, id) => {
+      if (chosen.get(connection) === id) return;
 
-      chosen = id;
+      chosen.set(connection, id);
       tell();
     },
   };

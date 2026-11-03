@@ -1,4 +1,4 @@
-import { useEffect, useState } from '@argo/plugin-kit';
+import { useEffect, usePageContext, useState } from '@argo/plugin-kit';
 import { loadingIssues } from './filter-shown';
 import type { IssueDeps } from './issue-deps';
 import type { Project } from './issue-project';
@@ -31,6 +31,7 @@ export type RootProjects = {
 export function useRootProjects(deps: IssueDeps): RootProjects {
   const { projects: source } = deps;
   const read = useIssueProjects(source);
+  const { connectionId } = usePageContext();
 
   useEffect(() => {
     void source.refresh();
@@ -40,7 +41,7 @@ export function useRootProjects(deps: IssueDeps): RootProjects {
 
   return {
     projects: shown,
-    project: projectChosen(shown, source.chosenId()),
+    project: projectChosen(shown, source.chosenId(connectionId)),
     message: rootMessage(read),
     settled: read.projects !== undefined || read.failed === true,
   };
@@ -81,11 +82,12 @@ export function usePageProject(deps: IssueDeps, id: string): PageProject {
   const { projects: source } = deps;
   const { projects, failed } = useIssueProjects(source);
   const project = projects?.find((candidate) => candidate.id === id);
+  const { connectionId } = usePageContext();
 
   useEffect(() => {
-    source.choose(id);
+    source.choose(connectionId, id);
     void listUnlessKnown(source, id);
-  }, [source, id]);
+  }, [source, connectionId, id]);
 
   return { project, message: projectsMessage(projects, failed, goneMessage) };
 }

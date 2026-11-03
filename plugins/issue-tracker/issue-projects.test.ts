@@ -55,10 +55,20 @@ describe('the section’s Projects', () => {
     const told = vi.fn<() => void>();
 
     projects.subscribe(told);
-    projects.choose('project-2');
-    projects.choose('project-2');
+    projects.choose('app-1', 'project-2');
+    projects.choose('app-1', 'project-2');
 
-    expect(projects.chosenId()).toBe('project-2');
+    expect(projects.chosenId('app-1')).toBe('project-2');
     expect(told).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps each App’s choice apart', () => {
+    const { projects } = listing();
+
+    projects.choose('app-1', 'project-2');
+    projects.choose('app-2', 'project-3');
+
+    expect(projects.chosenId('app-1')).toBe('project-2');
+    expect(projects.chosenId('app-2')).toBe('project-3');
   });
 });
