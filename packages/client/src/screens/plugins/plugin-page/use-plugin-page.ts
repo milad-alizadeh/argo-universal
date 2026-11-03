@@ -17,7 +17,6 @@ import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { putBack, showOptimistic, type Answer } from './draw-cache';
 import { usePageStateMemory } from './page-state-memory';
 import { freshMs, usePrefetch } from './use-prefetch';
-import { useStaleMarks } from './use-stale-marks';
 
 // Which Loader page, and the Project or Session it opened for; the Page state is the page's own.
 export type PageOpening = {
@@ -44,7 +43,6 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
   const run = useOperationRun(opening);
   const change = usePageStateChange(opening, [pageState, setPageState]);
 
-  useStaleMarks();
   usePrefetch(opening, root);
 
   return {
