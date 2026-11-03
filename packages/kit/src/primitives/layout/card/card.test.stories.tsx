@@ -1,18 +1,12 @@
 import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { View } from 'react-native';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
-import { readMotion } from '#mocks/motion-samples';
-import { settleLayout } from '#mocks/story-layout';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { Svg } from '#primitives/visual';
-import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
-import { SettlingContent } from '../collapsible/collapsible-motion-fixtures';
 import { Card } from './card';
-import { collapsedCard, expandedCard, footerCard } from './card-fixtures';
-import type { CardProps } from './card-props';
+import { collapsedCard, footerCard } from './card-fixtures';
 
 const mediaXml = fixtures.valid[0]?.xml ?? '';
 
@@ -183,82 +177,3 @@ export const ActionsStayBesideTheTrigger: Story = {
     ).toHaveAttribute(expanded, 'false');
   },
 };
-
-const nextCard = 'Next card';
-
-// Long enough for the fold and the rest after it.
-const foldFrames = 40;
-
-interface FoldSample {
-  titleTop: number;
-  width: number;
-  belowTop: number;
-}
-
-function sampleFold(parts: Record<keyof FoldSample, HTMLElement>): FoldSample {
-  return {
-    titleTop: parts.titleTop.getBoundingClientRect().top,
-    width: parts.width.getBoundingClientRect().width,
-    belowTop: parts.belowTop.getBoundingClientRect().top,
-  };
-}
-
-// Presses the title row once and samples every frame after, starting from how things stood before the press.
-async function foldOnce(
-  parts: Record<keyof FoldSample, HTMLElement>,
-): Promise<FoldSample[]> {
-  const before = sampleFold(parts);
-
-  const after = await sampleEachFrame(
-    () => parts.titleTop.click(),
-    () => sampleFold(parts),
-    foldFrames,
-  );
-
-  return [before, ...after];
-}
-
-// The title row holds still, the card keeps its width, and the card below moves one way with no frame that jumps.
-async function expectSteadyFold(samples: readonly FoldSample[]): Promise<void> {
-  const titleTops = new Set(samples.map((sample) => sample.titleTop));
-  const widths = new Set(samples.map((sample) => sample.width));
-  await expect(titleTops.size).toBe(1);
-  await expect(widths.size).toBe(1);
-  const motion = readMotion(samples.map((sample) => sample.belowTop));
-  await expect(motion.reversals).toBe(0);
-  await expect(motion.overshoot).toBeLessThanOrEqual(1);
-  await expect(motion.largestStepShare).toBeLessThan(0.5);
-}
-
-// A card whose body grows a frame after it mounts, as a Plugin's tree does, with a card below it.
-function foldStory(args: CardProps): Story {
-  return {
-    args: {
-      ...args,
-      children: <SettlingContent first={40} last={160} settles="next-frame" />,
-    },
-    render: (storyArgs) => (
-      <View className="gap-4">
-        <Card {...storyArgs} />
-        <Text>{nextCard}</Text>
-      </View>
-    ),
-    play: async ({ canvas }) => {
-      await settleLayout('wide');
-
-      const parts = {
-        titleTop: canvas.getByRole('button', { name: toggleName }),
-        width: canvas.getByRole('group', { name: title }),
-        belowTop: canvas.getByText(nextCard),
-      };
-
-      await expectSteadyFold(await foldOnce(parts));
-    },
-  };
-}
-
-// Unfolding, the title row stays put, the card keeps its width, and the card below moves down once with no frame that jumps.
-export const UnfoldsWithoutMovingTheTitle = foldStory(collapsedCard);
-
-// Folding, the title row stays put, the card keeps its width, and the card below moves up once with no frame that jumps.
-export const FoldsWithoutMovingTheTitle = foldStory(expandedCard);

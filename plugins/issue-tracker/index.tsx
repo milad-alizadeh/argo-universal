@@ -8,7 +8,6 @@ import { createIssuePages } from './issue-pages';
 import { createIssueProjects } from './issue-projects';
 import { IssuesRoot } from './issue-root';
 import { createIssueSeeds } from './issue-seeds';
-import { createLinkChanges } from './session-link-changes';
 import { registerSessionFills } from './session-slots';
 import { createTrackerStorage } from './tracker-storage';
 
@@ -20,7 +19,6 @@ function createDeps(api: Argo): IssueDeps {
     fetch: api.fetch,
     storage: createTrackerStorage(api),
     changes: createIssueChanges(),
-    links: createLinkChanges(),
     seeds: createIssueSeeds(),
   };
 

@@ -1,110 +1,136 @@
-import { type ComponentType, type ReactElement, useContext } from 'react';
-import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import {
+  type ReactElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { type LayoutChangeEvent, View } from 'react-native';
+import Animated, {
+  ReduceMotion,
+  runOnJS,
+  type SharedValue,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useAnimatedStyle } from '../../../animated-hooks';
 import {
-  CollapsibleLayoutSyncContext,
+  CollapsibleContext,
   contentAccessibility,
-  movingContentStyle,
-  OpenContext,
+  duration,
 } from './collapsible-context';
-import { LayoutSyncedContent } from './collapsible-layout-content';
-import { useNativeContentMotion } from './collapsible-native-motion';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
-import { CollapsibleRegion } from './collapsible-region';
 
-type NativeMotion = ReturnType<typeof useNativeContentMotion>;
+const timing = { duration, reduceMotion: ReduceMotion.System };
 
-type NativeHeightProps = {
-  contentProps: ContentProps;
-  motion: NativeMotion;
-  open: boolean;
-  children: ReactElement;
-};
+// The content lies out of the flow at its own height, which the clipping view reaches as it opens.
+const measuredStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+} as const;
 
-function NativeHeight(props: NativeHeightProps): ReactElement {
-  const { motion, open, children } = props;
-  const style = useNativeHeightStyle(motion);
+interface Motion {
+  height: SharedValue<number>;
+  progress: SharedValue<number>;
+  unmount: () => void;
+}
 
-  return (
-    <CollapsibleRegion contentProps={props.contentProps}>
-      <Animated.View style={style} {...contentAccessibility(open)}>
-        {children}
-      </Animated.View>
-    </CollapsibleRegion>
+function move(motion: Motion, open: boolean): void {
+  motion.progress.set(
+    withTiming(open ? 1 : 0, timing, (finished) => {
+      if (finished && !open) runOnJS(motion.unmount)();
+    }),
   );
 }
 
-type NativeHeightStyle = { height: number; overflow: 'hidden' };
+function useMounted(open: boolean): [boolean, () => void] {
+  const [mounted, setMounted] = useState(open);
+  const latestOpen = useRef(open);
 
-function useNativeHeightStyle({
+  if (open && !mounted) setMounted(true);
+
+  useLayoutEffect(() => {
+    latestOpen.current = open;
+  }, [open]);
+
+  // A close that finished after the content was reopened must not unmount it.
+  return [
+    mounted,
+    useCallback(() => {
+      if (!latestOpen.current) setMounted(false);
+    }, []),
+  ];
+}
+
+// Reanimated's measured accordion: the UI thread draws height × progress, so content that changes size is followed.
+function useMotion(open: boolean): Motion & { mounted: boolean } {
+  const height = useSharedValue(0);
+  const progress = useSharedValue(open ? 1 : 0);
+  const [mounted, unmount] = useMounted(open);
+
+  useEffect(() => {
+    // Opening for the first time waits for the content's measurement.
+    if (!open || height.get() > 0) move({ height, progress, unmount }, open);
+  }, [open, height, progress, unmount]);
+
+  return { height, progress, unmount, mounted };
+}
+
+function measure(
+  motion: Motion,
+  open: boolean,
+  event: LayoutChangeEvent,
+): void {
+  const first = motion.height.get() === 0;
+
+  motion.height.set(event.nativeEvent.layout.height);
+
+  if (open && first) move(motion, open);
+}
+
+function useClip({
   height,
   progress,
-}: NativeMotion): ReturnType<typeof useAnimatedStyle<NativeHeightStyle>> {
+}: Motion): ReturnType<
+  typeof useAnimatedStyle<{ height: number; overflow: 'hidden' }>
+> {
   return useAnimatedStyle(
     () => ({ height: height.get() * progress.get(), overflow: 'hidden' }),
     [height, progress],
   );
 }
 
-type NativeMeasuredContentProps = {
-  motion: NativeMotion;
-  className?: string;
-  children: ContentProps['children'];
-};
+interface NativeContent {
+  mounted: boolean;
+  clip: ReturnType<typeof useClip>;
+  onLayout: (event: LayoutChangeEvent) => void;
+}
 
-function NativeMeasuredContent({
-  motion,
-  className,
-  children,
-}: NativeMeasuredContentProps): ReactElement {
+function useNativeContent(open: boolean): NativeContent {
+  const motion = useMotion(open);
+  const clip = useClip(motion);
+
+  return {
+    mounted: motion.mounted,
+    clip,
+    onLayout: (event) => measure(motion, open, event),
+  };
+}
+
+export function DrawnContent(props: ContentProps): ReactElement | null {
+  const { forceMount, ...view } = props;
+  const { open } = useContext(CollapsibleContext);
+  const { mounted, clip, onLayout } = useNativeContent(open);
+
+  if (!mounted && !forceMount) return null;
+
   return (
-    <View
-      className={className}
-      style={movingContentStyle}
-      onLayout={motion.onLayout}
-    >
-      {children}
-    </View>
+    <Animated.View style={clip} {...contentAccessibility(open)}>
+      <View {...view} style={[view.style, measuredStyle]} onLayout={onLayout} />
+    </Animated.View>
   );
 }
-
-function NativeContent({
-  children,
-  className,
-  forceMount,
-  ...props
-}: ContentProps): ReactElement | null {
-  const open = useContext(OpenContext);
-  const motion = useNativeContentMotion({ open, forceMount });
-
-  if (!motion.mounted && !forceMount) return null;
-
-  return renderNativeContent(motion, open, { children, className, ...props });
-}
-
-function renderNativeContent(
-  motion: NativeMotion,
-  open: boolean,
-  { children, className, ...props }: ContentProps,
-): ReactElement {
-  return (
-    <NativeHeight motion={motion} open={open} contentProps={props}>
-      <NativeMeasuredContent motion={motion} className={className}>
-        {children}
-      </NativeMeasuredContent>
-    </NativeHeight>
-  );
-}
-
-// A phone animates the content's measured height; a layout-synced list animates with its rows instead.
-export function CollapsibleContent(props: ContentProps): ReactElement | null {
-  const layoutSync = useContext(CollapsibleLayoutSyncContext);
-
-  if (layoutSync)
-    return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
-
-  return <NativeContent {...props} />;
-}
-
-CollapsibleContent satisfies ComponentType<ContentProps>;

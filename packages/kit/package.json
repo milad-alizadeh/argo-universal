@@ -63,7 +63,6 @@
     "@lexical/react": "catalog:",
     "@lexical/rich-text": "catalog:",
     "@lexical/selection": "catalog:",
-    "@radix-ui/react-collapsible": "catalog:",
     "@radix-ui/react-context-menu": "catalog:",
     "@radix-ui/react-dialog": "catalog:",
     "@radix-ui/react-dismissable-layer": "catalog:",
