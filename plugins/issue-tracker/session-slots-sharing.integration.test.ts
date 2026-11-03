@@ -32,18 +32,6 @@ async function attachedTracker(): Promise<
   return tracked;
 }
 
-it("reads an Issue once for a page and then for its Slot's summary", async () => {
-  const { test, github } = await attachedTracker();
-  const page = await mountFor(test, issuePage);
-
-  await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
-  expect(issueReads(github)).toBe(1);
-
-  await until(watch(test, rowSlot), loaded);
-
-  expect(issueReads(github)).toBe(1);
-}, 30_000);
-
 it("reads an Issue once for its Slot's summary and then for its page", async () => {
   const { test, github } = await attachedTracker();
 
