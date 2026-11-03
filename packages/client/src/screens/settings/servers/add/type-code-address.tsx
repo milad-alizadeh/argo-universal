@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 
@@ -7,8 +8,7 @@ export interface AddressFieldProps {
   onChangeText: (value: string) => void;
 }
 
-const footer =
-  'Optional. Only if Argo can’t find the computer by itself. The other computer shows its address next to the code, as address:port.';
+const footer = `Optional. Only if ${productName} can’t find the computer by itself. The other computer shows its address next to the code, as address:port.`;
 
 /*
  * The optional Server address of the approved Enter code design (#1490, option B), a FieldGroup row as in Settings (ADR-0042). With a port, it is the only place Argo knocks and nothing is listened for, so a computer the network never announces can still be reached; a bare name is tried before the addresses the network announced.

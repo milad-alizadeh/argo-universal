@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { productName } from '../product-identity';
 import { kitComponent } from './kit';
 import {
   acceptsChildren,
@@ -23,12 +24,12 @@ export const isWireContainer = (node: WireNode): boolean =>
   Boolean(kitComponent(node.type)?.container) || hasContent(node);
 
 // Shown for a container no App can draw, and for a whole Plugin tree when the App is older than the wire minimum.
-export function updateArgoNode(key: string): WireNode {
+export function updateRequiredNode(key: string): WireNode {
   return {
     type: 'Text',
     key,
     props: {
-      children: 'Update Argo to see this',
+      children: `Update ${productName} to see this`,
       role: 'secondary',
       tone: 'muted',
     },
@@ -38,7 +39,7 @@ export function updateArgoNode(key: string): WireNode {
 }
 
 function unsupported(node: WireNode): WireNode | null {
-  return isWireContainer(node) ? updateArgoNode(node.key) : null;
+  return isWireContainer(node) ? updateRequiredNode(node.key) : null;
 }
 
 function parsedNode(node: WireNode, schema: z.ZodType): WireNode | null {

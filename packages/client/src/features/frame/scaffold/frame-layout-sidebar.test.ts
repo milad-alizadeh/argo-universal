@@ -6,9 +6,9 @@ it.each([
   { width: 1180, inspectorState: 'closed' as const },
   { width: 1440, inspectorState: 'open' as const },
 ])(
-  'an explicit sidebar request yields the Workbench at $width with the Inspector $inspectorState',
+  'the sidebar takes priority over the Workbench at $width with the Inspector $inspectorState',
   (state) => {
-    const layout = frameLayout({ ...input, ...state, sidebarRequested: true });
+    const layout = frameLayout({ ...input, ...state, sidebarRequested: false });
 
     expect(layout.list.width).toBe(312);
     expect(layout.workbench.state).toBe('auto-hidden');
@@ -48,4 +48,14 @@ it('keeps the list unavailable while the content and the Inspector need its room
 
   expect(layout.list.available).toBe(false);
   expect(layout.list.folded).toBe(true);
+});
+
+it('restores the Workbench when closing the Inspector frees enough room', () => {
+  const open = frameLayout({ ...input, inspectorState: 'open' });
+  const closed = frameLayout({ ...input, inspectorState: 'closed' });
+
+  expect(open.list.width).toBe(312);
+  expect(open.workbench.state).toBe('auto-hidden');
+  expect(closed.list.width).toBe(312);
+  expect(closed.workbench.state).toBe('docked');
 });

@@ -39,6 +39,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'onStartReachedThreshold'
     | 'drawDistance'
     | 'stickyHeaderIndices'
+    | 'alwaysRender'
     | 'keyboardDismissMode'
     | 'keyboardShouldPersistTaps'
   > & {

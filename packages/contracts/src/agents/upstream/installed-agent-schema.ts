@@ -3,7 +3,7 @@ import { AgentServerEnvironment, RegistryAgentId } from '../servers';
 import type { ACPAgent } from './registry.gen';
 import { registryAgentSchema } from './schema';
 
-const argoProperty = (
+const installedProperty = (
   schema: z.ZodObject,
   key: string,
 ): z.core.JSONSchema.JSONSchema => {
@@ -19,7 +19,7 @@ const argoProperty = (
 export const installedAgentSchema = {
   type: 'object',
   properties: {
-    id: argoProperty(RegistryAgentId, 'id'),
+    id: installedProperty(RegistryAgentId, 'id'),
     name: registryAgentSchema.properties.name,
     icon: registryAgentSchema.properties.icon,
     version: registryAgentSchema.properties.version,

@@ -20,18 +20,18 @@ const showSidebar = 'Show sidebar';
 
 const workbenchId = 'desktop-workbench';
 
-export const FoldedSidebarCanBeShown: Story = {
+export const HidingSidebarMakesRoomForTheWorkbench: Story = {
   play: async ({ canvas, userEvent }) => {
-    await expect(await canvas.findByTestId(workbenchId)).toBeVisible();
-    await userEvent.click(
-      await canvas.findByRole('button', { name: showSidebar }),
-    );
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: hideSidebar })).toBeVisible(),
-    );
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
+    await userEvent.click(
+      await canvas.findByRole('button', { name: hideSidebar }),
+    );
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+    await expect(
+      canvas.getByRole('button', { name: showSidebar }),
+    ).toBeVisible();
     await expect(canvas.getByRole('textbox', { name: 'Draft' })).toHaveValue(
       'Keep my draft',
     );
@@ -59,16 +59,15 @@ export const WideningSidebarDoesNotHideIt: Story = {
 
 export const UnavailableSidebarWaitsForSpaceBesideTheInspector: Story = {
   args: { inspectorOpen: true },
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole('button', { name: showSidebar }),
     ).toBeDisabled();
     await settleLayout('wide');
     // The sidebar re-enables on the next layout pass, which a slow runner reaches after the resize.
     await waitFor(() =>
-      expect(canvas.getByRole('button', { name: showSidebar })).toBeEnabled(),
+      expect(canvas.getByRole('button', { name: hideSidebar })).toBeEnabled(),
     );
-    await userEvent.click(canvas.getByRole('button', { name: showSidebar }));
     await expect(
       canvas.getByRole('button', { name: hideSidebar }),
     ).toBeVisible();

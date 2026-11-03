@@ -14,7 +14,8 @@ import type { RowTextProps } from './field-row-text';
 type RowTitleProps = RowTextProps & {
   title: string;
   subtitle?: string;
-  subtitleTone?: 'warning';
+  subtitleTone?: 'warning' | 'muted' | 'danger';
+  subtitleLines?: number;
 };
 
 /*
@@ -60,10 +61,27 @@ function TitleLines(props: RowTitleProps): ReactElement {
   return (
     <VStack alignment="leading">
       {title}
-      <NativeText modifiers={subtitleModifiers(warning)}>
-        {props.subtitle}
-      </NativeText>
+      <Subtitle
+        text={props.subtitle}
+        lines={props.subtitleLines}
+        color={warning}
+      />
     </VStack>
+  );
+}
+
+function Subtitle(props: {
+  text: string;
+  lines?: number;
+  color?: string;
+}): ReactElement {
+  return (
+    <NativeText
+      numberOfLines={props.lines}
+      modifiers={subtitleModifiers(props.color)}
+    >
+      {props.text}
+    </NativeText>
   );
 }
 
@@ -72,14 +90,34 @@ function TitleText(props: {
   tone: RowTextProps['tone'];
   children: string;
 }): ReactElement {
-  const lines = useEnlargedText() ? undefined : 1;
-
   return (
-    <NativeText tone={props.tone} numberOfLines={lines}>
+    <NativeText {...useTitleAppearance(props.tone)}>
       {props.children}
     </NativeText>
   );
 }
+
+type TitleAppearance = {
+  tone: RowTextProps['tone'];
+  numberOfLines: number | undefined;
+  modifiers: ReturnType<typeof foregroundStyle>[] | undefined;
+};
+
+function useTitleAppearance(tone: RowTextProps['tone']): TitleAppearance {
+  const lines = useEnlargedText() ? undefined : 1;
+  const muted = useTextColor(tone === 'muted' ? 'muted' : undefined);
+
+  return {
+    tone,
+    numberOfLines: lines,
+    modifiers: mutedModifiers(muted),
+  };
+}
+
+const mutedModifiers = (
+  color: string | undefined,
+): ReturnType<typeof foregroundStyle>[] | undefined =>
+  color ? [foregroundStyle(color)] : undefined;
 
 // A Label's title is a plain string, so the destructive tone colours the whole label.
 function useDangerStyle(

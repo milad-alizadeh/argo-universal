@@ -5,6 +5,7 @@ import {
   keyHashOf,
   keyHostLabelOf,
 } from '@repo/contracts';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type makeMdns from 'multicast-dns';
 
 export interface Announcement {
@@ -39,7 +40,7 @@ export class Identity {
   ) {
     this.instance = `${labelOf(announcement.name)}.${listing}`;
 
-    this.host = `argo-${keyHostLabelOf(announcement.key)}.local`;
+    this.host = `${productCompatibility.discoveryHostPrefix}-${keyHostLabelOf(announcement.key)}.local`;
   }
 
   // Everything an App needs to reach the Server from this interface, and only this interface's address: another subnet's address is no use to the phone asking.

@@ -3,9 +3,11 @@ import { image } from '../../../../mocks/composer-attachment-draft-mock';
 import { memoryStorage } from '../../../../mocks/memory-storage';
 import type { ComposerDraft } from '../components/composer/composer';
 import { draftKey } from '../utils/draft-key';
-import { forgetSentDraft } from './forget-sent-draft';
+import { forgetSentDraft, onSentDraftForgotten } from './forget-sent-draft';
 import { keptAttachments } from './kept-attachments';
 import { keptDrafts } from './kept-draft';
+
+type Listener = Parameters<typeof onSentDraftForgotten>[0];
 
 const key = draftKey({ type: 'new-session', projectId: 'project-a' });
 
@@ -50,6 +52,16 @@ describe('forgetting a sent draft', () => {
     });
   });
 
+  it('keeps the whole draft when its text was removed', async () => {
+    keptDrafts.keep(key, '');
+    keptAttachments.keep(key, [image('sent')], new Map());
+    await forgetSentDraft(key, sent);
+    expect(await keptDraft()).toEqual({
+      text: '',
+      attachments: [image('sent')],
+    });
+  });
+
   it('keeps the whole draft when its Attachments changed', async () => {
     keepDraft(sent.text, 'newer');
     await forgetSentDraft(key, sent);
@@ -57,5 +69,31 @@ describe('forgetting a sent draft', () => {
       text: sent.text,
       attachments: [image('newer')],
     });
+  });
+
+  it('tells an open Composer what was forgotten', async () => {
+    const heard = vi.fn<Listener>();
+    const stopListening = onSentDraftForgotten(heard);
+    keepDraft(sent.text, 'sent');
+    await forgetSentDraft(key, sent);
+    stopListening();
+    expect(heard).toHaveBeenCalledExactlyOnceWith(key, sent);
+  });
+
+  it('tells nobody when a newer draft stays', async () => {
+    const heard = vi.fn<Listener>();
+    const stopListening = onSentDraftForgotten(heard);
+    keepDraft(newerText, 'sent');
+    await forgetSentDraft(key, sent);
+    stopListening();
+    expect(heard).not.toHaveBeenCalled();
+  });
+
+  it('stops telling a Composer that has gone', async () => {
+    const heard = vi.fn<Listener>();
+    onSentDraftForgotten(heard)();
+    keepDraft(sent.text, 'sent');
+    await forgetSentDraft(key, sent);
+    expect(heard).not.toHaveBeenCalled();
   });
 });

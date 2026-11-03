@@ -10,8 +10,11 @@ type TerminalReference = Extract<ToolCallContent, { type: 'terminal' }>;
 
 type ShellOrigin = Pick<
   ShellRecord,
-  'sessionId' | 'toolCallId' | 'cwd' | 'startedAt'
->;
+  'sessionId' | 'toolCallId' | 'cwd' | 'startedAt' | 'description'
+> & {
+  // The command line as the Agent ran it, where `request` holds no argv to quote.
+  command?: string;
+};
 
 // Display only: ACP supplies an executable and argv, never a shell command line.
 const quoteArgument = (argument: string): string =>
@@ -27,7 +30,7 @@ export const shellFromTerminal = (
 ): ShellRecord => ({
   ...origin,
   id: terminal.terminalId,
-  command: terminalCommand(request),
+  command: origin.command ?? terminalCommand(request),
   cwd: request.cwd ?? origin.cwd,
   status: 'running',
   exitCode: null,

@@ -11,8 +11,9 @@ const claim = Buffer.from('iPhone 15 Pro');
 
 const welcome = Buffer.from('paired');
 
-// What node:crypto says when a record does not open with the key the other side used.
-const unauthenticated = /unable to authenticate data/;
+// Crypto providers report authentication failure with either of these messages.
+const unauthenticated =
+  /unable to authenticate data|Provider routines::bad decrypt/;
 
 type Exchange = {
   deviceKey: Keypair;

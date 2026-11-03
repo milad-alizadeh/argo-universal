@@ -15,19 +15,20 @@ const kinds = {
 // Argo's own fields on the row (ADR-0006), absent until the Agent reports an action.
 type SubagentMeta = NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>;
 
-const argoOf = (row: SubagentUpdate): SubagentMeta => row._meta?.argo ?? {};
+const extensionOf = (row: SubagentUpdate): SubagentMeta =>
+  row._meta?.argo ?? {};
 
 const actionOf = (row: SubagentUpdate): keyof typeof kinds | undefined => {
-  const action = argoOf(row).action;
+  const action = extensionOf(row).action;
 
   return action && action in kinds ? action : undefined;
 };
 
 const resultOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
-  argoOf(row).result;
+  extensionOf(row).result;
 
 const promptOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
-  argoOf(row).prompt;
+  extensionOf(row).prompt;
 
 const textOf = (blocks: ContentBlock[] | undefined): string =>
   (blocks ?? [])

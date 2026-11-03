@@ -20,7 +20,7 @@ import {
   type OpenFile,
 } from '../access/plugin-file-open';
 import type { FsCall, PluginValue } from '../protocol/runtime';
-import { argoLimitBytes } from './plugin-limits';
+import { pluginContentLimitBytes } from './plugin-limits';
 
 // A checked path, the access it was checked for, and the checker to ask again once it is open.
 type Opening = { access: PluginAccess; path: string; kind: FileAccess };
@@ -51,8 +51,10 @@ export async function fsCall(
 
 // Only a write may create a file; it truncates after the check, so a refused write changes nothing.
 async function write(opening: Opening, content: string): Promise<null> {
-  if (Buffer.byteLength(content) > argoLimitBytes)
-    throw new Error(`Content is over the ${argoLimitBytes} byte write limit`);
+  if (Buffer.byteLength(content) > pluginContentLimitBytes)
+    throw new Error(
+      `Content is over the ${pluginContentLimitBytes} byte write limit`,
+    );
   await opening.access.makeDataFolder();
   await makeParents(opening, dirname(opening.path));
 
@@ -165,11 +167,13 @@ const describeFile = (info: Stats): PluginValue => ({
 async function readCapped({ handle, info, path }: Opened): Promise<string> {
   if (!info.isFile()) throw new Error(`${path} is not a file`);
 
-  const buffer = Buffer.alloc(argoLimitBytes + 1);
+  const buffer = Buffer.alloc(pluginContentLimitBytes + 1);
   const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
 
-  if (bytesRead > argoLimitBytes)
-    throw new Error(`File is over the ${argoLimitBytes} byte read limit`);
+  if (bytesRead > pluginContentLimitBytes)
+    throw new Error(
+      `File is over the ${pluginContentLimitBytes} byte read limit`,
+    );
 
   return buffer.toString('utf8', 0, bytesRead);
 }

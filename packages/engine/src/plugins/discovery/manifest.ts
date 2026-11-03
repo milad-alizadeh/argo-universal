@@ -1,6 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PluginManifest } from '@repo/contracts/plugins';
+import { productName } from '@repo/contracts/product-identity';
 import { gtr, ltr, satisfies, valid, validRange } from 'semver';
 
 // A Server version no range written for a real Argo release reaches; a range it satisfies has no upper bound.
@@ -67,12 +68,12 @@ function incompatibility(
   version: string,
 ): string {
   if (ltr(version, range, semverOptions))
-    return `Requires Argo ${declared}; this Server is ${version}`;
+    return `Requires ${productName} ${declared}; this Server is ${version}`;
 
   if (gtr(version, range, semverOptions))
-    return `Supports Argo ${declared} only; this Server is ${version}, which is newer`;
+    return `Supports ${productName} ${declared} only; this Server is ${version}, which is newer`;
 
-  return `Does not support Argo ${version}; it declares ${declared}`;
+  return `Does not support ${productName} ${version}; it declares ${declared}`;
 }
 
 // The entry file must exist; it is checked, never imported.

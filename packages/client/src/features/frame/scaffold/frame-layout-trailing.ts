@@ -60,7 +60,12 @@ function workbenchOffset(
   { state, width }: Pick<WorkbenchRegion, 'state' | 'width'>,
   host: PaneSpan,
 ): number {
-  if (state === 'dedicated') return host.offset + (host.width - width) / 2;
+  // Over the content's trailing edge, absolute: the page keeps its width underneath, and the card never crosses the host's leading edge.
+  if (state === 'overlay') {
+    const trailingEdge = host.offset + host.width - input.measures.inset;
+
+    return Math.max(host.offset, trailingEdge - width);
+  }
 
   const trailing = width > 0 ? input.width - host.offset - host.width : 0;
 

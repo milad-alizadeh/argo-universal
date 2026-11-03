@@ -30,7 +30,6 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/kit > @radix-ui/react-popover',
   '@repo/kit > @radix-ui/react-dialog',
   '@repo/client > react-native > invariant',
-  '@repo/kit > @radix-ui/react-collapsible',
   '@repo/kit > @radix-ui/react-select',
   '@repo/kit > @radix-ui/react-dropdown-menu',
   '@repo/kit > @gorhom/portal',

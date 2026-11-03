@@ -98,7 +98,7 @@ const offeredIn = (
     (choice) => !levels || levels.includes(choice.value),
   );
 
-const argoOf = (
+const extensionOf = (
   choice?: SessionConfigSelectOption,
 ): ModelMetadata | undefined => choice?._meta?.argo;
 
@@ -107,7 +107,7 @@ export function configurationEffortChoices(
   model: SelectOption | undefined,
   option: SelectOption | undefined,
 ): SessionConfigSelectOption[] {
-  const metadata = argoOf(currentConfigurationChoice(model)) ?? {};
+  const metadata = extensionOf(currentConfigurationChoice(model)) ?? {};
 
   return metadata.supportsEffort === false
     ? []

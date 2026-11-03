@@ -1,7 +1,9 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import type { Meta } from '@storybook/react-native-web-vite';
-import type { JSX } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { useState, type JSX } from 'react';
+import { expect, fireEvent, fn, waitFor, within } from 'storybook/test';
 import {
   meta as sessionDetailViewTestMeta,
   type Story,
@@ -16,12 +18,31 @@ import { runningSession } from './session-detail-view.mocks';
 
 const subagentsName = 'Agents';
 
-const agentsOverview = 'Open Agents overview';
+const agentsCard = 'workbench-subagents';
+
+const cardRow = /^(Open (?!.*overview)|Show )/;
 
 const selected = ['aria-selected', 'true'] as const;
 
-const triggerName = (wide: boolean, count: number): string =>
-  wide ? agentsOverview : `Agents: ${count}`;
+// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; below wide the Composer's pill opens the list.
+async function openList(
+  { canvas, userEvent }: Interaction,
+  wide: boolean,
+  count: number,
+): Promise<void> {
+  if (!wide) {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: `Agents: ${count}` }),
+    );
+
+    return;
+  }
+
+  const card = within(await canvas.findByTestId(agentsCard));
+  const [row] = card.getAllByRole('button', { name: cardRow });
+
+  await userEvent.click(row ?? card.getByRole('button'));
+}
 
 const meta = {
   ...sessionDetailViewTestMeta,
@@ -51,7 +72,10 @@ async function assertPresentation(
     await userEvent.click(
       canvas.getByRole('button', { name: 'Toggle Workbench' }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: agentsOverview }));
+    const card = within(canvas.getByTestId(agentsCard));
+    const [row] = card.getAllByRole('button', { name: cardRow });
+
+    await userEvent.click(row ?? card.getByRole('button'));
     await expect(tab).toHaveAttribute(...selected);
     await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
 
@@ -83,7 +107,6 @@ function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
   const onSelect = fn();
   const wide = width === layoutWidths.wide;
-  const absentTrigger = wide ? agentsOverview : /^Subagents/;
 
   return {
     beforeEach: () => settleLayout(width),
@@ -96,27 +119,19 @@ function subagentsAt(width: number, state: State): Story {
     },
     play: async ({ canvas, userEvent }) => {
       await expect(
-        canvas.queryByRole('button', { name: 'Shells' }),
+        canvas.queryByRole('button', { name: 'Background Tasks' }),
       ).not.toBeInTheDocument();
       await expect(
         canvas.queryByRole('tab', { name: /^Agents:/ }),
       ).not.toBeInTheDocument();
 
       if (!subagents.length) {
-        await expect(
-          canvas.queryByRole('button', {
-            name: absentTrigger,
-          }),
-        ).not.toBeInTheDocument();
+        await expect(canvas.queryByTestId(agentsCard)).not.toBeInTheDocument();
 
         return;
       }
 
-      const trigger = triggerName(wide, subagents.length);
-
-      await userEvent.click(
-        await canvas.findByRole('button', { name: trigger }),
-      );
+      await openList({ canvas, userEvent }, wide, subagents.length);
 
       const page = await subagentsPage(canvas, wide);
 
@@ -155,3 +170,59 @@ export const PhoneSubagentsOpenSheet = subagentsAt(
   layoutWidths.phone,
   'severalMixed',
 );
+
+function PhoneSessionFocus(): JSX.Element {
+  const [focused, setFocused] = useState(true);
+
+  return (
+    <>
+      <Button
+        label="Switch Session"
+        onPress={() => setFocused((value) => !value)}
+      />
+      <RetainedPageVisibility value={focused}>
+        <FramedSessionPreview
+          state="open"
+          {...runningSession}
+          subagents={{
+            subagents: subagentStates.oneRunning,
+            onSelect: fn(),
+            now: subagentNow,
+          }}
+        />
+      </RetainedPageVisibility>
+    </>
+  );
+}
+
+export const PhoneSheetDismissesOnSwitch: Story = {
+  render: () => <PhoneSessionFocus />,
+  beforeEach: () => settleLayout(layoutWidths.phone),
+  play: async ({ canvas, userEvent }) => {
+    const body = within(document.body);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Agents: 1' }),
+    );
+    await expect(
+      await body.findByRole('dialog', { name: subagentsName }),
+    ).toBeVisible();
+    await fireEvent.click(
+      canvas.getByRole('button', { name: 'Switch Session', hidden: true }),
+    );
+    await waitFor(() =>
+      expect(
+        body.queryByRole('dialog', { name: subagentsName }),
+      ).not.toBeInTheDocument(),
+    );
+    await fireEvent.click(
+      canvas.getByRole('button', { name: 'Switch Session' }),
+    );
+    await expect(
+      body.queryByRole('dialog', { name: subagentsName }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Agents: 1' }));
+    await expect(
+      await body.findByRole('dialog', { name: subagentsName }),
+    ).toBeVisible();
+  },
+};

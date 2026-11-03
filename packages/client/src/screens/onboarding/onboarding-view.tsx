@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -19,8 +20,7 @@ function ServerRunning({ name }: { name: string }): React.JSX.Element {
   );
 }
 
-const lede =
-  'Argo runs Agents inside your Projects. Three steps and you can start your first Session.';
+const lede = `${productName} runs Agents inside your Projects. Three steps and you can start your first Session.`;
 
 function OnboardingHeader({
   serverName,
@@ -29,7 +29,7 @@ function OnboardingHeader({
     <View className="gap-2">
       {serverName !== undefined && <ServerRunning name={serverName} />}
       <Text role="title" accessibilityRole="heading" aria-level={1}>
-        Set up Argo
+        Set up {productName}
       </Text>
       <Text role="secondary" className="text-muted-foreground">
         {lede}

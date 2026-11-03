@@ -41,7 +41,7 @@ interface PreviewProps {
 
 type LayoutProps = Pick<PreviewProps, 'Story' | 'padding'>;
 
-function ArgoPreview(props: PreviewProps): React.JSX.Element {
+function AppPreview(props: PreviewProps): React.JSX.Element {
   usePreviewTheme(props.mode, props.storyId);
 
   return (
@@ -129,12 +129,12 @@ function NativeCentredLayout(props: LayoutProps): React.JSX.Element {
 const CentredLayout =
   Platform.OS === 'web' ? WebCentredLayout : NativeCentredLayout;
 
-export function withArgoPreview(
+export function withAppPreview(
   Story: ComponentType,
   context: PreviewContext,
 ): React.JSX.Element {
   return (
-    <ArgoPreview
+    <AppPreview
       Story={Story}
       storyId={context.id}
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}

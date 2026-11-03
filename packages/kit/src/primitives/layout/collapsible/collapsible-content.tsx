@@ -1,56 +1,90 @@
-import * as RadixCollapsible from '@radix-ui/react-collapsible';
-import { type ComponentType, type ReactElement, useContext } from 'react';
-import { View } from 'react-native';
 import {
-  CollapsibleLayoutSyncContext,
+  type ComponentProps,
+  type ReactElement,
+  type RefObject,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { View, type ViewInstance } from 'react-native';
+import {
+  CollapsibleContext,
   contentAccessibility,
-  OpenContext,
 } from './collapsible-context';
-import { LayoutSyncedContent } from './collapsible-layout-content';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
-import {
-  useWebContentMotion,
-  type WebContentMotion,
-} from './collapsible-web-motion';
 
-type MovingBoxProps = Omit<ContentProps, 'forceMount'> &
-  Pick<WebContentMotion, 'box' | 'content'>;
+type RegionRef = RefObject<ViewInstance | null>;
 
-// The caller's padding sits inside the moving box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut. Closing content is already hidden from touches and assistive technology while it leaves.
-function MovingBox(props: MovingBoxProps): ReactElement {
-  const { className, children, box, content, ...rest } = props;
+// The browser's transitions on the region, which a close waits for; reduced motion has none, so it closes at once.
+async function settled(region: RegionRef): Promise<void> {
+  const node = region.current;
 
-  return (
-    <RadixCollapsible.Content forceMount asChild>
-      <View {...rest} ref={box} className="overflow-hidden">
-        <View ref={content} className={className}>
-          {children}
-        </View>
-      </View>
-    </RadixCollapsible.Content>
+  if (!(node instanceof HTMLElement)) return;
+
+  await Promise.allSettled(
+    node.getAnimations().map((motion) => motion.finished),
   );
 }
 
-function WebContent({
-  forceMount,
-  ...props
-}: ContentProps): ReactElement | null {
-  const open = useContext(OpenContext);
-  const { mounted, ...refs } = useWebContentMotion(open, forceMount);
+// Closed content stays mounted until its close has finished, and a reopening on the way keeps it.
+function useMounted(open: boolean, region: RegionRef): boolean {
+  const [mounted, setMounted] = useState(open);
+  const latestOpen = useRef(open);
 
-  if (!mounted) return null;
+  if (open && !mounted) setMounted(true);
 
-  return <MovingBox {...props} {...contentAccessibility(open)} {...refs} />;
+  useLayoutEffect(() => {
+    latestOpen.current = open;
+
+    if (!open) void settled(region).then(() => setMounted(latestOpen.current));
+  }, [open, region]);
+
+  return mounted;
 }
 
-// The web moves the content's height with a CSS transition; a layout-synced list animates with its rows instead.
-export function CollapsibleContent(props: ContentProps): ReactElement | null {
-  const layoutSync = useContext(CollapsibleLayoutSyncContext);
+const regionClass = (open: boolean): string =>
+  `grid grid-cols-1 transition-grid-rows duration-200 ease-out motion-reduce:transition-none ${open ? 'grid-rows-content' : 'grid-rows-shut'}`;
 
-  if (layoutSync)
-    return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
-
-  return <WebContent {...props} />;
+/*
+ * The region's one grid row moves between `0fr` and `1fr`. The browser sizes that row from the content as it lays it
+ * out, so content that grows or shrinks while the row moves is followed in the same frame, with nothing to measure.
+ * The caller's padding sits inside the clipped row, so a close reaches zero.
+ */
+interface Region {
+  open: boolean;
+  mounted: boolean;
+  region: ComponentProps<typeof View>;
 }
 
-CollapsibleContent satisfies ComponentType<ContentProps>;
+function useRegion(): Region {
+  const { open, contentId } = useContext(CollapsibleContext);
+  const ref = useRef<ViewInstance>(null);
+  const mounted = useMounted(open, ref);
+  const region = { ref, nativeID: contentId, ...contentAccessibility(open) };
+
+  return { open, mounted, region };
+}
+
+export function DrawnContent(props: ContentProps): ReactElement {
+  const { forceMount, ...view } = props;
+  const { open, mounted, region } = useRegion();
+
+  return (
+    <View {...region} className={regionClass(open)}>
+      <Clipped shown={mounted || Boolean(forceMount)} content={view} />
+    </View>
+  );
+}
+
+// The grid row's one item may shrink below its content, which it clips.
+function Clipped(props: {
+  shown: boolean;
+  content: ContentProps;
+}): ReactElement {
+  return (
+    <View className="min-h-0 overflow-hidden">
+      {props.shown ? <View {...props.content} /> : null}
+    </View>
+  );
+}

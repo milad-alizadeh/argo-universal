@@ -38,8 +38,8 @@ function remembersSectionList(name: RegExp, label: string): Story {
 }
 
 export const RemembersShellListPosition = remembersSectionList(
-  /Shells/,
-  'Shells',
+  /Background Tasks/,
+  'Background Tasks',
 );
 
 export const RemembersAgentListPosition = remembersSectionList(
@@ -75,7 +75,9 @@ async function readEarlierOutput(
 
 export const RemembersShellOutputPosition: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      await canvas.findByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(
       await canvas.findByRole('button', { name: /^pnpm dev,/ }),
     );
@@ -87,11 +89,13 @@ export const RemembersShellOutputPosition: Story = {
     await readEarlierOutput(output, canvas);
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await expect(
-      canvas.queryByRole('button', { name: 'Back to Shells' }),
+      canvas.queryByRole('button', { name: 'Back to Background Tasks' }),
     ).toBeNull();
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await expect(
-      canvas.getByRole('button', { name: 'Back to Shells' }),
+      await canvas.findByRole('button', { name: 'Back to Background Tasks' }),
     ).toBeVisible();
     await expect(canvas.getByTestId('shell-output').scrollTop).toBeCloseTo(
       shellOutputOffset,
@@ -123,7 +127,7 @@ export const RemembersAgentFeedPosition: Story = {
     ).toBeNull();
     await userEvent.click(canvas.getByRole('tab', { name: /Agents/ }));
     await expect(
-      canvas.getByRole('button', { name: 'Back to Agents' }),
+      await canvas.findByRole('button', { name: 'Back to Agents' }),
     ).toBeVisible();
     await expect(canvas.getByTestId('feed-scroll').scrollTop).toBeCloseTo(
       10,

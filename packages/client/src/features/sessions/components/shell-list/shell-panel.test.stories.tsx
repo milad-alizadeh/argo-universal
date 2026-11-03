@@ -48,7 +48,7 @@ export const GoesBackToTheList: Story = {
   play: async ({ canvas, userEvent }) => {
     await openWide(canvas, userEvent, /pnpm dev/);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Back to Shells' }),
+      canvas.getByRole('button', { name: 'Back to Background Tasks' }),
     );
     await expect(
       canvas.getByRole('button', { name: /pnpm e2e/ }),
@@ -64,7 +64,7 @@ export const EndedShellsOfferNoStop: Story = {
     await openWide(canvas, userEvent, /pnpm storybook, Stopped/);
     await expect(canvas.getByText('after 2m 14s')).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: 'Back to Shells' }),
+      canvas.getByRole('button', { name: 'Back to Background Tasks' }),
     ).toBeVisible();
     await expect(canvas.queryByRole('button', { name: /^Stop / })).toBeNull();
   },

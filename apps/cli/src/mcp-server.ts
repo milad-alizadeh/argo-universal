@@ -5,6 +5,10 @@ import {
   type OperationRow,
   type OperationRunResponse,
 } from '@repo/contracts/operations/control';
+import {
+  productName,
+  productCompatibility,
+} from '@repo/contracts/product-identity';
 import { z } from 'zod';
 import type { ControlClient, RunRequest } from './control-client';
 
@@ -42,7 +46,7 @@ const result = (
 
 export function createOperationMcpServer(client: ControlClient): McpServer {
   const server = new McpServer(
-    { name: 'argo', version: '1.0.0' },
+    { name: productCompatibility.mcpServer, version: '1.0.0' },
     { instructions },
   );
 
@@ -57,8 +61,7 @@ const instructions =
   'Read the matching params schema and availability before calling operation_run.';
 
 const discoveryTool = {
-  description:
-    'Find Argo Operations by id, label or keyword. Returns matching argument schemas, tiers and availability.',
+  description: `Find ${productName} Operations by id, label or keyword. Returns matching argument schemas, tiers and availability.`,
   inputSchema: z.strictObject({ filter: z.string().optional() }),
   annotations: { readOnlyHint: true, openWorldHint: false },
 };

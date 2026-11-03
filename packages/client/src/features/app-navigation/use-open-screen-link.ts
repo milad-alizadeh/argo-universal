@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
@@ -12,7 +13,7 @@ type Queries = {
   trpc: ReturnType<typeof useTRPC>;
 };
 
-const notOpened = 'Argo could not open that link.';
+const notOpened = `${productName} could not open that link.`;
 
 // A function that stays the same while it always calls the latest `navigate`.
 function useStableNavigate(): Navigate {

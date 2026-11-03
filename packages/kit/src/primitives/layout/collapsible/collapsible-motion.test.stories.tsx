@@ -1,168 +1,164 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { cdp } from 'vitest/browser';
-import { readMotion } from '#mocks/motion-samples';
 import { settleLayout } from '#mocks/story-layout';
+import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
+  CollapsibleHeader,
 } from './collapsible';
-import { type Settles, SettlingContent } from './collapsible-motion-fixtures';
 
-const toggleLabel = 'Toggle details';
+const toggle = 'Toggle motion';
 
-const detailId = 'settling-detail';
+const body = 'Content retained while moving';
 
-const nextRow = 'Next row';
+const following = 'Following row';
 
-// Long enough for the motion and the rest after it.
-const motionFrames = 40;
+const insideAction = fn();
 
-// One frame's move may be up to this share of the whole way: an eased 200ms motion moves about a sixth a frame, so a larger step is a jump.
-const largestSmoothStep = 0.5;
+function MotionDisclosure({ forceMount }: { forceMount?: true }): ReactElement {
+  return (
+    <View>
+      <Collapsible defaultOpen>
+        <CollapsibleHeader label={toggle} />
+        <CollapsibleContent forceMount={forceMount}>
+          <Text>{body}</Text>
+          <Button label="Inside action" onPress={insideAction} />
+        </CollapsibleContent>
+      </Collapsible>
+      <Text>{following}</Text>
+    </View>
+  );
+}
 
 const meta = {
   title: 'Tests/Design System/Primitives/Layout/Collapsible/Motion',
+  parameters: { screenPreview: true },
+  render: (): ReactElement => <MotionDisclosure />,
 } satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-interface Body {
-  first: number;
-  last: number;
-  settles: Settles;
-}
+export const ReducedMotionClosesInOneStep: Story = {
+  beforeEach: async () => {
+    await cdp().send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+    });
 
-const settledBody: Body = { first: 120, last: 120, settles: 'on-mount' };
-
-function renderWithRowBelow(
-  body: Body,
-  defaultOpen = false,
-): () => ReactElement {
-  return () => (
-    <View>
-      <Collapsible defaultOpen={defaultOpen}>
-        <CollapsibleTrigger accessibilityLabel={toggleLabel}>
-          <Text>Toggle details</Text>
-        </CollapsibleTrigger>
-        <CollapsibleContent testID={detailId}>
-          <SettlingContent {...body} />
-        </CollapsibleContent>
-      </Collapsible>
-      <Text>{nextRow}</Text>
-    </View>
-  );
-}
-
-type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
-
-async function sampleRowBelow(canvas: Canvas): Promise<number[]> {
-  await settleLayout('wide');
-  const trigger = canvas.getByRole('button', { name: toggleLabel });
-  const below = canvas.getByText(nextRow);
-  const top = (): number => below.getBoundingClientRect().top;
-  const before = top();
-  const after = await sampleEachFrame(() => trigger.click(), top, motionFrames);
-
-  return [before, ...after];
-}
-
-// The row below moves one way, never past where it rests, and with no frame that jumps.
-async function expectOneSmoothMotion(
-  tops: readonly number[],
-  travel: number,
-): Promise<void> {
-  const motion = readMotion(tops);
-  await expect(motion.reversals).toBe(0);
-  await expect(motion.overshoot).toBeLessThanOrEqual(1);
-  await expect(motion.largestStepShare).toBeLessThan(largestSmoothStep);
-  await expect(motion.travel).toBeCloseTo(travel, 0);
-}
-
-function opensOnce(body: Body): Story {
-  return {
-    render: renderWithRowBelow(body),
-    play: async ({ canvas }) => {
-      const tops = await sampleRowBelow(canvas);
-      await expectOneSmoothMotion(tops, body.last);
-    },
-  };
-}
-
-// A placeholder that gives way as the content mounts: the motion heads for the height the content settles at, not the placeholder's.
-export const OpensOnceWhenContentShrinksAsItMounts = opensOnce({
-  first: 240,
-  last: 80,
-  settles: 'on-mount',
-});
-
-// Content that lays out shorter a frame after it mounts, as a late glyph does: the row below never passes where it rests and comes back.
-export const OpensOnceWhenContentShrinksAfterItMounts = opensOnce({
-  first: 160,
-  last: 80,
-  settles: 'next-frame',
-});
-
-// Content that grows a frame after it mounts, as a Plugin's tree arrives: the motion follows it there instead of snapping at the end.
-export const OpensOnceWhenContentGrowsAfterItMounts = opensOnce({
-  first: 40,
-  last: 160,
-  settles: 'next-frame',
-});
-
-export const ClosesOnceThenLeaves: Story = {
-  render: renderWithRowBelow(settledBody, true),
+    return async (): Promise<void> => {
+      await cdp().send('Emulation.setEmulatedMedia', { features: [] });
+    };
+  },
   play: async ({ canvas }) => {
-    const tops = await sampleRowBelow(canvas);
-    await expectOneSmoothMotion(tops, settledBody.last);
+    await settleLayout('wide');
+    const trigger = canvas.getByRole('button', { name: toggle });
+    const below = canvas.getByText(following);
+    const before = below.getBoundingClientRect().top;
+
+    const samples = await sampleEachFrame(
+      () => trigger.click(),
+      () => below.getBoundingClientRect().top,
+      5,
+    );
+
+    await expect(new Set(samples).size).toBe(1);
+    await expect(samples[0]).toBeLessThan(before);
     await waitFor(() =>
-      expect(canvas.queryByTestId(detailId)).not.toBeInTheDocument(),
+      expect(canvas.queryByText(body)).not.toBeInTheDocument(),
     );
   },
 };
 
-async function withReducedMotion(run: () => Promise<void>): Promise<void> {
-  await cdp().send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-  });
+export const RapidReversalKeepsOpenContent: Story = {
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const trigger = canvas.getByRole('button', { name: toggle });
 
-  try {
-    await run();
-  } finally {
-    await cdp().send('Emulation.setEmulatedMedia', { features: [] });
-  }
-}
+    trigger.click();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
 
-// Every frame after the press already shows where the row rests: opening and closing each take one step.
-async function expectOneStep(tops: readonly number[]): Promise<void> {
-  const afterPress = tops.slice(1);
-  await expect(afterPress).toEqual(afterPress.map(() => tops.at(-1)));
-}
+    const samples = await sampleEachFrame(
+      () => trigger.click(),
+      () => Number(canvas.queryByText(body) !== null),
+      40,
+    );
 
-export const ReducedMotionOpensInOneStep: Story = {
-  render: renderWithRowBelow(settledBody),
-  play: async ({ canvas }) =>
-    withReducedMotion(async () => {
-      const tops = await sampleRowBelow(canvas);
-      await expectOneStep(tops);
-      await expect(readMotion(tops).travel).toBeCloseTo(settledBody.last, 0);
-    }),
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expect(samples).toEqual(Array.from({ length: 40 }, () => 1));
+    await expect(canvas.getByText(body)).toBeVisible();
+  },
 };
 
-export const ReducedMotionClosesInOneStep: Story = {
-  render: renderWithRowBelow(settledBody, true),
-  play: async ({ canvas }) =>
-    withReducedMotion(async () => {
-      const tops = await sampleRowBelow(canvas);
-      await expectOneStep(tops);
-      await expect(readMotion(tops).travel).toBeCloseTo(settledBody.last, 0);
-      await expect(canvas.queryByTestId(detailId)).not.toBeInTheDocument();
-    }),
+export const ForcedContentStaysMountedButInaccessibleWhenClosed: Story = {
+  render: (): ReactElement => <MotionDisclosure forceMount />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const trigger = canvas.getByRole('button', { name: toggle });
+
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(canvas.getByText(body)).toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: 'Inside action' }),
+    ).toBeNull();
+    await userEvent.click(trigger);
+    await expect(
+      canvas.getByRole('button', { name: 'Inside action' }),
+    ).toBeVisible();
+  },
+};
+
+const shrink = 'Shrink content';
+
+function ShrinkingDisclosure(): ReactElement {
+  const [tall, setTall] = useState(true);
+
+  return (
+    <View>
+      <Button label={shrink} onPress={() => setTall(false)} />
+      <Collapsible>
+        <CollapsibleHeader label={toggle} />
+        <CollapsibleContent>
+          <View className={tall ? 'h-64' : 'h-16'} />
+        </CollapsibleContent>
+      </Collapsible>
+      <Text>{following}</Text>
+    </View>
+  );
+}
+
+// Content that shrinks while it opens takes the row below no further than where it ends, and the row rests there once.
+export const ShrinkingWhileOpeningNeverPassesTheEnd: Story = {
+  render: (): ReactElement => <ShrinkingDisclosure />,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const trigger = canvas.getByRole('button', { name: toggle });
+    const below = canvas.getByText(following);
+
+    trigger.click();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+
+    const tops = await sampleEachFrame(
+      () => canvas.getByRole('button', { name: shrink }).click(),
+      () => below.getBoundingClientRect().top,
+      40,
+    );
+
+    const end = tops.at(-1) ?? 0;
+    const rest = tops.indexOf(end);
+
+    await expect(Math.max(...tops)).toBeLessThanOrEqual(end);
+    await expect(tops.slice(rest)).toEqual(tops.slice(rest).map(() => end));
+  },
 };

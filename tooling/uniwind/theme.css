@@ -790,3 +790,16 @@
 @utility shadow-hairline {
   box-shadow: var(--shadow-hairline);
 }
+
+/* A Collapsible's region: one grid row that moves between nothing and its content's own height. */
+@utility grid-rows-shut {
+  grid-template-rows: 0fr;
+}
+
+@utility grid-rows-content {
+  grid-template-rows: 1fr;
+}
+
+@utility transition-grid-rows {
+  transition-property: grid-template-rows;
+}

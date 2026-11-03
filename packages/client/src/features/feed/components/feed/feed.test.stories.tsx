@@ -1,8 +1,12 @@
 import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { recordedDeepFeed } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { Feed } from './feed';
 import {
+  afterTwoFrames,
   driftWhileUntouched,
   earlierFeedLoadingLabel,
   feedScrollId,
@@ -153,5 +157,211 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
       await canvas.findByRole('button', { name: 'Step 1' }),
     ).toBeVisible();
     await expect(Math.abs((await settledTopOf(step)) - top)).toBeLessThan(2);
+  },
+};
+
+function ReopenedFeed({
+  sessionId = 'restored-feed-test',
+}: {
+  sessionId?: string;
+}): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => setOpen((current) => !current)}
+      />
+      {open && <Feed {...feedArgs} sessionId={sessionId} />}
+    </>
+  );
+}
+
+export const RestoresReadingAfterRemount: Story = {
+  render: () => <ReopenedFeed />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(scrolledToEnd(scroll)).toBe(true),
+      scrollAwayWait,
+    );
+    await waitFor(async () => {
+      scrollUp(scroll, scroll.clientHeight);
+      await expect(scrolledToEnd(scroll)).toBe(false);
+    }, scrollAwayWait);
+    await afterTwoFrames();
+    const distance = scroll.scrollHeight - scroll.scrollTop;
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () =>
+        expect(
+          Math.abs(restored.scrollHeight - restored.scrollTop - distance),
+        ).toBeLessThan(50),
+      scrollAwayWait,
+    );
+  },
+};
+
+export const UserScrollStopsRestoring: Story = {
+  render: () => <ReopenedFeed sessionId="restore-user-scroll-test" />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const original = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(scrolledToEnd(original)).toBe(true),
+      scrollAwayWait,
+    );
+    scrollUp(original, original.clientHeight);
+    await afterTwoFrames();
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await afterTwoFrames();
+    scrollUp(restored, restored.clientHeight);
+    const chosen = await markSettledMiddleOfView(restored);
+    await expect(await driftWhileUntouched(chosen)).toBeLessThan(3);
+  },
+};
+
+const switchSessionLabel = 'Switch Session';
+
+function ReopenedPagedFeed(): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => setOpen((current) => !current)}
+      />
+      {open && (
+        <PagedFeed
+          {...feedArgs}
+          rows={longRows}
+          pageLength={60}
+          sessionId="restored-older-feed-test"
+        />
+      )}
+    </>
+  );
+}
+
+export const RestoresOlderReadingAfterRemount: Story = {
+  render: () => <ReopenedPagedFeed />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(scrolledToEnd(scroll)).toBe(true),
+      scrollAwayWait,
+    );
+    /*
+     * Jump to the top of each loaded page, as a reader can with the scrollbar.
+     * Each prepend moves the viewport down, so continue until the oldest row arrives.
+     */
+    await waitFor(async () => {
+      scrollUp(scroll, scroll.scrollHeight);
+      await afterTwoFrames();
+      await expect(scroll.scrollTop).toBe(0);
+      await expect(
+        within(scroll).getAllByText(oldestMessage).length,
+      ).toBeGreaterThan(0);
+    }, scrollAwayWait);
+    scrollUp(scroll, -300);
+    await afterTwoFrames();
+    const before = await markSettledMiddleOfView(scroll);
+    const text = before.element.textContent;
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () =>
+        expect(
+          within(restored).getAllByText(oldestMessage).length,
+        ).toBeGreaterThan(0),
+      scrollAwayWait,
+    );
+    await waitFor(
+      () => expect(restored.scrollTop).toBeGreaterThan(250),
+      scrollAwayWait,
+    );
+    await expect(restored.scrollTop).toBeLessThan(350);
+    await waitFor(async () => {
+      const after = await markSettledMiddleOfView(restored);
+      await expect(after.element.textContent).toBe(text);
+      await expect(Math.abs(after.top - before.top)).toBeLessThan(3);
+    }, scrollAwayWait);
+  },
+};
+
+const deepMessage = 'The first message in the deep Feed.';
+
+const deepRows = recordedDeepFeed;
+
+function DeepReopenedFeed(): React.JSX.Element {
+  const [open, setOpen] = useState(true);
+  const [reopened, setReopened] = useState(false);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => {
+          if (open) setReopened(true);
+          setOpen((current) => !current);
+        }}
+      />
+      {open && (
+        <PagedFeed
+          {...feedArgs}
+          rows={deepRows}
+          opensAtStart={!reopened}
+          pageLength={reopened ? 1 : deepRows.length}
+          sessionId="deep-restored-feed-test"
+        />
+      )}
+    </>
+  );
+}
+
+export const RestoresBeyondOneHundredPages: Story = {
+  render: () => <DeepReopenedFeed />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(within(scroll).getByText(deepMessage)).toBeVisible(),
+      scrollAwayWait,
+    );
+    await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+    scrollUp(scroll, -1);
+    await afterTwoFrames();
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: switchSessionLabel }),
+    );
+    const restored = await canvas.findByTestId(feedScrollId);
+    await waitFor(
+      () => expect(within(restored).getByText(deepMessage)).toBeVisible(),
+      { timeout: 20_000 },
+    );
   },
 };

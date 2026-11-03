@@ -1,4 +1,5 @@
 import { sha256 } from '@noble/hashes/sha2.js';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import { concatBytes, textBytes } from './bytes';
 import { CipherState, deriveKeys } from './cipher-state';
 
@@ -6,7 +7,7 @@ import { CipherState, deriveKeys } from './cipher-state';
 const protocolName = textBytes('Noise_IK_25519_ChaChaPoly_SHA256');
 
 // Argo's own prologue; it must equal the Server's, byte for byte.
-export const argoPrologue = textBytes('argo-pairing/1');
+export const pairingPrologue = textBytes(productCompatibility.pairingPrologue);
 
 /*
  * The running hash and chaining key the initiator keeps while the two messages go by. The Server's `symmetric-state.ts` is the other half; the published Noise vector is what says they agree.
@@ -18,7 +19,7 @@ export class SymmetricState {
 
   public constructor(
     serverPublicKey: Uint8Array,
-    prologue: Uint8Array = argoPrologue,
+    prologue: Uint8Array = pairingPrologue,
   ) {
     this.mixHash(prologue);
     this.mixHash(serverPublicKey);

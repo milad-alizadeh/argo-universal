@@ -31,14 +31,18 @@ export type * from './frame-layout-types';
 
 // Docked, every region needs its room beside the content's floor; the Workbench undocks first, then the list folds.
 function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
-  const folded = railZone(input.measures) + contentFloor(input.measures);
-
-  const workbenchUndock =
-    folded + reservedWorkbench(input) + inspectorBudget(input);
+  const listFold =
+    railZone(input.measures) +
+    contentFloor(input.measures) +
+    inspectorBudget(input) +
+    preferredListWidth(input);
 
   return {
-    listFold: workbenchUndock + preferredListWidth(input),
-    workbenchUndock,
+    listFold,
+    workbenchUndock:
+      listFold +
+      reservedWorkbench(input) -
+      (input.sidebarShown ? 0 : preferredListWidth(input)),
   };
 }
 
@@ -64,7 +68,7 @@ function pageRegion(
     dockedWorkbench(input, workbench.state) +
     occupied(inspector.width, input.measures.paneGap);
 
-  const hidden = inspector.expanded || workbench.state === 'dedicated';
+  const hidden = inspector.expanded;
 
   return {
     offset: contentStart,

@@ -2,6 +2,8 @@ export { PlaceholderDetailView } from './components/placeholder-detail-view/plac
 
 export { useProjects } from './hooks/use-projects';
 
+export { type ProjectSource, useAddProject } from './hooks/use-add-project';
+
 export { homePath } from './utils/home-path';
 
 export {

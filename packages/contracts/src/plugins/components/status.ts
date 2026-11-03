@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { statusDotDefaults, tones } from '../../kit-tokens';
+import { productName } from '../../product-identity';
 import { emptyStateProps } from '../core-kit-props';
 import { defineKitComponent } from '../define-kit-component';
 import { optionalLabel, stringLabel } from '../kit-component-props';
@@ -34,8 +35,7 @@ export const statusComponents = {
     {
       group: 'status',
       slots: { action: ['Button'] },
-      appearance:
-        'Uses Argo semantic tokens and the approved EmptyState master; its icon illustration is decorative.',
+      appearance: `Uses ${productName} semantic tokens and the approved EmptyState master; its icon illustration is decorative.`,
       accessibility: {
         label:
           'The required `title` is a heading, followed by the optional description and action.',
@@ -49,7 +49,7 @@ export const statusComponents = {
   StatusDot: defineKitComponent(
     'A compact semantic status mark with an optional pulse.',
     z.object({
-      tone: z.enum(tones).describe('The Argo semantic status tone.'),
+      tone: z.enum(tones).describe(`The ${productName} semantic status tone.`),
       size: z
         .enum(['sm', 'md'])
         .optional()
