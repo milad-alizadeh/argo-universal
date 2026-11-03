@@ -1,21 +1,21 @@
 // Runs `action`, then reads `measure` on each of the next `frames` animation frames, so a test can follow a motion frame by frame.
-export function sampleEachFrame(
+export function sampleEachFrame<Sample = number>(
   action: () => void,
-  measure: () => number,
+  measure: () => Sample,
   frames: number,
-): Promise<number[]> {
+): Promise<Sample[]> {
   return new Promise((resolve) => {
     action();
     collectFrames(measure, frames, resolve);
   });
 }
 
-function collectFrames(
-  measure: () => number,
+function collectFrames<Sample>(
+  measure: () => Sample,
   frames: number,
-  resolve: (samples: number[]) => void,
+  resolve: (samples: Sample[]) => void,
 ): void {
-  const samples: number[] = [];
+  const samples: Sample[] = [];
 
   const step = (): void => {
     samples.push(measure());

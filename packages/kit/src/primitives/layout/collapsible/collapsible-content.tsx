@@ -1,40 +1,45 @@
 import * as RadixCollapsible from '@radix-ui/react-collapsible';
 import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
-import { cn } from '#kit/utils';
 import {
   CollapsibleLayoutSyncContext,
+  contentAccessibility,
   OpenContext,
 } from './collapsible-context';
 import { LayoutSyncedContent } from './collapsible-layout-content';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
+import { useWebContentMotion } from './collapsible-web-motion';
 
-const webContentMotion = (open: boolean): string =>
-  cn(
-    'overflow-hidden motion-reduce:animate-none',
-    open ? 'animate-collapsible-down' : 'animate-collapsible-up',
-  );
-
-// The caller's padding sits inside the animated box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut.
+// The caller's padding sits inside the moving box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut. Closing content is already hidden from touches and assistive technology while it leaves.
 function WebContent({
   className,
   children,
   forceMount,
   ...props
-}: ContentProps): ReactElement {
+}: ContentProps): ReactElement | null {
   const open = useContext(OpenContext);
+  const motion = useWebContentMotion(open, forceMount);
+
+  if (!motion.mounted) return null;
 
   return (
-    <RadixCollapsible.Content forceMount={forceMount} asChild>
-      <View {...props} className={webContentMotion(open)}>
-        <View className={className}>{children}</View>
+    <RadixCollapsible.Content forceMount asChild>
+      <View
+        {...props}
+        {...contentAccessibility(open)}
+        ref={motion.box}
+        className="overflow-hidden"
+      >
+        <View ref={motion.content} className={className}>
+          {children}
+        </View>
       </View>
     </RadixCollapsible.Content>
   );
 }
 
-// The web animates with CSS; a layout-synced list animates with its rows instead.
-export function CollapsibleContent(props: ContentProps): ReactElement {
+// The web moves the content's height with a CSS transition; a layout-synced list animates with its rows instead.
+export function CollapsibleContent(props: ContentProps): ReactElement | null {
   const layoutSync = useContext(CollapsibleLayoutSyncContext);
 
   if (layoutSync)
