@@ -349,6 +349,7 @@ export const RestoresBeyondOneHundredPages: Story = {
       () => expect(within(scroll).getByText(deepMessage)).toBeVisible(),
       scrollAwayWait,
     );
+    await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
     scrollUp(scroll, -1);
     await afterTwoFrames();
     await userEvent.click(
