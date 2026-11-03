@@ -1,32 +1,30 @@
 import { EmptyState, Icon, List, ListItem } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { IssueDeps } from './issue-deps';
 import {
   builtInGroups,
   filterGroups,
   type FilterGroup,
   type IssueFilter,
 } from './issue-filters';
+import { filterPath, projectPath } from './issue-paths';
 import { repositoryText, type Project } from './issue-project';
 import type { Overview, OverviewState } from './use-overview';
 import type { RootProjects } from './use-root-projects';
 
 type RootView = {
-  deps: IssueDeps;
   project: Project;
   overview: Overview | null;
   selected?: string;
 };
 
 type RootRowsProps = {
-  deps: IssueDeps;
   choice: RootProjects;
   state: OverviewState;
   selected?: string;
 };
 
 export function RootRows(props: RootRowsProps): JSX.Element {
-  const { deps, choice, state } = props;
+  const { choice, state } = props;
 
   return (
     <List
@@ -34,7 +32,7 @@ export function RootRows(props: RootRowsProps): JSX.Element {
       empty={<EmptyState title={choice.message} />}
       onRefresh={state.refresh}
     >
-      {projectSection(deps, choice)}
+      {projectSection(choice)}
       {filterSections(props)}
     </List>
   );
@@ -47,25 +45,18 @@ const rootFooter = (
 ): string => (project ? loaded || repositoryText(project) : message);
 
 // A Project to group Issues of, only when there is a choice.
-function projectSection(
-  deps: IssueDeps,
-  choice: RootProjects,
-): JSX.Element | null {
+function projectSection(choice: RootProjects): JSX.Element | null {
   if (choice.projects.length < 2) return null;
 
   return (
     <List.Section key="projects" title="Project">
-      {choice.projects.map((project) => projectRow(deps, choice, project))}
+      {choice.projects.map((project) => projectRow(choice, project))}
     </List.Section>
   );
 }
 
-function projectRow(
-  deps: IssueDeps,
-  choice: RootProjects,
-  project: Project,
-): JSX.Element {
-  const path = deps.pages.projectPagePath(project);
+function projectRow(choice: RootProjects, project: Project): JSX.Element {
+  const path = projectPath(project.id);
 
   return (
     <ListItem
@@ -78,12 +69,12 @@ function projectRow(
 }
 
 function filterSections(props: RootRowsProps): JSX.Element[] {
-  const { deps, choice, state, selected } = props;
+  const { choice, state, selected } = props;
   const project = choice.project;
 
   if (!project) return [];
 
-  const view = { deps, project, overview: state.overview, selected };
+  const view = { project, overview: state.overview, selected };
 
   return groupsOf(state.overview).map((group) => (
     <List.Section key={group.title} title={group.title}>
@@ -107,7 +98,7 @@ const countText = (
 
 // A keyed ListItem itself, as a List draws its children, not a component that returns one.
 function filterRow(view: RootView, filter: IssueFilter): JSX.Element {
-  const path = view.deps.pages.filterPagePath(view.project, filter);
+  const path = filterPath(view.project.id, filter);
 
   return (
     <ListItem

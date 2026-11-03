@@ -1,4 +1,3 @@
-import type { Page } from '@repo/contracts/plugins/argo-api';
 import type {
   PluginRenderContext,
   PluginSurface,
@@ -10,6 +9,8 @@ import {
   useContext,
   type ReactNode,
 } from 'react';
+import { jsx } from './jsx-runtime';
+import type { PageRoutes } from './page-routes';
 
 const PageContext = createContext<PluginRenderContext>({ serverDevice: false });
 
@@ -17,7 +18,7 @@ const PageContext = createContext<PluginRenderContext>({ serverDevice: false });
 export const usePageContext = (): PluginRenderContext =>
   useContext(PageContext);
 
-type Content = { pages: Map<string, Page> };
+type Content = { pages: PageRoutes };
 
 type Open = Extract<PluginEvent, { type: 'open' }>;
 
@@ -43,21 +44,30 @@ function renderContext(open: Open): PluginRenderContext {
   return withOpened(context, open);
 }
 
-// Every page gets the surface of the Connection its view belongs to.
+// Every page gets the surface of the Connection its view belongs to, and the `:name` segments its path matched.
 export function elementOf(content: Content, open: Open): ReactNode | null {
-  const page = content.pages.get(open.path);
-  const context = renderContext(open);
+  const matched = content.pages.match(open.path);
 
-  if (!page) return null;
+  if (!matched) return null;
 
-  const frozen = Object.freeze(context);
+  const context = Object.freeze(renderContext(open));
 
   return createElement(
     PageContext.Provider,
-    { value: frozen },
-    createElement(page, { context: frozen }),
+    { value: context },
+    createElement(matched.page, { context, params: matched.params }),
   );
 }
+
+// What a path with no page draws, so a stale link or a reload says so instead of waiting on a page that never comes.
+export const notFoundElement = (): ReactNode =>
+  jsx('Screen', {
+    title: 'Not found',
+    children: jsx('EmptyState', {
+      title: "This page doesn't exist",
+      description: 'Its link may be out of date.',
+    }),
+  });
 
 function frozenSurface(surface: PluginSurface): Readonly<PluginSurface> {
   return Object.freeze({

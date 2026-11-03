@@ -146,7 +146,13 @@ export const PluginApiCalls = z
 
 type PluginApiCalls = z.infer<typeof PluginApiCalls>;
 
-export type Page = ComponentType<{ context: PluginRenderContext }>;
+// What a page registered at a pattern such as `/issues/:number` matched: each `:name` segment, as a string.
+export type PageParams = Readonly<Record<string, string>>;
+
+export type Page = ComponentType<{
+  context: PluginRenderContext;
+  params: PageParams;
+}>;
 
 /*
  * The Plugin API: the frozen `argo` object a Plugin's `register(argo)` receives, its only way out of

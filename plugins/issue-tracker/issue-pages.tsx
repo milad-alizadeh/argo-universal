@@ -1,85 +1,66 @@
-import type { Argo } from '@argo/plugin-kit';
+import { EmptyState, Screen } from '@argo/plugin-kit';
+import type { Argo, Page, PageParams } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { IssueDeps, IssuePages } from './issue-deps';
+import type { IssueDeps } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { FilterPage } from './issue-filter-page';
-import { builtInFilters, type IssueFilter } from './issue-filters';
-import { filterPath, issuePath, projectPath } from './issue-paths';
+import { builtInFilters, labelFilter, type IssueFilter } from './issue-filters';
+import { fromPathSegment, pagePatterns } from './issue-paths';
 import { IssuesRoot } from './issue-root';
 
-type Page = Parameters<Argo['pages']['register']>[1];
-
 /*
- * A page path names one Project's filter or Issue, so each is registered the first time a row links
- * to it. Every Project's built-in filters are registered as the Plugin starts, so their links open
- * before the Issues page has drawn.
+ * A Project's page, its filters' lists and its Issues are each registered once, at a pattern, so a link
+ * opens its page however the App reached it: from a row, a reload or a link from outside the Plugin. A page
+ * keeps only the Project's id; the Project itself, remote and all, is read each time the page opens.
  */
-export function createIssuePages(
-  argo: Argo,
-  shared: Omit<IssueDeps, 'pages'>,
-): IssuePages {
-  const pages = pagePaths(registrar(argo), () => deps);
-  const deps: IssueDeps = { ...shared, pages };
-
-  void registerBuiltIns(deps);
-
-  return pages;
+export function registerIssuePages(argo: Argo, deps: IssueDeps): void {
+  argo.pages.register(pagePatterns.project, projectPage(deps));
+  argo.pages.register(pagePatterns.filter, filterPage(deps));
+  argo.pages.register(pagePatterns.issue, issuePage(deps));
 }
 
-type Register = (path: string, page: Page) => string;
+const projectIdOf = (params: PageParams): string =>
+  fromPathSegment(params.projectId ?? '');
 
-const pagePaths = (register: Register, deps: () => IssueDeps): IssuePages => ({
-  projectPagePath: ({ id }) =>
-    register(projectPath(id), projectPage(id, deps())),
-  filterPagePath: ({ id }, filter) =>
-    register(
-      filterPath(id, filter),
-      filterPage({ projectId: id, filter, deps: deps() }),
-    ),
-  issuePagePath: ({ id }, number) =>
-    register(
-      issuePath(id, number),
-      issuePage({ projectId: id, number, deps: deps() }),
-    ),
-});
+const labelPrefix = 'label-';
 
-// Registers a path's page once; the same path opens it.
-function registrar(argo: Argo): Register {
-  const registered = new Set<string>();
+// The filter a path names: a built-in one by its id, or a label by its name.
+function filterOf(id: string): IssueFilter | undefined {
+  const builtIn = builtInFilters().find((filter) => filter.id === id);
 
-  return (path, page) => {
-    if (!registered.has(path)) argo.pages.register(path, page);
-    registered.add(path);
+  if (builtIn) return builtIn;
 
-    return path;
-  };
+  return id.startsWith(labelPrefix)
+    ? labelFilter(fromPathSegment(id.slice(labelPrefix.length)))
+    : undefined;
 }
 
-async function registerBuiltIns(deps: IssueDeps): Promise<void> {
-  const projects = await deps.listProjects().catch(() => []);
+const issueNumberOf = (text: string): number | undefined =>
+  /^[1-9]\d*$/u.test(text) ? Number(text) : undefined;
 
-  for (const project of projects) {
-    deps.pages.projectPagePath(project);
-
-    for (const filter of builtInFilters())
-      deps.pages.filterPagePath(project, filter);
-  }
+function NotFound(): JSX.Element {
+  return (
+    <Screen title="Not found">
+      <EmptyState title="This page doesn't exist" />
+    </Screen>
+  );
 }
 
-// A page keeps only its Project's id: the Project itself, remote and all, is read each time the page opens.
-const projectPage = (projectId: string, deps: IssueDeps): Page =>
-  function IssueProjectPage(): JSX.Element {
-    return <IssuesRoot deps={deps} projectId={projectId} />;
+const projectPage = (deps: IssueDeps): Page =>
+  function IssueProjectPage(props: { params: PageParams }): JSX.Element {
+    return <IssuesRoot deps={deps} projectId={projectIdOf(props.params)} />;
   };
 
-type FilterInput = { projectId: string; filter: IssueFilter; deps: IssueDeps };
+const filterPage = (deps: IssueDeps): Page =>
+  function IssueFilterPage(props: { params: PageParams }): JSX.Element {
+    const filter = filterOf(props.params.filterId ?? '');
 
-const filterPage = ({ projectId, filter, deps }: FilterInput): Page =>
-  function IssueFilterPage(): JSX.Element {
+    if (!filter) return <NotFound />;
+
     return (
       <IssuesRoot
         deps={deps}
-        projectId={projectId}
+        projectId={projectIdOf(props.params)}
         filter={filter}
         detail={(project) => (
           <FilterPage project={project} filter={filter} deps={deps} />
@@ -88,14 +69,16 @@ const filterPage = ({ projectId, filter, deps }: FilterInput): Page =>
     );
   };
 
-type IssueInput = { projectId: string; number: number; deps: IssueDeps };
+const issuePage = (deps: IssueDeps): Page =>
+  function IssuePage(props: { params: PageParams }): JSX.Element {
+    const number = issueNumberOf(props.params.number ?? '');
 
-const issuePage = ({ projectId, number, deps }: IssueInput): Page =>
-  function IssuePage(): JSX.Element {
+    if (number === undefined) return <NotFound />;
+
     return (
       <IssuesRoot
         deps={deps}
-        projectId={projectId}
+        projectId={projectIdOf(props.params)}
         detail={(project) => (
           <IssueDetailPage project={project} number={number} deps={deps} />
         )}

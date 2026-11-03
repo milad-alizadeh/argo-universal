@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { IssueDeps } from './issue-deps';
+import { issuePath } from './issue-paths';
 import { createIssueSummaries, type IssueSummaries } from './issue-summary';
 import { barItems, rowItems, type Linked, type PathOf } from './session-items';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
@@ -34,8 +35,6 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
 type Fills = Omit<Answering, 'toItems'>;
 
 function registerItems(api: Argo, fills: Fills): void {
-  const pathOf = issuePathOf(fills.deps);
-
   const answer =
     (toItems: ToItems): SlotProvider =>
     (request) =>
@@ -62,10 +61,7 @@ const slotsChanged = (api: Argo) => async (): Promise<void> => {
   ]);
 };
 
-const issuePathOf =
-  (deps: IssueDeps): PathOf =>
-  ({ projectId, number }) =>
-    deps.pages.issuePagePath({ id: projectId }, number);
+const pathOf: PathOf = ({ projectId, number }) => issuePath(projectId, number);
 
 type Answering = {
   deps: IssueDeps;

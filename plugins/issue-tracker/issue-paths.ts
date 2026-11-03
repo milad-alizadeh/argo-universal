@@ -11,6 +11,19 @@ export const pathSegment = (text: string): string =>
     (character) => `_${(character.codePointAt(0) ?? 0).toString(hex)}_`,
   );
 
+// The text a path segment stands for; a segment `pathSegment` never wrote comes back as written.
+export const fromPathSegment = (segment: string): string =>
+  segment.replaceAll(/_([0-9a-f]+)_/gu, (_whole, code: string) =>
+    String.fromCodePoint(Number.parseInt(code, hex)),
+  );
+
+// The patterns each page is registered at once; a `:name` segment reaches the page as `params.name`.
+export const pagePatterns = {
+  project: '/projects/:projectId',
+  filter: '/projects/:projectId/filters/:filterId',
+  issue: '/projects/:projectId/issues/:number',
+} as const;
+
 export const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
 

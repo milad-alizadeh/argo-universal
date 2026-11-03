@@ -44,6 +44,14 @@ export function register(argo: Argo): void {
 
 A page is opened by the path it registers at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
 
+Register a page once for every path it opens. A pattern's `:name` segments each match one path segment, and the page receives them as strings in `params`:
+
+```tsx
+argo.pages.register('/builds/:buildId', ({ params }) => <Build id={params.buildId} />);
+```
+
+An exact path wins over a pattern that also matches it, so `/builds/latest` can have its own page. Two patterns that match the same paths, such as `/builds/:buildId` and `/builds/:name`, are refused: the second `register` throws. There are no regex or wildcard segments. A path no page matches opens a page saying "This page doesn't exist". Do not register a page only once a row links to it: a reload or a link from outside the Plugin opens the path before any row is drawn.
+
 Run the commands from the Plugin folder:
 
 ```sh
