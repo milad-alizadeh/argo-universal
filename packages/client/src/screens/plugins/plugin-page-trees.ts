@@ -32,13 +32,6 @@ export function keepPluginTree(
   client.setQueryData(keptTreeKey(page), tree);
 }
 
-export function readKeptTree(
-  client: QueryClient,
-  page: PluginViewInput,
-): WireNode | undefined {
-  return client.getQueryData(keptTreeKey(page));
-}
-
 const isTree = ({ queryKey }: Query): boolean =>
   queryKey[0] === pluginPageTrees;
 

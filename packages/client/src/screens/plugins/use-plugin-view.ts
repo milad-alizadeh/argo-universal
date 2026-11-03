@@ -23,7 +23,8 @@ export interface PluginView extends PluginViewState {
  * view they came from. A view that is not `live` is closed on the Server. Until a view is open the page draws the last
  * tree it kept (ADR-0048), and the view's first snapshot replaces that tree in place, so nothing remounts.
  */
-export function usePluginView(page: PluginViewInput, live = true): PluginView {
+export function usePluginView(input: PluginViewInput, live = true): PluginView {
+  const page = useSamePage(input);
   const kept = useKeptPluginTree(page);
   const state = usePluginViewStream(page, live, kept);
 
@@ -37,6 +38,16 @@ export function usePluginView(page: PluginViewInput, live = true): PluginView {
     dispatch: useHeldUntilLive({ page, live, drawn, onEvent }),
     treeKey: useLiveViewCount(state.viewId),
   };
+}
+
+// Callers build the page anew each render; effects follow which page it is.
+function useSamePage(page: PluginViewInput): PluginViewInput {
+  const [same, setSame] = useState(page);
+  const changed = JSON.stringify(page) !== JSON.stringify(same);
+
+  if (changed) setSame(page);
+
+  return changed ? page : same;
 }
 
 function usePluginViewStream(
@@ -60,11 +71,10 @@ function useKeepTree(page: PluginViewInput, state: PluginViewState): void {
   const client = useQueryClient();
   const { root, viewId } = state;
   const liveTree = viewId ? root : null;
-  const key = JSON.stringify(page);
 
   useEffect(() => {
-    if (liveTree) keepPluginTree(client, JSON.parse(key), liveTree);
-  }, [client, key, liveTree]);
+    if (liveTree) keepPluginTree(client, page, liveTree);
+  }, [client, page, liveTree]);
 }
 
 interface HoldingInput {
@@ -79,17 +89,16 @@ function useHeldUntilLive(input: HoldingInput): PluginOnEvent {
   const { page, live, drawn, onEvent } = input;
   const { root, viewId } = drawn;
   const [held] = useState(() => new HeldEvents());
-  const key = JSON.stringify(page);
 
   useEffect(() => {
     if (viewId && root) held.release(root, onEvent);
-  });
+  }, [held, viewId, root, onEvent]);
 
   useEffect(() => {
     if (!live) held.drop();
   }, [held, live]);
 
-  useEffect(() => (): void => held.drop(), [held, key]);
+  useEffect(() => (): void => held.drop(), [held, page]);
 
   if (viewId || !root) return onEvent;
 

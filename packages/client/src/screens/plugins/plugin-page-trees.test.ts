@@ -1,4 +1,4 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { PluginViewInput, WireNode } from '@repo/contracts/plugins/wire';
 import {
   QueryObserver,
   skipToken,
@@ -11,7 +11,6 @@ import {
   dropTreesOfPluginsOtherThan,
   keepPluginTree,
   keptTreeKey,
-  readKeptTree,
 } from './plugin-page-trees';
 
 const tree = (title: string): WireNode => ({
@@ -29,6 +28,11 @@ const issues = { pluginId: 'issues', path: '/open' };
 const issuesOther = { pluginId: 'issues', path: '/closed' };
 
 const atlas = { pluginId: 'atlas', path: '/open' };
+
+const readKeptTree = (
+  client: QueryClient,
+  page: PluginViewInput,
+): WireNode | undefined => client.getQueryData(keptTreeKey(page));
 
 const watchIssues = (client: QueryClient): QueryObserver<WireNode> =>
   new QueryObserver<WireNode>(client, {

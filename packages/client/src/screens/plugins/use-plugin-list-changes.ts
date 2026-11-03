@@ -1,3 +1,4 @@
+import type { PluginList } from '@repo/contracts/plugins';
 import {
   useQuery,
   useQueryClient,
@@ -73,12 +74,7 @@ function usePluginChangeHandlers(): PluginChangeHandlers {
   );
 }
 
-interface ListedPlugin {
-  enabled: boolean;
-  manifest: { id: string };
-}
-
-const enabledIds = (plugins: ListedPlugin[]): Set<string> =>
+const enabledIds = (plugins: PluginList['plugins']): Set<string> =>
   new Set(plugins.flatMap((it) => (it.enabled ? [it.manifest.id] : [])));
 
 // A Plugin the list no longer names, such as one removed from disk, draws nothing again.

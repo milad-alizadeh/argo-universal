@@ -31,7 +31,7 @@ export class PluginServices {
   public readonly accountCalls;
   private readonly held = new Map<string, Held>();
   private readonly activated = new Map<string, ActivatedPlugin>();
-  readonly reloaded = (id: string): void => this.options.reloaded?.(id);
+  public readonly reloaded = (id: string): void => this.options.reloaded?.(id);
 
   constructor(
     readonly storage: PluginStorage,

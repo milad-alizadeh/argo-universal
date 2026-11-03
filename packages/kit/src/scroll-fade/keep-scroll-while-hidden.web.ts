@@ -52,12 +52,12 @@ class HiddenScrollKeeper {
     this.position = scroller.scrollTop;
   }
 
-  readonly remember = (): void => {
+  public readonly remember = (): void => {
     if (!this.holding && this.scroller.clientHeight > 0)
       this.position = this.scroller.scrollTop;
   };
 
-  readonly resized = (): void => {
+  public readonly resized = (): void => {
     this.stopWaiting();
 
     if (this.scroller.clientHeight === 0) this.hold();
@@ -65,7 +65,7 @@ class HiddenScrollKeeper {
     else this.height = this.scroller.scrollHeight;
   };
 
-  stop(): void {
+  public stop(): void {
     this.stopWaiting();
   }
 
