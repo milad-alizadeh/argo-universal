@@ -15,6 +15,7 @@ const sessionDefaults = {
   title: '',
   titleSource: 'prompt',
   archivedAt: null,
+  keepCheckout: false,
   seenRevision: 0,
   activityAt: 0,
   failure: null,
