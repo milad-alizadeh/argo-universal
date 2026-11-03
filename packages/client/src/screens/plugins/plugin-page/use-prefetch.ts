@@ -15,7 +15,9 @@ export const freshMs = 5_000;
 
 /*
  * Draws ahead the Loader pages the first few links on a page open, so a tap paints from the cache. Only
- * links to Loader pages can be drawn ahead; a view page is still a live stream opened on the tap.
+ * an address with no tree is drawn: a kept one draws at once on the tap and its screen asks again then,
+ * so a redraw of this page does not read every link again. Only links to Loader pages can be drawn
+ * ahead; a view page is still a live stream opened on the tap.
  */
 export function usePrefetch(opening: PageOpening, root: WireNode | null): void {
   const trpc = useTRPC();
@@ -30,7 +32,7 @@ export function usePrefetch(opening: PageOpening, root: WireNode | null): void {
       const pageState = rememberedState(client, page);
       const options = trpc.plugins.draw.queryOptions({ ...page, pageState });
 
-      void client.prefetchQuery({ ...options, staleTime: freshMs });
+      void client.prefetchQuery({ ...options, staleTime: Infinity });
     }
   }, [client, trpc, pluginId, projectId, sessionId, root, patterns]);
 }
