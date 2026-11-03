@@ -1,4 +1,4 @@
-import { PluginViewId, WireNode } from '@repo/contracts/plugins/wire';
+import { WireNode } from '@repo/contracts/plugins/wire';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-view';
 
@@ -9,14 +9,11 @@ const severalAccounts = WireNode.parse(
   ),
 );
 
-const viewId = PluginViewId.parse('sign-in-several');
-
 const meta = {
   title: 'Design System/Patterns/PluginSignInSeveral',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
     <PluginDetailView
-      viewId={viewId}
       root={severalAccounts}
       callbacks={{ onEvent: () => {} }}
     />

@@ -116,7 +116,7 @@ function SectionList(props: SectionListProps): React.JSX.Element {
     <View className="hidden">
       <ListDetailSidebarPlaceOffer value={use(FrameListDetailSidebar)}>
         <PluginTree
-          key={props.view.viewId}
+          key={props.view.treeKey}
           root={props.list}
           onEvent={props.view.dispatch}
           onOpenPage={onOpenPage}

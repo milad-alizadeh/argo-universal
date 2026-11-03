@@ -8,6 +8,7 @@ import type {
   PluginViewId,
 } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { replaceEqualDeep } from '@tanstack/react-query';
 
 // What each Plugin stream draws: a page's view, or a Replaceable Slot's replacement.
 
@@ -32,12 +33,20 @@ export function reducePluginView(
   message: ViewMessage,
 ): PluginViewState {
   return message.type === 'snapshot'
-    ? snapshot(message)
+    ? snapshot(state, message)
     : patched(state, message);
 }
 
-function snapshot({ root, revision, viewId }: Snapshot): PluginViewState {
-  return { root, revision, viewId: viewId ?? null };
+// A node the snapshot left as it was stays the same object, so a row it did not change does not draw again.
+function snapshot(
+  { root: drawn }: PluginViewState,
+  { root, revision, viewId }: Snapshot,
+): PluginViewState {
+  return {
+    root: replaceEqualDeep(drawn, root),
+    revision,
+    viewId: viewId ?? null,
+  };
 }
 
 function patched(

@@ -1,5 +1,5 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
-import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import {
   Screen,
@@ -23,7 +23,8 @@ export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.
   root: WireNode | null;
   title?: string;
-  viewId?: PluginViewId | null;
+  // A new value starts the tree over.
+  treeKey?: number;
   callbacks: PluginPageCallbacks;
   // The App's own Back for a pushed page; a Plugin declares no navigation (`ScreenDefaultBack`).
   onBack?: (() => void) | null;
@@ -90,6 +91,6 @@ function ownsPage(root: WireNode | null): boolean {
 
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
-    <PluginTree key={props.viewId} root={props.root} {...props.callbacks} />
+    <PluginTree key={props.treeKey} root={props.root} {...props.callbacks} />
   ) : null;
 }

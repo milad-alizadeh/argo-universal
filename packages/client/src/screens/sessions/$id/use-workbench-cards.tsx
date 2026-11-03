@@ -107,7 +107,7 @@ function PluginCardPage({ pluginId, path, sessionId }: CardPage): ReactNode {
 
   return (
     <PluginTree
-      key={view.viewId}
+      key={view.treeKey}
       root={view.root}
       onEvent={view.dispatch}
       onOpenPage={(page) => openPage(pluginId, page)}

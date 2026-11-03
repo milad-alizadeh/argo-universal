@@ -12,7 +12,7 @@ const meta = {
   argTypes: {
     title: { control: 'text' },
     root: { control: false },
-    viewId: { control: false },
+    treeKey: { control: false },
     callbacks: { control: false },
   },
   parameters: { screenPreview: true },

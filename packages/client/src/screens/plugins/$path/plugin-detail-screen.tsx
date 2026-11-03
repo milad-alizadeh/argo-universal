@@ -164,7 +164,7 @@ function pluginPageProps(
 ): React.ComponentProps<typeof PluginDetailView> {
   return {
     title: section.title,
-    viewId: view.viewId,
+    treeKey: view.treeKey,
     root: view.root,
     callbacks: { onEvent: view.dispatch, onOpenPage },
   };

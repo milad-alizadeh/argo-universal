@@ -20,12 +20,17 @@ const keptQueries: readonly (readonly string[])[] = [
   ['system', 'info'],
 ];
 
+// The last tree of each Plugin page (ADR-0048); kept until something drops it, as a page returned to after an hour still draws.
+export const pluginPageTrees = 'plugin-page-trees';
+
 // A kept list is still asked for again on every visit; what it keeps is what the reader sees meanwhile.
 export function createQueryClient(): QueryClient {
   const client = new QueryClient();
 
   for (const path of keptQueries)
     client.setQueryDefaults([path], { gcTime: keptFor });
+
+  client.setQueryDefaults([pluginPageTrees], { gcTime: Infinity });
 
   return client;
 }

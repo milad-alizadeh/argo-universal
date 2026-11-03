@@ -12,6 +12,7 @@ import {
   waveCounterTree,
   waveCounterWavePatch,
 } from '@repo/contracts/plugins/wire-fixtures';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
 import {
   coreSlotState,
@@ -45,6 +46,36 @@ describe('reducePluginView', () => {
     expect(reducePluginView(emptyPluginView, counterTapPatch)).toBe(
       emptyPluginView,
     );
+  });
+
+  it('keeps the nodes a snapshot left as they were, and replaces the rest', () => {
+    const row = (title: string, key: string): WireNode => ({
+      type: 'ListItem',
+      key,
+      props: { title },
+      children: [],
+      slots: {},
+    });
+
+    const list = (...children: WireNode[]): WireNode => ({
+      type: 'List',
+      key: 'list',
+      props: {},
+      children,
+      slots: {},
+    });
+
+    const keptRoot = list(row('One', 'a'), row('Two', 'b'));
+    const fresh = list(row('One', 'a'), row('Two, edited', 'b'));
+
+    const { root } = reducePluginView(
+      { ...emptyPluginView, root: keptRoot },
+      { type: 'snapshot', root: fresh, revision: 1 },
+    );
+
+    expect(root).toEqual(fresh);
+    expect(root?.children[0]).toBe(keptRoot.children[0]);
+    expect(root?.children[1]).not.toBe(keptRoot.children[1]);
   });
 
   it('replaces the page with a fresh snapshot even when its revision is lower', () => {

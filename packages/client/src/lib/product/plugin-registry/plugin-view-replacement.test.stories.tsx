@@ -1,8 +1,4 @@
-import {
-  PluginViewId,
-  WireNode,
-  type ComponentEvent,
-} from '@repo/contracts/plugins/wire';
+import { WireNode, type ComponentEvent } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import fixture from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -15,17 +11,17 @@ const root = applyPatch(WireNode.parse(fixture), [
   { op: 'setProps', key: ['sheet'], props: { open: true } },
 ]);
 
-const first = PluginViewId.parse('first');
+const first = 0;
 
-const second = PluginViewId.parse('second');
+const second = 1;
 
 const received = fn();
 
 let confirmation: PromiseWithResolvers<void>;
 
 function delivery(
-  id: PluginViewId,
-  replace: (id: PluginViewId) => void,
+  id: number,
+  replace: (id: number) => void,
 ): PluginOnEvent {
   return (key, event) => {
     received(id, key, event);
@@ -42,13 +38,13 @@ function isConfirmation(key: string, event: ComponentEvent): boolean {
 }
 
 function Replacement(): React.JSX.Element {
-  const [viewId, replace] = useState(first);
+  const [treeKey, replace] = useState(first);
 
   return (
     <PluginDetailView
-      viewId={viewId}
+      treeKey={treeKey}
       root={root}
-      callbacks={{ onEvent: fn(delivery(viewId, replace)) }}
+      callbacks={{ onEvent: fn(delivery(treeKey, replace)) }}
     />
   );
 }

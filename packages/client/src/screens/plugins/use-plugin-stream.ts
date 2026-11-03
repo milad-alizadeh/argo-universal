@@ -57,6 +57,9 @@ function useStreamState<Message, State>(
 ): StreamState<Message, State> {
   const [stored, store] = useState({ source, state: initial });
 
+  // Forgets what the last source drew, so coming back to it starts over rather than showing a stream that has ended.
+  if (!sameSource(stored.source, source)) store({ source, state: initial });
+
   const receive = (message: Message): void =>
     store((previous) => ({
       source,
@@ -66,12 +69,13 @@ function useStreamState<Message, State>(
   return { state: current(stored, source, initial), receive };
 }
 
+const sameSource = (one: Source, other: Source): boolean =>
+  one.trpc === other.trpc && one.key === other.key;
+
 function current<State>(
   stored: { source: Source; state: State },
-  { trpc, key }: Source,
+  source: Source,
   initial: State,
 ): State {
-  return stored.source.trpc === trpc && stored.source.key === key
-    ? stored.state
-    : initial;
+  return sameSource(stored.source, source) ? stored.state : initial;
 }
