@@ -5,7 +5,6 @@ import {
   type Query,
   type QueryClient,
 } from '@tanstack/react-query';
-import type { RefObject } from 'react';
 import { pluginPageTrees } from '../../query-cache';
 
 /*
@@ -15,23 +14,6 @@ import { pluginPageTrees } from '../../query-cache';
 export const keptTreeKey = ({ pluginId, ...page }: PluginViewInput) =>
   [pluginPageTrees, pluginId, page] as const;
 
-/*
- * Never fetched: the trees come from the Plugin's own stream. A page drawing its live view does not draw this tree, so
- * it is not drawn again for each tree it keeps; it reads whatever the entry holds the next time it does draw.
- */
-export function useKeptPluginTree(
-  page: PluginViewInput,
-  drawingLive: RefObject<boolean>,
-): WireNode | null {
-  const { data } = useQuery<WireNode>({
-    queryKey: keptTreeKey(page),
-    queryFn: skipToken,
-    notifyOnChangeProps: () => (drawingLive.current ? [] : ['data']),
-  });
-
-  return data ?? null;
-}
-
 export function keepPluginTree(
   client: QueryClient,
   page: PluginViewInput,
@@ -40,39 +22,36 @@ export function keepPluginTree(
   client.setQueryData(keptTreeKey(page), tree);
 }
 
-const isTree = ({ queryKey }: Query): boolean =>
-  queryKey[0] === pluginPageTrees;
+/*
+ * The tree kept for a page, or null. A page drawing its live view passes `watching: false`, so it does not draw again
+ * for each tree it keeps; it reads whatever the entry holds the next time it draws.
+ */
+export function useKeptPluginTree(
+  page: PluginViewInput,
+  watching: boolean,
+): WireNode | null {
+  const { data } = useQuery<WireNode>({
+    queryKey: keptTreeKey(page),
+    queryFn: skipToken,
+    subscribed: watching,
+  });
+
+  return data ?? null;
+}
 
 /*
- * A page still watching a tree has to stop drawing it, so its entry is reset, which it hears; only then can the
- * entries nothing is watching leave the cache.
+ * Drops the trees of each Plugin `dropped` names. A page still watching a tree has to stop drawing it, so its entry is
+ * reset, which it hears; the entries nothing is watching leave the cache.
  */
-async function dropWhere(
+export function dropPluginTrees(
   client: QueryClient,
-  dropped: (query: Query) => boolean,
-): Promise<void> {
-  const predicate = (query: Query): boolean => isTree(query) && dropped(query);
+  dropped: (pluginId: string) => boolean,
+): void {
+  const predicate = ({ queryKey }: Query): boolean =>
+    queryKey[0] === pluginPageTrees && dropped(String(queryKey[1]));
 
-  await client.resetQueries({ predicate });
+  void client.resetQueries({ predicate });
   client.removeQueries({
     predicate: (query) => predicate(query) && query.getObserversCount() === 0,
   });
-}
-
-// Drops one Plugin's trees, or with no Plugin every tree.
-export function dropPluginTrees(
-  client: QueryClient,
-  pluginId?: string,
-): Promise<void> {
-  return dropWhere(
-    client,
-    ({ queryKey }) => pluginId === undefined || queryKey[1] === pluginId,
-  );
-}
-
-export function dropTreesOfPluginsOtherThan(
-  client: QueryClient,
-  listed: ReadonlySet<string>,
-): Promise<void> {
-  return dropWhere(client, ({ queryKey }) => !listed.has(String(queryKey[1])));
 }

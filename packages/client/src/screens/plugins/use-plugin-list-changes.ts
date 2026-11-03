@@ -1,16 +1,9 @@
 import type { PluginList } from '@repo/contracts/plugins';
-import {
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect, useMemo } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import {
-  dropPluginTrees,
-  dropTreesOfPluginsOtherThan,
-} from './plugin-page-trees';
+import { dropPluginTrees } from './plugin-page-trees';
 import { refreshPluginList } from './refresh-plugin-list';
 
 /*
@@ -21,13 +14,16 @@ import { refreshPluginList } from './refresh-plugin-list';
  */
 export function usePluginListChanges(): void {
   const trpc = useTRPC();
-  const { changed, reconnected } = usePluginChangeHandlers();
+  const changed = usePluginChanged();
 
   const subscription = useSubscription(
     trpc.plugins.listChanges.subscriptionOptions(undefined, {
-      // Reading on start covers a change made while the App was away or while the stream was starting.
-      onStarted: reconnected,
-      onData: changed,
+      /*
+       * Reading on start covers a change made while the App was away or while the stream was starting; the App cannot
+       * know what changed then, so it keeps no tree from before.
+       */
+      onStarted: () => changed(() => true),
+      onData: ({ pluginId }) => changed((id) => id === pluginId),
     }),
   );
 
@@ -35,41 +31,20 @@ export function usePluginListChanges(): void {
   useDropTreesOfUnlistedPlugins();
 }
 
-interface PluginChangeHandlers {
-  changed: (change: { pluginId: string }) => void;
-  // The App cannot know what changed while it was away, so it keeps no tree from before.
-  reconnected: () => void;
-}
-
-function changeHandlers(
-  cache: QueryClient,
-  reread: () => void,
-): PluginChangeHandlers {
-  return {
-    changed: ({ pluginId }): void => {
-      void dropPluginTrees(cache, pluginId);
-      reread();
-    },
-    reconnected: (): void => {
-      void dropPluginTrees(cache);
-      reread();
-    },
-  };
-}
-
 // The Plugin list and the declared Slot items both follow which Plugins the Server runs.
-function usePluginChangeHandlers(): PluginChangeHandlers {
+function usePluginChanged(): (dropped: (pluginId: string) => boolean) => void {
   const trpc = useTRPC();
   const cache = useQueryClient();
 
   return useMemo(
     () =>
-      changeHandlers(cache, () => {
+      (dropped): void => {
+        dropPluginTrees(cache, dropped);
         void refreshPluginList(cache, [
           trpc.plugin.list.queryFilter(),
           trpc.plugins.declared.queryFilter(),
         ]);
-      }),
+      },
     [cache, trpc],
   );
 }
@@ -83,6 +58,10 @@ function useDropTreesOfUnlistedPlugins(): void {
   const { data } = useQuery(useTRPC().plugin.list.queryOptions());
 
   useEffect(() => {
-    if (data) void dropTreesOfPluginsOtherThan(cache, enabledIds(data.plugins));
+    if (!data) return;
+
+    const listed = enabledIds(data.plugins);
+
+    dropPluginTrees(cache, (id) => !listed.has(id));
   }, [cache, data]);
 }

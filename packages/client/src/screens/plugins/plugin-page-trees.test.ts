@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '../../query-cache';
 import {
   dropPluginTrees,
-  dropTreesOfPluginsOtherThan,
   keepPluginTree,
   keptTreeKey,
 } from './plugin-page-trees';
@@ -82,24 +81,24 @@ describe('a Plugin page tree kept in the App', () => {
     expect(readKeptTree(client, atlas)).toEqual(tree('never watched'));
   });
 
-  it('dropping a Plugin leaves the other Plugins kept', async () => {
+  it('dropping a Plugin leaves the other Plugins kept', () => {
     keepPluginTree(client, issues, tree('open'));
     keepPluginTree(client, issuesOther, tree('closed'));
     keepPluginTree(client, atlas, tree('atlas'));
 
-    await dropPluginTrees(client, 'issues');
+    dropPluginTrees(client, (id) => id === 'issues');
 
     expect(readKeptTree(client, issues)).toBeUndefined();
     expect(readKeptTree(client, issuesOther)).toBeUndefined();
     expect(readKeptTree(client, atlas)).toEqual(tree('atlas'));
   });
 
-  it('dropping with no Plugin drops every tree, and nothing else', async () => {
+  it('dropping every Plugin drops every tree, and nothing else', () => {
     client.setQueryData(['projects', 'list'], ['kept']);
     keepPluginTree(client, issues, tree('open'));
     keepPluginTree(client, atlas, tree('atlas'));
 
-    await dropPluginTrees(client);
+    dropPluginTrees(client, () => true);
 
     expect(readKeptTree(client, issues)).toBeUndefined();
     expect(readKeptTree(client, atlas)).toBeUndefined();
@@ -118,19 +117,18 @@ describe('a Plugin page tree kept in the App', () => {
     await vi.runAllTimersAsync();
     expect(drawn.at(-1)).toEqual(tree('open'));
 
-    const dropping = dropPluginTrees(client, 'issues');
+    dropPluginTrees(client, (id) => id === 'issues');
     await vi.runAllTimersAsync();
-    await dropping;
 
     expect(drawn.at(-1)).toBeUndefined();
     unsubscribe();
   });
 
-  it('a Plugin no longer listed loses its trees', async () => {
+  it('a Plugin no longer listed loses its trees', () => {
     keepPluginTree(client, issues, tree('open'));
     keepPluginTree(client, atlas, tree('atlas'));
 
-    await dropTreesOfPluginsOtherThan(client, new Set(['atlas']));
+    dropPluginTrees(client, (id) => !new Set(['atlas']).has(id));
 
     expect(readKeptTree(client, issues)).toBeUndefined();
     expect(readKeptTree(client, atlas)).toEqual(tree('atlas'));

@@ -1,14 +1,23 @@
-import type { PluginViewInput } from '@repo/contracts/plugins/wire';
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import type {
+  PluginViewInput,
+  ViewMessage,
+  WireNode,
+} from '@repo/contracts/plugins/wire';
+import { replaceEqualDeep, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useTRPC } from '#features/connection';
 import {
   emptyPluginView,
   reducePluginView,
   type PluginViewState,
   type PluginOnEvent,
 } from '../../lib/product/plugin-registry';
-import { HeldEvents } from './held-events';
-import { keepPluginTree, useKeptPluginTree } from './plugin-page-trees';
+import { useHeldUntilLive } from './held-events';
+import {
+  keepPluginTree,
+  keptTreeKey,
+  useKeptPluginTree,
+} from './plugin-page-trees';
 import { usePluginBinding } from './use-plugin-binding';
 import { usePluginStream } from './use-plugin-stream';
 
@@ -25,100 +34,71 @@ export interface PluginView extends PluginViewState {
  */
 export function usePluginView(input: PluginViewInput, live = true): PluginView {
   const page = useSamePage(input);
-  const { kept, state } = useKeptAndLive(page, live);
-
-  useKeepTree(page, state);
-
-  const { onEvent } = usePluginBinding()({ ...page, view: state });
-  const drawn = state.viewId ? state : { ...state, root: kept };
+  const drawn = useKeptPluginView(page, live);
+  const { onEvent } = usePluginBinding()({ ...page, view: drawn });
 
   return {
     ...drawn,
     dispatch: useHeldUntilLive({ page, live, drawn, onEvent }),
-    treeKey: useLiveViewCount(state.viewId),
+    treeKey: useLiveViewCount(drawn.viewId),
   };
 }
 
-interface KeptAndLive {
-  kept: PluginViewState['root'];
-  state: PluginViewState;
-}
+// The live view once it is open, and until then the kept tree, which the view's first snapshot starts from.
+function useKeptPluginView(
+  page: PluginViewInput,
+  live: boolean,
+): PluginViewState {
+  const state = usePluginViewStream(page, live);
+  const kept = useKeptPluginTree(page, !state.viewId);
 
-function useKeptAndLive(page: PluginViewInput, live: boolean): KeptAndLive {
-  const drawingLive = useRef(false);
-  const kept = useKeptPluginTree(page, drawingLive);
-  const state = usePluginViewStream(page, live, kept);
+  useKeepLiveTree(page, state);
 
-  useEffect(() => {
-    drawingLive.current = Boolean(state.viewId);
-  }, [state.viewId]);
-
-  return { kept, state };
-}
-
-// Callers build the page anew each render; effects follow which page it is.
-function useSamePage(page: PluginViewInput): PluginViewInput {
-  const [same, setSame] = useState(page);
-  const changed = JSON.stringify(page) !== JSON.stringify(same);
-
-  if (changed) setSame(page);
-
-  return changed ? page : same;
+  return state.viewId ? state : { ...state, root: kept };
 }
 
 function usePluginViewStream(
   page: PluginViewInput,
   live: boolean,
-  kept: PluginViewState['root'],
 ): PluginViewState {
-  return usePluginStream(
-    { page, live },
-    (trpc, input, onData) =>
-      trpc.plugins.view.subscriptionOptions(input.page, {
-        onData,
-        enabled: input.live,
-      }),
-    { initial: { ...emptyPluginView, root: kept }, reduce: reducePluginView },
-  ).state;
+  const kept = useQueryClient().getQueryData<WireNode>(keptTreeKey(page));
+
+  return usePluginStream({ page, live }, subscribeToView, {
+    initial: { ...emptyPluginView, root: kept ?? null },
+    reduce: reducePluginView,
+  }).state;
 }
 
+type TRPC = ReturnType<typeof useTRPC>;
+
+const subscribeToView = (
+  trpc: TRPC,
+  input: { page: PluginViewInput; live: boolean },
+  onData: (message: ViewMessage) => void,
+): ReturnType<TRPC['plugins']['view']['subscriptionOptions']> =>
+  trpc.plugins.view.subscriptionOptions(input.page, {
+    onData,
+    enabled: input.live,
+  });
+
 // Only what a live view drew is kept, so an entry dropped under a live page stays dropped until the page changes.
-function useKeepTree(page: PluginViewInput, state: PluginViewState): void {
+function useKeepLiveTree(page: PluginViewInput, state: PluginViewState): void {
   const client = useQueryClient();
-  const { root, viewId } = state;
-  const liveTree = viewId ? root : null;
+  const liveTree = state.viewId ? state.root : null;
 
   useEffect(() => {
     if (liveTree) keepPluginTree(client, page, liveTree);
   }, [client, page, liveTree]);
 }
 
-interface HoldingInput {
-  page: PluginViewInput;
-  live: boolean;
-  drawn: PluginViewState;
-  onEvent: PluginOnEvent;
-}
+// Callers build the page anew each render; effects follow which page it is.
+function useSamePage(page: PluginViewInput): PluginViewInput {
+  const [same, setSame] = useState(page);
+  const next = replaceEqualDeep(same, page);
 
-// A tap on a tree with no view behind it waits for the view; the choice and its reasons are in ADR-0048.
-function useHeldUntilLive(input: HoldingInput): PluginOnEvent {
-  const { page, live, drawn, onEvent } = input;
-  const { root, viewId } = drawn;
-  const [held] = useState(() => new HeldEvents());
+  if (next !== same) setSame(next);
 
-  useEffect(() => {
-    if (viewId && root) held.release(root, onEvent);
-  }, [held, viewId, root, onEvent]);
-
-  useEffect(() => {
-    if (!live) held.drop();
-  }, [held, live]);
-
-  useEffect(() => (): void => held.drop(), [held, page]);
-
-  if (viewId || !root) return onEvent;
-
-  return (nodeKey, event) => held.hold(root, nodeKey, event);
+  return next;
 }
 
 type ViewId = PluginViewState['viewId'];
