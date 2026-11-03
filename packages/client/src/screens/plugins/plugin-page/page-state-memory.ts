@@ -13,10 +13,8 @@ const memoryKey = ({ pluginId, path }: Remembered): readonly string[] => [
   path,
 ];
 
-const rememberedState = (
-  client: QueryClient,
-  page: Remembered,
-): PageState => client.getQueryData<PageState>(memoryKey(page)) ?? {};
+const rememberedState = (client: QueryClient, page: Remembered): PageState =>
+  client.getQueryData<PageState>(memoryKey(page)) ?? {};
 
 /*
  * A Loader page's Page state, kept in the App beside its trees: Back and a later visit open the page at
