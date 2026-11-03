@@ -5,7 +5,6 @@ import {
 import {
   type ReactNode,
   useEffect,
-  useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -27,6 +26,7 @@ import {
   type SessionPluginCard,
 } from './sections/plugin-card-section';
 import { useDeclaredItems } from './use-declared-items';
+import { useLatest } from './use-latest';
 import type { ToggleWorkbenchCard } from './use-plugin-header-actions';
 
 type DeclaredCard = DeclaredItemOf<typeof sessionWorkbenchSlot>;
@@ -89,12 +89,12 @@ export function useEmptiedCardsClose(
   whenEmptied: WorkbenchCards['whenEmptied'],
   panels: SessionPanels,
 ): void {
-  const close = useRef(panels.close);
+  const close = useLatest(panels.close);
 
-  useEffect(() => {
-    close.current = panels.close;
-  });
-  useEffect(() => whenEmptied((key) => close.current(key)), [whenEmptied]);
+  useEffect(
+    () => whenEmptied((key) => close.current(key)),
+    [whenEmptied, close],
+  );
 }
 
 // The Session's card views: the store they are held in, which cards have something to show, and the views to mount.

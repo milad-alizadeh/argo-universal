@@ -38,6 +38,28 @@ Then(
   },
 );
 
+// Each word a step may use, and what it means; a word not listed fails the step rather than meaning the other.
+const meaning = <Meaning>(
+  words: Readonly<Record<string, Meaning>>,
+  word: string,
+): Meaning => {
+  const meant = words[word];
+
+  if (meant === undefined) throw new Error(`Unknown step word "${word}"`);
+
+  return meant;
+};
+
+// The button the Notes switch shows now, and the one it shows once pressed.
+const notesPresses = (verb: string): readonly [string, string] =>
+  meaning(
+    {
+      fill: ['Fill the Notes card', 'Empty the Notes card'],
+      empty: ['Empty the Notes card', 'Fill the Notes card'],
+    },
+    verb,
+  );
+
 /*
  * Flips the Lists mock's Notes switch for the Session. A press that lands while the page's first view is replaced is
  * refused with "try again", so it is pressed again until the switch reads the other way.
@@ -45,10 +67,7 @@ Then(
 When(
   'I {word} the Notes card on the Plugin page',
   async ({ page }, verb: string): Promise<void> => {
-    const [press, next] =
-      verb === 'fill'
-        ? ['Fill the Notes card', 'Empty the Notes card']
-        : ['Empty the Notes card', 'Fill the Notes card'];
+    const [press, next] = notesPresses(verb);
 
     const button = (name: string): Locator =>
       page
@@ -78,7 +97,7 @@ Then(
       .getByRole('menu')
       .getByRole('menuitem', { name, exact: true });
 
-    await expect(item).toHaveCount(has === 'lists' ? 1 : 0);
+    await expect(item).toHaveCount(meaning({ lists: 1, omits: 0 }, has));
     await page.keyboard.press('Escape');
     await expect(page.getByRole('menu')).toHaveCount(0);
   },

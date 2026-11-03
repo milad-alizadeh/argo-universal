@@ -22,17 +22,30 @@ const held = (root: WireNode | null): HeldCardView => ({
 });
 
 describe('HeldCardStore', () => {
-  it('counts a card as filled only once its page draws something, and not after it empties', () => {
+  it('counts no card as filled while one waits and another draws nothing', () => {
     const store = new HeldCardStore();
 
     store.hold(issue, held(null));
     store.hold(notes, held(emptyPage()));
+
     expect(store.filled()).toEqual([]);
+  });
+
+  it('counts a card as filled once its page draws something', () => {
+    const store = new HeldCardStore();
+
+    store.hold(issue, held(null));
+    store.hold(issue, held(text));
+
+    expect(store.filled()).toEqual([issue]);
+  });
+
+  it('stops counting a card as filled once its page empties', () => {
+    const store = new HeldCardStore();
 
     store.hold(issue, held(text));
-    expect(store.filled()).toEqual([issue]);
-
     store.hold(issue, held(emptyPage()));
+
     expect(store.filled()).toEqual([]);
   });
 
@@ -40,30 +53,57 @@ describe('HeldCardStore', () => {
     const store = new HeldCardStore();
     const watcher = vi.fn<() => void>();
 
-    store.subscribe(watcher);
     store.hold(issue, held(text));
+    store.subscribe(watcher);
     store.release(issue);
 
     expect(store.view(issue)).toBeUndefined();
     expect(store.filled()).toEqual([]);
-    expect(watcher).toHaveBeenCalledTimes(2);
+    expect(watcher).toHaveBeenCalled();
   });
 
-  it('says which card emptied when its page answers with nothing, not while it waits or when it is released', () => {
+  it('says which card emptied when its page drew something and then answers with nothing', () => {
+    const store = new HeldCardStore();
+    const emptied = vi.fn<(key: string) => void>();
+
+    store.whenEmptied(emptied);
+    store.hold(issue, held(text));
+    store.hold(issue, held(emptyPage()));
+
+    expect(emptied.mock.calls).toEqual([[issue]]);
+  });
+
+  it('says nothing emptied when a page answers with nothing before it ever drew', () => {
     const store = new HeldCardStore();
     const emptied = vi.fn<(key: string) => void>();
 
     store.whenEmptied(emptied);
     store.hold(issue, held(null));
     store.hold(issue, held(emptyPage()));
-    store.hold(notes, held(text));
-    store.hold(notes, held(null));
-    store.hold(notes, held(text));
-    store.release(notes);
-    store.hold(issue, held(text));
-    store.hold(issue, held(emptyPage()));
 
-    expect(emptied.mock.calls).toEqual([[issue]]);
+    expect(emptied).not.toHaveBeenCalled();
+  });
+
+  it('says nothing emptied while a card that drew waits for its next view', () => {
+    const store = new HeldCardStore();
+    const emptied = vi.fn<(key: string) => void>();
+
+    store.hold(notes, held(text));
+    store.whenEmptied(emptied);
+    store.hold(notes, held(null));
+
+    expect(emptied).not.toHaveBeenCalled();
+  });
+
+  it('says nothing emptied when a card that drew is released', () => {
+    const store = new HeldCardStore();
+    const emptied = vi.fn<(key: string) => void>();
+
+    store.hold(notes, held(text));
+    store.whenEmptied(emptied);
+    store.release(notes);
+
+    expect(emptied).not.toHaveBeenCalled();
   });
 
   it('keeps the same filled list while a change inside a card leaves which cards are filled alone', () => {

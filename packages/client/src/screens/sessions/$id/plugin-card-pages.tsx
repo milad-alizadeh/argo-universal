@@ -1,8 +1,9 @@
-import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
+import { type ReactNode, useEffect, useSyncExternalStore } from 'react';
 import { PluginTree } from '../../../lib/product/plugin-registry';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
 import { usePluginView } from '../../plugins/use-plugin-view';
 import type { HeldCardStore, HeldCardView } from './held-card-store';
+import { useLatest } from './use-latest';
 
 // One declared card's page, watched for a Session whether or not its card is drawn.
 export interface HeldCard {
@@ -66,16 +67,6 @@ function useHoldView(
   }, [store, cardKey, root, treeKey, latest]);
 
   useEffect(() => (): void => store.release(cardKey), [store, cardKey]);
-}
-
-function useLatest<Value>(value: Value): { current: Value } {
-  const latest = useRef(value);
-
-  useEffect(() => {
-    latest.current = value;
-  });
-
-  return latest;
 }
 
 // A card's page, drawn from the view the Session holds for it; nothing until that view has a tree.

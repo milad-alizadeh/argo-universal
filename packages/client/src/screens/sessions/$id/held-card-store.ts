@@ -10,9 +10,22 @@ export interface HeldCardView {
   dispatch: PluginOnEvent;
 }
 
-type Listener = () => void;
+// Who hears one kind of change, and the way to stop hearing it.
+class Listeners<Args extends unknown[]> {
+  private readonly heard = new Set<(...args: Args) => void>();
 
-type EmptiedListener = (key: string) => void;
+  public readonly add = (listener: (...args: Args) => void): (() => void) => {
+    this.heard.add(listener);
+
+    return () => {
+      this.heard.delete(listener);
+    };
+  };
+
+  public tell(...args: Args): void {
+    for (const listener of this.heard) listener(...args);
+  }
+}
 
 const sameKeys = (one: readonly string[], other: readonly string[]): boolean =>
   one.length === other.length && one.every((key, at) => other[at] === key);
@@ -27,26 +40,14 @@ const answeredNothing = ({ root }: HeldCardView): boolean =>
  */
 export class HeldCardStore {
   private readonly views = new Map<string, HeldCardView>();
-  private readonly listeners = new Set<Listener>();
-  private readonly emptiedListeners = new Set<EmptiedListener>();
+  private readonly changes = new Listeners<[]>();
+  private readonly empties = new Listeners<[key: string]>();
   private filledKeys: readonly string[] = [];
 
-  public readonly subscribe = (listener: Listener): (() => void) => {
-    this.listeners.add(listener);
-
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
+  public readonly subscribe = this.changes.add;
 
   // Hears each card whose page drew something and then answered with nothing; not one still waiting, or released.
-  public readonly whenEmptied = (listener: EmptiedListener): (() => void) => {
-    this.emptiedListeners.add(listener);
-
-    return () => {
-      this.emptiedListeners.delete(listener);
-    };
-  };
+  public readonly whenEmptied = this.empties.add;
 
   // The cards whose page draws something, the same array until that changes.
   public readonly filled = (): readonly string[] => this.filledKeys;
@@ -61,15 +62,11 @@ export class HeldCardStore {
     this.views.set(key, view);
     this.changed();
 
-    if (emptied) this.emptied(key);
+    if (emptied) this.empties.tell(key);
   }
 
   public release(key: string): void {
     if (this.views.delete(key)) this.changed();
-  }
-
-  private emptied(key: string): void {
-    for (const listener of this.emptiedListeners) listener(key);
   }
 
   private changed(): void {
@@ -79,6 +76,6 @@ export class HeldCardStore {
 
     if (!sameKeys(filled, this.filledKeys)) this.filledKeys = filled;
 
-    for (const listener of this.listeners) listener();
+    this.changes.tell();
   }
 }
