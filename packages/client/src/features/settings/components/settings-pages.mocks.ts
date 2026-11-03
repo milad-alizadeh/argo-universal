@@ -28,6 +28,7 @@ export const missingFolderProject: ProjectInfo = {
   checkoutChoice: { type: 'main' },
   remoteHost: null,
   folderExists: false,
+  deleteWorktreeOnArchive: true,
 };
 
 export const settingsProjects: ProjectInfo[] = [

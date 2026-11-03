@@ -9,7 +9,10 @@ import {
   accountsSection,
   type ProjectAccountsProps,
 } from './project-detail-accounts';
-import { newSessionsSections } from './project-detail-new-sessions';
+import {
+  newSessionsSections,
+  type ProjectNewSessionsControls,
+} from './project-detail-new-sessions';
 import { pluginSections, type OpenPluginPage } from './project-detail-plugins';
 import { removeSection } from './project-detail-remove';
 
@@ -31,6 +34,8 @@ export interface ProjectDetailViewProps {
   onOpenPluginPage?: OpenPluginPage;
   // The Accounts this Project chose per host, drawn below Folder; omitted until the Server has answered.
   accounts?: ProjectAccountsProps;
+  // What changes where this Project's Sessions start and what archiving them does; omitted until the page can save one.
+  newSessions?: ProjectNewSessionsControls;
 }
 
 type BodyProps = Pick<
@@ -41,11 +46,16 @@ type BodyProps = Pick<
   | 'pluginItems'
   | 'onOpenPluginPage'
   | 'accounts'
+  | 'newSessions'
 >;
 
 type SectionsProps = Pick<
   ProjectDetailViewProps,
-  'otherDevice' | 'pluginItems' | 'onOpenPluginPage' | 'accounts'
+  | 'otherDevice'
+  | 'pluginItems'
+  | 'onOpenPluginPage'
+  | 'accounts'
+  | 'newSessions'
 > & {
   project: ProjectInfo;
 };
@@ -96,7 +106,7 @@ function ProjectSections(props: SectionsProps): React.JSX.Element {
     <FieldGroup>
       {folderSection(project, otherDevice)}
       {accountsSection(accounts)}
-      {newSessionsSections(project)}
+      {newSessionsSections(project, props.newSessions)}
       {pluginSections(pluginItems, props.onOpenPluginPage)}
       {removeSection()}
     </FieldGroup>

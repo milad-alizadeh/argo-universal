@@ -6,6 +6,7 @@ import {
   createProject,
   listProjectBranches,
   readProjects,
+  updateProject,
 } from '../projects';
 import type { OperationImplementations, OperationsDeps } from './operations';
 
@@ -24,6 +25,8 @@ export function createProjectOperations(
     'project.clone': ({ url }) => cloneProject(deps.database, url),
     'project.create': ({ name }) => createProject(deps.database, name),
     'project.add': ({ path }) => addProject(deps.database, path),
+    'project.update': (input) =>
+      updateProject(deps.database, rejections, input),
     'project.listBranches': (input) =>
       listProjectBranches(deps.database, input),
   };

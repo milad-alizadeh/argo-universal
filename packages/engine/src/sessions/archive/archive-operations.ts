@@ -1,5 +1,5 @@
 import type { Database } from '@repo/db';
-import { session } from '@repo/db/schema';
+import { project, session } from '@repo/db/schema';
 import { isSessionBranch, removeCheckout } from '@repo/git';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 import { readProjectPath } from '../../projects';
@@ -21,6 +21,24 @@ const archivedSessionIds = (context: SessionContext): string[] => [
     .map(({ id }) => id),
 ];
 
+// Whether this archive keeps the worktree is settled now, so changing the Project's setting later never removes it.
+const keepsCheckout = (context: SessionContext): boolean =>
+  context.input.database
+    .select({ deletes: project.deleteWorktreeOnArchive })
+    .from(project)
+    .where(eq(project.id, context.projectId))
+    .get()?.deletes === false;
+
+const archiveJob = (
+  context: SessionContext,
+  archivedAt: number | null,
+): SessionArchiveJob =>
+  new SessionArchiveJob(
+    archivedSessionIds(context),
+    archivedAt,
+    archivedAt !== null && keepsCheckout(context),
+  );
+
 // The parent's archive and its borrowed Checkouts share one Writer commit.
 export async function saveSessionArchive(
   context: SessionContext,
@@ -31,10 +49,17 @@ export async function saveSessionArchive(
 
   await writeDatabaseJobAndWaitForCommit(
     writer,
-    new SessionArchiveJob(archivedSessionIds(context), archivedAt),
+    archiveJob(context, archivedAt),
     true,
   );
 }
+
+const isCheckoutKept = (database: Database, sessionId: string): boolean =>
+  database
+    .select({ keep: session.keepCheckout })
+    .from(session)
+    .where(eq(session.id, sessionId))
+    .get()?.keep === true;
 
 export async function removeSessionCheckout(
   database: Database,
@@ -42,6 +67,9 @@ export async function removeSessionCheckout(
   signal?: AbortSignal,
 ): Promise<void> {
   if (!isSessionBranch(data.checkout.branch, data.sessionId)) return;
+
+  if (isCheckoutKept(database, data.sessionId)) return;
+
   await removeCheckout(
     readProjectPath(database, data.projectId),
     data.checkout,

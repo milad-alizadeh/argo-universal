@@ -11,6 +11,7 @@ import {
 } from './project-detail-view';
 import { selectProject } from './select-project';
 import { useProjectAccounts } from './use-project-accounts';
+import { useProjectNewSessions } from './use-project-new-sessions';
 
 function toProjectLoad(
   projects: ProjectInfo[] | undefined,
@@ -55,29 +56,35 @@ export function ProjectDetailPane(props: {
   const detail = useProjectDetail(props.name, props.projectId);
 
   return detail.project.status === 'loaded' ? (
-    <LoadedProjectDetail
-      detail={detail}
-      projectId={detail.project.project.id}
-    />
+    <LoadedProjectDetail detail={detail} project={detail.project.project} />
   ) : (
     <ProjectDetailView {...detail} />
   );
 }
 
-type LoadedProps = { detail: ProjectDetailViewProps; projectId: string };
-
-// Asks the Slot only for a loaded Project, as the Server has no Project to answer for before then.
-function LoadedProjectDetail({
-  detail,
-  projectId,
-}: LoadedProps): React.JSX.Element {
+function useOpenProjectPluginPage(
+  projectId: string,
+): NonNullable<ProjectDetailViewProps['onOpenPluginPage']> {
   const open = usePluginOpener();
+
+  return (pluginId, path) => open(pluginId, { projectId })(path);
+}
+
+type LoadedProps = { detail: ProjectDetailViewProps; project: ProjectInfo };
+
+// Asks the Slot and the New Sessions rows only for a loaded Project, as the Server has no Project to answer for before then.
+function LoadedProjectDetail(props: LoadedProps): React.JSX.Element {
+  const { detail, project } = props;
+  const onOpenPluginPage = useOpenProjectPluginPage(project.id);
+  const newSessions = useProjectNewSessions(project);
 
   return (
     <ProjectDetailView
       {...detail}
-      pluginItems={useProjectDetailsItems(projectId)}
-      onOpenPluginPage={(pluginId, path) => open(pluginId, { projectId })(path)}
+      project={{ status: 'loaded', project: newSessions.project }}
+      newSessions={newSessions.controls}
+      pluginItems={useProjectDetailsItems(project.id)}
+      onOpenPluginPage={onOpenPluginPage}
     />
   );
 }

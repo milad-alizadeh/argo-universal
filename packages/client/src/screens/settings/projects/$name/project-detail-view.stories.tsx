@@ -7,6 +7,7 @@ import {
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
 import { chosenAccounts } from './project-detail-accounts-fixtures';
+import { newSessionBranches } from './project-detail-new-sessions-fixtures';
 import {
   longPathProject,
   pluginItems,
@@ -22,12 +23,18 @@ const meta = {
     project: { control: false },
     pluginItems: { control: false },
     accounts: { control: false },
+    newSessions: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
     name: worktreeProject.name,
     project: { status: 'loaded', project: worktreeProject },
     onBack: action('back'),
+    newSessions: {
+      branches: newSessionBranches,
+      onCheckoutChoiceChange: action('checkout choice'),
+      onDeleteWorktreeOnArchiveChange: action('archive cleanup'),
+    },
   },
 } satisfies Meta<typeof ProjectDetailView>;
 
@@ -41,6 +48,16 @@ export const NewWorktree: Story = {};
 export const LongPath: Story = {
   args: {
     project: { status: 'loaded', project: longPathProject },
+  },
+};
+
+// Archiving keeps the folder, and the footer says so.
+export const KeepsWorktreesOnArchive: Story = {
+  args: {
+    project: {
+      status: 'loaded',
+      project: { ...worktreeProject, deleteWorktreeOnArchive: false },
+    },
   },
 };
 

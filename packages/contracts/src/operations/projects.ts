@@ -4,6 +4,7 @@ import {
   ProjectsBranchesOutput,
 } from '../projects/branches';
 import { ProjectInfo } from '../projects/list';
+import { ProjectUpdateInput } from '../projects/update';
 import type { OperationDefinition } from './index';
 
 // What adding a Project answers: the Project that now holds the folder.
@@ -52,6 +53,16 @@ export const projectOperations = {
     result: ProjectAdded,
     tier: 'confirm',
     keywords: ['new', 'init', 'repository', 'folder'],
+  },
+  'project.update': {
+    id: 'project.update',
+    label: 'Update Project',
+    description:
+      "Change where a Project's next Session starts, and whether archiving its Sessions deletes their worktrees.",
+    params: ProjectUpdateInput,
+    result: ProjectInfo,
+    tier: 'confirm',
+    keywords: ['settings', 'worktree', 'base branch', 'archive', 'checkout'],
   },
   'project.listBranches': {
     id: 'project.listBranches',
