@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useKeepScrollWhileHidden } from './keep-scroll-while-hidden.web';
 
 type RenderItem<T> = LegendListProps<T>['renderItem'];
 
@@ -117,6 +118,8 @@ export function MeasuredLegendList<T>({
 }: ListProps<T>): ReactNode {
   const [list, bothRefs] = useListRef(ref);
   const renderItem = useRemeasuredRenderItem(props.renderItem);
+
+  useKeepScrollWhileHidden(list);
 
   return (
     <OverlayEntrances value={useOverlayEntrances(list)}>

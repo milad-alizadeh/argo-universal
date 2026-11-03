@@ -131,7 +131,7 @@ A named, versioned place in a core page that Plugins fill, such as Project detai
 _Avoid_: Contribution point, hook, outlet
 
 **Plugin tree**:
-The kit components a Plugin sends for one page or Slot, which the App draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts.
+The kit components a Plugin sends for one page or Slot, which the App draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts. The App keeps a page's last one in memory and draws it while the page's view opens again. See ADR-0048.
 _Avoid_: Wire tree, Plugin UI
 
 **Single-owner Slot**:

@@ -13,6 +13,9 @@ import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
 
+// A Plugin's first worker since it was activated; any later one is a reload or a restart after a crash.
+const firstGeneration = 1;
+
 export class RuntimeResources {
   readonly views;
   readonly data;
@@ -85,8 +88,9 @@ export class RuntimeResources {
     this.operations.activate(pluginId);
   }
 
-  // A worker that runs reopens its views, and lists ask it for their items.
+  // A worker that runs reopens its views, and lists ask it for their items. Told first, so an App holds no old tree when the new one comes.
   running(pluginId: string, generation: number): void {
+    if (generation > firstGeneration) this.input.services.reloaded(pluginId);
     this.views.reopen(pluginId);
     this.items.running(pluginId, generation);
     this.operations.ran(pluginId, generation);

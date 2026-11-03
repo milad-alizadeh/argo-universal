@@ -26,4 +26,6 @@ export type PluginServiceOptions = {
   waiting?: Waiting;
   clock?: PluginClock;
   watchProjects?: (changed: () => void) => () => void;
+  // A Plugin's worker was replaced while the Server ran.
+  reloaded?: (pluginId: string) => void;
 };

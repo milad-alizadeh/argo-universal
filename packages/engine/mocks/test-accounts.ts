@@ -57,6 +57,7 @@ function accountsOver(store: Store, source: Source): PluginAccounts {
     keychain: source.keychain,
     manifest: (pluginId) => pluginManifest(discovery, pluginId),
     firstParty: firstPartyIn(discovery),
+    changed: () => {},
   });
 }
 

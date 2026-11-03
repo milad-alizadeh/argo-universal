@@ -28,6 +28,31 @@ it('reports a dev Plugin outside the first-party root and never starts it', asyn
   );
 });
 
+it('tells a watching App that a Plugin reloaded', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'dev', fixture: 'dev', dev: true },
+  ]);
+
+  const { caller, createCaller } = await startEngineTestHost({ home });
+  const source = join(home, shippedFolder, 'dev/check.ts');
+  await writeFile(source, 'export function check(): void {}');
+  await expect
+    .poll(() => caller.plugin.activate({ pluginId: 'dev' }), processWait)
+    .toMatchObject({ state: 'running' });
+
+  const controller = new AbortController();
+
+  const changes = (
+    await createCaller({ signal: controller.signal }).plugins.listChanges()
+  )[Symbol.asyncIterator]();
+
+  const change = changes.next();
+  await writeFile(source, 'export function check(): void { /* edited */ }');
+
+  expect((await change).value).toEqual({ pluginId: 'dev' });
+  controller.abort();
+}, 30_000);
+
 it('bundles and reloads a first-party dev Plugin, recovering after runtime and build errors', async () => {
   const home = await createRuntimePlugins([
     { id: 'dev', fixture: 'dev', dev: true },

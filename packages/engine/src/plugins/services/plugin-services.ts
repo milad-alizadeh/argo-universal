@@ -48,6 +48,10 @@ export class PluginServices {
     return this.options.projectInfo();
   }
 
+  reloaded(pluginId: string): void {
+    this.options.reloaded?.(pluginId);
+  }
+
   watchProjects(changed: () => void): () => void {
     return this.options.watchProjects?.(changed) ?? (() => {});
   }

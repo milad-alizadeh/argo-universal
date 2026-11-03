@@ -60,9 +60,9 @@ type Foundations = {
 
 function accountsFor(
   options: PluginsOptions,
-  parts: Pick<Foundations, 'keychain' | 'discovery'>,
+  parts: Pick<Foundations, 'keychain' | 'discovery' | 'listChanges'>,
 ): PluginAccounts {
-  const { keychain, discovery } = parts;
+  const { keychain, discovery, listChanges } = parts;
 
   return new PluginAccounts({
     ...options,
@@ -72,6 +72,7 @@ function accountsFor(
       (await discoverPlugins(discovery)).plugins.some(
         (plugin) => plugin.manifest.id === pluginId && plugin.firstParty,
       ),
+    changed: (pluginId) => listChanges.changed(pluginId),
   });
 }
 
@@ -101,7 +102,7 @@ function foundations(options: PluginsOptions): Foundations {
     ...parts,
     hookPort: options.hookPort ?? new HookPort(),
     settings: settingsFor(options, parts),
-    accounts: accountsFor(options, { keychain, discovery }),
+    accounts: accountsFor(options, parts),
   };
 }
 
@@ -132,6 +133,7 @@ function runtimeFor(
     hooks: parts.hookPort.hooks,
     settings: async (pluginId, key) => settings.read(pluginId, key),
     locate: locator(parts),
+    reloaded: (pluginId) => parts.listChanges.changed(pluginId),
   });
 }
 

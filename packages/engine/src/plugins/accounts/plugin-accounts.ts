@@ -33,6 +33,8 @@ type Dependencies = {
   keychain: Keychain;
   manifest: (pluginId: string) => Promise<PluginManifest>;
   firstParty: (pluginId: string) => Promise<boolean>;
+  // What a Plugin draws can depend on its Accounts, so an App stops drawing what it kept from before (ADR-0048).
+  changed: (pluginId: string) => void;
 };
 
 // Durable inventory and Grants. Tokens remain in the providing Plugin's Keychain namespace.
@@ -81,6 +83,7 @@ export class PluginAccounts {
     const account = sameAccount(this.deps.database, fields);
 
     if (!account) throw new Error('Account is unavailable');
+    this.tell(this.usersOf(account));
 
     return account.id;
   }
@@ -145,7 +148,9 @@ export class PluginAccounts {
       pluginKeychainService(account.providedBy),
       id,
     );
+    const told = this.usersOf(account);
     await this.write({ action: 'signOut', id });
+    this.tell(told);
   }
 
   async removePlugin(pluginId: string): Promise<void> {
@@ -157,6 +162,18 @@ export class PluginAccounts {
         account.id,
       );
     await this.write({ action: 'removePlugin', pluginId });
+    this.deps.changed(pluginId);
+  }
+
+  private tell(pluginIds: Set<string>): void {
+    for (const pluginId of pluginIds) this.deps.changed(pluginId);
+  }
+
+  // The Plugin that provides the Account and each Plugin that may borrow it.
+  private usersOf({ id, providedBy }: PluginAccount): Set<string> {
+    const borrowers = this.grants(id).map(({ plugin }) => plugin);
+
+    return new Set([providedBy, ...borrowers]);
   }
 
   private write(change: AccountChange): Promise<void> {

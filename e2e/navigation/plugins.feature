@@ -31,6 +31,52 @@ Feature: Plugin navigation
       | wide  |
       | phone |
 
+  Scenario: A page seen before draws at once while the Server has not answered
+    Given a wide Frame
+    And the Server's answers to Plugin pages can be held
+    When I open the Counter Plugin
+    Then the Plugin page text reads "Tapped 0 times"
+    When I open the Lists Plugin
+    Then the Plugin page text reads "Deploy web"
+    When the Server's answers to Plugin pages are held
+    And I open the Counter Plugin
+    Then no Plugin page has answered
+    And the Plugin page text reads "Tapped 0 times"
+    When the Server's answers to Plugin pages arrive
+    Then the Plugin page text reads "Tapped 0 times"
+
+  Scenario: A tap on a page seen before waits for the Server and lands once
+    Given a wide Frame
+    And the Server's answers to Plugin pages can be held
+    When I open the Counter Plugin
+    Then the Plugin page text reads "Tapped 0 times"
+    When I open the Lists Plugin
+    Then the Plugin page text reads "Deploy web"
+    When the Server's answers to Plugin pages are held
+    And I open the Counter Plugin
+    Then no Plugin page has answered
+    When I press "Tap me" on the Plugin page
+    Then the Plugin page text reads "Tapped 0 times"
+    When the Server's answers to Plugin pages arrive
+    Then the Plugin page text reads "Tapped 1 times"
+
+  Scenario: A Plugin turned off and on draws nothing it kept from before
+    Given a wide Frame
+    And the Server's answers to Plugin pages can be held
+    When I open the Counter Plugin
+    Then the Plugin page text reads "Tapped 0 times"
+    When I open the Lists Plugin
+    Then the Plugin page text reads "Deploy web"
+    When the Counter Plugin is turned off on the Server
+    Then the navigation no longer lists the Counter Plugin
+    When the Counter Plugin is turned back on on the Server
+    And the Server's answers to Plugin pages are held
+    And I open the Counter Plugin
+    Then no Plugin page has answered
+    And the Plugin page does not read "Tapped 0 times"
+    When the Server's answers to Plugin pages arrive
+    Then the Plugin page text reads "Tapped 0 times"
+
   Scenario: A Plugin stopped on the Server leaves the navigation and its open page returns to Sessions
     Given a wide Frame
     When I open the Counter Plugin
