@@ -57,20 +57,16 @@ type SlotProvider = (request: Request) => Promise<Answered>;
 
 type Answered = Record<string, ReturnType<ToItems>>;
 
-const slotsChanged = (api: Argo) => async (): Promise<void> => {
-  await Promise.all([
-    api.slots.changed(sessionRowSlot),
-    api.slots.changed(sessionBarSlot),
-  ]);
-};
+// What the Session row and bar show changed, so Argo asks their Slots again.
+const slotsChanged = (api: Argo) => (): void => api.changed();
 
 function announceStatus(
   summaries: IssueSummaries,
-  changed: () => Promise<void>,
+  changed: () => void,
   number: number,
 ): void {
   summaries.stale(number);
-  void changed();
+  changed();
 }
 
 const issuePathOf =
@@ -124,18 +120,15 @@ function groupBySession(entries: Linked[]): Map<string, Linked[]> {
   return grouped;
 }
 
-function announcing(
-  storage: Attachments,
-  changed: () => Promise<void>,
-): Attachments {
+function announcing(storage: Attachments, changed: () => void): Attachments {
   return {
     attachSession: async (link) => {
       await storage.attachSession(link);
-      await changed();
+      changed();
     },
     detachSession: async (link) => {
       await storage.detachSession(link);
-      await changed();
+      changed();
     },
   };
 }

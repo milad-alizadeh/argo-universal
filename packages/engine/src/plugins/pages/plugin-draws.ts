@@ -19,36 +19,59 @@ export type Drawn =
   | { ok: true; root: WireJson; pages: number }
   | { ok: false; error: string };
 
-type Pending = Caller & { settle: (drawn: Drawn) => void };
+type Answered = Extract<LoaderPageCall, { id: number }>;
+
+type Failed = { ok: false; error: string };
+
+// The worker's answer, or why none came: it stopped, was not running or ran out of time.
+type Outcome = Answered | Failed;
+
+type Pending = Caller & { settle: (outcome: Outcome) => void };
 
 // An address and how many pages of its paged list the App shows.
 type DrawAt = Omit<PageAddress, 'pluginId'> & { pages: number };
+
+// Where a background pass runs a Loader alone: its Page path and the Project it reads for.
+export type LoadAt = { path: string; projectId: string };
+
+export type Loaded = { ok: true } | { ok: false; error: string };
 
 export type DrawTransport = {
   send: (pluginId: string, event: PluginEvent) => void;
   clock: PluginClock;
 };
 
-const failed = (error: string): Drawn => ({ ok: false, error });
+const failed = (error: string): Failed => ({ ok: false, error });
 
-type Answered = Extract<LoaderPageCall, { id: number }>;
+type ChangeListener = (pluginId: string) => void;
 
-type StaleListener = (pluginId: string) => void;
+function drawnOf(outcome: Outcome): Drawn {
+  if ('ok' in outcome) return outcome;
 
-const drawnOf = (call: Answered): Drawn =>
-  call.action === 'drawn'
-    ? { ok: true, root: call.root, pages: call.pages }
-    : failed(call.error);
+  return outcome.action === 'drawn'
+    ? { ok: true, root: outcome.root, pages: outcome.pages }
+    : failed(answeredError(outcome));
+}
+
+const answeredError = (answered: Answered): string =>
+  answered.action === 'failed' ? answered.error : 'The page only loaded';
+
+function loadedOf(outcome: Outcome): Loaded {
+  if ('ok' in outcome) return outcome;
+
+  return outcome.action === 'failed' ? failed(outcome.error) : { ok: true };
+}
 
 /*
- * The runtime side of Loader pages (ADR-0050): each draw is one call to the running worker generation,
- * answered by its id, and each generation tells the Page path patterns it defined as it starts.
+ * The runtime side of Loader pages (ADR-0050): each draw, and each background pass's load, is one call to
+ * the running worker generation, answered by its id, and each generation tells the Page path patterns it
+ * defined as it starts.
  */
 export class PluginDraws {
   private readonly running = new Map<string, number>();
   private readonly patterns = new Map<string, Set<string>>();
   private readonly pending = new Map<number, Pending>();
-  private readonly staleListeners = new Set<StaleListener>();
+  private readonly changeListeners = new Set<ChangeListener>();
   private next = 0;
 
   public constructor(private readonly transport: DrawTransport) {}
@@ -67,19 +90,48 @@ export class PluginDraws {
     return [...(this.patterns.get(pluginId) ?? [])];
   }
 
-  public draw(pluginId: string, address: DrawAt): Promise<Drawn> {
+  public async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
+    return drawnOf(await this.call(pluginId, address));
+  }
+
+  // A background pass: the Loader alone, for one Project, given the pass's own budget rather than a draw's.
+  public async load(
+    pluginId: string,
+    { path, projectId }: LoadAt,
+    limitMs: number,
+  ): Promise<Loaded> {
+    const at = {
+      path,
+      projectId,
+      pageState: {},
+      pages: 1,
+      loadOnly: true as const,
+    };
+
+    return loadedOf(await this.call(pluginId, at, limitMs));
+  }
+
+  private call(
+    pluginId: string,
+    address: DrawAt & { loadOnly?: true },
+    limitMs = drawLimitMs,
+  ): Promise<Outcome> {
     const generation = this.running.get(pluginId);
 
     if (generation === undefined)
       return Promise.resolve(failed(`Plugin ${pluginId} is not running`));
 
-    return this.call({ pluginId, generation }, address);
+    return this.sent({ pluginId, generation }, address, limitMs);
   }
 
-  private call(caller: Caller, address: DrawAt): Promise<Drawn> {
+  private sent(
+    caller: Caller,
+    address: DrawAt & { loadOnly?: true },
+    limitMs: number,
+  ): Promise<Outcome> {
     const id = this.next++;
-    const { promise, resolve } = Promise.withResolvers<Drawn>();
-    const cancel = this.deadline(address.path, resolve);
+    const { promise, resolve } = Promise.withResolvers<Outcome>();
+    const cancel = this.deadline(address.path, resolve, limitMs);
 
     this.pending.set(id, { ...caller, settle: resolve });
     this.transport.send(caller.pluginId, { type: 'draw', id, ...address });
@@ -90,43 +142,53 @@ export class PluginDraws {
     });
   }
 
-  private deadline(path: string, settle: Pending['settle']): () => void {
+  private deadline(
+    path: string,
+    settle: Pending['settle'],
+    limitMs: number,
+  ): () => void {
     return this.transport.clock.schedule(
       () => settle(failed(`${path} did not draw in time`)),
-      drawLimitMs,
+      limitMs,
     );
   }
 
-  // Hears each running worker that marks its Loader pages stale; the answer unsubscribes.
-  public onStale(listener: StaleListener): () => void {
-    this.staleListeners.add(listener);
+  // What one of the Plugin's Operations wrote, whoever ran it, changes it as `argo.changed()` does.
+  public changedBy(pluginId: string): void {
+    if (this.running.has(pluginId)) this.notify(pluginId);
+  }
 
-    return () => this.staleListeners.delete(listener);
+  // Hears each running worker's `argo.changed()` and Operations; the answer unsubscribes.
+  public onChanged(listener: ChangeListener): () => void {
+    this.changeListeners.add(listener);
+
+    return () => this.changeListeners.delete(listener);
   }
 
   /*
-   * A worker defines its patterns as its code runs, before it reports running; an answer or stale mark
+   * A worker defines its patterns as its code runs, before it reports running; an answer or change
    * from an ended worker is ignored.
    */
   public receive(caller: Caller, call: LoaderPageCall): void {
     if (call.action === 'defined') return this.define(caller, call.pattern);
 
-    if (call.action === 'stale') return this.markStale(caller);
+    if (call.action === 'changed') return this.changed(caller);
 
     this.settle(caller, call);
   }
 
-  private markStale({ pluginId, generation }: Caller): void {
-    if (this.running.get(pluginId) !== generation) return;
+  private changed({ pluginId, generation }: Caller): void {
+    if (this.running.get(pluginId) === generation) this.notify(pluginId);
+  }
 
-    for (const listener of this.staleListeners) listener(pluginId);
+  private notify(pluginId: string): void {
+    for (const listener of this.changeListeners) listener(pluginId);
   }
 
   private settle(caller: Caller, call: Answered): void {
     const pending = this.pending.get(call.id);
 
-    if (pending?.generation === caller.generation)
-      pending.settle(drawnOf(call));
+    if (pending?.generation === caller.generation) pending.settle(call);
   }
 
   private define({ pluginId }: Caller, pattern: string): void {

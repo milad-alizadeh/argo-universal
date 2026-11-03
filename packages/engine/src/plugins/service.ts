@@ -15,7 +15,7 @@ import {
 } from '@repo/contracts/plugins/plugin-contributions';
 import {
   ReplaceableInput,
-  type ReplaceableMessage,
+  type ReplaceableAnswer,
   type RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
 import type {
@@ -143,22 +143,20 @@ export class PluginService {
     return slotItemsFor(this.deps, input, connection);
   }
 
-  public async *render(
+  public async render(
     input: ReplaceableInput,
     connection: RpcConnection,
-  ): AsyncGenerator<ReplaceableMessage> {
+  ): Promise<ReplaceableAnswer> {
     const plugins = await startOrderedPlugins(this.deps, ({ plugin }) =>
       rendersSlot(plugin, input.slotId),
     );
 
-    yield* renderSlot(this.deps.pluginRuntime, { input, plugins }, connection);
+    return renderSlot(this.deps.pluginRuntime, { input, plugins }, connection);
   }
 
-  public renderFailed(
-    connection: RpcConnection,
-    input: RenderFailureInput,
-  ): void {
-    this.deps.pluginRuntime.views.renderFailed(connection, input);
+  // Logged once per Plugin, Slot and reason, so an App cannot flood the log.
+  public renderFailed(input: RenderFailureInput): void {
+    this.deps.pluginRuntime.drawingFailed(input);
   }
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {

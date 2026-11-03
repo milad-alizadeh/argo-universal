@@ -14,7 +14,6 @@ type Registration = {
   viewId: PluginViewId;
   watchId: string;
   every?: number;
-  backgroundInterval?: number;
 };
 
 export class QueryWatchers {
@@ -30,14 +29,11 @@ export class QueryWatchers {
     this.registrations.set(watchKey(request), {
       viewId: view.opening.viewId,
       watchId: request.watchId,
-      every: this.every(view, request.every),
-      backgroundInterval: view.backgroundInterval,
+      every: this.every(request.every),
     });
   }
 
-  private every(view: OpenView, every: number | undefined): number | undefined {
-    if (view.backgroundInterval !== undefined) return;
-
+  private every(every: number | undefined): number | undefined {
     if (this.owner.query.api === 'storage') return;
 
     return this.intervals.mounted(this.owner.pluginId, every);
@@ -72,11 +68,6 @@ export class QueryWatchers {
     return {
       active: this.active,
       period: minimum(this.registrations.values().map(({ every }) => every)),
-      backgroundPeriod: minimum(
-        this.registrations
-          .values()
-          .map(({ backgroundInterval }) => backgroundInterval),
-      ),
     };
   }
 
@@ -98,10 +89,7 @@ export class QueryWatchers {
 function untimed(registration: Registration | undefined): boolean {
   if (!registration) return true;
 
-  return (
-    registration.every === undefined &&
-    registration.backgroundInterval === undefined
-  );
+  return registration.every === undefined;
 }
 
 function minimum(values: IteratorObject<number | undefined>): number {

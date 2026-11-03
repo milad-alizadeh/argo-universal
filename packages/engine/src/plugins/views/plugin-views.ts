@@ -1,4 +1,3 @@
-import type { RenderFailureInput } from '@repo/contracts/plugins/replaceable';
 import type {
   PluginDispatchInput,
   PluginViewId,
@@ -12,8 +11,6 @@ import { drawTree } from './draw-tree';
 import {
   currentDispatch,
   dispatchEvent,
-  temporary,
-  type HeadlessView,
   type OpenView,
   type Opening,
   connectionOpening,
@@ -64,25 +61,9 @@ export class PluginViews {
 
   // The failure outlives the view it came from, so it is raised after the removal that would evict it.
   private failed(view: OpenView, reason: string): void {
-    const raised = view.draws.failed(view, reason, this.log);
+    view.draws.failed(view, reason, this.log);
     this.views.remove(view);
-
-    if (raised) this.lifecycle.failed(view, reason);
-  }
-
-  public headless(
-    pluginId: string,
-    opening: Opening,
-    interval: number,
-  ): HeadlessView {
-    const view = this.views.open(pluginId, opening, 'background');
-
-    view.backgroundInterval = interval;
-
-    return {
-      viewId: view.opening.viewId,
-      close: () => this.views.remove(view),
-    };
+    this.lifecycle.failed(view, reason);
   }
 
   public endProject(projectId: string): void {
@@ -135,10 +116,7 @@ export class PluginViews {
       (view) => view.pluginId === pluginId,
     );
 
-    for (const view of views) {
-      if (temporary(view)) this.views.remove(view);
-      else this.views.retire(view);
-    }
+    for (const view of views) this.views.retire(view);
   }
 
   public async *watch(
@@ -149,27 +127,11 @@ export class PluginViews {
     const reported = connectionOpening(opening, connection);
 
     const view = this.views.acquire(pluginId, reported, connection.id);
-    this.lifecycle.opened(view);
 
     try {
       yield* appView(view, connection, this.log);
     } finally {
       this.views.release(view);
     }
-  }
-
-  public discardRender(pluginId: string, path: string): void {
-    this.send(pluginId, { type: 'discardRender', path });
-  }
-
-  // Only the Connection that holds this revision of the view can say its App failed to draw it.
-  public renderFailed(
-    connection: RpcConnection,
-    input: RenderFailureInput,
-  ): void {
-    const view = this.views.find(connection.id, input);
-
-    if (view?.revision === input.revision)
-      view.draws.appFailed(view, input.reason, this.log);
   }
 }

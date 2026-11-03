@@ -166,6 +166,13 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
       LoaderPagesApi;
     slots: SlotsApi;
     operations: OperationsApi;
+    /*
+     * Says what the Plugin's pages and items Slots show may have changed, after a write that is not an
+     * Operation or a change it heard of elsewhere (an Operation's run says so itself): every connected App
+     * draws its open Loader pages again, the paged-list pages read before it are forgotten, and open items
+     * Slot lists ask again.
+     */
+    changed: () => void;
     on: <Name extends HookEventName>(
       name: Name,
       ...args: HookArgs<Hook<Name>>

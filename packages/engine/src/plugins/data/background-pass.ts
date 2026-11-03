@@ -1,5 +1,5 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
-import type { PluginViewId } from '@repo/contracts/plugins/wire';
+import type { PluginDraws } from '../pages';
 import { runtimeError } from '../protocol/runtime';
 import type { PluginViews } from '../views/plugin-views';
 import type { PluginData } from './plugin-data';
@@ -12,13 +12,9 @@ export type BackgroundEntry = {
   activate: () => Promise<void>;
 };
 
-type RunningPass = {
-  viewId: PluginViewId;
-  close: () => void;
-  finish: () => void;
-};
-
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
+  draws: PluginDraws;
+  // A removed Project's open App views end with it.
   views: PluginViews;
   data: PluginData;
 };
@@ -26,10 +22,11 @@ export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
 // `enter` holds the pass back while too many others are running, and answers with its release.
 type PassServices = BackgroundServices & { enter: () => Promise<() => void> };
 
+// One Project's pass (ADR-0050): on its interval the page's `load` runs alone, with no render and no tree.
 export class BackgroundPass {
-  private running: RunningPass | undefined;
   private closed = false;
   private cancel: () => void = () => {};
+  private finish: () => void = () => {};
 
   constructor(
     readonly entry: BackgroundEntry,
@@ -41,31 +38,10 @@ export class BackgroundPass {
     void this.run();
   }
 
-  rendered(viewId: PluginViewId): void {
-    const pass = this.running;
-
-    if (!pass) return;
-
-    if (pass.viewId === viewId) this.settle(pass);
-  }
-
-  // Every render is asked again: a Plugin that chains Queries declares the next one on a later render.
-  private settle(pass: RunningPass): void {
-    if (this.services.data.queriesSettled(pass.viewId)) pass.finish();
-  }
-
-  released(viewId: PluginViewId): void {
-    if (this.running?.viewId === viewId) this.running.finish();
-  }
-
   close(): void {
     this.closed = true;
     this.cancel();
-    this.running?.finish();
-  }
-
-  private stopped(): boolean {
-    return this.closed;
+    this.finish();
   }
 
   private async run(): Promise<void> {
@@ -84,53 +60,54 @@ export class BackgroundPass {
 
   // Closing while the pass waited its turn at the gate, or while the Plugin started, ends it here.
   private async activateAndPass(): Promise<void> {
-    if (this.stopped()) return;
+    if (this.closed) return;
     await this.entry.activate();
 
-    if (this.stopped()) return;
+    if (this.closed) return;
     await this.pass();
   }
 
   private schedule(): void {
-    if (this.stopped()) return;
+    if (this.closed) return;
     this.cancel = this.services.clock.schedule(
       () => this.start(),
       this.entry.declaration.interval,
     );
   }
 
+  // The budget is scheduled before the load's own limit of the same length, so on that clock it ends first.
   private async pass(): Promise<void> {
-    const done = Promise.withResolvers<void>();
-    const mounted = this.mount();
-    const deadline = this.deadline(done.resolve);
+    const ended = Promise.withResolvers<string>();
 
-    this.running = { ...mounted, finish: done.resolve };
+    const deadline = this.services.clock.schedule((): void => {
+      ended.resolve(`reached ${backgroundBudgetMs} ms`);
+    }, backgroundBudgetMs);
+
+    this.finish = (): void => {
+      ended.resolve('closed');
+    };
 
     try {
-      await done.promise;
+      this.line(await Promise.race([this.load(), ended.promise]));
     } finally {
-      this.running = undefined;
       deadline();
-      mounted.close();
-      this.line('completed');
+      this.finish = (): void => {};
     }
   }
 
-  private mount(): ReturnType<PluginViews['headless']> {
+  private async load(): Promise<string> {
     const { pluginId, declaration } = this.entry;
 
-    return this.services.views.headless(
+    const loaded = await this.services.draws.load(
       pluginId,
-      { path: declaration.path, projectId: this.projectId, background: true },
-      declaration.interval,
+      {
+        path: declaration.path,
+        projectId: this.projectId,
+      },
+      backgroundBudgetMs,
     );
-  }
 
-  private deadline(finish: () => void): () => void {
-    return this.services.clock.schedule(() => {
-      this.line(`reached ${backgroundBudgetMs} ms`);
-      finish();
-    }, backgroundBudgetMs);
+    return loaded.ok ? 'completed' : `failed: ${loaded.error}`;
   }
 
   private line(message: string): void {

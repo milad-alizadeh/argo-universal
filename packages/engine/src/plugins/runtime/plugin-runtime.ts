@@ -100,6 +100,11 @@ export class PluginRuntime {
     logFallback(this.log, 'runtime', fallback);
   }
 
+  // An App could not draw a replacement the Server sent it, and drew core's own.
+  public drawingFailed(fallback: Fallback): void {
+    logFallback(this.log, 'drawing', fallback);
+  }
+
   public contributionFailed(fallback: Fallback): void {
     logFallback(this.log, 'contribution', fallback);
   }

@@ -6,7 +6,7 @@ import type { Instance } from './wire-tree';
 
 const reconciler = Reconciler(hostConfig);
 
-// A published frame can finish a headless pass, so its passive effects must run first.
+// A published frame may be the last one a view sends, so its passive effects must run first.
 export function flushEffects(): void {
   reconciler.flushPassiveEffects();
 }

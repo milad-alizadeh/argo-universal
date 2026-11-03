@@ -12,10 +12,12 @@ type Request = Omit<Invocation, 'type' | 'id'>;
 /*
  * The runtime side of a Plugin's own Operations (ADR-0044): one call per run, answered by the worker
  * generation it went to. A Plugin that is not running answers nothing, so the caller starts it first.
+ * Each run that answers is heard, whoever ran it: what the Plugin shows may have changed (ADR-0050).
  */
 export class PluginOperations {
   private readonly running = new Map<string, number>();
   private readonly calls: PluginOperationCalls;
+  private readonly ranListeners = new Set<(pluginId: string) => void>();
 
   public constructor(transport: OperationTransport) {
     this.calls = new PluginOperationCalls(transport);
@@ -44,7 +46,22 @@ export class PluginOperations {
         error: `Plugin ${pluginId} is not running`,
       });
 
-    return this.calls.call({ pluginId, generation }, request);
+    return this.calls
+      .call({ pluginId, generation }, request)
+      .then((answer) => this.answered(pluginId, answer));
+  }
+
+  private answered(pluginId: string, answer: Answer): Answer {
+    if (answer.ok) for (const listener of this.ranListeners) listener(pluginId);
+
+    return answer;
+  }
+
+  // Called after each Operation that answered; the returned function stops it.
+  public onRan(listener: (pluginId: string) => void): () => void {
+    this.ranListeners.add(listener);
+
+    return () => this.ranListeners.delete(listener);
   }
 
   // An answer from an ended worker is ignored.

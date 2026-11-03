@@ -8,7 +8,7 @@ import {
 import { PageAddress } from '#plugin-page-address';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
-import { ReplaceableSlotId, SlotItemsInput } from '#plugin-wire-slot';
+import { SlotItemsInput } from '#plugin-wire-slot';
 
 export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
 
@@ -102,20 +102,14 @@ export const PluginEvent = z.union([
   }),
   z.object({
     type: z.literal('open'),
-    background: z.boolean().optional(),
     serverDevice: z.boolean().optional(),
     viewId: PluginViewId,
     path: z.string(),
     projectId: z.string().min(1).optional(),
     sessionId: z.string().min(1).optional(),
-    renderSlot: ReplaceableSlotId.optional(),
     surface: PluginSurface.optional(),
   }),
   z.object({ type: z.literal('close'), viewId: PluginViewId }),
-  z.object({
-    type: z.literal('discardRender'),
-    path: z.string().startsWith('render:'),
-  }),
   z.object({
     type: z.literal('dispatch'),
     viewId: PluginViewId,
@@ -134,11 +128,15 @@ export const PluginEvent = z.union([
     params: PluginOperationParams,
     caller: PluginOperationCaller,
   }),
-  // One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050); it answers by `id`.
+  /*
+   * One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050); it answers by
+   * `id`. A background pass's draw is `loadOnly`: the Loader runs, no list is read and nothing renders.
+   */
   PageAddress.omit({ pluginId: true }).extend({
     type: z.literal('draw'),
     id: z.number().int().nonnegative(),
     pages: z.number().int().positive(),
+    loadOnly: z.literal(true).optional(),
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({

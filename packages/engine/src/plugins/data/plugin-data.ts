@@ -160,17 +160,6 @@ export class PluginData {
       entry.storageWritten();
   }
 
-  opened(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values()) entry.opened();
-  }
-
-  // Whether every Query the view has declared so far holds a value or an error.
-  queriesSettled(viewId: PluginViewId): boolean {
-    return this.entries()
-      .filter((entry) => entry.hasView(viewId))
-      .every((entry) => entry.settled);
-  }
-
   private entries(): IteratorObject<QueryEntry> {
     return this.plugins.values().flatMap((entries) => entries.values());
   }

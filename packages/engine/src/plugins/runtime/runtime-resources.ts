@@ -34,16 +34,26 @@ export class RuntimeResources {
   constructor(private readonly input: QueryServices) {
     this.views = new PluginViews(input.send, input.log, this.lifecycle());
     this.data = new PluginData(input, this.views);
-    this.background = new PluginBackground({
-      ...input,
-      views: this.views,
-      data: this.data,
-    });
     this.items = new PluginSlotItems(input);
     this.operations = new PluginOperations(input);
     this.draws = new PluginDraws(input);
+    this.background = new PluginBackground({
+      ...input,
+      draws: this.draws,
+      views: this.views,
+      data: this.data,
+    });
     input.services.onStorageWrite((id) => this.data.storageWritten(id));
-    this.unwatch = input.services.watchProjects(() => this.projectsChanged());
+    this.unwatch = this.watch(input);
+  }
+
+  // `argo.changed()` and every Operation run reach pages and items Slots alike.
+  private watch(input: QueryServices): Array<() => void> {
+    return [
+      input.services.watchProjects(() => this.projectsChanged()),
+      this.operations.onRan((pluginId) => this.draws.changedBy(pluginId)),
+      this.draws.onChanged((pluginId) => this.items.changed(pluginId)),
+    ];
   }
 
   // The resources that answer a worker's calls, with the Hooks and services it also reaches.
@@ -55,7 +65,6 @@ export class RuntimeResources {
 
   private lifecycle(): ViewLifecycle {
     return {
-      opened: (view) => this.data.opened(view.pluginId),
       released: (view, lastOfOpening) => this.releaseView(view, lastOfOpening),
       received: (view) => this.markDrawn(view),
       failed: (view, message) => this.failures.failed(view, message),
@@ -64,14 +73,12 @@ export class RuntimeResources {
 
   private releaseView(view: OpenView, lastOfOpening: boolean): void {
     this.data.releaseView(view.opening.viewId);
-    this.background.released(view.opening.viewId);
 
     if (lastOfOpening) this.failures.clearDrawing(view);
   }
 
   private markDrawn(view: OpenView): void {
     this.failures.clearDrawing(view);
-    this.background.rendered(view.opening.viewId);
   }
 
   activate(
@@ -131,7 +138,7 @@ export class RuntimeResources {
   }
 
   close(): void {
-    this.unwatch();
+    for (const unwatch of this.unwatch) unwatch();
     this.background.close();
     this.failures.close();
     this.data.badges.close();

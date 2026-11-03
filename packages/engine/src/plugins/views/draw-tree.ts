@@ -77,9 +77,7 @@ function drawSanitized(
   { root, refused }: ReturnType<typeof sanitizeTree>,
 ): string | undefined {
   const { view, reception } = drawing;
-  const failure = view.draws.refusedSvg(view, refused, reception.log);
-
-  if (failure !== undefined) return failure;
+  view.draws.refusedSvg(view, refused, reception.log);
 
   return drawPrepared(drawing, prepareWireTree(root));
 }
@@ -109,13 +107,11 @@ function refuseTree(drawing: Drawing, reason: string): string | undefined {
   return refuse(drawing, reason);
 }
 
-// The App is sent the fallback once, however many refused messages follow; a view without one fails.
-function refuse(drawing: Drawing, reason: string): string | undefined {
+// The App is sent the fallback once, however many refused messages follow.
+function refuse(drawing: Drawing, reason: string): undefined {
   const { view, reception } = drawing;
   const { fallback } = view.draws;
   forgetWorkerRevision(view);
-
-  if (!fallback) return reason;
 
   if (view.refused) return undefined;
   reception.log(

@@ -41,14 +41,16 @@ it('runs ui.render Hooks by declared order and logs the props change and the sha
   ]);
   const { url } = await startEngineTestHost({ home });
 
-  const app = renderApp(url, messageSlotFixture, currentPluginSurface('web'));
+  const { answer } = await renderApp(
+    url,
+    messageSlotFixture,
+    currentPluginSurface('web'),
+  );
 
-  await expect
-    .poll(() => app.messages[0], { timeout: 15_000 })
-    .toMatchObject({
-      type: 'replacement',
-      message: { root: { props: { children: 'Early tree' } } },
-    });
+  expect(answer).toMatchObject({
+    type: 'replacement',
+    root: { props: { children: 'Early tree' } },
+  });
 
   const lines = async (): Promise<string[]> =>
     (await readFile(join(home, 'logs/plugins.log'), 'utf8'))

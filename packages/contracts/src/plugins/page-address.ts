@@ -46,7 +46,8 @@ export type PageRunAnswer = z.infer<typeof PageRunAnswer>;
 
 /*
  * A stale mark the Server pushes to every connected App after one of the Plugin's Operations ran, from
- * a Component event, an Agent or the CLI: the App draws again the kept addresses it has on screen.
+ * a Component event, an Agent or the CLI, or after the Plugin's `argo.changed()`: the App draws again
+ * the kept addresses it has on screen.
  */
 export const StaleMark = z.strictObject({
   pluginId: z.string().min(1),
@@ -55,7 +56,7 @@ export const StaleMark = z.strictObject({
 
 export type StaleMark = z.infer<typeof StaleMark>;
 
-// The worker's side of a draw: the tree it drew and the pages its list shows, why it could not, or a pattern it defined.
+// The worker's side of a draw: the tree it drew and the pages its list shows, a background load done, why it could not, a pattern it defined, or `argo.changed()`.
 export const LoaderPageCall = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('drawn'),
@@ -68,8 +69,14 @@ export const LoaderPageCall = z.discriminatedUnion('action', [
     id: z.number().int().nonnegative(),
     error: z.string(),
   }),
+  // A background pass's Loader read and answered; its answer stays in the worker.
+  z.strictObject({
+    action: z.literal('loaded'),
+    id: z.number().int().nonnegative(),
+  }),
   z.strictObject({ action: z.literal('defined'), pattern: z.string() }),
-  z.strictObject({ action: z.literal('stale') }),
+  // `argo.changed()`: what the Plugin's pages and items Slots show may have changed.
+  z.strictObject({ action: z.literal('changed') }),
 ]);
 
 export type LoaderPageCall = z.infer<typeof LoaderPageCall>;

@@ -1,6 +1,6 @@
-import type { ReplaceableMessage } from '@repo/contracts/plugins/replaceable';
 import {
   messageSlotId,
+  type ReplaceableAnswer,
   type ReplaceableInput,
 } from '@repo/contracts/plugins/replaceable';
 import { replacementTreeFixture } from '@repo/contracts/plugins/replaceable-fixtures';
@@ -18,7 +18,7 @@ import {
 } from '#lib/product/plugin-registry/replaceable-slot';
 import {
   coreSlotState,
-  reduceReplaceable,
+  replaceableState,
   ReplaceableSlotRenderer,
 } from '../../../../lib/product/plugin-registry';
 import { Feed } from './feed';
@@ -38,41 +38,30 @@ type Story = StoryObj<typeof meta>;
 
 const replacementText = 'Plugin replacement';
 
-// What the Server sends a stream for this Slot: core's own, or a Plugin's tree for a message.
-const firstMessage = (
+// What the Server answers for this Slot: core's own, or a Plugin's tree for a message.
+const answerFor = (
   input: ReplaceableInput,
   replaces: boolean,
-): ReplaceableMessage =>
+): ReplaceableAnswer =>
   replaces
-    ? {
-        type: 'replacement',
-        pluginId: 'fixture',
-        path: 'render:fixture',
-        message: {
-          type: 'snapshot',
-          root: replacementTreeFixture,
-          revision: 1,
-        },
-      }
+    ? { type: 'replacement', pluginId: 'fixture', root: replacementTreeFixture }
     : { type: 'core', input };
 
-type StreamedSlotProps = ReplaceableSlotProps & { replaces: boolean };
+type AnsweredSlotProps = ReplaceableSlotProps & { replaces: boolean };
 
 const ignoreEvent = async (): Promise<void> => {};
 
 const ignoreFallback = (): void => {};
 
-// Stands in for the connected Slot: it draws, then draws again with its stream's first message (ADR-0021 keeps tRPC out of stories).
-function StreamedSlot({
+// Stands in for the connected Slot: it draws, then draws again with the Server's answer (ADR-0021 keeps tRPC out of stories).
+function AnsweredSlot({
   replaces,
   ...props
-}: StreamedSlotProps): React.JSX.Element {
+}: AnsweredSlotProps): React.JSX.Element {
   const [state, setState] = useState(coreSlotState(props.input));
   useEffect(() => {
     const arrival = setTimeout(() => {
-      setState((current) =>
-        reduceReplaceable(current, firstMessage(props.input, replaces)),
-      );
+      setState(replaceableState(props.input, answerFor(props.input, replaces)));
     });
 
     return (): void => clearTimeout(arrival);
@@ -88,16 +77,16 @@ function StreamedSlot({
   );
 }
 
-const streamed = fn();
+const answered = fn();
 
 const drawing = (
   replaced: ReplaceableSlotDrawing['replaced'],
 ): ReplaceableSlotDrawing => ({
   replaced,
   render: (props) => {
-    streamed(props.input.slotId);
+    answered(props.input.slotId);
 
-    return <StreamedSlot {...props} replaces />;
+    return <AnsweredSlot {...props} replaces />;
   },
 });
 
@@ -136,7 +125,7 @@ function SlotsFeed({
 
 export const RowsNoPluginReplacesDrawOnce: Story = {
   beforeEach: () => {
-    streamed.mockClear();
+    answered.mockClear();
   },
   render: () => <SlotsFeed slots={noPlugin} />,
   play: async ({ canvas, canvasElement }) => {
@@ -149,16 +138,16 @@ export const RowsNoPluginReplacesDrawOnce: Story = {
     });
 
     await expect(counts.ReplaceableSlot?.mounts).toBeGreaterThan(0);
-    await expect(counts.StreamedSlot).toBeUndefined();
+    await expect(counts.AnsweredSlot).toBeUndefined();
     await expect(counts.ReplaceableSlotView).toBeUndefined();
-    await expect(streamed).not.toHaveBeenCalled();
+    await expect(answered).not.toHaveBeenCalled();
     await expect(counts.ReplaceableSlot?.updates).toEqual([]);
   },
 };
 
 export const OnlyTheSlotAPluginRendersOpensAStream: Story = {
   beforeEach: () => {
-    streamed.mockClear();
+    answered.mockClear();
   },
   render: () => <SlotsFeed slots={messagePlugin} />,
   play: async ({ canvas }) => {
@@ -171,9 +160,9 @@ export const OnlyTheSlotAPluginRendersOpensAStream: Story = {
         (await canvas.findAllByText(replacementText)).length,
       ).toBeGreaterThan(0);
     }, settleWait);
-    await expect(streamed).toHaveBeenCalledWith(messageSlotId);
+    await expect(answered).toHaveBeenCalledWith(messageSlotId);
     await expect(
-      streamed.mock.calls.filter(([slotId]) => slotId !== messageSlotId),
+      answered.mock.calls.filter(([slotId]) => slotId !== messageSlotId),
     ).toEqual([]);
   },
 };

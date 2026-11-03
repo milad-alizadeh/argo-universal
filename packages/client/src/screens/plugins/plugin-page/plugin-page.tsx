@@ -9,7 +9,8 @@ type PluginPageProps = PageOpening & {
   onBack: (() => void) | null;
 };
 
-const noEvents = (): Promise<void> =>
+// A Render passes no Plugin events (ADR-0050), so one that arrives is refused.
+export const noPluginEvents = (): Promise<void> =>
   Promise.reject(new Error('A Loader page sends no Plugin events'));
 
 /*
@@ -20,12 +21,14 @@ const noEvents = (): Promise<void> =>
 export function PluginPage(props: PluginPageProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const page = usePluginPage(opening);
+  const { onPageCall } = page;
+  const callbacks = { onEvent: noPluginEvents, onOpenPage, onPageCall };
 
   return (
     <PluginDetailView
       title={title}
       root={page.root}
-      callbacks={{ onEvent: noEvents, onOpenPage, onPageCall: page.onPageCall }}
+      callbacks={callbacks}
       onBack={onBack}
     />
   );

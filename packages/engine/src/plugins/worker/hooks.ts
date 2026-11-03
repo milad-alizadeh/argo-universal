@@ -12,8 +12,10 @@ import type {
   HookContext,
   HookEvent,
   HookEventName,
+  SlotTo,
 } from '@repo/contracts/plugins/hooks';
 import { requireNoHookOptions } from '../hooks/hook-arguments';
+import { pageTo } from '../kit/page-input';
 import type { Kit } from '../kit/plugin-kit';
 
 type SendHookCall = (call: HookCall) => Promise<Json>;
@@ -129,14 +131,17 @@ const nextOf =
   (rewritten: Json = event): Promise<Json> =>
     send({ action: 'next', invocation, event: rewritten });
 
-// Kit components a `ui.render` Hook answers with become the replacement the slot draws.
+/*
+ * Kit components a `ui.render` Hook answers with are drawn here, once, as a Render is: a hook or a function
+ * prop fails the Hook, and core draws the Slot (ADR-0050).
+ */
 const replacementOf = (
   kit: Kit,
-  { name, invocation }: Invocation,
+  { name }: Invocation,
   answer: Json | undefined,
 ): Json | undefined =>
   name === 'ui.render' && kit.isElement(answer)
-    ? kit.replacement(invocation, answer)
+    ? { tree: kit.drawTree(answer) }
     : answer;
 
 const contextOf = (invocation: Invocation): HookContext<HookEventName> =>
@@ -144,7 +149,12 @@ const contextOf = (invocation: Invocation): HookContext<HookEventName> =>
     name: invocation.name,
     surface: invocation.surface,
     props: invocation.name === 'ui.render' ? invocation.event.props : undefined,
+    to: invocation.name === 'ui.render' ? slotTo : undefined,
   });
+
+const { go, run } = pageTo();
+
+const slotTo: SlotTo = Object.freeze({ go, run });
 
 // A `ui.render` event is the slot's input, which the Hook reads but may only rewrite through `next`.
 const eventOf = ({ name, event }: Invocation): Json =>

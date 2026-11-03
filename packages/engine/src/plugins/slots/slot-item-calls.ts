@@ -22,7 +22,7 @@ export type Caller = { pluginId: string; generation: number };
 
 export type Reply = { ok: true; items: unknown } | LeftOut;
 
-type Answer = Exclude<SlotCall, { action: 'changed' }>;
+type Answer = SlotCall;
 
 type Pending = Caller & { settle: (reply: Reply) => void };
 

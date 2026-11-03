@@ -43,7 +43,6 @@ function wiring(): Wiring {
     (_pluginId, event) => sent.push(event),
     () => {},
     {
-      opened: (): void => {},
       received: (view): void => failures.clearDrawing(view),
       failed: (view, message): void => failures.failed(view, message),
       released: (view, last): void => {
@@ -169,14 +168,4 @@ it('fails an Opening whose page threw after it had already drawn', async () => {
   expect(await listed(failures)).toMatchObject([
     { kind: 'drawing', message: threw, pluginId: atlas },
   ]);
-});
-
-it('retires a failed Opening with no view left when the Plugin is deactivated', async () => {
-  const { failures, views } = wiring();
-  const page = views.headless(atlas, { path: '/sync' }, 60_000);
-  views.receive(atlas, page.viewId, { ...snapshot, root: broke });
-  expect(await listed(failures)).toMatchObject([{ message: threw }]);
-
-  failures.ended(atlas);
-  expect(await listed(failures)).toEqual([]);
 });

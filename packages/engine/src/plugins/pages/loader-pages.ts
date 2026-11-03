@@ -7,42 +7,34 @@ import type {
   DrawAnswer,
   DrawRequest,
 } from '@repo/contracts/plugins/page-draw';
-import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
-import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';
-import { pluginPageBytes } from '@repo/contracts/plugins/wire-limits';
 import type { PluginOperationService } from '../operations';
-import { sanitizeTree } from '../visual/sanitize-tree';
+import { checkedTree } from './checked-tree';
 import type { Drawn, PluginDraws } from './plugin-draws';
 import { StaleMarks } from './stale-marks';
 import { TreeAnswers } from './tree-answers';
-
-type Checked = { ok: true; root: WireNode } | { ok: false; error: string };
 
 // What drawing needs of the Plugin service: a running worker, started on the first draw as a page starts it.
 export type PagesHost = {
   activate: (pluginId: string) => Promise<PluginStatus>;
 };
 
-const failed = (error: string): Checked => ({ ok: false, error });
-
 const failedDraw = (error: string): DrawAnswer => ({ kind: 'failed', error });
 
 export class LoaderPages {
   private readonly marks = new StaleMarks();
   private readonly answers = new TreeAnswers();
-  private readonly unwatch: (() => void)[];
+  private readonly unwatch: () => void;
 
-  // An Operation's run, or the Plugin's own `argo.pages.stale`, marks every Loader page of the Plugin.
+  // An Operation's run, or the Plugin's own `argo.changed()`, marks every Loader page of the Plugin.
   public constructor(
     private readonly host: PagesHost,
     private readonly draws: PluginDraws,
     private readonly operations: PluginOperationService,
   ) {
-    const mark = (pluginId: string): void =>
-      this.marks.mark({ pluginId, stale: draws.patternsOf(pluginId) });
-
-    this.unwatch = [operations.onRan(mark), draws.onStale(mark)];
+    this.unwatch = draws.onChanged((pluginId) =>
+      this.marks.mark({ pluginId, stale: draws.patternsOf(pluginId) }),
+    );
   }
 
   public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {
@@ -50,7 +42,7 @@ export class LoaderPages {
   }
 
   public close(): void {
-    for (const unwatch of this.unwatch) unwatch();
+    this.unwatch();
     this.marks.close();
   }
 
@@ -99,7 +91,7 @@ export class LoaderPages {
   private answered(drawn: Drawn, known?: string): DrawAnswer {
     if (!drawn.ok) return failedDraw(drawn.error);
 
-    const tree = checked(drawn.root);
+    const tree = checkedTree(drawn.root, 'page');
 
     return tree.ok
       ? this.answers.answer(tree.root, drawn.pages, known)
@@ -114,29 +106,3 @@ export class LoaderPages {
     return status.error ?? `Plugin ${pluginId} is not running`;
   }
 }
-
-// The worker's tree is the Plugin's own JSON: it is parsed, capped, sanitised and prepared as a view's is.
-function checked(root: WireJson): Checked {
-  const parsed = WireNode.safeParse(root);
-
-  if (!parsed.success) return failed('The page drew an invalid Plugin tree');
-
-  const tooLarge = sizeReason(parsed.data, 'page');
-
-  if (tooLarge) return failed(tooLarge);
-
-  const prepared = prepareWireTree(sanitizeTree(parsed.data).root);
-
-  return preparedAnswer(prepared);
-}
-
-function preparedAnswer(prepared: WireNode): Checked {
-  const tooLarge = sizeReason(prepared, 'prepared page');
-
-  return tooLarge ? failed(tooLarge) : { ok: true, root: prepared };
-}
-
-const sizeReason = (tree: WireNode, kind: string): string | undefined =>
-  Buffer.byteLength(JSON.stringify(tree), 'utf8') > pluginPageBytes
-    ? `${kind} exceeds ${pluginPageBytes} bytes`
-    : undefined;

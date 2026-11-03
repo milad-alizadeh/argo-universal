@@ -10,12 +10,17 @@ import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   PageState,
   PageRunAnswer,
+  StaleMark,
 } from '@repo/contracts/plugins/page-address';
 import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
 import type {
   PluginOperationCaller,
   PluginOperationParams,
 } from '@repo/contracts/plugins/plugin-operations';
+import type {
+  ReplaceableAnswer,
+  ReplaceableInput,
+} from '@repo/contracts/plugins/replaceable';
 import type {
   PluginBadge,
   PluginFailure,
@@ -61,6 +66,11 @@ export interface PluginTest {
     input: SlotItemsInput,
     options: SlotItemsOptions,
   ) => AsyncGenerator<SlotItems>;
+  // One Replaceable Slot asked once, as the App asks it: a Plugin's checked tree, or core.
+  render: (
+    input: ReplaceableInput,
+    platform?: PluginSurface['platform'],
+  ) => Promise<ReplaceableAnswer>;
   // The Operations the Plugin declares, and one run of one as an Agent's `argo run` would (ADR-0044).
   operations: {
     list: () => Promise<OperationRow[]>;
@@ -86,6 +96,8 @@ export interface PluginTest {
       args: PluginOperationParams;
       projectId?: string;
     }) => Promise<PageRunAnswer>;
+    // The stale marks every connected App is sent, after an Operation run or the Plugin's `argo.changed()`.
+    stale: (signal: AbortSignal) => AsyncGenerator<StaleMark>;
   };
   close: () => Promise<void>;
   mount: (input: PluginMount) => Promise<PluginTestView>;

@@ -66,7 +66,7 @@ export type ProjectDetailsProps = TrackerDeps & {
   // The Project the page opened for, which the row that drilled in named (ADR-0046).
   context: Readonly<{ projectId?: string }>;
   // Says this Plugin's Project details rows changed, so the row behind the page shows the new Tracker.
-  changed: () => Promise<void>;
+  changed: () => void;
 };
 
 // The Tracker choice as this Plugin's own page: the choices are rows, and a check marks the chosen one.
@@ -92,7 +92,7 @@ function TrackerChoices(props: ChoicesProps): JSX.Element {
 
   const choose = async (id: string | null): Promise<void> => {
     await choice.choose(id);
-    await changed();
+    changed();
   };
 
   return <TrackerRows {...choice} choose={choose} trackers={trackers.list()} />;

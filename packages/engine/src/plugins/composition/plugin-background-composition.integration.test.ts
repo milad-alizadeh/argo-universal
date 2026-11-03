@@ -73,7 +73,7 @@ it('starts Project background passes at Server startup and after Writer membersh
     .toEqual([{ pluginId: dataPluginId, id: 'inbox', count: 2 }]);
 });
 
-it('runs the final background effects before announcing the pass completed', async () => {
+it('runs the Loader to its end before announcing the pass completed', async () => {
   const fixture = await backgroundFixture(50);
 
   const host = await startEngineTestHost({
@@ -93,14 +93,17 @@ it('runs the final background effects before announcing the pass completed', asy
 
 function backgroundFixture(blockMs = 0): ReturnType<typeof dataFixture> {
   return dataFixture(
-    `import {Text,useData,useEffect} from '@argo/plugin-kit';
+    `import {Text} from '@argo/plugin-kit';
   export function register(argo) {
     let count = 0;
-    argo.pages.register('/', ({context:{projectId}}) => {
-      const {data} = useData({api:'storage',queries:[{sql:'SELECT ?',params:[projectId],method:'values'}]});
-      if (data && ${blockMs}) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${blockMs});
-      useEffect(() => { if (data) void argo.nav.badge('inbox',++count); }, [data]);
-      return <Text>{projectId}</Text>;
+    argo.pages.define('/', {
+      load: async ({context:{projectId}}) => {
+        await argo.storage.execute({sql:'SELECT ?',params:[projectId],method:'values'});
+        if (${blockMs}) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${blockMs});
+        await argo.nav.badge('inbox', ++count);
+        return projectId;
+      },
+      render: (projectId) => <Text>{projectId}</Text>,
     });
   }`,
     {
@@ -144,7 +147,7 @@ async function slowBackgroundHome(): Promise<string> {
     `import {Text} from '@argo/plugin-kit';
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${blockedLongerThanTheHostWaitsMs});
   export function register(argo) {
-    argo.pages.register('/', () => <Text>slow</Text>);
+    argo.pages.define('/', { load: () => null, render: () => <Text>slow</Text> });
   }`,
     { nav: [], background: { path: '/', interval: 300000 } },
   );

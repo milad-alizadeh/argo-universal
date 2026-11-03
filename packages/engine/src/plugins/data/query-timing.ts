@@ -29,14 +29,13 @@ export class QueryTiming {
     this.remountDue = false;
   }
 
+  // An answer stays fresh until its last watcher leaves; a remount after that reads it again.
   finished(watchers: QueryWatchers): void {
-    const { active, backgroundPeriod } = watchers.pacing();
-
     this.lastAt = this.clock.now();
 
-    if (this.remountDue && !active) return;
+    if (this.remountDue && !watchers.pacing().active) return;
     this.remountDue = false;
-    this.dueAt = this.lastAt + backgroundPeriod;
+    this.dueAt = Number.POSITIVE_INFINITY;
   }
 
   schedule(watchers: QueryWatchers): void {

@@ -70,14 +70,3 @@ export function queryState(
     revision: previous.revision,
   });
 }
-
-export function backgroundRefusal(
-  background: boolean,
-  reply: PluginReply,
-): boolean {
-  if (!background) return false;
-
-  if (reply.ok) return false;
-
-  return reply.refused === true;
-}

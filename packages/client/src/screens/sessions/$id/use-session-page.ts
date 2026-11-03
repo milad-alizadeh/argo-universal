@@ -39,9 +39,14 @@ export interface OpenedSession {
 
 // Everything one Session page reads, with the Plugin cards it has open folded into its props (ADR-0035).
 export function useSessionPage(page: SessionPage): OpenedSession {
-  const cards = useWorkbenchCards(page.sessionId);
+  const sources = useConnectedFeed(page.sessionId);
 
-  return { props: useSessionViewProps(page, cards.open), cards };
+  const cards = useWorkbenchCards({
+    sessionId: page.sessionId,
+    projectId: sources.feed.snapshot?.projectId,
+  });
+
+  return { props: useSessionViewProps(page, cards.open, sources), cards };
 }
 
 type SessionSurroundings =
@@ -95,9 +100,9 @@ function useConnectedFeed(sessionId: string): ConnectedFeed {
 function useSessionViewProps(
   page: SessionPage,
   cards: readonly SessionPluginCard[],
+  sources: ConnectedFeed,
 ): SessionDetailViewProps {
   const { sessionId } = page;
-  const sources = useConnectedFeed(sessionId);
   const surroundings = useSessionSurroundings(page, cards, sources.feed);
   const reads = usePageCallout(sessionId, sources, surroundings.agents);
   const props = pageProps(sessionId, sources, { ...surroundings, ...reads });

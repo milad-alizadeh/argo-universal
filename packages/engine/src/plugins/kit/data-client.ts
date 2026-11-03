@@ -21,14 +21,11 @@ export class PluginDataClient {
     this.subscriptions.get(event.watchId)?.accept(event.state);
   }
 
-  ready(viewId: PluginViewId, background = false): boolean {
+  ready(viewId: PluginViewId): boolean {
     return this.subscriptions
       .values()
       .filter(({ target }) => target.viewId === viewId)
-      .every(
-        (subscription) =>
-          subscription.ready && (!background || subscription.settled),
-      );
+      .every((subscription) => subscription.ready);
   }
 
   seen(watchId: string, version: number): void {

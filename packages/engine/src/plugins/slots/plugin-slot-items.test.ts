@@ -115,10 +115,7 @@ it('drops what a Plugin answered before its change signal', async () => {
   const before = calls.changes.version;
   const asked = calls.items('counter', input);
 
-  calls.receive(
-    { pluginId: 'counter', generation: 1 },
-    { action: 'changed', slotId: sessionRowSlotId },
-  );
+  calls.changed('counter');
   calls.receive({ pluginId: 'counter', generation: 1 }, answer(0, 'old'));
   await asked;
   expect(calls.changes.version).toBeGreaterThan(before);
@@ -141,7 +138,7 @@ it('asks a failing Plugin again only after its change signal', async () => {
   });
   expect(sent).toHaveLength(1);
 
-  calls.receive(caller, { action: 'changed', slotId: sessionRowSlotId });
+  calls.changed('counter');
   void calls.items('counter', input);
   expect(sent).toHaveLength(2);
 });

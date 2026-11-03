@@ -41,6 +41,7 @@ export function testPages(
   return {
     draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }),
     run: (input) => pages.run({ pluginId, ...input }),
+    stale: (signal) => pages.stale(signal),
   };
 }
 

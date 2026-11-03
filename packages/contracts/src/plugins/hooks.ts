@@ -7,6 +7,8 @@ import {
   type HookInvocation,
   type HookRegistration,
 } from './hook-protocol';
+import type { PageTo } from './loader-page-api';
+import type { PageState } from './page-address';
 import { ReplaceableInput, RenderAnswer } from './replaceable';
 
 export { HookEventName } from './hook-protocol';
@@ -82,13 +84,23 @@ export type CoreHooks = {
   ) => Promise<HookAnswer<Name>>;
 };
 
-// What a Hook is told besides its event: which event, on which App, and a `ui.render` slot's props.
+/*
+ * The values a `ui.render` tree puts in its Component events, as a Loader page's `to` makes them: `go`
+ * opens one of the Plugin's pages and `run` runs one of its Operations. A Slot has no Page state.
+ */
+export type SlotTo = Pick<PageTo<PageState>, 'go' | 'run'>;
+
+/*
+ * What a Hook is told besides its event: which event, on which App, and for `ui.render` the slot's props
+ * and the `to` its tree's Component events are made with.
+ */
 export type HookContext<Name extends HookEventName> = Readonly<{
   name: Name;
   surface: HookInvocation['surface'];
   props: Name extends 'ui.render'
     ? Readonly<HookEvent<'ui.render'>['props']>
     : undefined;
+  to: Name extends 'ui.render' ? SlotTo : undefined;
 }>;
 
 // Passes the event, or a rewrite of it, down the chain and resolves to what the rest of it answered.
@@ -96,7 +108,10 @@ export type HookNext<Name extends HookEventName> = (
   event?: HookEvent<Name>,
 ) => Promise<HookAnswer<Name>>;
 
-// Nothing passes on what `next` answered; a `ui.render` Hook may answer with kit components.
+/*
+ * Nothing passes on what `next` answered. A `ui.render` Hook may answer with kit components, drawn once
+ * as a Loader page's Render is: pure, with values in its Component events (ADR-0050).
+ */
 type HookResult<Name extends HookEventName> =
   | HookAnswer<Name>
   | undefined

@@ -46,7 +46,7 @@ function trackerPage(api: Argo, deps: IssueDeps): TrackerPage {
       context={context}
       storage={storage}
       trackers={trackers}
-      changed={() => api.slots.changed(projectDetails)}
+      changed={() => api.changed()}
     />
   );
 }

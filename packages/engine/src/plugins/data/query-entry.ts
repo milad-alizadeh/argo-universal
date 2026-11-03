@@ -2,7 +2,7 @@ import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
 import type { PluginViewId } from '@repo/contracts/plugins/wire';
 import { runtimeError } from '../protocol/runtime';
 import type { OpenView } from '../views/open-view';
-import { backgroundRefusal, queryState, readQuery } from './query-answer';
+import { queryState, readQuery } from './query-answer';
 import type { QueryIntervals } from './query-intervals';
 import { QueryTiming } from './query-timing';
 import {
@@ -14,7 +14,6 @@ import { QueryWatchers } from './query-watchers';
 
 export class QueryEntry {
   state: PluginDataState = { stale: false, revision: 0 };
-  private refusedInBackground = false;
   readonly watchers;
   private readonly timing;
   private flight: Promise<void> | undefined;
@@ -34,16 +33,15 @@ export class QueryEntry {
 
   watch(view: OpenView, request: QueryWatch): PluginDataState {
     this.watchers.add(view, request);
-    const background = view.backgroundInterval !== undefined;
 
-    if (this.shouldRefresh(background)) void this.refresh(background);
+    if (this.shouldRefresh()) void this.refresh();
     else this.schedule();
 
     return this.state;
   }
 
-  private shouldRefresh(background: boolean): boolean {
-    return background || !this.timing.ran || this.timing.overdue;
+  private shouldRefresh(): boolean {
+    return !this.timing.ran || this.timing.overdue;
   }
 
   release(key: string): void {
@@ -55,39 +53,23 @@ export class QueryEntry {
     for (const key of this.watchers.keysForView(viewId)) this.release(key);
   }
 
-  refresh(background?: boolean): Promise<void> {
-    if (this.flight) return this.flight;
-    const inBackground = background === true;
-
-    if (this.stopped(inBackground)) return Promise.resolve();
-
-    return this.begin(inBackground);
+  refresh(): Promise<void> {
+    return this.flight ?? this.begin();
   }
 
-  // ADR-0037 stops a refused Query's clock in the background alone; a page on screen keeps its own.
-  private stopped(background: boolean): boolean {
-    return background && this.refusedInBackground;
-  }
-
-  // "Until the Plugin is next opened": opening it lets the next background pass read the Query again.
-  opened(): void {
-    this.refusedInBackground = false;
-  }
-
-  private begin(background: boolean): Promise<void> {
+  private begin(): Promise<void> {
     this.timing.started();
     this.publish({ ...this.state, stale: this.state.data !== undefined });
-    this.flight = this.execute(background)
+    this.flight = this.execute()
       .catch((cause: unknown) => this.failed(cause))
       .finally(() => this.finished());
 
     return this.flight;
   }
 
-  private async execute(background: boolean): Promise<void> {
+  private async execute(): Promise<void> {
     const reply = await readQuery(this.owner, this.services);
 
-    this.refusedInBackground = backgroundRefusal(background, reply);
     this.publish(queryState(this.state, reply));
   }
 
@@ -135,16 +117,8 @@ export class QueryEntry {
     if (this.watchers.active) void this.refresh();
   }
 
-  get settled(): boolean {
-    return !this.flight && this.timing.ran;
-  }
-
   owns(key: string): boolean {
     return this.watchers.has(key);
-  }
-
-  hasView(viewId: PluginViewId): boolean {
-    return this.watchers.keysForView(viewId).length > 0;
   }
 
   private publish(state: PluginDataState): void {

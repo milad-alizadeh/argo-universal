@@ -9,7 +9,7 @@ import {
   type WireNode,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
-import { drawsFor, type Draws } from './draws';
+import { pageDraws, type Draws } from './draws';
 import { requireViewHandler } from './handler';
 
 const staleView = 'Plugin view changed; try again';
@@ -21,7 +21,7 @@ export type Opening = Omit<Open, 'type' | 'viewId'>;
 type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
 /*
- * One App's view of a Plugin route or Slot. `root` is the Plugin's tree as the worker sent it, which
+ * One App's view of a Plugin page. `root` is the Plugin's tree as the worker sent it, which
  * handlers and data are looked up in; `drawn` is the sanitised, prepared tree the App holds, at
  * `revision`. `refused` is set while the App holds the fallback for a tree over the wire caps.
  */
@@ -38,7 +38,6 @@ export interface OpenView {
   connectionId: string;
   opening: Open;
   watchers: number;
-  backgroundInterval?: number;
 }
 
 export function createOpenView(
@@ -48,7 +47,7 @@ export function createOpenView(
 ): OpenView {
   return {
     pluginId,
-    draws: drawsFor(opening),
+    draws: pageDraws,
     projectId: opening.projectId,
     connectionId,
     events: viewEvents(),
@@ -62,12 +61,6 @@ function viewEvents(): ViewEvents {
   events.setMaxListeners(0);
 
   return events;
-}
-
-export type HeadlessView = { viewId: PluginViewId; close: () => void };
-
-export function temporary(view: OpenView): boolean {
-  return view.draws.temporary || view.backgroundInterval !== undefined;
 }
 
 function blankView(): Pick<

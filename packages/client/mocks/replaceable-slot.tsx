@@ -5,7 +5,7 @@ import {
 import { messageSlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { FeedItem } from '../src/features/feed/components/feed-item';
-import type { ReplaceableState } from '../src/lib/product/plugin-registry/plugin-stream-state';
+import type { ReplaceableState } from '../src/lib/product/plugin-registry/replaceable-state';
 
 export function renderCoreMessage(
   input: ReplaceableInput,
@@ -23,10 +23,6 @@ export function renderCoreMessage(
 export function replacementState(root: WireNode): ReplaceableState {
   return {
     input: messageSlotFixture,
-    replacement: {
-      pluginId: 'fixture',
-      path: 'render:fixture',
-      view: { root, revision: 1, viewId: null },
-    },
+    replacement: { pluginId: 'fixture', root },
   };
 }

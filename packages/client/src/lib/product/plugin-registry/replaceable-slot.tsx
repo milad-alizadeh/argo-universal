@@ -3,8 +3,12 @@ import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, type ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
 import { PluginDrawingBoundary } from './plugin-drawing-boundary';
-import { PluginTree, type PluginOnEvent } from './plugin-registry';
-import type { ReplaceableState } from './plugin-stream-state';
+import {
+  PluginTree,
+  type OnPageCall,
+  type PluginOnEvent,
+} from './plugin-registry';
+import type { ReplaceableState } from './replaceable-state';
 
 export interface ReplaceableSlotProps {
   input: ReplaceableInput;
@@ -33,6 +37,8 @@ export interface ReplaceableSlotViewProps extends ReplaceableSlotProps {
   state: ReplaceableState;
   onEvent: PluginOnEvent;
   onOpenPage?: OpenPluginPage;
+  // The Operations a replacement's Component events run (ADR-0050).
+  onPageCall?: OnPageCall;
   onFallback: (reason: string) => void;
 }
 
@@ -51,14 +57,12 @@ export function ReplaceableSlotView(
   );
 }
 
-function drawingKey({ input, state }: ReplaceableSlotViewProps): string {
-  const view = state.replacement ? state.replacement.view.viewId : 'core';
-
-  return JSON.stringify([view, input]);
-}
+// A new answer is a new drawing, so a replacement that threw is tried again once the Server answers anew.
+const drawingKey = ({ input, state }: ReplaceableSlotViewProps): string =>
+  JSON.stringify([state.replacement ?? 'core', input]);
 
 function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
-  const root = props.state.replacement?.view.root;
+  const root = props.state.replacement?.root;
 
   if (!root) return props.renderCore(coreInput(props));
 
@@ -67,6 +71,7 @@ function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
       root={root}
       onEvent={props.onEvent}
       onOpenPage={props.onOpenPage}
+      onPageCall={props.onPageCall}
     />
   );
 }

@@ -14,7 +14,6 @@ export type SlotSend = (slotCall: SlotCall) => Promise<void>;
 export interface SlotProviders {
   register: SlotsApi['register'];
   answer: (event: ItemsEvent) => void;
-  changed: SlotsApi['changed'];
 }
 
 type ItemsRequest = Readonly<{ contexts: readonly Readonly<ItemsContext>[] }>;
@@ -36,7 +35,6 @@ export function slotProviders(send: SlotSend): SlotProviders {
       void providers.set(slotId, { provide: provider }),
     answer: (event) =>
       void answer(send, providers.get(event.input.slotId), event),
-    changed: (slotId) => send({ action: 'changed', slotId }),
   };
 }
 

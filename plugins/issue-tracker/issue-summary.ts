@@ -45,7 +45,7 @@ const cacheKey = ({ projectId, number }: Target): CacheKey => ({
  */
 export function createIssueSummaries(
   source: Source,
-  changed: () => Promise<void>,
+  changed: () => void,
 ): IssueSummaries {
   const loadedAt = new Map<string, number>();
   const cached = storedSummary(source.storage);
@@ -66,7 +66,7 @@ const storedSummary =
 function loadSummary(
   source: Source,
   cached: IssueSummaries['cached'],
-  changed: () => Promise<void>,
+  changed: () => void,
 ): Loads['load'] {
   return async (target) => {
     const summary = await summaryOf(source, target);
@@ -75,7 +75,7 @@ function loadSummary(
       return;
 
     await source.storage.writeCache(cacheKey(target), summary);
-    await changed();
+    changed();
   };
 }
 

@@ -12,19 +12,14 @@ import { QueryViewContext } from './use-data';
 import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type PageHub = {
-  ready: (viewId: PluginViewId, background: boolean) => boolean;
+  ready: (viewId: PluginViewId) => boolean;
   send: (viewId: PluginViewId, message: ViewMessage) => Promise<void>;
   views: Map<PluginViewId, OpenView>;
 };
 
-type Content = {
-  viewId: PluginViewId;
-  element: ReactNode;
-  replaceable: boolean;
-  background?: boolean;
-};
+type Content = { viewId: PluginViewId; element: ReactNode };
 
-export function transmit(
+function transmit(
   hub: PageHub,
   viewId: PluginViewId,
   message: ViewMessage,
@@ -41,7 +36,7 @@ function publish(hub: PageHub, view: OpenView, next: WireNode): void {
 }
 
 function committed(hub: PageHub, view: OpenView, container: Instance): void {
-  const root = pageRoot(view, container);
+  const root = pageRoot(container);
   const handlers: Handlers = new Map();
   const next = root ? toWire(root, handlers) : emptyPage();
 
@@ -89,7 +84,7 @@ function schedule(
   schedulePage(view, () => {
     if (!canCommit(hub, view)) return;
 
-    if (hub.ready(view.viewId, view.background === true)) {
+    if (hub.ready(view.viewId)) {
       tryCommit(hub, view, { container, failed });
     } else {
       schedule(hub, view, { container, failed });
@@ -100,8 +95,6 @@ function schedule(
 function pageView(content: Content): OpenView {
   return {
     viewId: content.viewId,
-    replaceable: content.replaceable,
-    background: content.background,
     frame: undefined,
     sentWaiters: [],
     tree: null,
@@ -129,18 +122,11 @@ function tryCommit(
   }
 }
 
-function pageRoot(view: OpenView, container: Instance): Instance | undefined {
-  requireReplacementRoot(view, container);
-
+function pageRoot(container: Instance): Instance | undefined {
   return container.children[0];
 }
 
-function requireReplacementRoot(view: OpenView, container: Instance): void {
-  if (view.replaceable && container.children.length !== 1)
-    throw new Error('A replacement must draw one component');
-}
-
-export function failedDrawingRoot(reason: string): WireNode {
+function failedDrawingRoot(reason: string): WireNode {
   return {
     type: '#render-error',
     key: '0',

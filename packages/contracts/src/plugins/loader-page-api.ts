@@ -17,10 +17,11 @@ import type {
  *   App never set reads its default.
  * - `load` reads everything the page shows but its paged list. It may be slow; the App keeps the previous
  *   Plugin tree on screen until the next one lands. What it throws fails the draw, and the App says so.
+ *   A manifest's `background` pass runs `load` alone, for one Project, on its interval, and drops the answer.
  * - `list`, when the page has a paged list, reads one page of it from `cursor` (null for the first) and
  *   answers its items and the cursor of the page after, or null at the end. The kit keeps the pages it
- *   read for each address for a minute and reads only those it lacks; a write, an Operation or
- *   `argo.pages.stale()`, forgets every page whose read started before it. The first page alone is read
+ *   read for each address for a minute and reads only those it lacks; an Operation or `argo.changed()`
+ *   forgets every page whose read started before it. The first page alone is read
  *   again on every draw. An item equal to one already listed is dropped, so a cursor may include the
  *   boundary item.
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by
@@ -83,12 +84,5 @@ export type DefineLoaderPage = <State extends PageState, Data, Item = never>(
   page: LoaderPage<State, Data, Item>,
 ) => void;
 
-/*
- * `argo.pages.define`: a Loader and a pure Render, drawn once per Page address. `argo.pages.stale` tells
- * every connected App that the Plugin's Loader pages may have changed, after a write that is not an
- * Operation (an Operation's run marks them itself) or a change the Plugin heard of elsewhere.
- */
-export type LoaderPagesApi = Readonly<{
-  define: DefineLoaderPage;
-  stale: () => void;
-}>;
+// `argo.pages.define`: a Loader and a pure Render, drawn once per Page address.
+export type LoaderPagesApi = Readonly<{ define: DefineLoaderPage }>;

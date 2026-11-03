@@ -56,10 +56,7 @@ it('merges Session row items in Plugin order, limits them, leaves failing Plugin
       id: 'counter',
       slots: [sessionRowSlotId],
       order: 1,
-      source: counting(
-        ['a', 'b'],
-        `setTimeout(() => argo.slots.changed('${sessionRowSlotId}'), 0);`,
-      ),
+      source: counting(['a', 'b'], `setTimeout(() => argo.changed(), 0);`),
     },
     {
       id: 'second',

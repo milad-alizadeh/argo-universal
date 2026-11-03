@@ -1,4 +1,3 @@
-import type { PluginViewId } from '@repo/contracts/plugins/wire';
 import {
   BackgroundPass,
   type BackgroundEntry,
@@ -6,7 +5,7 @@ import {
 } from './background-pass';
 import { backgroundFloorMs } from './query-intervals';
 
-// At most this many headless passes run at once, so many Projects never burst into one crowd of calls.
+// At most this many background passes run at once, so many Projects never burst into one crowd of calls.
 const concurrentPasses = 4;
 
 export class PluginBackground {
@@ -99,14 +98,6 @@ export class PluginBackground {
       this.removePass(pass);
     this.services.views.endProject(projectId);
     this.services.data.releaseProject(projectId);
-  }
-
-  rendered(viewId: PluginViewId): void {
-    for (const pass of this.passes) pass.rendered(viewId);
-  }
-
-  released(viewId: PluginViewId): void {
-    for (const pass of this.passes) pass.released(viewId);
   }
 
   remove(pluginId: string): void {

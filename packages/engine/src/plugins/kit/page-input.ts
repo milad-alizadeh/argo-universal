@@ -1,9 +1,15 @@
 import type {
   LoaderInput,
+  PagedList as RenderedList,
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import type { OperationCall, PluginEvent } from '@repo/contracts/plugins/wire';
+import type {
+  LoadMore,
+  OperationCall,
+  PluginEvent,
+} from '@repo/contracts/plugins/wire';
+import type { Paged } from './paged-lists';
 
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
@@ -66,3 +72,12 @@ function operationCall(
 
   return call;
 }
+
+const loadMore: LoadMore = { loadMore: true };
+
+// The pages of a paged list as its Render sees them, with the load more it puts in the tree as a value.
+export const renderedList = <Item>({
+  items,
+  hasMore,
+}: Paged<Item>): RenderedList<Item> =>
+  Object.freeze({ items, hasMore, loadMore });

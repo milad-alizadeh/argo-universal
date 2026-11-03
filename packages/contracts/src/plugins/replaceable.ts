@@ -1,26 +1,29 @@
 import { z } from 'zod';
-import { ReplaceableInput } from './replaceable-input';
+import { ReplaceableInput, ReplaceableSlotId } from './replaceable-input';
 import { renderReasonLimit } from './replaceable-input';
-import { ViewMessage } from './wire';
-import { PluginViewInput, PluginViewId } from './wire-events';
+import { WireNode } from './wire';
 
 export * from './replaceable-input';
 
-export const ReplaceableMessage = z.discriminatedUnion('type', [
+/*
+ * A Replaceable Slot's one answer (ADR-0050): core draws its own with these props, or the Plugin tree a
+ * `ui.render` Hook drew, checked as every Plugin tree is. New props are a new question.
+ */
+export const ReplaceableAnswer = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('core'), input: ReplaceableInput }),
   z.strictObject({
     type: z.literal('replacement'),
     pluginId: z.string(),
-    path: z.string(),
-    message: ViewMessage,
+    root: WireNode,
   }),
 ]);
 
-export type ReplaceableMessage = z.infer<typeof ReplaceableMessage>;
+export type ReplaceableAnswer = z.infer<typeof ReplaceableAnswer>;
 
-export const RenderFailureInput = PluginViewInput.extend({
-  viewId: PluginViewId,
-  revision: z.int().positive(),
+// An App that could not draw a Plugin's replacement says so, and core draws the Slot instead.
+export const RenderFailureInput = z.strictObject({
+  pluginId: z.string().min(1),
+  slotId: ReplaceableSlotId,
   reason: z.string().max(renderReasonLimit),
 });
 

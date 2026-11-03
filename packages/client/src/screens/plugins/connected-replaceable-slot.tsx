@@ -1,22 +1,26 @@
-import { renderReasonLimit } from '@repo/contracts/plugins/replaceable';
+import {
+  renderReasonLimit,
+  type ReplaceableInput,
+} from '@repo/contracts/plugins/replaceable';
 import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPC } from '#features/connection';
 import {
   coreSlotState,
-  reduceReplaceable,
   ReplaceableSlotRenderer,
+  replaceableState,
   replacedSlots,
+  type OnPageCall,
   type ReplaceableState,
+  type SlotReplacement,
 } from '../../lib/product/plugin-registry';
 import {
   ReplaceableSlotView,
   type ReplaceableSlotProps,
   type ReplaceableSlotViewProps,
 } from '../../lib/product/plugin-registry/replaceable-slot';
-import { usePluginBinding } from './use-plugin-binding';
-import { usePluginStream } from './use-plugin-stream';
+import { usePluginOpener } from './use-plugin-opener';
 
 const noSlots: readonly ReplaceableSlotId[] = [];
 
@@ -25,7 +29,7 @@ const renderConnectedSlot = (
 ): React.JSX.Element => <ConnectedReplaceableSlot {...props} />;
 
 /*
- * One check of the Plugin list for every Slot below it, so a row no Plugin can replace opens no stream and core draws
+ * One check of the Plugin list for every Slot below it, so a row no Plugin can replace asks nothing and core draws
  * it from the start. `select` keeps its answer's identity across rereads, so a reread that changes nothing draws no row.
  */
 export function ConnectedReplaceableSlots({
@@ -54,59 +58,85 @@ function useReplacedSlots(): readonly ReplaceableSlotId[] {
   return data?.length ? data : noSlots;
 }
 
-// A Replaceable Slot as the connected Server answers it; a failed stream leaves core's own drawing.
+// A Replaceable Slot as the connected Server answers it, once for its props; a failed answer leaves core's own drawing.
 function ConnectedReplaceableSlot(
   props: ReplaceableSlotProps,
 ): React.JSX.Element {
   const state = useReplaceableState(props.input);
-  const actions = useSlotActions(state.replacement);
+  const actions = useSlotActions(props.input, state.replacement);
 
   return <ReplaceableSlotView {...props} {...actions} state={state} />;
 }
 
 type SlotActions = Pick<
   ReplaceableSlotViewProps,
-  'onEvent' | 'onOpenPage' | 'onFallback'
+  'onEvent' | 'onOpenPage' | 'onPageCall' | 'onFallback'
 >;
 
-// What the Slot's drawing reports back: the replacement's events and `navigate` Actions, and a drawing that fell back.
+/*
+ * What the Slot's drawing reports back: the Operations its Component events run and the pages its
+ * `navigate` Actions open, for the Plugin that drew it, and a drawing that fell back.
+ */
 function useSlotActions(
-  replacement: ReplaceableState['replacement'],
+  input: ReplaceableInput,
+  replacement: SlotReplacement | null,
 ): SlotActions {
-  const onFallback = useDrawingFallback(replacement);
-  const bind = usePluginBinding();
+  const onFallback = useDrawingFallback(input, replacement);
+  const opener = usePluginOpener();
+  const onPageCall = useSlotRun(replacement);
 
-  return { onFallback, ...(replacement ? bind(replacement) : unbound) };
+  if (!replacement) return { onEvent: noEvents, onFallback };
+
+  return {
+    onEvent: noEvents,
+    onOpenPage: opener(replacement.pluginId),
+    onPageCall,
+    onFallback,
+  };
 }
 
-function useReplaceableState(
-  input: ReplaceableSlotProps['input'],
-): ReplaceableState {
-  const { state, failed } = usePluginStream(
-    input,
-    (trpc, slot, onData) =>
-      trpc.plugins.render.subscriptionOptions(slot, { onData }),
-    { initial: coreSlotState(input), reduce: reduceReplaceable },
-  );
+// The props are the question, so new props ask again; the same props draw the same tree, so an answer stays fresh.
+function useReplaceableState(input: ReplaceableInput): ReplaceableState {
+  const { data } = useQuery({
+    ...useTRPC().plugins.render.queryOptions(input),
+    select: (answer) => replaceableState(input, answer),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 
-  return failed ? coreSlotState(input) : state;
+  return data ?? coreSlotState(input);
 }
 
-// Core draws the Slot, so there is no Plugin to send events to.
-const unbound = { onEvent: (): void => {} };
+// A pure render passes no Plugin events (ADR-0050).
+const noEvents = (): Promise<void> =>
+  Promise.reject(new Error('A Replaceable Slot sends no Plugin events'));
+
+// A replacement has no Page state, so the one call it makes is an Operation run, which says itself when it fails.
+function useSlotRun(replacement: SlotReplacement | null): OnPageCall {
+  const run = useMutation(useTRPC().plugins.run.mutationOptions());
+
+  return async (call) => {
+    if (!replacement || !('operation' in call)) return;
+    const { operation, args } = call;
+
+    await run
+      .mutateAsync({ pluginId: replacement.pluginId, operation, args })
+      .then(noAnswer, noAnswer);
+  };
+}
+
+const noAnswer = (): void => undefined;
 
 function useDrawingFallback(
-  replacement: ReplaceableState['replacement'],
+  input: ReplaceableInput,
+  replacement: SlotReplacement | null,
 ): (reason: string) => void {
   const failure = useMutation(useTRPC().plugins.renderFailed.mutationOptions());
 
   return (reason) => {
-    if (!replacement?.view.viewId) return;
+    if (!replacement) return;
     failure.mutate({
       pluginId: replacement.pluginId,
-      path: replacement.path,
-      viewId: replacement.view.viewId,
-      revision: replacement.view.revision,
+      slotId: input.slotId,
       reason: reason.slice(0, renderReasonLimit),
     });
   };

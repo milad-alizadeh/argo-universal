@@ -22,7 +22,6 @@ export type OperationHost = {
  */
 export class PluginOperationService {
   private readonly port: OperationsPort;
-  private readonly ran = new Set<(pluginId: string) => void>();
 
   public constructor(host: OperationHost, operations: PluginOperations) {
     this.port = {
@@ -38,19 +37,8 @@ export class PluginOperationService {
     return declaredOperationRows(this.port);
   }
 
-  public async run(input: OperationRun): Promise<Json> {
-    const result = await runDeclaredOperation(this.port, input);
-
-    for (const listener of this.ran) listener(input.pluginId);
-
-    return result;
-  }
-
-  // Called after each Operation that answered, whoever ran it; the returned function stops it.
-  public onRan(listener: (pluginId: string) => void): () => void {
-    this.ran.add(listener);
-
-    return () => this.ran.delete(listener);
+  public run(input: OperationRun): Promise<Json> {
+    return runDeclaredOperation(this.port, input);
   }
 }
 

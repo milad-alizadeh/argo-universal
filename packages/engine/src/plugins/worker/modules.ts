@@ -21,7 +21,7 @@ export async function registerPlugin(
   bridge: PluginBridge,
   startup: { initialized: () => void; clock?: PluginClock },
 ): Promise<PluginInboxes> {
-  const { context, inboxes, modules, validateBackground } = createPluginRealm(
+  const { context, inboxes, modules, validate } = createPluginRealm(
     bridge,
     await bundleKit(),
     startup.clock,
@@ -30,7 +30,7 @@ export async function registerPlugin(
   startup.initialized();
   await bootstrap(context, new PluginModules(entry, context, modules));
 
-  validatePaths(entry, validateBackground);
+  validatePaths(entry, validate);
 
   return inboxes;
 }
@@ -149,11 +149,12 @@ function builtModuleSource(source: string, path: string): string {
 
 function validatePaths(
   entry: PluginEntry,
-  validate: PluginRealmExports['validateBackground'],
+  validate: PluginRealmExports['validate'],
 ): void {
-  if (entry.backgroundPath !== undefined) validate(entry.backgroundPath);
+  if (entry.backgroundPath !== undefined)
+    validate.background(entry.backgroundPath);
 
-  for (const path of accountPaths(entry)) validate(path, 'Account');
+  for (const path of accountPaths(entry)) validate.page(path, 'Account');
 }
 
 const accountPaths = (entry: PluginEntry): string[] => entry.accountPaths ?? [];

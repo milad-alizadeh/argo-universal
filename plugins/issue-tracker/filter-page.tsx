@@ -40,9 +40,9 @@ export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   // A status change on any page, the Issue page's own included, leaves the counts and drawn lists stale.
   deps.changes.subscribe(() => {
     reloadOverviews(deps);
-    argo.pages.stale();
+    argo.changed();
   });
-  argo.pages.define(filterPattern, filterPage(deps, argo.pages.stale));
+  argo.pages.define(filterPattern, filterPage(deps, argo.changed));
 }
 
 const filterPage = (

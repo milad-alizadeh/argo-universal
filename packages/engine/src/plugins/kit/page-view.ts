@@ -21,8 +21,6 @@ export interface OpenView {
   viewId: PluginViewId;
   mounted?: Mounted;
   broken?: boolean;
-  replaceable?: boolean;
-  background?: boolean;
   frame: KitTimer | undefined;
   // Released once the pending frame has sent its tree.
   sentWaiters: Array<() => void>;

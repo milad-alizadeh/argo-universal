@@ -5,6 +5,7 @@ import {
 import { PageRun, PageRunAnswer } from '@repo/contracts/plugins/page-address';
 import { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import {
+  ReplaceableAnswer,
   ReplaceableInput,
   RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
@@ -75,7 +76,10 @@ const createListRouter = routerFactory((listChanges: PluginListChanges) =>
   }),
 );
 
-// Pages, Slots and Replaceable Slots stream to one live App Connection.
+/*
+ * A Plugin's view streams to one live App Connection; a Replaceable Slot is asked once, for that
+ * Connection's App, and asked again when its props change (ADR-0050).
+ */
 const createViewsRouter = routerFactory((plugins: PluginService) =>
   router({
     view: publicProcedure
@@ -83,7 +87,8 @@ const createViewsRouter = routerFactory((plugins: PluginService) =>
       .subscription((call) => plugins.view(call.input, connectionOf(call))),
     render: publicProcedure
       .input(ReplaceableInput)
-      .subscription((call) => plugins.render(call.input, connectionOf(call))),
+      .output(ReplaceableAnswer)
+      .query(({ input, ctx }) => plugins.render(input, viewConnection(ctx))),
   }),
 );
 
@@ -117,8 +122,8 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
       }),
     renderFailed: publicProcedure
       .input(RenderFailureInput)
-      .mutation(({ input, ctx }) => {
-        plugins.renderFailed(viewConnection(ctx), input);
+      .mutation(({ input }) => {
+        plugins.renderFailed(input);
 
         return { ok: true as const };
       }),

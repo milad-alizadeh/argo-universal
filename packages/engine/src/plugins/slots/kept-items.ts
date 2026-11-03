@@ -24,7 +24,7 @@ type Kept = Map<string, readonly ItemsSlotItem[]>;
 
 /*
  * One worker generation's items Slots: what it answered, by Slot id then context key, and why a Slot
- * left it out; both kept until the worker ends or says that Slot's items changed.
+ * left it out; both kept until the worker ends or says what it shows changed.
  */
 export type SlotWorker = Caller & {
   running: boolean;

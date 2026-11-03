@@ -11,10 +11,7 @@ import { realClock, type PluginClock } from '../clock';
 import { answerHook } from './hook-answer';
 import type { RegisteredHook } from './hook-registry';
 import { coreAnswer } from './hook-rules';
-import {
-  discardUnusedReplacements,
-  type RetainedReplacement,
-} from './render-answer';
+import type { DrawnReplacement } from './render-answer';
 import { logShadowed, passOn } from './render-log';
 import { RunningHook, type HookStep } from './running-hook';
 
@@ -22,7 +19,6 @@ export type HookChainInput = {
   clock?: PluginClock;
   send: (hook: RegisteredHook, invocation: HookInvocation) => void;
   log: (line: string) => void;
-  discard?: (pluginId: string, path: string) => void;
 };
 
 // Which worker a `next` or an outcome came from: only the worker running that Hook may send them.
@@ -35,7 +31,7 @@ type Chain = {
   hooks: readonly RegisteredHook[];
   ancestors: ReadonlySet<string>;
   surface?: PluginSurface;
-  replacements: RetainedReplacement[];
+  replacements: DrawnReplacement[];
 };
 
 // Runs Hooks as a middleware chain over core (ADR-0027), one worker call per Hook.
@@ -59,7 +55,6 @@ export class HookChain {
       return answer;
     } finally {
       logShadowed(this.input.log, chain, { event, answer });
-      discardUnusedReplacements(chain.replacements, answer, this.input.discard);
     }
   }
 

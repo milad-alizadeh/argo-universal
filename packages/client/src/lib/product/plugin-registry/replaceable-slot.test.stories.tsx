@@ -12,8 +12,8 @@ import {
   renderCoreMessage,
   replacementState,
 } from '../../../../mocks/replaceable-slot';
-import { coreSlotState, type ReplaceableState } from './plugin-stream-state';
 import { ReplaceableSlotView } from './replaceable-slot';
+import { coreSlotState, type ReplaceableState } from './replaceable-state';
 
 const meta = {
   title: 'Tests/Design System/Patterns/ReplaceableSlot',

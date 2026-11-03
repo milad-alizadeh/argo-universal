@@ -4,7 +4,7 @@ import {
   pluginKitExports,
   type PluginKitExport,
 } from '@repo/contracts/plugins/kit';
-import { PluginEvent } from '@repo/contracts/plugins/wire';
+import { PluginEvent, type WireJson } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
 import {
@@ -25,6 +25,7 @@ import {
   type ViewSender,
   type DispatchSender,
 } from './pages';
+import { valuesOf } from './render-tree';
 import {
   slotProviders,
   type SlotProviders,
@@ -78,8 +79,10 @@ export interface Kit {
   exports: typeof exportsOf & Pick<ReturnType<typeof dataClient>, 'useData'>;
   jsxRuntime: typeof jsxRuntime;
   registerPage: Pages['register'];
-  // The worker's `argo.slots`; it also answers the batched items calls the inbox hands it.
+  // The worker's `argo.slots`; the inbox hands its providers the batched items calls.
   slots: Argo['slots'];
+  // `argo.changed()`: the Plugin's pages and items Slots may show something new.
+  changed: Argo['changed'];
   // The worker's `argo.operations`; it also answers the Operation calls the inbox hands it.
   operations: OperationHandlers;
   // `argo.pages.define`, which also answers the inbox's draws (ADR-0050).
@@ -87,10 +90,10 @@ export interface Kit {
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
   requirePage: Pages['requirePage'];
-  replacement: (
-    invocation: number,
-    element: React.ReactNode,
-  ) => { treePath: string };
+  // A manifest's `background` path names one of the Plugin's Loader pages.
+  requireLoaderPage: (path: string) => void;
+  // A `ui.render` Hook's kit components, drawn once as a Render is (ADR-0050).
+  drawTree: (element: React.ReactNode) => WireJson;
 }
 
 // What the host answers for a Plugin: its Queries, its Slot items, its own Operations and its Loader pages' draws.
@@ -120,9 +123,7 @@ export function createKit(
 ): Kit {
   const data = dataClient(calls.data);
 
-  const pages = mountPages(send, settle, (viewId, background) =>
-    data.ready(viewId, background),
-  );
+  const pages = mountPages(send, settle, (viewId) => data.ready(viewId));
 
   return pageKit({ data, pages, ...providers(calls) });
 }
@@ -146,16 +147,25 @@ function pageKit(parts: KitParts): Kit {
   return {
     isElement: React.isValidElement,
     requirePage: pages.requirePage,
-    replacement: replacementOf(pages),
     exports: { ...exportsOf, useData: data.useData },
     jsxRuntime,
     registerPage: pages.register,
-    slots,
+    slots: { register: slots.register },
     operations,
-    loaderPages,
+    ...loaderKit(loaderPages),
     inbox: inbox(parts),
   };
 }
+
+// What Loader pages add to the kit: the pages, their one change signal and the background path check.
+const loaderKit = (
+  loaderPages: KitParts['loaderPages'],
+): Pick<Kit, 'loaderPages' | 'changed' | 'drawTree' | 'requireLoaderPage'> => ({
+  loaderPages,
+  changed: loaderPages.changed,
+  drawTree: valuesOf,
+  requireLoaderPage: loaderPages.requireBackground,
+});
 
 function inbox(parts: KitParts): Kit['inbox'] {
   return (json): void => deliver(parts, PluginEvent.parse(JSON.parse(json)));
@@ -178,13 +188,4 @@ function answerOrDraw(parts: KitParts, event: PartEvent): void {
   if (event.type === 'draw') return parts.loaderPages.answer(event);
 
   return parts.pages.receive(event);
-}
-
-function replacementOf(pages: Pages): Kit['replacement'] {
-  return (invocation, element) => {
-    const treePath = `render:${invocation}`;
-    pages.registerReplacement(treePath, element);
-
-    return { treePath };
-  };
 }

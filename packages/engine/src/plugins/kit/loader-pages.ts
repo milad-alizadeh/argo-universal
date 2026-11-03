@@ -2,19 +2,14 @@ import type {
   LoaderPagesApi,
   LoaderInput,
   LoaderPage,
-  PagedList as RenderedList,
 } from '@repo/contracts/plugins/loader-page-api';
 import {
   matchPagePath,
   type LoaderPageCall,
   type PageState,
 } from '@repo/contracts/plugins/page-address';
-import type {
-  LoadMore,
-  PluginEvent,
-  WireJson,
-} from '@repo/contracts/plugins/wire';
-import { inputOf, pageTo } from './page-input';
+import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
+import { inputOf, pageTo, renderedList } from './page-input';
 import {
   forget,
   forgets,
@@ -22,7 +17,7 @@ import {
   type Forgets,
   type Paged,
 } from './paged-lists';
-import { renderTree } from './render-tree';
+import { valuesOf } from './render-tree';
 
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
@@ -30,7 +25,8 @@ export type LoaderPageSend = (call: LoaderPageCall) => Promise<void>;
 
 type Params = Record<string, string>;
 
-type Drawn = { root: WireJson; pages: number };
+// What a draw answers: the tree and how many pages its list shows, or none for a background pass's load.
+type Drawn = { root: WireJson; pages: number } | null;
 
 // One defined page, its State, Data and Item types closed over, so the list holds pages of any shape.
 type Defined = {
@@ -39,13 +35,16 @@ type Defined = {
 };
 
 /*
- * `api` is the Plugin's `argo.pages.define` and `stale`; `answer` is the host's draws; `forgetting` wraps an
- * Operation's answer: the write is done by then, so every page of every paged list read before it is stale
- * before the host hears of it and draws again.
+ * `api` is the Plugin's `argo.pages.define`; `changed` is its `argo.changed()`; `answer` is the host's
+ * draws; `forgetting` wraps an Operation's answer: the write is done by then, so every page of every paged
+ * list read before it is stale before the host hears of it and draws again.
  */
 export interface LoaderPages {
   api: LoaderPagesApi;
+  changed: () => void;
   answer: (event: DrawEvent) => void;
+  // Throws unless a defined pattern matches the manifest's `background` path, since a pass runs only its `load`.
+  requireBackground: (path: string) => void;
   forgetting: <Call, Answer>(
     answerWrite: (call: Call) => Promise<Answer>,
   ) => (call: Call) => Promise<Answer>;
@@ -61,11 +60,10 @@ export function loaderPages(send: LoaderPageSend): LoaderPages {
   const marks = forgets();
 
   return {
-    api: {
-      define: defining(send, defined, marks),
-      stale: staling(send, marks),
-    },
+    api: { define: defining(send, defined, marks) },
+    changed: changing(send, marks),
     answer: (event) => void answer(send, defined, event),
+    requireBackground: requiringBackground(defined),
     forgetting: (answerWrite) => (call) => {
       forget(marks);
 
@@ -74,13 +72,11 @@ export function loaderPages(send: LoaderPageSend): LoaderPages {
   };
 }
 
-// A Plugin's own stale mark: what it wrote outside an Operation also makes its read pages stale.
-const staling =
-  (send: LoaderPageSend, marks: Forgets): LoaderPagesApi['stale'] =>
-  () => {
-    forget(marks);
-    void send({ action: 'stale' }).catch(() => null);
-  };
+// `argo.changed()`: what the Plugin wrote outside an Operation also makes its read pages stale.
+const changing = (send: LoaderPageSend, marks: Forgets) => (): void => {
+  forget(marks);
+  void send({ action: 'changed' }).catch(() => null);
+};
 
 const defining =
   (
@@ -96,15 +92,20 @@ const defining =
     void send({ action: 'defined', pattern }).catch(() => null);
   };
 
+const requiringBackground =
+  (defined: readonly Defined[]) =>
+  (path: string): void => {
+    if (!defined.some(({ pattern }) => matchPagePath(pattern, path) !== null))
+      throw new Error(`Background path ${path} is not a Loader page`);
+  };
+
 async function answer(
   send: LoaderPageSend,
   defined: readonly Defined[],
   event: DrawEvent,
 ): Promise<void> {
   try {
-    const { root, pages } = await draw(defined, event);
-
-    await send({ action: 'drawn', id: event.id, root, pages });
+    await send(answered(event, await draw(defined, event)));
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
 
@@ -113,6 +114,13 @@ async function answer(
     );
   }
 }
+
+// A background pass's load answers that it loaded; a draw answers its tree.
+const answered = (
+  { id }: DrawEvent,
+  drawn: Drawn,
+): Parameters<LoaderPageSend>[0] =>
+  drawn ? { action: 'drawn', id, ...drawn } : { action: 'loaded', id };
 
 function draw(defined: readonly Defined[], event: DrawEvent): Promise<Drawn> {
   for (const { pattern, draw: drawPage } of defined) {
@@ -124,7 +132,10 @@ function draw(defined: readonly Defined[], event: DrawEvent): Promise<Drawn> {
   throw new Error(`No Loader page at ${event.path}`);
 }
 
-// Load and read the paged list at once, then render once; the tree goes through JSON so only values cross to the host.
+/*
+ * Load and read the paged list at once, then render once; the tree goes through JSON so only values cross
+ * to the host. A background pass only loads.
+ */
 const drawing =
   <State extends PageState, Data, Item>(
     page: LoaderPage<State, Data, Item>,
@@ -133,19 +144,28 @@ const drawing =
   async (params: Params, event: DrawEvent): Promise<Drawn> => {
     const input = inputOf(page.state, params, event);
 
-    const [data, paged] = await Promise.all([
-      page.load(input),
-      pagedOf(page, lists, { input, event }),
-    ]);
+    if (!event.loadOnly) return drawn(page, lists, { input, event });
 
-    const list = renderedList(paged);
-    const root = valuesOf(page.render(data, pageTo(), { ...input, list }));
+    await page.load(input);
 
-    return { root, pages: paged.pages };
+    return null;
   };
 
-const valuesOf = (element: Parameters<typeof renderTree>[0]): WireJson =>
-  JSON.parse(JSON.stringify(renderTree(element)));
+async function drawn<State extends PageState, Data, Item>(
+  page: LoaderPage<State, Data, Item>,
+  lists: PagedList<Item>,
+  at: { input: LoaderInput<State>; event: DrawEvent },
+): Promise<Drawn> {
+  const [data, paged] = await Promise.all([
+    page.load(at.input),
+    pagedOf(page, lists, at),
+  ]);
+
+  const list = renderedList(paged);
+  const root = valuesOf(page.render(data, pageTo(), { ...at.input, list }));
+
+  return { root, pages: paged.pages };
+}
 
 const none: Paged<never> = { items: [], hasMore: false, pages: 0 };
 
@@ -169,11 +189,3 @@ const addressOf = ({
   sessionId,
 }: DrawEvent): string =>
   JSON.stringify([path, pageState, projectId ?? null, sessionId ?? null]);
-
-const loadMore: LoadMore = { loadMore: true };
-
-const renderedList = <Item>({
-  items,
-  hasMore,
-}: Paged<Item>): RenderedList<Item> =>
-  Object.freeze({ items, hasMore, loadMore });

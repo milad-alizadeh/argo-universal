@@ -12,8 +12,8 @@ import { SlotItemChanges } from './slot-item-changes';
 
 /*
  * The runtime side of items Slots (ADR-0035): one batched call per Plugin and list, answers kept per
- * worker generation and Slot key until the Plugin calls `argo.slots.changed`, and a change count that
- * open lists wait on.
+ * worker generation and Slot key until the Plugin calls `argo.changed()` or one of its Operations runs,
+ * and a change count that open lists wait on.
  */
 export class PluginSlotItems {
   readonly changes = new SlotItemChanges();
@@ -61,19 +61,19 @@ export class PluginSlotItems {
     );
   }
 
-  // A Plugin's answer, its failure or its change signal; one from an ended worker is ignored.
+  // A Plugin's answer or its failure; one from an ended worker is ignored.
   receive(caller: Caller, call: SlotCall): void {
-    if (call.action === 'changed') this.changed(caller, call.slotId);
-    else this.calls.settle(caller, call);
+    this.calls.settle(caller, call);
   }
 
-  private changed(caller: Caller, slotId: string): void {
-    const worker = this.current(caller);
+  // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
+  changed(pluginId: string): void {
+    const worker = this.workers.get(pluginId);
 
     if (!worker) return;
     worker.epoch += 1;
-    worker.kept.delete(slotId);
-    worker.failed.delete(slotId);
+    worker.kept.clear();
+    worker.failed.clear();
     this.changes.bump();
   }
 

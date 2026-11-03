@@ -24,14 +24,12 @@ type ViewTarget = Pick<PluginDispatchInput, 'pluginId' | 'path' | 'viewId'>;
  * belongs to rather than on the viewId a reload rotates.
  */
 export type ViewLifecycle = {
-  opened: (view: OpenView) => void;
   released: (view: OpenView, lastOfOpening: boolean) => void;
   received: (view: OpenView) => void;
   failed: (view: OpenView, message: string) => void;
 };
 
 export const noViewLifecycle: ViewLifecycle = {
-  opened: (): void => {},
   released: (): void => {},
   received: (): void => {},
   failed: (): void => {},

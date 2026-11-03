@@ -11,14 +11,14 @@ const draws = (): PluginDraws =>
     },
   });
 
-it('tells its listeners when the running worker marks its Loader pages stale', () => {
+it('tells its listeners when the running worker says what it shows changed', () => {
   const pages = draws();
   const marked: string[] = [];
 
-  pages.onStale((pluginId) => marked.push(pluginId));
+  pages.onChanged((pluginId) => marked.push(pluginId));
   pages.ran('tracker', 2);
-  pages.receive({ pluginId: 'tracker', generation: 1 }, { action: 'stale' });
-  pages.receive({ pluginId: 'tracker', generation: 2 }, { action: 'stale' });
+  pages.receive({ pluginId: 'tracker', generation: 1 }, { action: 'changed' });
+  pages.receive({ pluginId: 'tracker', generation: 2 }, { action: 'changed' });
 
   expect(marked).toEqual(['tracker']);
 });
@@ -27,10 +27,22 @@ it('stops telling a listener that unsubscribed', () => {
   const pages = draws();
   const marked: string[] = [];
 
-  const unsubscribe = pages.onStale((pluginId) => marked.push(pluginId));
+  const unsubscribe = pages.onChanged((pluginId) => marked.push(pluginId));
   pages.ran('tracker', 1);
   unsubscribe();
-  pages.receive({ pluginId: 'tracker', generation: 1 }, { action: 'stale' });
+  pages.receive({ pluginId: 'tracker', generation: 1 }, { action: 'changed' });
 
   expect(marked).toEqual([]);
+});
+
+it('tells its listeners when an Operation of a running Plugin ran', () => {
+  const pages = draws();
+  const marked: string[] = [];
+
+  pages.onChanged((pluginId) => marked.push(pluginId));
+  pages.changedBy('tracker');
+  pages.ran('tracker', 1);
+  pages.changedBy('tracker');
+
+  expect(marked).toEqual(['tracker']);
 });

@@ -4,7 +4,7 @@ import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
 import { logOnce } from '../views/render-fallback';
 import type { RegisteredHook } from './hook-registry';
-import { selectedHook, type RetainedReplacement } from './render-answer';
+import { selectedHook, type DrawnReplacement } from './render-answer';
 
 type Log = (line: string) => void;
 
@@ -36,7 +36,7 @@ function logChangedProps(log: Log, pluginId: string, event: JsonObject): void {
 
 type ShadowingChain = {
   hooks: readonly RegisteredHook[];
-  replacements: RetainedReplacement[];
+  replacements: DrawnReplacement[];
 };
 
 // Every other Plugin beneath the Hook whose tree the Slot draws is shadowed: its own change or tree is not drawn.

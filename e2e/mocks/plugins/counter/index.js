@@ -74,7 +74,7 @@ function Details({ onBack }) {
   );
 }
 
-// The Workbench card's own page: a summary in the card, and the whole of it in the Inspector tab.
+// The Workbench card's own Loader page: a summary in the card, and the whole of it in the Inspector tab.
 function Card({ sessionId }) {
   return (
     <Stack direction="column">
@@ -84,14 +84,22 @@ function Card({ sessionId }) {
   );
 }
 
+function defineCard(argo) {
+  argo.pages.define('/card', {
+    load: () => null,
+    render: (_data, _to, { context }) => <Card sessionId={context.sessionId} />,
+  });
+  argo.pages.define('/card/full', {
+    load: () => null,
+    render: () => <Text>Counter card in full</Text>,
+  });
+}
+
 export function register(argo) {
   argo.pages.register('/', ({ context }) => (
     <Counter argo={argo} sessionId={context.sessionId} />
   ));
-  argo.pages.register('/card', ({ context }) => (
-    <Card sessionId={context.sessionId} />
-  ));
-  argo.pages.register('/card/full', () => <Text>Counter card in full</Text>);
+  defineCard(argo);
   argo.slots.register('argo/project/details/v1', projectRows);
   argo.slots.register('argo/session/row/v1', rowItems);
   argo.slots.register('argo/session/activity/v1', activityLines);

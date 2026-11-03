@@ -12,7 +12,7 @@ import {
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
-import { itemsConnection } from './test-connection';
+import { itemsConnection, testConnection } from './test-connection';
 import { mountOpening, requireAccepted, testSession } from './test-mount';
 import { testOperations, testPages } from './test-operations';
 import { TestProjects } from './test-projects';
@@ -140,6 +140,14 @@ class HostedPlugin implements PluginTest {
 
   public readonly slotItems: PluginTest['slotItems'] = (input, options) =>
     this.service.slotItems(input, itemsConnection(options));
+
+  public readonly render: PluginTest['render'] = (input, platform) =>
+    this.service.render(
+      input,
+      testConnection(new AbortController().signal, {
+        surface: { platform: platform ?? 'web' },
+      }),
+    );
 
   get operations(): PluginTest['operations'] {
     const { service, runtime } = this;

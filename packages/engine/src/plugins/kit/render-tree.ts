@@ -1,4 +1,4 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import { keyOfProps, toProps, type ElementProps } from './element-props';
 import { toWire, type Handlers, type Instance } from './wire-tree';
@@ -12,7 +12,7 @@ type Element = React.ReactElement<ElementProps>;
  * nodes and plain function components are called, so nothing is mounted and nothing is kept. A Render is
  * pure, so a hook fails it, and a Component event holds a value, so a function prop fails it.
  */
-export function renderTree(element: Drawn): WireNode {
+function renderTree(element: Drawn): WireNode {
   const handlers: Handlers = new Map();
   const node = toWire(onlyRoot(instancesOf(element)), handlers);
 
@@ -121,3 +121,7 @@ function hookUse(name: string, error: Error): Error {
     `${name || 'A component'} calls a hook, and a Render is pure`,
   );
 }
+
+// The tree through JSON, so only values cross to the host.
+export const valuesOf = (element: Drawn): WireJson =>
+  JSON.parse(JSON.stringify(renderTree(element)));

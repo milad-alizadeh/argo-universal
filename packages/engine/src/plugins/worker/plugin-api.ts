@@ -27,7 +27,8 @@ declare global {
 type PluginInbox = (json: string) => void;
 
 export type PluginRealmExports = {
-  validateBackground: (path: string, contribution?: string) => void;
+  // A manifest's `background` path is a Loader page; an Account path is a registered page.
+  validate: { background: (path: string) => void; page: Kit['requirePage'] };
   inboxes: { pages: PluginInbox; hooks: PluginInbox; accounts: PluginInbox };
   modules: Pick<Kit, 'exports' | 'jsxRuntime'>;
 };
@@ -159,14 +160,15 @@ const pluginApi: Argo = frozen({
       (await call<PluginSettingValue | null>({ api: 'settings', key })) ?? null,
   }),
   pages: frozen({ register: kit.registerPage, ...kit.loaderPages.api }),
-  slots: frozen({ register: kit.slots.register, changed: kit.slots.changed }),
+  slots: frozen(kit.slots),
+  changed: kit.changed,
   on: hooks.on,
 });
 
 Object.assign(globalThis, {
   argo: pluginApi,
   __argoRealm: {
-    validateBackground: kit.requirePage,
+    validate: { background: kit.requireLoaderPage, page: kit.requirePage },
     inboxes: { pages: kit.inbox, hooks: hooks.inbox, accounts: accounts.inbox },
     modules: { exports: kit.exports, jsxRuntime: kit.jsxRuntime },
   } satisfies PluginRealmExports,

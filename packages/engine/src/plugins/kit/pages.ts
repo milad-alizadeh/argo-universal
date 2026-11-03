@@ -4,12 +4,10 @@ import type {
   PluginViewId,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
-import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
-import { startPage, transmit, failedDrawingRoot } from './mounted-page';
+import { startPage } from './mounted-page';
 import { cancelPageFrame } from './page-frame';
 import { runHandler, type OpenView, type DispatchSender } from './page-view';
-import { ReplacementPages } from './replacement-pages';
 import { elementOf } from './view-content';
 import { withView } from './view-scope';
 
@@ -33,27 +31,27 @@ type PageEvent = Exclude<
 export interface Pages {
   register: (path: string, page: Page) => void;
   receive: (event: PageEvent) => void;
-  registerReplacement: (path: string, element: ReactNode) => void;
-  requirePage: (path: string, contribution?: string) => void;
+  requirePage: (path: string, contribution: string) => void;
 }
 
 interface Hub {
-  ready: (viewId: PluginViewId, background: boolean) => boolean;
+  ready: (viewId: PluginViewId) => boolean;
   send: ViewSender;
   settle: DispatchSender;
   pages: Map<string, Page>;
   views: Map<PluginViewId, OpenView>;
-  replacements: ReplacementPages;
 }
 
 // A viewer that joins late gets the current tree again, as a snapshot.
 function resend(hub: Hub, view: OpenView): void {
   if (!view.tree) return;
-  transmit(hub, view.viewId, {
-    type: 'snapshot',
-    revision: view.revision,
-    root: view.tree,
-  });
+  void hub
+    .send(view.viewId, {
+      type: 'snapshot',
+      revision: view.revision,
+      root: view.tree,
+    })
+    .catch(reportFailure);
 }
 
 function open(hub: Hub, event: Open): void {
@@ -64,16 +62,9 @@ function open(hub: Hub, event: Open): void {
 }
 
 function openElement(hub: Hub, event: Open): void {
-  const element = hub.replacements.take(event.path) ?? elementOf(hub, event);
+  const element = elementOf(hub, event);
 
-  if (element)
-    return startPage(hub, {
-      viewId: event.viewId,
-      element,
-      replaceable: Boolean(event.renderSlot),
-      background: event.background,
-    });
-  missingRender(hub, event);
+  if (element) startPage(hub, { viewId: event.viewId, element });
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
@@ -115,17 +106,11 @@ export function mountPages(
   return {
     register: (path, page) => void hub.pages.set(path, page),
     receive: (event) => receive(hub, event),
-    registerReplacement: (path, element) =>
-      hub.replacements.register(path, element),
     requirePage: (path, contribution) => requirePage(hub, path, contribution),
   };
 }
 
-function requirePage(
-  hub: Hub,
-  path: string,
-  contribution = 'Background',
-): void {
+function requirePage(hub: Hub, path: string, contribution: string): void {
   if (!hub.pages.has(path))
     throw new Error(`${contribution} path ${path} is not a registered page`);
 }
@@ -141,7 +126,6 @@ function pageHub(
     settle,
     pages: new Map(),
     views: new Map(),
-    replacements: new ReplacementPages(),
   };
 }
 
@@ -150,15 +134,5 @@ function receiveDrawing(
   event: Exclude<PageEvent, { type: 'dispatch' }>,
 ): void {
   if (event.type === 'open') open(hub, event);
-  else if (event.type === 'close') close(hub, event.viewId);
-  else hub.replacements.discard(event.path);
-}
-
-function missingRender(hub: Hub, event: Open): void {
-  if (!event.renderSlot) return;
-  transmit(hub, event.viewId, {
-    type: 'snapshot',
-    revision: 1,
-    root: failedDrawingRoot('replacement tree is no longer available'),
-  });
+  else close(hub, event.viewId);
 }
