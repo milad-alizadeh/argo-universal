@@ -2,7 +2,6 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Detail } from '#primitives/scaffolds/detail';
-import { Metadata } from '#primitives/scaffolds/metadata';
 import { Screen } from '#primitives/scaffolds/screen';
 import { EmptyState } from '#primitives/status/empty-state';
 import { ListDetail } from './list-detail';
@@ -20,16 +19,9 @@ export interface Example {
   items: Item[];
 }
 
-const issueDetail = (markdown: string, status: string): ReactNode => (
-  <Detail
-    markdown={markdown}
-    metadata={
-      <Metadata>
-        <Metadata.StatusDot title="Status" text={status} tone="info" />
-        <Metadata.Avatar title="Assignee" name="Ana Ruiz" />
-      </Metadata>
-    }
-  />
+// The row's subtitle already says the status, so the pane holds the description alone.
+const issueDetail = (markdown: string): ReactNode => (
+  <Detail markdown={markdown} />
 );
 
 export const syncIssue: Item = {
@@ -38,7 +30,6 @@ export const syncIssue: Item = {
   subtitle: 'In progress',
   detail: issueDetail(
     'Sync stops after a few minutes on repositories with more than 50,000 files.',
-    'In progress',
   ),
 };
 
@@ -48,7 +39,6 @@ export const csvIssue: Item = {
   subtitle: 'Todo',
   detail: issueDetail(
     'Export the visible Issues as CSV, with the columns shown.',
-    'Todo',
   ),
 };
 

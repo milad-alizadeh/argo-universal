@@ -1,68 +1,66 @@
 import { describe, expect, it } from 'vitest';
+import type { AsidePlace } from '../screen/screen-aside-place';
 import {
   metadataDrawing,
   type MetadataFacts,
   type MetadataFieldLayout,
   type MetadataPlatform,
   type MetadataRoot,
-  type MetadataWidth,
 } from './metadata-drawing';
 
 type Case = [MetadataFacts, Picks];
 
 type Picks = { root: MetadataRoot; field: MetadataFieldLayout };
 
-const rows: Picks = { root: 'grouped-rows', field: 'beside' };
-
-const underRows: Picks = { root: 'grouped-rows', field: 'under' };
-
-const column: Picks = { root: 'properties', field: 'stacked' };
-
-const line: Picks = { root: 'inline', field: 'inline' };
-
-const section = (field: MetadataFieldLayout): Picks => ({
-  root: 'list-section',
+const picks = (root: MetadataRoot, field: MetadataFieldLayout): Picks => ({
+  root,
   field,
 });
+
+const platforms: MetadataPlatform[] = ['ios', 'android', 'web'];
+
+const rowsOf = { ios: 'beside', android: 'under', web: 'stacked' } as const;
+
+const own = { ios: 'grouped-rows', android: 'grouped-rows', web: 'aside' } as const;
 
 const on = (
   platform: MetadataPlatform,
   inList: boolean,
-  width: MetadataWidth,
-): MetadataFacts => ({ platform, inList, width });
+  place: AsidePlace | null,
+): MetadataFacts => ({ platform, inList, place });
 
-// The drawing for each platform, whether it is inside a List, and the width: the whole table of facts.
-const table: Case[] = [
-  [on('ios', false, 'column'), rows],
-  [on('ios', false, 'narrow'), rows],
-  [on('ios', true, 'column'), section('beside')],
-  [on('ios', true, 'narrow'), section('beside')],
-  [on('android', false, 'column'), underRows],
-  [on('android', false, 'narrow'), underRows],
-  [on('android', true, 'column'), section('under')],
-  [on('android', true, 'narrow'), section('under')],
-  [on('web', false, 'column'), column],
-  [on('web', false, 'narrow'), line],
-  [on('web', true, 'column'), section('stacked')],
-  [on('web', true, 'narrow'), section('stacked')],
-];
+// A Screen's aside draws the same on every platform: its column, a row of Pills, or Pills that show their icon alone.
+const asideTable: Case[] = platforms.flatMap((platform) => [
+  [on(platform, false, 'aside'), picks('aside', 'value')],
+  [on(platform, false, 'pills'), picks('pills', 'pill')],
+  [on(platform, false, 'icons'), picks('icons', 'icon')],
+]);
+
+// Anywhere else: one more section of the List it sits in, or the platform's own rows.
+const ownTable: Case[] = platforms.flatMap((platform) => [
+  [on(platform, true, null), picks('list-section', rowsOf[platform])],
+  [
+    on(platform, false, null),
+    picks(own[platform], platform === 'web' ? 'value' : rowsOf[platform]),
+  ],
+]);
 
 describe('which drawing Metadata picks', () => {
-  it.each(table)('%j draws %j', (facts, picks) => {
-    expect(metadataDrawing(facts)).toMatchObject(picks);
+  it.each(asideTable)('%j draws %j', (facts, expected) => {
+    expect(metadataDrawing(facts)).toMatchObject(expected);
   });
 
-  it('covers every platform, inside a List or not, at every width', () => {
-    expect(table).toHaveLength(3 * 2 * 2);
+  it.each(ownTable)('%j draws %j', (facts, expected) => {
+    expect(metadataDrawing(facts)).toMatchObject(expected);
+  });
+
+  it('covers every platform in every aside place, and outside one', () => {
+    expect(asideTable.length + ownTable.length).toBe(3 * 3 + 3 * 2);
   });
 
   it('mutes values on phones only', () => {
-    const platforms: MetadataPlatform[] = ['ios', 'android', 'web'];
-
     const muted = platforms.map(
-      (platform) =>
-        metadataDrawing({ platform, inList: false, width: 'column' })
-          .mutedValue,
+      (platform) => metadataDrawing(on(platform, false, null)).mutedValue,
     );
 
     expect(muted).toEqual([true, true, false]);

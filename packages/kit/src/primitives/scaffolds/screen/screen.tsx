@@ -8,7 +8,9 @@ import {
 import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
+import { ScreenAside, ScreenLead, useAsideFrame } from './screen-aside';
 import { ScreenBody } from './screen-body';
+import { ScreenFooterFrame } from './screen-footer';
 import { screenHeadersOf } from './screen-headers';
 import { ScreenHeadingBody } from './screen-heading-row';
 import { ListColumnScreen } from './screen-list-column-screen';
@@ -59,14 +61,22 @@ function ScreenHeaderSource(props: ScreenProps): ReactElement {
 
 // Web: the window paints the content colour, so the sidebar's shadow falls on it uncovered. iOS: the stack paints it, as a painted view here would hide the list from the large title.
 function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
+  const aside = useAsideFrame(props.width);
+
   return (
     <View
       testID={props.testID}
+      onLayout={aside.onLayout}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset web:bg-transparent ios:bg-transparent"
     >
       <ShortcutAnchors anchors={props.declaration.anchors} />
-      {props.plan.site === 'heading' ? <ScreenHeadingBody {...props} /> : null}
-      <ScreenBody {...props} />
+      <ScreenAside aside={props.aside} width={props.width} place={aside.place}>
+        {props.plan.site === 'heading' ? <ScreenHeadingBody {...props} /> : null}
+        <ScreenFooterFrame footer={props.footer} width={props.width}>
+          <ScreenLead width={props.width} />
+          <ScreenBody {...props} />
+        </ScreenFooterFrame>
+      </ScreenAside>
       {/* After the body: iOS's docked search is a native view, and UIKit's large title only finds a scroll view that comes first. */}
       <ScreenNavigation {...props} />
       <ScreenAccessory {...props} />

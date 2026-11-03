@@ -2,37 +2,32 @@ import { type ScreenWidth, screenDefaults } from '@repo/contracts/kit-tokens';
 import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { sideColumnExtra } from '#kit/content-column/column-layout';
-import {
-  type ContentColumn,
-  useSideColumn,
-} from '#kit/content-column/content-column';
+import { type ContentColumn } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
 
 /*
  * The one column a Screen's heading and content keep to: on a wide window the reading width (`--container-column`)
  * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
  * Below wide the phone shell's header runs from the window's edge, so the content does too. `narrow` holds one short
- * task to `--container-narrow` on every window, as it would otherwise stretch on a tablet. A side column beside the
- * content (a Detail's Metadata) widens the cap by itself, so the content keeps the reading width and the heading
- * spans both.
+ * task to `--container-narrow` on every window, as it would otherwise stretch on a tablet. `bleed` runs the content to
+ * the region's edges with no margins, for a canvas or a map. An aside never widens the column (screen-aside-place.ts).
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
 ): ContentColumn {
   const capped = useWide() && width === 'content';
-  const side = sideColumnExtra(useSideColumn());
   const { column, narrow, inset } = useColumnTokens();
-  const cap = columnCap(width, capped, { column: column + side, narrow });
+  const cap = columnCap(width, capped, { column, narrow });
+  const margin = width === 'bleed' ? 0 : inset;
 
-  return useMemo(() => columnStyle(cap, inset), [cap, inset]);
+  return useMemo(() => columnStyle(cap, margin), [cap, margin]);
 }
 
 type ColumnWidths = { column: number; narrow: number };
 
 type ColumnTokens = ColumnWidths & { inset: number };
 
-function useColumnTokens(): ColumnTokens {
+export function useColumnTokens(): ColumnTokens {
   return {
     column: tokenNumber(useCSSVariable('--container-column')),
     narrow: tokenNumber(useCSSVariable('--container-narrow')),

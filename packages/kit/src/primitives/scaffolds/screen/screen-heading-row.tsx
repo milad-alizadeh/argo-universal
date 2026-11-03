@@ -22,7 +22,7 @@ import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
   return (
     <View className={props.width === 'narrow' ? 'pt-6' : 'py-6'}>
-      <ScreenColumn width={props.width}>
+      <ScreenColumn width={headingWidth(props.width)}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
           <HeadingCaption {...props} />
@@ -31,6 +31,10 @@ export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
     </View>
   );
 }
+
+// A page that runs to the edges keeps its title in the margins a full-width page has.
+const headingWidth = (width: ScreenProps['width']): ScreenProps['width'] =>
+  width === 'bleed' ? 'full' : width;
 
 // A phone-width page of grouped cards starts its title and caption on its rows' text line.
 const headingInset = (inset: number): ViewStyle => ({

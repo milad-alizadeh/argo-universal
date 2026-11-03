@@ -107,8 +107,8 @@ export const menuDefaults = { align: 'end' } as const;
 
 export const chartDefaults = { grid: false } as const;
 
-// How wide a Screen's content runs on a window: a short task's column, the centred reading column, or the whole region.
-export const screenWidths = ['narrow', 'content', 'full'] as const;
+// How wide a Screen's content runs on a window: a short task's column, the centred reading column, the whole region, or the region with no side margins.
+export const screenWidths = ['narrow', 'content', 'full', 'bleed'] as const;
 
 export type ScreenWidth = (typeof screenWidths)[number];
 

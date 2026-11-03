@@ -59,8 +59,8 @@ function Form() {
 function Build() {
   const [cancelled, setCancelled] = useState(false);
   return (
-    <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={() => setCancelled(!cancelled)} />}>
-      <Detail markdown="Deploying" metadata={<Metadata><Metadata.StatusDot title="Status" text="Running" tone="info" /></Metadata>} />
+    <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={() => setCancelled(!cancelled)} />} aside={<Metadata><Metadata.StatusDot title="Status" text="Running" tone="info" /></Metadata>}>
+      <Detail markdown="Deploying" />
     </Screen>
   );
 }
