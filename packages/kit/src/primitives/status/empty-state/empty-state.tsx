@@ -12,8 +12,14 @@ import type { EmptyStateProps } from './empty-state-props';
  * holds a Button, pins itself to the start of whatever holds it. In a Card's body it is one of the card's rows instead.
  */
 export function EmptyState(props: EmptyStateProps): React.JSX.Element {
-  if (listPlaceFacts(useListPlace()).card) return <CardEmptyState {...props} />;
+  return listPlaceFacts(useListPlace()).card ? (
+    <CardEmptyState {...props} />
+  ) : (
+    <PageEmptyState {...props} />
+  );
+}
 
+function PageEmptyState(props: EmptyStateProps): React.JSX.Element {
   return (
     <View
       testID={props.testID}

@@ -52,13 +52,15 @@ type LeadingProps = Pick<
   'leading' | 'badge' | 'sidebar' | 'leadingSize'
 >;
 
-function leadingLane(look: ListLook, sidebar: boolean): LeadingLane {
-  if (look.menu) return 'menu';
-
+// The lane of a row outside a menu: a card's, a sidebar's or a compact row's, or the row's own.
+function listLane(look: ListLook, sidebar: boolean): LeadingLane {
   if (look.card) return 'card';
 
   return sidebar ? 'sidebar' : 'row';
 }
+
+const leadingLane = (look: ListLook, sidebar: boolean): LeadingLane =>
+  look.menu ? 'menu' : listLane(look, sidebar);
 
 function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
   const compact = useCompactRows(sidebar);

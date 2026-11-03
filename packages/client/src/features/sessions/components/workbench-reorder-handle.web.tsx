@@ -80,6 +80,17 @@ const pointerHandlers = (
 const handleClass =
   'flex h-6 w-8 cursor-grab touch-none select-none items-center justify-center rounded-control outline-none transition-opacity duration-150 hover:bg-hover focus-visible:bg-hover active:cursor-grabbing';
 
+// The handle's class and focus handlers: it shows while its card says so or while it has focus.
+function useShowing(shown: boolean): HTMLAttributes<HTMLDivElement> {
+  const [focused, setFocused] = useState(false);
+
+  return {
+    className: cn(handleClass, !(shown || focused) && 'opacity-0'),
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+  };
+}
+
 /*
  * The grip draws on the card's actions lane: pointer drag, or ArrowUp and ArrowDown while it has focus. It shows only
  * on the card under the pointer, while it has focus and while its card is held; the rest of the time its lane keeps
@@ -87,17 +98,13 @@ const handleClass =
  * press on its lane takes the card.
  */
 export function ReorderHandle(props: ReorderHandleProps): ReactElement {
-  const [focused, setFocused] = useState(false);
-
   return (
     <div
       role="button"
       tabIndex={0}
       aria-label={`Reorder ${props.label}`}
       aria-roledescription="drag handle"
-      className={cn(handleClass, !(props.shown || focused) && 'opacity-0')}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
+      {...useShowing(props.shown)}
       {...pointerHandlers(props)}
     >
       <Icon name="reorder" tone="muted" />

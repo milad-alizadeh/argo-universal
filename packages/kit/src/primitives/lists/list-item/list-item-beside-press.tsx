@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type ViewProps } from 'react-native';
 import { cn } from '../../../utils';
 import {
   hasAccessories,
@@ -82,22 +82,28 @@ const pressesNothing = (press: RowPressProps): boolean =>
  * row with none of its own would still swallow the press of what holds it, such as a card's body.
  */
 function inertRow(props: DrawingProps, press: RowPressProps): ReactElement {
-  const {
-    style: _style,
-    children: _children,
-    onHoverIn: _onHoverIn,
-    onHoverOut: _onHoverOut,
-    android_ripple: _ripple,
-    disabled: _disabled,
-    ...group
-  } = press;
-
   return (
-    <View {...group}>
+    <View {...groupOf(press)}>
       <ItemContentSlots {...props} />
     </View>
   );
 }
+
+// What only a Pressable takes: its state-driven style and children, its hover, ripple and disabled state.
+const pressOnly = new Set([
+  'style',
+  'children',
+  'onHoverIn',
+  'onHoverOut',
+  'android_ripple',
+  'disabled',
+]);
+
+// The row's name, role and class, without what only a Pressable takes.
+const groupOf = (press: RowPressProps): ViewProps =>
+  Object.fromEntries(
+    Object.entries(press).filter(([key]) => !pressOnly.has(key)),
+  );
 
 // A plain function, not a component, so the row is no deeper than its press.
 function besidePress(

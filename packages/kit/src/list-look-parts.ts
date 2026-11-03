@@ -12,11 +12,7 @@ import {
   type PhoneDrawing,
   type PlatformFacts,
 } from './list-look-platform';
-import {
-  listPlaceFacts,
-  type ListPlace,
-  type ListPlaceFacts,
-} from './list-place';
+import type { ListPlace, ListPlaceFacts } from './list-place';
 
 // What the phones draw instead of the web: the Sessions list is flat on the web and cards or grouped on a phone.
 export interface PhoneOverrides {
@@ -92,61 +88,6 @@ export interface InsetLook {
 export interface PlatformLook extends Omit<PlatformFacts, 'treeCapable'> {
   // Only a wide desktop or web window draws the tree: lanes, rails and folding.
   treeDrawn: boolean;
-}
-
-export const phoneOf = (drawing: Drawing): PhoneDrawing | undefined =>
-  drawing === 'web' ? undefined : drawing;
-
-// A phone draws what the phones declare; the web its own appearance.
-export const phoneAppearanceOf = (input: ListLookInput): ListAppearance =>
-  input.onPhones?.appearance ?? input.appearance;
-
-const declaredAppearanceOf = (
-  drawing: Drawing,
-  input: ListLookInput,
-): ListAppearance =>
-  drawing === 'web' ? input.appearance : phoneAppearanceOf(input);
-
-// A Card's body is the card already, so its List draws plain rows whatever it declares: never a card in the card.
-export const appearanceOf = (
-  drawing: Drawing,
-  input: ListLookInput,
-): ListAppearance =>
-  listPlaceFacts(input.place).card
-    ? 'plain'
-    : declaredAppearanceOf(drawing, input);
-
-export function groupedFacts(
-  drawing: Drawing,
-  appearance: ListAppearance,
-): Pick<FormLook, 'webGrouped' | 'phone'> {
-  const grouped = appearance === 'grouped';
-
-  return {
-    webGrouped: grouped && drawing === 'web',
-    phone: grouped ? phoneOf(drawing) : undefined,
-  };
-}
-
-// Only iOS separates rows and closes a group with a row description; a card's rows draw no hairlines between them.
-export const separationFacts = (
-  drawing: Drawing,
-  appearance: ListAppearance,
-  card = false,
-): Pick<FormLook, 'separated' | 'footerEndsGroup'> => ({
-  separated: drawing === 'ios' && appearance !== 'cards' && !card,
-  footerEndsGroup: drawing === 'ios',
-});
-
-export function formLook(drawing: Drawing, input: ListLookInput): FormLook {
-  const appearance = appearanceOf(drawing, input);
-  const { card } = listPlaceFacts(input.place);
-
-  return {
-    appearance,
-    ...groupedFacts(drawing, appearance),
-    ...separationFacts(drawing, appearance, card),
-  };
 }
 
 export const densityOf = (

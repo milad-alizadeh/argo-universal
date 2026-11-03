@@ -1,8 +1,8 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { List } from '@repo/kit/primitives/lists/list';
-import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type { SessionPluginCard } from './plugin-card-section';
 
 export const issueCardSummary = '#412 · In review';
