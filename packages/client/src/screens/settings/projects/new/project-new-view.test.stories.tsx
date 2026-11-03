@@ -1,4 +1,4 @@
-import { contentWideMin, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, mocked } from 'storybook/test';
 import { ProjectNewView } from './project-new-view';
@@ -108,10 +108,10 @@ export const ServerFolderCanBeTyped: Story = {
   },
 };
 
-// Cancel returns to the Projects list.
-export const CancelLeavesTheForm: Story = {
+// Back returns to the Projects list.
+export const BackLeavesTheForm: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
     await expect(args.onCancel).toHaveBeenCalledOnce();
   },
 };
@@ -137,29 +137,6 @@ export const AddingCannotBeSentTwice: Story = {
     await expect(
       canvas.getByRole('button', { name: cloneLabel }),
     ).toBeDisabled();
-  },
-};
-
-// The desktop action stays next to its bounded form instead of the window footer.
-export const CompactFormKeepsActionsBesideTheField: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: cloneLabel }));
-
-    const track = canvas
-      .getByRole('group', { name: 'Add a Project from' })
-      .getBoundingClientRect();
-
-    const input = canvas
-      .getByLabelText(repositoryLabel)
-      .getBoundingClientRect();
-
-    const action = canvas
-      .getByRole('button', { name: cloneAction })
-      .getBoundingClientRect();
-
-    await expect(track.width).toBeLessThanOrEqual(contentWideMin());
-    await expect(action.top - input.bottom).toBeLessThan(100);
-    await expect(Math.abs(action.right - track.right)).toBeLessThan(1);
   },
 };
 

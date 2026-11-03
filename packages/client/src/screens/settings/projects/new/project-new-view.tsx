@@ -1,4 +1,3 @@
-import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { useForm } from '@tanstack/react-form';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -15,19 +14,12 @@ export interface ProjectNewViewProps {
   onChooseFolder?: () => Promise<string | null>;
 }
 
-// The approved compact page keeps the source, field and actions in one capped column.
+// Project setup uses the same grouped form and content column as Settings.
 export function ProjectNewView(props: ProjectNewViewProps): React.JSX.Element {
   const [source, setSource] = useState<ProjectSource>('folder');
 
   return (
-    <Screen title="Add Project" onBack={props.onCancel}>
-      <SourceForm
-        key={source}
-        {...props}
-        source={source}
-        onChoose={setSource}
-      />
-    </Screen>
+    <SourceForm key={source} {...props} source={source} onChoose={setSource} />
   );
 }
 

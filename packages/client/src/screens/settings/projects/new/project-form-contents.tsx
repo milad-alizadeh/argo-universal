@@ -1,12 +1,13 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
-import { EntryForm } from '@repo/kit/primitives/scaffolds/entry-form';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { sourceCopy, sources } from './project-new-copy';
 import type { SourceFormProps } from './project-new-view';
 import { ProjectSourceActions } from './project-source-actions';
 import {
-  ProjectSourceField,
+  projectSourceSection,
   type SourceFieldProps,
 } from './project-source-field';
 
@@ -33,17 +34,22 @@ export function ProjectFormContents(
   props: FormContentsProps,
 ): React.JSX.Element {
   return (
-    <EntryForm
-      choice={<SourceChoice {...props} />}
-      error={errorText(props)}
-      actions={
-        <ProjectSourceActions {...props} value={props.field.state.value} />
-      }
-    >
-      <ProjectSourceField {...sourceField(props)} />
-    </EntryForm>
+    <Screen title="Add Project" onBack={props.onCancel}>
+      <FieldGroup disabled={props.disabled}>
+        {sourceChoiceSection(props)}
+        {projectSourceSection(sourceField(props))}
+        {errorSection(props)}
+      </FieldGroup>
+      <ProjectSourceActions {...props} value={props.field.state.value} />
+    </Screen>
   );
 }
+
+const sourceChoiceSection = (props: FormContentsProps): React.JSX.Element => (
+  <FieldGroup.Section>
+    <SourceChoice {...props} />
+  </FieldGroup.Section>
+);
 
 const sourceOptions = sources.map((value) => ({
   value,
@@ -66,10 +72,14 @@ function SourceChoice(
   );
 }
 
-const errorText = (props: FormContentsProps): React.JSX.Element | null => {
+const errorSection = (props: FormContentsProps): React.JSX.Element | null => {
   const error = props.pickerError ?? props.error;
 
-  return error ? <Text accessibilityRole="alert">{error}</Text> : null;
+  return error ? (
+    <FieldGroup.Section>
+      <Text accessibilityRole="alert">{error}</Text>
+    </FieldGroup.Section>
+  ) : null;
 };
 
 const sourceField = (props: FormContentsProps): SourceFieldProps => ({

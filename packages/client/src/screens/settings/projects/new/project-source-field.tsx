@@ -1,7 +1,5 @@
-import {
-  EntryFormField,
-  EntryFormSelection,
-} from '@repo/kit/primitives/scaffolds/entry-form';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 import type { ProjectSource } from '#features/settings';
 import { sourceCopy } from './project-new-copy';
@@ -15,50 +13,44 @@ export interface SourceFieldProps {
   onChooseFolder?: () => void;
 }
 
-// Only a local desktop chooser selects a directory; other Devices enter a path on their Server.
-export function ProjectSourceField(props: SourceFieldProps): React.JSX.Element {
-  if (props.source === 'folder' && props.onChooseFolder)
-    return <FolderChoice {...props} />;
-
-  return <TypedSource {...props} />;
+// Called as a section element so FieldGroup can discover its header, rows and footer.
+export function projectSourceSection(
+  props: SourceFieldProps,
+): React.JSX.Element {
+  return props.source === 'folder' && props.onChooseFolder
+    ? folderSection(props)
+    : typedSection(props);
 }
 
-type FolderChoiceProps = Pick<
-  SourceFieldProps,
-  'value' | 'disabled' | 'onChooseFolder'
->;
-
-function FolderChoice(props: FolderChoiceProps): React.JSX.Element {
-  return <EntryFormSelection {...folderSelection(props)} />;
+function folderSection(props: SourceFieldProps): React.JSX.Element {
+  return (
+    <FieldGroup.Section footer="Choose an existing repository folder on this Mac.">
+      {props.value ? (
+        <FieldGroup.Value title="Folder" value={props.value} />
+      ) : null}
+      <Button
+        label={props.value ? 'Change…' : 'Choose Folder…'}
+        variant="text"
+        disabled={props.disabled}
+        onPress={props.onChooseFolder}
+      />
+    </FieldGroup.Section>
+  );
 }
 
-const folderSelection = (
-  props: FolderChoiceProps,
-): React.ComponentProps<typeof EntryFormSelection> => ({
-  title: 'Project Folder',
-  name: props.value.split('/').findLast(Boolean) ?? props.value,
-  value: props.value,
-  description: props.value
-    ? 'Add Project registers the selected repository.'
-    : 'Choose an existing repository folder on this Mac.',
-  chooseLabel: 'Choose Folder…',
-  changeLabel: 'Change…',
-  disabled: props.disabled,
-  onChoose: props.onChooseFolder,
-});
-
-function TypedSource(props: SourceFieldProps): React.JSX.Element {
+function typedSection(props: SourceFieldProps): React.JSX.Element {
   const copy = sourceCopy[props.source];
 
   return (
-    <EntryFormField
-      title={copy.field}
-      placeholder={copy.placeholder}
-      description={copy.footer}
-      value={props.value}
-      disabled={props.disabled}
-      onChangeText={props.onChange}
-      onSubmit={props.onSubmit}
-    />
+    <FieldGroup.Section footer={copy.footer}>
+      <FieldGroup.TextField
+        title={copy.field}
+        placeholder={copy.placeholder}
+        value={props.value}
+        disabled={props.disabled}
+        onChangeText={props.onChange}
+        onSubmit={props.onSubmit}
+      />
+    </FieldGroup.Section>
   );
 }
