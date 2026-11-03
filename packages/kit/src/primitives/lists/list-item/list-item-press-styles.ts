@@ -42,8 +42,15 @@ function rowLayout(press: PressDrawing): PressLayout {
   return press.sidebar ? 'sidebar' : listLayout(press);
 }
 
-const layoutOf = (press: PressDrawing): PressLayout =>
-  press.look.menu ? 'menu' : rowLayout(press);
+// A card's rows keep the card's lanes, one line when compact.
+const cardLayout = (press: PressDrawing): PressLayout =>
+  press.compact ? 'card-compact' : 'card';
+
+function layoutOf(press: PressDrawing): PressLayout {
+  if (press.look.menu) return 'menu';
+
+  return press.look.card ? cardLayout(press) : rowLayout(press);
+}
 
 // The row's lanes alone, for content drawn beside its press rather than inside it.
 export function pressLayout(press: PressDrawing): string {

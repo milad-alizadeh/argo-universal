@@ -82,9 +82,13 @@ const LinkDisclosure = ({
 }: Pick<FieldLinkProps, 'action'>): ReactElement | null =>
   action ? null : <Chevron />;
 
-// A long value takes one line and truncates before the title does (#1750): its shrink factor outweighs the title's 1, so the row squeezes the value first.
+/*
+ * A long value takes one line and truncates before the title does (#1750): its shrink factor outweighs the title's 1,
+ * so the row squeezes the value first. The flexible Spacer gives way to nothing on a full row, so the value keeps the
+ * least gap a FieldGroup.Value keeps from its title, and the two never run together.
+ */
 const LinkValue = (props: { value: string }): ReactElement => (
-  <View className="min-w-0 shrink-9999">
+  <View className="ml-4 min-w-0 shrink-9999">
     <NativeText tone="muted" numberOfLines={1}>
       {props.value}
     </NativeText>

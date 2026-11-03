@@ -7,6 +7,9 @@ import {
   coverageCardSummary,
   issueCardFullView,
   issueCardSummary,
+  notesFullView,
+  notesListCard,
+  notesRowTitle,
   issueTrackerCard,
 } from './sections/plugin-card.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
@@ -71,6 +74,17 @@ export const CardOpensItsInspectorTab: Story = {
 
     const tab = within(await canvas.findByRole('tabpanel', { name: 'Issue' }));
     await expect(tab.getByText(issueCardFullView)).toBeVisible();
+  },
+};
+
+// The Plugin's own row presses nothing of its own, so pressing its middle presses the card's body.
+export const PressingARowInTheCardOpensItsInspectorTab: Story = {
+  args: { view: { state: 'open', ...session, pluginCards: [notesListCard] } },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByText(notesRowTitle));
+
+    const tab = within(await canvas.findByRole('tabpanel', { name: 'Notes' }));
+    await expect(tab.getByText(notesFullView)).toBeVisible();
   },
 };
 

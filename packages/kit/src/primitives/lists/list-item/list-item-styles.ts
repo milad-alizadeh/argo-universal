@@ -43,25 +43,26 @@ const menuGaps = {
 
 type SurfaceState = Pick<ListItemProps, 'selected' | 'tone' | 'sidebar'>;
 
-// Paper's SettingsList: a sidebar row is its own rounded tile, flat on the glass.
-const sidebarSurface = 'relative overflow-hidden rounded-xl';
+/*
+ * Paper's SettingsList: a sidebar row is its own rounded tile, flat on the glass. A menu row is one too, and so is a
+ * card's row, with the Workbench rows' radius, so its hover tint sits inside the card.
+ */
+const rowTileSurface = 'relative overflow-hidden rounded-xl';
 
 export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
-  if (drawing.look.menu)
-    return cn(
-      'relative overflow-hidden rounded-xl',
-      menuGaps[drawing.position],
-    );
+  if (drawing.look.menu) return cn(rowTileSurface, menuGaps[drawing.position]);
 
   return ownTile(drawing, state) ?? rowSurface(drawing, state);
 }
 
-// A sidebar row and a plain compact row are each their own rounded tile.
+const rowTile = (look: ListLook): boolean => look.sidebar || look.card;
+
+// A sidebar row, a card's row and a plain compact row are each their own rounded tile.
 function ownTile(
   drawing: ItemDrawing,
   state: SurfaceState,
 ): string | undefined {
-  if (drawing.look.sidebar) return sidebarSurface;
+  if (rowTile(drawing.look)) return rowTileSurface;
 
   return compactTile(drawing, state) ? compactSurface : undefined;
 }

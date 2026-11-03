@@ -1,6 +1,6 @@
 import { cn } from '@repo/kit/utils';
 import { useState } from 'react';
-import type { ViewStyle } from 'react-native';
+import type { PointerEvent, ViewStyle } from 'react-native';
 import { useReorderGesture, type Gesture } from './use-reorder-gesture.web';
 import type {
   ColumnRef,
@@ -42,21 +42,40 @@ function slotStyle(
 const glide = (id: string, drag: Drag | null): string | undefined =>
   drag && drag.id !== id ? 'web:transition-transform web:duration-200' : '';
 
+// The card under a mouse or pen, whose handle shows; a touch never hovers, so it leaves the handle as it is.
+interface Hover {
+  id: string | null;
+  set: (id: string | null) => void;
+}
+
+// What places each card and its handle: the order drawn, the drag under way and the card the pointer is over.
+interface Placing {
+  shown: readonly string[];
+  gesture: Gesture;
+  hover: Hover;
+}
+
+const pointed = (event: PointerEvent): boolean =>
+  event.nativeEvent.pointerType !== 'touch';
+
 function slotFor(
   id: string,
-  shown: readonly string[],
-  gesture: Gesture,
+  { shown, gesture, hover }: Placing,
 ): WorkbenchSlot {
   return {
     className: cn(glide(id, gesture.drag)),
     style: slotStyle(id, shown.indexOf(id), gesture.drag),
+    onPointerEnter: (event) => {
+      if (pointed(event)) hover.set(id);
+    },
+    onPointerLeave: () => hover.set(null),
   };
 }
 
 const gestureProps = (
   id: string,
   gesture: Gesture,
-): Omit<ReorderHandleProps, 'label' | 'column'> => ({
+): Omit<ReorderHandleProps, 'label' | 'column' | 'shown'> => ({
   onGrab: (grab: Grab) => gesture.begin(id, grab),
   onMove: gesture.move,
   onRelease: gesture.end,
@@ -78,19 +97,20 @@ function useOrder(cards: readonly WorkbenchColumnCard[]): OrderedCards {
   return { byId, shown: orderCards([...byId.keys()], order), setOrder };
 }
 
+// A handle shows on the card under the pointer and on the card being held, wherever the pointer has gone since.
+const handleShown = (id: string, { gesture, hover }: Placing): boolean =>
+  hover.id === id || gesture.drag?.id === id;
+
 // A lone card has nothing to move past, so it shows no handle.
 const handleFor =
-  (
-    count: number,
-    column: ColumnRef,
-    gesture: Gesture,
-  ): WorkbenchReorder['handle'] =>
+  (placing: Placing, column: ColumnRef): WorkbenchReorder['handle'] =>
   (id, label) =>
-    count > 1 ? (
+    placing.shown.length > 1 ? (
       <ReorderHandle
         label={label}
         column={column}
-        {...gestureProps(id, gesture)}
+        shown={handleShown(id, placing)}
+        {...gestureProps(id, placing.gesture)}
       />
     ) : null;
 
@@ -104,10 +124,12 @@ export function useWorkbenchReorder(
 ): WorkbenchReorder {
   const { byId, shown, setOrder } = useOrder(cards);
   const gesture = useReorderGesture({ shown, reorder: setOrder });
+  const [hovered, setHovered] = useState<string | null>(null);
+  const placing = { shown, gesture, hover: { id: hovered, set: setHovered } };
 
   return {
     cards: shown.flatMap((id) => byId.get(id) ?? []),
-    slot: (id) => slotFor(id, shown, gesture),
-    handle: handleFor(shown.length, column, gesture),
+    slot: (id) => slotFor(id, placing),
+    handle: handleFor(placing, column),
   };
 }

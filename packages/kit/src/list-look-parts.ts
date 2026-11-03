@@ -52,6 +52,8 @@ export interface PlaceLook {
   sectionEnds: boolean;
   // A Detail's content column already pads and scrolls this block, so it sizes to its rows and insets nothing.
   padded: boolean;
+  // Rows sit on a Card's body: plain, on the card's own edge.
+  card: boolean;
 }
 
 export interface FormLook {
@@ -88,50 +90,6 @@ export interface PlatformLook extends Omit<PlatformFacts, 'treeCapable'> {
   treeDrawn: boolean;
 }
 
-export const phoneOf = (drawing: Drawing): PhoneDrawing | undefined =>
-  drawing === 'web' ? undefined : drawing;
-
-// A phone draws what the phones declare; the web its own appearance.
-export const phoneAppearanceOf = (input: ListLookInput): ListAppearance =>
-  input.onPhones?.appearance ?? input.appearance;
-
-export const appearanceOf = (
-  drawing: Drawing,
-  input: ListLookInput,
-): ListAppearance =>
-  drawing === 'web' ? input.appearance : phoneAppearanceOf(input);
-
-export function groupedFacts(
-  drawing: Drawing,
-  appearance: ListAppearance,
-): Pick<FormLook, 'webGrouped' | 'phone'> {
-  const grouped = appearance === 'grouped';
-
-  return {
-    webGrouped: grouped && drawing === 'web',
-    phone: grouped ? phoneOf(drawing) : undefined,
-  };
-}
-
-// Only iOS separates rows and closes a group with a row description.
-export const separationFacts = (
-  drawing: Drawing,
-  appearance: ListAppearance,
-): Pick<FormLook, 'separated' | 'footerEndsGroup'> => ({
-  separated: drawing === 'ios' && appearance !== 'cards',
-  footerEndsGroup: drawing === 'ios',
-});
-
-export function formLook(drawing: Drawing, input: ListLookInput): FormLook {
-  const appearance = appearanceOf(drawing, input);
-
-  return {
-    appearance,
-    ...groupedFacts(drawing, appearance),
-    ...separationFacts(drawing, appearance),
-  };
-}
-
 export const densityOf = (
   drawing: Drawing,
   input: ListLookInput,
@@ -164,13 +122,13 @@ export const phonePaddingOf = (
 export function insetLook(
   drawing: Drawing,
   input: ListLookInput,
-  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded'>,
+  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded' | 'card'>,
 ): InsetLook {
-  const { menu, padded } = form;
+  const { menu, padded, card } = form;
   const phone = form.phone !== undefined;
 
   return {
-    insets: insetsOf({ ...form, menu, padded, phone, fit: input.fit }),
+    insets: insetsOf({ ...form, menu, padded, card, phone, fit: input.fit }),
     phonePadding: phonePaddingOf(drawing, input),
     headingInset: headingInsetOf(form.webGrouped, input.wide),
   };
@@ -187,6 +145,7 @@ export function placeLook(
     sidebar: facts.sidebar,
     sectionEnds: facts.ends,
     padded: facts.padded,
+    card: facts.card,
   };
 }
 

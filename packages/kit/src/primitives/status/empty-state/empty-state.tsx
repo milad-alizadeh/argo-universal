@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { listPlaceFacts, useListPlace } from '#kit/list-place';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { iconNames } from '../../../symbols/icon-names';
@@ -8,9 +9,17 @@ import type { EmptyStateProps } from './empty-state-props';
 
 /*
  * Centred as a column. The action sits in a box of its own size that the column centres: Expo's web Host, which
- * holds a Button, pins itself to the start of whatever holds it.
+ * holds a Button, pins itself to the start of whatever holds it. In a Card's body it is one of the card's rows instead.
  */
 export function EmptyState(props: EmptyStateProps): React.JSX.Element {
+  return listPlaceFacts(useListPlace()).card ? (
+    <CardEmptyState {...props} />
+  ) : (
+    <PageEmptyState {...props} />
+  );
+}
+
+function PageEmptyState(props: EmptyStateProps): React.JSX.Element {
   return (
     <View
       testID={props.testID}
@@ -19,6 +28,26 @@ export function EmptyState(props: EmptyStateProps): React.JSX.Element {
       {props.icon && <EmptyStateIcon icon={props.icon} />}
       <EmptyStateText {...props} />
       {props.action && <View className="self-center">{props.action}</View>}
+    </View>
+  );
+}
+
+/*
+ * A card's empty line, read as the card's own rows read: the title at row size under the card's heading, never a page
+ * heading that outweighs it, the description muted beneath, and no illustration. It starts on the card's edge.
+ */
+function CardEmptyState(props: EmptyStateProps): React.JSX.Element {
+  return (
+    <View testID={props.testID} className="items-start gap-2 py-2">
+      <View className="gap-0.5">
+        <Text role="row">{props.title}</Text>
+        {props.description && (
+          <Text role="row-detail" tone="muted">
+            {props.description}
+          </Text>
+        )}
+      </View>
+      {props.action}
     </View>
   );
 }

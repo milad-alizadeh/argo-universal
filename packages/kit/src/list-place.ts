@@ -2,12 +2,13 @@ import { createContext, use } from 'react';
 
 /*
  * Where a List and its rows sit, said once by whatever makes the place: a popover, a choosing popover, the desktop
- * sidebar, a popover opened from the sidebar, the last section of a Settings sidebar. List look reads it, so a row, a
- * section or a FieldGroup never combines contexts to find out where it is.
+ * sidebar, a popover opened from the sidebar, the last section of a Settings sidebar, a Card's body. List look reads
+ * it, so a row, a section or a FieldGroup never combines contexts to find out where it is.
  */
 export type ListPlace =
   | 'page'
   | 'detail'
+  | 'card'
   | 'popover'
   | 'choice'
   | 'sidebar'
@@ -28,6 +29,11 @@ export interface ListPlaceFacts {
    * draws no inset of its own and claims no column, so it starts on the body's line.
    */
   padded: boolean;
+  /*
+   * A Card's body, which already is the card: rows draw plain on it whatever their List declares, no hairlines between
+   * them, their text on the card's own edge as the Workbench's rows are, and their hover tile just outside it.
+   */
+  card: boolean;
 }
 
 const none = {
@@ -36,11 +42,13 @@ const none = {
   sidebar: false,
   ends: false,
   padded: false,
+  card: false,
 };
 
 const facts = {
   page: none,
   detail: { ...none, padded: true },
+  card: { ...none, padded: true, ends: true, card: true },
   popover: { ...none, menu: true },
   choice: { ...none, menu: true, choosing: true },
   sidebar: { ...none, sidebar: true },
@@ -59,6 +67,7 @@ export const choosingPlace = (place: ListPlace): ListPlace =>
 const popoverPlaces = {
   page: 'popover',
   detail: 'popover',
+  card: 'popover',
   popover: 'popover',
   choice: 'choice',
   sidebar: 'sidebar-menu',
