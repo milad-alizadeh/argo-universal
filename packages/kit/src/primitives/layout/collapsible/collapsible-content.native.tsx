@@ -3,6 +3,8 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
+  useRef,
   useState,
 } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
@@ -47,10 +49,21 @@ function move(motion: Motion, open: boolean): void {
 
 function useMounted(open: boolean): [boolean, () => void] {
   const [mounted, setMounted] = useState(open);
+  const latestOpen = useRef(open);
 
   if (open && !mounted) setMounted(true);
 
-  return [mounted, useCallback(() => setMounted(false), [])];
+  useLayoutEffect(() => {
+    latestOpen.current = open;
+  }, [open]);
+
+  // A close that finished after the content was reopened must not unmount it.
+  return [
+    mounted,
+    useCallback(() => {
+      if (!latestOpen.current) setMounted(false);
+    }, []),
+  ];
 }
 
 // Reanimated's measured accordion: the UI thread draws height × progress, so content that changes size is followed.
