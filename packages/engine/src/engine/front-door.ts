@@ -5,7 +5,7 @@ import { channelMagic } from '../pairing/channel-door';
 import { isLoopback } from './network-listener';
 import type { SocketGuard } from './socket-guard';
 
-export interface ChannelDoorPort {
+interface ChannelDoorPort {
   // `proven` is for the channel to call once the socket's first handshake message has all arrived, which is when the door stops timing it.
   readonly accept: (
     socket: Socket,

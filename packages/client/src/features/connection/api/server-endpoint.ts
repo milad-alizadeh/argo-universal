@@ -1,5 +1,5 @@
 // Where the Server on this Device answers: its loopback address, which the App's own page reaches over the WebSocket it has always used.
-export interface LoopbackEndpoint {
+interface LoopbackEndpoint {
   readonly url: string;
 }
 

@@ -25,7 +25,7 @@ export interface HandshakeVector {
   readonly prologue: Uint8Array;
 }
 
-export interface AcceptedChannel {
+interface AcceptedChannel {
   readonly welcome: Uint8Array;
   readonly cipher: ChannelCipher;
 }

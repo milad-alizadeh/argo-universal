@@ -1,18 +1,12 @@
 import type { PluginTest } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
-import {
-  chooseGithub,
-  project,
-  tracker,
-  trackerPage,
-  type PageView,
-} from './journey-fixture';
+import { chooseGithub, project, tracker, trackerPage } from './journey-fixture';
 
 export const rowSlot = 'argo/session/row/v1';
 
 export const barSlot = 'argo/session/bar/v1';
 
-export const sessionId = 'session-1';
+const sessionId = 'session-1';
 
 export const issuePage = `/projects/${project.id}/issues/42`;
 
@@ -87,16 +81,3 @@ export async function until(
     if (wanted(answer)) return answer;
   }
 }
-
-// A page the Session's Workbench opens, for that Session.
-export const mountFor = (
-  test: PluginTest,
-  page: string,
-  session?: string,
-): Promise<PageView> =>
-  test.mount({
-    page,
-    surface: { platform: 'web' },
-    projectId: project.id,
-    sessionId: session,
-  });

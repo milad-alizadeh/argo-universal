@@ -8,7 +8,7 @@ const RECENT_TESTS = 6;
 
 const ID_LENGTH = 6;
 
-export interface PointerSighting {
+interface PointerSighting {
   x: number;
   y: number;
   type: string;
@@ -16,7 +16,7 @@ export interface PointerSighting {
   ordinal: number;
 }
 
-export interface Sighting {
+interface Sighting {
   ordinal: number;
   test: string;
   count: number;
@@ -62,7 +62,7 @@ function host(): Window {
   }
 }
 
-export function pageRecord(): PageRecord {
+function pageRecord(): PageRecord {
   const page = host();
   page.__argoShardProbe ??= freshRecord();
 

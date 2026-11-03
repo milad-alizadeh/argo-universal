@@ -17,7 +17,7 @@ const updateEvent = 'acp.update';
 
 export type AcpModelEvent = ModelFixture<typeof sessionMachine>;
 
-export function acpModelEventKey(event: AcpModelEvent | DelayEvent): string {
+function acpModelEventKey(event: AcpModelEvent | DelayEvent): string {
   return event.type === updateEvent && 'notification' in event
     ? `${event.type}:${event.notification.update.sessionUpdate}`
     : event.type;

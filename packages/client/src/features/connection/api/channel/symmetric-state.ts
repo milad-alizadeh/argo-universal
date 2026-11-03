@@ -7,7 +7,7 @@ import { CipherState, deriveKeys } from './cipher-state';
 const protocolName = textBytes('Noise_IK_25519_ChaChaPoly_SHA256');
 
 // Argo's own prologue; it must equal the Server's, byte for byte.
-export const pairingPrologue = textBytes(productCompatibility.pairingPrologue);
+const pairingPrologue = textBytes(productCompatibility.pairingPrologue);
 
 /*
  * The running hash and chaining key the initiator keeps while the two messages go by. The Server's `symmetric-state.ts` is the other half; the published Noise vector is what says they agree.

@@ -44,10 +44,7 @@ export const endpointKey = (endpoint: ServerEndpoint): string =>
     : endpoint.url;
 
 // Where a Server answers: the loopback address of the one on this Device, or the channel of one it paired with.
-export const endpointOf = ({
-  url,
-  channel,
-}: AppServer): ServerEndpoint | undefined =>
+const endpointOf = ({ url, channel }: AppServer): ServerEndpoint | undefined =>
   channel ?? (url === undefined ? undefined : { url });
 
 // A Server kept twice keeps its first entry, so the second never shadows a Connection the App would then never close.

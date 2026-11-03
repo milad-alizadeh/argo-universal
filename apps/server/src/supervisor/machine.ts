@@ -38,7 +38,7 @@ export const maxCrashesInWindow = 10;
 
 export const backoffBaseMs = 500;
 
-export const backoffCapMs = 30_000;
+const backoffCapMs = 30_000;
 
 export const heartbeatTimeoutMs = 5000;
 

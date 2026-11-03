@@ -31,7 +31,7 @@ export const wrappingDraft =
  * and at the largest: the page is given that much height and nothing else, so a Composer that does not give height
  * up is drawn past the top of it, under the status bar.
  */
-export const roomAboveKeyboard = { default: 170, scaled: 300 } as const;
+const roomAboveKeyboard = { default: 170, scaled: 300 } as const;
 
 // Runs `check` in a phone-wide viewport as tall as the room above the keyboard, at the ordinary or the largest text size.
 export async function inRoomAboveKeyboard(

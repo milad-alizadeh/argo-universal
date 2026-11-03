@@ -60,7 +60,6 @@ export {
 export {
   defaultSessionsView,
   isDefaultSessionsView,
-  type SessionsLayout,
   type SessionsView,
   useSessionsViewKept,
 } from './stores/sessions-view';

@@ -1,10 +1,4 @@
-export {
-  type AppServer,
-  type AppServerState,
-  ownAppServer,
-  pairedAppServer,
-  serverStateOf,
-} from './app-server';
+export { type AppServer, type AppServerState } from './app-server';
 
 export {
   ServerConnectionsContext,
@@ -23,11 +17,7 @@ export { type ServerStates } from './server-states-store';
 
 export { useAppServerStates } from './server-states';
 
-export {
-  type AppServers,
-  ServersContext,
-  useAppServers,
-} from './servers-context';
+export { ServersContext, useAppServers } from './servers-context';
 
 export {
   createServersStore,
@@ -37,6 +27,4 @@ export {
 
 export type { PairPhase } from './pairing/pair-hook';
 
-export { type PairServer, usePairServer } from './pairing/use-pair-server';
-
-export type { PairFailure } from './pairing/pair-with-invite';
+export { usePairServer } from './pairing/use-pair-server';

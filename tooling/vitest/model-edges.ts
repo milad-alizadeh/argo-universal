@@ -41,7 +41,7 @@ const isRaised = (type: string): boolean =>
   type.startsWith('xstate.done.state.');
 
 // Every event type with an edge in the machine, however deep the state that handles it.
-export const graphEventTypes = (machine: AnyStateMachine): string[] =>
+const graphEventTypes = (machine: AnyStateMachine): string[] =>
   [...new Set(eventTypes(toDirectedGraph(machine)))].filter(
     (type): boolean => !isRaised(type),
   );

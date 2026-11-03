@@ -2,7 +2,6 @@ import { hasLiquidGlass } from '@repo/kit/native-header';
 import { useWide } from '@repo/kit/use-wide/use-wide';
 import { useComposerFade } from './composer-cover';
 import {
-  fadeDepth,
   type PerEdge,
   type ScrollFadeEdge,
   type ScrollFadeOptions,
@@ -21,11 +20,6 @@ const feedFadeEdges = (wide: boolean): PerEdge<ScrollFadeEdge> => ({
   top: topFade(wide),
   bottom: 'always',
 });
-
-// How far below the top of the view a row rests clear of the top fade.
-export function useFeedTopClearance(): number {
-  return useWide() ? headerFadeDepth : fadeDepth().top;
-}
 
 // The Feed fades out where the Composer's card begins, so nothing shows under it, and wide under the header. Where the Composer is not glass, its depth follows whether the reader is at the Feed's end.
 export function useFeedFade(atEnd: boolean): ScrollFadeOptions {

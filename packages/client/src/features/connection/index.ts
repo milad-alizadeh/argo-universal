@@ -21,8 +21,6 @@ export { pairWithServer } from './api/pair-with-server';
 
 export { requestServerKey } from './api/request-server-key';
 
-export { PairingRefused } from './api/channel/open-channel';
-
 export { retryServer } from './api/retry-server';
 
 // The connect step passes this as `browse`; null where the platform cannot browse.
@@ -33,8 +31,6 @@ export {
   type KnownServer,
   resolveServer,
   type ServerAddress,
-  ServerNotFoundError,
-  type ServerLocation,
 } from './discovery/resolve-server';
 
 export {

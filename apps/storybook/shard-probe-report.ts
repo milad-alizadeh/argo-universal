@@ -31,7 +31,7 @@ function pointerLine(record: PageRecord): string {
 }
 
 // What the page looked like when the story started, taken before the story draws anything.
-export function snapshotStart(record: PageRecord): string[] {
+function snapshotStart(record: PageRecord): string[] {
   const active = document.activeElement?.tagName ?? 'none';
   const running = document.getAnimations();
   const animations = `${running.length} [${animationNames(running)}]`;

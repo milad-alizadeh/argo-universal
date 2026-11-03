@@ -37,7 +37,7 @@ const closeBody = (code: number): Uint8Array =>
  * The slice of the browser's WebSocket that tRPC's client uses, speaking RFC 6455 to the Server inside an open channel. tRPC runs over it exactly as it runs over `ws://`, so nothing on the Server or in tRPC knows the difference (ADR-0045).
  * Each instance opens its own channel, so tRPC's reconnect is a new handshake with the same Device Key.
  */
-export class ChannelWebSocket {
+class ChannelWebSocket {
   public readyState: number = WebSocket.CONNECTING;
   public binaryType = 'arraybuffer';
   private readonly listeners = new Map<string, Set<Listener>>();

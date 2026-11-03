@@ -12,7 +12,7 @@ export interface InitiatorInput {
   readonly claim: Buffer;
 }
 
-export interface AcceptedChannel {
+interface AcceptedChannel {
   readonly welcome: Buffer;
   readonly cipher: ChannelCipher;
 }

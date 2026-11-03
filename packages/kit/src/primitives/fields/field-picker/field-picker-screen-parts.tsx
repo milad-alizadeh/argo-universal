@@ -64,7 +64,7 @@ interface EmptyStateProps {
   emptyText?: string;
 }
 
-export function EmptyState(props: EmptyStateProps): ReactElement {
+function EmptyState(props: EmptyStateProps): ReactElement {
   return (
     <Text accessibilityRole="status" role="secondary" className="px-4 py-3">
       {emptyMessage(props.hasOptions, props.emptyText)}

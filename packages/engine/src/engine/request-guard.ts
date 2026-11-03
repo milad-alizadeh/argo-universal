@@ -13,10 +13,10 @@ const originPattern = /^[a-z][a-z\d+.-]*:\/\/[^/?#]*/i;
 const headerExcerptLength = 100;
 
 // What a request has to show for itself; the socket it arrived on is no part of it.
-export type ProvingRequest = Pick<IncomingMessage, 'headers' | 'url'>;
+type ProvingRequest = Pick<IncomingMessage, 'headers' | 'url'>;
 
 // What a Connection shows for itself: the Origin of the page that opened it, and the token its caller sent, which on a WebSocket arrives in the connection's parameters rather than a header.
-export interface ProvingConnection {
+interface ProvingConnection {
   readonly origin: string | undefined;
   readonly token: string | undefined;
 }

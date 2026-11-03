@@ -54,8 +54,6 @@ export const fixtures = [
   { type: stopServerEvent },
 ] satisfies ModelFixture<typeof machine>[];
 
-export type SupervisorEvent = (typeof fixtures)[number];
-
 // Crash count, not crash times.
 export const vertex = (snapshot: SupervisorSnapshot): Vertex => ({
   value: snapshot.value,

@@ -26,7 +26,7 @@ export function seenLabel(lastSeenAt: string | null, now: number): string {
   return `Last seen ${formatDay(seen)}`;
 }
 
-export const formatDay = (date: Date): string =>
+const formatDay = (date: Date): string =>
   date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
 export const deviceRow = (device: ServerDevice, now: number): DeviceRow => ({

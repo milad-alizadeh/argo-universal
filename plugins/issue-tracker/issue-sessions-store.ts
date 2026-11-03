@@ -21,7 +21,7 @@ export const issueSessionsTable =
   'CREATE TABLE IF NOT EXISTS issue_sessions (project_id TEXT NOT NULL, issue_number INTEGER NOT NULL, session_id TEXT NOT NULL, attached_at TEXT NOT NULL, PRIMARY KEY (project_id, issue_number, session_id))';
 
 // Attaching twice is the same attachment, so the first time it happened stands.
-export async function attachSession(
+async function attachSession(
   store: SessionStore,
   { projectId, number, sessionId }: IssueLink,
 ): Promise<void> {
@@ -34,7 +34,7 @@ export async function attachSession(
   });
 }
 
-export async function detachSession(
+async function detachSession(
   store: SessionStore,
   { projectId, number, sessionId }: IssueLink,
 ): Promise<void> {
@@ -48,7 +48,7 @@ export async function detachSession(
 }
 
 // The Sessions attached to one Issue, the most recent first.
-export async function issueSessions(
+async function issueSessions(
   store: SessionStore,
   { projectId, number }: Omit<IssueLink, 'sessionId'>,
 ): Promise<IssueSession[]> {
@@ -75,7 +75,7 @@ const isSessionRow = (row: unknown): row is [string, string] =>
   typeof row[1] === 'string';
 
 // The Issues these Sessions work on, the most recently attached first; a Session with none has no link.
-export async function sessionLinks(
+async function sessionLinks(
   store: SessionStore,
   sessionIds: readonly string[],
 ): Promise<IssueLink[]> {
