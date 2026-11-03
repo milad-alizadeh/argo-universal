@@ -22,7 +22,7 @@ export const noKeptAttachments: KeptAttachmentsOfDraft = {
 };
 
 // Attachments kept in memory for as long as the App runs: a file is a Blob, which this Device's text storage cannot hold.
-export function keptAttachmentsInMemory(): KeptAttachments {
+function keptAttachmentsInMemory(): KeptAttachments {
   const kept = new Map<DraftKey, KeptAttachmentsOfDraft>();
 
   const load = (key: DraftKey): KeptAttachmentsOfDraft =>

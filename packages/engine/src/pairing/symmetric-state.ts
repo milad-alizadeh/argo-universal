@@ -9,9 +9,7 @@ import { CipherState, deriveKeys } from './cipher-state';
 const protocolName = 'Noise_IK_25519_ChaChaPoly_SHA256';
 
 // Argo's own prologue, so an exchange meant for another protocol over the same bytes cannot be replayed into this one.
-export const pairingPrologue = Buffer.from(
-  productCompatibility.pairingPrologue,
-);
+const pairingPrologue = Buffer.from(productCompatibility.pairingPrologue);
 
 const sha256 = (data: Buffer): Buffer =>
   createHash('sha256').update(data).digest();

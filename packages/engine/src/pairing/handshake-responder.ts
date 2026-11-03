@@ -6,9 +6,9 @@ import { keyBytes, sharedSecret, type Keypair } from './x25519';
 
 const deviceKeyRecordBytes = keyBytes + tagBytes;
 
-export const smallestFirstMessage = keyBytes + deviceKeyRecordBytes + tagBytes;
+const smallestFirstMessage = keyBytes + deviceKeyRecordBytes + tagBytes;
 
-export interface AnsweredChannel {
+interface AnsweredChannel {
   readonly message: Buffer;
   readonly cipher: ChannelCipher;
 }

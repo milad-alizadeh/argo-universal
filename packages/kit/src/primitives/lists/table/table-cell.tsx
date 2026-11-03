@@ -106,7 +106,7 @@ export function GridCell(props: CellProps): ReactElement {
   );
 }
 
-export const columnWidthSteps = (column: TableColumn): number =>
+const columnWidthSteps = (column: TableColumn): number =>
   widths[column.width ?? 'md'].steps;
 
 // The least room a column needs before the grid starts scrolling: its own kept width, or its token's steps.

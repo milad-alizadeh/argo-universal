@@ -15,7 +15,7 @@ export type NetworkAccessListener = (enabled: boolean) => void;
 // Moves the Server's listener between loopback and the local network; rejects when it cannot.
 export type Rebind = (enabled: boolean) => Promise<void>;
 
-export const readLocalNetworkAccess = (database: Database): boolean =>
+const readLocalNetworkAccess = (database: Database): boolean =>
   database.select().from(localNetworkAccess).get()?.enabled ?? false;
 
 /*

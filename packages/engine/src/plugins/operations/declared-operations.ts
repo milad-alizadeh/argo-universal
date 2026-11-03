@@ -90,7 +90,7 @@ function paramsSchema(params: Params = {}): OperationRow['params'] {
   return schema;
 }
 
-export type ParamValue = string | number | boolean;
+type ParamValue = string | number | boolean;
 
 export type CheckedParams = Readonly<Record<string, ParamValue>>;
 

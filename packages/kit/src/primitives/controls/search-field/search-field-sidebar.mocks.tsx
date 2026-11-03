@@ -15,7 +15,7 @@ export const lastActionLabel = 'Add item';
  * The two widths the column is drawn at here: the one it first paints at, and the narrower one it settles to. The step
  * between them is wider than the actions after the search button, so a stale measurement puts the glyph over them.
  */
-export const sidebarColumnWidths = { opening: 320, settled: 232 } as const;
+const sidebarColumnWidths = { opening: 320, settled: 232 } as const;
 
 /*
  * A list column's heading row, as the Frame's sidebar draws it: the search button first, then the column's actions.

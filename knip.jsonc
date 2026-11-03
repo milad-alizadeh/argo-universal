@@ -17,7 +17,9 @@
       "entry": [
         ".agents/skills/expo-ui/scripts/list-components.js",
         ".agents/skills/apple-design/scripts/pull-hig.mjs"
-      ]
+      ],
+      // Run as binaries by check-rule-allowlists.mts, the edit hooks and `pnpm quality:lint`, not by a package script knip reads.
+      "ignoreDependencies": ["oxlint", "oxlint-tsgolint"]
     },
     "packages/client": {
       // Metro selects platform modules by filename rather than by a literal import.
@@ -54,11 +56,12 @@
       ]
     },
     "packages/engine": {
-      // The OS supplies computer-name lookup and bzip2 archive compression.
-      "ignoreBinaries": ["scutil", "bzip2"],
       // The recorder runs by path; plugin fixtures are loaded by manifest or fixture name.
       "entry": [
         "mocks/user-message-recording.ts",
+        // tools/record-*.mts launch these through Vitest; they import the *-scenario files.
+        "mocks/deep-feed-recording.ts",
+        "mocks/report-recording.ts",
         "mocks/plugin-runtime/*.{js,mjs,cjs}",
         "mocks/plugins/first-party/*/index.js"
       ]
@@ -70,24 +73,27 @@
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
-        "@expo/ui",
         "@expo/material-symbols",
         "burnt",
         "expo-asset",
         "expo-document-picker",
         "expo-audio",
         "expo-clipboard",
+        "expo-crypto",
         "expo-file-system",
         "expo-font",
         "expo-glass-effect",
-        "expo-haptics",
         "expo-image-picker",
+        "expo-secure-store",
         "expo-video",
+        "react-native-tcp-socket",
+        "react-native-zeroconf",
         // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
         "expo-updates"
       ],
       // Config plugins that app.json names by path.
-      "entry": ["plugins/*.mjs"]
+      // The .d.mts types each plugin's .mjs for its test.
+      "entry": ["plugins/*.mjs", "plugins/*.d.mts"]
     },
     "apps/storybook": {
       // The story render checker selects this Vitest config by path.

@@ -87,12 +87,12 @@ export interface FeedTurnEnd {
   end: TurnEnd;
 }
 
-export interface ChildReply {
+interface ChildReply {
   type: 'child_reply';
   row: SessionMessage;
 }
 
-export interface ParentResult {
+interface ParentResult {
   type: 'parent_result';
   id: string;
   position: number;

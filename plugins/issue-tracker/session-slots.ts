@@ -4,9 +4,9 @@ import { createIssueSummaries, type IssueSummaries } from './issue-summary';
 import { barItems, rowItems, type Linked, type PathOf } from './session-items';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
 
-export const sessionRowSlot = 'argo/session/row/v1';
+const sessionRowSlot = 'argo/session/row/v1';
 
-export const sessionBarSlot = 'argo/session/bar/v1';
+const sessionBarSlot = 'argo/session/bar/v1';
 
 type Attachments = Pick<TrackerStorage, 'attachSession' | 'detachSession'>;
 

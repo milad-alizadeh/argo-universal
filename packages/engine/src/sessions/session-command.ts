@@ -31,7 +31,7 @@ export function sendSessionCommand(
 // A procedure that needs a ready Session: a Session command, or `session.open`, which only waits for one.
 export type ReadySessionCommandType = SessionCommand['type'] | 'session.open';
 
-export function rejectSessionCommand(
+function rejectSessionCommand(
   session: SessionActorRef,
   commandType: ReadySessionCommandType,
 ): never {

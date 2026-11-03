@@ -8,7 +8,7 @@ export interface HttpResponseHead {
   readonly headers: Map<string, string>;
 }
 
-export function indexOfBytes(haystack: Uint8Array, needle: Uint8Array): number {
+function indexOfBytes(haystack: Uint8Array, needle: Uint8Array): number {
   for (let at = 0; at + needle.length <= haystack.length; at += 1)
     if (needle.every((byte, offset) => haystack[at + offset] === byte))
       return at;

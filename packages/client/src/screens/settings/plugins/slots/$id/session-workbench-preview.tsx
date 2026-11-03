@@ -19,7 +19,7 @@ import type { SlotPreviewProps } from './slot-detail';
 export const noWorkbenchCards =
   'No Plugin left on adds a card to the Workbench.';
 
-export const noSessionToPreview =
+const noSessionToPreview =
   'The preview shows a Session’s Workbench, and there is no Session yet.';
 
 /*

@@ -14,10 +14,4 @@ export {
   type RpcContext,
 } from './connection';
 
-export {
-  admitAs,
-  identityOf,
-  serverDeviceIdentity,
-  type RpcIdentity,
-  type RpcSocket,
-} from './identity';
+export { serverDeviceIdentity } from './identity';

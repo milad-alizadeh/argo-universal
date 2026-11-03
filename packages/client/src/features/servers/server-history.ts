@@ -65,7 +65,7 @@ const edit = (key: string, change: Change): Promise<void> => {
 export const notePaired = (key: string, at: number): Promise<void> =>
   edit(key, (was) => ({ ...was, pairedAt: at }));
 
-export const noteConnected = (key: string, at: number): Promise<void> =>
+const noteConnected = (key: string, at: number): Promise<void> =>
   edit(key, (was) => ({ ...was, lastConnectedAt: at }));
 
 // A Server this Device has unpaired from keeps no history.
