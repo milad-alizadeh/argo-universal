@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
 import { Component, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { expect, spyOn } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
-import { View } from 'react-native';
 import type { AsidePlace } from '../screen/screen-aside-place';
 import { Metadata } from './metadata';
 import { MetadataPlaceContext } from './metadata-drawing-context';
@@ -308,6 +308,7 @@ export const LongLabelsWrapInTheirRow: Story = {
   },
   play: async ({ canvas }) => {
     const row = canvas.getByTestId('row').getBoundingClientRect();
+
     const ends = longLabels.map(
       (label) => canvas.getByText(label).getBoundingClientRect().right,
     );
