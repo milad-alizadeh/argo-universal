@@ -195,7 +195,7 @@ A read a Plugin describes as a value instead of making, which Argo performs, key
 _Avoid_: Descriptor, query key, request object
 
 **Background pass**:
-One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It refreshes Queries and may set its own nav badge; it draws nothing and never raises a Notification.
+One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
 
 **Nav badge**:

@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { dataFixture, processPage, processWait } from '../mocks/data-fixture';
+import { completed } from './loader-background-fixture';
 
 it('reports one drawing failure while other pages, Slots, Hooks and background passes keep running', async () => {
   const fixture = await dataFixture(
@@ -7,9 +8,16 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
       "argo.pages.register('/', Data);",
       `argo.pages.register('/', Data);
     argo.pages.register('/broken', () => { throw new Error('cannot draw'); });
+    argo.pages.define('/pass', {
+      load: async () => (await argo.process.run(['query-fixture'])).stdout,
+      render: (count) => <Text>{count}</Text>,
+    });
     argo.on('prompt.submit', (ctx, event, next) => next());`,
     ),
-    { hooks: ['prompt.submit'], background: { path: '/', interval: 300000 } },
+    {
+      hooks: ['prompt.submit'],
+      background: { path: '/pass', interval: 300000 },
+    },
   );
 
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
@@ -27,9 +35,6 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
     expect.objectContaining({ kind: 'drawing', message: 'cannot draw' }),
   ]);
 
-  const project = kit.page('/', undefined, 'one');
-
-  await project.find('1');
   const prompt = [{ type: 'text', text: 'Hello' }];
   expect(
     await kit.emit('prompt.submit', {
@@ -42,7 +47,7 @@ it('reports one drawing failure while other pages, Slots, Hooks and background p
   await page.find('3');
   await kit.clock.advance(300000);
   await expect.poll(() => fixture.requests(), processWait).toHaveLength(4);
-  await project.find('4');
+  await expect.poll(() => completed(kit), processWait).toBe(2);
   expect(broken.trees).toEqual([]);
   controller.abort();
   await failures.return([]);
