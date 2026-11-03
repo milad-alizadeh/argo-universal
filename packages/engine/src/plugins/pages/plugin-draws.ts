@@ -1,8 +1,13 @@
 import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import type { PluginClock } from '../clock';
 import type { PluginEvent } from '../protocol/runtime';
-import { stopWaiting } from '../stopped-calls';
+import type {
+  Caller,
+  CallOutcome,
+  Ended,
+  KindCalls,
+  WorkerCalls,
+} from '../runtime/worker-calls';
 import { checkedPage } from './checked-tree';
 
 /*
@@ -10,8 +15,6 @@ import { checkedPage } from './checked-tree';
  * `gh` call, so it is given as long as an Operation.
  */
 const drawLimitMs = 30_000;
-
-type Caller = { pluginId: string; generation: number };
 
 // A drawn tree as checked for any App to draw.
 export type Drawn =
@@ -25,8 +28,6 @@ type Failed = { ok: false; error: string };
 // The worker's answer, or why none came: it stopped, was not running or ran out of time.
 type Outcome = Answered | Failed;
 
-type Pending = Caller & { settle: (outcome: Outcome) => void };
-
 // An address, how many pages of its paged list the App shows, and the Connection that asked.
 type DrawAt = Omit<Extract<PluginEvent, { type: 'draw' }>, 'type' | 'id'>;
 
@@ -35,15 +36,12 @@ export type LoadAt = { path: string; projectId: string };
 
 export type Loaded = { ok: true } | { ok: false; error: string };
 
-export type DrawTransport = {
-  send: (pluginId: string, event: PluginEvent) => void;
-  clock: PluginClock;
-  log: (line: string) => void;
-};
+type ChangeListener = (pluginId: string) => void;
+
+// The patterns one worker generation defined as its code ran.
+type Defined = { generation: number; patterns: Set<string> };
 
 const failed = (error: string): Failed => ({ ok: false, error });
-
-type ChangeListener = (pluginId: string) => void;
 
 const answeredError = (answered: Answered): string =>
   answered.action === 'failed' ? answered.error : 'The page only loaded';
@@ -54,42 +52,60 @@ function loadedOf(outcome: Outcome): Loaded {
   return outcome.action === 'failed' ? failed(outcome.error) : { ok: true };
 }
 
+const endedError: Record<Ended, (pluginId: string, path: string) => string> = {
+  notRunning: (pluginId: string): string => `Plugin ${pluginId} is not running`,
+  stopped: (): string => 'Plugin stopped',
+  late: (_pluginId: string, path: string): string =>
+    `${path} did not draw in time`,
+};
+
+function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
+  if ('answered' in outcome) return outcome.answered;
+
+  return failed(endedError[outcome.ended](outcome.pluginId, at.path));
+}
+
 /*
  * The runtime side of Loader pages (ADR-0050): each draw, and each background pass's load, is one call to
  * the running worker generation, answered by its id, and each generation tells the Page path patterns it
  * defined as it starts.
  */
 export class PluginDraws {
-  private readonly running = new Map<string, number>();
-  private readonly patterns = new Map<string, Set<string>>();
-  private readonly pending = new Map<number, Pending>();
+  private readonly defined = new Map<string, Defined>();
   private readonly changeListeners = new Set<ChangeListener>();
-  private next = 0;
+  private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
 
-  public constructor(private readonly transport: DrawTransport) {}
-
-  // A new worker generation defines its pages again as its code runs.
-  public activate(pluginId: string): void {
-    this.running.delete(pluginId);
-    this.patterns.delete(pluginId);
+  public constructor(
+    private readonly workers: WorkerCalls,
+    private readonly log: (line: string) => void,
+  ) {
+    this.calls = workers.kind({
+      event: (id, at) => ({ type: 'draw', id, ...at }),
+      limitMs: drawLimitMs,
+      result: outcomeOf,
+    });
+    workers.watch((pluginId) => this.forgetEnded(pluginId));
   }
 
-  public ran(pluginId: string, generation: number): void {
-    this.running.set(pluginId, generation);
-  }
-
+  // Only the running generation's patterns count; a new one defines its pages again as its code runs.
   public patternsOf(pluginId: string): string[] {
-    return [...(this.patterns.get(pluginId) ?? [])];
+    const defined = this.defined.get(pluginId);
+
+    const running = this.workers.generation(pluginId);
+
+    return defined && defined.generation === running
+      ? [...defined.patterns]
+      : [];
   }
 
   public async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
-    const outcome = await this.call(pluginId, address);
+    const outcome = await this.calls.call(pluginId, address);
 
     if ('ok' in outcome) return outcome;
 
     if (outcome.action !== 'drawn') return failed(answeredError(outcome));
 
-    const { log } = this.transport;
+    const { log } = this;
 
     return checkedPage({ pluginId, path: address.path, log }, outcome);
   }
@@ -109,54 +125,12 @@ export class PluginDraws {
       loadOnly: true as const,
     };
 
-    return loadedOf(await this.call(pluginId, at, limitMs));
-  }
-
-  private call(
-    pluginId: string,
-    address: DrawAt,
-    limitMs = drawLimitMs,
-  ): Promise<Outcome> {
-    const generation = this.running.get(pluginId);
-
-    if (generation === undefined)
-      return Promise.resolve(failed(`Plugin ${pluginId} is not running`));
-
-    return this.sent({ pluginId, generation }, address, limitMs);
-  }
-
-  private sent(
-    caller: Caller,
-    address: DrawAt,
-    limitMs: number,
-  ): Promise<Outcome> {
-    const id = this.next++;
-    const { promise, resolve } = Promise.withResolvers<Outcome>();
-    const cancel = this.deadline(address.path, resolve, limitMs);
-
-    this.pending.set(id, { ...caller, settle: resolve });
-    this.transport.send(caller.pluginId, { type: 'draw', id, ...address });
-
-    return promise.finally(() => {
-      cancel();
-      this.pending.delete(id);
-    });
-  }
-
-  private deadline(
-    path: string,
-    settle: Pending['settle'],
-    limitMs: number,
-  ): () => void {
-    return this.transport.clock.schedule(
-      () => settle(failed(`${path} did not draw in time`)),
-      limitMs,
-    );
+    return loadedOf(await this.calls.call(pluginId, at, limitMs));
   }
 
   // What one of the Plugin's Operations wrote, whoever ran it, changes it as `argo.changed()` does.
   public changedBy(pluginId: string): void {
-    if (this.running.has(pluginId)) this.notify(pluginId);
+    if (this.workers.generation(pluginId) !== undefined) this.notify(pluginId);
   }
 
   // Hears each running worker's `argo.changed()` and Operations; the answer unsubscribes.
@@ -167,51 +141,41 @@ export class PluginDraws {
   }
 
   /*
-   * A worker defines its patterns as its code runs, before it reports running; an answer or change
-   * from an ended worker is ignored.
+   * A worker defines its patterns as its code runs, before it reports running; a change from an ended
+   * worker is ignored.
    */
   public receive(caller: Caller, call: LoaderPageCall): void {
     if (call.action === 'defined') return this.define(caller, call.pattern);
 
     if (call.action === 'changed') return this.changed(caller);
 
-    this.settle(caller, call);
+    this.calls.answer(caller, call);
   }
 
-  private changed({ pluginId, generation }: Caller): void {
-    if (this.running.get(pluginId) === generation) this.notify(pluginId);
+  private changed(caller: Caller): void {
+    if (this.workers.current(caller)) this.notify(caller.pluginId);
   }
 
   private notify(pluginId: string): void {
     for (const listener of this.changeListeners) listener(pluginId);
   }
 
-  private settle(caller: Caller, call: Answered): void {
-    const pending = this.pending.get(call.id);
+  private define({ pluginId, generation }: Caller, pattern: string): void {
+    const kept = this.defined.get(pluginId);
 
-    if (pending?.generation === caller.generation) pending.settle(call);
+    const defined =
+      kept?.generation === generation
+        ? kept
+        : { generation, patterns: new Set<string>() };
+
+    defined.patterns.add(pattern);
+    this.defined.set(pluginId, defined);
   }
 
-  private define({ pluginId }: Caller, pattern: string): void {
-    const defined = this.patterns.get(pluginId) ?? new Set<string>();
+  private forgetEnded(pluginId: string): void {
+    const running = this.workers.generation(pluginId);
 
-    defined.add(pattern);
-    this.patterns.set(pluginId, defined);
-  }
-
-  public release(pluginId: string): void {
-    this.running.delete(pluginId);
-    this.patterns.delete(pluginId);
-    this.stop((pending) => pending.pluginId === pluginId);
-  }
-
-  public close(): void {
-    this.running.clear();
-    this.patterns.clear();
-    this.stop(() => true);
-  }
-
-  private stop(matches: (pending: Pending) => boolean): void {
-    stopWaiting(this.pending.values(), matches);
+    if (this.defined.get(pluginId)?.generation !== running)
+      this.defined.delete(pluginId);
   }
 }

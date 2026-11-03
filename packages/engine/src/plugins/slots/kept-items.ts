@@ -7,13 +7,27 @@ import {
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import {
-  itemsLeftOut,
-  leftOut,
-  type Caller,
-  type LeftOut,
-  type Reply,
-} from './slot-item-calls';
+
+// Why a Plugin's items were left out; each is logged once per Plugin and Slot.
+export const itemsLeftOut = {
+  notRunning: 'Plugin is not running',
+  late: 'items provider ran late',
+  threw: 'items provider threw',
+  schema: 'items failed the Slot schema',
+} as const;
+
+type LeftOut = {
+  ok: false;
+  reason: (typeof itemsLeftOut)[keyof typeof itemsLeftOut];
+};
+
+// What the worker answered for the contexts it was asked, or why it was left out.
+export type Reply = { ok: true; items: unknown } | LeftOut;
+
+export const leftOut = (reason: LeftOut['reason']): LeftOut => ({
+  ok: false,
+  reason,
+});
 
 // One Plugin's items for a list, by each context's key.
 export type PluginItems = Readonly<Record<string, readonly ItemsSlotItem[]>>;
@@ -26,8 +40,8 @@ type Kept = Map<string, readonly ItemsSlotItem[]>;
  * One worker generation's items Slots: what it answered, by Slot id then context key, and why a Slot
  * left it out; both kept until the worker ends or says what it shows changed.
  */
-export type SlotWorker = Caller & {
-  running: boolean;
+export type SlotWorker = {
+  generation: number;
   // Bumped on every change signal, so an answer asked for before it is never kept.
   epoch: number;
   kept: Map<string, Kept>;

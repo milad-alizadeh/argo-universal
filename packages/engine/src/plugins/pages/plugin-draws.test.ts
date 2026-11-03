@@ -1,25 +1,30 @@
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
+import type { PluginClock } from '../clock';
+import { WorkerCalls } from '../runtime/worker-calls';
 import { stack, svg } from '../views/draw-tree-fixtures';
 import { PluginDraws } from './plugin-draws';
 
-const draws = (log: (line: string) => void = () => null): PluginDraws =>
-  new PluginDraws({
-    send: () => null,
-    clock: {
-      now: () => 0,
-      delay: () => Promise.resolve(),
-      schedule: () => () => null,
-    },
-    log,
-  });
+type Draws = { pages: PluginDraws; workers: WorkerCalls };
+
+const idleClock: PluginClock = {
+  now: () => 0,
+  delay: () => Promise.resolve(),
+  schedule: () => () => null,
+};
+
+function draws(log: (line: string) => void = (): null => null): Draws {
+  const workers = new WorkerCalls({ send: (): null => null, clock: idleClock });
+
+  return { pages: new PluginDraws(workers, log), workers };
+}
 
 it('draws a page without the SVG the sanitiser refused, and logs what it left out', async () => {
   const logs: string[] = [];
-  const pages = draws((line) => logs.push(line));
+  const { pages, workers } = draws((line) => logs.push(line));
   const at = { path: '/map', pageState: {}, pages: 1 };
 
-  pages.ran('atlas', 1);
+  workers.run('atlas', 1);
 
   const drawn = pages.draw('atlas', at);
 
@@ -40,11 +45,11 @@ it('draws a page without the SVG the sanitiser refused, and logs what it left ou
 });
 
 it('tells its listeners when the running worker says what it shows changed', () => {
-  const pages = draws();
+  const { pages, workers } = draws();
   const marked: string[] = [];
 
   pages.onChanged((pluginId) => marked.push(pluginId));
-  pages.ran('tracker', 2);
+  workers.run('tracker', 2);
   pages.receive({ pluginId: 'tracker', generation: 1 }, { action: 'changed' });
   pages.receive({ pluginId: 'tracker', generation: 2 }, { action: 'changed' });
 
@@ -52,11 +57,11 @@ it('tells its listeners when the running worker says what it shows changed', () 
 });
 
 it('stops telling a listener that unsubscribed', () => {
-  const pages = draws();
+  const { pages, workers } = draws();
   const marked: string[] = [];
 
   const unsubscribe = pages.onChanged((pluginId) => marked.push(pluginId));
-  pages.ran('tracker', 1);
+  workers.run('tracker', 1);
   unsubscribe();
   pages.receive({ pluginId: 'tracker', generation: 1 }, { action: 'changed' });
 
@@ -64,12 +69,12 @@ it('stops telling a listener that unsubscribed', () => {
 });
 
 it('tells its listeners when an Operation of a running Plugin ran', () => {
-  const pages = draws();
+  const { pages, workers } = draws();
   const marked: string[] = [];
 
   pages.onChanged((pluginId) => marked.push(pluginId));
   pages.changedBy('tracker');
-  pages.ran('tracker', 1);
+  workers.run('tracker', 1);
   pages.changedBy('tracker');
 
   expect(marked).toEqual(['tracker']);

@@ -6,8 +6,9 @@ import {
 } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import type { PluginClock } from '../clock';
+import { WorkerCalls } from '../runtime/worker-calls';
+import { itemsLeftOut } from './kept-items';
 import { PluginSlotItems } from './plugin-slot-items';
-import { itemsLeftOut } from './slot-item-calls';
 
 const input: SlotItemsInput = {
   slotId: sessionRowSlotId,
@@ -31,25 +32,27 @@ const manualClock = (): PluginClock & { fire: () => void } => {
   };
 };
 
-type WorkerCalls = {
+type SlotItems = {
   calls: PluginSlotItems;
+  workers: WorkerCalls;
   sent: PluginEvent[];
   clock: ReturnType<typeof manualClock>;
 };
 
-function workerCalls(): WorkerCalls {
+function slotItems(): SlotItems {
   const sent: PluginEvent[] = [];
   const clock = manualClock();
 
-  const calls = new PluginSlotItems({
+  const workers = new WorkerCalls({
     clock,
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  calls.activate('counter', 1);
-  calls.running('counter', 1);
+  const calls = new PluginSlotItems(workers);
 
-  return { calls, sent, clock };
+  workers.run('counter', 1);
+
+  return { calls, workers, sent, clock };
 }
 
 const answer = (id: number, text: string): SlotCall => ({
@@ -59,7 +62,7 @@ const answer = (id: number, text: string): SlotCall => ({
 });
 
 it('keeps an answer for its worker generation and asks a new generation again', async () => {
-  const { calls, sent } = workerCalls();
+  const { calls, workers, sent } = slotItems();
   const first = calls.items('counter', input);
 
   calls.receive({ pluginId: 'counter', generation: 1 }, answer(0, 'one'));
@@ -73,12 +76,10 @@ it('keeps an answer for its worker generation and asks a new generation again', 
   });
   expect(sent).toHaveLength(1);
 
-  calls.release('counter');
-  calls.activate('counter', 2);
-  calls.running('counter', 2);
+  workers.release('counter');
+  workers.run('counter', 2);
   const restarted = calls.items('counter', input);
 
-  calls.receive({ pluginId: 'counter', generation: 1 }, answer(1, 'stale'));
   calls.receive({ pluginId: 'counter', generation: 2 }, answer(1, 'two'));
   expect(await restarted).toEqual({
     ok: true,
@@ -87,10 +88,9 @@ it('keeps an answer for its worker generation and asks a new generation again', 
   expect(sent).toHaveLength(2);
 });
 
-it('leaves a Plugin out that is not running yet, answers late, or stops mid-call', async () => {
-  const { calls, clock } = workerCalls();
+it('leaves a Plugin out that is not running, stops mid-call or answers late', async () => {
+  const { calls, workers, clock } = slotItems();
 
-  calls.activate('starting', 1);
   expect(await calls.items('starting', input)).toEqual({
     ok: false,
     reason: itemsLeftOut.notRunning,
@@ -98,11 +98,10 @@ it('leaves a Plugin out that is not running yet, answers late, or stops mid-call
 
   const stopped = calls.items('counter', input);
 
-  calls.release('counter');
+  workers.release('counter');
   expect(await stopped).toEqual({ ok: false, reason: itemsLeftOut.notRunning });
 
-  calls.activate('counter', 2);
-  calls.running('counter', 2);
+  workers.run('counter', 2);
 
   const late = calls.items('counter', input);
 
@@ -111,7 +110,7 @@ it('leaves a Plugin out that is not running yet, answers late, or stops mid-call
 });
 
 it('drops what a Plugin answered before its change signal', async () => {
-  const { calls, sent } = workerCalls();
+  const { calls, sent } = slotItems();
   const before = calls.changes.version;
   const asked = calls.items('counter', input);
 
@@ -125,7 +124,7 @@ it('drops what a Plugin answered before its change signal', async () => {
 });
 
 it('asks a failing Plugin again only after its change signal', async () => {
-  const { calls, sent } = workerCalls();
+  const { calls, sent } = slotItems();
   const caller = { pluginId: 'counter', generation: 1 };
   const asked = calls.items('counter', input);
 

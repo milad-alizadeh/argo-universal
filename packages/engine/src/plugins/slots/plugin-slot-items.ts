@@ -1,14 +1,41 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
-import { keptAnswer, type ItemsAnswer, type SlotWorker } from './kept-items';
+import type {
+  Caller,
+  CallOutcome,
+  Ended,
+  KindCalls,
+  WorkerCalls,
+} from '../runtime/worker-calls';
 import {
   itemsLeftOut,
+  keptAnswer,
   leftOut,
-  SlotItemCalls,
-  type Caller,
-  type SlotItemsTransport,
-} from './slot-item-calls';
+  type ItemsAnswer,
+  type Reply,
+  type SlotWorker,
+} from './kept-items';
 import { SlotItemChanges } from './slot-item-changes';
+
+// How long one batched call may take before its Plugin is left out of that answer.
+const slotItemsLimitMs = 2000;
+
+// A Plugin that is not running, or stops mid-call, is left out as not running.
+const endedReason: Record<Ended, Reply> = {
+  notRunning: leftOut(itemsLeftOut.notRunning),
+  stopped: leftOut(itemsLeftOut.notRunning),
+  late: leftOut(itemsLeftOut.late),
+};
+
+function replyOf(outcome: CallOutcome<SlotCall>): Reply {
+  if ('ended' in outcome) return endedReason[outcome.ended];
+
+  const answer = outcome.answered;
+
+  return answer.action === 'items'
+    ? { ok: true, items: answer.items }
+    : leftOut(itemsLeftOut.threw);
+}
 
 /*
  * The runtime side of items Slots (ADR-0035): one batched call per Plugin and list, answers kept per
@@ -17,75 +44,67 @@ import { SlotItemChanges } from './slot-item-changes';
  */
 export class PluginSlotItems {
   readonly changes = new SlotItemChanges();
-  private readonly workers = new Map<string, SlotWorker>();
-  private readonly calls;
+  private readonly kept = new Map<string, SlotWorker>();
+  private readonly calls: KindCalls<SlotItemsInput, SlotCall, Reply>;
 
-  constructor(transport: SlotItemsTransport) {
-    this.calls = new SlotItemCalls(transport);
-  }
-
-  // A new worker generation keeps nothing of the last one; lists ask it once it runs.
-  activate(pluginId: string, generation: number): void {
-    this.workers.set(pluginId, {
-      pluginId,
-      generation,
-      running: false,
-      epoch: 0,
-      kept: new Map(),
-      failed: new Map(),
+  constructor(private readonly workers: WorkerCalls) {
+    this.calls = workers.kind({
+      event: (id, input) => ({ type: 'slotItems', id, input }),
+      limitMs: slotItemsLimitMs,
+      result: replyOf,
     });
+    workers.watch((pluginId) => this.generationChanged(pluginId));
   }
 
-  running(pluginId: string, generation: number): void {
-    const worker = this.current({ pluginId, generation });
-
-    if (!worker || worker.running) return;
-    worker.running = true;
-    this.changes.bump();
-  }
-
-  release(pluginId: string): void {
-    if (!this.workers.delete(pluginId)) return;
-    this.calls.release(pluginId);
+  // A generation that runs or ends keeps nothing of the last one, and open lists ask again.
+  private generationChanged(pluginId: string): void {
+    this.kept.delete(pluginId);
     this.changes.bump();
   }
 
   // The Plugin's items for every context of one list: kept ones, then one call for the rest.
   async items(pluginId: string, input: SlotItemsInput): Promise<ItemsAnswer> {
-    const worker = this.workers.get(pluginId);
+    const generation = this.workers.generation(pluginId);
 
-    if (!worker?.running) return leftOut(itemsLeftOut.notRunning);
+    if (generation === undefined) return leftOut(itemsLeftOut.notRunning);
 
-    return keptAnswer(worker, input, (missing) =>
-      this.calls.call(worker, missing),
+    return keptAnswer(this.worker(pluginId, generation), input, (missing) =>
+      this.calls.call(pluginId, missing),
     );
+  }
+
+  private worker(pluginId: string, generation: number): SlotWorker {
+    const kept = this.kept.get(pluginId);
+
+    if (kept?.generation === generation) return kept;
+
+    const worker = { generation, epoch: 0, kept: new Map(), failed: new Map() };
+
+    this.kept.set(pluginId, worker);
+
+    return worker;
   }
 
   // A Plugin's answer or its failure; one from an ended worker is ignored.
   receive(caller: Caller, call: SlotCall): void {
-    this.calls.settle(caller, call);
+    this.calls.answer(caller, call);
   }
 
   // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
   changed(pluginId: string): void {
-    const worker = this.workers.get(pluginId);
+    const worker = this.kept.get(pluginId);
 
-    if (!worker) return;
-    worker.epoch += 1;
-    worker.kept.clear();
-    worker.failed.clear();
+    if (worker) {
+      worker.epoch += 1;
+      worker.kept.clear();
+      worker.failed.clear();
+    }
+
     this.changes.bump();
   }
 
-  private current(caller: Caller): SlotWorker | undefined {
-    const worker = this.workers.get(caller.pluginId);
-
-    return worker?.generation === caller.generation ? worker : undefined;
-  }
-
   close(): void {
-    this.calls.close();
-    this.workers.clear();
+    this.kept.clear();
     this.changes.close();
   }
 }

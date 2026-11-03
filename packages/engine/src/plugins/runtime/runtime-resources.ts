@@ -13,6 +13,7 @@ import type { RuntimeCalls } from './calls';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
+import { WorkerCalls } from './worker-calls';
 
 export class RuntimeResources {
   readonly views;
@@ -21,6 +22,7 @@ export class RuntimeResources {
   readonly items;
   readonly operations;
   readonly draws;
+  private readonly workers;
   private readonly identities = new Map<
     string,
     ReturnType<typeof pluginIdentity>
@@ -34,21 +36,23 @@ export class RuntimeResources {
   constructor(private readonly input: QueryServices) {
     this.views = new PluginViews(input.send, input.log, this.lifecycle());
     this.data = new PluginData(input, this.views);
-    this.items = new PluginSlotItems(input);
-    this.operations = new PluginOperations(input);
-    this.draws = new PluginDraws(input);
+    this.workers = new WorkerCalls(input);
+    this.items = new PluginSlotItems(this.workers);
+    this.operations = new PluginOperations(this.workers);
+    this.draws = new PluginDraws(this.workers, input.log);
     this.background = new PluginBackground({
       ...input,
       draws: this.draws,
       views: this.views,
       data: this.data,
     });
-    input.services.onStorageWrite((id) => this.data.storageWritten(id));
     this.unwatch = this.watch(input);
   }
 
   // `argo.changed()` and every Operation run reach pages and items Slots alike.
   private watch(input: QueryServices): Array<() => void> {
+    input.services.onStorageWrite((id) => this.data.storageWritten(id));
+
     return [
       input.services.watchProjects(() => this.projectsChanged()),
       this.operations.onRan((pluginId) => this.draws.changedBy(pluginId)),
@@ -91,17 +95,12 @@ export class RuntimeResources {
     this.identities.set(pluginId, pluginIdentity(location));
     this.input.services.activate(pluginId, plugin);
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
-    this.items.activate(pluginId, generation);
-    this.operations.activate(pluginId);
-    this.draws.activate(pluginId);
   }
 
   // A worker that runs reopens its views, and lists ask it for their items.
   running(pluginId: string, generation: number): void {
     this.views.reopen(pluginId);
-    this.items.running(pluginId, generation);
-    this.operations.ran(pluginId, generation);
-    this.draws.ran(pluginId, generation);
+    this.workers.run(pluginId, generation);
   }
 
   // A crash does not end a pass: it keeps its timer and activates the Plugin again next interval.
@@ -112,9 +111,7 @@ export class RuntimeResources {
   release(pluginId: string): void {
     this.views.invalidate(pluginId);
     this.data.release(pluginId);
-    this.items.release(pluginId);
-    this.operations.release(pluginId);
-    this.draws.release(pluginId);
+    this.workers.release(pluginId);
     this.input.services.release(pluginId);
   }
 
@@ -142,9 +139,8 @@ export class RuntimeResources {
     this.background.close();
     this.failures.close();
     this.data.badges.close();
+    this.workers.close();
     this.items.close();
-    this.operations.close();
-    this.draws.close();
     this.views.close();
   }
 }
