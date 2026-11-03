@@ -1,0 +1,77 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
+import { expect, waitFor } from 'storybook/test';
+import { settleLayout } from '#mocks/story-layout';
+import { GrowingCards, arrivingCopy } from './card-growth.mocks';
+
+const meta = {
+  title: 'Tests/Design System/Primitives/Layout/Card/Growth',
+  parameters: { screenPreview: true },
+  render: (): ReactElement => <GrowingCards />,
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+function seekNearEnd(animation: Animation): void {
+  const effect = animation.effect;
+
+  if (!effect) throw new Error('The content animation must have an effect');
+
+  const timing = effect.getComputedTiming();
+
+  if (typeof timing.duration !== 'number')
+    throw new Error('The content animation must have a finite duration');
+
+  animation.pause();
+  animation.currentTime = timing.duration - 1;
+}
+
+function pauseAnimations(card: HTMLElement): void {
+  for (const animation of card.getAnimations({ subtree: true }))
+    animation.pause();
+}
+
+// Newly loaded content must be part of the animated target, rather than snapping into place at the end.
+export const ContentArrivesWhileOpening: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const trigger = canvas.getByRole('button', { name: 'Expand First' });
+    const neighbour = canvas.getByRole('button', { name: 'Collapse Second' });
+    const card = canvas.getByRole('group', { name: 'First' });
+
+    const initial = trigger.getBoundingClientRect();
+
+    trigger.click();
+    await waitFor(() =>
+      expect(card.getAnimations({ subtree: true }).length).toBeGreaterThan(0),
+    );
+    pauseAnimations(card);
+    await userEvent.click(canvas.getByRole('button', { name: 'Load content' }));
+    await expect(canvas.getByText(arrivingCopy.trim())).toBeInTheDocument();
+    await nextFrame();
+    await nextFrame();
+    const animations = card.getAnimations({ subtree: true });
+
+    await expect(animations.length).toBeGreaterThan(0);
+
+    for (const animation of animations) seekNearEnd(animation);
+
+    const before = neighbour.getBoundingClientRect().top;
+
+    for (const animation of animations) animation.finish();
+    await nextFrame();
+    const after = neighbour.getBoundingClientRect().top;
+
+    await expect(Math.abs(after - before)).toBeLessThan(1);
+    await expect(
+      canvas.getByText(arrivingCopy.trim()).getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(card.getBoundingClientRect().bottom);
+    await expect(trigger.getBoundingClientRect().top).toBe(initial.top);
+    await expect(trigger.getBoundingClientRect().width).toBe(initial.width);
+  },
+};

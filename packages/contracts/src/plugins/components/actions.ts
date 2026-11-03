@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { productName } from '../../product-identity';
 import { actionEntryProps, actionSectionProps } from '../action-props';
 import { buttonProps } from '../core-kit-props';
 import { defineKitComponent } from '../define-kit-component';
@@ -28,8 +29,7 @@ export const actionsComponents = {
       events: flushingPress,
       label: 'Action labels name buttons and menu rows.',
       accessibility: {
-        keyboard:
-          'Right-click or Shift+F10 opens a row menu. Arrow keys move, Enter activates, Escape closes. Shortcuts use first-declared-wins within the screen; Plugins cannot use Argo reserved keys.',
+        keyboard: `Right-click or Shift+F10 opens a row menu. Arrow keys move, Enter activates, Escape closes. Shortcuts use first-declared-wins within the screen; Plugins cannot use ${productName} reserved keys.`,
       },
     },
   ),
@@ -44,7 +44,7 @@ export const actionsComponents = {
     label: 'The required `accessibilityLabel` is the button name.',
   }),
   Button: defineKitComponent(
-    'An actionable control with Argo variants, sizes, and an optional activation handler.',
+    `An actionable control with ${productName} variants, sizes, and an optional activation handler.`,
     buttonProps,
     {
       group: 'actions',
@@ -56,8 +56,7 @@ export const actionsComponents = {
         voiceOver:
           'Exposes a button, reads its label, and reports the disabled state.',
       },
-      appearance:
-        '`variant` selects an Argo treatment that adapts to light and dark appearance. This kit component has no arbitrary `color` or Image prop.',
+      appearance: `\`variant\` selects an ${productName} treatment that adapts to light and dark appearance. This kit component has no arbitrary \`color\` or Image prop.`,
     },
   ),
 };

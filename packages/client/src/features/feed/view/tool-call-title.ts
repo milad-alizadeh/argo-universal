@@ -91,9 +91,20 @@ export function toolCallTitle(
 }
 
 function titleFor(row: ToolCallUpdate): string {
+  if (toolCallFacts(row).isEdit && isToolCallRunning(row))
+    return editTitle(row);
+
+  return standardTitle(row);
+}
+
+function standardTitle(row: ToolCallUpdate): string {
   const { actions } = toolCallFacts(row);
 
   return actions.length
     ? actions.map((action) => actionTitle(action, row.title)).join(', ')
     : impliedToolTitle(row);
+}
+
+function editTitle(row: ToolCallUpdate): string {
+  return toolCallFacts(row).description || row.title.trim() || 'Editing file';
 }

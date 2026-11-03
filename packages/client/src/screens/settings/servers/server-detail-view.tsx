@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
@@ -121,7 +122,7 @@ const stepCopy = {
     step(
       'Try again',
       props.onTryAgain,
-      'Wake the computer or join its Wi-Fi first. Argo reconnects on its own when it is back.',
+      `Wake the computer or join its Wi-Fi first. ${productName} reconnects on its own when it is back.`,
     ),
   'not-allowed': (props: LoadedProps): React.JSX.Element =>
     step(

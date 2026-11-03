@@ -1,9 +1,10 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 import { z } from 'zod';
+import { productCompatibility } from '../product-identity';
 
 // A Server announces itself as `_argo._tcp` while Local network access is on (ADR-0045). The type is declared in the App's iOS config too.
-export const discoveryServiceType = 'argo';
+export const discoveryServiceType = productCompatibility.discoveryService;
 
 export const discoveryProtocol = 'tcp';
 

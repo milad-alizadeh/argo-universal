@@ -6,7 +6,7 @@ import type { FeedUpdate, Plan, PlanEntry, PlanUpdate } from '@repo/contracts';
 import { createAcpContentMetadata } from './content';
 import { assignPresentField } from './present-field';
 
-type PlanArgoMetadata = NonNullable<NonNullable<PlanUpdate['_meta']>['argo']>;
+type PlanMetadata = NonNullable<NonNullable<PlanUpdate['_meta']>['argo']>;
 
 type PlanMetadataInput = {
   update: Pick<SessionNotification['update'], '_meta'>;
@@ -25,18 +25,18 @@ export const createPlanContentMetadata = (
   input: PlanMetadataInput,
   unaddressedPlanAcpSessionId?: string,
 ): PlanUpdate['_meta'] => {
-  const argo: PlanArgoMetadata = {
+  const extension: PlanMetadata = {
     removed: false,
     contentRevision: input.feed.maxRevision + 1,
   };
 
   assignPresentField(
-    argo,
+    extension,
     'unaddressedPlanAcpSessionId',
     unaddressedPlanAcpSessionId,
   );
 
-  return { ...createAcpContentMetadata(input.update._meta), argo };
+  return { ...createAcpContentMetadata(input.update._meta), argo: extension };
 };
 
 export const createPlanRow = (

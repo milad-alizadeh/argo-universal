@@ -6,7 +6,7 @@ import {
   type TurnEnd,
 } from '@repo/contracts';
 
-type ToolCallArgo = NonNullable<ToolCallUpdate['_meta']>['argo'];
+type ToolMetadata = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
 /*
  * What the Feed view needs to know about a Tool call, decoded from the row's wire details once.
@@ -23,6 +23,8 @@ export interface ToolCallFacts {
   isEdit: boolean;
   // The files an edit touches; empty for any other call, and for an edit that names none.
   editedPaths: ReadonlySet<string>;
+  // The Agent’s description, when supplied separately from the title.
+  description: string | undefined;
   // Whether the call runs a command.
   isCommand: boolean;
   // The file the call works on: the first action's path, else its first location; an unclassified action still names it.
@@ -44,10 +46,10 @@ const editKinds = new Set<ToolCallUpdate['kind']>(['edit', 'delete', 'move']);
 const firstLocation = (row: ToolCallUpdate): string | undefined =>
   row.locations?.[0]?.path;
 
-const argoOf = (row: ToolCallUpdate): ToolCallArgo => row._meta?.argo;
+const extensionOf = (row: ToolCallUpdate): ToolMetadata => row._meta?.argo;
 
 const reportedActions = (row: ToolCallUpdate): readonly CommandAction[] =>
-  argoOf(row)?.commandActions ?? [];
+  extensionOf(row)?.commandActions ?? [];
 
 const classified = (
   reported: readonly CommandAction[],
@@ -100,6 +102,9 @@ function decodeActions(
   };
 }
 
+const descriptionOf = (row: ToolCallUpdate): string | undefined =>
+  extensionOf(row)?.description?.trim();
+
 const isPlaceholder = (row: ToolCallUpdate): boolean =>
   [commandOf(row), adapterPlaceholderTitle, ''].includes(row.title);
 
@@ -110,16 +115,17 @@ const titleOf = (row: ToolCallUpdate): string | undefined =>
   isPlaceholder(row) ? undefined : row.title;
 
 const agentTitleOf = (row: ToolCallUpdate): string | undefined =>
-  argoOf(row)?.description || titleOf(row);
+  extensionOf(row)?.description || titleOf(row);
 
 const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   ...decodeActions(row),
   isEdit: editKinds.has(row.kind),
   editedPaths: editedPathsOf(row),
   isCommand: row.kind === 'execute',
+  description: descriptionOf(row),
   location: firstLocation(row),
-  permissionOutcome: argoOf(row)?.permissionOutcome,
-  startedAt: argoOf(row)?.startedAt,
+  permissionOutcome: extensionOf(row)?.permissionOutcome,
+  startedAt: extensionOf(row)?.startedAt,
   agentTitle: agentTitleOf(row),
 });
 

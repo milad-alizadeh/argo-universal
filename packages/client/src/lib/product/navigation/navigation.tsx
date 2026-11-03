@@ -1,3 +1,4 @@
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { useWide } from '@repo/kit/use-wide/use-wide';
 import {
   type Href,
@@ -38,12 +39,14 @@ export function newSessionHref(
   // useLocalSearchParams decodes every param once more, so a draft with `%2F` in it would arrive as `/`.
   if (draft !== undefined) params.draft = encodeURIComponent(draft);
 
-  return { pathname: '/sessions/[id]', params };
+  return { pathname: sessionRoute, params };
 }
+
+const sessionRoute = '/sessions/[id]';
 
 // A Session's page.
 export const sessionHref = (id: string): Href => ({
-  pathname: '/sessions/[id]',
+  pathname: sessionRoute,
   params: { id },
 });
 
@@ -104,9 +107,42 @@ function swapsPage({ shown, wide }: Place, next: string): boolean {
   return wide && isPage(next) && samePageSection(shown, next);
 }
 
-function go(href: Href, place: Place, options: NavigateOptions): void {
+function isSessionHref(href: Href): href is Exclude<Href, string> {
+  if (typeof href === 'string') return false;
+
+  return [
+    href.pathname === sessionRoute,
+    href.params?.id !== newSessionId,
+  ].every(Boolean);
+}
+
+function isSessionPlace(place: Place): boolean {
+  return (
+    place.wide &&
+    place.shown.startsWith('/sessions/') &&
+    place.shown !== '/sessions/new'
+  );
+}
+
+function goToOtherPage(
+  href: Href,
+  place: Place,
+  options: NavigateOptions,
+): void {
   if (options.replace || swapsPage(place, pathOf(href))) router.replace(href);
   else router.navigate(href, { withAnchor: options.withAnchor });
+}
+
+const canReuseSession = (place: Place, options: NavigateOptions): boolean =>
+  !options.replace && isSessionPlace(place);
+
+const setSessionParams = (href: Exclude<Href, string>): void =>
+  router.setParams(href.params ?? {});
+
+function go(href: Href, place: Place, options: NavigateOptions): void {
+  if (canReuseSession(place, options) && isSessionHref(href))
+    setSessionParams(href);
+  else goToOtherPage(href, place, options);
 }
 
 // Back to the page below the shown one, as the header's Back goes.
@@ -174,5 +210,8 @@ export function NavigationProvider({
 
 // Read at the consuming screen, whose navigator retains it when another section opens.
 export function useScreenFocused(): boolean {
-  return use(ScreenFocusContext)();
+  const focused = use(ScreenFocusContext)();
+  const visible = use(RetainedPageVisibility);
+
+  return focused && visible;
 }

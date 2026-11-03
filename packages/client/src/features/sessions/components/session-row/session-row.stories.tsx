@@ -41,10 +41,6 @@ const meta = {
       description:
         'The open Session, on a layout wide enough to show a selection.',
     },
-    subagentsFailed: {
-      control: 'boolean',
-      description: 'A Subagent of this Session failed.',
-    },
     age: {
       control: 'text',
       description:

@@ -4,6 +4,7 @@ import {
 } from '@repo/kit/primitives/scaffolds/inspector';
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
 import type { ReactNode } from 'react';
+import { Platform } from 'react-native';
 import {
   SubagentList,
   type SubagentListProps,
@@ -63,6 +64,8 @@ function AgentDetail({ detail }: { detail: ReactNode }): ReactNode {
 }
 
 function AgentList(props: SubagentListProps): ReactNode {
+  if (Platform.OS !== 'web') return <SubagentList {...props} />;
+
   return (
     <ScrollFadeView
       testID="desktop-inspector-scroll"

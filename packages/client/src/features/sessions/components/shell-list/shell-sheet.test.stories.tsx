@@ -20,22 +20,25 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const shellRow = (command: string): Promise<HTMLElement> =>
-  screen.findByRole('button', { name: new RegExp(`^${command},`) });
+  screen.findByRole('link', { name: new RegExp(`^${command},`) });
 
 export const ListsTheSessionsShells: Story = {
   play: async () => {
     await settleLayout('phone');
     await expect(
-      await screen.findByText('1 running · 3 in this Session'),
+      await screen.findByRole('heading', { name: 'Running' }),
     ).toBeVisible();
+    await expect(screen.getByRole('heading', { name: 'Done' })).toBeVisible();
+    await expect(screen.getByText('1')).toBeVisible();
+    await expect(screen.getByText('2')).toBeVisible();
     await expect(await shellRow('pnpm dev')).toHaveAccessibleName(
-      'pnpm dev, ready on localhost:8081, 4m 12s',
+      'pnpm dev, ready on localhost:8081 · 4m 12s',
     );
     await expect(await shellRow('pnpm e2e')).toHaveAccessibleName(
-      'pnpm e2e, Exit 0, 1m 47s',
+      'pnpm e2e, Exit 0 · 1m 47s',
     );
     await expect(await shellRow('pnpm storybook')).toHaveAccessibleName(
-      'pnpm storybook, Exit 1, 8s',
+      'pnpm storybook, Exit 1 · 8s',
     );
   },
 };

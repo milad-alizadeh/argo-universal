@@ -9,7 +9,6 @@ export interface SessionRowProps {
   session: SessionInfo;
   logo: string;
   selected?: boolean;
-  subagentsFailed?: boolean;
   pullRequest?: ChangeStageProps;
   // How long ago the Session was last active: it leads a Regular row's meta line, and ends a Compact row that has no PR.
   age?: string;

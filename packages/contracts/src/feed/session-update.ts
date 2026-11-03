@@ -106,6 +106,7 @@ export const SubagentUpdate = z.strictObject({
   _meta: createFeedMetadataSchema(
     z.strictObject({
       action: SubagentAction.optional(),
+      role: z.string().optional(),
       prompt: z.array(ContentBlock).optional(),
       result: z.array(ContentBlock).optional(),
     }),

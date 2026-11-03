@@ -15,9 +15,9 @@ type ToolUpdate = Extract<
   { sessionUpdate: 'tool_call' | 'tool_call_update' }
 >;
 
-type ArgoToolMeta = NonNullable<NonNullable<ToolRow['_meta']>['argo']>;
+type ToolMetadata = NonNullable<NonNullable<ToolRow['_meta']>['argo']>;
 
-type FullOutput = NonNullable<ArgoToolMeta['fullOutput']>;
+type FullOutput = NonNullable<ToolMetadata['fullOutput']>;
 
 type OutputField = keyof FullOutput;
 
@@ -124,7 +124,7 @@ const capSuppliedFields = (
   ...(update.rawOutput != null && { rawOutput: capRawOutput(row.rawOutput) }),
 });
 
-const readArgo = (row: ToolRow): ArgoToolMeta => row._meta?.argo ?? {};
+const readExtension = (row: ToolRow): ToolMetadata => row._meta?.argo ?? {};
 
 // The Blobs of the fields left out, then the new Blobs of the fields supplied.
 const readFullOutput = (
@@ -132,7 +132,7 @@ const readFullOutput = (
   capped: Partial<Record<OutputField, CappedField>>,
 ): FullOutput =>
   Object.fromEntries([
-    ...Object.entries(readArgo(row).fullOutput ?? {}).filter(
+    ...Object.entries(readExtension(row).fullOutput ?? {}).filter(
       ([field]): boolean => !Object.hasOwn(capped, field),
     ),
     ...Object.entries(capped).flatMap(([field, { blob }]) =>
@@ -141,19 +141,22 @@ const readFullOutput = (
   ]);
 
 const withTruncation = (row: ToolRow, fullOutput: FullOutput): ToolRow => {
-  const argo: ArgoToolMeta = { ...readArgo(row) };
-  delete argo.truncated;
-  delete argo.fullOutput;
+  const extension: ToolMetadata = { ...readExtension(row) };
+  delete extension.truncated;
+  delete extension.fullOutput;
 
   if (Object.keys(fullOutput).length > 0)
-    Object.assign(argo, { truncated: true, fullOutput });
+    Object.assign(extension, { truncated: true, fullOutput });
 
-  return { ...row, _meta: { ...row._meta, argo } };
+  return { ...row, _meta: { ...row._meta, argo: extension } };
 };
 
 // A row that never held capped output stays without Argo truncation fields.
 const markTruncation = (row: ToolRow, fullOutput: FullOutput): ToolRow => {
-  if (readArgo(row).truncated !== true && Object.keys(fullOutput).length === 0)
+  if (
+    readExtension(row).truncated !== true &&
+    Object.keys(fullOutput).length === 0
+  )
     return row;
 
   return withTruncation(row, fullOutput);

@@ -5,7 +5,12 @@ import type {
   Subagent,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { type FeedProps, toSubagentFeedView } from '#features/feed';
+import { recordedReports } from '@repo/mocks/app';
+import {
+  type FeedProps,
+  toParentResults,
+  toSubagentFeedView,
+} from '#features/feed';
 import {
   recordedFeedMock,
   recordedImageUrl,
@@ -14,9 +19,9 @@ import {
 
 const recording = recordedFeedMock('agent-2', 'edit-and-command');
 
-const parentSessionId = 'parent-session';
+const parentSessionId = recordedReports.parentSessionId;
 
-const subagentSessionId = 'subagent-readers';
+const subagentSessionId = recordedReports.childSessionId;
 
 const prompt = recordedUserMessage('agent-2', 'edit-and-command');
 
@@ -69,7 +74,7 @@ const feedOf = (
   rows: readonly SessionUpdate[],
   liveHeader: LiveHeader | null,
 ): FeedProps => ({
-  items: toSubagentFeedView(rows, recording.snapshot).items,
+  items: toSubagentFeedView(rows, recording.snapshot, parentSessionId).items,
   liveHeader,
   liveToolCall:
     liveHeader?.source.type === 'tool_call' ? liveToolCall : undefined,
@@ -82,6 +87,19 @@ const feedOf = (
 export const runningFeed = feedOf([incoming, ...childRows], liveToolCallHeader);
 
 export const finishedFeed = feedOf([incoming, ...childRows], null);
+
+// The scripted ACP Agent's own reply and parent report, stored by the real Engine.
+export const ownReplyFeed = feedOf(recordedReports.child, null);
+
+export const reportedFeed: FeedProps = {
+  ...finishedFeed,
+  items: [
+    ...finishedFeed.items,
+    ...toParentResults(recordedReports.parent, subagentSessionId).items.filter(
+      (item) => item.type === 'parent_result' && item.content.length > 0,
+    ),
+  ],
+};
 
 // Nothing reported yet: only the live row, which the Server names.
 const startingLiveHeader: LiveHeader = {

@@ -17,6 +17,7 @@ it('keeps a started Session on a page that does not contain its parent', async (
       id,
       title: id,
       activityAt: index,
+      createdAt: index,
       startedBySessionId: id === 'started' ? 'parent' : null,
     });
   host.database

@@ -1,6 +1,4 @@
-import type { Worker } from 'node:worker_threads';
 import {
-  pluginAnswerLimitMs,
   running,
   runtimeError,
   WorkerMessage,
@@ -14,6 +12,7 @@ import {
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
 import { startWorker, type WorkerRecord } from './start-worker.ts';
+import { workerDeadline } from './worker-deadline.ts';
 
 const heartbeatIntervalMs = 1000;
 
@@ -50,9 +49,10 @@ export class HostWorkers {
   activate(entry: PluginEntry): void {
     if (this.workers.has(entry.pluginId)) return;
 
-    const worker = startWorker(entry);
+    const record = startWorker(entry, (error, hanging) =>
+      this.crash(entry.pluginId, error, hanging),
+    );
 
-    const record = this.record(entry, worker);
     this.workers.set(entry.pluginId, record);
     this.listen(entry.pluginId, record);
   }
@@ -66,15 +66,6 @@ export class HostWorkers {
 
     if (record.heartbeat) clearTimeout(record.heartbeat);
     void record.worker.terminate();
-  }
-
-  private record(entry: PluginEntry, worker: Worker): WorkerRecord {
-    return {
-      generation: entry.generation,
-      worker,
-      deadline: this.deadline(entry.pluginId),
-      heartbeat: null,
-    };
   }
 
   private listen(pluginId: string, record: WorkerRecord): void {
@@ -121,14 +112,22 @@ export class HostWorkers {
     this.report({ ...call, pluginId, generation: record.generation });
   }
 
-  private answer(pluginId: string, answer: 'ready' | 'pong'): void {
+  private answer(
+    pluginId: string,
+    answer: 'bootstrap-ready' | 'ready' | 'pong',
+  ): void {
     const record = this.workers.get(pluginId);
 
     if (!record) return;
     clearTimeout(record.deadline);
 
-    if (answer === 'ready') this.ready(pluginId, record);
-    else this.beat(pluginId, record);
+    const replies = {
+      'bootstrap-ready': (): void => this.arm(pluginId, record),
+      ready: (): void => this.ready(pluginId, record),
+      pong: (): void => this.beat(pluginId, record),
+    };
+
+    replies[answer]();
   }
 
   private beat(pluginId: string, record: WorkerRecord): void {
@@ -150,11 +149,9 @@ export class HostWorkers {
 
   private arm(pluginId: string, record: WorkerRecord): void {
     clearTimeout(record.deadline);
-    record.deadline = this.deadline(pluginId);
-  }
-
-  private deadline(pluginId: string): ReturnType<typeof setTimeout> {
-    return setTimeout(() => this.hang(pluginId), pluginAnswerLimitMs);
+    record.deadline = workerDeadline('answering', (error, hanging) =>
+      this.crash(pluginId, error, hanging),
+    );
   }
 
   private ping(pluginId: string, record: WorkerRecord): void {
@@ -175,9 +172,5 @@ export class HostWorkers {
       hanging,
       error,
     });
-  }
-
-  private hang(pluginId: string): void {
-    this.crash(pluginId, 'Plugin did not answer within 3 seconds', true);
   }
 }

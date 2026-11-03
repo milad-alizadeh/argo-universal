@@ -1,34 +1,67 @@
 import * as RadixCollapsible from '@radix-ui/react-collapsible';
 import { type ComponentType, type ReactElement, useContext } from 'react';
-import { View } from 'react-native';
-import { cn } from '#kit/utils';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import {
   CollapsibleLayoutSyncContext,
   OpenContext,
+  contentAccessibility,
 } from './collapsible-context';
 import { LayoutSyncedContent } from './collapsible-layout-content';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
+import {
+  useWebContentMotion,
+  type WebContentMotion,
+} from './collapsible-web-motion';
 
-const webContentMotion = (open: boolean): string =>
-  cn(
-    'overflow-hidden motion-reduce:animate-none',
-    open ? 'animate-collapsible-down' : 'animate-collapsible-up',
-  );
+type Drawing = Pick<WebContentMotion, 'mounted' | 'height' | 'measure'>;
 
-// The caller's padding sits inside the animated box, whose height then reaches zero; padding on the box itself would stop it short and then snap shut.
-function WebContent({
-  className,
-  children,
-  forceMount,
-  ...props
-}: ContentProps): ReactElement {
-  const open = useContext(OpenContext);
+type BodyProps = { content: ContentProps; motion: Drawing };
+
+function MeasuredBody({ content, motion }: BodyProps): ReactElement | null {
+  if (!motion.mounted) return null;
 
   return (
-    <RadixCollapsible.Content forceMount={forceMount} asChild>
-      <View {...props} className={webContentMotion(open)}>
-        <View className={className}>{children}</View>
-      </View>
+    <View className={content.className} onLayout={motion.measure}>
+      {content.children}
+    </View>
+  );
+}
+
+const bodyStyle = ({ content, motion }: BodyProps): StyleProp<ViewStyle> => [
+  motion.mounted ? content.style : undefined,
+  { height: motion.height },
+];
+
+// Caller padding is measured inside the moving box, so closing can reach zero.
+function WebBody(props: BodyProps): ReactElement {
+  const open = useContext(OpenContext);
+  const own = props.motion.mounted ? props.content : {};
+
+  return (
+    <View
+      {...own}
+      {...contentAccessibility(open)}
+      style={bodyStyle(props)}
+      className="overflow-hidden transition-height duration-200 ease-out motion-reduce:transition-none"
+    >
+      <MeasuredBody {...props} />
+    </View>
+  );
+}
+
+function WebContent({ forceMount, ...props }: ContentProps): ReactElement {
+  const { region, onTransitionEnd, ...motion } = useWebContentMotion({
+    open: useContext(OpenContext),
+    forceMount,
+  });
+
+  return (
+    <RadixCollapsible.Content
+      ref={region}
+      forceMount
+      onTransitionEnd={onTransitionEnd}
+    >
+      <WebBody content={props} motion={motion} />
     </RadixCollapsible.Content>
   );
 }

@@ -8,13 +8,28 @@ import type { ShellEntry } from './shell-list-types';
 
 type ShellProps = { shell: ShellEntry };
 
-// The folder sits at the line's far end, as in Paper.
+// The full folder remains selectable below the command.
 function Folder({ shell }: ShellProps): JSX.Element {
   return (
-    <View className="min-w-0 flex-1 items-end">
-      <Text role="secondary-code" tone="muted" numberOfLines={1}>
+    <View className="min-w-0">
+      <Text role="secondary-code" tone="muted" selectable>
         {shell.cwd}
       </Text>
+    </View>
+  );
+}
+
+function Command({ shell }: ShellProps): JSX.Element {
+  return (
+    <View className="min-w-0 flex-row items-start gap-2">
+      <Text role="secondary-code" tone="muted">
+        $
+      </Text>
+      <View className="min-w-0 flex-1">
+        <Text role="secondary-code" selectable>
+          {shell.command}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -22,13 +37,8 @@ function Folder({ shell }: ShellProps): JSX.Element {
 // The command the Shell runs, and the folder it runs in.
 export function CommandLine({ shell }: ShellProps): JSX.Element {
   return (
-    <View className="h-8 flex-row items-center gap-2 px-4">
-      <Text role="secondary-code" tone="muted">
-        $
-      </Text>
-      <Text role="secondary-code" numberOfLines={1}>
-        {shell.command}
-      </Text>
+    <View className="gap-1 px-4 py-2">
+      <Command shell={shell} />
       <Folder shell={shell} />
     </View>
   );

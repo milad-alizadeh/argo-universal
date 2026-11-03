@@ -94,7 +94,7 @@ const shadowScrollProps = {
   className: '-mx-8 -mt-8 web:pointer-events-none!',
   pointerEvents: 'box-none',
   contentContainerStyle: { pointerEvents: 'box-none' },
-  contentContainerClassName: 'px-8 pt-8 pb-16',
+  contentContainerClassName: 'px-8 pt-8 pb-16 web:pointer-events-none!',
 } satisfies ComponentProps<typeof ScrollFadeView>;
 
 type WorkbenchScrollProps = { children: ReactNode; overlay: boolean };

@@ -7,6 +7,8 @@ const drawnItemTypes: Record<
   Exclude<FeedViewItem['type'], 'row' | 'turn_end'>,
   boolean
 > = {
+  child_reply: true,
+  parent_result: true,
   group: true,
   exploration: true,
   subagent: true,

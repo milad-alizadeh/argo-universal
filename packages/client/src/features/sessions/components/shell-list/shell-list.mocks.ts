@@ -118,3 +118,5 @@ export const endedShells: ShellEntry[] = [
   noCodeShell,
   lostShell,
 ];
+
+export const interleavedShells = [passedShell, runningShell, failedShell];
