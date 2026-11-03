@@ -1,6 +1,9 @@
+import { router } from 'expo-router';
 import { isValidElement, type ReactElement } from 'react';
+import { Linking } from 'react-native';
+import { isLinkUrl } from '#kit/link-url';
 import { Avatar } from '#primitives/content/avatar';
-import { Icon } from '#primitives/content/icon';
+import { Icon, type IconProps } from '#primitives/content/icon';
 import { Link, isRoute, type LinkProps } from '#primitives/content/link';
 import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
@@ -24,12 +27,19 @@ function fieldProps(props: FieldOwnProps): FieldOwnProps {
   return { title: props.title, accessibilityLabel: props.accessibilityLabel };
 }
 
+const iconGlyph = (icon: IconProps['name'] | undefined): ReactElement | undefined =>
+  icon ? <Icon name={icon} /> : undefined;
+
 export function MetadataLabel(props: MetadataLabelProps): ReactElement {
+  const glyph = iconGlyph(props.icon);
+
   return (
-    <MetadataField {...fieldProps(props)} valueLabel={props.text}>
-      <MetadataText text={props.text}>
-        {props.icon ? <Icon name={props.icon} /> : null}
-      </MetadataText>
+    <MetadataField
+      {...fieldProps(props)}
+      valueLabel={props.text}
+      face={{ glyph }}
+    >
+      <MetadataText text={props.text}>{glyph}</MetadataText>
     </MetadataField>
   );
 }
@@ -39,28 +49,43 @@ function destination(href: string): Pick<LinkProps, 'href' | 'route'> {
   return isRoute(href) ? { route: href } : { href };
 }
 
+// As a Pill the whole Pill is the link.
+function follow(href: string): () => void {
+  return () => {
+    if (isRoute(href)) router.navigate(href);
+    else if (isLinkUrl(href)) void Linking.openURL(href);
+  };
+}
+
 export function MetadataLink(props: MetadataLinkProps): ReactElement {
+  const glyph = iconGlyph(props.icon);
+
   return (
     <MetadataField
       {...fieldProps(props)}
       valueLabel={props.text}
       grouped={false}
+      face={{ glyph, onPress: follow(props.href) }}
     >
       <MetadataText
         text={<Link label={props.text} {...destination(props.href)} />}
-      />
+      >
+        {glyph}
+      </MetadataText>
     </MetadataField>
   );
 }
 
 export function MetadataStatus(props: MetadataStatusDotProps): ReactElement {
-  const { dotSize } = useMetadataDrawing();
+  const glyph = <StatusDot tone={props.tone} size={useMetadataDrawing().dotSize} />;
 
   return (
-    <MetadataField {...fieldProps(props)} valueLabel={props.text}>
-      <MetadataText text={props.text}>
-        <StatusDot tone={props.tone} size={dotSize} />
-      </MetadataText>
+    <MetadataField
+      {...fieldProps(props)}
+      valueLabel={props.text}
+      face={{ glyph, keepsText: true }}
+    >
+      <MetadataText text={props.text}>{glyph}</MetadataText>
     </MetadataField>
   );
 }
@@ -76,17 +101,23 @@ function initials(name: string): string {
 }
 
 export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
+  const glyph = (
+    <Avatar
+      size="sm"
+      initials={initials(props.name)}
+      accessibilityLabel={props.name}
+      source={props.src ? { uri: props.src } : undefined}
+      decorative
+    />
+  );
+
   return (
-    <MetadataField {...fieldProps(props)} valueLabel={props.name}>
-      <MetadataText text={props.name}>
-        <Avatar
-          size="sm"
-          initials={initials(props.name)}
-          accessibilityLabel={props.name}
-          source={props.src ? { uri: props.src } : undefined}
-          decorative
-        />
-      </MetadataText>
+    <MetadataField
+      {...fieldProps(props)}
+      valueLabel={props.name}
+      face={{ glyph }}
+    >
+      <MetadataText text={props.name}>{glyph}</MetadataText>
     </MetadataField>
   );
 }
@@ -105,6 +136,7 @@ export function MetadataPillsField(props: MetadataPillsProps): ReactElement {
     <MetadataField
       {...fieldProps(props)}
       valueLabel={pills.map((pill) => pill.text).join(', ')}
+      face={{ glyph: iconGlyph(props.icon), pills }}
     >
       <MetadataPills pills={pills} />
     </MetadataField>

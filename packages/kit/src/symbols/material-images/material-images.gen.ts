@@ -79,6 +79,7 @@ import material_info from '../assets/material-light/info.xml';
 import material_inventory_2 from '../assets/material-light/inventory_2.xml';
 import material_key_vertical from '../assets/material-light/key_vertical.xml';
 import material_keyboard_return from '../assets/material-light/keyboard_return.xml';
+import material_label from '../assets/material-light/label.xml';
 import material_language from '../assets/material-light/language.xml';
 import material_lightbulb from '../assets/material-light/lightbulb.xml';
 import material_link from '../assets/material-light/link.xml';
@@ -379,6 +380,7 @@ export const materialImages = {
   inventory_2: material_inventory_2,
   key_vertical: material_key_vertical,
   keyboard_return: material_keyboard_return,
+  label: material_label,
   language: material_language,
   lightbulb: material_lightbulb,
   link: material_link,

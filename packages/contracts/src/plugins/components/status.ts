@@ -82,7 +82,6 @@ export const statusComponents = {
     z.object({ accessibilityLabel: stringLabel }),
     {
       group: 'status',
-      wire: false,
       label: 'The required accessibilityLabel names the loading work.',
       accessibility: {
         keyboard: 'Spinner adds no keyboard focus stop or shortcut.',
@@ -94,11 +93,10 @@ export const statusComponents = {
     },
   ),
   Callout: defineKitComponent(
-    'A heading, description, detail, and optional actions.',
+    'A heading, description, detail, and optional actions, drawn in place: a page that failed to load says so with a danger Callout and a Button to try again.',
     calloutProps,
     {
       group: 'status',
-      wire: false,
       events: { onPress: z.undefined() },
       accessibility: {
         keyboard:

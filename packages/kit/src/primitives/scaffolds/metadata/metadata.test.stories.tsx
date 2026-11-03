@@ -4,7 +4,9 @@ import { Component, type ReactNode } from 'react';
 import { expect, spyOn } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
+import type { AsidePlace } from '../screen/screen-aside-place';
 import { Metadata } from './metadata';
+import { MetadataPlaceContext } from './metadata-drawing-context';
 import { fields } from './metadata.mocks';
 
 const path = '~/Developer/argo';
@@ -230,5 +232,60 @@ export const FieldOutsideMetadataRaises: Story = {
       canvas.getByText('A Metadata field draws only inside Metadata.'),
     ).toBeVisible();
     await expect(canvas.queryByText(path)).not.toBeInTheDocument();
+  },
+};
+
+// Metadata where a Screen's aside put it, as Pills under the title or as glyphs alone.
+const placed = (place: AsidePlace): Story['render'] =>
+  function Placed(args) {
+    return (
+      <MetadataPlaceContext value={place}>
+        <Metadata {...args} />
+      </MetadataPlaceContext>
+    );
+  };
+
+const issueFields = [
+  <Metadata.StatusDot key="status" title="Status" text="Open" tone="info" />,
+  <Metadata.Avatar key="assignee" title="Assignee" name="Ana Ruiz" />,
+  <Metadata.Link key="blocker" title="Blocked by" text="#41" href="/issues/41" />,
+];
+
+export const PillsAreTheFieldsValues: Story = {
+  args: { children: issueFields },
+  render: placed('pills'),
+  play: async ({ canvas, userEvent }) => {
+    const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
+
+    try {
+      await expect(canvas.getByText('Ana Ruiz')).toBeVisible();
+      // A value with no glyph names its field, so "#41" reads as a blocker.
+      await expect(canvas.getByText('Blocked by')).toBeVisible();
+      await userEvent.click(canvas.getByRole('button', { name: 'Blocked by, #41' }));
+      await expect(navigate).toHaveBeenCalledWith('/issues/41');
+    } finally {
+      navigate.mockRestore();
+    }
+  },
+};
+
+export const IconsKeepTheStatusInWords: Story = {
+  args: { children: issueFields },
+  render: placed('icons'),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Open')).toBeVisible();
+    await expect(canvas.queryByText('Ana Ruiz')).not.toBeInTheDocument();
+    await expect(canvas.getByLabelText('Assignee, Ana Ruiz')).toBeVisible();
+    await expect(canvas.getByText('#41')).toBeVisible();
+  },
+};
+
+export const AsideHeadsGroupsButNotGlyphs: Story = {
+  args: { children: [...issueFields, <Metadata.Link key="second" title="Blocked by" text="#57" href="/issues/57" />] },
+  render: placed('aside'),
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByText('Blocked by')).toHaveLength(1);
+    await expect(canvas.queryByText('Status')).not.toBeInTheDocument();
+    await expect(canvas.getByRole('link', { name: '#57' })).toBeVisible();
   },
 };

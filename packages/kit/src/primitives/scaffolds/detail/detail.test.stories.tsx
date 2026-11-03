@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
@@ -16,7 +16,7 @@ const meta = {
   component: Detail,
   args: issue.detail,
   render: (args): React.JSX.Element => (
-    <Screen title={issue.title}>
+    <Screen title={issue.title} aside={issue.aside}>
       <Detail {...args} />
     </Screen>
   ),
@@ -30,16 +30,14 @@ const body = issue.detail.markdown;
 
 const statusGroup = 'Status, In progress';
 
+// Each field names itself, whether it draws as a row of the aside or as a Pill under the title.
 async function expectMetadata(
   canvas: Parameters<Play>[0]['canvas'],
 ): Promise<void> {
-  await expect(canvas.getByRole('group', { name: statusGroup })).toBeVisible();
-  await expect(
-    canvas.getByRole('group', { name: 'Labels, bug, sync' }),
-  ).toBeVisible();
-  await expect(
-    canvas.getByRole('group', { name: 'Milestone, v1.2' }),
-  ).toBeVisible();
+  await expect(canvas.getByLabelText(statusGroup)).toBeVisible();
+  await expect(canvas.getByLabelText('Labels, bug, sync')).toBeVisible();
+  await expect(canvas.getByLabelText('Milestone, v1.2')).toBeVisible();
+  await expect(canvas.getByLabelText('Blocked by, #57')).toBeVisible();
 }
 
 type Play = NonNullable<Story['play']>;
@@ -57,46 +55,49 @@ export const ReadsContentAndMetadata: Story = {
 
 type Place = 'above' | 'beside';
 
-// Where the Metadata sits: inline above the content, or beside it in its own column.
+// Where the Metadata sits: beside the content in the aside's own column, or as Pills above it.
 function metadataPlace(canvas: Parameters<Play>[0]['canvas']): Place {
   const content = canvas.getByText(body).getBoundingClientRect();
+  const status = canvas.getByLabelText(statusGroup).getBoundingClientRect();
 
-  const status = canvas
-    .getByRole('group', { name: statusGroup })
-    .getBoundingClientRect();
+  if (status.left >= content.right) return 'beside';
 
   return status.bottom <= content.top ? 'above' : 'beside';
 }
 
-// The Metadata column is headed Properties; inline, the line of values has no heading.
-const propertiesHeading = (
-  canvas: Parameters<Play>[0]['canvas'],
-): Element | null => canvas.queryByRole('heading', { name: 'Properties' });
-
 const inContainer = (
-  size: 'h-160 w-90' | 'h-160 w-200',
-  place: Place,
+  size: 'h-160 w-90' | 'h-160 w-192',
+  play: Play,
 ): Story => ({
   render: (args) => (
     <View className={size}>
-      <Screen title={issue.title}>
+      <Screen title={issue.title} aside={issue.aside}>
         <Detail {...args} />
       </Screen>
     </View>
   ),
-  play: async ({ canvas }) => {
-    await expectMetadata(canvas);
-    await waitFor(() => expect(metadataPlace(canvas)).toBe(place));
-    await expect(Boolean(propertiesHeading(canvas))).toBe(place === 'beside');
-  },
+  play,
 });
 
-export const NarrowContainerDrawsMetadataInline = inContainer(
-  'h-160 w-90',
-  'above',
+// A tablet-wide page has no gutter for the aside, so its fields are Pills that lead the content, each with its value.
+export const TabletWidthLeadsWithPills = inContainer(
+  'h-160 w-192',
+  async ({ canvas }) => {
+    await expectMetadata(canvas);
+    await waitFor(() => expect(metadataPlace(canvas)).toBe('above'));
+    await expect(canvas.getByText('Ana Ruiz')).toBeVisible();
+  },
 );
 
-export const WideContainerSplitsColumns = inContainer('h-160 w-200', 'beside');
+// Below medium a Pill with a glyph shows the glyph alone; the status keeps its words.
+export const PhoneWidthShowsIconsAlone = inContainer(
+  'h-160 w-90',
+  async ({ canvas }) => {
+    await expectMetadata(canvas);
+    await waitFor(() => expect(canvas.queryByText('Ana Ruiz')).toBeNull());
+    await expect(canvas.getByText('In progress')).toBeVisible();
+  },
+);
 
 export const LoadingKeepsMetadata: Story = {
   args: { ...issue.detail, isLoading: true },
@@ -110,7 +111,6 @@ export const LoadingKeepsMetadata: Story = {
 // Story args merge with the meta's, so absent props are listed as undefined.
 const empty: DetailProps = {
   markdown: undefined,
-  metadata: issue.detail.metadata,
   children: <EmptyState title="No description" icon="issue" />,
 };
 
@@ -146,7 +146,12 @@ export const ComposedContentFollowsMarkdown: Story = {
 };
 
 export const WithoutMetadata: Story = {
-  args: { markdown: body, metadata: undefined },
+  args: { markdown: body },
+  render: (args) => (
+    <Screen title={issue.title}>
+      <Detail {...args} />
+    </Screen>
+  ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText(body)).toBeVisible();
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
@@ -161,6 +166,7 @@ export const ScreenActionsLeadTheContent: Story = {
   render: (args) => (
     <Screen
       title={issue.title}
+      aside={issue.aside}
       actions={
         <Action key="close" label={closeLabel} icon="check" onPress={closed} />
       }
@@ -191,40 +197,45 @@ const rect = (element: Element): DOMRect => element.getBoundingClientRect();
 // Rounding in layout is not a difference in edge.
 const sameEdge = (a: number, b: number): boolean => Math.abs(a - b) <= 1;
 
-// A window wide enough for the Screen's capped column, settled before the story renders; the Screen fills the viewport, as in the App.
-const onWide = (story: Story): Story => ({
+const screenId = 'detail-screen';
+
+// A window wide enough for the aside's own column, settled before the story renders; the Screen fills the viewport, as in the App.
+const onWidest = (story: Story): Story => ({
   ...story,
   parameters: { screenPreview: true },
-  beforeEach: () => settleLayout('wide'),
+  beforeEach: () => settleLayout(1920),
 });
 
+// The column a Screen without an aside keeps: the reading width and its inset each side, centred.
+const columnLeft = (screen: DOMRect): number =>
+  screen.left + (screen.width - (800 + 2 * 32)) / 2 + 32;
+
 /*
- * Metadata beside the content widens the Screen's column rather than taking from the content: the heading starts on the
- * content's edge and its Actions end on the Metadata's.
+ * The aside takes the right gutter and never the content's room: the title and the content start where a page without
+ * an aside starts them.
  */
-export const MetadataWidensTheColumnNotTheText: Story = onWide({
-  render: ScreenActionsLeadTheContent.render,
+export const AsideNeverMovesTheTitle: Story = onWidest({
+  render: (args) => (
+    <Screen title={issue.title} aside={issue.aside} testID={screenId}>
+      <Detail {...args} />
+    </Screen>
+  ),
   play: async ({ canvas }) => {
     await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
 
     const content = rect(canvas.getByText(body));
     const title = rect(canvas.getByRole('heading', { name: issue.title }));
-
-    const glyph = rect(
-      within(canvas.getByRole('button', { name: closeLabel })).getByTestId(
-        'icon-check',
-      ),
-    );
-
-    const status = rect(canvas.getByRole('group', { name: statusGroup }));
+    const screen = rect(canvas.getByTestId(screenId));
+    const status = rect(canvas.getByLabelText(statusGroup));
 
     await expect(sameEdge(title.left, content.left)).toBe(true);
-    await expect(sameEdge(glyph.right, status.right)).toBe(true);
+    await expect(sameEdge(content.left, columnLeft(screen))).toBe(true);
+    await expect(status.left).toBeGreaterThan(content.right);
   },
 });
 
-// A phone-wide web window is inside the reading width, so the widened column changes nothing and the Metadata draws inline.
-export const PhoneWidthDrawsMetadataInline: Story = {
+// A phone-wide web window draws icon Pills above the content.
+export const PhoneWindowLeadsWithIcons: Story = {
   parameters: { screenPreview: true },
   beforeEach: () => settleLayout('phone'),
   play: async ({ canvas }) => {
@@ -235,32 +246,22 @@ export const PhoneWidthDrawsMetadataInline: Story = {
 
 const scrollId = 'detail-scroll';
 
-// Enough description to scroll a 640-tall container well past the Metadata column.
+// Enough description to scroll the page well past the aside.
 const longBody = [
   body,
   ...Array.from(
-    { length: 20 },
+    { length: 40 },
     (_, step) => `Step ${step + 1}: fetch, then read the Server log again.`,
   ),
 ].join('\n\n');
 
-/*
- * The Metadata column keeps its place while the content scrolls under it, so a long description can be read with the
- * Issue's properties still in view.
- */
-export const MetadataColumnStaysWhileContentScrolls: Story = {
+// The aside keeps its place while the content scrolls, so a long description is read with the Issue's properties in view.
+export const AsideStaysWhileContentScrolls: Story = onWidest({
   args: { ...issue.detail, markdown: longBody, testID: scrollId },
-  render: (args) => (
-    <View className="h-160 w-200">
-      <Screen title={issue.title}>
-        <Detail {...args} />
-      </Screen>
-    </View>
-  ),
   play: async ({ canvas }) => {
     await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+    const status = canvas.getByLabelText(statusGroup);
     const scroll = canvas.getByTestId(scrollId);
-    const status = canvas.getByRole('group', { name: statusGroup });
     const { top } = rect(status);
 
     scroll.scrollTop = scroll.scrollHeight;
@@ -268,4 +269,4 @@ export const MetadataColumnStaysWhileContentScrolls: Story = {
     await expect(sameEdge(rect(status).top, top)).toBe(true);
     await expect(canPointAt(status)).toBe(true);
   },
-};
+});
