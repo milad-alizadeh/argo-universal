@@ -55,6 +55,11 @@ ipcRenderer.on('links:open', (_event, link: string): void => {
 // ADR-0002 permits native sharing of text and URLs alongside window controls and system symbols.
 const desktopBridge = {
   serverUrl,
+  chooseProjectFolder:
+    process.platform === 'darwin'
+      ? (): Promise<string | null> =>
+          ipcRenderer.invoke('project:choose-folder')
+      : undefined,
   share:
     process.platform === 'darwin'
       ? (content): Promise<void> => ipcRenderer.invoke('share:open', content)

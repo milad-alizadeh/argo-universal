@@ -54,26 +54,13 @@ async function selectLongModel(
   { userEvent, args }: PlayContext,
   lastModel: () => Promise<HTMLElement>,
 ): Promise<void> {
-  await clickUntil({ userEvent, row: lastModel }, () =>
+  await userEvent.click(await lastModel());
+  await waitFor(() =>
     expect(args.configuration?.onConfigChange).toHaveBeenCalledWith(
       expect.any(String),
       lastLongModel.value,
     ),
   );
-}
-
-// Clicks the row found fresh each try, as a virtualized list can swap the node under a click.
-async function clickUntil(
-  {
-    userEvent,
-    row,
-  }: Pick<PlayContext, 'userEvent'> & { row: () => Promise<HTMLElement> },
-  called: () => Promise<void>,
-): Promise<void> {
-  await waitFor(async () => {
-    await userEvent.click(await row());
-    await called();
-  });
 }
 
 export async function selectLastPhoneModel(

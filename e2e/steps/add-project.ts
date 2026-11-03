@@ -1,3 +1,4 @@
+import { chooseFixtureFolder } from '../desktop/project-folder';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 
@@ -10,8 +11,10 @@ When(
     await page
       .getByRole('button', { name: 'Add Project', exact: true })
       .click();
-    await page.getByRole('textbox', { name: 'Folder' }).fill(app.projectPath);
-    await page.getByRole('button', { name: 'Add', exact: true }).click();
+    await chooseFixtureFolder(app);
+    await page
+      .getByRole('button', { name: 'Add Project', exact: true })
+      .click();
   },
 );
 

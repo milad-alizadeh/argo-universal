@@ -1,13 +1,31 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, mocked, within } from 'storybook/test';
 import { ProjectNewView } from './project-new-view';
+
+const folder = '/Users/you/Developer/argo-universal';
+
+const addLabel = 'Add Project';
+
+const chooseLabel = 'Choose Folder…';
+
+const cloneAction = 'Clone Project';
+
+const cloneLabel = 'Clone Repository';
+
+const repositoryLabel = 'Repository URL';
+
+const repositoryUrl = 'https://github.com/owner/repo.git';
 
 const meta = {
   title: 'Tests/Screens/Settings/ProjectNewView',
   component: ProjectNewView,
   parameters: { screenPreview: true },
-  args: { onSubmit: fn() },
+  args: {
+    onSubmit: fn(),
+    onCancel: fn(),
+    onChooseFolder: fn<() => Promise<string | null>>(async () => folder),
+  },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof ProjectNewView>;
 
@@ -15,55 +33,128 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A folder is the first way in, and goes out trimmed.
+// Only a path returned by the native picker can be submitted on this Mac.
 export const AddSendsTheFolder: Story = {
   play: async ({ canvas, args, userEvent }) => {
+    await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
+    await expect(canvas.queryByLabelText('Folder')).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: chooseLabel }));
+    await expect(args.onChooseFolder).toHaveBeenCalledOnce();
+    await expect(canvas.getByText(folder)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: addLabel }));
+    await expect(args.onSubmit).toHaveBeenCalledWith('folder', folder);
+    await expect(
+      canvas.queryByRole('button', { name: 'New' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+// Canceling the native picker leaves the selected folder intact.
+export const CanceledPickerKeepsSelection: Story = {
+  args: {
+    onChooseFolder: fn<() => Promise<string | null>>(async () => folder),
+  },
+  play: async ({ canvas, args, userEvent }) => {
+    mocked(args.onChooseFolder)
+      ?.mockResolvedValueOnce(folder)
+      .mockResolvedValue(null);
+    await userEvent.click(canvas.getByRole('button', { name: chooseLabel }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Change…' }));
+    await expect(canvas.getByText(folder)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: addLabel }));
+    await expect(args.onSubmit).toHaveBeenCalledWith('folder', folder);
+  },
+};
+
+// A failed native dialog is recoverable without leaving the form.
+export const PickerFailureCanBeRetried: Story = {
+  args: {
+    onChooseFolder: fn<() => Promise<string | null>>(async () => folder),
+  },
+  play: async ({ canvas, args, userEvent }) => {
+    mocked(args.onChooseFolder)
+      ?.mockRejectedValueOnce(new Error('Unavailable'))
+      .mockResolvedValue(folder);
+    await userEvent.click(canvas.getByRole('button', { name: chooseLabel }));
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Could not open the folder picker. Try again.',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: chooseLabel }));
+    await expect(canvas.getByText(folder)).toBeVisible();
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};
+
+// Clone submits the trimmed repository URL.
+export const CloneSendsTheRepository: Story = {
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Source' }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', { name: cloneLabel }),
+    );
+    await userEvent.type(
+      canvas.getByLabelText(repositoryLabel),
+      ' https://github.com/owner/repo.git ',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: cloneAction }));
+    await expect(args.onSubmit).toHaveBeenCalledWith('clone', repositoryUrl);
+  },
+};
+
+// A Device without the native bridge enters a path on its Server.
+export const ServerFolderCanBeTyped: Story = {
+  args: { onChooseFolder: undefined },
+  play: async ({ canvas, args, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Folder'), ' /work/app ');
-    await userEvent.click(canvas.getByRole('button', { name: 'Add' }));
+    await userEvent.click(canvas.getByRole('button', { name: addLabel }));
     await expect(args.onSubmit).toHaveBeenCalledWith('folder', '/work/app');
   },
 };
 
-// Choosing Clone asks for a repository, and sends it as a clone.
-export const CloneSendsTheRepository: Story = {
+// Back returns to the Projects list.
+export const BackLeavesTheForm: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Clone' }));
-    await userEvent.type(
-      canvas.getByLabelText('Repository'),
-      'https://github.com/owner/repo.git',
-    );
-    await userEvent.click(canvas.getByRole('button', { name: 'Add' }));
-    await expect(args.onSubmit).toHaveBeenCalledWith(
-      'clone',
-      'https://github.com/owner/repo.git',
-    );
-  },
-};
-
-// Choosing New asks for a name, and sends it as a new Project.
-export const NewSendsTheName: Story = {
-  play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'New' }));
-    await userEvent.type(canvas.getByLabelText('Name'), 'notes');
-    await userEvent.click(canvas.getByRole('button', { name: 'Add' }));
-    await expect(args.onSubmit).toHaveBeenCalledWith('new', 'notes');
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+    await expect(args.onCancel).toHaveBeenCalledOnce();
   },
 };
 
 // Nothing typed is nothing to add.
 export const AddWithNothingTypedSendsNothing: Story = {
-  play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Add' }));
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };
 
-// While the Server adds it, Add cannot be pressed again.
+// The pending state blocks duplicate submissions and source changes.
 export const AddingCannotBeSentTwice: Story = {
   args: { adding: true },
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('button', { name: 'Adding…' }),
     ).toBeDisabled();
+    await expect(
+      canvas.getByRole('button', { name: chooseLabel }),
+    ).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Source' })).toBeDisabled();
+  },
+};
+
+// Switching source starts a fresh form instead of submitting a URL as a folder.
+export const SwitchingSourceClearsTheField: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Source' }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', { name: cloneLabel }),
+    );
+    await userEvent.type(canvas.getByLabelText(repositoryLabel), repositoryUrl);
+    await userEvent.click(canvas.getByRole('button', { name: 'Source' }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', {
+        name: 'Existing Folder',
+      }),
+    );
+    await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
   },
 };
