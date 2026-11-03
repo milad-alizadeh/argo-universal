@@ -52,8 +52,8 @@ function touchedFolders(changed: string[], root: string): string[] {
 const LISTED_PATHS = 3;
 
 // An empty change and a change verify does not read both exit 0, so the words must tell them apart.
-export function nothingChecked(paths: string[]): string {
-  if (paths.length === 0) return 'nothing changed since main.';
+export function nothingChecked(paths: string[], base: string): string {
+  if (paths.length === 0) return `nothing changed since ${base}.`;
 
   const listed = paths.slice(0, LISTED_PATHS).join(', ');
   const more = paths.length > LISTED_PATHS ? ', ...' : '';

@@ -11,13 +11,19 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 
 ## Verify
 
-`pnpm verify` (`tools/verify.mts`) checks the change since the merge base with `origin/main`, uncommitted files included:
+`pnpm verify` (`tools/verify.mts`) checks the change since the merge base with the branch's base, uncommitted files included, and first prints which base it chose. The base is, in order:
+
+1. The ref you pass with `pnpm verify --base <ref>` or `VERIFY_BASE=<ref>`, as given, then as `origin/<ref>`. It fails when neither has a merge base with `HEAD`.
+2. The open PR's base branch, read with `gh api`, as `origin/<base>`, then the local `<base>`. A stacked PR therefore checks only its own commits, not the unmerged PRs beneath it.
+3. `origin/main`, then `main`, then `HEAD` in a checkout with no main, which checks only uncommitted files.
+
+The lookup finds no PR before you open one, on a detached `HEAD`, for a PR from a fork, or when `gh` is offline or signed out; verify then says `no open PR found` beside the base. On a stacked branch with no PR yet, pass `--base` with the lower branch. Turbo's `--affected` type checks use the same base, through `TURBO_SCM_BASE`.
 
 - The Operation mutation gate, the generated Operation procedures check and the generated Registry validators check. A new hand-written tRPC mutation must become an Operation.
 - oxfmt `--check` and type-aware oxlint on the changed files, and `turbo run check-types --affected` when TypeScript changed.
 - The test files that import a changed file, found by `vitest list --changed`. Past `DEPENDENT_LIMIT` in `tools/verify-scope.mts` (a primitive's edit reaches most story files; a `package.json` or Vitest config edit reaches every test), it runs only those in the touched folders and below, and says how many it left to CI.
 
-When the change touches only paths `verify` does not read (Markdown, for one), it prints `verify: nothing checked.`, names the first paths, and says it is not a pass. It still exits 0, because a docs-only change has nothing to fail; the exit code means no check failed, not that one ran. `verify: nothing changed since main.` means the change is empty.
+When the change touches only paths `verify` does not read (Markdown, for one), it prints `verify: nothing checked.`, names the first paths, and says it is not a pass. It still exits 0, because a docs-only change has nothing to fail; the exit code means no check failed, not that one ran. `verify: nothing changed since <base>.` means the change is empty.
 
 `verify` runs the two Operation gates and the Registry validators check. The other static gates live in `pnpm quality:lint`, which CI runs: `sherif` for workspace versions, then a `tools/check-*.mts` apiece for CanvasKit, rule allowlists (whose one type-aware oxlint run is also the lint gate, warnings included), comments, test suffixes, test-only imports, story titles, story gates and kit pairing, and `jscpd` for duplication. Each reads the tracked files, prints one line per problem, and exits non-zero. The story-title and story-gate checks also read story files git does not track yet, so a new story fails locally as it would in CI once added.
 
