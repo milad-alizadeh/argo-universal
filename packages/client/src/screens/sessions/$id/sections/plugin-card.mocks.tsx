@@ -1,6 +1,7 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { List } from '@repo/kit/primitives/lists/list';
+import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { SessionPluginCard } from './plugin-card-section';
 
@@ -39,18 +40,45 @@ export const coverageCard: SessionPluginCard = {
   page: <Text>{coverageCardSummary}</Text>,
 };
 
-export const issueRowTitle = 'Work on the tracker card';
+export const notesRowTitle = 'Draft the release notes';
 
-// The Issue tracker's card as the Plugin draws it: a kit List of one row, which presses nothing of its own.
-export const issueRowCard: SessionPluginCard = {
-  ...issueTrackerCard,
+export const notesFullView = 'Every note on this Session';
+
+// A Plugin's card drawn as a kit List of one row, which presses nothing of its own, with a full view to open.
+export const notesListCard: SessionPluginCard = {
+  pluginId: 'lists',
+  card: {
+    id: 'notes',
+    title: 'Notes',
+    icon: { sf: 'note.text', material: 'notes' },
+    page: '/notes',
+    tab: '/notes/full',
+  },
   page: (
     <List>
       <ListItem
-        title={issueRowTitle}
-        subtitle="#42 · Open"
+        title={notesRowTitle}
+        subtitle="Updated today"
         leading={<Icon name="pending" tone="muted" />}
       />
     </List>
+  ),
+  tab: <Text>{notesFullView}</Text>,
+};
+
+// A Plugin's card that has its card but nothing in it yet, drawn with the kit's EmptyState.
+export const deploysEmptyCard: SessionPluginCard = {
+  pluginId: 'deploys',
+  card: {
+    id: 'deploys',
+    title: 'Deploys',
+    icon: { sf: 'shippingbox', material: 'deployed_code' },
+    page: '/deploys/session',
+  },
+  page: (
+    <EmptyState
+      title="No deploys yet"
+      description="This Session has not deployed its branch."
+    />
   ),
 };

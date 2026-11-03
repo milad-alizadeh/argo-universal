@@ -181,13 +181,13 @@ export const phonePaddingOf = (
 export function insetLook(
   drawing: Drawing,
   input: ListLookInput,
-  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded'>,
+  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded' | 'card'>,
 ): InsetLook {
-  const { menu, padded } = form;
+  const { menu, padded, card } = form;
   const phone = form.phone !== undefined;
 
   return {
-    insets: insetsOf({ ...form, menu, padded, phone, fit: input.fit }),
+    insets: insetsOf({ ...form, menu, padded, card, phone, fit: input.fit }),
     phonePadding: phonePaddingOf(drawing, input),
     headingInset: headingInsetOf(form.webGrouped, input.wide),
   };

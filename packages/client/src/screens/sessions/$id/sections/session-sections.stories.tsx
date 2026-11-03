@@ -13,7 +13,12 @@ import {
   subagentStates,
 } from '../../../../features/sessions/components/subagent-list/subagent-list.mocks';
 import type { SessionInspectorContent } from '../session-inspector-content';
-import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
+import {
+  coverageCard,
+  deploysEmptyCard,
+  issueTrackerCard,
+  notesListCard,
+} from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
 
@@ -76,5 +81,15 @@ export const AllSections: Story = {};
 export const PluginCards: Story = {
   args: {
     content: { ...everySection, pluginCards: [issueTrackerCard, coverageCard] },
+  },
+};
+
+// Plugin pages drawn with only kit components: a List draws as the card's own rows, an EmptyState as one of its lines.
+export const PluginKitPages: Story = {
+  args: {
+    content: {
+      ...everySection,
+      pluginCards: [notesListCard, deploysEmptyCard],
+    },
   },
 };
