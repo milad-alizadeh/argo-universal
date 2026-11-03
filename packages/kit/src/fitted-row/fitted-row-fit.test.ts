@@ -13,6 +13,17 @@ describe('fitCount', () => {
     ).toBe(2);
   });
 
+  it('shows every item until each "+N" is measured too', () => {
+    expect(
+      fitCount({
+        widths: [40, 40, 40],
+        counts: [20, undefined, undefined],
+        available: 100,
+        gap: 4,
+      }),
+    ).toBe(3);
+  });
+
   it('shows every item when they all fit', () => {
     expect(fitCount(measured(128))).toBe(3);
   });

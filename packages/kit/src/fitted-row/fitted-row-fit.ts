@@ -29,9 +29,9 @@ const measuredAll = (widths: (number | undefined)[]): widths is number[] =>
  * is never cut: when not even the first fits beside the count, the count stands alone.
  */
 export function fitCount(measurements: FitMeasurements): number {
-  const { widths } = measurements;
+  const { widths, counts } = measurements;
 
-  return measuredAll(widths)
+  return measuredAll(widths) && measuredAll(counts)
     ? fitMeasured(widths, measurements)
     : widths.length;
 }
