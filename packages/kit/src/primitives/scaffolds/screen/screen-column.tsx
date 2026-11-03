@@ -1,15 +1,26 @@
 import { type ScreenWidth, screenDefaults } from '@repo/contracts/kit-tokens';
-import { type ReactElement, type ReactNode, useMemo } from 'react';
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  use,
+  useMemo,
+} from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { type ContentColumn } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
+import type { ColumnEdges } from './screen-aside-place';
+
+// Where the Screen's aside put the column, beside its own (screen-aside-place.ts); null keeps the column centred.
+export const ScreenColumnEdgesContext = createContext<ColumnEdges | null>(null);
 
 /*
  * The one column a Screen's heading and content keep to: on a wide window the reading width (`--container-column`)
  * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
- * Below wide the phone shell's header runs from the window's edge, so the content does too. `bleed` runs the content to the
- * region's edges with no margins, for a canvas or a map. An aside never widens the column (screen-aside-place.ts).
+ * Below wide the phone shell's header runs from the window's edge, so the content does too. `bleed` runs the content to
+ * the region's edges with no margins, for a canvas or a map. Where the aside has its own column the capped column
+ * keeps the edges it leaves, on every page at that width, with or without an aside (screen-aside-place.ts).
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
@@ -18,9 +29,25 @@ export function useScreenColumn(
   const { column, inset } = useColumnTokens();
   const cap = capped ? column : undefined;
   const margin = marginOf(width, inset);
+  const beside = useEdgesBeside(cap);
 
-  return useMemo(() => columnStyle(cap, margin), [cap, margin]);
+  return useMemo(
+    () => (beside ? edgesStyle(beside) : columnStyle(cap, margin)),
+    [beside, cap, margin],
+  );
 }
+
+// Only a capped column moves aside; a full one already runs to the margins.
+function useEdgesBeside(cap: number | undefined): ColumnEdges | null {
+  const edges = use(ScreenColumnEdgesContext);
+
+  return cap === undefined ? null : edges;
+}
+
+const edgesStyle = ({ left, right }: ColumnEdges): ContentColumn => ({
+  paddingLeft: left,
+  paddingRight: right,
+});
 
 const marginOf = (width: ScreenWidth, inset: number): number =>
   width === 'bleed' ? 0 : inset;

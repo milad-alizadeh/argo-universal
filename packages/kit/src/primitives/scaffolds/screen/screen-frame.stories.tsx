@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 /*
  * Where the aside draws as the page narrows: Pills under the title at tablet width, and icon Pills at phone width, with
- * the status keeping its words. The aside's own column needs a window wider than 1440 (screen-aside-place.ts).
+ * the status keeping its words. The aside's own column needs a wide Screen at least 976 wide (screen-aside-place.ts).
  */
 export const AsidePlaces: Story = {
   render: (): React.JSX.Element => (

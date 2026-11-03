@@ -16,9 +16,10 @@ import { useWide } from '#kit/use-wide/use-wide';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { MetadataPlaceContext } from '../metadata/metadata-drawing-context';
 import {
+  type AsideLayout,
   type AsidePlace,
   type AsideRoom,
-  asidePlace,
+  asideLayout,
   asideWidth,
 } from './screen-aside-place';
 import { insetWidth, ScreenColumn, useColumnTokens } from './screen-column';
@@ -38,22 +39,30 @@ export function useAsideLead(): ReactNode {
   return lead;
 }
 
-interface AsideFrame {
-  place: AsidePlace;
+interface AsideFrame extends AsideLayout {
   onLayout: (event: LayoutChangeEvent) => void;
 }
 
 /*
- * Where the aside draws, from the Screen's own measured width. A page with no reading column to stand beside, `full`
- * or `bleed`, has no gutter, so its aside is always Pills.
+ * The width the last Screen measured. A page opened from another starts from it, as the two fill the same region, so
+ * its first frame lays its column out where the page it came from had it, not centred until it measures its own.
+ */
+let lastScreenWidth = 0;
+
+/*
+ * Where the aside draws, and where the column sits beside it, from the Screen's own measured width. A page with no
+ * reading column to stand beside, `full` or `bleed`, has no gutter, so its aside is always Pills.
  */
 export function useAsideFrame(screenWidth: ScreenProps['width']): AsideFrame {
-  const [width, setWidth] = useState(0);
+  const [width, setWidth] = useState(lastScreenWidth);
   const room = useAsideRoom(screenWidth);
 
   return {
-    place: asidePlace({ ...room, width }),
-    onLayout: (event) => setWidth(event.nativeEvent.layout.width),
+    ...asideLayout({ ...room, width }),
+    onLayout: (event) => {
+      lastScreenWidth = event.nativeEvent.layout.width;
+      setWidth(lastScreenWidth);
+    },
   };
 }
 
@@ -114,8 +123,8 @@ function leadOf({ aside, place }: AsideProps): ReactNode {
 }
 
 /*
- * The aside's own column in the right gutter, beside the column and never moving it, from the top of the Screen. It
- * scrolls on its own, so a long list of values stays in reach while the content scrolls.
+ * The aside's own column at the trailing edge, beside the reading column that leaves it room, from the top of the
+ * Screen. It scrolls on its own, so a long list of values stays in reach while the content scrolls.
  */
 function AsideColumn(props: {
   place: AsidePlace;

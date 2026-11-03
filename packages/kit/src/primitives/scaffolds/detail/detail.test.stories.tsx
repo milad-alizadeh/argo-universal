@@ -234,6 +234,79 @@ export const AsideNeverMovesTheTitle: Story = onWidest({
   },
 });
 
+const listId = 'list-screen';
+
+const listRows = 'list-rows';
+
+// The App's page beside its 384 sidebar at 1440: the Issue, and above it the list it opened from, each the page's width.
+const besideSidebar = 1440 - 384;
+
+function IssueAndList(args: DetailProps): React.JSX.Element {
+  return (
+    <View>
+      <View className="h-80" style={{ width: besideSidebar }}>
+        <Screen title="Open" testID={listId}>
+          <View testID={listRows}>
+            <Text>Rows run the width of the column.</Text>
+          </View>
+        </Screen>
+      </View>
+      <View className="h-80" style={{ width: besideSidebar }}>
+        <Screen title={issue.title} aside={issue.aside} testID={screenId}>
+          <Detail {...args} />
+        </Screen>
+      </View>
+    </View>
+  );
+}
+
+type Canvas = Parameters<Play>[0]['canvas'];
+
+// The list's title, body left and body width from its page, each beside the Issue's from its own.
+function columnEdges(canvas: Canvas): [number, number][] {
+  const list = rect(canvas.getByTestId(listId));
+  const page = rect(canvas.getByTestId(screenId));
+  const listTitle = rect(canvas.getByRole('heading', { name: 'Open' }));
+  const title = rect(canvas.getByRole('heading', { name: issue.title }));
+  const rows = rect(canvas.getByTestId(listRows));
+  const content = rect(canvas.getByText(body));
+
+  return [
+    [listTitle.left - list.left, title.left - page.left],
+    [rows.left - list.left, content.left - page.left],
+    [rows.width, content.width],
+  ];
+}
+
+async function expectOneColumn(canvas: Canvas): Promise<void> {
+  const edges = columnEdges(canvas);
+
+  await expect(
+    edges.every(([list, page]) => sameEdge(list, page)),
+    `list and Issue edges ${JSON.stringify(edges)}`,
+  ).toBe(true);
+}
+
+/*
+ * At 1440 with the sidebar shown the aside has its own column, which the body gives width to. The list it opened from
+ * keeps the same column, so opening an Issue moves neither the title nor the body's edges.
+ */
+export const AsideBesideNarrowedColumnAt1440: Story = {
+  parameters: { screenPreview: true },
+  beforeEach: () => settleLayout(1440),
+  render: (args) => <IssueAndList {...args} />,
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+    await waitFor(() => expectOneColumn(canvas));
+
+    const content = rect(canvas.getByText(body));
+
+    await expect(rect(canvas.getByLabelText(statusGroup)).left).toBeGreaterThan(
+      content.right,
+    );
+  },
+};
+
 // A phone-wide web window draws icon Pills above the content.
 export const PhoneWindowLeadsWithIcons: Story = {
   parameters: { screenPreview: true },
