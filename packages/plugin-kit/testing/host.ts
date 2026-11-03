@@ -151,8 +151,7 @@ class HostedPlugin implements PluginTest {
     const pages = new LoaderPages(service, runtime.draws, operations);
 
     return {
-      draw: (input) =>
-        pages.draw({ pluginId, pageState: {}, ...input }),
+      draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }),
       run: (input) => pages.run({ pluginId, ...input }),
     };
   }

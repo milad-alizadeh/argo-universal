@@ -7,7 +7,11 @@ const close = {
   description: 'Closes one Issue.',
   tier: 'act' as const,
   params: {
-    number: { type: 'number' as const, description: 'The Issue', required: true },
+    number: {
+      type: 'number' as const,
+      description: 'The Issue',
+      required: true,
+    },
   },
 };
 
