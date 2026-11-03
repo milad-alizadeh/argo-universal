@@ -55,13 +55,13 @@ function requireCallRow(
   });
 }
 
-const argoMeta = (row: ToolCallUpdate): ArgoMeta => row._meta?.argo;
+const extensionMetadata = (row: ToolCallUpdate): ArgoMeta => row._meta?.argo;
 
 const fullResult = (row: ToolCallUpdate): BlobRef | undefined =>
-  argoMeta(row)?.fullOutput?.rawOutput;
+  extensionMetadata(row)?.fullOutput?.rawOutput;
 
 const startedWork = (row: ToolCallUpdate): OperationWorkTarget | undefined =>
-  argoMeta(row)?.operationWork;
+  extensionMetadata(row)?.operationWork;
 
 function rowState(
   sources: CallSources,

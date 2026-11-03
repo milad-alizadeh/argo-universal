@@ -1,7 +1,7 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { IssueDeps } from './issue-deps';
+import { issuePath } from './issue-paths';
 import { createIssueSummaries, type IssueSummaries } from './issue-summary';
-import { registerSessionPages } from './session-issue-pages';
 import { barItems, rowItems, type Linked, type PathOf } from './session-items';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
 
@@ -19,7 +19,7 @@ type ToItems = (entries: Linked[]) => ReturnType<typeof rowItems>;
 
 /*
  * The Issue tracker's fills for a Session (ADR-0035): the Issues a Session is attached to (`attach`, ADR-0044) show as
- * items on its row and as one line in its Session bar, and as a Workbench card its manifest declares. The link is this
+ * items on its row and as one line in its Session bar. The link is this
  * Plugin's own `issue_sessions` store. Returns the attachments wrapped so attaching or detaching refreshes the Slots.
  */
 export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
@@ -27,7 +27,6 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   const summaries = createIssueSummaries(deps, changed);
 
   deps.changes.subscribe(() => void changed());
-  registerSessionPages(api, deps);
   registerItems(api, { deps, summaries });
 
   return announcing(deps.storage, changed);
@@ -36,8 +35,6 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
 type Fills = Omit<Answering, 'toItems'>;
 
 function registerItems(api: Argo, fills: Fills): void {
-  const pathOf = issuePathOf(fills.deps);
-
   const answer =
     (toItems: ToItems): SlotProvider =>
     (request) =>
@@ -64,10 +61,7 @@ const slotsChanged = (api: Argo) => async (): Promise<void> => {
   ]);
 };
 
-const issuePathOf =
-  (deps: IssueDeps): PathOf =>
-  ({ projectId, number }) =>
-    deps.pages.issuePagePath({ id: projectId }, number);
+const pathOf: PathOf = ({ projectId, number }) => issuePath(projectId, number);
 
 type Answering = {
   deps: IssueDeps;

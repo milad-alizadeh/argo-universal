@@ -6,6 +6,7 @@ import {
 } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import type { LookupFunction } from 'node:net';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import { CapabilityRefusal } from '../plugins/access/capability-refusal';
 import {
   allowLiteral,
@@ -132,7 +133,7 @@ function requestOptions({ signal, resolve }: PreviewNetwork): RequestOptions {
     agent: false,
     lookup: checkedLookup(publicHost, resolve),
     headers: {
-      'user-agent': 'Argo-LinkPreview',
+      'user-agent': productCompatibility.linkPreviewUserAgent,
       'accept-encoding': 'identity',
     },
   };

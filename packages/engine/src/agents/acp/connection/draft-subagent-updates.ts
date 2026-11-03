@@ -17,9 +17,12 @@ const sessionUpdateMethod = 'session/update';
 
 const DraftState = z.enum(['completed', 'cancelled', 'failed', 'disconnected']);
 
+const metadata = z.record(z.string(), z.unknown()).nullable().optional();
+
 const Spawned = z.object({
   sessionUpdate: z.literal('subagent_spawned'),
   subagentSessionId: z.string().min(1),
+  _meta: metadata,
   name: z.string().optional(),
   task: z.string().optional(),
   prompt: z.string().optional(),
@@ -29,6 +32,7 @@ const Spawned = z.object({
 const StateUpdated = z.object({
   sessionUpdate: z.literal('subagent_state_update'),
   subagentSessionId: z.string().min(1),
+  _meta: metadata,
   state: DraftState,
 });
 
@@ -81,6 +85,7 @@ const runningUpdate = (spawn: Spawn): Update => ({
   sessionUpdate: 'subagent_update',
   sessionId: spawn.subagentSessionId,
   title: spawn.name,
+  _meta: spawn._meta,
   capabilities: spawn.capabilities,
   state: { state: 'running' },
 });
@@ -105,6 +110,7 @@ const taskMessage = ({ sessionId, update }: FromParent<Spawn>): Update[] => {
 const endUpdate = (ending: Ending): Update => ({
   sessionUpdate: 'subagent_update',
   sessionId: ending.subagentSessionId,
+  _meta: ending._meta,
   state: standardStates[ending.state],
 });
 

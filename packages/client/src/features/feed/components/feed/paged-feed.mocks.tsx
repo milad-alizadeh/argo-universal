@@ -8,11 +8,10 @@ import {
   useState,
 } from 'react';
 import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
-import type { FeedView } from '../../view/feed-view';
-import { keepUnchangedItems } from '../../view/keep-unchanged-items';
 import { toFeedView } from '../../view/to-feed-view';
 import { Feed, type FeedProps } from './feed';
 import { longSnapshot, longTail, pageSize } from './feed.mocks';
+import { type HeldFeed, viewOf } from './paged-feed-view.mocks';
 
 // The Feed's story args: the Long Feed's newest page.
 export const feedArgs = {
@@ -38,31 +37,12 @@ const olderPageSent = (): Promise<void> =>
     releaseOlderPage = resolve;
   });
 
-interface HeldFeed {
-  start: number;
-  arrived: readonly SessionUpdate[];
-  view: FeedView;
-}
-
 type SetHeldFeed = Dispatch<SetStateAction<HeldFeed>>;
 
-// The held rows drawn again, keeping each unchanged item from the view before.
-function viewOf(
-  previous: FeedView | null,
+const newestPageStart = (
   rows: readonly SessionUpdate[],
-  held: Omit<HeldFeed, 'view'>,
-): HeldFeed {
-  return {
-    ...held,
-    view: keepUnchangedItems(
-      previous,
-      toFeedView([...rows.slice(held.start), ...held.arrived], longSnapshot),
-    ),
-  };
-}
-
-const newestPageStart = (rows: readonly SessionUpdate[]): number =>
-  Math.max(0, rows.length - pageSize);
+  size: number,
+): number => Math.max(0, rows.length - size);
 
 const withArrivedRow =
   (rows: readonly SessionUpdate[], row: SessionUpdate) =>
@@ -89,6 +69,7 @@ interface OlderPages {
   rows: readonly SessionUpdate[];
   setFeed: SetHeldFeed;
   holdOlderPages?: boolean;
+  pageLength?: number;
 }
 
 interface OlderPageLoad extends OlderPages {
@@ -101,7 +82,7 @@ const canLoadOlder = ({ inFlight, start }: OlderPageLoad['paging']): boolean =>
 
 function prependOlderPage(load: OlderPageLoad): void {
   const { paging } = load;
-  paging.start = Math.max(0, paging.start - pageSize);
+  paging.start = Math.max(0, paging.start - (load.pageLength ?? pageSize));
   const nextStart = paging.start;
   load.setFeed((held) =>
     viewOf(held.view, load.rows, { start: nextStart, arrived: held.arrived }),
@@ -110,12 +91,23 @@ function prependOlderPage(load: OlderPageLoad): void {
   load.setLoadingOlder(false);
 }
 
+const nextTurn = (): Promise<void> =>
+  new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+function deliveryWait(load: OlderPageLoad): Promise<void> | undefined {
+  if (load.holdOlderPages) return olderPageSent();
+
+  return load.pageLength ? nextTurn() : undefined;
+}
+
 async function loadOlderPage(load: OlderPageLoad): Promise<void> {
   if (!canLoadOlder(load.paging)) return;
   load.paging.inFlight = true;
   load.setLoadingOlder(true);
 
-  if (load.holdOlderPages) await olderPageSent();
+  const wait = deliveryWait(load);
+
+  if (wait) await wait;
   prependOlderPage(load);
 }
 
@@ -123,7 +115,11 @@ function useOlderPages(
   page: OlderPages,
 ): Pick<FeedProps, 'loadingOlder' | 'onStartReached'> {
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const paging = useRef({ start: newestPageStart(page.rows), inFlight: false });
+
+  const paging = useRef({
+    start: newestPageStart(page.rows, page.pageLength ?? pageSize),
+    inFlight: false,
+  });
 
   const onStartReached = (): void =>
     void loadOlderPage({ ...page, paging: paging.current, setLoadingOlder });
@@ -135,20 +131,48 @@ interface PagedFeedProps extends FeedProps {
   rows: readonly SessionUpdate[];
   // Each older page waits until the story sends it, so the story can mark the reader's place first.
   holdOlderPages?: boolean;
+  pageLength?: number;
+}
+
+function drawFeed(
+  props: FeedProps,
+  feed: HeldFeed,
+  older: Pick<FeedProps, 'loadingOlder' | 'onStartReached'>,
+): React.JSX.Element {
+  return (
+    <Feed
+      {...props}
+      items={feed.view.items}
+      historyCursor={feed.start}
+      {...older}
+    />
+  );
+}
+
+function useHeldFeed(
+  rows: readonly SessionUpdate[],
+  pageLength: number | undefined,
+): [HeldFeed, SetHeldFeed] {
+  return useState(() =>
+    viewOf(null, rows, {
+      start: newestPageStart(rows, pageLength ?? pageSize),
+      arrived: [],
+    }),
+  );
 }
 
 // Opens on the newest page and prepends an older one each time the reader nears the top, as the Session does.
 export function PagedFeed({
   rows,
   holdOlderPages,
+  pageLength,
   ...props
 }: PagedFeedProps): React.JSX.Element {
-  const [feed, setFeed] = useState(() =>
-    viewOf(null, rows, { start: newestPageStart(rows), arrived: [] }),
-  );
+  const [feed, setFeed] = useHeldFeed(rows, pageLength);
 
   useDeliversRows(rows, setFeed);
-  const older = useOlderPages({ rows, setFeed, holdOlderPages });
 
-  return <Feed {...props} items={feed.view.items} {...older} />;
+  const older = useOlderPages({ rows, setFeed, holdOlderPages, pageLength });
+
+  return drawFeed(props, feed, older);
 }

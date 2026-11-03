@@ -1,10 +1,12 @@
+import { createConnection } from 'node:net';
+import { networkInterfaces } from 'node:os';
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { AppPageSocket } from '@repo/engine/mocks/app-socket';
 import {
   lanAddress,
   watchAnnouncedServers,
 } from '@repo/engine/mocks/engine-network';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, vi } from 'vitest';
 import { openConnection } from '../api/open-connection';
 import { resolveServer, type ServerLocation } from './resolve-server';
 
@@ -52,6 +54,31 @@ async function nameReachedAt(location: ServerLocation): Promise<string> {
   return (await client.system.info.query()).name;
 }
 
+const nonInternalIPv4 = (): string[] =>
+  Object.values(networkInterfaces())
+    .flat()
+    .filter((entry) => entry?.internal === false)
+    .filter((entry) => entry?.family === 'IPv4')
+    .flatMap((entry) => (entry ? [entry.address] : []));
+
+const reachesPort = (host: string, port: number): Promise<boolean> =>
+  new Promise((resolve) => {
+    const socket = createConnection({ host, port });
+
+    const finish = (connected: boolean): void => {
+      socket.destroy();
+      resolve(connected);
+    };
+
+    closers.push(() => {
+      socket.destroy();
+    });
+    socket.setTimeout(3000);
+    socket.once('connect', () => finish(true));
+    socket.once('error', () => finish(false));
+    socket.once('timeout', () => finish(false));
+  });
+
 const computerName = 'Studio Mac';
 
 const nothingThere = { host: '192.0.2.1', port: 9 };
@@ -77,7 +104,12 @@ describe.skipIf(!lanAddress)(
         name: computerName,
         port: portOf(server),
       });
-      expect(location.hosts).toContain(lanAddress);
+      expect(location.hosts.length).toBeGreaterThan(0);
+      expect(nonInternalIPv4()).toEqual(expect.arrayContaining(location.hosts));
+      const host = location.hosts[0];
+
+      assert(host);
+      expect(await reachesPort(host, location.port)).toBe(true);
     });
 
     it('finds the same Server after a rename and a move to another port', async (): Promise<void> => {

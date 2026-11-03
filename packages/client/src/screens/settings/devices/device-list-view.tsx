@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { Action } from '@repo/kit/primitives/actions/action';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
@@ -36,7 +37,7 @@ export function DeviceListView(props: DeviceListViewProps): React.JSX.Element {
   return (
     <Screen
       title="Devices"
-      caption="Devices that can use Argo on this computer"
+      caption={`Devices that can use ${productName} on this computer`}
       {...pairAction(props)}
       onBack={props.onBack}
     >

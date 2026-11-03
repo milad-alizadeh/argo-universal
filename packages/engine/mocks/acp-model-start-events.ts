@@ -10,6 +10,7 @@ const shellFixture = {
   exitCode: null,
   startedAt: 0,
   endedAt: null,
+  description: null,
   outputBlobId: null,
 };
 

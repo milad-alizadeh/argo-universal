@@ -12,6 +12,7 @@ import {
   textRoles,
   tones,
 } from '../kit-tokens';
+import { productName } from '../product-identity';
 import { pressHandler } from './kit-event-props';
 import { perSizeClass } from './schema-size-class';
 import { svgCharacterLimit } from './wire-limits';
@@ -25,7 +26,10 @@ export const textProps = z.object({
     .optional()
     .meta({ default: textDefaults.role })
     .describe('The typography role, optionally by Size class.'),
-  tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
+  tone: z
+    .enum(tones)
+    .optional()
+    .describe(`The ${productName} semantic text tone.`),
   dimmed: z
     .boolean()
     .optional()
@@ -57,7 +61,7 @@ export const buttonProps = z.object({
   icon: iconSymbol
     .optional()
     .describe(
-      'An icon before the label: one of Argo’s, or an SF Symbol and Material Symbol pair.',
+      `An icon before the label: one of ${productName}’s, or an SF Symbol and Material Symbol pair.`,
     ),
   fullWidth: z
     .union([z.boolean(), z.literal('narrow')])

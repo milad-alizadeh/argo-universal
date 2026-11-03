@@ -9,6 +9,7 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
+import { issuePath } from './issue-paths';
 import { repositoryText } from './issue-project';
 import { statusMark } from './issue-status-mark';
 import { issueTree, type IssueNode } from './issue-tree';
@@ -76,7 +77,7 @@ const rowProps = ({ project, deps }: FilterSource, issue: Issue): RowProps => {
     finished: issue.status !== 'open',
     onPress: {
       action: 'navigate',
-      path: deps.pages.issuePagePath(project, issue.number),
+      path: issuePath(project.id, issue.number),
     },
     meta: [...rowMarks(issue), ...rowLabelPills(issue.labels)],
   };

@@ -3,6 +3,8 @@ import type * as React from 'react';
 
 export interface ArchiveSessionAlertProps {
   open: boolean;
+  // The Project keeps the worktree on archive, so nothing on disk goes.
+  keepsWorktree?: boolean;
   // Archive: the caller archives the Session and the row leaves the list.
   onArchive: () => void;
   // Cancel, or the system closing the alert: the Session stays.
@@ -13,6 +15,7 @@ export const archiveSessionCopy = {
   title: 'Archive Session?',
   message:
     'Its worktree and any uncommitted files are removed. The branch is kept.',
+  messageKeepsWorktree: 'Its worktree and its branch are kept.',
   archive: 'Archive',
   cancel: 'Cancel',
 };
@@ -26,11 +29,16 @@ export function ArchiveSessionAlert(
       open={props.open}
       onOpenChange={(open) => !open && props.onClose()}
       title={archiveSessionCopy.title}
-      message={archiveSessionCopy.message}
+      message={alertMessage(props.keepsWorktree)}
       actions={archiveActions(props.onArchive)}
     />
   );
 }
+
+const alertMessage = (keepsWorktree: boolean | undefined): string =>
+  keepsWorktree
+    ? archiveSessionCopy.messageKeepsWorktree
+    : archiveSessionCopy.message;
 
 const archiveActions = (onArchive: () => void): AlertAction[] => [
   { label: archiveSessionCopy.cancel, role: 'cancel' },

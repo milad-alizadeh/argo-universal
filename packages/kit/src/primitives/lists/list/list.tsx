@@ -30,7 +30,11 @@ function ListRows<Item>(props: ListProps<Item>): ReactElement {
 
   if (drawsNatively(look, props))
     return (
-      <NativeGroupedList empty={props.empty} onMove={props.onMove}>
+      <NativeGroupedList
+        empty={props.empty}
+        onMove={props.onMove}
+        accessibilityLabel={props.accessibilityLabel}
+      >
         {props.children}
       </NativeGroupedList>
     );

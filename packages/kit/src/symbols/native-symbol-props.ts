@@ -1,3 +1,4 @@
+import type { ColorValue } from 'react-native';
 import type { IconSize } from './icon-size';
 import type { IconSymbol } from './icon-symbol';
 import type { GlyphLane } from './row-glyph';
@@ -16,6 +17,7 @@ export interface NativeSymbolProps {
   filled?: boolean;
   // Unset, the symbol takes the colour its surroundings give it (iOS: the SwiftUI tint; Compose: the content colour).
   tone?: NativeSymbolTone;
+  color?: ColorValue;
   // Set on a row's leading glyph, which draws in a lane rather than at its own size (row-glyph.ts).
   lane?: GlyphLane;
 }

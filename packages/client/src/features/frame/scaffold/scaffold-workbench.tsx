@@ -1,4 +1,5 @@
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
+import { cn } from '@repo/kit/utils';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -35,7 +36,9 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchScroll>{children}</WorkbenchScroll>
+      <WorkbenchScroll overlay={layout.workbench.state === 'overlay'}>
+        {children}
+      </WorkbenchScroll>
     </Animated.View>
   );
 }
@@ -64,7 +67,7 @@ const visibilityProps = (visible: boolean): ViewProps & { inert: boolean } => ({
 });
 
 type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
-  motion: { offset: number; visible: boolean; replacesPrimary: boolean };
+  motion: { offset: number; visible: boolean };
 };
 
 // The panel keeps its full width while it slides out, so its cards never reflow.
@@ -80,7 +83,6 @@ function workbenchPlacement({
     motion: {
       offset,
       visible: workbench.width > 0,
-      replacesPrimary: workbench.state === 'dedicated',
     },
   };
 }
@@ -92,13 +94,21 @@ const shadowScrollProps = {
   className: '-mx-8 -mt-8 web:pointer-events-none!',
   pointerEvents: 'box-none',
   contentContainerStyle: { pointerEvents: 'box-none' },
-  contentContainerClassName: 'px-8 pt-8 pb-16',
+  contentContainerClassName: 'px-8 pt-8 pb-16 web:pointer-events-none!',
 } satisfies ComponentProps<typeof ScrollFadeView>;
 
-function WorkbenchScroll({ children }: { children: ReactNode }): ReactElement {
+type WorkbenchScrollProps = { children: ReactNode; overlay: boolean };
+
+function WorkbenchScroll({
+  children,
+  overlay,
+}: WorkbenchScrollProps): ReactElement {
   return (
     <ScrollFadeView {...shadowScrollProps}>
-      <View pointerEvents="auto" className="gap-2">
+      <View
+        pointerEvents="auto"
+        className={cn('gap-2', overlay && 'rounded-2xl bg-content')}
+      >
         {children}
       </View>
     </ScrollFadeView>

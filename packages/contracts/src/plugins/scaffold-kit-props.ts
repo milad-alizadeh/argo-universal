@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { screenDefaults, screenWidths } from '../kit-tokens';
+import { productName } from '../product-identity';
 import { handler, stringLabel } from './kit-component-props';
 import { listItemProps } from './list-kit-props';
 import { perSizeClass } from './schema-size-class';
@@ -81,8 +82,10 @@ export const inspectorProps = z.object({
 const settingsPage = z.object({
   id: z.string().describe('The page identity, which `selected` names.'),
   title: z.string().describe('The page title on its row.'),
-  icon: iconName.optional().describe('An Argo icon before the title.'),
-  href: z.string().describe('The Argo route the row opens.'),
+  icon: iconName
+    .optional()
+    .describe(`An ${productName} icon before the title.`),
+  href: z.string().describe(`The ${productName} route the row opens.`),
   value: listItemProps.shape.value,
   badge: listItemProps.shape.badge,
   disabled: listItemProps.shape.disabled,

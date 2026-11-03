@@ -6,75 +6,71 @@ import { View } from 'react-native';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
 import { sidebarRows } from './session-row-sidebar';
 
-type BadgeStatus = 'failed' | 'running';
-
-const runningStatus = (
-  props: SessionRowMetadataProps,
-): BadgeStatus | undefined =>
-  props.session.subagents.running > 0 ? 'running' : undefined;
-
-function subagentStatus(
-  props: SessionRowMetadataProps,
-): BadgeStatus | undefined {
-  if (sidebarRows) return undefined;
-
-  return props.subagentsFailed ? 'failed' : runningStatus(props);
+interface RunningWorkCountProps {
+  count: number;
+  icon: 'agent' | 'terminal';
+  label: string;
+  selected: boolean;
+  testID: string;
 }
 
 function dotClassName(selected: boolean): string {
   return cn(
-    'absolute -right-0.75 -top-0.75 rounded-full border-2 border-card bg-card p-0.5',
+    'absolute -right-0.75 -top-0.75 rounded-full border-2 border-card bg-card',
     selected && 'web:wide:border-content web:wide:bg-content',
   );
 }
 
-// A phone's count carries a dot while a Subagent runs or after one failed.
-function SubagentsStatus(props: SessionRowMetadataProps): React.ReactNode {
-  const status = subagentStatus(props);
-
-  if (status === undefined) return null;
-
+function RunningStatus({
+  selected,
+  testID,
+}: Pick<RunningWorkCountProps, 'selected' | 'testID'>): React.ReactNode {
   return (
-    <View testID="subagents-status" className={dotClassName(props.selected)}>
-      <StatusDot
-        tone={status === 'failed' ? 'danger' : 'success'}
-        pulse={status === 'running'}
-        size="sm"
-      />
+    <View testID={testID} className={dotClassName(selected)}>
+      <StatusDot tone="success" pulse size="sm" />
     </View>
   );
 }
 
-// A sidebar row's count stands alone (Paper "SessionsList"); the row's own dot speaks for the Session.
+// Completed work leaves the row; each active count carries its own running dot.
+function RunningWorkCount(props: RunningWorkCountProps): React.ReactNode {
+  return props.count > 0 ? (
+    <View
+      accessibilityLabel={`${props.label}: ${props.count} running`}
+      className="relative shrink-0 pr-2"
+    >
+      <Label
+        icon={props.icon}
+        text={String(props.count)}
+        sidebar={sidebarRows}
+      />
+      <RunningStatus selected={props.selected} testID={props.testID} />
+    </View>
+  ) : null;
+}
+
 export function SubagentsCount(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
-  const { total, running } = props.session.subagents;
-
-  if (total <= 0) return null;
-
   return (
-    <View
-      accessibilityLabel={`Agents: ${total}, ${running} running`}
-      className="relative shrink-0"
-    >
-      <Label icon="agent" text={String(total)} sidebar={sidebarRows} />
-      <SubagentsStatus {...props} />
-    </View>
+    <RunningWorkCount
+      count={props.session.subagents.running}
+      icon="agent"
+      label="Agents"
+      selected={props.selected}
+      testID="subagents-status"
+    />
   );
 }
 
-// How many shells the Session has open; a sidebar row's meta only.
-export function ShellsCount({
-  session,
-}: SessionRowMetadataProps): React.ReactNode {
-  const { total, running } = session.shells;
-
-  if (!sidebarRows || total <= 0) return null;
-
+export function ShellsCount(props: SessionRowMetadataProps): React.ReactNode {
   return (
-    <View accessibilityLabel={`Shells: ${total}, ${running} running`}>
-      <Label icon="terminal" text={String(total)} sidebar />
-    </View>
+    <RunningWorkCount
+      count={props.session.shells.running}
+      icon="terminal"
+      label="Background Tasks"
+      selected={props.selected}
+      testID="shells-status"
+    />
   );
 }

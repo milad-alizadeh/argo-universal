@@ -2,6 +2,7 @@ import { Action, Detail, EmptyState, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { IssueMetadata } from './issue-metadata';
+import { issuePath } from './issue-paths';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
 import {
@@ -34,8 +35,7 @@ const pageProps = (
   source: DetailSource,
 ): Pick<IssueDetailProps, 'projectId' | 'issuePath'> => ({
   projectId: source.project.id,
-  issuePath: (number) =>
-    source.deps.pages.issuePagePath(source.project, number),
+  issuePath: (number) => issuePath(source.project.id, number),
 });
 
 // An Issue opened without a row to start from has only its number until GitHub answers, and says why when it cannot.

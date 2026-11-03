@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import { jsonCodec } from './lib/json-codec';
 
 const serverAddressFile = 'server.json';
@@ -24,7 +25,8 @@ let lastUnrecognisedText: string | null = null;
 
 // The Server and desktop share the ARGO_HOME boundary, including an empty override.
 export const resolveRuntimeDirectory = (): string =>
-  process.env.ARGO_HOME ?? join(homedir(), '.argo');
+  process.env[productCompatibility.environment.home] ??
+  join(homedir(), productCompatibility.directory);
 
 // The user token's file, which the Server makes on its first start (ADR-0044).
 export const controlTokenPath = (home: string): string =>

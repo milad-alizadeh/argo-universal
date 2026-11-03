@@ -8,14 +8,9 @@ import {
   itemsOf,
   mountFor,
   rowSlot,
-  sessionId,
   until,
   watch,
 } from './session-slot-fixture';
-
-const cardPage = '/session-issue';
-
-const title = 'Fixture issue from GitHub';
 
 // The freshness window of `freshForMs`, and a little over it.
 const pastFresh = 61_000;
@@ -37,11 +32,11 @@ async function attachedTracker(): Promise<
   return tracked;
 }
 
-it("reads an Issue once for a page and then for its Slot's summary", async () => {
+it("reads an Issue once for a page opened first and then for its Slot's summary", async () => {
   const { test, github } = await attachedTracker();
-  const card = await mountFor(test, cardPage, sessionId);
+  const page = await mountFor(test, issuePage);
 
-  await expect.poll(() => card.findText(title), wait).toBeDefined();
+  await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
   expect(issueReads(github)).toBe(1);
 
   await until(watch(test, rowSlot), loaded);

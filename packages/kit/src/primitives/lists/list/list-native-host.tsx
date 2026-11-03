@@ -31,19 +31,27 @@ const fill = { flex: 1 };
  * It keeps to the column itself, as a FieldGroup does: a View is the column, capped, centred and padded, because
  * Compose's Host ignores padding and honours the cap.
  */
-function NativeHost(props: { children: ReactNode }): ReactElement {
+function NativeHost(props: {
+  children: ReactNode;
+  accessibilityLabel?: string;
+}): ReactElement {
   const column = fieldGroupColumnStyle(useClaimColumn('grouped'));
 
   return (
-    <View style={{ ...fill, ...column }}>
-      <Host style={fill}>
-        <InsideHostContext.Provider value>
-          {props.children}
-        </InsideHostContext.Provider>
-      </Host>
+    <View
+      style={{ ...fill, ...column }}
+      accessibilityLabel={props.accessibilityLabel}
+    >
+      <NativeContent>{props.children}</NativeContent>
     </View>
   );
 }
+
+const NativeContent = ({ children }: { children: ReactNode }): ReactElement => (
+  <Host style={fill}>
+    <InsideHostContext.Provider value>{children}</InsideHostContext.Provider>
+  </Host>
+);
 
 type NativeGroupedFrameProps = {
   list: NativeGroupedProps;
@@ -54,13 +62,18 @@ type NativeGroupedFrameProps = {
 type DrawnProps = Omit<NativeGroupedFrameProps, 'list'> & {
   sections: NativeSection[];
   empty: ReactNode;
+  accessibilityLabel?: string;
 };
 
 // Its empty state when no section has rows, otherwise the platform's list in the Host.
 function Drawn(props: DrawnProps): ReactNode {
   if (props.sections.length === 0) return <ListEmpty empty={props.empty} />;
 
-  return <NativeHost>{props.children(props.sections)}</NativeHost>;
+  return (
+    <NativeHost accessibilityLabel={props.accessibilityLabel}>
+      {props.children(props.sections)}
+    </NativeHost>
+  );
 }
 
 type MovingProps = NativeGroupedFrameProps & { onMove: MoveAnswer };
@@ -111,14 +124,21 @@ function MovingFrame({ list, onMove, children }: MovingProps): ReactElement {
   return (
     <ListMoveOrderContext value={order}>
       <View className="relative min-h-0 flex-1">
-        <Drawn sections={sections} empty={list.empty}>
-          {children}
-        </Drawn>
+        <Drawn {...drawnProps(list, sections)}>{children}</Drawn>
         <MoveOverlays order={order} />
       </View>
     </ListMoveOrderContext>
   );
 }
+
+const drawnProps = (
+  list: NativeGroupedProps,
+  sections: NativeSection[],
+): Omit<DrawnProps, 'children'> => ({
+  sections,
+  empty: list.empty,
+  accessibilityLabel: list.accessibilityLabel,
+});
 
 // A native grouped List: its empty state when no section has rows, otherwise the platform's list in the Host.
 export function NativeGroupedFrame(props: NativeGroupedFrameProps): ReactNode {
@@ -130,6 +150,7 @@ export function NativeGroupedFrame(props: NativeGroupedFrameProps): ReactNode {
     <Drawn
       sections={nativeSections(props.list.children)}
       empty={props.list.empty}
+      accessibilityLabel={props.list.accessibilityLabel}
     >
       {props.children}
     </Drawn>

@@ -27,14 +27,14 @@ function moreEntries(
   menu: SessionMenu | undefined,
   plugins: readonly SessionPluginAction[],
 ): React.JSX.Element[] {
-  const argo = menu
+  const coreActions = menu
     ? sessionActions(menu, { changesIcon: 'changed-files' })
     : [];
 
-  if (!plugins.length) return argo;
+  if (!plugins.length) return coreActions;
 
   return [
-    ...argo,
+    ...coreActions,
     <Action.Section key="plugins">{plugins.map(pluginAction)}</Action.Section>,
   ];
 }

@@ -8,9 +8,10 @@ import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
 import { startPage, transmit, failedDrawingRoot } from './mounted-page';
 import { cancelPageFrame } from './page-frame';
+import { pageRoutes, type PageRoutes } from './page-routes';
 import { runHandler, type OpenView, type DispatchSender } from './page-view';
 import { ReplacementPages } from './replacement-pages';
-import { elementOf } from './view-content';
+import { elementOf, notFoundElement } from './view-content';
 import { withView } from './view-scope';
 
 export type { DispatchSender } from './page-view';
@@ -41,7 +42,7 @@ interface Hub {
   ready: (viewId: PluginViewId, background: boolean) => boolean;
   send: ViewSender;
   settle: DispatchSender;
-  pages: Map<string, Page>;
+  pages: PageRoutes;
   views: Map<PluginViewId, OpenView>;
   replacements: ReplacementPages;
 }
@@ -63,17 +64,27 @@ function open(hub: Hub, event: Open): void {
   openElement(hub, event);
 }
 
-function openElement(hub: Hub, event: Open): void {
-  const element = hub.replacements.take(event.path) ?? elementOf(hub, event);
+const elementFor = (hub: Hub, event: Open): ReactNode =>
+  hub.replacements.take(event.path) ?? elementOf(hub, event);
 
-  if (element)
-    return startPage(hub, {
-      viewId: event.viewId,
-      element,
-      replaceable: Boolean(event.renderSlot),
-      background: event.background,
-    });
-  missingRender(hub, event);
+// A path no page matches still draws a page, saying so, rather than leaving the view waiting.
+function openElement(hub: Hub, event: Open): void {
+  const element = elementFor(hub, event);
+
+  if (element) return start(hub, event, element);
+
+  if (event.renderSlot) return missingRender(hub, event);
+
+  start(hub, event, notFoundElement());
+}
+
+function start(hub: Hub, event: Open, element: ReactNode): void {
+  startPage(hub, {
+    viewId: event.viewId,
+    element,
+    replaceable: Boolean(event.renderSlot),
+    background: event.background,
+  });
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
@@ -113,7 +124,7 @@ export function mountPages(
   const hub = pageHub(send, settle, ready);
 
   return {
-    register: (path, page) => void hub.pages.set(path, page),
+    register: (path, page) => hub.pages.register(path, page),
     receive: (event) => receive(hub, event),
     registerReplacement: (path, element) =>
       hub.replacements.register(path, element),
@@ -126,7 +137,7 @@ function requirePage(
   path: string,
   contribution = 'Background',
 ): void {
-  if (!hub.pages.has(path))
+  if (!hub.pages.match(path))
     throw new Error(`${contribution} path ${path} is not a registered page`);
 }
 
@@ -139,7 +150,7 @@ function pageHub(
     ready,
     send,
     settle,
-    pages: new Map(),
+    pages: pageRoutes(),
     views: new Map(),
     replacements: new ReplacementPages(),
   };
@@ -155,7 +166,6 @@ function receiveDrawing(
 }
 
 function missingRender(hub: Hub, event: Open): void {
-  if (!event.renderSlot) return;
   transmit(hub, event.viewId, {
     type: 'snapshot',
     revision: 1,

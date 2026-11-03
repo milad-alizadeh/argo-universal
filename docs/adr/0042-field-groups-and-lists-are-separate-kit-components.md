@@ -10,6 +10,8 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
 
 ## Decision
 
+**Owner amendment, 2026-11-02:** Agent and Background Task grouped data rows may use `FieldGroup.Link` with a secondary line and a reusable badged leading symbol. This keeps their status and supporting information in native grouped lists on iOS and Android; web uses the grouped List fallback. Settings rows keep the one-line default below.
+
 - **`FieldGroup`** holds a page's fixed set of rows: Project details, Connection, Plugin settings and short choice sheets.
   - Its API is Expo UI's universal `FieldGroup` and `FieldGroup.Section` (`title`, `footer`), so the kit can move onto Expo's own once Expo draws these rows natively.
     - On iOS and web it is Expo's universal `FieldGroup`, passed through (SwiftUI `Form` on iOS). Web styling against Argo's tokens is later work.

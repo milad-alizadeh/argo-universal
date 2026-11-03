@@ -18,10 +18,15 @@ import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
 
-// The Screen's own heading, drawn where its plan puts the header there.
+/*
+ * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
+ * `wide:mt-frame-inset` sets level with the rail's first tile, so its title sits on the sidebar title's line.
+ */
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
   return (
-    <View className={props.width === 'narrow' ? 'pt-6' : 'py-6'}>
+    <View
+      className={props.width === 'narrow' ? 'pt-6 wide:pt-0' : 'py-6 wide:pt-0'}
+    >
       <ScreenColumn width={props.width}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />

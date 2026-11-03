@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'node:stream';
-import { agentEnvironment, applyArgoEnvironment } from '../../agents';
+import { agentEnvironment, applySessionEnvironment } from '../../agents';
 import type { ShellCommandInput } from './shell-command';
 import type { Serializable } from './shell-launch';
 import type { ShellChild } from './shell-launch';
@@ -23,7 +23,7 @@ export const shellEnvironment = async (
 
   for (const { name, value } of input.request.env ?? []) env[name] = value;
 
-  return applyArgoEnvironment(input.launch, env);
+  return applySessionEnvironment(input.launch, env);
 };
 
 type ShellLaunchMessage = {

@@ -1,42 +1,11 @@
-import { comparisonBase, type ChangesSelection } from './comparison';
+import {
+  comparisonBase,
+  type ChangesSelection,
+  type Comparison,
+} from './comparison';
+import { joinedReads } from './joined-reads';
 import { trackedFiles, untrackedPaths, type CheckoutFile } from './parse';
 import { readNameStatus, readNumstat, readWorktree } from './status';
-
-// The list asks for every file in view at once; this is how long a read waits for the rest of them.
-const joinWindowMs = 5;
-
-type Read<Value> = () => Promise<Value>;
-
-const afterJoinWindow = <Value>(
-  key: string,
-  waiting: Map<string, Promise<Value>>,
-  read: Read<Value>,
-): Promise<Value> =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      waiting.delete(key);
-      resolve(read());
-    }, joinWindowMs);
-  });
-
-/*
- * Reads asked for together share one, and it starts only once the window closes. A read that has started takes no one
- * else, so an answer never predates its question: a file changed just before a refresh is always seen.
- */
-function joinedReads<Value>(): (
-  key: string,
-  read: Read<Value>,
-) => Promise<Value> {
-  const waiting = new Map<string, Promise<Value>>();
-
-  return (key, read) => {
-    const joined = waiting.get(key) ?? afterJoinWindow(key, waiting, read);
-
-    waiting.set(key, joined);
-
-    return joined;
-  };
-}
 
 const joinUntracked = joinedReads<ReadonlySet<string>>();
 
@@ -72,14 +41,18 @@ async function readTrackedChanges(
   return { base, files: new Map(files.map((file) => [file.path, file])) };
 }
 
+const comparisonName = (comparison: Comparison = 'main'): string =>
+  typeof comparison === 'string' ? comparison : `branch:${comparison.branch}`;
+
+// No path or ref holds a NUL, so two selections cannot share a key.
+const selectionKey = (selection: ChangesSelection): string =>
+  [
+    selection.checkout,
+    selection.projectCheckout,
+    comparisonName(selection.comparison),
+  ].join('\0');
+
 export const readTrackedComparison = (
   selection: ChangesSelection,
 ): Promise<TrackedChanges> =>
-  joinTracked(
-    JSON.stringify([
-      selection.checkout,
-      selection.projectCheckout,
-      selection.comparison,
-    ]),
-    () => readTrackedChanges(selection),
-  );
+  joinTracked(selectionKey(selection), () => readTrackedChanges(selection));

@@ -6,12 +6,13 @@ import {
   progressBarDefaults,
   tones,
 } from '../kit-tokens';
+import { productName } from '../product-identity';
 import { handler } from './kit-component-props';
 
 const semanticTone = z
   .enum(tones)
   .optional()
-  .describe('The Argo semantic tone.');
+  .describe(`The ${productName} semantic tone.`);
 
 export const progressBarProps = z.object({
   value: z.number().min(0).max(1).describe('Progress from zero to one.'),
@@ -30,7 +31,7 @@ export const labelProps = z.object({
   icon: iconSymbol
     .optional()
     .describe(
-      'An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text.',
+      `An optional ${productName} icon name or an SF and Material symbol pair; without one the Label shows only its text.`,
     ),
   text: z.string().describe('The text displayed by the kit component.'),
   tone: semanticTone.meta({ default: labelDefaults.tone }),

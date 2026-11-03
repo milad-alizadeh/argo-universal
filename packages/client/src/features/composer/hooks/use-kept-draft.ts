@@ -1,4 +1,5 @@
 import { type Dispatch, useEffect } from 'react';
+import { onSentDraftForgotten } from '../stores/forget-sent-draft';
 import { keptAttachments } from '../stores/kept-attachments';
 import { keptDrafts } from '../stores/kept-draft';
 import type { AttachmentDraftEvent } from '../utils/attachment-draft';
@@ -13,6 +14,18 @@ export function useKeptDraft(
   useEffect(() => {
     if (key) restoreDraft(key, dispatch, seed);
   }, [key, dispatch, seed]);
+  useForgottenSentDraft(dispatch);
+}
+
+// An open Composer hears when the draft it may hold has reached its Session.
+function useForgottenSentDraft(dispatch: Dispatch<AttachmentDraftEvent>): void {
+  useEffect(
+    () =>
+      onSentDraftForgotten((key, sent) =>
+        dispatch({ type: 'sentForgotten', key, sent }),
+      ),
+    [dispatch],
+  );
 }
 
 function restoreDraft(

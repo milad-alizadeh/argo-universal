@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
@@ -11,6 +12,7 @@ import {
   chosenAccounts,
   unchosenAccounts,
 } from './project-detail-accounts-fixtures';
+import { newSessionBranches } from './project-detail-new-sessions-fixtures';
 import {
   longPathProject,
   pluginItems,
@@ -34,6 +36,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const githubHost = 'api.github.com';
+
+const baseBranch = 'Base branch';
 
 /*
  * The Issue tracker Plugin names its section and its one row the same, as the real Plugin does, so its section
@@ -61,22 +65,159 @@ export const ShowsTheFolderAndCheckout: Story = {
       canvas.getByText(homePath(worktreeProject.path)),
     ).toBeVisible();
     await expect(canvas.getByText('New worktree')).toBeVisible();
-    await expect(canvas.getByText('Base branch')).toBeVisible();
+    await expect(canvas.getByText(baseBranch)).toBeVisible();
   },
 };
 
-// The Server cannot change the archive setting or remove a Project yet.
-export const OffersNoUnbuiltChanges: Story = {
-  play: async ({ canvas }) => {
-    const archive = canvas.getByRole('switch', {
-      name: 'Delete the worktree on archive',
-    });
+const startIn = /Start in/;
 
-    await expect(archive).toBeDisabled();
-    await expect(archive).toBeChecked();
+const archiveSwitch = { name: 'Delete the worktree on archive' };
+
+const newSessions = {
+  branches: newSessionBranches,
+  onCheckoutChoiceChange: fn(),
+  onDeleteWorktreeOnArchiveChange: fn(),
+};
+
+const clearNewSessions = async (): Promise<void> => {
+  newSessions.onCheckoutChoiceChange.mockClear();
+  newSessions.onDeleteWorktreeOnArchiveChange.mockClear();
+  await settleLayout('wide');
+};
+
+// The Server cannot remove a Project yet (#517).
+export const RemovingAProjectStaysUnbuilt: Story = {
+  args: { newSessions },
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('button', { name: 'Remove Project' }),
     ).toBeDisabled();
+  },
+};
+
+// Until the page can save a change, nothing offers one.
+export const OffersNoChangeWithoutControls: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('switch', archiveSwitch)).toBeDisabled();
+    await expect(canvas.getByRole('switch', archiveSwitch)).toBeChecked();
+  },
+};
+
+export const AMissingFolderOffersNoChange: Story = {
+  args: {
+    newSessions,
+    project: {
+      status: 'loaded',
+      project: { ...worktreeProject, folderExists: false },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('switch', archiveSwitch)).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: startIn })).toBeDisabled();
+  },
+};
+
+export const TurningOffArchiveCleanupAsksToSaveIt: Story = {
+  args: { newSessions },
+  beforeEach: clearNewSessions,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('switch', archiveSwitch));
+    await expect(
+      newSessions.onDeleteWorktreeOnArchiveChange,
+    ).toHaveBeenCalledWith(false);
+  },
+};
+
+export const AKeptWorktreeIsWhatTheFooterSays: Story = {
+  args: {
+    newSessions,
+    project: {
+      status: 'loaded',
+      project: { ...worktreeProject, deleteWorktreeOnArchive: false },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('switch', archiveSwitch)).not.toBeChecked();
+    await expect(canvas.getByText(/keeps its folder/)).toBeVisible();
+    await expect(
+      canvas.queryByText(/removes its folder/),
+    ).not.toBeInTheDocument();
+  },
+};
+
+type Choosing = {
+  canvas: Canvas;
+  userEvent: { click: (element: Element) => Promise<void> };
+};
+
+const chooseFrom = async (
+  { canvas, userEvent }: Choosing,
+  row: RegExp | string,
+  option: string,
+): Promise<void> => {
+  await userEvent.click(canvas.getByRole('button', { name: row }));
+
+  const item = await within(document.body).findByRole('option', {
+    name: option,
+  });
+
+  await settleOverlays(item);
+  await userEvent.click(item);
+};
+
+export const ChoosingLocalAsksToSaveIt: Story = {
+  args: { newSessions },
+  beforeEach: clearNewSessions,
+  play: async ({ canvas, userEvent }) => {
+    await chooseFrom({ canvas, userEvent }, startIn, 'Local');
+    await expect(newSessions.onCheckoutChoiceChange).toHaveBeenCalledWith({
+      type: 'main',
+    });
+  },
+};
+
+export const ChoosingAWorktreeBranchesFromTheCurrentBranch: Story = {
+  args: {
+    newSessions,
+    name: localProject.name,
+    project: { status: 'loaded', project: localProject },
+  },
+  beforeEach: clearNewSessions,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.queryByText(baseBranch)).not.toBeInTheDocument();
+    await chooseFrom({ canvas, userEvent }, startIn, 'New worktree');
+    await expect(newSessions.onCheckoutChoiceChange).toHaveBeenCalledWith({
+      type: 'worktree',
+      baseBranch: newSessionBranches.currentBranch,
+    });
+  },
+};
+
+export const ChoosingABaseBranchAsksToSaveIt: Story = {
+  args: { newSessions },
+  beforeEach: clearNewSessions,
+  play: async ({ canvas, userEvent }) => {
+    await chooseFrom({ canvas, userEvent }, baseBranch, 'release');
+    await expect(newSessions.onCheckoutChoiceChange).toHaveBeenCalledWith({
+      type: 'worktree',
+      baseBranch: 'release',
+    });
+  },
+};
+
+export const ABaseBranchThatIsGoneStaysShown: Story = {
+  args: {
+    newSessions,
+    project: {
+      status: 'loaded',
+      project: {
+        ...worktreeProject,
+        checkoutChoice: { type: 'worktree', baseBranch: 'deleted-branch' },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('deleted-branch')).toBeVisible();
   },
 };
 
@@ -123,7 +264,7 @@ export const ALocalProjectHasNoBaseBranch: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Local')).toBeVisible();
-    await expect(canvas.queryByText('Base branch')).not.toBeInTheDocument();
+    await expect(canvas.queryByText(baseBranch)).not.toBeInTheDocument();
   },
 };
 

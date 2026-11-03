@@ -4,6 +4,7 @@ import { SignInGate } from '@argo/plugin-kit/sign-in';
 import { github } from './github-account';
 import type { IssueDeps } from './issue-deps';
 import { openFilter } from './issue-filters';
+import { filterPath } from './issue-paths';
 import { RootRows } from './issue-root-rows';
 import { useOverview } from './use-overview';
 import { useRootProjects, type RootProjects } from './use-root-projects';
@@ -40,7 +41,7 @@ function RootLayout({ deps, choice }: LayoutProps): JSX.Element {
   return (
     <ListDetail
       title="Issues"
-      landing={project && deps.pages.filterPagePath(project, openFilter)}
+      landing={project && filterPath(project.id, openFilter)}
       list={<RootRows deps={deps} choice={choice} state={state} />}
       empty={noProjects(choice)}
     />

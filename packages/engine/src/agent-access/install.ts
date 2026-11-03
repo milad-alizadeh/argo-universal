@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { productName } from '@repo/contracts/product-identity';
 import {
   instructionTargets,
   optionalEntry,
@@ -34,7 +35,7 @@ async function writeInstructions(targets: string[]): Promise<void> {
     }
   } catch (cause) {
     throw new Error(
-      `Could not add Argo instructions: ${written} of 3 files updated. Run Add Argo to your Agents again to repair them.`,
+      `Could not add ${productName} instructions: ${written} of 3 files updated. Run Add ${productName} to your Agents again to repair them.`,
       { cause },
     );
   }

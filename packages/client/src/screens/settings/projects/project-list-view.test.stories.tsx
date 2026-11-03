@@ -33,6 +33,7 @@ const meta = {
   args: {
     projects: { status: 'loaded', projects: settingsProjects },
     onOpenProject: fn(),
+    onAddProject: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof ProjectListView>;
@@ -50,9 +51,8 @@ export const ListsAndOpensProjects: Story = {
     await expect(
       canvas.queryByText(`${settingsProjects.length} Projects`),
     ).toBeNull();
-    await expect(
-      canvas.getByRole('button', { name: 'Add Project' }),
-    ).toBeDisabled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Add Project' }));
+    await expect(args.onAddProject).toHaveBeenCalledOnce();
     await userEvent.click(
       canvas.getByRole('link', { name: rowName(localProject) }),
     );

@@ -47,14 +47,14 @@ describe('frameLayout regions', () => {
     expect(frameLayout({ ...input, width }).content).toEqual(content);
   });
 
-  it('places the Inspector beside the column at 1440 after the list and Workbench give way', () => {
+  it('places the Inspector beside the column at 1440 while the sidebar keeps its space', () => {
     const layout = frameLayout({ ...input, inspectorState: 'open' });
 
     expect(layout.rail).toEqual({ offset: 8, width: 56 });
-    expect(layout.list).toMatchObject({ offset: 64, width: 0 });
-    expect(layout.content).toEqual({ offset: 148, width: 848 });
+    expect(layout.list).toMatchObject({ offset: 64, width: 312 });
+    expect(layout.content).toEqual({ offset: 384, width: 688 });
     expect(layout.inspector).toMatchObject({ offset: 1080, width: 352 });
-    expect(layout.sidebarWidth).toBe(72);
+    expect(layout.sidebarWidth).toBe(384);
   });
 
   it('gives an explicitly expanded Inspector the page area', () => {
@@ -63,8 +63,8 @@ describe('frameLayout regions', () => {
     expect(layout.workbench.state).toBe('hidden');
     expect(layout.page).toMatchObject({ width: 0, hidden: true });
     expect(layout.inspector).toEqual({
-      offset: 72,
-      width: 1360,
+      offset: 384,
+      width: 1048,
       open: true,
       expanded: true,
     });
@@ -85,13 +85,13 @@ describe('frameLayout regions', () => {
 });
 
 describe('frameLayout transition identity', () => {
-  const autoHiddenKey = keyAt(1455);
+  const autoHiddenKey = keyAt(1767);
 
   it('changes when the Workbench docks', () => {
-    expect(keyAt(1456)).not.toBe(autoHiddenKey);
+    expect(keyAt(1768)).not.toBe(autoHiddenKey);
   });
 
   it('holds while a resize leaves every pane as it was', () => {
-    expect(keyAt(1454)).toBe(autoHiddenKey);
+    expect(keyAt(1766)).toBe(autoHiddenKey);
   });
 });

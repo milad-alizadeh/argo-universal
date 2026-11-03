@@ -41,6 +41,10 @@ export function shellOutcome(shell: Shell): ShellOutcome {
   return outcomes[shell.status](shell.exitCode);
 }
 
+// What a row calls the Shell: the Agent's own words for it, else the command line.
+export const shellTitle = (shell: Shell): string =>
+  shell.description ?? shell.command;
+
 // A running Shell's time so far; an ended one's whole run.
 export function shellElapsed(shell: Shell, now: number): string {
   return formatElapsed(
@@ -58,14 +62,6 @@ export function shellSupporting(shell: ShellEntry): string {
 // Whether any of the Session's Shells is still printing: its clock ticks and its count reads live.
 export const shellsRunning = (shells: Shell[]): boolean =>
   shells.some((shell) => shell.status === 'running');
-
-// The list's heading: "1 running · 3 in this Session".
-export function shellsSummary(shells: Shell[]): string {
-  const count = shells.filter((shell) => shell.status === 'running').length;
-  const total = `${shells.length} in this Session`;
-
-  return count > 0 ? `${count} running · ${total}` : total;
-}
 
 // The word for how the Shell stands, as its output's header says it: "Exited", never the exit code.
 const statusWords = {

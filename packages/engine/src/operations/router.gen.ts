@@ -234,6 +234,30 @@ export function generatedOperations(runner: OperationRunner) {
         .query(({ input }) =>
           runner.run({ kind: 'app', id: 'project.list', params: input }),
         ),
+      add: publicProcedure
+        .input(operations['project.add'].params)
+        .output(operations['project.add'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'project.add', params: input }),
+        ),
+      clone: publicProcedure
+        .input(operations['project.clone'].params)
+        .output(operations['project.clone'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'project.clone', params: input }),
+        ),
+      create: publicProcedure
+        .input(operations['project.create'].params)
+        .output(operations['project.create'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'project.create', params: input }),
+        ),
+      update: publicProcedure
+        .input(operations['project.update'].params)
+        .output(operations['project.update'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'project.update', params: input }),
+        ),
       listBranches: publicProcedure
         .input(operations['project.listBranches'].params)
         .output(operations['project.listBranches'].result)

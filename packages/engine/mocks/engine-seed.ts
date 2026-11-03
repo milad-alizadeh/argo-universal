@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { openDatabase, type Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
+import { onTestFinished, vi } from 'vitest';
 import { seedAgentFixtures } from './agent-fixtures';
 import type { openTestDatabase } from './database';
 import type { EngineTestOptions } from './engine';
@@ -10,6 +11,8 @@ export function seedTestCommands(
   home: string,
   storage: ReturnType<typeof openTestDatabase> | undefined,
 ): void {
+  seedWorkingDirectory();
+
   const seeded = seedDatabase(options, home, storage);
   seedAgentFixtures(
     seeded,
@@ -51,3 +54,11 @@ const closeSeedDatabase = (
 ): void => {
   if (!options.database && !storage) database.$client.close();
 };
+
+// A first run has no Projects, but most tests want one: the Engine registers the working directory unless the test set ARGO_PROJECT_PATH, even to nothing.
+function seedWorkingDirectory(): void {
+  if (process.env.ARGO_PROJECT_PATH !== undefined) return;
+
+  vi.stubEnv('ARGO_PROJECT_PATH', process.cwd());
+  onTestFinished((): void => void vi.unstubAllEnvs());
+}

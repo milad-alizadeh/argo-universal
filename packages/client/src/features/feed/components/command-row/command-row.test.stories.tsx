@@ -1,6 +1,7 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { scriptedToolCall } from '../tool-call-description.mocks';
 import {
   completedCommand,
   failedCommand,
@@ -145,3 +146,24 @@ export const OutputDisclosureWideDark: Story = {
 export const FailedPhoneDark: Story = { ...FailedPhone, ...dark };
 
 export const FailedWideDark: Story = { ...FailedWide, ...dark };
+
+const longTitle =
+  'Inspect a very long command description that must remain on a single line when the available space is narrow';
+
+export const LongDisclosureHeader: Story = {
+  args: { row: scriptedToolCall('described-long') },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.phone);
+    const row = canvas.getByRole('button', { name: longTitle });
+    const label = canvas.getByText(longTitle, { exact: false });
+    const lineHeight = Number.parseFloat(getComputedStyle(label).lineHeight);
+
+    await expect(label.getBoundingClientRect().height).toBeLessThanOrEqual(
+      lineHeight + 1,
+    );
+    await userEvent.click(row);
+    await expect(
+      canvas.getByText(shellCommand, { exact: false }),
+    ).toBeVisible();
+  },
+};

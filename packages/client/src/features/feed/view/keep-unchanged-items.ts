@@ -24,7 +24,7 @@ function rowIds(item: FeedViewItem): string[] {
 // A Subagent row stands for one row of its own; every other item carries the row it draws.
 const standaloneIds = (
   item: Exclude<FeedViewItem, { type: 'group' | 'exploration' }>,
-): string[] => (item.type === 'subagent' ? [item.id] : [item.row.id]);
+): string[] => ('id' in item ? [item.id] : [item.row.id]);
 
 function collapsibles(items: readonly FeedViewItem[]): Collapsible[] {
   return items.flatMap(nestedCollapsibles);

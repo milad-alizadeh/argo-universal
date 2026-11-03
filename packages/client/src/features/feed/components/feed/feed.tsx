@@ -16,12 +16,15 @@ import { FeedList, type FeedListProps } from './feed-list';
 import { useReportsAtEnd } from './use-feed-scroll-position';
 
 export interface FeedProps {
+  sessionId?: string;
   items: readonly FeedViewItem[];
   // The Turn's live line, drawn last while a Turn runs and no open group already draws the work.
   liveHeader: LiveHeaderValue | null;
   // The Feed row a `tool_call` live header names, for its icon.
   liveToolCall?: ToolCallUpdate;
   loadingOlder: boolean;
+  hasOlder?: boolean;
+  historyCursor?: number | null;
   // Asks for older rows when the reader nears the top.
   onStartReached: () => void;
   imageUrl: (blob: BlobRef) => string;
