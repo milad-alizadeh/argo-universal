@@ -12,6 +12,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { putBack, showOptimistic, type Answer } from './draw-cache';
@@ -39,7 +40,7 @@ export type PluginPageState = {
  */
 export function usePluginPage(opening: PageOpening): PluginPageState {
   const [pageState, setPageState] = usePageStateMemory(opening);
-  const root = rootOf(useDrawn({ ...opening, pageState }));
+  const root = useLastDrawn(useDrawn({ ...opening, pageState }));
   const run = useOperationRun(opening);
   const change = usePageStateChange(opening, [pageState, setPageState]);
 
@@ -51,8 +52,21 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
   };
 }
 
+// A failed answer leaves the last tree on screen, with its toast, as an App offline draws its last answer.
+function useLastDrawn(answer: Answer | undefined): WireNode | null {
+  const [last, setLast] = useState<WireNode | null>(null);
+  const root = rootOf(answer);
+
+  if (isNewer(root, last)) setLast(root);
+
+  return root ?? last;
+}
+
 const rootOf = (answer: Answer | undefined): WireNode | null =>
   answer?.ok ? answer.root : null;
+
+const isNewer = (root: WireNode | null, last: WireNode | null): boolean =>
+  root !== null && root !== last;
 
 function useDrawn(
   address: PageOpening & { pageState: PageState },

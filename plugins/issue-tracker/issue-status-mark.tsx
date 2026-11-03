@@ -7,9 +7,9 @@ type Marked = { status: IssueStatus; closedAs?: 'completed' | 'not-planned' };
 
 /*
  * GitHub has no workflow, so its states take the tracker types' default marks: open, done, and closed
- * with a reason. The list screen and an Issue's sub-Issues mark a row the same way.
+ * with a reason. The list screen and an Issue's sub-Issues mark a row the same way. `key` names the mark,
+ * so a Loader page's optimistic patch can repaint it.
  */
-// `key` names the mark, so a Loader page's optimistic patch can repaint it.
 export function statusMark(
   { status, closedAs }: Marked,
   key?: string,
