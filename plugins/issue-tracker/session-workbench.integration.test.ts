@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { drawsNothing } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
-import { tracker } from './journey-fixture';
+import { issueTitle, project, refusedTitle, tracker } from './journey-fixture';
 import {
+  attach,
   mountFor,
   sessionId,
   trackerWithAttachedIssue,
@@ -20,13 +22,49 @@ it("shows the Session's Issue on the Workbench card", async () => {
   expect(row.props.subtitle).toBe('#42 · Open');
 }, 20_000);
 
-it('says when the Session has no Issue, or the card has no Session', async () => {
+it('draws nothing on the card when the Session has no Issue, or the card has no Session', async () => {
   const { test } = await tracker();
   const empty = await mountFor(test, cardPage, sessionId);
   const none = await mountFor(test, cardPage);
 
-  expect(await empty.find('No Issue attached')).toBeDefined();
-  expect(await none.find('No Session')).toBeDefined();
+  for (const card of [empty, none]) {
+    await card.ready();
+    expect(drawsNothing(card.tree)).toBe(true);
+  }
+}, 20_000);
+
+it('follows the Session as an Agent attaches another Issue, and draws nothing once it detaches', async () => {
+  const test = await trackerWithAttachedIssue();
+  const card = await mountFor(test, cardPage, sessionId);
+
+  await card.find(issueTitle);
+  // The Plugin's clock stands still in a test; the second Issue is attached later, as it would be.
+  await test.clock.advance(1000);
+  await attach(test, 'attach', 43);
+  expect((await card.find(refusedTitle)).props.subtitle).toBe('#43 · Open');
+
+  await attach(test, 'detach', 43);
+  expect((await card.find(issueTitle)).props.subtitle).toBe('#42 · Open');
+  await attach(test, 'detach');
+  await card.waitFor(() => drawsNothing(card.tree), 'the card emptied');
+}, 20_000);
+
+it('keeps the card for an attached Issue that cannot load, and says why', async () => {
+  const { test } = await tracker([{ ...project, originUrl: null }]);
+
+  await attach(test, 'attach');
+
+  const card = await mountFor(test, cardPage, sessionId);
+
+  expect(await card.find('#42 could not load')).toBeDefined();
+  expect(drawsNothing(card.tree)).toBe(false);
+}, 20_000);
+
+it('keeps its own messages on the Inspector tab', async () => {
+  const { test } = await tracker();
+  const tab = await mountFor(test, tabPage, sessionId);
+
+  expect(await tab.find('No Issue attached')).toBeDefined();
 }, 20_000);
 
 it("opens the Session's full Issue as the Inspector tab", async () => {

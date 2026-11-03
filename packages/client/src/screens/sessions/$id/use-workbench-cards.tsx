@@ -2,16 +2,20 @@ import {
   type DeclaredItemOf,
   sessionWorkbenchSlot,
 } from '@repo/contracts/plugins/declared-slots';
-import { type ReactNode } from 'react';
+import { type ReactNode, useState, useSyncExternalStore } from 'react';
 import {
   type SessionPanels,
   SessionMemory,
   useSessionMemory,
 } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
-import { PluginTree } from '../../../lib/product/plugin-registry';
-import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
-import { usePluginView } from '../../plugins/use-plugin-view';
+import { HeldCardStore } from './held-card-store';
+import {
+  type HeldCard,
+  HeldCardPage,
+  HeldCardViews,
+  PluginTabPage,
+} from './plugin-card-pages';
 import {
   pluginCardKey,
   type SessionPluginCard,
@@ -21,12 +25,19 @@ import type { ToggleWorkbenchCard } from './use-plugin-header-actions';
 
 type DeclaredCard = DeclaredItemOf<typeof sessionWorkbenchSlot>;
 
+// Whether a Plugin's card has something to show for this Session.
+export type CardFilled = (pluginId: string, cardId: string) => boolean;
+
 // The Session's Plugin cards, and what a header action does to one.
 export interface WorkbenchCards {
   // The cards the Session has open, in Slot order, each with the Plugin's pages inside it.
   open: readonly SessionPluginCard[];
+  // A card with nothing to show has no header action either.
+  filled: CardFilled;
   // Toggles a card in the Workbench column, where there is one.
   toggle: ToggleWorkbenchCard;
+  // The views of every declared card's page, which the page mounts once beside the Session.
+  held: ReactNode;
 }
 
 // A closed card is held by the key its Section draws under, so the two can never drift apart.
@@ -43,22 +54,60 @@ const toggled = (keys: readonly string[], key: string): string[] =>
   keys.includes(key) ? without(keys, key) : [...keys, key];
 
 /*
- * The Plugin cards a Session draws: every card the enabled Plugins declare and this Device shows, less the ones the
- * user has closed. A card is in the Workbench from the moment the Session opens, as Argo's own are, and a Plugin's
- * header action closes it and opens it again (ADR-0035).
+ * The Plugin cards a Session draws: every card the enabled Plugins declare and this Device shows, once its page draws
+ * something, less the ones the user has closed. Each card's page is watched from the moment the Session opens, and
+ * a page that draws nothing, or has not answered yet, has no card, no Inspector tab and no header action (ADR-0035).
  */
 export function useWorkbenchCards(sessionId: string): WorkbenchCards {
   const declared = useDeclaredWorkbenchCards();
   const [closed, setClosed] = useSessionMemory(closedCards, sessionId);
+  const held = useHeldCards(sessionId, declared);
 
   return {
-    open: declared
-      .filter((card) => !closed.includes(keyOf(card)))
-      .map((card) => drawnCard(card, sessionId)),
+    open: openCards(declared, { sessionId, closed, ...held }),
+    filled: held.filled,
     toggle: (pluginId, cardId) =>
       setClosed((keys) => toggled(keys, pluginCardKey(pluginId, cardId))),
+    held: held.views,
   };
 }
+
+// The Session's card views: the store they are held in, which cards have something to show, and the views to mount.
+interface HeldCards {
+  store: HeldCardStore;
+  filled: CardFilled;
+  views: ReactNode;
+}
+
+function useHeldCards(
+  sessionId: string,
+  declared: readonly DeclaredCard[],
+): HeldCards {
+  const [store] = useState(() => new HeldCardStore());
+  const filled = useSyncExternalStore(store.subscribe, store.filled);
+  const cards = declared.map(heldCard);
+
+  return {
+    store,
+    filled: (pluginId, cardId) =>
+      filled.includes(pluginCardKey(pluginId, cardId)),
+    views: <HeldCardViews store={store} sessionId={sessionId} cards={cards} />,
+  };
+}
+
+type Opening = Drawing &
+  Pick<HeldCards, 'filled'> & { closed: readonly string[] };
+
+// The declared cards with something to show that the user has not closed, each drawn for the Session.
+const openCards = (
+  declared: readonly DeclaredCard[],
+  { closed, filled, ...drawing }: Opening,
+): SessionPluginCard[] =>
+  declared.flatMap((card) =>
+    filled(card.pluginId, card.item.id) && !closed.includes(keyOf(card))
+      ? [drawnCard(card, drawing)]
+      : [],
+  );
 
 // The cards the enabled Plugins declare, in Slot order, less the Plugins this Device turned off for the Slot.
 function useDeclaredWorkbenchCards(): DeclaredCard[] {
@@ -69,51 +118,33 @@ function useDeclaredWorkbenchCards(): DeclaredCard[] {
   );
 }
 
-// One of a card's pages, drawn for this Session.
-const cardPage = (
-  pluginId: string,
-  sessionId: string,
-  path: string,
-): ReactNode => (
-  <PluginCardPage pluginId={pluginId} path={path} sessionId={sessionId} />
-);
-
-// A card and its full view are the Plugin's own pages, drawn for this Session (ADR-0035).
-const drawnCard = (
-  { pluginId, item }: DeclaredCard,
-  sessionId: string,
-): SessionPluginCard => ({
-  pluginId,
-  card: item,
-  page: cardPage(pluginId, sessionId, item.page),
-  tab: item.tab && cardPage(pluginId, sessionId, item.tab),
+const heldCard = (card: DeclaredCard): HeldCard => ({
+  cardKey: keyOf(card),
+  pluginId: card.pluginId,
+  path: card.item.page,
 });
 
-interface CardPage {
-  pluginId: string;
-  path: string;
+interface Drawing {
   sessionId: string;
+  store: HeldCardStore;
 }
 
-/*
- * One Plugin page inside a card or its Inspector tab, watched for this Session as the Plugin's own pages are. The
- * card's frame is Argo's and draws at once; the page fills it when the Plugin answers (ADR-0025 lazy start).
- */
-function PluginCardPage({ pluginId, path, sessionId }: CardPage): ReactNode {
-  const view = usePluginView({ pluginId, path, sessionId });
-  const openPage = useOpenPluginPage();
-
-  if (!view.root) return null;
-
-  return (
-    <PluginTree
-      key={view.treeKey}
-      root={view.root}
-      onEvent={view.dispatch}
-      onOpenPage={(page) => openPage(pluginId, page)}
+// A card draws from the view the Session holds, and its full view is the Plugin's own page, drawn for this Session (ADR-0035).
+const drawnCard = (
+  card: DeclaredCard,
+  { sessionId, store }: Drawing,
+): SessionPluginCard => ({
+  pluginId: card.pluginId,
+  card: card.item,
+  page: <HeldCardPage store={store} card={heldCard(card)} />,
+  tab: card.item.tab && (
+    <PluginTabPage
+      pluginId={card.pluginId}
+      path={card.item.tab}
+      sessionId={sessionId}
     />
-  );
-}
+  ),
+});
 
 // What a header action does to a card on a phone, where there is no column: its sheet is the card's Inspector tab.
 export const toggleCardSheet =

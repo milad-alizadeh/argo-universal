@@ -29,9 +29,9 @@ export const pluginCardSection = (card: SessionPluginCard): SessionSection => ({
   key: pluginCardKey(card.pluginId, card.card.id),
   title: card.card.title,
   icon: pluginSymbol(card.card.icon),
-  // The App draws only the cards the Plugins declare and this Device shows, so one in hand is offered.
+  // The App hands over only the cards the Plugins declare, this Device shows and whose page draws something.
   offered: () => true,
-  // A Plugin's card counts nothing of Argo's; it is drawn because the Plugin declared it.
+  // A Plugin's card counts nothing of Argo's; it is drawn because its page has something to show.
   count: () => 1,
   card: (_content, tab) => ({
     summary: card.page,

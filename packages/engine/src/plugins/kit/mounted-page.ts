@@ -3,6 +3,7 @@ import type {
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
+import { emptyPage } from '@repo/contracts/plugins/wire-empty-page';
 import { createElement, type ReactNode } from 'react';
 import { reportFailure } from './host-config';
 import { cancelPageFrame, schedulePage } from './page-frame';
@@ -47,16 +48,6 @@ function committed(hub: PageHub, view: OpenView, container: Instance): void {
 
   view.handlers = handlers;
   publish(hub, view, next);
-}
-
-function emptyPage(): WireNode {
-  return {
-    type: 'Stack',
-    key: '0',
-    props: { direction: 'column' },
-    children: [],
-    slots: {},
-  };
 }
 
 export function startPage(hub: PageHub, content: Content): void {

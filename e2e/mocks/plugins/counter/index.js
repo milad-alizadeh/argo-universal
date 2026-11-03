@@ -1,5 +1,6 @@
 import { Button, Stack, Text, useEffect, useState } from '@argo/plugin-kit';
 import { Item } from './item.js';
+import { NotesCard, NotesSwitch } from './notes.js';
 
 const sessionDraft = '#7 Keep %2F in paths\nhttps://example.com/fixture/7';
 
@@ -91,11 +92,26 @@ export function register(argo) {
   argo.pages.register('/card', ({ context }) => (
     <Card sessionId={context.sessionId} />
   ));
-  argo.pages.register('/card/full', () => <Text>Counter card in full</Text>);
+  argo.pages.register('/card/full', ({ context }) => (
+    <NotesSwitch sessionId={context.sessionId} />
+  ));
+  registerNotes(argo);
+  registerSlots(argo);
+}
+
+function registerSlots(argo) {
   argo.slots.register('argo/project/details/v1', projectRows);
   argo.slots.register('argo/session/row/v1', rowItems);
   argo.slots.register('argo/session/activity/v1', activityLines);
   argo.slots.register('argo/session/bar/v1', barLines);
+}
+
+// The Notes card, which has something to show only once the Counter card's tab fills it.
+function registerNotes(argo) {
+  argo.pages.register('/notes', ({ context }) => (
+    <NotesCard sessionId={context.sessionId} />
+  ));
+  argo.pages.register('/notes/full', () => <Text>Notes in full</Text>);
 }
 
 /*

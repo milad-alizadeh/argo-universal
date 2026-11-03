@@ -8,9 +8,10 @@ import {
 } from './session-detail-view';
 import { SessionNewScreen } from './session-new-screen';
 import { ConnectedSessionHeader } from './session-page-header';
-import { useSessionPageMenu } from './session-page-menu';
+import { type SessionPageMenu, useSessionPageMenu } from './session-page-menu';
 import { sessionHeader } from './session-plugin-cards';
 import { type SessionPage, useSessionPage } from './use-session-page';
+import type { WorkbenchCards } from './use-workbench-cards';
 
 export interface SessionDetailScreenProps {
   id: string;
@@ -41,12 +42,36 @@ export function SessionDetailScreen({
 function ConnectedSession({
   sessionId,
 }: Pick<SessionPage, 'sessionId'>): React.JSX.Element {
+  const { preview, ...page } = useConnectedSession(sessionId);
+
+  // The card views are held beside the page either way, so a preview draws the same cards.
+  return (
+    <>
+      {preview ? (
+        <SessionDetailView {...previewed(page.props)} />
+      ) : (
+        <OpenedSession sessionId={sessionId} {...page} />
+      )}
+      {page.cards.held}
+    </>
+  );
+}
+
+type Opened = SessionPageMenu & { cards: WorkbenchCards };
+
+function useConnectedSession(sessionId: string): Opened & { preview: boolean } {
   const preview = useIsPreview();
-  const { props: opened, cards } = useSessionPage({ sessionId, preview });
-  const { props, dialogs } = useSessionPageMenu(sessionId, opened);
+  const { props, cards } = useSessionPage({ sessionId, preview });
 
-  if (preview) return <SessionDetailView {...previewed(props)} />;
+  return { preview, cards, ...useSessionPageMenu(sessionId, props) };
+}
 
+function OpenedSession({
+  sessionId,
+  props,
+  dialogs,
+  cards,
+}: Opened & Pick<SessionPage, 'sessionId'>): React.JSX.Element {
   return (
     <>
       <ConnectedSessionHeader {...sessionHeader(sessionId, cards, props)} />

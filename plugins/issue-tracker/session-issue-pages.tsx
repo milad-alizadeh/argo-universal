@@ -1,25 +1,19 @@
-import {
-  EmptyState,
-  List,
-  ListItem,
-  Screen,
-  useCallback,
-} from '@argo/plugin-kit';
+import { EmptyState, List, ListItem, Screen } from '@argo/plugin-kit';
 import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { IssueDeps } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
-import type { Project } from './issue-project';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
-import type { IssueLink } from './tracker-storage';
-import { useCall } from './use-call';
+import type { Called } from './use-call';
 import { useIssueDetail } from './use-issue-detail';
+import { useSessionIssue, type Attached } from './use-session-issue';
 
 /*
  * The Issue tracker's Workbench card and its Inspector tab (ADR-0035, ADR-0039). Both are declared in the manifest,
  * Argo draws the card around the first and opens the second when the card's body is pressed, and both open for the
- * Session whose Workbench they are in.
+ * Session whose Workbench they are in. A card that draws nothing is not drawn, so the card says nothing until the
+ * Session has an Issue; the tab keeps its messages.
  */
 export const sessionCardPath = '/session-issue';
 
@@ -30,18 +24,10 @@ type PageProps = {
   context: Pick<PluginRenderContext, 'sessionId'>;
 };
 
-type Attached = { project: Project; number: number };
-
 type Found = Attached & { deps: IssueDeps };
 
-// What a page says in place of the Issue.
+// What the tab says in place of the Issue.
 type Message = { message: string; description?: string };
-
-type Frame = (children: JSX.Element) => JSX.Element;
-
-type Draw = (found: Found) => JSX.Element;
-
-type PageKind = { draw: Draw; frame: Frame };
 
 export function registerSessionPages(api: Argo, deps: IssueDeps): void {
   api.pages.register(sessionCardPath, ({ context }) => (
@@ -65,93 +51,35 @@ const noIssue: Message = {
     'An Agent attaches a Session to an Issue with the issue-tracker.attach Operation.',
 };
 
-// The Issue this Session was most recently attached to, if its Project is still there.
-async function loadAttached(
-  deps: IssueDeps,
-  sessionId: string | undefined,
-): Promise<Attached | null> {
-  const link = await attachedLink(deps, sessionId);
-
-  return link ? attachedIssue(deps, link) : null;
-}
-
-async function attachedLink(
-  deps: IssueDeps,
-  sessionId: string | undefined,
-): Promise<IssueLink | undefined> {
-  const [link] =
-    sessionId === undefined ? [] : await deps.storage.sessionLinks([sessionId]);
-
-  return link;
-}
-
-async function attachedIssue(
-  deps: IssueDeps,
-  { projectId, number }: { projectId: string; number: number },
-): Promise<Attached | null> {
-  const projects = await deps.listProjects();
-  const project = projects.find(({ id }) => id === projectId);
-
-  return project ? { project, number } : null;
-}
-
 const pending = (error: string | undefined): Message =>
   error ? failed : loading;
 
 function messageFor(
   sessionId: string | undefined,
-  value: Attached | null | undefined,
-  error: string | undefined,
+  { value, error }: Called<Attached | null>,
 ): Message {
   if (sessionId === undefined) return noSession;
 
   return value === undefined ? pending(error) : noIssue;
 }
 
-function useSessionIssue({ deps, context }: PageProps): Attached | Message {
-  const { sessionId } = context;
+/*
+ * The card: a summary of the Session's Issue, one row. It draws nothing with no Session, while the link loads and with
+ * no Issue; a link that could not load still draws, since nothing would read as no Issue.
+ */
+function SessionIssueCard({ deps, context }: PageProps): JSX.Element | null {
+  const attached = useSessionIssue(deps, context.sessionId);
 
-  const { value, error } = useCall(
-    useCallback(() => loadAttached(deps, sessionId), [deps, sessionId]),
-  );
+  if (attached.value) return <CardRow {...attached.value} deps={deps} />;
 
-  return value ?? messageFor(sessionId, value, error);
+  return attached.error ? <EmptyState title={failed.message} /> : null;
 }
 
-// Draws the page for the Session's Issue, or says why there is none.
-function SessionIssuePage(props: PageProps & PageKind): JSX.Element {
-  const attached = useSessionIssue(props);
-
-  if ('message' in attached)
-    return props.frame(
-      <EmptyState
-        title={attached.message}
-        description={attached.description}
-      />,
-    );
-
-  return props.draw({ ...attached, deps: props.deps });
-}
-
-const bare: Frame = (children) => children;
-
-const titled: Frame = (children) => <Screen title="Issue">{children}</Screen>;
-
-// The card: a summary of the Session's Issue, one row. The number and state are the subtitle, not a value, which would claim width first and cut the title. Argo opens the full view when the card's body is pressed.
-function SessionIssueCard(props: PageProps): JSX.Element {
-  return (
-    <SessionIssuePage
-      {...props}
-      frame={bare}
-      draw={(found) => <CardRow {...found} />}
-    />
-  );
-}
-
+// The number and state are the subtitle, not a value, which would claim width first and cut the title. Argo opens the full view when the card's body is pressed.
 function CardRow(found: Found): JSX.Element {
-  const { issue } = useIssueDetail(found);
+  const { issue, message } = useIssueDetail(found);
 
-  if (!issue) return <EmptyState title={`#${found.number}`} />;
+  if (!issue) return <UnloadedRow number={found.number} message={message} />;
 
   return (
     <List>
@@ -165,13 +93,29 @@ function CardRow(found: Found): JSX.Element {
   );
 }
 
-// The Inspector tab: the whole Issue, as its own page draws it.
-function SessionIssueTab(props: PageProps): JSX.Element {
+// An attached Issue keeps its card: its number while GitHub answers, and why when it cannot load.
+function UnloadedRow(props: { number: number; message: string }): JSX.Element {
+  const title = `#${props.number}`;
+
+  if (!props.message) return <EmptyState title={title} />;
+
   return (
-    <SessionIssuePage
-      {...props}
-      frame={titled}
-      draw={(found) => <IssueDetailPage {...found} />}
-    />
+    <EmptyState title={`${title} could not load`} description={props.message} />
+  );
+}
+
+// The Inspector tab: the whole Issue, as its own page draws it, or why there is none.
+function SessionIssueTab({ deps, context }: PageProps): JSX.Element {
+  const attached = useSessionIssue(deps, context.sessionId);
+
+  if (attached.value)
+    return <IssueDetailPage {...attached.value} deps={deps} />;
+
+  const { message, description } = messageFor(context.sessionId, attached);
+
+  return (
+    <Screen title="Issue">
+      <EmptyState title={message} description={description} />
+    </Screen>
   );
 }

@@ -16,6 +16,9 @@ export {
 
 export { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 
+// Whether a page drew nothing, as Argo reads it: a Workbench card whose page draws nothing is not drawn.
+export { drawsNothing } from '@repo/contracts/plugins/wire-empty-page';
+
 export {
   fixtureServices,
   type FixtureAnswer,

@@ -39,6 +39,13 @@
           "icon": { "sf": "square.stack", "material": "dashboard" },
           "placement": "menu",
           "target": { "type": "card", "cardId": "counter-card" }
+        },
+        {
+          "id": "toggle-notes-card",
+          "label": "Toggle Notes card",
+          "icon": { "sf": "note.text", "material": "notes" },
+          "placement": "menu",
+          "target": { "type": "card", "cardId": "notes" }
         }
       ],
       "argo/session/workbench/v1": [
@@ -48,6 +55,13 @@
           "icon": { "sf": "square.stack", "material": "dashboard" },
           "page": "/card",
           "tab": "/card/full"
+        },
+        {
+          "id": "notes",
+          "title": "Notes",
+          "icon": { "sf": "note.text", "material": "notes" },
+          "page": "/notes",
+          "tab": "/notes/full"
         }
       ]
     }

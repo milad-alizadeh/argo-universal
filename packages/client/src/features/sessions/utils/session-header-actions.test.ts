@@ -57,6 +57,27 @@ describe('placeSessionHeaderActions', () => {
     expect(ids(placed.menu)).toEqual(['board', 'report']);
   });
 
+  it('leaves out an action whose Workbench card has nothing to show, and keeps it once the card has', () => {
+    const toCard: SessionHeaderAction = {
+      ...action('issue-card', 'header'),
+      target: { type: 'card', cardId: 'issue' },
+    };
+
+    const actions = [{ pluginId: 'tracker', item: toCard }, ...declared];
+
+    const place = (filled: boolean): string[] =>
+      ids(
+        placeSessionHeaderActions(actions, {
+          phone: false,
+          shows: showsAll,
+          filled: () => filled,
+        }).beside,
+      );
+
+    expect(place(false)).toEqual(['deploy']);
+    expect(place(true)).toEqual(['issue-card']);
+  });
+
   it('keeps menu actions in "…" even when the header has room', () => {
     const placed = placeSessionHeaderActions(
       [{ pluginId: 'tracker', item: action('board', 'menu') }],

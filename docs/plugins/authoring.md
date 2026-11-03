@@ -302,6 +302,8 @@ Give a card a `tab` and pressing its body opens that page in full as an Inspecto
 
 Both pages open for the Session whose Workbench they are in, so they read `context.sessionId` as a header action's page does. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
 
+A card shows only when it has something. Return `null` from `page` when the Session has nothing for it, such as no attached Issue, and Argo draws no card, no Inspector tab, no phone row and no header action that targets it; return a tree again and the card comes back, live. Nothing is drawn while the page's first answer is pending. A card that has something but failed to load it should still draw, and say so. The `tab` page keeps its own messages, and Settings › Plugins › Workbench cards still lists every declared card. In a test, `drawsNothing(view.tree)` from `@argo/plugin-kit/testing` reads a page the way Argo does.
+
 ## Background pages and badges
 
 Declare `contributes.background: { path, interval }` in `plugin.json`, and register that path as a page.

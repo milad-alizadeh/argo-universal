@@ -17,14 +17,15 @@ type Answer =
     ? Item
     : never;
 
-// The Session's Issue number 42 is attached by an Agent, as `argo run issue-tracker.attach` does.
+// The Session's Issue, number 42 unless another is named, is attached by an Agent, as `argo run issue-tracker.attach` does.
 export const attach = async (
   test: PluginTest,
   name: 'attach' | 'detach',
+  number = 42,
 ): Promise<void> => {
   await test.operations.run({
     name,
-    params: { number: 42 },
+    params: { number },
     caller: { sessionId, projectId: project.id },
   });
 };

@@ -13,8 +13,9 @@ import { useWorkbenchCards } from '../../../../sessions/$id/use-workbench-cards'
 import { useLatestSession } from './session-row-preview';
 import type { SlotPreviewProps } from './slot-detail';
 
+// A Plugin left on whose card has nothing to show for the Session draws no card here either, as in the Session.
 export const noWorkbenchCards =
-  'No Plugin left on adds a card to the Workbench.';
+  'No Plugin left on has a card to show for the latest Session.';
 
 export const noSessionToPreview =
   'The preview shows a Session’s Workbench, and there is no Session yet.';
@@ -57,9 +58,14 @@ export function LiveWorkbenchPreview({
   visibility,
 }: SlotPreviewProps): React.JSX.Element {
   const latest = useLatestSession();
-  const { open } = useWorkbenchCards(sessionIdOf(latest));
+  const { open, held } = useWorkbenchCards(sessionIdOf(latest));
 
   if (!latest) return <Text role="secondary">{noSessionToPreview}</Text>;
 
-  return <WorkbenchCardsPreview cards={open} visibility={visibility} />;
+  return (
+    <>
+      <WorkbenchCardsPreview cards={open} visibility={visibility} />
+      {held}
+    </>
+  );
 }

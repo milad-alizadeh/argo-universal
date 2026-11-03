@@ -54,6 +54,8 @@ export interface HeaderPlacement {
   sessionId: string;
   compact: boolean;
   toggleCard: ToggleWorkbenchCard;
+  // Whether a Plugin's card has something to show; an action targeting one that has not is not drawn.
+  filled: (pluginId: string, cardId: string) => boolean;
 }
 
 // The Session header's Plugin actions, placed for the window's size class and this Device's switches.
@@ -61,12 +63,13 @@ export function usePluginHeaderActions({
   sessionId,
   compact,
   toggleCard,
+  filled,
 }: HeaderPlacement): SessionPluginActions {
   const opener = { open: usePluginOpener(), sessionId, toggleCard };
   const { shows } = useSlotVisibility(sessionHeaderSlot.id);
 
   return placeSessionHeaderActions(
     useDeclaredHeaderActions().map(withPress(opener)),
-    { phone: compact, shows },
+    { phone: compact, shows, filled },
   );
 }

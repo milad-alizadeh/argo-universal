@@ -20,7 +20,8 @@ type ToItems = (entries: Linked[]) => ReturnType<typeof rowItems>;
 /*
  * The Issue tracker's fills for a Session (ADR-0035): the Issues a Session is attached to (`attach`, ADR-0044) show as
  * items on its row and as one line in its Session bar, and as a Workbench card its manifest declares. The link is this
- * Plugin's own `issue_sessions` store. Returns the attachments wrapped so attaching or detaching refreshes the Slots.
+ * Plugin's own `issue_sessions` store. Returns the attachments wrapped so attaching or detaching refreshes the Slots and
+ * the open card and tab.
  */
 export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   const changed = slotsChanged(api);
@@ -30,7 +31,10 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   registerSessionPages(api, deps);
   registerItems(api, { deps, summaries });
 
-  return announcing(deps.storage, changed);
+  return announcing(deps.storage, async () => {
+    deps.links.publish();
+    await changed();
+  });
 }
 
 type Fills = Omit<Answering, 'toItems'>;
