@@ -1,18 +1,23 @@
 import { type ReactElement, useLayoutEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, type ViewInstance } from 'react-native';
 import { Text } from '#primitives/content/text';
 
 // When content takes its final height: in the commit that mounts it, as a placeholder gives way, or a frame later, as a Plugin's tree arrives.
 export type Settles = 'on-mount' | 'next-frame';
 
-function useSettled(settles: Settles): boolean {
+const settleNow =
+  (height: number) =>
+  (view: ViewInstance | null): void => {
+    if (view instanceof HTMLElement) view.style.height = `${height}px`;
+  };
+
+function useSettledNextFrame(): boolean {
   const [settled, setSettled] = useState(false);
   useLayoutEffect(() => {
-    if (settles === 'on-mount') return setSettled(true);
     const frame = requestAnimationFrame(() => setSettled(true));
 
-    return () => cancelAnimationFrame(frame);
-  }, [settles]);
+    return (): void => cancelAnimationFrame(frame);
+  }, []);
 
   return settled;
 }
@@ -23,10 +28,11 @@ export function SettlingContent(props: {
   last: number;
   settles: Settles;
 }): ReactElement {
-  const settled = useSettled(props.settles);
+  const settled = useSettledNextFrame();
+  const onMount = props.settles === 'on-mount' ? settleNow(props.last) : null;
 
   return (
-    <View style={{ height: settled ? props.last : props.first }}>
+    <View ref={onMount} style={{ height: settled ? props.last : props.first }}>
       <Text>Tool call detail</Text>
     </View>
   );

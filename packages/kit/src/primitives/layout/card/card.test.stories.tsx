@@ -2,11 +2,11 @@ import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { readMotion } from '#mocks/motion-samples';
+import { settleLayout } from '#mocks/story-layout';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { readMotion } from '#mocks/motion-samples';
-import { settleLayout } from '#mocks/story-layout';
 import { Svg } from '#primitives/visual';
 import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { SettlingContent } from '../collapsible/collapsible-motion-fixtures';
@@ -202,6 +202,21 @@ function sampleFold(parts: Record<keyof FoldSample, HTMLElement>): FoldSample {
   };
 }
 
+// Presses the title row once and samples every frame after, starting from how things stood before the press.
+async function foldOnce(
+  parts: Record<keyof FoldSample, HTMLElement>,
+): Promise<FoldSample[]> {
+  const before = sampleFold(parts);
+
+  const after = await sampleEachFrame(
+    () => parts.titleTop.click(),
+    () => sampleFold(parts),
+    foldFrames,
+  );
+
+  return [before, ...after];
+}
+
 // The title row holds still, the card keeps its width, and the card below moves one way with no frame that jumps.
 async function expectSteadyFold(samples: readonly FoldSample[]): Promise<void> {
   const titleTops = new Set(samples.map((sample) => sample.titleTop));
@@ -234,17 +249,14 @@ export const FoldsWithoutMovingTheTitle: Story = {
   ),
   play: async ({ canvas }) => {
     await settleLayout('wide');
-    const toggle = canvas.getByRole('button', { name: toggleName });
+
     const parts = {
-      titleTop: toggle,
+      titleTop: canvas.getByRole('button', { name: toggleName }),
       width: canvas.getByRole('group', { name: title }),
       belowTop: canvas.getByTestId(nextCard),
     };
-    const fold = async (): Promise<FoldSample[]> => [
-      sampleFold(parts),
-      ...(await sampleEachFrame(() => toggle.click(), () => sampleFold(parts), foldFrames)),
-    ];
-    await expectSteadyFold(await fold());
-    await expectSteadyFold(await fold());
+
+    await expectSteadyFold(await foldOnce(parts));
+    await expectSteadyFold(await foldOnce(parts));
   },
 };

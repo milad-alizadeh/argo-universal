@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { cdp } from 'vitest/browser';
@@ -41,7 +42,10 @@ interface Body {
 
 const settledBody: Body = { first: 120, last: 120, settles: 'on-mount' };
 
-function renderWithRowBelow(body: Body, defaultOpen = false) {
+function renderWithRowBelow(
+  body: Body,
+  defaultOpen = false,
+): () => ReactElement {
   return () => (
     <View>
       <Collapsible defaultOpen={defaultOpen}>
@@ -65,11 +69,7 @@ async function sampleRowBelow(canvas: Canvas): Promise<number[]> {
   const below = canvas.getByText(nextRow);
   const top = (): number => below.getBoundingClientRect().top;
   const before = top();
-  const after = await sampleEachFrame(
-    () => trigger.click(),
-    top,
-    motionFrames,
-  );
+  const after = await sampleEachFrame(() => trigger.click(), top, motionFrames);
 
   return [before, ...after];
 }
