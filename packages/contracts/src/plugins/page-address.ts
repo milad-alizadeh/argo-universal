@@ -68,6 +68,7 @@ export const LoaderPageCall = z.discriminatedUnion('action', [
     error: z.string(),
   }),
   z.strictObject({ action: z.literal('defined'), pattern: z.string() }),
+  z.strictObject({ action: z.literal('stale') }),
 ]);
 
 export type LoaderPageCall = z.infer<typeof LoaderPageCall>;

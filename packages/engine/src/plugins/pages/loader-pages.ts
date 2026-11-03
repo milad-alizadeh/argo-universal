@@ -26,16 +26,18 @@ const failed = (error: string): PageAnswer => ({ ok: false, error });
 
 export class LoaderPages {
   private readonly marks = new StaleMarks();
-  private readonly unwatch: () => void;
+  private readonly unwatch: (() => void)[];
 
+  // An Operation's run, or the Plugin's own `argo.pages.stale`, marks every Loader page of the Plugin.
   public constructor(
     private readonly host: PagesHost,
     private readonly draws: PluginDraws,
     private readonly operations: PluginOperationService,
   ) {
-    this.unwatch = operations.onRan((pluginId) =>
-      this.marks.mark({ pluginId, stale: draws.patternsOf(pluginId) }),
-    );
+    const mark = (pluginId: string): void =>
+      this.marks.mark({ pluginId, stale: draws.patternsOf(pluginId) });
+
+    this.unwatch = [operations.onRan(mark), draws.onStale(mark)];
   }
 
   public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {
@@ -43,7 +45,7 @@ export class LoaderPages {
   }
 
   public close(): void {
-    this.unwatch();
+    for (const unwatch of this.unwatch) unwatch();
     this.marks.close();
   }
 

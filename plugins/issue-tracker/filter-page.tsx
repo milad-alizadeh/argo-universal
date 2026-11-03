@@ -14,6 +14,7 @@ import {
   type FilterData,
   type FilterState,
 } from './filter-loader';
+import { forgetPages } from './filter-paging';
 import { issueRow } from './filter-rows';
 import { loadingIssues } from './filter-shown';
 import { repositoryText, type Project } from './issue-client';
@@ -31,6 +32,11 @@ type To = PageTo<FilterState>;
  * next page, a pull starts again from the first, and a row's Action closes or reopens its Issue as an Operation.
  */
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
+  // A status change on any page, the Issue page's own included, leaves the kept pages and drawn lists stale.
+  deps.changes.subscribe(() => {
+    forgetPages();
+    argo.pages.stale();
+  });
   argo.pages.define(filterPattern, {
     state: filterState,
     load: (input) => loadFilter(deps, input),

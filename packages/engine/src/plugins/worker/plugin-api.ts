@@ -158,10 +158,7 @@ const pluginApi: Argo = frozen({
     get: async (key) =>
       (await call<PluginSettingValue | null>({ api: 'settings', key })) ?? null,
   }),
-  pages: frozen({
-    register: kit.registerPage,
-    define: kit.loaderPages.define,
-  }),
+  pages: frozen({ register: kit.registerPage, ...kit.loaderPages.api }),
   slots: frozen({ register: kit.slots.register, changed: kit.slots.changed }),
   on: hooks.on,
 });

@@ -53,5 +53,12 @@ export type DefineLoaderPage = <State extends PageState, Data>(
   page: LoaderPage<State, Data>,
 ) => void;
 
-// `argo.pages.define`: a Loader and a pure Render, drawn once per Page address.
-export type LoaderPagesApi = Readonly<{ define: DefineLoaderPage }>;
+/*
+ * `argo.pages.define`: a Loader and a pure Render, drawn once per Page address. `argo.pages.stale` tells
+ * every connected App that the Plugin's Loader pages may have changed, after a write that is not an
+ * Operation (an Operation's run marks them itself) or a change the Plugin heard of elsewhere.
+ */
+export type LoaderPagesApi = Readonly<{
+  define: DefineLoaderPage;
+  stale: () => void;
+}>;

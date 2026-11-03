@@ -25,7 +25,9 @@ export type DrawTransport = {
 
 const failed = (error: string): Drawn => ({ ok: false, error });
 
-type Answered = Exclude<LoaderPageCall, { action: 'defined' }>;
+type Answered = Extract<LoaderPageCall, { id: number }>;
+
+type StaleListener = (pluginId: string) => void;
 
 const drawnOf = (call: Answered): Drawn =>
   call.action === 'drawn' ? { ok: true, root: call.root } : failed(call.error);
@@ -38,6 +40,7 @@ export class PluginDraws {
   private readonly running = new Map<string, number>();
   private readonly patterns = new Map<string, Set<string>>();
   private readonly pending = new Map<number, Pending>();
+  private readonly staleListeners = new Set<StaleListener>();
   private next = 0;
 
   public constructor(private readonly transport: DrawTransport) {}
@@ -92,11 +95,29 @@ export class PluginDraws {
     );
   }
 
-  // A worker defines its patterns as its code runs, before it reports running; an answer from an ended worker is ignored.
+  // Hears each running worker that marks its Loader pages stale; the answer unsubscribes.
+  public onStale(listener: StaleListener): () => void {
+    this.staleListeners.add(listener);
+
+    return () => this.staleListeners.delete(listener);
+  }
+
+  /*
+   * A worker defines its patterns as its code runs, before it reports running; an answer or stale mark
+   * from an ended worker is ignored.
+   */
   public receive(caller: Caller, call: LoaderPageCall): void {
     if (call.action === 'defined') return this.define(caller, call.pattern);
 
+    if (call.action === 'stale') return this.markStale(caller);
+
     this.settle(caller, call);
+  }
+
+  private markStale({ pluginId, generation }: Caller): void {
+    if (this.running.get(pluginId) !== generation) return;
+
+    for (const listener of this.staleListeners) listener(pluginId);
   }
 
   private settle(caller: Caller, call: Answered): void {

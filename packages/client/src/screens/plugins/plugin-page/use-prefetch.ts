@@ -1,6 +1,6 @@
 import { matchPagePath } from '@repo/contracts/plugins/page-address';
 import { Action, type WireNode } from '@repo/contracts/plugins/wire';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTRPC } from '#features/connection';
 import { rememberedState } from './page-state-memory';
@@ -15,9 +15,9 @@ export const freshMs = 5_000;
 
 /*
  * Draws ahead the Loader pages the first few links on a page open, so a tap paints from the cache. Only
- * an address with no tree is drawn: a kept one draws at once on the tap and its screen asks again then,
- * so a redraw of this page does not read every link again. Only links to Loader pages can be drawn
- * ahead; a view page is still a live stream opened on the tap.
+ * an address with no tree is drawn, even a stale one is left: it draws at once on the tap and its screen
+ * asks again then, so neither a redraw of this page nor a write reads every link again. Only links to
+ * Loader pages can be drawn ahead; a view page is still a live stream opened on the tap.
  */
 export function usePrefetch(opening: PageOpening, root: WireNode | null): void {
   const trpc = useTRPC();
@@ -30,11 +30,19 @@ export function usePrefetch(opening: PageOpening, root: WireNode | null): void {
     for (const path of loaderLinks(root, patterns ?? [])) {
       const page = { pluginId, path, projectId, sessionId };
       const pageState = rememberedState(client, page);
-      const options = trpc.plugins.draw.queryOptions({ ...page, pageState });
 
-      void client.prefetchQuery({ ...options, staleTime: Infinity });
+      drawAhead(client, trpc.plugins.draw.queryOptions({ ...page, pageState }));
     }
   }, [client, trpc, pluginId, projectId, sessionId, root, patterns]);
+}
+
+type DrawOptions = ReturnType<
+  ReturnType<typeof useTRPC>['plugins']['draw']['queryOptions']
+>;
+
+function drawAhead(client: QueryClient, options: DrawOptions): void {
+  if (client.getQueryData(options.queryKey) === undefined)
+    void client.prefetchQuery(options);
 }
 
 function loaderLinks(root: WireNode | null, patterns: string[]): string[] {

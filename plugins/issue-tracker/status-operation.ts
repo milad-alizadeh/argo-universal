@@ -1,5 +1,4 @@
 import type { Argo } from '@argo/plugin-kit';
-import { forgetPages } from './filter-paging';
 import type { IssueStatus } from './github-issues';
 import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -29,7 +28,6 @@ async function setStatus(
   const client = await openDepsClient({ project, deps });
 
   await client.setStatus(number, status);
-  forgetPages();
   deps.changes.publish(number);
   void requestOverview(deps, project, true).catch(() => null);
 

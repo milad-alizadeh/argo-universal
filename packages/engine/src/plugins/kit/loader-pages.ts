@@ -1,5 +1,5 @@
 import type {
-  DefineLoaderPage,
+  LoaderPagesApi,
   LoaderInput,
   LoaderPage,
   PageTo,
@@ -28,8 +28,9 @@ type Defined = {
   draw: (params: Params, event: DrawEvent) => Promise<WireJson>;
 };
 
+// `api` is the Plugin's `argo.pages.define` and `stale`; `answer` is the host's draws.
 export interface LoaderPages {
-  define: DefineLoaderPage;
+  api: LoaderPagesApi;
   answer: (event: DrawEvent) => void;
 }
 
@@ -42,16 +43,23 @@ export function loaderPages(send: LoaderPageSend): LoaderPages {
   const defined: Defined[] = [];
 
   return {
-    define: (pattern, page) => {
-      if (!pattern.startsWith('/'))
-        throw new Error(`A Page path pattern starts with /: ${pattern}`);
-
-      defined.push({ pattern, draw: drawing(page) });
-      void send({ action: 'defined', pattern }).catch(() => null);
+    api: {
+      define: defining(send, defined),
+      stale: () => void send({ action: 'stale' }).catch(() => null),
     },
     answer: (event) => void answer(send, defined, event),
   };
 }
+
+const defining =
+  (send: LoaderPageSend, defined: Defined[]): LoaderPagesApi['define'] =>
+  (pattern, page) => {
+    if (!pattern.startsWith('/'))
+      throw new Error(`A Page path pattern starts with /: ${pattern}`);
+
+    defined.push({ pattern, draw: drawing(page) });
+    void send({ action: 'defined', pattern }).catch(() => null);
+  };
 
 async function answer(
   send: LoaderPageSend,
