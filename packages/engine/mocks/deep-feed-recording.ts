@@ -43,6 +43,9 @@ async function capturedRows(host: Host, sessionId: string) {
     direction: 'tail',
     limit: 200,
   });
+
+  if (tail.startCursor === null) return tail.rows;
+
   const earlier = await host.caller.feed.page({
     sessionId,
     direction: 'before',
