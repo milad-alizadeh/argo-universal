@@ -1,5 +1,4 @@
 import { Text } from '@repo/kit/primitives/content/text';
-import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
@@ -56,21 +55,20 @@ const sourceOptions = sources.map((value) => ({
   label: sourceCopy[value].label,
 }));
 
-function SourceChoice(
+const SourceChoice = (
   props: Pick<SourceFormProps, 'source' | 'onChoose'> & { disabled?: boolean },
-): React.JSX.Element {
-  return (
-    <SegmentedControl
-      label="Add a Project from"
-      value={props.source}
-      disabled={props.disabled}
-      options={sourceOptions}
-      onValueChange={(next) =>
-        props.onChoose(next === 'clone' ? 'clone' : 'folder')
-      }
-    />
-  );
-}
+): React.JSX.Element => (
+  <FieldGroup.Picker
+    title="Source"
+    presentation="menu"
+    value={props.source}
+    disabled={props.disabled}
+    options={sourceOptions}
+    onValueChange={(next) =>
+      props.onChoose(next === 'clone' ? 'clone' : 'folder')
+    }
+  />
+);
 
 const errorSection = (props: FormContentsProps): React.JSX.Element | null => {
   const error = props.pickerError ?? props.error;

@@ -1,6 +1,6 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, mocked } from 'storybook/test';
+import { expect, fn, mocked, within } from 'storybook/test';
 import { ProjectNewView } from './project-new-view';
 
 const folder = '/Users/you/Developer/argo-universal';
@@ -88,7 +88,10 @@ export const PickerFailureCanBeRetried: Story = {
 // Clone submits the trimmed repository URL.
 export const CloneSendsTheRepository: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: cloneLabel }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Source' }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', { name: cloneLabel }),
+    );
     await userEvent.type(
       canvas.getByLabelText(repositoryLabel),
       ' https://github.com/owner/repo.git ',
@@ -134,19 +137,23 @@ export const AddingCannotBeSentTwice: Story = {
     await expect(
       canvas.getByRole('button', { name: chooseLabel }),
     ).toBeDisabled();
-    await expect(
-      canvas.getByRole('button', { name: cloneLabel }),
-    ).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Source' })).toBeDisabled();
   },
 };
 
 // Switching source starts a fresh form instead of submitting a URL as a folder.
 export const SwitchingSourceClearsTheField: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: cloneLabel }));
-    await userEvent.type(canvas.getByLabelText(repositoryLabel), repositoryUrl);
+    await userEvent.click(canvas.getByRole('button', { name: 'Source' }));
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Existing Folder' }),
+      await within(document.body).findByRole('option', { name: cloneLabel }),
+    );
+    await userEvent.type(canvas.getByLabelText(repositoryLabel), repositoryUrl);
+    await userEvent.click(canvas.getByRole('button', { name: 'Source' }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', {
+        name: 'Existing Folder',
+      }),
     );
     await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
   },
