@@ -1,4 +1,5 @@
 import {
+  createContext,
   useContext,
   useMemo,
   useState,
@@ -13,16 +14,26 @@ import {
   type ListPosition,
   type RowPosition,
 } from '../../../list-context';
-import { useListLook } from '../../../list-look-context';
 import type { ListChild } from './list-children';
-import { fieldRowMoves } from './list-field-row-moves';
+import { FieldRowMoves } from './list-field-row-moves';
 import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
-import { groupedCell } from './list-grouped-cell';
-import { movableRow } from './list-movable-row';
-import { useListMoves } from './list-move-context';
+import { GroupedCells } from './list-grouped-cell';
+import { MovableRow } from './list-movable-row';
 import type { ListProps } from './list-props';
-import { RowLayoutContext, useRowLayout } from './list-row-layout';
-import { rowPosition } from './list-row-position';
+import { dataRowPosition, rowPosition } from './list-row-position';
+
+type RowLayout = {
+  // Whether a data row draws its card piece; a fixed child draws its own cell.
+  cell: boolean;
+  positionAt: (index: number) => ListPosition;
+};
+
+const emptyLayout: RowLayout = {
+  cell: false,
+  positionAt: () => 'only',
+};
+
+const RowLayoutContext = createContext<RowLayout>(emptyLayout);
 
 export function ListGrouping<Item>({
   children,
@@ -32,7 +43,7 @@ export function ListGrouping<Item>({
   list?: ListProps<Item>;
 }): ReactElement {
   const [ends] = useState(() => new ListGroupEnds());
-  const layout = useRowLayout(list, list?.renderItem !== childRenderer);
+  const layout = useRowLayout(list);
 
   return (
     <RowLayoutContext value={layout}>
@@ -41,7 +52,48 @@ export function ListGrouping<Item>({
   );
 }
 
+const listPositions: readonly ListPosition[] = [
+  'only',
+  'first',
+  'middle',
+  'last',
+];
+
+const positionNamed = (name: string): ListPosition =>
+  listPositions.find((position) => position === name) ?? 'only';
+
+// Each row's position, by name, as one value.
+function positionNames<Item>(list: ListProps<Item> | undefined): string {
+  if (!list?.items) return '';
+
+  return list.items.map((_, index) => dataRowPosition(list, index)).join();
+}
+
+// The same positions keep the same array, however often the List's items are new.
+const useHeldPositions = (names: string): readonly ListPosition[] =>
+  useMemo(() => (names ? names.split(',').map(positionNamed) : []), [names]);
+
+/*
+ * The list's props, and a List's children, are new each time its parent draws; a row's layout changes only with the
+ * places its rows hold, or every row draws again with the parent.
+ */
+function useRowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
+  const held = useHeldPositions(positionNames(list));
+  const cell = list?.renderItem !== childRenderer;
+
+  if (list === undefined) return emptyLayout;
+
+  return { cell, positionAt: (index) => held[index] ?? 'only' };
+}
+
 // Data rows start their own context. Fixed children and standalone Sections adapt it below.
+type DataRowProps = {
+  index: number;
+  // A heading, footer or gap the caller draws: not a row of the card.
+  part?: boolean;
+  children: ReactNode;
+};
+
 type FixedRowProps = {
   item: ListChild;
 };
@@ -53,39 +105,38 @@ type SectionRowProps = {
   children: ReactNode;
 };
 
-// Where a data row sits, and whether it draws its piece of a web grouped section's card.
-export type DataRow = {
+type DataRow = {
   value: RowPosition;
   cell: boolean;
   position: ListPosition;
 };
 
-// `part` is a heading, footer or gap the caller draws: not a row of the card.
-export function useDataRow(index: number, part: boolean): DataRow {
+function useDataRow(index: number, part?: boolean): DataRow {
   const { cell, positionAt } = useContext(RowLayoutContext);
-  const { webGrouped } = useListLook();
 
   const position = positionAt(index);
 
   const value = useMemo(() => ({ position, index }), [position, index]);
 
-  return { value, cell: webGrouped && cell && !part, position };
+  return { value, cell: cell && !part, position };
 }
 
 // A data row chooses nothing a section or List around its List chose: its List's own selection reaches it by row id.
 const noSelection: ListSelection = {};
 
-// A plain function for the List's own row, so a data row is no deeper than what it draws.
-export const dataListRow = (
-  row: DataRow,
-  children: ReactNode,
-): ReactElement => (
-  <ListSelectionContext value={noSelection}>
-    <RowPositionContext value={row.value}>
-      {groupedCell(row.cell, row.position, children)}
-    </RowPositionContext>
-  </ListSelectionContext>
-);
+export function DataListRow(props: DataRowProps): ReactElement {
+  const { value, cell, position } = useDataRow(props.index, props.part);
+
+  return (
+    <ListSelectionContext value={noSelection}>
+      <RowPositionContext value={value}>
+        <GroupedCells cell={cell} position={position}>
+          {props.children}
+        </GroupedCells>
+      </RowPositionContext>
+    </ListSelectionContext>
+  );
+}
 
 function useFixedPosition({ position }: ListChild): RowPosition {
   const { index } = useContext(RowPositionContext);
@@ -93,31 +144,21 @@ function useFixedPosition({ position }: ListChild): RowPosition {
   return useMemo(() => ({ index, position }), [index, position]);
 }
 
-// A fixed child's cell, drawn by its row itself so the row is no deeper than what it draws.
-const fixedCell = (
-  item: ListChild,
-  moves: ReturnType<typeof useListMoves>,
-  grouped: boolean,
-): ReactNode =>
-  movableRow(moves, {
-    id: item.moveId,
-    ghost: item.content,
-    children: groupedCell(
-      grouped && !item.fullSpan,
-      item.position,
-      fieldRowMoves({ id: item.moveId, content: item.content }),
-    ),
-  });
+const FixedCell = ({ item }: FixedRowProps): ReactElement => (
+  <MovableRow id={item.moveId} ghost={item.content}>
+    <GroupedCells cell={!item.fullSpan} position={item.position}>
+      <FieldRowMoves id={item.moveId} content={item.content} />
+    </GroupedCells>
+  </MovableRow>
+);
 
 function FixedListRow({ item }: FixedRowProps): ReactElement {
   const position = useFixedPosition(item);
-  const moves = useListMoves();
-  const { webGrouped } = useListLook();
 
   return (
     <ListSelectionContext value={listSelection(item)}>
       <RowPositionContext value={position}>
-        {fixedCell(item, moves, webGrouped)}
+        <FixedCell item={item} />
       </RowPositionContext>
     </ListSelectionContext>
   );

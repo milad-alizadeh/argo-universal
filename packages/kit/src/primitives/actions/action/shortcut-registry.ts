@@ -18,7 +18,7 @@ export class ShortcutRegistry {
 
   public readonly subscribe = this.listeners.subscribe;
 
-  // The Actions declaration `id` holds keys for, as one value that changes only when its own keys do.
+  // The ids of the Actions declaration `id` holds keys for, one per line: one value that changes only when its own keys do.
   public ownedBy(id: string): string {
     const actions = this.entries.get(id)?.actions ?? [];
 

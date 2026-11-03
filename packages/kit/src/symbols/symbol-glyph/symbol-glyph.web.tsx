@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { cn } from '../../utils';
-import { useSymbolImageRenderer } from '../symbol-images';
-import { glyphDrawing } from './glyph-drawing.web';
+import { GlyphDrawing } from './glyph-drawing.web';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 
 const glyphBox = {
@@ -20,8 +19,6 @@ const glyphBox = {
  * already draws at `appleSymbolShare` of it (glyph-sizing.ts), so both land on the size the lane gives them.
  */
 export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
-  const render = useSymbolImageRenderer();
-
   return (
     // data-icon lets a parent style the icons inside it, as `has-[>[data-icon]]` does on Button.
     <span
@@ -31,7 +28,7 @@ export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
       className={cn(props.colorClassName, '*:text-inherit!')}
       style={{ ...glyphBox, width: props.pixels, height: props.pixels }}
     >
-      {glyphDrawing(props, render)}
+      <GlyphDrawing {...props} />
     </span>
   );
 }

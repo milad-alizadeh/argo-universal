@@ -7,7 +7,7 @@ import { useListLook } from '../../../list-look-context';
 import type { ListInsets } from '../../../list-look-insets';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { ContentRowId } from './list-content-selection';
-import { dataListRow, useDataRow } from './list-grouping';
+import { DataListRow } from './list-grouping';
 import type { ListProps } from './list-props';
 import {
   renderedId,
@@ -49,39 +49,43 @@ const partOrRowId = <Item,>(
         selectionId(rowProps.props, rowProps.row.item, rowProps.row.index),
       );
 
-function DataListRow<Item>(rowProps: RowProps<Item>): ReactElement {
+function Row<Item>(rowProps: RowProps<Item>): ReactElement {
   const { row, props } = rowProps;
   const content = props.renderItem?.(row.item, row.index);
-  const gutter = useGutterStyle(props);
-  const drawn = useDataRow(row.index, isPart(rowProps));
 
   const id = partOrRowId(rowProps, content);
 
-  return dataListRow(
-    drawn,
-    <ContentRowId value={id}>{padded(content, gutter)}</ContentRowId>,
+  return (
+    <DataListRow index={row.index} part={isPart(rowProps)}>
+      <ContentRowId value={id}>
+        <PaddedRow content={content} props={props} />
+      </ContentRowId>
+    </DataListRow>
   );
 }
-
-type Gutter = { paddingHorizontal: number } | undefined;
 
 // Legend List's web cells ignore horizontal content padding, so each row holds its gutters.
-function useGutterStyle<Item>(props: ListProps<Item>): Gutter {
+function PaddedRow<Item>({
+  content,
+  props,
+}: {
+  content: ReactNode;
+  props: ListProps<Item>;
+}): ReactNode {
   const paddingHorizontal = useRowGutter(props);
+  const style = useMemo(() => ({ paddingHorizontal }), [paddingHorizontal]);
 
-  return useMemo(
-    () => (paddingHorizontal === 0 ? undefined : { paddingHorizontal }),
-    [paddingHorizontal],
+  return paddingHorizontal === 0 ? (
+    content
+  ) : (
+    <View style={style}>{content}</View>
   );
 }
-
-const padded = (content: ReactNode, gutter: Gutter): ReactNode =>
-  gutter ? <View style={gutter}>{content}</View> : content;
 
 export function useRenderedRows<Item>(
   props: ListProps<Item>,
 ): (row: LegendListRenderItemProps<Item>) => ReactElement {
-  return useCallback((row) => <DataListRow row={row} props={props} />, [props]);
+  return useCallback((row) => <Row row={row} props={props} />, [props]);
 }
 
 function usePadding(value: ListProps<never>['padding']): number {

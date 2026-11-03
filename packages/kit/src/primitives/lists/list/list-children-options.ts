@@ -9,7 +9,6 @@ export type ChildrenOptions = Omit<
   | 'getSectionKey'
   | 'keyExtractor'
   | 'getItemType'
-  | 'itemsAreEqual'
   | 'maintainVisibleContentPosition'
 >;
 
@@ -20,7 +19,6 @@ export function childrenOptions<Item>({
   getSelectionId: _selection,
   keyExtractor: _key,
   getItemType: _type,
-  itemsAreEqual: _equal,
   maintainVisibleContentPosition: _position,
   ...props
 }: ListProps<Item>): ChildrenOptions {

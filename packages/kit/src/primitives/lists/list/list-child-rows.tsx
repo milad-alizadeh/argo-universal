@@ -1,7 +1,7 @@
 import type { ReactElement, Ref } from 'react';
 import { useWindowDimensions } from 'react-native';
 import type { ListRef } from '../../../list-ref';
-import { childIdentity } from './list-child-identity';
+import { childIdentity, sameChild } from './list-child-identity';
 import { usePreparedChildren, type PreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
 import { ListEmpty } from './list-data';
@@ -67,7 +67,9 @@ function ChildDataList({
 
   if (shelves) return <SectionShelves {...props} {...childDrawing} />;
 
-  return <DataList {...rowsOf(props)} {...childDrawing} />;
+  return (
+    <DataList {...rowsOf(props)} {...childDrawing} itemsAreEqual={sameChild} />
+  );
 }
 
 /*
@@ -144,7 +146,7 @@ export function ChildRows<Item>(props: ListProps<Item>): ReactElement {
 
 const childDrawing: Pick<
   ChildDataProps,
-  'keyExtractor' | 'fullSpan' | 'getItemType' | 'itemsAreEqual' | 'renderItem'
+  'keyExtractor' | 'fullSpan' | 'getItemType' | 'renderItem'
 > = { ...childIdentity, renderItem: childRenderer };
 
 function childAnchor(anchor: ListProps<never>['anchor']): true | undefined {

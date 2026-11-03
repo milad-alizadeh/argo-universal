@@ -10,7 +10,7 @@ import { useLiftedRowMark } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { useDragValue } from './list-drag-layer';
 import { measureView } from './list-geometry';
-import type { ListMoves } from './list-move-context';
+import { useListMoves, type ListMoves } from './list-move-context';
 import type { RowId } from './list-move-model';
 import { slideOf, Sliding } from './list-move-zone';
 import { RowDrag } from './list-row-drag';
@@ -87,10 +87,13 @@ interface MovableRowProps {
  * A row of a List with `onMove`, when it is one the List can move: a top-level ListItem with an `id`, in a Section
  * with an id or in none, which is a row the List's reading gives a move `id`. Any other row draws as it is.
  */
-export function movableRow(
-  moves: ListMoves | null,
-  { id, ghost, children }: MovableRowProps,
-): ReactNode {
+export function MovableRow({
+  id,
+  ghost,
+  children,
+}: MovableRowProps): ReactNode {
+  const moves = useListMoves();
+
   if (!moves || id === undefined) return children;
 
   return (

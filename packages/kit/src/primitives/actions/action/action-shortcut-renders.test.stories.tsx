@@ -73,6 +73,8 @@ export const NewRowLeavesSiblingsAlone: Story = {
     });
 
     await expect(counts.ShortcutRow).toHaveProperty('mounts', 1);
+    // The new row's own ContextActions is counted, so the bound below counts the component it names.
+    await expect(counts.ContextActions).toHaveProperty('mounts', 1);
     // The new row's own declaration may draw again once its keys are handed out.
     await expect(updatesOf(counts, 'ContextActions')).toBeLessThanOrEqual(1);
   },

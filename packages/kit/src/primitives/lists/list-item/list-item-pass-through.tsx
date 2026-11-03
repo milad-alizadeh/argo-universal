@@ -45,14 +45,10 @@ interface LaneEvents {
 
 const inert: LaneEvents = { pointerEvents: 'none', 'aria-hidden': true };
 
-// Whether this row's lanes let presses fall through to the row's press under them.
-export const usePassingThrough = (): boolean => use(PassThroughContext);
-
 // A lane on the way to an accessory takes no press itself, but what it holds may.
-export const openLane = (through: boolean): LaneEvents =>
-  through ? { pointerEvents: 'box-none' } : {};
-
-export const useOpenLane = (): LaneEvents => openLane(usePassingThrough());
+export function useOpenLane(): LaneEvents {
+  return use(PassThroughContext) ? { pointerEvents: 'box-none' } : {};
+}
 
 // A lane that holds no accessory, drawn on its own View: presses fall through it and a screen reader skips it.
 export function useInertLane(): LaneEvents {
@@ -70,16 +66,7 @@ export function InertLane({
   children?: ReactNode;
   className?: string;
 }): ReactNode {
-  return inertLane(usePassingThrough(), children, className);
-}
-
-// An InertLane for a parent that read whether presses pass through already, so the lane is no component of its own.
-export function inertLane(
-  through: boolean,
-  children: ReactNode,
-  className?: string,
-): ReactNode {
-  if (!through || !children) return children;
+  if (!use(PassThroughContext) || !children) return children;
 
   return (
     <View {...inert} className={className}>
@@ -87,12 +74,6 @@ export function inertLane(
     </View>
   );
 }
-
-// The accessories' own lane, for a parent: none when the row has none.
-export const accessoryLane = (accessories: ReactNode): ReactNode =>
-  accessories === undefined ? null : (
-    <PassThroughContext value={false}>{accessories}</PassThroughContext>
-  );
 
 /*
  * A part among a row's accessories that presses the row rather than taking its own press, such as plain text. It gives

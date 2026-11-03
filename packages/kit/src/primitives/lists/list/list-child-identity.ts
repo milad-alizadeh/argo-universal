@@ -1,16 +1,40 @@
+import { isValidElement, type ReactNode } from 'react';
 import type { ListChild } from './list-children';
-import { sameContent } from './list-same-content';
 import type { TileListProps } from './list-tile-props';
 
-// Every field of a child but its content, which is compared by what it draws.
-const placeOf = ({
-  content: _content,
-  ...place
-}: ListChild): Omit<ListChild, 'content'> => place;
+export const childIdentity: Pick<
+  TileListProps<ListChild>,
+  'keyExtractor' | 'getItemType' | 'fullSpan'
+> = {
+  keyExtractor: (item) => item.key,
+  fullSpan: (item) => item.fullSpan === true,
+  getItemType: (item) => (item.fullSpan ? 'section' : 'item'),
+};
 
-function samePlace(first: ListChild, second: ListChild): boolean {
-  const place = Object.entries(placeOf(first));
-  const next = new Map(Object.entries(placeOf(second)));
+// What an element is drawn from; any other node is itself.
+const partsOf = (node: ReactNode): unknown[] =>
+  isValidElement(node) ? [node.type, node.key, node.props] : [node];
+
+/*
+ * The same node, or the same element copied: reading children (`Children.toArray`) copies each element to set its
+ * key, but keeps its type and its props object, so an element its owner kept still reads as the same.
+ */
+export function sameElement(first: ReactNode, second: ReactNode): boolean {
+  const parts = partsOf(first);
+  const next = partsOf(second);
+
+  return (
+    parts.length === next.length &&
+    parts.every((part, index) => Object.is(part, next[index]))
+  );
+}
+
+// Everything an entry holds but its content.
+type Place = Omit<ListChild, 'content'>;
+
+function samePlace(first: Place, second: Place): boolean {
+  const place = Object.entries(first);
+  const next = new Map(Object.entries(second));
 
   return (
     place.length === next.size &&
@@ -19,18 +43,12 @@ function samePlace(first: ListChild, second: ListChild): boolean {
 }
 
 /*
- * A List reads its children again each time its owner draws, so every row is a new entry. An entry that draws the
- * same content in the same place is the same row, and its cell does not draw again.
+ * A List reads its children again each time its owner draws, so every row is a new entry. An entry holding the same
+ * element in the same place is the same row, and its cell does not draw again.
  */
-export const sameChild = (first: ListChild, second: ListChild): boolean =>
-  samePlace(first, second) && sameContent(first.content, second.content);
+export function sameChild(first: ListChild, second: ListChild): boolean {
+  const { content, ...place } = first;
+  const { content: next, ...nextPlace } = second;
 
-export const childIdentity: Pick<
-  TileListProps<ListChild>,
-  'keyExtractor' | 'getItemType' | 'fullSpan' | 'itemsAreEqual'
-> = {
-  keyExtractor: (item) => item.key,
-  fullSpan: (item) => item.fullSpan === true,
-  getItemType: (item) => (item.fullSpan ? 'section' : 'item'),
-  itemsAreEqual: sameChild,
-};
+  return sameElement(content, next) && samePlace(place, nextPlace);
+}

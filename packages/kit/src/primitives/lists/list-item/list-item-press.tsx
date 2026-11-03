@@ -1,5 +1,5 @@
 import { use, type ReactElement, type ComponentProps } from 'react';
-import type { KeyDownEvent } from 'react-native';
+import { Pressable, type KeyDownEvent } from 'react-native';
 import type { ContextActions } from '#primitives/actions/action';
 import { usePressRipple } from '#primitives/native/material-palette';
 import type { SpokenElement } from '#primitives/overlays/menu';
@@ -7,13 +7,14 @@ import { ListTileContext } from '../../../list-context';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
-import { rowPress, useBesidePress } from './list-item-beside-press';
+import { BesidePress, useBesidePress } from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
 import { interactive, usePressClass } from './list-item-press-class';
 import { rowState, selectedState } from './list-item-press-state';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
+import { ItemContentSlots } from './list-item-slots';
 import { useRowFocus } from './use-row-focus';
 
 export type { DrawingProps } from './list-item-press-props';
@@ -135,7 +136,15 @@ export function ItemPress(props: DrawingProps): ReactElement {
   if (useRadioRow(props))
     return <RadioRow row={props} className={press.className} />;
 
-  return rowPress(props, { ...focused, className }, beside);
+  // Keep the same press target while an asynchronous accessory arrives during a click.
+  if (beside)
+    return <BesidePress props={props} press={{ ...focused, className }} />;
+
+  return (
+    <Pressable {...focused} className={className}>
+      <ItemContentSlots {...props} />
+    </Pressable>
+  );
 }
 
 function currentPage(props: DrawingProps): 'page' | undefined {

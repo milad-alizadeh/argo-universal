@@ -5,14 +5,31 @@ import {
   ListTreeContext,
   type TreeRow,
 } from '../../../list-tree';
+import { sameElement } from './list-child-identity';
 
 // How a List flattens its tree of ListItems: which parents are folded, and whether a wide window draws the tree at all.
 export interface TreeFolding {
   folded: ReadonlySet<string>;
-  // The one function that folds or opens the row at `key`, the same each time the List reads its children.
-  toggleOf: (key: string) => () => void;
+  // Folds or opens the parent row at `key`; one function for the List's life.
+  toggle: (key: string) => void;
   drawn: boolean;
+  // Each tree row's content as last drawn, held by the props it was drawn from.
+  kept: KeptContents;
 }
+
+/*
+ * A tree row's content, kept with what it was drawn from, so a row drawn from the same keeps the same element. It is
+ * held by the row's props, so it goes when its element does.
+ */
+interface KeptContent {
+  child: ReactNode;
+  place: string;
+  content: ReactNode;
+}
+
+export type KeptContents = WeakMap<object, KeptContent>;
+
+export const keptContents = (): KeptContents => new WeakMap();
 
 // One of a List's own children, or a child ListItem lifted out of its parent to a row of its own.
 export interface TreeChild {
@@ -105,7 +122,7 @@ function rowAndChildren(
   const rows = childRows(child);
   const tree = treeRow(rows, folding, place);
   const { key, level } = place;
-  const content = treeContent(child, tree, rows);
+  const content = keptContent(folding.kept, key, { child, tree, rows });
   const row: TreeChild = { child, key, content, nested: level.depth > 0 };
 
   if (!tree.parent?.open) return [row];
@@ -120,17 +137,56 @@ function treeRow(
 ): TreeRow {
   const parent =
     rows.length > 0
-      ? { open: isOpen(key, folding), toggle: folding.toggleOf(key) }
+      ? { open: isOpen(key, folding), key, toggle: folding.toggle }
       : undefined;
 
   return { depth: level.depth, through: level.through, last, parent };
 }
 
-function treeContent(
+// Where a row sits in the tree, as one value: a row drawn in the same place draws as it did.
+const placeOf = (
+  key: string,
+  { depth, last, parent, through }: TreeRow,
+): string => [key, depth, last, parent?.open, ...through].join();
+
+interface Drawn {
+  child: ReactNode;
+  tree: TreeRow;
+  rows: readonly ReactNode[];
+}
+
+const keeps = (
+  held: KeptContent | undefined,
   child: ReactNode,
-  tree: TreeRow,
-  rows: readonly ReactNode[],
-): ReactNode {
+  place: string,
+): held is KeptContent =>
+  held !== undefined && sameElement(held.child, child) && held.place === place;
+
+const isObject = (value: unknown): value is object =>
+  typeof value === 'object' && value !== null;
+
+const propsOf = (node: ReactNode): object | undefined =>
+  isValidElement(node) && isObject(node.props) ? node.props : undefined;
+
+// The row's content as it was last drawn, while its element and place are the same; a new one otherwise.
+function keptContent(kept: KeptContents, key: string, drawn: Drawn): ReactNode {
+  const props = propsOf(drawn.child);
+  const place = placeOf(key, drawn.tree);
+
+  if (!props) return treeContent(drawn);
+
+  const held = kept.get(props);
+
+  if (keeps(held, drawn.child, place)) return held.content;
+
+  const content = treeContent(drawn);
+
+  kept.set(props, { child: drawn.child, place, content });
+
+  return content;
+}
+
+function treeContent({ child, tree, rows }: Drawn): ReactNode {
   const own =
     rows.length > 0 && isValidElement<{ children?: ReactNode }>(child)
       ? cloneElement(child, { children: undefined })

@@ -62,7 +62,7 @@ function FoldButton({ parent, title }: FoldProps): ReactElement {
       accessibilityLabel={title}
       accessibilityState={{ expanded: parent.open }}
       aria-expanded={parent.open}
-      onPress={parent.toggle}
+      onPress={() => parent.toggle(parent.key)}
       className="absolute inset-0 items-center justify-center rounded-sm web:select-none web:hover:bg-hover"
     >
       <DisclosureChevron open={parent.open} />
@@ -108,14 +108,6 @@ export function useFoldButton(): boolean {
   const { treeDrawn } = useListLook();
 
   return Boolean(tree?.parent && treeDrawn);
-}
-
-// Whether the row draws a tree lane at all, so a row outside a drawn tree draws no TreeLane.
-export function useTreeLaneDrawn(): boolean {
-  const tree = useTreeRow();
-  const { treeDrawn } = useListLook();
-
-  return Boolean(tree) && treeDrawn;
 }
 
 /*

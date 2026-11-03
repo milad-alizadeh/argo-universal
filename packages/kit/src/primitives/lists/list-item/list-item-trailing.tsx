@@ -5,10 +5,9 @@ import { useListLook } from '../../../list-look-context';
 import { sidebarStatus } from '../../../row-badge';
 import { cn } from '../../../utils';
 import {
-  accessoryLane,
-  inertLane,
-  openLane,
-  usePassingThrough,
+  AccessoryLane,
+  InertLane,
+  useOpenLane,
 } from './list-item-pass-through';
 import type { ListItemProps } from './list-item-props';
 
@@ -53,15 +52,17 @@ const trailingClass = (accessories: ReactNode): string =>
 
 export function Trailing(props: TrailingProps): ReactNode {
   const content = useTrailingContent(props);
-  const through = usePassingThrough();
+  const open = useOpenLane();
   const accessories = props.trailingAccessories;
 
   if (content === undefined && accessories === undefined) return null;
 
   return (
-    <View {...openLane(through)} className={trailingClass(accessories)}>
-      {inertLane(through, content, 'shrink-0 flex-row items-center gap-1')}
-      {accessoryLane(accessories)}
+    <View {...open} className={trailingClass(accessories)}>
+      <InertLane className="shrink-0 flex-row items-center gap-1">
+        {content}
+      </InertLane>
+      <AccessoryLane>{accessories}</AccessoryLane>
     </View>
   );
 }

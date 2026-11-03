@@ -119,6 +119,9 @@ export const PatchDrawsOnlyItsRow: Story = {
   },
 };
 
+// The components a row draws through, by the names the counter reads.
+const rowParts = ['DataListRow', 'ListItem', 'ContextActions'];
+
 export const ParentDrawLeavesRowsAlone: Story = {
   render: () => <PatchedTree />,
   play: async ({ canvas, canvasElement, userEvent }) => {
@@ -132,9 +135,16 @@ export const ParentDrawLeavesRowsAlone: Story = {
       await canvas.findByRole('button', { name: 'Draw again 1' });
     });
 
-    await expect(counts.DataListRow).toBeUndefined();
-    await expect(counts.ListItem).toBeUndefined();
-    await expect(counts.ContextActions).toBeUndefined();
+    // A patch draws one row through the same names, so a renamed part cannot leave this test passing on nothing.
+    const patch = await renders.during(canvasElement, async () => {
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Patch row c' }),
+      );
+      await canvas.findByText(patchedTitle);
+    });
+
+    await expect(rowParts.filter((name) => name in counts)).toEqual([]);
+    await expect(rowParts.filter((name) => name in patch)).toEqual(rowParts);
   },
 };
 

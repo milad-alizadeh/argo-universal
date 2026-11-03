@@ -3,6 +3,7 @@ import { flattenedChildren } from '../../../flattened-children';
 import type { ListProps } from './list-props';
 import { unfilteredMove } from './list-search-moves';
 import { listTree, readList } from './list-section-model';
+import { keptContents, type TreeFolding } from './list-tree-rows';
 
 type SearchRow = {
   title?: string;
@@ -79,11 +80,13 @@ function hasAppQuery(
   return mode === 'app' && query !== '';
 }
 
-const allOpen = {
+// A reading of its own each time, so it keeps no rows between searches.
+const allOpen = (): TreeFolding => ({
   folded: new Set<string>(),
-  toggleOf: () => (): void => {},
+  toggle: (): void => {},
   drawn: false,
-};
+  kept: keptContents(),
+});
 
 // The movable rows of `children`, Section by Section, as a List with `onMove` reads them.
 const orderOf = (
@@ -91,7 +94,7 @@ const orderOf = (
 ): ReturnType<typeof readList>['sections'] =>
   readList(
     children,
-    { prefix: 'search', tree: listTree(children, allOpen, true) },
+    { prefix: 'search', tree: listTree(children, allOpen(), true) },
     (owners) => owners,
   ).sections;
 

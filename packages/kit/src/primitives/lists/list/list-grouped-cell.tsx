@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { RowFrame } from '#primitives/fields/field-row';
 import type { ListPosition } from '../../../list-context';
+import { useListLook } from '../../../list-look-context';
 import { cn } from '../../../utils';
 
 /*
@@ -36,17 +37,15 @@ function GroupedCell(props: {
   );
 }
 
-/*
- * A web grouped List draws each row as a piece of its section's card; the phones draw it later. A heading, footer or
- * gap is no piece. A plain function for a row that read its List look's `webGrouped` already, so a row outside a
- * grouped List is no component deeper.
- */
-export function groupedCell(
-  drawn: boolean,
-  position: ListPosition,
-  children: ReactNode,
-): ReactNode {
-  if (!drawn) return children;
+// A web grouped List draws each row as a piece of its section's card; the phones draw it later. A heading, footer or gap is no piece.
+export function GroupedCells(props: {
+  cell: boolean;
+  position: ListPosition;
+  children: ReactNode;
+}): ReactNode {
+  const { webGrouped } = useListLook();
 
-  return <GroupedCell position={position}>{children}</GroupedCell>;
+  if (!webGrouped || !props.cell) return props.children;
+
+  return <GroupedCell position={props.position}>{props.children}</GroupedCell>;
 }

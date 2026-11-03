@@ -60,21 +60,29 @@ function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
   return leadingLane(useListLook().menu, sidebar === true || compact);
 }
 
+// The leading lane holds no accessory, so a row with accessories lets its presses through.
+function LeadingFrame(props: {
+  className: string;
+  children: ReactNode;
+}): ReactElement {
+  return <View {...useInertLane()} {...props} />;
+}
+
 export function Leading(props: LeadingProps): ReactNode {
   const lane = useLeadingLane(props.sidebar);
   const badge = useLeadingBadge(props.badge);
-  // The leading lane holds no accessory, so a row with accessories lets its presses through.
-  const inert = useInertLane();
+
+  if (!hasLeading(props)) return null;
 
   return (
-    <View {...inert} className={leadingClass(lane, props.leadingSize)}>
+    <LeadingFrame className={leadingClass(lane, props.leadingSize)}>
       <IconSizeContext value={laneSizing(lane, props.leadingSize)}>
         <StatusMarkHidden value={hasBadge(props.badge)}>
           {props.leading}
         </StatusMarkHidden>
       </IconSizeContext>
-      {badge === undefined ? null : <ItemBadge badge={badge} />}
-    </View>
+      <ItemBadge badge={badge} />
+    </LeadingFrame>
   );
 }
 

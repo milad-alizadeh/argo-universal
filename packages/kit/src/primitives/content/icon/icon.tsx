@@ -51,7 +51,7 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
 
 export function Icon(slotted: IconProps): React.JSX.Element {
   const props = { ...slotted, size: useIconSize(slotted.size) };
-  const glyph = iconGlyph(props, useGlyphDrawing(props));
+  const glyph = <IconGlyph {...props} />;
 
   const hidden = useContext(StatusMarkHidden);
 
@@ -71,60 +71,49 @@ type LogoIconProps = Sized<IconProps> & { source: LogoSource };
 
 type SymbolIconProps = Sized<IconProps> & { name: IconSymbol };
 
-// What every glyph draws with: its colour classes, its pixels, and the lane it sits in.
-interface GlyphDrawing {
-  colorClassName: string;
-  pixels: number;
-  lane: ReturnType<typeof useIconLane>;
-}
+function IconGlyph(props: Sized<IconProps>): React.JSX.Element {
+  if (props.source) return <IconLogo {...props} source={props.source} />;
 
-function useGlyphDrawing(props: Sized<IconProps>): GlyphDrawing {
-  return {
-    colorClassName: useIconColor(props),
-    pixels: useIconPixels(props.size),
-    // A row's leading lane draws its glyph at what the platform's Settings app draws (row-glyph.ts).
-    lane: useIconLane(),
-  };
-}
-
-// A logo or a symbol, drawn by Icon itself rather than a component of its own, so the icon is no deeper than its glyph.
-function iconGlyph(
-  props: Sized<IconProps>,
-  drawing: GlyphDrawing,
-): React.JSX.Element {
-  if (props.source)
-    return logoGlyph({ ...props, source: props.source }, drawing);
-
-  return symbolGlyph({ ...props, name: props.name }, drawing);
+  return <IconSymbolGlyph {...props} name={props.name} />;
 }
 
 // Logos are SVG assets rather than symbols (ADR-0019, Logos).
-const logoGlyph = (
-  props: LogoIconProps,
-  { pixels, colorClassName }: GlyphDrawing,
-): React.JSX.Element => (
-  <LogoGlyph
-    source={props.source}
-    pixels={pixels}
-    colorClassName={colorClassName}
-    testID={props.testID ?? `icon-${props.source.label.toLowerCase()}`}
-  />
-);
+function IconLogo(props: LogoIconProps): React.JSX.Element {
+  return (
+    <LogoGlyph
+      source={props.source}
+      pixels={useIconPixels(props.size)}
+      colorClassName={useIconColor(props)}
+      testID={props.testID ?? `icon-${props.source.label.toLowerCase()}`}
+    />
+  );
+}
 
-function symbolGlyph(
-  props: SymbolIconProps,
-  drawing: GlyphDrawing,
-): React.JSX.Element {
+function IconSymbolGlyph(props: SymbolIconProps): React.JSX.Element {
+  const colorClassName = useIconColor(props);
   const icon = resolveIcon(props.name);
 
   return (
     <TintedSymbol
-      className={drawing.colorClassName}
-      {...drawing}
-      symbol={iconDrawing(icon, props.filled)}
-      testID={props.testID ?? `icon-${icon.key}`}
+      className={colorClassName}
+      {...useSymbolDrawingProps(props, icon, colorClassName)}
     />
   );
+}
+
+function useSymbolDrawingProps(
+  props: SymbolIconProps,
+  icon: ResolvedIcon,
+  colorClassName: string,
+): React.ComponentProps<typeof TintedSymbol> {
+  return {
+    symbol: iconDrawing(icon, props.filled),
+    colorClassName,
+    pixels: useIconPixels(props.size),
+    // A row's leading lane draws its glyph at what the platform's Settings app draws (row-glyph.ts).
+    lane: useIconLane(),
+    testID: props.testID ?? `icon-${icon.key}`,
+  };
 }
 
 function IconWithStatus(

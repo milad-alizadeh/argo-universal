@@ -12,28 +12,65 @@ import { useCompactRows } from '../../../list-look-context';
 import { hasBadge, ItemBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
-import { ItemContent } from './list-item-content';
-import { contentLane, leadingLanes, trailingLanes } from './list-item-lanes';
+import { CompactContent, ItemContent, trailsTitle } from './list-item-content';
+import { Accessory, Control, Leading } from './list-item-parts';
+import { InertLane } from './list-item-pass-through';
 import type { DrawingProps } from './list-item-press-props';
-import { useTreeLaneDrawn } from './list-item-tree';
+import { Trailing } from './list-item-trailing';
+import { TreeLane } from './list-item-tree';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
 export function ItemContentSlots(props: DrawingProps): ReactElement {
   const tile = useContext(ListTileContext);
-  const compact = useCompactRows(props.sidebar);
-  // A compact row draws its tree lane inside its one line.
-  const treeLane = useTreeLaneDrawn() && !compact;
 
   if (tile) return <TileContent props={props} aspect={tile.aspect} />;
 
+  return <RowContentSlots {...props} />;
+}
+
+function RowContentSlots(props: DrawingProps): ReactElement {
+  const compact = useCompactRows(props.sidebar);
+
   return (
     <TextClassContext value={undefined}>
-      {leadingLanes(props, treeLane)}
-      {contentLane(props, compact)}
-      {trailingLanes(props, compact)}
+      <InertLane>{props.choice}</InertLane>
+      {compact ? null : <TreeLane title={props.title} compact={false} />}
+      <Leading {...props} />
+      <RowContent props={props} compact={compact} />
+      <RowTrailing props={props} compact={compact} />
+      <Accessory>{props.accessory}</Accessory>
+      <Control>{props.control}</Control>
     </TextClassContext>
   );
 }
+
+// A regular row's trailing mark joins its title when the title trails; otherwise it has its own lane.
+function RowTrailing({
+  props,
+  compact,
+}: {
+  props: DrawingProps;
+  compact: boolean;
+}): ReactNode {
+  return !compact && trailsTitle(props) ? null : <Trailing {...props} />;
+}
+
+// A compact row draws its tree lane inside its one line; a regular row draws it before its leading mark.
+function RowContent({
+  props,
+  compact,
+}: {
+  props: DrawingProps;
+  compact: boolean;
+}): ReactNode {
+  return compact ? <CompactRow {...props} /> : <RegularRow {...props} />;
+}
+
+const CompactRow = (props: DrawingProps): ReactNode =>
+  props.content ?? <CompactContent {...props} />;
+
+const RegularRow = (props: DrawingProps): ReactNode =>
+  props.content ?? <ItemContent {...props} />;
 
 type TileProps = { props: DrawingProps; aspect: number };
 

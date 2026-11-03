@@ -15,8 +15,7 @@ const dotName = 'circle';
 // The dot fills half the icon's box, as SF Symbols' circle.fill sits in its own.
 const dotShare = 0.5;
 
-// A plain function, not a component, so the glyph is no deeper than the SymbolView it draws.
-export function materialGlyph({
+export function MaterialGlyph({
   symbol,
   pixels,
 }: MaterialGlyphProps): React.JSX.Element {

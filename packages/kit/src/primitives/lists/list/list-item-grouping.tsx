@@ -83,12 +83,12 @@ function RowFooter({
   description,
   position,
 }: {
-  description?: string;
+  description: string;
   position: ListPosition;
 }): ReactNode {
   const { footerEndsGroup } = useListLook();
 
-  if (!description || !footerEndsGroup) return null;
+  if (!footerEndsGroup) return null;
 
   return (
     <View className={footerGap(position)}>

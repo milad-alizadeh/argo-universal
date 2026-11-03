@@ -48,14 +48,11 @@ export function useActionShortcuts(
   const id = useId();
   useRegistration(scope, id, options);
   // A declaration draws again only when the keys it holds change, not for every other declaration's.
-  const owned = (): string => scope.ownedBy(id);
-  useSyncExternalStore(scope.subscribe, owned, owned);
+  const ownedBy = (): string => scope.ownedBy(id);
+  const owned = useSyncExternalStore(scope.subscribe, ownedBy, ownedBy);
   useShortcutListener({ ...options, scope, id });
 
-  return {
-    id,
-    actions: hintedActions(options.actions, scope, id),
-  };
+  return { id, actions: hintedActions(options.actions, owned) };
 }
 
 function useRegistration(
@@ -70,13 +67,15 @@ function useRegistration(
   }, [scope, id, actions, plugin, context]);
 }
 
+// Hinted from the keys it holds as read, never from the registry itself, so a compiled draw cannot keep stale hints.
 function hintedActions(
   actions: DeclaredAction[],
-  scope: ShortcutRegistry,
-  id: string,
+  owned: string,
 ): DeclaredAction[] {
+  const ids = new Set(owned.split('\n'));
+
   return actions.map((action) => ({
     ...action,
-    shortcut: scope.owns(id, action) ? action.shortcut : undefined,
+    shortcut: ids.has(action.id) ? action.shortcut : undefined,
   }));
 }
