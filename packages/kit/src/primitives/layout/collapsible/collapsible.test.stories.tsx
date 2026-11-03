@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { layoutWidths, settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
@@ -113,6 +113,26 @@ export const RowBelowRestsOnce: Story = {
     await expect(tops.slice(rest)).toEqual(
       tops.slice(rest).map(() => tops.at(-1)),
     );
+  },
+};
+
+const onOpenChange = fn();
+
+// The header's press reports each change of the open state once.
+export const HeaderOwnsToggle: Story = {
+  render: () => (
+    <Collapsible onOpenChange={onOpenChange}>
+      <CollapsibleHeader label={toggleLabel} icon="read" />
+    </Collapsible>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    onOpenChange.mockClear();
+    const header = canvas.getByRole('button', { name: toggleLabel });
+    await userEvent.click(header);
+    await expect(onOpenChange).toHaveBeenNthCalledWith(1, true);
+    await userEvent.click(header);
+    await expect(onOpenChange).toHaveBeenNthCalledWith(2, false);
+    await expect(onOpenChange).toHaveBeenCalledTimes(2);
   },
 };
 

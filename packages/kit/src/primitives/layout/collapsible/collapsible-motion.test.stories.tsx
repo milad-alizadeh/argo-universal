@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { cdp } from 'vitest/browser';
@@ -114,5 +114,51 @@ export const ForcedContentStaysMountedButInaccessibleWhenClosed: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Inside action' }),
     ).toBeVisible();
+  },
+};
+
+const shrink = 'Shrink content';
+
+function ShrinkingDisclosure(): ReactElement {
+  const [tall, setTall] = useState(true);
+
+  return (
+    <View>
+      <Button label={shrink} onPress={() => setTall(false)} />
+      <Collapsible>
+        <CollapsibleHeader label={toggle} />
+        <CollapsibleContent>
+          <View className={tall ? 'h-64' : 'h-16'} />
+        </CollapsibleContent>
+      </Collapsible>
+      <Text>{following}</Text>
+    </View>
+  );
+}
+
+// Content that shrinks while it opens takes the row below no further than where it ends, and the row rests there once.
+export const ShrinkingWhileOpeningNeverPassesTheEnd: Story = {
+  render: (): ReactElement => <ShrinkingDisclosure />,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const trigger = canvas.getByRole('button', { name: toggle });
+    const below = canvas.getByText(following);
+
+    trigger.click();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+
+    const tops = await sampleEachFrame(
+      () => canvas.getByRole('button', { name: shrink }).click(),
+      () => below.getBoundingClientRect().top,
+      40,
+    );
+
+    const end = tops.at(-1) ?? 0;
+    const rest = tops.indexOf(end);
+
+    await expect(Math.max(...tops)).toBeLessThanOrEqual(end);
+    await expect(tops.slice(rest)).toEqual(tops.slice(rest).map(() => end));
   },
 };

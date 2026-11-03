@@ -1,30 +1,24 @@
-import * as RadixCollapsible from '@radix-ui/react-collapsible';
 import {
   type ComponentProps,
-  createContext,
   type ReactElement,
   useContext,
+  useId,
 } from 'react';
-import { Pressable, View } from 'react-native';
-import { type OpenState, useOpenState } from '#primitives/overlays/open-state';
-import { CollapsibleContent } from './collapsible-content';
+import { Platform, Pressable, View } from 'react-native';
+import { useOpenState } from '#primitives/overlays/open-state';
+import { DrawnContent } from './collapsible-content';
 import {
+  CollapsibleContext,
   CollapsibleLayoutSyncContext,
-  OpenContext,
 } from './collapsible-context';
 import { createCollapsibleHeader } from './collapsible-header';
-import type { CollapsibleProps } from './collapsible-props';
+import { LayoutSyncedContent } from './collapsible-layout-content';
+import type {
+  CollapsibleContentProps,
+  CollapsibleProps,
+} from './collapsible-props';
 
-/*
- * The web's collapsible, on Radix Collapsible (`@radix-ui/react-collapsible`): Root `open`/`onOpenChange`/
- * `disabled` wires the trigger's `aria-expanded` and `aria-controls` to the content's region.
- */
-const ToggleContext = createContext<OpenState & { disabled: boolean }>({
-  open: false,
-  disabled: false,
-  onOpenChange: () => {},
-});
-
+// One disclosure on every platform: a button that reports `expanded` and, on the web, names the region it controls.
 function viewProps({
   open: _open,
   defaultOpen: _defaultOpen,
@@ -37,44 +31,50 @@ function viewProps({
 
 function Collapsible(props: CollapsibleProps): ReactElement {
   const state = useOpenState(props);
+  const contentId = useId();
   const disabled = Boolean(props.disabled);
 
   return (
-    <OpenContext.Provider value={state.open}>
-      <ToggleContext value={{ ...state, disabled }}>
-        <RadixCollapsible.Root {...state} disabled={disabled}>
-          <View {...viewProps(props)} />
-        </RadixCollapsible.Root>
-      </ToggleContext>
-    </OpenContext.Provider>
+    <CollapsibleContext value={{ ...state, disabled, contentId }}>
+      <View {...viewProps(props)} />
+    </CollapsibleContext>
   );
 }
 
 type TriggerProps = Omit<ComponentProps<typeof Pressable>, 'role'>;
 
-// React Native Web's Pressable keeps Radix's click from reaching the root, so the press toggles it.
-function CollapsibleTrigger(props: TriggerProps): ReactElement {
-  const behaviour = useTriggerBehaviour(props);
+// Only the web has `aria-controls`; a phone's reader moves into the content in order.
+const controls = (contentId: string): { 'aria-controls'?: string } =>
+  Platform.OS === 'web' ? { 'aria-controls': contentId } : {};
 
-  return (
-    <RadixCollapsible.Trigger disabled={!!behaviour.disabled} asChild>
-      <Pressable role="button" {...props} {...behaviour} />
-    </RadixCollapsible.Trigger>
-  );
-}
-
-function useTriggerBehaviour(
-  props: TriggerProps,
-): Pick<TriggerProps, 'disabled' | 'onPress'> {
-  const toggle = useContext(ToggleContext);
+function useTriggerBehaviour(props: TriggerProps): TriggerProps {
+  const toggle = useContext(CollapsibleContext);
 
   return {
+    ...controls(toggle.contentId),
+    'aria-expanded': toggle.open,
     disabled: toggle.disabled || Boolean(props.disabled),
     onPress: (event) => {
       props.onPress?.(event);
       toggle.onOpenChange(!toggle.open);
     },
   };
+}
+
+function CollapsibleTrigger(props: TriggerProps): ReactElement {
+  return <Pressable role="button" {...props} {...useTriggerBehaviour(props)} />;
+}
+
+// Legend List places the Feed's rows itself and hears a resize late, so the Feed's content moves with its row instead.
+function CollapsibleContent(
+  props: CollapsibleContentProps,
+): ReactElement | null {
+  const layoutSync = useContext(CollapsibleLayoutSyncContext);
+
+  if (layoutSync)
+    return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
+
+  return <DrawnContent {...props} />;
 }
 
 export {

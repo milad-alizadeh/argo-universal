@@ -1,79 +1,90 @@
-import * as RadixCollapsible from '@radix-ui/react-collapsible';
-import { type ComponentType, type ReactElement, useContext } from 'react';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
 import {
-  CollapsibleLayoutSyncContext,
-  OpenContext,
+  type ComponentProps,
+  type ReactElement,
+  type RefObject,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { View, type ViewInstance } from 'react-native';
+import {
+  CollapsibleContext,
   contentAccessibility,
 } from './collapsible-context';
-import { LayoutSyncedContent } from './collapsible-layout-content';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
-import {
-  useWebContentMotion,
-  type WebContentMotion,
-} from './collapsible-web-motion';
 
-type Drawing = Pick<WebContentMotion, 'mounted' | 'height' | 'measure'>;
+type RegionRef = RefObject<ViewInstance | null>;
 
-type BodyProps = { content: ContentProps; motion: Drawing };
+// The browser's transitions on the region, which a close waits for; reduced motion has none, so it closes at once.
+async function settled(region: RegionRef): Promise<void> {
+  const node = region.current;
 
-function MeasuredBody({ content, motion }: BodyProps): ReactElement | null {
-  if (!motion.mounted) return null;
+  if (!(node instanceof HTMLElement)) return;
+
+  await Promise.allSettled(
+    node.getAnimations().map((motion) => motion.finished),
+  );
+}
+
+// Closed content stays mounted until its close has finished, and a reopening on the way keeps it.
+function useMounted(open: boolean, region: RegionRef): boolean {
+  const [mounted, setMounted] = useState(open);
+  const latestOpen = useRef(open);
+
+  if (open && !mounted) setMounted(true);
+
+  useLayoutEffect(() => {
+    latestOpen.current = open;
+
+    if (!open) void settled(region).then(() => setMounted(latestOpen.current));
+  }, [open, region]);
+
+  return mounted;
+}
+
+const regionClass = (open: boolean): string =>
+  `grid grid-cols-1 transition-grid-rows duration-200 ease-out motion-reduce:transition-none ${open ? 'grid-rows-content' : 'grid-rows-shut'}`;
+
+/*
+ * The region's one grid row moves between `0fr` and `1fr`. The browser sizes that row from the content as it lays it
+ * out, so content that grows or shrinks while the row moves is followed in the same frame, with nothing to measure.
+ * The caller's padding sits inside the clipped row, so a close reaches zero.
+ */
+interface Region {
+  open: boolean;
+  mounted: boolean;
+  region: ComponentProps<typeof View>;
+}
+
+function useRegion(): Region {
+  const { open, contentId } = useContext(CollapsibleContext);
+  const ref = useRef<ViewInstance>(null);
+  const mounted = useMounted(open, ref);
+  const region = { ref, nativeID: contentId, ...contentAccessibility(open) };
+
+  return { open, mounted, region };
+}
+
+export function DrawnContent(props: ContentProps): ReactElement {
+  const { forceMount, ...view } = props;
+  const { open, mounted, region } = useRegion();
 
   return (
-    <View className={content.className} onLayout={motion.measure}>
-      {content.children}
+    <View {...region} className={regionClass(open)}>
+      <Clipped shown={mounted || Boolean(forceMount)} content={view} />
     </View>
   );
 }
 
-const bodyStyle = ({ content, motion }: BodyProps): StyleProp<ViewStyle> => [
-  motion.mounted ? content.style : undefined,
-  { height: motion.height },
-];
-
-// Caller padding is measured inside the moving box, so closing can reach zero.
-function WebBody(props: BodyProps): ReactElement {
-  const open = useContext(OpenContext);
-  const own = props.motion.mounted ? props.content : {};
-
+// The grid row's one item may shrink below its content, which it clips.
+function Clipped(props: {
+  shown: boolean;
+  content: ContentProps;
+}): ReactElement {
   return (
-    <View
-      {...own}
-      {...contentAccessibility(open)}
-      style={bodyStyle(props)}
-      className="overflow-hidden transition-height duration-200 ease-out motion-reduce:transition-none"
-    >
-      <MeasuredBody {...props} />
+    <View className="min-h-0 overflow-hidden">
+      {props.shown ? <View {...props.content} /> : null}
     </View>
   );
 }
-
-function WebContent({ forceMount, ...props }: ContentProps): ReactElement {
-  const { region, onTransitionEnd, ...motion } = useWebContentMotion({
-    open: useContext(OpenContext),
-    forceMount,
-  });
-
-  return (
-    <RadixCollapsible.Content
-      ref={region}
-      forceMount
-      onTransitionEnd={onTransitionEnd}
-    >
-      <WebBody content={props} motion={motion} />
-    </RadixCollapsible.Content>
-  );
-}
-
-// The web animates with CSS; a layout-synced list animates with its rows instead.
-export function CollapsibleContent(props: ContentProps): ReactElement {
-  const layoutSync = useContext(CollapsibleLayoutSyncContext);
-
-  if (layoutSync)
-    return <LayoutSyncedContent {...props} layoutSync={layoutSync} />;
-
-  return <WebContent {...props} />;
-}
-
-CollapsibleContent satisfies ComponentType<ContentProps>;

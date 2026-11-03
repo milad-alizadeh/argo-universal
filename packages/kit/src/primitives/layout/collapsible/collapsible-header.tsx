@@ -10,7 +10,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
-import { OpenContext } from './collapsible-context';
+import { useCollapsibleOpen } from './collapsible-context';
 import type { CollapsibleHeaderProps } from './collapsible-props';
 
 const HoveredContext = createContext(false);
@@ -46,7 +46,7 @@ function HeaderChevron({ hovered }: { hovered: boolean }): ReactElement {
     <LineSlot>
       <Chevron
         direction="right"
-        open={useContext(OpenContext)}
+        open={useCollapsibleOpen()}
         className={headerColour(hovered)}
       />
     </LineSlot>
