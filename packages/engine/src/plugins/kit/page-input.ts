@@ -10,6 +10,7 @@ import type {
   PluginEvent,
 } from '@repo/contracts/plugins/wire';
 import type { Paged } from './paged-lists';
+import { renderContext } from './render-context';
 
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
@@ -17,12 +18,12 @@ type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 export function inputOf<State extends PageState>(
   defaults: State | undefined,
   params: Record<string, string>,
-  { pageState, projectId, sessionId }: DrawEvent,
+  event: DrawEvent,
 ): LoaderInput<State> {
   return Object.freeze({
     params: Object.freeze(params),
-    state: Object.freeze(stateOf(defaults, pageState)),
-    context: Object.freeze({ serverDevice: false, projectId, sessionId }),
+    state: Object.freeze(stateOf(defaults, event.pageState)),
+    context: renderContext(event),
   });
 }
 

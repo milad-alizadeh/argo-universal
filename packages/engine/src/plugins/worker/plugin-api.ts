@@ -8,6 +8,7 @@ import type {
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
 import { fetchResponse } from '../kit/fetch-response';
+import { configureOperationScope } from '../kit/operation-scope';
 import { createKit, type Kit } from '../kit/plugin-kit';
 import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';
@@ -38,6 +39,8 @@ const bridge = globalThis.__argoBridge;
 delete globalThis.__argoBridge;
 
 if (!bridge) throw new Error('The kit runs only in a Plugin realm');
+
+if (bridge.operations) configureOperationScope(bridge.operations);
 
 if (bridge.inView) configureViewScope(bridge.inView);
 

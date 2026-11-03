@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import type { OperationScope } from '../kit/operation-scope.ts';
 import {
   PluginRequest,
   type PluginValue,
@@ -54,6 +55,7 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
 export type PluginBridge = ((json: string) => Promise<string>) & {
   inView?: <T>(viewId: string | null, run: () => T) => T;
   inProject?: <T>(projectId: string | undefined, run: () => T) => T;
+  operations?: OperationScope;
 };
 
 /*
@@ -65,7 +67,18 @@ export type PluginBridge = ((json: string) => Promise<string>) & {
 export function createPluginBridge(calls: WorkerCalls): PluginBridge {
   const scope = new AsyncLocalStorage<CallOrigin>();
 
-  const bridge: PluginBridge = async (json) => {
+  return Object.assign(bridgeCall(calls, scope), {
+    inView: <T>(viewId: string | null, run: () => T): T =>
+      scope.run({ viewId }, run),
+    inProject: <T>(projectId: string | undefined, run: () => T): T =>
+      scope.run({ projectId }, run),
+    operations: operationScope(),
+  });
+}
+
+const bridgeCall =
+  (calls: WorkerCalls, scope: AsyncLocalStorage<CallOrigin>) =>
+  async (json: string): Promise<string> => {
     const value = await calls.call(
       PluginRequest.parse(JSON.parse(json)),
       scope.getStore() ?? undefined,
@@ -74,11 +87,12 @@ export function createPluginBridge(calls: WorkerCalls): PluginBridge {
     return JSON.stringify(value ?? null);
   };
 
-  bridge.inView = <T>(viewId: string | null, run: () => T): T =>
-    scope.run({ viewId }, run);
+// The Operation invocation a handler answers, kept apart from the call origin it never changes.
+function operationScope(): OperationScope {
+  const operation = new AsyncLocalStorage<number>();
 
-  bridge.inProject = <T>(projectId: string | undefined, run: () => T): T =>
-    scope.run({ projectId }, run);
-
-  return bridge;
+  return {
+    run: (id, run) => operation.run(id, run),
+    current: () => operation.getStore() ?? null,
+  };
 }

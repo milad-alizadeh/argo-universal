@@ -1,11 +1,9 @@
-import type {
-  LoaderPageCall,
-  PageAddress,
-} from '@repo/contracts/plugins/page-address';
-import type { WireJson } from '@repo/contracts/plugins/wire';
+import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { PluginEvent } from '../protocol/runtime';
 import { stopWaiting } from '../stopped-calls';
+import { checkedPage } from './checked-tree';
 
 /*
  * How long a Loader may read before its draw fails. A Loader awaits the Plugin's own reads, such as a
@@ -15,8 +13,9 @@ const drawLimitMs = 30_000;
 
 type Caller = { pluginId: string; generation: number };
 
+// A drawn tree as checked for any App to draw.
 export type Drawn =
-  | { ok: true; root: WireJson; pages: number }
+  | { ok: true; root: WireNode; pages: number }
   | { ok: false; error: string };
 
 type Answered = Extract<LoaderPageCall, { id: number }>;
@@ -28,8 +27,8 @@ type Outcome = Answered | Failed;
 
 type Pending = Caller & { settle: (outcome: Outcome) => void };
 
-// An address and how many pages of its paged list the App shows.
-type DrawAt = Omit<PageAddress, 'pluginId'> & { pages: number };
+// An address, how many pages of its paged list the App shows, and the Connection that asked.
+type DrawAt = Omit<Extract<PluginEvent, { type: 'draw' }>, 'type' | 'id'>;
 
 // Where a background pass runs a Loader alone: its Page path and the Project it reads for.
 export type LoadAt = { path: string; projectId: string };
@@ -39,19 +38,12 @@ export type Loaded = { ok: true } | { ok: false; error: string };
 export type DrawTransport = {
   send: (pluginId: string, event: PluginEvent) => void;
   clock: PluginClock;
+  log: (line: string) => void;
 };
 
 const failed = (error: string): Failed => ({ ok: false, error });
 
 type ChangeListener = (pluginId: string) => void;
-
-function drawnOf(outcome: Outcome): Drawn {
-  if ('ok' in outcome) return outcome;
-
-  return outcome.action === 'drawn'
-    ? { ok: true, root: outcome.root, pages: outcome.pages }
-    : failed(answeredError(outcome));
-}
 
 const answeredError = (answered: Answered): string =>
   answered.action === 'failed' ? answered.error : 'The page only loaded';
@@ -91,7 +83,15 @@ export class PluginDraws {
   }
 
   public async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
-    return drawnOf(await this.call(pluginId, address));
+    const outcome = await this.call(pluginId, address);
+
+    if ('ok' in outcome) return outcome;
+
+    if (outcome.action !== 'drawn') return failed(answeredError(outcome));
+
+    const { log } = this.transport;
+
+    return checkedPage({ pluginId, path: address.path, log }, outcome);
   }
 
   // A background pass: the Loader alone, for one Project, given the pass's own budget rather than a draw's.
@@ -105,6 +105,7 @@ export class PluginDraws {
       projectId,
       pageState: {},
       pages: 1,
+      serverDevice: false,
       loadOnly: true as const,
     };
 
@@ -113,7 +114,7 @@ export class PluginDraws {
 
   private call(
     pluginId: string,
-    address: DrawAt & { loadOnly?: true },
+    address: DrawAt,
     limitMs = drawLimitMs,
   ): Promise<Outcome> {
     const generation = this.running.get(pluginId);
@@ -126,7 +127,7 @@ export class PluginDraws {
 
   private sent(
     caller: Caller,
-    address: DrawAt & { loadOnly?: true },
+    address: DrawAt,
     limitMs: number,
   ): Promise<Outcome> {
     const id = this.next++;

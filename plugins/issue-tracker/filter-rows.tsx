@@ -89,12 +89,13 @@ const statusRun = (
     { optimistic: statusPatches(number, status) },
   );
 
-const statusPatches = (
-  number: number,
-  status: Issue['status'],
-): NonNullable<ReturnType<RowSource['to']['run']>['optimistic']> => [
+type Patch = NonNullable<
+  ReturnType<RowSource['to']['run']>['optimistic']
+>[number];
+
+const statusPatches = (number: number, status: Issue['status']): Patch[] => [
   { key: String(number), props: { finished: status !== 'open' } },
-  { key: `mark-${number}`, props: markProps[status] },
+  { key: `mark-${number}`, props: markProps(status) },
   {
     key: `status-${number}`,
     props: {
@@ -104,10 +105,12 @@ const statusPatches = (
   },
 ];
 
-const markProps = {
-  open: { name: 'pending', tone: 'muted', filled: false },
-  closed: { name: 'passed', tone: 'done', filled: true },
-};
+// The Icon props of the mark the row changes to; the element's own props also carry its children and key.
+function markProps(status: Issue['status']): Patch['props'] {
+  const { name, tone, size, filled } = statusMark({ status }).props;
+
+  return { name, tone, size, filled };
+}
 
 function blockedMark(issue: Issue): JSX.Element[] {
   const open = (issue.blockedBy ?? []).filter(

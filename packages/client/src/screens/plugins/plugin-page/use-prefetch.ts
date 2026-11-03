@@ -1,4 +1,4 @@
-import { matchPagePath } from '@repo/contracts/plugins/page-address';
+import { matchesAnyPagePath } from '@repo/contracts/plugins/page-address';
 import { Action, type WireNode } from '@repo/contracts/plugins/wire';
 import { useEffect } from 'react';
 import { drawOptions, useDrawing, type Drawing } from './draw-cache';
@@ -48,9 +48,7 @@ function drawAhead(
 function loaderLinks(root: WireNode | null, patterns: string[]): string[] {
   const paths = root ? linksOf(root) : [];
 
-  const loaders = paths.filter((path) =>
-    patterns.some((pattern) => matchPagePath(pattern, path) !== null),
-  );
+  const loaders = paths.filter((path) => matchesAnyPagePath(patterns, path));
 
   return [...new Set(loaders)].slice(0, prefetched);
 }

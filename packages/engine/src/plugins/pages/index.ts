@@ -1,9 +1,10 @@
 /*
  * Loader pages (ADR-0050): a page is a Loader and a pure Render, drawn once per Page address.
  *
- * `draw(request)` starts the Plugin when it is not running, runs the Loader the address's path matches,
+ * `draw(request, drawnFor)` starts the Plugin when it is not running, runs the Loader the address's path
+ * matches, with a context that names the asking Connection's surface and whether it is the Server Device,
  * reads `pages` pages of its paged list, then runs its Render, and answers the Plugin tree, parsed,
- * capped, sanitised and prepared as every Plugin tree is. When the request names the hash of the tree the
+ * capped, sanitised and prepared as every Plugin tree is; the log names the SVG it left out. When the request names the hash of the tree the
  * App keeps, the answer is `unchanged` for the same tree, or `append` for a tree this Server sent that
  * the new one only grows by appended rows, and otherwise the whole `tree`. Two draws of one address may
  * run at once. It answers `failed` when the Plugin cannot start, no pattern matches the path, the Loader
@@ -15,12 +16,13 @@
  * App draws again. It throws what the Operation throws, so the App rolls back and says why.
  *
  * `stale(signal)` streams a stale mark after every Operation of a Plugin that answered, whoever ran it
- * (a Component event, an Agent, the CLI), until the signal aborts or `close()`; the App draws again only
+ * (a Component event, an Agent, the CLI), and after each `argo.changed()` outside one, until the signal
+ * aborts or `close()`; one Operation makes one mark, however often its handler says `argo.changed()`; the App draws again only
  * the addresses it has on screen, so no App polls.
  *
  * `patterns(pluginId)` lists the Page path patterns the running Plugin defined, so the App knows which
  * of its paths are Loader pages; it starts the Plugin first and throws when it cannot.
  */
-export { LoaderPages, type PagesHost } from './loader-pages';
+export { LoaderPages, type Asking, type PagesHost } from './loader-pages';
 
 export { PluginDraws } from './plugin-draws';

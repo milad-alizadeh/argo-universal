@@ -6,6 +6,12 @@ type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 
 export type OperationSend = (call: PluginOperationCall) => Promise<void>;
 
+// How an invocation is answered: its handler runs `during` the invocation, and `send` answers it.
+export type OperationAnswering = {
+  during: <T>(id: number, run: () => Promise<T>) => Promise<T>;
+  send: OperationSend;
+};
+
 export interface OperationHandlers {
   register: (name: string, handler: OperationHandler) => void;
   answer: (event: OperationEvent) => void;
@@ -15,22 +21,24 @@ export interface OperationHandlers {
  * The handlers a Plugin registered for its declared Operations; each invocation is answered by its id,
  * or failed with why. Core checked the params against the manifest before the handler sees them.
  */
-export function operationHandlers(send: OperationSend): OperationHandlers {
+export function operationHandlers(
+  answering: OperationAnswering,
+): OperationHandlers {
   const handlers = new Map<string, OperationHandler>();
 
   return {
     register: (name, handler) => handlers.set(name, handler),
-    answer: (event) => void answer(send, handlers.get(event.name), event),
+    answer: (event) => void answer(answering, handlers.get(event.name), event),
   };
 }
 
 async function answer(
-  send: OperationSend,
+  { during, send }: OperationAnswering,
   handler: OperationHandler | undefined,
   event: OperationEvent,
 ): Promise<void> {
   try {
-    const result = await resultOf(handler, event);
+    const result = await during(event.id, () => resultOf(handler, event));
 
     await send({ action: 'result', id: event.id, result });
   } catch (error) {

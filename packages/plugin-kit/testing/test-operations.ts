@@ -1,4 +1,6 @@
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import {
+  type Asking,
   LoaderPages,
   PluginOperationService,
   type PluginRuntime,
@@ -30,6 +32,9 @@ export function testOperations(
   };
 }
 
+// A draw asks as a web App does, as a mounted view's Connection does by default.
+const webApp: Asking = { surface: currentPluginSurface('web') };
+
 // One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
 export function testPages(
   { service, runtime }: Hosted,
@@ -39,7 +44,7 @@ export function testPages(
   const pages = new LoaderPages(service, runtime.draws, operations);
 
   return {
-    draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }),
+    draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }, webApp),
     run: (input) => pages.run({ pluginId, ...input }),
     stale: (signal) => pages.stale(signal),
   };

@@ -8,10 +8,11 @@ import type {
   DrawRequest,
 } from '@repo/contracts/plugins/page-draw';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
+import type { PluginEvent } from '@repo/contracts/plugins/wire';
+import type { RpcConnection } from '../../rpc';
+import { Broadcast } from '../broadcast';
 import type { PluginOperationService } from '../operations';
-import { checkedTree } from './checked-tree';
 import type { Drawn, PluginDraws } from './plugin-draws';
-import { StaleMarks } from './stale-marks';
 import { TreeAnswers } from './tree-answers';
 
 // What drawing needs of the Plugin service: a running worker, started on the first draw as a page starts it.
@@ -19,22 +20,44 @@ export type PagesHost = {
   activate: (pluginId: string) => Promise<PluginStatus>;
 };
 
+// The Connection a draw is for.
+export type Asking = Pick<RpcConnection, 'surface' | 'identity'>;
+
+const askedBy = ({
+  surface,
+  identity,
+}: Asking): Pick<
+  Extract<PluginEvent, { type: 'draw' }>,
+  'serverDevice' | 'surface'
+> => ({
+  serverDevice: identity?.serverDevice === true,
+  ...(surface && { surface }),
+});
+
 const failedDraw = (error: string): DrawAnswer => ({ kind: 'failed', error });
 
 export class LoaderPages {
-  private readonly marks = new StaleMarks();
+  private readonly marks = new Broadcast<StaleMark>();
   private readonly answers = new TreeAnswers();
   private readonly unwatch: () => void;
 
-  // An Operation's run, or the Plugin's own `argo.changed()`, marks every Loader page of the Plugin.
+  /*
+   * An Operation's run, or the Plugin's own `argo.changed()` outside one, marks every Loader page of the
+   * Plugin at once: the worker folds a change made inside an Operation into that run's one mark.
+   */
   public constructor(
     private readonly host: PagesHost,
     private readonly draws: PluginDraws,
     private readonly operations: PluginOperationService,
   ) {
-    this.unwatch = draws.onChanged((pluginId) =>
-      this.marks.mark({ pluginId, stale: draws.patternsOf(pluginId) }),
-    );
+    this.unwatch = draws.onChanged((pluginId) => this.mark(pluginId));
+  }
+
+  // A Plugin with no Loader pages has nothing to mark.
+  private mark(pluginId: string): void {
+    const stale = this.draws.patternsOf(pluginId);
+
+    if (stale.length > 0) this.marks.send({ pluginId, stale });
   }
 
   public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {
@@ -46,11 +69,11 @@ export class LoaderPages {
     this.marks.close();
   }
 
-  public async draw({
-    pluginId,
-    known,
-    ...at
-  }: DrawRequest): Promise<DrawAnswer> {
+  // The Loader reads, and the Render draws, for the Connection that asked, as a view's opening does.
+  public async draw(
+    { pluginId, known, ...at }: DrawRequest,
+    asking: Asking,
+  ): Promise<DrawAnswer> {
     const started = await this.started(pluginId);
 
     if (started) return failedDraw(started);
@@ -58,6 +81,7 @@ export class LoaderPages {
     const drawn = await this.draws.draw(pluginId, {
       ...at,
       pages: at.pages ?? 1,
+      ...askedBy(asking),
     });
 
     return this.answered(drawn, known);
@@ -89,13 +113,9 @@ export class LoaderPages {
   }
 
   private answered(drawn: Drawn, known?: string): DrawAnswer {
-    if (!drawn.ok) return failedDraw(drawn.error);
-
-    const tree = checkedTree(drawn.root, 'page');
-
-    return tree.ok
-      ? this.answers.answer(tree.root, drawn.pages, known)
-      : failedDraw(tree.error);
+    return drawn.ok
+      ? this.answers.answer(drawn.root, drawn.pages, known)
+      : failedDraw(drawn.error);
   }
 
   private async started(pluginId: string): Promise<string | undefined> {

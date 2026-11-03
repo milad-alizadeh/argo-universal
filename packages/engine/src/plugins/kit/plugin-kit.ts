@@ -136,7 +136,7 @@ function providers(
   calls: KitCalls,
 ): Pick<KitParts, 'slots' | 'operations' | 'loaderPages'> {
   const pages = loader.loaderPages(calls.pages);
-  const operations = operationHandlers(pages.forgetting(calls.operations));
+  const operations = operationHandlers(pages.answering(calls.operations));
 
   return { slots: slotProviders(calls.slots), operations, loaderPages: pages };
 }

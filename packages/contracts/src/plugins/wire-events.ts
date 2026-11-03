@@ -129,13 +129,16 @@ export const PluginEvent = z.union([
     caller: PluginOperationCaller,
   }),
   /*
-   * One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050); it answers by
-   * `id`. A background pass's draw is `loadOnly`: the Loader runs, no list is read and nothing renders.
+   * One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050), for the
+   * Connection that asked, as `open` names it; it answers by `id`. A background pass's draw is `loadOnly`:
+   * the Loader runs, no list is read and nothing renders.
    */
   PageAddress.omit({ pluginId: true }).extend({
     type: z.literal('draw'),
     id: z.number().int().nonnegative(),
     pages: z.number().int().positive(),
+    serverDevice: z.boolean().optional(),
+    surface: PluginSurface.optional(),
     loadOnly: z.literal(true).optional(),
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.

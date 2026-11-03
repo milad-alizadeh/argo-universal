@@ -4,19 +4,16 @@ import type {
   LoaderPage,
 } from '@repo/contracts/plugins/loader-page-api';
 import {
+  matchesAnyPagePath,
   matchPagePath,
   type LoaderPageCall,
   type PageState,
 } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
+import type { OperationAnswering, OperationSend } from './operation-handlers';
+import { operationMarks } from './operation-marks';
 import { inputOf, pageTo, renderedList } from './page-input';
-import {
-  forget,
-  forgets,
-  PagedList,
-  type Forgets,
-  type Paged,
-} from './paged-lists';
+import { forgets, PagedList, type Forgets, type Paged } from './paged-lists';
 import { valuesOf } from './render-tree';
 
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
@@ -36,8 +33,8 @@ type Defined = {
 
 /*
  * `api` is the Plugin's `argo.pages.define`; `changed` is its `argo.changed()`; `answer` is the host's
- * draws; `forgetting` wraps an Operation's answer: the write is done by then, so every page of every paged
- * list read before it is stale before the host hears of it and draws again.
+ * draws; `answering` runs and answers the Plugin's Operations: the write is done by the answer, so every
+ * page of every paged list read before it is stale before the host hears of it and draws again.
  */
 export interface LoaderPages {
   api: LoaderPagesApi;
@@ -45,9 +42,7 @@ export interface LoaderPages {
   answer: (event: DrawEvent) => void;
   // Throws unless a defined pattern matches the manifest's `background` path, since a pass runs only its `load`.
   requireBackground: (path: string) => void;
-  forgetting: <Call, Answer>(
-    answerWrite: (call: Call) => Promise<Answer>,
-  ) => (call: Call) => Promise<Answer>;
+  answering: (send: OperationSend) => OperationAnswering;
 }
 
 /*
@@ -61,22 +56,11 @@ export function loaderPages(send: LoaderPageSend): LoaderPages {
 
   return {
     api: { define: defining(send, defined, marks) },
-    changed: changing(send, marks),
+    ...operationMarks(send, marks),
     answer: (event) => void answer(send, defined, event),
     requireBackground: requiringBackground(defined),
-    forgetting: (answerWrite) => (call) => {
-      forget(marks);
-
-      return answerWrite(call);
-    },
   };
 }
-
-// `argo.changed()`: what the Plugin wrote outside an Operation also makes its read pages stale.
-const changing = (send: LoaderPageSend, marks: Forgets) => (): void => {
-  forget(marks);
-  void send({ action: 'changed' }).catch(() => null);
-};
 
 const defining =
   (
@@ -95,7 +79,12 @@ const defining =
 const requiringBackground =
   (defined: readonly Defined[]) =>
   (path: string): void => {
-    if (!defined.some(({ pattern }) => matchPagePath(pattern, path) !== null))
+    if (
+      !matchesAnyPagePath(
+        defined.map(({ pattern }) => pattern),
+        path,
+      )
+    )
       throw new Error(`Background path ${path} is not a Loader page`);
   };
 

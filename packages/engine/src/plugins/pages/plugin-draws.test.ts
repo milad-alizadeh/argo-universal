@@ -9,6 +9,7 @@ const draws = (): PluginDraws =>
       delay: () => Promise.resolve(),
       schedule: () => () => null,
     },
+    log: () => null,
   });
 
 it('tells its listeners when the running worker says what it shows changed', () => {

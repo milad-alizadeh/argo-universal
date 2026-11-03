@@ -1,4 +1,4 @@
-import { matchPagePath } from '@repo/contracts/plugins/page-address';
+import { matchesAnyPagePath } from '@repo/contracts/plugins/page-address';
 import type { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import type { OperationCall, WireNode } from '@repo/contracts/plugins/wire';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
@@ -200,5 +200,4 @@ const isStale = (
   pluginId: string,
   stale: readonly string[],
 ): boolean =>
-  address?.pluginId === pluginId &&
-  stale.some((pattern) => matchPagePath(pattern, address.path) !== null);
+  address?.pluginId === pluginId && matchesAnyPagePath(stale, address.path);

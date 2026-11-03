@@ -33,7 +33,63 @@ type Load = { params: Readonly<Record<string, string>>; state: FilterState };
 // What the Loader reads with, and how it says a read it left running has changed the page.
 export type LoadDeps = IssueDeps & { changed: () => void };
 
-type Target = { project: Project; filter: IssueFilter };
+// The Projects, and the Project and filter the Page path names with its Tracker opened, or why it does not open.
+type Target = {
+  projects: Project[];
+  project?: Project;
+  filter?: IssueFilter;
+  opened: Promise<Opened>;
+};
+
+type Opened = { client?: TrackerClient; message: string };
+
+/*
+ * One draw's Loader and paged list ask for its target at once, with the same input: it is worked out once
+ * per draw, and neither waits on the other.
+ */
+export function filterTargets(
+  deps: IssueDeps,
+): (input: Load) => Promise<Target> {
+  const targets = new WeakMap<Load, Promise<Target>>();
+
+  return (input) => {
+    const target = targets.get(input) ?? targetOf(deps, input.params);
+
+    targets.set(input, target);
+
+    return target;
+  };
+}
+
+async function targetOf(
+  deps: IssueDeps,
+  params: Load['params'],
+): Promise<Target> {
+  const projects = await deps.listProjects();
+  const { project, filter } = namedBy(projects, params);
+
+  const opened =
+    project && filter ? openedClient(deps, project) : Promise.resolve(gone);
+
+  return { projects, project, filter, opened };
+}
+
+const namedBy = (
+  projects: Project[],
+  params: Load['params'],
+): Pick<Target, 'project' | 'filter'> => ({
+  project: projects.find(({ id }) => id === pathText(params.project ?? '')),
+  filter: filterById(params.filter ?? ''),
+});
+
+const gone: Opened = { message: 'This page no longer exists.' };
+
+// Settled either way, so a draw that only loads leaves no failed open unread.
+const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
+  openDepsClient({ project, deps }).then(
+    (client) => ({ client, message: '' }),
+    (error: Error) => ({ message: error.message }),
+  );
 
 /*
  * A filter list's Loader (ADR-0050): the Projects, then for the Project and filter the Page path names, the
@@ -41,28 +97,20 @@ type Target = { project: Project; filter: IssueFilter };
  */
 export async function loadFilter(
   deps: LoadDeps,
-  { params }: Load,
+  target: Promise<Target>,
 ): Promise<FilterData> {
-  const projects = await deps.listProjects();
-  const { project, filter } = targetOf(projects, params);
+  const { projects, project, filter, opened } = await target;
 
   if (!project || !filter)
-    return { projects, overview: null, message: 'This page no longer exists.' };
+    return { projects, overview: null, message: gone.message };
 
-  const [overview, message] = await Promise.all([
+  const [overview, { message }] = await Promise.all([
     overviewOf(deps, project),
-    openMessage(deps, project),
+    opened,
   ]);
 
   return { projects, project, filter, overview, message };
 }
-
-// Why the Project's Tracker does not open, or nothing when it does.
-const openMessage = (deps: IssueDeps, project: Project): Promise<string> =>
-  openDepsClient({ project, deps }).then(
-    () => '',
-    (error: Error) => error.message,
-  );
 
 /*
  * One page of the filter's Issues, newest first, narrowed by the search. `gh issue list` has no cursor, so the
@@ -71,31 +119,16 @@ const openMessage = (deps: IssueDeps, project: Project): Promise<string> =>
  * says why.
  */
 export async function listFilter(
-  deps: IssueDeps,
-  { params, state }: Load,
+  target: Promise<Target>,
+  query: string,
   cursor: string | null,
 ): Promise<ListPage<Issue>> {
-  const open = await openTarget(deps, params);
+  const { filter, opened } = await target;
+  const { client } = await opened;
 
-  return open
-    ? readPage(open.client, searchOf(open.filter, state.query), cursor)
+  return filter && client
+    ? readPage(client, searchOf(filter, query), cursor)
     : end;
-}
-
-type OpenTarget = { client: TrackerClient; filter: IssueFilter };
-
-async function openTarget(
-  deps: IssueDeps,
-  params: Load['params'],
-): Promise<OpenTarget | null> {
-  const { project, filter } = targetOf(await deps.listProjects(), params);
-
-  if (!project || !filter) return null;
-
-  return openDepsClient({ project, deps }).then(
-    (client) => ({ client, filter }),
-    () => null,
-  );
 }
 
 const end: ListPage<Issue> = { items: [], cursor: null };
@@ -124,14 +157,6 @@ const nextCursor = (issues: Issue[]): string | null =>
 
 const lastCreated = (issues: Issue[]): string | null =>
   issues.at(-1)?.createdAt ?? null;
-
-const targetOf = (
-  projects: Project[],
-  params: Load['params'],
-): Partial<Target> => ({
-  project: projects.find(({ id }) => id === pathText(params.project ?? '')),
-  filter: filterById(params.filter ?? ''),
-});
 
 /*
  * The overview this Plugin read or is reading, so a page drawn after a status change waits for the new

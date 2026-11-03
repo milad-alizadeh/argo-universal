@@ -31,8 +31,8 @@ export function register(argo) {
     render: (seen) => <Text>{'Bumped ' + seen}</Text>,
   });
   argo.pages.define('/card', {
-    load: async ({ context: { projectId, sessionId } }) => ({ projectId, sessionId }),
-    render: ({ projectId, sessionId }) => <Text>{projectId + '/' + sessionId}</Text>,
+    load: async ({ context: { projectId, sessionId, surface } }) => ({ projectId, sessionId, platform: surface?.platform }),
+    render: ({ projectId, sessionId, platform }) => <Text>{projectId + '/' + sessionId + ' on ' + platform}</Text>,
   });
   argo.slots.register('${rowSlotId}', async ({ contexts }) =>
     Object.fromEntries(contexts.map(({ sessionId }) => [sessionId, [{ text: 'Count ' + count }]])));
@@ -65,7 +65,7 @@ const rows = (
     { signal },
   );
 
-it('draws a Workbench card page with its Session context', async () => {
+it('draws a Workbench card page with its Session context and the asking App’s surface', async () => {
   const kit = await start();
 
   expect(
@@ -76,7 +76,7 @@ it('draws a Workbench card page with its Session context', async () => {
     }),
   ).toMatchObject({
     kind: 'tree',
-    root: { type: 'Text', props: { children: 'one/first' } },
+    root: { type: 'Text', props: { children: 'one/first on web' } },
   });
 });
 

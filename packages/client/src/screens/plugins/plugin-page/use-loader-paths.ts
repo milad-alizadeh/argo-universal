@@ -1,4 +1,4 @@
-import { matchPagePath } from '@repo/contracts/plugins/page-address';
+import { matchesAnyPagePath } from '@repo/contracts/plugins/page-address';
 import { useQuery } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 
@@ -14,7 +14,7 @@ export function useIsLoaderPage(
 
   if (isError) return false;
 
-  return data?.some((pattern) => matchPagePath(pattern, path) !== null);
+  return data && matchesAnyPagePath(data, path);
 }
 
 // The Page path patterns of the Plugin's Loader pages.

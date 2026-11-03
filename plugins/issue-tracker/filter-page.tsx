@@ -12,6 +12,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import {
   filterState,
+  filterTargets,
   listFilter,
   loadFilter,
   type FilterData,
@@ -45,17 +46,22 @@ export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   argo.pages.define(filterPattern, filterPage(deps, argo.changed));
 }
 
-const filterPage = (
+function filterPage(
   deps: IssueDeps,
   changed: () => void,
-): LoaderPage<FilterState, FilterData, Issue> => ({
-  state: filterState,
-  load: (input) => loadFilter({ ...deps, changed }, input),
-  list: (input, cursor) => listFilter(deps, input, cursor),
-  render: (data, to, { state, list }) => (
-    <FilterPage {...{ deps, data, to, list }} query={state.query} />
-  ),
-});
+): LoaderPage<FilterState, FilterData, Issue> {
+  const targetOf = filterTargets(deps);
+
+  return {
+    state: filterState,
+    load: (input) => loadFilter({ ...deps, changed }, targetOf(input)),
+    list: (input, cursor) =>
+      listFilter(targetOf(input), input.state.query, cursor),
+    render: (data, to, { state, list }) => (
+      <FilterPage {...{ deps, data, to, list }} query={state.query} />
+    ),
+  };
+}
 
 type PageProps = {
   deps: IssueDeps;

@@ -138,7 +138,7 @@ const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   router({
     draw: publicProcedure
       .input(DrawRequest)
-      .query(({ input }) => pages.draw(input)),
+      .query(({ input, ctx }) => pages.draw(input, ctx.connection)),
     loaderPages: publicProcedure
       .input(z.strictObject({ pluginId: z.string().min(1) }))
       .query(({ input }) => pages.patterns(input.pluginId)),

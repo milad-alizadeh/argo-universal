@@ -108,6 +108,12 @@ export function matchPagePath(
   return paramsOf(pairs);
 }
 
+// Whether any of the patterns matches the path.
+export const matchesAnyPagePath = (
+  patterns: readonly string[],
+  path: string,
+): boolean => patterns.some((pattern) => matchPagePath(pattern, path) !== null);
+
 type Pair = [segment: string, value: string];
 
 const paramsOf = (pairs: Pair[]): Record<string, string> =>
