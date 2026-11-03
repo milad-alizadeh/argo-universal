@@ -66,6 +66,21 @@ it(
 );
 
 it(
+  'lists Issues when Check again is pressed after the Project gains its remote',
+  async () => {
+    const test = await openList(null);
+    const list = await openFilter(test);
+
+    await expect.poll(() => list.findText(noRemote), wait).toBeDefined();
+    await setRemote(test, project.originUrl);
+    await list.press('Check again');
+
+    await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
+  },
+  testTimeout,
+);
+
+it(
   'says the Project has no GitHub remote when it never had one',
   async () => {
     const test = await openList(null);

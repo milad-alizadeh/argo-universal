@@ -1,3 +1,6 @@
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import {
   follow,
@@ -88,10 +91,8 @@ it('opens a filter list, then an Issue from it, on pages beside the one list', a
       wait,
     )
     .toBe(true);
-  // The Issue's one link out is a property beside its description: the number goes to GitHub.
-  expect(detail.findText('#42')?.node.props.href).toBe(
-    'https://github.com/owner/repository/issues/42',
-  );
+  // The Issue's one link out is a header Action; its properties sit in the Screen's aside.
+  expect(detail.tree?.slots.aside?.[0]).toMatchObject({ type: 'Metadata' });
   expect(await test.log()).not.toContain('refused');
 }, 20_000);
 
@@ -119,4 +120,19 @@ it('shows an empty list for a filter with no Issues', async () => {
   const list = await follow(test, root, 'Closed');
 
   await expect.poll(() => list.findText('No Issues.'), wait).toBeDefined();
+}, 20_000);
+
+it('lists a Project added after the section opened when Check again is pressed', async () => {
+  const { test } = await signedIn([]);
+  const root = await test.mount({ page: '/', surface: { platform: 'web' } });
+
+  await expect
+    .poll(() => root.findText('No Projects yet.'), wait)
+    .toBeDefined();
+  const path = await mkdtemp(join(tmpdir(), 'argo-project-'));
+
+  await test.projects.add({ ...project, path });
+  await root.press('Check again');
+
+  await expect.poll(() => root.findText('Open'), wait).toBeDefined();
 }, 20_000);

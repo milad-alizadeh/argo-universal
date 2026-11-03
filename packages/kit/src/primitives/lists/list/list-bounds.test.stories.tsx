@@ -3,6 +3,7 @@ import { expect, waitFor } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
+import { Pill } from '#primitives/status/pill';
 import { List } from './list';
 
 const viewportHeight = 900;
@@ -66,5 +67,49 @@ export const ScrollingToTheEndShowsTheEnd: Story = {
         ).toEqual({ text, onScreen: true });
       }
     });
+  },
+};
+
+const longTitle =
+  'A row title long enough to need every pixel the line can give it';
+
+const longLabels = [
+  'needs-design-review-from-the-owner',
+  'blocked-on-the-upstream-release',
+  'documentation-follow-up-required',
+  'performance-regression-suspected',
+];
+
+/*
+ * A compact row's pills take what the title leaves, never the title's half of the line, and the row never hangs past
+ * its List however many there are.
+ */
+export const LongPillsLeaveTheTitleHalf: Story = {
+  render: () => (
+    <Screen title="Bounded">
+      <List appearance="plain" density="compact" accessibilityLabel={listLabel}>
+        <ListItem
+          title={longTitle}
+          subtitle="#7"
+          meta={longLabels.map((label) => (
+            <Pill key={label} text={label} />
+          ))}
+        />
+      </List>
+    </Screen>
+  ),
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByLabelText(listLabel);
+    const list = scroll.getBoundingClientRect();
+    const title = canvas.getByText(longTitle).getBoundingClientRect();
+
+    await expect(
+      { titleHalf: title.right - list.left >= list.width / 2 },
+      `title ends at ${title.right} in a list ${list.left}–${list.right}`,
+    ).toEqual({ titleHalf: true });
+    await expect(
+      { overflows: scroll.scrollWidth > scroll.clientWidth },
+      `list content is ${scroll.scrollWidth} wide in ${scroll.clientWidth}`,
+    ).toEqual({ overflows: false });
   },
 };

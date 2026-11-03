@@ -248,7 +248,12 @@ const placed = (place: AsidePlace): Story['render'] =>
 const issueFields = [
   <Metadata.StatusDot key="status" title="Status" text="Open" tone="info" />,
   <Metadata.Avatar key="assignee" title="Assignee" name="Ana Ruiz" />,
-  <Metadata.Link key="blocker" title="Blocked by" text="#41" href="/issues/41" />,
+  <Metadata.Link
+    key="blocker"
+    title="Blocked by"
+    text="#41"
+    href="/issues/41"
+  />,
 ];
 
 export const PillsAreTheFieldsValues: Story = {
@@ -261,7 +266,9 @@ export const PillsAreTheFieldsValues: Story = {
       await expect(canvas.getByText('Ana Ruiz')).toBeVisible();
       // A value with no glyph names its field, so "#41" reads as a blocker.
       await expect(canvas.getByText('Blocked by')).toBeVisible();
-      await userEvent.click(canvas.getByRole('button', { name: 'Blocked by, #41' }));
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Blocked by, #41' }),
+      );
       await expect(navigate).toHaveBeenCalledWith('/issues/41');
     } finally {
       navigate.mockRestore();
@@ -281,7 +288,17 @@ export const IconsKeepTheStatusInWords: Story = {
 };
 
 export const AsideHeadsGroupsButNotGlyphs: Story = {
-  args: { children: [...issueFields, <Metadata.Link key="second" title="Blocked by" text="#57" href="/issues/57" />] },
+  args: {
+    children: [
+      ...issueFields,
+      <Metadata.Link
+        key="second"
+        title="Blocked by"
+        text="#57"
+        href="/issues/57"
+      />,
+    ],
+  },
   render: placed('aside'),
   play: async ({ canvas }) => {
     await expect(canvas.getAllByText('Blocked by')).toHaveLength(1);

@@ -1,4 +1,4 @@
-import { EmptyState, ListDetail } from '@argo/plugin-kit';
+import { Button, EmptyState, ListDetail } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { SignInGate } from '@argo/plugin-kit/sign-in';
 import { github } from './github-account';
@@ -26,12 +26,22 @@ export function IssuesRoot({ deps }: RootProps): JSX.Element {
 
 type LayoutProps = RootProps & { choice: RootProjects };
 
-const noProjects = ({
-  project,
-  settled,
-  message,
-}: RootProjects): JSX.Element | undefined =>
-  settled && !project ? <EmptyState title={message} /> : undefined;
+// No Projects, or none could be read: looking again reads them, as one added since is what the section lacked.
+function noProjects(
+  deps: IssueDeps,
+  { project, settled, message }: RootProjects,
+): JSX.Element | undefined {
+  if (!settled || project) return undefined;
+
+  const checkAgain = (): void => void deps.projects.refresh();
+
+  return (
+    <EmptyState
+      title={message}
+      action={<Button label="Check again" onPress={checkAgain} />}
+    />
+  );
+}
 
 function RootLayout({ deps, choice }: LayoutProps): JSX.Element {
   const state = useOverview(choice.project);
@@ -42,7 +52,7 @@ function RootLayout({ deps, choice }: LayoutProps): JSX.Element {
       title="Issues"
       landing={project && deps.pages.filterPagePath(project, openFilter)}
       list={<RootRows deps={deps} choice={choice} state={state} />}
-      empty={noProjects(choice)}
+      empty={noProjects(deps, choice)}
     />
   );
 }

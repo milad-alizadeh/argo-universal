@@ -1,4 +1,4 @@
-import { Action, Detail, EmptyState, Screen } from '@argo/plugin-kit';
+import { Action, Button, Callout, Detail, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue } from './github-issues';
 import { IssueMetadata } from './issue-metadata';
@@ -12,7 +12,7 @@ import {
 
 type IssueDetailProps = Pick<
   IssueDetailState,
-  'onStatus' | 'sessions' | 'settled'
+  'onStatus' | 'sessions' | 'settled' | 'message' | 'refresh'
 > & {
   issue: Issue;
   projectId: string;
@@ -22,9 +22,9 @@ type IssueDetailProps = Pick<
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
 export function IssueDetailPage(source: DetailSource): JSX.Element {
-  const { issue, message, ...state } = useIssueDetail(source);
+  const { issue, ...state } = useIssueDetail(source);
 
-  if (!issue) return <Loading source={source} message={message} />;
+  if (!issue) return <Loading source={source} {...state} />;
 
   return <IssueDetail {...state} {...pageProps(source)} issue={issue} />;
 }
@@ -38,15 +38,37 @@ const pageProps = (
     source.deps.pages.issuePagePath(source.project, number),
 });
 
-// An Issue opened without a row to start from has only its number until GitHub answers, and says why when it cannot.
-function Loading(props: {
+type LoadingProps = Pick<IssueDetailState, 'message' | 'refresh'> & {
   source: DetailSource;
-  message: string;
-}): JSX.Element {
+};
+
+// An Issue opened without a row to start from has only its number until GitHub answers, and says why when it cannot.
+function Loading(props: LoadingProps): JSX.Element {
   return (
     <Screen title={`#${props.source.number}`}>
-      <EmptyState title={props.message || 'Opening…'} />
+      <Detail isLoading={!props.message}>
+        <ReadFailed {...props} />
+      </Detail>
     </Screen>
+  );
+}
+
+// GitHub could not answer: the page says why, and the reader can ask again.
+function ReadFailed({
+  message,
+  refresh,
+}: Pick<IssueDetailState, 'message' | 'refresh'>): JSX.Element | null {
+  if (!message) return null;
+
+  const retry = <Button label="Try again" onPress={() => void refresh()} />;
+
+  return (
+    <Callout
+      tone="danger"
+      title="Couldn’t load this Issue"
+      description={message}
+      actions={retry}
+    />
   );
 }
 
@@ -57,19 +79,31 @@ function IssueDetail(props: IssueDetailProps): JSX.Element {
     <Screen
       title={issue.title}
       primaryAction={<StartSessionAction {...props} />}
-      actions={<StatusAction {...props} />}
+      actions={<IssueActions {...props} />}
+      aside={<IssueMetadata issue={issue} issuePath={props.issuePath} />}
     >
       <IssueBody {...props} />
     </Screen>
   );
 }
 
-// The description, the Issue's own properties beside it, and the work under both.
+// The status change, then the one link out to GitHub, as header icons.
+function IssueActions(props: IssueDetailProps): JSX.Element {
+  return (
+    <>
+      <StatusAction {...props} />
+      <GitHubAction issue={props.issue} />
+    </>
+  );
+}
+
+// The description, then the work under it; the Issue's own properties are the Screen's aside.
 function IssueBody(props: IssueDetailProps): JSX.Element {
   const { issue } = props;
 
   return (
-    <Detail markdown={bodyOf(props)} metadata={<IssueMetadata issue={issue} />}>
+    <Detail markdown={bodyOf(props)}>
+      {props.settled ? null : <ReadFailed {...props} />}
       <SubIssues issue={issue} issuePath={props.issuePath} />
       <AttachedSessions sessions={props.sessions} />
     </Detail>
@@ -105,6 +139,18 @@ function StartSessionAction({
 }
 
 type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+
+// The Issue on GitHub, a header Action of the page beside the verbs that act on it.
+function GitHubAction({ issue }: { issue: Issue }): JSX.Element {
+  return (
+    <Action
+      key="github"
+      label="Open on GitHub"
+      icon="external-link"
+      onPress={{ action: 'openUrl', url: issue.url }}
+    />
+  );
+}
 
 function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
   const { label, icon, to } = statuses[issue.status].change;

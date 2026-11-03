@@ -16,7 +16,10 @@ import {
 function frameStyle(props: CanvasProps, bleed: boolean): ViewStyle {
   if (bleed) return { width: '100%', flex: 1, minHeight: 0 };
 
-  return { width: '100%', aspectRatio: props.aspectRatio ?? props.width / props.height };
+  return {
+    width: '100%',
+    aspectRatio: props.aspectRatio ?? props.width / props.height,
+  };
 }
 
 function CanvasRoot(props: CanvasProps): React.JSX.Element {

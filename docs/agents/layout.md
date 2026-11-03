@@ -25,12 +25,12 @@ The leading group holds the platform controls and sidebar toggle. The trailing g
 
 The title uses the content column's leading edge and stops before the trailing controls. Its spacer is `max(0, platformConstant - (frameInset + navigationWidth))`. The platform constant is 124 on macOS and 44 elsewhere.
 
-The following examples use the default pane widths and an available Workbench. The content region includes its two 24px gutters.
+The following examples use the default pane widths and an available Workbench. The content region includes its two 32px gutters.
 
 | Window | Inspector | Sessions list | Workbench | Content region |
 | --- | --- | --- | --- | --- |
 | 1440 | Closed | Shown | Docked | 728 |
-| 1440 | Open | Folded | Auto-hidden | 1000, with centered content capped at 848 |
+| 1440 | Open | Folded | Auto-hidden | 1000, with centered content capped at 864 |
 | 1456 | Open | Folded | Docked | 688 |
 | 1920 | Open | Shown | Docked | 840 |
 
@@ -89,8 +89,8 @@ The independent placement uses the measured host after effective navigation and 
 
 ## The content column
 
-- `--container-column` is 800. The Feed viewport and the Composer take the same centered column: `max-width` 848 at a 24 gutter on each side, `align-self: center`, on every desktop board.
-- The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. Manual Inspector resizing respects that floor.
+- `--container-column` is 800. The Feed viewport and the Composer take the same centered column: `max-width` 864 at a 32 gutter on each side, `align-self: center`, on every desktop board.
+- The region caps at 864, including its two 32px gutters. Its protected floor is 688: the 640px Composer plus the frame's 24px content gutter (`contentGutter`) on each side. Manual Inspector resizing respects that floor.
 - The Workbench and the Inspector sit outside the cap: they are regions of the window, not content in the column.
 
 ## Phones

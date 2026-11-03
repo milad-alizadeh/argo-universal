@@ -15,8 +15,13 @@ import {
 import { useWide } from '#kit/use-wide/use-wide';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { MetadataPlaceContext } from '../metadata/metadata-drawing-context';
-import { type AsidePlace, asidePlace, asideWidth } from './screen-aside-place';
-import { ScreenColumn, useColumnTokens } from './screen-column';
+import {
+  type AsidePlace,
+  type AsideRoom,
+  asidePlace,
+  asideWidth,
+} from './screen-aside-place';
+import { insetWidth, ScreenColumn, useColumnTokens } from './screen-column';
 import type { ScreenProps } from './screen-props';
 
 // The aside's Pills, for the content that scrolls to draw at its top; null when the aside has its own column.
@@ -44,17 +49,43 @@ interface AsideFrame {
  */
 export function useAsideFrame(screenWidth: ScreenProps['width']): AsideFrame {
   const [width, setWidth] = useState(0);
-  const tokens = useColumnTokens();
-  const medium = Number.parseFloat(String(useCSSVariable('--breakpoint-medium')));
-  const capped = screenWidth === undefined || screenWidth === 'content' || screenWidth === 'narrow';
-  const column = screenWidth === 'narrow' ? tokens.narrow : tokens.column;
-  const wide = useWide() && capped;
-  const room = { width, wide, column, inset: tokens.inset, medium: medium || 0 };
+  const room = useAsideRoom(screenWidth);
 
   return {
-    place: asidePlace(room),
+    place: asidePlace({ ...room, width }),
     onLayout: (event) => setWidth(event.nativeEvent.layout.width),
   };
+}
+
+// The widths a reading column is capped at, so the gutters beside it can hold an aside.
+const cappedWidths = new Set<ScreenProps['width']>([
+  undefined,
+  'content',
+  'narrow',
+]);
+
+function useAsideRoom(
+  screenWidth: ScreenProps['width'],
+): Omit<AsideRoom, 'width'> {
+  const tokens = useColumnTokens();
+  const medium = useMediumWidth();
+  const wide = useWide();
+
+  return {
+    wide: wide && cappedWidths.has(screenWidth),
+    column: screenWidth === 'narrow' ? tokens.narrow : tokens.column,
+    inset: tokens.inset,
+    medium,
+  };
+}
+
+// The medium Size class threshold; 0 where the token is missing, so Pills keep their words.
+function useMediumWidth(): number {
+  const medium = Number.parseFloat(
+    String(useCSSVariable('--breakpoint-medium')),
+  );
+
+  return Number.isNaN(medium) ? 0 : medium;
 }
 
 type AsideProps = Pick<ScreenProps, 'aside' | 'width'> & {
@@ -97,28 +128,41 @@ function AsideColumn(props: {
       className="absolute top-0 bottom-0"
       style={{ right: inset, width: asideWidth }}
     >
-      <OutsideColumn>
-        <ScrollFadeView contentContainerClassName="py-6">
-          <MetadataPlaceContext value={props.place}>
-            {props.children}
-          </MetadataPlaceContext>
-        </ScrollFadeView>
-      </OutsideColumn>
+      <AsideScroll {...props} />
     </View>
   );
 }
 
-// Content that scrolls none of its own leaves the aside's Pills to the Screen, between its heading and its body.
-export function ScreenLead({
-  width,
-}: Pick<ScreenProps, 'width'>): ReactNode {
-  const lead = use(AsideLeadContext);
-
-  if (useLeadClaimed() || lead === null) return null;
-
+function AsideScroll(props: {
+  place: AsidePlace;
+  children: ReactNode;
+}): ReactElement {
   return (
-    <ScreenColumn width={width === 'bleed' ? 'full' : width}>
-      <View className="pt-2 pb-4 wide:pt-0">{lead}</View>
+    <OutsideColumn>
+      <ScrollFadeView contentContainerClassName="py-6">
+        <MetadataPlaceContext value={props.place}>
+          {props.children}
+        </MetadataPlaceContext>
+      </ScrollFadeView>
+    </OutsideColumn>
+  );
+}
+
+// Content that scrolls none of its own leaves the aside's Pills to the Screen, between its heading and its body.
+export function ScreenLead({ width }: Pick<ScreenProps, 'width'>): ReactNode {
+  const lead = use(AsideLeadContext);
+  const shown = !useLeadClaimed() && lead !== null;
+
+  return shown ? <LeadStrip width={width}>{lead}</LeadStrip> : null;
+}
+
+function LeadStrip({
+  width,
+  children,
+}: Pick<ScreenProps, 'width'> & { children: ReactNode }): ReactElement {
+  return (
+    <ScreenColumn width={insetWidth(width)}>
+      <View className="pt-2 pb-4 wide:pt-0">{children}</View>
     </ScreenColumn>
   );
 }

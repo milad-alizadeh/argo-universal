@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { kitArgTypes } from '#kit/kit-arg-types';
 import { Screen } from './index';
 import {
   AsideExample,
@@ -11,6 +12,7 @@ import {
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Screen/Frame',
   component: Screen,
+  argTypes: kitArgTypes('Screen'),
   args: { title: 'Title' },
 } satisfies Meta<typeof Screen>;
 

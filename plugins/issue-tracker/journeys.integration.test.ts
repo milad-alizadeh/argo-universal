@@ -75,18 +75,37 @@ it("lists an Issue's sub-Issues under its description, with GitHub's tally", asy
 }, 20_000);
 
 const isBlocker = (node: WireNode): boolean =>
-  node.type === 'Metadata.Label' && node.props.title === 'Blocked by';
+  node.type === 'Metadata.Link' && node.props.title === 'Blocked by';
 
-it('names an open blocker in the Properties beside the Issue', async () => {
+// The open blocker in the Screen's aside, which holds the Issue's own properties.
+function blockerIn(
+  tree: WireNode | null,
+): ReturnType<typeof findWireNodeEntry> {
+  return (tree?.slots.aside ?? [])
+    .map((aside) => findWireNodeEntry(aside, isBlocker))
+    .find(Boolean);
+}
+
+it("links an open blocker in the Issue's aside to the blocker's page", async () => {
   const page = await openIssue(refusedTitle);
 
-  await expect
-    .poll(() => page.tree && findWireNodeEntry(page.tree, isBlocker), wait)
-    .toBeDefined();
+  await expect.poll(() => blockerIn(page.tree), wait).toBeDefined();
 
-  const entry = page.tree && findWireNodeEntry(page.tree, isBlocker);
+  const entry = blockerIn(page.tree);
 
   expect(entry && textOf(entry.node)).toBe('#42 Fixture issue from GitHub');
+  expect(entry?.node.props.href).toMatch(/\/42$/);
+}, 20_000);
+
+it('opens the Issue on GitHub from a header Action', async () => {
+  const page = await openIssue(issueTitle);
+
+  await expect
+    .poll(() => page.findText('Open on GitHub')?.node.props.onPress, wait)
+    .toMatchObject({
+      action: 'openUrl',
+      url: 'https://github.com/owner/repository/issues/42',
+    });
 }, 20_000);
 
 it('marks a blocked row and a parent row’s progress in the list', async () => {

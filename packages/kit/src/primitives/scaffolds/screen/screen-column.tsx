@@ -18,10 +18,18 @@ export function useScreenColumn(
   const capped = useWide() && width === 'content';
   const { column, narrow, inset } = useColumnTokens();
   const cap = columnCap(width, capped, { column, narrow });
-  const margin = width === 'bleed' ? 0 : inset;
+  const margin = marginOf(width, inset);
 
   return useMemo(() => columnStyle(cap, margin), [cap, margin]);
 }
+
+const marginOf = (width: ScreenWidth, inset: number): number =>
+  width === 'bleed' ? 0 : inset;
+
+// The aside's strip and the footer have no edge-to-edge drawing of their own: on a bleed page they keep the inset.
+export const insetWidth = (
+  width: ScreenWidth | undefined,
+): ScreenWidth | undefined => (width === 'bleed' ? 'full' : width);
 
 type ColumnWidths = { column: number; narrow: number };
 

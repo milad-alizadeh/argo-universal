@@ -1,4 +1,5 @@
 import {
+  Button,
   EmptyState,
   Label,
   List,
@@ -24,7 +25,7 @@ export function FilterPage(source: FilterSource): JSX.Element {
   const issues = useFilterIssues(source);
 
   return (
-    <Screen title={source.filter.title} caption={source.filter.search}>
+    <Screen title={source.filter.title}>
       <IssueList source={source} issues={issues} />
     </Screen>
   );
@@ -41,13 +42,38 @@ function IssueList({ source, issues }: IssueListProps): JSX.Element {
       appearance="plain"
       density="compact"
       footer={message || repositoryText(source.project)}
-      empty={<EmptyState title={message || 'No Issues.'} />}
+      empty={<IssuesEmpty source={source} issues={issues} />}
       pagination={{ hasMore: issues.hasMore, onLoadMore: issues.loadMore }}
       onRefresh={issues.refresh}
     >
       {issueTree(issues.issues).map((node) => issueRow(source, node))}
     </List>
   );
+}
+
+/*
+ * No Issues, or the reason there are none. A reason such as a missing remote or a failed read offers to look again,
+ * which reads the Projects, as a remote added since is what the Project lacked.
+ */
+function IssuesEmpty({ source, issues }: IssueListProps): JSX.Element {
+  const { message } = issues;
+  const checkAgain = (): void => void lookAgain(source, issues);
+  const action = <Button label="Check again" onPress={checkAgain} />;
+
+  return (
+    <EmptyState
+      title={message || 'No Issues.'}
+      action={message ? action : undefined}
+    />
+  );
+}
+
+async function lookAgain(
+  source: FilterSource,
+  issues: FilterIssues,
+): Promise<void> {
+  await source.deps.projects.refresh();
+  await issues.refresh();
 }
 
 // A keyed ListItem itself, as a List draws its children, not a component that returns one; its sub-Issues nest inside.

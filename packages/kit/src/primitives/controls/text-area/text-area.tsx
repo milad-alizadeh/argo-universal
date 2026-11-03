@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import {
   Platform,
   TextInput,
@@ -24,15 +24,21 @@ function useMaxHeight(): number {
 // Return sends on web and desktop, where Shift-Return adds a line; a phone's Return adds a line and its action sends.
 const submitBehavior = Platform.OS === 'web' ? 'submit' : 'newline';
 
-function inputProps(props: TextAreaProps): TextInputProps {
-  const { onSubmit } = props;
+// Without an `onSubmit`, Return always adds a line.
+function submitProps({
+  onSubmit,
+}: TextAreaProps): Pick<TextInputProps, 'onSubmitEditing' | 'submitBehavior'> {
+  if (!onSubmit) return { submitBehavior: 'newline' };
 
+  return { onSubmitEditing: (): void => onSubmit(), submitBehavior };
+}
+
+function inputProps(props: TextAreaProps): TextInputProps {
   return {
+    ...submitProps(props),
     multiline: true,
     value: props.value,
     onChangeText: props.onChangeText,
-    onSubmitEditing: onSubmit ? (): void => onSubmit() : undefined,
-    submitBehavior: onSubmit ? submitBehavior : 'newline',
     placeholder: props.placeholder ?? props.label,
     accessibilityLabel: props.label,
     editable: props.disabled !== true,
@@ -46,23 +52,27 @@ const fieldClass = (disabled: boolean | undefined): string =>
     disabled === true && 'opacity-50',
   );
 
+const cardClass =
+  'w-full flex-row items-end gap-2 rounded-2xl bg-card py-1.5 pr-1.5 pl-4 shadow-card';
+
 /*
  * A multi-line field on a card, with its one action beside it at the foot, as the Composer's envelope holds Send. It
  * grows with its text, so a Screen's footer holds it at its foot as a chat's message field.
  */
 export function TextArea(props: TextAreaProps): ReactElement {
   return (
-    <View
-      testID={props.testID}
-      className="w-full flex-row items-end gap-2 rounded-2xl bg-card py-1.5 pr-1.5 pl-4 shadow-card"
-    >
+    <View testID={props.testID} className={cardClass}>
       <TextInput
         {...inputProps(props)}
         placeholderTextColorClassName="accent-muted-foreground/70 dark:accent-muted-foreground"
         style={{ maxHeight: useMaxHeight() }}
         className={fieldClass(props.disabled)}
       />
-      {props.action ? <View className="shrink-0">{props.action}</View> : null}
+      <TextAreaAction action={props.action} />
     </View>
   );
+}
+
+function TextAreaAction({ action }: Pick<TextAreaProps, 'action'>): ReactNode {
+  return action ? <View className="shrink-0">{action}</View> : null;
 }

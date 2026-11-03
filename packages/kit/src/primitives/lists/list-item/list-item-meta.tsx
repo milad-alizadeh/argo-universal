@@ -44,18 +44,16 @@ export function Meta(props: MetaProps & { sidebar: boolean }): ReactNode {
   );
 }
 
-const compactMetaClass = (props: MetaProps): string =>
-  cn(
-    'flex-row items-center gap-1',
-    props.metaAccessories === undefined ? 'shrink-0' : 'min-w-0 shrink',
-  );
+// The compact meta takes what the title's half leaves and clips the rest, as a row of many labels would overflow.
+const compactMetaClass =
+  'min-w-0 shrink flex-row items-center gap-1 overflow-hidden';
 
 // A plain function for the compact row, which read whether presses pass through already.
 export function compactMeta(props: MetaProps, through: boolean): ReactNode {
   if (!hasMeta(props)) return null;
 
   return (
-    <View {...openLane(through)} className={compactMetaClass(props)}>
+    <View {...openLane(through)} className={compactMetaClass}>
       {metaItems(props, through)}
     </View>
   );
