@@ -21,7 +21,7 @@ export const initialChangesState: ChangesState = {
   wanted: {},
 };
 
-export const fingerprintOf = (file: ChangedFile): string =>
+const fingerprintOf = (file: ChangedFile): string =>
   [file.operation, file.oldPath, file.added, file.removed].join(':');
 
 // One string per distinct comparison; a branch's name cannot be mistaken for a kind.

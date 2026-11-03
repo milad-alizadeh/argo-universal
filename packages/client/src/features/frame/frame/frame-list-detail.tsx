@@ -17,16 +17,16 @@ import {
 import type { Section } from '../../../lib/product/navigation/sections';
 
 // The Frame's sidebar, which a Plugin page's ListDetail may hold on a wide window.
-export const FrameListDetailSidebar = createContext<
-  Place<ReactNode> | undefined
->(undefined);
+const FrameListDetailSidebar = createContext<Place<ReactNode> | undefined>(
+  undefined,
+);
 
 // Held by a Plugin page that is waiting for its first drawing, so the sidebar keeps the list the page before it drew.
 const FrameListDetailPending = createContext<Place<true> | undefined>(
   undefined,
 );
 
-export const FrameListDetailPendingOffer = FrameListDetailPending.Provider;
+const FrameListDetailPendingOffer = FrameListDetailPending.Provider;
 
 // A Plugin page's drawing arrives after its route opens. Until it does, the sidebar keeps the list the shown section last drew, since a claim only lives with a drawn ListDetail and would blank the list in between.
 export function useKeepSidebarWhilePending(): void {
@@ -38,7 +38,7 @@ export function useKeepSidebarWhilePending(): void {
 // Held by the shown section's Plugin page for the whole of its life, drawn or not.
 const FrameListDetailPage = createContext<Place<true> | undefined>(undefined);
 
-export const FrameListDetailPageOffer = FrameListDetailPage.Provider;
+const FrameListDetailPageOffer = FrameListDetailPage.Provider;
 
 /*
  * A section's page mounts a few frames after the path names the section, and until it does the Frame has no page to

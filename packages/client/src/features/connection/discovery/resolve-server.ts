@@ -28,7 +28,7 @@ export interface ServerLocation {
 
 const defaultTimeoutMs = 3000;
 
-export class ServerNotFoundError extends Error {
+class ServerNotFoundError extends Error {
   public constructor(name: string) {
     super(`${name} is not on the local network`);
     this.name = 'ServerNotFoundError';

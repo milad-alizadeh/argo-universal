@@ -12,7 +12,7 @@ import { type SlotItemsSnapshot, useSlotItems } from './use-slot-items';
 export type RowSession = Pick<SessionInfo, 'sessionId' | 'projectId'>;
 
 // The Sessions both Session row Slots are asked about; each takes the same context.
-export type RowSlotId = typeof sessionRowSlotId | typeof sessionActivitySlotId;
+type RowSlotId = typeof sessionRowSlotId | typeof sessionActivitySlotId;
 
 export type RowContexts = SlotContextOf<RowSlotId>[];
 

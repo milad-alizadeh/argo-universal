@@ -10,7 +10,7 @@ const actions = (onStop: () => void): AlertAction[] => [
 ];
 
 // Asks first: stopping ends every paired Device's Sessions, and only opening Argo again starts the Server.
-export const StopServerAlert = (props: {
+const StopServerAlert = (props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStop: () => void;

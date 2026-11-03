@@ -37,7 +37,6 @@ export {
   startedAddress,
   supervisorExitedEvent,
   supervisorSpawnedEvent,
-  watchCountsDouble,
 } from './server-machine-data.mocks';
 
 export interface SpawnCall {

@@ -25,7 +25,7 @@ export interface SessionSources extends Pick<
 }
 
 // The Session sources a handler reads beside the open Sessions, which stand in for their actor.
-export type HandlerSource = Exclude<
+type HandlerSource = Exclude<
   keyof SessionSources,
   'sessions' | 'sessionCommandSignal'
 >;

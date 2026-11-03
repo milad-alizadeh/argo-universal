@@ -19,11 +19,9 @@ type RequestedSchema = PendingElicitation['requestedSchema'];
 // A problem, and the property of the form whose answer has it.
 export type ElicitationIssue = ElicitationProblem & { property: string };
 
-export type ElicitationContent = Record<string, CheckedValue>;
+type ElicitationContent = Record<string, CheckedValue>;
 
-export type ElicitationValidate = (
-  content: ElicitationContent,
-) => ElicitationIssue[];
+type ElicitationValidate = (content: ElicitationContent) => ElicitationIssue[];
 
 export type ElicitationValidator = {
   validate?: ElicitationValidate;

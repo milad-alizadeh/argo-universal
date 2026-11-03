@@ -103,6 +103,9 @@ jobs:
       - name: Lint
         run: pnpm quality:lint
 
+      - name: Dead code
+        run: pnpm quality:dead-code
+
       - name: Build Plugin reference docs
         run: pnpm docs:build
 

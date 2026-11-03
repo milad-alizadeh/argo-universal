@@ -22,7 +22,7 @@ export const refusedTitle = 'Fixture issue gh cannot change';
 const trackerName = 'GitHub Issues';
 
 // The Tracker choice page, which a Project details row drills into (ADR-0046).
-export const trackerPath = '/tracker';
+const trackerPath = '/tracker';
 
 export type ChoiceView = ReturnType<PluginTest['page']>;
 

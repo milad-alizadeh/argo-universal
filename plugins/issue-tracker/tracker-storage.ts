@@ -6,7 +6,7 @@ import {
   type IssueSession,
 } from './issue-sessions-store';
 
-export type { IssueLink, IssueSession } from './issue-sessions-store';
+export type { IssueLink } from './issue-sessions-store';
 
 // A page's last loaded data in a Project, by the page's own name: shown at once while it loads again.
 type CacheKey = { projectId: string; view: string };

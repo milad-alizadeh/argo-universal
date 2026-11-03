@@ -10,7 +10,7 @@ import type { SessionCaller, TokenCaller } from './session-tokens';
 export type PluginOperation = { id: string; pluginId: string; name: string };
 
 // What a Plugin Operation's Tool call shows: the Operation it ran and the params it was given.
-export const pluginOperationCall = (
+const pluginOperationCall = (
   { id }: PluginOperation,
   row: OperationRow,
   params: Json,

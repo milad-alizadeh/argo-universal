@@ -36,7 +36,7 @@ export function whenLabel(at: number, now: number): string {
   return days === 1 ? `Yesterday, ${clock(new Date(at))}` : dateLabel(at, now);
 }
 
-export const unknownTime = 'Unknown';
+const unknownTime = 'Unknown';
 
 export interface ServerTimes {
   lastConnected?: string;

@@ -39,7 +39,7 @@ export interface SessionFeedPorts {
 }
 
 // The Server closed the Feed, with or without an error to show.
-export type FeedClosure = { error: Error | null } | null;
+type FeedClosure = { error: Error | null } | null;
 
 export interface SessionFeedState {
   // The rows committed at the last frame.

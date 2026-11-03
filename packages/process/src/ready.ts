@@ -2,7 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 import { describeExit, type Exit } from './exit';
 import { type Check, pollUntil } from './poll';
 
-export const outputTailLength = 2000;
+const outputTailLength = 2000;
 
 export type Watched = {
   label: string;

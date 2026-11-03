@@ -17,7 +17,7 @@ export const serverUnpairCopy = { action: 'Unpair', cancel: 'Cancel' };
  * What the owner loses, and how to get it back, with no Undo: pairing again needs a new code from the computer.
  * A Server that cannot be reached is told apart, because unpairing then only removes it here and it keeps listing this phone until it is removed there.
  */
-export const serverUnpairMessage = (
+const serverUnpairMessage = (
   name: string,
   state: ServerRow['state'],
 ): string => {
@@ -30,7 +30,7 @@ export const serverUnpairMessage = (
   return 'This phone loses access straight away. To use it again you’ll need to scan a new code.';
 };
 
-export const ServerUnpairAlert = (
+const ServerUnpairAlert = (
   props: ServerUnpairAlertProps,
 ): React.JSX.Element => (
   <Alert

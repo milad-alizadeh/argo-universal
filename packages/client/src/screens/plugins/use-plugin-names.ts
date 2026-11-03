@@ -27,11 +27,3 @@ export function usePluginLookup(): PluginLookup {
       plugins.get(pluginId) ?? unknownPlugin(pluginId);
   }, [data]);
 }
-
-export type PluginNameLookup = (pluginId: string) => string;
-
-export function usePluginNames(): PluginNameLookup {
-  const lookup = usePluginLookup();
-
-  return useMemo(() => (pluginId) => lookup(pluginId).name, [lookup]);
-}

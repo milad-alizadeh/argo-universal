@@ -71,7 +71,7 @@ export type Connection = Pick<RequestOptions, 'agent' | 'createConnection'>;
 /*
  * No agent at all: Node only honours `createConnection` when there is none, and an agent of its own would open a second, plain TCP connection beside the channel.
  */
-export const connectionOn = (socket: Duplex): Connection => ({
+const connectionOn = (socket: Duplex): Connection => ({
   createConnection: (): Duplex => socket,
 });
 
