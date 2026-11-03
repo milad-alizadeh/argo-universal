@@ -2,14 +2,14 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Then, When } from './fixtures';
 
-// The Counter mock's cards in the Workbench column, keyed by the Plugin and the card each declares.
-const cardIds = new Map([
-  ['Counter card', 'counter-card'],
-  ['Notes', 'notes'],
+// The mock Plugins' cards in the Workbench column, keyed by the Plugin and the card each declares.
+const cardKeys = new Map([
+  ['Counter card', 'counter/counter-card'],
+  ['Notes', 'lists/notes'],
 ]);
 
 const pluginCard = (page: Page, title: string): Locator =>
-  page.getByTestId(`workbench-plugin:counter/${cardIds.get(title)}`);
+  page.getByTestId(`workbench-plugin:${cardKeys.get(title)}`);
 
 Then(
   'the Session Workbench shows the Plugin card {string}',
@@ -38,22 +38,35 @@ Then(
   },
 );
 
+/*
+ * Flips the Lists mock's Notes switch for the Session. A press that lands while the page's first view is replaced is
+ * refused with "try again", so it is pressed again until the switch reads the other way.
+ */
 When(
-  'I open the Inspector tab {string}',
-  async ({ page }, tab: string): Promise<void> => {
-    await page.getByRole('tab', { name: tab, exact: true }).click();
+  'I {word} the Notes card on the Plugin page',
+  async ({ page }, verb: string): Promise<void> => {
+    const [press, next] =
+      verb === 'fill'
+        ? ['Fill the Notes card', 'Empty the Notes card']
+        : ['Empty the Notes card', 'Fill the Notes card'];
+
+    const button = (name: string): Locator =>
+      page
+        .getByTestId('plugin-page')
+        .getByRole('button', { name, exact: true });
+
+    await expect(async () => {
+      if (await button(next).isVisible()) return;
+
+      await button(press).click({ timeout: 2000 });
+      await expect(button(next)).toBeVisible({ timeout: 2000 });
+    }).toPass();
   },
 );
 
-When(
-  'I press {string} in the Inspector tab {string}',
-  async ({ page }, name: string, tab: string): Promise<void> => {
-    await page
-      .getByRole('tabpanel', { name: tab, exact: true })
-      .getByRole('button', { name, exact: true })
-      .click();
-  },
-);
+When('I go back to the Session', async ({ page }): Promise<void> => {
+  await page.goBack();
+});
 
 // The header's ⋯ menu lists an action only while what it opens is there.
 Then(

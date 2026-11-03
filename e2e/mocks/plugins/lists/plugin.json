@@ -23,6 +23,48 @@
         "path": "/issues"
       }
     ],
-    "slots": []
+    "slots": [],
+    "declared": {
+      "argo/session/header/v1": [
+        {
+          "id": "open-notes-switch",
+          "label": "Open Notes switch",
+          "icon": {
+            "sf": "note.text",
+            "material": "notes"
+          },
+          "placement": "menu",
+          "target": {
+            "type": "page",
+            "path": "/lists/notes-switch"
+          }
+        },
+        {
+          "id": "toggle-notes-card",
+          "label": "Toggle Notes card",
+          "icon": {
+            "sf": "note.text",
+            "material": "notes"
+          },
+          "placement": "menu",
+          "target": {
+            "type": "card",
+            "cardId": "notes"
+          }
+        }
+      ],
+      "argo/session/workbench/v1": [
+        {
+          "id": "notes",
+          "title": "Notes",
+          "icon": {
+            "sf": "note.text",
+            "material": "notes"
+          },
+          "page": "/notes",
+          "tab": "/notes/full"
+        }
+      ]
+    }
   }
 }
