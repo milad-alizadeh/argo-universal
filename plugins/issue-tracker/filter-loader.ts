@@ -5,6 +5,7 @@ import type { IssueDeps } from './issue-deps';
 import { filterById, type IssueFilter } from './issue-filters';
 import { pathText } from './issue-paths';
 import {
+  knownOverview,
   readOverview,
   requestOverview,
   type Overview,
@@ -31,6 +32,9 @@ export type FilterData = {
 
 type Load = { params: Readonly<Record<string, string>>; state: FilterState };
 
+// What the Loader reads with, and how it says a read it left running has changed the page.
+export type LoadDeps = IssueDeps & { changed: () => void };
+
 type Target = { project: Project; filter: IssueFilter };
 
 type Reads = Pick<FilterData, 'overview' | 'issues' | 'message' | 'hasMore'>;
@@ -40,7 +44,7 @@ type Reads = Pick<FilterData, 'overview' | 'issues' | 'message' | 'hasMore'>;
  * the overview and the Page state's pages of Issues, read at once.
  */
 export async function loadFilter(
-  deps: IssueDeps,
+  deps: LoadDeps,
   { params, state }: Load,
 ): Promise<FilterData> {
   const projects = await deps.listProjects();
@@ -70,7 +74,7 @@ const targetOf = (
 });
 
 async function targetReads(
-  deps: IssueDeps,
+  deps: LoadDeps,
   target: Target,
   pages: number,
 ): Promise<Reads> {
@@ -82,14 +86,34 @@ async function targetReads(
   return { overview, ...issues };
 }
 
-// The cached overview when there is one, as a filter page has always shown it; GitHub's otherwise.
+/*
+ * The overview this Plugin read or is reading, so a page drawn after a status change waits for the new
+ * counts. Before the first read, the stored overview draws at once and GitHub's is read behind it; the
+ * page draws again when it lands, as the overview page always has.
+ */
 async function overviewOf(
-  deps: IssueDeps,
+  deps: LoadDeps,
   project: Project,
 ): Promise<Overview | null> {
-  const cached = await readOverview(deps, project);
+  const known = knownOverview(deps, project);
 
-  return cached ?? requestOverview(deps, project, false).catch(() => null);
+  if (known) return known.catch(() => null);
+
+  return storedOverview(deps, project);
+}
+
+async function storedOverview(
+  deps: LoadDeps,
+  project: Project,
+): Promise<Overview | null> {
+  const stored = await readOverview(deps, project);
+  const read = requestOverview(deps, project, false);
+
+  if (!stored) return read.catch(() => null);
+
+  void read.then(deps.changed, () => null);
+
+  return stored;
 }
 
 async function issuesOf(

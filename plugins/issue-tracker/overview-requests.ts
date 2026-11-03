@@ -19,7 +19,11 @@ export const readOverview = (
 ): Promise<Overview | null> =>
   deps.storage.readCache<Overview>(cacheKey(project));
 
-type OverviewRequest = { promise: Promise<Overview>; pending: boolean };
+type OverviewRequest = {
+  project: Project;
+  promise: Promise<Overview>;
+  pending: boolean;
+};
 
 const requests = new WeakMap<
   IssueDeps['storage'],
@@ -46,6 +50,19 @@ export function requestOverview(
   return request.promise;
 }
 
+// The overview this Plugin last read or is reading for the Project; none before its first request.
+export const knownOverview = (
+  deps: IssueDeps,
+  project: Project,
+): Promise<Overview> | undefined =>
+  projectRequests(deps.storage).get(project.id)?.promise;
+
+// A status change moves the counts, so every Project's overview read before is read again.
+export function reloadOverviews(deps: IssueDeps): void {
+  for (const { project } of projectRequests(deps.storage).values())
+    void requestOverview(deps, project, true).catch(() => null);
+}
+
 function projectRequests(
   storage: IssueDeps['storage'],
 ): Map<string, OverviewRequest> {
@@ -68,6 +85,7 @@ function startRequest(
   forget: () => void,
 ): OverviewRequest {
   const request: OverviewRequest = {
+    project,
     promise: fetchAndCache(deps, project),
     pending: true,
   };

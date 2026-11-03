@@ -2,14 +2,13 @@ import type { Argo } from '@argo/plugin-kit';
 import type { IssueStatus } from './github-issues';
 import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import { requestOverview } from './overview-requests';
 
 type Params = Readonly<Record<string, string | number | boolean>>;
 
 /*
  * `setStatus` closes or reopens one Issue in a Project (ADR-0044), the write a filter list's row runs
- * (ADR-0050). The other open pages hear of it as they do of the Issue page's own change. The Project's
- * counts start to be read again as the call answers, so the pages it makes stale draw from that read.
+ * (ADR-0050). The other open pages hear of it as they do of the Issue page's own change, which also
+ * reads the Projects' counts again for the pages it makes stale.
  */
 export function registerStatusOperation(
   argo: Pick<Argo, 'operations'>,
@@ -29,7 +28,6 @@ async function setStatus(
 
   await client.setStatus(number, status);
   deps.changes.publish(number);
-  void requestOverview(deps, project, true).catch(() => null);
 
   return { number, status };
 }

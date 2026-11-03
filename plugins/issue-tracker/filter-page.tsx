@@ -23,6 +23,7 @@ import type { IssueFilter } from './issue-filters';
 import { filterPattern } from './issue-paths';
 import { RootRows } from './issue-root';
 import { issueTree } from './issue-tree';
+import { reloadOverviews } from './overview-requests';
 
 type To = PageTo<FilterState>;
 
@@ -35,11 +36,12 @@ export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   // A status change on any page, the Issue page's own included, leaves the kept pages and drawn lists stale.
   deps.changes.subscribe(() => {
     forgetPages();
+    reloadOverviews(deps);
     argo.pages.stale();
   });
   argo.pages.define(filterPattern, {
     state: filterState,
-    load: (input) => loadFilter(deps, input),
+    load: (input) => loadFilter({ ...deps, changed: argo.pages.stale }, input),
     render: (data, to) => <FilterPage deps={deps} data={data} to={to} />,
   });
 }
