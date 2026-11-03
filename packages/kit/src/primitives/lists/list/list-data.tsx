@@ -49,7 +49,7 @@ const partOrRowId = <Item,>(
         selectionId(rowProps.props, rowProps.row.item, rowProps.row.index),
       );
 
-function Row<Item>(rowProps: RowProps<Item>): ReactElement {
+function DataListRow<Item>(rowProps: RowProps<Item>): ReactElement {
   const { row, props } = rowProps;
   const content = props.renderItem?.(row.item, row.index);
   const gutter = useGutterStyle(props);
@@ -81,7 +81,7 @@ const padded = (content: ReactNode, gutter: Gutter): ReactNode =>
 export function useRenderedRows<Item>(
   props: ListProps<Item>,
 ): (row: LegendListRenderItemProps<Item>) => ReactElement {
-  return useCallback((row) => <Row row={row} props={props} />, [props]);
+  return useCallback((row) => <DataListRow row={row} props={props} />, [props]);
 }
 
 function usePadding(value: ListProps<never>['padding']): number {

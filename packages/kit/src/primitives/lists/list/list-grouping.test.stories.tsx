@@ -224,6 +224,6 @@ export const ParentDrawLeavesRowsAlone: Story = {
       await canvas.findByText('Drawn 1');
     });
 
-    await expect(counts.Row).toBeUndefined();
+    await expect(counts.DataListRow).toBeUndefined();
   },
 };

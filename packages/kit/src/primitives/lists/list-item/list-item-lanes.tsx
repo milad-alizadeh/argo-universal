@@ -39,12 +39,12 @@ export const trailingLanes = (
 ): ReactNode => (
   <>
     {drawsTrailing(props, compact) ? <Trailing {...props} /> : null}
-    {accessoryLane(props)}
+    {accessorySlot(props)}
     {props.control ? <Control>{props.control}</Control> : null}
   </>
 );
 
-const accessoryLane = (props: DrawingProps): ReactNode =>
+const accessorySlot = (props: DrawingProps): ReactNode =>
   props.accessory ? <Accessory>{props.accessory}</Accessory> : null;
 
 // A regular row's trailing mark joins its title when the title trails; otherwise it has its own lane.

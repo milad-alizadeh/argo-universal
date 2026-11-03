@@ -31,21 +31,23 @@ export function useItemDrawing(
   };
 }
 
-function ItemSeparator(props: ListItemProps): ReactNode {
+type SeparatorProps = Pick<ListItemProps, 'id' | 'leadingSize'> & {
+  separator: string;
+};
+
+function ItemSeparator(props: SeparatorProps): ReactNode {
   const { index } = useContext(RowPositionContext);
   const highlighted = useSeparatorCovered(index);
   const selected = useSelectedSeparator(props.id);
-  const covered = [highlighted, selected].some(Boolean);
-  const separator = itemSeparator(useItemDrawing(props), hasLeading(props));
 
-  if (covered) return null;
+  if ([highlighted, selected].some(Boolean)) return null;
 
-  return separator ? (
+  return (
     <View
-      className={separatorClass(separator, props.leadingSize)}
+      className={separatorClass(props.separator, props.leadingSize)}
       style={hairline}
     />
-  ) : null;
+  );
 }
 
 // Under a row that is not a tile: its separator when its List draws one, and its progress bar when it has one.
@@ -54,16 +56,25 @@ export function rowDetails({ props, drawing, tile }: RowParts): ReactNode {
 
   return (
     <>
-      {separated(props, drawing) ? <ItemSeparator {...props} /> : null}
+      {separatorLine(props, itemSeparator(drawing, hasLeading(props)))}
       {progressBar(props)}
     </>
   );
 }
 
+const separatorLine = (
+  props: DrawingProps,
+  separator: string | undefined,
+): ReactNode =>
+  separator === undefined ? null : (
+    <ItemSeparator
+      id={props.id}
+      leadingSize={props.leadingSize}
+      separator={separator}
+    />
+  );
+
 const progressBar = (props: DrawingProps): ReactNode =>
   props.progress ? (
     <ItemProgress progress={props.progress} sidebar={props.sidebar} />
   ) : null;
-
-const separated = (props: DrawingProps, drawing: ItemDrawing): boolean =>
-  itemSeparator(drawing, hasLeading(props)) !== undefined;

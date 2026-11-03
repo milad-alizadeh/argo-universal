@@ -36,26 +36,42 @@ import {
   ChoiceSlot,
   SelectionTint,
 } from './list-item-selection';
-import { itemSurface, type ItemDrawing } from './list-item-styles';
+import { itemSurface } from './list-item-styles';
 
 const tileSurface = 'relative overflow-hidden rounded-3xl bg-card';
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
-  const { context, footer } = useListItemGroup(props.description);
-  const actions = useContentItemActions(props);
-  const moves = useMoveActions(props.id);
-
-  return (
-    <ContextActions actions={actions} builtIn={moves} menu={rowMenu(props)}>
-      <>
-        <RowPositionContext value={context}>
-          <ItemSurface {...props} />
-        </RowPositionContext>
-        {footer}
-      </>
-    </ContextActions>
-  );
+  return itemFrame(props, useFrame(props));
 }
+
+// What a row's frame holds: its group's position and footer, its actions, and its moves.
+interface Frame {
+  group: ReturnType<typeof useListItemGroup>;
+  actions: ReturnType<typeof useContentItemActions>;
+  moves: ReturnType<typeof useMoveActions>;
+}
+
+function useFrame(props: DrawingProps): Frame {
+  return {
+    group: useListItemGroup(props.description),
+    actions: useContentItemActions(props),
+    moves: useMoveActions(props.id),
+  };
+}
+
+const itemFrame = (
+  props: DrawingProps,
+  { group, actions, moves }: Frame,
+): ReactElement => (
+  <ContextActions actions={actions} builtIn={moves} menu={rowMenu(props)}>
+    <>
+      <RowPositionContext value={group.context}>
+        <ItemSurface {...props} />
+      </RowPositionContext>
+      {group.footer}
+    </>
+  </ContextActions>
+);
 
 // A row's props, how it draws, whether it is a tile, and whether its List moves it.
 interface SurfaceParts extends RowParts {
@@ -83,7 +99,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
 // What the surface holds, each part only when the row has it, so a plain row draws no empty components.
 const surfaceContent = (parts: SurfaceParts): ReactNode => (
   <>
-    {pressedContent(parts.props, parts.drawing, parts.tile)}
+    {pressedContent(parts)}
     {rowDetails(parts)}
     {parts.movable ? (
       <RowMovePicker id={parts.props.id} Row={ListItem} />
@@ -91,14 +107,11 @@ const surfaceContent = (parts: SurfaceParts): ReactNode => (
   </>
 );
 
-// A row with no rows under it draws its frame itself, so a plain row is one component shallower.
 export function ListItem({ children, ...props }: ListItemProps): ReactElement {
   const rows = nestedRows(children);
-  const drawing = useChoosing(props);
+  const row = <ChoosingItem {...props} />;
 
-  if (rows.length === 0) return <ListItemFrame {...drawing} />;
-
-  return <NestingItem row={<ChoosingItem {...props} />} rows={rows} />;
+  return rows.length === 0 ? row : <NestingItem row={row} rows={rows} />;
 }
 
 // A List lifts child ListItems to rows of their own; it hands them on to this row's tree lane instead.
@@ -110,9 +123,11 @@ drawsMovePicker(({ id }) => <RowMovePicker id={id} Row={ListItem} />);
 // A List with no rows of its own stands in for itself with rows of this shape.
 drawsPlaceholderRows((props: PlaceholderRowProps) => <ListItem {...props} />);
 
-// A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
+// A menu row's check leads the row; elsewhere only a choosing List draws it, trailing. It draws the row's frame itself, so a row is no deeper than its frame.
 function ChoosingItem(props: ListItemProps): ReactElement {
-  return <ListItemFrame {...useChoosing(props)} />;
+  const drawing = useChoosing(props);
+
+  return itemFrame(drawing, useFrame(drawing));
 }
 
 function useChoosing({ disclosure, ...props }: ListItemProps): DrawingProps {
@@ -128,11 +143,7 @@ function useChoosing({ disclosure, ...props }: ListItemProps): DrawingProps {
 }
 
 // The row's press and, for a selected row, its tint over it.
-const pressedContent = (
-  props: DrawingProps,
-  drawing: ItemDrawing,
-  tile: boolean,
-): ReactNode => (
+const pressedContent = ({ props, drawing, tile }: RowParts): ReactNode => (
   <>
     <ItemPress {...drawingContent(props, tile, drawing.look.valuePlacement)} />
     {props.selected ? selectionTint(props, drawing.look.menu) : null}

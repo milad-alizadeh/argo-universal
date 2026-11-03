@@ -110,10 +110,6 @@ export function useFoldButton(): boolean {
   return Boolean(tree?.parent && treeDrawn);
 }
 
-/*
- * The row's tree lane, drawn only on a wide desktop or web window: its ancestors' rails, its parent's, then its own
- * lane, which holds a parent's chevron. It runs the row's full height, past a regular row's own padding.
- */
 // Whether the row draws a tree lane at all, so a row outside a drawn tree draws no TreeLane.
 export function useTreeLaneDrawn(): boolean {
   const tree = useTreeRow();
@@ -122,6 +118,10 @@ export function useTreeLaneDrawn(): boolean {
   return Boolean(tree) && treeDrawn;
 }
 
+/*
+ * The row's tree lane, drawn only on a wide desktop or web window: its ancestors' rails, its parent's, then its own
+ * lane, which holds a parent's chevron. It runs the row's full height, past a regular row's own padding.
+ */
 export function TreeLane(props: LaneProps): ReactNode {
   const tree = useTreeRow();
   const { treeDrawn: drawn } = useListLook();

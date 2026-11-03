@@ -110,7 +110,9 @@ export const PatchDrawsOnlyItsRow: Story = {
     await expect(titles(updatesOf(counts, 'ListItem'))).toEqual([patchedTitle]);
     await expect(counts.ListItem).toHaveProperty('mounts', 0);
     // The List's own row around it draws once, for that row alone.
-    await expect(updatesOf(counts, 'Row').length).toBeLessThanOrEqual(1);
+    await expect(updatesOf(counts, 'DataListRow').length).toBeLessThanOrEqual(
+      1,
+    );
     await expect(
       updatesOf(counts, 'ContextActions').length,
     ).toBeLessThanOrEqual(1);
@@ -130,7 +132,7 @@ export const ParentDrawLeavesRowsAlone: Story = {
       await canvas.findByRole('button', { name: 'Draw again 1' });
     });
 
-    await expect(counts.Row).toBeUndefined();
+    await expect(counts.DataListRow).toBeUndefined();
     await expect(counts.ListItem).toBeUndefined();
     await expect(counts.ContextActions).toBeUndefined();
   },
