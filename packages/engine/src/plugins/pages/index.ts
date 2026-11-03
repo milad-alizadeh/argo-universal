@@ -5,8 +5,9 @@
  * matches, with a context that names the asking Connection's surface and whether it is the Server Device,
  * reads `pages` pages of its paged list, then runs its Render, and answers the Plugin tree, parsed,
  * capped, sanitised and prepared as every Plugin tree is; the log names the SVG it left out. When the request names the hash of the tree the
- * App keeps, the answer is `unchanged` for the same tree, or `append` for a tree this Server sent that
- * the new one only grows by appended rows, and otherwise the whole `tree`. Two draws of one address may
+ * App keeps, the answer is `unchanged` for the same tree, or `append` when the App keeps the tree this
+ * Server last sent for the address and the new one only grows it by appended rows, and otherwise the whole
+ * `tree`. The Server keeps that last tree per address while the Plugin's generation runs. Two draws of one address may
  * run at once. It answers `failed` when the Plugin cannot start, no pattern matches the path, the Loader
  * throws or takes longer than 30 seconds, the Render calls a hook or passes a function prop, or the tree
  * is invalid or too large. It never throws.

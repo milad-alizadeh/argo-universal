@@ -18,7 +18,7 @@ export function useIsLoaderPage(
 }
 
 // The Page path patterns of the Plugin's Loader pages.
-export const useLoaderPatterns = (
+const useLoaderPatterns = (
   pluginId: string,
 ): { data?: string[]; isError: boolean } =>
   useQuery({

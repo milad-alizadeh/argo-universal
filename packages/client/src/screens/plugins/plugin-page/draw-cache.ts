@@ -14,7 +14,6 @@ import { keptAfter, type Answer, type Kept } from './kept-tree';
 
 export type { Answer } from './kept-tree';
 
-// The App's kept Plugin trees: every Loader page address drawn, under one tRPC query path.
 export type DrawCache = {
   client: QueryClient;
   draws: ReturnType<typeof useTRPC>['plugins']['draw'];

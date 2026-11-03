@@ -12,8 +12,7 @@ import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { Broadcast } from '../broadcast';
 import type { PluginOperationService } from '../operations';
-import type { Drawn, PluginDraws } from './plugin-draws';
-import { TreeAnswers } from './tree-answers';
+import type { PluginDraws } from './plugin-draws';
 
 // What drawing needs of the Plugin service: a running worker, started on the first draw as a page starts it.
 export type PagesHost = {
@@ -38,7 +37,6 @@ const failedDraw = (error: string): DrawAnswer => ({ kind: 'failed', error });
 
 export class LoaderPages {
   private readonly marks = new Broadcast<StaleMark>();
-  private readonly answers = new TreeAnswers();
   private readonly unwatch: () => void;
 
   /*
@@ -78,13 +76,9 @@ export class LoaderPages {
 
     if (started) return failedDraw(started);
 
-    const drawn = await this.draws.draw(pluginId, {
-      ...at,
-      pages: at.pages ?? 1,
-      ...askedBy(asking),
-    });
+    const address = { ...at, pages: at.pages ?? 1, ...askedBy(asking) };
 
-    return this.answered(drawn, known);
+    return this.draws.answer(pluginId, address, known);
   }
 
   public async patterns(pluginId: string): Promise<string[]> {
@@ -110,12 +104,6 @@ export class LoaderPages {
     });
 
     return { result, stale: this.draws.patternsOf(pluginId) };
-  }
-
-  private answered(drawn: Drawn, known?: string): DrawAnswer {
-    return drawn.ok
-      ? this.answers.answer(drawn.root, drawn.pages, known)
-      : failedDraw(drawn.error);
   }
 
   private async started(pluginId: string): Promise<string | undefined> {

@@ -16,7 +16,6 @@ import {
   type OnPageCall,
   type PageOpening,
 } from './use-page-calls';
-import { freshMs, usePrefetch } from './use-prefetch';
 
 export type { PageOpening } from './use-page-calls';
 
@@ -27,7 +26,7 @@ export type PluginPageState = { root: WireNode | null; onPageCall: OnPageCall };
  * address, so a revisit draws the kept tree at once and asks again behind it, naming what it keeps so an
  * unchanged page costs no tree. A Page state change keeps the tree on screen until the next address has
  * drawn; load more appends the next page's rows; a bound search or selection changes the Page state once
- * the edits pause. Only a focused screen asks again, and the Loader pages its first links open are drawn ahead.
+ * the edits pause. Only a focused screen asks again.
  */
 export function usePluginPage(opening: PageOpening): PluginPageState {
   const drawing = useDrawing();
@@ -35,8 +34,6 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
   const address = { ...opening, pageState: memory[0] };
   const root = useLastDrawn(useDrawn(drawing, address));
   const onPageCall = usePageCalls({ drawing, opening, memory });
-
-  usePrefetch(opening, root);
 
   return { root, onPageCall };
 }
@@ -61,7 +58,6 @@ function useDrawn(drawing: Drawing, address: Address): Answer | undefined {
   const { data } = useQuery({
     ...drawOptions(drawing, address),
     placeholderData: keepPreviousData,
-    staleTime: freshMs,
     subscribed: useScreenFocused(),
   });
 

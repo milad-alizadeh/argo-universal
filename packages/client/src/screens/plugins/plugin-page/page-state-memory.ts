@@ -13,7 +13,7 @@ const memoryKey = ({ pluginId, path }: Remembered): readonly string[] => [
   path,
 ];
 
-export const rememberedState = (
+const rememberedState = (
   client: QueryClient,
   page: Remembered,
 ): PageState => client.getQueryData<PageState>(memoryKey(page)) ?? {};

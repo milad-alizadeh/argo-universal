@@ -1,11 +1,13 @@
+import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import type { PluginClock } from '../clock';
+import type { PluginEvent } from '../protocol/runtime';
 import { WorkerCalls } from '../runtime/worker-calls';
-import { stack, svg } from '../views/draw-tree-fixtures';
+import { leaf, stack, svg } from '../views/draw-tree-fixtures';
 import { PluginDraws } from './plugin-draws';
 
-type Draws = { pages: PluginDraws; workers: WorkerCalls };
+type Draws = { pages: PluginDraws; workers: WorkerCalls; sent: PluginEvent[] };
 
 const idleClock: PluginClock = {
   now: () => 0,
@@ -14,10 +16,69 @@ const idleClock: PluginClock = {
 };
 
 function draws(log: (line: string) => void = (): null => null): Draws {
-  const workers = new WorkerCalls({ send: (): null => null, clock: idleClock });
+  const sent: PluginEvent[] = [];
 
-  return { pages: new PluginDraws(workers, log), workers };
+  const send = (_pluginId: string, event: PluginEvent): number =>
+    sent.push(event);
+
+  const workers = new WorkerCalls({ send, clock: idleClock });
+
+  return { pages: new PluginDraws(workers, log), workers, sent };
 }
+
+const rows = (count: number): WireJson =>
+  JSON.parse(
+    JSON.stringify(
+      stack(Array.from({ length: count }, (_, n) => leaf(`${n}`, {}))),
+    ),
+  );
+
+// One draw of `/list` showing `count` rows, answered by that generation of the worker.
+type Listed = { count: number; generation: number; known?: string };
+
+async function drawList(
+  { pages, sent }: Draws,
+  { count, generation, known }: Listed,
+): Promise<DrawAnswer> {
+  const at = { path: '/list', pageState: {}, pages: count };
+  const answer = pages.answer('tracker', at, known);
+  const event = sent.at(-1);
+  const id = event?.type === 'draw' ? event.id : -1;
+
+  pages.receive(
+    { pluginId: 'tracker', generation },
+    { action: 'drawn', id, root: rows(count), pages: count },
+  );
+
+  return answer;
+}
+
+const hashOf = (answer: DrawAnswer): string | undefined =>
+  'hash' in answer ? answer.hash : undefined;
+
+it('answers a load more with its rows against the tree last sent, and forgets that tree when the Plugin runs again', async () => {
+  const drawing = draws();
+
+  drawing.workers.run('tracker', 1);
+
+  const first = await drawList(drawing, { count: 1, generation: 1 });
+
+  const more = await drawList(drawing, {
+    count: 2,
+    generation: 1,
+    known: hashOf(first),
+  });
+
+  drawing.workers.release('tracker');
+  drawing.workers.run('tracker', 2);
+
+  expect(first.kind).toBe('tree');
+  expect(more.kind).toBe('append');
+  expect(
+    (await drawList(drawing, { count: 3, generation: 2, known: hashOf(more) }))
+      .kind,
+  ).toBe('tree');
+});
 
 it('draws a page without the SVG the sanitiser refused, and logs what it left out', async () => {
   const logs: string[] = [];
@@ -26,7 +87,7 @@ it('draws a page without the SVG the sanitiser refused, and logs what it left ou
 
   workers.run('atlas', 1);
 
-  const drawn = pages.draw('atlas', at);
+  const drawn = pages.answer('atlas', at);
 
   // The worker sends its tree as JSON.
   const root: WireJson = JSON.parse(
@@ -38,7 +99,7 @@ it('draws a page without the SVG the sanitiser refused, and logs what it left ou
     { action: 'drawn', id: 0, root, pages: 1 },
   );
 
-  expect(await drawn).toMatchObject({ ok: true, root: { children: [] } });
+  expect(await drawn).toMatchObject({ kind: 'tree', root: { children: [] } });
   expect(logs).toEqual([
     'Plugin atlas: refused /map node Stack#root/Svg#unsafe: element <script> refused',
   ]);

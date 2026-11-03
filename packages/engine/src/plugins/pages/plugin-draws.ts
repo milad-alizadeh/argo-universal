@@ -1,4 +1,5 @@
 import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
+import { treeAnswer, type DrawAnswer } from '@repo/contracts/plugins/page-draw';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { PluginEvent } from '../protocol/runtime';
 import type {
@@ -30,6 +31,15 @@ type Outcome = Answered | Failed;
 
 // An address, how many pages of its paged list the App shows, and the Connection that asked.
 type DrawAt = Omit<Extract<PluginEvent, { type: 'draw' }>, 'type' | 'id'>;
+
+// The trees last sent for each address a Plugin drew, kept until its running generation ends.
+type Sent = Map<string, WireNode>;
+
+type SentAt = { last: WireNode | undefined; keep: (root: WireNode) => void };
+
+// Two Apps showing one address with different page counts share one entry, so each may get whole trees.
+const sentKey = ({ pages: _pages, ...address }: DrawAt): string =>
+  JSON.stringify(address);
 
 // Where a background pass runs a Loader alone: its Page path and the Project it reads for.
 export type LoadAt = { path: string; projectId: string };
@@ -72,6 +82,7 @@ function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
  */
 export class PluginDraws {
   private readonly defined = new Map<string, Defined>();
+  private readonly sent = new Map<string, Sent>();
   private readonly changeListeners = new Set<ChangeListener>();
   private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
 
@@ -98,7 +109,42 @@ export class PluginDraws {
       : [];
   }
 
-  public async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
+  /*
+   * The draw's answer to an App that keeps the tree `known` names: unchanged, the rows a load more appended
+   * to the tree last sent for the address, or the whole tree (ADR-0050). A Server that restarted, or a Plugin
+   * that ran again, sent no trees and answers whole ones.
+   */
+  public async answer(
+    pluginId: string,
+    address: DrawAt,
+    known?: string,
+  ): Promise<DrawAnswer> {
+    const drawn = await this.draw(pluginId, address);
+
+    if (!drawn.ok) return { kind: 'failed', error: drawn.error };
+
+    const sent = this.sentAt(pluginId, sentKey(address));
+    const answer = treeAnswer(drawn.root, sent.last, known);
+
+    sent.keep(drawn.root);
+
+    return { ...answer, pages: drawn.pages };
+  }
+
+  // The tree last sent for an address, and keeping the next; only while a generation runs, so a Plugin released mid-draw keeps nothing.
+  private sentAt(pluginId: string, key: string): SentAt {
+    const keep = (root: WireNode): void => {
+      if (this.workers.generation(pluginId) === undefined) return;
+
+      const sent = this.sent.get(pluginId) ?? new Map<string, WireNode>();
+
+      this.sent.set(pluginId, sent.set(key, root));
+    };
+
+    return { last: this.sent.get(pluginId)?.get(key), keep };
+  }
+
+  private async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
     const outcome = await this.calls.call(pluginId, address);
 
     if ('ok' in outcome) return outcome;
@@ -173,6 +219,8 @@ export class PluginDraws {
   }
 
   private forgetEnded(pluginId: string): void {
+    this.sent.delete(pluginId);
+
     const running = this.workers.generation(pluginId);
 
     if (this.defined.get(pluginId)?.generation !== running)
