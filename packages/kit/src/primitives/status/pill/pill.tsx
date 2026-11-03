@@ -44,13 +44,11 @@ function pillClassName(tone: Tone | undefined): string {
   );
 }
 
-type Label = { label: LabelColours | undefined };
-
-const PillText = ({
-  text,
-  tone,
-  label,
-}: Pick<PillProps, 'text' | 'tone'> & Label): ReactElement => (
+// The Pill's words, drawn by LabelPill itself so a Pill is no deeper than its View and Text.
+const pillText = (
+  { text, tone }: Pick<PillProps, 'text' | 'tone'>,
+  label: LabelColours | undefined,
+): ReactElement => (
   <Text
     role="badge"
     tone={textTones[tone ?? pillDefaults.tone]}
@@ -61,19 +59,10 @@ const PillText = ({
   </Text>
 );
 
-type PillViewProps = Omit<PillProps, 'text' | 'color'> &
-  Label & { children: ReactElement };
-
 const fillStyle = (
   label: LabelColours | undefined,
 ): { backgroundColor: string } | undefined =>
   label?.fill ? { backgroundColor: label.fill } : undefined;
-
-function PillView({ tone, label, ...props }: PillViewProps): ReactElement {
-  return (
-    <View {...props} className={pillClassName(tone)} style={fillStyle(label)} />
-  );
-}
 
 // A tracker label's colour, read for the theme the Pill draws on.
 function useLabel(color: string | undefined): LabelColours | undefined {
@@ -82,29 +71,46 @@ function useLabel(color: string | undefined): LabelColours | undefined {
   return color ? labelColours(color, theme === 'dark') : undefined;
 }
 
-function LabelPill({
-  text,
-  tone = pillDefaults.tone,
-  color,
+// What the Pill hands its View: everything but its own words, tone, colour, variant and appearance.
+const viewProps = ({
+  text: _text,
+  tone: _tone,
+  color: _color,
   variant: _variant,
   appearance: _appearance,
   ...props
-}: PillProps): ReactElement {
-  const label = useLabel(color);
+}: PillProps): Omit<PillProps, keyof PillOwnProps> => props;
+
+type PillOwnProps = Pick<
+  PillProps,
+  'text' | 'tone' | 'color' | 'variant' | 'appearance'
+>;
+
+// A plain function, so a label Pill is no deeper than its View and Text.
+function labelPill(
+  props: PillProps,
+  label: LabelColours | undefined,
+): ReactElement {
+  const tone = props.tone ?? pillDefaults.tone;
 
   return (
-    <PillView {...props} tone={tone} label={label}>
-      <PillText text={text} tone={tone} label={label} />
-    </PillView>
+    <View
+      {...viewProps(props)}
+      className={pillClassName(tone)}
+      style={fillStyle(label)}
+    >
+      {pillText({ text: props.text, tone }, label)}
+    </View>
   );
 }
 
 export function Pill(props: PillProps): ReactElement {
   const variant = props.variant ?? pillDefaults.variant;
+  const label = useLabel(props.color);
 
   return variant === 'control' ? (
     <PillControl {...props} />
   ) : (
-    <LabelPill {...props} />
+    labelPill(props, label)
   );
 }

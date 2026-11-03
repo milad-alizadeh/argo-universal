@@ -36,7 +36,7 @@ const isFieldRow = (content: ReactNode): boolean =>
  * the Move Section a ListItem's does, and its Move to… picker opens over it, so every move a drag makes can be made
  * from the keyboard too. A ListItem draws its own; any other row draws as it is.
  */
-export function FieldRowMoves({ id, content }: FieldRowMovesProps): ReactNode {
+export function fieldRowMoves({ id, content }: FieldRowMovesProps): ReactNode {
   if (id === undefined || !isFieldRow(content)) return content;
 
   return <MovableFieldRow id={id} content={content} />;

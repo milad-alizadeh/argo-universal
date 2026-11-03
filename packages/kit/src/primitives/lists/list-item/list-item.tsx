@@ -1,12 +1,15 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { ContextActions } from '#primitives/actions/action';
-import { useListItemGroup, useMoveActions } from '#primitives/lists/list';
+import {
+  useInMovingList,
+  useListItemGroup,
+  useMoveActions,
+} from '#primitives/lists/list';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
 import { ListTileContext, RowPositionContext } from '../../../list-context';
-import { useCompactRows, useListLook } from '../../../list-look-context';
+import { useListLook } from '../../../list-look-context';
 import { nestedRows, nestsChildren } from '../../../list-tree';
-import { useSeparatorCovered } from '../../../row-highlights';
 import { drawsMovePicker } from '../list/list-move-picker-drawing';
 import {
   drawsPlaceholderRows,
@@ -15,15 +18,17 @@ import {
 import {
   useContentItemDrawing,
   useContentItemActions,
-  useSelectedSeparator,
 } from './list-item-content-selection';
 import { drawingContent } from './list-item-drawing-content';
 import { RowMovePicker } from './list-item-move-picker';
 import { NestingItem } from './list-item-nesting';
-import { hasLeading, separatorClass } from './list-item-parts';
 import { ItemPress, rowMenu, type DrawingProps } from './list-item-press';
-import { ItemProgress } from './list-item-progress';
 import type { ListItemProps } from './list-item-props';
+import {
+  rowDetails,
+  useItemDrawing,
+  type RowParts,
+} from './list-item-row-details';
 import {
   disclosureAccessory,
   useItemSelection,
@@ -31,42 +36,9 @@ import {
   ChoiceSlot,
   SelectionTint,
 } from './list-item-selection';
-import {
-  itemSeparator,
-  itemSurface,
-  type ItemDrawing,
-} from './list-item-styles';
-
-const hairline = { height: StyleSheet.hairlineWidth };
+import { itemSurface, type ItemDrawing } from './list-item-styles';
 
 const tileSurface = 'relative overflow-hidden rounded-3xl bg-card';
-
-function useItemDrawing(props: Pick<ListItemProps, 'sidebar'>): ItemDrawing {
-  const { position } = useContext(RowPositionContext);
-
-  return {
-    look: useListLook(),
-    position,
-    compact: useCompactRows(props.sidebar),
-  };
-}
-
-function ItemSeparator(props: ListItemProps): ReactNode {
-  const { index } = useContext(RowPositionContext);
-  const highlighted = useSeparatorCovered(index);
-  const selected = useSelectedSeparator(props.id);
-  const covered = [highlighted, selected].some(Boolean);
-  const separator = itemSeparator(useItemDrawing(props), hasLeading(props));
-
-  if (covered) return null;
-
-  return separator ? (
-    <View
-      className={separatorClass(separator, props.leadingSize)}
-      style={hairline}
-    />
-  ) : null;
-}
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
   const { context, footer } = useListItemGroup(props.description);
@@ -85,29 +57,46 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   );
 }
 
+// A row's props, how it draws, whether it is a tile, and whether its List moves it.
+interface SurfaceParts extends RowParts {
+  movable: boolean;
+}
+
 // A chosen row shows its check only, with no selected fill; a selected row without a check keeps its tint.
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing(props);
-  const tile = useContext(ListTileContext);
+  const tile = useContext(ListTileContext) !== null;
   // A row a Skeleton holds is a placeholder whose title is a width, so the row hides its own label. Both Skeletons hide everything they hold as well; this says it on the row itself, which is where the web story can see it. Skeleton.Ignore sets the context false.
   const loading = useSkeletonLoading();
+  const movable = useInMovingList();
 
   return (
     <View
       className={tile ? tileSurface : itemSurface(drawing, props)}
       aria-hidden={loading || undefined}
     >
-      <PressedContent props={props} drawing={drawing} tile={tile !== null} />
-      <RowDetails tile={tile !== null} props={props} />
-      <RowMovePicker id={props.id} Row={ListItem} />
+      {surfaceContent({ props, drawing, tile, movable })}
     </View>
   );
 }
 
+// What the surface holds, each part only when the row has it, so a plain row draws no empty components.
+const surfaceContent = (parts: SurfaceParts): ReactNode => (
+  <>
+    {pressedContent(parts.props, parts.drawing, parts.tile)}
+    {rowDetails(parts)}
+    {parts.movable ? (
+      <RowMovePicker id={parts.props.id} Row={ListItem} />
+    ) : null}
+  </>
+);
+
+// A row with no rows under it draws its frame itself, so a plain row is one component shallower.
 export function ListItem({ children, ...props }: ListItemProps): ReactElement {
   const rows = nestedRows(children);
+  const drawing = useChoosing(props);
 
-  if (rows.length === 0) return <ChoosingItem {...props} />;
+  if (rows.length === 0) return <ListItemFrame {...drawing} />;
 
   return <NestingItem row={<ChoosingItem {...props} />} rows={rows} />;
 }
@@ -121,53 +110,35 @@ drawsMovePicker(({ id }) => <RowMovePicker id={id} Row={ListItem} />);
 // A List with no rows of its own stands in for itself with rows of this shape.
 drawsPlaceholderRows((props: PlaceholderRowProps) => <ListItem {...props} />);
 
-// A row's props, and whether it draws as a tile.
-interface RowParts {
-  props: DrawingProps;
-  tile: boolean;
+// A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
+function ChoosingItem(props: ListItemProps): ReactElement {
+  return <ListItemFrame {...useChoosing(props)} />;
 }
 
-// A menu row's check leads the row; elsewhere only a choosing List draws it, trailing.
-function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
+function useChoosing({ disclosure, ...props }: ListItemProps): DrawingProps {
   const selected = useItemSelection(props);
   const { menu } = useListLook();
 
-  const drawing = useContentItemDrawing({
+  return useContentItemDrawing({
     ...selected,
     choice: menu ? <ChoiceSlot {...selected} /> : undefined,
     accessory:
       useTrailingChoice(menu, selected) ?? disclosureAccessory(disclosure),
   });
-
-  return <ListItemFrame {...drawing} />;
 }
 
-function RowDetails({ tile, props }: RowParts): ReactNode {
-  if (tile) return null;
+// The row's press and, for a selected row, its tint over it.
+const pressedContent = (
+  props: DrawingProps,
+  drawing: ItemDrawing,
+  tile: boolean,
+): ReactNode => (
+  <>
+    <ItemPress {...drawingContent(props, tile, drawing.look.valuePlacement)} />
+    {props.selected ? selectionTint(props, drawing.look.menu) : null}
+  </>
+);
 
-  return (
-    <>
-      <ItemSeparator {...props} />
-      <ItemProgress progress={props.progress} sidebar={props.sidebar} />
-    </>
-  );
-}
-
-interface PressedProps extends RowParts {
-  drawing: ItemDrawing;
-}
-
-function PressedContent({ props, drawing, tile }: PressedProps): ReactElement {
-  return (
-    <>
-      <ItemPress
-        {...drawingContent(props, tile, drawing.look.valuePlacement)}
-      />
-      <SelectionTint
-        selected={props.selected}
-        role={props.role}
-        menu={drawing.look.menu}
-      />
-    </>
-  );
-}
+const selectionTint = (props: DrawingProps, menu: boolean): ReactNode => (
+  <SelectionTint selected={props.selected} role={props.role} menu={menu} />
+);

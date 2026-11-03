@@ -28,18 +28,45 @@ function usePassThrough(props: DrawingProps): boolean {
   return hasAccessories(props) || folds;
 }
 
-// Keep the row's press target mounted when asynchronous accessories appear.
-export function useBesidePress(props: DrawingProps, tile: boolean): boolean {
-  if (usePassThrough(props)) return true;
-
-  if (tile) return false;
-
-  return [props.onPress, props.href].some(Boolean);
+// Whether the row's press goes beside its content, and whether its lanes let presses through to it.
+export interface BesideDrawing {
+  beside: boolean;
+  through: boolean;
 }
 
-export function BesidePress({ props, press }: BesidePressProps): ReactElement {
-  const accessories = usePassThrough(props);
+// Keep the row's press target mounted when asynchronous accessories appear.
+export function useBesidePress(
+  props: DrawingProps,
+  tile: boolean,
+): BesideDrawing {
+  const through = usePassThrough(props);
 
+  return { through, beside: through || pressesBeside(props, tile) };
+}
+
+const pressesBeside = (props: DrawingProps, tile: boolean): boolean =>
+  !tile && [props.onPress, props.href].some(Boolean);
+
+// The row's press, beside its content or around it; the same press target stays while an asynchronous accessory arrives during a click.
+export function rowPress(
+  props: DrawingProps,
+  press: RowPressProps,
+  beside: BesideDrawing,
+): ReactElement {
+  if (beside.beside) return besidePress({ props, press }, beside.through);
+
+  return (
+    <Pressable {...press}>
+      <ItemContentSlots {...props} />
+    </Pressable>
+  );
+}
+
+// A plain function, not a component, so the row is no deeper than its press.
+function besidePress(
+  { props, press }: BesidePressProps,
+  accessories: boolean,
+): ReactElement {
   return (
     <View className="relative">
       <Pressable {...press} className={pressClassName(press, accessories)}>

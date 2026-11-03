@@ -60,7 +60,9 @@ function drawing(
 ): ListItemGroup {
   return {
     context: { ...list, position },
-    footer: <RowFooter description={description} position={list.position} />,
+    footer: description ? (
+      <RowFooter description={description} position={list.position} />
+    ) : null,
   };
 }
 

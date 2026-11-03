@@ -4,15 +4,10 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import { LineEnd } from './list-item-line-end';
-import { CompactMeta, Meta } from './list-item-meta';
-import {
-  hasAccessories,
-  InertLane,
-  useOpenLane,
-} from './list-item-pass-through';
+import { hasMeta, Meta } from './list-item-meta';
+import { InertLane, useOpenLane } from './list-item-pass-through';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
-import { TreeLane } from './list-item-tree';
 
 type SubtitleProps = Pick<
   ListItemProps,
@@ -70,7 +65,10 @@ function titleWeight(
 const lineLimit = (multiline?: boolean): number | undefined =>
   multiline ? undefined : 1;
 
-function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
+// The row's title line, a plain function rather than a component, so a row is no deeper than its Text.
+export function rowTitle(
+  props: ListItemProps & { inLine?: boolean },
+): ReactElement {
   return (
     <Text
       role="row"
@@ -115,9 +113,7 @@ const subtitleOf = (props: PlacedContentProps): SubtitleProps => {
 function TextLines(props: PlacedContentProps): ReactElement {
   return (
     <InertLane className="min-w-0 gap-0.5">
-      <LineEnd end={titleLineEnd(props)}>
-        <Title {...props} />
-      </LineEnd>
+      <LineEnd end={titleLineEnd(props)}>{rowTitle(props)}</LineEnd>
       <LineEnd end={props.subtitleEnd}>
         <Subtitle {...subtitleOf(props)} />
       </LineEnd>
@@ -129,55 +125,13 @@ export function ItemContent(props: PlacedContentProps): ReactElement {
   return (
     <View {...useOpenLane()} className="min-w-0 flex-1 gap-0.5">
       <TextLines {...props} />
-      <Meta
-        sidebar={props.sidebar === true}
-        meta={props.meta}
-        metaAccessories={props.metaAccessories}
-      />
+      {hasMeta(props) ? (
+        <Meta
+          sidebar={props.sidebar === true}
+          meta={props.meta}
+          metaAccessories={props.metaAccessories}
+        />
+      ) : null}
     </View>
   );
 }
-
-// A compact row's subtitle reads beside its title, at the title's size and muted, short enough never to crowd it out.
-function InlineSubtitle(props: PlacedContentProps): ReactNode {
-  if (props.subtitle === undefined) return null;
-
-  return (
-    <Text
-      role="row"
-      tone={props.subtitleTone ?? 'muted'}
-      dimmed={props.subtitleDimmed}
-      numberOfLines={1}
-      className="max-w-1/2 shrink-0"
-    >
-      {props.subtitle}
-    </Text>
-  );
-}
-
-/*
- * A compact List's row on a wide window is one line (Paper "Issue row"): the tree lane, then the subtitle leading the
- * title as a short muted identifier, such as an Issue's number, then the title, which truncates; the meta lane follows,
- * pushed to the end before trailing. The line holds no second line, so its subtitle is a word or two, not a sentence.
- */
-export function CompactContent(props: PlacedContentProps): ReactElement {
-  return (
-    <>
-      <View {...useOpenLane()} className={compactTitleClass(props)}>
-        <TreeLane title={props.title} compact />
-        <InertLane className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch">
-          <InlineSubtitle {...props} />
-          <Title {...props} multiline={false} inLine />
-        </InertLane>
-      </View>
-      <CompactMeta meta={props.meta} metaAccessories={props.metaAccessories} />
-    </>
-  );
-}
-
-// Beside accessories the title keeps at least half the line; they give up their width first.
-const compactTitleClass = (props: PlacedContentProps): string =>
-  cn(
-    'min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch',
-    hasAccessories(props) && 'min-w-1/2',
-  );

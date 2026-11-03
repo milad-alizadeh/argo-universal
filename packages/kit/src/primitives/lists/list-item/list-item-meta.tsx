@@ -2,9 +2,10 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
 import {
-  AccessoryLane,
-  InertLane,
-  useOpenLane,
+  accessoryLane,
+  inertLane,
+  openLane,
+  usePassingThrough,
 } from './list-item-pass-through';
 import type { PlacedContentProps } from './list-item-placement';
 
@@ -14,29 +15,31 @@ const metaClassName = (sidebar: boolean): string =>
 
 type MetaProps = Pick<PlacedContentProps, 'meta' | 'metaAccessories'>;
 
-const hasMeta = (props: MetaProps): boolean =>
+export const hasMeta = (props: MetaProps): boolean =>
   [props.meta, props.metaAccessories].some(Boolean);
 
 // The meta line's own items take no press of their own; its accessories, after them, do.
-function MetaItems(props: MetaProps): ReactNode {
+function metaItems(props: MetaProps, through: boolean): ReactNode {
   return (
     <>
-      <InertLane className="min-w-0 shrink flex-row items-center gap-3">
-        {props.meta}
-      </InertLane>
-      <AccessoryLane>{props.metaAccessories}</AccessoryLane>
+      {inertLane(
+        through,
+        props.meta,
+        'min-w-0 shrink flex-row items-center gap-3',
+      )}
+      {accessoryLane(props.metaAccessories)}
     </>
   );
 }
 
 export function Meta(props: MetaProps & { sidebar: boolean }): ReactNode {
-  const open = useOpenLane();
+  const through = usePassingThrough();
 
   if (!hasMeta(props)) return null;
 
   return (
-    <View {...open} className={metaClassName(props.sidebar)}>
-      <MetaItems {...props} />
+    <View {...openLane(through)} className={metaClassName(props.sidebar)}>
+      {metaItems(props, through)}
     </View>
   );
 }
@@ -47,14 +50,13 @@ const compactMetaClass = (props: MetaProps): string =>
     props.metaAccessories === undefined ? 'shrink-0' : 'min-w-0 shrink',
   );
 
-export function CompactMeta(props: MetaProps): ReactNode {
-  const open = useOpenLane();
-
+// A plain function for the compact row, which read whether presses pass through already.
+export function compactMeta(props: MetaProps, through: boolean): ReactNode {
   if (!hasMeta(props)) return null;
 
   return (
-    <View {...open} className={compactMetaClass(props)}>
-      <MetaItems {...props} />
+    <View {...openLane(through)} className={compactMetaClass(props)}>
+      {metaItems(props, through)}
     </View>
   );
 }

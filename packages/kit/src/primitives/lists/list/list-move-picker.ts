@@ -41,6 +41,9 @@ const listPicker = (
 ): MovePicker | undefined =>
   order && id !== undefined ? rowPicker(order, id) : undefined;
 
+// Whether the row is in a List that moves its rows, so it can open a Move to… picker at all.
+export const useInMovingList = (): boolean => useListMoveOrder() !== undefined;
+
 // The Move to… picker while it is open for row `id`; nothing otherwise, or outside a List with `onMove`.
 export function useMovePicker(
   ownId: string | undefined,

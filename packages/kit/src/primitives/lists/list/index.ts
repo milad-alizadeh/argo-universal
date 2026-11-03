@@ -4,7 +4,11 @@ export { useListItemGroup } from './list-item-grouping';
 
 export { useMoveActions } from './list-move-actions';
 
-export { useMovePicker, type MovePicker } from './list-move-picker';
+export {
+  useInMovingList,
+  useMovePicker,
+  type MovePicker,
+} from './list-move-picker';
 
 export { NativeGroupedList } from './list-native-grouped';
 

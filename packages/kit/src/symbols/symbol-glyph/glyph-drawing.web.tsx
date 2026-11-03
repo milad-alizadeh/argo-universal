@@ -4,25 +4,26 @@ import { chevronSymbols } from '../chevron-scale';
 import { customSymbolPath, isCustomSymbol } from '../custom-symbols';
 import type { SystemDrawing } from '../drawn-symbol';
 import { appleSymbolShare } from '../glyph-sizing';
-import {
-  type RenderSymbolImage,
-  useSymbolImage,
-  useSymbolImageRenderer,
-} from '../symbol-images';
-import { MaterialGlyph } from './material-glyph.web';
+import { type RenderSymbolImage, useSymbolImage } from '../symbol-images';
+import { materialGlyph } from './material-glyph.web';
 import { SvgSymbolGlyph } from './svg-symbol';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { PathMask, SymbolMask } from './symbol-mask.web';
 
 type GlyphDrawingProps = Pick<SymbolGlyphProps, 'symbol' | 'pixels'>;
 
+// The system's symbol images on the macOS desktop app, else none.
+type GlyphRenderer = RenderSymbolImage | null;
+
 /*
  * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
- * and other desktops draw Material Symbols. SVG symbols draw from their components everywhere (ADR-0041).
+ * and other desktops draw Material Symbols. SVG symbols draw from their components everywhere (ADR-0041). A plain
+ * function, not a component, so a glyph is no deeper than the drawing it chooses.
  */
-export function GlyphDrawing(props: GlyphDrawingProps): React.JSX.Element {
-  const render = useSymbolImageRenderer();
-
+export function glyphDrawing(
+  props: GlyphDrawingProps,
+  render: GlyphRenderer,
+): React.JSX.Element {
   if (props.symbol.kind === 'svg')
     return (
       <SvgSymbolGlyph
@@ -32,21 +33,18 @@ export function GlyphDrawing(props: GlyphDrawingProps): React.JSX.Element {
       />
     );
 
-  return <SystemGlyph {...props} symbol={props.symbol} render={render} />;
+  return systemGlyph(props.symbol, props.pixels, render);
 }
 
-interface SystemGlyphProps extends Omit<GlyphDrawingProps, 'symbol'> {
-  symbol: SystemDrawing;
-  render: ReturnType<typeof useSymbolImageRenderer>;
-}
+function systemGlyph(
+  symbol: SystemDrawing,
+  pixels: number,
+  render: GlyphRenderer,
+): React.JSX.Element {
+  if (render)
+    return <AppleSymbolImage pixels={pixels} render={render} sf={symbol.sf} />;
 
-function SystemGlyph(props: SystemGlyphProps): React.JSX.Element {
-  if (props.render)
-    return (
-      <AppleSymbolImage {...props} render={props.render} sf={props.symbol.sf} />
-    );
-
-  return <MaterialGlyph {...props} />;
+  return materialGlyph({ symbol, pixels });
 }
 
 interface AppleSymbolImageProps extends Pick<SymbolGlyphProps, 'pixels'> {
