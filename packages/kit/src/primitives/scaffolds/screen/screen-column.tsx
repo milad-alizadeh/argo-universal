@@ -21,7 +21,8 @@ export const ScreenColumnEdgesContext = createContext<ColumnEdges | null>(null);
  * Below wide the phone shell's header runs from the window's edge, so the content does too. `narrow` holds one short
  * task to `--container-narrow` on every window, as it would otherwise stretch on a tablet. `bleed` runs the content to
  * the region's edges with no margins, for a canvas or a map. Where the aside has its own column the capped column
- * keeps the edges it leaves, on every page at that width, with or without an aside (screen-aside-place.ts).
+ * keeps the edges it leaves, on every page at that width, with or without an aside, except a `narrow` page with none,
+ * which stays centred (screen-aside-place.ts).
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,

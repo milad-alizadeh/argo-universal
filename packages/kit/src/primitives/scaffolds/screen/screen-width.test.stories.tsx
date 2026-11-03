@@ -1,5 +1,6 @@
 import type { ScreenWidth } from '@repo/contracts/kit-tokens';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { columnWidth } from '#mocks/story-layout';
 import { Screen } from './index';
@@ -66,3 +67,33 @@ export const ReadingColumnCapsWide = columnCap('content', true);
 export const NarrowKeepsInsideColumn = columnCap('narrow', true);
 
 export const FullWidthRunsPastColumn = columnCap('full', false);
+
+const region = 'width-region';
+
+// The App's page beside its 384 sidebar at 1440, where a page with an aside gives it a lane at the right.
+const besideSidebar = 1440 - 384;
+
+/*
+ * A narrow page with no aside has no list to share a column with, so it stays centred in the region, never moved left
+ * for an aside it does not have.
+ */
+export const NarrowWithoutAsideStaysCentred = atWidth(1440, {
+  render: () => (
+    <View testID={region} className="h-80" style={{ width: besideSidebar }}>
+      <WidthExample width="narrow" />
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    // A Screen draws once before it measures its own width; read it after it has.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const screen = canvas.getByTestId(region).getBoundingClientRect();
+    const content = canvas.getByTestId(widthContent).getBoundingClientRect();
+    const gutters = [content.left - screen.left, screen.right - content.right];
+
+    await expect(
+      Math.abs((gutters[0] ?? 0) - (gutters[1] ?? 0)) <= 1,
+      `gutters ${gutters.join(' and ')}`,
+    ).toBe(true);
+  },
+});
