@@ -206,6 +206,11 @@ Feature: Plugin navigation
     And I go back to the Session
     Then the Session Workbench has no Plugin card "Notes"
     And the Inspector has no tab "Notes"
+    When I press "Open Notes switch" in the Session header menu
+    And I fill the Notes card on the Plugin page
+    And I go back to the Session
+    Then the Session Workbench shows the Plugin card "Notes"
+    And the Inspector has no tab "Notes"
 
   Scenario: A Plugin ListDetail drills into the opened row on a phone Frame
     Given a phone Frame

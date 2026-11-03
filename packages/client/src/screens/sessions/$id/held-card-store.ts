@@ -12,8 +12,14 @@ export interface HeldCardView {
 
 type Listener = () => void;
 
+type EmptiedListener = (key: string) => void;
+
 const sameKeys = (one: readonly string[], other: readonly string[]): boolean =>
   one.length === other.length && one.every((key, at) => other[at] === key);
+
+// The page answered, and its answer draws nothing; a view with no tree yet is still waiting.
+const answeredNothing = ({ root }: HeldCardView): boolean =>
+  root !== null && drawsNothing(root);
 
 /*
  * The views a Session holds for its Plugin cards, by card key. A card draws from its view here, and the Workbench
@@ -22,6 +28,7 @@ const sameKeys = (one: readonly string[], other: readonly string[]): boolean =>
 export class HeldCardStore {
   private readonly views = new Map<string, HeldCardView>();
   private readonly listeners = new Set<Listener>();
+  private readonly emptiedListeners = new Set<EmptiedListener>();
   private filledKeys: readonly string[] = [];
 
   public readonly subscribe = (listener: Listener): (() => void) => {
@@ -29,6 +36,15 @@ export class HeldCardStore {
 
     return () => {
       this.listeners.delete(listener);
+    };
+  };
+
+  // Hears each card whose page drew something and then answered with nothing; not one still waiting, or released.
+  public readonly whenEmptied = (listener: EmptiedListener): (() => void) => {
+    this.emptiedListeners.add(listener);
+
+    return () => {
+      this.emptiedListeners.delete(listener);
     };
   };
 
@@ -40,12 +56,20 @@ export class HeldCardStore {
   }
 
   public hold(key: string, view: HeldCardView): void {
+    const emptied = this.filledKeys.includes(key) && answeredNothing(view);
+
     this.views.set(key, view);
     this.changed();
+
+    if (emptied) this.emptied(key);
   }
 
   public release(key: string): void {
     if (this.views.delete(key)) this.changed();
+  }
+
+  private emptied(key: string): void {
+    for (const listener of this.emptiedListeners) listener(key);
   }
 
   private changed(): void {

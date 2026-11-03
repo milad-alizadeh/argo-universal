@@ -2,7 +2,13 @@ import {
   type DeclaredItemOf,
   sessionWorkbenchSlot,
 } from '@repo/contracts/plugins/declared-slots';
-import { type ReactNode, useState, useSyncExternalStore } from 'react';
+import {
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import {
   type SessionPanels,
   SessionMemory,
@@ -38,6 +44,8 @@ export interface WorkbenchCards {
   toggle: ToggleWorkbenchCard;
   // The views of every declared card's page, which the page mounts once beside the Session.
   held: ReactNode;
+  // Hears each card that had something to show and now has nothing.
+  whenEmptied: HeldCardStore['whenEmptied'];
 }
 
 // A closed card is held by the key its Section draws under, so the two can never drift apart.
@@ -69,7 +77,24 @@ export function useWorkbenchCards(sessionId: string): WorkbenchCards {
     toggle: (pluginId, cardId) =>
       setClosed((keys) => toggled(keys, pluginCardKey(pluginId, cardId))),
     held: held.views,
+    whenEmptied: held.store.whenEmptied,
   };
+}
+
+/*
+ * A card that empties closes its Inspector tab, or its sheet on a phone, so neither comes back unasked the next time
+ * the card has something to show. A card still waiting for its Plugin keeps its tab, as when the Session reopens.
+ */
+export function useEmptiedCardsClose(
+  whenEmptied: WorkbenchCards['whenEmptied'],
+  panels: SessionPanels,
+): void {
+  const close = useRef(panels.close);
+
+  useEffect(() => {
+    close.current = panels.close;
+  });
+  useEffect(() => whenEmptied((key) => close.current(key)), [whenEmptied]);
 }
 
 // The Session's card views: the store they are held in, which cards have something to show, and the views to mount.

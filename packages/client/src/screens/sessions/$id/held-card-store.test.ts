@@ -49,6 +49,23 @@ describe('HeldCardStore', () => {
     expect(watcher).toHaveBeenCalledTimes(2);
   });
 
+  it('says which card emptied when its page answers with nothing, not while it waits or when it is released', () => {
+    const store = new HeldCardStore();
+    const emptied = vi.fn<(key: string) => void>();
+
+    store.whenEmptied(emptied);
+    store.hold(issue, held(null));
+    store.hold(issue, held(emptyPage()));
+    store.hold(notes, held(text));
+    store.hold(notes, held(null));
+    store.hold(notes, held(text));
+    store.release(notes);
+    store.hold(issue, held(text));
+    store.hold(issue, held(emptyPage()));
+
+    expect(emptied.mock.calls).toEqual([[issue]]);
+  });
+
   it('keeps the same filled list while a change inside a card leaves which cards are filled alone', () => {
     const store = new HeldCardStore();
 

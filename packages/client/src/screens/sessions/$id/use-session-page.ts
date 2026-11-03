@@ -4,7 +4,6 @@ import { useSessionFeed } from '#features/feed';
 import { useConnectionDropped, useSessionWork } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { renderSubagentFeed } from './connected-subagent-feed';
-import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { SessionDetailViewProps } from './session-detail-view';
 import {
   type SessionDetailViewSources,
@@ -21,7 +20,11 @@ import {
 } from './use-session-commands';
 import { useSessionReadOptions } from './use-session-read-options';
 import { useWithSessionBar } from './use-with-session-bar';
-import { type WorkbenchCards, useWorkbenchCards } from './use-workbench-cards';
+import {
+  useEmptiedCardsClose,
+  type WorkbenchCards,
+  useWorkbenchCards,
+} from './use-workbench-cards';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
@@ -41,7 +44,7 @@ export interface OpenedSession {
 export function useSessionPage(page: SessionPage): OpenedSession {
   const cards = useWorkbenchCards(page.sessionId);
 
-  return { props: useSessionViewProps(page, cards.open), cards };
+  return { props: useSessionViewProps(page, cards), cards };
 }
 
 type SessionSurroundings =
@@ -57,18 +60,35 @@ type SessionSurroundings =
 
 function useSessionSurroundings(
   { sessionId, preview }: SessionPage,
-  cards: readonly SessionPluginCard[],
+  cards: WorkbenchCards,
   feed: SessionFeed,
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     ...useFeedRequests(sessionId, feed),
-    ...useSessionWork(sessionId, feed.snapshot, offeredWith(cards)),
+    ...usePageWork(sessionId, cards, feed),
     agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
+}
+
+// The Session's work and its Inspector, whose tabs are the open cards' and close when a card empties.
+function usePageWork(
+  sessionId: string,
+  cards: WorkbenchCards,
+  feed: SessionFeed,
+): ReturnType<typeof useSessionWork> {
+  const work = useSessionWork(
+    sessionId,
+    feed.snapshot,
+    offeredWith(cards.open),
+  );
+
+  useEmptiedCardsClose(cards.whenEmptied, work.inspectorPanels);
+
+  return work;
 }
 
 interface ConnectedFeed {
@@ -94,7 +114,7 @@ function useConnectedFeed(sessionId: string): ConnectedFeed {
 
 function useSessionViewProps(
   page: SessionPage,
-  cards: readonly SessionPluginCard[],
+  cards: WorkbenchCards,
 ): SessionDetailViewProps {
   const { sessionId } = page;
   const sources = useConnectedFeed(sessionId);
@@ -104,7 +124,7 @@ function useSessionViewProps(
   const changed = useChangedSession({ sessionId, props, feed: sources.feed });
   const bar = useWithSessionBar(sessionId, sources.feed, changed);
 
-  return withPluginCards(withAgentFeed(bar), cards);
+  return withPluginCards(withAgentFeed(bar), cards.open);
 }
 
 // What the view draws, from the Session's own sources and everything the page read around it.
