@@ -129,6 +129,8 @@ function tileScrollProps<Item>(
     ListHeaderComponent: tileStart(props, geometry),
     ListEmptyComponent: <ListEmpty {...props} />,
     overrideItemLayout: tileSpan(props, geometry.columns),
+    // Each tile reads the grid's width and gap as it draws, so no tile is kept from the draw before.
+    itemsAreEqual: undefined,
   };
 }
 

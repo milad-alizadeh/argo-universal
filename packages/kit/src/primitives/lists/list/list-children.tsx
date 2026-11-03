@@ -1,4 +1,12 @@
-import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 import type { ListPosition, ListSelection } from '../../../list-context';
 import type { ListLook } from '../../../list-look';
 import { useListLook } from '../../../list-look-context';
@@ -76,35 +84,42 @@ const noneFolded: ReadonlySet<string> = new Set();
 function useFolding(): TreeFolding {
   const [folded, setFolded] = useState(noneFolded);
   const { treeDrawn: drawn } = useListLook();
-
-  const [toggles] = useState(() => new Map<string, () => void>());
-
-  const toggleOf = useCallback(
-    (key: string) => {
-      const held = toggles.get(key);
-
-      if (held) return held;
-
-      const toggle = (): void =>
-        setFolded((current) => {
-          const next = new Set(current);
-
-          if (!next.delete(key)) next.add(key);
-
-          return next;
-        });
-
-      toggles.set(key, toggle);
-
-      return toggle;
-    },
-    [toggles],
-  );
+  const toggleOf = useToggles(setFolded);
 
   return useMemo(
     () => ({ folded, toggleOf, drawn }),
     [folded, toggleOf, drawn],
   );
+}
+
+// One toggle per row key, kept for the List's life, so a row that did not change keeps the same one.
+function useToggles(
+  setFolded: Dispatch<SetStateAction<ReadonlySet<string>>>,
+): TreeFolding['toggleOf'] {
+  const [toggles] = useState(() => new Map<string, () => void>());
+
+  return useCallback(
+    (key: string) => {
+      const toggle = toggles.get(key) ?? ((): void => setFolded(flipped(key)));
+      toggles.set(key, toggle);
+
+      return toggle;
+    },
+    [toggles, setFolded],
+  );
+}
+
+// Folds the row at `key` when it is open, and opens it when it is folded.
+function flipped(
+  key: string,
+): (current: ReadonlySet<string>) => ReadonlySet<string> {
+  return (current) => {
+    const next = new Set(current);
+
+    if (!next.delete(key)) next.add(key);
+
+    return next;
+  };
 }
 
 // How one List reads its children: under its own key, as its rows fold.

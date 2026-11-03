@@ -3,7 +3,7 @@ import { wireNodeKeys } from '@repo/contracts/plugins/wire-node-key';
 import { errorMessage } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useEffect, useReducer, useState } from 'react';
-import { componentEventProps } from './component-event-props';
+import { componentEventProps, type NodeEvents } from './component-event-props';
 import type { DrawnNodes } from './drawn-nodes';
 import { ControlField, blurWithin } from './plugin-control-field';
 import {
@@ -35,19 +35,29 @@ export function useComponentEvents(
   drawn: DrawnNodes,
 ): PluginControls {
   const dispatcher = useDispatcher(onEvent);
-  const fields = useFields(root, drawn);
+  const tree = { fields: useFields(root, drawn), drawn };
   const [, update] = useReducer((revision: number) => revision + 1, 0);
-  const send = dispatcher.send.bind(dispatcher);
 
-  return (input) => {
-    const tree = { fields, drawn };
-    const field = fieldFor(tree, input);
-    const redraw = (): void => {
-      drawn.forget(input.context.key);
+  return (input) =>
+    componentEventProps({
+      input,
+      send: dispatcher.send.bind(dispatcher),
+      ...nodeState(tree, input, update),
+    });
+}
+
+// A node's field, and how it draws again: a node whose field changed forgets its drawing, then the tree draws again.
+function nodeState(
+  tree: TreeState,
+  input: ControlInput,
+  update: () => void,
+): Pick<NodeEvents, 'field' | 'update'> {
+  return {
+    field: fieldFor(tree, input),
+    update: (): void => {
+      tree.drawn.forget(input.context.key);
       update();
-    };
-
-    return componentEventProps({ input, field, send, update: redraw });
+    },
   };
 }
 
@@ -78,7 +88,10 @@ function useFields(root: WireNode, drawn: DrawnNodes): Fields {
   return fields;
 }
 
-function fieldFor({ fields, drawn }: TreeState, input: ControlInput): ControlField {
+function fieldFor(
+  { fields, drawn }: TreeState,
+  input: ControlInput,
+): ControlField {
   const { key } = input.context;
   const field = ControlField.matching(fields.get(key), input);
   fields.set(key, field);

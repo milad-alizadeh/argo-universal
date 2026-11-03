@@ -1,5 +1,4 @@
 import {
-  createContext,
   useContext,
   useMemo,
   useState,
@@ -20,20 +19,8 @@ import { ListGroupEnds, ListGroupEndsContext } from './list-group-ends';
 import { GroupedCells } from './list-grouped-cell';
 import { MovableRow } from './list-movable-row';
 import type { ListProps } from './list-props';
-import { dataRowPosition, rowPosition } from './list-row-position';
-
-type RowLayout = {
-  // Whether a data row draws its card piece; a fixed child draws its own cell.
-  cell: boolean;
-  positionAt: (index: number) => ListPosition;
-};
-
-const emptyLayout: RowLayout = {
-  cell: false,
-  positionAt: () => 'only',
-};
-
-const RowLayoutContext = createContext<RowLayout>(emptyLayout);
+import { RowLayoutContext, useRowLayout } from './list-row-layout';
+import { rowPosition } from './list-row-position';
 
 export function ListGrouping<Item>({
   children,
@@ -43,7 +30,7 @@ export function ListGrouping<Item>({
   list?: ListProps<Item>;
 }): ReactElement {
   const [ends] = useState(() => new ListGroupEnds());
-  const layout = useRowLayout(list);
+  const layout = useRowLayout(list, list?.renderItem !== childRenderer);
 
   return (
     <RowLayoutContext value={layout}>
@@ -51,56 +38,6 @@ export function ListGrouping<Item>({
     </RowLayoutContext>
   );
 }
-
-// The list's props, and a List's children, are new each time its parent draws; a row's layout changes only with the places its rows hold, or every row draws again with the parent.
-function useRowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
-  const listed = list !== undefined;
-
-  const { items, getSectionKey, renderItem }: Partial<ListProps<Item>> =
-    list ?? {};
-
-  const cell = renderItem !== childRenderer;
-  const positions = useSteadyPositions(
-    useMemo(
-      () => rowPositions({ items, getSectionKey }),
-      [items, getSectionKey],
-    ),
-  );
-
-  return useMemo(() => {
-    if (!listed) return emptyLayout;
-
-    return { cell, positionAt: (index) => positions[index] ?? 'only' };
-  }, [listed, cell, positions]);
-}
-
-function rowPositions<Item>(
-  grouping: Pick<ListProps<Item>, 'items' | 'getSectionKey'>,
-): readonly ListPosition[] {
-  return (grouping.items ?? []).map((_, index) =>
-    dataRowPosition(grouping, index),
-  );
-}
-
-// The positions drawn before, while every row holds the place it held.
-function useSteadyPositions(
-  next: readonly ListPosition[],
-): readonly ListPosition[] {
-  const [held, setHeld] = useState(next);
-
-  if (held === next || samePositions(held, next)) return held;
-
-  setHeld(next);
-
-  return next;
-}
-
-const samePositions = (
-  first: readonly ListPosition[],
-  second: readonly ListPosition[],
-): boolean =>
-  first.length === second.length &&
-  first.every((position, index) => position === second[index]);
 
 // Data rows start their own context. Fixed children and standalone Sections adapt it below.
 type DataRowProps = {

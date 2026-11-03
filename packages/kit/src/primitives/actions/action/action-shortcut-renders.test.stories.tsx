@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { memo, Profiler, useState } from 'react';
 import { expect } from 'storybook/test';
-import { renderCounter } from '#mocks/render-counts';
+import { renderCounter, type RenderCounts } from '#mocks/render-counts';
 import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Action, ActionShortcutScope, ContextActions } from './index';
@@ -55,6 +55,9 @@ function GrowingRows(): React.JSX.Element {
   );
 }
 
+const updatesOf = (counts: RenderCounts, name: string): number =>
+  counts[name]?.updates.length ?? 0;
+
 const allocated = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -71,9 +74,8 @@ export const NewRowLeavesSiblingsAlone: Story = {
       await allocated();
     });
 
-    await expect(counts.ShortcutRow?.mounts).toBe(1);
-    await expect(counts.ContextActions?.updates.length ?? 0).toBeLessThanOrEqual(
-      1,
-    );
+    await expect(counts.ShortcutRow).toHaveProperty('mounts', 1);
+    // The new row's own declaration may draw again once its keys are handed out.
+    await expect(updatesOf(counts, 'ContextActions')).toBeLessThanOrEqual(1);
   },
 };

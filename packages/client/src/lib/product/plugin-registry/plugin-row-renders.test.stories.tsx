@@ -1,12 +1,15 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
-import { renderCounter } from '@repo/kit/mocks/render-counts';
+import {
+  renderCounter,
+  type RenderCounts,
+} from '@repo/kit/mocks/render-counts';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Profiler, useState } from 'react';
 import { View } from 'react-native';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
@@ -51,11 +54,18 @@ const root = WireNode.parse({
   children: keys.map(row),
 });
 
+const patchedTitle = 'Row c patched';
+
 const patched = applyPatch(root, [
-  { op: 'setProps', key: ['c'], props: { title: 'Row c patched' } },
+  { op: 'setProps', key: ['c'], props: { title: patchedTitle } },
 ]);
 
 const renders = renderCounter();
+
+// The handler each draw of the tree's owner passes: a row drawn before still reaches the newest.
+const firstHandler = fn();
+
+const laterHandler = fn();
 
 // The App holds the tree a view sent and folds each patch onto it, so unchanged rows keep their nodes.
 function PatchedTree(): React.JSX.Element {
@@ -70,7 +80,7 @@ function PatchedTree(): React.JSX.Element {
         <View style={{ height: 400 }}>
           <PluginTree
             root={tree}
-            onEvent={fn()}
+            onEvent={draws === 0 ? firstHandler : laterHandler}
             onOpenPage={(path) => fn()(path, draws)}
           />
         </View>
@@ -78,6 +88,9 @@ function PatchedTree(): React.JSX.Element {
     </View>
   );
 }
+
+const updatesOf = (counts: RenderCounts, name: string): object[] =>
+  counts[name]?.updates ?? [];
 
 const titles = (updates: object[]): unknown[] =>
   updates.map((props) => ('title' in props ? props.title : undefined));
@@ -89,23 +102,29 @@ export const PatchDrawsOnlyItsRow: Story = {
     await canvas.findByText('Row e');
 
     const counts = await renders.during(canvasElement, async () => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Patch row c' }));
-      await canvas.findByText('Row c patched');
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Patch row c' }),
+      );
+      await canvas.findByText(patchedTitle);
     });
 
-    await expect(titles(counts.ListItem?.updates ?? [])).toEqual([
-      'Row c patched',
-    ]);
-    await expect(counts.ListItem?.mounts ?? 0).toBe(0);
+    await expect(titles(updatesOf(counts, 'ListItem'))).toEqual([patchedTitle]);
+    await expect(counts.ListItem).toHaveProperty('mounts', 0);
     // The List's own row around it draws once, for that row alone.
-    await expect(counts.DataListRow?.updates.length ?? 0).toBeLessThanOrEqual(1);
-    await expect(counts.ContextActions?.updates.length ?? 0).toBeLessThanOrEqual(1);
+    await expect(updatesOf(counts, 'DataListRow').length).toBeLessThanOrEqual(
+      1,
+    );
+    await expect(
+      updatesOf(counts, 'ContextActions').length,
+    ).toBeLessThanOrEqual(1);
   },
 };
 
 export const ParentDrawLeavesRowsAlone: Story = {
   render: () => <PatchedTree />,
   play: async ({ canvas, canvasElement, userEvent }) => {
+    firstHandler.mockClear();
+    laterHandler.mockClear();
     await settleLayout('wide');
     await canvas.findByText('Row e');
 
@@ -119,5 +138,9 @@ export const ParentDrawLeavesRowsAlone: Story = {
     await expect(counts.DataListRow).toBeUndefined();
     await expect(counts.ListItem).toBeUndefined();
     await expect(counts.ContextActions).toBeUndefined();
+
+    await userEvent.click(canvas.getByText('Row b'));
+    await waitFor(() => expect(laterHandler).toHaveBeenCalled());
+    await expect(firstHandler).not.toHaveBeenCalled();
   },
 };

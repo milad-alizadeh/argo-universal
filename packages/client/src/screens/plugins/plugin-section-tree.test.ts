@@ -71,11 +71,11 @@ describe('a section list’s selected row', () => {
 
   it('leaves every other row the node it was, so it does not draw again', () => {
     const marked = withSelectedRow(root, [closedPage]);
-    const [section] = marked.slots.list?.[0]?.children ?? [];
-    const [sourceSection] = list.children;
+    const [open, closed] = rowsIn(marked.slots.list ?? []);
+    const [sourceOpen, sourceClosed] = rowsIn([list]);
 
-    expect(section?.children[0]).toBe(sourceSection?.children[0]);
-    expect(section?.children[1]).not.toBe(sourceSection?.children[1]);
+    expect(open).toBe(sourceOpen);
+    expect(closed).not.toBe(sourceClosed);
     expect(marked.slots.empty).toBe(root.slots.empty);
   });
 

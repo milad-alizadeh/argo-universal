@@ -20,7 +20,6 @@ function scrollEvents<Item>(
     onEndReachedThreshold: props.onEndReachedThreshold,
     contentInsetAdjustmentBehavior:
       props.contentInsetAdjustmentBehavior ?? 'automatic',
-    estimatedItemSize: props.estimatedItemSize,
     keyExtractor: props.keyExtractor,
     getItemType: props.getItemType,
     itemsAreEqual: props.itemsAreEqual,
@@ -77,6 +76,7 @@ function listContents<Item>(
   return {
     inset: props.inset,
     depth: props.depth,
+    estimatedItemSize: props.estimatedItemSize,
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
     stickyHeaderIndices: props.stickyHeaderIndices,

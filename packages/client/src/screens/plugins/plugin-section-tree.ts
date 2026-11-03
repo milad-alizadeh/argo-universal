@@ -56,18 +56,25 @@ function linkedPages(nodes: readonly WireNode[]): string[] {
 
 // A row that is not marked and holds no marked row stays the node it was, so it draws as it did.
 function marked(node: WireNode, page: string): WireNode {
-  const children = node.children.map((child) => marked(child, page));
+  const children = markedChildren(node.children, page);
   const selected = linkedPage(node) === page;
-  const kept = children.every((child, index) => child === node.children[index]);
 
-  if (!selected && kept) return node;
+  if (!selected && children === node.children) return node;
 
-  return {
-    ...node,
-    children: kept ? node.children : children,
-    props: selected ? { ...node.props, selected: true } : node.props,
-  };
+  return { ...node, children, props: markedProps(node, selected) };
 }
+
+// The same array while no child changed.
+function markedChildren(nodes: WireNode[], page: string): WireNode[] {
+  const children = nodes.map((child) => marked(child, page));
+
+  return children.every((child, index) => child === nodes[index])
+    ? nodes
+    : children;
+}
+
+const markedProps = (node: WireNode, selected: boolean): WireNode['props'] =>
+  selected ? { ...node.props, selected: true } : node.props;
 
 /*
  * Marks the row of the page the section is showing, so a Plugin passes no selection on each page. `pages` is the

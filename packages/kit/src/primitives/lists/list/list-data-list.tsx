@@ -19,24 +19,27 @@ function useDataListProps<Item>(
   props: ListProps<Item>,
 ): ScrollFadeListProps<Item> {
   const renderItem = useRenderedRows(props);
-  const contentContainerStyle = useListPadding(props);
-  const gutter = useRowGutter(props);
-  // A row that equals the row before draws again only for its extra data, so the gutter it holds is part of it.
-  const extraData = useMemo(
-    () => ({ caller: props.extraData, gutter }),
-    [props.extraData, gutter],
-  );
 
   return {
     ...useScrollProps(props),
-    extraData,
+    extraData: useRowExtraData(props),
     data: props.items ?? [],
     renderItem,
-    contentContainerStyle,
+    contentContainerStyle: useListPadding(props),
     ListEmptyComponent: (
       <ListEmpty isLoading={props.isLoading} empty={props.empty} />
     ),
   };
+}
+
+// A row that equals the row before draws again only for its extra data, so the gutter it holds is part of it.
+function useRowExtraData<Item>(props: ListProps<Item>): object {
+  const gutter = useRowGutter(props);
+
+  return useMemo(
+    () => ({ caller: props.extraData, gutter }),
+    [props.extraData, gutter],
+  );
 }
 
 const fill = { flex: 1, minWidth: '100%' } as const;
