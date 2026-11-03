@@ -81,7 +81,6 @@ function PatchedTree(): React.JSX.Element {
           <PluginTree
             root={tree}
             onEvent={draws === 0 ? firstHandler : laterHandler}
-            onOpenPage={(path) => fn()(path, draws)}
           />
         </View>
       </Profiler>
@@ -123,8 +122,6 @@ export const PatchDrawsOnlyItsRow: Story = {
 export const ParentDrawLeavesRowsAlone: Story = {
   render: () => <PatchedTree />,
   play: async ({ canvas, canvasElement, userEvent }) => {
-    firstHandler.mockClear();
-    laterHandler.mockClear();
     await settleLayout('wide');
     await canvas.findByText('Row e');
 
@@ -138,8 +135,21 @@ export const ParentDrawLeavesRowsAlone: Story = {
     await expect(counts.DataListRow).toBeUndefined();
     await expect(counts.ListItem).toBeUndefined();
     await expect(counts.ContextActions).toBeUndefined();
+  },
+};
+
+// A row kept from an earlier draw sends its press to the handler the owner passed last.
+export const KeptRowReachesNewestHandler: Story = {
+  render: () => <PatchedTree />,
+  play: async ({ canvas, userEvent }) => {
+    firstHandler.mockClear();
+    laterHandler.mockClear();
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw again 0' }));
+    await canvas.findByRole('button', { name: 'Draw again 1' });
 
     await userEvent.click(canvas.getByText('Row b'));
+
     await waitFor(() => expect(laterHandler).toHaveBeenCalled());
     await expect(firstHandler).not.toHaveBeenCalled();
   },

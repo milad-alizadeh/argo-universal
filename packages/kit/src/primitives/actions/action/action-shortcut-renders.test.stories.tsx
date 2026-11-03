@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { memo, Profiler, useState } from 'react';
 import { expect } from 'storybook/test';
+import { nextFrames } from '#mocks/next-frames';
 import { renderCounter, type RenderCounts } from '#mocks/render-counts';
 import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
@@ -58,20 +59,17 @@ function GrowingRows(): React.JSX.Element {
 const updatesOf = (counts: RenderCounts, name: string): number =>
   counts[name]?.updates.length ?? 0;
 
-const allocated = (): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, 50));
-
 // A row that registers its shortcuts hands keys out again, and only a row whose keys changed draws again.
 export const NewRowLeavesSiblingsAlone: Story = {
   render: () => <GrowingRows />,
   play: async ({ canvas, canvasElement, userEvent }) => {
     await settleLayout('wide');
-    await allocated();
+    await nextFrames();
 
     const counts = await renders.during(canvasElement, async () => {
       await userEvent.click(canvas.getByRole('button', { name: 'Add row' }));
       await expect(await canvas.findByText('Row d')).toBeVisible();
-      await allocated();
+      await nextFrames();
     });
 
     await expect(counts.ShortcutRow).toHaveProperty('mounts', 1);

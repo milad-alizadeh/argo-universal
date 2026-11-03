@@ -31,8 +31,8 @@ export class DrawnNodes {
 
   // The node at `key` draws again, with the nodes around it that hold it and the nodes inside it.
   public forget(key: string): void {
-    for (const drawn of this.drawn.keys())
-      if (related(drawn, key)) this.drawn.delete(drawn);
+    for (const address of this.drawn.keys())
+      if (related(address, key)) this.drawn.delete(address);
   }
 
   // Only nodes still in the tree keep their drawing.
