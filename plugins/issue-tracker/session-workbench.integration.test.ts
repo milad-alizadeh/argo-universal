@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { drawsNothing } from '@argo/plugin-kit/testing';
+import { drawsNothing, findWireNodeEntry } from '@argo/plugin-kit/testing';
+import type { WireNode } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import { issueTitle, project, refusedTitle, tracker } from './journey-fixture';
 import {
@@ -14,12 +15,20 @@ const cardPage = '/session-issue';
 
 const tabPage = '/session-issue/full';
 
-it("shows the Session's Issue on the Workbench card", async () => {
+const holdsIssue = (tree: WireNode): boolean =>
+  findWireNodeEntry(tree, ({ props }) => props.title === issueTitle) !==
+  undefined;
+
+it("shows the Session's Issue on the Workbench card, and nothing before GitHub answers", async () => {
   const test = await trackerWithAttachedIssue();
   const card = await mountFor(test, cardPage, sessionId);
-  const row = await card.find('Fixture issue from GitHub');
+  const row = await card.find(issueTitle);
 
   expect(row.props.subtitle).toBe('#42 · Open');
+  // The card draws nothing at all until it can draw the Issue: no placeholder while GitHub answers.
+  expect(
+    card.trees.filter((tree) => !drawsNothing(tree)).every(holdsIssue),
+  ).toBe(true);
 }, 20_000);
 
 it('draws nothing on the card when the Session has no Issue, or the card has no Session', async () => {
@@ -42,6 +51,10 @@ it('follows the Session as an Agent attaches another Issue, and draws nothing on
   await test.clock.advance(1000);
   await attach(test, 'attach', 43);
   expect((await card.find(refusedTitle)).props.subtitle).toBe('#43 · Open');
+  // Between the two Issues the card keeps the last row; it never blanks.
+  expect(card.trees.filter(drawsNothing)).toHaveLength(
+    card.trees.findIndex((tree) => !drawsNothing(tree)),
+  );
 
   await attach(test, 'detach', 43);
   expect((await card.find(issueTitle)).props.subtitle).toBe('#42 · Open');

@@ -1,6 +1,14 @@
-import { EmptyState, List, ListItem, Screen } from '@argo/plugin-kit';
+import {
+  EmptyState,
+  List,
+  ListItem,
+  Screen,
+  useEffect,
+  useState,
+} from '@argo/plugin-kit';
 import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import type { Issue } from './github-issues';
 import type { IssueDeps } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
 import { statusMark } from './issue-status-mark';
@@ -64,7 +72,7 @@ function messageFor(
 }
 
 /*
- * The card: a summary of the Session's Issue, one row. It draws nothing with no Session, while the link loads and with
+ * The card: a summary of the Session's Issue, one row. It draws nothing with no Session, while the Issue loads and with
  * no Issue; a link that could not load still draws, since nothing would read as no Issue.
  */
 function SessionIssueCard({ deps, context }: PageProps): JSX.Element | null {
@@ -75,12 +83,37 @@ function SessionIssueCard({ deps, context }: PageProps): JSX.Element | null {
   return attached.error ? <EmptyState title={failed.message} /> : null;
 }
 
-// The number and state are the subtitle, not a value, which would claim width first and cut the title. Argo opens the full view when the card's body is pressed.
-function CardRow(found: Found): JSX.Element {
+/*
+ * The attached Issue's row once GitHub has answered, and why when it cannot load. Nothing is drawn before the first
+ * answer; when the Session moves to another Issue, the last row stays until the next one answers.
+ */
+function CardRow(found: Found): JSX.Element | null {
   const { issue, message } = useIssueDetail(found);
+  const shown = useShownIssue(issue, message);
 
-  if (!issue) return <UnloadedRow number={found.number} message={message} />;
+  if (shown) return <IssueRow issue={shown} />;
 
+  return message ? (
+    <EmptyState
+      title={`#${found.number} could not load`}
+      description={message}
+    />
+  ) : null;
+}
+
+// The Issue to draw: GitHub's answer, or while the next one loads, the last one it gave; none once a load fails.
+function useShownIssue(issue: Issue | null, message: string): Issue | null {
+  const [last, setLast] = useState<Issue | null>(null);
+
+  useEffect(() => {
+    if (issue) setLast(issue);
+  }, [issue]);
+
+  return issue ?? (message ? null : last);
+}
+
+// The number and state are the subtitle, not a value, which would claim width first and cut the title. Argo opens the full view when the card's body is pressed.
+function IssueRow({ issue }: { issue: Issue }): JSX.Element {
   return (
     <List>
       <ListItem
@@ -90,17 +123,6 @@ function CardRow(found: Found): JSX.Element {
         leading={statusMark(issue)}
       />
     </List>
-  );
-}
-
-// An attached Issue keeps its card: its number while GitHub answers, and why when it cannot load.
-function UnloadedRow(props: { number: number; message: string }): JSX.Element {
-  const title = `#${props.number}`;
-
-  if (!props.message) return <EmptyState title={title} />;
-
-  return (
-    <EmptyState title={`${title} could not load`} description={props.message} />
   );
 }
 
