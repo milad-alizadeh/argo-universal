@@ -150,6 +150,15 @@ export const FocusingAHandleShowsIt: Story = {
   },
 };
 
+export const PressingAHandleThenLeavingHidesIt: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await userEvent.click(handleOf(canvas, 'First'));
+    await userEvent.unhover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).not.toBeVisible());
+  },
+};
+
 export const ALoneCardHasNoHandle: Story = {
   args: { cards: oneCard },
   play: async ({ canvas }) => {

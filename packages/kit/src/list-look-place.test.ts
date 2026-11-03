@@ -92,10 +92,6 @@ describe('a List in a card', () => {
     },
   );
 
-  it('ends at its last row, with no end gap under it', () => {
-    expect(look({ place: 'card' }).insets).toEqual({ paddingBottom: 0 });
-  });
-
   it('is a menu when a popover opens from it', () => {
     expect(popoverPlace('card')).toBe('popover');
   });

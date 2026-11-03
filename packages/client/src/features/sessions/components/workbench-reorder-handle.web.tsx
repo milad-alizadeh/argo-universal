@@ -80,8 +80,11 @@ const pointerHandlers = (
 const handleClass =
   'flex h-6 w-8 cursor-grab touch-none select-none items-center justify-center rounded-control outline-none transition-opacity duration-150 hover:bg-hover focus-visible:bg-hover active:cursor-grabbing';
 
-// The handle's class and focus handlers: it shows while its card says so or while it has focus.
-function useShowing(shown: boolean): HTMLAttributes<HTMLDivElement> {
+/*
+ * The handle's class and focus handlers: it shows while its card says so or while it has focus. Only the keyboard
+ * focuses it: a pointer press is taken by the drag, whose default is prevented, so it never leaves focus behind.
+ */
+function useShowingProps(shown: boolean): HTMLAttributes<HTMLDivElement> {
   const [focused, setFocused] = useState(false);
 
   return {
@@ -98,13 +101,15 @@ function useShowing(shown: boolean): HTMLAttributes<HTMLDivElement> {
  * press on its lane takes the card.
  */
 export function ReorderHandle(props: ReorderHandleProps): ReactElement {
+  const showing = useShowingProps(props.shown);
+
   return (
     <div
       role="button"
       tabIndex={0}
       aria-label={`Reorder ${props.label}`}
       aria-roledescription="drag handle"
-      {...useShowing(props.shown)}
+      {...showing}
       {...pointerHandlers(props)}
     >
       <Icon name="reorder" tone="muted" />

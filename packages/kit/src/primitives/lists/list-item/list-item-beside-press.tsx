@@ -64,18 +64,21 @@ export function rowPress(
   );
 }
 
-// Every way a row's press can act: its own press, a long press, a selection, a link, a menu trigger's pointer or popup.
-const pressParts = (press: RowPressProps): unknown[] => [
-  press.onPress,
-  press.onPressIn,
-  press.onLongPress,
-  press.onPointerDown,
-  press.href,
-  press['aria-haspopup'],
-];
+// Handlers that only paint the row, never act: its hover look and its layout.
+const paintOnly = new Set(['onHoverIn', 'onHoverOut', 'onLayout']);
+
+// A link or a popup acts like a handler does.
+const actingProps = new Set(['href', 'aria-haspopup']);
+
+const actingKey = (key: string): boolean =>
+  actingProps.has(key) || (key.startsWith('on') && !paintOnly.has(key));
+
+// Every way a row's press can act: any handler it was given (a press, a long press, a key, a menu's pointer), a link or a popup.
+const acts = ([key, value]: [string, unknown]): boolean =>
+  Boolean(value) && actingKey(key);
 
 const pressesNothing = (press: RowPressProps): boolean =>
-  press.role === 'group' && pressParts(press).every((part) => !part);
+  press.role === 'group' && !Object.entries(press).some(acts);
 
 /*
  * A row that presses nothing is a named group, drawn without a press: the web's press stops every click it sees, so a
