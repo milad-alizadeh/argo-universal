@@ -9,8 +9,9 @@ import { ActionShortcutScope } from '#primitives/actions/action';
 import { SvgBudget } from '#primitives/visual';
 import { ScreenAccessory } from './screen-accessory';
 import { ScreenAside, ScreenLead, useAsideFrame } from './screen-aside';
-import type { AsidePlace } from './screen-aside-place';
+import type { AsideLayout, AsidePlace } from './screen-aside-place';
 import { ScreenBody } from './screen-body';
+import { ScreenColumnEdgesContext } from './screen-column';
 import { ScreenFooterFrame } from './screen-footer';
 import { screenHeadersOf } from './screen-headers';
 import { ScreenHeadingBody } from './screen-heading-row';
@@ -89,9 +90,21 @@ function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
       className={drawingClass}
     >
       <ShortcutAnchors anchors={props.declaration.anchors} />
-      <ScreenFrame {...props} place={aside.place} />
+      <ScreenColumns {...props} layout={aside} />
       <ScreenEnd {...props} />
     </View>
+  );
+}
+
+// The frame, with the column where the aside leaves it.
+function ScreenColumns({
+  layout,
+  ...props
+}: ScreenHeaderPlanned & { layout: AsideLayout }): ReactElement {
+  return (
+    <ScreenColumnEdgesContext value={layout.column ?? null}>
+      <ScreenFrame {...props} place={layout.place} />
+    </ScreenColumnEdgesContext>
   );
 }
 
