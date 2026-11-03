@@ -19,10 +19,7 @@ const received = fn();
 
 let confirmation: PromiseWithResolvers<void>;
 
-function delivery(
-  id: number,
-  replace: (id: number) => void,
-): PluginOnEvent {
+function delivery(id: number, replace: (id: number) => void): PluginOnEvent {
   return (key, event) => {
     received(id, key, event);
 

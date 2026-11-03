@@ -1,12 +1,16 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { QueryObserver, type QueryClient } from '@tanstack/react-query';
+import {
+  QueryObserver,
+  skipToken,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '../../query-cache';
 import {
   dropPluginTrees,
   dropTreesOfPluginsOtherThan,
   keepPluginTree,
-  keptPluginTreeOptions,
+  keptTreeKey,
   readKeptTree,
 } from './plugin-page-trees';
 
@@ -25,6 +29,12 @@ const issues = { pluginId: 'issues', path: '/open' };
 const issuesOther = { pluginId: 'issues', path: '/closed' };
 
 const atlas = { pluginId: 'atlas', path: '/open' };
+
+const watchIssues = (client: QueryClient): QueryObserver<WireNode> =>
+  new QueryObserver<WireNode>(client, {
+    queryKey: keptTreeKey(issues),
+    queryFn: skipToken,
+  });
 
 describe('a Plugin page tree kept in the App', () => {
   let client: QueryClient;
@@ -56,7 +66,7 @@ describe('a Plugin page tree kept in the App', () => {
   });
 
   it('stays long after the page that drew it has gone', () => {
-    const observer = new QueryObserver(client, keptPluginTreeOptions(issues));
+    const observer = watchIssues(client);
     const unsubscribe = observer.subscribe(() => {});
 
     keepPluginTree(client, issues, tree('open'));
@@ -93,7 +103,7 @@ describe('a Plugin page tree kept in the App', () => {
   });
 
   it('a page drawing a tree that is dropped hears of it', async () => {
-    const observer = new QueryObserver(client, keptPluginTreeOptions(issues));
+    const observer = watchIssues(client);
     const drawn: (WireNode | undefined)[] = [];
 
     const unsubscribe = observer.subscribe((result) => {

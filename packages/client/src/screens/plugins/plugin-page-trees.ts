@@ -1,7 +1,7 @@
 import type { PluginViewInput, WireNode } from '@repo/contracts/plugins/wire';
 import {
-  queryOptions,
   skipToken,
+  useQuery,
   type Query,
   type QueryClient,
 } from '@tanstack/react-query';
@@ -11,26 +11,32 @@ import { pluginPageTrees } from '../../query-cache';
  * The last tree each Plugin page drew, kept in memory for the Connection, so a page opened again draws at once while
  * its view opens on the Server (ADR-0048). Only the App's page hook fills it; the Server's first snapshot replaces it.
  */
-const treeKey = ({ pluginId, ...page }: PluginViewInput) =>
+export const keptTreeKey = ({ pluginId, ...page }: PluginViewInput) =>
   [pluginPageTrees, pluginId, page] as const;
 
 // Never fetched: the trees come from the Plugin's own stream.
-export const keptPluginTreeOptions = (page: PluginViewInput) =>
-  queryOptions<WireNode>({ queryKey: treeKey(page), queryFn: skipToken });
+export function useKeptPluginTree(page: PluginViewInput): WireNode | null {
+  const { data } = useQuery<WireNode>({
+    queryKey: keptTreeKey(page),
+    queryFn: skipToken,
+  });
+
+  return data ?? null;
+}
 
 export function keepPluginTree(
   client: QueryClient,
   page: PluginViewInput,
   tree: WireNode,
 ): void {
-  client.setQueryData(treeKey(page), tree);
+  client.setQueryData(keptTreeKey(page), tree);
 }
 
 export function readKeptTree(
   client: QueryClient,
   page: PluginViewInput,
 ): WireNode | undefined {
-  return client.getQueryData(treeKey(page));
+  return client.getQueryData(keptTreeKey(page));
 }
 
 const isTree = ({ queryKey }: Query): boolean =>

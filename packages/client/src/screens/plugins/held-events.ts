@@ -13,8 +13,10 @@ type Held = {
 
 const changed = 'This changed before your tap reached it. Try again.';
 
-const sameNode = (drawn: WireNode | undefined, live: WireNode | undefined) =>
-  drawn !== undefined && replaceEqualDeep(drawn, live) === drawn;
+const sameNode = (
+  drawn: WireNode | undefined,
+  live: WireNode | undefined,
+): boolean => drawn !== undefined && replaceEqualDeep(drawn, live) === drawn;
 
 /*
  * Taps on a kept tree, waiting for the page's live view. A tree can be old: the same key may now mean another Issue,

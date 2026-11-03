@@ -2,6 +2,7 @@ import {
   messageSlotFixture,
   rewrittenMessage,
 } from '@repo/contracts/plugins/replaceable-fixtures';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   counterRoot,
   counterSnapshot,
@@ -12,7 +13,6 @@ import {
   waveCounterTree,
   waveCounterWavePatch,
 } from '@repo/contracts/plugins/wire-fixtures';
-import type { WireNode } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
 import {
   coreSlotState,
@@ -20,6 +20,22 @@ import {
   reducePluginView,
   reduceReplaceable,
 } from './plugin-stream-state';
+
+const row = (title: string, key: string): WireNode => ({
+  type: 'ListItem',
+  key,
+  props: { title },
+  children: [],
+  slots: {},
+});
+
+const list = (...children: WireNode[]): WireNode => ({
+  type: 'List',
+  key: 'list',
+  props: {},
+  children,
+  slots: {},
+});
 
 describe('reducePluginView', () => {
   const shown = reducePluginView(emptyPluginView, counterSnapshot);
@@ -49,22 +65,6 @@ describe('reducePluginView', () => {
   });
 
   it('keeps the nodes a snapshot left as they were, and replaces the rest', () => {
-    const row = (title: string, key: string): WireNode => ({
-      type: 'ListItem',
-      key,
-      props: { title },
-      children: [],
-      slots: {},
-    });
-
-    const list = (...children: WireNode[]): WireNode => ({
-      type: 'List',
-      key: 'list',
-      props: {},
-      children,
-      slots: {},
-    });
-
     const keptRoot = list(row('One', 'a'), row('Two', 'b'));
     const fresh = list(row('One', 'a'), row('Two, edited', 'b'));
 

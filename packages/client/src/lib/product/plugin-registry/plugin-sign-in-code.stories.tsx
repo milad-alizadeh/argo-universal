@@ -20,9 +20,6 @@ type Story = StoryObj<typeof meta>;
 
 export const CodeStep: Story = {
   render: () => (
-    <PluginDetailView
-      root={codeStep}
-      callbacks={{ onEvent: () => {} }}
-    />
+    <PluginDetailView root={codeStep} callbacks={{ onEvent: () => {} }} />
   ),
 };

@@ -4,9 +4,11 @@ import { useEffect, type RefObject } from 'react';
 // Frames the rows get to measure again; a list that has since become shorter than the position gets its own height back.
 const framesToMeasure = 30;
 
+const nothing = (): void => {};
+
 // The rows' own height now reaches the scroll position, so the content can have its own height back without moving it.
 function rowsReachPosition(scroller: Element, content: Element): boolean {
-  const rows = Array.from(content.children).reduce(
+  const rows = [...content.children].reduce(
     (total, child) => total + child.getBoundingClientRect().height,
     0,
   );
@@ -14,19 +16,14 @@ function rowsReachPosition(scroller: Element, content: Element): boolean {
   return rows >= scroller.scrollTop + scroller.clientHeight;
 }
 
-function onceRowsMeasured(
-  scroller: Element,
-  content: Element,
-  done: () => void,
-): () => void {
+function untilMeasured(measured: () => boolean, done: () => void): () => void {
   let frame = 0;
   let id = 0;
 
   const check = (): void => {
     frame += 1;
 
-    if (frame >= framesToMeasure || rowsReachPosition(scroller, content))
-      done();
+    if (frame >= framesToMeasure || measured()) done();
     else id = requestAnimationFrame(check);
   };
 
@@ -39,45 +36,74 @@ function onceRowsMeasured(
  * Follows the position and height the list has while shown. While hidden it holds the height; a resize observer runs
  * before paint, so the frame the page shows in already has the position back. It lets go once the rows have measured.
  */
-function keepScrollWhileHidden(
-  scroller: Element,
-  content: HTMLElement,
-): () => void {
-  const { minHeight } = content.style;
-  let height = scroller.scrollHeight;
-  let position = scroller.scrollTop;
-  let holding = false;
-  let stopWaiting = (): void => {};
+class HiddenScrollKeeper {
+  private readonly ownMinHeight: string;
+  private height: number;
+  private position: number;
+  private holding = false;
+  private stopWaiting = nothing;
 
-  const remember = (): void => {
-    if (!holding && scroller.clientHeight > 0) position = scroller.scrollTop;
+  constructor(
+    private readonly scroller: HTMLElement,
+    private readonly content: HTMLElement,
+  ) {
+    this.ownMinHeight = content.style.minHeight;
+    this.height = scroller.scrollHeight;
+    this.position = scroller.scrollTop;
+  }
+
+  readonly remember = (): void => {
+    if (!this.holding && this.scroller.clientHeight > 0)
+      this.position = this.scroller.scrollTop;
   };
 
-  const observer = new ResizeObserver(() => {
-    stopWaiting();
+  readonly resized = (): void => {
+    this.stopWaiting();
 
-    if (scroller.clientHeight === 0) {
-      holding = true;
-      content.style.minHeight = `${height}px`;
-    } else if (holding) {
-      scroller.scrollTop = position;
-      stopWaiting = onceRowsMeasured(scroller, content, () => {
-        holding = false;
-        content.style.minHeight = minHeight;
-      });
-    } else {
-      height = scroller.scrollHeight;
-    }
-  });
+    if (this.scroller.clientHeight === 0) this.hold();
+    else if (this.holding) this.reveal();
+    else this.height = this.scroller.scrollHeight;
+  };
+
+  stop(): void {
+    this.stopWaiting();
+  }
+
+  private hold(): void {
+    this.holding = true;
+    this.content.style.minHeight = `${this.height}px`;
+  }
+
+  private reveal(): void {
+    this.scroller.scrollTop = this.position;
+    this.stopWaiting = untilMeasured(
+      () => rowsReachPosition(this.scroller, this.content),
+      () => this.letGo(),
+    );
+  }
+
+  private letGo(): void {
+    this.holding = false;
+    this.content.style.minHeight = this.ownMinHeight;
+  }
+}
+
+function keepScrollWhileHidden(scroller: HTMLElement): () => void {
+  const content = scroller.firstElementChild;
+
+  if (!(content instanceof HTMLElement)) return nothing;
+
+  const keeper = new HiddenScrollKeeper(scroller, content);
+  const observer = new ResizeObserver(keeper.resized);
 
   observer.observe(scroller);
   observer.observe(content);
-  scroller.addEventListener('scroll', remember, { passive: true });
+  scroller.addEventListener('scroll', keeper.remember, { passive: true });
 
   return () => {
-    scroller.removeEventListener('scroll', remember);
+    scroller.removeEventListener('scroll', keeper.remember);
     observer.disconnect();
-    stopWaiting();
+    keeper.stop();
   };
 }
 
@@ -92,12 +118,8 @@ export function useKeepScrollWhileHidden(
   useEffect(() => {
     const scroller: unknown = list.current?.getScrollableNode();
 
-    if (!(scroller instanceof HTMLElement)) return undefined;
-
-    const content = scroller.firstElementChild;
-
-    return content instanceof HTMLElement
-      ? keepScrollWhileHidden(scroller, content)
-      : undefined;
+    return scroller instanceof HTMLElement
+      ? keepScrollWhileHidden(scroller)
+      : nothing;
   }, [list]);
 }

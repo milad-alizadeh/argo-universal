@@ -9,7 +9,7 @@ import { List } from './list';
 const viewportHeight = 700;
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Lists/List/Hidden page',
+  title: 'Tests/Design System/Primitives/Lists/List/HiddenPage',
   parameters: { screenPreview: true },
   beforeEach: async (): Promise<void> => {
     await settleLayout('wide', viewportHeight);

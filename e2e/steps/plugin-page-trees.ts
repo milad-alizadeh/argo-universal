@@ -15,19 +15,24 @@ interface HeldViews {
 
 const holds = new WeakMap<Page, HeldViews>();
 
-const framesIn = (frame: WireFrame): { id?: unknown; method?: string; params?: { path?: string } }[] => {
-  const parsed: unknown = JSON.parse(String(frame));
+interface WireMessage {
+  id?: unknown;
+  method?: string;
+  params?: { path?: string };
+}
 
-  return Array.isArray(parsed) ? parsed : [parsed as object];
-};
+const framesIn = (frame: WireFrame): WireMessage[] =>
+  [JSON.parse(String(frame))].flat();
+
+const opensView = ({ method, params }: WireMessage): boolean =>
+  method === 'subscription' && params?.path === 'plugins.view';
 
 function relay(route: WebSocketRoute, views: HeldViews): void {
   const server = route.connectToServer();
 
   route.onMessage((frame) => {
-    for (const { id, method, params } of framesIn(frame))
-      if (method === 'subscription' && params?.path === 'plugins.view')
-        views.viewIds.add(id);
+    for (const { id } of framesIn(frame).filter(opensView))
+      views.viewIds.add(id);
 
     server.send(frame);
   });
@@ -75,12 +80,9 @@ When(
   },
 );
 
-Then(
-  'no Plugin page has answered',
-  async ({ page }): Promise<void> => {
-    await expect.poll(() => heldViews(page).held.length).toBeGreaterThan(0);
-  },
-);
+Then('no Plugin page has answered', async ({ page }): Promise<void> => {
+  await expect.poll(() => heldViews(page).held.length).toBeGreaterThan(0);
+});
 
 When(
   'the {} Plugin is turned back on on the Server',

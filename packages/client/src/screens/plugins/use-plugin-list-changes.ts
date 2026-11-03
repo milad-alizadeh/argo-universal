@@ -1,4 +1,8 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect, useMemo } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
@@ -36,49 +40,53 @@ interface PluginChangeHandlers {
   reconnected: () => void;
 }
 
+function changeHandlers(
+  cache: QueryClient,
+  reread: () => void,
+): PluginChangeHandlers {
+  return {
+    changed: ({ pluginId }): void => {
+      void dropPluginTrees(cache, pluginId);
+      reread();
+    },
+    reconnected: (): void => {
+      void dropPluginTrees(cache);
+      reread();
+    },
+  };
+}
+
 // The Plugin list and the declared Slot items both follow which Plugins the Server runs.
 function usePluginChangeHandlers(): PluginChangeHandlers {
   const trpc = useTRPC();
   const cache = useQueryClient();
 
-  return useMemo(() => {
-    const reread = (): void => {
-      void refreshPluginList(cache, [
-        trpc.plugin.list.queryFilter(),
-        trpc.plugins.declared.queryFilter(),
-      ]);
-    };
-
-    return {
-      changed: ({ pluginId }): void => {
-        void dropPluginTrees(cache, pluginId);
-        reread();
-      },
-      reconnected: (): void => {
-        void dropPluginTrees(cache);
-        reread();
-      },
-    };
-  }, [cache, trpc]);
+  return useMemo(
+    () =>
+      changeHandlers(cache, () => {
+        void refreshPluginList(cache, [
+          trpc.plugin.list.queryFilter(),
+          trpc.plugins.declared.queryFilter(),
+        ]);
+      }),
+    [cache, trpc],
+  );
 }
+
+interface ListedPlugin {
+  enabled: boolean;
+  manifest: { id: string };
+}
+
+const enabledIds = (plugins: ListedPlugin[]): Set<string> =>
+  new Set(plugins.flatMap((it) => (it.enabled ? [it.manifest.id] : [])));
 
 // A Plugin the list no longer names, such as one removed from disk, draws nothing again.
 function useDropTreesOfUnlistedPlugins(): void {
   const cache = useQueryClient();
   const { data } = useQuery(useTRPC().plugin.list.queryOptions());
 
-  const listed = useMemo(
-    () =>
-      data &&
-      new Set(
-        data.plugins
-          .filter((plugin) => plugin.enabled)
-          .map((plugin) => plugin.manifest.id),
-      ),
-    [data],
-  );
-
   useEffect(() => {
-    if (listed) void dropTreesOfPluginsOtherThan(cache, listed);
-  }, [cache, listed]);
+    if (data) void dropTreesOfPluginsOtherThan(cache, enabledIds(data.plugins));
+  }, [cache, data]);
 }

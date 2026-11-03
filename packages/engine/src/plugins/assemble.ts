@@ -4,7 +4,7 @@ import type { WriterActorRef } from '../storage';
 import { PluginAccounts } from './accounts/plugin-accounts';
 import type { OAuthOptions } from './accounts/plugin-oauth';
 import type { PluginClock } from './clock';
-import { discoverPlugins } from './discovery/loader';
+import { isFirstPartyPlugin } from './first-party-plugin';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
 import { pluginLocation, pluginManifest } from './located-plugins';
@@ -68,10 +68,7 @@ function accountsFor(
     ...options,
     keychain,
     manifest: (pluginId) => pluginManifest(discovery, pluginId),
-    firstParty: async (pluginId) =>
-      (await discoverPlugins(discovery)).plugins.some(
-        (plugin) => plugin.manifest.id === pluginId && plugin.firstParty,
-      ),
+    firstParty: (pluginId) => isFirstPartyPlugin(discovery, pluginId),
     changed: (pluginId) => listChanges.changed(pluginId),
   });
 }
@@ -123,15 +120,13 @@ function runtimeFor(
   options: PluginsOptions,
   parts: Foundations,
 ): PluginRuntime {
-  const { accounts, keychain, settings } = parts;
-
   return createPluginRuntime(options.home, {
-    accounts,
-    keychain,
+    accounts: parts.accounts,
+    keychain: parts.keychain,
     ...runtimePorts(options),
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,
-    settings: async (pluginId, key) => settings.read(pluginId, key),
+    settings: async (pluginId, key) => parts.settings.read(pluginId, key),
     locate: locator(parts),
     reloaded: (pluginId) => parts.listChanges.changed(pluginId),
   });
