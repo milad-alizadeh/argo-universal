@@ -130,6 +130,13 @@ declare global {
 // The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
 export type { Argo } from '@repo/contracts/plugins/argo-api';
 
+// A Loader page and the values its Render puts in Component events (ADR-0050).
+export type {
+  LoaderInput,
+  LoaderPage,
+  PageTo,
+} from '@repo/contracts/plugins/loader-page-api';
+
 // The items a Plugin answers an add-only Slot with: Argo draws each one as a row (ADR-0046).
 export type {
   ProjectDetailsItem,

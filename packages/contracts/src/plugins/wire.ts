@@ -36,6 +36,10 @@ import { WireJson } from '#plugin-wire-json';
 
 export { WireJson } from '#plugin-wire-json';
 
+export { LoaderPageCall } from '#plugin-page-address';
+
+export { PluginOperationCall } from '#plugin-operations';
+
 export interface WireNode {
   type: string;
   key: string;
@@ -54,7 +58,15 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-export { Action, Handler, WireEvent } from '#plugin-wire-action';
+export {
+  Action,
+  Handler,
+  OperationCall,
+  PageCall,
+  PageStateChange,
+  PageValue,
+  WireEvent,
+} from '#plugin-wire-action';
 
 // Keys are local to their sibling collection; slot steps keep identically named children distinct.
 export const PatchStep = z.union([

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { labelFilter } from './issue-filters';
-import { filterPath, issuePath, pathSegment } from './issue-paths';
+import { filterPath, issuePath, pathSegment, pathText } from './issue-paths';
 
 it.each([
   ['bug', 'bug'],
@@ -20,4 +20,9 @@ it("names a Project's filter and Issue pages", () => {
 
 it('lists a label as its open Issues', () => {
   expect(labelFilter('help wanted').search).toBe('is:open label:"help wanted"');
+});
+
+it('reads a page path segment back to its text', () => {
+  expect(pathText('type_3a__20_bug')).toBe('type: bug');
+  expect(pathText(pathSegment('project 1'))).toBe('project 1');
 });

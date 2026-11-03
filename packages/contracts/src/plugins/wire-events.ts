@@ -5,6 +5,7 @@ import {
   PluginOperationName,
   PluginOperationParams,
 } from '#plugin-operations';
+import { PageAddress } from '#plugin-page-address';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
 import { ReplaceableSlotId, SlotItemsInput } from '#plugin-wire-slot';
@@ -132,6 +133,11 @@ export const PluginEvent = z.union([
     name: PluginOperationName,
     params: PluginOperationParams,
     caller: PluginOperationCaller,
+  }),
+  // One draw of a Loader page at its address (ADR-0050); it answers by `id` with the Plugin tree.
+  PageAddress.omit({ pluginId: true }).extend({
+    type: z.literal('draw'),
+    id: z.number().int().nonnegative(),
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({

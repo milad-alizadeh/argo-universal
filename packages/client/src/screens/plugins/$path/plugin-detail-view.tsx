@@ -11,6 +11,7 @@ import { useKeepSidebarWhilePending } from '#features/frame';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   PluginTree,
+  type OnPageCall,
   type PluginOnEvent,
 } from '../../../lib/product/plugin-registry';
 
@@ -18,6 +19,8 @@ import {
 export interface PluginPageCallbacks {
   onEvent: PluginOnEvent;
   onOpenPage?: OpenPluginPage;
+  // A Loader page's Page state changes and Operation calls (ADR-0050).
+  onPageCall?: OnPageCall;
 }
 
 export interface PluginDetailViewProps {

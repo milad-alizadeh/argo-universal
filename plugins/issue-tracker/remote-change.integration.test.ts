@@ -9,7 +9,7 @@ import {
   project,
   tracker,
   trackerPage,
-  type PageView,
+  type ShownPage,
   wait,
 } from './journey-fixture';
 
@@ -32,7 +32,7 @@ async function openList(originUrl: string | null): Promise<Test> {
   return test;
 }
 
-async function openFilter(test: Test): Promise<PageView> {
+async function openFilter(test: Test): Promise<ShownPage> {
   const root = await test.mount({ page: '/', surface: { platform: 'web' } });
 
   return follow(test, root, 'Open');

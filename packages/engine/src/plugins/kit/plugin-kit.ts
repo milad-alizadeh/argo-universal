@@ -13,6 +13,7 @@ import {
   registerKitComponent,
   type KitElementType,
 } from './jsx-runtime';
+import * as loader from './loader-pages';
 import {
   operationHandlers,
   type OperationHandlers,
@@ -81,6 +82,8 @@ export interface Kit {
   slots: Argo['slots'];
   // The worker's `argo.operations`; it also answers the Operation calls the inbox hands it.
   operations: OperationHandlers;
+  // `argo.pages.define`, which also answers the inbox's draws (ADR-0050).
+  loaderPages: loader.LoaderPages;
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
   requirePage: Pages['requirePage'];
@@ -90,11 +93,12 @@ export interface Kit {
   ) => { treePath: string };
 }
 
-// What the host answers for a Plugin: its Queries, its Slot items and its own Operations.
+// What the host answers for a Plugin: its Queries, its Slot items, its own Operations and its Loader pages' draws.
 type KitCalls = {
   data: Parameters<typeof dataClient>[0];
   slots: SlotSend;
   operations: OperationSend;
+  pages: loader.LoaderPageSend;
 };
 
 type DataClient = ReturnType<typeof dataClient>;
@@ -105,6 +109,7 @@ type KitParts = {
   pages: Pages;
   slots: SlotProviders;
   operations: OperationHandlers;
+  loaderPages: loader.LoaderPages;
 };
 
 // Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
@@ -125,13 +130,14 @@ export function createKit(
 // What a Plugin registers besides its pages: the Slots it answers and the Operations it declares.
 const providers = (
   calls: KitCalls,
-): Pick<KitParts, 'slots' | 'operations'> => ({
+): Pick<KitParts, 'slots' | 'operations' | 'loaderPages'> => ({
   slots: slotProviders(calls.slots),
   operations: operationHandlers(calls.operations),
+  loaderPages: loader.loaderPages(calls.pages),
 });
 
 function pageKit(parts: KitParts): Kit {
-  const { data, pages, slots, operations } = parts;
+  const { data, pages, slots, operations, loaderPages } = parts;
 
   return {
     isElement: React.isValidElement,
@@ -142,6 +148,7 @@ function pageKit(parts: KitParts): Kit {
     registerPage: pages.register,
     slots,
     operations,
+    loaderPages,
     inbox: inbox(parts),
   };
 }
@@ -159,11 +166,12 @@ function deliver(parts: KitParts, event: PluginEvent): void {
   return answerOrDraw(parts, event);
 }
 
-function answerOrDraw(
-  parts: KitParts,
-  event: Exclude<PluginEvent, { type: 'data' | 'slotItems' }>,
-): void {
+type PartEvent = Exclude<PluginEvent, { type: 'data' | 'slotItems' }>;
+
+function answerOrDraw(parts: KitParts, event: PartEvent): void {
   if (event.type === 'operation') return parts.operations.answer(event);
+
+  if (event.type === 'draw') return parts.loaderPages.answer(event);
 
   return parts.pages.receive(event);
 }

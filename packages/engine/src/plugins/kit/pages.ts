@@ -27,7 +27,7 @@ type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 // What the pages answer: data goes to `useData`, items calls to the Slot providers and Operations to their handlers.
 type PageEvent = Exclude<
   PluginEvent,
-  { type: 'data' | 'slotItems' | 'operation' }
+  { type: 'data' | 'slotItems' | 'operation' | 'draw' }
 >;
 
 export interface Pages {

@@ -1,5 +1,6 @@
 import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { defineFilterPage } from './filter-page';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
@@ -11,6 +12,7 @@ import {
   trackerPath,
 } from './project-details';
 import { registerSessionFills } from './session-slots';
+import { registerStatusOperation } from './status-operation';
 import { createTrackerRegistry } from './tracker-registry';
 import { createTrackerStorage } from './tracker-storage';
 
@@ -57,6 +59,8 @@ export function register(api: Argo): void {
   }
 
   registerIssueOperations(api, { storage: registerSessionFills(api, deps) });
+  registerStatusOperation(api, deps);
+  defineFilterPage(api, deps);
   api.pages.register('/', IssuesPage);
   api.pages.register(trackerPath, trackerPage(api, deps));
 

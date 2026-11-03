@@ -21,6 +21,7 @@ import {
 import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
 import type { PluginRenderContext } from './kit';
+import type { LoaderPagesApi } from './loader-page-api';
 import type { OperationsApi } from './operations-api';
 import { PluginSettingValue } from './plugin-settings';
 import type { QueryResult } from './query-results';
@@ -161,7 +162,8 @@ export type Page = ComponentType<{ context: PluginRenderContext }>;
 export type Argo = Omit<PluginApiCalls, 'accounts'> &
   Readonly<{
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
-    pages: Readonly<{ register: (path: string, page: Page) => void }>;
+    pages: Readonly<{ register: (path: string, page: Page) => void }> &
+      LoaderPagesApi;
     slots: SlotsApi;
     operations: OperationsApi;
     on: <Name extends HookEventName>(

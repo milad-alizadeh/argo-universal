@@ -9,10 +9,10 @@ import {
   tracker,
   trackerPage,
   wait,
-  type PageView,
+  type ShownPage,
 } from './journey-fixture';
 
-const shownValue = (view: PageView, text: string): string => {
+const shownValue = (view: ShownPage, text: string): string => {
   const value = view.findText(text)?.node.props.value;
 
   return typeof value === 'string' ? value : '';
@@ -22,7 +22,7 @@ const listDetail = 'ListDetail';
 
 const assignedToYou = 'Assigned to you';
 
-const selected = (view: PageView, title: string): boolean =>
+const selected = (view: ShownPage, title: string): boolean =>
   view.findText(title)?.node.props.selected === true;
 
 it('groups Issues by status, by you and by label, each with its own list', async () => {

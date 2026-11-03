@@ -3,6 +3,7 @@ import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
 import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
+import { PluginDraws } from '../pages';
 import type { PluginStatus } from '../protocol/runtime';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
 import type { OpenView } from '../views/open-view';
@@ -19,6 +20,7 @@ export class RuntimeResources {
   readonly background;
   readonly items;
   readonly operations;
+  readonly draws;
   private readonly identities = new Map<
     string,
     ReturnType<typeof pluginIdentity>
@@ -39,15 +41,16 @@ export class RuntimeResources {
     });
     this.items = new PluginSlotItems(input);
     this.operations = new PluginOperations(input);
+    this.draws = new PluginDraws(input);
     input.services.onStorageWrite((id) => this.data.storageWritten(id));
     this.unwatch = input.services.watchProjects(() => this.projectsChanged());
   }
 
   // The resources that answer a worker's calls, with the Hooks and services it also reaches.
   calls(core: Pick<RuntimeCalls, 'hooks' | 'services'>): RuntimeCalls {
-    const { views, data, items, operations } = this;
+    const { views, data, items, operations, draws } = this;
 
-    return { ...core, views, data, items, operations };
+    return { ...core, views, data, items, operations, draws };
   }
 
   private lifecycle(): ViewLifecycle {
@@ -83,6 +86,7 @@ export class RuntimeResources {
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
     this.items.activate(pluginId, generation);
     this.operations.activate(pluginId);
+    this.draws.activate(pluginId);
   }
 
   // A worker that runs reopens its views, and lists ask it for their items.
@@ -90,6 +94,7 @@ export class RuntimeResources {
     this.views.reopen(pluginId);
     this.items.running(pluginId, generation);
     this.operations.ran(pluginId, generation);
+    this.draws.ran(pluginId, generation);
   }
 
   // A crash does not end a pass: it keeps its timer and activates the Plugin again next interval.
@@ -102,6 +107,7 @@ export class RuntimeResources {
     this.data.release(pluginId);
     this.items.release(pluginId);
     this.operations.release(pluginId);
+    this.draws.release(pluginId);
     this.input.services.release(pluginId);
   }
 
@@ -131,6 +137,7 @@ export class RuntimeResources {
     this.data.badges.close();
     this.items.close();
     this.operations.close();
+    this.draws.close();
     this.views.close();
   }
 }

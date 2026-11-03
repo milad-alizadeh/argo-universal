@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Action, WireEvent } from './wire';
+import { Action, PageCall, WireEvent } from './wire';
 
 export const stringLabel = z
   .string()
@@ -11,6 +11,7 @@ type EventHandler<Name extends string> = z.ZodUnion<
   readonly [
     z.ZodObject<{ $event: z.ZodLiteral<Name> }, z.core.$strict>,
     typeof Action,
+    typeof PageCall,
   ]
 >;
 
@@ -18,7 +19,7 @@ export function handler<const Name extends string>(
   name: Name,
 ): EventHandler<Name> {
   return z
-    .union([WireEvent.extend({ $event: z.literal(name) }), Action])
+    .union([WireEvent.extend({ $event: z.literal(name) }), Action, PageCall])
     .describe(`Action or Plugin event invoked by ${name}.`);
 }
 

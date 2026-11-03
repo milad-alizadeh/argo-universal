@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { Action, WireEvent } from './wire';
+import { Action, PageCall, WireEvent } from './wire';
 
 export const pressHandler = z
-  .union([WireEvent.extend({ $event: z.literal('onPress') }), Action])
+  .union([WireEvent.extend({ $event: z.literal('onPress') }), Action, PageCall])
   .describe('A Plugin event handler or an App action.');
 
 export type AcknowledgedEvent = z.ZodUndefined & {

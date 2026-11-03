@@ -10,7 +10,12 @@ import type { z } from 'zod';
 import { runAction } from '../plugin-actions';
 import type { ControlField } from './plugin-control-field';
 import type { PluginDispatcher } from './plugin-dispatcher';
-import type { Callback, ControlInput, PluginProps } from './plugin-rendering';
+import type {
+  Callback,
+  ControlInput,
+  OnPageCall,
+  PluginProps,
+} from './plugin-rendering';
 
 // One node's events: the node, its field, the tree's dispatcher, and the redraw a field's change asks for.
 export type NodeEvents = {
@@ -103,11 +108,26 @@ async function deliver(
 ): Promise<void> {
   const { handler, name, schema } = event;
 
-  if (!handler) return;
-
-  if (!('$event' in handler)) return runAction(handler, input.context.openPage);
+  if (!handler || !('$event' in handler)) return runInApp(input, handler);
   await send(input.context.key, { event: name, payload, schema });
 }
+
+// A built-in Action, or a Loader page's Page state change or Operation call: nothing goes to the Plugin.
+async function runInApp(
+  input: ControlInput,
+  handler: Exclude<Handler, { $event: string }> | undefined,
+): Promise<void> {
+  if (!handler) return;
+
+  if ('action' in handler) return runAction(handler, input.context.openPage);
+
+  return pageCallOf(input)(handler);
+}
+
+// Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.
+const pageCallOf = ({ context }: ControlInput): OnPageCall =>
+  context.pageCall ??
+  (() => Promise.reject(new Error('This page cannot change its Page state')));
 
 const valuesAt = (placed: readonly Placed[], within?: string): PluginProps =>
   Object.fromEntries(

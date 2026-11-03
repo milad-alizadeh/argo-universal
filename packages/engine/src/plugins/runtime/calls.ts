@@ -2,6 +2,7 @@ import { replyFailure } from '../access/capability-refusal';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type { PluginOperations } from '../operations';
+import type { PluginDraws } from '../pages';
 import type {
   HostMessage,
   PluginReply,
@@ -20,6 +21,7 @@ export type RuntimeCalls = {
   data: PluginData;
   items: PluginSlotItems;
   operations: PluginOperations;
+  draws: PluginDraws;
 };
 
 type Call = Extract<HostMessage, { type: 'call' }>;
@@ -57,6 +59,9 @@ const runtimeCalls: RuntimeAnswers = {
   // A Plugin's answer to one of its own Operations (ADR-0044); it waits for nothing.
   operations: ({ operations }, { pluginId, generation, request }) =>
     operations.receive({ pluginId, generation }, request.call),
+  // A Loader page's tree, failure or defined pattern (ADR-0050); it waits for nothing.
+  pages: ({ draws }, { pluginId, generation, request }) =>
+    draws.receive({ pluginId, generation }, request.call),
 };
 
 export async function answerPluginCall(

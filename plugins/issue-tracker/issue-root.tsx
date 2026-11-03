@@ -1,4 +1,5 @@
 import { EmptyState, Icon, List, ListDetail, ListItem } from '@argo/plugin-kit';
+import type { PluginProps } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { repositoryText, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -59,10 +60,12 @@ type RootListProps = Pick<RootProps, 'deps' | 'filter'> & {
   reload: boolean;
 };
 
-type RootRowsProps = {
+// The sidebar's rows: a hook page passes its overview's refresh, a Loader page a Page state change.
+export type RootRowsProps = {
   deps: IssueDeps;
   choice: RootProjects;
-  state: OverviewState;
+  state: Pick<OverviewState, 'overview' | 'message'>;
+  onRefresh: PluginProps['List']['onRefresh'];
   selected?: string;
 };
 
@@ -71,18 +74,24 @@ function RootList(props: RootListProps): JSX.Element {
   const state = useOverview(deps, choice.project, reload);
 
   return (
-    <RootRows deps={deps} choice={choice} state={state} selected={filter?.id} />
+    <RootRows
+      deps={deps}
+      choice={choice}
+      state={state}
+      onRefresh={state.refresh}
+      selected={filter?.id}
+    />
   );
 }
 
-function RootRows(props: RootRowsProps): JSX.Element {
+export function RootRows(props: RootRowsProps): JSX.Element {
   const { deps, choice, state } = props;
 
   return (
     <List
       footer={rootFooter(choice, state.message)}
       empty={<EmptyState title={choice.message} />}
-      onRefresh={state.refresh}
+      onRefresh={props.onRefresh}
     >
       {projectSection(deps, choice)}
       {filterSections(props)}

@@ -2,17 +2,15 @@ import type { Argo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { IssueDeps, IssuePages } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
-import { FilterPage } from './issue-filter-page';
-import { builtInFilters, type IssueFilter } from './issue-filters';
 import { filterPath, issuePath, projectPath } from './issue-paths';
 import { IssuesRoot } from './issue-root';
 
 type Page = Parameters<Argo['pages']['register']>[1];
 
 /*
- * A page path names one Project's filter or Issue, so each is registered the first time a row links
- * to it. Every Project's built-in filters are registered as the Plugin starts, so their links open
- * before the Issues page has drawn.
+ * A page path names one Project or Issue, so each is registered the first time a row links to it.
+ * Every Project's page is registered as the Plugin starts, so its link opens before the Issues page
+ * has drawn. A filter list is a Loader page, defined once for every Project.
  */
 export function createIssuePages(
   argo: Argo,
@@ -31,11 +29,8 @@ type Register = (path: string, page: Page) => string;
 const pagePaths = (register: Register, deps: () => IssueDeps): IssuePages => ({
   projectPagePath: ({ id }) =>
     register(projectPath(id), projectPage(id, deps())),
-  filterPagePath: ({ id }, filter) =>
-    register(
-      filterPath(id, filter),
-      filterPage({ projectId: id, filter, deps: deps() }),
-    ),
+  // A filter list is the one Loader page every Project shares (ADR-0050), so its path registers nothing.
+  filterPagePath: ({ id }, filter) => filterPath(id, filter),
   issuePagePath: ({ id }, number) =>
     register(
       issuePath(id, number),
@@ -60,9 +55,6 @@ async function registerBuiltIns(deps: IssueDeps): Promise<void> {
 
   for (const project of projects) {
     deps.pages.projectPagePath(project);
-
-    for (const filter of builtInFilters())
-      deps.pages.filterPagePath(project, filter);
   }
 }
 
@@ -70,22 +62,6 @@ async function registerBuiltIns(deps: IssueDeps): Promise<void> {
 const projectPage = (projectId: string, deps: IssueDeps): Page =>
   function IssueProjectPage(): JSX.Element {
     return <IssuesRoot deps={deps} projectId={projectId} />;
-  };
-
-type FilterInput = { projectId: string; filter: IssueFilter; deps: IssueDeps };
-
-const filterPage = ({ projectId, filter, deps }: FilterInput): Page =>
-  function IssueFilterPage(): JSX.Element {
-    return (
-      <IssuesRoot
-        deps={deps}
-        projectId={projectId}
-        filter={filter}
-        detail={(project) => (
-          <FilterPage project={project} filter={filter} deps={deps} />
-        )}
-      />
-    );
   };
 
 type IssueInput = { projectId: string; number: number; deps: IssueDeps };

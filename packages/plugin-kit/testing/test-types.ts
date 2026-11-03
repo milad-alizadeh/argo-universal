@@ -7,13 +7,24 @@ import type {
 import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { JsonObject, Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
-import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
+import type {
+  PageState,
+  PageRunAnswer,
+} from '@repo/contracts/plugins/page-address';
+import type {
+  PluginOperationCaller,
+  PluginOperationParams,
+} from '@repo/contracts/plugins/plugin-operations';
 import type {
   PluginBadge,
   PluginFailure,
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
-import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
+import type {
+  PageAnswer,
+  PluginStorage,
+  PluginNetwork,
+} from '@repo/engine/plugins';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
 
@@ -62,6 +73,20 @@ export interface PluginTest {
       caller?: PluginOperationCaller;
       pluginId?: string;
     }) => Promise<Json>;
+  };
+  // The Plugin's Loader pages, drawn and acted on as the App does (ADR-0050).
+  pages: {
+    draw: (input: {
+      path: string;
+      pageState?: PageState;
+      projectId?: string;
+      sessionId?: string;
+    }) => Promise<PageAnswer>;
+    run: (input: {
+      operation: string;
+      args: PluginOperationParams;
+      projectId?: string;
+    }) => Promise<PageRunAnswer>;
   };
   close: () => Promise<void>;
   mount: (input: PluginMount) => Promise<PluginTestView>;

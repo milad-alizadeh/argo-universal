@@ -3,6 +3,7 @@ import { watchTurnActivity } from '../sessions';
 import { assemble, type Assembled, type PluginsOptions } from './assemble';
 import type { HookPort } from './hooks/hook-port';
 import { PluginOperationService } from './operations';
+import { LoaderPages } from './pages';
 import type { PluginsRouterDeps } from './router';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { startBackgroundPlugins } from './start-background';
@@ -51,11 +52,14 @@ export class Plugins {
   private routerDeps(): PluginsRouterDeps {
     const { service, runtime, accounts, listChanges } = this.parts;
 
+    const operations = new PluginOperationService(service, runtime.operations);
+
     return {
       plugins: service,
       accounts,
       listChanges,
-      operations: new PluginOperationService(service, runtime.operations),
+      operations,
+      pages: new LoaderPages(service, runtime.draws, operations),
     };
   }
 

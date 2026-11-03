@@ -6,6 +6,8 @@ import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
 import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
+import { PluginPage as LoaderPage } from '../plugin-page/plugin-page';
+import { useIsLoaderPage } from '../plugin-page/use-loader-paths';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
@@ -57,8 +59,36 @@ type PluginPageProps = PluginDetailScreenProps & {
   root: boolean;
 };
 
+// A Loader page draws from its address; any other page is a view the Plugin keeps open (ADR-0050).
+function PluginPage(props: PluginPageProps): React.JSX.Element | null {
+  const path = pluginPagePath(props.path);
+  const loader = useIsLoaderPage(props.section.pluginId, path);
+
+  if (loader === undefined) return <PluginLoading />;
+
+  if (!loader) return <ViewPage {...props} />;
+
+  return <DrawnPage {...props} />;
+}
+
+function DrawnPage(props: PluginPageProps): React.JSX.Element {
+  const { section, projectId, sessionId } = props;
+  const path = pluginPagePath(props.path);
+  const opening = { pluginId: section.pluginId, path, projectId, sessionId };
+  const onOpenPage = usePluginOpener()(section.pluginId);
+
+  return (
+    <LoaderPage
+      {...opening}
+      title={section.title}
+      onOpenPage={onOpenPage}
+      onBack={usePushedBack(props.root)}
+    />
+  );
+}
+
 // The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
-function PluginPage(props: PluginPageProps): React.JSX.Element {
+function ViewPage(props: PluginPageProps): React.JSX.Element {
   const { section } = props;
 
   const view = usePluginView({

@@ -8,6 +8,8 @@ import {
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
 import {
+  LoaderPages,
+  PluginOperationService,
   PluginService,
   PluginStorage,
   type PluginRuntime,
@@ -140,6 +142,19 @@ class HostedPlugin implements PluginTest {
     const { service, runtime } = this;
 
     return testOperations({ service, runtime }, this.options.pluginId);
+  }
+
+  get pages(): PluginTest['pages'] {
+    const { service, runtime } = this;
+    const { pluginId } = this.options;
+    const operations = new PluginOperationService(service, runtime.operations);
+    const pages = new LoaderPages(service, runtime.draws, operations);
+
+    return {
+      draw: (input) =>
+        pages.draw({ pluginId, pageState: {}, ...input }),
+      run: (input) => pages.run({ pluginId, ...input }),
+    };
   }
 
   private open(

@@ -7,10 +7,16 @@ import {
   RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
 import {
+  PageAddress,
+  PageRun,
+  PageRunAnswer,
+} from '@repo/contracts/plugins/page-address';
+import {
   PluginDispatchInput,
   PluginViewInput,
   SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
+import { z } from 'zod';
 import {
   mergeRouters,
   liveConnection,
@@ -24,6 +30,7 @@ import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
 import type { PluginListChanges } from './list-changes';
 import type { PluginOperationService } from './operations';
+import type { LoaderPages } from './pages';
 import type { PluginService } from './service';
 
 function requireSignal(signal: AbortSignal | undefined): AbortSignal {
@@ -121,15 +128,35 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
+/*
+ * Loader pages (ADR-0050): a draw is a plain query the App caches by Page address, and an Operation a
+ * page's Component event runs answers the patterns to draw again. The App's tap runs as the user.
+ */
+const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
+  router({
+    draw: publicProcedure
+      .input(PageAddress)
+      .query(({ input }) => pages.draw(input)),
+    loaderPages: publicProcedure
+      .input(z.strictObject({ pluginId: z.string().min(1) }))
+      .query(({ input }) => pages.patterns(input.pluginId)),
+    run: publicProcedure
+      .input(PageRun)
+      .output(PageRunAnswer)
+      .mutation(({ input }) => pages.run(input)),
+  }),
+);
+
 export type PluginsRouterDeps = {
   plugins: PluginService;
   accounts: PluginAccounts;
   listChanges: PluginListChanges;
   operations: PluginOperationService;
+  pages: LoaderPages;
 };
 
 export const createPluginsRouter = routerFactory(
-  ({ plugins, accounts, listChanges }: PluginsRouterDeps) =>
+  ({ plugins, accounts, listChanges, pages }: PluginsRouterDeps) =>
     mergeRouters(
       router({ accounts: accountsRouter(accounts) }),
       createLifecycleRouter(plugins),
@@ -137,5 +164,6 @@ export const createPluginsRouter = routerFactory(
       createViewsRouter(plugins),
       createSlotItemsRouter(plugins),
       createViewEventsRouter(plugins),
+      createLoaderPagesRouter(pages),
     ),
 );

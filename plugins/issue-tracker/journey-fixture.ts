@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import {
   Action,
+  findWireNodeEntry,
   startPluginTest,
   type PluginTest,
 } from '@argo/plugin-kit/testing';
@@ -76,7 +77,7 @@ export async function issuesRoot(): Promise<{
 }
 
 // A row's `navigate` Action names the page's own path; the test mounts it as the App would.
-export function linkedPage(view: PageView, text: string): string {
+export function linkedPage(view: ShownPage, text: string): string {
   const action = Action.parse(view.findText(text)?.node.props.onPress);
 
   if (action.action !== 'navigate')
@@ -85,22 +86,52 @@ export function linkedPage(view: PageView, text: string): string {
   return action.path;
 }
 
+// What a test reads of a page: a mounted page, or the one Plugin tree a Loader page drew (ADR-0050).
+export type ShownPage = Pick<PageView, 'tree' | 'findText'>;
+
 export async function follow(
   test: PluginTest,
-  view: PageView,
+  view: ShownPage,
   text: string,
-): Promise<PageView> {
+): Promise<ShownPage> {
   await expect.poll(() => view.findText(text), wait).toBeDefined();
 
   const page = linkedPage(view, text);
 
+  if (filterPath.test(page)) return drawn(test, page);
+
   return test.mount({ page, surface: { platform: 'web' } });
+}
+
+// A filter list is a Loader page; the rest still mount.
+const filterPath = /^\/projects\/[^/]+\/filters\/[^/]+$/;
+
+async function drawn(test: PluginTest, path: string): Promise<ShownPage> {
+  const answer = await test.pages.draw({ path });
+
+  if (!answer.ok) throw new Error(answer.error);
+
+  const tree = answer.root;
+
+  return {
+    tree,
+    findText: (text) =>
+      findWireNodeEntry(tree, (node) =>
+        ['label', 'title', 'text', 'children', 'accessibilityLabel'].some(
+          (prop) => node.props[prop] === text,
+        ),
+      ),
+  };
 }
 
 export async function openIssue(title: string): Promise<PageView> {
   const { test, root } = await issuesRoot();
   const list = await follow(test, root, 'Open');
-  const page = await follow(test, list, title);
+
+  const page = await test.mount({
+    page: linkedPage(list, title),
+    surface: { platform: 'web' },
+  });
 
   await expect.poll(() => page.findText('Start Session'), wait).toBeDefined();
   await expect

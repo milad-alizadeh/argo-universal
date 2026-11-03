@@ -9,7 +9,8 @@ const retained = new Map<string, readonly string[]>([
     ['authenticate', 'cancelAuthenticate', 'authTerminalInput'],
   ],
   ['plugins/accounts/router.ts', ['choose', 'grant', 'signOut']],
-  ['plugins/router.ts', ['dispatch', 'renderFailed']],
+  // A Loader page's tap runs the Plugin's declared Operation through the registry's own checks (ADR-0050); only the App's transport to it is hand-written, as `dispatch` is.
+  ['plugins/router.ts', ['dispatch', 'renderFailed', 'run']],
   ['notifications/router.ts', ['attention', 'acknowledge']],
   ['blob/router.ts', ['upload']],
   // How the Server Device runs is the owner's alone: ADR-0044's exception for what is the user's alone, which ADR-0045 extends. Staying out of the registry means no Agent can reach it as an Operation, and `serverDeviceProcedure` refuses every Paired Device (#1497); neither stops an Agent that reaches loopback tRPC as the Server Device, which is #1696.

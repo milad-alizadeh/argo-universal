@@ -61,6 +61,7 @@ const kit = createKit(
     slots: (slotCall) => call({ api: 'slots', call: slotCall }),
     operations: (operationCall) =>
       call({ api: 'operations', call: operationCall }),
+    pages: (pageCall) => call({ api: 'pages', call: pageCall }),
   },
 );
 
@@ -157,7 +158,10 @@ const pluginApi: Argo = frozen({
     get: async (key) =>
       (await call<PluginSettingValue | null>({ api: 'settings', key })) ?? null,
   }),
-  pages: frozen({ register: kit.registerPage }),
+  pages: frozen({
+    register: kit.registerPage,
+    define: kit.loaderPages.define,
+  }),
   slots: frozen({ register: kit.slots.register, changed: kit.slots.changed }),
   on: hooks.on,
 });

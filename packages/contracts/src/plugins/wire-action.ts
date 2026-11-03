@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { WebUrl } from '#plugin-account-calls';
+import { PluginOperationName, PluginOperationParams } from '#plugin-operations';
 
 // A handler prop on the wire; the App sends it back as a Component event by node key and event name.
 export const WireEvent = z.strictObject({
@@ -37,7 +38,38 @@ export const Action = z.discriminatedUnion('action', [
 
 export type Action = z.infer<typeof Action>;
 
-// What a Plugin's handler prop becomes: a Server event, or an Action the App runs itself.
-export const Handler = z.union([WireEvent, Action]);
+/*
+ * What a Component event on a Loader page holds besides a built-in Action (ADR-0050). A Page state change merges into
+ * the page's Page state, and the App asks for the page at its new address; an empty change asks again with fresh
+ * Queries, as a pull to refresh does. An Operation call runs one of the Plugin's declared Operations with its
+ * arguments; `optimistic` names a node by its key and the props it shows until the Operation answers. Both hold
+ * scalars only: an address stays a flat cache key, and the kit's prop types stay shallow enough for TypeScript.
+ */
+export const PageValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
+export type PageValue = z.infer<typeof PageValue>;
+
+export const PageStateChange = z.strictObject({
+  pageState: z.record(z.string(), PageValue),
+});
+
+export const OperationCall = z.strictObject({
+  operation: PluginOperationName,
+  args: PluginOperationParams,
+  optimistic: z
+    .strictObject({ key: z.string(), props: z.record(z.string(), PageValue) })
+    .optional(),
+});
+
+export type PageStateChange = z.infer<typeof PageStateChange>;
+
+export type OperationCall = z.infer<typeof OperationCall>;
+
+export const PageCall = z.union([PageStateChange, OperationCall]);
+
+export type PageCall = z.infer<typeof PageCall>;
+
+// What a Plugin's handler prop becomes: a Server event, an Action the App runs itself, or a Loader page's call.
+export const Handler = z.union([WireEvent, Action, PageCall]);
 
 export type Handler = z.infer<typeof Handler>;

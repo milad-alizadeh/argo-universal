@@ -1,4 +1,8 @@
-export { PluginTree, type PluginOnEvent } from './plugin-registry';
+export {
+  PluginTree,
+  type OnPageCall,
+  type PluginOnEvent,
+} from './plugin-registry';
 
 export * from './plugin-stream-state';
 

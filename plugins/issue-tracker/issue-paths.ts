@@ -11,6 +11,15 @@ export const pathSegment = (text: string): string =>
     (character) => `_${(character.codePointAt(0) ?? 0).toString(hex)}_`,
   );
 
+// The text a path segment holds: each `_<hex>_` back to its character.
+export const pathText = (segment: string): string =>
+  segment.replaceAll(/_([0-9a-f]+)_/gu, (_match, code: string) =>
+    String.fromCodePoint(Number.parseInt(code, hex)),
+  );
+
+// Every Project's filter list is one Loader page (ADR-0050).
+export const filterPattern = '/projects/:project/filters/:filter';
+
 export const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
 
