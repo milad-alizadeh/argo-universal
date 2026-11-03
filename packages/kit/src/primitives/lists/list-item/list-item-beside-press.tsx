@@ -64,8 +64,14 @@ export function rowPress(
   );
 }
 
-// Handlers that only paint the row, never act: its hover look and its layout.
-const paintOnly = new Set(['onHoverIn', 'onHoverOut', 'onLayout']);
+// Handlers that only paint the row, never act: its hover look, its focus ring and its layout.
+const paintOnly = new Set([
+  'onHoverIn',
+  'onHoverOut',
+  'onFocus',
+  'onBlur',
+  'onLayout',
+]);
 
 // A link or a popup acts like a handler does.
 const actingProps = new Set(['href', 'aria-haspopup']);
