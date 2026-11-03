@@ -110,6 +110,7 @@ export const ForcedContentStaysMountedButInaccessibleWhenClosed: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'Inside action' }),
     ).toBeNull();
+    await expect(canvas.getByText(body).closest('[inert]')).not.toBeNull();
     await userEvent.click(trigger);
     await expect(
       canvas.getByRole('button', { name: 'Inside action' }),

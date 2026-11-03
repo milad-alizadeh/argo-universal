@@ -61,7 +61,14 @@ function useRegion(): Region {
   const { open, contentId } = useContext(CollapsibleContext);
   const ref = useRef<ViewInstance>(null);
   const mounted = useMounted(open, ref);
-  const region = { ref, nativeID: contentId, ...contentAccessibility(open) };
+
+  // `inert` keeps closed content, which a forced mount leaves in the tree, out of the Tab order.
+  const region = {
+    ref,
+    nativeID: contentId,
+    ...contentAccessibility(open),
+    inert: !open,
+  };
 
   return { open, mounted, region };
 }

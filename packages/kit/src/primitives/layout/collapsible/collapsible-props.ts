@@ -9,7 +9,7 @@ export type CollapsibleProps = KitProps<'Collapsible'> &
   Omit<ComponentProps<typeof View>, keyof KitProps<'Collapsible'>>;
 
 export type CollapsibleContentProps = ComponentProps<typeof View> & {
-  // Web only: keeps the closed content mounted, for content that animates its own height.
+  // Keeps the closed content mounted, for content that animates its own height.
   forceMount?: true;
 };
 
