@@ -199,7 +199,7 @@ A page is a `Screen`. Its props say what the page holds, and the App lays it out
 
 - `width` is `content` (the reading column, the default), `narrow`, `full` or `bleed`. A `bleed` page has no column and no inset: its body fills the page, and a `Canvas` in it fills that body, as a board or a map does.
 - `aside` takes one `Metadata` of the page's properties, as an Issue's status, labels and assignee. When the window leaves room beside the column it is a column of its own at the trailing edge; otherwise it is a row of Pills under the title, and below medium those Pills show their icon alone. The aside never moves the title or changes the column's width.
-- `footer` stays pinned under the body and rises with the keyboard, as a chat's input does. It takes a `TextArea`, a `Stack` or a `Button`. `TextArea` is a multi-line input that grows to six lines and has an optional trailing action, such as a Send `IconButton`.
+- `footer` stays pinned under the body and rises with the keyboard, as a chat's input does. The footer takes a `TextArea`, a `Stack` or a `Button`. `TextArea` is a multi-line input that grows to six lines and has an optional trailing action, such as a Send `IconButton`. The body does not scroll by itself, so a body longer than the screen goes in a `ScrollView` or a `List`, which then scrolls above the footer.
 
 ```tsx
 <Screen
