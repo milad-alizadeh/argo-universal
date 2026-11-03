@@ -61,7 +61,7 @@ const oauthJourney = (
 ): OAuthJourney => ({
   ...host,
   ...browser,
-  started: startReader(home),
+  started: startReader(home, browser.opened),
   result: resultReader(home),
   failure: failureReader(home),
 });
@@ -125,7 +125,8 @@ const read = async (
       ),
     );
 
-function startReader(home: string): OAuthJourney['started'] {
+// A started exchange once the Plugin awaits it: a callback before the await would settle it unawaited.
+function startReader(home: string, opened: string[]): OAuthJourney['started'] {
   return async (id = 'alice') => {
     await expect
       .poll(() => read(home, id, 'start').catch(() => null), {
@@ -133,9 +134,18 @@ function startReader(home: string): OAuthJourney['started'] {
       })
       .not.toBeNull();
 
-    return StartedRecord.parse(await read(home, id, 'start'));
+    const started = StartedRecord.parse(await read(home, id, 'start'));
+
+    await expect
+      .poll(() => openedFor(opened, started.state), { timeout: 10_000 })
+      .toBe(true);
+
+    return started;
   };
 }
+
+const openedFor = (opened: string[], state: string): boolean =>
+  opened.some((url) => url.endsWith(`state=${state}`));
 
 function resultReader(home: string): OAuthJourney['result'] {
   return async (id = 'alice') => {
