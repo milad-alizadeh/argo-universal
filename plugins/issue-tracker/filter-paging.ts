@@ -7,7 +7,7 @@ type Page = { issues: Issue[]; next: string | null };
 
 type Kept = { page: Page; at: number };
 
-// Pages after the first are kept this long, so a further page costs one read however many came before.
+// Pages are kept this long, so a further page costs one read however many came before.
 const keptMs = 60_000;
 
 const kept = new Map<string, Kept>();
@@ -17,14 +17,14 @@ export type Paged = { issues: Issue[]; hasMore: boolean };
 /*
  * `gh issue list` has no cursor, so the cursor is a search qualifier: newest first, and each further page
  * from the last Issue's creation time on (inclusive, so a tie at the boundary is not lost; the repeat is
- * dropped). The first page is always read; the ones after it come from what was kept when they can.
+ * dropped). One page is a pull, so it is read again; more pages come from what was kept when they can.
  */
 export async function readPages(
   client: TrackerClient,
-  scope: { project: string; search: string },
+  scope: Scope,
   pages: number,
 ): Promise<Paged> {
-  let page = await readPage(client, scope.search, null);
+  let page = await firstPage(client, scope, pages);
   const issues = [...page.issues];
 
   for (let read = 1; read < pages && page.next !== null; read++) {
@@ -40,19 +40,38 @@ export function forgetPages(): void {
   kept.clear();
 }
 
+type Scope = { project: string; search: string };
+
+const firstPage = (
+  client: TrackerClient,
+  scope: Scope,
+  pages: number,
+): Promise<Page> =>
+  pages > 1 ? keptPage(client, scope, null) : freshPage(client, scope, null);
+
 async function keptPage(
   client: TrackerClient,
-  scope: { project: string; search: string },
-  cursor: string,
+  scope: Scope,
+  cursor: string | null,
 ): Promise<Page> {
-  const key = `${scope.project}\n${scope.search}\n${cursor}`;
-  const hit = kept.get(key);
+  const hit = kept.get(keyOf(scope, cursor));
 
   if (hit && Date.now() - hit.at < keptMs) return hit.page;
 
+  return freshPage(client, scope, cursor);
+}
+
+const keyOf = (scope: Scope, cursor: string | null): string =>
+  `${scope.project}\n${scope.search}\n${cursor ?? ''}`;
+
+async function freshPage(
+  client: TrackerClient,
+  scope: Scope,
+  cursor: string | null,
+): Promise<Page> {
   const page = await readPage(client, scope.search, cursor);
 
-  kept.set(key, { page, at: Date.now() });
+  kept.set(keyOf(scope, cursor), { page, at: Date.now() });
 
   return page;
 }

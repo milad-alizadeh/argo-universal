@@ -70,12 +70,23 @@ it('reads one page more for each further page, joining them without the repeat a
   searches.length = 0;
   const three = await readPages(client, scope, 3);
 
-  // The first page is read again; the second comes from what was kept; only the third is new.
-  expect(searches).toHaveLength(2);
-  expect(searches[1]).toContain('created:<=');
+  // The first two pages come from what was kept; only the third is read.
+  expect(searches).toHaveLength(1);
+  expect(searches[0]).toContain('created:<=');
   expect(three.issues.map(({ number }) => number)).toEqual([
     ...new Set(three.issues.map(({ number }) => number)),
   ]);
+});
+
+it('reads the first page again for a pull, which asks for one page', async () => {
+  forgetPages();
+  const { client, searches } = tracker(pageSize * 3);
+
+  await readPages(client, scope, 2);
+  searches.length = 0;
+  await readPages(client, scope, 1);
+
+  expect(searches).toEqual(['is:open sort:created-desc']);
 });
 
 it('has no more once a page comes back short', async () => {
