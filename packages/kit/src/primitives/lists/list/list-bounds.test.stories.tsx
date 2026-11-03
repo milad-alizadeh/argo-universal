@@ -100,12 +100,14 @@ export const LongPillsLeaveTheTitleHalf: Story = {
   ),
   play: async ({ canvas }) => {
     const scroll = await canvas.findByLabelText(listLabel);
-    const list = scroll.getBoundingClientRect();
-    const title = canvas.getByText(longTitle).getBoundingClientRect();
+    const titleText = canvas.getByText(longTitle);
+    const [count] = seen(await canvas.findAllByText(/^\+\d$/));
+    const row = rowOf(titleText, count ?? document.body);
+    const title = titleText.getBoundingClientRect();
 
     await expect(
-      { titleHalf: title.right - list.left >= list.width / 2 },
-      `title ends at ${title.right} in a list ${list.left}–${list.right}`,
+      { titleHalf: title.right - row.left >= row.width / 2 },
+      `title ends at ${title.right} in a row ${row.left}–${row.right}`,
     ).toEqual({ titleHalf: true });
     await expect(
       { overflows: scroll.scrollWidth > scroll.clientWidth },
@@ -113,3 +115,80 @@ export const LongPillsLeaveTheTitleHalf: Story = {
     ).toEqual({ overflows: false });
   },
 };
+
+const shortTitle = 'Sync stalls';
+
+// The row's line: the nearest box that holds both its title and its Pills.
+function rowOf(title: Element, pill: Element): DOMRect {
+  const box = title.parentElement ?? document.body;
+
+  return box.contains(pill) ? box.getBoundingClientRect() : rowOf(box, pill);
+}
+
+// The nearest box that clips what it holds, which a cut Pill would run past.
+function clipOf(element: Element): Element {
+  const box = element.parentElement;
+
+  if (!box) return document.body;
+
+  return getComputedStyle(box).overflowX === 'hidden' ? box : clipOf(box);
+}
+
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
+// What a reader sees, not the copies drawn unseen to measure them.
+const seen = (elements: HTMLElement[]): HTMLElement[] =>
+  elements.filter(
+    (element) => element.closest('[aria-hidden="true"]') === null,
+  );
+
+const seenPills = (canvas: Canvas): HTMLElement[] =>
+  seen(longLabels.flatMap((label) => canvas.queryAllByText(label)));
+
+const seenCounts = (canvas: Canvas): HTMLElement[] =>
+  seen(canvas.queryAllByText(/^\+\d$/));
+
+const runsPastItsClip = (pill: HTMLElement): boolean =>
+  pill.getBoundingClientRect().right >
+  clipOf(pill).getBoundingClientRect().right + 1;
+
+/*
+ * A row's label Pills show whole or not at all: as many as fit, then "+N" for the rest, never one cut at the row's
+ * edge, on a phone's row and on a wide window's compact one.
+ */
+function pillsFoldAt(width: number): Story {
+  return {
+    beforeEach: () => settleLayout(width, viewportHeight),
+    render: () => (
+      <Screen title="Bounded">
+        <List
+          appearance="plain"
+          density="compact"
+          accessibilityLabel={listLabel}
+        >
+          <ListItem
+            title={shortTitle}
+            subtitle="#7"
+            meta={longLabels.map((label) => (
+              <Pill key={label} text={label} />
+            ))}
+          />
+        </List>
+      </Screen>
+    ),
+    play: async ({ canvas }) => {
+      await waitFor(() => expect(seenCounts(canvas)).toHaveLength(1));
+
+      const cut = seenPills(canvas)
+        .filter(runsPastItsClip)
+        .map((pill) => pill.textContent);
+
+      await expect(cut).toEqual([]);
+      await expect(seenPills(canvas).length).toBeLessThan(longLabels.length);
+    },
+  };
+}
+
+export const PillsFoldIntoACountOnAPhone = pillsFoldAt(375);
+
+export const PillsFoldIntoACountOnAWideWindow = pillsFoldAt(1440);

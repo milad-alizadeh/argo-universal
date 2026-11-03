@@ -13,7 +13,7 @@ import type { Issue } from './github-issues';
 import { repositoryText } from './issue-project';
 import { statusMark } from './issue-status-mark';
 import { issueTree, type IssueNode } from './issue-tree';
-import { rowLabelPills } from './label-pills';
+import { labelPills } from './label-pills';
 import {
   useFilterIssues,
   type FilterIssues,
@@ -104,7 +104,8 @@ const rowProps = ({ project, deps }: FilterSource, issue: Issue): RowProps => {
       action: 'navigate',
       path: deps.pages.issuePagePath(project, issue.number),
     },
-    meta: [...rowMarks(issue), ...rowLabelPills(issue.labels)],
+    // Every label: the row shows those that fit whole and counts the rest.
+    meta: [...rowMarks(issue), ...labelPills(issue.labels)],
   };
 };
 
