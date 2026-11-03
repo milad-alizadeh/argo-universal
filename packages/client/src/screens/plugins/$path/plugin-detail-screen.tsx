@@ -3,7 +3,10 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useKeepSidebarWhileOpening } from '#features/frame';
+import {
+  useKeepSidebarWhileOpening,
+  useKeepSidebarWhilePending,
+} from '#features/frame';
 import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
 import { PluginPage as LoaderPage } from '../plugin-page/plugin-page';
@@ -53,6 +56,13 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
+// A page that may be a Loader page waits for its first draw like any other, so it holds the sidebar as the page before it left it.
+function PendingLoaderPage(): React.JSX.Element {
+  useKeepSidebarWhilePending();
+
+  return <PluginLoading />;
+}
+
 type PluginPageProps = PluginDetailScreenProps & {
   section: PluginSection;
   // The page is its nav item's root.
@@ -64,7 +74,7 @@ function PluginPage(props: PluginPageProps): React.JSX.Element | null {
   const path = pluginPagePath(props.path);
   const loader = useIsLoaderPage(props.section.pluginId, path);
 
-  if (loader === undefined) return <PluginLoading />;
+  if (loader === undefined) return <PendingLoaderPage />;
 
   if (!loader) return <ViewPage {...props} />;
 
