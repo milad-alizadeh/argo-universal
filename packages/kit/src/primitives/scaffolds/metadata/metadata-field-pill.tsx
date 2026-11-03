@@ -48,12 +48,12 @@ function fieldPill(props: FieldProps): PillProps {
   };
 }
 
-// Labels keep their own Pills, wrapped under the title with the rest.
+// Labels keep their own Pills, wrapped under the title with the rest; a long list wraps inside the row, never past it.
 function LabelPills(props: FieldProps): ReactElement {
   return (
     <View
       {...groupProps(props)}
-      className="min-w-0 flex-row flex-wrap items-center gap-1"
+      className="max-w-full min-w-0 shrink flex-row flex-wrap items-center gap-1"
     >
       {props.children}
     </View>

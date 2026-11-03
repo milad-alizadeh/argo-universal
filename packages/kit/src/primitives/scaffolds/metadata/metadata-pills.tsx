@@ -8,7 +8,7 @@ type PillValuesProps = { pills: PillProps[] };
 
 export function MetadataPills({ pills }: PillValuesProps): ReactElement {
   return (
-    <View className="min-w-0 flex-row flex-wrap items-center gap-1">
+    <View className="max-w-full min-w-0 shrink flex-row flex-wrap items-center gap-1">
       {withOccurrenceKeys(pills, pillIdentity).map(({ item, key }) => (
         <Pill key={key} {...item} />
       ))}
