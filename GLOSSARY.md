@@ -135,7 +135,7 @@ A named, versioned place in a core page that Plugins fill, such as Project detai
 _Avoid_: Contribution point, hook, outlet
 
 **Plugin tree**:
-The kit components a Plugin sends for one page or Slot, which the App draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts.
+The kit components a Plugin's Render answers for one page or Slot, as a value the App fetches, keeps and draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts. The App keeps a page's last one in memory and draws it while the page is fetched again. See ADR-0050.
 _Avoid_: Wire tree, Plugin UI
 
 **Single-owner Slot**:
@@ -154,8 +154,20 @@ _Avoid_: Kit component version, kit version, protocol version
 The path a Plugin registers one of its pages at with `argo.pages.register`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
 _Avoid_: App path, route (for what a Plugin writes)
 
+**Loader**:
+The read half of a Plugin page or Slot: it runs on the Server, takes the page's path, Page state and context, and answers the data the page draws from. It never writes.
+_Avoid_: Fetcher, data hook, `useData`
+
+**Render**:
+The draw half of a Plugin page or Slot: a pure function from the Loader's answer to a Plugin tree, with no hooks and no state.
+_Avoid_: View (a view per Connection no longer exists), component, template
+
+**Page state**:
+What one open Plugin page must remember to draw differently, such as a tab, a range or a page size. The page declares it with defaults, the App keeps it, and it is part of the page's address.
+_Avoid_: Local state, `useState`, params (for what the App keeps)
+
 **Component event**:
-A named handler prop on a kit component, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the kit component's schema.
+A named handler prop on a kit component, such as `onPress`. In a Plugin tree it holds a value, never a function: a navigation, a Page state change, or an Operation with its arguments.
 _Avoid_: Interaction, action (Action is a kit component), handler
 
 **Capability**:
@@ -171,7 +183,7 @@ A read a Plugin describes as a value instead of making, which Argo performs, key
 _Avoid_: Descriptor, query key, request object
 
 **Background pass**:
-One run of a Plugin's declared background entry on its interval, for one Project. It refreshes Queries and may set its own nav badge; it draws nothing and never raises a Notification.
+One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It refreshes Queries and may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
 
 **Nav badge**:
