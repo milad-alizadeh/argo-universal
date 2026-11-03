@@ -4,6 +4,8 @@ import { Component, type ReactNode } from 'react';
 import { expect, spyOn } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
+import { Pill } from '#primitives/status/pill';
+import { View } from 'react-native';
 import type { AsidePlace } from '../screen/screen-aside-place';
 import { Metadata } from './metadata';
 import { MetadataPlaceContext } from './metadata-drawing-context';
@@ -273,6 +275,47 @@ export const PillsAreTheFieldsValues: Story = {
     } finally {
       navigate.mockRestore();
     }
+  },
+};
+
+const longLabels = [
+  'needs-design-review',
+  'blocked-on-upstream-release',
+  'documentation-follow-up',
+  'priority: high',
+  'area: plugins',
+];
+
+// A long label list wraps inside the row it sits in instead of running past it.
+export const LongLabelsWrapInTheirRow: Story = {
+  args: {
+    children: (
+      <Metadata.Pills title="Labels">
+        {longLabels.map((label) => (
+          <Pill key={label} text={label} />
+        ))}
+      </Metadata.Pills>
+    ),
+  },
+  render: function Narrow(args) {
+    return (
+      <View testID="row" className="w-80">
+        <MetadataPlaceContext value="pills">
+          <Metadata {...args} />
+        </MetadataPlaceContext>
+      </View>
+    );
+  },
+  play: async ({ canvas }) => {
+    const row = canvas.getByTestId('row').getBoundingClientRect();
+    const ends = longLabels.map(
+      (label) => canvas.getByText(label).getBoundingClientRect().right,
+    );
+
+    await expect(
+      { inside: Math.max(...ends) <= row.right + 0.5 },
+      `labels end at ${Math.max(...ends)} past ${row.right}`,
+    ).toEqual({ inside: true });
   },
 };
 
