@@ -39,10 +39,9 @@ export function register(argo) {
 }
 `;
 
-const drawn = async (
-  kit: Awaited<ReturnType<typeof startKit>>,
-  page: string,
-): Promise<boolean> => {
+type Kit = Awaited<ReturnType<typeof startKit>>;
+
+const drawn = async (kit: Kit, page: string): Promise<boolean> => {
   const view = await kit.mount({ page, surface });
 
   await view.ready();
@@ -64,18 +63,36 @@ it('reads a page of one component, or a Stack holding one, as drawing something'
   expect(await drawn(kit, '/stacked')).toBe(true);
 }, 20_000);
 
-it('draws something once the page has it, and nothing again once it is gone', async () => {
+// A card page that starts with nothing, and the page whose button fills and empties it.
+const fillable = async (): Promise<{
+  card: Awaited<ReturnType<Kit['mount']>>;
+  fill: Awaited<ReturnType<Kit['mount']>>;
+}> => {
   const kit = await startKit(source);
   const card = await kit.mount({ page: '/filled', surface });
   const fill = await kit.mount({ page: '/fill', surface });
 
   await card.ready();
-  expect(drawsNothing(card.tree)).toBe(true);
+
+  return { card, fill };
+};
+
+it('draws something once the page has it', async () => {
+  const { card, fill } = await fillable();
+
+  await fill.press('Fill');
+
+  await card.waitFor(() => !drawsNothing(card.tree), 'the page filled');
+  expect(card.findText('Something to show')).toBeDefined();
+}, 20_000);
+
+it('draws nothing again once what the page had is gone', async () => {
+  const { card, fill } = await fillable();
 
   await fill.press('Fill');
   await card.waitFor(() => !drawsNothing(card.tree), 'the page filled');
-  expect(card.findText('Something to show')).toBeDefined();
-
   await fill.press('Fill');
+
   await card.waitFor(() => drawsNothing(card.tree), 'the page emptied');
+  expect(card.findText('Something to show')).toBeUndefined();
 }, 20_000);

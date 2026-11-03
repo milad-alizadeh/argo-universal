@@ -26,6 +26,24 @@ const ids = (items: readonly { item: SessionHeaderAction }[]): string[] =>
 
 const showsAll = (): boolean => true;
 
+const toCard: SessionHeaderAction = {
+  ...action('issue-card', 'header'),
+  target: { type: 'card', cardId: 'issue' },
+};
+
+// The actions beside "…" on a desktop when a card action leads, its card filled or not.
+const besideWithCard = (filled: boolean): string[] =>
+  ids(
+    placeSessionHeaderActions(
+      [{ pluginId: 'tracker', item: toCard }, ...declared],
+      {
+        phone: false,
+        shows: showsAll,
+        filled: () => filled,
+      },
+    ).beside,
+  );
+
 describe('placeSessionHeaderActions', () => {
   it('puts the first header action beside "…" on a desktop and the rest in it, in Slot order', () => {
     const placed = placeSessionHeaderActions(declared, {
@@ -57,25 +75,12 @@ describe('placeSessionHeaderActions', () => {
     expect(ids(placed.menu)).toEqual(['board', 'report']);
   });
 
-  it('leaves out an action whose Workbench card has nothing to show, and keeps it once the card has', () => {
-    const toCard: SessionHeaderAction = {
-      ...action('issue-card', 'header'),
-      target: { type: 'card', cardId: 'issue' },
-    };
+  it('leaves out an action whose Workbench card has nothing to show', () => {
+    expect(besideWithCard(false)).toEqual(['deploy']);
+  });
 
-    const actions = [{ pluginId: 'tracker', item: toCard }, ...declared];
-
-    const place = (filled: boolean): string[] =>
-      ids(
-        placeSessionHeaderActions(actions, {
-          phone: false,
-          shows: showsAll,
-          filled: () => filled,
-        }).beside,
-      );
-
-    expect(place(false)).toEqual(['deploy']);
-    expect(place(true)).toEqual(['issue-card']);
+  it('keeps an action whose Workbench card has something to show', () => {
+    expect(besideWithCard(true)).toEqual(['issue-card']);
   });
 
   it('keeps menu actions in "…" even when the header has room', () => {

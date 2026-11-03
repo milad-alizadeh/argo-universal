@@ -19,7 +19,7 @@ const holdsIssue = (tree: WireNode): boolean =>
   findWireNodeEntry(tree, ({ props }) => props.title === issueTitle) !==
   undefined;
 
-it("shows the Session's Issue on the Workbench card, and nothing before GitHub answers", async () => {
+it("draws only the Session's Issue on the Workbench card, with no placeholder before GitHub answers", async () => {
   const test = await trackerWithAttachedIssue();
   const card = await mountFor(test, cardPage, sessionId);
   const row = await card.find(issueTitle);
@@ -31,35 +31,66 @@ it("shows the Session's Issue on the Workbench card, and nothing before GitHub a
   ).toBe(true);
 }, 20_000);
 
-it('draws nothing on the card when the Session has no Issue, or the card has no Session', async () => {
+it('draws nothing on the card when the Session has no Issue', async () => {
   const { test } = await tracker();
-  const empty = await mountFor(test, cardPage, sessionId);
-  const none = await mountFor(test, cardPage);
+  const card = await mountFor(test, cardPage, sessionId);
 
-  for (const card of [empty, none]) {
-    await card.ready();
-    expect(drawsNothing(card.tree)).toBe(true);
-  }
+  await card.ready();
+
+  expect(drawsNothing(card.tree)).toBe(true);
 }, 20_000);
 
-it('follows the Session as an Agent attaches another Issue, and draws nothing once it detaches', async () => {
+it('draws nothing on the card when it has no Session', async () => {
+  const { test } = await tracker();
+  const card = await mountFor(test, cardPage);
+
+  await card.ready();
+
+  expect(drawsNothing(card.tree)).toBe(true);
+}, 20_000);
+
+// A card showing #42, then #43 once an Agent attaches it later, as it would be; the Plugin's clock stands still in a test.
+const cardFollowing43 = async (): Promise<{
+  test: Awaited<ReturnType<typeof trackerWithAttachedIssue>>;
+  card: Awaited<ReturnType<typeof mountFor>>;
+}> => {
   const test = await trackerWithAttachedIssue();
   const card = await mountFor(test, cardPage, sessionId);
 
   await card.find(issueTitle);
-  // The Plugin's clock stands still in a test; the second Issue is attached later, as it would be.
   await test.clock.advance(1000);
   await attach(test, 'attach', 43);
+  await card.find(refusedTitle);
+
+  return { test, card };
+};
+
+it('follows the Session to the Issue an Agent attaches next, never blanking between the two', async () => {
+  const { card } = await cardFollowing43();
+
   expect((await card.find(refusedTitle)).props.subtitle).toBe('#43 · Open');
-  // Between the two Issues the card keeps the last row; it never blanks.
   expect(card.trees.filter(drawsNothing)).toHaveLength(
     card.trees.findIndex((tree) => !drawsNothing(tree)),
   );
+}, 20_000);
+
+it('falls back to the Issue still attached when the latest detaches', async () => {
+  const { test, card } = await cardFollowing43();
 
   await attach(test, 'detach', 43);
+
   expect((await card.find(issueTitle)).props.subtitle).toBe('#42 · Open');
+}, 20_000);
+
+it('draws nothing once the last Issue detaches', async () => {
+  const { test, card } = await cardFollowing43();
+
+  await attach(test, 'detach', 43);
+  await card.find(issueTitle);
   await attach(test, 'detach');
+
   await card.waitFor(() => drawsNothing(card.tree), 'the card emptied');
+  expect(card.findText(issueTitle)).toBeUndefined();
 }, 20_000);
 
 it('keeps the card for an attached Issue that cannot load, and says why', async () => {

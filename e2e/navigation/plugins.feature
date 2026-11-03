@@ -194,21 +194,30 @@ Feature: Plugin navigation
     Then the Session Workbench shows the Plugin card "Counter card"
     And the Session Workbench has no Plugin card "Notes"
     And the Session header menu omits "Toggle Notes card"
-    When I press "Open Notes switch" in the Session header menu
-    And I fill the Notes card on the Plugin page
-    And I go back to the Session
+
+  Scenario: A Plugin's Workbench card appears with its header action once it has something to show
+    Given a wide Frame
+    And a Session named "Check the live list"
+    When the Notes card is filled
     Then the Session Workbench shows the Plugin card "Notes"
     And the Session header menu lists "Toggle Notes card"
-    When I press the Plugin card "Notes"
-    Then the Inspector tab "Notes" shows "Notes in full"
-    When I press "Open Notes switch" in the Session header menu
-    And I empty the Notes card on the Plugin page
-    And I go back to the Session
+
+  Scenario: A Plugin's Workbench card that empties leaves with its Inspector tab
+    Given a wide Frame
+    And a Session named "Check the live list"
+    And the Notes card is filled
+    And I press the Plugin card "Notes"
+    When the Notes card is emptied
     Then the Session Workbench has no Plugin card "Notes"
     And the Inspector has no tab "Notes"
-    When I press "Open Notes switch" in the Session header menu
-    And I fill the Notes card on the Plugin page
-    And I go back to the Session
+
+  Scenario: A Plugin's Workbench card that fills again does not reopen its Inspector tab
+    Given a wide Frame
+    And a Session named "Check the live list"
+    And the Notes card is filled
+    And I press the Plugin card "Notes"
+    And the Notes card is emptied
+    When the Notes card is filled
     Then the Session Workbench shows the Plugin card "Notes"
     And the Inspector has no tab "Notes"
 

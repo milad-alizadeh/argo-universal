@@ -38,6 +38,14 @@ Then(
   },
 );
 
+const openFromHeaderMenu = async (page: Page, name: string): Promise<void> => {
+  await page.getByRole('button', { name: 'More', exact: true }).click();
+  await page
+    .getByRole('menu')
+    .getByRole('menuitem', { name, exact: true })
+    .click();
+};
+
 // Each word a step may use, and what it means; a word not listed fails the step rather than meaning the other.
 const meaning = <Meaning>(
   words: Readonly<Record<string, Meaning>>,
@@ -51,41 +59,58 @@ const meaning = <Meaning>(
 };
 
 // The button the Notes switch shows now, and the one it shows once pressed.
-const notesPresses = (verb: string): readonly [string, string] =>
+const notesPresses = (state: string): readonly [string, string] =>
   meaning(
     {
-      fill: ['Fill the Notes card', 'Empty the Notes card'],
-      empty: ['Empty the Notes card', 'Fill the Notes card'],
+      filled: ['Fill the Notes card', 'Empty the Notes card'],
+      emptied: ['Empty the Notes card', 'Fill the Notes card'],
     },
-    verb,
+    state,
   );
 
 /*
  * Flips the Lists mock's Notes switch for the Session. A press that lands while the page's first view is replaced is
  * refused with "try again", so it is pressed again until the switch reads the other way.
  */
+const flipNotes = async (page: Page, state: string): Promise<void> => {
+  const [press, next] = notesPresses(state);
+
+  const button = (name: string): Locator =>
+    page.getByTestId('plugin-page').getByRole('button', { name, exact: true });
+
+  await expect(async () => {
+    if (await button(next).isVisible()) return;
+
+    await button(press).click({ timeout: 2000 });
+    await expect(button(next)).toBeVisible({ timeout: 2000 });
+  }).toPass();
+};
+
+/*
+ * Opens the Notes switch from the ⋯ menu. While the Session's cards first answer, their actions join the menu and move
+ * its rows, so a press can miss; the menu is closed and opened again until the switch's page is up.
+ */
+const openNotesSwitch = async (page: Page): Promise<void> => {
+  const pluginPage = page.getByTestId('plugin-page');
+
+  await expect(async () => {
+    if (await page.getByRole('menu').isVisible())
+      await page.keyboard.press('Escape');
+
+    await openFromHeaderMenu(page, 'Open Notes switch');
+    await expect(pluginPage).toBeVisible({ timeout: 3000 });
+  }).toPass();
+};
+
+// The Lists mock's Notes card gets, or loses, something to show for the Session, from the Plugin's own page.
 When(
-  'I {word} the Notes card on the Plugin page',
-  async ({ page }, verb: string): Promise<void> => {
-    const [press, next] = notesPresses(verb);
-
-    const button = (name: string): Locator =>
-      page
-        .getByTestId('plugin-page')
-        .getByRole('button', { name, exact: true });
-
-    await expect(async () => {
-      if (await button(next).isVisible()) return;
-
-      await button(press).click({ timeout: 2000 });
-      await expect(button(next)).toBeVisible({ timeout: 2000 });
-    }).toPass();
+  'the Notes card is {word}',
+  async ({ page }, state: string): Promise<void> => {
+    await openNotesSwitch(page);
+    await flipNotes(page, state);
+    await page.goBack();
   },
 );
-
-When('I go back to the Session', async ({ page }): Promise<void> => {
-  await page.goBack();
-});
 
 // The header's ⋯ menu lists an action only while what it opens is there.
 Then(
@@ -127,10 +152,6 @@ Then(
 When(
   'I press {string} in the Session header menu',
   async ({ page }, name: string): Promise<void> => {
-    await page.getByRole('button', { name: 'More', exact: true }).click();
-    await page
-      .getByRole('menu')
-      .getByRole('menuitem', { name, exact: true })
-      .click();
+    await openFromHeaderMenu(page, name);
   },
 );
