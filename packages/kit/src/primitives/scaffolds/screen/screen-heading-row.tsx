@@ -24,7 +24,9 @@ import type { ScreenHeaderInput, ScreenProps } from './screen-props';
  */
 export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
   return (
-    <View className={props.width === 'narrow' ? 'pt-6 wide:pt-0' : 'py-6 wide:pt-0'}>
+    <View
+      className={props.width === 'narrow' ? 'pt-6 wide:pt-0' : 'py-6 wide:pt-0'}
+    >
       <ScreenColumn width={headingWidth(props.width)}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
