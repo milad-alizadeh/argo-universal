@@ -8,6 +8,16 @@ const sidebarPressLayouts = {
 };
 
 /*
+ * A Card's row, as the Workbench draws its own (Changes, Agents): 4 inside its hover tile, which its List pulls 4 past
+ * the card's padding, so its leading mark starts on the card title's edge; lanes 8 apart, 8 above and below. A compact
+ * List's row in a card is the same, on one 36-tall line.
+ */
+const cardPressLayouts = {
+  card: 'w-full flex-row items-start gap-2 px-1 py-2',
+  'card-compact': 'w-full min-h-9 flex-row items-center gap-2 px-1',
+};
+
+/*
  * Rows keep 16 from their edge and 20 on wide. A sidebar List's row (Paper's SettingsList) is a 52-high tile whose
  * content starts 8 in, on the sidebar title's edge.
  */
@@ -18,6 +28,7 @@ export const pressLayouts = {
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
   'sidebar-tile': 'w-full min-h-13 flex-row items-center gap-3.5 px-2 py-1.5',
   ...sidebarPressLayouts,
+  ...cardPressLayouts,
 };
 
 export type PressLayout = keyof typeof pressLayouts;
@@ -32,4 +43,6 @@ export const controlLines = {
   'sidebar-tile': controlLine,
   sidebar: controlLine,
   'sidebar-compact': controlLine,
+  card: controlLine,
+  'card-compact': controlLine,
 } satisfies Record<PressLayout, string>;

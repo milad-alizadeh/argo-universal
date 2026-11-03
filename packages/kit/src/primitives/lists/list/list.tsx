@@ -1,5 +1,6 @@
 import { listDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
 import type { ListLook } from '../../../list-look';
 import {
@@ -91,13 +92,26 @@ const renderRows = <Item,>(prepared: ListProps<Item>): ReactElement => (
   </ListMenuRows>
 );
 
+// A card's rows carry 4 of their own inside their hover tile; pulling the List out by that puts their marks on the card's edge.
+const CardEdge = ({
+  card,
+  children,
+}: {
+  card: boolean;
+  children: ReactElement;
+}): ReactElement =>
+  card ? <View className="-mx-1">{children}</View> : children;
+
 // A Plugin's List, whose props its wire checked: plugin-kit's types keep `onMove` off a List of `items` there.
 export function PluginList<Item>(props: ListProps<Item>): ReactElement {
   const list = useListContent(props);
+  const look = useLook(list);
 
   return (
-    <ListLookContext value={useLook(list)}>
-      <ListBehaviours list={list} render={renderRows} />
+    <ListLookContext value={look}>
+      <CardEdge card={look.card}>
+        <ListBehaviours list={list} render={renderRows} />
+      </CardEdge>
     </ListLookContext>
   );
 }

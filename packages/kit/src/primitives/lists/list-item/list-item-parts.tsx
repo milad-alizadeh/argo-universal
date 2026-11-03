@@ -5,6 +5,7 @@ import {
   IconSizeContext,
   type IconSizing,
 } from '#primitives/content/icon';
+import type { ListLook } from '../../../list-look';
 import { useCompactRows, useListLook } from '../../../list-look-context';
 import { hasBadge, ItemBadge, useLeadingBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
@@ -25,6 +26,8 @@ export function hasLeading(
  */
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
+  // A card's row leads with the Workbench rows' 28 lane, so its title starts where theirs do.
+  card: 'relative h-6 w-7 wide-type:h-5 shrink-0 items-center justify-center',
   menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
   sidebar: 'relative h-5 w-4 shrink-0 items-center justify-center',
 };
@@ -39,6 +42,7 @@ type LeadingLane = keyof typeof leadingClasses;
  */
 const leadingIconSizes = {
   row: { size: rowGlyphSize, fixed: true, lane: 'row' },
+  card: { size: rowGlyphSize, fixed: true, lane: 'row' },
   menu: { size: 'md', fixed: true },
   sidebar: { size: 'sm', fixed: true },
 } as const satisfies Record<LeadingLane, IconSizing>;
@@ -48,8 +52,10 @@ type LeadingProps = Pick<
   'leading' | 'badge' | 'sidebar' | 'leadingSize'
 >;
 
-function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
-  if (menu) return 'menu';
+function leadingLane(look: ListLook, sidebar: boolean): LeadingLane {
+  if (look.menu) return 'menu';
+
+  if (look.card) return 'card';
 
   return sidebar ? 'sidebar' : 'row';
 }
@@ -57,7 +63,7 @@ function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
 function useLeadingLane(sidebar: boolean | undefined): LeadingLane {
   const compact = useCompactRows(sidebar);
 
-  return leadingLane(useListLook().menu, sidebar === true || compact);
+  return leadingLane(useListLook(), sidebar === true || compact);
 }
 
 export function Leading(props: LeadingProps): ReactNode {

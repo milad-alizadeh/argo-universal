@@ -55,10 +55,47 @@ export function rowPress(
 ): ReactElement {
   if (beside.beside) return besidePress({ props, press }, beside.through);
 
+  if (pressesNothing(press)) return inertRow(props, press);
+
   return (
     <Pressable {...press}>
       <ItemContentSlots {...props} />
     </Pressable>
+  );
+}
+
+// Every way a row's press can act: its own press, a long press, a selection, a link, a menu trigger's pointer or popup.
+const pressParts = (press: RowPressProps): unknown[] => [
+  press.onPress,
+  press.onPressIn,
+  press.onLongPress,
+  press.onPointerDown,
+  press.href,
+  press['aria-haspopup'],
+];
+
+const pressesNothing = (press: RowPressProps): boolean =>
+  press.role === 'group' && pressParts(press).every((part) => !part);
+
+/*
+ * A row that presses nothing is a named group, drawn without a press: the web's press stops every click it sees, so a
+ * row with none of its own would still swallow the press of what holds it, such as a card's body.
+ */
+function inertRow(props: DrawingProps, press: RowPressProps): ReactElement {
+  const {
+    style: _style,
+    children: _children,
+    onHoverIn: _onHoverIn,
+    onHoverOut: _onHoverOut,
+    android_ripple: _ripple,
+    disabled: _disabled,
+    ...group
+  } = press;
+
+  return (
+    <View {...group}>
+      <ItemContentSlots {...props} />
+    </View>
   );
 }
 

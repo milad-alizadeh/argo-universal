@@ -1,10 +1,13 @@
 import { type ComponentRef, type ReactNode, type RefObject } from 'react';
-import type { View, ViewStyle } from 'react-native';
+import type { View, ViewProps, ViewStyle } from 'react-native';
 import type { WorkbenchColumnCard } from './workbench-column';
 
 export interface WorkbenchSlot {
   className?: string;
   style?: ViewStyle;
+  // A pointer over the card shows its handle; a touch is not a hover and shows nothing.
+  onPointerEnter?: ViewProps['onPointerEnter'];
+  onPointerLeave?: ViewProps['onPointerLeave'];
 }
 
 // The column the cards are stacked in, which a handle measures as it is taken.

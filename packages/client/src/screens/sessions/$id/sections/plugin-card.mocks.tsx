@@ -1,4 +1,7 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { SessionPluginCard } from './plugin-card-section';
 
 export const issueCardSummary = '#412 · In review';
@@ -34,4 +37,20 @@ export const coverageCard: SessionPluginCard = {
     page: '/coverage/session',
   },
   page: <Text>{coverageCardSummary}</Text>,
+};
+
+export const issueRowTitle = 'Work on the tracker card';
+
+// The Issue tracker's card as the Plugin draws it: a kit List of one row, which presses nothing of its own.
+export const issueRowCard: SessionPluginCard = {
+  ...issueTrackerCard,
+  page: (
+    <List>
+      <ListItem
+        title={issueRowTitle}
+        subtitle="#42 · Open"
+        leading={<Icon name="pending" tone="muted" />}
+      />
+    </List>
+  ),
 };

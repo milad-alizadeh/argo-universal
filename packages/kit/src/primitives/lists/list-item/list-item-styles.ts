@@ -56,12 +56,17 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
   return ownTile(drawing, state) ?? rowSurface(drawing, state);
 }
 
-// A sidebar row and a plain compact row are each their own rounded tile.
+// A card's row is a tile on the card, its radius the Workbench rows' own, so its hover tint sits inside the card.
+const cardRowSurface = 'relative overflow-hidden rounded-xl';
+
+// A sidebar row, a card's row and a plain compact row are each their own rounded tile.
 function ownTile(
   drawing: ItemDrawing,
   state: SurfaceState,
 ): string | undefined {
   if (drawing.look.sidebar) return sidebarSurface;
+
+  if (drawing.look.card) return cardRowSurface;
 
   return compactTile(drawing, state) ? compactSurface : undefined;
 }
