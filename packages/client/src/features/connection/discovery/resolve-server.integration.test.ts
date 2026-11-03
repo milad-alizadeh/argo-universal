@@ -1,9 +1,9 @@
 import { createConnection } from 'node:net';
+import { networkInterfaces } from 'node:os';
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { AppPageSocket } from '@repo/engine/mocks/app-socket';
 import {
   lanAddress,
-  ownAddresses,
   watchAnnouncedServers,
 } from '@repo/engine/mocks/engine-network';
 import { afterEach, assert, describe, expect, it, vi } from 'vitest';
@@ -54,15 +54,29 @@ async function nameReachedAt(location: ServerLocation): Promise<string> {
   return (await client.system.info.query()).name;
 }
 
+const nonInternalIPv4 = (): string[] =>
+  Object.values(networkInterfaces())
+    .flat()
+    .filter((entry) => entry?.internal === false)
+    .filter((entry) => entry?.family === 'IPv4')
+    .flatMap((entry) => (entry ? [entry.address] : []));
+
 const reachesPort = (host: string, port: number): Promise<boolean> =>
   new Promise((resolve) => {
     const socket = createConnection({ host, port });
 
-    socket.once('connect', () => {
+    const finish = (connected: boolean): void => {
       socket.destroy();
-      resolve(true);
+      resolve(connected);
+    };
+
+    closers.push(() => {
+      socket.destroy();
     });
-    socket.once('error', () => resolve(false));
+    socket.setTimeout(3000);
+    socket.once('connect', () => finish(true));
+    socket.once('error', () => finish(false));
+    socket.once('timeout', () => finish(false));
   });
 
 const computerName = 'Studio Mac';
@@ -91,7 +105,7 @@ describe.skipIf(!lanAddress)(
         port: portOf(server),
       });
       expect(location.hosts.length).toBeGreaterThan(0);
-      expect(ownAddresses).toEqual(expect.arrayContaining(location.hosts));
+      expect(nonInternalIPv4()).toEqual(expect.arrayContaining(location.hosts));
       const host = location.hosts[0];
 
       assert(host);
