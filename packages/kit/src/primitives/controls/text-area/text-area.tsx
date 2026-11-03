@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { type ReactElement, type ReactNode, useState } from 'react';
 import {
   Platform,
   TextInput,
@@ -19,6 +19,32 @@ function useMaxHeight(): number {
   const { fontScale } = useWindowDimensions();
 
   return maximumVisibleLines * lineHeight * Math.max(1, fontScale);
+}
+
+type FittedHeight = Pick<TextInputProps, 'onContentSizeChange'> & {
+  height?: number;
+};
+
+/*
+ * An empty field is one line tall. iOS measures a field again only when its reader types, so one a send clears keeps
+ * the height of the text it held; a native field holds the height it had while empty whenever it is empty again.
+ * Web's textarea sizes itself to its text (`fieldClass`).
+ */
+function useEmptyHeight(value: string): FittedHeight {
+  const [emptyHeight, setEmptyHeight] = useState<number>();
+
+  if (Platform.OS === 'web') return {};
+
+  return {
+    height: value === '' ? emptyHeight : undefined,
+    // The least height seen while empty: text pasted into an empty field can report its size before its value.
+    onContentSizeChange: (event): void => {
+      const { height } = event.nativeEvent.contentSize;
+
+      if (value === '')
+        setEmptyHeight((seen) => Math.min(seen ?? height, height));
+    },
+  };
 }
 
 // Return sends on web and desktop, where Shift-Return adds a line; a phone's Return adds a line and its action sends.
@@ -48,7 +74,7 @@ function inputProps(props: TextAreaProps): TextInputProps {
 
 const fieldClass = (disabled: boolean | undefined): string =>
   cn(
-    'min-h-5 min-w-0 flex-1 overflow-hidden border-0 bg-transparent p-0 py-1.5 type-body text-foreground shadow-none web:outline-none',
+    'min-h-5 min-w-0 flex-1 overflow-hidden border-0 bg-transparent p-0 py-1.5 type-body text-foreground shadow-none web:field-sizing-content web:resize-none web:outline-none',
     disabled === true && 'opacity-50',
   );
 
@@ -60,12 +86,15 @@ const cardClass =
  * grows with its text, so a Screen's footer holds it at its foot as a chat's message field.
  */
 export function TextArea(props: TextAreaProps): ReactElement {
+  const { height, onContentSizeChange } = useEmptyHeight(props.value);
+
   return (
     <View testID={props.testID} className={cardClass}>
       <TextInput
         {...inputProps(props)}
+        onContentSizeChange={onContentSizeChange}
         placeholderTextColorClassName="accent-muted-foreground/70 dark:accent-muted-foreground"
-        style={{ maxHeight: useMaxHeight() }}
+        style={{ height, maxHeight: useMaxHeight() }}
         className={fieldClass(props.disabled)}
       />
       <TextAreaAction action={props.action} />
