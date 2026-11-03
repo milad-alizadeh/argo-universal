@@ -81,26 +81,39 @@ function Uses() {
 }
 `;
 
-const start = async () => {
+const issuesPath = '/projects/argo/issues';
+
+async function start(): Promise<Kit> {
   const fixture = await dataFixture(source, { operations: [close] });
 
   return fixture.start();
-};
+}
 
-const titlesOf = (answer: Awaited<ReturnType<Kit['pages']['draw']>>) => {
+type Kit = Awaited<
+  ReturnType<Awaited<ReturnType<typeof dataFixture>>['start']>
+>;
+
+type Answer = Awaited<ReturnType<Kit['pages']['draw']>>;
+
+type Drawn = Extract<Answer, { ok: true }>['root'];
+
+// The drawn tree, or the draw's failure thrown.
+function rootOf(answer: Answer): Drawn {
   if (!answer.ok) throw new Error(answer.error);
 
-  const list = answer.root.children[0];
+  return answer.root;
+}
+
+const titlesOf = (answer: Answer): unknown[] | undefined => {
+  const list = rootOf(answer).children[0];
 
   return list?.children.map((row) => row.props.title);
 };
 
-type Kit = Awaited<ReturnType<typeof start>>;
-
 it('draws a Loader page at its address, with the Page state over its defaults', async () => {
   const kit = await start();
 
-  const first = await kit.pages.draw({ path: '/projects/argo/issues' });
+  const first = await kit.pages.draw({ path: issuesPath });
 
   expect(first).toMatchObject({
     ok: true,
@@ -109,7 +122,7 @@ it('draws a Loader page at its address, with the Page state over its defaults', 
   expect(titlesOf(first)).toEqual(['Issue 1', 'Issue 2']);
 
   const more = await kit.pages.draw({
-    path: '/projects/argo/issues',
+    path: issuesPath,
     pageState: { limit: 4 },
   });
 
@@ -119,11 +132,7 @@ it('draws a Loader page at its address, with the Page state over its defaults', 
 it('puts Page state changes and keys in the tree as values', async () => {
   const kit = await start();
 
-  const answer = await kit.pages.draw({ path: '/projects/argo/issues' });
-
-  if (!answer.ok) throw new Error(answer.error);
-
-  const list = answer.root.children[0];
+  const list = rootOf(await kit.pages.draw({ path: issuesPath })).children[0];
 
   expect(list?.props).toMatchObject({
     pagination: { hasMore: true, onLoadMore: { pageState: { limit: 4 } } },
@@ -142,11 +151,9 @@ it('runs a declared Operation and answers every Loader page as stale', async () 
     stale: ['/projects/:project/issues', '/hooks', '/functions', '/throws'],
   });
 
-  const answer = await kit.pages.draw({ path: '/projects/argo/issues' });
+  const root = rootOf(await kit.pages.draw({ path: issuesPath }));
 
-  if (!answer.ok) throw new Error(answer.error);
-
-  expect(answer.root.children[0]?.children[1]?.props.finished).toBe(true);
+  expect(root.children[0]?.children[1]?.props.finished).toBe(true);
 });
 
 it('refuses an Operation call the manifest does not allow', async () => {
