@@ -49,20 +49,22 @@ export class HeightMotion {
 
   private readonly observer = new ResizeObserver(() => this.follow());
 
-  constructor(
+  public constructor(
     openAtStart: boolean,
     private readonly onLeave: (mounted: false) => void,
   ) {
     this.heading = openAtStart ? 'rest' : 'nothing';
   }
 
-  readonly setBox = (view: ViewInstance | null): void => {
+  // A box that leaves takes its pending fallback with it, so nothing finishes a motion on a box no longer there.
+  public readonly setBox = (view: ViewInstance | null): void => {
     this.box?.removeEventListener('transitionend', this.onEnd);
+    clearTimeout(this.timer);
     this.box = domNode(view);
     this.attachBox();
   };
 
-  readonly setContent = (view: ViewInstance | null): void => {
+  public readonly setContent = (view: ViewInstance | null): void => {
     this.observer.disconnect();
     this.content = domNode(view);
 
@@ -70,7 +72,7 @@ export class HeightMotion {
   };
 
   // Starts the motion when the content opens or closes; content that mounts open, as a card shown open does, rests as it is.
-  toggle(isOpen: boolean, forceMount: boolean): void {
+  public toggle(isOpen: boolean, forceMount: boolean): void {
     this.forceMount = forceMount;
     const fresh = this.attached;
     this.attached = false;

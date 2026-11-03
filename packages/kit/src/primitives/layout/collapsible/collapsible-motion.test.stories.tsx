@@ -146,18 +146,23 @@ async function expectOneStep(tops: readonly number[]): Promise<void> {
   await expect(afterPress).toEqual(afterPress.map(() => tops.at(-1)));
 }
 
-export const ReducedMotionTakesOneStep: Story = {
+export const ReducedMotionOpensInOneStep: Story = {
   render: renderWithRowBelow(settledBody),
   play: async ({ canvas }) =>
     withReducedMotion(async () => {
-      const opening = await sampleRowBelow(canvas);
-      await expectOneStep(opening);
-      const closing = await sampleRowBelow(canvas);
-      await expectOneStep(closing);
-      await expect(closing.at(-1)).toBeCloseTo(
-        (opening.at(-1) ?? 0) - settledBody.last,
-        0,
-      );
+      const tops = await sampleRowBelow(canvas);
+      await expectOneStep(tops);
+      await expect(readMotion(tops).travel).toBeCloseTo(settledBody.last, 0);
+    }),
+};
+
+export const ReducedMotionClosesInOneStep: Story = {
+  render: renderWithRowBelow(settledBody, true),
+  play: async ({ canvas }) =>
+    withReducedMotion(async () => {
+      const tops = await sampleRowBelow(canvas);
+      await expectOneStep(tops);
+      await expect(readMotion(tops).travel).toBeCloseTo(settledBody.last, 0);
       await expect(canvas.queryByTestId(detailId)).not.toBeInTheDocument();
     }),
 };

@@ -11,7 +11,8 @@ import { Svg } from '#primitives/visual';
 import { sampleEachFrame } from '../../../../mocks/sample-each-frame';
 import { SettlingContent } from '../collapsible/collapsible-motion-fixtures';
 import { Card } from './card';
-import { collapsedCard, footerCard } from './card-fixtures';
+import { collapsedCard, expandedCard, footerCard } from './card-fixtures';
+import type { CardProps } from './card-props';
 
 const mediaXml = fixtures.valid[0]?.xml ?? '';
 
@@ -183,7 +184,7 @@ export const ActionsStayBesideTheTrigger: Story = {
   },
 };
 
-const nextCard = 'next-card';
+const nextCard = 'Next card';
 
 // Long enough for the fold and the rest after it.
 const foldFrames = 40;
@@ -229,34 +230,35 @@ async function expectSteadyFold(samples: readonly FoldSample[]): Promise<void> {
   await expect(motion.largestStepShare).toBeLessThan(0.5);
 }
 
-/*
- * A card whose body grows a frame after it mounts, as a Plugin's tree does, with a card below it: unfolding and
- * folding again, the title row stays put, the card keeps its width, and the card below moves one way each time
- * with no frame that jumps.
- */
-export const FoldsWithoutMovingTheTitle: Story = {
-  args: {
-    ...collapsedCard,
-    children: <SettlingContent first={40} last={160} settles="next-frame" />,
-  },
-  render: (args) => (
-    <View className="gap-4">
-      <Card {...args} />
-      <View testID={nextCard}>
-        <Text>Next card</Text>
+// A card whose body grows a frame after it mounts, as a Plugin's tree does, with a card below it.
+function foldStory(args: CardProps): Story {
+  return {
+    args: {
+      ...args,
+      children: <SettlingContent first={40} last={160} settles="next-frame" />,
+    },
+    render: (storyArgs) => (
+      <View className="gap-4">
+        <Card {...storyArgs} />
+        <Text>{nextCard}</Text>
       </View>
-    </View>
-  ),
-  play: async ({ canvas }) => {
-    await settleLayout('wide');
+    ),
+    play: async ({ canvas }) => {
+      await settleLayout('wide');
 
-    const parts = {
-      titleTop: canvas.getByRole('button', { name: toggleName }),
-      width: canvas.getByRole('group', { name: title }),
-      belowTop: canvas.getByTestId(nextCard),
-    };
+      const parts = {
+        titleTop: canvas.getByRole('button', { name: toggleName }),
+        width: canvas.getByRole('group', { name: title }),
+        belowTop: canvas.getByText(nextCard),
+      };
 
-    await expectSteadyFold(await foldOnce(parts));
-    await expectSteadyFold(await foldOnce(parts));
-  },
-};
+      await expectSteadyFold(await foldOnce(parts));
+    },
+  };
+}
+
+// Unfolding, the title row stays put, the card keeps its width, and the card below moves down once with no frame that jumps.
+export const UnfoldsWithoutMovingTheTitle = foldStory(collapsedCard);
+
+// Folding, the title row stays put, the card keeps its width, and the card below moves up once with no frame that jumps.
+export const FoldsWithoutMovingTheTitle = foldStory(expandedCard);
