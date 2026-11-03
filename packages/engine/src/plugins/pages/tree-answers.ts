@@ -54,7 +54,7 @@ function grownAnswer(
     : { kind: 'tree', root, ...drawn };
 }
 
-export const treeHash = (root: WireNode): string =>
+const treeHash = (root: WireNode): string =>
   createHash('sha256').update(JSON.stringify(root)).digest('base64url');
 
 const same = <Value>(one: Value, other: Value): boolean =>

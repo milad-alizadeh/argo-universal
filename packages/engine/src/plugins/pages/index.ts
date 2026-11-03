@@ -23,6 +23,6 @@
  * `patterns(pluginId)` lists the Page path patterns the running Plugin defined, so the App knows which
  * of its paths are Loader pages; it starts the Plugin first and throws when it cannot.
  */
-export { LoaderPages, type Asking, type PagesHost } from './loader-pages';
+export { LoaderPages, type Asking } from './loader-pages';
 
 export { PluginDraws } from './plugin-draws';
