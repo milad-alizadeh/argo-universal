@@ -1,0 +1,2347 @@
+[
+  {
+    "id": "c0e63e20-0209-42bb-a662-161bd6bc07e8:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 0,
+    "revision": 1,
+    "turnId": "c0e63e20-0209-42bb-a662-161bd6bc07e8",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "c0e63e20-0209-42bb-a662-161bd6bc07e8:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "The first message in the deep Feed."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "c0e63e20-0209-42bb-a662-161bd6bc07e8:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 1,
+    "revision": 2,
+    "turnId": "c0e63e20-0209-42bb-a662-161bd6bc07e8",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "03f9b53b-c91d-400d-b3aa-b9f976247177:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 2,
+    "revision": 3,
+    "turnId": "03f9b53b-c91d-400d-b3aa-b9f976247177",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "03f9b53b-c91d-400d-b3aa-b9f976247177:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 0."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "03f9b53b-c91d-400d-b3aa-b9f976247177:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 3,
+    "revision": 4,
+    "turnId": "03f9b53b-c91d-400d-b3aa-b9f976247177",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "0018f2a6-7c10-44c0-af4e-26b05f6b2dbc:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 4,
+    "revision": 5,
+    "turnId": "0018f2a6-7c10-44c0-af4e-26b05f6b2dbc",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "0018f2a6-7c10-44c0-af4e-26b05f6b2dbc:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 1."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "0018f2a6-7c10-44c0-af4e-26b05f6b2dbc:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 5,
+    "revision": 6,
+    "turnId": "0018f2a6-7c10-44c0-af4e-26b05f6b2dbc",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "f9947e64-52e4-4cff-9e0f-6fccc119a47e:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 6,
+    "revision": 7,
+    "turnId": "f9947e64-52e4-4cff-9e0f-6fccc119a47e",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "f9947e64-52e4-4cff-9e0f-6fccc119a47e:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 2."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "f9947e64-52e4-4cff-9e0f-6fccc119a47e:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 7,
+    "revision": 8,
+    "turnId": "f9947e64-52e4-4cff-9e0f-6fccc119a47e",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "b299c230-03ae-48a3-a273-e7d6ed56e145:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 8,
+    "revision": 9,
+    "turnId": "b299c230-03ae-48a3-a273-e7d6ed56e145",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "b299c230-03ae-48a3-a273-e7d6ed56e145:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 3."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "b299c230-03ae-48a3-a273-e7d6ed56e145:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 9,
+    "revision": 10,
+    "turnId": "b299c230-03ae-48a3-a273-e7d6ed56e145",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "ed32c86d-b1b9-4b41-bf9c-ffd80b93b4e4:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 10,
+    "revision": 11,
+    "turnId": "ed32c86d-b1b9-4b41-bf9c-ffd80b93b4e4",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "ed32c86d-b1b9-4b41-bf9c-ffd80b93b4e4:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 4."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "ed32c86d-b1b9-4b41-bf9c-ffd80b93b4e4:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 11,
+    "revision": 12,
+    "turnId": "ed32c86d-b1b9-4b41-bf9c-ffd80b93b4e4",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "ae7fb0ef-5295-4340-b859-329a1d879be2:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 12,
+    "revision": 13,
+    "turnId": "ae7fb0ef-5295-4340-b859-329a1d879be2",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "ae7fb0ef-5295-4340-b859-329a1d879be2:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 5."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "ae7fb0ef-5295-4340-b859-329a1d879be2:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 13,
+    "revision": 14,
+    "turnId": "ae7fb0ef-5295-4340-b859-329a1d879be2",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "4be29530-fbdd-4724-a655-26a574c38dae:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 14,
+    "revision": 15,
+    "turnId": "4be29530-fbdd-4724-a655-26a574c38dae",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "4be29530-fbdd-4724-a655-26a574c38dae:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 6."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "4be29530-fbdd-4724-a655-26a574c38dae:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 15,
+    "revision": 16,
+    "turnId": "4be29530-fbdd-4724-a655-26a574c38dae",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "21908dbc-d1e5-4bfc-857c-ba64f107164f:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 16,
+    "revision": 17,
+    "turnId": "21908dbc-d1e5-4bfc-857c-ba64f107164f",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "21908dbc-d1e5-4bfc-857c-ba64f107164f:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 7."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "21908dbc-d1e5-4bfc-857c-ba64f107164f:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 17,
+    "revision": 18,
+    "turnId": "21908dbc-d1e5-4bfc-857c-ba64f107164f",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 14
+        }
+      }
+    }
+  },
+  {
+    "id": "20987ef3-9a5b-46e8-94c3-b03f2126bf4b:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 18,
+    "revision": 19,
+    "turnId": "20987ef3-9a5b-46e8-94c3-b03f2126bf4b",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "20987ef3-9a5b-46e8-94c3-b03f2126bf4b:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 8."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "20987ef3-9a5b-46e8-94c3-b03f2126bf4b:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 19,
+    "revision": 20,
+    "turnId": "20987ef3-9a5b-46e8-94c3-b03f2126bf4b",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "484598c4-cdfa-42a8-a0ed-f22b915049bd:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 20,
+    "revision": 21,
+    "turnId": "484598c4-cdfa-42a8-a0ed-f22b915049bd",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "484598c4-cdfa-42a8-a0ed-f22b915049bd:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 9."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "484598c4-cdfa-42a8-a0ed-f22b915049bd:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 21,
+    "revision": 22,
+    "turnId": "484598c4-cdfa-42a8-a0ed-f22b915049bd",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "d148c899-24b0-4082-a412-d03c1523923a:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 22,
+    "revision": 23,
+    "turnId": "d148c899-24b0-4082-a412-d03c1523923a",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "d148c899-24b0-4082-a412-d03c1523923a:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 10."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "d148c899-24b0-4082-a412-d03c1523923a:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 23,
+    "revision": 24,
+    "turnId": "d148c899-24b0-4082-a412-d03c1523923a",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 10
+        }
+      }
+    }
+  },
+  {
+    "id": "2752098b-48d8-4c90-8c47-a54a485d74b1:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 24,
+    "revision": 25,
+    "turnId": "2752098b-48d8-4c90-8c47-a54a485d74b1",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "2752098b-48d8-4c90-8c47-a54a485d74b1:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 11."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "2752098b-48d8-4c90-8c47-a54a485d74b1:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 25,
+    "revision": 26,
+    "turnId": "2752098b-48d8-4c90-8c47-a54a485d74b1",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "8a37efd0-708e-4841-8cf5-6fc923c99439:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 26,
+    "revision": 27,
+    "turnId": "8a37efd0-708e-4841-8cf5-6fc923c99439",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "8a37efd0-708e-4841-8cf5-6fc923c99439:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 12."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "8a37efd0-708e-4841-8cf5-6fc923c99439:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 27,
+    "revision": 28,
+    "turnId": "8a37efd0-708e-4841-8cf5-6fc923c99439",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "f8d4a105-b4ed-4ec0-9d09-096e74c6a467:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 28,
+    "revision": 29,
+    "turnId": "f8d4a105-b4ed-4ec0-9d09-096e74c6a467",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "f8d4a105-b4ed-4ec0-9d09-096e74c6a467:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 13."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "f8d4a105-b4ed-4ec0-9d09-096e74c6a467:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 29,
+    "revision": 30,
+    "turnId": "f8d4a105-b4ed-4ec0-9d09-096e74c6a467",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 11
+        }
+      }
+    }
+  },
+  {
+    "id": "d0fe5096-bbd8-4ae4-a38a-1b061cafdcc6:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 30,
+    "revision": 31,
+    "turnId": "d0fe5096-bbd8-4ae4-a38a-1b061cafdcc6",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "d0fe5096-bbd8-4ae4-a38a-1b061cafdcc6:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 14."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "d0fe5096-bbd8-4ae4-a38a-1b061cafdcc6:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 31,
+    "revision": 32,
+    "turnId": "d0fe5096-bbd8-4ae4-a38a-1b061cafdcc6",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 17
+        }
+      }
+    }
+  },
+  {
+    "id": "19cfb267-7216-495c-8a8a-e3ce1341f473:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 32,
+    "revision": 33,
+    "turnId": "19cfb267-7216-495c-8a8a-e3ce1341f473",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "19cfb267-7216-495c-8a8a-e3ce1341f473:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 15."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "19cfb267-7216-495c-8a8a-e3ce1341f473:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 33,
+    "revision": 34,
+    "turnId": "19cfb267-7216-495c-8a8a-e3ce1341f473",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 11
+        }
+      }
+    }
+  },
+  {
+    "id": "ae2b5af7-c124-4b14-8d02-4ecbe13ab9b9:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 34,
+    "revision": 35,
+    "turnId": "ae2b5af7-c124-4b14-8d02-4ecbe13ab9b9",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "ae2b5af7-c124-4b14-8d02-4ecbe13ab9b9:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 16."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "ae2b5af7-c124-4b14-8d02-4ecbe13ab9b9:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 35,
+    "revision": 36,
+    "turnId": "ae2b5af7-c124-4b14-8d02-4ecbe13ab9b9",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "8469de0a-df2a-4fd2-841d-276da6fee054:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 36,
+    "revision": 37,
+    "turnId": "8469de0a-df2a-4fd2-841d-276da6fee054",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "8469de0a-df2a-4fd2-841d-276da6fee054:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 17."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "8469de0a-df2a-4fd2-841d-276da6fee054:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 37,
+    "revision": 38,
+    "turnId": "8469de0a-df2a-4fd2-841d-276da6fee054",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "c5804399-a7b1-40cd-b651-a3cfdff9a3bb:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 38,
+    "revision": 39,
+    "turnId": "c5804399-a7b1-40cd-b651-a3cfdff9a3bb",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "c5804399-a7b1-40cd-b651-a3cfdff9a3bb:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 18."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "c5804399-a7b1-40cd-b651-a3cfdff9a3bb:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 39,
+    "revision": 40,
+    "turnId": "c5804399-a7b1-40cd-b651-a3cfdff9a3bb",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "fbdfdda4-5488-430c-89a0-1f5db858e4dd:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 40,
+    "revision": 41,
+    "turnId": "fbdfdda4-5488-430c-89a0-1f5db858e4dd",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "fbdfdda4-5488-430c-89a0-1f5db858e4dd:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 19."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "fbdfdda4-5488-430c-89a0-1f5db858e4dd:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 41,
+    "revision": 42,
+    "turnId": "fbdfdda4-5488-430c-89a0-1f5db858e4dd",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "6ef45f7f-4461-4586-8c5a-fc2baeb21cc6:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 42,
+    "revision": 43,
+    "turnId": "6ef45f7f-4461-4586-8c5a-fc2baeb21cc6",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "6ef45f7f-4461-4586-8c5a-fc2baeb21cc6:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 20."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "6ef45f7f-4461-4586-8c5a-fc2baeb21cc6:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 43,
+    "revision": 44,
+    "turnId": "6ef45f7f-4461-4586-8c5a-fc2baeb21cc6",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "534a736d-382a-4a8c-82ca-8b59aa47eaeb:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 44,
+    "revision": 45,
+    "turnId": "534a736d-382a-4a8c-82ca-8b59aa47eaeb",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "534a736d-382a-4a8c-82ca-8b59aa47eaeb:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 21."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "534a736d-382a-4a8c-82ca-8b59aa47eaeb:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 45,
+    "revision": 46,
+    "turnId": "534a736d-382a-4a8c-82ca-8b59aa47eaeb",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "22221c9e-895f-4eaf-9944-0d6c66f01b53:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 46,
+    "revision": 47,
+    "turnId": "22221c9e-895f-4eaf-9944-0d6c66f01b53",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "22221c9e-895f-4eaf-9944-0d6c66f01b53:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 22."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "22221c9e-895f-4eaf-9944-0d6c66f01b53:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 47,
+    "revision": 48,
+    "turnId": "22221c9e-895f-4eaf-9944-0d6c66f01b53",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "6cbf1fbe-ec6b-456b-ae21-5de4c775691b:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 48,
+    "revision": 49,
+    "turnId": "6cbf1fbe-ec6b-456b-ae21-5de4c775691b",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "6cbf1fbe-ec6b-456b-ae21-5de4c775691b:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 23."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "6cbf1fbe-ec6b-456b-ae21-5de4c775691b:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 49,
+    "revision": 50,
+    "turnId": "6cbf1fbe-ec6b-456b-ae21-5de4c775691b",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "288ec4f0-2202-42f9-a43c-89c1f3849490:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 50,
+    "revision": 51,
+    "turnId": "288ec4f0-2202-42f9-a43c-89c1f3849490",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "288ec4f0-2202-42f9-a43c-89c1f3849490:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 24."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "288ec4f0-2202-42f9-a43c-89c1f3849490:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 51,
+    "revision": 52,
+    "turnId": "288ec4f0-2202-42f9-a43c-89c1f3849490",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "f328e8ea-14f4-462f-b5dd-e49c38d44342:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 52,
+    "revision": 53,
+    "turnId": "f328e8ea-14f4-462f-b5dd-e49c38d44342",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "f328e8ea-14f4-462f-b5dd-e49c38d44342:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 25."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "f328e8ea-14f4-462f-b5dd-e49c38d44342:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 53,
+    "revision": 54,
+    "turnId": "f328e8ea-14f4-462f-b5dd-e49c38d44342",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "528f7444-5668-4ad3-a7d0-8a87c2476e1b:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 54,
+    "revision": 55,
+    "turnId": "528f7444-5668-4ad3-a7d0-8a87c2476e1b",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "528f7444-5668-4ad3-a7d0-8a87c2476e1b:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 26."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "528f7444-5668-4ad3-a7d0-8a87c2476e1b:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 55,
+    "revision": 56,
+    "turnId": "528f7444-5668-4ad3-a7d0-8a87c2476e1b",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "eb740d49-41ff-4cb9-8097-68b87ae28f34:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 56,
+    "revision": 57,
+    "turnId": "eb740d49-41ff-4cb9-8097-68b87ae28f34",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "eb740d49-41ff-4cb9-8097-68b87ae28f34:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 27."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "eb740d49-41ff-4cb9-8097-68b87ae28f34:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 57,
+    "revision": 58,
+    "turnId": "eb740d49-41ff-4cb9-8097-68b87ae28f34",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "b2b6c6b4-bf5f-4c29-ae30-595814b8430f:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 58,
+    "revision": 59,
+    "turnId": "b2b6c6b4-bf5f-4c29-ae30-595814b8430f",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "b2b6c6b4-bf5f-4c29-ae30-595814b8430f:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 28."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "b2b6c6b4-bf5f-4c29-ae30-595814b8430f:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 59,
+    "revision": 60,
+    "turnId": "b2b6c6b4-bf5f-4c29-ae30-595814b8430f",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "5a2d2b1b-2ec7-43ac-b1a4-fbbe6507164c:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 60,
+    "revision": 61,
+    "turnId": "5a2d2b1b-2ec7-43ac-b1a4-fbbe6507164c",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "5a2d2b1b-2ec7-43ac-b1a4-fbbe6507164c:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 29."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "5a2d2b1b-2ec7-43ac-b1a4-fbbe6507164c:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 61,
+    "revision": 62,
+    "turnId": "5a2d2b1b-2ec7-43ac-b1a4-fbbe6507164c",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "744ee60d-5662-4592-a683-4762fcaf0929:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 62,
+    "revision": 63,
+    "turnId": "744ee60d-5662-4592-a683-4762fcaf0929",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "744ee60d-5662-4592-a683-4762fcaf0929:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 30."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "744ee60d-5662-4592-a683-4762fcaf0929:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 63,
+    "revision": 64,
+    "turnId": "744ee60d-5662-4592-a683-4762fcaf0929",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "4eac1267-912e-4f51-8ad5-a27ab3b17af2:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 64,
+    "revision": 65,
+    "turnId": "4eac1267-912e-4f51-8ad5-a27ab3b17af2",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "4eac1267-912e-4f51-8ad5-a27ab3b17af2:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 31."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "4eac1267-912e-4f51-8ad5-a27ab3b17af2:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 65,
+    "revision": 66,
+    "turnId": "4eac1267-912e-4f51-8ad5-a27ab3b17af2",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "a85379c1-bd73-449c-833f-c2d0ec645335:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 66,
+    "revision": 67,
+    "turnId": "a85379c1-bd73-449c-833f-c2d0ec645335",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "a85379c1-bd73-449c-833f-c2d0ec645335:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 32."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "a85379c1-bd73-449c-833f-c2d0ec645335:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 67,
+    "revision": 68,
+    "turnId": "a85379c1-bd73-449c-833f-c2d0ec645335",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "1ad0d2f6-a6cc-4d10-ab08-895dec1acc09:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 68,
+    "revision": 69,
+    "turnId": "1ad0d2f6-a6cc-4d10-ab08-895dec1acc09",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "1ad0d2f6-a6cc-4d10-ab08-895dec1acc09:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 33."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "1ad0d2f6-a6cc-4d10-ab08-895dec1acc09:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 69,
+    "revision": 70,
+    "turnId": "1ad0d2f6-a6cc-4d10-ab08-895dec1acc09",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "d59d7e93-80d6-467d-b211-7f4cb20aaadc:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 70,
+    "revision": 71,
+    "turnId": "d59d7e93-80d6-467d-b211-7f4cb20aaadc",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "d59d7e93-80d6-467d-b211-7f4cb20aaadc:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 34."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "d59d7e93-80d6-467d-b211-7f4cb20aaadc:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 71,
+    "revision": 72,
+    "turnId": "d59d7e93-80d6-467d-b211-7f4cb20aaadc",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "fc7be36f-a4e9-4d14-8398-1ed760493050:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 72,
+    "revision": 73,
+    "turnId": "fc7be36f-a4e9-4d14-8398-1ed760493050",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "fc7be36f-a4e9-4d14-8398-1ed760493050:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 35."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "fc7be36f-a4e9-4d14-8398-1ed760493050:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 73,
+    "revision": 74,
+    "turnId": "fc7be36f-a4e9-4d14-8398-1ed760493050",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "36b142d5-b6eb-4d13-a512-d627d4d15c0d:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 74,
+    "revision": 75,
+    "turnId": "36b142d5-b6eb-4d13-a512-d627d4d15c0d",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "36b142d5-b6eb-4d13-a512-d627d4d15c0d:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 36."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "36b142d5-b6eb-4d13-a512-d627d4d15c0d:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 75,
+    "revision": 76,
+    "turnId": "36b142d5-b6eb-4d13-a512-d627d4d15c0d",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "a0cc8bcd-e931-4158-aa4e-f6d87fbe458e:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 76,
+    "revision": 77,
+    "turnId": "a0cc8bcd-e931-4158-aa4e-f6d87fbe458e",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "a0cc8bcd-e931-4158-aa4e-f6d87fbe458e:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 37."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "a0cc8bcd-e931-4158-aa4e-f6d87fbe458e:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 77,
+    "revision": 78,
+    "turnId": "a0cc8bcd-e931-4158-aa4e-f6d87fbe458e",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "b7a889c8-61cd-4d5b-944e-548cbc89becc:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 78,
+    "revision": 79,
+    "turnId": "b7a889c8-61cd-4d5b-944e-548cbc89becc",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "b7a889c8-61cd-4d5b-944e-548cbc89becc:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 38."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "b7a889c8-61cd-4d5b-944e-548cbc89becc:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 79,
+    "revision": 80,
+    "turnId": "b7a889c8-61cd-4d5b-944e-548cbc89becc",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "c1c8ffde-6f1d-43de-b667-389b8ff0814b:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 80,
+    "revision": 81,
+    "turnId": "c1c8ffde-6f1d-43de-b667-389b8ff0814b",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "c1c8ffde-6f1d-43de-b667-389b8ff0814b:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 39."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "c1c8ffde-6f1d-43de-b667-389b8ff0814b:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 81,
+    "revision": 82,
+    "turnId": "c1c8ffde-6f1d-43de-b667-389b8ff0814b",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "0fd9c110-362b-459c-95b2-ecddba80b396:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 82,
+    "revision": 83,
+    "turnId": "0fd9c110-362b-459c-95b2-ecddba80b396",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "0fd9c110-362b-459c-95b2-ecddba80b396:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 40."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "0fd9c110-362b-459c-95b2-ecddba80b396:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 83,
+    "revision": 84,
+    "turnId": "0fd9c110-362b-459c-95b2-ecddba80b396",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "785b4dbb-907e-4934-93c0-f33d593f5bdc:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 84,
+    "revision": 85,
+    "turnId": "785b4dbb-907e-4934-93c0-f33d593f5bdc",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "785b4dbb-907e-4934-93c0-f33d593f5bdc:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 41."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "785b4dbb-907e-4934-93c0-f33d593f5bdc:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 85,
+    "revision": 86,
+    "turnId": "785b4dbb-907e-4934-93c0-f33d593f5bdc",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "ee86f387-5af7-47cd-91a9-afb1a5de82ba:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 86,
+    "revision": 87,
+    "turnId": "ee86f387-5af7-47cd-91a9-afb1a5de82ba",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "ee86f387-5af7-47cd-91a9-afb1a5de82ba:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 42."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "ee86f387-5af7-47cd-91a9-afb1a5de82ba:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 87,
+    "revision": 88,
+    "turnId": "ee86f387-5af7-47cd-91a9-afb1a5de82ba",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "7b8cc444-47dd-48b9-a7de-bfcc51ff853d:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 88,
+    "revision": 89,
+    "turnId": "7b8cc444-47dd-48b9-a7de-bfcc51ff853d",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "7b8cc444-47dd-48b9-a7de-bfcc51ff853d:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 43."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "7b8cc444-47dd-48b9-a7de-bfcc51ff853d:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 89,
+    "revision": 90,
+    "turnId": "7b8cc444-47dd-48b9-a7de-bfcc51ff853d",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "07fa0c14-c95b-41a6-b989-56cc1b52e13b:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 90,
+    "revision": 91,
+    "turnId": "07fa0c14-c95b-41a6-b989-56cc1b52e13b",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "07fa0c14-c95b-41a6-b989-56cc1b52e13b:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 44."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "07fa0c14-c95b-41a6-b989-56cc1b52e13b:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 91,
+    "revision": 92,
+    "turnId": "07fa0c14-c95b-41a6-b989-56cc1b52e13b",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "ac596f02-84ea-4ff3-af56-ab53e0a73726:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 92,
+    "revision": 93,
+    "turnId": "ac596f02-84ea-4ff3-af56-ab53e0a73726",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "ac596f02-84ea-4ff3-af56-ab53e0a73726:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 45."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "ac596f02-84ea-4ff3-af56-ab53e0a73726:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 93,
+    "revision": 94,
+    "turnId": "ac596f02-84ea-4ff3-af56-ab53e0a73726",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "48c66389-a39d-4bf2-be0b-6b86962b5b40:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 94,
+    "revision": 95,
+    "turnId": "48c66389-a39d-4bf2-be0b-6b86962b5b40",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "48c66389-a39d-4bf2-be0b-6b86962b5b40:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 46."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "48c66389-a39d-4bf2-be0b-6b86962b5b40:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 95,
+    "revision": 96,
+    "turnId": "48c66389-a39d-4bf2-be0b-6b86962b5b40",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 11
+        }
+      }
+    }
+  },
+  {
+    "id": "91428f16-c4d3-420a-a294-765da7e1fb25:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 96,
+    "revision": 97,
+    "turnId": "91428f16-c4d3-420a-a294-765da7e1fb25",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "91428f16-c4d3-420a-a294-765da7e1fb25:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 47."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "91428f16-c4d3-420a-a294-765da7e1fb25:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 97,
+    "revision": 98,
+    "turnId": "91428f16-c4d3-420a-a294-765da7e1fb25",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "ba7887c0-b1c7-49a0-b05c-6e873d72836a:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 98,
+    "revision": 99,
+    "turnId": "ba7887c0-b1c7-49a0-b05c-6e873d72836a",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "ba7887c0-b1c7-49a0-b05c-6e873d72836a:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 48."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "ba7887c0-b1c7-49a0-b05c-6e873d72836a:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 99,
+    "revision": 100,
+    "turnId": "ba7887c0-b1c7-49a0-b05c-6e873d72836a",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "0233add8-eed0-4294-a561-22712ee1b412:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 100,
+    "revision": 101,
+    "turnId": "0233add8-eed0-4294-a561-22712ee1b412",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "0233add8-eed0-4294-a561-22712ee1b412:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 49."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "0233add8-eed0-4294-a561-22712ee1b412:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 101,
+    "revision": 102,
+    "turnId": "0233add8-eed0-4294-a561-22712ee1b412",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 10
+        }
+      }
+    }
+  },
+  {
+    "id": "3a3abbf1-a90f-4746-8ddf-6e25282d16ed:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 102,
+    "revision": 103,
+    "turnId": "3a3abbf1-a90f-4746-8ddf-6e25282d16ed",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "3a3abbf1-a90f-4746-8ddf-6e25282d16ed:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 50."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "3a3abbf1-a90f-4746-8ddf-6e25282d16ed:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 103,
+    "revision": 104,
+    "turnId": "3a3abbf1-a90f-4746-8ddf-6e25282d16ed",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 7
+        }
+      }
+    }
+  },
+  {
+    "id": "96d6a92b-8c36-4439-8d30-3b3ce65e3a4e:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 104,
+    "revision": 105,
+    "turnId": "96d6a92b-8c36-4439-8d30-3b3ce65e3a4e",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "96d6a92b-8c36-4439-8d30-3b3ce65e3a4e:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 51."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "96d6a92b-8c36-4439-8d30-3b3ce65e3a4e:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 105,
+    "revision": 106,
+    "turnId": "96d6a92b-8c36-4439-8d30-3b3ce65e3a4e",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "d466a0c2-09a5-4d19-9cd9-0b01f85189c0:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 106,
+    "revision": 107,
+    "turnId": "d466a0c2-09a5-4d19-9cd9-0b01f85189c0",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "d466a0c2-09a5-4d19-9cd9-0b01f85189c0:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "Continue the conversation 52."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  },
+  {
+    "id": "d466a0c2-09a5-4d19-9cd9-0b01f85189c0:end",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 107,
+    "revision": 108,
+    "turnId": "d466a0c2-09a5-4d19-9cd9-0b01f85189c0",
+    "state": "settled",
+    "sessionUpdate": "notice",
+    "severity": "info",
+    "title": "Turn ended",
+    "_meta": {
+      "argo": {
+        "turnEnd": {
+          "stopReason": "end_turn",
+          "error": null,
+          "durationMs": 9
+        }
+      }
+    }
+  },
+  {
+    "id": "bc5e63c7-9575-4433-9a23-d99dfbd6446a:user",
+    "sessionId": "ff0fd64c-818b-4f0a-bd30-c8fd9efa3cf5",
+    "position": 108,
+    "revision": 109,
+    "turnId": "bc5e63c7-9575-4433-9a23-d99dfbd6446a",
+    "state": "settled",
+    "sessionUpdate": "user_message",
+    "messageId": "bc5e63c7-9575-4433-9a23-d99dfbd6446a:user",
+    "content": [
+      {
+        "type": "text",
+        "text": "The current active turn."
+      }
+    ],
+    "_meta": {
+      "argo": {
+        "sender": {
+          "type": "user"
+        }
+      }
+    }
+  }
+]

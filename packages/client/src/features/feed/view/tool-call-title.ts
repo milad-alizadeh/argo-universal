@@ -60,14 +60,10 @@ function actionTitle(action: CommandAction, fallback: string): string {
   return actionTitles[action.type]?.(action) ?? fallback;
 }
 
-function hasDescription(row: ToolCallUpdate): boolean {
-  const terminal = row.content.find((content) => content.type === 'terminal');
-
-  return Boolean(row.title) && row.title !== terminal?.command;
-}
-
 function commandTitle(row: ToolCallUpdate): string {
-  if (hasDescription(row)) return row.title;
+  const { agentTitle } = toolCallFacts(row);
+
+  if (agentTitle) return agentTitle;
 
   if (isToolCallRunning(row)) return 'Running command';
 
@@ -84,19 +80,31 @@ function impliedToolTitle(row: ToolCallUpdate): string {
   return path ? `Read ${path}` : commandTitle(row);
 }
 
+const approvalTitle = (row: ToolCallUpdate): string =>
+  toolCallFacts(row).agentTitle ?? row.title;
+
 export function toolCallTitle(
   row: ToolCallUpdate,
   awaitingApproval = false,
 ): string {
-  if (awaitingApproval) return row.title;
-
-  return titleFor(row);
+  return awaitingApproval ? approvalTitle(row) : titleFor(row);
 }
 
 function titleFor(row: ToolCallUpdate): string {
+  if (toolCallFacts(row).isEdit && isToolCallRunning(row))
+    return editTitle(row);
+
+  return standardTitle(row);
+}
+
+function standardTitle(row: ToolCallUpdate): string {
   const { actions } = toolCallFacts(row);
 
   return actions.length
     ? actions.map((action) => actionTitle(action, row.title)).join(', ')
     : impliedToolTitle(row);
+}
+
+function editTitle(row: ToolCallUpdate): string {
+  return toolCallFacts(row).description || row.title.trim() || 'Editing file';
 }

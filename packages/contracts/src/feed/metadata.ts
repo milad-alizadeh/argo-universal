@@ -1,18 +1,21 @@
 import { z } from 'zod';
+import { productCompatibility } from '../product-identity';
 
 const acpMetadata = z.record(z.string(), z.unknown()).optional();
 
-export const createFeedMetadataSchema = <Extension extends z.ZodObject>(
-  argoExtensionSchema: Extension,
-): z.ZodOptional<
+type FeedMetadataSchema<Extension extends z.ZodObject> = z.ZodOptional<
   z.ZodObject<
-    {
-      argo: z.ZodOptional<Extension>;
-      acp: typeof acpMetadata;
-    },
+    { argo: z.ZodOptional<Extension>; acp: typeof acpMetadata },
     z.core.$strict
   >
-> =>
+>;
+
+export const createFeedMetadataSchema = <Extension extends z.ZodObject>(
+  extensionSchema: Extension,
+): FeedMetadataSchema<Extension> =>
   z
-    .strictObject({ argo: argoExtensionSchema.optional(), acp: acpMetadata })
+    .strictObject({
+      [productCompatibility.feedMetadata]: extensionSchema.optional(),
+      acp: acpMetadata,
+    })
     .optional();

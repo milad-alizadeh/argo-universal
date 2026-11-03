@@ -8,6 +8,7 @@ import {
   type PluginEvent,
   type PluginReply,
 } from '../protocol/runtime';
+import { runtimeStartupLimitMs } from '../protocol/runtime-limits';
 import { hostCompletion } from './completion';
 import { hostLifecycleMachine, hostBudgetExhausted } from './lifecycle.machine';
 import { readHostMessage } from './read-host-message';
@@ -15,8 +16,6 @@ import { readHostMessage } from './read-host-message';
 export type PluginHostProcess = ChildProcess;
 
 const closeLimitMs = 1000;
-
-const hostStartupLimitMs = 10_000;
 
 type HostCallbacks = {
   log: (line: string) => void;
@@ -173,7 +172,10 @@ function hostEnvironment(): NodeJS.ProcessEnv {
 }
 
 function monitorStartup(child: ChildProcess): void {
-  const deadline = setTimeout(() => child.kill('SIGKILL'), hostStartupLimitMs);
+  const deadline = setTimeout(
+    () => child.kill('SIGKILL'),
+    runtimeStartupLimitMs,
+  );
 
   child.once('message', () => clearTimeout(deadline));
   child.once('close', () => clearTimeout(deadline));

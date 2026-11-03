@@ -3,7 +3,7 @@ import {
   type SessionComparison,
   sessionDiffPageLines,
 } from '@repo/contracts';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   ChangesQuery,
   ChangesSource,
@@ -17,49 +17,9 @@ import {
   memoryDiffPage,
   memoryFilesPage,
 } from './memory-pages.mocks';
+import { type Paging, usePaging } from './memory-paging.mocks';
 
 export type { MemoryCatalog } from './memory-pages.mocks';
-
-// Long enough for a spinner to show, short enough for a test.
-const answerAfter = 300;
-
-// How many pages of each list were asked for, and how many have arrived, by list.
-type Counts = Readonly<Record<string, number>>;
-
-interface Paging {
-  asked: Counts;
-  answered: Counts;
-  // Asking again for as many pages, or fewer, does nothing; a page asked for arrives a moment later.
-  ask: (list: string, pages: number) => void;
-}
-
-function useLater(): (answer: () => void) => void {
-  const [timers] = useState(() => new Set<ReturnType<typeof setTimeout>>());
-
-  useEffect(
-    () => (): void => {
-      for (const timer of timers) clearTimeout(timer);
-    },
-    [timers],
-  );
-
-  return (answer) => void timers.add(setTimeout(answer, answerAfter));
-}
-
-function usePaging(): Paging {
-  const later = useLater();
-  const [asked, setAsked] = useState<Counts>({});
-  const [answered, setAnswered] = useState<Counts>({});
-
-  const ask = (list: string, pages: number): void => {
-    if ((asked[list] ?? 0) >= pages) return;
-
-    setAsked((last) => ({ ...last, [list]: pages }));
-    later(() => setAnswered((last) => ({ ...last, [list]: pages })));
-  };
-
-  return { asked, answered, ask };
-}
 
 const listOf = (comparison: SessionComparison, path = ''): string =>
   `${JSON.stringify(comparison)}:${path}`;
@@ -84,6 +44,17 @@ function filesPages(
   };
 }
 
+// Like a query's data, the pages keep one identity until another arrives.
+const usePagesOnce = (
+  catalog: MemoryCatalog,
+  files: ReturnType<MemoryCatalog['files']>,
+  count: number,
+): Omit<FilesPages, 'loadMore'> | undefined =>
+  useMemo(
+    () => files && filesPages(catalog, files, count),
+    [catalog, files, count],
+  );
+
 // The first page of a comparison's files is there at once; each later page arrives as the list asks for it.
 function useMemoryFiles(
   catalog: MemoryCatalog,
@@ -93,13 +64,11 @@ function useMemoryFiles(
   const files = catalog.files(query.comparison);
   const list = listOf(query.comparison);
   const count = paging.answered[list] ?? 1;
+  const pages = usePagesOnce(catalog, files, count);
 
-  if (!files) return { ...unanswered, error: catalog.loadError };
+  if (!pages) return { ...unanswered, error: catalog.loadError };
 
-  return {
-    ...filesPages(catalog, files, count),
-    loadMore: () => paging.ask(list, count + 1),
-  };
+  return { ...pages, loadMore: () => paging.ask(list, count + 1) };
 }
 
 function diffPage(
@@ -138,18 +107,36 @@ function useAsking(paging: Paging, wanted: [string, number][]): void {
   });
 }
 
+// Like a query's data, a page keeps one identity once it has arrived.
+function useDiffPageOnce(
+  catalog: MemoryCatalog,
+  query: ChangesQuery,
+): (key: DiffPageKey) => DiffPage {
+  const [arrived] = useState(() => new Map<string, DiffPage>());
+
+  return (key) => {
+    const id = `${listOf(query.comparison, key.path)}:${key.index}`;
+    const page = arrived.get(id) ?? diffPage(catalog, query, key);
+
+    arrived.set(id, page);
+
+    return page;
+  };
+}
+
 function useMemoryDiffPages(
   catalog: MemoryCatalog,
   query: ChangesQuery,
   keys: readonly DiffPageKey[],
 ): Loaded<DiffPage>[] {
   const paging = usePaging();
+  const pageOf = useDiffPageOnce(catalog, query);
 
   useAsking(paging, wantedCounts(query, keys));
 
   return keys.map((key) =>
     key.index < answeredOf(paging, query, key)
-      ? { data: diffPage(catalog, query, key), pending: false }
+      ? { data: pageOf(key), pending: false }
       : { pending: true },
   );
 }

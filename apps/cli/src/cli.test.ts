@@ -6,7 +6,7 @@ import type {
 import type { AppRouter } from '@repo/engine/router';
 import { TRPCClientError } from '@trpc/client';
 import { expect, it } from 'vitest';
-import { runArgo } from './cli';
+import { runCli } from './cli';
 import type { ControlClient, RunRequest } from './control-client';
 
 const projectList = 'project.list';
@@ -61,7 +61,7 @@ async function argo(
   const stdout: string[] = [];
   const stderr: string[] = [];
 
-  const code = await runArgo(argv, {
+  const code = await runCli(argv, {
     write: (line) => stdout.push(line),
     writeError: (line) => stderr.push(line),
     client,

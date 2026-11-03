@@ -41,7 +41,9 @@ Given('Shell output reads are observed', async ({ page }) => {
 async function closeShellOutput(page: Page): Promise<void> {
   await (onPhone(page)
     ? page.keyboard.press('Escape')
-    : page.getByRole('button', { name: 'Close Shells', exact: true }).click());
+    : page
+        .getByRole('button', { name: 'Close Background Tasks', exact: true })
+        .click());
 }
 
 When('I close the Shell output', async ({ page }) => {
@@ -66,7 +68,7 @@ Then('no Shell output read remains open', async ({ page }) => {
 
 When('I return to the Shells list', async ({ page }) => {
   await page
-    .getByRole('button', { name: 'Back to Shells', exact: true })
+    .getByRole('button', { name: 'Back to Background Tasks', exact: true })
     .click();
 });
 

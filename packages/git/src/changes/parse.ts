@@ -92,10 +92,14 @@ function addUntracked(paths: string[], field: string): void {
   if (!path.endsWith('/')) paths.push(path);
 }
 
+// A rename or copy, staged or in the worktree, is followed by a field holding only its old path.
+const namesOldPath = (field: string): boolean =>
+  /^(?:[RC].|.[RC]) /.test(field);
+
 function collectUntracked(paths: string[], field: string): number {
   if (field.startsWith('?? ')) addUntracked(paths, field);
 
-  return /^[RC]/.test(field.slice(0, 2)) ? 1 : 0;
+  return namesOldPath(field) ? 1 : 0;
 }
 
 export function untrackedPaths(status: string): string[] {

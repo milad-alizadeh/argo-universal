@@ -1,6 +1,7 @@
 import {
   FeedPageInput,
   FeedPageOutput,
+  FeedReportsInput,
   FeedRowInput,
   FeedRowOutput,
   FeedSubscribeInput,
@@ -19,6 +20,10 @@ const createFeedReadRouter = routerFactory((deps: FeedDeps) =>
   router({
     page: publicProcedure
       .input(FeedPageInput)
+      .output(FeedPageOutput)
+      .query(({ input }): FeedPageOutput => readFeedPage(deps, input)),
+    reports: publicProcedure
+      .input(FeedReportsInput)
       .output(FeedPageOutput)
       .query(({ input }): FeedPageOutput => readFeedPage(deps, input)),
     row: publicProcedure

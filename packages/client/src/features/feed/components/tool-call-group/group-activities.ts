@@ -37,6 +37,25 @@ function explorationWithout(
 const isLiveToolCall = (activity: FeedActivity, liveId: string): boolean =>
   activity.type === 'tool_call' && activity.row.id === liveId;
 
+function genericOutput(
+  row: Extract<FeedActivity, { type: 'tool_call' }>['row'],
+): boolean {
+  return [
+    row.content.length > 0,
+    row.rawInput != null,
+    row.rawOutput != null,
+  ].some(Boolean);
+}
+
+// Any available detail stays visible under the live title, whatever the Tool call's semantic kind.
+function liveDetail(activity: FeedActivity): boolean {
+  return activity.type === 'tool_call' && genericOutput(activity.row);
+}
+
+function keepActivity(activity: FeedActivity, liveId: string): boolean {
+  return !isLiveToolCall(activity, liveId) || liveDetail(activity);
+}
+
 function activityWithout(
   activity: FeedActivity,
   liveId: string,
@@ -44,7 +63,7 @@ function activityWithout(
   if (activity.type === 'exploration')
     return explorationWithout(activity, liveId);
 
-  return isLiveToolCall(activity, liveId) ? [] : [activity];
+  return keepActivity(activity, liveId) ? [activity] : [];
 }
 
 // The live Tool call is drawn in the group's title, so its activity leaves the list.

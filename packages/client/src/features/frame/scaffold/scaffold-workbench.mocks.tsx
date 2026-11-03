@@ -92,6 +92,7 @@ type SetInspectorState = (state: InspectorState) => void;
 const mockPage = (
   <View testID="workbench-feed" className="flex-1">
     <TextInput accessibilityLabel="Draft" defaultValue="Keep my draft" />
+    <Text>Feed content beneath the Workbench remains mounted.</Text>
   </View>
 );
 
@@ -149,7 +150,7 @@ const workbenchCards = (
   overflowing ? (
     overflowCards(open)
   ) : (
-    <Card title="Changes" onPress={() => open('open')}>
+    <Card kind="glass" title="Changes" onPress={() => open('open')}>
       <Text>2 files</Text>
     </Card>
   );

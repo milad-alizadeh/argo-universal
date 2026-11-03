@@ -1,5 +1,6 @@
 import type { Socket } from 'node:net';
 import { PairingClaim } from '@repo/contracts';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { Admission, DeviceAdmission } from '../devices/admit-device';
 import type { OpenChannels } from '../devices/open-channels';
 import { admitAs, type RpcIdentity } from '../rpc/identity';
@@ -15,7 +16,7 @@ import type { Keypair } from './x25519';
  */
 export const channelMagic = Buffer.concat([
   Buffer.alloc(1),
-  Buffer.from('ARGO'),
+  Buffer.from(productCompatibility.channelMagic),
 ]);
 
 export interface ChannelDoorDeps {

@@ -16,6 +16,7 @@ interface SessionChanges {
 }
 
 export interface SessionHeaderProps {
+  sessionId?: string;
   title: string;
   status: SessionHeaderStatus;
   // The running Turn's start, for "4m 12s"; null when no Turn runs.

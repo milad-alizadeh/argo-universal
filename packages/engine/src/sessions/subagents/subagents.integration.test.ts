@@ -3,6 +3,7 @@ import { feedRow, session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { openMemorySubagents } from '#mocks/memory-subagents';
+import { createSessionSnapshotWatcher } from '../snapshot';
 import { ownsSubagentUpdate } from '.';
 
 const vendorChild = 'vendor-child';
@@ -63,4 +64,50 @@ it('owns the updates of a Subagent it knows and nothing else', (): void => {
   expect(ownsSubagentUpdate(state(), association)).toBe(true);
   route(association);
   expect(ownsSubagentUpdate(state(), message)).toBe(true);
+});
+
+it('keeps an explicitly reported Claude Agent role through partial updates and reload', async (): Promise<void> => {
+  const { database, route, settled } = openMemorySubagents();
+
+  const snapshot = (): string | null | undefined => {
+    let role: string | null | undefined;
+
+    const watch = createSessionSnapshotWatcher({
+      database,
+      findFeed: vi.fn<() => undefined>(),
+      findWriter: vi.fn<() => undefined>(),
+      findSession: vi.fn<() => undefined>(),
+    });
+
+    const subscription = watch('session-1', {
+      next: (event) => {
+        if (event.type === 'snapshot') role = event.snapshot.subagents[0]?.role;
+      },
+    });
+
+    subscription.unsubscribe();
+
+    return role;
+  };
+
+  route({
+    ...association,
+    update: {
+      ...association.update,
+      _meta: { claudeCode: { subagentRole: 'Explore' } },
+    },
+  });
+  route(association);
+
+  route({
+    ...association,
+    update: {
+      ...association.update,
+      _meta: { claudeCode: { subagentRole: '  custom-role  ' } },
+    },
+  });
+  route(association);
+  await settled();
+
+  expect(snapshot()).toBe('  custom-role  ');
 });

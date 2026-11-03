@@ -11,13 +11,17 @@ import type { InspectorTab, InspectorTabsProps } from './inspector-props';
 import { useTabFocus, type TabFocus } from './inspector-tab-focus';
 import { tabKeys } from './inspector-tab-keys';
 
-const tabClassName = 'h-7 flex-row items-center gap-1.5 rounded-md pl-2';
+const tabClassName =
+  'h-7 flex-row items-center gap-1.5 rounded-md border pl-2 pr-1';
 
 const tabState = {
-  selected: { className: 'bg-card pr-1 shadow-control', tone: 'neutral' },
+  selected: {
+    className: 'border-border bg-card shadow-control dark:bg-muted',
+    tone: 'neutral',
+  },
   unselected: {
     className: cn(
-      'pr-2 web:hover:bg-hover web:active:bg-pressed',
+      'border-border bg-card/50 dark:bg-card web:hover:bg-hover web:active:bg-pressed',
       tintTransitionClassName,
     ),
     tone: 'muted',
@@ -40,10 +44,8 @@ interface TabProps {
   focus: TabFocus;
 }
 
-// Closes the selected tab; a sibling of the tab's own button, never inside it.
-function CloseTab({ tab, selected, focus }: TabProps): ReactElement | null {
-  if (!selected) return null;
-
+// A sibling of the tab's own button, never inside it.
+function CloseTab({ tab, focus }: TabProps): ReactElement {
   return (
     <ChromeIconButton
       variant="ghost"
@@ -134,7 +136,7 @@ function TabList({ tabs }: { tabs: InspectorTabsProps }): ReactElement {
   const focus = useTabFocus(tabs);
 
   return (
-    <View role="tablist" className="flex-row items-center gap-0.5">
+    <View role="tablist" className="flex-row items-center gap-1">
       {tabs.items.map((tab) => (
         <Tab
           key={tab.key}

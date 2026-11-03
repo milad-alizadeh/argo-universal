@@ -9,6 +9,7 @@ const origin = {
   toolCallId: runningShellStep.toolCallId,
   cwd: '/project',
   startedAt: 100,
+  description: null,
 };
 
 const terminal = { type: 'terminal', terminalId: 'terminal-1' } as const;

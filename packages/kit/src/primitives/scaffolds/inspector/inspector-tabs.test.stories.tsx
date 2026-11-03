@@ -25,15 +25,13 @@ const closeSubagents = { name: 'Close Subagents' };
 
 const selected = ['aria-selected', 'true'] as const;
 
-// Tabs take the title's place: a tab shows its panel, only the shown tab has a close, and closing it shows the next.
+// Tabs take the title's place, and closing the shown tab shows the next.
 export const WideTabsSelectAndClose: Story = {
   render: () => <ExampleTabsPane />,
   play: async ({ canvas, userEvent }) => {
     const changes = await canvas.findByRole('tab', changesTab);
     await expect(changes).toHaveAttribute(...selected);
-    await expect(
-      canvas.queryByRole('button', closeSubagents),
-    ).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', closeSubagents)).toBeVisible();
 
     await userEvent.click(canvas.getByRole('tab', subagentsTab));
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
@@ -52,6 +50,20 @@ export const WideTabsSelectAndClose: Story = {
   },
 };
 
+// Closing an inactive tab keeps the current panel selected and returns focus to it.
+export const CloseInactiveTab: Story = {
+  render: () => <ExampleTabsPane />,
+  play: async ({ canvas, userEvent }) => {
+    const changes = await canvas.findByRole('tab', changesTab);
+    await userEvent.click(canvas.getByRole('button', closeSubagents));
+    await expect(
+      canvas.queryByRole('tab', subagentsTab),
+    ).not.toBeInTheDocument();
+    await expect(changes).toHaveAttribute(...selected);
+    await expect(changes).toHaveFocus();
+  },
+};
+
 // Keyboard navigation reaches tabs beyond the faded edge without scrolling the pinned controls away.
 export const OverflowTabsStayReachable: Story = {
   render: () => <ExampleTabsPane narrow />,
@@ -59,7 +71,7 @@ export const OverflowTabsStayReachable: Story = {
     const changes = await canvas.findByRole('tab', changesTab);
     changes.focus();
     await userEvent.keyboard('{End}');
-    const shells = canvas.getByRole('tab', { name: 'Shells: 2' });
+    const shells = canvas.getByRole('tab', { name: 'Background Tasks: 2' });
     await expect(shells).toHaveFocus();
     await expect(shells).toHaveAttribute(...selected);
     const close = canvas.getByRole('button', { name: closeLabel });

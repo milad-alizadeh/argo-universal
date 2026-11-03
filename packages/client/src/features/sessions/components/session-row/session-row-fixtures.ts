@@ -4,7 +4,7 @@ import type { SessionRowPluginItem } from './session-row-props';
 
 /*
  * Paper "SessionsList": one row per status, both Agents, a Change at each stage, a failed
- * Subagent and a finished Plan. A story adds only onSelect, so a parent can pass a fixture
+ * Session and a finished Plan. A story adds only onSelect, so a parent can pass a fixture
  * straight through its own prop.
  */
 type SessionRowFixture = Omit<
@@ -51,7 +51,6 @@ export const failedSession = {
     subagents: { running: 0, total: 2 },
   },
   logo: firstAgentLogo,
-  subagentsFailed: true,
   pullRequest: { number: 40, stage: 'closed' },
   age: '1h',
 } satisfies SessionRowFixture;

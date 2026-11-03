@@ -5,7 +5,7 @@ import type {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
-import { and, desc, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
 import type { FeedDeps } from './feed';
 import {
   hydrateStoredFeedRow,
@@ -27,19 +27,38 @@ const pageCursor = (
 
 function readPageRows(
   database: Database,
-  input: FeedPageInput,
+  input: FeedPageInput & { childSessionId?: string },
   cursor: number | undefined,
 ): FeedRowWrite[] {
-  const before =
-    cursor === undefined ? undefined : lt(feedRow.position, cursor);
-
   return database
     .select(storedFeedColumns)
     .from(feedRow)
-    .where(and(eq(feedRow.sessionId, input.sessionId), before))
+    .where(pageWhere(input, cursor))
     .orderBy(desc(feedRow.position))
     .limit(input.limit + 1)
     .all();
+}
+
+const pageWhere = (
+  input: FeedPageInput & { childSessionId?: string },
+  cursor: number | undefined,
+): SQL | undefined =>
+  and(
+    eq(feedRow.sessionId, input.sessionId),
+    beforeCursor(cursor),
+    reportFilter(input.childSessionId),
+  );
+
+const beforeCursor = (cursor: number | undefined): SQL | undefined =>
+  cursor === undefined ? undefined : lt(feedRow.position, cursor);
+
+function reportFilter(childSessionId: string | undefined): SQL | undefined {
+  if (childSessionId === undefined) return undefined;
+
+  return and(
+    eq(feedRow.sessionUpdate, 'subagent_update'),
+    sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.subagentSessionId') = ${childSessionId} and json_type(${feedRow.payload}, '$._meta.argo.result') = 'array' else false end`,
+  );
 }
 
 const hydratePageRows = (
@@ -66,7 +85,7 @@ function pageContent(
 
 export function readFeedPage(
   { database, readSession }: Pick<FeedDeps, 'database' | 'readSession'>,
-  input: FeedPageInput,
+  input: FeedPageInput & { childSessionId?: string },
 ): FeedPageOutput {
   const { epoch, maxRevision } = readSession(input.sessionId);
   const cursor = pageCursor(input, epoch);

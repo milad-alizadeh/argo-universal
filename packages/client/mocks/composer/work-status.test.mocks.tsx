@@ -43,7 +43,10 @@ export function workStatusCounts(
         name: subagentCountLabel,
       });
 
-      const shells = canvas.getByRole('button', { name: 'Shells: 1' });
+      const shells = canvas.getByRole('button', {
+        name: 'Background Tasks: 1',
+      });
+
       await expect(subagents).toBeVisible();
       await expect(shells).toBeVisible();
     },
@@ -66,7 +69,7 @@ export async function expectPhoneFooter({
   await expect(context).not.toHaveTextContent(/34k|200k/);
 
   const work = canvas
-    .getByRole('button', { name: 'Shells: 1' })
+    .getByRole('button', { name: 'Background Tasks: 1' })
     .getBoundingClientRect();
 
   await expect(work.right).toBeLessThan(bounds.right);

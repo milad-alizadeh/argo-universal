@@ -33,10 +33,12 @@ export function NativeSymbol({
   lane: _lane,
   ...props
 }: NativeSymbolProps): React.JSX.Element {
+  const toneColor = useToneColor(props.tone);
+
   return (
     <NativeIcon
       {...props}
-      color={useToneColor(props.tone)}
+      color={props.color ?? toneColor}
       fallback={<HostedSymbol {...props} />}
     />
   );

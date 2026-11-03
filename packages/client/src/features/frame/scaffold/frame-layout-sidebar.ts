@@ -36,7 +36,7 @@ export const listOpenWidth = (input: FrameLayoutInput): number =>
     ? Math.min(preferredListWidth(input), listCapacity(input))
     : preferredListWidth(input);
 
-// An explicit sidebar request takes the region from the Workbench; ordinary resize still folds the sidebar first.
+// An explicit sidebar request takes the region from the Workbench; ordinary resize gives up the Workbench first.
 export function requestedThresholds(
   input: FrameLayoutInput,
   thresholds: Thresholds,
@@ -45,6 +45,6 @@ export function requestedThresholds(
 
   return {
     listFold: input.width - listCapacity(input) + input.measures.listWidth,
-    workbenchUndock: thresholds.listFold,
+    workbenchUndock: thresholds.workbenchUndock,
   };
 }

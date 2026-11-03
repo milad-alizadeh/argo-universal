@@ -19,7 +19,7 @@ const uncommittedFile = 'pending.txt';
 
 const uncommittedContents = 'Uncommitted work\n';
 
-const checkoutPath = (app: {
+export const checkoutPath = (app: {
   projectPath: string;
   requestLogPath: string;
 }): string => {

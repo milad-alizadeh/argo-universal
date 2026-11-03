@@ -2,11 +2,19 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
-export { useSessionFeed } from './hooks/use-session-feed';
+export {
+  useSessionFeed,
+  useFeedHistoryPages,
+  useFeedLiveChanges,
+} from './hooks/use-session-feed';
+
+export { useSessionFeedStore } from './hooks/use-session-feed-store';
 
 export type { SessionFeed } from './hooks/session-feed';
 
 export { toFeedView } from './view/to-feed-view';
+
+export { toParentResults } from './view/to-parent-results';
 
 export { toSubagentFeedView } from './view/to-subagent-feed-view';
 

@@ -3,6 +3,7 @@ import {
   type ScreenDestination,
   type ScreenLinkParse,
 } from '@repo/contracts/navigation';
+import { productName } from '@repo/contracts/product-identity';
 import type { Href } from 'expo-router';
 
 export type OpenLinkOutcome =
@@ -28,7 +29,7 @@ const refused = (message: string): OpenLinkOutcome => ({
 
 const loading: OpenLinkOutcome = { status: 'loading' };
 
-const malformed = refused('That link is not one Argo can open.');
+const malformed = refused(`That link is not one ${productName} can open.`);
 
 const open = (href: Href): OpenLinkOutcome => ({ status: 'open', href });
 

@@ -6,6 +6,7 @@ import {
   iconButtonSizes,
   tones,
 } from '../kit-tokens';
+import { productName } from '../product-identity';
 import { handler } from './kit-component-props';
 import { imageAsset } from './media-kit-props';
 import { perSizeClass } from './schema-size-class';
@@ -16,7 +17,9 @@ const statusMark = z.object({
 });
 
 export const iconProps = z.object({
-  name: iconSymbol.describe('An Argo icon or an SF and Material symbol pair.'),
+  name: iconSymbol.describe(
+    `An ${productName} icon or an SF and Material symbol pair.`,
+  ),
   size: perSizeClass(iconSize).describe(
     'Semantic icon size, optionally by Size class.',
   ),

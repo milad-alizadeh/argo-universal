@@ -4,8 +4,8 @@ import { SourceTextModule, SyntheticModule, type Module } from 'node:vm';
 import { requirePluginFile } from '../access/plugin-files.ts';
 import { bundleKit, bundleSignIn } from '../kit/bundle.ts';
 import type { PluginEntry } from '../protocol/runtime.ts';
-import { type ArgoBridge } from './argo.ts';
 import type { PluginRealmExports } from './plugin-api.ts';
+import { type PluginBridge } from './plugin-bridge.ts';
 import {
   createPluginRealm,
   type PluginClock,
@@ -18,15 +18,16 @@ import {
  */
 export async function registerPlugin(
   entry: PluginEntry,
-  bridge: ArgoBridge,
-  clock?: PluginClock,
+  bridge: PluginBridge,
+  startup: { initialized: () => void; clock?: PluginClock },
 ): Promise<PluginInboxes> {
   const { context, inboxes, modules, validateBackground } = createPluginRealm(
     bridge,
     await bundleKit(),
-    clock,
+    startup.clock,
   );
 
+  startup.initialized();
   await bootstrap(context, new PluginModules(entry, context, modules));
 
   validatePaths(entry, validateBackground);

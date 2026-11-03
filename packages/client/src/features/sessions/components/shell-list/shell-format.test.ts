@@ -5,16 +5,16 @@ import {
   shellHeading,
   shellOutcome,
   shellPassed,
-  shellsSummary,
   shellSupporting,
+  shellTitle,
 } from './shell-format';
 import {
+  describedShell,
   failedShell,
   lostShell,
   noCodeShell,
   passedShell,
   runningShell,
-  sessionShells,
   shellNow,
   stoppedShell,
 } from './shell-list.mocks';
@@ -64,13 +64,6 @@ describe('shellSupporting', () => {
   });
 });
 
-describe('shellsSummary', () => {
-  it('counts the running Shells and all of them', () => {
-    expect(shellsSummary(sessionShells)).toBe('1 running · 3 in this Session');
-    expect(shellsSummary([passedShell])).toBe('1 in this Session');
-  });
-});
-
 describe('shellHeading', () => {
   it('counts a running Shell up and names how an ended one ended', () => {
     expect(shellHeading(runningShell, shellNow).label).toBe('Running · 4m 12s');
@@ -98,5 +91,15 @@ describe('shellPassed', () => {
     expect(
       [passedShell, failedShell, noCodeShell, lostShell].map(shellPassed),
     ).toEqual([true, false, false, false]);
+  });
+});
+
+describe('shellTitle', () => {
+  it('is the description the Agent gave', () => {
+    expect(shellTitle(describedShell)).toBe('Run the app dev server');
+  });
+
+  it('is the command when the Agent gave no description', () => {
+    expect(shellTitle(passedShell)).toBe('pnpm e2e');
   });
 });

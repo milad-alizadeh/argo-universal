@@ -1,4 +1,5 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
 import {
   Inspector,
   InspectorPlaceOffer,
@@ -6,7 +7,7 @@ import {
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import {
@@ -24,6 +25,12 @@ const showInspectorLabel = 'Show Inspector';
 const hideInspectorLabel = 'Hide Inspector';
 
 const expanded = 'aria-pressed';
+
+const switchSession = 'Switch Session';
+
+const openChanges = 'Open Changes overview';
+
+const expandInspector = 'Expand Inspector';
 
 // The Frame's own sidebar and Inspector state around a page, as the App's Frame holds them.
 function FrameStatePage({
@@ -54,7 +61,7 @@ const changesOnly = ['changes'];
 
 // A Session's Workbench card opens its Changes tab in the Inspector.
 function SessionPage({ title }: { title: string }): React.JSX.Element {
-  const panels = useSessionPanels(changesOnly);
+  const panels = useSessionPanels(changesOnly, title);
   const open = panels.state.tabs.length > 0;
   const toggleChanges = (): void => panels.toggle('changes');
 
@@ -63,6 +70,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
       <ScreenStackHeader title={title} />
       <SessionBandClaim
         title={title}
+        sessionId={title}
         status="idle"
         startedAt={null}
         workbench={{
@@ -109,7 +117,7 @@ export const ChangesOpensInspector: Story = {
   },
   play: async ({ canvas, userEvent }) => {
     const changes = await canvas.findByRole('button', {
-      name: 'Open Changes overview',
+      name: openChanges,
     });
 
     await expect(
@@ -161,5 +169,64 @@ export const LongSessionTitle: Story = {
         controls.getBoundingClientRect().left,
       );
     }
+  },
+};
+
+function SwitchSessions({
+  prefix = 'Workbench',
+}: {
+  prefix?: string;
+}): React.JSX.Element {
+  const [session, setSession] = useState('First');
+
+  return (
+    <>
+      <Button
+        label={switchSession}
+        onPress={() => setSession(session === 'First' ? 'Second' : 'First')}
+      />
+      <FrameStatePage
+        content={<SessionPage key={session} title={`${prefix} ${session}`} />}
+      />
+    </>
+  );
+}
+
+export const WorkbenchPerSession: Story = {
+  render: () => <SwitchSessions />,
+  play: async ({ canvas, userEvent }) => {
+    const toggle = await canvas.findByRole('button', {
+      name: 'Toggle Workbench',
+    });
+
+    await expect(toggle).toHaveAttribute(expanded, 'true');
+    await userEvent.click(toggle);
+    await userEvent.click(canvas.getByRole('button', { name: switchSession }));
+    await expect(toggle).toHaveAttribute(expanded, 'true');
+    await userEvent.click(canvas.getByRole('button', { name: switchSession }));
+    await expect(toggle).toHaveAttribute(expanded, 'false');
+  },
+};
+
+export const InspectorExpansionPerSession: Story = {
+  render: () => <SwitchSessions prefix="Inspector" />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: openChanges }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: expandInspector }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: switchSession }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: openChanges }),
+    );
+    await expect(
+      canvas.getByRole('button', { name: expandInspector }),
+    ).toHaveAttribute(expanded, 'false');
+    await userEvent.click(canvas.getByRole('button', { name: switchSession }));
+    await expect(
+      canvas.getByRole('button', { name: 'Restore Inspector' }),
+    ).toHaveAttribute(expanded, 'true');
   },
 };

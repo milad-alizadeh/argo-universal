@@ -25,7 +25,7 @@ export const NotInstalled: Story = {
   args: { agent: { status: 'not-installed' } },
 };
 
-// What the App shows today: no GitHub sign-in or Add Project flow yet, so their buttons are disabled.
+// What a build without a GitHub sign-in or an Add Project handler shows: their buttons are disabled.
 export const FirstRun: Story = {
   args: {
     github: notConnectedGitHub.github,
