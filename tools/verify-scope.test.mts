@@ -69,11 +69,11 @@ describe('chooseTests', () => {
 
 describe('nothingChecked', (): void => {
   it('calls an empty change empty', (): void => {
-    expect(nothingChecked([])).toBe('nothing changed since main.');
+    expect(nothingChecked([], 'main')).toBe('nothing changed since main.');
   });
 
   it('says a change it does not read was not checked and is not a pass', (): void => {
-    const message = nothingChecked(['docs/agents/storybook.md']);
+    const message = nothingChecked(['docs/agents/storybook.md'], 'main');
 
     expect(message).toContain('nothing checked');
     expect(message).toContain('docs/agents/storybook.md');
@@ -82,7 +82,7 @@ describe('nothingChecked', (): void => {
   });
 
   it('names the first paths and elides the rest', (): void => {
-    const message = nothingChecked(['a.md', 'b.md', 'c.md', 'd.md']);
+    const message = nothingChecked(['a.md', 'b.md', 'c.md', 'd.md'], 'main');
 
     expect(message).toContain('a.md, b.md, c.md, ...');
     expect(message).not.toContain('d.md');

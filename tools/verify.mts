@@ -16,6 +16,7 @@ import {
   root,
   run,
 } from './hook-checks.mts';
+import { chooseBase } from './verify-base.mts';
 import {
   chooseTests,
   nothingChecked,
@@ -31,16 +32,6 @@ const LOCAL_WORKERS = '2';
 
 const say = (text: string): boolean =>
   process.stdout.write(`verify: ${text}\n`);
-
-function mergeBase(): string {
-  for (const ref of ['origin/main', 'main']) {
-    const base = run('git', ['merge-base', 'HEAD', ref]);
-
-    if (base.status === 0) return base.output.trim();
-  }
-
-  return 'HEAD';
-}
 
 const operationGeneration = [
   '--import',
@@ -137,17 +128,19 @@ function runTests(base: string, changed: string[]): number {
     : reportFailure(listing.failure);
 }
 
-const base = mergeBase();
+const { ref, reason, commit: baseCommit } = chooseBase();
+
+say(`checking the change since ${ref} (${reason}).`);
 
 // Turbo's --affected compares with local main; this keeps the type checks on the same base as the tests.
-process.env.TURBO_SCM_BASE = base;
+process.env.TURBO_SCM_BASE = baseCommit;
 
-const paths = changedPaths(base);
+const paths = changedPaths(baseCommit);
 
 const changed = readableFiles(paths);
 
 if (changed.length === 0) {
-  say(nothingChecked(paths));
+  say(nothingChecked(paths, ref));
   process.exit(0);
 }
 
@@ -161,6 +154,6 @@ say(
     : 'format, lint or types failed.',
 );
 
-const testStatus = runTests(base, changed);
+const testStatus = runTests(baseCommit, changed);
 
 process.exit(failed.length > 0 || testStatus !== 0 ? 1 : 0);
