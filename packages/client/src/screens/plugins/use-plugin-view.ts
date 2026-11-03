@@ -1,6 +1,6 @@
 import type { PluginViewInput } from '@repo/contracts/plugins/wire';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   emptyPluginView,
   reducePluginView,
@@ -25,8 +25,7 @@ export interface PluginView extends PluginViewState {
  */
 export function usePluginView(input: PluginViewInput, live = true): PluginView {
   const page = useSamePage(input);
-  const kept = useKeptPluginTree(page);
-  const state = usePluginViewStream(page, live, kept);
+  const { kept, state } = useKeptAndLive(page, live);
 
   useKeepTree(page, state);
 
@@ -38,6 +37,23 @@ export function usePluginView(input: PluginViewInput, live = true): PluginView {
     dispatch: useHeldUntilLive({ page, live, drawn, onEvent }),
     treeKey: useLiveViewCount(state.viewId),
   };
+}
+
+interface KeptAndLive {
+  kept: PluginViewState['root'];
+  state: PluginViewState;
+}
+
+function useKeptAndLive(page: PluginViewInput, live: boolean): KeptAndLive {
+  const drawingLive = useRef(false);
+  const kept = useKeptPluginTree(page, drawingLive);
+  const state = usePluginViewStream(page, live, kept);
+
+  useEffect(() => {
+    drawingLive.current = Boolean(state.viewId);
+  }, [state.viewId]);
+
+  return { kept, state };
 }
 
 // Callers build the page anew each render; effects follow which page it is.

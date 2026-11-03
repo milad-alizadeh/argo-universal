@@ -5,6 +5,7 @@ import {
   type Query,
   type QueryClient,
 } from '@tanstack/react-query';
+import type { RefObject } from 'react';
 import { pluginPageTrees } from '../../query-cache';
 
 /*
@@ -14,11 +15,18 @@ import { pluginPageTrees } from '../../query-cache';
 export const keptTreeKey = ({ pluginId, ...page }: PluginViewInput) =>
   [pluginPageTrees, pluginId, page] as const;
 
-// Never fetched: the trees come from the Plugin's own stream.
-export function useKeptPluginTree(page: PluginViewInput): WireNode | null {
+/*
+ * Never fetched: the trees come from the Plugin's own stream. A page drawing its live view does not draw this tree, so
+ * it is not drawn again for each tree it keeps; it reads whatever the entry holds the next time it does draw.
+ */
+export function useKeptPluginTree(
+  page: PluginViewInput,
+  drawingLive: RefObject<boolean>,
+): WireNode | null {
   const { data } = useQuery<WireNode>({
     queryKey: keptTreeKey(page),
     queryFn: skipToken,
+    notifyOnChangeProps: () => (drawingLive.current ? [] : ['data']),
   });
 
   return data ?? null;
