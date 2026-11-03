@@ -26,7 +26,7 @@ export function useScreenColumn(
 const marginOf = (width: ScreenWidth, inset: number): number =>
   width === 'bleed' ? 0 : inset;
 
-// The aside's strip and the footer have no edge-to-edge drawing of their own: on a bleed page they keep the inset.
+// The heading, the aside's strip and the footer have no edge-to-edge drawing of their own: on a bleed page they keep the inset.
 export const insetWidth = (
   width: ScreenWidth | undefined,
 ): ScreenWidth | undefined => (width === 'bleed' ? 'full' : width);

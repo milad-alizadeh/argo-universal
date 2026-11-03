@@ -12,7 +12,7 @@ import { Icon } from '#primitives/content/icon';
 import { Link, isRoute } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { ScreenBack } from './screen-back';
-import { ScreenColumn } from './screen-column';
+import { insetWidth, ScreenColumn } from './screen-column';
 import { HeadingActions } from './screen-heading-actions';
 import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
@@ -27,7 +27,7 @@ export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
     <View
       className={props.width === 'narrow' ? 'pt-6 wide:pt-0' : 'py-6 wide:pt-0'}
     >
-      <ScreenColumn width={headingWidth(props.width)}>
+      <ScreenColumn width={insetWidth(props.width)}>
         <View className="gap-1" style={headingInset(useHeadingInset())}>
           <HeadingRow {...props} />
           <HeadingCaption {...props} />
@@ -36,10 +36,6 @@ export function ScreenHeadingBody(props: ScreenHeaderInput): ReactElement {
     </View>
   );
 }
-
-// A page that runs to the edges keeps its title in the margins a full-width page has.
-const headingWidth = (width: ScreenProps['width']): ScreenProps['width'] =>
-  width === 'bleed' ? 'full' : width;
 
 // A phone-width page of grouped cards starts its title and caption on its rows' text line.
 const headingInset = (inset: number): ViewStyle => ({

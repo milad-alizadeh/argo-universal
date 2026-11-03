@@ -24,7 +24,7 @@ type IssueDetailProps = Pick<
 export function IssueDetailPage(source: DetailSource): JSX.Element {
   const { issue, ...state } = useIssueDetail(source);
 
-  if (!issue) return <Loading source={source} {...state} />;
+  if (!issue) return <Unread source={source} {...state} />;
 
   return <IssueDetail {...state} {...pageProps(source)} issue={issue} />;
 }
@@ -38,12 +38,12 @@ const pageProps = (
     source.deps.pages.issuePagePath(source.project, number),
 });
 
-type LoadingProps = Pick<IssueDetailState, 'message' | 'refresh'> & {
+type UnreadProps = Pick<IssueDetailState, 'message' | 'refresh'> & {
   source: DetailSource;
 };
 
 // An Issue opened without a row to start from has only its number until GitHub answers, and says why when it cannot.
-function Loading(props: LoadingProps): JSX.Element {
+function Unread(props: UnreadProps): JSX.Element {
   return (
     <Screen title={`#${props.source.number}`}>
       <Detail isLoading={!props.message}>
