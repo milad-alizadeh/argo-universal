@@ -2,6 +2,7 @@ import { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
+import { stopWaiting } from '../stopped-calls';
 
 /*
  * How long one of a Plugin's Operations may run before the call fails. An Operation is an Agent's own
@@ -73,8 +74,7 @@ export class PluginOperationCalls {
   }
 
   private stop(matches: (pending: Pending) => boolean): void {
-    for (const pending of this.pending.values())
-      if (matches(pending)) pending.settle(failed('Plugin stopped'));
+    stopWaiting(this.pending.values(), matches);
   }
 }
 

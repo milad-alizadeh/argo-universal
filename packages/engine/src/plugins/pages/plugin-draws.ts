@@ -5,6 +5,7 @@ import type {
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { PluginEvent } from '../protocol/runtime';
+import { stopWaiting } from '../stopped-calls';
 
 /*
  * How long a Loader may read before its draw fails. A Loader awaits the Plugin's own reads, such as a
@@ -147,7 +148,6 @@ export class PluginDraws {
   }
 
   private stop(matches: (pending: Pending) => boolean): void {
-    for (const pending of this.pending.values())
-      if (matches(pending)) pending.settle(failed('Plugin stopped'));
+    stopWaiting(this.pending.values(), matches);
   }
 }
