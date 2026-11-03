@@ -47,7 +47,9 @@ export function useActionShortcuts(
   const scope = useContext(ShortcutScope);
   const id = useId();
   useRegistration(scope, id, options);
-  useSyncExternalStore(scope.subscribe, scope.snapshot, scope.snapshot);
+  // A declaration draws again only when the keys it holds change, not for every other declaration's.
+  const owned = (): string => scope.ownedBy(id);
+  useSyncExternalStore(scope.subscribe, owned, owned);
   useShortcutListener({ ...options, scope, id });
 
   return {

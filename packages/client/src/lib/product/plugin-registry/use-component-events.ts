@@ -4,6 +4,7 @@ import { errorMessage } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useEffect, useReducer, useState } from 'react';
 import { componentEventProps } from './component-event-props';
+import type { DrawnNodes } from './drawn-nodes';
 import { ControlField, blurWithin } from './plugin-control-field';
 import {
   PluginDispatcher,
@@ -21,6 +22,9 @@ const reportFailure: ReportFailure = (error): void =>
 
 type Fields = Map<string, ControlField>;
 
+// A tree's fields and the drawing each node keeps: a field that changes draws its node again.
+type TreeState = { fields: Fields; drawn: DrawnNodes };
+
 /*
  * One tree's Component events, handled once from each kit component's schema metadata: the callbacks its kit components take, the
  * value the App echoes at once and rolls back when refused, the draft a focused field keeps, and the throttled sends.
@@ -28,16 +32,22 @@ type Fields = Map<string, ControlField>;
 export function useComponentEvents(
   root: WireNode,
   onEvent: PluginOnEvent,
+  drawn: DrawnNodes,
 ): PluginControls {
   const dispatcher = useDispatcher(onEvent);
-  const fields = useFields(root);
+  const fields = useFields(root, drawn);
   const [, update] = useReducer((revision: number) => revision + 1, 0);
   const send = dispatcher.send.bind(dispatcher);
 
   return (input) => {
-    const field = fieldFor(fields, input);
+    const tree = { fields, drawn };
+    const field = fieldFor(tree, input);
+    const redraw = (): void => {
+      drawn.forget(input.context.key);
+      update();
+    };
 
-    return componentEventProps({ input, field, send, update });
+    return componentEventProps({ input, field, send, update: redraw });
   };
 }
 
@@ -55,29 +65,31 @@ function useDispatcher(onEvent: PluginOnEvent): PluginDispatcher {
   return dispatcher;
 }
 
-// Each node's field, by node key, while the node is in the tree.
-function useFields(root: WireNode): Fields {
+// Each node's field and drawing, by node key, while the node is in the tree.
+function useFields(root: WireNode, drawn: DrawnNodes): Fields {
   const [fields] = useState<Fields>(() => new Map());
   useEffect(() => {
     const live = wireNodeKeys(root);
 
     for (const key of fields.keys()) if (!live.has(key)) fields.delete(key);
-  }, [fields, root]);
+    drawn.keep(live);
+  }, [fields, drawn, root]);
 
   return fields;
 }
 
-function fieldFor(fields: Fields, input: ControlInput): ControlField {
+function fieldFor({ fields, drawn }: TreeState, input: ControlInput): ControlField {
   const { key } = input.context;
   const field = ControlField.matching(fields.get(key), input);
   fields.set(key, field);
-  syncEcho(fields, field, input);
+  syncEcho({ fields, drawn }, field, input);
 
   return field;
 }
 
+// A field that closes takes focus from the fields inside it, which then show the Server's value when they next draw.
 function syncEcho(
-  fields: Fields,
+  { fields, drawn }: TreeState,
   field: ControlField,
   input: ControlInput,
 ): void {
@@ -86,7 +98,9 @@ function syncEcho(
   if (prop === undefined) return;
   field.sync(propsWithin(input.source, within)[prop]);
 
-  if (closed(field)) blurWithin(fields, input.context.key);
+  if (!closed(field)) return;
+  blurWithin(fields, input.context.key);
+  drawn.forget(input.context.key);
 }
 
 const closed = (field: ControlField): boolean =>

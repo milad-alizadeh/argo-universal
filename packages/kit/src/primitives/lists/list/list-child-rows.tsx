@@ -144,7 +144,7 @@ export function ChildRows<Item>(props: ListProps<Item>): ReactElement {
 
 const childDrawing: Pick<
   ChildDataProps,
-  'keyExtractor' | 'fullSpan' | 'getItemType' | 'renderItem'
+  'keyExtractor' | 'fullSpan' | 'getItemType' | 'itemsAreEqual' | 'renderItem'
 > = { ...childIdentity, renderItem: childRenderer };
 
 function childAnchor(anchor: ListProps<never>['anchor']): true | undefined {

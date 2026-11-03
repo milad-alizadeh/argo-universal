@@ -77,19 +77,34 @@ function useFolding(): TreeFolding {
   const [folded, setFolded] = useState(noneFolded);
   const { treeDrawn: drawn } = useListLook();
 
-  const toggle = useCallback(
-    (key: string) =>
-      setFolded((current) => {
-        const next = new Set(current);
+  const [toggles] = useState(() => new Map<string, () => void>());
 
-        if (!next.delete(key)) next.add(key);
+  const toggleOf = useCallback(
+    (key: string) => {
+      const held = toggles.get(key);
 
-        return next;
-      }),
-    [],
+      if (held) return held;
+
+      const toggle = (): void =>
+        setFolded((current) => {
+          const next = new Set(current);
+
+          if (!next.delete(key)) next.add(key);
+
+          return next;
+        });
+
+      toggles.set(key, toggle);
+
+      return toggle;
+    },
+    [toggles],
   );
 
-  return useMemo(() => ({ folded, toggle, drawn }), [folded, toggle, drawn]);
+  return useMemo(
+    () => ({ folded, toggleOf, drawn }),
+    [folded, toggleOf, drawn],
+  );
 }
 
 // How one List reads its children: under its own key, as its rows fold.

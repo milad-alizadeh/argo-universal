@@ -69,6 +69,16 @@ describe('a section list’s selected row', () => {
     ).toEqual(['open']);
   });
 
+  it('leaves every other row the node it was, so it does not draw again', () => {
+    const marked = withSelectedRow(root, [closedPage]);
+    const [section] = marked.slots.list?.[0]?.children ?? [];
+    const [sourceSection] = list.children;
+
+    expect(section?.children[0]).toBe(sourceSection?.children[0]);
+    expect(section?.children[1]).not.toBe(sourceSection?.children[1]);
+    expect(marked.slots.empty).toBe(root.slots.empty);
+  });
+
   it('is no row for a page no row links to', () => {
     expect(selectedRows(withSelectedRow(root, ['/issues/42']))).toEqual([]);
   });

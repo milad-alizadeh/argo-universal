@@ -1,9 +1,14 @@
-import type { ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { useListLook } from '../../../list-look-context';
 import { RowHighlightProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
-import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
+import {
+  ListEmpty,
+  useRenderedRows,
+  useListPadding,
+  useRowGutter,
+} from './list-data';
 import { ListGrouping } from './list-grouping';
 import type { ListProps } from './list-props';
 import { useScrollProps } from './list-scroll-props';
@@ -15,9 +20,16 @@ function useDataListProps<Item>(
 ): ScrollFadeListProps<Item> {
   const renderItem = useRenderedRows(props);
   const contentContainerStyle = useListPadding(props);
+  const gutter = useRowGutter(props);
+  // A row that equals the row before draws again only for its extra data, so the gutter it holds is part of it.
+  const extraData = useMemo(
+    () => ({ caller: props.extraData, gutter }),
+    [props.extraData, gutter],
+  );
 
   return {
     ...useScrollProps(props),
+    extraData,
     data: props.items ?? [],
     renderItem,
     contentContainerStyle,

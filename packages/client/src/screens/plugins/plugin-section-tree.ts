@@ -54,14 +54,18 @@ function linkedPages(nodes: readonly WireNode[]): string[] {
   });
 }
 
+// A row that is not marked and holds no marked row stays the node it was, so it draws as it did.
 function marked(node: WireNode, page: string): WireNode {
+  const children = node.children.map((child) => marked(child, page));
+  const selected = linkedPage(node) === page;
+  const kept = children.every((child, index) => child === node.children[index]);
+
+  if (!selected && kept) return node;
+
   return {
     ...node,
-    children: node.children.map((child) => marked(child, page)),
-    props:
-      linkedPage(node) === page
-        ? { ...node.props, selected: true }
-        : node.props,
+    children: kept ? node.children : children,
+    props: selected ? { ...node.props, selected: true } : node.props,
   };
 }
 

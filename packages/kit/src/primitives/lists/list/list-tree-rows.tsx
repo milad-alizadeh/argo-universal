@@ -9,7 +9,8 @@ import {
 // How a List flattens its tree of ListItems: which parents are folded, and whether a wide window draws the tree at all.
 export interface TreeFolding {
   folded: ReadonlySet<string>;
-  toggle: (key: string) => void;
+  // The one function that folds or opens the row at `key`, the same each time the List reads its children.
+  toggleOf: (key: string) => () => void;
   drawn: boolean;
 }
 
@@ -117,10 +118,10 @@ function treeRow(
   folding: TreeFolding,
   { level, key, last }: Place,
 ): TreeRow {
-  const toggle = (): void => folding.toggle(key);
-
   const parent =
-    rows.length > 0 ? { open: isOpen(key, folding), toggle } : undefined;
+    rows.length > 0
+      ? { open: isOpen(key, folding), toggle: folding.toggleOf(key) }
+      : undefined;
 
   return { depth: level.depth, through: level.through, last, parent };
 }

@@ -26,7 +26,7 @@ const reader = (children: ReactNode): Parameters<typeof readList>[1] => ({
   prefix: 'list',
   tree: listTree(
     children,
-    { folded: new Set(), toggle: () => {}, drawn: false },
+    { folded: new Set(), toggleOf: () => () => {}, drawn: false },
     true,
   ),
 });

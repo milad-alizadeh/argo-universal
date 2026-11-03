@@ -2,8 +2,10 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import { PluginTreeContext } from '@repo/kit/plugin-tree-context';
 import { SvgBudget } from '@repo/kit/primitives/visual';
+import { useLayoutEffect, useState } from 'react';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
+import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
 import type { PluginOnEvent } from './plugin-rendering';
 import { useComponentEvents } from './use-component-events';
@@ -17,12 +19,29 @@ export interface PluginTreeProps {
   onOpenPage?: OpenPluginPage;
 }
 
+// One function for the tree's life that opens a page as the tree's caller opens it now.
+function useOpenPage(open: OpenPluginPage): OpenPluginPage {
+  const [latest] = useState(() => {
+    const box = { open };
+
+    return { box, open: (path: string): void => box.open(path) };
+  });
+
+  useLayoutEffect(() => {
+    latest.box.open = open;
+  }, [latest, open]);
+
+  return latest.open;
+}
+
 // One tree, one dispatcher: overlays are ordinary nodes in it.
 export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
+  const [drawn] = useState(() => new DrawnNodes());
   const context = {
     key: childNodeKey('', props.root.key),
-    openPage: props.onOpenPage ?? pageUnavailable,
-    controls: useComponentEvents(props.root, props.onEvent),
+    openPage: useOpenPage(props.onOpenPage ?? pageUnavailable),
+    controls: useComponentEvents(props.root, props.onEvent, drawn),
+    drawn,
   };
 
   return (

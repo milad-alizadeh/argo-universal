@@ -52,7 +52,7 @@ export function ListGrouping<Item>({
   );
 }
 
-// The list's props are a new object each time its parent draws; a row's layout changes only with what it reads from them, or every row draws again with the parent.
+// The list's props, and a List's children, are new each time its parent draws; a row's layout changes only with the places its rows hold, or every row draws again with the parent.
 function useRowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
   const listed = list !== undefined;
 
@@ -60,16 +60,47 @@ function useRowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
     list ?? {};
 
   const cell = renderItem !== childRenderer;
+  const positions = useSteadyPositions(
+    useMemo(
+      () => rowPositions({ items, getSectionKey }),
+      [items, getSectionKey],
+    ),
+  );
 
   return useMemo(() => {
     if (!listed) return emptyLayout;
 
-    return {
-      cell,
-      positionAt: (index) => dataRowPosition({ items, getSectionKey }, index),
-    };
-  }, [listed, cell, items, getSectionKey]);
+    return { cell, positionAt: (index) => positions[index] ?? 'only' };
+  }, [listed, cell, positions]);
 }
+
+function rowPositions<Item>(
+  grouping: Pick<ListProps<Item>, 'items' | 'getSectionKey'>,
+): readonly ListPosition[] {
+  return (grouping.items ?? []).map((_, index) =>
+    dataRowPosition(grouping, index),
+  );
+}
+
+// The positions drawn before, while every row holds the place it held.
+function useSteadyPositions(
+  next: readonly ListPosition[],
+): readonly ListPosition[] {
+  const [held, setHeld] = useState(next);
+
+  if (held === next || samePositions(held, next)) return held;
+
+  setHeld(next);
+
+  return next;
+}
+
+const samePositions = (
+  first: readonly ListPosition[],
+  second: readonly ListPosition[],
+): boolean =>
+  first.length === second.length &&
+  first.every((position, index) => position === second[index]);
 
 // Data rows start their own context. Fixed children and standalone Sections adapt it below.
 type DataRowProps = {

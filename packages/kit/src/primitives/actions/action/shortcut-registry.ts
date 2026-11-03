@@ -13,13 +13,20 @@ export interface ShortcutRegistration {
 export class ShortcutRegistry {
   private readonly entries = new Map<string, ShortcutRegistration>();
   private readonly listeners = listenerSet();
-  private revision = 0;
   private allocated = new ShortcutAllocation();
   private pending = false;
 
   public readonly subscribe = this.listeners.subscribe;
 
-  public snapshot = (): number => this.revision;
+  // The Actions declaration `id` holds keys for, as one value that changes only when its own keys do.
+  public ownedBy(id: string): string {
+    const actions = this.entries.get(id)?.actions ?? [];
+
+    return actions
+      .filter((action) => this.owns(id, action))
+      .map((action) => action.id)
+      .join('\n');
+  }
 
   public register(entry: ShortcutRegistration): () => void {
     this.entries.set(entry.id, entry);
@@ -46,7 +53,6 @@ export class ShortcutRegistry {
   private readonly allocate = (): void => {
     this.pending = false;
     this.allocated = allocatedActions([...this.entries.values()]);
-    this.revision++;
     this.listeners.notify();
   };
 }

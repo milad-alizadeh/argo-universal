@@ -23,6 +23,7 @@ function scrollEvents<Item>(
     estimatedItemSize: props.estimatedItemSize,
     keyExtractor: props.keyExtractor,
     getItemType: props.getItemType,
+    itemsAreEqual: props.itemsAreEqual,
   };
 }
 

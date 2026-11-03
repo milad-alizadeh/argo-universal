@@ -81,7 +81,7 @@ function hasAppQuery(
 
 const allOpen = {
   folded: new Set<string>(),
-  toggle: (): void => {},
+  toggleOf: () => (): void => {},
   drawn: false,
 };
 

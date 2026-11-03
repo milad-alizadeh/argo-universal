@@ -14,6 +14,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'refreshControl'
     | 'keyExtractor'
     | 'getItemType'
+    | 'itemsAreEqual'
     | 'extraData'
     | 'recycleItems'
     | 'onEndReached'
