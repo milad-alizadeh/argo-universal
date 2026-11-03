@@ -1,7 +1,8 @@
 import { expect, it } from 'vitest';
+import { stack, svg } from '../views/draw-tree-fixtures';
 import { PluginDraws } from './plugin-draws';
 
-const draws = (): PluginDraws =>
+const draws = (log: (line: string) => void = () => null): PluginDraws =>
   new PluginDraws({
     send: () => null,
     clock: {
@@ -9,8 +10,29 @@ const draws = (): PluginDraws =>
       delay: () => Promise.resolve(),
       schedule: () => () => null,
     },
-    log: () => null,
+    log,
   });
+
+it('draws a page without the SVG the sanitiser refused, and logs what it left out', async () => {
+  const logs: string[] = [];
+  const pages = draws((line) => logs.push(line));
+  const at = { path: '/map', pageState: {}, pages: 1 };
+
+  pages.ran('atlas', 1);
+
+  const drawn = pages.draw('atlas', at);
+  const root = stack([svg('<svg><script/></svg>', 'unsafe')]);
+
+  pages.receive(
+    { pluginId: 'atlas', generation: 1 },
+    { action: 'drawn', id: 0, root, pages: 1 },
+  );
+
+  expect(await drawn).toMatchObject({ ok: true, root: { children: [] } });
+  expect(logs).toEqual([
+    'Plugin atlas: refused /map node Stack#root/Svg#unsafe: element <script> refused',
+  ]);
+});
 
 it('tells its listeners when the running worker says what it shows changed', () => {
   const pages = draws();
