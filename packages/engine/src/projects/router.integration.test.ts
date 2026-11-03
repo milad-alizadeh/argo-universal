@@ -33,6 +33,7 @@ it('preserves a registered Project identity and stored metadata through a nested
       name: basename(projectPath),
       createdAt: 123,
       checkoutChoice: { type: 'worktree', baseBranch: 'feature' },
+      deleteWorktreeOnArchive: true,
       remoteHost: null,
       folderExists: true,
     },

@@ -8,6 +8,7 @@ export const stored = SessionRecord.parse({
   title: 'Check reliability',
   titleSource: 'user',
   archivedAt: null,
+  keepCheckout: false,
   seenRevision: 0,
   activityAt: 100,
   failure: null,

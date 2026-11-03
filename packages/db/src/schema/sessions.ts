@@ -33,6 +33,8 @@ export const session = snakeCase.table('session', {
   title: text().notNull().default(''),
   titleSource: text({ enum: sessionTitleSources }).notNull().default('prompt'),
   archivedAt: integer(),
+  // The Project's archive setting when this Session was archived, so changing it later never removes a kept worktree.
+  keepCheckout: integer({ mode: 'boolean' }).notNull().default(false),
   seenRevision: integer().notNull().default(0),
   activityAt: integer().notNull().default(0),
   failure: text(),

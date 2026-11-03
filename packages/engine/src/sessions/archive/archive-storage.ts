@@ -13,6 +13,7 @@ export class SessionArchiveJob
   public constructor(
     private readonly ids: string[],
     private readonly archivedAt: number | null,
+    private readonly keepCheckout: boolean,
   ) {}
 
   public describe(): string {
@@ -22,7 +23,7 @@ export class SessionArchiveJob
   public commit(transaction: StorageTransaction): void {
     transaction
       .update(session)
-      .set({ archivedAt: this.archivedAt })
+      .set({ archivedAt: this.archivedAt, keepCheckout: this.keepCheckout })
       .where(inArray(session.id, this.ids))
       .run();
 
@@ -52,7 +53,11 @@ export class SessionArchiveJob
     sessionId: string,
   ): SessionRecord | undefined {
     return current && this.ids.includes(sessionId)
-      ? { ...current, archivedAt: this.archivedAt }
+      ? {
+          ...current,
+          archivedAt: this.archivedAt,
+          keepCheckout: this.keepCheckout,
+        }
       : current;
   }
 
