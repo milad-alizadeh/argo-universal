@@ -106,14 +106,16 @@ const fresh = ({ at }: Kept): boolean =>
 const keyOf = (scope: Scope, cursor: string | null): string =>
   `${scope.project}\n${scope.search}\n${cursor ?? ''}`;
 
+// A page is as old as its read's start, so a read a write overtook is stale when it lands.
 async function freshPage(
   client: TrackerClient,
   scope: Scope,
   cursor: string | null,
 ): Promise<Page> {
+  const at = Date.now();
   const page = await readPage(client, scope.search, cursor);
 
-  kept.set(keyOf(scope, cursor), { page, at: Date.now() });
+  kept.set(keyOf(scope, cursor), { page, at });
 
   return page;
 }

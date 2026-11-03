@@ -75,21 +75,39 @@ function patched(node: WireNode, patches: Patches): WireNode {
 /*
  * Every kept address of the Plugin whose path a stale pattern matches is marked stale; only those on a
  * focused screen draw again now (a screen out of focus is not subscribed), the rest when they come back.
- * A draw already running is left to finish rather than restarted.
+ * A draw already running read before the change, so it is left to finish and then marked again.
  */
 export function drawStale(
   { client, draws }: DrawCache,
   pluginId: string,
   stale: readonly string[],
 ): void {
-  void client.invalidateQueries(
-    {
-      ...draws.pathFilter(),
-      predicate: (query) => isStale(addressOf(query), pluginId, stale),
-    },
-    { cancelRefetch: false },
-  );
+  const filters = {
+    ...draws.pathFilter(),
+    predicate: (query: Query): boolean =>
+      isStale(addressOf(query), pluginId, stale),
+  };
+
+  const landed = markWhenLanded(client);
+
+  for (const query of client.getQueryCache().findAll(filters)) landed(query);
+  void client.invalidateQueries(filters, { cancelRefetch: false });
 }
+
+const markWhenLanded =
+  (client: QueryClient) =>
+  ({ queryKey, promise }: Query): void => {
+    const mark = markAgain(client, queryKey);
+
+    void promise?.then(mark, mark);
+  };
+
+const markAgain =
+  (client: QueryClient, queryKey: Query['queryKey']) => (): void =>
+    void client.invalidateQueries(
+      { queryKey, exact: true },
+      { cancelRefetch: false },
+    );
 
 type Address = { pluginId: string; path: string };
 
