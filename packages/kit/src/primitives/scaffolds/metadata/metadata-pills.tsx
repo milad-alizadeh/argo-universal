@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Pill, type PillProps } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
-import { pillIdentity } from './metadata-pill-fit';
+import { pillIdentity } from './metadata-pill-identity';
 
 type PillValuesProps = { pills: PillProps[] };
 
