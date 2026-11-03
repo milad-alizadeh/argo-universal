@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Project } from './issue-project';
+import { createListeners } from './listeners';
 
 export type ProjectsRead = { projects?: Project[]; failed?: boolean };
 
@@ -70,25 +71,6 @@ function createProjectChoice(
 
       chosen = id;
       tell();
-    },
-  };
-}
-
-type Listeners = Pick<IssueProjects, 'subscribe'> & { tell: () => void };
-
-function createListeners(): Listeners {
-  const listeners = new Set<() => void>();
-
-  return {
-    tell: () => {
-      for (const listener of listeners) listener();
-    },
-    subscribe: (listener) => {
-      listeners.add(listener);
-
-      return () => {
-        listeners.delete(listener);
-      };
     },
   };
 }

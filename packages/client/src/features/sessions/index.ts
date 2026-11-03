@@ -37,7 +37,11 @@ export { WorkbenchMoreChanges } from './components/session-workbench-changes';
 
 export { WorkbenchCountSummary } from './components/workbench-count-summary';
 
-export { type SessionPanels, useSessionPanels } from './stores/session-panels';
+export {
+  closeSessionPanel,
+  type SessionPanels,
+  useSessionPanels,
+} from './stores/session-panels';
 
 export { SessionMemory, useSessionMemory } from './stores/session-memory';
 

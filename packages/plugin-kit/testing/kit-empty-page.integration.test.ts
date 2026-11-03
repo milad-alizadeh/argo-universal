@@ -3,8 +3,8 @@ import { expect, it } from 'vitest';
 import { startKit, webSurface as surface } from '../mocks/kit-page-helpers';
 
 /*
- * A Plugin says a card has nothing to show by drawing nothing (ADR-0035). Argo reads that from the tree alone, so a
- * page that returns `null` must reach it as nothing, and a page of one component, which has no children, must not.
+ * A Plugin says a card has nothing to show by returning `null` (ADR-0035). The Engine sends that as the empty root, so
+ * Argo reads it as nothing, and anything the Plugin drew, even an empty `Stack` or one childless component, as something.
  */
 const source = `import { Button, Stack, Text, useEffect, useState } from '@argo/plugin-kit';
 
@@ -49,16 +49,16 @@ const drawn = async (kit: Kit, page: string): Promise<boolean> => {
   return !drawsNothing(view.tree);
 };
 
-it('reads a page that returns null, or an empty Stack, as drawing nothing', async () => {
+it('reads a page that returns null as drawing nothing', async () => {
   const kit = await startKit(source);
 
   expect(await drawn(kit, '/nothing')).toBe(false);
-  expect(await drawn(kit, '/empty-stack')).toBe(false);
 }, 20_000);
 
-it('reads a page of one component, or a Stack holding one, as drawing something', async () => {
+it('reads a page the Plugin drew, even an empty Stack, as drawing something', async () => {
   const kit = await startKit(source);
 
+  expect(await drawn(kit, '/empty-stack')).toBe(true);
   expect(await drawn(kit, '/one-text')).toBe(true);
   expect(await drawn(kit, '/stacked')).toBe(true);
 }, 20_000);

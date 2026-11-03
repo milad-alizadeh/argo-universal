@@ -1,6 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { drawsNothing } from '@repo/contracts/plugins/wire-empty-page';
 import type { PluginOnEvent } from '../../../lib/product/plugin-registry';
+import { StoreListeners } from '../../../lib/store-listeners';
 
 // One Workbench card's page as the Session holds it: the tree it draws, and where its events go.
 export interface HeldCardView {
@@ -8,23 +9,6 @@ export interface HeldCardView {
   // Changes when one live view replaces another, so the card starts over with no drafts from the old.
   treeKey: number;
   dispatch: PluginOnEvent;
-}
-
-// Who hears one kind of change, and the way to stop hearing it.
-class Listeners<Args extends unknown[]> {
-  private readonly heard = new Set<(...args: Args) => void>();
-
-  public readonly add = (listener: (...args: Args) => void): (() => void) => {
-    this.heard.add(listener);
-
-    return () => {
-      this.heard.delete(listener);
-    };
-  };
-
-  public tell(...args: Args): void {
-    for (const listener of this.heard) listener(...args);
-  }
 }
 
 const sameKeys = (one: readonly string[], other: readonly string[]): boolean =>
@@ -40,14 +24,10 @@ const answeredNothing = ({ root }: HeldCardView): boolean =>
  */
 export class HeldCardStore {
   private readonly views = new Map<string, HeldCardView>();
-  private readonly changes = new Listeners<[]>();
-  private readonly empties = new Listeners<[key: string]>();
+  private readonly changes = new StoreListeners();
   private filledKeys: readonly string[] = [];
 
-  public readonly subscribe = this.changes.add;
-
-  // Hears each card whose page drew something and then answered with nothing; not one still waiting, or released.
-  public readonly whenEmptied = this.empties.add;
+  public readonly subscribe = this.changes.subscribe;
 
   // The cards whose page draws something, the same array until that changes.
   public readonly filled = (): readonly string[] => this.filledKeys;
@@ -56,13 +36,14 @@ export class HeldCardStore {
     return this.views.get(key);
   }
 
-  public hold(key: string, view: HeldCardView): void {
+  // Holds the card's latest view; true when its page drew something and now answered with nothing, not when it waits.
+  public hold(key: string, view: HeldCardView): boolean {
     const emptied = this.filledKeys.includes(key) && answeredNothing(view);
 
     this.views.set(key, view);
     this.changed();
 
-    if (emptied) this.empties.tell(key);
+    return emptied;
   }
 
   public release(key: string): void {
@@ -76,6 +57,6 @@ export class HeldCardStore {
 
     if (!sameKeys(filled, this.filledKeys)) this.filledKeys = filled;
 
-    this.changes.tell();
+    this.changes.notify();
   }
 }

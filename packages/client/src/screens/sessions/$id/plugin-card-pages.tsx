@@ -1,9 +1,9 @@
-import { type ReactNode, useEffect, useSyncExternalStore } from 'react';
+import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
+import { closeSessionPanel } from '#features/sessions';
 import { PluginTree } from '../../../lib/product/plugin-registry';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
 import { usePluginView } from '../../plugins/use-plugin-view';
 import type { HeldCardStore, HeldCardView } from './held-card-store';
-import { useLatest } from './use-latest';
 
 // One declared card's page, watched for a Session whether or not its card is drawn.
 export interface HeldCard {
@@ -37,34 +37,47 @@ export function HeldCardViews({
 function HeldView({
   store,
   sessionId,
-  card,
+  card: { cardKey, pluginId, path },
 }: Holding & { card: HeldCard }): null {
-  const { pluginId, path } = card;
-
   useHoldView(
-    store,
-    card.cardKey,
+    { store, sessionId, cardKey },
     usePluginView({ pluginId, path, sessionId }),
   );
 
   return null;
 }
 
-// Keeps the view in the store while it lasts; its dispatch changes every render, so the held one calls the current.
-function useHoldView(
-  store: HeldCardStore,
-  cardKey: string,
-  { root, treeKey, dispatch }: HeldCardView,
-): void {
-  const latest = useLatest(dispatch);
+// The value from the latest render, for a callback the store keeps past the render it was made in.
+function useCurrent<Value>(value: Value): { current: Value } {
+  const current = useRef(value);
 
   useEffect(() => {
-    store.hold(cardKey, {
+    current.current = value;
+  });
+
+  return current;
+}
+
+/*
+ * Keeps one card's view in the store while it lasts. A card that empties closes its Inspector tab, or its sheet on a
+ * phone, so neither comes back unasked when it fills again; one still waiting for its Plugin keeps its tab.
+ */
+function useHoldView(
+  { store, sessionId, cardKey }: Holding & { cardKey: string },
+  { root, treeKey, dispatch }: HeldCardView,
+): void {
+  // The view's dispatch changes every render, so the held one calls the current.
+  const latest = useCurrent(dispatch);
+
+  useEffect(() => {
+    const emptied = store.hold(cardKey, {
       root,
       treeKey,
       dispatch: (...event) => latest.current(...event),
     });
-  }, [store, cardKey, root, treeKey, latest]);
+
+    if (emptied) closeSessionPanel(sessionId, cardKey);
+  }, [store, sessionId, cardKey, root, treeKey, latest]);
 
   useEffect(() => (): void => store.release(cardKey), [store, cardKey]);
 }
@@ -72,16 +85,12 @@ function useHoldView(
 // A card's page, drawn from the view the Session holds for it; nothing until that view has a tree.
 export function HeldCardPage({
   store,
-  card,
-}: {
-  store: HeldCardStore;
-  card: Omit<HeldCard, 'path'>;
-}): ReactNode {
-  const view = useSyncExternalStore(store.subscribe, () =>
-    store.view(card.cardKey),
-  );
+  cardKey,
+  pluginId,
+}: Omit<HeldCard, 'path'> & { store: HeldCardStore }): ReactNode {
+  const view = useSyncExternalStore(store.subscribe, () => store.view(cardKey));
 
-  return <DrawnPluginPage view={view} pluginId={card.pluginId} />;
+  return <DrawnPluginPage view={view} pluginId={pluginId} />;
 }
 
 /*

@@ -32,7 +32,7 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   registerItems(api, { deps, summaries });
 
   return announcing(deps.storage, async () => {
-    deps.links.publish();
+    deps.links.tell();
     await changed();
   });
 }

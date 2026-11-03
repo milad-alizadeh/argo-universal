@@ -4,7 +4,7 @@ import type { IssueFilter } from './issue-filters';
 import type { Project } from './issue-project';
 import type { IssueProjects } from './issue-projects';
 import type { IssueSeeds } from './issue-seeds';
-import type { LinkChanges } from './session-link-changes';
+import type { Listeners } from './listeners';
 import type { TrackerStorage } from './tracker-storage';
 
 // The page paths a row navigates to; each one's page is registered as its row is drawn.
@@ -24,8 +24,11 @@ export type IssueDeps = {
   fetch: Argo['fetch'];
   storage: TrackerStorage;
   changes: IssueChanges;
-  // A Session attached to an Issue or detached from one.
-  links: LinkChanges;
+  /*
+   * A Session attached to an Issue or detached from one, told to the pages that show a Session's Issue so they read
+   * its link again; the Slots hear it through `argo.slots.changed`, and a page has no such call.
+   */
+  links: Listeners;
   seeds: IssueSeeds;
   pages: IssuePages;
 };

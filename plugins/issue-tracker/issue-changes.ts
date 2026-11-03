@@ -1,5 +1,6 @@
 import { useEffect, useState } from '@argo/plugin-kit';
 import type { IssueStatus } from './github-issues';
+import { createListeners } from './listeners';
 import { freshForMs } from './use-github';
 
 // The changed Issue's number and the status it now has.
@@ -18,16 +19,6 @@ export type IssueChanges = {
   recent: () => ReadonlyMap<number, IssueStatus>;
 };
 
-function subscription(listeners: Set<Listener>): IssueChanges['subscribe'] {
-  return (listener) => {
-    listeners.add(listener);
-
-    return () => {
-      listeners.delete(listener);
-    };
-  };
-}
-
 const freshStatus = ([number, { status, at }]: [number, Change]): [
   number,
   IssueStatus,
@@ -39,15 +30,14 @@ const recentOf = (
   new Map([...changes].flatMap(freshStatus));
 
 export function createIssueChanges(): IssueChanges {
-  const listeners = new Set<Listener>();
+  const { subscribe, tell } = createListeners<[number, IssueStatus]>();
   const changes = new Map<number, Change>();
 
   return {
-    subscribe: subscription(listeners),
+    subscribe,
     publish: (number, status) => {
       changes.set(number, { status, at: Date.now() });
-
-      for (const listener of listeners) listener(number, status);
+      tell(number, status);
     },
     recent: () => recentOf(changes),
   };

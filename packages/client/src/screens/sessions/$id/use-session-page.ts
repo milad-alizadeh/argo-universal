@@ -20,11 +20,7 @@ import {
 } from './use-session-commands';
 import { useSessionReadOptions } from './use-session-read-options';
 import { useWithSessionBar } from './use-with-session-bar';
-import {
-  useEmptiedCardsClose,
-  type WorkbenchCards,
-  useWorkbenchCards,
-} from './use-workbench-cards';
+import { type WorkbenchCards, useWorkbenchCards } from './use-workbench-cards';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
@@ -65,30 +61,13 @@ function useSessionSurroundings(
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     ...useFeedRequests(sessionId, feed),
-    ...usePageWork(sessionId, cards, feed),
+    ...useSessionWork(sessionId, feed.snapshot, offeredWith(cards.open)),
     agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
-}
-
-// The Session's work and its Inspector, whose tabs are the open cards' and close when a card empties.
-function usePageWork(
-  sessionId: string,
-  cards: WorkbenchCards,
-  feed: SessionFeed,
-): ReturnType<typeof useSessionWork> {
-  const work = useSessionWork(
-    sessionId,
-    feed.snapshot,
-    offeredWith(cards.open),
-  );
-
-  useEmptiedCardsClose(cards.whenEmptied, work.inspectorPanels);
-
-  return work;
 }
 
 interface ConnectedFeed {

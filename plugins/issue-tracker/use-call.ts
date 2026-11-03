@@ -1,4 +1,5 @@
 import { useEffect, useState } from '@argo/plugin-kit';
+import type { Listeners } from './listeners';
 
 export type Called<Value> = {
   // `undefined` until the call answers.
@@ -9,16 +10,14 @@ export type Called<Value> = {
 
 type State<Value> = Called<Value> & { call: () => Promise<Value> };
 
+type Settle<Value> = (state: State<Value>) => void;
+
 const waiting = { value: undefined, error: undefined } as const;
 
-/*
- * Runs a `argo` call that is not a Query, such as listing Projects or reading a Session, again whenever `call`
- * changes, so wrap it in `useCallback`. GitHub is read with `useGitHub`, never with this.
- */
 // Runs the call, and hands each answer to `settle` unless the effect has moved on.
 function runCall<Value>(
   call: () => Promise<Value>,
-  settle: (state: State<Value>) => void,
+  settle: Settle<Value>,
 ): () => void {
   let current = true;
 
@@ -33,10 +32,37 @@ function runCall<Value>(
   };
 }
 
-export function useCall<Value>(call: () => Promise<Value>): Called<Value> {
+// Runs the call now and again on each change, each run dropping the answer of the one before it.
+function runOnChanges<Value>(
+  call: () => Promise<Value>,
+  settle: Settle<Value>,
+  changes: Listeners['subscribe'] | undefined,
+): () => void {
+  let stopRun = runCall(call, settle);
+
+  const stopHearing = changes?.(() => {
+    stopRun();
+    stopRun = runCall(call, settle);
+  });
+
+  return (): void => {
+    stopRun();
+    stopHearing?.();
+  };
+}
+
+/*
+ * Runs a `argo` call that is not a Query, such as listing Projects or reading a Session, again whenever `call`
+ * changes, so wrap it in `useCallback`. Given `changes`, it also runs again on each one, and the last answer stays
+ * while the next is read. GitHub is read with `useGitHub`, never with this.
+ */
+export function useCall<Value>(
+  call: () => Promise<Value>,
+  changes?: Listeners['subscribe'],
+): Called<Value> {
   const [state, setState] = useState<State<Value>>();
 
-  useEffect(() => runCall(call, setState), [call]);
+  useEffect(() => runOnChanges(call, setState, changes), [call, changes]);
 
   return state?.call === call ? state : waiting;
 }
