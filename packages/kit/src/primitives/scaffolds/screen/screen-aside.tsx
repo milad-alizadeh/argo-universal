@@ -139,7 +139,8 @@ function AsideScroll(props: {
 }): ReactElement {
   return (
     <OutsideColumn>
-      <ScrollFadeView contentContainerClassName="py-6">
+      {/* Wide only, so its first field starts level with the page title, as the heading drops its top padding there. */}
+      <ScrollFadeView contentContainerClassName="pb-6">
         <MetadataPlaceContext value={props.place}>
           {props.children}
         </MetadataPlaceContext>
