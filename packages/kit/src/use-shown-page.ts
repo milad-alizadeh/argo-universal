@@ -1,6 +1,9 @@
 import { NavigationContext } from 'expo-router/react-navigation';
-import { use, useMemo, useSyncExternalStore } from 'react';
+import { createContext, use, useMemo, useSyncExternalStore } from 'react';
 import { useWide } from './use-wide/use-wide';
+
+// A retained page stays mounted while another page in the same route is shown.
+export const RetainedPageVisibility = createContext(true);
 
 type Navigation = NonNullable<React.ContextType<typeof NavigationContext>>;
 
@@ -69,7 +72,9 @@ export function usePageFocused(): boolean {
   const navigation = use(NavigationContext);
   const store = useMemo(() => focusStoreOf(navigation), [navigation]);
 
-  return useSyncExternalStore(store.subscribe, store.read);
+  const visible = use(RetainedPageVisibility);
+
+  return useSyncExternalStore(store.subscribe, store.read) && visible;
 }
 
 // The one rule for every Place: only the shown page may hold it, and only on a wide window.

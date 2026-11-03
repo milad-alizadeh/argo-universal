@@ -5,9 +5,9 @@ import {
 } from './field-group-choice-props';
 import {
   fieldGroupFieldProps,
-  fieldGroupLinkRowProps,
   fieldGroupRowProps,
 } from './field-group-row-props';
+import { fieldGroupLinkProps } from './field-link-props';
 import { echoes, handler } from './kit-component-props';
 import { rowPress } from './list-kit-props';
 import { textChangeEvents } from './text-field-kit-props';
@@ -99,16 +99,6 @@ const fieldGroupValueProps = fieldGroupRowProps.extend({
     .describe(
       'The row is a placeholder while its value is on its way: a bar as wide as the title stands in for it, and assistive technology skips it.',
     ),
-});
-
-const fieldGroupLinkProps = fieldGroupLinkRowProps.extend({
-  value: z
-    .string()
-    .optional()
-    .describe(
-      'What the page it opens holds, such as a count: before the chevron on iOS and the web, under the title on Android.',
-    ),
-  onPress: handler('onPress'),
 });
 
 const pressEvents = { onPress: rowPress };

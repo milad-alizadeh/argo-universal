@@ -6,9 +6,11 @@ import { SessionWorkbenchColumn } from './session-workbench';
 // Draws nothing itself. On a wide window the Session's overview claims the band; its title and menu are its Screen's header, which the kit draws there.
 export function SessionBandClaim({
   workbench,
+  sessionId,
 }: SessionHeaderProps): ReactElement {
   return (
     <WindowBand
+      sessionId={sessionId}
       workbench={
         workbench && <SessionWorkbenchColumn sections={workbench.sections} />
       }

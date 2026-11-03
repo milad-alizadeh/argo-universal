@@ -30,6 +30,7 @@ export type RowListItemProps = Pick<
   // What sits under the title: a Slider, or a text row's value as EditTextPreference shows it.
   supporting?: ReactNode;
   headline?: ReactNode;
+  leadingContent?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
   disabled?: boolean;
@@ -51,9 +52,17 @@ export function RowListItem(props: RowListItemProps): ReactElement {
         <Headline {...props} />
       </ListItem.HeadlineContent>
       <SupportingSlot supporting={props.supporting} />
-      <LeadingSlot {...props} />
+      <LeadingContent {...props} />
       <TrailingSlot trailing={props.trailing} />
     </ListItem>
+  );
+}
+
+function LeadingContent(props: RowListItemProps): ReactNode {
+  if (!props.leadingContent) return <LeadingSlot {...props} />;
+
+  return (
+    <ListItem.LeadingContent>{props.leadingContent}</ListItem.LeadingContent>
   );
 }
 

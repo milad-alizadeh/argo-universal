@@ -2,7 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
-import { argoActivity } from './session-row-slot';
+import { builtInActivity } from './session-row-slot';
 import { noActivityLine } from './slot-detail-model';
 import type { SlotOwner, SlotPlugin } from './slot-detail-model';
 import { SlotDetailView } from './slot-detail-view';
@@ -65,7 +65,7 @@ export const PreviewsTheSlotsOwnComponentWithAllPluginsOn: Story = {
     await expect(canvas.getByText(issueRef(412))).toBeVisible();
     await expect(canvas.getByText(previewReady)).toBeVisible();
     await expect(canvas.getByText('78%')).toBeVisible();
-    await expect(canvas.getByText(argoActivity)).toBeVisible();
+    await expect(canvas.getByText(builtInActivity)).toBeVisible();
   },
 };
 
@@ -101,7 +101,7 @@ export const DefaultGivesTheLineBackToArgo: Story = {
     await expect(canvas.getByText(issueTrackerLine)).toBeVisible();
     await expect(canvas.queryByRole('alertdialog')).toBeNull();
     await userEvent.click(canvas.getByRole('radio', { name: /Default/ }));
-    await expect(canvas.getByText(argoActivity)).toBeVisible();
+    await expect(canvas.getByText(builtInActivity)).toBeVisible();
     await expect(canvas.queryByText(issueTrackerLine)).toBeNull();
   },
 };
@@ -111,7 +111,7 @@ export const ChoosingAPluginWritesTheActivityLineAtOnce: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('radio', { name: /Issue tracker/ }));
     await expect(canvas.getByText(issueTrackerLine)).toBeVisible();
-    await expect(canvas.queryByText(argoActivity)).toBeNull();
+    await expect(canvas.queryByText(builtInActivity)).toBeNull();
     await expect(
       canvas.getByText('Also asks. Replaces Issue tracker.'),
     ).toBeVisible();
@@ -141,6 +141,6 @@ export const TurningOffTheOwnerGivesTheLineBackToArgo: Story = {
     await userEvent.click(
       canvas.getByRole('switch', { name: issueTrackerName }),
     );
-    await expect(canvas.getByText(argoActivity)).toBeVisible();
+    await expect(canvas.getByText(builtInActivity)).toBeVisible();
   },
 };

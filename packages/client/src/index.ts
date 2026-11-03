@@ -49,6 +49,8 @@ export { SlotDetailScreen } from './screens/settings/plugins/slots/$id/slot-deta
 
 export { PluginSettingsDetailScreen } from './screens/settings/plugins/$id/plugin-settings-detail-screen';
 
+export { ProjectNewScreen } from './screens/settings/projects/new/project-new-screen';
+
 export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
 
 export { OpenLinkScreen } from './screens/open/open-link-screen';

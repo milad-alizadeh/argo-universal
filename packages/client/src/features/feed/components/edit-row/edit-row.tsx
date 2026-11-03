@@ -1,8 +1,15 @@
-import type { ToolCallContent, ToolCallUpdate } from '@repo/contracts';
+import {
+  isToolCallRunning,
+  type ToolCallContent,
+  type ToolCallUpdate,
+} from '@repo/contracts';
 import type * as React from 'react';
-import { useMemo, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { type FileDiff, toFileDiffs } from '../../view/file-diff';
+import { toolCallTitle } from '../../view/tool-call-title';
+import { ShimmerText } from '../shimmer-text';
+import { GroupLiveId } from '../tool-call-group/group-live-id';
 import { ToolOutput } from '../tool-output';
 import { FailedEdit } from './failed-edit';
 import { FileEdit } from './file-edit';
@@ -37,9 +44,21 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
   );
 }
 
+function EditActivity({
+  row,
+  titleInGroup,
+}: EditRowProps & { titleInGroup: boolean }): React.JSX.Element | null {
+  if (!isToolCallRunning(row) || titleInGroup) return null;
+
+  return <ShimmerText text={toolCallTitle(row)} />;
+}
+
 export function EditRow({ row }: EditRowProps): React.JSX.Element {
+  const titleInGroup = use(GroupLiveId) === row.id;
+
   return (
     <View className="gap-2">
+      <EditActivity row={row} titleInGroup={titleInGroup} />
       <FileEdits row={row} />
       <ToolOutput
         content={row.content.filter((block) => block.type !== 'diff')}

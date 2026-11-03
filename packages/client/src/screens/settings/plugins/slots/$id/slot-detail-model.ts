@@ -1,3 +1,4 @@
+import { productName } from '@repo/contracts/product-identity';
 import { type SlotVisibility, slotVisibility } from '#features/settings';
 import type { OwnerSlot } from './slot-detail';
 
@@ -115,7 +116,9 @@ const conflictSubtitle = (
       }
     : undefined;
 
-const writesSubtitle: Subtitle = { subtitle: 'Writes it in place of Argo’s.' };
+const writesSubtitle: Subtitle = {
+  subtitle: `Writes it in place of ${productName}’s.`,
+};
 
 // Default, Argo's own line, then every Plugin on the Slot; only those that ask can be chosen.
 export function ownerOptions(

@@ -15,10 +15,13 @@ Given(
   },
 );
 
+// On a phone the Composer's pill; wide, the running tasks the Workbench card draws as rows.
 function shellEntry(page: Page): Locator {
   return onPhone(page)
-    ? page.getByRole('button', { name: /^Shells:/ })
-    : page.getByRole('button', { name: 'Open Shells overview', exact: true });
+    ? page.getByRole('button', { name: /^Background Tasks:/ })
+    : page
+        .getByTestId('workbench-shells')
+        .getByRole('button', { name: /^Open / });
 }
 
 const shellOutput = (page: Page): Locator =>
@@ -35,7 +38,9 @@ Then('the Session offers no Shells', async ({ page }) => {
     page.getByRole('button', { name: 'Stop', exact: true }),
   ).toBeVisible();
   await expect(shellEntry(page)).toHaveCount(0);
-  await expect(page.getByRole('tab', { name: /^Shells/ })).toHaveCount(0);
+  await expect(
+    page.getByRole('tab', { name: /^Background Tasks/ }),
+  ).toHaveCount(0);
 });
 
 When('the Agent starts its Shell', async ({ app }) => {
@@ -46,8 +51,8 @@ Then('the Session offers 1 Shell', async ({ page }) => {
   await expect(shellEntry(page)).toBeVisible();
 
   await (onPhone(page)
-    ? expect(shellEntry(page)).toHaveAccessibleName('Shells: 1')
-    : expect(shellEntry(page)).toContainText('1 shell'));
+    ? expect(shellEntry(page)).toHaveAccessibleName('Background Tasks: 1')
+    : expect(shellEntry(page)).toHaveCount(1));
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
@@ -79,7 +84,11 @@ export async function openRunningShell(page: Page): Promise<void> {
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
   await shellEntry(page).click();
-  const shell = page.getByRole('button', { name: /Shell ready/ });
+
+  // Wide, the card's row opens the output itself; on a phone the pill opens the list first.
+  if (!onPhone(page)) return;
+
+  const shell = page.getByRole('link', { name: /Shell ready/ });
 
   await expect(shell).toBeVisible();
   await shell.click();

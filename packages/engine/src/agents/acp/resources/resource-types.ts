@@ -47,7 +47,7 @@ export type AcpSessionLease = {
 export type AcpConnectionLease = Omit<AcpSessionLease, 'connectionKind'>;
 
 export type SessionProcessAccess = {
-  environment: NonNullable<AgentLaunch['argo']>;
+  environment: NonNullable<AgentLaunch['sessionAccess']>;
   release: () => void;
 };
 

@@ -1,10 +1,11 @@
+import { productName } from '@repo/contracts/product-identity';
 import { app, dialog } from 'electron';
 
 export function reportUnexpectedFailure(error: string): void {
   void dialog
     .showMessageBox({
       type: 'error',
-      message: 'Argo could not start the Server',
+      message: `${productName} could not start the Server`,
       detail: error,
       buttons: ['Quit'],
     })

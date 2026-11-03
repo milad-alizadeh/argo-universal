@@ -1,6 +1,6 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { isLegendList, type ListRef } from '@repo/kit/primitives/lists/list';
-import { type RefObject, useRef } from 'react';
+import { type RefObject, useCallback, useRef } from 'react';
 import { headerKey } from '../../view/changes-items';
 import type { OpenFiles } from './use-open-files';
 
@@ -38,11 +38,13 @@ const scrollToFoldingHeader = (list: ListRef | null, path: string): void => {
 export function useFoldScroll(setOpen: OpenFiles['setOpen']): FoldScroll {
   const ref = useRef<ListRef>(null);
 
-  return {
-    ref,
-    setOpen: (path, open) => {
+  const setFoldOpen = useCallback<OpenFiles['setOpen']>(
+    (path, open) => {
       if (!open) scrollToFoldingHeader(ref.current, path);
       setOpen(path, open);
     },
-  };
+    [setOpen],
+  );
+
+  return { ref, setOpen: setFoldOpen };
 }

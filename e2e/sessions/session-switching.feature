@@ -20,3 +20,50 @@ Feature: Session switching
     And I left an open Agent and model for Settings
     When I return to the Session "Plan the release"
     Then the Message box shows "Ship on Friday"
+
+  Scenario Outline: Each Session keeps its Workbench visibility
+    Given a wide Frame
+    And Sessions named "<first>" and "<second>"
+    When I open the Session "<first>"
+    And I hide the Workbench
+    And I open the Session "<second>"
+    Then the Workbench is shown
+    When I open the Session "<first>"
+    Then the Workbench is hidden
+
+    Examples:
+      | first            | second             |
+      | Plan the release | Fix the login test |
+
+  Scenario Outline: A recently visited Session keeps its Feed mounted
+    Given a wide Frame
+    And Sessions named "<first>" and "<second>"
+    When I open the Session "<first>"
+    And I remember the current Feed
+    And I open the Session "<second>"
+    Then the remembered Feed remains mounted and hidden
+    When I open the Session "<first>"
+    Then the remembered Feed is shown
+
+    Examples:
+      | first            | second             |
+      | Plan the release | Fix the login test |
+
+  @web-only
+  Scenario Outline: A Session restores its reading place after its Feed cache expires
+    Given the browser clock can advance for Feed expiration
+    And a wide Frame
+    And Agent 1 supplies a long Feed history
+    And a New Session with Agent 1
+    When I send the prompt "<prompt>"
+    And I reopen the stored long Feed
+    And I scroll the Feed to its oldest message
+    And I remember the oldest Feed message's position
+    And I create three other Sessions
+    And the Feed cache expires
+    And I return to the long Feed
+    Then the oldest Feed message returns to its remembered position
+
+    Examples:
+      | prompt               |
+      | Build a long history |

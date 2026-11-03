@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { productName } from '../../product-identity';
 import { textProps } from '../core-kit-props';
 import { defineKitComponent } from '../define-kit-component';
 import { audioProps, imageProps, videoProps } from '../media-kit-props';
@@ -11,7 +12,7 @@ const textReader =
 
 export const contentComponents = {
   Markdown: defineKitComponent(
-    'CommonMark content with Argo typography, Code fences and Link navigation.',
+    `CommonMark content with ${productName} typography, Code fences and Link navigation.`,
     markdownProps,
     {
       group: 'content',
@@ -31,7 +32,7 @@ export const contentComponents = {
     { group: 'content' },
   ),
   Link: defineKitComponent(
-    'Text that opens an allowed URL or an Argo route.',
+    `Text that opens an allowed URL or an ${productName} route.`,
     linkProps,
     {
       group: 'content',
@@ -64,7 +65,7 @@ export const contentComponents = {
     },
   ),
   Audio: defineKitComponent(
-    'An Argo transport row on a tint tray: play or pause, a scrubber and elapsed / total time.',
+    `An ${productName} transport row on a tint tray: play or pause, a scrubber and elapsed / total time.`,
     audioProps,
     {
       group: 'content',
@@ -77,8 +78,7 @@ export const contentComponents = {
         talkBack:
           'TalkBack reads a Play or Pause button and a seek control, each named with accessibilityLabel; the seek control’s state is the elapsed and total time.',
       },
-      appearance:
-        'Drawn by Argo the same everywhere: a tint tray with each platform’s ghost IconButton and Slider. No volume, speed or waveform. One clip plays at a time.',
+      appearance: `Drawn by ${productName} the same everywhere: a tint tray with each platform’s ghost IconButton and Slider. No volume, speed or waveform. One clip plays at a time.`,
     },
   ),
   Image: defineKitComponent(
@@ -99,7 +99,7 @@ export const contentComponents = {
     },
   ),
   Text: defineKitComponent(
-    'Text content with an optional Argo typography role and semantic tone.',
+    `Text content with an optional ${productName} typography role and semantic tone.`,
     textProps,
     {
       group: 'content',
@@ -112,8 +112,7 @@ export const contentComponents = {
         keyboard: 'Text is not focusable and adds no keyboard shortcut.',
         voiceOver: textReader,
       },
-      appearance:
-        '`tone` selects an Argo semantic text color that adapts to light and dark appearance. This kit component has no arbitrary `color` or Image prop.',
+      appearance: `\`tone\` selects an ${productName} semantic text color that adapts to light and dark appearance. This kit component has no arbitrary \`color\` or Image prop.`,
       sdkProps:
         'Plugin JSX accepts text children; the worker serializes them as the `children` prop.',
     },

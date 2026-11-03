@@ -69,16 +69,22 @@ function toSection(run: ReactNode[], index: number): NativeSection {
   if (!isSection(first))
     return { key: `rows-${index}`, loose: true, rows: rowsOf(run) };
 
-  const { id, title, footer, children } = first.props;
+  const { id, title, footer, count, children } = first.props;
 
   return {
     key: String(first.key ?? index),
     id: sectionIdOf(id),
-    title,
+    title: countedTitle(title, count),
     footer,
     rows: rowsOf(children),
   };
 }
+
+const countedTitle = (
+  title: string | undefined,
+  count: number | undefined,
+): string | undefined =>
+  title && count !== undefined ? `${title} ${count}` : title;
 
 const hasRows = (section: NativeSection): boolean => section.rows.length > 0;
 

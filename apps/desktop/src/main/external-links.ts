@@ -1,7 +1,8 @@
 import { parseScreenLink } from '@repo/contracts/navigation';
+import { productCompatibility } from '@repo/contracts/product-identity';
 
 // The scheme the system hands to this app. It is separate from `app://app`, which serves the App's own assets.
-export const externalScheme = 'argo';
+export const externalScheme = productCompatibility.linkScheme;
 
 const accepted = (link: string): boolean => parseScreenLink(link).ok;
 

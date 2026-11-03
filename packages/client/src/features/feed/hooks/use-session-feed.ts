@@ -26,8 +26,8 @@ export function useSessionFeed(
 ): SessionFeed {
   const { store, state } = useSessionFeedStore(sessionId, translate);
   const history = useFeedHistory(sessionId, state.feed);
-  useHistoryPages(store, history.data);
-  const changes = useLiveChanges(sessionId, store, state.syncPoint);
+  useFeedHistoryPages(store, history.data);
+  const changes = useFeedLiveChanges(sessionId, store, state.syncPoint);
 
   return {
     ...feedDisplay(state, sessionId),
@@ -36,7 +36,7 @@ export function useSessionFeed(
   };
 }
 
-function useHistoryPages(
+export function useFeedHistoryPages(
   store: SessionFeedStore,
   data: FeedHistory['data'],
 ): void {
@@ -45,7 +45,7 @@ function useHistoryPages(
   }, [store, data]);
 }
 
-function useLiveChanges(
+export function useFeedLiveChanges(
   sessionId: string | undefined,
   store: SessionFeedStore,
   syncPoint: FeedSyncPoint | null,
@@ -70,6 +70,8 @@ type FeedDisplay = Pick<
   | 'permissionToolCall'
   | 'snapshot'
   | 'ready'
+  | 'hasOlder'
+  | 'historyCursor'
 >;
 
 function feedDisplay(
@@ -78,6 +80,8 @@ function feedDisplay(
 ): FeedDisplay {
   return {
     view,
+    hasOlder: feed.epoch === null || feed.hasOlder,
+    historyCursor: feed.startCursor,
     revision: feed.revision,
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
     permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),

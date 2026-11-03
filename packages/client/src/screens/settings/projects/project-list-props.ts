@@ -8,6 +8,7 @@ export type ProjectsLoad =
 export interface ProjectListViewProps {
   projects: ProjectsLoad;
   onOpenProject: (name: string) => void;
+  onAddProject: () => void;
   // Where the search starts, for stories.
   initialSearch?: string;
 }

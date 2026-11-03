@@ -1,6 +1,7 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { useClock } from '@repo/kit/use-clock';
 import type { JSX } from 'react';
+import { Platform } from 'react-native';
 import { PhoneSubagentList } from './subagent-list-phone';
 import type { SubagentListProps } from './subagent-list-types';
 import { WideSubagentList } from './subagent-list-wide';
@@ -12,6 +13,8 @@ export function SubagentList(props: SubagentListProps): JSX.Element | null {
   const now = useClock(running, props.now);
 
   if (props.subagents.length === 0) return null;
+
+  if (Platform.OS !== 'web') return <PhoneSubagentList {...props} now={now} />;
 
   return (
     <SizeClass

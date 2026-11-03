@@ -39,19 +39,16 @@ function ProjectsPage(props: SearchedProps): React.JSX.Element {
 function screenProps(props: SearchedProps): ScreenProps {
   return {
     title: projectsTitle,
-    primaryAction: addProject,
+    primaryAction: addProject(props),
     search: { label: searchLabel },
     value: props.search,
     onChangeText: props.onSearch,
   };
 }
 
-const addProject = (
-  <Action label="Add Project" icon="add" disabled onPress={unavailable} />
+const addProject = (props: SearchedProps): React.JSX.Element => (
+  <Action label="Add Project" icon="add" onPress={props.onAddProject} />
 );
-
-// The Server cannot add a Project from the App yet.
-function unavailable(): void {}
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Projects',

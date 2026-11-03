@@ -22,7 +22,7 @@ import {
 import { shellsSection } from './shells-section';
 
 // Argo's own Sections, in the order the Workbench stacks them by default.
-const argoSections: readonly SessionSection[] = [
+const builtInSections: readonly SessionSection[] = [
   changesSection,
   agentsSection,
   shellsSection,
@@ -38,7 +38,7 @@ const openCards = (content: SessionCards): readonly SessionPluginCard[] =>
 export const sessionSections = (
   content: SessionCards,
 ): readonly SessionSection[] => [
-  ...argoSections,
+  ...builtInSections,
   ...openCards(content).map(pluginCardSection),
 ];
 
@@ -50,7 +50,7 @@ export const offeredSections = (
   items: SessionItems,
   cards: readonly SessionPluginCard[] = [],
 ): string[] => [
-  ...offeredKeys(argoSections, items),
+  ...offeredKeys(builtInSections, items),
   ...cards.map((card) => pluginCardKey(card.pluginId, card.card.id)),
 ];
 

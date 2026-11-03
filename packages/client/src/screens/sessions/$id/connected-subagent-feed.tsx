@@ -1,7 +1,8 @@
-import type { ReactElement } from 'react';
+import { useCallback, type ReactElement } from 'react';
 import { useBlobUrl } from '#features/connection';
 import { toSubagentFeedView, useSessionFeed } from '#features/feed';
 import { SubagentFeed, type SubagentFeedProps } from '#features/sessions';
+import { useSubagentReports } from './use-subagent-reports';
 
 export type ConnectedSubagentFeedProps = Pick<
   SubagentFeedProps,
@@ -12,10 +13,62 @@ export type ConnectedSubagentFeedProps = Pick<
 function ConnectedSubagentFeed(
   props: ConnectedSubagentFeedProps,
 ): ReactElement {
-  const source = useSessionFeed(props.subagent.sessionId, toSubagentFeedView);
+  const source = useChildSource(props.subagent);
+
+  const reports = useSubagentReports(
+    props.subagent.parentSessionId,
+    props.subagent.sessionId,
+  );
+
   const imageUrl = useBlobUrl();
 
-  return <SubagentFeed {...props} feed={childFeed(source, imageUrl)} />;
+  return drawSubagent(props, { source, reports, imageUrl });
+}
+
+interface SubagentSources {
+  source: Source;
+  reports: ReturnType<typeof useSubagentReports>;
+  imageUrl: SubagentFeedProps['feed']['imageUrl'];
+}
+
+function drawSubagent(
+  props: ConnectedSubagentFeedProps,
+  { source, reports, imageUrl }: SubagentSources,
+): ReactElement {
+  return (
+    <SubagentFeed
+      {...props}
+      feed={childFeed(source, reports.items, imageUrl)}
+      {...reportControls(reports)}
+    />
+  );
+}
+
+function useChildSource(
+  subagent: ConnectedSubagentFeedProps['subagent'],
+): Source {
+  const translate = useCallback(
+    (
+      rows: Parameters<typeof toSubagentFeedView>[0],
+      snapshot: Parameters<typeof toSubagentFeedView>[1],
+    ) => toSubagentFeedView(rows, snapshot, subagent.parentSessionId),
+    [subagent.parentSessionId],
+  );
+
+  return useSessionFeed(subagent.sessionId, translate);
+}
+
+function reportControls(
+  reports: ReturnType<typeof useSubagentReports>,
+): Pick<
+  SubagentFeedProps,
+  'loadEarlierReports' | 'reportsLoading' | 'retryReports'
+> {
+  return {
+    loadEarlierReports: reports.hasOlder ? reports.loadOlder : undefined,
+    reportsLoading: reports.loading,
+    retryReports: reports.error ? reports.retry : undefined,
+  };
 }
 
 type Source = ReturnType<typeof useSessionFeed>;
@@ -26,20 +79,36 @@ const childItems = (source: Source): SubagentFeedProps['feed']['items'] =>
 const childHeader = (source: Source): SubagentFeedProps['feed']['liveHeader'] =>
   source.snapshot?.liveHeader ?? null;
 
+function childPaging(
+  source: Source,
+): Pick<
+  SubagentFeedProps['feed'],
+  'loadingOlder' | 'hasOlder' | 'historyCursor' | 'onStartReached'
+> {
+  return {
+    loadingOlder: source.loadingOlder,
+    hasOlder: source.hasOlder,
+    historyCursor: source.historyCursor,
+    onStartReached: () => void source.loadOlder(),
+  };
+}
+
 function childFeed(
   source: Source,
+  reports: SubagentFeedProps['feed']['items'],
   imageUrl: SubagentFeedProps['feed']['imageUrl'],
 ): SubagentFeedProps['feed'] {
   return {
-    items: childItems(source),
+    items: [...childItems(source), ...reports],
     liveHeader: childHeader(source),
     liveToolCall: source.liveToolCall,
-    loadingOlder: source.loadingOlder,
-    onStartReached: () => void source.loadOlder(),
+    ...childPaging(source),
     imageUrl,
   };
 }
 
 export const renderSubagentFeed = (
   props: ConnectedSubagentFeedProps,
-): ReactElement => <ConnectedSubagentFeed {...props} />;
+): ReactElement => (
+  <ConnectedSubagentFeed key={props.subagent.sessionId} {...props} />
+);

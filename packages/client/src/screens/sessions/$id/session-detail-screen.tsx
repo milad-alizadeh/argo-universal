@@ -1,5 +1,9 @@
+import { SizeClass } from '@repo/kit/size-class/size-class';
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { useIsPreview } from 'expo-router';
+import { useState } from 'react';
 import type * as React from 'react';
+import { View, type ViewStyle } from 'react-native';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
 import {
@@ -22,19 +26,98 @@ export interface SessionDetailScreenProps {
 }
 
 // One Session, or New Session for the id no Session has: the first prompt's hand-off only changes the id, so the route keeps its screen. A new id starts every piece of state over.
-export function SessionDetailScreen({
+export function SessionDetailScreen(
+  props: SessionDetailScreenProps,
+): React.JSX.Element {
+  return (
+    <ConnectedReplaceableSlots>{sessionPage(props)}</ConnectedReplaceableSlots>
+  );
+}
+
+function sessionPage({
   id,
   projectId,
   draft,
-}: SessionDetailScreenProps): React.JSX.Element {
+}: SessionDetailScreenProps): React.ReactNode {
+  if (id === newSessionId)
+    return <SessionNewScreen projectId={projectId} draft={draft} />;
+
   return (
-    <ConnectedReplaceableSlots>
-      {id === newSessionId ? (
-        <SessionNewScreen projectId={projectId} draft={draft} />
-      ) : (
-        <ConnectedSession key={id} sessionId={id} />
-      )}
-    </ConnectedReplaceableSlots>
+    <SizeClass
+      wide={<RetainedSessions sessionId={id} />}
+      compact={<ConnectedSession key={id} sessionId={id} />}
+    />
+  );
+}
+
+const retainedSessionCount = 3;
+
+function useRecentSessions(sessionId: string): string[] {
+  const [recent, setRecent] = useState([sessionId]);
+
+  if (recent[0] !== sessionId)
+    setRecent(
+      [sessionId, ...recent.filter((id) => id !== sessionId)].slice(
+        0,
+        retainedSessionCount,
+      ),
+    );
+
+  return recent;
+}
+
+// The three most recently shown wide Session pages keep their live Feeds.
+function RetainedSessions({
+  sessionId,
+}: {
+  sessionId: string;
+}): React.JSX.Element {
+  const recent = useRecentSessions(sessionId);
+
+  return (
+    <View style={{ flex: 1 }}>
+      {recent.map((id) => (
+        <RetainedSession key={id} sessionId={id} visible={id === sessionId} />
+      ))}
+    </View>
+  );
+}
+
+const retainedStyle = {
+  position: 'absolute',
+  width: '100%',
+  height: '100%',
+  opacity: 0,
+} as const;
+
+const sessionStyle = (visible: boolean): ViewStyle =>
+  visible ? { flex: 1 } : retainedStyle;
+
+const sessionPointer = (visible: boolean): 'auto' | 'none' =>
+  visible ? 'auto' : 'none';
+
+function retainedProps(visible: boolean): React.ComponentProps<typeof View> {
+  return {
+    'aria-hidden': !visible,
+    className: visible ? undefined : 'web:invisible',
+    pointerEvents: sessionPointer(visible),
+    style: sessionStyle(visible),
+  };
+}
+
+function RetainedSession({
+  sessionId,
+  visible,
+}: {
+  sessionId: string;
+  visible: boolean;
+}): React.JSX.Element {
+  return (
+    <RetainedPageVisibility value={visible}>
+      <View {...retainedProps(visible)}>
+        <ConnectedSession sessionId={sessionId} />
+      </View>
+    </RetainedPageVisibility>
   );
 }
 

@@ -2,6 +2,7 @@ import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import { ResourceCode } from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
+import { use } from 'react';
 import { View } from 'react-native';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import { fileName } from '../../view/file-edit-label';
@@ -9,6 +10,7 @@ import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
+import { GroupLiveId } from '../tool-call-group/group-live-id';
 import { toolCallIcon } from '../tool-call-icon';
 import { ToolOutput } from '../tool-output';
 
@@ -93,7 +95,7 @@ function ToolCallRowOutput({
   );
 }
 
-export function ToolCallRow(props: ToolCallRowProps): React.JSX.Element {
+function ToolCallRowDisclosure(props: ToolCallRowProps): React.JSX.Element {
   const { row } = props;
 
   return (
@@ -106,5 +108,15 @@ export function ToolCallRow(props: ToolCallRowProps): React.JSX.Element {
     >
       <ToolCallRowOutput row={row} />
     </ToolCallDisclosure>
+  );
+}
+
+export function ToolCallRow(props: ToolCallRowProps): React.JSX.Element {
+  const titleInGroup = use(GroupLiveId) === props.row.id;
+
+  return titleInGroup ? (
+    <ToolCallRowOutput row={props.row} />
+  ) : (
+    <ToolCallRowDisclosure {...props} />
   );
 }

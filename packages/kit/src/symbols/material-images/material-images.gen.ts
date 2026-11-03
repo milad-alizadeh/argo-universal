@@ -13,6 +13,7 @@ import material_arrow_upward from '../assets/material-light/arrow_upward.xml';
 import material_article from '../assets/material-light/article.xml';
 import material_assignment from '../assets/material-light/assignment.xml';
 import material_attach_file from '../assets/material-light/attach_file.xml';
+import material_auto_awesome from '../assets/material-light/auto_awesome.xml';
 import material_block from '../assets/material-light/block.xml';
 import material_bolt from '../assets/material-light/bolt.xml';
 import material_broken_image from '../assets/material-light/broken_image.xml';
@@ -312,6 +313,7 @@ export const materialImages = {
   article: material_article,
   assignment: material_assignment,
   attach_file: material_attach_file,
+  auto_awesome: material_auto_awesome,
   block: material_block,
   bolt: material_bolt,
   broken_image: material_broken_image,
@@ -602,4 +604,4 @@ export const materialFilledImages = {
 } as const;
 
 // Material names with no drawing; their icons stay drawn by Argo's Icon.
-export const undrawnMaterialNames = ["auto_awesome","expand_less","smartphone"] as const;
+export const undrawnMaterialNames = ["expand_less","smartphone"] as const;

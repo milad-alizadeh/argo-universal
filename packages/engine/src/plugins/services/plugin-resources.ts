@@ -6,7 +6,7 @@ import type { FsCall, PluginValue } from '../protocol/runtime';
 import { fetchCall, fetchResponse, type FetchContext } from './plugin-fetch';
 import type { Hop } from './plugin-fetch-response';
 import { fsCall } from './plugin-file-calls';
-import { argoTimeoutMs } from './plugin-limits';
+import { pluginTimeoutMs } from './plugin-limits';
 import { PluginProcesses, type CheckedProcessCall } from './plugin-processes';
 
 /*
@@ -77,7 +77,7 @@ export class PluginResources {
 
   // Aborts a request at the deadline or on `release`; the returned function ends it early.
   private timed(request: AbortController): () => void {
-    const cancel = this.clock.schedule(() => request.abort(), argoTimeoutMs);
+    const cancel = this.clock.schedule(() => request.abort(), pluginTimeoutMs);
 
     return this.hold(() => {
       cancel();

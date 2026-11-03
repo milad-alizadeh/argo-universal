@@ -1,9 +1,11 @@
 import type {
   AgentThought,
+  ContentBlock,
   LiveHeader,
   Notice,
   Plan,
   SessionUpdate,
+  SessionMessage,
   ToolCallUpdate,
   TurnEnd,
 } from '@repo/contracts';
@@ -85,7 +87,22 @@ export interface FeedTurnEnd {
   end: TurnEnd;
 }
 
+export interface ChildReply {
+  type: 'child_reply';
+  row: SessionMessage;
+}
+
+export interface ParentResult {
+  type: 'parent_result';
+  id: string;
+  position: number;
+  revision: number;
+  content: readonly ContentBlock[];
+}
+
 export type FeedViewItem =
+  | ParentResult
+  | ChildReply
   | FeedActivity
   | FeedGroup
   | FeedStandaloneRow

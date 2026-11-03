@@ -145,7 +145,7 @@ const exampleTabs: readonly InspectorTab[] = [
     count: 3,
     countTone: 'success',
   },
-  { key: 'shells', label: 'Shells', icon: 'terminal', count: 2 },
+  { key: 'shells', label: 'Background Tasks', icon: 'terminal', count: 2 },
 ];
 
 function useExampleTabs(): InspectorTabsProps {
@@ -157,7 +157,9 @@ function useExampleTabs(): InspectorTabsProps {
 
     setItems(rest);
 
-    onSelect(rest[0]?.key ?? '');
+    const first = rest.map((tab) => tab.key)[0];
+
+    onSelect(selected === key ? first || '' : selected);
   };
 
   return { items, selected, onSelect, onClose };

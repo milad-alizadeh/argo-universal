@@ -21,6 +21,7 @@ const sizes = {
 
 interface TintedAvatarProps {
   icon: IconName;
+  accessibilityLabel?: string;
   tone: keyof typeof palettes;
   size?: keyof typeof sizes;
   dimmed?: boolean;
@@ -30,7 +31,10 @@ interface TintedAvatarProps {
 // Paper SubagentRow: role-tinted avatar, with an optional ringless status dot.
 export function TintedAvatar(props: TintedAvatarProps): ReactElement {
   return (
-    <View className={avatarClass(props)}>
+    <View
+      className={avatarClass(props)}
+      accessibilityLabel={props.accessibilityLabel}
+    >
       <Icon
         name={props.icon}
         size={sizes[props.size ?? 'leading'].glyph}

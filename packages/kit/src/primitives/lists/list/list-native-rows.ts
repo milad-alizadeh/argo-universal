@@ -18,7 +18,6 @@ const unhonouredProps = [
   'testID',
   'refreshControl',
   'onEndReached',
-  'accessibilityLabel',
   'padding',
   'maxHeight',
 ] as const satisfies (keyof ListProps<never>)[];

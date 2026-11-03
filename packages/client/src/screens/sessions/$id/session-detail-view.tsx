@@ -31,6 +31,7 @@ import {
 } from './session-inspector';
 import { useWorkPanels } from './session-work-panels';
 import { useInspectorPanels } from './use-inspector-panels';
+import { usePhoneSheet } from './use-phone-sheet';
 
 export interface OpenSessionViewProps extends SessionInspectorContent {
   header: SessionHeaderProps;
@@ -88,17 +89,30 @@ export function SessionDetailView(
 
 // The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
-  const panels = useInspectorPanels(props);
-  const work = useWorkPanels(props, panels);
+  const phone = usePhoneSheet(useInspectorPanels(props));
+  const { panels } = phone;
+  const work = useWorkPanels(props, panels, phone.visible);
 
   return (
     <>
       <SessionLayout {...sessionParts(withWork(props, work), panels)} />
-      <SessionInspector {...withOpenSubagent(props, work)} panels={panels} />
+      {sessionInspector(props, work, phone)}
       {work.sheets}
     </>
   );
 }
+
+const sessionInspector = (
+  props: OpenSessionViewProps,
+  work: ReturnType<typeof useWorkPanels>,
+  phone: ReturnType<typeof usePhoneSheet>,
+): React.JSX.Element => (
+  <SessionInspector
+    {...withOpenSubagent(props, work)}
+    panels={phone.panels}
+    phoneVisible={phone.visible}
+  />
+);
 
 // The Inspector's Agents tab lists the same Subagents, and opens the one the Session has open.
 const withOpenSubagent = (
@@ -111,7 +125,7 @@ const withOpenSubagent = (
   openSubagentFeed: work.openSubagentFeed,
 });
 
-// The Composer carries the work pills, and the Feed's Subagent rows open the Subagents panel.
+// The Composer carries the work pills, the Feed's Subagent rows open the Subagents panel, and the Workbench's Agent rows select the same Subagent.
 const withWork = (
   props: OpenSessionViewProps,
   work: ReturnType<typeof useWorkPanels>,
@@ -119,6 +133,7 @@ const withWork = (
   ...props,
   composer: work.composer,
   feed: work.feed,
+  subagents: work.subagents,
 });
 
 const sessionParts = (

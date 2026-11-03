@@ -82,6 +82,7 @@ const namedScenarioSteps = [
   [agentStep('starts a Shell when released'), 'shell-live'],
   [agentStep('edits a file and keeps its Turn running'), 'changed-files'],
   [agentStep('supplies a long Feed history'), 'feed-history'],
+  [agentStep('supplies Agent reports'), 'subagent-reports'],
   [agentStep('asks for an Elicitation'), 'elicitation'],
   [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
   [agentStep('asks permission to edit README.md'), 'permission'],

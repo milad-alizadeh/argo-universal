@@ -1,0 +1,398 @@
+{
+  "provenance": "Scripted ACP Agent through real Engine and feed.page; not a Claude capture",
+  "parentSessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+  "childSessionId": "628d427f-f3a8-4ff5-958a-80b497c0cc1a",
+  "parent": [
+    {
+      "id": "5367d054-dce8-4197-abd8-b3d98b4f18be:user",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 0,
+      "revision": 1,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "settled",
+      "sessionUpdate": "user_message",
+      "messageId": "5367d054-dce8-4197-abd8-b3d98b4f18be:user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Show the result"
+        }
+      ],
+      "_meta": {
+        "argo": {
+          "sender": {
+            "type": "user"
+          }
+        }
+      }
+    },
+    {
+      "id": "64efd492-7e99-4f7d-91a0-f515721b003d",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 1,
+      "revision": 2,
+      "turnId": null,
+      "state": "settled",
+      "sessionUpdate": "subagent_update",
+      "subagentSessionId": "628d427f-f3a8-4ff5-958a-80b497c0cc1a",
+      "_meta": {
+        "argo": {
+          "action": "spawn"
+        }
+      }
+    },
+    {
+      "id": "[\"subagent_update\",\"1884f8a3-092b-4abb-85e3-2524f6e51828\",\"reply\"]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 2,
+      "revision": 3,
+      "turnId": null,
+      "state": "settled",
+      "sessionUpdate": "subagent_update",
+      "subagentSessionId": "628d427f-f3a8-4ff5-958a-80b497c0cc1a",
+      "_meta": {
+        "argo": {
+          "result": [
+            {
+              "type": "text",
+              "text": "Two packages."
+            },
+            {
+              "type": "resource_link",
+              "name": "Source",
+              "uri": "file:///source.ts"
+            },
+            {
+              "type": "text",
+              "text": "Review complete."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"mcp-content\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 3,
+      "revision": 4,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "mcp-content",
+      "title": "Read the issue",
+      "kind": "other",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "content",
+          "content": {
+            "type": "text",
+            "text": "Issue details from MCP"
+          }
+        }
+      ],
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"mcp-raw\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 4,
+      "revision": 5,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "mcp-raw",
+      "title": "Look up the issue",
+      "kind": "other",
+      "status": "in_progress",
+      "content": [],
+      "rawInput": {
+        "issue": 1918
+      },
+      "rawOutput": {
+        "title": "Live detail"
+      },
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"execute-text\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 5,
+      "revision": 6,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "execute-text",
+      "title": "Inspect the build",
+      "kind": "execute",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "content",
+          "content": {
+            "type": "text",
+            "text": "Build output in progress"
+          }
+        }
+      ],
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"edit-raw\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 6,
+      "revision": 7,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "edit-raw",
+      "title": "Update configuration",
+      "kind": "edit",
+      "status": "in_progress",
+      "content": [],
+      "rawInput": {
+        "file": "config.json"
+      },
+      "rawOutput": {
+        "result": "Changes pending"
+      },
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"edit-title\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 7,
+      "revision": 8,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "edit-title",
+      "title": "Updating the greeting",
+      "kind": "edit",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "diff",
+          "changes": [
+            {
+              "operation": "modify",
+              "path": "/project/hello.txt",
+              "oldText": "hello",
+              "newText": "hello Argo"
+            }
+          ]
+        }
+      ],
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"edit-empty-title\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 8,
+      "revision": 9,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "edit-empty-title",
+      "title": "",
+      "kind": "edit",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "diff",
+          "changes": [
+            {
+              "operation": "modify",
+              "path": "/project/hello.txt",
+              "oldText": "hello",
+              "newText": "hello Argo"
+            }
+          ]
+        }
+      ],
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"edit-described\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 9,
+      "revision": 10,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "edit-described",
+      "title": "Correcting the greeting",
+      "kind": "edit",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "diff",
+          "changes": [
+            {
+              "operation": "modify",
+              "path": "/project/hello.txt",
+              "oldText": "hello",
+              "newText": "hello Argo"
+            }
+          ]
+        }
+      ],
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"described-running\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 10,
+      "revision": 11,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "described-running",
+      "title": "Run command",
+      "kind": "execute",
+      "status": "in_progress",
+      "content": [
+        {
+          "type": "terminal",
+          "command": "cat hello.txt && git status --short",
+          "cwd": "/project",
+          "output": "",
+          "_meta": {
+            "acp": {
+              "terminalId": "described-running"
+            }
+          }
+        }
+      ],
+      "rawInput": {
+        "command": "cat hello.txt && git status --short",
+        "description": "Checking the working tree"
+      },
+      "_meta": {
+        "argo": {
+          "description": "Checking the working tree"
+        },
+        "acp": {
+          "terminal_info": {
+            "terminal_id": "described-running",
+            "cwd": "/project"
+          }
+        }
+      }
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"described-long\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 11,
+      "revision": 13,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "settled",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "described-long",
+      "title": "Run command",
+      "kind": "execute",
+      "status": "completed",
+      "content": [
+        {
+          "type": "terminal",
+          "command": "cat hello.txt && git status --short",
+          "cwd": "/project",
+          "output": "",
+          "exitStatus": {
+            "exitCode": 0
+          },
+          "_meta": {
+            "acp": {
+              "terminalId": "described-long"
+            }
+          }
+        }
+      ],
+      "rawInput": {
+        "command": "cat hello.txt && git status --short",
+        "description": "Inspect a very long command description that must remain on a single line when the available space is narrow"
+      },
+      "_meta": {
+        "argo": {
+          "description": "Inspect a very long command description that must remain on a single line when the available space is narrow"
+        },
+        "acp": {
+          "terminal_exit": {
+            "terminal_id": "described-long",
+            "exit_code": 0,
+            "signal": null
+          }
+        }
+      }
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"delete-raw\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 12,
+      "revision": 14,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "delete-raw",
+      "title": "Remove cache",
+      "kind": "delete",
+      "status": "in_progress",
+      "content": [],
+      "rawOutput": {
+        "result": "Removal pending"
+      },
+      "_meta": {}
+    },
+    {
+      "id": "[\"tool_call_update\",\"parent\",[\"upstream\",\"move-raw\"]]",
+      "sessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828",
+      "position": 13,
+      "revision": 15,
+      "turnId": "5367d054-dce8-4197-abd8-b3d98b4f18be",
+      "state": "open",
+      "sessionUpdate": "tool_call_update",
+      "toolCallId": "move-raw",
+      "title": "Move archive",
+      "kind": "move",
+      "status": "in_progress",
+      "content": [],
+      "rawOutput": {
+        "result": "Move pending"
+      },
+      "_meta": {}
+    }
+  ],
+  "child": [
+    {
+      "id": "[\"session_message\",\"628d427f-f3a8-4ff5-958a-80b497c0cc1a\",\"reply\"]",
+      "sessionId": "628d427f-f3a8-4ff5-958a-80b497c0cc1a",
+      "position": 0,
+      "revision": 1,
+      "turnId": null,
+      "state": "settled",
+      "sessionUpdate": "session_message",
+      "messageId": "reply",
+      "content": [
+        {
+          "type": "text",
+          "text": "Two packages."
+        },
+        {
+          "type": "resource_link",
+          "name": "Source",
+          "uri": "file:///source.ts"
+        },
+        {
+          "type": "text",
+          "text": "Review complete."
+        }
+      ],
+      "_meta": {
+        "argo": {
+          "senderSessionId": "628d427f-f3a8-4ff5-958a-80b497c0cc1a",
+          "recipientSessionId": "1884f8a3-092b-4abb-85e3-2524f6e51828"
+        }
+      }
+    }
+  ]
+}

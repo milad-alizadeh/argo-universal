@@ -35,7 +35,9 @@ export const RemembersListPositionAcrossTabs: Story = {
     await waitFor(() =>
       expect(list.scrollTop, 'initial scroll').toBeGreaterThan(400),
     );
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await waitFor(() =>
       expect(
@@ -56,7 +58,9 @@ export const RemembersFoldedFilesAcrossTabs: Story = {
     await expect(
       canvas.getByRole('button', fileHeader(firstFile)),
     ).toHaveAttribute('aria-expanded', 'false');
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     // The returning panel's rows can be briefly hidden to assistive queries right after the tab flips back.
     await expect(
@@ -67,7 +71,9 @@ export const RemembersFoldedFilesAcrossTabs: Story = {
 
 export const RemembersShellDetailAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      await canvas.findByRole('tab', { name: /Background Tasks/ }),
+    );
     await userEvent.click(
       await canvas.findByRole('button', { name: /^pnpm dev,/ }),
     );
@@ -75,15 +81,17 @@ export const RemembersShellDetailAcrossTabs: Story = {
       canvas.getByRole('button', { name: backToShells }),
     ).toBeVisible();
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    await userEvent.click(canvas.getByRole('tab', { name: /Shells/ }));
+    await userEvent.click(
+      canvas.getByRole('tab', { name: /Background Tasks/ }),
+    );
     await expect(
-      canvas.getByRole('button', { name: backToShells }),
+      await canvas.findByRole('button', { name: backToShells }),
     ).toBeVisible();
     await expect(canvas.getByTestId('shell-output')).toBeVisible();
   },
 };
 
-const backToShells = 'Back to Shells';
+const backToShells = 'Back to Background Tasks';
 
 const backToAgents = 'Back to Agents';
 
@@ -101,7 +109,7 @@ export const RemembersAgentDetailAcrossTabs: Story = {
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
     await userEvent.click(canvas.getByRole('tab', { name: /Agents/ }));
     await expect(
-      canvas.getByRole('button', { name: backToAgents }),
+      await canvas.findByRole('button', { name: backToAgents }),
     ).toBeVisible();
     await expect(
       canvas.getAllByText(/^Use apply_patch to change beta to gamma/)[0],
@@ -112,6 +120,61 @@ export const RemembersAgentDetailAcrossTabs: Story = {
         name: new RegExp(`^${runningSubagent.title},`),
       }),
     ).toBeVisible();
+  },
+};
+
+/*
+ * toBeVisible walks the ancestors, so it passes for a page that paints through its hidden tab; this asks the page
+ * itself. A pressable's transition holds it visible for its duration, so the stories wait for it to go.
+ */
+const paints = (element: HTMLElement): boolean =>
+  element.checkVisibility({ visibilityProperty: true });
+
+export const HidesOpenAgentFeedBehindAnotherTab: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('tab', { name: /Agents/ }));
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: new RegExp(`^${runningSubagent.title},`),
+      }),
+    );
+
+    const back = canvas.getByRole('button', { name: backToAgents });
+
+    await expect(paints(back)).toBe(true);
+    await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
+    await waitFor(() => expect(paints(back)).toBe(false));
+  },
+};
+
+export const HidesOpenShellBehindAnotherTab: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('tab', { name: /Background Tasks/ }),
+    );
+    await userEvent.click(
+      await canvas.findByRole('button', { name: /^pnpm dev,/ }),
+    );
+
+    const output = canvas.getByTestId('shell-output');
+
+    await expect(paints(output)).toBe(true);
+    await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
+    await waitFor(() => expect(paints(output)).toBe(false));
+  },
+};
+
+export const HidesAgentsListBehindAnotherTab: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('tab', { name: /Agents/ }));
+
+    const row = await canvas.findByRole('button', {
+      name: new RegExp(`^${runningSubagent.title},`),
+    });
+
+    await expect(paints(row)).toBe(true);
+    await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
+    await waitFor(() => expect(paints(row)).toBe(false));
   },
 };
 

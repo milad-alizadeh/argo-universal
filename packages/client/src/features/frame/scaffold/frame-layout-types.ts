@@ -8,10 +8,10 @@ export type WorkbenchState =
   | 'gutter'
   | 'docked'
   | 'auto-hidden'
-  | 'dedicated'
+  | 'overlay'
   | 'hidden';
 
-// What the person asked of the Workbench's one toggle: nothing yet, so it docks when the window has room, or to show it or hide it.
+// What the person asked of the Workbench's one toggle: nothing yet, so it docks when the window has room, or to show it (an overlay when it does not fit) or hide it.
 export type WorkbenchIntent = 'auto' | 'shown' | 'hidden';
 
 // The Frame's sizes, read from its tokens and the platform.

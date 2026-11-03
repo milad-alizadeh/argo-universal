@@ -1,5 +1,6 @@
 import { Worker } from 'node:worker_threads';
 import type { PluginEntry } from '../protocol/runtime.ts';
+import { workerDeadline } from './worker-deadline.ts';
 
 const heapLimitMb = 64;
 
@@ -10,9 +11,19 @@ export type WorkerRecord = {
   heartbeat: ReturnType<typeof setTimeout> | null;
 };
 
-export function startWorker(entry: PluginEntry): Worker {
-  return new Worker(new URL('../worker/process.ts', import.meta.url), {
+export function startWorker(
+  entry: PluginEntry,
+  failed: (error: string, hanging: boolean) => void,
+): WorkerRecord {
+  const worker = new Worker(new URL('../worker/process.ts', import.meta.url), {
     workerData: entry,
     resourceLimits: { maxOldGenerationSizeMb: heapLimitMb },
   });
+
+  return {
+    generation: entry.generation,
+    worker,
+    deadline: workerDeadline('initializing', failed),
+    heartbeat: null,
+  };
 }

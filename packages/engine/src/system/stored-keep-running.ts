@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import { openReadOnlyDatabase } from '@repo/db/plugin-database';
 import { serverSettings } from '@repo/db/schema';
 import { sql } from 'drizzle-orm';
@@ -14,7 +15,9 @@ const StoredFlag = z.literal([0, 1]);
  * Only a value that is read and is a boolean counts. A missing file, a locked or unreadable database and a damaged row all throw, and the caller treats a throw as "stop the Server".
  */
 export function readStoredKeepRunning(home: string): boolean {
-  const client = openReadOnlyDatabase(join(home, 'argo.db'));
+  const client = openReadOnlyDatabase(
+    join(home, productCompatibility.databaseFile),
+  );
 
   try {
     // The raw column, not the boolean the schema maps it to, which would read any non-zero value as true.

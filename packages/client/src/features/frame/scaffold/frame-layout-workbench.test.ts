@@ -8,7 +8,7 @@ describe('Workbench states from one toggle', () => {
   it.each([
     { width: 1440, workbenchIntent: 'auto', state: 'docked' },
     { width: 900, workbenchIntent: 'auto', state: autoHidden },
-    { width: 900, workbenchIntent: 'shown', state: 'dedicated' },
+    { width: 900, workbenchIntent: 'shown', state: 'overlay' },
     { width: 900, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'shown', state: 'docked' },
@@ -21,23 +21,37 @@ describe('Workbench states from one toggle', () => {
     },
   );
 
-  it('replaces the primary view when explicit Show cannot fit a separate region', () => {
+  it('overlays the content when explicit Show cannot fit a separate region', () => {
     const layout = frameLayout({
       ...input,
       inspectorState: 'open',
       workbenchIntent: 'shown',
     });
 
-    expect(layout.workbench.state).toBe('dedicated');
-    expect(layout.page).toEqual({ offset: 72, width: 0, hidden: true });
+    expect(layout.page).toEqual({ offset: 384, width: 688, hidden: false });
     expect(layout.workbench).toEqual({
-      state: 'dedicated',
-      offset: 416,
+      state: 'overlay',
+      offset: 752,
       width: 312,
     });
     expect(layout.workbench.offset + layout.workbench.width).toBeLessThan(
       layout.inspector.offset,
     );
+  });
+
+  it("overlays the content's trailing edge with the Inspector closed", () => {
+    const layout = frameLayout({
+      ...input,
+      width: 900,
+      workbenchIntent: 'shown',
+    });
+
+    expect(layout.page).toEqual({ offset: 72, width: 828, hidden: false });
+    expect(layout.workbench).toEqual({
+      state: 'overlay',
+      offset: 580,
+      width: 312,
+    });
   });
 
   it('auto-hides beside an open Inspector at 1440', () => {
@@ -78,8 +92,8 @@ describe('panes placed around the Workbench', () => {
       width: 1456,
       inspectorState: 'open',
       workbenchIntent: 'auto',
-      list: 0,
-      page: 688,
+      list: 312,
+      page: 704,
       handle: 1096,
       inspector: 352,
     },
@@ -87,8 +101,8 @@ describe('panes placed around the Workbench', () => {
       width: 1455,
       inspectorState: 'open',
       workbenchIntent: 'auto',
-      list: 0,
-      page: 1015,
+      list: 312,
+      page: 703,
       handle: 1095,
       inspector: 352,
     },
@@ -114,10 +128,10 @@ describe('panes placed around the Workbench', () => {
       width: 1440,
       inspectorState: 'expanded',
       workbenchIntent: 'auto',
-      list: 0,
+      list: 312,
       page: 0,
-      handle: 80,
-      inspector: 1360,
+      handle: 392,
+      inspector: 1048,
     },
   ] as const)(
     'places panes at $width with the Inspector $inspectorState and the Workbench intent $workbenchIntent',

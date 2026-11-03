@@ -19,7 +19,7 @@ describe('resize handles', () => {
   });
 
   it('drops the list handle when the list has no room to grow', () => {
-    expect(frameLayout({ ...input, width: 1100 }).handles.list).toBeNull();
+    expect(frameLayout({ ...input, width: 1072 }).handles.list).toBeNull();
   });
 
   it('caps the list handle at the widest list', () => {
@@ -76,9 +76,9 @@ describe('the Inspector handle agrees with the layout', () => {
   it.each([
     { width: 100, outcome: 'closed' },
     { width: 176, outcome: 352 },
-    { width: 900, outcome: 664 },
-    { width: 1024, outcome: 664 },
-    { width: 1025, outcome: 'expanded' },
+    { width: 500, outcome: 352 },
+    { width: 712, outcome: 352 },
+    { width: 713, outcome: 'expanded' },
   ])('a drag to $width at 1440 gives $outcome', ({ width, outcome }) => {
     const { handles } = frameLayout({ ...input, inspectorState: 'open' });
 
@@ -88,6 +88,6 @@ describe('the Inspector handle agrees with the layout', () => {
   it('reaches across the whole page area', () => {
     const { handles } = frameLayout({ ...input, inspectorState: 'open' });
 
-    expect(handles.inspector.reach).toBe(1368);
+    expect(handles.inspector.reach).toBe(1056);
   });
 });
