@@ -10,7 +10,11 @@ const idleClock: PluginClock = {
   schedule: () => () => null,
 };
 
-const request = { name: 'close', params: {}, caller: { person: true } } as const;
+const request = {
+  name: 'close',
+  params: {},
+  caller: { person: true },
+} as const;
 
 // One run of `close` on Plugin `tracker`, which the worker answers with `answer`, and the Plugins heard to run.
 async function runAnswered(
@@ -30,10 +34,7 @@ async function runAnswered(
   const running = operations.run('tracker', request);
   const id = sent.at(-1)?.type === 'operation' ? sent.at(-1)?.id : -1;
 
-  operations.receive(
-    { pluginId: 'tracker', generation: 1 },
-    answer(id ?? -1),
-  );
+  operations.receive({ pluginId: 'tracker', generation: 1 }, answer(id ?? -1));
   await running;
 
   return heard;

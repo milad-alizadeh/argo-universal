@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
+import { jsx } from './jsx-runtime';
 import { stopper } from './live-loads';
 import { drawing, type DrawEvent } from './page-drawing';
-import { jsx } from './jsx-runtime';
 
 const event: DrawEvent = {
   type: 'draw',

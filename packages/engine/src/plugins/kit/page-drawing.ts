@@ -6,12 +6,7 @@ import type {
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import { eachYielded, firstOf, isYielding, type Stop } from './live-loads';
-import {
-  loaderInputOf,
-  pageInputOf,
-  pageTo,
-  renderedList,
-} from './page-input';
+import { loaderInputOf, pageInputOf, pageTo, renderedList } from './page-input';
 import { drawnPaged, type Paged } from './paged-lists';
 import type { DataCall } from './query-reads';
 import { drawReader, type DrawLists, type DrawReader } from './query-reads';
