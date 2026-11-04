@@ -51,12 +51,12 @@ function stopThenAgain(stop: () => void, again: () => void): void {
 class KeptTree {
   private readonly key: ReturnType<typeof treeKey>;
 
-  constructor(private readonly following: Following) {
+  public constructor(private readonly following: Following) {
     this.key = treeKey(following.address);
   }
 
   // Whether the answer was kept; a patch onto a tree not kept was not.
-  took(answer: LiveAnswer): boolean {
+  public took(answer: LiveAnswer): boolean {
     if (answer.kind === 'failed') return this.failed(answer.error);
 
     return this.drawn(answer);

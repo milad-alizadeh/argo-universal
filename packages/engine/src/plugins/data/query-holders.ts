@@ -12,7 +12,7 @@ export const reading = Number.POSITIVE_INFINITY;
 export class QueryHolders {
   private readonly held = new Map<string, Held>();
 
-  hold(address: PageAddress | undefined, revision: number): void {
+  public hold(address: PageAddress | undefined, revision: number): void {
     if (!address) return;
     const key = JSON.stringify(address);
 
@@ -22,7 +22,7 @@ export class QueryHolders {
   }
 
   // The addresses that drew an answer older than `revision`.
-  before(revision: number): PageAddress[] {
+  public before(revision: number): PageAddress[] {
     return this.held
       .values()
       .filter((held) => held.revision < revision)
@@ -30,7 +30,7 @@ export class QueryHolders {
       .toArray();
   }
 
-  clear(): void {
+  public clear(): void {
     this.held.clear();
   }
 

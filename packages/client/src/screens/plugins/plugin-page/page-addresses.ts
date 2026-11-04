@@ -49,14 +49,14 @@ type HowDrawn = { pages?: number; pull?: true };
  * caller builds an address or a query key.
  */
 export class PageAddresses {
-  constructor(
+  public constructor(
     private readonly client: QueryClient,
     private readonly draw: DrawPage,
     private readonly follow: FollowPage,
   ) {}
 
   // The Page state the opening shows, as a query only this cache writes.
-  state(opening: PageOpening): StateOptions {
+  public state(opening: PageOpening): StateOptions {
     return {
       queryKey: stateKey(opening),
       queryFn: () => Promise.resolve(this.stateOf(opening)),
@@ -70,7 +70,7 @@ export class PageAddresses {
    * hash and pages kept, and the tree draws again on its interval while subscribed. The Page state is an argument,
    * not read from the cache here, so options a render keeps change with the address.
    */
-  tree(opening: PageOpening, pageState: PageState): TreeOptions {
+  public tree(opening: PageOpening, pageState: PageState): TreeOptions {
     return {
       ...this.treeAt(this.addressOf(opening, pageState)),
       ...treePacing,
@@ -81,7 +81,7 @@ export class PageAddresses {
    * The opening's live subscription, naming the tree kept, so its first answer may be `unchanged`; `again` is
    * asked when it must start over from a whole tree. The answer unsubscribes.
    */
-  followLive(opening: PageOpening, again: () => void): () => void {
+  public followLive(opening: PageOpening, again: () => void): () => void {
     const address = this.addressOf(opening);
 
     return followLive({
@@ -97,7 +97,7 @@ export class PageAddresses {
    * The opening drawn at its next Page state, which it shows once drawn; an empty change is a pull, which reads the
    * first page again and keeps the pages already loaded.
    */
-  async change(opening: PageOpening, change: PageState): Promise<void> {
+  public async change(opening: PageOpening, change: PageState): Promise<void> {
     if (Object.keys(change).length === 0)
       return this.drawPages(this.addressOf(opening), { pull: true });
 
@@ -108,12 +108,12 @@ export class PageAddresses {
   }
 
   // The tree the opening shows now, at its Page state, if one has drawn.
-  shown(opening: PageOpening): WireNode | undefined {
+  public shown(opening: PageOpening): WireNode | undefined {
     return this.keptAt(this.addressOf(opening))?.root;
   }
 
   // One more page of the opening's paged list, appended to the tree kept.
-  async loadMore(opening: PageOpening): Promise<void> {
+  public async loadMore(opening: PageOpening): Promise<void> {
     const address = this.addressOf(opening);
     const kept = this.keptAt(address);
 
@@ -125,7 +125,7 @@ export class PageAddresses {
    * changes, since two never share a tree. Its draws in flight are cancelled first, so an answer read before the
    * Operation cannot paint over the patch; the answer puts the tree back as it was.
    */
-  async patch(
+  public async patch(
     opening: PageOpening,
     patch: (root: WireNode) => WireNode,
   ): Promise<() => void> {
@@ -139,7 +139,7 @@ export class PageAddresses {
    * subscribed, on a focused screen, draw again now, the rest when they come back. A draw already running read
    * before the change, so it is left to finish and then marked again.
    */
-  markStale(mark: StaleMark): void {
+  public markStale(mark: StaleMark): void {
     for (const filter of staleFilters(mark)) {
       for (const query of this.client.getQueryCache().findAll(filter))
         this.markWhenLanded(query);

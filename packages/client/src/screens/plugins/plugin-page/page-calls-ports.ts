@@ -17,10 +17,7 @@ export type OperationRunner = {
 
 // A port's run of an Operation for the Plugin, which the page or Slot it was called from does not own.
 export const operationRunFor =
-  (
-    pluginId: string,
-    run: OperationRunner['run'],
-  ): PageCallsPorts['run'] =>
+  (pluginId: string, run: OperationRunner['run']): PageCallsPorts['run'] =>
   async (scoped: ScopedRun) => {
     await run({ pluginId, ...scoped });
   };
