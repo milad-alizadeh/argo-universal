@@ -22,30 +22,26 @@ export { Fragment } from 'react';
 type Events<Name extends WireComponentName> =
   (typeof kitComponents)[Name]['events'];
 
-// Plugin JSX: declared events accept callbacks at their declared place; other nested handlers are built-in Actions.
-interface PluginDrawing<Item> extends KitDrawing {
+// Plugin JSX: every event, nested ones too, is a value (ADR-0050): a navigation, a Page state change or an Operation call.
+interface PluginDrawing extends KitDrawing {
   node: ReactNode;
   choice: string;
-  item: Item;
-  wireNode: PluginWireNode;
-  returns: void | Promise<void>;
+  returns: never;
   plugin: true;
 }
 
-type MappedPluginProps<
+type MappedPluginProps<Props, Name extends WireComponentName> = KitMappedProps<
   Props,
-  Name extends WireComponentName,
-  Item,
-> = KitMappedProps<Props, Events<Name>, never, PluginDrawing<Item>>;
+  Events<Name>,
+  never,
+  PluginDrawing
+>;
 
 type EventProps<
   Name extends WireComponentName,
   Item = unknown,
-> = MappedPluginProps<
-  DeclaredProps<WireProps[Name] & Expansion<(typeof kitComponents)[Name]>>,
-  Name,
-  Item
->;
+> = MappedPluginProps<DeclaredProps<WireProps[Name]>, Name> &
+  Expansion<(typeof kitComponents)[Name], Item, ReactNode>;
 
 type SlotChild = ReactElement | boolean | null | undefined;
 
@@ -103,7 +99,7 @@ export type PluginWireNode = {
   [Name in WireComponentName]: {
     type: Name;
     key: string;
-    props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name, unknown>;
+    props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name>;
     children: PluginWireNode[];
     slots: Record<string, PluginWireNode[]>;
   };

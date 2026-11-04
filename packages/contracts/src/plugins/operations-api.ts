@@ -32,11 +32,16 @@ type Spelled<Fields> = { [Key in keyof Fields]: Fields[Key] };
 
 type ParamTypes = { string: string; number: number; boolean: boolean };
 
+// A param with choices takes one of them; any other takes its declared type.
 type ParamValue<Param> = Param extends { choices: readonly (infer Choice)[] }
   ? Choice
-  : Param extends { type: keyof ParamTypes }
-    ? ParamTypes[Param['type']]
-    : never;
+  : TypedValue<Param>;
+
+type TypedValue<Param> = Param extends {
+  type: infer Type extends keyof ParamTypes;
+}
+  ? ParamTypes[Type]
+  : never;
 
 type DeclaredParams<Operation> = Operation extends {
   params: infer Params;

@@ -22,18 +22,17 @@ export const WireJson: z.ZodType<WireJson> = z.lazy(() =>
 
 /*
  * A value that crosses the worker boundary as JSON and comes back as the same type: `Value extends
- * CrossesAsJson<Value>` holds when every part of it is JSON, so it accepts interfaces and optional fields but refuses a
- * `Date`, a `Map` or a function, which would come back as something else. It is a mapped type at its top, so a type
- * parameter can be bounded by it; a primitive maps to itself.
+ * CrossesAsJson<Value>` holds when no part of it is a function, a `bigint` or a `symbol`, so it accepts
+ * interfaces and optional fields but refuses a `Date`, a `Map` or a function, whose methods are functions.
+ * A plain JSON union cannot say this: an interface has no index signature, so it would refuse every interface.
  */
 export type CrossesAsJson<Value> = {
   [Key in keyof Value]: JsonPart<Value[Key]>;
 };
 
-type JsonPart<Value> = unknown extends Value
-  ? Value
-  : Value extends string | number | boolean | null | undefined
-    ? Value
-    : Value extends bigint | symbol | ((...args: never[]) => void)
-      ? never
-      : CrossesAsJson<Value>;
+type JsonPart<Value> = Value extends
+  | bigint
+  | symbol
+  | ((...args: never[]) => void)
+  ? never
+  : CrossesAsJson<Value>;

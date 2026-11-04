@@ -5,12 +5,12 @@ import type {
   FieldGroupSchemaProps,
   KitDrawing,
   KitEvents,
+  KitExpansion,
   KitHasChildren,
   KitMappedProps,
   KitComponentName,
   KitSchemaProps,
   KitSlots,
-  WireNode,
 } from '@repo/contracts/kit-props';
 import type { ReactNode } from 'react';
 
@@ -22,12 +22,10 @@ type SchemaProps<Name extends KitComponentName> = DeclaredProps<
     ? { children?: ReactNode }
     : Record<never, never>);
 
-// The App draws its own nodes, choices and list items; handlers return nothing.
-interface AppDrawing<Choice, Node, Item> extends KitDrawing {
+// The App draws its own nodes and choices; handlers return nothing.
+interface AppDrawing<Choice, Node> extends KitDrawing {
   node: Node;
   choice: Choice;
-  item: Item;
-  wireNode: WireNode;
   returns: void;
   plugin: false;
 }
@@ -41,8 +39,9 @@ export type KitProps<
   SchemaProps<Name>,
   KitEvents<Name>,
   KitSlots<Name> | (KitHasChildren<Name> extends true ? 'children' : never),
-  AppDrawing<Choice, Node, Item>
->;
+  AppDrawing<Choice, Node>
+> &
+  KitExpansion<Name, Item, Node>;
 
 // A Form component's props (ADR-0042): its Contracts schema, with handlers as callbacks.
 export type FieldGroupKitProps<Name extends FieldGroupKitComponentName> =
@@ -50,5 +49,5 @@ export type FieldGroupKitProps<Name extends FieldGroupKitComponentName> =
     FieldGroupSchemaProps<Name>,
     FieldGroupEvents<Name>,
     never,
-    AppDrawing<string, ReactNode, unknown>
+    AppDrawing<string, ReactNode>
   >;

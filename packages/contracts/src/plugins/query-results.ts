@@ -20,10 +20,11 @@ export type NamedQuery<Value> = Extract<PluginQuery, { api: 'read' }> & {
 // A named read answers what its read does; any other Query, a bare named read included, what its api does.
 export type QueryResult<Query extends PluginQuery> =
   Query extends NamedQuery<infer Value>
-    ? unknown extends Value
-      ? QueryResults[Query['api']]
-      : Value
+    ? NamedAnswer<Value, QueryResults[Query['api']]>
     : QueryResults[Query['api']];
+
+// A bare named read names no answer type, so it answers what its api does.
+type NamedAnswer<Value, ApiAnswer> = unknown extends Value ? ApiAnswer : Value;
 
 // What a named read is given besides its args: the Project its Query is for, when it is for one.
 export type QueryReadContext = Readonly<{ projectId?: string }>;
