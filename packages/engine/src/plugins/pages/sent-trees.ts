@@ -9,6 +9,9 @@ type SentAt = { last: WireNode | undefined; keep: (root: WireNode) => void };
 const sentKey = ({ pages: _pages, pull: _pull, ...address }: DrawAt): string =>
   JSON.stringify(address);
 
+// The most addresses a Plugin keeps a sent tree for; the least recently drawn goes first.
+const maxAddresses = 100;
+
 // The trees last sent for each address a Plugin drew, kept until its running generation ends (ADR-0050).
 export class SentTrees {
   private readonly sent = new Map<string, Map<string, WireNode>>();
@@ -26,7 +29,14 @@ export class SentTrees {
 
       const sent = this.sent.get(pluginId) ?? new Map<string, WireNode>();
 
-      this.sent.set(pluginId, sent.set(key, root));
+      sent.delete(key);
+      sent.set(key, root);
+      this.sent.set(pluginId, sent);
+
+      for (const [oldest] of sent) {
+        if (sent.size <= maxAddresses) break;
+        sent.delete(oldest);
+      }
     };
 
     return { last: this.sent.get(pluginId)?.get(key), keep };

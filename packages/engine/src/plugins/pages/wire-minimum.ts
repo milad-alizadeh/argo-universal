@@ -1,7 +1,7 @@
 import { drawsPluginWire } from '@repo/contracts/plugins/kit';
 import { updateRequiredNode } from '@repo/contracts/plugins/prepare-tree';
 import { productName } from '@repo/contracts/product-identity';
-import { belowWireMinimum, logOnce } from '../runtime/render-fallback';
+import { belowWireMinimum, logOnce, oneLine } from '../runtime/render-fallback';
 import type { DrawAt } from './draw-calls';
 import type { Drawn } from './plugin-draws';
 
@@ -21,7 +21,7 @@ export function forApp({ pluginId, at, log }: Gated, drawn: Drawn): Drawn {
   logOnce(
     log,
     [pluginId, 'update-argo', at.path],
-    `Plugin ${pluginId}: Update ${productName} ${at.path}: ${belowWireMinimum}`,
+    `Plugin ${pluginId}: Update ${productName} ${oneLine(at.path)}: ${belowWireMinimum}`,
   );
 
   return { ...drawn, root: updateRequiredNode(drawn.root.key) };

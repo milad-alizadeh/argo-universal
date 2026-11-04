@@ -7,7 +7,7 @@ export const oneLine = (text: string): string =>
 export type Fallback = { pluginId: string; slotId: string; reason: string };
 
 const renderFallbackLine = ({ pluginId, slotId, reason }: Fallback): string =>
-  `Plugin ${pluginId}: core fallback ${slotId}: ${oneLine(reason)}`;
+  `Plugin ${oneLine(pluginId)}: core fallback ${slotId}: ${oneLine(reason)}`;
 
 export const belowWireMinimum = 'App is below the wire minimum';
 
@@ -42,6 +42,9 @@ export type OnceKey = readonly [pluginId: string, ...identity: string[]];
 
 type Held = { key: OnceKey; repeats: number };
 
+// The most keys a log holds; a key past it is not written, so a flood of new causes cannot grow the log or its memory.
+export const maxOnceKeys = 1000;
+
 // Per log, every key written once and how often it came back since. Collected with the log.
 const written = new WeakMap<Log, Map<string, Held>>();
 
@@ -58,7 +61,7 @@ export function logOnce(log: Log, key: OnceKey, line: string): void {
   const seen = held.get(JSON.stringify(key));
 
   if (seen) seen.repeats += 1;
-  else {
+  else if (held.size < maxOnceKeys) {
     held.set(JSON.stringify(key), { key, repeats: 0 });
     log(line);
   }

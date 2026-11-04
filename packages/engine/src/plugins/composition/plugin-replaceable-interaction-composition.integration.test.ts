@@ -83,3 +83,35 @@ it('logs an App drawing failure once', async () => {
     'Plugin counter: core fallback argo/feed/tool-call/v1: App drawing failed',
   );
 }, 20_000);
+
+it('refuses a drawing failure from a Plugin the Server does not have', async () => {
+  const home = await counterHome();
+  const { url } = await startEngineTestHost({ home });
+
+  const app = await renderApp(
+    url,
+    toolCallSlotFixture,
+    currentPluginSurface('web'),
+  );
+
+  await expect(
+    app.client.plugins.renderFailed.mutate({
+      pluginId: 'nobody',
+      slotId: toolCallSlotId,
+      reason: 'forged',
+    }),
+  ).rejects.toThrow();
+  await expect(
+    app.client.plugins.renderFailed.mutate({
+      pluginId: 'x'.repeat(200),
+      slotId: toolCallSlotId,
+      reason: 'forged',
+    }),
+  ).rejects.toThrow();
+
+  const log = await readFile(join(home, 'logs/plugins.log'), 'utf8').catch(
+    () => '',
+  );
+
+  expect(log).not.toContain('forged');
+}, 20_000);

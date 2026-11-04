@@ -4,6 +4,7 @@ import {
   forgetOnce,
   logFallback,
   logOnce,
+  maxOnceKeys,
   type OnceKey,
 } from './render-fallback';
 
@@ -106,4 +107,27 @@ it('says nothing when forgetting a Plugin that never repeated', () => {
   forgetOnce(log, 'a');
 
   expect(log).toHaveBeenCalledOnce();
+});
+
+it('holds back new keys once a log has written the most it keeps', () => {
+  const log = vi.fn<(line: string) => void>();
+
+  for (let key = 0; key < maxOnceKeys + 10; key += 1)
+    logOnce(log, updateArgoKey('counter', `/page-${key}`), `line ${key}`);
+
+  expect(log).toHaveBeenCalledTimes(maxOnceKeys);
+});
+
+it('writes a fallback on one line whatever the Plugin and reason spell', () => {
+  const log = vi.fn<(line: string) => void>();
+
+  logFallback(log, 'drawing', {
+    pluginId: 'counter\nPlugin forged: stopped',
+    slotId: 'argo/composer/above/v1',
+    reason: 'a\r\nb',
+  });
+
+  expect(log.mock.calls.flat()).toEqual([
+    'Plugin counter Plugin forged: stopped: core fallback argo/composer/above/v1: a  b',
+  ]);
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DrawRequest,
   treeAfter,
   treeAnswer,
   type HashedTree,
@@ -166,5 +167,21 @@ describe('a tree crossing to the App', () => {
 
     expect(treeAfter(undefined, answer)).toBeUndefined();
     expect(treeAfter(other, answer)).toBeUndefined();
+  });
+});
+
+describe('DrawRequest', () => {
+  const request = (path: string): unknown => ({
+    pluginId: 'counter',
+    path,
+    pageState: {},
+    pages: 1,
+  });
+
+  it('refuses a Page path longer than an App may ask for', () => {
+    expect(DrawRequest.safeParse(request('/page')).success).toBe(true);
+    expect(DrawRequest.safeParse(request(`/${'a'.repeat(600)}`)).success).toBe(
+      false,
+    );
   });
 });

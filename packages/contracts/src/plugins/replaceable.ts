@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { maxPluginIdLength } from './plugin-identifier';
 import { ReplaceableInput, ReplaceableSlotId } from './replaceable-input';
 import { renderReasonLimit } from './replaceable-input';
 import { WireNode } from './wire';
@@ -22,7 +23,7 @@ export type ReplaceableAnswer = z.infer<typeof ReplaceableAnswer>;
 
 // An App that could not draw a Plugin's replacement says so, and core draws the Slot instead.
 export const RenderFailureInput = z.strictObject({
-  pluginId: z.string().min(1),
+  pluginId: z.string().min(1).max(maxPluginIdLength),
   slotId: ReplaceableSlotId,
   reason: z.string().max(renderReasonLimit),
 });

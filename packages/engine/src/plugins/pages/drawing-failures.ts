@@ -39,7 +39,7 @@ export class DrawingFailures {
     if (!this.drawings.failed(addressOf(pluginId, at), error)) return;
 
     this.log(
-      `Plugin ${pluginId}: ${verbs[kind]} ${at.path}: ${oneLine(error)}`,
+      `Plugin ${pluginId}: ${verbs[kind]} ${oneLine(at.path)}: ${oneLine(error)}`,
     );
   }
 

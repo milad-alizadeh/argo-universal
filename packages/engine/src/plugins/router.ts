@@ -53,8 +53,8 @@ const createRenderRouter = routerFactory((plugins: PluginService) =>
       .query(({ input, ctx }) => plugins.render(input, appConnection(ctx))),
     renderFailed: publicProcedure
       .input(RenderFailureInput)
-      .mutation(({ input }) => {
-        plugins.renderFailed(input);
+      .mutation(async ({ input }) => {
+        await plugins.renderFailed(input);
 
         return { ok: true as const };
       }),

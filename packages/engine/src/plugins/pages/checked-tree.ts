@@ -6,6 +6,7 @@ import {
   pluginPageBytes,
 } from '@repo/contracts/plugins/wire-limits';
 import type { Failure } from '../protocol/runtime-status';
+import { oneLine } from '../runtime/render-fallback';
 import { sanitizeTree, type RefusedSvg } from '../visual/sanitize-tree';
 import type { Drawn } from './plugin-draws';
 
@@ -79,7 +80,7 @@ export function checkedPage(
   if (!tree.ok) return tree;
 
   for (const { node, reason } of tree.refused)
-    log(`Plugin ${pluginId}: refused ${path} node ${node}: ${reason}`);
+    log(`Plugin ${pluginId}: refused ${oneLine(path)} node ${node}: ${reason}`);
 
   return { ok: true, root: tree.root, pages, live };
 }

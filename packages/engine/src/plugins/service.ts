@@ -128,8 +128,12 @@ export class PluginService {
     return renderSlot(this.deps.pluginRuntime, { input, plugins }, connection);
   }
 
-  // Logged once per Plugin, Slot and reason, so an App cannot flood the log.
-  public renderFailed(input: RenderFailureInput): void {
+  /*
+   * An App's report that it could not draw a replacement, logged once per Plugin and Slot. A paired App is
+   * not trusted to name a Plugin: one the Server does not have is refused, so it cannot forge or grow the log.
+   */
+  public async renderFailed(input: RenderFailureInput): Promise<void> {
+    await locatePlugin(this.deps, input.pluginId);
     this.deps.pluginRuntime.drawingFailed(input);
   }
 

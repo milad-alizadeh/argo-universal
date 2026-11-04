@@ -31,6 +31,9 @@ const addressKey = ({
     sessionId ?? null,
   ]);
 
+// The most drawing failures held at once; the oldest goes first, so an App asking for endless addresses cannot grow them.
+const maxDrawings = 200;
+
 /*
  * The failures the App shows: a stopped Plugin's, and drawing failures, one per Page address. A Plugin
  * that throws fails what the App asked for and nothing else, so another page of the same Plugin neither
@@ -69,10 +72,21 @@ export class PluginFailures {
     const at = addressKey(address);
 
     if (!plugin || this.isRepeat(plugin.pluginId, at, message)) return false;
-    this.drawings.set(at, failure(plugin, 'drawing', message));
+    this.holdDrawing(at, failure(plugin, 'drawing', message));
     this.changed();
 
     return true;
+  }
+
+  // The newest failure of an address is the last held; past the most held, the oldest goes.
+  private holdDrawing(at: string, held: PluginFailure): void {
+    this.drawings.delete(at);
+    this.drawings.set(at, held);
+
+    for (const [oldest] of this.drawings) {
+      if (this.drawings.size <= maxDrawings) break;
+      this.drawings.delete(oldest);
+    }
   }
 
   private isRepeat(pluginId: string, at: string, message: string): boolean {

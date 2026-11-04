@@ -16,9 +16,12 @@ export const PageState = z.record(z.string(), PageStateValue);
 
 export type PageState = z.infer<typeof PageState>;
 
+// The longest Page path an App may ask a Plugin for, which the Server logs when the page fails.
+export const maxPagePathLength = 512;
+
 export const PageAddress = z.strictObject({
   pluginId: z.string().min(1),
-  path: z.string().startsWith('/'),
+  path: z.string().startsWith('/').max(maxPagePathLength),
   pageState: PageState,
   projectId: z.string().min(1).optional(),
   sessionId: z.string().min(1).optional(),
