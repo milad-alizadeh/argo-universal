@@ -8,6 +8,13 @@ import { WireJson } from '#plugin-wire-json';
  */
 
 // One Operation's name within its Plugin; its id is `<plugin-id>.<name>`.
+/*
+ * How long one of a Plugin's Operations may run before the Server fails its call. An Operation is an Agent's
+ * own step, not a drawing deadline, so it is given far longer than a Slot's batched call. The worker knows
+ * it too: once it has passed, the run is no longer the Server's to mark, and a later change marks as usual.
+ */
+export const operationLimitMs = 30_000;
+
 export const PluginOperationName = z
   .string()
   .regex(

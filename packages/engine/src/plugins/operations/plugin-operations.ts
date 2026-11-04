@@ -1,5 +1,8 @@
 import { Json } from '@repo/contracts/plugins/hook-protocol';
-import type { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
+import {
+  operationLimitMs,
+  type PluginOperationCall,
+} from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { Failure } from '../protocol/runtime-status';
 import type {
@@ -9,12 +12,6 @@ import type {
   KindCalls,
   WorkerCalls,
 } from '../runtime/worker-calls';
-
-/*
- * How long one of a Plugin's Operations may run before the call fails. An Operation is an Agent's own
- * step, not a drawing deadline, so it is given far longer than a Slot's batched call.
- */
-const operationLimitMs = 30_000;
 
 type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 
