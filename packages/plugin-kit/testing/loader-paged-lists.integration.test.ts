@@ -131,3 +131,21 @@ it('stops offering a load more at the most pages an address can ask for', async 
     hasMore: false,
   });
 });
+
+it('keeps a paged list read for one App apart from the same list read for another', async () => {
+  const kit = await start();
+
+  const titles = async (app: {
+    platform?: 'web' | 'ios';
+    serverDevice?: boolean;
+  }): Promise<unknown[]> =>
+    treeOf(await kit.pages.draw({ path: '/by-app', ...app })).root.children.map(
+      (row) => row.props.title,
+    );
+
+  expect(await titles({ platform: 'web', serverDevice: true })).toEqual([
+    'web on the Server',
+  ]);
+  expect(await titles({ platform: 'ios' })).toEqual(['ios']);
+  expect(await titles({ platform: 'web' })).toEqual(['web']);
+});

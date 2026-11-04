@@ -110,6 +110,22 @@ export function register(argo) {
     ),
   });
 
+  // A list whose items name the App it was read for.
+  argo.pages.define('/by-app', {
+    load: () => null,
+    list: async ({ context }) => ({
+      items: [context.surface?.platform + (context.serverDevice ? ' on the Server' : '')],
+      cursor: null,
+    }),
+    render: (_data, _to, { list }) => (
+      <List>
+        {list.items.map((app) => (
+          <ListItem key={app} title={app} />
+        ))}
+      </List>
+    ),
+  });
+
   // A list with no end: every page answers one item and a cursor for the next.
   argo.pages.define('/endless', {
     load: () => null,

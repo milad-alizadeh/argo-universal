@@ -5,6 +5,7 @@ import {
   type PluginQuery,
 } from '@repo/contracts/plugins/argo-calls';
 import type { PageState } from '@repo/contracts/plugins/page-address';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import type { QueryResult } from '@repo/contracts/plugins/query-results';
 import { z } from 'zod';
 import type { ReadPage } from './paged-lists';
@@ -44,12 +45,21 @@ async function readQuery(
 }
 
 // The address a list is read at, short of its Plugin and Project, which the Query's entry already names.
-type ListAt = { path: string; pageState: PageState; sessionId?: string };
+type ListAt = {
+  path: string;
+  pageState: PageState;
+  sessionId?: string;
+  serverDevice?: boolean;
+  surface?: PluginSurface;
+};
 
-// One page of the draw's paged list, kept by Argo as a Query of its address and cursor.
+/*
+ * One page of the draw's paged list, kept by Argo as a Query of its address and cursor. The list sees the
+ * App's surface and whether it is the Server Device, so they are part of what the page is kept under.
+ */
 export function listReader<Item>(
   read: DrawReader,
-  { path, pageState, sessionId }: ListAt,
+  { path, pageState, sessionId, serverDevice, surface }: ListAt,
 ): ReadPage<Item> {
   const page = z.object({
     items: z.array(z.custom<Item>()),
@@ -57,7 +67,14 @@ export function listReader<Item>(
   });
 
   return async (cursor, fresh) => {
-    const args = { path, pageState, sessionId: sessionId ?? null, cursor };
+    const args = {
+      path,
+      pageState,
+      sessionId: sessionId ?? null,
+      serverDevice: serverDevice === true,
+      surface: surface ?? null,
+      cursor,
+    };
 
     return page.parse(
       await read({ api: 'read', name: pagedListRead, args }, fresh),
