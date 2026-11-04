@@ -19,7 +19,6 @@ import {
   type FilterState,
 } from './filter-loader';
 import { issueRow } from './filter-rows';
-import { loadingIssues } from './filter-shown';
 import type { Issue } from './github-issues';
 import { repositoryText, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -27,6 +26,7 @@ import type { IssueFilter } from './issue-filters';
 import { filterPattern } from './issue-paths';
 import { RootRows } from './issue-root';
 import { issueTree } from './issue-tree';
+import { loadingIssues } from './loading-issues';
 
 type To = PageTo<FilterState>;
 

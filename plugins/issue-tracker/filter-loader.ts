@@ -1,5 +1,4 @@
 import type { ListPage, LoaderInput } from '@argo/plugin-kit';
-import { pageSize } from './filter-shown';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
 import { openDepsClient, type Project } from './issue-client';
@@ -25,6 +24,9 @@ export type FilterData = {
 
 type Load = { params: Readonly<Record<string, string>>; state: FilterState };
 
+// Issues a page loads at a time, and again for each further page.
+const pageSize = 30;
+
 // How the Loader reads a Query through Argo.
 type Read = LoaderInput<FilterState>['read'];
 
@@ -36,7 +38,10 @@ type Target = {
   opened: Promise<Opened>;
 };
 
-type Opened = { client?: TrackerClient; message: string };
+// Either the Tracker's client, or why it did not open.
+type Opened =
+  | { opened: true; client: TrackerClient }
+  | { opened: false; message: string };
 
 /*
  * One draw's Loader and paged list ask for its target at once, with the same input: it is worked out once
@@ -77,13 +82,16 @@ const namedBy = (
   filter: filterById(params.filter ?? ''),
 });
 
-const gone: Opened = { message: 'This page no longer exists.' };
+const gone = { opened: false, message: 'This page no longer exists.' } as const;
+
+const messageOf = (tracker: Opened): string =>
+  tracker.opened ? '' : tracker.message;
 
 // Settled either way, so a draw that only loads leaves no failed open unread.
 const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
   openDepsClient({ project, deps }).then(
-    (client) => ({ client, message: '' }),
-    (error: Error) => ({ message: error.message }),
+    (client): Opened => ({ opened: true, client }),
+    (error: Error): Opened => ({ opened: false, message: error.message }),
   );
 
 /*
@@ -100,12 +108,12 @@ export async function loadFilter(
   if (!project || !filter)
     return { projects, overview: null, message: gone.message };
 
-  const [overview, { message }] = await Promise.all([
+  const [overview, tracker] = await Promise.all([
     read(deps.overview({ projectId: project.id })).catch(() => null),
     opened,
   ]);
 
-  return { projects, project, filter, overview, message };
+  return { projects, project, filter, overview, message: messageOf(tracker) };
 }
 
 /*
@@ -120,10 +128,10 @@ export async function listFilter(
   cursor: string | null,
 ): Promise<ListPage<Issue>> {
   const { filter, opened } = await target;
-  const { client } = await opened;
+  const tracker = await opened;
 
-  return filter && client
-    ? readPage(client, searchOf(filter, query), cursor)
+  return filter && tracker.opened
+    ? readPage(tracker.client, searchOf(filter, query), cursor)
     : end;
 }
 

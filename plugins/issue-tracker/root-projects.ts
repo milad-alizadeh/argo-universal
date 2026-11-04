@@ -1,6 +1,6 @@
-import { loadingIssues } from './filter-shown';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
+import { loadingIssues } from './loading-issues';
 
 // The Projects to group Issues of, the one a page opened for, and what to say in place of its Issues.
 export type RootProjects = {
