@@ -7,8 +7,8 @@ import type {
   SecretCall,
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
-import { fetchResponse } from '../kit/fetch-response';
 import { configureCallScopes } from '../kit/call-scope';
+import { fetchResponse } from '../kit/fetch-response';
 import { createKit, type Kit } from '../kit/plugin-kit';
 import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';

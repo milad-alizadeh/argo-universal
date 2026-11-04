@@ -53,15 +53,27 @@ export function testPages(
 
   return {
     draw: ({ serverDevice, ...input }) =>
-      pages.draw(
-        { pluginId, pageState: {}, pages: 1, ...input },
-        webApp(serverDevice),
-      ),
+      pages.draw(drawInput(pluginId, input), webApp(serverDevice)),
     run: ({ serverDevice, ...input }) =>
       pages.run({ pluginId, ...input }, webApp(serverDevice)),
     stale: (signal) => pages.stale(signal),
   };
 }
+
+type DrawInput = Omit<
+  Parameters<PluginTest['pages']['draw']>[0],
+  'serverDevice'
+>;
+
+const drawInput = (
+  pluginId: string,
+  input: DrawInput,
+): Parameters<LoaderPages['draw']>[0] => ({
+  pluginId,
+  pageState: {},
+  pages: 1,
+  ...input,
+});
 
 const runInput = (input: RunInput, fallbackId: string): Run => ({
   ...givenToRun(input),

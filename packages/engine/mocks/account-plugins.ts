@@ -14,7 +14,7 @@ type AccountPlugins = Awaited<ReturnType<typeof installed>> & {
 };
 
 const providerSource = `export async function register(argo) {
-    argo.pages.register('/', () => null);
+    argo.pages.define('/', { load: () => null, render: () => null });
     let id = await argo.secrets.get('account-id');
     if (!id) { id = await argo.accounts.add('${accountHost}', { label: 'Milad' });
       await argo.secrets.set('account-id', id); await argo.secrets.set(id, 'synthetic-token'); }
@@ -44,6 +44,7 @@ const installBorrower = async (
     id: 'borrower',
     fixture: 'healthy',
     capabilities: [{ kind: 'fetch', host: '*', reason: 'Fixture APIs' }],
+    operations: [borrowOperation],
   });
   await writeFile(
     join(home, 'shipped/borrower/index.mjs'),
@@ -51,16 +52,27 @@ const installBorrower = async (
   );
 };
 
+// The borrower's one Operation, which a run for a Project starts as its page's button would.
+const borrowOperation = {
+  name: 'borrow',
+  label: 'Borrow the Account',
+  description: 'Makes the call that borrows the Account.',
+  tier: 'act' as const,
+};
+
+// The run makes the call and writes its value or error to the borrower's data folder.
 const borrowerSource = (home: string, expression: string): string =>
   `
-    import { useEffect, Text } from '@argo/plugin-kit';
-    import { jsx } from '@argo/plugin-kit/jsx-runtime';
-    export function register(argo) { argo.pages.register('/', function Page() {
-      useEffect(() => { (async () => ${expression})().then(
-        (value) => argo.fs.write('${home}/plugin-data/borrower/out.json', JSON.stringify({ result: { value: value ?? null } })),
-        (error) => argo.fs.write('${home}/plugin-data/borrower/out.json', JSON.stringify({ result: { error: error.message } }))
-      ); }, []); return jsx(Text, { children: 'Probe' });
-    }); }
+    export function register(argo) {
+      argo.operations.register('borrow', async () => {
+        const out = '${home}/plugin-data/borrower/out.json';
+        await (async () => ${expression})().then(
+          (value) => argo.fs.write(out, JSON.stringify({ result: { value: value ?? null } })),
+          (error) => argo.fs.write(out, JSON.stringify({ result: { error: error.message } })),
+        );
+        return null;
+      });
+    }
   `;
 
 type ReceivedRequest = { host: string; token: string | undefined };

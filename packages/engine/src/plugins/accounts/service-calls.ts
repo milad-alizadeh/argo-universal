@@ -57,7 +57,7 @@ export async function oauthCall(
   call.resources.assertOpen();
   const input = request.call;
 
-  if (!call.serverDevice && !startedHere(call, input))
+  if (!mayRun(call, input))
     throw new CapabilityRefusal('OAuth must run on the Server Device');
 
   return input.action === 'start'
@@ -65,7 +65,8 @@ export async function oauthCall(
     : call.oauth.await(call, input);
 }
 
-const startedHere = (
-  call: PluginCall,
-  input: OAuthRequest['call'],
-): boolean => input.action === 'await' && call.oauth.issued(call, input.state);
+const mayRun = (call: PluginCall, input: OAuthRequest['call']): boolean =>
+  call.serverDevice || startedHere(call, input);
+
+const startedHere = (call: PluginCall, input: OAuthRequest['call']): boolean =>
+  input.action === 'await' && call.oauth.issued(call, input.state);

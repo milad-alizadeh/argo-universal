@@ -218,6 +218,10 @@ _Avoid_: Share, delegate, proxy
 A sign-in one Plugin provides and other Plugins borrow, named by the API host its token opens, such as `api.linear.app`, rather than by the button that gets it. CircleCI and GitHub are separate Accounts though both sign in with GitHub. A Plugin asks Argo for an Account, and the user approves each Plugin once per Account. See ADR-0036.
 _Avoid_: Login, credential, identity, Tracker, Integration
 
+**OAuth flow**:
+The kit's ready-made sign-in for a service that signs in with OAuth: the Plugin names the service's authorize and token URLs, its client ID and the Account's host, and the flow opens the browser, waits for the person, keeps the token and adds the Account. It holds where the sign-in stands, such as waiting or failed, for the Plugin's sign-in page to draw, and a sign-in started can be cancelled. It runs on the Server Device only.
+_Avoid_: OAuth helper, login flow, auth handler
+
 ## Agents and Sessions
 
 **Agent**:

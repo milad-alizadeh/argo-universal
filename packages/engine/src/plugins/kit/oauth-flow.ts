@@ -4,10 +4,12 @@ import type {
   OAuthFlowPattern,
   OAuthFlowState,
 } from '@repo/contracts/plugins/oauth-flow-api';
-
-type Started = NonNullable<Awaited<ReturnType<OAuthFlowArgo['oauth']['start']>>>;
-
-type Grant = Started & { clientId: string; code: string; verifier: string };
+import {
+  authorizeLocation,
+  failed,
+  signedIn,
+  type Waiting,
+} from './oauth-exchange';
 
 // The one sign-in a flow holds, and the attempt whose answers still count.
 type Held = { state: OAuthFlowState; attempt: symbol | null };
@@ -24,18 +26,7 @@ type Given = Omit<Attempt, 'live' | 'settle'>;
 
 const idle: OAuthFlowState = { kind: 'idle' };
 
-const failed = (message: string): OAuthFlowState => ({
-  kind: 'failed',
-  reason: 'failed',
-  message,
-});
-
 const bearer = { header: 'Authorization', prefix: 'Bearer' };
-
-const form = (fields: Record<string, string>): string =>
-  Object.entries(fields)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&');
 
 /*
  * A kit pattern on the open `argo.oauth`, `argo.fetch`, `argo.accounts` and `argo.secrets` calls: start a
@@ -83,9 +74,7 @@ async function start(held: Held, given: Given): Promise<OAuthFlowState> {
   const attempt = current(held, given);
 
   attempt.settle({ kind: 'waiting' });
-  await opened(attempt).catch((error: unknown) =>
-    attempt.settle(refused(error)),
-  );
+  await opened(attempt).catch((error: Error) => attempt.settle(refused(error)));
 
   return held.state;
 }
@@ -102,12 +91,12 @@ async function opened(attempt: Attempt): Promise<void> {
 
   const started = await attempt.argo.oauth.start();
 
-  if (!started) attempt.settle(failed('Couldn’t start sign-in.'));
-  else
+  if (started)
     void finished(attempt, { ...started, clientId }).then(
       attempt.settle,
-      (error: unknown) => attempt.settle(refused(error)),
+      (error: Error) => attempt.settle(refused(error)),
     );
+  else attempt.settle(failed('Couldn’t start sign-in.'));
 }
 
 async function clientIdOf(options: OAuthFlowOptions): Promise<string | null> {
@@ -118,15 +107,13 @@ async function clientIdOf(options: OAuthFlowOptions): Promise<string | null> {
 }
 
 // Argo's own message when another program holds the fixed callback port.
-function refused(error: unknown): OAuthFlowState {
-  const message = error instanceof Error ? error.message : String(error);
+function refused(error: Error): OAuthFlowState {
+  const message = String(error.message);
 
   return message.includes('in use')
     ? { kind: 'failed', reason: 'port-in-use', message }
     : failed(message);
 }
-
-type Waiting = Started & { clientId: string };
 
 // A denial, the five-minute timeout and a newer sign-in resolve to nothing, which leaves the flow idle.
 async function finished(
@@ -137,84 +124,9 @@ async function finished(
   const result = await attempt.argo.oauth.await(waiting.state, url);
 
   // A cancelled sign-in adds no Account, even when the person finished in the browser.
-  if (!attempt.live()) return idle;
+  if (!result || !attempt.live()) return idle;
 
-  return result ? signedIn(attempt, { ...waiting, ...result }) : idle;
-}
-
-function authorizeLocation(options: OAuthFlowOptions, start: Waiting): string {
-  const scope = options.scopes?.join(' ');
-
-  return `${options.authorizeUrl}?${form({
-    response_type: 'code',
-    client_id: start.clientId,
-    redirect_uri: start.redirectUri,
-    state: start.state,
-    code_challenge: start.codeChallenge,
-    code_challenge_method: start.codeChallengeMethod,
-    ...(scope && { scope }),
-  })}`;
-}
-
-// Argo mints the Account id; the token lives in the Plugin's own secrets under it.
-async function signedIn(
-  { argo, options }: Attempt,
-  grant: Grant,
-): Promise<OAuthFlowState> {
-  const token = await exchange(argo, options, grant);
-
-  if (!token) return failed('The service did not return a token.');
-
-  const label = await options.label(token);
-
-  if (!label) return failed('The service did not say who signed in.');
-
-  const id = await argo.accounts.add(options.host, { label });
-
-  await argo.secrets.set(id, token);
-
-  return { kind: 'signed-in', label };
-}
-
-// The Plugin exchanges the code itself, as a public client with its PKCE verifier (RFC 6749, RFC 7636).
-async function exchange(
-  argo: OAuthFlowArgo,
-  options: OAuthFlowOptions,
-  grant: Grant,
-): Promise<string | null> {
-  const response = await argo.fetch(options.tokenUrl, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: form({
-      grant_type: 'authorization_code',
-      client_id: grant.clientId,
-      code: grant.code,
-      code_verifier: grant.verifier,
-      redirect_uri: grant.redirectUri,
-    }),
-  });
-
-  if (!response?.ok) return null;
-
-  return (options.readToken ?? accessToken)(jsonOf(await response.text()));
-}
-
-// A token endpoint that answers anything but JSON answers no token.
-function jsonOf(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-}
-
-function accessToken(answer: unknown): string | null {
-  const token: unknown = Object(answer).access_token;
-
-  return typeof token === 'string' && token !== '' ? token : null;
+  return signedIn(attempt.argo, attempt.options, { ...waiting, ...result });
 }
 
 function cancel(held: Held, argo: OAuthFlowArgo): OAuthFlowState {

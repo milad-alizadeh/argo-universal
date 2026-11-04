@@ -1,8 +1,7 @@
 import { replyFailure } from '../access/capability-refusal';
 import type { PluginData, QueryOrigin } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
-import type { PluginOperations } from '../operations';
-import type { RunOrigin } from '../operations/plugin-operations';
+import type { PluginOperations, RunOrigin } from '../operations';
 import type { PluginDraws } from '../pages';
 import type { Drawing } from '../pages/draw-calls';
 import type {
@@ -121,7 +120,7 @@ const noOrigin: ServiceOrigin = { projectId: undefined, serverDevice: false };
 
 /*
  * A call reaches what the call it runs for reaches: a draw's Project and Server Device, an Operation run's
- * Project and Server Device, or a Hook's Project. A draw or run that has already answered reaches neither,
+ * Project and Server Device. A draw or run that has already answered reaches neither,
  * and nor does a call made outside all of them, such as at registration.
  */
 function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
@@ -133,8 +132,6 @@ function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
   if (message.operation !== undefined)
     return runOrigin(runtime.operations.origin(caller, message.operation));
 
-  if (message.viewId) return viewOrigin(runtime, message.pluginId, message.viewId);
-
   return { projectId: message.projectId, serverDevice: false };
 }
 
@@ -144,21 +141,9 @@ const drawOrigin = (drawn: Drawing | undefined): ServiceOrigin =>
     : noOrigin;
 
 const runOrigin = (origin: RunOrigin | undefined): ServiceOrigin =>
-  origin ? { projectId: origin.projectId, serverDevice: origin.serverDevice } : noOrigin;
-
-// A hook page's view (the old path, which goes with its views).
-function viewOrigin(
-  runtime: RuntimeCalls,
-  pluginId: string,
-  viewId: string,
-): ServiceOrigin {
-  const view = runtime.views.dataView(pluginId, viewId);
-
-  return {
-    projectId: view.projectId,
-    serverDevice: view.opening.serverDevice === true,
-  };
-}
+  origin
+    ? { projectId: origin.projectId, serverDevice: origin.serverDevice }
+    : noOrigin;
 
 type DataRequest = Extract<PluginRequest, { api: 'data' }>;
 

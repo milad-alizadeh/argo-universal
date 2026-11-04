@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
-import { chooseView } from './sign-in-view';
+import { chooseView, type SignInData, type SignInView } from './sign-in-view';
 
 const account = { label: 'octocat', host: 'api.github.com' };
 
@@ -36,14 +36,14 @@ test('without an Account, a device that is not the Server Device is told to cont
   );
 });
 
-test('the Server Device draws the sign-in where it stands', () => {
-  const view = (flow: Parameters<typeof chooseView>[0]['flow']) =>
-    chooseView({ account: null, serverDevice: true, flow });
+const onServerDevice = (flow: SignInData['flow']): SignInView =>
+  chooseView({ account: null, serverDevice: true, flow });
 
-  assert.deepEqual(view(idle), { kind: 'signed-out' });
-  assert.deepEqual(view({ kind: 'waiting' }), { kind: 'waiting' });
+test('the Server Device draws the sign-in where it stands', () => {
+  assert.deepEqual(onServerDevice(idle), { kind: 'signed-out' });
+  assert.deepEqual(onServerDevice({ kind: 'waiting' }), { kind: 'waiting' });
   assert.deepEqual(
-    view({
+    onServerDevice({
       kind: 'failed',
       reason: 'port-in-use',
       message: 'Port 51789 is in use',
@@ -55,7 +55,11 @@ test('the Server Device draws the sign-in where it stands', () => {
     },
   );
   assert.deepEqual(
-    view({ kind: 'failed', reason: 'failed', message: 'GitHub said no' }),
+    onServerDevice({
+      kind: 'failed',
+      reason: 'failed',
+      message: 'GitHub said no',
+    }),
     { kind: 'failed', title: 'Couldn’t sign in', message: 'GitHub said no' },
   );
 });

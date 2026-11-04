@@ -59,8 +59,8 @@ const oauthJourney = (
   ...host,
   ...browser,
   started: startReader(home, browser.opened),
-  result: resultReader(home),
-  failure: failureReader(home),
+  result: settledReader(home, 'result', OAuthResult.nullable()),
+  failure: settledReader(home, 'failure', z.string().nullable()),
 });
 
 // The one Operation each fixture Plugin declares: it starts a sign-in, as a sign-in page's button does.
@@ -116,7 +116,11 @@ const oauthSourceTemplate = `
 // Each Plugin's sign-in starts from a run on the Server Device, as a tap in its App there does.
 async function runProbes(host: EngineHost, ids: string[]): Promise<void> {
   for (const id of ids)
-    await host.caller.plugins.run({ pluginId: id, operation: 'probe', args: {} });
+    await host.caller.plugins.run({
+      pluginId: id,
+      operation: 'probe',
+      args: {},
+    });
 }
 
 const read = async (
@@ -154,32 +158,18 @@ function startReader(home: string, opened: string[]): OAuthJourney['started'] {
 const openedFor = (opened: string[], state: string): boolean =>
   opened.some((url) => url.endsWith(`state=${state}`));
 
-function resultReader(home: string): OAuthJourney['result'] {
-  return async (id = 'alice') => {
+// What the Plugin wrote to `file` once it has written it.
+const settledReader =
+  <Value>(home: string, file: string, schema: z.ZodType<Value>) =>
+  async (id = 'alice'): Promise<Value> => {
     await expect
-      .poll(() => read(home, id, 'result').catch(() => 'pending'), {
+      .poll(() => read(home, id, file).catch(() => 'pending'), {
         timeout: 10_000,
       })
       .not.toBe('pending');
 
-    return OAuthResult.nullable().parse(await read(home, id, 'result'));
+    return schema.parse(await read(home, id, file));
   };
-}
-
-function failureReader(home: string): OAuthJourney['failure'] {
-  return async (id = 'alice') => {
-    await expect
-      .poll(() => read(home, id, 'failure').catch(() => 'pending'), {
-        timeout: 10_000,
-      })
-      .not.toBe('pending');
-
-    return z
-      .string()
-      .nullable()
-      .parse(await read(home, id, 'failure'));
-  };
-}
 
 export const challenge = (verifier: string): string =>
   createHash('sha256').update(verifier).digest('base64url');

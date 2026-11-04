@@ -18,8 +18,8 @@ type Given<Value> = Value | (() => Value | null | Promise<Value | null>);
  * - `scopes` go in the authorize URL's `scope`, joined by spaces.
  * - `label` names whose Account the token opens, such as the login the service answers for it; null fails
  *   the sign-in.
- * - `readToken` reads the access token from the token endpoint's JSON answer; by default its
- *   `access_token`. A service that nests it, such as Slack's, says where.
+ * - `tokenPath` is where the access token sits in the token endpoint's JSON answer, `['access_token']`
+ *   by default. A service that nests it, such as Slack's `['authed_user', 'access_token']`, says where.
  * - `header` is how a borrower's request carries the token, `Authorization: Bearer` by default.
  */
 export type OAuthFlowOptions = Readonly<{
@@ -29,7 +29,7 @@ export type OAuthFlowOptions = Readonly<{
   clientId: Given<string>;
   scopes?: readonly string[];
   label: (token: string) => Promise<string | null>;
-  readToken?: (answer: unknown) => string | null;
+  tokenPath?: readonly string[];
   header?: Readonly<{ header: string; prefix: string }>;
 }>;
 

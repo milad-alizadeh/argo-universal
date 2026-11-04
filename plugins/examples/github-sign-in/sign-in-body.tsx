@@ -59,10 +59,14 @@ function Failure({ title, message, start }: Failure): JSX.Element {
   );
 }
 
+type NotSignedIn = Exclude<
+  SignInView,
+  { kind: 'signed-in' } | { kind: 'continue-on-server-device' }
+>;
+
 export function Body({
   view,
-  start,
-  cancel,
+  ...actions
 }: Actions & { view: SignInView }): JSX.Element {
   if (view.kind === 'signed-in') return <SignedIn account={view.account} />;
 
@@ -74,6 +78,15 @@ export function Body({
       />
     );
 
+  return <SignIn view={view} {...actions} />;
+}
+
+// The Server Device's sign-in, where it stands.
+function SignIn({
+  view,
+  start,
+  cancel,
+}: Actions & { view: NotSignedIn }): JSX.Element {
   if (view.kind === 'waiting') return <InProgress cancel={cancel} />;
 
   if (view.kind === 'failed')

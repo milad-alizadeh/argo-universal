@@ -24,31 +24,27 @@ export type SignInView =
  * Accounts has yet to choose. Otherwise only the Server Device signs in, where the browser and Argo's
  * listener are.
  */
-export function chooseView({
-  account,
-  serverDevice,
-  flow,
-}: SignInData): SignInView {
-  if (account) return { kind: 'signed-in', account };
+export function chooseView(data: SignInData): SignInView {
+  const account = data.account ?? justAdded(data.flow);
 
-  if (flow.kind === 'signed-in')
-    return {
-      kind: 'signed-in',
-      account: { label: flow.label, host: accountHost },
-    };
-
-  if (!serverDevice) return { kind: 'continue-on-server-device' };
-
-  return flowView(flow);
+  return account ? { kind: 'signed-in', account } : notSignedIn(data);
 }
 
-function flowView(
-  flow: Exclude<OAuthFlowState, { kind: 'signed-in' }>,
+const justAdded = (flow: OAuthFlowState): Account | null =>
+  flow.kind === 'signed-in' ? { label: flow.label, host: accountHost } : null;
+
+const notSignedIn = ({ serverDevice, flow }: SignInData): SignInView =>
+  serverDevice ? flowView(flow) : { kind: 'continue-on-server-device' };
+
+function flowView(flow: OAuthFlowState): SignInView {
+  if (flow.kind === 'failed') return failedView(flow);
+
+  return flow.kind === 'waiting' ? flow : { kind: 'signed-out' };
+}
+
+function failedView(
+  flow: Extract<OAuthFlowState, { kind: 'failed' }>,
 ): SignInView {
-  if (flow.kind === 'idle') return { kind: 'signed-out' };
-
-  if (flow.kind === 'waiting') return flow;
-
   const title =
     flow.reason === 'port-in-use'
       ? 'Couldn’t start sign-in'

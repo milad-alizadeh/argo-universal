@@ -35,7 +35,11 @@ type Runtime = ReturnType<typeof startPluginRuntime>;
 type OriginJourney = {
   opened: string[];
   result: (server: boolean) => Promise<Json>;
-  run: (name: string, params: JsonObject, serverDevice: boolean) => Promise<Json>;
+  run: (
+    name: string,
+    params: JsonObject,
+    serverDevice: boolean,
+  ) => Promise<Json>;
 };
 
 // Two runs of one Operation at once, one asked from the Server Device and one from a paired device.

@@ -12,8 +12,12 @@ async function loginOf(calls: Calls, token: string): Promise<string | null> {
     headers: { authorization: `Bearer ${token}`, accept: 'application/json' },
   });
 
-  if (!response?.ok) return null;
-  const login: unknown = Object(await response.json()).login;
+  return loginIn(response?.ok ? await response.text() : 'null');
+}
+
+// The `login` of GitHub's answer, or null for anything else.
+function loginIn(text: string): string | null {
+  const login = Object(JSON.parse(text)).login;
 
   return typeof login === 'string' && login !== '' ? login : null;
 }
