@@ -89,6 +89,9 @@ export const StorageRead = StorageQuery.extend({
  */
 export const QueryReadName = z.string().regex(/^[\w.-]+$/u);
 
+// Argo's own name for one page of a Loader page's paged list, which a Plugin's read can never take.
+export const pagedListRead = 'argo:list';
+
 /*
  * Queries describe only repeatable reads, using the imperative calls' member schemas, or name a read the
  * Plugin declared with `argo.queries.define`, run by the Plugin with these args.
@@ -99,7 +102,7 @@ export const PluginQuery = z.discriminatedUnion('api', [
   z.object({ api: z.literal('storage'), queries: z.array(StorageRead) }),
   z.object({
     api: z.literal('read'),
-    name: z.union([QueryReadName, z.literal('argo:list')]),
+    name: z.union([QueryReadName, z.literal(pagedListRead)]),
     args: WireJson,
   }),
 ]);
@@ -116,13 +119,12 @@ export const PluginDataState = z.object({
 export type PluginDataState = z.infer<typeof PluginDataState>;
 
 /*
- * A Loader's read during the draw `draw` names, held by that draw's Page address: the kept answer
+ * A Loader's read during the draw its code runs for, held by that draw's Page address: the kept answer
  * unless a write made it due, or read again when `fresh`, as a pull reads its list's first page.
  */
 export const PluginDataRequest = z.object({
   api: z.literal('data'),
   action: z.literal('read'),
-  draw: z.number().int().nonnegative(),
   query: PluginQuery,
   fresh: z.boolean().optional(),
 });

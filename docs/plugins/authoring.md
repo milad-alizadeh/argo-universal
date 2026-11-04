@@ -467,8 +467,9 @@ Plugin removal also deletes its Accounts and dependent records when discovery su
 
 `argo.accounts.get(host)` returns the current Project’s Account or `null`.
 One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
-Loaders, Operation runs, and Hooks carry their Project context across awaited calls.
-A call without a Project returns no Account.
+Loaders, paged lists, named reads, Operation runs, and Hooks carry their Project context across awaited calls.
+A named read runs for its Query's Project only, never as the Server Device, because Argo keeps its answer for every App.
+A call without a Project returns no Account, such as one made while the Plugin registers or from an items Slot provider.
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
 A fetch Query uses the same field and the Project its page is drawn for.

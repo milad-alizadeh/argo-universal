@@ -1,4 +1,5 @@
 import {
+  pagedListRead,
   QueryReadName,
   type PluginDataRequest,
   type PluginDataState,
@@ -38,9 +39,6 @@ export interface QueryReads {
   api: QueriesApi;
   answer: (event: ReadEvent) => void;
 }
-
-// Argo's own name for one page of a Loader page's paged list, which a Plugin's read can never take.
-const listRead = 'argo:list';
 
 /*
  * The named reads a Plugin defined (ADR-0037), and the reads Argo asks of them for the Queries it keeps:
@@ -92,7 +90,7 @@ function run(
   lists: DrawLists,
   { name, args, projectId, draw }: ReadEvent,
 ): Promise<WireJson> {
-  if (name === listRead) return listPage(lists, draw, args);
+  if (name === pagedListRead) return listPage(lists, draw, args);
 
   const read = defined.get(name);
 
@@ -146,24 +144,23 @@ export type DrawReader = <Query extends PluginQuery>(
   fresh: boolean,
 ) => Promise<QueryResult<Query>>;
 
-type DrawAt = { call: DataCall; draw: number };
-
+// The Server holds each read by the draw the Loader runs for.
 export const drawReader =
-  (call: DataCall, draw: number): DrawReader =>
+  (call: DataCall): DrawReader =>
   (query, fresh) =>
-    readQuery({ call, draw }, query, fresh);
+    readQuery(call, query, fresh);
 
 async function readQuery<Query extends PluginQuery>(
-  at: DrawAt,
+  call: DataCall,
   query: Query,
   fresh: boolean,
 ): Promise<QueryResult<Query>>;
 async function readQuery(
-  { call, draw }: DrawAt,
+  call: DataCall,
   query: PluginQuery,
   fresh: boolean,
 ): Promise<QueryResult<PluginQuery> | undefined> {
-  const state = await call({ api: 'data', action: 'read', draw, query, fresh });
+  const state = await call({ api: 'data', action: 'read', query, fresh });
 
   if (state.data === undefined)
     throw new Error(state.error ?? 'The Query answered nothing');
@@ -187,6 +184,8 @@ export function listReader<Item>(
   return async (cursor, fresh) => {
     const args = { path, pageState, sessionId: sessionId ?? null, cursor };
 
-    return page.parse(await read({ api: 'read', name: listRead, args }, fresh));
+    return page.parse(
+      await read({ api: 'read', name: pagedListRead, args }, fresh),
+    );
   };
 }

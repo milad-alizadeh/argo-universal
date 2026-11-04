@@ -1,5 +1,5 @@
-import { currentOperation, inOperation } from './call-scope';
-import type { LoaderPageSend, LoaderPages } from './loader-pages';
+import type { CallOrigin } from '../protocol/call-origin';
+import type { LoaderCalls, LoaderPageSend, LoaderPages } from './loader-pages';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 
 // The Operations being answered, each with whether its handler said `argo.changed()`.
@@ -11,22 +11,30 @@ type Running = Map<number, boolean>;
  * the mark the host makes when that Operation answers; a failed Operation makes none, so its change is
  * sent as it answers.
  */
-export function operationMarks(
-  send: LoaderPageSend,
-): Pick<LoaderPages, 'changed' | 'answering'> {
+export function operationMarks({
+  pages: send,
+  origin,
+}: Pick<LoaderCalls, 'pages' | 'origin'>): Pick<
+  LoaderPages,
+  'changed' | 'answering'
+> {
   const running: Running = new Map();
 
   return {
     changed: () => {
-      if (!heldFor(running, currentOperation())) sendChanged(send);
+      if (!heldFor(running, origin())) sendChanged(send);
     },
     answering: answering(send, running),
   };
 }
 
-// Whether the change joins a running Operation's mark.
-function heldFor(running: Running, id: number | null): boolean {
-  if (id === null || !running.has(id)) return false;
+// Whether the change joins a running Operation's mark: the worker runs each Operation's handler for its id.
+function heldFor(running: Running, origin: CallOrigin): boolean {
+  if (!('operation' in origin)) return false;
+
+  const id = origin.operation;
+
+  if (!running.has(id)) return false;
 
   running.set(id, true);
 
@@ -42,7 +50,7 @@ const answering =
     during: (id, run) => {
       running.set(id, false);
 
-      return inOperation(id, run);
+      return run();
     },
     send: (call) => {
       const changed = running.get(call.id) === true;

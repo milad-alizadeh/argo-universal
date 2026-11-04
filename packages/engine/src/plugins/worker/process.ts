@@ -1,4 +1,5 @@
 import { parentPort, workerData } from 'node:worker_threads';
+import { CallScope, originOf } from '../protocol/call-origin.ts';
 import {
   PluginEntry,
   WorkerCommand,
@@ -15,7 +16,9 @@ const post = (
 
 const calls = new WorkerCalls(post);
 
-const bridge = createPluginBridge(calls);
+const scope = new CallScope();
+
+const bridge = createPluginBridge(calls, scope);
 
 const entry = PluginEntry.parse(workerData);
 
@@ -38,19 +41,22 @@ function deliver(command: Delivery): void {
   else deliverToInbox(command);
 }
 
-function deliverToInbox(
-  command: Exclude<Delivery, { type: 'reply' | 'test' }>,
-): void {
-  if (inboxes) toInbox(inboxes, command);
+type ToPlugin = Exclude<Delivery, { type: 'reply' | 'test' }>;
+
+// Plugin code runs inside the origin its delivery names, so every `argo` call it makes is for that.
+function deliverToInbox(command: ToPlugin): void {
+  const ready = inboxes;
+
+  if (ready) scope.run(originOf(command), () => toInbox(ready, command));
 }
 
 function toInbox(
   { pages, hooks, accounts }: PluginInboxes,
-  command: Exclude<Delivery, { type: 'reply' | 'test' }>,
+  command: ToPlugin,
 ): void {
   if (command.type === 'event') pages(JSON.stringify(command.event));
   else if (command.type === 'accountToken') accounts(JSON.stringify(command));
-  else deliverHook(hooks, command);
+  else hooks(JSON.stringify(command));
 }
 
 parentPort?.on('message', (message) => {
@@ -67,15 +73,3 @@ inboxes = await registerPlugin(entry, bridge, {
 });
 
 post('ready');
-
-function deliverHook(
-  hooks: PluginInboxes['hooks'],
-  command: Extract<Delivery, { type: 'hook' }>,
-): void {
-  const projectId = command.event.projectId;
-  const run = (): void => hooks(JSON.stringify(command));
-  bridge.inProject?.(
-    typeof projectId === 'string' ? projectId : undefined,
-    run,
-  );
-}

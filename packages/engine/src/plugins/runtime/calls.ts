@@ -1,9 +1,10 @@
 import { replyFailure } from '../access/capability-refusal';
-import type { PluginData, QueryOrigin } from '../data/plugin-data';
+import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
-import type { PluginOperations, RunOrigin } from '../operations';
+import type { PluginOperations } from '../operations';
 import type { PluginDraws } from '../pages';
 import type { Drawing } from '../pages/draw-calls';
+import { reachOf, type Reach } from '../protocol/call-origin';
 import type {
   HostMessage,
   PluginReply,
@@ -44,11 +45,11 @@ type RuntimeAnswers = { [Name in RuntimeApi]: Answer<Name> };
 const runtimeCalls: RuntimeAnswers = {
   nav: ({ data }, { pluginId, generation, request }) =>
     data.badges.set(pluginId, generation, request),
-  data: (runtime, { pluginId, generation, request }) =>
+  data: (runtime, call) =>
     runtime.data.handle(
-      { pluginId, generation },
-      request,
-      queryOrigin(runtime, { pluginId, generation }, request),
+      { pluginId: call.pluginId, generation: call.generation },
+      call.request,
+      reach(runtime, call),
     ),
   // A Plugin's answer to a named read a Query asked it to run (ADR-0037); it waits for nothing.
   reads: ({ data }, { pluginId, generation, request }) =>
@@ -101,54 +102,27 @@ function answerService(
   message: StateCall,
 ): Promise<PluginReply> {
   const { pluginId, generation, request } = message;
+  const { projectId, serverDevice } = reach(runtime, message);
 
   return runtime.services.handle(pluginId, generation, {
     ...request,
-    ...callOrigin(runtime, message),
+    projectId,
+    serverDevice,
   });
 }
 
-type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
+// What a call reaches is looked up from the draw or the run its origin names, still waiting on its generation.
+function reach(
+  { draws, operations }: RuntimeCalls,
+  { pluginId, generation, origin }: Omit<Call, 'request'>,
+): Reach<Drawing> {
+  const caller = { pluginId, generation };
 
-const noOrigin: ServiceOrigin = { projectId: undefined, serverDevice: false };
-
-/*
- * A call reaches what the call it runs for reaches: a draw's Project and Server Device, or an Operation run's
- * Project and Server Device. A draw or run that has already answered reaches neither. A call outside them
- * reaches only the Project its Hook ran for, and never the Server Device.
- */
-function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
-  const caller = { pluginId: message.pluginId, generation: message.generation };
-
-  if (message.draw !== undefined)
-    return drawOrigin(runtime.draws.drawing(caller, message.draw));
-
-  if (message.operation !== undefined)
-    return runOrigin(runtime.operations.origin(caller, message.operation));
-
-  return { projectId: message.projectId, serverDevice: false };
-}
-
-const drawOrigin = (drawn: Drawing | undefined): ServiceOrigin =>
-  drawn
-    ? { projectId: drawn.projectId, serverDevice: drawn.serverDevice }
-    : noOrigin;
-
-const runOrigin = (origin: RunOrigin | undefined): ServiceOrigin =>
-  origin
-    ? { projectId: origin.projectId, serverDevice: origin.serverDevice }
-    : noOrigin;
-
-type DataRequest = Extract<PluginRequest, { api: 'data' }>;
-
-// A Loader's read is for its draw's Project and is held by its Page address. A read that names no draw still running reads nothing.
-
-function queryOrigin(
-  runtime: RuntimeCalls,
-  caller: { pluginId: string; generation: number },
-  request: DataRequest,
-): QueryOrigin {
-  const drawn = runtime.draws.drawing(caller, request.draw);
-
-  return { projectId: drawn?.projectId, drawn };
+  return reachOf(
+    {
+      draw: (id) => draws.drawing(caller, id),
+      run: (id) => operations.origin(caller, id),
+    },
+    origin,
+  );
 }

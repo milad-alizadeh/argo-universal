@@ -28,7 +28,8 @@ import type { CrossesAsJson } from './wire-json';
  * - `list`, when the page has a paged list, reads one page of it from `cursor` (null for the first) and
  *   answers its items and the cursor of the page after, or null at the end. Argo keeps each page as a Query
  *   of the address and cursor, so a load more reads only the page it lacks; an Operation or
- *   `argo.changed()` makes every kept page due. The first page alone is read again on every draw. An item
+ *   `argo.changed()` makes every kept page due. A draw that shows only the first page, as a pull does,
+ *   reads it again; a draw that shows more answers from the kept pages unless a write made them due. An item
  *   equal to one already listed is dropped, so a cursor may include the boundary item. Items cross to
  *   Argo as JSON, so an item must be JSON all through: a `Date` or a `Map` fails type-checking.
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by

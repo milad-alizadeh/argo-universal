@@ -202,6 +202,10 @@ _Avoid_: Descriptor, query key, request object
 A Query that is the Plugin's own read, defined once by name and asked for with args, for a read that combines several calls. Argo keeps its answer and runs it again when it is due, so it may only read.
 _Avoid_: Cached function, custom query, memo
 
+**Call origin**:
+What a Plugin's `argo` call runs for: the draw, the Operation run or the Project whose code made it, as the event that started that code said. Argo decides from it which Project and Account the call reaches and whether it reaches the Server Device. A named read runs for its Project alone.
+_Avoid_: Call context, call scope, caller
+
 **Query holder**:
 What keeps a Query's answer wanted: a view watching it, or a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration

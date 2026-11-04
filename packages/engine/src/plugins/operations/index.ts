@@ -1,3 +1,3 @@
-export { PluginOperations, type RunOrigin } from './plugin-operations';
+export { PluginOperations } from './plugin-operations';
 
 export { PluginOperationService } from './operation-service';

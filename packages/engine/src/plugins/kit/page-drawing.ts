@@ -71,7 +71,7 @@ function atOf<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   { params, event, reading }: DrawCall,
 ): At<State> {
-  const read = drawReader(reading.call, event.id);
+  const read = drawReader(reading.call);
 
   return { input: inputOf(page.state, params, { event, read }), event, read };
 }

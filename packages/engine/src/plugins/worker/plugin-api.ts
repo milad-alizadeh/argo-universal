@@ -7,7 +7,6 @@ import type {
   SecretCall,
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
-import { configureCallScopes } from '../kit/call-scope';
 import { fetchResponse } from '../kit/fetch-response';
 import { createKit, type Kit } from '../kit/plugin-kit';
 import type { PluginRequest } from '../protocol/runtime';
@@ -39,8 +38,6 @@ delete globalThis.__argoBridge;
 
 if (!bridge) throw new Error('The kit runs only in a Plugin realm');
 
-if (bridge.scopes) configureCallScopes(bridge.scopes);
-
 // No object, promise or error from the worker's realm reaches Plugin code: only the bridge's JSON text crosses.
 const call = async <Value>(request: PluginRequest): Promise<Value> => {
   try {
@@ -51,6 +48,7 @@ const call = async <Value>(request: PluginRequest): Promise<Value> => {
 };
 
 const kit = createKit({
+  origin: bridge.origin,
   data: (request) => call(request),
   slots: (slotCall) => call({ api: 'slots', call: slotCall }),
   operations: (operationCall) =>

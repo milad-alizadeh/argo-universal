@@ -1,17 +1,10 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
-import type { CallScopes, IdScope } from '../kit/call-scope.ts';
+import type { CallOrigin, CallScope } from '../protocol/call-origin.ts';
 import {
   PluginRequest,
   type PluginValue,
   type WorkerCall,
   type WorkerReply,
 } from '../protocol/runtime.ts';
-
-type CallOrigin = {
-  projectId?: string;
-  draw?: number;
-  operation?: number;
-};
 
 type Pending = {
   resolve: (value: PluginValue) => void;
@@ -28,7 +21,7 @@ export class WorkerCalls {
     this.send = send;
   }
 
-  call(request: PluginRequest, origin: CallOrigin = {}): Promise<PluginValue> {
+  call(request: PluginRequest, origin: CallOrigin): Promise<PluginValue> {
     const id = this.next++;
 
     return new Promise((resolve, reject) => {
@@ -37,7 +30,7 @@ export class WorkerCalls {
         type: 'call',
         id,
         request,
-        ...origin,
+        origin,
       });
     });
   }
@@ -55,59 +48,34 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
   else pending.reject(new Error(reply.error));
 }
 
+// `origin` tells the kit what the running code is for, as `argo.changed()` inside an Operation joins its mark.
 export type PluginBridge = ((json: string) => Promise<string>) & {
-  inProject?: <T>(projectId: string | undefined, run: () => T) => T;
-  scopes?: CallScopes;
+  origin: () => CallOrigin;
 };
 
 /*
  * The only host function a Plugin's context ever holds, and the context never sees it:
  * it takes and returns JSON strings, so no object, promise or error from this realm
  * reaches Plugin code (and with it no path to this realm's `Function`). The Plugin API
- * (`plugin-api.ts`) wraps it inside the context, then removes it.
+ * (`plugin-api.ts`) wraps it inside the context, then removes it. Each call carries the
+ * origin of the delivery its code runs in.
  */
-export function createPluginBridge(calls: WorkerCalls): PluginBridge {
-  const scope = new AsyncLocalStorage<CallOrigin>();
-  const scopes = { operation: idScope(), draw: idScope() };
+export function createPluginBridge(
+  calls: WorkerCalls,
+  scope: CallScope,
+): PluginBridge {
+  const origin = (): CallOrigin => scope.current();
 
-  return Object.assign(bridgeCall(calls, { scope, scopes }), {
-    inProject: <T>(projectId: string | undefined, run: () => T): T =>
-      scope.run({ projectId }, run),
-    scopes,
-  });
+  return Object.assign(bridgeCall(calls, origin), { origin });
 }
 
-type Scoped = { scope: AsyncLocalStorage<CallOrigin>; scopes: CallScopes };
-
-// Each call names the draw or the Operation its code runs for; the Server looks up what that call may reach.
-const originOf = ({ scope, scopes }: Scoped): CallOrigin => {
-  const draw = scopes.draw.current();
-  const operation = scopes.operation.current();
-
-  return {
-    ...scope.getStore(),
-    ...(draw !== null && { draw }),
-    ...(operation !== null && { operation }),
-  };
-};
-
 const bridgeCall =
-  (calls: WorkerCalls, scoped: Scoped) =>
+  (calls: WorkerCalls, origin: () => CallOrigin) =>
   async (json: string): Promise<string> => {
     const value = await calls.call(
       PluginRequest.parse(JSON.parse(json)),
-      originOf(scoped),
+      origin(),
     );
 
     return JSON.stringify(value ?? null);
   };
-
-// A draw or an Operation invocation by id, kept apart from the Project a Hook sets.
-function idScope(): IdScope {
-  const current = new AsyncLocalStorage<number>();
-
-  return {
-    run: (id, run) => current.run(id, run),
-    current: () => current.getStore() ?? null,
-  };
-}

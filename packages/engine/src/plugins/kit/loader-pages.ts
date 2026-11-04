@@ -6,7 +6,7 @@ import {
 } from '@repo/contracts/plugins/page-address';
 import type { QueriesApi } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
-import { inDraw } from './call-scope';
+import type { CallOrigin } from '../protocol/call-origin';
 import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
@@ -31,8 +31,12 @@ type LoaderEvent = Extract<PluginEvent, { type: 'draw' | 'read' | 'stop' }>;
 
 export type LoaderPageSend = (call: LoaderPageCall) => Promise<void>;
 
-// The host calls a Plugin's Loader pages answer: their draws, their Queries and their named reads.
+/*
+ * The host calls a Plugin's Loader pages answer: their draws, their Queries and their named reads; and
+ * what the code running now is for.
+ */
 export type LoaderCalls = {
+  origin: () => CallOrigin;
   pages: LoaderPageSend;
   data: DataCall;
   reads: QueryReadSend;
@@ -71,8 +75,8 @@ type Pages = {
  * The Loader pages a Plugin defined, and the draws the host asks of them (ADR-0050). A draw matches the
  * path to the first pattern defined for it, runs its Loader, then its Render, and answers the tree by the
  * draw's id, or fails it with why. A live draw sends a frame for each value its Loader yields until the
- * Loader ends or the host stops it, then answers that it ended. A draw's `argo` calls, a live draw's
- * included, run in its scope, so the Server gives them the draw's Project and Server Device.
+ * Loader ends or the host stops it, then answers that it ended. The worker runs each draw for its id, so
+ * the Server gives its `argo` calls, a live draw's included, the draw's Project and Server Device.
  */
 export function loaderPages(calls: LoaderCalls): LoaderPages {
   const pages = pagesOf(calls);
@@ -81,7 +85,7 @@ export function loaderPages(calls: LoaderCalls): LoaderPages {
   return {
     api: { define: defining(pages) },
     queries: reads.api,
-    ...operationMarks(calls.pages),
+    ...operationMarks(calls),
     answer: (event) => {
       if (event.type === 'read') return reads.answer(event);
 
@@ -150,7 +154,7 @@ async function answer(pages: Pages, event: DrawEvent): Promise<void> {
   const stop = stoppable(pages, event);
 
   try {
-    await pages.send(await inDraw(event.id, () => settled(pages, event, stop)));
+    await pages.send(await settled(pages, event, stop));
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
 

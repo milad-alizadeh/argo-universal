@@ -19,7 +19,8 @@ const kitSource = `
 
 it('keeps kit timers real and apart from Plugin timers under a test clock', async () => {
   const clock = new PluginTestClock();
-  const { context } = createPluginRealm(async () => 'null', kitSource, clock);
+  const bridge = Object.assign(async () => 'null', { origin: () => ({}) });
+  const { context } = createPluginRealm(bridge, kitSource, clock);
   const fired: string[] = [];
 
   context.run((name: string) => fired.push(name));

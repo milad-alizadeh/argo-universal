@@ -18,7 +18,7 @@ import {
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import * as wire from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import { callOrigin } from '#plugin-call-origin';
+import { CallOrigin } from '#plugin-call-origin';
 import { PluginEntry } from '#plugin-entry';
 import { TestCommand, TestReply } from '#plugin-test-control';
 
@@ -113,7 +113,7 @@ export const HostMessage = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('call'),
     pluginId: z.string(),
-    ...callOrigin,
+    origin: CallOrigin,
     generation: z.number(),
     id: z.number(),
     request: PluginRequest,
@@ -124,7 +124,7 @@ export type HostMessage = z.infer<typeof HostMessage>;
 
 export const WorkerCall = z.object({
   type: z.literal('call'),
-  ...callOrigin,
+  origin: CallOrigin,
   id: z.number(),
   request: PluginRequest,
 });

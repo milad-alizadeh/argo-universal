@@ -75,7 +75,7 @@ function harness(): Harness {
   ): Promise<PluginReply> =>
     data.handle(
       { pluginId, generation: 1 },
-      { api: 'data', action: 'read', draw: 1, query: overview, fresh },
+      { api: 'data', action: 'read', query: overview, fresh },
       { drawn: { draw: 1, ...drawn } },
     );
 
@@ -180,7 +180,7 @@ it('refuses a Loader read outside a draw', async () => {
 
   const reply = await data.handle(
     { pluginId, generation: 1 },
-    { api: 'data', action: 'read', draw: 1, query: overview },
+    { api: 'data', action: 'read', query: overview },
     {},
   );
 

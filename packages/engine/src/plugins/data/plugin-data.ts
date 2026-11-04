@@ -19,7 +19,7 @@ export type DrawnFor = { draw: number; holder?: PageAddress };
 
 /*
  * Where a Loader's read came from: the Project its Query is for and the draw. The runtime works it out
- * from the draw the call names, so this module needs no draws.
+ * from the draw the call runs for, so this module needs no draws.
  */
 export type QueryOrigin = { projectId?: string; drawn?: DrawnFor };
 
