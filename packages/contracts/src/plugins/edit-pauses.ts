@@ -12,19 +12,20 @@ export const realClock: PauseClock = (ms, fire) => {
 
 type Waiting = { cancel: () => void; make: () => Promise<void> };
 
-const forget = (): void => {};
-
 /*
  * The one wait a Plugin tree's edits share: a bound search or selection, or a throttled event's call, is
  * made once the edits pause, and an edit before then starts its key's wait again. `land` makes every
  * waiting change now and waits for those already being made, as a press that runs an Operation needs,
- * and `drop` forgets them with the tree.
+ * and `drop` forgets them with the tree. A change that fails is told to `failed`, as an Operation's failure is.
  */
 export class EditPauses {
   private readonly waiting = new Map<string, Waiting>();
   private readonly making = new Set<Promise<void>>();
 
-  public constructor(private readonly clock: PauseClock) {}
+  public constructor(
+    private readonly clock: PauseClock,
+    private readonly failed: (error: Error) => void,
+  ) {}
 
   public wait(key: string, ms: number, make: () => Promise<void>): void {
     this.waiting.get(key)?.cancel();
@@ -50,7 +51,7 @@ export class EditPauses {
     this.waiting.clear();
   }
 
-  // A change that fails has already said why, and leaves the tree as it was.
+  // A change that fails leaves the tree as it was and says why.
   private async made(key: string): Promise<void> {
     const waiting = this.waiting.get(key);
 
@@ -58,7 +59,11 @@ export class EditPauses {
 
     waiting.cancel();
     this.waiting.delete(key);
-    const making = waiting.make().catch(forget);
+    const making = waiting
+      .make()
+      .catch((error: unknown) =>
+        this.failed(error instanceof Error ? error : new Error(String(error))),
+      );
     this.making.add(making);
     await making;
     this.making.delete(making);

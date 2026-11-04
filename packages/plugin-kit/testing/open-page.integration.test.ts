@@ -1,6 +1,6 @@
 import type { OpenPage } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
-import { issuesPath, start } from './loader-page-fixture';
+import { issuesPath, listed, start } from './loader-page-fixture';
 
 const titles = (page: OpenPage): unknown[] =>
   page.tree.children[0]?.children.map((row) => row.props.title) ?? [];
@@ -37,14 +37,16 @@ it('lands what was typed before a press runs its Operation, so the run takes the
   expect(page.find('Noted: fix login').type).toBe('ListItem');
 });
 
-it('appends the next page on load more, and a pull starts again from the first', async () => {
-  const page = await open();
+it('appends the next page on load more, and a pull reads the first page again and keeps the pages loaded, as the App does', async () => {
+  const kit = await start();
+  const page = await kit.pages.open({ path: issuesPath });
 
   await page.loadMore();
   expect(titles(page)).toEqual(['Issue 1', 'Issue 2', 'Issue 3', 'Issue 4']);
 
   await page.act(isList, 'onRefresh');
-  expect(titles(page)).toEqual(['Issue 1', 'Issue 2']);
+  expect(titles(page)).toEqual(['Issue 1', 'Issue 2', 'Issue 3', 'Issue 4']);
+  expect(await listed(kit)).toBe('null,2,null');
 });
 
 it('runs an Operation for the page, then draws it again', async () => {

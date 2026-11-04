@@ -106,8 +106,8 @@ export class OpenPage {
     return findNode(this.tree, match);
   }
 
-  // Draws the address again, naming the tree kept, as the App does when the page is marked stale.
-  async draw(pages = this.kept.pages): Promise<void> {
+  // Draws the address again, naming the tree kept, as the App does when the page is marked stale; a pull says so.
+  async draw(pages = this.kept.pages, pull = false): Promise<void> {
     const { hash } = this.kept;
 
     const request = {
@@ -115,6 +115,7 @@ export class OpenPage {
       pageState: this.state,
       ...caller(this.opening),
       pages,
+      ...(pull && { pull: true as const }),
       ...(hash && { known: hash }),
     };
 
@@ -189,12 +190,13 @@ export class OpenPage {
     await this.draw();
   }
 
-  // An empty change draws the same address again from its first page.
+  // An empty change is a pull, which reads the first page again and keeps the pages loaded, as the App's does.
   private async change(change: PageState): Promise<void> {
-    if (Object.keys(change).length > 0) {
-      this.state = { ...this.state, ...change };
-      this.kept.forget();
-    }
+    if (Object.keys(change).length === 0)
+      return this.draw(this.kept.pages, true);
+
+    this.state = { ...this.state, ...change };
+    this.kept.forget();
 
     await this.draw(1);
   }

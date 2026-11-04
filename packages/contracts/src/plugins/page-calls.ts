@@ -73,7 +73,7 @@ export class PageCalls {
     private ports: PageCallsPorts,
     clock: PauseClock = realClock,
   ) {
-    this.pauses = new EditPauses(clock);
+    this.pauses = new EditPauses(clock, (error) => this.ports.failed(error));
   }
 
   // The tree's latest ports, as a new render of it holds them.

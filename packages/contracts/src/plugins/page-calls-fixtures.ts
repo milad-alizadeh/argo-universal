@@ -109,6 +109,7 @@ export class DraftPage {
   private patched: WireNode | undefined;
   private draws: Gate | undefined;
   private running: Gate | undefined;
+  private drawError: string | undefined;
 
   constructor(withState = true) {
     this.calls = new PageCalls(this.ports(withState), this.clock.wait);
@@ -148,6 +149,11 @@ export class DraftPage {
     this.draws = gate;
 
     return () => gate.settle();
+  }
+
+  // Every Page state draw after this fails with `error`.
+  failDraws(error: string): void {
+    this.drawError = error;
   }
 
   // The next run waits until the answer lets it end, failing with `error` when one is given.
@@ -193,6 +199,9 @@ export class DraftPage {
 
   private async change(change: PageState): Promise<void> {
     await this.draws?.promise;
+
+    if (this.drawError) throw new Error(this.drawError);
+
     this.state = { ...this.state, ...change };
     this.drafts.push(this.state.draft);
   }

@@ -114,3 +114,13 @@ it('refuses a Page state change on a tree that has no Page state', async () => {
     ),
   ).rejects.toThrow('This Plugin tree has no Page state');
 });
+
+it('says why a draw failed that a typing pause made, as it does for a press', async () => {
+  const page = new DraftPage();
+
+  page.failDraws('Plugin stopped');
+  await page.type('fix');
+  await page.clock.advance(pauseMs);
+
+  expect(page.failures).toEqual(['Plugin stopped']);
+});
