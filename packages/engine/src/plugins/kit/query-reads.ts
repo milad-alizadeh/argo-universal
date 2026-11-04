@@ -158,7 +158,7 @@ async function readQuery(
   call: DataCall,
   query: PluginQuery,
   fresh: boolean,
-): Promise<QueryResult<PluginQuery> | undefined> {
+): Promise<QueryResult<PluginQuery>> {
   const state = await call({ api: 'data', action: 'read', query, fresh });
 
   if (state.data === undefined)

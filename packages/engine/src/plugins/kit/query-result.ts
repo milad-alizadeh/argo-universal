@@ -24,13 +24,7 @@ const readers: QueryReaders = {
   read: (data) => data,
 };
 
-export function queryResult(
-  api: PluginQuery['api'] | undefined,
-  data: WireJson | undefined,
-): QueryValue | undefined {
-  if (api === undefined) return;
-
-  if (data === undefined) return;
-
-  return readers[api](data);
-}
+export const queryResult = (
+  api: PluginQuery['api'],
+  data: WireJson,
+): QueryValue => readers[api](data);
