@@ -34,7 +34,7 @@ it.each([
 
     const directory =
       await fixture(`import { ${imported} } from '@argo/plugin-kit';
-    export function register(argo) { argo.pages.register('/', () => <${type} ${props} />); }
+    export function register(argo) { argo.pages.define('/', { load: () => null, render: () => <${type} ${props} /> }); }
   `);
 
     const result = await run('validate', directory);
@@ -49,7 +49,7 @@ it.each([
 it('validate checks shapes within an aliased Canvas', async () => {
   const directory =
     await fixture(`import { Canvas as Scene } from '@argo/plugin-kit';
-    export function register(argo) { argo.pages.register('/', () => <Scene label="Map" width={10} height={10} camera="fixed"><Scene.Image key="image" /></Scene>); }
+    export function register(argo) { argo.pages.define('/', { load: () => null, render: () => <Scene label="Map" width={10} height={10} camera="fixed"><Scene.Image key="image" /></Scene> }); }
   `);
 
   expect(await run('validate', directory)).toMatchObject({
