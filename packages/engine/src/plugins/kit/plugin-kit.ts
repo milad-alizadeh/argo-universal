@@ -13,7 +13,7 @@ import {
   registerKitComponent,
   type KitElementType,
 } from './jsx-runtime';
-import * as loader from './loader-pages';
+import * as loader from './worker-pages';
 import { oauthFlow } from './oauth-flow';
 import {
   operationHandlers,

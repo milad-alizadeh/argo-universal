@@ -1,6 +1,6 @@
 import type { TreePatch } from '@repo/contracts/plugins/optimistic-tree';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
-import { pacing, type Answer, type Kept } from './page-answer';
+import { pacing, type KeptPage, type Kept } from './page-answer';
 
 /*
  * A kept tree with a patch applied, as an Operation call's optimistic props are. A tree the patch leaves as
@@ -8,10 +8,10 @@ import { pacing, type Answer, type Kept } from './page-answer';
  */
 export const patchedAnswer =
   (patch: TreePatch) =>
-  (answer: Answer | undefined): Answer | undefined =>
+  (answer: KeptPage | undefined): KeptPage | undefined =>
     answer?.ok ? patchedKept(answer, patch) : answer;
 
-function patchedKept(kept: Kept, patch: TreePatch): Answer {
+function patchedKept(kept: Kept, patch: TreePatch): KeptPage {
   const root = patch(kept.root);
 
   return root === kept.root

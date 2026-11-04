@@ -6,7 +6,7 @@ import type {
 } from '@repo/contracts/plugins/page-live';
 import { hashKey, type QueryClient } from '@tanstack/react-query';
 import { LiveBackoff } from './live-backoff';
-import { failedAfter, liveAfter, type Answer } from './page-answer';
+import { failedAfter, liveAfter, type KeptPage } from './page-answer';
 import { treeKey } from './page-keys';
 
 // A live page's subscription for an address, naming what the App keeps, with each answer; the answer unsubscribes.
@@ -88,7 +88,7 @@ class KeptTree {
     return next !== undefined;
   }
 
-  private kept(): Answer | undefined {
+  private kept(): KeptPage | undefined {
     return this.following.client.getQueryData(this.key);
   }
 }

@@ -23,12 +23,12 @@ import {
   keptOf,
   shownOf,
   treePacing,
-  type Answer,
+  type KeptPage,
   type Kept,
 } from './page-answer';
 import { staleFilters, stateKey, treeKey, type PageOpening } from './page-keys';
 
-export type { Answer } from './page-answer';
+export type { KeptPage } from './page-answer';
 
 export type { PageOpening } from './page-keys';
 
@@ -37,7 +37,7 @@ export type DrawPage = (request: DrawRequest) => Promise<DrawAnswer>;
 
 type QueryOptions<Data> = { queryKey: QueryKey; queryFn: () => Promise<Data> };
 
-type TreeOptions = QueryOptions<Answer> & typeof treePacing;
+type TreeOptions = QueryOptions<KeptPage> & typeof treePacing;
 
 // Page state is never asked for: it is what the cache last remembered, or none.
 type StateOptions = QueryOptions<PageState> & {
@@ -226,10 +226,10 @@ export class PageAddresses {
   }
 
   private keptAt(address: PageAddress): Kept | undefined {
-    return keptOf(this.client.getQueryData<Answer>(treeKey(address)));
+    return keptOf(this.client.getQueryData<KeptPage>(treeKey(address)));
   }
 
-  private treeAt(address: PageAddress): QueryOptions<Answer> {
+  private treeAt(address: PageAddress): QueryOptions<KeptPage> {
     return {
       queryKey: treeKey(address),
       queryFn: () => this.refreshed(address),
@@ -240,14 +240,14 @@ export class PageAddresses {
    * The query's own draw of an address. A load more that landed while it drew has more pages than it read for,
    * so the tree kept stands instead of the shorter one this draw would shrink it to.
    */
-  private async refreshed(address: PageAddress): Promise<Answer> {
+  private async refreshed(address: PageAddress): Promise<KeptPage> {
     const key = hashKey(treeKey(address));
     const epoch = this.epochOf(key);
     const answer = await this.redraw(address);
 
     return this.epochOf(key) === epoch
       ? answer
-      : (this.client.getQueryData<Answer>(treeKey(address)) ?? answer);
+      : (this.client.getQueryData<KeptPage>(treeKey(address)) ?? answer);
   }
 
   /*
@@ -293,8 +293,8 @@ export class PageAddresses {
   private async redraw(
     address: PageAddress,
     how: HowDrawn = {},
-  ): Promise<Answer> {
-    const before = this.client.getQueryData<Answer>(treeKey(address));
+  ): Promise<KeptPage> {
+    const before = this.client.getQueryData<KeptPage>(treeKey(address));
     const answer = await this.draw(requestOf(address, keptOf(before), how));
 
     return keptAfter(before, answer);

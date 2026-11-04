@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { OnPageCall } from '../../lib/product/plugin-registry';
-import type { Answer, PageAddresses, PageOpening } from './page-addresses';
+import type { KeptPage, PageAddresses, PageOpening } from './page-addresses';
 import { pageCallsPorts } from './page-calls-ports';
 import { useLivePage } from './use-live-page';
 import { usePageAddresses } from './use-page-addresses';
@@ -39,7 +39,7 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
  * A failed answer leaves the last tree on screen, as an App offline draws its last answer, or says the page
  * could not be shown when there is none. The Plugin's one drawing-failure toast says why (ADR-0037).
  */
-function useLastDrawn(answer: Answer | undefined): WireNode | null {
+function useLastDrawn(answer: KeptPage | undefined): WireNode | null {
   return useKeptRoot(rootOf(answer)) ?? fallbackOf(answer);
 }
 
@@ -53,10 +53,10 @@ function useKeptRoot(root: WireNode | null): WireNode | null {
 }
 
 // A page that failed before it drew anything shows the fallback; one still loading shows nothing yet.
-const fallbackOf = (answer: Answer | undefined): WireNode | null =>
+const fallbackOf = (answer: KeptPage | undefined): WireNode | null =>
   answer?.ok === false ? pluginPageFallback : null;
 
-const rootOf = (answer: Answer | undefined): WireNode | null =>
+const rootOf = (answer: KeptPage | undefined): WireNode | null =>
   answer?.ok ? answer.root : null;
 
 const isNewer = (root: WireNode | null, last: WireNode | null): boolean =>
@@ -70,7 +70,7 @@ const isNewer = (root: WireNode | null, last: WireNode | null): boolean =>
 function useDrawn(
   addresses: PageAddresses,
   opening: PageOpening,
-): Answer | undefined {
+): KeptPage | undefined {
   const { data: pageState } = useQuery(addresses.state(opening));
 
   const { data } = useQuery({

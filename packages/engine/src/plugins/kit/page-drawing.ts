@@ -4,6 +4,7 @@ import type {
   PageInput,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
+import type { DrawnTree } from '@repo/contracts/plugins/page-draw';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import type { DataCall } from './draw-reads';
 import { drawReader, type DrawReader } from './draw-reads';
@@ -17,13 +18,13 @@ import { swallowed } from './swallowed';
 export type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
 // A rendered page: its tree, and how many pages of its paged list it shows.
-type Rendered = { root: WireJson; pages: number };
+type Rendered = DrawnTree;
 
 /*
  * What a draw answers: the tree and how many pages its list shows, `live` when its Loader yields, or none
  * for a background pass's load.
  */
-export type DrawnPage = (Rendered & { live?: true }) | null;
+export type DrawnPage = DrawnTree | null;
 
 // What one draw reads with: its Queries, and the paged lists of the draws in flight, which Argo reads pages from.
 export type Reading = { call: DataCall; lists: DrawLists };

@@ -10,7 +10,11 @@ import type {
 } from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
-import { PageAddresses, type Answer, type PageOpening } from './page-addresses';
+import {
+  PageAddresses,
+  type KeptPage,
+  type PageOpening,
+} from './page-addresses';
 
 const rowsPerPage = 2;
 
@@ -162,7 +166,7 @@ export const issues: PageOpening = {
 };
 
 export interface OnScreen {
-  answer: () => Answer | undefined;
+  answer: () => KeptPage | undefined;
   leave: () => void;
 }
 
@@ -187,13 +191,13 @@ export async function settled(): Promise<void> {
     });
 }
 
-export type Kept = Extract<Answer, { ok: true }>;
+export type Kept = Extract<KeptPage, { ok: true }>;
 
-export function kept(answer: Answer | undefined): Kept {
+export function kept(answer: KeptPage | undefined): Kept {
   if (!answer?.ok) throw new Error('No tree is kept');
 
   return answer;
 }
 
-export const rowsOf = (answer: Answer | undefined): WireNode[] =>
+export const rowsOf = (answer: KeptPage | undefined): WireNode[] =>
   kept(answer).root.children[0]?.children ?? [];

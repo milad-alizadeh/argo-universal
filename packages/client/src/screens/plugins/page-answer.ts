@@ -1,6 +1,7 @@
 import {
   treeAfter,
   type DrawAnswer,
+  type DrawnTree,
   type DrawPacing,
   type HashedTree,
 } from '@repo/contracts/plugins/page-draw';
@@ -17,13 +18,13 @@ import type { Query } from '@tanstack/react-query';
  * draw failed, keeping the interval so a failure does not stop the clock. A tree the App changed itself, as an
  * optimistic patch does, has no hash, so the next answer is a whole tree.
  */
-export type Answer =
-  | ({ ok: true; root: WireNode; hash?: string; pages: number } & DrawPacing)
+export type KeptPage =
+  | ({ ok: true; hash?: string } & DrawnTree<WireNode> & DrawPacing)
   | { ok: false; error: string; every?: number };
 
-export type Kept = Extract<Answer, { ok: true }>;
+export type Kept = Extract<KeptPage, { ok: true }>;
 
-export const keptOf = (answer: Answer | undefined): Kept | undefined =>
+export const keptOf = (answer: KeptPage | undefined): Kept | undefined =>
   answer?.ok ? answer : undefined;
 
 // A page with no paged list shows none of its pages, but its draw still asks for one.
@@ -34,9 +35,9 @@ const notKept = 'The page answered for a tree the App does not keep';
 
 // Why the last draw failed, with the interval the answer before it kept.
 export const failedAfter = (
-  before: Answer | undefined,
+  before: KeptPage | undefined,
   error: string,
-): Answer => ({
+): KeptPage => ({
   ok: false,
   error,
   ...(before?.every !== undefined && { every: before.every }),
@@ -44,9 +45,9 @@ export const failedAfter = (
 
 // What the App keeps after an answer, the drawn tree rebuilt from the kept one as the Contracts say.
 export function keptAfter(
-  before: Answer | undefined,
+  before: KeptPage | undefined,
   answer: DrawAnswer,
-): Answer {
+): KeptPage {
   if (answer.kind === 'failed') return failedAfter(before, answer.error);
 
   const kept = keptOf(before);
@@ -62,9 +63,9 @@ export function keptAfter(
  * so the App asks for the whole tree again.
  */
 export function liveAfter(
-  before: Answer | undefined,
+  before: KeptPage | undefined,
   answer: LiveTree,
-): Answer | undefined {
+): KeptPage | undefined {
   const kept = keptOf(before);
   const tree = liveTreeAfter(hashedOf(kept), answer);
 
@@ -73,14 +74,14 @@ export function liveAfter(
 }
 
 // Whether the answer is a live page's tree, which only its subscription draws.
-export const isLive = (answer: Answer | undefined): boolean =>
+export const isLive = (answer: KeptPage | undefined): boolean =>
   keptOf(answer)?.live === true;
 
-const everyOf = (answer: Answer | undefined): number | false =>
+const everyOf = (answer: KeptPage | undefined): number | false =>
   answer?.every ?? false;
 
 // The interval a kept answer is drawn again on; a live tree has none.
-const intervalOf = (answer: Answer | undefined): number | false =>
+const intervalOf = (answer: KeptPage | undefined): number | false =>
   isLive(answer) ? false : everyOf(answer);
 
 /*
@@ -88,9 +89,9 @@ const intervalOf = (answer: Answer | undefined): number | false =>
  * neither a stale mark nor the clock draws it.
  */
 export const treePacing = {
-  refetchInterval: ({ state }: Query<Answer>): number | false =>
+  refetchInterval: ({ state }: Query<KeptPage>): number | false =>
     intervalOf(state.data),
-  enabled: ({ state }: Query<Answer>): boolean => !isLive(state.data),
+  enabled: ({ state }: Query<KeptPage>): boolean => !isLive(state.data),
 };
 
 // How an answer stays fresh, with no field it leaves unset.
@@ -109,7 +110,7 @@ const sameOrNew = (
   kept: Kept | undefined,
   tree: HashedTree,
   shown: Shown,
-): Answer =>
+): KeptPage =>
   kept && unmoved(kept, tree, shown) ? kept : { ok: true, ...tree, ...shown };
 
 const shownKeys = ['pages', 'every', 'live'] as const;

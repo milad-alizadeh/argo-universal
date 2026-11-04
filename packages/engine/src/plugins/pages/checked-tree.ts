@@ -1,3 +1,4 @@
+import type { DrawnTree } from '@repo/contracts/plugins/page-draw';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
 import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';
@@ -65,13 +66,10 @@ function replacementReason(
 
 type PageAt = { pluginId: string; path: string; log: (line: string) => void };
 
-// A drawn page, `live` when its Loader yields.
-type DrawnPage = { root: WireJson; pages: number; live?: true };
-
 // A page draws without the SVG the sanitiser refused, and the log says what was left out.
 export function checkedPage(
   { pluginId, path, log }: PageAt,
-  { root, pages, live }: DrawnPage,
+  { root, pages, live }: DrawnTree,
 ): Drawn {
   const tree = checkedTree(root, 'page');
 

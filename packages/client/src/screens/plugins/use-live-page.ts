@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useReducer } from 'react';
 import { useConnectionState } from '#features/connection';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import type { Answer, PageAddresses, PageOpening } from './page-addresses';
+import type { KeptPage, PageAddresses, PageOpening } from './page-addresses';
 import { isLive } from './page-answer';
 
 const counted = (round: number): number => round + 1;
@@ -15,7 +15,7 @@ const counted = (round: number): number => round + 1;
 export function useLivePage(
   addresses: PageAddresses,
   opening: PageOpening,
-  answer: Answer | undefined,
+  answer: KeptPage | undefined,
 ): void {
   const following = useFollowing(answer);
   const at = useOpening(opening);
@@ -28,7 +28,7 @@ export function useLivePage(
   );
 }
 
-function useFollowing(answer: Answer | undefined): boolean {
+function useFollowing(answer: KeptPage | undefined): boolean {
   const focused = useScreenFocused();
   const open = useConnectionState() === 'open';
 
