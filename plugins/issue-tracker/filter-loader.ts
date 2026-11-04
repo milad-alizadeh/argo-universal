@@ -1,4 +1,5 @@
 import type { ListPage, LoaderInput } from '@argo/plugin-kit';
+import { githubError } from './github-errors';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
 import { openDepsClient, type Project } from './issue-client';
@@ -91,7 +92,10 @@ const messageOf = (tracker: Opened): string =>
 const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
   openDepsClient({ project, deps }).then(
     (client): Opened => ({ opened: true, client }),
-    (error: Error): Opened => ({ opened: false, message: error.message }),
+    (cause: unknown): Opened => ({
+      opened: false,
+      message: githubError(cause),
+    }),
   );
 
 /*
