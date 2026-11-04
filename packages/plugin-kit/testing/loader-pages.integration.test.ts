@@ -21,6 +21,19 @@ it('draws a Loader page at its address, with the Page state over its defaults', 
   expect(titlesOf(found)).toEqual(['Issue 3']);
 });
 
+it('draws with the default for a kept Page state value whose type the page no longer declares', async () => {
+  const kit = await start();
+
+  // The App kept a number for `query` before the page declared it a string.
+  const kept = await kit.pages.draw({
+    path: issuesPath,
+    pageState: { query: 3 },
+  });
+
+  expect(treeOf(kept).root.props).toMatchObject({ value: '' });
+  expect(titlesOf(kept)).toEqual(['Issue 1', 'Issue 2']);
+});
+
 it('puts load more, Page state changes and bindings in the tree as values', async () => {
   const kit = await start();
 

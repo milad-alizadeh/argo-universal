@@ -32,18 +32,35 @@ export function inputOf<State extends PageState>(
   });
 }
 
-// The App's Page state is input: a key the defaults name must hold a value of the default's type.
+/*
+ * The App's Page state is input, and the App keeps it across visits: a kept value whose type is no longer its
+ * default's, as after the Plugin changed that default, draws with the default instead, so the page never locks.
+ */
 function stateOf<State extends PageState>(
   defaults: State | undefined,
   given: PageState,
 ): State {
-  const state = { ...defaults, ...given };
+  const kept: PageState = defaults ?? {};
+  const state = { ...kept, ...fittingOf(kept, given) };
 
-  if (!fitsDefaults<State>(state, defaults ?? {}))
+  if (!fitsDefaults<State>(state, kept))
     throw new Error('This Page state does not fit the page');
 
   return state;
 }
+
+const fitting = (
+  defaults: PageState,
+  key: string,
+  value: PageState[string],
+): boolean => !(key in defaults) || typeof value === typeof defaults[key];
+
+const fittingOf = (defaults: PageState, given: PageState): PageState =>
+  Object.fromEntries(
+    Object.entries(given).filter(([key, value]) =>
+      fitting(defaults, key, value),
+    ),
+  );
 
 const fitsDefaults = <State extends PageState>(
   state: PageState,
