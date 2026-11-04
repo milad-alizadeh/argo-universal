@@ -192,18 +192,22 @@ export class PageAddresses {
   // The address drawn again, showing `pages` pages, or as many as it shows now; a pull reads the first page again.
   private async drawn(
     address: PageAddress,
-    { pages, pull }: HowDrawn = {},
+    how: HowDrawn = {},
   ): Promise<Answer> {
     const before = this.client.getQueryData<Answer>(treeKey(address));
-    const kept = keptOf(before);
-
-    const answer = await this.draw({
-      ...address,
-      pages: pages ?? shownOf(kept),
-      known: kept?.hash,
-      ...(pull && { pull }),
-    });
+    const answer = await this.draw(requestOf(address, keptOf(before), how));
 
     return keptAfter(before, answer);
   }
 }
+
+const requestOf = (
+  address: PageAddress,
+  kept: Kept | undefined,
+  how: HowDrawn,
+): DrawRequest => ({
+  ...address,
+  known: kept?.hash,
+  ...how,
+  pages: how.pages ?? shownOf(kept),
+});

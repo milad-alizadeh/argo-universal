@@ -23,7 +23,7 @@ export const WireJson: z.ZodType<WireJson> = z.lazy(() =>
 const wireJson = z.json();
 
 // A value as JSON would carry it, checked: what a Plugin's code gave, kept only as data crosses the wire.
-export const wireJsonOf = (value: unknown): WireJson =>
+export const wireJsonOf = <Value>(value: Value): WireJson =>
   wireJson.parse(JSON.parse(JSON.stringify(value ?? null)));
 
 /*

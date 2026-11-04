@@ -8,6 +8,12 @@ export type ReadPage<Item> = (
   fresh: boolean,
 ) => Promise<ListPage<Item>>;
 
+// One page read from its cursor, and whether it is the list's first.
+type ReadFrom<Item> = (
+  cursor: string | null,
+  first: boolean,
+) => Promise<ListPage<Item>>;
+
 export type Paged<Item> = { items: Item[]; hasMore: boolean; pages: number };
 
 // The draw a paged list is read for, and how it reads its Queries.
@@ -50,21 +56,24 @@ async function readPaged<Item>(
   { pages, pull }: Pick<ListDraw['event'], 'pages' | 'pull'>,
   readPage: ReadPage<Item>,
 ): Promise<Paged<Item>> {
-  return joined(await further([], pages, pull === true, readPage));
+  // Only the first page of a pull is read fresh.
+  const reading: ReadFrom<Item> = (cursor, first) =>
+    readPage(cursor, first && pull === true);
+
+  return joined(await further([], pages, reading));
 }
 
 async function further<Item>(
   read: ListPage<Item>[],
   pages: number,
-  pull: boolean,
-  readPage: ReadPage<Item>,
+  readPage: ReadFrom<Item>,
 ): Promise<ListPage<Item>[]> {
-  const page = await readPage(cursorAfter(read), pull && read.length === 0);
+  const page = await readPage(cursorAfter(read), read.length === 0);
   const all = [...read, page];
 
   return page.cursor === null || all.length >= pages
     ? all
-    : further(all, pages, pull, readPage);
+    : further(all, pages, readPage);
 }
 
 const cursorAfter = <Item>(read: ListPage<Item>[]): string | null =>

@@ -109,9 +109,11 @@ function tokenIn(
   return token.safeParse(parsed(text)).data ?? null;
 }
 
-const parsed = (text: string): unknown => {
+const AnswerJson = z.json();
+
+const parsed = (text: string): z.infer<typeof AnswerJson> => {
   try {
-    return JSON.parse(text);
+    return AnswerJson.parse(JSON.parse(text));
   } catch {
     return null;
   }
