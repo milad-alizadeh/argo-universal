@@ -4,7 +4,8 @@ import type {
   LiveRequest,
   LiveTree,
 } from '@repo/contracts/plugins/page-live';
-import type { QueryClient } from '@tanstack/react-query';
+import { hashKey, type QueryClient } from '@tanstack/react-query';
+import { LiveBackoff } from './live-backoff';
 import { failedAfter, liveAfter, type Answer } from './page-answer';
 import { treeKey } from './page-keys';
 
@@ -21,12 +22,14 @@ export type Following = {
   address: PageAddress;
   known: string | undefined;
   again: () => void;
+  backoff: LiveBackoff;
 };
 
 /*
  * An address's live subscription (ADR-0050), each answer built onto the tree kept for it. A patch onto a tree
  * the App no longer keeps ends it and asks `again`, so the next starts from a whole tree. A failure is kept
- * and the page drawn again, so a Plugin that ran again is followed afresh. The answer unsubscribes.
+ * and the page drawn again, after a longer wait for each failure in a row, so a Plugin that ran again is followed
+ * afresh and one that keeps failing is not followed at network speed. The answer unsubscribes.
  */
 export function followLive(following: Following): () => void {
   const { follow, address, known } = following;
@@ -65,8 +68,14 @@ class KeptTree {
   private failed(error: string): true {
     const { client } = this.following;
 
+    const wait = this.following.backoff.failed(hashKey(this.key));
+    const drawAgain = (): void =>
+      void client.invalidateQueries({ queryKey: this.key, exact: true });
+
     client.setQueryData(this.key, failedAfter(this.kept(), error));
-    void client.invalidateQueries({ queryKey: this.key, exact: true });
+
+    if (wait === 0) drawAgain();
+    else setTimeout(drawAgain, wait);
 
     return true;
   }

@@ -15,6 +15,7 @@ import {
   type QueryClient,
   type QueryKey,
 } from '@tanstack/react-query';
+import { LiveBackoff } from './live-backoff';
 import { followLive, type FollowPage } from './live-follow';
 import { patchedAnswer, patchedAt, unpatchedAt } from './optimistic-patch';
 import {
@@ -56,6 +57,8 @@ type HowDrawn = { pages?: number; pull?: true };
  */
 export class PageAddresses {
   // The Page state last asked for each opening, which a change merges into and the last one asked leaves on landing.
+  // How long each live page waits to be drawn again after its subscription failed.
+  private readonly backoff = new LiveBackoff();
   private readonly asked = new Map<string, PageState>();
   // The load mores and pulls drawing now, by tree: outside the query's own fetch, so the cache tracks them.
   private readonly drawing = new Set<string>();
@@ -105,6 +108,7 @@ export class PageAddresses {
       address,
       known: this.keptAt(address)?.hash,
       again,
+      backoff: this.backoff,
     });
   }
 

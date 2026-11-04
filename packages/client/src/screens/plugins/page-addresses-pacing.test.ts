@@ -161,6 +161,38 @@ it('keeps why a live page failed and draws it again, so a Plugin that ran again 
   screen.leave();
 });
 
+it('backs off between tries of a live page that keeps failing, so it does not loop at network speed', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+  onTestFinished(() => {
+    vi.useRealTimers();
+  });
+
+  const cache = cacheOverMemory();
+
+  cache.server.pacing = { live: true };
+
+  const screen = onScreen(cache, issues);
+
+  await vi.advanceTimersByTimeAsync(0);
+
+  // A page shown while it is live subscribes; its Loader fails after the first frame, and it is drawn again.
+  for (let tick = 0; tick < 120_000; tick += 100) {
+    const shown = screen.answer();
+
+    if (shown?.ok && shown.live) {
+      cache.addresses.followLive(issues, () => null);
+      cache.live.send({ kind: 'failed', error: 'Plugin stopped' });
+    }
+
+    await vi.advanceTimersByTimeAsync(100);
+  }
+
+  // Drawn again at once, then after 1, 2, 4, 8, 16 and 30 seconds, and every 30 after: a handful in two minutes.
+  expect(cache.server.requests.length).toBeGreaterThan(5);
+  expect(cache.server.requests.length).toBeLessThan(15);
+  screen.leave();
+});
+
 // The tree with its first List's first row titled anew.
 function retitled(root: WireNode, title: string): WireNode {
   const [list] = root.children;
