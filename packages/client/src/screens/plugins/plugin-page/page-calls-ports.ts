@@ -15,6 +15,16 @@ export type OperationRunner = {
   failed: PageCallsPorts['failed'];
 };
 
+// A port's run of an Operation for the Plugin, which the page or Slot it was called from does not own.
+export const operationRunFor =
+  (
+    pluginId: string,
+    run: OperationRunner['run'],
+  ): PageCallsPorts['run'] =>
+  async (scoped: ScopedRun) => {
+    await run({ pluginId, ...scoped });
+  };
+
 // The opening's Page state, as the Page address cache draws it again.
 const pageStateOf = (
   addresses: PageAddresses,
@@ -38,9 +48,7 @@ export const pageCallsPorts = (
   scope: opening,
   shown: () => addresses.shown(opening),
   patch: (patch) => addresses.patch(opening, patch),
-  run: async (scoped) => {
-    await run({ pluginId: opening.pluginId, ...scoped });
-  },
+  run: operationRunFor(opening.pluginId, run),
   failed,
   pageState: pageStateOf(addresses, opening),
 });

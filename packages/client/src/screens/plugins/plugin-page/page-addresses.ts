@@ -10,7 +10,7 @@ import type {
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
 import { followLive, type FollowPage } from './live-follow';
-import { patchedAnswer } from './optimistic-patch';
+import { patchedAnswer, patchedAt } from './optimistic-patch';
 import {
   keptAfter,
   keptOf,
@@ -131,13 +131,7 @@ export class PageAddresses {
   ): Promise<() => void> {
     const queryKey = treeKey(this.addressOf(opening));
 
-    await this.client.cancelQueries({ queryKey, exact: true });
-
-    const before = this.client.getQueryData<Answer>(queryKey);
-
-    this.client.setQueryData<Answer>(queryKey, patchedAnswer(patch));
-
-    return () => this.client.setQueryData(queryKey, before);
+    return patchedAt({ client: this.client, queryKey }, patchedAnswer(patch));
   }
 
   /*

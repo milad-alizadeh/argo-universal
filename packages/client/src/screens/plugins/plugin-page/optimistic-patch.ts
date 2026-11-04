@@ -1,4 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { pacing, type Answer, type Kept } from './page-answer';
 
 /*
@@ -16,4 +17,21 @@ function patchedKept(kept: Kept, patch: (root: WireNode) => WireNode): Answer {
   return root === kept.root
     ? kept
     : { ok: true, root, pages: kept.pages, ...pacing(kept) };
+}
+
+/*
+ * The answer kept at `queryKey` patched at once, its read in flight cancelled first so an answer read before the
+ * patch cannot paint over it; the function returned puts the answer back as it was.
+ */
+export async function patchedAt<Data>(
+  { client, queryKey }: { client: QueryClient; queryKey: QueryKey },
+  patched: (answer: Data | undefined) => Data | undefined,
+): Promise<() => void> {
+  await client.cancelQueries({ queryKey, exact: true });
+
+  const before = client.getQueryData<Data>(queryKey);
+
+  client.setQueryData<Data>(queryKey, patched);
+
+  return () => client.setQueryData(queryKey, before);
 }

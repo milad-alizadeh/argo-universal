@@ -1,11 +1,12 @@
-import type {
-  PageCallsPorts,
-  ScopedRun,
-} from '@repo/contracts/plugins/page-calls';
+import type { PageCallsPorts } from '@repo/contracts/plugins/page-calls';
 import type { ReplaceableAnswer } from '@repo/contracts/plugins/replaceable';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
-import type { OperationRunner } from './plugin-page/page-calls-ports';
+import { patchedAt } from './plugin-page/optimistic-patch';
+import {
+  operationRunFor,
+  type OperationRunner,
+} from './plugin-page/page-calls-ports';
 
 // The Session a Feed row is in, and its Project once the Session's Feed has said which it is.
 export type SlotSession = { sessionId: string; projectId?: string };
@@ -29,20 +30,6 @@ const replacementIn = ({
   return answer?.type === 'replacement' ? answer.root : undefined;
 };
 
-// The replacement patched at once, its read in flight cancelled first; the answer puts it back.
-async function patchedIn(
-  { client, queryKey }: SlotAnswer,
-  patch: (root: WireNode) => WireNode,
-): Promise<() => void> {
-  await client.cancelQueries({ queryKey, exact: true });
-
-  const before = client.getQueryData<ReplaceableAnswer>(queryKey);
-
-  client.setQueryData<ReplaceableAnswer>(queryKey, patchedReplacement(patch));
-
-  return () => client.setQueryData(queryKey, before);
-}
-
 /*
  * What a Replaceable Slot's calls reach (ADR-0027, ADR-0050): the replacement kept in its own answer, and the
  * Plugin's Operation run for the Session the row is in. A replacement has no Page state, so an Operation run is
@@ -55,9 +42,7 @@ export const slotCallsPorts = (
 ): PageCallsPorts => ({
   scope: session,
   shown: () => replacementIn(answer),
-  patch: (patch) => patchedIn(answer, patch),
-  run: async (scoped: ScopedRun) => {
-    await run({ pluginId, ...scoped });
-  },
+  patch: (patch) => patchedAt(answer, patchedReplacement(patch)),
+  run: operationRunFor(pluginId, run),
   failed,
 });
