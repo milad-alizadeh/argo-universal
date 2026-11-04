@@ -10,6 +10,7 @@ import type {
   PageBind,
   PageStateChange,
 } from './wire-action';
+import type { CrossesAsJson } from './wire-json';
 
 /*
  * A Loader page (ADR-0050), as `argo.pages.define(pattern, page)` takes it. Every draw runs `load` and
@@ -28,7 +29,7 @@ import type {
  *   of the address and cursor, so a load more reads only the page it lacks; an Operation or
  *   `argo.changed()` makes every kept page due. The first page alone is read again on every draw. An item
  *   equal to one already listed is dropped, so a cursor may include the boundary item. Items cross to
- *   Argo as JSON, so a `Date` comes back as its string.
+ *   Argo as JSON, so an item must be JSON all through: a `Date` or a `Map` fails type-checking.
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by
  *   `to`, which the App acts on itself; a function prop fails the draw. `input.list` holds the pages read.
  */
@@ -90,7 +91,11 @@ export type PageTo<State extends PageState> = Readonly<{
   ) => OperationCall;
 }>;
 
-export type DefineLoaderPage = <State extends PageState, Data, Item = never>(
+export type DefineLoaderPage = <
+  State extends PageState,
+  Data,
+  Item extends CrossesAsJson<Item> = never,
+>(
   pattern: string,
   page: LoaderPage<State, Data, Item>,
 ) => void;

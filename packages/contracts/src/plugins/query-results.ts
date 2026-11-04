@@ -1,6 +1,6 @@
 import type { FetchResponse } from './argo-api';
 import type { PluginQuery, ProcessResult, StorageResult } from './argo-calls';
-import type { WireJson } from './wire-json';
+import type { CrossesAsJson, WireJson } from './wire-json';
 
 // What each Query api answers with. The Engine's readers and the kit's `useData` type both come from here.
 export type QueryResults = {
@@ -30,13 +30,13 @@ export type QueryReadContext = Readonly<{ projectId?: string }>;
 
 /*
  * `argo.queries.define(name, read)` (ADR-0037): a read the Plugin runs and Argo keeps, as it keeps a
- * described Query. Its answer is the Plugin's own JSON, keyed by the Plugin, the Project and the name with
- * its args, so a Loader, a `useData` and a background pass naming the same args share one entry, and a
- * write makes it due. Argo may run it again whenever it likes, so it must only read, and only from its
- * args and context.
+ * described Query. Its answer is the Plugin's own JSON, so its type must be JSON all through: a `Date` fails
+ * type-checking. It is keyed by the Plugin, the Project and the name with its args, so a Loader, a `useData`
+ * and a background pass naming the same args share one entry, and a write makes it due. Argo may run it again
+ * whenever it likes, so it must only read, and only from its args and context.
  */
 export type QueriesApi = Readonly<{
-  define: <Args extends WireJson, Value>(
+  define: <Args extends WireJson, Value extends CrossesAsJson<Value>>(
     name: string,
     read: (args: Args, context: QueryReadContext) => Value | Promise<Value>,
   ) => (args: Args) => NamedQuery<Value>;
