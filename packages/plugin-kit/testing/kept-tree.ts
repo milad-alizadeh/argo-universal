@@ -1,3 +1,4 @@
+import type { TreePatch } from '@repo/contracts/plugins/optimistic-tree';
 import {
   treeAfter,
   type DrawAnswer,
@@ -52,13 +53,16 @@ export class KeptTree {
     this.patched = undefined;
   }
 
-  patch(patch: (root: WireNode) => WireNode): Promise<() => void> {
+  patch(patch: TreePatch): Promise<void> {
     const root = this.shown;
 
     if (root) this.patched = patch(root);
 
-    return Promise.resolve(() => {
-      this.patched = undefined;
-    });
+    return Promise.resolve();
+  }
+
+  // A patch taken off the patched tree; a draw since has already replaced it.
+  unpatch(patch: TreePatch): void {
+    if (this.patched) this.patched = patch(this.patched);
   }
 }

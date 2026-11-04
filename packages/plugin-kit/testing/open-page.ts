@@ -174,6 +174,7 @@ export class OpenPage {
       scope: caller(this.opening),
       shown: () => this.kept.shown,
       patch: (patch) => this.kept.patch(patch),
+      unpatch: (patch) => this.kept.unpatch(patch),
       run: (run) => this.run(run),
       failed: rejected,
       pageState: {

@@ -1,8 +1,9 @@
+import type { TreePatch } from '@repo/contracts/plugins/optimistic-tree';
 import type { PageCallsPorts } from '@repo/contracts/plugins/page-calls';
 import type { ReplaceableAnswer } from '@repo/contracts/plugins/replaceable';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
-import { patchedAt } from './optimistic-patch';
+import { patchedAt, unpatchedAt } from './optimistic-patch';
 import { operationRunFor, type OperationRunner } from './page-calls-ports';
 
 // The Session a Feed row is in, and its Project once the Session's Feed has said which it is.
@@ -12,7 +13,7 @@ export type SlotSession = { sessionId: string; projectId?: string };
 export type SlotAnswer = { client: QueryClient; queryKey: QueryKey };
 
 const patchedReplacement =
-  (patch: (root: WireNode) => WireNode) =>
+  (patch: TreePatch) =>
   (answer: ReplaceableAnswer | undefined): ReplaceableAnswer | undefined =>
     answer?.type === 'replacement'
       ? { ...answer, root: patch(answer.root) }
@@ -40,6 +41,7 @@ export const slotCallsPorts = (
   scope: session,
   shown: () => replacementIn(answer),
   patch: (patch) => patchedAt(answer, patchedReplacement(patch)),
+  unpatch: (patch) => unpatchedAt(answer, patchedReplacement(patch)),
   run: operationRunFor(pluginId, run),
   failed,
 });

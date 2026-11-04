@@ -50,22 +50,26 @@ it('marks a draw in flight again once it lands, since it read before the change'
   screen.leave();
 });
 
-// The second row shown finished, the rest of the tree as it was.
-const finished = (root: WireNode): WireNode => {
-  const [list] = root.children;
+// The second row with `change` applied to its props, the rest of the tree as it was.
+const secondRow =
+  (change: (props: WireNode['props']) => WireNode['props']) =>
+  (root: WireNode): WireNode => {
+    const [list] = root.children;
 
-  if (!list) return root;
+    if (!list) return root;
 
-  const rows = list.children.map((row) =>
-    row.key === '/issues#1'
-      ? { ...row, props: { ...row.props, finished: true } }
-      : row,
-  );
+    const rows = list.children.map((row) =>
+      row.key === '/issues#1' ? { ...row, props: change(row.props) } : row,
+    );
 
-  return { ...root, children: [{ ...list, children: rows }] };
-};
+    return { ...root, children: [{ ...list, children: rows }] };
+  };
 
-it('patches only the address the press came from, keeps its unpatched rows and every other tree, and puts it back', async () => {
+const finished = secondRow((props) => ({ ...props, finished: true }));
+
+const unfinished = secondRow(({ finished: _finished, ...props }) => props);
+
+it('patches only the address the press came from, keeps its unpatched rows and every other tree, and takes the patch back off', async () => {
   const cache = cacheOverMemory();
   const argo = onScreen(cache, issues);
   const site = onScreen(cache, { ...issues, projectId: 'site' });
@@ -73,7 +77,7 @@ it('patches only the address the press came from, keeps its unpatched rows and e
   await settled();
 
   const [before, untouched] = [argo.answer(), site.answer()];
-  const putBack = await cache.addresses.patch(issues, finished);
+  await cache.addresses.patch(issues, finished);
   const patched = kept(argo.answer());
 
   expect(rowsOf(patched)[1]?.props).toMatchObject({ finished: true });
@@ -82,9 +86,9 @@ it('patches only the address the press came from, keeps its unpatched rows and e
   expect(site.answer()).toBe(untouched);
   expect(kept(untouched).hash).toBeDefined();
 
-  putBack();
+  cache.addresses.unpatch(issues, unfinished);
 
-  expect(argo.answer()).toEqual(before);
+  expect(kept(argo.answer()).root).toEqual(kept(before).root);
   argo.leave();
   site.leave();
 });

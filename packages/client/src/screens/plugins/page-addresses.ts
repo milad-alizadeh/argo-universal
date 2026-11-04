@@ -1,3 +1,4 @@
+import type { TreePatch } from '@repo/contracts/plugins/optimistic-tree';
 import type {
   PageAddress,
   PageState,
@@ -10,7 +11,7 @@ import type {
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
 import { followLive, type FollowPage } from './live-follow';
-import { patchedAnswer, patchedAt } from './optimistic-patch';
+import { patchedAnswer, patchedAt, unpatchedAt } from './optimistic-patch';
 import {
   keptAfter,
   keptOf,
@@ -123,15 +124,15 @@ export class PageAddresses {
   /*
    * The tree the opening shows now, patched at once, as an Operation call's optimistic props are; no other address
    * changes, since two never share a tree. Its draws in flight are cancelled first, so an answer read before the
-   * Operation cannot paint over the patch; the answer puts the tree back as it was.
+   * Operation cannot paint over the patch.
    */
-  public async patch(
-    opening: PageOpening,
-    patch: (root: WireNode) => WireNode,
-  ): Promise<() => void> {
-    const queryKey = treeKey(this.addressOf(opening));
+  public patch(opening: PageOpening, patch: TreePatch): Promise<void> {
+    return patchedAt(this.treeCache(opening), patchedAnswer(patch));
+  }
 
-    return patchedAt({ client: this.client, queryKey }, patchedAnswer(patch));
+  // The tree the opening shows now, with a patch of its own taken back off it; draws in flight are left to land.
+  public unpatch(opening: PageOpening, patch: TreePatch): void {
+    unpatchedAt(this.treeCache(opening), patchedAnswer(patch));
   }
 
   /*
@@ -158,6 +159,16 @@ export class PageAddresses {
       );
 
     void promise?.then(again, again);
+  }
+
+  private treeCache(opening: PageOpening): {
+    client: QueryClient;
+    queryKey: QueryKey;
+  } {
+    return {
+      client: this.client,
+      queryKey: treeKey(this.addressOf(opening)),
+    };
   }
 
   private stateOf(opening: PageOpening): PageState {

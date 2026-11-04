@@ -1,6 +1,11 @@
 import type { z } from 'zod';
 import { EditPauses, realClock, type PauseClock } from './edit-pauses';
-import { optimisticTree, type Optimistic } from './optimistic-tree';
+import {
+  optimisticTree,
+  optimisticUndo,
+  type Optimistic,
+  type TreePatch,
+} from './optimistic-tree';
 import type { PageRun, PageState } from './page-address';
 import {
   madePageCall,
@@ -45,14 +50,16 @@ export type PageStatePort = {
 
 /*
  * Everything one Plugin tree's calls reach, as the App or the test kit keeps it. `shown` is the tree shown now;
- * `patch` shows it patched until the answer puts it back; `run` is the one call to the Server, which rejects
+ * `patch` shows it patched at once and `unpatch` takes a patch of its own back off whatever is shown by then, so
+ * a tree drawn in between is never replaced by an older one; `run` is the one call to the Server, which rejects
  * with why an Operation failed; `failed` says so, and a `failed` that throws rejects the call. A tree with no
  * Page state, as a Replaceable Slot's, has no `pageState`.
  */
 export type PageCallsPorts = {
   scope: Pick<ScopedRun, 'projectId' | 'sessionId'>;
   shown: () => WireNode | undefined;
-  patch: (patch: (root: WireNode) => WireNode) => Promise<() => void>;
+  patch: (patch: TreePatch) => Promise<void>;
+  unpatch: (patch: TreePatch) => void;
   run: (run: ScopedRun) => Promise<void>;
   failed: (error: Error) => void;
   pageState?: PageStatePort;
@@ -185,12 +192,19 @@ export class PageCalls {
     }
   }
 
+  // Shows the optimistic props at once; the function returned takes back only those, as a failure does.
   private async showOptimistic(
     optimistic: Optimistic | undefined,
   ): Promise<() => void> {
-    if (!optimistic?.length) return keep;
+    const before = this.ports.shown();
 
-    return this.ports.patch((root) => optimisticTree(root, optimistic));
+    if (!optimistic?.length || !before) return keep;
+
+    await this.ports.patch((root) => optimisticTree(root, optimistic));
+
+    const undo = optimisticUndo(before, optimistic);
+
+    return () => this.ports.unpatch(undo);
   }
 }
 

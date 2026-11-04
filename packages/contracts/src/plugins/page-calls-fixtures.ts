@@ -1,5 +1,6 @@
 import type { PauseClock } from './edit-pauses';
 import { kitComponent } from './kit';
+import type { TreePatch } from './optimistic-tree';
 import type { PageState } from './page-address';
 import {
   PageCalls,
@@ -163,6 +164,7 @@ export class DraftPage {
       scope: { projectId: 'argo', sessionId: 'session-1' },
       shown: () => this.shown(),
       patch: (patch) => this.patch(patch),
+      unpatch: (patch) => this.unpatch(patch),
       run: (run) => this.run(run),
       failed: (error) => this.failures.push(error.message),
       ...(withState && { pageState: this.pageState() }),
@@ -176,12 +178,14 @@ export class DraftPage {
     };
   }
 
-  private patch(patch: (root: WireNode) => WireNode): Promise<() => void> {
+  private patch(patch: TreePatch): Promise<void> {
     this.patched = patch(this.shown());
 
-    return Promise.resolve(() => {
-      this.patched = undefined;
-    });
+    return Promise.resolve();
+  }
+
+  private unpatch(patch: TreePatch): void {
+    this.patched = this.patched && patch(this.patched);
   }
 
   private async run(run: ScopedRun): Promise<void> {

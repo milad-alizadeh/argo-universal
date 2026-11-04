@@ -45,6 +45,7 @@ export const pageCallsPorts = (
   scope: opening,
   shown: () => addresses.shown(opening),
   patch: (patch) => addresses.patch(opening, patch),
+  unpatch: (patch) => addresses.unpatch(opening, patch),
   run: operationRunFor(opening.pluginId, run),
   failed,
   pageState: pageStateOf(addresses, opening),
