@@ -35,3 +35,20 @@ it('hands the Render no way to read, as it is pure', async () => {
     expect.arrayContaining(['params', 'state', 'context', 'list']),
   );
 });
+
+it('ends a live draw when it is stopped while its Loader is still loading', async () => {
+  const stop = stopper();
+
+  const page = pageDrawer({
+    load: () => new Promise<never>(() => undefined),
+    render: () => jsx('Stack', {}),
+  });
+
+  const following = page.live({ params: {}, event, reading, stop }, () =>
+    Promise.resolve(),
+  );
+
+  stop.stop();
+
+  await expect(following).resolves.toBeUndefined();
+});

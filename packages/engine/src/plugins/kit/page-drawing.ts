@@ -12,6 +12,7 @@ import { loaderInputOf, pageInputOf, pageTo, renderedList } from './page-input';
 import { drawnPaged, type Paged } from './paged-lists';
 import type { DrawLists } from './query-reads';
 import { valuesOf } from './render-tree';
+import { swallowed } from './swallowed';
 
 export type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
@@ -140,16 +141,36 @@ async function followLive<State extends PageState, Data, Item>(
   { input, pageInput }: DrawRun<State>,
   { stop, frame }: Followed,
 ): Promise<void> {
+  const { stopped } = stop;
+
   if (page.list) throw new Error(unlistedError);
 
-  const loaded = await page.load(input);
+  const loading = Promise.resolve(page.load(input)).then((value) => ({
+    value,
+  }));
+  const loaded = await Promise.race([loading, stopped.then(() => null)]);
+
+  // A Loader that never settles must not hold its draw once the App has left.
+  if (loaded === null) return endLate(loading);
 
   const each = (data: Data): Promise<void> =>
     frame(renderPage(page, { data, pageInput, paged: unlisted }).root);
 
-  if (!isYielding(loaded)) return each(loaded);
+  if (!isYielding(loaded.value)) return each(loaded.value);
 
-  await eachYielded(loaded, stop, each);
+  await eachYielded(loaded.value, stop, each);
+}
+
+// A Loader stopped before it answered: if it yields values later, its iterator is closed so its `finally` runs.
+function endLate<Data>(
+  loading: Promise<{ value: Data | AsyncIterable<Data> }>,
+): void {
+  void loading
+    .then(
+      ({ value }) =>
+        isYielding(value) && value[Symbol.asyncIterator]().return?.(),
+    )
+    .catch(swallowed);
 }
 
 type Rendering<State extends PageState, Data, Item> = {
