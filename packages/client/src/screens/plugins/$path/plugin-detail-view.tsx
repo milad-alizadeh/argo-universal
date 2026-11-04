@@ -10,7 +10,7 @@ import { View } from 'react-native';
 import { useKeepSidebarWhilePending } from '#features/frame';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
-  PluginTree,
+  BoundedPluginTree,
   type OnPageCall,
 } from '../../../lib/product/plugin-registry';
 
@@ -91,7 +91,7 @@ function ownsPage(root: WireNode | null): boolean {
 
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
-    <PluginTree root={props.root} {...props.callbacks} />
+    <BoundedPluginTree root={props.root} {...props.callbacks} />
   ) : (
     <PendingPage />
   );

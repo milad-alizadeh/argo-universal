@@ -4,7 +4,8 @@ interface PluginDrawingBoundaryProps {
   children: ReactNode;
   fallback: ReactNode;
   resetKey?: string;
-  onFallback: (reason: string) => void;
+  // Told why a drawing fell back, when something is listening.
+  onFallback?: (reason: string) => void;
 }
 
 interface DrawingState {
@@ -27,7 +28,7 @@ export class PluginDrawingBoundary extends Component<
     return resetKey === state.resetKey ? null : { failed: false, resetKey };
   }
   public override componentDidCatch(error: Error): void {
-    this.props.onFallback(error.message);
+    this.props.onFallback?.(error.message);
   }
   public override render(): ReactNode {
     return this.state.failed ? this.props.fallback : this.props.children;

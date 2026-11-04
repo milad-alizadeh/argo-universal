@@ -9,7 +9,7 @@ import {
   useSessionMemory,
 } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
-import { PluginTree } from '../../../lib/product/plugin-registry';
+import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
 import { usePluginPage } from '../../plugins/use-plugin-page';
 import {
@@ -110,7 +110,7 @@ function DrawnCardPage(props: CardPage & { projectId: string }): ReactNode {
   if (!page.root) return null;
 
   return (
-    <PluginTree
+    <BoundedPluginTree
       root={page.root}
       onOpenPage={(opened) => openPage(props.pluginId, opened)}
       onPageCall={page.onPageCall}
