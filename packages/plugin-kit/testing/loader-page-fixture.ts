@@ -103,6 +103,17 @@ export function register(argo) {
     ),
   });
 
+  // Issue 1, which closes as an Operation and links to the listed cursors.
+  argo.pages.define('/issue', {
+    load: () => ({ closed: closed.has(1) }),
+    render: (data, to) => (
+      <Screen title="Issue 1">
+        <ListItem title={data.closed ? 'Closed' : 'Open'} onPress={to.run('close', { number: 1 })} />
+        <ListItem title="Cursors" onPress={to.go('/listed')} />
+      </Screen>
+    ),
+  });
+
   argo.pages.define('/hooks', {
     load: () => null,
     render: () => <Uses />,

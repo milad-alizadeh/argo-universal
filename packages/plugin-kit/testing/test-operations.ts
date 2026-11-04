@@ -1,4 +1,9 @@
-import { currentPluginSurface } from '@repo/contracts/plugins/kit';
+import {
+  currentPluginSurface,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
+import type { PageRun } from '@repo/contracts/plugins/page-address';
+import type { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import {
   type Asking,
   LoaderPages,
@@ -6,6 +11,7 @@ import {
   type PluginRuntime,
   type PluginService,
 } from '@repo/engine/plugins';
+import { PageView } from './page-view';
 import type { PluginTest } from './test-types';
 
 type Operations = PluginTest['operations'];
@@ -13,6 +19,8 @@ type Operations = PluginTest['operations'];
 type Hosted = { service: PluginService; runtime: PluginRuntime };
 
 type RunInput = Parameters<Operations['run']>[0];
+
+type Platform = PluginSurface['platform'];
 
 type Run = Parameters<PluginOperationService['run']>[0];
 
@@ -32,8 +40,10 @@ export function testOperations(
   };
 }
 
-// A draw asks as a web App does, as a mounted view's Connection does by default.
-const webApp: Asking = { surface: currentPluginSurface('web') };
+// A draw asks as the platform's App does, a web App unless the test names another.
+const appOn = (platform: PluginSurface['platform'] = 'web'): Asking => ({
+  surface: currentPluginSurface(platform),
+});
 
 // One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
 export function testPages(
@@ -43,10 +53,17 @@ export function testPages(
   const operations = new PluginOperationService(service, runtime.operations);
   const pages = new LoaderPages(service, runtime.draws, operations);
 
+  const server = {
+    draw: (request: Omit<DrawRequest, 'pluginId'>, platform?: Platform) =>
+      pages.draw({ pluginId, ...request }, appOn(platform)),
+    run: (run: Omit<PageRun, 'pluginId'>) => pages.run({ pluginId, ...run }),
+  };
+
   return {
-    draw: (input) =>
-      pages.draw({ pluginId, pageState: {}, pages: 1, ...input }, webApp),
-    run: (input) => pages.run({ pluginId, ...input }),
+    draw: ({ platform, ...input }) =>
+      server.draw({ pageState: {}, pages: 1, ...input }, platform),
+    open: (opening) => PageView.open(server, opening),
+    run: (input) => server.run(input),
     stale: (signal) => pages.stale(signal),
   };
 }

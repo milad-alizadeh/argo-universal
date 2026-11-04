@@ -27,6 +27,7 @@ import type {
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
+import type { PageOpening, PageView } from './page-view';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
 
@@ -83,6 +84,7 @@ export interface PluginTest {
   };
   // The Plugin's Loader pages, drawn and acted on as the App does (ADR-0050).
   pages: {
+    // One draw of an address, answered as the Server answers the App.
     draw: (input: {
       path: string;
       pageState?: PageState;
@@ -90,7 +92,10 @@ export interface PluginTest {
       sessionId?: string;
       pages?: number;
       known?: string;
+      platform?: PluginSurface['platform'];
     }) => Promise<DrawAnswer>;
+    // The page as an App shows it: its tree, and presses that act on what the tree's events hold.
+    open: (opening: PageOpening) => Promise<PageView>;
     run: (input: {
       operation: string;
       args: PluginOperationParams;
