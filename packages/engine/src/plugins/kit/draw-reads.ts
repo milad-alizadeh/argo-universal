@@ -4,8 +4,8 @@ import {
   type PluginDataState,
   type PluginQuery,
 } from '@repo/contracts/plugins/argo-calls';
-import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { QueryResult } from '@repo/contracts/plugins/query-results';
 import { z } from 'zod';
 import type { ReadPage } from './paged-lists';

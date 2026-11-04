@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { SentTrees } from './sent-trees';
 
-const tree = { key: 'root', type: 'Text', props: {}, children: [] };
+const tree = { key: 'root', type: 'Text', props: {}, children: [], slots: {} };
 
 const trees = (): SentTrees => new SentTrees({ generation: () => 1 });
 

@@ -31,7 +31,7 @@ it('logs an App below the wire minimum on one line whatever path it asked for', 
     },
     {
       ok: true,
-      root: { key: 'root', type: 'Text', props: {}, children: [] },
+      root: { key: 'root', type: 'Text', props: {}, children: [], slots: {} },
       pages: 0,
     },
   );

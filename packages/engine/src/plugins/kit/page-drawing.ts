@@ -166,10 +166,9 @@ function endLate<Data>(
   loading: Promise<{ value: Data | AsyncIterable<Data> }>,
 ): void {
   void loading
-    .then(
-      ({ value }) =>
-        isYielding(value) && value[Symbol.asyncIterator]().return?.(),
-    )
+    .then(({ value }) => {
+      if (isYielding(value)) void value[Symbol.asyncIterator]().return?.();
+    })
     .catch(swallowed);
 }
 

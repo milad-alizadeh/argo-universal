@@ -52,7 +52,7 @@ export async function signedIn(
 ): Promise<OAuthFlowState> {
   const exchanged = await exchange(argo, options, grant);
 
-  if (!exchanged.token) return failed(exchanged.problem);
+  if (exchanged.problem !== undefined) return failed(exchanged.problem);
 
   const { token } = exchanged;
   const label = await options.label(token);
