@@ -1,6 +1,7 @@
 import type { Socket } from 'node:net';
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { createTRPCClient, createWSClient, wsLink } from '@trpc/client';
 import { expect, it, onTestFinished } from 'vitest';
 import { WebSocket as NodeWebSocket } from 'ws';
@@ -35,7 +36,8 @@ const recordingSocket = (wire: Wire): typeof WebSocket =>
     },
   });
 
-function watchPage(url: string, wire: Wire): ViewMessage[] {
+// Draws the page over the WebSocket, as the App's page does.
+function drawPage(url: string, wire: Wire): Promise<DrawAnswer> {
   const client = createWSClient({
     url: url.replace(/^http/, 'ws'),
     connectionParams: { pluginSurface: JSON.stringify(surface) },
@@ -44,24 +46,19 @@ function watchPage(url: string, wire: Wire): ViewMessage[] {
 
   onTestFinished(() => client.close());
 
-  const messages: ViewMessage[] = [];
-
-  const subscription = createTRPCClient<AppRouter>({
+  return createTRPCClient<AppRouter>({
     links: [wsLink({ client })],
-  }).plugins.view.subscribe(
-    { pluginId: 'surface', path: '/', projectId },
-    { onData: (message): void => void messages.push(message) },
-  );
-
-  onTestFinished(() => subscription.unsubscribe());
-
-  return messages;
+  }).plugins.draw.query({
+    pluginId: 'surface',
+    path: '/',
+    pageState: {},
+    projectId,
+    pages: 1,
+  });
 }
 
-function drawn(messages: ViewMessage[]): string | null {
-  const snapshot = messages.findLast((message) => message.type === 'snapshot');
-
-  return snapshot ? text(snapshot.root) : null;
+function drawn(answer: DrawAnswer): string | null {
+  return answer.kind === 'tree' ? text(answer.root) : null;
 }
 
 function text(root: WireNode): string | null {
@@ -80,11 +77,7 @@ it('agrees permessage-deflate at the handshake and delivers a large page intact 
   const { url } = await startEngineTestHost({ home });
   const wire: Wire = {};
 
-  const messages = watchPage(url, wire);
-
-  await expect
-    .poll(() => drawn(messages), { timeout: 10_000 })
-    .toBe(expectedPage);
+  expect(drawn(await drawPage(url, wire))).toBe(expectedPage);
   expect(wire.agreed).toBe(
     'permessage-deflate; server_no_context_takeover; client_no_context_takeover',
   );
