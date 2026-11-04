@@ -37,3 +37,52 @@ it('leaves a node alone that no longer shows the optimistic props, as a tree dra
 
   expect(optimisticUndo(before, optimistic)(redrawn)).toBe(redrawn);
 });
+
+const text = (key: string, props: WireNode['props']): WireNode => ({
+  ...node(key, props),
+  type: 'Text',
+});
+
+it('shows a prop that fits its kit component and drops one that does not', () => {
+  const before = stack(text('note', { children: 'Open', tone: 'muted' }));
+
+  const shown = optimisticTree(before, [
+    { key: 'note', props: { children: 'Closing', tone: 'not-a-tone' } },
+  ]);
+
+  expect(shown.children[0]?.props).toEqual({
+    children: 'Closing',
+    tone: 'muted',
+  });
+});
+
+it('shows no prop a Plugin may not set on a node, such as a class or a style', () => {
+  const before = stack(text('note', { children: 'Open' }));
+
+  const shown = optimisticTree(before, [
+    { key: 'note', props: { className: 'p-4', style: 'x', children: 'Hi' } },
+  ]);
+
+  expect(shown.children[0]?.props).toEqual({ children: 'Hi' });
+});
+
+it('takes back a prop it showed even when another of the same patch was dropped', () => {
+  const before = stack(text('note', { children: 'Open' }));
+  const patch = [{ key: 'note', props: { children: 'Closing', tone: 'bad' } }];
+
+  const shown = optimisticTree(before, patch);
+
+  expect(optimisticUndo(before, patch)(shown)).toEqual(before);
+});
+
+it('takes back each node of a shared key to the props it had itself', () => {
+  const before = stack(
+    { ...stack(text('note', { children: 'First' })), key: 'one' },
+    { ...stack(text('note', { children: 'Second' })), key: 'two' },
+  );
+  const patch = [{ key: 'note', props: { children: 'Closing' } }];
+
+  const shown = optimisticTree(before, patch);
+
+  expect(optimisticUndo(before, patch)(shown)).toEqual(before);
+});
