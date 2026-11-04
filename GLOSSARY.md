@@ -170,6 +170,10 @@ _Avoid_: Invalidation, refresh event, push update
 The read half of a Plugin page or Slot: it runs on the Server, takes the page's path, Page state and context, and answers the data the page draws from. It never writes.
 _Avoid_: Fetcher, data hook, `useData`
 
+**Live page**:
+A Plugin page whose Loader answers over time, such as a log tail. The App follows it while it is on screen and draws each new answer as it comes; leaving the page ends the Loader. Stale marks and a page's clock do not draw it again.
+_Avoid_: Streaming view, push page
+
 **Render**:
 The draw half of a Plugin page or Slot: a pure function from the Loader's answer to a Plugin tree, with no hooks and no state.
 _Avoid_: View (a view per Connection no longer exists), component, template

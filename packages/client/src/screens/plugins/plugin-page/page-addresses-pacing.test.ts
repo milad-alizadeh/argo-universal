@@ -1,4 +1,4 @@
-import { liveAnswer } from '@repo/contracts/plugins/page-draw';
+import { liveAnswer, type LiveTree } from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { environmentManager } from '@tanstack/react-query';
 import { expect, it, onTestFinished, vi } from 'vitest';
@@ -6,6 +6,7 @@ import {
   cacheOverMemory,
   issues,
   kept,
+  type Kept,
   onScreen,
   rowsOf,
   settled,
@@ -100,16 +101,15 @@ it('draws a live tree only from its subscription, which builds on the tree kept'
   expect(cache.server.requests).toHaveLength(1);
 
   cache.addresses.followLive(issues, () => null);
-  expect(cache.live.followed[0]?.request).toMatchObject({
+  expect(cache.live.latest().request).toMatchObject({
     pluginId: 'tracker',
     path: '/issues',
     known: first.hash,
   });
 
   const next = retitled(first.root, 'Row 0 again');
-  const patch = liveAnswer(next, { root: first.root, hash: first.hash ?? '' }, undefined);
+  const patch = patchOnto(first, next);
 
-  if (!patch) throw new Error('The trees are the same');
   cache.live.send(patch);
   expect(screen.answer()).toMatchObject({
     ok: true,
@@ -139,7 +139,7 @@ it('subscribes again from a whole tree when a patch builds on a tree the App doe
   cache.live.send({ kind: 'patch', base: 'other', ops: [], hash: 'next' });
 
   expect(asked).toBe(1);
-  expect(cache.live.followed[0]?.open).toBe(false);
+  expect(cache.live.latest().open).toBe(false);
   expect(screen.answer()).toBe(before);
   screen.leave();
 });
@@ -174,4 +174,13 @@ function retitled(root: WireNode, title: string): WireNode {
   const changed = { ...row, props: { ...row.props, title } };
 
   return { ...root, children: [{ ...list, children: [changed, ...rest] }] };
+}
+
+// The live patch from the tree kept to the next.
+function patchOnto({ root, hash }: Kept, next: WireNode): LiveTree {
+  const patch = liveAnswer(next, { root, hash: String(hash) });
+
+  if (!patch) throw new Error('The trees are the same');
+
+  return patch;
 }

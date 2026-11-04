@@ -65,12 +65,13 @@ const failed = (error: string): Checked => ({ ok: false, error });
 
 type PageAt = { pluginId: string; path: string; log: (line: string) => void };
 
-type DrawnPage = { root: WireJson; pages: number };
+// A drawn page, `live` when its Loader yields.
+type DrawnPage = { root: WireJson; pages: number; live?: true };
 
 // A page draws without the SVG the sanitiser refused, and the log says what was left out.
 export function checkedPage(
   { pluginId, path, log }: PageAt,
-  { root, pages }: DrawnPage,
+  { root, pages, live }: DrawnPage,
 ): Drawn {
   const tree = checkedTree(root, 'page');
 
@@ -79,7 +80,7 @@ export function checkedPage(
   for (const { node, reason } of tree.refused)
     log(`Plugin ${pluginId}: refused ${path} node ${node}: ${reason}`);
 
-  return { ok: true, root: tree.root, pages };
+  return { ok: true, root: tree.root, pages, live };
 }
 
 const sizeReason = (

@@ -19,7 +19,11 @@ export class QueryIntervals {
   }
 
   // A Loader page drawn again on a clock while on screen, by the pattern it was defined at.
-  page(pluginId: string, pattern: string, every: number | undefined): number | undefined {
+  page(
+    pluginId: string,
+    pattern: string,
+    every: number | undefined,
+  ): number | undefined {
     return this.clamped(pluginId, `page ${pattern}`, every);
   }
 
@@ -42,7 +46,9 @@ export class QueryIntervals {
 
     if (seen.has(asked)) return;
     seen.add(asked);
-    this.log(`Plugin ${pluginId}: ${asked} clamped to ${mountedQueryFloorMs} ms`);
+    this.log(
+      `Plugin ${pluginId}: ${asked} clamped to ${mountedQueryFloorMs} ms`,
+    );
   }
 
   release(pluginId: string): void {

@@ -49,7 +49,7 @@ export function testPages(
     run: (input) => pages.run({ pluginId, ...input }),
     stale: (signal) => pages.stale(signal),
     live: (input, signal) =>
-      pages.live({ pluginId, pageState: {}, ...input }, webApp, signal),
+      pages.live({ pluginId, pageState: {}, ...input }, { ...webApp, signal }),
   };
 }
 

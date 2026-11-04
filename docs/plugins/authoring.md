@@ -314,6 +314,43 @@ Give a card a `tab` and pressing its body opens that page in full as an Inspecto
 
 Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
 
+## Pages on a clock and live pages
+
+A Loader page redraws when a stale mark names it (ADR-0050). Give it `every` (ms) to also redraw on a clock while it is on screen; the Server clamps it to at least ten seconds and logs once when it does. On each tick the page's Queries older than `every` are read again, so a tick with nothing new draws nothing.
+
+```tsx
+argo.pages.define('/status', {
+  every: 60_000,
+  load: async ({ read }) => read(statusQuery),
+  render: (status) => <Text>{status.summary}</Text>,
+});
+```
+
+A Live page's `load` is an async generator: each value it yields is drawn while the page is on screen, at most once a frame, and Argo sends only the rows that changed. Leaving the page, or the Plugin stopping or reloading, ends the generator; its `finally` runs once the `await` it is in settles. Stale marks and `every` do not draw a Live page again, so wait for your own changes inside it. A Live page cannot have a `list`, and a one-off draw of it shows its first value.
+
+```tsx
+const lines: string[] = [];
+let wake = () => {};
+
+argo.pages.define('/log', {
+  async *load() {
+    for (;;) {
+      yield [...lines];
+      await new Promise<void>((resolve) => (wake = resolve));
+    }
+  },
+  render: (shown) => (
+    <List>
+      {shown.map((line, index) => (
+        <ListItem key={String(index)} title={line} />
+      ))}
+    </List>
+  ),
+});
+```
+
+An Operation that appends a line then calls `wake()`. In tests, `kit.pages.live({ path })` follows a Live page and answers its trees and patches; `packages/plugin-kit/testing/loader-live-fixture.ts` is a worked example.
+
 ## Background pages and badges
 
 Declare `contributes.background: { path, interval }` in `plugin.json`, and define that path as a Loader page with `argo.pages.define`.

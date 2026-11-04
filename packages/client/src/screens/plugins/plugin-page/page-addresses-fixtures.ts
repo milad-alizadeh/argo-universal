@@ -3,9 +3,11 @@ import {
   type DrawAnswer,
   type DrawPacing,
   type DrawRequest,
-  type LiveAnswer,
-  type LiveRequest,
 } from '@repo/contracts/plugins/page-draw';
+import type {
+  LiveAnswer,
+  LiveRequest,
+} from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { PageAddresses, type Answer, type PageOpening } from './page-addresses';
@@ -50,16 +52,21 @@ class MemoryServer {
 
   readonly draw = async (request: DrawRequest): Promise<DrawAnswer> => {
     this.requests.push(request);
+    await this.held();
 
+    return this.failing === undefined
+      ? this.drawn(request)
+      : { kind: 'failed', error: this.failing };
+  };
+
+  private async held(): Promise<void> {
     if (this.holding)
       await new Promise<void>((resolve) => this.waiting.push(resolve));
+  }
 
-    if (this.failing !== undefined)
-      return { kind: 'failed', error: this.failing };
-
-    const { known, pages, ...address } = request;
+  private drawn({ known, pages, ...address }: DrawRequest): DrawAnswer {
     const key = JSON.stringify(address);
-    const root = drawnTree(request, this.edition);
+    const root = drawnTree({ ...address, pages }, this.edition);
     const tree = treeAnswer(root, this.sent.get(key), known);
     const answer = { ...tree, pages, ...this.pacing };
 
@@ -67,7 +74,7 @@ class MemoryServer {
     this.answers.push(answer);
 
     return answer;
-  };
+  }
 
   // Draws wait until `release`, as slow ones do.
   hold(): void {
@@ -104,6 +111,15 @@ class MemoryLive {
       followed.open = false;
     };
   };
+
+  // The latest subscription, and whether it is still open.
+  latest(): { request: LiveRequest; open: boolean } {
+    const latest = this.followed.at(-1);
+
+    if (!latest) throw new Error('Nothing is followed');
+
+    return latest;
+  }
 
   // The latest subscription's answer.
   send(answer: LiveAnswer): void {
@@ -160,9 +176,9 @@ export async function settled(): Promise<void> {
     });
 }
 
-export function kept(
-  answer: Answer | undefined,
-): Extract<Answer, { ok: true }> {
+export type Kept = Extract<Answer, { ok: true }>;
+
+export function kept(answer: Answer | undefined): Kept {
   if (!answer?.ok) throw new Error('No tree is kept');
 
   return answer;

@@ -1,4 +1,3 @@
-import type { LiveAnswer } from '@repo/contracts/plugins/page-draw';
 import { dataFixture } from '../mocks/data-fixture';
 
 const change = {
@@ -24,9 +23,10 @@ const append = {
 /*
  * The live pages the kit's live page tests share (ADR-0050): a log tail that waits for its next line, 2,000
  * keyed rows an Operation changes, a Loader that stops after one value, one that throws, one with a paged
- * list, and a page that says how often each Loader's `finally` ran.
+ * list, a Canvas of day shapes one of which an Operation brightens, and a page that says how often each
+ * Loader's `finally` ran.
  */
-const source = `import { List, ListItem, Text } from '@argo/plugin-kit';
+const source = `import { Canvas, List, ListItem, Text } from '@argo/plugin-kit';
 
 const lines = [];
 const rows = Array.from({ length: 2000 }, (_, index) => ({
@@ -34,6 +34,8 @@ const rows = Array.from({ length: 2000 }, (_, index) => ({
   title: 'Row ' + index,
   ...(index === 0 && { subtitle: 'first' }),
 }));
+const days = Array.from({ length: 4 }, (_, index) => ({ key: 'day-' + index, x: 8 + index * 29 }));
+let brightened = 0.5;
 const waiting = new Set();
 const finished = { log: 0, rows: 0 };
 
@@ -50,6 +52,7 @@ const changes = {
   rename: () => (rows[0] = { key: rows[0].key, title: 'renamed' }),
   retype: () => (rows[0] = { ...rows[0], text: true }),
   remove: () => rows.splice(1, 1),
+  brighten: () => (brightened = 1),
 };
 
 export function register(argo) {
@@ -107,6 +110,22 @@ export function register(argo) {
     ),
   });
 
+  argo.pages.define('/canvas', {
+    load: async function* () {
+      for (;;) {
+        yield brightened;
+        await changed();
+      }
+    },
+    render: (intensity) => (
+      <Canvas width={160} height={48} camera="pan-zoom" label="Activity" selectedKey="">
+        {days.map((day) => (
+          <Canvas.Rect key={day.key} x={day.x} y={8} width={25} height={25} tone="accent" intensity={day.key === 'day-2' ? intensity : 0.25} label={'Day ' + day.key.slice(4) + (day.key === 'day-2' ? ': ' + intensity : '')} />
+        ))}
+      </Canvas>
+    ),
+  });
+
   argo.pages.define('/once', {
     load: async function* () {
       yield 'only';
@@ -148,37 +167,3 @@ export async function start(): Promise<{ kit: Kit; directory: string }> {
 export type Kit = Awaited<
   ReturnType<Awaited<ReturnType<typeof dataFixture>>['start']>
 >;
-
-// Real time a frame waits for the worker before the Plugin clock closes it.
-const frameWaitMs = 20;
-
-const liveFrameMs = 16;
-
-/*
- * The next answer on a live subscription. Frames close on the Plugin clock, so the clock moves a frame on
- * each time the answer has not come yet.
- */
-export async function nextAnswer(
-  kit: Kit,
-  answers: AsyncGenerator<LiveAnswer>,
-): Promise<LiveAnswer | undefined> {
-  const pending = answers.next();
-  const settled = pending.then(() => true);
-
-  for (;;) {
-    const waited = new Promise<false>((resolve) => {
-      setTimeout(() => resolve(false), frameWaitMs);
-    });
-
-    if (await Promise.race([settled, waited])) return (await pending).value;
-
-    await kit.clock.advance(liveFrameMs);
-  }
-}
-
-// How often each live Loader's `finally` ran, as `log,rows`.
-export async function finished(kit: Kit): Promise<unknown> {
-  const answer = await kit.pages.draw({ path: '/finished' });
-
-  return answer.kind === 'tree' ? answer.root.props.title : answer.kind;
-}

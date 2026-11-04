@@ -6,21 +6,19 @@ import type {
 import type {
   DrawAnswer,
   DrawRequest,
-  LiveAnswer,
-  LiveRequest,
 } from '@repo/contracts/plugins/page-draw';
 import type {
   OperationCall,
   PageStateChange,
 } from '@repo/contracts/plugins/wire';
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
+import { followLive, type FollowPage } from './live-follow';
 import { patchedAnswer } from './optimistic-patch';
 import {
-  failedAfter,
   keptAfter,
   keptOf,
-  liveAfter,
   shownOf,
+  treePacing,
   type Answer,
   type Kept,
 } from './page-answer';
@@ -39,35 +37,12 @@ export type { PageOpening } from './page-keys';
 // The one call the cache makes: a draw of an address, naming what it keeps. tRPC in the App, a function in tests.
 export type DrawPage = (request: DrawRequest) => Promise<DrawAnswer>;
 
-// A live page's subscription for an address, naming what the App keeps, with each answer; the answer unsubscribes.
-export type FollowPage = (
-  request: LiveRequest,
-  onAnswer: (answer: LiveAnswer) => void,
-) => () => void;
-
 // The trees an optimistic patch replaced, to put back when the Operation fails.
 export type Snapshot = readonly [QueryKey, Answer | undefined][];
 
 type QueryOptions<Data> = { queryKey: QueryKey; queryFn: () => Promise<Data> };
 
-/*
- * A tree draws again on the interval its last answer names, and a live tree only from its subscription, so
- * neither a stale mark nor the clock draws it.
- */
-type TreeOptions = QueryOptions<Answer> & {
-  refetchInterval: (query: Query<Answer>) => number | false;
-  enabled: (query: Query<Answer>) => boolean;
-};
-
-const intervalOf = ({ state }: Query<Answer>): number | false =>
-  state.data?.every !== undefined && !isLive(state.data)
-    ? state.data.every
-    : false;
-
-const isLive = (answer: Answer | undefined): boolean =>
-  answer?.ok === true && answer.live === true;
-
-const drawsItself = ({ state }: Query<Answer>): boolean => !isLive(state.data);
+type TreeOptions = QueryOptions<Answer> & typeof treePacing;
 
 // Page state is never asked for: it is what the cache last remembered, or none.
 type StateOptions = QueryOptions<PageState> & {
@@ -107,50 +82,24 @@ export class PageAddresses {
   tree(opening: PageOpening): TreeOptions {
     return {
       ...this.treeAt(this.addressOf(opening)),
-      refetchInterval: intervalOf,
-      enabled: drawsItself,
+      ...treePacing,
     };
-  }
-
-  // Whether the opening's tree is live, so a screen showing it follows its subscription.
-  isLive(opening: PageOpening): boolean {
-    return isLive(this.client.getQueryData(treeKey(this.addressOf(opening))));
   }
 
   /*
-   * The opening's live subscription, naming the tree kept, so its first answer may be `unchanged`; each answer
-   * after builds on the tree kept. A patch onto a tree the App no longer keeps ends it and asks `again`, so the
-   * next one starts from a whole tree. A failure is kept and the page drawn again, so a Plugin that ran again
-   * is followed afresh. The answer unsubscribes.
+   * The opening's live subscription, naming the tree kept, so its first answer may be `unchanged`; `again` is
+   * asked when it must start over from a whole tree. The answer unsubscribes.
    */
   followLive(opening: PageOpening, again: () => void): () => void {
     const address = this.addressOf(opening);
-    const key = treeKey(address);
-    const known = this.keptAt(address)?.hash;
-    const kept = (): Answer | undefined => this.client.getQueryData(key);
 
-    const answer = (live: LiveAnswer): void => {
-      if (live.kind === 'failed') {
-        this.client.setQueryData(key, failedAfter(kept(), live.error));
-        void this.client.invalidateQueries({ queryKey: key, exact: true });
-
-        return;
-      }
-
-      const next = liveAfter(kept(), live);
-
-      if (next) return void this.client.setQueryData(key, next);
-
-      stop();
-      again();
-    };
-
-    const stop = this.follow(
-      { ...address, ...(known !== undefined && { known }) },
-      answer,
-    );
-
-    return stop;
+    return followLive({
+      client: this.client,
+      follow: this.follow,
+      address,
+      known: this.keptAt(address)?.hash,
+      again,
+    });
   }
 
   // The opening drawn at its next Page state, which it shows once drawn; an empty change draws it again from page one.

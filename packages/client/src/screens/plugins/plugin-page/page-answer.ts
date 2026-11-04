@@ -1,12 +1,15 @@
 import {
-  liveTreeAfter,
   treeAfter,
   type DrawAnswer,
   type DrawPacing,
   type HashedTree,
-  type LiveTree,
 } from '@repo/contracts/plugins/page-draw';
+import {
+  liveTreeAfter,
+  type LiveTree,
+} from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { Query } from '@tanstack/react-query';
 
 /*
  * What the App keeps for one Page address: the tree, the hash the Server gave it, how many pages of its paged
@@ -40,7 +43,10 @@ export const failedAfter = (
 });
 
 // What the App keeps after an answer, the drawn tree rebuilt from the kept one as the Contracts say.
-export function keptAfter(before: Answer | undefined, answer: DrawAnswer): Answer {
+export function keptAfter(
+  before: Answer | undefined,
+  answer: DrawAnswer,
+): Answer {
   if (answer.kind === 'failed') return failedAfter(before, answer.error);
 
   const kept = keptOf(before);
@@ -61,12 +67,34 @@ export function liveAfter(
 ): Answer | undefined {
   const kept = keptOf(before);
   const tree = liveTreeAfter(hashedOf(kept), answer);
-  const shown = { pages: kept?.pages ?? 0, live: true as const };
 
-  return tree && sameOrNew(kept, tree, shown);
+  // A live page has no paged list.
+  return tree && sameOrNew(kept, tree, { pages: 0, live: true });
 }
 
-const pacing = ({ every, live }: DrawPacing): DrawPacing => ({
+// Whether the answer is a live page's tree, which only its subscription draws.
+export const isLive = (answer: Answer | undefined): boolean =>
+  keptOf(answer)?.live === true;
+
+const everyOf = (answer: Answer | undefined): number | false =>
+  answer?.every ?? false;
+
+// The interval a kept answer is drawn again on; a live tree has none.
+const intervalOf = (answer: Answer | undefined): number | false =>
+  isLive(answer) ? false : everyOf(answer);
+
+/*
+ * A tree draws again on the interval its last answer names, and a live tree only from its subscription, so
+ * neither a stale mark nor the clock draws it.
+ */
+export const treePacing = {
+  refetchInterval: ({ state }: Query<Answer>): number | false =>
+    intervalOf(state.data),
+  enabled: ({ state }: Query<Answer>): boolean => !isLive(state.data),
+};
+
+// How an answer stays fresh, with no field it leaves unset.
+export const pacing = ({ every, live }: DrawPacing): DrawPacing => ({
   ...(every !== undefined && { every }),
   ...(live && { live }),
 });
@@ -84,9 +112,9 @@ const sameOrNew = (
 ): Answer =>
   kept && unmoved(kept, tree, shown) ? kept : { ok: true, ...tree, ...shown };
 
+const shownKeys = ['pages', 'every', 'live'] as const;
+
 const unmoved = (kept: Kept, tree: HashedTree, shown: Shown): boolean =>
   kept.root === tree.root &&
   kept.hash === tree.hash &&
-  kept.pages === shown.pages &&
-  kept.every === shown.every &&
-  kept.live === shown.live;
+  shownKeys.every((key): boolean => kept[key] === shown[key]);

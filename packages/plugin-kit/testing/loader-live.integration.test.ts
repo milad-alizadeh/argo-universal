@@ -1,49 +1,15 @@
 import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import {
-  liveTreeAfter,
-  type HashedTree,
-  type LiveAnswer,
-} from '@repo/contracts/plugins/page-draw';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it } from 'vitest';
 import { processWait } from '../mocks/data-fixture';
-import { finished, nextAnswer, start, type Kit } from './loader-live-fixture';
-
-type Subscription = {
-  next: () => Promise<LiveAnswer | undefined>;
-  leave: () => void;
-};
-
-function subscribe(kit: Kit, path: string, known?: string): Subscription {
-  const controller = new AbortController();
-  const answers = kit.pages.live({ path, known }, controller.signal);
-
-  onTestFinished(() => controller.abort());
-
-  return {
-    next: () => nextAnswer(kit, answers),
-    leave: () => controller.abort(),
-  };
-}
-
-function treeOf(answer: LiveAnswer | undefined): HashedTree {
-  if (answer?.kind !== 'tree') throw new Error(`Answered ${answer?.kind}`);
-
-  return { root: answer.root, hash: answer.hash };
-}
-
-function patched(kept: HashedTree, answer: LiveAnswer | undefined): HashedTree {
-  if (answer?.kind !== 'patch') throw new Error(`Answered ${answer?.kind}`);
-
-  const after = liveTreeAfter(kept, answer);
-
-  if (!after) throw new Error('The patch does not fit the tree kept');
-
-  return after;
-}
-
-const rowsOf = ({ root }: HashedTree): unknown[] =>
-  root.children.map((row) => row.props.title);
+import { start } from './loader-live-fixture';
+import {
+  finished,
+  patched,
+  rowsOf,
+  subscribe,
+  treeOf,
+} from './loader-live-subscriptions';
 
 it('draws a live page once at its first value, says it is live, and stops its Loader', async () => {
   const { kit } = await start();
@@ -117,17 +83,40 @@ it.each([
 
     const answer = await rows.next();
 
-    expect(answer).toMatchObject({ kind: 'patch', ops: [{ op }] });
-    expect(answer?.kind === 'patch' && answer.ops).toHaveLength(1);
-
-    const drawn = await kit.pages.draw({ path: '/rows' });
-
-    expect(drawn.kind === 'tree' && drawn.root).toEqual(
-      patched(first, answer).root,
+    expect(answer).toEqual(
+      expect.objectContaining({ ops: [expect.objectContaining({ op })] }),
     );
+    expect(await kit.pages.draw({ path: '/rows' })).toMatchObject({
+      kind: 'tree',
+      ...patched(first, answer),
+    });
   },
   20_000,
 );
+
+// Canvas shapes are data (ADR-0028), so one shape that changes is one keyed op.
+it('sends one keyed setProps when one Canvas shape changes', async () => {
+  const { kit } = await start();
+  const canvas = subscribe(kit, '/canvas');
+  const first = treeOf(await canvas.next());
+
+  await kit.operations.run({ name: 'change', params: { how: 'brighten' } });
+
+  const answer = await canvas.next();
+
+  expect(answer).toEqual(
+    expect.objectContaining({
+      ops: [
+        {
+          op: 'setProps',
+          key: expect.arrayContaining(['day-2']),
+          props: { intensity: 1, label: 'Day 2: 1' },
+        },
+      ],
+    }),
+  );
+  expect(patched(first, answer).root.children[2]?.props.label).toBe('Day 2: 1');
+});
 
 it('stops the Loader when the App leaves, so its finally runs once its wait settles', async () => {
   const { kit } = await start();
@@ -170,5 +159,8 @@ it('ends a live page when its Plugin runs again', async () => {
   await log.next();
   await appendFile(join(directory, 'index.tsx'), '\n// Edited.\n');
 
-  expect(await log.next()).toEqual({ kind: 'failed', error: 'Plugin stopped' });
+  expect(await log.ended()).toEqual({
+    kind: 'failed',
+    error: 'Plugin stopped',
+  });
 }, 20_000);

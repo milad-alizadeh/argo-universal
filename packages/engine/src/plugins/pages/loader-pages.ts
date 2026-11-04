@@ -7,9 +7,11 @@ import type {
 import type {
   DrawAnswer,
   DrawRequest,
+} from '@repo/contracts/plugins/page-draw';
+import type {
   LiveAnswer,
   LiveRequest,
-} from '@repo/contracts/plugins/page-draw';
+} from '@repo/contracts/plugins/page-live';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
@@ -94,8 +96,7 @@ export class LoaderPages {
    */
   public async *live(
     { pluginId, known, ...at }: LiveRequest,
-    asking: Asking,
-    signal: AbortSignal,
+    asking: Asking & { signal: AbortSignal },
   ): AsyncGenerator<LiveAnswer> {
     const started = await this.started(pluginId);
 
@@ -103,7 +104,7 @@ export class LoaderPages {
 
     const address = { ...at, pages: 1, ...askedBy(asking) };
 
-    yield* this.draws.live(pluginId, address, known, signal);
+    yield* this.draws.live({ pluginId, address, known, signal: asking.signal });
   }
 
   public async patterns(pluginId: string): Promise<string[]> {

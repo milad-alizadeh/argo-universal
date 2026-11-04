@@ -12,10 +12,8 @@ import type {
   PageRunAnswer,
   StaleMark,
 } from '@repo/contracts/plugins/page-address';
-import type {
-  DrawAnswer,
-  LiveAnswer,
-} from '@repo/contracts/plugins/page-draw';
+import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
+import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
 import type {
   PluginOperationCaller,
   PluginOperationParams,

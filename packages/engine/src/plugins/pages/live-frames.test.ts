@@ -1,8 +1,14 @@
-import { liveTreeAfter, treeAnswer } from '@repo/contracts/plugins/page-draw';
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { HashedTree } from '@repo/contracts/plugins/page-draw';
+import {
+  liveAnswer,
+  liveTreeAfter,
+  type LiveAnswer,
+} from '@repo/contracts/plugins/page-live';
+import { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { PluginTestClock } from '../worker/test-clock';
 import { LatestFrames, liveAnswers, liveFrameMs } from './live-frames';
+import type { Drawn } from './plugin-draws';
 
 const row = (title: string): WireNode => ({
   type: 'ListItem',
@@ -13,8 +19,7 @@ const row = (title: string): WireNode => ({
 });
 
 // The hash the Contracts give a tree, as a whole-tree answer names it.
-const hashOf = (root: WireNode): string =>
-  treeAnswer(root, undefined, undefined).hash;
+const hashOf = (root: WireNode): string => String(liveAnswer(root)?.hash);
 
 const list = (...titles: string[]): WireNode => ({
   type: 'List',
@@ -26,13 +31,23 @@ const list = (...titles: string[]): WireNode => ({
 
 type Live = {
   clock: PluginTestClock;
+  push: (root: WireNode) => void;
   frames: LatestFrames;
   answers: ReturnType<typeof liveAnswers>;
   stops: () => number;
   controller: AbortController;
 };
 
-// A live subscription over frames a test pushes, whose trees pass their checks unless they are a Text.
+// Trees pass their checks unless they are a Text.
+function checked(json: WireJson): Drawn {
+  const root = WireNode.parse(json);
+
+  return root.type === 'Text'
+    ? { ok: false, error: 'Refused' }
+    : { ok: true, root, pages: 0 };
+}
+
+// A live subscription over frames a test pushes.
 function live(known?: string): Live {
   const clock = new PluginTestClock();
   const frames = new LatestFrames(clock);
@@ -43,23 +58,32 @@ function live(known?: string): Live {
     frames,
     known,
     signal: controller.signal,
-    check: (root) =>
-      (root as WireNode).type === 'Text'
-        ? { ok: false, error: 'Refused' }
-        : { ok: true, root: root as WireNode, pages: 0 },
+    check: checked,
     stop: () => {
       stops += 1;
     },
   });
 
-  return { clock, frames, answers, stops: () => stops, controller };
+  const push = (root: WireNode): void => frames.push(WireJson.parse(root));
+
+  return { clock, push, frames, answers, stops: () => stops, controller };
+}
+
+// What a patch leaves of the tree it builds on.
+function patchedTree(
+  base: WireNode,
+  answer: LiveAnswer | undefined,
+): HashedTree | undefined {
+  if (answer?.kind !== 'patch') throw new Error('No patch');
+
+  return liveTreeAfter({ root: base, hash: hashOf(base) }, answer);
 }
 
 it('sends the first tree whole, then one patch a frame from the latest tree', async () => {
-  const { clock, frames, answers } = live();
+  const { clock, push, answers } = live();
   const first = answers.next();
 
-  frames.push(list('a'));
+  push(list('a'));
   await clock.advance(liveFrameMs);
   expect((await first).value).toEqual({
     kind: 'tree',
@@ -69,8 +93,8 @@ it('sends the first tree whole, then one patch a frame from the latest tree', as
 
   const second = answers.next();
 
-  frames.push(list('a', 'b'));
-  frames.push(list('a', 'b', 'c'));
+  push(list('a', 'b'));
+  push(list('a', 'b', 'c'));
   await clock.advance(liveFrameMs);
   const patch = (await second).value;
 
@@ -80,17 +104,16 @@ it('sends the first tree whole, then one patch a frame from the latest tree', as
     hash: hashOf(list('a', 'b', 'c')),
     ops: [{ op: 'insert' }, { op: 'insert' }],
   });
-  if (patch?.kind !== 'patch') throw new Error('No patch');
-  expect(
-    liveTreeAfter({ root: list('a'), hash: hashOf(list('a')) }, patch)?.root,
-  ).toEqual(list('a', 'b', 'c'));
+  expect(patchedTree(list('a'), patch)).toMatchObject({
+    root: list('a', 'b', 'c'),
+  });
 });
 
 it('answers unchanged for the tree the App keeps, and nothing for a tree the same as the last', async () => {
-  const { clock, frames, answers } = live(hashOf(list('a')));
+  const { clock, push, answers } = live(hashOf(list('a')));
   const first = answers.next();
 
-  frames.push(list('a'));
+  push(list('a'));
   await clock.advance(liveFrameMs);
   expect((await first).value).toEqual({
     kind: 'unchanged',
@@ -99,9 +122,9 @@ it('answers unchanged for the tree the App keeps, and nothing for a tree the sam
 
   const next = answers.next();
 
-  frames.push(list('a'));
+  push(list('a'));
   await clock.advance(liveFrameMs);
-  frames.push(list('b'));
+  push(list('b'));
   await clock.advance(liveFrameMs);
   expect((await next).value).toMatchObject({
     kind: 'patch',
@@ -110,9 +133,9 @@ it('answers unchanged for the tree the App keeps, and nothing for a tree the sam
 });
 
 it('sends the open frame before a Loader that ended, then ends quietly and stops the worker', async () => {
-  const { frames, answers, stops } = live();
+  const { push, frames, answers, stops } = live();
 
-  frames.push(list('a'));
+  push(list('a'));
   frames.end({ action: 'ended', id: 1 });
 
   expect((await answers.next()).value).toMatchObject({ kind: 'tree' });
@@ -131,7 +154,7 @@ it('answers why a Loader failed, a tree was refused or its Plugin stopped', asyn
 
   const refused = live();
 
-  refused.frames.push({ ...row('a'), type: 'Text' });
+  refused.push({ ...row('a'), type: 'Text' });
   refused.frames.end({ action: 'ended', id: 1 });
   expect((await refused.answers.next()).value).toEqual({
     kind: 'failed',

@@ -10,7 +10,12 @@
  * `tree`. The Server keeps that last tree per address while the Plugin's generation runs. Two draws of one address may
  * run at once. It answers `failed` when the Plugin cannot start, no pattern matches the path, the Loader
  * throws or takes longer than 30 seconds, the Render calls a hook or passes a function prop, or the tree
- * is invalid or too large. It never throws.
+ * is invalid or too large. It never throws. Each answer carries the page's clamped `every`, and a timed
+ * redraw reads again the Queries older than it; a Live page's draw answers its first value and `live`.
+ *
+ * `live(request, asking, signal)` follows a Live page: the first tree whole (or `unchanged`), then one
+ * keyed patch a frame from the tree sent before, until the signal aborts, the Loader ends or fails, or
+ * the Plugin's generation ends; it then stops the Loader.
  *
  * `run(call)` runs one of the Plugin's declared Operations through the ADR-0044 registry's checks (the
  * manifest's params and tier, a running worker) and answers its result. It throws what the Operation

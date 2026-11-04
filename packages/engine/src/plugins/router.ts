@@ -3,7 +3,8 @@ import {
   DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
 import { PageRun, PageRunAnswer } from '@repo/contracts/plugins/page-address';
-import { DrawRequest, LiveRequest } from '@repo/contracts/plugins/page-draw';
+import { DrawRequest } from '@repo/contracts/plugins/page-draw';
+import { LiveRequest } from '@repo/contracts/plugins/page-live';
 import {
   ReplaceableAnswer,
   ReplaceableInput,
@@ -15,46 +16,18 @@ import {
   SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import {
-  mergeRouters,
-  liveConnection,
-  publicProcedure,
-  router,
-  routerFactory,
-  type RpcConnection,
-} from '../rpc';
-import type { RpcContext } from '../rpc/connection';
+import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
 import type { PluginListChanges } from './list-changes';
 import type { PluginOperationService } from './operations';
 import type { LoaderPages } from './pages';
 import type { PluginService } from './service';
-
-function requireSignal(signal: AbortSignal | undefined): AbortSignal {
-  if (!signal) throw new Error('Plugin subscription signal is missing');
-
-  return signal;
-}
-
-const viewConnection = (ctx: RpcContext): RpcConnection =>
-  liveConnection(ctx.connection, 'Plugin views require a live App Connection');
-
-// A view lives while both the App Connection and its subscription are open.
-function connectionOf({
-  ctx,
-  signal,
-}: {
-  ctx: RpcContext;
-  signal?: AbortSignal;
-}): RpcConnection {
-  const live = viewConnection(ctx);
-
-  return {
-    ...live,
-    signal: signal ? AbortSignal.any([live.signal, signal]) : live.signal,
-  };
-}
+import {
+  connectionOf,
+  requireSignal,
+  viewConnection,
+} from './subscription-connection';
 
 const createLifecycleRouter = routerFactory((plugins: PluginService) =>
   router({
@@ -132,19 +105,13 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
 
 /*
  * Loader pages (ADR-0050): a draw is a plain query the App caches by Page address, and an Operation a
- * page's Component event runs answers the patterns to draw again. The App's tap runs as the user. A live
- * page streams to one live App Connection while it subscribes.
+ * page's Component event runs answers the patterns to draw again. The App's tap runs as the user.
  */
 const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   router({
     draw: publicProcedure
       .input(DrawRequest)
       .query(({ input, ctx }) => pages.draw(input, ctx.connection)),
-    live: publicProcedure.input(LiveRequest).subscription((call) => {
-      const connection = connectionOf(call);
-
-      return pages.live(call.input, connection, connection.signal);
-    }),
     loaderPages: publicProcedure
       .input(z.strictObject({ pluginId: z.string().min(1) }))
       .query(({ input }) => pages.patterns(input.pluginId)),
@@ -155,12 +122,18 @@ const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   }),
 );
 
-// After any Operation of a Plugin, its Loader pages are stale on every connected App.
-const createStaleRouter = routerFactory((pages: LoaderPages) =>
+/*
+ * After any Operation of a Plugin, its Loader pages are stale on every connected App; a live page streams to
+ * one live App Connection while it subscribes.
+ */
+const createPageStreamsRouter = routerFactory((pages: LoaderPages) =>
   router({
     stale: publicProcedure.subscription(({ signal }) =>
       pages.stale(requireSignal(signal)),
     ),
+    live: publicProcedure
+      .input(LiveRequest)
+      .subscription((call) => pages.live(call.input, connectionOf(call))),
   }),
 );
 
@@ -182,6 +155,6 @@ export const createPluginsRouter = routerFactory(
       createSlotItemsRouter(plugins),
       createViewEventsRouter(plugins),
       createLoaderPagesRouter(pages),
-      createStaleRouter(pages),
+      createPageStreamsRouter(pages),
     ),
 );

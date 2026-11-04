@@ -7,10 +7,14 @@
 export const isYielding = <Data>(
   loaded: Data | AsyncIterable<Data>,
 ): loaded is AsyncIterable<Data> =>
-  typeof loaded === 'object' && loaded !== null && Symbol.asyncIterator in loaded;
+  typeof loaded === 'object' &&
+  loaded !== null &&
+  Symbol.asyncIterator in loaded;
 
 // The first value a live Loader yields, as a one-off draw or a background pass draws it; the Loader stops after.
-export async function firstOf<Data>(loaded: AsyncIterable<Data>): Promise<Data> {
+export async function firstOf<Data>(
+  loaded: AsyncIterable<Data>,
+): Promise<Data> {
   const iterator = loaded[Symbol.asyncIterator]();
 
   try {
@@ -38,6 +42,11 @@ export function stopper(): Stop {
 
 type Next<Data> = IteratorResult<Data> | 'stopped';
 
+const isOver = <Data>(
+  next: Next<Data>,
+): next is 'stopped' | IteratorReturnResult<unknown> =>
+  next === 'stopped' || next.done === true;
+
 /*
  * Each value the Loader yields, one at a time, until it ends or it is stopped. A Loader waiting inside an
  * await when it is stopped is left to settle; its `return()` is queued, and its `finally` runs once that
@@ -51,14 +60,22 @@ export async function eachYielded<Data>(
   const iterator = loaded[Symbol.asyncIterator]();
 
   try {
-    for (;;) {
-      const next: Next<Data> = await Promise.race([iterator.next(), stopped]);
-
-      if (next === 'stopped' || next.done === true) return;
-
-      await each(next.value);
-    }
+    await eachUntil(iterator, stopped, each);
   } finally {
     void Promise.resolve(iterator.return?.()).catch(() => null);
+  }
+}
+
+async function eachUntil<Data>(
+  iterator: AsyncIterator<Data>,
+  stopped: Stop['stopped'],
+  each: (data: Data) => Promise<void>,
+): Promise<void> {
+  for (;;) {
+    const next: Next<Data> = await Promise.race([iterator.next(), stopped]);
+
+    if (isOver(next)) return;
+
+    await each(next.value);
   }
 }

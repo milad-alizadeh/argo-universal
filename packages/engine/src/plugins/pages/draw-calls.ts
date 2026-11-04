@@ -3,7 +3,7 @@ import type {
   PageAddress,
 } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent } from '../protocol/runtime';
-import type { CallOutcome, Ended } from '../runtime/worker-calls';
+import type { CallKind, CallOutcome, Ended } from '../runtime/worker-calls';
 
 // One draw call to a worker: what it asks, what the worker answers, and the Loader reads it holds; a live draw's frames are routed apart.
 export type Answered = Exclude<
@@ -42,7 +42,7 @@ const endedError: Record<Ended, (pluginId: string, path: string) => string> = {
     `${path} did not draw in time`,
 };
 
-export function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
+function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
   if ('answered' in outcome) return outcome.answered;
 
   return failed(endedError[outcome.ended](outcome.pluginId, at.path));
@@ -76,7 +76,7 @@ export function drawingOf(
 
   const holder = addressOf(pluginId, at);
 
-  return { draw, projectId, holder, ...(every !== undefined && { every }) };
+  return { draw, projectId, holder, every };
 }
 
 const addressOf = (
@@ -89,3 +89,15 @@ const addressOf = (
   ...(projectId !== undefined && { projectId }),
   ...(sessionId !== undefined && { sessionId }),
 });
+
+/*
+ * How long a Loader may read before its draw fails. A Loader awaits the Plugin's own reads, such as a
+ * `gh` call, so it is given as long as an Operation.
+ */
+const drawLimitMs = 30_000;
+
+export const drawKind: CallKind<DrawAt, Answered, Outcome> = {
+  event: (id, at) => ({ type: 'draw', id, ...at }),
+  limitMs: drawLimitMs,
+  result: outcomeOf,
+};

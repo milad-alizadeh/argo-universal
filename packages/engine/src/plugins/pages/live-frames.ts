@@ -1,12 +1,9 @@
-import {
-  liveAnswer,
-  type HashedTree,
-  type LiveAnswer,
-} from '@repo/contracts/plugins/page-draw';
+import type { HashedTree } from '@repo/contracts/plugins/page-draw';
+import { liveAnswer, type LiveAnswer } from '@repo/contracts/plugins/page-live';
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
-import type { Drawn } from './plugin-draws';
 import type { Outcome } from './draw-calls';
+import type { Drawn } from './plugin-draws';
 
 // A live page's answers go out at most once a frame; the trees it yields between are folded into the latest.
 export const liveFrameMs = 16;
@@ -43,28 +40,35 @@ export class LatestFrames {
 
   // The next tree or the end, or null once the signal aborts.
   public async next(signal: AbortSignal): Promise<Next | null> {
-    for (;;) {
-      if (signal.aborted) return null;
-
+    while (!signal.aborted) {
       const taken = this.take();
 
       if (taken) return taken;
 
       await this.waited(signal);
     }
+
+    return null;
   }
 
-  private take(): Next | undefined {
-    if (this.ready && this.latest !== undefined) {
-      const root = this.latest;
+  private take(): Next | null {
+    return this.takeRoot() ?? this.takeEnd();
+  }
 
-      this.ready = false;
-      this.latest = undefined;
+  private takeRoot(): Next | null {
+    const root = this.latest;
 
-      return { root };
-    }
+    if (!this.ready || root === undefined) return null;
 
-    return this.ended && !this.closing ? { end: this.ended } : undefined;
+    this.ready = false;
+    this.latest = undefined;
+
+    return { root };
+  }
+
+  // The end goes out once no frame is open.
+  private takeEnd(): Next | null {
+    return this.ended && !this.closing ? { end: this.ended } : null;
   }
 
   private close(): void {
@@ -109,41 +113,72 @@ export type Live = {
  * worker is told to stop its Loader.
  */
 export async function* liveAnswers(live: Live): AsyncGenerator<LiveAnswer> {
-  const { frames, signal, stop } = live;
-  let sent: HashedTree | undefined;
+  const { signal, stop } = live;
+  const answering = new Answering(live);
 
   signal.addEventListener('abort', stop, { once: true });
 
   try {
-    for (;;) {
-      const next = await frames.next(signal);
-
-      if (next === null) return;
-
-      if ('end' in next) return yield* endOf(next.end);
-
-      const checked = live.check(next.root);
-
-      if (!checked.ok) return yield { kind: 'failed', error: checked.error };
-
-      const answer = liveAnswer(checked.root, sent, live.known);
-
-      if (!answer) continue;
-
-      sent = { root: checked.root, hash: answer.hash };
-
-      yield answer;
-    }
+    yield* answering.answers();
   } finally {
     signal.removeEventListener('abort', stop);
     stop();
   }
 }
 
-// A Loader that ended on its own ends the stream quietly; any other end says why.
-function* endOf(outcome: Outcome): Generator<LiveAnswer> {
-  if ('ok' in outcome) return yield { kind: 'failed', error: outcome.error };
+// What one subscription answers next: an answer, null when nothing crosses, or that it is done.
+type Step = LiveAnswer | null | 'done';
 
-  if (outcome.action === 'failed')
-    return yield { kind: 'failed', error: outcome.error };
+// One subscription's answers, from the tree it sent last.
+class Answering {
+  private sent: HashedTree | undefined;
+  private over = false;
+
+  public constructor(private readonly live: Live) {}
+
+  public async *answers(): AsyncGenerator<LiveAnswer> {
+    for (
+      let step = await this.step();
+      step !== 'done';
+      step = await this.step()
+    )
+      if (step) yield step;
+  }
+
+  private async step(): Promise<Step> {
+    if (this.over) return 'done';
+
+    const next = await this.live.frames.next(this.live.signal);
+
+    return next === null ? 'done' : this.stepOf(next);
+  }
+
+  private stepOf(next: Next): Step {
+    return 'end' in next ? this.ended(endOf(next.end)) : this.drawn(next.root);
+  }
+
+  private drawn(root: WireJson): Step {
+    const checked = this.live.check(root);
+
+    if (!checked.ok)
+      return this.ended({ kind: 'failed', error: checked.error });
+
+    const answer = liveAnswer(checked.root, this.sent, this.live.known);
+
+    if (answer) this.sent = { root: checked.root, hash: answer.hash };
+
+    return answer;
+  }
+
+  private ended(answer: LiveAnswer | null): Step {
+    this.over = true;
+
+    return answer ?? 'done';
+  }
 }
+
+// A Loader that ended on its own ends the stream quietly; any other end says why.
+const endOf = (outcome: Outcome): LiveAnswer | null =>
+  'ok' in outcome || outcome.action === 'failed'
+    ? { kind: 'failed', error: outcome.error }
+    : null;

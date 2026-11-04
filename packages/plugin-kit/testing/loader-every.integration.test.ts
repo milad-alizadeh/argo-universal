@@ -12,7 +12,9 @@ export function register(argo) {
   });
 }`;
 
-type Kit = Awaited<ReturnType<Awaited<ReturnType<typeof dataFixture>>['start']>>;
+type Kit = Awaited<
+  ReturnType<Awaited<ReturnType<typeof dataFixture>>['start']>
+>;
 
 async function hashOf(kit: Kit): Promise<string> {
   const answer = await kit.pages.draw({ path: '/' });
