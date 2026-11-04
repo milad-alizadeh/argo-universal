@@ -1,35 +1,49 @@
-import { EmptyState, Text, useData, useMemo } from '@argo/plugin-kit';
+import {
+  EmptyState,
+  type Argo,
+  type LoaderPage,
+  type PageTo,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { FileMap } from './file-map';
-import { fileQueries, projectFiles } from './project-files';
-import { readFiles, type Answer, type Reading } from './reading';
+import type { CodeFile } from './model';
+import { projectFiles } from './project-files';
+import { loadFiles } from './reading';
 
-// One Query's answer, kept the same object while it holds the same data.
-function useAnswer(
-  query: (typeof fileQueries)[keyof typeof fileQueries],
-): Answer {
-  const { data, error } = useData(query);
+// The file the map has selected, by its rectangle's key, or none.
+export type MapState = { selected: string };
 
-  return useMemo(() => ({ data, error }), [data, error]);
+// Git's files, or none when git could not read the Project.
+type MapData = { files: CodeFile[] } | null;
+
+const codeMap: LoaderPage<MapState, MapData> = {
+  state: { selected: '' },
+  load: async ({ read }) => {
+    const reading = await loadFiles(read);
+
+    return reading.state === 'ready'
+      ? { files: projectFiles(reading.answers) }
+      : null;
+  },
+  render: (data, to, { state }) => (
+    <CodeMap data={data} selected={state.selected} to={to} />
+  ),
+};
+
+// The Code Map's Loader page, drawn for the Project the page opened for.
+export function defineCodeMap(argo: Argo, path: string): void {
+  argo.pages.define(path, codeMap);
 }
 
-// The map's page belongs to the Project its row drilled in from, so each Query runs in that folder.
-function useReading(): Reading {
-  const lines = useAnswer(fileQueries.lines);
-  const branches = useAnswer(fileQueries.branches);
-  const touches = useAnswer(fileQueries.touches);
+type MapProps = {
+  data: MapData;
+  selected: string;
+  to: PageTo<MapState>;
+};
 
-  return useMemo(
-    () => readFiles({ lines, branches, touches }),
-    [lines, branches, touches],
-  );
-}
-
-// Waits for git's answers, then draws the Project's files as a treemap.
-export function CodeMap(): JSX.Element {
-  const reading = useReading();
-
-  if (reading.state === 'failed')
+// Draws the Project's files as a treemap once git has answered.
+function CodeMap({ data, selected, to }: MapProps): JSX.Element {
+  if (!data)
     return (
       <EmptyState
         title="Could not read this Project’s files."
@@ -37,18 +51,7 @@ export function CodeMap(): JSX.Element {
       />
     );
 
-  if (reading.state === 'loading')
-    return <Text tone="muted">Reading this Project’s files…</Text>;
-
-  return <ProjectMap reading={reading} />;
-}
-
-type ReadyReading = Extract<Reading, { state: 'ready' }>;
-
-function ProjectMap({ reading }: { reading: ReadyReading }): JSX.Element {
-  const files = useMemo(() => projectFiles(reading.answers), [reading]);
-
-  if (files.length === 0)
+  if (data.files.length === 0)
     return (
       <EmptyState
         title="No text files yet"
@@ -56,5 +59,11 @@ function ProjectMap({ reading }: { reading: ReadyReading }): JSX.Element {
       />
     );
 
-  return <FileMap files={files} />;
+  return (
+    <FileMap
+      files={data.files}
+      selected={selected}
+      onSelect={(key) => to.set({ selected: key })}
+    />
+  );
 }

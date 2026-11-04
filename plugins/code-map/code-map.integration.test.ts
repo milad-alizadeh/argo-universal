@@ -2,17 +2,15 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
+import { startPluginTest, type PageView } from '@argo/plugin-kit/testing';
 import { expect, it, onTestFinished } from 'vitest';
 
-type View = ReturnType<PluginTest['page']>;
+type View = PageView;
 
-type Node = NonNullable<View['tree']>;
+type Node = View['tree'];
 
 // The Engine's limit on a drawn page, in bytes.
 const pageBytes = 1_047_552;
-
-const wait = { timeout: 10_000 };
 
 // A Project folder whose marker file tells the fixture git what to answer.
 async function projectFolder(marker?: string): Promise<string> {
@@ -45,8 +43,8 @@ async function codeMap(marker?: string): Promise<View> {
     await test.close();
   });
 
-  // The map is a page now, opened for the Project whose details row drilled into it (ADR-0046).
-  return test.page('/map', undefined, 'project-1');
+  // The map is a Loader page, opened for the Project whose details row drilled into it (ADR-0046).
+  return test.pages.open({ path: '/map', projectId: 'project-1' });
 }
 
 function descendants(node: Node, type: string): Node[] {
@@ -58,7 +56,7 @@ function descendants(node: Node, type: string): Node[] {
 }
 
 const nodes = (view: View, type: string): Node[] =>
-  view.tree ? descendants(view.tree, type) : [];
+  descendants(view.tree, type);
 
 const canvas = (view: View): Node | undefined => nodes(view, 'Canvas')[0];
 
@@ -74,7 +72,7 @@ const field = (view: View, title: string): Node | undefined =>
 
 it('draws each text file of the Project, named by its path', async () => {
   const view = await codeMap();
-  await expect.poll(() => canvas(view), wait).toBeDefined();
+  expect(canvas(view)).toBeDefined();
 
   expect(nodes(view, rectType).map((rect) => rect.props.label)).toEqual([
     'README.md',
@@ -85,12 +83,9 @@ it('draws each text file of the Project, named by its path', async () => {
 
 it('selects a file and shows what the map measured', async () => {
   const view = await codeMap();
-  await view.find(app);
-  await view.press(app);
+  await view.press((node) => node.type === rectType && node.props.label === app);
 
-  await expect
-    .poll(() => selectedRect(view), wait)
-    .toMatchObject({ props: { label: app } });
+  expect(selectedRect(view)).toMatchObject({ props: { label: app } });
   expect(field(view, 'Lines')).toMatchObject({ props: { text: '120' } });
   expect(field(view, 'Branching lines')).toMatchObject({
     props: { text: '24' },
@@ -101,13 +96,13 @@ it('selects a file and shows what the map measured', async () => {
 it('says so when git cannot read the Project', async () => {
   const view = await codeMap('broken');
 
-  await view.find('Could not read this Project’s files.');
+  view.find('Could not read this Project’s files.');
   expect(canvas(view)).toBeUndefined();
 });
 
 it('draws the largest files of a big Project within the page limit', async () => {
   const view = await codeMap('large');
-  await view.find('Showing the 2,500 largest of 3,000 files.');
+  view.find('Showing the 2,500 largest of 3,000 files.');
 
   expect(nodes(view, rectType)).toHaveLength(2500);
   expect(Buffer.byteLength(JSON.stringify(view.tree))).toBeLessThan(pageBytes);

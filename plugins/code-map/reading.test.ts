@@ -14,16 +14,7 @@ function ran(stdout: string, exitCode: number | null = 0): Answer {
   return { data };
 }
 
-const waiting = { data: undefined };
-
 describe('Reading a Project’s files', () => {
-  it('waits until every answer is in', () => {
-    expect(
-      readFiles({ lines: ran('a\x001\n'), branches: waiting, touches: ran('') })
-        .state,
-    ).toBe('loading');
-  });
-
   it('reads the answers once they are all in', () => {
     const reading = readFiles({
       lines: ran('a\x001\n'),
@@ -53,9 +44,9 @@ describe('Reading a Project’s files', () => {
 
   it('fails when the Query itself fails', () => {
     const reading = readFiles({
-      lines: { data: undefined, error: 'refused' },
-      branches: waiting,
-      touches: waiting,
+      lines: { error: 'refused' },
+      branches: ran('', 1),
+      touches: ran(''),
     });
 
     expect(reading.state).toBe('failed');

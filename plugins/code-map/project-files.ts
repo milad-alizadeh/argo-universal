@@ -25,7 +25,7 @@ const run = (argv: string[]): ProcessQuery => ({
   argv,
 });
 
-// The Queries run in the Project's folder, because the Project details Slot's view belongs to that Project.
+// The Queries run in the Project's folder, because the page is drawn for that Project.
 export const fileQueries: Record<Measure, ProcessQuery> = {
   lines: run([...grep, '-e', '^']),
   branches: run([...grep, '-E', '-e', branchPattern]),
