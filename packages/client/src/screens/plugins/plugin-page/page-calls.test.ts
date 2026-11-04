@@ -132,3 +132,34 @@ it('draws a typed field once the typing pauses, not on every keystroke', async (
 
   expect(drafts(page.cache)).toEqual([undefined, 'fix']);
 });
+
+it('lands the typing before a press runs its Operation, so the run takes what was typed', async () => {
+  const page = await drafting();
+
+  await page.type('fix login');
+  await page.press();
+
+  expect(drafts(page.cache)).toEqual([undefined, 'fix login']);
+  expect(page.runs).toEqual([
+    { operation: 'create', args: { title: 'fix login' } },
+  ]);
+});
+
+it('runs a press as drawn when nothing is waiting', async () => {
+  const page = await drafting();
+
+  await page.press();
+
+  expect(page.runs).toEqual([{ operation: 'create', args: { title: '' } }]);
+});
+
+it('refuses a press whose control the newly drawn page no longer has', async () => {
+  const page = await drafting();
+
+  await page.type('gone');
+
+  await expect(page.press()).rejects.toThrow(
+    'That control is no longer on the page',
+  );
+  expect(page.runs).toEqual([]);
+});

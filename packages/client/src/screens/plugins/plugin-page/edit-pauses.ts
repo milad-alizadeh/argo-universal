@@ -5,8 +5,8 @@ type Waiting = {
 
 /*
  * The one wait a Loader page's edits share: a bound search or selection, or a throttled event's call, is
- * made once the edits pause, and an edit before then starts its key's wait again; `drop` forgets them
- * with the page.
+ * made once the edits pause, and an edit before then starts its key's wait again. `land` makes every
+ * waiting change now, as a press that runs an Operation needs, and `drop` forgets them with the page.
  */
 export class EditPauses {
   private readonly waiting = new Map<string, Waiting>();
@@ -17,6 +17,15 @@ export class EditPauses {
       timer: setTimeout(() => void this.made(key), ms),
       then,
     });
+  }
+
+  // Whether anything was waiting; every change it made has settled, failed or not, when it resolves.
+  public async land(): Promise<boolean> {
+    const keys = [...this.waiting.keys()];
+
+    await Promise.all(keys.map((key) => this.made(key)));
+
+    return keys.length > 0;
   }
 
   public drop(): void {

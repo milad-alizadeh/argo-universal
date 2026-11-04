@@ -8,6 +8,7 @@ import type {
   DrawAnswer,
   DrawRequest,
 } from '@repo/contracts/plugins/page-draw';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
 import { followLive, type FollowPage } from './live-follow';
 import { patchedAnswer } from './optimistic-patch';
@@ -109,6 +110,11 @@ export class PageAddresses {
 
     await this.client.fetchQuery(this.treeAt(this.addressOf(opening, next)));
     this.client.setQueryData(stateKey(opening), next);
+  }
+
+  // The tree the opening shows now, at its Page state, if one has drawn.
+  shown(opening: PageOpening): WireNode | undefined {
+    return this.keptAt(this.addressOf(opening))?.root;
   }
 
   // One more page of the opening's paged list, appended to the tree kept.
