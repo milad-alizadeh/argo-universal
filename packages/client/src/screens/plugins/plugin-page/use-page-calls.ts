@@ -1,9 +1,9 @@
 import type {
-  OperationCall,
-  PageCall,
-  PageStateChange,
-  WireJson,
-} from '@repo/contracts/plugins/wire';
+  MadeOperationCall,
+  MadePageCall,
+  MadeStateChange,
+} from '@repo/contracts/plugins/page-call-payload';
+import type { WireJson } from '@repo/contracts/plugins/wire';
 import { errorToast } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
@@ -12,7 +12,7 @@ import type { OnPageCall } from '../../../lib/product/plugin-registry';
 import type { PageAddresses, PageOpening, Snapshot } from './page-addresses';
 import { useBind } from './use-bind';
 
-type PageStateCall = Exclude<PageCall, OperationCall>;
+type PageStateCall = Exclude<MadePageCall, MadeOperationCall>;
 
 // A Loader page's calls: an Operation runs; load more, a bound value and a Page state change draw again.
 export function usePageCalls(
@@ -31,7 +31,7 @@ function usePageStateCalls(
   addresses: PageAddresses,
   opening: PageOpening,
 ): (call: PageStateCall, value?: WireJson) => Promise<void> {
-  const change = (call: PageStateChange): Promise<void> =>
+  const change = (call: MadeStateChange): Promise<void> =>
     addresses.change(opening, call.pageState);
 
   const bind = useBind(change);
@@ -51,12 +51,12 @@ function usePageStateCalls(
 function useOperationRun(
   addresses: PageAddresses,
   { pluginId, projectId, sessionId }: PageOpening,
-): (call: OperationCall) => Promise<void> {
+): (call: MadeOperationCall) => Promise<void> {
   const run = useTRPCClient().plugins.run;
 
   // An Operation belongs to the Plugin, not to the page it was called from.
   const { mutateAsync } = useMutation({
-    mutationFn: ({ operation, args }: OperationCall) =>
+    mutationFn: ({ operation, args }: MadeOperationCall) =>
       run.mutate({ pluginId, projectId, sessionId, operation, args }),
     onMutate: (call) => addresses.showOptimistic(pluginId, call),
     onError: putBackAndSay(addresses),
@@ -68,7 +68,11 @@ function useOperationRun(
 
 const putBackAndSay =
   (addresses: PageAddresses) =>
-  (error: Error, _call: OperationCall, before: Snapshot | undefined): void => {
+  (
+    error: Error,
+    _call: MadeOperationCall,
+    before: Snapshot | undefined,
+  ): void => {
     if (before) addresses.putBack(before);
 
     const toast = errorToast('That did not work', error);

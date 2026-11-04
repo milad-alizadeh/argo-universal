@@ -1,11 +1,8 @@
+import type { WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
-import {
-  keyOf,
-  startKit,
-  webSurface as surface,
-} from '../mocks/kit-page-helpers';
+import { startKit } from '../mocks/kit-page-helpers';
 
-const source = `import { Audio, Pill, Screen, ScrollView, Stack, Surface, Table, Video, useState } from '@argo/plugin-kit';
+const source = `import { Audio, Pill, Screen, ScrollView, Stack, Surface, Table, Video } from '@argo/plugin-kit';
 
 const columns = [
   { id: 'workflow', title: 'Workflow' },
@@ -18,27 +15,27 @@ const runs = [
   { id: 'lint', workflow: 'Lint', order: 3 },
 ];
 
-function Runs() {
-  const [sort, setSort] = useState({ column: 'started', direction: 'ascending' });
-  const order = sort.direction === 'ascending' ? 1 : -1;
+// The sort is Page state, two flat keys the Table's sort fills in, so the page draws again at the new address.
+const runsPage = ({ sortColumn, sortDirection }, to) => {
+  const order = sortDirection === 'ascending' ? 1 : -1;
   return (
     <Screen title="Runs">
       <Table
         accessibilityLabel="CI runs"
         columns={columns}
-        sort={sort}
-        onSortChange={setSort}
-        items={runs.toSorted((a, b) => order * (a.order - b.order))}
-        renderItem={(run) => (
+        sort={{ column: sortColumn, direction: sortDirection }}
+        onSortChange={to.set({ sortColumn: to.payload('column'), sortDirection: to.payload('direction') })}
+      >
+        {runs.toSorted((a, b) => order * (a.order - b.order)).map((run) => (
           <Table.Row key={run.id} id={run.id}>
             <Table.Cell column="workflow" text={run.workflow}><Pill text="Passed" tone="success" /></Table.Cell>
             <Table.Cell column="started" text={'Run ' + run.order} />
           </Table.Row>
-        )}
-      />
+        ))}
+      </Table>
     </Screen>
   );
-}
+};
 
 // The media's Server references, resolved before the page draws.
 const resolveMedia = async (assets) => {
@@ -61,31 +58,41 @@ const media = ({ clip, poster, chime }) => (
   </ScrollView>
 );
 
-// The runs table stays a mounted page: a Loader page cannot yet take a sort's payload.
 export function register(argo) {
-  argo.pages.register('/runs', Runs);
+  argo.pages.define('/runs', {
+    state: { sortColumn: 'started', sortDirection: 'ascending' },
+    load: () => null,
+    render: (_data, to, { state }) => runsPage(state, to),
+  });
   argo.pages.define('/media', { load: () => resolveMedia(argo.assets), render: media });
 }`;
 
 const start = (): ReturnType<typeof startKit> =>
   startKit(source, ['clip.mp4', 'poster.jpeg', 'chime.mp3']);
 
-it('sorts a table of runs when Argo reports the new sort', async () => {
+it('sorts a table of runs into Page state from the sort the Table reports', async () => {
   const kit = await start();
-  const page = await kit.mount({ page: '/runs', surface });
-  expect((await page.find('CI runs')).type).toBe('Table');
-  expect((await page.find('Build iOS')).type).toBe('Table.Cell');
+  const page = await kit.pages.open({ path: '/runs' });
+  expect(page.find('CI runs').type).toBe('Table');
+  expect(page.find('Build iOS').type).toBe('Table.Cell');
 
-  const firstRun = (): string =>
-    JSON.stringify(page.findText('CI runs')?.node.children[0]?.props.id);
+  const firstRun = (): WireJson | undefined =>
+    page.find('CI runs').children[0]?.props.id;
 
-  expect(firstRun()).toBe('"typecheck"');
-  await page.dispatch({
-    key: keyOf(page, 'CI runs'),
-    event: 'onSortChange',
-    payload: { column: 'started', direction: 'descending' },
+  expect(firstRun()).toBe('typecheck');
+  await page.act('CI runs', 'onSortChange', {
+    column: 'started',
+    direction: 'descending',
   });
-  await page.waitFor(() => firstRun() === '"lint"');
+  expect(page.pageState).toEqual({
+    sortColumn: 'started',
+    sortDirection: 'descending',
+  });
+  expect(firstRun()).toBe('lint');
+  expect(page.find('CI runs').props.sort).toEqual({
+    column: 'started',
+    direction: 'descending',
+  });
 });
 
 it('plays a clip and a sound named by the Server reference, not a Plugin host', async () => {

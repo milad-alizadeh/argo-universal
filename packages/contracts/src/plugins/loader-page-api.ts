@@ -9,6 +9,7 @@ import type {
   OperationCall,
   PageBind,
   PageStateChange,
+  PayloadValue,
 } from './wire-action';
 import type { CrossesAsJson } from './wire-json';
 
@@ -96,20 +97,32 @@ export type RenderInput<State extends PageState, Item> = LoaderInput<State> &
  * edits pause, while the kit component shows them at once; `run` runs one of the Plugin's declared
  * Operations, and `optimistic` names nodes, by their keys, and the props each shows until the Operation
  * answers, so a row and its menu change together. A search or selection with no `bind` stays in the App.
+ * `payload` stands, in a value `set` or `run` takes, for what the event reports when it fires: the field
+ * it names, such as a Table sort's `column` or a List move's `section`, or the whole payload with no
+ * field. The App fills it in and acts at once, with no draw in between; a field the payload lacks leaves
+ * its key out, and a value that does not fit, such as an object into Page state, fails the event. The
+ * types check the Operation and its params but not the field's name; the Server checks the filled-in
+ * arguments against the manifest, as it does any run.
  */
 export type PageTo<
   State extends PageState,
   Operations = OperationDeclarations,
 > = Readonly<{
   go: (path: string) => { action: 'navigate'; path: string };
-  set: (change: Partial<State>) => PageStateChange;
+  set: (change: OrPayload<Partial<State>>) => PageStateChange;
   bind: (key: keyof State & string) => PageBind;
   run: <Name extends keyof Operations & string>(
     operation: Name,
-    args: OperationArgs<Operations[Name]>,
+    args: OrPayload<OperationArgs<Operations[Name]>>,
     options?: { optimistic?: OperationCall['optimistic'] },
   ) => OperationCall;
+  payload: (field?: string) => PayloadValue;
 }>;
+
+// Each value may instead be what the event's payload gives.
+export type OrPayload<Values> = {
+  [Key in keyof Values]: Values[Key] | PayloadValue;
+};
 
 export type DefineLoaderPage<Operations = OperationDeclarations> = <
   State extends PageState,

@@ -1,8 +1,5 @@
-import {
-  PageStateValue,
-  type PageStateChange,
-  type WireJson,
-} from '@repo/contracts/plugins/wire';
+import type { MadeStateChange } from '@repo/contracts/plugins/page-call-payload';
+import { PageStateValue, type WireJson } from '@repo/contracts/plugins/wire';
 import { useEffect, useState } from 'react';
 
 // How long a bound search or selection waits for the edits to pause before the page draws for it.
@@ -17,7 +14,7 @@ export type Bind = (key: string, value: WireJson | undefined) => Promise<void>;
  * edits pause, and an edit before then starts the wait again.
  */
 export function useBind(
-  change: (call: PageStateChange) => Promise<void>,
+  change: (call: MadeStateChange) => Promise<void>,
 ): Bind {
   const timers = useTimers();
 

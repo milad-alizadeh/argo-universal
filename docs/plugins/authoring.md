@@ -54,6 +54,24 @@ argo.pages.define('/counter', {
 });
 ```
 
+Some Component events report a payload: a Table's `onSortChange` reports the column and direction, and a List's `onMove` reports the moved row's `id`, the `section` it lands in and its `index` there. `to.payload(field)` stands for one field of it, or `to.payload()` for the whole payload, such as a Switch's value, anywhere `to.set` or `to.run` takes a value. The App fills it in when the event fires and acts at once, with no draw in between. Page state holds scalars and selections only, so an object payload goes into flat keys:
+
+```tsx
+<Table
+  columns={columns}
+  sort={{ column: state.sortColumn, direction: state.sortDirection }}
+  onSortChange={to.set({ sortColumn: to.payload('column'), sortDirection: to.payload('direction') })}
+>
+  {rows}
+</Table>
+
+<List layout="lanes" onMove={to.run('moveCard', { card: to.payload('id'), lane: to.payload('section'), index: to.payload('index') })}>
+  {lanes}
+</List>
+```
+
+A field the payload lacks, as a move's `section` for rows outside any Section, leaves its key out. A value that does not fit where it lands, such as a whole object into Page state, fails the event. The types check the Operation's name and its fixed params, not a payload field's name; core checks the filled-in arguments against the manifest's params, as it does for any run. The List holds a moved row where it was dropped until the page draws again after the Operation.
+
 A page is opened by the path it is defined at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
 
 Run the commands from the Plugin folder:
@@ -142,7 +160,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `view.tree`, `view.pageState`, `view.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
 | `view.find(match)` | Returns the node a text or a node test matches, or throws. |
 | `view.press(match)` | Acts on the node's `onPress` as the App does and returns the view showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the view's Project and Session, then the page draws again. |
-| `view.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText`. A bound value lands at once. |
+| `view.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value lands at once. |
 | `view.loadMore()` | Draws one more page of the page's paged list. |
 | `view.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
 | `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |

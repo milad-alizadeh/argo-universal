@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { WebUrl } from '#plugin-account-calls';
-import { PluginOperationName, PluginOperationParams } from '#plugin-operations';
+import { PluginOperationName } from '#plugin-operations';
 
 // A handler prop on the wire; the App sends it back as a Component event by node key and event name.
 export const WireEvent = z.strictObject({
@@ -59,18 +59,37 @@ export const PageStateValue = z.union([PageValue, z.array(z.string())]);
 
 export type PageStateValue = z.infer<typeof PageStateValue>;
 
+/*
+ * A value the event's payload gives when it fires, in place of one the Render wrote: the payload's field it names,
+ * such as a Table sort's `column`, or `true` for the whole payload, such as a Switch's value. The App puts the
+ * payload's value in its place before it acts; a field the payload lacks leaves the key out.
+ */
+export const PayloadValue = z.strictObject({
+  $payload: z.union([z.literal(true), z.string().min(1)]),
+});
+
+export type PayloadValue = z.infer<typeof PayloadValue>;
+
+const orPayload = <Value extends z.ZodType>(
+  value: Value,
+): z.ZodUnion<readonly [Value, typeof PayloadValue]> =>
+  z.union([value, PayloadValue]);
+
 export const PageStateChange = z.strictObject({
-  pageState: z.record(z.string(), PageStateValue),
+  pageState: z.record(z.string(), orPayload(PageStateValue)),
 });
 
 export const OperationCall = z.strictObject({
   operation: PluginOperationName,
-  args: PluginOperationParams,
+  args: z.record(
+    PluginOperationName,
+    orPayload(z.union([z.string(), z.number(), z.boolean()])),
+  ),
   optimistic: z
     .array(
       z.strictObject({
         key: z.string(),
-        props: z.record(z.string(), PageValue),
+        props: z.record(z.string(), orPayload(PageValue)),
       }),
     )
     .optional(),

@@ -3,14 +3,11 @@ import type {
   PageState,
   StaleMark,
 } from '@repo/contracts/plugins/page-address';
+import type { MadeOperationCall } from '@repo/contracts/plugins/page-call-payload';
 import type {
   DrawAnswer,
   DrawRequest,
 } from '@repo/contracts/plugins/page-draw';
-import type {
-  OperationCall,
-  PageStateChange,
-} from '@repo/contracts/plugins/wire';
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
 import { followLive, type FollowPage } from './live-follow';
 import { patchedAnswer } from './optimistic-patch';
@@ -103,10 +100,7 @@ export class PageAddresses {
   }
 
   // The opening drawn at its next Page state, which it shows once drawn; an empty change draws it again from page one.
-  async change(
-    opening: PageOpening,
-    change: PageStateChange['pageState'],
-  ): Promise<void> {
+  async change(opening: PageOpening, change: PageState): Promise<void> {
     if (Object.keys(change).length === 0)
       return this.drawPages(this.addressOf(opening), 1);
 
@@ -130,7 +124,7 @@ export class PageAddresses {
    */
   async showOptimistic(
     pluginId: string,
-    { optimistic }: OperationCall,
+    { optimistic }: MadeOperationCall,
   ): Promise<Snapshot> {
     if (!optimistic) return [];
 

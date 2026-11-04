@@ -4,7 +4,11 @@ import type {
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import type { LoadMore, PluginEvent } from '@repo/contracts/plugins/wire';
+import type {
+  LoadMore,
+  PageStateChange,
+  PluginEvent,
+} from '@repo/contracts/plugins/wire';
 import type { Paged } from './paged-lists';
 import type { DrawReader } from './query-reads';
 import { renderContext } from './render-context';
@@ -59,13 +63,16 @@ export const pageTo = <State extends PageState>(): PageTo<State> =>
       args: { ...args },
       ...(optimistic && { optimistic }),
     }),
+    payload: (field) => ({ $payload: field ?? true }),
   });
 
+type SetValues = PageStateChange['pageState'];
+
 // A change leaves out the keys it does not set.
-const setValues = (change: Partial<PageState>): PageState =>
+const setValues = (change: Partial<SetValues>): SetValues =>
   Object.fromEntries(
     Object.entries(change).filter(
-      (entry): entry is [string, PageState[string]] => entry[1] !== undefined,
+      (entry): entry is [string, SetValues[string]] => entry[1] !== undefined,
     ),
   );
 

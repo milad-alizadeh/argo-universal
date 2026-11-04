@@ -50,6 +50,7 @@
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
     "./plugins/plugin-operations": "./src/plugins/plugin-operations.ts",
     "./plugins/page-address": "./src/plugins/page-address.ts",
+    "./plugins/page-call-payload": "./src/plugins/page-call-payload.ts",
     "./plugins/page-draw": "./src/plugins/page-draw.ts",
     "./plugins/page-live": "./src/plugins/page-live.ts",
     "./plugins/loader-page-api": "./src/plugins/loader-page-api.ts",

@@ -1,5 +1,10 @@
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import {
+  madePageCall,
+  type MadeOperationCall,
+  type MadePageCall,
+} from '@repo/contracts/plugins/page-call-payload';
+import {
   treeAfter,
   type DrawAnswer,
   type HashedTree,
@@ -7,7 +12,6 @@ import {
 import {
   PageStateValue,
   type Action,
-  type PageCall,
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
@@ -32,7 +36,7 @@ const paged = (node: WireNode): boolean =>
 
 // The Page state a change or a bound value sets.
 const stateChange = (
-  call: Exclude<PageCall, { operation: string } | { loadMore: true }>,
+  call: Exclude<MadePageCall, MadeOperationCall | { loadMore: true }>,
   value: WireJson | undefined,
 ): PageState =>
   'bind' in call
@@ -41,10 +45,10 @@ const stateChange = (
 
 /*
  * One Loader page as an App shows it (ADR-0050): its Page address, the tree the Server last drew there, and the
- * Component events an App acts on. A press does what the value in the tree says, as the App does: a navigation opens
- * the page it names, a Page state change or a bound value draws the new address, load more draws one more page, and
- * an Operation runs for the page's Project and Session and, once it answers, the page draws again, as its stale mark
- * makes the App do. A bound value lands at once; the App waits for the edits to pause.
+ * Component events an App acts on. A press does what the value in the tree says, with the event's payload filled in,
+ * as the App does: a navigation opens the page it names, a Page state change or a bound value draws the new address,
+ * load more draws one more page, and an Operation runs for the page's Project and Session and, once it answers, the
+ * page draws again, as its stale mark makes the App do. A bound value lands at once; the App waits for the edits to pause.
  */
 export class PageView {
   private kept: HashedTree | undefined;
@@ -140,7 +144,7 @@ export class PageView {
 
     if ('action' in handler) return this.actOn(handler);
 
-    await this.call(handler, value);
+    await this.call(madePageCall(handler, value), value);
 
     return this;
   }
@@ -156,7 +160,7 @@ export class PageView {
     });
   }
 
-  private call(call: PageCall, value?: WireJson): Promise<void> {
+  private call(call: MadePageCall, value?: WireJson): Promise<void> {
     if ('operation' in call) return this.run(call);
 
     if ('loadMore' in call) return this.draw(this.pages + 1);
@@ -174,10 +178,7 @@ export class PageView {
     await this.draw(1);
   }
 
-  private async run({
-    operation,
-    args,
-  }: Extract<PageCall, { operation: string }>): Promise<void> {
+  private async run({ operation, args }: MadeOperationCall): Promise<void> {
     const run = { operation, args, ...caller(this.opening) };
 
     await this.server.run(run, this.opening);

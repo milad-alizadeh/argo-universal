@@ -1,3 +1,4 @@
+import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
 import {
   Handler,
   componentEventHandler,
@@ -114,8 +115,9 @@ async function deliver(
 }
 
 /*
- * A built-in Action, or a Loader page's call: nothing goes to the Plugin. With no handler, as a Loader page's
- * search or selection that is not Page state, the kit component's own state is all there is.
+ * A built-in Action, or a Loader page's call with the event's payload filled in: nothing goes to the Plugin. With no
+ * handler, as a Loader page's search or selection that is not Page state, the kit component's own state is all there
+ * is.
  */
 async function runInApp(
   input: ControlInput,
@@ -126,7 +128,7 @@ async function runInApp(
 
   if ('action' in handler) return runAction(handler, input.context.openPage);
 
-  return pageCallOf(input)(handler, payload);
+  return pageCallOf(input)(madePageCall(handler, payload), payload);
 }
 
 // Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.

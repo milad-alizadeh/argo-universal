@@ -1,19 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { PluginTest, PluginTestView } from '@argo/plugin-kit/testing';
+import type { PluginTest } from '@argo/plugin-kit/testing';
+import type { Contributions } from '@repo/engine/mocks/data-fixture';
 import { dataFixture } from './data-fixture';
 
-export const webSurface = { platform: 'web' as const };
-
-export function keyOf(page: PluginTestView, label: string): string {
-  const entry = page.findText(label);
-
-  if (!entry) throw new Error(`Plugin node not found: ${label}`);
-
-  return entry.key;
-}
-
 async function writeAssets(directory: string, files: string[]): Promise<void> {
+  if (files.length === 0) return;
+
   await mkdir(join(directory, 'assets'));
 
   for (const file of files)
@@ -24,10 +17,10 @@ async function writeAssets(directory: string, files: string[]): Promise<void> {
 export async function startKit(
   source: string,
   assets: string[] = [],
+  contributes: Contributions = {},
 ): Promise<PluginTest> {
-  const fixture = await dataFixture(source);
-
-  if (assets.length > 0) await writeAssets(fixture.directory, assets);
+  const fixture = await dataFixture(source, contributes);
+  await writeAssets(fixture.directory, assets);
 
   return fixture.start({ clockStart: 0 });
 }
