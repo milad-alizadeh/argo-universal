@@ -3,7 +3,7 @@ import {
   DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
 import { PageRun, PageRunAnswer } from '@repo/contracts/plugins/page-address';
-import { DrawRequest } from '@repo/contracts/plugins/page-draw';
+import { DrawRequest, LiveRequest } from '@repo/contracts/plugins/page-draw';
 import {
   ReplaceableAnswer,
   ReplaceableInput,
@@ -132,13 +132,19 @@ const createViewEventsRouter = routerFactory((plugins: PluginService) =>
 
 /*
  * Loader pages (ADR-0050): a draw is a plain query the App caches by Page address, and an Operation a
- * page's Component event runs answers the patterns to draw again. The App's tap runs as the user.
+ * page's Component event runs answers the patterns to draw again. The App's tap runs as the user. A live
+ * page streams to one live App Connection while it subscribes.
  */
 const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   router({
     draw: publicProcedure
       .input(DrawRequest)
       .query(({ input, ctx }) => pages.draw(input, ctx.connection)),
+    live: publicProcedure.input(LiveRequest).subscription((call) => {
+      const connection = connectionOf(call);
+
+      return pages.live(call.input, connection, connection.signal);
+    }),
     loaderPages: publicProcedure
       .input(z.strictObject({ pluginId: z.string().min(1) }))
       .query(({ input }) => pages.patterns(input.pluginId)),

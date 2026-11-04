@@ -5,8 +5,11 @@ import type {
 import type { PluginEvent } from '../protocol/runtime';
 import type { CallOutcome, Ended } from '../runtime/worker-calls';
 
-// One draw call to a worker: what it asks, what the worker answers, and the Loader reads it holds.
-export type Answered = Extract<LoaderPageCall, { id: number }>;
+// One draw call to a worker: what it asks, what the worker answers, and the Loader reads it holds; a live draw's frames are routed apart.
+export type Answered = Exclude<
+  Extract<LoaderPageCall, { id: number }>,
+  { action: 'frame' }
+>;
 
 type Failed = { ok: false; error: string };
 
@@ -45,18 +48,25 @@ export function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
   return failed(endedError[outcome.ended](outcome.pluginId, at.path));
 }
 
-// The draw a Loader's read is for: its Project, and the address holding the read, or none for a background pass.
+/*
+ * The draw a Loader's read is for: its Project, the address holding the read, or none for a background
+ * pass, and the interval its page is drawn again on, as clamped.
+ */
 export type Drawing = {
   draw: number;
   projectId?: string;
   holder?: PageAddress;
+  every?: number;
 };
 
-// A draw that only loads is a background pass's, which holds nothing; any other draw is held by its address.
+/*
+ * A draw that only loads is a background pass's, which holds nothing and reads fresh; any other draw is
+ * held by its address and reads past the interval its page is drawn again on.
+ */
 export function drawingOf(
   pluginId: string,
   draw: number,
-  at: DrawAt | undefined,
+  { at, every }: { at: DrawAt | undefined; every?: number },
 ): Drawing | undefined {
   if (!at) return undefined;
 
@@ -64,7 +74,9 @@ export function drawingOf(
 
   if (at.loadOnly) return { draw, projectId };
 
-  return { draw, projectId, holder: addressOf(pluginId, at) };
+  const holder = addressOf(pluginId, at);
+
+  return { draw, projectId, holder, ...(every !== undefined && { every }) };
 }
 
 const addressOf = (

@@ -32,6 +32,15 @@ import type { CrossesAsJson } from './wire-json';
  *   Argo as JSON, so an item must be JSON all through: a `Date` or a `Map` fails type-checking.
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by
  *   `to`, which the App acts on itself; a function prop fails the draw. `input.list` holds the pages read.
+ * - `every`, in milliseconds, draws the page again on that interval while it is on screen, clamped to at
+ *   least ten seconds; a Query the Loader reads is read again once its answer is older than the interval,
+ *   so a redraw that finds nothing new costs the App no tree.
+ * - A live page's `load` yields over time, as an async generator does, such as a log tail. While the page
+ *   is on screen the App keeps a subscription to it: each value yielded is rendered, and the App receives
+ *   only what changed from the tree before. When the App leaves the page the Loader is stopped, and its
+ *   `finally` runs once the await it is in settles. Only what it yields draws a live page: a write or `every` does
+ *   not draw it again, so a Loader that shows the Plugin's own writes waits for them itself. A live page
+ *   has no paged list.
  */
 export type LoaderPage<
   State extends PageState,
@@ -40,7 +49,10 @@ export type LoaderPage<
   Operations = OperationDeclarations,
 > = Readonly<{
   state?: State;
-  load: (input: LoaderInput<State>) => Data | Promise<Data>;
+  every?: number;
+  load: (
+    input: LoaderInput<State>,
+  ) => Data | Promise<Data> | AsyncIterable<Data>;
   list?: (
     input: LoaderInput<State>,
     cursor: string | null,

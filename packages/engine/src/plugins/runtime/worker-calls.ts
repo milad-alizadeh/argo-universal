@@ -22,16 +22,21 @@ export type CallKind<Request, Answer, Result> = {
   result: (outcome: CallOutcome<Answer>, request: Request) => Result;
 };
 
-// The calls of one kind: each sent to the running generation and answered by its id.
+/*
+ * The calls of one kind: each sent to the running generation and answered by its id. A call given a null
+ * limit waits with no deadline, until its answer or its generation's end.
+ */
 export type KindCalls<Request, Answer, Result> = {
   call: (
     pluginId: string,
     request: Request,
-    limitMs?: number,
+    limitMs?: number | null,
   ) => Promise<Result>;
   answer: (caller: Caller, answer: Answer) => void;
   // What a call still waiting on the caller's generation asked for, by its id.
   request: (caller: Caller, id: number) => Request | undefined;
+  // Sends the generation a call still waits on a further event about it, by the call's id; none once it settled.
+  tell: (request: Request, event: (id: number) => PluginEvent) => void;
 };
 
 export type WorkerTransport = {
@@ -72,7 +77,7 @@ class KindTable<
   public async call(
     pluginId: string,
     request: Request,
-    limitMs = this.kind.limitMs,
+    limitMs: number | null = this.kind.limitMs,
   ): Promise<Result> {
     const generation = this.sending.generation(pluginId);
 
@@ -87,7 +92,7 @@ class KindTable<
   private sent(
     caller: Caller,
     request: Request,
-    limitMs: number,
+    limitMs: number | null,
   ): Promise<CallOutcome<Answer>> {
     const id = this.next++;
     const { promise, resolve } = Promise.withResolvers<CallOutcome<Answer>>();
@@ -105,8 +110,10 @@ class KindTable<
   private deadline(
     { pluginId }: Caller,
     settle: Waiting<Request, Answer>['settle'],
-    limitMs: number,
+    limitMs: number | null,
   ): () => void {
+    if (limitMs === null) return () => {};
+
     const late = (): void => settle({ ended: 'late', pluginId });
 
     return this.sending.clock.schedule(late, limitMs);
@@ -122,6 +129,12 @@ class KindTable<
     const waiting = this.waiting.get(id);
 
     return waiting && sameWorker(waiting, caller) ? waiting.request : undefined;
+  }
+
+  public tell(request: Request, event: (id: number) => PluginEvent): void {
+    for (const [id, waiting] of this.waiting)
+      if (waiting.request === request)
+        this.sending.send(waiting.pluginId, event(id));
   }
 
   public end(matches: (caller: Caller) => boolean): void {
@@ -146,6 +159,11 @@ export class WorkerCalls {
 
   public generation(pluginId: string): number | undefined {
     return this.running.get(pluginId);
+  }
+
+  // The clock every call's deadline runs on, which a caller pacing its own sends shares.
+  public get clock(): PluginClock {
+    return this.transport.clock;
   }
 
   public current(caller: Caller): boolean {

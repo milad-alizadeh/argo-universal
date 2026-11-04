@@ -55,12 +55,18 @@ export class QueryEntry {
 
   /*
    * A Loader's read: the kept answer while it is current, or a read joined or begun. A read joined that
-   * began before a write is not current when it lands, so the Loader waits for one more.
+   * began before a write is not current when it lands, so the Loader waits for one more. A page drawn
+   * again on a clock reads again once the kept answer is as old as its interval.
    */
-  async read({ holder, fresh, draw }: QueryRead): Promise<PluginDataState> {
+  async read({
+    holder,
+    fresh,
+    draw,
+    every,
+  }: QueryRead): Promise<PluginDataState> {
     this.holders.hold(holder, reading);
 
-    if (fresh) await this.refresh(draw);
+    if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
     await this.untilCurrent(draw, 2);
     this.holders.hold(holder, this.state.revision);
 

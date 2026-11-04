@@ -7,6 +7,8 @@ import type {
 import type {
   DrawAnswer,
   DrawRequest,
+  LiveAnswer,
+  LiveRequest,
 } from '@repo/contracts/plugins/page-draw';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
@@ -84,6 +86,24 @@ export class LoaderPages {
     const address = { ...at, ...askedBy(asking) };
 
     return this.draws.answer(pluginId, address, known);
+  }
+
+  /*
+   * A live page's answers for the Connection that asked, while the signal holds: its whole tree, then the
+   * keyed patches between the trees its Loader yields (ADR-0050).
+   */
+  public async *live(
+    { pluginId, known, ...at }: LiveRequest,
+    asking: Asking,
+    signal: AbortSignal,
+  ): AsyncGenerator<LiveAnswer> {
+    const started = await this.started(pluginId);
+
+    if (started) return yield { kind: 'failed', error: started };
+
+    const address = { ...at, pages: 1, ...askedBy(asking) };
+
+    yield* this.draws.live(pluginId, address, known, signal);
   }
 
   public async patterns(pluginId: string): Promise<string[]> {

@@ -19,6 +19,15 @@ export class QueryTiming {
     return this.lastAt !== null;
   }
 
+  // Whether the last read finished at least `ms` ago; never, without an interval.
+  olderThan(ms: number | undefined): boolean {
+    return (
+      ms !== undefined &&
+      this.lastAt !== null &&
+      this.clock.now() - this.lastAt >= ms
+    );
+  }
+
   makeDue(): void {
     this.dueAt = this.clock.now();
     this.remountDue = true;

@@ -15,7 +15,9 @@ export const patchedAnswer =
 function patchedKept(kept: Kept, patches: Patches): Answer {
   const root = patched(kept.root, patches);
 
-  return root === kept.root ? kept : { ok: true, root, pages: kept.pages };
+  const { hash: _drawn, ...shown } = kept;
+
+  return root === kept.root ? kept : { ...shown, root };
 }
 
 // A node's slots are walked as its children are: a row's menu Action sits in its `actions` slot.

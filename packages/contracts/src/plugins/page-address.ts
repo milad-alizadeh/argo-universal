@@ -56,13 +56,28 @@ export const StaleMark = z.strictObject({
 
 export type StaleMark = z.infer<typeof StaleMark>;
 
-// The worker's side of a draw: the tree it drew and the pages its list shows, a background load done, why it could not, a pattern it defined, or `argo.changed()`.
+/*
+ * The worker's side of a draw: the tree it drew and the pages its list shows, a background load done, why
+ * it could not, a pattern it defined with the interval its page asks to be drawn again on, or
+ * `argo.changed()`. A drawn tree from a Loader that yields is `live`. A live draw sends each tree its
+ * Loader yields as a `frame` and answers `ended` once the Loader stops.
+ */
 export const LoaderPageCall = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('drawn'),
     id: z.number().int().nonnegative(),
     root: WireJson,
     pages: z.number().int().nonnegative(),
+    live: z.literal(true).optional(),
+  }),
+  z.strictObject({
+    action: z.literal('frame'),
+    id: z.number().int().nonnegative(),
+    root: WireJson,
+  }),
+  z.strictObject({
+    action: z.literal('ended'),
+    id: z.number().int().nonnegative(),
   }),
   z.strictObject({
     action: z.literal('failed'),
@@ -74,7 +89,11 @@ export const LoaderPageCall = z.discriminatedUnion('action', [
     action: z.literal('loaded'),
     id: z.number().int().nonnegative(),
   }),
-  z.strictObject({ action: z.literal('defined'), pattern: z.string() }),
+  z.strictObject({
+    action: z.literal('defined'),
+    pattern: z.string(),
+    every: z.number().int().positive().optional(),
+  }),
   // `argo.changed()`: what the Plugin's pages and items Slots show may have changed.
   z.strictObject({ action: z.literal('changed') }),
 ]);

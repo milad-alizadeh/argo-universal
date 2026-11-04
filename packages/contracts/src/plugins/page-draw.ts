@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { PageAddress } from './page-address';
-import type { WireNode } from './wire';
+import type { PatchOp, WireNode } from './wire';
 import { sameIdentity, sameJson, sameTree, treeHash } from './wire-identity';
+import { applyPatch, diff } from './wire-patch';
 
 // The most pages of a paged list one address shows.
 export const maxPages = 50;
@@ -28,10 +29,78 @@ export type TreeAnswer =
   | { kind: 'unchanged'; hash: string }
   | { kind: 'append'; append: Appended; hash: string };
 
-// A draw's answer: how its tree crosses, and how many pages its paged list shows; or why it failed.
+/*
+ * How the App keeps a drawn page fresh: `every` is the interval, as the Server clamped it, the App draws the
+ * page again on while it is on screen; `live` says the page's Loader yields, so while on screen the App keeps
+ * a live subscription for it instead of drawing it again.
+ */
+export type DrawPacing = { every?: number; live?: true };
+
+// A draw's answer: how its tree crosses, how many pages its paged list shows and how it stays fresh; or why it failed.
 export type DrawAnswer =
-  | (TreeAnswer & { pages: number })
+  | (TreeAnswer & { pages: number } & DrawPacing)
   | { kind: 'failed'; error: string };
+
+// A live page the App subscribes to while it is on screen, and the hash of the tree it keeps for the address.
+export const LiveRequest = PageAddress.extend({
+  known: z.string().min(1).optional(),
+});
+
+export type LiveRequest = z.infer<typeof LiveRequest>;
+
+/*
+ * One answer on a live page's subscription (ADR-0050). The first is the whole `tree`, or `unchanged` when it
+ * is the tree the App keeps; each after it is a `patch` of ADR-0031's keyed ops onto the tree hashed `base`,
+ * which leaves the tree hashed `hash`. `failed` says why the Loader or its tree failed, and ends the
+ * subscription.
+ */
+export type LiveAnswer = LiveTree | { kind: 'failed'; error: string };
+
+// A live answer that carries a tree.
+export type LiveTree =
+  | Exclude<TreeAnswer, { kind: 'append' }>
+  | { kind: 'patch'; base: string; ops: PatchOp[]; hash: string };
+
+/*
+ * The answer for a live page's next tree, from the tree this side last sent on the subscription, or none for
+ * its first; null when the tree is the one sent, so nothing crosses.
+ */
+export function liveAnswer(
+  drawn: WireNode,
+  sent: HashedTree | undefined,
+  known: string | undefined,
+): LiveTree | null {
+  const hash = treeHash(drawn);
+
+  if (!sent)
+    return known === hash
+      ? { kind: 'unchanged', hash }
+      : { kind: 'tree', root: drawn, hash };
+
+  if (sent.hash === hash) return null;
+
+  return { kind: 'patch', base: sent.hash, ops: diff(sent.root, drawn), hash };
+}
+
+/*
+ * The tree a live answer leaves the App holding, from the one it keeps, or undefined when the answer builds on
+ * a tree it does not keep: a patch onto another hash, or one whose keys leave the tree. A patch keeps every
+ * node it does not touch.
+ */
+export function liveTreeAfter(
+  kept: HashedTree | undefined,
+  answer: LiveTree,
+): HashedTree | undefined {
+  if (answer.kind !== 'patch') return treeAfter(kept, answer);
+
+  if (kept?.hash !== answer.base) return undefined;
+
+  try {
+    return { root: applyPatch(kept.root, answer.ops), hash: answer.hash };
+  } catch {
+    return undefined;
+  }
+}
 
 // A step from a node to one of its children, or to a node in one of its slots.
 export type AppendStep = { slot?: string; index: number };

@@ -48,6 +48,8 @@ export function testPages(
       pages.draw({ pluginId, pageState: {}, pages: 1, ...input }, webApp),
     run: (input) => pages.run({ pluginId, ...input }),
     stale: (signal) => pages.stale(signal),
+    live: (input, signal) =>
+      pages.live({ pluginId, pageState: {}, ...input }, webApp, signal),
   };
 }
 

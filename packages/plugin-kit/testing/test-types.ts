@@ -12,7 +12,10 @@ import type {
   PageRunAnswer,
   StaleMark,
 } from '@repo/contracts/plugins/page-address';
-import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
+import type {
+  DrawAnswer,
+  LiveAnswer,
+} from '@repo/contracts/plugins/page-draw';
 import type {
   PluginOperationCaller,
   PluginOperationParams,
@@ -98,6 +101,17 @@ export interface PluginTest {
     }) => Promise<PageRunAnswer>;
     // The stale marks every connected App is sent, after an Operation run or the Plugin's `argo.changed()`.
     stale: (signal: AbortSignal) => AsyncGenerator<StaleMark>;
+    // A live page as the App subscribes to it: its whole tree, then keyed patches, until the signal aborts.
+    live: (
+      input: {
+        path: string;
+        pageState?: PageState;
+        projectId?: string;
+        sessionId?: string;
+        known?: string;
+      },
+      signal: AbortSignal,
+    ) => AsyncGenerator<LiveAnswer>;
   };
   close: () => Promise<void>;
   mount: (input: PluginMount) => Promise<PluginTestView>;

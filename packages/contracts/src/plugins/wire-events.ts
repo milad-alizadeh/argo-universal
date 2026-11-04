@@ -131,7 +131,8 @@ export const PluginEvent = z.union([
   /*
    * One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050), for the
    * Connection that asked, as `open` names it; it answers by `id`. A background pass's draw is `loadOnly`:
-   * the Loader runs, no list is read and nothing renders.
+   * the Loader runs, no list is read and nothing renders. A `live` draw keeps a live page's Loader
+   * yielding and sends each tree it renders as a frame, until it ends or Argo stops it.
    */
   PageAddress.omit({ pluginId: true }).extend({
     type: z.literal('draw'),
@@ -140,7 +141,10 @@ export const PluginEvent = z.union([
     serverDevice: z.boolean().optional(),
     surface: PluginSurface.optional(),
     loadOnly: z.literal(true).optional(),
+    live: z.literal(true).optional(),
   }),
+  // The App left a live page, so its Loader stops yielding; the draw `id` answers once it has.
+  z.object({ type: z.literal('stop'), id: z.number().int().nonnegative() }),
   /*
    * One named read Argo keeps a Query for, run by the Plugin with its args for the Query's Project; it
    * answers by `id`. A page of a paged list (`argo:list`) is read for the draw `draw` names.

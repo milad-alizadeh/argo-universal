@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { OnPageCall } from '../../../lib/product/plugin-registry';
 import type { Answer, PageAddresses, PageOpening } from './page-addresses';
+import { useLivePage } from './use-live-page';
 import { usePageAddresses } from './use-page-addresses';
 import { usePageCalls } from './use-page-calls';
 
@@ -15,11 +16,16 @@ export type PluginPageState = { root: WireNode | null; onPageCall: OnPageCall };
  * revisit draws the kept tree at once and asks again behind it, naming what it keeps so an unchanged page
  * costs no tree. A Page state change keeps the tree on screen until the next address has drawn; load more
  * appends the next page's rows; a bound search or selection changes the Page state once the edits pause.
- * Only a focused screen asks again.
+ * Only a focused screen asks again: on a stale mark, on the page's interval, or, for a live page, on its
+ * subscription.
  */
 export function usePluginPage(opening: PageOpening): PluginPageState {
   const addresses = usePageAddresses();
-  const root = useLastDrawn(useDrawn(addresses, opening));
+  const answer = useDrawn(addresses, opening);
+
+  useLivePage(addresses, opening, answer);
+
+  const root = useLastDrawn(answer);
   const onPageCall = usePageCalls(addresses, opening);
 
   return { root, onPageCall };
