@@ -59,6 +59,7 @@ function live(known?: string): Live {
     known,
     signal: controller.signal,
     check: checked,
+    threw: () => null,
     stop: () => {
       stops += 1;
     },

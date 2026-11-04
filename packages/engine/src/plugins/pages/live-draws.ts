@@ -5,7 +5,9 @@ import type { PluginClock } from '../clock';
 import type { Caller, KindCalls } from '../runtime/worker-calls';
 import { checkedPage } from './checked-tree';
 import type { Answered, DrawAt, Outcome } from './draw-calls';
+import type { DrawingFailures } from './drawing-failures';
 import { LatestFrames, liveAnswers } from './live-frames';
+import type { Drawn } from './plugin-draws';
 import { forApp } from './wire-minimum';
 
 // Where a live draw's worker sends each tree its Loader yields.
@@ -25,6 +27,7 @@ type LiveDrawsDeps = {
   calls: KindCalls<DrawAt, Answered, Outcome>;
   clock: PluginClock;
   log: (line: string) => void;
+  failures: DrawingFailures;
 };
 
 /*
@@ -42,16 +45,36 @@ export class LiveDraws {
     const { pluginId, address, known, signal } = follow;
     const request: DrawAt = { ...address, live: true };
     const { calls, log } = this.deps;
-    const at = { pluginId, path: address.path, log };
     const gated = { pluginId, at: address, log };
 
     return liveAnswers({
       frames: this.framesFor(pluginId, request),
       known,
       signal,
-      check: (root) => forApp(gated, checkedPage(at, { root, pages: 0 })),
+      check: (root) => forApp(gated, this.checked(pluginId, address, root)),
+      // A Loader that threw, ran out of time or stopped with its Plugin is the page's drawing failure.
+      threw: (error) =>
+        this.deps.failures.failed(
+          { pluginId, at: address, kind: 'threw' },
+          error,
+        ),
       stop: () => calls.tell(request, (id) => ({ type: 'stop', id })),
     });
+  }
+
+  // Each tree is checked as a drawn page's is, and a refused one is the page's drawing failure.
+  private checked(pluginId: string, address: DrawAt, root: WireJson): Drawn {
+    const { log, failures } = this.deps;
+    const drawn = checkedPage(
+      { pluginId, path: address.path, log },
+      { root, pages: 0 },
+    );
+
+    if (drawn.ok) failures.drew(pluginId, address);
+    else
+      failures.failed({ pluginId, at: address, kind: 'refused' }, drawn.error);
+
+    return drawn;
   }
 
   // A frame counts only from the generation its live draw still waits on.

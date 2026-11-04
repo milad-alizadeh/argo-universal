@@ -25,6 +25,11 @@ import {
   type Loaded,
   type Outcome,
 } from './draw-calls';
+import {
+  DrawingFailures,
+  type Drawings,
+  type FailureKind,
+} from './drawing-failures';
 import { LiveDraws, type LiveFollow } from './live-draws';
 import { SentTrees } from './sent-trees';
 import { drawsForApp, forApp } from './wire-minimum';
@@ -49,6 +54,14 @@ type ChangeListener = (pluginId: string, addresses?: PageAddress[]) => void;
 // What a write makes due before anyone hears of it, so a page drawn again reads past it.
 type Written = (pluginId: string) => void;
 
+// The running workers, the Server log, what a write makes due, and the drawing failures the App shows.
+type PluginDrawsDeps = {
+  workers: WorkerCalls;
+  log: (line: string) => void;
+  written: Written;
+  drawings: Drawings;
+};
+
 /*
  * The runtime side of Loader pages (ADR-0050): each draw, and each background pass's load, is one call to
  * the running worker generation, answered by its id, and each generation tells the Page path patterns it
@@ -61,11 +74,16 @@ export class PluginDraws {
   private readonly changeListeners = new Set<ChangeListener>();
   private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
 
-  public constructor(
-    private readonly workers: WorkerCalls,
-    private readonly log: (line: string) => void,
-    private readonly written: Written,
-  ) {
+  private readonly workers: WorkerCalls;
+  private readonly log: (line: string) => void;
+  private readonly written: Written;
+  private readonly failures: DrawingFailures;
+
+  public constructor({ workers, log, written, drawings }: PluginDrawsDeps) {
+    this.workers = workers;
+    this.log = log;
+    this.written = written;
+    this.failures = new DrawingFailures(drawings, log);
     this.calls = workers.kind(drawKind);
     this.sent = new SentTrees(workers);
     this.patterns = new DefinedPatterns(workers, log);
@@ -73,6 +91,7 @@ export class PluginDraws {
       calls: this.calls,
       clock: workers.clock,
       log,
+      failures: this.failures,
     });
     workers.watch((pluginId) => this.forgetEnded(pluginId));
   }
@@ -138,16 +157,38 @@ export class PluginDraws {
     return this.lives.follow(follow);
   }
 
+  /*
+   * A draw that fails, by its Loader or Render or by a tree the Server refuses, is logged once and shown to
+   * the App as its Plugin's drawing failure (ADR-0037); the address's next tree clears it.
+   */
   private async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
     const outcome = await this.calls.call(pluginId, address);
+    const failing = { pluginId, at: address };
 
-    if ('ok' in outcome) return outcome;
+    if ('ok' in outcome)
+      return this.failed({ ...failing, kind: 'threw' }, outcome.error);
 
-    if (outcome.action !== 'drawn') return failed(answeredError(outcome));
+    if (outcome.action !== 'drawn')
+      return this.failed({ ...failing, kind: 'threw' }, answeredError(outcome));
 
     const { log } = this;
+    const drawn = checkedPage({ pluginId, path: address.path, log }, outcome);
 
-    return checkedPage({ pluginId, path: address.path, log }, outcome);
+    if (!drawn.ok)
+      return this.failed({ ...failing, kind: 'refused' }, drawn.error);
+
+    this.failures.drew(pluginId, address);
+
+    return drawn;
+  }
+
+  private failed(
+    failing: { pluginId: string; at: DrawAt; kind: FailureKind },
+    error: string,
+  ): Drawn {
+    this.failures.failed(failing, error);
+
+    return failed(error);
   }
 
   // A background pass: the Loader alone, for one Project, given the pass's own budget rather than a draw's.

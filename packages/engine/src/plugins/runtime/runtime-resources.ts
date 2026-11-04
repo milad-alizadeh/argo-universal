@@ -43,9 +43,12 @@ export class RuntimeResources {
     this.data = this.pluginData(input);
     this.items = new PluginSlotItems(this.workers);
     this.operations = new PluginOperations(this.workers);
-    this.draws = new PluginDraws(this.workers, input.log, (pluginId) =>
-      this.data.written(pluginId),
-    );
+    this.draws = new PluginDraws({
+      workers: this.workers,
+      log: input.log,
+      written: (pluginId) => this.data.written(pluginId),
+      drawings: this.failures,
+    });
     this.background = this.backgroundPasses(input);
     this.unwatch = this.watch(input);
   }

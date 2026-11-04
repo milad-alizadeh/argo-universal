@@ -1,13 +1,22 @@
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
-import type { WireJson } from '@repo/contracts/plugins/wire';
+import type { PluginFailure } from '@repo/contracts/plugins/runtime';
+import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
+import { pluginMessageBytes } from '@repo/contracts/plugins/wire-limits';
 import { expect, it } from 'vitest';
 import type { PluginClock } from '../clock';
 import type { PluginEvent } from '../protocol/runtime';
+import { PluginFailures } from '../runtime/failures';
 import { WorkerCalls } from '../runtime/worker-calls';
-import { leaf, stack, svg } from '../views/draw-tree-fixtures';
 import { PluginDraws } from './plugin-draws';
+import { leaf, stack, svg } from './tree-fixtures';
 
-type Draws = { pages: PluginDraws; workers: WorkerCalls; sent: PluginEvent[] };
+type Draws = {
+  pages: PluginDraws;
+  workers: WorkerCalls;
+  sent: PluginEvent[];
+  failures: PluginFailures;
+};
 
 const idleClock: PluginClock = {
   now: () => 0,
@@ -23,7 +32,57 @@ function draws(log: (line: string) => void = (): null => null): Draws {
 
   const workers = new WorkerCalls({ send, clock: idleClock });
 
-  return { pages: new PluginDraws(workers, log, () => null), workers, sent };
+  const failures = new PluginFailures((pluginId) => ({
+    pluginId,
+    name: 'Atlas',
+  }));
+
+  const pages = new PluginDraws({
+    workers,
+    log,
+    written: () => null,
+    drawings: failures,
+  });
+
+  return { pages, workers, sent, failures };
+}
+
+// The App draws today's Plugin trees.
+const surface = currentPluginSurface('web');
+
+async function listed(failures: PluginFailures): Promise<PluginFailure[]> {
+  const watching = new AbortController();
+  const { value } = await failures.watch(watching.signal).next();
+
+  watching.abort();
+
+  return value ?? [];
+}
+
+// One draw of `path`, answered by the running worker with what it sends.
+async function drawn(
+  { pages, sent }: Draws,
+  path: string,
+  answer: { root: WireJson } | { error: string },
+): Promise<DrawAnswer> {
+  const drawing = pages.answer('atlas', {
+    path,
+    pageState: {},
+    pages: 1,
+    surface,
+  });
+  const event = sent.at(-1);
+  const id = event?.type === 'draw' ? event.id : -1;
+  const caller = { pluginId: 'atlas', generation: 1 };
+
+  pages.receive(
+    caller,
+    'root' in answer
+      ? { action: 'drawn', id, root: answer.root, pages: 1 }
+      : { action: 'failed', id, error: answer.error },
+  );
+
+  return drawing;
 }
 
 const rows = (count: number): WireJson =>
@@ -40,7 +99,7 @@ async function drawList(
   { pages, sent }: Draws,
   { count, generation, known }: Listed,
 ): Promise<DrawAnswer> {
-  const at = { path: '/list', pageState: {}, pages: count };
+  const at = { path: '/list', pageState: {}, pages: count, surface };
   const answer = pages.answer('tracker', at, known);
   const event = sent.at(-1);
   const id = event?.type === 'draw' ? event.id : -1;
@@ -83,7 +142,7 @@ it('answers a load more with its rows against the tree last sent, and forgets th
 it('draws a page without the SVG the sanitiser refused, and logs what it left out', async () => {
   const logs: string[] = [];
   const { pages, workers } = draws((line) => logs.push(line));
-  const at = { path: '/map', pageState: {}, pages: 1 };
+  const at = { path: '/map', pageState: {}, pages: 1, surface };
 
   workers.run('atlas', 1);
 
@@ -139,4 +198,51 @@ it('tells its listeners when an Operation of a running Plugin ran', () => {
   pages.changedBy('tracker');
 
   expect(marked).toEqual(['tracker']);
+});
+
+const json = (root: WireNode): WireJson => JSON.parse(JSON.stringify(root));
+
+const tooLarge: WireJson = {
+  type: 'Stack',
+  key: 'root',
+  huge: 'x'.repeat(pluginMessageBytes),
+};
+
+it('logs a page that fails to draw once however often it fails, and the App shows one failure for the Plugin', async () => {
+  const logs: string[] = [];
+  const drawing = draws((line) => logs.push(line));
+
+  drawing.workers.run('atlas', 1);
+  await drawn(drawing, '/map', { error: 'Atlas threw' });
+  await drawn(drawing, '/map', { error: 'Atlas threw' });
+  await drawn(drawing, '/files', { root: tooLarge });
+
+  expect(logs).toEqual([
+    'Plugin atlas: could not draw /map: Atlas threw',
+    `Plugin atlas: refused /files: page message exceeds ${pluginMessageBytes} bytes`,
+  ]);
+  expect(await listed(drawing.failures)).toMatchObject([
+    {
+      kind: 'drawing',
+      pluginId: 'atlas',
+      message: `page message exceeds ${pluginMessageBytes} bytes`,
+    },
+  ]);
+});
+
+it("clears a page's failure when it draws, and leaves another page's failed", async () => {
+  const drawing = draws();
+
+  drawing.workers.run('atlas', 1);
+  await drawn(drawing, '/map', { error: 'Atlas threw' });
+  await drawn(drawing, '/files', { error: 'Files threw' });
+  await drawn(drawing, '/files', { root: json(stack([])) });
+
+  expect(await listed(drawing.failures)).toMatchObject([
+    { kind: 'drawing', message: 'Atlas threw' },
+  ]);
+
+  await drawn(drawing, '/map', { root: json(stack([])) });
+
+  expect(await listed(drawing.failures)).toEqual([]);
 });

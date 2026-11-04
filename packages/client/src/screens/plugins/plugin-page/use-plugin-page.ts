@@ -1,5 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
+import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
@@ -31,14 +31,17 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
   return { root, onPageCall };
 }
 
-// A failed answer leaves the last tree on screen, with its toast, as an App offline draws its last answer.
+/*
+ * A failed answer leaves the last tree on screen, as an App offline draws its last answer, or says the page
+ * could not be shown when there is none. The Plugin's one drawing-failure toast says why (ADR-0037).
+ */
 function useLastDrawn(answer: Answer | undefined): WireNode | null {
   const [last, setLast] = useState<WireNode | null>(null);
   const root = rootOf(answer);
 
   if (isNewer(root, last)) setLast(root);
 
-  return root ?? last;
+  return root ?? last ?? (answer?.ok === false ? pluginPageFallback : null);
 }
 
 const rootOf = (answer: Answer | undefined): WireNode | null =>
@@ -64,14 +67,5 @@ function useDrawn(
     subscribed: useScreenFocused(),
   });
 
-  useErrorToast(failureOf(data));
-
   return data;
 }
-
-const failureOf = (
-  answer: Answer | undefined,
-): Parameters<typeof useErrorToast>[0] =>
-  answer?.ok === false
-    ? { title: 'This page could not load', message: answer.error }
-    : undefined;

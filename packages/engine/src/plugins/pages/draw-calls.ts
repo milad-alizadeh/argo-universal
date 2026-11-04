@@ -82,7 +82,7 @@ export function drawingOf(
   return { draw, projectId, serverDevice, holder, every };
 }
 
-const addressOf = (
+export const addressOf = (
   pluginId: string,
   { path, pageState, projectId, sessionId }: DrawAt,
 ): PageAddress => ({

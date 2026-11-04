@@ -5,6 +5,8 @@ import type { PluginClock } from '../clock';
 import type { Outcome } from './draw-calls';
 import type { Drawn } from './plugin-draws';
 
+type Failed = Extract<LiveAnswer, { kind: 'failed' }>;
+
 // A live page's answers go out at most once a frame; the trees it yields between are folded into the latest.
 export const liveFrameMs = 16;
 
@@ -97,10 +99,14 @@ export class LatestFrames {
   }
 }
 
-// One live subscription: its frames, how each tree is checked, the tree the App keeps, and how to stop it.
+/*
+ * One live subscription: its frames, how each tree is checked, what hears that its Loader failed, the tree
+ * the App keeps, and how to stop it.
+ */
 export type Live = {
   frames: LatestFrames;
   check: (root: WireJson) => Drawn;
+  threw: (error: string) => void;
   known: string | undefined;
   signal: AbortSignal;
   stop: () => void;
@@ -154,7 +160,13 @@ class Answering {
   }
 
   private stepOf(next: Next): Step {
-    return 'end' in next ? this.ended(endOf(next.end)) : this.drawn(next.root);
+    if (!('end' in next)) return this.drawn(next.root);
+
+    const end = endOf(next.end);
+
+    if (end) this.live.threw(end.error);
+
+    return this.ended(end);
   }
 
   private drawn(root: WireJson): Step {
@@ -178,7 +190,7 @@ class Answering {
 }
 
 // A Loader that ended on its own ends the stream quietly; any other end says why.
-const endOf = (outcome: Outcome): LiveAnswer | null =>
+const endOf = (outcome: Outcome): Failed | null =>
   'ok' in outcome || outcome.action === 'failed'
     ? { kind: 'failed', error: outcome.error }
     : null;
