@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.plugin.json",
-  // A Plugin's tests run in Node.
+  // A Plugin's tests run in Node, and read the Operation types `argo-plugin types` wrote.
   "compilerOptions": { "types": ["node"] },
-  "include": ["${configDir}/**/*.test.ts"],
+  "include": ["${configDir}/**/*.test.ts", "${configDir}/plugin.gen.d.ts"],
   "exclude": ["${configDir}/**/node_modules"]
 }

@@ -7,12 +7,12 @@ import { PluginTree } from './plugin-registry';
 const fixture: WireNode = JSON.parse(`{
   "type": "ListItem", "key": "row", "props": { "title": "Deploy web" }, "children": [],
   "slots": { "actions": [{ "type": "Action.Section", "key": "run", "props": { "title": "Run" }, "slots": {}, "children": [
-    { "type": "Action", "key": "copy", "props": { "label": "Copy link", "icon": "copy", "shortcut": { "modifiers": ["meta", "shift"], "key": "c" }, "onPress": { "$event": "onPress" } }, "slots": {}, "children": [] },
-    { "type": "Action", "key": "disabled", "props": { "label": "Archive", "icon": "archive", "disabled": true, "onPress": { "$event": "onPress" } }, "slots": {}, "children": [] }
+    { "type": "Action", "key": "copy", "props": { "label": "Copy link", "icon": "copy", "shortcut": { "modifiers": ["meta", "shift"], "key": "c" }, "onPress": { "operation": "copyLink", "args": {} } }, "slots": {}, "children": [] },
+    { "type": "Action", "key": "disabled", "props": { "label": "Archive", "icon": "archive", "disabled": true, "onPress": { "operation": "archive", "args": {} } }, "slots": {}, "children": [] }
   ] }] }
 }`);
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Action',
@@ -22,10 +22,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ContextDispatch: Story = {
-  render: () => <PluginTree root={fixture} onEvent={onEvent} />,
+export const ContextAction: Story = {
+  render: () => <PluginTree root={fixture} onPageCall={onPageCall} />,
   play: async ({ canvas, canvasElement, userEvent }) => {
-    onEvent.mockClear();
+    onPageCall.mockClear();
     await userEvent.pointer({
       keys: '[MouseRight]',
       target: canvas.getByText('Deploy web'),
@@ -37,9 +37,10 @@ export const ContextDispatch: Story = {
       page.getByRole('menuitem', { name: 'Archive' }),
     ).toHaveAttribute('aria-disabled', 'true');
     await userEvent.click(copy);
-    await expect(onEvent).toHaveBeenCalledTimes(1);
-    await expect(onEvent).toHaveBeenCalledWith('row#actions/run/copy', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledTimes(1);
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'copyLink', args: {} },
+      expect.objectContaining({ key: 'row#actions/run/copy' }),
+    );
   },
 };

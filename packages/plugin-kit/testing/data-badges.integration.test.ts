@@ -1,32 +1,49 @@
 import { expect, it } from 'vitest';
 import { dataFixture, dataPluginId } from '../mocks/data-fixture';
 
+type Operation = {
+  name: string;
+  label: string;
+  description: string;
+  tier: 'act';
+  params: Record<string, never>;
+};
+
+const operation = (name: string): Operation => ({
+  name,
+  label: name,
+  description: `Badge ${name}.`,
+  tier: 'act' as const,
+  params: {},
+});
+
 it('publishes only its own nav badges, clears zero and refuses another nav id', async () => {
   const fixture = await dataFixture(
-    `import { Text, Stack, Button, useState } from '@argo/plugin-kit';
-    export function register(argo) {
-      function Nav() {
-        const [result, setResult] = useState('ready');
-        return <Stack direction="column"><Text>{result}</Text><Button label="Set" onPress={() => argo.nav.badge('inbox', 7)} /><Button label="Clear" onPress={() => argo.nav.badge('inbox', 0)} /><Button label="Other" onPress={async () => { try { await argo.nav.badge('another-plugins-nav', 4); setResult('accepted'); } catch { setResult('refused'); } }} /></Stack>;
-      }
-      argo.pages.register('/', Nav);
+    `export function register(argo) {
+      argo.operations.register('set', () => argo.nav.badge('inbox', 7));
+      argo.operations.register('clear', () => argo.nav.badge('inbox', 0));
+      argo.operations.register('other', async () => {
+        try { await argo.nav.badge('another-plugins-nav', 4); return 'accepted'; } catch { return 'refused'; }
+      });
     }`,
-    { nav: [{ id: 'inbox', title: 'Inbox', path: '/' }] },
+    {
+      nav: [{ id: 'inbox', title: 'Inbox', path: '/' }],
+      operations: ['set', 'clear', 'other'].map(operation),
+    },
   );
 
   const kit = await fixture.start();
   const controller = new AbortController();
   const badges = kit.badges(controller.signal);
   expect((await badges.next()).value).toEqual([]);
-  const page = kit.page();
-  await page.find('ready');
-  await page.press('Set');
+  await kit.pages.run({ operation: 'set', args: {} });
   expect((await badges.next()).value).toEqual([
     { pluginId: dataPluginId, id: 'inbox', count: 7 },
   ]);
-  await page.press('Other');
-  await page.find('refused');
-  await page.press('Clear');
+  expect(await kit.pages.run({ operation: 'other', args: {} })).toEqual({
+    result: 'refused',
+  });
+  await kit.pages.run({ operation: 'clear', args: {} });
   expect((await badges.next()).value).toEqual([]);
   expect(await kit.log()).toContain(
     'refused argo.nav.badge another-plugins-nav',

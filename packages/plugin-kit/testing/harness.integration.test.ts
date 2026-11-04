@@ -1,8 +1,17 @@
 import { fileURLToPath } from 'node:url';
-import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
+import {
+  startPluginTest,
+  type OpenPage,
+  type PluginTest,
+} from '@argo/plugin-kit/testing';
 import { expect, it, onTestFinished } from 'vitest';
 
 const runFixture = 'Run fixture';
+
+// The fixture CLI in `mocks/first` answers `first`, and the one in `mocks/second` answers `second`.
+const first = 'first';
+
+const typed = 'typed text';
 
 async function start(path: string): Promise<PluginTest> {
   const test = await startPluginTest({
@@ -17,46 +26,35 @@ async function start(path: string): Promise<PluginTest> {
   return test;
 }
 
+const open = async (path: string): Promise<OpenPage> =>
+  (await start(path)).pages.open({ path: '/' });
+
 it("loads the fixture's TypeScript entry through the production loader", async () => {
-  const page = (await start('first')).page();
-  await expect
-    .poll(() => page.findText('Harness'), { timeout: 10_000 })
-    .toBeDefined();
+  const page = await open(first);
+
+  expect(page.findText('Harness')).toBeDefined();
 }, 20_000);
 
-it('delivers a text event through the worker and applies its keyed patch to the observed tree', async () => {
-  const test = await start('first');
-  const page = test.page();
-  await expect
-    .poll(() => page.findText('empty'), { timeout: 10_000 })
-    .toBeDefined();
-  await page.dispatch({
-    key: 'search',
-    event: 'onChangeText',
-    payload: 'typed text',
-  });
-  await expect
-    .poll(() => page.findText('typed text'), { timeout: 10_000 })
-    .toBeDefined();
+it('binds a search to Page state and draws the page again with its text once the typing pauses', async () => {
+  const test = await start(first);
+  const page = await test.pages.open({ path: '/' });
+  expect(page.findText('empty')).toBeDefined();
+
+  await page.act('Harness', 'onChangeText', typed);
+  await test.clock.advance(300);
+
+  expect(page.pageState).toMatchObject({ value: typed });
+  expect(page.findText(typed)).toBeDefined();
   expect(page.findText('empty')).toBeUndefined();
 }, 20_000);
 
 it('keeps PATH executable fixtures separate for simultaneous Plugin hosts', async () => {
   const originalPath = process.env.PATH;
-  const first = (await start('first')).page();
-  await expect
-    .poll(() => first.findText(runFixture), { timeout: 10_000 })
-    .toBeDefined();
-  const second = (await start('second')).page();
-  await expect
-    .poll(() => second.findText(runFixture), { timeout: 10_000 })
-    .toBeDefined();
-  await Promise.all([first.press(runFixture), second.press(runFixture)]);
-  await expect
-    .poll(() => first.findText('first'), { timeout: 10_000 })
-    .toBeDefined();
-  await expect
-    .poll(() => second.findText('second'), { timeout: 10_000 })
-    .toBeDefined();
+  const [one, two] = await Promise.all([open(first), open('second')]);
+
+  await Promise.all([one.press(runFixture), two.press(runFixture)]);
+
+  expect(one.findText(first)).toBeDefined();
+  expect(two.findText('second')).toBeDefined();
   expect(process.env.PATH).toBe(originalPath);
 }, 20_000);

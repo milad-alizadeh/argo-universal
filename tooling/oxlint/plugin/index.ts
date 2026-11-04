@@ -12,6 +12,7 @@ import { kitStyling } from './kit-styling.ts';
 import { lexicalZone } from './lexical-zone.ts';
 import { machineClock } from './machine-clock.ts';
 import { noInternalMock } from './no-internal-mock.ts';
+import { noNestedConditionalType } from './no-nested-conditional-type.ts';
 import { screenSpacing } from './screen-spacing.ts';
 import { staticImports } from './static-imports.ts';
 import { styleTokens } from './style-tokens.ts';
@@ -35,6 +36,7 @@ export default definePlugin({
     'lexical-zone': lexicalZone,
     'machine-clock': machineClock,
     'no-internal-mock': noInternalMock,
+    'no-nested-conditional-type': noNestedConditionalType,
     'screen-spacing': screenSpacing,
     'vendor-name': vendorName,
     'unit-test-io': unitTestIo,

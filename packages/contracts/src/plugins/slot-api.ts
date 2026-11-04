@@ -14,7 +14,7 @@ export type SlotItemsAnswer = Readonly<Record<string, readonly SlotItem[]>>;
 
 /*
  * Answers one batched call for a whole list (ADR-0035, VS Code's `provideFileDecorations`). Argo
- * keeps the answer until the Plugin calls `argo.slots.changed`.
+ * keeps the answer until the Plugin calls `argo.changed()` or one of its Operations runs.
  */
 export type SlotItemsProvider<Id extends ItemsSlotId = ItemsSlotId> = (
   request: Readonly<{ contexts: readonly Readonly<ItemsContext<Id>>[] }>,
@@ -26,8 +26,4 @@ type SlotRegistration = <Id extends ItemsSlotId>(
   provider: SlotItemsProvider<Id>,
 ) => void;
 
-export type SlotsApi = Readonly<{
-  register: SlotRegistration;
-  // Drops what Argo keeps of this Plugin's items in the Slot, so open lists ask again.
-  changed: (slotId: ItemsSlotId) => Promise<void>;
-}>;
+export type SlotsApi = Readonly<{ register: SlotRegistration }>;

@@ -3,49 +3,38 @@ import { dropOldest, retainedWarmEntries, type MappedQuery } from './entry-map';
 
 type TestEntry = MappedQuery & { closed: boolean };
 
-function entryWatched(active: boolean): TestEntry {
-  const entry: TestEntry = {
+function entry(): TestEntry {
+  const made: TestEntry = {
     owner: {},
-    watchers: { active },
     closed: false,
     close: (): void => {
-      entry.closed = true;
+      made.closed = true;
     },
   };
 
-  return entry;
+  return made;
 }
 
-const watched = (): TestEntry => entryWatched(true);
-
-const warm = (): TestEntry => entryWatched(false);
-
-const many = (count: number, make: () => TestEntry): TestEntry[] =>
-  Array.from({ length: count }, make);
+const many = (count: number): TestEntry[] =>
+  Array.from({ length: count }, entry);
 
 function mapOf(entries: TestEntry[]): Map<string, TestEntry> {
-  return new Map(entries.map((entry, index) => [String(index), entry]));
+  return new Map(entries.map((made, index) => [String(index), made]));
 }
 
-it('keeps the newest entry when it is the only one nobody is watching', () => {
-  const newest = warm();
-  const entries = mapOf([...many(retainedWarmEntries, watched), newest]);
+it('keeps every entry inside the bound', () => {
+  const entries = mapOf(many(retainedWarmEntries));
 
   expect(dropOldest(entries)).toBe(0);
-  expect(newest.closed).toBe(false);
-  expect(entries.has(String(retainedWarmEntries))).toBe(true);
+  expect(entries.size).toBe(retainedWarmEntries);
 });
 
-it('counts only the entries nobody is watching against the bound', () => {
-  const oldest = warm();
-
-  const entries = mapOf([
-    oldest,
-    ...many(retainedWarmEntries, watched),
-    ...many(retainedWarmEntries, warm),
-  ]);
+it('drops and closes the oldest entries over the bound, and keeps the newest', () => {
+  const made = many(retainedWarmEntries + 1);
+  const entries = mapOf(made);
 
   expect(dropOldest(entries)).toBe(1);
-  expect(oldest.closed).toBe(true);
-  expect(entries.size).toBe(retainedWarmEntries * 2);
+  expect(made.map(({ closed }) => closed).indexOf(true)).toBe(0);
+  expect(made.filter(({ closed }) => closed)).toHaveLength(1);
+  expect(entries.has(String(retainedWarmEntries))).toBe(true);
 });

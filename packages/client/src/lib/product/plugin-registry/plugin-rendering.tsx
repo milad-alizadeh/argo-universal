@@ -1,14 +1,24 @@
 import type { KitComponentDefinition } from '@repo/contracts/plugins/kit';
+import type { MadePageCall } from '@repo/contracts/plugins/page-call-payload';
+import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
 
-export type { PluginOnEvent } from './plugin-dispatcher';
+/*
+ * What a Plugin tree does with a Page state change, an Operation call, a load more or a bound value
+ * (ADR-0050), with the event's payload already filled in.
+ */
+export type OnPageCall = (
+  call: MadePageCall,
+  event: PageEvent,
+) => Promise<void>;
 
 export interface RenderContext {
   key: string;
   openPage: OpenPluginPage;
   controls: PluginControls;
+  pageCall?: OnPageCall;
 }
 
 export type Callback = (value?: WireJson) => void | Promise<void>;

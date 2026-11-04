@@ -3,6 +3,7 @@ import fixtures from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, fireEvent, waitFor } from 'storybook/test';
+import type { OnPageCall } from './plugin-registry';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
@@ -17,7 +18,7 @@ const sliderRoot = WireNode.parse(
   fixtures.find((node) => node.type === 'Slider'),
 );
 
-const onEvent = fn();
+const onPageCall = fn<OnPageCall>(async () => {});
 
 const concurrency = { name: 'Concurrency' };
 
@@ -32,9 +33,9 @@ async function editInTurn(
   replies: PromiseWithResolvers<void>[],
 ): Promise<void> {
   for (const [index, reply] of replies.entries()) {
-    onEvent.mockReturnValueOnce(reply.promise);
+    onPageCall.mockReturnValueOnce(reply.promise);
     await fireEvent.change(range, { target: { value: String(7 + index) } });
-    await waitFor(() => expect(onEvent).toHaveBeenCalledTimes(index + 1));
+    await waitFor(() => expect(onPageCall).toHaveBeenCalledTimes(index + 1));
   }
 }
 
@@ -45,10 +46,10 @@ function ClampedSlider(): React.JSX.Element {
   return (
     <PluginTree
       root={root}
-      onEvent={(key, event) => {
+      onPageCall={(call, event) => {
         setRoot({ ...sliderRoot, props: { ...sliderRoot.props, value: 5 } });
 
-        return onEvent(key, event);
+        return onPageCall(call, event);
       }}
     />
   );
@@ -60,10 +61,10 @@ function serverPatch(accepted: boolean): Story {
     render: ClampedSlider,
     play: async ({ canvas }) => {
       const reply = Promise.withResolvers<void>();
-      onEvent.mockReturnValueOnce(reply.promise);
+      onPageCall.mockReturnValueOnce(reply.promise);
       const range = canvas.getByRole('slider', concurrency);
       await fireEvent.change(range, { target: { value: '7' } });
-      await waitFor(() => expect(onEvent).toHaveBeenCalledOnce());
+      await waitFor(() => expect(onPageCall).toHaveBeenCalledOnce());
       await expect(range).toHaveValue('7');
       settle(reply, accepted);
       await waitFor(() => expect(range).toHaveValue('5'));
@@ -76,7 +77,7 @@ export const ServerPatchBeforeRejection = serverPatch(false);
 export const ServerPatchBeforeAcceptance = serverPatch(true);
 
 const slider = (): React.JSX.Element => (
-  <PluginTree root={sliderRoot} onEvent={onEvent} />
+  <PluginTree root={sliderRoot} onPageCall={onPageCall} />
 );
 
 // Edits 7, 8 and 9 in turn; each step settles one of them and names what the slider shows after it.
@@ -118,21 +119,3 @@ export const InterleavedFailuresRestoreValue = overlapping([
   { edit: 0, ok: false, shows: '9' },
   { edit: 2, ok: false, shows: '2' },
 ]);
-
-export const FailedCoalescedEditRestoresValue: Story = {
-  render: slider,
-  play: async ({ canvas }) => {
-    onEvent.mockRejectedValueOnce(new Error('Handler failed'));
-    const range = canvas.getByRole('slider', concurrency);
-    await fireEvent.change(range, { target: { value: '7' } });
-    await fireEvent.change(range, { target: { value: '8' } });
-    await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('slider', {
-        event: 'onValueChange',
-        payload: 8,
-      }),
-    );
-    await waitFor(() => expect(range).toHaveValue('2'));
-    await expect(onEvent).toHaveBeenCalledOnce();
-  },
-};

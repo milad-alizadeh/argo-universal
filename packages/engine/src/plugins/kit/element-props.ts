@@ -1,9 +1,8 @@
-import { kitComponentEvents } from '@repo/contracts/plugins/kit';
-import { componentEventRules, WireJson } from '@repo/contracts/plugins/wire';
+import { WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { Prop, Props } from './wire-tree';
 
-// What React hands the reconciler: a Plugin's props, plus `children` and the `argoKey` the JSX runtime adds.
+// What a Render's JSX hands the kit: a Plugin's props, plus `children` and the `argoKey` the JSX runtime adds.
 export interface ElementProps {
   children?: ReactNode;
   renderItem?: (item: WireJson, index: number) => ReactNode;
@@ -14,14 +13,8 @@ export interface ElementProps {
     | ((item: WireJson, index: number) => ReactNode);
 }
 
-function isProp(value: ElementProps[string]): value is Prop {
-  if (typeof value === 'function') return true;
-
-  return isPropData(value);
-}
-
-// Handlers go only in top-level props, so nested data is plain JSON.
-function isPropData(value: ElementProps[string]): boolean {
+// A prop is plain JSON all the way down.
+function isPropData(value: ElementProps[string]): value is WireJson {
   if (Array.isArray(value)) return value.every(isPropData);
 
   if (value === null) return true;
@@ -46,58 +39,22 @@ function isPropObject(
 
 const reserved = new Set(['children', 'argoKey']);
 
+// A Component event holds a value (ADR-0050), so a function prop is the Plugin's mistake, named in its terms.
 function checked(
   type: string,
   name: string,
   value: ElementProps[string],
 ): Prop {
-  if (!isProp(value))
-    throw new Error(
-      `${type}: prop ${name} must be JSON or a top-level function`,
-    );
+  if (typeof value === 'function')
+    throw new Error(`A Render passes values, not functions: ${name}`);
+
+  if (!isPropData(value)) throw new Error(`${type}: prop ${name} must be JSON`);
 
   return value;
 }
 
-const isPlainObject = (value: unknown): value is ElementProps =>
-  typeof value === 'object' &&
-  value !== null &&
-  Object.getPrototypeOf(value) === Object.prototype;
-
-type EventPlace = { name: string; within: string };
-
-// The Component events whose schema keeps their handler inside a prop object, such as a Picker's `footerAction.onPress`.
-const eventPlaces = (type: string): EventPlace[] =>
-  Object.entries(kitComponentEvents(type)).flatMap(([name, schema]) => {
-    const { within } = componentEventRules(schema);
-
-    return within === undefined ? [] : [{ name, within }];
-  });
-
-/*
- * A handler written inside its prop object runs as the node's event of that name: the one nested place a function is
- * allowed. The Plugin runtime holds it at the node's top level, and the wire puts it back inside (wire-tree).
- */
-function liftedEvent(raw: ElementProps, place: EventPlace): ElementProps {
-  const holder = raw[place.within];
-
-  if (!isPlainObject(holder) || typeof holder[place.name] !== 'function')
-    return raw;
-
-  const rest = Object.fromEntries(
-    Object.entries(holder).filter(([name]) => name !== place.name),
-  );
-
-  return { ...raw, [place.name]: holder[place.name], [place.within]: rest };
-}
-
-const liftedEvents = (type: string, raw: ElementProps): ElementProps =>
-  eventPlaces(type).reduce(liftedEvent, raw);
-
 // Keeps the props that cross the wire: drops `children`, the key and `undefined`.
-export function toProps(type: string, source: ElementProps): Props {
-  const raw = liftedEvents(type, source);
-
+export function toProps(type: string, raw: ElementProps): Props {
   return Object.fromEntries(
     Object.entries(raw)
       .filter(([name, value]) => !reserved.has(name) && value !== undefined)

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Action, WireEvent } from './wire';
+import { Action, PageCall } from './wire';
 
 export const stringLabel = z
   .string()
@@ -7,19 +7,13 @@ export const stringLabel = z
 
 export const optionalLabel = stringLabel.optional();
 
-type EventHandler<Name extends string> = z.ZodUnion<
-  readonly [
-    z.ZodObject<{ $event: z.ZodLiteral<Name> }, z.core.$strict>,
-    typeof Action,
-  ]
->;
+type EventHandler = z.ZodUnion<readonly [typeof Action, typeof PageCall]>;
 
-export function handler<const Name extends string>(
-  name: Name,
-): EventHandler<Name> {
+// What a Component event holds on the wire: an Action the App runs, or a Loader page's call (ADR-0050).
+export function handler(name: string): EventHandler {
   return z
-    .union([WireEvent.extend({ $event: z.literal(name) }), Action])
-    .describe(`Action or Plugin event invoked by ${name}.`);
+    .union([Action, PageCall])
+    .describe(`Action or Page call invoked by ${name}.`);
 }
 
 export const onPress = handler('onPress');

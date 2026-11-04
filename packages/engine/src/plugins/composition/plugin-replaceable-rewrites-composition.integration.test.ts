@@ -37,14 +37,16 @@ it('retains a downstream replacement when an outer Hook exhausts its budget on a
   ]);
   const { url } = await startEngineTestHost({ home });
 
-  const app = renderApp(url, toolCallSlotFixture, currentPluginSurface('web'));
+  const { answer } = await renderApp(
+    url,
+    toolCallSlotFixture,
+    currentPluginSurface('web'),
+  );
 
-  await expect
-    .poll(() => app.messages[0], { timeout: 15_000 })
-    .toMatchObject({
-      type: 'replacement',
-      message: { root: { props: { children: 'Retained tree' } } },
-    });
+  expect(answer).toMatchObject({
+    type: 'replacement',
+    root: { props: { children: 'Retained tree' } },
+  });
   const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');
 
   expect(

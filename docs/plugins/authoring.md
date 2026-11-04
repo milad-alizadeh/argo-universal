@@ -8,7 +8,7 @@ A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-ki
   "private": true,
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "check-types": "argo-plugin types . --check && tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "argo-plugin test .",
     "validate": "argo-plugin validate ."
   },
@@ -38,11 +38,41 @@ Plugin code runs without Node, so it is checked without Node's types; only `*.te
 import { Text, type Argo } from '@argo/plugin-kit';
 
 export function register(argo: Argo): void {
-  argo.pages.register('/', () => <Text>Hello</Text>);
+  argo.pages.define('/', { load: () => 'Hello', render: (text) => <Text>{text}</Text> });
 }
 ```
 
-A page is opened by the path it registers at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
+A page is a Loader page (ADR-0050): `load` reads what the page shows, and `render` turns it into a tree, with no hooks, effects or function props. A Component event holds a value made by `to`, the Render's second argument: `to.go(path)` opens a page, `to.set(change)` changes the Page state and draws the page again, `to.bind(key)` puts a search's text or a selection into a Page state key, and `to.run(operation, args)` runs one of the Plugin's Operations. `state` gives the Page state's defaults; the Render reads it as `input.state`, and a pattern's `:params` as `input.params`:
+
+```tsx
+argo.pages.define('/counter', {
+  state: { taps: 0 },
+  load: () => null,
+  render: (_data, to, { state }) => (
+    <Button label={`Tapped ${state.taps} times`} onPress={to.set({ taps: state.taps + 1 })} />
+  ),
+});
+```
+
+Some Component events report a payload: a Table's `onSortChange` reports the column and direction, and a List's `onMove` reports the moved row's `id`, the `section` it lands in and its `index` there. `to.payload(field)` stands for one field of it, or `to.payload()` for the whole payload, such as a Switch's value, anywhere `to.set` or `to.run` takes a value. The App fills it in when the event fires and acts at once, with no draw in between. Page state holds scalars and selections only, so an object payload goes into flat keys:
+
+```tsx
+<Table
+  columns={columns}
+  sort={{ column: state.sortColumn, direction: state.sortDirection }}
+  onSortChange={to.set({ sortColumn: to.payload('column'), sortDirection: to.payload('direction') })}
+>
+  {rows}
+</Table>
+
+<List layout="lanes" onMove={to.run('moveCard', { card: to.payload('id'), lane: to.payload('section'), index: to.payload('index') })}>
+  {lanes}
+</List>
+```
+
+A field the payload lacks, as a move's `section` for rows outside any Section, leaves its key out. A value that does not fit where it lands, such as a whole object into Page state, fails the event. The types check the Operation's name and its fixed params, not a payload field's name; core checks the filled-in arguments against the manifest's params, as it does for any run. The List holds a moved row where it was dropped until the page draws a new order or the Operation answers, whichever comes first, and puts it back if the Operation fails.
+
+A page is opened by the path it is defined at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
 
 Run the commands from the Plugin folder:
 
@@ -51,7 +81,7 @@ pnpm validate
 pnpm test
 ```
 
-`argo-plugin <validate|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|test> <dir>` runs the same command.
+`argo-plugin <validate|types|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|types|test> <dir>` runs the same command.
 
 ## Source validation
 
@@ -64,8 +94,38 @@ The command checks source without starting the Plugin or running its machine cal
 Source inspection reports literal Hook and Slot names. Computed registrations need tests that exercise those registrations.
 For literal visual props in JSX, validation uses the Server checks and reports the node and refusal reason.
 These checks cover `Svg` markup, `Chart` series, and `Canvas` scenes from amended ADR-0028.
-`CodeMap` is unsupported; use `Canvas`. Computed visual data needs a mount test.
+`CodeMap` is unsupported; use `Canvas`. Computed visual data needs a page test: a draw drops a refused node and logs why.
 Chart and Canvas rendering remains part of the visual kit components work (#959).
+
+## Operations
+
+A Plugin's own Operations are declared in `contributes.operations` (ADR-0044). Each names its params, and a string param may list its `choices`. `caller` says what the Operation needs of whoever runs it: `"session"` runs it only for a Session (a person's tap on a page is not one, though it carries the page's Project and Session as scope), and `"project"` gives it a Project, the `projectId` the run names or else the caller's own. Core checks all of this before the handler runs.
+
+```json
+{
+  "name": "setStatus",
+  "label": "Set Issue status",
+  "description": "Close or reopen one Issue in a Project.",
+  "tier": "act",
+  "params": {
+    "number": { "type": "number", "description": "The Issue number.", "required": true },
+    "status": { "type": "string", "description": "open or closed.", "required": true, "choices": ["open", "closed"] }
+  },
+  "caller": ["project"]
+}
+```
+
+`argo-plugin types .` writes `plugin.gen.d.ts` beside `plugin.json`; run it again after changing the Operations, and commit it. The handler then gets typed params and caller, and `to.run` in a Render or a `ui.render` Hook is checked against the manifest, so a misspelt name, a missing param or a value outside `choices` fails `check-types`:
+
+```ts
+argo.operations.register('setStatus', async ({ number, status }, { projectId }) => {
+  // status is 'open' | 'closed', and projectId is always a string here.
+});
+
+to.run('setStatus', { number, status: 'closed' });
+```
+
+`argo-plugin types . --check` and `argo-plugin validate` fail while the file is not the manifest's. A Plugin's `tsconfig.test.json` that sets its own `include` lists `plugin.gen.d.ts` too.
 
 ## Plugin tests
 
@@ -77,11 +137,11 @@ Import `test` from `@argo/plugin-kit/testing`:
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
-test('a press changes the page', async ({ mount }) => {
-  const page = await mount({ page: '/', surface: { platform: 'web' } });
+test('a press changes the page', async ({ pages }) => {
+  const page = await pages.open({ path: '/' });
 
   await page.press('Increment');
-  assert.equal((await page.find('Count: 1')).type, 'Text');
+  assert.equal(page.find('Count: 1').type, 'Text');
 });
 ```
 
@@ -89,42 +149,40 @@ Each test receives a fresh Plugin host and temporary storage. The command closes
 A failed assertion, empty test file, missing test file, or test timeout produces a non-zero exit code.
 Each test has a ten-second time limit.
 
-The test host uses the production loader, worker, Hook chain, wire preparation, and checked dispatch.
+The test host uses the production loader, worker, Hook chain, wire preparation, and page checks.
 Tests run local Plugin code and use its declared Capabilities. Executable fixtures remain necessary for tests that run external commands.
 
 ## Test kit
 
 | API | Behavior |
 | --- | --- |
-| `mount({ page, surface })` | Opens a page with the chosen App platform. |
-| `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
+| `pages.open({ path, projectId?, sessionId?, pageState?, platform? })` | Draws a page once, as the App on `platform` (web by default) asks for it, and returns its page. A page that cannot draw rejects with why. |
+| `page.tree`, `page.pageState`, `page.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
+| `page.find(match)` | Returns the node a text or a node test matches, or throws. |
+| `page.press(match)` | Acts on the node's `onPress` as the App does and returns the page showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the page's Project and Session, then the page draws again. A press that flushes, such as a Button's or an Action's, first lands every edit still waiting for its pause. An Operation that fails rejects the press with why. |
+| `page.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value, or a throttled edit such as a TextField's `onChangeText`, waits for the edits to pause, as in the App: `clock.advance(300)` lands it. |
+| `page.loadMore()` | Draws one more page of the page's paged list. |
+| `page.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
+| `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
-| `view.find(text)` | Waits for a matching node and returns its wire data. |
-| `view.press(text)` | Sends `onPress` through the production dispatch path. |
-| `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, and Hook deadlines together. The kit keeps its real rendering scheduler. |
+| `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, Hook deadlines, and the open pages' edit pauses together. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
 | `session` | Provides test Session, Project, and Agent identifiers. |
 | `sessions` option | What `argo.sessions.get` answers, by Session id. |
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
-`find` matches a label, title, text, text content, or accessible label. It waits up to three seconds.
-The chosen surface sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
+`find` matches a label, title, text, text content, or accessible label.
+While an Operation runs, `page.tree` shows its `optimistic` props, as the App does; the page drawn after it answers replaces them, and a failure puts the tree back.
+The chosen platform sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
-`mount` accepts `projectId` for a Project page.
-Use the same `connectionId` on overlapping mounts to model subscriptions from one App Connection. Omitting it creates a fresh Connection.
-Closing a view releases only its subscription.
-
-For a Project details Slot, use the same input that the Server receives:
+A Workbench card or a Session header action opens a page for a Session; open it with that `sessionId`, as the App does. For an items Slot, such as Project details, ask with the same input the Server receives:
 
 ```ts
-const view = await mount({
-  slot: {
-    slotId: 'argo/project/details/v1',
-    context: { projectId: session.projectId },
-  },
-  surface: { platform: 'ios' },
-});
+const items = slotItems(
+  { slotId: 'argo/project/details/v1', contexts: [{ projectId: session.projectId }] },
+  { signal, platform: 'ios' },
+);
 ```
 
 For a Hook test, use the returned result from the real chain:
@@ -140,39 +198,32 @@ assert.deepEqual(answer, { prompt: [{ type: 'text', text: '[checked] Hello' }] }
 
 ## Declared data
 
-Use `useData` to describe a read. Argo runs the Query, shares its answer, and releases the registration when the component unmounts.
+A Loader reads through a Query with `read(query)`. Argo runs the Query, shares its answer, and keeps it for the Page address the draw is for.
 
 ```tsx
-import { Label, useData, type Argo } from '@argo/plugin-kit';
+import { Label, type Argo } from '@argo/plugin-kit';
+
+const forgeList = { api: 'process', action: 'run', argv: ['forge', 'list', '--json'] } as const;
 
 export function register(argo: Argo): void {
-  argo.slots.register('argo/project/details/v1', ({ context: { projectId } }) => {
-    const { data, error } = useData(
-      { api: 'process', action: 'run', argv: ['forge', 'list', '--json'] },
-      { every: 30_000 },
-    );
-
-    return <Label text={error ?? data?.stdout ?? projectId} />;
+  argo.pages.define('/forge', {
+    every: 30_000,
+    load: ({ read }) => read(forgeList),
+    render: (list) => <Label text={list.stdout} />,
   });
 }
 ```
 
-Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
+Declare the command's Capability in `plugin.json`. A process Query uses the Project folder of the page it is read for unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
 A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
-The hook returns `{ data, error, stale, refresh }`:
+`read` answers the Query's data and keeps the last successful value. It throws, failing the draw, only when the Query has no answer yet: a refused call, a transport failure, or Argo's timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow fails the read until it has data.
 
-- `data` contains the call's answer and retains the last successful value.
-- `error` describes a refused call, transport failure, or Argo timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow reports an error and retains the last successful data.
-- `stale` is true only while refreshing an existing answer.
-- `refresh()` runs the Query now and joins a call already in flight.
-
-`useData(null)` creates no entry. Without `every`, a Query runs once per mount.
-Argo clamps `every` to ten seconds and logs the clamp once. Shared viewers use their smallest interval.
+Without `every`, a Query is read again only when an Operation runs, the Plugin calls `argo.changed()`, or its storage changes. `every` reads Queries older than it again on each tick.
 Storage Queries are never polled. A committed Plugin storage write marks them due.
 
-Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different Slots.
+Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
 
 ## Session row items
@@ -205,9 +256,9 @@ An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 cha
 A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
 The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session.
 
-Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.slots.changed('argo/session/row/v1')`, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
+Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.changed()` or one of its Operations runs, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".
-A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.slots.changed` or restarts.
+A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.changed()`, one of its Operations runs, or it restarts.
 
 ## Session Activity line
 
@@ -255,7 +306,10 @@ Argo's own actions come first. On a wide window the first `header` action, in Sl
 The page opens for the Session whose header it was pressed in: it reads the Session's id from `context.sessionId`.
 
 ```tsx
-argo.pages.register('/issues', ({ context }) => <Issues sessionId={context.sessionId} />);
+argo.pages.define('/issues', {
+  load: () => null,
+  render: (_data, _to, { context }) => <Issues sessionId={context.sessionId} />,
+});
 ```
 
 A page opened any other way has no `sessionId`.
@@ -278,37 +332,72 @@ A Plugin adds one card to a Session's Workbench under the Slot `argo/session/wor
 }
 ```
 
-A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters and names the card, its Inspector tab and its row in a phone's Workbench, and both paths are the Plugin's own. Argo draws the card and owns where it goes: its own cards (Changes, Agents, Shells) come first, then one card per Plugin in Slot order, each in a collapsible glass card the Plugin cannot restyle (ADR-0039). The Plugin draws `page` inside it with any kit components, as on its own pages, and keeps it to a summary — the Workbench shows summaries, not lists.
+A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters and names the card, its Inspector tab and its row in a phone's Workbench, and both paths are the Plugin's own. Argo draws the card and owns where it goes: its own cards (Changes, Agents, Shells) come first, then one card per Plugin in Slot order, each in a collapsible glass card the Plugin cannot restyle (ADR-0039). Both paths are Loader pages, defined with `argo.pages.define(path, { load, render })` (ADR-0050). The Plugin draws `page` inside it with any kit components, as on its own pages, and keeps it to a summary — the Workbench shows summaries, not lists.
 
 Give a card a `tab` and pressing its body opens that page in full as an Inspector tab; leave it out and the card stays a card. A phone has no Workbench column, so the card opens as the Inspector's sheet instead.
 
-Both pages open for the Session whose Workbench they are in, so they read `context.sessionId` as a header action's page does. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
+Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
+
+## Pages on a clock and live pages
+
+A Loader page redraws when a stale mark names it (ADR-0050). Give it `every` (ms) to also redraw on a clock while it is on screen; the Server clamps it to at least ten seconds and logs once when it does. On each tick the page's Queries older than `every` are read again, so a tick with nothing new draws nothing.
+
+```tsx
+argo.pages.define('/status', {
+  every: 60_000,
+  load: async ({ read }) => read(statusQuery),
+  render: (status) => <Text>{status.summary}</Text>,
+});
+```
+
+A Live page's `load` is an async generator: each value it yields is drawn while the page is on screen, at most once a frame, and Argo sends only the rows that changed. Leaving the page, or the Plugin stopping or reloading, ends the generator; its `finally` runs once the `await` it is in settles. Stale marks and `every` do not draw a Live page again, so wait for your own changes inside it. A Live page cannot have a `list`, and a one-off draw of it shows its first value.
+
+```tsx
+const lines: string[] = [];
+let wake = () => {};
+
+argo.pages.define('/log', {
+  async *load() {
+    for (;;) {
+      yield [...lines];
+      await new Promise<void>((resolve) => (wake = resolve));
+    }
+  },
+  render: (shown) => (
+    <List>
+      {shown.map((line, index) => (
+        <ListItem key={String(index)} title={line} />
+      ))}
+    </List>
+  ),
+});
+```
+
+An Operation that appends a line then calls `wake()`. In tests, `kit.pages.live({ path }, signal)` follows a Live page and answers its trees and patches until the signal aborts; `packages/plugin-kit/testing/loader-live-fixture.ts` is a worked example.
 
 ## Background pages and badges
 
-Declare `contributes.background: { path, interval }` in `plugin.json`, and register that path as a page.
-Argo activates the Plugin and mounts the page once per registered Project, with `projectId` in its context.
+Declare `contributes.background: { path, interval }` in `plugin.json`, and define that path as a Loader page with `argo.pages.define`.
+On each interval Argo activates the Plugin and runs that page's `load` alone, once per registered Project, with `projectId` in its context. Nothing renders and no tree is kept.
 There is no Project-less pass. Each Plugin and Project pair owns an independent timer, with a five-minute minimum interval.
-Adding a Project starts its pass. Removing one releases its views, passes, and entries.
+Adding a Project starts its pass. Removing one releases its pages, passes, and entries.
 
-Use the same Query in the background page and the mounted Slot to warm the same entry.
-A background pass ignores a Query's `every` option. It ends after the first render's Queries settle, or after sixty seconds, and discards its tree.
-A refused background Query stops retrying until the Plugin is next opened.
+A pass ends when `load` settles, or after sixty seconds. A `load` that throws fails that pass only; the next interval runs it again.
 The optional fetch `account` field borrows the Project’s Account for that host.
 An unavailable Borrow returns `null` from a direct `argo.fetch` call. A Query reports an error and retains its last successful data.
 
 A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id its own manifest declares. Zero clears the badge.
-A background page runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
+A background `load` runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
 Nav badges are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
 
-A drawing throw closes only the failed view. Other pages, Slots, Hooks, and background passes continue.
+A drawing throw closes only the failed page. Other pages, Slots, Hooks, and background passes continue.
 The failure subscription records one non-fatal drawing failure per Plugin.
 
 ## Hooks
 
 The core Hook events are `prompt.submit`, `tool.check`, and `process.spawn` (ADR-0038).
 Both `prompt.submit` and `tool.check` carry `sessionId` and `projectId`.
-The separate `ui.render` Hook draws Replaceable Slots with its existing payload and answer.
+The separate `ui.render` Hook draws Replaceable Slots with its existing payload. It returns a tree from a pure render, with no state or effects, or calls `next` to leave the row to the Plugins after it and core. `ctx.to.go(path)` and `ctx.to.run(operation, args)` give a Component event its value. Argo checks the tree as it checks a page's and answers the App once; a tree that throws, is refused, or needs a newer App leaves core to draw the row, logged once. New props ask the chain again.
 List the Replaceable Slots it draws in `contributes.renders`, which needs `ui.render` in `contributes.hooks`. `contributes.slots` and `argo.slots.register` take only add-only Slots.
 
 Order a Plugin with `contributes.order` in `plugin.json`, an integer that defaults to 0 (ADR-0035).
@@ -342,10 +431,10 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service.
+`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, waiting, signed-in, continue-on-the-Server-Device and port-in-use states, and GitHub's sign-in through the kit's OAuth flow. Copy it for a new service.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
-Register that page with `argo.pages.register` before registration completes.
+Define that page with `argo.pages.define` before registration completes; an Account's page is a Loader page.
 The host must be concrete and have an identical `fetch` Capability, including its port. A wildcard Capability does not satisfy this requirement.
 Localhost forms are refused.
 
@@ -378,19 +467,67 @@ Plugin removal also deletes its Accounts and dependent records when discovery su
 
 `argo.accounts.get(host)` returns the current Project’s Account or `null`.
 One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
-Page effects, Component event handlers, and Hooks carry their Project context across awaited calls.
-A call without a Project returns no Account.
+Loaders, paged lists, named reads, Operation runs, and Hooks carry their Project context across awaited calls.
+A named read runs for its Query's Project only, never as the Server Device, because Argo keeps its answer for every App.
+A call without a Project returns no Account, such as one made while the Plugin registers or from an items Slot provider.
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
-A fetch Query uses the same field and the declaring view’s Project.
+A fetch Query uses the same field and the Project its page is drawn for.
 Argo checks the Grant, calls the provider, and sets its header. The borrower receives no credential value from Argo.
 The URL must name the Account’s exact host and port. A redirect away from that host drops the provider header.
 Argo removes any borrower header with the same name first. Network-reserved headers cannot provide authentication.
 First-party Plugins receive unset Grants silently until consent screens exist. A refused Grant stays refused across Server restarts.
 
-OAuth starts from a page effect or Component event handler on the Server Device.
-The Server stamps `context.serverDevice` from the Connection and independently refuses OAuth calls from other Devices.
+### The OAuth flow
+
+`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that uses OAuth's authorization code grant with PKCE, such as GitHub, Linear, GitLab or Slack. Give it the service's URLs:
+
+```tsx
+import { oauthFlow } from '@argo/plugin-kit';
+
+const signIn = oauthFlow(argo, {
+  host: 'api.linear.app',
+  authorizeUrl: 'https://linear.app/oauth/authorize',
+  tokenUrl: 'https://api.linear.app/oauth/token',
+  clientId: async () => {
+    const id = await argo.settings.get('client-id');
+
+    return typeof id === 'string' ? id : null;
+  },
+  scopes: ['read'],
+  label: (token) => linearLogin(argo, token),
+});
+
+argo.operations.register('signIn', () => signIn.start());
+argo.operations.register('cancelSignIn', () => signIn.cancel());
+argo.pages.define('/sign-in', {
+  load: () => ({ flow: signIn.state() }),
+  // Draw data.flow, with Buttons whose onPress is to.run('signIn', {}) and to.run('cancelSignIn', {}).
+  render: (data, to) => <SignIn flow={data.flow} to={to} />,
+});
+await signIn.provide();
+```
+
+- `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability; `tokenUrl`'s host needs a `fetch` Capability too.
+- `clientId` is the OAuth app's public client ID, or a function the flow calls when a sign-in starts.
+- `label` turns a token into the name of whose Account it opens, such as the login the service answers; `null` fails the sign-in.
+- `tokenPath` says where the token sits in the token endpoint's JSON when it is not `access_token`, such as `['authed_user', 'access_token']`.
+- `header` is how a borrower's request carries the token, `{ header: 'Authorization', prefix: 'Bearer' }` unless you say otherwise.
+
+`signIn.state()` is `idle`, `waiting`, `signed-in` with the Account's `label`, or `failed` with a `message`, whose `reason` is `port-in-use` when another program holds the callback port. The flow lives in the Plugin's module, so every page and every App sees the one sign-in, and it calls `argo.changed()` each time the state changes, so pages that draw it redraw.
+
+`start()` answers as soon as the browser opens, normally with `waiting`, so the Operation that calls it returns at once. The flow then waits up to five minutes for the person, exchanges the code, adds the Account and keeps its token under the Account's id. `cancel()` ends the wait; a callback from the browser tab still open is ignored. `provide()` registers the provider handler that hands borrowers the kept token.
+
+Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
+
+### `argo.oauth`
+
+The OAuth flow is built on these calls, which a Plugin can use itself for a service the flow does not fit.
+
+OAuth runs only for the Server Device: from an Operation run or a draw the Server Device asked for.
+The Server stamps `context.serverDevice` from the asking Connection and independently refuses OAuth calls for other Devices.
 The App cannot set this flag through its reported platform.
+An exchange the Plugin started on the Server Device may be awaited after the run that started it has answered, from any later call of the same worker.
 
 `argo.oauth.start()` returns `redirectUri`, `state`, `codeChallenge`, and `codeChallengeMethod`, or `null` if the listener cannot start.
 The method is always `S256`. The redirect URI is `http://127.0.0.1:51789/callback`.

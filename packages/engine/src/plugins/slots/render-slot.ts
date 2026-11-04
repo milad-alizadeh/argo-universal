@@ -2,27 +2,35 @@ import { JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import { drawsPluginWire } from '@repo/contracts/plugins/kit';
 import {
   RenderAnswer,
+  type ReplaceableAnswer,
   type ReplaceableInput,
-  type ReplaceableMessage,
 } from '@repo/contracts/plugins/replaceable';
 import type { RpcConnection } from '../../rpc';
 import type { StartedPlugins } from '../located-plugins';
+import { checkedTree, type Checked } from '../pages/checked-tree';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
-import { belowWireMinimum, type Fallback } from '../views/render-fallback';
-import { renderView } from './render-view';
+import { belowWireMinimum, type Fallback } from '../runtime/render-fallback';
 
 type RenderRequest = { input: ReplaceableInput; plugins: StartedPlugins };
 
-export async function* renderSlot(
+type Drawn = Extract<RenderAnswer, { pluginId: string }>;
+
+/*
+ * A Replaceable Slot's one answer (ADR-0050): the `ui.render` chain runs once and its tree, when a Hook
+ * drew one, is checked as every Plugin tree is. Nothing is kept: new props are a new question. Core draws
+ * its own when no Hook drew, the tree is refused, or the App is below the wire minimum, logged as such.
+ */
+export async function renderSlot(
   runtime: PluginRuntime,
   request: RenderRequest,
   connection: RpcConnection,
-): AsyncGenerator<ReplaceableMessage> {
+): Promise<ReplaceableAnswer> {
   const answer = await renderAnswer(runtime, request, connection);
 
-  if (connection.signal.aborted) return discardSelected(runtime, answer);
+  if (!('pluginId' in answer))
+    return { type: 'core', input: coreInput(request.input, answer) };
 
-  yield* drawAnswer(runtime, { input: request.input, answer }, connection);
+  return drawnAnswer(runtime, { ...answer, input: request.input }, connection);
 }
 
 function coreInput(
@@ -55,44 +63,28 @@ async function renderAnswer(
   );
 }
 
-type AnsweredRender = { input: ReplaceableInput; answer: RenderAnswer };
+type Selected = Drawn & { input: ReplaceableInput };
 
-async function* drawAnswer(
+function drawnAnswer(
   runtime: PluginRuntime,
-  { input, answer }: AnsweredRender,
+  { pluginId, tree, input }: Selected,
   connection: RpcConnection,
-): AsyncGenerator<ReplaceableMessage> {
-  if (!('pluginId' in answer))
-    yield { type: 'core', input: coreInput(input, answer) };
-  else if (drawsPluginWire(connection.surface))
-    yield* renderView({
-      runtime,
-      replacement: { ...answer, input },
-      connection,
-    });
-  else yield drawCoreForOlderApp(runtime, { ...answer, input });
-}
+): ReplaceableAnswer {
+  const checked = checkedFor(connection, tree);
 
-type Selected = Extract<RenderAnswer, { pluginId: string }> & {
-  input: ReplaceableInput;
-};
+  if (checked.ok) return { type: 'replacement', pluginId, root: checked.root };
 
-// An App older than the wire minimum draws core's own in every Replaceable Slot (ADR-0034).
-function drawCoreForOlderApp(
-  runtime: PluginRuntime,
-  { pluginId, path, input }: Selected,
-): ReplaceableMessage {
-  runtime.views.discardRender(pluginId, path);
   runtime.renderFallback({
     pluginId,
     slotId: input.slotId,
-    reason: belowWireMinimum,
+    reason: checked.error,
   });
 
   return { type: 'core', input };
 }
 
-function discardSelected(runtime: PluginRuntime, answer: RenderAnswer): void {
-  if ('pluginId' in answer)
-    runtime.views.discardRender(answer.pluginId, answer.path);
-}
+// An App older than the wire minimum draws core's own in every Replaceable Slot (ADR-0034).
+const checkedFor = (connection: RpcConnection, tree: Drawn['tree']): Checked =>
+  drawsPluginWire(connection.surface)
+    ? checkedTree(tree, 'replacement')
+    : { ok: false, error: belowWireMinimum };

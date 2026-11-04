@@ -15,13 +15,13 @@ const meta = {
     input: { control: false },
     state: { control: false },
     renderCore: { control: false },
-    onEvent: { control: false },
+    onPageCall: { control: false },
     onFallback: { control: false },
   },
   args: {
     ...coreSlot,
     renderCore: renderCoreMessage,
-    onEvent: action('Plugin event'),
+    onPageCall: action('Page call'),
     onFallback: action('fall back to the core drawing'),
   },
 } satisfies Meta<typeof ReplaceableSlotView>;

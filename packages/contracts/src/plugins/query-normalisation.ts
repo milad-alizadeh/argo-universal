@@ -20,7 +20,7 @@ function normalHeaders(query: PluginQuery): PluginQuery {
 
 // The Query apis that are their own normal form: a new api is named here or normalised above, never neither.
 function alreadyNormal(
-  query: Extract<PluginQuery, { api: 'process' | 'storage' }>,
+  query: Extract<PluginQuery, { api: 'process' | 'storage' | 'read' }>,
 ): PluginQuery {
   return query;
 }

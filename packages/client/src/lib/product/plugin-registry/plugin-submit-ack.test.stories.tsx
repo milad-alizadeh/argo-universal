@@ -1,15 +1,25 @@
-import { WireNode, type ComponentEvent } from '@repo/contracts/plugins/wire';
+import type { MadePageCall } from '@repo/contracts/plugins/page-call-payload';
+import { WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
-import { PluginTree } from './plugin-registry';
+import { PluginTree, type OnPageCall } from './plugin-registry';
 import { textFieldNode } from './plugin-registry-fixtures';
 
-const onEvent = fn();
+// The Operation's answer; an edit's call answers at once.
+let answer = Promise.withResolvers<void>();
+
+const onPageCall = fn<OnPageCall>((call) =>
+  'operation' in call ? answer.promise : Promise.resolve(),
+);
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/SubmitAck',
+  beforeEach: (): void => {
+    answer = Promise.withResolvers<void>();
+    onPageCall.mockClear();
+  },
 } satisfies Meta;
 
 export default meta;
@@ -32,60 +42,62 @@ const sheetField = {
 
 type Row = {
   field: typeof textField;
-  // The edit has reached the Plugin and is still running, or is still queued.
-  running: boolean;
   // The named button confirms; without one, Return submits the field.
   confirm?: string;
-  sent: [string, ComponentEvent];
+  sent: { call: MadePageCall; key: string };
 };
 
-// A Submit or confirming press reaches the Plugin only after the edit before it settles.
-function waitsForEdit(row: Row): Story {
+/*
+ * A Submit or confirming press runs its Operation after the edit before it, and its control is held
+ * until the Operation answers. A Loader page lands the edit before the run (`PageCalls`).
+ */
+function waitsForOperation(row: Row): Story {
   return {
-    render: () => <PluginTree root={row.field.root} onEvent={onEvent} />,
+    render: () => <PluginTree root={row.field.root} onPageCall={onPageCall} />,
     play: async ({ userEvent }) => {
       const page = within(document.body);
-      const answer = Promise.withResolvers<void>();
-      onEvent.mockReturnValueOnce(answer.promise);
       const input = await page.findByRole('textbox', { name: row.field.name });
       await fireEvent.change(input, { target: { value: 'Atlas' } });
+      await waitFor(() =>
+        expect(onPageCall).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ key: row.field.key, payload: 'Atlas' }),
+        ),
+      );
 
-      if (row.running)
-        await waitFor(() => expect(onEvent).toHaveBeenCalledOnce());
+      const control = row.confirm
+        ? page.getByRole('button', { name: row.confirm })
+        : input;
 
       await (row.confirm
-        ? userEvent.click(page.getByRole('button', { name: row.confirm }))
+        ? userEvent.click(control)
         : userEvent.type(input, '{Enter}'));
-      await waitFor(() => expect(onEvent).toHaveBeenCalledOnce());
-      await expect(onEvent).toHaveBeenCalledWith(row.field.key, {
-        event: 'onChangeText',
-        payload: 'Atlas',
-      });
+      await waitFor(() =>
+        expect(onPageCall).toHaveBeenLastCalledWith(
+          row.sent.call,
+          expect.objectContaining({ key: row.sent.key }),
+        ),
+      );
+      await expect(control).toBeDisabled();
       answer.resolve();
-      await waitFor(() => expect(onEvent).toHaveBeenCalledTimes(2));
-      await expect(onEvent).toHaveBeenLastCalledWith(...row.sent);
+      await waitFor(() => expect(control).toBeEnabled());
     },
   };
 }
 
-export const SubmitWaitsForEdit = waitsForEdit({
+export const SubmitWaitsForItsOperation = waitsForOperation({
   field: textField,
-  running: false,
-  sent: ['textinput', { event: 'onSubmit' }],
+  sent: {
+    call: { operation: 'saveProject', args: {} },
+    key: 'textinput',
+  },
 });
 
-const applySheet = {
+export const ConfirmWaitsForItsOperation = waitsForOperation({
   field: sheetField,
   confirm: 'Apply sheet',
-  sent: ['overlays/sheet/body/apply', { event: 'onPress' }],
-} satisfies Omit<Row, 'running'>;
-
-export const ConfirmSendsQueuedEdit = waitsForEdit({
-  ...applySheet,
-  running: false,
-});
-
-export const ConfirmWaitsForRunningEdit = waitsForEdit({
-  ...applySheet,
-  running: true,
+  sent: {
+    call: { operation: 'rename', args: {} },
+    key: 'overlays/sheet/body/apply',
+  },
 });

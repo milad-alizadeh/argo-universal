@@ -180,8 +180,6 @@ catalog:
   semver: 7.8.5
   "@types/semver": 7.7.1
   esbuild: 0.28.2
-  "@types/react-reconciler": 0.33.0
-  react-reconciler: 0.33.0
   "@shopify/react-native-skia": 2.14.0
   # Last line on Skia 2.x; 43 moves to react-native-skia v3 (ADR-0028).
   victory-native: 42.0.1

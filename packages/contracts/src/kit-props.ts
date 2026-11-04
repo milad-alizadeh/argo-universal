@@ -1,9 +1,7 @@
 import type { z } from 'zod';
 import type { KitCallbackReturn } from './kit-callback-return';
 import type { kitComponentSchemas } from './plugins/kit-component-schemas';
-import type { KitListItem, KitNode } from './plugins/list-expansion';
 import type { KitChoiceValue } from './plugins/selection-value';
-import type { WireEvent, WireNode } from './plugins/wire';
 
 export type KitComponentName = keyof typeof kitComponentSchemas;
 
@@ -26,18 +24,36 @@ export type DeclaredProps<Props> = Props extends object
     }
   : Props;
 
-export type Expansion<Component> = Component extends {
-  expansion: infer Schema extends z.ZodType;
+/*
+ * A List or Table's items and the `renderItem` that draws each one, run before the tree crosses the wire
+ * (ADR-0031); without them the list takes its rows as children.
+ */
+export type KitListExpansion<Item, Node> =
+  | {
+      items: readonly Item[];
+      renderItem: (item: Item, index: number) => Node;
+      children?: undefined;
+    }
+  | { items?: undefined; renderItem?: undefined };
+
+// The list expansion's props, for a kit component that has one.
+export type Expansion<Component, Item, Node> = Component extends {
+  expansion: z.ZodType;
 }
-  ? z.output<Schema>
+  ? KitListExpansion<Item, Node>
   : Record<never, never>;
 
 export type KitSchemaProps = {
   [Name in KitComponentName]: DeclaredProps<
     z.output<(typeof kitComponentSchemas)[Name]['props']>
-  > &
-    Expansion<(typeof kitComponentSchemas)[Name]>;
+  >;
 };
+
+export type KitExpansion<Name extends KitComponentName, Item, Node> = Expansion<
+  (typeof kitComponentSchemas)[Name],
+  Item,
+  Node
+>;
 
 export type KitEvents<Name extends KitComponentName> =
   (typeof kitComponentSchemas)[Name]['events'];
@@ -52,21 +68,21 @@ export type KitHasChildren<Name extends KitComponentName> =
 type KitValuePayload<Payload, Props> = Props extends {
   value?: infer Value;
 }
-  ? [Extract<Payload, NonNullable<Value>>] extends [never]
-    ? Payload
-    : Extract<Payload, NonNullable<Value>>
+  ? NarrowedTo<Payload, Extract<Payload, NonNullable<Value>>>
   : Payload;
 
+// A payload narrowed to the shapes its component's value takes, or left whole when none fits.
+type NarrowedTo<Payload, Narrowed> = [Narrowed] extends [never]
+  ? Payload
+  : Narrowed;
+
 /*
- * How one side draws schema values. The App gets its own nodes, choices and items, receives handlers alone
- * (inside nested data too) and slot props as nodes. A Plugin writes JSX: a handler goes beside the value it
- * replaces, at the top level or in its declared nested event, and every list is readonly.
+ * How one side draws schema values. The App gets its own choices and receives handlers alone (inside nested
+ * data too) and slot props as nodes. A Plugin writes JSX whose events are values.
  */
 export interface KitDrawing {
   node: unknown;
   choice: unknown;
-  item: unknown;
-  wireNode: unknown;
   returns: unknown;
   plugin: boolean;
 }
@@ -85,78 +101,62 @@ type Callback<Schema, Props, Drawing extends KitDrawing> = [
       payload: KitValue<Payload<Schema, Props>, Record<never, never>, Drawing>,
     ) => KitCallbackReturn<Schema, Drawing['returns']>;
 
-type NestedEvents<
-  Events,
-  Drawing extends KitDrawing,
-  Value,
-> = Drawing['plugin'] extends true
-  ? {
-      [
-        Key in keyof Events as Key extends keyof Value
-          ? Extract<Value[Key], WireEvent> extends never
-            ? never
-            : Key
-          : never
-      ]: Events[Key];
-    }
-  : Events;
-
-type KitList<
-  Values extends readonly unknown[],
-  Events,
-  Drawing extends KitDrawing,
-> = Drawing['plugin'] extends true
-  ? { readonly [Key in keyof Values]: KitValue<Values[Key], Events, Drawing> }
-  : { [Key in keyof Values]: KitValue<Values[Key], Events, Drawing> };
-
+// A choice is drawn as the side's own choice type; objects and lists map prop by prop, and the rest is as the schema says.
 type KitValue<
   Value,
   Events,
   Drawing extends KitDrawing,
-> = Value extends WireNode
-  ? Drawing['wireNode']
-  : Value extends WireEvent
-    ? Drawing['plugin'] extends true
-      ? never
-      : Value
-    : Value extends KitListItem
-      ? Drawing['item']
-      : Value extends KitNode
-        ? Drawing['node']
-        : Value extends KitChoiceValue
-          ? Drawing['choice']
-          : Value extends (...args: infer Args) => infer Result
-            ? (
-                ...args: {
-                  [Key in keyof Args]: KitValue<Args[Key], Events, Drawing>;
-                }
-              ) => KitValue<Result, Events, Drawing>
-            : Value extends readonly unknown[]
-              ? KitList<Value, Events, Drawing>
-              : Value extends object
-                ? KitMappedProps<
-                    Value,
-                    NestedEvents<Events, Drawing, Value>,
-                    never,
-                    Drawing
-                  >
-                : Value;
+> = Value extends KitChoiceValue
+  ? Drawing['choice']
+  : KitData<Value, Events, Drawing>;
 
+type KitData<Value, Events, Drawing extends KitDrawing> = Value extends object
+  ? KitObject<Value, Events, Drawing>
+  : Value;
+
+// A Plugin's nested event is a value like any other data, and its lists are readonly; the App's nested event takes a handler.
+type KitObject<
+  Value,
+  Events,
+  Drawing extends KitDrawing,
+> = Drawing['plugin'] extends true
+  ? Readonly<KitMappedProps<Value, Record<never, never>, never, Drawing>>
+  : KitMappedProps<Value, Events, never, Drawing>;
+
+// A Plugin's Render passes an event a value (ADR-0050); the App's kit component takes a handler.
 type EventProp<
   Value,
   Schema,
   Props,
   Drawing extends KitDrawing,
 > = Drawing['plugin'] extends true
-  ?
-      | KitValue<Exclude<Value, WireEvent>, Record<never, never>, Drawing>
-      | Callback<Schema, Props, Drawing>
+  ? KitValue<Value, Record<never, never>, Drawing>
   : Callback<Schema, Props, Drawing>;
+
+// A prop that is not a slot: an event, or data.
+type KitProp<
+  Prop,
+  Props,
+  Events,
+  Drawing extends KitDrawing,
+> = Prop extends keyof Events
+  ? EventProp<Props[Prop & keyof Props], Events[Prop], Props, Drawing>
+  : KitValue<Props[Prop & keyof Props], Events, Drawing>;
+
+type KitSetProp<
+  Prop,
+  Props,
+  Events,
+  Slots extends PropertyKey,
+  Drawing extends KitDrawing,
+> = Prop extends Slots
+  ? Drawing['node']
+  : KitProp<Prop, Props, Events, Drawing>;
 
 /*
  * The one schema-to-props mapping for App kit props and Plugin JSX; Contracts owns every prop, including
- * events inside action and option data. The App keeps a prop its schema leaves unset as it is; a Plugin may
- * still pass a handler for it.
+ * events inside action and option data. Slot props are drawn as nodes; a prop the schema leaves unset stays
+ * unset, never a handler or a node.
  */
 export type KitMappedProps<
   Props,
@@ -164,14 +164,7 @@ export type KitMappedProps<
   Slots extends PropertyKey,
   Drawing extends KitDrawing,
 > = {
-  [Prop in keyof Props]: [
-    Drawing['plugin'],
-    Exclude<Props[Prop], undefined>,
-  ] extends [false, never]
+  [Prop in keyof Props]: [Exclude<Props[Prop], undefined>] extends [never]
     ? Props[Prop]
-    : Prop extends Slots
-      ? Drawing['node']
-      : Prop extends keyof Events
-        ? EventProp<Props[Prop], Events[Prop], Props, Drawing>
-        : KitValue<Props[Prop], Events, Drawing>;
+    : KitSetProp<Prop, Props, Events, Slots, Drawing>;
 };

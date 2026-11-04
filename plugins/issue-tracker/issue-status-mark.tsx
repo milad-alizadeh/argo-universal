@@ -7,14 +7,22 @@ type Marked = { status: IssueStatus; closedAs?: 'completed' | 'not-planned' };
 
 /*
  * GitHub has no workflow, so its states take the tracker types' default marks: open, done, and closed
- * with a reason. The list screen and an Issue's sub-Issues mark a row the same way.
+ * with a reason. The list screen and an Issue's sub-Issues mark a row the same way. `key` names the mark,
+ * so a Loader page's optimistic patch can repaint it with the props of the mark it changes to.
  */
-export function statusMark({ status, closedAs }: Marked): JSX.Element {
-  if (status === 'open') return <Icon name="pending" tone="muted" size="sm" />;
+export function statusMark(
+  { status, closedAs }: Marked,
+  key?: string,
+): JSX.Element {
+  // Unfilled said outright, so a patch from a closed mark to this one leaves no fill behind.
+  if (status === 'open')
+    return (
+      <Icon key={key} name="pending" tone="muted" size="sm" filled={false} />
+    );
 
   return closedAs === 'not-planned' ? (
-    <Icon name="failed" tone="muted" size="sm" filled />
+    <Icon key={key} name="failed" tone="muted" size="sm" filled />
   ) : (
-    <Icon name="passed" tone="done" size="sm" filled />
+    <Icon key={key} name="passed" tone="done" size="sm" filled />
   );
 }

@@ -9,7 +9,10 @@ import {
 import type { SlotVisibility } from '#features/settings';
 import type { SessionPluginCard } from '../../../../sessions/$id/sections/plugin-card-section';
 import { sessionWorkbench } from '../../../../sessions/$id/sections/session-sections';
-import { useWorkbenchCards } from '../../../../sessions/$id/use-workbench-cards';
+import {
+  type CardSession,
+  useWorkbenchCards,
+} from '../../../../sessions/$id/use-workbench-cards';
 import { useLatestSession } from './session-row-preview';
 import type { SlotPreviewProps } from './slot-detail';
 
@@ -49,15 +52,17 @@ function usePreviewSections(
 }
 
 // The Session the preview draws for; the cards hook asks for none while there is no Session.
-const sessionIdOf = (latest: SessionInfo | undefined): string =>
-  latest?.sessionId ?? '';
+const sessionOf = (latest: SessionInfo | undefined): CardSession =>
+  latest
+    ? { sessionId: latest.sessionId, projectId: latest.projectId }
+    : { sessionId: '' };
 
 // The preview on the App: the cards the Server's Plugins declare, drawn for the latest Session.
 export function LiveWorkbenchPreview({
   visibility,
 }: SlotPreviewProps): React.JSX.Element {
   const latest = useLatestSession();
-  const { open } = useWorkbenchCards(sessionIdOf(latest));
+  const { open } = useWorkbenchCards(sessionOf(latest));
 
   if (!latest) return <Text role="secondary">{noSessionToPreview}</Text>;
 

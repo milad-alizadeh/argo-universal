@@ -15,7 +15,7 @@ import {
 } from '@repo/contracts/plugins/plugin-contributions';
 import {
   ReplaceableInput,
-  type ReplaceableMessage,
+  type ReplaceableAnswer,
   type RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
 import type {
@@ -24,11 +24,8 @@ import type {
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import {
-  type PluginDispatchInput,
-  type PluginViewInput,
   type SlotItems,
   type SlotItemsInput,
-  type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
@@ -113,29 +110,6 @@ export class PluginService {
     return hooks.run({ ...started, exempt }, name, event);
   }
 
-  async dispatch(
-    connection: RpcConnection,
-    input: PluginDispatchInput,
-  ): Promise<void> {
-    await this.deps.pluginRuntime.views.dispatch(connection, input);
-  }
-
-  async *view(
-    { pluginId, path, projectId, sessionId }: PluginViewInput,
-    connection: RpcConnection,
-  ): AsyncGenerator<ViewMessage> {
-    const status = await this.activate(pluginId);
-
-    if (status.state !== 'running')
-      throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
-
-    yield* this.deps.pluginRuntime.views.watch(
-      pluginId,
-      { path, projectId, sessionId },
-      connection,
-    );
-  }
-
   slotItems(
     input: SlotItemsInput,
     connection: RpcConnection,
@@ -143,22 +117,24 @@ export class PluginService {
     return slotItemsFor(this.deps, input, connection);
   }
 
-  public async *render(
+  public async render(
     input: ReplaceableInput,
     connection: RpcConnection,
-  ): AsyncGenerator<ReplaceableMessage> {
+  ): Promise<ReplaceableAnswer> {
     const plugins = await startOrderedPlugins(this.deps, ({ plugin }) =>
       rendersSlot(plugin, input.slotId),
     );
 
-    yield* renderSlot(this.deps.pluginRuntime, { input, plugins }, connection);
+    return renderSlot(this.deps.pluginRuntime, { input, plugins }, connection);
   }
 
-  public renderFailed(
-    connection: RpcConnection,
-    input: RenderFailureInput,
-  ): void {
-    this.deps.pluginRuntime.views.renderFailed(connection, input);
+  /*
+   * An App's report that it could not draw a replacement, logged once per Plugin and Slot. A paired App is
+   * not trusted to name a Plugin: one the Server does not have is refused, so it cannot forge or grow the log.
+   */
+  public async renderFailed(input: RenderFailureInput): Promise<void> {
+    await locatePlugin(this.deps, input.pluginId);
+    this.deps.pluginRuntime.drawingFailed(input);
   }
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {

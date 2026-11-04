@@ -9,7 +9,6 @@ import type {
 } from '@repo/contracts/plugins/argo-calls';
 import { fetchResponse } from '../kit/fetch-response';
 import { createKit, type Kit } from '../kit/plugin-kit';
-import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';
 import { accountDispatcher } from './accounts';
 import { hookDispatcher } from './hooks';
@@ -27,7 +26,8 @@ declare global {
 type PluginInbox = (json: string) => void;
 
 export type PluginRealmExports = {
-  validateBackground: (path: string, contribution?: string) => void;
+  // A manifest's `background` path and each Account path are Loader pages.
+  validate: { page: Kit['requireLoaderPage'] };
   inboxes: { pages: PluginInbox; hooks: PluginInbox; accounts: PluginInbox };
   modules: Pick<Kit, 'exports' | 'jsxRuntime'>;
 };
@@ -38,8 +38,6 @@ delete globalThis.__argoBridge;
 
 if (!bridge) throw new Error('The kit runs only in a Plugin realm');
 
-if (bridge.inView) configureViewScope(bridge.inView);
-
 // No object, promise or error from the worker's realm reaches Plugin code: only the bridge's JSON text crosses.
 const call = async <Value>(request: PluginRequest): Promise<Value> => {
   try {
@@ -49,20 +47,15 @@ const call = async <Value>(request: PluginRequest): Promise<Value> => {
   }
 };
 
-const kit = createKit(
-  async (viewId, message) => {
-    await call({ api: 'view', viewId, message });
-  },
-  async (requestId, result) => {
-    await call({ api: 'dispatchResult', requestId, result });
-  },
-  {
-    data: (request) => call(request),
-    slots: (slotCall) => call({ api: 'slots', call: slotCall }),
-    operations: (operationCall) =>
-      call({ api: 'operations', call: operationCall }),
-  },
-);
+const kit = createKit({
+  origin: bridge.origin,
+  data: (request) => call(request),
+  slots: (slotCall) => call({ api: 'slots', call: slotCall }),
+  operations: (operationCall) =>
+    call({ api: 'operations', call: operationCall }),
+  pages: (pageCall) => call({ api: 'pages', call: pageCall }),
+  reads: (answer) => call({ api: 'reads', call: answer }),
+});
 
 const hooks = hookDispatcher(
   (hookCall) => call({ api: 'hooks', call: hookCall }),
@@ -93,6 +86,7 @@ const spawned = (id: string): PluginProcess =>
 
 const pluginApi: Argo = frozen({
   operations: frozen({ register: kit.operations.register }),
+  queries: frozen(kit.loaderPages.queries),
   accounts: frozen({
     add: (host, options) =>
       call({ api: 'accounts', call: { action: 'add', host, ...options } }),
@@ -105,9 +99,7 @@ const pluginApi: Argo = frozen({
       call({ api: 'oauth', call: { action: 'await', state, url } }),
   }),
   nav: frozen({
-    badge: async (id, count) => {
-      await call({ api: 'nav', id, count });
-    },
+    badge: (id, count) => call({ api: 'nav', id, count }).then(() => {}),
   }),
   assets: frozen({
     resolve: (source) => call({ api: 'assets', source }),
@@ -157,15 +149,16 @@ const pluginApi: Argo = frozen({
     get: async (key) =>
       (await call<PluginSettingValue | null>({ api: 'settings', key })) ?? null,
   }),
-  pages: frozen({ register: kit.registerPage }),
-  slots: frozen({ register: kit.slots.register, changed: kit.slots.changed }),
+  pages: frozen({ ...kit.loaderPages.api }),
+  slots: frozen(kit.slots),
+  changed: kit.changed,
   on: hooks.on,
 });
 
 Object.assign(globalThis, {
   argo: pluginApi,
   __argoRealm: {
-    validateBackground: kit.requirePage,
+    validate: { page: kit.requireLoaderPage },
     inboxes: { pages: kit.inbox, hooks: hooks.inbox, accounts: accounts.inbox },
     modules: { exports: kit.exports, jsxRuntime: kit.jsxRuntime },
   } satisfies PluginRealmExports,

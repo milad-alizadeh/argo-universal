@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, fireEvent } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 // A draft control is sent without the handler, so the App keeps its value locally.
 function localControl(node: WireNode): WireNode {
@@ -23,7 +23,7 @@ const meta = {
   render: (): React.JSX.Element => (
     <>
       {roots.map((root) => (
-        <PluginTree key={root.key} root={root} onEvent={onEvent} />
+        <PluginTree key={root.key} root={root} onPageCall={onPageCall} />
       ))}
     </>
   ),
@@ -38,6 +38,6 @@ export const DraftsWithoutHandlers: Story = {
     const slider = canvas.getByRole('slider', { name: 'Concurrency' });
     await fireEvent.change(slider, { target: { value: '7' } });
     await expect(slider).toHaveValue('7');
-    await expect(onEvent).not.toHaveBeenCalled();
+    await expect(onPageCall).not.toHaveBeenCalled();
   },
 };

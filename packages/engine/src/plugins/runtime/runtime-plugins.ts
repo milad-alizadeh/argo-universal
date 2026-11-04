@@ -117,7 +117,6 @@ export class RuntimePlugins {
 
     if (!plugin) return;
     this.plugins.delete(pluginId);
-    this.input.resources.views.end(pluginId);
     await plugin.stop();
   }
 

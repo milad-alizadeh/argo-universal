@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const onPageCall = fn();
 
 const projectName = 'Project name';
 
@@ -37,8 +37,8 @@ function PatchedDraft({ draft }: { draft: Draft }): React.JSX.Element {
   return (
     <PluginTree
       root={root}
-      onEvent={(key, event) => {
-        onEvent(key, event);
+      onPageCall={async (call, event) => {
+        onPageCall(event.key, event.payload);
         setRoot({
           ...root,
           props: { ...root.props, value: 'Server replacement' },
@@ -59,10 +59,7 @@ async function editFocusedDraft(
   await userEvent.clear(field);
   await userEvent.type(field, localEdit);
   await waitFor(() =>
-    expect(onEvent).toHaveBeenCalledWith(draft.key, {
-      event: 'onChangeText',
-      payload: localEdit,
-    }),
+    expect(onPageCall).toHaveBeenCalledWith(draft.key, localEdit),
   );
   await expect(field).toHaveFocus();
   await expect(field).toHaveValue(localEdit);

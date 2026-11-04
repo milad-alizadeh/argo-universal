@@ -1,104 +1,122 @@
-import type { Argo } from '@argo/plugin-kit';
+import type { Argo, LoaderInput, PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { IssueDeps, IssuePages } from './issue-deps';
+import type { Project } from './issue-client';
+import type { IssueDeps } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
-import { FilterPage } from './issue-filter-page';
-import { builtInFilters, type IssueFilter } from './issue-filters';
-import { filterPath, issuePath, projectPath } from './issue-paths';
-import { IssuesRoot } from './issue-root';
+import { loadIssueDetail, type IssueDetailData } from './issue-detail-data';
+import { issuePattern, pathText, projectPattern } from './issue-paths';
+import { RootPage, RootRows, type SidebarOverview } from './issue-root';
+import { rootProjects, type RootProjects } from './root-projects';
 
-type Page = Parameters<Argo['pages']['register']>[1];
+type Input = LoaderInput;
+
+type To = PageTo;
+
+// What every Issues page draws in its sidebar: the Projects, the one it is for, and that Project's overview.
+type RootData = { choice: RootProjects; overview: SidebarOverview };
 
 /*
- * A page path names one Project's filter or Issue, so each is registered the first time a row links
- * to it. Every Project's built-in filters are registered as the Plugin starts, so their links open
- * before the Issues page has drawn.
+ * The Issues section's Loader pages (ADR-0050): its landing page for the first Project, one Project's, and one
+ * Issue's beside its Project's filters. A page path names its Project and Issue, so one pattern serves every one.
  */
-export function createIssuePages(
-  argo: Argo,
-  shared: Omit<IssueDeps, 'pages'>,
-): IssuePages {
-  const pages = pagePaths(registrar(argo), () => deps);
-  const deps: IssueDeps = { ...shared, pages };
-
-  void registerBuiltIns(deps);
-
-  return pages;
+export function defineIssuePages(argo: Argo, deps: IssueDeps): void {
+  argo.pages.define('/', {
+    load: (input) => loadRoot(deps, input),
+    render: rootPage,
+  });
+  argo.pages.define(projectPattern, {
+    load: (input) => loadRoot(deps, input, projectOf(input)),
+    render: rootPage,
+  });
+  argo.pages.define(issuePattern, {
+    load: (input) => loadIssuePage(deps, input),
+    render: issuePage,
+  });
 }
 
-type Register = (path: string, page: Page) => string;
+const rootPage = (data: RootData, to: To): JSX.Element => (
+  <RootPage rows={sidebar(data, to)} />
+);
 
-const pagePaths = (register: Register, deps: () => IssueDeps): IssuePages => ({
-  projectPagePath: ({ id }) =>
-    register(projectPath(id), projectPage(id, deps())),
-  filterPagePath: ({ id }, filter) =>
-    register(
-      filterPath(id, filter),
-      filterPage({ projectId: id, filter, deps: deps() }),
-    ),
-  issuePagePath: ({ id }, number) =>
-    register(
-      issuePath(id, number),
-      issuePage({ projectId: id, number, deps: deps() }),
-    ),
-});
+const issuePage = (
+  data: IssuePageData,
+  to: To,
+  { params }: Pick<Input, 'params'>,
+): JSX.Element => (
+  <RootPage rows={sidebar(data, to)} detail={issueDetail(data, to, params)} />
+);
 
-// Registers a path's page once; the same path opens it.
-function registrar(argo: Argo): Register {
-  const registered = new Set<string>();
+const projectOf = ({ params }: Pick<Input, 'params'>): string =>
+  pathText(params.project ?? '');
 
-  return (path, page) => {
-    if (!registered.has(path)) argo.pages.register(path, page);
-    registered.add(path);
+// The Projects, and for the one the page is for, the overview Argo keeps for it; a pull reads it again.
+async function loadRoot(
+  deps: IssueDeps,
+  { read }: Input,
+  projectId?: string,
+): Promise<RootData> {
+  const choice = await rootProjects(deps, projectId);
 
-    return path;
-  };
+  return { choice, overview: await overviewOf(deps, read, choice.project) };
 }
 
-async function registerBuiltIns(deps: IssueDeps): Promise<void> {
-  const projects = await deps.listProjects().catch(() => []);
+const noOverview: SidebarOverview = { overview: null, message: '' };
 
-  for (const project of projects) {
-    deps.pages.projectPagePath(project);
+const overviewOf = (
+  deps: IssueDeps,
+  read: Input['read'],
+  project: Project | undefined,
+): Promise<SidebarOverview> =>
+  project
+    ? read(deps.overview({ projectId: project.id })).then(
+        (overview) => ({ overview, message: '' }),
+        (error: Error) => ({ overview: null, message: error.message }),
+      )
+    : Promise.resolve(noOverview);
 
-    for (const filter of builtInFilters())
-      deps.pages.filterPagePath(project, filter);
-  }
+const sidebar = ({ choice, overview }: RootData, to: To): JSX.Element => (
+  <RootRows choice={choice} state={overview} onRefresh={to.set({})} />
+);
+
+type IssuePageData = RootData & { detail: IssueDetailData | null };
+
+// The sidebar and the Issue at once: the Issue page reads its Project's overview as every Issues page does.
+async function loadIssuePage(
+  deps: IssueDeps,
+  input: Input,
+): Promise<IssuePageData> {
+  const choice = await rootProjects(deps, projectOf(input));
+
+  const [overview, detail] = await Promise.all([
+    overviewOf(deps, input.read, choice.project),
+    detailOf(deps, choice.project, Number(input.params.number)),
+  ]);
+
+  return { choice, overview, detail };
 }
 
-// A page keeps only its Project's id: the Project itself, remote and all, is read each time the page opens.
-const projectPage = (projectId: string, deps: IssueDeps): Page =>
-  function IssueProjectPage(): JSX.Element {
-    return <IssuesRoot deps={deps} projectId={projectId} />;
-  };
+const detailOf = (
+  deps: IssueDeps,
+  project: Project | undefined,
+  number: number,
+): Promise<IssueDetailData> | null =>
+  project && Number.isSafeInteger(number)
+    ? loadIssueDetail({ deps, project, number })
+    : null;
 
-type FilterInput = { projectId: string; filter: IssueFilter; deps: IssueDeps };
+function issueDetail(
+  { choice, detail }: IssuePageData,
+  to: To,
+  params: Input['params'],
+): JSX.Element | null {
+  if (!choice.project || !detail) return null;
 
-const filterPage = ({ projectId, filter, deps }: FilterInput): Page =>
-  function IssueFilterPage(): JSX.Element {
-    return (
-      <IssuesRoot
-        deps={deps}
-        projectId={projectId}
-        filter={filter}
-        detail={(project) => (
-          <FilterPage project={project} filter={filter} deps={deps} />
-        )}
-      />
-    );
-  };
-
-type IssueInput = { projectId: string; number: number; deps: IssueDeps };
-
-const issuePage = ({ projectId, number, deps }: IssueInput): Page =>
-  function IssuePage(): JSX.Element {
-    return (
-      <IssuesRoot
-        deps={deps}
-        projectId={projectId}
-        detail={(project) => (
-          <IssueDetailPage project={project} number={number} deps={deps} />
-        )}
-      />
-    );
-  };
+  return (
+    <IssueDetailPage
+      data={detail}
+      projectId={choice.project.id}
+      number={Number(params.number)}
+      to={to}
+    />
+  );
+}

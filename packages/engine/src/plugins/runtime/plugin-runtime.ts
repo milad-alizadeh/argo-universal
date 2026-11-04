@@ -1,6 +1,5 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { realClock, type PluginClock } from '../clock';
-import type { QueryServices } from '../data/query-types';
 import { hostHooks } from '../hooks/host-hooks';
 import { keepWaiting } from '../hooks/keep-waiting';
 import { HostConnection } from '../host/connection';
@@ -10,25 +9,21 @@ import type {
   PluginStatus,
 } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
-import {
-  forgetOnce,
-  logFallback,
-  type Fallback,
-} from '../views/render-fallback';
 import { answerPluginCall } from './calls';
 import type { PluginLocation } from './plugin-location';
+import { forgetOnce, logFallback, type Fallback } from './render-fallback';
 import { RuntimePlugins } from './runtime-plugins';
-import { RuntimeResources } from './runtime-resources';
+import { RuntimeResources, type RuntimeInput } from './runtime-resources';
 import { TestControl } from './test-control';
 
 export class PluginRuntime {
   readonly hooks;
   // What a Plugin's test kit drives: the clock every deadline and worker realm share.
   readonly testControl: TestControl;
-  readonly views: RuntimeResources['views'];
   readonly data: RuntimeResources['data'];
   readonly items: RuntimeResources['items'];
   readonly operations: RuntimeResources['operations'];
+  readonly draws: RuntimeResources['draws'];
   readonly background: RuntimeResources['background'];
   private readonly plugins: RuntimePlugins;
   private readonly resources: RuntimeResources;
@@ -45,10 +40,15 @@ export class PluginRuntime {
     this.testControl = this.controlFor(clock);
     this.hooks = hostHooks(this.host, this.log, clock);
     this.resources = new RuntimeResources(this.resourceInput());
-    ({ views: this.views, data: this.data } = this.resources);
+    ({ data: this.data } = this.resources);
     ({ items: this.items, background: this.background } = this.resources);
-    this.operations = this.resources.operations;
+    ({ operations: this.operations, draws: this.draws } = this.resources);
     this.plugins = new RuntimePlugins(this.pluginInput());
+  }
+
+  // The Plugins' changes: `argo.changed()`, Operations and Query answers that moved.
+  get changes(): RuntimeResources['changes'] {
+    return this.resources.changes;
   }
 
   private connectAccounts(): void {
@@ -75,7 +75,7 @@ export class PluginRuntime {
     };
   }
 
-  private resourceInput(): QueryServices {
+  private resourceInput(): RuntimeInput {
     return {
       services: this.services,
       clock: this.testControl.clock,
@@ -97,6 +97,11 @@ export class PluginRuntime {
 
   public renderFallback(fallback: Fallback): void {
     logFallback(this.log, 'runtime', fallback);
+  }
+
+  // An App could not draw a replacement the Server sent it, and drew core's own.
+  public drawingFailed(fallback: Fallback): void {
+    logFallback(this.log, 'drawing', fallback);
   }
 
   public contributionFailed(fallback: Fallback): void {

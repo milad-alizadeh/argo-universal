@@ -5,10 +5,10 @@ import { componentEventHandler, componentEventPayload } from './wire';
 it('keeps pagination and anchoring on a Plugin List', () => {
   const props = {
     anchor: 'end',
-    pagination: { hasMore: true, onLoadMore: { $event: 'onLoadMore' } },
-    onRefresh: { $event: 'onRefresh' },
+    pagination: { hasMore: true, onLoadMore: { loadMore: true } },
+    onRefresh: { pageState: {} },
     searchMode: 'plugin',
-    onSearchTextChange: { $event: 'onSearchTextChange' },
+    onSearchTextChange: { bind: 'query' },
   };
 
   expect(kitComponent('List')?.props.parse(props)).toMatchObject(props);
@@ -26,11 +26,11 @@ it('checks the nested selection event payload', () => {
         selection: {
           mode: 'multiple',
           selected: [],
-          onChange: { $event: 'onChange' },
+          onChange: { bind: 'selected' },
         },
       },
       'onChange',
       event,
     ),
-  ).toEqual({ $event: 'onChange' });
+  ).toEqual({ bind: 'selected' });
 });

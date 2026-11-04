@@ -16,7 +16,7 @@ import { type PageRename, useRenamedTitle } from './use-renamed-title';
 
 type SessionMenuHandlers = Pick<SessionMenu, 'onRename' | 'onArchive'>;
 
-interface SessionPageMenu {
+export interface SessionPageMenu {
   // The page's props, with Rename and Archive in the open Session's header menu.
   props: SessionDetailViewProps;
   // The rename dialog, and the phones' alert before archiving.

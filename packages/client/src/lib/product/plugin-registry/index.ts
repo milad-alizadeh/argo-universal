@@ -1,6 +1,8 @@
-export { PluginTree, type PluginOnEvent } from './plugin-registry';
+export { BoundedPluginTree } from './bounded-plugin-tree';
 
-export * from './plugin-stream-state';
+export { type OnPageCall } from './plugin-registry';
+
+export * from './replaceable-state';
 
 export { replacedSlots } from './replaced-slots';
 

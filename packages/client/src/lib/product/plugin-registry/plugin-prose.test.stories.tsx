@@ -42,10 +42,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn(async () => {});
+const onPageCall = fn(async () => {});
 
 export const DrawsProse: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('heading', { name: 'Release notes', level: 2 }),
@@ -57,7 +57,7 @@ export const DrawsProse: Story = {
 };
 
 export const CopiesInTheApp: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
 
@@ -75,7 +75,7 @@ export const CopiesInTheApp: Story = {
       await expect(
         await canvas.findByRole('button', { name: 'Copied' }),
       ).toBeVisible();
-      await expect(onEvent).not.toHaveBeenCalled();
+      await expect(onPageCall).not.toHaveBeenCalled();
     } finally {
       clipboard.mockRestore();
     }

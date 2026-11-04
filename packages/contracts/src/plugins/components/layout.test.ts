@@ -40,7 +40,7 @@ describe('layout prop boundary', () => {
       card.props.safeParse({
         title: 'api-gateway',
         subtitle: 'Production',
-        onPress: { $event: 'onPress' },
+        onPress: { operation: 'open', args: {} },
       }).success,
     ).toBe(true);
   });

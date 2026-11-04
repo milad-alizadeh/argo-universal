@@ -18,7 +18,7 @@ const row = (key: string, title: string, selected: boolean): WireNode =>
   node({
     type: 'ListItem',
     key,
-    props: { title, selected, onPress: { $event: 'onPress' } },
+    props: { title, selected, onPress: { pageState: { issue: key } } },
   });
 
 const issuePage = node({
@@ -61,7 +61,7 @@ function tree(selected: boolean): WireNode {
   );
 }
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/ListDetail',
@@ -73,9 +73,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const DrawsListBesideTheSelectedPage: Story = {
-  render: () => <PluginTree root={tree(true)} onEvent={onEvent} />,
+  render: () => <PluginTree root={tree(true)} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
-    onEvent.mockClear();
+    onPageCall.mockClear();
     await expect(
       await canvas.findByRole('heading', { name: syncTitle }),
     ).toBeVisible();
@@ -87,14 +87,15 @@ export const DrawsListBesideTheSelectedPage: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: /Add CSV export/ }),
     );
-    await expect(onEvent).toHaveBeenLastCalledWith('issues#list/rows/418', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenLastCalledWith(
+      { pageState: { issue: '418' } },
+      expect.objectContaining({ key: 'issues#list/rows/418' }),
+    );
   },
 };
 
 export const NothingSelectedDrawsTheEmptyState: Story = {
-  render: () => <PluginTree root={tree(false)} onEvent={onEvent} />,
+  render: () => <PluginTree root={tree(false)} />,
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole('heading', { name: 'Select an Issue' }),

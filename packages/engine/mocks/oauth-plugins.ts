@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { OAuthStart, OAuthResult } from '@repo/contracts/plugins/account-calls';
-import { expect, onTestFinished } from 'vitest';
+import { expect } from 'vitest';
 import { z } from 'zod';
 import { PluginTestClock } from '../src/plugins/worker/test-clock';
 import { startEngineTestHost } from './engine';
@@ -10,10 +10,7 @@ import { createRuntimePlugins } from './runtime-plugins';
 
 type StartRecord = z.infer<typeof StartedRecord>;
 
-const StartedRecord = OAuthStart.extend({
-  unknown: z.null(),
-  serverDevice: z.literal(true),
-});
+const StartedRecord = OAuthStart.extend({ unknown: z.null() });
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
 
@@ -34,7 +31,7 @@ export async function oauthPlugins(ids = ['alice']): Promise<OAuthJourney> {
 
   const host = await oauthHost(home, clock, opened);
 
-  await openViews(host, ids);
+  await runProbes(host, ids);
 
   return oauthJourney(host, home, { clock, opened });
 }
@@ -61,14 +58,24 @@ const oauthJourney = (
 ): OAuthJourney => ({
   ...host,
   ...browser,
-  started: startReader(home),
-  result: resultReader(home),
-  failure: failureReader(home),
+  started: startReader(home, browser.opened),
+  result: settledReader(home, 'result', OAuthResult.nullable()),
+  failure: settledReader(home, 'failure', z.string().nullable()),
 });
+
+// The one Operation each fixture Plugin declares: it starts a sign-in, as a sign-in page's button does.
+const probe = {
+  name: 'probe',
+  label: 'Start a sign-in',
+  description: 'Starts an OAuth exchange and waits for its callback.',
+  tier: 'act' as const,
+};
 
 async function writeOAuthPlugins(ids: string[]): Promise<string> {
   const home = await realpath(
-    await createRuntimePlugins(ids.map((id) => ({ id, fixture: 'healthy' }))),
+    await createRuntimePlugins(
+      ids.map((id) => ({ id, fixture: 'healthy', operations: [probe] })),
+    ),
   );
 
   for (const id of ids)
@@ -85,31 +92,35 @@ const oauthSource = (home: string, id: string): string =>
     .replaceAll('$FIXTURE_HOME', home)
     .replaceAll('$FIXTURE_ID', id);
 
+/*
+ * The Operation answers once the exchange is started, as a sign-in's does, and the Plugin waits for the
+ * callback past it: the exchange's later calls are the starting run's.
+ */
 const oauthSourceTemplate = `
-    import { useEffect, Text } from '@argo/plugin-kit';
-    import { jsx } from '@argo/plugin-kit/jsx-runtime';
-    export function register(argo) { argo.pages.register('/', function Page({ context }) {
-      useEffect(() => { (async () => {
+    export function register(argo) {
+      argo.operations.register('probe', async () => {
         const unknown = await argo.oauth.await('unissued-state', 'https://authorize.example/');
         const failure = { message: null };
         const start = await argo.oauth.start().catch((error) => { failure.message = error.message; return null; });
         await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/failure.json', JSON.stringify(failure.message));
-        await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/start.json', JSON.stringify({ ...start, unknown, serverDevice: context.serverDevice }));
-        const result = start && await argo.oauth.await(start.state, 'https://authorize.example/?state=' + start.state);
-        await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/result.json', JSON.stringify(result));
-      })(); }, []); return jsx(Text, { children: 'Probe' });
-    }); }
+        await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/start.json', JSON.stringify({ ...start, unknown }));
+        void (async () => {
+          const result = start && await argo.oauth.await(start.state, 'https://authorize.example/?state=' + start.state);
+          await argo.fs.write('$FIXTURE_HOME/plugin-data/$FIXTURE_ID/result.json', JSON.stringify(result));
+        })();
+        return null;
+      });
+    }
   `;
 
-async function openViews(host: EngineHost, ids: string[]): Promise<void> {
-  const controller = new AbortController();
-  onTestFinished(() => controller.abort());
-  const caller = host.createCaller({ signal: controller.signal });
-
-  for (const id of ids) {
-    const view = await caller.plugins.view({ pluginId: id, path: '/' });
-    await view[Symbol.asyncIterator]().next();
-  }
+// Each Plugin's sign-in starts from a run on the Server Device, as a tap in its App there does.
+async function runProbes(host: EngineHost, ids: string[]): Promise<void> {
+  for (const id of ids)
+    await host.caller.plugins.run({
+      pluginId: id,
+      operation: 'probe',
+      args: {},
+    });
 }
 
 const read = async (
@@ -125,7 +136,8 @@ const read = async (
       ),
     );
 
-function startReader(home: string): OAuthJourney['started'] {
+// A started exchange once the Plugin awaits it: a callback before the await would settle it unawaited.
+function startReader(home: string, opened: string[]): OAuthJourney['started'] {
   return async (id = 'alice') => {
     await expect
       .poll(() => read(home, id, 'start').catch(() => null), {
@@ -133,36 +145,31 @@ function startReader(home: string): OAuthJourney['started'] {
       })
       .not.toBeNull();
 
-    return StartedRecord.parse(await read(home, id, 'start'));
+    const started = StartedRecord.parse(await read(home, id, 'start'));
+
+    await expect
+      .poll(() => openedFor(opened, started.state), { timeout: 10_000 })
+      .toBe(true);
+
+    return started;
   };
 }
 
-function resultReader(home: string): OAuthJourney['result'] {
-  return async (id = 'alice') => {
+const openedFor = (opened: string[], state: string): boolean =>
+  opened.some((url) => url.endsWith(`state=${state}`));
+
+// What the Plugin wrote to `file` once it has written it.
+const settledReader =
+  <Value>(home: string, file: string, schema: z.ZodType<Value>) =>
+  async (id = 'alice'): Promise<Value> => {
     await expect
-      .poll(() => read(home, id, 'result').catch(() => 'pending'), {
+      .poll(() => read(home, id, file).catch(() => 'pending'), {
         timeout: 10_000,
       })
       .not.toBe('pending');
 
-    return OAuthResult.nullable().parse(await read(home, id, 'result'));
+    return schema.parse(await read(home, id, file));
   };
-}
-
-function failureReader(home: string): OAuthJourney['failure'] {
-  return async (id = 'alice') => {
-    await expect
-      .poll(() => read(home, id, 'failure').catch(() => 'pending'), {
-        timeout: 10_000,
-      })
-      .not.toBe('pending');
-
-    return z
-      .string()
-      .nullable()
-      .parse(await read(home, id, 'failure'));
-  };
-}
 
 export const challenge = (verifier: string): string =>
   createHash('sha256').update(verifier).digest('base64url');

@@ -1,7 +1,6 @@
 import { request } from 'node:http';
 import { createServer } from 'node:http';
 import { expect, it } from 'vitest';
-import { overlappingOAuth, viewlessOAuth } from '#mocks/oauth-origin';
 import { oauthPlugins, challenge } from '#mocks/oauth-plugins';
 import { serialiseOnOAuthPort } from '#mocks/oauth-port-lock';
 
@@ -136,37 +135,6 @@ it(
     } finally {
       await new Promise<void>((resolve) => occupied.close(() => resolve()));
     }
-  },
-  journeyMs,
-);
-
-const refusal = 'Refused: OAuth must run on the Server Device';
-
-it(
-  'refuses OAuth without an App view before opening a browser or listener',
-  async () => {
-    const host = await viewlessOAuth();
-    expect(host.result).toEqual({
-      start: { error: refusal },
-      wait: { error: refusal },
-    });
-    expect(host.opened).toEqual([]);
-    await expect(fetch(redirectUri)).rejects.toThrow(networkFailure);
-  },
-  journeyMs,
-);
-
-it(
-  'keeps overlapping Server and Paired Device view origins across awaits',
-  async () => {
-    const host = await overlappingOAuth();
-    await expect
-      .poll(() => host.result(false), { timeout: 10_000 })
-      .toEqual({ start: { error: refusal }, wait: { error: refusal } });
-    await expect
-      .poll(() => host.result(true), { timeout: 10_000 })
-      .toEqual({ start: { value: true }, wait: { value: null } });
-    expect(host.opened).toEqual([]);
   },
   journeyMs,
 );

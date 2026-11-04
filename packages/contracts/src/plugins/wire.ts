@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { PluginViewId } from '#plugin-wire-events';
 
 export {
   AddOnlySlotId,
@@ -34,7 +33,11 @@ export {
 
 import { WireJson } from '#plugin-wire-json';
 
-export { WireJson } from '#plugin-wire-json';
+export { WireJson, wireJsonOf } from '#plugin-wire-json';
+
+export { LoaderRequest } from '#plugin-page-address';
+
+export { PluginOperationCall } from '#plugin-operations';
 
 export interface WireNode {
   type: string;
@@ -54,7 +57,17 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-export { Action, Handler, WireEvent } from '#plugin-wire-action';
+export {
+  Action,
+  Handler,
+  LoadMore,
+  OperationCall,
+  PageBind,
+  PageCall,
+  PageStateChange,
+  PageStateValue,
+  PageValue,
+} from '#plugin-wire-action';
 
 // Keys are local to their sibling collection; slot steps keep identically named children distinct.
 export const PatchStep = z.union([
@@ -93,31 +106,8 @@ export const PatchOp = z.discriminatedUnion('op', [
 
 export type PatchOp = z.infer<typeof PatchOp>;
 
-export const ViewMessage = z.discriminatedUnion('type', [
-  z.strictObject({
-    type: z.literal('snapshot'),
-    viewId: PluginViewId.optional(),
-    revision: z.number().int().nonnegative(),
-    root: WireNode,
-  }),
-  z.strictObject({
-    type: z.literal('patch'),
-    viewId: PluginViewId.optional(),
-    revision: z.number().int().nonnegative(),
-    ops: z.array(PatchOp).min(1),
-  }),
-]);
-
-export type ViewMessage = z.infer<typeof ViewMessage>;
-
 export {
-  PluginViewId,
-  PluginDispatchId,
-  PluginDispatchInput,
-  ComponentEvent,
   componentEventPayload,
-  PluginDispatchResult,
-  PluginViewInput,
   PluginEvent,
   componentEventRules,
   type ComponentEventRules,
@@ -125,7 +115,6 @@ export {
 
 export {
   componentEventHandler,
-  placedComponentEvent,
   propsWithin,
   WireProps,
 } from '#plugin-kit-component-events';

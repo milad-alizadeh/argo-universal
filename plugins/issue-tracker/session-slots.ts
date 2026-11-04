@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { IssueDeps } from './issue-deps';
+import { issuePath } from './issue-paths';
 import { createIssueSummaries, type IssueSummaries } from './issue-summary';
 import { barItems, rowItems, type Linked, type PathOf } from './session-items';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
@@ -36,8 +37,6 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
 type Fills = Omit<Answering, 'toItems'>;
 
 function registerItems(api: Argo, fills: Fills): void {
-  const pathOf = issuePathOf(fills.deps);
-
   const answer =
     (toItems: ToItems): SlotProvider =>
     (request) =>
@@ -57,26 +56,19 @@ type SlotProvider = (request: Request) => Promise<Answered>;
 
 type Answered = Record<string, ReturnType<ToItems>>;
 
-const slotsChanged = (api: Argo) => async (): Promise<void> => {
-  await Promise.all([
-    api.slots.changed(sessionRowSlot),
-    api.slots.changed(sessionBarSlot),
-  ]);
-};
+// What the Session row and bar show changed, so Argo asks their Slots again.
+const slotsChanged = (api: Argo) => (): void => api.changed();
 
 function announceStatus(
   summaries: IssueSummaries,
-  changed: () => Promise<void>,
+  changed: () => void,
   number: number,
 ): void {
   summaries.stale(number);
-  void changed();
+  changed();
 }
 
-const issuePathOf =
-  (deps: IssueDeps): PathOf =>
-  ({ projectId, number }) =>
-    deps.pages.issuePagePath({ id: projectId }, number);
+const pathOf: PathOf = ({ projectId, number }) => issuePath(projectId, number);
 
 type Answering = {
   deps: IssueDeps;
@@ -124,18 +116,15 @@ function groupBySession(entries: Linked[]): Map<string, Linked[]> {
   return grouped;
 }
 
-function announcing(
-  storage: Attachments,
-  changed: () => Promise<void>,
-): Attachments {
+function announcing(storage: Attachments, changed: () => void): Attachments {
   return {
     attachSession: async (link) => {
       await storage.attachSession(link);
-      await changed();
+      changed();
     },
     detachSession: async (link) => {
       await storage.detachSession(link);
-      await changed();
+      changed();
     },
   };
 }

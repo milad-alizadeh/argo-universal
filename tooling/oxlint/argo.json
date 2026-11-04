@@ -103,6 +103,8 @@
     "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
     "argo/cross-package-import": "error",
+    // The type-level twin of unicorn/no-nested-ternary.
+    "argo/no-nested-conditional-type": "error",
     // oxlint cannot resolve the re-exported members of Radix namespaces; tsc checks every namespace member.
     "import/namespace": "off",
     // React Native has no semantic HTML tags; `role` is how a View states its role.
@@ -110,6 +112,11 @@
     "jsx-a11y/aria-role": ["error", { "ignoreNonDOM": true }]
   },
   "overrides": [
+    {
+      // `PluginOperations` is empty on purpose: a Plugin's generated `plugin.gen.d.ts` merges each declared Operation into it (ADR-0044).
+      "files": ["packages/plugin-kit/src/index.d.ts"],
+      "rules": { "typescript/no-empty-object-type": "off" }
+    },
     {
       // ADR-0027 confines first-party Plugin evaluation to the worker realm. #824 explicitly runs local Plugin tests.
       "files": [

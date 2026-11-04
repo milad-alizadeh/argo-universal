@@ -1,12 +1,10 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+import type { CallOrigin, CallScope } from '../protocol/call-origin.ts';
 import {
   PluginRequest,
   type PluginValue,
   type WorkerCall,
   type WorkerReply,
 } from '../protocol/runtime.ts';
-
-type CallOrigin = { viewId?: string | null; projectId?: string };
 
 type Pending = {
   resolve: (value: PluginValue) => void;
@@ -23,7 +21,7 @@ export class WorkerCalls {
     this.send = send;
   }
 
-  call(request: PluginRequest, origin: CallOrigin = {}): Promise<PluginValue> {
+  call(request: PluginRequest, origin: CallOrigin): Promise<PluginValue> {
     const id = this.next++;
 
     return new Promise((resolve, reject) => {
@@ -32,8 +30,7 @@ export class WorkerCalls {
         type: 'call',
         id,
         request,
-        ...origin,
-        viewId: origin.viewId ?? undefined,
+        origin,
       });
     });
   }
@@ -51,34 +48,34 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
   else pending.reject(new Error(reply.error));
 }
 
+// `origin` tells the kit what the running code is for, as `argo.changed()` inside an Operation joins its mark.
 export type PluginBridge = ((json: string) => Promise<string>) & {
-  inView?: <T>(viewId: string | null, run: () => T) => T;
-  inProject?: <T>(projectId: string | undefined, run: () => T) => T;
+  origin: () => CallOrigin;
 };
 
 /*
  * The only host function a Plugin's context ever holds, and the context never sees it:
  * it takes and returns JSON strings, so no object, promise or error from this realm
  * reaches Plugin code (and with it no path to this realm's `Function`). The Plugin API
- * (`plugin-api.ts`) wraps it inside the context, then removes it.
+ * (`plugin-api.ts`) wraps it inside the context, then removes it. Each call carries the
+ * origin of the delivery its code runs in.
  */
-export function createPluginBridge(calls: WorkerCalls): PluginBridge {
-  const scope = new AsyncLocalStorage<CallOrigin>();
+export function createPluginBridge(
+  calls: WorkerCalls,
+  scope: CallScope,
+): PluginBridge {
+  const origin = (): CallOrigin => scope.current();
 
-  const bridge: PluginBridge = async (json) => {
+  return Object.assign(bridgeCall(calls, origin), { origin });
+}
+
+const bridgeCall =
+  (calls: WorkerCalls, origin: () => CallOrigin) =>
+  async (json: string): Promise<string> => {
     const value = await calls.call(
       PluginRequest.parse(JSON.parse(json)),
-      scope.getStore() ?? undefined,
+      origin(),
     );
 
     return JSON.stringify(value ?? null);
   };
-
-  bridge.inView = <T>(viewId: string | null, run: () => T): T =>
-    scope.run({ viewId }, run);
-
-  bridge.inProject = <T>(projectId: string | undefined, run: () => T): T =>
-    scope.run({ projectId }, run);
-
-  return bridge;
-}

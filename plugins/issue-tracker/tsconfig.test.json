@@ -3,6 +3,7 @@
   "include": [
     "**/*.test.ts",
     "journey-fixture.ts",
+    "plugin.gen.d.ts",
     "session-slot-fixture.ts",
     "vitest.config.ts"
   ]

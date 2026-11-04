@@ -6,6 +6,10 @@ import type { RunningHook } from './running-hook';
 
 export type AcceptedHookAnswer = { answer: Json };
 
+/*
+ * A Hook's own tree is named by the Plugin whose Hook drew it, so no Plugin can answer in another's name;
+ * any other answer must be what the rest of the chain answered it.
+ */
 export async function readRenderAnswer(
   running: RunningHook,
   answer: Json,
@@ -14,10 +18,16 @@ export async function readRenderAnswer(
 
   if (!parsed) return null;
 
-  if ('treePath' in parsed) return retainedAnswer(running, parsed.treePath);
-
-  return forwardedAnswer(running, answer);
+  return isOwnTree(parsed)
+    ? drawnAnswer(running, parsed.tree)
+    : forwardedAnswer(running, answer);
 }
+
+// A tree with no Plugin named is the Hook's own; one already named came back from further down the chain.
+const isOwnTree = (
+  parsed: RenderAnswer,
+): parsed is Extract<RenderAnswer, { tree: unknown }> =>
+  'tree' in parsed && !('pluginId' in parsed);
 
 async function forwardedAnswer(
   running: RunningHook,
@@ -28,60 +38,20 @@ async function forwardedAnswer(
     : null;
 }
 
-type RenderedReplacement = { pluginId: string; path: string };
+// A tree a Hook answered with in this chain, and the Hook that drew it.
+export type DrawnReplacement = { hook: RegisteredHook; answer: Json };
 
-// A tree a Hook answered with in this chain, and the Hook that answered it.
-export type RetainedReplacement = RenderedReplacement & {
-  hook: RegisteredHook;
-};
+function drawnAnswer(running: RunningHook, tree: Json): AcceptedHookAnswer {
+  const answer = { pluginId: running.hook.pluginId, tree };
 
-function retainedAnswer(
-  running: RunningHook,
-  path: string,
-): AcceptedHookAnswer {
-  const replacement = { pluginId: running.hook.pluginId, path };
-  running.step.replacements?.push({ ...replacement, hook: running.hook });
+  running.step.replacements?.push({ hook: running.hook, answer });
 
-  return { answer: replacement };
-}
-
-export function discardUnusedReplacements(
-  replacements: RetainedReplacement[],
-  answer: Json,
-  discard?: (pluginId: string, path: string) => void,
-): void {
-  const selected = selectedReplacement(answer);
-
-  for (const { pluginId, path } of replacements.filter(
-    (item) => !isSelected(item, selected),
-  ))
-    discard?.(pluginId, path);
+  return { answer };
 }
 
 // The Hook whose tree the chain answered with, if any.
-export function selectedHook(
-  replacements: RetainedReplacement[],
+export const selectedHook = (
+  replacements: DrawnReplacement[],
   answer: Json,
-): RegisteredHook | undefined {
-  const selected = selectedReplacement(answer);
-
-  return replacements.find((item) => isSelected(item, selected))?.hook;
-}
-
-function selectedReplacement(answer: Json): RenderedReplacement | null {
-  const parsed = RenderAnswer.safeParse(answer).data;
-
-  return parsed && 'pluginId' in parsed ? parsed : null;
-}
-
-function isSelected(
-  replacement: RenderedReplacement,
-  selected: RenderedReplacement | null,
-): boolean {
-  if (!selected) return false;
-
-  return (
-    replacement.pluginId === selected.pluginId &&
-    replacement.path === selected.path
-  );
-}
+): RegisteredHook | undefined =>
+  replacements.find((drawn) => isDeepStrictEqual(drawn.answer, answer))?.hook;

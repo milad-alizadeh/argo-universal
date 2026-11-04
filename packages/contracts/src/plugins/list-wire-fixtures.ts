@@ -22,7 +22,7 @@ export const runListRoot: WireNode = {
             subtitle: 'main',
             selected: true,
             progress: { value: 0.4, tone: 'success', active: false },
-            onPress: { $event: 'onPress' },
+            onPress: { pageState: { run: 'web' } },
           }),
           slots: {
             meta: [
@@ -41,7 +41,7 @@ export const runListRoot: WireNode = {
 };
 
 const card = (id: string, title: string): WireNode =>
-  node('ListItem', id, { id, title, onPress: { $event: 'onPress' } });
+  node('ListItem', id, { id, title, onPress: { pageState: { card: id } } });
 
 const lane = (id: string, title: string, cards: WireNode[]): WireNode => ({
   ...node('List.Section', id, { id, title }),
@@ -54,7 +54,14 @@ export const boardListRoot: WireNode = {
     accessibilityLabel: 'Board',
     layout: 'lanes',
     appearance: 'cards',
-    onMove: { $event: 'onMove' },
+    onMove: {
+      operation: 'moveCard',
+      args: {
+        card: { $payload: 'id' },
+        lane: { $payload: 'section' },
+        index: { $payload: 'index' },
+      },
+    },
   }),
   children: [
     lane('todo', 'To do', [
@@ -70,7 +77,14 @@ export const boardListRoot: WireNode = {
 export const queueListRoot: WireNode = {
   ...node('List', 'queue', {
     accessibilityLabel: 'Queue',
-    onMove: { $event: 'onMove' },
+    onMove: {
+      operation: 'moveCard',
+      args: {
+        card: { $payload: 'id' },
+        lane: { $payload: 'section' },
+        index: { $payload: 'index' },
+      },
+    },
   }),
   children: [
     lane('queue', 'Queue', [
@@ -95,7 +109,7 @@ export const emptyRunListRoot: WireNode = {
           action: [
             node('Button', 'run-workflow', {
               label: 'Run workflow',
-              onPress: { $event: 'onPress' },
+              onPress: { operation: 'runWorkflow', args: {} },
             }),
           ],
         },

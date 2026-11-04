@@ -1,4 +1,4 @@
-import { expect, onTestFinished } from 'vitest';
+import { expect } from 'vitest';
 import type { PluginClock } from '../src/plugins';
 import { PluginTestClock } from '../src/plugins/worker/test-clock';
 import { accountPlugins, accountNetwork } from './account-plugins';
@@ -29,7 +29,7 @@ export async function borrow(
 
   await prepareProvider(host, prepare);
   const projectId = await borrowProject(host);
-  await openBorrower(host, projectId);
+  await runBorrower(host, projectId);
 
   return finishBorrow(setup, projectId);
 }
@@ -90,18 +90,14 @@ async function borrowProject(host: EngineHost): Promise<string> {
   return project.id;
 }
 
-async function openBorrower(
-  host: EngineHost,
-  projectId: string,
-): Promise<void> {
-  const controller = new AbortController();
-
-  const view = await host
-    .createCaller({ signal: controller.signal })
-    .plugins.view({ pluginId: 'borrower', path: '/', projectId });
-
-  onTestFinished(() => controller.abort());
-  await view[Symbol.asyncIterator]().next();
+// The borrower's Operation runs for the Project, as a tap on its page would.
+async function runBorrower(host: EngineHost, projectId: string): Promise<void> {
+  await host.caller.plugins.run({
+    pluginId: 'borrower',
+    operation: 'borrow',
+    args: {},
+    projectId,
+  });
 }
 
 async function prepareProvider(

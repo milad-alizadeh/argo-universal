@@ -12,17 +12,17 @@ const tokenValue = 'test-token';
 
 const roots = fixtures.map((fixture) => WireNode.parse(fixture));
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/SegmentedSecret',
   beforeEach: (): void => {
-    onEvent.mockReset();
+    onPageCall.mockReset();
   },
   render: (): React.JSX.Element => (
     <>
       {roots.map((root) => (
-        <PluginTree key={root.key} root={root} onEvent={onEvent} />
+        <PluginTree key={root.key} root={root} onPageCall={onPageCall} />
       ))}
     </>
   ),
@@ -42,16 +42,16 @@ export const SwitchView: Story = {
       pressedState,
       'false',
     );
-    await expect(onEvent).toHaveBeenCalledWith('views', {
-      event: 'onValueChange',
-      payload: 'closed',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { bind: 'view' },
+      expect.objectContaining({ key: 'views', payload: 'closed' }),
+    );
   },
 };
 
 export const RefusedViewKeepsSelection: Story = {
   play: async ({ canvas, userEvent }) => {
-    onEvent.mockRejectedValueOnce(new Error('Refused'));
+    onPageCall.mockRejectedValueOnce(new Error('Refused'));
     await userEvent.click(canvas.getByRole('button', { name: 'Closed' }));
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: 'Open' })).toHaveAttribute(
@@ -73,10 +73,13 @@ export const EditSecret: Story = {
     await expect(canvas.getByText('Invalid token')).toBeVisible();
     await userEvent.type(field, tokenValue);
     await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('settings/section/token', {
-        event: 'onChangeText',
-        payload: tokenValue,
-      }),
+      expect(onPageCall).toHaveBeenLastCalledWith(
+        { bind: 'token' },
+        expect.objectContaining({
+          key: 'settings/section/token',
+          payload: tokenValue,
+        }),
+      ),
     );
     await expect(field).toHaveValue(tokenValue);
     await expect(canvas.queryByText(tokenValue)).not.toBeInTheDocument();

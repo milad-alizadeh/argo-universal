@@ -109,23 +109,3 @@ function contributions(
 
 // Booting a worker, bundling its page and running a real process outlast the one second `poll` waits by default.
 export const processWait = { timeout: 5000 };
-
-export const processQuery =
-  "{ api: 'process', action: 'run', argv: ['query-fixture'] }";
-
-export function dataPage(query = processQuery, options = ''): string {
-  return `import { Text, Button, Stack, useData } from '@argo/plugin-kit';
-export function register(argo) {
-  function Data() {
-    const { data, error, stale, refresh } = useData(${queryArguments(query, options)});
-    return <Stack direction="column"><Text>{data ? data.stdout : error ? 'error:' + error : 'empty'}</Text><Text>{stale ? 'stale' : 'settled'}</Text><Button label="Refresh" onPress={refresh} /></Stack>;
-  }
-  argo.pages.register('/', Data);
-}`;
-}
-
-export const processPage = dataPage();
-
-function queryArguments(query: string, options: string): string {
-  return options ? query + ', ' + options : query;
-}

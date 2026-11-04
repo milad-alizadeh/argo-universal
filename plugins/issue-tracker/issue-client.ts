@@ -14,6 +14,13 @@ export type ClientSource = {
   trackers: TrackerRegistry;
 };
 
+// A Project by its id, of the Projects Argo lists now; none once it is removed.
+export const projectById = async (
+  listProjects: Argo['projects']['list'],
+  projectId: string,
+): Promise<Project | undefined> =>
+  (await listProjects()).find(({ id }) => id === projectId);
+
 const chooseTrackerMessage = 'Choose a Tracker in Project details.';
 
 const noRemoteMessage = 'This Project has no GitHub remote.';

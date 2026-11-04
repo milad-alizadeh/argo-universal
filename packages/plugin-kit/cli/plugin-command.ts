@@ -9,15 +9,17 @@ import {
 } from '../testing';
 import { withinPluginTestBudget } from './plugin-test-budget';
 import { loadPluginTests, pluginTestFiles } from './plugin-test-files';
+import { types, typesDiagnostics } from './plugin-types';
 
 type Write = (line: string) => void;
 
-const PluginArguments = z.tuple([
-  z.enum(['validate', 'test']),
-  z.string().min(1),
+// `types --check` writes nothing and fails when the Operation types are not the manifest's.
+const PluginArguments = z.union([
+  z.tuple([z.enum(['validate', 'types', 'test']), z.string().min(1)]),
+  z.tuple([z.literal('types'), z.string().min(1), z.literal('--check')]),
 ]);
 
-const commands = { validate, test: runTests };
+const commands = { validate, types, test: runTests };
 
 // `name` is how the caller is run: `argo-plugin` from the kit, `argo plugin` from the CLI.
 export function runPluginCommand(
@@ -28,7 +30,7 @@ export function runPluginCommand(
   const parsed = PluginArguments.safeParse(args);
 
   if (!parsed.success) {
-    write(`Usage: ${name} <validate|test> <dir>`);
+    write(`Usage: ${name} <validate|types|test> <dir> (types takes --check)`);
 
     return Promise.resolve(1);
   }
@@ -37,11 +39,11 @@ export function runPluginCommand(
 }
 
 async function runCommand(
-  [command, directory]: z.infer<typeof PluginArguments>,
+  [command, directory, check]: z.infer<typeof PluginArguments>,
   write: Write,
 ): Promise<number> {
   try {
-    return await commands[command](resolve(directory), write);
+    return await commands[command](resolve(directory), write, Boolean(check));
   } catch (error) {
     write(String(error));
 
@@ -51,6 +53,11 @@ async function runCommand(
 
 async function validate(directory: string, write: Write): Promise<number> {
   const report = await validatePlugin(directory);
+
+  if (report.manifest)
+    report.diagnostics.push(
+      ...(await typesDiagnostics(directory, report.manifest)),
+    );
   writeReport(report, write);
 
   return Number(report.diagnostics.length > 0);

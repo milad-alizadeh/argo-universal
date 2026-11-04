@@ -19,27 +19,27 @@ const root: WireNode = {
         node('FieldGroup.Toggle', 'fast', {
           title: 'Fast mode',
           value: false,
-          onValueChange: { $event: 'onValueChange' },
+          onValueChange: { bind: 'fast' },
         }),
         node('FieldGroup.TextField', 'name', {
           title: 'Name',
           value: '',
-          onChangeText: { $event: 'onChangeText' },
+          onChangeText: { bind: 'name' },
         }),
       ],
     },
   ],
 };
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Settings',
   component: PluginTree,
-  args: { root, onEvent },
+  args: { root, onPageCall },
   parameters: { screenPreview: true },
   beforeEach: (): void => {
-    onEvent.mockClear();
+    onPageCall.mockClear();
   },
 } satisfies Meta<typeof PluginTree>;
 
@@ -49,24 +49,27 @@ export const FieldGroupDrawsSettingsRows: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.click(await canvas.findByText('Fast mode'));
-    await expect(onEvent).toHaveBeenCalledWith('settings/section/fast', {
-      event: 'onValueChange',
-      payload: true,
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { bind: 'fast' },
+      expect.objectContaining({ key: 'settings/section/fast', payload: true }),
+    );
   },
 };
 
-export const FieldDraftSurvivesEventDelivery: StoryObj<typeof meta> = {
+export const FieldDraftSurvivesPageCall: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     const name = await canvas.findByRole('textbox', { name: 'Name' });
     await userEvent.type(name, 'Argo');
     await expect(name).toHaveValue('Argo');
     await waitFor(() =>
-      expect(onEvent).toHaveBeenLastCalledWith('settings/section/name', {
-        event: 'onChangeText',
-        payload: 'Argo',
-      }),
+      expect(onPageCall).toHaveBeenLastCalledWith(
+        { bind: 'name' },
+        expect.objectContaining({
+          key: 'settings/section/name',
+          payload: 'Argo',
+        }),
+      ),
     );
   },
 };

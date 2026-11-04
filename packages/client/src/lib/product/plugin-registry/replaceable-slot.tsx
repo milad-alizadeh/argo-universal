@@ -2,9 +2,9 @@ import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
 import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, type ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
-import { PluginDrawingBoundary } from './plugin-drawing-boundary';
-import { PluginTree, type PluginOnEvent } from './plugin-registry';
-import type { ReplaceableState } from './plugin-stream-state';
+import { drawingOf, PluginDrawingBoundary } from './plugin-drawing-boundary';
+import { PluginTree, type OnPageCall } from './plugin-registry';
+import type { ReplaceableState } from './replaceable-state';
 
 export interface ReplaceableSlotProps {
   input: ReplaceableInput;
@@ -31,8 +31,9 @@ export function ReplaceableSlot(props: ReplaceableSlotProps): ReactNode {
 
 export interface ReplaceableSlotViewProps extends ReplaceableSlotProps {
   state: ReplaceableState;
-  onEvent: PluginOnEvent;
   onOpenPage?: OpenPluginPage;
+  // The Operations a replacement's Component events run (ADR-0050).
+  onPageCall?: OnPageCall;
   onFallback: (reason: string) => void;
 }
 
@@ -51,22 +52,23 @@ export function ReplaceableSlotView(
   );
 }
 
-function drawingKey({ input, state }: ReplaceableSlotViewProps): string {
-  const view = state.replacement ? state.replacement.view.viewId : 'core';
-
-  return JSON.stringify([view, input]);
-}
+/*
+ * A new answer is a new drawing, so a replacement that threw is tried again once the Server answers anew; the
+ * tree is named by identity, never read whole, so a Slot of a large tree costs nothing to key.
+ */
+const drawingKey = ({ input, state }: ReplaceableSlotViewProps): string =>
+  `${input.slotId}:${state.replacement ? drawingOf(state.replacement.root) : 'core'}:${JSON.stringify(input)}`;
 
 function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
-  const root = props.state.replacement?.view.root;
+  const root = props.state.replacement?.root;
 
   if (!root) return props.renderCore(coreInput(props));
 
   return (
     <PluginTree
       root={root}
-      onEvent={props.onEvent}
       onOpenPage={props.onOpenPage}
+      onPageCall={props.onPageCall}
     />
   );
 }

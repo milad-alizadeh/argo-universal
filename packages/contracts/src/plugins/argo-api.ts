@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { z } from 'zod';
 import {
   accountApiCalls,
@@ -11,7 +10,6 @@ import {
   PluginFileEntry,
   PluginFileInfo,
   PluginNavBadge,
-  type PluginQuery,
   ProcessCommand,
   ProcessResult,
   SecretSet,
@@ -20,10 +18,10 @@ import {
 } from './argo-calls';
 import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
-import type { PluginRenderContext } from './kit';
-import type { OperationsApi } from './operations-api';
+import type { LoaderPagesApi } from './loader-page-api';
+import type { OperationDeclarations, OperationsApi } from './operations-api';
 import { PluginSettingValue } from './plugin-settings';
-import type { QueryResult } from './query-results';
+import type { QueriesApi } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
 
@@ -138,34 +136,29 @@ export const PluginApiCalls = z
 
 type PluginApiCalls = z.infer<typeof PluginApiCalls>;
 
-// What `useData` hands a page for its Query, and the hook itself: the Engine's kit implements it, `@argo/plugin-kit` declares it.
-export type UseDataResult<Query extends PluginQuery> = {
-  data: QueryResult<Query> | undefined;
-  error: string | undefined;
-  stale: boolean;
-  refresh: () => Promise<void>;
-};
-
-export type UseData = <Query extends PluginQuery>(
-  query: Query | null,
-  options?: { every?: number },
-) => UseDataResult<Query>;
-
-export type Page = ComponentType<{ context: PluginRenderContext }>;
+type ArgoCalls = Omit<PluginApiCalls, 'accounts'>;
 
 /*
  * The Plugin API: the frozen `argo` object a Plugin's `register(argo)` receives, its only way out of
  * its worker (ADR-0027). Its calls are inferred from `PluginApiCalls`; `on` registers a Hook on one
  * core event.
  */
-export type Argo = Omit<PluginApiCalls, 'accounts'> &
+export type Argo<Operations = OperationDeclarations> = ArgoCalls &
   Readonly<{
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
-    pages: Readonly<{ register: (path: string, page: Page) => void }>;
+    pages: LoaderPagesApi<Operations>;
     slots: SlotsApi;
-    operations: OperationsApi;
+    operations: OperationsApi<Operations>;
+    queries: QueriesApi;
+    /*
+     * Says what the Plugin's pages and items Slots show may have changed, after a write that is not an
+     * Operation or a change it heard of elsewhere (an Operation's run says so itself): every Query the
+     * Plugin's Loaders read, its paged-list pages among them, is due, every connected App draws its open
+     * Loader pages again, and open items Slot lists ask again.
+     */
+    changed: () => void;
     on: <Name extends HookEventName>(
       name: Name,
-      ...args: HookArgs<Hook<Name>>
+      ...args: HookArgs<Hook<Name, Operations>>
     ) => Promise<void>;
   }>;

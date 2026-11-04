@@ -3,7 +3,9 @@ import {
   currentPluginSurface,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
+import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   createTRPCClient,
   createWSClient,
@@ -17,7 +19,7 @@ import { createRuntimePlugins } from '#mocks/runtime-plugins';
 import type { AppRouter } from './router';
 
 type App = {
-  client: TRPCClient<AppRouter>;
+  readonly client: TRPCClient<AppRouter>;
   update: (surface: Partial<PluginSurface>) => void;
 };
 
@@ -27,55 +29,75 @@ type Reported = Partial<PluginSurface> | string;
 const encoded = (surface: Reported): string =>
   typeof surface === 'string' ? surface : JSON.stringify(surface);
 
-function app(url: string, initial?: Reported): App {
-  let surface = initial;
-
+// One Connection reporting `surface`, which the test closes when it ends.
+function connection(
+  url: string,
+  surface: Reported | undefined,
+): TRPCClient<AppRouter> {
   const socket = createWSClient({
     url: url.replace(/^http/, 'ws'),
-    connectionParams: () =>
-      surface ? { pluginSurface: encoded(surface) } : {},
+    connectionParams: surface ? { pluginSurface: encoded(surface) } : {},
     WebSocket: AppPageSocket,
-  });
-
-  const client = createTRPCClient<AppRouter>({
-    links: [wsLink({ client: socket })],
   });
 
   onTestFinished(() => socket.close());
 
+  return createTRPCClient<AppRouter>({ links: [wsLink({ client: socket })] });
+}
+
+/*
+ * An App reports its surface as it connects, so an App that updates connects again with the new one. It opens
+ * that Connection before it draws again rather than reopening the old socket, so no draw races the close.
+ */
+function app(url: string, initial?: Reported): App {
+  let client = connection(url, initial);
+
   return {
-    client,
+    get client() {
+      return client;
+    },
     update: (next): void => {
-      surface = next;
-      socket.connection?.ws?.close();
+      client = connection(url, next);
     },
   };
 }
 
-// The page is watched for a Project, as a Project details row's drill-in opens it (ADR-0046).
-function watch({ client }: App): ViewMessage[] {
-  const messages: ViewMessage[] = [];
-
-  const subscription = client.plugins.view.subscribe(
-    { pluginId: 'surface', path: '/', projectId: 'project-1' },
-    { onData: (message: ViewMessage): void => void messages.push(message) },
-  );
-
-  onTestFinished(() => subscription.unsubscribe());
-
-  return messages;
-}
-
-function rendered(messages: ViewMessage[]): string | null {
-  const latest = messages.findLast((message) => message.type === 'snapshot');
-
-  return latest ? renderedText(latest.root) : null;
-}
+// The page is drawn for a Project, as a Project details row's drill-in opens it (ADR-0046).
+const address = {
+  pluginId: 'surface',
+  path: '/',
+  pageState: {},
+  projectId: 'project-1',
+};
 
 function renderedText(root: WireNode): string | null {
   const text = root.props['children'] ?? root.props['label'];
 
   return typeof text === 'string' ? text : null;
+}
+
+const answeredText = (answer: DrawAnswer | LiveAnswer): string | null =>
+  answer.kind === 'tree' ? renderedText(answer.root) : answer.kind;
+
+const drawn = async ({ client }: App): Promise<string | null> =>
+  answeredText(await client.plugins.draw.query({ ...address, pages: 1 }));
+
+// The live page's subscription: the text of the last tree it answered.
+function followed({ client }: App): () => string | null {
+  let last: string | null = null;
+
+  const subscription = client.plugins.live.subscribe(
+    { ...address, path: '/live' },
+    {
+      onData: (answer): void => {
+        last = answeredText(answer);
+      },
+    },
+  );
+
+  onTestFinished(() => subscription.unsubscribe());
+
+  return () => last;
 }
 
 function expected(surface: PluginSurface): string {
@@ -105,28 +127,34 @@ it('draws a page for an App at the wire minimum and Update Argo for an older or 
   // A surface that is not JSON, or has the wrong shape, reports no wire version.
   const notJson = app(url, 'not json');
   const malformed = app(url, '{"platform":"ios","wireVersion":"one"}');
+  const apps = [phone, current, unreported, notJson, malformed];
 
-  const views = [phone, current, unreported, notJson, malformed].map((viewer) =>
-    watch(viewer),
+  const older = [updateArgo, updateArgo, updateArgo];
+
+  await expect(Promise.all(apps.map(drawn))).resolves.toEqual([
+    updateArgo,
+    expected(desktop),
+    ...older,
+  ]);
+
+  phone.update(phoneAtMinimum);
+  await expect
+    .poll(() => Promise.all(apps.map(drawn)), { timeout: 10_000 })
+    .toEqual([expected(phoneAtMinimum), expected(desktop), ...older]);
+}, 20_000);
+
+it('follows a live page for an App at the wire minimum and shows Update Argo to an older one', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'surface', fixture: 'surface' },
+  ]);
+
+  const { url } = await startEngineTestHost({ home });
+
+  const lives = [app(url, { platform: 'ios' }), app(url, desktop)].map(
+    followed,
   );
 
   await expect
-    .poll(() => views.map(rendered), { timeout: 10_000 })
-    .toEqual([
-      updateArgo,
-      expected(desktop),
-      updateArgo,
-      updateArgo,
-      updateArgo,
-    ]);
-  phone.update(phoneAtMinimum);
-  await expect
-    .poll(() => views.map(rendered), { timeout: 10_000 })
-    .toEqual([
-      expected(phoneAtMinimum),
-      expected(desktop),
-      updateArgo,
-      updateArgo,
-      updateArgo,
-    ]);
+    .poll(() => lives.map((last) => last()), { timeout: 10_000 })
+    .toEqual([updateArgo, expected(desktop)]);
 }, 20_000);

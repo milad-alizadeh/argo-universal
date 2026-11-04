@@ -1,65 +1,62 @@
-import { ViewMessage, type ComponentEvent } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { connectPluginApp } from '#mocks/plugin-app';
+import { drawnRoot, pageAt } from '#mocks/plugin-pages';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const page = { pluginId: 'overlays', path: '/' };
-
-async function overlayApp(): Promise<ReturnType<typeof connectPluginApp>> {
+it('draws an overlay open from Page state, with its Component events naming the next state', async () => {
   const home = await createRuntimePlugins([
-    { id: page.pluginId, fixture: 'overlay-actions' },
+    { id: 'overlays', fixture: 'overlay-actions' },
   ]);
 
-  const { url } = await startEngineTestHost({ home });
+  const { caller } = await startEngineTestHost({ home });
 
-  const app = connectPluginApp(url, page);
-
-  await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(1);
-
-  return app;
-}
-
-type App = Awaited<ReturnType<typeof overlayApp>>;
-
-async function dispatch(
-  app: App,
-  event: { key: string } & ComponentEvent,
-): Promise<void> {
-  const latest = ViewMessage.parse(app.messages.at(-1));
-
-  if (!latest.viewId) throw new Error('Expected view identity');
-  const { viewId, revision } = latest;
-  await app.client.plugins.dispatch.mutate({
-    ...page,
-    viewId,
-    revision,
-    ...event,
+  await expect(
+    drawnRoot(caller, pageAt('overlays', '/')),
+  ).resolves.toMatchObject({
+    children: [
+      { props: { children: 'Waiting' } },
+      { key: 'open', props: { onPress: { pageState: { open: true } } } },
+      { type: 'Sheet', key: 'sheet', props: { open: false } },
+    ],
   });
-}
-
-const latestText = (app: App): string => JSON.stringify(app.messages.at(-1));
-
-it(
-  'opens an overlay node and delivers its Component events to the Plugin',
-  { timeout: 20_000 },
-  async () => {
-    const app = await overlayApp();
-    await dispatch(app, { key: '0/open', event: 'onPress' });
-    await expect
-      .poll(() => latestText(app), { timeout: 10_000 })
-      .toContain('"open":true');
-    await dispatch(app, { key: '0/sheet/apply', event: 'onPress' });
-    await expect
-      .poll(() => latestText(app), { timeout: 10_000 })
-      .toContain('Confirmed');
-    await dispatch(app, {
-      key: '0/sheet',
-      event: 'onOpenChange',
-      payload: false,
-    });
-    await expect
-      .poll(() => latestText(app), { timeout: 10_000 })
-      .toContain('Dismissed');
-  },
-);
+  await expect(
+    drawnRoot(caller, pageAt('overlays', '/', { open: true })),
+  ).resolves.toMatchObject({
+    children: [
+      {},
+      {},
+      {
+        type: 'Sheet',
+        props: {
+          open: true,
+          onOpenChange: { pageState: { open: { $payload: true } } },
+        },
+        children: [
+          {
+            key: 'fields',
+            children: [
+              {
+                children: [
+                  {
+                    key: 'field',
+                    props: {
+                      onChangeText: {
+                        pageState: { answer: { $payload: true } },
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            key: 'apply',
+            props: {
+              onPress: { pageState: { answer: 'Confirmed', open: false } },
+            },
+          },
+        ],
+      },
+    ],
+  });
+}, 20_000);

@@ -1,5 +1,5 @@
 import type { Issue } from './github-issues';
-import { openClient } from './issue-client';
+import { openClient, projectById } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
 
@@ -45,7 +45,7 @@ const cacheKey = ({ projectId, number }: Target): CacheKey => ({
  */
 export function createIssueSummaries(
   source: Source,
-  changed: () => Promise<void>,
+  changed: () => void,
 ): IssueSummaries {
   const loadedAt = new Map<string, number>();
   const cached = storedSummary(source.storage);
@@ -66,7 +66,7 @@ const storedSummary =
 function loadSummary(
   source: Source,
   cached: IssueSummaries['cached'],
-  changed: () => Promise<void>,
+  changed: () => void,
 ): Loads['load'] {
   return async (target) => {
     const summary = await summaryOf(source, target);
@@ -75,7 +75,7 @@ function loadSummary(
       return;
 
     await source.storage.writeCache(cacheKey(target), summary);
-    await changed();
+    changed();
   };
 }
 
@@ -104,8 +104,7 @@ async function summaryOf(
   source: Source,
   { projectId, number }: Target,
 ): Promise<IssueSummary> {
-  const projects = await source.listProjects();
-  const project = projects.find(({ id }) => id === projectId);
+  const project = await projectById(source.listProjects, projectId);
 
   if (!project) throw new Error('This Project no longer exists.');
 

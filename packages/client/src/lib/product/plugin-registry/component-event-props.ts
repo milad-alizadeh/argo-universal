@@ -1,22 +1,29 @@
+import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
 import {
   Handler,
   componentEventHandler,
+  componentEventPayload,
   componentEventRules,
   propsWithin,
   type ComponentEventRules,
   type WireJson,
 } from '@repo/contracts/plugins/wire';
-import type { z } from 'zod';
+import { errorToast } from '@repo/kit/error-toast';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
+import { z } from 'zod';
 import { runAction } from '../plugin-actions';
 import type { ControlField } from './plugin-control-field';
-import type { PluginDispatcher } from './plugin-dispatcher';
-import type { Callback, ControlInput, PluginProps } from './plugin-rendering';
+import type {
+  Callback,
+  ControlInput,
+  OnPageCall,
+  PluginProps,
+} from './plugin-rendering';
 
-// One node's events: the node, its field, the tree's dispatcher, and the redraw a field's change asks for.
+// One node's events: the node, its field, and the redraw a field's change asks for.
 export type NodeEvents = {
   input: ControlInput;
   field: ControlField;
-  send: PluginDispatcher['send'];
   update: () => void;
 };
 
@@ -96,18 +103,54 @@ function placeEcho({ input, field }: NodeEvents): Placed[] {
   return [{ within, name, value: field.current }];
 }
 
-async function deliver(
-  { input, send }: NodeEvents,
+// An awaited event's kit component reports its own failure; the field of any other only rolls back, so it is said here.
+function deliver(
+  { input }: NodeEvents,
   event: Declared,
   payload?: WireJson,
 ): Promise<void> {
-  const { handler, name, schema } = event;
+  const run = runInApp(input, event, payload);
 
+  return event.rules.awaits ? run : run.catch(sayWhy);
+}
+
+// A call that fails in the App, as a payload that does not fit where it lands, says why.
+function sayWhy(error: Error): never {
+  const toast = errorToast('That did not work', error);
+
+  if (toast) showToast({ ...toast, tone: 'danger' });
+
+  throw error;
+}
+
+/*
+ * A built-in Action, or a Loader page's call with the event's payload filled in: nothing goes to the Plugin. With no
+ * handler, as a Loader page's search or selection that is not Page state, the kit component's own state is all there
+ * is.
+ */
+async function runInApp(
+  input: ControlInput,
+  { handler, name, schema }: Declared,
+  payload?: WireJson,
+): Promise<void> {
   if (!handler) return;
 
-  if (!('$event' in handler)) return runAction(handler, input.context.openPage);
-  await send(input.context.key, { event: name, payload, schema });
+  if ('action' in handler) return runAction(handler, input.context.openPage);
+
+  const checked = componentEventPayload(schema, sent(schema, payload));
+  const from = { key: input.context.key, name, schema, payload: checked };
+
+  return pageCallOf(input)(madePageCall(handler, checked), from);
 }
+
+// A press reports a native event object; its call carries no payload.
+const sent = (schema: z.ZodType, payload?: WireJson): WireJson | undefined =>
+  schema instanceof z.ZodUndefined ? undefined : payload;
+
+// Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.
+const pageCallOf = ({ context }: ControlInput): OnPageCall =>
+  context.pageCall ??
+  (() => Promise.reject(new Error('This page cannot change its Page state')));
 
 const valuesAt = (placed: readonly Placed[], within?: string): PluginProps =>
   Object.fromEntries(

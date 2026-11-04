@@ -2,6 +2,9 @@ import { replyFailure } from '../access/capability-refusal';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type { PluginOperations } from '../operations';
+import type { PluginDraws } from '../pages';
+import type { DrawLookup } from '../pages/draw-calls';
+import { reachOf, type DrawReach } from '../protocol/call-origin';
 import type {
   HostMessage,
   PluginReply,
@@ -10,16 +13,15 @@ import type {
 import type { StateRequest } from '../services/plugin-calls';
 import type { PluginServices } from '../services/plugin-services';
 import type { PluginSlotItems } from '../slots/plugin-slot-items';
-import type { PluginViews } from '../views/plugin-views';
 
 // What answers one worker call: the runtime's own resources, with the Hooks and services beside them.
 export type RuntimeCalls = {
   hooks: PluginHooks;
   services: PluginServices;
-  views: PluginViews;
   data: PluginData;
   items: PluginSlotItems;
   operations: PluginOperations;
+  draws: PluginDraws;
 };
 
 type Call = Extract<HostMessage, { type: 'call' }>;
@@ -43,20 +45,26 @@ type RuntimeAnswers = { [Name in RuntimeApi]: Answer<Name> };
 const runtimeCalls: RuntimeAnswers = {
   nav: ({ data }, { pluginId, generation, request }) =>
     data.badges.set(pluginId, generation, request),
-  data: ({ data }, { pluginId, generation, request }) =>
-    data.handle(pluginId, generation, request),
+  data: (runtime, call) =>
+    runtime.data.handle(
+      { pluginId: call.pluginId, generation: call.generation },
+      call.request,
+      reach(runtime, call),
+    ),
+  // A Plugin's answer to a named read a Query asked it to run (ADR-0037); it waits for nothing.
+  reads: ({ data }, { pluginId, generation, request }) =>
+    data.reads.receive({ pluginId, generation }, request.call),
   hooks: ({ hooks }, { pluginId, generation, request }) =>
     hooks.reply({ pluginId, generation }, request.call),
-  view: ({ views }, { pluginId, request }) =>
-    views.receive(pluginId, request.viewId, request.message),
-  dispatchResult: ({ views }, { pluginId, request }) =>
-    views.dispatches.settle(pluginId, request.requestId, request.result),
   // A Plugin's batched items answer, failure or change signal (ADR-0035); it waits for nothing.
   slots: ({ items }, { pluginId, generation, request }) =>
     items.receive({ pluginId, generation }, request.call),
   // A Plugin's answer to one of its own Operations (ADR-0044); it waits for nothing.
   operations: ({ operations }, { pluginId, generation, request }) =>
     operations.receive({ pluginId, generation }, request.call),
+  // A Loader page's tree, failure or defined pattern (ADR-0050); it waits for nothing.
+  pages: ({ draws }, { pluginId, generation, request }) =>
+    draws.receive({ pluginId, generation }, request.call),
 };
 
 export async function answerPluginCall(
@@ -94,22 +102,27 @@ function answerService(
   message: StateCall,
 ): Promise<PluginReply> {
   const { pluginId, generation, request } = message;
+  const { projectId, serverDevice } = reach(runtime, message);
 
   return runtime.services.handle(pluginId, generation, {
     ...request,
-    ...callOrigin(runtime, message),
+    projectId,
+    serverDevice,
   });
 }
 
-function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
-  if (!message.viewId)
-    return { projectId: message.projectId, serverDevice: false };
-  const view = runtime.views.dataView(message.pluginId, message.viewId);
+// What a call reaches is looked up from the draw or the run its origin names, still waiting on its generation.
+function reach(
+  { draws, operations }: RuntimeCalls,
+  { pluginId, generation, origin }: Omit<Call, 'request'>,
+): DrawReach<DrawLookup> {
+  const caller = { pluginId, generation };
 
-  return {
-    projectId: view.projectId,
-    serverDevice: view.opening.serverDevice === true,
-  };
+  return reachOf(
+    {
+      draw: (id) => draws.lookup(caller, id),
+      run: (id) => operations.origin(caller, id),
+    },
+    origin,
+  );
 }
-
-type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };

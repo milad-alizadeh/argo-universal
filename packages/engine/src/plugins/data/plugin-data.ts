@@ -3,49 +3,55 @@ import type {
   PluginDataRequest,
   PluginDataState,
 } from '@repo/contracts/plugins/argo-calls';
-import type { PluginViewId } from '@repo/contracts/plugins/wire';
+import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError, type PluginReply } from '../protocol/runtime';
-import type { OpenView } from '../views/open-view';
-import type { PluginViews } from '../views/plugin-views';
-import {
-  dropOldest,
-  keepNewest,
-  queryKey,
-  removeProject,
-  retainedWarmEntries,
-} from './entry-map';
+import type { WorkerCalls } from '../runtime/worker-calls';
+import { boundWarm, keepNewest, queryKey, removeWhere } from './entry-map';
+import { NamedReads } from './named-reads';
 import { PluginBadges } from './plugin-badges';
-import { QueryEntry } from './query-entry';
-import { QueryIntervals } from './query-intervals';
-import {
-  watchKey,
-  type QueryOwner,
-  type QueryServices,
-  type QueryWatch,
-} from './query-types';
+import { QueryEntry, type EntryServices } from './query-entry';
+import type { QueryOwner, QueryServices } from './query-types';
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
 
+// The draw a Loader's read is for: its id, and the Page address holding the read, or none for a background pass.
+export type DrawnFor = { draw: number; holder?: PageAddress };
+
+/*
+ * Where a Loader's read came from: the Project its Query is for and the draw. The runtime works it out
+ * from the draw the call runs for, so this module needs no draws.
+ */
+export type QueryOrigin = { projectId?: string; drawn?: DrawnFor };
+
+/*
+ * The one cache of a Plugin's reads (ADR-0037, ADR-0050): an entry per Plugin, Project and Query, held by
+ * the Page addresses whose draws read it; a background pass reads it fresh. A
+ * write makes the Plugin's entries due; an answer that changes marks the addresses holding it.
+ */
 export class PluginData {
   readonly badges;
+  readonly reads;
   private readonly plugins = new Map<string, Map<string, QueryEntry>>();
-  private readonly intervals;
+  private readonly services: EntryServices;
 
   constructor(
-    private readonly services: QueryServices,
-    private readonly views: PluginViews,
+    services: QueryServices,
+    private readonly workers: WorkerCalls,
+    marked: EntryServices['marked'],
   ) {
     this.badges = new PluginBadges(services.log);
-    this.intervals = new QueryIntervals(services.log);
+    this.reads = new NamedReads(workers);
+    this.services = { ...services, reads: this.reads, marked };
+    workers.watch((pluginId) => this.forgetEndedReads(pluginId));
   }
 
   async handle(
-    pluginId: string,
-    generation: number,
+    caller: Caller,
     request: PluginDataRequest,
+    origin: QueryOrigin,
   ): Promise<PluginReply> {
     try {
-      return await this.operate({ pluginId, generation }, request);
+      return await this.operate(caller, request, origin);
     } catch (cause) {
       return { ok: false, error: runtimeError(cause) };
     }
@@ -54,62 +60,47 @@ export class PluginData {
   private async operate(
     caller: Caller,
     request: PluginDataRequest,
+    origin: QueryOrigin,
   ): Promise<PluginReply> {
-    const view = this.views.dataView(caller.pluginId, request.viewId);
-
-    if (request.action === 'watch')
-      return { ok: true, value: this.watch(caller, view, request) };
-    await this.update(caller.pluginId, request);
-
-    return { ok: true };
+    return { ok: true, value: await this.read(caller, origin, request) };
   }
 
-  // The watcher is registered before the map is bounded, so this answer is never the entry dropped.
-  private watch(
+  // A background pass reads every Query fresh, so the answers it warms are the ones the pages draw next.
+  private read(
     caller: Caller,
-    view: OpenView,
-    request: QueryWatch,
-  ): PluginDataState {
+    { projectId, drawn }: QueryOrigin,
+    { query, fresh }: PluginDataRequest,
+  ): Promise<PluginDataState> {
+    if (!drawn) throw new Error('A Query is read only during a draw');
+
     const entries = this.entriesOf(caller.pluginId);
-    const state = this.entry(caller, view, request.query).watch(view, request);
+    const entry = this.entry(caller, projectId, query);
 
-    this.bound(caller.pluginId, entries);
+    boundWarm(entries, this.services.log, caller.pluginId);
 
-    return state;
+    return entry.read({
+      ...drawn,
+      fresh: fresh === true || drawn.holder === undefined,
+    });
   }
 
   private entry(
     caller: Caller,
-    view: OpenView,
+    projectId: string | undefined,
     query: PluginQuery,
   ): QueryEntry {
     const entries = this.entriesOf(caller.pluginId);
-    const { projectId } = view;
     const key = queryKey(projectId, query);
 
     const existing = entries.get(key);
 
     if (existing) return keepNewest(entries, key, existing);
-    const entry = this.createEntry({ ...caller, projectId, query });
+    const owner = { ...caller, projectId, query };
+    const entry = new QueryEntry(owner, this.services);
 
     entries.set(key, entry);
 
     return entry;
-  }
-
-  // The warm path keeps answers no view holds, so only the oldest unwatched ones go.
-  private bound(pluginId: string, entries: Map<string, QueryEntry>): void {
-    if (entries.size <= retainedWarmEntries) return;
-    const dropped = dropOldest(entries);
-
-    if (dropped === 0) return;
-    this.services.log(
-      `Plugin ${pluginId}: dropped ${dropped} warm Query answers over the ${retainedWarmEntries} kept`,
-    );
-  }
-
-  private createEntry(owner: QueryOwner): QueryEntry {
-    return new QueryEntry(owner, this.services, this.intervals);
   }
 
   private entriesOf(pluginId: string): Map<string, QueryEntry> {
@@ -122,29 +113,18 @@ export class PluginData {
     return entries;
   }
 
-  private async update(
-    pluginId: string,
-    request: Exclude<PluginDataRequest, { action: 'watch' }>,
-  ): Promise<void> {
-    const key = watchKey(request);
+  // A named read is the code of the generation that defined it, so a generation that ends takes its answers.
+  private forgetEndedReads(pluginId: string): void {
+    const running = this.workers.generation(pluginId);
 
-    const entry = this.entriesOf(pluginId)
-      .values()
-      .find((entry) => entry.owns(key));
-
-    if (!entry) return;
-
-    if (request.action === 'release') entry.release(key);
-    else await entry.refresh();
-  }
-
-  releaseView(viewId: PluginViewId): void {
-    for (const entry of this.entries()) entry.releaseView(viewId);
+    removeWhere(
+      this.entriesOf(pluginId),
+      ({ owner }) => owner.query.api === 'read' && owner.generation !== running,
+    );
   }
 
   release(pluginId: string): void {
     this.badges.release(pluginId);
-    this.intervals.release(pluginId);
 
     for (const entry of this.entriesOf(pluginId).values()) entry.close();
     this.plugins.delete(pluginId);
@@ -152,26 +132,17 @@ export class PluginData {
 
   releaseProject(projectId: string): void {
     for (const entries of this.plugins.values())
-      removeProject(entries, projectId);
+      removeWhere(entries, ({ owner }) => owner.projectId === projectId);
   }
 
+  // One of the Plugin's Operations ran, or it said `argo.changed()`: every answer it kept is due.
+  written(pluginId: string): void {
+    for (const entry of this.entriesOf(pluginId).values()) entry.written();
+  }
+
+  // A storage write makes only the Plugin's storage reads due.
   storageWritten(pluginId: string): void {
     for (const entry of this.entriesOf(pluginId).values())
-      entry.storageWritten();
-  }
-
-  opened(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values()) entry.opened();
-  }
-
-  // Whether every Query the view has declared so far holds a value or an error.
-  queriesSettled(viewId: PluginViewId): boolean {
-    return this.entries()
-      .filter((entry) => entry.hasView(viewId))
-      .every((entry) => entry.settled);
-  }
-
-  private entries(): IteratorObject<QueryEntry> {
-    return this.plugins.values().flatMap((entries) => entries.values());
+      if (entry.owner.query.api === 'storage') entry.written();
   }
 }

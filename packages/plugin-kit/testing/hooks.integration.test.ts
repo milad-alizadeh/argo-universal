@@ -7,6 +7,8 @@ import {
   promptEvent,
 } from '../mocks/hook-fixture';
 
+const submit = 'prompt.submit';
+
 it.each(['session.start', 'turn.complete'])(
   'refuses a manifest naming withdrawn event %s',
   async (name) => {
@@ -21,14 +23,14 @@ it.each([
   "'prompt.submit', () => ({ drop: 'No' }), { guard: true }",
   "'prompt.submit', undefined, () => ({ drop: 'No' }), { guard: true }",
 ])('refuses removed Hook options naming the option: %s', async (args) => {
-  const kit =
-    await start(`import { Text } from '@argo/plugin-kit'; export async function register(argo) {
-    await argo.on(${args}); argo.pages.register('/', () => <Text>Ready</Text>);
+  const kit = await start(`export async function register(argo) {
+    await argo.on(${args});
   }`);
 
-  await expect(
-    kit.mount({ page: '/', surface: { platform: 'web' } }),
-  ).rejects.toThrow('guard');
+  expect(await kit.emit(submit, promptEvent)).toEqual({
+    prompt: promptEvent.prompt,
+  });
+  expect(await kit.log()).toContain('guard');
 });
 
 it('passes the Project to prompt.submit Hooks', async () => {
@@ -36,7 +38,7 @@ it('passes the Project to prompt.submit Hooks', async () => {
     await argo.on('prompt.submit', (ctx, event) => ({ prompt: [{ type: 'text', text: event.projectId }] }));
   }`);
 
-  expect(await kit.emit('prompt.submit', promptEvent)).toEqual({
+  expect(await kit.emit(submit, promptEvent)).toEqual({
     prompt: [{ type: 'text', text: 'test-project' }],
   });
 });
@@ -47,7 +49,7 @@ it('a Plugin that registers a refusing Hook and then fails to start refuses noth
     throw new Error('Startup failed');
   }`);
 
-  expect(await kit.emit('prompt.submit', promptEvent)).toEqual({
+  expect(await kit.emit(submit, promptEvent)).toEqual({
     prompt: promptEvent.prompt,
   });
   expect(await kit.log()).toContain('Startup failed');

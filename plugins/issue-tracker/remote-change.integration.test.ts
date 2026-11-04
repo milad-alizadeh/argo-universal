@@ -4,13 +4,11 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import {
   chooseGithub,
-  follow,
   issueTitle,
   project,
   tracker,
   trackerPage,
-  type PageView,
-  wait,
+  type OpenPage,
 } from './journey-fixture';
 
 type Test = Awaited<ReturnType<typeof tracker>>;
@@ -27,15 +25,15 @@ async function setRemote(test: Test, originUrl: string | null): Promise<void> {
 
 async function openList(originUrl: string | null): Promise<Test> {
   const test = await tracker([{ ...project, originUrl }]);
-  await chooseGithub(trackerPage(test));
+  await chooseGithub(await trackerPage(test));
 
   return test;
 }
 
-async function openFilter(test: Test): Promise<PageView> {
-  const root = await test.mount({ page: '/', surface: { platform: 'web' } });
+async function openFilter(test: Test): Promise<OpenPage> {
+  const root = await test.pages.open({ path: '/' });
 
-  return follow(test, root, 'Open');
+  return root.press('Open');
 }
 
 it(
@@ -47,7 +45,7 @@ it(
 
     const list = await openFilter(test);
 
-    await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
+    expect(list.findText(issueTitle)).toBeDefined();
     expect(list.findText(noRemote)).toBeUndefined();
   },
   testTimeout,
@@ -62,7 +60,7 @@ it(
 
     const list = await openFilter(test);
 
-    await expect.poll(() => list.findText(noRemote), wait).toBeDefined();
+    expect(list.findText(noRemote)).toBeDefined();
     expect(list.findText(issueTitle)).toBeUndefined();
   },
   testTimeout,
@@ -74,7 +72,7 @@ it(
     const test = await openList(null);
     const list = await openFilter(test);
 
-    await expect.poll(() => list.findText(noRemote), wait).toBeDefined();
+    expect(list.findText(noRemote)).toBeDefined();
   },
   testTimeout,
 );

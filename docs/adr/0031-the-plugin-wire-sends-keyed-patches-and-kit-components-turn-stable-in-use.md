@@ -12,6 +12,8 @@ This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.m
 
 ADR-0025's stability rule also blocks the spec: a kit component turns stable only once the Issue tracker and Atlas both use it, and Atlas will never use a DatePicker, Video or Table. The fixes below copy Shopify remote-dom, Phoenix LiveView, Raycast, Adaptive Cards and VS Code.
 
+[ADR-0050](0050-plugin-pages-are-a-loader-and-a-pure-render.md) (owner, 2026-11-03) amends this: a page is a tree the App asks for by its Page address, keyed patches are sent only to a live page, and a Component event is a value the App acts on, so nothing is dispatched to the Server by node key.
+
 [ADR-0034](0034-plugin-apps-check-one-wire-version.md) (owner, 2026-10-19) amends this: per-kit-component versions and lowering are gone, and each App reports one Plugin wire version, which the Server checks against a minimum.
 
 ## Decision
@@ -23,15 +25,14 @@ ADR-0025's stability rule also blocks the spec: a kit component turns stable onl
   - `replace` (key, node), only when a node's type changes.
 
   Adding, removing or moving one row sends one op. Copied from remote-dom's mutation records and LiveView streams.
-- **Commits are coalesced and capped.** The worker sends at most one patch per frame per view. Each message and each page's tree have size caps, set in #983 from measurement and checked on the Server. A message over the cap is refused and logged, and the page shows its fallback. These caps sit above the per-kit-component caps of ADR-0028.
+- **Commits are coalesced and capped.** A live page sends at most one patch per frame. Each message and each page's tree have size caps, set in #983 from measurement and checked on the Server. A message over the cap is refused and logged, and the page shows its fallback. These caps sit above the per-kit-component caps of ADR-0028.
 - **The App draws slots.** A slot holds any number of nodes, in order. A prop whose value is an element or an array of elements (`leading`, `media`, `accessories`) becomes a slot of that name. This replaces today's "first node only".
-- **Taps name the node, not the path.** A dispatch carries `{ pluginId, path, revision, key, event, payload }`.
-  - The Server looks the handler up by the node's `key` and event name in the view's current revision.
-  - When that node no longer exists, the tap is refused, never run on another row.
-  - `payload` is typed per event by the kit component's schema, for example `onChangeText: string` or `onSelectionChange: string[]`. The App and the Server both check it against that schema.
+- **Taps name the node, not the path.** A Component event's value sits on its node, found by the node's `key` and the event name (ADR-0050).
+  - When that node is no longer on the page, the tap is refused, never run on another row.
+  - `payload` is typed per event by the kit component's schema, for example `onChangeText: string` or `onSelectionChange: string[]`. The App checks it against that schema, and the Server checks the Operation arguments it fills.
   - A node's key and the event name are the whole address; there are no nested paths inside a node. Kit components with several tappable entries, such as SplitButton, take them as keyed `Action` children. Amended by the owner on 2026-10-19 (#1052).
-  - Dispatch returns when the handler settles: `ok`, or an error the App shows as an error toast. Pending states wait for it. A Switch or Checkbox flips at once and reverts when the handler fails.
-- **Views belong to a Connection.** The Server keeps one view per Connection, Plugin and page, so each App renders its own tree. That makes ADR-0027's `ctx.surface` work per App: a tree is built for that App's platform. UI state is the App's own: search text, selection, scroll position, open or closed, and input drafts. The Plugin hears it only through events it opts into:
+  - An Operation call returns when the Operation settles: `ok`, or an error the App shows as an error toast. Pending states wait for it. A Switch or Checkbox flips at once and reverts when the Operation fails.
+- **Each App draws its own tree.** The Server draws each page for the App that asks, so ADR-0027's `ctx.surface` works per App: a tree is built for that App's platform. UI state is the App's own: search text, selection, scroll position, open or closed, and input drafts. The Plugin hears it only through events it opts into, each a Page state change or an Operation call (ADR-0050):
   - throttled `onSearchTextChange` (otherwise the App filters the list itself);
   - `onSelectionChange`;
   - a field's throttled `onChange`;

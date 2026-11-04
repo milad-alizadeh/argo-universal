@@ -1,94 +1,91 @@
 import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
-import type { PluginViewId } from '@repo/contracts/plugins/wire';
+import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError } from '../protocol/runtime';
-import type { OpenView } from '../views/open-view';
-import { backgroundRefusal, queryState, readQuery } from './query-answer';
-import type { QueryIntervals } from './query-intervals';
+import { queryState, readQuery, type QueryReaders } from './query-answer';
+import { QueryHolders, reading } from './query-holders';
 import { QueryTiming } from './query-timing';
-import {
-  type QueryOwner,
-  type QueryServices,
-  type QueryWatch,
-} from './query-types';
-import { QueryWatchers } from './query-watchers';
+import type { QueryOwner, QueryRead, QueryServices } from './query-types';
+
+// What an entry needs besides the Plugin services: the worker its named reads run in, and where its marks go.
+export type EntryServices = QueryServices &
+  QueryReaders & {
+    marked: (pluginId: string, addresses: PageAddress[]) => void;
+  };
 
 export class QueryEntry {
   state: PluginDataState = { stale: false, revision: 0 };
-  private refusedInBackground = false;
-  readonly watchers;
   private readonly timing;
+  private readonly holders = new QueryHolders();
   private flight: Promise<void> | undefined;
-  private dirty = false;
-  private closed = false;
 
   constructor(
     readonly owner: QueryOwner,
-    private readonly services: QueryServices,
-    intervals: QueryIntervals,
+    private readonly services: EntryServices,
   ) {
-    this.watchers = new QueryWatchers(owner, services, intervals);
-    this.timing = new QueryTiming(services.clock, () => {
-      void this.refresh();
-    });
+    this.timing = new QueryTiming(services.clock);
   }
 
-  watch(view: OpenView, request: QueryWatch): PluginDataState {
-    this.watchers.add(view, request);
-    const background = view.backgroundInterval !== undefined;
+  /*
+   * A Loader's read: the kept answer while it is current, or a read joined or begun. A read joined that
+   * began before a write is not current when it lands, so the Loader waits for one more. A page drawn
+   * again on a clock reads again once the kept answer is as old as its interval.
+   */
+  async read({
+    holder,
+    fresh,
+    draw,
+    every,
+  }: QueryRead): Promise<PluginDataState> {
+    this.holders.hold(holder, reading);
 
-    if (this.shouldRefresh(background)) void this.refresh(background);
-    else this.schedule();
+    if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
+    await this.untilCurrent(draw, 2);
+    this.holders.hold(holder, this.state.revision);
 
     return this.state;
   }
 
-  private shouldRefresh(background: boolean): boolean {
-    return background || !this.timing.ran || this.timing.overdue;
+  private async untilCurrent(draw: number, tries: number): Promise<void> {
+    if (tries === 0 || this.current()) return;
+    await this.refresh(draw);
+
+    return this.untilCurrent(draw, tries - 1);
   }
 
-  release(key: string): void {
-    if (this.watchers.remove(key)) this.timing.makeDue();
-    this.schedule();
+  // Read since the last write, not past its due time, and read without failing.
+  private current(): boolean {
+    return !this.timing.overdue && this.state.error === undefined;
   }
 
-  releaseView(viewId: PluginViewId): void {
-    for (const key of this.watchers.keysForView(viewId)) this.release(key);
+  private refresh(draw?: number): Promise<void> {
+    return this.flight ?? this.begin(draw);
   }
 
-  refresh(background?: boolean): Promise<void> {
-    if (this.flight) return this.flight;
-    const inBackground = background === true;
-
-    if (this.stopped(inBackground)) return Promise.resolve();
-
-    return this.begin(inBackground);
-  }
-
-  // ADR-0037 stops a refused Query's clock in the background alone; a page on screen keeps its own.
-  private stopped(background: boolean): boolean {
-    return background && this.refusedInBackground;
-  }
-
-  // "Until the Plugin is next opened": opening it lets the next background pass read the Query again.
-  opened(): void {
-    this.refusedInBackground = false;
-  }
-
-  private begin(background: boolean): Promise<void> {
+  private begin(draw: number | undefined): Promise<void> {
     this.timing.started();
     this.publish({ ...this.state, stale: this.state.data !== undefined });
-    this.flight = this.execute(background)
+    this.flight = this.execute(draw)
       .catch((cause: unknown) => this.failed(cause))
       .finally(() => this.finished());
 
     return this.flight;
   }
 
-  private async execute(background: boolean): Promise<void> {
-    const reply = await readQuery(this.owner, this.services);
+  private async execute(draw: number | undefined): Promise<void> {
+    const reply = await readQuery(this.owner, this.services, draw);
+    const before = this.state.data;
 
-    this.refusedInBackground = backgroundRefusal(background, reply);
     this.publish(queryState(this.state, reply));
+
+    if (changed(before, this.state.data)) this.markHolders();
+  }
+
+  // The addresses that drew the answer before this one are marked, so the Apps showing them draw again.
+  private markHolders(): void {
+    const addresses = this.holders.before(this.state.revision);
+
+    if (addresses.length > 0)
+      this.services.marked(this.owner.pluginId, addresses);
   }
 
   private failed(cause: unknown): void {
@@ -100,61 +97,26 @@ export class QueryEntry {
 
   private finished(): void {
     this.flight = undefined;
-    this.timing.finished(this.watchers);
-    this.schedule();
-
-    if (this.needsRerun()) this.rerun();
+    this.timing.finished();
   }
 
-  private needsRerun(): boolean {
-    return this.dirty && this.watchers.active;
-  }
-
-  private rerun(): void {
-    this.dirty = false;
-    void this.refresh();
-  }
-
-  private schedule(): void {
-    this.timing.close();
-
-    if (this.paused()) return;
-
-    this.timing.schedule(this.watchers);
-  }
-
-  private paused(): boolean {
-    return Boolean(this.flight) || this.closed;
-  }
-
-  storageWritten(): void {
-    if (this.owner.query.api !== 'storage') return;
-    this.dirty = Boolean(this.flight);
+  // A write makes the entry due: a read in flight lands still due, and the next Loader read waits for a fresh answer.
+  written(): void {
     this.timing.makeDue();
-
-    if (this.watchers.active) void this.refresh();
-  }
-
-  get settled(): boolean {
-    return !this.flight && this.timing.ran;
-  }
-
-  owns(key: string): boolean {
-    return this.watchers.has(key);
-  }
-
-  hasView(viewId: PluginViewId): boolean {
-    return this.watchers.keysForView(viewId).length > 0;
   }
 
   private publish(state: PluginDataState): void {
     this.state = { ...state, revision: this.state.revision + 1 };
-    this.watchers.publish(this.state);
   }
 
   close(): void {
-    this.closed = true;
-    this.watchers.close();
-    this.timing.close();
+    this.holders.clear();
   }
 }
+
+// A first answer changes nothing on screen; after that, a different answer does.
+const changed = (
+  before: PluginDataState['data'],
+  after: PluginDataState['data'],
+): boolean =>
+  before !== undefined && JSON.stringify(before) !== JSON.stringify(after);

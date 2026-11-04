@@ -2,8 +2,9 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { PluginList } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
+import type { OperationCard } from '../../sessions';
+import { checkRun, type CheckedRun } from './checked-run';
 import {
-  checkParams,
   declaredOperations,
   operationRow,
   type DeclaredOperation,
@@ -23,15 +24,23 @@ export type OperationsPort = {
       name: string;
       params: Readonly<Record<string, string | number | boolean>>;
       caller: PluginOperationCaller;
+      serverDevice?: boolean;
     },
   ) => Promise<Answer>;
 };
 
+/*
+ * One run of a Plugin's own Operation. `serverDevice` says the Connection that asked is the Server Device,
+ * as a tap in the App there is; an Agent's `argo run` and a Hook's run leave it out.
+ */
 export type OperationRun = {
   pluginId: string;
   name: string;
   params: Json;
   caller: PluginOperationCaller;
+  serverDevice?: boolean;
+  // Asks the user first, for a Session's run in a Project other than its own; a run with none is refused there.
+  confirm?: (card: OperationCard) => Promise<void>;
 };
 
 // Every enabled Plugin's declared Operations, as the registry lists them.
@@ -49,15 +58,50 @@ export async function runDeclaredOperation(
   input: OperationRun,
 ): Promise<Json> {
   const declared = await declaredOperation(port, input);
-  const params = checkParams(declared.operation.params ?? {}, input.params);
+  const checked = await checkedRun(declared, input);
 
   await port.requireRunning(input.pluginId);
 
-  const answer = await port.call(input.pluginId, { ...input, params });
+  const answer = await port.call(input.pluginId, {
+    name: input.name,
+    ...checked,
+    ...(input.serverDevice && { serverDevice: true }),
+  });
 
   if (!answer.ok) throw new Error(answer.error);
 
   return answer.result;
+}
+
+// The params and caller the handler is given; a run in another Project is confirmed first.
+async function checkedRun(
+  { operation }: DeclaredOperation,
+  input: OperationRun,
+): Promise<Omit<CheckedRun, 'outside'>> {
+  const { outside, ...checked } = checkRun(
+    operation,
+    input.params,
+    input.caller,
+  );
+
+  if (outside) await confirmed(input, operation.label);
+
+  return checked;
+}
+
+// Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first.
+async function confirmed(
+  { confirm, name }: OperationRun,
+  label: string,
+): Promise<void> {
+  if (!confirm)
+    throw new Error(`${name} in another Project needs the user to confirm`);
+
+  await confirm({
+    title: label,
+    description:
+      'Run a Plugin Operation in a Project other than the calling Session’s.',
+  });
 }
 
 async function declaredOperation(

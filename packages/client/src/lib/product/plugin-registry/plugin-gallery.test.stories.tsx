@@ -12,7 +12,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const personName = 'Sam Rivera';
 
@@ -43,7 +43,10 @@ const root: WireNode = {
     {
       type: 'ListItem',
       key: 'file',
-      props: { title: 'Open screenshot', onPress: { $event: 'onPress' } },
+      props: {
+        title: 'Open screenshot',
+        onPress: { operation: 'openScreenshot', args: {} },
+      },
       children: [],
       slots: { media: [image] },
     },
@@ -58,8 +61,8 @@ const root: WireNode = {
   slots: {},
 };
 
-export const DrawsAndDispatches: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+export const DrawsAndRuns: Story = {
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     await expect(
       await canvas.findByRole('img', { name: 'Thumbnail' }),
@@ -69,8 +72,9 @@ export const DrawsAndDispatches: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Open screenshot' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith('gallery/file', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'openScreenshot', args: {} },
+      expect.objectContaining({ key: 'gallery/file' }),
+    );
   },
 };

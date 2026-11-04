@@ -12,13 +12,12 @@ const meta = {
   argTypes: {
     title: { control: 'text' },
     root: { control: false },
-    viewId: { control: false },
     callbacks: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
     root: counterRoot,
-    callbacks: { onEvent: action('Plugin event') },
+    callbacks: { onPageCall: action('Page call') },
   },
 } satisfies Meta<typeof PluginDetailView>;
 

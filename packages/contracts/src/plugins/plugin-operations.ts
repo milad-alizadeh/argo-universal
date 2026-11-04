@@ -8,6 +8,13 @@ import { WireJson } from '#plugin-wire-json';
  */
 
 // One Operation's name within its Plugin; its id is `<plugin-id>.<name>`.
+/*
+ * How long one of a Plugin's Operations may run before the Server fails its call. An Operation is an Agent's
+ * own step, not a drawing deadline, so it is given far longer than a Slot's batched call. The worker knows
+ * it too: once it has passed, the run is no longer the Server's to mark, and a later change marks as usual.
+ */
+export const operationLimitMs = 30_000;
+
 export const PluginOperationName = z
   .string()
   .regex(
@@ -17,13 +24,24 @@ export const PluginOperationName = z
 
 /*
  * A declared param: its type, whether it must be given, and the line `argo operations` prints for it.
- * Core checks the params against these before the Plugin ever sees them.
+ * A string param may list its `choices`, the only values it takes. Core checks the params against these
+ * before the Plugin ever sees them.
  */
-export const PluginOperationParam = z.strictObject({
-  type: z.enum(['string', 'number', 'boolean']),
-  description: z.string().trim().min(1),
-  required: z.boolean().optional(),
-});
+export const PluginOperationParam = z
+  .strictObject({
+    type: z.enum(['string', 'number', 'boolean']),
+    description: z.string().trim().min(1),
+    required: z.boolean().optional(),
+    choices: z.array(z.string().min(1)).min(1).optional(),
+  })
+  .refine(
+    ({ type, choices }) => choices === undefined || type === 'string',
+    'Only a string param lists choices',
+  )
+  .refine(
+    ({ choices = [] }) => new Set(choices).size === choices.length,
+    'A param lists each choice once',
+  );
 
 export type PluginOperationParam = z.infer<typeof PluginOperationParam>;
 
@@ -46,12 +64,37 @@ export const PluginOperationTier = z.enum(['read', 'act']);
 
 export type PluginOperationTier = z.infer<typeof PluginOperationTier>;
 
+/*
+ * What an Operation needs its Caller to carry: `session`, that a Session runs it; `project`, a Project it
+ * acts in. Core gives a `project` Operation a `projectId` param of its own, and the Project is the one it
+ * names or else the Caller's; core refuses the run when there is none, so the handler always has one.
+ */
+export const PluginOperationNeed = z.enum(['project', 'session']);
+
+export type PluginOperationNeed = z.infer<typeof PluginOperationNeed>;
+
+// The param core adds to an Operation that needs a Project; a Plugin never declares it.
+export const projectParam = 'projectId';
+
 export const PluginOperationContribution = z.strictObject({
   name: PluginOperationName,
   label: z.string().trim().min(1),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
-  params: z.record(PluginOperationName, PluginOperationParam).optional(),
+  params: z
+    .record(PluginOperationName, PluginOperationParam)
+    .refine(
+      (params) => !Object.hasOwn(params, projectParam),
+      'An Operation needs a Project with "caller": ["project"], not a projectId param',
+    )
+    .optional(),
+  caller: z
+    .array(PluginOperationNeed)
+    .refine(
+      (needs) => new Set(needs).size === needs.length,
+      'An Operation names each need once',
+    )
+    .optional(),
   keywords: z.array(z.string().trim().min(1)).optional(),
 });
 
@@ -69,13 +112,25 @@ export const PluginOperationContributions = z
     'Operation names must be unique',
   );
 
-// Who ran the Operation: the Session whose token called it, and the Project that Session works in.
+/*
+ * Who ran the Operation: the Session whose token called it, and the Project that Session works in. A tap
+ * is run by the person at an App, so it says `person` and carries the page's Project and Session as its
+ * scope only; it is not a Session, and an Operation that needs one refuses it.
+ */
 export const PluginOperationCaller = z.strictObject({
   sessionId: z.string().min(1).optional(),
   projectId: z.string().min(1).optional(),
+  person: z.literal(true).optional(),
 });
 
 export type PluginOperationCaller = z.infer<typeof PluginOperationCaller>;
+
+// The worker's answer that one call Argo asked of it failed, by the call's id, and why.
+export const WorkerCallFailed = z.strictObject({
+  action: z.literal('failed'),
+  id: z.number().int().nonnegative(),
+  error: z.string(),
+});
 
 // The worker's answer to one invocation, by the id it arrived with.
 export const PluginOperationCall = z.discriminatedUnion('action', [
@@ -84,11 +139,7 @@ export const PluginOperationCall = z.discriminatedUnion('action', [
     id: z.number().int().nonnegative(),
     result: WireJson,
   }),
-  z.strictObject({
-    action: z.literal('failed'),
-    id: z.number().int().nonnegative(),
-    error: z.string(),
-  }),
+  WorkerCallFailed,
 ]);
 
 export type PluginOperationCall = z.infer<typeof PluginOperationCall>;

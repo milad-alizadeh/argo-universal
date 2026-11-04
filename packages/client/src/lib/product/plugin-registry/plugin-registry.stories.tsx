@@ -19,8 +19,8 @@ const meta = {
   title: 'Design System/Patterns/PluginRegistry',
   component: PluginTree,
   parameters: { screenPreview: true },
-  argTypes: { root: { control: false }, onEvent: { control: false } },
-  args: { ...slottedRowTree, onEvent: action('Plugin event') },
+  argTypes: { root: { control: false }, onPageCall: { control: false } },
+  args: { ...slottedRowTree, onPageCall: action('Page call') },
 } satisfies Meta<typeof PluginTree>;
 
 export default meta;
@@ -37,14 +37,14 @@ function rowWithCount(root: WireNode, count: number): WireNode {
   ]);
 }
 
-function SlotPreview({ root, onEvent }: PluginTreeProps): ReactElement {
+function SlotPreview({ root, onPageCall }: PluginTreeProps): ReactElement {
   const [count, setCount] = useState(0);
 
   return (
     <PluginTree
       root={rowWithCount(root, count)}
-      onEvent={(key, event) => {
-        void onEvent(key, event);
+      onPageCall={async (call, event) => {
+        await onPageCall?.(call, event);
         setCount((value) => value + 1);
       }}
     />

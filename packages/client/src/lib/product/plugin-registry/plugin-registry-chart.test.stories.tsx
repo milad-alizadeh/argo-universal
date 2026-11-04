@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const { line } = chartFixtures;
 
@@ -21,16 +21,19 @@ export const Press: Story = {
       root={{
         type: 'Chart',
         key: '0',
-        props: { ...line, onPress: { $event: 'onPress' } },
+        props: { ...line, onPress: { operation: 'openChart', args: {} } },
         children: [],
         slots: {},
       }}
-      onEvent={onEvent}
+      onPageCall={onPageCall}
     />
   ),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: line.label }));
-    await expect(onEvent).toHaveBeenCalledWith('0', { event: 'onPress' });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'openChart', args: {} },
+      expect.objectContaining({ key: '0', name: 'onPress' }),
+    );
   },
 };
 
@@ -38,7 +41,6 @@ export const Image: Story = {
   render: () => (
     <PluginTree
       root={{ type: 'Chart', key: '0', props: line, children: [], slots: {} }}
-      onEvent={onEvent}
     />
   ),
   play: async ({ canvas }) => {

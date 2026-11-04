@@ -15,10 +15,10 @@ import {
   HostHookCommand,
   WorkerHookCommand,
 } from '@repo/contracts/plugins/hook-protocol';
-import { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import * as wire from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { CallOrigin } from '#plugin-call-origin';
 import { PluginEntry } from '#plugin-entry';
 import { TestCommand, TestReply } from '#plugin-test-control';
 
@@ -43,17 +43,8 @@ export const pluginAnswerLimitMs = 3000;
 export const PluginRequest = z.discriminatedUnion('api', [
   ...ArgoRequest.options,
   z.object({ api: z.literal('hooks'), call: HookCall }),
-  z.object({
-    api: z.literal('dispatchResult'),
-    requestId: wire.PluginDispatchId,
-    result: wire.PluginDispatchResult,
-  }),
-  z.object({ api: z.literal('operations'), call: PluginOperationCall }),
-  z.object({
-    api: z.literal('view'),
-    viewId: wire.PluginViewId,
-    message: wire.ViewMessage,
-  }),
+  z.object({ api: z.literal('operations'), call: wire.PluginOperationCall }),
+  ...wire.LoaderRequest.options,
 ]);
 
 export type PluginRequest = z.infer<typeof PluginRequest>;
@@ -122,8 +113,7 @@ export const HostMessage = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('call'),
     pluginId: z.string(),
-    viewId: z.string().optional(),
-    projectId: z.string().optional(),
+    origin: CallOrigin,
     generation: z.number(),
     id: z.number(),
     request: PluginRequest,
@@ -134,8 +124,7 @@ export type HostMessage = z.infer<typeof HostMessage>;
 
 export const WorkerCall = z.object({
   type: z.literal('call'),
-  viewId: z.string().optional(),
-  projectId: z.string().optional(),
+  origin: CallOrigin,
   id: z.number(),
   request: PluginRequest,
 });

@@ -15,7 +15,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 // A cold browser fetches and compiles CanvasKit before the drawing is ready.
 const canvasReady = { timeout: 15_000 };
@@ -43,7 +43,7 @@ const narrow = WireNode.parse({
         y: 101,
         text: 'File',
         tone: 'neutral',
-        onPress: { $event: 'onPress' },
+        onPress: { operation: 'openFile', args: {} },
       },
       children: [],
       slots: {},
@@ -54,7 +54,7 @@ const narrow = WireNode.parse({
 function Sample({ root }: { root: WireNode }): React.JSX.Element {
   return (
     <View style={{ width: 360 }}>
-      <PluginTree root={root} onEvent={onEvent} />
+      <PluginTree root={root} onPageCall={onPageCall} />
     </View>
   );
 }
@@ -75,7 +75,7 @@ export const ZoomAndCull: Story = {
     await waitFor(() => expect(label).toBeVisible());
     await userEvent.keyboard('{Home}');
     await waitFor(() => expect(label).not.toBeVisible());
-    await expect(onEvent).not.toHaveBeenCalled();
+    await expect(onPageCall).not.toHaveBeenCalled();
   },
 };
 
@@ -94,7 +94,7 @@ export const FixedCameraDoesNotZoom: Story = {
     frame.focus();
     await userEvent.keyboard('++++');
     await expect(within(image).getByText('File')).not.toBeVisible();
-    await expect(onEvent).not.toHaveBeenCalled();
+    await expect(onPageCall).not.toHaveBeenCalled();
   },
 };
 
@@ -126,9 +126,10 @@ export const FixedAfterPan: Story = {
       coords: { clientX: bounds.left + 20, clientY: bounds.top + 45 },
       keys: '[MouseLeft]',
     });
-    await expect(onEvent).toHaveBeenCalledWith('scene/box', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'selectDrawing', args: { drawing: 'box' } },
+      expect.objectContaining({ key: 'scene/box', name: 'onPress' }),
+    );
   },
 };
 
@@ -155,6 +156,6 @@ export const ReleaseOutsideFixed: Story = {
     await expect(canvas.findByRole('tooltip')).resolves.toHaveTextContent(
       'Web build',
     );
-    await expect(onEvent).not.toHaveBeenCalled();
+    await expect(onPageCall).not.toHaveBeenCalled();
   },
 };

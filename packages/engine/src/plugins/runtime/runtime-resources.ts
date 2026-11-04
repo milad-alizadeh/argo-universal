@@ -3,22 +3,29 @@ import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
 import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
+import { PageChanges, PluginDraws } from '../pages';
 import type { PluginStatus } from '../protocol/runtime';
+import type { PluginServices } from '../services/plugin-services';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
-import type { OpenView } from '../views/open-view';
-import { PluginViews } from '../views/plugin-views';
-import type { ViewLifecycle } from '../views/view-registry';
 import type { RuntimeCalls } from './calls';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
+import { WorkerCalls, type WorkerTransport } from './worker-calls';
+
+// What the runtime's resources are built from: the Queries' services, with the whole of the Plugin services and the send to a worker.
+export type RuntimeInput = QueryServices &
+  Pick<WorkerTransport, 'send'> & { services: PluginServices };
 
 export class RuntimeResources {
-  readonly views;
   readonly data;
   readonly background;
   readonly items;
   readonly operations;
+  readonly draws;
+  // Hears each running worker's `argo.changed()` and Operations, and the addresses whose reads changed.
+  readonly changes;
+  private readonly workers;
   private readonly identities = new Map<
     string,
     ReturnType<typeof pluginIdentity>
@@ -29,46 +36,71 @@ export class RuntimeResources {
   private readonly unwatch;
   private projectUpdates: Promise<void> = Promise.resolve();
 
-  constructor(private readonly input: QueryServices) {
-    this.views = new PluginViews(input.send, input.log, this.lifecycle());
-    this.data = new PluginData(input, this.views);
-    this.background = new PluginBackground({
-      ...input,
-      views: this.views,
-      data: this.data,
+  constructor(private readonly input: RuntimeInput) {
+    this.workers = new WorkerCalls(input);
+    this.data = this.pluginData(input);
+    this.items = new PluginSlotItems(this.workers);
+    this.operations = new PluginOperations(this.workers);
+    this.changes = this.pageChanges();
+    this.draws = this.pluginDraws(input);
+    this.background = this.backgroundPasses(input);
+    this.unwatch = this.watch(input);
+  }
+
+  // A write makes the Plugin's Queries due before its pages hear of it.
+  private pageChanges(): PageChanges {
+    return new PageChanges(this.workers, (pluginId): void =>
+      this.data.written(pluginId),
+    );
+  }
+
+  private pluginDraws(input: RuntimeInput): PluginDraws {
+    return new PluginDraws({
+      workers: this.workers,
+      log: input.log,
+      changes: this.changes,
+      drawings: this.failures,
     });
-    this.items = new PluginSlotItems(input);
-    this.operations = new PluginOperations(input);
+  }
+
+  // A Query answer that changed marks the Page addresses whose draws read it.
+  private pluginData(input: QueryServices): PluginData {
+    return new PluginData(input, this.workers, (pluginId, addresses) =>
+      this.changes.heldChanged(pluginId, addresses),
+    );
+  }
+
+  private backgroundPasses(input: QueryServices): PluginBackground {
+    return new PluginBackground({
+      ...input,
+      draws: this.draws,
+      projectRemoved: (projectId): void => this.projectRemoved(projectId),
+    });
+  }
+
+  // `argo.changed()` and every Operation run reach pages and items Slots alike.
+  private watch(input: RuntimeInput): Array<() => void> {
     input.services.onStorageWrite((id) => this.data.storageWritten(id));
-    this.unwatch = input.services.watchProjects(() => this.projectsChanged());
+
+    return [
+      input.services.watchProjects(() => this.projectsChanged()),
+      this.operations.onRan((pluginId) => this.changes.changedBy(pluginId)),
+      this.changes.listen((pluginId, addresses) => {
+        if (!addresses) this.items.changed(pluginId);
+      }),
+    ];
   }
 
   // The resources that answer a worker's calls, with the Hooks and services it also reaches.
   calls(core: Pick<RuntimeCalls, 'hooks' | 'services'>): RuntimeCalls {
-    const { views, data, items, operations } = this;
+    const { data, items, operations, draws } = this;
 
-    return { ...core, views, data, items, operations };
+    return { ...core, data, items, operations, draws };
   }
 
-  private lifecycle(): ViewLifecycle {
-    return {
-      opened: (view) => this.data.opened(view.pluginId),
-      released: (view, lastOfOpening) => this.releaseView(view, lastOfOpening),
-      received: (view) => this.markDrawn(view),
-      failed: (view, message) => this.failures.failed(view, message),
-    };
-  }
-
-  private releaseView(view: OpenView, lastOfOpening: boolean): void {
-    this.data.releaseView(view.opening.viewId);
-    this.background.released(view.opening.viewId);
-
-    if (lastOfOpening) this.failures.clearDrawing(view);
-  }
-
-  private markDrawn(view: OpenView): void {
-    this.failures.clearDrawing(view);
-    this.background.rendered(view.opening.viewId);
+  // A removed Project's kept answers end with its passes.
+  private projectRemoved(projectId: string): void {
+    this.data.releaseProject(projectId);
   }
 
   activate(
@@ -81,15 +113,12 @@ export class RuntimeResources {
     this.identities.set(pluginId, pluginIdentity(location));
     this.input.services.activate(pluginId, plugin);
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
-    this.items.activate(pluginId, generation);
-    this.operations.activate(pluginId);
   }
 
-  // A worker that runs reopens its views, and lists ask it for their items.
+  // A worker that runs answers the calls held for it.
   running(pluginId: string, generation: number): void {
-    this.views.reopen(pluginId);
-    this.items.running(pluginId, generation);
-    this.operations.ran(pluginId, generation);
+    this.workers.run(pluginId, generation);
+    this.changes.restarted(pluginId);
   }
 
   // A crash does not end a pass: it keeps its timer and activates the Plugin again next interval.
@@ -98,10 +127,8 @@ export class RuntimeResources {
   }
 
   release(pluginId: string): void {
-    this.views.invalidate(pluginId);
     this.data.release(pluginId);
-    this.items.release(pluginId);
-    this.operations.release(pluginId);
+    this.workers.release(pluginId);
     this.input.services.release(pluginId);
   }
 
@@ -125,12 +152,11 @@ export class RuntimeResources {
   }
 
   close(): void {
-    this.unwatch();
+    for (const unwatch of this.unwatch) unwatch();
     this.background.close();
     this.failures.close();
     this.data.badges.close();
+    this.workers.close();
     this.items.close();
-    this.operations.close();
-    this.views.close();
   }
 }

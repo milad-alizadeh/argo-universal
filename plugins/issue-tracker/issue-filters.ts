@@ -1,5 +1,5 @@
 import type { PluginProps } from '@argo/plugin-kit';
-import { pathSegment } from './issue-paths';
+import { pathSegment, pathText } from './issue-paths';
 
 type IconName = NonNullable<PluginProps['Icon']['name']>;
 
@@ -87,3 +87,13 @@ export function filterGroups(labels: readonly string[]): FilterGroup[] {
 
 export const builtInFilters = (): IssueFilter[] =>
   builtInGroups.flatMap((group) => group.filters);
+
+const labelPrefix = 'label-';
+
+// The filter a path's filter segment names: a built-in one by its id, or a label by its encoded name.
+export function filterById(id: string): IssueFilter | undefined {
+  if (id.startsWith(labelPrefix))
+    return labelFilter(pathText(id.slice(labelPrefix.length)));
+
+  return builtInFilters().find((filter) => filter.id === id);
+}

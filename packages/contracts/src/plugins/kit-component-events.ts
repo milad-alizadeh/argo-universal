@@ -31,24 +31,3 @@ export function componentEventHandler(
 ): WireJson | undefined {
   return propsWithin(props, componentEventRules(schema).within)[name];
 }
-
-// Moves a handler from the node's top level, where the Plugin runtime keeps it, into the prop object `within` names.
-export function placedComponentEvent(
-  props: WireProps,
-  name: string,
-  schema: z.ZodType | undefined,
-): WireProps {
-  const { within } = componentEventRules(schema);
-  const handler = props[name];
-
-  if (within === undefined || handler === undefined) return props;
-  const rest = without(props, name);
-
-  return {
-    ...rest,
-    [within]: { ...propsWithin(rest, within), [name]: handler },
-  };
-}
-
-const without = (props: WireProps, name: string): WireProps =>
-  Object.fromEntries(Object.entries(props).filter(([key]) => key !== name));

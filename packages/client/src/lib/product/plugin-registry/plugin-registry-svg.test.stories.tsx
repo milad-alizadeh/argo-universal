@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const label = 'Service map';
 
@@ -31,16 +31,19 @@ export const Press: Story = {
       root={{
         type: 'Svg',
         key: '0',
-        props: { xml, label, onPress: { $event: 'onPress' } },
+        props: { xml, label, onPress: { operation: 'openMap', args: {} } },
         children: [],
         slots: {},
       }}
-      onEvent={onEvent}
+      onPageCall={onPageCall}
     />
   ),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: label }));
-    await expect(onEvent).toHaveBeenCalledWith('0', { event: 'onPress' });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'openMap', args: {} },
+      expect.objectContaining({ key: '0', name: 'onPress' }),
+    );
   },
 };
 
@@ -54,7 +57,6 @@ export const Fallback: Story = {
         children: [],
         slots: {},
       }}
-      onEvent={onEvent}
     />
   ),
   play: async ({ canvas }) => {

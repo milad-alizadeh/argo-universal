@@ -1,18 +1,28 @@
 import { useClaimed, type Place } from '@repo/kit/place';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import { isCoreSection } from '../../../lib/product/navigation/sections';
 import { isFramed } from '../scaffold/is-framed';
 import type { ScaffoldProps } from '../scaffold/scaffold';
 import type { FrameListDetail } from './frame-list-detail';
 import type { FrameSections } from './section-lists';
 
-// The list a Plugin page's ListDetail holds the Frame's sidebar with.
+// The list a Plugin page's ListDetail holds the Frame's sidebar with; while the page waits for its first draw, the list the section drew last, or loading in the pane's place.
 function ClaimedList(props: {
   sidebar: Place<ReactNode>;
   kept?: ReactNode;
 }): ReactNode {
-  return useClaimed(props.sidebar) ?? props.kept;
+  return useClaimed(props.sidebar) ?? props.kept ?? <ListPending />;
+}
+
+function ListPending(): ReactNode {
+  return (
+    <View className="flex-1 items-center justify-center">
+      <Spinner accessibilityLabel="Loading" />
+    </View>
+  );
 }
 
 type SectionScaffold = Pick<ScaffoldProps, 'list'> &

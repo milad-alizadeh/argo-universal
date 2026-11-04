@@ -1,9 +1,7 @@
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
-
-const onEvent = fn();
 
 const updateMessage = /Update Argo/;
 
@@ -26,7 +24,6 @@ export const NewerOptionalProp: Story = {
         children: [],
         slots: {},
       })}
-      onEvent={onEvent}
     />
   ),
   play: async ({ canvas }) => {
@@ -53,7 +50,6 @@ export const InvalidContainer: Story = {
         ],
         slots: {},
       })}
-      onEvent={onEvent}
     />
   ),
   play: async ({ canvas }) => {
@@ -72,7 +68,6 @@ export const InvalidEmptyContainer: Story = {
         children: [],
         slots: {},
       })}
-      onEvent={onEvent}
     />
   ),
   play: async ({ canvas }) => {

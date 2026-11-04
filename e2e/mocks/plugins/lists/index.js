@@ -1,5 +1,5 @@
-import { List, ListItem, Label, Pill, useState } from '@argo/plugin-kit';
-import { registerIssues } from './issues.js';
+import { List, ListItem, Label, Pill } from '@argo/plugin-kit';
+import { defineIssues } from './issues.js';
 
 const builds = [
   { id: 'web', title: 'Deploy web' },
@@ -16,42 +16,27 @@ const buildMeta = (
   </>
 );
 
-function BuildRow({ build, selected, onSelect }) {
-  return (
-    <ListItem
-      title={build.title}
-      subtitle="main"
-      selected={selected === build.id}
-      onPress={() => onSelect(build.id)}
-      meta={buildMeta}
-      badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
-      progress={{ value: 0.4, tone: 'success', active: true }}
-    />
-  );
-}
-
-const renderBuild = (selected, onSelect) => (build) => (
-  <BuildRow
+// The selected build is Page state, so a press draws the list again with that row selected.
+const buildRow = (selected, to) => (build) => (
+  <ListItem
     key={build.id}
-    build={build}
-    selected={selected}
-    onSelect={onSelect}
+    title={build.title}
+    subtitle="main"
+    selected={selected === build.id}
+    onPress={to.set({ selected: build.id })}
+    meta={buildMeta}
+    badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
+    progress={{ value: 0.4, tone: 'success', active: true }}
   />
 );
 
-function HelloListPage() {
-  const [selected, setSelected] = useState('');
-
-  return (
-    <List
-      appearance="cards"
-      items={builds}
-      renderItem={renderBuild(selected, setSelected)}
-    />
-  );
-}
-
 export function register(argo) {
-  argo.pages.register('/lists', HelloListPage);
-  registerIssues(argo.pages);
+  argo.pages.define('/lists', {
+    state: { selected: '' },
+    load: () => builds,
+    render: (items, to, { state }) => (
+      <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
+    ),
+  });
+  defineIssues(argo.pages);
 }

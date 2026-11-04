@@ -17,47 +17,31 @@ import type {
 } from '@repo/contracts/plugins/kit';
 import type { ComponentType, ReactNode, ReactElement } from 'react';
 
-export {
-  useState,
-  useReducer,
-  useMemo,
-  useCallback,
-  useRef,
-  useEffect,
-  useLayoutEffect,
-  useContext,
-  createContext,
-  memo,
-  Fragment,
-} from 'react';
+export { Fragment } from 'react';
 
 type Events<Name extends WireComponentName> =
   (typeof kitComponents)[Name]['events'];
 
-// Plugin JSX: declared events accept callbacks at their declared place; other nested handlers are built-in Actions.
-interface PluginDrawing<Item> extends KitDrawing {
+// Plugin JSX: every event, nested ones too, is a value (ADR-0050): a navigation, a Page state change or an Operation call.
+interface PluginDrawing extends KitDrawing {
   node: ReactNode;
   choice: string;
-  item: Item;
-  wireNode: PluginWireNode;
-  returns: void | Promise<void>;
+  returns: never;
   plugin: true;
 }
 
-type MappedPluginProps<
+type MappedPluginProps<Props, Name extends WireComponentName> = KitMappedProps<
   Props,
-  Name extends WireComponentName,
-  Item,
-> = KitMappedProps<Props, Events<Name>, never, PluginDrawing<Item>>;
+  Events<Name>,
+  never,
+  PluginDrawing
+>;
 
 type EventProps<
   Name extends WireComponentName,
   Item = unknown,
-> = MappedPluginProps<
-  DeclaredProps<WireProps[Name] & Expansion<(typeof kitComponents)[Name]>>,
-  Name,
-  Item
->;
+> = MappedPluginProps<DeclaredProps<WireProps[Name]>, Name> &
+  Expansion<(typeof kitComponents)[Name], Item, ReactNode>;
 
 type SlotChild = ReactElement | boolean | null | undefined;
 
@@ -115,7 +99,7 @@ export type PluginWireNode = {
   [Name in WireComponentName]: {
     type: Name;
     key: string;
-    props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name, unknown>;
+    props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name>;
     children: PluginWireNode[];
     slots: Record<string, PluginWireNode[]>;
   };
@@ -127,8 +111,30 @@ declare global {
   function clearTimeout(id: number | undefined): void;
 }
 
-// The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
-export type { Argo } from '@repo/contracts/plugins/argo-api';
+/*
+ * The Operations this Plugin's manifest declares. `argo-plugin types <dir>` writes `plugin.gen.d.ts`
+ * beside `plugin.json`, which adds each one here, so the handlers `argo.operations.register` takes and
+ * the calls `to.run` makes are checked against the manifest. A Plugin that declares none adds nothing.
+ */
+export interface PluginOperations {}
+
+// The Plugin API and what it hands a Plugin, bound to its declared Operations.
+export type {
+  Argo,
+  Hook,
+  HookContext,
+  LoaderInput,
+  LoaderPage,
+  OperationHandler,
+  PageTo,
+} from './plugin-api';
+
+// A Loader page's parts and the paged list its Render reads (ADR-0050).
+export type {
+  ListPage,
+  PagedList,
+  RenderInput,
+} from '@repo/contracts/plugins/loader-page-api';
 
 // The items a Plugin answers an add-only Slot with: Argo draws each one as a row (ADR-0046).
 export type {
@@ -145,11 +151,14 @@ export {
   type MovableSection,
 } from '@repo/contracts/kit-moves';
 
-export type {
-  Hook,
-  HookContext,
-  HookNext,
-} from '@repo/contracts/plugins/hooks';
+// One service's OAuth sign-in on Argo's redirect (ADR-0036); `OAuthFlow` says what it does.
+export declare const oauthFlow: OAuthFlowPattern;
+
+export type * from '@repo/contracts/plugins/oauth-flow-api';
+
+import type { OAuthFlowPattern } from '@repo/contracts/plugins/oauth-flow-api';
+
+export type { HookNext } from '@repo/contracts/plugins/hooks';
 
 export type {
   ProcessResult,
@@ -157,11 +166,12 @@ export type {
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
 
-import type { UseData } from '@repo/contracts/plugins/argo-api';
-
 export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 
 // One definition, shared with the Engine's readers: what a Query answers comes from its api.
-export type { QueryResult } from '@repo/contracts/plugins/query-results';
-
-export declare const useData: UseData;
+export type {
+  NamedQuery,
+  QueriesApi,
+  QueryReadContext,
+  QueryResult,
+} from '@repo/contracts/plugins/query-results';

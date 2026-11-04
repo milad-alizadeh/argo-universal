@@ -35,12 +35,9 @@
             "type": "number",
             "description": "The Issue number to attach.",
             "required": true
-          },
-          "projectId": {
-            "type": "string",
-            "description": "The Project the Issue belongs to; the caller's own Project by default."
           }
-        }
+        },
+        "caller": ["project", "session"]
       },
       {
         "name": "detach",
@@ -53,12 +50,44 @@
             "type": "number",
             "description": "The Issue number to detach.",
             "required": true
-          },
-          "projectId": {
-            "type": "string",
-            "description": "The Project the Issue belongs to; the caller's own Project by default."
           }
-        }
+        },
+        "caller": ["project", "session"]
+      },
+      {
+        "name": "chooseTracker",
+        "label": "Choose a Project's Issue tracker",
+        "description": "Choose which Tracker a Project's Issues come from, or none when no tracker is named.",
+        "tier": "act",
+        "keywords": ["issue", "tracker", "project"],
+        "params": {
+          "tracker": {
+            "type": "string",
+            "description": "The Tracker's id, such as github; leave it out for none."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "setStatus",
+        "label": "Set Issue status",
+        "description": "Close or reopen one Issue in a Project.",
+        "tier": "act",
+        "keywords": ["issue", "close", "reopen", "status"],
+        "params": {
+          "number": {
+            "type": "number",
+            "description": "The Issue number.",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Whether the Issue is open or closed.",
+            "required": true,
+            "choices": ["open", "closed"]
+          }
+        },
+        "caller": ["project"]
       }
     ]
   },

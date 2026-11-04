@@ -7,7 +7,7 @@ import {
   rewrittenMessage,
   toolCallSlotFixture,
 } from '@repo/contracts/plugins/replaceable-fixtures';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { writeHookPlugins } from '#mocks/hook-plugins';
 import { renderApp } from '#mocks/replaceable-app';
@@ -16,19 +16,12 @@ import { createRuntimePlugins } from '#mocks/runtime-plugins';
 it('keeps the Slot props when no Plugin declares its Replaceable Slot', async () => {
   const home = await createRuntimePlugins([]);
   const { createCaller } = await startEngineTestHost({ home });
-  const controller = new AbortController();
-
   const input = toolCallSlotFixture;
 
-  const messages = [];
-
-  for await (const message of await createCaller({
-    signal: controller.signal,
-  }).plugins.render(input))
-    messages.push(message);
-
-  expect(messages).toEqual([{ type: 'core', input }]);
-  controller.abort();
+  expect(await createCaller({}).plugins.render(input)).toEqual({
+    type: 'core',
+    input,
+  });
 }, 20_000);
 
 it.each([messageSlotFixture, toolCallSlotFixture])(
@@ -51,11 +44,9 @@ it.each([messageSlotFixture, toolCallSlotFixture])(
     ]);
     const { url } = await startEngineTestHost({ home });
 
-    const app = renderApp(url, input, currentPluginSurface('ios'));
+    const { answer } = await renderApp(url, input, currentPluginSurface('ios'));
 
-    await expect
-      .poll(() => app.messages[0], { timeout: 10_000 })
-      .toEqual({ type: 'core', input });
+    expect(answer).toEqual({ type: 'core', input });
     const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');
     expect(log).not.toContain('core fallback');
   },
@@ -85,16 +76,8 @@ it.each([
       },
     ]);
     const { createCaller } = await startEngineTestHost({ home });
-    const controller = new AbortController();
-    onTestFinished(() => controller.abort());
 
-    const stream = (
-      await createCaller({ signal: controller.signal }).plugins.render(
-        messageSlotFixture,
-      )
-    )[Symbol.asyncIterator]();
-
-    expect((await stream.next()).value).toEqual({
+    expect(await createCaller({}).plugins.render(messageSlotFixture)).toEqual({
       type: 'core',
       input: expected,
     });
@@ -112,15 +95,9 @@ it('never starts a ui.render Plugin that did not declare the Slot', async () => 
     },
   ]);
   const { createCaller } = await startEngineTestHost({ home });
-  const controller = new AbortController();
-  onTestFinished(() => controller.abort());
-  const app = createCaller({ signal: controller.signal });
+  const app = createCaller({});
 
-  const stream = (await app.plugins.render(toolCallSlotFixture))[
-    Symbol.asyncIterator
-  ]();
-
-  expect((await stream.next()).value).toEqual({
+  expect(await app.plugins.render(toolCallSlotFixture)).toEqual({
     type: 'core',
     input: toolCallSlotFixture,
   });

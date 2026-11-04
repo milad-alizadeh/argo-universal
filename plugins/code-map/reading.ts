@@ -1,16 +1,17 @@
-import type { ProcessResult } from '@argo/plugin-kit';
-import type { FileAnswers } from './project-files';
+import type { LoaderInput, ProcessResult } from '@argo/plugin-kit';
+import { fileQueries, type FileAnswers } from './project-files';
 
-// What `useData` holds for one Query.
+// What one Query answered, or why it could not.
 export interface Answer {
-  data: ProcessResult | undefined;
+  data?: ProcessResult;
   error?: string;
 }
 
 export type Reading =
-  | { state: 'loading' }
   | { state: 'failed' }
   | { state: 'ready'; answers: FileAnswers };
+
+type Measure = keyof FileAnswers;
 
 // `git grep` exits 1 when no line matches, which is an empty answer, not a failure.
 const grepAnswered = new Set<number | null>([0, 1]);
@@ -22,11 +23,9 @@ const settled = (data: ProcessResult, codes: Set<number | null>): boolean =>
 
 const historyAnswered = new Set<number | null>([0]);
 
-function grepFailed({ data, error }: Answer): boolean {
-  if (error !== undefined) return true;
-
-  return data !== undefined && !settled(data, grepAnswered);
-}
+// What `git grep` answered, or undefined when it failed.
+const grepData = ({ data }: Answer): ProcessResult | undefined =>
+  data && settled(data, grepAnswered) ? data : undefined;
 
 function answer({ stdout, truncated }: ProcessResult): FileAnswers['lines'] {
   return { stdout, truncated };
@@ -39,35 +38,41 @@ function history({ data }: Answer): FileAnswers['touches'] {
   return answer(data);
 }
 
-const waiting = ({ data, error }: Answer): boolean =>
-  data === undefined && error === undefined;
+// Failed when either `git grep` fails; ready with all three answers otherwise.
+export function readFiles(answers: Record<Measure, Answer>): Reading {
+  const lines = grepData(answers.lines);
+  const branches = grepData(answers.branches);
 
-function ready(answers: Record<keyof FileAnswers, Answer>): Reading {
-  const { lines, branches, touches } = answers;
+  if (!lines || !branches) return { state: 'failed' };
 
-  if (!lines.data || !branches.data) return { state: 'loading' };
+  const touches = history(answers.touches);
 
   return {
     state: 'ready',
-    answers: {
-      lines: answer(lines.data),
-      branches: answer(branches.data),
-      touches: history(touches),
-    },
+    answers: { lines: answer(lines), branches: answer(branches), touches },
   };
 }
 
-const failed = ({
-  lines,
-  branches,
-}: Record<keyof FileAnswers, Answer>): boolean =>
-  grepFailed(lines) || grepFailed(branches);
+// One Query read through Argo's cache, a refusal kept as its answer's error.
+const readAnswer = (
+  read: LoaderInput['read'],
+  measure: Measure,
+): Promise<Answer> =>
+  read(fileQueries[measure]).then(
+    (data) => ({ data }),
+    (error: Error) => ({ error: error.message }),
+  );
 
-// Failed as soon as either `git grep` fails; ready once git has answered all three.
-export function readFiles(answers: Record<keyof FileAnswers, Answer>): Reading {
-  if (failed(answers)) return { state: 'failed' };
+/*
+ * The map's Loader (ADR-0050): git's three answers at once, each a Query run in the folder of the Project the
+ * page opened for, which its details row drilled in from.
+ */
+export async function loadFiles(read: LoaderInput['read']): Promise<Reading> {
+  const [lines, branches, touches] = await Promise.all([
+    readAnswer(read, 'lines'),
+    readAnswer(read, 'branches'),
+    readAnswer(read, 'touches'),
+  ]);
 
-  if (waiting(answers.touches)) return { state: 'loading' };
-
-  return ready(answers);
+  return readFiles({ lines, branches, touches });
 }

@@ -4,7 +4,7 @@ import {
   pluginKitExports,
   type PluginKitExport,
 } from '@repo/contracts/plugins/kit';
-import { PluginEvent } from '@repo/contracts/plugins/wire';
+import { PluginEvent, type WireJson } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
 import {
@@ -13,36 +13,19 @@ import {
   registerKitComponent,
   type KitElementType,
 } from './jsx-runtime';
+import { oauthFlow } from './oauth-flow';
 import {
   operationHandlers,
   type OperationHandlers,
   type OperationSend,
 } from './operation-handlers';
-import {
-  mountPages,
-  type Pages,
-  type ViewSender,
-  type DispatchSender,
-} from './pages';
+import { valuesOf } from './render-tree';
 import {
   slotProviders,
   type SlotProviders,
   type SlotSend,
 } from './slot-providers';
-import { dataClient } from './use-data';
-import { viewEffects } from './view-scope';
-
-const hooks = {
-  useState: React.useState,
-  useReducer: React.useReducer,
-  useMemo: React.useMemo,
-  useCallback: React.useCallback,
-  useRef: React.useRef,
-  ...viewEffects,
-  useContext: React.useContext,
-  createContext: React.createContext,
-  memo: React.memo,
-};
+import * as loader from './worker-pages';
 
 // A kit component with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
 function kitExport({
@@ -61,118 +44,87 @@ function kitExport({
   return carrier;
 }
 
-// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks, the JSX runtime and the List's move rule.
+// What `@argo/plugin-kit` exports to a Plugin: its components, the JSX runtime, the List's move rule and the OAuth flow.
 const exportsOf = {
   ...Object.fromEntries(
     pluginKitExports.map((entry) => [entry.name, kitExport(entry)]),
   ),
-  ...hooks,
   Fragment: React.Fragment,
   applyListMove,
+  oauthFlow,
 };
 
 const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };
 
 export interface Kit {
-  exports: typeof exportsOf & Pick<ReturnType<typeof dataClient>, 'useData'>;
+  exports: typeof exportsOf;
   jsxRuntime: typeof jsxRuntime;
-  registerPage: Pages['register'];
-  // The worker's `argo.slots`; it also answers the batched items calls the inbox hands it.
+  // The worker's `argo.slots`; the inbox hands its providers the batched items calls.
   slots: Argo['slots'];
+  // `argo.changed()`: the Plugin's pages and items Slots may show something new.
+  changed: Argo['changed'];
   // The worker's `argo.operations`; it also answers the Operation calls the inbox hands it.
   operations: OperationHandlers;
+  // `argo.pages.define`, which also answers the inbox's draws (ADR-0050).
+  loaderPages: loader.WorkerPages;
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
-  requirePage: Pages['requirePage'];
-  replacement: (
-    invocation: number,
-    element: React.ReactNode,
-  ) => { treePath: string };
+  // A manifest's `background` path and `contributes.accounts` pages name the Plugin's Loader pages.
+  requireLoaderPage: loader.WorkerPages['requirePage'];
+  // A `ui.render` Hook's kit components, drawn once as a Render is (ADR-0050).
+  drawTree: (element: React.ReactNode) => WireJson;
 }
 
-// What the host answers for a Plugin: its Queries, its Slot items and its own Operations.
-type KitCalls = {
-  data: Parameters<typeof dataClient>[0];
+// What the host answers for a Plugin: its Queries, its Slot items, its own Operations and its Loader pages' calls.
+type KitCalls = loader.LoaderCalls & {
   slots: SlotSend;
   operations: OperationSend;
 };
 
-type DataClient = ReturnType<typeof dataClient>;
-
 // Each part of the kit a host event can be for.
 type KitParts = {
-  data: DataClient;
-  pages: Pages;
   slots: SlotProviders;
   operations: OperationHandlers;
+  loaderPages: loader.WorkerPages;
 };
 
 // Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
-export function createKit(
-  send: ViewSender,
-  settle: DispatchSender,
-  calls: KitCalls,
-): Kit {
-  const data = dataClient(calls.data);
-
-  const pages = mountPages(send, settle, (viewId, background) =>
-    data.ready(viewId, background),
-  );
-
-  return pageKit({ data, pages, ...providers(calls) });
-}
-
-// What a Plugin registers besides its pages: the Slots it answers and the Operations it declares.
-const providers = (
-  calls: KitCalls,
-): Pick<KitParts, 'slots' | 'operations'> => ({
-  slots: slotProviders(calls.slots),
-  operations: operationHandlers(calls.operations),
-});
-
-function pageKit(parts: KitParts): Kit {
-  const { data, pages, slots, operations } = parts;
+export function createKit(calls: KitCalls): Kit {
+  const parts = kitParts(calls);
+  const { slots, operations, loaderPages } = parts;
 
   return {
-    isElement: React.isValidElement,
-    requirePage: pages.requirePage,
-    replacement: replacementOf(pages),
-    exports: { ...exportsOf, useData: data.useData },
-    jsxRuntime,
-    registerPage: pages.register,
-    slots,
+    ...modules,
+    slots: { register: slots.register },
     operations,
-    inbox: inbox(parts),
+    loaderPages,
+    changed: loaderPages.changed,
+    requireLoaderPage: loaderPages.requirePage,
+    inbox: (json) => deliver(parts, PluginEvent.parse(JSON.parse(json))),
   };
 }
 
-function inbox(parts: KitParts): Kit['inbox'] {
-  return (json): void => deliver(parts, PluginEvent.parse(JSON.parse(json)));
+// The parts a host event can be for; an Operation's answer also says which pages it changed.
+function kitParts(calls: KitCalls): KitParts {
+  const loaderPages = loader.loaderPages(calls);
+  const operations = operationHandlers(loaderPages.answering(calls.operations));
+
+  return { slots: slotProviders(calls.slots), operations, loaderPages };
 }
 
-// Each event the host sends goes to the part waiting for it; anything else is a page's.
-function deliver(parts: KitParts, event: PluginEvent): void {
-  if (event.type === 'data') return parts.data.receive(event);
+// What the kit holds the same for every Plugin: its modules and how it reads a tree.
+const modules = {
+  isElement: React.isValidElement,
+  exports: exportsOf,
+  jsxRuntime,
+  drawTree: valuesOf,
+} satisfies Partial<Kit>;
 
+// Each event the host sends goes to the part waiting for it.
+function deliver(parts: KitParts, event: PluginEvent): void {
   if (event.type === 'slotItems') return parts.slots.answer(event);
 
-  return answerOrDraw(parts, event);
-}
-
-function answerOrDraw(
-  parts: KitParts,
-  event: Exclude<PluginEvent, { type: 'data' | 'slotItems' }>,
-): void {
   if (event.type === 'operation') return parts.operations.answer(event);
 
-  return parts.pages.receive(event);
-}
-
-function replacementOf(pages: Pages): Kit['replacement'] {
-  return (invocation, element) => {
-    const treePath = `render:${invocation}`;
-    pages.registerReplacement(treePath, element);
-
-    return { treePath };
-  };
+  return parts.loaderPages.answer(event);
 }

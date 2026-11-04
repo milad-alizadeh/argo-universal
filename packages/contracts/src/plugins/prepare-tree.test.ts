@@ -121,7 +121,7 @@ describe('Plugin wire preparation', () => {
       type: 'Menu',
       props: {
         accessibilityLabel: 'Sort',
-        actions: [{ label: 'Name', onPress: { $event: 'onPress' } }],
+        actions: [{ label: 'Name', onPress: { operation: 'open', args: {} } }],
       },
     },
     {
@@ -129,7 +129,7 @@ describe('Plugin wire preparation', () => {
       props: {
         label: 'Search',
         value: '',
-        onChangeText: { $event: 'onChangeText' },
+        onChangeText: { bind: 'query' },
       },
     },
     {
@@ -137,7 +137,7 @@ describe('Plugin wire preparation', () => {
       props: {
         label: 'Open',
         selected: false,
-        onPress: { $event: 'onPress' },
+        onPress: { operation: 'open', args: {} },
       },
     },
   ])('refuses $type, a kit component only the App draws', (refused) => {

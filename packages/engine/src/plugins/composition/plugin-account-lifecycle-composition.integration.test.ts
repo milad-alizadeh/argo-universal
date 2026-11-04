@@ -47,13 +47,12 @@ it(
       },
     ]);
 
-    const view = await second.caller.plugins.view({
+    await second.caller.plugins.run({
       pluginId: 'borrower',
-      path: '/',
+      operation: 'borrow',
+      args: {},
       projectId: run.projectId,
     });
-
-    await view[Symbol.asyncIterator]().next();
     await expect
       .poll(() => probeResult(run.borrowerData).catch(() => null), {
         timeout: 10_000,

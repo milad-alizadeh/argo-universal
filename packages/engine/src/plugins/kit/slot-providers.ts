@@ -4,6 +4,8 @@ import type {
 } from '@repo/contracts/plugins/argo-api';
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { ItemsContext, PluginEvent } from '@repo/contracts/plugins/wire';
+import { runtimeError } from '../protocol/runtime-status';
+import { swallowed } from './swallowed';
 
 type ItemsEvent = Extract<PluginEvent, { type: 'slotItems' }>;
 
@@ -14,7 +16,6 @@ export type SlotSend = (slotCall: SlotCall) => Promise<void>;
 export interface SlotProviders {
   register: SlotsApi['register'];
   answer: (event: ItemsEvent) => void;
-  changed: SlotsApi['changed'];
 }
 
 type ItemsRequest = Readonly<{ contexts: readonly Readonly<ItemsContext>[] }>;
@@ -36,7 +37,6 @@ export function slotProviders(send: SlotSend): SlotProviders {
       void providers.set(slotId, { provide: provider }),
     answer: (event) =>
       void answer(send, providers.get(event.input.slotId), event),
-    changed: (slotId) => send({ action: 'changed', slotId }),
   };
 }
 
@@ -48,9 +48,9 @@ async function answer(
   try {
     await send({ action: 'items', id, items: await itemsOf(provider, input) });
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-
-    await send({ action: 'failed', id, error: reason }).catch(() => null);
+    await send({ action: 'failed', id, error: runtimeError(error) }).catch(
+      swallowed,
+    );
   }
 }
 

@@ -4,20 +4,32 @@ import type { Issue, IssueLabel, IssueRelation } from './github-issues';
 import { statuses } from './issue-status-view';
 import { labelPills } from './label-pills';
 
+// The Issue's status names its Issue, so a status change's optimistic patch repaints it.
+export const statusDotKey = (number: number): string => `dot-${number}`;
+
 // The Issue's own properties, beside its description: what it is, not the work under it.
 export function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
   return (
     <Metadata>
-      <Metadata.StatusDot
-        title="Status"
-        text={statuses[issue.status].text}
-        tone={statuses[issue.status].tone}
-      />
+      <IssueStatus issue={issue} />
       <IssueLabels labels={issue.labels} />
       <Blockers issue={issue} />
       <Assignees assignees={issue.assignees} />
       <GitHubLink issue={issue} />
     </Metadata>
+  );
+}
+
+function IssueStatus({ issue }: { issue: Issue }): JSX.Element {
+  const { text, tone } = statuses[issue.status];
+
+  return (
+    <Metadata.StatusDot
+      key={statusDotKey(issue.number)}
+      title="Status"
+      text={text}
+      tone={tone}
+    />
   );
 }
 

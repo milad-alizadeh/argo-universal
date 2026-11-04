@@ -4,16 +4,26 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
 import { PluginManifest } from '@repo/contracts/plugins';
-import { svgCharacterLimit } from '@repo/contracts/plugins/wire-limits';
 import { expect, it, onTestFinished } from 'vitest';
 
 const fixtureDirectory = fileURLToPath(
   new URL('../mocks/plugin/', import.meta.url),
 );
 
-const surface = { platform: 'web' as const };
+// An Operation that takes no arguments and needs no Project or Session.
+const startTimer = {
+  name: 'startTimer',
+  label: 'Start timer',
+  description: 'Starts a timer.',
+  tier: 'act',
+  params: {},
+  caller: [],
+};
 
-async function start(source: string): Promise<PluginTest> {
+async function start(
+  source: string,
+  operations: (typeof startTimer)[] = [],
+): Promise<PluginTest> {
   const directory = await mkdtemp(join(tmpdir(), 'argo-authoring-kit-'));
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
   await cp(fixtureDirectory, directory, { recursive: true });
@@ -29,6 +39,7 @@ async function start(source: string): Promise<PluginTest> {
       contributes: {
         ...manifest.contributes,
         hooks: ['prompt.submit'],
+        operations,
         settings: [
           { key: 'prefix', type: 'text', label: 'Prefix', default: 'Test' },
         ],
@@ -70,79 +81,29 @@ it('raises a real event through the production Hook chain with isolated storage,
 });
 
 it('advances the Plugin worker clock', async () => {
-  const kit =
-    await start(`import { Stack, Text, Button, useState } from '@argo/plugin-kit';
-    function Page() {
-      const [value, setValue] = useState('waiting');
-      return <Stack direction="column"><Text>{value}</Text><Button label="Start timer" onPress={() => setTimeout(() => setValue('elapsed'), 1000)} /></Stack>;
+  const kit = await start(
+    `import { Button, Stack, Text } from '@argo/plugin-kit';
+    let value = 'waiting';
+    export function register(argo) {
+      argo.operations.register('startTimer', () => {
+        setTimeout(() => { value = 'elapsed'; argo.changed(); }, 1000);
+        return null;
+      });
+      argo.pages.define('/', {
+        load: () => value,
+        render: (text, to) => <Stack direction="column"><Text>{text}</Text><Button label="Start timer" onPress={to.run('startTimer', {})} /></Stack>,
+      });
     }
-    export function register(argo) { argo.pages.register('/', Page); }
-  `);
+  `,
+    [startTimer],
+  );
 
-  const page = await kit.mount({ page: '/', surface });
+  const page = await kit.pages.open({ path: '/' });
   await page.press('Start timer');
   await kit.clock.advance(900);
-  expect((await page.find('waiting')).type).toBe('Text');
+  await page.draw();
+  expect(page.find('waiting').type).toBe('Text');
   await kit.clock.advance(100);
-  expect((await page.find('elapsed')).type).toBe('Text');
+  await page.draw();
+  expect(page.find('elapsed').type).toBe('Text');
 });
-
-it.each([
-  {
-    name: 'element subset',
-    xml: '<svg><script/></svg>',
-    reason: 'element <script> refused',
-  },
-  {
-    name: 'raw color',
-    xml: '<svg><path fill="#ffffff"/></svg>',
-    reason: 'color #ffffff refused',
-  },
-  {
-    name: 'character cap',
-    xml: `<svg>${' '.repeat(svgCharacterLimit)}</svg>`,
-    reason: 'character cap exceeded',
-  },
-])(
-  'mount refuses the Svg node: $name',
-  async ({ xml, reason }) => {
-    const kit = await start(`import { Svg } from '@argo/plugin-kit';
-    export function register(argo) { argo.pages.register('/', () => <Svg label="Art" xml={${JSON.stringify(xml)}} />); }
-  `);
-
-    await expect(kit.mount({ page: '/', surface })).rejects.toThrow(reason);
-    expect(await kit.log()).toContain('node Svg#');
-  },
-  30_000,
-);
-
-it.each([
-  [
-    'Chart',
-    '<Chart label="Data" kind="bar" series={[{ name: "Files", tone: "#fff", points: [] }]} />',
-    'tone',
-  ],
-  [
-    'Canvas',
-    '<Canvas label="Map" width={10} height={10} camera="fixed"><Image key="image" /></Canvas>',
-    'shape Canvas.Image refused',
-  ],
-  [
-    'Canvas',
-    '<Canvas label="Map" width={10} height={10} camera="fixed"><Rect key="rect" tone="accent" width={1} height={1} fill="#fff" /></Canvas>',
-    'fill',
-  ],
-  ['CodeMap', '<CodeMap />', 'unsupported CodeMap'],
-])(
-  'mount refuses invalid %s data through the real Plugin host',
-  async (type, element, reason) => {
-    const kit =
-      await start(`const Chart='Chart', Canvas='Canvas', Image='Canvas.Image', Rect='Canvas.Rect', CodeMap='CodeMap';
-    export function register(argo) { argo.pages.register('/', () => ${element}); }
-  `);
-
-    await expect(kit.mount({ page: '/', surface })).rejects.toThrow(reason);
-    expect(await kit.log()).toContain(`node ${type}#`);
-  },
-  30_000,
-);

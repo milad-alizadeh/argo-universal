@@ -2,6 +2,7 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { PluginList } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
+import { notRunningError } from '../runtime/worker-calls';
 import type { Answer, PluginOperations } from './plugin-operations';
 import {
   declaredOperationRows,
@@ -50,5 +51,5 @@ async function requireRunning(
   const status = await host.activate(pluginId);
 
   if (status.state !== 'running')
-    throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
+    throw new Error(status.error ?? notRunningError(pluginId));
 }

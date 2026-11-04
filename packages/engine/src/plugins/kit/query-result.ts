@@ -20,15 +20,11 @@ const readers: QueryReaders = {
   fetch: (data) => fetchResponse(FetchReply.parse(data)),
   process: (data) => ProcessResult.parse(data),
   storage: (data) => z.array(StorageResult).parse(data),
+  // A named read answers the Plugin's own JSON, which only its own code reads.
+  read: (data) => data,
 };
 
-export function queryResult(
-  api: PluginQuery['api'] | undefined,
-  data: WireJson | undefined,
-): QueryValue | undefined {
-  if (api === undefined) return;
-
-  if (data === undefined) return;
-
-  return readers[api](data);
-}
+export const queryResult = (
+  api: PluginQuery['api'],
+  data: WireJson,
+): QueryValue => readers[api](data);

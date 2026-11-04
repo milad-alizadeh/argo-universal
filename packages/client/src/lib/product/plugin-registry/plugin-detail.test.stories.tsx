@@ -73,13 +73,13 @@ const root = WireNode.parse({
       leaf('Action', 'close', {
         label: 'Close Issue',
         icon: 'check',
-        onPress: { $event: 'onPress' },
+        onPress: { operation: 'closeIssue', args: {} },
       }),
     ],
   },
 });
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Detail',
@@ -88,9 +88,9 @@ const meta = {
 export default meta;
 
 export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
-    onEvent.mockClear();
+    onPageCall.mockClear();
     await expect(
       canvas.getByText('Sync stops on repositories with 50,000 files.'),
     ).toBeVisible();
@@ -105,8 +105,9 @@ export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
       await expect(canvas.getByRole('group', { name })).toBeVisible();
     await expect(canvas.queryByText(/Update Argo/)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Close Issue' }));
-    await expect(onEvent).toHaveBeenLastCalledWith('page#actions/close', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenLastCalledWith(
+      { operation: 'closeIssue', args: {} },
+      expect.objectContaining({ key: 'page#actions/close', name: 'onPress' }),
+    );
   },
 };

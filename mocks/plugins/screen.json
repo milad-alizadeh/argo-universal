@@ -8,7 +8,7 @@
     },
     "value": "",
     "onChangeText": {
-      "$event": "onChangeText"
+      "bind": "query"
     }
   },
   "children": [
@@ -31,7 +31,8 @@
           "label": "Filters",
           "icon": "filters",
           "onPress": {
-            "$event": "onPress"
+            "operation": "openFilters",
+            "args": {}
           }
         },
         "children": [],
@@ -63,7 +64,9 @@
                   "label": "Newest",
                   "icon": "arrow-down",
                   "onPress": {
-                    "$event": "onPress"
+                    "pageState": {
+                      "order": "newest"
+                    }
                   }
                 },
                 "children": [],
@@ -76,7 +79,9 @@
                   "label": "Oldest",
                   "icon": "arrow-up",
                   "onPress": {
-                    "$event": "onPress"
+                    "pageState": {
+                      "order": "oldest"
+                    }
                   }
                 },
                 "children": [],
@@ -97,7 +102,8 @@
           "label": "New Issue",
           "icon": "add",
           "onPress": {
-            "$event": "onPress"
+            "operation": "newIssue",
+            "args": {}
           }
         },
         "children": [],

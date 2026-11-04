@@ -7,7 +7,11 @@ describe('an Action entry', () => {
   it.each([
     [
       'a press Action',
-      { label: 'Newest', icon: 'arrow-down', onPress: { $event: 'onPress' } },
+      {
+        label: 'Newest',
+        icon: 'arrow-down',
+        onPress: { operation: 'open', args: {} },
+      },
     ],
     ['a submenu', sort],
     [

@@ -66,24 +66,24 @@ export interface SlotReading<Item> {
 type Attributed<Item> = { pluginId: string; item: Item };
 
 // One context's answer from an items Slot, parsed: what fit, then the rest.
-type Answer<Item> = {
+type KeptPage<Item> = {
   items: readonly Attributed<Item>[];
   overflow: readonly Attributed<Item>[];
 };
 
 // What the reader needs of an items Slot's registry entry: the schema it parses with, and who may own its line.
 type SlotEntry<Item> = {
-  merged: z.ZodType<Answer<Item>>;
+  merged: z.ZodType<KeptPage<Item>>;
   content: { owners?: 'one' };
 };
 
-const noAnswer: Answer<never> = { items: [], overflow: [] };
+const noAnswer: KeptPage<never> = { items: [], overflow: [] };
 
 // A Server that sent no answer for the context, or something the Slot's own schema rejects, gives none.
 function sentAnswer<Item>(
   slot: SlotEntry<Item>,
   sent: SentItems,
-): Answer<Item> {
+): KeptPage<Item> {
   const parsed = slot.merged.safeParse(sent);
 
   return parsed.success ? parsed.data : noAnswer;
@@ -94,9 +94,9 @@ function sentAnswer<Item>(
  * to what the Server let fit, and the rest stay behind "+N".
  */
 function shownItems<Item>(
-  { items, overflow }: Answer<Item>,
+  { items, overflow }: KeptPage<Item>,
   { shows }: SlotVisibility,
-): Answer<Item> {
+): KeptPage<Item> {
   const left = [...items, ...overflow].filter(({ pluginId }) =>
     shows(pluginId),
   );
@@ -122,7 +122,7 @@ const namedBy =
  */
 function ownerOf<Item>(
   slot: SlotEntry<Item>,
-  answer: Answer<Item>,
+  answer: KeptPage<Item>,
   { owner }: SlotVisibility,
 ): Attributed<Item> | undefined {
   const writer = slot.content.owners === 'one' ? owner : null;
@@ -134,7 +134,7 @@ function ownerOf<Item>(
 
 // Every item the reading carries, with its Plugin named.
 const namedReading = <Item>(
-  shown: Answer<Item>,
+  shown: KeptPage<Item>,
   owner: Attributed<Item> | undefined,
   lookup: PluginLookup,
 ): SlotReading<Item> => {

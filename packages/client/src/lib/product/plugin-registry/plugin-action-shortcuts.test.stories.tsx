@@ -9,7 +9,7 @@ function actions(label: string): WireNode {
   return {
     type: 'ListItem',
     key: 'row',
-    props: { title: label, onPress: { $event: 'onPress' } },
+    props: { title: label, onPress: { pageState: { row: label } } },
     children: [],
     slots: {
       actions: [
@@ -20,7 +20,7 @@ function actions(label: string): WireNode {
             label: 'Copy link',
             icon: 'copy',
             shortcut: { modifiers: ['alt'], key: 'i' },
-            onPress: { $event: 'onPress' },
+            onPress: { operation: 'copyLink', args: {} },
           },
           children: [],
           slots: {},
@@ -30,14 +30,14 @@ function actions(label: string): WireNode {
   };
 }
 
-const first = fn();
+const first = fn(async () => {});
 
-const later = fn();
+const later = fn(async () => {});
 
 // Two Plugins' trees in one List, as a page that draws more than one Plugin's tree does.
 const trees = [
-  { key: 'first', root: actions('First row'), onEvent: first },
-  { key: 'later', root: actions('Later row'), onEvent: later },
+  { key: 'first', root: actions('First row'), onPageCall: first },
+  { key: 'later', root: actions('Later row'), onPageCall: later },
 ];
 
 const meta = {
@@ -78,9 +78,10 @@ export const FirstContributionOwnsShortcut: Story = {
     await userEvent.keyboard('{Escape}');
     await userEvent.click(canvas.getByText('First row'));
     await userEvent.keyboard('{Alt>}i{/Alt}');
-    await expect(first).toHaveBeenCalledWith('row#actions/copy', {
-      event: 'onPress',
-    });
+    await expect(first).toHaveBeenCalledWith(
+      { operation: 'copyLink', args: {} },
+      expect.objectContaining({ key: 'row#actions/copy' }),
+    );
     await expect(later).not.toHaveBeenCalled();
   },
 };

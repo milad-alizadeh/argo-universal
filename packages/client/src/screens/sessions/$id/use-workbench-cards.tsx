@@ -9,9 +9,9 @@ import {
   useSessionMemory,
 } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
-import { PluginTree } from '../../../lib/product/plugin-registry';
+import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
-import { usePluginView } from '../../plugins/use-plugin-view';
+import { usePluginPage } from '../../plugins/use-plugin-page';
 import {
   pluginCardKey,
   type SessionPluginCard,
@@ -42,19 +42,22 @@ const without = (keys: readonly string[], key: string): string[] =>
 const toggled = (keys: readonly string[], key: string): string[] =>
   keys.includes(key) ? without(keys, key) : [...keys, key];
 
+// The Session a card draws for, and its Project once the Session's Feed has said which it is.
+export type CardSession = { sessionId: string; projectId?: string };
+
 /*
  * The Plugin cards a Session draws: every card the enabled Plugins declare and this Device shows, less the ones the
  * user has closed. A card is in the Workbench from the moment the Session opens, as Argo's own are, and a Plugin's
  * header action closes it and opens it again (ADR-0035).
  */
-export function useWorkbenchCards(sessionId: string): WorkbenchCards {
+export function useWorkbenchCards(session: CardSession): WorkbenchCards {
   const declared = useDeclaredWorkbenchCards();
-  const [closed, setClosed] = useSessionMemory(closedCards, sessionId);
+  const [closed, setClosed] = useSessionMemory(closedCards, session.sessionId);
 
   return {
     open: declared
       .filter((card) => !closed.includes(keyOf(card)))
-      .map((card) => drawnCard(card, sessionId)),
+      .map((card) => drawnCard(card, session)),
     toggle: (pluginId, cardId) =>
       setClosed((keys) => toggled(keys, pluginCardKey(pluginId, cardId))),
   };
@@ -72,45 +75,45 @@ function useDeclaredWorkbenchCards(): DeclaredCard[] {
 // One of a card's pages, drawn for this Session.
 const cardPage = (
   pluginId: string,
-  sessionId: string,
+  session: CardSession,
   path: string,
-): ReactNode => (
-  <PluginCardPage pluginId={pluginId} path={path} sessionId={sessionId} />
-);
+): ReactNode => <PluginCardPage pluginId={pluginId} path={path} {...session} />;
 
-// A card and its full view are the Plugin's own pages, drawn for this Session (ADR-0035).
+// A card and its full view are the Plugin's own Loader pages, drawn for this Session (ADR-0035, ADR-0050).
 const drawnCard = (
   { pluginId, item }: DeclaredCard,
-  sessionId: string,
+  session: CardSession,
 ): SessionPluginCard => ({
   pluginId,
   card: item,
-  page: cardPage(pluginId, sessionId, item.page),
-  tab: item.tab && cardPage(pluginId, sessionId, item.tab),
+  page: cardPage(pluginId, session, item.page),
+  tab: item.tab && cardPage(pluginId, session, item.tab),
 });
 
-interface CardPage {
-  pluginId: string;
-  path: string;
-  sessionId: string;
-}
+type CardPage = CardSession & { pluginId: string; path: string };
 
 /*
- * One Plugin page inside a card or its Inspector tab, watched for this Session as the Plugin's own pages are. The
- * card's frame is Argo's and draws at once; the page fills it when the Plugin answers (ADR-0025 lazy start).
+ * One Plugin page inside a card or its Inspector tab, drawn for this Session as the Plugin's own Loader pages
+ * are. The card's frame is Argo's and draws at once; the page fills it once the Session's Project is known and
+ * the Plugin has answered (ADR-0025 lazy start).
  */
-function PluginCardPage({ pluginId, path, sessionId }: CardPage): ReactNode {
-  const view = usePluginView({ pluginId, path, sessionId });
+function PluginCardPage(props: CardPage): ReactNode {
+  if (props.projectId === undefined) return null;
+
+  return <DrawnCardPage {...props} projectId={props.projectId} />;
+}
+
+function DrawnCardPage(props: CardPage & { projectId: string }): ReactNode {
+  const page = usePluginPage(props);
   const openPage = useOpenPluginPage();
 
-  if (!view.root) return null;
+  if (!page.root) return null;
 
   return (
-    <PluginTree
-      key={view.viewId}
-      root={view.root}
-      onEvent={view.dispatch}
-      onOpenPage={(page) => openPage(pluginId, page)}
+    <BoundedPluginTree
+      root={page.root}
+      onOpenPage={(opened) => openPage(props.pluginId, opened)}
+      onPageCall={page.onPageCall}
     />
   );
 }

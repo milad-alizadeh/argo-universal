@@ -12,9 +12,13 @@ import {
 } from './session-detail-view';
 import { SessionNewScreen } from './session-new-screen';
 import { ConnectedSessionHeader } from './session-page-header';
-import { useSessionPageMenu } from './session-page-menu';
+import { type SessionPageMenu, useSessionPageMenu } from './session-page-menu';
 import { sessionHeader } from './session-plugin-cards';
-import { type SessionPage, useSessionPage } from './use-session-page';
+import {
+  type OpenedSession,
+  type SessionPage,
+  useSessionPage,
+} from './use-session-page';
 
 export interface SessionDetailScreenProps {
   id: string;
@@ -25,15 +29,7 @@ export interface SessionDetailScreenProps {
 }
 
 // One Session, or New Session for the id no Session has: the first prompt's hand-off only changes the id, so the route keeps its screen. A new id starts every piece of state over.
-export function SessionDetailScreen(
-  props: SessionDetailScreenProps,
-): React.JSX.Element {
-  return (
-    <ConnectedReplaceableSlots>{sessionPage(props)}</ConnectedReplaceableSlots>
-  );
-}
-
-function sessionPage({
+export function SessionDetailScreen({
   id,
   projectId,
   draft,
@@ -120,16 +116,43 @@ function RetainedSession({
   );
 }
 
-// iOS's long-press preview draws the page outside its stack: it takes no header, and a peek does not mark the Session seen.
+// A Feed row a Plugin replaces runs its Operations for this Session and its Project.
 function ConnectedSession({
   sessionId,
 }: Pick<SessionPage, 'sessionId'>): React.JSX.Element {
   const preview = useIsPreview();
-  const { props: opened, cards } = useSessionPage({ sessionId, preview });
-  const { props, dialogs } = useSessionPageMenu(sessionId, opened);
+  const opened = useSessionPage({ sessionId, preview });
 
-  if (preview) return <SessionDetailView {...previewed(props)} />;
+  return (
+    <ConnectedReplaceableSlots session={opened.session}>
+      <SessionPageBody
+        sessionId={sessionId}
+        preview={preview}
+        opened={opened}
+      />
+    </ConnectedReplaceableSlots>
+  );
+}
 
+// iOS's long-press preview draws the page outside its stack: it takes no header, and a peek does not mark the Session seen.
+function SessionPageBody({
+  sessionId,
+  preview,
+  opened,
+}: SessionPage & { opened: OpenedSession }): React.JSX.Element {
+  const menu = useSessionPageMenu(sessionId, opened.props);
+
+  if (preview) return <SessionDetailView {...previewed(menu.props)} />;
+
+  return headed(sessionId, opened.cards, menu);
+}
+
+// The page under its header, with the header menu's dialogs.
+function headed(
+  sessionId: string,
+  cards: OpenedSession['cards'],
+  { props, dialogs }: SessionPageMenu,
+): React.JSX.Element {
   return (
     <>
       <ConnectedSessionHeader {...sessionHeader(sessionId, cards, props)} />

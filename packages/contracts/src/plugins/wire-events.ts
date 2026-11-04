@@ -1,39 +1,13 @@
 import { z } from 'zod';
-import { PluginDataState } from '#plugin-argo-calls';
 import {
   PluginOperationCaller,
   PluginOperationName,
   PluginOperationParams,
 } from '#plugin-operations';
+import { PageAddress } from '#plugin-page-address';
 import { PluginSurface } from '#plugin-surface';
 import { WireJson } from '#plugin-wire-json';
-import { ReplaceableSlotId, SlotItemsInput } from '#plugin-wire-slot';
-
-export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
-
-export type PluginViewId = z.infer<typeof PluginViewId>;
-
-export const PluginDispatchId = z.string().min(1).brand<'PluginDispatchId'>();
-
-export type PluginDispatchId = z.infer<typeof PluginDispatchId>;
-
-export const PluginViewInput = z.object({
-  pluginId: z.string(),
-  path: z.string(),
-  projectId: z.string().min(1).optional(),
-  // The Session a page opens for, such as from a Session header action; the page reads it from its context.
-  sessionId: z.string().min(1).optional(),
-});
-
-export type PluginViewInput = z.infer<typeof PluginViewInput>;
-
-// A Component event: the App names the node by key and the handler prop by event name.
-export const ComponentEvent = z.object({
-  event: z.string().min(1),
-  payload: WireJson.optional(),
-});
-
-export type ComponentEvent = z.infer<typeof ComponentEvent>;
+import { SlotItemsInput } from '#plugin-wire-slot';
 
 // The App before it sends and the Server on arrival both check a payload against the kit component's event schema.
 export function componentEventPayload(
@@ -72,56 +46,7 @@ export function componentEventRules(
   return ComponentEventRules.parse(schema?.meta() ?? {});
 }
 
-const target = z.object({
-  revision: z.number().int().positive(),
-  key: z.string().min(1),
-});
-
-export const PluginDispatchInput = PluginViewInput.extend({
-  ...target.shape,
-  ...ComponentEvent.shape,
-  viewId: PluginViewId,
-});
-
-export type PluginDispatchInput = z.infer<typeof PluginDispatchInput>;
-
-export const PluginDispatchResult = z.discriminatedUnion('ok', [
-  z.strictObject({ ok: z.literal(true) }),
-  z.strictObject({ ok: z.literal(false), error: z.string() }),
-]);
-
-export type PluginDispatchResult = z.infer<typeof PluginDispatchResult>;
-
 export const PluginEvent = z.union([
-  z.object({
-    type: z.literal('data'),
-    viewId: PluginViewId,
-    watchId: z.string(),
-    state: PluginDataState,
-  }),
-  z.object({
-    type: z.literal('open'),
-    background: z.boolean().optional(),
-    serverDevice: z.boolean().optional(),
-    viewId: PluginViewId,
-    path: z.string(),
-    projectId: z.string().min(1).optional(),
-    sessionId: z.string().min(1).optional(),
-    renderSlot: ReplaceableSlotId.optional(),
-    surface: PluginSurface.optional(),
-  }),
-  z.object({ type: z.literal('close'), viewId: PluginViewId }),
-  z.object({
-    type: z.literal('discardRender'),
-    path: z.string().startsWith('render:'),
-  }),
-  z.object({
-    type: z.literal('dispatch'),
-    viewId: PluginViewId,
-    requestId: PluginDispatchId,
-    ...target.shape,
-    ...ComponentEvent.shape,
-  }),
   /*
    * One of the Plugin's own Operations, run by an Agent or the user through `argo run`; it answers by
    * `id` with the handler's result, or with why it failed.
@@ -132,6 +57,36 @@ export const PluginEvent = z.union([
     name: PluginOperationName,
     params: PluginOperationParams,
     caller: PluginOperationCaller,
+  }),
+  /*
+   * One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050), for the
+   * Connection that asked; it answers by `id`. A background pass's draw is `loadOnly`:
+   * the Loader runs, no list is read and nothing renders. A `live` draw keeps a live page's Loader
+   * yielding and sends each tree it renders as a frame, until it ends or Argo stops it.
+   */
+  PageAddress.omit({ pluginId: true }).extend({
+    type: z.literal('draw'),
+    id: z.number().int().nonnegative(),
+    pages: z.number().int().positive(),
+    pull: z.literal(true).optional(),
+    serverDevice: z.boolean().optional(),
+    surface: PluginSurface.optional(),
+    loadOnly: z.literal(true).optional(),
+    live: z.literal(true).optional(),
+  }),
+  // The App left a live page, so its Loader stops yielding; the draw `id` answers once it has.
+  z.object({ type: z.literal('stop'), id: z.number().int().nonnegative() }),
+  /*
+   * One named read Argo keeps a Query for, run by the Plugin with its args for the Query's Project; it
+   * answers by `id`. A page of a paged list (`argo:list`) is read for the draw `draw` names.
+   */
+  z.object({
+    type: z.literal('read'),
+    id: z.number().int().nonnegative(),
+    name: z.string().min(1),
+    args: WireJson,
+    projectId: z.string().min(1).optional(),
+    draw: z.number().int().nonnegative().optional(),
   }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({

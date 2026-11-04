@@ -1,4 +1,4 @@
-import { List, ListItem, Label, Pill, useState } from '@argo/plugin-kit';
+import { List, ListItem, Label, Pill } from '@argo/plugin-kit';
 
 const builds = [
   { id: 'web', title: 'Deploy web' },
@@ -15,13 +15,13 @@ const buildMeta = (
   </>
 );
 
-function BuildRow({ build, selected, onSelect }) {
+function BuildRow({ build, selected, to }) {
   return (
     <ListItem
       title={build.title}
       subtitle="main"
       selected={selected === build.id}
-      onPress={() => onSelect(build.id)}
+      onPress={to.set({ selected: build.id })}
       meta={buildMeta}
       badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
       progress={{ value: 0.4, tone: 'success', active: true }}
@@ -29,27 +29,20 @@ function BuildRow({ build, selected, onSelect }) {
   );
 }
 
-const renderBuild = (selected, onSelect) => (build) => (
-  <BuildRow
-    key={build.id}
-    build={build}
-    selected={selected}
-    onSelect={onSelect}
-  />
+const renderBuild = (selected, to) => (build) => (
+  <BuildRow key={build.id} build={build} selected={selected} to={to} />
 );
 
-function HelloListPage() {
-  const [selected, setSelected] = useState('');
-
-  return (
-    <List
-      appearance="cards"
-      items={builds}
-      renderItem={renderBuild(selected, setSelected)}
-    />
-  );
-}
-
 export function register(argo) {
-  argo.pages.register('/lists', HelloListPage);
+  argo.pages.define('/lists', {
+    state: { selected: '' },
+    load: ({ state }) => state.selected,
+    render: (selected, to) => (
+      <List
+        appearance="cards"
+        items={builds}
+        renderItem={renderBuild(selected, to)}
+      />
+    ),
+  });
 }

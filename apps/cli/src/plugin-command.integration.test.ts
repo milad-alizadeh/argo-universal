@@ -1,5 +1,6 @@
 import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
 import {
   fixture,
@@ -8,6 +9,11 @@ import {
   readManifest,
   run,
 } from '../mocks/plugin-cli';
+
+// A shipped Plugin whose pages, Queries and Operations validate reports.
+const issueTracker = fileURLToPath(
+  new URL('../../../plugins/issue-tracker/', import.meta.url),
+);
 
 // The example starts a separate worker for each of its tests.
 const exampleTestLimitMs = 60_000;
@@ -67,12 +73,13 @@ it.each([
   30_000,
 );
 
-it('validate reports a shipped example Plugin’s contributions', async () => {
-  const result = await run('validate', githubSignIn);
+it('validate reports a shipped Plugin’s contributions', async () => {
+  const result = await run('validate', issueTracker);
   expect(result).toMatchObject({ code: 0 });
-  // Both of the example's registrations, named as the Plugin API calls that make them.
-  expect(result.output).toContain('argo.pages.register');
-  expect(result.output).toContain('argo.accounts.provide');
+  // The Plugin's registrations, named as the Plugin API calls that make them.
+  expect(result.output).toContain('argo.pages.define');
+  expect(result.output).toContain('argo.queries.define');
+  expect(result.output).toContain('argo.operations.register');
 }, 30_000);
 
 it('validate reports the declared order', async () => {
@@ -108,7 +115,7 @@ it(
     expect(await run('test', githubSignIn, exampleTestLimitMs)).toMatchObject({
       code: 0,
       output: expect.stringContaining(
-        'PASS the provider is registered for the Account host with the Authorization header',
+        'PASS the Server Device draws the sign-in where it stands',
       ),
     });
   },

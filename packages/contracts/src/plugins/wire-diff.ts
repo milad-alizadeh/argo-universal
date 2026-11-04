@@ -1,8 +1,6 @@
-import type { PatchOp, PatchStep, WireJson, WireNode } from './wire';
+import type { PatchOp, PatchStep, WireNode } from './wire';
 import { diffChildren } from './wire-diff-children';
-
-const same = (left: WireJson | undefined, right: WireJson): boolean =>
-  JSON.stringify(left) === JSON.stringify(right);
+import { sameIdentity, sameJson } from './wire-identity';
 
 function propsChanged(
   before: WireNode,
@@ -36,9 +34,6 @@ function slotsChanged(
   );
 }
 
-const sameIdentity = (before: WireNode, after: WireNode): boolean =>
-  before.type === after.type && before.key === after.key;
-
 // Author keys retain identity; generated position keys retain positional matching.
 export function diff(
   before: WireNode,
@@ -63,7 +58,7 @@ const removedProps = (names: string[]): string[] | undefined =>
 function changedProps(before: WireNode, after: WireNode): WireNode['props'] {
   return Object.fromEntries(
     Object.entries(after.props).filter(
-      ([name, value]) => !same(before.props[name], value),
+      ([name, value]) => !sameJson(before.props[name], value),
     ),
   );
 }

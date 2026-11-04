@@ -80,6 +80,10 @@ _Avoid_: Ticket, task
 A named thing Argo can do, such as listing Projects or starting a Session, defined once with typed arguments and a tier. Agents, the command line and Apps all call the same Operation.
 _Avoid_: Command (a Slash command or a shell command), tool, action, capability
 
+**Caller**:
+Who an Operation runs for, with the scope it may act within: an Agent in its Session, the command line, or the person at an App. A person's tap on a Plugin page calls as that person, scoped to the page's Project and Session.
+_Avoid_: Actor, principal, user (for an Agent)
+
 **Operation tier**:
 How far an Operation may go without asking the user: `read` never asks, `act` stays within the caller's own scope and never asks, and `confirm` always asks first, whatever mode the Agent is in.
 _Avoid_: Permission level, risk level
@@ -135,7 +139,7 @@ A named, versioned place in a core page that Plugins fill, such as Project detai
 _Avoid_: Contribution point, hook, outlet
 
 **Plugin tree**:
-The kit components a Plugin sends for one page or Slot, which the App draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts.
+The kit components a Plugin's Render answers for one page or Slot, as a value the App fetches, keeps and draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts. The App keeps a page's last one in memory and draws it while the page is fetched again. See ADR-0050.
 _Avoid_: Wire tree, Plugin UI
 
 **Single-owner Slot**:
@@ -151,11 +155,35 @@ The one version of the Plugin wire that an App reports when it connects. The Ser
 _Avoid_: Kit component version, kit version, protocol version
 
 **Page path**:
-The path a Plugin registers one of its pages at with `argo.pages.register`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
+The path a Plugin defines one of its pages at, with `argo.pages.define`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
 _Avoid_: App path, route (for what a Plugin writes)
 
+**Page address**:
+What names one drawing of a Plugin page: the Plugin, the Page path, the Page state and the Project or Session it opened for. The App keeps one Plugin tree per Page address, so two addresses never share a tree.
+_Avoid_: Query key, cache key, URL
+
+**Stale mark**:
+The Server telling every connected App that a Plugin's pages may have changed: all of them after a write, or the Page addresses that read a Query whose answer changed. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
+_Avoid_: Invalidation, refresh event, push update
+
+**Loader**:
+The read half of a Plugin page or Slot: it runs on the Server, takes the page's path, Page state and context, and answers the data the page draws from. It never writes.
+_Avoid_: Fetcher, data hook, `useData`
+
+**Live page**:
+A Plugin page whose Loader answers over time, such as a log tail. The App follows it while it is on screen and draws each new answer as it comes; leaving the page ends the Loader. Stale marks and a page's clock do not draw it again.
+_Avoid_: Streaming view, push page
+
+**Render**:
+The draw half of a Plugin page or Slot: a pure function from the Loader's answer to a Plugin tree, with no hooks and no state.
+_Avoid_: View (a view per Connection no longer exists), component, template
+
+**Page state**:
+What one open Plugin page must remember to draw differently, such as a tab, a range or a page size. The page declares it with defaults, the App keeps it, and it is part of the page's address.
+_Avoid_: Local state, `useState`, params (for what the App keeps)
+
 **Component event**:
-A named handler prop on a kit component, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the kit component's schema.
+A named handler prop on a kit component, such as `onPress`. In a Plugin tree it holds a value, never a function: a navigation, a Page state change, or an Operation with its arguments.
 _Avoid_: Interaction, action (Action is a kit component), handler
 
 **Capability**:
@@ -167,11 +195,23 @@ The answer, from the user or from Argo for a first-party Plugin, about a Capabil
 _Avoid_: Approval, permission
 
 **Query**:
-A read a Plugin describes as a value instead of making, which Argo performs, keys by its normalised form and refreshes on a clock Argo owns.
+A read a Plugin describes as a value instead of making, which Argo performs, keys by its normalised form and refreshes on a clock Argo owns. It is the one place Argo keeps a Plugin's reads; a write makes them due.
 _Avoid_: Descriptor, query key, request object
 
+**Named read**:
+A Query that is the Plugin's own read, defined once by name and asked for with args, for a read that combines several calls. Argo keeps its answer and runs it again when it is due, so it may only read.
+_Avoid_: Cached function, custom query, memo
+
+**Call origin**:
+What a Plugin's `argo` call runs for: the draw, the Operation run or the Project whose code made it, as the event that started that code said. Argo decides from it which Project and Account the call reaches and whether it reaches the Server Device. A named read runs for its Project alone.
+_Avoid_: Call context, call scope, caller
+
+**Query holder**:
+What keeps a Query's answer wanted: a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
+_Avoid_: Subscriber, owner, registration
+
 **Background pass**:
-One run of a Plugin's declared background entry on its interval, for one Project. It refreshes Queries and may set its own nav badge; it draws nothing and never raises a Notification.
+One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
 
 **Nav badge**:
@@ -185,6 +225,10 @@ _Avoid_: Share, delegate, proxy
 **Account**:
 A sign-in one Plugin provides and other Plugins borrow, named by the API host its token opens, such as `api.linear.app`, rather than by the button that gets it. CircleCI and GitHub are separate Accounts though both sign in with GitHub. A Plugin asks Argo for an Account, and the user approves each Plugin once per Account. See ADR-0036.
 _Avoid_: Login, credential, identity, Tracker, Integration
+
+**OAuth flow**:
+The kit's ready-made sign-in for a service that signs in with OAuth: the Plugin names the service's authorize and token URLs, its client ID and the Account's host, and the flow opens the browser, waits for the person, keeps the token and adds the Account. It holds where the sign-in stands, such as waiting or failed, for the Plugin's sign-in page to draw, and a sign-in started can be cancelled. It runs on the Server Device only.
+_Avoid_: OAuth helper, login flow, auth handler
 
 ## Agents and Sessions
 

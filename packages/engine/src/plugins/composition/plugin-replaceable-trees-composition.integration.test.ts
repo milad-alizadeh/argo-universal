@@ -24,7 +24,7 @@ it.each([
     expected: {
       type: 'replacement',
       pluginId: 'tree',
-      message: { type: 'snapshot', root: replacementTreeFixture },
+      root: replacementTreeFixture,
     },
     fallbacks: 0,
   },
@@ -36,7 +36,7 @@ it.each([
     fallbacks: 1,
   },
   {
-    scenario: 'missing tree',
+    scenario: 'not a tree',
     surface: current,
     body: '',
     expected: { type: 'core', input: toolCallSlotFixture },
@@ -84,12 +84,9 @@ it.each([
     const { url, caller } = await startEngineTestHost({ home });
 
     for (let count = 0; count < 2; count++) {
-      const app = renderApp(url, toolCallSlotFixture, surface);
-      await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(1);
-      const result = app.messages[0];
+      const { answer } = await renderApp(url, toolCallSlotFixture, surface);
 
-      expect(result).toMatchObject(expected);
-      app.stop();
+      expect(answer).toEqual(expected);
     }
 
     const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');
@@ -102,6 +99,6 @@ it.each([
 );
 
 const renderAnswer = (scenario: string): string =>
-  scenario === 'missing tree'
+  scenario === 'not a tree'
     ? `({ treePath: 'render:missing' })`
     : 'jsx(Replacement, {})';

@@ -1,25 +1,24 @@
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { pluginTap } from '#mocks/plugin-app';
+import { liveAnswers, pageAt } from '#mocks/plugin-pages';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 const fixture = { id: 'edges', fixture: 'wire-edge-cases' };
 
-it('keeps positional and explicit children distinct through a patch', async () => {
+async function liveEdges(
+  path: string,
+): Promise<Awaited<ReturnType<typeof liveAnswers>>> {
   const home = await createRuntimePlugins([fixture]);
+  const host = await startEngineTestHost({ home });
 
-  const { createCaller } = await startEngineTestHost({ home });
-  const controller = new AbortController();
-  onTestFinished(() => controller.abort());
-  const input = { pluginId: 'edges', path: '/mixed' };
+  return liveAnswers(host, pageAt('edges', path), 2);
+}
 
-  const watching = createCaller({ signal: controller.signal });
-  const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
+it('keeps positional and explicit children distinct through a patch', async () => {
+  const [first, patch] = await liveEdges('/mixed');
 
-  const initial = (await stream.next()).value;
-
-  expect(initial).toMatchObject({
-    type: 'snapshot',
+  expect(first).toMatchObject({
+    kind: 'tree',
     root: {
       children: [
         { key: '1', props: { label: 'Change' } },
@@ -28,40 +27,23 @@ it('keeps positional and explicit children distinct through a patch', async () =
       ],
     },
   });
-  await watching.plugins.dispatch(pluginTap(initial, { ...input, key: '0/1' }));
-  expect((await stream.next()).value).toEqual({
-    type: 'patch',
-    viewId: initial.viewId,
-    revision: 2,
+  expect(patch).toMatchObject({
+    kind: 'patch',
     ops: [{ op: 'setProps', key: ['~~1'], props: { children: 'Changed' } }],
   });
 }, 10_000);
 
 it('ignores empty React children in slot arrays and inserts a conditional node', async () => {
-  const home = await createRuntimePlugins([fixture]);
+  const [first, patch] = await liveEdges('/conditional');
 
-  const { createCaller } = await startEngineTestHost({ home });
-  const controller = new AbortController();
-  onTestFinished(() => controller.abort());
-  const input = { pluginId: 'edges', path: '/conditional' };
-
-  const watching = createCaller({ signal: controller.signal });
-  const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
-
-  const initial = (await stream.next()).value;
-  expect(initial).toMatchObject({
-    type: 'snapshot',
+  expect(first).toMatchObject({
+    kind: 'tree',
     root: {
-      slots: {
-        trailing: [{ key: 'always', props: { children: 'Always' } }],
-      },
+      slots: { trailing: [{ key: 'always', props: { children: 'Always' } }] },
     },
   });
-  await watching.plugins.dispatch(pluginTap(initial, { ...input, key: '0' }));
-  expect((await stream.next()).value).toEqual({
-    type: 'patch',
-    viewId: initial.viewId,
-    revision: 2,
+  expect(patch).toMatchObject({
+    kind: 'patch',
     ops: [
       {
         op: 'insert',

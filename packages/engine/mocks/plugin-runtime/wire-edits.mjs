@@ -1,4 +1,3 @@
-import { useState } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
 function changedNode(step) {
@@ -10,33 +9,36 @@ function changedNode(step) {
   return jsx('Button', { label: 'Changed' }, 'kept');
 }
 
-function Edits({ initial, removeOnly = false }) {
-  const [step, setStep] = useState(initial);
-
-  return jsx('Stack', {
-    direction: 'column',
-    children: [
-      jsx(
-        'Button',
-        { label: 'Next', onPress: () => setStep((n) => n + 1) },
-        'next',
-      ),
-      changedNode(removeOnly ? 0 : step),
-      removedNode(step, removeOnly),
-    ],
-  });
-}
-
-export function register(argo) {
-  argo.pages.register('/remove', () =>
-    jsx(Edits, { initial: 0, removeOnly: true }),
-  );
-  argo.pages.register('/props', () => jsx(Edits, { initial: 0 }));
-  argo.pages.register('/replace', () => jsx(Edits, { initial: 1 }));
-}
-
 function removedNode(step, removeOnly) {
   if (!removeOnly) return null;
 
   return step === 0 ? jsx('Text', { children: 'Removed' }, 'removed') : null;
+}
+
+const edits = (step, removeOnly) =>
+  jsx('Stack', {
+    direction: 'column',
+    children: [
+      changedNode(removeOnly ? 0 : step),
+      removedNode(step, removeOnly),
+    ],
+  });
+
+const later = () => new Promise((resolve) => setTimeout(resolve, 100));
+
+// A live page that draws `initial`, then the step after it, then holds.
+const stepped = (initial, removeOnly = false) => ({
+  load: async function* () {
+    yield initial;
+    await later();
+    yield initial + 1;
+    await new Promise(() => {});
+  },
+  render: (step) => edits(step, removeOnly),
+});
+
+export function register(argo) {
+  argo.pages.define('/remove', stepped(0, true));
+  argo.pages.define('/props', stepped(0));
+  argo.pages.define('/replace', stepped(1));
 }

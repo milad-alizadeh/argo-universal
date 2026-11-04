@@ -1,130 +1,91 @@
-import { useState, useLayoutEffect, Fragment } from '@argo/plugin-kit';
+import { Fragment } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
 const row = (id) => jsx('Text', { children: id }, id);
 
-const largeRow = (_, i) =>
-  jsx('Text', { children: 'x'.repeat(700000) }, String(i));
+// A live Loader yields its first value, then its second once that frame has gone out, then holds.
+const later = () => new Promise((resolve) => setTimeout(resolve, 100));
 
-function GrowPage() {
-  const [count, setCount] = useState(0);
-
-  return jsx('Stack', {
-    direction: 'column',
-    children: [
-      jsx(
-        'Button',
-        { label: 'Grow', onPress: () => setCount((n) => n + 1) },
-        'grow',
-      ),
-      ...Array.from({ length: count }, largeRow),
-    ],
-  });
+function live(first, second, render) {
+  return {
+    load: async function* () {
+      yield first;
+      await later();
+      yield second;
+      await new Promise(() => {});
+    },
+    render,
+  };
 }
 
-function CoalescedPage() {
-  const [count, setCount] = useState(0);
+const drawn = (render) => ({ load: () => null, render });
 
-  useLayoutEffect(() => {
-    if (count < 3) setCount(count + 1);
-  }, [count]);
-
-  return jsx('Text', { children: `Commit ${count}` });
-}
-
-function trailing(count, setCount) {
+function trailing(count) {
   if (count === 2) return [];
 
   return [
-    jsx(
-      'Button',
-      { label: 'Increment', onPress: () => setCount((n) => n + 1) },
-      'button',
-    ),
+    jsx('Button', { label: 'Increment' }, 'button'),
     jsx('Text', { children: `Count ${count}` }, 'count'),
   ];
 }
 
-function SlottedPage({ initial = 0 }) {
-  const [count, setCount] = useState(initial);
-
-  return jsx('ListItem', {
+const slotted = (count) =>
+  jsx('ListItem', {
     title: 'Slotted row',
     leading:
       count === 2
         ? []
         : jsx(Fragment, { children: [row('First'), row('Second')] }),
-    trailing: trailing(count, setCount),
+    trailing: trailing(count),
   });
-}
 
-const prepend = (rows) => ['new', ...rows];
+const rows = Array.from({ length: 2000 }, (_, i) => String(i));
 
-const moveFirst = (rows) => [...rows.slice(1), rows[0]];
-
-function listActions(setItems) {
-  return [
-    jsx(
-      'Button',
-      { label: 'Prepend', onPress: () => setItems(prepend) },
-      'prepend',
-    ),
-    jsx(
-      'Button',
-      { label: 'Move first', onPress: () => setItems(moveFirst) },
-      'move',
-    ),
-  ];
-}
-
-function ListPage() {
-  const [items, setItems] = useState(() =>
-    Array.from({ length: 2000 }, (_, i) => String(i)),
-  );
-
-  return jsx('Stack', {
+const list = (items) =>
+  jsx('Stack', {
     direction: 'column',
-    children: [
-      ...listActions(setItems),
-      jsx('List', { items, renderItem: row }, 'list'),
-    ],
+    children: [jsx('List', { items, renderItem: row }, 'list')],
   });
-}
 
 const CustomRow = ({ id }) => row(id);
 
 const pages = {
-  '/indexed': () =>
+  '/prepend': live(rows, ['new', ...rows], list),
+  '/move': live(rows, [...rows.slice(1), rows[0]], list),
+  '/indexed': drawn(() =>
     jsx('List', {
       items: ['row'],
       renderItem: (id, index) =>
         jsx('Text', { children: `${index}:${id}` }, id),
     }),
-  '/custom': () =>
+  ),
+  '/custom': drawn(() =>
     jsx('List', {
       items: ['row'],
       renderItem: (id) => jsx(CustomRow, { id }, id),
     }),
-  '/fragment': () =>
+  ),
+  '/fragment': drawn(() =>
     jsx('List', {
       items: ['row'],
       renderItem: (id) => jsx(Fragment, { children: row(id) }, id),
     }),
-  '/': ListPage,
-  '/oversize': () => jsx('Text', { children: '🚀'.repeat(300000) }),
-  '/grow': GrowPage,
-  '/coalesce': CoalescedPage,
-  '/slots': SlottedPage,
-  '/slots-empty': () => jsx(SlottedPage, { initial: 1 }),
-  '/missing': () =>
+  ),
+  '/oversize': drawn(() => jsx('Text', { children: '🚀'.repeat(300000) })),
+  '/slots': live(0, 1, slotted),
+  '/slots-empty': live(1, 2, slotted),
+  '/missing': drawn(() =>
     jsx('List', {
       items: ['row'],
       renderItem: (id) => jsx('Text', { children: id }),
     }),
-  '/duplicate': () => jsx('List', { items: ['row', 'row'], renderItem: row }),
+  ),
+  '/duplicate': drawn(() =>
+    jsx('List', { items: ['row', 'row'], renderItem: row }),
+  ),
 };
 
 export function register(argo) {
   for (const [path, page] of Object.entries(pages))
-    argo.pages.register(path, page);
+    argo.pages.define(path, page);
 }

@@ -1,8 +1,5 @@
-import type {
-  PluginDataRequest,
-  PluginQuery,
-} from '@repo/contracts/plugins/argo-calls';
-import type { PluginEvent } from '@repo/contracts/plugins/wire';
+import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
+import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import type { PluginClock } from '../clock';
 import type { PluginServices } from '../services/plugin-services';
 
@@ -13,25 +10,21 @@ export type QueryOwner = {
   query: PluginQuery;
 };
 
+// What Queries need of the Server: the one call that performs a described Query, its clock and its log.
 export type QueryServices = {
-  services: PluginServices;
+  services: Pick<PluginServices, 'handle'>;
   clock: PluginClock;
-  send: (pluginId: string, event: PluginEvent) => void;
   log: (line: string) => void;
   during: <T>(call: () => Promise<T>) => Promise<T>;
 };
 
-// What Timing needs of the watchers: whether any view holds the Query, and how often each kind wants it.
-export type QueryPacing = {
-  active: boolean;
-  period: number;
-  backgroundPeriod: number;
+/*
+ * A Loader's read for one draw: the address holding it, whether it reads fresh whatever is kept, and the
+ * interval its page is drawn again on, past which a kept answer is read again.
+ */
+export type QueryRead = {
+  holder?: PageAddress;
+  fresh: boolean;
+  draw: number;
+  every?: number;
 };
-
-export type QueryWatch = Extract<PluginDataRequest, { action: 'watch' }>;
-
-export function watchKey(
-  request: Pick<PluginDataRequest, 'viewId' | 'watchId'>,
-): string {
-  return JSON.stringify([request.viewId, request.watchId]);
-}

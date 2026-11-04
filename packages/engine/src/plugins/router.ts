@@ -2,54 +2,27 @@ import {
   DeclaredItems,
   DeclaredItemsInput,
 } from '@repo/contracts/plugins/declared-slots';
+import { PageRun, PageRunAnswer } from '@repo/contracts/plugins/page-address';
+import { DrawRequest } from '@repo/contracts/plugins/page-draw';
+import { LiveRequest } from '@repo/contracts/plugins/page-live';
 import {
+  ReplaceableAnswer,
   ReplaceableInput,
   RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
-import {
-  PluginDispatchInput,
-  PluginViewInput,
-  SlotItemsInput,
-} from '@repo/contracts/plugins/wire';
-import {
-  mergeRouters,
-  liveConnection,
-  publicProcedure,
-  router,
-  routerFactory,
-  type RpcConnection,
-} from '../rpc';
-import type { RpcContext } from '../rpc/connection';
+import { SlotItemsInput } from '@repo/contracts/plugins/wire';
+import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
 import type { PluginListChanges } from './list-changes';
 import type { PluginOperationService } from './operations';
+import type { LoaderPages } from './pages';
 import type { PluginService } from './service';
-
-function requireSignal(signal: AbortSignal | undefined): AbortSignal {
-  if (!signal) throw new Error('Plugin subscription signal is missing');
-
-  return signal;
-}
-
-const viewConnection = (ctx: RpcContext): RpcConnection =>
-  liveConnection(ctx.connection, 'Plugin views require a live App Connection');
-
-// A view lives while both the App Connection and its subscription are open.
-function connectionOf({
-  ctx,
-  signal,
-}: {
-  ctx: RpcContext;
-  signal?: AbortSignal;
-}): RpcConnection {
-  const live = viewConnection(ctx);
-
-  return {
-    ...live,
-    signal: signal ? AbortSignal.any([live.signal, signal]) : live.signal,
-  };
-}
+import {
+  connectionOf,
+  requireSignal,
+  appConnection,
+} from './subscription-connection';
 
 const createLifecycleRouter = routerFactory((plugins: PluginService) =>
   router({
@@ -71,15 +44,20 @@ const createListRouter = routerFactory((listChanges: PluginListChanges) =>
   }),
 );
 
-// Pages, Slots and Replaceable Slots stream to one live App Connection.
-const createViewsRouter = routerFactory((plugins: PluginService) =>
+// A Replaceable Slot is asked once, for the Connection's App, and asked again when its props change (ADR-0050).
+const createRenderRouter = routerFactory((plugins: PluginService) =>
   router({
-    view: publicProcedure
-      .input(PluginViewInput)
-      .subscription((call) => plugins.view(call.input, connectionOf(call))),
     render: publicProcedure
       .input(ReplaceableInput)
-      .subscription((call) => plugins.render(call.input, connectionOf(call))),
+      .output(ReplaceableAnswer)
+      .query(({ input, ctx }) => plugins.render(input, appConnection(ctx))),
+    renderFailed: publicProcedure
+      .input(RenderFailureInput)
+      .mutation(async ({ input }) => {
+        await plugins.renderFailed(input);
+
+        return { ok: true as const };
+      }),
   }),
 );
 
@@ -101,23 +79,35 @@ const createSlotItemsRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
-// What an App sends back about a view it draws.
-const createViewEventsRouter = routerFactory((plugins: PluginService) =>
+/*
+ * Loader pages (ADR-0050): a draw is a plain query the App caches by Page address, and an Operation a
+ * page's Component event runs answers its result; the pages it changed hear of it from the stale mark. The
+ * App's tap runs as the user.
+ */
+const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   router({
-    dispatch: publicProcedure
-      .input(PluginDispatchInput)
-      .mutation(async ({ input, ctx }) => {
-        await plugins.dispatch(viewConnection(ctx), input);
+    draw: publicProcedure
+      .input(DrawRequest)
+      .query(({ input, ctx }) => pages.draw(input, ctx.connection)),
+    run: publicProcedure
+      .input(PageRun)
+      .output(PageRunAnswer)
+      .mutation(({ input, ctx }) => pages.run(input, ctx.connection)),
+  }),
+);
 
-        return { ok: true as const };
-      }),
-    renderFailed: publicProcedure
-      .input(RenderFailureInput)
-      .mutation(({ input, ctx }) => {
-        plugins.renderFailed(viewConnection(ctx), input);
-
-        return { ok: true as const };
-      }),
+/*
+ * After any Operation of a Plugin, its Loader pages are stale on every connected App; a live page streams to
+ * one live App Connection while it subscribes.
+ */
+const createPageStreamsRouter = routerFactory((pages: LoaderPages) =>
+  router({
+    stale: publicProcedure.subscription(({ signal }) =>
+      pages.stale(requireSignal(signal)),
+    ),
+    live: publicProcedure
+      .input(LiveRequest)
+      .subscription((call) => pages.live(call.input, connectionOf(call))),
   }),
 );
 
@@ -126,16 +116,18 @@ export type PluginsRouterDeps = {
   accounts: PluginAccounts;
   listChanges: PluginListChanges;
   operations: PluginOperationService;
+  pages: LoaderPages;
 };
 
 export const createPluginsRouter = routerFactory(
-  ({ plugins, accounts, listChanges }: PluginsRouterDeps) =>
+  ({ plugins, accounts, listChanges, pages }: PluginsRouterDeps) =>
     mergeRouters(
       router({ accounts: accountsRouter(accounts) }),
       createLifecycleRouter(plugins),
       createListRouter(listChanges),
-      createViewsRouter(plugins),
+      createRenderRouter(plugins),
       createSlotItemsRouter(plugins),
-      createViewEventsRouter(plugins),
+      createLoaderPagesRouter(pages),
+      createPageStreamsRouter(pages),
     ),
 );

@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest';
+import type { CallOrigin } from '../protocol/call-origin';
 import { createPluginRealm } from './realm';
 import { PluginTestClock } from './test-clock';
 
@@ -17,9 +18,12 @@ const kitSource = `
   };
 `;
 
+const none: CallOrigin = { kind: 'none' };
+
 it('keeps kit timers real and apart from Plugin timers under a test clock', async () => {
   const clock = new PluginTestClock();
-  const { context } = createPluginRealm(async () => 'null', kitSource, clock);
+  const bridge = Object.assign(async () => 'null', { origin: () => none });
+  const { context } = createPluginRealm(bridge, kitSource, clock);
   const fired: string[] = [];
 
   context.run((name: string) => fired.push(name));

@@ -1,65 +1,46 @@
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { drawnRoot, pageAt } from '#mocks/plugin-pages';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const page = { pluginId: 'list', path: '/lists' };
-
-it('expands fixture List items into keyed rows and dispatches selection to the matching row', async () => {
+it('expands fixture List items into keyed rows, each pressing to its own selection', async () => {
   const home = await createRuntimePlugins([
     { id: 'list', fixture: 'list-selection', main: 'index.js' },
   ]);
 
-  const { createCaller } = await startEngineTestHost({
-    home,
-  });
+  const { caller } = await startEngineTestHost({ home });
 
-  const controller = new AbortController();
-  const app = createCaller({ signal: controller.signal });
-  const messages = (await app.plugins.view(page))[Symbol.asyncIterator]();
-
-  try {
-    const snapshot = (await messages.next()).value;
-    expect(snapshot).toMatchObject({
-      type: 'snapshot',
-      root: {
-        type: 'List',
-        key: '0',
-        children: [
-          {
-            type: 'ListItem',
-            key: 'web',
-            props: {
-              title: 'Deploy web',
-              selected: false,
-              progress: { value: 0.4 },
-            },
-            slots: {
-              meta: [
-                { type: 'Pill', props: { text: 'Healthy', tone: 'success' } },
-                { type: 'Label', props: { text: '2/5 jobs' } },
-              ],
-            },
-          },
-          {
-            type: 'ListItem',
-            key: 'native',
-            props: { title: 'Build native', selected: false },
-          },
-        ],
+  await expect(
+    drawnRoot(caller, pageAt('list', '/lists')),
+  ).resolves.toMatchObject({
+    type: 'List',
+    children: [
+      {
+        type: 'ListItem',
+        key: 'web',
+        props: {
+          title: 'Deploy web',
+          selected: false,
+          progress: { value: 0.4 },
+          onPress: { pageState: { selected: 'web' } },
+        },
+        slots: {
+          meta: [
+            { type: 'Pill', props: { text: 'Healthy', tone: 'success' } },
+            { type: 'Label', props: { text: '2/5 jobs' } },
+          ],
+        },
       },
-    });
-    await app.plugins.dispatch({
-      ...page,
-      revision: 1,
-      viewId: snapshot.viewId,
-      key: '0/web',
-      event: 'onPress',
-    });
-    expect((await messages.next()).value).toMatchObject({
-      type: 'patch',
-      ops: [{ op: 'setProps', key: ['web'], props: { selected: true } }],
-    });
-  } finally {
-    controller.abort();
-  }
+      {
+        type: 'ListItem',
+        key: 'native',
+        props: { title: 'Build native', selected: false },
+      },
+    ],
+  });
+  await expect(
+    drawnRoot(caller, pageAt('list', '/lists', { selected: 'web' })),
+  ).resolves.toMatchObject({
+    children: [{ props: { selected: true } }, { props: { selected: false } }],
+  });
 }, 20_000);

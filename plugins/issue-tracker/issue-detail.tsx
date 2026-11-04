@@ -1,58 +1,48 @@
-import { Action, Detail, EmptyState, Screen } from '@argo/plugin-kit';
+import {
+  Action,
+  Detail,
+  EmptyState,
+  Screen,
+  type PageTo,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue } from './github-issues';
-import { IssueMetadata } from './issue-metadata';
+import type { Issue, IssueStatus } from './github-issues';
+import type { AttachedSession, IssueDetailData } from './issue-detail-data';
+import { IssueMetadata, statusDotKey } from './issue-metadata';
+import { issuePath } from './issue-paths';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
-import {
-  useIssueDetail,
-  type DetailSource,
-  type IssueDetailState,
-} from './use-issue-detail';
 
-type IssueDetailProps = Pick<IssueDetailState, 'onStatus' | 'sessions'> & {
-  issue: Issue;
+type IssueDetailProps = {
+  data: IssueDetailData;
   projectId: string;
-  // The page path of another Issue in the same Project, for a relation's row.
-  issuePath: (number: number) => string;
+  number: number;
+  to: PageTo;
+};
+
+type ShownProps = Omit<IssueDetailProps, 'data'> & {
+  issue: Issue;
+  sessions: AttachedSession[];
 };
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
-export function IssueDetailPage(source: DetailSource): JSX.Element {
-  const { issue, message, ...state } = useIssueDetail(source);
+export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
+  const { data } = props;
 
-  if (!issue) return <Loading source={source} message={message} />;
+  if (!data.ok)
+    return (
+      <Screen title={`#${props.number}`}>
+        <EmptyState title={data.message} />
+      </Screen>
+    );
 
-  return <IssueDetail {...state} {...pageProps(source)} issue={issue} />;
+  return <IssueDetail {...props} issue={data.issue} sessions={data.sessions} />;
 }
 
-// What the page reads from the Project it is in: the Issue's Project, and its siblings' paths.
-const pageProps = (
-  source: DetailSource,
-): Pick<IssueDetailProps, 'projectId' | 'issuePath'> => ({
-  projectId: source.project.id,
-  issuePath: (number) =>
-    source.deps.pages.issuePagePath(source.project, number),
-});
-
-// Until the Issue loads, and when it cannot, the page says so under its number.
-function Loading(props: {
-  source: DetailSource;
-  message: string;
-}): JSX.Element {
-  return (
-    <Screen title={`#${props.source.number}`}>
-      <EmptyState title={props.message} />
-    </Screen>
-  );
-}
-
-function IssueDetail(props: IssueDetailProps): JSX.Element {
-  const { issue } = props;
-
+function IssueDetail(props: ShownProps): JSX.Element {
   return (
     <Screen
-      title={issue.title}
+      title={props.issue.title}
       primaryAction={<StartSessionAction {...props} />}
       actions={<StatusAction {...props} />}
     >
@@ -62,16 +52,17 @@ function IssueDetail(props: IssueDetailProps): JSX.Element {
 }
 
 // The description, the Issue's own properties beside it, and the work under both.
-function IssueBody(props: IssueDetailProps): JSX.Element {
-  const { issue } = props;
-
+function IssueBody({ issue, projectId, sessions }: ShownProps): JSX.Element {
   return (
     <Detail
       markdown={issue.body || 'No description.'}
       metadata={<IssueMetadata issue={issue} />}
     >
-      <SubIssues issue={issue} issuePath={props.issuePath} />
-      <AttachedSessions sessions={props.sessions} />
+      <SubIssues
+        issue={issue}
+        issuePath={(number) => issuePath(projectId, number)}
+      />
+      <AttachedSessions sessions={sessions} />
     </Detail>
   );
 }
@@ -80,16 +71,11 @@ function IssueBody(props: IssueDetailProps): JSX.Element {
 const issueDraft = (issue: Issue): string =>
   `#${issue.number} ${issue.title}\n${issue.url}`;
 
-type StartSessionProps = Pick<IssueDetailProps, 'issue' | 'projectId'>;
-
 /*
  * What the Issue asks of the reader, on its title's line: start work on it, or settle it. They are the Screen's
  * header Actions, inside the pane the Issue is read in, so the page's verbs sit with what they act on.
  */
-function StartSessionAction({
-  issue,
-  projectId,
-}: StartSessionProps): JSX.Element {
+function StartSessionAction({ issue, projectId }: ShownProps): JSX.Element {
   return (
     <Action
       key="start-session"
@@ -100,17 +86,50 @@ function StartSessionAction({
   );
 }
 
-type StatusActionProps = Pick<IssueDetailProps, 'issue' | 'onStatus'>;
+// The status Action shares its key with the Issue's filter row's, so one Operation's patch repaints both.
+const statusActionKey = (number: number): string => `status-${number}`;
 
-function StatusAction({ issue, onStatus }: StatusActionProps): JSX.Element {
-  const { label, icon, to } = statuses[issue.status].change;
+/*
+ * Closes or reopens the Issue as the `setStatus` Operation; the status and the Action show the new status at
+ * once, and the old one again when gh refuses it.
+ */
+function StatusAction({ issue, projectId, to }: ShownProps): JSX.Element {
+  const { label, icon, to: next } = statuses[issue.status].change;
+  const { number } = issue;
+  const press = setStatus(to, { number, status: next, projectId });
 
   return (
     <Action
-      key="status"
+      key={statusActionKey(number)}
       label={label}
       icon={icon}
-      onPress={() => onStatus(to)}
+      onPress={press}
     />
   );
 }
+
+type Patches = NonNullable<ReturnType<PageTo['run']>['optimistic']>;
+
+type StatusChange = { number: number; status: IssueStatus; projectId: string };
+
+const setStatus = (
+  to: PageTo,
+  change: StatusChange,
+): ReturnType<PageTo['run']> =>
+  to.run('setStatus', change, {
+    optimistic: statusPatches(change.number, change.status),
+  });
+
+const statusPatches = (number: number, status: IssueStatus): Patches => [
+  {
+    key: statusDotKey(number),
+    props: { text: statuses[status].text, tone: statuses[status].tone },
+  },
+  {
+    key: statusActionKey(number),
+    props: {
+      label: statuses[status].change.label,
+      icon: statuses[status].change.icon,
+    },
+  },
+];

@@ -11,7 +11,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn(async () => {});
+const onPageCall = fn(async () => {});
 
 // A Card as a Plugin sends it: its action in the actions Slot, the body as children.
 const root = {
@@ -20,7 +20,7 @@ const root = {
   props: {
     title: 'api-gateway',
     subtitle: 'Production',
-    onPress: { $event: 'onPress' },
+    onPress: { operation: 'openDeploy', args: {} },
   },
   children: [
     {
@@ -39,7 +39,7 @@ const root = {
         props: {
           icon: 'more',
           accessibilityLabel: 'More',
-          onPress: { $event: 'onPress' },
+          onPress: { operation: 'showMore', args: {} },
         },
         children: [],
         slots: {},
@@ -48,24 +48,29 @@ const root = {
   },
 } satisfies WireNode;
 
-export const DispatchesPress: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+export const RunsPress: Story = {
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByText('Deployed 12 min ago')).toBeVisible();
     await userEvent.click(
       canvas.getByRole('button', { name: 'api-gateway, Production' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith('deploy', { event: 'onPress' });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'openDeploy', args: {} },
+      expect.objectContaining({ key: 'deploy', name: 'onPress' }),
+    );
   },
 };
 
-export const DispatchesAction: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+export const RunsAction: Story = {
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
+    onPageCall.mockClear();
     await userEvent.click(canvas.getByRole('button', { name: 'More' }));
-    await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith('deploy#actions/more', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledOnce();
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'showMore', args: {} },
+      expect.objectContaining({ key: 'deploy#actions/more', name: 'onPress' }),
+    );
   },
 };

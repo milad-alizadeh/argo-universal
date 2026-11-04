@@ -11,7 +11,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const node = (
   type: string,
@@ -23,7 +23,7 @@ const section: WireNode = {
   ...node('List.Section', 'choices', {
     selectionMode: 'multiple',
     selection: [],
-    onSelectionChange: { $event: 'onSelectionChange' },
+    onSelectionChange: { bind: 'choices' },
   }),
   children: [node('ListItem', 'argo', { id: 'argo', title: 'Argo' })],
 };
@@ -33,11 +33,11 @@ export const AppsKeepSelectionIndependent: Story = {
     <>
       <PluginTree
         root={{ ...node('List', 'list', {}), children: [section] }}
-        onEvent={onEvent}
+        onPageCall={onPageCall}
       />
       <PluginTree
         root={{ ...node('List', 'list', {}), children: [section] }}
-        onEvent={onEvent}
+        onPageCall={onPageCall}
       />
     </>
   ),
@@ -54,10 +54,10 @@ export const AppsKeepSelectionIndependent: Story = {
 
       if (!row) throw new Error('Expected an Argo row in this App');
       await userEvent.click(row);
-      await expect(onEvent).toHaveBeenLastCalledWith('list/choices', {
-        event: 'onSelectionChange',
-        payload,
-      });
+      await expect(onPageCall).toHaveBeenLastCalledWith(
+        { bind: 'choices' },
+        expect.objectContaining({ key: 'list/choices', payload }),
+      );
     }
   },
 };

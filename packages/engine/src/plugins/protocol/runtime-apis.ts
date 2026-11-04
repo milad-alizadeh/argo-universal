@@ -1,6 +1,7 @@
 /*
  * The `argo` calls the runtime answers itself: pages, Hooks, dispatch results, Queries, badges, Slot
- * items and a Plugin's answers to its own Operations. PluginServices answers every other call.
+ * items, a Plugin's answers to its own Operations, its Loader pages' draws and its named reads. PluginServices
+ * answers every other call.
  */
 export type RuntimeApiName =
   | 'view'
@@ -9,4 +10,6 @@ export type RuntimeApiName =
   | 'data'
   | 'nav'
   | 'slots'
-  | 'operations';
+  | 'operations'
+  | 'pages'
+  | 'reads';

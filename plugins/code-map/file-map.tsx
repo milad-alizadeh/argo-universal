@@ -3,8 +3,7 @@ import {
   Metadata,
   Stack,
   Text,
-  useMemo,
-  useState,
+  type PageTo,
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
@@ -31,34 +30,43 @@ interface Scene {
   captions: FileCaption[];
 }
 
-// Laid out once per answer.
-function useScene(files: CodeFile[]): Scene {
-  const drawn = useMemo(() => drawnFiles(files), [files]);
-  const tiles = useMemo(() => layout(drawn.files), [drawn]);
-  const rects = useMemo(() => fileRects(tiles), [tiles]);
-  const captions = useMemo(() => fileCaptions(tiles), [tiles]);
+// Laid out once per draw.
+function sceneOf(files: CodeFile[]): Scene {
+  const drawn = drawnFiles(files);
+  const tiles = layout(drawn.files);
 
-  return { drawn, rects, captions };
+  return { drawn, rects: fileRects(tiles), captions: fileCaptions(tiles) };
 }
 
-// The App owns pan, zoom and the selection outline; the Plugin keeps which file is selected.
-export function FileMap({ files }: { files: CodeFile[] }): JSX.Element {
-  const [selected, setSelected] = useState<string | null>(null);
-  const scene = useScene(files);
-  const selectedKey = scene.rects.find(({ path }) => path === selected)?.key;
+/*
+ * A press selects a file by its rectangle's short key, a Page state change, so the page draws again with that file's
+ * details. The key, not the path, keeps each rectangle's press small enough for 2,500 of them on one page.
+ */
+type Select = (key: string) => ReturnType<PageTo['set']>;
+
+type FileMapProps = { files: CodeFile[]; selected: string; onSelect: Select };
+
+// The App owns pan, zoom and the selection outline; the page's Page state keeps which file is selected.
+export function FileMap({
+  files,
+  selected,
+  onSelect,
+}: FileMapProps): JSX.Element {
+  const scene = sceneOf(files);
+  const rect = scene.rects.find(({ key }) => key === selected);
 
   return (
     <Stack direction="column" gap={4}>
-      <MapCanvas {...scene} selected={selectedKey} onSelect={setSelected} />
+      <MapCanvas {...scene} selected={rect?.key} onSelect={onSelect} />
       <MapNotes drawn={scene.drawn} total={files.length} />
-      <FileDetails file={files.find(({ path }) => path === selected)} />
+      <FileDetails file={files.find(({ path }) => path === rect?.path)} />
     </Stack>
   );
 }
 
 type MapCanvasProps = Pick<Scene, 'rects' | 'captions'> & {
   selected: string | undefined;
-  onSelect: (path: string) => void;
+  onSelect: Select;
 };
 
 // The scene's own units; the App scales it to fit and owns the camera.
@@ -74,8 +82,8 @@ const frame: Omit<PluginProps['Canvas'], 'selectedKey'> = {
 function MapCanvas(props: MapCanvasProps): JSX.Element {
   return (
     <Canvas {...frame} selectedKey={props.selected}>
-      {props.rects.map(({ key, path, ...rect }) => (
-        <Canvas.Rect key={key} {...rect} onPress={() => props.onSelect(path)} />
+      {props.rects.map(({ key, path: _path, ...rect }) => (
+        <Canvas.Rect key={key} {...rect} onPress={props.onSelect(key)} />
       ))}
       {props.captions.map(({ key, file: _file, ...caption }) => (
         <Canvas.Text key={key} {...caption} />

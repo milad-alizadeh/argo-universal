@@ -88,7 +88,7 @@ export class Operations {
   }
   /*
    * The core registry, then the Operations running Plugins add to it. A Plugin's Operation reaches only
-   * the caller's own Project, so a Session sees it as it is.
+   * the caller's own Project unless the user confirms another, so a Session sees it as it is.
    */
   public async list(
     token: string | undefined,
