@@ -152,11 +152,9 @@ export class DraftPage {
 
   // The next run waits until the answer lets it end, failing with `error` when one is given.
   holdRun(): (error?: string) => void {
-    const gate = new Gate();
+    this.running = new Gate();
 
-    this.running = gate;
-
-    return gate.settle;
+    return this.running.settle;
   }
 
   private ports(withState: boolean): PageCallsPorts {

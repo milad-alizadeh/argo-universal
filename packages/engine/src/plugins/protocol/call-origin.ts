@@ -121,11 +121,19 @@ export function reachOf<Draw extends Reach>(
   waiting: WaitingCalls<Draw>,
   origin: CallOrigin,
 ): DrawReach<Draw> {
+  if (origin.kind === 'draw') return reachOfDraw(waiting.draw(origin.draw));
+
+  if (origin.kind === 'operation')
+    return reachOfRun(waiting.run(origin.operation));
+
+  return reachOfProject(origin);
+}
+
+// A call for a Project reaches that Project and never the Server Device.
+function reachOfProject(
+  origin: Extract<CallOrigin, { kind: 'project' | 'none' }>,
+): DrawReach<never> {
   switch (origin.kind) {
-    case 'draw':
-      return reachOfDraw(waiting.draw(origin.draw));
-    case 'operation':
-      return reachOfRun(waiting.run(origin.operation));
     case 'project':
       return { projectId: origin.projectId, serverDevice: false };
     case 'none':

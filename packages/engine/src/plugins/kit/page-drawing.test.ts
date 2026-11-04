@@ -12,7 +12,7 @@ const event: DrawEvent = {
 };
 
 const reading = {
-  call: () => Promise.reject(new Error('no read expected')),
+  call: (): Promise<never> => Promise.reject(new Error('no read expected')),
   lists: new Map(),
 };
 

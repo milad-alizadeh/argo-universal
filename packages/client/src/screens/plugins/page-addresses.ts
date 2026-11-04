@@ -161,10 +161,7 @@ export class PageAddresses {
     void promise?.then(again, again);
   }
 
-  private treeCache(opening: PageOpening): {
-    client: QueryClient;
-    queryKey: QueryKey;
-  } {
+  private treeCache(opening: PageOpening): TreeCache {
     return {
       client: this.client,
       queryKey: treeKey(this.addressOf(opening)),
@@ -205,6 +202,9 @@ export class PageAddresses {
     return keptAfter(before, answer);
   }
 }
+
+// A tree's place in the query cache.
+type TreeCache = { client: QueryClient; queryKey: QueryKey };
 
 const requestOf = (
   address: PageAddress,

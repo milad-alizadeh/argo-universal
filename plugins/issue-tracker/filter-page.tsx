@@ -24,7 +24,7 @@ import type { Issue } from './github-issues';
 import { repositoryText } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { filterPattern } from './issue-paths';
-import { RootRows } from './issue-root';
+import { RootRows, type RootRowsProps } from './issue-root';
 import { issueTree } from './issue-tree';
 import { loadingIssues } from './loading-issues';
 
@@ -76,25 +76,31 @@ function FilterPage(props: PageProps): JSX.Element {
   );
 }
 
+// What the filters beside the list show: nothing for a page that is gone.
+type Shown = Pick<RootRowsProps, 'selected'> &
+  Pick<RootRowsProps['choice'], 'project'> &
+  Pick<RootRowsProps['state'], 'overview'>;
+
+const shownOf = (data: FilterData): Shown =>
+  data.state === 'gone'
+    ? { project: undefined, overview: null, selected: undefined }
+    : {
+        project: data.project,
+        overview: data.overview,
+        selected: data.filter.id,
+      };
+
 // The Project's filters beside the list; a pull asks again, as the list's own does.
 function sidebar({ data, to }: PageProps): JSX.Element {
   const message = noIssuesBecause(data) || loadingIssues;
-
-  if (data.state === 'gone')
-    return (
-      <RootRows
-        choice={{ projects: data.projects, project: undefined, message }}
-        state={{ overview: null, message: '' }}
-        onRefresh={to.set({})}
-      />
-    );
+  const { project, overview, selected } = shownOf(data);
 
   return (
     <RootRows
-      choice={{ projects: data.projects, project: data.project, message }}
-      state={{ overview: data.overview, message: '' }}
+      choice={{ projects: data.projects, project, message }}
+      state={{ overview, message: '' }}
       onRefresh={to.set({})}
-      selected={data.filter.id}
+      selected={selected}
     />
   );
 }

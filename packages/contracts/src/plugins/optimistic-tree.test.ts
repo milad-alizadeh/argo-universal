@@ -19,7 +19,9 @@ const optimistic = [{ key: 'save', props: { label: 'Saving', loading: true } }];
 
 it('takes back the props a node lacked before, and the ones it had, leaving the others', () => {
   const before = stack(node('save', { label: 'Save', tone: 'primary' }));
+
   const shown = optimisticTree(before, optimistic);
+
   const moved = stack(
     node('save', { ...shown.children[0]?.props, tone: 'danger' }),
   );

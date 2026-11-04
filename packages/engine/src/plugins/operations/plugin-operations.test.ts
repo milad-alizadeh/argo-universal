@@ -16,15 +16,24 @@ const request = {
   caller: { person: true },
 } as const;
 
+// The id of the Operation run the worker was last sent.
+const lastRunId = (sent: PluginEvent[]): number => {
+  const last = sent.at(-1);
+
+  return last?.type === 'operation' ? last.id : -1;
+};
+
 // One run of `close` on Plugin `tracker`, which the worker answers with `answer`, and the Plugins heard to run.
 async function runAnswered(
   answer: (id: number) => Parameters<PluginOperations['receive']>[1],
 ): Promise<string[]> {
   const sent: PluginEvent[] = [];
+
   const workers = new WorkerCalls({
-    send: (_, event) => sent.push(event),
+    send: (_, event): void => void sent.push(event),
     clock: idleClock,
   });
+
   const operations = new PluginOperations(workers);
   const heard: string[] = [];
 
@@ -32,9 +41,11 @@ async function runAnswered(
   workers.run('tracker', 1);
 
   const running = operations.run('tracker', request);
-  const id = sent.at(-1)?.type === 'operation' ? sent.at(-1)?.id : -1;
 
-  operations.receive({ pluginId: 'tracker', generation: 1 }, answer(id ?? -1));
+  operations.receive(
+    { pluginId: 'tracker', generation: 1 },
+    answer(lastRunId(sent)),
+  );
   await running;
 
   return heard;

@@ -120,12 +120,16 @@ export async function loadFilter(
     opened,
   ]);
 
-  const chosen = { projects, project, filter, overview };
+  return withTracker({ projects, project, filter, overview }, tracker);
+}
 
-  return tracker.opened
+const withTracker = (
+  chosen: { projects: Project[] } & Chosen,
+  tracker: Opened,
+): FilterData =>
+  tracker.opened
     ? { ...chosen, state: 'opened' }
     : { ...chosen, state: 'unopened', message: tracker.message };
-}
 
 // Why there are no Issues to show; none when the Tracker opened.
 export function noIssuesBecause(data: FilterData): string {

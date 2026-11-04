@@ -1,11 +1,6 @@
 import type { z } from 'zod';
 import { EditPauses, realClock, type PauseClock } from './edit-pauses';
-import {
-  optimisticTree,
-  optimisticUndo,
-  type Optimistic,
-  type TreePatch,
-} from './optimistic-tree';
+import { showOptimistic, type TreePorts } from './optimistic-tree';
 import type { PageRun, PageState } from './page-address';
 import {
   madePageCall,
@@ -18,7 +13,6 @@ import {
   componentEventHandler,
   componentEventRules,
   type WireJson,
-  type WireNode,
 } from './wire';
 import { findWireNode } from './wire-node-key';
 
@@ -55,11 +49,8 @@ export type PageStatePort = {
  * with why an Operation failed; `failed` says so, and a `failed` that throws rejects the call. A tree with no
  * Page state, as a Replaceable Slot's, has no `pageState`.
  */
-export type PageCallsPorts = {
+export type PageCallsPorts = TreePorts & {
   scope: Pick<ScopedRun, 'projectId' | 'sessionId'>;
-  shown: () => WireNode | undefined;
-  patch: (patch: TreePatch) => Promise<void>;
-  unpatch: (patch: TreePatch) => void;
   run: (run: ScopedRun) => Promise<void>;
   failed: (error: Error) => void;
   pageState?: PageStatePort;
@@ -182,7 +173,7 @@ export class PageCalls {
     optimistic,
   }: MadeOperationCall): Promise<void> {
     const { scope, run, failed } = this.ports;
-    const putBack = await this.showOptimistic(optimistic);
+    const putBack = await showOptimistic(this.ports, optimistic);
 
     try {
       await run({ operation, args, ...definedScope(scope) });
@@ -191,24 +182,7 @@ export class PageCalls {
       failed(error instanceof Error ? error : new Error(String(error)));
     }
   }
-
-  // Shows the optimistic props at once; the function returned takes back only those, as a failure does.
-  private async showOptimistic(
-    optimistic: Optimistic | undefined,
-  ): Promise<() => void> {
-    const before = this.ports.shown();
-
-    if (!optimistic?.length || !before) return keep;
-
-    await this.ports.patch((root) => optimisticTree(root, optimistic));
-
-    const undo = optimisticUndo(before, optimistic);
-
-    return () => this.ports.unpatch(undo);
-  }
 }
-
-const keep = (): void => {};
 
 function drawPageFor(
   pageState: PageStatePort,

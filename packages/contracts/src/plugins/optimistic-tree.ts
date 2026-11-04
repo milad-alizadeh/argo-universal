@@ -34,26 +34,28 @@ export const optimisticTree = (
  * node gets the props it had in `before` back, unless it no longer shows the optimistic ones, as a node a
  * newer tree drew again does not. It leaves every other prop, and every other node, as that tree has them.
  */
-export function optimisticUndo(
+export const optimisticUndo = (
   before: WireNode,
   optimistic: Optimistic,
-): TreePatch {
+): TreePatch => {
   const earlier = propsOf(before, new Set(optimistic.map(({ key }) => key)));
 
-  return (root) =>
-    patched(
-      root,
-      new Map(
-        optimistic.map(({ key, props }) => [
-          key,
-          (shown): Props =>
-            isShowing(shown, props)
-              ? restored(shown, props, earlier.get(key))
-              : shown,
-        ]),
-      ),
-    );
-}
+  return (root) => patched(root, takeBack(optimistic, earlier));
+};
+
+const takeBack = (
+  optimistic: Optimistic,
+  earlier: ReadonlyMap<string, Props>,
+): PropsChanges =>
+  new Map(
+    optimistic.map(({ key, props }) => [
+      key,
+      (shown): Props =>
+        isShowing(shown, props)
+          ? restored(shown, props, earlier.get(key))
+          : shown,
+    ]),
+  );
 
 const isShowing = (shown: Props, patch: Props): boolean =>
   Object.entries(patch).every(([name, value]) => shown[name] === value);
@@ -73,24 +75,61 @@ function restored(
   ]);
 }
 
+const childrenOf = (node: WireNode): WireNode[] => [
+  ...node.children,
+  ...Object.values(node.slots).flat(),
+];
+
+function* nodesOf(node: WireNode): Generator<WireNode> {
+  yield node;
+
+  for (const child of childrenOf(node)) yield* nodesOf(child);
+}
+
 // The props each named node shows in the tree; the first node of a key stands for it.
-function propsOf(
+const propsOf = (
   root: WireNode,
   keys: ReadonlySet<string>,
-): Map<string, Props> {
-  const found = new Map<string, Props>();
+): Map<string, Props> =>
+  new Map(
+    [...nodesOf(root)]
+      .filter(({ key }) => keys.has(key))
+      .reverse()
+      .map(({ key, props }) => [key, props]),
+  );
 
-  const visit = (node: WireNode): void => {
-    if (keys.has(node.key) && !found.has(node.key))
-      found.set(node.key, node.props);
+// The ports an Operation call's optimistic props show through and are taken back by.
+export type TreePorts = {
+  shown: () => WireNode | undefined;
+  patch: (patch: TreePatch) => Promise<void>;
+  unpatch: (patch: TreePatch) => void;
+};
 
-    for (const child of [...node.children, ...Object.values(node.slots).flat()])
-      visit(child);
-  };
+const keep = (): void => {};
 
-  visit(root);
+/*
+ * Shows the optimistic props at once. The function returned takes back only those, as a failure does, and
+ * does nothing when there were none to show.
+ */
+export const showOptimistic = (
+  ports: TreePorts,
+  optimistic: Optimistic | undefined,
+): Promise<() => void> =>
+  optimistic?.length ? showPatch(ports, optimistic) : Promise.resolve(keep);
 
-  return found;
+async function showPatch(
+  ports: TreePorts,
+  optimistic: Optimistic,
+): Promise<() => void> {
+  const before = ports.shown();
+
+  if (!before) return keep;
+
+  await ports.patch((root) => optimisticTree(root, optimistic));
+
+  const undo = optimisticUndo(before, optimistic);
+
+  return () => ports.unpatch(undo);
 }
 
 // A node's slots are walked as its children are: a row's menu Action sits in its `actions` slot.
