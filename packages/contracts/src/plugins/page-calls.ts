@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { EditPauses, realClock, type PauseClock } from './edit-pauses';
 import { showOptimistic, type TreePorts } from './optimistic-tree';
-import type { PageRun, PageState } from './page-address';
+import type { PageRun, PageScope, PageState } from './page-address';
 import {
   madePageCall,
   type MadeOperationCall,
@@ -50,7 +50,7 @@ export type PageStatePort = {
  * Page state, as a Replaceable Slot's, has no `pageState`.
  */
 export type PageCallsPorts = TreePorts & {
-  scope: Pick<ScopedRun, 'projectId' | 'sessionId'>;
+  scope: PageScope;
   run: (run: ScopedRun) => Promise<void>;
   failed: (error: Error) => void;
   pageState?: PageStatePort;
@@ -194,10 +194,7 @@ function drawPageFor(
 }
 
 // A run names only the Project and Session the tree has.
-const definedScope = ({
-  projectId,
-  sessionId,
-}: PageCallsPorts['scope']): PageCallsPorts['scope'] => ({
+const definedScope = ({ projectId, sessionId }: PageScope): PageScope => ({
   ...(projectId && { projectId }),
   ...(sessionId && { sessionId }),
 });

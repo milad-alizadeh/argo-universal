@@ -19,12 +19,19 @@ export type PageState = z.infer<typeof PageState>;
 // The longest Page path an App may ask a Plugin for, which the Server logs when the page fails.
 export const maxPagePathLength = 512;
 
+// The Project and Session a page or a run is for, each when it has one.
+const scope = {
+  projectId: z.string().min(1).optional(),
+  sessionId: z.string().min(1).optional(),
+};
+
+export type PageScope = { projectId?: string; sessionId?: string };
+
 export const PageAddress = z.strictObject({
   pluginId: z.string().min(1),
   path: z.string().startsWith('/').max(maxPagePathLength),
   pageState: PageState,
-  projectId: z.string().min(1).optional(),
-  sessionId: z.string().min(1).optional(),
+  ...scope,
 });
 
 export type PageAddress = z.infer<typeof PageAddress>;
@@ -34,8 +41,7 @@ export const PageRun = z.strictObject({
   pluginId: z.string().min(1),
   operation: PluginOperationName,
   args: PluginOperationParams,
-  projectId: z.string().min(1).optional(),
-  sessionId: z.string().min(1).optional(),
+  ...scope,
 });
 
 export type PageRun = z.infer<typeof PageRun>;
