@@ -99,7 +99,7 @@ Chart and Canvas rendering remains part of the visual kit components work (#959)
 
 ## Operations
 
-A Plugin's own Operations are declared in `contributes.operations` (ADR-0044). Each names its params, and a string param may list its `choices`. `caller` says what the Operation needs of whoever runs it: `"session"` runs it only for a Session, and `"project"` gives it a Project, the `projectId` the run names or else the caller's own. Core checks all of this before the handler runs.
+A Plugin's own Operations are declared in `contributes.operations` (ADR-0044). Each names its params, and a string param may list its `choices`. `caller` says what the Operation needs of whoever runs it: `"session"` runs it only for a Session (a person's tap on a page is not one, though it carries the page's Project and Session as scope), and `"project"` gives it a Project, the `projectId` the run names or else the caller's own. Core checks all of this before the handler runs.
 
 ```json
 {

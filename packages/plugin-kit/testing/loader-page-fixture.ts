@@ -1,5 +1,5 @@
 import { dataFixture } from '../mocks/data-fixture';
-import { close, note } from './loader-page-operations';
+import { attach, close, note } from './loader-page-operations';
 
 /*
  * The one Plugin the kit's Loader page tests share: a Loader page over a paged list it keeps in memory, with a
@@ -27,6 +27,8 @@ export function register(argo) {
     closed.add(number);
     return { closed: number };
   });
+
+  argo.operations.register('attach', async () => ({ attached: true }));
 
   argo.operations.register('note', async ({ title }) => {
     notes.push(title);
@@ -136,7 +138,7 @@ export function register(argo) {
 export const issuesPath = '/projects/argo/issues';
 
 export async function start(): Promise<Kit> {
-  const fixture = await dataFixture(source, { operations: [close, note] });
+  const fixture = await dataFixture(source, { operations: [attach, close, note] });
 
   return fixture.start();
 }

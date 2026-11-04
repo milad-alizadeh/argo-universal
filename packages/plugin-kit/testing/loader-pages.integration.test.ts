@@ -55,6 +55,19 @@ it('refuses an Operation call the manifest does not allow', async () => {
   ).rejects.toThrow(/number/);
 });
 
+it('runs a tap as the person at the App, so an Operation only a Session may run refuses it', async () => {
+  const kit = await start();
+
+  await expect(
+    kit.pages.run({
+      operation: 'attach',
+      args: {},
+      projectId: 'project-1',
+      sessionId: 'session-1',
+    }),
+  ).rejects.toThrow(/Only a Session can run attach/);
+});
+
 it('fails a draw whose Render passes a function', async () => {
   const kit = await start();
 

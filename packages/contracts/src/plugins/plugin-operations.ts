@@ -105,10 +105,15 @@ export const PluginOperationContributions = z
     'Operation names must be unique',
   );
 
-// Who ran the Operation: the Session whose token called it, and the Project that Session works in.
+/*
+ * Who ran the Operation: the Session whose token called it, and the Project that Session works in. A tap
+ * is run by the person at an App, so it says `person` and carries the page's Project and Session as its
+ * scope only; it is not a Session, and an Operation that needs one refuses it.
+ */
 export const PluginOperationCaller = z.strictObject({
   sessionId: z.string().min(1).optional(),
   projectId: z.string().min(1).optional(),
+  person: z.literal(true).optional(),
 });
 
 export type PluginOperationCaller = z.infer<typeof PluginOperationCaller>;

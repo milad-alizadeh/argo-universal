@@ -26,3 +26,12 @@ export const note = {
     },
   },
 };
+
+// An Operation only a Session may run: a person's tap on a page is not one.
+export const attach = {
+  name: 'attach',
+  label: 'Attach to the Session',
+  description: 'Acts for the calling Session.',
+  tier: 'act' as const,
+  caller: ['session' as const],
+};

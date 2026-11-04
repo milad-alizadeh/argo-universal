@@ -118,7 +118,7 @@ export class LoaderPages {
       pluginId,
       name: operation,
       params: args,
-      caller: { projectId, sessionId },
+      caller: { person: true, projectId, sessionId },
       serverDevice: askedBy(asking).serverDevice,
     });
 
