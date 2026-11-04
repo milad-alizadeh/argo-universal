@@ -3,37 +3,24 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import {
-  drawOptions,
-  useDrawing,
-  type Address,
-  type Answer,
-  type Drawing,
-} from './draw-cache';
-import { usePageStateMemory } from './page-state-memory';
-import {
-  usePageCalls,
-  type OnPageCall,
-  type PageOpening,
-} from './use-page-calls';
-
-export type { PageOpening } from './use-page-calls';
+import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import type { Answer, PageAddresses, PageOpening } from './page-addresses';
+import { usePageAddresses } from './use-page-addresses';
+import { usePageCalls } from './use-page-calls';
 
 export type PluginPageState = { root: WireNode | null; onPageCall: OnPageCall };
 
 /*
- * One Loader page on the connected Server (ADR-0050): its Plugin tree is a query keyed by its Page
- * address, so a revisit draws the kept tree at once and asks again behind it, naming what it keeps so an
- * unchanged page costs no tree. A Page state change keeps the tree on screen until the next address has
- * drawn; load more appends the next page's rows; a bound search or selection changes the Page state once
- * the edits pause. Only a focused screen asks again.
+ * One Loader page on the connected Server (ADR-0050): its Plugin tree is kept by its Page address, so a
+ * revisit draws the kept tree at once and asks again behind it, naming what it keeps so an unchanged page
+ * costs no tree. A Page state change keeps the tree on screen until the next address has drawn; load more
+ * appends the next page's rows; a bound search or selection changes the Page state once the edits pause.
+ * Only a focused screen asks again.
  */
 export function usePluginPage(opening: PageOpening): PluginPageState {
-  const drawing = useDrawing();
-  const memory = usePageStateMemory(opening);
-  const address = { ...opening, pageState: memory[0] };
-  const root = useLastDrawn(useDrawn(drawing, address));
-  const onPageCall = usePageCalls({ drawing, opening, memory });
+  const addresses = usePageAddresses();
+  const root = useLastDrawn(useDrawn(addresses, opening));
+  const onPageCall = usePageCalls(addresses, opening);
 
   return { root, onPageCall };
 }
@@ -54,9 +41,15 @@ const rootOf = (answer: Answer | undefined): WireNode | null =>
 const isNewer = (root: WireNode | null, last: WireNode | null): boolean =>
   root !== null && root !== last;
 
-function useDrawn(drawing: Drawing, address: Address): Answer | undefined {
+// The tree at the page's Page state; a new Page state draws the page at its next address.
+function useDrawn(
+  addresses: PageAddresses,
+  opening: PageOpening,
+): Answer | undefined {
+  useQuery(addresses.state(opening));
+
   const { data } = useQuery({
-    ...drawOptions(drawing, address),
+    ...addresses.tree(opening),
     placeholderData: keepPreviousData,
     subscribed: useScreenFocused(),
   });

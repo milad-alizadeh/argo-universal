@@ -12,7 +12,7 @@ export const maxPages = 50;
  * address: two Apps showing one address keep their own page counts.
  */
 export const DrawRequest = PageAddress.extend({
-  pages: z.number().int().positive().max(maxPages).optional(),
+  pages: z.number().int().positive().max(maxPages),
   known: z.string().min(1).optional(),
 });
 

@@ -1,7 +1,8 @@
 import type * as React from 'react';
 import { PluginDetailView } from '../$path/plugin-detail-view';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
-import { usePluginPage, type PageOpening } from './use-plugin-page';
+import type { PageOpening } from './page-addresses';
+import { usePluginPage } from './use-plugin-page';
 
 type PluginPageProps = PageOpening & {
   title: string;

@@ -6,15 +6,22 @@ import {
 import type { WireNode } from '@repo/contracts/plugins/wire';
 
 /*
- * What the App keeps for one Loader page address: the tree, the hash the Server gave it, and how many pages of
- * its paged list it shows; or why the last draw failed. A tree the App changed itself, as an optimistic patch
- * does, has no hash, so the next answer is a whole tree.
+ * What the App keeps for one Page address: the tree, the hash the Server gave it, and how many pages of its paged
+ * list it shows; or why the last draw failed. A tree the App changed itself, as an optimistic patch does, has no
+ * hash, so the next answer is a whole tree.
  */
 export type Answer =
   | { ok: true; root: WireNode; hash?: string; pages: number }
   | { ok: false; error: string };
 
 export type Kept = Extract<Answer, { ok: true }>;
+
+export const keptOf = (answer: Answer | undefined): Kept | undefined =>
+  answer?.ok ? answer : undefined;
+
+// A page with no paged list shows none of its pages, but its draw still asks for one.
+export const shownOf = (kept: Kept | undefined): number =>
+  Math.max(1, kept?.pages ?? 1);
 
 const notKept: Answer = {
   ok: false,

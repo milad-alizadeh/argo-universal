@@ -44,7 +44,8 @@ export function testPages(
   const pages = new LoaderPages(service, runtime.draws, operations);
 
   return {
-    draw: (input) => pages.draw({ pluginId, pageState: {}, ...input }, webApp),
+    draw: (input) =>
+      pages.draw({ pluginId, pageState: {}, pages: 1, ...input }, webApp),
     run: (input) => pages.run({ pluginId, ...input }),
     stale: (signal) => pages.stale(signal),
   };

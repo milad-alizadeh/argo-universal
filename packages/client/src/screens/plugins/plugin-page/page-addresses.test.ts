@@ -1,0 +1,98 @@
+import type { PageState } from '@repo/contracts/plugins/page-address';
+import { expect, it } from 'vitest';
+import {
+  cacheOverMemory,
+  issues,
+  kept,
+  onScreen,
+  rowsOf,
+  settled,
+} from './page-addresses-fixtures';
+
+it('draws an address whole, then keeps the very same answer when a draw finds nothing changed', async () => {
+  const cache = cacheOverMemory();
+  const screen = onScreen(cache, issues);
+
+  await settled();
+  const first = screen.answer();
+
+  cache.addresses.markStale({ pluginId: 'tracker' });
+  await settled();
+
+  expect(cache.server.answers.map(({ kind }) => kind)).toEqual([
+    'tree',
+    'unchanged',
+  ]);
+  expect(cache.server.requests[1]).toMatchObject({
+    pages: 1,
+    known: kept(first).hash,
+  });
+  expect(screen.answer()).toBe(first);
+  screen.leave();
+});
+
+it('asks for one page more on a load more, naming the kept hash, and appends its rows to the kept tree', async () => {
+  const cache = cacheOverMemory();
+  const screen = onScreen(cache, issues);
+
+  await settled();
+  const first = screen.answer();
+
+  await cache.addresses.loadMore(issues);
+
+  expect(cache.server.requests.at(-1)).toMatchObject({
+    pages: 2,
+    known: kept(first).hash,
+  });
+  expect(cache.server.answers.at(-1)?.kind).toBe('append');
+  expect(kept(screen.answer()).pages).toBe(2);
+  expect(rowsOf(screen.answer()).map(({ key }) => key)).toEqual([
+    '/issues#0',
+    '/issues#1',
+    '/issues#2',
+    '/issues#3',
+  ]);
+  expect(rowsOf(screen.answer())[0]).toBe(rowsOf(first)[0]);
+  screen.leave();
+});
+
+it('shows a new Page state only once its address has drawn', async () => {
+  const cache = cacheOverMemory();
+
+  const stateOf = (): PageState | undefined =>
+    cache.client.getQueryData(cache.addresses.state(issues).queryKey);
+
+  await cache.addresses.change(issues, { query: 'bug' });
+
+  expect(cache.server.requests.at(-1)?.pageState).toEqual({ query: 'bug' });
+  expect(stateOf()).toEqual({ query: 'bug' });
+
+  cache.server.hold();
+  const changing = cache.addresses.change(issues, { query: 'crash' });
+
+  await settled();
+  expect(stateOf()).toEqual({ query: 'bug' });
+  cache.server.release();
+  await changing;
+  expect(stateOf()).toEqual({ query: 'crash' });
+});
+
+it('draws the address it shows again from its first page for an empty change, as a pull', async () => {
+  const cache = cacheOverMemory();
+
+  await cache.addresses.change(issues, { query: 'bug' });
+
+  const screen = onScreen(cache, issues);
+
+  expect(kept(screen.answer()).root.props.title).toBe('bug');
+
+  await cache.addresses.loadMore(issues);
+  await cache.addresses.change(issues, {});
+
+  expect(cache.server.requests.at(-1)).toMatchObject({
+    pageState: { query: 'bug' },
+    pages: 1,
+  });
+  expect(kept(screen.answer()).pages).toBe(1);
+  screen.leave();
+});

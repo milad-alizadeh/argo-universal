@@ -81,7 +81,7 @@ export class LoaderPages {
 
     if (started) return failedDraw(started);
 
-    const address = { ...at, pages: at.pages ?? 1, ...askedBy(asking) };
+    const address = { ...at, ...askedBy(asking) };
 
     return this.draws.answer(pluginId, address, known);
   }

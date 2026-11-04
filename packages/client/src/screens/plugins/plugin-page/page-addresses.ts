@@ -1,0 +1,190 @@
+import type {
+  PageAddress,
+  PageState,
+  StaleMark,
+} from '@repo/contracts/plugins/page-address';
+import type {
+  DrawAnswer,
+  DrawRequest,
+} from '@repo/contracts/plugins/page-draw';
+import type {
+  OperationCall,
+  PageStateChange,
+} from '@repo/contracts/plugins/wire';
+import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
+import { patchedAnswer } from './optimistic-patch';
+import {
+  keptAfter,
+  keptOf,
+  shownOf,
+  type Answer,
+  type Kept,
+} from './page-answer';
+import {
+  pluginKey,
+  staleFilters,
+  stateKey,
+  treeKey,
+  type PageOpening,
+} from './page-keys';
+
+export type { Answer } from './page-answer';
+
+export type { PageOpening } from './page-keys';
+
+// The one call the cache makes: a draw of an address, naming what it keeps. tRPC in the App, a function in tests.
+export type DrawPage = (request: DrawRequest) => Promise<DrawAnswer>;
+
+// The trees an optimistic patch replaced, to put back when the Operation fails.
+export type Snapshot = readonly [QueryKey, Answer | undefined][];
+
+type QueryOptions<Data> = { queryKey: QueryKey; queryFn: () => Promise<Data> };
+
+// Page state is never asked for: it is what the cache last remembered, or none.
+type StateOptions = QueryOptions<PageState> & {
+  initialData: () => PageState;
+  staleTime: number;
+};
+
+const noState: PageState = {};
+
+/*
+ * Everything the App knows about its Page addresses (ADR-0050), kept in TanStack Query: each address's tree, hash
+ * and page count, each page's Page state, and the draws in flight. A hook subscribes to an opening's Page state and
+ * tree through it; a Page state change, a load more, a stale mark and an optimistic patch all go through it, so no
+ * caller builds an address or a query key.
+ */
+export class PageAddresses {
+  constructor(
+    private readonly client: QueryClient,
+    private readonly draw: DrawPage,
+  ) {}
+
+  // The Page state the opening shows, as a query only this cache writes.
+  state(opening: PageOpening): StateOptions {
+    return {
+      queryKey: stateKey(opening),
+      queryFn: () => Promise.resolve(this.stateOf(opening)),
+      initialData: () => this.stateOf(opening),
+      staleTime: Number.POSITIVE_INFINITY,
+    };
+  }
+
+  // The opening's tree at its Page state: a kept tree draws at once, and a draw names the hash and pages kept.
+  tree(opening: PageOpening): QueryOptions<Answer> {
+    return this.treeAt(this.addressOf(opening));
+  }
+
+  // The opening drawn at its next Page state, which it shows once drawn; an empty change draws it again from page one.
+  async change(
+    opening: PageOpening,
+    change: PageStateChange['pageState'],
+  ): Promise<void> {
+    if (Object.keys(change).length === 0)
+      return this.drawPages(this.addressOf(opening), 1);
+
+    const next = { ...this.stateOf(opening), ...change };
+
+    await this.client.fetchQuery(this.treeAt(this.addressOf(opening, next)));
+    this.client.setQueryData(stateKey(opening), next);
+  }
+
+  // One more page of the opening's paged list, appended to the tree kept.
+  async loadMore(opening: PageOpening): Promise<void> {
+    const address = this.addressOf(opening);
+    const kept = this.keptAt(address);
+
+    if (kept) await this.drawPages(address, kept.pages + 1);
+  }
+
+  /*
+   * The Plugin's kept trees show the call's optimistic props at once. Its draws in flight are cancelled first, so an
+   * answer read before the Operation cannot paint over the patch; the trees before come back to put back.
+   */
+  async showOptimistic(
+    pluginId: string,
+    { optimistic }: OperationCall,
+  ): Promise<Snapshot> {
+    if (!optimistic) return [];
+
+    const filter = { queryKey: pluginKey(pluginId) };
+    const patches = new Map(optimistic.map(({ key, props }) => [key, props]));
+
+    await this.client.cancelQueries(filter);
+
+    const before = this.client.getQueriesData<Answer>(filter);
+
+    this.client.setQueriesData<Answer>(filter, patchedAnswer(patches));
+
+    return before;
+  }
+
+  putBack(snapshot: Snapshot): void {
+    for (const [key, answer] of snapshot) this.client.setQueryData(key, answer);
+  }
+
+  /*
+   * The kept addresses a stale mark names are marked stale, or every one of the Plugin's when it names none; those
+   * subscribed, on a focused screen, draw again now, the rest when they come back. A draw already running read
+   * before the change, so it is left to finish and then marked again.
+   */
+  markStale(mark: StaleMark): void {
+    for (const filter of staleFilters(mark)) {
+      for (const query of this.client.getQueryCache().findAll(filter))
+        this.markWhenLanded(query);
+
+      void this.client.invalidateQueries(filter, { cancelRefetch: false });
+    }
+  }
+
+  private markWhenLanded({ queryKey, promise, state }: Query): void {
+    if (state.fetchStatus !== 'fetching') return;
+
+    const again = (): void =>
+      void this.client.invalidateQueries(
+        { queryKey, exact: true },
+        { cancelRefetch: false },
+      );
+
+    void promise?.then(again, again);
+  }
+
+  private stateOf(opening: PageOpening): PageState {
+    return this.client.getQueryData<PageState>(stateKey(opening)) ?? noState;
+  }
+
+  private addressOf(
+    opening: PageOpening,
+    pageState = this.stateOf(opening),
+  ): PageAddress {
+    return { ...opening, pageState };
+  }
+
+  private keptAt(address: PageAddress): Kept | undefined {
+    return keptOf(this.client.getQueryData<Answer>(treeKey(address)));
+  }
+
+  private treeAt(address: PageAddress): QueryOptions<Answer> {
+    return { queryKey: treeKey(address), queryFn: () => this.drawn(address) };
+  }
+
+  private async drawPages(address: PageAddress, pages: number): Promise<void> {
+    this.client.setQueryData(
+      treeKey(address),
+      await this.drawn(address, pages),
+    );
+  }
+
+  // The address drawn again, showing `pages` pages, or as many as it shows now.
+  private async drawn(address: PageAddress, pages?: number): Promise<Answer> {
+    const kept = this.keptAt(address);
+
+    const answer = await this.draw({
+      ...address,
+      pages: pages ?? shownOf(kept),
+      known: kept?.hash,
+    });
+
+    return keptAfter(kept, answer);
+  }
+}
