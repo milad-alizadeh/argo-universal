@@ -5,7 +5,7 @@ import {
 } from '@repo/contracts/plugins/wire-fixtures';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
@@ -84,5 +84,88 @@ export const FocusedRowMovesFromKeyboard: Story = {
         },
       ],
     ]);
+  },
+};
+
+// The board as a Loader page draws it: a move runs the Plugin's `moveCard` with the fields the List reports.
+const loaderBoard: WireNode = {
+  ...board,
+  props: {
+    ...board.props,
+    onMove: {
+      operation: 'moveCard',
+      args: {
+        card: { $payload: 'id' },
+        lane: { $payload: 'section' },
+        index: { $payload: 'index' },
+      },
+    },
+  },
+};
+
+const lane = (canvasElement: HTMLElement, title: string): HTMLElement =>
+  within(canvasElement).getByRole('group', { name: title });
+
+// The run fails: the App has already said why and puts the trees back, and the page does not draw again.
+let refuse = (): void => {};
+
+const onPageCall = fn(
+  () =>
+    new Promise<void>((resolve) => {
+      refuse = resolve;
+    }),
+);
+
+export const FailedMoveGoesBack: Story = {
+  beforeEach: async () => {
+    onPageCall.mockClear();
+    await settleLayout('wide');
+  },
+  render: () => (
+    <PluginTree root={loaderBoard} onEvent={onEvent} onPageCall={onPageCall} />
+  ),
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const row = await canvas.findByRole('button', { name: 'Fix login' });
+
+    await userEvent.pointer({ target: row, keys: '[MouseRight]' });
+
+    const body = within(canvasElement.ownerDocument.body);
+    const menu = await body.findByRole('menu');
+
+    await userEvent.click(
+      within(menu).getByRole('menuitem', { name: 'Move to…' }),
+    );
+
+    const picker = await body.findByRole('dialog', { name: 'Move to' });
+
+    const doneTop = within(picker)
+      .getAllByRole('button', { name: 'Top' })
+      .at(-1);
+
+    if (doneTop) await userEvent.click(doneTop);
+
+    await waitFor(() =>
+      expect(
+        within(lane(canvasElement, 'Done')).getByRole('button', {
+          name: 'Fix login',
+        }),
+      ).toBeVisible(),
+    );
+    await expect(onPageCall).toHaveBeenCalledTimes(1);
+
+    refuse();
+
+    await waitFor(() =>
+      expect(
+        within(lane(canvasElement, 'To do')).getByRole('button', {
+          name: 'Fix login',
+        }),
+      ).toBeVisible(),
+    );
+    await expect(
+      within(lane(canvasElement, 'Done')).queryByRole('button', {
+        name: 'Fix login',
+      }),
+    ).toBeNull();
   },
 };
