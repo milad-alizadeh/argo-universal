@@ -1,11 +1,17 @@
 import type {
   LoaderInput,
   LoaderPage,
+  PageInput,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import { eachYielded, firstOf, isYielding, type Stop } from './live-loads';
-import { inputOf, pageTo, renderedList } from './page-input';
+import {
+  loaderInputOf,
+  pageInputOf,
+  pageTo,
+  renderedList,
+} from './page-input';
 import { drawnPaged, type Paged } from './paged-lists';
 import type { DataCall } from './query-reads';
 import { drawReader, type DrawLists, type DrawReader } from './query-reads';
@@ -43,6 +49,7 @@ export type Drawing = {
 };
 
 type DrawRun<State extends PageState> = {
+  pageInput: PageInput<State>;
   input: LoaderInput<State>;
   event: DrawEvent;
   read: DrawReader;
@@ -72,8 +79,14 @@ function drawRunOf<State extends PageState, Data, Item>(
   { params, event, reading }: DrawCall,
 ): DrawRun<State> {
   const read = drawReader(reading.call);
+  const pageInput = pageInputOf(page.state, params, event);
 
-  return { input: inputOf(page.state, params, { event, read }), event, read };
+  return {
+    pageInput,
+    input: loaderInputOf(pageInput, read),
+    event,
+    read,
+  };
 }
 
 async function loadedOnly<State extends PageState, Data, Item>(
@@ -92,7 +105,7 @@ async function drawn<State extends PageState, Data, Item>(
   run: DrawRun<State>,
   reading: Reading,
 ): Promise<Drawn> {
-  const { input } = run;
+  const { input, pageInput } = run;
 
   const [loaded, paged] = await Promise.all([
     page.load(input),
@@ -100,11 +113,11 @@ async function drawn<State extends PageState, Data, Item>(
   ]);
 
   if (!isYielding(loaded))
-    return rendered(page, { data: loaded, input, paged });
+    return rendered(page, { data: loaded, pageInput, paged });
 
   const data = await firstUnlisted(page, loaded);
 
-  return { ...rendered(page, { data, input, paged }), live: true };
+  return { ...rendered(page, { data, pageInput, paged }), live: true };
 }
 
 const unlistedError = 'A live page has no paged list';
@@ -128,7 +141,7 @@ const unlisted: Paged<never> = { items: [], hasMore: false, pages: 0 };
 // A live draw renders each value its Loader yields to a frame; a Loader that answers once sends one.
 async function followed<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
-  { input }: DrawRun<State>,
+  { input, pageInput }: DrawRun<State>,
   { stop, frame }: Followed,
 ): Promise<void> {
   if (page.list) throw new Error(unlistedError);
@@ -136,7 +149,7 @@ async function followed<State extends PageState, Data, Item>(
   const loaded = await page.load(input);
 
   const each = (data: Data): Promise<void> =>
-    frame(rendered(page, { data, input, paged: unlisted }).root);
+    frame(rendered(page, { data, pageInput, paged: unlisted }).root);
 
   if (!isYielding(loaded)) return each(loaded);
 
@@ -145,16 +158,16 @@ async function followed<State extends PageState, Data, Item>(
 
 type Rendering<State extends PageState, Data, Item> = {
   data: Data;
-  input: LoaderInput<State>;
+  pageInput: PageInput<State>;
   paged: Paged<Item>;
 };
 
 function rendered<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
-  { data, input, paged }: Rendering<State, Data, Item>,
+  { data, pageInput, paged }: Rendering<State, Data, Item>,
 ): Rendered {
   const list = renderedList(paged);
-  const root = valuesOf(page.render(data, pageTo(), { ...input, list }));
+  const root = valuesOf(page.render(data, pageTo(), { ...pageInput, list }));
 
   return { root, pages: paged.pages };
 }

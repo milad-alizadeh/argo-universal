@@ -1,5 +1,6 @@
 import type {
   LoaderInput,
+  PageInput,
   PagedList as RenderedList,
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
@@ -16,21 +17,27 @@ import { renderContext } from './render-context';
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
 /*
- * The address's Page state over the page's defaults; the context is the one the App opened the page for,
- * and its Queries are read for this draw.
+ * The address's Page state over the page's defaults; the context is the one the App opened the page for.
+ * Both the Loader and the Render get it.
  */
-export function inputOf<State extends PageState>(
+export function pageInputOf<State extends PageState>(
   defaults: State | undefined,
   params: Record<string, string>,
-  { event, read }: { event: DrawEvent; read: DrawReader },
-): LoaderInput<State> {
+  event: DrawEvent,
+): PageInput<State> {
   return Object.freeze({
     params: Object.freeze(params),
     state: Object.freeze(stateOf(defaults, event.pageState)),
     context: renderContext(event),
-    read: (query) => read(query, false),
   });
 }
+
+// Only the Loader reads, and its Queries are read for this draw.
+export const loaderInputOf = <State extends PageState>(
+  input: PageInput<State>,
+  read: DrawReader,
+): LoaderInput<State> =>
+  Object.freeze({ ...input, read: (query) => read(query, false) });
 
 /*
  * The App's Page state is input, and the App keeps it across visits: a kept value whose type is no longer its

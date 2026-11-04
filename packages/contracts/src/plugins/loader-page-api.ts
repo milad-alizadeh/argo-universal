@@ -67,17 +67,22 @@ export type LoaderPage<
 }>;
 
 /*
- * What a draw is for: the pattern's `:params` from the Page path, the Page state, and the page's context;
- * `read` reads a Query for it, held by its Page address.
+ * What a draw is for: the pattern's `:params` from the Page path, the Page state, and the page's context.
+ * The Loader and the Render both get it.
  */
-export type LoaderInput<State extends PageState> = Readonly<{
+export type PageInput<State extends PageState> = Readonly<{
   params: Readonly<Record<string, string>>;
   state: Readonly<State>;
   context: PluginRenderContext;
-  read: <Query extends PluginQuery>(
-    query: Query,
-  ) => Promise<QueryResult<Query>>;
 }>;
+
+// The Loader's input also reads a Query for the draw, held by its Page address.
+export type LoaderInput<State extends PageState> = PageInput<State> &
+  Readonly<{
+    read: <Query extends PluginQuery>(
+      query: Query,
+    ) => Promise<QueryResult<Query>>;
+  }>;
 
 export type ListPage<Item> = { items: Item[]; cursor: string | null };
 
@@ -88,7 +93,8 @@ export type PagedList<Item> = Readonly<{
   loadMore: LoadMore;
 }>;
 
-export type RenderInput<State extends PageState, Item> = LoaderInput<State> &
+// The Render reads nothing: it is pure, so it gets what the draw is for and the pages the Loader's `list` read.
+export type RenderInput<State extends PageState, Item> = PageInput<State> &
   Readonly<{ list: PagedList<Item> }>;
 
 /*
