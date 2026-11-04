@@ -8,10 +8,10 @@ name: A tap on the fixture page reaches the Plugin and redraws the page
 - tapOn: "^Counter$"
 # The page is drawn natively from the Plugin's wire tree.
 - assertVisible: "^Counter fixture$"
-# The count lives in the Plugin on the Server, so another viewer may have tapped already.
+# The count is the page's Page state, which the App keeps; read it rather than assume it starts at 0.
 - copyTextFrom: "^Tapped \\d+ times$"
 - evalScript: ${output.expectedCount = 'Tapped ' + (parseInt(maestro.copiedText.split(' ')[1]) + 1) + ' times'}
-# "Tap me" carries an event id; the Plugin's handler runs on the Server and
-# the patch it sends back redraws the count.
+# "Tap me" carries a Page state change; the App asks the Server to draw the
+# new address and shows the tree it sends back.
 - tapOn: "^Tap me$"
 - assertVisible: ${output.expectedCount}

@@ -1,18 +1,10 @@
-import { Button, Stack, Text, useEffect, useState } from '@argo/plugin-kit';
+import { Button, Stack, Text } from '@argo/plugin-kit';
 import { Item } from './item.js';
 
 const sessionDraft = '#7 Keep %2F in paths\nhttps://example.com/fixture/7';
 
 // Opens New Session in the first Project with a draft in the Composer.
-function StartSession({ argo }) {
-  const [projectId, setProjectId] = useState(null);
-
-  useEffect(() => {
-    void argo.projects.list().then((projects) => {
-      setProjectId(projects[0]?.id ?? null);
-    });
-  }, [argo]);
-
+function StartSession({ projectId }) {
   if (!projectId) return null;
 
   return (
@@ -33,31 +25,22 @@ function Heading({ sessionId }) {
   );
 }
 
-function Counter({ argo, sessionId }) {
-  const [taps, setTaps] = useState(0);
-  const [view, setView] = useState('counter');
+// The count and the view shown are Page state, so a tap draws the page again with one more.
+function Counter({ projectId, sessionId, state, to }) {
+  if (state.view === 'details')
+    return <Details onBack={to.set({ view: 'counter' })} />;
 
-  if (view === 'details') return <Details onBack={() => setView('counter')} />;
-
-  if (view === 'item') return <Item />;
+  if (state.view === 'item') return <Item />;
 
   return (
     <Stack direction="column">
       <Heading sessionId={sessionId} />
-      <Text>{`Tapped ${taps} times`}</Text>
-      <Button label="Tap me" onPress={() => setTaps(taps + 1)} />
-      <Views setView={setView} />
-      <StartSession argo={argo} />
+      <Text>{`Tapped ${state.taps} times`}</Text>
+      <Button label="Tap me" onPress={to.set({ taps: state.taps + 1 })} />
+      <Button label="Open details" onPress={to.set({ view: 'details' })} />
+      <Button label="Open item" onPress={to.set({ view: 'item' })} />
+      <StartSession projectId={projectId} />
     </Stack>
-  );
-}
-
-function Views({ setView }) {
-  return (
-    <>
-      <Button label="Open details" onPress={() => setView('details')} />
-      <Button label="Open item" onPress={() => setView('item')} />
-    </>
   );
 }
 
@@ -72,6 +55,21 @@ function Details({ onBack }) {
       />
     </Stack>
   );
+}
+
+function defineCounter(argo) {
+  argo.pages.define('/', {
+    state: { taps: 0, view: 'counter' },
+    load: async () => (await argo.projects.list())[0]?.id ?? null,
+    render: (projectId, to, { state, context }) => (
+      <Counter
+        projectId={projectId}
+        sessionId={context.sessionId}
+        state={state}
+        to={to}
+      />
+    ),
+  });
 }
 
 // The Workbench card's own Loader page: a summary in the card, and the whole of it in the Inspector tab.
@@ -96,9 +94,7 @@ function defineCard(argo) {
 }
 
 export function register(argo) {
-  argo.pages.register('/', ({ context }) => (
-    <Counter argo={argo} sessionId={context.sessionId} />
-  ));
+  defineCounter(argo);
   defineCard(argo);
   argo.slots.register('argo/project/details/v1', projectRows);
   argo.slots.register('argo/session/row/v1', rowItems);

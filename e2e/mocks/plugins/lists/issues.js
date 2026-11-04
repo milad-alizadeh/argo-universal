@@ -14,10 +14,10 @@ const issues = [
 
 const issuesPath = '/issues';
 
-// The same path registers an Issue's page and opens it.
+// The same path opens an Issue's page and names it in the pattern.
 const issuePath = (issue) => `${issuesPath}/${issue.id}`;
 
-const renderIssue = (selected) => (issue) => (
+const issueRow = (selected) => (issue) => (
   <ListItem
     key={issue.id}
     title={issue.title}
@@ -40,30 +40,21 @@ const issueDetail = (issue) => (
 );
 
 // The Issues beside the one the route names; the list moves to the Frame's sidebar on a wide window.
-function IssuesListDetail({ selected }) {
-  return (
-    <ListDetail
-      list={
-        <List
-          appearance="cards"
-          items={issues}
-          renderItem={renderIssue(selected)}
-        />
-      }
-      detail={selected ? issueDetail(selected) : undefined}
-      empty={noIssue}
-    />
-  );
-}
+const issuesListDetail = (selected) => (
+  <ListDetail
+    list={<List appearance="cards">{issues.map(issueRow(selected))}</List>}
+    detail={selected ? issueDetail(selected) : undefined}
+    empty={noIssue}
+  />
+);
 
-const issuePage = (issue) =>
-  function IssuePage() {
-    return <IssuesListDetail selected={issue} />;
-  };
-
-export function registerIssues(pages) {
-  pages.register(issuesPath, () => <IssuesListDetail />);
-
-  for (const issue of issues)
-    pages.register(issuePath(issue), issuePage(issue));
+export function defineIssues(pages) {
+  pages.define(issuesPath, {
+    load: () => null,
+    render: () => issuesListDetail(undefined),
+  });
+  pages.define(`${issuesPath}/:id`, {
+    load: ({ params }) => issues.find(({ id }) => id === params.id) ?? null,
+    render: (issue) => issuesListDetail(issue ?? undefined),
+  });
 }
