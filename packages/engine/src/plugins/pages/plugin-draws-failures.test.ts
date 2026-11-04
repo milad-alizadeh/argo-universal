@@ -6,7 +6,6 @@ import { stack } from './tree-fixtures';
 
 const atlasThrew = { error: 'Atlas threw' };
 
-
 const tooLarge: WireJson = {
   type: 'Stack',
   key: 'root',

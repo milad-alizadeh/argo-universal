@@ -87,21 +87,16 @@ export class PluginDraws {
    * that ran again, sent no trees and answers whole ones. An App below the wire minimum is answered "Update
    * Argo" (ADR-0034), and the tree it was not sent is not kept as sent.
    */
-  public async answer(
-    pluginId: string,
-    address: DrawAt,
-    known?: string,
-  ): Promise<DrawAnswer> {
-    const gated = { pluginId, at: address, log: this.log };
-    const drawn = forApp(gated, await this.draw(pluginId, address));
+  public async answer(page: DrawnFor, known?: string): Promise<DrawAnswer> {
+    const drawn = forApp({ ...page, log: this.log }, await this.draw(page));
 
     if (!drawn.ok) return { kind: 'failed', error: drawn.error };
 
-    const answer = this.treeFor(pluginId, address, { root: drawn.root, known });
+    const answer = this.treeFor(page, { root: drawn.root, known });
 
-    const pacing = this.patterns.pacingOf(pluginId, {
+    const pacing = this.patterns.pacingOf(page.pluginId, {
       ...drawn,
-      path: address.path,
+      path: page.at.path,
     });
 
     return { ...answer, pages: drawn.pages, ...pacing };
@@ -109,13 +104,12 @@ export class PluginDraws {
 
   // The tree the App is sent, as an append to the tree last sent for the address when it may be.
   private treeFor(
-    pluginId: string,
-    address: DrawAt,
+    page: DrawnFor,
     { root, known }: { root: WireNode; known: string | undefined },
   ): TreeAnswer {
-    if (!drawsForApp(address)) return treeAnswer(root, undefined, known);
+    if (!drawsForApp(page.at)) return treeAnswer(root, undefined, known);
 
-    const sent = this.sent.at(pluginId, address);
+    const sent = this.sent.at(page);
     const answer = treeAnswer(root, sent.last, known);
 
     sent.keep(root);
@@ -133,9 +127,8 @@ export class PluginDraws {
    * the App as its Plugin's drawing failure (ADR-0037); the address's next tree clears it. A draw its Plugin
    * stopping ended is not one.
    */
-  private async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
-    const outcome = await this.calls.call(pluginId, address);
-    const page = { pluginId, at: address };
+  private async draw(page: DrawnFor): Promise<Drawn> {
+    const outcome = await this.calls.call(page.pluginId, page.at);
 
     if (!('ok' in outcome)) return this.answered(page, outcome);
 

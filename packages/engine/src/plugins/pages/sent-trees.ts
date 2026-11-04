@@ -1,6 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { WorkerCalls } from '../runtime/worker-calls';
 import type { DrawAt } from './draw-calls';
+import type { DrawnFor } from './drawing-failures';
 
 type SentAt = { last: WireNode | undefined; keep: (root: WireNode) => void };
 
@@ -17,8 +18,8 @@ export class SentTrees {
   ) {}
 
   // The tree last sent for an address, and keeping the next; only while a generation runs, so a Plugin released mid-draw keeps nothing.
-  public at(pluginId: string, address: DrawAt): SentAt {
-    const key = sentKey(address);
+  public at({ pluginId, at }: DrawnFor): SentAt {
+    const key = sentKey(at);
 
     const keep = (root: WireNode): void => {
       if (this.workers.generation(pluginId) === undefined) return;

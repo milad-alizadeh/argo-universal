@@ -76,7 +76,7 @@ export async function drawn(
   answer: WorkerAnswer,
 ): Promise<DrawAnswer> {
   const at = { path, pageState: {}, pages: 1, surface };
-  const drawing = pages.answer('atlas', at);
+  const drawing = pages.answer({ pluginId: 'atlas', at });
 
   pages.receive(
     { pluginId: 'atlas', generation: 1 },

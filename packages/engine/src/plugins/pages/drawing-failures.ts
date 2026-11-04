@@ -43,7 +43,7 @@ export class DrawingFailures {
     );
   }
 
-  public drew(pluginId: string, at: DrawAt): void {
+  public drew({ pluginId, at }: DrawnFor): void {
     this.drawings.clearDrawing(addressOf(pluginId, at));
   }
 
@@ -56,7 +56,7 @@ export class DrawingFailures {
 
   // A tree the Server checked: a refused one is the page's drawing failure, and a sent one clears it.
   public checked(page: DrawnFor, drawn: Drawn): Drawn {
-    if (drawn.ok) this.drew(page.pluginId, page.at);
+    if (drawn.ok) this.drew(page);
     else this.failed({ ...page, kind: 'refused' }, drawn.error);
 
     return drawn;

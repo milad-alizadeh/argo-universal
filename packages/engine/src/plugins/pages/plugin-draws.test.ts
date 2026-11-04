@@ -15,7 +15,7 @@ async function drawList(
   { count, generation, known }: Listed,
 ): Promise<DrawAnswer> {
   const at = { path: '/list', pageState: {}, pages: count, surface };
-  const answer = pages.answer('tracker', at, known);
+  const answer = pages.answer({ pluginId: 'tracker', at }, known);
   const id = lastDraw(sent);
 
   pages.receive(
@@ -60,7 +60,7 @@ it('draws a page without the SVG the sanitiser refused, and logs what it left ou
 
   workers.run('atlas', 1);
 
-  const drawn = pages.answer('atlas', at);
+  const drawn = pages.answer({ pluginId: 'atlas', at });
 
   // The worker sends its tree as JSON.
   const root = wireJsonOf(stack([svg('<svg><script/></svg>', 'unsafe')]));
