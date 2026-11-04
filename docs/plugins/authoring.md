@@ -427,7 +427,11 @@ const signIn = oauthFlow(argo, {
   host: 'api.linear.app',
   authorizeUrl: 'https://linear.app/oauth/authorize',
   tokenUrl: 'https://api.linear.app/oauth/token',
-  clientId: () => argo.settings.get('client-id'),
+  clientId: async () => {
+    const id = await argo.settings.get('client-id');
+
+    return typeof id === 'string' ? id : null;
+  },
   scopes: ['read'],
   label: (token) => linearLogin(argo, token),
 });

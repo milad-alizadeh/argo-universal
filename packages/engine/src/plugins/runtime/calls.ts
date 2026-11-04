@@ -119,9 +119,9 @@ type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
 const noOrigin: ServiceOrigin = { projectId: undefined, serverDevice: false };
 
 /*
- * A call reaches what the call it runs for reaches: a draw's Project and Server Device, an Operation run's
- * Project and Server Device. A draw or run that has already answered reaches neither,
- * and nor does a call made outside all of them, such as at registration.
+ * A call reaches what the call it runs for reaches: a draw's Project and Server Device, or an Operation run's
+ * Project and Server Device. A draw or run that has already answered reaches neither. A call outside them
+ * reaches only the Project its Hook ran for, and never the Server Device.
  */
 function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
   const caller = { pluginId: message.pluginId, generation: message.generation };
