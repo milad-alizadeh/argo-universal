@@ -2,7 +2,9 @@ import { replyFailure } from '../access/capability-refusal';
 import type { PluginData, QueryOrigin } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type { PluginOperations } from '../operations';
+import type { RunOrigin } from '../operations/plugin-operations';
 import type { PluginDraws } from '../pages';
+import type { Drawing } from '../pages/draw-calls';
 import type {
   HostMessage,
   PluginReply,
@@ -113,18 +115,50 @@ function answerService(
   });
 }
 
+type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
+
+const noOrigin: ServiceOrigin = { projectId: undefined, serverDevice: false };
+
+/*
+ * A call reaches what the call it runs for reaches: a draw's Project and Server Device, an Operation run's
+ * Project and Server Device, or a Hook's Project. A draw or run that has already answered reaches neither,
+ * and nor does a call made outside all of them, such as at registration.
+ */
 function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
-  if (!message.viewId)
-    return { projectId: message.projectId, serverDevice: false };
-  const view = runtime.views.dataView(message.pluginId, message.viewId);
+  const caller = { pluginId: message.pluginId, generation: message.generation };
+
+  if (message.draw !== undefined)
+    return drawOrigin(runtime.draws.drawing(caller, message.draw));
+
+  if (message.operation !== undefined)
+    return runOrigin(runtime.operations.origin(caller, message.operation));
+
+  if (message.viewId) return viewOrigin(runtime, message.pluginId, message.viewId);
+
+  return { projectId: message.projectId, serverDevice: false };
+}
+
+const drawOrigin = (drawn: Drawing | undefined): ServiceOrigin =>
+  drawn
+    ? { projectId: drawn.projectId, serverDevice: drawn.serverDevice }
+    : noOrigin;
+
+const runOrigin = (origin: RunOrigin | undefined): ServiceOrigin =>
+  origin ? { projectId: origin.projectId, serverDevice: origin.serverDevice } : noOrigin;
+
+// A hook page's view (the old path, which goes with its views).
+function viewOrigin(
+  runtime: RuntimeCalls,
+  pluginId: string,
+  viewId: string,
+): ServiceOrigin {
+  const view = runtime.views.dataView(pluginId, viewId);
 
   return {
     projectId: view.projectId,
     serverDevice: view.opening.serverDevice === true,
   };
 }
-
-type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
 
 type DataRequest = Extract<PluginRequest, { api: 'data' }>;
 

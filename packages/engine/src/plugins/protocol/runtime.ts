@@ -111,6 +111,17 @@ export type HostHook = Extract<HostCommand, { type: 'hook' }>;
 
 export type HostWaiting = Extract<HostCommand, { type: 'waiting' }>;
 
+/*
+ * What a worker's call runs for, which the Server looks up rather than trusts: the draw or the Operation
+ * whose code made it, by id, or the view or Hook's Project it ran in.
+ */
+const callOrigin = {
+  viewId: z.string().optional(),
+  projectId: z.string().optional(),
+  draw: z.number().int().nonnegative().optional(),
+  operation: z.number().int().nonnegative().optional(),
+};
+
 export const HostMessage = z.discriminatedUnion('type', [
   TestReply.extend({ pluginId: z.string(), generation: z.number() }),
   z.object({ type: z.literal('ready') }),
@@ -122,8 +133,7 @@ export const HostMessage = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('call'),
     pluginId: z.string(),
-    viewId: z.string().optional(),
-    projectId: z.string().optional(),
+    ...callOrigin,
     generation: z.number(),
     id: z.number(),
     request: PluginRequest,
@@ -134,8 +144,7 @@ export type HostMessage = z.infer<typeof HostMessage>;
 
 export const WorkerCall = z.object({
   type: z.literal('call'),
-  viewId: z.string().optional(),
-  projectId: z.string().optional(),
+  ...callOrigin,
   id: z.number(),
   request: PluginRequest,
 });

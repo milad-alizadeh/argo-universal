@@ -11,6 +11,7 @@ import {
 } from '@repo/contracts/plugins/page-address';
 import type { QueriesApi } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
+import { inDraw } from './call-scope';
 import type { DataCall } from './data-subscription';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
@@ -63,8 +64,11 @@ export interface LoaderPages {
   queries: QueriesApi;
   changed: () => void;
   answer: (event: LoaderEvent) => void;
-  // Throws unless a defined pattern matches the manifest's `background` path, since a pass runs only its `load`.
-  requireBackground: (path: string) => void;
+  /*
+   * Throws unless a defined pattern matches a path the manifest names, such as its `background` pass, which
+   * runs only a `load`, or a `contributes.accounts` page; `contribution` names which in the error.
+   */
+  requirePage: (path: string, contribution: string) => void;
   answering: (send: OperationSend) => OperationAnswering;
 }
 
@@ -74,7 +78,8 @@ type Pages = { send: LoaderPageSend; defined: Defined[]; reading: Reading };
 /*
  * The Loader pages a Plugin defined, and the draws the host asks of them (ADR-0050). A draw matches the
  * path to the first pattern defined for it, runs its Loader, then its Render, and answers the tree by the
- * draw's id, or fails it with why.
+ * draw's id, or fails it with why. A draw's `argo` calls run in its scope, so the Server gives them the
+ * draw's Project and Server Device.
  */
 export function loaderPages(calls: LoaderCalls): LoaderPages {
   const pages = pagesOf(calls);
@@ -86,7 +91,7 @@ export function loaderPages(calls: LoaderCalls): LoaderPages {
     ...operationMarks(calls.pages),
     answer: (event) =>
       event.type === 'read' ? reads.answer(event) : void answer(pages, event),
-    requireBackground: requiringBackground(pages.defined),
+    requirePage: requiringPage(pages.defined),
   };
 }
 
@@ -106,23 +111,25 @@ const defining =
     void send({ action: 'defined', pattern }).catch(() => null);
   };
 
-const requiringBackground =
+const requiringPage =
   (defined: readonly Defined[]) =>
-  (path: string): void => {
+  (path: string, contribution: string): void => {
     if (
       !matchesAnyPagePath(
         defined.map(({ pattern }) => pattern),
         path,
       )
     )
-      throw new Error(`Background path ${path} is not a Loader page`);
+      throw new Error(`${contribution} path ${path} is not a Loader page`);
   };
 
 async function answer(pages: Pages, event: DrawEvent): Promise<void> {
   const { send } = pages;
 
   try {
-    await send(answered(event, await draw(pages, event)));
+    const drawn = await inDraw(event.id, () => draw(pages, event));
+
+    await send(answered(event, drawn));
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
 

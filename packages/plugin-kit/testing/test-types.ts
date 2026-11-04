@@ -81,7 +81,10 @@ export interface PluginTest {
       pluginId?: string;
     }) => Promise<Json>;
   };
-  // The Plugin's Loader pages, drawn and acted on as the App does (ADR-0050).
+  /*
+   * The Plugin's Loader pages, drawn and acted on as the App does (ADR-0050): a paired device's App unless
+   * `serverDevice` asks as the App on the Server Device.
+   */
   pages: {
     draw: (input: {
       path: string;
@@ -90,11 +93,13 @@ export interface PluginTest {
       sessionId?: string;
       pages?: number;
       known?: string;
+      serverDevice?: boolean;
     }) => Promise<DrawAnswer>;
     run: (input: {
       operation: string;
       args: PluginOperationParams;
       projectId?: string;
+      serverDevice?: boolean;
     }) => Promise<PageRunAnswer>;
     // The stale marks every connected App is sent, after an Operation run or the Plugin's `argo.changed()`.
     stale: (signal: AbortSignal) => AsyncGenerator<StaleMark>;

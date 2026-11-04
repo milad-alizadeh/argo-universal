@@ -145,7 +145,7 @@ const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
     run: publicProcedure
       .input(PageRun)
       .output(PageRunAnswer)
-      .mutation(({ input }) => pages.run(input)),
+      .mutation(({ input, ctx }) => pages.run(input, ctx.connection)),
   }),
 );
 

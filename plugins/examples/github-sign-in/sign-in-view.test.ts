@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
-import { chooseView, flowOf } from './sign-in-view';
+import { chooseView } from './sign-in-view';
 
 const account = { label: 'octocat', host: 'api.github.com' };
 
@@ -14,39 +14,48 @@ test('an Account from argo.accounts.get means signed in, on any device', () => {
     });
 });
 
+test('the Account just added shows signed in before the Project has chosen it', () => {
+  assert.deepEqual(
+    chooseView({
+      account: null,
+      serverDevice: false,
+      flow: { kind: 'signed-in', label: 'octocat' },
+    }),
+    { kind: 'signed-in', account },
+  );
+});
+
 test('without an Account, a device that is not the Server Device is told to continue there', () => {
   assert.deepEqual(
     chooseView({
       account: null,
       serverDevice: false,
-      flow: { kind: 'waiting', attempt: Symbol('attempt') },
+      flow: { kind: 'waiting' },
     }),
-    {
-      kind: 'continue-on-server-device',
-    },
+    { kind: 'continue-on-server-device' },
   );
 });
 
-test('on the Server Device the flow decides: signed out, waiting or a failure', () => {
-  for (const flow of [
-    idle,
-    { kind: 'waiting', attempt: Symbol('attempt') },
+test('the Server Device draws the sign-in where it stands', () => {
+  const view = (flow: Parameters<typeof chooseView>[0]['flow']) =>
+    chooseView({ account: null, serverDevice: true, flow });
+
+  assert.deepEqual(view(idle), { kind: 'signed-out' });
+  assert.deepEqual(view({ kind: 'waiting' }), { kind: 'waiting' });
+  assert.deepEqual(
+    view({
+      kind: 'failed',
+      reason: 'port-in-use',
+      message: 'Port 51789 is in use',
+    }),
     {
       kind: 'failed',
       title: 'Couldn’t start sign-in',
-      message: 'Port 51789 is already in use.',
+      message: 'Port 51789 is in use',
     },
-  ] as const)
-    assert.deepEqual(
-      chooseView({ account: null, serverDevice: true, flow }),
-      flow,
-    );
-});
-
-test('a taken port and any other failure become a failed flow, a cancelled exchange goes back to idle', () => {
-  const message = 'Port 51789 is already in use.';
-
-  assert.equal(flowOf({ kind: 'port-in-use', message }).kind, 'failed');
-  assert.equal(flowOf({ kind: 'failed', message }).kind, 'failed');
-  assert.deepEqual(flowOf({ kind: 'cancelled' }), { kind: 'idle' });
+  );
+  assert.deepEqual(
+    view({ kind: 'failed', reason: 'failed', message: 'GitHub said no' }),
+    { kind: 'failed', title: 'Couldn’t sign in', message: 'GitHub said no' },
+  );
 });

@@ -12,9 +12,10 @@
  * throws or takes longer than 30 seconds, the Render calls a hook or passes a function prop, or the tree
  * is invalid or too large. It never throws.
  *
- * `run(call)` runs one of the Plugin's declared Operations through the ADR-0044 registry's checks (the
- * manifest's params and tier, a running worker) and answers its result. It throws what the Operation
- * throws, so the App rolls back and says why.
+ * `run(call, asking)` runs one of the Plugin's declared Operations through the ADR-0044 registry's checks
+ * (the manifest's params and tier, a running worker) and answers its result. It runs for the asking
+ * Connection, so the handler's own `argo` calls reach the run's Project and know whether it was asked from
+ * the Server Device. It throws what the Operation throws, so the App rolls back and says why.
  *
  * `stale(signal)` streams a stale mark after every Operation of a Plugin that answered, whoever ran it
  * (a Component event, an Agent, the CLI), and after each `argo.changed()` outside one, naming no address,

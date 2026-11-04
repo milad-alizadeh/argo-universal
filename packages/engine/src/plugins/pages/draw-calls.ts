@@ -45,10 +45,14 @@ export function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
   return failed(endedError[outcome.ended](outcome.pluginId, at.path));
 }
 
-// The draw a Loader's read is for: its Project, and the address holding the read, or none for a background pass.
+/*
+ * The draw a Loader's call is for: its Project, whether the Connection that asked is the Server Device, and
+ * the address holding its reads, or none for a background pass.
+ */
 export type Drawing = {
   draw: number;
   projectId?: string;
+  serverDevice: boolean;
   holder?: PageAddress;
 };
 
@@ -61,10 +65,11 @@ export function drawingOf(
   if (!at) return undefined;
 
   const { projectId } = at;
+  const serverDevice = at.serverDevice === true;
 
-  if (at.loadOnly) return { draw, projectId };
+  if (at.loadOnly) return { draw, projectId, serverDevice };
 
-  return { draw, projectId, holder: addressOf(pluginId, at) };
+  return { draw, projectId, serverDevice, holder: addressOf(pluginId, at) };
 }
 
 const addressOf = (

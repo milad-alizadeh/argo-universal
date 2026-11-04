@@ -1,52 +1,58 @@
-import type { SignInResult } from './github-oauth';
+import type { OAuthFlowState } from '@argo/plugin-kit';
+import { accountHost } from './account-host';
 
 // The two fields of an Account this page draws.
 export type Account = { label: string; host: string };
 
-// What the sign-in page is doing; the Plugin keeps it, Argo does not know about it.
-export type Flow =
-  | { kind: 'idle' }
-  | { kind: 'waiting'; attempt: symbol }
-  | { kind: 'failed'; title: string; message: string };
+// What the page draws from: this Project's Account, the asking device, and the sign-in the Plugin holds.
+export type SignInData = {
+  account: Account | null;
+  // `context.serverDevice`, stamped by the Server; never inferred from platform or width.
+  serverDevice: boolean;
+  flow: OAuthFlowState;
+};
 
 export type SignInView =
   | { kind: 'signed-in'; account: Account }
   | { kind: 'continue-on-server-device' }
-  | Flow;
+  | { kind: 'signed-out' }
+  | { kind: 'waiting' }
+  | { kind: 'failed'; title: string; message: string };
 
-type Inputs = {
-  // `argo.accounts.get(host)`: this Project's Account, or nothing.
-  account: Account | null;
-  // `context.serverDevice`, stamped by the Server; never inferred from platform or width.
-  serverDevice: boolean;
-  flow: Flow;
-};
-
+/*
+ * Signed in on any device: this Project's Account, or the one just added, which a Project with several
+ * Accounts has yet to choose. Otherwise only the Server Device signs in, where the browser and Argo's
+ * listener are.
+ */
 export function chooseView({
   account,
   serverDevice,
   flow,
-}: Inputs): SignInView {
+}: SignInData): SignInView {
   if (account) return { kind: 'signed-in', account };
 
-  return serverDevice ? flow : { kind: 'continue-on-server-device' };
+  if (flow.kind === 'signed-in')
+    return {
+      kind: 'signed-in',
+      account: { label: flow.label, host: accountHost },
+    };
+
+  if (!serverDevice) return { kind: 'continue-on-server-device' };
+
+  return flowView(flow);
 }
 
-// A cancelled exchange leaves the page signed out; a finished one shows through the Account.
-export function flowOf(result: SignInResult): Flow {
-  if (result.kind === 'port-in-use')
-    return {
-      kind: 'failed',
-      title: 'Couldn’t start sign-in',
-      message: result.message,
-    };
+function flowView(
+  flow: Exclude<OAuthFlowState, { kind: 'signed-in' }>,
+): SignInView {
+  if (flow.kind === 'idle') return { kind: 'signed-out' };
 
-  if (result.kind === 'failed')
-    return {
-      kind: 'failed',
-      title: 'Couldn’t sign in',
-      message: result.message,
-    };
+  if (flow.kind === 'waiting') return flow;
 
-  return { kind: 'idle' };
+  const title =
+    flow.reason === 'port-in-use'
+      ? 'Couldn’t start sign-in'
+      : 'Couldn’t sign in';
+
+  return { kind: 'failed', title, message: flow.message };
 }

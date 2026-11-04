@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { OperationScope } from '../kit/operation-scope.ts';
+import type { CallScopes, IdScope } from '../kit/call-scope.ts';
 import {
   PluginRequest,
   type PluginValue,
@@ -7,7 +7,12 @@ import {
   type WorkerReply,
 } from '../protocol/runtime.ts';
 
-type CallOrigin = { viewId?: string | null; projectId?: string };
+type CallOrigin = {
+  viewId?: string | null;
+  projectId?: string;
+  draw?: number;
+  operation?: number;
+};
 
 type Pending = {
   resolve: (value: PluginValue) => void;
@@ -55,7 +60,7 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
 export type PluginBridge = ((json: string) => Promise<string>) & {
   inView?: <T>(viewId: string | null, run: () => T) => T;
   inProject?: <T>(projectId: string | undefined, run: () => T) => T;
-  operations?: OperationScope;
+  scopes?: CallScopes;
 };
 
 /*
@@ -66,33 +71,48 @@ export type PluginBridge = ((json: string) => Promise<string>) & {
  */
 export function createPluginBridge(calls: WorkerCalls): PluginBridge {
   const scope = new AsyncLocalStorage<CallOrigin>();
+  const scopes = { operation: idScope(), draw: idScope() };
 
-  return Object.assign(bridgeCall(calls, scope), {
+  return Object.assign(bridgeCall(calls, { scope, scopes }), {
     inView: <T>(viewId: string | null, run: () => T): T =>
       scope.run({ viewId }, run),
     inProject: <T>(projectId: string | undefined, run: () => T): T =>
       scope.run({ projectId }, run),
-    operations: operationScope(),
+    scopes,
   });
 }
 
+type Scoped = { scope: AsyncLocalStorage<CallOrigin>; scopes: CallScopes };
+
+// Each call names the draw or the Operation its code runs for; the Server looks up what that call may reach.
+const originOf = ({ scope, scopes }: Scoped): CallOrigin => {
+  const draw = scopes.draw.current();
+  const operation = scopes.operation.current();
+
+  return {
+    ...scope.getStore(),
+    ...(draw !== null && { draw }),
+    ...(operation !== null && { operation }),
+  };
+};
+
 const bridgeCall =
-  (calls: WorkerCalls, scope: AsyncLocalStorage<CallOrigin>) =>
+  (calls: WorkerCalls, scoped: Scoped) =>
   async (json: string): Promise<string> => {
     const value = await calls.call(
       PluginRequest.parse(JSON.parse(json)),
-      scope.getStore() ?? undefined,
+      originOf(scoped),
     );
 
     return JSON.stringify(value ?? null);
   };
 
-// The Operation invocation a handler answers, kept apart from the call origin it never changes.
-function operationScope(): OperationScope {
-  const operation = new AsyncLocalStorage<number>();
+// A draw or an Operation invocation by id, kept apart from the call origin a view or Hook sets.
+function idScope(): IdScope {
+  const current = new AsyncLocalStorage<number>();
 
   return {
-    run: (id, run) => operation.run(id, run),
-    current: () => operation.getStore() ?? null,
+    run: (id, run) => current.run(id, run),
+    current: () => current.getStore() ?? null,
   };
 }

@@ -31,7 +31,6 @@ type PageEvent = Exclude<
 export interface Pages {
   register: (path: string, page: Page) => void;
   receive: (event: PageEvent) => void;
-  requirePage: (path: string, contribution: string) => void;
 }
 
 interface Hub {
@@ -106,13 +105,7 @@ export function mountPages(
   return {
     register: (path, page) => void hub.pages.set(path, page),
     receive: (event) => receive(hub, event),
-    requirePage: (path, contribution) => requirePage(hub, path, contribution),
   };
-}
-
-function requirePage(hub: Hub, path: string, contribution: string): void {
-  if (!hub.pages.has(path))
-    throw new Error(`${contribution} path ${path} is not a registered page`);
 }
 
 function pageHub(

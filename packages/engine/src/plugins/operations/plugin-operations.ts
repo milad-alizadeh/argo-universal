@@ -15,7 +15,21 @@ import type {
  */
 const operationLimitMs = 30_000;
 
-type Request = Omit<Extract<PluginEvent, { type: 'operation' }>, 'type' | 'id'>;
+type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
+
+/*
+ * One run: what the worker is sent, and whether the Connection that asked is the Server Device, which the
+ * Server keeps to scope the run's own `argo` calls and never sends the Plugin.
+ */
+type Request = Omit<OperationEvent, 'type' | 'id'> & { serverDevice?: boolean };
+
+// What a run's `argo` calls reach: the Project it acts in and whether it was asked from the Server Device.
+export type RunOrigin = { projectId?: string; serverDevice: boolean };
+
+const eventOf = (
+  id: number,
+  { serverDevice: _serverDevice, ...request }: Request,
+): OperationEvent => ({ type: 'operation', id, ...request });
 
 export type Answer = { ok: true; result: Json } | { ok: false; error: string };
 
@@ -55,7 +69,7 @@ export class PluginOperations {
 
   public constructor(workers: WorkerCalls) {
     this.calls = workers.kind({
-      event: (id, request) => ({ type: 'operation', id, ...request }),
+      event: eventOf,
       limitMs: operationLimitMs,
       result: answerOf,
     });
@@ -74,6 +88,21 @@ export class PluginOperations {
     this.ranListeners.add(listener);
 
     return () => this.ranListeners.delete(listener);
+  }
+
+  /*
+   * The origin of the run still waiting on the caller's generation, by its id, or none once it answered:
+   * a call made after its Operation answered reaches no Project and no Server Device.
+   */
+  public origin(caller: Caller, id: number): RunOrigin | undefined {
+    const request = this.calls.request(caller, id);
+
+    if (!request) return undefined;
+
+    return {
+      projectId: request.caller.projectId,
+      serverDevice: request.serverDevice === true,
+    };
   }
 
   // An answer from an ended worker is ignored.

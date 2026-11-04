@@ -14,6 +14,7 @@ import {
   type KitElementType,
 } from './jsx-runtime';
 import * as loader from './loader-pages';
+import { oauthFlow } from './oauth-flow';
 import {
   operationHandlers,
   type OperationHandlers,
@@ -63,7 +64,7 @@ function kitExport({
   return carrier;
 }
 
-// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks, the JSX runtime and the List's move rule.
+// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks, the JSX runtime, the List's move rule and the OAuth flow.
 const exportsOf = {
   ...Object.fromEntries(
     pluginKitExports.map((entry) => [entry.name, kitExport(entry)]),
@@ -71,6 +72,7 @@ const exportsOf = {
   ...hooks,
   Fragment: React.Fragment,
   applyListMove,
+  oauthFlow,
 };
 
 const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };
@@ -89,9 +91,8 @@ export interface Kit {
   loaderPages: loader.LoaderPages;
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
-  requirePage: Pages['requirePage'];
-  // A manifest's `background` path names one of the Plugin's Loader pages.
-  requireLoaderPage: (path: string) => void;
+  // A manifest's `background` path and `contributes.accounts` pages name the Plugin's Loader pages.
+  requireLoaderPage: loader.LoaderPages['requirePage'];
   // A `ui.render` Hook's kit components, drawn once as a Render is (ADR-0050).
   drawTree: (element: React.ReactNode) => WireJson;
 }
@@ -141,7 +142,6 @@ function pageKit(parts: KitParts): Kit {
 
   return {
     isElement: React.isValidElement,
-    requirePage: pages.requirePage,
     exports: { ...exportsOf, useData: data.useData },
     jsxRuntime,
     registerPage: pages.register,
@@ -159,7 +159,7 @@ const loaderKit = (
   loaderPages,
   changed: loaderPages.changed,
   drawTree: valuesOf,
-  requireLoaderPage: loaderPages.requireBackground,
+  requireLoaderPage: loaderPages.requirePage,
 });
 
 function inbox(parts: KitParts): Kit['inbox'] {

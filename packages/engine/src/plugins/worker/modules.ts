@@ -152,7 +152,7 @@ function validatePaths(
   validate: PluginRealmExports['validate'],
 ): void {
   if (entry.backgroundPath !== undefined)
-    validate.background(entry.backgroundPath);
+    validate.page(entry.backgroundPath, 'Background');
 
   for (const path of accountPaths(entry)) validate.page(path, 'Account');
 }

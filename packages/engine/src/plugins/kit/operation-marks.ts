@@ -1,6 +1,6 @@
 import type { LoaderPageSend, LoaderPages } from './loader-pages';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
-import { currentOperation, inOperation } from './operation-scope';
+import { currentOperation, inOperation } from './call-scope';
 
 // The Operations being answered, each with whether its handler said `argo.changed()`.
 type Running = Map<number, boolean>;

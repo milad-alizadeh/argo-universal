@@ -53,6 +53,7 @@
     "./plugins/page-draw": "./src/plugins/page-draw.ts",
     "./plugins/loader-page-api": "./src/plugins/loader-page-api.ts",
     "./plugins/operations-api": "./src/plugins/operations-api.ts",
+    "./plugins/oauth-flow-api": "./src/plugins/oauth-flow-api.ts",
     "./plugins/hooks": "./src/plugins/hooks.ts",
     "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
     "./plugins/replaceable-fixtures": "./mocks/replaceable-slots.ts",

@@ -32,8 +32,16 @@ export function testOperations(
   };
 }
 
-// A draw asks as a web App does, as a mounted view's Connection does by default.
-const webApp: Asking = { surface: currentPluginSurface('web') };
+/*
+ * A draw or a run asks as a web App does, as a mounted view's Connection does by default; `serverDevice`
+ * asks as the App on the Server Device, where a Plugin may sign in.
+ */
+const webApp = (serverDevice = false): Asking => ({
+  surface: currentPluginSurface('web'),
+  identity: serverDevice
+    ? { serverDevice: true }
+    : { serverDevice: false, deviceId: 'paired-device' },
+});
 
 // One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
 export function testPages(
@@ -44,9 +52,13 @@ export function testPages(
   const pages = new LoaderPages(service, runtime.draws, operations);
 
   return {
-    draw: (input) =>
-      pages.draw({ pluginId, pageState: {}, pages: 1, ...input }, webApp),
-    run: (input) => pages.run({ pluginId, ...input }),
+    draw: ({ serverDevice, ...input }) =>
+      pages.draw(
+        { pluginId, pageState: {}, pages: 1, ...input },
+        webApp(serverDevice),
+      ),
+    run: ({ serverDevice, ...input }) =>
+      pages.run({ pluginId, ...input }, webApp(serverDevice)),
     stale: (signal) => pages.stale(signal),
   };
 }

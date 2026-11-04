@@ -1,8 +1,11 @@
-import { Button, ListItem, Text } from '@argo/plugin-kit';
+import { Button, ListItem, Text, type PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Account, SignInView } from './sign-in-view';
 
-export type Actions = { start: () => void; cancel: () => void };
+type Run = ReturnType<PageTo<Record<never, never>>['run']>;
+
+// The Operations the buttons run, as values the App acts on (ADR-0050).
+export type Actions = { start: Run; cancel: Run };
 
 type Lines = { primary: string; secondary?: string };
 
@@ -45,7 +48,7 @@ function InProgress({ cancel }: Pick<Actions, 'cancel'>): JSX.Element {
   );
 }
 
-type Failure = { title: string; message: string; start: () => void };
+type Failure = { title: string; message: string; start: Run };
 
 function Failure({ title, message, start }: Failure): JSX.Element {
   return (
@@ -56,22 +59,10 @@ function Failure({ title, message, start }: Failure): JSX.Element {
   );
 }
 
-type Flowing = Actions & { view: Exclude<SignInView, { kind: 'signed-in' }> };
-
-function FlowBody({ view, start, cancel }: Flowing): JSX.Element {
-  if (view.kind === 'waiting') return <InProgress cancel={cancel} />;
-
-  return view.kind === 'failed' ? (
-    <Failure title={view.title} message={view.message} start={start} />
-  ) : (
-    <SignedOut start={start} />
-  );
-}
-
-// Signed in on any device; otherwise the Server Device decides what is drawn.
 export function Body({
   view,
-  ...actions
+  start,
+  cancel,
 }: Actions & { view: SignInView }): JSX.Element {
   if (view.kind === 'signed-in') return <SignedIn account={view.account} />;
 
@@ -83,5 +74,10 @@ export function Body({
       />
     );
 
-  return <FlowBody view={view} {...actions} />;
+  if (view.kind === 'waiting') return <InProgress cancel={cancel} />;
+
+  if (view.kind === 'failed')
+    return <Failure title={view.title} message={view.message} start={start} />;
+
+  return <SignedOut start={start} />;
 }

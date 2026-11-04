@@ -1,20 +1,16 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { createSignIn, provideAccount } from './github-oauth';
-import { SignInPage } from './sign-in-page';
+import { githubSignIn } from './github';
+import { signInPage } from './sign-in-page';
 
-// The reference sign-in page: copy this Plugin, change the host, URLs and token handling (docs/plugins/authoring.md).
+// The reference sign-in page: copy this Plugin and change `github.ts` for another service (docs/plugins/authoring.md).
 export async function register(argo: Argo): Promise<void> {
-  const signIn = createSignIn(argo);
+  const signIn = githubSignIn(argo);
 
-  function Page(
-    props: Pick<Parameters<typeof SignInPage>[0], 'context'>,
-  ): JSX.Element {
-    return <SignInPage {...props} accounts={argo.accounts} signIn={signIn} />;
-  }
-
-  // The page named in `contributes.accounts`, registered before registration completes.
-  argo.pages.register('/sign-in', Page);
+  // The Operations the page's buttons run; a person taps them on the Server Device.
+  argo.operations.register('signIn', () => signIn.start());
+  argo.operations.register('cancelSignIn', () => signIn.cancel());
+  // The page named in `contributes.accounts`, defined before registration completes.
+  argo.pages.define('/sign-in', signInPage(argo, signIn));
   // The handler other Plugins borrow through `argo.fetch(url, { account })`.
-  await provideAccount(argo);
+  await signIn.provide();
 }
