@@ -1,6 +1,7 @@
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
+import { failed } from '../protocol/runtime-status';
 import { oneLine } from '../runtime/render-fallback';
-import { addressOf, failed, type DrawAt } from './draw-calls';
+import { addressOf, type DrawAt } from './draw-calls';
 import type { Drawn } from './plugin-draws';
 
 /*

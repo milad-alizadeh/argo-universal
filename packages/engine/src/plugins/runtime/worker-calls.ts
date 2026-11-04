@@ -8,6 +8,23 @@ export type Caller = { pluginId: string; generation: number };
 // Why a call to a worker ended without its answer.
 export type Ended = 'notRunning' | 'stopped' | 'late';
 
+export const notRunningError = (pluginId: string): string =>
+  `Plugin ${pluginId} is not running`;
+
+/*
+ * Why a call ended, for the person or Agent that asked. Only a call that ran out of time differs by what it
+ * asked, so its caller says it.
+ */
+export const endedError = (
+  ended: Ended,
+  pluginId: string,
+  late: string,
+): string => {
+  if (ended === 'late') return late;
+
+  return ended === 'stopped' ? 'Plugin stopped' : notRunningError(pluginId);
+};
+
 // The worker's answer, or why none came, with the Plugin it was asked of.
 export type CallOutcome<Answer> =
   | { answered: Answer }

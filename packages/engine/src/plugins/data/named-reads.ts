@@ -1,12 +1,12 @@
 import type { QueryReadAnswer } from '@repo/contracts/plugins/page-address';
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import type { PluginReply } from '../protocol/runtime';
-import type {
-  Caller,
-  CallOutcome,
-  Ended,
-  KindCalls,
-  WorkerCalls,
+import {
+  endedError,
+  type Caller,
+  type CallOutcome,
+  type KindCalls,
+  type WorkerCalls,
 } from '../runtime/worker-calls';
 
 // A named read is the Plugin's own code, so it is given as long as a draw's Loader.
@@ -20,18 +20,19 @@ export type NamedRead = {
   draw?: number;
 };
 
-const endedError: Record<Ended, (read: NamedRead) => string> = {
-  notRunning: () => 'The Plugin is not running',
-  stopped: () => 'Plugin stopped',
-  late: ({ name }) => `The ${name} read did not answer in time`,
-};
-
 function replyOf(
   outcome: CallOutcome<QueryReadAnswer>,
   read: NamedRead,
 ): PluginReply {
   if ('ended' in outcome)
-    return { ok: false, error: endedError[outcome.ended](read) };
+    return {
+      ok: false,
+      error: endedError(
+        outcome.ended,
+        outcome.pluginId,
+        `The ${read.name} read did not answer in time`,
+      ),
+    };
 
   const { answered } = outcome;
 

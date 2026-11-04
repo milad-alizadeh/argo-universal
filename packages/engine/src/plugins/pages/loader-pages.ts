@@ -17,6 +17,7 @@ import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { Broadcast } from '../broadcast';
 import type { PluginOperationService } from '../operations';
+import { notRunningError } from '../runtime/worker-calls';
 import type { PageChanges } from './page-changes';
 import type { PluginDraws } from './plugin-draws';
 
@@ -137,6 +138,6 @@ export class LoaderPages {
 
     if (status.state === 'running') return undefined;
 
-    return status.error ?? `Plugin ${pluginId} is not running`;
+    return status.error ?? notRunningError(pluginId);
   }
 }

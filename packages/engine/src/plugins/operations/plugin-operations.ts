@@ -4,13 +4,13 @@ import {
   type PluginOperationCall,
 } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
-import type { Failure } from '../protocol/runtime-status';
-import type {
-  Caller,
-  CallOutcome,
-  Ended,
-  KindCalls,
-  WorkerCalls,
+import { failed, type Failure } from '../protocol/runtime-status';
+import {
+  endedError,
+  type Caller,
+  type CallOutcome,
+  type KindCalls,
+  type WorkerCalls,
 } from '../runtime/worker-calls';
 
 type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
@@ -31,23 +31,20 @@ const eventOf = (
 
 export type Answer = { ok: true; result: Json } | Failure;
 
-const failed = (error: string): Answer => ({ ok: false, error });
-
-const endedError: Record<Ended, (pluginId: string, name: string) => string> = {
-  notRunning: (pluginId: string): string => `Plugin ${pluginId} is not running`,
-  stopped: (): string => 'Plugin stopped',
-  // An Operation that never answers fails on its own, so no Agent waits on a stalled worker.
-  late: (_pluginId: string, name: string): string =>
-    `${name} did not answer in time`,
-};
-
 // The worker answers in wire JSON, which is parsed here before any Agent reads it.
 function answerOf(
   outcome: CallOutcome<PluginOperationCall>,
   { name }: Request,
 ): Answer {
   if ('ended' in outcome)
-    return failed(endedError[outcome.ended](outcome.pluginId, name));
+    return failed(
+      endedError(
+        outcome.ended,
+        outcome.pluginId,
+        // An Operation that never answers fails on its own, so no Agent waits on a stalled worker.
+        `${name} did not answer in time`,
+      ),
+    );
 
   const call = outcome.answered;
 

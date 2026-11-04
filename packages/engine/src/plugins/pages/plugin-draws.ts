@@ -7,6 +7,7 @@ import {
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Failure } from '../protocol/runtime-status';
+import { failed } from '../protocol/runtime-status';
 import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
 import { checkedPage } from './checked-tree';
 import { DefinedPatterns } from './defined-patterns';
@@ -14,7 +15,6 @@ import {
   answeredError,
   drawLookupOf,
   drawKind,
-  failed,
   loadedOf,
   passAt,
   type Answered,

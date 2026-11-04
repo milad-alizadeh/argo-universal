@@ -5,7 +5,7 @@ import {
   pluginMessageBytes,
   pluginPageBytes,
 } from '@repo/contracts/plugins/wire-limits';
-import type { Failure } from '../protocol/runtime-status';
+import { failed, type Failure } from '../protocol/runtime-status';
 import { oneLine } from '../runtime/render-fallback';
 import { sanitizeTree, type RefusedSvg } from '../visual/sanitize-tree';
 import type { Drawn } from './plugin-draws';
@@ -62,8 +62,6 @@ function replacementReason(
     replacementTreeReason(tree) ?? (first && `${first.node}: ${first.reason}`)
   );
 }
-
-const failed = (error: string): Checked => ({ ok: false, error });
 
 type PageAt = { pluginId: string; path: string; log: (line: string) => void };
 

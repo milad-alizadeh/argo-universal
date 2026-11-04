@@ -3,8 +3,12 @@ import type {
   PageAddress,
 } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent } from '../protocol/runtime';
-import type { Failure } from '../protocol/runtime-status';
-import type { CallKind, CallOutcome, Ended } from '../runtime/worker-calls';
+import { failed, type Failure } from '../protocol/runtime-status';
+import {
+  endedError,
+  type CallKind,
+  type CallOutcome,
+} from '../runtime/worker-calls';
 
 // One draw call to a worker: what it asks, what the worker answers, and the Loader reads it holds; a live draw's frames are routed apart.
 export type Answered = Exclude<
@@ -25,8 +29,6 @@ export type DrawAt = Omit<
 >;
 
 export type Loaded = { ok: true } | Failure;
-
-export const failed = (error: string): Failed => ({ ok: false, error });
 
 // Where a background pass runs a Loader alone: its Page path and the Project it reads for.
 export type LoadAt = { path: string; projectId: string };
@@ -50,17 +52,14 @@ export function loadedOf(outcome: Outcome): Loaded {
   return outcome.action === 'failed' ? failed(outcome.error) : { ok: true };
 }
 
-const endedError: Record<Ended, (pluginId: string, path: string) => string> = {
-  notRunning: (pluginId: string): string => `Plugin ${pluginId} is not running`,
-  stopped: (): string => 'Plugin stopped',
-  late: (_pluginId: string, path: string): string =>
-    `${path} did not draw in time`,
-};
-
 function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
   if ('answered' in outcome) return outcome.answered;
 
-  const error = endedError[outcome.ended](outcome.pluginId, at.path);
+  const error = endedError(
+    outcome.ended,
+    outcome.pluginId,
+    `${at.path} did not draw in time`,
+  );
 
   return outcome.ended === 'late'
     ? failed(error)
