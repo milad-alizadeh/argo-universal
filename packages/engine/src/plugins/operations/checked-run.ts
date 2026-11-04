@@ -78,13 +78,10 @@ export function checkRun(
 }
 
 const namesOtherProject = (
-  { sessionId, person, projectId }: PluginOperationCaller,
+  { sessionId, projectId }: PluginOperationCaller,
   named: ParamValue | undefined,
 ): boolean =>
-  sessionId !== undefined &&
-  person !== true &&
-  typeof named === 'string' &&
-  named !== projectId;
+  sessionId !== undefined && typeof named === 'string' && named !== projectId;
 
 const inProject = (
   caller: PluginOperationCaller,

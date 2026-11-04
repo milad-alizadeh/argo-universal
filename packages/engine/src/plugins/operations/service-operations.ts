@@ -3,7 +3,7 @@ import type { PluginList } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
 import type { OperationCard } from '../../sessions';
-import { checkRun } from './checked-run';
+import { checkRun, type CheckedRun } from './checked-run';
 import {
   declaredOperations,
   operationRow,
@@ -58,13 +58,7 @@ export async function runDeclaredOperation(
   input: OperationRun,
 ): Promise<Json> {
   const declared = await declaredOperation(port, input);
-  const { outside, ...checked } = checkRun(
-    declared.operation,
-    input.params,
-    input.caller,
-  );
-
-  if (outside) await confirmed(input, declared.operation.label);
+  const checked = await checkedRun(declared, input);
 
   await port.requireRunning(input.pluginId);
 
@@ -77,6 +71,22 @@ export async function runDeclaredOperation(
   if (!answer.ok) throw new Error(answer.error);
 
   return answer.result;
+}
+
+// The params and caller the handler is given; a run in another Project is confirmed first.
+async function checkedRun(
+  { operation }: DeclaredOperation,
+  input: OperationRun,
+): Promise<Omit<CheckedRun, 'outside'>> {
+  const { outside, ...checked } = checkRun(
+    operation,
+    input.params,
+    input.caller,
+  );
+
+  if (outside) await confirmed(input, operation.label);
+
+  return checked;
 }
 
 // Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first.

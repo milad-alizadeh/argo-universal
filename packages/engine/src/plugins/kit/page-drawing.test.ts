@@ -40,7 +40,7 @@ it('ends a live draw when it is stopped while its Loader is still loading', asyn
   const stop = stopper();
 
   const page = pageDrawer({
-    load: () => new Promise<never>(() => undefined),
+    load: () => new Promise<never>(() => {}),
     render: () => jsx('Stack', {}),
   });
 

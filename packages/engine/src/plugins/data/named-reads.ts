@@ -3,6 +3,7 @@ import type { WireJson } from '@repo/contracts/plugins/wire';
 import type { PluginReply } from '../protocol/runtime';
 import {
   endedError,
+  type Ended,
   type Caller,
   type CallOutcome,
   type KindCalls,
@@ -20,19 +21,21 @@ export type NamedRead = {
   draw?: number;
 };
 
+const endedReply = (
+  ended: Ended,
+  pluginId: string,
+  { name }: NamedRead,
+): PluginReply => ({
+  ok: false,
+  error: endedError(ended, pluginId, `The ${name} read did not answer in time`),
+});
+
 function replyOf(
   outcome: CallOutcome<QueryReadAnswer>,
   read: NamedRead,
 ): PluginReply {
   if ('ended' in outcome)
-    return {
-      ok: false,
-      error: endedError(
-        outcome.ended,
-        outcome.pluginId,
-        `The ${read.name} read did not answer in time`,
-      ),
-    };
+    return endedReply(outcome.ended, outcome.pluginId, read);
 
   const { answered } = outcome;
 

@@ -1,10 +1,10 @@
 import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
+import type { DrawnTree } from '@repo/contracts/plugins/page-address';
 import {
   treeAnswer,
   type DrawAnswer,
   type TreeAnswer,
 } from '@repo/contracts/plugins/page-draw';
-import type { DrawnTree } from '@repo/contracts/plugins/page-draw';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Failure } from '../protocol/runtime-status';

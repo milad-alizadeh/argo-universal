@@ -1,8 +1,8 @@
 import { operationLimitMs } from '@repo/contracts/plugins/plugin-operations';
 import type { CallOrigin } from '../protocol/call-origin';
-import type { LoaderCalls, LoaderPageSend, WorkerPages } from './worker-pages';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { swallowed } from './swallowed';
+import type { LoaderCalls, LoaderPageSend, WorkerPages } from './worker-pages';
 
 // The Operations being answered, by id, and when each began.
 type Running = Map<number, number>;

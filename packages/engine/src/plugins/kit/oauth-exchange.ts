@@ -79,10 +79,17 @@ async function exchange(
 ): Promise<Exchanged> {
   const response = await argo.fetch(options.tokenUrl, tokenRequest(grant));
 
-  if (!response) return { problem: 'The service did not answer.' };
+  return response
+    ? answered(response, options.tokenPath)
+    : { problem: 'The service did not answer.' };
+}
 
+async function answered(
+  response: NonNullable<Awaited<ReturnType<OAuthFlowArgo['fetch']>>>,
+  path: OAuthFlowOptions['tokenPath'],
+): Promise<Exchanged> {
   const text = await response.text();
-  const token = response.ok ? tokenIn(text, options.tokenPath) : null;
+  const token = response.ok ? tokenIn(text, path) : null;
 
   return token === null
     ? { problem: refusal(response.status, text) }
@@ -128,14 +135,23 @@ const maxReason = 200;
  * 5.2) on one line and capped, since the person reads it and the log may keep it.
  */
 function refusal(status: number, text: string): string {
-  const said = ServiceError.safeParse(parsed(text)).data;
-  const reason = [said?.error, said?.error_description]
-    .filter((part) => part !== undefined)
-    .join(', ');
+  const reason = reasonIn(text);
 
   return reason === ''
     ? `The service did not return a token (${status}).`
-    : `The service refused the sign-in (${status}): ${oneLine(reason).slice(0, maxReason)}`;
+    : `The service refused the sign-in (${status}): ${reason}`;
+}
+
+const noReason: z.infer<typeof ServiceError> = {};
+
+function reasonIn(text: string): string {
+  const said = ServiceError.safeParse(parsed(text)).data ?? noReason;
+
+  const reason = [said.error, said.error_description]
+    .filter((part) => part !== undefined)
+    .join(', ');
+
+  return oneLine(reason).slice(0, maxReason);
 }
 
 const ServiceError = z.object({

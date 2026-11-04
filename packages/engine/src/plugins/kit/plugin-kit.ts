@@ -13,7 +13,6 @@ import {
   registerKitComponent,
   type KitElementType,
 } from './jsx-runtime';
-import * as loader from './worker-pages';
 import { oauthFlow } from './oauth-flow';
 import {
   operationHandlers,
@@ -26,6 +25,7 @@ import {
   type SlotProviders,
   type SlotSend,
 } from './slot-providers';
+import * as loader from './worker-pages';
 
 // A kit component with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
 function kitExport({

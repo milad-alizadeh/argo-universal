@@ -1,11 +1,12 @@
 import { expect, it } from 'vitest';
+import type { DrawnFor } from './drawing-failures';
 import { SentTrees } from './sent-trees';
 
 const tree = { key: 'root', type: 'Text', props: {}, children: [], slots: {} };
 
 const trees = (): SentTrees => new SentTrees({ generation: () => 1 });
 
-const drawn = (path: string) => ({
+const drawn = (path: string): DrawnFor => ({
   pluginId: 'counter',
   at: { path, pageState: {}, pages: 1 },
 });

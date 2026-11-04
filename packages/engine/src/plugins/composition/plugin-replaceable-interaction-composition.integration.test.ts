@@ -100,14 +100,14 @@ it('refuses a drawing failure from a Plugin the Server does not have', async () 
       slotId: toolCallSlotId,
       reason: 'forged',
     }),
-  ).rejects.toThrow();
+  ).rejects.toThrow(/nobody/);
   await expect(
     app.client.plugins.renderFailed.mutate({
       pluginId: 'x'.repeat(200),
       slotId: toolCallSlotId,
       reason: 'forged',
     }),
-  ).rejects.toThrow();
+  ).rejects.toThrow(/64/);
 
   const log = await readFile(join(home, 'logs/plugins.log'), 'utf8').catch(
     () => '',

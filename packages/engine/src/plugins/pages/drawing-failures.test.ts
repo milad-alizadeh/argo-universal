@@ -8,8 +8,9 @@ const at = { path: forged, pageState: {}, pages: 1 };
 
 it('logs a failing page on one line whatever path the App asked for', () => {
   const log = vi.fn<(line: string) => void>();
+
   const failures = new DrawingFailures(
-    { failed: () => true, clearDrawing: () => undefined },
+    { failed: (): boolean => true, clearDrawing: (): void => {} },
     log,
   );
 

@@ -8,9 +8,17 @@ const operation = (id: number): CallOrigin => ({
   operation: id,
 });
 
-function marksOver(origin: CallOrigin) {
-  const send = vi.fn(() => Promise.resolve());
+type Marks = {
+  marks: ReturnType<typeof operationMarks>;
+  send: ReturnType<typeof vi.fn<() => Promise<void>>>;
+  later: (ms: number) => void;
+};
+
+function marksOver(origin: CallOrigin): Marks {
+  const send = vi.fn<() => Promise<void>>(() => Promise.resolve());
+
   let now = 0;
+
   const marks = operationMarks(
     { pages: send, origin: () => origin },
     () => now,

@@ -42,7 +42,7 @@ function matches(row: OperationRow, search: string): boolean {
 export class PluginOperationRouter {
   public constructor(
     private readonly deps: PluginOperationDeps,
-    private readonly sessions: Sessions,
+    private readonly sessions: Pick<Sessions, 'call'>,
   ) {}
 
   // A Plugin that cannot be listed leaves the core registry answerable on its own.
@@ -89,15 +89,15 @@ export class PluginOperationRouter {
     params: Json,
   ): Promise<OperationRunResponse> {
     if (caller.kind === 'user')
-      return { kind: 'result', result: await this.run(plugin, params, caller) };
+      return resulted(this.run(plugin, params, { caller }));
 
     const row = await this.row(plugin.id);
     const called = pluginOperationCall(plugin, row, params);
 
     const run = (call: SessionOperationCall): Promise<Json> =>
-      this.run(plugin, params, caller, call);
+      this.run(plugin, params, { caller, call });
 
-    return { kind: 'result', result: await this.recorded(caller, called, run) };
+    return resulted(this.recorded(caller, called, run));
   }
 
   // A Session's own run is a Tool call like any other, named by the Operation it ran.
@@ -118,8 +118,7 @@ export class PluginOperationRouter {
   private run(
     { pluginId, name }: PluginOperation,
     params: Json,
-    caller: TokenCaller,
-    call?: SessionOperationCall,
+    { caller, call }: { caller: TokenCaller; call?: SessionOperationCall },
   ): Promise<Json> {
     return this.deps.operations.run({
       pluginId,
@@ -136,3 +135,8 @@ const callerOf = (caller: TokenCaller): PluginOperationCaller =>
   caller.kind === 'session'
     ? { sessionId: caller.sessionId, projectId: caller.projectId }
     : { person: true };
+
+const resulted = async (run: Promise<Json>): Promise<OperationRunResponse> => ({
+  kind: 'result',
+  result: await run,
+});

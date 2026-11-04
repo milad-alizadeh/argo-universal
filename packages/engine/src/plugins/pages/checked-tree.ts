@@ -1,4 +1,4 @@
-import type { DrawnTree } from '@repo/contracts/plugins/page-draw';
+import type { DrawnTree } from '@repo/contracts/plugins/page-address';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
 import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';

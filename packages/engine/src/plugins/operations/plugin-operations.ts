@@ -8,6 +8,7 @@ import { failed, type Failure } from '../protocol/runtime-status';
 import {
   endedError,
   type Caller,
+  type Ended,
   type CallOutcome,
   type KindCalls,
   type WorkerCalls,
@@ -31,20 +32,17 @@ const eventOf = (
 
 export type Answer = { ok: true; result: Json } | Failure;
 
+// An Operation that never answers fails on its own, so no Agent waits on a stalled worker.
+const endedAnswer = (ended: Ended, pluginId: string, name: string): Answer =>
+  failed(endedError(ended, pluginId, `${name} did not answer in time`));
+
 // The worker answers in wire JSON, which is parsed here before any Agent reads it.
 function answerOf(
   outcome: CallOutcome<PluginOperationCall>,
   { name }: Request,
 ): Answer {
   if ('ended' in outcome)
-    return failed(
-      endedError(
-        outcome.ended,
-        outcome.pluginId,
-        // An Operation that never answers fails on its own, so no Agent waits on a stalled worker.
-        `${name} did not answer in time`,
-      ),
-    );
+    return endedAnswer(outcome.ended, outcome.pluginId, name);
 
   const call = outcome.answered;
 

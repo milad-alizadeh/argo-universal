@@ -1,68 +1,84 @@
-import { expect, it, vi } from 'vitest';
-import type { Sessions } from '../sessions';
+import type { OperationRow } from '@repo/contracts/operations';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { expect, it } from 'vitest';
+import type { PluginOperationService } from '../plugins';
+import type { OperationCard, SessionOperationCall } from '../sessions';
 import { PluginOperationRouter } from './plugin-run';
 
 const plugin = { id: 'demo:close', pluginId: 'demo', name: 'close' };
 
-function routerOver(run: () => Promise<{ closed: true }>) {
-  const operations = {
-    run: vi.fn(run),
-    rows: vi.fn(() => Promise.resolve([])),
-  };
-  // Only the registry's `run` and the Sessions a Session's run is recorded on are used by a user's run.
-  const router = new PluginOperationRouter(
-    { operations },
-    Object.create(null) as Sessions,
-  );
+type Run = Parameters<PluginOperationService['run']>[0];
 
-  return { router, operations };
+const row: OperationRow = {
+  id: plugin.id,
+  label: 'Close',
+  description: '',
+  params: {},
+  result: {},
+  tier: 'act',
+  keywords: [],
+  enabled: true,
+  disabledReason: null,
+};
+
+// The Plugin Operations a Server runs, and the Session's Tool call that asks the user, each recording what it was given.
+class Fakes {
+  public readonly runs: Run[] = [];
+  public readonly asked: OperationCard[] = [];
+
+  public readonly operations = {
+    rows: (): Promise<OperationRow[]> => Promise.resolve([row]),
+    run: (input: Run): Promise<Json> => {
+      this.runs.push(input);
+
+      return Promise.resolve({ closed: true });
+    },
+  };
+
+  public readonly sessions = {
+    call: (): SessionOperationCall => ({
+      toolCallId: 'call-1',
+      canConfirm: true,
+      confirm: (card) => {
+        this.asked.push(card);
+
+        return Promise.resolve();
+      },
+      started: (): void => {},
+      finish: (): void => {},
+    }),
+  };
+
+  // The one run the Plugin was handed.
+  public first(): Run {
+    const [run] = this.runs;
+
+    if (!run) throw new Error('The Plugin was not run');
+
+    return run;
+  }
+
+  public router(): PluginOperationRouter {
+    return new PluginOperationRouter(this, this.sessions);
+  }
 }
+
+const session = { kind: 'session', sessionId: 's1', projectId: 'p1' } as const;
 
 it("runs the user's own Plugin Operation as a person, as a tap does", async () => {
-  const { router, operations } = routerOver(() =>
-    Promise.resolve({ closed: true }),
-  );
+  const fakes = new Fakes();
 
-  await router.runFor({ kind: 'user' }, plugin, { number: 1 });
+  await fakes.router().runFor({ kind: 'user' }, plugin, { number: 1 });
 
-  expect(operations.run).toHaveBeenCalledWith(
-    expect.objectContaining({ caller: { person: true } }),
-  );
+  expect(fakes.first().caller).toEqual({ person: true });
 });
 
-const session = { kind: 'session' as const, sessionId: 's1', projectId: 'p1' };
+it('hands a Session’s run the way to ask the user, for a Project it names past its own', async () => {
+  const fakes = new Fakes();
 
-function sessionRouter() {
-  const confirm = vi.fn(() => Promise.resolve());
-  const call = { confirm, finish: vi.fn(), started: vi.fn() };
-  const operations = {
-    run: vi.fn(() => Promise.resolve({ closed: true })),
-    rows: vi.fn(() =>
-      Promise.resolve([{ id: plugin.id, label: 'Close', keywords: [] }]),
-    ),
-  };
-  const sessions = { call: vi.fn(() => call) } as unknown as Sessions;
+  await fakes.router().runFor(session, plugin, { projectId: 'p2' });
+  await fakes.first().confirm?.({ title: 'Close', description: 'Elsewhere' });
 
-  return {
-    router: new PluginOperationRouter(
-      { operations: operations as never },
-      sessions,
-    ),
-    confirm,
-    operations,
-  };
-}
-
-it('hands a Session’s run the way to ask the user, for the Project it names past its own', async () => {
-  const { router, operations, confirm } = sessionRouter();
-
-  await router.runFor(session, plugin, { projectId: 'p2' });
-
-  const [{ confirm: ask }] = operations.run.mock.calls[0] as unknown as [
-    { confirm: (card: unknown) => Promise<void> },
-  ];
-
-  await ask({ title: 'x', description: 'y' });
-
-  expect(confirm).toHaveBeenCalledWith({ title: 'x', description: 'y' });
+  expect(fakes.first().caller).toEqual({ sessionId: 's1', projectId: 'p1' });
+  expect(fakes.asked).toEqual([{ title: 'Close', description: 'Elsewhere' }]);
 });

@@ -4,7 +4,7 @@ import type {
   PageInput,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import type { DrawnTree } from '@repo/contracts/plugins/page-draw';
+import type { DrawnTree } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import type { DataCall } from './draw-reads';
 import { drawReader, type DrawReader } from './draw-reads';
@@ -142,17 +142,9 @@ async function followLive<State extends PageState, Data, Item>(
   { input, pageInput }: DrawRun<State>,
   { stop, frame }: Followed,
 ): Promise<void> {
-  const { stopped } = stop;
+  const loaded = await firstLoad(page, input, stop.stopped);
 
-  if (page.list) throw new Error(unlistedError);
-
-  const loading = Promise.resolve(page.load(input)).then((value) => ({
-    value,
-  }));
-  const loaded = await Promise.race([loading, stopped.then(() => null)]);
-
-  // A Loader that never settles must not hold its draw once the App has left.
-  if (loaded === null) return endLate(loading);
+  if (loaded === null) return;
 
   const each = (data: Data): Promise<void> =>
     frame(renderPage(page, { data, pageInput, paged: unlisted }).root);
@@ -160,6 +152,27 @@ async function followLive<State extends PageState, Data, Item>(
   if (!isYielding(loaded.value)) return each(loaded.value);
 
   await eachYielded(loaded.value, stop, each);
+}
+
+type Loaded<Data> = { value: Data | AsyncIterable<Data> };
+
+// The Loader's first answer, or none once stopped before it came: a Loader that never settles must not hold its draw.
+async function firstLoad<State extends PageState, Data, Item>(
+  page: LoaderPage<State, Data, Item>,
+  input: LoaderInput<State>,
+  stopped: Stop['stopped'],
+): Promise<Loaded<Data> | null> {
+  if (page.list) throw new Error(unlistedError);
+
+  const loading = Promise.resolve(page.load(input)).then((value) => ({
+    value,
+  }));
+
+  const loaded = await Promise.race([loading, stopped.then(() => null)]);
+
+  if (loaded === null) endLate(loading);
+
+  return loaded;
 }
 
 // A Loader stopped before it answered: if it yields values later, its iterator is closed so its `finally` runs.

@@ -7,6 +7,7 @@ import {
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { QueryResult } from '@repo/contracts/plugins/query-results';
+import type { WireJson } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 import type { ReadPage } from './paged-lists';
 import { queryResult } from './query-result';
@@ -53,31 +54,39 @@ type ListAt = {
   surface?: PluginSurface;
 };
 
-/*
- * One page of the draw's paged list, kept by Argo as a Query of its address and cursor. The list sees the
- * App's surface and whether it is the Server Device, so they are part of what the page is kept under.
- */
-export function listReader<Item>(
-  read: DrawReader,
-  { path, pageState, sessionId, serverDevice, surface }: ListAt,
-): ReadPage<Item> {
-  const page = z.object({
+const listPage = <Item>(): z.ZodType<{
+  items: Item[];
+  cursor: string | null;
+}> =>
+  z.object({
     items: z.array(z.custom<Item>()),
     cursor: z.string().nullable(),
   });
 
-  return async (cursor, fresh) => {
-    const args = {
-      path,
-      pageState,
-      sessionId: sessionId ?? null,
-      serverDevice: serverDevice === true,
-      surface: surface ?? null,
-      cursor,
-    };
+const listArgs = (
+  { path, pageState, sessionId, serverDevice, surface }: ListAt,
+  cursor: string | null,
+): WireJson => ({
+  path,
+  pageState,
+  sessionId: sessionId ?? null,
+  serverDevice: serverDevice === true,
+  surface: surface ?? null,
+  cursor,
+});
 
-    return page.parse(
-      await read({ api: 'read', name: pagedListRead, args }, fresh),
+/*
+ * One page of the draw's paged list, kept by Argo as a Query of its address and cursor. The list sees the
+ * App's surface and whether it is the Server Device, so they are part of what the page is kept under.
+ */
+export function listReader<Item>(read: DrawReader, at: ListAt): ReadPage<Item> {
+  const page = listPage<Item>();
+
+  return async (cursor, fresh) =>
+    page.parse(
+      await read(
+        { api: 'read', name: pagedListRead, args: listArgs(at, cursor) },
+        fresh,
+      ),
     );
-  };
 }
