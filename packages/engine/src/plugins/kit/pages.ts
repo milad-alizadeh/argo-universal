@@ -22,10 +22,10 @@ type Open = Extract<PluginEvent, { type: 'open' }>;
 
 type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 
-// What the pages answer: data goes to `useData`, items calls to the Slot providers, Operations to their handlers and named reads to their reads.
+// What the pages answer: data goes to `useData`, items calls to the Slot providers, Operations to their handlers, and draws, stops and named reads to the Loader pages.
 type PageEvent = Exclude<
   PluginEvent,
-  { type: 'data' | 'slotItems' | 'operation' | 'draw' | 'read' }
+  { type: 'data' | 'slotItems' | 'operation' | 'draw' | 'read' | 'stop' }
 >;
 
 export interface Pages {

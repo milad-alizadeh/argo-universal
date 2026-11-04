@@ -59,13 +59,28 @@ export function testPages(
   const server = pageServer(pages, pluginId);
 
   return {
-    draw: ({ platform = 'web', ...input }) =>
-      server.draw({ pageState: {}, pages: 1, ...input }, platform),
+    draw: firstPages(server),
     open: (opening) => PageView.open(server, opening),
     run: (input) => server.run(input),
     stale: (signal) => pages.stale(signal),
+    live: livePages(pages, pluginId),
   };
 }
+
+// A draw of the first page, empty Page state, on the web unless the test names a platform.
+const firstPages =
+  (server: PageServer): PluginTest['pages']['draw'] =>
+  ({ platform = 'web', ...input }) =>
+    server.draw({ pageState: {}, pages: 1, ...input }, platform);
+
+// A live page followed as the web App follows it, until the signal ends it.
+const livePages =
+  (pages: LoaderPages, pluginId: string): PluginTest['pages']['live'] =>
+  (input, signal) =>
+    pages.live(
+      { pluginId, pageState: {}, ...input },
+      { ...appOn('web'), signal },
+    );
 
 const runInput = (input: RunInput, fallbackId: string): Run => ({
   ...givenToRun(input),

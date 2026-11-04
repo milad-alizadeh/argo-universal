@@ -1,5 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import type { Answer, Kept } from './page-answer';
+import { pacing, type Answer, type Kept } from './page-answer';
 
 export type Patches = ReadonlyMap<string, WireNode['props']>;
 
@@ -15,7 +15,9 @@ export const patchedAnswer =
 function patchedKept(kept: Kept, patches: Patches): Answer {
   const root = patched(kept.root, patches);
 
-  return root === kept.root ? kept : { ok: true, root, pages: kept.pages };
+  return root === kept.root
+    ? kept
+    : { ok: true, root, pages: kept.pages, ...pacing(kept) };
 }
 
 // A node's slots are walked as its children are: a row's menu Action sits in its `actions` slot.

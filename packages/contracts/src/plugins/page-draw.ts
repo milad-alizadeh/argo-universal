@@ -28,9 +28,16 @@ export type TreeAnswer =
   | { kind: 'unchanged'; hash: string }
   | { kind: 'append'; append: Appended; hash: string };
 
-// A draw's answer: how its tree crosses, and how many pages its paged list shows; or why it failed.
+/*
+ * How the App keeps a drawn page fresh: `every` is the interval, as the Server clamped it, the App draws the
+ * page again on while it is on screen; `live` says the page's Loader yields, so while on screen the App keeps
+ * a live subscription for it instead of drawing it again.
+ */
+export type DrawPacing = { every?: number; live?: true };
+
+// A draw's answer: how its tree crosses, how many pages its paged list shows and how it stays fresh; or why it failed.
 export type DrawAnswer =
-  | (TreeAnswer & { pages: number })
+  | (TreeAnswer & { pages: number } & DrawPacing)
   | { kind: 'failed'; error: string };
 
 // A step from a node to one of its children, or to a node in one of its slots.

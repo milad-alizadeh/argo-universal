@@ -1,8 +1,13 @@
 import {
   treeAnswer,
   type DrawAnswer,
+  type DrawPacing,
   type DrawRequest,
 } from '@repo/contracts/plugins/page-draw';
+import type {
+  LiveAnswer,
+  LiveRequest,
+} from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { PageAddresses, type Answer, type PageOpening } from './page-addresses';
@@ -40,23 +45,36 @@ class MemoryServer {
   private readonly waiting: (() => void)[] = [];
   private holding = false;
   private edition = 0;
+  // How every page answers it stays fresh: on an interval, or live.
+  pacing: DrawPacing = {};
+  // Draws fail with this until it is cleared.
+  failing: string | undefined;
 
   readonly draw = async (request: DrawRequest): Promise<DrawAnswer> => {
     this.requests.push(request);
+    await this.held();
 
+    return this.failing === undefined
+      ? this.drawn(request)
+      : { kind: 'failed', error: this.failing };
+  };
+
+  private async held(): Promise<void> {
     if (this.holding)
       await new Promise<void>((resolve) => this.waiting.push(resolve));
+  }
 
-    const { known, pages, ...address } = request;
+  private drawn({ known, pages, ...address }: DrawRequest): DrawAnswer {
     const key = JSON.stringify(address);
-    const root = drawnTree(request, this.edition);
-    const answer = { ...treeAnswer(root, this.sent.get(key), known), pages };
+    const root = drawnTree({ ...address, pages }, this.edition);
+    const tree = treeAnswer(root, this.sent.get(key), known);
+    const answer = { ...tree, pages, ...this.pacing };
 
     this.sent.set(key, root);
     this.answers.push(answer);
 
     return answer;
-  };
+  }
 
   // Draws wait until `release`, as slow ones do.
   hold(): void {
@@ -75,9 +93,44 @@ class MemoryServer {
   }
 }
 
+// A live page's subscriptions in memory: each records what it asked for, and the test sends its answers.
+class MemoryLive {
+  readonly followed: { request: LiveRequest; open: boolean }[] = [];
+  private readonly listeners: ((answer: LiveAnswer) => void)[] = [];
+
+  readonly follow = (
+    request: LiveRequest,
+    onAnswer: (answer: LiveAnswer) => void,
+  ): (() => void) => {
+    const followed = { request, open: true };
+
+    this.followed.push(followed);
+    this.listeners.push(onAnswer);
+
+    return () => {
+      followed.open = false;
+    };
+  };
+
+  // The latest subscription, and whether it is still open.
+  latest(): { request: LiveRequest; open: boolean } {
+    const latest = this.followed.at(-1);
+
+    if (!latest) throw new Error('Nothing is followed');
+
+    return latest;
+  }
+
+  // The latest subscription's answer.
+  send(answer: LiveAnswer): void {
+    this.listeners.at(-1)?.(answer);
+  }
+}
+
 export interface Cache {
   addresses: PageAddresses;
   server: MemoryServer;
+  live: MemoryLive;
   client: QueryClient;
 }
 
@@ -87,8 +140,10 @@ export function cacheOverMemory(): Cache {
   });
 
   const server = new MemoryServer();
+  const live = new MemoryLive();
+  const addresses = new PageAddresses(client, server.draw, live.follow);
 
-  return { addresses: new PageAddresses(client, server.draw), server, client };
+  return { addresses, server, live, client };
 }
 
 export const issues: PageOpening = {
@@ -121,9 +176,9 @@ export async function settled(): Promise<void> {
     });
 }
 
-export function kept(
-  answer: Answer | undefined,
-): Extract<Answer, { ok: true }> {
+export type Kept = Extract<Answer, { ok: true }>;
+
+export function kept(answer: Answer | undefined): Kept {
   if (!answer?.ok) throw new Error('No tree is kept');
 
   return answer;

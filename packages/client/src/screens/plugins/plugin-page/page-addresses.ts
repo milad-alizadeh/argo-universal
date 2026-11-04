@@ -12,11 +12,13 @@ import type {
   PageStateChange,
 } from '@repo/contracts/plugins/wire';
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
+import { followLive, type FollowPage } from './live-follow';
 import { patchedAnswer } from './optimistic-patch';
 import {
   keptAfter,
   keptOf,
   shownOf,
+  treePacing,
   type Answer,
   type Kept,
 } from './page-answer';
@@ -40,6 +42,8 @@ export type Snapshot = readonly [QueryKey, Answer | undefined][];
 
 type QueryOptions<Data> = { queryKey: QueryKey; queryFn: () => Promise<Data> };
 
+type TreeOptions = QueryOptions<Answer> & typeof treePacing;
+
 // Page state is never asked for: it is what the cache last remembered, or none.
 type StateOptions = QueryOptions<PageState> & {
   initialData: () => PageState;
@@ -58,6 +62,7 @@ export class PageAddresses {
   constructor(
     private readonly client: QueryClient,
     private readonly draw: DrawPage,
+    private readonly follow: FollowPage,
   ) {}
 
   // The Page state the opening shows, as a query only this cache writes.
@@ -70,9 +75,31 @@ export class PageAddresses {
     };
   }
 
-  // The opening's tree at its Page state: a kept tree draws at once, and a draw names the hash and pages kept.
-  tree(opening: PageOpening): QueryOptions<Answer> {
-    return this.treeAt(this.addressOf(opening));
+  /*
+   * The opening's tree at its Page state: a kept tree draws at once, a draw names the hash and pages kept, and
+   * the tree draws again on its interval while subscribed.
+   */
+  tree(opening: PageOpening): TreeOptions {
+    return {
+      ...this.treeAt(this.addressOf(opening)),
+      ...treePacing,
+    };
+  }
+
+  /*
+   * The opening's live subscription, naming the tree kept, so its first answer may be `unchanged`; `again` is
+   * asked when it must start over from a whole tree. The answer unsubscribes.
+   */
+  followLive(opening: PageOpening, again: () => void): () => void {
+    const address = this.addressOf(opening);
+
+    return followLive({
+      client: this.client,
+      follow: this.follow,
+      address,
+      known: this.keptAt(address)?.hash,
+      again,
+    });
   }
 
   // The opening drawn at its next Page state, which it shows once drawn; an empty change draws it again from page one.
@@ -177,7 +204,8 @@ export class PageAddresses {
 
   // The address drawn again, showing `pages` pages, or as many as it shows now.
   private async drawn(address: PageAddress, pages?: number): Promise<Answer> {
-    const kept = this.keptAt(address);
+    const before = this.client.getQueryData<Answer>(treeKey(address));
+    const kept = keptOf(before);
 
     const answer = await this.draw({
       ...address,
@@ -185,6 +213,6 @@ export class PageAddresses {
       known: kept?.hash,
     });
 
-    return keptAfter(kept, answer);
+    return keptAfter(before, answer);
   }
 }

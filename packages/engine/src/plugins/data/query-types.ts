@@ -32,7 +32,16 @@ export type QueryWatch = Extract<PluginDataRequest, { action: 'watch' }>;
  * One Loader read of an entry: the Page address whose draw read it, which a changed answer marks, or none
  * for a background pass; whether it reads again whatever is kept; and the draw a paged-list page is read for.
  */
-export type QueryRead = { holder?: PageAddress; fresh: boolean; draw: number };
+/*
+ * A Loader's read for one draw: the address holding it, whether it reads fresh whatever is kept, and the
+ * interval its page is drawn again on, past which a kept answer is read again.
+ */
+export type QueryRead = {
+  holder?: PageAddress;
+  fresh: boolean;
+  draw: number;
+  every?: number;
+};
 
 export function watchKey(request: { viewId: string; watchId: string }): string {
   return JSON.stringify([request.viewId, request.watchId]);

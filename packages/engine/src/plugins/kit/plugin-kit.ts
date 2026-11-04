@@ -178,7 +178,7 @@ function deliver(parts: KitParts, event: PluginEvent): void {
 type PartEvent = Exclude<PluginEvent, { type: 'data' | 'slotItems' }>;
 
 const isLoaderEvent = (event: PartEvent): event is loader.LoaderEvent =>
-  event.type === 'draw' || event.type === 'read';
+  event.type === 'draw' || event.type === 'read' || event.type === 'stop';
 
 function answerOrDraw(parts: KitParts, event: PartEvent): void {
   if (event.type === 'operation') return parts.operations.answer(event);
