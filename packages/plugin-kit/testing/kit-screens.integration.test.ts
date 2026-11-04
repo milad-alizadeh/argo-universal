@@ -1,4 +1,4 @@
-import type { PageView } from '@argo/plugin-kit/testing';
+import type { PageView, PluginTest } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import { startKit } from '../mocks/kit-page-helpers';
 import { kitScreensSource } from '../mocks/kit-screens-source';
@@ -8,22 +8,28 @@ const start = (): ReturnType<typeof startKit> => startKit(kitScreensSource);
 const open = async (path: string): Promise<PageView> =>
   (await start()).pages.open({ path });
 
-// Each edit binds its field's Page state key, and the page draws again showing it.
+// How long a bound edit waits for the edits to pause.
+const bindPauseMs = 300;
+
+// Each edit binds its field's Page state key, and once the edits pause the page draws again showing it.
 async function edit(
-  page: PageView,
+  { kit, page }: { kit: PluginTest; page: PageView },
   field: { label: string; event: string; value: string | string[] },
 ): Promise<void> {
   const { label, event, value } = field;
   await page.act(label, event, value);
+  await kit.clock.advance(bindPauseMs);
   expect(page.find(label).props.value).toEqual(value);
 }
 
 it('switches the view and shows the matching content', async () => {
-  const page = await open('/views');
+  const kit = await start();
+  const page = await kit.pages.open({ path: '/views' });
 
   expect(page.find('Open Issue').type).toBe('Text');
   expect(page.find('Issue view').type).toBe('SegmentedControl');
   await page.act('Issue view', 'onValueChange', 'closed');
+  await kit.clock.advance(bindPauseMs);
   expect(page.find('Closed Issue').type).toBe('Text');
   expect(page.findText('Open Issue')).toBeUndefined();
 });
@@ -49,15 +55,17 @@ it('draws a grid of Cards', async () => {
 });
 
 it('submits the drafted Issue from a FieldGroup form', async () => {
-  const page = await open('/form');
+  const kit = await start();
+  const form = { kit, page: await kit.pages.open({ path: '/form' }) };
+  const { page } = form;
 
-  await edit(page, { label: 'Title', event: 'onChangeText', value: 'Crash' });
-  await edit(page, {
+  await edit(form, { label: 'Title', event: 'onChangeText', value: 'Crash' });
+  await edit(form, {
     label: 'Labels',
     event: 'onValueChange',
     value: ['bug'],
   });
-  await edit(page, {
+  await edit(form, {
     label: 'Due',
     event: 'onValueChange',
     value: '2026-10-30',

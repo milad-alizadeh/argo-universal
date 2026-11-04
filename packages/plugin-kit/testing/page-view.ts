@@ -1,25 +1,25 @@
 import type { PageState } from '@repo/contracts/plugins/page-address';
+import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
 import {
-  madePageCall,
-  type MadeOperationCall,
-  type MadePageCall,
-} from '@repo/contracts/plugins/page-call-payload';
+  PageCalls,
+  type PageCallsPorts,
+  type PageEvent,
+  type ScopedRun,
+} from '@repo/contracts/plugins/page-calls';
 import {
-  treeAfter,
-  type DrawAnswer,
-  type HashedTree,
-} from '@repo/contracts/plugins/page-draw';
-import {
-  PageStateValue,
   type Action,
+  type PageCall,
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
+import { KeptTree } from './kept-tree';
+import type { PageClock } from './page-clock';
 import {
   findByText,
+  findEntry,
   findNode,
   handlerOf,
-  pageHandler,
+  pageEventOf,
   type FoundNode,
   type NodeMatch,
 } from './page-nodes';
@@ -34,41 +34,38 @@ import {
 const paged = (node: WireNode): boolean =>
   handlerOf(node, 'onLoadMore') !== undefined;
 
-// The Page state a change or a bound value sets.
-const stateChange = (
-  call: Exclude<MadePageCall, MadeOperationCall | { loadMore: true }>,
-  value: WireJson | undefined,
-): PageState =>
-  'bind' in call
-    ? { [call.bind]: PageStateValue.parse(value ?? '') }
-    : call.pageState;
+const rejected = (error: Error): never => {
+  throw error;
+};
+
+// Where a view's draws and runs go, and the clock its edits wait on.
+export type Showing = { server: PageServer; clock: PageClock };
 
 /*
  * One Loader page as an App shows it (ADR-0050): its Page address, the tree the Server last drew there, and the
- * Component events an App acts on. A press does what the value in the tree says, with the event's payload filled in,
- * as the App does: a navigation opens the page it names, a Page state change or a bound value draws the new address,
- * load more draws one more page, and an Operation runs for the page's Project and Session and, once it answers, the
- * page draws again, as its stale mark makes the App do. A bound value lands at once; the App waits for the edits to pause.
+ * Component events an App acts on. A press does what the value in the tree says, with the event's payload filled
+ * in, and through the same Page calls the App makes (`PageCalls`): a navigation opens the page it names, a Page
+ * state change draws the new address, load more draws one more page, and an Operation runs for the page's Project
+ * and Session, showing its optimistic props until it answers, and then the page draws again, as its stale mark
+ * makes the App do. A bound value or a throttled edit waits for the edits to pause, on the test's clock; a press
+ * that flushes lands it first.
  */
 export class PageView {
-  private kept: HashedTree | undefined;
-  private failure: string | undefined;
-  private pages = 1;
+  private readonly kept = new KeptTree();
   private state: PageState;
+  private readonly calls: PageCalls;
 
   private constructor(
-    private readonly server: PageServer,
+    private readonly showing: Showing,
     private readonly opening: Opened,
   ) {
     this.state = opening.pageState ?? {};
+    this.calls = new PageCalls(this.ports(), showing.clock.wait);
   }
 
   // Opens the page and draws it once; a page that cannot draw rejects with why.
-  static async open(
-    server: PageServer,
-    opening: PageOpening,
-  ): Promise<PageView> {
-    const view = new PageView(server, { platform: 'web', ...opening });
+  static async open(showing: Showing, opening: PageOpening): Promise<PageView> {
+    const view = new PageView(showing, { platform: 'web', ...opening });
 
     await view.draw();
     view.requireDrawn();
@@ -84,18 +81,20 @@ export class PageView {
     return this.state;
   }
 
-  // The tree the page shows; a draw that failed throws why, as the App's toast says it.
+  // The tree the page shows, with an Operation's optimistic props while it runs; a draw that failed throws why.
   get tree(): WireNode {
     this.requireDrawn();
 
-    if (!this.kept) throw new Error(`${this.path} has drawn no tree`);
+    const { shown } = this.kept;
 
-    return this.kept.root;
+    if (!shown) throw new Error(`${this.path} has drawn no tree`);
+
+    return shown;
   }
 
   // Why the last draw failed, or undefined while it drew.
   get error(): string | undefined {
-    return this.failure;
+    return this.kept.error;
   }
 
   findText(text: string): FoundNode | undefined {
@@ -108,16 +107,18 @@ export class PageView {
   }
 
   // Draws the address again, naming the tree kept, as the App does when the page is marked stale.
-  async draw(pages = this.pages): Promise<void> {
+  async draw(pages = this.kept.pages): Promise<void> {
+    const { hash } = this.kept;
+
     const request = {
       path: this.path,
       pageState: this.state,
       ...caller(this.opening),
       pages,
-      ...(this.kept && { known: this.kept.hash }),
+      ...(hash && { known: hash }),
     };
 
-    this.keep(await this.server.draw(request, this.opening));
+    this.kept.keep(await this.showing.server.draw(request, this.opening));
   }
 
   // `onPress` on the node `match` names; the view showing after it, a new one when it navigates.
@@ -132,72 +133,74 @@ export class PageView {
 
   /*
    * The Component event `event` on the node `match` names, with the value a kit component reports, such as a
-   * search's text for `onChangeText`. The event is the node's prop, or a prop of one of its prop objects, as a List's
-   * `onLoadMore` sits in its `pagination`.
+   * search's text for `onChangeText`. The event is the node's prop, or a prop of one of its prop objects, as a
+   * List's `onLoadMore` sits in its `pagination`.
    */
   async act(
     match: NodeMatch,
     event: string,
     value?: WireJson,
   ): Promise<PageView> {
-    const handler = pageHandler(this.tree, match, event);
+    const { node, key } = findEntry(this.tree, match);
+    const handler = handlerOf(node, event);
+
+    if (!handler) throw new Error(`${node.type} ${key} has no ${event}`);
 
     if ('action' in handler) return this.actOn(handler);
 
-    await this.call(madePageCall(handler, value), value);
+    await this.call(handler, pageEventOf(node, { key, name: event, value }));
 
     return this;
+  }
+
+  private call(handler: PageCall, event: PageEvent): Promise<void> {
+    return this.calls.call(madePageCall(handler, event.payload), event);
   }
 
   // A navigation opens the page it names for the same Project, Session and App; other Actions stay in the App.
   private async actOn(action: Action): Promise<PageView> {
     if (action.action !== 'navigate') return this;
 
-    return PageView.open(this.server, {
+    return PageView.open(this.showing, {
       ...this.opening,
       path: action.path,
       pageState: {},
     });
   }
 
-  private call(call: MadePageCall, value?: WireJson): Promise<void> {
-    if ('operation' in call) return this.run(call);
+  // The App's Page calls, on this view's tree; a failed Operation rejects the press with why.
+  private ports(): PageCallsPorts {
+    return {
+      scope: caller(this.opening),
+      shown: () => this.kept.shown,
+      patch: (patch) => this.kept.patch(patch),
+      run: (run) => this.run(run),
+      failed: rejected,
+      pageState: {
+        change: (change) => this.change(change),
+        loadMore: () => this.draw(this.kept.pages + 1),
+      },
+    };
+  }
 
-    if ('loadMore' in call) return this.draw(this.pages + 1);
-
-    return this.change(stateChange(call, value));
+  private async run(run: ScopedRun): Promise<void> {
+    await this.showing.server.run(run, this.opening);
+    await this.draw();
   }
 
   // An empty change draws the same address again from its first page.
   private async change(change: PageState): Promise<void> {
     if (Object.keys(change).length > 0) {
       this.state = { ...this.state, ...change };
-      this.kept = undefined;
+      this.kept.forget();
     }
 
     await this.draw(1);
   }
 
-  private async run({ operation, args }: MadeOperationCall): Promise<void> {
-    const run = { operation, args, ...caller(this.opening) };
-
-    await this.server.run(run, this.opening);
-    await this.draw();
-  }
-
-  private keep(answer: DrawAnswer): void {
-    if (answer.kind === 'failed') {
-      this.failure = answer.error;
-
-      return;
-    }
-
-    this.failure = undefined;
-    this.pages = Math.max(1, answer.pages);
-    this.kept = treeAfter(this.kept, answer);
-  }
-
   private requireDrawn(): void {
-    if (this.failure !== undefined) throw new Error(this.failure);
+    const { error } = this.kept;
+
+    if (error !== undefined) throw new Error(error);
   }
 }

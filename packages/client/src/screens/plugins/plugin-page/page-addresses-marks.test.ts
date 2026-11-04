@@ -1,3 +1,4 @@
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import {
   cacheOverMemory,
@@ -49,36 +50,41 @@ it('marks a draw in flight again once it lands, since it read before the change'
   screen.leave();
 });
 
-it('patches only the calling Plugin trees holding a named node, keeps every other tree and its hash, and puts them back', async () => {
+// The second row shown finished, the rest of the tree as it was.
+const finished = (root: WireNode): WireNode => {
+  const [list] = root.children;
+
+  if (!list) return root;
+
+  const rows = list.children.map((row) =>
+    row.key === '/issues#1'
+      ? { ...row, props: { ...row.props, finished: true } }
+      : row,
+  );
+
+  return { ...root, children: [{ ...list, children: rows }] };
+};
+
+it('patches only the address the press came from, keeps its unpatched rows and every other tree, and puts it back', async () => {
   const cache = cacheOverMemory();
-  const tracker = onScreen(cache, issues);
-  const closed = onScreen(cache, { ...issues, path: '/closed' });
-  const other = onScreen(cache, { ...issues, pluginId: 'notes' });
+  const argo = onScreen(cache, issues);
+  const site = onScreen(cache, { ...issues, projectId: 'site' });
 
   await settled();
 
-  const [before, unnamed, untouched] = [tracker, closed, other].map((screen) =>
-    screen.answer(),
-  );
-
-  const snapshot = await cache.addresses.showOptimistic('tracker', {
-    operation: 'close',
-    args: {},
-    optimistic: [{ key: '/issues#1', props: { finished: true } }],
-  });
-
-  const patched = kept(tracker.answer());
+  const [before, untouched] = [argo.answer(), site.answer()];
+  const putBack = await cache.addresses.patch(issues, finished);
+  const patched = kept(argo.answer());
 
   expect(rowsOf(patched)[1]?.props).toMatchObject({ finished: true });
   expect(rowsOf(patched)[0]).toBe(rowsOf(before)[0]);
   expect(patched.hash).toBeUndefined();
-  expect(closed.answer()).toBe(unnamed);
-  expect(other.answer()).toBe(untouched);
+  expect(site.answer()).toBe(untouched);
   expect(kept(untouched).hash).toBeDefined();
 
-  cache.addresses.putBack(snapshot);
+  putBack();
 
-  expect(tracker.answer()).toEqual(before);
-
-  for (const screen of [tracker, closed, other]) screen.leave();
+  expect(argo.answer()).toEqual(before);
+  argo.leave();
+  site.leave();
 });

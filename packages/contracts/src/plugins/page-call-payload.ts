@@ -106,10 +106,7 @@ const madeOptimistic = (
  * Server still checks an Operation's arguments against the params its manifest declares. A bound value keeps the
  * payload apart, since it lands only once the edits pause.
  */
-export function madePageCall(
-  call: PageCall,
-  payload: WireJson | undefined,
-): MadePageCall {
+export function madePageCall(call: PageCall, payload?: WireJson): MadePageCall {
   if ('operation' in call) return madeRun(call, payload);
 
   if ('pageState' in call)

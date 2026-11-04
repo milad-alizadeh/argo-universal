@@ -5,9 +5,10 @@ import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { OnPageCall } from '../../../lib/product/plugin-registry';
 import type { Answer, PageAddresses, PageOpening } from './page-addresses';
+import { pageCallsPorts } from './page-calls-ports';
 import { useLivePage } from './use-live-page';
 import { usePageAddresses } from './use-page-addresses';
-import { usePageCalls } from './use-page-calls';
+import { useOperationRunner, useTreeCalls } from './use-tree-calls';
 
 export type PluginPageState = { root: WireNode | null; onPageCall: OnPageCall };
 
@@ -26,7 +27,10 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
   useLivePage(addresses, opening, answer);
 
   const root = useLastDrawn(answer);
-  const onPageCall = usePageCalls(addresses, opening);
+
+  const onPageCall = useTreeCalls(
+    pageCallsPorts(addresses, opening, useOperationRunner()),
+  );
 
   return { root, onPageCall };
 }

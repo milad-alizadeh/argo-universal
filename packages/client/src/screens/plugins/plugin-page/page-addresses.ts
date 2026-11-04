@@ -3,7 +3,6 @@ import type {
   PageState,
   StaleMark,
 } from '@repo/contracts/plugins/page-address';
-import type { MadeOperationCall } from '@repo/contracts/plugins/page-call-payload';
 import type {
   DrawAnswer,
   DrawRequest,
@@ -20,13 +19,7 @@ import {
   type Answer,
   type Kept,
 } from './page-answer';
-import {
-  pluginKey,
-  staleFilters,
-  stateKey,
-  treeKey,
-  type PageOpening,
-} from './page-keys';
+import { staleFilters, stateKey, treeKey, type PageOpening } from './page-keys';
 
 export type { Answer } from './page-answer';
 
@@ -34,9 +27,6 @@ export type { PageOpening } from './page-keys';
 
 // The one call the cache makes: a draw of an address, naming what it keeps. tRPC in the App, a function in tests.
 export type DrawPage = (request: DrawRequest) => Promise<DrawAnswer>;
-
-// The trees an optimistic patch replaced, to put back when the Operation fails.
-export type Snapshot = readonly [QueryKey, Answer | undefined][];
 
 type QueryOptions<Data> = { queryKey: QueryKey; queryFn: () => Promise<Data> };
 
@@ -126,29 +116,23 @@ export class PageAddresses {
   }
 
   /*
-   * The Plugin's kept trees show the call's optimistic props at once. Its draws in flight are cancelled first, so an
-   * answer read before the Operation cannot paint over the patch; the trees before come back to put back.
+   * The tree the opening shows now, patched at once, as an Operation call's optimistic props are; no other address
+   * changes, since two never share a tree. Its draws in flight are cancelled first, so an answer read before the
+   * Operation cannot paint over the patch; the answer puts the tree back as it was.
    */
-  async showOptimistic(
-    pluginId: string,
-    { optimistic }: MadeOperationCall,
-  ): Promise<Snapshot> {
-    if (!optimistic) return [];
+  async patch(
+    opening: PageOpening,
+    patch: (root: WireNode) => WireNode,
+  ): Promise<() => void> {
+    const queryKey = treeKey(this.addressOf(opening));
 
-    const filter = { queryKey: pluginKey(pluginId) };
-    const patches = new Map(optimistic.map(({ key, props }) => [key, props]));
+    await this.client.cancelQueries({ queryKey, exact: true });
 
-    await this.client.cancelQueries(filter);
+    const before = this.client.getQueryData<Answer>(queryKey);
 
-    const before = this.client.getQueriesData<Answer>(filter);
+    this.client.setQueryData<Answer>(queryKey, patchedAnswer(patch));
 
-    this.client.setQueriesData<Answer>(filter, patchedAnswer(patches));
-
-    return before;
-  }
-
-  putBack(snapshot: Snapshot): void {
-    for (const [key, answer] of snapshot) this.client.setQueryData(key, answer);
+    return () => this.client.setQueryData(queryKey, before);
   }
 
   /*

@@ -35,11 +35,13 @@ it("loads the fixture's TypeScript entry through the production loader", async (
   expect(page.findText('Harness')).toBeDefined();
 }, 20_000);
 
-it('binds a search to Page state and draws the page again with its text', async () => {
-  const page = await open(first);
+it('binds a search to Page state and draws the page again with its text once the typing pauses', async () => {
+  const test = await start(first);
+  const page = await test.pages.open({ path: '/' });
   expect(page.findText('empty')).toBeDefined();
 
   await page.act('Harness', 'onChangeText', typed);
+  await test.clock.advance(300);
 
   expect(page.pageState).toMatchObject({ value: typed });
   expect(page.findText(typed)).toBeDefined();

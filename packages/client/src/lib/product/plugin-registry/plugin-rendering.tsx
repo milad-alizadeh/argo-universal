@@ -1,24 +1,12 @@
 import type { KitComponentDefinition } from '@repo/contracts/plugins/kit';
 import type { MadePageCall } from '@repo/contracts/plugins/page-call-payload';
+import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
-import type { z } from 'zod';
 import type { OpenPluginPage } from '../plugin-actions';
 
 /*
- * The Component event a Loader page's call came from: the node's key, the event's name and schema, whose
- * metadata says whether its edits are throttled or it flushes them, and its payload, which a binding puts
- * into the Page state.
- */
-export type PageEvent = {
-  key: string;
-  name: string;
-  schema: z.ZodType;
-  payload?: WireJson;
-};
-
-/*
- * What a Loader page does with a Page state change, an Operation call, a load more or a bound value
+ * What a Plugin tree does with a Page state change, an Operation call, a load more or a bound value
  * (ADR-0050), with the event's payload already filled in.
  */
 export type OnPageCall = (

@@ -1,27 +1,15 @@
 import { dataFixture } from '../mocks/data-fixture';
-
-const close = {
-  name: 'close',
-  label: 'Close the Issue',
-  description: 'Closes one Issue.',
-  tier: 'act' as const,
-  params: {
-    number: {
-      type: 'number' as const,
-      description: 'The Issue',
-      required: true,
-    },
-  },
-};
+import { close, note } from './loader-page-operations';
 
 /*
  * The one Plugin the kit's Loader page tests share: a Loader page over a paged list it keeps in memory, with a
- * search, load more, a refresh and a write, one whose cursor repeats the boundary item, and two pages reading one
- * named read.
+ * search, load more, a refresh and a write, a draft whose Button notes what was typed, one whose cursor repeats
+ * the boundary item, and two pages reading one named read.
  */
-const source = `import { List, ListItem, Screen } from '@argo/plugin-kit';
+const source = `import { Button, List, ListItem, Screen } from '@argo/plugin-kit';
 
 const closed = new Set();
+const notes = [];
 const numbers = [1, 2, 3, 4, 5];
 globalThis.listed = [];
 
@@ -38,6 +26,23 @@ export function register(argo) {
   argo.operations.register('close', async ({ number }) => {
     closed.add(number);
     return { closed: number };
+  });
+
+  argo.operations.register('note', async ({ title }) => {
+    notes.push(title);
+    return { noted: title };
+  });
+
+  // A draft search whose Button notes the draft the page drew for, and the titles noted so far.
+  argo.pages.define('/draft', {
+    state: { title: '' },
+    load: () => ({ notes: notes.join(',') }),
+    render: (data, to, { state }) => (
+      <Screen title="Draft" search={{ label: 'Title' }} value={state.title} onChangeText={to.bind('title')}>
+        <ListItem title={'Noted: ' + data.notes} />
+        <Button label="Note" onPress={to.run('note', { title: state.title })} />
+      </Screen>
+    ),
   });
 
   // A named read the two counted pages share: Argo keeps its answer until a write.
@@ -131,7 +136,7 @@ export function register(argo) {
 export const issuesPath = '/projects/argo/issues';
 
 export async function start(): Promise<Kit> {
-  const fixture = await dataFixture(source, { operations: [close] });
+  const fixture = await dataFixture(source, { operations: [close, note] });
 
   return fixture.start();
 }

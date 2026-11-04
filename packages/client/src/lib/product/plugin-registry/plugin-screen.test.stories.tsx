@@ -1,9 +1,10 @@
 import type { MadePageCall } from '@repo/contracts/plugins/page-call-payload';
+import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import { WireNode } from '@repo/contracts/plugins/wire';
 import fixture from '@repo/mocks/plugins/screen.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PluginTree, type PageEvent } from './plugin-registry';
+import { PluginTree } from './plugin-registry';
 
 const root = WireNode.parse(fixture);
 

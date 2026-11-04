@@ -1,8 +1,9 @@
+import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';
 import fixtures from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
-import { PluginTree, type PageEvent } from './plugin-registry';
+import { PluginTree } from './plugin-registry';
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Controls',

@@ -3,7 +3,7 @@ import {
   type ReplaceableInput,
 } from '@repo/contracts/plugins/replaceable';
 import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPC } from '#features/connection';
 import {
@@ -17,35 +17,51 @@ import {
 } from '../../lib/product/plugin-registry';
 import {
   ReplaceableSlotView,
+  type ReplaceableSlotDrawing,
   type ReplaceableSlotProps,
   type ReplaceableSlotViewProps,
 } from '../../lib/product/plugin-registry/replaceable-slot';
+import { useOperationRunner, useTreeCalls } from './plugin-page/use-tree-calls';
+import { slotCallsPorts, type SlotSession } from './slot-calls-ports';
 import { usePluginOpener } from './use-plugin-opener';
 
 const noSlots: readonly ReplaceableSlotId[] = [];
 
-const renderConnectedSlot = (
-  props: ReplaceableSlotProps,
-): React.JSX.Element => <ConnectedReplaceableSlot {...props} />;
-
-/*
- * One check of the Plugin list for every Slot below it, so a row no Plugin can replace asks nothing and core draws
- * it from the start. `select` keeps its answer's identity across rereads, so a reread that changes nothing draws no row.
- */
-export function ConnectedReplaceableSlots({
-  children,
-}: React.PropsWithChildren): React.JSX.Element {
-  const replaced = useReplacedSlots();
-
-  const drawing = useMemo(
-    () => ({ replaced, render: renderConnectedSlot }),
-    [replaced],
+const renderConnectedSlotIn =
+  (session: SlotSession) =>
+  (props: ReplaceableSlotProps): React.JSX.Element => (
+    <ConnectedReplaceableSlot {...props} session={session} />
   );
 
+/*
+ * One check of the Plugin list for every Slot of one Session's Feed, so a row no Plugin can replace asks nothing
+ * and core draws it from the start. `select` keeps its answer's identity across rereads, so a reread that changes
+ * nothing draws no row. A replacement's Operations run for that Session and its Project.
+ */
+export function ConnectedReplaceableSlots({
+  session,
+  children,
+}: React.PropsWithChildren<{ session: SlotSession }>): React.JSX.Element {
   return (
-    <ReplaceableSlotRenderer value={drawing}>
+    <ReplaceableSlotRenderer value={useSlotDrawing(session)}>
       {children}
     </ReplaceableSlotRenderer>
+  );
+}
+
+// The same Slots and Session draw with the same renderer, so a reread that changes neither draws no row.
+function useSlotDrawing({
+  sessionId,
+  projectId,
+}: SlotSession): ReplaceableSlotDrawing {
+  const replaced = useReplacedSlots();
+
+  return useMemo(
+    () => ({
+      replaced,
+      render: renderConnectedSlotIn({ sessionId, projectId }),
+    }),
+    [replaced, sessionId, projectId],
   );
 }
 
@@ -59,11 +75,12 @@ function useReplacedSlots(): readonly ReplaceableSlotId[] {
 }
 
 // A Replaceable Slot as the connected Server answers it, once for its props; a failed answer leaves core's own drawing.
-function ConnectedReplaceableSlot(
-  props: ReplaceableSlotProps,
-): React.JSX.Element {
+function ConnectedReplaceableSlot({
+  session,
+  ...props
+}: ReplaceableSlotProps & { session: SlotSession }): React.JSX.Element {
   const state = useReplaceableState(props.input);
-  const actions = useSlotActions(props.input, state.replacement);
+  const actions = useSlotActions(props.input, state.replacement, session);
 
   return <ReplaceableSlotView {...props} {...actions} state={state} />;
 }
@@ -80,10 +97,11 @@ type SlotActions = Pick<
 function useSlotActions(
   input: ReplaceableInput,
   replacement: SlotReplacement | null,
+  session: SlotSession,
 ): SlotActions {
   const onFallback = useDrawingFallback(input, replacement);
   const opener = usePluginOpener();
-  const onPageCall = useSlotRun(replacement);
+  const onPageCall = useSlotCalls(input, replacement, session);
 
   if (!replacement) return { onFallback };
 
@@ -105,21 +123,23 @@ function useReplaceableState(input: ReplaceableInput): ReplaceableState {
   return data ?? coreSlotState(input);
 }
 
-// A replacement has no Page state, so the one call it makes is an Operation run, which says itself when it fails.
-function useSlotRun(replacement: SlotReplacement | null): OnPageCall {
-  const run = useMutation(useTRPC().plugins.run.mutationOptions());
-
-  return async (call) => {
-    if (!replacement || !('operation' in call)) return;
-    const { operation, args } = call;
-
-    await run
-      .mutateAsync({ pluginId: replacement.pluginId, operation, args })
-      .then(noAnswer, noAnswer);
+// A replacement's calls, on the answer its Slot keeps; the Slot hands them on only while a replacement is drawn.
+function useSlotCalls(
+  input: ReplaceableInput,
+  replacement: SlotReplacement | null,
+  session: SlotSession,
+): OnPageCall {
+  const answer = {
+    client: useQueryClient(),
+    queryKey: useTRPC().plugins.render.queryKey(input),
   };
-}
 
-const noAnswer = (): void => undefined;
+  const pluginId = replacement?.pluginId ?? '';
+
+  return useTreeCalls(
+    slotCallsPorts(answer, { pluginId, session }, useOperationRunner()),
+  );
+}
 
 function useDrawingFallback(
   input: ReplaceableInput,

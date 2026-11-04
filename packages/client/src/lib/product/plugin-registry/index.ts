@@ -1,4 +1,4 @@
-export { PluginTree, type OnPageCall, type PageEvent } from './plugin-registry';
+export { PluginTree, type OnPageCall } from './plugin-registry';
 
 export * from './replaceable-state';
 

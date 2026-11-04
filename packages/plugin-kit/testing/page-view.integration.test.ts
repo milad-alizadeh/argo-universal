@@ -10,15 +10,31 @@ const open = async (path = issuesPath): Promise<PageView> =>
 
 const isList = (node: { type: string }): boolean => node.type === 'List';
 
-it('draws the address again for a bound search, at once', async () => {
-  const page = await open();
+it('draws the address again for a bound search once the edits pause, as the App does', async () => {
+  const kit = await start();
+  const page = await kit.pages.open({ path: issuesPath });
 
   expect(titles(page)).toEqual(['Issue 1', 'Issue 2']);
 
   await page.act('argo', 'onChangeText', '3');
+  await kit.clock.advance(299);
+
+  expect(page.pageState).toEqual({});
+
+  await kit.clock.advance(1);
 
   expect(page.pageState).toEqual({ query: '3' });
   expect(titles(page)).toEqual(['Issue 3']);
+});
+
+it('lands what was typed before a press runs its Operation, so the run takes the latest draft', async () => {
+  const page = await open('/draft');
+
+  await page.act('Draft', 'onChangeText', 'fix login');
+  await page.press('Note');
+
+  expect(page.pageState).toEqual({ title: 'fix login' });
+  expect(page.find('Noted: fix login').type).toBe('ListItem');
 });
 
 it('appends the next page on load more, and a pull starts again from the first', async () => {

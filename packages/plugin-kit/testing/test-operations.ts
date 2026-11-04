@@ -6,6 +6,7 @@ import {
   type PluginRuntime,
   type PluginService,
 } from '@repo/engine/plugins';
+import type { PageClock } from './page-clock';
 import type { PageServer, TestApp } from './page-server';
 import { PageView } from './page-view';
 import type { PluginTest } from './test-types';
@@ -57,23 +58,33 @@ const pageServer = (pages: LoaderPages, pluginId: string): PageServer => ({
   run: (run, app) => pages.run({ pluginId, ...run }, appOn(app)),
 });
 
-// One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
+/*
+ * One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before; the views
+ * it opens wait for their edits to pause on the test's clock.
+ */
 export function testPages(
-  { service, runtime }: Hosted,
+  hosted: Hosted,
   pluginId: string,
+  clock: PageClock,
 ): PluginTest['pages'] {
-  const operations = new PluginOperationService(service, runtime.operations);
-  const pages = new LoaderPages(service, runtime.draws, operations);
+  const pages = loaderPages(hosted);
   const server = pageServer(pages, pluginId);
 
   return {
     draw: firstPages(server),
-    open: (opening) => PageView.open(server, opening),
+    open: (opening) => PageView.open({ server, clock }, opening),
     run: pageRuns(server),
     stale: (signal) => pages.stale(signal),
     live: livePages(pages, pluginId),
   };
 }
+
+const loaderPages = ({ service, runtime }: Hosted): LoaderPages =>
+  new LoaderPages(
+    service,
+    runtime.draws,
+    new PluginOperationService(service, runtime.operations),
+  );
 
 // An Operation run from a page, on the web App.
 const pageRuns =

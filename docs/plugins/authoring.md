@@ -159,13 +159,13 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `pages.open({ path, projectId?, sessionId?, pageState?, platform? })` | Draws a page once, as the App on `platform` (web by default) asks for it, and returns its view. A page that cannot draw rejects with why. |
 | `view.tree`, `view.pageState`, `view.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
 | `view.find(match)` | Returns the node a text or a node test matches, or throws. |
-| `view.press(match)` | Acts on the node's `onPress` as the App does and returns the view showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the view's Project and Session, then the page draws again. |
-| `view.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value lands at once. |
+| `view.press(match)` | Acts on the node's `onPress` as the App does and returns the view showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the view's Project and Session, then the page draws again. A press that flushes, such as a Button's or an Action's, first lands every edit still waiting for its pause. An Operation that fails rejects the press with why. |
+| `view.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value, or a throttled edit such as a TextField's `onChangeText`, waits for the edits to pause, as in the App: `clock.advance(300)` lands it. |
 | `view.loadMore()` | Draws one more page of the page's paged list. |
 | `view.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
 | `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
-| `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, and Hook deadlines together. The kit keeps its real rendering scheduler. |
+| `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, Hook deadlines, and the page views' edit pauses together. The kit keeps its real rendering scheduler. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
 | `session` | Provides test Session, Project, and Agent identifiers. |
@@ -173,7 +173,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
 `find` matches a label, title, text, text content, or accessible label.
-An `optimistic` change is the App's to show; a test reads it from the press's value in the tree, and the page drawn after the Operation answers.
+While an Operation runs, `view.tree` shows its `optimistic` props, as the App does; the page drawn after it answers replaces them, and a failure puts the tree back.
 The chosen platform sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
 A Workbench card or a Session header action opens a page for a Session; open it with that `sessionId`, as the App does. For an items Slot, such as Project details, ask with the same input the Server receives:

@@ -12,6 +12,7 @@ import {
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
+import { PageClock } from './page-clock';
 import { itemsConnection, testConnection } from './test-connection';
 import { testOperations, testPages } from './test-operations';
 import { TestProjects } from './test-projects';
@@ -59,9 +60,18 @@ class HostedPlugin implements PluginTest {
   readonly pages: PluginTest['pages'];
   readonly projects;
   readonly session = testSession;
+  private readonly pageClock = new PageClock();
+  /*
+   * The page views' edit pauses always move; the Plugin's timers move with them when the test started its clock
+   * with `clockStart`.
+   */
   readonly clock = {
-    advance: (ms: number): Promise<void> =>
-      this.runtime.testControl.advanceClock(ms),
+    advance: async (ms: number): Promise<void> => {
+      if (this.options.clockStart !== undefined)
+        await this.runtime.testControl.advanceClock(ms);
+
+      await this.pageClock.advance(ms);
+    },
   };
   readonly storage = {
     execute: (
@@ -81,6 +91,7 @@ class HostedPlugin implements PluginTest {
     this.pages = testPages(
       { service: this.service, runtime: this.runtime },
       options.pluginId,
+      this.pageClock,
     );
   }
 

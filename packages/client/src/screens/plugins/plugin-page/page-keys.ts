@@ -9,8 +9,6 @@ export type PageOpening = Omit<PageAddress, 'pageState'>;
 
 const treeRoot = 'pluginPageTree';
 
-export const pluginKey = (pluginId: string): QueryKey => [treeRoot, pluginId];
-
 // One key for an address, as the App draws it and as a stale mark from the Server names it.
 export const treeKey = ({
   pluginId,

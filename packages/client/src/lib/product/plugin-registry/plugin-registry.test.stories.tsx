@@ -1,3 +1,4 @@
+import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import {
   runListRoot,
@@ -11,7 +12,7 @@ import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-view';
-import { PluginTree, type PageEvent } from './plugin-registry';
+import { PluginTree } from './plugin-registry';
 
 const onPageCall = fn(async () => {});
 

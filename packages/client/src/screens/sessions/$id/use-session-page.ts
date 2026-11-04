@@ -21,7 +21,11 @@ import {
 } from './use-session-commands';
 import { useSessionReadOptions } from './use-session-read-options';
 import { useWithSessionBar } from './use-with-session-bar';
-import { type WorkbenchCards, useWorkbenchCards } from './use-workbench-cards';
+import {
+  type CardSession,
+  type WorkbenchCards,
+  useWorkbenchCards,
+} from './use-workbench-cards';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
@@ -31,22 +35,29 @@ export interface SessionPage {
   preview: boolean;
 }
 
-// What the page draws, and the Plugin cards in it, which its header toggles.
+// What the page draws, the Plugin cards in it, which its header toggles, and the Session and Project they draw for.
 export interface OpenedSession {
   props: SessionDetailViewProps;
   cards: WorkbenchCards;
+  session: CardSession;
 }
 
 // Everything one Session page reads, with the Plugin cards it has open folded into its props (ADR-0035).
 export function useSessionPage(page: SessionPage): OpenedSession {
   const sources = useConnectedFeed(page.sessionId);
 
-  const cards = useWorkbenchCards({
+  const session = {
     sessionId: page.sessionId,
     projectId: sources.feed.snapshot?.projectId,
-  });
+  };
 
-  return { props: useSessionViewProps(page, cards.open, sources), cards };
+  const cards = useWorkbenchCards(session);
+
+  return {
+    props: useSessionViewProps(page, cards.open, sources),
+    cards,
+    session,
+  };
 }
 
 type SessionSurroundings =

@@ -1,10 +1,11 @@
+import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import fixture from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PluginTree, type PageEvent } from './plugin-registry';
+import { PluginTree } from './plugin-registry';
 
 // The Plugin opens an overlay by setting its `open` prop, as a Server patch does.
 const opened = (key: string): WireNode =>
