@@ -1,11 +1,19 @@
 import type { OperationRow } from '@repo/contracts/operations';
 import type { OperationRunResponse } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { splitPluginOperationId } from '@repo/contracts/plugins/plugin-operations';
-import type { PluginsRouterDeps } from '../plugins';
+import {
+  splitPluginOperationId,
+  type PluginOperationCaller,
+} from '@repo/contracts/plugins/plugin-operations';
+import type { PluginOperationService } from '../plugins';
 import type { CalledOperation, Sessions } from '../sessions';
 import { recordOperation } from './call-recording';
 import type { SessionCaller, TokenCaller } from './session-tokens';
+
+// What the router needs of the Plugin Operations a Server runs.
+type PluginOperationDeps = {
+  operations: Pick<PluginOperationService, 'rows' | 'run'>;
+};
 
 export type PluginOperation = { id: string; pluginId: string; name: string };
 
@@ -28,7 +36,7 @@ function matches(row: OperationRow, search: string): boolean {
  */
 export class PluginOperationRouter {
   public constructor(
-    private readonly deps: PluginsRouterDeps,
+    private readonly deps: PluginOperationDeps,
     private readonly sessions: Sessions,
   ) {}
 
@@ -109,10 +117,8 @@ export class PluginOperationRouter {
   }
 }
 
-// The user's own run names no Session; a Session's names it and the Project it works in.
-const callerOf = (
-  caller: TokenCaller,
-): { sessionId?: string; projectId?: string } =>
+// The user's own run is a person's, as a tap is; a Session's names it and the Project it works in.
+const callerOf = (caller: TokenCaller): PluginOperationCaller =>
   caller.kind === 'session'
     ? { sessionId: caller.sessionId, projectId: caller.projectId }
-    : {};
+    : { person: true };
