@@ -9,6 +9,8 @@ import type { AppRouter } from './router';
 
 const forbiddenStatus = 403;
 
+const compressionThreshold = 1024;
+
 export interface HttpConnectionsInput {
   readonly requests: Server;
   readonly router: AppRouter;
@@ -78,6 +80,12 @@ function createWebSocketServer({
   const webSocketServer = new WebSocketServer({
     server: requests,
     verifyClient: verifyUpgrade(guard),
+    // Plugin pages are repetitive JSON that deflates several times over, which a phone on a slow link feels. A small message is not worth the work, and each message starts a fresh window so a Connection carries no zlib history.
+    perMessageDeflate: {
+      threshold: compressionThreshold,
+      serverNoContextTakeover: true,
+      clientNoContextTakeover: true,
+    },
   });
 
   // ws forwards the HTTP server's 'error' here, and an emitter with no listener throws it: a listen that fails after start-up (the switch moving the bind) must reach the caller that awaits it instead.
