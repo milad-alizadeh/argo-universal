@@ -4,11 +4,7 @@ import type {
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import type {
-  LoadMore,
-  OperationCall,
-  PluginEvent,
-} from '@repo/contracts/plugins/wire';
+import type { LoadMore, PluginEvent } from '@repo/contracts/plugins/wire';
 import type { Paged } from './paged-lists';
 import type { DrawReader } from './query-reads';
 import { renderContext } from './render-context';
@@ -58,8 +54,11 @@ export const pageTo = <State extends PageState>(): PageTo<State> =>
     go: (path) => ({ action: 'navigate', path }),
     set: (change) => ({ pageState: setValues(change) }),
     bind: (key) => ({ bind: key }),
-    run: (operation, args, options = {}) =>
-      operationCall({ operation, args: { ...args } }, options.optimistic),
+    run: (operation, args, { optimistic } = {}) => ({
+      operation,
+      args: { ...args },
+      ...(optimistic && { optimistic }),
+    }),
   });
 
 // A change leaves out the keys it does not set.
@@ -69,15 +68,6 @@ const setValues = (change: Partial<PageState>): PageState =>
       (entry): entry is [string, PageState[string]] => entry[1] !== undefined,
     ),
   );
-
-function operationCall(
-  call: OperationCall,
-  optimistic: OperationCall['optimistic'],
-): OperationCall {
-  if (optimistic) return { ...call, optimistic };
-
-  return call;
-}
 
 const loadMore: LoadMore = { loadMore: true };
 
