@@ -1,6 +1,10 @@
 import type { IncomingMessage, Server } from 'node:http';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
-import { WebSocketServer, type VerifyClientCallbackAsync } from 'ws';
+import {
+  WebSocketServer,
+  type PerMessageDeflateOptions,
+  type VerifyClientCallbackAsync,
+} from 'ws';
 import { createRpcContext, type RpcContext } from '../rpc';
 import type { ServerListener } from './network-listener';
 import { provenIdentity } from './proven-caller';
@@ -9,7 +13,12 @@ import type { AppRouter } from './router';
 
 const forbiddenStatus = 403;
 
-const compressionThreshold = 1024;
+// Plugin pages are repetitive JSON that deflates several times over, which a phone on a slow link feels. A small message is not worth the work, and each message starts a fresh window so a Connection carries no zlib history.
+const compression = {
+  threshold: 1024,
+  serverNoContextTakeover: true,
+  clientNoContextTakeover: true,
+} satisfies PerMessageDeflateOptions;
 
 export interface HttpConnectionsInput {
   readonly requests: Server;
@@ -80,12 +89,7 @@ function createWebSocketServer({
   const webSocketServer = new WebSocketServer({
     server: requests,
     verifyClient: verifyUpgrade(guard),
-    // Plugin pages are repetitive JSON that deflates several times over, which a phone on a slow link feels. A small message is not worth the work, and each message starts a fresh window so a Connection carries no zlib history.
-    perMessageDeflate: {
-      threshold: compressionThreshold,
-      serverNoContextTakeover: true,
-      clientNoContextTakeover: true,
-    },
+    perMessageDeflate: compression,
   });
 
   // ws forwards the HTTP server's 'error' here, and an emitter with no listener throws it: a listen that fails after start-up (the switch moving the bind) must reach the caller that awaits it instead.

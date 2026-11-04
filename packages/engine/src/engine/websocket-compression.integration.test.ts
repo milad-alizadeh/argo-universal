@@ -21,10 +21,11 @@ const projectId = 'project-'.repeat(4000);
  */
 const recordingSocket = (wire: Wire): typeof WebSocket =>
   new Proxy(WebSocket, {
-    construct: (_socket, [url]): object => {
+    construct: (_socket, [url]): NodeWebSocket => {
       const socket = new NodeWebSocket(String(url), {
         headers: { origin: 'app://app' },
       });
+
       socket.once('upgrade', (response): void => {
         wire.agreed = response.headers['sec-websocket-extensions'];
         wire.tcp = response.socket;
@@ -40,27 +41,34 @@ function watchPage(url: string, wire: Wire): ViewMessage[] {
     connectionParams: { pluginSurface: JSON.stringify(surface) },
     WebSocket: recordingSocket(wire),
   });
+
   onTestFinished(() => client.close());
 
   const messages: ViewMessage[] = [];
+
   const subscription = createTRPCClient<AppRouter>({
     links: [wsLink({ client })],
   }).plugins.view.subscribe(
     { pluginId: 'surface', path: '/', projectId },
     { onData: (message): void => void messages.push(message) },
   );
+
   onTestFinished(() => subscription.unsubscribe());
 
   return messages;
 }
 
-const drawn = (messages: ViewMessage[]): unknown => {
+function drawn(messages: ViewMessage[]): string | null {
   const snapshot = messages.findLast((message) => message.type === 'snapshot');
 
-  return snapshot ? text(snapshot.root) : undefined;
-};
+  return snapshot ? text(snapshot.root) : null;
+}
 
-const text = (root: WireNode): unknown => root.props['children'];
+function text(root: WireNode): string | null {
+  const children = root.props['children'];
+
+  return typeof children === 'string' ? children : null;
+}
 
 const expectedPage = JSON.stringify({ ...surface, projectId, frozen: true });
 
@@ -68,6 +76,7 @@ it('agrees permessage-deflate at the handshake and delivers a large page intact 
   const home = await createRuntimePlugins([
     { id: 'surface', fixture: 'surface' },
   ]);
+
   const { url } = await startEngineTestHost({ home });
   const wire: Wire = {};
 
