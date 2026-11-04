@@ -138,7 +138,9 @@ export function register(argo) {
 export const issuesPath = '/projects/argo/issues';
 
 export async function start(): Promise<Kit> {
-  const fixture = await dataFixture(source, { operations: [attach, close, note] });
+  const fixture = await dataFixture(source, {
+    operations: [attach, close, note],
+  });
 
   return fixture.start();
 }
