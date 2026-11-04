@@ -45,9 +45,11 @@ it('keeps an HTTP error as data, and the last answer through a transport error',
 
 it('joins two pages reading one fetch whose object keys and header names differ in order or case', async () => {
   const held: ServerResponse[] = [];
+  const requested = Promise.withResolvers<void>();
 
   const port = await httpsServer((_request, response) => {
     held.push(response);
+    requested.resolve();
   });
 
   const url = `https://localhost:${port}/`;
@@ -67,7 +69,7 @@ it('joins two pages reading one fetch whose object keys and header names differ 
   const first = drawnText(kit, { path: '/first' });
   const second = drawnText(kit, { path: '/second' });
 
-  await expect.poll(() => held.length).toBe(1);
+  await requested.promise;
   held[0]?.end('answer');
   expect(await first).toBe('200:answer');
   expect(await second).toBe('answer');
