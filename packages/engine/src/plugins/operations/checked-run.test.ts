@@ -32,16 +32,31 @@ it('passes on the declared params, leaving out the ones not given', () => {
   expect(checkRun(operation, { number: 1320 }, caller)).toEqual({
     params: { number: 1320 },
     caller,
+    outside: false,
   });
 });
 
-it('acts in the Project the run names instead of the caller’s', () => {
+it('acts in the Project the run names, and says a Session reaching past its own Project must be confirmed', () => {
   expect(
     checkRun(operation, { number: 7, projectId: 'project-2' }, caller),
   ).toEqual({
     params: { number: 7 },
     caller: { sessionId: 'session-1', projectId: 'project-2' },
+    outside: true,
   });
+});
+
+it('needs no confirmation for the Session’s own Project, or from a person', () => {
+  const own = { number: 7, projectId: 'project-1' };
+
+  expect(checkRun(operation, own, caller).outside).toBe(false);
+  expect(
+    checkRun(
+      { ...operation, caller: ['project'] },
+      { number: 7, projectId: 'project-2' },
+      { person: true },
+    ).outside,
+  ).toBe(false);
 });
 
 type Refusal = {
@@ -93,5 +108,6 @@ it('reads no params at all as none given', () => {
   expect(checkRun({ ...operation, params: {}, caller: [] }, null, {})).toEqual({
     params: {},
     caller: {},
+    outside: false,
   });
 });

@@ -2,6 +2,7 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { PluginList } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
+import type { OperationCard } from '../../sessions';
 import { checkRun } from './checked-run';
 import {
   declaredOperations,
@@ -38,6 +39,8 @@ export type OperationRun = {
   params: Json;
   caller: PluginOperationCaller;
   serverDevice?: boolean;
+  // Asks the user first, for a Session's run in a Project other than its own; a run with none is refused there.
+  confirm?: (card: OperationCard) => Promise<void>;
 };
 
 // Every enabled Plugin's declared Operations, as the registry lists them.
@@ -55,7 +58,13 @@ export async function runDeclaredOperation(
   input: OperationRun,
 ): Promise<Json> {
   const declared = await declaredOperation(port, input);
-  const checked = checkRun(declared.operation, input.params, input.caller);
+  const { outside, ...checked } = checkRun(
+    declared.operation,
+    input.params,
+    input.caller,
+  );
+
+  if (outside) await confirmed(input, declared.operation.label);
 
   await port.requireRunning(input.pluginId);
 
@@ -68,6 +77,21 @@ export async function runDeclaredOperation(
   if (!answer.ok) throw new Error(answer.error);
 
   return answer.result;
+}
+
+// Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first.
+async function confirmed(
+  { confirm, name }: OperationRun,
+  label: string,
+): Promise<void> {
+  if (!confirm)
+    throw new Error(`${name} in another Project needs the user to confirm`);
+
+  await confirm({
+    title: label,
+    description:
+      'Run a Plugin Operation in a Project other than the calling Session’s.',
+  });
 }
 
 async function declaredOperation(
