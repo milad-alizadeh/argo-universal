@@ -20,6 +20,7 @@ import {
   type WireJson,
 } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { runtimeError } from '../protocol/runtime-status';
 import type { ReadPage } from './paged-lists';
 import { queryResult } from './query-result';
 import { swallowed } from './swallowed';
@@ -130,12 +131,9 @@ const answer = (
   value
     .then((read) => send({ action: 'read', id, value: read }))
     .catch((cause: unknown) =>
-      send({ action: 'failed', id, error: reasonOf(cause) }),
+      send({ action: 'failed', id, error: runtimeError(cause) }),
     )
     .catch(swallowed);
-
-const reasonOf = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : String(cause);
 
 // A Loader's reads during one draw: the answer Argo keeps for the Query, or why it has none.
 export type DrawReader = <Query extends PluginQuery>(

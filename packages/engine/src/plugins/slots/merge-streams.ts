@@ -1,4 +1,5 @@
 import { EventEmitter, on } from 'node:events';
+import { runtimeError } from '../protocol/runtime-status';
 
 type Merge<T> = EventEmitter<{ item: [T]; done: [] }>;
 
@@ -38,7 +39,7 @@ const pump = async <T>(
   try {
     await drain(iterator, events);
   } catch (error) {
-    report(failed, id, error instanceof Error ? error.message : String(error));
+    report(failed, id, runtimeError(error));
   } finally {
     ended();
   }

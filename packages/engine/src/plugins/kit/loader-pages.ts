@@ -7,6 +7,7 @@ import {
 import type { QueriesApi } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { CallOrigin } from '../protocol/call-origin';
+import { runtimeError } from '../protocol/runtime-status';
 import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
@@ -157,10 +158,8 @@ async function answer(pages: Pages, event: DrawEvent): Promise<void> {
   try {
     await pages.send(await settled(pages, event, stop));
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-
     await pages
-      .send({ action: 'failed', id: event.id, error: reason })
+      .send({ action: 'failed', id: event.id, error: runtimeError(error) })
       .catch(swallowed);
   } finally {
     stop.stop();

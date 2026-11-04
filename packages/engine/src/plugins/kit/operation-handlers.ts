@@ -1,6 +1,7 @@
 import type { OperationHandler } from '@repo/contracts/plugins/operations-api';
 import type { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
+import { runtimeError } from '../protocol/runtime-status';
 import { swallowed } from './swallowed';
 
 type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
@@ -43,9 +44,7 @@ async function answer(
 
     await send({ action: 'result', id: event.id, result });
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-
-    await failed(send, event.id, reason);
+    await failed(send, event.id, runtimeError(error));
   }
 }
 
