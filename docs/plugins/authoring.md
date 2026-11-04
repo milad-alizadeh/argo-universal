@@ -349,7 +349,7 @@ argo.pages.define('/log', {
 });
 ```
 
-An Operation that appends a line then calls `wake()`. In tests, `kit.pages.live({ path })` follows a Live page and answers its trees and patches; `packages/plugin-kit/testing/loader-live-fixture.ts` is a worked example.
+An Operation that appends a line then calls `wake()`. In tests, `kit.pages.live({ path }, signal)` follows a Live page and answers its trees and patches until the signal aborts; `packages/plugin-kit/testing/loader-live-fixture.ts` is a worked example.
 
 ## Background pages and badges
 
