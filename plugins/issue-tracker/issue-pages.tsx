@@ -41,12 +41,13 @@ const rootPage = (data: RootData, to: To): JSX.Element => (
 const issuePage = (
   data: IssuePageData,
   to: To,
-  { params }: Input,
+  { params }: Pick<Input, 'params'>,
 ): JSX.Element => (
   <RootPage rows={sidebar(data, to)} detail={issueDetail(data, to, params)} />
 );
 
-const projectOf = ({ params }: Input): string => pathText(params.project ?? '');
+const projectOf = ({ params }: Pick<Input, 'params'>): string =>
+  pathText(params.project ?? '');
 
 // The Projects, and for the one the page is for, the overview Argo keeps for it; a pull reads it again.
 async function loadRoot(
