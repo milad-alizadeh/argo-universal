@@ -1,4 +1,8 @@
-import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
+import {
+  wireJsonOf,
+  type WireJson,
+  type WireNode,
+} from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import { keyOfProps, toProps, type ElementProps } from './element-props';
 import { toWire, type Instance } from './wire-tree';
@@ -114,4 +118,4 @@ function hookUse(name: string, error: Error): Error {
 
 // The tree through JSON, so only values cross to the host.
 export const valuesOf = (element: Drawn): WireJson =>
-  JSON.parse(JSON.stringify(renderTree(element)));
+  wireJsonOf(renderTree(element));

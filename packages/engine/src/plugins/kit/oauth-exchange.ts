@@ -109,7 +109,7 @@ function tokenIn(
   return token.safeParse(parsed(text)).data ?? null;
 }
 
-const parsed = (text: string): ReturnType<typeof JSON.parse> => {
+const parsed = (text: string): unknown => {
   try {
     return JSON.parse(text);
   } catch {

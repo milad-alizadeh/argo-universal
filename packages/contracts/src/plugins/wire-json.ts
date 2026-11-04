@@ -20,6 +20,12 @@ export const WireJson: z.ZodType<WireJson> = z.lazy(() =>
   ]),
 );
 
+const wireJson = z.json();
+
+// A value as JSON would carry it, checked: what a Plugin's code gave, kept only as data crosses the wire.
+export const wireJsonOf = (value: unknown): WireJson =>
+  wireJson.parse(JSON.parse(JSON.stringify(value ?? null)));
+
 /*
  * A value that crosses the worker boundary as JSON and comes back as the same type: `Value extends
  * CrossesAsJson<Value>` holds when no part of it is a function, a `bigint` or a `symbol`, so it accepts

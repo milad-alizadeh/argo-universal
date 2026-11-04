@@ -1,15 +1,11 @@
 import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
-import type { WireJson } from '@repo/contracts/plugins/wire';
+import { wireJsonOf, type WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { draws, lastDraw, surface, type Draws } from './plugin-draws-fixtures';
 import { leaf, stack, svg } from './tree-fixtures';
 
 const rows = (count: number): WireJson =>
-  JSON.parse(
-    JSON.stringify(
-      stack(Array.from({ length: count }, (_, n) => leaf(`${n}`, {}))),
-    ),
-  );
+  wireJsonOf(stack(Array.from({ length: count }, (_, n) => leaf(`${n}`, {}))));
 
 // One draw of `/list` showing `count` rows, answered by that generation of the worker.
 type Listed = { count: number; generation: number; known?: string };
@@ -67,9 +63,7 @@ it('draws a page without the SVG the sanitiser refused, and logs what it left ou
   const drawn = pages.answer('atlas', at);
 
   // The worker sends its tree as JSON.
-  const root: WireJson = JSON.parse(
-    JSON.stringify(stack([svg('<svg><script/></svg>', 'unsafe')])),
-  );
+  const root = wireJsonOf(stack([svg('<svg><script/></svg>', 'unsafe')]));
 
   pages.receive(
     { pluginId: 'atlas', generation: 1 },

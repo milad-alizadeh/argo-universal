@@ -14,7 +14,11 @@ import type {
   QueryReadContext,
   QueryResult,
 } from '@repo/contracts/plugins/query-results';
-import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
+import {
+  wireJsonOf,
+  type PluginEvent,
+  type WireJson,
+} from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 import type { ReadPage } from './paged-lists';
 import { queryResult } from './query-result';
@@ -82,7 +86,7 @@ function asRead<Args extends WireJson, Value>(
 ): Read {
   const named: Named<Value> = { run: read };
 
-  return async (args, context) => asJson(await named.run(args, context));
+  return async (args, context) => wireJsonOf(await named.run(args, context));
 }
 
 function run(
@@ -113,7 +117,7 @@ async function listPage(
 
   if (!list) throw new Error('A paged list is read only during its draw');
 
-  return asJson(await list(ListArgs.parse(args).cursor));
+  return wireJsonOf(await list(ListArgs.parse(args).cursor));
 }
 
 // A read that failed, or whose answer could not be sent, is answered with why.
@@ -131,12 +135,6 @@ const answer = (
 
 const reasonOf = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);
-
-const JsonValue = z.json();
-
-// Only JSON crosses to Argo, so what the read answered is kept as JSON would carry it.
-const asJson = <Value>(value: Value): WireJson =>
-  JsonValue.parse(JSON.parse(JSON.stringify(value ?? null)));
 
 // A Loader's reads during one draw: the answer Argo keeps for the Query, or why it has none.
 export type DrawReader = <Query extends PluginQuery>(
