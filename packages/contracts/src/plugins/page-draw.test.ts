@@ -170,18 +170,18 @@ describe('a tree crossing to the App', () => {
   });
 });
 
-describe('DrawRequest', () => {
-  const request = (path: string): unknown => ({
-    pluginId: 'counter',
-    path,
-    pageState: {},
-    pages: 1,
-  });
+const requestAt = (path: string): DrawRequest => ({
+  pluginId: 'counter',
+  path,
+  pageState: {},
+  pages: 1,
+});
 
+describe('DrawRequest', () => {
   it('refuses a Page path longer than an App may ask for', () => {
-    expect(DrawRequest.safeParse(request('/page')).success).toBe(true);
-    expect(DrawRequest.safeParse(request(`/${'a'.repeat(600)}`)).success).toBe(
-      false,
-    );
+    const tooLong = `/${'a'.repeat(600)}`;
+
+    expect(DrawRequest.safeParse(requestAt('/page')).success).toBe(true);
+    expect(DrawRequest.safeParse(requestAt(tooLong)).success).toBe(false);
   });
 });

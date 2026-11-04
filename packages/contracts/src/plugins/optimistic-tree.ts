@@ -33,28 +33,23 @@ export const optimisticTree = (
   });
 
 // The props a node shows with every patch that names it, each prop that fits its kit component and no other.
-const shownWith = (node: WireNode, named: Optimistic): Props =>
-  named
-    .flatMap(({ props }) => Object.entries(props))
-    .reduce(
-      (shown, [name, value]) => withFitting(node.type, shown, name, value),
-      node.props,
-    );
+const shownWith = (node: WireNode, named: Optimistic): Props => {
+  const component = kitComponent(node.type);
 
-function withFitting(
-  type: string,
+  return named
+    .flatMap(({ props }) => Object.entries(props))
+    .filter(([name]) => !unpatchable.has(name))
+    .reduce((shown, change) => fitted(component, shown, change), node.props);
+};
+
+function fitted(
+  component: ReturnType<typeof kitComponent>,
   shown: Props,
-  name: string,
-  value: Props[string],
+  [name, value]: [string, Props[string]],
 ): Props {
   const next = { ...shown, [name]: value };
-  const component = kitComponent(type);
 
-  return component &&
-    !unpatchable.has(name) &&
-    component.props.safeParse(next).success
-    ? next
-    : shown;
+  return component?.props.safeParse(next).success === true ? next : shown;
 }
 
 /*
@@ -104,16 +99,26 @@ function restored(
   ]);
 }
 
-const childrenOf = (node: WireNode): WireNode[] => [
-  ...node.children,
-  ...Object.values(node.slots).flat(),
-];
+// Every node of the tree with its path key, a node's slots walked as its children are.
+function* walk(node: WireNode, path: string): Generator<[WireNode, string]> {
+  yield [node, path];
 
-function* nodesOf(node: WireNode): Generator<WireNode> {
-  yield node;
-
-  for (const child of childrenOf(node)) yield* nodesOf(child);
+  for (const [child, at] of reached(node, path)) yield* walk(child, at);
 }
+
+// The nodes one below this one, with their path keys: its children, then those in its slots.
+const reached = (node: WireNode, path: string): [WireNode, string][] => [
+  ...node.children.map((child): [WireNode, string] => [
+    child,
+    childNodeKey(path, child.key),
+  ]),
+  ...Object.entries(node.slots).flatMap(([name, nodes]) =>
+    nodes.map((child): [WireNode, string] => [
+      child,
+      slotNodeKey(path, name, child.key),
+    ]),
+  ),
+];
 
 // The props each named node shows in the tree, by the node's path key.
 function propsOf(
@@ -122,11 +127,8 @@ function propsOf(
 ): Map<string, Props> {
   const found = new Map<string, Props>();
 
-  patched(root, childNodeKey('', root.key), (node, path) => {
+  for (const [node, path] of walk(root, childNodeKey('', root.key)))
     if (keys.has(node.key)) found.set(path, node.props);
-
-    return undefined;
-  });
 
   return found;
 }
@@ -203,6 +205,7 @@ function patchedSlots(
   change: PropsChange,
 ): WireNode['slots'] {
   const names = Object.keys(slots);
+
   const next = names.map((name) =>
     patchedAll(slots[name] ?? [], change, (child) =>
       slotNodeKey(path, name, child.key),

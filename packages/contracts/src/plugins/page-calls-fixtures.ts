@@ -1,4 +1,3 @@
-import type { PauseClock } from './edit-pauses';
 import { kitComponent } from './kit';
 import type { TreePatch } from './optimistic-tree';
 import type { PageState } from './page-address';
@@ -8,6 +7,7 @@ import {
   type PageEvent,
   type ScopedRun,
 } from './page-calls';
+import { Gate, TestClock } from './page-calls-gates';
 import type { WireNode } from './wire';
 import { childNodeKey } from './wire-node-key';
 
@@ -57,42 +57,6 @@ export function schemaOf(type: string, name: string): PageEvent['schema'] {
   if (!schema) throw new Error(`${type} has no ${name}`);
 
   return schema;
-}
-
-type Timer = { at: number; fire: () => Promise<void> };
-
-// A clock that moves only when the test advances it.
-class TestClock {
-  private now = 0;
-  private readonly timers = new Set<Timer>();
-
-  readonly wait: PauseClock = (ms, fire) => {
-    const timer = { at: this.now + ms, fire };
-
-    this.timers.add(timer);
-
-    return () => this.timers.delete(timer);
-  };
-
-  async advance(ms: number): Promise<void> {
-    this.now += ms;
-    const due = [...this.timers].filter(({ at }) => at <= this.now);
-
-    for (const timer of due) this.timers.delete(timer);
-
-    await Promise.all(due.map(({ fire }) => fire()));
-  }
-}
-
-// A promise the test settles: `settle()` resolves it, `settle(error)` rejects it with that error.
-class Gate {
-  private readonly settled = Promise.withResolvers<void>();
-  readonly promise = this.settled.promise;
-
-  readonly settle = (error?: string): void => {
-    if (error) this.settled.reject(new Error(error));
-    else this.settled.resolve();
-  };
 }
 
 /*

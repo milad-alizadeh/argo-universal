@@ -80,6 +80,7 @@ it('takes back each node of a shared key to the props it had itself', () => {
     { ...stack(text('note', { children: 'First' })), key: 'one' },
     { ...stack(text('note', { children: 'Second' })), key: 'two' },
   );
+
   const patch = [{ key: 'note', props: { children: 'Closing' } }];
 
   const shown = optimisticTree(before, patch);

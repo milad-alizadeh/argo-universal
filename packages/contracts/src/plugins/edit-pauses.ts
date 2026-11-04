@@ -51,7 +51,6 @@ export class EditPauses {
     this.waiting.clear();
   }
 
-  // A change that fails leaves the tree as it was and says why.
   private async made(key: string): Promise<void> {
     const waiting = this.waiting.get(key);
 
@@ -59,13 +58,20 @@ export class EditPauses {
 
     waiting.cancel();
     this.waiting.delete(key);
-    const making = waiting
-      .make()
-      .catch((error: unknown) =>
-        this.failed(error instanceof Error ? error : new Error(String(error))),
-      );
+
+    const making = this.attempt(waiting.make);
+
     this.making.add(making);
     await making;
     this.making.delete(making);
+  }
+
+  // A change that fails leaves the tree as it was and says why.
+  private async attempt(make: () => Promise<void>): Promise<void> {
+    try {
+      await make();
+    } catch (error) {
+      this.failed(error instanceof Error ? error : new Error(String(error)));
+    }
   }
 }

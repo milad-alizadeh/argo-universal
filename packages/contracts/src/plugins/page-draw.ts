@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PageAddress } from './page-address';
-import type { WireJson, WireNode } from './wire';
+import type { WireNode } from './wire';
 import { sameIdentity, sameJson, sameTree, treeHash } from './wire-identity';
 
 // The most pages of a paged list one address shows.
@@ -49,13 +49,6 @@ export type Appended = {
   at: AppendStep[];
   props: WireNode['props'];
   rows: WireNode[];
-};
-
-// A drawn page: its tree, how many pages of its paged list it shows, and `live` when its Loader yields.
-export type DrawnTree<Root = WireJson> = {
-  root: Root;
-  pages: number;
-  live?: true;
 };
 
 // A tree and the hash it is known by.

@@ -36,6 +36,13 @@ export const PageAddress = z.strictObject({
 
 export type PageAddress = z.infer<typeof PageAddress>;
 
+// A drawn page: its tree, how many pages of its paged list it shows, and `live` when its Loader yields.
+export type DrawnTree<Root = WireJson> = {
+  root: Root;
+  pages: number;
+  live?: true;
+};
+
 // An Operation a Loader page's Component event runs, for the Project and Session the page opened for.
 export const PageRun = z.strictObject({
   pluginId: z.string().min(1),
