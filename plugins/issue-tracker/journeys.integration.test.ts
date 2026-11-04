@@ -14,7 +14,6 @@ import {
   refusedTitle,
   tracker,
   trackerPage,
-  type PageView,
 } from './journey-fixture';
 
 const closeIssue = 'Close Issue';
@@ -93,10 +92,6 @@ function shownStatus(tree: WireNode): string {
   return entry ? textOf(entry.node) : '';
 }
 
-// The props the Issue's status and its Action show while its status change runs.
-const optimisticOf = (page: PageView): unknown =>
-  page.find(closeIssue).props.onPress;
-
 function textOf(node: WireNode): string {
   const { text } = node.props;
 
@@ -106,7 +101,8 @@ function textOf(node: WireNode): string {
 it('closes an Issue at once, as an Operation the page shows the new status of until it answers', async () => {
   const page = await openIssue(issueTitle);
 
-  expect(optimisticOf(page)).toEqual({
+  // The props the Issue's status and its Action show while its status change runs.
+  expect(page.find(closeIssue).props.onPress).toEqual({
     operation: 'setStatus',
     args: { number: 42, status: 'closed', projectId: project.id },
     optimistic: [

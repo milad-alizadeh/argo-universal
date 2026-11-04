@@ -4,7 +4,9 @@ export type { PluginTest, PluginTestOptions } from './host';
 
 export { PluginTestView } from './view';
 
-export type { PageOpening, PageView } from './page-view';
+export type { PageOpening } from './page-server';
+
+export type { PageView } from './page-view';
 
 export { test, collectPluginTests, type PluginTestCase } from './test-cases';
 

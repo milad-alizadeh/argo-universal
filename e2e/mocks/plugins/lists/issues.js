@@ -51,10 +51,10 @@ const issuesListDetail = (selected) => (
 export function defineIssues(pages) {
   pages.define(issuesPath, {
     load: () => null,
-    render: () => issuesListDetail(undefined),
+    render: () => issuesListDetail(null),
   });
   pages.define(`${issuesPath}/:id`, {
     load: ({ params }) => issues.find(({ id }) => id === params.id) ?? null,
-    render: (issue) => issuesListDetail(issue ?? undefined),
+    render: issuesListDetail,
   });
 }

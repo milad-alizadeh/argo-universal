@@ -38,14 +38,20 @@ function sceneOf(files: CodeFile[]): Scene {
   return { drawn, rects: fileRects(tiles), captions: fileCaptions(tiles) };
 }
 
-// A press selects a file by its rectangle's short key, a Page state change, so the page draws again with that file's
-// details. The key, not the path, keeps each rectangle's press small enough for 2,500 of them on one page.
+/*
+ * A press selects a file by its rectangle's short key, a Page state change, so the page draws again with that file's
+ * details. The key, not the path, keeps each rectangle's press small enough for 2,500 of them on one page.
+ */
 type Select = (key: string) => ReturnType<PageTo['set']>;
 
 type FileMapProps = { files: CodeFile[]; selected: string; onSelect: Select };
 
 // The App owns pan, zoom and the selection outline; the page's Page state keeps which file is selected.
-export function FileMap({ files, selected, onSelect }: FileMapProps): JSX.Element {
+export function FileMap({
+  files,
+  selected,
+  onSelect,
+}: FileMapProps): JSX.Element {
   const scene = sceneOf(files);
   const rect = scene.rects.find(({ key }) => key === selected);
 

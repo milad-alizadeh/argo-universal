@@ -7,7 +7,9 @@ export interface Answer {
   error?: string;
 }
 
-export type Reading = { state: 'failed' } | { state: 'ready'; answers: FileAnswers };
+export type Reading =
+  | { state: 'failed' }
+  | { state: 'ready'; answers: FileAnswers };
 
 type Measure = keyof FileAnswers;
 
@@ -21,11 +23,9 @@ const settled = (data: ProcessResult, codes: Set<number | null>): boolean =>
 
 const historyAnswered = new Set<number | null>([0]);
 
-function grepFailed({ data, error }: Answer): boolean {
-  if (error !== undefined || data === undefined) return true;
-
-  return !settled(data, grepAnswered);
-}
+// What `git grep` answered, or undefined when it failed.
+const grepData = ({ data }: Answer): ProcessResult | undefined =>
+  data && settled(data, grepAnswered) ? data : undefined;
 
 function answer({ stdout, truncated }: ProcessResult): FileAnswers['lines'] {
   return { stdout, truncated };
@@ -40,18 +40,16 @@ function history({ data }: Answer): FileAnswers['touches'] {
 
 // Failed when either `git grep` fails; ready with all three answers otherwise.
 export function readFiles(answers: Record<Measure, Answer>): Reading {
-  const { lines, branches, touches } = answers;
+  const lines = grepData(answers.lines);
+  const branches = grepData(answers.branches);
 
-  if (grepFailed(lines) || grepFailed(branches) || !lines.data || !branches.data)
-    return { state: 'failed' };
+  if (!lines || !branches) return { state: 'failed' };
+
+  const touches = history(answers.touches);
 
   return {
     state: 'ready',
-    answers: {
-      lines: answer(lines.data),
-      branches: answer(branches.data),
-      touches: history(touches),
-    },
+    answers: { lines: answer(lines), branches: answer(branches), touches },
   };
 }
 

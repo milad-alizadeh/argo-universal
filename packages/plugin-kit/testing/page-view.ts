@@ -1,51 +1,43 @@
-import type { PluginSurface } from '@repo/contracts/plugins/kit';
-import type {
-  PageRun,
-  PageRunAnswer,
-  PageState,
-} from '@repo/contracts/plugins/page-address';
+import type { PageState } from '@repo/contracts/plugins/page-address';
 import {
   treeAfter,
   type DrawAnswer,
-  type DrawRequest,
   type HashedTree,
 } from '@repo/contracts/plugins/page-draw';
 import {
-  Handler,
   PageStateValue,
+  type Action,
   type PageCall,
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
-import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
+import {
+  findByText,
+  findNode,
+  handlerOf,
+  pageHandler,
+  type FoundNode,
+  type NodeMatch,
+} from './page-nodes';
+import {
+  caller,
+  type Opened,
+  type PageOpening,
+  type PageServer,
+} from './page-server';
 
-type Platform = PluginSurface['platform'];
+// A node whose List loads more.
+const paged = (node: WireNode): boolean =>
+  handlerOf(node, 'onLoadMore') !== undefined;
 
-// Where a test opens a Loader page: its Page path, the Project and Session it opens for, its first Page state, and the App's platform.
-export type PageOpening = {
-  path: string;
-  projectId?: string;
-  sessionId?: string;
-  pageState?: PageState;
-  platform?: Platform;
-};
-
-// What a page view asks of the Server: a draw of its address, as the platform's App asks, and an Operation run.
-export type PageServer = {
-  draw: (
-    request: Omit<DrawRequest, 'pluginId'>,
-    platform: Platform,
-  ) => Promise<DrawAnswer>;
-  run: (run: Omit<PageRun, 'pluginId'>) => Promise<PageRunAnswer>;
-};
-
-type Found = NonNullable<ReturnType<typeof findWireNodeEntry>>;
-
-// A node by the text it reads, or by a test of its own.
-export type NodeMatch = string | ((node: WireNode) => boolean);
-
-// The props `findText` reads a node's text from.
-const textProps = ['label', 'title', 'text', 'children', 'accessibilityLabel'];
+// The Page state a change or a bound value sets.
+const stateChange = (
+  call: Exclude<PageCall, { operation: string } | { loadMore: true }>,
+  value: WireJson | undefined,
+): PageState =>
+  'bind' in call
+    ? { [call.bind]: PageStateValue.parse(value ?? '') }
+    : call.pageState;
 
 /*
  * One Loader page as an App shows it (ADR-0050): its Page address, the tree the Server last drew there, and the
@@ -62,8 +54,7 @@ export class PageView {
 
   private constructor(
     private readonly server: PageServer,
-    private readonly opening: Required<Pick<PageOpening, 'path' | 'platform'>> &
-      PageOpening,
+    private readonly opening: Opened,
   ) {
     this.state = opening.pageState ?? {};
   }
@@ -73,10 +64,7 @@ export class PageView {
     server: PageServer,
     opening: PageOpening,
   ): Promise<PageView> {
-    const view = new PageView(server, {
-      ...opening,
-      platform: opening.platform ?? 'web',
-    });
+    const view = new PageView(server, { platform: 'web', ...opening });
 
     await view.draw();
     view.requireDrawn();
@@ -106,40 +94,26 @@ export class PageView {
     return this.failure;
   }
 
-  findText(text: string): Found | undefined {
-    return findWireNodeEntry(this.tree, (node) =>
-      textProps.some((prop) => node.props[prop] === text),
-    );
+  findText(text: string): FoundNode | undefined {
+    return findByText(this.tree, text);
   }
 
   // The node `match` names; none throws.
   find(match: NodeMatch): WireNode {
-    const entry =
-      typeof match === 'string'
-        ? this.findText(match)
-        : findWireNodeEntry(this.tree, match);
-
-    if (!entry) throw new Error(`No node matches ${describe(match)}`);
-
-    return entry.node;
+    return findNode(this.tree, match);
   }
 
   // Draws the address again, naming the tree kept, as the App does when the page is marked stale.
   async draw(pages = this.pages): Promise<void> {
-    const { path, projectId, sessionId, platform } = this.opening;
-    const answer = await this.server.draw(
-      {
-        path,
-        pageState: this.state,
-        ...(projectId && { projectId }),
-        ...(sessionId && { sessionId }),
-        pages,
-        ...(this.kept && { known: this.kept.hash }),
-      },
-      platform,
-    );
+    const request = {
+      path: this.path,
+      pageState: this.state,
+      ...caller(this.opening),
+      pages,
+      ...(this.kept && { known: this.kept.hash }),
+    };
 
-    this.keep(answer);
+    this.keep(await this.server.draw(request, this.opening.platform));
   }
 
   // `onPress` on the node `match` names; the view showing after it, a new one when it navigates.
@@ -149,7 +123,7 @@ export class PageView {
 
   // The next page of the page's paged list, as a List's load more asks for it.
   async loadMore(): Promise<void> {
-    await this.act((node) => handlerOf(node, 'onLoadMore') !== undefined, 'onLoadMore');
+    await this.act(paged, 'onLoadMore');
   }
 
   /*
@@ -162,13 +136,7 @@ export class PageView {
     event: string,
     value?: WireJson,
   ): Promise<PageView> {
-    const handler = handlerOf(this.find(match), event);
-    const named = describe(match);
-
-    if (!handler) throw new Error(`${named} has no ${event}`);
-
-    if ('$event' in handler)
-      throw new Error(`${named} sends ${event} to a mounted view`);
+    const handler = pageHandler(this.tree, match, event);
 
     if ('action' in handler) return this.actOn(handler);
 
@@ -177,48 +145,40 @@ export class PageView {
     return this;
   }
 
-  private async actOn(action: Extract<Handler, { action: string }>) {
+  // A navigation opens the page it names for the same Project, Session and platform; other Actions stay in the App.
+  private async actOn(action: Action): Promise<PageView> {
     if (action.action !== 'navigate') return this;
 
-    const { projectId, sessionId, platform } = this.opening;
-
     return PageView.open(this.server, {
+      ...this.opening,
       path: action.path,
-      projectId,
-      sessionId,
-      platform,
+      pageState: {},
     });
   }
 
-  private async call(call: PageCall, value?: WireJson): Promise<void> {
+  private call(call: PageCall, value?: WireJson): Promise<void> {
     if ('operation' in call) return this.run(call);
 
     if ('loadMore' in call) return this.draw(this.pages + 1);
 
-    if ('bind' in call)
-      return this.change({ [call.bind]: PageStateValue.parse(value ?? '') });
-
-    return this.change(call.pageState);
+    return this.change(stateChange(call, value));
   }
 
   // An empty change draws the same address again from its first page.
   private async change(change: PageState): Promise<void> {
-    if (Object.keys(change).length === 0) return this.draw(1);
+    if (Object.keys(change).length > 0) {
+      this.state = { ...this.state, ...change };
+      this.kept = undefined;
+    }
 
-    this.state = { ...this.state, ...change };
-    this.kept = undefined;
     await this.draw(1);
   }
 
-  private async run(call: Extract<PageCall, { operation: string }>) {
-    const { projectId, sessionId } = this.opening;
-
-    await this.server.run({
-      operation: call.operation,
-      args: call.args,
-      ...(projectId && { projectId }),
-      ...(sessionId && { sessionId }),
-    });
+  private async run({
+    operation,
+    args,
+  }: Extract<PageCall, { operation: string }>): Promise<void> {
+    await this.server.run({ operation, args, ...caller(this.opening) });
     await this.draw();
   }
 
@@ -238,19 +198,3 @@ export class PageView {
     if (this.failure !== undefined) throw new Error(this.failure);
   }
 }
-
-const describe = (match: NodeMatch): string =>
-  typeof match === 'string' ? JSON.stringify(match) : 'the node test';
-
-// The handler a node holds for `event`, on itself or in one of its prop objects.
-function handlerOf(node: WireNode, event: string): Handler | undefined {
-  const own = node.props[event];
-  const within = Object.values(node.props).flatMap((prop) =>
-    isRecord(prop) && event in prop ? [prop[event]] : [],
-  );
-
-  return Handler.safeParse(own ?? within[0]).data;
-}
-
-const isRecord = (value: WireJson): value is Record<string, WireJson> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);

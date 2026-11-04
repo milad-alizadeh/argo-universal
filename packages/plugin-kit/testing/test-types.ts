@@ -27,7 +27,8 @@ import type {
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
-import type { PageOpening, PageView } from './page-view';
+import type { PageOpening } from './page-server';
+import type { PageView } from './page-view';
 import type { TestProjects } from './test-projects';
 import type { PluginMount, PluginTestView } from './view';
 

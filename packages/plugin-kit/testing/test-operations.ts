@@ -2,8 +2,6 @@ import {
   currentPluginSurface,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
-import type { PageRun } from '@repo/contracts/plugins/page-address';
-import type { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import {
   type Asking,
   LoaderPages,
@@ -11,6 +9,7 @@ import {
   type PluginRuntime,
   type PluginService,
 } from '@repo/engine/plugins';
+import type { PageServer } from './page-server';
 import { PageView } from './page-view';
 import type { PluginTest } from './test-types';
 
@@ -19,8 +18,6 @@ type Operations = PluginTest['operations'];
 type Hosted = { service: PluginService; runtime: PluginRuntime };
 
 type RunInput = Parameters<Operations['run']>[0];
-
-type Platform = PluginSurface['platform'];
 
 type Run = Parameters<PluginOperationService['run']>[0];
 
@@ -40,9 +37,16 @@ export function testOperations(
   };
 }
 
-// A draw asks as the platform's App does, a web App unless the test names another.
-const appOn = (platform: PluginSurface['platform'] = 'web'): Asking => ({
+// A draw asks as the platform's App does.
+const appOn = (platform: PluginSurface['platform']): Asking => ({
   surface: currentPluginSurface(platform),
+});
+
+// The Plugin's draws and runs, as a page view asks the Server for them.
+const pageServer = (pages: LoaderPages, pluginId: string): PageServer => ({
+  draw: (request, platform) =>
+    pages.draw({ pluginId, ...request }, appOn(platform)),
+  run: (run) => pages.run({ pluginId, ...run }),
 });
 
 // One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
@@ -52,15 +56,10 @@ export function testPages(
 ): PluginTest['pages'] {
   const operations = new PluginOperationService(service, runtime.operations);
   const pages = new LoaderPages(service, runtime.draws, operations);
-
-  const server = {
-    draw: (request: Omit<DrawRequest, 'pluginId'>, platform?: Platform) =>
-      pages.draw({ pluginId, ...request }, appOn(platform)),
-    run: (run: Omit<PageRun, 'pluginId'>) => pages.run({ pluginId, ...run }),
-  };
+  const server = pageServer(pages, pluginId);
 
   return {
-    draw: ({ platform, ...input }) =>
+    draw: ({ platform = 'web', ...input }) =>
       server.draw({ pageState: {}, pages: 1, ...input }, platform),
     open: (opening) => PageView.open(server, opening),
     run: (input) => server.run(input),

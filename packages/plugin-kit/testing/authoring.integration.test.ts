@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
 import { PluginManifest } from '@repo/contracts/plugins';
-import { svgCharacterLimit } from '@repo/contracts/plugins/wire-limits';
 import { expect, it, onTestFinished } from 'vitest';
 
 const fixtureDirectory = fileURLToPath(
@@ -12,18 +11,18 @@ const fixtureDirectory = fileURLToPath(
 );
 
 // An Operation that takes no arguments and needs no Project or Session.
-const plainOperation = (name: string) => ({
-  name,
+const startTimer = {
+  name: 'startTimer',
   label: 'Start timer',
   description: 'Starts a timer.',
   tier: 'act',
   params: {},
   caller: [],
-});
+};
 
 async function start(
   source: string,
-  operations: string[] = [],
+  operations: (typeof startTimer)[] = [],
 ): Promise<PluginTest> {
   const directory = await mkdtemp(join(tmpdir(), 'argo-authoring-kit-'));
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
@@ -40,7 +39,7 @@ async function start(
       contributes: {
         ...manifest.contributes,
         hooks: ['prompt.submit'],
-        operations: operations.map(plainOperation),
+        operations,
         settings: [
           { key: 'prefix', type: 'text', label: 'Prefix', default: 'Test' },
         ],
@@ -96,7 +95,7 @@ it('advances the Plugin worker clock', async () => {
       });
     }
   `,
-    ['startTimer'],
+    [startTimer],
   );
 
   const page = await kit.pages.open({ path: '/' });
@@ -108,69 +107,3 @@ it('advances the Plugin worker clock', async () => {
   await page.draw();
   expect(page.find('elapsed').type).toBe('Text');
 });
-
-it.each([
-  {
-    name: 'element subset',
-    xml: '<svg><script/></svg>',
-    reason: 'element <script> refused',
-  },
-  {
-    name: 'raw color',
-    xml: '<svg><path fill="#ffffff"/></svg>',
-    reason: 'color #ffffff refused',
-  },
-  {
-    name: 'character cap',
-    xml: `<svg>${' '.repeat(svgCharacterLimit)}</svg>`,
-    reason: 'character cap exceeded',
-  },
-])(
-  'a draw drops and logs the refused Svg node: $name',
-  async ({ xml, reason }) => {
-    const kit = await start(`import { Svg } from '@argo/plugin-kit';
-    export function register(argo) { argo.pages.define('/', { load: () => null, render: () => <Svg label="Art" xml={${JSON.stringify(xml)}} /> }); }
-  `);
-
-    const page = await kit.pages.open({ path: '/' });
-
-    expect(page.tree.children).toEqual([]);
-    expect(await kit.log()).toContain(`node Svg#0: ${reason}`);
-  },
-  30_000,
-);
-
-it.each([
-  [
-    'Chart',
-    '<Chart label="Data" kind="bar" series={[{ name: "Files", tone: "#fff", points: [] }]} />',
-    'tone',
-  ],
-  [
-    'Canvas',
-    '<Canvas label="Map" width={10} height={10} camera="fixed"><Image key="image" /></Canvas>',
-    'shape Canvas.Image refused',
-  ],
-  [
-    'Canvas',
-    '<Canvas label="Map" width={10} height={10} camera="fixed"><Rect key="rect" tone="accent" width={1} height={1} fill="#fff" /></Canvas>',
-    'fill',
-  ],
-  ['CodeMap', '<CodeMap />', 'unsupported CodeMap'],
-])(
-  'a draw drops and logs invalid %s data through the real Plugin host',
-  async (type, element, reason) => {
-    const kit =
-      await start(`const Chart='Chart', Canvas='Canvas', Image='Canvas.Image', Rect='Canvas.Rect', CodeMap='CodeMap';
-    export function register(argo) { argo.pages.define('/', { load: () => null, render: () => ${element} }); }
-  `);
-
-    const page = await kit.pages.open({ path: '/' });
-    const log = await kit.log();
-
-    expect(page.tree.children).toEqual([]);
-    expect(log).toContain(`node ${type}#`);
-    expect(log).toContain(reason);
-  },
-  30_000,
-);

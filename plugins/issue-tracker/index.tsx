@@ -5,9 +5,10 @@ import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
 import { defineIssuePages } from './issue-pages';
 import { defineOverview } from './overview';
-import { defineTrackerPage, projectDetailsItems } from './project-details';
+import { projectDetailsItems } from './project-details';
 import { registerSessionFills } from './session-slots';
 import { registerStatusOperation } from './status-operation';
+import { defineTrackerPage } from './tracker-page';
 import { createTrackerRegistry } from './tracker-registry';
 import { createTrackerStorage } from './tracker-storage';
 

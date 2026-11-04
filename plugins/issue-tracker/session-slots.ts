@@ -37,7 +37,6 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
 type Fills = Omit<Answering, 'toItems'>;
 
 function registerItems(api: Argo, fills: Fills): void {
-
   const answer =
     (toItems: ToItems): SlotProvider =>
     (request) =>

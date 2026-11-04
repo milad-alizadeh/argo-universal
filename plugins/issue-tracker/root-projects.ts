@@ -17,13 +17,15 @@ export async function rootProjects(
   deps: Pick<IssueDeps, 'listProjects'>,
   selectedId?: string,
 ): Promise<RootProjects> {
-  const projects = await deps.listProjects().catch(() => undefined);
+  const projects = await deps.listProjects().catch(() => null);
   const shown = projects ?? [];
 
   return {
     projects: shown,
     project: chosenProject(shown, selectedId),
-    message: projectsMessage(projects, selectedId),
+    message: projects
+      ? projectsMessage(projects, selectedId)
+      : 'Could not load Projects.',
   };
 }
 
@@ -36,11 +38,9 @@ const chosenProject = (
     : projects.find(({ id }) => id === selectedId);
 
 function projectsMessage(
-  rows: Project[] | undefined,
+  rows: Project[],
   selectedId: string | undefined,
 ): string {
-  if (!rows) return 'Could not load Projects.';
-
   if (rows.length === 0) return 'No Projects yet.';
 
   return chosenProject(rows, selectedId) ? loadingIssues : goneMessage;

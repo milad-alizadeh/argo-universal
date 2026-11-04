@@ -39,10 +39,7 @@ type RowProps = Pick<
   'id' | 'leading' | 'title' | 'subtitle' | 'finished' | 'onPress' | 'meta'
 >;
 
-const rowProps = (
-  { project, to }: RowSource,
-  issue: Issue,
-): RowProps => ({
+const rowProps = ({ project, to }: RowSource, issue: Issue): RowProps => ({
   id: String(issue.number),
   leading: statusMark(issue, `mark-${issue.number}`),
   title: issue.title,

@@ -22,22 +22,31 @@ type RootData = { choice: RootProjects; overview: SidebarOverview };
 export function defineIssuePages(argo: Argo, deps: IssueDeps): void {
   argo.pages.define('/', {
     load: (input) => loadRoot(deps, input),
-    render: (data, to) => <RootPage rows={sidebar(data, to)} />,
+    render: rootPage,
   });
   argo.pages.define(projectPattern, {
     load: (input) => loadRoot(deps, input, projectOf(input)),
-    render: (data, to) => <RootPage rows={sidebar(data, to)} />,
+    render: rootPage,
   });
   argo.pages.define(issuePattern, {
     load: (input) => loadIssuePage(deps, input),
-    render: (data, to, { params }) => (
-      <RootPage rows={sidebar(data, to)} detail={issueDetail(data, to, params)} />
-    ),
+    render: issuePage,
   });
 }
 
-const projectOf = ({ params }: Input): string =>
-  pathText(params.project ?? '');
+const rootPage = (data: RootData, to: To): JSX.Element => (
+  <RootPage rows={sidebar(data, to)} />
+);
+
+const issuePage = (
+  data: IssuePageData,
+  to: To,
+  { params }: Input,
+): JSX.Element => (
+  <RootPage rows={sidebar(data, to)} detail={issueDetail(data, to, params)} />
+);
+
+const projectOf = ({ params }: Input): string => pathText(params.project ?? '');
 
 // The Projects, and for the one the page is for, the overview Argo keeps for it; a pull reads it again.
 async function loadRoot(
@@ -99,14 +108,12 @@ function issueDetail(
   to: To,
   params: Input['params'],
 ): JSX.Element | null {
-  const project = choice.project;
-
-  if (!project || !detail) return null;
+  if (!choice.project || !detail) return null;
 
   return (
     <IssueDetailPage
       data={detail}
-      projectId={project.id}
+      projectId={choice.project.id}
       number={Number(params.number)}
       to={to}
     />

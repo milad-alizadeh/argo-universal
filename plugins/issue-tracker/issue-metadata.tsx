@@ -11,17 +11,25 @@ export const statusDotKey = (number: number): string => `dot-${number}`;
 export function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
   return (
     <Metadata>
-      <Metadata.StatusDot
-        key={statusDotKey(issue.number)}
-        title="Status"
-        text={statuses[issue.status].text}
-        tone={statuses[issue.status].tone}
-      />
+      <IssueStatus issue={issue} />
       <IssueLabels labels={issue.labels} />
       <Blockers issue={issue} />
       <Assignees assignees={issue.assignees} />
       <GitHubLink issue={issue} />
     </Metadata>
+  );
+}
+
+function IssueStatus({ issue }: { issue: Issue }): JSX.Element {
+  const { text, tone } = statuses[issue.status];
+
+  return (
+    <Metadata.StatusDot
+      key={statusDotKey(issue.number)}
+      title="Status"
+      text={text}
+      tone={tone}
+    />
   );
 }
 

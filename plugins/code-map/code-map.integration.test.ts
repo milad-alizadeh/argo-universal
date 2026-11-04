@@ -83,7 +83,9 @@ it('draws each text file of the Project, named by its path', async () => {
 
 it('selects a file and shows what the map measured', async () => {
   const view = await codeMap();
-  await view.press((node) => node.type === rectType && node.props.label === app);
+  await view.press(
+    (node) => node.type === rectType && node.props.label === app,
+  );
 
   expect(selectedRect(view)).toMatchObject({ props: { label: app } });
   expect(field(view, 'Lines')).toMatchObject({ props: { text: '120' } });

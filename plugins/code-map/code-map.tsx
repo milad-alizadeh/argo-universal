@@ -11,7 +11,7 @@ import { projectFiles } from './project-files';
 import { loadFiles } from './reading';
 
 // The file the map has selected, by its rectangle's key, or none.
-export type MapState = { selected: string };
+type MapState = { selected: string };
 
 // Git's files, or none when git could not read the Project.
 type MapData = { files: CodeFile[] } | null;
@@ -41,23 +41,25 @@ type MapProps = {
   to: PageTo<MapState>;
 };
 
+const unreadable = (
+  <EmptyState
+    title="Could not read this Project’s files."
+    description="The Code Map needs the Project to be a git repository."
+  />
+);
+
+const noFiles = (
+  <EmptyState
+    title="No text files yet"
+    description="The Code Map draws the text files git tracks in this Project."
+  />
+);
+
 // Draws the Project's files as a treemap once git has answered.
 function CodeMap({ data, selected, to }: MapProps): JSX.Element {
-  if (!data)
-    return (
-      <EmptyState
-        title="Could not read this Project’s files."
-        description="The Code Map needs the Project to be a git repository."
-      />
-    );
+  if (!data) return unreadable;
 
-  if (data.files.length === 0)
-    return (
-      <EmptyState
-        title="No text files yet"
-        description="The Code Map draws the text files git tracks in this Project."
-      />
-    );
+  if (data.files.length === 0) return noFiles;
 
   return (
     <FileMap

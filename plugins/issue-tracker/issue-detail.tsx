@@ -87,7 +87,7 @@ function StartSessionAction({ issue, projectId }: ShownProps): JSX.Element {
 }
 
 // The status Action shares its key with the Issue's filter row's, so one Operation's patch repaints both.
-export const statusActionKey = (number: number): string => `status-${number}`;
+const statusActionKey = (number: number): string => `status-${number}`;
 
 /*
  * Closes or reopens the Issue as the `setStatus` Operation; the status and the Action show the new status at
@@ -96,22 +96,29 @@ export const statusActionKey = (number: number): string => `status-${number}`;
 function StatusAction({ issue, projectId, to }: ShownProps): JSX.Element {
   const { label, icon, to: next } = statuses[issue.status].change;
   const { number } = issue;
+  const press = setStatus(to, { number, status: next, projectId });
 
   return (
     <Action
       key={statusActionKey(number)}
       label={label}
       icon={icon}
-      onPress={to.run(
-        'setStatus',
-        { number, status: next, projectId },
-        { optimistic: statusPatches(number, next) },
-      )}
+      onPress={press}
     />
   );
 }
 
 type Patches = NonNullable<ReturnType<PageTo['run']>['optimistic']>;
+
+type StatusChange = { number: number; status: IssueStatus; projectId: string };
+
+const setStatus = (
+  to: PageTo,
+  change: StatusChange,
+): ReturnType<PageTo['run']> =>
+  to.run('setStatus', change, {
+    optimistic: statusPatches(change.number, change.status),
+  });
 
 const statusPatches = (number: number, status: IssueStatus): Patches => [
   {
