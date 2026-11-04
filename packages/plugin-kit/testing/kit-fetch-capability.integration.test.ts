@@ -1,10 +1,9 @@
-import type { PluginTestView } from '@argo/plugin-kit/testing';
+import type { PageView } from '@argo/plugin-kit/testing';
 import type { PluginCapability } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
 import { localhost } from '../../engine/mocks/fetch-fixture-server';
 import { fixtureNetwork, httpsServer } from '../../engine/mocks/probe-plugin';
 import { dataFixture } from '../mocks/data-fixture';
-import { pluginTestTimeoutMs } from './test-timeout';
 
 type Recorded = { port: number; requested: string[] };
 
@@ -24,35 +23,35 @@ async function recordingServer(): Promise<Recorded> {
 async function postsPage(
   port: number,
   capabilities: PluginCapability[],
-): Promise<PluginTestView> {
+): Promise<PageView> {
   const fixture = await dataFixture(
-    `import { Text, useData } from '@argo/plugin-kit';
+    `import { Text } from '@argo/plugin-kit';
+    const posts = { api: 'fetch', url: 'https://localhost:${port}/posts' };
     export function register(argo) {
-      argo.pages.register('/', () => {
-        const { data, error } = useData({ api: 'fetch', url: 'https://localhost:${port}/posts' });
-        return <Text>{error ?? (data ? data.status + ':' + data.body : 'empty')}</Text>;
+      argo.pages.define('/', {
+        load: ({ read }) => read(posts).then((data) => data.status + ':' + data.body, (error) => error.message),
+        render: (text) => <Text>{text}</Text>,
       });
     }`,
     {},
     capabilities,
   );
 
-  return (await fixture.start({ network: await fixtureNetwork() })).page();
+  return (await fixture.start({ network: await fixtureNetwork() })).pages.open({
+    path: '/',
+  });
 }
 
-// Starting a Plugin host and answering over TLS outruns the view's own wait on a busy Mac.
-async function shows(page: PluginTestView, text: string): Promise<void> {
-  await expect
-    .poll(() => page.findText(text), { timeout: pluginTestTimeoutMs })
-    .toBeDefined();
-}
+const shows = (page: PageView, text: string): void => {
+  expect(page.findText(text)).toBeDefined();
+};
 
 it('answers a page fetching the host its manifest declares', async () => {
   const { port, requested } = await recordingServer();
 
   const page = await postsPage(port, [localhost(port)]);
 
-  await shows(page, '200:posts');
+  shows(page, '200:posts');
   expect(requested).toEqual(['/posts']);
 });
 
@@ -63,6 +62,6 @@ it('refuses a page fetching a host its manifest does not declare', async () => {
     { kind: 'fetch', host: 'example.com', reason: 'Some other host' },
   ]);
 
-  await shows(page, `Refused: localhost:${port} is not a declared host`);
+  shows(page, `Refused: localhost:${port} is not a declared host`);
   expect(requested).toEqual([]);
 });

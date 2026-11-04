@@ -1,34 +1,23 @@
-// A Plugin mounted through the kit the way a real one is: the page registers, the Engine draws it, a dispatch patches it.
-export const kitListsSource = `import { Action, Image, List, ListItem, Screen, Svg, Text, applyListMove, useEffect, useState } from '@argo/plugin-kit';
+/*
+ * A Plugin drawn through the kit the way a real one is: its Loader pages define, the Engine draws them, and a press
+ * acts on what the tree holds. The board stays a mounted page: a Loader page cannot yet take a move's payload.
+ */
+export const kitListsSource = `import { Action, Image, List, ListItem, Screen, Svg, Text, applyListMove, useState } from '@argo/plugin-kit';
 
 const xml = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 9L10 1" stroke="currentColor" fill="none"/></svg>';
 
-function Gallery({ assets }) {
-  const [picture, setPicture] = useState();
-  const [selected, select] = useState('');
-  useEffect(() => {
-    void assets.resolve({ asset: 'assets/poster.jpeg' }).then((asset) => setPicture(asset));
-  }, []);
-  return (
-    <Screen title="Gallery">
-      <List
-        direction="horizontal"
-        tileSize="md"
-        aspect="landscape"
-        items={['Overview', 'Checkout']}
-        renderItem={(title) => <ListItem key={title} title={title} media={<Image source={picture} accessibilityLabel={title + ' preview'} />} />}
-      />
-      <List
-        layout="grid"
-        columns="auto"
-        tileSize="sm"
-        aspect="landscape"
-        items={[{ id: '1', title: 'Metric 1' }, { id: '2', title: 'Metric 2' }]}
-        renderItem={(metric) => <ListItem key={metric.id} title={metric.title} media={<Svg xml={xml} label={metric.title + ' trend'} />} selected={metric.id === selected} onPress={() => select(metric.id)} />}
-      />
-    </Screen>
-  );
-}
+const gallery = (picture, selected, to) => (
+  <Screen title="Gallery">
+    <List direction="horizontal" tileSize="md" aspect="landscape">
+      {['Overview', 'Checkout'].map((title) => <ListItem key={title} title={title} media={<Image source={picture} accessibilityLabel={title + ' preview'} />} />)}
+    </List>
+    <List layout="grid" columns="auto" tileSize="sm" aspect="landscape">
+      {[{ id: '1', title: 'Metric 1' }, { id: '2', title: 'Metric 2' }].map((metric) => (
+        <ListItem key={metric.id} title={metric.title} media={<Svg xml={xml} label={metric.title + ' trend'} />} selected={metric.id === selected} onPress={to.set({ selected: metric.id })} />
+      ))}
+    </List>
+  </Screen>
+);
 
 const lanes = [
   { id: 'todo', title: 'To do', rows: [{ id: 'login', title: 'Fix login' }, { id: 'docs', title: 'Write docs' }] },
@@ -50,37 +39,45 @@ function Board() {
   );
 }
 
-function Log() {
-  const [lines, setLines] = useState(Array.from({ length: 80 }, (_, index) => 'Line ' + (index + 1)));
-  const append = () => setLines([...lines, 'Line ' + (lines.length + 1)]);
-  return (
-    <Screen title="Log" actions={<Action label="Append line" icon="add" onPress={append} />}>
-      <List anchor="end" items={lines} renderItem={(line) => <Text key={line}>{line}</Text>} />
-    </Screen>
-  );
-}
+const lineTexts = (count) => Array.from({ length: count }, (_, index) => 'Line ' + (index + 1));
 
-const rows = (count) => Array.from({ length: count }, (_, index) => ({ id: index + 1, title: 'Post ' + (index + 1) }));
+const log = (count, to) => (
+  <Screen title="Log" actions={<Action label="Append line" icon="add" onPress={to.set({ lines: count + 1 })} />}>
+    <List anchor="end">{lineTexts(count).map((line) => <Text key={line}>{line}</Text>)}</List>
+  </Screen>
+);
 
-function Paged() {
-  const [count, setCount] = useState(3);
-  return (
-    <Screen title="Paged">
-      <List
-        accessibilityLabel="Posts"
-        items={rows(count)}
-        renderItem={(post) => <ListItem key={post.id} id={String(post.id)} title={post.title} />}
-        pagination={{ hasMore: count < 6, onLoadMore: () => setCount(count + 3) }}
-        isLoading={false}
-        empty={<Text>No posts</Text>}
-      />
-    </Screen>
-  );
-}
+// Six posts, three a page; a cursor is the index the next page starts at.
+const posts = Array.from({ length: 6 }, (_, index) => ({ id: index + 1, title: 'Post ' + (index + 1) }));
+
+const postsPage = (cursor) => {
+  const from = cursor === null ? 0 : Number(cursor);
+  return { items: posts.slice(from, from + 3), cursor: from + 3 < posts.length ? String(from + 3) : null };
+};
+
+const paged = (list) => (
+  <Screen title="Paged">
+    <List accessibilityLabel="Posts" pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }} empty={<Text>No posts</Text>}>
+      {list.items.map((post) => <ListItem key={post.id} id={String(post.id)} title={post.title} />)}
+    </List>
+  </Screen>
+);
 
 export function register(argo) {
-  argo.pages.register('/gallery', () => <Gallery assets={argo.assets} />);
+  argo.pages.define('/gallery', {
+    state: { selected: '' },
+    load: () => argo.assets.resolve({ asset: 'assets/poster.jpeg' }),
+    render: (picture, to, { state }) => gallery(picture, state.selected, to),
+  });
   argo.pages.register('/board', Board);
-  argo.pages.register('/log', Log);
-  argo.pages.register('/paged', Paged);
+  argo.pages.define('/log', {
+    state: { lines: 80 },
+    load: () => null,
+    render: (_data, to, { state }) => log(state.lines, to),
+  });
+  argo.pages.define('/paged', {
+    load: () => null,
+    list: (_input, cursor) => postsPage(cursor),
+    render: (_data, _to, { list }) => paged(list),
+  });
 }`;

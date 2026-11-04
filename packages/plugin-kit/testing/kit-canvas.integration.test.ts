@@ -1,14 +1,18 @@
-import type { PluginTestView } from '@argo/plugin-kit/testing';
+import type { PageView, PluginTestView } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import { startKit } from '../mocks/kit-page-helpers';
 
-type Node = NonNullable<PluginTestView['tree']>;
+type Node = PageView['tree'];
 
 type Patch = Extract<NonNullable<PluginTestView['message']>, { type: 'patch' }>;
 
 type SetProps = Extract<Patch['ops'][number], { op: 'setProps' }>;
 
-// Canvas is the kit part and a Plugin sends shapes as data (ADR-0028), so each platform mounts the same shapes.
+/*
+ * Canvas is the kit part and a Plugin sends shapes as data (ADR-0028), so each platform draws the same shapes.
+ * `/files` is a Loader page whose selection is Page state; `/` stays a mounted page, whose keyed patches only the
+ * mounted path sends.
+ */
 const source = `import { Action, Canvas, Screen, Stack, useState } from '@argo/plugin-kit';
 
 const days = Array.from({ length: 4 }, (_, index) => ({ key: 'day-' + index, x: 8 + index * 29, y: 8 }));
@@ -35,37 +39,35 @@ function Page() {
   );
 }
 
+const projectFiles = (selected, to) => (
+  <Canvas width={160} height={80} camera="pan-zoom" label="Project files" selectedKey={selected}>
+    {files.map((file) => (
+      <Canvas.Rect key={file.key} x={file.x} y={file.y} width={100} height={28} tone="accent" intensity={0.25} label={file.label} onPress={to.set({ selected: file.key })} />
+    ))}
+  </Canvas>
+);
+
 export function register(argo) {
   argo.pages.register('/', Page);
+  argo.pages.define('/files', {
+    state: { selected: 'packages-0' },
+    load: () => null,
+    render: (_data, to, { state }) => projectFiles(state.selected, to),
+  });
 }`;
 
-function canvases(node: Node | null): Node[] {
-  if (!node) return [];
-
-  if (node.type === 'Canvas') return [node];
-
-  return node.children.flatMap(canvases);
-}
-
 for (const platform of ['ios', 'android', 'desktop'] as const)
-  it(`mounts Canvas.Rect shapes and selects one on press on ${platform}`, async () => {
+  it(`draws Canvas.Rect shapes and selects one on press on ${platform}`, async () => {
     const kit = await startKit(source);
-    const page = await kit.mount({ page: '/', surface: { platform } });
-    expect((await page.find('Day 0')).type).toBe('Canvas.Rect');
-    expect((await page.find('packages/file-1.ts')).type).toBe('Canvas.Rect');
+    const page = await kit.pages.open({ path: '/files', platform });
+    expect(page.find('packages/file-0.ts').type).toBe('Canvas.Rect');
 
-    const selectedKey = (): string => {
-      const canvas = canvases(page.tree).find(
-        (node) => node.props.label === 'Project files',
-      );
+    const selectedKey = (): Node['props'][string] | undefined =>
+      page.find('Project files').props.selectedKey;
 
-      return JSON.stringify(canvas?.props.selectedKey);
-    };
-
-    expect(selectedKey()).toBe('"packages-0"');
+    expect(selectedKey()).toBe('packages-0');
     await page.press('packages/file-1.ts');
-    await kit.clock.advance(16);
-    await page.waitFor(() => selectedKey() === '"packages-1"');
+    expect(selectedKey()).toBe('packages-1');
   });
 
 it('sends one keyed patch when one shape changes', async () => {

@@ -5,7 +5,7 @@ import {
   webSurface as surface,
 } from '../mocks/kit-page-helpers';
 
-const source = `import { Audio, Pill, Screen, ScrollView, Stack, Surface, Table, Text, Video, useEffect, useState } from '@argo/plugin-kit';
+const source = `import { Audio, Pill, Screen, ScrollView, Stack, Surface, Table, Video, useState } from '@argo/plugin-kit';
 
 const columns = [
   { id: 'workflow', title: 'Workflow' },
@@ -40,32 +40,31 @@ function Runs() {
   );
 }
 
-function Media({ assets }) {
-  const [media, setMedia] = useState(null);
-  useEffect(() => {
-    void Promise.all([
-      assets.resolve({ asset: 'assets/clip.mp4' }),
-      assets.resolve({ asset: 'assets/poster.jpeg' }),
-      assets.resolve({ asset: 'assets/chime.mp3' }),
-    ]).then(([clip, poster, chime]) => setMedia({ clip, poster, chime }));
-  }, []);
-  return (
-    <ScrollView>
-      <Surface kind="background" padding={4}>
-        {media ? (
-          <Stack direction="column" gap={4}>
-            <Video source={media.clip} poster={media.poster} accessibilityLabel="Clip" />
-            <Audio source={media.chime} accessibilityLabel="Chime" />
-          </Stack>
-        ) : <Text>Loading media</Text>}
-      </Surface>
-    </ScrollView>
-  );
-}
+// The media's Server references, resolved before the page draws.
+const resolveMedia = async (assets) => {
+  const [clip, poster, chime] = await Promise.all([
+    assets.resolve({ asset: 'assets/clip.mp4' }),
+    assets.resolve({ asset: 'assets/poster.jpeg' }),
+    assets.resolve({ asset: 'assets/chime.mp3' }),
+  ]);
+  return { clip, poster, chime };
+};
 
+const media = ({ clip, poster, chime }) => (
+  <ScrollView>
+    <Surface kind="background" padding={4}>
+      <Stack direction="column" gap={4}>
+        <Video source={clip} poster={poster} accessibilityLabel="Clip" />
+        <Audio source={chime} accessibilityLabel="Chime" />
+      </Stack>
+    </Surface>
+  </ScrollView>
+);
+
+// The runs table stays a mounted page: a Loader page cannot yet take a sort's payload.
 export function register(argo) {
   argo.pages.register('/runs', Runs);
-  argo.pages.register('/media', () => <Media assets={argo.assets} />);
+  argo.pages.define('/media', { load: () => resolveMedia(argo.assets), render: media });
 }`;
 
 const start = (): ReturnType<typeof startKit> =>
@@ -91,9 +90,9 @@ it('sorts a table of runs when Argo reports the new sort', async () => {
 
 it('plays a clip and a sound named by the Server reference, not a Plugin host', async () => {
   const kit = await start();
-  const page = await kit.mount({ page: '/media', surface });
-  const clip = await page.find('Clip');
-  const chime = await page.find('Chime');
+  const page = await kit.pages.open({ path: '/media' });
+  const clip = page.find('Clip');
+  const chime = page.find('Chime');
   expect(clip.type).toBe('Video');
   expect(Object.keys(clip.props.source ?? {}).toSorted()).toEqual([
     'format',

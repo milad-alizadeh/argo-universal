@@ -1,33 +1,29 @@
-import { Screen, Button, Text, useState, type Argo } from '@argo/plugin-kit';
-import { jsx, type JSX } from '@argo/plugin-kit/jsx-runtime';
+import { Button, Screen, Text, type Argo } from '@argo/plugin-kit';
 
-type SetValue = (value: string) => void;
+type HarnessState = { value: string; ran: boolean };
 
-function Harness({ argo }: { argo: Argo }): JSX.Element {
-  const [value, setValue] = useState('empty');
+// What the page shows: the search's text, or the fixture CLI's answer once Run fixture asked for it.
+async function shown(argo: Argo, { value, ran }: HarnessState): Promise<string> {
+  if (!ran) return value;
 
-  return (
-    <Screen
-      key="search"
-      title="Harness"
-      search={{ label: 'Search' }}
-      value={value}
-      onChangeText={setValue}
-    >
-      <Button label="Run fixture" onPress={runFixture(argo, setValue)} />
-      <Text>{value}</Text>
-    </Screen>
-  );
+  return (await argo.process.run(['fixture-cli'])).stdout.trim();
 }
 
-const runFixture =
-  (argo: Argo, setValue: SetValue): (() => Promise<void>) =>
-  async () => {
-    const result = await argo.process.run(['fixture-cli']);
-
-    setValue(result.stdout.trim());
-  };
-
 export function register(argo: Argo): void {
-  argo.pages.register('/', () => jsx(Harness, { argo }));
+  argo.pages.define('/', {
+    state: { value: 'empty', ran: false },
+    load: ({ state }) => shown(argo, state),
+    render: (text, to) => (
+      <Screen
+        key="search"
+        title="Harness"
+        search={{ label: 'Search' }}
+        value={text}
+        onChangeText={to.bind('value')}
+      >
+        <Button label="Run fixture" onPress={to.set({ ran: true })} />
+        <Text>{text}</Text>
+      </Screen>
+    ),
+  });
 }
