@@ -3,6 +3,7 @@ import type {
   PageAddress,
 } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent } from '../protocol/runtime';
+import type { Failure } from '../protocol/runtime-status';
 import type { CallKind, CallOutcome, Ended } from '../runtime/worker-calls';
 
 // One draw call to a worker: what it asks, what the worker answers, and the Loader reads it holds; a live draw's frames are routed apart.
@@ -12,7 +13,7 @@ export type Answered = Exclude<
 >;
 
 // `stopped` when the Plugin stopped or was not running: why the Plugin stopped, if it crashed, is its own failure.
-type Failed = { ok: false; error: string; stopped?: true };
+type Failed = Failure & { stopped?: true };
 
 // The worker's answer, or why none came: it stopped, was not running or ran out of time.
 export type Outcome = Answered | Failed;
@@ -23,7 +24,7 @@ export type DrawAt = Omit<
   'type' | 'id'
 >;
 
-export type Loaded = { ok: true } | { ok: false; error: string };
+export type Loaded = { ok: true } | Failure;
 
 export const failed = (error: string): Failed => ({ ok: false, error });
 

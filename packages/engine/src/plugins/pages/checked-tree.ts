@@ -5,12 +5,13 @@ import {
   pluginMessageBytes,
   pluginPageBytes,
 } from '@repo/contracts/plugins/wire-limits';
+import type { Failure } from '../protocol/runtime-status';
 import { sanitizeTree, type RefusedSvg } from '../visual/sanitize-tree';
 import type { Drawn } from './plugin-draws';
 
 export type Checked =
   | { ok: true; root: WireNode; refused: RefusedSvg[] }
-  | { ok: false; error: string };
+  | Failure;
 
 type TreeKind = 'page' | 'replacement';
 

@@ -6,6 +6,7 @@ import {
 } from '@repo/contracts/plugins/page-draw';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { Failure } from '../protocol/runtime-status';
 import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
 import { checkedPage } from './checked-tree';
 import { DefinedPatterns } from './defined-patterns';
@@ -36,7 +37,7 @@ import { drawsForApp, forApp } from './wire-minimum';
 // A drawn tree as checked for any App to draw, `live` when its Loader yields.
 export type Drawn =
   | { ok: true; root: WireNode; pages: number; live?: true }
-  | { ok: false; error: string };
+  | Failure;
 
 export type { LoadAt } from './draw-calls';
 

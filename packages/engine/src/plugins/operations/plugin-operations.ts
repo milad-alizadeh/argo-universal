@@ -1,6 +1,7 @@
 import { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
+import type { Failure } from '../protocol/runtime-status';
 import type {
   Caller,
   CallOutcome,
@@ -31,7 +32,7 @@ const eventOf = (
   { serverDevice: _serverDevice, ...request }: Request,
 ): OperationEvent => ({ type: 'operation', id, ...request });
 
-export type Answer = { ok: true; result: Json } | { ok: false; error: string };
+export type Answer = { ok: true; result: Json } | Failure;
 
 const failed = (error: string): Answer => ({ ok: false, error });
 
