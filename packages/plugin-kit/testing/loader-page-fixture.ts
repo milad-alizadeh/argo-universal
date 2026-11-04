@@ -16,7 +16,8 @@ const close = {
 
 /*
  * The one Plugin the kit's Loader page tests share: a Loader page over a paged list it keeps in memory, with a
- * search, load more, a refresh and a write, and two pages reading one named read.
+ * search, load more, a refresh and a write, one whose cursor repeats the boundary item, and two pages reading one
+ * named read.
  */
 const source = `import { List, ListItem, Screen, useState } from '@argo/plugin-kit';
 
@@ -82,6 +83,23 @@ export function register(argo) {
           ))}
         </List>
       </Screen>
+    ),
+  });
+
+  // Numbers 7 down to 1, three a page; a cursor is the last number shown and the next page starts at it.
+  argo.pages.define('/inclusive', {
+    load: () => null,
+    list: async (_input, cursor) => {
+      const top = cursor === null ? 7 : Number(cursor);
+      const items = [top, top - 1, top - 2].filter((number) => number > 0);
+      return { items, cursor: items.length === 3 ? String(items.at(-1)) : null };
+    },
+    render: (_data, _to, { list }) => (
+      <List pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }}>
+        {list.items.map((number) => (
+          <Row key={String(number)} number={number} />
+        ))}
+      </List>
     ),
   });
 

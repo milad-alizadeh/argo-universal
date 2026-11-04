@@ -1,5 +1,12 @@
+import type { WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
-import { issuesPath, listed, start, treeOf } from './loader-page-fixture';
+import {
+  issuesPath,
+  listed,
+  start,
+  treeOf,
+  type Kit,
+} from './loader-page-fixture';
 
 it('reads only the next page for a load more, and answers only its rows', async () => {
   const kit = await start();
@@ -64,5 +71,41 @@ it('runs a declared Operation, marks every Loader page stale and reads the shown
   const { root } = treeOf(await kit.pages.draw({ path: issuesPath, pages: 2 }));
 
   expect(root.children[0]?.children[2]?.props.finished).toBe(true);
+  expect(await listed(kit)).toBe('null,2,null,2');
+});
+
+type Shown = { keys: string[]; pagination: WireJson | undefined };
+
+const shown = (answer: Awaited<ReturnType<Kit['pages']['draw']>>): Shown => {
+  const { props, children } = treeOf(answer).root;
+
+  return { keys: children.map(({ key }) => key), pagination: props.pagination };
+};
+
+it('drops the item a cursor repeats at a page boundary, and has no more once a page comes back short', async () => {
+  const kit = await start();
+
+  const three = shown(await kit.pages.draw({ path: '/inclusive', pages: 3 }));
+
+  expect(three).toMatchObject({
+    keys: ['7', '6', '5', '4', '3', '2', '1'],
+    pagination: { hasMore: true },
+  });
+
+  const four = shown(await kit.pages.draw({ path: '/inclusive', pages: 4 }));
+
+  expect(four).toMatchObject({
+    keys: ['7', '6', '5', '4', '3', '2', '1'],
+    pagination: { hasMore: false },
+  });
+});
+
+it('keeps each address its own pages', async () => {
+  const kit = await start();
+
+  await kit.pages.draw({ path: issuesPath, pages: 2 });
+  await kit.pages.draw({ path: '/projects/site/issues', pages: 2 });
+
+  // The second address reads its second page itself rather than the first address's.
   expect(await listed(kit)).toBe('null,2,null,2');
 });
