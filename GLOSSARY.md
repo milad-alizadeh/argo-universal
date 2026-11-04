@@ -207,7 +207,7 @@ What a Plugin's `argo` call runs for: the draw, the Operation run or the Project
 _Avoid_: Call context, call scope, caller
 
 **Query holder**:
-What keeps a Query's answer wanted: a view watching it, or a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
+What keeps a Query's answer wanted: a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration
 
 **Background pass**:

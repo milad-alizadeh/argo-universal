@@ -20,7 +20,7 @@
  * the Plugin's generation ends; it then stops the Loader.
  *
  * `run(call, asking)` runs one of the Plugin's declared Operations through the ADR-0044 registry's checks
- * (the manifest's params and tier, a running worker) and answers its result. It runs for the asking
+ * (the manifest's params and caller needs, a running worker) and answers its result. It runs for the asking
  * Connection, so the handler's own `argo` calls reach the run's Project and know whether it was asked from
  * the Server Device. It throws what the Operation throws, so the App rolls back and says why.
  *

@@ -4,7 +4,7 @@ import { build, type BuildOptions, type BuildResult } from 'esbuild';
 let bundled: Promise<string> | null = null;
 
 /*
- * The kit (React, the reconciler and the host config) and the Plugin API run inside each Plugin's
+ * The kit (the JSX runtime and the kit components) and the Plugin API run inside each Plugin's
  * context, so no object from the worker's realm reaches Plugin code. They are bundled once per
  * worker, from source.
  */
