@@ -3,7 +3,7 @@ import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
 import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
-import { PluginDraws } from '../pages';
+import { PageChanges, PluginDraws } from '../pages';
 import type { PluginStatus } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
@@ -23,6 +23,8 @@ export class RuntimeResources {
   readonly items;
   readonly operations;
   readonly draws;
+  // Hears each running worker's `argo.changed()` and Operations, and the addresses whose reads changed.
+  readonly changes;
   private readonly workers;
   private readonly identities = new Map<
     string,
@@ -39,20 +41,32 @@ export class RuntimeResources {
     this.data = this.pluginData(input);
     this.items = new PluginSlotItems(this.workers);
     this.operations = new PluginOperations(this.workers);
-    this.draws = new PluginDraws({
-      workers: this.workers,
-      log: input.log,
-      written: (pluginId): void => this.data.written(pluginId),
-      drawings: this.failures,
-    });
+    this.changes = this.pageChanges();
+    this.draws = this.pluginDraws(input);
     this.background = this.backgroundPasses(input);
     this.unwatch = this.watch(input);
+  }
+
+  // A write makes the Plugin's Queries due before its pages hear of it.
+  private pageChanges(): PageChanges {
+    return new PageChanges(this.workers, (pluginId): void =>
+      this.data.written(pluginId),
+    );
+  }
+
+  private pluginDraws(input: RuntimeInput): PluginDraws {
+    return new PluginDraws({
+      workers: this.workers,
+      log: input.log,
+      changes: this.changes,
+      drawings: this.failures,
+    });
   }
 
   // A Query answer that changed marks the Page addresses whose draws read it.
   private pluginData(input: QueryServices): PluginData {
     return new PluginData(input, this.workers, (pluginId, addresses) =>
-      this.draws.changes.heldChanged(pluginId, addresses),
+      this.changes.heldChanged(pluginId, addresses),
     );
   }
 
@@ -70,10 +84,8 @@ export class RuntimeResources {
 
     return [
       input.services.watchProjects(() => this.projectsChanged()),
-      this.operations.onRan((pluginId) =>
-        this.draws.changes.changedBy(pluginId),
-      ),
-      this.draws.changes.listen((pluginId, addresses) => {
+      this.operations.onRan((pluginId) => this.changes.changedBy(pluginId)),
+      this.changes.listen((pluginId, addresses) => {
         if (!addresses) this.items.changed(pluginId);
       }),
     ];

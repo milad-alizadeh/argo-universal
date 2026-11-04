@@ -17,6 +17,7 @@ import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { Broadcast } from '../broadcast';
 import type { PluginOperationService } from '../operations';
+import type { PageChanges } from './page-changes';
 import type { PluginDraws } from './plugin-draws';
 
 // What drawing needs of the Plugin service: a running worker, started on the first draw as a page starts it.
@@ -40,7 +41,11 @@ const askedBy = ({
 
 const failedDraw = (error: string): DrawAnswer => ({ kind: 'failed', error });
 
+// What drawing hears and asks of the Plugins' pages: their draws, and the changes that make them stale.
+export type Drawing = { draws: PluginDraws; changes: PageChanges };
+
 export class LoaderPages {
+  private readonly draws: PluginDraws;
   private readonly marks = new Broadcast<StaleMark>();
   private readonly unwatch: () => void;
 
@@ -51,10 +56,11 @@ export class LoaderPages {
    */
   public constructor(
     private readonly host: PagesHost,
-    private readonly draws: PluginDraws,
+    { draws, changes }: Drawing,
     private readonly operations: PluginOperationService,
   ) {
-    this.unwatch = draws.changes.listen((pluginId, addresses) =>
+    this.draws = draws;
+    this.unwatch = changes.listen((pluginId, addresses) =>
       this.mark(pluginId, addresses),
     );
   }

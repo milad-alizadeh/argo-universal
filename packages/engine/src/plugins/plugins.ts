@@ -60,7 +60,7 @@ export class Plugins {
       accounts,
       listChanges,
       operations,
-      pages: new LoaderPages(service, runtime.draws, operations),
+      pages: new LoaderPages(service, runtime, operations),
     };
   }
 

@@ -33,4 +33,6 @@
  */
 export { LoaderPages, type Asking } from './loader-pages';
 
+export { PageChanges } from './page-changes';
+
 export { PluginDraws } from './plugin-draws';

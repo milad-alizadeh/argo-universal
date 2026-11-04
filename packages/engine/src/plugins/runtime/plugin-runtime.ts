@@ -46,6 +46,11 @@ export class PluginRuntime {
     this.plugins = new RuntimePlugins(this.pluginInput());
   }
 
+  // The Plugins' changes: `argo.changed()`, Operations and Query answers that moved.
+  get changes(): RuntimeResources['changes'] {
+    return this.resources.changes;
+  }
+
   private connectAccounts(): void {
     this.services.accountCalls.connect((pluginId, generation, invocation) =>
       this.host.tell({ ...invocation, pluginId, generation }),

@@ -7,6 +7,7 @@ import type { PluginEvent } from '../protocol/runtime';
 import { PluginFailures } from '../runtime/failures';
 import { WorkerCalls } from '../runtime/worker-calls';
 import type { Answered } from './draw-calls';
+import { PageChanges } from './page-changes';
 import { PluginDraws } from './plugin-draws';
 
 export type Draws = {
@@ -34,7 +35,8 @@ export function draws(log: (line: string) => void = (): null => null): Draws {
   const send = (_: string, event: PluginEvent): number => sent.push(event);
   const workers = new WorkerCalls({ send, clock: idleClock });
   const failures = named();
-  const pages = new PluginDraws({ workers, log, written, drawings: failures });
+  const changes = new PageChanges(workers, written);
+  const pages = new PluginDraws({ workers, log, changes, drawings: failures });
 
   return { pages, workers, sent, failures };
 }

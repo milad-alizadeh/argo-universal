@@ -29,7 +29,7 @@ import {
   type Drawings,
 } from './drawing-failures';
 import { LiveDraws, type LiveFollow } from './live-draws';
-import { PageChanges, type Written } from './page-changes';
+import type { PageChanges } from './page-changes';
 import { SentTrees } from './sent-trees';
 import { drawsForApp, forApp } from './wire-minimum';
 
@@ -40,11 +40,11 @@ export type Drawn =
 
 export type { LoadAt } from './draw-calls';
 
-// The running workers, the Server log, what a write makes due, and the drawing failures the App shows.
+// The running workers, the Server log, the Plugins' changes the draws hear, and the drawing failures the App shows.
 type PluginDrawsDeps = {
   workers: WorkerCalls;
   log: (line: string) => void;
-  written: Written;
+  changes: PageChanges;
   drawings: Drawings;
 };
 
@@ -57,20 +57,19 @@ export class PluginDraws {
   private readonly patterns: DefinedPatterns;
   private readonly lives: LiveDraws;
   private readonly sent: SentTrees;
-  // Hears each running worker's `argo.changed()` and Operations, and the addresses whose reads changed.
-  public readonly changes: PageChanges;
+  private readonly changes: PageChanges;
   private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
   private readonly log: (line: string) => void;
   private readonly failures: DrawingFailures;
 
-  public constructor({ workers, log, written, drawings }: PluginDrawsDeps) {
+  public constructor({ workers, log, changes, drawings }: PluginDrawsDeps) {
     const failures = new DrawingFailures(drawings, log);
     const calls = workers.kind(drawKind);
 
     this.log = log;
     this.failures = failures;
     this.calls = calls;
-    this.changes = new PageChanges(workers, written);
+    this.changes = changes;
     this.sent = new SentTrees(workers);
     this.patterns = new DefinedPatterns(workers, log);
     this.lives = new LiveDraws({ calls, clock: workers.clock, log, failures });
