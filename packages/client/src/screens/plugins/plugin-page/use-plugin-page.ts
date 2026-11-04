@@ -47,15 +47,19 @@ const rootOf = (answer: Answer | undefined): WireNode | null =>
 const isNewer = (root: WireNode | null, last: WireNode | null): boolean =>
   root !== null && root !== last;
 
-// The tree at the page's Page state; a new Page state draws the page at its next address.
+/*
+ * The tree at the page's Page state; a new Page state draws the page at its next address. The Page state is read
+ * here and handed to the tree's options, so the React Compiler, which keeps those options while their inputs
+ * hold, sees the address change.
+ */
 function useDrawn(
   addresses: PageAddresses,
   opening: PageOpening,
 ): Answer | undefined {
-  useQuery(addresses.state(opening));
+  const { data: pageState } = useQuery(addresses.state(opening));
 
   const { data } = useQuery({
-    ...addresses.tree(opening),
+    ...addresses.tree(opening, pageState),
     placeholderData: keepPreviousData,
     subscribed: useScreenFocused(),
   });
