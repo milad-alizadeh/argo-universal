@@ -1,6 +1,7 @@
 import type { ListPage } from '@repo/contracts/plugins/loader-page-api';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
-import { listReader, type DrawLists, type DrawReader } from './query-reads';
+import { listReader, type DrawReader } from './draw-reads';
+import type { DrawLists } from './query-reads';
 
 // One page of the list read from its cursor, through Argo's Queries; `fresh` reads it again whatever is kept.
 export type ReadPage<Item> = (

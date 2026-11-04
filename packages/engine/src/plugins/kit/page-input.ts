@@ -10,8 +10,8 @@ import type {
   PageStateChange,
   PluginEvent,
 } from '@repo/contracts/plugins/wire';
+import type { DrawReader } from './draw-reads';
 import type { Paged } from './paged-lists';
-import type { DrawReader } from './query-reads';
 import { renderContext } from './render-context';
 
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;

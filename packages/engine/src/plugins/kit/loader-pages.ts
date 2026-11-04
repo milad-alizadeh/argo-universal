@@ -8,6 +8,7 @@ import type { QueriesApi } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { CallOrigin } from '../protocol/call-origin';
 import { runtimeError } from '../protocol/runtime-status';
+import type { DataCall } from './draw-reads';
 import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
@@ -19,7 +20,6 @@ import {
   type Frame,
   type Reading,
 } from './page-drawing';
-import type { DataCall } from './query-reads';
 import { queryReads, type QueryReadSend } from './query-reads';
 import { swallowed } from './swallowed';
 
