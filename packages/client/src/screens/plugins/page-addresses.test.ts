@@ -1,5 +1,6 @@
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import { expect, it } from 'vitest';
+import type { PageOpening } from './page-addresses';
 import {
   cacheOverMemory,
   issues,
@@ -97,4 +98,19 @@ it('reads the first page again for an empty change, as a pull, and keeps the pag
   });
   expect(kept(screen.answer()).pages).toBe(2);
   screen.leave();
+});
+
+it('keeps Page state apart for each Project and Session a page opens for', async () => {
+  const cache = cacheOverMemory();
+  const inSession = { ...issues, sessionId: 'one' };
+
+  const stateAt = (opening: PageOpening): PageState | undefined =>
+    cache.client.getQueryData(cache.addresses.state(opening).queryKey);
+
+  await cache.addresses.change(inSession, { query: 'bug' });
+
+  expect(stateAt(inSession)).toEqual({ query: 'bug' });
+  expect(stateAt({ ...inSession, sessionId: 'two' })).toBeUndefined();
+  expect(stateAt({ ...inSession, projectId: 'site' })).toBeUndefined();
+  expect(stateAt(issues)).toBeUndefined();
 });

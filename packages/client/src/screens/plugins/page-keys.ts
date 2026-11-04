@@ -25,11 +25,17 @@ export const treeKey = ({
   { pageState, projectId, sessionId },
 ];
 
-// Page state belongs to the page, not to the Project or Session it opened for, so Back and a later visit keep it.
-export const stateKey = ({ pluginId, path }: PageOpening): QueryKey => [
+// Page state is part of the page's address, so a page opened for another Project or Session starts from its defaults.
+export const stateKey = ({
+  pluginId,
+  path,
+  projectId,
+  sessionId,
+}: PageOpening): QueryKey => [
   'pluginPageState',
   pluginId,
   path,
+  { projectId, sessionId },
 ];
 
 type TreeFilter = { queryKey: QueryKey; exact?: boolean };
