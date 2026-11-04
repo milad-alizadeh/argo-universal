@@ -85,11 +85,11 @@ export class PageCalls {
 
   public call(call: MadePageCall, event: PageEvent): Promise<void> {
     if ('bind' in call)
-      return this.later(call.bind, bindPauseMs, () =>
-        this.bound(call.bind, event.payload),
+      return this.pause(call.bind, bindPauseMs, () =>
+        this.changeBound(call.bind, event.payload),
       );
 
-    return this.unbound(call, event);
+    return this.callUnbound(call, event);
   }
 
   // Every waiting change, made now, as a flushing press makes them.
@@ -103,16 +103,16 @@ export class PageCalls {
   }
 
   // A throttled event's call waits for its edits to pause; a flushing one lands every waiting change first.
-  private unbound(call: MadePageCall, event: PageEvent): Promise<void> {
+  private callUnbound(call: MadePageCall, event: PageEvent): Promise<void> {
     const { throttleMs, flush } = componentEventRules(event.schema);
 
     if (throttleMs > 0)
-      return this.later(eventKey(event), throttleMs, () => this.made(call));
+      return this.pause(eventKey(event), throttleMs, () => this.makeCall(call));
 
-    return flush ? this.flushed(call, event) : this.made(call);
+    return flush ? this.flushCall(call, event) : this.makeCall(call);
   }
 
-  private later(
+  private pause(
     key: string,
     ms: number,
     then: () => Promise<void>,
@@ -122,10 +122,10 @@ export class PageCalls {
     return Promise.resolve();
   }
 
-  private async flushed(call: MadePageCall, event: PageEvent): Promise<void> {
-    if (!(await this.pauses.land())) return this.made(call);
+  private async flushCall(call: MadePageCall, event: PageEvent): Promise<void> {
+    if (!(await this.pauses.land())) return this.makeCall(call);
 
-    return this.made(this.callNow(event));
+    return this.makeCall(this.callNow(event));
   }
 
   // The call the event's node makes in the tree drawn now.
@@ -144,29 +144,29 @@ export class PageCalls {
     return node && componentEventHandler(node.props, name, schema);
   }
 
-  private bound(key: string, value: WireJson | undefined): Promise<void> {
+  private changeBound(key: string, value: WireJson | undefined): Promise<void> {
     const parsed = PageStateValue.safeParse(value ?? '');
 
     return parsed.success
-      ? this.made({ pageState: { [key]: parsed.data } })
+      ? this.makeCall({ pageState: { [key]: parsed.data } })
       : Promise.resolve();
   }
 
-  private made(call: MadePageCall): Promise<void> {
+  private makeCall(call: MadePageCall): Promise<void> {
     if ('operation' in call) return this.run(call);
 
-    return this.drawn(call);
+    return this.drawPage(call);
   }
 
   // A load more or a Page state change draws the page again; a bind has already landed as one.
-  private async drawn(
+  private async drawPage(
     call: Exclude<MadePageCall, MadeOperationCall>,
   ): Promise<void> {
     const { pageState } = this.ports;
 
     if (!pageState) throw new Error('This Plugin tree has no Page state');
 
-    return drawnFor(pageState, call);
+    return drawPageFor(pageState, call);
   }
 
   private async run({
@@ -175,7 +175,7 @@ export class PageCalls {
     optimistic,
   }: MadeOperationCall): Promise<void> {
     const { scope, run, failed } = this.ports;
-    const putBack = await this.shownOptimistic(optimistic);
+    const putBack = await this.showOptimistic(optimistic);
 
     try {
       await run({ operation, args, ...definedScope(scope) });
@@ -185,7 +185,7 @@ export class PageCalls {
     }
   }
 
-  private async shownOptimistic(
+  private async showOptimistic(
     optimistic: Optimistic | undefined,
   ): Promise<() => void> {
     if (!optimistic?.length) return keep;
@@ -196,7 +196,7 @@ export class PageCalls {
 
 const keep = (): void => {};
 
-function drawnFor(
+function drawPageFor(
   pageState: PageStatePort,
   call: Exclude<MadePageCall, MadeOperationCall>,
 ): Promise<void> {

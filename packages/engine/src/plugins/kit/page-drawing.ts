@@ -42,7 +42,7 @@ export type Drawing = {
   live: (call: DrawCall, frame: Frame) => Promise<void>;
 };
 
-type At<State extends PageState> = {
+type DrawRun<State extends PageState> = {
   input: LoaderInput<State>;
   event: DrawEvent;
   read: DrawReader;
@@ -57,20 +57,20 @@ export const drawing = <State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
 ): Drawing => ({
   draw: (call) => {
-    const at = atOf(page, call);
+    const run = drawRunOf(page, call);
 
     return call.event.loadOnly
-      ? loadedOnly(page, at.input)
-      : drawn(page, at, call.reading);
+      ? loadedOnly(page, run.input)
+      : drawn(page, run, call.reading);
   },
   live: (call, frame) =>
-    followed(page, { at: atOf(page, call), stop: call.stop, frame }),
+    followed(page, drawRunOf(page, call), { stop: call.stop, frame }),
 });
 
-function atOf<State extends PageState, Data, Item>(
+function drawRunOf<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   { params, event, reading }: DrawCall,
-): At<State> {
+): DrawRun<State> {
   const read = drawReader(reading.call);
 
   return { input: inputOf(page.state, params, { event, read }), event, read };
@@ -89,20 +89,22 @@ async function loadedOnly<State extends PageState, Data, Item>(
 
 async function drawn<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
-  at: At<State>,
+  run: DrawRun<State>,
   reading: Reading,
 ): Promise<Drawn> {
+  const { input } = run;
+
   const [loaded, paged] = await Promise.all([
-    page.load(at.input),
-    drawnPaged(page.list?.bind(null, at.input), at, reading.lists),
+    page.load(input),
+    drawnPaged(page.list?.bind(null, input), run, reading.lists),
   ]);
 
   if (!isYielding(loaded))
-    return rendered(page, { data: loaded, input: at.input, paged });
+    return rendered(page, { data: loaded, input, paged });
 
   const data = await firstUnlisted(page, loaded);
 
-  return { ...rendered(page, { data, input: at.input, paged }), live: true };
+  return { ...rendered(page, { data, input, paged }), live: true };
 }
 
 const unlistedError = 'A live page has no paged list';
@@ -119,25 +121,22 @@ async function firstUnlisted<State extends PageState, Data, Item>(
   throw new Error(unlistedError);
 }
 
-type Followed<State extends PageState> = {
-  at: At<State>;
-  stop: Stop;
-  frame: Frame;
-};
+type Followed = { stop: Stop; frame: Frame };
 
 const unlisted: Paged<never> = { items: [], hasMore: false, pages: 0 };
 
 // A live draw renders each value its Loader yields to a frame; a Loader that answers once sends one.
 async function followed<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
-  { at, stop, frame }: Followed<State>,
+  { input }: DrawRun<State>,
+  { stop, frame }: Followed,
 ): Promise<void> {
   if (page.list) throw new Error(unlistedError);
 
-  const loaded = await page.load(at.input);
+  const loaded = await page.load(input);
 
   const each = (data: Data): Promise<void> =>
-    frame(rendered(page, { data, input: at.input, paged: unlisted }).root);
+    frame(rendered(page, { data, input, paged: unlisted }).root);
 
   if (!isYielding(loaded)) return each(loaded);
 
