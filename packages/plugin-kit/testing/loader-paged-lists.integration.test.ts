@@ -121,3 +121,13 @@ it('keeps each address its own pages', async () => {
   // The second address reads its second page itself rather than the first address's.
   expect(await listed(kit)).toBe('null,2,null,2');
 });
+
+it('stops offering a load more at the most pages an address can ask for', async () => {
+  const kit = await start();
+
+  const last = treeOf(await kit.pages.draw({ path: '/endless', pages: 50 }));
+
+  expect(last.root.props.pagination).toMatchObject({
+    hasMore: false,
+  });
+});

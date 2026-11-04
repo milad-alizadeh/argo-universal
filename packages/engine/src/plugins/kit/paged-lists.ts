@@ -1,4 +1,5 @@
 import type { ListPage } from '@repo/contracts/plugins/loader-page-api';
+import { maxPages } from '@repo/contracts/plugins/page-draw';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { listReader, type DrawReader } from './draw-reads';
 import type { DrawLists } from './query-reads';
@@ -80,9 +81,10 @@ async function further<Item>(
 const cursorAfter = <Item>(read: ListPage<Item>[]): string | null =>
   read.at(-1)?.cursor ?? null;
 
+// A list stops offering more at `maxPages`, the most pages an address can ask for.
 const joined = <Item>(read: ListPage<Item>[]): Paged<Item> => ({
   items: distinct(read.flatMap((page) => page.items)),
-  hasMore: cursorAfter(read) !== null,
+  hasMore: cursorAfter(read) !== null && read.length < maxPages,
   pages: read.length,
 });
 
