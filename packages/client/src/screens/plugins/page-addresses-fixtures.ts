@@ -89,6 +89,13 @@ class MemoryServer {
     for (const resolve of this.waiting.splice(0)) resolve();
   }
 
+  // Draws wait until `release`, and the one asked last answers first, as a slower earlier one does.
+  releaseNewestFirst(): void {
+    this.holding = false;
+
+    for (const resolve of this.waiting.splice(0).reverse()) resolve();
+  }
+
   // The Plugin's data changes, so every row draws a new edition.
   write(): void {
     this.edition += 1;

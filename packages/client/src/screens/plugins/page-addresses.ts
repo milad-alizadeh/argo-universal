@@ -9,7 +9,12 @@ import type {
   DrawRequest,
 } from '@repo/contracts/plugins/page-draw';
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import type { Query, QueryClient, QueryKey } from '@tanstack/react-query';
+import {
+  hashKey,
+  type Query,
+  type QueryClient,
+  type QueryKey,
+} from '@tanstack/react-query';
 import { followLive, type FollowPage } from './live-follow';
 import { patchedAnswer, patchedAt, unpatchedAt } from './optimistic-patch';
 import {
@@ -50,6 +55,15 @@ type HowDrawn = { pages?: number; pull?: true };
  * caller builds an address or a query key.
  */
 export class PageAddresses {
+  // The Page state last asked for each opening, which a change merges into and the last one asked leaves on landing.
+  private readonly asked = new Map<string, PageState>();
+  // The load mores and pulls drawing now, by tree: outside the query's own fetch, so the cache tracks them.
+  private readonly drawing = new Set<string>();
+  // The trees a stale mark named while they drew, to be marked again once the draw lands.
+  private readonly marked = new Set<string>();
+  // How often each tree was patched or had pages land, so a draw that began before cannot paint over either.
+  private readonly epochs = new Map<string, number>();
+
   public constructor(
     private readonly client: QueryClient,
     private readonly draw: DrawPage,
@@ -102,9 +116,26 @@ export class PageAddresses {
     if (Object.keys(change).length === 0)
       return this.drawPages(this.addressOf(opening), { pull: true });
 
-    const next = { ...this.stateOf(opening), ...change };
+    const key = hashKey(stateKey(opening));
+    const next = {
+      ...(this.asked.get(key) ?? this.stateOf(opening)),
+      ...change,
+    };
 
-    await this.client.fetchQuery(this.treeAt(this.addressOf(opening, next)));
+    this.asked.set(key, next);
+
+    try {
+      await this.client.fetchQuery(this.treeAt(this.addressOf(opening, next)));
+    } catch (error) {
+      if (this.asked.get(key) === next) this.asked.delete(key);
+
+      throw error;
+    }
+
+    // Only the Page state asked last is shown, whichever draw lands last.
+    if (this.asked.get(key) !== next) return;
+
+    this.asked.delete(key);
     this.client.setQueryData(stateKey(opening), next);
   }
 
@@ -127,6 +158,8 @@ export class PageAddresses {
    * Operation cannot paint over the patch.
    */
   public patch(opening: PageOpening, patch: TreePatch): Promise<void> {
+    this.touch(treeKey(this.addressOf(opening)));
+
     return patchedAt(this.treeCache(opening), patchedAnswer(patch));
   }
 
@@ -145,11 +178,20 @@ export class PageAddresses {
       for (const query of this.client.getQueryCache().findAll(filter))
         this.markWhenLanded(query);
 
-      void this.client.invalidateQueries(filter, { cancelRefetch: false });
+      // A load more or pull drawing now read before the change; it is marked again when it lands.
+      void this.client.invalidateQueries(
+        {
+          ...filter,
+          predicate: ({ queryHash }) => !this.drawing.has(queryHash),
+        },
+        { cancelRefetch: false },
+      );
     }
   }
 
-  private markWhenLanded({ queryKey, promise, state }: Query): void {
+  private markWhenLanded({ queryKey, promise, state, queryHash }: Query): void {
+    if (this.drawing.has(queryHash)) this.marked.add(queryHash);
+
     if (state.fetchStatus !== 'fetching') return;
 
     const again = (): void =>
@@ -184,11 +226,63 @@ export class PageAddresses {
   }
 
   private treeAt(address: PageAddress): QueryOptions<Answer> {
-    return { queryKey: treeKey(address), queryFn: () => this.redraw(address) };
+    return {
+      queryKey: treeKey(address),
+      queryFn: () => this.refreshed(address),
+    };
   }
 
+  /*
+   * The query's own draw of an address. A load more that landed while it drew has more pages than it read for,
+   * so the tree kept stands instead of the shorter one this draw would shrink it to.
+   */
+  private async refreshed(address: PageAddress): Promise<Answer> {
+    const key = hashKey(treeKey(address));
+    const epoch = this.epochOf(key);
+    const answer = await this.redraw(address);
+
+    return this.epochOf(key) === epoch
+      ? answer
+      : (this.client.getQueryData<Answer>(treeKey(address)) ?? answer);
+  }
+
+  /*
+   * A load more or a pull: drawn outside the query's own fetch, so the cache tracks it. A mark that arrives
+   * while it draws marks the tree again when it lands, and an optimistic patch made meanwhile is not painted over.
+   */
   private async drawPages(address: PageAddress, how: HowDrawn): Promise<void> {
-    this.client.setQueryData(treeKey(address), await this.redraw(address, how));
+    const queryKey = treeKey(address);
+    const key = hashKey(queryKey);
+    const epoch = this.epochOf(key);
+
+    this.drawing.add(key);
+
+    try {
+      const answer = await this.redraw(address, how);
+
+      if (this.epochOf(key) === epoch) {
+        this.client.setQueryData(queryKey, answer);
+        this.touch(key);
+      }
+    } finally {
+      this.drawing.delete(key);
+    }
+
+    if (this.marked.delete(key))
+      void this.client.invalidateQueries(
+        { queryKey, exact: true },
+        { cancelRefetch: false },
+      );
+  }
+
+  private epochOf(key: string): number {
+    return this.epochs.get(key) ?? 0;
+  }
+
+  private touch(key: string | QueryKey): void {
+    const hashed = typeof key === 'string' ? key : hashKey(key);
+
+    this.epochs.set(hashed, this.epochOf(hashed) + 1);
   }
 
   // The address drawn again, showing `pages` pages, or as many as it shows now; a pull reads the first page again.

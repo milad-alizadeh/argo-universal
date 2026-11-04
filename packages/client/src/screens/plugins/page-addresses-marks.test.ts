@@ -92,3 +92,67 @@ it('patches only the address the press came from, keeps its unpatched rows and e
   argo.leave();
   site.leave();
 });
+
+it('marks a load more again once it lands when a mark arrived while it drew', async () => {
+  const cache = cacheOverMemory();
+  const screen = onScreen(cache, issues);
+
+  await settled();
+  cache.server.hold();
+
+  const loading = cache.addresses.loadMore(issues);
+
+  await settled();
+  cache.server.write();
+  cache.addresses.markStale({ pluginId: 'tracker' });
+  cache.server.release();
+  await loading;
+  await settled();
+
+  expect(kept(screen.answer()).pages).toBe(2);
+  expect(rowsOf(screen.answer())[0]?.props.edition).toBe(1);
+  screen.leave();
+});
+
+it('keeps the pages a load more added when a mark’s draw that began before it lands after', async () => {
+  const cache = cacheOverMemory();
+  const screen = onScreen(cache, issues);
+
+  await settled();
+  cache.server.hold();
+  cache.addresses.markStale({ pluginId: 'tracker' });
+  await settled();
+
+  const loading = cache.addresses.loadMore(issues);
+
+  await settled();
+  cache.server.releaseNewestFirst();
+  await loading;
+  await settled();
+
+  expect(kept(screen.answer()).pages).toBe(2);
+  expect(rowsOf(screen.answer())).toHaveLength(4);
+  screen.leave();
+});
+
+it('does not paint a load more over an optimistic patch made while it drew', async () => {
+  const cache = cacheOverMemory();
+  const screen = onScreen(cache, issues);
+
+  await settled();
+  cache.server.hold();
+
+  const loading = cache.addresses.loadMore(issues);
+
+  await settled();
+  await cache.addresses.patch(issues, (root) => ({
+    ...root,
+    props: { ...root.props, title: 'Patched' },
+  }));
+  cache.server.release();
+  await loading;
+  await settled();
+
+  expect(kept(screen.answer()).root.props.title).toBe('Patched');
+  screen.leave();
+});

@@ -114,3 +114,43 @@ it('keeps Page state apart for each Project and Session a page opens for', async
   expect(stateAt({ ...inSession, projectId: 'site' })).toBeUndefined();
   expect(stateAt(issues)).toBeUndefined();
 });
+
+it('merges Page state changes that overlap, so a search and a tab asked together both stay', async () => {
+  const cache = cacheOverMemory();
+
+  const stateOf = (): PageState | undefined =>
+    cache.client.getQueryData(cache.addresses.state(issues).queryKey);
+
+  cache.server.hold();
+
+  const search = cache.addresses.change(issues, { query: 'bug' });
+  const tab = cache.addresses.change(issues, { tab: 'open' });
+
+  await settled();
+  cache.server.release();
+  await Promise.all([search, tab]);
+
+  expect(stateOf()).toEqual({ query: 'bug', tab: 'open' });
+  expect(cache.server.requests.at(-1)?.pageState).toEqual({
+    query: 'bug',
+    tab: 'open',
+  });
+});
+
+it('keeps the Page state asked last when an earlier change draws more slowly', async () => {
+  const cache = cacheOverMemory();
+
+  const stateOf = (): PageState | undefined =>
+    cache.client.getQueryData(cache.addresses.state(issues).queryKey);
+
+  cache.server.hold();
+
+  const first = cache.addresses.change(issues, { query: 'b' });
+  const last = cache.addresses.change(issues, { query: 'bug' });
+
+  await settled();
+  cache.server.releaseNewestFirst();
+  await Promise.all([first, last]);
+
+  expect(stateOf()).toEqual({ query: 'bug' });
+});
