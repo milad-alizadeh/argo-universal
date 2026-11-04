@@ -38,18 +38,16 @@ const pageSize = 30;
 // How the Loader reads a Query through Argo.
 type Read = LoaderInput<FilterState>['read'];
 
-// The Projects, and the Project and filter the Page path names with its Tracker opened, or why it does not open.
-type Target = {
-  projects: Project[];
-  project?: Project;
-  filter?: IssueFilter;
-  opened: Promise<Opened>;
-};
+// The Projects, and either nothing the Page path names, or its Project and filter with the Tracker opened or why it does not open.
+type Target = { projects: Project[]; opened: Promise<Opened> } & (
+  | { state: 'gone' }
+  | { state: 'named'; project: Project; filter: IssueFilter }
+);
 
 // Either the Tracker's client, or why it did not open.
 type Opened =
-  | { opened: true; client: TrackerClient }
-  | { opened: false; message: string };
+  | { ok: true; client: TrackerClient }
+  | { ok: false; message: string };
 
 /*
  * One draw's Loader and paged list ask for its target at once, with the same input: it is worked out once
@@ -74,30 +72,31 @@ async function targetOf(
   params: Load['params'],
 ): Promise<Target> {
   const projects = await deps.listProjects();
-  const { project, filter } = namedBy(projects, params);
+  const project = projects.find(
+    ({ id }) => id === pathText(params.project ?? ''),
+  );
+  const filter = filterById(params.filter ?? '');
 
-  const opened =
-    project && filter ? openedClient(deps, project) : Promise.resolve(gone);
+  if (!project || !filter)
+    return { projects, state: 'gone', opened: Promise.resolve(gone) };
 
-  return { projects, project, filter, opened };
+  return {
+    projects,
+    state: 'named',
+    project,
+    filter,
+    opened: openedClient(deps, project),
+  };
 }
 
-const namedBy = (
-  projects: Project[],
-  params: Load['params'],
-): Pick<Target, 'project' | 'filter'> => ({
-  project: projects.find(({ id }) => id === pathText(params.project ?? '')),
-  filter: filterById(params.filter ?? ''),
-});
-
-const gone = { opened: false, message: 'This page no longer exists.' } as const;
+const gone = { ok: false, message: 'This page no longer exists.' } as const;
 
 // Settled either way, so a draw that only loads leaves no failed open unread.
 const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
   openDepsClient({ project, deps }).then(
-    (client): Opened => ({ opened: true, client }),
+    (client): Opened => ({ ok: true, client }),
     (cause: unknown): Opened => ({
-      opened: false,
+      ok: false,
       message: githubError(cause),
     }),
   );
@@ -111,13 +110,16 @@ export async function loadFilter(
   read: Read,
   target: Promise<Target>,
 ): Promise<FilterData> {
-  const { projects, project, filter, opened } = await target;
+  const named = await target;
+  const { projects } = named;
 
-  if (!project || !filter) return { projects, state: 'gone' };
+  if (named.state === 'gone') return { projects, state: 'gone' };
+
+  const { project, filter } = named;
 
   const [overview, tracker] = await Promise.all([
     read(deps.overview({ projectId: project.id })).catch(() => null),
-    opened,
+    named.opened,
   ]);
 
   return withTracker({ projects, project, filter, overview }, tracker);
@@ -127,7 +129,7 @@ const withTracker = (
   chosen: { projects: Project[] } & Chosen,
   tracker: Opened,
 ): FilterData =>
-  tracker.opened
+  tracker.ok
     ? { ...chosen, state: 'opened' }
     : { ...chosen, state: 'unopened', message: tracker.message };
 
@@ -149,11 +151,11 @@ export async function listFilter(
   query: string,
   cursor: string | null,
 ): Promise<ListPage<Issue>> {
-  const { filter, opened } = await target;
-  const tracker = await opened;
+  const named = await target;
+  const tracker = await named.opened;
 
-  return filter && tracker.opened
-    ? readPage(tracker.client, searchOf(filter, query), cursor)
+  return named.state === 'named' && tracker.ok
+    ? readPage(tracker.client, searchOf(named.filter, query), cursor)
     : end;
 }
 

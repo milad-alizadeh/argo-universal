@@ -11,9 +11,7 @@ export type AttachedSession = {
 };
 
 // The Issue, or the line the page shows instead when it cannot be read.
-type IssueRead =
-  | { found: true; issue: Issue }
-  | { found: false; message: string };
+type IssueRead = { ok: true; issue: Issue } | { ok: false; message: string };
 
 // What one Issue's page shows: the Issue or why not, and the Sessions attached to it (none when none are).
 export type IssueDetailData = IssueRead & { sessions: AttachedSession[] };
@@ -40,9 +38,9 @@ async function readIssue(source: DetailSource): Promise<IssueRead> {
   try {
     const client = await openDepsClient(source);
 
-    return { found: true, issue: await client.getIssue(source.number) };
+    return { ok: true, issue: await client.getIssue(source.number) };
   } catch (cause) {
-    return { found: false, message: githubError(cause) };
+    return { ok: false, message: githubError(cause) };
   }
 }
 

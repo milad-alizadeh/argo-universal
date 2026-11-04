@@ -18,7 +18,7 @@ export function defineTrackerPage(
   );
   argo.pages.define(trackerPath, {
     load: ({ context }) => loadChoice(deps, context.projectId),
-    render: (choice, to) => <ProjectDetails choice={choice} to={to} />,
+    render: (choice, to) => <TrackerChoice choice={choice} to={to} />,
   });
 }
 
@@ -80,7 +80,7 @@ const noProject = (
   />
 );
 
-function ProjectDetails({
+function TrackerChoice({
   choice,
   to,
 }: {

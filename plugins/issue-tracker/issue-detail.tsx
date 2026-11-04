@@ -29,7 +29,7 @@ type ShownProps = Omit<IssueDetailProps, 'data'> & {
 export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
   const { data } = props;
 
-  if (!data.found)
+  if (!data.ok)
     return (
       <Screen title={`#${props.number}`}>
         <EmptyState title={data.message} />
