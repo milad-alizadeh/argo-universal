@@ -13,10 +13,10 @@ import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
 import {
-  drawing,
+  pageDrawer,
   type DrawEvent,
-  type Drawing,
-  type Drawn,
+  type PageDrawer,
+  type DrawnPage,
   type Frame,
   type Reading,
 } from './page-drawing';
@@ -24,7 +24,7 @@ import { queryReads, type QueryReadSend } from './query-reads';
 import { swallowed } from './swallowed';
 
 // One defined page and how it draws.
-type Defined = Drawing & { pattern: string };
+type Defined = PageDrawer & { pattern: string };
 
 type StopEvent = Extract<PluginEvent, { type: 'stop' }>;
 
@@ -49,7 +49,7 @@ export type LoaderCalls = {
  * `argo.changed()`; `answer` is the host's draws and named reads; `answering` runs and answers the
  * Plugin's Operations, whose answer the host marks stale.
  */
-export interface LoaderPages {
+export interface WorkerPages {
   api: LoaderPagesApi;
   queries: QueriesApi;
   changed: () => void;
@@ -80,7 +80,7 @@ type Pages = {
  * Loader ends or the host stops it, then answers that it ended. The worker runs each draw for its id, so
  * the Server gives its `argo` calls, a live draw's included, the draw's Project and Server Device.
  */
-export function loaderPages(calls: LoaderCalls): LoaderPages {
+export function loaderPages(calls: LoaderCalls): WorkerPages {
   const pages = pagesOf(calls);
   const reads = queryReads(calls.reads, pages.reading.lists);
 
@@ -114,7 +114,7 @@ const defining =
   (pattern, page) => {
     const every = checkedEvery(checkedPattern(pattern), page.every);
 
-    defined.push({ pattern, ...drawing(page) });
+    defined.push({ pattern, ...pageDrawer(page) });
     void send({
       action: 'defined',
       pattern,
@@ -153,10 +153,10 @@ const requiringPage =
   };
 
 async function answer(pages: Pages, event: DrawEvent): Promise<void> {
-  const stop = stoppable(pages, event);
+  const stop = registerStop(pages, event);
 
   try {
-    await pages.send(await settled(pages, event, stop));
+    await pages.send(await settleDraw(pages, event, stop));
   } catch (error) {
     await pages
       .send({ action: 'failed', id: event.id, error: runtimeError(error) })
@@ -168,7 +168,7 @@ async function answer(pages: Pages, event: DrawEvent): Promise<void> {
 }
 
 // A live draw can be stopped by its id until it answers.
-function stoppable({ running }: Pages, { live, id }: DrawEvent): Stop {
+function registerStop({ running }: Pages, { live, id }: DrawEvent): Stop {
   const stop = stopper();
 
   if (live) running.set(id, stop);
@@ -176,15 +176,15 @@ function stoppable({ running }: Pages, { live, id }: DrawEvent): Stop {
   return stop;
 }
 
-async function settled(
+async function settleDraw(
   { send, defined, reading }: Pages,
   event: DrawEvent,
   stop: Stop,
 ): Promise<LoaderPageCall> {
-  const { page, params } = matched(defined, event.path);
+  const { page, params } = matchPage(defined, event.path);
   const call = { params, event, reading, stop };
 
-  if (!event.live) return answered(event, await page.draw(call));
+  if (!event.live) return callFor(event, await page.draw(call));
 
   const frame: Frame = (root) => send({ action: 'frame', id: event.id, root });
 
@@ -194,12 +194,12 @@ async function settled(
 }
 
 // A background pass's load answers that it loaded; a draw answers its tree.
-const answered = ({ id }: DrawEvent, drawn: Drawn): LoaderPageCall =>
+const callFor = ({ id }: DrawEvent, drawn: DrawnPage): LoaderPageCall =>
   drawn ? { action: 'drawn', id, ...drawn } : { action: 'loaded', id };
 
 type Matched = { page: Defined; params: Record<string, string> };
 
-function matched(defined: readonly Defined[], path: string): Matched {
+function matchPage(defined: readonly Defined[], path: string): Matched {
   for (const page of defined) {
     const params = matchPagePath(page.pattern, path);
 

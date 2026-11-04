@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { jsx } from './jsx-runtime';
 import { stopper } from './live-loads';
-import { drawing, type DrawEvent } from './page-drawing';
+import { pageDrawer, type DrawEvent } from './page-drawing';
 
 const event: DrawEvent = {
   type: 'draw',
@@ -19,7 +19,7 @@ const reading = {
 it('hands the Render no way to read, as it is pure', async () => {
   let inputKeys: string[] = [];
 
-  const page = drawing({
+  const page = pageDrawer({
     load: () => 'loaded',
     render: (_data, _to, input) => {
       inputKeys = Object.keys(input);

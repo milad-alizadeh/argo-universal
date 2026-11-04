@@ -1,5 +1,11 @@
 import { expect, it } from 'vitest';
-import { CallScope, originOf, reachOf, type Delivered } from './call-origin';
+import {
+  CallScope,
+  originOf,
+  reachOf,
+  type CallOrigin,
+  type Delivered,
+} from './call-origin';
 
 const event = (value: Extract<Delivered, { type: 'event' }>['event']) =>
   ({ type: 'event', event: value }) as const;
@@ -8,12 +14,12 @@ it.each<[string, Delivered, ReturnType<typeof originOf>]>([
   [
     'a draw for its id',
     event({ type: 'draw', id: 4, path: '/', pageState: {}, pages: 1 }),
-    { draw: 4 },
+    { kind: 'draw', draw: 4 },
   ],
   [
     'a live draw stop for its draw',
     event({ type: 'stop', id: 4 }),
-    { draw: 4 },
+    { kind: 'draw', draw: 4 },
   ],
   [
     'an Operation for its run',
@@ -24,7 +30,7 @@ it.each<[string, Delivered, ReturnType<typeof originOf>]>([
       params: {},
       caller: {},
     }),
-    { operation: 7 },
+    { kind: 'operation', operation: 7 },
   ],
   [
     'a paged list page for the draw reading it',
@@ -36,7 +42,7 @@ it.each<[string, Delivered, ReturnType<typeof originOf>]>([
       projectId: 'project',
       draw: 4,
     }),
-    { draw: 4 },
+    { kind: 'draw', draw: 4 },
   ],
   [
     'a named read for its Project alone, whichever draw asked',
@@ -48,12 +54,12 @@ it.each<[string, Delivered, ReturnType<typeof originOf>]>([
       projectId: 'project',
       draw: 4,
     }),
-    { projectId: 'project' },
+    { kind: 'project', projectId: 'project' },
   ],
   [
     'a named read with no Project for nothing',
     event({ type: 'read', id: 1, name: 'overview', args: {} }),
-    {},
+    { kind: 'none' },
   ],
   [
     'a batched items call for nothing',
@@ -62,15 +68,23 @@ it.each<[string, Delivered, ReturnType<typeof originOf>]>([
       id: 1,
       input: { slotId: 'argo/project/details/v1', contexts: [] },
     }),
-    {},
+    { kind: 'none' },
   ],
   [
     'a Hook for its Project',
     { type: 'hook', event: { projectId: 'project' } },
-    { projectId: 'project' },
+    { kind: 'project', projectId: 'project' },
   ],
-  ['a Hook with no Project for nothing', { type: 'hook', event: {} }, {}],
-  ['an Account token ask for nothing', { type: 'accountToken' }, {}],
+  [
+    'a Hook with no Project for nothing',
+    { type: 'hook', event: {} },
+    { kind: 'none' },
+  ],
+  [
+    'an Account token ask for nothing',
+    { type: 'accountToken' },
+    { kind: 'none' },
+  ],
 ])('runs %s', (_name, delivered, origin) => {
   expect(originOf(delivered)).toEqual(origin);
 });
@@ -82,12 +96,16 @@ it('keeps each delivery its own origin across awaits', async () => {
     new Promise((resolve) => setTimeout(() => resolve(scope.current()), 1));
 
   const seen = await Promise.all([
-    scope.run({ draw: 1 }, after),
-    scope.run({ operation: 2 }, after),
+    scope.run({ kind: 'draw', draw: 1 }, after),
+    scope.run({ kind: 'operation', operation: 2 }, after),
     after(),
   ]);
 
-  expect(seen).toEqual([{ draw: 1 }, { operation: 2 }, {}]);
+  expect(seen).toEqual([
+    { kind: 'draw', draw: 1 },
+    { kind: 'operation', operation: 2 },
+    { kind: 'none' },
+  ]);
 });
 
 const drawn = { projectId: 'drawn', serverDevice: true, holder: 'address' };
@@ -100,29 +118,33 @@ const waiting = {
   run: (id: number): typeof ran | undefined => (id === 2 ? ran : undefined),
 };
 
-it.each([
+it.each<[string, CallOrigin, ReturnType<typeof reachOf>]>([
   [
     'a waiting draw reaches its Project and Server Device',
-    { draw: 1 },
+    { kind: 'draw', draw: 1 },
     { projectId: 'drawn', serverDevice: true, drawn },
   ],
   [
     'a waiting run reaches its Project and Server Device',
-    { operation: 2 },
+    { kind: 'operation', operation: 2 },
     { projectId: 'ran', serverDevice: true },
   ],
-  ['an answered draw reaches nothing', { draw: 9 }, { serverDevice: false }],
+  [
+    'an answered draw reaches nothing',
+    { kind: 'draw', draw: 9 },
+    { serverDevice: false },
+  ],
   [
     'an answered run reaches nothing',
-    { operation: 9 },
+    { kind: 'operation', operation: 9 },
     { serverDevice: false },
   ],
   [
     'a Project origin reaches the Project but never the Server Device',
-    { projectId: 'hooked' },
+    { kind: 'project', projectId: 'hooked' },
     { projectId: 'hooked', serverDevice: false },
   ],
-  ['no origin reaches nothing', {}, { serverDevice: false }],
+  ['no origin reaches nothing', { kind: 'none' }, { serverDevice: false }],
 ])('%s', (_name, origin, reach) => {
   expect(reachOf(waiting, origin)).toEqual(reach);
 });

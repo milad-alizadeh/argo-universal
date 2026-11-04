@@ -66,11 +66,11 @@ export interface Kit {
   // The worker's `argo.operations`; it also answers the Operation calls the inbox hands it.
   operations: OperationHandlers;
   // `argo.pages.define`, which also answers the inbox's draws (ADR-0050).
-  loaderPages: loader.LoaderPages;
+  loaderPages: loader.WorkerPages;
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
   // A manifest's `background` path and `contributes.accounts` pages name the Plugin's Loader pages.
-  requireLoaderPage: loader.LoaderPages['requirePage'];
+  requireLoaderPage: loader.WorkerPages['requirePage'];
   // A `ui.render` Hook's kit components, drawn once as a Render is (ADR-0050).
   drawTree: (element: React.ReactNode) => WireJson;
 }
@@ -85,7 +85,7 @@ type KitCalls = loader.LoaderCalls & {
 type KitParts = {
   slots: SlotProviders;
   operations: OperationHandlers;
-  loaderPages: loader.LoaderPages;
+  loaderPages: loader.WorkerPages;
 };
 
 // Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.

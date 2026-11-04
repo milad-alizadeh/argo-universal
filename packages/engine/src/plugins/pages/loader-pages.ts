@@ -42,7 +42,7 @@ const askedBy = ({
 const failedDraw = (error: string): DrawAnswer => ({ kind: 'failed', error });
 
 // What drawing hears and asks of the Plugins' pages: their draws, and the changes that make them stale.
-export type Drawing = { draws: PluginDraws; changes: PageChanges };
+export type PageSources = { draws: PluginDraws; changes: PageChanges };
 
 export class LoaderPages {
   private readonly draws: PluginDraws;
@@ -56,7 +56,7 @@ export class LoaderPages {
    */
   public constructor(
     private readonly host: PagesHost,
-    { draws, changes }: Drawing,
+    { draws, changes }: PageSources,
     private readonly operations: PluginOperationService,
   ) {
     this.draws = draws;
@@ -87,9 +87,9 @@ export class LoaderPages {
     { pluginId, known, ...at }: DrawRequest,
     asking: Asking,
   ): Promise<DrawAnswer> {
-    const started = await this.started(pluginId);
+    const notStarted = await this.startFailure(pluginId);
 
-    if (started) return failedDraw(started);
+    if (notStarted) return failedDraw(notStarted);
 
     const address = { ...at, ...askedBy(asking) };
 
@@ -104,9 +104,9 @@ export class LoaderPages {
     { pluginId, known, ...at }: LiveRequest,
     asking: Asking & { signal: AbortSignal },
   ): AsyncGenerator<LiveAnswer> {
-    const started = await this.started(pluginId);
+    const notStarted = await this.startFailure(pluginId);
 
-    if (started) return yield { kind: 'failed', error: started };
+    if (notStarted) return yield { kind: 'failed', error: notStarted };
 
     const address = { ...at, pages: 1, ...askedBy(asking) };
 
@@ -131,7 +131,8 @@ export class LoaderPages {
     return { result };
   }
 
-  private async started(pluginId: string): Promise<string | undefined> {
+  // Why the Plugin's worker did not start, or none when it runs.
+  private async startFailure(pluginId: string): Promise<string | undefined> {
     const status = await this.host.activate(pluginId);
 
     if (status.state === 'running') return undefined;

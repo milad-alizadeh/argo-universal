@@ -11,26 +11,26 @@ const id = z.number().int().nonnegative();
  * id, which the Server looks up rather than trusts, or the Project a Hook or a named read runs for; or
  * nothing, as code its Plugin runs as it registers.
  */
-export const CallOrigin = z.union([
-  z.strictObject({ draw: id }),
-  z.strictObject({ operation: id }),
-  z.strictObject({ projectId: z.string().min(1) }),
-  z.strictObject({}),
+export const CallOrigin = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.literal('draw'), draw: id }),
+  z.strictObject({ kind: z.literal('operation'), operation: id }),
+  z.strictObject({ kind: z.literal('project'), projectId: z.string().min(1) }),
+  z.strictObject({ kind: z.literal('none') }),
 ]);
 
 export type CallOrigin = z.infer<typeof CallOrigin>;
 
-const none: CallOrigin = {};
+const none: CallOrigin = { kind: 'none' };
 
 const ProjectId = z.string().min(1);
 
 const forProject = (projectId: string | undefined): CallOrigin =>
-  projectId ? { projectId } : none;
+  projectId ? { kind: 'project', projectId } : none;
 
 // A Hook's event is the Plugin-facing JSON of its kind; only a Hook for a Project names one.
 const HookProject = z.object({ projectId: ProjectId });
 
-type Of<Type extends PluginEvent['type']> = Extract<
+type EventOfType<Type extends PluginEvent['type']> = Extract<
   PluginEvent,
   { type: Type }
 >;
@@ -42,24 +42,25 @@ type Of<Type extends PluginEvent['type']> = Extract<
  */
 // What each kind of event runs for; a new kind fails type-checking until it says.
 type EventOrigins = {
-  [Type in PluginEvent['type']]: (event: Of<Type>) => CallOrigin;
+  [Type in PluginEvent['type']]: (event: EventOfType<Type>) => CallOrigin;
 };
 
 const eventOrigins: EventOrigins = {
-  draw: ({ id }) => ({ draw: id }),
-  stop: ({ id }) => ({ draw: id }),
-  operation: ({ id }) => ({ operation: id }),
+  draw: ({ id }) => ({ kind: 'draw', draw: id }),
+  stop: ({ id }) => ({ kind: 'draw', draw: id }),
+  operation: ({ id }) => ({ kind: 'operation', operation: id }),
   read: ({ name, draw, projectId }) =>
     name === pagedListRead && draw !== undefined
-      ? { draw }
+      ? { kind: 'draw', draw }
       : forProject(projectId),
   slotItems: () => none,
 };
 
 const eventOrigin = <Type extends PluginEvent['type']>(
-  event: Of<Type>,
+  event: EventOfType<Type>,
 ): CallOrigin => {
-  const origin: (event: Of<Type>) => CallOrigin = eventOrigins[event.type];
+  const origin: (event: EventOfType<Type>) => CallOrigin =
+    eventOrigins[event.type];
 
   return origin(event);
 };
@@ -97,48 +98,53 @@ export class CallScope {
   }
 }
 
-type Reached = { projectId?: string; serverDevice: boolean };
+// What a call may reach on the Server: a Project, and whether its App is the Server Device.
+type Reach = { projectId?: string; serverDevice: boolean };
 
-// What a call may reach on the Server: a Project, whether its App is the Server Device, and the draw it is for.
-export type Reach<Drawn> = Reached & { drawn?: Drawn };
+// A reach that also holds the draw the call is for.
+export type DrawReach<Draw> = Reach & { drawn?: Draw };
 
 // The draws and Operation runs still waiting on the calling worker generation, by id.
-export type Waiting<Drawn extends Reached> = {
-  draw: (id: number) => Drawn | undefined;
-  run: (id: number) => Reached | undefined;
+export type WaitingCalls<Draw extends Reach> = {
+  draw: (id: number) => Draw | undefined;
+  run: (id: number) => Reach | undefined;
 };
 
-const unreached: Reach<never> = { serverDevice: false };
+const reachesNothing: DrawReach<never> = { serverDevice: false };
 
 /*
  * A call reaches what the draw or the Operation run it is for reaches: its Project and Server Device. A draw or
  * run that has already answered reaches neither. A call for a Project reaches that Project and never the Server
  * Device; a call for nothing reaches nothing.
  */
-export function reachOf<Drawn extends Reached>(
-  waiting: Waiting<Drawn>,
+export function reachOf<Draw extends Reach>(
+  waiting: WaitingCalls<Draw>,
   origin: CallOrigin,
-): Reach<Drawn> {
-  if ('draw' in origin) return drawReach(waiting.draw(origin.draw));
-
-  if ('operation' in origin) return runReach(waiting.run(origin.operation));
-
-  return projectReach(origin);
+): DrawReach<Draw> {
+  switch (origin.kind) {
+    case 'draw':
+      return reachOfDraw(waiting.draw(origin.draw));
+    case 'operation':
+      return reachOfRun(waiting.run(origin.operation));
+    case 'project':
+      return { projectId: origin.projectId, serverDevice: false };
+    case 'none':
+      return reachesNothing;
+  }
 }
 
-const projectReach = (origin: CallOrigin): Reach<never> =>
-  'projectId' in origin
-    ? { projectId: origin.projectId, serverDevice: false }
-    : unreached;
+const reachOfDraw = <Draw extends Reach>(
+  draw: Draw | undefined,
+): DrawReach<Draw> =>
+  draw
+    ? {
+        projectId: draw.projectId,
+        serverDevice: draw.serverDevice,
+        drawn: draw,
+      }
+    : reachesNothing;
 
-const drawReach = <Drawn extends Reached>(
-  drawn: Drawn | undefined,
-): Reach<Drawn> =>
-  drawn
-    ? { projectId: drawn.projectId, serverDevice: drawn.serverDevice, drawn }
-    : unreached;
-
-const runReach = (run: Reached | undefined): Reach<never> =>
+const reachOfRun = (run: Reach | undefined): DrawReach<never> =>
   run
     ? { projectId: run.projectId, serverDevice: run.serverDevice }
-    : unreached;
+    : reachesNothing;

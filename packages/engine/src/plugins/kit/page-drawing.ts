@@ -22,7 +22,7 @@ type Rendered = { root: WireJson; pages: number };
  * What a draw answers: the tree and how many pages its list shows, `live` when its Loader yields, or none
  * for a background pass's load.
  */
-export type Drawn = (Rendered & { live?: true }) | null;
+export type DrawnPage = (Rendered & { live?: true }) | null;
 
 // What one draw reads with: its Queries, and the paged lists of the draws in flight, which Argo reads pages from.
 export type Reading = { call: DataCall; lists: DrawLists };
@@ -39,8 +39,8 @@ type DrawCall = {
 export type Frame = (root: WireJson) => Promise<void>;
 
 // One defined page's draws, its State, Data and Item types closed over, so a list holds pages of any shape.
-export type Drawing = {
-  draw: (call: DrawCall) => Promise<Drawn>;
+export type PageDrawer = {
+  draw: (call: DrawCall) => Promise<DrawnPage>;
   live: (call: DrawCall, frame: Frame) => Promise<void>;
 };
 
@@ -53,21 +53,21 @@ type DrawRun<State extends PageState> = {
 
 /*
  * Load and read the paged list at once, then render once; the tree goes through JSON so only values cross
- * to the host. A background pass only loads. A live Loader is drawn once at its first value, or followed
+ * to the host. A background pass only loads. A live Loader is drawn once at its first value, or followLive
  * value by value on a live draw.
  */
-export const drawing = <State extends PageState, Data, Item>(
+export const pageDrawer = <State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
-): Drawing => ({
+): PageDrawer => ({
   draw: (call) => {
     const run = drawRunOf(page, call);
 
     return call.event.loadOnly
-      ? loadedOnly(page, run.input)
-      : drawn(page, run, call.reading);
+      ? loadOnly(page, run.input)
+      : drawPage(page, run, call.reading);
   },
   live: (call, frame) =>
-    followed(page, drawRunOf(page, call), { stop: call.stop, frame }),
+    followLive(page, drawRunOf(page, call), { stop: call.stop, frame }),
 });
 
 function drawRunOf<State extends PageState, Data, Item>(
@@ -85,7 +85,7 @@ function drawRunOf<State extends PageState, Data, Item>(
   };
 }
 
-async function loadedOnly<State extends PageState, Data, Item>(
+async function loadOnly<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   input: LoaderInput<State>,
 ): Promise<null> {
@@ -96,11 +96,11 @@ async function loadedOnly<State extends PageState, Data, Item>(
   return null;
 }
 
-async function drawn<State extends PageState, Data, Item>(
+async function drawPage<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   run: DrawRun<State>,
   reading: Reading,
-): Promise<Drawn> {
+): Promise<DrawnPage> {
   const { input, pageInput } = run;
 
   const [loaded, paged] = await Promise.all([
@@ -109,17 +109,17 @@ async function drawn<State extends PageState, Data, Item>(
   ]);
 
   if (!isYielding(loaded))
-    return rendered(page, { data: loaded, pageInput, paged });
+    return renderPage(page, { data: loaded, pageInput, paged });
 
-  const data = await firstUnlisted(page, loaded);
+  const data = await takeFirst(page, loaded);
 
-  return { ...rendered(page, { data, pageInput, paged }), live: true };
+  return { ...renderPage(page, { data, pageInput, paged }), live: true };
 }
 
 const unlistedError = 'A live page has no paged list';
 
 // A live Loader's first value, unless its page has a paged list, which a live page cannot.
-async function firstUnlisted<State extends PageState, Data, Item>(
+async function takeFirst<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   loaded: AsyncIterable<Data>,
 ): Promise<Data> {
@@ -135,7 +135,7 @@ type Followed = { stop: Stop; frame: Frame };
 const unlisted: Paged<never> = { items: [], hasMore: false, pages: 0 };
 
 // A live draw renders each value its Loader yields to a frame; a Loader that answers once sends one.
-async function followed<State extends PageState, Data, Item>(
+async function followLive<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   { input, pageInput }: DrawRun<State>,
   { stop, frame }: Followed,
@@ -145,7 +145,7 @@ async function followed<State extends PageState, Data, Item>(
   const loaded = await page.load(input);
 
   const each = (data: Data): Promise<void> =>
-    frame(rendered(page, { data, pageInput, paged: unlisted }).root);
+    frame(renderPage(page, { data, pageInput, paged: unlisted }).root);
 
   if (!isYielding(loaded)) return each(loaded);
 
@@ -158,7 +158,7 @@ type Rendering<State extends PageState, Data, Item> = {
   paged: Paged<Item>;
 };
 
-function rendered<State extends PageState, Data, Item>(
+function renderPage<State extends PageState, Data, Item>(
   page: LoaderPage<State, Data, Item>,
   { data, pageInput, paged }: Rendering<State, Data, Item>,
 ): Rendered {

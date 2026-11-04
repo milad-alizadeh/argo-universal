@@ -12,7 +12,7 @@ import { checkedPage } from './checked-tree';
 import { DefinedPatterns } from './defined-patterns';
 import {
   answeredError,
-  drawingOf,
+  drawLookupOf,
   drawKind,
   failed,
   loadedOf,
@@ -20,7 +20,7 @@ import {
   type Answered,
   type DrawAt,
   type LoadAt,
-  type Drawing,
+  type DrawLookup,
   type Loaded,
   type Outcome,
 } from './draw-calls';
@@ -131,14 +131,14 @@ export class PluginDraws {
   private async draw(page: DrawnFor): Promise<Drawn> {
     const outcome = await this.calls.call(page.pluginId, page.at);
 
-    if (!('ok' in outcome)) return this.answered(page, outcome);
+    if (!('ok' in outcome)) return this.answerDraw(page, outcome);
 
     return outcome.stopped
       ? failed(outcome.error)
       : this.failures.threw(page, outcome.error);
   }
 
-  private answered(page: DrawnFor, answered: Answered): Drawn {
+  private answerDraw(page: DrawnFor, answered: Answered): Drawn {
     if (answered.action !== 'drawn')
       return this.failures.threw(page, answeredError(answered));
 
@@ -161,11 +161,11 @@ export class PluginDraws {
   }
 
   // The draw still waiting on the caller's generation that a Loader's read names, or none.
-  public drawing(caller: Caller, draw: number): Drawing | undefined {
+  public lookup(caller: Caller, draw: number): DrawLookup | undefined {
     const at = this.calls.request(caller, draw);
     const every = at && this.patterns.everyOf(caller.pluginId, at.path);
 
-    return drawingOf(caller.pluginId, draw, { at, every });
+    return drawLookupOf(caller.pluginId, draw, { at, every });
   }
 
   /*
@@ -175,10 +175,10 @@ export class PluginDraws {
   public receive(caller: Caller, call: LoaderPageCall): void {
     if (call.action === 'frame') return this.lives.framed(caller, call);
 
-    this.received(caller, call);
+    this.receiveCall(caller, call);
   }
 
-  private received(
+  private receiveCall(
     caller: Caller,
     call: Exclude<LoaderPageCall, { action: 'frame' }>,
   ): void {

@@ -187,15 +187,15 @@ export class PageAddresses {
   }
 
   private treeAt(address: PageAddress): QueryOptions<Answer> {
-    return { queryKey: treeKey(address), queryFn: () => this.drawn(address) };
+    return { queryKey: treeKey(address), queryFn: () => this.redraw(address) };
   }
 
   private async drawPages(address: PageAddress, how: HowDrawn): Promise<void> {
-    this.client.setQueryData(treeKey(address), await this.drawn(address, how));
+    this.client.setQueryData(treeKey(address), await this.redraw(address, how));
   }
 
   // The address drawn again, showing `pages` pages, or as many as it shows now; a pull reads the first page again.
-  private async drawn(
+  private async redraw(
     address: PageAddress,
     how: HowDrawn = {},
   ): Promise<Answer> {

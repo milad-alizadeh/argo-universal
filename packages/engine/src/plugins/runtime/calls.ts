@@ -3,8 +3,8 @@ import type { PluginData } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type { PluginOperations } from '../operations';
 import type { PluginDraws } from '../pages';
-import type { Drawing } from '../pages/draw-calls';
-import { reachOf, type Reach } from '../protocol/call-origin';
+import type { DrawLookup } from '../pages/draw-calls';
+import { reachOf, type DrawReach } from '../protocol/call-origin';
 import type {
   HostMessage,
   PluginReply,
@@ -115,12 +115,12 @@ function answerService(
 function reach(
   { draws, operations }: RuntimeCalls,
   { pluginId, generation, origin }: Omit<Call, 'request'>,
-): Reach<Drawing> {
+): DrawReach<DrawLookup> {
   const caller = { pluginId, generation };
 
   return reachOf(
     {
-      draw: (id) => draws.drawing(caller, id),
+      draw: (id) => draws.lookup(caller, id),
       run: (id) => operations.origin(caller, id),
     },
     origin,

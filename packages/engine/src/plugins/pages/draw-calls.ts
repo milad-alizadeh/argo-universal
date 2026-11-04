@@ -72,7 +72,7 @@ function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
  * address holding its reads, or none for a background pass, and the interval its page is drawn again on,
  * as clamped.
  */
-export type Drawing = {
+export type DrawLookup = {
   draw: number;
   projectId?: string;
   serverDevice: boolean;
@@ -84,11 +84,11 @@ export type Drawing = {
  * A draw that only loads is a background pass's, which holds nothing and reads fresh; any other draw is
  * held by its address and reads past the interval its page is drawn again on.
  */
-export function drawingOf(
+export function drawLookupOf(
   pluginId: string,
   draw: number,
   { at, every }: { at: DrawAt | undefined; every?: number },
-): Drawing | undefined {
+): DrawLookup | undefined {
   if (!at) return undefined;
 
   const { projectId } = at;

@@ -1,5 +1,5 @@
 import type { CallOrigin } from '../protocol/call-origin';
-import type { LoaderCalls, LoaderPageSend, LoaderPages } from './loader-pages';
+import type { LoaderCalls, LoaderPageSend, WorkerPages } from './loader-pages';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { swallowed } from './swallowed';
 
@@ -15,7 +15,7 @@ export function operationMarks({
   pages: send,
   origin,
 }: Pick<LoaderCalls, 'pages' | 'origin'>): Pick<
-  LoaderPages,
+  WorkerPages,
   'changed' | 'answering'
 > {
   const running: Running = new Set();
@@ -30,7 +30,7 @@ export function operationMarks({
 
 // Whether the change joins a running Operation's mark: the worker runs each Operation's handler for its id.
 function heldFor(running: Running, origin: CallOrigin): boolean {
-  if (!('operation' in origin)) return false;
+  if (origin.kind !== 'operation') return false;
 
   return running.has(origin.operation);
 }
