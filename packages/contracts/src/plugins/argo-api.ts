@@ -24,7 +24,7 @@ import type { PluginRenderContext } from './kit';
 import type { LoaderPagesApi } from './loader-page-api';
 import type { OperationsApi } from './operations-api';
 import { PluginSettingValue } from './plugin-settings';
-import type { QueryResult } from './query-results';
+import type { QueriesApi, QueryResult } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
 
@@ -166,11 +166,12 @@ export type Argo = Omit<PluginApiCalls, 'accounts'> &
       LoaderPagesApi;
     slots: SlotsApi;
     operations: OperationsApi;
+    queries: QueriesApi;
     /*
      * Says what the Plugin's pages and items Slots show may have changed, after a write that is not an
-     * Operation or a change it heard of elsewhere (an Operation's run says so itself): every connected App
-     * draws its open Loader pages again, the paged-list pages read before it are forgotten, and open items
-     * Slot lists ask again.
+     * Operation or a change it heard of elsewhere (an Operation's run says so itself): every Query the
+     * Plugin's Loaders read, its paged-list pages among them, is due, every connected App draws its open
+     * Loader pages again, and open items Slot lists ask again.
      */
     changed: () => void;
     on: <Name extends HookEventName>(

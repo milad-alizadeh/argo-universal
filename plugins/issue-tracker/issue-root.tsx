@@ -41,7 +41,7 @@ export function IssuesRoot({
   return (
     <ListDetail
       title="Issues"
-      list={<RootList {...props} choice={choice} reload={!detail} />}
+      list={<RootList {...props} choice={choice} />}
       detail={choice.project && detail?.(choice.project)}
       empty={<SelectFilter />}
     />
@@ -57,7 +57,6 @@ const SelectFilter = (): JSX.Element => (
 
 type RootListProps = Pick<RootProps, 'deps' | 'filter'> & {
   choice: RootProjects;
-  reload: boolean;
 };
 
 // The sidebar's rows: a hook page passes its overview's refresh, a Loader page a Page state change.
@@ -70,8 +69,8 @@ export type RootRowsProps = {
 };
 
 function RootList(props: RootListProps): JSX.Element {
-  const { deps, choice, filter, reload } = props;
-  const state = useOverview(deps, choice.project, reload);
+  const { deps, choice, filter } = props;
+  const state = useOverview(deps, choice.project);
 
   return (
     <RootRows

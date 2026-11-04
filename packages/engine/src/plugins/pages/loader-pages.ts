@@ -1,4 +1,5 @@
 import type {
+  PageAddress,
   PageRun,
   PageRunAnswer,
   StaleMark,
@@ -41,21 +42,25 @@ export class LoaderPages {
 
   /*
    * An Operation's run, or the Plugin's own `argo.changed()` outside one, marks every Loader page of the
-   * Plugin at once: the worker folds a change made inside an Operation into that run's one mark.
+   * Plugin at once: the worker folds a change made inside an Operation into that run's one mark. A Query
+   * answer that changed marks the addresses that read it.
    */
   public constructor(
     private readonly host: PagesHost,
     private readonly draws: PluginDraws,
     private readonly operations: PluginOperationService,
   ) {
-    this.unwatch = draws.onChanged((pluginId) => this.mark(pluginId));
+    this.unwatch = draws.onChanged((pluginId, addresses) =>
+      this.mark(pluginId, addresses),
+    );
   }
 
   // A Plugin with no Loader pages has nothing to mark.
-  private mark(pluginId: string): void {
-    const stale = this.draws.patternsOf(pluginId);
+  private mark(pluginId: string, addresses?: PageAddress[]): void {
+    if (addresses) return this.marks.send({ pluginId, addresses });
 
-    if (stale.length > 0) this.marks.send({ pluginId, stale });
+    if (this.draws.patternsOf(pluginId).length > 0)
+      this.marks.send({ pluginId });
   }
 
   public stale(signal: AbortSignal): AsyncGenerator<StaleMark> {
@@ -89,10 +94,7 @@ export class LoaderPages {
     return this.draws.patternsOf(pluginId);
   }
 
-  /*
-   * Every Loader page of the Plugin is stale after one of its Operations: the Engine keeps no record of
-   * what a Loader read, so it cannot narrow the set (ADR-0050).
-   */
+  // The trees the Operation changed hear of it from its stale mark, which reaches every App (ADR-0050).
   public async run(run: PageRun): Promise<PageRunAnswer> {
     const { pluginId, operation, args, projectId, sessionId } = run;
 
@@ -103,7 +105,7 @@ export class LoaderPages {
       caller: { projectId, sessionId },
     });
 
-    return { result, stale: this.draws.patternsOf(pluginId) };
+    return { result };
   }
 
   private async started(pluginId: string): Promise<string | undefined> {

@@ -2,6 +2,7 @@ import type { Argo } from '@argo/plugin-kit';
 import type { IssueChanges } from './issue-changes';
 import type { Project } from './issue-client';
 import type { IssueFilter } from './issue-filters';
+import type { OverviewQuery } from './overview';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
@@ -20,5 +21,7 @@ export type IssueDeps = {
   storage: TrackerStorage;
   trackers: TrackerRegistry;
   changes: IssueChanges;
+  // A Project's overview, as the named read Argo keeps.
+  overview: OverviewQuery;
   pages: IssuePages;
 };

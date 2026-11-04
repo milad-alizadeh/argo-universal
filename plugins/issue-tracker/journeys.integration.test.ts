@@ -166,8 +166,7 @@ it('closes an Issue from its filter row as an Operation, which makes the filter 
     args: { number: 42, status: 'closed', projectId: project.id },
   });
 
-  expect(ran.result).toEqual({ number: 42, status: 'closed' });
-  expect(ran.stale).toContain('/projects/:project/filters/:filter');
+  expect(ran).toEqual({ result: { number: 42, status: 'closed' } });
   await expect(
     test.pages.run({
       operation: 'setStatus',

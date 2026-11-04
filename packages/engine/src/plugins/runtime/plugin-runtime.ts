@@ -1,6 +1,5 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { realClock, type PluginClock } from '../clock';
-import type { QueryServices } from '../data/query-types';
 import { hostHooks } from '../hooks/host-hooks';
 import { keepWaiting } from '../hooks/keep-waiting';
 import { HostConnection } from '../host/connection';
@@ -18,7 +17,7 @@ import {
 import { answerPluginCall } from './calls';
 import type { PluginLocation } from './plugin-location';
 import { RuntimePlugins } from './runtime-plugins';
-import { RuntimeResources } from './runtime-resources';
+import { RuntimeResources, type RuntimeInput } from './runtime-resources';
 import { TestControl } from './test-control';
 
 export class PluginRuntime {
@@ -76,7 +75,7 @@ export class PluginRuntime {
     };
   }
 
-  private resourceInput(): QueryServices {
+  private resourceInput(): RuntimeInput {
     return {
       services: this.services,
       clock: this.testControl.clock,

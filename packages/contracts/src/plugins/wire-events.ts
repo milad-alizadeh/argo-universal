@@ -141,6 +141,18 @@ export const PluginEvent = z.union([
     surface: PluginSurface.optional(),
     loadOnly: z.literal(true).optional(),
   }),
+  /*
+   * One named read Argo keeps a Query for, run by the Plugin with its args for the Query's Project; it
+   * answers by `id`. A page of a paged list (`argo:list`) is read for the draw `draw` names.
+   */
+  z.object({
+    type: z.literal('read'),
+    id: z.number().int().nonnegative(),
+    name: z.string().min(1),
+    args: WireJson,
+    projectId: z.string().min(1).optional(),
+    draw: z.number().int().nonnegative().optional(),
+  }),
   // One batched call to a Plugin's items Slot provider; it answers by `id`.
   z.object({
     type: z.literal('slotItems'),

@@ -27,7 +27,6 @@ import type { IssueFilter } from './issue-filters';
 import { filterPattern } from './issue-paths';
 import { RootRows } from './issue-root';
 import { issueTree } from './issue-tree';
-import { reloadOverviews } from './overview-requests';
 
 type To = PageTo<FilterState>;
 
@@ -39,22 +38,18 @@ type To = PageTo<FilterState>;
  */
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   // A status change on any page, the Issue page's own included, leaves the counts and drawn lists stale.
-  deps.changes.subscribe(() => {
-    reloadOverviews(deps);
-    argo.changed();
-  });
-  argo.pages.define(filterPattern, filterPage(deps, argo.changed));
+  deps.changes.subscribe(() => argo.changed());
+  argo.pages.define(filterPattern, filterPage(deps));
 }
 
 function filterPage(
   deps: IssueDeps,
-  changed: () => void,
 ): LoaderPage<FilterState, FilterData, Issue> {
   const targetOf = filterTargets(deps);
 
   return {
     state: filterState,
-    load: (input) => loadFilter({ ...deps, changed }, targetOf(input)),
+    load: (input) => loadFilter(deps, input.read, targetOf(input)),
     list: (input, cursor) =>
       listFilter(targetOf(input), input.state.query, cursor),
     render: (data, to, { state, list }) => (

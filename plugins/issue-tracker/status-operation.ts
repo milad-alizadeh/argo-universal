@@ -1,6 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { IssueStatus } from './github-issues';
-import { openDepsClient, type Project } from './issue-client';
+import { openDepsClient, projectById, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 
 type Params = Readonly<Record<string, string | number | boolean>>;
@@ -23,7 +23,7 @@ async function setStatus(
 ): Promise<{ number: number; status: IssueStatus }> {
   const number = Number(params.number);
   const status = statusOf(params.status);
-  const project = await projectOf(deps, params.projectId);
+  const project = await projectOf(deps, String(params.projectId));
   const client = await openDepsClient({ project, deps });
 
   await client.setStatus(number, status);
@@ -38,13 +38,8 @@ function statusOf(given: Params[string] | undefined): IssueStatus {
   throw new Error('status must be open or closed.');
 }
 
-async function projectOf(
-  deps: IssueDeps,
-  projectId: Params[string] | undefined,
-): Promise<Project> {
-  const project = (await deps.listProjects()).find(
-    ({ id }) => id === projectId,
-  );
+async function projectOf(deps: IssueDeps, projectId: string): Promise<Project> {
+  const project = await projectById(deps.listProjects, projectId);
 
   if (!project) throw new Error('No Project holds that Issue.');
 

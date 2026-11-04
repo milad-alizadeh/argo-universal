@@ -48,7 +48,7 @@ export const PluginRequest = z.discriminatedUnion('api', [
     result: wire.PluginDispatchResult,
   }),
   z.object({ api: z.literal('operations'), call: wire.PluginOperationCall }),
-  z.object({ api: z.literal('pages'), call: wire.LoaderPageCall }),
+  ...wire.LoaderRequest.options,
   z.object({
     api: z.literal('view'),
     viewId: wire.PluginViewId,

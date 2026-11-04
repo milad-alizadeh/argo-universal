@@ -66,6 +66,7 @@ const kit = createKit(
     operations: (operationCall) =>
       call({ api: 'operations', call: operationCall }),
     pages: (pageCall) => call({ api: 'pages', call: pageCall }),
+    reads: (answer) => call({ api: 'reads', call: answer }),
   },
 );
 
@@ -98,6 +99,7 @@ const spawned = (id: string): PluginProcess =>
 
 const pluginApi: Argo = frozen({
   operations: frozen({ register: kit.operations.register }),
+  queries: frozen(kit.loaderPages.queries),
   accounts: frozen({
     add: (host, options) =>
       call({ api: 'accounts', call: { action: 'add', host, ...options } }),
@@ -110,9 +112,7 @@ const pluginApi: Argo = frozen({
       call({ api: 'oauth', call: { action: 'await', state, url } }),
   }),
   nav: frozen({
-    badge: async (id, count) => {
-      await call({ api: 'nav', id, count });
-    },
+    badge: (id, count) => call({ api: 'nav', id, count }).then(() => {}),
   }),
   assets: frozen({
     resolve: (source) => call({ api: 'assets', source }),

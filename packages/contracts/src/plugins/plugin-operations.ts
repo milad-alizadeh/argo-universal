@@ -77,6 +77,13 @@ export const PluginOperationCaller = z.strictObject({
 
 export type PluginOperationCaller = z.infer<typeof PluginOperationCaller>;
 
+// The worker's answer that one call Argo asked of it failed, by the call's id, and why.
+export const WorkerCallFailed = z.strictObject({
+  action: z.literal('failed'),
+  id: z.number().int().nonnegative(),
+  error: z.string(),
+});
+
 // The worker's answer to one invocation, by the id it arrived with.
 export const PluginOperationCall = z.discriminatedUnion('action', [
   z.strictObject({
@@ -84,11 +91,7 @@ export const PluginOperationCall = z.discriminatedUnion('action', [
     id: z.number().int().nonnegative(),
     result: WireJson,
   }),
-  z.strictObject({
-    action: z.literal('failed'),
-    id: z.number().int().nonnegative(),
-    error: z.string(),
-  }),
+  WorkerCallFailed,
 ]);
 
 export type PluginOperationCall = z.infer<typeof PluginOperationCall>;

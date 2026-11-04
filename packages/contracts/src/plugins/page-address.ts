@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { PluginOperationName, PluginOperationParams } from '#plugin-operations';
+import {
+  PluginOperationName,
+  PluginOperationParams,
+  WorkerCallFailed,
+} from '#plugin-operations';
 import { PageStateValue } from '#plugin-wire-action';
 import { WireJson } from '#plugin-wire-json';
 
@@ -33,25 +37,21 @@ export const PageRun = z.strictObject({
 
 export type PageRun = z.infer<typeof PageRun>;
 
-/*
- * What the Operation answered and the Page path patterns whose Plugin trees it may have changed: the
- * App draws again every open address whose path one of them matches.
- */
-export const PageRunAnswer = z.strictObject({
-  result: WireJson,
-  stale: z.array(z.string()),
-});
+// What the Operation answered; the trees it changed hear of it from the stale mark it makes.
+export const PageRunAnswer = z.strictObject({ result: WireJson });
 
 export type PageRunAnswer = z.infer<typeof PageRunAnswer>;
 
 /*
- * A stale mark the Server pushes to every connected App after one of the Plugin's Operations ran, from
- * a Component event, an Agent or the CLI, or after the Plugin's `argo.changed()`: the App draws again
- * the kept addresses it has on screen.
+ * A stale mark the Server pushes to every connected App. A write, which is one of the Plugin's Operations
+ * run from a Component event, an Agent or the CLI, or the Plugin's `argo.changed()`, marks every address
+ * of the Plugin and names none. A Query whose kept answer changed with no write, as when a background pass
+ * reads it again, names the addresses whose last draw read it. The App draws again the marked addresses
+ * it has on screen.
  */
 export const StaleMark = z.strictObject({
   pluginId: z.string().min(1),
-  stale: z.array(z.string()),
+  addresses: z.array(PageAddress).optional(),
 });
 
 export type StaleMark = z.infer<typeof StaleMark>;
@@ -80,6 +80,24 @@ export const LoaderPageCall = z.discriminatedUnion('action', [
 ]);
 
 export type LoaderPageCall = z.infer<typeof LoaderPageCall>;
+
+// The Plugin's answer to one named read Argo asked it to run, by the read's id.
+export const QueryReadAnswer = z.discriminatedUnion('action', [
+  z.strictObject({
+    action: z.literal('read'),
+    id: z.number().int().nonnegative(),
+    value: WireJson,
+  }),
+  WorkerCallFailed,
+]);
+
+export type QueryReadAnswer = z.infer<typeof QueryReadAnswer>;
+
+// A worker's calls for its Loader pages, by the runtime api each crosses on.
+export const LoaderRequest = z.discriminatedUnion('api', [
+  z.object({ api: z.literal('pages'), call: LoaderPageCall }),
+  z.object({ api: z.literal('reads'), call: QueryReadAnswer }),
+]);
 
 const segmentsOf = (path: string): string[] =>
   path.split('/').filter((segment) => segment.length > 0);

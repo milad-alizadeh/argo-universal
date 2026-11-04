@@ -16,7 +16,7 @@ const close = {
 
 /*
  * The one Plugin the kit's Loader page tests share: a Loader page over a paged list it keeps in memory, with a
- * search, load more, a refresh and a write.
+ * search, load more, a refresh and a write, and two pages reading one named read.
  */
 const source = `import { List, ListItem, Screen, useState } from '@argo/plugin-kit';
 
@@ -38,6 +38,18 @@ export function register(argo) {
     closed.add(number);
     return { closed: number };
   });
+
+  // A named read the two counted pages share: Argo keeps its answer until a write.
+  const count = argo.queries.define('count', async ({ n }) => {
+    globalThis.counted = (globalThis.counted ?? 0) + 1;
+    return { n, times: globalThis.counted };
+  });
+
+  for (const path of ['/counted', '/counted-too'])
+    argo.pages.define(path, {
+      load: ({ read }) => read(count({ n: 1 })),
+      render: (data) => <ListItem title={String(data.times)} />,
+    });
 
   argo.pages.define('/listed', {
     load: () => null,

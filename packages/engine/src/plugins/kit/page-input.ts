@@ -10,20 +10,25 @@ import type {
   PluginEvent,
 } from '@repo/contracts/plugins/wire';
 import type { Paged } from './paged-lists';
+import type { DrawReader } from './query-reads';
 import { renderContext } from './render-context';
 
 type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
 
-// The address's Page state over the page's defaults; the context is the one the App opened the page for.
+/*
+ * The address's Page state over the page's defaults; the context is the one the App opened the page for,
+ * and its Queries are read for this draw.
+ */
 export function inputOf<State extends PageState>(
   defaults: State | undefined,
   params: Record<string, string>,
-  event: DrawEvent,
+  { event, read }: { event: DrawEvent; read: DrawReader },
 ): LoaderInput<State> {
   return Object.freeze({
     params: Object.freeze(params),
     state: Object.freeze(stateOf(defaults, event.pageState)),
     context: renderContext(event),
+    read: (query) => read(query, false),
   });
 }
 

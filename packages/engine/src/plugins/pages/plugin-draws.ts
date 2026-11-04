@@ -1,15 +1,23 @@
-import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
+import type {
+  LoaderPageCall,
+  PageAddress,
+} from '@repo/contracts/plugins/page-address';
 import { treeAnswer, type DrawAnswer } from '@repo/contracts/plugins/page-draw';
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import type { PluginEvent } from '../protocol/runtime';
-import type {
-  Caller,
-  CallOutcome,
-  Ended,
-  KindCalls,
-  WorkerCalls,
-} from '../runtime/worker-calls';
+import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
 import { checkedPage } from './checked-tree';
+import {
+  answeredError,
+  drawingOf,
+  failed,
+  loadedOf,
+  outcomeOf,
+  type Answered,
+  type DrawAt,
+  type Drawing,
+  type Loaded,
+  type Outcome,
+} from './draw-calls';
 
 /*
  * How long a Loader may read before its draw fails. A Loader awaits the Plugin's own reads, such as a
@@ -21,16 +29,6 @@ const drawLimitMs = 30_000;
 export type Drawn =
   | { ok: true; root: WireNode; pages: number }
   | { ok: false; error: string };
-
-type Answered = Extract<LoaderPageCall, { id: number }>;
-
-type Failed = { ok: false; error: string };
-
-// The worker's answer, or why none came: it stopped, was not running or ran out of time.
-type Outcome = Answered | Failed;
-
-// An address, how many pages of its paged list the App shows, and the Connection that asked.
-type DrawAt = Omit<Extract<PluginEvent, { type: 'draw' }>, 'type' | 'id'>;
 
 // The trees last sent for each address a Plugin drew, kept until its running generation ends.
 type Sent = Map<string, WireNode>;
@@ -44,36 +42,17 @@ const sentKey = ({ pages: _pages, ...address }: DrawAt): string =>
 // Where a background pass runs a Loader alone: its Page path and the Project it reads for.
 export type LoadAt = { path: string; projectId: string };
 
-export type Loaded = { ok: true } | { ok: false; error: string };
+/*
+ * Hears a Plugin's pages go stale: every one after a write, which names no addresses, or the addresses
+ * whose last draw read a Query answer that changed.
+ */
+type ChangeListener = (pluginId: string, addresses?: PageAddress[]) => void;
 
-type ChangeListener = (pluginId: string) => void;
+// What a write makes due before anyone hears of it, so a page drawn again reads past it.
+type Written = (pluginId: string) => void;
 
 // The patterns one worker generation defined as its code ran.
 type Defined = { generation: number; patterns: Set<string> };
-
-const failed = (error: string): Failed => ({ ok: false, error });
-
-const answeredError = (answered: Answered): string =>
-  answered.action === 'failed' ? answered.error : 'The page only loaded';
-
-function loadedOf(outcome: Outcome): Loaded {
-  if ('ok' in outcome) return outcome;
-
-  return outcome.action === 'failed' ? failed(outcome.error) : { ok: true };
-}
-
-const endedError: Record<Ended, (pluginId: string, path: string) => string> = {
-  notRunning: (pluginId: string): string => `Plugin ${pluginId} is not running`,
-  stopped: (): string => 'Plugin stopped',
-  late: (_pluginId: string, path: string): string =>
-    `${path} did not draw in time`,
-};
-
-function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
-  if ('answered' in outcome) return outcome.answered;
-
-  return failed(endedError[outcome.ended](outcome.pluginId, at.path));
-}
 
 /*
  * The runtime side of Loader pages (ADR-0050): each draw, and each background pass's load, is one call to
@@ -89,6 +68,7 @@ export class PluginDraws {
   public constructor(
     private readonly workers: WorkerCalls,
     private readonly log: (line: string) => void,
+    private readonly written: Written,
   ) {
     this.calls = workers.kind({
       event: (id, at) => ({ type: 'draw', id, ...at }),
@@ -174,6 +154,16 @@ export class PluginDraws {
     return loadedOf(await this.calls.call(pluginId, at, limitMs));
   }
 
+  // The draw still waiting on the caller's generation that a Loader's read names, or none.
+  public drawing(caller: Caller, draw: number): Drawing | undefined {
+    return drawingOf(caller.pluginId, draw, this.calls.request(caller, draw));
+  }
+
+  // The addresses whose last draw read a Query answer that has since changed.
+  public heldChanged(pluginId: string, addresses: PageAddress[]): void {
+    for (const listener of this.changeListeners) listener(pluginId, addresses);
+  }
+
   // What one of the Plugin's Operations wrote, whoever ran it, changes it as `argo.changed()` does.
   public changedBy(pluginId: string): void {
     if (this.workers.generation(pluginId) !== undefined) this.notify(pluginId);
@@ -203,6 +193,8 @@ export class PluginDraws {
   }
 
   private notify(pluginId: string): void {
+    this.written(pluginId);
+
     for (const listener of this.changeListeners) listener(pluginId);
   }
 

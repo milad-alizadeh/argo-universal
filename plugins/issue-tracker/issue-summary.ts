@@ -1,5 +1,5 @@
 import type { Issue } from './github-issues';
-import { openClient } from './issue-client';
+import { openClient, projectById } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
 
@@ -104,8 +104,7 @@ async function summaryOf(
   source: Source,
   { projectId, number }: Target,
 ): Promise<IssueSummary> {
-  const projects = await source.listProjects();
-  const project = projects.find(({ id }) => id === projectId);
+  const project = await projectById(source.listProjects, projectId);
 
   if (!project) throw new Error('This Project no longer exists.');
 

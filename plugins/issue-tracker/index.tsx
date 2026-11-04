@@ -6,6 +6,7 @@ import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
 import { createIssuePages } from './issue-pages';
 import { IssuesRoot } from './issue-root';
+import { defineOverview } from './overview';
 import {
   ProjectDetails,
   projectDetailsItems,
@@ -23,12 +24,16 @@ type TrackerPage = (props: { context: PluginRenderContext }) => JSX.Element;
 function createDeps(api: Argo): IssueDeps {
   const trackers = createTrackerRegistry(api);
 
+  const storage = createTrackerStorage(api, trackers.has);
+  const listProjects = api.projects.list;
+
   const shared = {
-    listProjects: api.projects.list,
+    listProjects,
     getSession: api.sessions.get,
-    storage: createTrackerStorage(api, trackers.has),
+    storage,
     trackers,
     changes: createIssueChanges(),
+    overview: defineOverview(api, { listProjects, storage, trackers }),
   };
 
   return { ...shared, pages: createIssuePages(api, shared) };

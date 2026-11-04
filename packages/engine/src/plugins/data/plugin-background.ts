@@ -96,8 +96,7 @@ export class PluginBackground {
       .values()
       .filter((pass) => pass.projectId === projectId))
       this.removePass(pass);
-    this.services.views.endProject(projectId);
-    this.services.data.releaseProject(projectId);
+    this.services.projectRemoved(projectId);
   }
 
   remove(pluginId: string): void {

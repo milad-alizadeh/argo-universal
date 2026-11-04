@@ -59,7 +59,7 @@ const nextMark = (
     new Promise<'none'>((settle) => setTimeout(() => settle('none'), 100)),
   ]);
 
-const marked = { pluginId: dataPluginId, stale: ['/'] };
+const marked = { pluginId: dataPluginId };
 
 it('marks the pages once when an Operation says argo.changed() as it writes', async () => {
   const kit = await start();

@@ -1,6 +1,5 @@
 import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
-import type { PluginViewId } from '@repo/contracts/plugins/wire';
-import type { OpenView } from '../views/open-view';
+import { PluginViewId } from '@repo/contracts/plugins/wire';
 import type { QueryIntervals } from './query-intervals';
 import {
   watchKey,
@@ -25,9 +24,9 @@ export class QueryWatchers {
     private readonly intervals: QueryIntervals,
   ) {}
 
-  add(view: OpenView, request: QueryWatch): void {
+  add(request: QueryWatch): void {
     this.registrations.set(watchKey(request), {
-      viewId: view.opening.viewId,
+      viewId: PluginViewId.parse(request.viewId),
       watchId: request.watchId,
       every: this.every(request.every),
     });

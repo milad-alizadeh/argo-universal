@@ -23,7 +23,7 @@ function draws(log: (line: string) => void = (): null => null): Draws {
 
   const workers = new WorkerCalls({ send, clock: idleClock });
 
-  return { pages: new PluginDraws(workers, log), workers, sent };
+  return { pages: new PluginDraws(workers, log, () => null), workers, sent };
 }
 
 const rows = (count: number): WireJson =>

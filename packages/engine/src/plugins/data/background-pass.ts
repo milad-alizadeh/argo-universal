@@ -1,8 +1,6 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
 import type { PluginDraws } from '../pages';
 import { runtimeError } from '../protocol/runtime';
-import type { PluginViews } from '../views/plugin-views';
-import type { PluginData } from './plugin-data';
 import { backgroundBudgetMs } from './query-intervals';
 import type { QueryServices } from './query-types';
 
@@ -14,9 +12,8 @@ export type BackgroundEntry = {
 
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
   draws: PluginDraws;
-  // A removed Project's open App views end with it.
-  views: PluginViews;
-  data: PluginData;
+  // A removed Project's views and kept answers end with its passes.
+  projectRemoved: (projectId: string) => void;
 };
 
 // `enter` holds the pass back while too many others are running, and answers with its release.

@@ -27,6 +27,7 @@
     "#plugin-material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
     "#kit-tokens": "./src/kit-tokens.ts",
     "#plugin-session-calls": "./src/plugins/session-calls.ts",
+    "#plugin-fs-calls": "./src/plugins/fs-calls.ts",
     "#plugin-slot-calls": "./src/plugins/slot-calls.ts",
     "#contract-columns": "./src/columns.ts"
   },

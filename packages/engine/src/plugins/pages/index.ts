@@ -13,13 +13,15 @@
  * is invalid or too large. It never throws.
  *
  * `run(call)` runs one of the Plugin's declared Operations through the ADR-0044 registry's checks (the
- * manifest's params and tier, a running worker) and answers its result with the Page path patterns the
- * App draws again. It throws what the Operation throws, so the App rolls back and says why.
+ * manifest's params and tier, a running worker) and answers its result. It throws what the Operation
+ * throws, so the App rolls back and says why.
  *
  * `stale(signal)` streams a stale mark after every Operation of a Plugin that answered, whoever ran it
- * (a Component event, an Agent, the CLI), and after each `argo.changed()` outside one, until the signal
- * aborts or `close()`; one Operation makes one mark, however often its handler says `argo.changed()`; the App draws again only
- * the addresses it has on screen, so no App polls.
+ * (a Component event, an Agent, the CLI), and after each `argo.changed()` outside one, naming no address,
+ * so every one of the Plugin's is stale; one Operation makes one mark, however often its handler says
+ * `argo.changed()`. A Query answer that changed with no write marks the addresses whose last draw read
+ * it. It runs until the signal aborts or `close()`; the App draws again only the addresses it has on
+ * screen, so no App polls.
  *
  * `patterns(pluginId)` lists the Page path patterns the running Plugin defined, so the App knows which
  * of its paths are Loader pages; it starts the Plugin first and throws when it cannot.

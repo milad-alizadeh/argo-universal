@@ -1,4 +1,4 @@
-import type { ListPage } from '@argo/plugin-kit';
+import type { ListPage, LoaderInput } from '@argo/plugin-kit';
 import { pageSize } from './filter-shown';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
@@ -6,12 +6,7 @@ import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { filterById, type IssueFilter } from './issue-filters';
 import { pathText } from './issue-paths';
-import {
-  knownOverview,
-  readOverview,
-  requestOverview,
-  type Overview,
-} from './overview-requests';
+import type { Overview } from './overview';
 
 // What the search field holds, which narrows the filter's Issues.
 export type FilterState = { query: string };
@@ -30,8 +25,8 @@ export type FilterData = {
 
 type Load = { params: Readonly<Record<string, string>>; state: FilterState };
 
-// What the Loader reads with, and how it says a read it left running has changed the page.
-export type LoadDeps = IssueDeps & { changed: () => void };
+// How the Loader reads a Query through Argo.
+type Read = LoaderInput<FilterState>['read'];
 
 // The Projects, and the Project and filter the Page path names with its Tracker opened, or why it does not open.
 type Target = {
@@ -96,7 +91,8 @@ const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
  * overview and whether its Tracker opens. The Issues are the page's paged list, read by `listFilter`.
  */
 export async function loadFilter(
-  deps: LoadDeps,
+  deps: IssueDeps,
+  read: Read,
   target: Promise<Target>,
 ): Promise<FilterData> {
   const { projects, project, filter, opened } = await target;
@@ -105,7 +101,7 @@ export async function loadFilter(
     return { projects, overview: null, message: gone.message };
 
   const [overview, { message }] = await Promise.all([
-    overviewOf(deps, project),
+    read(deps.overview({ projectId: project.id })).catch(() => null),
     opened,
   ]);
 
@@ -157,33 +153,3 @@ const nextCursor = (issues: Issue[]): string | null =>
 
 const lastCreated = (issues: Issue[]): string | null =>
   issues.at(-1)?.createdAt ?? null;
-
-/*
- * The overview this Plugin read or is reading, so a page drawn after a status change waits for the new
- * counts. Before the first read, the stored overview draws at once and GitHub's is read behind it; the
- * page draws again when it lands, as the overview page always has.
- */
-async function overviewOf(
-  deps: LoadDeps,
-  project: Project,
-): Promise<Overview | null> {
-  const known = knownOverview(deps, project);
-
-  if (known) return known.catch(() => null);
-
-  return storedOverview(deps, project);
-}
-
-async function storedOverview(
-  deps: LoadDeps,
-  project: Project,
-): Promise<Overview | null> {
-  const stored = await readOverview(deps, project);
-  const read = requestOverview(deps, project, false);
-
-  if (!stored) return read.catch(() => null);
-
-  void read.then(deps.changed, () => null);
-
-  return stored;
-}

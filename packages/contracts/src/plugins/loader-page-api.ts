@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import type { PluginQuery } from './argo-calls';
 import type { PluginRenderContext } from './kit';
 import type { PageState } from './page-address';
 import type { PluginOperationParams } from './plugin-operations';
+import type { QueryResult } from './query-results';
 import type {
   LoadMore,
   OperationCall,
@@ -17,13 +19,15 @@ import type {
  *   App never set reads its default.
  * - `load` reads everything the page shows but its paged list. It may be slow; the App keeps the previous
  *   Plugin tree on screen until the next one lands. What it throws fails the draw, and the App says so.
- *   A manifest's `background` pass runs `load` alone, for one Project, on its interval, and drops the answer.
+ *   `input.read(query)` reads a Query, described or named, through Argo's cache: the answer Argo keeps,
+ *   unless a write made it due. A manifest's `background` pass runs `load` alone, for one Project, on its
+ *   interval, reads every Query fresh and drops the answer, so the pages that read them draw again when
+ *   their answers changed.
  * - `list`, when the page has a paged list, reads one page of it from `cursor` (null for the first) and
- *   answers its items and the cursor of the page after, or null at the end. The kit keeps the pages it
- *   read for each address for a minute and reads only those it lacks; an Operation or `argo.changed()`
- *   forgets every page whose read started before it. The first page alone is read
- *   again on every draw. An item equal to one already listed is dropped, so a cursor may include the
- *   boundary item.
+ *   answers its items and the cursor of the page after, or null at the end. Argo keeps each page as a Query
+ *   of the address and cursor, so a load more reads only the page it lacks; an Operation or
+ *   `argo.changed()` makes every kept page due. The first page alone is read again on every draw. An item
+ *   equal to one already listed is dropped, so a cursor may include the boundary item.
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by
  *   `to`, which the App acts on itself; a function prop fails the draw. `input.list` holds the pages read.
  */
@@ -41,11 +45,17 @@ export type LoaderPage<State extends PageState, Data, Item = never> = Readonly<{
   ) => ReactNode;
 }>;
 
-// What a draw is for: the pattern's `:params` from the Page path, the Page state, and the page's context.
+/*
+ * What a draw is for: the pattern's `:params` from the Page path, the Page state, and the page's context;
+ * `read` reads a Query for it, held by its Page address.
+ */
 export type LoaderInput<State extends PageState> = Readonly<{
   params: Readonly<Record<string, string>>;
   state: Readonly<State>;
   context: PluginRenderContext;
+  read: <Query extends PluginQuery>(
+    query: Query,
+  ) => Promise<QueryResult<Query>>;
 }>;
 
 export type ListPage<Item> = { items: Item[]; cursor: string | null };

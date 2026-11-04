@@ -93,10 +93,7 @@ it("draws a page again and asks an items Slot again after the Plugin's argo.chan
 
   await kit.pages.draw({ path: '/bump' });
 
-  expect((await stale.next()).value).toEqual({
-    pluginId: dataPluginId,
-    stale: expect.arrayContaining(['/', '/card']),
-  });
+  expect((await stale.next()).value).toEqual({ pluginId: dataPluginId });
   expect(await kit.pages.draw({ path: '/' })).toMatchObject({
     root: { props: { children: 'Count 1' } },
   });

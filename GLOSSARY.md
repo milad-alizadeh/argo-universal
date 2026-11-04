@@ -163,7 +163,7 @@ What names one drawing of a Plugin page: the Plugin, the Page path, the Page sta
 _Avoid_: Query key, cache key, URL
 
 **Stale mark**:
-The Server telling every connected App that a Plugin's pages may have changed, by their Page path patterns. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
+The Server telling every connected App that a Plugin's pages may have changed: all of them after a write, or the Page addresses that read a Query whose answer changed. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
 _Avoid_: Invalidation, refresh event, push update
 
 **Loader**:
@@ -191,8 +191,16 @@ The answer, from the user or from Argo for a first-party Plugin, about a Capabil
 _Avoid_: Approval, permission
 
 **Query**:
-A read a Plugin describes as a value instead of making, which Argo performs, keys by its normalised form and refreshes on a clock Argo owns.
+A read a Plugin describes as a value instead of making, which Argo performs, keys by its normalised form and refreshes on a clock Argo owns. It is the one place Argo keeps a Plugin's reads; a write makes them due.
 _Avoid_: Descriptor, query key, request object
+
+**Named read**:
+A Query that is the Plugin's own read, defined once by name and asked for with args, for a read that combines several calls. Argo keeps its answer and runs it again when it is due, so it may only read.
+_Avoid_: Cached function, custom query, memo
+
+**Query holder**:
+What keeps a Query's answer wanted: a view watching it, a Page address whose last draw read it, or a Background pass reading it. A changed answer marks the Page addresses holding it stale.
+_Avoid_: Subscriber, owner, registration
 
 **Background pass**:
 One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.

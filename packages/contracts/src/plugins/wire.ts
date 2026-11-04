@@ -36,7 +36,7 @@ import { WireJson } from '#plugin-wire-json';
 
 export { WireJson } from '#plugin-wire-json';
 
-export { LoaderPageCall } from '#plugin-page-address';
+export { LoaderRequest } from '#plugin-page-address';
 
 export { PluginOperationCall } from '#plugin-operations';
 

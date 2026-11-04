@@ -1,4 +1,4 @@
-import { matchesAnyPagePath } from '@repo/contracts/plugins/page-address';
+import type { StaleMark } from '@repo/contracts/plugins/page-address';
 import type { DrawRequest } from '@repo/contracts/plugins/page-draw';
 import type { OperationCall, WireNode } from '@repo/contracts/plugins/wire';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
@@ -8,7 +8,6 @@ import {
   type QueryClient,
   type QueryKey,
 } from '@tanstack/react-query';
-import { z } from 'zod';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import { keptAfter, type Answer, type Kept } from './kept-tree';
 
@@ -144,26 +143,33 @@ function patched(node: WireNode, patches: Patches): WireNode {
 }
 
 /*
- * Every kept address of the Plugin whose path a stale pattern matches is marked stale; only those on a
- * focused screen draw again now (a screen out of focus is not subscribed), the rest when they come back.
- * A draw already running read before the change, so it is left to finish and then marked again.
+ * The kept addresses a stale mark names are marked stale, or every kept address of the Plugin when it names
+ * none; only those on a focused screen draw again now (a screen out of focus is not subscribed), the rest
+ * when they come back. A draw already running read before the change, so it is left to finish and then
+ * marked again.
  */
-export function drawStale(
-  { client, draws }: DrawCache,
-  pluginId: string,
-  stale: readonly string[],
-): void {
-  const filters = {
-    ...draws.pathFilter(),
-    predicate: (query: Query): boolean =>
-      isStale(addressOf(query), pluginId, stale),
-  };
+export function drawStale({ client, draws }: DrawCache, mark: StaleMark): void {
+  for (const filter of staleFilters(draws, mark)) {
+    const landed = markWhenLanded(client);
 
-  const landed = markWhenLanded(client);
-
-  for (const query of client.getQueryCache().findAll(filters)) landed(query);
-  void client.invalidateQueries(filters, { cancelRefetch: false });
+    for (const query of client.getQueryCache().findAll(filter)) landed(query);
+    void client.invalidateQueries(filter, { cancelRefetch: false });
+  }
 }
+
+type DrawFilter = { queryKey: QueryKey; exact?: boolean };
+
+// Each address the mark names, exactly, or every address of the Plugin when it names none.
+const staleFilters = (
+  draws: DrawCache['draws'],
+  { pluginId, addresses }: StaleMark,
+): DrawFilter[] =>
+  addresses
+    ? addresses.map((address) => ({
+        queryKey: draws.queryKey(address),
+        exact: true,
+      }))
+    : [draws.queryFilter({ pluginId })];
 
 const markWhenLanded =
   (client: QueryClient) =>
@@ -179,24 +185,3 @@ const markAgain =
       { queryKey, exact: true },
       { cancelRefetch: false },
     );
-
-type Keyed = { pluginId: string; path: string };
-
-// A draw query's key holds its address as tRPC's input.
-const DrawKey = z.tuple([
-  z.unknown(),
-  z.object({ input: z.object({ pluginId: z.string(), path: z.string() }) }),
-]);
-
-const addressOf = (query: Query): Keyed | null => {
-  const parsed = DrawKey.safeParse(query.queryKey);
-
-  return parsed.success ? parsed.data[1].input : null;
-};
-
-const isStale = (
-  address: Keyed | null,
-  pluginId: string,
-  stale: readonly string[],
-): boolean =>
-  address?.pluginId === pluginId && matchesAnyPagePath(stale, address.path);

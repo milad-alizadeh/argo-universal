@@ -96,12 +96,10 @@ export interface Kit {
   drawTree: (element: React.ReactNode) => WireJson;
 }
 
-// What the host answers for a Plugin: its Queries, its Slot items, its own Operations and its Loader pages' draws.
-type KitCalls = {
-  data: Parameters<typeof dataClient>[0];
+// What the host answers for a Plugin: its Queries, its Slot items, its own Operations and its Loader pages' calls.
+type KitCalls = loader.LoaderCalls & {
   slots: SlotSend;
   operations: OperationSend;
-  pages: loader.LoaderPageSend;
 };
 
 type DataClient = ReturnType<typeof dataClient>;
@@ -128,17 +126,14 @@ export function createKit(
   return pageKit({ data, pages, ...providers(calls) });
 }
 
-/*
- * What a Plugin registers besides its pages: the Slots it answers and the Operations it declares. An Operation
- * has written by the time it answers, so the paged lists read before then are stale.
- */
+// What a Plugin registers besides its pages: the Slots it answers and the Operations it declares.
 function providers(
   calls: KitCalls,
 ): Pick<KitParts, 'slots' | 'operations' | 'loaderPages'> {
-  const pages = loader.loaderPages(calls.pages);
-  const operations = operationHandlers(pages.answering(calls.operations));
+  const loaderPages = loader.loaderPages(calls);
+  const operations = operationHandlers(loaderPages.answering(calls.operations));
 
-  return { slots: slotProviders(calls.slots), operations, loaderPages: pages };
+  return { slots: slotProviders(calls.slots), operations, loaderPages };
 }
 
 function pageKit(parts: KitParts): Kit {
@@ -182,10 +177,13 @@ function deliver(parts: KitParts, event: PluginEvent): void {
 
 type PartEvent = Exclude<PluginEvent, { type: 'data' | 'slotItems' }>;
 
+const isLoaderEvent = (event: PartEvent): event is loader.LoaderEvent =>
+  event.type === 'draw' || event.type === 'read';
+
 function answerOrDraw(parts: KitParts, event: PartEvent): void {
   if (event.type === 'operation') return parts.operations.answer(event);
 
-  if (event.type === 'draw') return parts.loaderPages.answer(event);
+  if (isLoaderEvent(event)) return parts.loaderPages.answer(event);
 
   return parts.pages.receive(event);
 }

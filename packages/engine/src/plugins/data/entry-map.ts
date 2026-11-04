@@ -48,6 +48,21 @@ export function dropOldest(entries: Map<string, MappedQuery>): number {
   return spare.length;
 }
 
+// The warm path keeps answers no view holds, so only the oldest unwatched ones go.
+export function boundWarm(
+  entries: Map<string, MappedQuery>,
+  log: (line: string) => void,
+  pluginId: string,
+): void {
+  if (entries.size <= retainedWarmEntries) return;
+  const dropped = dropOldest(entries);
+
+  if (dropped === 0) return;
+  log(
+    `Plugin ${pluginId}: dropped ${dropped} warm Query answers over the ${retainedWarmEntries} kept`,
+  );
+}
+
 export function queryKey(
   projectId: string | undefined,
   query: PluginQuery,
@@ -59,13 +74,14 @@ export function queryKey(
   return JSON.stringify([projectId ?? null, hash]);
 }
 
-export function removeProject(
-  entries: Map<string, MappedQuery>,
-  projectId: string,
+// Closes and drops the entries `drops` picks, such as those of a removed Project.
+export function removeWhere<Entry extends MappedQuery>(
+  entries: Map<string, Entry>,
+  drops: (entry: Entry) => boolean,
 ): void {
   for (const [key, entry] of entries
     .entries()
-    .filter(([, entry]) => entry.owner.projectId === projectId)) {
+    .filter(([, entry]) => drops(entry))) {
     entry.close();
     entries.delete(key);
   }

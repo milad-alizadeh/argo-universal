@@ -6,9 +6,12 @@ import {
 import { productName } from '@repo/contracts/product-identity';
 import type { PluginReply } from '../protocol/runtime';
 import type { StateRequest } from '../services/plugin-calls';
+import type { NamedReads } from './named-reads';
 import type { QueryOwner, QueryServices } from './query-types';
 
-function requestOf(query: PluginQuery): StateRequest {
+type Described = Exclude<PluginQuery, { api: 'read' }>;
+
+function requestOf(query: Described): StateRequest {
   if (query.api === 'storage') return query;
 
   if (query.api === 'fetch') return { api: 'fetch', call: query };
@@ -21,17 +24,36 @@ const processRequest = (
   query: Extract<PluginQuery, { api: 'process' }>,
 ): StateRequest => ({ api: 'process', call: query });
 
+// What reading needs: the services a described Query calls, and the worker a named read runs in.
+export type QueryReaders = Pick<QueryServices, 'during' | 'services'> & {
+  reads: NamedReads;
+};
+
+// A described Query is Argo's call; a named read is the Plugin's, run for the draw that asked, if any.
+function ask(
+  { pluginId, generation, projectId, query }: QueryOwner,
+  readers: QueryReaders,
+  draw: number | undefined,
+): Promise<PluginReply> {
+  if (query.api === 'read') {
+    const { name, args } = query;
+
+    return readers.reads.run(pluginId, { name, args, projectId, draw });
+  }
+
+  return readers.services.handle(pluginId, generation, {
+    ...requestOf(query),
+    query: true,
+    projectId,
+  });
+}
+
 export async function readQuery(
   owner: QueryOwner,
-  services: Pick<QueryServices, 'during' | 'services'>,
+  readers: QueryReaders,
+  draw?: number,
 ): Promise<PluginReply> {
-  const reply = await services.during(() =>
-    services.services.handle(owner.pluginId, owner.generation, {
-      ...requestOf(owner.query),
-      query: true,
-      projectId: owner.projectId,
-    }),
-  );
+  const reply = await readers.during(() => ask(owner, readers, draw));
 
   if (timedOut(owner.query, reply))
     return { ok: false, error: `${productName} Query timed out` };
@@ -49,6 +71,7 @@ const timeouts: Record<PluginQuery['api'], (reply: PluginReply) => boolean> = {
   fetch: neverTimesOut,
   process: processTimedOut,
   storage: neverTimesOut,
+  read: neverTimesOut,
 };
 
 function processTimedOut(reply: PluginReply): boolean {

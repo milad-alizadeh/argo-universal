@@ -8,7 +8,7 @@ import {
   type State,
 } from './async-state';
 
-export type Show<Value> = (value: Value) => void;
+type Show<Value> = (value: Value) => void;
 
 // Answers the value, and may `show` an earlier one first, such as a cached answer.
 export type Load<Value> = (show: Show<Value>) => Promise<Value>;

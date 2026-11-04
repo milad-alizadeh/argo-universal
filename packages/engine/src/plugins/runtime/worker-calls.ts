@@ -30,6 +30,8 @@ export type KindCalls<Request, Answer, Result> = {
     limitMs?: number,
   ) => Promise<Result>;
   answer: (caller: Caller, answer: Answer) => void;
+  // What a call still waiting on the caller's generation asked for, by its id.
+  request: (caller: Caller, id: number) => Request | undefined;
 };
 
 export type WorkerTransport = {
@@ -37,7 +39,8 @@ export type WorkerTransport = {
   clock: PluginClock;
 };
 
-type Waiting<Answer> = Caller & {
+type Waiting<Request, Answer> = Caller & {
+  request: Request;
   settle: (outcome: CallOutcome<Answer>) => void;
 };
 
@@ -58,7 +61,7 @@ class KindTable<
   Answer extends { id: number },
   Result,
 > implements KindCalls<Request, Answer, Result> {
-  private readonly waiting = new Map<number, Waiting<Answer>>();
+  private readonly waiting = new Map<number, Waiting<Request, Answer>>();
   private next = 0;
 
   public constructor(
@@ -90,7 +93,7 @@ class KindTable<
     const { promise, resolve } = Promise.withResolvers<CallOutcome<Answer>>();
     const cancel = this.deadline(caller, resolve, limitMs);
 
-    this.waiting.set(id, { ...caller, settle: resolve });
+    this.waiting.set(id, { ...caller, request, settle: resolve });
     this.sending.send(caller.pluginId, this.kind.event(id, request));
 
     return promise.finally(() => {
@@ -101,7 +104,7 @@ class KindTable<
 
   private deadline(
     { pluginId }: Caller,
-    settle: Waiting<Answer>['settle'],
+    settle: Waiting<Request, Answer>['settle'],
     limitMs: number,
   ): () => void {
     const late = (): void => settle({ ended: 'late', pluginId });
@@ -113,6 +116,12 @@ class KindTable<
     const waiting = this.waiting.get(answered.id);
 
     if (waiting && sameWorker(waiting, caller)) waiting.settle({ answered });
+  }
+
+  public request(caller: Caller, id: number): Request | undefined {
+    const waiting = this.waiting.get(id);
+
+    return waiting && sameWorker(waiting, caller) ? waiting.request : undefined;
   }
 
   public end(matches: (caller: Caller) => boolean): void {

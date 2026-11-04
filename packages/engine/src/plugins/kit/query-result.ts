@@ -20,6 +20,8 @@ const readers: QueryReaders = {
   fetch: (data) => fetchResponse(FetchReply.parse(data)),
   process: (data) => ProcessResult.parse(data),
   storage: (data) => z.array(StorageResult).parse(data),
+  // A named read answers the Plugin's own JSON, which only its own code reads.
+  read: (data) => data,
 };
 
 export function queryResult(

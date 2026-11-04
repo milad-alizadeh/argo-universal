@@ -172,6 +172,11 @@ import type { UseData } from '@repo/contracts/plugins/argo-api';
 export type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 
 // One definition, shared with the Engine's readers: what a Query answers comes from its api.
-export type { QueryResult } from '@repo/contracts/plugins/query-results';
+export type {
+  NamedQuery,
+  QueriesApi,
+  QueryReadContext,
+  QueryResult,
+} from '@repo/contracts/plugins/query-results';
 
 export declare const useData: UseData;

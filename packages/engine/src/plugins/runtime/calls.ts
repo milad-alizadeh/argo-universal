@@ -1,5 +1,5 @@
 import { replyFailure } from '../access/capability-refusal';
-import type { PluginData } from '../data/plugin-data';
+import type { PluginData, QueryOrigin } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import type { PluginOperations } from '../operations';
 import type { PluginDraws } from '../pages';
@@ -45,8 +45,15 @@ type RuntimeAnswers = { [Name in RuntimeApi]: Answer<Name> };
 const runtimeCalls: RuntimeAnswers = {
   nav: ({ data }, { pluginId, generation, request }) =>
     data.badges.set(pluginId, generation, request),
-  data: ({ data }, { pluginId, generation, request }) =>
-    data.handle(pluginId, generation, request),
+  data: (runtime, { pluginId, generation, request }) =>
+    runtime.data.handle(
+      { pluginId, generation },
+      request,
+      queryOrigin(runtime, { pluginId, generation }, request),
+    ),
+  // A Plugin's answer to a named read a Query asked it to run (ADR-0037); it waits for nothing.
+  reads: ({ data }, { pluginId, generation, request }) =>
+    data.reads.receive({ pluginId, generation }, request.call),
   hooks: ({ hooks }, { pluginId, generation, request }) =>
     hooks.reply({ pluginId, generation }, request.call),
   view: ({ views }, { pluginId, request }) =>
@@ -118,3 +125,25 @@ function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
 }
 
 type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
+
+type DataRequest = Extract<PluginRequest, { api: 'data' }>;
+
+/*
+ * A view's Query is for the Project the view opened for; a Loader's read is for its draw's Project and is
+ * held by its Page address. A read that names no draw still running reads nothing.
+ */
+function queryOrigin(
+  runtime: RuntimeCalls,
+  caller: { pluginId: string; generation: number },
+  request: DataRequest,
+): QueryOrigin {
+  if (request.action !== 'read')
+    return {
+      projectId: runtime.views.dataView(caller.pluginId, request.viewId)
+        .projectId,
+    };
+
+  const drawn = runtime.draws.drawing(caller, request.draw);
+
+  return { projectId: drawn?.projectId, drawn };
+}

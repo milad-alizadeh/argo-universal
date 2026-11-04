@@ -5,6 +5,7 @@ import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
 import { PluginDraws } from '../pages';
 import type { PluginStatus } from '../protocol/runtime';
+import type { PluginServices } from '../services/plugin-services';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
 import type { OpenView } from '../views/open-view';
 import { PluginViews } from '../views/plugin-views';
@@ -14,6 +15,9 @@ import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
 import { WorkerCalls } from './worker-calls';
+
+// What the runtime's resources are built from: the Queries' services, with the whole of the Plugin services.
+export type RuntimeInput = QueryServices & { services: PluginServices };
 
 export class RuntimeResources {
   readonly views;
@@ -33,30 +37,44 @@ export class RuntimeResources {
   private readonly unwatch;
   private projectUpdates: Promise<void> = Promise.resolve();
 
-  constructor(private readonly input: QueryServices) {
+  constructor(private readonly input: RuntimeInput) {
     this.views = new PluginViews(input.send, input.log, this.lifecycle());
-    this.data = new PluginData(input, this.views);
     this.workers = new WorkerCalls(input);
+    this.data = this.pluginData(input);
     this.items = new PluginSlotItems(this.workers);
     this.operations = new PluginOperations(this.workers);
-    this.draws = new PluginDraws(this.workers, input.log);
-    this.background = new PluginBackground({
-      ...input,
-      draws: this.draws,
-      views: this.views,
-      data: this.data,
-    });
+    this.draws = new PluginDraws(this.workers, input.log, (pluginId) =>
+      this.data.written(pluginId),
+    );
+    this.background = this.backgroundPasses(input);
     this.unwatch = this.watch(input);
   }
 
+  // A Query answer that changed marks the Page addresses whose draws read it.
+  private pluginData(input: QueryServices): PluginData {
+    return new PluginData(input, this.workers, (pluginId, addresses) =>
+      this.draws.heldChanged(pluginId, addresses),
+    );
+  }
+
+  private backgroundPasses(input: QueryServices): PluginBackground {
+    return new PluginBackground({
+      ...input,
+      draws: this.draws,
+      projectRemoved: (projectId): void => this.projectRemoved(projectId),
+    });
+  }
+
   // `argo.changed()` and every Operation run reach pages and items Slots alike.
-  private watch(input: QueryServices): Array<() => void> {
+  private watch(input: RuntimeInput): Array<() => void> {
     input.services.onStorageWrite((id) => this.data.storageWritten(id));
 
     return [
       input.services.watchProjects(() => this.projectsChanged()),
       this.operations.onRan((pluginId) => this.draws.changedBy(pluginId)),
-      this.draws.onChanged((pluginId) => this.items.changed(pluginId)),
+      this.draws.onChanged((pluginId, addresses) => {
+        if (!addresses) this.items.changed(pluginId);
+      }),
     ];
   }
 
@@ -73,6 +91,12 @@ export class RuntimeResources {
       received: (view) => this.markDrawn(view),
       failed: (view, message) => this.failures.failed(view, message),
     };
+  }
+
+  // A removed Project's open views and kept answers end with its passes.
+  private projectRemoved(projectId: string): void {
+    this.views.endProject(projectId);
+    this.data.releaseProject(projectId);
   }
 
   private releaseView(view: OpenView, lastOfOpening: boolean): void {
