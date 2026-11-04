@@ -38,11 +38,23 @@ Plugin code runs without Node, so it is checked without Node's types; only `*.te
 import { Text, type Argo } from '@argo/plugin-kit';
 
 export function register(argo: Argo): void {
-  argo.pages.register('/', () => <Text>Hello</Text>);
+  argo.pages.define('/', { load: () => 'Hello', render: (text) => <Text>{text}</Text> });
 }
 ```
 
-A page is opened by the path it registers at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
+A page is a Loader page (ADR-0050): `load` reads what the page shows, and `render` turns it into a tree, with no hooks, effects or function props. A Component event holds a value made by `to`, the Render's second argument: `to.go(path)` opens a page, `to.set(change)` changes the Page state and draws the page again, `to.bind(key)` puts a search's text or a selection into a Page state key, and `to.run(operation, args)` runs one of the Plugin's Operations. `state` gives the Page state's defaults; the Render reads it as `input.state`, and a pattern's `:params` as `input.params`:
+
+```tsx
+argo.pages.define('/counter', {
+  state: { taps: 0 },
+  load: () => null,
+  render: (_data, to, { state }) => (
+    <Button label={`Tapped ${state.taps} times`} onPress={to.set({ taps: state.taps + 1 })} />
+  ),
+});
+```
+
+A page is opened by the path it is defined at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
 
 Run the commands from the Plugin folder:
 
@@ -64,7 +76,7 @@ The command checks source without starting the Plugin or running its machine cal
 Source inspection reports literal Hook and Slot names. Computed registrations need tests that exercise those registrations.
 For literal visual props in JSX, validation uses the Server checks and reports the node and refusal reason.
 These checks cover `Svg` markup, `Chart` series, and `Canvas` scenes from amended ADR-0028.
-`CodeMap` is unsupported; use `Canvas`. Computed visual data needs a mount test.
+`CodeMap` is unsupported; use `Canvas`. Computed visual data needs a page test: a draw drops a refused node and logs why.
 Chart and Canvas rendering remains part of the visual kit components work (#959).
 
 ## Operations
@@ -107,11 +119,11 @@ Import `test` from `@argo/plugin-kit/testing`:
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
-test('a press changes the page', async ({ mount }) => {
-  const page = await mount({ page: '/', surface: { platform: 'web' } });
+test('a press changes the page', async ({ pages }) => {
+  const page = await pages.open({ path: '/' });
 
   await page.press('Increment');
-  assert.equal((await page.find('Count: 1')).type, 'Text');
+  assert.equal(page.find('Count: 1').type, 'Text');
 });
 ```
 
@@ -126,11 +138,16 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 
 | API | Behavior |
 | --- | --- |
-| `mount({ page, surface })` | Opens a page with the chosen App platform. |
+| `pages.open({ path, projectId?, sessionId?, pageState?, platform? })` | Draws a page once, as the App on `platform` (web by default) asks for it, and returns its view. A page that cannot draw rejects with why. |
+| `view.tree`, `view.pageState`, `view.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
+| `view.find(match)` | Returns the node a text or a node test matches, or throws. |
+| `view.press(match)` | Acts on the node's `onPress` as the App does and returns the view showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the view's Project and Session, then the page draws again. |
+| `view.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText`. A bound value lands at once. |
+| `view.loadMore()` | Draws one more page of the page's paged list. |
+| `view.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
+| `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
-| `view.find(text)` | Waits for a matching node and returns its wire data. |
-| `view.press(text)` | Sends `onPress` through the production dispatch path. |
 | `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, and Hook deadlines together. The kit keeps its real rendering scheduler. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
@@ -138,11 +155,11 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `sessions` option | What `argo.sessions.get` answers, by Session id. |
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
-`find` matches a label, title, text, text content, or accessible label. It waits up to three seconds.
-The chosen surface sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
+`find` matches a label, title, text, text content, or accessible label. A Slot view's `find` waits up to three seconds for it.
+An `optimistic` change is the App's to show; a test reads it from the press's value in the tree, and the page drawn after the Operation answers.
+The chosen platform sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
-`mount` accepts `projectId` for a Project page.
-Use the same `connectionId` on overlapping mounts to model subscriptions from one App Connection. Omitting it creates a fresh Connection.
+Use the same `connectionId` on overlapping Slot mounts to model subscriptions from one App Connection. Omitting it creates a fresh Connection.
 Closing a view releases only its subscription.
 
 For a Project details Slot, use the same input that the Server receives:
@@ -285,7 +302,10 @@ Argo's own actions come first. On a wide window the first `header` action, in Sl
 The page opens for the Session whose header it was pressed in: it reads the Session's id from `context.sessionId`.
 
 ```tsx
-argo.pages.register('/issues', ({ context }) => <Issues sessionId={context.sessionId} />);
+argo.pages.define('/issues', {
+  load: () => null,
+  render: (_data, _to, { context }) => <Issues sessionId={context.sessionId} />,
+});
 ```
 
 A page opened any other way has no `sessionId`.
