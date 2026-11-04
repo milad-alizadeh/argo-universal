@@ -8,7 +8,7 @@ A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-ki
   "private": true,
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "check-types": "argo-plugin types . --check && tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "argo-plugin test .",
     "validate": "argo-plugin validate ."
   },
@@ -51,7 +51,7 @@ pnpm validate
 pnpm test
 ```
 
-`argo-plugin <validate|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|test> <dir>` runs the same command.
+`argo-plugin <validate|types|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|types|test> <dir>` runs the same command.
 
 ## Source validation
 
@@ -66,6 +66,36 @@ For literal visual props in JSX, validation uses the Server checks and reports t
 These checks cover `Svg` markup, `Chart` series, and `Canvas` scenes from amended ADR-0028.
 `CodeMap` is unsupported; use `Canvas`. Computed visual data needs a mount test.
 Chart and Canvas rendering remains part of the visual kit components work (#959).
+
+## Operations
+
+A Plugin's own Operations are declared in `contributes.operations` (ADR-0044). Each names its params, and a string param may list its `choices`. `caller` says what the Operation needs of whoever runs it: `"session"` runs it only for a Session, and `"project"` gives it a Project, the `projectId` the run names or else the caller's own. Core checks all of this before the handler runs.
+
+```json
+{
+  "name": "setStatus",
+  "label": "Set Issue status",
+  "description": "Close or reopen one Issue in a Project.",
+  "tier": "act",
+  "params": {
+    "number": { "type": "number", "description": "The Issue number.", "required": true },
+    "status": { "type": "string", "description": "open or closed.", "required": true, "choices": ["open", "closed"] }
+  },
+  "caller": ["project"]
+}
+```
+
+`argo-plugin types .` writes `plugin.gen.d.ts` beside `plugin.json`; run it again after changing the Operations, and commit it. The handler then gets typed params and caller, and `to.run` in a Render or a `ui.render` Hook is checked against the manifest, so a misspelt name, a missing param or a value outside `choices` fails `check-types`:
+
+```ts
+argo.operations.register('setStatus', async ({ number, status }, { projectId }) => {
+  // status is 'open' | 'closed', and projectId is always a string here.
+});
+
+to.run('setStatus', { number, status: 'closed' });
+```
+
+`argo-plugin types . --check` and `argo-plugin validate` fail while the file is not the manifest's. A Plugin's `tsconfig.test.json` that sets its own `include` lists `plugin.gen.d.ts` too.
 
 ## Plugin tests
 

@@ -82,3 +82,76 @@ it('refuses an Operation the Plugin never declared', async () => {
     /detach/,
   );
 });
+
+const setStatus = {
+  name: 'setStatus',
+  label: 'Set the Issue status',
+  description: 'Closes or reopens one Issue.',
+  tier: 'act' as const,
+  params: {
+    status: {
+      type: 'string' as const,
+      description: 'The new status',
+      required: true,
+      choices: ['open', 'closed'],
+    },
+  },
+  caller: ['project' as const, 'session' as const],
+};
+
+const echo = `export function register(argo) {
+  argo.operations.register('setStatus', async (params, caller) => ({ params, caller }));
+}`;
+
+it('hands the handler the Project the run names, or else the caller’s', async () => {
+  const fixture = await dataFixture(echo, { operations: [setStatus] });
+  const kit = await fixture.start();
+  const caller = { sessionId: 'session-1', projectId: 'project-1' };
+
+  await expect(
+    kit.operations.run({
+      name: 'setStatus',
+      params: { status: 'open' },
+      caller,
+    }),
+  ).resolves.toEqual({ params: { status: 'open' }, caller });
+
+  await expect(
+    kit.operations.run({
+      name: 'setStatus',
+      params: { status: 'closed', projectId: 'project-2' },
+      caller,
+    }),
+  ).resolves.toEqual({
+    params: { status: 'closed' },
+    caller: { sessionId: 'session-1', projectId: 'project-2' },
+  });
+});
+
+it('refuses a run outside the param’s choices, or without what the Operation needs of its caller', async () => {
+  const fixture = await dataFixture(echo, { operations: [setStatus] });
+  const kit = await fixture.start();
+
+  await expect(
+    kit.operations.run({
+      name: 'setStatus',
+      params: { status: 'done' },
+      caller: { sessionId: 'session-1', projectId: 'project-1' },
+    }),
+  ).rejects.toThrow('Param status must be one of open, closed');
+
+  await expect(
+    kit.operations.run({
+      name: 'setStatus',
+      params: { status: 'open', projectId: 'project-1' },
+    }),
+  ).rejects.toThrow('Only a Session can run setStatus');
+
+  await expect(
+    kit.operations.run({
+      name: 'setStatus',
+      params: { status: 'open' },
+      caller: { sessionId: 'session-1' },
+    }),
+  ).rejects.toThrow('setStatus needs a Project');
+});

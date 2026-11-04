@@ -2,8 +2,8 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { PluginList } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
+import { checkRun } from './checked-run';
 import {
-  checkParams,
   declaredOperations,
   operationRow,
   type DeclaredOperation,
@@ -49,11 +49,14 @@ export async function runDeclaredOperation(
   input: OperationRun,
 ): Promise<Json> {
   const declared = await declaredOperation(port, input);
-  const params = checkParams(declared.operation.params ?? {}, input.params);
+  const checked = checkRun(declared.operation, input.params, input.caller);
 
   await port.requireRunning(input.pluginId);
 
-  const answer = await port.call(input.pluginId, { ...input, params });
+  const answer = await port.call(input.pluginId, {
+    name: input.name,
+    ...checked,
+  });
 
   if (!answer.ok) throw new Error(answer.error);
 

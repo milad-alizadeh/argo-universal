@@ -1,9 +1,6 @@
-import type { Argo } from '@argo/plugin-kit';
-import type { IssueStatus } from './github-issues';
+import type { Argo, OperationHandler } from '@argo/plugin-kit';
 import { openDepsClient, projectById, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-
-type Params = Readonly<Record<string, string | number | boolean>>;
 
 /*
  * `setStatus` closes or reopens one Issue in a Project (ADR-0044), the write a filter list's row runs
@@ -14,29 +11,20 @@ export function registerStatusOperation(
   argo: Pick<Argo, 'operations'>,
   deps: IssueDeps,
 ): void {
-  argo.operations.register('setStatus', (params) => setStatus(deps, params));
+  argo.operations.register('setStatus', setStatus(deps));
 }
 
-async function setStatus(
-  deps: IssueDeps,
-  params: Params,
-): Promise<{ number: number; status: IssueStatus }> {
-  const number = Number(params.number);
-  const status = statusOf(params.status);
-  const project = await projectOf(deps, String(params.projectId));
-  const client = await openDepsClient({ project, deps });
+const setStatus =
+  (deps: IssueDeps): OperationHandler<'setStatus'> =>
+  async ({ number, status }, { projectId }) => {
+    const project = await projectOf(deps, projectId);
+    const client = await openDepsClient({ project, deps });
 
-  await client.setStatus(number, status);
-  deps.changes.publish(number);
+    await client.setStatus(number, status);
+    deps.changes.publish(number);
 
-  return { number, status };
-}
-
-function statusOf(given: Params[string] | undefined): IssueStatus {
-  if (given === 'open' || given === 'closed') return given;
-
-  throw new Error('status must be open or closed.');
-}
+    return { number, status };
+  };
 
 async function projectOf(deps: IssueDeps, projectId: string): Promise<Project> {
   const project = await projectById(deps.listProjects, projectId);

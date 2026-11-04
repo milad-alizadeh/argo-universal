@@ -127,16 +127,29 @@ declare global {
   function clearTimeout(id: number | undefined): void;
 }
 
-// The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
-export type { Argo } from '@repo/contracts/plugins/argo-api';
+/*
+ * The Operations this Plugin's manifest declares. `argo-plugin types <dir>` writes `plugin.gen.d.ts`
+ * beside `plugin.json`, which adds each one here, so the handlers `argo.operations.register` takes and
+ * the calls `to.run` makes are checked against the manifest. A Plugin that declares none adds nothing.
+ */
+// oxlint-disable-next-line typescript/no-empty-object-type -- the generated file merges each Operation in.
+export interface PluginOperations {}
 
-// A Loader page and the values its Render puts in Component events (ADR-0050).
+// The Plugin API and what it hands a Plugin, bound to its declared Operations.
+export type {
+  Argo,
+  Hook,
+  HookContext,
+  LoaderPage,
+  OperationHandler,
+  PageTo,
+} from './plugin-api';
+
+// A Loader page's parts and the paged list its Render reads (ADR-0050).
 export type {
   ListPage,
   LoaderInput,
-  LoaderPage,
   PagedList,
-  PageTo,
   RenderInput,
 } from '@repo/contracts/plugins/loader-page-api';
 
@@ -155,11 +168,7 @@ export {
   type MovableSection,
 } from '@repo/contracts/kit-moves';
 
-export type {
-  Hook,
-  HookContext,
-  HookNext,
-} from '@repo/contracts/plugins/hooks';
+export type { HookNext } from '@repo/contracts/plugins/hooks';
 
 export type {
   ProcessResult,

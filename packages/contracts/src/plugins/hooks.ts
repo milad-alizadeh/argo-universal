@@ -8,6 +8,7 @@ import {
   type HookRegistration,
 } from './hook-protocol';
 import type { PageTo } from './loader-page-api';
+import type { OperationDeclarations } from './operations-api';
 import type { PageState } from './page-address';
 import { ReplaceableInput, RenderAnswer } from './replaceable';
 
@@ -88,19 +89,25 @@ export type CoreHooks = {
  * The values a `ui.render` tree puts in its Component events, as a Loader page's `to` makes them: `go`
  * opens one of the Plugin's pages and `run` runs one of its Operations. A Slot has no Page state.
  */
-export type SlotTo = Pick<PageTo<PageState>, 'go' | 'run'>;
+export type SlotTo<Operations = OperationDeclarations> = Pick<
+  PageTo<PageState, Operations>,
+  'go' | 'run'
+>;
 
 /*
  * What a Hook is told besides its event: which event, on which App, and for `ui.render` the slot's props
  * and the `to` its tree's Component events are made with.
  */
-export type HookContext<Name extends HookEventName> = Readonly<{
+export type HookContext<
+  Name extends HookEventName,
+  Operations = OperationDeclarations,
+> = Readonly<{
   name: Name;
   surface: HookInvocation['surface'];
   props: Name extends 'ui.render'
     ? Readonly<HookEvent<'ui.render'>['props']>
     : undefined;
-  to: Name extends 'ui.render' ? SlotTo : undefined;
+  to: Name extends 'ui.render' ? SlotTo<Operations> : undefined;
 }>;
 
 // Passes the event, or a rewrite of it, down the chain and resolves to what the rest of it answered.
@@ -117,8 +124,11 @@ type HookResult<Name extends HookEventName> =
   | undefined
   | (Name extends 'ui.render' ? ReactElement : never);
 
-export type Hook<Name extends HookEventName> = (
-  context: HookContext<Name>,
+export type Hook<
+  Name extends HookEventName,
+  Operations = OperationDeclarations,
+> = (
+  context: HookContext<Name, Operations>,
   event: HookEvent<Name>,
   next: HookNext<Name>,
 ) => HookResult<Name> | Promise<HookResult<Name>>;

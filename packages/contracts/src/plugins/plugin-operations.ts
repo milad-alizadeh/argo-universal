@@ -17,13 +17,24 @@ export const PluginOperationName = z
 
 /*
  * A declared param: its type, whether it must be given, and the line `argo operations` prints for it.
- * Core checks the params against these before the Plugin ever sees them.
+ * A string param may list its `choices`, the only values it takes. Core checks the params against these
+ * before the Plugin ever sees them.
  */
-export const PluginOperationParam = z.strictObject({
-  type: z.enum(['string', 'number', 'boolean']),
-  description: z.string().trim().min(1),
-  required: z.boolean().optional(),
-});
+export const PluginOperationParam = z
+  .strictObject({
+    type: z.enum(['string', 'number', 'boolean']),
+    description: z.string().trim().min(1),
+    required: z.boolean().optional(),
+    choices: z.array(z.string().min(1)).min(1).optional(),
+  })
+  .refine(
+    ({ type, choices }) => choices === undefined || type === 'string',
+    'Only a string param lists choices',
+  )
+  .refine(
+    ({ choices = [] }) => new Set(choices).size === choices.length,
+    'A param lists each choice once',
+  );
 
 export type PluginOperationParam = z.infer<typeof PluginOperationParam>;
 
@@ -46,12 +57,37 @@ export const PluginOperationTier = z.enum(['read', 'act']);
 
 export type PluginOperationTier = z.infer<typeof PluginOperationTier>;
 
+/*
+ * What an Operation needs its Caller to carry: `session`, that a Session runs it; `project`, a Project it
+ * acts in. Core gives a `project` Operation a `projectId` param of its own, and the Project is the one it
+ * names or else the Caller's; core refuses the run when there is none, so the handler always has one.
+ */
+export const PluginOperationNeed = z.enum(['project', 'session']);
+
+export type PluginOperationNeed = z.infer<typeof PluginOperationNeed>;
+
+// The param core adds to an Operation that needs a Project; a Plugin never declares it.
+export const projectParam = 'projectId';
+
 export const PluginOperationContribution = z.strictObject({
   name: PluginOperationName,
   label: z.string().trim().min(1),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
-  params: z.record(PluginOperationName, PluginOperationParam).optional(),
+  params: z
+    .record(PluginOperationName, PluginOperationParam)
+    .refine(
+      (params) => !Object.hasOwn(params, projectParam),
+      'An Operation needs a Project with "caller": ["project"], not a projectId param',
+    )
+    .optional(),
+  caller: z
+    .array(PluginOperationNeed)
+    .refine(
+      (needs) => new Set(needs).size === needs.length,
+      'An Operation names each need once',
+    )
+    .optional(),
   keywords: z.array(z.string().trim().min(1)).optional(),
 });
 

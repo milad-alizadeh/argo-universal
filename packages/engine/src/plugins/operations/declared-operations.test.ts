@@ -1,14 +1,10 @@
 import type { OperationRow } from '@repo/contracts/operations';
 import { PluginList } from '@repo/contracts/plugins';
-import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { PluginOperationContribution } from '@repo/contracts/plugins/plugin-operations';
 import { expect, it } from 'vitest';
-import {
-  checkParams,
-  declaredOperations,
-  operationRow,
-} from './declared-operations';
+import { declaredOperations, operationRow } from './declared-operations';
 
-const operation = {
+const operation = PluginOperationContribution.parse({
   name: 'attach',
   label: 'Attach Issue to Session',
   description: 'Connect the calling Session to an Issue.',
@@ -19,9 +15,14 @@ const operation = {
       description: 'The Issue number.',
       required: true,
     },
-    projectId: { type: 'string', description: 'The Project.' },
+    status: {
+      type: 'string',
+      description: 'open or closed.',
+      choices: ['open', 'closed'],
+    },
   },
-} as const;
+  caller: ['project', 'session'],
+});
 
 const manifest = {
   id: 'issue-tracker',
@@ -74,43 +75,23 @@ it('lists an Operation of a Plugin that is turned off, and says so', () => {
   });
 });
 
-it('publishes the declared params as a JSON Schema', () => {
+it('publishes the declared params as a JSON Schema, with a Project to name', () => {
   expect(firstRow(list()).params).toEqual({
     type: 'object',
     additionalProperties: false,
     properties: {
       number: { type: 'number', description: 'The Issue number.' },
-      projectId: { type: 'string', description: 'The Project.' },
+      status: {
+        type: 'string',
+        description: 'open or closed.',
+        enum: ['open', 'closed'],
+      },
+      projectId: {
+        type: 'string',
+        description:
+          "The Project to act in; the caller's own Project by default.",
+      },
     },
     required: ['number'],
   });
-});
-
-it('passes on the declared params, leaving out the ones not given', () => {
-  expect(checkParams(operation.params, { number: 1320 })).toEqual({
-    number: 1320,
-  });
-});
-
-const refusals: [string, Json, string][] = [
-  [
-    'a param the Plugin never declared',
-    { number: 1, other: 2 },
-    'Unknown param other',
-  ],
-  ['a missing required param', { projectId: 'p' }, 'Param number is required'],
-  [
-    'a param of the wrong type',
-    { number: '1320' },
-    'Param number must be a number',
-  ],
-  ['params that are not an object', [1], 'Params must be a JSON object'],
-];
-
-it.each(refusals)('refuses %s', (_name, given, message) => {
-  expect(() => checkParams(operation.params, given)).toThrow(message);
-});
-
-it('reads no params at all as none given', () => {
-  expect(checkParams({}, null)).toEqual({});
 });

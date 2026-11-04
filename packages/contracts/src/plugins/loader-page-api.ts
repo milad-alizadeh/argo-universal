@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import type { PluginQuery } from './argo-calls';
 import type { PluginRenderContext } from './kit';
+import type { OperationArgs, OperationDeclarations } from './operations-api';
 import type { PageState } from './page-address';
-import type { PluginOperationParams } from './plugin-operations';
 import type { QueryResult } from './query-results';
 import type {
   LoadMore,
@@ -33,7 +33,12 @@ import type { CrossesAsJson } from './wire-json';
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by
  *   `to`, which the App acts on itself; a function prop fails the draw. `input.list` holds the pages read.
  */
-export type LoaderPage<State extends PageState, Data, Item = never> = Readonly<{
+export type LoaderPage<
+  State extends PageState,
+  Data,
+  Item = never,
+  Operations = OperationDeclarations,
+> = Readonly<{
   state?: State;
   load: (input: LoaderInput<State>) => Data | Promise<Data>;
   list?: (
@@ -42,7 +47,7 @@ export type LoaderPage<State extends PageState, Data, Item = never> = Readonly<{
   ) => ListPage<Item> | Promise<ListPage<Item>>;
   render: (
     data: Data,
-    to: PageTo<State>,
+    to: PageTo<State, Operations>,
     input: RenderInput<State, Item>,
   ) => ReactNode;
 }>;
@@ -80,25 +85,30 @@ export type RenderInput<State extends PageState, Item> = LoaderInput<State> &
  * Operations, and `optimistic` names nodes, by their keys, and the props each shows until the Operation
  * answers, so a row and its menu change together. A search or selection with no `bind` stays in the App.
  */
-export type PageTo<State extends PageState> = Readonly<{
+export type PageTo<
+  State extends PageState,
+  Operations = OperationDeclarations,
+> = Readonly<{
   go: (path: string) => { action: 'navigate'; path: string };
   set: (change: Partial<State>) => PageStateChange;
   bind: (key: keyof State & string) => PageBind;
-  run: (
-    operation: string,
-    args: PluginOperationParams,
+  run: <Name extends keyof Operations & string>(
+    operation: Name,
+    args: OperationArgs<Operations[Name]>,
     options?: { optimistic?: OperationCall['optimistic'] },
   ) => OperationCall;
 }>;
 
-export type DefineLoaderPage = <
+export type DefineLoaderPage<Operations = OperationDeclarations> = <
   State extends PageState,
   Data,
   Item extends CrossesAsJson<Item> = never,
 >(
   pattern: string,
-  page: LoaderPage<State, Data, Item>,
+  page: LoaderPage<State, Data, Item, Operations>,
 ) => void;
 
 // `argo.pages.define`: a Loader and a pure Render, drawn once per Page address.
-export type LoaderPagesApi = Readonly<{ define: DefineLoaderPage }>;
+export type LoaderPagesApi<Operations = OperationDeclarations> = Readonly<{
+  define: DefineLoaderPage<Operations>;
+}>;
