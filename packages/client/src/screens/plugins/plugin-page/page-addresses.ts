@@ -76,12 +76,13 @@ export class PageAddresses {
   }
 
   /*
-   * The opening's tree at its Page state: a kept tree draws at once, a draw names the hash and pages kept, and
-   * the tree draws again on its interval while subscribed.
+   * The opening's tree at the Page state its caller read from `state`: a kept tree draws at once, a draw names the
+   * hash and pages kept, and the tree draws again on its interval while subscribed. The Page state is an argument,
+   * not read from the cache here, so options a render keeps change with the address.
    */
-  tree(opening: PageOpening): TreeOptions {
+  tree(opening: PageOpening, pageState: PageState): TreeOptions {
     return {
-      ...this.treeAt(this.addressOf(opening)),
+      ...this.treeAt(this.addressOf(opening, pageState)),
       ...treePacing,
     };
   }

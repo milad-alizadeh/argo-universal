@@ -162,7 +162,9 @@ export function onScreen(
   { addresses, client }: Cache,
   opening: PageOpening,
 ): OnScreen {
-  const observer = new QueryObserver(client, addresses.tree(opening));
+  const tree = addresses.tree(opening, addresses.state(opening).initialData());
+  const observer = new QueryObserver(client, tree);
+
   const leave = observer.subscribe(() => null);
 
   return { answer: () => observer.getCurrentResult().data, leave };
