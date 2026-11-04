@@ -1,7 +1,11 @@
 import { request } from 'node:http';
 import { createServer } from 'node:http';
 import { expect, it } from 'vitest';
-import { overlappingOAuth, viewlessOAuth } from '#mocks/oauth-origin';
+import {
+  originJourney,
+  overlappingOAuth,
+  viewlessOAuth,
+} from '#mocks/oauth-origin';
 import { oauthPlugins, challenge } from '#mocks/oauth-plugins';
 import { serialiseOnOAuthPort } from '#mocks/oauth-port-lock';
 
@@ -143,7 +147,7 @@ it(
 const refusal = 'Refused: OAuth must run on the Server Device';
 
 it(
-  'refuses OAuth without an App view before opening a browser or listener',
+  'refuses OAuth outside any run or draw before opening a browser or listener',
   async () => {
     const host = await viewlessOAuth();
     expect(host.result).toEqual({
@@ -157,7 +161,7 @@ it(
 );
 
 it(
-  'keeps overlapping Server and Paired Device view origins across awaits',
+  'keeps overlapping Server and Paired Device run origins across awaits',
   async () => {
     const host = await overlappingOAuth();
     await expect
@@ -167,6 +171,32 @@ it(
       .poll(() => host.result(true), { timeout: 10_000 })
       .toEqual({ start: { value: true }, wait: { value: null } });
     expect(host.opened).toEqual([]);
+  },
+  journeyMs,
+);
+
+it(
+  'lets a later run await an exchange its Plugin started on the Server Device',
+  async () => {
+    const host = await originJourney();
+    const state = await host.run('begin', {}, true);
+
+    if (typeof state !== 'string') throw new Error('No exchange started');
+    const finished = host.run('finish', { state }, false);
+
+    await expect
+      .poll(() => host.opened.length, { timeout: 10_000 })
+      .toBe(1);
+    await fetch(`${redirectUri}?state=${state}&code=code-later`);
+
+    expect(await finished).toEqual({
+      code: 'code-later',
+      verifier: expect.any(String),
+    });
+    // A paired device still cannot await a state its Plugin never started.
+    expect(await host.run('finish', { state: 'unissued' }, false)).toBe(
+      refusal,
+    );
   },
   journeyMs,
 );

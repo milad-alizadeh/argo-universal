@@ -33,6 +33,8 @@ type FixturePlugin = {
   order?: number;
   // What the manifest adds to declared Slots, such as Session header actions.
   declared?: PluginManifest['contributes']['declared'];
+  // The Operations it declares (ADR-0044).
+  operations?: PluginManifest['contributes']['operations'];
 };
 
 export async function createRuntimePlugins(
@@ -104,6 +106,7 @@ const pluginContributions = (
   accounts: plugin.accounts,
   order: plugin.order,
   declared: plugin.declared,
+  operations: plugin.operations,
 });
 
 // A dev Plugin's entry imports a TypeScript source the Server bundles.
