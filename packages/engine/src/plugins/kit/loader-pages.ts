@@ -27,10 +27,7 @@ type Defined = Drawing & { pattern: string };
 type StopEvent = Extract<PluginEvent, { type: 'stop' }>;
 
 // What the host asks of a Plugin's Loader pages: a draw, a live draw's stop, or one of its Queries' named reads.
-type LoaderEvent = Extract<
-  PluginEvent,
-  { type: 'draw' | 'read' | 'stop' }
->;
+type LoaderEvent = Extract<PluginEvent, { type: 'draw' | 'read' | 'stop' }>;
 
 export type LoaderPageSend = (call: LoaderPageCall) => Promise<void>;
 
