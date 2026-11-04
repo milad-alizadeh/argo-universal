@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { z } from 'zod';
 import {
   accountApiCalls,
@@ -11,7 +10,6 @@ import {
   PluginFileEntry,
   PluginFileInfo,
   PluginNavBadge,
-  type PluginQuery,
   ProcessCommand,
   ProcessResult,
   SecretSet,
@@ -20,11 +18,10 @@ import {
 } from './argo-calls';
 import { PluginAssetRef, PluginAssetSource } from './assets';
 import type { Hook, HookArgs, HookEventName } from './hooks';
-import type { PluginRenderContext } from './kit';
 import type { LoaderPagesApi } from './loader-page-api';
 import type { OperationDeclarations, OperationsApi } from './operations-api';
 import { PluginSettingValue } from './plugin-settings';
-import type { QueriesApi, QueryResult } from './query-results';
+import type { QueriesApi } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
 
@@ -141,21 +138,6 @@ type PluginApiCalls = z.infer<typeof PluginApiCalls>;
 
 type ArgoCalls = Omit<PluginApiCalls, 'accounts'>;
 
-// What `useData` hands a page for its Query, and the hook itself: the Engine's kit implements it, `@argo/plugin-kit` declares it.
-export type UseDataResult<Query extends PluginQuery> = {
-  data: QueryResult<Query> | undefined;
-  error: string | undefined;
-  stale: boolean;
-  refresh: () => Promise<void>;
-};
-
-export type UseData = <Query extends PluginQuery>(
-  query: Query | null,
-  options?: { every?: number },
-) => UseDataResult<Query>;
-
-export type Page = ComponentType<{ context: PluginRenderContext }>;
-
 /*
  * The Plugin API: the frozen `argo` object a Plugin's `register(argo)` receives, its only way out of
  * its worker (ADR-0027). Its calls are inferred from `PluginApiCalls`; `on` registers a Hook on one
@@ -164,8 +146,7 @@ export type Page = ComponentType<{ context: PluginRenderContext }>;
 export type Argo<Operations = OperationDeclarations> = ArgoCalls &
   Readonly<{
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
-    pages: Readonly<{ register: (path: string, page: Page) => void }> &
-      LoaderPagesApi<Operations>;
+    pages: LoaderPagesApi<Operations>;
     slots: SlotsApi;
     operations: OperationsApi<Operations>;
     queries: QueriesApi;

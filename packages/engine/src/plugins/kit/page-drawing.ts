@@ -4,10 +4,10 @@ import type {
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
-import type { DataCall } from './data-subscription';
 import { eachYielded, firstOf, isYielding, type Stop } from './live-loads';
 import { inputOf, pageTo, renderedList } from './page-input';
 import { drawnPaged, type Paged } from './paged-lists';
+import type { DataCall } from './query-reads';
 import { drawReader, type DrawLists, type DrawReader } from './query-reads';
 import { valuesOf } from './render-tree';
 

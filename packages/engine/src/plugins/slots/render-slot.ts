@@ -9,7 +9,7 @@ import type { RpcConnection } from '../../rpc';
 import type { StartedPlugins } from '../located-plugins';
 import { checkedTree, type Checked } from '../pages/checked-tree';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
-import { belowWireMinimum, type Fallback } from '../views/render-fallback';
+import { belowWireMinimum, type Fallback } from '../runtime/render-fallback';
 
 type RenderRequest = { input: ReplaceableInput; plugins: StartedPlugins };
 

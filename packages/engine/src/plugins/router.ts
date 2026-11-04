@@ -10,12 +10,7 @@ import {
   ReplaceableInput,
   RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
-import {
-  PluginDispatchInput,
-  PluginViewInput,
-  SlotItemsInput,
-} from '@repo/contracts/plugins/wire';
-import { z } from 'zod';
+import { SlotItemsInput } from '@repo/contracts/plugins/wire';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
@@ -49,19 +44,20 @@ const createListRouter = routerFactory((listChanges: PluginListChanges) =>
   }),
 );
 
-/*
- * A Plugin's view streams to one live App Connection; a Replaceable Slot is asked once, for that
- * Connection's App, and asked again when its props change (ADR-0050).
- */
-const createViewsRouter = routerFactory((plugins: PluginService) =>
+// A Replaceable Slot is asked once, for the Connection's App, and asked again when its props change (ADR-0050).
+const createRenderRouter = routerFactory((plugins: PluginService) =>
   router({
-    view: publicProcedure
-      .input(PluginViewInput)
-      .subscription((call) => plugins.view(call.input, connectionOf(call))),
     render: publicProcedure
       .input(ReplaceableInput)
       .output(ReplaceableAnswer)
       .query(({ input, ctx }) => plugins.render(input, viewConnection(ctx))),
+    renderFailed: publicProcedure
+      .input(RenderFailureInput)
+      .mutation(({ input }) => {
+        plugins.renderFailed(input);
+
+        return { ok: true as const };
+      }),
   }),
 );
 
@@ -83,26 +79,6 @@ const createSlotItemsRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
-// What an App sends back about a view it draws.
-const createViewEventsRouter = routerFactory((plugins: PluginService) =>
-  router({
-    dispatch: publicProcedure
-      .input(PluginDispatchInput)
-      .mutation(async ({ input, ctx }) => {
-        await plugins.dispatch(viewConnection(ctx), input);
-
-        return { ok: true as const };
-      }),
-    renderFailed: publicProcedure
-      .input(RenderFailureInput)
-      .mutation(({ input }) => {
-        plugins.renderFailed(input);
-
-        return { ok: true as const };
-      }),
-  }),
-);
-
 /*
  * Loader pages (ADR-0050): a draw is a plain query the App caches by Page address, and an Operation a
  * page's Component event runs answers the patterns to draw again. The App's tap runs as the user.
@@ -112,9 +88,6 @@ const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
     draw: publicProcedure
       .input(DrawRequest)
       .query(({ input, ctx }) => pages.draw(input, ctx.connection)),
-    loaderPages: publicProcedure
-      .input(z.strictObject({ pluginId: z.string().min(1) }))
-      .query(({ input }) => pages.patterns(input.pluginId)),
     run: publicProcedure
       .input(PageRun)
       .output(PageRunAnswer)
@@ -151,9 +124,8 @@ export const createPluginsRouter = routerFactory(
       router({ accounts: accountsRouter(accounts) }),
       createLifecycleRouter(plugins),
       createListRouter(listChanges),
-      createViewsRouter(plugins),
+      createRenderRouter(plugins),
       createSlotItemsRouter(plugins),
-      createViewEventsRouter(plugins),
       createLoaderPagesRouter(pages),
       createPageStreamsRouter(pages),
     ),

@@ -7,20 +7,17 @@ import { PluginDraws } from '../pages';
 import type { PluginStatus } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
-import type { OpenView } from '../views/open-view';
-import { PluginViews } from '../views/plugin-views';
-import type { ViewLifecycle } from '../views/view-registry';
 import type { RuntimeCalls } from './calls';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
 import { pluginIdentity } from './status';
-import { WorkerCalls } from './worker-calls';
+import { WorkerCalls, type WorkerTransport } from './worker-calls';
 
-// What the runtime's resources are built from: the Queries' services, with the whole of the Plugin services.
-export type RuntimeInput = QueryServices & { services: PluginServices };
+// What the runtime's resources are built from: the Queries' services, with the whole of the Plugin services and the send to a worker.
+export type RuntimeInput = QueryServices &
+  Pick<WorkerTransport, 'send'> & { services: PluginServices };
 
 export class RuntimeResources {
-  readonly views;
   readonly data;
   readonly background;
   readonly items;
@@ -38,7 +35,6 @@ export class RuntimeResources {
   private projectUpdates: Promise<void> = Promise.resolve();
 
   constructor(private readonly input: RuntimeInput) {
-    this.views = new PluginViews(input.send, input.log, this.lifecycle());
     this.workers = new WorkerCalls(input);
     this.data = this.pluginData(input);
     this.items = new PluginSlotItems(this.workers);
@@ -46,7 +42,7 @@ export class RuntimeResources {
     this.draws = new PluginDraws({
       workers: this.workers,
       log: input.log,
-      written: (pluginId) => this.data.written(pluginId),
+      written: (pluginId): void => this.data.written(pluginId),
       drawings: this.failures,
     });
     this.background = this.backgroundPasses(input);
@@ -56,7 +52,7 @@ export class RuntimeResources {
   // A Query answer that changed marks the Page addresses whose draws read it.
   private pluginData(input: QueryServices): PluginData {
     return new PluginData(input, this.workers, (pluginId, addresses) =>
-      this.draws.heldChanged(pluginId, addresses),
+      this.draws.changes.heldChanged(pluginId, addresses),
     );
   }
 
@@ -74,8 +70,10 @@ export class RuntimeResources {
 
     return [
       input.services.watchProjects(() => this.projectsChanged()),
-      this.operations.onRan((pluginId) => this.draws.changedBy(pluginId)),
-      this.draws.onChanged((pluginId, addresses) => {
+      this.operations.onRan((pluginId) =>
+        this.draws.changes.changedBy(pluginId),
+      ),
+      this.draws.changes.listen((pluginId, addresses) => {
         if (!addresses) this.items.changed(pluginId);
       }),
     ];
@@ -83,33 +81,14 @@ export class RuntimeResources {
 
   // The resources that answer a worker's calls, with the Hooks and services it also reaches.
   calls(core: Pick<RuntimeCalls, 'hooks' | 'services'>): RuntimeCalls {
-    const { views, data, items, operations, draws } = this;
+    const { data, items, operations, draws } = this;
 
-    return { ...core, views, data, items, operations, draws };
+    return { ...core, data, items, operations, draws };
   }
 
-  private lifecycle(): ViewLifecycle {
-    return {
-      released: (view, lastOfOpening) => this.releaseView(view, lastOfOpening),
-      received: (view) => this.markDrawn(view),
-      failed: (view, message) => this.failures.failed(view, message),
-    };
-  }
-
-  // A removed Project's open views and kept answers end with its passes.
+  // A removed Project's kept answers end with its passes.
   private projectRemoved(projectId: string): void {
-    this.views.endProject(projectId);
     this.data.releaseProject(projectId);
-  }
-
-  private releaseView(view: OpenView, lastOfOpening: boolean): void {
-    this.data.releaseView(view.opening.viewId);
-
-    if (lastOfOpening) this.failures.clearDrawing(view);
-  }
-
-  private markDrawn(view: OpenView): void {
-    this.failures.clearDrawing(view);
   }
 
   activate(
@@ -124,9 +103,8 @@ export class RuntimeResources {
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
   }
 
-  // A worker that runs reopens its views, and lists ask it for their items.
+  // A worker that runs answers the calls held for it.
   running(pluginId: string, generation: number): void {
-    this.views.reopen(pluginId);
     this.workers.run(pluginId, generation);
   }
 
@@ -136,7 +114,6 @@ export class RuntimeResources {
   }
 
   release(pluginId: string): void {
-    this.views.invalidate(pluginId);
     this.data.release(pluginId);
     this.workers.release(pluginId);
     this.input.services.release(pluginId);
@@ -168,6 +145,5 @@ export class RuntimeResources {
     this.data.badges.close();
     this.workers.close();
     this.items.close();
-    this.views.close();
   }
 }

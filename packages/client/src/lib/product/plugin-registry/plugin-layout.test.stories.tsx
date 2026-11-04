@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 
 const openBuild = 'Open build';
 
-const onEvent = fn(async () => {});
+const onPageCall = fn(async () => {});
 
 function node(
   type: string,
@@ -27,7 +27,7 @@ const card: WireNode = {
   ...node('Surface', 'card', {
     kind: 'card',
     padding: 4,
-    onPress: { $event: 'onPress' },
+    onPress: { operation: 'openBuild', args: {} },
   }),
   children: [node('Text', 'title', { children: openBuild })],
   slots: {
@@ -38,7 +38,7 @@ const card: WireNode = {
           node('Action', 'copy', {
             label: 'Copy link',
             icon: 'copy',
-            onPress: { $event: 'onPress' },
+            onPress: { operation: 'copyLink', args: {} },
           }),
         ],
       },
@@ -48,7 +48,7 @@ const card: WireNode = {
           node('Action', 'archive', {
             label: 'Archive build',
             icon: 'archive',
-            onPress: { $event: 'onPress' },
+            onPress: { operation: 'archiveBuild', args: {} },
           }),
         ],
       },
@@ -83,25 +83,26 @@ const root: WireNode = {
 
 // A Surface has no disabled state, so a second tap while the Plugin answers sends nothing.
 export const ActivatesSurface: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     const answer = Promise.withResolvers<void>();
-    onEvent.mockReturnValueOnce(answer.promise);
+    onPageCall.mockReturnValueOnce(answer.promise);
     await expect(canvas.getByText('Healthy')).toBeVisible();
     const surface = canvas.getByRole('button', { name: openBuild });
     await userEvent.click(surface);
     await userEvent.click(surface);
-    await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith('scroll/grid/card', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledOnce();
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'openBuild', args: {} },
+      expect.objectContaining({ key: 'scroll/grid/card' }),
+    );
     answer.resolve();
   },
 };
 
 // Two Action.Sections in the actions Slot reach Surface the way the renderer sends a plural Slot.
-export const DispatchesContextAction: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+export const RunsContextAction: Story = {
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent, canvasElement }) => {
     await userEvent.pointer({
       target: canvas.getByText(openBuild),
@@ -111,9 +112,11 @@ export const DispatchesContextAction: Story = {
     await userEvent.click(
       await menu.findByRole('menuitem', { name: 'Archive build' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith(
-      'scroll/grid/card#actions/actions/archive',
-      { event: 'onPress' },
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'archiveBuild', args: {} },
+      expect.objectContaining({
+        key: 'scroll/grid/card#actions/actions/archive',
+      }),
     );
   },
 };

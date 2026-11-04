@@ -1,32 +1,27 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
-import { expect, it, onTestFinished } from 'vitest';
+import type { WireNode } from '@repo/contracts/plugins/wire';
+import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { pluginTap } from '#mocks/plugin-app';
+import { drawnRoot, liveAnswers, pageAt } from '#mocks/plugin-pages';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 const listFixture = { id: 'list', fixture: 'keyed-list' };
 
-it('prepending to 2,000 Plugin rows sends one keyed insert and retains the full tree for a late viewer', async () => {
+const listRows = (root: WireNode): WireNode[] =>
+  root.children[0]?.children ?? [];
+
+it('sends one keyed insert when a live page prepends to its 2,000 rows', async () => {
   const home = await createRuntimePlugins([listFixture]);
+  const host = await startEngineTestHost({ home });
+  const [first, patch] = await liveAnswers(host, pageAt('list', '/prepend'), 2);
 
-  const { createCaller } = await startEngineTestHost({ home });
-  const controller = new AbortController();
-  onTestFinished(() => controller.abort());
-  const watching = createCaller({ signal: controller.signal });
-  const input = { pluginId: 'list', path: '/' };
-  const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
-  const initial = (await stream.next()).value;
+  if (first?.kind !== 'tree') throw new Error('Expected a tree');
 
-  expect(rowsOf(initial)).toHaveLength(2000);
-  await watching.plugins.dispatch(
-    pluginTap(initial, { ...input, key: '0/prepend' }),
-  );
-  expect((await stream.next()).value).toEqual({
-    type: 'patch',
-    viewId: initial.viewId,
-    revision: 2,
+  expect(listRows(first.root)).toHaveLength(2000);
+  expect(patch).toMatchObject({
+    kind: 'patch',
+    base: first.hash,
     ops: [
       {
         op: 'insert',
@@ -42,32 +37,15 @@ it('prepending to 2,000 Plugin rows sends one keyed insert and retains the full 
       },
     ],
   });
-  const late = (await watching.plugins.view(input))[Symbol.asyncIterator]();
-  const snapshot = (await late.next()).value;
-
-  expect(rowsOf(snapshot)).toHaveLength(2001);
-  expect(rowsOf(snapshot)[0]).toMatchObject({ props: { children: 'new' } });
 }, 20_000);
 
-it('moving the first row to the end sends one move op', async () => {
+it('sends one move op when a live page moves its first row to the end', async () => {
   const home = await createRuntimePlugins([listFixture]);
+  const host = await startEngineTestHost({ home });
+  const [, patch] = await liveAnswers(host, pageAt('list', '/move'), 2);
 
-  const { createCaller } = await startEngineTestHost({ home });
-  const controller = new AbortController();
-  onTestFinished(() => controller.abort());
-  const input = { pluginId: 'list', path: '/' };
-
-  const watching = createCaller({ signal: controller.signal });
-  const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
-
-  const initial = (await stream.next()).value;
-  await watching.plugins.dispatch(
-    pluginTap(initial, { ...input, key: '0/move' }),
-  );
-  expect((await stream.next()).value).toEqual({
-    type: 'patch',
-    viewId: initial.viewId,
-    revision: 2,
+  expect(patch).toMatchObject({
+    kind: 'patch',
     ops: [{ op: 'move', key: ['list', '0'], parent: ['list'], index: 1999 }],
   });
 }, 20_000);
@@ -79,26 +57,14 @@ it.each([
   'refuses $path list keys with one log line and a local drawing failure',
   async ({ path, error }) => {
     const home = await createRuntimePlugins([listFixture]);
+    const { caller } = await startEngineTestHost({ home });
+    const draw = { ...pageAt('list', path), pages: 1 };
 
-    const { caller, createCaller } = await startEngineTestHost({ home });
-    const controller = new AbortController();
-    onTestFinished(() => controller.abort());
-
-    const watching = createCaller({ signal: controller.signal });
-
-    const failures = (await watching.plugins.failures())[
-      Symbol.asyncIterator
-    ]();
-
-    expect((await failures.next()).value).toEqual([]);
-    const view = await watching.plugins.view({ pluginId: 'list', path });
-
-    expect(await view[Symbol.asyncIterator]().next()).toMatchObject({
-      done: true,
+    await expect(caller.plugins.draw(draw)).resolves.toEqual({
+      kind: 'failed',
+      error,
     });
-    expect((await failures.next()).value).toMatchObject([
-      { pluginId: 'list', kind: 'drawing', message: error },
-    ]);
+    await caller.plugins.draw(draw);
     expect(await caller.plugin.list()).toMatchObject({
       plugins: [{ state: 'running', error: null }],
     });
@@ -114,15 +80,6 @@ it.each([
   10_000,
 );
 
-function rowsOf(message: ViewMessage | void): WireNode[] {
-  if (message?.type !== 'snapshot') throw new Error('Expected a snapshot');
-
-  return listRows(message.root);
-}
-
-const listRows = (root: WireNode): WireNode[] =>
-  root.children[2]?.children ?? [];
-
 it.each([
   { path: '/custom', text: 'row' },
   { path: '/fragment', text: 'row' },
@@ -131,23 +88,13 @@ it.each([
   'preserves the key and expansion content of a $path list row',
   async ({ path, text }) => {
     const home = await createRuntimePlugins([listFixture]);
-    const { createCaller } = await startEngineTestHost({ home });
-    const controller = new AbortController();
-    onTestFinished(() => controller.abort());
+    const { caller } = await startEngineTestHost({ home });
 
-    const stream = (
-      await createCaller({ signal: controller.signal }).plugins.view({
-        pluginId: 'list',
-        path,
-      })
-    )[Symbol.asyncIterator]();
-
-    expect((await stream.next()).value).toMatchObject({
-      type: 'snapshot',
-      root: {
-        props: {},
-        children: [{ type: 'Text', key: 'row', props: { children: text } }],
-      },
+    await expect(
+      drawnRoot(caller, pageAt('list', path)),
+    ).resolves.toMatchObject({
+      props: {},
+      children: [{ type: 'Text', key: 'row', props: { children: text } }],
     });
   },
   10_000,

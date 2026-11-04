@@ -12,13 +12,11 @@ import type {
 import type { StateRequest } from '../services/plugin-calls';
 import type { PluginServices } from '../services/plugin-services';
 import type { PluginSlotItems } from '../slots/plugin-slot-items';
-import type { PluginViews } from '../views/plugin-views';
 
 // What answers one worker call: the runtime's own resources, with the Hooks and services beside them.
 export type RuntimeCalls = {
   hooks: PluginHooks;
   services: PluginServices;
-  views: PluginViews;
   data: PluginData;
   items: PluginSlotItems;
   operations: PluginOperations;
@@ -57,10 +55,6 @@ const runtimeCalls: RuntimeAnswers = {
     data.reads.receive({ pluginId, generation }, request.call),
   hooks: ({ hooks }, { pluginId, generation, request }) =>
     hooks.reply({ pluginId, generation }, request.call),
-  view: ({ views }, { pluginId, request }) =>
-    views.receive(pluginId, request.viewId, request.message),
-  dispatchResult: ({ views }, { pluginId, request }) =>
-    views.dispatches.settle(pluginId, request.requestId, request.result),
   // A Plugin's batched items answer, failure or change signal (ADR-0035); it waits for nothing.
   slots: ({ items }, { pluginId, generation, request }) =>
     items.receive({ pluginId, generation }, request.call),
@@ -147,21 +141,13 @@ const runOrigin = (origin: RunOrigin | undefined): ServiceOrigin =>
 
 type DataRequest = Extract<PluginRequest, { api: 'data' }>;
 
-/*
- * A view's Query is for the Project the view opened for; a Loader's read is for its draw's Project and is
- * held by its Page address. A read that names no draw still running reads nothing.
- */
+// A Loader's read is for its draw's Project and is held by its Page address. A read that names no draw still running reads nothing.
+
 function queryOrigin(
   runtime: RuntimeCalls,
   caller: { pluginId: string; generation: number },
   request: DataRequest,
 ): QueryOrigin {
-  if (request.action !== 'read')
-    return {
-      projectId: runtime.views.dataView(caller.pluginId, request.viewId)
-        .projectId,
-    };
-
   const drawn = runtime.draws.drawing(caller, request.draw);
 
   return { projectId: drawn?.projectId, drawn };

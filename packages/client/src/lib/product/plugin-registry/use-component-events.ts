@@ -1,58 +1,25 @@
 import { propsWithin, type WireNode } from '@repo/contracts/plugins/wire';
 import { wireNodeKeys } from '@repo/contracts/plugins/wire-node-key';
-import { errorMessage } from '@repo/kit/error-toast';
-import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useEffect, useReducer, useState } from 'react';
 import { componentEventProps } from './component-event-props';
 import { ControlField, blurWithin } from './plugin-control-field';
-import {
-  PluginDispatcher,
-  type PluginOnEvent,
-  type ReportFailure,
-} from './plugin-dispatcher';
 import type { ControlInput, PluginControls } from './plugin-rendering';
-
-const reportFailure: ReportFailure = (error): void =>
-  showToast({
-    title: 'Plugin action failed',
-    message: errorMessage(error),
-    tone: 'danger',
-  });
 
 type Fields = Map<string, ControlField>;
 
 /*
  * One tree's Component events, handled once from each kit component's schema metadata: the callbacks its kit components take, the
- * value the App echoes at once and rolls back when refused, the draft a focused field keeps, and the throttled sends.
+ * value the App echoes at once and rolls back when refused, and the draft a focused field keeps.
  */
-export function useComponentEvents(
-  root: WireNode,
-  onEvent: PluginOnEvent,
-): PluginControls {
-  const dispatcher = useDispatcher(onEvent);
+export function useComponentEvents(root: WireNode): PluginControls {
   const fields = useFields(root);
   const [, update] = useReducer((revision: number) => revision + 1, 0);
-  const send = dispatcher.send.bind(dispatcher);
 
   return (input) => {
     const field = fieldFor(fields, input);
 
-    return componentEventProps({ input, field, send, update });
+    return componentEventProps({ input, field, update });
   };
-}
-
-// One dispatcher for the tree's life; closing it sends what is still queued.
-function useDispatcher(onEvent: PluginOnEvent): PluginDispatcher {
-  const [dispatcher] = useState(
-    () => new PluginDispatcher(onEvent, reportFailure),
-  );
-
-  useEffect(() => {
-    dispatcher.setDelivery(onEvent);
-  }, [dispatcher, onEvent]);
-  useEffect(() => (): void => dispatcher.close(), [dispatcher]);
-
-  return dispatcher;
 }
 
 // Each node's field, by node key, while the node is in the tree.

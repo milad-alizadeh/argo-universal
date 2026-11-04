@@ -10,7 +10,7 @@ import { coreSlotState } from './replaceable-state';
 // A story supplies the drawing and the spies; a fixture is the Slot's input and what a Plugin made of it.
 type ReplaceableSlotFixture = Omit<
   ReplaceableSlotViewProps,
-  'renderCore' | 'onEvent' | 'onFallback'
+  'renderCore' | 'onFallback'
 >;
 
 // No Plugin has taken the Slot, so Argo's own drawing stands.

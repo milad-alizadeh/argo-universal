@@ -6,20 +6,18 @@ import {
 import type { QueryOwner } from './query-types';
 
 /*
- * Nothing expires, so the bound is on the warm answers alone: a Plugin that mints a Query per keystroke
- * keeps at most this many that no view holds. An entry a view holds is bounded by that view, which the
- * view lifecycle releases, and is never taken from under the caller that is about to read it.
+ * Nothing expires, so the bound is on the answers kept: a Plugin that mints a Query per keystroke keeps at
+ * most this many. The entry a caller is about to read is the newest, so it is never the one dropped.
  */
 export const retainedWarmEntries = 1000;
 
-// What the map asks of an entry: whose Project it answers for, whether a view holds it, and how to close it.
+// What the map asks of an entry: whose Project it answers for, and how to close it.
 export type MappedQuery = {
   owner: Pick<QueryOwner, 'projectId'>;
-  watchers: { active: boolean };
   close: () => void;
 };
 
-// Re-inserting moves the entry to the end, so the map's own order is least-recently-watched first.
+// Re-inserting moves the entry to the end, so the map's own order is least-recently-read first.
 export function keepNewest<Entry>(
   entries: Map<string, Entry>,
   key: string,
@@ -31,14 +29,13 @@ export function keepNewest<Entry>(
   return entry;
 }
 
-// Only entries nobody is watching are dropped, oldest first, until the warm ones are back inside the bound.
-export function dropOldest(entries: Map<string, MappedQuery>): number {
-  const warm = entries
-    .entries()
-    .filter(([, entry]) => !entry.watchers.active)
-    .toArray();
+// Entries are dropped oldest first until the map is back inside the bound.
+export function dropOldest<Entry extends MappedQuery>(
+  entries: Map<string, Entry>,
+): number {
+  const kept = entries.entries().toArray();
 
-  const spare = warm.slice(0, Math.max(0, warm.length - retainedWarmEntries));
+  const spare = kept.slice(0, Math.max(0, kept.length - retainedWarmEntries));
 
   for (const [key, entry] of spare) {
     entry.close();
@@ -48,9 +45,9 @@ export function dropOldest(entries: Map<string, MappedQuery>): number {
   return spare.length;
 }
 
-// The warm path keeps answers no view holds, so only the oldest unwatched ones go.
-export function boundWarm(
-  entries: Map<string, MappedQuery>,
+// The oldest answers kept go first.
+export function boundWarm<Entry extends MappedQuery>(
+  entries: Map<string, Entry>,
   log: (line: string) => void,
   pluginId: string,
 ): void {

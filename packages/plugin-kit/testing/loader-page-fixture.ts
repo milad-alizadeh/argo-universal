@@ -19,7 +19,7 @@ const close = {
  * search, load more, a refresh and a write, one whose cursor repeats the boundary item, and two pages reading one
  * named read.
  */
-const source = `import { List, ListItem, Screen, useState } from '@argo/plugin-kit';
+const source = `import { List, ListItem, Screen } from '@argo/plugin-kit';
 
 const closed = new Set();
 const numbers = [1, 2, 3, 4, 5];
@@ -114,11 +114,6 @@ export function register(argo) {
     ),
   });
 
-  argo.pages.define('/hooks', {
-    load: () => null,
-    render: () => <Uses />,
-  });
-
   argo.pages.define('/functions', {
     load: () => null,
     render: () => <ListItem title="Tap" onPress={() => {}} />,
@@ -130,11 +125,6 @@ export function register(argo) {
     },
     render: () => null,
   });
-}
-
-function Uses() {
-  const [value] = useState(0);
-  return <ListItem title={String(value)} />;
 }
 `;
 

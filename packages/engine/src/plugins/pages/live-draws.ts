@@ -44,20 +44,17 @@ export class LiveDraws {
   public follow(follow: LiveFollow): AsyncGenerator<LiveAnswer> {
     const { pluginId, address, known, signal } = follow;
     const request: DrawAt = { ...address, live: true };
-    const { calls, log } = this.deps;
-    const gated = { pluginId, at: address, log };
+    const { calls, log, failures } = this.deps;
+    const page = { pluginId, at: address };
 
     return liveAnswers({
       frames: this.framesFor(pluginId, request),
       known,
       signal,
-      check: (root) => forApp(gated, this.checked(pluginId, address, root)),
-      // A Loader that threw, ran out of time or stopped with its Plugin is the page's drawing failure.
-      threw: (error) =>
-        this.deps.failures.failed(
-          { pluginId, at: address, kind: 'threw' },
-          error,
-        ),
+      check: (root) =>
+        forApp({ ...page, log }, this.checked(pluginId, address, root)),
+      // A Loader that threw or ran out of time is the page's drawing failure.
+      threw: (error) => failures.threw(page, error),
       stop: () => calls.tell(request, (id) => ({ type: 'stop', id })),
     });
   }
@@ -65,16 +62,12 @@ export class LiveDraws {
   // Each tree is checked as a drawn page's is, and a refused one is the page's drawing failure.
   private checked(pluginId: string, address: DrawAt, root: WireJson): Drawn {
     const { log, failures } = this.deps;
-    const drawn = checkedPage(
-      { pluginId, path: address.path, log },
-      { root, pages: 0 },
+    const page = { pluginId, path: address.path, log };
+
+    return failures.checked(
+      { pluginId, at: address },
+      checkedPage(page, { root, pages: 0 }),
     );
-
-    if (drawn.ok) failures.drew(pluginId, address);
-    else
-      failures.failed({ pluginId, at: address, kind: 'refused' }, drawn.error);
-
-    return drawn;
   }
 
   // A frame counts only from the generation its live draw still waits on.

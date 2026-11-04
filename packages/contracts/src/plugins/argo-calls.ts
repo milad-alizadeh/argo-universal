@@ -115,32 +115,17 @@ export const PluginDataState = z.object({
 
 export type PluginDataState = z.infer<typeof PluginDataState>;
 
-const dataTarget = z.object({
+/*
+ * A Loader's read during the draw `draw` names, held by that draw's Page address: the kept answer
+ * unless a write made it due, or read again when `fresh`, as a pull reads its list's first page.
+ */
+export const PluginDataRequest = z.object({
   api: z.literal('data'),
-  viewId: z.string().min(1),
-  watchId: z.string().min(1),
+  action: z.literal('read'),
+  draw: z.number().int().nonnegative(),
+  query: PluginQuery,
+  fresh: z.boolean().optional(),
 });
-
-export const PluginDataRequest = z.discriminatedUnion('action', [
-  dataTarget.extend({
-    action: z.literal('watch'),
-    query: PluginQuery,
-    every: z.number().finite().nonnegative().optional(),
-  }),
-  dataTarget.extend({ action: z.literal('release') }),
-  dataTarget.extend({ action: z.literal('refresh') }),
-  /*
-   * A Loader's read during the draw `draw` names, held by that draw's Page address: the kept answer
-   * unless a write made it due, or read again when `fresh`, as a pull reads its list's first page.
-   */
-  z.object({
-    api: z.literal('data'),
-    action: z.literal('read'),
-    draw: z.number().int().nonnegative(),
-    query: PluginQuery,
-    fresh: z.boolean().optional(),
-  }),
-]);
 
 export type PluginDataRequest = z.infer<typeof PluginDataRequest>;
 

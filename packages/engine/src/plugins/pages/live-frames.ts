@@ -100,8 +100,8 @@ export class LatestFrames {
 }
 
 /*
- * One live subscription: its frames, how each tree is checked, what hears that its Loader failed, the tree
- * the App keeps, and how to stop it.
+ * One live subscription: its frames, how each tree is checked, what hears that its Loader failed rather than
+ * stopped with its Plugin, the tree the App keeps, and how to stop it.
  */
 export type Live = {
   frames: LatestFrames;
@@ -162,11 +162,11 @@ class Answering {
   private stepOf(next: Next): Step {
     if (!('end' in next)) return this.drawn(next.root);
 
-    const end = endOf(next.end);
+    const threw = threwError(next.end);
 
-    if (end) this.live.threw(end.error);
+    if (threw !== undefined) this.live.threw(threw);
 
-    return this.ended(end);
+    return this.ended(endOf(next.end));
   }
 
   private drawn(root: WireJson): Step {
@@ -188,6 +188,10 @@ class Answering {
     return answer ?? 'done';
   }
 }
+
+// Why the Loader failed, when it did; its Plugin stopping is not the page's failure.
+const threwError = (outcome: Outcome): string | undefined =>
+  'stopped' in outcome ? undefined : endOf(outcome)?.error;
 
 // A Loader that ended on its own ends the stream quietly; any other end says why.
 const endOf = (outcome: Outcome): Failed | null =>

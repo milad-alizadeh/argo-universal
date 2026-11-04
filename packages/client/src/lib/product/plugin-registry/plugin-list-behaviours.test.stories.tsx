@@ -14,12 +14,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 const root: WireNode = JSON.parse(`{
   "type":"List", "key":"runs", "props":{
-    "selection":{"mode":"multiple","selected":[],"onChange":{"$event":"onChange"}},
-    "searchMode":"plugin", "onSearchTextChange":{"$event":"onSearchTextChange"}
+    "selection":{"mode":"multiple","selected":[],"onChange":{"bind":"selected"}},
+    "searchMode":"plugin", "onSearchTextChange":{"bind":"search"}
   }, "slots":{}, "children":[
     {"type":"ListItem","key":"web","props":{"id":"web","title":"Web"},"slots":{},"children":[]},
     {"type":"ListItem","key":"phone","props":{"id":"phone","title":"Phone"},"slots":{},"children":[]}
@@ -29,8 +29,8 @@ const root: WireNode = JSON.parse(`{
 export const SelectionStaysInEachApp: Story = {
   render: () => (
     <>
-      <PluginTree root={root} onEvent={onEvent} />
-      <PluginTree root={root} onEvent={onEvent} />
+      <PluginTree root={root} onPageCall={onPageCall} />
+      <PluginTree root={root} onPageCall={onPageCall} />
     </>
   ),
   play: async ({ canvas, userEvent }) => {
@@ -42,17 +42,17 @@ export const SelectionStaysInEachApp: Story = {
     await userEvent.click(first);
     await expect(first).toHaveAttribute(selectedAttribute, 'true');
     await expect(second).toHaveAttribute(selectedAttribute, 'false');
-    await expect(onEvent).toHaveBeenLastCalledWith('runs', {
-      event: 'onChange',
-      payload: ['web'],
-    });
+    await expect(onPageCall).toHaveBeenLastCalledWith(
+      { bind: 'selected' },
+      expect.objectContaining({ key: 'runs', payload: ['web'] }),
+    );
     await userEvent.click(first);
     await expect(first).toHaveAttribute(selectedAttribute, 'true');
   },
 };
 
 export const PluginSearchKeepsLoadedRows: Story = {
-  render: () => <PluginTree root={root} onEvent={onEvent} />,
+  render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
       await canvas.findByRole('searchbox', { name: 'Search' }),
@@ -62,10 +62,10 @@ export const PluginSearchKeepsLoadedRows: Story = {
       await canvas.findByRole('button', { name: 'Web' }),
     ).toBeVisible();
     await waitFor(() =>
-      expect(onEvent).toHaveBeenLastCalledWith('runs', {
-        event: 'onSearchTextChange',
-        payload: 'build',
-      }),
+      expect(onPageCall).toHaveBeenLastCalledWith(
+        { bind: 'search' },
+        expect.objectContaining({ key: 'runs', payload: 'build' }),
+      ),
     );
   },
 };
@@ -80,7 +80,7 @@ const pages: WireNode = {
   slots: {},
   props: {
     accessibilityLabel: 'Paged list',
-    pagination: { hasMore: true, onLoadMore: { $event: 'onLoadMore' } },
+    pagination: { hasMore: true, onLoadMore: { loadMore: true } },
   },
   children: Array.from({ length: 40 }, (_, index) => ({
     type: 'ListItem',
@@ -92,7 +92,7 @@ const pages: WireNode = {
 };
 
 export const PaginationWaitsForThePlugin: Story = {
-  render: () => <PluginTree root={pages} onEvent={loadPage} />,
+  render: () => <PluginTree root={pages} onPageCall={loadPage} />,
   play: async ({ canvas }) => {
     const scroll = await canvas.findByLabelText('Paged list');
     await waitFor(async () => {
@@ -101,8 +101,8 @@ export const PaginationWaitsForThePlugin: Story = {
       await expect(canvas.getByLabelText('Loading more')).toBeVisible();
     });
     await expect(loadPage).toHaveBeenCalledWith(
-      'pages',
-      expect.objectContaining({ event: 'onLoadMore' }),
+      { loadMore: true },
+      expect.objectContaining({ key: 'pages', name: 'onLoadMore' }),
     );
     await waitFor(() =>
       expect(canvas.queryByLabelText('Loading more')).toBeNull(),
@@ -125,7 +125,7 @@ const logLines: WireNode = {
 };
 
 export const AnchoredListOffersJumpToLatest: Story = {
-  render: () => <PluginTree root={logLines} onEvent={onEvent} />,
+  render: () => <PluginTree root={logLines} />,
   play: async ({ canvas }) => {
     const scroll = await canvas.findByLabelText('Log lines');
     await waitFor(() => expect(canvas.getByText('Item 120')).toBeVisible());
@@ -151,7 +151,7 @@ const refreshable: WireNode = {
   slots: {},
   props: {
     accessibilityLabel: 'Refreshable list',
-    onRefresh: { $event: 'onRefresh' },
+    onRefresh: { operation: 'refresh', args: {} },
   },
   children: [
     {
@@ -165,7 +165,7 @@ const refreshable: WireNode = {
 };
 
 export const RefreshDrawsNothingOnWeb: Story = {
-  render: () => <PluginTree root={refreshable} onEvent={onEvent} />,
+  render: () => <PluginTree root={refreshable} onPageCall={onPageCall} />,
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Web')).toBeVisible();
     await expect(canvas.queryByRole('progressbar')).toBeNull();

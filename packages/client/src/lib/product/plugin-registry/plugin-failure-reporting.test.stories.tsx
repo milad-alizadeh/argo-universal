@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const pluginFailed = 'Plugin action failed';
+const pressFailed = 'That did not work';
 
 const loadFailed = "Couldn't load more";
 
@@ -26,7 +26,7 @@ const pages: WireNode = {
   slots: {},
   props: {
     accessibilityLabel: 'Paged list',
-    pagination: { hasMore: true, onLoadMore: { $event: 'onLoadMore' } },
+    pagination: { hasMore: true, onLoadMore: { loadMore: true } },
   },
   children: Array.from({ length: 40 }, (_, index) => ({
     type: 'ListItem',
@@ -40,7 +40,7 @@ const pages: WireNode = {
 const row: WireNode = {
   type: 'ListItem',
   key: 'row',
-  props: { title: 'Deploy web', onPress: { $event: 'onPress' } },
+  props: { title: 'Deploy web', onPress: { operation: 'deploy', args: {} } },
   children: [],
   slots: {},
 };
@@ -49,13 +49,13 @@ const row: WireNode = {
 async function clearToasts(): Promise<void> {
   dismissToasts();
   await waitFor(async () => {
-    await expect(await allToasts(pluginFailed)).toHaveLength(0);
+    await expect(await allToasts(pressFailed)).toHaveLength(0);
     await expect(await allToasts(loadFailed)).toHaveLength(0);
   });
 }
 
 export const AwaitedLoadReportsOnce: Story = {
-  render: () => <PluginTree root={pages} onEvent={refused} />,
+  render: () => <PluginTree root={pages} onPageCall={refused} />,
   play: async ({ canvas }) => {
     await clearToasts();
     const scroll = await canvas.findByLabelText('Paged list');
@@ -64,19 +64,19 @@ export const AwaitedLoadReportsOnce: Story = {
       scroll.dispatchEvent(new Event('scroll'));
       await expect(await allToasts(loadFailed)).toHaveLength(1);
     });
-    await expect(await allToasts(pluginFailed)).toHaveLength(0);
+    await expect(await allToasts(pressFailed)).toHaveLength(0);
   },
 };
 
 export const UnawaitedPressReportsOnce: Story = {
-  render: () => <PluginTree root={row} onEvent={refused} />,
+  render: () => <PluginTree root={row} onPageCall={refused} />,
   play: async ({ canvas, userEvent }) => {
     await clearToasts();
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Deploy web' }),
     );
-    await findToast(pluginFailed);
-    await expect(await allToasts(pluginFailed)).toHaveLength(1);
+    await findToast(pressFailed);
+    await expect(await allToasts(pressFailed)).toHaveLength(1);
     await expect(await allToasts(loadFailed)).toHaveLength(0);
   },
 };

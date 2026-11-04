@@ -44,7 +44,7 @@ it.each([
   const report = inspectSource(
     {
       file: 'index.js',
-      source: `import {Canvas} from '@argo/plugin-kit'; export function register(api) { api.pages.register('/', () => <Canvas label="Map" width={100} height={100} camera="fixed">${children}</Canvas>); }`,
+      source: `import {Canvas} from '@argo/plugin-kit'; export function register(api) { api.pages.define('/', { load: () => [], render: (items) => <Canvas label="Map" width={100} height={100} camera="fixed">${children}</Canvas> }); }`,
     },
     manifest,
   );

@@ -1,35 +1,22 @@
-import { kitComponentEvents } from '@repo/contracts/plugins/kit';
-import {
-  placedComponentEvent,
-  type WireJson,
-  type WireNode,
-} from '@repo/contracts/plugins/wire';
+import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
   slotParentKey,
 } from '@repo/contracts/plugins/wire-node-key';
 import { listTypes } from './list-props';
 import { childKeys } from './wire-keys';
-import { wireProps } from './wire-props';
 
-// A handler a Plugin passes as a prop; the wire carries it as an event id.
-type PluginFn = (payload?: WireJson) => void | Promise<void>;
-
-export type Prop = WireJson | PluginFn;
+export type Prop = WireJson;
 
 export type Props = Record<string, Prop>;
 
-// A node the reconciler holds; `#slot` children are filled into the parent's named slots.
+// A node a Render drew; `#slot` children are filled into the parent's named slots.
 export interface Instance {
   type: string;
   key?: string;
   props: Props;
   children: Instance[];
-  // Set on the root only: the host calls it after every commit.
-  onCommit?: () => void;
 }
-
-export type Handlers = Map<string, PluginFn>;
 
 const slotType = '#slot';
 
@@ -50,36 +37,22 @@ function checkUniqueKeys(type: string, children: Instance[]): void {
 
 const isSlot = (instance: Instance): boolean => instance.type === slotType;
 
-function slotContent(
-  slot: Instance,
-  id: string,
-  handlers: Handlers,
-): [string, WireNode[]][] {
+function slotContent(slot: Instance, id: string): [string, WireNode[]][] {
   if (!slot.key) return [];
   checkChildren(slot, slot.children);
 
-  const content = wireChildren(
-    slot.children,
-    slotParentKey(id, slot.key),
-    handlers,
-  );
+  const content = wireChildren(slot.children, slotParentKey(id, slot.key));
 
   return content.length ? [[slot.key, content]] : [];
 }
 
-function wireSlots(
-  instance: Instance,
-  id: string,
-  handlers: Handlers,
-): WireNode['slots'] {
+function wireSlots(instance: Instance, id: string): WireNode['slots'] {
   return Object.fromEntries(
-    instance.children
-      .filter(isSlot)
-      .flatMap((slot) => slotContent(slot, id, handlers)),
+    instance.children.filter(isSlot).flatMap((slot) => slotContent(slot, id)),
   );
 }
 
-function wireNode(source: Instance, id: string, handlers: Handlers): WireNode {
+function wireNode(source: Instance, id: string): WireNode {
   const instance = rowContent(source);
   const content = instance.children.filter((child) => !isSlot(child));
   checkChildren(instance, content);
@@ -87,41 +60,23 @@ function wireNode(source: Instance, id: string, handlers: Handlers): WireNode {
   return {
     type: instance.type,
     key: decodeURIComponent(id.slice(id.lastIndexOf('/') + 1)),
-    props: placedEvents(instance.type, wireProps(instance.props, id, handlers)),
-    children: wireChildren(content, id, handlers),
-    slots: wireSlots(instance, id, handlers),
+    props: instance.props,
+    children: wireChildren(content, id),
+    slots: wireSlots(instance, id),
   };
 }
 
-// An event a kit component keeps inside a prop object goes there on the wire, such as a Picker's `footerAction.onPress`.
-const placedEvents = (
-  type: string,
-  props: WireNode['props'],
-): WireNode['props'] =>
-  Object.entries(kitComponentEvents(type)).reduce(
-    (placed, [name, schema]) => placedComponentEvent(placed, name, schema),
-    props,
-  );
-
-function wireChildren(
-  instances: Instance[],
-  parent: string,
-  handlers: Handlers,
-): WireNode[] {
+function wireChildren(instances: Instance[], parent: string): WireNode[] {
   const keys = childKeys(instances);
 
   return instances.map((instance, index) =>
-    wireNode(
-      instance,
-      childNodeKey(parent, keys[index] ?? String(index)),
-      handlers,
-    ),
+    wireNode(instance, childNodeKey(parent, keys[index] ?? String(index))),
   );
 }
 
-// Turns the reconciler's instances into wire nodes, collecting each function prop under its event id.
-export function toWire(root: Instance, handlers: Handlers): WireNode {
-  const [node] = wireChildren([root], '', handlers);
+// Turns a Render's instances into wire nodes.
+export function toWire(root: Instance): WireNode {
+  const [node] = wireChildren([root], '');
 
   if (!node) throw new Error('A page must render one component');
 

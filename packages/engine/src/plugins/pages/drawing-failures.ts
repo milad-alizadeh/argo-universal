@@ -1,6 +1,7 @@
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { oneLine } from '../runtime/render-fallback';
-import { addressOf, type DrawAt } from './draw-calls';
+import { addressOf, failed, type DrawAt } from './draw-calls';
+import type { Drawn } from './plugin-draws';
 
 /*
  * Where a page's drawing failures go: the failures the App shows, one toast per Plugin (ADR-0037). `failed`
@@ -12,14 +13,17 @@ export type Drawings = {
 };
 
 // A Loader or Render that threw, ran out of time or stopped; or a tree the Server refused to send.
-export type FailureKind = 'threw' | 'refused';
+type FailureKind = 'threw' | 'refused';
 
 const verbs: Record<FailureKind, string> = {
   threw: 'could not draw',
   refused: 'refused',
 };
 
-type Failing = { pluginId: string; at: DrawAt; kind: FailureKind };
+// The page a draw is for: its Plugin and its address.
+export type DrawnFor = { pluginId: string; at: DrawAt };
+
+type Failing = DrawnFor & { kind: FailureKind };
 
 /*
  * A page's draws as the Server reports them: a failure is logged once and shown to the App, and the next
@@ -41,5 +45,20 @@ export class DrawingFailures {
 
   public drew(pluginId: string, at: DrawAt): void {
     this.drawings.clearDrawing(addressOf(pluginId, at));
+  }
+
+  // A Loader or Render that threw or ran out of time: the page's drawing failure, answered as a failed draw.
+  public threw(page: DrawnFor, error: string): Drawn {
+    this.failed({ ...page, kind: 'threw' }, error);
+
+    return failed(error);
+  }
+
+  // A tree the Server checked: a refused one is the page's drawing failure, and a sent one clears it.
+  public checked(page: DrawnFor, drawn: Drawn): Drawn {
+    if (drawn.ok) this.drew(page.pluginId, page.at);
+    else this.failed({ ...page, kind: 'refused' }, drawn.error);
+
+    return drawn;
   }
 }

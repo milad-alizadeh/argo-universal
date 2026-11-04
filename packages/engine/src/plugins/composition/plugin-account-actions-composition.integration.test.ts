@@ -9,15 +9,21 @@ it.each(['openUrl', 'share'])(
     const { home } = await installed(`
     import { Button } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
-    export function register(argo) { argo.pages.register('/', () => jsx(Button, {
+    export function register(argo) { argo.pages.define('/', { load: () => null, render: () => jsx(Button, {
       label: 'Open', onPress: { action: '${action}', url: 'javascript:alert(1)', message: 'See this' }
-    })); }
+    }) }); }
   `);
 
     const { caller } = await startEngineTestHost({ home });
-    const view = await caller.plugins.view({ pluginId: 'probe', path: '/' });
-    const message = await view[Symbol.asyncIterator]().next();
-    expect(JSON.stringify(message.value)).not.toContain('javascript:');
+
+    const answer = await caller.plugins.draw({
+      pluginId: 'probe',
+      path: '/',
+      pageState: {},
+      pages: 1,
+    });
+
+    expect(JSON.stringify(answer)).not.toContain('javascript:');
 
     const lines = (await pluginLog(home))
       .split('\n')

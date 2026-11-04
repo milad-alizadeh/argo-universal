@@ -24,11 +24,8 @@ import type {
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import {
-  type PluginDispatchInput,
-  type PluginViewInput,
   type SlotItems,
   type SlotItemsInput,
-  type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
@@ -111,29 +108,6 @@ export class PluginService {
     );
 
     return hooks.run({ ...started, exempt }, name, event);
-  }
-
-  async dispatch(
-    connection: RpcConnection,
-    input: PluginDispatchInput,
-  ): Promise<void> {
-    await this.deps.pluginRuntime.views.dispatch(connection, input);
-  }
-
-  async *view(
-    { pluginId, path, projectId, sessionId }: PluginViewInput,
-    connection: RpcConnection,
-  ): AsyncGenerator<ViewMessage> {
-    const status = await this.activate(pluginId);
-
-    if (status.state !== 'running')
-      throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
-
-    yield* this.deps.pluginRuntime.views.watch(
-      pluginId,
-      { path, projectId, sessionId },
-      connection,
-    );
   }
 
   slotItems(

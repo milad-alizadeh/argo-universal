@@ -10,7 +10,6 @@ import type {
 import { configureCallScopes } from '../kit/call-scope';
 import { fetchResponse } from '../kit/fetch-response';
 import { createKit, type Kit } from '../kit/plugin-kit';
-import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';
 import { accountDispatcher } from './accounts';
 import { hookDispatcher } from './hooks';
@@ -42,8 +41,6 @@ if (!bridge) throw new Error('The kit runs only in a Plugin realm');
 
 if (bridge.scopes) configureCallScopes(bridge.scopes);
 
-if (bridge.inView) configureViewScope(bridge.inView);
-
 // No object, promise or error from the worker's realm reaches Plugin code: only the bridge's JSON text crosses.
 const call = async <Value>(request: PluginRequest): Promise<Value> => {
   try {
@@ -53,22 +50,14 @@ const call = async <Value>(request: PluginRequest): Promise<Value> => {
   }
 };
 
-const kit = createKit(
-  async (viewId, message) => {
-    await call({ api: 'view', viewId, message });
-  },
-  async (requestId, result) => {
-    await call({ api: 'dispatchResult', requestId, result });
-  },
-  {
-    data: (request) => call(request),
-    slots: (slotCall) => call({ api: 'slots', call: slotCall }),
-    operations: (operationCall) =>
-      call({ api: 'operations', call: operationCall }),
-    pages: (pageCall) => call({ api: 'pages', call: pageCall }),
-    reads: (answer) => call({ api: 'reads', call: answer }),
-  },
-);
+const kit = createKit({
+  data: (request) => call(request),
+  slots: (slotCall) => call({ api: 'slots', call: slotCall }),
+  operations: (operationCall) =>
+    call({ api: 'operations', call: operationCall }),
+  pages: (pageCall) => call({ api: 'pages', call: pageCall }),
+  reads: (answer) => call({ api: 'reads', call: answer }),
+});
 
 const hooks = hookDispatcher(
   (hookCall) => call({ api: 'hooks', call: hookCall }),
@@ -162,7 +151,7 @@ const pluginApi: Argo = frozen({
     get: async (key) =>
       (await call<PluginSettingValue | null>({ api: 'settings', key })) ?? null,
   }),
-  pages: frozen({ register: kit.registerPage, ...kit.loaderPages.api }),
+  pages: frozen({ ...kit.loaderPages.api }),
   slots: frozen(kit.slots),
   changed: kit.changed,
   on: hooks.on,

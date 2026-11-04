@@ -61,8 +61,5 @@ export function pageHandler(
 
   if (!handler) throw new Error(`${named} has no ${event}`);
 
-  if ('$event' in handler)
-    throw new Error(`${named} sends ${event} to a mounted view`);
-
   return handler;
 }

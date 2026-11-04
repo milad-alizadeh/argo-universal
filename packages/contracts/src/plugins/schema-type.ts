@@ -75,14 +75,8 @@ function action(schema: JsonSchema): SchemaType | undefined {
   return name === undefined ? undefined : { kind: 'action', name };
 }
 
-function event(schema: JsonSchema): SchemaType | undefined {
-  return schema.properties?.$event === undefined
-    ? undefined
-    : { kind: 'named', name: 'Plugin event object' };
-}
-
 function namedObject(schema: JsonSchema): SchemaType {
-  return action(schema) ?? event(schema) ?? { kind: 'named', name: 'object' };
+  return action(schema) ?? { kind: 'named', name: 'object' };
 }
 
 function objectType(schema: JsonSchema): SchemaType | undefined {

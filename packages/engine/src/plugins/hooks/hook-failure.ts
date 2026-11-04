@@ -1,5 +1,5 @@
 import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
-import { logFallback } from '../views/render-fallback';
+import { logFallback } from '../runtime/render-fallback';
 import type { RunningHook } from './running-hook';
 
 // A failed `ui.render` Hook falls its Slot back to core on every render: that is written once per Plugin and Slot.

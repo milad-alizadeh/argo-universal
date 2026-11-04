@@ -1,6 +1,8 @@
+import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { pageAt } from '#mocks/plugin-pages';
 import { installed } from '#mocks/probe-plugin';
 
 // Two Loader pages that throw, a live page whose Loader throws after its first tree, and one that draws.
@@ -18,15 +20,20 @@ const failingPages = `
       argo.pages.define('/', { load: () => 'drawn', render });
     }`;
 
-const address = (path: string) => ({ pluginId: 'probe', path, pageState: {} });
+const address = (path: string): PageAddress => pageAt('probe', path);
 
-const at = (path: string) => ({ ...address(path), pages: 1 });
+const at = (path: string): PageAddress & { pages: number } => ({
+  ...address(path),
+  pages: 1,
+});
 
 it('shows one drawing failure for a Plugin whose pages fail, live or not, and keeps its other pages drawing', async () => {
   const fixture = await installed(failingPages);
+
   const { caller, createCaller } = await startEngineTestHost({
     home: fixture.home,
   });
+
   const watching = new AbortController();
   const listened = createCaller({ signal: watching.signal });
   const failures = (await listened.plugins.failures())[Symbol.asyncIterator]();
@@ -65,6 +72,7 @@ it('shows one drawing failure for a Plugin whose pages fail, live or not, and ke
   const live = (await caller.plugins.live(address('/tail')))[
     Symbol.asyncIterator
   ]();
+
   const answers = [await live.next(), await live.next()].map(
     ({ value }) => value?.kind,
   );

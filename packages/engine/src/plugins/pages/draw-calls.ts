@@ -11,7 +11,8 @@ export type Answered = Exclude<
   { action: 'frame' }
 >;
 
-type Failed = { ok: false; error: string };
+// `stopped` when the Plugin stopped or was not running: why the Plugin stopped, if it crashed, is its own failure.
+type Failed = { ok: false; error: string; stopped?: true };
 
 // The worker's answer, or why none came: it stopped, was not running or ran out of time.
 export type Outcome = Answered | Failed;
@@ -25,6 +26,19 @@ export type DrawAt = Omit<
 export type Loaded = { ok: true } | { ok: false; error: string };
 
 export const failed = (error: string): Failed => ({ ok: false, error });
+
+// Where a background pass runs a Loader alone: its Page path and the Project it reads for.
+export type LoadAt = { path: string; projectId: string };
+
+// A background pass's draw: the Loader alone, for its Project's first page, as no Connection asks.
+export const passAt = ({ path, projectId }: LoadAt): DrawAt => ({
+  path,
+  projectId,
+  pageState: {},
+  pages: 1,
+  serverDevice: false,
+  loadOnly: true,
+});
 
 export const answeredError = (answered: Answered): string =>
   answered.action === 'failed' ? answered.error : 'The page only loaded';
@@ -45,7 +59,11 @@ const endedError: Record<Ended, (pluginId: string, path: string) => string> = {
 function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
   if ('answered' in outcome) return outcome.answered;
 
-  return failed(endedError[outcome.ended](outcome.pluginId, at.path));
+  const error = endedError[outcome.ended](outcome.pluginId, at.path);
+
+  return outcome.ended === 'late'
+    ? failed(error)
+    : { ...failed(error), stopped: true };
 }
 
 /*

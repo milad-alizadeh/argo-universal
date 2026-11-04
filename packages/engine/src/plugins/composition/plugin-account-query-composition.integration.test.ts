@@ -1,46 +1,62 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { accountPlugins, accountNetwork } from '#mocks/account-plugins';
 import { startEngineTestHost } from '#mocks/engine';
+import type { EngineConnections } from '#mocks/engine-read';
+import { drawnRoot, pageAt, textOf } from '#mocks/plugin-pages';
 import { installed, registeredProject } from '#mocks/probe-plugin';
 import { PluginTestClock } from '../worker/test-clock';
+
+// A Loader page that reads one Account-borrowing fetch Query and draws its status or why it has none.
+const borrowingPage = (url: string, every = ''): string => `
+    import { Text } from '@argo/plugin-kit';
+    import { jsx } from '@argo/plugin-kit/jsx-runtime';
+    export function register(argo) {
+      argo.pages.define('/', {
+        ${every}
+        load: ({ read }) => read({ api: 'fetch', url: '${url}', account: 'api.github.com' }).then(
+          (data) => ({ status: data.status }),
+          (error) => ({ error: error.message }),
+        ),
+        render: (shown) => jsx(Text, { children: JSON.stringify(shown) }),
+      });
+    }`;
+
+// What the page shows: the fetch's status, or why the Query has no answer.
+const Shown = z.union([
+  z.strictObject({ status: z.number() }),
+  z.strictObject({ error: z.string() }),
+]);
+
+async function drawnText(
+  caller: EngineConnections['caller'],
+  address: { pluginId: string; projectId: string },
+): Promise<z.infer<typeof Shown>> {
+  const root = await drawnRoot(caller, {
+    ...pageAt(address.pluginId, '/'),
+    projectId: address.projectId,
+  });
+
+  return Shown.parse(JSON.parse(textOf(root)));
+}
 
 it('reports an unavailable Borrow as a Query error', async () => {
   await registeredProject();
 
-  const fixture = await installed(
-    `
-    import { useData, useEffect, Text } from '@argo/plugin-kit';
-    import { jsx } from '@argo/plugin-kit/jsx-runtime';
-    export function register(argo) {
-      argo.pages.register('/', function Page() {
-        const {data, error} = useData({api:'fetch', url:'https://api.github.com/', account:'api.github.com'});
-        useEffect(() => {
-          if (data !== undefined || error) void argo.fs.write('$DATA/out.json', JSON.stringify({data: data === undefined ? 'unavailable' : data, error: error ?? null}));
-        }, [data, error]);
-        return jsx(Text, {children:'Query'});
-      });
-    }`,
-    { capabilities: [{ kind: 'fetch', host: 'api.github.com' }] },
-  );
+  const fixture = await installed(borrowingPage('https://api.github.com/'), {
+    capabilities: [{ kind: 'fetch', host: 'api.github.com' }],
+  });
 
   const host = await startEngineTestHost({ home: fixture.home });
   const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
 
-  const view = await host.caller.plugins.view({
-    pluginId: 'probe',
-    path: '/',
-    projectId: project.id,
-  });
-
-  await view[Symbol.asyncIterator]().next();
-  await expect
-    .poll(() => readResult(fixture.data), { timeout: 10_000 })
-    .toEqual({ data: 'unavailable', error: 'Refused: Account is unavailable' });
+  await expect(
+    drawnText(host.caller, { pluginId: 'probe', projectId: project.id }),
+  ).resolves.toEqual({ error: 'Refused: Account is unavailable' });
 }, 30_000);
 
 it('keeps the last successful Query data when a refreshed Borrow is refused', async () => {
@@ -48,22 +64,7 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
   const fixture = await accountPlugins('null');
   await writeFile(
     join(fixture.home, 'shipped/borrower/index.mjs'),
-    `
-    import { useData, useEffect, Text } from '@argo/plugin-kit';
-    import { jsx } from '@argo/plugin-kit/jsx-runtime';
-    export function register(argo) {
-      let writing = Promise.resolve();
-      argo.pages.register('/', function Page() {
-        const {data, error, stale} = useData({api:'fetch', url:'https://api.github.com/done', account:'api.github.com'}, {every:10000});
-        useEffect(() => {
-          if (data !== undefined || error) {
-            const snapshot = JSON.stringify({status:data?.status ?? null,error:error ?? null,stale});
-            writing = writing.then(() => argo.fs.write('${fixture.borrowerData}/out.json', snapshot));
-          }
-        }, [data,error,stale]);
-        return jsx(Text, {children:'Query'});
-      });
-    }`,
+    borrowingPage('https://api.github.com/done', 'every: 10000,'),
   );
   const network = await accountNetwork();
   const clock = new PluginTestClock(0);
@@ -78,17 +79,11 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
   const [project] = await host.caller.project.list();
 
   if (!project) throw new Error('Missing fixture Project');
+  const address = { pluginId: 'borrower', projectId: project.id };
 
-  const view = await host.caller.plugins.view({
-    pluginId: 'borrower',
-    path: '/',
-    projectId: project.id,
+  await expect(drawnText(host.caller, address)).resolves.toEqual({
+    status: 200,
   });
-
-  await view[Symbol.asyncIterator]().next();
-  await expect
-    .poll(() => readResult(fixture.borrowerData), { timeout: 10_000 })
-    .toEqual({ status: 200, error: null, stale: false });
   const [account] = await host.caller.plugins.accounts.list();
 
   if (!account) throw new Error('Missing fixture Account');
@@ -99,19 +94,8 @@ it('keeps the last successful Query data when a refreshed Borrow is refused', as
     allowed: false,
   });
   await clock.advance(10000);
-  await expect
-    .poll(() => readResult(fixture.borrowerData), { timeout: 10_000 })
-    .toEqual({
-      status: 200,
-      error: 'Refused: Account is unavailable',
-      stale: false,
-    });
+  await expect(drawnText(host.caller, address)).resolves.toEqual({
+    status: 200,
+  });
   expect(network.received).toHaveLength(1);
 }, 30_000);
-
-const readResult = async (
-  directory: string,
-): Promise<z.infer<ReturnType<typeof z.json>>> =>
-  z
-    .json()
-    .parse(JSON.parse(await readFile(join(directory, 'out.json'), 'utf8')));

@@ -30,9 +30,6 @@
  * `argo.changed()`. A Query answer that changed with no write marks the addresses whose last draw read
  * it. It runs until the signal aborts or `close()`; the App draws again only the addresses it has on
  * screen, so no App polls.
- *
- * `patterns(pluginId)` lists the Page path patterns the running Plugin defined, so the App knows which
- * of its paths are Loader pages; it starts the Plugin first and throws when it cannot.
  */
 export { LoaderPages, type Asking } from './loader-pages';
 

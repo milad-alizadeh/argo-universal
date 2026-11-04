@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { PluginViewId } from '#plugin-wire-events';
 
 export {
   AddOnlySlotId,
@@ -68,7 +67,6 @@ export {
   PageStateChange,
   PageStateValue,
   PageValue,
-  WireEvent,
 } from '#plugin-wire-action';
 
 // Keys are local to their sibling collection; slot steps keep identically named children distinct.
@@ -108,31 +106,8 @@ export const PatchOp = z.discriminatedUnion('op', [
 
 export type PatchOp = z.infer<typeof PatchOp>;
 
-export const ViewMessage = z.discriminatedUnion('type', [
-  z.strictObject({
-    type: z.literal('snapshot'),
-    viewId: PluginViewId.optional(),
-    revision: z.number().int().nonnegative(),
-    root: WireNode,
-  }),
-  z.strictObject({
-    type: z.literal('patch'),
-    viewId: PluginViewId.optional(),
-    revision: z.number().int().nonnegative(),
-    ops: z.array(PatchOp).min(1),
-  }),
-]);
-
-export type ViewMessage = z.infer<typeof ViewMessage>;
-
 export {
-  PluginViewId,
-  PluginDispatchId,
-  PluginDispatchInput,
-  ComponentEvent,
   componentEventPayload,
-  PluginDispatchResult,
-  PluginViewInput,
   PluginEvent,
   componentEventRules,
   type ComponentEventRules,
@@ -140,7 +115,6 @@ export {
 
 export {
   componentEventHandler,
-  placedComponentEvent,
   propsWithin,
   WireProps,
 } from '#plugin-kit-component-events';

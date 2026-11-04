@@ -10,7 +10,7 @@
       "accessibilityLabel": "Concurrency",
       "valueLabel": "2 jobs",
       "onValueChange": {
-        "$event": "onValueChange"
+        "bind": "concurrency"
       }
     },
     "children": [],
@@ -46,7 +46,7 @@
                 }
               ],
               "onValueChange": {
-                "$event": "onValueChange"
+                "bind": "environment"
               }
             },
             "children": [],
@@ -59,7 +59,7 @@
               "title": "Notifications",
               "value": false,
               "onValueChange": {
-                "$event": "onValueChange"
+                "bind": "notifications"
               }
             },
             "children": [],
@@ -72,10 +72,11 @@
               "title": "Project name",
               "value": "Argo",
               "onChangeText": {
-                "$event": "onChangeText"
+                "bind": "projectName"
               },
               "onSubmit": {
-                "$event": "onSubmit"
+                "operation": "saveProject",
+                "args": {}
               }
             },
             "children": [],
@@ -92,7 +93,8 @@
       "icon": "add",
       "accessibilityLabel": "Add project",
       "onPress": {
-        "$event": "onPress"
+        "operation": "addProject",
+        "args": {}
       }
     },
     "children": [],
@@ -105,7 +107,8 @@
       "label": "Deploy",
       "menuLabel": "More deployments",
       "onPress": {
-        "$event": "onPress"
+        "operation": "deploy",
+        "args": {}
       }
     },
     "children": [
@@ -116,7 +119,8 @@
           "label": "Deploy preview",
           "icon": "add",
           "onPress": {
-            "$event": "onPress"
+            "operation": "deployPreview",
+            "args": {}
           }
         },
         "children": [],

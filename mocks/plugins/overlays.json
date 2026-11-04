@@ -14,7 +14,7 @@
         "title": "Alert title",
         "message": "Alert wire content",
         "onOpenChange": {
-          "$event": "onOpenChange"
+          "bind": "alertOpen"
         }
       },
       "children": [
@@ -24,7 +24,8 @@
           "props": {
             "label": "Apply alert",
             "onPress": {
-              "$event": "onPress"
+              "operation": "applyChanges",
+              "args": {}
             }
           },
           "children": [],
@@ -37,7 +38,8 @@
             "label": "Cancel alert",
             "role": "cancel",
             "onPress": {
-              "$event": "onPress"
+              "operation": "discardChanges",
+              "args": {}
             }
           },
           "children": [],
@@ -53,7 +55,7 @@
         "open": false,
         "label": "Sheet title",
         "onOpenChange": {
-          "$event": "onOpenChange"
+          "bind": "sheetOpen"
         }
       },
       "children": [
@@ -84,7 +86,7 @@
                         "title": "Overlay name",
                         "value": "Argo",
                         "onChangeText": {
-                          "$event": "onChangeText"
+                          "bind": "name"
                         }
                       },
                       "children": [],
@@ -100,7 +102,8 @@
               "props": {
                 "label": "Cancel sheet",
                 "onPress": {
-                  "$event": "onPress"
+                  "operation": "cancelRename",
+                  "args": {}
                 }
               },
               "children": [],
@@ -112,7 +115,8 @@
               "props": {
                 "label": "Apply sheet",
                 "onPress": {
-                  "$event": "onPress"
+                  "operation": "rename",
+                  "args": {}
                 }
               },
               "children": [],

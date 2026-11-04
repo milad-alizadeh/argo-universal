@@ -3,25 +3,16 @@ import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  useKeepSidebarWhileOpening,
-  useKeepSidebarWhilePending,
-} from '#features/frame';
+import { useKeepSidebarWhileOpening } from '#features/frame';
 import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
 import { PluginPage as LoaderPage } from '../plugin-page/plugin-page';
-import { useIsLoaderPage } from '../plugin-page/use-loader-paths';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
   usePluginAt,
   type PluginSection,
 } from '../use-plugin-sections';
-import { usePluginView } from '../use-plugin-view';
-import {
-  PluginDetailView,
-  type PluginPageCallbacks,
-} from './plugin-detail-view';
 
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
@@ -56,32 +47,14 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
-// A page that may be a Loader page waits for its first draw like any other, so it holds the sidebar as the page before it left it.
-function PendingLoaderPage(): React.JSX.Element {
-  useKeepSidebarWhilePending();
-
-  return <PluginLoading />;
-}
-
 type PluginPageProps = PluginDetailScreenProps & {
   section: PluginSection;
   // The page is its nav item's root.
   root: boolean;
 };
 
-// A Loader page draws from its address; any other page is a view the Plugin keeps open (ADR-0050).
-function PluginPage(props: PluginPageProps): React.JSX.Element | null {
-  const path = pluginPagePath(props.path);
-  const loader = useIsLoaderPage(props.section.pluginId, path);
-
-  if (loader === undefined) return <PendingLoaderPage />;
-
-  if (!loader) return <ViewPage {...props} />;
-
-  return <DrawnPage {...props} />;
-}
-
-function DrawnPage(props: PluginPageProps): React.JSX.Element {
+// A Loader page draws from its address (ADR-0050); the route is the Plugin id, the nav id, then the page's own path.
+function PluginPage(props: PluginPageProps): React.JSX.Element {
   const { section, projectId, sessionId } = props;
   const path = pluginPagePath(props.path);
   const opening = { pluginId: section.pluginId, path, projectId, sessionId };
@@ -92,25 +65,6 @@ function DrawnPage(props: PluginPageProps): React.JSX.Element {
       {...opening}
       title={section.title}
       onOpenPage={onOpenPage}
-      onBack={usePushedBack(props.root)}
-    />
-  );
-}
-
-// The route is the Plugin id, the nav id, then the page's own path, which is what the Plugin registered.
-function ViewPage(props: PluginPageProps): React.JSX.Element {
-  const { section } = props;
-
-  const view = usePluginView({
-    pluginId: section.pluginId,
-    path: pluginPagePath(props.path),
-    sessionId: props.sessionId,
-    projectId: props.projectId,
-  });
-
-  return (
-    <PluginDetailView
-      {...pluginPageProps(section, view, usePluginOpener()(section.pluginId))}
       onBack={usePushedBack(props.root)}
     />
   );
@@ -131,17 +85,4 @@ function PluginUnavailable(): React.JSX.Element {
   useErrorToast(unavailable);
 
   return <Redirect href="/sessions" />;
-}
-
-function pluginPageProps(
-  section: PluginSection,
-  view: ReturnType<typeof usePluginView>,
-  onOpenPage: PluginPageCallbacks['onOpenPage'],
-): React.ComponentProps<typeof PluginDetailView> {
-  return {
-    title: section.title,
-    viewId: view.viewId,
-    root: view.root,
-    callbacks: { onEvent: view.dispatch, onOpenPage },
-  };
 }

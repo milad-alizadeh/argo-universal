@@ -22,7 +22,7 @@ describe('a FieldGroup row’s leading icon', () => {
         value: 'a',
         options: [],
         presentation: 'menu',
-        onValueChange: { $event: 'onValueChange' },
+        onValueChange: { pageState: { value: { $payload: true } } },
         leading: name,
       }).success,
     ).toBe(false);
@@ -58,7 +58,7 @@ const parseLogo = (logo: string): boolean =>
     value: 'a',
     options: [{ value: 'a', label: 'A', logo }],
     presentation: 'menu',
-    onValueChange: { $event: 'onValueChange' },
+    onValueChange: { pageState: { value: { $payload: true } } },
   }).success;
 
 describe('a FieldGroup.Picker option’s logo', () => {

@@ -2,6 +2,7 @@ import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
 import {
   Handler,
   componentEventHandler,
+  componentEventPayload,
   componentEventRules,
   propsWithin,
   type ComponentEventRules,
@@ -9,10 +10,9 @@ import {
 } from '@repo/contracts/plugins/wire';
 import { errorToast } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { runAction } from '../plugin-actions';
 import type { ControlField } from './plugin-control-field';
-import type { PluginDispatcher } from './plugin-dispatcher';
 import type {
   Callback,
   ControlInput,
@@ -20,11 +20,10 @@ import type {
   PluginProps,
 } from './plugin-rendering';
 
-// One node's events: the node, its field, the tree's dispatcher, and the redraw a field's change asks for.
+// One node's events: the node, its field, and the redraw a field's change asks for.
 export type NodeEvents = {
   input: ControlInput;
   field: ControlField;
-  send: PluginDispatcher['send'];
   update: () => void;
 };
 
@@ -104,30 +103,13 @@ function placeEcho({ input, field }: NodeEvents): Placed[] {
   return [{ within, name, value: field.current }];
 }
 
-async function deliver(
-  { input, send }: NodeEvents,
+// An awaited event's kit component reports its own failure; the field of any other only rolls back, so it is said here.
+function deliver(
+  { input }: NodeEvents,
   event: Declared,
   payload?: WireJson,
 ): Promise<void> {
-  const { handler, name, schema } = event;
-
-  if (!handler || !('$event' in handler))
-    return inApp(input, { handler, event }, payload);
-  await send(input.context.key, { event: name, payload, schema });
-}
-
-type InApp = {
-  handler: Exclude<Handler, { $event: string }> | undefined;
-  event: Declared;
-};
-
-// An awaited event's kit component reports its own failure; the field of any other only rolls back, so it is said here.
-function inApp(
-  input: ControlInput,
-  { handler, event }: InApp,
-  payload?: WireJson,
-): Promise<void> {
-  const run = runInApp(input, { handler, event }, payload);
+  const run = runInApp(input, event, payload);
 
   return event.rules.awaits ? run : run.catch(sayWhy);
 }
@@ -148,18 +130,22 @@ function sayWhy(error: Error): never {
  */
 async function runInApp(
   input: ControlInput,
-  { handler, event }: InApp,
+  { handler, name, schema }: Declared,
   payload?: WireJson,
 ): Promise<void> {
   if (!handler) return;
 
   if ('action' in handler) return runAction(handler, input.context.openPage);
 
-  const { name, schema } = event;
-  const from = { key: input.context.key, name, schema, payload };
+  const checked = componentEventPayload(schema, sent(schema, payload));
+  const from = { key: input.context.key, name, schema, payload: checked };
 
-  return pageCallOf(input)(madePageCall(handler, payload), from);
+  return pageCallOf(input)(madePageCall(handler, checked), from);
 }
+
+// A press reports a native event object; its call carries no payload.
+const sent = (schema: z.ZodType, payload?: WireJson): WireJson | undefined =>
+  schema instanceof z.ZodUndefined ? undefined : payload;
 
 // Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.
 const pageCallOf = ({ context }: ControlInput): OnPageCall =>

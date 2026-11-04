@@ -1,3 +1,4 @@
+import type { MadePageCall } from '@repo/contracts/plugins/page-call-payload';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   boardListRoot,
@@ -6,7 +7,7 @@ import {
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PluginTree } from './plugin-registry';
+import { PluginTree, type PageEvent } from './plugin-registry';
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/ListMoves',
@@ -17,17 +18,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const moved = fn(async () => {});
 
-// The board as a Plugin sends it: JSON over the wire.
+// The `moveCard` run a move makes, with the fields the List reports.
+const moveCard = (
+  card: string,
+  lane: string,
+  index: number,
+): [MadePageCall, PageEvent] => [
+  { operation: 'moveCard', args: { card, lane, index } },
+  expect.objectContaining({ name: 'onMove' }),
+];
+
+// The board as a Plugin sends it: JSON over the wire; a move runs the Plugin's `moveCard`.
 const board: WireNode = JSON.parse(JSON.stringify(boardListRoot));
 
 export const BoardRowMovesToAnotherLane: Story = {
   beforeEach: async () => {
-    onEvent.mockClear();
+    moved.mockClear();
     await settleLayout('wide');
   },
-  render: () => <PluginTree root={board} onEvent={onEvent} />,
+  render: () => <PluginTree root={board} onPageCall={moved} />,
   play: async ({ canvas, canvasElement, userEvent }) => {
     const row = await canvas.findByRole('button', { name: 'Fix login' });
 
@@ -53,10 +64,7 @@ export const BoardRowMovesToAnotherLane: Story = {
 
     if (doneTop) await userEvent.click(doneTop);
 
-    await expect(onEvent).toHaveBeenCalledWith('board', {
-      event: 'onMove',
-      payload: { id: 'login', section: 'done', index: 0 },
-    });
+    await expect(moved).toHaveBeenCalledWith(...moveCard('login', 'done', 0));
   },
 };
 
@@ -65,41 +73,17 @@ const queue: WireNode = JSON.parse(JSON.stringify(queueListRoot));
 // Every lower card declares Alt+↑: Argo declares the Move Actions, so the focused card answers, not the first.
 export const FocusedRowMovesFromKeyboard: Story = {
   beforeEach: async () => {
-    onEvent.mockClear();
+    moved.mockClear();
     await settleLayout('wide');
   },
-  render: () => <PluginTree root={queue} onEvent={onEvent} />,
+  render: () => <PluginTree root={queue} onPageCall={moved} />,
   play: async ({ canvas, userEvent }) => {
     const row = await canvas.findByRole('button', { name: 'Third card' });
 
     row.focus();
     await userEvent.keyboard('{Alt>}{ArrowUp}{/Alt}');
 
-    await expect(onEvent.mock.calls).toEqual([
-      [
-        'queue',
-        {
-          event: 'onMove',
-          payload: { id: 'third', section: 'queue', index: 1 },
-        },
-      ],
-    ]);
-  },
-};
-
-// The board as a Loader page draws it: a move runs the Plugin's `moveCard` with the fields the List reports.
-const loaderBoard: WireNode = {
-  ...board,
-  props: {
-    ...board.props,
-    onMove: {
-      operation: 'moveCard',
-      args: {
-        card: { $payload: 'id' },
-        lane: { $payload: 'section' },
-        index: { $payload: 'index' },
-      },
-    },
+    await expect(moved.mock.calls).toEqual([moveCard('third', 'queue', 1)]);
   },
 };
 
@@ -121,9 +105,7 @@ export const FailedMoveGoesBack: Story = {
     onPageCall.mockClear();
     await settleLayout('wide');
   },
-  render: () => (
-    <PluginTree root={loaderBoard} onEvent={onEvent} onPageCall={onPageCall} />
-  ),
+  render: () => <PluginTree root={board} onPageCall={onPageCall} />,
   play: async ({ canvas, canvasElement, userEvent }) => {
     const row = await canvas.findByRole('button', { name: 'Fix login' });
 

@@ -36,13 +36,21 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
  * could not be shown when there is none. The Plugin's one drawing-failure toast says why (ADR-0037).
  */
 function useLastDrawn(answer: Answer | undefined): WireNode | null {
+  return useKeptRoot(rootOf(answer)) ?? fallbackOf(answer);
+}
+
+// The newest tree drawn, kept while a later answer has none.
+function useKeptRoot(root: WireNode | null): WireNode | null {
   const [last, setLast] = useState<WireNode | null>(null);
-  const root = rootOf(answer);
 
   if (isNewer(root, last)) setLast(root);
 
-  return root ?? last ?? (answer?.ok === false ? pluginPageFallback : null);
+  return root ?? last;
 }
+
+// A page that failed before it drew anything shows the fallback; one still loading shows nothing yet.
+const fallbackOf = (answer: Answer | undefined): WireNode | null =>
+  answer?.ok === false ? pluginPageFallback : null;
 
 const rootOf = (answer: Answer | undefined): WireNode | null =>
   answer?.ok ? answer.root : null;

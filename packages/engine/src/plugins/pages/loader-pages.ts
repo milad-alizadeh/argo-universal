@@ -54,7 +54,7 @@ export class LoaderPages {
     private readonly draws: PluginDraws,
     private readonly operations: PluginOperationService,
   ) {
-    this.unwatch = draws.onChanged((pluginId, addresses) =>
+    this.unwatch = draws.changes.listen((pluginId, addresses) =>
       this.mark(pluginId, addresses),
     );
   }
@@ -105,14 +105,6 @@ export class LoaderPages {
     const address = { ...at, pages: 1, ...askedBy(asking) };
 
     yield* this.draws.live({ pluginId, address, known, signal: asking.signal });
-  }
-
-  public async patterns(pluginId: string): Promise<string[]> {
-    const started = await this.started(pluginId);
-
-    if (started) throw new Error(started);
-
-    return this.draws.patternsOf(pluginId);
   }
 
   /*

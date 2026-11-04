@@ -1,5 +1,5 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
-import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import {
   Screen,
@@ -12,22 +12,19 @@ import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   PluginTree,
   type OnPageCall,
-  type PluginOnEvent,
 } from '../../../lib/product/plugin-registry';
 
-// What a page's tree reports back: the events its controls send, and the page a `navigate` Action opens.
-export interface PluginPageCallbacks {
-  onEvent: PluginOnEvent;
+// What a page's tree reports back: the page a `navigate` Action opens, and its Page calls.
+interface PluginPageCallbacks {
   onOpenPage?: OpenPluginPage;
   // A Loader page's Page state changes and Operation calls (ADR-0050).
   onPageCall?: OnPageCall;
 }
 
 export interface PluginDetailViewProps {
-  // The page the Plugin draws; blank until the Server's first snapshot arrives.
+  // The page the Plugin draws; blank until its first tree arrives.
   root: WireNode | null;
   title?: string;
-  viewId?: PluginViewId | null;
   callbacks: PluginPageCallbacks;
   // The App's own Back for a pushed page; a Plugin declares no navigation (`ScreenDefaultBack`).
   onBack?: (() => void) | null;
@@ -94,13 +91,13 @@ function ownsPage(root: WireNode | null): boolean {
 
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
-    <PluginTree key={props.viewId} root={props.root} {...props.callbacks} />
+    <PluginTree root={props.root} {...props.callbacks} />
   ) : (
     <PendingPage />
   );
 }
 
-// A page waiting for its first snapshot draws nothing, but holds the sidebar as the page before it left it.
+// A page waiting for its first tree draws nothing, but holds the sidebar as the page before it left it.
 function PendingPage(): null {
   useKeepSidebarWhilePending();
 

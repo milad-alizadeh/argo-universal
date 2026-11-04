@@ -31,7 +31,6 @@ import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { PageOpening } from './page-server';
 import type { PageView } from './page-view';
 import type { TestProjects } from './test-projects';
-import type { PluginMount, PluginTestView } from './view';
 
 export interface PluginTestOptions {
   directory: string;
@@ -59,11 +58,6 @@ export interface PluginTest {
   badges: (signal: AbortSignal) => AsyncGenerator<PluginBadge[]>;
   failures: (signal: AbortSignal) => AsyncGenerator<PluginFailure[]>;
   log: (pluginId?: string) => Promise<string>;
-  page: (
-    path?: string,
-    pluginId?: string,
-    projectId?: string,
-  ) => PluginTestView;
   // One list's merged items, sent again each time a Plugin says its items changed.
   slotItems: (
     input: SlotItemsInput,
@@ -124,7 +118,6 @@ export interface PluginTest {
     ) => AsyncGenerator<LiveAnswer>;
   };
   close: () => Promise<void>;
-  mount: (input: PluginMount) => Promise<PluginTestView>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
   clock: { advance: (ms: number) => Promise<void> };
   settings: Map<string, PluginSettingValue>;

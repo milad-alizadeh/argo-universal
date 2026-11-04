@@ -5,8 +5,6 @@ import { expect, fn, waitFor } from 'storybook/test';
 import { allToasts, findToast } from '../../../../../kit/mocks/find-toast';
 import { PluginTree } from './plugin-registry';
 
-const onEvent = fn();
-
 const onPageCall = fn(() => Promise.resolve());
 
 const searchLabel = 'Search Issues';
@@ -50,7 +48,7 @@ const meta = {
 } satisfies Meta;
 
 const drawn = (bound: boolean) => (): React.JSX.Element => (
-  <PluginTree root={page(bound)} onEvent={onEvent} onPageCall={onPageCall} />
+  <PluginTree root={page(bound)} onPageCall={onPageCall} />
 );
 
 export default meta;
@@ -71,7 +69,6 @@ async function searchFor(
 export const UnboundSearchAndSelectionStayInTheApp: Story = {
   render: drawn(false),
   play: async (context) => {
-    onEvent.mockClear();
     onPageCall.mockClear();
     const field = await searchFor(context, 'flaky');
     await context.userEvent.click(
@@ -79,7 +76,6 @@ export const UnboundSearchAndSelectionStayInTheApp: Story = {
     );
 
     await expect(field).toHaveValue('flaky');
-    await expect(onEvent).not.toHaveBeenCalled();
     await expect(onPageCall).not.toHaveBeenCalled();
   },
 };
@@ -87,7 +83,6 @@ export const UnboundSearchAndSelectionStayInTheApp: Story = {
 export const BoundSearchAndSelectionReachThePage: Story = {
   render: drawn(true),
   play: async (context) => {
-    onEvent.mockClear();
     onPageCall.mockClear();
     const field = await searchFor(context, 'flaky');
 
@@ -108,7 +103,6 @@ export const BoundSearchAndSelectionReachThePage: Story = {
         expect.objectContaining({ payload: ['argo'] }),
       ),
     );
-    await expect(onEvent).not.toHaveBeenCalled();
   },
 };
 
@@ -135,9 +129,7 @@ const misfitSort = node('Table', 'runs', {
 const misfit = "The event's payload does not fit Page state";
 
 export const PayloadThatDoesNotFitSaysWhy: Story = {
-  render: () => (
-    <PluginTree root={misfitSort} onEvent={onEvent} onPageCall={onPageCall} />
-  ),
+  render: () => <PluginTree root={misfitSort} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     onPageCall.mockClear();
     dismissToasts();

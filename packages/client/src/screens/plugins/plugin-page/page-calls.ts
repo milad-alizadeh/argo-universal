@@ -44,12 +44,17 @@ export class PageCalls {
   }
 
   public call(call: MadePageCall, event: PageEvent): Promise<void> {
-    const { throttleMs, flush } = componentEventRules(event.schema);
-
     if ('bind' in call)
       return this.later(call.bind, bindPauseMs, () =>
         this.bound(call.bind, event.payload),
       );
+
+    return this.unbound(call, event);
+  }
+
+  // A throttled event's call waits for its edits to pause; a flushing one lands every waiting change first.
+  private unbound(call: MadePageCall, event: PageEvent): Promise<void> {
+    const { throttleMs, flush } = componentEventRules(event.schema);
 
     if (throttleMs > 0)
       return this.later(eventKey(event), throttleMs, () => this.made(call));
@@ -80,15 +85,18 @@ export class PageCalls {
 
   // The call the event's node makes in the tree drawn now.
   private callNow(event: PageEvent): MadePageCall {
-    const root = this.deps.addresses.shown(this.deps.opening);
-    const node = root && findWireNode(root, event.key);
-    const handler =
-      node && componentEventHandler(node.props, event.name, event.schema);
-    const call = PageCall.safeParse(handler).data;
+    const call = PageCall.safeParse(this.handlerNow(event)).data;
 
     if (!call) throw new Error('That control is no longer on the page');
 
     return madePageCall(call, event.payload);
+  }
+
+  private handlerNow({ key, name, schema }: PageEvent): WireJson | undefined {
+    const root = this.deps.addresses.shown(this.deps.opening);
+    const node = root && findWireNode(root, key);
+
+    return node && componentEventHandler(node.props, name, schema);
   }
 
   private bound(key: string, value: WireJson | undefined): Promise<void> {
@@ -100,15 +108,18 @@ export class PageCalls {
   }
 
   private made(call: MadePageCall): Promise<void> {
-    const { addresses, opening, run } = this.deps;
+    if ('operation' in call) return this.deps.run(call);
 
-    if ('operation' in call) return run(call);
+    return this.drawn(call);
+  }
 
-    if ('loadMore' in call) return addresses.loadMore(opening);
+  // A load more or a Page state change draws the page again; a bind has already landed as one.
+  private drawn(call: Exclude<MadePageCall, MadeOperationCall>): Promise<void> {
+    const { addresses, opening } = this.deps;
 
-    if ('bind' in call) return Promise.resolve();
+    if ('pageState' in call) return addresses.change(opening, call.pageState);
 
-    return addresses.change(opening, call.pageState);
+    return 'loadMore' in call ? addresses.loadMore(opening) : Promise.resolve();
   }
 }
 

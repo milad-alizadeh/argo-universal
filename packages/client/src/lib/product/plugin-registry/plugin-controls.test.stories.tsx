@@ -1,15 +1,15 @@
-import { WireNode } from '@repo/contracts/plugins/wire';
+import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';
 import fixtures from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
-import { PluginTree } from './plugin-registry';
+import { PluginTree, type PageEvent } from './plugin-registry';
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Controls',
   render: (): React.JSX.Element => (
     <>
       {roots.map((root) => (
-        <PluginTree key={root.key} root={root} onEvent={onEvent} />
+        <PluginTree key={root.key} root={root} onPageCall={onPageCall} />
       ))}
     </>
   ),
@@ -19,7 +19,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
+
+// What a control's event sent, from the node it came from.
+const from = (key: string, payload?: WireJson): PageEvent =>
+  expect.objectContaining(payload === undefined ? { key } : { key, payload });
 
 const environment = 'Environment';
 
@@ -38,20 +42,20 @@ export const BinaryControls: Story = {
       ['switch', 'Notifications', toggleKey],
     ] as const) {
       const answer = Promise.withResolvers<void>();
-      onEvent.mockReturnValueOnce(answer.promise);
+      onPageCall.mockReturnValueOnce(answer.promise);
       const control = canvas.getByRole(role, { name });
       await userEvent.click(canvas.getByText(name));
       await expect(control).toBeChecked();
       await expect(control).toBeDisabled();
-      await expect(onEvent).toHaveBeenCalledWith(key, {
-        event: 'onValueChange',
-        payload: true,
-      });
+      await expect(onPageCall).toHaveBeenCalledWith(
+        { bind: 'notifications' },
+        from(key, true),
+      );
       answer.reject(new Error('Handler failed'));
       await waitFor(() => expect(control).not.toBeChecked());
       await expect(control).not.toBeDisabled();
       const accepted = Promise.withResolvers<void>();
-      onEvent.mockReturnValueOnce(accepted.promise);
+      onPageCall.mockReturnValueOnce(accepted.promise);
       await userEvent.click(canvas.getByText(name));
       await expect(control).toBeDisabled();
       accepted.resolve();
@@ -67,10 +71,10 @@ export const SelectPicker: Story = {
     await userEvent.click(
       within(document.body).getByRole('option', { name: 'Production' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith(pickerKey, {
-      event: 'onValueChange',
-      payload: 'prod',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { bind: 'environment' },
+      from(pickerKey, 'prod'),
+    );
   },
 };
 
@@ -79,10 +83,10 @@ export const AdjustSlider: Story = {
     const slider = canvas.getByRole('slider', { name: 'Concurrency' });
     await fireEvent.change(slider, { target: { value: '7' } });
     await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('slider', {
-        event: 'onValueChange',
-        payload: 7,
-      }),
+      expect(onPageCall).toHaveBeenCalledWith(
+        { bind: 'concurrency' },
+        from('slider', 7),
+      ),
     );
   },
 };
@@ -93,41 +97,45 @@ export const EditAndSubmitText: Story = {
     await userEvent.clear(field);
     await userEvent.type(field, 'Atlas');
     await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith(textKey, {
-        event: 'onChangeText',
-        payload: 'Atlas',
-      }),
+      expect(onPageCall).toHaveBeenCalledWith(
+        { bind: 'projectName' },
+        from(textKey, 'Atlas'),
+      ),
     );
     await userEvent.type(field, '{Enter}');
-    await expect(onEvent).toHaveBeenCalledWith(textKey, {
-      event: 'onSubmit',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'saveProject', args: {} },
+      from(textKey),
+    );
   },
 };
 
 export const PressIconButton: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Add project' }));
-    await expect(onEvent).toHaveBeenCalledWith('iconbutton', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'addProject', args: {} },
+      from('iconbutton'),
+    );
   },
 };
 
 export const UseSplitButton: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /^Deploy$/ }));
-    await expect(onEvent).toHaveBeenCalledWith('splitbutton', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'deploy', args: {} },
+      from('splitbutton'),
+    );
     await userEvent.click(
       canvas.getByRole('button', { name: 'More deployments' }),
     );
     await userEvent.click(
       within(document.body).getByRole('menuitem', { name: 'Deploy preview' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith('splitbutton/preview', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(
+      { operation: 'deployPreview', args: {} },
+      from('splitbutton/preview'),
+    );
   },
 };

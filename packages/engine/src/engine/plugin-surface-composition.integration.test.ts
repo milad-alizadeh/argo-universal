@@ -80,7 +80,11 @@ function followed({ client }: App): () => string | null {
 
   const subscription = client.plugins.live.subscribe(
     { ...address, path: '/live' },
-    { onData: (answer) => void (last = answeredText(answer)) },
+    {
+      onData: (answer): void => {
+        last = answeredText(answer);
+      },
+    },
   );
 
   onTestFinished(() => subscription.unsubscribe());

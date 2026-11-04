@@ -11,7 +11,7 @@ const svg: WireNode = {
     label: 'Service map',
     tone: 'info',
     aspectRatio: 1.5,
-    onPress: { $event: 'onPress' },
+    onPress: { operation: 'open', args: {} },
   },
   children: [],
   slots: {},

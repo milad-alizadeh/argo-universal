@@ -7,8 +7,8 @@ import overlaysFixture from '@repo/mocks/plugins/overlays.json' with { type: 'js
 import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { PluginTreeProps } from './plugin-registry';
 
-// A story supplies the event spy; a fixture is the wire tree a Plugin sent.
-type PluginTreeFixture = Omit<PluginTreeProps, 'onEvent'>;
+// A story supplies the Page call spy; a fixture is the wire tree a Plugin sent.
+type PluginTreeFixture = Pick<PluginTreeProps, 'root'>;
 
 // Each control fixture is one node in the shared mocks, keyed by the kit component it draws.
 function controlTree(key: string): WireNode {
@@ -39,7 +39,7 @@ const svgRoot = (): WireNode => ({
     xml: validSvgXml('gradient with local references'),
     label: 'Service map',
     tone: 'info',
-    onPress: { $event: 'onPress' },
+    onPress: { operation: 'openServiceMap', args: {} },
   },
   children: [],
   slots: {},

@@ -1,3 +1,4 @@
+import type { MadePageCall } from '@repo/contracts/plugins/page-call-payload';
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { Button } from '@repo/kit/primitives/actions/button';
@@ -5,7 +6,7 @@ import fixture from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
-import { PluginTree } from './plugin-registry';
+import { PluginTree, type PageEvent } from './plugin-registry';
 
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Canvas',
@@ -17,7 +18,16 @@ type Story = StoryObj<typeof meta>;
 
 const scene = WireNode.parse(fixture);
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
+
+// The call a shape's press makes, as the canvas fixture names it.
+const pressed = (key: string): [MadePageCall, PageEvent] => [
+  {
+    operation: 'selectDrawing',
+    args: { drawing: key.split('/').at(-1) ?? key },
+  },
+  expect.objectContaining({ key, name: 'onPress' }),
+];
 
 // A cold browser fetches and compiles CanvasKit before the drawing is ready.
 const canvasReady = { timeout: 15_000 };
@@ -44,7 +54,7 @@ function drawingPress(
   key: string,
 ): Story {
   return {
-    render: () => <PluginTree root={scene} onEvent={onEvent} />,
+    render: () => <PluginTree root={scene} onPageCall={onPageCall} />,
     play: async ({ canvas, userEvent }) => {
       await expect(
         canvas.findByRole('button', { name: label }, canvasReady),
@@ -56,7 +66,7 @@ function drawingPress(
         keys: '[MouseLeft]',
       });
       await waitFor(() =>
-        expect(onEvent).toHaveBeenCalledWith(key, { event: 'onPress' }),
+        expect(onPageCall).toHaveBeenCalledWith(...pressed(key)),
       );
       await expect(canvas.getByRole('button', { name: label })).toHaveAttribute(
         'aria-selected',
@@ -79,7 +89,7 @@ export const TransformedGroup = drawingPress(
 );
 
 export const AccessibleDrawings: Story = {
-  render: () => <PluginTree root={scene} onEvent={onEvent} />,
+  render: () => <PluginTree root={scene} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     const button = await canvas.findByRole(
       'button',
@@ -89,9 +99,7 @@ export const AccessibleDrawings: Story = {
 
     button.focus();
     await userEvent.keyboard('{Enter}');
-    await expect(onEvent).toHaveBeenCalledWith('scene/circle', {
-      event: 'onPress',
-    });
+    await expect(onPageCall).toHaveBeenCalledWith(...pressed('scene/circle'));
     await expect(button).toHaveAttribute('aria-selected', 'true');
     await expect(
       canvas.getByRole('list', { name: 'Build activity shapes' }),
@@ -100,7 +108,7 @@ export const AccessibleDrawings: Story = {
 };
 
 export const Hover: Story = {
-  render: () => <PluginTree root={scene} onEvent={onEvent} />,
+  render: () => <PluginTree root={scene} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     await canvas.findByRole('button', { name: 'Web build' }, canvasReady);
     const image = canvas.getByRole('img', { name: activity });
@@ -108,7 +116,7 @@ export const Hover: Story = {
     await expect(canvas.findByRole('tooltip')).resolves.toHaveTextContent(
       'Web build',
     );
-    await expect(onEvent).not.toHaveBeenCalled();
+    await expect(onPageCall).not.toHaveBeenCalled();
   },
 };
 
@@ -131,7 +139,7 @@ function DrawingPatch(): React.JSX.Element {
           )
         }
       />
-      <PluginTree root={root} onEvent={onEvent} />
+      <PluginTree root={root} onPageCall={onPageCall} />
     </>
   );
 }
@@ -154,7 +162,7 @@ export const CameraSurvivesPatch: Story = {
       keys: '[MouseLeft]',
     });
     await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('scene/box', { event: 'onPress' }),
+      expect(onPageCall).toHaveBeenCalledWith(...pressed('scene/box')),
     );
   },
 };

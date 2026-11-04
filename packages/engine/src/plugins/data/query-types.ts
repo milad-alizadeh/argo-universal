@@ -1,9 +1,5 @@
-import type {
-  PluginDataRequest,
-  PluginQuery,
-} from '@repo/contracts/plugins/argo-calls';
+import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
-import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { PluginServices } from '../services/plugin-services';
 
@@ -18,20 +14,10 @@ export type QueryOwner = {
 export type QueryServices = {
   services: Pick<PluginServices, 'handle'>;
   clock: PluginClock;
-  send: (pluginId: string, event: PluginEvent) => void;
   log: (line: string) => void;
   during: <T>(call: () => Promise<T>) => Promise<T>;
 };
 
-// What Timing needs of the watchers: whether any view holds the Query, and how often they want it.
-export type QueryPacing = { active: boolean; period: number };
-
-export type QueryWatch = Extract<PluginDataRequest, { action: 'watch' }>;
-
-/*
- * One Loader read of an entry: the Page address whose draw read it, which a changed answer marks, or none
- * for a background pass; whether it reads again whatever is kept; and the draw a paged-list page is read for.
- */
 /*
  * A Loader's read for one draw: the address holding it, whether it reads fresh whatever is kept, and the
  * interval its page is drawn again on, past which a kept answer is read again.
@@ -42,7 +28,3 @@ export type QueryRead = {
   draw: number;
   every?: number;
 };
-
-export function watchKey(request: { viewId: string; watchId: string }): string {
-  return JSON.stringify([request.viewId, request.watchId]);
-}

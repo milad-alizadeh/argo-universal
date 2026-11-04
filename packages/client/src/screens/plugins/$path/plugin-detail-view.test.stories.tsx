@@ -13,7 +13,7 @@ const meta = {
   beforeEach: async (): Promise<void> => {
     await settleLayout('phone');
   },
-  args: { callbacks: { onEvent: action('Plugin event') } },
+  args: { callbacks: { onPageCall: action('Page call') } },
 } satisfies Meta<typeof PluginDetailView>;
 
 export default meta;

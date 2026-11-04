@@ -8,7 +8,6 @@ import {
 } from '../protocol/runtime.ts';
 
 type CallOrigin = {
-  viewId?: string | null;
   projectId?: string;
   draw?: number;
   operation?: number;
@@ -39,7 +38,6 @@ export class WorkerCalls {
         id,
         request,
         ...origin,
-        viewId: origin.viewId ?? undefined,
       });
     });
   }
@@ -58,7 +56,6 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
 }
 
 export type PluginBridge = ((json: string) => Promise<string>) & {
-  inView?: <T>(viewId: string | null, run: () => T) => T;
   inProject?: <T>(projectId: string | undefined, run: () => T) => T;
   scopes?: CallScopes;
 };
@@ -74,8 +71,6 @@ export function createPluginBridge(calls: WorkerCalls): PluginBridge {
   const scopes = { operation: idScope(), draw: idScope() };
 
   return Object.assign(bridgeCall(calls, { scope, scopes }), {
-    inView: <T>(viewId: string | null, run: () => T): T =>
-      scope.run({ viewId }, run),
     inProject: <T>(projectId: string | undefined, run: () => T): T =>
       scope.run({ projectId }, run),
     scopes,
@@ -107,7 +102,7 @@ const bridgeCall =
     return JSON.stringify(value ?? null);
   };
 
-// A draw or an Operation invocation by id, kept apart from the call origin a view or Hook sets.
+// A draw or an Operation invocation by id, kept apart from the Project a Hook sets.
 function idScope(): IdScope {
   const current = new AsyncLocalStorage<number>();
 

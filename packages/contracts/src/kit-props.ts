@@ -3,7 +3,7 @@ import type { KitCallbackReturn } from './kit-callback-return';
 import type { kitComponentSchemas } from './plugins/kit-component-schemas';
 import type { KitListItem, KitNode } from './plugins/list-expansion';
 import type { KitChoiceValue } from './plugins/selection-value';
-import type { WireEvent, WireNode } from './plugins/wire';
+import type { WireNode } from './plugins/wire';
 
 export type KitComponentName = keyof typeof kitComponentSchemas;
 
@@ -59,8 +59,8 @@ type KitValuePayload<Payload, Props> = Props extends {
 
 /*
  * How one side draws schema values. The App gets its own nodes, choices and items, receives handlers alone
- * (inside nested data too) and slot props as nodes. A Plugin writes JSX: a handler goes beside the value it
- * replaces, at the top level or in its declared nested event, and every list is readonly.
+ * (inside nested data too) and slot props as nodes. A Plugin writes JSX whose events are values, and every
+ * list is readonly.
  */
 export interface KitDrawing {
   node: unknown;
@@ -85,21 +85,11 @@ type Callback<Schema, Props, Drawing extends KitDrawing> = [
       payload: KitValue<Payload<Schema, Props>, Record<never, never>, Drawing>,
     ) => KitCallbackReturn<Schema, Drawing['returns']>;
 
+// A Plugin's nested event is a value like any other prop data; the App's takes a handler.
 type NestedEvents<
   Events,
   Drawing extends KitDrawing,
-  Value,
-> = Drawing['plugin'] extends true
-  ? {
-      [
-        Key in keyof Events as Key extends keyof Value
-          ? Extract<Value[Key], WireEvent> extends never
-            ? never
-            : Key
-          : never
-      ]: Events[Key];
-    }
-  : Events;
+> = Drawing['plugin'] extends true ? Record<never, never> : Events;
 
 type KitList<
   Values extends readonly unknown[],
@@ -115,48 +105,42 @@ type KitValue<
   Drawing extends KitDrawing,
 > = Value extends WireNode
   ? Drawing['wireNode']
-  : Value extends WireEvent
-    ? Drawing['plugin'] extends true
-      ? never
-      : Value
-    : Value extends KitListItem
-      ? Drawing['item']
-      : Value extends KitNode
-        ? Drawing['node']
-        : Value extends KitChoiceValue
-          ? Drawing['choice']
-          : Value extends (...args: infer Args) => infer Result
-            ? (
-                ...args: {
-                  [Key in keyof Args]: KitValue<Args[Key], Events, Drawing>;
-                }
-              ) => KitValue<Result, Events, Drawing>
-            : Value extends readonly unknown[]
-              ? KitList<Value, Events, Drawing>
-              : Value extends object
-                ? KitMappedProps<
-                    Value,
-                    NestedEvents<Events, Drawing, Value>,
-                    never,
-                    Drawing
-                  >
-                : Value;
+  : Value extends KitListItem
+    ? Drawing['item']
+    : Value extends KitNode
+      ? Drawing['node']
+      : Value extends KitChoiceValue
+        ? Drawing['choice']
+        : Value extends (...args: infer Args) => infer Result
+          ? (
+              ...args: {
+                [Key in keyof Args]: KitValue<Args[Key], Events, Drawing>;
+              }
+            ) => KitValue<Result, Events, Drawing>
+          : Value extends readonly unknown[]
+            ? KitList<Value, Events, Drawing>
+            : Value extends object
+              ? KitMappedProps<
+                  Value,
+                  NestedEvents<Events, Drawing>,
+                  never,
+                  Drawing
+                >
+              : Value;
 
+// A Plugin's Render passes an event a value (ADR-0050); the App's kit component takes a handler.
 type EventProp<
   Value,
   Schema,
   Props,
   Drawing extends KitDrawing,
 > = Drawing['plugin'] extends true
-  ?
-      | KitValue<Exclude<Value, WireEvent>, Record<never, never>, Drawing>
-      | Callback<Schema, Props, Drawing>
+  ? KitValue<Value, Record<never, never>, Drawing>
   : Callback<Schema, Props, Drawing>;
 
 /*
  * The one schema-to-props mapping for App kit props and Plugin JSX; Contracts owns every prop, including
- * events inside action and option data. The App keeps a prop its schema leaves unset as it is; a Plugin may
- * still pass a handler for it.
+ * events inside action and option data. The App keeps a prop its schema leaves unset as it is.
  */
 export type KitMappedProps<
   Props,

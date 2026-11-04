@@ -21,14 +21,14 @@ const rerun = (id: string): WireNode =>
   node('Action', `${id}-rerun`, {
     label: 'Re-run',
     icon: 'retry',
-    onPress: { $event: 'onPress' },
+    onPress: { operation: 'rerun', args: { run: id } },
   });
 
 const run = (
   id: string,
   [name, branch, status, tone, time]: Run,
 ): WireNode => ({
-  ...node('Table.Row', id, { id, onPress: { $event: 'onPress' } }),
+  ...node('Table.Row', id, { id, onPress: { pageState: { run: id } } }),
   children: [
     cell(`${id}-name`, 'name', name),
     cell(`${id}-branch`, 'branch', branch),
@@ -54,10 +54,15 @@ export const runTableRoot: WireNode = {
       },
     ],
     sort: { column: 'time', direction: 'descending' },
-    onSortChange: { $event: 'onSortChange' },
+    onSortChange: {
+      pageState: {
+        sortColumn: { $payload: 'column' },
+        sortDirection: { $payload: 'direction' },
+      },
+    },
     selectionMode: 'multiple',
     selection: [],
-    onSelectionChange: { $event: 'onSelectionChange' },
+    onSelectionChange: { bind: 'selection' },
   }),
   children: [
     run('web', ['Deploy web', 'main', 'Passed', 'success', '2 min ago']),

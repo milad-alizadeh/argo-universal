@@ -9,13 +9,9 @@ import type {
   PluginStatus,
 } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
-import {
-  forgetOnce,
-  logFallback,
-  type Fallback,
-} from '../views/render-fallback';
 import { answerPluginCall } from './calls';
 import type { PluginLocation } from './plugin-location';
+import { forgetOnce, logFallback, type Fallback } from './render-fallback';
 import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources, type RuntimeInput } from './runtime-resources';
 import { TestControl } from './test-control';
@@ -24,7 +20,6 @@ export class PluginRuntime {
   readonly hooks;
   // What a Plugin's test kit drives: the clock every deadline and worker realm share.
   readonly testControl: TestControl;
-  readonly views: RuntimeResources['views'];
   readonly data: RuntimeResources['data'];
   readonly items: RuntimeResources['items'];
   readonly operations: RuntimeResources['operations'];
@@ -45,7 +40,7 @@ export class PluginRuntime {
     this.testControl = this.controlFor(clock);
     this.hooks = hostHooks(this.host, this.log, clock);
     this.resources = new RuntimeResources(this.resourceInput());
-    ({ views: this.views, data: this.data } = this.resources);
+    ({ data: this.data } = this.resources);
     ({ items: this.items, background: this.background } = this.resources);
     ({ operations: this.operations, draws: this.draws } = this.resources);
     this.plugins = new RuntimePlugins(this.pluginInput());

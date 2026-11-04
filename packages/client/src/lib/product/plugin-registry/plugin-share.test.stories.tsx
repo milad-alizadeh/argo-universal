@@ -8,7 +8,7 @@ const root = WireNode.parse(fixture);
 
 const share = fn<(data: ShareData) => Promise<void>>();
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
 
 let answer: PromiseWithResolvers<void>;
 
@@ -33,7 +33,9 @@ function sharePort(): () => void {
 const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Share',
   beforeEach: sharePort,
-  render: (): React.JSX.Element => <PluginTree root={root} onEvent={onEvent} />,
+  render: (): React.JSX.Element => (
+    <PluginTree root={root} onPageCall={onPageCall} />
+  ),
 } satisfies Meta;
 
 export default meta;
@@ -49,7 +51,7 @@ export const AppShare: Story = {
       text: 'Shared from a Plugin',
       url: undefined,
     });
-    await expect(onEvent).not.toHaveBeenCalled();
+    await expect(onPageCall).not.toHaveBeenCalled();
     await expect(button).toBeDisabled();
     answer.resolve();
     await waitFor(() => expect(button).toBeEnabled());

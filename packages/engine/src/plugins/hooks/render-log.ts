@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { HookEventName } from '@repo/contracts/plugins';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
-import { logOnce } from '../views/render-fallback';
+import { logOnce } from '../runtime/render-fallback';
 import type { RegisteredHook } from './hook-registry';
 import { selectedHook, type DrawnReplacement } from './render-answer';
 

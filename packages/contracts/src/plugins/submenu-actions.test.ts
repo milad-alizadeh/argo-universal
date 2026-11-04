@@ -23,7 +23,7 @@ const press = (key: string, label: string): WireNode =>
   node('Action', key, {
     label,
     icon: 'external-link',
-    onPress: { $event: 'onPress' },
+    onPress: { operation: 'open', args: {} },
   });
 
 const sort = parent(

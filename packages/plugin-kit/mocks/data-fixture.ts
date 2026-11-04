@@ -12,12 +12,7 @@ import {
 } from '@repo/engine/mocks/data-fixture';
 import { onTestFinished } from 'vitest';
 
-export {
-  dataPage,
-  dataPluginId,
-  processPage,
-  processWait,
-} from '@repo/engine/mocks/data-fixture';
+export { dataPluginId, processWait } from '@repo/engine/mocks/data-fixture';
 
 type HostedFixture = DataFixture & {
   start: (options?: Partial<PluginTestOptions>) => Promise<PluginTest>;

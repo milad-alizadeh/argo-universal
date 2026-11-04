@@ -1,25 +1,18 @@
-import { useState } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
-function MixedKeys() {
-  const [changed, setChanged] = useState(false);
-
-  return jsx('Stack', {
+const mixedKeys = (changed) =>
+  jsx('Stack', {
     direction: 'column',
     children: [
-      jsx('Button', { label: 'Change', onPress: () => setChanged(true) }, '1'),
+      jsx('Button', { label: 'Change' }, '1'),
       jsx('Text', { children: changed ? 'Changed' : 'Original' }),
       jsx('Text', { children: 'Reserved-looking key' }, '~1'),
     ],
   });
-}
 
-function ConditionalSlots() {
-  const [visible, setVisible] = useState(false);
-
-  return jsx('ListItem', {
+const conditionalSlots = (visible) =>
+  jsx('ListItem', {
     title: 'Conditional slots',
-    onPress: () => setVisible((value) => !value),
     trailing: [
       null,
       undefined,
@@ -28,9 +21,21 @@ function ConditionalSlots() {
       jsx('Text', { children: 'Always' }, 'always'),
     ],
   });
-}
+
+const later = () => new Promise((resolve) => setTimeout(resolve, 100));
+
+// A live page that draws false, then true, then holds.
+const flipped = (render) => ({
+  load: async function* () {
+    yield false;
+    await later();
+    yield true;
+    await new Promise(() => {});
+  },
+  render,
+});
 
 export function register(argo) {
-  argo.pages.register('/mixed', MixedKeys);
-  argo.pages.register('/conditional', ConditionalSlots);
+  argo.pages.define('/mixed', flipped(mixedKeys));
+  argo.pages.define('/conditional', flipped(conditionalSlots));
 }

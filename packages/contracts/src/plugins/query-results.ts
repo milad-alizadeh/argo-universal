@@ -2,7 +2,7 @@ import type { FetchResponse } from './argo-api';
 import type { PluginQuery, ProcessResult, StorageResult } from './argo-calls';
 import type { CrossesAsJson, WireJson } from './wire-json';
 
-// What each Query api answers with. The Engine's readers and the kit's `useData` type both come from here.
+// What each Query api answers with. The Engine's readers and a Loader's `read` type both come from here.
 export type QueryResults = {
   fetch: FetchResponse;
   process: ProcessResult;
@@ -31,7 +31,7 @@ export type QueryReadContext = Readonly<{ projectId?: string }>;
 /*
  * `argo.queries.define(name, read)` (ADR-0037): a read the Plugin runs and Argo keeps, as it keeps a
  * described Query. Its answer is the Plugin's own JSON, so its type must be JSON all through: a `Date` fails
- * type-checking. It is keyed by the Plugin, the Project and the name with its args, so a Loader, a `useData`
+ * type-checking. It is keyed by the Plugin, the Project and the name with its args, so two Loaders
  * and a background pass naming the same args share one entry, and a write makes it due. Argo may run it again
  * whenever it likes, so it must only read, and only from its args and context.
  */

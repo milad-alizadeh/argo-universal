@@ -1,5 +1,7 @@
 import {
   QueryReadName,
+  type PluginDataRequest,
+  type PluginDataState,
   type PluginQuery,
 } from '@repo/contracts/plugins/argo-calls';
 import type {
@@ -13,9 +15,11 @@ import type {
 } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import type { DataCall } from './data-subscription';
 import type { ReadPage } from './paged-lists';
 import { queryResult } from './query-result';
+
+// The worker's read of one Query through the Server's cache (ADR-0037).
+export type DataCall = (request: PluginDataRequest) => Promise<PluginDataState>;
 
 export type QueryReadSend = (answer: QueryReadAnswer) => Promise<void>;
 

@@ -43,18 +43,8 @@ export const pluginAnswerLimitMs = 3000;
 export const PluginRequest = z.discriminatedUnion('api', [
   ...ArgoRequest.options,
   z.object({ api: z.literal('hooks'), call: HookCall }),
-  z.object({
-    api: z.literal('dispatchResult'),
-    requestId: wire.PluginDispatchId,
-    result: wire.PluginDispatchResult,
-  }),
   z.object({ api: z.literal('operations'), call: wire.PluginOperationCall }),
   ...wire.LoaderRequest.options,
-  z.object({
-    api: z.literal('view'),
-    viewId: wire.PluginViewId,
-    message: wire.ViewMessage,
-  }),
 ]);
 
 export type PluginRequest = z.infer<typeof PluginRequest>;

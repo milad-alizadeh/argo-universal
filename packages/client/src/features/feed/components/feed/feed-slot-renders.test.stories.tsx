@@ -49,8 +49,6 @@ const answerFor = (
 
 type AnsweredSlotProps = ReplaceableSlotProps & { replaces: boolean };
 
-const ignoreEvent = async (): Promise<void> => {};
-
 const ignoreFallback = (): void => {};
 
 // Stands in for the connected Slot: it draws, then draws again with the Server's answer (ADR-0021 keeps tRPC out of stories).
@@ -68,12 +66,7 @@ function AnsweredSlot({
   }, [props.input, replaces]);
 
   return (
-    <ReplaceableSlotView
-      {...props}
-      state={state}
-      onEvent={ignoreEvent}
-      onFallback={ignoreFallback}
-    />
+    <ReplaceableSlotView {...props} state={state} onFallback={ignoreFallback} />
   );
 }
 

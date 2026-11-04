@@ -70,7 +70,7 @@ function ConnectedReplaceableSlot(
 
 type SlotActions = Pick<
   ReplaceableSlotViewProps,
-  'onEvent' | 'onOpenPage' | 'onPageCall' | 'onFallback'
+  'onOpenPage' | 'onPageCall' | 'onFallback'
 >;
 
 /*
@@ -85,10 +85,9 @@ function useSlotActions(
   const opener = usePluginOpener();
   const onPageCall = useSlotRun(replacement);
 
-  if (!replacement) return { onEvent: noEvents, onFallback };
+  if (!replacement) return { onFallback };
 
   return {
-    onEvent: noEvents,
     onOpenPage: opener(replacement.pluginId),
     onPageCall,
     onFallback,
@@ -105,10 +104,6 @@ function useReplaceableState(input: ReplaceableInput): ReplaceableState {
 
   return data ?? coreSlotState(input);
 }
-
-// A pure render passes no Plugin events (ADR-0050).
-const noEvents = (): Promise<void> =>
-  Promise.reject(new Error('A Replaceable Slot sends no Plugin events'));
 
 // A replacement has no Page state, so the one call it makes is an Operation run, which says itself when it fails.
 function useSlotRun(replacement: SlotReplacement | null): OnPageCall {

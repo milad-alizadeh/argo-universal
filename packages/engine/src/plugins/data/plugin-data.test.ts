@@ -50,7 +50,6 @@ function harness(): Harness {
     {
       services: { handle: async (): Promise<PluginReply> => refused },
       clock,
-      send: (): null => null,
       log: (): null => null,
       during: <T>(call: () => Promise<T>): Promise<T> => call(),
     },

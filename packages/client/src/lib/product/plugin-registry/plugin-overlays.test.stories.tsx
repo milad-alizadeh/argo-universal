@@ -4,7 +4,7 @@ import fixture from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { PluginTree } from './plugin-registry';
+import { PluginTree, type PageEvent } from './plugin-registry';
 
 // The Plugin opens an overlay by setting its `open` prop, as a Server patch does.
 const opened = (key: string): WireNode =>
@@ -14,7 +14,11 @@ const opened = (key: string): WireNode =>
 
 const roots = { alert: opened('alert'), sheet: opened('sheet') };
 
-const onEvent = fn();
+const onPageCall = fn(async () => {});
+
+// What a press or a close sent, from the node it came from.
+const from = (key: string, payload?: boolean): PageEvent =>
+  expect.objectContaining(payload === undefined ? { key } : { key, payload });
 
 const fieldName = 'Overlay name';
 
@@ -26,7 +30,7 @@ const meta = {
   title: 'Tests/Design System/Patterns/PluginRegistry/Overlays',
   args: { overlay: 'sheet' },
   render: ({ overlay }): React.JSX.Element => (
-    <PluginTree root={roots[overlay]} onEvent={onEvent} />
+    <PluginTree root={roots[overlay]} onPageCall={onPageCall} />
   ),
 } satisfies Meta<{ overlay: keyof typeof roots }>;
 
@@ -42,9 +46,9 @@ export const AlertAnswer: Story = {
     await userEvent.click(await page.findByRole('button', apply));
     await waitFor(() => expect(page.queryByRole('button', apply)).toBeNull());
     await waitFor(() =>
-      expect(onEvent.mock.calls).toEqual([
-        ['overlays/alert/apply', { event: 'onPress' }],
-        ['overlays/alert', { event: 'onOpenChange', payload: false }],
+      expect(onPageCall.mock.calls).toEqual([
+        [{ operation: 'applyChanges', args: {} }, from('overlays/alert/apply')],
+        [{ bind: 'alertOpen' }, from('overlays/alert', false)],
       ]),
     );
   },
@@ -66,9 +70,12 @@ export const AlertCancelRole: Story = {
 
     await userEvent.click(within(alert).getByRole('button', cancel));
     await waitFor(() =>
-      expect(onEvent.mock.calls).toEqual([
-        ['overlays/alert/cancel', { event: 'onPress' }],
-        ['overlays/alert', { event: 'onOpenChange', payload: false }],
+      expect(onPageCall.mock.calls).toEqual([
+        [
+          { operation: 'discardChanges', args: {} },
+          from('overlays/alert/cancel'),
+        ],
+        [{ bind: 'alertOpen' }, from('overlays/alert', false)],
       ]),
     );
   },
@@ -82,8 +89,8 @@ export const SheetCloseReachesPlugin: Story = {
     await waitFor(() =>
       expect(page.queryByRole('textbox', { name: fieldName })).toBeNull(),
     );
-    await expect(onEvent.mock.calls).toEqual([
-      ['overlays/sheet', { event: 'onOpenChange', payload: false }],
+    await expect(onPageCall.mock.calls).toEqual([
+      [{ bind: 'sheetOpen' }, from('overlays/sheet', false)],
     ]);
   },
 };
@@ -94,7 +101,7 @@ export const ConfirmAcknowledgement: Story = {
   play: async ({ userEvent }) => {
     const page = within(document.body);
     const answer = Promise.withResolvers<void>();
-    onEvent.mockReturnValueOnce(answer.promise);
+    onPageCall.mockReturnValueOnce(answer.promise);
     const confirm = await page.findByRole('button', applySheet);
     await userEvent.click(confirm);
     await expect(confirm).toBeDisabled();
@@ -105,15 +112,15 @@ export const ConfirmAcknowledgement: Story = {
 
 const delivered = fn();
 
-// The press goes through the delivery current when it is sent, not the one the sheet first rendered with.
+// The press goes through the Page call current when it is sent, not the one the sheet first rendered with.
 function UpdatedDelivery(): React.JSX.Element {
   const [revision, update] = useState(1);
 
   return (
     <PluginTree
       root={roots.sheet}
-      onEvent={(key, event) => {
-        delivered(revision, key, event);
+      onPageCall={async (call, event) => {
+        delivered(revision, call, event.key);
         update(2);
       }}
     />
@@ -131,8 +138,8 @@ export const CurrentDeliveryAfterEdit: Story = {
     await waitFor(() =>
       expect(delivered).toHaveBeenLastCalledWith(
         2,
+        { operation: 'rename', args: {} },
         'overlays/sheet/body/apply',
-        { event: 'onPress' },
       ),
     );
   },

@@ -38,7 +38,6 @@ const draw = (
       input={messageSlotFixture}
       state={state}
       renderCore={renderCore}
-      onEvent={fn()}
       onFallback={onFallback}
     />
     <Text>{restOfFeedText}</Text>

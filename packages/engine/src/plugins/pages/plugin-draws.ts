@@ -1,11 +1,7 @@
-import type {
-  LoaderPageCall,
-  PageAddress,
-} from '@repo/contracts/plugins/page-address';
+import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
 import {
   treeAnswer,
   type DrawAnswer,
-  type DrawPacing,
   type TreeAnswer,
 } from '@repo/contracts/plugins/page-draw';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
@@ -19,18 +15,21 @@ import {
   drawKind,
   failed,
   loadedOf,
+  passAt,
   type Answered,
   type DrawAt,
+  type LoadAt,
   type Drawing,
   type Loaded,
   type Outcome,
 } from './draw-calls';
 import {
   DrawingFailures,
+  type DrawnFor,
   type Drawings,
-  type FailureKind,
 } from './drawing-failures';
 import { LiveDraws, type LiveFollow } from './live-draws';
+import { PageChanges, type Written } from './page-changes';
 import { SentTrees } from './sent-trees';
 import { drawsForApp, forApp } from './wire-minimum';
 
@@ -39,20 +38,7 @@ export type Drawn =
   | { ok: true; root: WireNode; pages: number; live?: true }
   | { ok: false; error: string };
 
-// What a draw's pacing depends on: its path, and whether its Loader yields.
-type DrawnAt = { path: string; live?: true };
-
-// Where a background pass runs a Loader alone: its Page path and the Project it reads for.
-export type LoadAt = { path: string; projectId: string };
-
-/*
- * Hears a Plugin's pages go stale: every one after a write, which names no addresses, or the addresses
- * whose last draw read a Query answer that changed.
- */
-type ChangeListener = (pluginId: string, addresses?: PageAddress[]) => void;
-
-// What a write makes due before anyone hears of it, so a page drawn again reads past it.
-type Written = (pluginId: string) => void;
+export type { LoadAt } from './draw-calls';
 
 // The running workers, the Server log, what a write makes due, and the drawing failures the App shows.
 type PluginDrawsDeps = {
@@ -71,43 +57,29 @@ export class PluginDraws {
   private readonly patterns: DefinedPatterns;
   private readonly lives: LiveDraws;
   private readonly sent: SentTrees;
-  private readonly changeListeners = new Set<ChangeListener>();
+  // Hears each running worker's `argo.changed()` and Operations, and the addresses whose reads changed.
+  public readonly changes: PageChanges;
   private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
-
-  private readonly workers: WorkerCalls;
   private readonly log: (line: string) => void;
-  private readonly written: Written;
   private readonly failures: DrawingFailures;
 
   public constructor({ workers, log, written, drawings }: PluginDrawsDeps) {
-    this.workers = workers;
+    const failures = new DrawingFailures(drawings, log);
+    const calls = workers.kind(drawKind);
+
     this.log = log;
-    this.written = written;
-    this.failures = new DrawingFailures(drawings, log);
-    this.calls = workers.kind(drawKind);
+    this.failures = failures;
+    this.calls = calls;
+    this.changes = new PageChanges(workers, written);
     this.sent = new SentTrees(workers);
     this.patterns = new DefinedPatterns(workers, log);
-    this.lives = new LiveDraws({
-      calls: this.calls,
-      clock: workers.clock,
-      log,
-      failures: this.failures,
-    });
+    this.lives = new LiveDraws({ calls, clock: workers.clock, log, failures });
     workers.watch((pluginId) => this.forgetEnded(pluginId));
   }
 
   // Only the running generation's patterns count; a new one defines its pages again as its code runs.
   public patternsOf(pluginId: string): string[] {
     return this.patterns.patternsOf(pluginId);
-  }
-
-  private pacingOf(pluginId: string, drawn: DrawnAt): DrawPacing {
-    const every = this.patterns.everyOf(pluginId, drawn.path);
-
-    return {
-      ...(every !== undefined && { every }),
-      ...(drawn.live && { live: true }),
-    };
   }
 
   /*
@@ -121,17 +93,17 @@ export class PluginDraws {
     address: DrawAt,
     known?: string,
   ): Promise<DrawAnswer> {
-    const { log } = this;
-    const drawn = forApp(
-      { pluginId, at: address, log },
-      await this.draw(pluginId, address),
-    );
+    const gated = { pluginId, at: address, log: this.log };
+    const drawn = forApp(gated, await this.draw(pluginId, address));
 
     if (!drawn.ok) return { kind: 'failed', error: drawn.error };
 
     const answer = this.treeFor(pluginId, address, { root: drawn.root, known });
 
-    const pacing = this.pacingOf(pluginId, { ...drawn, path: address.path });
+    const pacing = this.patterns.pacingOf(pluginId, {
+      ...drawn,
+      path: address.path,
+    });
 
     return { ...answer, pages: drawn.pages, ...pacing };
   }
@@ -159,54 +131,40 @@ export class PluginDraws {
 
   /*
    * A draw that fails, by its Loader or Render or by a tree the Server refuses, is logged once and shown to
-   * the App as its Plugin's drawing failure (ADR-0037); the address's next tree clears it.
+   * the App as its Plugin's drawing failure (ADR-0037); the address's next tree clears it. A draw its Plugin
+   * stopping ended is not one.
    */
   private async draw(pluginId: string, address: DrawAt): Promise<Drawn> {
     const outcome = await this.calls.call(pluginId, address);
-    const failing = { pluginId, at: address };
+    const page = { pluginId, at: address };
 
-    if ('ok' in outcome)
-      return this.failed({ ...failing, kind: 'threw' }, outcome.error);
+    if (!('ok' in outcome)) return this.answered(page, outcome);
 
-    if (outcome.action !== 'drawn')
-      return this.failed({ ...failing, kind: 'threw' }, answeredError(outcome));
-
-    const { log } = this;
-    const drawn = checkedPage({ pluginId, path: address.path, log }, outcome);
-
-    if (!drawn.ok)
-      return this.failed({ ...failing, kind: 'refused' }, drawn.error);
-
-    this.failures.drew(pluginId, address);
-
-    return drawn;
+    return outcome.stopped
+      ? failed(outcome.error)
+      : this.failures.threw(page, outcome.error);
   }
 
-  private failed(
-    failing: { pluginId: string; at: DrawAt; kind: FailureKind },
-    error: string,
-  ): Drawn {
-    this.failures.failed(failing, error);
+  private answered(page: DrawnFor, answered: Answered): Drawn {
+    if (answered.action !== 'drawn')
+      return this.failures.threw(page, answeredError(answered));
 
-    return failed(error);
+    const checking = {
+      pluginId: page.pluginId,
+      path: page.at.path,
+      log: this.log,
+    };
+
+    return this.failures.checked(page, checkedPage(checking, answered));
   }
 
   // A background pass: the Loader alone, for one Project, given the pass's own budget rather than a draw's.
   public async load(
     pluginId: string,
-    { path, projectId }: LoadAt,
+    at: LoadAt,
     limitMs: number,
   ): Promise<Loaded> {
-    const at = {
-      path,
-      projectId,
-      pageState: {},
-      pages: 1,
-      serverDevice: false,
-      loadOnly: true as const,
-    };
-
-    return loadedOf(await this.calls.call(pluginId, at, limitMs));
+    return loadedOf(await this.calls.call(pluginId, passAt(at), limitMs));
   }
 
   // The draw still waiting on the caller's generation that a Loader's read names, or none.
@@ -215,23 +173,6 @@ export class PluginDraws {
     const every = at && this.patterns.everyOf(caller.pluginId, at.path);
 
     return drawingOf(caller.pluginId, draw, { at, every });
-  }
-
-  // The addresses whose last draw read a Query answer that has since changed.
-  public heldChanged(pluginId: string, addresses: PageAddress[]): void {
-    for (const listener of this.changeListeners) listener(pluginId, addresses);
-  }
-
-  // What one of the Plugin's Operations wrote, whoever ran it, changes it as `argo.changed()` does.
-  public changedBy(pluginId: string): void {
-    if (this.workers.generation(pluginId) !== undefined) this.notify(pluginId);
-  }
-
-  // Hears each running worker's `argo.changed()` and Operations; the answer unsubscribes.
-  public onChanged(listener: ChangeListener): () => void {
-    this.changeListeners.add(listener);
-
-    return () => this.changeListeners.delete(listener);
   }
 
   /*
@@ -250,19 +191,9 @@ export class PluginDraws {
   ): void {
     if (call.action === 'defined') return this.patterns.define(caller, call);
 
-    if (call.action === 'changed') return this.changed(caller);
+    if (call.action === 'changed') return this.changes.changed(caller);
 
     this.calls.answer(caller, call);
-  }
-
-  private changed(caller: Caller): void {
-    if (this.workers.current(caller)) this.notify(caller.pluginId);
-  }
-
-  private notify(pluginId: string): void {
-    this.written(pluginId);
-
-    for (const listener of this.changeListeners) listener(pluginId);
   }
 
   private forgetEnded(pluginId: string): void {

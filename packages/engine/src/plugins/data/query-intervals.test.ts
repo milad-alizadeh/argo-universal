@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { mountedQueryFloorMs, QueryIntervals } from './query-intervals';
+import { pageFloorMs, QueryIntervals } from './query-intervals';
 
 const atlas = 'atlas';
 
@@ -21,17 +21,17 @@ function clamping(): Clamping {
 it('writes one line however often a Plugin asks for the same fast interval', () => {
   const { lines, intervals } = clamping();
 
-  expect(intervals.mounted(atlas, tooFast)).toBe(mountedQueryFloorMs);
-  expect(intervals.mounted(atlas, tooFast)).toBe(mountedQueryFloorMs);
+  expect(intervals.page(atlas, '/runs', tooFast)).toBe(pageFloorMs);
+  expect(intervals.page(atlas, '/runs', tooFast)).toBe(pageFloorMs);
   expect(lines).toHaveLength(1);
 });
 
 it('forgets the intervals it clamped for a Plugin that was released', () => {
   const { lines, intervals } = clamping();
 
-  intervals.mounted(atlas, tooFast);
+  intervals.page(atlas, '/runs', tooFast);
   intervals.release(atlas);
-  intervals.mounted(atlas, tooFast);
+  intervals.page(atlas, '/runs', tooFast);
 
   expect(lines).toHaveLength(2);
 });

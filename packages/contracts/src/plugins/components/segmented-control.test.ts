@@ -12,7 +12,7 @@ const control: WireNode = {
       { value: 'open', label: 'Open' },
       { value: 'closed', label: 'Closed' },
     ],
-    onValueChange: { $event: 'onValueChange' },
+    onValueChange: { pageState: { value: { $payload: true } } },
   },
   children: [],
   slots: {},

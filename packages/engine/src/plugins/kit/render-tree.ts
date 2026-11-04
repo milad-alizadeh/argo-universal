@@ -1,7 +1,7 @@
 import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import { keyOfProps, toProps, type ElementProps } from './element-props';
-import { toWire, type Handlers, type Instance } from './wire-tree';
+import { toWire, type Instance } from './wire-tree';
 
 type Drawn = React.ReactNode;
 
@@ -13,12 +13,7 @@ type Element = React.ReactElement<ElementProps>;
  * pure, so a hook fails it, and a Component event holds a value, so a function prop fails it.
  */
 function renderTree(element: Drawn): WireNode {
-  const handlers: Handlers = new Map();
-  const node = toWire(onlyRoot(instancesOf(element)), handlers);
-
-  if (handlers.size > 0) throw new Error(functionProps(handlers));
-
-  return node;
+  return toWire(onlyRoot(instancesOf(element)));
 }
 
 function onlyRoot([root, ...rest]: Instance[]): Instance {
@@ -27,11 +22,6 @@ function onlyRoot([root, ...rest]: Instance[]): Instance {
 
   return root;
 }
-
-const functionProps = (handlers: Handlers): string =>
-  `A Render passes values, not functions: ${[...handlers.keys()]
-    .map((id) => String(JSON.parse(id)[1]))
-    .join(', ')}`;
 
 const isEmpty = (node: Drawn): node is null | undefined | boolean =>
   node === null || node === undefined || typeof node === 'boolean';

@@ -2,6 +2,7 @@ import {
   matchPagePath,
   type LoaderPageCall,
 } from '@repo/contracts/plugins/page-address';
+import type { DrawPacing } from '@repo/contracts/plugins/page-draw';
 import { QueryIntervals } from '../data/query-intervals';
 import type { Caller, WorkerCalls } from '../runtime/worker-calls';
 
@@ -42,6 +43,19 @@ export class DefinedPatterns {
       .find(([pattern]) => matchPagePath(pattern, path) !== null);
 
     return matched?.[1];
+  }
+
+  // A draw's pacing: the interval its path's page is drawn again on, and whether its Loader yields.
+  public pacingOf(
+    pluginId: string,
+    drawn: { path: string; live?: true },
+  ): DrawPacing {
+    const every = this.everyOf(pluginId, drawn.path);
+
+    return {
+      ...(every !== undefined && { every }),
+      ...(drawn.live && { live: true }),
+    };
   }
 
   // A pattern defined twice keeps its first interval, as a draw matches the first page defined for it.

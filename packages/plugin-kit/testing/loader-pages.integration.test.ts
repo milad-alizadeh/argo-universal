@@ -42,13 +42,9 @@ it('refuses an Operation call the manifest does not allow', async () => {
   ).rejects.toThrow(/number/);
 });
 
-it('fails a draw whose Render calls a hook or passes a function', async () => {
+it('fails a draw whose Render passes a function', async () => {
   const kit = await start();
 
-  expect(await kit.pages.draw({ path: '/hooks' })).toEqual({
-    kind: 'failed',
-    error: 'Uses calls a hook, and a Render is pure',
-  });
   expect(await kit.pages.draw({ path: '/functions' })).toEqual({
     kind: 'failed',
     error: 'A Render passes values, not functions: onPress',

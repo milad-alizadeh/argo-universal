@@ -53,25 +53,35 @@ it('starts a Plugin again once it is turned back on', async () => {
   });
 });
 
-it('ends the open pages of a Plugin when it is turned off', async () => {
+it('ends the live pages of a Plugin when it is turned off', async () => {
   const home = await createRuntimePlugins([
-    { id: 'counter', fixture: 'wire-counter', main: 'index.js' },
+    { id: 'surface', fixture: 'surface' },
   ]);
 
   const { caller, createCaller } = await startEngineTestHost({
     home,
   });
 
-  const view = await createCaller({
-    signal: new AbortController().signal,
-  }).plugins.view({ pluginId: 'counter', path: '/' });
+  const watching = createCaller({ signal: new AbortController().signal });
 
-  const messages = view[Symbol.asyncIterator]();
+  const live = await watching.plugins.live({
+    pluginId: 'surface',
+    path: '/live',
+    pageState: {},
+  });
 
-  await messages.next();
-  await caller.plugin.setEnabled({ pluginId: 'counter', enabled: false });
+  const answers = live[Symbol.asyncIterator]();
 
-  await expect(messages.next()).resolves.toMatchObject({ done: true });
+  await answers.next();
+  await caller.plugin.setEnabled({ pluginId: 'surface', enabled: false });
+
+  await expect(answers.next()).resolves.toMatchObject({
+    value: { kind: 'failed', error: 'Plugin stopped' },
+  });
+  await expect(answers.next()).resolves.toMatchObject({ done: true });
+  // A Plugin turned off is not failing to draw.
+  const failures = (await watching.plugins.failures())[Symbol.asyncIterator]();
+  await expect(failures.next()).resolves.toMatchObject({ value: [] });
 }, 20_000);
 
 it('tells a watching App that a Plugin was turned off', async () => {

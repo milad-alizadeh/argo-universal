@@ -2,8 +2,6 @@ export { startPluginTest } from './host';
 
 export type { PluginTest, PluginTestOptions } from './host';
 
-export { PluginTestView } from './view';
-
 export type { PageOpening } from './page-server';
 
 export type { PageView } from './page-view';

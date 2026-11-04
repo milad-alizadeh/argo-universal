@@ -19,7 +19,10 @@
         "tone": "info",
         "label": "Web build",
         "onPress": {
-          "$event": "onPress"
+          "operation": "selectDrawing",
+          "args": {
+            "drawing": "box"
+          }
         }
       },
       "children": [],
@@ -35,7 +38,10 @@
         "tone": "success",
         "label": "Native build",
         "onPress": {
-          "$event": "onPress"
+          "operation": "selectDrawing",
+          "args": {
+            "drawing": "circle"
+          }
         }
       },
       "children": [],
@@ -63,7 +69,10 @@
         "tone": "warning",
         "label": "Pending build",
         "onPress": {
-          "$event": "onPress"
+          "operation": "selectDrawing",
+          "args": {
+            "drawing": "path"
+          }
         }
       },
       "children": [],
@@ -102,7 +111,10 @@
             "tone": "accent",
             "label": "Grouped file",
             "onPress": {
-              "$event": "onPress"
+              "operation": "selectDrawing",
+              "args": {
+                "drawing": "nested"
+              }
             }
           },
           "children": [],

@@ -3,11 +3,7 @@ import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, type ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
 import { PluginDrawingBoundary } from './plugin-drawing-boundary';
-import {
-  PluginTree,
-  type OnPageCall,
-  type PluginOnEvent,
-} from './plugin-registry';
+import { PluginTree, type OnPageCall } from './plugin-registry';
 import type { ReplaceableState } from './replaceable-state';
 
 export interface ReplaceableSlotProps {
@@ -35,7 +31,6 @@ export function ReplaceableSlot(props: ReplaceableSlotProps): ReactNode {
 
 export interface ReplaceableSlotViewProps extends ReplaceableSlotProps {
   state: ReplaceableState;
-  onEvent: PluginOnEvent;
   onOpenPage?: OpenPluginPage;
   // The Operations a replacement's Component events run (ADR-0050).
   onPageCall?: OnPageCall;
@@ -69,7 +64,6 @@ function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
   return (
     <PluginTree
       root={root}
-      onEvent={props.onEvent}
       onOpenPage={props.onOpenPage}
       onPageCall={props.onPageCall}
     />

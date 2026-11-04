@@ -1,70 +1,60 @@
-import {
-  Action,
-  SplitButton,
-  Slider,
-  Text,
-  Stack,
-  useState,
-} from '@argo/plugin-kit';
+import { Action, SplitButton, Slider, Text, Stack } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
-
-const refuse = async () => {
-  throw new Error('Secondary refused');
-};
 
 const action = (key, label, onPress) =>
   jsx(Action, { label, icon: 'add', onPress }, key);
 
-// The secondary menu's entries are keyed Action children.
-function secondaryActions(setResult) {
-  return [
-    action('first', 'First', () => setResult('First')),
-    action('second', 'Second', () => setResult('Second')),
-    action('refuse', 'Refuse', refuse),
-  ];
-}
+// The secondary menu's entries are keyed Action children, each with its own value.
+const secondaryActions = (to) => [
+  action('first', 'First', to.set({ result: 'First' })),
+  action('second', 'Second', to.set({ result: 'Second' })),
+  action('refuse', 'Refuse', to.run('refuse', { level: 1 })),
+];
 
-function runButton(setResult) {
-  return jsxs(
+const runButton = (to) =>
+  jsxs(
     SplitButton,
     {
       label: 'Run',
       menuLabel: 'Other runs',
-      children: secondaryActions(setResult),
+      children: secondaryActions(to),
     },
     'run',
   );
-}
 
-function sliderControl(setResult) {
-  return jsx(
+const sliderControl = (level, to) =>
+  jsx(
     Slider,
     {
-      value: 0,
+      value: level,
       minimumValue: 0,
       maximumValue: 10,
       step: 1,
       accessibilityLabel: 'Level',
       valueLabel: 'Level',
-      onValueChange: (value) => setResult(`Level ${value}`),
+      onValueChange: to.set({ level: to.payload() }),
     },
     'slider',
   );
-}
 
-function Page() {
-  const [result, setResult] = useState('Waiting');
-
-  return jsxs(Stack, {
+// The last run's result above the controls that change it.
+const controls = ({ result, level }, to) =>
+  jsxs(Stack, {
     direction: 'column',
     children: [
       jsx(Text, { children: result }, 'result'),
-      runButton(setResult),
-      sliderControl(setResult),
+      runButton(to),
+      sliderControl(level, to),
     ],
   });
-}
 
 export function register(argo) {
-  argo.pages.register('/', Page);
+  argo.operations.register('refuse', async () => {
+    throw new Error('Secondary refused');
+  });
+  argo.pages.define('/', {
+    state: { result: 'Waiting', level: 0 },
+    load: ({ state }) => state,
+    render: controls,
+  });
 }

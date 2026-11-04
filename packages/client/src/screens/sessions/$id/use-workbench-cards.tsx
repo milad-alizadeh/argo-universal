@@ -10,7 +10,6 @@ import {
 } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
 import { PluginTree } from '../../../lib/product/plugin-registry';
-import { noPluginEvents } from '../../plugins/plugin-page/plugin-page';
 import { usePluginPage } from '../../plugins/plugin-page/use-plugin-page';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
 import {
@@ -113,7 +112,6 @@ function DrawnCardPage(props: CardPage & { projectId: string }): ReactNode {
   return (
     <PluginTree
       root={page.root}
-      onEvent={noPluginEvents}
       onOpenPage={(opened) => openPage(props.pluginId, opened)}
       onPageCall={page.onPageCall}
     />

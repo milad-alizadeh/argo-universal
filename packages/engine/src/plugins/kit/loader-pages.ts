@@ -7,7 +7,6 @@ import {
 import type { QueriesApi } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { inDraw } from './call-scope';
-import type { DataCall } from './data-subscription';
 import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
@@ -19,6 +18,7 @@ import {
   type Frame,
   type Reading,
 } from './page-drawing';
+import type { DataCall } from './query-reads';
 import { queryReads, type QueryReadSend } from './query-reads';
 
 // One defined page and how it draws.
@@ -27,7 +27,7 @@ type Defined = Drawing & { pattern: string };
 type StopEvent = Extract<PluginEvent, { type: 'stop' }>;
 
 // What the host asks of a Plugin's Loader pages: a draw, a live draw's stop, or one of its Queries' named reads.
-export type LoaderEvent = Extract<
+type LoaderEvent = Extract<
   PluginEvent,
   { type: 'draw' | 'read' | 'stop' }
 >;

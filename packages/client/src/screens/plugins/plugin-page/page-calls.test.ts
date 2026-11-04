@@ -17,9 +17,8 @@ import { PageCalls } from './page-calls';
 const node = (
   type: string,
   key: string,
-  props: WireNode['props'] = {},
-  children: WireNode[] = [],
-): WireNode => ({ type, key, props, children, slots: {} });
+  props: WireNode['props'],
+): WireNode => ({ type, key, props, children: [], slots: {} });
 
 /*
  * A draft field whose typing is Page state, and a Create button whose Operation takes the draft the page
@@ -33,14 +32,16 @@ function draftPage({ pageState }: DrawRequest): WireNode {
     onPress: { operation: 'create', args: { title: draft } },
   });
 
-  return node('Stack', 'page', {}, [
-    node('FieldGroup.TextField', 'draft', {
-      label: 'Title',
-      value: draft,
-      onChangeText: { pageState: { draft: { $payload: true } } },
-    }),
-    ...(draft === 'gone' ? [] : [create]),
-  ]);
+  const field = node('FieldGroup.TextField', 'draft', {
+    label: 'Title',
+    value: draft,
+    onChangeText: { pageState: { draft: { $payload: true } } },
+  });
+
+  return {
+    ...node('Stack', 'page', {}),
+    children: [field, ...(draft === 'gone' ? [] : [create])],
+  };
 }
 
 const keyOf = (key: string): string =>
@@ -69,10 +70,11 @@ async function drafting(): Promise<Page> {
   cache.server.tree = draftPage;
 
   const screen = onScreen(cache, issues);
+
   const calls = new PageCalls({
     addresses: cache.addresses,
     opening: issues,
-    run: (call) => {
+    run: (call): Promise<void> => {
       runs.push(call);
 
       return Promise.resolve();
@@ -162,4 +164,21 @@ it('refuses a press whose control the newly drawn page no longer has', async () 
     'That control is no longer on the page',
   );
   expect(page.runs).toEqual([]);
+});
+
+it('waits for typing that is already drawing before a press runs its Operation', async () => {
+  const page = await drafting();
+
+  await page.type('fix login');
+  page.cache.server.hold();
+  await pause();
+
+  const pressed = page.press();
+
+  page.cache.server.release();
+  await pressed;
+
+  expect(page.runs).toEqual([
+    { operation: 'create', args: { title: 'fix login' } },
+  ]);
 });
