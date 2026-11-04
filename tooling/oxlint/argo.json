@@ -113,6 +113,11 @@
   },
   "overrides": [
     {
+      // `PluginOperations` is empty on purpose: a Plugin's generated `plugin.gen.d.ts` merges each declared Operation into it (ADR-0044).
+      "files": ["packages/plugin-kit/src/index.d.ts"],
+      "rules": { "typescript/no-empty-object-type": "off" }
+    },
+    {
       // ADR-0027 confines first-party Plugin evaluation to the worker realm. #824 explicitly runs local Plugin tests.
       "files": [
         "packages/engine/src/plugins/worker/modules.ts",

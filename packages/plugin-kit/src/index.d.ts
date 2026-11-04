@@ -116,7 +116,6 @@ declare global {
  * beside `plugin.json`, which adds each one here, so the handlers `argo.operations.register` takes and
  * the calls `to.run` makes are checked against the manifest. A Plugin that declares none adds nothing.
  */
-// oxlint-disable-next-line typescript/no-empty-object-type -- the generated file merges each Operation in.
 export interface PluginOperations {}
 
 // The Plugin API and what it hands a Plugin, bound to its declared Operations.
