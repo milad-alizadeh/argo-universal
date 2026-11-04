@@ -1,6 +1,7 @@
 import type { OperationHandler } from '@repo/contracts/plugins/operations-api';
 import type { PluginOperationCall } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
+import { swallowed } from './swallowed';
 
 type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 
@@ -54,7 +55,7 @@ const failed = (
   id: number,
   error: string,
 ): Promise<void | null> =>
-  send({ action: 'failed', id, error }).catch(() => null);
+  send({ action: 'failed', id, error }).catch(swallowed);
 
 // Only JSON leaves the realm, so the Server answers the very result the handler returned.
 async function resultOf(

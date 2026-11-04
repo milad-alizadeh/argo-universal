@@ -20,6 +20,7 @@ import {
 } from './page-drawing';
 import type { DataCall } from './query-reads';
 import { queryReads, type QueryReadSend } from './query-reads';
+import { swallowed } from './swallowed';
 
 // One defined page and how it draws.
 type Defined = Drawing & { pattern: string };
@@ -117,7 +118,7 @@ const defining =
       action: 'defined',
       pattern,
       ...(every !== undefined && { every }),
-    }).catch(() => null);
+    }).catch(swallowed);
   };
 
 function checkedPattern(pattern: string): string {
@@ -160,7 +161,7 @@ async function answer(pages: Pages, event: DrawEvent): Promise<void> {
 
     await pages
       .send({ action: 'failed', id: event.id, error: reason })
-      .catch(() => null);
+      .catch(swallowed);
   } finally {
     stop.stop();
     pages.running.delete(event.id);

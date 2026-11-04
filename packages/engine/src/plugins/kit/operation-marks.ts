@@ -1,6 +1,7 @@
 import type { CallOrigin } from '../protocol/call-origin';
 import type { LoaderCalls, LoaderPageSend, LoaderPages } from './loader-pages';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
+import { swallowed } from './swallowed';
 
 // The Operations being answered, each with whether its handler said `argo.changed()`.
 type Running = Map<number, boolean>;
@@ -42,7 +43,7 @@ function heldFor(running: Running, origin: CallOrigin): boolean {
 }
 
 const sendChanged = (send: LoaderPageSend): void =>
-  void send({ action: 'changed' }).catch(() => null);
+  void send({ action: 'changed' }).catch(swallowed);
 
 const answering =
   (pagesSend: LoaderPageSend, running: Running) =>

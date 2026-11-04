@@ -22,6 +22,7 @@ import {
 import { z } from 'zod';
 import type { ReadPage } from './paged-lists';
 import { queryResult } from './query-result';
+import { swallowed } from './swallowed';
 
 // The worker's read of one Query through the Server's cache (ADR-0037).
 export type DataCall = (request: PluginDataRequest) => Promise<PluginDataState>;
@@ -131,7 +132,7 @@ const answer = (
     .catch((cause: unknown) =>
       send({ action: 'failed', id, error: reasonOf(cause) }),
     )
-    .catch(() => {});
+    .catch(swallowed);
 
 const reasonOf = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);

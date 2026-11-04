@@ -1,3 +1,5 @@
+import { swallowed } from './swallowed';
+
 /*
  * A live page's Loader yields over time, as an async generator does (ADR-0050). These are the ways Argo
  * reads one: every exit calls the iterator's `return()`, so the Loader's own `finally` runs.
@@ -62,7 +64,7 @@ export async function eachYielded<Data>(
   try {
     await eachUntil(iterator, stopped, each);
   } finally {
-    void Promise.resolve(iterator.return?.()).catch(() => null);
+    void Promise.resolve(iterator.return?.()).catch(swallowed);
   }
 }
 

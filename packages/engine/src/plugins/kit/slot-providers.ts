@@ -4,6 +4,7 @@ import type {
 } from '@repo/contracts/plugins/argo-api';
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { ItemsContext, PluginEvent } from '@repo/contracts/plugins/wire';
+import { swallowed } from './swallowed';
 
 type ItemsEvent = Extract<PluginEvent, { type: 'slotItems' }>;
 
@@ -48,7 +49,7 @@ async function answer(
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
 
-    await send({ action: 'failed', id, error: reason }).catch(() => null);
+    await send({ action: 'failed', id, error: reason }).catch(swallowed);
   }
 }
 
