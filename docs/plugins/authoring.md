@@ -70,7 +70,7 @@ Some Component events report a payload: a Table's `onSortChange` reports the col
 </List>
 ```
 
-A field the payload lacks, as a move's `section` for rows outside any Section, leaves its key out. A value that does not fit where it lands, such as a whole object into Page state, fails the event. The types check the Operation's name and its fixed params, not a payload field's name; core checks the filled-in arguments against the manifest's params, as it does for any run. The List holds a moved row where it was dropped until the page draws again after the Operation.
+A field the payload lacks, as a move's `section` for rows outside any Section, leaves its key out. A value that does not fit where it lands, such as a whole object into Page state, fails the event. The types check the Operation's name and its fixed params, not a payload field's name; core checks the filled-in arguments against the manifest's params, as it does for any run. The List holds a moved row where it was dropped until the page draws a new order or the Operation answers, whichever comes first, and puts it back if the Operation fails.
 
 A page is opened by the path it is defined at. A `navigate` Action carries that same path, as `onPress={{ action: 'navigate', path: '/builds/web' }}`, and the App finds the route; a Plugin never writes the App's `/plugins/<Plugin id>/<nav id>` prefix. The page opens under the nav item the App is showing when its path sits below that item's `path`, and otherwise under the Plugin's nav item whose `path` holds it. A path no nav item holds is not available.
 
@@ -149,7 +149,7 @@ Each test receives a fresh Plugin host and temporary storage. The command closes
 A failed assertion, empty test file, missing test file, or test timeout produces a non-zero exit code.
 Each test has a ten-second time limit.
 
-The test host uses the production loader, worker, Hook chain, wire preparation, and checked dispatch.
+The test host uses the production loader, worker, Hook chain, wire preparation, and page checks.
 Tests run local Plugin code and use its declared Capabilities. Executable fixtures remain necessary for tests that run external commands.
 
 ## Test kit
@@ -164,7 +164,6 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `view.loadMore()` | Draws one more page of the page's paged list. |
 | `view.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
 | `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |
-| `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
 | `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, and Hook deadlines together. The kit keeps its real rendering scheduler. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
@@ -173,23 +172,17 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `sessions` option | What `argo.sessions.get` answers, by Session id. |
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
-`find` matches a label, title, text, text content, or accessible label. A Slot view's `find` waits up to three seconds for it.
+`find` matches a label, title, text, text content, or accessible label.
 An `optimistic` change is the App's to show; a test reads it from the press's value in the tree, and the page drawn after the Operation answers.
 The chosen platform sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
-Use the same `connectionId` on overlapping Slot mounts to model subscriptions from one App Connection. Omitting it creates a fresh Connection.
-Closing a view releases only its subscription.
-
-For a Project details Slot, use the same input that the Server receives:
+A Workbench card or a Session header action opens a page for a Session; open it with that `sessionId`, as the App does. For an items Slot, such as Project details, ask with the same input the Server receives:
 
 ```ts
-const view = await mount({
-  slot: {
-    slotId: 'argo/project/details/v1',
-    context: { projectId: session.projectId },
-  },
-  surface: { platform: 'ios' },
-});
+const items = slotItems(
+  { slotId: 'argo/project/details/v1', contexts: [{ projectId: session.projectId }] },
+  { signal, platform: 'ios' },
+);
 ```
 
 For a Hook test, use the returned result from the real chain:
@@ -205,39 +198,32 @@ assert.deepEqual(answer, { prompt: [{ type: 'text', text: '[checked] Hello' }] }
 
 ## Declared data
 
-Use `useData` to describe a read. Argo runs the Query, shares its answer, and releases the registration when the component unmounts.
+A Loader reads through a Query with `read(query)`. Argo runs the Query, shares its answer, and keeps it for the Page address the draw is for.
 
 ```tsx
-import { Label, useData, type Argo } from '@argo/plugin-kit';
+import { Label, type Argo } from '@argo/plugin-kit';
+
+const forgeList = { api: 'process', action: 'run', argv: ['forge', 'list', '--json'] } as const;
 
 export function register(argo: Argo): void {
-  argo.slots.register('argo/project/details/v1', ({ context: { projectId } }) => {
-    const { data, error } = useData(
-      { api: 'process', action: 'run', argv: ['forge', 'list', '--json'] },
-      { every: 30_000 },
-    );
-
-    return <Label text={error ?? data?.stdout ?? projectId} />;
+  argo.pages.define('/forge', {
+    every: 30_000,
+    load: ({ read }) => read(forgeList),
+    render: (list) => <Label text={list.stdout} />,
   });
 }
 ```
 
-Declare the command's Capability in `plugin.json`. A process Query uses the declaring view's Project folder unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
+Declare the command's Capability in `plugin.json`. A process Query uses the Project folder of the page it is read for unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
 A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
-The hook returns `{ data, error, stale, refresh }`:
+`read` answers the Query's data and keeps the last successful value. It throws, failing the draw, only when the Query has no answer yet: a refused call, a transport failure, or Argo's timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow fails the read until it has data.
 
-- `data` contains the call's answer and retains the last successful value.
-- `error` describes a refused call, transport failure, or Argo timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow reports an error and retains the last successful data.
-- `stale` is true only while refreshing an existing answer.
-- `refresh()` runs the Query now and joins a call already in flight.
-
-`useData(null)` creates no entry. Without `every`, a Query runs once per mount.
-Argo clamps `every` to ten seconds and logs the clamp once. Shared viewers use their smallest interval.
+Without `every`, a Query is read again only when an Operation runs, the Plugin calls `argo.changed()`, or its storage changes. `every` reads Queries older than it again on each tick.
 Storage Queries are never polled. A committed Plugin storage write marks them due.
 
-Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different Slots.
+Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
 
 ## Session row items
