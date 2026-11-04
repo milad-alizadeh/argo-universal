@@ -90,6 +90,7 @@ export interface PluginTest {
       projectId?: string;
       sessionId?: string;
       pages?: number;
+      pull?: true;
       known?: string;
       platform?: PluginSurface['platform'];
       serverDevice?: boolean;

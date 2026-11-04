@@ -5,7 +5,7 @@ import type { DrawAt } from './draw-calls';
 type SentAt = { last: WireNode | undefined; keep: (root: WireNode) => void };
 
 // Two Apps showing one address with different page counts share one entry, so each may get whole trees.
-const sentKey = ({ pages: _pages, ...address }: DrawAt): string =>
+const sentKey = ({ pages: _pages, pull: _pull, ...address }: DrawAt): string =>
   JSON.stringify(address);
 
 // The trees last sent for each address a Plugin drew, kept until its running generation ends (ADR-0050).

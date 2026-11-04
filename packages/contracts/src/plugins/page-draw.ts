@@ -9,11 +9,13 @@ export const maxPages = 50;
 /*
  * One draw the App asks for: the address, how many pages of its paged list it shows, and the hash of the tree it
  * keeps for the address, so an answer that would match it is `unchanged`. `pages` and `known` are not part of the
- * address: two Apps showing one address keep their own page counts.
+ * address: two Apps showing one address keep their own page counts. `pull` says the person pulled to refresh,
+ * so the first page is read again whatever Argo kept; any other draw reads what Argo kept, as its Queries allow.
  */
 export const DrawRequest = PageAddress.extend({
   pages: z.number().int().positive().max(maxPages),
   known: z.string().min(1).optional(),
+  pull: z.literal(true).optional(),
 });
 
 export type DrawRequest = z.infer<typeof DrawRequest>;

@@ -40,6 +40,8 @@ type StateOptions = QueryOptions<PageState> & {
 
 const noState: PageState = {};
 
+type HowDrawn = { pages?: number; pull?: true };
+
 /*
  * Everything the App knows about its Page addresses (ADR-0050), kept in TanStack Query: each address's tree, hash
  * and page count, each page's Page state, and the draws in flight. A hook subscribes to an opening's Page state and
@@ -91,10 +93,13 @@ export class PageAddresses {
     });
   }
 
-  // The opening drawn at its next Page state, which it shows once drawn; an empty change draws it again from page one.
+  /*
+   * The opening drawn at its next Page state, which it shows once drawn; an empty change is a pull, which reads the
+   * first page again and keeps the pages already loaded.
+   */
   async change(opening: PageOpening, change: PageState): Promise<void> {
     if (Object.keys(change).length === 0)
-      return this.drawPages(this.addressOf(opening), 1);
+      return this.drawPages(this.addressOf(opening), { pull: true });
 
     const next = { ...this.stateOf(opening), ...change };
 
@@ -112,7 +117,7 @@ export class PageAddresses {
     const address = this.addressOf(opening);
     const kept = this.keptAt(address);
 
-    if (kept) await this.drawPages(address, kept.pages + 1);
+    if (kept) await this.drawPages(address, { pages: kept.pages + 1 });
   }
 
   /*
@@ -180,15 +185,15 @@ export class PageAddresses {
     return { queryKey: treeKey(address), queryFn: () => this.drawn(address) };
   }
 
-  private async drawPages(address: PageAddress, pages: number): Promise<void> {
-    this.client.setQueryData(
-      treeKey(address),
-      await this.drawn(address, pages),
-    );
+  private async drawPages(address: PageAddress, how: HowDrawn): Promise<void> {
+    this.client.setQueryData(treeKey(address), await this.drawn(address, how));
   }
 
-  // The address drawn again, showing `pages` pages, or as many as it shows now.
-  private async drawn(address: PageAddress, pages?: number): Promise<Answer> {
+  // The address drawn again, showing `pages` pages, or as many as it shows now; a pull reads the first page again.
+  private async drawn(
+    address: PageAddress,
+    { pages, pull }: HowDrawn = {},
+  ): Promise<Answer> {
     const before = this.client.getQueryData<Answer>(treeKey(address));
     const kept = keptOf(before);
 
@@ -196,6 +201,7 @@ export class PageAddresses {
       ...address,
       pages: pages ?? shownOf(kept),
       known: kept?.hash,
+      ...(pull && { pull }),
     });
 
     return keptAfter(before, answer);

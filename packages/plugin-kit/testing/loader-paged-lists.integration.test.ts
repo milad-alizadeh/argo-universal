@@ -37,8 +37,20 @@ it('reads only the next page for a load more, and answers only its rows', async 
 
   expect(again.kind).toBe('unchanged');
 
-  // A pull draws one page, read again from the first.
-  await kit.pages.draw({ path: issuesPath, pages: 1 });
+  // A draw that is not a pull reads the pages Argo kept, and a redraw with nothing new is unchanged.
+  const back = await kit.pages.draw({ path: issuesPath, pages: 1 });
+
+  expect(back.kind).toBe('tree');
+  expect(await listed(kit)).toBe('null,2');
+
+  // A pull reads the first page again, and the pages after it that Argo kept answer at once.
+  const pulled = await kit.pages.draw({
+    path: issuesPath,
+    pages: 2,
+    pull: true,
+  });
+
+  expect(pulled.kind).toBe('tree');
   expect(await listed(kit)).toBe('null,2,null');
 });
 

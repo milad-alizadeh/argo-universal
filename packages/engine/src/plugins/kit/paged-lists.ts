@@ -34,7 +34,7 @@ export async function drawnPaged<Item>(
   lists.set(event.id, list);
 
   try {
-    return await readPaged(event.pages, listReader<Item>(read, event));
+    return await readPaged(event, listReader<Item>(read, event));
   } finally {
     lists.delete(event.id);
   }
@@ -43,27 +43,28 @@ export async function drawnPaged<Item>(
 /*
  * Up to `pages` pages of one Loader page's paged list, each read from the cursor the page before answered
  * (ADR-0050). Argo keeps every page as a Query of its address and cursor, so a page it kept answers at
- * once and a load more reads only the page it lacks. One page is a pull, so that read is fresh. The App
- * says how many pages it shows; the worker never decides that.
+ * once and a load more reads only the page it lacks. A pull reads the first page fresh. The App says how
+ * many pages it shows; the worker never decides that.
  */
 async function readPaged<Item>(
-  pages: number,
+  { pages, pull }: Pick<ListDraw['event'], 'pages' | 'pull'>,
   readPage: ReadPage<Item>,
 ): Promise<Paged<Item>> {
-  return joined(await further([], pages, readPage));
+  return joined(await further([], pages, pull === true, readPage));
 }
 
 async function further<Item>(
   read: ListPage<Item>[],
   pages: number,
+  pull: boolean,
   readPage: ReadPage<Item>,
 ): Promise<ListPage<Item>[]> {
-  const page = await readPage(cursorAfter(read), pages === 1);
+  const page = await readPage(cursorAfter(read), pull && read.length === 0);
   const all = [...read, page];
 
   return page.cursor === null || all.length >= pages
     ? all
-    : further(all, pages, readPage);
+    : further(all, pages, pull, readPage);
 }
 
 const cursorAfter = <Item>(read: ListPage<Item>[]): string | null =>

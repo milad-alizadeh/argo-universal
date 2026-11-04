@@ -77,13 +77,14 @@ it('shows a new Page state only once its address has drawn', async () => {
   expect(stateOf()).toEqual({ query: 'crash' });
 });
 
-it('draws the address it shows again from its first page for an empty change, as a pull', async () => {
+it('reads the first page again for an empty change, as a pull, and keeps the pages already loaded', async () => {
   const cache = cacheOverMemory();
 
   await cache.addresses.change(issues, { query: 'bug' });
 
   const screen = onScreen(cache, issues);
 
+  await settled();
   expect(kept(screen.answer()).root.props.title).toBe('bug');
 
   await cache.addresses.loadMore(issues);
@@ -91,8 +92,9 @@ it('draws the address it shows again from its first page for an empty change, as
 
   expect(cache.server.requests.at(-1)).toMatchObject({
     pageState: { query: 'bug' },
-    pages: 1,
+    pages: 2,
+    pull: true,
   });
-  expect(kept(screen.answer()).pages).toBe(1);
+  expect(kept(screen.answer()).pages).toBe(2);
   screen.leave();
 });
