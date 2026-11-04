@@ -72,13 +72,22 @@ async function targetOf(
   params: Load['params'],
 ): Promise<Target> {
   const projects = await deps.listProjects();
-  const project = projects.find(
-    ({ id }) => id === pathText(params.project ?? ''),
-  );
-  const filter = filterById(params.filter ?? '');
+  const id = pathText(params.project ?? '');
 
+  return named(deps, projects, {
+    project: projects.find((found) => found.id === id),
+    filter: filterById(params.filter ?? ''),
+  });
+}
+
+// The Target a path names, or a gone one when it names no Project or no filter.
+function named(
+  deps: IssueDeps,
+  projects: Project[],
+  { project, filter }: Named,
+): Target {
   if (!project || !filter)
-    return { projects, state: 'gone', opened: Promise.resolve(gone) };
+    return { projects, state: 'gone', opened: goneOpen() };
 
   return {
     projects,
@@ -88,6 +97,13 @@ async function targetOf(
     opened: openedClient(deps, project),
   };
 }
+
+type Named = {
+  project: Project | undefined;
+  filter: ReturnType<typeof filterById>;
+};
+
+const goneOpen = (): Promise<Opened> => Promise.resolve(gone);
 
 const gone = { ok: false, message: 'This page no longer exists.' } as const;
 
