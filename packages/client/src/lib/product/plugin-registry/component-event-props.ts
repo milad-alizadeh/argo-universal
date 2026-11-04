@@ -7,6 +7,8 @@ import {
   type ComponentEventRules,
   type WireJson,
 } from '@repo/contracts/plugins/wire';
+import { errorToast } from '@repo/kit/error-toast';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
 import type { z } from 'zod';
 import { runAction } from '../plugin-actions';
 import type { ControlField } from './plugin-control-field';
@@ -110,8 +112,33 @@ async function deliver(
   const { handler, name, schema } = event;
 
   if (!handler || !('$event' in handler))
-    return runInApp(input, handler, payload);
+    return inApp(input, { handler, rules: event.rules }, payload);
   await send(input.context.key, { event: name, payload, schema });
+}
+
+type InApp = {
+  handler: Exclude<Handler, { $event: string }> | undefined;
+  rules: ComponentEventRules;
+};
+
+// An awaited event's kit component reports its own failure; the field of any other only rolls back, so it is said here.
+function inApp(
+  input: ControlInput,
+  { handler, rules }: InApp,
+  payload?: WireJson,
+): Promise<void> {
+  const run = runInApp(input, handler, payload);
+
+  return rules.awaits ? run : run.catch(sayWhy);
+}
+
+// A call that fails in the App, as a payload that does not fit where it lands, says why.
+function sayWhy(error: Error): never {
+  const toast = errorToast('That did not work', error);
+
+  if (toast) showToast({ ...toast, tone: 'danger' });
+
+  throw error;
 }
 
 /*
@@ -121,7 +148,7 @@ async function deliver(
  */
 async function runInApp(
   input: ControlInput,
-  handler: Exclude<Handler, { $event: string }> | undefined,
+  handler: InApp['handler'],
   payload?: WireJson,
 ): Promise<void> {
   if (!handler) return;

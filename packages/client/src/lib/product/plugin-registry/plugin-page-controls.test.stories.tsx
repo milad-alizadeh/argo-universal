@@ -1,6 +1,8 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { dismissToasts } from '@repo/kit/primitives/overlays/toast';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
+import { allToasts, findToast } from '../../../../../kit/mocks/find-toast';
 import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
@@ -101,5 +103,46 @@ export const BoundSearchAndSelectionReachThePage: Story = {
       expect(onPageCall).toHaveBeenLastCalledWith({ bind: 'picked' }, ['argo']),
     );
     await expect(onEvent).not.toHaveBeenCalled();
+  },
+};
+
+// A sort's whole payload is an object, which Page state cannot hold: the event fails in the App and says so.
+const misfitSort = node('Table', 'runs', {
+  props: {
+    accessibilityLabel: 'CI runs',
+    columns: [{ id: 'time', title: 'Started', sortable: true }],
+    sort: { column: 'time', direction: 'descending' },
+    onSortChange: { pageState: { sort: { $payload: true } } },
+  },
+  children: [
+    node('Table.Row', 'web', {
+      props: { id: 'web' },
+      children: [
+        node('Table.Cell', 'web-time', {
+          props: { column: 'time', text: '2 min ago' },
+        }),
+      ],
+    }),
+  ],
+});
+
+const misfit = "The event's payload does not fit Page state";
+
+export const PayloadThatDoesNotFitSaysWhy: Story = {
+  render: () => (
+    <PluginTree root={misfitSort} onEvent={onEvent} onPageCall={onPageCall} />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    onPageCall.mockClear();
+    dismissToasts();
+    await waitFor(async () => expect(await allToasts(misfit)).toHaveLength(0));
+
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Started, sorted descending' }),
+    );
+
+    await findToast(misfit);
+    await expect(await allToasts(misfit)).toHaveLength(1);
+    await expect(onPageCall).not.toHaveBeenCalled();
   },
 };
