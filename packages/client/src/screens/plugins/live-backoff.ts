@@ -1,9 +1,14 @@
 const firstWaitMs = 1000;
+
 const longestWaitMs = 30_000;
+
 // A page that has gone this long without failing is healthy again, so its next failure is a first.
 const calmMs = 60_000;
 
 type Failures = { count: number; at: number };
+
+const waitAfter = (count: number): number =>
+  count === 1 ? 0 : Math.min(longestWaitMs, firstWaitMs * 2 ** (count - 2));
 
 /*
  * How long a live page waits before it is drawn again after its subscription failed. The first failure draws
@@ -18,13 +23,16 @@ export class LiveBackoff {
   // Records a failure of the page kept under `key` and says how long to wait before drawing it again.
   public failed(key: string): number {
     const at = this.now();
-    const before = this.failures.get(key);
-    const count = before && at - before.at < calmMs ? before.count + 1 : 1;
+    const count = this.countAt(key, at);
 
     this.failures.set(key, { count, at });
 
-    return count === 1
-      ? 0
-      : Math.min(longestWaitMs, firstWaitMs * 2 ** (count - 2));
+    return waitAfter(count);
+  }
+
+  private countAt(key: string, at: number): number {
+    const before = this.failures.get(key);
+
+    return before && at - before.at < calmMs ? before.count + 1 : 1;
   }
 }

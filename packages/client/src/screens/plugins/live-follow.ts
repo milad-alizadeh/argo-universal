@@ -66,18 +66,25 @@ class KeptTree {
   }
 
   private failed(error: string): true {
-    const { client } = this.following;
-
-    const wait = this.following.backoff.failed(hashKey(this.key));
-    const drawAgain = (): void =>
-      void client.invalidateQueries({ queryKey: this.key, exact: true });
+    const { client, backoff } = this.following;
+    const wait = backoff.failed(hashKey(this.key));
 
     client.setQueryData(this.key, failedAfter(this.kept(), error));
+    this.drawAgainIn(wait);
+
+    return true;
+  }
+
+  // The page is drawn again at once, or after the wait a failure in a row asks.
+  private drawAgainIn(wait: number): void {
+    const drawAgain = (): void =>
+      void this.following.client.invalidateQueries({
+        queryKey: this.key,
+        exact: true,
+      });
 
     if (wait === 0) drawAgain();
     else setTimeout(drawAgain, wait);
-
-    return true;
   }
 
   private drawn(answer: LiveTree): boolean {

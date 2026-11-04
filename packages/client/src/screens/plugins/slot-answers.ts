@@ -1,4 +1,4 @@
-import type { ReplaceableAnswer } from '@repo/contracts/plugins/replaceable';
+import { ReplaceableAnswer } from '@repo/contracts/plugins/replaceable';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
 
 /*
@@ -15,7 +15,7 @@ export function staleSlotAnswers(
   void client.invalidateQueries({
     queryKey: renderKey,
     predicate: ({ state }) => {
-      const answer = state.data as ReplaceableAnswer | undefined;
+      const answer = ReplaceableAnswer.safeParse(state.data).data;
 
       return answer?.type === 'replacement' && answer.pluginId === pluginId;
     },

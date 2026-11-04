@@ -1,5 +1,4 @@
 import { updateRequiredNode } from '@repo/contracts/plugins/prepare-tree';
-import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { drawingOf, PluginDrawingBoundary } from './plugin-drawing-boundary';
 import { PluginTree, type PluginTreeProps } from './plugin-registry';

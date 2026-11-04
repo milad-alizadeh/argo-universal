@@ -52,8 +52,10 @@ export function ReplaceableSlotView(
   );
 }
 
-// A new answer is a new drawing, so a replacement that threw is tried again once the Server answers anew; the
-// tree is named by identity, never read whole, so a Slot of a large tree costs nothing to key.
+/*
+ * A new answer is a new drawing, so a replacement that threw is tried again once the Server answers anew; the
+ * tree is named by identity, never read whole, so a Slot of a large tree costs nothing to key.
+ */
 const drawingKey = ({ input, state }: ReplaceableSlotViewProps): string =>
   `${input.slotId}:${state.replacement ? drawingOf(state.replacement.root) : 'core'}:${JSON.stringify(input)}`;
 

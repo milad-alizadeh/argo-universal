@@ -1,6 +1,6 @@
 export { BoundedPluginTree } from './bounded-plugin-tree';
 
-export { PluginTree, type OnPageCall } from './plugin-registry';
+export { type OnPageCall } from './plugin-registry';
 
 export * from './replaceable-state';
 

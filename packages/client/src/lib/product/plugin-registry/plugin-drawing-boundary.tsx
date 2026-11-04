@@ -2,6 +2,7 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import { Component, type ReactNode } from 'react';
 
 const drawings = new WeakMap<WireNode, string>();
+
 let counted = 0;
 
 // A tree is one drawing for as long as it is the very same tree, so a newer answer tries again.

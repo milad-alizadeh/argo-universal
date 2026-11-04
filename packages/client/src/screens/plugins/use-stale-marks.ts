@@ -1,3 +1,4 @@
+import type { StaleMark } from '@repo/contracts/plugins/page-address';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
@@ -12,23 +13,24 @@ import { usePageAddresses } from './use-page-addresses';
  * page and Workbench card, whichever Section is shown.
  */
 export function useStaleMarks(): void {
-  const addresses = usePageAddresses();
-  const client = useQueryClient();
-  const trpc = useTRPC();
-
   const subscription = useSubscription(
-    trpc.plugins.stale.subscriptionOptions(undefined, {
-      onData: (mark) => {
-        addresses.markStale(mark);
-        if (!mark.addresses)
-          staleSlotAnswers(
-            client,
-            trpc.plugins.render.pathKey(),
-            mark.pluginId,
-          );
-      },
+    useTRPC().plugins.stale.subscriptionOptions(undefined, {
+      onData: useMarked(),
     }),
   );
 
   useResubscribeOnReconnect(subscription);
+}
+
+// What a mark does: the kept trees it names are marked stale, and the Plugin's Slot answers are asked again.
+function useMarked(): (mark: StaleMark) => void {
+  const addresses = usePageAddresses();
+  const client = useQueryClient();
+  const renderKey = useTRPC().plugins.render.pathKey();
+
+  return (mark) => {
+    addresses.markStale(mark);
+
+    if (!mark.addresses) staleSlotAnswers(client, renderKey, mark.pluginId);
+  };
 }

@@ -1,7 +1,7 @@
+import type { DrawnTree } from '@repo/contracts/plugins/page-address';
 import {
   treeAfter,
   type DrawAnswer,
-  type DrawnTree,
   type DrawPacing,
   type HashedTree,
 } from '@repo/contracts/plugins/page-draw';

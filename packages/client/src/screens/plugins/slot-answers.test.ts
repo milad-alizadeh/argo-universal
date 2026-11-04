@@ -1,18 +1,21 @@
-import type { ReplaceableAnswer } from '@repo/contracts/plugins/replaceable';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { QueryClient } from '@tanstack/react-query';
 import { expect, it } from 'vitest';
 import { staleSlotAnswers } from './slot-answers';
 
 const render = ['plugins', 'render'];
-const input = { slotId: 'feed.row' } as never;
 
-const replacement = (pluginId: string): ReplaceableAnswer => ({
+type Answer =
+  | { type: 'replacement'; pluginId: string; root: WireNode }
+  | { type: 'core'; input: { slotId: string } };
+
+const replacement = (pluginId: string): Answer => ({
   type: 'replacement',
   pluginId,
-  root: { key: 'root', type: 'Text', props: { children: 'x' } } as never,
+  root: { key: 'root', type: 'Text', props: {}, children: [], slots: {} },
 });
 
-function kept(answers: Record<string, ReplaceableAnswer>): QueryClient {
+function kept(answers: Record<string, Answer>): QueryClient {
   const client = new QueryClient();
 
   for (const [id, answer] of Object.entries(answers))
@@ -37,7 +40,9 @@ it("draws a Plugin's replacements again once it reloads or an Operation of it ra
 });
 
 it('leaves an answer core drew, which no Plugin owns', () => {
-  const client = kept({ core: { type: 'core', input } });
+  const client = kept({
+    core: { type: 'core', input: { slotId: 'feed.row' } },
+  });
 
   staleSlotAnswers(client, render, 'tracker');
 
