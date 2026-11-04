@@ -93,14 +93,20 @@ export const BoundSearchAndSelectionReachThePage: Story = {
 
     await expect(field).toHaveValue('flaky');
     await waitFor(() =>
-      expect(onPageCall).toHaveBeenLastCalledWith({ bind: 'query' }, 'flaky'),
+      expect(onPageCall).toHaveBeenLastCalledWith(
+        { bind: 'query' },
+        expect.objectContaining({ payload: 'flaky' }),
+      ),
     );
 
     await context.userEvent.click(
       context.canvas.getByRole('button', { name: 'Argo' }),
     );
     await waitFor(() =>
-      expect(onPageCall).toHaveBeenLastCalledWith({ bind: 'picked' }, ['argo']),
+      expect(onPageCall).toHaveBeenLastCalledWith(
+        { bind: 'picked' },
+        expect.objectContaining({ payload: ['argo'] }),
+      ),
     );
     await expect(onEvent).not.toHaveBeenCalled();
   },

@@ -8,7 +8,7 @@ import { RenderNode } from './plugin-nodes';
 import type { OnPageCall, PluginOnEvent } from './plugin-rendering';
 import { useComponentEvents } from './use-component-events';
 
-export type { OnPageCall, PluginOnEvent } from './plugin-rendering';
+export type { OnPageCall, PageEvent, PluginOnEvent } from './plugin-rendering';
 
 export interface PluginTreeProps {
   root: WireNode;

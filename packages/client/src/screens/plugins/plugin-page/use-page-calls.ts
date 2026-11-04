@@ -1,46 +1,26 @@
-import type {
-  MadeOperationCall,
-  MadePageCall,
-  MadeStateChange,
-} from '@repo/contracts/plugins/page-call-payload';
-import type { WireJson } from '@repo/contracts/plugins/wire';
+import type { MadeOperationCall } from '@repo/contracts/plugins/page-call-payload';
 import { errorToast } from '@repo/kit/error-toast';
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTRPCClient } from '#features/connection';
 import type { OnPageCall } from '../../../lib/product/plugin-registry';
 import type { PageAddresses, PageOpening, Snapshot } from './page-addresses';
-import { useBind } from './use-bind';
+import { PageCalls } from './page-calls';
 
-type PageStateCall = Exclude<MadePageCall, MadeOperationCall>;
-
-// A Loader page's calls: an Operation runs; load more, a bound value and a Page state change draw again.
+// A Loader page's calls, made as `PageCalls` says, with the Operation run the App's mutation makes.
 export function usePageCalls(
   addresses: PageAddresses,
   opening: PageOpening,
 ): OnPageCall {
   const run = useOperationRun(addresses, opening);
-  const onPageState = usePageStateCalls(addresses, opening);
+  const deps = { addresses, opening, run };
+  const [calls] = useState(() => new PageCalls(deps));
 
-  return (call, value) =>
-    'operation' in call ? run(call) : onPageState(call, value);
-}
+  useEffect(() => calls.update(deps));
+  useEffect(() => (): void => calls.close(), [calls]);
 
-// The List keeps its spinner until the next address has drawn.
-function usePageStateCalls(
-  addresses: PageAddresses,
-  opening: PageOpening,
-): (call: PageStateCall, value?: WireJson) => Promise<void> {
-  const change = (call: MadeStateChange): Promise<void> =>
-    addresses.change(opening, call.pageState);
-
-  const bind = useBind(change);
-
-  return (call, value) => {
-    if ('loadMore' in call) return addresses.loadMore(opening);
-
-    return 'bind' in call ? bind(call.bind, value) : change(call);
-  };
+  return (call, event) => calls.call(call, event);
 }
 
 /*

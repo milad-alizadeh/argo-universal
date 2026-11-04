@@ -49,6 +49,8 @@ class MemoryServer {
   pacing: DrawPacing = {};
   // Draws fail with this until it is cleared.
   failing: string | undefined;
+  // What every address draws.
+  tree: (request: DrawRequest, edition: number) => WireNode = drawnTree;
 
   readonly draw = async (request: DrawRequest): Promise<DrawAnswer> => {
     this.requests.push(request);
@@ -66,7 +68,7 @@ class MemoryServer {
 
   private drawn({ known, pages, ...address }: DrawRequest): DrawAnswer {
     const key = JSON.stringify(address);
-    const root = drawnTree({ ...address, pages }, this.edition);
+    const root = this.tree({ ...address, pages }, this.edition);
     const tree = treeAnswer(root, this.sent.get(key), known);
     const answer = { ...tree, pages, ...this.pacing };
 

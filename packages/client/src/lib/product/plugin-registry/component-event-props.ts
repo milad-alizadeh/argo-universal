@@ -112,24 +112,24 @@ async function deliver(
   const { handler, name, schema } = event;
 
   if (!handler || !('$event' in handler))
-    return inApp(input, { handler, rules: event.rules }, payload);
+    return inApp(input, { handler, event }, payload);
   await send(input.context.key, { event: name, payload, schema });
 }
 
 type InApp = {
   handler: Exclude<Handler, { $event: string }> | undefined;
-  rules: ComponentEventRules;
+  event: Declared;
 };
 
 // An awaited event's kit component reports its own failure; the field of any other only rolls back, so it is said here.
 function inApp(
   input: ControlInput,
-  { handler, rules }: InApp,
+  { handler, event }: InApp,
   payload?: WireJson,
 ): Promise<void> {
-  const run = runInApp(input, handler, payload);
+  const run = runInApp(input, { handler, event }, payload);
 
-  return rules.awaits ? run : run.catch(sayWhy);
+  return event.rules.awaits ? run : run.catch(sayWhy);
 }
 
 // A call that fails in the App, as a payload that does not fit where it lands, says why.
@@ -148,14 +148,17 @@ function sayWhy(error: Error): never {
  */
 async function runInApp(
   input: ControlInput,
-  handler: InApp['handler'],
+  { handler, event }: InApp,
   payload?: WireJson,
 ): Promise<void> {
   if (!handler) return;
 
   if ('action' in handler) return runAction(handler, input.context.openPage);
 
-  return pageCallOf(input)(madePageCall(handler, payload), payload);
+  const { name, schema } = event;
+  const from = { key: input.context.key, name, schema, payload };
+
+  return pageCallOf(input)(madePageCall(handler, payload), from);
 }
 
 // Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.

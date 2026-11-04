@@ -1,6 +1,7 @@
 export {
   PluginTree,
   type OnPageCall,
+  type PageEvent,
   type PluginOnEvent,
 } from './plugin-registry';
 
