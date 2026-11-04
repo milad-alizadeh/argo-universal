@@ -4,6 +4,7 @@ import type {
   OAuthFlowState,
 } from '@repo/contracts/plugins/oauth-flow-api';
 import { z } from 'zod';
+import { oneLine } from '../runtime/render-fallback';
 
 // What Argo's redirect answered when it started listening, with the client ID the sign-in read.
 export type Waiting = NonNullable<
@@ -13,7 +14,7 @@ export type Waiting = NonNullable<
 // A waiting sign-in once the browser answered with its code.
 export type Grant = Waiting & { code: string; verifier: string };
 
-type Request = NonNullable<Parameters<OAuthFlowArgo['fetch']>[1]>;
+type TokenRequest = NonNullable<Parameters<OAuthFlowArgo['fetch']>[1]>;
 
 export const failed = (message: string): OAuthFlowState => ({
   kind: 'failed',
@@ -49,10 +50,11 @@ export async function signedIn(
   options: OAuthFlowOptions,
   grant: Grant,
 ): Promise<OAuthFlowState> {
-  const token = await exchange(argo, options, grant);
+  const exchanged = await exchange(argo, options, grant);
 
-  if (!token) return failed('The service did not return a token.');
+  if (!exchanged.token) return failed(exchanged.problem);
 
+  const { token } = exchanged;
   const label = await options.label(token);
 
   if (!label) return failed('The service did not say who signed in.');
@@ -64,20 +66,30 @@ export async function signedIn(
   return { kind: 'signed-in', label };
 }
 
+// The token the service gave, or why it gave none.
+type Exchanged =
+  | { token: string; problem?: never }
+  | { token?: never; problem: string };
+
 // The Plugin exchanges the code itself, as a public client with its PKCE verifier (RFC 6749, RFC 7636).
 async function exchange(
   argo: OAuthFlowArgo,
   options: OAuthFlowOptions,
   grant: Grant,
-): Promise<string | null> {
+): Promise<Exchanged> {
   const response = await argo.fetch(options.tokenUrl, tokenRequest(grant));
 
-  return response?.ok
-    ? tokenIn(await response.text(), options.tokenPath)
-    : null;
+  if (!response) return { problem: 'The service did not answer.' };
+
+  const text = await response.text();
+  const token = response.ok ? tokenIn(text, options.tokenPath) : null;
+
+  return token === null
+    ? { problem: refusal(response.status, text) }
+    : { token };
 }
 
-const tokenRequest = (grant: Grant): Request => ({
+const tokenRequest = (grant: Grant): TokenRequest => ({
   method: 'POST',
   headers: {
     accept: 'application/json',
@@ -108,6 +120,28 @@ function tokenIn(
 
   return token.safeParse(parsed(text)).data ?? null;
 }
+
+const maxReason = 200;
+
+/*
+ * Why the service gave no token, in the words it used: its `error` and `error_description` (RFC 6749 section
+ * 5.2) on one line and capped, since the person reads it and the log may keep it.
+ */
+function refusal(status: number, text: string): string {
+  const said = ServiceError.safeParse(parsed(text)).data;
+  const reason = [said?.error, said?.error_description]
+    .filter((part) => part !== undefined)
+    .join(', ');
+
+  return reason === ''
+    ? `The service did not return a token (${status}).`
+    : `The service refused the sign-in (${status}): ${oneLine(reason).slice(0, maxReason)}`;
+}
+
+const ServiceError = z.object({
+  error: z.string().optional(),
+  error_description: z.string().optional(),
+});
 
 const AnswerJson = z.json();
 
