@@ -121,11 +121,28 @@ it('hands the handler the Project the run names, or else the caller’s', async 
       name: 'setStatus',
       params: { status: 'closed', projectId: 'project-2' },
       caller,
+      confirm: () => Promise.resolve(),
     }),
   ).resolves.toEqual({
     params: { status: 'closed' },
     caller: { sessionId: 'session-1', projectId: 'project-2' },
   });
+});
+
+it('runs nothing in another Project than the Session’s when the user declines to confirm', async () => {
+  const fixture = await dataFixture(echo, { operations: [setStatus] });
+  const kit = await fixture.start();
+  const caller = { sessionId: 'session-1', projectId: 'project-1' };
+  const params = { status: 'open', projectId: 'project-2' };
+
+  await expect(
+    kit.operations.run({
+      name: 'setStatus',
+      params,
+      caller,
+      confirm: () => Promise.reject(new Error('The user declined')),
+    }),
+  ).rejects.toThrow('The user declined');
 });
 
 it('refuses a run outside the param’s choices, or without what the Operation needs of its caller', async () => {

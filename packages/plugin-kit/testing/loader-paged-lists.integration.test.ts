@@ -1,5 +1,6 @@
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
+import { startLists } from './loader-list-fixture';
 import {
   issuesPath,
   listed,
@@ -123,7 +124,7 @@ it('keeps each address its own pages', async () => {
 });
 
 it('stops offering a load more at the most pages an address can ask for', async () => {
-  const kit = await start();
+  const kit = await startLists();
 
   const last = treeOf(await kit.pages.draw({ path: '/endless', pages: 50 }));
 
@@ -133,7 +134,7 @@ it('stops offering a load more at the most pages an address can ask for', async 
 });
 
 it('keeps a paged list read for one App apart from the same list read for another', async () => {
-  const kit = await start();
+  const kit = await startLists();
 
   const titles = async (app: {
     platform?: 'web' | 'ios';

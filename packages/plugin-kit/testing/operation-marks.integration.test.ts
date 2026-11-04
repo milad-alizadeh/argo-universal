@@ -64,6 +64,9 @@ const marked = { pluginId: dataPluginId };
 it('marks the pages once when an Operation says argo.changed() as it writes', async () => {
   const kit = await start();
   const controller = new AbortController();
+
+  await kit.pages.draw({ path: '/' });
+
   const stale = kit.pages.stale(controller.signal);
 
   await kit.pages.run({ operation: 'bumpAndSay', args: {} });
@@ -76,6 +79,9 @@ it('marks the pages once when an Operation says argo.changed() as it writes', as
 it('still marks the pages when an Operation that said argo.changed() fails', async () => {
   const kit = await start();
   const controller = new AbortController();
+
+  await kit.pages.draw({ path: '/' });
+
   const stale = kit.pages.stale(controller.signal);
 
   await expect(

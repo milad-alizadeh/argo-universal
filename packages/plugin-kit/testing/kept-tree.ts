@@ -21,6 +21,13 @@ export class KeptTree {
     return this.shownPages;
   }
 
+  // The hash the next draw names as already shown, if any tree is kept.
+  known(): { known?: string } {
+    const { hash } = this;
+
+    return hash ? { known: hash } : {};
+  }
+
   get hash(): string | undefined {
     return this.kept?.hash;
   }

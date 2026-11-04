@@ -120,7 +120,9 @@ const runInput = (input: RunInput, fallbackId: string): Run => ({
 const givenToRun = ({
   params,
   caller,
-}: RunInput): Pick<Run, 'params' | 'caller'> => ({
+  confirm,
+}: RunInput): Pick<Run, 'params' | 'caller' | 'confirm'> => ({
   params: params ?? {},
   caller: caller ?? {},
+  confirm,
 });

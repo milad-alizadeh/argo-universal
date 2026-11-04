@@ -110,38 +110,6 @@ export function register(argo) {
     ),
   });
 
-  // A list whose items name the App it was read for.
-  argo.pages.define('/by-app', {
-    load: () => null,
-    list: async ({ context }) => ({
-      items: [context.surface?.platform + (context.serverDevice ? ' on the Server' : '')],
-      cursor: null,
-    }),
-    render: (_data, _to, { list }) => (
-      <List>
-        {list.items.map((app) => (
-          <ListItem key={app} title={app} />
-        ))}
-      </List>
-    ),
-  });
-
-  // A list with no end: every page answers one item and a cursor for the next.
-  argo.pages.define('/endless', {
-    load: () => null,
-    list: async (_input, cursor) => {
-      const at = cursor === null ? 0 : Number(cursor);
-      return { items: [at], cursor: String(at + 1) };
-    },
-    render: (_data, _to, { list }) => (
-      <List pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }}>
-        {list.items.map((number) => (
-          <Row key={String(number)} number={number} />
-        ))}
-      </List>
-    ),
-  });
-
   // Issue 1, which closes as an Operation and links to the listed cursors.
   argo.pages.define('/issue', {
     load: () => ({ closed: closed.has(1) }),

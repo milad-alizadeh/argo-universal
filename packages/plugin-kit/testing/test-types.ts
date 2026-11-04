@@ -76,6 +76,8 @@ export interface PluginTest {
       params?: JsonObject;
       caller?: PluginOperationCaller;
       pluginId?: string;
+      // Asks the user, as a Session's run in a Project other than its own does; a rejection refuses the run.
+      confirm?: (card: { title: string; description: string }) => Promise<void>;
     }) => Promise<Json>;
   };
   /*

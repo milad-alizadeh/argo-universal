@@ -108,15 +108,13 @@ export class OpenPage {
 
   // Draws the address again, naming the tree kept, as the App does when the page is marked stale; a pull says so.
   async draw(pages = this.kept.pages, pull = false): Promise<void> {
-    const { hash } = this.kept;
-
     const request = {
       path: this.path,
       pageState: this.state,
       ...caller(this.opening),
       pages,
-      ...(pull && { pull: true as const }),
-      ...(hash && { known: hash }),
+      ...this.kept.known(),
+      ...pullOf(pull),
     };
 
     this.kept.keep(await this.showing.server.draw(request, this.opening));
@@ -207,3 +205,5 @@ export class OpenPage {
     if (error !== undefined) throw new Error(error);
   }
 }
+
+const pullOf = (pull: boolean): { pull?: true } => (pull ? { pull: true } : {});
