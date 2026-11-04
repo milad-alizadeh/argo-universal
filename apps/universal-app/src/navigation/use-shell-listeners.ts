@@ -3,6 +3,7 @@ import {
   useNotifications,
   usePluginListChanges,
   useRememberShownPage,
+  useStaleMarks,
 } from '@repo/client';
 import { usePathname } from 'expo-router';
 
@@ -13,4 +14,6 @@ export function useShellListeners(): void {
   useRememberShownPage();
   // A Plugin turned off elsewhere leaves the rail and its open page, as it does when the App reloads.
   usePluginListChanges();
+  // Every Loader page and Workbench card hears a Plugin's stale marks, whichever Section is shown or none.
+  useStaleMarks();
 }

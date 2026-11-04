@@ -3,7 +3,6 @@ import {
   pluginPath,
   SectionListDetail,
   usePluginAt,
-  useStaleMarks,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
 import { useLocalSearchParams, usePathname } from 'expo-router';
@@ -26,9 +25,6 @@ function useNavRoot(path: string, row: string | undefined): boolean {
  */
 export function PluginLayout(): React.JSX.Element {
   const { section } = usePluginAt(usePathname());
-
-  // Loader pages hear stale marks while any page of the section is on top, a view page included.
-  useStaleMarks();
 
   return (
     <ScreenStack
