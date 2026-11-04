@@ -36,7 +36,7 @@ type Update = Exclude<PluginDataRequest, { action: 'watch' | 'read' }>;
 
 /*
  * The one cache of a Plugin's reads (ADR-0037, ADR-0050): an entry per Plugin, Project and Query, held by
- * the views watching it, the Page addresses whose draws read it and the background passes reading it. A
+ * the views watching it and the Page addresses whose draws read it; a background pass reads it fresh. A
  * write makes the Plugin's entries due; an answer that changes marks the addresses holding it.
  */
 export class PluginData {

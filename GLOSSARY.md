@@ -199,7 +199,7 @@ A Query that is the Plugin's own read, defined once by name and asked for with a
 _Avoid_: Cached function, custom query, memo
 
 **Query holder**:
-What keeps a Query's answer wanted: a view watching it, a Page address whose last draw read it, or a Background pass reading it. A changed answer marks the Page addresses holding it stale.
+What keeps a Query's answer wanted: a view watching it, or a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration
 
 **Background pass**:

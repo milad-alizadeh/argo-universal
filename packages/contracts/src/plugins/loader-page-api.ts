@@ -27,7 +27,8 @@ import type {
  *   answers its items and the cursor of the page after, or null at the end. Argo keeps each page as a Query
  *   of the address and cursor, so a load more reads only the page it lacks; an Operation or
  *   `argo.changed()` makes every kept page due. The first page alone is read again on every draw. An item
- *   equal to one already listed is dropped, so a cursor may include the boundary item.
+ *   equal to one already listed is dropped, so a cursor may include the boundary item. Items cross to
+ *   Argo as JSON, so a `Date` comes back as its string.
  * - `render` is pure: no hooks, no effects, no function props. A Component event holds a value made by
  *   `to`, which the App acts on itself; a function prop fails the draw. `input.list` holds the pages read.
  */
