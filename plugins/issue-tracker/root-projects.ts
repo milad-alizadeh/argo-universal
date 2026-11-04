@@ -1,8 +1,8 @@
 import { loadingIssues } from './filter-shown';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import { useAsync } from './use-async';
 
+// The Projects to group Issues of, the one a page opened for, and what to say in place of its Issues.
 export type RootProjects = {
   projects: Project[];
   project: Project | undefined;
@@ -10,21 +10,20 @@ export type RootProjects = {
 };
 
 /*
- * Loads the Projects each time a page opens, so a Project's remote is never older than the page, and
- * opens the one a page names, or the first.
+ * Reads the Projects each time a page draws, so a Project's remote is never older than the page, and opens
+ * the one a page names, or the first.
  */
-export function useRootProjects(
-  deps: IssueDeps,
+export async function rootProjects(
+  deps: Pick<IssueDeps, 'listProjects'>,
   selectedId?: string,
-): RootProjects {
-  const { value, error } = useAsync(deps.listProjects);
-  const projects = value ?? [];
-  const project = chosenProject(projects, selectedId);
+): Promise<RootProjects> {
+  const projects = await deps.listProjects().catch(() => undefined);
+  const shown = projects ?? [];
 
   return {
-    projects,
-    project,
-    message: projectsMessage(value, error, selectedId),
+    projects: shown,
+    project: chosenProject(shown, selectedId),
+    message: projectsMessage(projects, selectedId),
   };
 }
 
@@ -38,18 +37,10 @@ const chosenProject = (
 
 function projectsMessage(
   rows: Project[] | undefined,
-  error: string | undefined,
   selectedId: string | undefined,
 ): string {
-  if (error !== undefined) return 'Could not load Projects.';
+  if (!rows) return 'Could not load Projects.';
 
-  return rows ? loadedMessage(rows, selectedId) : 'Loading Projects…';
-}
-
-function loadedMessage(
-  rows: Project[],
-  selectedId: string | undefined,
-): string {
   if (rows.length === 0) return 'No Projects yet.';
 
   return chosenProject(rows, selectedId) ? loadingIssues : goneMessage;

@@ -140,6 +140,7 @@ export type {
   Argo,
   Hook,
   HookContext,
+  LoaderInput,
   LoaderPage,
   OperationHandler,
   PageTo,
@@ -148,7 +149,6 @@ export type {
 // A Loader page's parts and the paged list its Render reads (ADR-0050).
 export type {
   ListPage,
-  LoaderInput,
   PagedList,
   RenderInput,
 } from '@repo/contracts/plugins/loader-page-api';

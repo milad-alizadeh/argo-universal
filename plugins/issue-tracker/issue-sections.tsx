@@ -2,7 +2,7 @@ import { FieldGroup, List, ListItem } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueProgress, IssueRelation } from './github-issues';
 import { statusMark } from './issue-status-mark';
-import type { AttachedSession } from './use-issue-detail';
+import type { AttachedSession } from './issue-detail-data';
 
 // The page path of another Issue in the same Project, for a sub-Issue's row.
 type IssuePath = (number: number) => string;

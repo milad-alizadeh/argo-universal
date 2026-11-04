@@ -10,14 +10,13 @@ import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { FilterState } from './filter-loader';
 import type { Issue } from './github-issues';
 import type { Project } from './issue-client';
-import type { IssueDeps } from './issue-deps';
+import { issuePath } from './issue-paths';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueNode } from './issue-tree';
 import { rowLabelPills } from './label-pills';
 
 export type RowSource = {
-  deps: IssueDeps;
   project: Project;
   to: PageTo<FilterState>;
 };
@@ -41,7 +40,7 @@ type RowProps = Pick<
 >;
 
 const rowProps = (
-  { deps, project, to }: RowSource,
+  { project, to }: RowSource,
   issue: Issue,
 ): RowProps => ({
   id: String(issue.number),
@@ -49,7 +48,7 @@ const rowProps = (
   title: issue.title,
   subtitle: `#${issue.number}`,
   finished: issue.status !== 'open',
-  onPress: to.go(deps.pages.issuePagePath(project, issue.number)),
+  onPress: to.go(issuePath(project.id, issue.number)),
   meta: rowMeta(issue),
 });
 

@@ -33,7 +33,7 @@ export const attach = async (
 export async function chosenTracker(): Promise<PluginTest> {
   const test = await tracker();
 
-  await chooseGithub(trackerPage(test));
+  await chooseGithub(await trackerPage(test));
 
   return test;
 }

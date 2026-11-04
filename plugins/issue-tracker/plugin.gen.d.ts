@@ -27,6 +27,16 @@ declare module '@argo/plugin-kit' {
         "session"
       ]
     };
+    chooseTracker: {
+      "params": {
+        "tracker": {
+          "type": "string"
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
     setStatus: {
       "params": {
         "number": {

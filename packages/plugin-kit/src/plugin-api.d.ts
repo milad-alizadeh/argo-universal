@@ -5,6 +5,7 @@ import type {
   HookEventName,
 } from '@repo/contracts/plugins/hooks';
 import type {
+  LoaderInput as ContractsLoaderInput,
   LoaderPage as ContractsLoaderPage,
   PageTo as ContractsPageTo,
 } from '@repo/contracts/plugins/loader-page-api';
@@ -22,10 +23,14 @@ export type LoaderPage<
   Item = never,
 > = ContractsLoaderPage<State, Data, Item, PluginOperations>;
 
-export type PageTo<State extends PageState> = ContractsPageTo<
+// A page that declares no Page state names neither type's State.
+export type PageTo<State extends PageState = PageState> = ContractsPageTo<
   State,
   PluginOperations
 >;
+
+export type LoaderInput<State extends PageState = PageState> =
+  ContractsLoaderInput<State>;
 
 // One declared Operation's handler, as `argo.operations.register(name, handler)` takes it.
 export type OperationHandler<Name extends keyof PluginOperations> =

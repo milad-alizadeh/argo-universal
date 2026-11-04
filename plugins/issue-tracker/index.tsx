@@ -1,17 +1,11 @@
-import type { Argo, PluginRenderContext } from '@argo/plugin-kit';
-import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import type { Argo } from '@argo/plugin-kit';
 import { defineFilterPage } from './filter-page';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
-import { createIssuePages } from './issue-pages';
-import { IssuesRoot } from './issue-root';
+import { defineIssuePages } from './issue-pages';
 import { defineOverview } from './overview';
-import {
-  ProjectDetails,
-  projectDetailsItems,
-  trackerPath,
-} from './project-details';
+import { defineTrackerPage, projectDetailsItems } from './project-details';
 import { registerSessionFills } from './session-slots';
 import { registerStatusOperation } from './status-operation';
 import { createTrackerRegistry } from './tracker-registry';
@@ -19,15 +13,13 @@ import { createTrackerStorage } from './tracker-storage';
 
 const projectDetails = 'argo/project/details/v1';
 
-type TrackerPage = (props: { context: PluginRenderContext }) => JSX.Element;
-
 function createDeps(api: Argo): IssueDeps {
   const trackers = createTrackerRegistry(api);
 
   const storage = createTrackerStorage(api, trackers.has);
   const listProjects = api.projects.list;
 
-  const shared = {
+  return {
     listProjects,
     getSession: api.sessions.get,
     storage,
@@ -35,39 +27,16 @@ function createDeps(api: Argo): IssueDeps {
     changes: createIssueChanges(),
     overview: defineOverview(api, { listProjects, storage, trackers }),
   };
-
-  return { ...shared, pages: createIssuePages(api, shared) };
-}
-
-/*
- * The Tracker choice page: it draws for the Project its view opened for, which is the Project whose details row
- * drilled into it (ADR-0046), and tells Argo the row's value changed once a choice is saved.
- */
-function trackerPage(api: Argo, deps: IssueDeps): TrackerPage {
-  const { storage, trackers } = deps;
-
-  return ({ context }) => (
-    <ProjectDetails
-      context={context}
-      storage={storage}
-      trackers={trackers}
-      changed={() => api.changed()}
-    />
-  );
 }
 
 export function register(api: Argo): void {
   const deps = createDeps(api);
 
-  function IssuesPage(): JSX.Element {
-    return <IssuesRoot deps={deps} />;
-  }
-
   registerIssueOperations(api, { storage: registerSessionFills(api, deps) });
   registerStatusOperation(api, deps);
+  defineIssuePages(api, deps);
   defineFilterPage(api, deps);
-  api.pages.register('/', IssuesPage);
-  api.pages.register(trackerPath, trackerPage(api, deps));
+  defineTrackerPage(api, deps);
 
   api.slots.register(projectDetails, (request) =>
     projectDetailsItems(deps, request),

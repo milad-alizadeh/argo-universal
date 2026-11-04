@@ -17,8 +17,12 @@ export const pathText = (segment: string): string =>
     String.fromCodePoint(Number.parseInt(code, hex)),
   );
 
-// Every Project's filter list is one Loader page (ADR-0050).
-export const filterPattern = '/projects/:project/filters/:filter';
+// Every Project's page, filter list and Issue is one Loader page each (ADR-0050).
+export const projectPattern = '/projects/:project';
+
+export const filterPattern = `${projectPattern}/filters/:filter`;
+
+export const issuePattern = `${projectPattern}/issues/:number`;
 
 export const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;

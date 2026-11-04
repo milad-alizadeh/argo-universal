@@ -7,7 +7,6 @@ import { expect, it, onTestFinished } from 'vitest';
 import {
   chooseGithub,
   chosen,
-  follow,
   issuesRoot,
   issueTitle,
   openIssue,
@@ -15,19 +14,36 @@ import {
   refusedTitle,
   tracker,
   trackerPage,
-  wait,
+  type PageView,
 } from './journey-fixture';
 
 const closeIssue = 'Close Issue';
 
 it('persists a Tracker chosen on the choice page across views', async () => {
   const test = await tracker();
-  const first = trackerPage(test);
+  const first = await trackerPage(test);
+  expect(chosen(first)).toBe(false);
   await chooseGithub(first);
-  first.close();
 
-  const reopened = trackerPage(test);
-  await expect.poll(() => chosen(reopened), wait).toBe(true);
+  expect(chosen(await trackerPage(test))).toBe(true);
+}, 20_000);
+
+it('moves the check to the chosen Tracker at once, and chooses none again', async () => {
+  const test = await tracker();
+  const page = await trackerPage(test);
+
+  expect(page.find('GitHub Issues').props.onPress).toMatchObject({
+    operation: 'chooseTracker',
+    args: { tracker: 'github' },
+    optimistic: [
+      { key: 'none', props: { selected: false } },
+      { key: 'github', props: { selected: true } },
+    ],
+  });
+
+  await chooseGithub(page);
+  await page.press('None');
+  expect(page.find('None').props.selected).toBe(true);
 }, 20_000);
 
 /*
@@ -60,7 +76,7 @@ it('answers the Project details row with the Tracker the choice page saved', asy
     },
   });
 
-  await chooseGithub(trackerPage(test));
+  await chooseGithub(await trackerPage(test));
 
   expect((await rows.next()).value).toMatchObject({
     [project.id]: { items: [{ item: { value: 'GitHub Issues' } }] },
@@ -71,11 +87,15 @@ const isStatus = (node: WireNode): boolean =>
   node.type === 'Metadata.StatusDot';
 
 // The Status the open Issue's Properties show.
-function shownStatus(tree: WireNode | null): string {
-  const entry = tree && findWireNodeEntry(tree, isStatus);
+function shownStatus(tree: WireNode): string {
+  const entry = findWireNodeEntry(tree, isStatus);
 
   return entry ? textOf(entry.node) : '';
 }
+
+// The props the Issue's status and its Action show while its status change runs.
+const optimisticOf = (page: PageView): unknown =>
+  page.find(closeIssue).props.onPress;
 
 function textOf(node: WireNode): string {
   const { text } = node.props;
@@ -83,26 +103,30 @@ function textOf(node: WireNode): string {
   return typeof text === 'string' ? text : '';
 }
 
-it('closes and reopens an Issue at once', async () => {
+it('closes an Issue at once, as an Operation the page shows the new status of until it answers', async () => {
   const page = await openIssue(issueTitle);
 
+  expect(optimisticOf(page)).toEqual({
+    operation: 'setStatus',
+    args: { number: 42, status: 'closed', projectId: project.id },
+    optimistic: [
+      { key: 'dot-42', props: { text: 'Closed', tone: 'done' } },
+      { key: 'status-42', props: { label: 'Reopen Issue', icon: 'issue' } },
+    ],
+  });
   await page.press(closeIssue);
-  await expect.poll(() => shownStatus(page.tree), wait).toBe('Closed');
-
-  await page.press('Reopen Issue');
-  await expect.poll(() => shownStatus(page.tree), wait).toBe('Open');
+  // The fixture gh keeps no status, so the Issue reads as open when drawn again.
+  expect(shownStatus(page.tree)).toBe('Open');
 }, 20_000);
 
-it('rolls a status change gh refuses back and fails the press with its error', async () => {
+it('fails a status change gh refuses with its error, and draws the old status', async () => {
   const page = await openIssue(refusedTitle);
-  const before = page.trees.length;
 
-  // The App shows a failed press as an error toast.
+  // The App shows a failed press as an error toast and puts the optimistic props back.
   await expect(page.press(closeIssue)).rejects.toThrow(
     'GraphQL: Could not close the issue.',
   );
-  await expect.poll(() => shownStatus(page.tree), wait).toBe('Open');
-  expect(page.trees.slice(before).map(shownStatus)).toContain('Closed');
+  expect(shownStatus(page.tree)).toBe('Open');
   expect(page.findText(closeIssue)).toBeDefined();
 }, 20_000);
 
@@ -120,7 +144,7 @@ it("starts a Session with the Issue's reference, title and link in the Composer"
 it("lists an Issue's sub-Issues under its description, with GitHub's tally", async () => {
   const page = await openIssue(issueTitle);
 
-  await expect.poll(() => page.findText('Sub-Issues'), wait).toBeDefined();
+  expect(page.findText('Sub-Issues')).toBeDefined();
   expect(page.findText('Sub-Issues')?.node.props.subtitle).toBe(
     '0 of 1 closed',
   );
@@ -135,20 +159,16 @@ const isBlocker = (node: WireNode): boolean =>
 it('names an open blocker in the Properties beside the Issue', async () => {
   const page = await openIssue(refusedTitle);
 
-  await expect
-    .poll(() => page.tree && findWireNodeEntry(page.tree, isBlocker), wait)
-    .toBeDefined();
-
-  const entry = page.tree && findWireNodeEntry(page.tree, isBlocker);
+  const entry = findWireNodeEntry(page.tree, isBlocker);
 
   expect(entry && textOf(entry.node)).toBe('#42 Fixture issue from GitHub');
 }, 20_000);
 
 it('marks a blocked row and a parent row’s progress in the list', async () => {
-  const { test, root } = await issuesRoot();
-  const list = await follow(test, root, 'Open');
+  const { root } = await issuesRoot();
+  const list = await root.press('Open');
 
-  await expect.poll(() => list.findText(issueTitle), wait).toBeDefined();
+  expect(list.findText(issueTitle)).toBeDefined();
   expect(list.findText('Blocked')).toBeDefined();
   expect(list.findText('0 / 1')).toBeDefined();
 }, 20_000);

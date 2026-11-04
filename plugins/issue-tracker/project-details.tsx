@@ -1,9 +1,9 @@
 import { EmptyState, List, ListItem } from '@argo/plugin-kit';
 import type { ProjectDetailsItem } from '@argo/plugin-kit';
+import type { Argo, PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { PublicTracker, TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
-import { useProjectTracker, type TrackerChoice } from './use-project-tracker';
 
 /*
  * Project details takes items, so the row only names the chosen Tracker and the choice itself is a page
@@ -62,18 +62,61 @@ export async function projectDetailsItems(
   return Object.fromEntries(answered);
 }
 
-export type ProjectDetailsProps = TrackerDeps & {
-  // The Project the page opened for, which the row that drilled in named (ADR-0046).
-  context: Readonly<{ projectId?: string }>;
-  // Says this Plugin's Project details rows changed, so the row behind the page shows the new Tracker.
-  changed: () => void;
-};
+/*
+ * The Tracker choice as this Plugin's own Loader page (ADR-0050), for the Project whose details row drilled into
+ * it (ADR-0046): the choices are rows, and a check marks the chosen one. A press runs `chooseTracker`, which moves
+ * the check at once and, once saved, makes the row behind the page show the new Tracker.
+ */
+export function defineTrackerPage(
+  argo: Pick<Argo, 'pages' | 'operations'>,
+  deps: TrackerDeps,
+): void {
+  argo.operations.register('chooseTracker', async ({ tracker }, { projectId }) => {
+    if (tracker !== undefined && !deps.trackers.has(tracker))
+      throw new Error(`No Tracker is called ${tracker}.`);
 
-// The Tracker choice as this Plugin's own page: the choices are rows, and a check marks the chosen one.
-export function ProjectDetails(props: ProjectDetailsProps): JSX.Element {
-  const { projectId } = props.context;
+    await deps.storage.chooseTracker(projectId, tracker ?? null);
 
-  if (projectId === undefined)
+    return { tracker: tracker ?? null };
+  });
+  argo.pages.define(trackerPath, {
+    load: ({ context }) => loadChoice(deps, context.projectId),
+    render: (choice, to) => <ProjectDetails choice={choice} to={to} />,
+  });
+}
+
+type Choice =
+  | { projectId: undefined }
+  | {
+      projectId: string;
+      selection: string | null;
+      message: string;
+      trackers: PublicTracker[];
+    };
+
+async function loadChoice(
+  { storage, trackers }: TrackerDeps,
+  projectId: string | undefined,
+): Promise<Choice> {
+  if (projectId === undefined) return { projectId };
+
+  const selection = await storage.selectedTracker(projectId).then(
+    (chosen) => ({ chosen, message: '' }),
+    () => ({ chosen: null, message: 'Could not load the Tracker choice.' }),
+  );
+
+  return {
+    projectId,
+    selection: selection.chosen,
+    message: selection.message,
+    trackers: trackers.list(),
+  };
+}
+
+type To = PageTo;
+
+function ProjectDetails({ choice, to }: { choice: Choice; to: To }): JSX.Element {
+  if (choice.projectId === undefined)
     return (
       <EmptyState
         title="No Project"
@@ -81,48 +124,51 @@ export function ProjectDetails(props: ProjectDetailsProps): JSX.Element {
       />
     );
 
-  return <TrackerChoices {...props} projectId={projectId} />;
-}
-
-type ChoicesProps = ProjectDetailsProps & { projectId: string };
-
-function TrackerChoices(props: ChoicesProps): JSX.Element {
-  const { storage, trackers, projectId, changed } = props;
-  const choice = useProjectTracker({ storage, projectId });
-
-  const choose = async (id: string | null): Promise<void> => {
-    await choice.choose(id);
-    changed();
-  };
-
-  return <TrackerRows {...choice} choose={choose} trackers={trackers.list()} />;
+  return <TrackerRows choice={choice} to={to} />;
 }
 
 type Option = { id: string | null; name: string };
 
-type RowsProps = TrackerChoice & { trackers: PublicTracker[] };
+type Shown = Extract<Choice, { projectId: string }>;
 
-function TrackerRows({ trackers, ...choice }: RowsProps): JSX.Element {
-  const options: Option[] = [{ id: null, name: noTracker }, ...trackers];
+function TrackerRows({ choice, to }: { choice: Shown; to: To }): JSX.Element {
+  const options: Option[] = [{ id: null, name: noTracker }, ...choice.trackers];
 
   return (
     <List footer={choice.message || undefined}>
-      {options.map((option) => trackerRow(option, choice))}
+      {options.map((option) => trackerRow(option, options, { choice, to }))}
     </List>
   );
 }
 
-type RowChoice = Pick<TrackerChoice, 'selection' | 'choose'>;
+const optionKey = (option: Option): string => option.id ?? 'none';
 
 // A keyed ListItem itself, as a List draws its children, not a component that returns one.
-function trackerRow(option: Option, choice: RowChoice): JSX.Element {
+function trackerRow(
+  option: Option,
+  options: Option[],
+  { choice, to }: { choice: Shown; to: To },
+): JSX.Element {
   return (
     <ListItem
-      key={option.id ?? 'none'}
+      key={optionKey(option)}
       title={option.name}
       selected={choice.selection === option.id}
-      disabled={choice.selection === undefined}
-      onPress={() => void choice.choose(option.id)}
+      onPress={to.run(
+        'chooseTracker',
+        option.id === null ? {} : { tracker: option.id },
+        { optimistic: checkMoves(options, option) },
+      )}
     />
   );
 }
+
+// The check moves to the chosen row at once.
+const checkMoves = (
+  options: Option[],
+  chosen: Option,
+): NonNullable<ReturnType<To['run']>['optimistic']> =>
+  options.map((option) => ({
+    key: optionKey(option),
+    props: { selected: option === chosen },
+  }));

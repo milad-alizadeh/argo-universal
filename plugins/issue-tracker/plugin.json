@@ -55,6 +55,20 @@
         "caller": ["project", "session"]
       },
       {
+        "name": "chooseTracker",
+        "label": "Choose a Project's Issue tracker",
+        "description": "Choose which Tracker a Project's Issues come from, or none when no tracker is named.",
+        "tier": "act",
+        "keywords": ["issue", "tracker", "project"],
+        "params": {
+          "tracker": {
+            "type": "string",
+            "description": "The Tracker's id, such as github; leave it out for none."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
         "name": "setStatus",
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",

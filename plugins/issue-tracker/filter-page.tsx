@@ -53,13 +53,12 @@ function filterPage(
     list: (input, cursor) =>
       listFilter(targetOf(input), input.state.query, cursor),
     render: (data, to, { state, list }) => (
-      <FilterPage {...{ deps, data, to, list }} query={state.query} />
+      <FilterPage {...{ data, to, list }} query={state.query} />
     ),
   };
 }
 
 type PageProps = {
-  deps: IssueDeps;
   data: FilterData;
   to: To;
   query: string;
@@ -78,12 +77,11 @@ function FilterPage(props: PageProps): JSX.Element {
 }
 
 // The Project's filters beside the list; a pull asks again, as the list's own does.
-function sidebar({ deps, data, to }: PageProps): JSX.Element {
+function sidebar({ data, to }: PageProps): JSX.Element {
   const message = data.message || loadingIssues;
 
   return (
     <RootRows
-      deps={deps}
       choice={{ projects: data.projects, project: data.project, message }}
       state={{ overview: data.overview, message: '' }}
       onRefresh={to.set({})}
@@ -106,13 +104,13 @@ type DetailProps = PageProps & {
 
 // The search's text is the App's at once and the Page state's once typing pauses.
 function FilterDetail(props: DetailProps): JSX.Element {
-  const { deps, data, to, list } = props;
+  const { data, to, list } = props;
 
   return (
     <Screen {...screenProps(props)}>
       <List appearance="plain" density="compact" {...listProps(props)}>
         {issueTree(list.items).map((node) =>
-          issueRow({ deps, project: data.project, to }, node),
+          issueRow({ project: data.project, to }, node),
         )}
       </List>
     </Screen>
