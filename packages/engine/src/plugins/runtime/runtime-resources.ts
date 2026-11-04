@@ -118,6 +118,7 @@ export class RuntimeResources {
   // A worker that runs answers the calls held for it.
   running(pluginId: string, generation: number): void {
     this.workers.run(pluginId, generation);
+    this.changes.restarted(pluginId);
   }
 
   // A crash does not end a pass: it keeps its timer and activates the Plugin again next interval.

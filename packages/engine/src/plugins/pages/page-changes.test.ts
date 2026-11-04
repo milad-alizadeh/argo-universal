@@ -53,3 +53,14 @@ it('tells its listeners when an Operation of a running Plugin ran', () => {
 
   expect(marked).toEqual(['tracker']);
 });
+
+it('tells its listeners when a new worker of a Plugin starts running, so its kept answers are drawn again', () => {
+  const { changes, workers } = pageChanges();
+  const marked: string[] = [];
+
+  changes.listen((pluginId) => marked.push(pluginId));
+  workers.run('tracker', 1);
+  changes.restarted('tracker');
+
+  expect(marked).toEqual(['tracker']);
+});

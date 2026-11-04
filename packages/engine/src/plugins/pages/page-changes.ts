@@ -35,6 +35,11 @@ export class PageChanges {
     if (this.workers.generation(pluginId) !== undefined) this.notify(pluginId);
   }
 
+  // A new worker of the Plugin runs: what it kept in the App from the one before is stale.
+  public restarted(pluginId: string): void {
+    this.notify(pluginId);
+  }
+
   // A running worker's `argo.changed()`.
   public changed(caller: Caller): void {
     if (this.workers.current(caller)) this.notify(caller.pluginId);

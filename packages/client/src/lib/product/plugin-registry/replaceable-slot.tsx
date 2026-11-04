@@ -2,7 +2,7 @@ import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
 import type { ReplaceableSlotId } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, type ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
-import { PluginDrawingBoundary } from './plugin-drawing-boundary';
+import { drawingOf, PluginDrawingBoundary } from './plugin-drawing-boundary';
 import { PluginTree, type OnPageCall } from './plugin-registry';
 import type { ReplaceableState } from './replaceable-state';
 
@@ -52,9 +52,10 @@ export function ReplaceableSlotView(
   );
 }
 
-// A new answer is a new drawing, so a replacement that threw is tried again once the Server answers anew.
+// A new answer is a new drawing, so a replacement that threw is tried again once the Server answers anew; the
+// tree is named by identity, never read whole, so a Slot of a large tree costs nothing to key.
 const drawingKey = ({ input, state }: ReplaceableSlotViewProps): string =>
-  JSON.stringify([state.replacement ?? 'core', input]);
+  `${input.slotId}:${state.replacement ? drawingOf(state.replacement.root) : 'core'}:${JSON.stringify(input)}`;
 
 function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
   const root = props.state.replacement?.root;
