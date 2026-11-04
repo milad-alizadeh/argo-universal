@@ -37,7 +37,9 @@ export const actionProps = z.object({
     .describe(
       'Marks the chosen Action in a submenu of choices, drawn with a check; a top-level header Action is a verb and does not use it.',
     ),
-  onPress: pressHandler.describe('The Plugin handler or built-in App Action.'),
+  onPress: pressHandler.describe(
+    'The navigation, Page state change or Operation call it makes, or a built-in App Action.',
+  ),
   role: z
     .enum(['cancel', 'destructive'])
     .optional()
