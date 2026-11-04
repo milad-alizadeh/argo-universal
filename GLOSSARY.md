@@ -155,7 +155,7 @@ The one version of the Plugin wire that an App reports when it connects. The Ser
 _Avoid_: Kit component version, kit version, protocol version
 
 **Page path**:
-The path a Plugin defines or registers one of its pages at, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
+The path a Plugin defines one of its pages at, with `argo.pages.define`, and the same path its `navigate` Action opens. It never holds the App's route: the App finds the nav item the page sits under and builds the route itself.
 _Avoid_: App path, route (for what a Plugin writes)
 
 **Page address**:

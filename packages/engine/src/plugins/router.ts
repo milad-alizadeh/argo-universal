@@ -81,7 +81,8 @@ const createSlotItemsRouter = routerFactory((plugins: PluginService) =>
 
 /*
  * Loader pages (ADR-0050): a draw is a plain query the App caches by Page address, and an Operation a
- * page's Component event runs answers the patterns to draw again. The App's tap runs as the user.
+ * page's Component event runs answers its result; the pages it changed hear of it from the stale mark. The
+ * App's tap runs as the user.
  */
 const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
   router({
