@@ -19,7 +19,7 @@ import { createRuntimePlugins } from '#mocks/runtime-plugins';
 import type { AppRouter } from './router';
 
 type App = {
-  client: TRPCClient<AppRouter>;
+  readonly client: TRPCClient<AppRouter>;
   update: (surface: Partial<PluginSurface>) => void;
 };
 
@@ -29,27 +29,35 @@ type Reported = Partial<PluginSurface> | string;
 const encoded = (surface: Reported): string =>
   typeof surface === 'string' ? surface : JSON.stringify(surface);
 
-function app(url: string, initial?: Reported): App {
-  let surface = initial;
-
+// One Connection reporting `surface`, which the test closes when it ends.
+function connection(
+  url: string,
+  surface: Reported | undefined,
+): TRPCClient<AppRouter> {
   const socket = createWSClient({
     url: url.replace(/^http/, 'ws'),
-    connectionParams: () =>
-      surface ? { pluginSurface: encoded(surface) } : {},
+    connectionParams: surface ? { pluginSurface: encoded(surface) } : {},
     WebSocket: AppPageSocket,
-  });
-
-  const client = createTRPCClient<AppRouter>({
-    links: [wsLink({ client: socket })],
   });
 
   onTestFinished(() => socket.close());
 
+  return createTRPCClient<AppRouter>({ links: [wsLink({ client: socket })] });
+}
+
+/*
+ * An App reports its surface as it connects, so an App that updates connects again with the new one. It opens
+ * that Connection before it draws again rather than reopening the old socket, so no draw races the close.
+ */
+function app(url: string, initial?: Reported): App {
+  let client = connection(url, initial);
+
   return {
-    client,
+    get client() {
+      return client;
+    },
     update: (next): void => {
-      surface = next;
-      socket.connection?.ws?.close();
+      client = connection(url, next);
     },
   };
 }
