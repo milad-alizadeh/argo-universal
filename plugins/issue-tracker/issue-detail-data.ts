@@ -10,13 +10,13 @@ export type AttachedSession = {
   branch: string | null;
 };
 
-// What one Issue's page shows: the Issue, or the line it shows instead; and the Sessions attached to it.
-export type IssueDetailData = {
-  issue: Issue | null;
-  message: string;
-  // The Sessions attached to this Issue; empty when none are.
-  sessions: AttachedSession[];
-};
+// The Issue, or the line the page shows instead when it cannot be read.
+type IssueRead =
+  | { found: true; issue: Issue }
+  | { found: false; message: string };
+
+// What one Issue's page shows: the Issue or why not, and the Sessions attached to it (none when none are).
+export type IssueDetailData = IssueRead & { sessions: AttachedSession[] };
 
 export type DetailSource = {
   project: Project;
@@ -36,15 +36,13 @@ export async function loadIssueDetail(
   return { ...read, sessions };
 }
 
-async function readIssue(
-  source: DetailSource,
-): Promise<Pick<IssueDetailData, 'issue' | 'message'>> {
+async function readIssue(source: DetailSource): Promise<IssueRead> {
   try {
     const client = await openDepsClient(source);
 
-    return { issue: await client.getIssue(source.number), message: '' };
+    return { found: true, issue: await client.getIssue(source.number) };
   } catch (cause) {
-    return { issue: null, message: githubError(cause) };
+    return { found: false, message: githubError(cause) };
   }
 }
 

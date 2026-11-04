@@ -13,17 +13,24 @@ export type FilterState = { query: string };
 
 export const filterState: FilterState = { query: '' };
 
-// What the Loader read: the Projects, and for the one the path names, its filter and overview.
-export type FilterData = {
-  projects: Project[];
-  project?: Project;
-  filter?: IssueFilter;
+// The Project and filter the Page path names, and the Project's overview when it could be read.
+type Chosen = {
+  project: Project;
+  filter: IssueFilter;
   overview: Overview | null;
-  // Why there are no Issues to show, such as no Tracker chosen yet.
-  message: string;
 };
 
-type Load = { params: Readonly<Record<string, string>>; state: FilterState };
+/*
+ * What the Loader read: the Projects, and for the page the path names either nothing (`gone`), or its Project
+ * and filter with the Tracker opened, or with why it did not open, such as no Tracker chosen yet.
+ */
+export type FilterData = { projects: Project[] } & (
+  | { state: 'gone' }
+  | ({ state: 'unopened'; message: string } & Chosen)
+  | ({ state: 'opened' } & Chosen)
+);
+
+type Load = Pick<LoaderInput<FilterState>, 'params' | 'state'>;
 
 // Issues a page loads at a time, and again for each further page.
 const pageSize = 30;
@@ -85,9 +92,6 @@ const namedBy = (
 
 const gone = { opened: false, message: 'This page no longer exists.' } as const;
 
-const messageOf = (tracker: Opened): string =>
-  tracker.opened ? '' : tracker.message;
-
 // Settled either way, so a draw that only loads leaves no failed open unread.
 const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
   openDepsClient({ project, deps }).then(
@@ -109,15 +113,25 @@ export async function loadFilter(
 ): Promise<FilterData> {
   const { projects, project, filter, opened } = await target;
 
-  if (!project || !filter)
-    return { projects, overview: null, message: gone.message };
+  if (!project || !filter) return { projects, state: 'gone' };
 
   const [overview, tracker] = await Promise.all([
     read(deps.overview({ projectId: project.id })).catch(() => null),
     opened,
   ]);
 
-  return { projects, project, filter, overview, message: messageOf(tracker) };
+  const chosen = { projects, project, filter, overview };
+
+  return tracker.opened
+    ? { ...chosen, state: 'opened' }
+    : { ...chosen, state: 'unopened', message: tracker.message };
+}
+
+// Why there are no Issues to show; none when the Tracker opened.
+export function noIssuesBecause(data: FilterData): string {
+  if (data.state === 'gone') return gone.message;
+
+  return data.state === 'unopened' ? data.message : '';
 }
 
 /*

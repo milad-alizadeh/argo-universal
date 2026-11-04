@@ -7,7 +7,7 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueStatus } from './github-issues';
-import type { IssueDetailData } from './issue-detail-data';
+import type { AttachedSession, IssueDetailData } from './issue-detail-data';
 import { IssueMetadata, statusDotKey } from './issue-metadata';
 import { issuePath } from './issue-paths';
 import { AttachedSessions, SubIssues } from './issue-sections';
@@ -22,21 +22,21 @@ type IssueDetailProps = {
 
 type ShownProps = Omit<IssueDetailProps, 'data'> & {
   issue: Issue;
-  sessions: IssueDetailData['sessions'];
+  sessions: AttachedSession[];
 };
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
 export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
-  const { issue, message, sessions } = props.data;
+  const { data } = props;
 
-  if (!issue)
+  if (!data.found)
     return (
       <Screen title={`#${props.number}`}>
-        <EmptyState title={message} />
+        <EmptyState title={data.message} />
       </Screen>
     );
 
-  return <IssueDetail {...props} issue={issue} sessions={sessions} />;
+  return <IssueDetail {...props} issue={data.issue} sessions={data.sessions} />;
 }
 
 function IssueDetail(props: ShownProps): JSX.Element {

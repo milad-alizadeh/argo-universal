@@ -15,14 +15,14 @@ import {
   filterTargets,
   listFilter,
   loadFilter,
+  noIssuesBecause,
   type FilterData,
   type FilterState,
 } from './filter-loader';
 import { issueRow } from './filter-rows';
 import type { Issue } from './github-issues';
-import { repositoryText, type Project } from './issue-client';
+import { repositoryText } from './issue-client';
 import type { IssueDeps } from './issue-deps';
-import type { IssueFilter } from './issue-filters';
 import { filterPattern } from './issue-paths';
 import { RootRows } from './issue-root';
 import { issueTree } from './issue-tree';
@@ -71,35 +71,44 @@ function FilterPage(props: PageProps): JSX.Element {
       title="Issues"
       list={sidebar(props)}
       detail={filterDetail(props)}
-      empty={<EmptyState title={props.data.message} />}
+      empty={<EmptyState title={noIssuesBecause(props.data)} />}
     />
   );
 }
 
 // The Project's filters beside the list; a pull asks again, as the list's own does.
 function sidebar({ data, to }: PageProps): JSX.Element {
-  const message = data.message || loadingIssues;
+  const message = noIssuesBecause(data) || loadingIssues;
+
+  if (data.state === 'gone')
+    return (
+      <RootRows
+        choice={{ projects: data.projects, project: undefined, message }}
+        state={{ overview: null, message: '' }}
+        onRefresh={to.set({})}
+      />
+    );
 
   return (
     <RootRows
       choice={{ projects: data.projects, project: data.project, message }}
       state={{ overview: data.overview, message: '' }}
       onRefresh={to.set({})}
-      selected={data.filter?.id}
+      selected={data.filter.id}
     />
   );
 }
 
 function filterDetail(props: PageProps): JSX.Element | null {
-  const { project, filter } = props.data;
+  const { data } = props;
 
-  if (!project || !filter) return null;
+  if (data.state === 'gone') return null;
 
-  return <FilterDetail {...props} data={{ ...props.data, project, filter }} />;
+  return <FilterDetail {...props} data={data} />;
 }
 
 type DetailProps = PageProps & {
-  data: FilterData & { project: Project; filter: IssueFilter };
+  data: Exclude<FilterData, { state: 'gone' }>;
 };
 
 // The search's text is the App's at once and the Page state's once typing pauses.
@@ -140,8 +149,8 @@ type ListProps = Pick<
  * one more page, read from the last one's cursor; a pull goes back to the first page, read again.
  */
 const listProps = ({ data, list, to }: DetailProps): ListProps => ({
-  footer: data.message || repositoryText(data.project),
-  empty: <EmptyState title={data.message || 'No Issues.'} />,
+  footer: noIssuesBecause(data) || repositoryText(data.project),
+  empty: <EmptyState title={noIssuesBecause(data) || 'No Issues.'} />,
   pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
   onRefresh: to.set({}),
 });
