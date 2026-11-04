@@ -6,9 +6,9 @@ import {
   type PluginRuntime,
   type PluginService,
 } from '@repo/engine/plugins';
+import { OpenPage } from './open-page';
 import type { PageClock } from './page-clock';
 import type { PageServer, TestApp } from './page-server';
-import { PageView } from './page-view';
 import type { PluginTest } from './test-types';
 
 type Operations = PluginTest['operations'];
@@ -52,14 +52,14 @@ const webApp = (serverDevice?: boolean): TestApp => ({
   serverDevice,
 });
 
-// The Plugin's draws and runs, as a page view asks the Server for them.
+// The Plugin's draws and runs, as an open page asks the Server for them.
 const pageServer = (pages: LoaderPages, pluginId: string): PageServer => ({
   draw: (request, app) => pages.draw({ pluginId, ...request }, appOn(app)),
   run: (run, app) => pages.run({ pluginId, ...run }, appOn(app)),
 });
 
 /*
- * One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before; the views
+ * One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before; the open pages
  * it opens wait for their edits to pause on the test's clock.
  */
 export function testPages(
@@ -72,7 +72,7 @@ export function testPages(
 
   return {
     draw: firstPages(server),
-    open: (opening) => PageView.open({ server, clock }, opening),
+    open: (opening) => OpenPage.open({ server, clock }, opening),
     run: pageRuns(server),
     stale: (signal) => pages.stale(signal),
     live: livePages(pages, pluginId),
@@ -82,7 +82,7 @@ export function testPages(
 const loaderPages = ({ service, runtime }: Hosted): LoaderPages =>
   new LoaderPages(
     service,
-    runtime.draws,
+    runtime,
     new PluginOperationService(service, runtime.operations),
   );
 

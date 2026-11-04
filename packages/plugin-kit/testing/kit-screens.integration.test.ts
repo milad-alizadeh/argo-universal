@@ -1,11 +1,11 @@
-import type { PageView, PluginTest } from '@argo/plugin-kit/testing';
+import type { OpenPage, PluginTest } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import { startKit } from '../mocks/kit-page-helpers';
 import { kitScreensSource } from '../mocks/kit-screens-source';
 
 const start = (): ReturnType<typeof startKit> => startKit(kitScreensSource);
 
-const open = async (path: string): Promise<PageView> =>
+const open = async (path: string): Promise<OpenPage> =>
   (await start()).pages.open({ path });
 
 // How long a bound edit waits for the edits to pause.
@@ -13,7 +13,7 @@ const bindPauseMs = 300;
 
 // Each edit binds its field's Page state key, and once the edits pause the page draws again showing it.
 async function edit(
-  { kit, page }: { kit: PluginTest; page: PageView },
+  { kit, page }: { kit: PluginTest; page: OpenPage },
   field: { label: string; event: string; value: string | string[] },
 ): Promise<void> {
   const { label, event, value } = field;

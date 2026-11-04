@@ -62,7 +62,7 @@ class HostedPlugin implements PluginTest {
   readonly session = testSession;
   private readonly pageClock = new PageClock();
   /*
-   * The page views' edit pauses always move; the Plugin's timers move with them when the test started its clock
+   * The open pages' edit pauses always move; the Plugin's timers move with them when the test started its clock
    * with `clockStart`.
    */
   readonly clock = {

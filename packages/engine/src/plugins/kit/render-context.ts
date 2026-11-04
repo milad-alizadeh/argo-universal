@@ -3,7 +3,7 @@ import type {
   PluginSurface,
 } from '@repo/contracts/plugins/kit';
 
-// What the App opened a page for, from the Connection that asked: a view's `open` or a Loader page's `draw`.
+// What the App opened a page for, from the Connection that asked: a Loader page's `draw` or a Replaceable Slot's `render`.
 export type Opened = {
   serverDevice?: boolean;
   surface?: PluginSurface;

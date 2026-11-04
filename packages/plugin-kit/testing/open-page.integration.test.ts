@@ -1,11 +1,11 @@
-import type { PageView } from '@argo/plugin-kit/testing';
+import type { OpenPage } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import { issuesPath, start } from './loader-page-fixture';
 
-const titles = (page: PageView): unknown[] =>
+const titles = (page: OpenPage): unknown[] =>
   page.tree.children[0]?.children.map((row) => row.props.title) ?? [];
 
-const open = async (path = issuesPath): Promise<PageView> =>
+const open = async (path = issuesPath): Promise<OpenPage> =>
   (await start()).pages.open({ path });
 
 const isList = (node: { type: string }): boolean => node.type === 'List';

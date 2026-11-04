@@ -1,4 +1,4 @@
-import type { PageView } from '@argo/plugin-kit/testing';
+import type { OpenPage } from '@argo/plugin-kit/testing';
 import type { PluginCapability } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
 import { localhost } from '../../engine/mocks/fetch-fixture-server';
@@ -23,7 +23,7 @@ async function recordingServer(): Promise<Recorded> {
 async function postsPage(
   port: number,
   capabilities: PluginCapability[],
-): Promise<PageView> {
+): Promise<OpenPage> {
   const fixture = await dataFixture(
     `import { Text } from '@argo/plugin-kit';
     const posts = { api: 'fetch', url: 'https://localhost:${port}/posts' };
@@ -42,7 +42,7 @@ async function postsPage(
   });
 }
 
-const shows = (page: PageView, text: string): void => {
+const shows = (page: OpenPage, text: string): void => {
   expect(page.findText(text)).toBeDefined();
 };
 

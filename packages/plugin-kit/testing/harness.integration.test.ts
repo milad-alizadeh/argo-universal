@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import {
   startPluginTest,
-  type PageView,
+  type OpenPage,
   type PluginTest,
 } from '@argo/plugin-kit/testing';
 import { expect, it, onTestFinished } from 'vitest';
@@ -26,7 +26,7 @@ async function start(path: string): Promise<PluginTest> {
   return test;
 }
 
-const open = async (path: string): Promise<PageView> =>
+const open = async (path: string): Promise<OpenPage> =>
   (await start(path)).pages.open({ path: '/' });
 
 it("loads the fixture's TypeScript entry through the production loader", async () => {

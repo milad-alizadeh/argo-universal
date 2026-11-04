@@ -1,8 +1,8 @@
-import type { PageView } from '@argo/plugin-kit/testing';
+import type { OpenPage } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import { startKit } from '../mocks/kit-page-helpers';
 
-type Node = PageView['tree'];
+type Node = OpenPage['tree'];
 
 // Canvas is the kit part and a Plugin sends shapes as data (ADR-0028), so each platform draws the same shapes; `/files` keeps its selection in Page state.
 const source = `import { Canvas } from '@argo/plugin-kit';

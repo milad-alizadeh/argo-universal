@@ -7,11 +7,11 @@ import {
   project,
   tracker,
   trackerPage,
-  type PageView,
+  type OpenPage,
 } from './journey-fixture';
 
-const shownValue = (view: PageView, text: string): string => {
-  const value = view.findText(text)?.node.props.value;
+const shownValue = (page: OpenPage, text: string): string => {
+  const value = page.findText(text)?.node.props.value;
 
   return typeof value === 'string' ? value : '';
 };
@@ -20,8 +20,8 @@ const listDetail = 'ListDetail';
 
 const assignedToYou = 'Assigned to you';
 
-const selected = (view: PageView, title: string): boolean =>
-  view.findText(title)?.node.props.selected === true;
+const selected = (page: OpenPage, title: string): boolean =>
+  page.findText(title)?.node.props.selected === true;
 
 it('groups Issues by status, by you and by label, each with its own list', async () => {
   const { root } = await issuesRoot();

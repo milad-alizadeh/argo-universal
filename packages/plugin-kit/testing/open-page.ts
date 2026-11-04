@@ -38,7 +38,7 @@ const rejected = (error: Error): never => {
   throw error;
 };
 
-// Where a view's draws and runs go, and the clock its edits wait on.
+// Where an open page's draws and runs go, and the clock its edits wait on.
 export type Showing = { server: PageServer; clock: PageClock };
 
 /*
@@ -50,7 +50,7 @@ export type Showing = { server: PageServer; clock: PageClock };
  * makes the App do. A bound value or a throttled edit waits for the edits to pause, on the test's clock; a press
  * that flushes lands it first.
  */
-export class PageView {
+export class OpenPage {
   private readonly kept = new KeptTree();
   private state: PageState;
   private readonly calls: PageCalls;
@@ -64,13 +64,13 @@ export class PageView {
   }
 
   // Opens the page and draws it once; a page that cannot draw rejects with why.
-  static async open(showing: Showing, opening: PageOpening): Promise<PageView> {
-    const view = new PageView(showing, { platform: 'web', ...opening });
+  static async open(showing: Showing, opening: PageOpening): Promise<OpenPage> {
+    const page = new OpenPage(showing, { platform: 'web', ...opening });
 
-    await view.draw();
-    view.requireDrawn();
+    await page.draw();
+    page.requireDrawn();
 
-    return view;
+    return page;
   }
 
   get path(): string {
@@ -121,8 +121,8 @@ export class PageView {
     this.kept.keep(await this.showing.server.draw(request, this.opening));
   }
 
-  // `onPress` on the node `match` names; the view showing after it, a new one when it navigates.
-  press(match: NodeMatch): Promise<PageView> {
+  // `onPress` on the node `match` names; the page showing after it, a new one when it navigates.
+  press(match: NodeMatch): Promise<OpenPage> {
     return this.act(match, 'onPress');
   }
 
@@ -140,7 +140,7 @@ export class PageView {
     match: NodeMatch,
     event: string,
     value?: WireJson,
-  ): Promise<PageView> {
+  ): Promise<OpenPage> {
     const { node, key } = findEntry(this.tree, match);
     const handler = handlerOf(node, event);
 
@@ -158,17 +158,17 @@ export class PageView {
   }
 
   // A navigation opens the page it names for the same Project, Session and App; other Actions stay in the App.
-  private async actOn(action: Action): Promise<PageView> {
+  private async actOn(action: Action): Promise<OpenPage> {
     if (action.action !== 'navigate') return this;
 
-    return PageView.open(this.showing, {
+    return OpenPage.open(this.showing, {
       ...this.opening,
       path: action.path,
       pageState: {},
     });
   }
 
-  // The App's Page calls, on this view's tree; a failed Operation rejects the press with why.
+  // The App's Page calls, on this page's tree; a failed Operation rejects the press with why.
   private ports(): PageCallsPorts {
     return {
       scope: caller(this.opening),

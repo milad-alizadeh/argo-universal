@@ -82,7 +82,7 @@ export class LoaderPages {
     this.marks.close();
   }
 
-  // The Loader reads, and the Render draws, for the Connection that asked, as a view's opening does.
+  // The Loader reads, and the Render draws, for the Connection that asked.
   public async draw(
     { pluginId, known, ...at }: DrawRequest,
     asking: Asking,

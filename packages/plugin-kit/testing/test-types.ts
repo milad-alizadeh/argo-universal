@@ -28,8 +28,8 @@ import type {
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
+import type { OpenPage } from './open-page';
 import type { PageOpening } from './page-server';
-import type { PageView } from './page-view';
 import type { TestProjects } from './test-projects';
 
 export interface PluginTestOptions {
@@ -96,11 +96,12 @@ export interface PluginTest {
       serverDevice?: boolean;
     }) => Promise<DrawAnswer>;
     // The page as an App shows it: its tree, and presses that act on what the tree's events hold.
-    open: (opening: PageOpening) => Promise<PageView>;
+    open: (opening: PageOpening) => Promise<OpenPage>;
     run: (input: {
       operation: string;
       args: PluginOperationParams;
       projectId?: string;
+      sessionId?: string;
       serverDevice?: boolean;
     }) => Promise<PageRunAnswer>;
     // The stale marks every connected App is sent, after an Operation run or the Plugin's `argo.changed()`.

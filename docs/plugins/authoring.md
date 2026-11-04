@@ -156,16 +156,16 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 
 | API | Behavior |
 | --- | --- |
-| `pages.open({ path, projectId?, sessionId?, pageState?, platform? })` | Draws a page once, as the App on `platform` (web by default) asks for it, and returns its view. A page that cannot draw rejects with why. |
-| `view.tree`, `view.pageState`, `view.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
-| `view.find(match)` | Returns the node a text or a node test matches, or throws. |
-| `view.press(match)` | Acts on the node's `onPress` as the App does and returns the view showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the view's Project and Session, then the page draws again. A press that flushes, such as a Button's or an Action's, first lands every edit still waiting for its pause. An Operation that fails rejects the press with why. |
-| `view.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value, or a throttled edit such as a TextField's `onChangeText`, waits for the edits to pause, as in the App: `clock.advance(300)` lands it. |
-| `view.loadMore()` | Draws one more page of the page's paged list. |
-| `view.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
+| `pages.open({ path, projectId?, sessionId?, pageState?, platform? })` | Draws a page once, as the App on `platform` (web by default) asks for it, and returns its page. A page that cannot draw rejects with why. |
+| `page.tree`, `page.pageState`, `page.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
+| `page.find(match)` | Returns the node a text or a node test matches, or throws. |
+| `page.press(match)` | Acts on the node's `onPress` as the App does and returns the page showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the page's Project and Session, then the page draws again. A press that flushes, such as a Button's or an Action's, first lands every edit still waiting for its pause. An Operation that fails rejects the press with why. |
+| `page.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value, or a throttled edit such as a TextField's `onChangeText`, waits for the edits to pause, as in the App: `clock.advance(300)` lands it. |
+| `page.loadMore()` | Draws one more page of the page's paged list. |
+| `page.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
 | `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
-| `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, Hook deadlines, and the page views' edit pauses together. |
+| `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, Hook deadlines, and the open pages' edit pauses together. |
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
 | `session` | Provides test Session, Project, and Agent identifiers. |
@@ -173,7 +173,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
 `find` matches a label, title, text, text content, or accessible label.
-While an Operation runs, `view.tree` shows its `optimistic` props, as the App does; the page drawn after it answers replaces them, and a failure puts the tree back.
+While an Operation runs, `page.tree` shows its `optimistic` props, as the App does; the page drawn after it answers replaces them, and a failure puts the tree back.
 The chosen platform sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
 A Workbench card or a Session header action opens a page for a Session; open it with that `sessionId`, as the App does. For an items Slot, such as Project details, ask with the same input the Server receives:
@@ -380,7 +380,7 @@ An Operation that appends a line then calls `wake()`. In tests, `kit.pages.live(
 Declare `contributes.background: { path, interval }` in `plugin.json`, and define that path as a Loader page with `argo.pages.define`.
 On each interval Argo activates the Plugin and runs that page's `load` alone, once per registered Project, with `projectId` in its context. Nothing renders and no tree is kept.
 There is no Project-less pass. Each Plugin and Project pair owns an independent timer, with a five-minute minimum interval.
-Adding a Project starts its pass. Removing one releases its views, passes, and entries.
+Adding a Project starts its pass. Removing one releases its pages, passes, and entries.
 
 A pass ends when `load` settles, or after sixty seconds. A `load` that throws fails that pass only; the next interval runs it again.
 The optional fetch `account` field borrows the Project’s Account for that host.
@@ -390,7 +390,7 @@ A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id it
 A background `load` runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
 Nav badges are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
 
-A drawing throw closes only the failed view. Other pages, Slots, Hooks, and background passes continue.
+A drawing throw closes only the failed page. Other pages, Slots, Hooks, and background passes continue.
 The failure subscription records one non-fatal drawing failure per Plugin.
 
 ## Hooks

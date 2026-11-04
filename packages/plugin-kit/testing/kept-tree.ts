@@ -6,7 +6,7 @@ import {
 import type { WireNode } from '@repo/contracts/plugins/wire';
 
 /*
- * What a page view keeps of its address, as the App keeps it: the tree last drawn and its hash, how many pages
+ * What an open page keeps of its address, as the App keeps it: the tree last drawn and its hash, how many pages
  * of its list it shows, why the last draw failed, and an Operation's optimistic patch, shown until the next draw
  * or until it is put back.
  */

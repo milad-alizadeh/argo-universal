@@ -12,7 +12,7 @@ export type BackgroundEntry = {
 
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
   draws: PluginDraws;
-  // A removed Project's views and kept answers end with its passes.
+  // A removed Project's kept answers end with its passes.
   projectRemoved: (projectId: string) => void;
 };
 

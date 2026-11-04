@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import {
   Action,
   startPluginTest,
-  type PageView,
+  type OpenPage,
   type PluginTest,
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
@@ -25,21 +25,21 @@ const trackerName = 'GitHub Issues';
 // The Tracker choice page, which a Project details row drills into (ADR-0046).
 const trackerPath = '/tracker';
 
-export type { PageView } from '@argo/plugin-kit/testing';
+export type { OpenPage } from '@argo/plugin-kit/testing';
 
 // The Tracker choice page for one Project, as the row that drilled in opens it.
 export const trackerPage = (
   test: PluginTest,
   projectId = project.id,
-): Promise<PageView> => test.pages.open({ path: trackerPath, projectId });
+): Promise<OpenPage> => test.pages.open({ path: trackerPath, projectId });
 
 // A check marks the chosen row.
-export const chosen = (view: PageView): boolean =>
-  view.findText(trackerName)?.node.props.selected === true;
+export const chosen = (page: OpenPage): boolean =>
+  page.findText(trackerName)?.node.props.selected === true;
 
-export async function chooseGithub(view: PageView): Promise<void> {
-  await view.press(trackerName);
-  expect(chosen(view)).toBe(true);
+export async function chooseGithub(page: OpenPage): Promise<void> {
+  await page.press(trackerName);
+  expect(chosen(page)).toBe(true);
 }
 
 export async function tracker(projects = [project]): Promise<PluginTest> {
@@ -58,7 +58,7 @@ export async function tracker(projects = [project]): Promise<PluginTest> {
 
 export async function issuesRoot(): Promise<{
   test: PluginTest;
-  root: PageView;
+  root: OpenPage;
 }> {
   const test = await tracker();
 
@@ -68,8 +68,8 @@ export async function issuesRoot(): Promise<{
 }
 
 // The page path a row's `navigate` Action names.
-export function linkedPage(view: PageView, text: string): string {
-  const action = Action.parse(view.findText(text)?.node.props.onPress);
+export function linkedPage(page: OpenPage, text: string): string {
+  const action = Action.parse(page.findText(text)?.node.props.onPress);
 
   if (action.action !== 'navigate')
     throw new Error(`${text} does not navigate`);
@@ -78,7 +78,7 @@ export function linkedPage(view: PageView, text: string): string {
 }
 
 // The filter list, then the Issue a row of it opens, as a person presses them.
-export async function openIssue(title: string): Promise<PageView> {
+export async function openIssue(title: string): Promise<OpenPage> {
   const { root } = await issuesRoot();
   const list = await root.press('Open');
   const page = await list.press(title);

@@ -7,10 +7,10 @@ export function requireSignal(signal: AbortSignal | undefined): AbortSignal {
   return signal;
 }
 
-export const viewConnection = (ctx: RpcContext): RpcConnection =>
-  liveConnection(ctx.connection, 'Plugin views require a live App Connection');
+export const appConnection = (ctx: RpcContext): RpcConnection =>
+  liveConnection(ctx.connection, 'Plugin pages require a live App Connection');
 
-// A view or a live page lives while both the App Connection and its subscription are open.
+// A live page lives while both the App Connection and its subscription are open.
 export function connectionOf({
   ctx,
   signal,
@@ -18,7 +18,7 @@ export function connectionOf({
   ctx: RpcContext;
   signal?: AbortSignal;
 }): RpcConnection {
-  const live = viewConnection(ctx);
+  const live = appConnection(ctx);
 
   return {
     ...live,

@@ -8,7 +8,7 @@ import {
   project,
   tracker,
   trackerPage,
-  type PageView,
+  type OpenPage,
 } from './journey-fixture';
 
 type Test = Awaited<ReturnType<typeof tracker>>;
@@ -30,7 +30,7 @@ async function openList(originUrl: string | null): Promise<Test> {
   return test;
 }
 
-async function openFilter(test: Test): Promise<PageView> {
+async function openFilter(test: Test): Promise<OpenPage> {
   const root = await test.pages.open({ path: '/' });
 
   return root.press('Open');

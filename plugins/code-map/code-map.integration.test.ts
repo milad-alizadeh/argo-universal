@@ -2,12 +2,10 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startPluginTest, type PageView } from '@argo/plugin-kit/testing';
+import { startPluginTest, type OpenPage } from '@argo/plugin-kit/testing';
 import { expect, it, onTestFinished } from 'vitest';
 
-type View = PageView;
-
-type Node = View['tree'];
+type Node = OpenPage['tree'];
 
 // The Engine's limit on a drawn page, in bytes.
 const pageBytes = 1_047_552;
@@ -26,7 +24,7 @@ const app = 'src/app.ts';
 
 const rectType = 'Canvas.Rect';
 
-async function codeMap(marker?: string): Promise<View> {
+async function codeMap(marker?: string): Promise<OpenPage> {
   const folder = await projectFolder(marker);
 
   const test = await startPluginTest({
@@ -55,26 +53,26 @@ function descendants(node: Node, type: string): Node[] {
   return node.type === type ? [node, ...children] : children;
 }
 
-const nodes = (view: View, type: string): Node[] =>
-  descendants(view.tree, type);
+const nodes = (page: OpenPage, type: string): Node[] =>
+  descendants(page.tree, type);
 
-const canvas = (view: View): Node | undefined => nodes(view, 'Canvas')[0];
+const canvas = (page: OpenPage): Node | undefined => nodes(page, 'Canvas')[0];
 
 // The App outlines the rectangle whose key the Canvas names.
-function selectedRect(view: View): Node | undefined {
-  const key = canvas(view)?.props.selectedKey;
+function selectedRect(page: OpenPage): Node | undefined {
+  const key = canvas(page)?.props.selectedKey;
 
-  return nodes(view, rectType).find((rect) => rect.key === key);
+  return nodes(page, rectType).find((rect) => rect.key === key);
 }
 
-const field = (view: View, title: string): Node | undefined =>
-  view.findText(title)?.node;
+const field = (page: OpenPage, title: string): Node | undefined =>
+  page.findText(title)?.node;
 
 it('draws each text file of the Project, named by its path', async () => {
-  const view = await codeMap();
-  expect(canvas(view)).toBeDefined();
+  const page = await codeMap();
+  expect(canvas(page)).toBeDefined();
 
-  expect(nodes(view, rectType).map((rect) => rect.props.label)).toEqual([
+  expect(nodes(page, rectType).map((rect) => rect.props.label)).toEqual([
     'README.md',
     app,
     'src/lib/parse.ts',
@@ -82,30 +80,30 @@ it('draws each text file of the Project, named by its path', async () => {
 });
 
 it('selects a file and shows what the map measured', async () => {
-  const view = await codeMap();
-  await view.press(
+  const page = await codeMap();
+  await page.press(
     (node) => node.type === rectType && node.props.label === app,
   );
 
-  expect(selectedRect(view)).toMatchObject({ props: { label: app } });
-  expect(field(view, 'Lines')).toMatchObject({ props: { text: '120' } });
-  expect(field(view, 'Branching lines')).toMatchObject({
+  expect(selectedRect(page)).toMatchObject({ props: { label: app } });
+  expect(field(page, 'Lines')).toMatchObject({ props: { text: '120' } });
+  expect(field(page, 'Branching lines')).toMatchObject({
     props: { text: '24' },
   });
-  expect(field(view, 'Changes')).toMatchObject({ props: { text: '2' } });
+  expect(field(page, 'Changes')).toMatchObject({ props: { text: '2' } });
 });
 
 it('says so when git cannot read the Project', async () => {
-  const view = await codeMap('broken');
+  const page = await codeMap('broken');
 
-  view.find('Could not read this Project’s files.');
-  expect(canvas(view)).toBeUndefined();
+  page.find('Could not read this Project’s files.');
+  expect(canvas(page)).toBeUndefined();
 });
 
 it('draws the largest files of a big Project within the page limit', async () => {
-  const view = await codeMap('large');
-  view.find('Showing the 2,500 largest of 3,000 files.');
+  const page = await codeMap('large');
+  page.find('Showing the 2,500 largest of 3,000 files.');
 
-  expect(nodes(view, rectType)).toHaveLength(2500);
-  expect(Buffer.byteLength(JSON.stringify(view.tree))).toBeLessThan(pageBytes);
+  expect(nodes(page, rectType)).toHaveLength(2500);
+  expect(Buffer.byteLength(JSON.stringify(page.tree))).toBeLessThan(pageBytes);
 });

@@ -30,7 +30,7 @@ export type PageOpening = {
   serverDevice?: boolean;
 };
 
-// What a page view asks of the Server, as its App asks: a draw of its address, and an Operation run.
+// What an open page asks of the Server, as its App asks: a draw of its address, and an Operation run.
 export type PageServer = {
   draw: (
     request: Omit<DrawRequest, 'pluginId'>,
@@ -41,7 +41,7 @@ export type PageServer = {
 
 export type Opened = PageOpening & TestApp;
 
-// The Project and Session a view's draws and runs are for, named only when the view has them.
+// The Project and Session an open page's draws and runs are for, named only when the page has them.
 export const caller = ({
   projectId,
   sessionId,

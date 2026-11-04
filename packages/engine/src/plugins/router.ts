@@ -21,7 +21,7 @@ import type { PluginService } from './service';
 import {
   connectionOf,
   requireSignal,
-  viewConnection,
+  appConnection,
 } from './subscription-connection';
 
 const createLifecycleRouter = routerFactory((plugins: PluginService) =>
@@ -50,7 +50,7 @@ const createRenderRouter = routerFactory((plugins: PluginService) =>
     render: publicProcedure
       .input(ReplaceableInput)
       .output(ReplaceableAnswer)
-      .query(({ input, ctx }) => plugins.render(input, viewConnection(ctx))),
+      .query(({ input, ctx }) => plugins.render(input, appConnection(ctx))),
     renderFailed: publicProcedure
       .input(RenderFailureInput)
       .mutation(({ input }) => {
