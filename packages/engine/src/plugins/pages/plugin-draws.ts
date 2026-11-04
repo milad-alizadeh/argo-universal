@@ -6,6 +6,7 @@ import {
   treeAnswer,
   type DrawAnswer,
   type DrawPacing,
+  type TreeAnswer,
 } from '@repo/contracts/plugins/page-draw';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
 import type { WireNode } from '@repo/contracts/plugins/wire';
@@ -26,6 +27,7 @@ import {
 } from './draw-calls';
 import { LiveDraws, type LiveFollow } from './live-draws';
 import { SentTrees } from './sent-trees';
+import { drawsForApp, forApp } from './wire-minimum';
 
 // A drawn tree as checked for any App to draw, `live` when its Loader yields.
 export type Drawn =
@@ -92,25 +94,43 @@ export class PluginDraws {
   /*
    * The draw's answer to an App that keeps the tree `known` names: unchanged, the rows a load more appended
    * to the tree last sent for the address, or the whole tree (ADR-0050). A Server that restarted, or a Plugin
-   * that ran again, sent no trees and answers whole ones.
+   * that ran again, sent no trees and answers whole ones. An App below the wire minimum is answered "Update
+   * Argo" (ADR-0034), and the tree it was not sent is not kept as sent.
    */
   public async answer(
     pluginId: string,
     address: DrawAt,
     known?: string,
   ): Promise<DrawAnswer> {
-    const drawn = await this.draw(pluginId, address);
+    const { log } = this;
+    const drawn = forApp(
+      { pluginId, at: address, log },
+      await this.draw(pluginId, address),
+    );
 
     if (!drawn.ok) return { kind: 'failed', error: drawn.error };
 
-    const sent = this.sent.at(pluginId, address);
-    const answer = treeAnswer(drawn.root, sent.last, known);
-
-    sent.keep(drawn.root);
+    const answer = this.treeFor(pluginId, address, { root: drawn.root, known });
 
     const pacing = this.pacingOf(pluginId, { ...drawn, path: address.path });
 
     return { ...answer, pages: drawn.pages, ...pacing };
+  }
+
+  // The tree the App is sent, as an append to the tree last sent for the address when it may be.
+  private treeFor(
+    pluginId: string,
+    address: DrawAt,
+    { root, known }: { root: WireNode; known: string | undefined },
+  ): TreeAnswer {
+    if (!drawsForApp(address)) return treeAnswer(root, undefined, known);
+
+    const sent = this.sent.at(pluginId, address);
+    const answer = treeAnswer(root, sent.last, known);
+
+    sent.keep(root);
+
+    return answer;
   }
 
   // A live page's answers for one subscription (ADR-0050).

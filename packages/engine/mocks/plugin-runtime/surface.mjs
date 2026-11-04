@@ -7,17 +7,25 @@ function frozenSurface(surface) {
   return Object.isFrozen(surface);
 }
 
-function content({ context: ctx }) {
-  return jsx(Text, {
-    children: JSON.stringify({
-      ...ctx.surface,
-      projectId: ctx.projectId,
-      sessionId: ctx.sessionId,
-      frozen: Object.isFrozen(ctx) && frozenSurface(ctx.surface),
-    }),
-  });
+// A Loader page that draws the context it was drawn for: the asking App's surface and the page's scope.
+function load({ context: ctx }) {
+  return {
+    ...ctx.surface,
+    projectId: ctx.projectId,
+    sessionId: ctx.sessionId,
+    frozen: Object.isFrozen(ctx) && frozenSurface(ctx.surface),
+  };
+}
+
+const render = (shown) => jsx(Text, { children: JSON.stringify(shown) });
+
+// A live page yields the same context once and then holds, as a log tail waits for its next line.
+async function* follow(input) {
+  yield load(input);
+  await new Promise(() => {});
 }
 
 export function register(argo) {
-  argo.pages.register('/', content);
+  argo.pages.define('/', { load, render });
+  argo.pages.define('/live', { load: follow, render });
 }

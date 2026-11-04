@@ -12,6 +12,8 @@
  * throws or takes longer than 30 seconds, the Render calls a hook or passes a function prop, or the tree
  * is invalid or too large. It never throws. Each answer carries the page's clamped `every`, and a timed
  * redraw reads again the Queries older than it; a Live page's draw answers its first value and `live`.
+ * An App below the wire minimum is answered "Update Argo" in place of the tree (ADR-0034), logged once per
+ * Plugin and path.
  *
  * `live(request, asking, signal)` follows a Live page: the first tree whole (or `unchanged`), then one
  * keyed patch a frame from the tree sent before, until the signal aborts, the Loader ends or fails, or
