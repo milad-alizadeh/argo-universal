@@ -1,8 +1,9 @@
 import { replyFailure } from '../access/capability-refusal';
 import type { PluginData, QueryOrigin } from '../data/plugin-data';
 import type { PluginHooks } from '../hooks/plugin-hooks';
-import type { PluginOperations } from '../operations';
+import type { PluginOperations, RunOrigin } from '../operations';
 import type { PluginDraws } from '../pages';
+import type { Drawing } from '../pages/draw-calls';
 import type {
   HostMessage,
   PluginReply,
@@ -113,18 +114,36 @@ function answerService(
   });
 }
 
-function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
-  if (!message.viewId)
-    return { projectId: message.projectId, serverDevice: false };
-  const view = runtime.views.dataView(message.pluginId, message.viewId);
+type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
 
-  return {
-    projectId: view.projectId,
-    serverDevice: view.opening.serverDevice === true,
-  };
+const noOrigin: ServiceOrigin = { projectId: undefined, serverDevice: false };
+
+/*
+ * A call reaches what the call it runs for reaches: a draw's Project and Server Device, or an Operation run's
+ * Project and Server Device. A draw or run that has already answered reaches neither. A call outside them
+ * reaches only the Project its Hook ran for, and never the Server Device.
+ */
+function callOrigin(runtime: RuntimeCalls, message: StateCall): ServiceOrigin {
+  const caller = { pluginId: message.pluginId, generation: message.generation };
+
+  if (message.draw !== undefined)
+    return drawOrigin(runtime.draws.drawing(caller, message.draw));
+
+  if (message.operation !== undefined)
+    return runOrigin(runtime.operations.origin(caller, message.operation));
+
+  return { projectId: message.projectId, serverDevice: false };
 }
 
-type ServiceOrigin = { projectId: string | undefined; serverDevice: boolean };
+const drawOrigin = (drawn: Drawing | undefined): ServiceOrigin =>
+  drawn
+    ? { projectId: drawn.projectId, serverDevice: drawn.serverDevice }
+    : noOrigin;
+
+const runOrigin = (origin: RunOrigin | undefined): ServiceOrigin =>
+  origin
+    ? { projectId: origin.projectId, serverDevice: origin.serverDevice }
+    : noOrigin;
 
 type DataRequest = Extract<PluginRequest, { api: 'data' }>;
 

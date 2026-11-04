@@ -168,6 +168,13 @@ export {
   type MovableSection,
 } from '@repo/contracts/kit-moves';
 
+// One service's OAuth sign-in on Argo's redirect (ADR-0036); `OAuthFlow` says what it does.
+export declare const oauthFlow: OAuthFlowPattern;
+
+export type * from '@repo/contracts/plugins/oauth-flow-api';
+
+import type { OAuthFlowPattern } from '@repo/contracts/plugins/oauth-flow-api';
+
 export type { HookNext } from '@repo/contracts/plugins/hooks';
 
 export type {

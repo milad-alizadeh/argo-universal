@@ -49,12 +49,14 @@ function outcomeOf(outcome: CallOutcome<Answered>, at: DrawAt): Outcome {
 }
 
 /*
- * The draw a Loader's read is for: its Project, the address holding the read, or none for a background
- * pass, and the interval its page is drawn again on, as clamped.
+ * The draw a Loader's call is for: its Project, whether the Connection that asked is the Server Device, the
+ * address holding its reads, or none for a background pass, and the interval its page is drawn again on,
+ * as clamped.
  */
 export type Drawing = {
   draw: number;
   projectId?: string;
+  serverDevice: boolean;
   holder?: PageAddress;
   every?: number;
 };
@@ -71,12 +73,13 @@ export function drawingOf(
   if (!at) return undefined;
 
   const { projectId } = at;
+  const serverDevice = at.serverDevice === true;
 
-  if (at.loadOnly) return { draw, projectId };
+  if (at.loadOnly) return { draw, projectId, serverDevice };
 
   const holder = addressOf(pluginId, at);
 
-  return { draw, projectId, holder, every };
+  return { draw, projectId, serverDevice, holder, every };
 }
 
 const addressOf = (

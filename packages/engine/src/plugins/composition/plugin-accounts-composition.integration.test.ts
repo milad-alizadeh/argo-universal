@@ -14,7 +14,7 @@ it(
         added: "argo.accounts.add('api.github.com', { label: 'Milad' })",
       }).replace(
         'const results = {};',
-        "argo.pages.register('/', () => null); const results = {};",
+        "argo.pages.define('/', { load: () => null, render: () => null }); const results = {};",
       ),
       {
         capabilities: [{ kind: 'fetch', host: accountHost }],

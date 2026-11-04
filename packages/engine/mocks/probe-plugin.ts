@@ -35,6 +35,7 @@ type ProbeOptions = {
   capabilities?: PluginCapability[];
   settings?: PluginSettingField[];
   accounts?: PluginManifest['contributes']['accounts'];
+  operations?: PluginManifest['contributes']['operations'];
 };
 
 export async function installed(

@@ -62,6 +62,13 @@ export class PluginOAuth {
     return exchange.lifecycle.answer;
   }
 
+  // Whether `state` names an exchange the caller's own worker generation started.
+  issued(caller: SpawnCaller, state: string): boolean {
+    const exchange = this.exchanges.get(state);
+
+    return exchange !== undefined && sameWorker(exchange, caller);
+  }
+
   release(pluginId: string): void {
     for (const [state, exchange] of this.exchanges)
       if (exchange.pluginId === pluginId) this.finish(state, null);

@@ -7,8 +7,8 @@ import type {
   SecretCall,
   StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
+import { configureCallScopes } from '../kit/call-scope';
 import { fetchResponse } from '../kit/fetch-response';
-import { configureOperationScope } from '../kit/operation-scope';
 import { createKit, type Kit } from '../kit/plugin-kit';
 import { configureViewScope } from '../kit/view-scope';
 import type { PluginRequest } from '../protocol/runtime';
@@ -28,8 +28,8 @@ declare global {
 type PluginInbox = (json: string) => void;
 
 export type PluginRealmExports = {
-  // A manifest's `background` path is a Loader page; an Account path is a registered page.
-  validate: { background: (path: string) => void; page: Kit['requirePage'] };
+  // A manifest's `background` path and each Account path are Loader pages.
+  validate: { page: Kit['requireLoaderPage'] };
   inboxes: { pages: PluginInbox; hooks: PluginInbox; accounts: PluginInbox };
   modules: Pick<Kit, 'exports' | 'jsxRuntime'>;
 };
@@ -40,7 +40,7 @@ delete globalThis.__argoBridge;
 
 if (!bridge) throw new Error('The kit runs only in a Plugin realm');
 
-if (bridge.operations) configureOperationScope(bridge.operations);
+if (bridge.scopes) configureCallScopes(bridge.scopes);
 
 if (bridge.inView) configureViewScope(bridge.inView);
 
@@ -171,7 +171,7 @@ const pluginApi: Argo = frozen({
 Object.assign(globalThis, {
   argo: pluginApi,
   __argoRealm: {
-    validate: { background: kit.requireLoaderPage, page: kit.requirePage },
+    validate: { page: kit.requireLoaderPage },
     inboxes: { pages: kit.inbox, hooks: hooks.inbox, accounts: accounts.inbox },
     modules: { exports: kit.exports, jsxRuntime: kit.jsxRuntime },
   } satisfies PluginRealmExports,

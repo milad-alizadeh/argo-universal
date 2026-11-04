@@ -427,10 +427,10 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, in-progress, signed-in, continue-on-the-Server-Device and port-in-use states, PKCE sign-in against GitHub, and the provider handler. Copy it for a new service.
+`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, waiting, signed-in, continue-on-the-Server-Device and port-in-use states, and GitHub's sign-in through the kit's OAuth flow. Copy it for a new service.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
-Register that page with `argo.pages.register` before registration completes.
+Define that page with `argo.pages.define` before registration completes; an Account's page is a Loader page.
 The host must be concrete and have an identical `fetch` Capability, including its port. A wildcard Capability does not satisfy this requirement.
 Localhost forms are refused.
 
@@ -463,19 +463,66 @@ Plugin removal also deletes its Accounts and dependent records when discovery su
 
 `argo.accounts.get(host)` returns the current Project’s Account or `null`.
 One available Account becomes the Project’s choice automatically. Multiple Accounts require an explicit choice.
-Page effects, Component event handlers, and Hooks carry their Project context across awaited calls.
+Loaders, Operation runs, and Hooks carry their Project context across awaited calls.
 A call without a Project returns no Account.
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
-A fetch Query uses the same field and the declaring view’s Project.
+A fetch Query uses the same field and the Project its page is drawn for.
 Argo checks the Grant, calls the provider, and sets its header. The borrower receives no credential value from Argo.
 The URL must name the Account’s exact host and port. A redirect away from that host drops the provider header.
 Argo removes any borrower header with the same name first. Network-reserved headers cannot provide authentication.
 First-party Plugins receive unset Grants silently until consent screens exist. A refused Grant stays refused across Server restarts.
 
-OAuth starts from a page effect or Component event handler on the Server Device.
-The Server stamps `context.serverDevice` from the Connection and independently refuses OAuth calls from other Devices.
+### The OAuth flow
+
+`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that uses OAuth's authorization code grant with PKCE, such as GitHub, Linear, GitLab or Slack. Give it the service's URLs:
+
+```tsx
+import { oauthFlow } from '@argo/plugin-kit';
+
+const signIn = oauthFlow(argo, {
+  host: 'api.linear.app',
+  authorizeUrl: 'https://linear.app/oauth/authorize',
+  tokenUrl: 'https://api.linear.app/oauth/token',
+  clientId: async () => {
+    const id = await argo.settings.get('client-id');
+
+    return typeof id === 'string' ? id : null;
+  },
+  scopes: ['read'],
+  label: (token) => linearLogin(argo, token),
+});
+
+argo.operations.register('signIn', () => signIn.start());
+argo.operations.register('cancelSignIn', () => signIn.cancel());
+argo.pages.define('/sign-in', {
+  load: () => ({ flow: signIn.state() }),
+  // Draw data.flow, with Buttons whose onPress is to.run('signIn', {}) and to.run('cancelSignIn', {}).
+  render: (data, to) => <SignIn flow={data.flow} to={to} />,
+});
+await signIn.provide();
+```
+
+- `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability; `tokenUrl`'s host needs a `fetch` Capability too.
+- `clientId` is the OAuth app's public client ID, or a function the flow calls when a sign-in starts.
+- `label` turns a token into the name of whose Account it opens, such as the login the service answers; `null` fails the sign-in.
+- `tokenPath` says where the token sits in the token endpoint's JSON when it is not `access_token`, such as `['authed_user', 'access_token']`.
+- `header` is how a borrower's request carries the token, `{ header: 'Authorization', prefix: 'Bearer' }` unless you say otherwise.
+
+`signIn.state()` is `idle`, `waiting`, `signed-in` with the Account's `label`, or `failed` with a `message`, whose `reason` is `port-in-use` when another program holds the callback port. The flow lives in the Plugin's module, so every page and every App sees the one sign-in, and it calls `argo.changed()` each time the state changes, so pages that draw it redraw.
+
+`start()` answers as soon as the browser opens, normally with `waiting`, so the Operation that calls it returns at once. The flow then waits up to five minutes for the person, exchanges the code, adds the Account and keeps its token under the Account's id. `cancel()` ends the wait; a callback from the browser tab still open is ignored. `provide()` registers the provider handler that hands borrowers the kept token.
+
+Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
+
+### `argo.oauth`
+
+The OAuth flow is built on these calls, which a Plugin can use itself for a service the flow does not fit.
+
+OAuth runs only for the Server Device: from an Operation run or a draw the Server Device asked for.
+The Server stamps `context.serverDevice` from the asking Connection and independently refuses OAuth calls for other Devices.
 The App cannot set this flag through its reported platform.
+An exchange the Plugin started on the Server Device may be awaited after the run that started it has answered, from any later call of the same worker.
 
 `argo.oauth.start()` returns `redirectUri`, `state`, `codeChallenge`, and `codeChallengeMethod`, or `null` if the listener cannot start.
 The method is always `S256`. The redirect URI is `http://127.0.0.1:51789/callback`.

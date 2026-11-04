@@ -23,15 +23,21 @@ export type OperationsPort = {
       name: string;
       params: Readonly<Record<string, string | number | boolean>>;
       caller: PluginOperationCaller;
+      serverDevice?: boolean;
     },
   ) => Promise<Answer>;
 };
 
+/*
+ * One run of a Plugin's own Operation. `serverDevice` says the Connection that asked is the Server Device,
+ * as a tap in the App there is; an Agent's `argo run` and a Hook's run leave it out.
+ */
 export type OperationRun = {
   pluginId: string;
   name: string;
   params: Json;
   caller: PluginOperationCaller;
+  serverDevice?: boolean;
 };
 
 // Every enabled Plugin's declared Operations, as the registry lists them.
@@ -56,6 +62,7 @@ export async function runDeclaredOperation(
   const answer = await port.call(input.pluginId, {
     name: input.name,
     ...checked,
+    ...(input.serverDevice && { serverDevice: true }),
   });
 
   if (!answer.ok) throw new Error(answer.error);

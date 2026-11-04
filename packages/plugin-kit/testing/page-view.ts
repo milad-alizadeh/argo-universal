@@ -113,7 +113,7 @@ export class PageView {
       ...(this.kept && { known: this.kept.hash }),
     };
 
-    this.keep(await this.server.draw(request, this.opening.platform));
+    this.keep(await this.server.draw(request, this.opening));
   }
 
   // `onPress` on the node `match` names; the view showing after it, a new one when it navigates.
@@ -145,7 +145,7 @@ export class PageView {
     return this;
   }
 
-  // A navigation opens the page it names for the same Project, Session and platform; other Actions stay in the App.
+  // A navigation opens the page it names for the same Project, Session and App; other Actions stay in the App.
   private async actOn(action: Action): Promise<PageView> {
     if (action.action !== 'navigate') return this;
 
@@ -178,7 +178,9 @@ export class PageView {
     operation,
     args,
   }: Extract<PageCall, { operation: string }>): Promise<void> {
-    await this.server.run({ operation, args, ...caller(this.opening) });
+    const run = { operation, args, ...caller(this.opening) };
+
+    await this.server.run(run, this.opening);
     await this.draw();
   }
 

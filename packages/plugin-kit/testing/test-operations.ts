@@ -1,7 +1,4 @@
-import {
-  currentPluginSurface,
-  type PluginSurface,
-} from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import {
   type Asking,
   LoaderPages,
@@ -9,7 +6,7 @@ import {
   type PluginRuntime,
   type PluginService,
 } from '@repo/engine/plugins';
-import type { PageServer } from './page-server';
+import type { PageServer, TestApp } from './page-server';
 import { PageView } from './page-view';
 import type { PluginTest } from './test-types';
 
@@ -37,16 +34,27 @@ export function testOperations(
   };
 }
 
-// A draw asks as the platform's App does.
-const appOn = (platform: PluginSurface['platform']): Asking => ({
+/*
+ * A draw or a run asks as the platform's App on a paired device does; `serverDevice` asks as the App on the
+ * Server Device, where a Plugin may sign in.
+ */
+const appOn = ({ platform, serverDevice = false }: TestApp): Asking => ({
   surface: currentPluginSurface(platform),
+  identity: serverDevice
+    ? { serverDevice: true }
+    : { serverDevice: false, deviceId: 'paired-device' },
+});
+
+// The web App, on the Server Device when the test asks for it.
+const webApp = (serverDevice?: boolean): TestApp => ({
+  platform: 'web',
+  serverDevice,
 });
 
 // The Plugin's draws and runs, as a page view asks the Server for them.
 const pageServer = (pages: LoaderPages, pluginId: string): PageServer => ({
-  draw: (request, platform) =>
-    pages.draw({ pluginId, ...request }, appOn(platform)),
-  run: (run) => pages.run({ pluginId, ...run }),
+  draw: (request, app) => pages.draw({ pluginId, ...request }, appOn(app)),
+  run: (run, app) => pages.run({ pluginId, ...run }, appOn(app)),
 });
 
 // One Server's Loader pages for the test's life, so a draw can answer against a tree it sent before.
@@ -61,25 +69,34 @@ export function testPages(
   return {
     draw: firstPages(server),
     open: (opening) => PageView.open(server, opening),
-    run: (input) => server.run(input),
+    run: pageRuns(server),
     stale: (signal) => pages.stale(signal),
     live: livePages(pages, pluginId),
   };
 }
 
+// An Operation run from a page, on the web App.
+const pageRuns =
+  (server: PageServer): PluginTest['pages']['run'] =>
+  ({ serverDevice, ...input }) =>
+    server.run(input, webApp(serverDevice));
+
 // A draw of the first page, empty Page state, on the web unless the test names a platform.
 const firstPages =
   (server: PageServer): PluginTest['pages']['draw'] =>
-  ({ platform = 'web', ...input }) =>
-    server.draw({ pageState: {}, pages: 1, ...input }, platform);
+  ({ platform = 'web', serverDevice, ...input }) =>
+    server.draw(
+      { pageState: {}, pages: 1, ...input },
+      { platform, serverDevice },
+    );
 
 // A live page followed as the web App follows it, until the signal ends it.
 const livePages =
   (pages: LoaderPages, pluginId: string): PluginTest['pages']['live'] =>
-  (input, signal) =>
+  ({ serverDevice, ...input }, signal) =>
     pages.live(
       { pluginId, pageState: {}, ...input },
-      { ...appOn('web'), signal },
+      { ...appOn(webApp(serverDevice)), signal },
     );
 
 const runInput = (input: RunInput, fallbackId: string): Run => ({

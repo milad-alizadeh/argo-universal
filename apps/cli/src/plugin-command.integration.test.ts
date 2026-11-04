@@ -115,7 +115,7 @@ it(
     expect(await run('test', githubSignIn, exampleTestLimitMs)).toMatchObject({
       code: 0,
       output: expect.stringContaining(
-        'PASS the provider is registered for the Account host with the Authorization header',
+        'PASS the Server Device draws the sign-in where it stands',
       ),
     });
   },

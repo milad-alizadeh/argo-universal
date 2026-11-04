@@ -11,25 +11,35 @@ import type {
 
 type Platform = PluginSurface['platform'];
 
-// Where a test opens a Loader page: its Page path, the Project and Session it opens for, its first Page state, and the App's platform.
+/*
+ * The App a test asks as: its platform, and whether it runs on the Server Device, where a Plugin may sign
+ * in, rather than on a paired device.
+ */
+export type TestApp = { platform: Platform; serverDevice?: boolean };
+
+/*
+ * Where a test opens a Loader page: its Page path, the Project and Session it opens for, its first Page
+ * state, and the App it opens in.
+ */
 export type PageOpening = {
   path: string;
   projectId?: string;
   sessionId?: string;
   pageState?: PageState;
   platform?: Platform;
+  serverDevice?: boolean;
 };
 
-// What a page view asks of the Server: a draw of its address, as the platform's App asks, and an Operation run.
+// What a page view asks of the Server, as its App asks: a draw of its address, and an Operation run.
 export type PageServer = {
   draw: (
     request: Omit<DrawRequest, 'pluginId'>,
-    platform: Platform,
+    app: TestApp,
   ) => Promise<DrawAnswer>;
-  run: (run: Omit<PageRun, 'pluginId'>) => Promise<PageRunAnswer>;
+  run: (run: Omit<PageRun, 'pluginId'>, app: TestApp) => Promise<PageRunAnswer>;
 };
 
-export type Opened = PageOpening & { platform: Platform };
+export type Opened = PageOpening & TestApp;
 
 // The Project and Session a view's draws and runs are for, named only when the view has them.
 export const caller = ({

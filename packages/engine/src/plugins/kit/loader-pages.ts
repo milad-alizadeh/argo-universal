@@ -6,6 +6,7 @@ import {
 } from '@repo/contracts/plugins/page-address';
 import type { QueriesApi } from '@repo/contracts/plugins/query-results';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
+import { inDraw } from './call-scope';
 import type { DataCall } from './data-subscription';
 import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
@@ -50,8 +51,11 @@ export interface LoaderPages {
   queries: QueriesApi;
   changed: () => void;
   answer: (event: LoaderEvent) => void;
-  // Throws unless a defined pattern matches the manifest's `background` path, since a pass runs only its `load`.
-  requireBackground: (path: string) => void;
+  /*
+   * Throws unless a defined pattern matches a path the manifest names, such as its `background` pass, which
+   * runs only a `load`, or a `contributes.accounts` page; `contribution` names which in the error.
+   */
+  requirePage: (path: string, contribution: string) => void;
   answering: (send: OperationSend) => OperationAnswering;
 }
 
@@ -70,7 +74,8 @@ type Pages = {
  * The Loader pages a Plugin defined, and the draws the host asks of them (ADR-0050). A draw matches the
  * path to the first pattern defined for it, runs its Loader, then its Render, and answers the tree by the
  * draw's id, or fails it with why. A live draw sends a frame for each value its Loader yields until the
- * Loader ends or the host stops it, then answers that it ended.
+ * Loader ends or the host stops it, then answers that it ended. A draw's `argo` calls, a live draw's
+ * included, run in its scope, so the Server gives them the draw's Project and Server Device.
  */
 export function loaderPages(calls: LoaderCalls): LoaderPages {
   const pages = pagesOf(calls);
@@ -87,7 +92,7 @@ export function loaderPages(calls: LoaderCalls): LoaderPages {
 
       void answer(pages, event);
     },
-    requireBackground: requiringBackground(pages.defined),
+    requirePage: requiringPage(pages.defined),
   };
 }
 
@@ -132,23 +137,23 @@ function checkedEvery(
   throw new Error(`A page's every is a whole number of ms: ${pattern}`);
 }
 
-const requiringBackground =
+const requiringPage =
   (defined: readonly Defined[]) =>
-  (path: string): void => {
+  (path: string, contribution: string): void => {
     if (
       !matchesAnyPagePath(
         defined.map(({ pattern }) => pattern),
         path,
       )
     )
-      throw new Error(`Background path ${path} is not a Loader page`);
+      throw new Error(`${contribution} path ${path} is not a Loader page`);
   };
 
 async function answer(pages: Pages, event: DrawEvent): Promise<void> {
   const stop = stoppable(pages, event);
 
   try {
-    await pages.send(await settled(pages, event, stop));
+    await pages.send(await inDraw(event.id, () => settled(pages, event, stop)));
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
 

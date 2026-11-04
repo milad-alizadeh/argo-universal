@@ -25,6 +25,22 @@
         "label": "Client ID",
         "description": "The OAuth client ID from your GitHub OAuth app, whose callback URL is http://127.0.0.1:51789/callback."
       }
+    ],
+    "operations": [
+      {
+        "name": "signIn",
+        "label": "Sign in to GitHub",
+        "description": "Opens GitHub's sign-in in the browser on the Server Device and adds the Account once the person allows it.",
+        "tier": "act",
+        "keywords": ["github", "account", "sign in"]
+      },
+      {
+        "name": "cancelSignIn",
+        "label": "Cancel GitHub sign-in",
+        "description": "Stops waiting for the GitHub sign-in in the browser.",
+        "tier": "act",
+        "keywords": ["github", "account", "sign in"]
+      }
     ]
   },
   "capabilities": [

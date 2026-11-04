@@ -115,8 +115,11 @@ export class LoaderPages {
     return this.draws.patternsOf(pluginId);
   }
 
-  // The trees the Operation changed hear of it from its stale mark, which reaches every App (ADR-0050).
-  public async run(run: PageRun): Promise<PageRunAnswer> {
+  /*
+   * The trees the Operation changed hear of it from its stale mark, which reaches every App (ADR-0050). The
+   * run is the Connection's that asked, so a tap on the Server Device may sign in.
+   */
+  public async run(run: PageRun, asking: Asking): Promise<PageRunAnswer> {
     const { pluginId, operation, args, projectId, sessionId } = run;
 
     const result = await this.operations.run({
@@ -124,6 +127,7 @@ export class LoaderPages {
       name: operation,
       params: args,
       caller: { projectId, sessionId },
+      serverDevice: askedBy(asking).serverDevice,
     });
 
     return { result };
