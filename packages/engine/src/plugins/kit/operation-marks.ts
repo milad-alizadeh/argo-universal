@@ -3,14 +3,13 @@ import type { LoaderCalls, LoaderPageSend, LoaderPages } from './loader-pages';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { swallowed } from './swallowed';
 
-// The Operations being answered, each with whether its handler said `argo.changed()`.
-type Running = Map<number, boolean>;
+// The ids of the Operations being answered.
+type Running = Set<number>;
 
 /*
  * `argo.changed()` and the Plugin's Operations mark its pages stale, and the host makes one mark per
  * write, which also makes the Plugin's kept Queries due. A change said inside an Operation's handler joins
- * the mark the host makes when that Operation answers; a failed Operation makes none, so its change is
- * sent as it answers.
+ * the mark the host makes when that Operation ends, failed or not.
  */
 export function operationMarks({
   pages: send,
@@ -19,13 +18,13 @@ export function operationMarks({
   LoaderPages,
   'changed' | 'answering'
 > {
-  const running: Running = new Map();
+  const running: Running = new Set();
 
   return {
     changed: () => {
       if (!heldFor(running, origin())) sendChanged(send);
     },
-    answering: answering(send, running),
+    answering: answering(running),
   };
 }
 
@@ -33,32 +32,22 @@ export function operationMarks({
 function heldFor(running: Running, origin: CallOrigin): boolean {
   if (!('operation' in origin)) return false;
 
-  const id = origin.operation;
-
-  if (!running.has(id)) return false;
-
-  running.set(id, true);
-
-  return true;
+  return running.has(origin.operation);
 }
 
 const sendChanged = (send: LoaderPageSend): void =>
   void send({ action: 'changed' }).catch(swallowed);
 
 const answering =
-  (pagesSend: LoaderPageSend, running: Running) =>
+  (running: Running) =>
   (send: OperationSend): OperationAnswering => ({
     during: (id, run) => {
-      running.set(id, false);
+      running.add(id);
 
       return run();
     },
     send: (call) => {
-      const changed = running.get(call.id) === true;
-
       running.delete(call.id);
-
-      if (changed && call.action === 'failed') sendChanged(pagesSend);
 
       return send(call);
     },

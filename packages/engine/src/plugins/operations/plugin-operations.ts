@@ -61,7 +61,8 @@ function answerOf(
 /*
  * The runtime side of a Plugin's own Operations (ADR-0044): one call per run, answered by the worker
  * generation it went to. A Plugin that is not running answers nothing, so the caller starts it first.
- * Each run that answers is heard, whoever ran it: what the Plugin shows may have changed (ADR-0050).
+ * Every run is heard once it ends, whoever ran it and however it ended: a handler that wrote and then threw
+ * leaves the Plugin's pages stale (ADR-0050).
  */
 export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;
@@ -78,12 +79,12 @@ export class PluginOperations {
   public async run(pluginId: string, request: Request): Promise<Answer> {
     const answer = await this.calls.call(pluginId, request);
 
-    if (answer.ok) for (const listener of this.ranListeners) listener(pluginId);
+    for (const listener of this.ranListeners) listener(pluginId);
 
     return answer;
   }
 
-  // Called after each Operation that answered; the returned function stops it.
+  // Called after each Operation run ends, failed or not; the returned function stops it.
   public onRan(listener: (pluginId: string) => void): () => void {
     this.ranListeners.add(listener);
 
