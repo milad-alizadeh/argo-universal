@@ -21,9 +21,9 @@ import {
   type ReplaceableSlotProps,
   type ReplaceableSlotViewProps,
 } from '../../lib/product/plugin-registry/replaceable-slot';
-import { useOperationRunner, useTreeCalls } from './plugin-page/use-tree-calls';
 import { slotCallsPorts, type SlotSession } from './slot-calls-ports';
 import { usePluginOpener } from './use-plugin-opener';
+import { useOperationRunner, useTreeCalls } from './use-tree-calls';
 
 const noSlots: readonly ReplaceableSlotId[] = [];
 

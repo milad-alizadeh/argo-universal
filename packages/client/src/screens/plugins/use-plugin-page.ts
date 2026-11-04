@@ -3,7 +3,7 @@ import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import type { OnPageCall } from '../../lib/product/plugin-registry';
 import type { Answer, PageAddresses, PageOpening } from './page-addresses';
 import { pageCallsPorts } from './page-calls-ports';
 import { useLivePage } from './use-live-page';

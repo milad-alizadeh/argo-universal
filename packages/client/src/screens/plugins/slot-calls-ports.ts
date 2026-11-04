@@ -2,11 +2,8 @@ import type { PageCallsPorts } from '@repo/contracts/plugins/page-calls';
 import type { ReplaceableAnswer } from '@repo/contracts/plugins/replaceable';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
-import { patchedAt } from './plugin-page/optimistic-patch';
-import {
-  operationRunFor,
-  type OperationRunner,
-} from './plugin-page/page-calls-ports';
+import { patchedAt } from './optimistic-patch';
+import { operationRunFor, type OperationRunner } from './page-calls-ports';
 
 // The Session a Feed row is in, and its Project once the Session's Feed has said which it is.
 export type SlotSession = { sessionId: string; projectId?: string };

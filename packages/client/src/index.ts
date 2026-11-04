@@ -111,7 +111,7 @@ export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
-export { useStaleMarks } from './screens/plugins/plugin-page/use-stale-marks';
+export { useStaleMarks } from './screens/plugins/use-stale-marks';
 
 export { ScreenBesideList } from '@repo/kit/primitives/scaffolds/screen';
 

@@ -4,7 +4,7 @@ import {
 } from '@repo/contracts/plugins/page-calls';
 import { useEffect, useState } from 'react';
 import { useTRPCClient } from '#features/connection';
-import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import type { OnPageCall } from '../../lib/product/plugin-registry';
 import type { OperationRunner } from './page-calls-ports';
 import { sayOperationFailed } from './say-operation-failed';
 

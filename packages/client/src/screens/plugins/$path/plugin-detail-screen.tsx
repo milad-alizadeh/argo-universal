@@ -6,13 +6,13 @@ import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
 import { showsBack } from '../plugin-back';
 import { pluginPagePath } from '../plugin-page-route';
-import { PluginPage as LoaderPage } from '../plugin-page/plugin-page';
 import { usePluginOpener } from '../use-plugin-opener';
 import {
   pluginPath,
   usePluginAt,
   type PluginSection,
 } from '../use-plugin-sections';
+import { PluginPageDetailView } from './plugin-page-detail-view';
 
 interface PluginDetailScreenProps {
   // The catch-all route's segments: Plugin id, nav id, then the page's own path.
@@ -32,7 +32,8 @@ export function PluginDetailScreen(
   const { section, root, loaded } = usePluginAt(pluginPath(props.path));
   useKeepSidebarWhileOpening();
 
-  if (section) return <PluginPage {...props} section={section} root={root} />;
+  if (section)
+    return <PluginPageDetail {...props} section={section} root={root} />;
 
   return loaded ? <PluginUnavailable /> : <PluginLoading />;
 }
@@ -47,21 +48,21 @@ function PluginLoading(): React.JSX.Element {
   );
 }
 
-type PluginPageProps = PluginDetailScreenProps & {
+type PluginPageDetailProps = PluginDetailScreenProps & {
   section: PluginSection;
   // The page is its nav item's root.
   root: boolean;
 };
 
 // A Loader page draws from its address (ADR-0050); the route is the Plugin id, the nav id, then the page's own path.
-function PluginPage(props: PluginPageProps): React.JSX.Element {
+function PluginPageDetail(props: PluginPageDetailProps): React.JSX.Element {
   const { section, projectId, sessionId } = props;
   const path = pluginPagePath(props.path);
   const opening = { pluginId: section.pluginId, path, projectId, sessionId };
   const onOpenPage = usePluginOpener()(section.pluginId);
 
   return (
-    <LoaderPage
+    <PluginPageDetailView
       {...opening}
       title={section.title}
       onOpenPage={onOpenPage}

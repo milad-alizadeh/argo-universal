@@ -10,8 +10,8 @@ import {
 } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
 import { PluginTree } from '../../../lib/product/plugin-registry';
-import { usePluginPage } from '../../plugins/plugin-page/use-plugin-page';
 import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
+import { usePluginPage } from '../../plugins/use-plugin-page';
 import {
   pluginCardKey,
   type SessionPluginCard,

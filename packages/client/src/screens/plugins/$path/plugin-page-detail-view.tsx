@@ -1,10 +1,10 @@
 import type * as React from 'react';
-import { PluginDetailView } from '../$path/plugin-detail-view';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
-import type { PageOpening } from './page-addresses';
-import { usePluginPage } from './use-plugin-page';
+import type { PageOpening } from '../page-addresses';
+import { usePluginPage } from '../use-plugin-page';
+import { PluginDetailView } from './plugin-detail-view';
 
-type PluginPageProps = PageOpening & {
+type PageViewProps = PageOpening & {
   title: string;
   onOpenPage: OpenPluginPage;
   onBack: (() => void) | null;
@@ -15,7 +15,7 @@ type PluginPageProps = PageOpening & {
  * hides how trees are kept and asked for again, and how a Component event's Page state change or
  * Operation call is carried out.
  */
-export function PluginPage(props: PluginPageProps): React.ReactNode {
+export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const page = usePluginPage(opening);
   const { onPageCall } = page;
