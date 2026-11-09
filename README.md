@@ -19,7 +19,7 @@ Node 24 and pnpm 12. `pnpm install`, then:
 | --- | --- |
 | `pnpm dev` | Starts the Server, Metro, and Electron. |
 | `pnpm --filter @repo/universal-app ios` | Builds and opens the iOS development build. |
-| `pnpm --filter @repo/universal-app android` | Builds and opens the Android development build. Run `adb reverse tcp:8081 tcp:8081` and `adb reverse tcp:7337 tcp:7337` first. |
+| `pnpm --filter @repo/universal-app android` | Builds and opens the Android development build. Run `adb reverse tcp:8337 tcp:8337` and `adb reverse tcp:7337 tcp:7337` first. |
 | `pnpm dev:storybook` | Opens the web Storybook. On device, pick "Open Storybook" in the dev menu. |
 | `pnpm verify` | Checks your change: format, lint and types on changed files, then the tests that depend on it ([hooks](docs/agents/hooks.md#verify)). |
 | `pnpm quality` | Runs sherif, oxfmt, oxlint, the comment and duplication checks, type checks, and Vitest. |
