@@ -10,7 +10,7 @@ import { z } from 'zod';
 // `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two.
 const home = resolveRuntimeDirectory();
 
-const webUrl = process.env.ARGO_EXPO_WEB_URL ?? 'http://localhost:8081';
+const webUrl = process.env.ARGO_EXPO_WEB_URL ?? 'http://localhost:8337';
 
 const timeoutMs = 300_000;
 
