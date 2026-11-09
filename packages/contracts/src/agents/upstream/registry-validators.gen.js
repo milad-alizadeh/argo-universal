@@ -243,7 +243,7 @@ var pattern0 = new RegExp("^[a-z][a-z0-9-]*$", "u");
 var pattern1 = new RegExp("^[0-9]+\\.[0-9]+\\.[0-9]+$", "u");
 var func2 = require_ucs2length().default;
 var formats0 = require_formats().fullFormats.uri;
-var schema12 = { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/binaryTarget" }, "propertyNames": { "enum": ["darwin-aarch64", "darwin-x86_64", "linux-aarch64", "linux-x86_64", "windows-aarch64", "windows-x86_64"] } };
+var schema12 = { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/binaryTarget" }, "propertyNames": { "enum": ["darwin-aarch64", "darwin-x86_64", "linux-aarch64", "linux-aarch64-musl", "linux-x86_64", "linux-x86_64-musl", "windows-aarch64", "windows-x86_64"] } };
 var pattern2 = new RegExp("^[a-fA-F0-9]{64}$", "u");
 function validate11(data, { instancePath = "", parentData, parentDataProperty, rootData = data } = {}) {
   let vErrors = null;
@@ -256,7 +256,7 @@ function validate11(data, { instancePath = "", parentData, parentDataProperty, r
       } else {
         for (const key0 in data) {
           const _errs1 = errors;
-          if (!(key0 === "darwin-aarch64" || key0 === "darwin-x86_64" || key0 === "linux-aarch64" || key0 === "linux-x86_64" || key0 === "windows-aarch64" || key0 === "windows-x86_64")) {
+          if (!(key0 === "darwin-aarch64" || key0 === "darwin-x86_64" || key0 === "linux-aarch64" || key0 === "linux-aarch64-musl" || key0 === "linux-x86_64" || key0 === "linux-x86_64-musl" || key0 === "windows-aarch64" || key0 === "windows-x86_64")) {
             const err0 = { instancePath, schemaPath: "#/propertyNames/enum", keyword: "enum", params: { allowedValues: schema12.propertyNames.enum }, message: "must be equal to one of the allowed values", propertyName: key0 };
             if (vErrors === null) {
               vErrors = [err0];

@@ -4,9 +4,9 @@ import { z } from 'zod';
 import registrySchema from '../../src/agents/upstream/registry.schema.json' with { type: 'json' };
 
 const producerDigest =
-  'ac3e7008ccccdb42852bc9e3780d46078cfaf9e0f92c39d59427d3294eb12207';
+  '9ae9dfefd51f837848282c0c085b8823973d1aa4c2326f4501dea7e42fbedd2d';
 
-const producerCommit = '33a1a101ef68ab20a97624ac89d4b977eeac0daf';
+const producerCommit = '2d9e3f082c49182fb7abd3b9f8c545c9b32c6db2';
 
 const producerUrl = new URL('./upstream/build_registry.py', import.meta.url);
 
