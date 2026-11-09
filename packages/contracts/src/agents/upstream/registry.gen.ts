@@ -1,4 +1,4 @@
-/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */
+/* Generated from ACP Registry 2d9e3f082c49182fb7abd3b9f8c545c9b32c6db2 schema and published extensions literal by json-schema-to-typescript 16.0.0. */
 
 /**
  * Schema for the aggregated ACP agent registry index
