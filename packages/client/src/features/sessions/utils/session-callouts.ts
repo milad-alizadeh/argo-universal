@@ -46,18 +46,21 @@ export interface TurnAnswers extends Pick<TurnSignIn, 'authenticating'> {
   onAuthenticate: (turnEnd: string) => void;
 }
 
-// Authenticate on an `auth_required` Turn's card swaps the card for the sign-in.
+/*
+ * Authenticate on an `auth_required` Turn's card swaps the card for the sign-in. A Turn that ends
+ * `auth_required` while that sign-in runs keeps it on show, so its finish answers the newer Turn.
+ */
 export const turnCallout = (
   problem: Problem<'turn'>,
   answers: TurnAnswers,
 ): SessionCalloutProps =>
-  problem.id === answers.authenticating
-    ? answers.signIn
-    : {
+  answers.authenticating === undefined
+    ? {
         kind: 'auth-required',
         description: problem.description,
         onAuthenticate: () => answers.onAuthenticate(problem.id),
-      };
+      }
+    : answers.signIn;
 
 const refusedForSignIn = (problem: SessionProblem | undefined): boolean =>
   problem?.type === 'open' && problem.error.type === 'auth-required';
@@ -65,9 +68,9 @@ const refusedForSignIn = (problem: SessionProblem | undefined): boolean =>
 const turnSigningIn = (
   problem: SessionProblem | undefined,
   authenticating: string | undefined,
-): boolean => problem?.type === 'turn' && problem.id === authenticating;
+): boolean => problem?.type === 'turn' && authenticating !== undefined;
 
-// The sign-in a problem asks for: a refused open, or the `auth_required` Turn whose Authenticate was pressed.
+// The sign-in a problem asks for: a refused open, or an `auth_required` Turn while a Turn's sign-in runs.
 export const signsIn = (
   problem: SessionProblem | undefined,
   authenticating?: string,
