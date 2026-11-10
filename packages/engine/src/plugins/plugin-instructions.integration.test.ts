@@ -28,7 +28,7 @@ it('drops only the Plugin whose instructions cannot be read', async () => {
       pluginSettings: {
         enabled: () => true,
         setEnabled: () => Promise.resolve(),
-        values: () => Promise.resolve({}),
+        values: () => Promise.resolve({ values: {}, secretsSet: [] }),
         change: () => Promise.resolve(),
       },
     },
