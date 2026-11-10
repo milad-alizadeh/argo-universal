@@ -31,3 +31,39 @@ export function newestShellOutput(
 
   return received.after > visible.after ? received : visible;
 }
+
+export interface ShellOutputStore {
+  current: () => ShellOutputBuffer | undefined;
+  subscribe: (listener: () => void) => () => void;
+  receive: (received: ShellOutputBuffer) => void;
+}
+
+interface StoreState {
+  shown?: ShellOutputBuffer;
+  listeners: Set<() => void>;
+}
+
+function receiveInto(state: StoreState, received: ShellOutputBuffer): void {
+  const next = newestShellOutput(state.shown, received);
+
+  if (next === state.shown) return;
+
+  state.shown = next;
+
+  for (const listener of state.listeners) listener();
+}
+
+// Holds the newest output for its listeners, so a chunk re-renders the output view and not the Session page.
+export function createShellOutputStore(): ShellOutputStore {
+  const state: StoreState = { listeners: new Set() };
+
+  return {
+    current: () => state.shown,
+    subscribe: (listener) => {
+      state.listeners.add(listener);
+
+      return () => state.listeners.delete(listener);
+    },
+    receive: (received) => receiveInto(state, received),
+  };
+}

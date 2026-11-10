@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shellOutputLines } from './shell-output-lines';
+import { shellOutputLines } from './shell-output-read';
 
 const escape = '\u001B';
 

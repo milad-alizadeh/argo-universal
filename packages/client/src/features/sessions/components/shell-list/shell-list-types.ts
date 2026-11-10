@@ -10,6 +10,12 @@ export interface ShellOutputText {
   droppedLines?: number;
 }
 
+// Output that arrives outside React: only the view that draws it re-renders, not whoever holds the subscription.
+export interface ShellOutputSource {
+  current: () => ShellOutputText | undefined;
+  subscribe: (listener: () => void) => () => void;
+}
+
 export interface ShellListProps {
   shells: ShellEntry[];
   onSelect?: (shell: ShellEntry) => void;
@@ -21,6 +27,8 @@ export interface ShellListProps {
 export interface ShellViewProps extends ShellListProps {
   // The open Shell's output; the caller loads it when `onSelect` names the Shell.
   output?: ShellOutputText;
+  // The open Shell's output as it arrives; when given, it wins over `output`.
+  outputSource?: ShellOutputSource;
   onStop: (shell: ShellEntry) => void;
   onDeselect?: () => void;
   // The Background Task the caller has open, as when a Workbench card row picked it; absent, the view keeps its own.
