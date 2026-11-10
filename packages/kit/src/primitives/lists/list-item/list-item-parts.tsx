@@ -21,7 +21,8 @@ export function hasLeading(
 
 /*
  * Paper: a menu row's icon slot is 20px and sizes its icon with the menu role, a sidebar row's and a compact row's
- * is 16 wide on its title's 20 line; other rows keep the row icon slot.
+ * is 16 wide on its title's 20 line; other rows keep the row icon slot. A tree's rail runs from the middle of the row
+ * and sidebar slots (list-item-tree-lanes.ts).
  */
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',

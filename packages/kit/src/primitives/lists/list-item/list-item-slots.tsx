@@ -13,11 +13,12 @@ import { hasBadge, ItemBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
 import { CompactContent, ItemContent, trailsTitle } from './list-item-content';
-import { Accessory, Control, hasLeading, Leading } from './list-item-parts';
+import { Accessory, Control, Leading } from './list-item-parts';
 import { InertLane } from './list-item-pass-through';
 import type { DrawingProps } from './list-item-press-props';
 import { Trailing } from './list-item-trailing';
 import { TreeLane } from './list-item-tree';
+import type { TreeLayout } from './list-item-tree-lanes';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
 export function ItemContentSlots(props: DrawingProps): ReactElement {
@@ -34,7 +35,7 @@ function RowContentSlots(props: DrawingProps): ReactElement {
   return (
     <TextClassContext value={undefined}>
       <InertLane>{props.choice}</InertLane>
-      <RowTreeLane props={props} compact={compact} />
+      {compact ? null : <TreeLane row={props} layout={regularTree(props)} />}
       <Leading {...props} />
       <RowContent props={props} compact={compact} />
       <RowTrailing props={props} compact={compact} />
@@ -44,19 +45,9 @@ function RowContentSlots(props: DrawingProps): ReactElement {
   );
 }
 
-type RowProps = { props: DrawingProps; compact: boolean };
-
-// A regular row draws its tree lane before its leading mark, against its own lanes.
-function RowTreeLane({ props, compact }: RowProps): ReactNode {
-  if (compact) return null;
-
-  const regular = {
-    sidebar: props.sidebar === true,
-    leading: hasLeading(props),
-  };
-
-  return <TreeLane title={props.title} regular={regular} />;
-}
+// A regular row's tree is drawn in its own row's layout: a sidebar row's lanes are narrower.
+const regularTree = (props: DrawingProps): TreeLayout =>
+  props.sidebar ? 'sidebar' : 'row';
 
 // A regular row's trailing mark joins its title when the title trails; otherwise it has its own lane.
 function RowTrailing({

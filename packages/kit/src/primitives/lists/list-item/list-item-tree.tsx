@@ -3,91 +3,60 @@ import { View } from 'react-native';
 import { useListLook } from '../../../list-look-context';
 import { useTreeRow, type TreeRow } from '../../../list-tree';
 import { cn } from '../../../utils';
-import { FoldButton, type FoldProps } from './list-item-tree-fold';
-import { RegularLanes, type RegularRow } from './list-item-tree-regular';
+import { hasLeading } from './list-item-parts';
+import type { ListItemProps } from './list-item-props';
+import { OwnLane } from './list-item-tree-fold';
+import {
+  treeLanes,
+  type InLanes,
+  type TreeLayout,
+} from './list-item-tree-lanes';
 
-/*
- * Paper "Issue row": each level of the tree is a 16 lane. A rail is a 1px line 7 in from its lane's start, in the
- * border colour; a child's lane under its parent's chevron carries its rail and a stub across to its own lane, and a
- * last child's rail ends in an elbow there. The rail's box is 8 wide, so its right border lands on that line.
- */
-const lane = 'relative w-4 shrink-0';
-
-const rail = 'absolute left-0 w-2 border-r border-border';
-
-const across = 'absolute top-1/2 right-0 h-px bg-border';
+// A rail starts at its lane's edge.
+const railStart = 'absolute left-0';
 
 // An ancestor's rail that runs on past this row to a later sibling of the row's own branch.
-function ThroughLane({ runs }: { runs: boolean }): ReactElement {
+function ThroughLane({
+  runs,
+  lanes,
+}: InLanes<{ runs: boolean }>): ReactElement {
   return (
-    <View pointerEvents="none" className={lane}>
-      {runs ? <View className={cn(rail, 'inset-y-0')} /> : null}
-    </View>
-  );
-}
-
-// The parent's rail beside this row, with a stub across to the row's own lane; a last child's ends there.
-function ParentLane({ last }: { last: boolean }): ReactElement {
-  return (
-    <View pointerEvents="none" className={lane}>
-      <View
-        className={cn(rail, 'top-0', last ? 'bottom-1/2 -mb-px' : 'bottom-0')}
-      />
-      <View className={cn(across, 'left-2')} />
-    </View>
-  );
-}
-
-// A parent's chevron folds and unfolds its children; an open parent's rail starts under it.
-function FoldLane({ parent, title }: FoldProps): ReactElement {
-  return (
-    <View pointerEvents="box-none" className={lane}>
-      {parent.open ? (
-        <View
-          pointerEvents="none"
-          className={cn(rail, 'top-1/2 bottom-0 mt-2')}
-        />
+    <View pointerEvents="none" className={lanes.lane}>
+      {runs ? (
+        <View className={cn(railStart, lanes.rail, 'inset-y-0')} />
       ) : null}
-      <FoldButton parent={parent} title={title} className="absolute inset-0" />
-    </View>
-  );
-}
-
-function OwnLane({
-  tree,
-  title,
-}: {
-  tree: TreeRow;
-  title: string;
-}): ReactElement {
-  if (tree.parent) return <FoldLane parent={tree.parent} title={title} />;
-
-  return (
-    <View pointerEvents="none" className={lane}>
-      {tree.depth > 0 ? <View className={cn(across, 'left-0')} /> : null}
     </View>
   );
 }
 
 // The rails of the row's ancestors, outermost first.
-function ThroughLanes({ through }: { through: readonly boolean[] }): ReactNode {
-  const [runs, ...inner] = through;
+function ThroughLanes(
+  props: InLanes<{ through: readonly boolean[] }>,
+): ReactNode {
+  const [runs, ...inner] = props.through;
 
   if (runs === undefined) return null;
 
   return (
     <>
-      <ThroughLane runs={runs} />
-      <ThroughLanes through={inner} />
+      <ThroughLane runs={runs} lanes={props.lanes} />
+      <ThroughLanes through={inner} lanes={props.lanes} />
     </>
   );
 }
 
-type LaneProps = {
-  title: string;
-  // Set on a regular row, which draws its tree against its own lanes; a compact row's line leaves it out.
-  regular?: RegularRow;
-};
+const parentRail = ({ last, lanes }: InLanes<{ last: boolean }>): string =>
+  cn(railStart, lanes.rail, last ? lanes.lastRail : 'inset-y-0');
+
+// The parent's rail beside this row, with a stub across towards the row; a last child's rail ends there.
+function ParentLane(props: InLanes<{ last: boolean }>): ReactElement {
+  return (
+    <View pointerEvents="none" className={props.lanes.lane}>
+      <View className={parentRail(props)} />
+      <View className={props.lanes.stub} />
+    </View>
+  );
+}
 
 // True when the row draws a chevron of its own, a button its row's press must not hold (list-item-beside-press.tsx).
 export function useFoldButton(): boolean {
@@ -97,32 +66,36 @@ export function useFoldButton(): boolean {
   return Boolean(tree?.parent && treeDrawn);
 }
 
+interface TreeLaneProps {
+  // The row, for its title, which names its chevron, and its leading mark, which a regular row's chevron sits under.
+  row: Pick<ListItemProps, 'title' | 'leading' | 'badge'>;
+  layout: TreeLayout;
+}
+
 /*
- * The row's tree lane, drawn only on a wide desktop or web window. A compact row's is its ancestors' rails, its
- * parent's, then its own lane, which holds a parent's chevron. A regular row keeps its chevron and rail under its
- * leading mark instead (list-item-tree-regular.tsx).
+ * The row's tree lane, drawn only on a wide desktop or web window: its ancestors' rails, its parent's, then its own
+ * lane, which holds a parent's chevron. It runs the row's full height, past a regular row's own padding.
  */
-export function TreeLane(props: LaneProps): ReactNode {
+export function TreeLane(props: TreeLaneProps): ReactNode {
   const tree = useTreeRow();
   const { treeDrawn: drawn } = useListLook();
 
   if (!tree || !drawn) return null;
 
-  return <Lanes tree={tree} {...props} />;
+  return <RowOfLanes tree={tree} {...props} />;
 }
 
-function Lanes({
-  tree,
-  title,
-  regular,
-}: LaneProps & { tree: TreeRow }): ReactElement {
-  if (regular) return <RegularLanes tree={tree} title={title} {...regular} />;
+const rowOfLanes = 'flex-row self-stretch';
+
+function RowOfLanes(props: TreeLaneProps & { tree: TreeRow }): ReactElement {
+  const { tree, row } = props;
+  const lanes = treeLanes(props.layout, hasLeading(row));
 
   return (
-    <View pointerEvents="box-none" className="flex-row self-stretch">
-      <ThroughLanes through={tree.through} />
-      {tree.depth > 0 ? <ParentLane last={tree.last} /> : null}
-      <OwnLane tree={tree} title={title} />
+    <View pointerEvents="box-none" className={cn(rowOfLanes, lanes.own.lanes)}>
+      <ThroughLanes through={tree.through} lanes={lanes} />
+      {tree.depth > 0 ? <ParentLane last={tree.last} lanes={lanes} /> : null}
+      <OwnLane tree={tree} title={row.title} lanes={lanes} />
     </View>
   );
 }
