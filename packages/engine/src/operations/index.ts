@@ -21,8 +21,8 @@ export function createOperationProcedures(
   return {
     ...generatedOperations(runner),
     operations: createOperationsRouter({
-      engine: new Operations(deps, runner),
-      reader: new OperationInstructions(deps),
+      operations: new Operations(deps, runner),
+      instructions: new OperationInstructions(deps, deps.plugins.plugins),
     }),
   };
 }

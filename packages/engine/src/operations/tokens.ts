@@ -1,6 +1,7 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { chmod, writeFile } from 'node:fs/promises';
 import { controlTokenPath, readControlToken } from '../server-runtime';
+import type { SessionTokens, TokenCaller } from './session-tokens';
 
 const tokenBytes = 32;
 
@@ -36,4 +37,14 @@ export function tokensMatch(expected: string, supplied: string): boolean {
   const token = Buffer.from(expected);
 
   return candidate.length === token.length && timingSafeEqual(candidate, token);
+}
+
+// Who a token belongs to: the user for the control token, else the live Session holding it, else UNAUTHORIZED.
+export function authenticate(
+  tokens: { controlToken: string; sessionTokens: SessionTokens },
+  token: string | undefined,
+): TokenCaller {
+  if (token && tokensMatch(tokens.controlToken, token)) return { kind: 'user' };
+
+  return tokens.sessionTokens.require(token);
 }

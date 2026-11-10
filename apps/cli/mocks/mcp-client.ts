@@ -10,6 +10,12 @@ import { z } from 'zod';
 
 const entry = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
 
+const launcherErrors = new WeakMap<Client, string[]>();
+
+// What `argo mcp` has written to standard error so far.
+export const mcpStderr = (client: Client): string =>
+  (launcherErrors.get(client) ?? []).join('');
+
 export async function connectMcp(
   home: string,
   token?: string,
@@ -23,6 +29,9 @@ export async function connectMcp(
     stderr: 'pipe',
   });
 
+  const errors: string[] = [];
+  launcherErrors.set(client, errors);
+  transport.stderr?.on('data', (chunk: Buffer) => errors.push(String(chunk)));
   onTestFinished(() => client.close());
   await client.connect(transport);
 

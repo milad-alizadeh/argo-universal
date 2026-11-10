@@ -54,17 +54,17 @@ const waitingRouter = routerFactory((engine: Operations) =>
   }),
 );
 
-type OperationsEngine = {
-  engine: Operations;
-  reader: OperationInstructions;
+type OperationsRouterInput = {
+  operations: Operations;
+  instructions: OperationInstructions;
 };
 
 export const createOperationsRouter = routerFactory(
-  ({ engine, reader }: OperationsEngine) =>
+  ({ operations, instructions }: OperationsRouterInput) =>
     mergeRouters(
-      discoveryRouter(engine),
-      instructionsRouter(reader),
-      executionRouter(engine),
-      waitingRouter(engine),
+      discoveryRouter(operations),
+      instructionsRouter(instructions),
+      executionRouter(operations),
+      waitingRouter(operations),
     ),
 );

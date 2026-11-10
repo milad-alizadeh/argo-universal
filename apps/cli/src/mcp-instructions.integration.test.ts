@@ -4,8 +4,8 @@ import {
   createRuntimePlugins,
   shippedFolder,
 } from '@repo/engine/mocks/runtime-plugins';
-import { expect, it } from 'vitest';
-import { connectMcp } from '../mocks/mcp-client';
+import { expect, it, vi } from 'vitest';
+import { connectMcp, mcpStderr } from '../mocks/mcp-client';
 import { startCliHost } from '../mocks/operations-cli';
 
 const discoveryLine =
@@ -107,4 +107,7 @@ it('keeps the discovery line when a bad token cannot read Plugin instructions', 
   const client = await connectMcp(host.home, 'revoked-session-token');
 
   expect(client.getInstructions()).toBe(discoveryLine);
+  await vi.waitFor(() =>
+    expect(mcpStderr(client)).toContain('Plugin instructions are unavailable'),
+  );
 }, 30_000);

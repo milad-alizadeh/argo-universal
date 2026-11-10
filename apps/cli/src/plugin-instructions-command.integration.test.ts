@@ -1,12 +1,28 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PluginManifest } from '@repo/contracts/plugins';
 import { pluginInstructionsLimit } from '@repo/contracts/plugins/manifest-fields';
+import { readPluginManifest } from '@repo/engine/plugins';
 import { expect, it } from 'vitest';
 import { fixture, manifestFile, readManifest, run } from '../mocks/plugin-cli';
 
 const instructionsFile = 'instructions.md';
+
+it('validate accepts a valid Plugin instructions file', async () => {
+  const directory = await fixture('export function register() {}');
+  const manifest = await readManifest(directory);
+
+  await writeFile(
+    join(directory, manifestFile),
+    JSON.stringify({
+      ...manifest,
+      contributes: { ...manifest.contributes, instructions: instructionsFile },
+    }),
+  );
+  await writeFile(join(directory, instructionsFile), 'Use the Operation.');
+
+  expect(await run('validate', directory)).toMatchObject({ code: 0 });
+}, 30_000);
 
 it.each([
   [undefined, 'instructions file instructions.md is missing'],
@@ -43,9 +59,7 @@ const issueTracker = fileURLToPath(
 );
 
 it('ships the Issue tracker with Plugin instructions under the cap', async () => {
-  const manifest = PluginManifest.parse(
-    JSON.parse(await readFile(join(issueTracker, manifestFile), 'utf8')),
-  );
+  const manifest = await readPluginManifest(issueTracker, '0.0.1');
 
   const file = manifest.contributes.instructions;
 

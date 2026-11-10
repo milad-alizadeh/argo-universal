@@ -44,6 +44,12 @@ it('accepts Plugin instructions in a file beside the manifest', async () => {
   expect(manifest.contributes.instructions).toBe(instructionsFile);
 });
 
+it('measures the trimmed text the Server serves', async () => {
+  const folder = await pluginFolder(`\n${'x'.repeat(instructionsCap)}\n\n`);
+
+  await expect(readManifest(folder, '1.2.3')).resolves.toBeDefined();
+});
+
 it('refuses Plugin instructions whose file is missing', async () => {
   await expect(readManifest(await pluginFolder(), '1.2.3')).rejects.toThrow(
     'instructions file instructions.md is missing',

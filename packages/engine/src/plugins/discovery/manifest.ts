@@ -105,7 +105,7 @@ function requireWithinCap(file: string, text: string | null): void {
   if (text === null)
     throw instructionsError(`instructions file ${file} is missing`);
 
-  if (text.length <= pluginInstructionsLimit) return;
+  if (text.trim().length <= pluginInstructionsLimit) return;
   throw instructionsError(
     `instructions file ${file} is over ${pluginInstructionsLimit} characters`,
   );
