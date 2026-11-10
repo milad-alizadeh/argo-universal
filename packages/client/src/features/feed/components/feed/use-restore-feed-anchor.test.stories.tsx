@@ -42,7 +42,7 @@ function RestoringFeed(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Feed/RestoreFeedAnchor',
+  title: 'Tests/Feed/UseRestoreFeedAnchor',
   component: RestoringFeed,
   tags: ['!autodocs'],
 } satisfies Meta<typeof RestoringFeed>;
