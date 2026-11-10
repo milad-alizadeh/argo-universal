@@ -50,10 +50,10 @@ it('follows the discovery line with a Plugin prose under its name', async () => 
 it('orders Plugin prose by Plugin id', async () => {
   expect(
     await instructionsWith([
-      shipped('zeta', 'Zeta', 'Last.'),
-      shipped('alpha', 'Alpha', 'First.'),
+      shipped('zeta', 'Alpha', 'Last.'),
+      shipped('alpha', 'Zulu', 'First.'),
     ]),
-  ).toBe(`${discoveryLine}\n\n## Alpha\n\nFirst.\n\n## Zeta\n\nLast.`);
+  ).toBe(`${discoveryLine}\n\n## Zulu\n\nFirst.\n\n## Alpha\n\nLast.`);
 }, 30_000);
 
 it('leaves a disabled Plugin out', async () => {
@@ -63,4 +63,21 @@ it('leaves a disabled Plugin out', async () => {
       ['off'],
     ),
   ).toBe(`${discoveryLine}\n\n## On\n\nShown.`);
+}, 30_000);
+
+it('leaves out a Plugin whose instructions are only whitespace', async () => {
+  expect(await instructionsWith([shipped('blank', 'Blank', '  \n\n')])).toBe(
+    discoveryLine,
+  );
+}, 30_000);
+
+it('keeps the discovery line when a bad token cannot read Plugin instructions', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'tracker', name: 'Tracker', fixture: 'healthy', instructions: 'Hi.' },
+  ]);
+
+  const host = await startCliHost({ home });
+  const client = await connectMcp(host.home, 'revoked-session-token');
+
+  expect(client.getInstructions()).toBe(discoveryLine);
 }, 30_000);

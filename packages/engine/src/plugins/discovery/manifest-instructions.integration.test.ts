@@ -10,7 +10,10 @@ const instructionsCap = 1_000;
 const instructionsFile = 'instructions.md';
 
 // A Plugin folder whose manifest declares its instructions file, holding this text when given.
-async function pluginFolder(text?: string): Promise<string> {
+async function pluginFolder(
+  text?: string,
+  declared = instructionsFile,
+): Promise<string> {
   const folder = await makeResolvedTempFolder('argo-instructions-');
   onTestFinished(() => rm(folder, { recursive: true, force: true }));
   await mkdir(folder, { recursive: true });
@@ -22,7 +25,7 @@ async function pluginFolder(text?: string): Promise<string> {
     join(folder, 'plugin.json'),
     JSON.stringify({
       ...manifestTemplate,
-      contributes: { ...contributes, instructions: instructionsFile },
+      contributes: { ...contributes, instructions: declared },
     }),
   );
 
@@ -52,3 +55,14 @@ it('refuses Plugin instructions over the cap', async () => {
     'instructions file instructions.md is over 1000 characters',
   );
 });
+
+it.each(['../outside.md', '/etc/outside.md', 'instructions.txt'])(
+  'refuses the Plugin instructions path %s',
+  async (declared) => {
+    const folder = await pluginFolder('Hi.', declared);
+    await writeFile(join(folder, '..', 'outside.md'), 'Outside.');
+    onTestFinished(() => rm(join(folder, '..', 'outside.md'), { force: true }));
+
+    await expect(readManifest(folder, '1.2.3')).rejects.toThrow();
+  },
+);

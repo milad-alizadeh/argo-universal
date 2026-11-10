@@ -1,5 +1,8 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PluginManifest } from '@repo/contracts/plugins';
+import { pluginInstructionsLimit } from '@repo/contracts/plugins/manifest-fields';
 import { expect, it } from 'vitest';
 import { fixture, manifestFile, readManifest, run } from '../mocks/plugin-cli';
 
@@ -34,3 +37,22 @@ it.each([
   },
   30_000,
 );
+
+const issueTracker = fileURLToPath(
+  new URL('../../../plugins/issue-tracker/', import.meta.url),
+);
+
+it('ships the Issue tracker with Plugin instructions under the cap', async () => {
+  const manifest = PluginManifest.parse(
+    JSON.parse(await readFile(join(issueTracker, manifestFile), 'utf8')),
+  );
+
+  const file = manifest.contributes.instructions;
+
+  expect(file).toBeDefined();
+
+  const text = await readFile(join(issueTracker, file ?? ''), 'utf8');
+
+  expect(text.trim().length).toBeGreaterThan(0);
+  expect(text.length).toBeLessThanOrEqual(pluginInstructionsLimit);
+});

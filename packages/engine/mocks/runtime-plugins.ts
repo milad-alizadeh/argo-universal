@@ -108,7 +108,8 @@ const pluginManifest = (
   capabilities: plugin.capabilities,
   contributes: {
     ...pluginContributions(template, plugin),
-    instructions: plugin.instructions && instructionsFile,
+    instructions:
+      plugin.instructions === undefined ? undefined : instructionsFile,
   },
 });
 
