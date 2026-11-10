@@ -3,6 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
+import { subagentRoleMark } from '../../../lib/product/subagents/subagent-role';
 import { subagentSupporting } from './subagent-list/subagent-format';
 import type { SubagentListProps } from './subagent-list/subagent-list-types';
 import { SubagentMark } from './subagent-list/subagent-mark';
@@ -37,7 +38,11 @@ export function WorkbenchMoreAgents({
 }): ReactElement | null {
   const { more, done } = activePreview(subagents, isWorking);
 
-  return <WorkbenchShowMore more={more} done={done} onOpen={onOpen} />;
+  const icons = subagents
+    .filter((agent) => !isWorking(agent))
+    .map((agent) => subagentRoleMark(agent.role));
+
+  return <WorkbenchShowMore {...{ more, done, icons, onOpen }} />;
 }
 
 const rowPressable = ({ agent, onOpen }: RowProps) =>
