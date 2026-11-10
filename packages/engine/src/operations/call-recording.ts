@@ -4,9 +4,9 @@ import {
   type OperationRow,
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { z } from 'zod';
 import type { CalledOperation, SessionOperationCall } from '../sessions';
 import type { OperationRunResult } from './implementations';
+import { wireJson } from './wire-json';
 
 // A Session's Operation, shown as its Tool call until its result or failure settles it.
 export type RecordedOperation<Result> = {
@@ -47,12 +47,11 @@ function failed(call: SessionOperationCall, cause: unknown): never {
   throw cause;
 }
 
-export const listedOutput = (value: OperationRow[]): Json =>
-  z.json().parse(value);
+export const listedOutput = (value: OperationRow[]): Json => wireJson(value);
 
 // A Session's Tool call shows the Operation's own result.
 export const recordedOutput = (value: OperationRunResult): Json =>
-  z.json().parse(value.kind === 'result' ? value.result : value);
+  wireJson(value.kind === 'result' ? value.result : value);
 
 export const discoveryCall = (filter: string): CalledOperation => ({
   name: 'operations.list',

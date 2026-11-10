@@ -7,8 +7,9 @@ import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { z } from 'zod';
 import { readBlobBytes } from '../blob';
 import { outputBlobStored } from '../feed';
-import type { OperationResult, OperationRunResult } from './implementations';
+import type { OperationRunResult } from './implementations';
 import type { OperationsDeps } from './operations';
+import { wireJson } from './wire-json';
 
 // An Operation's whole stored result, read once its Blob's Writer receipt arrives (ADR-0002).
 export type OutputBlobs = (
@@ -29,10 +30,6 @@ export const storedOutputBlobs =
 
     return z.json().parse(JSON.parse(bytes.toString('utf8')));
   };
-
-// The result as the wire carries it: a parsed result may hold `undefined` fields, which JSON leaves out.
-const wireJson = (value: OperationResult): Json =>
-  z.json().parse(JSON.parse(JSON.stringify(value)));
 
 // What a caller is answered: the Operation's own result tagged as one, or its execution with any whole result inlined.
 export class OperationResponses {
