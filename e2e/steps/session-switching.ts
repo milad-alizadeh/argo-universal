@@ -1,13 +1,13 @@
-import type { ElementHandle, Locator, Page } from '@playwright/test';
+import type { ElementHandle, Page } from '@playwright/test';
 import { expect } from '../fixtures';
+import { shownFeed } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { openSessionRow, sessionRow, startSession } from './live-session';
 import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
 
-const feed = (page: Page): Locator =>
-  page.getByTestId('feed-scroll').filter({ visible: true });
+const feed = shownFeed;
 
 // The press is checked by the shared helper, so the Feed is asked for its content only once the Session is open.
 export async function openSession(page: Page, title: string): Promise<void> {

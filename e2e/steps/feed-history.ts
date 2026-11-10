@@ -12,7 +12,7 @@ import { reloadApp } from './frame';
 import { query } from './server-query';
 import { agentWork } from './timeouts';
 
-const lastMessage = 'Latest history reply.';
+export const lastMessage = 'Latest history reply.';
 
 const feedScroll = 'feed-scroll';
 

@@ -334,6 +334,10 @@ _Avoid_: Closed, finalised
 The ordered list of Session updates that Argo shows for one Session.
 _Avoid_: Timeline, transcript, log, history
 
+**Reading place**:
+Where a reader left a Session's Feed: the row they were reading and where it sat in the view, or the Feed's end.
+_Avoid_: Scroll position, scroll offset
+
 **Session snapshot**:
 Everything a Session shows that is not in its Feed, such as its title, state, Live header, Background Tasks, and the Agents it started. It is sent whole on each change.
 _Avoid_: Session state (one field of it), session details
