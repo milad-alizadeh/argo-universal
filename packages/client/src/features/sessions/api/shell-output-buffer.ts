@@ -24,7 +24,7 @@ export function appendShellOutput(
   };
 }
 
-export function newestShellOutput(
+function newestShellOutput(
   visible: ShellOutputBuffer | undefined,
   received: ShellOutputBuffer,
 ): ShellOutputBuffer {
