@@ -63,6 +63,6 @@ it.each(['../outside.md', '/etc/outside.md', 'instructions.txt'])(
     await writeFile(join(folder, '..', 'outside.md'), 'Outside.');
     onTestFinished(() => rm(join(folder, '..', 'outside.md'), { force: true }));
 
-    await expect(readManifest(folder, '1.2.3')).rejects.toThrow();
+    await expect(readManifest(folder, '1.2.3')).rejects.toThrow('instructions');
   },
 );
