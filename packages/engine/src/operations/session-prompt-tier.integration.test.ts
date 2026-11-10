@@ -2,6 +2,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { insertSession } from '#mocks/database';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
@@ -47,6 +48,30 @@ it('prompts an unrelated Session in its own Project without asking, as the calli
       },
     }),
   );
+}, 30_000);
+
+it('prompts a Started Session from a Session that did not start it', async () => {
+  const journey = await delegationJourney();
+  insertSession(journey.host.database, { id: 'starter' });
+  insertSession(journey.host.database, {
+    id: 'started',
+    startedBySessionId: 'starter',
+  });
+
+  await holdSession(journey, journey.caller.sessionId);
+
+  const sent = await runOperation(journey.caller.caller.operations, {
+    wait: true,
+    id: promptOperation,
+    params: {
+      sessionId: 'started',
+      prompt: [{ type: 'text', text: 'Pick up the delegated work' }],
+    },
+  });
+
+  expect(OperationExecution.parse(sent)).toMatchObject({
+    turn: { sessionId: 'started' },
+  });
 }, 30_000);
 
 it('asks before a Session prompts itself, which its own live Turn cannot answer', async () => {

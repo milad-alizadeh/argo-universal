@@ -114,9 +114,7 @@ function useSubagentWork(
   panels: SessionPanels,
   phoneVisible: boolean,
 ): SubagentParts {
-  const selection = useSubagentSelection(props, () =>
-    panels.close('subagents'),
-  );
+  const selection = useSubagentSelection(props);
 
   const home = subagentHome(props.composer, panels, {
     close: selection.close,

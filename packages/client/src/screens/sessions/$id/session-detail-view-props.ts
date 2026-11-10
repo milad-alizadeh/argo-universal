@@ -6,10 +6,7 @@ import {
   type SessionPanels,
 } from '#features/sessions';
 import type { SessionCallouts } from '#features/sessions';
-import {
-  leaveForSessions,
-  sessionHref,
-} from '#lib/product/navigation/navigation';
+import { leaveForSessions } from '#lib/product/navigation/navigation';
 import {
   type OpenSession,
   sessionComposerProps,
@@ -163,10 +160,5 @@ export function toSessionViewProps(
 function sessionAgents(
   open: OpenSessionSources,
 ): NonNullable<OpenSessionViewProps['subagents']> {
-  return {
-    subagents: open.snapshot.subagents,
-    onSelect: (one) => {
-      if (!one.readOnly) open.navigate(sessionHref(one.sessionId));
-    },
-  };
+  return { subagents: open.snapshot.subagents };
 }
