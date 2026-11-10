@@ -540,6 +540,8 @@ const sessionSetup = setup({
           ? context.failure
           : String(params.error),
     })),
+    // A new Turn supersedes the last one's failure; the stored Turn still records it.
+    forgetPromptFailure: assign({ failure: null }),
     rememberSession: assign(
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
@@ -1251,7 +1253,10 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             committing: {
               tags: ['ready', 'running'],
-              entry: { type: 'persistTurn', params: toPromptTurn },
+              entry: [
+                'forgetPromptFailure',
+                { type: 'persistTurn', params: toPromptTurn },
+              ],
               invoke: {
                 id: 'commitPrompt',
                 src: 'commitPrompt',
