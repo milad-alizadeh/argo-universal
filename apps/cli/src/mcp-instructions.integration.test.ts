@@ -1,4 +1,4 @@
-import { cp, readFile, writeFile } from 'node:fs/promises';
+import { cp, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   createRuntimePlugins,
@@ -80,24 +80,21 @@ it('carries the shipped Issue tracker prose under its name', async () => {
   const home = await createRuntimePlugins([]);
   const source = new URL('../../../plugins/issue-tracker', import.meta.url);
 
-  const folder = join(home, shippedFolder, 'issue-tracker');
+  await cp(source, join(home, shippedFolder, 'issue-tracker'), {
+    recursive: true,
+    filter: (path) => !/node_modules|\.test\./.test(path),
+  });
 
-  await cp(source, folder, { recursive: true });
-
-  // The test Server reports version 1.2.3; only the engine range is changed, the prose is the shipped file.
-  const manifestPath = join(folder, 'plugin.json');
-  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-  manifest.engines.argo = '>=0.0.0 <2.0.0';
-  await writeFile(manifestPath, JSON.stringify(manifest));
-
-  const host = await startCliHost({ home });
-  const instructions = (await connectMcp(host.home)).getInstructions();
-
-  expect(instructions).toContain(
-    `${discoveryLine}\n\n## Issue tracker\n\n**Issues.** When you start implementing an Issue, attach this Session to it with \`issue-tracker.attach\``,
+  const text = await readFile(
+    new URL('instructions.md', `${source.href}/`),
+    'utf8',
   );
-  expect(instructions).toContain(
-    "put its `#123` in that Session's Prompt so the new Session attaches itself.",
+
+  // The shipped manifest's engine range admits the real Server version, not the test default 1.2.3.
+  const host = await startCliHost({ home, version: '0.0.0' });
+
+  expect((await connectMcp(host.home)).getInstructions()).toBe(
+    `${discoveryLine}\n\n## Issue tracker\n\n${text.trim()}`,
   );
 }, 30_000);
 
