@@ -16,7 +16,7 @@ const toastClassNames = {
 export function Toaster(): React.JSX.Element {
   return (
     <BurntToaster
-      position="top-center"
+      position="bottom-right"
       toastOptions={{ unstyled: true, classNames: toastClassNames }}
     />
   );
