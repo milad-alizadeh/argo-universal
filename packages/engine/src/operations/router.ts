@@ -24,12 +24,13 @@ const discoveryRouter = routerFactory((engine: Operations) =>
   }),
 );
 
-const instructionsRouter = routerFactory((reader: OperationInstructions) =>
-  router({
-    instructions: publicProcedure
-      .output(z.array(PluginInstruction))
-      .query(({ ctx }) => reader.read(ctx.token)),
-  }),
+const instructionsRouter = routerFactory(
+  (instructions: OperationInstructions) =>
+    router({
+      instructions: publicProcedure
+        .output(z.array(PluginInstruction))
+        .query(({ ctx }) => instructions.read(ctx.token)),
+    }),
 );
 
 const executionRouter = routerFactory((engine: Operations) =>
