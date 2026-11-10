@@ -1,7 +1,8 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { makeResolvedTempFolder } from '@repo/mocks/fs/resolved-temp-folder';
 import { expect, it, onTestFinished } from 'vitest';
+import { z } from 'zod';
 import { manifestTemplate } from '#mocks/plugin-manifest-template';
 import { readManifest } from './manifest';
 
@@ -14,9 +15,10 @@ async function pluginFolder(
   text?: string,
   declared = instructionsFile,
 ): Promise<string> {
-  const folder = await makeResolvedTempFolder('argo-instructions-');
-  onTestFinished(() => rm(folder, { recursive: true, force: true }));
-  await mkdir(folder, { recursive: true });
+  const parent = await makeResolvedTempFolder('argo-instructions-');
+  const folder = join(parent, 'plugin');
+  onTestFinished(() => rm(parent, { recursive: true, force: true }));
+  await mkdir(folder);
   await writeFile(join(folder, 'index.js'), '');
 
   const { contributes } = manifestTemplate;
@@ -60,9 +62,11 @@ it.each(['../outside.md', '/etc/outside.md', 'instructions.txt'])(
   'refuses the Plugin instructions path %s',
   async (declared) => {
     const folder = await pluginFolder('Hi.', declared);
-    await writeFile(join(folder, '..', 'outside.md'), 'Outside.');
-    onTestFinished(() => rm(join(folder, '..', 'outside.md'), { force: true }));
+    await writeFile(join(dirname(folder), 'outside.md'), 'Outside.');
 
-    await expect(readManifest(folder, '1.2.3')).rejects.toThrow('instructions');
+    // The schema refuses the path itself; a missing or long file is a ManifestFieldError.
+    await expect(readManifest(folder, '1.2.3')).rejects.toBeInstanceOf(
+      z.ZodError,
+    );
   },
 );
