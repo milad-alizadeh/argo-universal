@@ -26,6 +26,9 @@ import type {
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
 
+// The narrowest wide window whose page gutter shows the Workbench's cards.
+const workbenchWide = 1856;
+
 const meta = {
   ...sessionDetailViewTestMeta,
   title: 'Tests/Screens/Sessions/Session/SubagentFeed',
@@ -91,15 +94,15 @@ function feedRowOpens(width: number): Story {
 
       await userEvent.click(started);
 
-      await assertOpened(canvas, width === layoutWidths.wide);
-      await assertFeedShown(canvas, width === layoutWidths.wide);
+      await assertOpened(canvas, width === workbenchWide);
+      await assertFeedShown(canvas, width === workbenchWide);
     },
   };
 }
 
 // Choosing a Subagent in the list opens its Feed, in the Sheet below wide and the Inspector's tab at wide.
 function listRowOpensFeed(width: number): Story {
-  const wide = width === layoutWidths.wide;
+  const wide = width === workbenchWide;
 
   return {
     beforeEach: () => settleLayout(width),
@@ -151,10 +154,10 @@ async function assertOpened(
   );
 }
 
-export const WideFeedRowOpensTab = feedRowOpens(layoutWidths.wide);
+export const WideFeedRowOpensTab = feedRowOpens(workbenchWide);
 
 export const PhoneFeedRowOpensSheet = feedRowOpens(layoutWidths.phone);
 
-export const WideListRowOpensFeed = listRowOpensFeed(layoutWidths.wide);
+export const WideListRowOpensFeed = listRowOpensFeed(workbenchWide);
 
 export const PhoneListRowOpensFeed = listRowOpensFeed(layoutWidths.phone);

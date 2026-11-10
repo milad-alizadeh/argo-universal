@@ -504,3 +504,45 @@ label input[role="switch"] {
 .segmented-control-track:has(:focus-visible) {
   outline: 2px solid var(--color-focus);
 }
+
+/* On a wide window the Feed's scrollbar stays drawn while the Feed can scroll, at the page's trailing edge, rather
+   than only while it moves, as a macOS overlay scrollbar would be. Its 12px matches the strip ScrollFadeFrame leaves
+   unfaded. Only the Feed's own scroll view, not the scroll views inside its rows; a phone keeps its own. Its gutter is
+   kept on both edges, so the Feed's column stays centred over the Composer's, which no scrollbar narrows. */
+/* --breakpoint-wide, which Uniwind cannot read into a media query in this file. */
+@media (width >= 1100px) {
+  .feed-scrollbar > * > .scroll-fade > * {
+    scrollbar-gutter: stable both-edges;
+  }
+  .feed-scrollbar > * > .scroll-fade > *::-webkit-scrollbar {
+    width: 12px;
+    background: transparent;
+  }
+  .feed-scrollbar > * > .scroll-fade > *::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+    background-color: color-mix(
+      in oklab,
+      var(--color-foreground) 22%,
+      transparent
+    );
+  }
+  .feed-scrollbar > * > .scroll-fade > *::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(
+      in oklab,
+      var(--color-foreground) 38%,
+      transparent
+    );
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    .feed-scrollbar > * > .scroll-fade > * {
+      scrollbar-color: color-mix(
+          in oklab,
+          var(--color-foreground) 22%,
+          transparent
+        )
+        transparent;
+    }
+  }
+}

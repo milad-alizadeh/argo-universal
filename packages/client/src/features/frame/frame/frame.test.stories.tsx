@@ -101,8 +101,9 @@ const meta = {
   component: FrameStatePage,
   parameters: { screenPreview: true },
   args: { content: null },
+  // The narrowest window whose page gutter holds the Workbench with the list shown.
   beforeEach: async (): Promise<void> => {
-    await settleLayout('wide');
+    await settleLayout(1856);
   },
 } satisfies Meta<typeof FrameStatePage>;
 

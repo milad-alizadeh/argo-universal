@@ -16,9 +16,9 @@ describe('frameLayout band', () => {
   );
 
   it.each([
-    { width: 1440, sidebarShown: true, bandLeading: 124, leading: 284 },
-    { width: 1440, sidebarShown: false, bandLeading: 124, leading: 68 },
-    { width: 1100, sidebarShown: false, bandLeading: 44, leading: 52 },
+    { width: 1440, sidebarShown: true, bandLeading: 124, leading: 388 },
+    { width: 1440, sidebarShown: false, bandLeading: 124, leading: 232 },
+    { width: 1100, sidebarShown: false, bandLeading: 44, leading: 142 },
     { width: 1100, sidebarShown: false, bandLeading: 200, leading: 24 },
   ])(
     'starts the title on the content column at $width with sidebar $sidebarShown',
@@ -40,9 +40,9 @@ const keyAt = (width: number): string =>
 
 describe('frameLayout regions', () => {
   it.each([
-    { width: 1559, content: { offset: 384, width: 847 } },
-    { width: 1560, content: { offset: 384, width: 848 } },
-    { width: 1561, content: { offset: 384.5, width: 848 } },
+    { width: 1231, content: { offset: 384, width: 847 } },
+    { width: 1232, content: { offset: 384, width: 848 } },
+    { width: 1233, content: { offset: 384.5, width: 848 } },
   ])('centres the capped column at $width', ({ width, content }) => {
     expect(frameLayout({ ...input, width }).content).toEqual(content);
   });
@@ -79,19 +79,19 @@ describe('frameLayout regions', () => {
     });
 
     expect(layout.list).toMatchObject({ offset: 64, width: 0, folded: true });
-    expect(layout.workbench.state).toBe('docked');
-    expect(layout.content).toEqual({ offset: 148, width: 848 });
+    expect(layout.workbench.state).toBe('auto-hidden');
+    expect(layout.content).toEqual({ offset: 312, width: 848 });
   });
 });
 
 describe('frameLayout transition identity', () => {
-  const autoHiddenKey = keyAt(1767);
+  const autoHiddenKey = keyAt(2223);
 
-  it('changes when the Workbench docks', () => {
-    expect(keyAt(1768)).not.toBe(autoHiddenKey);
+  it('changes when the Workbench fits in the gutter', () => {
+    expect(keyAt(2224)).not.toBe(autoHiddenKey);
   });
 
   it('holds while a resize leaves every pane as it was', () => {
-    expect(keyAt(1766)).toBe(autoHiddenKey);
+    expect(keyAt(2222)).toBe(autoHiddenKey);
   });
 });

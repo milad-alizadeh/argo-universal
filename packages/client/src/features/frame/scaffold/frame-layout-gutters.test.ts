@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { frameLayout } from './frame-layout';
 import { input } from './frame-layout.mocks';
 
+const autoHidden = 'auto-hidden';
+
 describe('independent Workbench cards in the side gutter', () => {
   it.each([
     {
@@ -14,7 +16,7 @@ describe('independent Workbench cards in the side gutter', () => {
       width: 1855,
       sidebarShown: true,
       inspectorState: 'closed',
-      state: 'docked',
+      state: autoHidden,
     },
     {
       width: 2224,
@@ -26,7 +28,7 @@ describe('independent Workbench cards in the side gutter', () => {
       width: 2223,
       sidebarShown: true,
       inspectorState: 'open',
-      state: 'docked',
+      state: autoHidden,
     },
     {
       width: 1544,
@@ -38,7 +40,7 @@ describe('independent Workbench cards in the side gutter', () => {
       width: 1543,
       sidebarShown: false,
       inspectorState: 'closed',
-      state: 'docked',
+      state: autoHidden,
     },
     {
       width: 1912,
@@ -50,7 +52,7 @@ describe('independent Workbench cards in the side gutter', () => {
       width: 1911,
       sidebarShown: false,
       inspectorState: 'open',
-      state: 'docked',
+      state: autoHidden,
     },
   ] as const)(
     'uses $state at $width with navigation $sidebarShown and Inspector $inspectorState',

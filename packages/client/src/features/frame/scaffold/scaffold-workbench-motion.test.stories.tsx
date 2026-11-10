@@ -9,7 +9,7 @@ const meta = {
   component: WorkbenchScaffold,
   parameters: { screenPreview: true },
   args: { inspectorOpen: true },
-  beforeEach: (): Promise<void> => settleLayout(1920),
+  beforeEach: (): Promise<void> => settleLayout(2224),
 } satisfies Meta<typeof WorkbenchScaffold>;
 
 export default meta;
@@ -48,11 +48,12 @@ function closesAt(width: number): Story {
   };
 }
 
-export const DockedWorkbenchSlidesWhenTheInspectorCloses: Story =
-  closesAt(1920);
+export const GutterWorkbenchSlidesWhenTheInspectorCloses: Story =
+  closesAt(2224);
 
+// Beside the open Inspector the gutter is too narrow; closing it frees the room.
 export const AutoHiddenWorkbenchSlidesWhenTheInspectorCloses: Story =
-  closesAt(1440);
+  closesAt(1856);
 
 export const WorkbenchSlidesWhenTheExpandedInspectorRestores: Story = {
   play: async ({ canvas, userEvent }) => {

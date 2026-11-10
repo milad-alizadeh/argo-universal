@@ -21,7 +21,7 @@ type Story = StoryObj<typeof meta>;
 
 function gutterWheel(edge: 'left' | 'right'): Story {
   return {
-    beforeEach: (): Promise<void> => settleLayout(1768),
+    beforeEach: (): Promise<void> => settleLayout(1856),
     play: async ({ canvas }) => {
       const scroll = await canvas.findByTestId('feed-scroll');
       await waitFor(() =>
