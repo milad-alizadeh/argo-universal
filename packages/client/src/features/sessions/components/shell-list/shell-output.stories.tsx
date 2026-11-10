@@ -9,6 +9,7 @@ import {
   lostShellOutput,
   runningShellOutput,
   stoppedShellOutput,
+  uncolouredShellOutput,
 } from './shell-output-fixtures';
 
 const meta = {
@@ -49,3 +50,6 @@ export const ExitedWithoutACode: Story = {
 
 // Paper "ShellOutput / Lost": the Server restarted mid-run; the output it kept stays readable.
 export const Lost: Story = { args: lostShellOutput };
+
+// A tool that printed no colours: links, paths, and error, warning and pass words are marked.
+export const Uncoloured: Story = { args: uncolouredShellOutput };
