@@ -16,4 +16,4 @@ export function retainSession(recent: string[], sessionId: string): string[] {
  * resets every scroller inside a moved node, so its Feed came back at the top (#1982).
  */
 export const drawnSessions = (recent: string[]): string[] =>
-  [...recent].sort((first, second) => first.localeCompare(second));
+  [...recent].sort((first, second) => (first < second ? -1 : 1));

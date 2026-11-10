@@ -7,7 +7,15 @@ import { openSessionRow, sessionRow, startSession } from './live-session';
 const feed = (page: Page): Locator =>
   page.getByTestId('feed-scroll').filter({ visible: true });
 
-const positionMissing = 'The reading position is missing';
+// How far below the Feed's top edge a message is drawn.
+async function topInFeed(page: Page, message: Locator): Promise<number> {
+  const box = await message.boundingBox();
+  const feedBox = await feed(page).boundingBox();
+
+  if (!box || !feedBox) throw new Error('The reading position is missing');
+
+  return box.y - feedBox.y;
+}
 
 const oldestFeedPosition = new WeakMap<Page, number>();
 
@@ -18,11 +26,7 @@ Given('the browser clock can advance for Feed expiration', async ({ page }) => {
 When("I remember the oldest Feed message's position", async ({ page }) => {
   const row = feed(page).getByText(oldestHistoryMessage, { exact: true });
   await expect(row).toBeInViewport();
-  const box = await row.boundingBox();
-  const feedBox = await feed(page).boundingBox();
-
-  if (!box || !feedBox) throw new Error(positionMissing);
-  oldestFeedPosition.set(page, box.y - feedBox.y);
+  oldestFeedPosition.set(page, await topInFeed(page, row));
 });
 
 When('I create three other Sessions', async ({ page }) => {
@@ -45,11 +49,7 @@ Then(
 
     await expect(async () => {
       await expect(row).toBeInViewport();
-      const box = await row.boundingBox();
-      const feedBox = await feed(page).boundingBox();
-
-      if (!box || !feedBox) throw new Error(positionMissing);
-      expect(Math.abs(box.y - feedBox.y - before)).toBeLessThan(30);
+      expect(Math.abs((await topInFeed(page, row)) - before)).toBeLessThan(30);
     }).toPass({ timeout: 20_000 });
   },
 );
@@ -76,16 +76,6 @@ interface ReadingPlace {
 }
 
 const readingPlaces = new WeakMap<Page, ReadingPlace>();
-
-// How far below the Feed's top edge a message is drawn.
-async function topInFeed(page: Page, message: Locator): Promise<number> {
-  const box = await message.boundingBox();
-  const feedBox = await feed(page).boundingBox();
-
-  if (!box || !feedBox) throw new Error(positionMissing);
-
-  return box.y - feedBox.y;
-}
 
 // The list draws only the rows near the view, so the middle one of those is in or beside it.
 async function middleDrawnMessage(page: Page): Promise<string> {
