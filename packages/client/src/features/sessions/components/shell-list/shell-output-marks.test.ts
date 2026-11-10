@@ -72,9 +72,9 @@ describe('shellOutputLines on lines the command left uncoloured', () => {
   });
 
   it('keeps words and fractions that only look like paths plain', () => {
-    expect(shellOutputLines('and/or 1/2 errors? no')).toEqual([
+    expect(shellOutputLines('and/or 1/2 3/4.5 errors? no')).toEqual([
       [
-        { text: 'and/or 1/2 ' },
+        { text: 'and/or 1/2 3/4.5 ' },
         { text: 'errors', tone: 'danger' },
         { text: '? no' },
       ],

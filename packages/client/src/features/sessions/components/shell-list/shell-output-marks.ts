@@ -5,7 +5,7 @@ import type { ShellLine, ShellSpan } from './shell-output-lines';
 const marks = new RegExp(
   [
     String.raw`(?<link>https?://[^\s'"<>]*[^\s'"<>.,;:!?)\]])`,
-    String.raw`(?<=^|[\s'"(=\[])(?<path>(?:~|\.{1,2})?/[\w.@+~-]+(?:/[\w.@+~-]+)*/?(?::\d+)*|[\w.@-]+(?:/[\w.@-]+)+\.\w+(?::\d+)*)`,
+    String.raw`(?<=^|[\s'"(=\[])(?<path>(?:~|\.{1,2})?/[\w.@+~-]+(?:/[\w.@+~-]+)*/?(?::\d+)*|[\w.@-]+(?:/[\w.@-]+)+\.[A-Za-z]\w*(?::\d+)*)`,
     String.raw`\b(?<danger>errors?|err|failed|failures?|fail|fatal|exception|panic)\b`,
     String.raw`\b(?<warning>warnings?|warn|deprecated)\b`,
     String.raw`(?<success>[✓✔]|\bpassed\b|\bsucceeded\b)`,
