@@ -12,6 +12,7 @@ import {
   webWithImageLinkPreviewCard,
 } from './link-preview-card-fixtures';
 import { LinkPreviewContext } from './link-preview-context';
+import { GitStateIcon } from './link-preview-git';
 
 const source = {
   load: async (): Promise<ReactNode> => (
@@ -48,6 +49,43 @@ export const Hover: Story = {
     <WebOnly>
       <LinkPreviewContext value={source}>
         <Link href="https://example.com/guide" label="the migration guide" />
+      </LinkPreviewContext>
+    </WebOnly>
+  ),
+};
+
+const states = ['open', 'draft', 'merged', 'closed'] as const;
+
+// Each link's last digit picks its state.
+const markedSource = {
+  load: async (): Promise<ReactNode> => null,
+  mark: async (href: string): Promise<ReactNode> => (
+    <GitStateIcon
+      data={{
+        kind: 'pullRequest',
+        state: states[Number(href.slice(-1))] ?? 'open',
+      }}
+    />
+  ),
+};
+
+// A pull request link draws its state before the text, so it reads without a hover.
+export const StateMark: Story = {
+  render: (): ReactElement => (
+    <WebOnly>
+      <LinkPreviewContext value={markedSource}>
+        <View className="gap-2">
+          {states.map((state, index) => (
+            <Text key={state} role="body">
+              The {state} change is{' '}
+              <Link
+                href={`https://example.com/pull/${index}`}
+                label={`example/app#${index + 1}`}
+              />
+              .
+            </Text>
+          ))}
+        </View>
       </LinkPreviewContext>
     </WebOnly>
   ),
