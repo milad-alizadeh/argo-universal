@@ -1,4 +1,9 @@
-import { createRuntimePlugins } from '@repo/engine/mocks/runtime-plugins';
+import { cp, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import {
+  createRuntimePlugins,
+  shippedFolder,
+} from '@repo/engine/mocks/runtime-plugins';
 import { expect, it } from 'vitest';
 import { connectMcp } from '../mocks/mcp-client';
 import { startCliHost } from '../mocks/operations-cli';
@@ -68,6 +73,31 @@ it('leaves a disabled Plugin out', async () => {
 it('leaves out a Plugin whose instructions are only whitespace', async () => {
   expect(await instructionsWith([shipped('blank', 'Blank', '  \n\n')])).toBe(
     discoveryLine,
+  );
+}, 30_000);
+
+it('carries the shipped Issue tracker prose under its name', async () => {
+  const home = await createRuntimePlugins([]);
+  const source = new URL('../../../plugins/issue-tracker', import.meta.url);
+
+  const folder = join(home, shippedFolder, 'issue-tracker');
+
+  await cp(source, folder, { recursive: true });
+
+  // The test Server reports version 1.2.3; only the engine range is changed, the prose is the shipped file.
+  const manifestPath = join(folder, 'plugin.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  manifest.engines.argo = '>=0.0.0 <2.0.0';
+  await writeFile(manifestPath, JSON.stringify(manifest));
+
+  const host = await startCliHost({ home });
+  const instructions = (await connectMcp(host.home)).getInstructions();
+
+  expect(instructions).toContain(
+    `${discoveryLine}\n\n## Issue tracker\n\n**Issues.** When you start implementing an Issue, attach this Session to it with \`issue-tracker.attach\``,
+  );
+  expect(instructions).toContain(
+    "put its `#123` in that Session's Prompt so the new Session attaches itself.",
   );
 }, 30_000);
 
