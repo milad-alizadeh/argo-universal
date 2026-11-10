@@ -18,6 +18,7 @@ import { InertLane } from './list-item-pass-through';
 import type { DrawingProps } from './list-item-press-props';
 import { Trailing } from './list-item-trailing';
 import { TreeLane } from './list-item-tree';
+import type { TreeLayout } from './list-item-tree-lanes';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
 export function ItemContentSlots(props: DrawingProps): ReactElement {
@@ -34,7 +35,7 @@ function RowContentSlots(props: DrawingProps): ReactElement {
   return (
     <TextClassContext value={undefined}>
       <InertLane>{props.choice}</InertLane>
-      {compact ? null : <TreeLane title={props.title} compact={false} />}
+      {compact ? null : <TreeLane row={props} layout={regularTree(props)} />}
       <Leading {...props} />
       <RowContent props={props} compact={compact} />
       <RowTrailing props={props} compact={compact} />
@@ -43,6 +44,10 @@ function RowContentSlots(props: DrawingProps): ReactElement {
     </TextClassContext>
   );
 }
+
+// A regular row's tree is drawn in its own row's layout: a sidebar row's lanes are narrower.
+const regularTree = (props: DrawingProps): TreeLayout =>
+  props.sidebar ? 'sidebar' : 'row';
 
 // A regular row's trailing mark joins its title when the title trails; otherwise it has its own lane.
 function RowTrailing({
