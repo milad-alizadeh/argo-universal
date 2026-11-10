@@ -79,7 +79,7 @@ function shownHeading(
 const inspectorProps = (props: SessionInspectorProps): InspectorProps => ({
   ...shownHeading(props),
   open: props.panels.state.tabs.length > 0,
-  onOpenChange: (open) => !open && props.panels.closeAll(),
+  onOpenChange: (open) => !open && props.panels.hide(),
   tabs: inspectorTabs(props),
 });
 

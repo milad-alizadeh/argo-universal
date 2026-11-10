@@ -85,11 +85,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
           onOpenInspector: toggleChanges,
         }}
       />
-      <Inspector
-        title="Changes"
-        open={open}
-        onOpenChange={() => panels.closeAll()}
-      >
+      <Inspector title="Changes" open={open} onOpenChange={() => panels.hide()}>
         {null}
       </Inspector>
     </>

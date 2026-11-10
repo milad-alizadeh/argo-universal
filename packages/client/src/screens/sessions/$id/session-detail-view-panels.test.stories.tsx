@@ -109,7 +109,7 @@ export const CloseTabs: Story = {
   },
 };
 
-// Closing the Inspector closes every tab, so the next opening starts with that panel alone.
+// Closing the Inspector keeps its tabs: the band's toggle opens it with them again, and a card adds its own tab to them.
 export const CloseInspector: Story = {
   play: async (context) => {
     const { canvas, userEvent } = context;
@@ -119,8 +119,18 @@ export const CloseInspector: Story = {
       canvas.getByRole('button', { name: 'Hide Inspector' }),
     );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Show Inspector' }),
+    );
+    await expect(canvas.getAllByRole('tab')).toHaveLength(2);
+    await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
+      ...selected,
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Hide Inspector' }),
+    );
     await userEvent.click(canvas.getByRole('button', subagentsEntry));
-    await expect(canvas.getAllByRole('tab')).toHaveLength(1);
+    await expect(canvas.getAllByRole('tab')).toHaveLength(2);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
     );
