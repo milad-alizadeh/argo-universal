@@ -20,7 +20,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const sessions = ['first', 'second', 'third'] as const;
+// One more Session than the App retains, so opening the last one drops a page.
+const sessions = ['first', 'second', 'third', 'fourth'] as const;
 
 function SessionButton({
   id,
@@ -40,7 +41,7 @@ function SessionButton({
   );
 }
 
-// Three Sessions' Feeds behind the App's own retention, as a wide window keeps them.
+// Four Sessions' Feeds behind the App's own retention, as a wide window keeps them.
 function RetainedFeeds(props: FeedProps): React.JSX.Element {
   const [shown, setShown] = useState<string>(sessions[0]);
 
@@ -111,8 +112,17 @@ async function open(
   return scroll;
 }
 
-// Each visit swaps which pages sit behind the shown one; a Feed that comes back from there still draws its rows at its end.
-const visits = ['second', 'first', 'second', 'first', 'third', 'first'];
+// Each visit swaps which pages sit behind the shown one, and the fourth Session drops one that a later visit mounts again; a Feed that comes back still draws its rows at its end.
+const visits = [
+  'second',
+  'first',
+  'second',
+  'first',
+  'third',
+  'fourth',
+  'second',
+  'first',
+];
 
 export const ShowsRowsAfterSwitchingBack: Story = {
   render: (args) => <RetainedFeeds {...args} />,

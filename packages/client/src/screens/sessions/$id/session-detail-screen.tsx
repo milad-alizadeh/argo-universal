@@ -42,15 +42,13 @@ export function SessionDetailScreen({
 function SessionPages({ id }: { id: string }): React.JSX.Element {
   return (
     <SizeClass
-      wide={
-        <RetainedSessions sessionId={id}>{retainedSession}</RetainedSessions>
-      }
+      wide={<RetainedSessions sessionId={id}>{renderSession}</RetainedSessions>}
       compact={<ConnectedSession key={id} sessionId={id} />}
     />
   );
 }
 
-const retainedSession = (sessionId: string): React.JSX.Element => (
+const renderSession = (sessionId: string): React.JSX.Element => (
   <ConnectedSession sessionId={sessionId} />
 );
 
