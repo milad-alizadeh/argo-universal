@@ -1,5 +1,6 @@
 import { Toaster as BurntToaster } from 'burnt/web';
 import type * as React from 'react';
+import { useWide } from '../../../use-wide/use-wide';
 
 const toastClassNames = {
   toast:
@@ -12,11 +13,16 @@ const toastClassNames = {
     'flex h-5 shrink-0 cursor-pointer items-center type-body font-control text-foreground',
 };
 
-// Web draws toasts here, mounted once at the root.
+/*
+ * Web draws toasts here, mounted once at the root. A wide window puts them in the bottom-right corner; the phone
+ * shell keeps them at the top, clear of the Composer at the bottom.
+ */
 export function Toaster(): React.JSX.Element {
+  const wide = useWide();
+
   return (
     <BurntToaster
-      position="bottom-right"
+      position={wide ? 'bottom-right' : 'top-center'}
       toastOptions={{ unstyled: true, classNames: toastClassNames }}
     />
   );
