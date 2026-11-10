@@ -96,6 +96,15 @@ describe('turnCallout', () => {
       }),
     ).toBe(signIn);
   });
+
+  it('keeps the running sign-in on show when a newer Turn ends needing sign-in', () => {
+    expect(
+      turnCallout(
+        { ...turn, id: 'newer-end' },
+        { signIn, authenticating: turn.id, onAuthenticate: () => {} },
+      ),
+    ).toBe(signIn);
+  });
 });
 
 describe('signsIn', () => {
@@ -116,6 +125,12 @@ describe('signsIn', () => {
     {
       label: 'a Turn after its Authenticate',
       problem: turn,
+      authenticating: turn.id,
+      expected: true,
+    },
+    {
+      label: 'a newer Turn while an older Turn’s sign-in runs',
+      problem: { ...turn, id: 'newer-end' },
       authenticating: turn.id,
       expected: true,
     },
