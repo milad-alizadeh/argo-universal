@@ -152,3 +152,66 @@ export const CardInsideTextKeepsItsRowsInsideWide: Story = {
     );
   },
 };
+
+const pullHref = 'https://github.com/example/app/pull/42';
+
+const marked = {
+  load: async (): Promise<ReactNode> => <LinkPreviewCard data={pullPreview} />,
+  mark: (target: string): Promise<ReactNode> | null =>
+    target === pullHref
+      ? Promise.resolve(<Text role="secondary">merged</Text>)
+      : null,
+};
+
+export const MarkShowsBeforeHoverWide: Story = {
+  render: () => (
+    <LinkPreviewContext value={marked}>
+      <Text role="body">
+        See <Link href={pullHref} label="the pull request" /> and{' '}
+        <Link href={href} label="the guide" />.
+      </Text>
+    </LinkPreviewContext>
+  ),
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    await expect(await canvas.findAllByText('merged')).toHaveLength(1);
+    await expect(
+      within(document.body).queryByRole('dialog'),
+    ).not.toBeInTheDocument();
+  },
+};
+
+function RefreshingMark(): ReactElement {
+  const [source] = useState(() => {
+    let state: 'open' | 'closed' = 'open';
+
+    return {
+      load: async (): Promise<ReactNode> => {
+        state = 'closed';
+
+        return <LinkPreviewCard data={{ ...pullPreview, state }} />;
+      },
+      mark: async (): Promise<ReactNode> => (
+        <Text role="secondary">{state}</Text>
+      ),
+    };
+  });
+
+  return (
+    <LinkPreviewContext value={source}>
+      <Text role="body">
+        See <Link href={pullHref} label="the pull request" />.
+      </Text>
+    </LinkPreviewContext>
+  );
+}
+
+export const HoverRefreshesMarkWide: Story = {
+  render: () => <RefreshingMark />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await expect(await canvas.findByText('open')).toBeInTheDocument();
+    await userEvent.hover(canvas.getByRole('link'));
+    await expect(await canvas.findByText('closed')).toBeInTheDocument();
+  },
+};

@@ -132,7 +132,18 @@ function GitState({ data }: { data: GitItemPreview }): ReactElement {
   );
 }
 
-function stateIcon(data: GitItemPreview): ComponentProps<typeof Icon> {
+// The state's icon alone, drawn beside a link so its state reads without a hover.
+export function GitStateIcon({
+  data,
+}: {
+  data: Pick<GitItemPreview, 'kind' | 'state'>;
+}): ReactElement {
+  return <Icon {...stateIcon(data)} />;
+}
+
+function stateIcon(
+  data: Pick<GitItemPreview, 'kind' | 'state'>,
+): ComponentProps<typeof Icon> {
   const drawing = stateDrawing[data.state ?? 'open'];
 
   return {
