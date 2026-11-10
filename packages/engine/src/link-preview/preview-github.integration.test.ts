@@ -1,7 +1,30 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PreviewFixture, issueUrl, item, pullUrl } from './preview.mocks';
 
 describe('Link preview of a GitHub link', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('asks GitHub again for a pull request a few seconds later, so a closed one stops reading open', async () => {
+    vi.useFakeTimers();
+    const fixture = new PreviewFixture();
+    fixture.github
+      .mockResolvedValueOnce(item)
+      .mockResolvedValueOnce({ ...item, state: 'closed' });
+    expect(await fixture.caller.get({ href: pullUrl })).toMatchObject({
+      state: 'open',
+    });
+    expect(await fixture.caller.get({ href: pullUrl })).toMatchObject({
+      state: 'open',
+    });
+    vi.advanceTimersByTime(11_000);
+    expect(await fixture.caller.get({ href: pullUrl })).toMatchObject({
+      state: 'closed',
+    });
+    expect(fixture.github).toHaveBeenCalledTimes(2);
+  });
+
   it('uses Server GitHub access for private issues without fetching their page', async () => {
     const fixture = new PreviewFixture();
     expect(await fixture.caller.get({ href: issueUrl })).toMatchObject({

@@ -4,7 +4,10 @@ import {
   LinkPreviewContext,
   type LinkPreviewSource,
 } from '@repo/kit/primitives/overlays/link-preview';
-import { LinkPreviewCard } from '@repo/kit/primitives/overlays/link-preview';
+import {
+  GitStateIcon,
+  LinkPreviewCard,
+} from '@repo/kit/primitives/overlays/link-preview';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TRPCClient } from '@trpc/client';
 import { useMemo, type ReactNode } from 'react';
@@ -40,8 +43,35 @@ function previewSource(
 
       return card(data, imageUrl);
     },
+    mark: (href) => gitMark(client, cache, href),
   };
 }
+
+// Only pull requests and issues have a state worth drawing beside the link, so other links wait for a hover.
+const gitItemLink =
+  /^https:\/\/github\.com\/[\w-]+\/[\w.-]+\/(pull|issues)\/\d+\/?$/;
+
+function gitMark(
+  client: TRPCClient<AppRouter>,
+  cache: QueryClient,
+  href: string,
+): Promise<ReactNode> | null {
+  if (!gitItemLink.test(href)) return null;
+
+  return cache.fetchQuery(queryOptions(client, href)).then(stateMark);
+}
+
+function stateMark(data: LinkPreviewData | null): ReactNode {
+  return isGitItem(data) ? <GitStateIcon data={data} /> : null;
+}
+
+function isGitItem(
+  data: LinkPreviewData | null,
+): data is Extract<LinkPreviewData, { kind: 'issue' | 'pullRequest' }> {
+  return gitItemKinds.has(data?.kind ?? 'web');
+}
+
+const gitItemKinds = new Set<LinkPreviewData['kind']>(['issue', 'pullRequest']);
 
 function card(data: LinkPreviewData | null, imageUrl: BlobUrl): ReactNode {
   return data ? (
@@ -63,7 +93,8 @@ function queryOptions(
   return {
     queryKey: ['linkPreview', href],
     queryFn: () => client.linkPreview.get.query({ href }),
-    staleTime: 30_000,
+    // Short, so each hover asks the Server again; the Server's cache decides how fresh each kind must be.
+    staleTime: 5000,
     retry: false,
   };
 }

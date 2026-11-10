@@ -16,6 +16,11 @@ const cacheMs = 300_000;
 
 const failureMs = 30_000;
 
+// An issue or pull request changes state, so a hover a few seconds later asks GitHub again.
+const gitItemMs = 10_000;
+
+const gitItemKinds = new Set<LinkPreviewData['kind']>(['issue', 'pullRequest']);
+
 // Per-Server, bounded and single-flight. Failed previews are cached briefly to avoid hammering a host.
 export class PreviewCache {
   private readonly entries = new Map<string, Entry>();
@@ -69,9 +74,15 @@ function settle(
   entry: Entry,
   value: LinkPreviewData | null,
 ): LinkPreviewData | null {
-  entry.expires = Date.now() + (value ? cacheMs : failureMs);
+  entry.expires = Date.now() + lifetime(value);
 
   return value;
+}
+
+function lifetime(value: LinkPreviewData | null): number {
+  if (!value) return failureMs;
+
+  return gitItemKinds.has(value.kind) ? gitItemMs : cacheMs;
 }
 
 function isFresh(entry: Entry | undefined): entry is Entry {

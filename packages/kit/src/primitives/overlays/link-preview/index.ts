@@ -7,4 +7,6 @@ export {
 
 export { LinkPreviewCard } from './link-preview-card';
 
+export { GitStateIcon } from './link-preview-git';
+
 export type { LinkPreviewCardData } from './link-preview-card-props';
