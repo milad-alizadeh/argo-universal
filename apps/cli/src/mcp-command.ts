@@ -9,9 +9,10 @@ export async function runMcp(
   { client, writeError }: CliIo,
 ): Promise<number> {
   parseUsage(() => z.tuple([]).parse(args));
+
   // Plugin instructions only advise: when the Server will not give them, the tools still answer for themselves.
-  const instructions = await client.instructions().catch((error: unknown) => {
-    writeError(`Plugin instructions are unavailable: ${String(error)}`);
+  const instructions = await client.instructions().catch((error: Error) => {
+    writeError(`Plugin instructions are unavailable: ${error.message}`);
 
     return [];
   });

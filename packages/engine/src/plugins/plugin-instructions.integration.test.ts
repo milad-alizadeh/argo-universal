@@ -1,49 +1,39 @@
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 import { createRuntimePlugins, shippedFolder } from '#mocks/runtime-plugins';
 import { pluginInstructions } from './plugin-instructions';
 
-const reads = new Map<string, number>();
+const plugins = ['broken', 'fine'].map((id) => ({
+  id,
+  fixture: 'healthy',
+  instructions: `${id} prose`,
+}));
 
-// A file read once for the manifest's check then fails, as one deleted between discovery and the read does.
-vi.mock('node:fs/promises', async (importOriginal) => {
-  const original = await importOriginal<typeof import('node:fs/promises')>();
+// A read that fails for the broken Plugin's file, as one that goes missing after discovery does.
+const readText = async (path: string): Promise<string> => {
+  if (path.includes('/broken/')) throw new Error('EIO');
 
-  return {
-    ...original,
-    readFile: async (...args: Parameters<typeof original.readFile>) => {
-      const path = String(args[0]);
-      const count = (reads.get(path) ?? 0) + 1;
-      reads.set(path, count);
-
-      if (path.includes('/broken/instructions.md') && count > 1)
-        throw new Error('EIO');
-
-      return original.readFile(...args);
-    },
-  };
-});
+  return readFile(path, 'utf8');
+};
 
 it('drops only the Plugin whose instructions cannot be read', async () => {
-  const home = await createRuntimePlugins(
-    ['broken', 'fine'].map((id) => ({
-      id,
-      fixture: 'healthy',
-      instructions: `${id} prose`,
-    })),
-  );
+  const home = await createRuntimePlugins(plugins);
 
-  const found = await pluginInstructions({
-    home,
-    version: '1.2.3',
-    firstPartyPluginsDirectory: join(home, shippedFolder),
-    pluginSettings: {
-      enabled: () => true,
-      setEnabled: async () => undefined,
-      values: async () => ({ values: {} }) as never,
-      change: async () => undefined,
+  const found = await pluginInstructions(
+    {
+      home,
+      version: '1.2.3',
+      firstPartyPluginsDirectory: join(home, shippedFolder),
+      pluginSettings: {
+        enabled: () => true,
+        setEnabled: () => Promise.resolve(),
+        values: () => Promise.resolve({}),
+        change: () => Promise.resolve(),
+      },
     },
-  });
+    readText,
+  );
 
   expect(found.map(({ pluginId }) => pluginId)).toEqual(['fine']);
 });

@@ -16,22 +16,31 @@ const launcherErrors = new WeakMap<Client, string[]>();
 export const mcpStderr = (client: Client): string =>
   (launcherErrors.get(client) ?? []).join('');
 
-export async function connectMcp(
-  home: string,
-  token?: string,
-): Promise<Client> {
-  const client = new Client({ name: 'argo-test', version: '1.0.0' });
+function recordStderr(client: Client, transport: StdioClientTransport): void {
+  const errors: string[] = [];
+  launcherErrors.set(client, errors);
+  transport.stderr?.on('data', (chunk: Buffer) => errors.push(String(chunk)));
+}
 
-  const transport = new StdioClientTransport({
+const launcher = (
+  home: string,
+  token: string | undefined,
+): StdioClientTransport =>
+  new StdioClientTransport({
     command: process.execPath,
     args: [entry, 'mcp'],
     env: clientEnvironment(home, token),
     stderr: 'pipe',
   });
 
-  const errors: string[] = [];
-  launcherErrors.set(client, errors);
-  transport.stderr?.on('data', (chunk: Buffer) => errors.push(String(chunk)));
+export async function connectMcp(
+  home: string,
+  token?: string,
+): Promise<Client> {
+  const client = new Client({ name: 'argo-test', version: '1.0.0' });
+  const transport = launcher(home, token);
+
+  recordStderr(client, transport);
   onTestFinished(() => client.close());
   await client.connect(transport);
 
