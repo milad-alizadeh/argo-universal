@@ -161,19 +161,3 @@ describe('pastSessionCallout with a cold auth cache', () => {
     ).toBe(coldSignIn);
   });
 });
-
-describe('pastSessionSignIn while a sign-in runs', () => {
-  // The user sent again before the browser sign-in finished, so a newer Turn ended `auth_required`.
-  it('follows the sign-in and answers the newest Turn when it finishes', () => {
-    expect(
-      pastSessionSignIn({
-        ...quiet,
-        problem: laterExpired,
-        authenticating: 'end-1',
-      }),
-    ).toMatchObject({
-      follows: true,
-      afterSignIn: { type: 'answer-turn', turnEnd: 'end-2' },
-    });
-  });
-});

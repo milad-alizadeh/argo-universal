@@ -54,13 +54,13 @@ export const turnCallout = (
   problem: Problem<'turn'>,
   answers: TurnAnswers,
 ): SessionCalloutProps =>
-  answers.authenticating !== undefined
-    ? answers.signIn
-    : {
+  answers.authenticating === undefined
+    ? {
         kind: 'auth-required',
         description: problem.description,
         onAuthenticate: () => answers.onAuthenticate(problem.id),
-      };
+      }
+    : answers.signIn;
 
 const refusedForSignIn = (problem: SessionProblem | undefined): boolean =>
   problem?.type === 'open' && problem.error.type === 'auth-required';
