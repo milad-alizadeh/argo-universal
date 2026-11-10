@@ -25,6 +25,14 @@ function readInPieces(text: string, cuts: number[]): ShellOutputRead {
 }
 
 describe('readShellOutput', () => {
+  it('keeps an empty line and drops the newline that ends the output', () => {
+    expect(shellOutputLines('one\n\ntwo\n')).toEqual([
+      [{ text: 'one' }],
+      [],
+      [{ text: 'two' }],
+    ]);
+  });
+
   it('reads output in pieces as it reads it whole, wherever the pieces break', () => {
     const whole = shellOutputLines(sample);
 

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { shellOutputLines } from './shell-output-read';
+import type { ShellLine } from './shell-output-lines';
+import { markedLine } from './shell-output-marks';
 
-const escape = '\u001B';
+const marked = (text: string): ShellLine => markedLine([{ text }]);
 
-describe('shellOutputLines on lines the command left uncoloured', () => {
+describe('markedLine', () => {
   it.each([
     [
       'a URL',
@@ -60,24 +61,31 @@ describe('shellOutputLines on lines the command left uncoloured', () => {
       ],
     ],
   ] as const)('tones %s', (_, line, spans) => {
-    expect(shellOutputLines(line)).toEqual([spans]);
+    expect(marked(line)).toEqual(spans);
   });
 
   it('leaves a line the command coloured as it coloured it', () => {
-    expect(
-      shellOutputLines(`${escape}[32mok${escape}[0m error in /srv/x.log`),
-    ).toEqual([
-      [{ text: 'ok', tone: 'success' }, { text: ' error in /srv/x.log' }],
-    ]);
+    const coloured: ShellLine = [
+      { text: 'ok', tone: 'success' },
+      { text: ' error in /srv/x.log' },
+    ];
+
+    expect(markedLine(coloured)).toBe(coloured);
+  });
+
+  it.each([
+    ['a count of none', '0 errors, 0 warnings'],
+    ['a flag', 'vitest --fail-fast'],
+    ['a file name', 'see error.ts'],
+  ])('leaves %s plain', (_, line) => {
+    expect(marked(line)).toEqual([{ text: line }]);
   });
 
   it('keeps words and fractions that only look like paths plain', () => {
-    expect(shellOutputLines('and/or 1/2 3/4.5 errors? no')).toEqual([
-      [
-        { text: 'and/or 1/2 3/4.5 ' },
-        { text: 'errors', tone: 'danger' },
-        { text: '? no' },
-      ],
+    expect(marked('and/or 1/2 3/4.5 errors? no')).toEqual([
+      { text: 'and/or 1/2 3/4.5 ' },
+      { text: 'errors', tone: 'danger' },
+      { text: '? no' },
     ]);
   });
 });

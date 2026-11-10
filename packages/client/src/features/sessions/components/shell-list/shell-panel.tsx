@@ -35,12 +35,7 @@ function OpenShell(props: OpenProps): JSX.Element {
   return (
     <View className="flex-1">
       <TickingHeader {...props} />
-      <ShellOutput
-        shell={props.shell}
-        output={props.output}
-        outputSource={props.outputSource}
-        now={props.now}
-      />
+      <ShellOutput {...props} />
     </View>
   );
 }

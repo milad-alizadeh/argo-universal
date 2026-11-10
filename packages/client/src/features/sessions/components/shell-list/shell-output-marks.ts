@@ -1,13 +1,19 @@
 import type { Tone } from '@repo/kit/primitives/content/text';
 import type { ShellLine, ShellSpan } from './shell-output-lines';
 
+// "0 errors" says nothing went wrong, and a flag such as `--fail-fast` names no failure.
+const notCounted = String.raw`(?<![-\w]|\b0 )`;
+
+// Nor does a word inside a name: `error.ts`, `fail-fast`.
+const notPartOfName = String.raw`(?![-.]\w)`;
+
 // What a command often prints without colour, toned as a terminal theme might: links, files, and the words that say how a step went.
 const marks = new RegExp(
   [
     String.raw`(?<link>https?://[^\s'"<>]*[^\s'"<>.,;:!?)\]])`,
     String.raw`(?<=^|[\s'"(=\[])(?<path>(?:~|\.{1,2})?/[\w.@+~-]+(?:/[\w.@+~-]+)*/?(?::\d+)*|[\w.@-]+(?:/[\w.@-]+)+\.[A-Za-z]\w*(?::\d+)*)`,
-    String.raw`\b(?<danger>errors?|err|failed|failures?|fail|fatal|exception|panic)\b`,
-    String.raw`\b(?<warning>warnings?|warn|deprecated)\b`,
+    String.raw`${notCounted}\b(?<danger>errors?|err|failed|failures?|fail|fatal|exception|panic)\b${notPartOfName}`,
+    String.raw`${notCounted}\b(?<warning>warnings?|warn|deprecated)\b${notPartOfName}`,
     String.raw`(?<success>[✓✔]|\bpassed\b|\bsucceeded\b)`,
   ].join('|'),
   'giu',

@@ -1,20 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { shellOutputLines } from './shell-output-read';
+import { readLines } from './shell-output-lines';
+
+const shellOutputLines = (
+  text: string,
+): ReturnType<typeof readLines>['lines'] => readLines(text).lines;
 
 const escape = '\u001B';
 
-describe('shellOutputLines', () => {
+describe('readLines', () => {
   it('splits plain output into lines of untoned text', () => {
     expect(shellOutputLines('one\ntwo')).toEqual([
       [{ text: 'one' }],
-      [{ text: 'two' }],
-    ]);
-  });
-
-  it('keeps an empty line and drops the newline that ends the output', () => {
-    expect(shellOutputLines('one\n\ntwo\n')).toEqual([
-      [{ text: 'one' }],
-      [],
       [{ text: 'two' }],
     ]);
   });

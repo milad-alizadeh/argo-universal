@@ -1,4 +1,5 @@
 import type { ShellOutput } from '@repo/contracts';
+import type { ShellOutputSource } from '../components/shell-list/shell-list-types';
 
 export interface ShellOutputBuffer {
   shellId: string;
@@ -32,9 +33,9 @@ export function newestShellOutput(
   return received.after > visible.after ? received : visible;
 }
 
-export interface ShellOutputStore {
+// The source the output view reads, which the subscription also writes to.
+export interface ShellOutputStore extends ShellOutputSource {
   current: () => ShellOutputBuffer | undefined;
-  subscribe: (listener: () => void) => () => void;
   receive: (received: ShellOutputBuffer) => void;
 }
 
