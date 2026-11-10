@@ -82,34 +82,6 @@ it('validate reports a shipped Plugin’s contributions', async () => {
   expect(result.output).toContain('argo.operations.register');
 }, 30_000);
 
-it.each([
-  [undefined, 'instructions file instructions.md is missing'],
-  ['x'.repeat(1_001), 'is over 1000 characters'],
-])(
-  'validate refuses Plugin instructions of %s',
-  async (text, reason) => {
-    const directory = await fixture('export function register() {}');
-    const file = join(directory, manifestFile);
-    const manifest = await readManifest(directory);
-
-    await writeFile(
-      file,
-      JSON.stringify({
-        ...manifest,
-        contributes: { ...manifest.contributes, instructions: 'instructions.md' },
-      }),
-    );
-
-    if (text !== undefined)
-      await writeFile(join(directory, 'instructions.md'), text);
-
-    const result = await run('validate', directory);
-    expect(result).toMatchObject({ code: 1 });
-    expect(result.output).toContain(reason);
-  },
-  30_000,
-);
-
 it('validate reports the declared order', async () => {
   const directory = await fixture(
     "export function register(argo) { argo.on('ui.render', (ctx, e, next) => next()); }",

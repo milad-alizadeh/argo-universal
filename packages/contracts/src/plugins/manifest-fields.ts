@@ -41,6 +41,6 @@ export const PluginPath = z
 export const pluginInstructionsLimit = 1_000;
 
 // The Markdown file of Plugin instructions, named relative to the Plugin's folder.
-export const PluginInstructionsFile = z
+export const InstructionsFile = z
   .string()
   .regex(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.md$/);

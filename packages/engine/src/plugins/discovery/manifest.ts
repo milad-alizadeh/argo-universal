@@ -1,9 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import {
-  PluginManifest,
-  pluginInstructionsLimit,
-} from '@repo/contracts/plugins';
+import { PluginManifest } from '@repo/contracts/plugins';
+import { pluginInstructionsLimit } from '@repo/contracts/plugins/manifest-fields';
 import { productName } from '@repo/contracts/product-identity';
 import { gtr, ltr, satisfies, valid, validRange } from 'semver';
 
@@ -93,17 +91,22 @@ async function requireInstructions(
   directory: string,
   file: string | undefined,
 ): Promise<void> {
-  if (file === undefined) return;
+  if (file !== undefined)
+    requireWithinCap(file, await readText(directory, file));
+}
 
-  const text = await readFile(join(directory, file), 'utf8').catch(() => null);
-  const field = ['contributes', 'instructions'];
+const readText = (directory: string, file: string): Promise<string | null> =>
+  readFile(join(directory, file), 'utf8').catch(() => null);
 
+const instructionsError = (message: string): ManifestFieldError =>
+  new ManifestFieldError(['contributes', 'instructions'], message);
+
+function requireWithinCap(file: string, text: string | null): void {
   if (text === null)
-    throw new ManifestFieldError(field, `instructions file ${file} is missing`);
+    throw instructionsError(`instructions file ${file} is missing`);
 
-  if (text.length > pluginInstructionsLimit)
-    throw new ManifestFieldError(
-      field,
-      `instructions file ${file} is over ${pluginInstructionsLimit} characters`,
-    );
+  if (text.length <= pluginInstructionsLimit) return;
+  throw instructionsError(
+    `instructions file ${file} is over ${pluginInstructionsLimit} characters`,
+  );
 }

@@ -9,6 +9,7 @@ import {
 } from '@repo/contracts/operations/control';
 import { z } from 'zod';
 import { publicProcedure, routerFactory, router, mergeRouters } from '../rpc';
+import type { OperationInstructions } from './instructions';
 import type { Operations } from './operations';
 
 const DiscoveryInput = z
@@ -23,11 +24,11 @@ const discoveryRouter = routerFactory((engine: Operations) =>
   }),
 );
 
-const instructionsRouter = routerFactory((engine: Operations) =>
+const instructionsRouter = routerFactory((reader: OperationInstructions) =>
   router({
     instructions: publicProcedure
       .output(z.array(PluginInstruction))
-      .query(({ ctx }) => engine.instructions(ctx.token)),
+      .query(({ ctx }) => reader.read(ctx.token)),
   }),
 );
 
@@ -53,11 +54,17 @@ const waitingRouter = routerFactory((engine: Operations) =>
   }),
 );
 
-export const createOperationsRouter = routerFactory((engine: Operations) =>
-  mergeRouters(
-    discoveryRouter(engine),
-    instructionsRouter(engine),
-    executionRouter(engine),
-    waitingRouter(engine),
-  ),
+type OperationsEngine = {
+  engine: Operations;
+  reader: OperationInstructions;
+};
+
+export const createOperationsRouter = routerFactory(
+  ({ engine, reader }: OperationsEngine) =>
+    mergeRouters(
+      discoveryRouter(engine),
+      instructionsRouter(reader),
+      executionRouter(engine),
+      waitingRouter(engine),
+    ),
 );

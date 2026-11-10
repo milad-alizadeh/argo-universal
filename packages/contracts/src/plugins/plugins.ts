@@ -3,18 +3,13 @@ import { validateAccountCapabilities } from './account-manifest';
 import { AccountHost, PluginCapability } from './capabilities';
 import { DeclaredContributions } from './declared-slots';
 import { HookEventName } from './hooks';
-import {
-  PluginIcon,
-  PluginInstructionsFile,
-  PluginPath,
-} from './manifest-fields';
+import { InstructionsFile, PluginIcon, PluginPath } from './manifest-fields';
 import { PluginOperationContributions } from './plugin-operations';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
 import { AddOnlySlotId, ReplaceableSlotId } from './wire';
 
 export { PluginProjectInfo } from './argo-calls';
-export { pluginInstructionsLimit } from './manifest-fields';
 
 export { PluginIcon } from './manifest-fields';
 
@@ -117,8 +112,8 @@ export const PluginManifest = z
         ).optional(),
         // The Operations the Plugin adds to the registry, which an Agent runs with `argo run <plugin-id>.<name>` (ADR-0044).
         operations: PluginOperationContributions.optional(),
-        // A Markdown file beside `plugin.json`: the Plugin instructions every Session's Agent gets once (ADR-0044). Core reads it without running the Plugin.
-        instructions: PluginInstructionsFile.optional(),
+        // The Plugin instructions file beside `plugin.json`, which every Session's Agent gets once (ADR-0044).
+        instructions: InstructionsFile.optional(),
         // Where the Plugin sits among a Slot's contributors and in a Replaceable Slot's `ui.render` chain: lower comes first, 0 when left out (ADR-0035).
         order: z.int().optional(),
       })

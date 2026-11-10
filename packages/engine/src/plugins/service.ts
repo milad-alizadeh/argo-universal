@@ -1,3 +1,4 @@
+import type { PluginInstruction } from '@repo/contracts/operations/control';
 import type {
   HookEventName,
   PluginList,
@@ -28,7 +29,6 @@ import {
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
-import type { PluginInstruction } from '@repo/contracts/operations/control';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { runsBackground } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
