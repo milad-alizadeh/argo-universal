@@ -1,10 +1,8 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { useIsPreview } from 'expo-router';
-import { useState } from 'react';
 import type * as React from 'react';
-import { View, type ViewStyle } from 'react-native';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
+import { RetainedSessions } from '../../../lib/product/retained-sessions';
 import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
 import {
   SessionDetailView,
@@ -37,84 +35,24 @@ export function SessionDetailScreen({
   if (id === newSessionId)
     return <SessionNewScreen projectId={projectId} draft={draft} />;
 
+  return <SessionPages id={id} />;
+}
+
+// A wide window keeps the Sessions shown last behind the one shown; a phone keeps only the one.
+function SessionPages({ id }: { id: string }): React.JSX.Element {
   return (
     <SizeClass
-      wide={<RetainedSessions sessionId={id} />}
+      wide={
+        <RetainedSessions sessionId={id}>{retainedSession}</RetainedSessions>
+      }
       compact={<ConnectedSession key={id} sessionId={id} />}
     />
   );
 }
 
-const retainedSessionCount = 3;
-
-function useRecentSessions(sessionId: string): string[] {
-  const [recent, setRecent] = useState([sessionId]);
-
-  if (recent[0] !== sessionId)
-    setRecent(
-      [sessionId, ...recent.filter((id) => id !== sessionId)].slice(
-        0,
-        retainedSessionCount,
-      ),
-    );
-
-  return recent;
-}
-
-// The three most recently shown wide Session pages keep their live Feeds.
-function RetainedSessions({
-  sessionId,
-}: {
-  sessionId: string;
-}): React.JSX.Element {
-  const recent = useRecentSessions(sessionId);
-
-  return (
-    <View style={{ flex: 1 }}>
-      {recent.map((id) => (
-        <RetainedSession key={id} sessionId={id} visible={id === sessionId} />
-      ))}
-    </View>
-  );
-}
-
-const retainedStyle = {
-  position: 'absolute',
-  width: '100%',
-  height: '100%',
-  opacity: 0,
-} as const;
-
-const sessionStyle = (visible: boolean): ViewStyle =>
-  visible ? { flex: 1 } : retainedStyle;
-
-const sessionPointer = (visible: boolean): 'auto' | 'none' =>
-  visible ? 'auto' : 'none';
-
-function retainedProps(visible: boolean): React.ComponentProps<typeof View> {
-  return {
-    'aria-hidden': !visible,
-    className: visible ? undefined : 'web:invisible',
-    pointerEvents: sessionPointer(visible),
-    style: sessionStyle(visible),
-  };
-}
-
-function RetainedSession({
-  sessionId,
-  visible,
-}: {
-  sessionId: string;
-  visible: boolean;
-}): React.JSX.Element {
-  return (
-    <RetainedPageVisibility value={visible}>
-      <View {...retainedProps(visible)}>
-        <ConnectedSession sessionId={sessionId} />
-      </View>
-    </RetainedPageVisibility>
-  );
-}
+const retainedSession = (sessionId: string): React.JSX.Element => (
+  <ConnectedSession sessionId={sessionId} />
+);
 
 // A Feed row a Plugin replaces runs its Operations for this Session and its Project.
 function ConnectedSession({
