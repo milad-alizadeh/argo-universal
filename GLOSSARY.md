@@ -122,6 +122,10 @@ _Avoid_: Idle Session, live Session (for this)
 A folder the Server loads that adds nav items, pages, Settings sections or Slot content to Argo. Argo's own Issue tracker and Atlas are Plugins.
 _Avoid_: Extension, add-on, mod
 
+**Plugin instructions**:
+Prose a Plugin gives every Session's Agent, once per Session, through Argo's MCP server. A Plugin declares it in `contributes.instructions`, a Markdown file beside `plugin.json`, and it tells the Agent when the Plugin's Operations apply.
+_Avoid_: Plugin prompt, system prompt
+
 **Plugin host**:
 The Server process that runs Plugin code, each Plugin in its own worker thread with no Node; a Plugin reaches the machine only through its `argo` object. Apps never run Plugin code.
 _Avoid_: Extension host, sandbox

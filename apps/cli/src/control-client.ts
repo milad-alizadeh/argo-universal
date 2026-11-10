@@ -2,6 +2,7 @@ import {
   OperationExecution,
   OperationRow,
   OperationRunResponse,
+  PluginInstruction,
   type OperationRunRequest,
 } from '@repo/contracts/operations/control';
 import { z } from 'zod';
@@ -16,6 +17,7 @@ export type RunRequest = OperationRunRequest;
 // The Server's control procedures, answered complete and checked against their envelopes; results stay JSON.
 export type ControlClient = {
   list: (filter: string | undefined) => Promise<OperationRow[]>;
+  instructions: () => Promise<PluginInstruction[]>;
   run: (request: RunRequest) => Promise<OperationRunResponse>;
   wait: (id: string, timeoutMs?: number) => Promise<OperationExecution>;
 };
@@ -32,6 +34,12 @@ const listOperations = async (
   readControlResponse(
     z.array(OperationRow),
     await (await connectControl()).operations.list.query({ filter }),
+  );
+
+const readInstructions = async (): Promise<PluginInstruction[]> =>
+  readControlResponse(
+    z.array(PluginInstruction),
+    await (await connectControl()).operations.instructions.query(),
   );
 
 const runOperation = async (
@@ -60,6 +68,7 @@ const waitOperation = async (
 // Finds the Server and reads the token only when a command first calls it, so a usage error needs no Server.
 export const createControlClient = (): ControlClient => ({
   list: listOperations,
+  instructions: readInstructions,
   run: runOperation,
   wait: waitOperation,
 });

@@ -9,7 +9,12 @@ export async function runMcp(
   { client }: CommandIo,
 ): Promise<number> {
   parseUsage(() => z.tuple([]).parse(args));
-  await createOperationMcpServer(client).connect(new StdioServerTransport());
+  // Plugin instructions only advise: when the Server will not give them, the tools still answer for themselves.
+  const instructions = await client.instructions().catch(() => []);
+
+  await createOperationMcpServer(client, instructions).connect(
+    new StdioServerTransport(),
+  );
 
   return 0;
 }

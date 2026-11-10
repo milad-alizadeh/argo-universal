@@ -5,6 +5,7 @@ import {
 import {
   OperationRunRequest,
   OperationWaitRequest,
+  PluginInstruction,
 } from '@repo/contracts/operations/control';
 import { z } from 'zod';
 import { publicProcedure, routerFactory, router, mergeRouters } from '../rpc';
@@ -19,6 +20,14 @@ const discoveryRouter = routerFactory((engine: Operations) =>
     list: publicProcedure
       .input(DiscoveryInput)
       .query(({ ctx, input }) => engine.list(ctx.token, input?.filter)),
+  }),
+);
+
+const instructionsRouter = routerFactory((engine: Operations) =>
+  router({
+    instructions: publicProcedure
+      .output(z.array(PluginInstruction))
+      .query(({ ctx }) => engine.instructions(ctx.token)),
   }),
 );
 
@@ -47,6 +56,7 @@ const waitingRouter = routerFactory((engine: Operations) =>
 export const createOperationsRouter = routerFactory((engine: Operations) =>
   mergeRouters(
     discoveryRouter(engine),
+    instructionsRouter(engine),
     executionRouter(engine),
     waitingRouter(engine),
   ),

@@ -7,6 +7,7 @@ import type {
 import type {
   OperationRunRequest,
   OperationWaitRequest,
+  PluginInstruction,
 } from '@repo/contracts/operations/control';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
@@ -106,6 +107,15 @@ export class Operations {
     ];
 
     return recordOperation(call, listed, listedOutput).result;
+  }
+
+  // The Plugin instructions every Session's Agent gets once; any caller with a token may read them.
+  public async instructions(
+    token: string | undefined,
+  ): Promise<PluginInstruction[]> {
+    this.caller(token);
+
+    return this.deps.plugins.plugins.instructions();
   }
 
   public async run(

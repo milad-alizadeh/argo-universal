@@ -28,6 +28,7 @@ import {
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
+import type { PluginInstruction } from '@repo/contracts/operations/control';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { runsBackground } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
@@ -39,6 +40,7 @@ import {
   startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
+import { pluginInstructions } from './plugin-instructions';
 import { startOrderedPlugins } from './plugin-order';
 import { declaredItems } from './slots/declared-items';
 import { renderSlot } from './slots/render-slot';
@@ -61,6 +63,11 @@ export class PluginService {
     applyStatus(result, this.deps.pluginRuntime);
 
     return result;
+  }
+
+  // Each enabled Plugin's instructions, read from its folder without running its code, in Plugin id order.
+  async instructions(): Promise<PluginInstruction[]> {
+    return pluginInstructions(this.deps);
   }
 
   async declared(input: DeclaredItemsInput): Promise<DeclaredItems> {

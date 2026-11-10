@@ -50,7 +50,13 @@ function fakeClient(answers: Partial<ControlClient> = {}): Fake {
 
   return {
     runs,
-    client: { list: unreachable, wait: unreachable, ...answers, run },
+    client: {
+      list: unreachable,
+      instructions: unreachable,
+      wait: unreachable,
+      ...answers,
+      run,
+    },
   };
 }
 

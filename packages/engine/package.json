@@ -59,6 +59,7 @@
     "./router": "./src/engine/router.ts",
     "./mocks": "./mocks/engine.ts",
     "./mocks/operation-waits": "./mocks/operation-waits.ts",
+    "./mocks/runtime-plugins": "./mocks/runtime-plugins.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
     "./stored-keep-running": "./src/system/stored-keep-running.ts",
