@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   closePanel,
+  hidePanels,
   noPanels,
   offeredPanels,
+  reopenPanels,
   selectPanel,
   togglePanel,
 } from './session-panels';
@@ -68,6 +70,53 @@ describe("a Session's Inspector panels", () => {
     expect(offeredPanels(both, ['changes', 'shells'])).toEqual({
       tabs: ['changes'],
       shown: 'changes',
+    });
+  });
+
+  it('reopens with the tabs it held when it was closed', () => {
+    const both = togglePanel(togglePanel(noPanels, 'subagents'), 'shells');
+    const closed = hidePanels(selectPanel(both, 'subagents'));
+
+    expect(closed.tabs).toEqual([]);
+    expect(reopenPanels(closed, 'changes')).toEqual({
+      tabs: ['subagents', 'shells'],
+      shown: 'subagents',
+    });
+  });
+
+  it('reopens with the first offered section when it held no tabs', () => {
+    expect(reopenPanels(noPanels, 'changes')).toEqual({
+      tabs: ['changes'],
+      shown: 'changes',
+    });
+  });
+
+  it('adds a tab opened while closed to the tabs it held', () => {
+    const closed = hidePanels(togglePanel(noPanels, 'subagents'));
+
+    expect(selectPanel(closed, 'shells')).toEqual({
+      tabs: ['subagents', 'shells'],
+      shown: 'shells',
+    });
+  });
+
+  it('forgets tabs closed by hand', () => {
+    const closed = hidePanels(
+      closePanel(togglePanel(noPanels, 'subagents'), 'subagents'),
+    );
+
+    expect(reopenPanels(closed, 'changes')).toEqual({
+      tabs: ['changes'],
+      shown: 'changes',
+    });
+  });
+
+  it('drops a held tab whose section is no longer offered', () => {
+    const both = togglePanel(togglePanel(noPanels, 'subagents'), 'shells');
+
+    expect(offeredPanels(hidePanels(both), ['subagents']).hidden).toEqual({
+      tabs: ['subagents'],
+      shown: 'subagents',
     });
   });
 });

@@ -85,14 +85,14 @@ const workbenchCard = (
       ]
     : [];
 
-// The band's Inspector button opens the first Section the Session offers.
-function openFirst(
+// The band's Inspector button opens the tabs the Inspector last held, or the first Section the Session offers.
+function openInspector(
   content: SessionInspectorContent,
   panels: SessionPanels,
 ): () => void {
   const [first] = offeredSections(itemsOf(content), openCards(content));
 
-  return () => first && panels.select(first);
+  return () => first && panels.reopen(first);
 }
 
 export const sessionWorkbench = (
@@ -102,5 +102,5 @@ export const sessionWorkbench = (
   sections: sessionSections(content).flatMap((section) =>
     workbenchCard(content, panels, section),
   ),
-  onOpenInspector: openFirst(content, panels),
+  onOpenInspector: openInspector(content, panels),
 });

@@ -89,6 +89,7 @@ The independent placement uses the measured host after effective navigation and 
 - **Wide:** its own region beside the Feed. At 1440 the Workbench auto-hides. Both fit from 1768 with the list shown, or from 1456 when the user hides the list.
 - **Medium:** the desktop floating design remains pending the ADR-0026 decision above.
 - **Size-class changes retain open tabs.** Returning to wide restores the selected tab.
+- **Closing the Inspector keeps its tabs.** The band's toggle reopens them with the same tab selected, and a card opened meanwhile adds its tab to them. Only closing every tab by hand empties it; the next opening then starts with the first Section offered.
 
 ## The content column
 

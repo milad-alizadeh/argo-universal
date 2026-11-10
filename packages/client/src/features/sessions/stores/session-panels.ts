@@ -7,21 +7,64 @@ export interface SessionPanelsState {
   shown?: string;
   // How often a card asked each tab to start over at its first page, as a Change row asks Changes for its detail after Files was picked.
   requests?: Readonly<Record<string, number>>;
+  // The tabs a closed Inspector held, which it opens with again; only closing each tab by hand forgets them.
+  hidden?: HiddenPanels;
 }
+
+type HiddenPanels = Pick<SessionPanelsState, 'tabs' | 'shown'>;
 
 export const noPanels: SessionPanelsState = { tabs: [] };
 
-export function selectPanel(
+// Closing the Inspector keeps its tabs to open with again.
+export function hidePanels(state: SessionPanelsState): SessionPanelsState {
+  if (state.tabs.length === 0) return state;
+
+  return {
+    ...noPanels,
+    requests: state.requests,
+    hidden: { tabs: state.tabs, shown: state.shown },
+  };
+}
+
+function restoredPanels(state: SessionPanelsState): SessionPanelsState {
+  const { hidden, ...rest } = state;
+
+  if (!hidden || state.tabs.length > 0) return state;
+
+  return { ...rest, ...hidden };
+}
+
+// Opens the Inspector with the tabs it last held, or with `panel` when it held none.
+export function reopenPanels(
   state: SessionPanelsState,
   panel: string,
 ): SessionPanelsState {
+  const restored = restoredPanels(state);
+
+  return restored.tabs.length > 0 ? restored : selectPanel(state, panel);
+}
+
+// Opening a tab on a closed Inspector brings back the tabs it held.
+export function selectPanel(
+  current: SessionPanelsState,
+  panel: string,
+): SessionPanelsState {
+  const state = restoredPanels(current);
+
   if (state.tabs.includes(panel)) return { ...state, shown: panel };
 
   return { ...state, tabs: [...state.tabs, panel], shown: panel };
 }
 
-// Closing the shown tab shows the last one left.
+// Closing the shown tab shows the last one left; closing a tab that is not open changes nothing.
 export function closePanel(
+  state: SessionPanelsState,
+  panel: string,
+): SessionPanelsState {
+  return state.tabs.includes(panel) ? closeOpenPanel(state, panel) : state;
+}
+
+function closeOpenPanel(
   state: SessionPanelsState,
   panel: string,
 ): SessionPanelsState {
@@ -59,14 +102,33 @@ function requestPanel(
   };
 }
 
-// A tab exists only while its section is offered.
+const keptShown = (
+  shown: string | undefined,
+  tabs: readonly string[],
+): string | undefined =>
+  shown !== undefined && tabs.includes(shown) ? shown : tabs.at(-1);
+
+// The set-aside tabs whose sections are still offered; none left forgets them.
+const offeredHidden = (
+  hidden: HiddenPanels,
+  offered: readonly string[],
+): Pick<SessionPanelsState, 'hidden'> => {
+  const tabs = hidden.tabs.filter((tab) => offered.includes(tab));
+
+  if (tabs.length === 0) return {};
+
+  return { hidden: { tabs, shown: keptShown(hidden.shown, tabs) } };
+};
+
+// A tab exists only while its section is offered, open or set aside.
 export function offeredPanels(
   state: SessionPanelsState,
   offered: readonly string[],
 ): SessionPanelsState {
   const gone = state.tabs.filter((tab) => !offered.includes(tab));
+  const { hidden, ...open } = gone.reduce(closePanel, state);
 
-  return gone.reduce(closePanel, state);
+  return hidden ? { ...open, ...offeredHidden(hidden, offered) } : open;
 }
 
 export interface SessionPanels {
@@ -75,7 +137,10 @@ export interface SessionPanels {
   select: (panel: string) => void;
   close: (panel: string) => void;
   request: (panel: string) => void;
-  closeAll: () => void;
+  // Opens the tabs a closed Inspector held, or `panel` when it held none.
+  reopen: (panel: string) => void;
+  // Closes the Inspector, keeping its tabs for `reopen`.
+  hide: () => void;
 }
 
 type PanelChange = typeof togglePanel;
@@ -121,6 +186,7 @@ function panelActions(
     select: on(selectPanel),
     close: on(closePanel),
     request: on(requestPanel),
-    closeAll: () => setState(noPanels),
+    reopen: on(reopenPanels),
+    hide: () => setState(hidePanels),
   };
 }
