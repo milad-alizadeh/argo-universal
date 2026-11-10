@@ -92,12 +92,14 @@ interface ChildReply {
   row: SessionMessage;
 }
 
-interface ParentResult {
+export interface ParentResult {
   type: 'parent_result';
   id: string;
   position: number;
   revision: number;
   content: readonly ContentBlock[];
+  // The child Feed position the result arrived at; a result stored without one draws last.
+  childPosition?: number;
 }
 
 export type FeedViewItem =
