@@ -154,6 +154,37 @@ export const NamedImageOpensWithItsName: Story = {
   },
 };
 
+// A prompt that is only a list sizes its bubble to the items' text, so a long item wraps across the bubble's width.
+const longItem =
+  'Keep the low-level APIs for any service that needs a client secret, and say why in the ADR.';
+
+const recordedListPrompt = recordedPrompt('agent-1', 'markdown-prompt');
+
+function listOnlyPrompt(width: number): Story {
+  return {
+    args: {
+      row: {
+        ...recordedListPrompt,
+        content: [{ type: 'text', text: `1. Agreed\n2. ${longItem}` }],
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleLayout(width);
+      const item = canvas.getByText(longItem, { exact: true });
+
+      await waitFor(() => {
+        const { width: drawnWidth, height } = item.getBoundingClientRect();
+
+        void expect(drawnWidth).toBeGreaterThan(height);
+      });
+    },
+  };
+}
+
+export const ListOnlyPromptPhone = listOnlyPrompt(layoutWidths.phone);
+
+export const ListOnlyPromptWide = listOnlyPrompt(layoutWidths.wide);
+
 // A long markdown prompt shows only whole lines above Show more, then every line once expanded.
 function showsMore(agent: MockAgent, width: number): Story {
   return {
