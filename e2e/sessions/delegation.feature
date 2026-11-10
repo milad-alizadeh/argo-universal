@@ -9,7 +9,9 @@ Feature: Session delegation
     When the Frame becomes a phone Frame
     And I return from the Session detail
     Then the phone list preserves the delegated Session after its caller
-    When I open the delegated Agent from its caller's Agents card
+    And the caller has no Agents, because a Started Session is not one
+    When I return from the Session detail
+    And I open the delegated Session from the list
     Then the delegated Session accepts a new prompt
 
     Examples:
