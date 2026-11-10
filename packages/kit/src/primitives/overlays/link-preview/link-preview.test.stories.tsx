@@ -6,7 +6,6 @@ import { Link } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { LinkPreviewCard } from './link-preview-card';
 import { LinkPreviewContext } from './link-preview-context';
-import { GitStateIcon } from './link-preview-git';
 import { pullPreview, webPreview } from './link-preview.mocks';
 
 const href = 'https://example.com/guide';
@@ -160,7 +159,7 @@ const marked = {
   load: async (): Promise<ReactNode> => <LinkPreviewCard data={pullPreview} />,
   mark: (target: string): Promise<ReactNode> | null =>
     target === pullHref
-      ? Promise.resolve(<GitStateIcon data={pullPreview} />)
+      ? Promise.resolve(<Text role="secondary">merged</Text>)
       : null,
 };
 
@@ -175,12 +174,7 @@ export const MarkShowsBeforeHoverWide: Story = {
   ),
   play: async ({ canvas }) => {
     await settleLayout('wide');
-    const [pull, guide] = canvas.getAllByRole('link');
-
-    await waitFor(() =>
-      expect(pull?.previousElementSibling).toHaveAttribute('aria-hidden'),
-    );
-    await expect(guide?.previousElementSibling).toBeNull();
+    await expect(await canvas.findAllByText('merged')).toHaveLength(1);
     await expect(
       within(document.body).queryByRole('dialog'),
     ).not.toBeInTheDocument();

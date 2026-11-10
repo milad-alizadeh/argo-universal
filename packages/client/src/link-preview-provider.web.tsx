@@ -48,15 +48,21 @@ function previewSource(
 }
 
 // Only pull requests and issues have a state worth drawing beside the link, so other links wait for a hover.
-const gitItemLink =
-  /^https:\/\/github\.com\/[\w-]+\/[\w.-]+\/(pull|issues)\/\d+\/?$/;
+const gitItemPath = /^\/[\w-]+\/[\w.-]+\/(pull|issues)\/\d+\/?$/;
+
+// The path alone decides, so a link to a comment (`#issuecomment-…`) or with a query still gets its mark.
+function isGitItemLink(href: string): boolean {
+  const url = URL.parse(href);
+
+  return url?.hostname === 'github.com' && gitItemPath.test(url.pathname);
+}
 
 function gitMark(
   client: TRPCClient<AppRouter>,
   cache: QueryClient,
   href: string,
 ): Promise<ReactNode> | null {
-  if (!gitItemLink.test(href)) return null;
+  if (!isGitItemLink(href)) return null;
 
   return cache.fetchQuery(queryOptions(client, href)).then(stateMark);
 }

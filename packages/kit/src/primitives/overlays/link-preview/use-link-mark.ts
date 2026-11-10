@@ -24,7 +24,7 @@ function requestMark(
   if (!pending) return undefined;
   const alive = { current: true };
 
-  void pending.then((value) => alive.current && setMark(value)).catch(noMark);
+  void pending.then((value) => keepMark(alive, value, setMark)).catch(noMark);
 
   return (): void => {
     alive.current = false;
@@ -38,6 +38,15 @@ function markOf(
   const mark = source?.mark;
 
   return mark ? mark(href) : null;
+}
+
+// A refetch that finds nothing (the Server busy, `gh` failing) keeps the last state drawn rather than blanking it.
+function keepMark(
+  alive: { current: boolean },
+  value: ReactNode,
+  setMark: (mark: ReactNode) => void,
+): void {
+  if (alive.current && value) setMark(value);
 }
 
 function noMark(): void {}
