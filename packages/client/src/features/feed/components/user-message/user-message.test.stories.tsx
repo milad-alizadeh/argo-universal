@@ -156,7 +156,7 @@ export const NamedImageOpensWithItsName: Story = {
 
 const markdownRecording = 'markdown-prompt';
 
-// A prompt that is only a list sizes its bubble to the items' text, rather than to the markers, so a short item keeps to one line.
+// A prompt that is only a list sizes its bubble to the items' text, rather than to the markers, so a short item keeps to one line, whether or not the clamp shows it.
 const listStart = '1. Read';
 
 const listEnd = '\n\n> ';
@@ -195,13 +195,8 @@ function listOnlyPrompt(agent: MockAgent, width: number): Story {
     play: async ({ canvas }) => {
       await settleLayout(width);
       const item = canvas.getByText(shortItem, { exact: true });
-      const lineHeight = Number.parseFloat(getComputedStyle(item).lineHeight);
 
-      await waitFor(() =>
-        expect(item.getBoundingClientRect().height).toBeLessThan(
-          lineHeight * 1.5,
-        ),
-      );
+      await waitFor(() => expect(lineViews(item)).toHaveLength(1));
     },
   };
 }
