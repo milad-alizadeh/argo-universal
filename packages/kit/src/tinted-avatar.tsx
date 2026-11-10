@@ -60,7 +60,7 @@ function AvatarStatus({
 
   return (
     <View className="absolute right-0 top-0">
-      <StatusDot {...status} />
+      <StatusDot {...status} pulse />
     </View>
   );
 }
