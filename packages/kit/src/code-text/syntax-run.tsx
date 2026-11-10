@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { withOccurrenceKeys } from '#kit/occurrence-keys';
-import { Text } from '#primitives/content/text';
+import { Text, type TextRole } from '#primitives/content/text';
 
 /*
  * The six the Foundations "Components / Code" master draws, one --color-syntax-* token each.
@@ -37,9 +37,13 @@ const syntaxClassNames = {
   comment: 'text-syntax-comment italic',
 } as const satisfies Record<SyntaxType, string>;
 
-function SyntaxText({ text, type }: SyntaxRun): ReactElement {
+function SyntaxText({
+  text,
+  type,
+  role,
+}: SyntaxRun & { role: TextRole }): ReactElement {
   return (
-    <Text role="code" className={type && syntaxClassNames[type]}>
+    <Text role={role} className={type && syntaxClassNames[type]}>
       {text}
     </Text>
   );
@@ -47,10 +51,13 @@ function SyntaxText({ text, type }: SyntaxRun): ReactElement {
 
 /*
  * Coloured runs as nested Text, so the block around them stays one selectable, copyable piece of
- * text rather than a row of separate ones.
+ * text rather than a row of separate ones. `role` matches the Text the runs sit in.
  */
-export function syntaxRunsText(runs: SyntaxRun[]): ReactNode {
+export function syntaxRunsText(
+  runs: SyntaxRun[],
+  role: TextRole = 'code',
+): ReactNode {
   return withOccurrenceKeys(runs, (run) => run.text).map(({ item, key }) => (
-    <SyntaxText key={key} {...item} />
+    <SyntaxText key={key} {...item} role={role} />
   ));
 }

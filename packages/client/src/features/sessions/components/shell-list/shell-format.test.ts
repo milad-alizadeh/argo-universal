@@ -81,8 +81,8 @@ describe('shellHeading', () => {
 
 describe('shellEnding', () => {
   it('times an ended Shell but says what became of a lost one', () => {
-    expect(shellEnding(stoppedShell, shellNow)).toBe('after 2m 14s');
-    expect(shellEnding(lostShell, shellNow)).toBe('when the Server restarted');
+    expect(shellEnding(stoppedShell)).toBe('after 2m 14s');
+    expect(shellEnding(lostShell)).toBe('when the Server restarted');
   });
 });
 

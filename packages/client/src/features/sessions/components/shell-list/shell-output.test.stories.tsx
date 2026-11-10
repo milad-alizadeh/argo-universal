@@ -173,6 +173,8 @@ export const Lost: Story = {
 const longCommand =
   'pnpm run a-very-long-command-with-several-options --include-all-packages --verbose --no-cache';
 
+const commandId = 'shell-command';
+
 const longDirectory =
   '/Users/example/Projects/a-very-long-project-name/packages/example-application';
 
@@ -184,9 +186,10 @@ export const LongCommandAndFolderRemainReadable: Story = {
   play: async ({ canvas }) => {
     await settleLayout('phone');
 
-    for (const text of [longCommand, longDirectory]) {
-      const element = canvas.getByText(text);
-
+    for (const element of [
+      canvas.getByTestId(commandId),
+      canvas.getByText(longDirectory),
+    ]) {
       await expect(element.scrollWidth).toBeLessThanOrEqual(
         element.clientWidth,
       );

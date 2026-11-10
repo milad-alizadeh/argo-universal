@@ -2,6 +2,7 @@ import {
   failedShell,
   lostShell,
   noCodeShell,
+  passedShell,
   runningShell,
   shellNow,
   stoppedShell,
@@ -14,6 +15,7 @@ import {
   noCodeOutput,
   runningOutput,
   stoppedOutput,
+  uncolouredOutput,
 } from './shell-output.mocks';
 
 export const runningShellOutput = {
@@ -49,5 +51,15 @@ export const exitedWithoutACodeShellOutput = {
 export const lostShellOutput = {
   shell: lostShell,
   output: lostOutput,
+  now: shellNow,
+} satisfies ShellOutputProps;
+
+// Output without its own colours, where links, paths and error and warning words are marked.
+export const uncolouredShellOutput = {
+  shell: {
+    ...passedShell,
+    command: "pnpm vitest run src/ --reporter=basic 2>&1 | tee 'test.log'",
+  },
+  output: uncolouredOutput,
   now: shellNow,
 } satisfies ShellOutputProps;

@@ -16,19 +16,26 @@ export type ShellPanelProps = ShellViewProps & { listScrolls?: boolean };
 
 type OpenProps = ShellPanelProps & { shell: ShellEntry; onBack: () => void };
 
-// An open Shell fills the panel: its own header over the output, which scrolls on its own.
-function OpenShell({ shell, onBack, ...props }: OpenProps): JSX.Element {
+// Only the header shows a running time, so only the header ticks.
+function TickingHeader({ shell, onBack, ...props }: OpenProps): JSX.Element {
   const now = useClock(shell.status === 'running', props.now);
 
   return (
+    <ShellOutputHeader
+      shell={shell}
+      onBack={onBack}
+      onStop={props.onStop}
+      now={now}
+    />
+  );
+}
+
+// An open Shell fills the panel: its own header over the output, which scrolls on its own.
+function OpenShell(props: OpenProps): JSX.Element {
+  return (
     <View className="flex-1">
-      <ShellOutputHeader
-        shell={shell}
-        onBack={onBack}
-        onStop={props.onStop}
-        now={now}
-      />
-      <ShellOutput shell={shell} output={props.output} now={props.now} />
+      <TickingHeader {...props} />
+      <ShellOutput {...props} />
     </View>
   );
 }
