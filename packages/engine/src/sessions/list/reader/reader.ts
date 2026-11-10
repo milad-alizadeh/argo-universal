@@ -4,6 +4,7 @@ import { createLiveHeaderReader } from '../../live-header';
 import type { SessionInput } from '../../session-data';
 import { readQueuedSessionRows } from '../../session-storage';
 import { latestTurnOf } from '../../stored-turn';
+import { isSubagentOf } from '../../subagents/subagent-of';
 import type { WriterChange } from '../observation';
 import type { SessionListState } from '../state';
 import { readSessionInformation } from './information';
@@ -106,10 +107,7 @@ class ListReader {
     row: SessionRecord,
     rows: SessionRecord[],
   ): SessionListState {
-    const children = rows.filter(
-      (child): boolean =>
-        child.parentSessionId === row.id || child.startedBySessionId === row.id,
-    );
+    const children = rows.filter(isSubagentOf(row.id));
 
     const turns = familyTurns(input, row.id, children);
     const listed = this.listed(input, { row, turns });

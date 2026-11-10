@@ -5,18 +5,15 @@ import type {
   Turn,
 } from '@repo/contracts';
 
-type ChildSession = Pick<
-  SessionRecord,
-  'id' | 'parentSessionId' | 'startedBySessionId' | 'title'
->;
+type ChildSession = Pick<SessionRecord, 'id' | 'parentSessionId' | 'title'>;
 
-// A child Session with its latest Turn; a Session without a parent is no Subagent.
+// A child Session with its latest Turn; a Started Session is no Subagent, so it is listed under its starter and never here.
 export function toSubagent(
   child: ChildSession,
   latest: Turn | undefined,
   updates: readonly SubagentUpdate[],
 ): Subagent[] {
-  const parentId = child.parentSessionId ?? child.startedBySessionId;
+  const parentId = child.parentSessionId;
 
   if (parentId === null) return [];
 
@@ -86,7 +83,7 @@ function knownTurnDetails(latest: Turn): ReturnType<typeof turnDetails> {
 
 type ChildIdentity = Pick<
   Subagent,
-  'sessionId' | 'parentSessionId' | 'readOnly' | 'toolCallId' | 'title' | 'role'
+  'sessionId' | 'parentSessionId' | 'toolCallId' | 'title' | 'role'
 >;
 
 function childIdentity(
@@ -97,7 +94,6 @@ function childIdentity(
   return {
     sessionId: child.id,
     parentSessionId,
-    readOnly: child.parentSessionId !== null,
     toolCallId: null,
     title: child.title,
     role: updateRole(child.id, updates),

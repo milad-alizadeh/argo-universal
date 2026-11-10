@@ -8,7 +8,7 @@ import type { SectionTabHandle, SessionSection } from './session-section';
 
 const noAgents: SubagentListProps = { subagents: [] };
 
-// A row opens that Agent's Feed in the tab, or sends the person to its own page if the Session can't show it read-only.
+// A row opens that Agent's Feed in the tab.
 const agentsSummary = (
   { subagents = noAgents }: SessionInspectorContent,
   tab: SectionTabHandle,
@@ -17,8 +17,7 @@ const agentsSummary = (
     {...subagents}
     onOpen={(agent) => {
       subagents.onSelect?.(agent);
-
-      if (agent.readOnly) tab.open();
+      tab.open();
     }}
   />
 );

@@ -20,7 +20,6 @@ const runningTurn = {
 const unknownWork = {
   sessionId: 'child',
   parentSessionId: 'session-1',
-  readOnly: true,
   toolCallId: null,
   role: null,
   model: null,

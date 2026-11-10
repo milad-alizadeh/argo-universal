@@ -245,8 +245,12 @@ A Session that New Session opened in the Project's main checkout and no prompt h
 _Avoid_: Draft Session, pending Session
 
 **Agent**:
-A Session that another Session started to do delegated work. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so.
+A Session that another Session's Agent started over ACP to do delegated work. Only that parent drives it: it takes no prompt from the person, and it is shown in its parent's Workbench and Inspector, never as a row in the Sessions list. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so; the code still says `Subagent` and `parentSessionId`. The owner split off Started Session on 2026-11-10.
 _Avoid_: Subagent, child agent, task agent
+
+**Started Session**:
+A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`.
+_Avoid_: Agent, Subagent, child Session, delegated Session
 
 **Background Task**:
 A command an Agent started in the background, which keeps running while the Turn goes on. The owner renamed Shell to Background Task on 2026-11-02; the code still says `Shell`.
