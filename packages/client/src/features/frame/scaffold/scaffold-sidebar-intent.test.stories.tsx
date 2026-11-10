@@ -20,7 +20,9 @@ const showSidebar = 'Show sidebar';
 
 const workbenchId = 'desktop-workbench';
 
+// Without the list, the page's gutter holds the Workbench from 1544.
 export const HidingSidebarMakesRoomForTheWorkbench: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1544),
   play: async ({ canvas, userEvent }) => {
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),

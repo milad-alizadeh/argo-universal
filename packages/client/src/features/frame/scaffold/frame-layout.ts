@@ -21,7 +21,7 @@ import type {
   FrameLayoutInput,
   ListRegion,
 } from './frame-layout-types';
-import { dockedWorkbench, reservedWorkbench } from './frame-layout-workbench';
+import { gutterPage } from './frame-layout-workbench';
 
 export { resizeOutcome } from './frame-layout-handles';
 
@@ -29,20 +29,20 @@ export { workbenchDrawn } from './frame-layout-workbench';
 
 export type * from './frame-layout-types';
 
-// Docked, every region needs its room beside the content's floor; the Workbench undocks first, then the list folds.
+// The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page's gutters no longer hold it.
 function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
-  const listFold =
+  const leading =
     railZone(input.measures) +
-    contentFloor(input.measures) +
     inspectorBudget(input) +
-    preferredListWidth(input);
+    (input.sidebarShown ? preferredListWidth(input) : 0);
 
   return {
-    listFold,
-    workbenchUndock:
-      listFold +
-      reservedWorkbench(input) -
-      (input.sidebarShown ? 0 : preferredListWidth(input)),
+    listFold:
+      railZone(input.measures) +
+      contentFloor(input.measures) +
+      inspectorBudget(input) +
+      preferredListWidth(input),
+    workbenchGutter: leading + gutterPage(input),
   };
 }
 
@@ -59,15 +59,13 @@ function listRegion(input: FrameLayoutInput, listFold: number): ListRegion {
   };
 }
 
+// Everything beside the list but the Inspector: the Workbench is drawn over the page, never beside it.
 function pageRegion(
   input: FrameLayoutInput,
   contentStart: number,
-  { inspector, workbench }: Pick<FrameLayout, 'inspector' | 'workbench'>,
+  inspector: FrameLayout['inspector'],
 ): FrameLayout['page'] {
-  const trailing =
-    dockedWorkbench(input, workbench.state) +
-    occupied(inspector.width, input.measures.paneGap);
-
+  const trailing = occupied(inspector.width, input.measures.paneGap);
   const hidden = inspector.expanded;
 
   return {
@@ -119,13 +117,13 @@ function placeRegions(
 ): Placed {
   const { contentStart, ...leading } = leadingRegions(input, thresholds);
   const inspector = inspectorRegion(input, contentStart);
-  const workbench = workbenchRegion(input, inspector, contentStart);
+  const page = pageRegion(input, contentStart, inspector);
 
   return {
     ...leading,
     inspector,
-    page: pageRegion(input, contentStart, { inspector, workbench }),
-    workbench,
+    page,
+    workbench: workbenchRegion(input, page),
   };
 }
 
@@ -142,7 +140,7 @@ const arrangement = (
 /*
  * A wide window's Frame: the window's width, the Frame's measures, the preferred pane widths and what the
  * person asked of the sidebar, the Workbench and the Inspector in; every region, divider and resize limit out.
- * The content keeps its floor first, then the Workbench undocks, then the list folds.
+ * The content keeps its floor before the list folds; the Workbench takes no width and shows where the page's gutter holds it.
  */
 export function frameLayout(input: FrameLayoutInput): FrameLayout {
   const thresholds = requestedThresholds(input, budgetThresholds(input));

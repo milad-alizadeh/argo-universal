@@ -174,7 +174,9 @@ export const ChecksPopoverListsEachCheck: Story = {
   },
 };
 
+// The Workbench stays beside the open Inspector only where the gutter still holds it.
 export const PreviewRestoresPrDetails: Story = {
+  beforeEach: (): Promise<void> => settleLayout(2224),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', firstChange));
     await expectPrDetails({ canvas });

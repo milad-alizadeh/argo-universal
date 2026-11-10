@@ -3,15 +3,14 @@ import type { PaneSpan } from '../utils/pane-shift';
 // The Inspector: closed, open beside the page, or expanded over it.
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
-// Effective placement follows the width budget; the separate intent survives automatic hiding.
-export type WorkbenchState =
-  | 'gutter'
-  | 'docked'
-  | 'auto-hidden'
-  | 'overlay'
-  | 'hidden';
+/*
+ * The Workbench never takes width from the page: it is drawn over the page's trailing edge, in the gutter beside the
+ * centred content when it fits there, over the content when the person shows it anyway, or not at all. Effective
+ * placement follows the width budget; the separate intent survives automatic hiding.
+ */
+export type WorkbenchState = 'gutter' | 'auto-hidden' | 'overlay' | 'hidden';
 
-// What the person asked of the Workbench's one toggle: nothing yet, so it docks when the window has room, or to show it (an overlay when it does not fit) or hide it.
+// What the person asked of the Workbench's one toggle: nothing yet, so it shows when the gutter has room, or to show it (an overlay when it does not fit) or hide it.
 export type WorkbenchIntent = 'auto' | 'shown' | 'hidden';
 
 // The Frame's sizes, read from its tokens and the platform.
@@ -64,7 +63,7 @@ export interface ResizeHandle {
 export type ResizeOutcome = 'closed' | 'expanded' | number;
 
 /*
- * What a pane opening, closing, folding or docking changes, and so what the Frame animates on: a type
+ * What a pane opening, closing or folding, or the Workbench showing, changes, and so what the Frame animates on: a type
  * alias, so `transitionKeyOf` takes it as the plain record it serialises.
  */
 export type FrameArrangement = {
@@ -95,8 +94,8 @@ export interface InspectorRegion extends PaneSpan {
 export interface FrameLayout {
   // The panes start under the window band.
   panesTop: number;
-  // The window widths below which the list folds and the Workbench undocks.
-  thresholds: { listFold: number; workbenchUndock: number };
+  // The window widths below which the list folds and the Workbench no longer fits in the content's gutter.
+  thresholds: { listFold: number; workbenchGutter: number };
   rail: PaneSpan;
   list: ListRegion;
   // The rail and the list with their insets: the permanent drawer's width.
@@ -109,6 +108,6 @@ export interface FrameLayout {
   handles: { list: ResizeHandle | null; inspector: ResizeHandle };
   // The band title's distance from the leading group, so it starts on the content column's leading edge.
   bandTitleLeading: number;
-  // Changes only when a pane opens, closes, folds or docks, so a window resize or a drag moves the Frame at once.
+  // Changes only when a pane opens, closes or folds, or the Workbench shows or hides, so a window resize or a drag moves the Frame at once.
   transitionKey: string;
 }

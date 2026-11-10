@@ -43,6 +43,8 @@ const composerId = 'composer-column';
 
 const workbenchId = 'desktop-workbench';
 
+const detailId = 'desktop-detail';
+
 async function expectSeparateCards(canvas: Canvas): Promise<void> {
   const composer = canvas.getByTestId(composerId);
   await browserUser.hover(composer);
@@ -68,7 +70,22 @@ function gutterBoundary(width: number): Story {
 
 export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1856);
 
-export const CardsDockBelowTheIndependentBoundary = gutterBoundary(1855);
+// Below it the cards hide rather than move the conversation, which stays centred in the page.
+export const CardsAutoHideBelowTheIndependentBoundary: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1855),
+  play: async ({ canvas }) => {
+    const composer = await canvas.findByTestId(composerId);
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
+    const page = canvas.getByTestId(detailId).getBoundingClientRect();
+    const content = composer.getBoundingClientRect();
+    await expect(content.left + content.width / 2).toBeCloseTo(
+      page.left + page.width / 2,
+      1,
+    );
+  },
+};
 
 export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
   beforeEach: (): Promise<void> => settleLayout(2224),
@@ -89,7 +106,7 @@ export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
-    await expect(canvas.getByTestId('desktop-detail')).toHaveAttribute(
+    await expect(canvas.getByTestId(detailId)).toHaveAttribute(
       'aria-hidden',
       'true',
     );

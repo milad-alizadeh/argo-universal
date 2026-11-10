@@ -16,6 +16,9 @@ import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
 
+// The narrowest wide window whose page gutter shows the Workbench's cards.
+const workbenchWide = 1856;
+
 const subagentsName = 'Agents';
 
 const agentsCard = 'workbench-subagents';
@@ -106,7 +109,7 @@ async function subagentsPage(
 function subagentsAt(width: number, state: State): Story {
   const subagents = subagentStates[state];
   const onSelect = fn();
-  const wide = width === layoutWidths.wide;
+  const wide = width === workbenchWide;
 
   return {
     beforeEach: () => settleLayout(width),
@@ -144,13 +147,13 @@ function subagentsAt(width: number, state: State): Story {
   };
 }
 
-export const WideNone = subagentsAt(layoutWidths.wide, 'none');
+export const WideNone = subagentsAt(workbenchWide, 'none');
 
-export const WideOneRunning = subagentsAt(layoutWidths.wide, 'oneRunning');
+export const WideOneRunning = subagentsAt(workbenchWide, 'oneRunning');
 
-export const WideSeveralMixed = subagentsAt(layoutWidths.wide, 'severalMixed');
+export const WideSeveralMixed = subagentsAt(workbenchWide, 'severalMixed');
 
-export const WideAllFinished = subagentsAt(layoutWidths.wide, 'allFinished');
+export const WideAllFinished = subagentsAt(workbenchWide, 'allFinished');
 
 export const MediumNone = subagentsAt(layoutWidths.tablet, 'none');
 
