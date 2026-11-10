@@ -13,7 +13,7 @@ import { hasBadge, ItemBadge } from '../../../row-badge';
 import { StatusMarkHidden } from '../../../status-mark-context';
 import { cn } from '../../../utils';
 import { CompactContent, ItemContent, trailsTitle } from './list-item-content';
-import { Accessory, Control, Leading } from './list-item-parts';
+import { Accessory, Control, hasLeading, Leading } from './list-item-parts';
 import { InertLane } from './list-item-pass-through';
 import type { DrawingProps } from './list-item-press-props';
 import { Trailing } from './list-item-trailing';
@@ -34,7 +34,7 @@ function RowContentSlots(props: DrawingProps): ReactElement {
   return (
     <TextClassContext value={undefined}>
       <InertLane>{props.choice}</InertLane>
-      {compact ? null : <TreeLane title={props.title} compact={false} />}
+      <RowTreeLane props={props} compact={compact} />
       <Leading {...props} />
       <RowContent props={props} compact={compact} />
       <RowTrailing props={props} compact={compact} />
@@ -42,6 +42,20 @@ function RowContentSlots(props: DrawingProps): ReactElement {
       <Control>{props.control}</Control>
     </TextClassContext>
   );
+}
+
+type RowProps = { props: DrawingProps; compact: boolean };
+
+// A regular row draws its tree lane before its leading mark, against its own lanes.
+function RowTreeLane({ props, compact }: RowProps): ReactNode {
+  if (compact) return null;
+
+  const regular = {
+    sidebar: props.sidebar === true,
+    leading: hasLeading(props),
+  };
+
+  return <TreeLane title={props.title} regular={regular} />;
 }
 
 // A regular row's trailing mark joins its title when the title trails; otherwise it has its own lane.

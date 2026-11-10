@@ -1,9 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
-import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
+import { View } from 'react-native';
 import { useListLook } from '../../../list-look-context';
 import { useTreeRow, type TreeRow } from '../../../list-tree';
 import { cn } from '../../../utils';
+import { FoldButton, type FoldProps } from './list-item-tree-fold';
+import { RegularLanes, type RegularRow } from './list-item-tree-regular';
 
 /*
  * Paper "Issue row": each level of the tree is a 16 lane. A rail is a 1px line 7 in from its lane's start, in the
@@ -37,8 +38,6 @@ function ParentLane({ last }: { last: boolean }): ReactElement {
   );
 }
 
-type FoldProps = { parent: NonNullable<TreeRow['parent']>; title: string };
-
 // A parent's chevron folds and unfolds its children; an open parent's rail starts under it.
 function FoldLane({ parent, title }: FoldProps): ReactElement {
   return (
@@ -49,24 +48,8 @@ function FoldLane({ parent, title }: FoldProps): ReactElement {
           className={cn(rail, 'top-1/2 bottom-0 mt-2')}
         />
       ) : null}
-      <FoldButton parent={parent} title={title} />
+      <FoldButton parent={parent} title={title} className="absolute inset-0" />
     </View>
-  );
-}
-
-// Named after its row, so a screen reader hears which row it folds, and reporting whether that row is open.
-function FoldButton({ parent, title }: FoldProps): ReactElement {
-  return (
-    <Pressable
-      role="button"
-      accessibilityLabel={title}
-      accessibilityState={{ expanded: parent.open }}
-      aria-expanded={parent.open}
-      onPress={parent.toggle}
-      className="absolute inset-0 items-center justify-center rounded-sm web:select-none web:hover:bg-hover"
-    >
-      <DisclosureChevron open={parent.open} />
-    </Pressable>
   );
 }
 
@@ -100,7 +83,11 @@ function ThroughLanes({ through }: { through: readonly boolean[] }): ReactNode {
   );
 }
 
-type LaneProps = { title: string; compact: boolean };
+type LaneProps = {
+  title: string;
+  // Set on a regular row, which draws its tree against its own lanes; a compact row's line leaves it out.
+  regular?: RegularRow;
+};
 
 // True when the row draws a chevron of its own, a button its row's press must not hold (list-item-beside-press.tsx).
 export function useFoldButton(): boolean {
@@ -111,8 +98,9 @@ export function useFoldButton(): boolean {
 }
 
 /*
- * The row's tree lane, drawn only on a wide desktop or web window: its ancestors' rails, its parent's, then its own
- * lane, which holds a parent's chevron. It runs the row's full height, past a regular row's own padding.
+ * The row's tree lane, drawn only on a wide desktop or web window. A compact row's is its ancestors' rails, its
+ * parent's, then its own lane, which holds a parent's chevron. A regular row keeps its chevron and rail under its
+ * leading mark instead (list-item-tree-regular.tsx).
  */
 export function TreeLane(props: LaneProps): ReactNode {
   const tree = useTreeRow();
@@ -123,16 +111,15 @@ export function TreeLane(props: LaneProps): ReactNode {
   return <Lanes tree={tree} {...props} />;
 }
 
-const lanesClass = (compact: boolean): string =>
-  cn('flex-row self-stretch', !compact && '-my-4');
-
 function Lanes({
   tree,
   title,
-  compact,
+  regular,
 }: LaneProps & { tree: TreeRow }): ReactElement {
+  if (regular) return <RegularLanes tree={tree} title={title} {...regular} />;
+
   return (
-    <View pointerEvents="box-none" className={lanesClass(compact)}>
+    <View pointerEvents="box-none" className="flex-row self-stretch">
       <ThroughLanes through={tree.through} />
       {tree.depth > 0 ? <ParentLane last={tree.last} /> : null}
       <OwnLane tree={tree} title={title} />
