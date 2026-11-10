@@ -85,7 +85,10 @@ function deliverResult(
 
   sendMessageAction(input, reply.child, {
     messageId: update.messageId,
-    field: { result: messageContent(update, reply.previous) },
+    field: {
+      result: messageContent(update, reply.previous),
+      childPosition: reply.childPosition,
+    },
   });
 
   return true;

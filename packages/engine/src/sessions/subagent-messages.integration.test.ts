@@ -31,7 +31,7 @@ const foregroundActions = [
   { action: 'message', prompt: [text('Review the change.')] },
   { subagentState: 'requires_action' },
   { subagentState: 'running' },
-  { result: [text('The change looks correct.')] },
+  { result: [text('The change looks correct.')], childPosition: 2 },
   { subagentState: 'idle' },
 ];
 

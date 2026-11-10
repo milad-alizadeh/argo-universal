@@ -102,13 +102,17 @@ export const SubagentUpdate = z.strictObject({
   subagentSessionId: z.string(),
   title: z.string().optional(),
   subagentState: SubagentState.optional(),
-  // `prompt` is the parent's outgoing message; `result` only an explicit reply from the child.
+  /*
+   * `prompt` is the parent's outgoing message; `result` only an explicit reply from the child.
+   * `childPosition` is the child Feed's next position when the result first arrived, where the child's Feed draws it (#1981).
+   */
   _meta: createFeedMetadataSchema(
     z.strictObject({
       action: SubagentAction.optional(),
       role: z.string().optional(),
       prompt: z.array(ContentBlock).optional(),
       result: z.array(ContentBlock).optional(),
+      childPosition: z.number().int().nonnegative().optional(),
     }),
   ),
 });

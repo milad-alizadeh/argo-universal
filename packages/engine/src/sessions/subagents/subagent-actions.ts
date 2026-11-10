@@ -22,7 +22,9 @@ export type MessageRouting = SubagentRouting & {
 };
 
 // Only the parent's outgoing `prompt` is a `message` action; a child's explicit `result` carries no action (#930).
-type MessageField = { prompt: ContentBlock[] } | { result: ContentBlock[] };
+type MessageField =
+  | { prompt: ContentBlock[] }
+  | { result: ContentBlock[]; childPosition: number };
 
 export type MessageAction = { messageId: string; field: MessageField };
 
@@ -156,7 +158,22 @@ const replier = (
   previous ? childById(input, previous) : explicitReplier(input, update);
 
 // `previous` is the result so far, which a chunk extends and a patch may keep.
-type Reply = { child: ChildFeed; previous: ContentBlock[] | undefined };
+type Reply = {
+  child: ChildFeed;
+  previous: ContentBlock[] | undefined;
+  childPosition: number;
+};
+
+// A result keeps the child Feed position it first arrived at, so a revision never moves it (#1981).
+const storedChildPosition = (row: SubagentUpdate): number | undefined =>
+  row._meta?.argo?.childPosition;
+
+const childPositionOf = (
+  child: ChildFeed,
+  previous: SubagentUpdate | undefined,
+): number =>
+  (previous && storedChildPosition(previous)) ??
+  child.feed.getSnapshot().context.nextPosition;
 
 export function replyOf(
   input: MessageRouting,
@@ -165,5 +182,11 @@ export function replyOf(
   const previous = previousResult(input, update.messageId);
   const child = replier(input, update, previous);
 
-  return child && { child, previous: previous && resultOf(previous) };
+  return (
+    child && {
+      child,
+      previous: previous && resultOf(previous),
+      childPosition: childPositionOf(child, previous),
+    }
+  );
 }

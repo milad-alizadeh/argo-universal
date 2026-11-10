@@ -18,6 +18,8 @@ export { toParentResults } from './view/to-parent-results';
 
 export { toSubagentFeedView } from './view/to-subagent-feed-view';
 
+export { withParentResults } from './view/with-parent-results';
+
 export { DiffView } from './components/diff-view/diff-view';
 
 export { toFileDiffs, type FileDiff } from './view/file-diff';
