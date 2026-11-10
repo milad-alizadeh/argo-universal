@@ -1,6 +1,11 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import type { FeedAnchor } from './feed-scroll-memory';
 
+export type AnchoredList = Pick<
+  LegendListRef,
+  'scrollToKey' | 'anchorVisibleContent'
+>;
+
 const maxFrames = 120;
 
 const stableFrames = 20;
@@ -10,10 +15,7 @@ const offsetTolerance = 2;
 const nextFrame = (): Promise<void> =>
   new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
-function scrollToAnchor(
-  list: LegendListRef,
-  anchor: FeedAnchor,
-): Promise<void> {
+function scrollToAnchor(list: AnchoredList, anchor: FeedAnchor): Promise<void> {
   return list.scrollToKey({
     key: anchor.key,
     viewPosition: 0,
@@ -22,7 +24,7 @@ function scrollToAnchor(
   });
 }
 
-const offsetMatches = (list: LegendListRef, anchor: FeedAnchor): boolean => {
+const offsetMatches = (list: AnchoredList, anchor: FeedAnchor): boolean => {
   const current = list.anchorVisibleContent({ key: anchor.key, hold: false });
 
   return (
@@ -37,7 +39,7 @@ interface Measurement {
 }
 
 async function measureOnce(
-  list: LegendListRef,
+  list: AnchoredList,
   anchor: FeedAnchor,
   measurement: Measurement,
 ): Promise<number> {
@@ -54,7 +56,7 @@ const shouldStop = (signal: AbortSignal, stable: number): boolean =>
   signal.aborted || stable >= stableFrames;
 
 function holdIfActive(
-  list: LegendListRef,
+  list: AnchoredList,
   anchor: FeedAnchor,
   signal: AbortSignal,
 ): void {
@@ -62,7 +64,7 @@ function holdIfActive(
 }
 
 async function followMeasurements(
-  list: LegendListRef,
+  list: AnchoredList,
   anchor: FeedAnchor,
   signal: AbortSignal,
 ): Promise<void> {
@@ -81,7 +83,7 @@ async function followMeasurements(
 
 // Legend List reports when its target can be measured; keep correcting until its offset settles.
 export async function restoreFeedAnchor(
-  list: LegendListRef,
+  list: AnchoredList,
   anchor: FeedAnchor,
   signal: AbortSignal,
 ): Promise<void> {
