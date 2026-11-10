@@ -75,7 +75,7 @@ function ListItem({ marker, tokens, caret }: ListItemProps): ReactElement {
   return (
     <View className="flex-row w-full gap-2">
       <ListMarker>{marker}</ListMarker>
-      <View className="w-0 min-w-0 flex-1 gap-1">
+      <View className="min-w-0 shrink grow gap-1">
         <Blocks tokens={tokens} caret={caret} />
       </View>
     </View>
