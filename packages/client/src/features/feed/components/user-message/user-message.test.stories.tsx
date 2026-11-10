@@ -154,41 +154,82 @@ export const NamedImageOpensWithItsName: Story = {
   },
 };
 
-// A prompt that is only a list sizes its bubble to the items' text, so a long item wraps across the bubble's width.
-const longItem =
-  'Keep the low-level APIs for any service that needs a client secret, and say why in the ADR.';
+const markdownRecording = 'markdown-prompt';
 
-const recordedListPrompt = recordedPrompt('agent-1', 'markdown-prompt');
+// A prompt that is only a list sizes its bubble to the items' text, rather than to the markers, so a short item keeps to one line.
+const listStart = '1. Read';
 
-function listOnlyPrompt(width: number): Story {
+const listEnd = '\n\n> ';
+
+const shortItem = 'Run the tests';
+
+const recordedText = (agent: MockAgent): string =>
+  recordedPrompt(agent, markdownRecording)
+    .content.flatMap((block) => (block.type === 'text' ? [block.text] : []))
+    .join('');
+
+// The recorded prompt's list, from its first item up to the quote after it.
+function recordedList(agent: MockAgent): string {
+  const text = recordedText(agent);
+  const start = text.indexOf(listStart);
+
+  return text.slice(start, text.indexOf(listEnd, start));
+}
+
+for (const agent of ['agent-1', 'agent-2'] as const)
+  if (
+    !recordedList(agent).startsWith(listStart) ||
+    !recordedList(agent).includes(shortItem)
+  )
+    throw new Error(
+      `Recorded catalog needs a list from ${listStart} holding ${shortItem} in the markdown prompt`,
+    );
+
+function listOnlyPrompt(agent: MockAgent, width: number): Story {
+  const row = recordedPrompt(agent, markdownRecording);
+
   return {
     args: {
-      row: {
-        ...recordedListPrompt,
-        content: [{ type: 'text', text: `1. Agreed\n2. ${longItem}` }],
-      },
+      row: { ...row, content: [{ type: 'text', text: recordedList(agent) }] },
     },
     play: async ({ canvas }) => {
       await settleLayout(width);
-      const item = canvas.getByText(longItem, { exact: true });
+      const item = canvas.getByText(shortItem, { exact: true });
+      const lineHeight = Number.parseFloat(getComputedStyle(item).lineHeight);
 
-      await waitFor(() => {
-        const { width: drawnWidth, height } = item.getBoundingClientRect();
-
-        void expect(drawnWidth).toBeGreaterThan(height);
-      });
+      await waitFor(() =>
+        expect(item.getBoundingClientRect().height).toBeLessThan(
+          lineHeight * 1.5,
+        ),
+      );
     },
   };
 }
 
-export const ListOnlyPromptPhone = listOnlyPrompt(layoutWidths.phone);
+export const FirstAgentListOnlyPromptPhone = listOnlyPrompt(
+  'agent-1',
+  layoutWidths.phone,
+);
 
-export const ListOnlyPromptWide = listOnlyPrompt(layoutWidths.wide);
+export const FirstAgentListOnlyPromptWide = listOnlyPrompt(
+  'agent-1',
+  layoutWidths.wide,
+);
+
+export const SecondAgentListOnlyPromptPhone = listOnlyPrompt(
+  'agent-2',
+  layoutWidths.phone,
+);
+
+export const SecondAgentListOnlyPromptWide = listOnlyPrompt(
+  'agent-2',
+  layoutWidths.wide,
+);
 
 // A long markdown prompt shows only whole lines above Show more, then every line once expanded.
 function showsMore(agent: MockAgent, width: number): Story {
   return {
-    args: { row: recordedPrompt(agent, 'markdown-prompt') },
+    args: { row: recordedPrompt(agent, markdownRecording) },
     play: async ({ canvas, canvasElement, userEvent }) => {
       await settleLayout(width);
       const showMore = await canvas.findByRole('button', { name: 'Show more' });
