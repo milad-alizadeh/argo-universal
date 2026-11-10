@@ -12,7 +12,7 @@ const unavailable = (input: FrameLayoutInput): boolean =>
   !input.workbenchAvailable || input.inspectorState === 'expanded';
 
 // The narrowest page whose gutters beside the centred content each hold the Workbench, its gap and the inset.
-export function gutterPage({ measures }: FrameLayoutInput): number {
+export function pageWidthForGutter({ measures }: FrameLayoutInput): number {
   const gutter = measures.workbenchWidth + measures.paneGap + measures.inset;
 
   return measures.contentMaximum + gutter * 2;
@@ -28,7 +28,7 @@ const fittedState = (
   input: FrameLayoutInput,
   available: number,
 ): WorkbenchState =>
-  available >= gutterPage(input)
+  available >= pageWidthForGutter(input)
     ? 'gutter'
     : requestedState(input.workbenchIntent);
 

@@ -36,7 +36,7 @@ export const listOpenWidth = (input: FrameLayoutInput): number =>
     ? Math.min(preferredListWidth(input), listCapacity(input))
     : preferredListWidth(input);
 
-// An explicit sidebar request keeps the list open down to the content's floor.
+// An explicit sidebar request keeps the list open down to the content's floor. The Workbench takes no width, so its gutter threshold is unchanged.
 export function requestedThresholds(
   input: FrameLayoutInput,
   thresholds: Thresholds,

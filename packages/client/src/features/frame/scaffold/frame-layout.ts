@@ -21,7 +21,7 @@ import type {
   FrameLayoutInput,
   ListRegion,
 } from './frame-layout-types';
-import { gutterPage } from './frame-layout-workbench';
+import { pageWidthForGutter } from './frame-layout-workbench';
 
 export { resizeOutcome } from './frame-layout-handles';
 
@@ -31,18 +31,13 @@ export type * from './frame-layout-types';
 
 // The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page's gutters no longer hold it.
 function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
-  const leading =
-    railZone(input.measures) +
-    inspectorBudget(input) +
-    (input.sidebarShown ? preferredListWidth(input) : 0);
+  const base = railZone(input.measures) + inspectorBudget(input);
+  const list = preferredListWidth(input);
 
   return {
-    listFold:
-      railZone(input.measures) +
-      contentFloor(input.measures) +
-      inspectorBudget(input) +
-      preferredListWidth(input),
-    workbenchGutter: leading + gutterPage(input),
+    listFold: base + contentFloor(input.measures) + list,
+    workbenchGutter:
+      base + (input.sidebarShown ? list : 0) + pageWidthForGutter(input),
   };
 }
 
