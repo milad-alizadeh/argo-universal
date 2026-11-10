@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { drawnSessions, retainSession } from './retained-sessions';
+import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 
 const visit = (sessionIds: string[]): string[] =>
   sessionIds.reduce<string[]>(retainSession, []);
 
-// Whether `first` is drawn before `second`, for two Sessions that are both kept.
 const drawnBefore = (
   recent: string[],
   first: string,
   second: string,
 ): boolean =>
-  drawnSessions(recent).indexOf(first) < drawnSessions(recent).indexOf(second);
+  sessionsInDrawOrder(recent).indexOf(first) <
+  sessionsInDrawOrder(recent).indexOf(second);
 
 describe('the Session pages kept mounted on a wide window', () => {
   it('keeps the shown Session and the two shown before it', () => {
@@ -28,7 +28,7 @@ describe('the Session pages kept mounted on a wide window', () => {
   });
 
   it('draws every kept Session', () => {
-    expect(drawnSessions(visit(['c', 'a', 'b'])).toSorted()).toEqual([
+    expect(sessionsInDrawOrder(visit(['c', 'a', 'b'])).toSorted()).toEqual([
       'a',
       'b',
       'c',
@@ -51,8 +51,8 @@ describe('the Session pages kept mounted on a wide window', () => {
       const next = retainSession(recent, sessionId);
       const stayed = new Set(recent).intersection(new Set(next));
 
-      expect(drawnSessions(next).filter((id) => stayed.has(id))).toEqual(
-        drawnSessions(recent).filter((id) => stayed.has(id)),
+      expect(sessionsInDrawOrder(next).filter((id) => stayed.has(id))).toEqual(
+        sessionsInDrawOrder(recent).filter((id) => stayed.has(id)),
       );
       recent = next;
     }

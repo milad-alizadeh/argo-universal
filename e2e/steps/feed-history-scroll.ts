@@ -4,9 +4,12 @@ import { agentWork } from './timeouts';
 
 export const oldestHistoryMessage = 'History message 1.';
 
+// A wide window keeps recently shown Sessions' Feeds mounted and hidden beside the shown one.
+export const shownFeed = (page: Page): Locator =>
+  page.getByTestId('feed-scroll').filter({ visible: true });
+
 export async function scrollToOldestHistoryMessage(page: Page): Promise<void> {
-  // A wide window keeps recently shown Sessions' Feeds mounted and hidden beside the shown one.
-  const feed = page.getByTestId('feed-scroll').filter({ visible: true });
+  const feed = shownFeed(page);
   const oldest = feed.getByText(oldestHistoryMessage, { exact: true });
   // An older page lands at the top, then the Feed keeps its place and moves it up out of view, so scroll again until the oldest message stays.
   await expect(async () => {

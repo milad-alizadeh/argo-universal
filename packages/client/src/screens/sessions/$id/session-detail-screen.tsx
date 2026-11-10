@@ -6,7 +6,7 @@ import type * as React from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
-import { drawnSessions, retainSession } from './retained-sessions';
+import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -65,7 +65,7 @@ function RetainedSessions({
 
   return (
     <View style={{ flex: 1 }}>
-      {drawnSessions(recent).map((id) => (
+      {sessionsInDrawOrder(recent).map((id) => (
         <RetainedSession key={id} sessionId={id} visible={id === sessionId} />
       ))}
     </View>

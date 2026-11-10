@@ -15,5 +15,5 @@ export function retainSession(recent: string[], sessionId: string): string[] {
  * removes a page. Drawn most recent first, the page just left moved in the document, and a browser
  * resets every scroller inside a moved node, so its Feed came back at the top (#1982).
  */
-export const drawnSessions = (recent: string[]): string[] =>
+export const sessionsInDrawOrder = (recent: string[]): string[] =>
   [...recent].sort((first, second) => (first < second ? -1 : 1));
