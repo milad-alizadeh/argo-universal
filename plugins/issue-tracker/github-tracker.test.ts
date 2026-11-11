@@ -47,14 +47,14 @@ it('says what GitHub answered when it is neither an answer nor a rejection', asy
   );
 });
 
-it('searches the repository newest first and maps the Issues', async () => {
-  const issue = {
-    number: 8,
-    title: 'Keep the boundary',
-    state: 'OPEN',
-    url: 'https://github.com/owner/repository/issues/8',
-  };
+const issue = {
+  number: 8,
+  title: 'Keep the boundary',
+  state: 'OPEN',
+  url: 'https://github.com/owner/repository/issues/8',
+};
 
+it('searches the repository newest first and maps the Issues', async () => {
   const { sent, tracker } = trackerAnswering(
     reply(200, { data: { search: { nodes: [issue] } } }),
   );
@@ -107,13 +107,6 @@ it('leaves a filter without a count when GitHub does not report it, and rejects 
 });
 
 it('skips a search node that is no Issue, and rejects a node with some of an Issue only', async () => {
-  const issue = {
-    number: 8,
-    title: 'Keep the boundary',
-    state: 'OPEN',
-    url: 'https://github.com/owner/repository/issues/8',
-  };
-
   const skipped = trackerAnswering(
     reply(200, { data: { search: { nodes: [{}, issue] } } }),
   );

@@ -4,6 +4,7 @@ import type {
   DeviceFlowPattern,
   DeviceFlowState,
 } from '@repo/contracts/plugins/device-flow-api';
+import { runtimeError } from '../protocol/runtime-status';
 import { askFor, codeOf, shown } from './device-code';
 import { labelRead } from './device-http';
 import {
@@ -18,10 +19,6 @@ import { sleep } from './scheduler';
 const slowDownMs = 5000;
 
 const idle: DeviceFlowState = { kind: 'idle' };
-
-// What a rejection says: an Error's message, or whatever else was thrown, as text.
-const reasonOf = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
 
 const bearer = { header: 'Authorization', prefix: 'Bearer' };
 
@@ -104,7 +101,7 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
 
   void awaitToken(attempt, found.device, found.intervalMs).then(
     attempt.settle,
-    (error: unknown) => attempt.settle(ended('failed', reasonOf(error))),
+    (cause: unknown) => attempt.settle(ended('failed', runtimeError(cause))),
   );
 
   return attempt.settle(shown(found));
@@ -177,8 +174,8 @@ function start(
 
   attempt.settle({ kind: 'requesting' });
 
-  return requestCode(attempt).catch((error: unknown) =>
-    attempt.settle(ended('failed', reasonOf(error))),
+  return requestCode(attempt).catch((cause: unknown) =>
+    attempt.settle(ended('failed', runtimeError(cause))),
   );
 }
 
