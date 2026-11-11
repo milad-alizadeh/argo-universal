@@ -1,6 +1,5 @@
-import type { ListPage, LoaderInput } from '@argo/plugin-kit';
-import { githubError } from './github-errors';
-import type { Issue } from './github-issues';
+import type { LoaderInput } from '@argo/plugin-kit';
+import { answered } from './github-reads';
 import type { TrackerClient } from './github-tracker';
 import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -32,14 +31,11 @@ export type FilterData = { projects: Project[] } & (
 
 type Load = Pick<LoaderInput<FilterState>, 'params' | 'state'>;
 
-// Issues a page loads at a time, and again for each further page.
-const pageSize = 30;
-
 // How the Loader reads a Query through Argo.
-type Read = LoaderInput<FilterState>['read'];
+export type Read = LoaderInput<FilterState>['read'];
 
 // The Projects, and either nothing the Page path names, or its Project and filter with the Tracker opened or why it does not open.
-type Target = { projects: Project[]; opened: Promise<Opened> } & (
+export type Target = { projects: Project[]; opened: Promise<Opened> } & (
   | { state: 'gone' }
   | { state: 'named'; project: Project; filter: IssueFilter }
 );
@@ -113,7 +109,7 @@ const openedClient = (deps: IssueDeps, project: Project): Promise<Opened> =>
     (client): Opened => ({ ok: true, client }),
     (cause: unknown): Opened => ({
       ok: false,
-      message: githubError(cause),
+      message: String(Object(cause).message),
     }),
   );
 
@@ -134,12 +130,20 @@ export async function loadFilter(
   const { project, filter } = named;
 
   const [overview, tracker] = await Promise.all([
-    read(deps.overview({ projectId: project.id })).catch(() => null),
+    overviewOf(deps, read, project),
     named.opened,
   ]);
 
   return withTracker({ projects, project, filter, overview }, tracker);
 }
+
+// The overview when it could be read; a rejected sign-in is the page's to answer, any other failure leaves none.
+const overviewOf = async (
+  deps: IssueDeps,
+  read: Read,
+  project: Project,
+): Promise<Overview | null> =>
+  (await answered(read(deps.reads.overview({ projectId: project.id })))).value;
 
 const withTracker = (
   chosen: { projects: Project[] } & Chosen,
@@ -155,49 +159,3 @@ export function noIssuesBecause(data: FilterData): string {
 
   return data.state === 'unopened' ? data.message : '';
 }
-
-/*
- * One page of the filter's Issues, newest first, narrowed by the search. `gh issue list` has no cursor, so the
- * cursor is a search qualifier: each further page from the last Issue's creation time on, inclusive so a tie at
- * the boundary is not lost (the kit drops the repeat). A Tracker that does not open lists nothing; the Loader
- * says why.
- */
-export async function listFilter(
-  target: Promise<Target>,
-  query: string,
-  cursor: string | null,
-): Promise<ListPage<Issue>> {
-  const named = await target;
-  const tracker = await named.opened;
-
-  return named.state === 'named' && tracker.ok
-    ? readPage(tracker.client, searchOf(named.filter, query), cursor)
-    : end;
-}
-
-const end: ListPage<Issue> = { items: [], cursor: null };
-
-const searchOf = (filter: IssueFilter, query: string): string =>
-  query.trim() ? `${filter.search} ${query.trim()}` : filter.search;
-
-async function readPage(
-  client: TrackerClient,
-  search: string,
-  cursor: string | null,
-): Promise<ListPage<Issue>> {
-  const from = cursor === null ? '' : ` created:<=${cursor}`;
-
-  const items = await client.listIssues(
-    `${search} sort:created-desc${from}`,
-    pageSize,
-  );
-
-  return { items, cursor: nextCursor(items) };
-}
-
-// A full page may have more after it; an Issue without a creation time leaves no cursor to go on from.
-const nextCursor = (issues: Issue[]): string | null =>
-  issues.length >= pageSize ? lastCreated(issues) : null;
-
-const lastCreated = (issues: Issue[]): string | null =>
-  issues.at(-1)?.createdAt ?? null;

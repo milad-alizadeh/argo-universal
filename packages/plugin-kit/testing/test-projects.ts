@@ -6,6 +6,7 @@ export class TestProjects {
   constructor(
     private readonly options: ConfiguredTest,
     private readonly runtime: PluginRuntime,
+    private readonly changed: () => void,
   ) {}
 
   async add({
@@ -17,6 +18,7 @@ export class TestProjects {
       ({ id }) => id !== project.id,
     );
     this.options.projects.push(project);
+    this.changed();
     await this.runtime.refreshProjects();
   }
 
@@ -25,6 +27,7 @@ export class TestProjects {
     this.options.projects = this.options.projects.filter(
       ({ id }) => id !== projectId,
     );
+    this.changed();
     await this.runtime.refreshProjects();
   }
 }

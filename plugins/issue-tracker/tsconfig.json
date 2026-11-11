@@ -4,6 +4,7 @@
   "exclude": [
     "**/*.test.ts",
     "**/node_modules",
+    "github-fixture.ts",
     "journey-fixture.ts",
     "session-slot-fixture.ts",
     "vitest.config.ts"

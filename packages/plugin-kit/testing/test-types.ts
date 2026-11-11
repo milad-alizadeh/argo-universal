@@ -27,6 +27,7 @@ import type {
   PluginFailure,
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
+import type { PluginAccounts } from '@repo/engine/mocks/test-accounts';
 import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
 import type { OpenPage } from './open-page';
 import type { PageOpening } from './page-server';
@@ -55,6 +56,8 @@ type SlotItemsOptions = {
 
 export interface PluginTest {
   projects: TestProjects;
+  // The real Account inventory: what is signed in, and which Account each Project chose.
+  accounts: Pick<PluginAccounts, 'list' | 'get' | 'choose' | 'signOut'>;
   badges: (signal: AbortSignal) => AsyncGenerator<PluginBadge[]>;
   failures: (signal: AbortSignal) => AsyncGenerator<PluginFailure[]>;
   log: (pluginId?: string) => Promise<string>;

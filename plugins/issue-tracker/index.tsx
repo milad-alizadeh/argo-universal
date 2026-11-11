@@ -1,10 +1,11 @@
 import type { Argo } from '@argo/plugin-kit';
 import { defineFilterPage } from './filter-page';
+import { githubSignIn, provideGitHub } from './github-account';
+import { defineReads } from './github-reads';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
 import { defineIssuePages } from './issue-pages';
-import { defineOverview } from './overview';
 import { projectDetailsItems } from './project-details';
 import { registerSessionFills } from './session-slots';
 import { registerStatusOperation } from './status-operation';
@@ -26,13 +27,15 @@ function createDeps(api: Argo): IssueDeps {
     storage,
     trackers,
     changes: createIssueChanges(),
-    overview: defineOverview(api, { listProjects, storage, trackers }),
+    signIn: githubSignIn(api),
+    reads: defineReads(api, { listProjects, storage, trackers }),
   };
 }
 
-export function register(api: Argo): void {
+export async function register(api: Argo): Promise<void> {
   const deps = createDeps(api);
 
+  await provideGitHub(api, deps.signIn);
   registerIssueOperations(api, { storage: registerSessionFills(api, deps) });
   registerStatusOperation(api, deps);
   defineIssuePages(api, deps);

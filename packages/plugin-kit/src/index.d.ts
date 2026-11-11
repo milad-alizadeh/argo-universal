@@ -129,6 +129,8 @@ export type {
   PageTo,
 } from './plugin-api';
 
+export type { PageState } from '@repo/contracts/plugins/page-address';
+
 // A Loader page's parts and the paged list its Render reads (ADR-0050).
 export type {
   ListPage,

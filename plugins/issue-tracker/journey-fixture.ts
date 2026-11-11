@@ -6,6 +6,8 @@ import {
   type PluginTest,
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
+import { githubFixture, type GitHubFixture } from './github-fixture';
+import { refusedTitle } from './github-issue-nodes';
 
 type FixtureProject = { id: string; name: string; originUrl: string | null };
 
@@ -17,8 +19,11 @@ export const project: FixtureProject = {
 
 export const issueTitle = 'Fixture issue from GitHub';
 
-// The fixture gh refuses every status change to this Issue.
-export const refusedTitle = 'Fixture issue gh cannot change';
+// The fixture GitHub refuses every status change to this Issue.
+export { refusedTitle };
+
+// Where GitHub's own pages are stood in for: the fixture service and what it saw.
+export type Tracked = { test: PluginTest; github: GitHubFixture };
 
 const trackerName = 'GitHub Issues';
 
@@ -42,29 +47,74 @@ export async function chooseGithub(page: OpenPage): Promise<void> {
   expect(chosen(page)).toBe(true);
 }
 
-export async function tracker(projects = [project]): Promise<PluginTest> {
+// The tracker over a fixture GitHub, not signed in; its Plugin clock only moves when the test moves it.
+export async function trackedGitHub(projects = [project]): Promise<Tracked> {
+  const github = await githubFixture();
+
   const test = await startPluginTest({
     directory: fileURLToPath(new URL('.', import.meta.url)),
     pluginId: 'issue-tracker',
     version: '0.0.0',
     projects,
-    path: [fileURLToPath(new URL('./mocks', import.meta.url))],
+    network: github.network,
+    clockStart: 0,
   });
 
   onTestFinished(() => test.close());
 
-  return test;
+  return { test, github };
+}
+
+const signInLabel = 'Sign in to GitHub';
+
+// The fixture asks the Plugin to poll every second, and approves at once.
+const pollMs = 1000;
+
+const pollLimit = 5;
+
+// Signs in as a person does: asks for the code on the sign-in page, and lets the flow poll until GitHub approves it.
+export async function signIn({ test }: Tracked): Promise<void> {
+  const page = await test.pages.open({ path: '/sign-in' });
+
+  await page.press(signInLabel);
+
+  for (let poll = 0; poll < pollLimit; poll += 1) {
+    if (page.findText('Signed in as octocat')) break;
+
+    await test.clock.advance(pollMs);
+    await page.draw();
+  }
+
+  expect(page.findText('Signed in as octocat')).toBeDefined();
+}
+
+// The tracker with the person already signed in to the fixture GitHub.
+export async function tracker(projects = [project]): Promise<PluginTest> {
+  const tracked = await trackedGitHub(projects);
+
+  await signIn(tracked);
+
+  return tracked.test;
+}
+
+export async function signedInRoot(): Promise<
+  Tracked & { root: OpenPage }
+> {
+  const tracked = await trackedGitHub();
+
+  await signIn(tracked);
+  await chooseGithub(await trackerPage(tracked.test));
+
+  return { ...tracked, root: await tracked.test.pages.open({ path: '/' }) };
 }
 
 export async function issuesRoot(): Promise<{
   test: PluginTest;
   root: OpenPage;
 }> {
-  const test = await tracker();
+  const { test, root } = await signedInRoot();
 
-  await chooseGithub(await trackerPage(test));
-
-  return { test, root: await test.pages.open({ path: '/' }) };
+  return { test, root };
 }
 
 // The page path a row's `navigate` Action names.

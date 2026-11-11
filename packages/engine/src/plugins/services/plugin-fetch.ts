@@ -124,6 +124,17 @@ function send(hop: Hop, context: FetchContext): Promise<IncomingMessage> {
   });
 }
 
+// A browser's fetch always sends a User-Agent and some services, GitHub's API among them, refuse a request without one.
+function withUserAgent(
+  headers: Record<string, string>,
+): Record<string, string> {
+  const given = Object.keys(headers).some(
+    (name) => name.toLowerCase() === 'user-agent',
+  );
+
+  return given ? headers : { ...headers, 'user-agent': 'Argo' };
+}
+
 // Checks the hop's host before anything is sent, then pins the checks to its socket.
 function requestOptions(
   hop: Hop,
@@ -133,7 +144,7 @@ function requestOptions(
 
   return {
     method: hop.method,
-    headers: hop.headers,
+    headers: withUserAgent(hop.headers),
     signal,
     // A pooled socket could have been connected under another Plugin's rule.
     agent: false,

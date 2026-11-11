@@ -1,6 +1,8 @@
-import { githubError } from './github-errors';
+import type { LoaderInput } from '@argo/plugin-kit';
+import { SignInRequired } from './github-api';
 import type { Issue } from './github-issues';
-import { openDepsClient, type Project } from './issue-client';
+import { unwrap } from './github-reads';
+import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 
 // A Session an Agent attached to this Issue, named as the App names it.
@@ -20,6 +22,7 @@ export type DetailSource = {
   project: Project;
   number: number;
   deps: IssueDeps;
+  read: LoaderInput<Record<never, never>>['read'];
 };
 
 // The Issue and its Sessions at once; an Issue that cannot be read says why in its place.
@@ -35,12 +38,17 @@ export async function loadIssueDetail(
 }
 
 async function readIssue(source: DetailSource): Promise<IssueRead> {
-  try {
-    const client = await openDepsClient(source);
+  const { read, deps, project, number } = source;
 
-    return { ok: true, issue: await client.getIssue(source.number) };
+  try {
+    const query = deps.reads.issue({ projectId: project.id, number });
+
+    return { ok: true, issue: unwrap(await read(query)) };
   } catch (cause) {
-    return { ok: false, message: githubError(cause) };
+    // Signing in is the page's, not a line in place of the Issue.
+    if (cause instanceof SignInRequired) throw cause;
+
+    return { ok: false, message: String(Object(cause).message) };
   }
 }
 

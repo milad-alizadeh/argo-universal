@@ -475,6 +475,7 @@ A call without a Project returns no Account, such as one made while the Plugin r
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
 A fetch Query uses the same field and the Project its page is drawn for.
+A direct `argo.fetch` call may also name a registered Project with `projectId`, which decides the Account it borrows; a page whose path names a Project reads this way from a named read. An unregistered Project is refused.
 Argo checks the Grant, calls the provider, and sets its header. The borrower receives no credential value from Argo.
 The URL must name the Account’s exact host and port. A redirect away from that host drops the provider header.
 Argo removes any borrower header with the same name first. Network-reserved headers cannot provide authentication.

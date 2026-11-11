@@ -58,7 +58,7 @@ const rowMeta = (issue: Issue): JSX.Element[] => [
 
 /*
  * Spike-only UI: the row's menu closes or reopens its Issue, so one write runs as an Operation. The
- * row shows its new status at once and rolls back if gh refuses.
+ * row shows its new status at once and rolls back if GitHub refuses.
  */
 function statusAction(source: RowSource, issue: Issue): JSX.Element {
   const { change } = statuses[issue.status];

@@ -1,5 +1,11 @@
-import type { Argo, LoaderInput, PageTo } from '@argo/plugin-kit';
+import type {
+  Argo,
+  LoaderInput,
+  PageState,
+  PageTo,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { answered } from './github-reads';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { IssueDetailPage } from './issue-detail';
@@ -7,6 +13,7 @@ import { loadIssueDetail, type IssueDetailData } from './issue-detail-data';
 import { issuePattern, pathText, projectPattern } from './issue-paths';
 import { RootPage, RootRows, type SidebarOverview } from './issue-root';
 import { rootProjects, type RootProjects } from './root-projects';
+import { gated, type GatedPage } from './signed-in-gate';
 
 type Input = LoaderInput;
 
@@ -20,19 +27,27 @@ type RootData = { choice: RootProjects; overview: SidebarOverview };
  * Issue's beside its Project's filters. A page path names its Project and Issue, so one pattern serves every one.
  */
 export function defineIssuePages(argo: Argo, deps: IssueDeps): void {
-  argo.pages.define('/', {
-    load: (input) => loadRoot(deps, input),
-    render: rootPage,
-  });
-  argo.pages.define(projectPattern, {
-    load: (input) => loadRoot(deps, input, projectOf(input)),
-    render: rootPage,
-  });
-  argo.pages.define(issuePattern, {
-    load: (input) => loadIssuePage(deps, input),
-    render: issuePage,
-  });
+  const { signIn } = deps;
+
+  argo.pages.define('/', gated(signIn, rootLanding(deps)));
+  argo.pages.define(projectPattern, gated(signIn, projectLanding(deps)));
+  argo.pages.define(issuePattern, gated(signIn, issueLanding(deps)));
 }
+
+const rootLanding = (deps: IssueDeps): GatedPage<PageState, RootData> => ({
+  load: (input) => loadRoot(deps, input),
+  render: rootPage,
+});
+
+const projectLanding = (deps: IssueDeps): GatedPage<PageState, RootData> => ({
+  load: (input) => loadRoot(deps, input, projectOf(input)),
+  render: rootPage,
+});
+
+const issueLanding = (deps: IssueDeps): GatedPage<PageState, IssuePageData> => ({
+  load: (input) => loadIssuePage(deps, input),
+  render: issuePage,
+});
 
 const rootPage = (data: RootData, to: To): JSX.Element => (
   <RootPage rows={sidebar(data, to)} />
@@ -62,17 +77,18 @@ async function loadRoot(
 
 const noOverview: SidebarOverview = { overview: null, message: '' };
 
-const overviewOf = (
+async function overviewOf(
   deps: IssueDeps,
   read: Input['read'],
   project: Project | undefined,
-): Promise<SidebarOverview> =>
-  project
-    ? read(deps.overview({ projectId: project.id })).then(
-        (overview) => ({ overview, message: '' }),
-        (error: Error) => ({ overview: null, message: error.message }),
-      )
-    : Promise.resolve(noOverview);
+): Promise<SidebarOverview> {
+  if (!project) return noOverview;
+
+  const query = deps.reads.overview({ projectId: project.id });
+  const { value, message } = await answered(read(query));
+
+  return { overview: value, message };
+}
 
 const sidebar = ({ choice, overview }: RootData, to: To): JSX.Element => (
   <RootRows choice={choice} state={overview} onRefresh={to.set({})} />
@@ -89,7 +105,7 @@ async function loadIssuePage(
 
   const [overview, detail] = await Promise.all([
     overviewOf(deps, input.read, choice.project),
-    detailOf(deps, choice.project, Number(input.params.number)),
+    detailOf(deps, input, choice.project),
   ]);
 
   return { choice, overview, detail };
@@ -97,12 +113,15 @@ async function loadIssuePage(
 
 const detailOf = (
   deps: IssueDeps,
+  { read, params }: Input,
   project: Project | undefined,
-  number: number,
-): Promise<IssueDetailData> | null =>
-  project && Number.isSafeInteger(number)
-    ? loadIssueDetail({ deps, project, number })
+): Promise<IssueDetailData> | null => {
+  const number = Number(params.number);
+
+  return project && Number.isSafeInteger(number)
+    ? loadIssueDetail({ deps, read, project, number })
     : null;
+};
 
 function issueDetail(
   { choice, detail }: IssuePageData,

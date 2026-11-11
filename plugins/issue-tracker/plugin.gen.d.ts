@@ -56,5 +56,11 @@ declare module '@argo/plugin-kit' {
         "project"
       ]
     };
+    signIn: {
+      "params": {}
+    };
+    cancelSignIn: {
+      "params": {}
+    };
   }
 }

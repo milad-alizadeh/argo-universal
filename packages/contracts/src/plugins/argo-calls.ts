@@ -47,12 +47,18 @@ export const ProcessCall = z.discriminatedUnion('action', [
 
 export type ProcessCall = z.infer<typeof ProcessCall>;
 
-export const FetchCall = z.object({
+// What a fetch asks for; a Query is this and nothing more, as its Project is the page's.
+export const FetchRead = z.object({
   url: z.string(),
   method: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   body: z.string().optional(),
   account: z.string().optional(),
+});
+
+// A call may name its Project, which decides the Account it borrows; it defaults to the Project of the call's own context (ADR-0037).
+export const FetchCall = FetchRead.extend({
+  projectId: z.string().optional(),
 });
 
 export type FetchCall = z.infer<typeof FetchCall>;
@@ -97,7 +103,7 @@ export const pagedListRead = 'argo:list';
  * Plugin declared with `argo.queries.define`, run by the Plugin with these args.
  */
 export const PluginQuery = z.discriminatedUnion('api', [
-  FetchCall.extend({ api: z.literal('fetch') }),
+  FetchRead.extend({ api: z.literal('fetch') }),
   ProcessRun.extend({ api: z.literal('process') }),
   z.object({ api: z.literal('storage'), queries: z.array(StorageRead) }),
   z.object({

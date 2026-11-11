@@ -91,7 +91,7 @@ const statusActionKey = (number: number): string => `status-${number}`;
 
 /*
  * Closes or reopens the Issue as the `setStatus` Operation; the status and the Action show the new status at
- * once, and the old one again when gh refuses it.
+ * once, and the old one again when GitHub refuses it.
  */
 function StatusAction({ issue, projectId, to }: ShownProps): JSX.Element {
   const { label, icon, to: next } = statuses[issue.status].change;
