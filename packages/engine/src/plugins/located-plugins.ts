@@ -63,7 +63,9 @@ function locatedIn({ result, locations }: Discovered): LocatedPlugin[] {
 }
 
 // Each admitted Plugin with its folder and whether it's turned on.
-async function locatePlugins(deps: LocateDeps): Promise<LocatedPlugin[]> {
+export async function locatePlugins(
+  deps: LocateDeps,
+): Promise<LocatedPlugin[]> {
   const discovered = await discover(deps);
   applyEnabled(discovered.result, deps.pluginSettings);
 

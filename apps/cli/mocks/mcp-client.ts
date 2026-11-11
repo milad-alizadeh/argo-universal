@@ -10,19 +10,37 @@ import { z } from 'zod';
 
 const entry = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
 
-export async function connectMcp(
-  home: string,
-  token?: string,
-): Promise<Client> {
-  const client = new Client({ name: 'argo-test', version: '1.0.0' });
+const launcherErrors = new WeakMap<Client, string[]>();
 
-  const transport = new StdioClientTransport({
+// What `argo mcp` has written to standard error so far.
+export const mcpStderr = (client: Client): string =>
+  (launcherErrors.get(client) ?? []).join('');
+
+function recordStderr(client: Client, transport: StdioClientTransport): void {
+  const errors: string[] = [];
+  launcherErrors.set(client, errors);
+  transport.stderr?.on('data', (chunk: Buffer) => errors.push(String(chunk)));
+}
+
+const launcher = (
+  home: string,
+  token: string | undefined,
+): StdioClientTransport =>
+  new StdioClientTransport({
     command: process.execPath,
     args: [entry, 'mcp'],
     env: clientEnvironment(home, token),
     stderr: 'pipe',
   });
 
+export async function connectMcp(
+  home: string,
+  token?: string,
+): Promise<Client> {
+  const client = new Client({ name: 'argo-test', version: '1.0.0' });
+  const transport = launcher(home, token);
+
+  recordStderr(client, transport);
   onTestFinished(() => client.close());
   await client.connect(transport);
 

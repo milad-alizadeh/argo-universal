@@ -1,4 +1,5 @@
 import { createRunner } from './create-runner';
+import { OperationInstructions } from './instructions';
 import { Operations, type OperationsDeps } from './operations';
 import { createOperationsRouter } from './router';
 import { generatedOperations } from './router.gen';
@@ -19,7 +20,10 @@ export function createOperationProcedures(
 
   return {
     ...generatedOperations(runner),
-    operations: createOperationsRouter(new Operations(deps, runner)),
+    operations: createOperationsRouter({
+      operations: new Operations(deps, runner),
+      instructions: new OperationInstructions(deps, deps.plugins.plugins),
+    }),
   };
 }
 

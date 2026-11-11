@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   OperationWaitId,
+  type PluginInstruction,
   type OperationRow,
   type OperationRunResponse,
 } from '@repo/contracts/operations/control';
@@ -44,10 +45,21 @@ const result = (
   content: [{ type: 'text', text: JSON.stringify(value) }],
 });
 
-export function createOperationMcpServer(client: ControlClient): McpServer {
+// Argo's discovery line, then each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
+function mcpInstructions(plugins: PluginInstruction[]): string {
+  return [
+    discoveryInstructions,
+    ...plugins.map(({ name, text }) => `## ${name}\n\n${text}`),
+  ].join('\n\n');
+}
+
+export function createOperationMcpServer(
+  client: ControlClient,
+  plugins: PluginInstruction[] = [],
+): McpServer {
   const server = new McpServer(
     { name: productCompatibility.mcpServer, version: '1.0.0' },
-    { instructions },
+    { instructions: mcpInstructions(plugins) },
   );
 
   registerDiscovery(server, client);
@@ -56,7 +68,7 @@ export function createOperationMcpServer(client: ControlClient): McpServer {
   return server;
 }
 
-const instructions =
+const discoveryInstructions =
   'Discover: call operation_list with a task-specific filter. ' +
   'Read the matching params schema and availability before calling operation_run.';
 

@@ -17,8 +17,12 @@ import { manifestTemplate } from './plugin-manifest-template';
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
 export const shippedFolder = 'shipped';
 
+const instructionsFile = 'instructions.md';
+
 type FixturePlugin = {
   id: string;
+  // The Plugin name, which the fixture template sets when left out.
+  name?: string;
   fixture: string;
   dev?: boolean;
   main?: string;
@@ -35,6 +39,8 @@ type FixturePlugin = {
   declared?: PluginManifest['contributes']['declared'];
   // The Operations it declares (ADR-0044).
   operations?: PluginManifest['contributes']['operations'];
+  // The Plugin instructions it ships, written to `instructions.md` beside the manifest.
+  instructions?: string;
 };
 
 export async function createRuntimePlugins(
@@ -59,8 +65,16 @@ export async function writePlugin(
   await mkdir(folder, { recursive: true });
   await writeManifest({ ...plugin, folder, main });
   await copyPluginFixture(plugin.fixture, folder, main);
+  await writeInstructions(folder, plugin.instructions);
 
   if (plugin.dev) await addDevSource(folder);
+}
+
+async function writeInstructions(
+  folder: string,
+  text: string | undefined,
+): Promise<void> {
+  if (text !== undefined) await writeFile(join(folder, instructionsFile), text);
 }
 
 const copyPluginFixture = async (
@@ -89,9 +103,14 @@ const pluginManifest = (
 ): PluginManifest => ({
   ...template,
   id: plugin.id,
+  name: plugin.name ?? template.name,
   main: plugin.main,
   capabilities: plugin.capabilities,
-  contributes: pluginContributions(template, plugin),
+  contributes: {
+    ...pluginContributions(template, plugin),
+    instructions:
+      plugin.instructions === undefined ? undefined : instructionsFile,
+  },
 });
 
 const pluginContributions = (

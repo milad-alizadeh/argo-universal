@@ -36,3 +36,11 @@ export type PluginIcon = z.infer<typeof PluginIcon>;
 export const PluginPath = z
   .string()
   .regex(/^\/(?:[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*)?$/);
+
+// The most characters a Plugin's instructions file may hold, so the prose every Session carries stays short.
+export const pluginInstructionsLimit = 1_000;
+
+// The Markdown file of Plugin instructions, named relative to the Plugin's folder.
+export const InstructionsFile = z
+  .string()
+  .regex(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.md$/);

@@ -12,3 +12,5 @@ export {
   OperationWaitRequest,
   operationWaitLimitMs,
 } from './control-input';
+
+export { PluginInstruction } from './plugin-instructions';

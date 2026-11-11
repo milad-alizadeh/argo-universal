@@ -37,7 +37,7 @@ import type {
   SessionTokens,
   TokenCaller,
 } from './session-tokens';
-import { tokensMatch } from './tokens';
+import { authenticate } from './tokens';
 import { liveWorkDeps, OperationWork, type OperationWaitClock } from './work';
 
 export type {
@@ -169,9 +169,6 @@ export class Operations {
     );
   }
   private caller(token: string | undefined): TokenCaller {
-    if (token && tokensMatch(this.deps.controlToken, token))
-      return { kind: 'user' };
-
-    return this.deps.sessionTokens.require(token);
+    return authenticate(this.deps, token);
   }
 }
