@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { pressTarget } from '#mocks/press-target';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
 import { SkeletonLoadingContext } from '#primitives/status/skeleton';
@@ -305,5 +306,98 @@ export const ARowThatPressesNothingLeavesThePressToWhatHoldsIt: Story = {
   play: async ({ canvas, userEvent, parameters }) => {
     await userEvent.click(canvas.getByText(title));
     await expect(parameters.holderPress).toHaveBeenCalledOnce();
+  },
+};
+
+// What else makes a row act: each of these keeps its own press, so the press does not reach the holder.
+const holdOnly = (row: ReactElement): ReactElement => (
+  <Pressable role="button" accessibilityLabel="Holder" onPress={holderPress}>
+    {row}
+  </Pressable>
+);
+
+const holderPress = fn();
+
+export const ARowWithOnlyALongPressStillActs: Story = {
+  args: { onPress: undefined, onLongPress: fn() },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  beforeEach: (): void => holderPress.mockClear(),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByText(title));
+    await expect(holderPress).not.toHaveBeenCalled();
+  },
+};
+
+export const ARowWithOnlyALinkStillActs: Story = {
+  args: { onPress: undefined, href: '#row' },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  beforeEach: (): void => holderPress.mockClear(),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText(title).closest('a')).toHaveAttribute(
+      'href',
+      '#row',
+    );
+  },
+};
+
+export const ADisabledRowKeepsItsDisabledState: Story = {
+  args: { onPress: undefined, disabled: true },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(title)).toBeVisible();
+    await expect(canvas.getByLabelText(title)).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  },
+};
+
+export const ASwitchRowStillActs: Story = {
+  args: { onPress: undefined, checked: false },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  beforeEach: (): void => holderPress.mockClear(),
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByRole('switch', { name: title })).toBeVisible();
+    await userEvent.click(canvas.getByText(title));
+    await expect(holderPress).not.toHaveBeenCalled();
+  },
+};
+
+export const ARowWithOnlyActionsKeepsItsMenu: Story = {
+  args: {
+    onPress: undefined,
+    actions: <Action label="Archive row" icon="archive" onPress={fn()} />,
+  },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.pointer({
+      keys: '[MouseRight]',
+      target: canvas.getByText(title),
+    });
+    const item = await within(document.body).findByRole('menuitem', {
+      name: 'Archive row',
+    });
+
+    await waitFor(() => expect(item).toBeVisible());
+  },
+};
+
+export const ARowWithOnlyAContextMenuKeepsItsTrigger: Story = {
+  args: {
+    onPress: undefined,
+    contextMenu: { title: 'Row menu' },
+    actions: <Action label="Archive row" icon="archive" onPress={fn()} />,
+  },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.pointer({
+      keys: '[MouseRight]',
+      target: canvas.getByText(title),
+    });
+    const item = await within(document.body).findByRole('menuitem', {
+      name: 'Archive row',
+    });
+
+    await waitFor(() => expect(item).toBeVisible());
   },
 };

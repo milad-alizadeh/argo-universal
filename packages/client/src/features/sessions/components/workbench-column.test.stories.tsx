@@ -159,6 +159,46 @@ export const PressingAHandleThenLeavingHidesIt: Story = {
   },
 };
 
+// A touch is not a hover: the same enter, from a finger, shows no grip.
+export const ATouchOverACardShowsNoHandle: Story = {
+  play: async ({ canvas }) => {
+    const card = canvas.getByText('One line.');
+
+    for (const type of ['pointerover', 'pointerenter']) {
+      card.dispatchEvent(
+        new PointerEvent(type, {
+          pointerType: 'touch',
+          bubbles: type === 'pointerover',
+        }),
+      );
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(handleOf(canvas, 'First')).not.toBeVisible();
+  },
+};
+
+// While a card is held, only its grip shows, wherever the pointer passes.
+export const HoveringAnotherCardWhileDraggingShowsOnlyTheHeldGrip: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const grip = handleOf(canvas, 'First');
+
+    await userEvent.hover(canvas.getByText('One line.'));
+    await waitFor(() => expect(grip).toBeVisible());
+    await userEvent.pointer([
+      { keys: '[MouseLeft>]', target: grip },
+      {
+        target: canvas.getByText(
+          'A body of two lines, so the cards differ in height.',
+        ),
+      },
+    ]);
+    await expect(grip).toBeVisible();
+    await expect(handleOf(canvas, 'Second')).not.toBeVisible();
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+  },
+};
+
 export const ALoneCardHasNoHandle: Story = {
   args: { cards: oneCard },
   play: async ({ canvas }) => {

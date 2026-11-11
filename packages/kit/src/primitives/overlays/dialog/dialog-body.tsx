@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Pressable, Text } from 'react-native';
+import { ListPlaceContext } from '#kit/list-place';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import {
@@ -38,7 +39,7 @@ function ContentClose(): React.JSX.Element {
 export function DialogBody(props: ContentProps): React.JSX.Element {
   return (
     <CentredModal {...modalProps(props)}>
-      {props.children}
+      <ListPlaceContext value="page">{props.children}</ListPlaceContext>
       {props.showClose === false ? null : <ContentClose />}
     </CentredModal>
   );

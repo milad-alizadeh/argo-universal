@@ -97,9 +97,9 @@ function useOrder(cards: readonly WorkbenchColumnCard[]): OrderedCards {
   return { byId, shown: orderCards([...byId.keys()], order), setOrder };
 }
 
-// A handle shows on the card under the pointer and on the card being held, wherever the pointer has gone since.
+// A handle shows on the card under the pointer; while a card is held it is the only one, wherever the pointer has gone.
 const handleShown = (id: string, { gesture, hover }: Placing): boolean =>
-  hover.id === id || gesture.drag?.id === id;
+  gesture.drag ? gesture.drag.id === id : hover.id === id;
 
 // A lone card has nothing to move past, so it shows no handle.
 const handleFor =

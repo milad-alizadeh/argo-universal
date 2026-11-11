@@ -1,4 +1,5 @@
 import { Text } from '@repo/kit/primitives/content/text';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { SessionPluginCard } from './plugin-card-section';
@@ -56,4 +57,31 @@ export const listCard: SessionPluginCard = {
     </List>
   ),
   tab: <Text>{issueCardFullView}</Text>,
+};
+
+export const sessionRowTitle = 'Work on the tracker card for the Workbench';
+
+export const sessionRowBranch = 'argo/c17-workbench-card-style';
+
+// A card whose page is a List of FieldGroup.Link rows, as the Issue tracker's Sessions list is: a long title and a long branch.
+export const sessionsCard: SessionPluginCard = {
+  pluginId: 'issue-tracker',
+  card: {
+    id: 'sessions',
+    title: 'Sessions',
+    icon: { sf: 'ticket', material: 'confirmation_number' },
+    page: '/issues/sessions',
+  },
+  page: (
+    <List appearance="grouped">
+      <List.Section title="Sessions">
+        <FieldGroup.Link
+          id="session-one"
+          title={sessionRowTitle}
+          value={sessionRowBranch}
+          onPress={() => undefined}
+        />
+      </List.Section>
+    </List>
+  ),
 };

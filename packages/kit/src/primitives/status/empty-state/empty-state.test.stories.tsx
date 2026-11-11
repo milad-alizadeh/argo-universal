@@ -67,7 +67,7 @@ export const Search: Story = {
   },
 };
 
-// A card's empty line is a row, not a page: far shorter than the page-sized state, and not drawn on tiles.
+// A card's empty line is a row, not a page: the row's text role, and none of the page's icon tiles.
 export const InACard: Story = {
   args: { icon: 'sessions', action: undefined },
   decorators: [
@@ -77,13 +77,14 @@ export const InACard: Story = {
       </Card>
     ),
   ],
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
     const heading = canvas.getByRole('heading', { name: content.title });
 
     await expect(heading).toBeVisible();
-    await expect(heading.getBoundingClientRect().height).toBeLessThan(30);
+    await expect(heading).toHaveClass('type-body');
+    await expect(heading).not.toHaveClass('type-title');
     await expect(
-      heading.parentElement?.getBoundingClientRect().height,
-    ).toBeLessThan(80);
+      canvasElement.querySelector('[aria-hidden="true"]'),
+    ).toBeNull();
   },
 };
