@@ -143,8 +143,10 @@ Feature: Plugin navigation
 
   Scenario: A Plugin's Workbench card is drawn only while its page has something to show
     Given a wide Frame
-    And the Notes card has nothing to show
     And a Session named "Check the live list"
+    And the Notes card has nothing to show
+    And I return to Sessions
+    And I open the Session "Check the live list"
     Then the Session Workbench has no Plugin card "Notes"
     When I open the Lists Plugin
     And I press "Fill the Notes card" on the Plugin page
@@ -159,8 +161,10 @@ Feature: Plugin navigation
 
   Scenario: A Plugin card that empties takes its Inspector tab with it
     Given a wide Frame
-    And the Notes card has nothing to show
     And a Session named "Check the live list"
+    And the Notes card has nothing to show
+    And I return to Sessions
+    And I open the Session "Check the live list"
     When I open the Lists Plugin
     And I press "Fill the Notes card" on the Plugin page
     And I return to Sessions
