@@ -30,9 +30,42 @@ export function prepareSection(
     title: props.title,
     children: props.isExpanded === false ? null : props.children,
     selection: sectionSelection(props),
+    ...sectionParts(props, key, footerShown),
+  };
+}
+
+type SectionParts = Pick<SectionState, 'header' | 'footer'>;
+
+interface DrawnParts {
+  // The key and footer choice they were drawn for.
+  drawnFor: string;
+  parts: SectionParts;
+}
+
+const drawnParts = new WeakMap<ListSectionProps, DrawnParts>();
+
+/*
+ * A Section drawn again from the same props holds the header and footer it drew, so the List's rows for them read as
+ * the same rows and do not draw again.
+ */
+function sectionParts(
+  props: ListSectionProps,
+  key: string,
+  footerShown: boolean,
+): SectionParts {
+  const drawnFor = `${key} ${footerShown}`;
+  const held = drawnParts.get(props);
+
+  if (held?.drawnFor === drawnFor) return held.parts;
+
+  const parts = {
     header: sectionHeader(props, key),
     footer: sectionFooter(props, key, footerShown),
   };
+
+  drawnParts.set(props, { drawnFor, parts });
+
+  return parts;
 }
 
 // A Section's header is where a dragged row lands first in its Section.
