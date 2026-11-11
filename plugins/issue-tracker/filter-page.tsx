@@ -1,4 +1,5 @@
 import {
+  Button,
   EmptyState,
   List,
   ListDetail,
@@ -157,12 +158,11 @@ function FilterDetail(props: DetailProps): JSX.Element {
 
 type ScreenProps = Pick<
   PluginProps['Screen'],
-  'title' | 'caption' | 'search' | 'value' | 'onChangeText'
+  'title' | 'search' | 'value' | 'onChangeText'
 >;
 
 const screenProps = ({ data, to, query }: DetailProps): ScreenProps => ({
   title: data.filter.title,
-  caption: data.filter.search,
   search: { label: 'Search Issues' },
   value: query,
   onChangeText: to.bind('query'),
@@ -179,7 +179,17 @@ type ListProps = Pick<
  */
 const listProps = ({ data, list, to }: DetailProps): ListProps => ({
   footer: noIssuesBecause(data) || repositoryText(data.project),
-  empty: <EmptyState title={noIssuesBecause(data) || 'No Issues.'} />,
+  empty: (
+    <EmptyState
+      title={noIssuesBecause(data) || 'No Issues.'}
+      action={data.state === 'unopened' ? checkAgain(to) : undefined}
+    />
+  ),
   pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
   onRefresh: to.set({}),
 });
+
+// Where the Tracker did not open, Project details is where it is set up; once it is, this asks again.
+const checkAgain = (to: To): JSX.Element => (
+  <Button label="Check again" onPress={to.set({})} />
+);

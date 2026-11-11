@@ -1,4 +1,4 @@
-import { Action, Detail, Callout, Screen, type PageTo } from '@argo/plugin-kit';
+import { Action, Button, Callout, Detail, Screen, type PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueStatus } from './github-issues';
 import type { AttachedSession, IssueDetailData } from './issue-detail-data';
@@ -30,6 +30,7 @@ export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
           tone="danger"
           title="Couldn’t load this Issue"
           description={data.message}
+          actions={<Button label="Check again" onPress={props.to.set({})} />}
         />
       </Screen>
     );
