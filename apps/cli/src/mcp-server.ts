@@ -46,7 +46,7 @@ const result = (
 });
 
 // Argo's discovery line, then each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
-export function mcpInstructions(plugins: PluginInstruction[]): string {
+function mcpInstructions(plugins: PluginInstruction[]): string {
   return [
     discoveryInstructions,
     ...plugins.map(({ name, text }) => `## ${name}\n\n${text}`),
