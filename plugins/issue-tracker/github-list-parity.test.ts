@@ -54,5 +54,5 @@ it('lists each Issue with the fields its own page reads, so one opened from a ro
 
   // The list asks GitHub for the same fields the page's own read does.
   for (const field of ['body', 'blockedBy', 'subIssues'])
-    expect(String(bodyOf(listed.sent).query)).toContain(field);
+    expect(JSON.stringify(bodyOf(listed.sent).query)).toContain(field);
 });
