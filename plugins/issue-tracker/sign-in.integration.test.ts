@@ -5,38 +5,14 @@ import {
   signedInRoot,
   trackedGitHub,
   trackerPage,
-  type OpenPage,
-  type Tracked,
 } from './journey-fixture';
-
-const signInLabel = 'Sign in to GitHub';
-
-const signedInText = 'Signed in as octocat';
-
-// The device flow polls on the Plugin's clock; each step lets one poll through.
-async function until(
-  { test }: Tracked,
-  page: OpenPage,
-  text: string,
-): Promise<void> {
-  for (let step = 0; step < 6 && !page.findText(text); step += 1) {
-    await test.clock.advance(1000);
-    await page.draw();
-  }
-
-  expect(page.findText(text)).toBeDefined();
-}
-
-// Opens the sign-in page as a paired Device's App does, and asks for a code.
-async function showsCode(tracked: Tracked): Promise<OpenPage> {
-  const page = await tracked.test.pages.open({ path: '/sign-in' });
-
-  await page.press(signInLabel);
-  await page.draw();
-  expect(page.findText('WDJB-MJHT')).toBeDefined();
-
-  return page;
-}
+import {
+  apiCalls,
+  showsCode,
+  signedInText,
+  signInLabel,
+  until,
+} from './sign-in-helpers';
 
 it('shows the code and where to enter it, then names the Account once approved, from a paired Device', async () => {
   const tracked = await trackedGitHub();
@@ -77,24 +53,6 @@ it('keeps waiting through pending and slow_down answers, then signs in', async (
     tracked.github.requests.filter(({ path }) => path.endsWith('access_token')),
   ).toHaveLength(3);
 });
-
-it.each([
-  ['access_denied', 'Sign-in was denied'],
-  ['expired_token', 'The code expired'],
-  ['incorrect_client_credentials', 'Couldn’t sign in'],
-])(
-  'says so when GitHub answers %s, and offers another try',
-  async (error, title) => {
-    const tracked = await trackedGitHub();
-
-    tracked.github.script({ error });
-
-    const page = await showsCode(tracked);
-
-    await until(tracked, page, title);
-    expect(page.findText('Try again')).toBeDefined();
-  },
-);
 
 it('lets the person give up waiting', async () => {
   const tracked = await trackedGitHub();
@@ -147,8 +105,10 @@ it('reads the overview in one call, and opens again inside the freshness window 
 
   expect(root.findText('good first issue')).toBeDefined();
   expect(github.graphqlCalls()).toHaveLength(1);
+  // Every call to the API but the sign-in's own `/user`: the overview is the only one, so no search or REST call follows it.
+  expect(apiCalls(github)).toHaveLength(1);
 
   await test.clock.advance(30_000);
   await test.pages.open({ path: '/' });
-  expect(github.graphqlCalls()).toHaveLength(1);
+  expect(apiCalls(github)).toHaveLength(1);
 });

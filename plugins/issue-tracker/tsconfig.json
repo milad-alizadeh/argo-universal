@@ -6,6 +6,8 @@
     "**/node_modules",
     "github-fixture.ts",
     "journey-fixture.ts",
+    "sign-in-helpers.ts",
+    "tracker-answering.ts",
     "session-slot-fixture.ts",
     "vitest.config.ts"
   ]

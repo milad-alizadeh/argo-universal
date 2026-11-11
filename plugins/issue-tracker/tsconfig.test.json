@@ -4,6 +4,8 @@
     "**/*.test.ts",
     "github-fixture.ts",
     "journey-fixture.ts",
+    "sign-in-helpers.ts",
+    "tracker-answering.ts",
     "plugin.gen.d.ts",
     "session-slot-fixture.ts",
     "vitest.config.ts"

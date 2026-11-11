@@ -70,6 +70,7 @@ it('closes an Issue with four pages open and re-reads only the page on screen', 
 
   // The Issue page's own overview and Issue; the root, the list and the other Issue are not drawn, so not read.
   expect(github.graphqlCalls().length - before).toBe(2);
-  await test.clock.advance(1000);
+  // Past the freshness window, a page nobody draws is still not read: only a page on screen reads again.
+  await test.clock.advance(61_000);
   expect(github.graphqlCalls().length - before).toBe(2);
 });

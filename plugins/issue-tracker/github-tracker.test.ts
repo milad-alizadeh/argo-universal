@@ -1,50 +1,6 @@
-import type { Argo } from '@argo/plugin-kit';
 import { expect, it } from 'vitest';
 import { githubHost, SignInRequired } from './github-api';
-import { createGitHubTracker, type TrackerClient } from './github-tracker';
-import type { JsonObject } from './json';
-
-type Fetch = Argo['fetch'];
-
-type Sent = { url: string; init: Parameters<Fetch>[1] };
-
-type Body = JsonObject;
-
-const reply = (status: number, body: Body): Awaited<ReturnType<Fetch>> => ({
-  ok: status < 400,
-  status,
-  statusText: '',
-  headers: {},
-  body: JSON.stringify(body),
-  truncated: false,
-  text: () => Promise.resolve(JSON.stringify(body)),
-  json: () => Promise.resolve(body),
-});
-
-// A tracker whose every call gets one answer, and the calls it made.
-type Answering = { sent: Sent[]; tracker: TrackerClient };
-
-function trackerAnswering(answer: Awaited<ReturnType<Fetch>>): Answering {
-  const sent: Sent[] = [];
-
-  const fetch: Fetch = (url, init) => {
-    sent.push({ url, init });
-
-    return Promise.resolve(answer);
-  };
-
-  return {
-    sent,
-    tracker: createGitHubTracker(fetch, {
-      projectId: 'project-1',
-      repository: 'owner/repository',
-    }),
-  };
-}
-
-// The JSON a call sent, as an object.
-const bodyOf = (calls: Sent[]): Body =>
-  Object(JSON.parse(calls.map(({ init }) => init?.body).at(0) ?? '{}'));
+import { bodyOf, reply, trackerAnswering } from './tracker-answering';
 
 const overview = {
   data: {
@@ -131,5 +87,21 @@ it('closes an Issue as the signed-in person, and says GitHub’s own words when 
 
   await expect(refused.tracker.setStatus(8, 'closed')).rejects.toThrow(
     'Could not close the issue.',
+  );
+});
+
+it('leaves a filter without a count when GitHub does not report it, and rejects a label list it does not send', async () => {
+  const missing = trackerAnswering(
+    reply(200, {
+      data: { repository: { labels: { nodes: [{ name: 'bug' }] } } },
+    }),
+  );
+
+  expect((await missing.tracker.overview()).counts).toEqual({});
+
+  const invalid = trackerAnswering(reply(200, { data: { repository: {} } }));
+
+  await expect(invalid.tracker.overview()).rejects.toThrow(
+    'GitHub returned an invalid label list.',
   );
 });
