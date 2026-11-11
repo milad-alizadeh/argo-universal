@@ -4,7 +4,12 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
-import { answer, dataOf, secondToken, tokenOf } from './github-fixture-data';
+import {
+  answer,
+  graphqlAnswer,
+  secondToken,
+  tokenOf,
+} from './github-fixture-data';
 import { childNumber, parentNumber } from './github-issue-nodes';
 
 const slowRefusalMs = 1000;
@@ -59,7 +64,7 @@ function api(request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> {
 
   if (request.method === 'PATCH') return patch(request);
 
-  return answer(`{"data":${dataOf(request)}}`);
+  return answer(graphqlAnswer(request));
 }
 
 type State = { replies: PollReply[]; polled: number };

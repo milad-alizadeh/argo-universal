@@ -57,6 +57,13 @@ export async function called(
   return reply;
 }
 
+// An answer with nothing in it, as `{ repository: { issue: null } }` for an Issue that is not there.
+const hollow = (value: Json | undefined): boolean =>
+  value === null || (isObject(value) && Object.values(value).every(hollow));
+
+const hasErrors = (answer: Json): boolean =>
+  Array.isArray(pick(answer, 'errors'));
+
 function firstError(reply: Json): string {
   const message = pick(item(pick(reply, 'errors'), 0), 'message');
 
@@ -77,7 +84,7 @@ export async function graphqlData(
   const answer = parseJson(await reply.text());
   const data = pick(answer, 'data');
 
-  if (isObject(data)) return data;
+  if (isObject(data) && !(hollow(data) && hasErrors(answer))) return data;
 
   throw new Error(firstError(answer));
 }

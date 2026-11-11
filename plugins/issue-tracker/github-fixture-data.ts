@@ -40,15 +40,21 @@ const titledFor = <Node extends { title: string }>(
 ): Node =>
   token === secondToken ? { ...node, title: `${node.title} (as hubot)` } : node;
 
+const missingNumber = 404;
+
 const issueData = (variables: JsonObject, token: string): string =>
-  JSON.stringify({
-    repository: {
-      issue: titledFor(
-        Number(variables.number) === childNumber ? childIssue() : parentIssue(),
-        token,
-      ),
-    },
-  });
+  Number(variables.number) === missingNumber
+    ? JSON.stringify({ repository: { issue: null } })
+    : JSON.stringify({
+        repository: {
+          issue: titledFor(
+            Number(variables.number) === childNumber
+              ? childIssue()
+              : parentIssue(),
+            token,
+          ),
+        },
+      });
 
 const searchData = (variables: JsonObject): string => {
   const closed = textOf(variables.query).includes('is:closed');
@@ -72,3 +78,15 @@ export function dataOf(request: FixtureRequest): string {
 
 export const tokenOf = (request: FixtureRequest): string =>
   String(request.headers.authorization ?? '').replace('Bearer ', '');
+
+const missingIssue = 'Could not resolve to an Issue with the number of 404.';
+
+// GitHub's whole GraphQL answer: its data, and why a part of it is null.
+export function graphqlAnswer(request: FixtureRequest): string {
+  const data = dataOf(request);
+  const missing = data.includes('"issue":null');
+
+  return missing
+    ? `{"data":${data},"errors":[{"message":"${missingIssue}"}]}`
+    : `{"data":${data}}`;
+}

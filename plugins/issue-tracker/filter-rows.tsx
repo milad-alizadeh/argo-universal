@@ -14,7 +14,7 @@ import { issuePath } from './issue-paths';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueNode } from './issue-tree';
-import { rowLabelPills } from './label-pills';
+import { labelPills } from './label-pills';
 
 export type RowSource = {
   project: Project;
@@ -53,7 +53,7 @@ const rowProps = ({ project, to }: RowSource, issue: Issue): RowProps => ({
 const rowMeta = (issue: Issue): JSX.Element[] => [
   ...blockedMark(issue),
   ...progressMark(issue),
-  ...rowLabelPills(issue.labels),
+  ...labelPills(issue.labels),
 ];
 
 /*

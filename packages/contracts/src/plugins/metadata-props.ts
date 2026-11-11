@@ -14,14 +14,18 @@ export const metadataProps = z.object({
   title: z
     .string()
     .optional()
-    .describe(
-      "Optional section heading; on desktop and web, beside a Detail's content, it defaults to Properties.",
-    ),
+    .describe('Optional heading, inside a List as its section heading.'),
 });
+
+const fieldIcon = iconSymbol
+  .optional()
+  .describe(
+    'The glyph before the value; without one, a narrow window keeps the value in words.',
+  );
 
 export const metadataLabelProps = field.extend({
   text: z.string().describe('The field value.'),
-  icon: iconSymbol.optional(),
+  icon: fieldIcon,
 });
 
 export const metadataLinkProps = field.extend({
@@ -31,9 +35,10 @@ export const metadataLinkProps = field.extend({
     .describe(
       'An http, https or mailto URL, or an absolute route within the App.',
     ),
+  icon: fieldIcon,
 });
 
-export const metadataPillsProps = field;
+export const metadataPillsProps = field.extend({ icon: fieldIcon });
 
 export const metadataStatusDotProps = field.extend({
   text: z.string().describe('The status text.'),

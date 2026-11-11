@@ -78,6 +78,8 @@ export const iconSymbols = {
   fit: { sf: 'viewfinder', material: 'fit_screen' },
   flag: { sf: 'flag', material: 'flag' },
   goal: { sf: 'target', material: 'target' },
+  // A tracker's labels.
+  tag: { sf: 'tag', material: 'label' },
   guide: { sf: 'text.book.closed', material: 'import_contacts' },
   heart: { sf: 'heart', sfFilled: 'heart.fill', material: 'favorite' },
   hand: { sf: 'hand.raised', material: 'front_hand' },
