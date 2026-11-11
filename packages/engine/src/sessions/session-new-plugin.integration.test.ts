@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
@@ -26,6 +26,8 @@ const checkoutDirectory = 'plugins';
 
 const pluginId = 'reading-list';
 
+const manifestFile = 'plugin.json';
+
 it('writes the one template into the Session’s Checkout under plugins/<id>', async () => {
   const { host, sessionId, path } = await openedSession();
 
@@ -33,13 +35,13 @@ it('writes the one template into the Session’s Checkout under plugins/<id>', a
 
   expect(made.path).toBe(join(checkoutDirectory, pluginId));
   expect(made.files).toEqual(
-    expect.arrayContaining(['plugin.json', 'index.tsx', 'index.test.ts']),
+    expect.arrayContaining([manifestFile, 'index.tsx', 'index.test.ts']),
   );
   expect(made.next.join('\n')).toContain(
     `pnpm --filter @argo/${pluginId} check`,
   );
   expect(
-    JSON.parse(await readFile(join(path, made.path, 'plugin.json'), 'utf8')),
+    JSON.parse(await readFile(join(path, made.path, manifestFile), 'utf8')),
   ).toMatchObject({ id: pluginId, name: 'Reading List' });
 });
 
@@ -92,6 +94,23 @@ it('keeps an apostrophe and an ampersand in a name the manifest and the page bot
   });
 
   expect(
-    JSON.parse(await readFile(join(path, made.path, 'plugin.json'), 'utf8')),
+    JSON.parse(await readFile(join(path, made.path, manifestFile), 'utf8')),
   ).toMatchObject({ name: 'Bob’s & Co' });
+});
+
+it('refuses an id whose package name the workspace already holds, naming the fix', async () => {
+  const { host, sessionId, path } = await openedSession();
+  const kit = join(path, 'packages', 'plugin-kit');
+
+  await mkdir(kit, { recursive: true });
+  await writeFile(
+    join(kit, 'package.json'),
+    JSON.stringify({ name: '@argo/plugin-kit' }),
+  );
+
+  await expect(
+    host.caller.plugin.new({ sessionId, id: 'plugin-kit' }),
+  ).rejects.toThrow(
+    '@argo/plugin-kit is already a package in this workspace. Pick another id',
+  );
 });
