@@ -47,13 +47,18 @@ export async function writePluginFolder(
 
 const workspaceFolders = ['packages', 'plugins', join('plugins', 'examples')];
 
+// The `name` a parsed `package.json` holds, when it holds a string.
+const packageName = (manifest: unknown): string[] =>
+  typeof manifest === 'object' &&
+  manifest !== null &&
+  'name' in manifest &&
+  typeof manifest.name === 'string'
+    ? [manifest.name]
+    : [];
+
 const nameIn = (folder: string): Promise<string[]> =>
   readFile(join(folder, 'package.json'), 'utf8').then(
-    (text: string) => {
-      const { name }: { name?: unknown } = JSON.parse(text);
-
-      return typeof name === 'string' ? [name] : [];
-    },
+    (text: string) => packageName(JSON.parse(text)),
     (): string[] => [],
   );
 

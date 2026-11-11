@@ -105,3 +105,26 @@ it('leaves a filter without a count when GitHub does not report it, and rejects 
     'GitHub returned an invalid label list.',
   );
 });
+
+it('skips a search node that is no Issue, and rejects a node with some of an Issue only', async () => {
+  const issue = {
+    number: 8,
+    title: 'Keep the boundary',
+    state: 'OPEN',
+    url: 'https://github.com/owner/repository/issues/8',
+  };
+
+  const skipped = trackerAnswering(
+    reply(200, { data: { search: { nodes: [{}, issue] } } }),
+  );
+
+  expect((await skipped.tracker.listIssues('is:open', 30)).length).toBe(1);
+
+  const malformed = trackerAnswering(
+    reply(200, { data: { search: { nodes: [{ number: 9 }, issue] } } }),
+  );
+
+  await expect(malformed.tracker.listIssues('is:open', 30)).rejects.toThrow(
+    'GitHub returned an invalid Issue.',
+  );
+});

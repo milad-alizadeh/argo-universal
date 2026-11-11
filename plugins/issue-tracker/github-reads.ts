@@ -96,13 +96,11 @@ async function listed(
   return issues;
 }
 
-/*
- * The tracker's GitHub reads, named reads (ADR-0037): every page and Slot that asks the same question shares the
- * one entry Argo keeps for it, and a status change or a sign-in, which say `argo.changed()`, make it due.
- */
 // Each read is kept for the Project its args name, so a page drawn for a Project and a Slot share its entry.
 const byProject = { projectOf: ({ projectId }: Target): string => projectId };
 
+// A named read (ADR-0037): every page and Slot that asks the same question shares the one entry Argo keeps for it, and a
+// status change or a sign-in, which say `argo.changed()`, make it due.
 const issueRead = (argo: Argo, source: Source): GitHubReads['issue'] =>
   argo.queries.define(
     'issue',

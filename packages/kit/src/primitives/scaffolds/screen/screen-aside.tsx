@@ -46,6 +46,9 @@ interface AsideFrame extends AsideLayout {
 /*
  * The width the last Screen measured. A page opened from another starts from it, as the two fill the same region, so
  * its first frame lays its column out where the page it came from had it, not centred until it measures its own.
+ * It has to outlive the Screen that measured it, so it cannot be that Screen's state. It is shared by every Screen
+ * in the JS context, whatever region it fills: a Screen of another width (a second window, a story beside others, a
+ * Screen in the Inspector) lays out its first frame from a width that is not its own, until its own measure replaces it.
  */
 let lastScreenWidth = 0;
 

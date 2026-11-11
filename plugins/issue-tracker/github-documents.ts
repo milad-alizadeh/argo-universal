@@ -2,7 +2,7 @@ import { graphqlRequest, type GitHubRequest } from './github-api';
 import type { GitHubIssue, Issue } from './github-issues';
 import { mapIssue } from './github-issues';
 import { builtInFilters } from './issue-filters';
-import { isObject, pick, type Json } from './json';
+import { at, isObject, pick, type Json } from './json';
 import type { Overview } from './overview';
 
 // The most labels a repository's grouping shows, and the most Issues one search answers.
@@ -80,7 +80,7 @@ const labelName = (node: Json): string[] => {
 };
 
 export function mapOverview(data: Json): Overview {
-  const nodes = pick(pick(pick(data, 'repository'), 'labels'), 'nodes');
+  const nodes = at(data, 'repository', 'labels', 'nodes');
 
   if (!Array.isArray(nodes))
     throw new Error('GitHub returned an invalid label list.');
@@ -91,7 +91,7 @@ export function mapOverview(data: Json): Overview {
 // A count GitHub refused, such as past its search rate limit, only leaves its row without one.
 function countsOf(data: Json): Overview['counts'] {
   const entries = countedFilters.flatMap(({ id }, index) => {
-    const count = pick(pick(data, countAlias(index)), 'issueCount');
+    const count = at(data, countAlias(index), 'issueCount');
 
     return Number.isSafeInteger(count) ? [[id, Number(count)] as const] : [];
   });
@@ -147,11 +147,14 @@ const flatten = ({
   assignees: assignees?.nodes,
 });
 
+// A search node that is not an Issue, as a pull request, comes back empty; a node with anything in it is an Issue and must be a valid one.
 const issueNode = (node: Json): Issue[] =>
-  isObject(node) && 'number' in node ? [mapIssue(flatten(node))] : [];
+  isObject(node) && Object.keys(node).length > 0
+    ? [mapIssue(flatten(node))]
+    : [];
 
 export function mapIssueList(data: Json): Issue[] {
-  const nodes = pick(pick(data, 'search'), 'nodes');
+  const nodes = at(data, 'search', 'nodes');
 
   if (!Array.isArray(nodes))
     throw new Error('GitHub returned an invalid Issue list.');
@@ -160,7 +163,7 @@ export function mapIssueList(data: Json): Issue[] {
 }
 
 export function mapIssueDetail(data: Json): Issue {
-  const issue = pick(pick(data, 'repository'), 'issue');
+  const issue = at(data, 'repository', 'issue');
 
   if (!isObject(issue)) throw new Error('GitHub has no such Issue.');
 

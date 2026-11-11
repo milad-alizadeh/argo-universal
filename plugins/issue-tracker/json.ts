@@ -11,6 +11,12 @@ export const isObject = (value: Json | undefined): value is JsonObject =>
 export const pick = (value: Json | undefined, key: string): Json | undefined =>
   isObject(value) ? value[key] : undefined;
 
+// The value at a path of keys, or undefined where any step is not an object holding it.
+export const at = (
+  value: Json | undefined,
+  ...keys: string[]
+): Json | undefined => keys.reduce<Json | undefined>(pick, value);
+
 export const item = (
   value: Json | undefined,
   index: number,

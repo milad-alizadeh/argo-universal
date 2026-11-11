@@ -19,6 +19,10 @@ const slowDownMs = 5000;
 
 const idle: DeviceFlowState = { kind: 'idle' };
 
+// What a rejection says: an Error's message, or whatever else was thrown, as text.
+const reasonOf = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 const bearer = { header: 'Authorization', prefix: 'Bearer' };
 
 // What one attempt reaches: the Plugin's calls, the service, and whether it is still the current one.
@@ -100,7 +104,7 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
 
   void awaitToken(attempt, found.device, found.intervalMs).then(
     attempt.settle,
-    (error: Error) => attempt.settle(ended('failed', error.message)),
+    (error: unknown) => attempt.settle(ended('failed', reasonOf(error))),
   );
 
   return attempt.settle(shown(found));
@@ -173,8 +177,8 @@ function start(
 
   attempt.settle({ kind: 'requesting' });
 
-  return requestCode(attempt).catch((error: Error) =>
-    attempt.settle(ended('failed', error.message)),
+  return requestCode(attempt).catch((error: unknown) =>
+    attempt.settle(ended('failed', reasonOf(error))),
   );
 }
 
