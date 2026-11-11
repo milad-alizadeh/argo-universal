@@ -1,5 +1,4 @@
-import type { Argo } from '@argo/plugin-kit';
-import type { DeviceFlow } from './device-flow';
+import type { Argo, DeviceFlow } from '@argo/plugin-kit';
 import type { IssueChanges } from './issue-changes';
 import type { GitHubReads } from './github-reads';
 import type { TrackerRegistry } from './tracker-registry';

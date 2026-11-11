@@ -14,7 +14,10 @@ const okStatus = 200;
  * Signing in is the way forward: no Account answered the borrow, or GitHub no longer accepts its token. A page
  * answers it with the sign-in page, not an error.
  */
-export class SignInRequired extends Error {}
+export class SignInRequired extends Error {
+  // The kit's gate recognises this error by its name; a module its unit tests load cannot import the kit.
+  override name = 'SignInRequired';
+}
 
 type Fetch = Argo['fetch'];
 

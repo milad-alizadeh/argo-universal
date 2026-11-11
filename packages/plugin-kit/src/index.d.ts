@@ -158,6 +158,9 @@ export declare const oauthFlow: OAuthFlowPattern;
 
 export type * from '@repo/contracts/plugins/oauth-flow-api';
 
+// The device flow and the sign-in pattern that draws either flow.
+export * from './sign-in';
+
 import type { OAuthFlowPattern } from '@repo/contracts/plugins/oauth-flow-api';
 
 export type { HookNext } from '@repo/contracts/plugins/hooks';

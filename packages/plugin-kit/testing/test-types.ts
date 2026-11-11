@@ -43,6 +43,8 @@ export interface PluginTestOptions {
   path?: string[];
   clockStart?: number;
   network?: PluginNetwork;
+  // Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL.
+  openBrowser?: (url: string) => Promise<void>;
   settings?: Map<string, PluginSettingValue>;
   // What `argo.sessions.get` answers, by Session id.
   sessions?: Record<string, PluginSessionInfo>;

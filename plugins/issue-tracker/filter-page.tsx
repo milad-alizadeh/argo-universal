@@ -26,7 +26,8 @@ import type { IssueDeps } from './issue-deps';
 import { filterPattern } from './issue-paths';
 import { RootRows, type RootRowsProps } from './issue-root';
 import { issueTree } from './issue-tree';
-import { gated, type GatedPage } from './signed-in-gate';
+import { signInGate, type GatedPage } from '@argo/plugin-kit';
+import { signInOptions } from './github-account';
 import { loadingIssues } from './loading-issues';
 
 type To = PageTo<FilterState>;
@@ -40,7 +41,7 @@ type To = PageTo<FilterState>;
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   // A status change on any page, the Issue page's own included, leaves the counts and drawn lists stale.
   deps.changes.subscribe(() => argo.changed());
-  argo.pages.define(filterPattern, gated(deps.signIn, filterPage(deps)));
+  argo.pages.define(filterPattern, signInGate(deps.signIn, signInOptions, filterPage(deps)));
 }
 
 function filterPage(

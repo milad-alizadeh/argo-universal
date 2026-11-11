@@ -57,6 +57,8 @@ export type OAuthFlowState =
  *   once as the Plugin registers.
  */
 export type OAuthFlow = Readonly<{
+  // The browser and Argo's callback port are the Server Device's, so only it starts this sign-in.
+  serverDevice: true;
   state: () => OAuthFlowState;
   start: () => Promise<OAuthFlowState>;
   cancel: () => OAuthFlowState;

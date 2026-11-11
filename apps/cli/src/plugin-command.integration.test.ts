@@ -115,7 +115,7 @@ it(
     expect(await run('test', githubSignIn, exampleTestLimitMs)).toMatchObject({
       code: 0,
       output: expect.stringContaining(
-        'PASS the Server Device draws the sign-in where it stands',
+        'PASS draws the sign-in until the person signs in, on any device',
       ),
     });
   },

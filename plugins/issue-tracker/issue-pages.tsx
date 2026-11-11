@@ -13,7 +13,8 @@ import { loadIssueDetail, type IssueDetailData } from './issue-detail-data';
 import { issuePattern, pathText, projectPattern } from './issue-paths';
 import { RootPage, RootRows, type SidebarOverview } from './issue-root';
 import { rootProjects, type RootProjects } from './root-projects';
-import { gated, type GatedPage } from './signed-in-gate';
+import { signInGate, type GatedPage } from '@argo/plugin-kit';
+import { signInOptions } from './github-account';
 
 type Input = LoaderInput;
 
@@ -29,9 +30,9 @@ type RootData = { choice: RootProjects; overview: SidebarOverview };
 export function defineIssuePages(argo: Argo, deps: IssueDeps): void {
   const { signIn } = deps;
 
-  argo.pages.define('/', gated(signIn, rootLanding(deps)));
-  argo.pages.define(projectPattern, gated(signIn, projectLanding(deps)));
-  argo.pages.define(issuePattern, gated(signIn, issueLanding(deps)));
+  argo.pages.define('/', signInGate(signIn, signInOptions, rootLanding(deps)));
+  argo.pages.define(projectPattern, signInGate(signIn, signInOptions, projectLanding(deps)));
+  argo.pages.define(issuePattern, signInGate(signIn, signInOptions, issueLanding(deps)));
 }
 
 const rootLanding = (deps: IssueDeps): GatedPage<PageState, RootData> => ({

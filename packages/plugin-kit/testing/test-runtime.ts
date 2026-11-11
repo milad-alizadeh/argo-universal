@@ -1,5 +1,8 @@
 import { delimiter } from 'node:path';
-import type { PluginProjectInfo } from '@repo/contracts/plugins';
+import type {
+  PluginProjectInfo,
+  PluginSettingValue,
+} from '@repo/contracts/plugins';
 import type { MemoryKeychain } from '@repo/engine/mocks/keychain';
 import type { TestAccounts } from '@repo/engine/mocks/test-accounts';
 import { createPluginRuntime, type PluginRuntime } from '@repo/engine/plugins';
@@ -22,12 +25,23 @@ export function runtimeFor(
     ...parts,
     clockStart: options.clockStart,
     network: options.network,
-    settings: async (id, key) =>
-      options.settingsByPlugin.get(id)?.get(key) ?? null,
+    oauth: oauthOf(options),
+    settings: settingsOf(options),
     ...projectOptions(options),
     environment: testEnvironment(options),
   });
 }
+
+const settingsOf =
+  ({ settingsByPlugin }: ConfiguredTest) =>
+  async (id: string, key: string): Promise<PluginSettingValue | null> =>
+    settingsByPlugin.get(id)?.get(key) ?? null;
+
+// The browser a sign-in opens is the test's own when it gave one.
+const oauthOf = ({
+  openBrowser,
+}: ConfiguredTest): { open: (url: string) => Promise<void> } | undefined =>
+  openBrowser && { open: openBrowser };
 
 function projectOptions(
   options: ConfiguredTest,
