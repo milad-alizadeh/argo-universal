@@ -89,9 +89,10 @@ it('writes a Plugin that passes every step of its own check script', async () =>
 
   expect(steps.filter((step) => step.startsWith('tsc'))).toHaveLength(2);
 
-  for (const step of steps)
-    expect({ step, ...(await runStep(step, directory)) }).toMatchObject({
-      step,
-      code: 0,
-    });
+  for (const step of steps) {
+    const { code, output } = await runStep(step, directory);
+
+    // A failing step names itself and says all it printed.
+    expect(code, `${step} printed:\n${output}`).toBe(0);
+  }
 }, 180_000);
