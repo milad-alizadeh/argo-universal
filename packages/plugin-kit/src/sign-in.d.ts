@@ -11,6 +11,7 @@ import type {
 } from '@repo/contracts/plugins/device-flow-api';
 import type { PageState as SignInPageState } from '@repo/contracts/plugins/page-address';
 import type {
+  AccountFetchPattern,
   Gated,
   GatedPage as ContractsGatedPage,
   SignInOptions,
@@ -51,3 +52,6 @@ export declare function provideSignIn(
   flow: SignInFlow,
   options: SignInOptions & { path?: string },
 ): Promise<void>;
+
+// `argo.fetch` as the person signed in to a host: no Account or a 401 throws `SignInRequired`.
+export declare const accountFetch: AccountFetchPattern;

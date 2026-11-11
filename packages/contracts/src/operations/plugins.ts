@@ -7,6 +7,12 @@ import {
   PluginSettings,
 } from '../plugins/plugins';
 import { PluginStatus } from '../plugins/runtime';
+import {
+  PluginGuide,
+  PluginGuideInput,
+  PluginNewInput,
+  PluginNewOutput,
+} from './plugin-guide';
 
 export const pluginOperations = {
   'plugin.list': {
@@ -58,5 +64,35 @@ export const pluginOperations = {
     result: z.strictObject({ ok: z.literal(true) }),
     tier: 'confirm',
     keywords: ['extensions', 'settings', 'configuration', 'secret'],
+  },
+  'plugin.guide': {
+    id: 'plugin.guide',
+    label: 'Plugin blueprint',
+    description:
+      'Read how to build, create or scaffold an Argo Plugin: the blueprint and an index of kit components; pass components to read their props. Read it before building a Plugin, then run plugin.new.',
+    params: PluginGuideInput,
+    result: PluginGuide,
+    tier: 'read',
+    keywords: [
+      'plugin',
+      'build',
+      'create',
+      'scaffold',
+      'blueprint',
+      'guide',
+      'kit',
+      'component',
+      'extension',
+    ],
+  },
+  'plugin.new': {
+    id: 'plugin.new',
+    label: 'New Plugin',
+    description:
+      'Write a working Plugin into a Session Checkout: one page, one Operation and one passing test. Run plugin.guide first.',
+    params: PluginNewInput,
+    result: PluginNewOutput,
+    tier: 'act',
+    keywords: ['plugin', 'build', 'create', 'scaffold', 'template', 'new'],
   },
 } as const;

@@ -5,6 +5,7 @@ import type {
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type {
+  AccountFetchPattern,
   Gated,
   ProvideSignInPattern,
   SignInData,
@@ -109,3 +110,18 @@ export const provideSignIn: ProvideSignInPattern = async (
 
   await flow.provide();
 };
+
+// Signing in is the way forward when no Account answers the borrow, or the service no longer accepts its token.
+export const accountFetch: AccountFetchPattern =
+  (argo, host) => async (url, init) => {
+    const reply = await argo.fetch(url, { ...init, account: host });
+
+    if (!reply) throw new SignInRequired(`Sign in to ${host}.`);
+
+    if (reply.status === unauthorized)
+      throw new SignInRequired(`${host} no longer accepts this sign-in.`);
+
+    return reply;
+  };
+
+const unauthorized = 401;

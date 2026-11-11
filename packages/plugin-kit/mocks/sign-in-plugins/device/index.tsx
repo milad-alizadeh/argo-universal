@@ -1,9 +1,9 @@
 import {
+  accountFetch,
   deviceFlow,
   provideSignIn,
   Screen,
   signInGate,
-  SignInRequired,
   Text,
   type Argo,
   type GatedPage,
@@ -12,26 +12,12 @@ import {
 
 const items = 'https://api.service.example/items';
 
-// The one read of the page: the Account is borrowed, so a signed-out person has no answer.
-async function readItems(
-  argo: Argo,
-  projectId: string | undefined,
-): Promise<string> {
-  const reply = await argo.fetch(items, {
-    account: 'api.service.example',
-    projectId,
-  });
-
-  if (!reply || reply.status === 401)
-    throw new SignInRequired('Sign in to Service.');
-
-  return reply.text();
-}
-
 const service = { name: 'Service' };
 
+// The one read of the page: the Account is borrowed, so a signed-out person has no answer.
 const itemsPage = (argo: Argo): GatedPage<PageState, string> => ({
-  load: ({ context }) => readItems(argo, context.projectId),
+  load: async () =>
+    (await accountFetch(argo, 'api.service.example')(items)).text(),
   render: (text) => (
     <Screen title="Items">
       <Text>{text}</Text>

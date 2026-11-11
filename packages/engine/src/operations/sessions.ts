@@ -22,7 +22,7 @@ import type { OperationImplementations } from './operations';
 
 type SessionImplementations = Pick<
   OperationImplementations,
-  keyof typeof sessionOperations | keyof typeof readerOperations
+  keyof typeof sessionOperations | keyof typeof readerOperations | 'plugin.new'
 >;
 
 // Sessions answer their own Operations; a new Session and a Prompt answer with the native work they start.

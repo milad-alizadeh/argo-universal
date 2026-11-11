@@ -1,5 +1,7 @@
 # Write, validate and test a Plugin
 
+An Agent asked to build a Plugin starts from the Operations `plugin.guide`, which answers the blueprint and a component reference read from the kit's schemas, and `plugin.new`, which writes a working Plugin into the Session's Checkout. This page is the API they point to. `pnpm check` in a Plugin's folder runs every check on that Plugin alone: its Operation types, `tsc`, validation and its harness tests.
+
 A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-kit` alone, which provides the components, the `Argo` type of the Plugin API, the test kit and the `argo-plugin` command. Plugins in this repository take the kit from the workspace:
 
 ```json

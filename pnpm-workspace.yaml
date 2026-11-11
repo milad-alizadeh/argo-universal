@@ -1,9 +1,10 @@
 packages:
   - apps/*
   - packages/*
-  - plugins/issue-tracker
-  - plugins/code-map
-  - plugins/examples/github-sign-in
+  # Every Plugin folder, so a Plugin `plugin.new` writes resolves the kit after `pnpm install`.
+  - plugins/*
+  - plugins/examples/*
+  - "!plugins/examples"
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e

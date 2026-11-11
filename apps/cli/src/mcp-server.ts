@@ -64,6 +64,7 @@ export function createOperationMcpServer(
 
   registerDiscovery(server, client);
   registerExecution(server, client);
+  registerCreatePlugin(server);
 
   return server;
 }
@@ -82,6 +83,24 @@ function registerDiscovery(server: McpServer, client: ControlClient): void {
   server.registerTool('operation_list', discoveryTool, async ({ filter }) =>
     result(await client.list(filter)),
   );
+}
+
+// The explicit way in, such as Claude Code's /mcp__argo__create-plugin: it names the Operations and holds none of their content.
+const createPluginPrompt = {
+  title: 'Create a Plugin',
+  description: `Build a ${productName} Plugin: read the blueprint, then scaffold one.`,
+};
+
+const createPluginText =
+  'Build an Argo Plugin. Run the plugin.guide Operation and read all of it, ' +
+  'then run plugin.new, then follow the guide until its check passes.';
+
+function registerCreatePlugin(server: McpServer): void {
+  server.registerPrompt('create-plugin', createPluginPrompt, () => ({
+    messages: [
+      { role: 'user', content: { type: 'text', text: createPluginText } },
+    ],
+  }));
 }
 
 const executionTool = {

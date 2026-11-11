@@ -90,7 +90,7 @@ export class PluginAccess {
 
     if (matching.length === 0)
       throw new CapabilityRefusal(
-        `${command.argv.join(' ')} is not a declared command`,
+        `${command.argv.join(' ')} is not a declared command. Add { "kind": "process:exec", "command": "${command.argv[0]}", "args": [...] } to capabilities in plugin.json; args lists the arguments it may take, with * for one and ** for the rest.`,
       );
 
     return this.checkedCommand(command, matching);
@@ -114,7 +114,9 @@ export class PluginAccess {
   // `argo.sessions.get` reads Session details only under a `sessions:read` Grant.
   checkSessionsRead(): void {
     if (!this.scope.grants.some(({ kind }) => kind === 'sessions:read'))
-      throw new CapabilityRefusal('sessions:read is not a declared Capability');
+      throw new CapabilityRefusal(
+        'sessions:read is not a declared Capability. Add { "kind": "sessions:read" } to capabilities in plugin.json.',
+      );
   }
 
   checkHost(url: URL): HostRule {
@@ -201,5 +203,7 @@ const exactHost = ({ host, reason }: FetchCapability): HostRule => ({
 function anyHost(capabilities: FetchCapability[], url: URL): HostRule {
   if (capabilities.some(({ host }) => host === '*')) return { private: false };
 
-  throw new CapabilityRefusal(`${url.host} is not a declared host`);
+  throw new CapabilityRefusal(
+    `${url.host} is not a declared host. Add { "kind": "fetch", "host": "${url.host}" } to capabilities in plugin.json.`,
+  );
 }

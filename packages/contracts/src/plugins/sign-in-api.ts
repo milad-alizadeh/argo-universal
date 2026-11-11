@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Argo } from './argo-api';
+import type { Argo, FetchResponse } from './argo-api';
 import type { SignInFlow, SignInState } from './device-flow-api';
 import type {
   LoaderInput,
@@ -71,3 +71,21 @@ export type ProvideSignInPattern = (
   flow: SignInFlow,
   options: SignInOptions & { path?: string },
 ) => Promise<void>;
+
+// What `accountFetch` needs of the Plugin API, and the Account's host it signs requests as.
+export type AccountFetchArgo = Pick<Argo, 'fetch'>;
+
+type AccountFetchInit = NonNullable<Parameters<Argo['fetch']>[1]>;
+
+/*
+ * `accountFetch(argo, host)`: `argo.fetch` as the person signed in to `host`. The kit borrows the Account, so the
+ * Plugin never holds a token. A call that finds no Account, or one the service rejects with a 401, throws
+ * `SignInRequired`, which a `signInGate` page answers with the sign-in; any other status is the reply, to check.
+ */
+export type AccountFetchPattern = (
+  argo: AccountFetchArgo,
+  host: string,
+) => (
+  url: string,
+  init?: Omit<AccountFetchInit, 'account'>,
+) => Promise<FetchResponse>;

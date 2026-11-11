@@ -62,6 +62,9 @@ it('refuses a page fetching a host its manifest does not declare', async () => {
     { kind: 'fetch', host: 'example.com', reason: 'Some other host' },
   ]);
 
-  shows(page, `Refused: localhost:${port} is not a declared host`);
+  shows(
+    page,
+    `Refused: localhost:${port} is not a declared host. Add { "kind": "fetch", "host": "localhost:${port}" } to capabilities in plugin.json.`,
+  );
   expect(requested).toEqual([]);
 });

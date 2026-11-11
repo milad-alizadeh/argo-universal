@@ -16,6 +16,7 @@ import type { SessionList } from './list/session-list';
 import type { OpenSessions } from './open-sessions';
 import { createSessionAgentReader, listSessionBranches } from './readers';
 import { cancelSession, closeSession } from './session-closure';
+import { createPlugin } from './session-new-plugin';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
 import type { SessionHandlerSources } from './session-sources';
@@ -25,7 +26,7 @@ import { createSessionSnapshotReader } from './snapshot';
 
 // The Session Operations that answer with their result; a new Session and a Prompt start native work instead.
 type SessionOperationId = Exclude<
-  keyof typeof sessionOperations | keyof typeof readerOperations,
+  keyof typeof sessionOperations | keyof typeof readerOperations | 'plugin.new',
   'session.new' | 'session.prompt'
 >;
 
@@ -59,6 +60,7 @@ const actImplementations = (
   'session.archive': ({ sessionId }) => archiveSession(sources, sessionId),
   'session.unarchive': ({ sessionId }) => unarchiveSession(sources, sessionId),
   'session.savePlan': (input) => saveSessionPlan(sources.open, input),
+  'plugin.new': (input) => createPlugin(sources.open, input),
   'session.close': ({ sessionId }) => closeSession(sources.open, sessionId),
   'session.setConfigOption': (input) => configureSession(sources.open, input),
   'session.rename': (input) => renameSession(sources.open, input),
