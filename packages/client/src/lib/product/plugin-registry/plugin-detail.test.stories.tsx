@@ -99,10 +99,12 @@ export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
       'Status, In progress',
       'Assignee, Ana Ruiz',
       'Labels, bug, sync',
-      'Milestone, v1.2',
       'Source, GitHub',
     ])
-      await expect(canvas.getByLabelText(name)).toBeVisible();
+      await expect(canvas.getByRole('group', { name })).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Milestone, v1.2' }),
+    ).toBeVisible();
     await expect(canvas.queryByText(/Update Argo/)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Close Issue' }));
     await expect(onPageCall).toHaveBeenLastCalledWith(

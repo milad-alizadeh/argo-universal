@@ -9,6 +9,7 @@ import {
   unknownNodesRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
+import { seen } from '@repo/kit/mocks/seen-text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-view';
@@ -84,6 +85,16 @@ export const RefusedPage: Story = {
   },
 };
 
+// A row's meta also draws unseen copies to measure; a reader sees each text once.
+function onlyOne(elements: HTMLElement[]): HTMLElement {
+  const shown = seen(elements);
+
+  if (shown.length !== 1)
+    throw new Error(`expected one visible match, found ${shown.length}`);
+
+  return shown[0] as HTMLElement;
+}
+
 export const ListAnatomy: Story = {
   parameters: { screenPreview: true },
   render: () => (
@@ -92,9 +103,9 @@ export const ListAnatomy: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText('CI runs')).toBeVisible();
     await expect(canvas.getByText('main')).toBeVisible();
-    await expect(canvas.getAllByText('2/5 jobs')[0]).toBeVisible();
-    await expect(canvas.getAllByText('Production')[0]).toBeVisible();
-    await expect(canvas.getAllByText('now')[0]).toBeVisible();
+    await expect(onlyOne(canvas.getAllByText('2/5 jobs'))).toBeVisible();
+    await expect(onlyOne(canvas.getAllByText('Production'))).toBeVisible();
+    await expect(onlyOne(canvas.getAllByText('now'))).toBeVisible();
     await expect(canvas.getByRole('progressbar')).toHaveAttribute(
       'aria-valuenow',
       '40',

@@ -30,14 +30,22 @@ const body = issue.detail.markdown;
 
 const statusGroup = 'Status, In progress';
 
-// Each field names itself, whether it draws as a row of the aside or as a Pill under the title.
+// Each static field is a named group, whether it draws as a row of the aside or as a Pill under the title.
 async function expectMetadata(
   canvas: Parameters<Play>[0]['canvas'],
 ): Promise<void> {
-  await expect(canvas.getByLabelText(statusGroup)).toBeVisible();
-  await expect(canvas.getByLabelText('Labels, bug, sync')).toBeVisible();
-  await expect(canvas.getByLabelText('Milestone, v1.2')).toBeVisible();
-  await expect(canvas.getByLabelText('Blocked by, #57')).toBeVisible();
+  for (const name of [statusGroup, 'Labels, bug, sync'])
+    await expect(canvas.getByRole('group', { name })).toBeVisible();
+
+  // A field that opens something is a link in the aside's rows and a button as a Pill, named for it either way.
+  for (const name of [/v1\.2/, /#57/]) {
+    const opens = [
+      ...canvas.queryAllByRole('link', { name }),
+      ...canvas.queryAllByRole('button', { name }),
+    ];
+
+    await expect(opens, `${name} opens something`).toHaveLength(1);
+  }
 }
 
 type Play = NonNullable<Story['play']>;
@@ -48,6 +56,9 @@ export const ReadsContentAndMetadata: Story = {
       canvas.getByRole('heading', { name: issue.title }),
     ).toBeVisible();
     await expect(canvas.getByText(body)).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Properties' }),
+    ).toBeVisible();
     await expectMetadata(canvas);
     await expect(canvas.queryByLabelText('Loading')).not.toBeInTheDocument();
   },
@@ -58,7 +69,9 @@ type Place = 'above' | 'beside';
 // Where the Metadata sits: beside the content in the aside's own column, or as Pills above it.
 function metadataPlace(canvas: Parameters<Play>[0]['canvas']): Place {
   const content = canvas.getByText(body).getBoundingClientRect();
-  const status = canvas.getByLabelText(statusGroup).getBoundingClientRect();
+  const status = canvas
+    .getByRole('group', { name: statusGroup })
+    .getBoundingClientRect();
 
   if (status.left >= content.right) return 'beside';
 
@@ -226,7 +239,7 @@ export const AsideNeverMovesTheTitle: Story = onWidest({
     const content = rect(canvas.getByText(body));
     const title = rect(canvas.getByRole('heading', { name: issue.title }));
     const screen = rect(canvas.getByTestId(screenId));
-    const status = rect(canvas.getByLabelText(statusGroup));
+    const status = rect(canvas.getByRole('group', { name: statusGroup }));
 
     await expect(sameEdge(title.left, content.left)).toBe(true);
     await expect(sameEdge(content.left, columnLeft(screen))).toBe(true);
@@ -238,10 +251,10 @@ const listId = 'list-screen';
 
 const listRows = 'list-rows';
 
-// The App's page beside its 384 sidebar at 1440: the Issue, and above it the list it opened from, each the page's width.
-const besideSidebar = 1440 - 384;
+// The App's page beside its sidebar: the Issue, and above it the list it opened from, each the page's width.
+function IssueAndList(args: DetailProps & { page: number }): React.JSX.Element {
+  const besideSidebar = args.page;
 
-function IssueAndList(args: DetailProps): React.JSX.Element {
   return (
     <View>
       <View className="h-80" style={{ width: besideSidebar }}>
@@ -287,25 +300,87 @@ async function expectOneColumn(canvas: Canvas): Promise<void> {
   ).toBe(true);
 }
 
+// The App's sidebar takes 384 of a window wide enough to show it, and the rail alone below 1072.
+const pageAt = (window: number): number => window - (window >= 1072 ? 384 : 56);
+
 /*
- * At 1440 with the sidebar shown the aside has its own column, which the body gives width to. The list it opened from
- * keeps the same column, so opening an Issue moves neither the title nor the body's edges.
+ * The list an Issue opens from keeps the Issue's column, so opening an Issue moves neither the title nor the body's
+ * edges. Where the aside has its own column it sits beside the body, which gives it width.
  */
-export const AsideBesideNarrowedColumnAt1440: Story = {
-  parameters: { screenPreview: true },
-  beforeEach: () => settleLayout(1440),
-  render: (args) => <IssueAndList {...args} />,
-  play: async ({ canvas }) => {
-    await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
-    await waitFor(() => expectOneColumn(canvas));
+function listToIssueAt(window: number, beside: boolean): Story {
+  return {
+    parameters: { screenPreview: true },
+    beforeEach: () => settleLayout(window, 900),
+    render: (args) => <IssueAndList {...args} page={pageAt(window)} />,
+    play: async ({ canvas }) => {
+      await expectMetadata(canvas);
+      await waitFor(() => expectOneColumn(canvas));
 
-    const content = rect(canvas.getByText(body));
+      if (!beside) return;
 
-    await expect(rect(canvas.getByLabelText(statusGroup)).left).toBeGreaterThan(
-      content.right,
-    );
-  },
-};
+      await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+
+      const content = rect(canvas.getByText(body));
+      const status = canvas.getByRole('group', { name: statusGroup });
+
+      await expect(rect(status).left).toBeGreaterThan(content.right);
+    },
+  };
+}
+
+export const ListToIssueKeepsColumnAt1024 = listToIssueAt(1024, false);
+
+export const AsideBesideNarrowedColumnAt1440 = listToIssueAt(1440, true);
+
+export const ListToIssueKeepsColumnAt1920 = listToIssueAt(1920, true);
+
+const overflowId = 'overflow-page';
+
+// A page of one width, as the App gives it at each window.
+function pageOfWidth(window: number): Story {
+  return {
+    parameters: { screenPreview: true },
+    beforeEach: () => settleLayout(window, 900),
+    render: (args) => (
+      <View
+        testID={overflowId}
+        className="h-160"
+        style={{ width: pageAt(window) }}
+      >
+        <Screen title={issue.title} aside={issue.aside}>
+          <Detail {...args} />
+        </Screen>
+      </View>
+    ),
+    play: async ({ canvas }) => {
+      await expectMetadata(canvas);
+
+      const edges = [
+        canvas.getByTestId(overflowId),
+        canvas.getByRole('group', { name: 'Properties' }),
+      ];
+
+      await waitFor(() => {
+        for (const edge of edges)
+          expect(
+            edge.scrollWidth,
+            `${edge.getAttribute('aria-label') ?? 'page'} is ${edge.scrollWidth} wide in ${edge.clientWidth}`,
+          ).toBeLessThanOrEqual(edge.clientWidth);
+      });
+    },
+  };
+}
+
+// The aside's column at the widest windows and the Pills under the title at the rest never run past their page.
+export const NothingOverflowsAt375 = pageOfWidth(375);
+
+export const NothingOverflowsAt768 = pageOfWidth(768);
+
+export const NothingOverflowsAt1024 = pageOfWidth(1024);
+
+export const NothingOverflowsAt1440 = pageOfWidth(1440);
+
+export const NothingOverflowsAt1920 = pageOfWidth(1920);
 
 // A phone-wide web window draws icon Pills above the content.
 export const PhoneWindowLeadsWithIcons: Story = {
@@ -333,7 +408,7 @@ export const AsideStaysWhileContentScrolls: Story = onWidest({
   args: { ...issue.detail, markdown: longBody, testID: scrollId },
   play: async ({ canvas }) => {
     await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
-    const status = canvas.getByLabelText(statusGroup);
+    const status = canvas.getByRole('group', { name: statusGroup });
     const scroll = canvas.getByTestId(scrollId);
     const { top } = rect(status);
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { seen } from '#mocks/seen-text';
 import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
@@ -70,9 +71,6 @@ export const ScrollingToTheEndShowsTheEnd: Story = {
   },
 };
 
-// The row's own padding, which its box holds beside the half the title keeps.
-const rowInset = 32;
-
 const longTitle =
   'A row title long enough to need every pixel the line can give it';
 
@@ -106,13 +104,16 @@ export const LongPillsLeaveTheTitleHalf: Story = {
     const titleText = canvas.getByText(longTitle);
     const [count] = seen(await canvas.findAllByText(/^\+\d$/));
 
+    if (!count) throw new Error('the row drew no count of its hidden Pills');
+
     await waitFor(() => {
       const ended = titleText.getBoundingClientRect();
-      const row = rowOf(titleText, count ?? document.body);
+      const row = contentBox(rowOf(titleText, count));
+      const kept = ended.right - row.left;
 
       return expect(
-        { titleHalf: ended.right - row.left >= row.width / 2 - rowInset },
-        `title ends at ${ended.right} in a row ${row.left}–${row.right}`,
+        { titleHalf: kept >= row.width / 2 },
+        `title keeps ${kept} of a row's ${row.width} content width`,
       ).toEqual({ titleHalf: true });
     });
     await expect(
@@ -124,29 +125,35 @@ export const LongPillsLeaveTheTitleHalf: Story = {
 
 const shortTitle = 'Sync stalls';
 
-// The row's line: the nearest box that holds both its title and its Pills.
-function rowOf(title: Element, pill: Element): DOMRect {
-  const box = title.parentElement ?? document.body;
+// The row's line: the nearest box that holds both its title and its Pills. No such box is a failure, not a pass.
+function rowOf(title: Element, pill: Element): Element {
+  const box = title.parentElement;
 
-  return box.contains(pill) ? box.getBoundingClientRect() : rowOf(box, pill);
+  if (!box) throw new Error('no box holds both the title and its Pills');
+
+  return box.contains(pill) ? box : rowOf(box, pill);
 }
 
-// The nearest box that clips what it holds, which a cut Pill would run past.
+// The nearest box that clips what it holds, which a cut Pill would run past. No such box is a failure, not a pass.
 function clipOf(element: Element): Element {
   const box = element.parentElement;
 
-  if (!box) return document.body;
+  if (!box) throw new Error(`no box clips ${element.textContent}`);
 
   return getComputedStyle(box).overflowX === 'hidden' ? box : clipOf(box);
 }
 
-type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+// A box's width less its own padding: the room its content has.
+function contentBox(box: Element): { left: number; width: number } {
+  const { left, width } = box.getBoundingClientRect();
+  const style = getComputedStyle(box);
+  const before = Number.parseFloat(style.paddingLeft);
+  const after = Number.parseFloat(style.paddingRight);
 
-// What a reader sees, not the copies drawn unseen to measure them.
-const seen = (elements: HTMLElement[]): HTMLElement[] =>
-  elements.filter(
-    (element) => element.closest('[aria-hidden="true"]') === null,
-  );
+  return { left: left + before, width: width - before - after };
+}
+
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
 const seenPills = (canvas: Canvas): HTMLElement[] =>
   seen(longLabels.flatMap((label) => canvas.queryAllByText(label)));

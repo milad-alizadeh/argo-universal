@@ -12,7 +12,22 @@ import { groupProps } from './metadata-group';
 export function PillField(props: FieldProps): ReactElement {
   if (props.face.pills) return <LabelPills {...props} />;
 
-  return <Pill {...fieldPill(props)} />;
+  return <FieldPill {...props} />;
+}
+
+// A field that does nothing is a labelled group around its Pill; one that opens something is the Pill's own button.
+function FieldPill(
+  props: FieldProps & { drawing?: Partial<PillProps> },
+): ReactElement {
+  const pill = { ...fieldPill(props), ...props.drawing };
+
+  if (props.face.onPress) return <Pill {...pill} />;
+
+  return (
+    <View {...groupProps(props)} className="shrink-0 self-start">
+      <Pill {...pill} accessibilityLabel={undefined} />
+    </View>
+  );
 }
 
 /*
@@ -26,7 +41,7 @@ export function IconField(props: FieldProps): ReactElement {
 
   return (
     <Tooltip label={`${props.title}: ${props.valueLabel}`}>
-      <Pill {...fieldPill(props)} {...iconOnly(pills)} />
+      <FieldPill {...props} drawing={iconOnly(pills)} />
     </Tooltip>
   );
 }

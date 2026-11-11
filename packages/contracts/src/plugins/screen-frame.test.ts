@@ -49,6 +49,15 @@ describe('a Detail', () => {
 });
 
 describe('a multi-line field', () => {
+  it('takes its text and the value that binds it through the schema', () => {
+    const props = kitComponent('TextArea')?.props;
+
+    expect(props?.parse(textArea.props)).toEqual(textArea.props);
+    expect(props?.safeParse({ ...textArea.props, value: 3 }).success).toBe(
+      false,
+    );
+  });
+
   it('sends with an IconButton beside it', () => {
     const field = {
       ...textArea,
@@ -65,10 +74,42 @@ describe('a multi-line field', () => {
 
     expect(supportsWireNode(field)).toBe(true);
   });
+
+  it('takes no Screen inside its action', () => {
+    const field = { ...textArea, slots: { action: [node('Screen')] } };
+
+    expect(supportsWireNode(field)).toBe(false);
+  });
 });
 
 describe('loading and failure', () => {
-  it.each(['Spinner', 'Callout'])('%s is on the wire', (type) => {
-    expect(kitComponent(type)).toBeDefined();
+  const retry = node('Button', {
+    label: 'Try again',
+    onPress: { operation: 'retry', args: {} },
+  });
+
+  it('draws a Spinner named for its work', () => {
+    const spinner = node('Spinner', { accessibilityLabel: 'Loading Issues' });
+
+    expect(supportsWireNode(spinner)).toBe(true);
+    expect(
+      kitComponent('Spinner')?.props.safeParse({}).success,
+      'a Spinner without a name is refused',
+    ).toBe(false);
+  });
+
+  it('draws a danger Callout with a Button to try again', () => {
+    const props = {
+      tone: 'danger',
+      title: 'Couldn’t load this Issue',
+      description: 'The tracker did not answer.',
+    };
+    const callout = node('Callout', props, { actions: [retry] });
+
+    expect(supportsWireNode(callout)).toBe(true);
+    expect(kitComponent('Callout')?.props.parse(props)).toMatchObject(props);
+    expect(
+      supportsWireNode(node('Callout', props, { actions: [node('Screen')] })),
+    ).toBe(false);
   });
 });

@@ -120,3 +120,17 @@ it('shows an empty list for a filter with no Issues', async () => {
 
   expect(list.findText('No Issues.')).toBeDefined();
 }, 20_000);
+
+it('says an Issue its tracker cannot read as a danger Callout on its own page', async () => {
+  const { test } = await issuesRoot();
+  const page = await test.pages.open({
+    path: '/projects/project-1/issues/404',
+  });
+
+  const drawn = JSON.stringify(page.tree);
+
+  expect(drawn).toContain('"type":"Callout"');
+  expect(drawn).toContain('"tone":"danger"');
+  expect(drawn).toContain('Could not resolve');
+  expect(page.findText('Start Session')).toBeUndefined();
+}, 20_000);
