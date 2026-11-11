@@ -1,12 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { pressTarget } from '#mocks/press-target';
+import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
 import { SkeletonLoadingContext } from '#primitives/status/skeleton';
 import { ListItem, ListItemInert, useListItemPress } from './index';
+
+const ariaDisabled = 'aria-disabled';
 
 const title = 'Item one';
 
@@ -38,7 +41,7 @@ export const Disabled: Story = {
   args: { disabled: true },
   play: async ({ args, canvas, userEvent }) => {
     const row = canvas.getByRole('button', { name: title });
-    await expect(row).toHaveAttribute('aria-disabled', 'true');
+    await expect(row).toHaveAttribute(ariaDisabled, 'true');
     row.focus();
     await userEvent.keyboard('{Enter}');
     await expect(args.onPress).not.toHaveBeenCalled();
@@ -71,7 +74,7 @@ export const CountBadge: Story = {
     await expect(await canvas.findByLabelText('3')).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Disabled item' }),
-    ).toHaveAttribute('aria-disabled', 'true');
+    ).toHaveAttribute(ariaDisabled, 'true');
   },
 };
 
@@ -284,5 +287,139 @@ export const HiddenWhileSkeletonLoads: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'Placeholder title' }),
     ).toBeNull();
+  },
+};
+
+// A row with no press of its own swallowed the press of what held it, such as a card's body.
+export const ARowThatPressesNothingLeavesThePressToWhatHoldsIt: Story = {
+  args: { onPress: undefined },
+  decorators: [
+    (Story, { parameters }): ReactElement => (
+      <Pressable
+        role="button"
+        accessibilityLabel="Holder"
+        onPress={parameters.holderPress}
+      >
+        <Story />
+      </Pressable>
+    ),
+  ],
+  parameters: { holderPress: fn() },
+  play: async ({ canvas, userEvent, parameters }) => {
+    await userEvent.click(canvas.getByText(title));
+    await expect(parameters.holderPress).toHaveBeenCalledOnce();
+  },
+};
+
+// What else makes a row act: each of these keeps its own press, so the press does not reach the holder.
+const holdOnly = (row: ReactElement): ReactElement => (
+  <Pressable role="button" accessibilityLabel="Holder" onPress={holderPress}>
+    {row}
+  </Pressable>
+);
+
+const holderPress = fn();
+
+export const ARowWithOnlyALongPressStillActs: Story = {
+  args: { onPress: undefined, onLongPress: fn() },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  beforeEach: (): void => {
+    holderPress.mockClear();
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByText(title));
+    await expect(holderPress).not.toHaveBeenCalled();
+  },
+};
+
+export const ARowWithOnlyALinkStillActs: Story = {
+  args: { onPress: undefined, href: '#row' },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  beforeEach: (): void => {
+    holderPress.mockClear();
+  },
+  play: async ({ canvas, userEvent }) => {
+    const followed: (string | null | undefined)[] = [];
+
+    const follow = (event: Event): void => {
+      event.preventDefault();
+
+      if (event.target instanceof Element)
+        followed.push(event.target.closest('a')?.getAttribute('href'));
+    };
+
+    document.addEventListener('click', follow, true);
+    await userEvent.click(canvas.getByText(title));
+    document.removeEventListener('click', follow, true);
+    await expect(followed).toEqual(['#row']);
+    await expect(holderPress).not.toHaveBeenCalled();
+  },
+};
+
+export const ADisabledRowKeepsItsDisabledState: Story = {
+  args: { onPress: undefined, disabled: true },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(title)).toBeVisible();
+    await expect(canvas.getByLabelText(title)).toHaveAttribute(
+      ariaDisabled,
+      'true',
+    );
+  },
+};
+
+const archive = <Action label="Archive row" icon="archive" onPress={fn()} />;
+
+const playMenuThenClick: Story['play'] = async ({ canvas, userEvent }) => {
+  holderPress.mockClear();
+  await userEvent.pointer({
+    keys: '[MouseRight]',
+    target: canvas.getByText(title),
+  });
+
+  const item = await within(document.body).findByRole('menuitem', {
+    name: 'Archive row',
+  });
+
+  await waitFor(() => expect(item).toBeVisible());
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() =>
+    expect(within(document.body).queryByRole('menuitem')).toBeNull(),
+  );
+  await userEvent.click(canvas.getByText(title));
+  await expect(holderPress).toHaveBeenCalledOnce();
+};
+
+// The menu opens from the trigger around the row, so a row with only Actions opens it and leaves a plain click to its holder.
+export const ARowWithOnlyActionsKeepsItsMenuAndLeavesTheClick: Story = {
+  args: { onPress: undefined, actions: archive },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: playMenuThenClick,
+};
+
+export const ARowWithAContextMenuKeepsItsMenuAndLeavesTheClick: Story = {
+  args: {
+    onPress: undefined,
+    contextMenu: { title: 'Row menu' },
+    actions: archive,
+  },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: playMenuThenClick,
+};
+
+const doubleClicked = fn();
+
+// A double-click opens from the trigger around the row, so a row with no press of its own still fires it.
+export const AnInertRowStillFiresItsDoubleClick: Story = {
+  args: {
+    onPress: undefined,
+    actions: archive,
+    contextMenu: { onDoubleClick: doubleClicked },
+  },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: async ({ canvas, userEvent }) => {
+    doubleClicked.mockClear();
+    await userEvent.dblClick(canvas.getByText(title));
+    await expect(doubleClicked).toHaveBeenCalledOnce();
   },
 };
