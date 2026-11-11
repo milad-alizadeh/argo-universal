@@ -29,7 +29,7 @@ export { workbenchDrawn } from './frame-layout-workbench';
 
 export type * from './frame-layout-types';
 
-// The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page's gutters no longer hold it.
+// The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page's two gutters together no longer hold it.
 function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
   const base = railZone(input.measures) + inspectorBudget(input);
   const list = preferredListWidth(input);
@@ -70,7 +70,7 @@ function pageRegion(
   };
 }
 
-const contentRegion = (
+const centredContent = (
   { measures }: FrameLayoutInput,
   page: PaneSpan,
 ): PaneSpan =>
@@ -78,6 +78,33 @@ const contentRegion = (
     maximum: measures.contentMaximum,
     gutter: measures.contentGutter,
   });
+
+// How far the centred content moves towards the page's leading edge so a Workbench in the gutter keeps its gap from the column: nothing where the trailing gutter alone holds it.
+function contentShift(
+  { measures }: FrameLayoutInput,
+  centred: PaneSpan,
+  workbench: FrameLayout['workbench'],
+): number {
+  if (workbench.state !== 'gutter') return 0;
+
+  const columnEnd = centred.offset + centred.width - measures.contentGutter;
+
+  return Math.max(0, columnEnd + measures.paneGap - workbench.offset);
+}
+
+// The content column: centred in the page, or beside a Workbench that the trailing gutter alone does not hold.
+function contentRegion(
+  input: FrameLayoutInput,
+  { page, workbench }: Placed,
+): Pick<FrameLayout, 'content' | 'contentShift'> {
+  const centred = centredContent(input, page);
+  const shift = contentShift(input, centred, workbench);
+
+  return {
+    content: { ...centred, offset: centred.offset - shift },
+    contentShift: shift,
+  };
+}
 
 // The title starts on the content column's leading edge, and never under the band's leading group.
 const bandTitleLeading = (
@@ -135,21 +162,21 @@ const arrangement = (
 /*
  * A wide window's Frame: the window's width, the Frame's measures, the preferred pane widths and what the
  * person asked of the sidebar, the Workbench and the Inspector in; every region, divider and resize limit out.
- * The content keeps its floor before the list folds; the Workbench takes no width and shows where the page's gutter holds it.
+ * The content keeps its floor before the list folds; the Workbench takes no width and shows where the page's gutters hold it, the content moving aside where the trailing one alone does not.
  */
 export function frameLayout(input: FrameLayoutInput): FrameLayout {
   const thresholds = requestedThresholds(input, budgetThresholds(input));
   const placed = placeRegions(input, thresholds);
-  const content = contentRegion(input, placed.page);
+  const column = contentRegion(input, placed);
 
   return {
     ...placed,
+    ...column,
     panesTop: input.measures.bandHeight,
     thresholds,
     sidebarWidth: railZone(input.measures) + placed.list.width,
-    content,
     handles: resizeHandles(input, placed),
-    bandTitleLeading: bandTitleLeading(input, content),
+    bandTitleLeading: bandTitleLeading(input, column.content),
     transitionKey: transitionKeyOf(arrangement(input, placed)),
   };
 }

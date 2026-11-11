@@ -17,7 +17,7 @@ describe('frameLayout band', () => {
 
   it.each([
     { width: 1440, sidebarShown: true, bandLeading: 124, leading: 388 },
-    { width: 1440, sidebarShown: false, bandLeading: 124, leading: 232 },
+    { width: 1440, sidebarShown: false, bandLeading: 124, leading: 180 },
     { width: 1100, sidebarShown: false, bandLeading: 44, leading: 142 },
     { width: 1100, sidebarShown: false, bandLeading: 200, leading: 24 },
   ])(
@@ -79,19 +79,19 @@ describe('frameLayout regions', () => {
     });
 
     expect(layout.list).toMatchObject({ offset: 64, width: 0, folded: true });
-    expect(layout.workbench.state).toBe('auto-hidden');
-    expect(layout.content).toEqual({ offset: 312, width: 848 });
+    expect(layout.workbench.state).toBe('gutter');
+    expect(layout.content).toEqual({ offset: 240, width: 848 });
   });
 });
 
 describe('frameLayout transition identity', () => {
-  const autoHiddenKey = keyAt(2223);
+  const autoHiddenKey = keyAt(1911);
 
   it('changes when the Workbench fits in the gutter', () => {
-    expect(keyAt(2224)).not.toBe(autoHiddenKey);
+    expect(keyAt(1912)).not.toBe(autoHiddenKey);
   });
 
   it('holds while a resize leaves every pane as it was', () => {
-    expect(keyAt(2222)).toBe(autoHiddenKey);
+    expect(keyAt(1910)).toBe(autoHiddenKey);
   });
 });

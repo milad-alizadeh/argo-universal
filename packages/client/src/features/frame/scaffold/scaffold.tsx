@@ -1,8 +1,11 @@
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { contentFill, ContentWidthProvider } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
+import { useFrameOffset } from '../hooks/use-frame-offset';
+import type { FrameMotion } from '../utils/frame-timing';
 import {
   type PanePlacement,
   ScaffoldFrame,
@@ -52,19 +55,53 @@ export function ScaffoldSidebar({
 
 export type ScaffoldPageProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
+// Only a Frame moves the column aside for its Workbench.
+const pageContentShift = ({ layout, framed }: ScaffoldParts): number =>
+  framed ? layout.contentShift : 0;
+
+// A hidden overflow still scrolls: the web clips instead, so focus inside the sliding content cannot scroll the page sideways.
+const pageClip = `${contentFill} overflow-hidden web:overflow-clip`;
+
+// The column takes its place beside the Workbench at once and slides there as the Workbench shows or hides; a resize moves it at once.
+function SlidingContent(
+  props: PropsWithChildren<{ shift: number; motion: FrameMotion }>,
+): React.JSX.Element {
+  const offset = -props.shift;
+  const slide = useFrameOffset({ ...props.motion, offset, visible: true });
+
+  return (
+    <View className={pageClip}>
+      <Animated.View className={contentFill} style={slide}>
+        {props.children}
+      </Animated.View>
+    </View>
+  );
+}
+
+function PageContent({
+  parts,
+  children,
+}: ScaffoldPageProps): React.JSX.Element {
+  const shift = pageContentShift(parts);
+
+  return (
+    <ContentWidthProvider wide={usePageContentWide(parts)} shift={shift}>
+      <SlidingContent shift={shift} motion={parts.layout.motion}>
+        {children}
+      </SlidingContent>
+    </ContentWidthProvider>
+  );
+}
+
 // A page: beside the list on a wide window, the whole window on a compact or medium one; the tree is the same at each, so the page never remounts. Its content draws wide from the column the Frame placed.
 export function ScaffoldPage({
   parts,
   children,
 }: ScaffoldPageProps): React.JSX.Element {
-  const contentWide = usePageContentWide(parts);
-
   return (
     <View className="flex-1 flex-row">
       <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
-        <ContentWidthProvider wide={contentWide}>
-          <View className={`${contentFill} overflow-hidden`}>{children}</View>
-        </ContentWidthProvider>
+        <PageContent parts={parts}>{children}</PageContent>
       </FramePane>
     </View>
   );

@@ -16,6 +16,11 @@ export function useContentWide(): boolean {
   return contentWide ?? windowWide;
 }
 
+const ContentShift = createContext(0);
+
+// How far the column sits from its pane's centre, towards the leading edge: the Frame moves it aside for a Workbench in the gutter; elsewhere it is centred.
+export const useContentShift = (): number => useContext(ContentShift);
+
 export const contentFill = 'flex-1 min-h-0 min-w-0';
 
 // The measuring host: a View that learns its own width, for Storybook and any host that draws no Frame.
@@ -47,11 +52,14 @@ function useContentWidth(
 // Undefined leaves the content to the window's width.
 export function ContentWidthProvider(props: {
   wide?: boolean;
+  shift?: number;
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
     <ContentWide.Provider value={props.wide}>
-      {props.children}
+      <ContentShift.Provider value={props.shift ?? 0}>
+        {props.children}
+      </ContentShift.Provider>
     </ContentWide.Provider>
   );
 }

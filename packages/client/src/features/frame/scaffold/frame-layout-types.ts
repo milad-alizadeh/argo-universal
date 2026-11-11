@@ -5,8 +5,9 @@ export type InspectorState = 'closed' | 'open' | 'expanded';
 
 /*
  * The Workbench never takes width from the page: it is drawn over the page's trailing edge, in the gutter beside the
- * centred content when it fits there, over the content when the person shows it anyway, or not at all. Effective
- * placement follows the width budget; the separate intent survives automatic hiding.
+ * content when the page's two gutters together hold it (the content moves aside where the trailing one alone does
+ * not), over the content when the person shows it anyway, or not at all. Effective placement follows the width
+ * budget; the separate intent survives automatic hiding.
  */
 export type WorkbenchState = 'gutter' | 'auto-hidden' | 'overlay' | 'hidden';
 
@@ -94,15 +95,17 @@ export interface InspectorRegion extends PaneSpan {
 export interface FrameLayout {
   // The panes start under the window band.
   panesTop: number;
-  // The window widths below which the list folds and the Workbench no longer fits in the content's gutter.
+  // The window widths below which the list folds and the Workbench no longer fits in the content's gutters.
   thresholds: { listFold: number; workbenchGutter: number };
   rail: PaneSpan;
   list: ListRegion;
   // The rail and the list with their insets: the permanent drawer's width.
   sidebarWidth: number;
   page: PaneSpan & { hidden: boolean };
-  // The page's centred content column, with its two gutters.
+  // The page's content column, with its two gutters: centred, or moved aside for a Workbench in the gutter.
   content: PaneSpan;
+  // How far the Workbench moved the content column from the page's centre, towards its leading edge.
+  contentShift: number;
   workbench: WorkbenchRegion;
   inspector: InspectorRegion;
   handles: { list: ResizeHandle | null; inspector: ResizeHandle };

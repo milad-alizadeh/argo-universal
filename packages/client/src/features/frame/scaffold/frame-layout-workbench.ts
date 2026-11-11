@@ -11,11 +11,11 @@ export const workbenchDrawn = (state: WorkbenchState): boolean =>
 const unavailable = (input: FrameLayoutInput): boolean =>
   !input.workbenchAvailable || input.inspectorState === 'expanded';
 
-// The narrowest page whose gutters beside the centred content each hold the Workbench, its gap and the inset.
+// The narrowest page whose two gutters together hold the Workbench: the capped column keeps its leading gutter, then its gap, the Workbench and the inset.
 export function pageWidthForGutter({ measures }: FrameLayoutInput): number {
-  const gutter = measures.workbenchWidth + measures.paneGap + measures.inset;
+  const workbench = measures.paneGap + measures.workbenchWidth + measures.inset;
 
-  return measures.contentMaximum + gutter * 2;
+  return measures.contentGutter + measures.contentMaximum + workbench;
 }
 
 const unavailableOrHidden = (input: FrameLayoutInput): boolean =>

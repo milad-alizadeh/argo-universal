@@ -1,5 +1,4 @@
 import { ScrollFadeView } from '@repo/kit/scroll-fade/scroll-fade';
-import { cn } from '@repo/kit/utils';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -36,9 +35,7 @@ function WorkbenchPanel({
 
   return (
     <Animated.View {...placement}>
-      <WorkbenchScroll overlay={layout.workbench.state === 'overlay'}>
-        {children}
-      </WorkbenchScroll>
+      <WorkbenchScroll>{children}</WorkbenchScroll>
     </Animated.View>
   );
 }
@@ -97,19 +94,12 @@ const shadowScrollProps = {
   contentContainerClassName: 'px-8 pt-8 pb-16 web:pointer-events-none!',
 } satisfies ComponentProps<typeof ScrollFadeView>;
 
-type WorkbenchScrollProps = { children: ReactNode; overlay: boolean };
-
-function WorkbenchScroll({
-  children,
-  overlay,
-}: WorkbenchScrollProps): ReactElement {
+// The cards have no backing of their own, so what an overlaid Workbench covers shows through their glass and nothing clips them.
+function WorkbenchScroll(props: { children: ReactNode }): ReactElement {
   return (
     <ScrollFadeView {...shadowScrollProps}>
-      <View
-        pointerEvents="auto"
-        className={cn('gap-2', overlay && 'rounded-2xl bg-content')}
-      >
-        {children}
+      <View pointerEvents="auto" className="gap-2">
+        {props.children}
       </View>
     </ScrollFadeView>
   );

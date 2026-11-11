@@ -3,6 +3,7 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import type { Ref } from 'react';
 import { type ViewProps, View, type ViewInstance } from 'react-native';
+import { useContentShift } from './content-layout';
 import { columnGutter } from './content-rule';
 import { filledClass } from './session-fill';
 import { useContentRule } from './use-content-rule';
@@ -27,15 +28,16 @@ const shrinkClass = 'min-h-0 shrink';
 const paneClassName = ({ shrink, fill }: ColumnPaneProps): string =>
   cn('w-full', shrink && shrinkClass, fill && filledClass);
 
-// The pane's side padding, the content rule's gutter at the window's Size class.
+// The pane's side padding, the content rule's gutter at the window's Size class. Twice the shift on the trailing side moves the centred column that far towards the leading edge.
 function ColumnPane(props: ColumnPaneProps): React.JSX.Element {
   const gutter = columnGutter(useContentRule(), useWide());
+  const shift = useContentShift();
 
   return (
     <View
       pointerEvents={props.pointerEvents}
       className={paneClassName(props)}
-      style={{ paddingHorizontal: gutter }}
+      style={{ paddingLeft: gutter, paddingRight: gutter + shift * 2 }}
     >
       {props.children}
     </View>
@@ -57,7 +59,7 @@ function ColumnBody(props: ViewProps): React.JSX.Element {
   );
 }
 
-// The Session's one column: as wide as the content rule allows, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
+// The Session's one column: as wide as the content rule allows, centred in the pane with the pane's side padding, or beside a Workbench the Frame moved it aside for. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
 export function SessionColumn({
   fill,
   shrink,

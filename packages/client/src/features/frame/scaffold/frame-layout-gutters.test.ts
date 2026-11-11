@@ -4,52 +4,52 @@ import { input } from './frame-layout.mocks';
 
 const autoHidden = 'auto-hidden';
 
-describe('independent Workbench cards in the side gutter', () => {
+describe('independent Workbench cards beside the content', () => {
   it.each([
     {
-      width: 1856,
-      sidebarShown: true,
-      inspectorState: 'closed',
-      state: 'gutter',
-    },
-    {
-      width: 1855,
-      sidebarShown: true,
-      inspectorState: 'closed',
-      state: autoHidden,
-    },
-    {
-      width: 2224,
-      sidebarShown: true,
-      inspectorState: 'open',
-      state: 'gutter',
-    },
-    {
-      width: 2223,
-      sidebarShown: true,
-      inspectorState: 'open',
-      state: autoHidden,
-    },
-    {
       width: 1544,
-      sidebarShown: false,
+      sidebarShown: true,
       inspectorState: 'closed',
       state: 'gutter',
     },
     {
       width: 1543,
-      sidebarShown: false,
+      sidebarShown: true,
       inspectorState: 'closed',
       state: autoHidden,
     },
     {
       width: 1912,
-      sidebarShown: false,
+      sidebarShown: true,
       inspectorState: 'open',
       state: 'gutter',
     },
     {
       width: 1911,
+      sidebarShown: true,
+      inspectorState: 'open',
+      state: autoHidden,
+    },
+    {
+      width: 1232,
+      sidebarShown: false,
+      inspectorState: 'closed',
+      state: 'gutter',
+    },
+    {
+      width: 1231,
+      sidebarShown: false,
+      inspectorState: 'closed',
+      state: autoHidden,
+    },
+    {
+      width: 1600,
+      sidebarShown: false,
+      inspectorState: 'open',
+      state: 'gutter',
+    },
+    {
+      width: 1599,
       sidebarShown: false,
       inspectorState: 'open',
       state: autoHidden,
@@ -68,6 +68,39 @@ describe('independent Workbench cards in the side gutter', () => {
       );
     },
   );
+
+  it.each([
+    { width: 1544, offset: 384, contentShift: 156 },
+    { width: 1700, offset: 540, contentShift: 78 },
+    { width: 1856, offset: 696, contentShift: 0 },
+  ])(
+    'moves the content $contentShift aside at $width, where the trailing gutter alone does not hold the cards',
+    ({ width, offset, contentShift }) => {
+      const layout = frameLayout({ ...input, width });
+
+      expect(layout.content).toEqual({ offset, width: 848 });
+      expect(layout.contentShift).toBe(contentShift);
+    },
+  );
+
+  it.each(['hidden', 'auto'] as const)(
+    'centres the content while the Workbench is not in the gutter, with the intent %s',
+    (workbenchIntent) => {
+      const width = workbenchIntent === 'hidden' ? 1544 : 1543;
+      const layout = frameLayout({ ...input, width, workbenchIntent });
+
+      expect(layout.contentShift).toBe(0);
+      expect(layout.content.offset).toBe(384 + (width - 384 - 848) / 2);
+    },
+  );
+
+  it('leaves the content centred under an overlaid Workbench', () => {
+    const layout = frameLayout({ ...input, workbenchIntent: 'shown' });
+
+    expect(layout.workbench.state).toBe('overlay');
+    expect(layout.contentShift).toBe(0);
+    expect(layout.content).toEqual({ offset: 488, width: 848 });
+  });
 
   it('keeps the conversation axis when both wide gutters fit the cards', () => {
     const shown = frameLayout({ ...input, width: 2560 });
