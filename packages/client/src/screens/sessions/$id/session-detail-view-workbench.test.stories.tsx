@@ -162,17 +162,17 @@ export const WideGuttersKeepTheConversationCentered: Story = {
   },
 };
 
-const pageCentre = (canvas: Canvas): number => {
-  const page = canvas.getByTestId(detailId).getBoundingClientRect();
-
-  return page.left + page.width / 2;
-};
+// At 1544 the page is exactly as wide as the column, its leading gutter, the gap, a card and the inset, so the column moves half a card's 312 from the centre.
+const asideAtTheBoundary = 156;
 
 const centreOf = (element: HTMLElement): number => {
   const box = element.getBoundingClientRect();
 
   return box.left + box.width / 2;
 };
+
+const pageCentre = (canvas: Canvas): number =>
+  centreOf(canvas.getByTestId(detailId));
 
 // Where the trailing gutter alone does not hold the cards, the conversation moves aside for them and returns to the page's centre when they hide.
 export const NarrowGuttersMoveTheConversationAside: Story = {
@@ -181,7 +181,10 @@ export const NarrowGuttersMoveTheConversationAside: Story = {
     const composer = await canvas.findByTestId(composerId);
     await expectSeparateCards(canvas);
     await waitFor(() =>
-      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas) - 156, 1),
+      expect(centreOf(composer)).toBeCloseTo(
+        pageCentre(canvas) - asideAtTheBoundary,
+        1,
+      ),
     );
     const feed = canvas.getAllByTestId('feed-column').at(-1);
 
