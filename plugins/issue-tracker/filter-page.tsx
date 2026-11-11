@@ -1,5 +1,4 @@
 import {
-  Button,
   EmptyState,
   List,
   ListDetail,
@@ -12,6 +11,7 @@ import {
 } from '@argo/plugin-kit';
 import { signInGate, type GatedPage } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { noIssues } from './filter-empty';
 import { listFilter } from './filter-list';
 import {
   filterState,
@@ -179,17 +179,7 @@ type ListProps = Pick<
  */
 const listProps = ({ data, list, to }: DetailProps): ListProps => ({
   footer: noIssuesBecause(data) || repositoryText(data.project),
-  empty: (
-    <EmptyState
-      title={noIssuesBecause(data) || 'No Issues.'}
-      action={data.state === 'unopened' ? checkAgain(to) : undefined}
-    />
-  ),
+  empty: noIssues(data, to),
   pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
   onRefresh: to.set({}),
 });
-
-// Where the Tracker did not open, Project details is where it is set up; once it is, this asks again.
-const checkAgain = (to: To): JSX.Element => (
-  <Button label="Check again" onPress={to.set({})} />
-);

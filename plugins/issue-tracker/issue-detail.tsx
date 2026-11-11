@@ -1,4 +1,11 @@
-import { Action, Button, Callout, Detail, Screen, type PageTo } from '@argo/plugin-kit';
+import {
+  Action,
+  Button,
+  Callout,
+  Detail,
+  Screen,
+  type PageTo,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueStatus } from './github-issues';
 import type { AttachedSession, IssueDetailData } from './issue-detail-data';
