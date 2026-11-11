@@ -39,11 +39,13 @@ export interface InsetCase {
   fit?: boolean;
   // A Detail's content column pads what it holds, so the List adds nothing around its rows.
   padded?: boolean;
+  // A card's body ends where its last row does, so the List keeps no end gap under it either.
+  card?: boolean;
 }
 
 // Where the List sits decides on its own: a padded column holds nothing around the rows, a menu holds its own.
 function placeInsets(state: InsetCase): ListInsets | undefined {
-  if (state.padded) return {};
+  if (state.padded) return state.card ? { paddingBottom: 0 } : {};
 
   return state.menu ? menuInsets : undefined;
 }

@@ -74,6 +74,30 @@ describe('a popover', () => {
   });
 });
 
+const appearances = ['plain', 'cards', 'grouped'] as const;
+
+describe('a List in a card', () => {
+  it.each(
+    everyPlatform.flatMap((platform) =>
+      appearances.map((appearance) => ({ platform, appearance })),
+    ),
+  )(
+    'on $platform draws $appearance as plain rows with no card of its own',
+    (where) => {
+      expect(look({ ...where, place: 'card' })).toMatchObject({
+        appearance: 'plain',
+        card: true,
+        separated: false,
+        insets: { paddingBottom: 0 },
+      });
+    },
+  );
+
+  it('is a menu when a popover opens from it', () => {
+    expect(popoverPlace('card')).toBe('popover');
+  });
+});
+
 describe('the place', () => {
   it.each(placeFacts)(
     'tells what %s is to rows and sections',

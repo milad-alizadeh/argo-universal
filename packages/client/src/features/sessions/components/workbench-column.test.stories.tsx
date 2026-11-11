@@ -117,6 +117,48 @@ export const ACardCollapsesBesideTheOthers: Story = {
   },
 };
 
+const handleOf = (canvas: Canvas, name: string): HTMLElement =>
+  canvas.getByRole('button', { name: `Reorder ${name}` });
+
+export const AHandleIsHiddenAtRest: Story = {
+  play: async ({ canvas }) => {
+    await expect(handleOf(canvas, 'First')).not.toBeVisible();
+  },
+};
+
+export const HoveringACardShowsItsHandleOnly: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).toBeVisible());
+    await expect(handleOf(canvas, 'Second')).not.toBeVisible();
+  },
+};
+
+export const LeavingACardHidesItsHandle: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).toBeVisible());
+    await userEvent.unhover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).not.toBeVisible());
+  },
+};
+
+export const FocusingAHandleShowsIt: Story = {
+  play: async ({ canvas }) => {
+    handleOf(canvas, 'Third').focus();
+    await waitFor(() => expect(handleOf(canvas, 'Third')).toBeVisible());
+  },
+};
+
+export const PressingAHandleThenLeavingHidesIt: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await userEvent.click(handleOf(canvas, 'First'));
+    await userEvent.unhover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).not.toBeVisible());
+  },
+};
+
 export const ALoneCardHasNoHandle: Story = {
   args: { cards: oneCard },
   play: async ({ canvas }) => {

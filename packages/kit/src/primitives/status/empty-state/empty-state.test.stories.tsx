@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { Button } from '#primitives/actions/button';
+import { Card } from '#primitives/layout/card';
 import { EmptyState } from './empty-state';
 
 const onPress = fn();
@@ -63,5 +64,26 @@ export const Search: Story = {
     ).toBeVisible();
     await expect(canvas.getByText(content.description)).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
+  },
+};
+
+// A card's empty line is a row, not a page: far shorter than the page-sized state, and not drawn on tiles.
+export const InACard: Story = {
+  args: { icon: 'sessions', action: undefined },
+  decorators: [
+    (Story) => (
+      <Card title="Card">
+        <Story />
+      </Card>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    const heading = canvas.getByRole('heading', { name: content.title });
+
+    await expect(heading).toBeVisible();
+    await expect(heading.getBoundingClientRect().height).toBeLessThan(30);
+    await expect(
+      heading.parentElement?.getBoundingClientRect().height,
+    ).toBeLessThan(80);
   },
 };

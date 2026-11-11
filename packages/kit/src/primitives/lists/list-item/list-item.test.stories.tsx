@@ -286,3 +286,24 @@ export const HiddenWhileSkeletonLoads: Story = {
     ).toBeNull();
   },
 };
+
+// A row with no press of its own swallowed the press of what held it, such as a card's body.
+export const ARowThatPressesNothingLeavesThePressToWhatHoldsIt: Story = {
+  args: { onPress: undefined },
+  decorators: [
+    (Story, { parameters }): ReactElement => (
+      <Pressable
+        role="button"
+        accessibilityLabel="Holder"
+        onPress={parameters.holderPress}
+      >
+        <Story />
+      </Pressable>
+    ),
+  ],
+  parameters: { holderPress: fn() },
+  play: async ({ canvas, userEvent, parameters }) => {
+    await userEvent.click(canvas.getByText(title));
+    await expect(parameters.holderPress).toHaveBeenCalledOnce();
+  },
+};

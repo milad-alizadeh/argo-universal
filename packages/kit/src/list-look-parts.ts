@@ -12,7 +12,11 @@ import {
   type PhoneDrawing,
   type PlatformFacts,
 } from './list-look-platform';
-import type { ListPlace, ListPlaceFacts } from './list-place';
+import {
+  listPlaceFacts,
+  type ListPlace,
+  type ListPlaceFacts,
+} from './list-place';
 
 // What the phones draw instead of the web: the Sessions list is flat on the web and cards or grouped on a phone.
 export interface PhoneOverrides {
@@ -52,6 +56,8 @@ export interface PlaceLook {
   sectionEnds: boolean;
   // A Detail's content column already pads and scrolls this block, so it sizes to its rows and insets nothing.
   padded: boolean;
+  // A Card's body: plain rows on the card's own edge.
+  card: boolean;
 }
 
 export interface FormLook {
@@ -95,11 +101,20 @@ export const phoneOf = (drawing: Drawing): PhoneDrawing | undefined =>
 export const phoneAppearanceOf = (input: ListLookInput): ListAppearance =>
   input.onPhones?.appearance ?? input.appearance;
 
-export const appearanceOf = (
+const declaredAppearanceOf = (
   drawing: Drawing,
   input: ListLookInput,
 ): ListAppearance =>
   drawing === 'web' ? input.appearance : phoneAppearanceOf(input);
+
+// A Card's body is the card already, so its List draws plain rows whatever it declares: never a card in the card.
+export const appearanceOf = (
+  drawing: Drawing,
+  input: ListLookInput,
+): ListAppearance =>
+  listPlaceFacts(input.place).card
+    ? 'plain'
+    : declaredAppearanceOf(drawing, input);
 
 export function groupedFacts(
   drawing: Drawing,
@@ -117,8 +132,9 @@ export function groupedFacts(
 export const separationFacts = (
   drawing: Drawing,
   appearance: ListAppearance,
+  card = false,
 ): Pick<FormLook, 'separated' | 'footerEndsGroup'> => ({
-  separated: drawing === 'ios' && appearance !== 'cards',
+  separated: drawing === 'ios' && appearance !== 'cards' && !card,
   footerEndsGroup: drawing === 'ios',
 });
 
@@ -128,7 +144,7 @@ export function formLook(drawing: Drawing, input: ListLookInput): FormLook {
   return {
     appearance,
     ...groupedFacts(drawing, appearance),
-    ...separationFacts(drawing, appearance),
+    ...separationFacts(drawing, appearance, listPlaceFacts(input.place).card),
   };
 }
 
@@ -164,13 +180,13 @@ export const phonePaddingOf = (
 export function insetLook(
   drawing: Drawing,
   input: ListLookInput,
-  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded'>,
+  form: FormLook & Pick<ListPlaceFacts, 'menu' | 'padded' | 'card'>,
 ): InsetLook {
-  const { menu, padded } = form;
+  const { menu, padded, card } = form;
   const phone = form.phone !== undefined;
 
   return {
-    insets: insetsOf({ ...form, menu, padded, phone, fit: input.fit }),
+    insets: insetsOf({ ...form, menu, padded, card, phone, fit: input.fit }),
     phonePadding: phonePaddingOf(drawing, input),
     headingInset: headingInsetOf(form.webGrouped, input.wide),
   };
@@ -187,6 +203,7 @@ export function placeLook(
     sidebar: facts.sidebar,
     sectionEnds: facts.ends,
     padded: facts.padded,
+    card: facts.card,
   };
 }
 

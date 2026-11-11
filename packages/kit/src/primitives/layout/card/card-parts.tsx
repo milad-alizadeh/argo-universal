@@ -1,6 +1,7 @@
 import { cardDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { ListPlaceContext } from '#kit/list-place';
 import { cn } from '#kit/utils';
 import { Text } from '#primitives/content/text';
 import type { CardProps } from './card-props';
@@ -67,7 +68,11 @@ export const IconLane = ({ children }: { children?: ReactNode }): ReactNode => (
   </TitleLine>
 );
 
-// The body and the footer, on the card's own edge; nothing when the card holds neither.
+// The body and the footer, on the card's own edge; nothing when the card holds neither. A List or an EmptyState in it draws as a card's rows.
 export function CardBody(props: Pick<CardProps, 'children'>): ReactNode {
-  return props.children ? <View>{props.children}</View> : null;
+  return props.children ? (
+    <ListPlaceContext value="card">
+      <View>{props.children}</View>
+    </ListPlaceContext>
+  ) : null;
 }

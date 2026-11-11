@@ -7,7 +7,12 @@ import { ListTileContext } from '../../../list-context';
 import { useListLook } from '../../../list-look-context';
 import { useRowHighlightHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
-import { BesidePress, useBesidePress } from './list-item-beside-press';
+import {
+  BesidePress,
+  InertRow,
+  pressesNothing,
+  useBesidePress,
+} from './list-item-beside-press';
 import { useContentItemPress } from './list-item-content-selection';
 import { linkPress } from './list-item-link-press';
 import { interactive, usePressClass } from './list-item-press-class';
@@ -139,6 +144,10 @@ export function ItemPress(props: DrawingProps): ReactElement {
   // Keep the same press target while an asynchronous accessory arrives during a click.
   if (beside)
     return <BesidePress props={props} press={{ ...focused, className }} />;
+
+  const drawn = { ...focused, className };
+
+  if (pressesNothing(drawn)) return <InertRow props={props} press={drawn} />;
 
   return (
     <Pressable {...focused} className={className}>

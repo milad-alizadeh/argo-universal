@@ -1,13 +1,15 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import {
   coverageCard,
   coverageCardSummary,
   issueCardFullView,
   issueCardSummary,
   issueTrackerCard,
+  listCard,
+  listCardRow,
 } from './sections/plugin-card.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -84,5 +86,34 @@ export const CardWithoutAFullViewOpensNothing: Story = {
     await expect(
       canvas.queryByRole('tabpanel', { name: 'Coverage' }),
     ).toBeNull();
+  },
+};
+
+// A press on the middle of a row that presses nothing is a press on the card's body, so it opens the card's tab.
+export const PressingARowInACardOpensItsTab: Story = {
+  args: { view: { state: 'open', ...session, pluginCards: [listCard] } },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByText(listCardRow));
+
+    const tab = within(await canvas.findByRole('tabpanel', { name: 'Rows' }));
+    await expect(tab.getByText(issueCardFullView)).toBeVisible();
+  },
+};
+
+// A List in a card draws rows on the card, not a card of its own, and ends where its last row does.
+export const AListInACardDrawsNoCardOfItsOwn: Story = {
+  args: { view: { state: 'open', ...session, pluginCards: [listCard] } },
+  play: async ({ canvas }) => {
+    const card = await canvas.findByTestId(
+      'workbench-plugin:issue-tracker/rows',
+    );
+    const row = canvas.getByText(listCardRow);
+
+    await waitFor(() =>
+      expect(
+        card.getBoundingClientRect().bottom -
+          row.getBoundingClientRect().bottom,
+      ).toBeLessThan(30),
+    );
   },
 };
