@@ -3,10 +3,16 @@ import { Button, Stack, Text } from '@argo/plugin-kit';
 // Whether the Notes card has something to show; every page of the Plugin's one process reads the same flag.
 let filled = false;
 
+function setFilled(value) {
+  filled = value;
+
+  return { filled };
+}
+
 // A card with nothing to show returns null, and Argo draws no card, tab or header action for it.
 export function defineNotes(argo) {
-  argo.operations.register('fillNotes', () => ({ filled: (filled = true) }));
-  argo.operations.register('emptyNotes', () => ({ filled: (filled = false) }));
+  argo.operations.register('fillNotes', () => setFilled(true));
+  argo.operations.register('emptyNotes', () => setFilled(false));
 
   argo.pages.define('/notes', {
     load: () => filled,

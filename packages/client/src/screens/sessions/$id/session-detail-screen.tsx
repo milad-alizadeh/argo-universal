@@ -116,14 +116,11 @@ function ConnectedSession({
 }: Pick<SessionPage, 'sessionId'>): React.JSX.Element {
   const preview = useIsPreview();
   const opened = useSessionPage({ sessionId, preview });
+  const body = { sessionId, preview, opened };
 
   return (
     <ConnectedReplaceableSlots session={opened.session}>
-      <SessionPageBody
-        sessionId={sessionId}
-        preview={preview}
-        opened={opened}
-      />
+      <SessionPageBody {...body} />
       {opened.cards.held}
     </ConnectedReplaceableSlots>
   );

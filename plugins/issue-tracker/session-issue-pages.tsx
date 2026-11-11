@@ -74,7 +74,10 @@ async function loadSessionIssue(
 
   if (!attached) return null;
 
-  return { ...attached, detail: await loadIssueDetail({ deps, read, ...attached }) };
+  return {
+    ...attached,
+    detail: await loadIssueDetail({ deps, read, ...attached }),
+  };
 }
 
 // The card: a summary of the Session's Issue, one row, or nothing while there is none.

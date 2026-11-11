@@ -33,12 +33,14 @@ interface HeaderPlace {
 
 const alwaysFilled = (): boolean => true;
 
-// An action that targets a card is drawn only while the card has something to show.
-const cardShown = (
+// An action is drawn when this Device shows its Plugin and, if it targets a card, the card has something to show.
+const drawn = (
+  { pluginId, item: { target } }: DeclaredHeaderAction,
+  shows: HeaderPlace['shows'],
   filled: NonNullable<HeaderPlace['filled']>,
-  pluginId: string,
-  { target }: SessionHeaderAction,
-): boolean => target.type !== 'card' || filled(pluginId, target.cardId);
+): boolean =>
+  shows(pluginId) &&
+  (target.type !== 'card' || filled(pluginId, target.cardId));
 
 /*
  * The Session header's Plugin actions in Slot order, split by the Slot's limit: on a desktop the first header actions
@@ -49,9 +51,7 @@ export function placeSessionHeaderActions<Action extends DeclaredHeaderAction>(
   { phone, shows, filled = alwaysFilled }: HeaderPlace,
 ): PlacedHeaderActions<Action> {
   const { limit, shown } = sessionHeaderSlot.content.placement;
-  const visible = declared.filter(
-    ({ pluginId, item }) => shows(pluginId) && cardShown(filled, pluginId, item),
-  );
+  const visible = declared.filter((action) => drawn(action, shows, filled));
 
   const beside = visible
     .filter(({ item }) => shown(item))

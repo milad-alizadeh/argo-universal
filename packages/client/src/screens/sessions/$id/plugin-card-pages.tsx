@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
 import { closeSessionPanel } from '#features/sessions';
 import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
-import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
 import type { PageOpening } from '../../plugins/page-addresses';
+import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
 import { usePluginPage } from '../../plugins/use-plugin-page';
 import type { HeldCardPage, HeldCardStore } from './held-card-store';
 
@@ -50,7 +50,11 @@ function HeldPage({
   store,
   opening,
   card: { cardKey, pluginId, path },
-}: { store: HeldCardStore; opening: CardOpening; card: HeldCard }): null {
+}: {
+  store: HeldCardStore;
+  opening: CardOpening;
+  card: HeldCard;
+}): null {
   useHoldPage(
     { store, sessionId: opening.sessionId, cardKey },
     usePluginPage({ pluginId, path, ...opening }),
@@ -123,7 +127,10 @@ export function PluginTabPage({
 
 function DrawnTabPage({ opening }: { opening: PageOpening }): ReactNode {
   return (
-    <DrawnPluginPage page={usePluginPage(opening)} pluginId={opening.pluginId} />
+    <DrawnPluginPage
+      page={usePluginPage(opening)}
+      pluginId={opening.pluginId}
+    />
   );
 }
 

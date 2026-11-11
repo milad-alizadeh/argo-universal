@@ -197,7 +197,9 @@ function renderPage<State extends PageState, Data, Item>(
   { data, pageInput, paged }: Rendering<State, Data, Item>,
 ): Rendered {
   const list = renderedList(paged);
-  const root = pageValuesOf(page.render(data, pageTo(), { ...pageInput, list }));
+  const root = pageValuesOf(
+    page.render(data, pageTo(), { ...pageInput, list }),
+  );
 
   return { root, pages: paged.pages };
 }

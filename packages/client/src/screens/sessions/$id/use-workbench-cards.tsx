@@ -84,26 +84,31 @@ interface HeldCards {
 }
 
 function useHeldCards(
-  { sessionId, projectId }: CardSession,
+  session: CardSession,
   declared: readonly DeclaredCard[],
 ): HeldCards {
   const [store] = useState(() => new HeldCardStore());
   const filled = useSyncExternalStore(store.subscribe, store.filled);
-  const opening = projectId === undefined ? undefined : { sessionId, projectId };
 
   return {
     store,
     filled: (pluginId, cardId) =>
       filled.includes(pluginCardKey(pluginId, cardId)),
-    pages: (
-      <HeldCardPages
-        store={store}
-        opening={opening}
-        cards={declared.map(heldCard)}
-      />
-    ),
+    pages: heldPages(store, session, declared),
   };
 }
+
+const heldPages = (
+  store: HeldCardStore,
+  { sessionId, projectId }: CardSession,
+  declared: readonly DeclaredCard[],
+): ReactNode => (
+  <HeldCardPages
+    store={store}
+    opening={projectId === undefined ? undefined : { sessionId, projectId }}
+    cards={declared.map(heldCard)}
+  />
+);
 
 type Opening = Pick<HeldCards, 'filled' | 'store'> & {
   session: CardSession;

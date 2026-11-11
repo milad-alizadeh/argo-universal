@@ -3,13 +3,16 @@ import { expect } from '../fixtures';
 import { Then, When } from './fixtures';
 
 // The fixture Plugins' cards in the Workbench column, keyed by the Plugin and the card each declares.
-const cardIds: Record<string, string> = {
+const cardIds = {
   'Counter card': 'workbench-plugin:counter/counter-card',
   Notes: 'workbench-plugin:lists/notes',
-};
+} satisfies Record<string, string>;
+
+const titledCard = (title: string): string =>
+  title in cardIds ? cardIds[title as keyof typeof cardIds] : title;
 
 const cardOf = (page: Page, title: string): Locator =>
-  page.getByTestId(cardIds[title] ?? title);
+  page.getByTestId(titledCard(title));
 
 Then(
   'the Session Workbench shows the Plugin card {string}',

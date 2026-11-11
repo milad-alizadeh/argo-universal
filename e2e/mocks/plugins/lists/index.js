@@ -37,7 +37,9 @@ export function register(argo) {
     load: () => builds,
     render: (items, to, { state }) => (
       <Stack direction="column">
-        <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
+        <List appearance="cards">
+          {items.map(buildRow(state.selected, to))}
+        </List>
         <NotesSwitch to={to} />
       </Stack>
     ),

@@ -101,11 +101,13 @@ function PlacedSessionHeader({
   ...props
 }: SessionDetailViewProps &
   HeaderCards & { compact: boolean }): React.JSX.Element {
+  const toggleCard = cardToggle({ cards, panels }, compact);
+  const filled = cards.filled;
   const pluginActions = usePluginHeaderActions({
     sessionId,
     compact,
-    toggleCard: cardToggle({ cards, panels }, compact),
-    filled: cards.filled,
+    toggleCard,
+    filled,
   });
 
   return <SessionPageHeader {...withPluginActions(props, pluginActions)} />;
