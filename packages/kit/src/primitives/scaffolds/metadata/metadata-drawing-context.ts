@@ -1,26 +1,22 @@
 import { createContext, use, useMemo } from 'react';
 import { useListLook } from '../../../list-look-context';
-import {
-  metadataDrawing,
-  type MetadataDrawing,
-  type MetadataWidth,
-} from './metadata-drawing';
+import type { AsidePlace } from '../screen/screen-aside-place';
+import { metadataDrawing, type MetadataDrawing } from './metadata-drawing';
 
 /*
- * How much room a Detail gives its Metadata. List look knows the window's width, not this container's: only the
- * Detail's measured columns know whether the Metadata has a column of its own.
+ * Where a Screen's aside put its Metadata. List look knows the window's width, not the Screen's: only the Screen's
+ * measured width knows whether the aside has a column of its own.
  */
-export const MetadataWidthContext = createContext<MetadataWidth>('column');
+export const MetadataPlaceContext = createContext<AsidePlace | null>(null);
 
-// The one place a Metadata drawing is resolved: from the List look it sits in and the room it has.
-export function useResolvedMetadataDrawing(
-  width: MetadataWidth,
-): MetadataDrawing {
+// The one place a Metadata drawing is resolved: from the List look it sits in and where the aside put it.
+export function useResolvedMetadataDrawing(): MetadataDrawing {
   const { fieldRows, inList } = useListLook();
+  const place = use(MetadataPlaceContext);
 
   return useMemo(
-    () => metadataDrawing({ platform: fieldRows, inList, width }),
-    [fieldRows, inList, width],
+    () => metadataDrawing({ platform: fieldRows, inList, place }),
+    [fieldRows, inList, place],
   );
 }
 

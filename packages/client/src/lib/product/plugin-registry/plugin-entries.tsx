@@ -15,6 +15,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
 import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Slider } from '@repo/kit/primitives/controls/slider';
+import { TextArea } from '@repo/kit/primitives/controls/text-area';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
 import { Card } from '@repo/kit/primitives/layout/card';
@@ -32,9 +33,11 @@ import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import { Callout } from '@repo/kit/primitives/status/callout';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
+import { Spinner } from '@repo/kit/primitives/status/spinner';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
 
@@ -43,6 +46,13 @@ function PluginSheet(
   props: KitProps<'Sheet', string, React.JSX.Element>,
 ): React.JSX.Element {
   return <Sheet {...props} inset />;
+}
+
+// A Plugin's Callout is a page's own message, such as its error, so it draws in place on every window.
+function PluginCallout(
+  props: KitProps<'Callout', string, React.JSX.Element>,
+): React.JSX.Element {
+  return <Callout {...props} inline />;
 }
 
 export const pluginEntries = {
@@ -61,6 +71,9 @@ export const pluginEntries = {
   Action,
   'Action.Section': Action.Section,
   EmptyState,
+  Spinner,
+  Callout: PluginCallout,
+  TextArea,
   Slider,
   SegmentedControl,
   FieldGroup,

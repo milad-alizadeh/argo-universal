@@ -7,6 +7,7 @@ import {
   type PartLayout,
 } from '#kit/content-column/content-column';
 import { flattenedChildren } from '#kit/flattened-children';
+import { ScreenBleedContext } from '#kit/screen-bleed';
 import { useWide } from '#kit/use-wide/use-wide';
 import { cn } from '#kit/utils';
 import { screenContentEnds, useScreenColumn } from './screen-column';
@@ -66,7 +67,9 @@ function PartView(props: PartViewProps): ReactElement {
 
   return (
     <View className={bodyClass(props, useWide())} style={style}>
-      {props.children}
+      <ScreenBleedContext value={props.width === 'bleed'}>
+        {props.children}
+      </ScreenBleedContext>
     </View>
   );
 }
@@ -98,6 +101,8 @@ const claimedClass = (props: PartProps, filled: boolean): string =>
  * one part of several it keeps its own height, and the last part ends above the home indicator.
  */
 function unclaimedClass(props: PartProps): string {
+  if (props.width === 'bleed') return 'min-h-0 w-full flex-1';
+
   if (props.last === undefined)
     return cn('min-h-0 flex-1 w-full self-center', screenContentEnds);
 

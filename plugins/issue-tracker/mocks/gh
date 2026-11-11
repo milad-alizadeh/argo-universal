@@ -36,6 +36,10 @@ if [ "$1" = "label" ] && [ "$2" = "list" ]; then
   exit 0
 fi
 if [ "$1" = "issue" ] && [ "$2" = "view" ]; then
+  if [ "$3" = "404" ]; then
+    printf '%s\n' 'GraphQL: Could not resolve to an Issue with the number of 404.' >&2
+    exit 1
+  fi
   if [ "$3" = "43" ]; then issue_43; else issue_42; fi
   printf '\n'
   exit 0

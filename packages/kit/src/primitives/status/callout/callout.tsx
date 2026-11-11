@@ -10,12 +10,24 @@ import type { CalloutProps } from './callout-props';
 
 /*
  * A wide window draws the callout's content in place, for a tray such as the one behind the Composer's card.
- * A phone presents the same content as a bottom sheet.
+ * A phone presents the same content as a bottom sheet. An inline Callout draws in place on a card everywhere.
  */
 export function Callout(props: CalloutProps): React.JSX.Element {
-  if (useWide()) return <WideCallout {...props} />;
+  const wide = useWide();
+
+  if (props.inline) return <InlineCallout {...props} />;
+
+  if (wide) return <WideCallout {...props} />;
 
   return <CalloutSheet {...props} />;
+}
+
+function InlineCallout(props: CalloutProps): React.JSX.Element {
+  return (
+    <View className="w-full rounded-2xl bg-card shadow-card">
+      <WideCallout {...props} />
+    </View>
+  );
 }
 
 const contentOf = ({ title, description }: CalloutProps): string =>
