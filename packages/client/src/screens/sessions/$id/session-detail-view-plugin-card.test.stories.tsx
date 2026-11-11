@@ -130,7 +130,7 @@ export const AListInACardDrawsNoCardOfItsOwn: Story = {
 // A Plugin's rows start where the Workbench's own rows do: their tiles share one leading edge, and the text sits no further in than the row's own inset.
 export const ARowInACardLinesUpWithTheAgentsRows: Story = {
   args: {
-    view: { state: 'open', ...subagentsSession, pluginCards: [listCard] },
+    view: { ...subagentsSession, pluginCards: [listCard] },
   },
   play: async ({ canvas }) => {
     const text = await canvas.findByText(listCardRow);
