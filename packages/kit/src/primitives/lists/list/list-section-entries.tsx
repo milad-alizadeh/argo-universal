@@ -41,7 +41,7 @@ function blockEntries(block: ListBlock): ListChild[] {
     ...partEntry(block.section.header, `${block.key}:header`),
     ...sectionItems(block.blocks, block.section),
     ...partEntry(block.section.footer, `${block.key}:footer`),
-    ...partEntry(<SectionGap />, `${block.key}:gap`),
+    ...partEntry(sectionGap, `${block.key}:gap`),
   ];
 }
 
@@ -66,6 +66,9 @@ function SectionGap(): ReactElement {
 
   return <View className={menu ? 'h-2' : section.below} />;
 }
+
+// One element for every gap, so a gap the List reads again is the gap it drew.
+const sectionGap = <SectionGap />;
 
 // The last popover group ends at the popover's own inset.
 export function menuEntries(entries: ListChild[]): ListChild[] {

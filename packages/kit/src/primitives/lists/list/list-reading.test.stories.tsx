@@ -13,6 +13,7 @@ import {
   type ListReading,
   type ShownOrder,
 } from './list-section-model';
+import { keptContents } from './list-tree-rows';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Reading',
@@ -26,7 +27,7 @@ const reader = (children: ReactNode): Parameters<typeof readList>[1] => ({
   prefix: 'list',
   tree: listTree(
     children,
-    { folded: new Set(), toggle: () => {}, drawn: false },
+    { folded: new Set(), toggle: () => {}, drawn: false, kept: keptContents() },
     true,
   ),
 });
