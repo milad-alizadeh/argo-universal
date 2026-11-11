@@ -406,3 +406,20 @@ export const ARowWithAContextMenuKeepsItsMenuAndLeavesTheClick: Story = {
   decorators: [(Story): ReactElement => holdOnly(<Story />)],
   play: playMenuThenClick,
 };
+
+const doubleClicked = fn();
+
+// A double-click opens from the trigger around the row, so a row with no press of its own still fires it.
+export const AnInertRowStillFiresItsDoubleClick: Story = {
+  args: {
+    onPress: undefined,
+    actions: archive,
+    contextMenu: { onDoubleClick: doubleClicked },
+  },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: async ({ canvas, userEvent }) => {
+    doubleClicked.mockClear();
+    await userEvent.dblClick(canvas.getByText(title));
+    await expect(doubleClicked).toHaveBeenCalledOnce();
+  },
+};
