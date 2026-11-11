@@ -2,6 +2,7 @@ import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { SignInRequired } from './github-api';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
+import type { IssueCache } from './issue-cache';
 import { openClient, projectById, type ClientSource } from './issue-client';
 import type { Overview } from './overview';
 
@@ -55,6 +56,7 @@ async function settle<Value>(
 
 type Source = Pick<ClientSource, 'storage' | 'trackers'> & {
   listProjects: Argo['projects']['list'];
+  issueCache: IssueCache;
 };
 
 type Target = { projectId: string };
@@ -86,18 +88,33 @@ async function clientFor(
  * The tracker's GitHub reads, named reads (ADR-0037): every page and Slot that asks the same question shares the
  * one answer Argo keeps for it, and a status change or a sign-in, which say `argo.changed()`, make it due.
  */
+// A list's Issues are read in full, so each is kept for the page and Slot summary that ask for it next.
+async function listed(
+  source: Source,
+  { projectId, search, limit }: IssuesTarget,
+): Promise<Issue[]> {
+  const issues = await (
+    await clientFor(source, projectId)
+  ).listIssues(search, limit);
+
+  source.issueCache.seed(projectId, issues);
+
+  return issues;
+}
+
+const issueOf = async (source: Source, target: IssueTarget): Promise<Issue> =>
+  source.issueCache.get(target, async () =>
+    (await clientFor(source, target.projectId)).getIssue(target.number),
+  );
+
 export const defineReads = (argo: Argo, source: Source): GitHubReads => ({
   overview: argo.queries.define('overview', ({ projectId }: Target) =>
     settle(async () => (await clientFor(source, projectId)).overview()),
   ),
-  issues: argo.queries.define(
-    'issues',
-    ({ projectId, search, limit }: IssuesTarget) =>
-      settle(async () =>
-        (await clientFor(source, projectId)).listIssues(search, limit),
-      ),
+  issues: argo.queries.define('issues', (target: IssuesTarget) =>
+    settle(() => listed(source, target)),
   ),
-  issue: argo.queries.define('issue', ({ projectId, number }: IssueTarget) =>
-    settle(async () => (await clientFor(source, projectId)).getIssue(number)),
+  issue: argo.queries.define('issue', (target: IssueTarget) =>
+    settle(() => issueOf(source, target)),
   ),
 });

@@ -1,5 +1,6 @@
 import type { Argo, DeviceFlow } from '@argo/plugin-kit';
 import type { GitHubReads } from './github-reads';
+import type { IssueCache } from './issue-cache';
 import type { IssueChanges } from './issue-changes';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
@@ -16,4 +17,6 @@ export type IssueDeps = {
   signIn: DeviceFlow;
   // The remote reads Argo keeps, as named reads.
   reads: GitHubReads;
+  // The Issues the Plugin read, which a list, a page and a Slot's summary share.
+  issueCache: IssueCache;
 };

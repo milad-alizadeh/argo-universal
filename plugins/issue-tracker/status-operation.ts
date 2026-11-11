@@ -21,6 +21,7 @@ const setStatus =
     const client = await openDepsClient({ project, deps });
 
     await client.setStatus(number, status);
+    deps.issueCache.forget(project.id);
     deps.changes.publish(number);
 
     return { number, status };

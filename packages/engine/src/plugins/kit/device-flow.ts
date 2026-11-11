@@ -4,8 +4,8 @@ import type {
   DeviceFlowPattern,
   DeviceFlowState,
 } from '@repo/contracts/plugins/device-flow-api';
-import type { z } from 'zod';
-import { CodeAnswer, CompleteCode, labelRead, postForm } from './device-http';
+import { askFor, codeOf, shown } from './device-code';
+import { labelRead } from './device-http';
 import {
   ended,
   expired,
@@ -16,8 +16,6 @@ import {
 import { sleep } from './scheduler';
 
 const slowDownMs = 5000;
-
-const msPerSecond = 1000;
 
 const idle: DeviceFlowState = { kind: 'idle' };
 
@@ -88,52 +86,6 @@ async function awaitToken(
   return settled(attempt, polled);
 }
 
-// What the service gave for the code, when it gave one.
-type Code = {
-  device: Device;
-  userCode: string;
-  uri: string;
-  lifetimeMs: number;
-  intervalMs: number;
-};
-
-const msOf = (seconds: number): number => seconds * msPerSecond;
-
-const codeOf = (reply: z.infer<typeof CodeAnswer>): Code | null => {
-  const complete = CompleteCode.safeParse(reply);
-
-  if (!complete.success) return null;
-
-  const { device_code: code, user_code: userCode } = complete.data;
-  const lifetimeMs = msOf(complete.data.expires_in);
-
-  return {
-    device: { code, expiresAt: Date.now() + lifetimeMs },
-    userCode,
-    uri: complete.data.verification_uri,
-    lifetimeMs,
-    intervalMs: msOf(complete.data.interval),
-  };
-};
-
-const shown = (found: Code): DeviceFlowState => ({
-  kind: 'code',
-  userCode: found.userCode,
-  verificationUri: found.uri,
-  expiresAt: found.device.expiresAt,
-  lifetimeMs: found.lifetimeMs,
-});
-
-const askFor = (attempt: Attempt): Promise<z.infer<typeof CodeAnswer>> => {
-  const { argo, options } = attempt;
-  const fields = {
-    client_id: options.clientId,
-    ...(options.scope && { scope: options.scope }),
-  };
-
-  return postForm(argo.fetch, { url: options.deviceUrl, fields }, CodeAnswer);
-};
-
 // Asks for a code and shows it; the wait for the person goes on past the call that started it.
 async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
   const reply = await askFor(attempt);
@@ -156,6 +108,18 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
 
 type Held = { state: DeviceFlowState; attempt: symbol | null };
 
+// Records a state for the attempt that still counts, and says so, so the pages that draw it redraw.
+const settling =
+  (held: Held, argo: DeviceFlowArgo, mine: symbol) =>
+  (state: DeviceFlowState): DeviceFlowState => {
+    if (held.attempt !== mine) return held.state;
+
+    held.state = state;
+    argo.changed();
+
+    return state;
+  };
+
 // A new attempt replaces the one before, whose answers then change nothing.
 function attemptOf(
   held: Held,
@@ -170,14 +134,7 @@ function attemptOf(
     argo,
     options,
     live: () => held.attempt === mine,
-    settle: (state) => {
-      if (held.attempt !== mine) return held.state;
-
-      held.state = state;
-      argo.changed();
-
-      return state;
-    },
+    settle: settling(held, argo, mine),
   };
 }
 

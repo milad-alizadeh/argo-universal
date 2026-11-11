@@ -43,23 +43,23 @@ const start = (parts: SignInParts, label: string): ReactElement[] =>
 
 type Coded = Extract<Step, { kind: 'code' }>;
 
-function codeStep(parts: SignInParts, step: Coded): ReactElement[] {
-  const minutes = Math.round(step.lifetimeMs / msPerMinute);
+const codeButtons = (parts: SignInParts, step: Coded): ReactElement[] => [
+  button(`Open ${parts.name}`, {
+    action: 'openUrl',
+    url: step.verificationUri,
+  }),
+  button('Copy code', { action: 'copy', text: step.userCode }, 'secondary'),
+  button('Cancel', parts.cancel, 'secondary'),
+];
 
-  return [
-    ...lines(
-      `Enter this code on ${parts.name}, on any device.`,
-      `The code lasts ${minutes} minutes. Waiting for ${parts.name}…`,
-    ),
-    text('code', step.userCode),
-    button(`Open ${parts.name}`, {
-      action: 'openUrl',
-      url: step.verificationUri,
-    }),
-    button('Copy code', { action: 'copy', text: step.userCode }, 'secondary'),
-    button('Cancel', parts.cancel, 'secondary'),
-  ];
-}
+const codeStep = (parts: SignInParts, step: Coded): ReactElement[] => [
+  ...lines(
+    `Enter this code on ${parts.name}, on any device.`,
+    `The code lasts ${Math.round(step.lifetimeMs / msPerMinute)} minutes. Waiting for ${parts.name}…`,
+  ),
+  text('code', step.userCode),
+  ...codeButtons(parts, step),
+];
 
 type Ended = Extract<Step, { kind: 'ended' }>;
 

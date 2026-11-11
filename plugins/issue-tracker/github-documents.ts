@@ -20,6 +20,9 @@ const listFields = `
 
 const relationFields = 'nodes { number title state url }';
 
+// A list reads each Issue in full, so opening one from its row needs no call of its own.
+const detailFields = `${listFields} body subIssues(first: 50) { ${relationFields} }`;
+
 const split = (repository: string): [string, string] => {
   const [owner = '', name = ''] = repository.split('/');
 
@@ -104,7 +107,7 @@ export const listQuery = (
   graphqlRequest(
     `query ($query: String!, $first: Int!) {
       search(query: $query, type: ISSUE, first: $first) {
-        nodes { ... on Issue { ${listFields} } }
+        nodes { ... on Issue { ${detailFields} } }
       }
     }`,
     { query: `repo:${repository} is:issue ${search} sort:created-desc`, first },
@@ -119,7 +122,7 @@ export const issueQuery = (
   return graphqlRequest(
     `query ($owner: String!, $name: String!, $number: Int!) {
       repository(owner: $owner, name: $name) {
-        issue(number: $number) { ${listFields} body subIssues(first: 50) { ${relationFields} } }
+        issue(number: $number) { ${detailFields} }
       }
     }`,
     { owner, name, number },

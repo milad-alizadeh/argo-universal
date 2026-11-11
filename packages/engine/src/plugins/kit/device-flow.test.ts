@@ -37,6 +37,7 @@ it('shows the code once the service gives it, then adds the Account and keeps th
     userCode: 'WDJB-MJHT',
     verificationUri: 'https://github.com/login/device',
   });
+
   expect(fake.calls[0]?.body).toBe('client_id=client-1&scope=repo');
 
   await wait();
@@ -63,10 +64,12 @@ it('needs no Server Device, and says each step so the pages that draw it redraw'
 
 it('keeps waiting through pending, and waits five seconds longer after slow_down', async () => {
   const slow = { status: 200, body: { error: 'slow_down' } };
+
   const fake = fakeDevice({
     ...approved,
     [service.tokenUrl]: [pending, slow, token],
   });
+
   const flow = deviceFlow(fake.argo, service);
 
   await flow.start();
@@ -103,6 +106,7 @@ it('says why the service sent no code', async () => {
     status: 200,
     body: { error_description: 'The client_id is not valid.' },
   };
+
   const fake = fakeDevice({ [service.deviceUrl]: [reply] });
   const flow = deviceFlow(fake.argo, service);
 
@@ -115,11 +119,13 @@ it('says why the service sent no code', async () => {
 
 it('ends as expired when the code runs out before the service answers', async () => {
   const short = { ...code, body: { ...code.body, expires_in: 2 } };
+
   const fake = fakeDevice({
     ...approved,
     [service.deviceUrl]: [short],
     [service.tokenUrl]: [pending],
   });
+
   const flow = deviceFlow(fake.argo, service);
 
   await flow.start();
@@ -145,6 +151,7 @@ it('fails when the service does not say who signed in', async () => {
     ...approved,
     [userUrl]: [{ status: 401, body: {} }],
   });
+
   const flow = deviceFlow(fake.argo, service);
 
   await flow.start();

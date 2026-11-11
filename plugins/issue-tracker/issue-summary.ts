@@ -6,7 +6,10 @@ import type { IssueLink, TrackerStorage } from './tracker-storage';
 // What a Session row and the Session bar say about an Issue: its state, and its title for a tooltip.
 export type IssueSummary = Pick<Issue, 'title' | 'status' | 'closedAs'>;
 
-type Source = Pick<IssueDeps, 'storage' | 'trackers' | 'listProjects'>;
+type Source = Pick<
+  IssueDeps,
+  'storage' | 'trackers' | 'listProjects' | 'issueCache'
+>;
 
 type Target = Pick<IssueLink, 'projectId' | 'number'>;
 
@@ -108,8 +111,10 @@ async function summaryOf(
 
   if (!project) throw new Error('This Project no longer exists.');
 
-  const client = await openClient({ ...source, project });
-  const { title, status, closedAs } = await client.getIssue(number);
+  const { title, status, closedAs } = await source.issueCache.get(
+    { projectId, number },
+    async () => (await openClient({ ...source, project })).getIssue(number),
+  );
 
   return { title, status, closedAs };
 }

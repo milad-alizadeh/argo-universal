@@ -73,6 +73,7 @@ export async function pollOnce(
     url: options.tokenUrl,
     fields: tokenFields(options, device),
   };
+
   const reply = await postForm(fetch, target, TokenAnswer);
 
   if (reply.access_token) return { kind: 'token', token: reply.access_token };
