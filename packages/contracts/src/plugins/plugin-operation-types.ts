@@ -13,15 +13,18 @@ export const pluginTypesFile = 'plugin.gen.d.ts';
 const declaration = ({
   params = {},
   caller,
-}: PluginOperationContribution): OperationDeclaration => ({
-  params: Object.fromEntries(
-    Object.entries(params).map(([name, { type, required, choices }]) => [
-      name,
-      { type, required, choices },
-    ]),
-  ),
-  ...(caller === undefined ? {} : { caller }),
-});
+}: PluginOperationContribution): OperationDeclaration => {
+  const declared = {
+    params: Object.fromEntries(
+      Object.entries(params).map(([name, { type, required, choices }]) => [
+        name,
+        { type, required, choices },
+      ]),
+    ),
+  };
+
+  return caller === undefined ? declared : { ...declared, caller };
+};
 
 // JSON is a TypeScript type literal too: its strings, booleans and arrays read as literals and tuples.
 const member = (operation: PluginOperationContribution): string =>
