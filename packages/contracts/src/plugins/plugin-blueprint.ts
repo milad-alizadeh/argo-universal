@@ -37,5 +37,7 @@ After an Operation edit in \`plugin.json\`, run \`pnpm types\` in the Plugin so 
 
 ## Test
 
-\`index.test.ts\` opens a page and presses what a person presses: \`pages.open({ path })\`, \`page.press(label)\`, \`page.find(text)\`. A text matches a node's label, title, subtitle, description or text exactly; pass a function such as \`(node) => node.props.finished === true\` to test any prop. A test that reads the network starts the host itself with \`startPluginTest({ directory, pluginId, version, network })\` from \`@argo/plugin-kit/testing\` and a \`fixtureServices\` network; no test touches a real service.
+\`index.test.ts\` opens a page and presses what a person presses: \`pages.open({ path })\`, \`page.press(label)\`, \`page.find(text)\`. A text matches a node's label, title, subtitle, description or text exactly; pass a function such as \`(node) => node.props.finished === true\` to test any prop. A Plugin that reaches a service names it to the test: \`test(name, async (kit, requests) => …, { services: ({ host, path }) => ({ json }) })\` answers every request the Plugin makes, so no test touches a real service, and \`requests\` lists what it asked. Open a page that reads an Account with \`projectId: kit.session.projectId\`: an Account is borrowed for a Project. Keep every test in \`*.test.ts\` on this harness; \`argo-plugin test\` runs them all, and another test runner's file fails there.
+
+A reply's \`json()\` is \`unknown\`: narrow it with a type guard, as the Plugin's own lint rejects a cast. \`packages/plugin-kit/mocks/sign-in-plugins/device/index.tsx\` is a whole gated page with \`accountFetch\`.
 `;
