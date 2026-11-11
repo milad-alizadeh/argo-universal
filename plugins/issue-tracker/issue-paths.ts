@@ -20,6 +20,9 @@ export const pathText = (segment: string): string =>
 // Every Project's page, filter list and Issue is one Loader page each (ADR-0050).
 export const projectPattern = '/projects/:project';
 
+// The Project's Tracker choice, reached from its Issues where none is chosen.
+export const projectTrackerPattern = `${projectPattern}/tracker`;
+
 export const filterPattern = `${projectPattern}/filters/:filter`;
 
 export const issuePattern = `${projectPattern}/issues/:number`;
@@ -32,3 +35,6 @@ export const filterPath = (projectId: string, filter: IssueFilter): string =>
 
 export const issuePath = (projectId: string, number: number): string =>
   `${projectPath(projectId)}/issues/${number}`;
+
+export const projectTrackerPath = (projectId: string): string =>
+  `${projectPath(projectId)}/tracker`;
