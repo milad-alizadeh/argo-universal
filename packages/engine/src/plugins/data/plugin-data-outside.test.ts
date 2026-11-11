@@ -153,3 +153,27 @@ it('drops a seed from a read a write overtook, so it never revives stale data', 
 
   expect(valueOf(await after)).toEqual({ count: 2 });
 });
+
+it('refuses a read or a seed of a Query that names a Project Argo has not registered, and says the fix', async () => {
+  const { data, reads } = harness();
+  const ghost = { ...overview, projectId: 'ghost' };
+
+  const read = await data.handle(
+    { pluginId, generation: 1 },
+    { api: 'data', action: 'read', query: ghost },
+    {},
+  );
+
+  const seed = await data.handle(
+    { pluginId, generation: 1 },
+    { api: 'data', action: 'seed', query: ghost, value: 1 },
+    {},
+  );
+
+  for (const reply of [read, seed]) {
+    expect(reply.ok).toBe(false);
+    expect(valueOf(reply)).toContain('argo.projects.list()');
+  }
+
+  expect(reads()).toHaveLength(0);
+});
