@@ -68,11 +68,11 @@ function gutterBoundary(width: number): Story {
   };
 }
 
-export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1856);
+export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1544);
 
-// Below it the cards hide rather than move the conversation, which stays centred in the page.
+// Below it the page's gutters together no longer hold the cards, so they hide and the conversation stays centred in the page.
 export const CardsAutoHideBelowTheIndependentBoundary: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1855),
+  beforeEach: (): Promise<void> => settleLayout(1543),
   play: async ({ canvas }) => {
     const composer = await canvas.findByTestId(composerId);
     await waitFor(() =>
@@ -159,6 +159,46 @@ export const WideGuttersKeepTheConversationCentered: Story = {
     await browserUser.hover(composer);
     await expect(composer.getBoundingClientRect().left).toBe(before.left);
     await expect(composer.getBoundingClientRect().right).toBe(before.right);
+  },
+};
+
+// At 1544 the page is exactly as wide as the column, its leading gutter, the gap, a card and the inset, so the column moves half a card's 312 from the centre.
+const asideAtTheBoundary = 156;
+
+const centreOf = (element: HTMLElement): number => {
+  const box = element.getBoundingClientRect();
+
+  return box.left + box.width / 2;
+};
+
+const pageCentre = (canvas: Canvas): number =>
+  centreOf(canvas.getByTestId(detailId));
+
+// Where the trailing gutter alone does not hold the cards, the conversation moves aside for them and returns to the page's centre when they hide.
+export const NarrowGuttersMoveTheConversationAside: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1544),
+  play: async ({ canvas, userEvent }) => {
+    const composer = await canvas.findByTestId(composerId);
+    await expectSeparateCards(canvas);
+    await waitFor(() =>
+      expect(centreOf(composer)).toBeCloseTo(
+        pageCentre(canvas) - asideAtTheBoundary,
+        1,
+      ),
+    );
+    const feed = canvas.getAllByTestId('feed-column').at(-1);
+
+    if (!feed) throw new Error('Recorded Session needs a Feed row');
+    await expect(centreOf(feed)).toBeCloseTo(centreOf(composer), 1);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Toggle Workbench' }),
+    );
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
+    await waitFor(() =>
+      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
+    );
   },
 };
 
