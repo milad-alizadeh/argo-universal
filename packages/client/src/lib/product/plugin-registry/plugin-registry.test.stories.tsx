@@ -87,12 +87,12 @@ export const RefusedPage: Story = {
 
 // A row's meta also draws unseen copies to measure; a reader sees each text once.
 function onlyOne(elements: HTMLElement[]): HTMLElement {
-  const shown = seen(elements);
+  const [only, ...rest] = seen(elements);
 
-  if (shown.length !== 1)
-    throw new Error(`expected one visible match, found ${shown.length}`);
+  if (!only || rest.length > 0)
+    throw new Error(`expected one visible match, found ${rest.length + 1}`);
 
-  return shown[0] as HTMLElement;
+  return only;
 }
 
 export const ListAnatomy: Story = {

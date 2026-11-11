@@ -104,12 +104,13 @@ export const LongPillsLeaveTheTitleHalf: Story = {
     const titleText = canvas.getByText(longTitle);
 
     // The count shows once the line has measured its Pills.
-    const [count] = await waitFor(() => {
+    const [count] = await waitFor(async () => {
       const counts = seenCounts(canvas);
 
-      expect(counts.length, 'the row drew no count of its hidden Pills').toBe(
-        1,
-      );
+      await expect(
+        counts.length,
+        'the row drew no count of its hidden Pills',
+      ).toBe(1);
 
       return counts;
     });

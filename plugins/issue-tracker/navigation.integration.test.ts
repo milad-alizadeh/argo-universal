@@ -123,6 +123,7 @@ it('shows an empty list for a filter with no Issues', async () => {
 
 it('says an Issue its tracker cannot read as a danger Callout on its own page', async () => {
   const { test } = await issuesRoot();
+
   const page = await test.pages.open({
     path: '/projects/project-1/issues/404',
   });

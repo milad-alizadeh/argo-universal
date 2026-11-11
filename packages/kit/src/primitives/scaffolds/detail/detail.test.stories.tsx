@@ -69,6 +69,7 @@ type Place = 'above' | 'beside';
 // Where the Metadata sits: beside the content in the aside's own column, or as Pills above it.
 function metadataPlace(canvas: Parameters<Play>[0]['canvas']): Place {
   const content = canvas.getByText(body).getBoundingClientRect();
+
   const status = canvas
     .getByRole('group', { name: statusGroup })
     .getBoundingClientRect();
@@ -360,9 +361,9 @@ function pageOfWidth(window: number): Story {
         canvas.getByRole('group', { name: 'Properties' }),
       ];
 
-      await waitFor(() => {
+      await waitFor(async () => {
         for (const edge of edges)
-          expect(
+          await expect(
             edge.scrollWidth,
             `${edge.getAttribute('aria-label') ?? 'page'} is ${edge.scrollWidth} wide in ${edge.clientWidth}`,
           ).toBeLessThanOrEqual(edge.clientWidth);
