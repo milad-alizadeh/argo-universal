@@ -50,6 +50,11 @@ export function pluginGuide({ components }: PluginGuideInput): PluginGuide {
   };
 }
 
+const nameFix =
+  "A Plugin name holds letters, digits, spaces and . , : & - ' ’ only, such as Reading List; the manifest and the page both carry it as written";
+
+const maxNameLength = 60;
+
 const idFix =
   'A Plugin id is lower-case letters, digits and dashes, and starts with a letter, such as notes-board';
 
@@ -63,6 +68,8 @@ export const PluginNewInput = z.strictObject({
     .string()
     .trim()
     .min(1)
+    .max(maxNameLength)
+    .regex(/^[\p{L}\p{N} .,:&'’-]+$/u, nameFix)
     .optional()
     .describe('The name people see; the id spelled as words when left out.'),
   sessionId: sessionColumns.shape.id

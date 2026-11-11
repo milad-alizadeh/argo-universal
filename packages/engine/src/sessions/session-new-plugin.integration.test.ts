@@ -70,3 +70,28 @@ it('asks for a Session when no Session runs it', async () => {
     'pass sessionId',
   );
 });
+
+it.each(['Bob "B"', 'Notes {draft}', 'Back\\slash', 'Two\nlines', '<Notes>'])(
+  'refuses the name %j, naming the characters a name may hold',
+  async (name) => {
+    const { host, sessionId } = await openedSession();
+
+    await expect(
+      host.caller.plugin.new({ sessionId, id: 'named', name }),
+    ).rejects.toThrow('A Plugin name holds letters, digits, spaces');
+  },
+);
+
+it('keeps an apostrophe and an ampersand in a name the manifest and the page both carry', async () => {
+  const { host, sessionId, path } = await openedSession();
+
+  const made = await host.caller.plugin.new({
+    sessionId,
+    id: 'bobs',
+    name: 'Bob’s & Co',
+  });
+
+  expect(
+    JSON.parse(await readFile(join(path, made.path, 'plugin.json'), 'utf8')),
+  ).toMatchObject({ name: 'Bob’s & Co' });
+});
