@@ -117,6 +117,15 @@ export const ACardCollapsesBesideTheOthers: Story = {
   },
 };
 
+// A Workbench with no card to draw is an empty column: no heading, no handle, nothing to press.
+export const NoCardsIsAnEmptyColumn: Story = {
+  args: { cards: [] },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryAllByRole('heading')).toHaveLength(0);
+    await expect(canvas.queryAllByRole('button')).toHaveLength(0);
+  },
+};
+
 export const ALoneCardHasNoHandle: Story = {
   args: { cards: oneCard },
   play: async ({ canvas }) => {
