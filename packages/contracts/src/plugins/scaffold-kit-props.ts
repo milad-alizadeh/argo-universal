@@ -38,7 +38,7 @@ export const screenProps = z.object({
     .optional()
     .meta({ default: screenDefaults.width })
     .describe(
-      'How wide the content runs on a window wider than the reading column: `content` keeps it to that centred column, `full` fills the screen, as a table, board or canvas wants. Both keep the screen’s side margins.',
+      'How wide the content runs on a window wider than the reading column: `content` keeps it to that centred column, `full` fills the screen, as a table or board wants. Both keep the screen’s side margins. `bleed` runs the content to the screen’s edges with no margins, for a canvas, map or video; the title keeps its margin.',
     ),
 });
 

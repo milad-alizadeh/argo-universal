@@ -228,6 +228,29 @@ Storage Queries are never polled. A committed Plugin storage write marks them du
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
 
+## Page frames
+
+A page is a `Screen`. Its props say what the page holds, and the App lays it out at every width; a Plugin sets no sizes.
+
+- `width` is `content` (the reading column, the default), `full` or `bleed`. A `bleed` page has no column and no inset: its body fills the page, and a `Canvas` in it fills that body, as a board or a map does.
+- `aside` takes one `Metadata` of the page's properties, as an Issue's status, labels and assignee. When the window leaves room beside the column it is a column of its own at the trailing edge; otherwise it is a row of Pills under the title, and below medium those Pills show their icon alone. The aside never moves the title or changes the column's width.
+- `footer` stays pinned under the body and rises with the keyboard, as a chat's input does. The footer takes a `TextArea`, a `Stack` or a `Button`. `TextArea` is a multi-line input that grows to six lines and has an optional trailing action, such as a Send `IconButton`. The body does not scroll by itself, so a body longer than the screen goes in a `ScrollView` or a `List`, which then scrolls above the footer.
+
+```tsx
+<Screen
+  title="#42"
+  aside={
+    <Metadata>
+      <Metadata.StatusDot title="Status" text="Open" tone="success" />
+    </Metadata>
+  }
+>
+  <Detail markdown={body} isLoading={!body} />
+</Screen>
+```
+
+`Detail` holds the page's body only; its properties go in the `Screen`'s `aside`. `isLoading` draws the body's skeleton. A failed read shows a `Callout` in the body with `tone="danger"` and a Button that tries again, so loading, empty and error read differently. A `Spinner` marks work that has no body to sketch yet.
+
 ## Session row items
 
 A Session row's meta line takes items, not a kit tree. Argo asks each Plugin that declares `argo/session/row/v1` once per list, with every row's `{ sessionId, projectId }`, and the Plugin answers with items keyed by Session id (ADR-0035):

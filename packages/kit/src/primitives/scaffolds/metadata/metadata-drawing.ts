@@ -1,27 +1,38 @@
-export type MetadataPlatform = 'ios' | 'android' | 'web';
+import type { AsidePlace } from '../screen/screen-aside-place';
 
-// How much room the Metadata has: its own column beside the content, or a container too narrow for one.
-export type MetadataWidth = 'column' | 'narrow';
+export type MetadataPlatform = 'ios' | 'android' | 'web';
 
 export interface MetadataFacts {
   platform: MetadataPlatform;
   // Metadata sits in a List, such as a Settings page, as one more section of it.
   inList: boolean;
-  width: MetadataWidth;
+  // Where a Screen's aside put it (screen-aside-place.ts); null anywhere else.
+  place: AsidePlace | null;
 }
 
 /*
- * The four ways Metadata draws: a section of the List it sits in, the grouped List of rows a phone draws on its own,
- * the headed Properties column of desktop and web, and one inline line of values when that column has no room.
+ * The ways Metadata draws: a section of the List it sits in; the grouped List of rows a phone draws on its own; the
+ * aside's column of values under small headings; and, where the aside has no column, a row of Pills under the title,
+ * which shows each value's icon alone below medium.
  */
 export type MetadataRoot =
   | 'list-section'
   | 'grouped-rows'
-  | 'properties'
-  | 'inline';
+  | 'aside'
+  | 'pills'
+  | 'icons';
 
-// How one field draws its label and value; the drawing decides it, so a field never asks the platform.
-export type MetadataFieldLayout = 'beside' | 'under' | 'stacked' | 'inline';
+/*
+ * How one field draws: as a row's label and value (`beside`, `under`, `stacked`), as its value alone under its
+ * group's heading (`value`), or as one Pill (`pill`, or `icon` for a Pill that shows its icon alone).
+ */
+export type MetadataFieldLayout =
+  | 'beside'
+  | 'under'
+  | 'stacked'
+  | 'value'
+  | 'pill'
+  | 'icon';
 
 export interface MetadataDrawing {
   root: MetadataRoot;
@@ -37,25 +48,25 @@ const rowLayouts = {
   web: 'stacked',
 } satisfies Record<MetadataPlatform, MetadataFieldLayout>;
 
-/*
- * Outside a List: phones draw grouped rows at any width; the web's column gives way to one line when it has no room.
- */
+// Outside an aside and a List, a phone draws grouped rows and the web the aside's own column.
+const ownRoots = {
+  ios: 'grouped-rows',
+  android: 'grouped-rows',
+  web: 'aside',
+} satisfies Record<MetadataPlatform, MetadataRoot>;
+
 // A root that lays every field out one way; the rest follow the platform's rows.
 const rootFields: Partial<Record<MetadataRoot, MetadataFieldLayout>> = {
-  inline: 'inline',
-  properties: 'stacked',
+  aside: 'value',
+  pills: 'pill',
+  icons: 'icon',
 };
 
-const phoneRoots = { column: 'grouped-rows', narrow: 'grouped-rows' } as const;
+function rootOf({ platform, inList, place }: MetadataFacts): MetadataRoot {
+  if (place) return place;
 
-const ownRoots = {
-  ios: phoneRoots,
-  android: phoneRoots,
-  web: { column: 'properties', narrow: 'inline' },
-} satisfies Record<MetadataPlatform, Record<MetadataWidth, MetadataRoot>>;
-
-const rootOf = ({ platform, inList, width }: MetadataFacts): MetadataRoot =>
-  inList ? 'list-section' : ownRoots[platform][width];
+  return inList ? 'list-section' : ownRoots[platform];
+}
 
 const fieldOf = (
   root: MetadataRoot,
@@ -63,8 +74,8 @@ const fieldOf = (
 ): MetadataFieldLayout => rootFields[root] ?? rowLayouts[platform];
 
 /*
- * The one place that decides how Metadata draws, from the platform, whether it sits in a List and how much width it has.
- * Metadata draws the root it names and each field draws its one layout.
+ * The one place that decides how Metadata draws, from the platform, whether it sits in a List and where a Screen's
+ * aside put it. Metadata draws the root it names and each field draws its one layout.
  */
 export function metadataDrawing(facts: MetadataFacts): MetadataDrawing {
   const root = rootOf(facts);

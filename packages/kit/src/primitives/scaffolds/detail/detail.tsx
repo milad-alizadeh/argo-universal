@@ -1,11 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { ListPlaceContext } from '#kit/list-place';
 import { cn } from '#kit/utils';
 import { Markdown } from '#primitives/content/markdown';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { useAsideLead } from '../screen/screen-aside';
 import { screenContentEnds } from '../screen/screen-column';
-import { DetailColumns } from './detail-columns';
 import type { DetailProps } from './detail-props';
 
 /*
@@ -19,15 +20,18 @@ const scroll = {
 } as const;
 
 /*
- * Foundations / Detail: content, then its Metadata beside it on wide containers.
- * Its Screen declares the header Actions; a Detail has none of its own.
+ * Foundations / Detail: an item's content. Its Screen declares the header Actions and holds its Metadata in the
+ * `aside`; where the aside has no column, its Pills lead the content and scroll away with it.
  */
 export function Detail(props: DetailProps): ReactElement {
+  const lead = useAsideLead();
+
   return (
     <ScrollFadeView {...scroll} testID={props.testID}>
-      <DetailColumns metadata={props.metadata}>
+      <ListPlaceContext value="detail">
+        {lead ? <View className="pb-4">{lead}</View> : null}
         <DetailContent {...props} />
-      </DetailColumns>
+      </ListPlaceContext>
     </ScrollFadeView>
   );
 }

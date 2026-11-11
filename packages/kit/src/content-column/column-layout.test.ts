@@ -22,16 +22,16 @@ describe('claimState', () => {
       claimed: false,
       filled: false,
       grouped: false,
-      side: false,
+      lead: false,
     });
   });
 
-  it('reports a side column without claiming the column', () => {
-    expect(claimState(claimed('side'))).toEqual({
+  it('reports content that draws the aside lead without claiming the column', () => {
+    expect(claimState(claimed('lead'))).toEqual({
       claimed: false,
       filled: false,
       grouped: false,
-      side: true,
+      lead: true,
     });
   });
 
@@ -51,7 +51,7 @@ describe('claimState', () => {
       claimed: true,
       filled: true,
       grouped: true,
-      side: false,
+      lead: false,
     });
   });
 

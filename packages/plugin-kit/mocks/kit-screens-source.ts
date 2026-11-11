@@ -47,8 +47,8 @@ const form = (state, to) => (
 );
 
 const build = (cancelled, to) => (
-  <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={to.set({ cancelled: !cancelled })} />}>
-    <Detail markdown="Deploying" metadata={<Metadata><Metadata.StatusDot title="Status" text="Running" tone="info" /></Metadata>} />
+  <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={to.set({ cancelled: !cancelled })} />} aside={<Metadata><Metadata.StatusDot title="Status" text="Running" tone="info" /></Metadata>}>
+    <Detail markdown="Deploying" />
   </Screen>
 );
 
