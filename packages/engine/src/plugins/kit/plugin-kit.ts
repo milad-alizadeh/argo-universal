@@ -21,7 +21,12 @@ import {
   type OperationSend,
 } from './operation-handlers';
 import { valuesOf } from './render-tree';
-import { provideSignIn, signInGate, SignInRequired } from './sign-in';
+import {
+  accountFetch,
+  provideSignIn,
+  signInGate,
+  SignInRequired,
+} from './sign-in';
 import {
   slotProviders,
   type SlotProviders,
@@ -57,6 +62,7 @@ const exportsOf = {
   deviceFlow,
   signInGate,
   provideSignIn,
+  accountFetch,
   SignInRequired,
 };
 

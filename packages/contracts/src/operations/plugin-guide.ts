@@ -40,6 +40,9 @@ export type PluginNewInput = z.infer<typeof PluginNewInput>;
 // Where the Plugin went, relative to the Checkout, and what to run next.
 export const PluginNewOutput = z.strictObject({
   path: z.string(),
+  directory: z
+    .string()
+    .describe('The absolute folder, for a caller that is not in the Checkout.'),
   files: z.array(z.string()),
   next: z.array(z.string()),
 });

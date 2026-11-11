@@ -40,7 +40,9 @@ it('keeps no Grants for a Plugin once it is released', async () => {
 
   expect(await services.handle('probe', 1, echo)).toEqual({
     ok: false,
-    error: 'Refused: echo hi is not a declared command',
+    error: expect.stringContaining(
+      'Refused: echo hi is not a declared command. Add { "kind": "process:exec", "command": "echo"',
+    ),
     refused: true,
   });
   services.close();

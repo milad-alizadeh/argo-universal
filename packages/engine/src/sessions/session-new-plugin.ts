@@ -82,6 +82,7 @@ export async function createPlugin(
 
   return {
     path,
+    directory,
     files: files.map(([file]) => file),
     next: steps(input.id, path),
   };

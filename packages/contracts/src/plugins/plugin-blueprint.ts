@@ -7,9 +7,9 @@ The Issue tracker (\`plugins/issue-tracker\`) is the reference Plugin. \`plugins
 
 ## Steps
 
-1. Run \`plugin.new\` with an \`id\` (lower-case, dashes). It writes \`plugins/<id>/\` in this Session's Checkout: one page, one Operation that writes, one test. Done when the folder exists.
+1. Run \`plugin.new\` with an \`id\` (lower-case, dashes). It writes \`plugins/<id>/\` in this Session's Checkout: one page, one Operation that writes, one test. \`path\` is relative to the Checkout and \`directory\` is the absolute folder; look there. Done when the folder exists.
 2. At the repository root run \`pnpm install\`, then \`pnpm --filter @argo/<id> check\`. \`check\` runs on the Plugin alone: Operation types, \`tsc\`, validation and the harness test. Done when it passes on the scaffold, before you change anything.
-3. Turn the scaffold into your Plugin, one choice below at a time. Done when \`check\` passes after each choice. A refusal names the declaration or call to fix: fix that, never work around it.
+3. Turn the scaffold into your Plugin, one choice below at a time. Delete what you do not need: the notes page, \`notes.ts\`, and the \`addNote\` Operation in \`plugin.json\`, then run \`pnpm types\`. Done when \`check\` passes after each choice. A refusal names the declaration or call to fix: fix that, never work around it.
 4. Look at it in Argo: \`ln -s "$PWD/plugins/<id>" ~/.argo/plugins/<id>\` loads it, and each edit reloads it. Open every state it has: signed out, loading, empty, error, loaded, on a phone-width window too. Done when you have seen each, or have said you could not run Argo.
 
 ## Choices
@@ -23,7 +23,8 @@ A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\
 | A board, a canvas, a chat | \`Screen width="bleed"\`, \`List layout="lanes"\` with \`onMove\`, \`footer\` for an input | \`docs/plugins/authoring.md\`, "Page frames" |
 | Data from a URL or a command | a Query: \`read({ api: 'fetch', url })\`, with the \`fetch\` or \`process:exec\` Capability in \`plugin.json\` | \`docs/plugins/authoring.md\`, "Declared data" |
 | Data two pages or a Slot share | a named read: \`argo.queries.define\`, \`projectOf\`, then \`argo.queries.read\` and \`seed\` | \`plugins/issue-tracker/github-reads.ts\` |
-| A person's login at a service | \`deviceFlow\` + \`provideSignIn\` + \`signInGate\` | \`plugins/examples/github-sign-in\`, \`plugins/issue-tracker/github-account.ts\` |
+| A person's login at a service | \`deviceFlow\` + \`provideSignIn\` + \`signInGate\`; read as that person with \`accountFetch(argo, host)(url)\`, which throws \`SignInRequired\` for the gate to draw | \`plugins/examples/github-sign-in\`, \`plugins/issue-tracker/github-account.ts\` |
+| Text a person types | \`TextArea\` or the Screen's \`search\` with \`onChangeText={to.bind('key')}\`; the text lands in Page state \`key\`, read as \`input.state.key\` |
 | A change | an Operation declared in \`plugin.json\`, run with \`to.run\`, then \`argo.changed()\` | the scaffold's \`notes.ts\` |
 | A change that must show now | \`to.run(name, args, { optimistic })\` patches nodes by \`key\` until the Operation answers | \`plugins/issue-tracker/issue-detail.tsx\` |
 | To show in a row, bar, header or the Workbench | a Slot declared in \`plugin.json\` | \`docs/plugins/authoring.md\`, "Session Workbench card" |
