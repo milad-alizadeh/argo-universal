@@ -1,6 +1,7 @@
 import { EmptyState, List, ListItem } from '@argo/plugin-kit';
-import type { Argo, PageTo } from '@argo/plugin-kit';
+import type { Argo, LoaderPage, PageState, PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { pathText, projectTrackerPattern } from './issue-paths';
 import { noTracker, trackerPath, type TrackerDeps } from './project-details';
 import type { PublicTracker } from './tracker-registry';
 
@@ -16,11 +17,25 @@ export function defineTrackerPage(
   argo.operations.register('chooseTracker', ({ tracker }, { projectId }) =>
     saveTracker(deps, projectId, tracker),
   );
-  argo.pages.define(trackerPath, {
-    load: ({ context }) => loadChoice(deps, context.projectId),
-    render: (choice, to) => <TrackerChoice choice={choice} to={to} />,
-  });
+
+  // The details row's page names its Project by context; the Issues section's names it in the path.
+  for (const pattern of [trackerPath, projectTrackerPattern])
+    argo.pages.define(pattern, choicePage(deps));
 }
+
+const choicePage = (deps: TrackerDeps): LoaderPage<PageState, Choice> => ({
+  load: ({ context, params }) =>
+    loadChoice(deps, {
+      projectId: context.projectId ?? projectOf(params),
+      named: context.projectId === undefined,
+    }),
+  render: (choice, to) => <TrackerChoice choice={choice} to={to} />,
+});
+
+const projectOf = (
+  params: Readonly<Record<string, string>>,
+): string | undefined =>
+  params.project === undefined ? undefined : pathText(params.project);
 
 // Saves the Tracker `chooseTracker` names for the Project, and answers it.
 async function saveTracker(
@@ -52,23 +67,33 @@ type Choice =
   | { projectId: undefined }
   | {
       projectId: string;
+      // Whether the page's path, not its context, names the Project; a press then names it in its call.
+      named: boolean;
       selection: string | null;
       message: string;
       trackers: PublicTracker[];
     };
 
+type Asked = { projectId: string | undefined; named: boolean };
+
+// The Project asked for, only when a Project holds that id: a path never makes a choice for one that does not exist.
 async function loadChoice(
-  { storage, trackers }: TrackerDeps,
-  projectId: string | undefined,
+  { storage, trackers, listProjects }: TrackerDeps,
+  { projectId, named }: Asked,
 ): Promise<Choice> {
   if (projectId === undefined) return { projectId };
+
+  const projects = await listProjects();
+
+  if (!projects.some(({ id }) => id === projectId))
+    return { projectId: undefined };
 
   const selection = await storage.selectedTracker(projectId).then(
     (chosen) => ({ selection: chosen, message: '' }),
     () => ({ selection: null, message: 'Could not load the Tracker choice.' }),
   );
 
-  return { projectId, ...selection, trackers: trackers.list() };
+  return { projectId, named, ...selection, trackers: trackers.list() };
 }
 
 type To = PageTo;
@@ -119,20 +144,33 @@ function trackerRow(
       key={optionKey(option)}
       title={option.name}
       selected={choice.selection === option.id}
-      onPress={choose(to, options, option)}
+      onPress={choose({ choice, to }, options, option)}
     />
   );
 }
 
 // Runs `chooseTracker` for the option, moving the check to it at once.
 const choose = (
-  to: To,
+  { choice, to }: { choice: Shown; to: To },
   options: Option[],
   option: Option,
 ): ReturnType<To['run']> =>
-  to.run('chooseTracker', option.id === null ? {} : { tracker: option.id }, {
+  to.run('chooseTracker', chosenArgs(choice, option), {
     optimistic: checkMoves(options, option),
   });
+
+// A page the path names the Project of names it in the call too, as it has no Project context to give it.
+function chosenArgs({ projectId, named }: Shown, option: Option): ChosenArgs {
+  const args: ChosenArgs = {};
+
+  if (named) args.projectId = projectId;
+
+  if (option.id !== null) args.tracker = option.id;
+
+  return args;
+}
+
+type ChosenArgs = { projectId?: string; tracker?: string };
 
 // The check moves to the chosen row at once.
 const checkMoves = (
