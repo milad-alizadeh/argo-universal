@@ -159,7 +159,7 @@ it('does not show the filter’s raw search as its caption', async () => {
   expect(JSON.stringify(list.tree)).not.toContain('is:open');
 }, 20_000);
 
-it('offers Check again where a Project has no tracker, and says where to choose one', async () => {
+it('offers Choose a tracker where a Project has none, and opens that Project’s choice', async () => {
   const tracked = await trackedGitHub();
 
   await signIn(tracked);
@@ -168,6 +168,14 @@ it('offers Check again where a Project has no tracker, and says where to choose 
     path: '/projects/project-1/filters/open',
   });
 
-  expect(page.findText('Choose a Tracker in Project details.')).toBeDefined();
-  expect((await page.press(checkAgain)).findText(checkAgain)).toBeDefined();
+  const choice = await page.press('Choose a tracker');
+
+  await choice.press('GitHub Issues');
+  expect(choice.findText('GitHub Issues')?.node.props.selected).toBe(true);
+
+  const list = await tracked.test.pages.open({
+    path: '/projects/project-1/filters/open',
+  });
+
+  expect(list.findText(issueTitle)).toBeDefined();
 }, 20_000);

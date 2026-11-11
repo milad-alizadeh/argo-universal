@@ -1,6 +1,7 @@
 import { EmptyState, List, ListItem } from '@argo/plugin-kit';
 import type { Argo, PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { pathText, projectTrackerPattern } from './issue-paths';
 import { noTracker, trackerPath, type TrackerDeps } from './project-details';
 import type { PublicTracker } from './tracker-registry';
 
@@ -16,11 +17,20 @@ export function defineTrackerPage(
   argo.operations.register('chooseTracker', ({ tracker }, { projectId }) =>
     saveTracker(deps, projectId, tracker),
   );
-  argo.pages.define(trackerPath, {
-    load: ({ context }) => loadChoice(deps, context.projectId),
-    render: (choice, to) => <TrackerChoice choice={choice} to={to} />,
-  });
+
+  // The details row's page names its Project by context; the Issues section's names it in the path.
+  for (const pattern of [trackerPath, projectTrackerPattern])
+    argo.pages.define(pattern, {
+      load: ({ context, params }) =>
+        loadChoice(deps, context.projectId ?? projectOf(params)),
+      render: (choice, to) => <TrackerChoice choice={choice} to={to} />,
+    });
 }
+
+const projectOf = (
+  params: Readonly<Record<string, string>>,
+): string | undefined =>
+  params.project === undefined ? undefined : pathText(params.project);
 
 // Saves the Tracker `chooseTracker` names for the Project, and answers it.
 async function saveTracker(
@@ -119,20 +129,27 @@ function trackerRow(
       key={optionKey(option)}
       title={option.name}
       selected={choice.selection === option.id}
-      onPress={choose(to, options, option)}
+      onPress={choose({ choice, to }, options, option)}
     />
   );
 }
 
 // Runs `chooseTracker` for the option, moving the check to it at once.
 const choose = (
-  to: To,
+  { choice, to }: { choice: Shown; to: To },
   options: Option[],
   option: Option,
 ): ReturnType<To['run']> =>
-  to.run('chooseTracker', option.id === null ? {} : { tracker: option.id }, {
+  to.run('chooseTracker', chosenArgs(choice.projectId, option), {
     optimistic: checkMoves(options, option),
   });
+
+// The Project is named in the call, as the path-scoped page has no Project context to give it.
+const chosenArgs = (
+  projectId: string,
+  option: Option,
+): { projectId: string; tracker?: string } =>
+  option.id === null ? { projectId } : { projectId, tracker: option.id };
 
 // The check moves to the chosen row at once.
 const checkMoves = (
