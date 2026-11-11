@@ -12,6 +12,8 @@ export function registerStatusOperation(
   deps: IssueDeps,
 ): void {
   argo.operations.register('setStatus', setStatus(deps));
+  // Any Operation that runs makes Argo's kept answers due, so the page that ran it reads again.
+  argo.operations.register('checkAgain', () => ({}));
 }
 
 const setStatus =

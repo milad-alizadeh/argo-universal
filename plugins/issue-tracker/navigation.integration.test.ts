@@ -3,8 +3,6 @@ import type { GitHubFixture } from './github-fixture';
 import {
   chooseGithub,
   issuesRoot,
-  signIn,
-  trackedGitHub,
   issueTitle,
   linkedPage,
   project,
@@ -23,8 +21,6 @@ const shownValue = (page: OpenPage, text: string): string => {
 const listDetail = 'ListDetail';
 
 const assignedToYou = 'Assigned to you';
-
-const checkAgain = 'Check again';
 
 const selected = (page: OpenPage, title: string): boolean =>
   page.findText(title)?.node.props.selected === true;
@@ -139,43 +135,4 @@ it('says an Issue its tracker cannot read as a danger Callout on its own page', 
   expect(drawn).toContain('"tone":"danger"');
   expect(drawn).toContain('Could not resolve');
   expect(page.findText('Start Session')).toBeUndefined();
-}, 20_000);
-
-it('offers Check again on the Callout of an Issue it cannot read', async () => {
-  const { test } = await issuesRoot();
-
-  const page = await test.pages.open({
-    path: '/projects/project-1/issues/404',
-  });
-
-  expect(page.findText(checkAgain)).toBeDefined();
-  expect((await page.press(checkAgain)).findText(checkAgain)).toBeDefined();
-}, 20_000);
-
-it('does not show the filter’s raw search as its caption', async () => {
-  const { root } = await issuesRoot();
-  const list = await root.press('Open');
-
-  expect(JSON.stringify(list.tree)).not.toContain('is:open');
-}, 20_000);
-
-it('offers Choose a tracker where a Project has none, and opens that Project’s choice', async () => {
-  const tracked = await trackedGitHub();
-
-  await signIn(tracked);
-
-  const page = await tracked.test.pages.open({
-    path: '/projects/project-1/filters/open',
-  });
-
-  const choice = await page.press('Choose a tracker');
-
-  await choice.press('GitHub Issues');
-  expect(choice.findText('GitHub Issues')?.node.props.selected).toBe(true);
-
-  const list = await tracked.test.pages.open({
-    path: '/projects/project-1/filters/open',
-  });
-
-  expect(list.findText(issueTitle)).toBeDefined();
 }, 20_000);

@@ -70,6 +70,14 @@
         "caller": ["project"]
       },
       {
+        "name": "checkAgain",
+        "label": "Read a Project's Issues again",
+        "description": "Make the Project's Issues and counts be read from the tracker again, as after a page said it could not read them.",
+        "tier": "read",
+        "keywords": ["issue", "refresh", "retry"],
+        "caller": ["project"]
+      },
+      {
         "name": "setStatus",
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",

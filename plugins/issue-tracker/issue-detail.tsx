@@ -30,20 +30,31 @@ type ShownProps = Omit<IssueDetailProps, 'data'> & {
 export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
   const { data } = props;
 
-  if (!data.ok)
-    return (
-      <Screen title={`#${props.number}`}>
-        <Callout
-          tone="danger"
-          title="Couldn’t load this Issue"
-          description={data.message}
-          actions={<Button label="Check again" onPress={props.to.set({})} />}
-        />
-      </Screen>
-    );
+  if (!data.ok) return <Unreadable {...props} message={data.message} />;
 
   return <IssueDetail {...props} issue={data.issue} sessions={data.sessions} />;
 }
+
+// An Issue that cannot be read says why, and offers to read it again.
+function Unreadable(props: UnreadableProps): JSX.Element {
+  return (
+    <Screen title={`#${props.number}`}>
+      <Callout
+        tone="danger"
+        title="Couldn’t load this Issue"
+        description={props.message}
+        actions={readAgain(props)}
+      />
+    </Screen>
+  );
+}
+
+type UnreadableProps = Omit<IssueDetailProps, 'data'> & { message: string };
+
+// Any Operation that runs makes Argo read the Issue again, so this one does nothing else.
+const readAgain = ({ projectId, to }: UnreadableProps): JSX.Element => (
+  <Button label="Check again" onPress={to.run('checkAgain', { projectId })} />
+);
 
 function IssueDetail(props: ShownProps): JSX.Element {
   return (
