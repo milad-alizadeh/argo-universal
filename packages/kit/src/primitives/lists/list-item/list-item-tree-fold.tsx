@@ -23,7 +23,7 @@ function FoldButton(props: FoldButtonProps): ReactElement {
       accessibilityLabel={props.title}
       accessibilityState={{ expanded: props.parent.open }}
       aria-expanded={props.parent.open}
-      onPress={props.parent.toggle}
+      onPress={() => props.parent.toggle(props.parent.key)}
       className={cn(foldButton, props.className)}
     >
       <DisclosureChevron open={props.parent.open} />

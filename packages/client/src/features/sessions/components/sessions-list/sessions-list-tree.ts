@@ -67,7 +67,7 @@ function parentLane(
   id: string,
   nesting: SessionNesting,
 ): NonNullable<TreeRow['parent']> {
-  return { open: !nesting.folded.has(id), toggle: () => nesting.toggle(id) };
+  return { open: !nesting.folded.has(id), key: id, toggle: nesting.toggle };
 }
 
 export function useNestedEntries(

@@ -51,21 +51,22 @@ function useItemDrawing(props: Pick<ListItemProps, 'sidebar'>): ItemDrawing {
   };
 }
 
-function ItemSeparator(props: ListItemProps): ReactNode {
+function ItemSeparator({
+  separator,
+  ...props
+}: ListItemProps & { separator: string }): ReactNode {
   const { index } = useContext(RowPositionContext);
   const highlighted = useSeparatorCovered(index);
   const selected = useSelectedSeparator(props.id);
-  const covered = [highlighted, selected].some(Boolean);
-  const separator = itemSeparator(useItemDrawing(props), hasLeading(props));
 
-  if (covered) return null;
+  if ([highlighted, selected].some(Boolean)) return null;
 
-  return separator ? (
+  return (
     <View
       className={separatorClass(separator, props.leadingSize)}
       style={hairline}
     />
-  ) : null;
+  );
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
@@ -98,7 +99,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
       aria-hidden={loading || undefined}
     >
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
-      <RowDetails tile={tile !== null} props={props} />
+      <RowDetails tile={tile !== null} props={props} drawing={drawing} />
       <RowMovePicker id={props.id} Row={ListItem} />
     </View>
   );
@@ -142,14 +143,25 @@ function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   return <ListItemFrame {...drawing} />;
 }
 
-function RowDetails({ tile, props }: RowParts): ReactNode {
+// Under a row that is not a tile: its separator when its List draws one, and its progress bar when it has one.
+function RowDetails({ tile, props, drawing }: PressedProps): ReactNode {
   if (tile) return null;
 
   return (
     <>
-      <ItemSeparator {...props} />
-      <ItemProgress progress={props.progress} sidebar={props.sidebar} />
+      {rowSeparator(props, drawing)}
+      {props.progress ? (
+        <ItemProgress progress={props.progress} sidebar={props.sidebar} />
+      ) : null}
     </>
+  );
+}
+
+function rowSeparator(props: DrawingProps, drawing: ItemDrawing): ReactNode {
+  const separator = itemSeparator(drawing, hasLeading(props));
+
+  return separator === undefined ? null : (
+    <ItemSeparator {...props} separator={separator} />
   );
 }
 
