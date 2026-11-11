@@ -104,18 +104,21 @@ export const PressingARowInACardOpensItsTab: Story = {
   },
 };
 
-const hasRoundedBackground = (node: Element): boolean => {
-  const { borderTopLeftRadius, backgroundColor } = getComputedStyle(node);
+const roundedBackground =
+  (clear: string) =>
+  (node: Element): boolean => {
+    const { borderTopLeftRadius, backgroundColor } = getComputedStyle(node);
 
-  const drawn =
-    backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent';
+    return (
+      Number.parseFloat(borderTopLeftRadius) > 0 && backgroundColor !== clear
+    );
+  };
 
-  return Number.parseFloat(borderTopLeftRadius) > 0 && drawn;
-};
-
-// A surface is anything drawn with rounded corners over a background; the card is the one surface in it.
+// A surface is anything drawn with rounded corners over a background; the card is the one surface in it. The wrapper around the card draws none, so its background is what none looks like.
 const surfacesIn = (element: HTMLElement): Element[] =>
-  [element, ...element.querySelectorAll('*')].filter(hasRoundedBackground);
+  [...element.querySelectorAll('*')].filter(
+    roundedBackground(getComputedStyle(element).backgroundColor),
+  );
 
 export const AListInACardDrawsNoCardOfItsOwn: Story = {
   args: { view: { state: 'open', ...session, pluginCards: [listCard] } },

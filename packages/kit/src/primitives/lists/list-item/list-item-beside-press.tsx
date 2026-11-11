@@ -57,9 +57,12 @@ const acts = ([key, value]: [string, unknown]): boolean =>
   Boolean(value) && actingKey(key);
 
 // A row that opens a context menu acts too, though its menu is not a handler on the press.
+const opensMenu = (props: DrawingProps): boolean =>
+  Boolean(props.contextMenu ?? props.actions);
+
 const pressesNothing = (props: DrawingProps, press: RowPressProps): boolean =>
   press.role === 'group' &&
-  !(props.contextMenu ?? props.actions) &&
+  !opensMenu(props) &&
   !Object.entries(press).some(acts);
 
 // What only a Pressable takes: its state-driven style and children, its hover, ripple and disabled state.

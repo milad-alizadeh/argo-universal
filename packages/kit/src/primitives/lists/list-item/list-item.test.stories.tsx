@@ -343,9 +343,9 @@ export const ARowWithOnlyALinkStillActs: Story = {
 
     const follow = (event: Event): void => {
       event.preventDefault();
-      followed.push(
-        (event.target as Element).closest('a')?.getAttribute('href'),
-      );
+
+      if (event.target instanceof Element)
+        followed.push(event.target.closest('a')?.getAttribute('href'));
     };
 
     document.addEventListener('click', follow, true);
