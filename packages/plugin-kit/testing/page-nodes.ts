@@ -15,7 +15,15 @@ export type FoundNode = NonNullable<ReturnType<typeof findWireNodeEntry>>;
 export type NodeMatch = string | ((node: WireNode) => boolean);
 
 // The props a node's text is read from.
-const textProps = ['label', 'title', 'text', 'children', 'accessibilityLabel'];
+const textProps = [
+  'label',
+  'title',
+  'subtitle',
+  'description',
+  'text',
+  'children',
+  'accessibilityLabel',
+];
 
 const describeMatch = (match: NodeMatch): string =>
   typeof match === 'string' ? JSON.stringify(match) : 'the node test';
@@ -35,7 +43,10 @@ export function findEntry(tree: WireNode, match: NodeMatch): FoundNode {
       ? findByText(tree, match)
       : findWireNodeEntry(tree, match);
 
-  if (!entry) throw new Error(`No node matches ${describeMatch(match)}`);
+  if (!entry)
+    throw new Error(
+      `No node matches ${describeMatch(match)}. A text matches a node's ${textProps.join(', ')} exactly; pass a function, such as (node) => node.props.finished === true, to test any prop.`,
+    );
 
   return entry;
 }

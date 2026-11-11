@@ -18,7 +18,7 @@ const readOperations = (
   plugins: PluginService,
 ): Pick<PluginImplementations, 'plugin.list' | 'plugin.guide'> => ({
   'plugin.list': (): Promise<PluginList> => plugins.list(),
-  'plugin.guide': async () => pluginGuide(),
+  'plugin.guide': async (input) => pluginGuide(input),
 });
 
 export function createPluginOperations(

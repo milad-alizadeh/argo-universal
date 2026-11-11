@@ -1,9 +1,11 @@
 // What an Agent reads before it builds a Plugin: choices and how to check, with the components left to the generated reference.
 export const pluginBlueprint = `# Build an Argo Plugin
 
-A Plugin is a folder: \`plugin.json\` and a TypeScript entry that draws Argo's kit components. Argo runs it on the Server and draws it on every platform. This guide holds the choices. "Kit components" at the end lists every component and prop. Everything every Plugin needs is kit code: copy the file named beside your choice, never write sign-in, polling, caching or token handling yourself.
+A Plugin is a folder: \`plugin.json\` and a TypeScript entry that draws Argo's kit components. Argo runs it on the Server and draws it on every platform. This guide holds the choices. "Kit components" at the end indexes every component; run \`plugin.guide\` with \`{ "components": ["Screen", "List"] }\` for the props of those you use. Everything every Plugin needs is kit code: copy the file named beside your choice, never write sign-in, polling, caching or token handling yourself.
 
 The Issue tracker (\`plugins/issue-tracker\`) is the reference Plugin. \`plugins/examples/github-sign-in\` is the smallest sign-in. \`docs/plugins/authoring.md\` holds the full API.
+
+Plugins live in Argo's own repository for now: the kit is unpublished, so a Plugin in another Project cannot resolve it.
 
 ## Steps
 
@@ -14,7 +16,7 @@ The Issue tracker (\`plugins/issue-tracker\`) is the reference Plugin. \`plugins
 
 ## Choices
 
-A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\` is pure: no hooks, no effects, no function props. An event holds a value made by \`to\`: \`to.go(path)\`, \`to.set(change)\`, \`to.bind(key)\`, \`to.run(operation, args)\`.
+A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\` is pure: no hooks, no effects, no function props. A child component types \`to\` as \`PageTo\`. An event holds a value made by \`to\`: \`to.go(path)\`, \`to.set(change)\`, \`to.bind(key)\`, \`to.run(operation, args)\`.
 
 | You need | Use | Copy |
 | --- | --- | --- |
@@ -35,5 +37,5 @@ After an Operation edit in \`plugin.json\`, run \`pnpm types\` in the Plugin so 
 
 ## Test
 
-\`index.test.ts\` opens a page and presses what a person presses: \`pages.open({ path })\`, \`page.press(label)\`, \`page.find(text)\`. A test that reads the network starts the host itself with \`startPluginTest({ directory, pluginId, version, network })\` from \`@argo/plugin-kit/testing\` and a \`fixtureServices\` network; no test touches a real service.
+\`index.test.ts\` opens a page and presses what a person presses: \`pages.open({ path })\`, \`page.press(label)\`, \`page.find(text)\`. A text matches a node's label, title, subtitle, description or text exactly; pass a function such as \`(node) => node.props.finished === true\` to test any prop. A test that reads the network starts the host itself with \`startPluginTest({ directory, pluginId, version, network })\` from \`@argo/plugin-kit/testing\` and a \`fixtureServices\` network; no test touches a real service.
 `;

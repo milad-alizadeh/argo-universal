@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { kitComponents } from './kit';
-import { kitReference } from './plugin-guide-reference';
+import {
+  componentNames,
+  kitIndex,
+  kitReference,
+} from './plugin-guide-reference';
 
 describe('the kit reference', () => {
-  const reference = kitReference();
+  const reference = kitReference(componentNames());
 
-  it('lists every component a Plugin can draw, under its own name', () => {
-    for (const name of Object.keys(kitComponents))
+  it('indexes every component a Plugin can draw, and gives each its props', () => {
+    for (const name of Object.keys(kitComponents)) {
+      expect(kitIndex()).toContain(`- ${name}: `);
       expect(reference).toContain(`### ${name}\n`);
+    }
   });
 
   it('marks a required prop apart from an optional one, as the schema does', () => {

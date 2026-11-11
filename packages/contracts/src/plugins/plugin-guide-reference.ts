@@ -82,21 +82,30 @@ function valueLists(lists: ValueLists): string {
   return ['## Value lists', '', ...rows].join('\n');
 }
 
-const names = (): (keyof Components)[] =>
+export const componentNames = (): (keyof Components)[] =>
   Object.keys(kitComponents).filter((name): name is keyof Components =>
     Object.hasOwn(kitComponents, name),
   );
 
+// One line a component: its name and what it is, so an Agent can ask for the props of those it uses.
+export function kitIndex(): string {
+  const rows = componentNames().map(
+    (name) => `- ${name}: ${kitComponents[name].reference.summary}`,
+  );
+
+  return ['## Kit components', '', ...rows].join('\n');
+}
+
 /*
- * Every kit component a Plugin can draw, with each prop, read from the schemas the Server checks a tree
- * against, so the reference is the schemas and cannot drift from them.
+ * The props of the kit components asked for, read from the schemas the Server checks a tree against, so the
+ * reference is the schemas and cannot drift from them.
  */
-export function kitReference(): string {
+export function kitReference(names: (keyof Components)[]): string {
   const lists: ValueLists = new Map();
-  const sections = names().map((name) => section(lists, name));
+  const sections = names.map((name) => section(lists, name));
 
   return [
-    '## Kit components',
+    '## Kit component props',
     '',
     'A prop marked `?` is optional. Import each component from `@argo/plugin-kit`.',
     '',

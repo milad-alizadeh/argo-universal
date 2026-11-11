@@ -7,7 +7,12 @@ import {
   PluginSettings,
 } from '../plugins/plugins';
 import { PluginStatus } from '../plugins/runtime';
-import { PluginGuide, PluginNewInput, PluginNewOutput } from './plugin-guide';
+import {
+  PluginGuide,
+  PluginGuideInput,
+  PluginNewInput,
+  PluginNewOutput,
+} from './plugin-guide';
 
 export const pluginOperations = {
   'plugin.list': {
@@ -64,8 +69,8 @@ export const pluginOperations = {
     id: 'plugin.guide',
     label: 'Plugin blueprint',
     description:
-      'Read how to build, create or scaffold an Argo Plugin: the blueprint and every kit component with its props. Read it before building a Plugin, then run plugin.new.',
-    params: z.strictObject({}).default({}),
+      'Read how to build, create or scaffold an Argo Plugin: the blueprint and an index of kit components; pass components to read their props. Read it before building a Plugin, then run plugin.new.',
+    params: PluginGuideInput,
     result: PluginGuide,
     tier: 'read',
     keywords: [
