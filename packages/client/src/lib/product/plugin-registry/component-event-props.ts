@@ -148,9 +148,11 @@ const sent = (schema: z.ZodType, payload?: WireJson): WireJson | undefined =>
   schema instanceof z.ZodUndefined ? undefined : payload;
 
 // Only a Loader page's tree carries Page calls; any other tree's would be a Plugin bug, refused as one.
+export const pageCallRefused: OnPageCall = () =>
+  Promise.reject(new Error('This page cannot change its Page state'));
+
 const pageCallOf = ({ context }: ControlInput): OnPageCall =>
-  context.pageCall ??
-  (() => Promise.reject(new Error('This page cannot change its Page state')));
+  context.pageCall ?? pageCallRefused;
 
 const valuesAt = (placed: readonly Placed[], within?: string): PluginProps =>
   Object.fromEntries(

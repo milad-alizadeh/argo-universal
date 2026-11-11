@@ -4,6 +4,7 @@ import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import type { OpenPluginPage } from '../plugin-actions';
+import type { DrawnNodes } from './drawn-nodes';
 
 /*
  * What a Plugin tree does with a Page state change, an Operation call, a load more or a bound value
@@ -19,6 +20,7 @@ export interface RenderContext {
   openPage: OpenPluginPage;
   controls: PluginControls;
   pageCall?: OnPageCall;
+  drawn: DrawnNodes;
 }
 
 export type Callback = (value?: WireJson) => void | Promise<void>;

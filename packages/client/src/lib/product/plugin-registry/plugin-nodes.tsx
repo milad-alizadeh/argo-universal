@@ -15,8 +15,27 @@ const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
 
 type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
 
-// The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything it could not draw is already its "Update Argo" note.
+/*
+ * The Server prepared the tree (prepare-tree.ts): every node is a current kit component with valid props, and anything
+ * it could not draw is already its "Update Argo" note. A node it left as it was draws as the element it drew before,
+ * so its row does not draw again. Kit components read their children's types and props, so a node draws as its kit
+ * element itself, never inside a wrapper of its own.
+ */
 export function RenderNode({
+  node,
+  context,
+}: RenderNodeProps): React.JSX.Element | null {
+  const drawn = context.drawn.get(context.key, node);
+
+  if (drawn !== undefined) return drawn;
+
+  const element = drawNode({ node, context });
+  context.drawn.set(context.key, node, element);
+
+  return element;
+}
+
+function drawNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
