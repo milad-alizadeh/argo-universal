@@ -16,6 +16,9 @@ export {
   type WireNode,
 } from '@repo/contracts/plugins/wire';
 
+// Whether a page's answer is the empty root, which a Workbench card of it is not drawn for.
+export { drawsNothing } from '@repo/contracts/plugins/wire-empty-page';
+
 export { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 
 export {

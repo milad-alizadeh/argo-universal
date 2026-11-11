@@ -163,6 +163,10 @@ function usePanelState(
   return sessionId === undefined ? own : remembered;
 }
 
+// Closes one Session's tab from outside its page, as when a Plugin card that had something has nothing.
+export const closeSessionPanel = (sessionId: string, panel: string): void =>
+  panelMemory.write(sessionId, (state) => closePanel(state, panel));
+
 // The Inspector's tabs for one open Session, limited to the sections it offers.
 export function useSessionPanels(
   offered: readonly string[],

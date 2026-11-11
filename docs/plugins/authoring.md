@@ -361,7 +361,12 @@ A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters an
 
 Give a card a `tab` and pressing its body opens that page in full as an Inspector tab; leave it out and the card stays a card. A phone has no Workbench column, so the card opens as the Inspector's sheet instead.
 
-Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
+Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`.
+
+A card with nothing to show is not drawn. Return `null` from the card page's `render` when there is nothing, as Argo's own cards do: the page answers the empty root, and Argo draws no card, no Inspector tab, no row in a phone's Workbench and no header action that targets the card. Argo draws the page when a Session opens and shows no card, nor a frame for one, until the first answer; a card seen before draws from its kept answer. Attaching something while the Session is open brings the card in, and removing it takes the card away, and an open tab of it closes, without a reload. Return `null` for "no Session", "still loading" and "nothing attached", and keep drawing for a failure, so the person sees the card say so instead of reading its absence as "nothing". A tree you draw, even an empty `Stack`, draws a card.
+
+Three things follow from how Argo asks. Every declared card's page is drawn for each open Session, whether or not the card is shown, so a card page with `every`, or a live one, keeps running while the Session is mounted: keep a card page cheap. A Render draws nothing when it returns `null`, `[]` or a Fragment of nothing; anything else, even an empty `Stack`, draws a card. And a tree the Server could not draw, such as a Render that throws or a refused component, also answers the empty root, so a broken card disappears like an empty one. The Server logs why. An App older than this rule still draws an empty root as nothing, as it always did for a failed tree, but it has no card logic and still draws the card's frame.
+ A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
 
 ## Pages on a clock and live pages
 

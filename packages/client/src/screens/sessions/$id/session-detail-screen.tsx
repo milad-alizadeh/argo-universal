@@ -110,20 +110,18 @@ function RetainedSession({
   );
 }
 
-// A Feed row a Plugin replaces runs its Operations for this Session and its Project.
+// A Feed row a Plugin replaces runs its Operations for this Session and its Project. The cards' pages are drawn beside the page, so a preview draws the same cards.
 function ConnectedSession({
   sessionId,
 }: Pick<SessionPage, 'sessionId'>): React.JSX.Element {
   const preview = useIsPreview();
   const opened = useSessionPage({ sessionId, preview });
+  const body = { sessionId, preview, opened };
 
   return (
     <ConnectedReplaceableSlots session={opened.session}>
-      <SessionPageBody
-        sessionId={sessionId}
-        preview={preview}
-        opened={opened}
-      />
+      <SessionPageBody {...body} />
+      {opened.cards.held}
     </ConnectedReplaceableSlots>
   );
 }

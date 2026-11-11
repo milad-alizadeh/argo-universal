@@ -23,6 +23,34 @@
         "path": "/issues"
       }
     ],
-    "slots": []
+    "slots": [],
+    "operations": [
+      {
+        "name": "fillNotes",
+        "label": "Fill the Notes card",
+        "description": "Gives the Notes card something to show.",
+        "tier": "act"
+      },
+      {
+        "name": "emptyNotes",
+        "label": "Empty the Notes card",
+        "description": "Leaves the Notes card nothing to show.",
+        "tier": "act"
+      }
+    ],
+    "declared": {
+      "argo/session/workbench/v1": [
+        {
+          "id": "notes",
+          "title": "Notes",
+          "icon": {
+            "sf": "note.text",
+            "material": "note"
+          },
+          "page": "/notes",
+          "tab": "/notes/full"
+        }
+      ]
+    }
   }
 }

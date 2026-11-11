@@ -3,6 +3,7 @@ import {
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
+import { emptyPage } from '@repo/contracts/plugins/wire-empty-page';
 import * as React from 'react';
 import { keyOfProps, toProps, type ElementProps } from './element-props';
 import { toWire, type Instance } from './wire-tree';
@@ -119,3 +120,12 @@ function hookUse(name: string, error: Error): Error {
 // The tree through JSON, so only values cross to the host.
 export const valuesOf = (element: Drawn): WireJson =>
   wireJsonOf(renderTree(element));
+
+/*
+ * A Loader page's tree: a Render that draws nothing, as `null`, `[]` or a Fragment of nothing, answers the empty
+ * root, which says the page has nothing to show, so a Workbench card of it is not drawn (ADR-0035).
+ */
+export const pageValuesOf = (element: Drawn): WireJson =>
+  instancesOf(element).length === 0
+    ? wireJsonOf(emptyPage())
+    : valuesOf(element);

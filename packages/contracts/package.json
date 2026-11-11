@@ -69,6 +69,7 @@
     "./plugins/session-bar-item": "./src/plugins/session-bar-item.ts",
     "./plugins/declared-slots": "./src/plugins/declared-slots.ts",
     "./plugins/wire-patch": "./src/plugins/wire-patch.ts",
+    "./plugins/wire-empty-page": "./src/plugins/wire-empty-page.ts",
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
