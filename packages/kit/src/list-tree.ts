@@ -20,8 +20,8 @@ export interface TreeRow {
   through: readonly boolean[];
   // The last child of its parent: its rail ends in an elbow.
   last: boolean;
-  // Set on a row that holds child ListItems.
-  parent?: { open: boolean; toggle: () => void };
+  // Set on a row that holds child ListItems: whether it is open, and its List's one toggle, which it hands its own key.
+  parent?: { open: boolean; key: string; toggle: (key: string) => void };
 }
 
 export const ListTreeContext = createContext<TreeRow | null>(null);

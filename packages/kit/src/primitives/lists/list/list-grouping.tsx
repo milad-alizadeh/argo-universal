@@ -52,23 +52,38 @@ export function ListGrouping<Item>({
   );
 }
 
-// The list's props are a new object each time its parent draws; a row's layout changes only with what it reads from them, or every row draws again with the parent.
+const listPositions: readonly ListPosition[] = [
+  'only',
+  'first',
+  'middle',
+  'last',
+];
+
+const positionNamed = (name: string): ListPosition =>
+  listPositions.find((position) => position === name) ?? 'only';
+
+// Each row's position, by name, as one value.
+function positionNames<Item>(list: ListProps<Item> | undefined): string {
+  if (!list?.items) return '';
+
+  return list.items.map((_, index) => dataRowPosition(list, index)).join();
+}
+
+// The same positions keep the same array, however often the List's items are new.
+const useHeldPositions = (names: string): readonly ListPosition[] =>
+  useMemo(() => (names ? names.split(',').map(positionNamed) : []), [names]);
+
+/*
+ * The list's props, and a List's children, are new each time its parent draws; a row's layout changes only with the
+ * places its rows hold, or every row draws again with the parent.
+ */
 function useRowLayout<Item>(list: ListProps<Item> | undefined): RowLayout {
-  const listed = list !== undefined;
+  const held = useHeldPositions(positionNames(list));
+  const cell = list?.renderItem !== childRenderer;
 
-  const { items, getSectionKey, renderItem }: Partial<ListProps<Item>> =
-    list ?? {};
+  if (list === undefined) return emptyLayout;
 
-  const cell = renderItem !== childRenderer;
-
-  return useMemo(() => {
-    if (!listed) return emptyLayout;
-
-    return {
-      cell,
-      positionAt: (index) => dataRowPosition({ items, getSectionKey }, index),
-    };
-  }, [listed, cell, items, getSectionKey]);
+  return { cell, positionAt: (index) => held[index] ?? 'only' };
 }
 
 // Data rows start their own context. Fixed children and standalone Sections adapt it below.

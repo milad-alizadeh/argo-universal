@@ -19,6 +19,7 @@ import {
   reactNativeWorkletsWebImports,
   skiaAssetRegistry,
 } from './expo-web-imports.ts';
+import { reactCompilerRuntime, withReactCompiler } from './react-compiler.ts';
 import { victoryWeb } from './victory-web.ts';
 
 function getAbsolutePath(value: string): string {
@@ -47,6 +48,7 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/kit > expo-symbols/androidWeights/extraLight',
   '@repo/kit > victory-native > react-fast-compare',
   'storybook/actions',
+  reactCompilerRuntime,
 ];
 
 // Dependency files Metro reads one way and the web build another; both the server and the dependency pre-bundle need them.
@@ -162,7 +164,7 @@ const config: Config = {
   framework: {
     name: getAbsolutePath('@storybook/react-native-web-vite'),
     options: {
-      pluginReactOptions: victoryWeb.pluginReactOptions,
+      pluginReactOptions: withReactCompiler(victoryWeb.pluginReactOptions),
     },
   },
   viteFinal: storybookVite,
