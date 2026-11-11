@@ -17,3 +17,10 @@ export {
 } from '@repo/contracts/plugins/wire';
 
 export { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
+
+export {
+  fixtureServices,
+  type FixtureAnswer,
+  type FixtureRequest,
+  type FixtureServices,
+} from './fixture-services';

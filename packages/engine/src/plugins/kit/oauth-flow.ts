@@ -37,6 +37,7 @@ export const oauthFlow: OAuthFlowPattern = (argo, options) => {
   const held: Held = { state: idle, attempt: null };
 
   return Object.freeze({
+    serverDevice: true,
     state: () => held.state,
     start: () => start(held, { argo, options }),
     cancel: () => cancel(held, argo),

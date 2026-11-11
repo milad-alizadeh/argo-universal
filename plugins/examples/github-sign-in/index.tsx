@@ -1,16 +1,18 @@
-import type { Argo } from '@argo/plugin-kit';
-import { githubSignIn } from './github';
-import { signInPage } from './sign-in-page';
+import { deviceFlow, provideSignIn, type Argo } from '@argo/plugin-kit';
 
-// The reference sign-in page: copy this Plugin and change `github.ts` for another service (docs/plugins/authoring.md).
+// The reference sign-in: copy this Plugin, and change the URLs and the client ID for another service that has a device flow.
 export async function register(argo: Argo): Promise<void> {
-  const signIn = githubSignIn(argo);
+  const flow = deviceFlow(argo, {
+    host: 'api.github.com',
+    name: 'GitHub',
+    // A device-flow app has no secret; its ID is public, and only names the app on GitHub's page.
+    clientId: 'Ov23livvjnJww4D3CYGd',
+    scope: 'read:user',
+    deviceUrl: 'https://github.com/login/device/code',
+    tokenUrl: 'https://github.com/login/oauth/access_token',
+    label: { url: 'https://api.github.com/user', field: 'login' },
+  });
 
-  // The Operations the page's buttons run; a person taps them on the Server Device.
-  argo.operations.register('signIn', () => signIn.start());
-  argo.operations.register('cancelSignIn', () => signIn.cancel());
-  // The page named in `contributes.accounts`, defined before registration completes.
-  argo.pages.define('/sign-in', signInPage(argo, signIn));
-  // The handler other Plugins borrow through `argo.fetch(url, { account })`.
-  await signIn.provide();
+  // The Operations the page's buttons run, the page `contributes.accounts` names, and the Account's provider.
+  await provideSignIn(argo, flow, { name: 'GitHub' });
 }

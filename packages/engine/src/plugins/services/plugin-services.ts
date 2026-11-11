@@ -1,6 +1,6 @@
 import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import { replyFailure } from '../access/capability-refusal';
+import { CapabilityRefusal, replyFailure } from '../access/capability-refusal';
 import type { PluginAccess, ActivatedPlugin } from '../access/plugin-access';
 import { AccountServices } from '../accounts/account-services';
 import type { OpenedAsset } from '../assets/plugin-assets';
@@ -96,14 +96,34 @@ export class PluginServices {
     this.storage.close();
   }
 
-  private attempt(
+  // A fetch may name its Project, which then decides the Account it borrows (ADR-0037).
+  private async projectOf(
+    request: ServiceRequest,
+  ): Promise<string | undefined> {
+    const named = namedProject(request);
+
+    if (named === undefined) return request.projectId;
+
+    await this.requireRegistered(named);
+
+    return named;
+  }
+
+  private async requireRegistered(projectId: string): Promise<void> {
+    const projects = await this.options.projectInfo();
+
+    if (!projects.some(({ id }) => id === projectId))
+      throw new CapabilityRefusal('Project is unavailable');
+  }
+
+  private async attempt(
     caller: SpawnCaller,
     request: ServiceRequest,
   ): Promise<PluginValue> {
     return answerCall(
       {
         ...this.reach(caller),
-        projectId: request.projectId,
+        projectId: await this.projectOf(request),
         serverDevice: request.serverDevice,
         query: request.query,
       },
@@ -159,3 +179,7 @@ export class PluginServices {
     return resources;
   }
 }
+
+// The Project a fetch names, when it names one.
+const namedProject = (request: ServiceRequest): string | undefined =>
+  request.api === 'fetch' ? request.call.projectId : undefined;

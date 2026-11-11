@@ -1,4 +1,7 @@
-import type { AccountChoice } from '@repo/contracts/plugins/accounts';
+import type {
+  AccountChoice,
+  PluginAccount,
+} from '@repo/contracts/plugins/accounts';
 import type { Database } from '@repo/db';
 import { pluginAccount, project } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
@@ -17,6 +20,20 @@ export function hasAccount(
       .where(and(eq(pluginAccount.id, account), eq(pluginAccount.host, host)))
       .get() !== undefined
   );
+}
+
+// One row per host, providing Plugin and label: a label names one person, so adding them again finds their row.
+export function sameAccount(
+  database: AccountDatabase,
+  { host, providedBy, label }: Omit<PluginAccount, 'id'>,
+): PluginAccount | undefined {
+  const same = and(
+    eq(pluginAccount.host, host),
+    eq(pluginAccount.providedBy, providedBy),
+    eq(pluginAccount.label, label),
+  );
+
+  return database.select().from(pluginAccount).where(same).get();
 }
 
 export function hasProject(

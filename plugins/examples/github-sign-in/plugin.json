@@ -18,19 +18,11 @@
         "page": "/sign-in"
       }
     ],
-    "settings": [
-      {
-        "key": "client-id",
-        "type": "secret",
-        "label": "Client ID",
-        "description": "The OAuth client ID from your GitHub OAuth app, whose callback URL is http://127.0.0.1:51789/callback."
-      }
-    ],
     "operations": [
       {
         "name": "signIn",
         "label": "Sign in to GitHub",
-        "description": "Opens GitHub's sign-in in the browser on the Server Device and adds the Account once the person allows it.",
+        "description": "Asks GitHub for a code, shows it on the sign-in page, and adds the Account once the person allows it.",
         "tier": "act",
         "keywords": ["github", "account", "sign in"]
       },
@@ -52,7 +44,7 @@
     {
       "kind": "fetch",
       "host": "github.com",
-      "reason": "Exchanges the OAuth authorization code for a token."
+      "reason": "Asks for the device sign-in code and exchanges it for a token."
     }
   ]
 }
