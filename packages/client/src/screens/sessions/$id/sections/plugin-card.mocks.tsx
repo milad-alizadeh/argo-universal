@@ -1,3 +1,4 @@
+import { Action } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { List } from '@repo/kit/primitives/lists/list';
@@ -90,4 +91,28 @@ export const sessionsCard: SessionPluginCard = {
       </List.Section>
     </List>
   ),
+};
+
+export const menuRowLabel = 'Archive the tracker card';
+
+// A card whose rows have a context menu and no press of their own: the card's body is what a click on them opens.
+export const menuRowCard: SessionPluginCard = {
+  pluginId: trackerId,
+  card: {
+    id: 'menu-rows',
+    title: 'Menu rows',
+    icon: ticketIcon,
+    page: '/issues/menu-rows',
+    tab: '/issues/menu-rows/full',
+  },
+  page: (
+    <List testID="menu-rows-list">
+      <ListItem
+        title={menuRowLabel}
+        contextMenu={{ title: 'Row menu' }}
+        actions={<Action label="Archive" icon="archive" onPress={noop} />}
+      />
+    </List>
+  ),
+  tab: <Text>{issueCardFullView}</Text>,
 };

@@ -56,14 +56,9 @@ const actingKey = (key: string): boolean =>
 const acts = ([key, value]: [string, unknown]): boolean =>
   Boolean(value) && actingKey(key);
 
-// A row that opens a context menu acts too, though its menu is not a handler on the press.
-const opensMenu = (props: DrawingProps): boolean =>
-  Boolean(props.contextMenu ?? props.actions);
-
-const pressesNothing = (props: DrawingProps, press: RowPressProps): boolean =>
-  press.role === 'group' &&
-  !opensMenu(props) &&
-  !Object.entries(press).some(acts);
+// A row's context menu, and its double-click, open from the trigger around the row, not from the row's own press: a row with only those still presses nothing.
+const pressesNothing = (press: RowPressProps): boolean =>
+  press.role === 'group' && !Object.entries(press).some(acts);
 
 // What only a Pressable takes: its state-driven style and children, its hover, ripple and disabled state.
 const pressOnly = new Set([
@@ -101,8 +96,7 @@ export function rowPress(
 ): ReactElement {
   if (beside) return <BesidePress props={props} press={press} />;
 
-  if (pressesNothing(props, press))
-    return <InertRow props={props} press={press} />;
+  if (pressesNothing(press)) return <InertRow props={props} press={press} />;
 
   return (
     <Pressable {...press}>

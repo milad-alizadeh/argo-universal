@@ -1,7 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import {
   coverageCard,
   coverageCardSummary,
@@ -10,6 +10,8 @@ import {
   issueTrackerCard,
   listCard,
   listCardRow,
+  menuRowCard,
+  menuRowLabel,
   sessionRowBranch,
   sessionRowTitle,
   sessionsCard,
@@ -107,14 +109,18 @@ export const PressingARowInACardOpensItsTab: Story = {
 const roundedBackground =
   (clear: string) =>
   (node: Element): boolean => {
-    const { borderTopLeftRadius, backgroundColor } = getComputedStyle(node);
+    const { borderTopLeftRadius, backgroundColor, borderTopWidth } =
+      getComputedStyle(node);
+
+    const outlined = Number.parseFloat(borderTopWidth) > 0;
 
     return (
-      Number.parseFloat(borderTopLeftRadius) > 0 && backgroundColor !== clear
+      Number.parseFloat(borderTopLeftRadius) > 0 &&
+      (backgroundColor !== clear || outlined)
     );
   };
 
-// A surface is anything drawn with rounded corners over a background; the card is the one surface in it. The wrapper around the card draws none, so its background is what none looks like.
+// A surface is anything drawn with rounded corners over a background or inside an edge; the card is the one surface in it. The wrapper around the card draws none, so its background is what none looks like.
 const surfacesIn = (element: HTMLElement): Element[] =>
   [...element.querySelectorAll('*')].filter(
     roundedBackground(getComputedStyle(element).backgroundColor),
@@ -173,5 +179,29 @@ export const ASessionRowKeepsAGapBeforeItsBranch: Story = {
     const branch = canvas.getByText(sessionRowBranch).getBoundingClientRect();
 
     await expect(branch.left - title.right).toBeGreaterThanOrEqual(12);
+  },
+};
+
+// A row with a menu and no press of its own leaves a click to the card: its centre opens the tab, and right-click still opens the menu.
+export const AMenuRowInACardOpensTheTabAndKeepsItsMenu: Story = {
+  args: { view: { state: 'open', ...session, pluginCards: [menuRowCard] } },
+  play: async ({ canvas, userEvent }) => {
+    const row = await canvas.findByText(menuRowLabel);
+
+    await userEvent.pointer({ keys: '[MouseRight]', target: row });
+
+    const item = await within(document.body).findByRole('menuitem', {
+      name: 'Archive',
+    });
+
+    await waitFor(() => expect(item).toBeVisible());
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(row);
+
+    const tab = within(
+      await canvas.findByRole('tabpanel', { name: 'Menu rows' }),
+    );
+
+    await expect(tab.getByText(issueCardFullView)).toBeVisible();
   },
 };

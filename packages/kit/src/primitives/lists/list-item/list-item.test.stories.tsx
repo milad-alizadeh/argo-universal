@@ -368,56 +368,41 @@ export const ADisabledRowKeepsItsDisabledState: Story = {
   },
 };
 
-export const ARowWithOnlyActionsKeepsItsMenu: Story = {
-  args: {
-    onPress: undefined,
-    actions: <Action label="Archive row" icon="archive" onPress={fn()} />,
-  },
-  decorators: [(Story): ReactElement => holdOnly(<Story />)],
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.pointer({
-      keys: '[MouseRight]',
-      target: canvas.getByText(title),
-    });
+const archive = <Action label="Archive row" icon="archive" onPress={fn()} />;
 
-    const item = await within(document.body).findByRole('menuitem', {
-      name: 'Archive row',
-    });
+const playMenuThenClick: Story['play'] = async ({ canvas, userEvent }) => {
+  holderPress.mockClear();
+  await userEvent.pointer({
+    keys: '[MouseRight]',
+    target: canvas.getByText(title),
+  });
 
-    await waitFor(() => expect(item).toBeVisible());
-  },
+  const item = await within(document.body).findByRole('menuitem', {
+    name: 'Archive row',
+  });
+
+  await waitFor(() => expect(item).toBeVisible());
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() =>
+    expect(within(document.body).queryByRole('menuitem')).toBeNull(),
+  );
+  await userEvent.click(canvas.getByText(title));
+  await expect(holderPress).toHaveBeenCalledOnce();
 };
 
-export const ARowWithOnlyAContextMenuKeepsItsTrigger: Story = {
+// The menu opens from the trigger around the row, so a row with only Actions opens it and leaves a plain click to its holder.
+export const ARowWithOnlyActionsKeepsItsMenuAndLeavesTheClick: Story = {
+  args: { onPress: undefined, actions: archive },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  play: playMenuThenClick,
+};
+
+export const ARowWithAContextMenuKeepsItsMenuAndLeavesTheClick: Story = {
   args: {
     onPress: undefined,
     contextMenu: { title: 'Row menu' },
-    actions: <Action label="Archive row" icon="archive" onPress={fn()} />,
+    actions: archive,
   },
   decorators: [(Story): ReactElement => holdOnly(<Story />)],
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.pointer({
-      keys: '[MouseRight]',
-      target: canvas.getByText(title),
-    });
-
-    const item = await within(document.body).findByRole('menuitem', {
-      name: 'Archive row',
-    });
-
-    await waitFor(() => expect(item).toBeVisible());
-  },
-};
-
-// A row with only a context menu is not inert either: it keeps its press, so the press does not reach the holder.
-export const ARowWithOnlyAContextMenuIsNotInert: Story = {
-  args: { onPress: undefined, contextMenu: { title: 'Row menu' } },
-  decorators: [(Story): ReactElement => holdOnly(<Story />)],
-  beforeEach: (): void => {
-    holderPress.mockClear();
-  },
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByText(title));
-    await expect(holderPress).not.toHaveBeenCalled();
-  },
+  play: playMenuThenClick,
 };
