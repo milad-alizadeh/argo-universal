@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { Argo } from './argo-api';
 import type { SignInFlow, SignInState } from './device-flow-api';
 import type {
   LoaderInput,
@@ -6,7 +7,6 @@ import type {
   PageTo,
   RenderInput,
 } from './loader-page-api';
-import type { Argo } from './argo-api';
 import type { OperationDeclarations } from './operations-api';
 import type { PageState } from './page-address';
 

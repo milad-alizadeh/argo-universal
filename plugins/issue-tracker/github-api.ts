@@ -24,7 +24,10 @@ type Fetch = Argo['fetch'];
 type Reply = NonNullable<Awaited<ReturnType<Fetch>>>;
 
 // A GraphQL call; the Account and the Project are added as the call is made.
-export type GitHubRequest = { url: string; init: NonNullable<Parameters<Fetch>[1]> };
+export type GitHubRequest = {
+  url: string;
+  init: NonNullable<Parameters<Fetch>[1]>;
+};
 
 export const graphqlRequest = (
   document: string,

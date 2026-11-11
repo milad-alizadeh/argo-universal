@@ -5,7 +5,6 @@ import { builtInFilters } from './issue-filters';
 import { isObject, pick, type Json } from './json';
 import type { Overview } from './overview';
 
-
 // The most labels a repository's grouping shows, and the most Issues one search answers.
 const labelLimit = 100;
 
@@ -111,7 +110,10 @@ export const listQuery = (
     { query: `repo:${repository} is:issue ${search} sort:created-desc`, first },
   );
 
-export const issueQuery = (repository: string, number: number): GitHubRequest => {
+export const issueQuery = (
+  repository: string,
+  number: number,
+): GitHubRequest => {
   const [owner, name] = split(repository);
 
   return graphqlRequest(

@@ -61,7 +61,10 @@ export type FakeDevice = {
 };
 
 // The next scripted answer for a URL; the last one repeats.
-const nextFor = (script: Map<string, Reply[]>, url: string): Reply | undefined => {
+const nextFor = (
+  script: Map<string, Reply[]>,
+  url: string,
+): Reply | undefined => {
   const replies = script.get(url) ?? [];
 
   return replies.length > 1 ? replies.shift() : replies[0];
@@ -78,7 +81,9 @@ const fetching =
     return Promise.resolve(reply ? answerOf(reply) : null);
   };
 
-const accountsOf = (added: FakeDevice['added']): DeviceFlowArgo['accounts'] => ({
+const accountsOf = (
+  added: FakeDevice['added'],
+): DeviceFlowArgo['accounts'] => ({
   add: (host, { label }) => {
     added.push({ host, label });
 

@@ -50,7 +50,7 @@ it('shows the code and where to enter it, then names the Account once approved, 
   expect(tracked.github.requests.map(({ path }) => path)).toContain(
     '/login/oauth/access_token',
   );
-  expect(await tracked.test.accounts.list()).toMatchObject([
+  expect(tracked.test.accounts.list()).toMatchObject([
     { host: 'api.github.com', label: 'octocat' },
   ]);
 });
@@ -82,16 +82,19 @@ it.each([
   ['access_denied', 'Sign-in was denied'],
   ['expired_token', 'The code expired'],
   ['incorrect_client_credentials', 'Couldn’t sign in'],
-])('says so when GitHub answers %s, and offers another try', async (error, title) => {
-  const tracked = await trackedGitHub();
+])(
+  'says so when GitHub answers %s, and offers another try',
+  async (error, title) => {
+    const tracked = await trackedGitHub();
 
-  tracked.github.script({ error });
+    tracked.github.script({ error });
 
-  const page = await showsCode(tracked);
+    const page = await showsCode(tracked);
 
-  await until(tracked, page, title);
-  expect(page.findText('Try again')).toBeDefined();
-});
+    await until(tracked, page, title);
+    expect(page.findText('Try again')).toBeDefined();
+  },
+);
 
 it('lets the person give up waiting', async () => {
   const tracked = await trackedGitHub();
@@ -110,9 +113,9 @@ it('draws the sign-in in place of the Issues page when there is no Account, call
   await chooseGithub(await trackerPage(tracked.test));
   await root.draw();
   expect(root.findText(signInLabel)).toBeDefined();
-  expect(tracked.github.requests.filter(({ host }) => host === 'api.github.com')).toEqual(
-    [],
-  );
+  expect(
+    tracked.github.requests.filter(({ host }) => host === 'api.github.com'),
+  ).toEqual([]);
 });
 
 it('draws the sign-in again after GitHub rejects the token, and signing in again keeps the one Account', async () => {
@@ -136,7 +139,7 @@ it('draws the sign-in again after GitHub rejects the token, and signing in again
   await root.press(signInLabel);
   await until(tracked, root, 'Open');
 
-  expect(await tracked.test.accounts.list()).toHaveLength(1);
+  expect(tracked.test.accounts.list()).toHaveLength(1);
 });
 
 it('reads the overview in one call, and opens again inside the freshness window with none', async () => {

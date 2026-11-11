@@ -6,8 +6,14 @@ import type {
 } from '@repo/contracts/plugins/device-flow-api';
 import type { z } from 'zod';
 import { CodeAnswer, CompleteCode, labelRead, postForm } from './device-http';
+import {
+  ended,
+  expired,
+  pollOnce,
+  type Device,
+  type Polled,
+} from './device-poll';
 import { sleep } from './scheduler';
-import { ended, expired, pollOnce, type Device, type Polled } from './device-poll';
 
 const slowDownMs = 5000;
 
@@ -48,7 +54,10 @@ async function finish(
 const stateOf = (polled: Polled): DeviceFlowState =>
   polled.kind === 'ended' ? polled.state : idle;
 
-const settled = async (attempt: Attempt, polled: Polled): Promise<DeviceFlowState> =>
+const settled = async (
+  attempt: Attempt,
+  polled: Polled,
+): Promise<DeviceFlowState> =>
   polled.kind === 'token' ? finish(attempt, polled.token) : stateOf(polled);
 
 // One poll, unless the attempt was replaced or the code ran out first.
@@ -80,7 +89,13 @@ async function awaitToken(
 }
 
 // What the service gave for the code, when it gave one.
-type Code = { device: Device; userCode: string; uri: string; lifetimeMs: number; intervalMs: number };
+type Code = {
+  device: Device;
+  userCode: string;
+  uri: string;
+  lifetimeMs: number;
+  intervalMs: number;
+};
 
 const msOf = (seconds: number): number => seconds * msPerSecond;
 
@@ -111,7 +126,10 @@ const shown = (found: Code): DeviceFlowState => ({
 
 const askFor = (attempt: Attempt): Promise<z.infer<typeof CodeAnswer>> => {
   const { argo, options } = attempt;
-  const fields = { client_id: options.clientId, ...(options.scope && { scope: options.scope }) };
+  const fields = {
+    client_id: options.clientId,
+    ...(options.scope && { scope: options.scope }),
+  };
 
   return postForm(argo.fetch, { url: options.deviceUrl, fields }, CodeAnswer);
 };
@@ -122,7 +140,11 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
   const found = codeOf(reply);
 
   if (!found)
-    return ended('failed', reply.error_description ?? `${attempt.options.name} sent no sign-in code.`);
+    return ended(
+      'failed',
+      reply.error_description ??
+        `${attempt.options.name} sent no sign-in code.`,
+    );
 
   void awaitToken(attempt, found.device, found.intervalMs).then(
     attempt.settle,
@@ -135,7 +157,11 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
 type Held = { state: DeviceFlowState; attempt: symbol | null };
 
 // A new attempt replaces the one before, whose answers then change nothing.
-function attemptOf(held: Held, argo: DeviceFlowArgo, options: DeviceFlowOptions): Attempt {
+function attemptOf(
+  held: Held,
+  argo: DeviceFlowArgo,
+  options: DeviceFlowOptions,
+): Attempt {
   const mine = Symbol('attempt');
 
   held.attempt = mine;
@@ -156,7 +182,10 @@ function attemptOf(held: Held, argo: DeviceFlowArgo, options: DeviceFlowOptions)
 }
 
 // A borrower's request gets the kept token in the header the flow names; Argo sets it.
-const provide = (argo: DeviceFlowArgo, options: DeviceFlowOptions): Promise<void> =>
+const provide = (
+  argo: DeviceFlowArgo,
+  options: DeviceFlowOptions,
+): Promise<void> =>
   argo.accounts.provide(options.host, options.header ?? bearer, (account) =>
     argo.secrets.get(account.id),
   );
@@ -178,7 +207,11 @@ export const deviceFlow: DeviceFlowPattern = (argo, options) => {
   });
 };
 
-function start(held: Held, argo: DeviceFlowArgo, options: DeviceFlowOptions): Promise<DeviceFlowState> {
+function start(
+  held: Held,
+  argo: DeviceFlowArgo,
+  options: DeviceFlowOptions,
+): Promise<DeviceFlowState> {
   const attempt = attemptOf(held, argo, options);
 
   attempt.settle({ kind: 'requesting' });

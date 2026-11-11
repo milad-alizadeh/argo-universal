@@ -30,11 +30,7 @@
         "label": "Attach Issue to Session",
         "description": "Connect the calling Session to an Issue it is implementing, so the Issue's page lists it.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "session",
-          "connect"
-        ],
+        "keywords": ["issue", "session", "connect"],
         "params": {
           "number": {
             "type": "number",
@@ -42,21 +38,14 @@
             "required": true
           }
         },
-        "caller": [
-          "project",
-          "session"
-        ]
+        "caller": ["project", "session"]
       },
       {
         "name": "detach",
         "label": "Detach Issue from Session",
         "description": "Disconnect the calling Session from an Issue it is no longer working on.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "session",
-          "disconnect"
-        ],
+        "keywords": ["issue", "session", "disconnect"],
         "params": {
           "number": {
             "type": "number",
@@ -64,42 +53,28 @@
             "required": true
           }
         },
-        "caller": [
-          "project",
-          "session"
-        ]
+        "caller": ["project", "session"]
       },
       {
         "name": "chooseTracker",
         "label": "Choose a Project's Issue tracker",
         "description": "Choose which Tracker a Project's Issues come from, or none when no tracker is named.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "tracker",
-          "project"
-        ],
+        "keywords": ["issue", "tracker", "project"],
         "params": {
           "tracker": {
             "type": "string",
             "description": "The Tracker's id, such as github; leave it out for none."
           }
         },
-        "caller": [
-          "project"
-        ]
+        "caller": ["project"]
       },
       {
         "name": "setStatus",
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",
         "tier": "act",
-        "keywords": [
-          "issue",
-          "close",
-          "reopen",
-          "status"
-        ],
+        "keywords": ["issue", "close", "reopen", "status"],
         "params": {
           "number": {
             "type": "number",
@@ -110,35 +85,24 @@
             "type": "string",
             "description": "Whether the Issue is open or closed.",
             "required": true,
-            "choices": [
-              "open",
-              "closed"
-            ]
+            "choices": ["open", "closed"]
           }
         },
-        "caller": [
-          "project"
-        ]
+        "caller": ["project"]
       },
       {
         "name": "signIn",
         "label": "Sign in to GitHub",
         "description": "Asks GitHub for a sign-in code, shows it on the sign-in page, and adds the Account once the person approves it on GitHub.",
         "tier": "act",
-        "keywords": [
-          "account",
-          "sign in"
-        ]
+        "keywords": ["account", "sign in"]
       },
       {
         "name": "cancelSignIn",
         "label": "Cancel GitHub sign-in",
         "description": "Stops waiting for the GitHub sign-in code to be approved.",
         "tier": "act",
-        "keywords": [
-          "account",
-          "sign in"
-        ]
+        "keywords": ["account", "sign in"]
       }
     ],
     "accounts": [

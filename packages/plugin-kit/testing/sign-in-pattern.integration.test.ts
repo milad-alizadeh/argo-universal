@@ -44,7 +44,7 @@ it('signs a throwaway Plugin in with the device flow, from a paired Device, and 
   await clockUntil(test, page, itemsText);
 
   expect(service.readTokens().at(-1)).toBe('token-1');
-  expect(await test.accounts.list()).toMatchObject([{ label: 'person' }]);
+  expect(test.accounts.list()).toMatchObject([{ label: 'person' }]);
 });
 
 it('signs a throwaway Plugin in through the browser with PKCE and no secret, on the Server Device', async () => {

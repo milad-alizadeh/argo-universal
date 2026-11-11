@@ -23,7 +23,11 @@ const lines = (primary: string, secondary?: string): ReactElement[] =>
     ? [text('secondary', primary), text('secondary', secondary)]
     : [text('secondary', primary)];
 
-const button = (label: string, onPress: Pressed, variant?: string): ReactElement =>
+const button = (
+  label: string,
+  onPress: Pressed,
+  variant?: string,
+): ReactElement =>
   jsx('Button', { label, onPress, ...(variant && { variant }) });
 
 const handOver = (name: string): ReactElement[] =>
@@ -48,7 +52,10 @@ function codeStep(parts: SignInParts, step: Coded): ReactElement[] {
       `The code lasts ${minutes} minutes. Waiting for ${parts.name}…`,
     ),
     text('code', step.userCode),
-    button(`Open ${parts.name}`, { action: 'openUrl', url: step.verificationUri }),
+    button(`Open ${parts.name}`, {
+      action: 'openUrl',
+      url: step.verificationUri,
+    }),
     button('Copy code', { action: 'copy', text: step.userCode }, 'secondary'),
     button('Cancel', parts.cancel, 'secondary'),
   ];
@@ -67,12 +74,19 @@ const waitingStep = (parts: SignInParts, step: Waiting): ReactElement[] =>
   step.kind === 'requesting'
     ? lines(`Asking ${parts.name} for a code…`)
     : [
-        ...lines(`Finish signing in in your browser. Waiting for ${parts.name}…`),
+        ...lines(
+          `Finish signing in in your browser. Waiting for ${parts.name}…`,
+        ),
         button('Cancel', parts.cancel, 'secondary'),
       ];
 
-const signedInStep = (step: Extract<Step, { kind: 'signed-in' }>): ReactElement[] =>
-  lines(`Signed in as ${step.label}`, 'Manage this Account in Settings › Accounts.');
+const signedInStep = (
+  step: Extract<Step, { kind: 'signed-in' }>,
+): ReactElement[] =>
+  lines(
+    `Signed in as ${step.label}`,
+    'Manage this Account in Settings › Accounts.',
+  );
 
 const idleStep = (parts: SignInParts): ReactElement[] => [
   ...lines(parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`),
@@ -99,5 +113,9 @@ function body(parts: SignInParts): ReactElement[] {
 export const signInScreen = (parts: SignInParts): ReactElement =>
   jsx('Screen', {
     title: parts.name,
-    children: jsx('Stack', { direction: 'column', gap: 6, children: body(parts) }),
+    children: jsx('Stack', {
+      direction: 'column',
+      gap: 6,
+      children: body(parts),
+    }),
   });

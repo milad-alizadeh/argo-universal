@@ -97,7 +97,9 @@ export class PluginServices {
   }
 
   // A fetch may name its Project, which then decides the Account it borrows (ADR-0037).
-  private async projectOf(request: ServiceRequest): Promise<string | undefined> {
+  private async projectOf(
+    request: ServiceRequest,
+  ): Promise<string | undefined> {
     const named = namedProject(request);
 
     if (named === undefined) return request.projectId;

@@ -9,8 +9,8 @@ import {
   overviewQuery,
 } from './github-documents';
 import type { Issue, IssueStatus } from './github-issues';
-import type { Json } from './json';
 import { setIssueStatus } from './github-write';
+import type { Json } from './json';
 import type { Overview } from './overview';
 
 // Each list is a GitHub search, as `is:open label:bug`.

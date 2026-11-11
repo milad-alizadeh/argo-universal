@@ -1,9 +1,9 @@
 import type { ListPage } from '@argo/plugin-kit';
+import type { Read, Target } from './filter-loader';
 import { SignInRequired } from './github-api';
 import type { Issue } from './github-issues';
 import { unwrap } from './github-reads';
 import type { IssueDeps } from './issue-deps';
-import type { Read, Target } from './filter-loader';
 import type { IssueFilter } from './issue-filters';
 
 // Issues a page loads at a time, and again for each further page.

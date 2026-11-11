@@ -46,7 +46,11 @@ const endOf = (
   return { kind: 'ended', state: ended(end, why ?? messages(name)[end]) };
 };
 
-type TokenFields = { client_id: string; device_code: string; grant_type: string };
+type TokenFields = {
+  client_id: string;
+  device_code: string;
+  grant_type: string;
+};
 
 const tokenFields = (
   { clientId }: DeviceFlowOptions,
@@ -65,7 +69,10 @@ export async function pollOnce(
   options: DeviceFlowOptions,
   device: Device,
 ): Promise<Polled> {
-  const target = { url: options.tokenUrl, fields: tokenFields(options, device) };
+  const target = {
+    url: options.tokenUrl,
+    fields: tokenFields(options, device),
+  };
   const reply = await postForm(fetch, target, TokenAnswer);
 
   if (reply.access_token) return { kind: 'token', token: reply.access_token };

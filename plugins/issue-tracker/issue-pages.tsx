@@ -1,10 +1,7 @@
-import type {
-  Argo,
-  LoaderInput,
-  PageState,
-  PageTo,
-} from '@argo/plugin-kit';
+import type { Argo, LoaderInput, PageState, PageTo } from '@argo/plugin-kit';
+import { signInGate, type GatedPage } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { signInOptions } from './github-account';
 import { answered } from './github-reads';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -13,8 +10,6 @@ import { loadIssueDetail, type IssueDetailData } from './issue-detail-data';
 import { issuePattern, pathText, projectPattern } from './issue-paths';
 import { RootPage, RootRows, type SidebarOverview } from './issue-root';
 import { rootProjects, type RootProjects } from './root-projects';
-import { signInGate, type GatedPage } from '@argo/plugin-kit';
-import { signInOptions } from './github-account';
 
 type Input = LoaderInput;
 
@@ -31,8 +26,14 @@ export function defineIssuePages(argo: Argo, deps: IssueDeps): void {
   const { signIn } = deps;
 
   argo.pages.define('/', signInGate(signIn, signInOptions, rootLanding(deps)));
-  argo.pages.define(projectPattern, signInGate(signIn, signInOptions, projectLanding(deps)));
-  argo.pages.define(issuePattern, signInGate(signIn, signInOptions, issueLanding(deps)));
+  argo.pages.define(
+    projectPattern,
+    signInGate(signIn, signInOptions, projectLanding(deps)),
+  );
+  argo.pages.define(
+    issuePattern,
+    signInGate(signIn, signInOptions, issueLanding(deps)),
+  );
 }
 
 const rootLanding = (deps: IssueDeps): GatedPage<PageState, RootData> => ({
@@ -45,7 +46,9 @@ const projectLanding = (deps: IssueDeps): GatedPage<PageState, RootData> => ({
   render: rootPage,
 });
 
-const issueLanding = (deps: IssueDeps): GatedPage<PageState, IssuePageData> => ({
+const issueLanding = (
+  deps: IssueDeps,
+): GatedPage<PageState, IssuePageData> => ({
   load: (input) => loadIssuePage(deps, input),
   render: issuePage,
 });

@@ -9,7 +9,9 @@ import {
   type PageTo,
   type PluginProps,
 } from '@argo/plugin-kit';
+import { signInGate, type GatedPage } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { listFilter } from './filter-list';
 import {
   filterState,
   filterTargets,
@@ -18,16 +20,14 @@ import {
   type FilterData,
   type FilterState,
 } from './filter-loader';
-import { listFilter } from './filter-list';
 import { issueRow } from './filter-rows';
+import { signInOptions } from './github-account';
 import type { Issue } from './github-issues';
 import { repositoryText } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { filterPattern } from './issue-paths';
 import { RootRows, type RootRowsProps } from './issue-root';
 import { issueTree } from './issue-tree';
-import { signInGate, type GatedPage } from '@argo/plugin-kit';
-import { signInOptions } from './github-account';
 import { loadingIssues } from './loading-issues';
 
 type To = PageTo<FilterState>;
@@ -41,7 +41,10 @@ type To = PageTo<FilterState>;
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   // A status change on any page, the Issue page's own included, leaves the counts and drawn lists stale.
   deps.changes.subscribe(() => argo.changed());
-  argo.pages.define(filterPattern, signInGate(deps.signIn, signInOptions, filterPage(deps)));
+  argo.pages.define(
+    filterPattern,
+    signInGate(deps.signIn, signInOptions, filterPage(deps)),
+  );
 }
 
 function filterPage(
@@ -62,7 +65,11 @@ function filterPage(
 type Targets = ReturnType<typeof filterTargets>;
 
 // What a draw's list reads: its page's deps and target, and its input.
-type ListSource = { deps: IssueDeps; targetOf: Targets; input: LoaderInput<FilterState> };
+type ListSource = {
+  deps: IssueDeps;
+  targetOf: Targets;
+  input: LoaderInput<FilterState>;
+};
 
 const listOf = (
   { deps, targetOf, input }: ListSource,

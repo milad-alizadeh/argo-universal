@@ -13,10 +13,17 @@ import {
 const items = 'https://api.service.example/items';
 
 // The one read of the page: the Account is borrowed, so a signed-out person has no answer.
-async function readItems(argo: Argo, projectId: string | undefined): Promise<string> {
-  const reply = await argo.fetch(items, { account: 'api.service.example', projectId });
+async function readItems(
+  argo: Argo,
+  projectId: string | undefined,
+): Promise<string> {
+  const reply = await argo.fetch(items, {
+    account: 'api.service.example',
+    projectId,
+  });
 
-  if (!reply || reply.status === 401) throw new SignInRequired('Sign in to Service.');
+  if (!reply || reply.status === 401)
+    throw new SignInRequired('Sign in to Service.');
 
   return reply.text();
 }

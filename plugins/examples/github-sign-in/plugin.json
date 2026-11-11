@@ -24,22 +24,14 @@
         "label": "Sign in to GitHub",
         "description": "Asks GitHub for a code, shows it on the sign-in page, and adds the Account once the person allows it.",
         "tier": "act",
-        "keywords": [
-          "github",
-          "account",
-          "sign in"
-        ]
+        "keywords": ["github", "account", "sign in"]
       },
       {
         "name": "cancelSignIn",
         "label": "Cancel GitHub sign-in",
         "description": "Stops waiting for the GitHub sign-in in the browser.",
         "tier": "act",
-        "keywords": [
-          "github",
-          "account",
-          "sign in"
-        ]
+        "keywords": ["github", "account", "sign in"]
       }
     ]
   },

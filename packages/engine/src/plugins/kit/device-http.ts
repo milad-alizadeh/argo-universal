@@ -68,7 +68,10 @@ const Label = z.string().min(1).nullable().catch(null);
 
 type Response = Awaited<ReturnType<DeviceFlowArgo['fetch']>>;
 
-async function labelIn(response: Response, field: string): Promise<string | null> {
+async function labelIn(
+  response: Response,
+  field: string,
+): Promise<string | null> {
   if (!response?.ok) return null;
 
   const value = parsed(LabelAnswer, await response.text())[field];

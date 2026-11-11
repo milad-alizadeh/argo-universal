@@ -28,7 +28,9 @@ type Failed = Extract<SignInState, { kind: 'failed' }>;
 const failedStep = (state: Failed): Step => ({
   kind: 'ended',
   title:
-    state.reason === 'port-in-use' ? 'Couldn’t start sign-in' : endTitles.failed,
+    state.reason === 'port-in-use'
+      ? 'Couldn’t start sign-in'
+      : endTitles.failed,
   message: state.message,
 });
 
@@ -44,7 +46,11 @@ export function stepOf(state: SignInState): Step {
   if (state.kind === 'failed') return failedStep(state);
 
   if (state.kind === 'ended')
-    return { kind: 'ended', title: endTitles[state.end], message: state.message };
+    return {
+      kind: 'ended',
+      title: endTitles[state.end],
+      message: state.message,
+    };
 
   return plainStep(state);
 }

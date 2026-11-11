@@ -97,9 +97,7 @@ export async function tracker(projects = [project]): Promise<PluginTest> {
   return tracked.test;
 }
 
-export async function signedInRoot(): Promise<
-  Tracked & { root: OpenPage }
-> {
+export async function signedInRoot(): Promise<Tracked & { root: OpenPage }> {
   const tracked = await trackedGitHub();
 
   await signIn(tracked);

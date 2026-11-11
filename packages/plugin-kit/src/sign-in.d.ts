@@ -9,15 +9,19 @@ import type {
   DeviceFlowPattern,
   SignInFlow,
 } from '@repo/contracts/plugins/device-flow-api';
+import type { PageState as SignInPageState } from '@repo/contracts/plugins/page-address';
 import type {
   Gated,
   GatedPage as ContractsGatedPage,
   SignInOptions,
 } from '@repo/contracts/plugins/sign-in-api';
-import type { PageState as SignInPageState } from '@repo/contracts/plugins/page-address';
 import type { Argo, LoaderPage } from './plugin-api';
 
-export type { Gated, SignInData, SignInOptions } from '@repo/contracts/plugins/sign-in-api';
+export type {
+  Gated,
+  SignInData,
+  SignInOptions,
+} from '@repo/contracts/plugins/sign-in-api';
 
 // A Loader page for `signInGate` to wrap, bound to this Plugin's declared Operations.
 export type GatedPage<
@@ -47,4 +51,3 @@ export declare function provideSignIn(
   flow: SignInFlow,
   options: SignInOptions & { path?: string },
 ): Promise<void>;
-

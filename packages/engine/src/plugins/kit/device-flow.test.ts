@@ -63,7 +63,10 @@ it('needs no Server Device, and says each step so the pages that draw it redraw'
 
 it('keeps waiting through pending, and waits five seconds longer after slow_down', async () => {
   const slow = { status: 200, body: { error: 'slow_down' } };
-  const fake = fakeDevice({ ...approved, [service.tokenUrl]: [pending, slow, token] });
+  const fake = fakeDevice({
+    ...approved,
+    [service.tokenUrl]: [pending, slow, token],
+  });
   const flow = deviceFlow(fake.argo, service);
 
   await flow.start();
@@ -80,20 +83,26 @@ it.each([
   ['access_denied', 'denied'],
   ['expired_token', 'expired'],
   ['incorrect_client_credentials', 'failed'],
-])('ends as %s when the service says so, with no Account', async (error, end) => {
-  const reply = { status: 200, body: { error, error_description: 'Why.' } };
-  const fake = fakeDevice({ ...approved, [service.tokenUrl]: [reply] });
-  const flow = deviceFlow(fake.argo, service);
+])(
+  'ends as %s when the service says so, with no Account',
+  async (error, end) => {
+    const reply = { status: 200, body: { error, error_description: 'Why.' } };
+    const fake = fakeDevice({ ...approved, [service.tokenUrl]: [reply] });
+    const flow = deviceFlow(fake.argo, service);
 
-  await flow.start();
-  await wait();
+    await flow.start();
+    await wait();
 
-  expect(flow.state()).toMatchObject({ kind: 'ended', end });
-  expect(fake.added).toEqual([]);
-});
+    expect(flow.state()).toMatchObject({ kind: 'ended', end });
+    expect(fake.added).toEqual([]);
+  },
+);
 
 it('says why the service sent no code', async () => {
-  const reply = { status: 200, body: { error_description: 'The client_id is not valid.' } };
+  const reply = {
+    status: 200,
+    body: { error_description: 'The client_id is not valid.' },
+  };
   const fake = fakeDevice({ [service.deviceUrl]: [reply] });
   const flow = deviceFlow(fake.argo, service);
 
@@ -106,7 +115,11 @@ it('says why the service sent no code', async () => {
 
 it('ends as expired when the code runs out before the service answers', async () => {
   const short = { ...code, body: { ...code.body, expires_in: 2 } };
-  const fake = fakeDevice({ ...approved, [service.deviceUrl]: [short], [service.tokenUrl]: [pending] });
+  const fake = fakeDevice({
+    ...approved,
+    [service.deviceUrl]: [short],
+    [service.tokenUrl]: [pending],
+  });
   const flow = deviceFlow(fake.argo, service);
 
   await flow.start();
@@ -128,7 +141,10 @@ it('adds no Account for a sign-in cancelled while it waited', async () => {
 });
 
 it('fails when the service does not say who signed in', async () => {
-  const fake = fakeDevice({ ...approved, [userUrl]: [{ status: 401, body: {} }] });
+  const fake = fakeDevice({
+    ...approved,
+    [userUrl]: [{ status: 401, body: {} }],
+  });
   const flow = deviceFlow(fake.argo, service);
 
   await flow.start();
@@ -145,7 +161,10 @@ it('hands a borrower the token it kept, in the header it names', async () => {
   const fake = fakeDevice(approved);
   const provided: unknown[] = [];
 
-  const provide = (host: string, header: { header: string; prefix: string }): Promise<void> => {
+  const provide = (
+    host: string,
+    header: { header: string; prefix: string },
+  ): Promise<void> => {
     provided.push({ host, header });
 
     return Promise.resolve();

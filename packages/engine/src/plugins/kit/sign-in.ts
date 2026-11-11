@@ -1,9 +1,9 @@
+import type { SignInFlow } from '@repo/contracts/plugins/device-flow-api';
 import type {
   LoaderInput,
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import type { SignInFlow } from '@repo/contracts/plugins/device-flow-api';
 import type {
   Gated,
   ProvideSignInPattern,
@@ -30,10 +30,15 @@ const isSignInRequired = (cause: unknown): cause is Error =>
   cause instanceof Error && cause.name === 'SignInRequired';
 
 // A token the flow just reported as signed in, and the service then refused, is not signed in any more.
-function flowStateOf(flow: SignInFlow, rejected: string | null): SignInData['flow'] {
+function flowStateOf(
+  flow: SignInFlow,
+  rejected: string | null,
+): SignInData['flow'] {
   const state = flow.state();
 
-  return rejected !== null && state.kind === 'signed-in' ? { kind: 'idle' } : state;
+  return rejected !== null && state.kind === 'signed-in'
+    ? { kind: 'idle' }
+    : state;
 }
 
 const signInData = (
@@ -74,7 +79,8 @@ const runsOf = (to: Runs): Pick<SignInParts, 'start' | 'cancel'> => ({
 export const signInGate: SignInGatePattern = (flow, options, page) => ({
   ...page,
   every: page.every ?? freshForMs,
-  load: (input) => loaded(flow, input.context.serverDevice, () => page.load(input)),
+  load: (input) =>
+    loaded(flow, input.context.serverDevice, () => page.load(input)),
   render: (answer, to, input) =>
     'signIn' in answer
       ? signInScreen({ name: options.name, data: answer.signIn, ...runsOf(to) })
@@ -92,7 +98,11 @@ const signInPage = (flow: SignInFlow, { name }: SignInOptions): SignInPage => ({
   render: (data, to) => signInScreen({ name, data, ...runsOf(to) }),
 });
 
-export const provideSignIn: ProvideSignInPattern = async (argo, flow, options) => {
+export const provideSignIn: ProvideSignInPattern = async (
+  argo,
+  flow,
+  options,
+) => {
   argo.operations.register('signIn', async () => ({ ...(await flow.start()) }));
   argo.operations.register('cancelSignIn', () => ({ ...flow.cancel() }));
   argo.pages.define(options.path ?? '/sign-in', signInPage(flow, options));

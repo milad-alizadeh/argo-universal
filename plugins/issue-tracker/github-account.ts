@@ -1,4 +1,9 @@
-import { deviceFlow, provideSignIn, type Argo, type DeviceFlow } from '@argo/plugin-kit';
+import {
+  deviceFlow,
+  provideSignIn,
+  type Argo,
+  type DeviceFlow,
+} from '@argo/plugin-kit';
 import { githubHost } from './github-api';
 import { githubClientId } from './github-client-id';
 
