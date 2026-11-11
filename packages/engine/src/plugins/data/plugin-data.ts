@@ -10,7 +10,8 @@ import { boundWarm, keepNewest, queryKey, removeWhere } from './entry-map';
 import { NamedReads } from './named-reads';
 import { PluginBadges } from './plugin-badges';
 import { QueryEntry, type EntryServices } from './query-entry';
-import type { QueryOwner, QueryRead, QueryServices } from './query-types';
+import { drawnRead, projectOf, refuseOutside } from './query-scope';
+import type { QueryOwner, QueryServices } from './query-types';
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
 
@@ -71,7 +72,7 @@ export class PluginData {
     };
   }
 
-  // A named read's answer for another named read's Query, kept for the Project the first one runs for.
+  // A named read's answer for another named read's Query, kept for the Project that Query names, or the one the first runs for.
   private seed(
     caller: Caller,
     { projectId }: QueryOrigin,
@@ -80,9 +81,17 @@ export class PluginData {
     if (query.api !== 'read')
       throw new Error('Only a named read can be seeded');
 
-    this.entry(caller, projectId, query).seed(value);
+    // A seed from a read a write overtook would revive an answer the write made stale.
+    if (!this.overtaken(caller.pluginId))
+      this.entry(caller, projectOf(query, projectId), query).seed(value);
 
     return null;
+  }
+
+  private overtaken(pluginId: string): boolean {
+    return [...this.entriesOf(pluginId).values()].some(
+      (entry) => entry.overtaken,
+    );
   }
 
   /*
@@ -105,10 +114,13 @@ export class PluginData {
   // The entry a read is for, kept within the Plugin's bound on warm ones.
   private readEntry(
     caller: Caller,
-    { projectId }: QueryOrigin,
+    origin: QueryOrigin,
     { query, projectId: named }: Extract<PluginDataRequest, { action: 'read' }>,
   ): QueryEntry {
-    const entry = this.entry(caller, named ?? projectId, query);
+    refuseOutside(origin, query);
+
+    const project = projectOf(query, named ?? origin.projectId);
+    const entry = this.entry(caller, project, query);
 
     boundWarm(
       this.entriesOf(caller.pluginId),
@@ -181,9 +193,3 @@ export class PluginData {
       if (entry.owner.query.api === 'storage') entry.written();
   }
 }
-
-// A Loader's read holds its Page address, and a background pass, which holds none, reads fresh.
-const drawnRead = (drawn: DrawnFor, fresh: boolean | undefined): QueryRead => ({
-  ...drawn,
-  fresh: fresh === true || drawn.holder === undefined,
-});

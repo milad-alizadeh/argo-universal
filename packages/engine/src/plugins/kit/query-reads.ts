@@ -48,19 +48,35 @@ export function queryReads(send: QueryReadSend, lists: DrawLists): QueryReads {
   };
 }
 
+const named = (projectId: string | undefined): { projectId?: string } =>
+  projectId === undefined ? {} : { projectId };
+
+// The Project a Query is for, when its read names one from its args.
+const projectOf = <Args>(
+  options: { projectOf?: (args: Args) => string | undefined } | undefined,
+  args: Args,
+): { projectId?: string } => named(options?.projectOf?.(args));
+
+function checkName(defined: Map<string, Read>, name: string): void {
+  if (!QueryReadName.safeParse(name).success)
+    throw new Error(`A named read's name is letters, digits, . or -: ${name}`);
+
+  if (defined.has(name)) throw new Error(`${name} is already a named read`);
+}
+
 const defining =
   (defined: Map<string, Read>): QueriesApi['define'] =>
-  (name, read) => {
-    if (!QueryReadName.safeParse(name).success)
-      throw new Error(
-        `A named read's name is letters, digits, . or -: ${name}`,
-      );
-
-    if (defined.has(name)) throw new Error(`${name} is already a named read`);
-
+  (name, read, options) => {
+    checkName(defined, name);
     defined.set(name, asRead(read));
 
-    return (args) => Object.freeze({ api: 'read', name, args });
+    return (args) =>
+      Object.freeze({
+        api: 'read',
+        name,
+        args,
+        ...projectOf(options, args),
+      });
   };
 
 type Named<Value> = {

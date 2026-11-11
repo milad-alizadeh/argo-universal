@@ -40,6 +40,7 @@ export type QueriesApi = Readonly<{
   define: <Args extends WireJson, Value extends CrossesAsJson<Value>>(
     name: string,
     read: (args: Args, context: QueryReadContext) => Value | Promise<Value>,
+    options?: { projectOf?: (args: Args) => string | undefined },
   ) => (args: Args) => NamedQuery<Value>;
   /*
    * Reads a named Query from code that runs outside a draw, such as a Slot's provider, through the entry a
@@ -52,7 +53,10 @@ export type QueriesApi = Readonly<{
     options?: { projectId?: string },
   ) => Promise<QueryResult<NamedQuery<Value>>>;
   /*
-   * Keeps `value` as the answer of another named Query, for the Project of the read that calls it, as if it
+   * Keeps `value` as the answer of another named Query. Argo cannot check it against a shape, as a named read's
+   * answer is the Plugin's own JSON, so the Plugin keeps the two reads in step. A write, or `argo.changed()`, that
+   * lands while the seeding read is in flight drops the seed, so it never revives an answer a write made stale.
+   * It keeps `value` for the Project of the read that calls it, as if it
    * had just been read. Call it from a named read that already holds the answer.
    */
   seed: <Value extends CrossesAsJson<Value>>(

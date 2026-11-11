@@ -100,9 +100,15 @@ async function listed(
  * The tracker's GitHub reads, named reads (ADR-0037): every page and Slot that asks the same question shares the
  * one entry Argo keeps for it, and a status change or a sign-in, which say `argo.changed()`, make it due.
  */
+// Each read is kept for the Project its args name, so a page drawn for a Project and a Slot share its entry.
+const byProject = { projectOf: ({ projectId }: Target): string => projectId };
+
 const issueRead = (argo: Argo, source: Source): GitHubReads['issue'] =>
-  argo.queries.define('issue', ({ projectId, number }: IssueTarget) =>
-    settle(async () => (await clientFor(source, projectId)).getIssue(number)),
+  argo.queries.define(
+    'issue',
+    ({ projectId, number }: IssueTarget) =>
+      settle(async () => (await clientFor(source, projectId)).getIssue(number)),
+    byProject,
   );
 
 // Seeds the entry of each Issue a list read in full, as the Query a page or a Slot's summary would read it.
@@ -114,18 +120,34 @@ const seeding =
       value: found,
     });
 
+const overviewRead = (argo: Argo, source: Source): GitHubReads['overview'] =>
+  argo.queries.define(
+    'overview',
+    ({ projectId }: Target) =>
+      settle(async () => (await clientFor(source, projectId)).overview()),
+    byProject,
+  );
+
+const issuesRead = (
+  argo: Argo,
+  source: Source,
+  issue: GitHubReads['issue'],
+): GitHubReads['issues'] =>
+  argo.queries.define(
+    'issues',
+    (target: IssuesTarget) =>
+      settle(() =>
+        listed(source, seeding(argo, issue, target.projectId), target),
+      ),
+    byProject,
+  );
+
 export function defineReads(argo: Argo, source: Source): GitHubReads {
   const issue = issueRead(argo, source);
 
   return {
     issue,
-    overview: argo.queries.define('overview', ({ projectId }: Target) =>
-      settle(async () => (await clientFor(source, projectId)).overview()),
-    ),
-    issues: argo.queries.define('issues', (target: IssuesTarget) =>
-      settle(() =>
-        listed(source, seeding(argo, issue, target.projectId), target),
-      ),
-    ),
+    overview: overviewRead(argo, source),
+    issues: issuesRead(argo, source, issue),
   };
 }

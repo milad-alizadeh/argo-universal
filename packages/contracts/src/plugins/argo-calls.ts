@@ -110,6 +110,8 @@ export const PluginQuery = z.discriminatedUnion('api', [
     api: z.literal('read'),
     name: z.union([QueryReadName, z.literal(pagedListRead)]),
     args: WireJson,
+    // The Project the Query is for when its read names one, which keys its entry whatever Project a draw or a Slot runs for.
+    projectId: z.string().optional(),
   }),
 ]);
 

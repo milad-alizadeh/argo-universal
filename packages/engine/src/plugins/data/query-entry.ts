@@ -103,6 +103,11 @@ export class QueryEntry {
     this.timing.finished();
   }
 
+  // Whether a read is in flight that a write has overtaken, so what it hands on is already stale.
+  get overtaken(): boolean {
+    return this.flight !== undefined && this.timing.overtaken;
+  }
+
   // An answer another read already holds is kept as this Query's, as if it had just been read.
   seed(value: PluginDataState['data']): void {
     const before = this.state.data;
