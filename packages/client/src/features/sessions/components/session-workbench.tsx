@@ -74,6 +74,20 @@ function SectionCard(props: SectionCardProps): ReactElement {
   );
 }
 
+/*
+ * A long press on a row inside the body belongs to that row's context menu. Pressable skips `onPress` after a long
+ * press it has a handler for, so the release never opens the card's tab as well.
+ */
+const ignoreLongPress = (): void => {};
+
+const openProps = (title: string, onOpen: () => void) =>
+  ({
+    role: 'button',
+    accessibilityLabel: `Open ${title} overview`,
+    onPress: onOpen,
+    onLongPress: ignoreLongPress,
+  }) as const;
+
 function SectionBody({
   section,
 }: Pick<SectionCardProps, 'section'>): ReactNode {
@@ -82,11 +96,7 @@ function SectionBody({
   if (!section.onOpen) return summary;
 
   return (
-    <Pressable
-      role="button"
-      accessibilityLabel={`Open ${section.title} overview`}
-      onPress={section.onOpen}
-    >
+    <Pressable {...openProps(section.title, section.onOpen)}>
       {summary}
     </Pressable>
   );

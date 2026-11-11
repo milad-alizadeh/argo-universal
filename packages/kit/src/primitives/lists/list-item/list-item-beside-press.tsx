@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type ViewProps } from 'react-native';
 import { cn } from '../../../utils';
 import {
   hasAccessories,
@@ -37,7 +37,75 @@ export function useBesidePress(props: DrawingProps, tile: boolean): boolean {
   return [props.onPress, props.href].some(Boolean);
 }
 
-export function BesidePress({ props, press }: BesidePressProps): ReactElement {
+// Handlers that only paint the row, never act: its hover look, its focus ring and its layout.
+const paintOnly = new Set([
+  'onHoverIn',
+  'onHoverOut',
+  'onFocus',
+  'onBlur',
+  'onLayout',
+]);
+
+// A link or a popup acts like a handler does, and a disabled row keeps its Pressable for its disabled state.
+const actingProps = new Set(['href', 'aria-haspopup', 'disabled']);
+
+const actingKey = (key: string): boolean =>
+  actingProps.has(key) || (key.startsWith('on') && !paintOnly.has(key));
+
+// Every way a row's press can act: any handler it was given (a press, a long press, a key, a menu's pointer), a link or a popup.
+const acts = ([key, value]: [string, unknown]): boolean =>
+  Boolean(value) && actingKey(key);
+
+// A row's context menu, and its double-click, open from the trigger around the row, not from the row's own press: a row with only those still presses nothing.
+const pressesNothing = (press: RowPressProps): boolean =>
+  press.role === 'group' && !Object.entries(press).some(acts);
+
+// What only a Pressable takes: its state-driven style and children, its hover, ripple and disabled state.
+const pressOnly = new Set([
+  'style',
+  'children',
+  'onHoverIn',
+  'onHoverOut',
+  'android_ripple',
+  'disabled',
+]);
+
+// The row's name, role and class, without what only a Pressable takes.
+const groupOf = (press: RowPressProps): ViewProps =>
+  Object.fromEntries(
+    Object.entries(press).filter(([key]) => !pressOnly.has(key)),
+  );
+
+/*
+ * A row that presses nothing is a named group, drawn without a press: the web's press stops every click it sees, so a
+ * row with none of its own would still swallow the press of what holds it, such as a card's body.
+ */
+function InertRow({ props, press }: BesidePressProps): ReactElement {
+  return (
+    <View {...groupOf(press)}>
+      <ItemContentSlots {...props} />
+    </View>
+  );
+}
+
+// The row's press, beside its content or around it; the same press target stays while an asynchronous accessory arrives during a click.
+export function rowPress(
+  props: DrawingProps,
+  press: RowPressProps,
+  beside: boolean,
+): ReactElement {
+  if (beside) return <BesidePress props={props} press={press} />;
+
+  if (pressesNothing(press)) return <InertRow props={props} press={press} />;
+
+  return (
+    <Pressable {...press}>
+      <ItemContentSlots {...props} />
+    </Pressable>
+  );
+}
+
+function BesidePress({ props, press }: BesidePressProps): ReactElement {
   const accessories = usePassThrough(props);
 
   return (

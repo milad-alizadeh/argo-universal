@@ -1,5 +1,5 @@
+import { formLook } from './list-look-form';
 import {
-  formLook,
   placeLook,
   platformLook,
   insetLook,

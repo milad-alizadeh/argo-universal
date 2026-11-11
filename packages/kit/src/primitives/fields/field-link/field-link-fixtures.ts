@@ -60,3 +60,8 @@ export const plainMark = {
     plain: true,
   },
 } as const;
+
+export const longValue = {
+  title: 'Draft the quarterly summary for review',
+  value: 'records/quarterly-summary-draft',
+} as const;

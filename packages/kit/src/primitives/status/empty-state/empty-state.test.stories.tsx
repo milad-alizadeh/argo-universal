@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
+import { Card } from '#primitives/layout/card';
 import { Callout } from '../callout';
 import { Spinner } from '../spinner';
 import { EmptyState } from './empty-state';
@@ -67,6 +68,28 @@ export const Search: Story = {
     ).toBeVisible();
     await expect(canvas.getByText(content.description)).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
+  },
+};
+
+// A card's empty line is a row, not a page: the row's text role, and none of the page's icon tiles.
+export const InACard: Story = {
+  args: { icon: 'sessions', action: undefined },
+  decorators: [
+    (Story) => (
+      <Card title="Card">
+        <Story />
+      </Card>
+    ),
+  ],
+  play: async ({ canvas, canvasElement }) => {
+    const heading = canvas.getByRole('heading', { name: content.title });
+
+    await expect(heading).toBeVisible();
+    await expect(heading).toHaveClass('type-body');
+    await expect(heading).not.toHaveClass('type-title');
+    await expect(
+      canvasElement.querySelector('[aria-hidden="true"]'),
+    ).toBeNull();
   },
 };
 
