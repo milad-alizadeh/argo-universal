@@ -4,6 +4,8 @@ import { expect, waitFor, within } from 'storybook/test';
 import { useListPlace } from '#kit/list-place';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { Sheet } from '#primitives/overlays/sheet';
 import {
   Dialog,
@@ -77,5 +79,31 @@ export const ADialogOpenedFromACardIsAPage: Story = {
     const probe = await body.findByText('Dialog place: page');
 
     await waitFor(() => expect(probe).toBeVisible());
+  },
+};
+
+// A row's tile reaches 4 beyond the card's content edge, so the row's own 4 of padding puts its marks on that edge.
+const tileReach = 4;
+
+const sameEdge = 1;
+
+// A kit List drawn directly in a card, not through a Plugin's tree, lines its rows up with the card's own content.
+export const AListDrawnInACardLinesUpWithItsContent: Story = {
+  render: () => (
+    <Card title="Card">
+      <Text>Content</Text>
+      <List>
+        <ListItem title="Row" />
+      </List>
+    </Card>
+  ),
+  play: async ({ canvas }) => {
+    const content = canvas.getByText('Content').getBoundingClientRect();
+    const text = canvas.getByText('Row');
+    const row = text.closest('[role=group]') ?? text;
+
+    await expect(
+      Math.abs(content.left - tileReach - row.getBoundingClientRect().left),
+    ).toBeLessThanOrEqual(sameEdge);
   },
 };

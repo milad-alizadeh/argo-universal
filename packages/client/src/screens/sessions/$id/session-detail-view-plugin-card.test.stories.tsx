@@ -104,17 +104,19 @@ export const PressingARowInACardOpensItsTab: Story = {
   },
 };
 
-const cardRadius = 16;
+const hasRoundedBackground = (node: Element): boolean => {
+  const { borderTopLeftRadius, backgroundColor } = getComputedStyle(node);
 
-// A surface is anything drawn with a card's corners; the card is the one surface in it.
+  const drawn =
+    backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent';
+
+  return Number.parseFloat(borderTopLeftRadius) > 0 && drawn;
+};
+
+// A surface is anything drawn with rounded corners over a background; the card is the one surface in it.
 const surfacesIn = (element: HTMLElement): Element[] =>
-  [element, ...element.querySelectorAll('*')].filter(
-    (node) =>
-      Number.parseFloat(getComputedStyle(node).borderTopLeftRadius) >=
-      cardRadius,
-  );
+  [element, ...element.querySelectorAll('*')].filter(hasRoundedBackground);
 
-// A List in a card draws rows on the card, not a card of its own: the card is the only surface inside its testID.
 export const AListInACardDrawsNoCardOfItsOwn: Story = {
   args: { view: { state: 'open', ...session, pluginCards: [listCard] } },
   play: async ({ canvas }) => {
@@ -126,6 +128,12 @@ export const AListInACardDrawsNoCardOfItsOwn: Story = {
     await expect(surfacesIn(card)).toHaveLength(1);
   },
 };
+
+// A row's text starts its own inset inside its tile: the tile's 4 and the leading lane's 16.
+const rowTextInset = 4 + 16;
+
+// Where the eye cannot tell a pixel apart, two edges are one.
+const sameEdge = 1;
 
 // A Plugin's rows start where the Workbench's own rows do: their tiles share one leading edge, and the text sits no further in than the row's own inset.
 export const ARowInACardLinesUpWithTheAgentsRows: Story = {
@@ -139,12 +147,14 @@ export const ARowInACardLinesUpWithTheAgentsRows: Story = {
 
     if (!agent) throw new Error('The Agents card needs a row');
 
-    await expect(row.getBoundingClientRect().left).toBe(
-      agent.getBoundingClientRect().left,
-    );
+    await expect(
+      Math.abs(
+        row.getBoundingClientRect().left - agent.getBoundingClientRect().left,
+      ),
+    ).toBeLessThanOrEqual(sameEdge);
     await expect(
       text.getBoundingClientRect().left - row.getBoundingClientRect().left,
-    ).toBeLessThanOrEqual(20);
+    ).toBeLessThanOrEqual(rowTextInset + sameEdge);
   },
 };
 

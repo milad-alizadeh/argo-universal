@@ -159,9 +159,9 @@ export const PressingAHandleThenLeavingHidesIt: Story = {
   },
 };
 
-// A touch is not a hover: the same enter, from a finger, shows no grip.
+// A touch is not a hover: the same enter, from a finger, shows no grip. A mouse over the next card, which does show its grip, marks the touch as handled.
 export const ATouchOverACardShowsNoHandle: Story = {
-  play: async ({ canvas }) => {
+  play: async ({ canvas, userEvent }) => {
     const card = canvas.getByText('One line.');
 
     for (const type of ['pointerover', 'pointerenter']) {
@@ -173,7 +173,10 @@ export const ATouchOverACardShowsNoHandle: Story = {
       );
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await userEvent.hover(
+      canvas.getByText('A body of two lines, so the cards differ in height.'),
+    );
+    await waitFor(() => expect(handleOf(canvas, 'Second')).toBeVisible());
     await expect(handleOf(canvas, 'First')).not.toBeVisible();
   },
 };

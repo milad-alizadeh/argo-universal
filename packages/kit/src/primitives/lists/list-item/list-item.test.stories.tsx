@@ -338,11 +338,21 @@ export const ARowWithOnlyALinkStillActs: Story = {
   beforeEach: (): void => {
     holderPress.mockClear();
   },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByLabelText(title).closest('a')).toHaveAttribute(
-      'href',
-      '#row',
-    );
+  play: async ({ canvas, userEvent }) => {
+    const followed: (string | null | undefined)[] = [];
+
+    const follow = (event: Event): void => {
+      event.preventDefault();
+      followed.push(
+        (event.target as Element).closest('a')?.getAttribute('href'),
+      );
+    };
+
+    document.addEventListener('click', follow, true);
+    await userEvent.click(canvas.getByText(title));
+    document.removeEventListener('click', follow, true);
+    await expect(followed).toEqual(['#row']);
+    await expect(holderPress).not.toHaveBeenCalled();
   },
 };
 
@@ -396,5 +406,18 @@ export const ARowWithOnlyAContextMenuKeepsItsTrigger: Story = {
     });
 
     await waitFor(() => expect(item).toBeVisible());
+  },
+};
+
+// A row with only a context menu is not inert either: it keeps its press, so the press does not reach the holder.
+export const ARowWithOnlyAContextMenuIsNotInert: Story = {
+  args: { onPress: undefined, contextMenu: { title: 'Row menu' } },
+  decorators: [(Story): ReactElement => holdOnly(<Story />)],
+  beforeEach: (): void => {
+    holderPress.mockClear();
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByText(title));
+    await expect(holderPress).not.toHaveBeenCalled();
   },
 };
