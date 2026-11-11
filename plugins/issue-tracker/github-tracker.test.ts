@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { githubHost, SignInRequired } from './github-api';
+import type { JsonObject } from './json';
 import { bodyOf, reply, trackerAnswering } from './tracker-answering';
 
 const overview = {
@@ -47,7 +48,7 @@ it('says what GitHub answered when it is neither an answer nor a rejection', asy
   );
 });
 
-const issueNode = () => ({
+const issueNode = (): JsonObject => ({
   number: 8,
   title: 'Keep the boundary',
   state: 'OPEN',
