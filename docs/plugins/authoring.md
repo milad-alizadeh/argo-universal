@@ -247,11 +247,11 @@ A page is a `Screen`. Its props say what the page holds, and the App lays it out
     </Metadata>
   }
 >
-  <Detail markdown={body} isLoading={!body} />
+  <Detail markdown={body} />
 </Screen>
 ```
 
-`Detail` holds the page's body only; its properties go in the `Screen`'s `aside`. `isLoading` draws the body's skeleton. A failed read shows a `Callout` in the body with `tone="danger"` and a Button that tries again, so loading, empty and error read differently. A `Spinner` marks work that has no body to sketch yet.
+`Detail` holds the page's body only; its properties go in the `Screen`'s `aside`. A failed read shows a `Callout` in the body with `tone="danger"` and a Button that tries again, so empty and error read differently. While the page's loader reads for the first time, the App draws the page's Screen with its title and a blank body, and a revisit draws the kept tree at once and asks again behind it, so a page never builds a loading state for its own first read and its render never sees one. `isLoading` draws the body's skeleton, and a `Spinner` marks work with no body to sketch, only for a part the page itself marks pending inside a render, such as a body the loader left unread.
 
 ## Session row items
 
@@ -513,7 +513,7 @@ First-party Plugins receive unset Grants silently until consent screens exist. A
 
 ### The OAuth flow
 
-`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that uses OAuth's authorization code grant with PKCE, such as GitHub, Linear, GitLab or Slack. Give it the service's URLs:
+`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that takes OAuth's authorization code grant with PKCE from a public client, with no client secret, such as Linear or GitLab. GitHub's web flow needs its client secret even with PKCE, so GitHub uses `deviceFlow`. Give it the service's URLs:
 
 ```tsx
 import { oauthFlow } from '@argo/plugin-kit';

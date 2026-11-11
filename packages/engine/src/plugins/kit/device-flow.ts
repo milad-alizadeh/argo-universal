@@ -4,6 +4,7 @@ import type {
   DeviceFlowPattern,
   DeviceFlowState,
 } from '@repo/contracts/plugins/device-flow-api';
+import { runtimeError } from '../protocol/runtime-status';
 import { askFor, codeOf, shown } from './device-code';
 import { labelRead } from './device-http';
 import {
@@ -100,7 +101,7 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
 
   void awaitToken(attempt, found.device, found.intervalMs).then(
     attempt.settle,
-    (error: Error) => attempt.settle(ended('failed', error.message)),
+    (cause: unknown) => attempt.settle(ended('failed', runtimeError(cause))),
   );
 
   return attempt.settle(shown(found));
@@ -173,8 +174,8 @@ function start(
 
   attempt.settle({ kind: 'requesting' });
 
-  return requestCode(attempt).catch((error: Error) =>
-    attempt.settle(ended('failed', error.message)),
+  return requestCode(attempt).catch((cause: unknown) =>
+    attempt.settle(ended('failed', runtimeError(cause))),
   );
 }
 

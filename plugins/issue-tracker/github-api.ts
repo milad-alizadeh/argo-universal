@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import {
+  at,
   isObject,
   item,
   parseJson,
@@ -72,7 +73,7 @@ const hasErrors = (answer: Json): boolean =>
   Array.isArray(pick(answer, 'errors'));
 
 function firstError(reply: Json): string {
-  const message = pick(item(pick(reply, 'errors'), 0), 'message');
+  const message = pick(item(at(reply, 'errors'), 0), 'message');
 
   return typeof message === 'string' ? message : 'GitHub returned no data.';
 }

@@ -31,7 +31,7 @@ A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\
 | A change that must show now | \`to.run(name, args, { optimistic })\` patches nodes by \`key\` until the Operation answers | \`plugins/issue-tracker/issue-detail.tsx\` |
 | To show in a row, bar, header or the Workbench | a Slot declared in \`plugin.json\` | \`docs/plugins/authoring.md\`, "Session Workbench card" |
 
-Three states always look different. Loading: \`Detail isLoading\` or a \`Spinner\`. Empty: an \`EmptyState\`. Failed: a \`Callout tone="danger"\` with a \`Button\` that runs an Operation, because any Operation run makes Argo read again. A Workbench card with nothing to show returns \`null\` from \`render\`, and Argo draws no card.
+Three states always look different. Loading: while a page's loader first reads, the App draws the page's Screen with a blank body, and a revisit draws the kept tree, so a page never builds a loading state for that read; \`Detail isLoading\` or a \`Spinner\` is only for a part the page itself marks pending inside a render, as a body the loader left unread. Empty: an \`EmptyState\`. Failed: a \`Callout tone="danger"\` with a \`Button\` that runs an Operation, because any Operation run makes Argo read again. A Workbench card with nothing to show returns \`null\` from \`render\`, and Argo draws no card.
 
 After an Operation edit in \`plugin.json\`, run \`pnpm types\` in the Plugin so \`to.run\` and the handler are checked against it.
 

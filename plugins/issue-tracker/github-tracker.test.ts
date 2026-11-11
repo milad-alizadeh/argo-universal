@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { githubHost, SignInRequired } from './github-api';
+import type { JsonObject } from './json';
 import { bodyOf, reply, trackerAnswering } from './tracker-answering';
 
 const overview = {
@@ -47,16 +48,16 @@ it('says what GitHub answered when it is neither an answer nor a rejection', asy
   );
 });
 
-it('searches the repository newest first and maps the Issues', async () => {
-  const issue = {
-    number: 8,
-    title: 'Keep the boundary',
-    state: 'OPEN',
-    url: 'https://github.com/owner/repository/issues/8',
-  };
+const issueNode = (): JsonObject => ({
+  number: 8,
+  title: 'Keep the boundary',
+  state: 'OPEN',
+  url: 'https://github.com/owner/repository/issues/8',
+});
 
+it('searches the repository newest first and maps the Issues', async () => {
   const { sent, tracker } = trackerAnswering(
-    reply(200, { data: { search: { nodes: [issue] } } }),
+    reply(200, { data: { search: { nodes: [issueNode()] } } }),
   );
 
   const issues = await tracker.listIssues('is:open', 30);
@@ -103,5 +104,25 @@ it('leaves a filter without a count when GitHub does not report it, and rejects 
 
   await expect(invalid.tracker.overview()).rejects.toThrow(
     'GitHub returned an invalid label list.',
+  );
+});
+
+it('skips a search node that is no Issue, and rejects a node with some of an Issue only', async () => {
+  const skipped = trackerAnswering(
+    reply(200, { data: { search: { nodes: [{}, issueNode()] } } }),
+  );
+
+  expect(
+    (await skipped.tracker.listIssues('is:open', 30)).map(
+      ({ number }) => number,
+    ),
+  ).toEqual([8]);
+
+  const malformed = trackerAnswering(
+    reply(200, { data: { search: { nodes: [{ number: 9 }, issueNode()] } } }),
+  );
+
+  await expect(malformed.tracker.listIssues('is:open', 30)).rejects.toThrow(
+    'GitHub returned an invalid Issue.',
   );
 });
