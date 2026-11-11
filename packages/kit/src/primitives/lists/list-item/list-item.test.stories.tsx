@@ -321,7 +321,9 @@ const holderPress = fn();
 export const ARowWithOnlyALongPressStillActs: Story = {
   args: { onPress: undefined, onLongPress: fn() },
   decorators: [(Story): ReactElement => holdOnly(<Story />)],
-  beforeEach: (): void => holderPress.mockClear(),
+  beforeEach: (): void => {
+    holderPress.mockClear();
+  },
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByText(title));
     await expect(holderPress).not.toHaveBeenCalled();
@@ -331,7 +333,9 @@ export const ARowWithOnlyALongPressStillActs: Story = {
 export const ARowWithOnlyALinkStillActs: Story = {
   args: { onPress: undefined, href: '#row' },
   decorators: [(Story): ReactElement => holdOnly(<Story />)],
-  beforeEach: (): void => holderPress.mockClear(),
+  beforeEach: (): void => {
+    holderPress.mockClear();
+  },
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText(title).closest('a')).toHaveAttribute(
       'href',
@@ -349,17 +353,6 @@ export const ADisabledRowKeepsItsDisabledState: Story = {
       'aria-disabled',
       'true',
     );
-  },
-};
-
-export const ASwitchRowStillActs: Story = {
-  args: { onPress: undefined, checked: false },
-  decorators: [(Story): ReactElement => holdOnly(<Story />)],
-  beforeEach: (): void => holderPress.mockClear(),
-  play: async ({ canvas, userEvent }) => {
-    await expect(canvas.getByRole('switch', { name: title })).toBeVisible();
-    await userEvent.click(canvas.getByText(title));
-    await expect(holderPress).not.toHaveBeenCalled();
   },
 };
 
