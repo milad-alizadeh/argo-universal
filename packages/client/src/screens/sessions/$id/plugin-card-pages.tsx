@@ -36,18 +36,16 @@ interface Holding {
 export function HeldCardPages({
   cards,
   opening,
-  store,
-  usePage,
+  ...holding
 }: Holding & { cards: readonly HeldCard[] }): ReactNode {
   if (!opening) return null;
 
   return cards.map((card) => (
     <HeldPage
       key={`${opening.sessionId}/${card.cardKey}`}
-      store={store}
+      {...holding}
       opening={opening}
       card={card}
-      usePage={usePage}
     />
   ));
 }
@@ -57,16 +55,13 @@ function HeldPage({
   opening,
   card: { cardKey, pluginId, path },
   usePage = usePluginPage,
-}: {
-  store: HeldCardStore;
+}: Omit<Holding, 'opening'> & {
   opening: CardOpening;
   card: HeldCard;
-  usePage?: UsePage;
 }): null {
-  useHoldPage(
-    { store, sessionId: opening.sessionId, cardKey },
-    usePage({ pluginId, path, ...opening }),
-  );
+  const page = usePage({ pluginId, path, ...opening });
+
+  useHoldPage({ store, sessionId: opening.sessionId, cardKey }, page);
 
   return null;
 }
