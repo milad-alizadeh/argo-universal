@@ -6,12 +6,14 @@ const autoHidden = 'auto-hidden';
 
 describe('Workbench states from one toggle', () => {
   it.each([
-    { width: 1440, workbenchIntent: 'auto', state: 'docked' },
+    { width: 1856, workbenchIntent: 'auto', state: 'gutter' },
+    { width: 1440, workbenchIntent: 'auto', state: autoHidden },
     { width: 900, workbenchIntent: 'auto', state: autoHidden },
     { width: 900, workbenchIntent: 'shown', state: 'overlay' },
     { width: 900, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'hidden', state: 'hidden' },
-    { width: 1440, workbenchIntent: 'shown', state: 'docked' },
+    { width: 1440, workbenchIntent: 'shown', state: 'overlay' },
+    { width: 1856, workbenchIntent: 'shown', state: 'gutter' },
   ] as const)(
     'at $width with the intent $workbenchIntent is $state',
     ({ width, workbenchIntent, state }) => {
@@ -74,19 +76,9 @@ describe('Workbench states from one toggle', () => {
 
     expect(workbench).toEqual({ state: 'hidden', offset: 1432, width: 0 });
   });
-
-  it('docks beside the Inspector', () => {
-    const { workbench } = frameLayout({
-      ...input,
-      width: 1920,
-      inspectorState: 'open',
-    });
-
-    expect(workbench).toEqual({ state: 'docked', offset: 1232, width: 312 });
-  });
 });
 
-describe('panes placed around the Workbench', () => {
+describe('panes placed under the Workbench', () => {
   it.each([
     {
       width: 1456,
@@ -120,7 +112,7 @@ describe('panes placed around the Workbench', () => {
       inspectorState: 'closed',
       workbenchIntent: 'shown',
       list: 312,
-      page: 728,
+      page: 1056,
       handle: 1440,
       inspector: 0,
     },
@@ -150,7 +142,7 @@ describe('panes placed around the Workbench', () => {
     },
   );
 
-  it('gives up the list and Workbench before letting a resized Inspector take the content floor', () => {
+  it('gives up the list before letting a resized Inspector take the content floor', () => {
     const layout = frameLayout({
       ...input,
       width: 1920,

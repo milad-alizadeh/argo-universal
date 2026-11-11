@@ -1,6 +1,10 @@
 import { useCallback, type ReactElement } from 'react';
 import { useBlobUrl } from '#features/connection';
-import { toSubagentFeedView, useSessionFeed } from '#features/feed';
+import {
+  toSubagentFeedView,
+  useSessionFeed,
+  withParentResults,
+} from '#features/feed';
 import { SubagentFeed, type SubagentFeedProps } from '#features/sessions';
 import { useSubagentReports } from './use-subagent-reports';
 
@@ -95,11 +99,11 @@ function childPaging(
 
 function childFeed(
   source: Source,
-  reports: SubagentFeedProps['feed']['items'],
+  reports: ReturnType<typeof useSubagentReports>['items'],
   imageUrl: SubagentFeedProps['feed']['imageUrl'],
 ): SubagentFeedProps['feed'] {
   return {
-    items: [...childItems(source), ...reports],
+    items: withParentResults(childItems(source), reports),
     liveHeader: childHeader(source),
     liveToolCall: source.liveToolCall,
     ...childPaging(source),

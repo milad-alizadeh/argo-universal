@@ -93,11 +93,11 @@ export function shellHeading(shell: Shell, now: number): ShellHeading {
   };
 }
 
-// A lost Shell has no run to time: its footer says what became of it instead.
-export function shellEnding(shell: Shell, now: number): string {
+// An ended Shell's footer: how long it ran, which no longer changes. A lost Shell has no run to time, so it says what became of it instead.
+export function shellEnding(shell: Shell): string {
   if (shell.status === 'lost') return 'when the Server restarted';
 
-  return `after ${shellElapsed(shell, now)}`;
+  return `after ${formatElapsed(shell.durationMs)}`;
 }
 
 // A Shell that exited cleanly has nothing left to read: the wide list mutes its command.

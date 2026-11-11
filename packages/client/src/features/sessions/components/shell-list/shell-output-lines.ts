@@ -1,4 +1,5 @@
 import type { Tone } from '@repo/kit/primitives/content/text';
+import { markedLine } from './shell-output-marks';
 
 // A run of a Shell's output in one colour; untoned text takes the output's own colour.
 export interface ShellSpan {
@@ -45,12 +46,12 @@ const escapeSequence = new RegExp(
   'g',
 );
 
-interface Pen {
+export interface Pen {
   colour?: Tone;
   dim: boolean;
 }
 
-const plainPen: Pen = { dim: false };
+export const plainPen: Pen = { dim: false };
 
 const penTone = (pen: Pen): Tone | undefined =>
   pen.colour ?? (pen.dim ? 'muted' : undefined);
@@ -152,19 +153,24 @@ function drawLine(writer: Writer, line: string): void {
 function redrawnLine(writer: Writer, line: string): ShellLine {
   const text = line.endsWith('\r') ? line.slice(0, -1) : line;
   const shown = text.lastIndexOf('\r') + 1;
+
   drawLine(writer, text.slice(0, shown));
   writer.spans = [];
   drawLine(writer, text.slice(shown));
 
-  return writer.spans;
+  return markedLine(writer.spans);
 }
 
-const outputLines = (text: string): string[] =>
-  (text.endsWith('\n') ? text.slice(0, -1) : text).split('\n');
+export interface ReadLines {
+  lines: ShellLine[];
+  // The colour the lines leave set for whatever follows them.
+  pen: Pen;
+}
 
-// A Shell's output as lines of coloured spans, read from its ANSI colour codes; other escape sequences are dropped.
-export function shellOutputLines(text: string): ShellLine[] {
-  const writer: Writer = { pen: plainPen, spans: [] };
+// Newline-separated output as lines of coloured spans, read from its ANSI colour codes from the colour `pen` sets; other escape sequences are dropped.
+export function readLines(text: string, pen: Pen = plainPen): ReadLines {
+  const writer: Writer = { pen, spans: [] };
+  const lines = text.split('\n').map((line) => redrawnLine(writer, line));
 
-  return outputLines(text).map((line) => redrawnLine(writer, line));
+  return { lines, pen: writer.pen };
 }

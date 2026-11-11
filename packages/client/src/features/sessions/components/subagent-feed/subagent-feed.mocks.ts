@@ -116,7 +116,6 @@ export const noIncomingFeed = feedOf(childRows, liveToolCallHeader);
 const subagent: Subagent = {
   sessionId: subagentSessionId,
   parentSessionId,
-  readOnly: true,
   toolCallId: 'tool-readers',
   title: 'Find every Feed reader',
   role: 'Explore',

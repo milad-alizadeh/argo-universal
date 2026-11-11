@@ -31,7 +31,9 @@ it.each([
   {
     reply: 'explicitly addressed on the parent transcript',
     steps: childReply(undefined, fromChild),
-    result: [{ result: [text('Done'), text(' and checked')] }],
+    result: [
+      { result: [text('Done'), text(' and checked')], childPosition: 0 },
+    ],
   },
   {
     reply: 'revised by a later patch',
@@ -39,7 +41,7 @@ it.each([
       ...childReply(undefined, fromChild),
       sessionMessage('reply', { content: [text('Revised')] }),
     ],
-    result: [{ result: [text('Revised')] }],
+    result: [{ result: [text('Revised')], childPosition: 0 }],
   },
   {
     reply: 'without a recipient',

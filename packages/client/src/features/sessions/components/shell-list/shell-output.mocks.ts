@@ -3,6 +3,7 @@ import {
   failedShell,
   lostShell,
   noCodeShell,
+  passedShell,
   runningShell,
   stoppedShell,
 } from './shell-list.mocks';
@@ -100,3 +101,18 @@ export const stoppedOutput = keptOutput(stoppedShell.id);
 export const noCodeOutput = keptOutput(noCodeShell.id);
 
 export const lostOutput = keptOutput(lostShell.id);
+
+// A test run piped through tee, which drops the colours, so the light marks draw it instead.
+export const uncolouredOutput: ShellOutputText = {
+  shellId: passedShell.id,
+  text: outputText([
+    ' RUN  v3.2.4 /Users/you/argo',
+    ' ✓ src/feed.test.ts (12 tests) 48ms',
+    ' ✓ src/session.test.ts (9 tests) 31ms',
+    'warning: --reporter=basic is deprecated, see https://vitest.dev/guide/reporters',
+    'Error: expected 2 calls, received 1',
+    '    at ./src/composer.test.ts:88:14',
+    ' Test Files  1 failed | 2 passed (3)',
+    '      Tests  0 errors in ~/argo/packages/client',
+  ]),
+};

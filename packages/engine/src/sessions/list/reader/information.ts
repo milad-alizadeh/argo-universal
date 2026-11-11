@@ -8,6 +8,7 @@ import {
 import { newestRows, readQueuedFeed } from '../../../feed';
 import type { SessionActorRef } from '../../session-machine';
 import { latestTurnOf } from '../../stored-turn';
+import { isSubagentOf } from '../../subagents/subagent-of';
 import { toSessionInfo, type SessionInfoInput } from '../information';
 import type { SessionListState } from '../state';
 import { readStoredActivity } from './activity-query';
@@ -112,11 +113,7 @@ class SessionInformationRead {
   }
 
   private children(): SessionRecord[] {
-    return this.input.rows.filter(
-      (child): boolean =>
-        child.parentSessionId === this.input.row.id ||
-        child.startedBySessionId === this.input.row.id,
-    );
+    return this.input.rows.filter(isSubagentOf(this.input.row.id));
   }
 
   private liveInput(): Pick<SessionInfoInput, 'live' | 'feed'> {

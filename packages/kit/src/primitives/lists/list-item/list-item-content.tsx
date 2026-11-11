@@ -164,7 +164,7 @@ export function CompactContent(props: PlacedContentProps): ReactElement {
   return (
     <>
       <View {...useOpenLane()} className={compactTitleClass(props)}>
-        <TreeLane title={props.title} compact />
+        <TreeLane row={props} layout="compact" />
         <InertLane className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch">
           <InlineSubtitle {...props} />
           <Title {...props} multiline={false} inLine />

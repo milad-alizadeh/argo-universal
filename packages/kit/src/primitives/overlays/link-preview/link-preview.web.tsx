@@ -10,6 +10,7 @@ import TextAncestorContext from 'react-native-web/dist/exports/Text/TextAncestor
 import { Text } from '#primitives/content/text';
 import { Popover, PopoverContent } from '#primitives/overlays/popover';
 import type { LinkPreviewProps } from './link-preview-props';
+import { useLinkMark } from './use-link-mark';
 import { useLinkPreview, type PreviewState } from './use-link-preview';
 
 const preventFocus = (event: Event): void => event.preventDefault();
@@ -20,10 +21,14 @@ export function LinkPreview(props: LinkPreviewProps): ReactElement {
 
 function Preview({ href, children }: LinkPreviewProps): ReactElement {
   const state = useLinkPreview(href);
+  const mark = useLinkMark(href, state.data);
 
   return (
     <Popover open={state.open} onOpenChange={state.setOpen} inline>
-      <PreviewAnchor state={state}>{children}</PreviewAnchor>
+      <PreviewAnchor state={state}>
+        <LinkMark mark={mark} />
+        {children}
+      </PreviewAnchor>
       <PreviewContent href={href} state={state} />
     </Popover>
   );
@@ -40,6 +45,18 @@ function PreviewAnchor({
     <WebPopover.Anchor asChild>
       <span {...anchorHandlers(state)}>{children}</span>
     </WebPopover.Anchor>
+  );
+}
+
+function LinkMark({ mark }: { mark: ReactNode }): ReactElement | null {
+  if (!mark) return null;
+
+  // The word joiner forbids a line break between the mark and the label that follows it.
+  return (
+    <span aria-hidden>
+      <span className="me-0.5 inline-flex align-middle">{mark}</span>
+      {'⁠'}
+    </span>
   );
 }
 

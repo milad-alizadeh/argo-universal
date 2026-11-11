@@ -1,9 +1,5 @@
 import type { PaneSpan } from '../utils/pane-shift';
-import {
-  contentFloor,
-  inspectorWidth,
-  occupied,
-} from './frame-layout-measures';
+import { contentFloor, inspectorWidth } from './frame-layout-measures';
 import type {
   FrameLayoutInput,
   InspectorRegion,
@@ -24,52 +20,27 @@ function drawnWorkbenchWidth(
   );
 }
 
-// A Workbench that is not drawn waits at the window's trailing inset, where it slides in from.
+// Over the page's trailing edge, in its gutter or over its content; it never crosses the page's leading edge. A Workbench that is not drawn waits at the window's trailing inset, where it slides in from.
 export function workbenchRegion(
   input: FrameLayoutInput,
-  inspector: PaneSpan,
-  contentStart: number,
+  page: PaneSpan,
 ): WorkbenchRegion {
-  const host = conversationHost(input, inspector, contentStart);
-  const state = workbenchState(input, host.width);
+  const state = workbenchState(input, page.width);
   const width = drawnWorkbenchWidth(input, state);
 
-  return {
-    state,
-    width,
-    offset: workbenchOffset(input, { state, width }, host),
-  };
-}
-
-function conversationHost(
-  input: FrameLayoutInput,
-  inspector: PaneSpan,
-  contentStart: number,
-): PaneSpan {
-  return {
-    offset: contentStart,
-    width:
-      input.width -
-      contentStart -
-      occupied(inspector.width, input.measures.paneGap),
-  };
+  return { state, width, offset: workbenchOffset(input, width, page) };
 }
 
 function workbenchOffset(
   input: FrameLayoutInput,
-  { state, width }: Pick<WorkbenchRegion, 'state' | 'width'>,
-  host: PaneSpan,
+  width: number,
+  page: PaneSpan,
 ): number {
-  // Over the content's trailing edge, absolute: the page keeps its width underneath, and the card never crosses the host's leading edge.
-  if (state === 'overlay') {
-    const trailingEdge = host.offset + host.width - input.measures.inset;
+  if (width === 0) return input.width - input.measures.inset;
 
-    return Math.max(host.offset, trailingEdge - width);
-  }
+  const trailingEdge = page.offset + page.width - input.measures.inset;
 
-  const trailing = width > 0 ? input.width - host.offset - host.width : 0;
-
-  return input.width - trailing - input.measures.inset - width;
+  return Math.max(page.offset, trailingEdge - width);
 }
 
 // The widest the Inspector gets beside the page while the content keeps its floor.

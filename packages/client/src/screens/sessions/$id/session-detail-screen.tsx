@@ -6,6 +6,7 @@ import type * as React from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
+import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -45,20 +46,13 @@ export function SessionDetailScreen({
   );
 }
 
-const retainedSessionCount = 3;
-
 function useRecentSessions(sessionId: string): string[] {
   const [recent, setRecent] = useState([sessionId]);
+  const next = retainSession(recent, sessionId);
 
-  if (recent[0] !== sessionId)
-    setRecent(
-      [sessionId, ...recent.filter((id) => id !== sessionId)].slice(
-        0,
-        retainedSessionCount,
-      ),
-    );
+  if (next !== recent) setRecent(next);
 
-  return recent;
+  return next;
 }
 
 // The three most recently shown wide Session pages keep their live Feeds.
@@ -71,7 +65,7 @@ function RetainedSessions({
 
   return (
     <View style={{ flex: 1 }}>
-      {recent.map((id) => (
+      {sessionsInDrawOrder(recent).map((id) => (
         <RetainedSession key={id} sessionId={id} visible={id === sessionId} />
       ))}
     </View>

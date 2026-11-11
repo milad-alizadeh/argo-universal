@@ -1,7 +1,8 @@
+import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { Given, Then, When } from './fixtures';
-import { openSessionRow, openSessionUrl, sessionRow } from './live-session';
+import { openSessionRow, sessionRow } from './live-session';
 import { sessionOpenTimeout } from './new-session';
 
 const parentTitle = 'Delegate the investigation';
@@ -11,36 +12,37 @@ const childTitle = 'Review delegated work';
 Given('Agent {int} delegates work through the argo CLI', expectListedAgent);
 
 // The fixture replies only after the supplied CLI has returned a successful settled result.
-Then('the supplied CLI has started the delegated Session', async ({ page }) => {
+const expectDelegationReply = async (page: Page): Promise<void> => {
   await expect(
     page
       .getByTestId('feed-scroll')
       .getByText('The delegated Session has started.', { exact: true }),
   ).toBeVisible(sessionOpenTimeout);
-});
+};
+
+Then('the supplied CLI has started the delegated Session', ({ page }) =>
+  expectDelegationReply(page),
+);
 
 When('I return from the Session detail', async ({ page }) => {
   await page.getByRole('link', { name: 'Sessions, back' }).click();
 });
 
-When(
-  "I open the delegated Agent from its caller's Agents card",
+Then(
+  'the caller has no Agents, because a Started Session is not one',
   async ({ page }) => {
     await openSessionRow(page, sessionRow(page, parentTitle), parentTitle);
-    const callerUrl = page.url();
-
-    await page.getByRole('button', { name: 'Agents: 1', exact: true }).click();
-    await page
-      .getByRole('dialog', { name: 'Agents', exact: true })
-      .getByText(childTitle, { exact: true })
-      .click();
-    // The card's rows expose no pressed state, so the URL leaving the caller's Session is the only signal.
-    const notOpened = `the delegated Agent "${childTitle}" did not open`;
-
-    await expect(page, notOpened).toHaveURL(openSessionUrl);
-    await expect(page, notOpened).not.toHaveURL(callerUrl);
+    // The caller's Feed has drawn once its delegation reply shows, so a missing Agents button is no race.
+    await expectDelegationReply(page);
+    await expect(page.getByRole('button', { name: /^Agents: / })).toHaveCount(
+      0,
+    );
   },
 );
+
+When('I open the delegated Session from the list', async ({ page }) => {
+  await openSessionRow(page, sessionRow(page, childTitle), childTitle);
+});
 
 Then('the delegated Session accepts a new prompt', async ({ page }) => {
   const message = page.getByRole('textbox', { name: 'Message', exact: true });

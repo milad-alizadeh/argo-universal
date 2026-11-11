@@ -8,7 +8,6 @@ const parentSessionId = 'parent-session';
 export const runningSubagent: Subagent = {
   sessionId: 'subagent-readers',
   parentSessionId,
-  readOnly: true,
   toolCallId: 'tool-readers',
   title: 'Find every Feed reader',
   role: 'Explore',

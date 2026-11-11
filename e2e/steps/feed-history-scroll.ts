@@ -4,8 +4,12 @@ import { agentWork } from './timeouts';
 
 export const oldestHistoryMessage = 'History message 1.';
 
+// A wide window keeps recently shown Sessions' Feeds mounted and hidden beside the shown one.
+export const shownFeed = (page: Page): Locator =>
+  page.getByTestId('feed-scroll').filter({ visible: true });
+
 export async function scrollToOldestHistoryMessage(page: Page): Promise<void> {
-  const feed = page.getByTestId('feed-scroll');
+  const feed = shownFeed(page);
   const oldest = feed.getByText(oldestHistoryMessage, { exact: true });
   // An older page lands at the top, then the Feed keeps its place and moves it up out of view, so scroll again until the oldest message stays.
   await expect(async () => {
@@ -31,7 +35,7 @@ async function expectStaysInView(page: Page, row: Locator): Promise<void> {
 declare const requestAnimationFrame: (callback: () => void) => number;
 
 // Waits for the page to draw this many frames, so a pending scroll adjustment lands.
-async function afterFrames(page: Page, frames: number): Promise<void> {
+export async function afterFrames(page: Page, frames: number): Promise<void> {
   await page.evaluate(
     (count) =>
       new Promise<void>((resolve) => {

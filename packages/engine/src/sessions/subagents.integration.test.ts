@@ -39,7 +39,6 @@ it('reads Subagents with only their latest Turn metrics through the stored Feed 
     {
       sessionId: 'child',
       parentSessionId: 'session-1',
-      readOnly: true,
       title: 'Review',
       toolCallId: null,
       role: null,

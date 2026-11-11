@@ -1,9 +1,12 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { type RefObject, useCallback, useEffect, useRef } from 'react';
 import type { FeedAnchor } from './feed-scroll-memory';
-import { restoreFeedAnchor } from './restore-feed-anchor';
+import { type AnchoredList, restoreFeedAnchor } from './restore-feed-anchor';
 
-type ListRef = RefObject<LegendListRef | null>;
+export type RestorableList = AnchoredList &
+  Pick<LegendListRef, 'scrollToEnd' | 'cancelScroll'>;
+
+type ListRef = RefObject<RestorableList | null>;
 
 interface Restoration {
   open: (anchor: FeedAnchor | null) => void;
@@ -27,7 +30,7 @@ export function inputGuard(cancel: () => void): () => void {
 }
 
 function restore(
-  current: LegendListRef,
+  current: RestorableList,
   anchor: FeedAnchor,
   controller: AbortController,
 ): void {
@@ -68,10 +71,15 @@ function cancelController(
   list: ListRef,
   controller: RefObject<AbortController | null>,
 ): void {
-  if (!isActive(controller.current)) return;
+  const active = controller.current;
 
-  controller.current.abort();
-  list.current?.cancelScroll();
+  if (!isActive(active)) return;
+
+  active.abort();
+  // Legend List's cancelScroll may flushSync, which React refuses inside the commit this effect cleanup runs in (#1977). A restoration opened meanwhile owns the scroll, so leave it alone.
+  queueMicrotask(() => {
+    if (controller.current === active) list.current?.cancelScroll();
+  });
 }
 
 function useCancel(

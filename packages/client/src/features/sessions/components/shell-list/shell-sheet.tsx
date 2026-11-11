@@ -48,13 +48,13 @@ function ShellRows(
 }
 
 function OutputPage(
-  props: Pick<ShellViewProps, 'output' | 'now'> & { shell?: ShellEntry },
+  props: Pick<ShellViewProps, 'output' | 'outputSource' | 'now'> & {
+    shell?: ShellEntry;
+  },
 ): JSX.Element | null {
-  const { shell } = props;
+  const { shell, ...output } = props;
 
-  if (!shell) return null;
-
-  return <ShellOutput shell={shell} output={props.output} now={props.now} />;
+  return shell ? <ShellOutput {...output} shell={shell} /> : null;
 }
 
 // The output page's header: the Shell's title, and Stop while the Shell runs.
@@ -90,7 +90,7 @@ export function ShellSheet(props: ShellSheetProps): JSX.Element {
         <ShellRows shells={props.shells} now={props.now} onOpen={openShell} />
       </Sheet.Screen>
       <Sheet.Screen name="shell" {...heading}>
-        <OutputPage shell={shell} output={props.output} now={props.now} />
+        <OutputPage {...props} shell={shell} />
       </Sheet.Screen>
     </Sheet>
   );

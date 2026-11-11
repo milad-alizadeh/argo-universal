@@ -3,7 +3,7 @@ import type {
   SessionUpdate,
   SubagentUpdate,
 } from '@repo/contracts';
-import type { FeedView, FeedViewItem } from './feed-view';
+import type { FeedView, FeedViewItem, ParentResult } from './feed-view';
 
 function resultItem(row: SessionUpdate, childId: string): FeedViewItem[] {
   if (row.sessionUpdate !== 'subagent_update') return [];
@@ -16,18 +16,27 @@ function resultItem(row: SessionUpdate, childId: string): FeedViewItem[] {
 const resultContent = (row: SubagentUpdate): ContentBlock[] | undefined =>
   row._meta?.argo?.result;
 
-function contentItem(row: SubagentUpdate): FeedViewItem[] {
-  const content = resultContent(row);
+const childPositionOf = (row: SubagentUpdate): number | undefined =>
+  row._meta?.argo?.childPosition;
 
-  return [
-    {
-      type: 'parent_result',
-      id: row.id,
-      position: row.position,
-      revision: row.revision,
-      content: content ?? [],
-    },
-  ];
+function placed(item: ParentResult, row: SubagentUpdate): ParentResult {
+  const childPosition = childPositionOf(row);
+
+  if (childPosition !== undefined) item.childPosition = childPosition;
+
+  return item;
+}
+
+function contentItem(row: SubagentUpdate): FeedViewItem[] {
+  const item: ParentResult = {
+    type: 'parent_result',
+    id: row.id,
+    position: row.position,
+    revision: row.revision,
+    content: resultContent(row) ?? [],
+  };
+
+  return [placed(item, row)];
 }
 
 export function toParentResults(

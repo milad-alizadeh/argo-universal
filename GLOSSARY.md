@@ -249,8 +249,12 @@ A Session that New Session opened in the Project's main checkout and no prompt h
 _Avoid_: Draft Session, pending Session
 
 **Agent**:
-A Session that another Session started to do delegated work. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so.
+A Session that another Session's Agent started over ACP to do delegated work. Only that parent drives it: it takes no prompt from the person, and it is shown in its parent's Workbench and Inspector, never as a row in the Sessions list. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so; the code still says `Subagent` and `parentSessionId`. The owner split off Started Session on 2026-11-10.
 _Avoid_: Subagent, child agent, task agent
+
+**Started Session**:
+A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`.
+_Avoid_: Agent, Subagent, child Session, delegated Session
 
 **Background Task**:
 A command an Agent started in the background, which keeps running while the Turn goes on. The owner renamed Shell to Background Task on 2026-11-02; the code still says `Shell`.
@@ -337,6 +341,10 @@ _Avoid_: Closed, finalised
 **Feed**:
 The ordered list of Session updates that Argo shows for one Session.
 _Avoid_: Timeline, transcript, log, history
+
+**Reading place**:
+Where a reader left a Session's Feed: the row they were reading and where it sat in the view, or the Feed's end.
+_Avoid_: Scroll position, scroll offset
 
 **Session snapshot**:
 Everything a Session shows that is not in its Feed, such as its title, state, Live header, Background Tasks, and the Agents it started. It is sent whole on each change.
@@ -513,7 +521,7 @@ The App's chrome around its pages: the rail, the section sidebar and the panes. 
 _Avoid_: Shell, app shell, chrome
 
 **Frame layout**:
-Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor first, then the Workbench undocks, then the list folds.
+Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor before the list folds, and the Workbench, drawn over the page, takes no width and shows where the page's gutter holds it.
 _Avoid_: Geometry, legacy layout
 
 **Scaffold**:

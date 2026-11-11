@@ -50,6 +50,22 @@ Feature: Session switching
       | Plan the release | Fix the login test |
 
   @web-only
+  Scenario Outline: A recently visited Session keeps its reading place at the <place> of its Feed
+    Given a wide Frame
+    And Agent 1 supplies a long Feed history
+    And a New Session with Agent 1
+    When I send the prompt "Build a long history"
+    And I reopen the stored long Feed
+    And I read the long Feed to its <place> beside two other recent Sessions
+    And I visit both other Sessions and return
+    Then the Feed is at the place I left it
+
+    Examples:
+      | place  |
+      | middle |
+      | end    |
+
+  @web-only
   Scenario Outline: A Session restores its reading place after its Feed cache expires
     Given the browser clock can advance for Feed expiration
     And a wide Frame

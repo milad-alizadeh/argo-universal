@@ -95,6 +95,7 @@ it('stores the actual parent-reported result for the Agent’s Inspector', async
               },
               { type: 'text', text: 'Review complete.' },
             ],
+            childPosition: 0,
           },
         },
       }),
