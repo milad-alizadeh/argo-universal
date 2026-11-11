@@ -60,7 +60,7 @@ export function CompactMeta(props: MetaProps): ReactNode {
   if (!hasMeta(props)) return null;
 
   return (
-    <View {...open} className={compactMetaClass(props)}>
+    <View {...open} className={compactMetaClass}>
       <MetaItems {...props} />
     </View>
   );

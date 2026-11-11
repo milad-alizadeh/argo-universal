@@ -96,16 +96,12 @@ function ScreenDrawing(props: ScreenHeaderPlanned): ReactElement {
   );
 }
 
-// A narrow page with no aside has no list to share a column with, so it stays centred.
-const keepsAsideLane = ({ aside, width }: ScreenHeaderPlanned): boolean =>
-  Boolean(aside) || width !== 'narrow';
-
 // The frame, with the column where the aside leaves it.
 function ScreenColumns({
   layout,
   ...props
 }: ScreenHeaderPlanned & { layout: AsideLayout }): ReactElement {
-  const edges = keepsAsideLane(props) ? (layout.column ?? null) : null;
+  const edges = layout.column ?? null;
 
   return (
     <ScreenColumnEdgesContext value={edges}>

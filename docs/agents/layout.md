@@ -97,6 +97,14 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 - The Workbench and the Inspector sit outside the cap. The Inspector is its own region of the window; the Workbench is drawn over the page's gutter.
 - On a wide web or desktop window the Feed's scrollbar stays drawn while the Feed can scroll, at the page's trailing edge, which is the window's edge unless the Inspector is open. Its gutter is kept on both sides, so the Feed's column stays over the Composer's.
 
+## A Screen's column
+
+The session frame's column above (800 and a 24 gutter, 848 with its gutters) is the Feed's. A Screen, which draws every Plugin page and every Settings page, has its own: `--container-column` 800 inside `--spacing-8` margins on a wide window, so its region caps at 864, and `--spacing-4` below wide ([ADR-0049](../adr/0049-a-screen-frames-its-page-with-aside-bleed-and-footer.md)).
+
+- **`aside`** holds the page's one Metadata. Its place comes from the Screen's width alone: a 280 column at the trailing edge when the reading column beside it keeps the medium width, a wrapping row of Pills under the title when it does not, and icon-only Pills below medium. The column moves towards the leading edge for the lane and never under it, with or without an aside, so opening an Issue from its list moves neither the title nor the body.
+- **`width: bleed`** has no column and no margins; a Canvas in the body fills it. The title keeps its margin.
+- **`footer`** is pinned under the body and rises with the keyboard. A body over a footer scrolls in a ScrollView or a List.
+
 ## Phones
 
 Compact has no column, so the Workbench is a menu and a sheet. Every card and every Inspector tab is still reachable, as ADR-0039 requires: nothing is dropped and no card is desktop-only.

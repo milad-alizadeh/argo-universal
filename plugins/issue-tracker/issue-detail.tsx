@@ -1,10 +1,4 @@
-import {
-  Action,
-  Detail,
-  EmptyState,
-  Screen,
-  type PageTo,
-} from '@argo/plugin-kit';
+import { Action, Detail, Callout, Screen, type PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueStatus } from './github-issues';
 import type { AttachedSession, IssueDetailData } from './issue-detail-data';
@@ -32,7 +26,11 @@ export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
   if (!data.ok)
     return (
       <Screen title={`#${props.number}`}>
-        <EmptyState title={data.message} />
+        <Callout
+          tone="danger"
+          title="Couldn’t load this Issue"
+          description={data.message}
+        />
       </Screen>
     );
 
@@ -45,6 +43,7 @@ function IssueDetail(props: ShownProps): JSX.Element {
       title={props.issue.title}
       primaryAction={<StartSessionAction {...props} />}
       actions={<StatusAction {...props} />}
+      aside={<IssueMetadata issue={props.issue} />}
     >
       <IssueBody {...props} />
     </Screen>
@@ -54,10 +53,7 @@ function IssueDetail(props: ShownProps): JSX.Element {
 // The description, the Issue's own properties beside it, and the work under both.
 function IssueBody({ issue, projectId, sessions }: ShownProps): JSX.Element {
   return (
-    <Detail
-      markdown={issue.body || 'No description.'}
-      metadata={<IssueMetadata issue={issue} />}
-    >
+    <Detail markdown={issue.body || 'No description.'}>
       <SubIssues
         issue={issue}
         issuePath={(number) => issuePath(projectId, number)}

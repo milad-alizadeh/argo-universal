@@ -67,11 +67,7 @@ export function useAsideFrame(screenWidth: ScreenProps['width']): AsideFrame {
 }
 
 // The widths a reading column is capped at, so the gutters beside it can hold an aside.
-const cappedWidths = new Set<ScreenProps['width']>([
-  undefined,
-  'content',
-  'narrow',
-]);
+const cappedWidths = new Set<ScreenProps['width']>([undefined, 'content']);
 
 function useAsideRoom(
   screenWidth: ScreenProps['width'],
@@ -82,7 +78,7 @@ function useAsideRoom(
 
   return {
     wide: wide && cappedWidths.has(screenWidth),
-    column: screenWidth === 'narrow' ? tokens.narrow : tokens.column,
+    column: tokens.column,
     inset: tokens.inset,
     medium,
   };
