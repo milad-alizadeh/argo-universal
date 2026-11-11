@@ -20,7 +20,7 @@ const declaration = ({
       { type, required, choices },
     ]),
   ),
-  caller,
+  ...(caller === undefined ? {} : { caller }),
 });
 
 // JSON is a TypeScript type literal too: its strings, booleans and arrays read as literals and tuples.
