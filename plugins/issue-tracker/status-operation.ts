@@ -8,10 +8,16 @@ import type { IssueDeps } from './issue-deps';
  * reads the Projects' counts again for the pages it makes stale.
  */
 export function registerStatusOperation(
-  argo: Pick<Argo, 'operations'>,
+  argo: Pick<Argo, 'operations' | 'changed'>,
   deps: IssueDeps,
 ): void {
   argo.operations.register('setStatus', setStatus(deps));
+  // Says the Plugin's answers may have changed, so the pages read again; the page that ran it draws the new ones.
+  argo.operations.register('checkAgain', () => {
+    argo.changed();
+
+    return {};
+  });
 }
 
 const setStatus =

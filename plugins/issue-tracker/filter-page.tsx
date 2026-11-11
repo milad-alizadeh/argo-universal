@@ -11,6 +11,7 @@ import {
 } from '@argo/plugin-kit';
 import { signInGate, type GatedPage } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { noIssues } from './filter-empty';
 import { listFilter } from './filter-list';
 import {
   filterState,
@@ -157,12 +158,11 @@ function FilterDetail(props: DetailProps): JSX.Element {
 
 type ScreenProps = Pick<
   PluginProps['Screen'],
-  'title' | 'caption' | 'search' | 'value' | 'onChangeText'
+  'title' | 'search' | 'value' | 'onChangeText'
 >;
 
 const screenProps = ({ data, to, query }: DetailProps): ScreenProps => ({
   title: data.filter.title,
-  caption: data.filter.search,
   search: { label: 'Search Issues' },
   value: query,
   onChangeText: to.bind('query'),
@@ -179,7 +179,7 @@ type ListProps = Pick<
  */
 const listProps = ({ data, list, to }: DetailProps): ListProps => ({
   footer: noIssuesBecause(data) || repositoryText(data.project),
-  empty: <EmptyState title={noIssuesBecause(data) || 'No Issues.'} />,
+  empty: noIssues(data, to),
   pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
   onRefresh: to.set({}),
 });

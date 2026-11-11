@@ -99,6 +99,14 @@
         "caller": ["project"]
       },
       {
+        "name": "checkAgain",
+        "label": "Read a Project's Issues again",
+        "description": "Make the Issue tracker's pages read again.",
+        "tier": "read",
+        "keywords": ["issue", "refresh", "retry"],
+        "caller": ["project"]
+      },
+      {
         "name": "setStatus",
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",
