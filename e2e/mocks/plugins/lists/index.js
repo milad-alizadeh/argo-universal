@@ -31,18 +31,19 @@ const buildRow = (selected, to) => (build) => (
   />
 );
 
+// The builds, with the buttons that fill and empty the Notes card under them.
+const buildsPage = (items, to, { state }) => (
+  <Stack direction="column">
+    <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
+    <NotesSwitch to={to} />
+  </Stack>
+);
+
 export function register(argo) {
   argo.pages.define('/lists', {
     state: { selected: '' },
     load: () => builds,
-    render: (items, to, { state }) => (
-      <Stack direction="column">
-        <List appearance="cards">
-          {items.map(buildRow(state.selected, to))}
-        </List>
-        <NotesSwitch to={to} />
-      </Stack>
-    ),
+    render: buildsPage,
   });
   defineIssues(argo.pages);
   defineNotes(argo);

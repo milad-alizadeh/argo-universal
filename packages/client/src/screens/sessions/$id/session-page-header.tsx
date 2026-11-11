@@ -14,6 +14,7 @@ import {
 } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
 import {
+  type HeaderPlacement,
   type ToggleWorkbenchCard,
   usePluginHeaderActions,
 } from './use-plugin-header-actions';
@@ -92,6 +93,17 @@ const cardToggle = (
 ): ToggleWorkbenchCard =>
   compact && panels ? toggleCardSheet(panels) : cards.toggle;
 
+// Where the header sits, and how its card actions toggle and which cards have something to show.
+const headerPlacement = (
+  { sessionId, cards, panels }: HeaderCards,
+  compact: boolean,
+): HeaderPlacement => ({
+  sessionId,
+  compact,
+  toggleCard: cardToggle({ cards, panels }, compact),
+  filled: cards.filled,
+});
+
 // One size class's header: a compact window keeps every Plugin action in "…", a wide one gives the first an icon.
 function PlacedSessionHeader({
   sessionId,
@@ -101,14 +113,9 @@ function PlacedSessionHeader({
   ...props
 }: SessionDetailViewProps &
   HeaderCards & { compact: boolean }): React.JSX.Element {
-  const toggleCard = cardToggle({ cards, panels }, compact);
-  const filled = cards.filled;
-  const pluginActions = usePluginHeaderActions({
-    sessionId,
-    compact,
-    toggleCard,
-    filled,
-  });
+  const pluginActions = usePluginHeaderActions(
+    headerPlacement({ sessionId, cards, panels }, compact),
+  );
 
   return <SessionPageHeader {...withPluginActions(props, pluginActions)} />;
 }
