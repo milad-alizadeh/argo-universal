@@ -11,6 +11,17 @@ function node(
   return { type, key: type, props, children: [], slots };
 }
 
+// A kit component's props schema; one the kit does not declare fails the test.
+function propsOf(
+  type: string,
+): NonNullable<ReturnType<typeof kitComponent>>['props'] {
+  const component = kitComponent(type);
+
+  if (!component) throw new Error(`${type} is not a kit component`);
+
+  return component.props;
+}
+
 const screen = (slots: Record<string, WireNode[]>): WireNode =>
   node('Screen', { title: 'Page' }, slots);
 
@@ -50,10 +61,10 @@ describe('a Detail', () => {
 
 describe('a multi-line field', () => {
   it('takes its text and the value that binds it through the schema', () => {
-    const props = kitComponent('TextArea')?.props;
+    const schema = propsOf('TextArea');
 
-    expect(props?.parse(textArea.props)).toEqual(textArea.props);
-    expect(props?.safeParse({ ...textArea.props, value: 3 }).success).toBe(
+    expect(schema.parse(textArea.props)).toEqual(textArea.props);
+    expect(schema.safeParse({ ...textArea.props, value: 3 }).success).toBe(
       false,
     );
   });
@@ -93,7 +104,7 @@ describe('loading and failure', () => {
 
     expect(supportsWireNode(spinner)).toBe(true);
     expect(
-      kitComponent('Spinner')?.props.safeParse({}).success,
+      propsOf('Spinner').safeParse({}).success,
       'a Spinner without a name is refused',
     ).toBe(false);
   });
@@ -104,10 +115,11 @@ describe('loading and failure', () => {
       title: 'Couldn’t load this Issue',
       description: 'The tracker did not answer.',
     };
+
     const callout = node('Callout', props, { actions: [retry] });
 
     expect(supportsWireNode(callout)).toBe(true);
-    expect(kitComponent('Callout')?.props.parse(props)).toMatchObject(props);
+    expect(propsOf('Callout').parse(props)).toMatchObject(props);
     expect(
       supportsWireNode(node('Callout', props, { actions: [node('Screen')] })),
     ).toBe(false);

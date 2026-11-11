@@ -102,7 +102,17 @@ export const LongPillsLeaveTheTitleHalf: Story = {
   play: async ({ canvas }) => {
     const scroll = await canvas.findByLabelText(listLabel);
     const titleText = canvas.getByText(longTitle);
-    const [count] = seen(await canvas.findAllByText(/^\+\d$/));
+
+    // The count shows once the line has measured its Pills.
+    const [count] = await waitFor(() => {
+      const counts = seenCounts(canvas);
+
+      expect(counts.length, 'the row drew no count of its hidden Pills').toBe(
+        1,
+      );
+
+      return counts;
+    });
 
     if (!count) throw new Error('the row drew no count of its hidden Pills');
 
@@ -144,7 +154,7 @@ function clipOf(element: Element): Element {
 }
 
 // A box's width less its own padding: the room its content has.
-function contentBox(box: Element): { left: number; width: number } {
+function contentBox(box: Element): Pick<DOMRect, 'left' | 'width'> {
   const { left, width } = box.getBoundingClientRect();
   const style = getComputedStyle(box);
   const before = Number.parseFloat(style.paddingLeft);
