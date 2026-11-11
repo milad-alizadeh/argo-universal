@@ -129,6 +129,8 @@ export type {
   PageTo,
 } from './plugin-api';
 
+export type { PageState } from '@repo/contracts/plugins/page-address';
+
 // A Loader page's parts and the paged list its Render reads (ADR-0050).
 export type {
   ListPage,
@@ -155,6 +157,9 @@ export {
 export declare const oauthFlow: OAuthFlowPattern;
 
 export type * from '@repo/contracts/plugins/oauth-flow-api';
+
+// The device flow and the sign-in pattern that draws either flow.
+export * from './sign-in';
 
 import type { OAuthFlowPattern } from '@repo/contracts/plugins/oauth-flow-api';
 

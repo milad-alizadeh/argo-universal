@@ -4,22 +4,24 @@ import {
   ListDetail,
   Screen,
   type Argo,
-  type LoaderPage,
+  type LoaderInput,
   type PagedList,
   type PageTo,
   type PluginProps,
 } from '@argo/plugin-kit';
+import { signInGate, type GatedPage } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { listFilter } from './filter-list';
 import {
   filterState,
   filterTargets,
-  listFilter,
   loadFilter,
   noIssuesBecause,
   type FilterData,
   type FilterState,
 } from './filter-loader';
 import { issueRow } from './filter-rows';
+import { signInOptions } from './github-account';
 import type { Issue } from './github-issues';
 import { repositoryText } from './issue-client';
 import type { IssueDeps } from './issue-deps';
@@ -39,24 +41,45 @@ type To = PageTo<FilterState>;
 export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   // A status change on any page, the Issue page's own included, leaves the counts and drawn lists stale.
   deps.changes.subscribe(() => argo.changed());
-  argo.pages.define(filterPattern, filterPage(deps));
+  argo.pages.define(
+    filterPattern,
+    signInGate(deps.signIn, signInOptions, filterPage(deps)),
+  );
 }
 
 function filterPage(
   deps: IssueDeps,
-): LoaderPage<FilterState, FilterData, Issue> {
+): GatedPage<FilterState, FilterData, Issue> {
   const targetOf = filterTargets(deps);
 
   return {
     state: filterState,
     load: (input) => loadFilter(deps, input.read, targetOf(input)),
-    list: (input, cursor) =>
-      listFilter(targetOf(input), input.state.query, cursor),
+    list: (input, cursor) => listOf({ deps, targetOf, input }, cursor),
     render: (data, to, { state, list }) => (
       <FilterPage {...{ data, to, list }} query={state.query} />
     ),
   };
 }
+
+type Targets = ReturnType<typeof filterTargets>;
+
+// What a draw's list reads: its page's deps and target, and its input.
+type ListSource = {
+  deps: IssueDeps;
+  targetOf: Targets;
+  input: LoaderInput<FilterState>;
+};
+
+const listOf = (
+  { deps, targetOf, input }: ListSource,
+  cursor: string | null,
+): ReturnType<typeof listFilter> =>
+  listFilter(
+    { deps, read: input.read, target: targetOf(input) },
+    input.state.query,
+    cursor,
+  );
 
 type PageProps = {
   data: FilterData;

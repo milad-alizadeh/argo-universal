@@ -12,6 +12,11 @@ export class QueryTiming {
     return this.due;
   }
 
+  // A write landed since the read in flight began.
+  get overtaken(): boolean {
+    return this.writtenDuringRead;
+  }
+
   // Whether the last read finished at least `ms` ago; never, without an interval.
   olderThan(ms: number | undefined): boolean {
     return (

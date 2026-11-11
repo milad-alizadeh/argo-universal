@@ -1,12 +1,15 @@
 import type { Issue } from './github-issues';
-import { openClient, projectById } from './issue-client';
+import { unwrap } from './github-reads';
 import type { IssueDeps } from './issue-deps';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
 
 // What a Session row and the Session bar say about an Issue: its state, and its title for a tooltip.
 export type IssueSummary = Pick<Issue, 'title' | 'status' | 'closedAs'>;
 
-type Source = Pick<IssueDeps, 'storage' | 'trackers' | 'listProjects'>;
+type Source = Pick<
+  IssueDeps,
+  'storage' | 'trackers' | 'listProjects' | 'reads' | 'readQuery'
+>;
 
 type Target = Pick<IssueLink, 'projectId' | 'number'>;
 
@@ -16,8 +19,8 @@ const freshForMs = 60_000;
 export type IssueSummaries = {
   // The last summary this Plugin stored for the Issue; `null` until one has loaded.
   cached: (target: Target) => Promise<IssueSummary | null>;
-  // Loads each Issue's summary in the background and tells Argo, through `changed`, when one differs from the stored.
-  refresh: (targets: readonly Target[]) => void;
+  // The Issue's summary for a Slot: the stored one, refreshed in the background, or else one read now within the budget.
+  answer: (target: Target) => Promise<IssueSummary | null>;
   // The Issue's state changed, so the next ask loads it again whatever its age.
   stale: (number: number) => void;
 };
@@ -49,13 +52,35 @@ export function createIssueSummaries(
 ): IssueSummaries {
   const loadedAt = new Map<string, number>();
   const cached = storedSummary(source.storage);
-  const load = loadSummary(source, cached, changed);
+  const loads = { loadedAt, load: loadSummary(source, cached, changed) };
+  const first = { source, cached, changed };
 
   return {
     cached,
-    refresh: (targets) => refreshAll({ loadedAt, load }, targets),
+    answer: (target) => answering(loads, first, target),
     stale: (number) => forget(loadedAt, number),
   };
+}
+
+type First = {
+  source: Source;
+  cached: IssueSummaries['cached'];
+  changed: () => void;
+};
+
+// The stored summary, refreshed on the side, or else one read now.
+async function answering(
+  loads: Loads,
+  first: First,
+  target: Target,
+): Promise<IssueSummary | null> {
+  const stored = await first.cached(target);
+
+  if (!stored) return firstSummary(first, target);
+
+  refreshAll(loads, [target]);
+
+  return stored;
 }
 
 const storedSummary =
@@ -63,21 +88,67 @@ const storedSummary =
   (target) =>
     storage.readCache<IssueSummary>(cacheKey(target)).catch(() => null);
 
+type Read = { summary: IssueSummary; differs: boolean };
+
+// Reads the summary through the Issue's Query and stores it when it differs from the stored one.
+async function readAndStore(
+  source: Source,
+  cached: IssueSummaries['cached'],
+  target: Target,
+): Promise<Read> {
+  const summary = await summaryOf(source, target);
+
+  const differs =
+    JSON.stringify(summary) !== JSON.stringify(await cached(target));
+
+  if (differs) await source.storage.writeCache(cacheKey(target), summary);
+
+  return { summary, differs };
+}
+
 function loadSummary(
   source: Source,
   cached: IssueSummaries['cached'],
   changed: () => void,
 ): Loads['load'] {
   return async (target) => {
-    const summary = await summaryOf(source, target);
-
-    if (JSON.stringify(summary) === JSON.stringify(await cached(target)))
-      return;
-
-    await source.storage.writeCache(cacheKey(target), summary);
-    changed();
+    if ((await readAndStore(source, cached, target)).differs) changed();
   };
 }
+
+// How long a Slot's first answer waits for the Issue before it answers without it.
+const slotBudgetMs = 1500;
+
+const late = Symbol('late');
+
+/*
+ * The first answer for an Issue not stored yet reads it through the Query in the Slot's own call, so the Slot says
+ * nothing is `changed` and the page's entry stays as fresh as it was; one that is late answers without it, then says so.
+ */
+async function firstSummary(
+  { source, cached, changed }: First,
+  target: Target,
+): Promise<IssueSummary | null> {
+  const loading = readAndStore(source, cached, target).catch(() => null);
+  const winner = await Promise.race([loading, timeout()]);
+
+  return winner === late ? lateSummary(loading, changed) : summaryIn(winner);
+}
+
+const summaryIn = (read: Read | null): IssueSummary | null =>
+  read?.summary ?? null;
+
+// A read that missed the budget answers without it, then says the Slots' items changed once it lands.
+function lateSummary(loading: Promise<Read | null>, changed: () => void): null {
+  void loading.then((read) => read && changed());
+
+  return null;
+}
+
+const timeout = (): Promise<typeof late> =>
+  new Promise((done) => {
+    setTimeout(() => done(late), slotBudgetMs);
+  });
 
 function refreshAll(loads: Loads, targets: readonly Target[]): void {
   const unique = new Map(targets.map((target) => [keyOf(target), target]));
@@ -104,12 +175,12 @@ async function summaryOf(
   source: Source,
   { projectId, number }: Target,
 ): Promise<IssueSummary> {
-  const project = await projectById(source.listProjects, projectId);
+  // The same entry a page's Loader reads, so a Slot and a page asking for the Issue make one read.
+  const settled = await source.readQuery(
+    source.reads.issue({ projectId, number }),
+  );
 
-  if (!project) throw new Error('This Project no longer exists.');
-
-  const client = await openClient({ ...source, project });
-  const { title, status, closedAs } = await client.getIssue(number);
+  const { title, status, closedAs } = unwrap(settled);
 
   return { title, status, closedAs };
 }

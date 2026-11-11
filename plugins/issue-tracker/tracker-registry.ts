@@ -1,17 +1,17 @@
 import type { Argo, PluginProps } from '@argo/plugin-kit';
-import {
-  createGitHubTracker,
-  githubRepositoryFromOrigin,
-  type TrackerClient,
-} from './github-tracker';
+import { githubRepositoryFromOrigin } from './github-repository';
+import { createGitHubTracker, type TrackerClient } from './github-tracker';
 
 const githubId = 'github';
+
+// The Project a client reads for: its id borrows the Project's Account, its origin names the repository.
+type ClientProject = { id: string; originUrl: string | null | undefined };
 
 type TrackerType = {
   id: string;
   name: string;
   icon: NonNullable<PluginProps['Label']['icon']>;
-  openClient: (originUrl: string | null | undefined) => TrackerClient | null;
+  openClient: (project: ClientProject) => TrackerClient | null;
 };
 
 export type PublicTracker = Pick<TrackerType, 'id' | 'name' | 'icon'>;
@@ -43,10 +43,12 @@ function createGitHubType(argo: Argo): TrackerType {
     id: githubId,
     name: 'GitHub Issues',
     icon: 'issue',
-    openClient: (originUrl) => {
+    openClient: ({ id, originUrl }) => {
       const repository = githubRepositoryFromOrigin(originUrl);
 
-      return repository ? createGitHubTracker(argo, repository) : null;
+      return repository
+        ? createGitHubTracker(argo.fetch, { projectId: id, repository })
+        : null;
     },
   };
 }

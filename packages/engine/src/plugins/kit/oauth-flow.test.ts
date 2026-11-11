@@ -131,3 +131,7 @@ it('provides the kept token to borrowers in the header the flow names', async ()
     }),
   ).toBe('token-1');
 });
+
+it('needs the Server Device, which a device flow does not', () => {
+  expect(oauthFlow(fakeProvider().argo, linear).serverDevice).toBe(true);
+});

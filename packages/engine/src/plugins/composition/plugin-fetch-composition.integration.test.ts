@@ -136,3 +136,25 @@ it('refuses a Host header that would reach another site on the same address, log
     [expect.stringContaining('Plugin probe: refused argo.fetch GET')],
   );
 });
+
+it('sends a User-Agent of Argo unless the Plugin gives its own, in any casing, redirects included', async () => {
+  const port = await serving();
+  const url = `https://localhost:${port}/user-agent`;
+  const viaRedirect = redirectTo(port, url);
+
+  const { results } = await runProbe({
+    calls: {
+      none: `argo.fetch(${JSON.stringify(url)}).then((r) => r.json())`,
+      hop: `argo.fetch(${JSON.stringify(viaRedirect)}).then((r) => r.json())`,
+      own: `argo.fetch(${JSON.stringify(url)}, { headers: { 'User-Agent': 'mine' } }).then((r) => r.json())`,
+    },
+    capabilities: [localhost(port)],
+    network: true,
+  });
+
+  expect(results).toEqual({
+    none: { value: 'Argo' },
+    hop: { value: 'Argo' },
+    own: { value: 'mine' },
+  });
+});

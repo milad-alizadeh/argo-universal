@@ -1,8 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
-import {
-  githubRepositoryFromOrigin,
-  type TrackerClient,
-} from './github-tracker';
+import { githubRepositoryFromOrigin } from './github-repository';
+import type { TrackerClient } from './github-tracker';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
@@ -28,7 +26,7 @@ const noRemoteMessage = 'This Project has no GitHub remote.';
 // The Project's chosen Tracker, open on its repository; its failure says what to set up.
 export async function openClient(source: ClientSource): Promise<TrackerClient> {
   const tracker = await chosenTracker(source);
-  const client = tracker.openClient(source.project.originUrl);
+  const client = tracker.openClient(source.project);
 
   if (!client) throw new Error(noRemoteMessage);
 

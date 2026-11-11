@@ -89,6 +89,26 @@
           }
         },
         "caller": ["project"]
+      },
+      {
+        "name": "signIn",
+        "label": "Sign in to GitHub",
+        "description": "Asks GitHub for a sign-in code, shows it on the sign-in page, and adds the Account once the person approves it on GitHub.",
+        "tier": "act",
+        "keywords": ["account", "sign in"]
+      },
+      {
+        "name": "cancelSignIn",
+        "label": "Cancel GitHub sign-in",
+        "description": "Stops waiting for the GitHub sign-in code to be approved.",
+        "tier": "act",
+        "keywords": ["account", "sign in"]
+      }
+    ],
+    "accounts": [
+      {
+        "host": "api.github.com",
+        "page": "/sign-in"
       }
     ]
   },
@@ -97,68 +117,14 @@
       "kind": "sessions:read"
     },
     {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["auth", "status"],
-      "env": ["GH_HOST", "GH_TOKEN"]
+      "kind": "fetch",
+      "host": "api.github.com",
+      "reason": "Reads and changes Issues as the signed-in person, and is the host of the Account this Plugin provides."
     },
     {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": [
-        "issue",
-        "list",
-        "--repo",
-        "*",
-        "--state",
-        "all",
-        "--search",
-        "*",
-        "--limit",
-        "*",
-        "--json",
-        "*"
-      ],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": [
-        "api",
-        "-X",
-        "GET",
-        "search/issues",
-        "-f",
-        "*",
-        "-f",
-        "per_page=1"
-      ],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["label", "list", "--repo", "*", "--limit", "*", "--json", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "view", "*", "--repo", "*", "--json", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "close", "*", "--repo", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "reopen", "*", "--repo", "*"],
-      "env": ["GH_HOST", "GH_TOKEN"]
+      "kind": "fetch",
+      "host": "github.com",
+      "reason": "Asks for the device sign-in code and exchanges it for a token."
     }
   ]
 }

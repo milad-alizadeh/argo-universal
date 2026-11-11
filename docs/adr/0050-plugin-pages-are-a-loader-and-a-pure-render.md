@@ -14,7 +14,7 @@ This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.m
 
 ## Slots
 
-- **Items Slots are unchanged.** ADR-0046's items Slots (Project details, Session row meta, Activity, Session bar) still answer items, not trees, and Argo keeps each answer per worker generation.
+- **Items Slots are unchanged.** ADR-0046's items Slots (Project details, Session row meta, Activity, Session bar) still answer items, not trees, and Argo keeps each answer per worker generation. A Slot's provider has no Loader, so it reads a named Query with `argo.queries.read`, which answers from the entry a page's Loader reads and so shares it with the page.
 - **Workbench card pages are Loader pages.** The `page` and `tab` of an `argo/session/workbench/v1` card are drawn by the same path as any page, at their Page address with the Session's `projectId` and `sessionId` as context. Argo's card frame stays Argo's; only what fills it changes.
 - **Replaceable Slots answer once.** ADR-0027's `ui.render` Hook returns a tree from a pure render, with Component events as values (`ctx.to.go`, `ctx.to.run`). The Server checks it as it checks a page's tree and answers the App once, with no view and no subscription. Core draws its own when the tree is refused, throws or needs a newer App than the one asking, and the Server logs why. New core props ask again.
 - **A background pass runs the Loader alone.** On its interval the Server runs the background page's `load` for one Project, with no render, no tree and no mounted view, within the same sixty-second budget.

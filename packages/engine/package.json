@@ -70,6 +70,7 @@
     "./mocks/engine-channel": "./mocks/engine-channel.ts",
     "./mocks/app-socket": "./mocks/app-socket.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts",
+    "./mocks/test-accounts": "./mocks/test-accounts.ts",
     "./mocks/data-fixture": "./mocks/data-fixture.ts",
     "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
     "./mocks/acp-engine": "./mocks/acp-engine.ts",

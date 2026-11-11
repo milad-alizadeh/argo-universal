@@ -9,7 +9,7 @@ import type { ConfiguredTest } from './test-configuration';
 const unavailable = (): Promise<never> =>
   Promise.reject(new Error('Plugin settings are not available'));
 
-// A Plugin's own tests turn nothing off and hold no Accounts; settings reach the runtime through `settings`.
+// A Plugin's own tests turn nothing off; settings reach the runtime through `settings`.
 const unmanagedSettings: PluginServiceDeps['pluginSettings'] = {
   enabled: () => true,
   setEnabled: () =>
@@ -18,16 +18,15 @@ const unmanagedSettings: PluginServiceDeps['pluginSettings'] = {
   change: unavailable,
 };
 
-const noAccounts: PluginServiceDeps['pluginAccounts'] = {
-  list: () => [],
-  grants: () => [],
-  removePlugin: () => Promise.resolve(),
+export type ServiceParts = {
+  runtime: PluginRuntime;
+  accounts: PluginServiceDeps['pluginAccounts'];
 };
 
 export function serviceFor(
   home: string,
   options: ConfiguredTest,
-  runtime: PluginRuntime,
+  { runtime, accounts }: ServiceParts,
 ): PluginService {
   return new PluginService({
     home,
@@ -35,6 +34,6 @@ export function serviceFor(
     firstPartyPluginsDirectory: resolve(options.directory),
     pluginRuntime: runtime,
     pluginSettings: unmanagedSettings,
-    pluginAccounts: noAccounts,
+    pluginAccounts: accounts,
   });
 }
