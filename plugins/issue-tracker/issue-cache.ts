@@ -67,7 +67,7 @@ function seedAll(
   issues: readonly Issue[],
 ): void {
   for (const issue of issues)
-    keep(held, keyOf(projectId, issue.number), Promise.resolve(issue));
+    void keep(held, keyOf(projectId, issue.number), Promise.resolve(issue));
 }
 
 function forgetAll({ entries }: Held, projectId: string): void {
