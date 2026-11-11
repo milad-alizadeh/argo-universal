@@ -43,9 +43,13 @@ export interface InsetCase {
   card?: boolean;
 }
 
+// A padded column holds nothing around the rows; a card's holds no end gap under them either.
+const paddedInsets = (card: boolean | undefined): ListInsets =>
+  card ? { paddingBottom: 0 } : {};
+
 // Where the List sits decides on its own: a padded column holds nothing around the rows, a menu holds its own.
 function placeInsets(state: InsetCase): ListInsets | undefined {
-  if (state.padded) return state.card ? { paddingBottom: 0 } : {};
+  if (state.padded) return paddedInsets(state.card);
 
   return state.menu ? menuInsets : undefined;
 }
