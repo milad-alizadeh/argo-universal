@@ -7,6 +7,7 @@ import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
 import { defineIssuePages } from './issue-pages';
 import { projectDetailsItems } from './project-details';
+import { defineSessionIssuePages } from './session-issue-pages';
 import { registerSessionFills } from './session-slots';
 import { registerStatusOperation } from './status-operation';
 import { defineTrackerPage } from './tracker-page';
@@ -50,6 +51,7 @@ export async function register(api: Argo): Promise<void> {
   defineIssuePages(api, deps);
   defineFilterPage(api, deps);
   defineTrackerPage(api, deps);
+  defineSessionIssuePages(api, deps);
 
   api.slots.register(projectDetails, (request) =>
     projectDetailsItems(deps, request),

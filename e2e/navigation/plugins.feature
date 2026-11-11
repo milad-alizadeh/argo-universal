@@ -141,6 +141,37 @@ Feature: Plugin navigation
     When I press "Toggle Counter card" in the Session header menu
     Then the Session Workbench shows the Plugin card "Counter card"
 
+  Scenario: A Plugin's Workbench card is drawn only while its page has something to show
+    Given a wide Frame
+    And a Session named "Check the live list"
+    Then the Session Workbench has no Plugin card "Notes"
+    When I open the Lists Plugin
+    And I press "Fill the Notes card" on the Plugin page
+    And I return to Sessions
+    And I open the Session "Check the live list"
+    Then the Session Workbench shows the Plugin card "Notes"
+    When I open the Lists Plugin
+    And I press "Empty the Notes card" on the Plugin page
+    And I return to Sessions
+    And I open the Session "Check the live list"
+    Then the Session Workbench has no Plugin card "Notes"
+
+  Scenario: A Plugin card that empties takes its Inspector tab with it
+    Given a wide Frame
+    And a Session named "Check the live list"
+    When I open the Lists Plugin
+    And I press "Fill the Notes card" on the Plugin page
+    And I return to Sessions
+    And I open the Session "Check the live list"
+    And I press the Plugin card "Notes"
+    Then the Inspector tab "Notes" shows "Notes in full"
+    When I open the Lists Plugin
+    And I press "Empty the Notes card" on the Plugin page
+    And I return to Sessions
+    And I open the Session "Check the live list"
+    Then the Session Workbench has no Plugin card "Notes"
+    And the Inspector has no tab "Notes"
+
   Scenario: A Plugin ListDetail drills into the opened row on a phone Frame
     Given a phone Frame
     When I open the Issues Plugin

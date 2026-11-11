@@ -12,7 +12,7 @@ import { eachYielded, firstOf, isYielding, type Stop } from './live-loads';
 import { loaderInputOf, pageInputOf, pageTo, renderedList } from './page-input';
 import { drawnPaged, type Paged } from './paged-lists';
 import type { DrawLists } from './query-reads';
-import { valuesOf } from './render-tree';
+import { pageValuesOf } from './render-tree';
 import { swallowed } from './swallowed';
 
 export type DrawEvent = Extract<PluginEvent, { type: 'draw' }>;
@@ -197,7 +197,7 @@ function renderPage<State extends PageState, Data, Item>(
   { data, pageInput, paged }: Rendering<State, Data, Item>,
 ): Rendered {
   const list = renderedList(paged);
-  const root = valuesOf(page.render(data, pageTo(), { ...pageInput, list }));
+  const root = pageValuesOf(page.render(data, pageTo(), { ...pageInput, list }));
 
   return { root, pages: paged.pages };
 }

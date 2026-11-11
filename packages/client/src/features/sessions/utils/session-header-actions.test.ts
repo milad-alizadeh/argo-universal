@@ -26,7 +26,29 @@ const ids = (items: readonly { item: SessionHeaderAction }[]): string[] =>
 
 const showsAll = (): boolean => true;
 
+const toCard: SessionHeaderAction = {
+  ...action('issue-card', 'header'),
+  target: { type: 'card', cardId: 'issue' },
+};
+
+// The actions beside "…" on a desktop when a card action leads, its card filled or not.
+const besideWithCard = (filled: boolean): string[] =>
+  ids(
+    placeSessionHeaderActions(
+      [{ pluginId: 'tracker', item: toCard }, ...declared],
+      { phone: false, shows: showsAll, filled: () => filled },
+    ).beside,
+  );
+
 describe('placeSessionHeaderActions', () => {
+  it('leaves out an action whose Workbench card has nothing to show', () => {
+    expect(besideWithCard(false)).toEqual(['deploy']);
+  });
+
+  it('keeps an action whose Workbench card has something to show', () => {
+    expect(besideWithCard(true)).toEqual(['issue-card']);
+  });
+
   it('puts the first header action beside "…" on a desktop and the rest in it, in Slot order', () => {
     const placed = placeSessionHeaderActions(declared, {
       phone: false,

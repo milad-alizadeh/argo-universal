@@ -1,5 +1,6 @@
-import { List, ListItem, Label, Pill } from '@argo/plugin-kit';
+import { List, ListItem, Label, Pill, Stack } from '@argo/plugin-kit';
 import { defineIssues } from './issues.js';
+import { defineNotes, NotesSwitch } from './notes.js';
 
 const builds = [
   { id: 'web', title: 'Deploy web' },
@@ -35,8 +36,12 @@ export function register(argo) {
     state: { selected: '' },
     load: () => builds,
     render: (items, to, { state }) => (
-      <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
+      <Stack direction="column">
+        <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
+        <NotesSwitch to={to} />
+      </Stack>
     ),
   });
   defineIssues(argo.pages);
+  defineNotes(argo);
 }

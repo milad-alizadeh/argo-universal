@@ -105,6 +105,7 @@ function PlacedSessionHeader({
     sessionId,
     compact,
     toggleCard: cardToggle({ cards, panels }, compact),
+    filled: cards.filled,
   });
 
   return <SessionPageHeader {...withPluginActions(props, pluginActions)} />;

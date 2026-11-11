@@ -43,7 +43,11 @@ export {
   WorkbenchTasks,
 } from './components/session-workbench-tasks';
 
-export { type SessionPanels, useSessionPanels } from './stores/session-panels';
+export {
+  closeSessionPanel,
+  type SessionPanels,
+  useSessionPanels,
+} from './stores/session-panels';
 
 export { SessionMemory, useSessionMemory } from './stores/session-memory';
 

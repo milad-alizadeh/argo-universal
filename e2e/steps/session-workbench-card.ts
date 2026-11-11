@@ -1,13 +1,20 @@
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Then, When } from './fixtures';
 
-// A Plugin's card in the Workbench column, keyed by the Plugin and the card it declares.
-const counterCard = 'workbench-plugin:counter/counter-card';
+// The fixture Plugins' cards in the Workbench column, keyed by the Plugin and the card each declares.
+const cardIds: Record<string, string> = {
+  'Counter card': 'workbench-plugin:counter/counter-card',
+  Notes: 'workbench-plugin:lists/notes',
+};
+
+const cardOf = (page: Page, title: string): Locator =>
+  page.getByTestId(cardIds[title] ?? title);
 
 Then(
   'the Session Workbench shows the Plugin card {string}',
   async ({ page }, title: string): Promise<void> => {
-    const card = page.getByTestId(counterCard);
+    const card = cardOf(page, title);
 
     await expect(card).toBeVisible();
     await expect(card.getByText(title, { exact: true })).toBeVisible();
@@ -17,7 +24,7 @@ Then(
 Then(
   'the Session Workbench has no Plugin card {string}',
   async ({ page }, title: string): Promise<void> => {
-    await expect(page.getByTestId(counterCard)).toHaveCount(0);
+    await expect(cardOf(page, title)).toHaveCount(0);
     await expect(page.getByText(title, { exact: true })).toHaveCount(0);
   },
 );
@@ -51,5 +58,14 @@ When(
       .getByRole('menu')
       .getByRole('menuitem', { name, exact: true })
       .click();
+  },
+);
+
+Then(
+  'the Inspector has no tab {string}',
+  async ({ page }, tab: string): Promise<void> => {
+    await expect(page.getByRole('tab', { name: tab, exact: true })).toHaveCount(
+      0,
+    );
   },
 );
