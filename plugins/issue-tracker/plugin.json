@@ -72,7 +72,7 @@
       {
         "name": "checkAgain",
         "label": "Read a Project's Issues again",
-        "description": "Make the Project's Issues and counts be read from the tracker again, as after a page said it could not read them.",
+        "description": "Make the Issue tracker's pages read again.",
         "tier": "read",
         "keywords": ["issue", "refresh", "retry"],
         "caller": ["project"]
