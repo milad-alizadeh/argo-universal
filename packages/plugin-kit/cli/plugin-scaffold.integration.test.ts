@@ -10,13 +10,29 @@ import {
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pluginTemplate } from '@repo/contracts/plugins/plugin-template';
-import { expect, it, onTestFinished } from 'vitest';
+import { beforeAll, expect, it, onTestFinished } from 'vitest';
 import { z } from 'zod';
 import { runPluginCommand } from './plugin-command';
 
 const kitRoot = fileURLToPath(new URL('..', import.meta.url));
 
 const checkFile = 'package.json';
+
+const contracts = join(kitRoot, '..', 'contracts');
+
+// The kit's component declarations are generated and not committed; an install that skips its scripts lacks them, and no Plugin type-checks without them.
+beforeAll(
+  () =>
+    new Promise<void>((resolve, reject) => {
+      execFile(
+        process.execPath,
+        ['--import', 'tsx', join('tools', 'generate-plugin-kit.mts')],
+        { cwd: contracts, timeout: 120_000 },
+        (error) => (error ? reject(error) : resolve()),
+      );
+    }),
+  150_000,
+);
 
 // Inside the kit's package, with the node_modules a `pnpm install` gives a Plugin: the kit, Node's types, TypeScript.
 async function scaffold(): Promise<string> {
