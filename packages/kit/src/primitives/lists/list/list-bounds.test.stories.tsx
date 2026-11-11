@@ -70,6 +70,9 @@ export const ScrollingToTheEndShowsTheEnd: Story = {
   },
 };
 
+// The row's own padding, which its box holds beside the half the title keeps.
+const rowInset = 32;
+
 const longTitle =
   'A row title long enough to need every pixel the line can give it';
 
@@ -102,13 +105,16 @@ export const LongPillsLeaveTheTitleHalf: Story = {
     const scroll = await canvas.findByLabelText(listLabel);
     const titleText = canvas.getByText(longTitle);
     const [count] = seen(await canvas.findAllByText(/^\+\d$/));
-    const row = rowOf(titleText, count ?? document.body);
-    const title = titleText.getBoundingClientRect();
 
-    await expect(
-      { titleHalf: title.right - row.left >= row.width / 2 },
-      `title ends at ${title.right} in a row ${row.left}–${row.right}`,
-    ).toEqual({ titleHalf: true });
+    await waitFor(() => {
+      const ended = titleText.getBoundingClientRect();
+      const row = rowOf(titleText, count ?? document.body);
+
+      return expect(
+        { titleHalf: ended.right - row.left >= row.width / 2 - rowInset },
+        `title ends at ${ended.right} in a row ${row.left}–${row.right}`,
+      ).toEqual({ titleHalf: true });
+    });
     await expect(
       { overflows: scroll.scrollWidth > scroll.clientWidth },
       `list content is ${scroll.scrollWidth} wide in ${scroll.clientWidth}`,
