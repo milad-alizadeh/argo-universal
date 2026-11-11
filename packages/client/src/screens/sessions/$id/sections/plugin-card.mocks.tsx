@@ -4,6 +4,8 @@ import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { SessionPluginCard } from './plugin-card-section';
 
+const trackerId = 'issue-tracker';
+
 const ticketIcon = { sf: 'ticket', material: 'confirmation_number' } as const;
 
 export const issueCardSummary = '#412 · In review';
@@ -17,7 +19,7 @@ export const coverageCardSummary = '78% of lines covered';
  * draws. A story passes the drawn page, as the Session does.
  */
 export const issueTrackerCard: SessionPluginCard = {
-  pluginId: 'issue-tracker',
+  pluginId: trackerId,
   card: {
     id: 'issue',
     title: 'Issue',
@@ -45,7 +47,7 @@ export const listCardRow = 'Fix the tracker card';
 
 // A card whose page is a List of rows that press nothing of their own, so the card's body is what a press on a row opens.
 export const listCard: SessionPluginCard = {
-  pluginId: 'issue-tracker',
+  pluginId: trackerId,
   card: {
     id: 'rows',
     title: 'Rows',
@@ -69,7 +71,7 @@ export const sessionRowBranch = 'argo/c17-workbench-card-style';
 
 // A card whose page is a List of FieldGroup.Link rows, as the Issue tracker's Sessions list is: a long title and a long branch.
 export const sessionsCard: SessionPluginCard = {
-  pluginId: 'issue-tracker',
+  pluginId: trackerId,
   card: {
     id: 'sessions',
     title: 'Sessions',

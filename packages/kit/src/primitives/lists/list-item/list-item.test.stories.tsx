@@ -9,6 +9,8 @@ import { Pill } from '#primitives/status/pill';
 import { SkeletonLoadingContext } from '#primitives/status/skeleton';
 import { ListItem, ListItemInert, useListItemPress } from './index';
 
+const ariaDisabled = 'aria-disabled';
+
 const title = 'Item one';
 
 const openIssueName = 'Open issue';
@@ -39,7 +41,7 @@ export const Disabled: Story = {
   args: { disabled: true },
   play: async ({ args, canvas, userEvent }) => {
     const row = canvas.getByRole('button', { name: title });
-    await expect(row).toHaveAttribute('aria-disabled', 'true');
+    await expect(row).toHaveAttribute(ariaDisabled, 'true');
     row.focus();
     await userEvent.keyboard('{Enter}');
     await expect(args.onPress).not.toHaveBeenCalled();
@@ -72,7 +74,7 @@ export const CountBadge: Story = {
     await expect(await canvas.findByLabelText('3')).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Disabled item' }),
-    ).toHaveAttribute('aria-disabled', 'true');
+    ).toHaveAttribute(ariaDisabled, 'true');
   },
 };
 
@@ -317,8 +319,6 @@ const holdOnly = (row: ReactElement): ReactElement => (
 );
 
 const holderPress = fn();
-
-const ariaDisabled = 'aria-disabled';
 
 export const ARowWithOnlyALongPressStillActs: Story = {
   args: { onPress: undefined, onLongPress: fn() },
