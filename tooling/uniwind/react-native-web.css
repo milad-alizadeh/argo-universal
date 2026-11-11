@@ -201,28 +201,30 @@
 }
 
 /* ShimmerText: a band of brightness sweeps along a line while the Agent works.
-   Two mask layers add up: the line rests at --shimmer-rest, and a band as wide as
-   --shimmer-band carries it the rest of the way to whole as it passes. The browser
-   runs it, so a line costs one node and no JavaScript a frame. */
+   The glyphs are filled by two backgrounds clipped to them: the line rests at
+   --shimmer-rest of its colour, and a band as wide as --shimmer-band carries it the
+   rest of the way to whole as it passes. The browser runs it, so a line costs one
+   node and no JavaScript a frame. Not a mask: under one, the desktop app drew the
+   band inside the Composer's glass as well. */
 .shimmer-text {
   --shimmer-rest: 0.45;
   /* Sixteen characters wide, as the native sweep's band is, at about half an em each. */
   --shimmer-band: 8em;
-  mask-repeat: no-repeat;
-  mask-size:
+  --shimmer-rest-color: color-mix(
+    in srgb,
+    currentColor calc(var(--shimmer-rest) * 100%),
+    transparent
+  );
+  /* The fill is cleared, not the colour, so the backgrounds still read the line's own colour. */
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-repeat: no-repeat;
+  background-size:
     var(--shimmer-band) 100%,
     100% 100%;
-  mask-image:
-    linear-gradient(
-      to right,
-      transparent,
-      rgb(0 0 0 / calc(1 - var(--shimmer-rest))) 50%,
-      transparent
-    ),
-    linear-gradient(
-      rgb(0 0 0 / var(--shimmer-rest)),
-      rgb(0 0 0 / var(--shimmer-rest))
-    );
+  background-image:
+    linear-gradient(to right, transparent, currentColor 50%, transparent),
+    linear-gradient(var(--shimmer-rest-color), var(--shimmer-rest-color));
   animation: shimmer-text-sweep 1600ms linear infinite;
 }
 /* An emphasized line rests brighter, so its band carries it less far. */
@@ -231,12 +233,12 @@
 }
 @keyframes shimmer-text-sweep {
   from {
-    mask-position:
+    background-position:
       calc(0px - var(--shimmer-band)) 0,
       0 0;
   }
   to {
-    mask-position:
+    background-position:
       calc(100% + var(--shimmer-band)) 0,
       0 0;
   }
@@ -244,7 +246,8 @@
 /* Reduced motion holds the line whole and still. */
 @media (prefers-reduced-motion: reduce) {
   .shimmer-text {
-    mask-image: none;
+    -webkit-text-fill-color: currentColor;
+    background-image: none;
     animation: none;
   }
 }
