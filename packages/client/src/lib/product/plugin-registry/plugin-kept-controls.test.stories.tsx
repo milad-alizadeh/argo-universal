@@ -115,8 +115,11 @@ export const DraftClearsWhenFocusLeaves: Story = {
     await userEvent.type(field, ' draft');
     await expect(field).toHaveValue('Argo draft');
 
-    server.sends(withFields({ name: text('Renamed') }));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // The same tree also flips toggle a, so its arrival is seen before the draft is checked.
+    server.sends(withFields({ name: text('Renamed'), a: toggle('a', true) }));
+    await waitFor(() =>
+      expect(canvas.getByRole('switch', { name: 'Toggle a' })).toBeChecked(),
+    );
     await expect(field).toHaveValue('Argo draft');
 
     await userEvent.tab();

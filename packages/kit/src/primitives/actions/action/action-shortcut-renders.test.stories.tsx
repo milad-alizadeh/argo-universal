@@ -141,3 +141,45 @@ export const NewRowTakingHeldKeyLosesIt: Story = {
     await context.userEvent.keyboard('{Escape}');
   },
 };
+
+// Two Plugin rows ask for one key; the first holds it until it goes away.
+function HolderLeaves(): React.JSX.Element {
+  const [gone, setGone] = useState(false);
+
+  return (
+    <ActionShortcutScope>
+      <Button label="Remove row a" onPress={() => setGone(true)} />
+      <PluginTreeContext value>
+        {(gone ? ['dup'] : ['a', 'dup']).map((name) => (
+          <ShortcutRow key={name} name={name} />
+        ))}
+      </PluginTreeContext>
+    </ActionShortcutScope>
+  );
+}
+
+// The row that lost a key shows its hint once the row holding it is gone.
+export const LoserShowsHintWhenHolderLeaves: Story = {
+  render: () => <HolderLeaves />,
+  play: async (context) => {
+    await settleLayout('wide');
+    await nextFrames();
+
+    const before = await hintOf('dup', context);
+    await expect(within(before).queryByText('A')).toBeNull();
+    await context.userEvent.keyboard('{Escape}');
+
+    await context.userEvent.click(
+      context.canvas.getByRole('button', { name: 'Remove row a' }),
+    );
+    await waitFor(() =>
+      expect(
+        context.canvas.queryByRole('button', { name: 'Row a' }),
+      ).toBeNull(),
+    );
+
+    const after = await hintOf('dup', context);
+    await waitFor(() => expect(within(after).getByText('A')).toBeVisible());
+    await context.userEvent.keyboard('{Escape}');
+  },
+};
