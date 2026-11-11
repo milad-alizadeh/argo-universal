@@ -122,8 +122,10 @@ export const valuesOf = (element: Drawn): WireJson =>
   wireJsonOf(renderTree(element));
 
 /*
- * A Loader page's tree: a Render that returns nothing answers the empty root, which says the page has nothing to
- * show, so a Workbench card of it is not drawn (ADR-0035).
+ * A Loader page's tree: a Render that draws nothing, as `null`, `[]` or a Fragment of nothing, answers the empty
+ * root, which says the page has nothing to show, so a Workbench card of it is not drawn (ADR-0035).
  */
 export const pageValuesOf = (element: Drawn): WireJson =>
-  isEmpty(element) ? wireJsonOf(emptyPage()) : valuesOf(element);
+  instancesOf(element).length === 0
+    ? wireJsonOf(emptyPage())
+    : valuesOf(element);

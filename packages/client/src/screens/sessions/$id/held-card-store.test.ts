@@ -61,7 +61,7 @@ describe('HeldCardStore', () => {
     expect(watcher).toHaveBeenCalled();
   });
 
-  it('says a card emptied when its page drew something and then answers with nothing', () => {
+  it('says a page answered nothing when it drew something and then answers with nothing', () => {
     const store = new HeldCardStore();
 
     store.hold(issue, held(text));
@@ -69,15 +69,13 @@ describe('HeldCardStore', () => {
     expect(store.hold(issue, held(emptyPage()))).toBe(true);
   });
 
-  it('says nothing emptied when a page answers with nothing before it ever drew', () => {
+  it('says a page answered nothing on its first answer, as after the Session remounts', () => {
     const store = new HeldCardStore();
 
-    store.hold(issue, held(null));
-
-    expect(store.hold(issue, held(emptyPage()))).toBe(false);
+    expect(store.hold(issue, held(emptyPage()))).toBe(true);
   });
 
-  it('says nothing emptied while a card that drew waits for its next answer', () => {
+  it('says nothing answered while a page waits, even one that drew before', () => {
     const store = new HeldCardStore();
 
     store.hold(notes, held(text));
@@ -85,13 +83,10 @@ describe('HeldCardStore', () => {
     expect(store.hold(notes, held(null))).toBe(false);
   });
 
-  it('says nothing emptied when a card that drew was released before it answers with nothing', () => {
+  it('says nothing answered for a page that draws something', () => {
     const store = new HeldCardStore();
 
-    store.hold(notes, held(text));
-    store.release(notes);
-
-    expect(store.hold(notes, held(emptyPage()))).toBe(false);
+    expect(store.hold(notes, held(text))).toBe(false);
   });
 
   it('keeps the same filled list while a change inside a card leaves which cards are filled alone', () => {

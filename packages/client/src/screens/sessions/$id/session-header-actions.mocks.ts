@@ -57,6 +57,7 @@ export const desktopPluginActions = (): SessionPluginActions =>
   placeSessionHeaderActions(declaredHeaderActions.map(pressable), {
     phone: false,
     shows: showsAll,
+    filled: () => true,
   });
 
 // As iOS and Android place them: every one inside "…".
@@ -64,6 +65,7 @@ export const phonePluginActions = (): SessionPluginActions =>
   placeSessionHeaderActions(declaredHeaderActions.map(pressable), {
     phone: true,
     shows: showsAll,
+    filled: () => true,
   });
 
 // An idle Session whose header carries the Plugins' actions as placed.

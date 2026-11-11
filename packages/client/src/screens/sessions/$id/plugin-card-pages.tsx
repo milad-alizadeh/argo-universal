@@ -19,9 +19,13 @@ export interface CardOpening {
   projectId: string;
 }
 
+// How a card's page is drawn: the Loader cache's, unless a story stands in for it.
+export type UsePage = (opening: PageOpening) => HeldCardPage;
+
 interface Holding {
   store: HeldCardStore;
   opening: CardOpening | undefined;
+  usePage?: UsePage;
 }
 
 /*
@@ -33,6 +37,7 @@ export function HeldCardPages({
   cards,
   opening,
   store,
+  usePage,
 }: Holding & { cards: readonly HeldCard[] }): ReactNode {
   if (!opening) return null;
 
@@ -42,6 +47,7 @@ export function HeldCardPages({
       store={store}
       opening={opening}
       card={card}
+      usePage={usePage}
     />
   ));
 }
@@ -50,14 +56,16 @@ function HeldPage({
   store,
   opening,
   card: { cardKey, pluginId, path },
+  usePage = usePluginPage,
 }: {
   store: HeldCardStore;
   opening: CardOpening;
   card: HeldCard;
+  usePage?: UsePage;
 }): null {
   useHoldPage(
     { store, sessionId: opening.sessionId, cardKey },
-    usePluginPage({ pluginId, path, ...opening }),
+    usePage({ pluginId, path, ...opening }),
   );
 
   return null;
@@ -77,8 +85,8 @@ function useCurrent<Value>(value: Value): { current: Value } {
 type Held = { store: HeldCardStore; sessionId: string; cardKey: string };
 
 /*
- * Keeps one card's page in the store while it lasts. A card that empties closes its Inspector tab, or its sheet on
- * a phone, so neither comes back unasked; one still waiting for its Plugin keeps its tab. The page's call handler
+ * Keeps one card's page in the store while it lasts. A page that answers nothing, on its first answer or after drawing, closes its
+ * Inspector tab, or its sheet on a phone, so neither comes back unasked; one still waiting for its Plugin keeps its tab. The page's call handler
  * changes with its render, so the held one calls the current.
  */
 function useHoldPage(

@@ -35,14 +35,12 @@ export class HeldCardStore {
     return this.pages.get(key);
   }
 
-  // Holds the card's latest page; true when it drew something and now answers with nothing, not when it waits.
+  // Holds the card's latest page; true when it has answered with nothing, whether or not it drew something before, and not while it waits.
   public hold(key: string, page: HeldCardPage): boolean {
-    const emptied = this.filledKeys.includes(key) && answeredNothing(page);
-
     this.pages.set(key, page);
     this.changed();
 
-    return emptied;
+    return answeredNothing(page);
   }
 
   public release(key: string): void {

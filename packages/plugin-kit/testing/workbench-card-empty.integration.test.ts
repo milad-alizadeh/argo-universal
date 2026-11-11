@@ -14,6 +14,8 @@ export function register(argo) {
   argo.pages.define('/nothing', { load: () => null, render: () => null });
   argo.pages.define('/empty-stack', { load: () => null, render: () => <Stack direction="column" /> });
   argo.pages.define('/text', { load: () => null, render: () => <Text>One line</Text> });
+  argo.pages.define('/empty-list', { load: () => null, render: () => [] });
+  argo.pages.define('/null-fragment', { load: () => null, render: () => <>{null}{false}</> });
   argo.pages.define('/by-session', {
     load: ({ context: { sessionId } }) => sessionId,
     render: (sessionId) => (sessionId === 'attached' ? <Text>Attached</Text> : null),
@@ -46,6 +48,11 @@ async function drawsSomething(
 
 it('answers the empty root for a page that returns null', async () => {
   expect(await drawsSomething('/nothing')).toBe(false);
+});
+
+it('answers the empty root for a page that renders nothing at all: an empty list or a Fragment of nothing', async () => {
+  expect(await drawsSomething('/empty-list')).toBe(false);
+  expect(await drawsSomething('/null-fragment')).toBe(false);
 });
 
 it('answers a tree for a page that drew an empty Stack or one Text', async () => {

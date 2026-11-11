@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { Then, When } from './fixtures';
+import { Given, Then, When } from './fixtures';
 
 // The fixture Plugins' cards in the Workbench column, keyed by the Plugin and the card each declares.
 const cardIds = new Map([
@@ -8,8 +8,17 @@ const cardIds = new Map([
   ['Notes', 'workbench-plugin:lists/notes'],
 ]);
 
+const cardId = (title: string): string => {
+  const id = cardIds.get(title);
+
+  if (id === undefined)
+    throw new Error(`No fixture Plugin card is titled ${title}`);
+
+  return id;
+};
+
 const cardOf = (page: Page, title: string): Locator =>
-  page.getByTestId(cardIds.get(title) ?? title);
+  page.getByTestId(cardId(title));
 
 Then(
   'the Session Workbench shows the Plugin card {string}',
@@ -69,3 +78,15 @@ Then(
     );
   },
 );
+
+// The Notes card's flag lives in the Plugin's process, so each scenario starts it from a known state.
+Given('the Notes card has nothing to show', async ({ page }): Promise<void> => {
+  await page
+    .getByTestId('desktop-rail')
+    .getByRole('button', { name: 'Lists', exact: true })
+    .click();
+  await page
+    .getByTestId('plugin-page')
+    .getByRole('button', { name: 'Empty the Notes card', exact: true })
+    .click();
+});

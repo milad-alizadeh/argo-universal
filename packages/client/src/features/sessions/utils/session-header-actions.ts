@@ -28,16 +28,14 @@ interface HeaderPlace {
   // This Device's per-Plugin switch on the Slot's Settings page.
   shows: (pluginId: string) => boolean;
   // Whether a Plugin's Workbench card has something to show; an action targeting one that has not is left out.
-  filled?: (pluginId: string, cardId: string) => boolean;
+  filled: (pluginId: string, cardId: string) => boolean;
 }
-
-const alwaysFilled = (): boolean => true;
 
 // An action is drawn when this Device shows its Plugin and, if it targets a card, the card has something to show.
 const drawn = (
   { pluginId, item: { target } }: DeclaredHeaderAction,
   shows: HeaderPlace['shows'],
-  filled: NonNullable<HeaderPlace['filled']>,
+  filled: HeaderPlace['filled'],
 ): boolean =>
   shows(pluginId) &&
   (target.type !== 'card' || filled(pluginId, target.cardId));
@@ -48,7 +46,7 @@ const drawn = (
  */
 export function placeSessionHeaderActions<Action extends DeclaredHeaderAction>(
   declared: readonly Action[],
-  { phone, shows, filled = alwaysFilled }: HeaderPlace,
+  { phone, shows, filled }: HeaderPlace,
 ): PlacedHeaderActions<Action> {
   const { limit, shown } = sessionHeaderSlot.content.placement;
   const visible = declared.filter((action) => drawn(action, shows, filled));

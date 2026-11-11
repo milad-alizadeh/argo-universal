@@ -26,6 +26,8 @@ const ids = (items: readonly { item: SessionHeaderAction }[]): string[] =>
 
 const showsAll = (): boolean => true;
 
+const allFilled = (): boolean => true;
+
 const toCard: SessionHeaderAction = {
   ...action('issue-card', 'header'),
   target: { type: 'card', cardId: 'issue' },
@@ -53,6 +55,7 @@ describe('placeSessionHeaderActions', () => {
     const placed = placeSessionHeaderActions(declared, {
       phone: false,
       shows: showsAll,
+      filled: allFilled,
     });
 
     expect(ids(placed.beside)).toEqual(['deploy']);
@@ -63,6 +66,7 @@ describe('placeSessionHeaderActions', () => {
     const placed = placeSessionHeaderActions(declared, {
       phone: true,
       shows: showsAll,
+      filled: allFilled,
     });
 
     expect(placed.beside).toEqual([]);
@@ -73,6 +77,7 @@ describe('placeSessionHeaderActions', () => {
     const placed = placeSessionHeaderActions(declared, {
       phone: false,
       shows: (pluginId) => pluginId !== 'deploys',
+      filled: allFilled,
     });
 
     expect(ids(placed.beside)).toEqual(['issue']);
@@ -82,7 +87,7 @@ describe('placeSessionHeaderActions', () => {
   it('keeps menu actions in "…" even when the header has room', () => {
     const placed = placeSessionHeaderActions(
       [{ pluginId: 'tracker', item: action('board', 'menu') }],
-      { phone: false, shows: showsAll },
+      { phone: false, shows: showsAll, filled: allFilled },
     );
 
     expect(placed.beside).toEqual([]);
