@@ -3,6 +3,7 @@
   "include": [
     "**/*.test.ts",
     "github-fixture.ts",
+    "github-fixture-data.ts",
     "journey-fixture.ts",
     "sign-in-helpers.ts",
     "tracker-answering.ts",

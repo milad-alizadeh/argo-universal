@@ -2,7 +2,6 @@ import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { SignInRequired } from './github-api';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
-import type { IssueCache } from './issue-cache';
 import { openClient, projectById, type ClientSource } from './issue-client';
 import type { Overview } from './overview';
 
@@ -56,7 +55,6 @@ async function settle<Value>(
 
 type Source = Pick<ClientSource, 'storage' | 'trackers'> & {
   listProjects: Argo['projects']['list'];
-  issueCache: IssueCache;
 };
 
 type Target = { projectId: string };
@@ -84,37 +82,50 @@ async function clientFor(
   return openClient({ ...source, project });
 }
 
-/*
- * The tracker's GitHub reads, named reads (ADR-0037): every page and Slot that asks the same question shares the
- * one answer Argo keeps for it, and a status change or a sign-in, which say `argo.changed()`, make it due.
- */
-// A list's Issues are read in full, so each is kept for the page and Slot summary that ask for it next.
+// A list's Issues are read in full, so each seeds the entry a page opened from its row, or a Slot's summary, reads next.
 async function listed(
   source: Source,
+  seed: (issue: Issue) => Promise<void>,
   { projectId, search, limit }: IssuesTarget,
 ): Promise<Issue[]> {
-  const issues = await (
-    await clientFor(source, projectId)
-  ).listIssues(search, limit);
+  const client = await clientFor(source, projectId);
+  const issues = await client.listIssues(search, limit);
 
-  source.issueCache.seed(projectId, issues);
+  await Promise.all(issues.map(seed));
 
   return issues;
 }
 
-const issueOf = async (source: Source, target: IssueTarget): Promise<Issue> =>
-  source.issueCache.get(target, async () =>
-    (await clientFor(source, target.projectId)).getIssue(target.number),
+/*
+ * The tracker's GitHub reads, named reads (ADR-0037): every page and Slot that asks the same question shares the
+ * one entry Argo keeps for it, and a status change or a sign-in, which say `argo.changed()`, make it due.
+ */
+const issueRead = (argo: Argo, source: Source): GitHubReads['issue'] =>
+  argo.queries.define('issue', ({ projectId, number }: IssueTarget) =>
+    settle(async () => (await clientFor(source, projectId)).getIssue(number)),
   );
 
-export const defineReads = (argo: Argo, source: Source): GitHubReads => ({
-  overview: argo.queries.define('overview', ({ projectId }: Target) =>
-    settle(async () => (await clientFor(source, projectId)).overview()),
-  ),
-  issues: argo.queries.define('issues', (target: IssuesTarget) =>
-    settle(() => listed(source, target)),
-  ),
-  issue: argo.queries.define('issue', (target: IssueTarget) =>
-    settle(() => issueOf(source, target)),
-  ),
-});
+// Seeds the entry of each Issue a list read in full, as the Query a page or a Slot's summary would read it.
+const seeding =
+  (argo: Argo, issue: GitHubReads['issue'], projectId: string) =>
+  (found: Issue): Promise<void> =>
+    argo.queries.seed(issue({ projectId, number: found.number }), {
+      ok: true,
+      value: found,
+    });
+
+export function defineReads(argo: Argo, source: Source): GitHubReads {
+  const issue = issueRead(argo, source);
+
+  return {
+    issue,
+    overview: argo.queries.define('overview', ({ projectId }: Target) =>
+      settle(async () => (await clientFor(source, projectId)).overview()),
+    ),
+    issues: argo.queries.define('issues', (target: IssuesTarget) =>
+      settle(() =>
+        listed(source, seeding(argo, issue, target.projectId), target),
+      ),
+    ),
+  };
+}

@@ -4,13 +4,8 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
-import {
-  childIssue,
-  childNumber,
-  parentIssue,
-  parentNumber,
-} from './github-issue-nodes';
-import { isObject, parseJson, pick, type Json, type JsonObject } from './json';
+import { answer, dataOf, secondToken, tokenOf } from './github-fixture-data';
+import { childNumber, parentNumber } from './github-issue-nodes';
 
 const slowRefusalMs = 1000;
 
@@ -19,9 +14,6 @@ const unauthorized = 401;
 const forbidden = 403;
 
 const unprocessable = 422;
-
-const textOf = (value: Json | undefined): string =>
-  typeof value === 'string' ? value : '';
 
 // What the device flow's token endpoint answers, one reply for each poll.
 export type PollReply = {
@@ -37,62 +29,6 @@ export type GitHubFixture = FixtureServices & {
   accepted: Set<string>;
   graphqlCalls: () => FixtureRequest[];
 };
-
-const answer = (body: string, status?: number): FixtureAnswer => ({
-  status,
-  text: body,
-});
-
-const variablesOf = (body: Json): JsonObject => {
-  const variables = pick(body, 'variables');
-
-  return isObject(variables) ? variables : {};
-};
-
-const overviewData = (variables: JsonObject): string =>
-  JSON.stringify({
-    repository: {
-      labels: { nodes: [{ name: 'fixture' }, { name: 'good first issue' }] },
-    },
-    ...Object.fromEntries(
-      Object.entries(variables).flatMap(([key, query]) =>
-        key.startsWith('count')
-          ? [[key, { issueCount: textOf(query).includes('is:closed') ? 0 : 2 }]]
-          : [],
-      ),
-    ),
-  });
-
-const issueData = (variables: JsonObject): string =>
-  JSON.stringify({
-    repository: {
-      issue:
-        Number(variables.number) === childNumber ? childIssue() : parentIssue(),
-    },
-  });
-
-const searchData = (variables: JsonObject): string => {
-  const closed = textOf(variables.query).includes('is:closed');
-
-  return JSON.stringify({
-    search: { nodes: closed ? [] : [parentIssue(), childIssue()] },
-  });
-};
-
-function dataOf(request: FixtureRequest): string {
-  const body = parseJson(request.body);
-  const variables = variablesOf(body);
-
-  if ('count0' in variables) return overviewData(variables);
-
-  if (textOf(pick(body, 'query')).includes('issue(number:'))
-    return issueData(variables);
-
-  return searchData(variables);
-}
-
-const tokenOf = (request: FixtureRequest): string =>
-  String(request.headers.authorization ?? '').replace('Bearer ', '');
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((done) => setTimeout(done, ms));
@@ -110,9 +46,16 @@ async function patch(request: FixtureRequest): Promise<FixtureAnswer> {
   );
 }
 
+// Who a token signs in: the second token is another person.
+const userAnswer = (request: FixtureRequest): FixtureAnswer =>
+  answer(
+    JSON.stringify({
+      login: tokenOf(request) === secondToken ? 'hubot' : 'octocat',
+    }),
+  );
+
 function api(request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> {
-  if (request.path === '/user')
-    return answer(JSON.stringify({ login: 'octocat' }));
+  if (request.path === '/user') return userAnswer(request);
 
   if (request.method === 'PATCH') return patch(request);
 

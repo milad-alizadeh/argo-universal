@@ -10,7 +10,7 @@ import { boundWarm, keepNewest, queryKey, removeWhere } from './entry-map';
 import { NamedReads } from './named-reads';
 import { PluginBadges } from './plugin-badges';
 import { QueryEntry, type EntryServices } from './query-entry';
-import type { QueryOwner, QueryServices } from './query-types';
+import type { QueryOwner, QueryRead, QueryServices } from './query-types';
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
 
@@ -62,26 +62,61 @@ export class PluginData {
     request: PluginDataRequest,
     origin: QueryOrigin,
   ): Promise<PluginReply> {
-    return { ok: true, value: await this.read(caller, origin, request) };
+    return {
+      ok: true,
+      value:
+        request.action === 'seed'
+          ? this.seed(caller, origin, request)
+          : await this.read(caller, origin, request),
+    };
   }
 
-  // A background pass reads every Query fresh, so the answers it warms are the ones the pages draw next.
+  // A named read's answer for another named read's Query, kept for the Project the first one runs for.
+  private seed(
+    caller: Caller,
+    { projectId }: QueryOrigin,
+    { query, value }: Extract<PluginDataRequest, { action: 'seed' }>,
+  ): null {
+    if (query.api !== 'read')
+      throw new Error('Only a named read can be seeded');
+
+    this.entry(caller, projectId, query).seed(value);
+
+    return null;
+  }
+
+  /*
+   * A background pass reads every Query fresh, so the answers it warms are the ones the pages draw next. Code
+   * outside a draw reads the kept answer, for the Project it names, and holds nothing.
+   */
   private read(
     caller: Caller,
-    { projectId, drawn }: QueryOrigin,
-    { query, fresh }: PluginDataRequest,
+    origin: QueryOrigin,
+    request: Extract<PluginDataRequest, { action: 'read' }>,
   ): Promise<PluginDataState> {
-    if (!drawn) throw new Error('A Query is read only during a draw');
+    const entry = this.readEntry(caller, origin, request);
+    const { drawn } = origin;
 
-    const entries = this.entriesOf(caller.pluginId);
-    const entry = this.entry(caller, projectId, query);
+    return entry.read(
+      drawn ? drawnRead(drawn, request.fresh) : { fresh: false },
+    );
+  }
 
-    boundWarm(entries, this.services.log, caller.pluginId);
+  // The entry a read is for, kept within the Plugin's bound on warm ones.
+  private readEntry(
+    caller: Caller,
+    { projectId }: QueryOrigin,
+    { query, projectId: named }: Extract<PluginDataRequest, { action: 'read' }>,
+  ): QueryEntry {
+    const entry = this.entry(caller, named ?? projectId, query);
 
-    return entry.read({
-      ...drawn,
-      fresh: fresh === true || drawn.holder === undefined,
-    });
+    boundWarm(
+      this.entriesOf(caller.pluginId),
+      this.services.log,
+      caller.pluginId,
+    );
+
+    return entry;
   }
 
   private entry(
@@ -146,3 +181,9 @@ export class PluginData {
       if (entry.owner.query.api === 'storage') entry.written();
   }
 }
+
+// A Loader's read holds its Page address, and a background pass, which holds none, reads fresh.
+const drawnRead = (drawn: DrawnFor, fresh: boolean | undefined): QueryRead => ({
+  ...drawn,
+  fresh: fresh === true || drawn.holder === undefined,
+});

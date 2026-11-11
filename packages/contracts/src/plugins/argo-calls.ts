@@ -126,14 +126,33 @@ export type PluginDataState = z.infer<typeof PluginDataState>;
 
 /*
  * A Loader's read during the draw its code runs for, held by that draw's Page address: the kept answer
- * unless a write made it due, or read again when `fresh`, as a pull reads its list's first page.
+ * unless a write made it due, or read again when `fresh`, as a pull reads its list's first page. Code that
+ * runs outside a draw, such as a Slot's provider, reads the same entry with `projectId` naming the Project
+ * its Query is for (none when the page it shares with has none), and holds nothing.
  */
-export const PluginDataRequest = z.object({
+const DataRead = z.object({
   api: z.literal('data'),
   action: z.literal('read'),
   query: PluginQuery,
   fresh: z.boolean().optional(),
+  projectId: z.string().optional(),
 });
+
+/*
+ * A named read's own answer for another named read's Query, kept as that Query's answer as if it had just been
+ * read: a list that read each Issue in full seeds the Issue's entry, so a page opened from its row needs no read.
+ */
+const DataSeed = z.object({
+  api: z.literal('data'),
+  action: z.literal('seed'),
+  query: PluginQuery,
+  value: WireJson,
+});
+
+export const PluginDataRequest = z.discriminatedUnion('action', [
+  DataRead,
+  DataSeed,
+]);
 
 export type PluginDataRequest = z.infer<typeof PluginDataRequest>;
 

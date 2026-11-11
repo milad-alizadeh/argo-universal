@@ -2,7 +2,6 @@ import type { Argo } from '@argo/plugin-kit';
 import { defineFilterPage } from './filter-page';
 import { githubSignIn, provideGitHub } from './github-account';
 import { defineReads } from './github-reads';
-import { createIssueCache } from './issue-cache';
 import { createIssueChanges } from './issue-changes';
 import type { IssueDeps } from './issue-deps';
 import { registerIssueOperations } from './issue-operations';
@@ -28,7 +27,7 @@ const createSource = (
   getSession: api.sessions.get,
   storage: createTrackerStorage(api, trackers.has),
   trackers,
-  issueCache: createIssueCache(),
+  readQuery: api.queries.read,
 });
 
 function createDeps(api: Argo): IssueDeps {

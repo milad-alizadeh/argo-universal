@@ -84,8 +84,6 @@ async function answerSessions(
   const sessionIds = contexts.map(({ sessionId }) => sessionId);
   const links = await deps.storage.sessionLinks(sessionIds);
 
-  summaries.refresh(links);
-
   const grouped = groupBySession(await withSummaries(summaries, links));
 
   return Object.fromEntries(
@@ -100,7 +98,7 @@ const withSummaries = (
   Promise.all(
     links.map(async (link) => ({
       link,
-      summary: await summaries.cached(link),
+      summary: await summaries.answer(link),
     })),
   );
 

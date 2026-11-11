@@ -45,7 +45,10 @@ export class QueryEntry {
     return this.state;
   }
 
-  private async untilCurrent(draw: number, tries: number): Promise<void> {
+  private async untilCurrent(
+    draw: number | undefined,
+    tries: number,
+  ): Promise<void> {
     if (tries === 0 || this.current()) return;
     await this.refresh(draw);
 
@@ -98,6 +101,17 @@ export class QueryEntry {
   private finished(): void {
     this.flight = undefined;
     this.timing.finished();
+  }
+
+  // An answer another read already holds is kept as this Query's, as if it had just been read.
+  seed(value: PluginDataState['data']): void {
+    const before = this.state.data;
+
+    this.timing.started();
+    this.publish(queryState(this.state, { ok: true, value }));
+    this.timing.finished();
+
+    if (changed(before, this.state.data)) this.markHolders();
   }
 
   // A write makes the entry due: a read in flight lands still due, and the next Loader read waits for a fresh answer.

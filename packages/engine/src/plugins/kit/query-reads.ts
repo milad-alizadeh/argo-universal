@@ -30,7 +30,7 @@ type ListRead = (cursor: string | null) => object | Promise<object>;
 export type DrawLists = Map<number, ListRead>;
 
 export interface QueryReads {
-  api: QueriesApi;
+  api: Pick<QueriesApi, 'define'>;
   answer: (event: ReadEvent) => void;
 }
 

@@ -25,6 +25,7 @@ export type QueryServices = {
 export type QueryRead = {
   holder?: PageAddress;
   fresh: boolean;
-  draw: number;
+  // The draw reading, which a paged list's page is read for; code outside a draw has none.
+  draw?: number;
   every?: number;
 };

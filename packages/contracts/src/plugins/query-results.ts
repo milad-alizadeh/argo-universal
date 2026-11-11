@@ -41,4 +41,22 @@ export type QueriesApi = Readonly<{
     name: string,
     read: (args: Args, context: QueryReadContext) => Value | Promise<Value>,
   ) => (args: Args) => NamedQuery<Value>;
+  /*
+   * Reads a named Query from code that runs outside a draw, such as a Slot's provider, through the entry a
+   * page's Loader reads: the answer Argo keeps unless a write made it due, so a Slot and a page asking the
+   * same question make one read. `projectId` names the Project the Query is for; leave it out to share the
+   * entry of a page that has none. It throws when the Query has no answer yet.
+   */
+  read: <Value>(
+    query: NamedQuery<Value>,
+    options?: { projectId?: string },
+  ) => Promise<QueryResult<NamedQuery<Value>>>;
+  /*
+   * Keeps `value` as the answer of another named Query, for the Project of the read that calls it, as if it
+   * had just been read. Call it from a named read that already holds the answer.
+   */
+  seed: <Value extends CrossesAsJson<Value>>(
+    query: NamedQuery<Value>,
+    value: Value,
+  ) => Promise<void>;
 }>;
