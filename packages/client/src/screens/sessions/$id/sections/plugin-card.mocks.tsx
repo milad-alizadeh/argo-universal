@@ -4,6 +4,8 @@ import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { SessionPluginCard } from './plugin-card-section';
 
+const ticketIcon = { sf: 'ticket', material: 'confirmation_number' } as const;
+
 export const issueCardSummary = '#412 · In review';
 
 export const issueCardFullView = 'Every comment on #412';
@@ -19,7 +21,7 @@ export const issueTrackerCard: SessionPluginCard = {
   card: {
     id: 'issue',
     title: 'Issue',
-    icon: { sf: 'ticket', material: 'confirmation_number' },
+    icon: ticketIcon,
     page: '/issues/session',
     tab: '/issues/session/full',
   },
@@ -47,7 +49,7 @@ export const listCard: SessionPluginCard = {
   card: {
     id: 'rows',
     title: 'Rows',
-    icon: { sf: 'ticket', material: 'confirmation_number' },
+    icon: ticketIcon,
     page: '/issues/rows',
     tab: '/issues/rows/full',
   },
@@ -59,6 +61,8 @@ export const listCard: SessionPluginCard = {
   tab: <Text>{issueCardFullView}</Text>,
 };
 
+const noop = (): void => {};
+
 export const sessionRowTitle = 'Work on the tracker card for the Workbench';
 
 export const sessionRowBranch = 'argo/c17-workbench-card-style';
@@ -69,7 +73,7 @@ export const sessionsCard: SessionPluginCard = {
   card: {
     id: 'sessions',
     title: 'Sessions',
-    icon: { sf: 'ticket', material: 'confirmation_number' },
+    icon: ticketIcon,
     page: '/issues/sessions',
   },
   page: (
@@ -79,7 +83,7 @@ export const sessionsCard: SessionPluginCard = {
           id="session-one"
           title={sessionRowTitle}
           value={sessionRowBranch}
-          onPress={() => undefined}
+          onPress={noop}
         />
       </List.Section>
     </List>

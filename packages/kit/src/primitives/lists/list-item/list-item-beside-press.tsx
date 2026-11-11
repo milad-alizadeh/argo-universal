@@ -46,8 +46,7 @@ const paintOnly = new Set([
   'onLayout',
 ]);
 
-// A link or a popup acts like a handler does.
-// A disabled row keeps its Pressable too, for its disabled state.
+// A link or a popup acts like a handler does, and a disabled row keeps its Pressable for its disabled state.
 const actingProps = new Set(['href', 'aria-haspopup', 'disabled']);
 
 const actingKey = (key: string): boolean =>

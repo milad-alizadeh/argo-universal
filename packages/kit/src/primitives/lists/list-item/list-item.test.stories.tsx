@@ -318,6 +318,8 @@ const holdOnly = (row: ReactElement): ReactElement => (
 
 const holderPress = fn();
 
+const ariaDisabled = 'aria-disabled';
+
 export const ARowWithOnlyALongPressStillActs: Story = {
   args: { onPress: undefined, onLongPress: fn() },
   decorators: [(Story): ReactElement => holdOnly(<Story />)],
@@ -350,7 +352,7 @@ export const ADisabledRowKeepsItsDisabledState: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText(title)).toBeVisible();
     await expect(canvas.getByLabelText(title)).toHaveAttribute(
-      'aria-disabled',
+      ariaDisabled,
       'true',
     );
   },
@@ -367,6 +369,7 @@ export const ARowWithOnlyActionsKeepsItsMenu: Story = {
       keys: '[MouseRight]',
       target: canvas.getByText(title),
     });
+
     const item = await within(document.body).findByRole('menuitem', {
       name: 'Archive row',
     });
@@ -387,6 +390,7 @@ export const ARowWithOnlyAContextMenuKeepsItsTrigger: Story = {
       keys: '[MouseRight]',
       target: canvas.getByText(title),
     });
+
     const item = await within(document.body).findByRole('menuitem', {
       name: 'Archive row',
     });
