@@ -23,10 +23,10 @@ const shimmerClass = (
   cn('shimmer-text', emphasized && 'shimmer-text-emphasized', className);
 
 /*
- * The browser sweeps the same band as a mask it animates itself, `shimmer-text` in react-native-web.css, so a line
- * costs one node and no JavaScript a frame. It holds the band still under reduced motion, as the media query says.
+ * The browser sweeps the same band itself, as backgrounds clipped to the glyphs, `shimmer-text` in react-native-web.css,
+ * so a line costs one node and no JavaScript a frame. It holds the line whole and still under reduced motion.
  */
-function MaskedShimmer({
+function PaintedShimmer({
   text,
   className,
   emphasized,
@@ -60,7 +60,7 @@ function SweptShimmer({
   );
 }
 
-const Shimmer = Platform.OS === 'web' ? MaskedShimmer : SweptShimmer;
+const Shimmer = Platform.OS === 'web' ? PaintedShimmer : SweptShimmer;
 
 // A line of text a band of brightness sweeps across while the Agent works.
 export function ShimmerText({
