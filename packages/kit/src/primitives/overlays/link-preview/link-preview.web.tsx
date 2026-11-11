@@ -51,9 +51,11 @@ function PreviewAnchor({
 function LinkMark({ mark }: { mark: ReactNode }): ReactElement | null {
   if (!mark) return null;
 
+  // The word joiner forbids a line break between the mark and the label that follows it.
   return (
-    <span className="me-0.5 inline-flex align-middle" aria-hidden>
-      {mark}
+    <span aria-hidden>
+      <span className="me-0.5 inline-flex align-middle">{mark}</span>
+      {'⁠'}
     </span>
   );
 }
