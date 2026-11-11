@@ -5,6 +5,7 @@ import { SvgBudget } from '@repo/kit/primitives/visual';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
+import { pageCallRefused } from './component-event-props';
 import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
 import type { OnPageCall } from './plugin-rendering';
@@ -20,25 +21,23 @@ export interface PluginTreeProps {
   onPageCall?: OnPageCall;
 }
 
-// One function for the tree's life that calls `latest` as its caller passes it now, so a node drawn before still reaches it.
+/*
+ * One function for the tree's life that calls `latest` as its caller passes it now, or `fallback` while it passes none,
+ * so a node kept from an earlier draw still reaches the caller's newest, even one added or removed since.
+ */
 function useLatest<Args extends unknown[], Result>(
   latest: ((...args: Args) => Result) | undefined,
-): ((...args: Args) => Result) | undefined {
+  fallback: (...args: Args) => Result,
+): (...args: Args) => Result {
   const ref = useRef(latest);
   useLayoutEffect(() => {
     ref.current = latest;
   });
 
-  const call = useCallback((...args: Args): Result => {
-    const current = ref.current;
-
-    if (!current)
-      throw new Error('A tree called a function its caller removed');
-
-    return current(...args);
-  }, []);
-
-  return latest ? call : undefined;
+  return useCallback(
+    (...args: Args) => (ref.current ?? fallback)(...args),
+    [fallback],
+  );
 }
 
 // One tree: overlays are ordinary nodes in it.
@@ -47,9 +46,9 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
 
   const context = {
     key: childNodeKey('', props.root.key),
-    openPage: useLatest(props.onOpenPage) ?? pageUnavailable,
+    openPage: useLatest(props.onOpenPage, pageUnavailable),
     controls: useComponentEvents(props.root, drawn),
-    pageCall: useLatest(props.onPageCall),
+    pageCall: useLatest(props.onPageCall, pageCallRefused),
     drawn,
   };
 

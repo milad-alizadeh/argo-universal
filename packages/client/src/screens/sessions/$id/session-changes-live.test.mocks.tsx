@@ -1,6 +1,6 @@
 import type { ChangesSummary } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
-import { type JSX, useMemo, useSyncExternalStore } from 'react';
+import { type JSX, useState, useSyncExternalStore } from 'react';
 import type { ChangesSource } from '#features/changes';
 import type { FileDiff } from '#features/feed';
 import {
@@ -86,12 +86,11 @@ const watchReading = (redraw: () => void): (() => void) => {
   return (): void => void readers.delete(redraw);
 };
 
-// A new catalog for each reading: the compiled source holds what a catalog returned until the catalog itself changes.
-const catalogOf = (files: readonly FileDiff[]): MemoryCatalog => ({
-  files: () => files,
+const catalog: MemoryCatalog = {
+  files: () => reading,
   mainBranch: 'main',
   branches: ['main'],
-});
+};
 
 /*
  * A Server that answers only what the page asks for. The shared in-memory source hands over a comparison's first
@@ -126,11 +125,10 @@ const staleFeed = {
  * Turn whose snapshot keeps the totals it started with.
  */
 export function LiveChangedSession(): JSX.Element {
-  const current = useSyncExternalStore(watchReading, () => reading);
+  useSyncExternalStore(watchReading, () => reading);
 
-  const source = useMemo(
-    () => answersOnlyOpenQueries(memoryChanges(catalogOf(current))),
-    [current],
+  const [source] = useState(() =>
+    answersOnlyOpenQueries(memoryChanges(catalog)),
   );
 
   return (

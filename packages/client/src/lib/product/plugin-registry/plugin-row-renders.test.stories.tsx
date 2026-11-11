@@ -172,3 +172,29 @@ export const KeptRowReachesNewestHandler: Story = {
     await expect(firstHandler).not.toHaveBeenCalled();
   },
 };
+
+// A handler the owner adds after a row was drawn still receives that row's press.
+function LateHandlerTree(): React.JSX.Element {
+  const [added, add] = useState(false);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Button label="Add handler" onPress={() => add(true)} />
+      <View style={{ height: 400 }}>
+        <PluginTree root={root} onPageCall={added ? laterHandler : undefined} />
+      </View>
+    </View>
+  );
+}
+
+export const KeptRowReachesHandlerAddedLater: Story = {
+  render: () => <LateHandlerTree />,
+  play: async ({ canvas, userEvent }) => {
+    laterHandler.mockClear();
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Add handler' }));
+    await userEvent.click(canvas.getByText('Row b'));
+
+    await waitFor(() => expect(laterHandler).toHaveBeenCalled());
+  },
+};
