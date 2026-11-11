@@ -47,16 +47,16 @@ it('says what GitHub answered when it is neither an answer nor a rejection', asy
   );
 });
 
-const issue = {
+const issueNode = () => ({
   number: 8,
   title: 'Keep the boundary',
   state: 'OPEN',
   url: 'https://github.com/owner/repository/issues/8',
-};
+});
 
 it('searches the repository newest first and maps the Issues', async () => {
   const { sent, tracker } = trackerAnswering(
-    reply(200, { data: { search: { nodes: [issue] } } }),
+    reply(200, { data: { search: { nodes: [issueNode()] } } }),
   );
 
   const issues = await tracker.listIssues('is:open', 30);
@@ -108,13 +108,17 @@ it('leaves a filter without a count when GitHub does not report it, and rejects 
 
 it('skips a search node that is no Issue, and rejects a node with some of an Issue only', async () => {
   const skipped = trackerAnswering(
-    reply(200, { data: { search: { nodes: [{}, issue] } } }),
+    reply(200, { data: { search: { nodes: [{}, issueNode()] } } }),
   );
 
-  expect((await skipped.tracker.listIssues('is:open', 30)).length).toBe(1);
+  expect(
+    (await skipped.tracker.listIssues('is:open', 30)).map(
+      ({ number }) => number,
+    ),
+  ).toEqual([8]);
 
   const malformed = trackerAnswering(
-    reply(200, { data: { search: { nodes: [{ number: 9 }, issue] } } }),
+    reply(200, { data: { search: { nodes: [{ number: 9 }, issueNode()] } } }),
   );
 
   await expect(malformed.tracker.listIssues('is:open', 30)).rejects.toThrow(
