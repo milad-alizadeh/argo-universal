@@ -21,6 +21,7 @@ export function useComponentEvents(
 
   return (input) => {
     const field = fieldFor({ fields, drawn }, input);
+
     // A node whose field changed forgets its drawing, then the tree draws again.
     const update = (): void => {
       drawn.forget(input.context.key);

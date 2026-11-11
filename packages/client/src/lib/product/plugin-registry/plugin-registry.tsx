@@ -28,7 +28,15 @@ function useLatest<Args extends unknown[], Result>(
   useLayoutEffect(() => {
     ref.current = latest;
   });
-  const call = useCallback((...args: Args) => ref.current?.(...args) as Result, []);
+
+  const call = useCallback((...args: Args): Result => {
+    const current = ref.current;
+
+    if (!current)
+      throw new Error('A tree called a function its caller removed');
+
+    return current(...args);
+  }, []);
 
   return latest ? call : undefined;
 }
