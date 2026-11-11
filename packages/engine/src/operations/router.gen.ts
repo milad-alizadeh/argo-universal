@@ -206,6 +206,18 @@ export function generatedOperations(runner: OperationRunner) {
         .mutation(({ input }) =>
           runner.run({ kind: 'app', id: 'plugin.setSetting', params: input }),
         ),
+      guide: publicProcedure
+        .input(operations['plugin.guide'].params)
+        .output(operations['plugin.guide'].result)
+        .query(({ input }) =>
+          runner.run({ kind: 'app', id: 'plugin.guide', params: input }),
+        ),
+      new: publicProcedure
+        .input(operations['plugin.new'].params)
+        .output(operations['plugin.new'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'plugin.new', params: input }),
+        ),
     }),
     registry: router({
       get: publicProcedure
