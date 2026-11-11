@@ -16,7 +16,7 @@ const metaClassName = (sidebar: boolean): string =>
 
 type MetaProps = Pick<PlacedContentProps, 'meta' | 'metaAccessories'>;
 
-const hasMeta = (props: MetaProps): boolean =>
+export const hasMeta = (props: MetaProps): boolean =>
   [props.meta, props.metaAccessories].some(Boolean);
 
 /*

@@ -17,7 +17,7 @@ const screen = (slots: Record<string, WireNode[]>): WireNode =>
 const textArea = node('TextArea', {
   label: 'Message',
   value: '',
-  onChangeText: { $event: 'onChangeText' },
+  onChangeText: { bind: 'draft' },
 });
 
 describe("a Screen's frame", () => {
@@ -54,7 +54,11 @@ describe('a multi-line field', () => {
       ...textArea,
       slots: {
         action: [
-          node('IconButton', { icon: 'arrow-up', accessibilityLabel: 'Send' }),
+          node('IconButton', {
+            icon: 'arrow-up',
+            accessibilityLabel: 'Send',
+            onPress: { operation: 'send', args: {} },
+          }),
         ],
       },
     };

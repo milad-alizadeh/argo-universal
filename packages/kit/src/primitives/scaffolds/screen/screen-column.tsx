@@ -20,23 +20,28 @@ export const ScreenColumnEdgesContext = createContext<ColumnEdges | null>(null);
  * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
  * Below wide the phone shell's header runs from the window's edge, so the content does too. `bleed` runs the content to
  * the region's edges with no margins, for a canvas or a map. Where the aside has its own column the capped column
- * keeps the edges it leaves, on every page at that width, with or without an aside, except a `narrow` page with none,
- * which stays centred (screen-aside-place.ts).
+ * keeps the edges it leaves, on every page at that width, with or without an aside.
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
 ): ContentColumn {
-  const capped = useWide() && width === 'content';
+  const wide = useWide();
   const { column, inset } = useColumnTokens();
-  const cap = capped ? column : undefined;
-  const margin = marginOf(width, inset);
+  const cap = capOf(wide && width === 'content', column);
   const beside = useEdgesBeside(cap);
+  const margin = marginOf(width, inset);
 
-  return useMemo(
-    () => (beside ? edgesStyle(beside) : columnStyle(cap, margin)),
-    [beside, cap, margin],
-  );
+  return useMemo(() => placedStyle(beside, cap, margin), [beside, cap, margin]);
 }
+
+const capOf = (capped: boolean, column: number): number | undefined =>
+  capped ? column : undefined;
+
+const placedStyle = (
+  beside: ColumnEdges | null,
+  cap: number | undefined,
+  margin: number,
+): ContentColumn => (beside ? edgesStyle(beside) : columnStyle(cap, margin));
 
 // Only a capped column moves aside; a full one already runs to the margins.
 function useEdgesBeside(cap: number | undefined): ColumnEdges | null {

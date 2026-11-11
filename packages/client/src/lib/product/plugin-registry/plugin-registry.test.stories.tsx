@@ -92,9 +92,9 @@ export const ListAnatomy: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText('CI runs')).toBeVisible();
     await expect(canvas.getByText('main')).toBeVisible();
-    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
-    await expect(canvas.getByText('Production')).toBeVisible();
-    await expect(canvas.getByText('now')).toBeVisible();
+    await expect(canvas.getAllByText('2/5 jobs')[0]).toBeVisible();
+    await expect(canvas.getAllByText('Production')[0]).toBeVisible();
+    await expect(canvas.getAllByText('now')[0]).toBeVisible();
     await expect(canvas.getByRole('progressbar')).toHaveAttribute(
       'aria-valuenow',
       '40',
