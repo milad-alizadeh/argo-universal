@@ -1,5 +1,12 @@
 import type { Argo } from '@argo/plugin-kit';
-import { isObject, item, parseJson, pick, type Json } from './json';
+import {
+  isObject,
+  item,
+  parseJson,
+  pick,
+  type Json,
+  type JsonObject,
+} from './json';
 
 // The one Account every read borrows, named by the API host its token opens (ADR-0036).
 export const githubHost = 'api.github.com';
@@ -81,10 +88,18 @@ export async function graphqlData(
   if (reply.status !== okStatus)
     throw new Error(`GitHub answered ${reply.status}.`);
 
-  const answer = parseJson(await reply.text());
+  return dataOf(parseJson(await reply.text()));
+}
+
+// Data GitHub filled, not hollowed and then explained by its errors.
+const usable = (data: Json | undefined, answer: Json): data is JsonObject =>
+  isObject(data) && !(hollow(data) && hasErrors(answer));
+
+// The answer's data, unless GitHub left it hollow and said why.
+function dataOf(answer: Json): Json {
   const data = pick(answer, 'data');
 
-  if (isObject(data) && !(hollow(data) && hasErrors(answer))) return data;
+  if (usable(data, answer)) return data;
 
   throw new Error(firstError(answer));
 }
