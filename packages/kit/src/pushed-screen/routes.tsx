@@ -13,8 +13,8 @@ import {
   subscribePushedScreens,
 } from './pushed-screen-store';
 
-// An address no route answers, so the router's own not-found page takes it.
-const unknownAddress = '/screen-not-found';
+// The router's own not-found page, where any address no route answers goes.
+const unknownAddress = '/+not-found';
 
 /*
  * The one route (`/screen/[id]`) every pushed page uses: the App's `app/screen/[id].tsx` and a story's `withStack` both
