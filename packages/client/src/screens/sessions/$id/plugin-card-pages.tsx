@@ -14,7 +14,7 @@ export interface HeldCard {
 }
 
 // The Session a card draws for, once its Feed has said which Project it is in.
-export interface CardOpening {
+interface CardOpening {
   sessionId: string;
   projectId: string;
 }

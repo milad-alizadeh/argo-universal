@@ -2,7 +2,7 @@ import type { FixtureAnswer, FixtureRequest } from './fixture-services';
 import type { PluginTest } from './host';
 
 // Plays the public services the Plugin reaches, such as api.github.com, answering each request it makes.
-export type TestServices = (
+type TestServices = (
   request: FixtureRequest,
 ) => FixtureAnswer | Promise<FixtureAnswer>;
 

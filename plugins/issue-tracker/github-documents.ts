@@ -5,10 +5,8 @@ import { builtInFilters } from './issue-filters';
 import { at, isObject, pick, type Json } from './json';
 import type { Overview } from './overview';
 
-// The most labels a repository's grouping shows, and the most Issues one search answers.
+// The most labels a repository's grouping shows.
 const labelLimit = 100;
-
-export const searchLimit = 100;
 
 const listFields = `
   number title state stateReason url createdAt

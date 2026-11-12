@@ -5,7 +5,7 @@ import { isObject, parseJson, pick, type Json, type JsonObject } from './json';
 // The token of the second person the fixture signs in.
 export const secondToken = 'token-2';
 
-export const textOf = (value: Json | undefined): string =>
+const textOf = (value: Json | undefined): string =>
   typeof value === 'string' ? value : '';
 
 export const answer = (body: string, status?: number): FixtureAnswer => ({
@@ -64,7 +64,7 @@ const searchData = (variables: JsonObject): string => {
   });
 };
 
-export function dataOf(request: FixtureRequest): string {
+function dataOf(request: FixtureRequest): string {
   const body = parseJson(request.body);
   const variables = variablesOf(body);
 

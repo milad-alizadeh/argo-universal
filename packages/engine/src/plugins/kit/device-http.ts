@@ -1,5 +1,6 @@
 import type { DeviceFlowArgo } from '@repo/contracts/plugins/device-flow-api';
 import { z } from 'zod';
+import { form } from './form-body';
 
 // What a device endpoint may answer; every field is optional, so an answer that is not JSON reads as one with none.
 export const CodeAnswer = z.object({
@@ -30,11 +31,6 @@ export const TokenAnswer = z.object({
   error: z.string().optional(),
   error_description: z.string().optional(),
 });
-
-const form = (fields: Record<string, string>): string =>
-  Object.entries(fields)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&');
 
 function parsed<Answer>(schema: z.ZodType<Answer>, text: string): Answer {
   try {

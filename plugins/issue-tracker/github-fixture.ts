@@ -21,7 +21,7 @@ const forbidden = 403;
 const unprocessable = 422;
 
 // What the device flow's token endpoint answers, one reply for each poll.
-export type PollReply = {
+type PollReply = {
   access_token?: string;
   error?: string;
   error_description?: string;
