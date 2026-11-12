@@ -1,3 +1,4 @@
+import type { Href } from 'expo-router';
 import { sectionOf } from './sections';
 
 const sectionOfLink = (link: string): string =>
@@ -31,9 +32,18 @@ function decoded(link: string): string | undefined {
   }
 }
 
-// The page a page was opened from, when it was opened from another section.
-export function returnToOf(params?: Carried): string | undefined {
-  const link = params?.returnTo;
+// An address inside the App, which the router can go to; a link out of it is no page to go back to.
+type AppPath = Extract<Href, string>;
 
-  return typeof link === 'string' ? decoded(link) : undefined;
+const isAppPath = (link: string | undefined): link is AppPath =>
+  link?.startsWith('/') ?? false;
+
+const carriedLink = ({ returnTo }: Carried = {}): string | undefined =>
+  typeof returnTo === 'string' ? decoded(returnTo) : undefined;
+
+// The page a page was opened from, when it was opened from another section.
+export function returnToOf(params?: Carried): AppPath | undefined {
+  const path = carriedLink(params);
+
+  return isAppPath(path) ? path : undefined;
 }
