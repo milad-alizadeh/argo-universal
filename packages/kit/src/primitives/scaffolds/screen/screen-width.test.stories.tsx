@@ -52,9 +52,14 @@ export const FullWidthWide = atWidth(widths.Wide, sharedEdge('full'));
  * (the content's parent) to leave the phone's inset, then asserts once. It cannot wait for the wide inset itself:
  * where the aside's lane holds the column (ADR-0049) the column's insets are the lane's edges, not that inset.
  */
-const keepsPhoneInset = (content: Element): boolean =>
-  getComputedStyle(content.parentElement as Element).paddingLeft ===
-  `${phoneInset()}px`;
+const keepsPhoneInset = (content: Element): boolean => {
+  const column = content.parentElement;
+
+  return (
+    column !== null &&
+    getComputedStyle(column).paddingLeft === `${phoneInset()}px`
+  );
+};
 
 function columnCap(width: ScreenWidth, capped: boolean): Story {
   return atWidth(widths.Wide, {
