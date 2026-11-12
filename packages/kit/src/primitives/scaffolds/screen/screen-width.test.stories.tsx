@@ -1,7 +1,7 @@
 import type { ScreenWidth } from '@repo/contracts/kit-tokens';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { columnWidth, wideInset } from '#mocks/story-layout';
+import { columnWidth } from '#mocks/story-layout';
 import { Screen } from './index';
 import { widthContent, WidthExample } from './screen-width.mocks';
 import { atWidth, screenWidths as widths } from './screen-widths.mocks';
@@ -48,25 +48,19 @@ export const FullWidthWide = atWidth(widths.Wide, sharedEdge('full'));
 /*
  * On a wide window the reading column holds the content to its width, and a full Screen lets it run past. The size
  * class reaches the Screen a render after the viewport does, so a loaded machine can draw a first frame that is not
- * wide yet, uncapped either way. The claim is about the wide drawing, so it first waits for the column to take the
- * wide inset, which a phone's does not, and then asserts once.
+ * wide yet, uncapped either way. The claim is about the wide drawing, so it waits for the measured width to settle on
+ * the claim, which a mutated cap never does. It cannot wait for a wide inset instead: where the aside's lane holds the
+ * column (ADR-0049) the column's insets are the lane's edges, not the wide inset, and the width is still the cap.
  */
-const insetsAreWide = (content: Element): boolean => {
-  for (let at = content.parentElement; at; at = at.parentElement)
-    if (getComputedStyle(at).paddingLeft === `${wideInset()}px`) return true;
-
-  return false;
-};
-
 function columnCap(width: ScreenWidth, capped: boolean): Story {
   return atWidth(widths.Wide, {
     render: () => <WidthExample width={width} />,
     play: async ({ canvas }) => {
-      const content = canvas.getByTestId(widthContent);
-
-      await waitFor(() => expect(insetsAreWide(content)).toBe(true));
-      await expect(content.getBoundingClientRect().width <= columnWidth()).toBe(
-        capped,
+      await waitFor(() =>
+        expect(
+          canvas.getByTestId(widthContent).getBoundingClientRect().width <=
+            columnWidth(),
+        ).toBe(capped),
       );
     },
   });
