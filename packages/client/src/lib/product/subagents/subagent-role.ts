@@ -32,6 +32,10 @@ const roleKey = (role: string | null): string => {
 export const subagentRoleMark = (role: string | null): SubagentRoleMark =>
   namedRole(roleKey(role)) ?? roles.general;
 
+// What assistive technology calls an Agent's mark, wherever it is drawn.
+export const subagentMarkLabel = (role: string | null): string =>
+  `${role ?? 'General'} Agent`;
+
 const statusMarks = {
   running: { tone: 'success', label: 'Running' },
   requires_action: { tone: 'warning', label: 'Needs input' },
@@ -48,7 +52,7 @@ type AgentMark = SubagentRoleMark & {
 export function subagentMarkDescriptor(subagent: Subagent): AgentMark {
   return {
     ...subagentRoleMark(subagent.role),
-    label: `${subagent.role ?? 'General'} Agent`,
+    label: subagentMarkLabel(subagent.role),
     status: statusMarks[subagent.state],
     dimmed: subagent.state === 'idle',
   };

@@ -69,8 +69,6 @@ export interface FeedSubagent {
   title: string;
   // Tints and names the row's avatar; Argo falls back to the General mark without one.
   role: string | null;
-  // The first line of the prompt, the parent's message, or the child's reply.
-  text?: string;
 }
 
 interface FeedStandaloneRow {

@@ -25,21 +25,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const quoted = (text: string): string => `“${text}”`;
+// Each row names the action and the Agent and leads with its role mark; the words said stay in the Agent's Feed.
+const exploreMark = `${subagentItemOf('started').role} Agent`;
 
-// The row's words are one clamped line, so the title never gives way before the quote.
+const saysNothingSaid = async (
+  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
+): Promise<void> => {
+  for (const said of [explorePrompt, exploreMessage, exploreResult])
+    await expect(canvas.queryByText(said, { exact: false })).toBeNull();
+};
 
 export const Started: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(
-        canvas.getByRole('button', {
-          name: `Started ${exploreTitle}, ${explorePrompt}`,
-        }),
+        canvas.getByRole('button', { name: `Started ${exploreTitle}` }),
       ).toBeVisible();
-      await expect(canvas.getByText(`Started ${exploreTitle}`)).toBeVisible();
-      await expect(canvas.getByText(explorePrompt)).toBeVisible();
-      await expect(canvas.queryByText(quoted(explorePrompt))).toBeNull();
+      await expect(canvas.getByLabelText(exploreMark)).toBeVisible();
+      await saysNothingSaid(canvas);
     }),
 };
 
@@ -50,8 +53,10 @@ export const Messaged: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(
-        canvas.getByText(`Messaged ${exploreTitle} ${quoted(exploreMessage)}`),
+        canvas.getByRole('button', { name: `Messaged ${exploreTitle}` }),
       ).toBeVisible();
+      await expect(canvas.getByLabelText(exploreMark)).toBeVisible();
+      await saysNothingSaid(canvas);
     }),
 };
 
@@ -62,9 +67,11 @@ export const Replied: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(
-        canvas.getByText(`${exploreTitle} replied ${quoted(exploreResult)}`),
+        canvas.getByRole('button', { name: `${exploreTitle} replied` }),
       ).toBeVisible();
+      await expect(canvas.getByLabelText(exploreMark)).toBeVisible();
       await expect(canvas.queryByText(`Started ${exploreTitle}`)).toBeNull();
+      await saysNothingSaid(canvas);
     }),
 };
 

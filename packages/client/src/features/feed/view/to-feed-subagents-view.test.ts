@@ -1,8 +1,5 @@
 import { expect, it } from 'vitest';
 import {
-  exploreMessage,
-  explorePrompt,
-  exploreResult,
   exploreSessionId,
   exploreTitle,
   messageRow,
@@ -34,7 +31,6 @@ it('draws one row per Subagent action', () => {
       kind: 'started',
       title: exploreTitle,
       role: 'Explore',
-      text: explorePrompt,
     },
     {
       type: 'subagent',
@@ -43,7 +39,6 @@ it('draws one row per Subagent action', () => {
       kind: 'messaged',
       title: exploreTitle,
       role: 'Explore',
-      text: exploreMessage,
     },
     {
       type: 'subagent',
@@ -52,7 +47,6 @@ it('draws one row per Subagent action', () => {
       kind: 'replied',
       title: exploreTitle,
       role: 'Explore',
-      text: exploreResult,
     },
   ]);
 });
@@ -63,7 +57,16 @@ it('draws no row for a Subagent state change', () => {
 
 it('keeps a prompt that arrives without a spawn as its own Messaged row', () => {
   expect(subagentItems([spawnPromptRow])).toEqual([
-    expect.objectContaining({ kind: 'messaged', text: explorePrompt }),
+    expect.objectContaining({ kind: 'messaged' }),
+  ]);
+});
+
+it('draws a reply that carries no text', () => {
+  const silent = { ...resultRow, _meta: { argo: { result: [] } } };
+
+  expect(subagentItems([spawnRow, silent])).toEqual([
+    expect.objectContaining({ kind: 'started' }),
+    expect.objectContaining({ kind: 'replied' }),
   ]);
 });
 
@@ -78,20 +81,19 @@ it('starts a Subagent the snapshot does not list yet from its own row', () => {
   );
 });
 
-it('shows only the first line of a long prompt', () => {
-  const multiline = {
+it('folds the prompt a child started on into its Started row', () => {
+  expect(subagentItems([spawnRow, spawnPromptRow])).toEqual([
+    expect.objectContaining({ kind: 'started' }),
+  ]);
+});
+
+it('folds the first message after a spawn even when it carries no words', () => {
+  const empty = {
     ...spawnPromptRow,
-    _meta: {
-      argo: {
-        action: 'message' as const,
-        prompt: [
-          { type: 'text' as const, text: `${exploreMessage}\nAnd more` },
-        ],
-      },
-    },
+    _meta: { argo: { action: 'message' as const } },
   };
 
-  expect(subagentItems([spawnRow, multiline])).toEqual([
-    expect.objectContaining({ kind: 'started', text: exploreMessage }),
+  expect(subagentItems([spawnRow, empty])).toEqual([
+    expect.objectContaining({ kind: 'started' }),
   ]);
 });
