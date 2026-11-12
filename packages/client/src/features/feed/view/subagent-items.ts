@@ -36,17 +36,24 @@ export function foldedPrompts(
   const folded = new Set<string>();
   const spawned = new Set<string>();
 
-  for (const row of rows.filter(isSubagentUpdate)) {
-    const action = actionOf(row);
-
-    if (action === 'spawn') spawned.add(row.subagentSessionId);
-
-    if (action !== 'message' || !spawned.has(row.subagentSessionId)) continue;
-    spawned.delete(row.subagentSessionId);
-    folded.add(row.id);
-  }
+  for (const row of rows.filter(isSubagentUpdate))
+    foldPrompt(row, spawned, folded);
 
   return folded;
+}
+
+// The first message to a spawned child is its prompt, which the Started row stands for.
+const isSpawnPrompt = (row: SubagentUpdate, spawned: Set<string>): boolean =>
+  actionOf(row) === 'message' && spawned.delete(row.subagentSessionId);
+
+// A spawn waits for its prompt; the child's next message is that prompt, and folds.
+function foldPrompt(
+  row: SubagentUpdate,
+  spawned: Set<string>,
+  folded: Set<string>,
+): void {
+  if (actionOf(row) === 'spawn') spawned.add(row.subagentSessionId);
+  else if (isSpawnPrompt(row, spawned)) folded.add(row.id);
 }
 
 type Known = SessionSnapshot['subagents'][number] | undefined;

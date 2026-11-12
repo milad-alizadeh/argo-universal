@@ -4,8 +4,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { FeedSubagent } from '../../view/feed-view';
 
-// Each action is only its fact: "Started Explore", "Messaged Explore", "Explore replied". What was said is in the
-// Agent's own Feed, one press away (#1997).
+/*
+ * Each action is only its fact: "Started Explore", "Messaged Explore", "Explore replied". What was said is in the
+ * Agent's own Feed, one press away (#1997).
+ */
 const words = {
   started: (title: string) => `Started ${title}`,
   messaged: (title: string) => `Messaged ${title}`,
