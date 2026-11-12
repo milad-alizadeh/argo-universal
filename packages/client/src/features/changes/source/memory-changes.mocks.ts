@@ -60,6 +60,9 @@ function useMemoryFiles(
   catalog: MemoryCatalog,
   query: ChangesQuery,
 ): FilesPages {
+  // A catalog is read afresh on each call, as a Server is: the compiler would keep its first answer.
+  'use no memo';
+
   const paging = usePaging();
   const files = catalog.files(query.comparison);
   const list = listOf(query.comparison);

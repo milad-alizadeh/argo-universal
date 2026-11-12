@@ -111,16 +111,16 @@ it('closes an Issue at once, as an Operation the page shows the new status of un
     ],
   });
   await page.press(closeIssue);
-  // The fixture gh keeps no status, so the Issue reads as open when drawn again.
+  // The fixture GitHub keeps no status, so the Issue reads as open when drawn again.
   expect(shownStatus(page.tree)).toBe('Open');
 }, 20_000);
 
-it('fails a status change gh refuses with its error, and draws the old status', async () => {
+it('fails a status change GitHub refuses with its error, and draws the old status', async () => {
   const page = await openIssue(refusedTitle);
 
   // The App shows a failed press as an error toast and puts the optimistic props back.
   await expect(page.press(closeIssue)).rejects.toThrow(
-    'GraphQL: Could not close the issue.',
+    'Could not close the issue.',
   );
   expect(shownStatus(page.tree)).toBe('Open');
   expect(page.findText(closeIssue)).toBeDefined();

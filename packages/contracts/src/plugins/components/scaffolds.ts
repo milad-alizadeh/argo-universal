@@ -37,6 +37,10 @@ export const scaffoldsComponents = {
         actions: actionSlot,
         // The main Action: a header button, iOS toolbar item, or Android FAB.
         primaryAction: ['Action'],
+        // The page's properties: a column beside the content when the window has room, else a row of Pills under the title.
+        aside: ['Metadata'],
+        // Held at the foot of the screen above the keyboard, such as a chat's message field.
+        footer: ['TextArea', 'Stack', 'Button'],
       },
       // Typed search echoes at once and coalesces, and never holds the screen.
       events: {
@@ -75,16 +79,12 @@ export const scaffoldsComponents = {
     },
   ),
   Detail: defineKitComponent(
-    'An item page: content beside its Metadata on wide screens, above it on narrow ones.',
+    "An item page's scrolling content: its Markdown, then its children. Its properties go in the Screen's `aside`.",
     detailProps,
-    {
-      group: 'scaffolds',
-      children: true,
-      slots: { metadata: ['Metadata'] },
-    },
+    { group: 'scaffolds', children: true },
   ),
   Metadata: defineKitComponent(
-    'Read-only label/value fields for a detail view.',
+    "Read-only properties of an item, for a Screen's `aside`: icon and value rows beside the content, Pills under the title when there is no room.",
     metadataProps,
     { group: 'scaffolds', children: metadataChildComponents },
   ),

@@ -23,7 +23,8 @@ function useParentRow(): ParentRow {
   const above = useTreeRow() ?? topRow;
   const toggle = useCallback(() => setOpen((current) => !current), []);
 
-  return { ...above, parent: { open: open || !drawn, toggle } };
+  // It folds only itself, so its toggle needs no key.
+  return { ...above, parent: { open: open || !drawn, key: '', toggle } };
 }
 
 function ChildRows(props: {

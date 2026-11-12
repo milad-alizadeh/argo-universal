@@ -60,7 +60,9 @@ function drawing(
 ): ListItemGroup {
   return {
     context: { ...list, position },
-    footer: <RowFooter description={description} position={list.position} />,
+    footer: description ? (
+      <RowFooter description={description} position={list.position} />
+    ) : null,
   };
 }
 
@@ -81,12 +83,12 @@ function RowFooter({
   description,
   position,
 }: {
-  description?: string;
+  description: string;
   position: ListPosition;
 }): ReactNode {
   const { footerEndsGroup } = useListLook();
 
-  if (!description || !footerEndsGroup) return null;
+  if (!footerEndsGroup) return null;
 
   return (
     <View className={footerGap(position)}>

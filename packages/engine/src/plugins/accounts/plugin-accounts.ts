@@ -18,7 +18,7 @@ import {
 } from '../../storage';
 import { pluginKeychainService, type Keychain } from '../services/keychain';
 import { AccountJob, type AccountChange } from './account-job';
-import { requireAccount, requireChoice } from './account-records';
+import { requireAccount, requireChoice, sameAccount } from './account-records';
 
 type Dependencies = {
   database: Database;
@@ -62,13 +62,18 @@ export class PluginAccounts {
 
   async add(pluginId: string, host: string, label: string): Promise<string> {
     await this.requireProvider(pluginId, host);
-    const id = randomUUID();
+    const fields = { host, label, providedBy: pluginId };
+
     await this.write({
       action: 'add',
-      account: { id, host, label, providedBy: pluginId },
+      account: { id: randomUUID(), ...fields },
     });
 
-    return id;
+    const account = sameAccount(this.deps.database, fields);
+
+    if (!account) throw new Error('Account is unavailable');
+
+    return account.id;
   }
 
   async get(host: string, projectId?: string): Promise<PluginAccount | null> {

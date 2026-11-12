@@ -28,7 +28,44 @@ const segmentedControlProps = z.object({
     .describe('Whether the whole control is unavailable.'),
 });
 
+const textAreaProps = z.object({
+  label: stringLabel.describe(
+    'Names the field for assistive technology; also its placeholder unless `placeholder` is set.',
+  ),
+  value: z.string().describe('The current text.'),
+  placeholder: z.string().optional().describe('Example shown while empty.'),
+  disabled: z.boolean().optional().describe('The field holds still.'),
+  onChangeText: handler('onChangeText'),
+  onSubmit: handler('onSubmit')
+    .optional()
+    .describe(
+      'Return sends on web and desktop, where Shift-Return adds a line; phones send with the action.',
+    ),
+});
+
 export const controlsComponents = {
+  TextArea: defineKitComponent(
+    'A multi-line text field that grows with its text, on a card with one action beside it, such as Send.',
+    textAreaProps,
+    {
+      group: 'controls',
+      slots: { action: ['IconButton', 'Button'] },
+      events: {
+        ...textChangeEvents(textAreaProps),
+        // Return sends the typed text before it submits.
+        onSubmit: z.undefined().meta({ flush: true }),
+      },
+      label: 'The required label names the field.',
+      accessibility: {
+        keyboard:
+          'Tab reaches the field, then its action. Return submits on web and desktop; Shift-Return adds a line.',
+        voiceOver:
+          'VoiceOver exposes a text field named by its label and reports its value.',
+        talkBack:
+          'TalkBack exposes a text field named by its label and reports its value.',
+      },
+    },
+  ),
   SegmentedControl: defineKitComponent(
     'Switches between a short set of views.',
     segmentedControlProps,

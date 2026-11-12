@@ -1,10 +1,12 @@
 import { expect, it } from 'vitest';
+import type { GitHubFixture } from './github-fixture';
 import {
   chooseGithub,
   issuesRoot,
   issueTitle,
   linkedPage,
   project,
+  signedInRoot,
   tracker,
   trackerPage,
   type OpenPage,
@@ -47,12 +49,15 @@ it('nests a sub-Issue under its parent in a filter list', async () => {
   const parent = list.findText(issueTitle)?.node;
 
   expect(JSON.stringify(parent?.children)).toContain(
-    'Fixture issue gh cannot change',
+    'Fixture issue GitHub cannot change',
   );
 }, 20_000);
 
+const overviewCalls = (github: GitHubFixture): unknown[] =>
+  github.graphqlCalls().filter(({ body }) => body.includes('count0'));
+
 it('opens a filter list, then an Issue from it, on their own pages', async () => {
-  const { test, root } = await issuesRoot();
+  const { test, github, root } = await signedInRoot();
   const list = await root.press('Open');
 
   expect(list.tree).toMatchObject({
@@ -75,19 +80,15 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
 
   // Detail draws the body as `markdown`, which `findText` does not read.
   expect(JSON.stringify(detail.tree)).toContain(
-    'This Issue came from the fixture gh executable.',
+    'This Issue came from the fixture GitHub.',
   );
   // The Issue's one link out is a property beside its description: the number goes to GitHub.
   expect(detail.findText('#42')?.node.props.href).toBe(
     'https://github.com/owner/repository/issues/42',
   );
   expect(await test.log()).not.toContain('refused');
-  // The three pages read one overview, which counts its filters once.
-  expect(
-    (await test.log()).match(
-      /argo\.process\.run gh api -X GET search\/issues/g,
-    ),
-  ).toHaveLength(5);
+  // The three pages read one overview, which is one GraphQL call.
+  expect(overviewCalls(github)).toHaveLength(1);
 }, 20_000);
 
 it('keeps the selected Project in the sidebar across filter and Issue routes', async () => {
@@ -119,4 +120,19 @@ it('shows an empty list for a filter with no Issues', async () => {
   const list = await root.press('Closed');
 
   expect(list.findText('No Issues.')).toBeDefined();
+}, 20_000);
+
+it('says an Issue its tracker cannot read as a danger Callout on its own page', async () => {
+  const { test } = await issuesRoot();
+
+  const page = await test.pages.open({
+    path: '/projects/project-1/issues/404',
+  });
+
+  const drawn = JSON.stringify(page.tree);
+
+  expect(drawn).toContain('"type":"Callout"');
+  expect(drawn).toContain('"tone":"danger"');
+  expect(drawn).toContain('Could not resolve');
+  expect(page.findText('Start Session')).toBeUndefined();
 }, 20_000);

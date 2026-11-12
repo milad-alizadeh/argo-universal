@@ -1,5 +1,13 @@
+import { Action } from '@repo/kit/primitives/actions/action';
 import { Text } from '@repo/kit/primitives/content/text';
+import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { List } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { SessionPluginCard } from './plugin-card-section';
+
+const trackerId = 'issue-tracker';
+
+const ticketIcon = { sf: 'ticket', material: 'confirmation_number' } as const;
 
 export const issueCardSummary = '#412 · In review';
 
@@ -12,11 +20,11 @@ export const coverageCardSummary = '78% of lines covered';
  * draws. A story passes the drawn page, as the Session does.
  */
 export const issueTrackerCard: SessionPluginCard = {
-  pluginId: 'issue-tracker',
+  pluginId: trackerId,
   card: {
     id: 'issue',
     title: 'Issue',
-    icon: { sf: 'ticket', material: 'confirmation_number' },
+    icon: ticketIcon,
     page: '/issues/session',
     tab: '/issues/session/full',
   },
@@ -34,4 +42,77 @@ export const coverageCard: SessionPluginCard = {
     page: '/coverage/session',
   },
   page: <Text>{coverageCardSummary}</Text>,
+};
+
+export const listCardRow = 'Fix the tracker card';
+
+// A card whose page is a List of rows that press nothing of their own, so the card's body is what a press on a row opens.
+export const listCard: SessionPluginCard = {
+  pluginId: trackerId,
+  card: {
+    id: 'rows',
+    title: 'Rows',
+    icon: ticketIcon,
+    page: '/issues/rows',
+    tab: '/issues/rows/full',
+  },
+  page: (
+    <List testID="rows-list">
+      <ListItem title={listCardRow} />
+    </List>
+  ),
+  tab: <Text>{issueCardFullView}</Text>,
+};
+
+const noop = (): void => {};
+
+export const sessionRowTitle = 'Work on the tracker card for the Workbench';
+
+export const sessionRowBranch = 'argo/c17-workbench-card-style';
+
+// A card whose page is a List of FieldGroup.Link rows, as the Issue tracker's Sessions list is: a long title and a long branch.
+export const sessionsCard: SessionPluginCard = {
+  pluginId: trackerId,
+  card: {
+    id: 'sessions',
+    title: 'Sessions',
+    icon: ticketIcon,
+    page: '/issues/sessions',
+  },
+  page: (
+    <List appearance="grouped">
+      <List.Section title="Sessions">
+        <FieldGroup.Link
+          id="session-one"
+          title={sessionRowTitle}
+          value={sessionRowBranch}
+          onPress={noop}
+        />
+      </List.Section>
+    </List>
+  ),
+};
+
+export const menuRowLabel = 'Archive the tracker card';
+
+// A card whose rows have a context menu and no press of their own: the card's body is what a click on them opens.
+export const menuRowCard: SessionPluginCard = {
+  pluginId: trackerId,
+  card: {
+    id: 'menu-rows',
+    title: 'Menu rows',
+    icon: ticketIcon,
+    page: '/issues/menu-rows',
+    tab: '/issues/menu-rows/full',
+  },
+  page: (
+    <List testID="menu-rows-list">
+      <ListItem
+        title={menuRowLabel}
+        contextMenu={{ title: 'Row menu' }}
+        actions={<Action label="Archive" icon="archive" onPress={noop} />}
+      />
+    </List>
+  ),
+  tab: <Text>{issueCardFullView}</Text>,
 };

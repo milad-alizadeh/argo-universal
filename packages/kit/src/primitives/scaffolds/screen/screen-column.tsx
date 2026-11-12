@@ -1,49 +1,82 @@
 import { type ScreenWidth, screenDefaults } from '@repo/contracts/kit-tokens';
-import { type ReactElement, type ReactNode, useMemo } from 'react';
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  use,
+  useMemo,
+} from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { sideColumnExtra } from '#kit/content-column/column-layout';
-import {
-  type ContentColumn,
-  useSideColumn,
-} from '#kit/content-column/content-column';
+import { type ContentColumn } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
+import type { ColumnEdges } from './screen-aside-place';
+
+// Where the Screen's aside put the column, beside its own (screen-aside-place.ts); null keeps the column centred.
+export const ScreenColumnEdgesContext = createContext<ColumnEdges | null>(null);
 
 /*
  * The one column a Screen's heading and content keep to: on a wide window the reading width (`--container-column`)
  * centred in the region, or the whole region for `full` (no max width), inside the Screen's side margins either way.
- * Below wide the phone shell's header runs from the window's edge, so the content does too. A side column beside the
- * content (a Detail's Metadata) widens the cap by itself, so the content keeps the reading width and the heading
- * spans both.
+ * Below wide the phone shell's header runs from the window's edge, so the content does too. `bleed` runs the content to
+ * the region's edges with no margins, for a canvas or a map. Where the aside has its own column the capped column
+ * keeps the edges it leaves, on every page at that width, with or without an aside.
  */
 export function useScreenColumn(
   width: ScreenWidth = screenDefaults.width,
 ): ContentColumn {
-  const capped = useWide() && width === 'content';
-  const side = sideColumnExtra(useSideColumn());
-  const [column, inset] = useColumnTokens();
+  const wide = useWide();
+  const { column, inset } = useColumnTokens();
+  const cap = capOf(wide && width === 'content', column);
+  const beside = useEdgesBeside(cap);
+  const margin = marginOf(width, inset);
 
-  return useMemo(
-    () => columnStyle(capped, column + side, inset),
-    [capped, column, side, inset],
-  );
+  return useMemo(() => placedStyle(beside, cap, margin), [beside, cap, margin]);
 }
 
-function useColumnTokens(): [column: number, inset: number] {
-  const [column = 0, inset = 0] = useCSSVariable([
-    '--container-column',
-    usePaddingToken(),
-  ]).map(tokenNumber);
+const capOf = (capped: boolean, column: number): number | undefined =>
+  capped ? column : undefined;
 
-  return [column, inset];
+const placedStyle = (
+  beside: ColumnEdges | null,
+  cap: number | undefined,
+  margin: number,
+): ContentColumn => (beside ? edgesStyle(beside) : columnStyle(cap, margin));
+
+// Only a capped column moves aside; a full one already runs to the margins.
+function useEdgesBeside(cap: number | undefined): ColumnEdges | null {
+  const edges = use(ScreenColumnEdgesContext);
+
+  return cap === undefined ? null : edges;
+}
+
+const edgesStyle = ({ left, right }: ColumnEdges): ContentColumn => ({
+  paddingLeft: left,
+  paddingRight: right,
+});
+
+const marginOf = (width: ScreenWidth, inset: number): number =>
+  width === 'bleed' ? 0 : inset;
+
+// The heading, the aside's strip and the footer have no edge-to-edge drawing of their own: on a bleed page they keep the inset.
+export const insetWidth = (
+  width: ScreenWidth | undefined,
+): ScreenWidth | undefined => (width === 'bleed' ? 'full' : width);
+
+type ColumnTokens = { column: number; inset: number };
+
+export function useColumnTokens(): ColumnTokens {
+  return {
+    column: tokenNumber(useCSSVariable('--container-column')),
+    inset: tokenNumber(useCSSVariable(usePaddingToken())),
+  };
 }
 
 const columnStyle = (
-  capped: boolean,
-  column: number,
+  cap: number | undefined,
   inset: number,
 ): ContentColumn => ({
-  maxWidth: capped ? column + inset * 2 : undefined,
+  maxWidth: cap === undefined ? undefined : cap + inset * 2,
   paddingLeft: inset,
   paddingRight: inset,
 });

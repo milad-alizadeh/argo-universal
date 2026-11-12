@@ -14,7 +14,7 @@ import { issuePath } from './issue-paths';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueNode } from './issue-tree';
-import { rowLabelPills } from './label-pills';
+import { labelPills } from './label-pills';
 
 export type RowSource = {
   project: Project;
@@ -53,12 +53,12 @@ const rowProps = ({ project, to }: RowSource, issue: Issue): RowProps => ({
 const rowMeta = (issue: Issue): JSX.Element[] => [
   ...blockedMark(issue),
   ...progressMark(issue),
-  ...rowLabelPills(issue.labels),
+  ...labelPills(issue.labels),
 ];
 
 /*
  * Spike-only UI: the row's menu closes or reopens its Issue, so one write runs as an Operation. The
- * row shows its new status at once and rolls back if gh refuses.
+ * row shows its new status at once and rolls back if GitHub refuses.
  */
 function statusAction(source: RowSource, issue: Issue): JSX.Element {
   const { change } = statuses[issue.status];

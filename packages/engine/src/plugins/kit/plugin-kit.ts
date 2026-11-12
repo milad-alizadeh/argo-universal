@@ -6,6 +6,7 @@ import {
 } from '@repo/contracts/plugins/kit';
 import { PluginEvent, type WireJson } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
+import { deviceFlow } from './device-flow';
 import type { ElementProps } from './element-props';
 import {
   jsx,
@@ -20,6 +21,12 @@ import {
   type OperationSend,
 } from './operation-handlers';
 import { valuesOf } from './render-tree';
+import {
+  accountFetch,
+  provideSignIn,
+  signInGate,
+  SignInRequired,
+} from './sign-in';
 import {
   slotProviders,
   type SlotProviders,
@@ -44,7 +51,7 @@ function kitExport({
   return carrier;
 }
 
-// What `@argo/plugin-kit` exports to a Plugin: its components, the JSX runtime, the List's move rule and the OAuth flow.
+// What `@argo/plugin-kit` exports to a Plugin: its components, the JSX runtime, the List's move rule, the sign-in flows and their gate.
 const exportsOf = {
   ...Object.fromEntries(
     pluginKitExports.map((entry) => [entry.name, kitExport(entry)]),
@@ -52,6 +59,11 @@ const exportsOf = {
   Fragment: React.Fragment,
   applyListMove,
   oauthFlow,
+  deviceFlow,
+  signInGate,
+  provideSignIn,
+  accountFetch,
+  SignInRequired,
 };
 
 const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };

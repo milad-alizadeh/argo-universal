@@ -6,11 +6,21 @@ import type {
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError, type PluginReply } from '../protocol/runtime';
 import type { WorkerCalls } from '../runtime/worker-calls';
-import { boundWarm, keepNewest, queryKey, removeWhere } from './entry-map';
+import { boundWarm, removeWhere } from './entry-map';
 import { NamedReads } from './named-reads';
 import { PluginBadges } from './plugin-badges';
 import { QueryEntry, type EntryServices } from './query-entry';
+import {
+  drawnRead,
+  entryIn,
+  namedProject,
+  projectOf,
+  refuseOutside,
+  requireRegistered,
+} from './query-scope';
 import type { QueryOwner, QueryServices } from './query-types';
+
+type ReadRequest = Extract<PluginDataRequest, { action: 'read' }>;
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
 
@@ -62,26 +72,75 @@ export class PluginData {
     request: PluginDataRequest,
     origin: QueryOrigin,
   ): Promise<PluginReply> {
-    return { ok: true, value: await this.read(caller, origin, request) };
+    return {
+      ok: true,
+      value:
+        request.action === 'seed'
+          ? await this.seed(caller, origin, request)
+          : await this.read(caller, origin, request),
+    };
   }
 
-  // A background pass reads every Query fresh, so the answers it warms are the ones the pages draw next.
+  // A named read's answer for another named read's Query, kept for the Project that Query names, or the one the first runs for.
+  private async seed(
+    caller: Caller,
+    { projectId }: QueryOrigin,
+    { query, value }: Extract<PluginDataRequest, { action: 'seed' }>,
+  ): Promise<null> {
+    if (query.api !== 'read')
+      throw new Error('Only a named read can be seeded');
+
+    await requireRegistered(this.projects, [query.projectId]);
+
+    // A seed from a read a write overtook would revive an answer the write made stale.
+    if (!this.overtaken(caller.pluginId))
+      this.entry(caller, projectOf(query, projectId), query).seed(value);
+
+    return null;
+  }
+
+  // The Projects Argo has registered; the call keeps its receiver.
+  private readonly projects = (): ReturnType<
+    QueryServices['services']['projectInfo']
+  > => this.services.services.projectInfo();
+
+  private overtaken(pluginId: string): boolean {
+    return [...this.entriesOf(pluginId).values()].some(
+      (entry) => entry.overtaken,
+    );
+  }
+
+  /*
+   * A background pass reads every Query fresh, so the answers it warms are the ones the pages draw next. Code
+   * outside a draw reads the kept answer, for the Project it names, and holds nothing.
+   */
   private read(
     caller: Caller,
-    { projectId, drawn }: QueryOrigin,
-    { query, fresh }: PluginDataRequest,
+    origin: QueryOrigin,
+    request: ReadRequest,
   ): Promise<PluginDataState> {
-    if (!drawn) throw new Error('A Query is read only during a draw');
+    refuseOutside(origin, request.query);
 
-    const entries = this.entriesOf(caller.pluginId);
-    const entry = this.entry(caller, projectId, query);
+    const named = [request.projectId, namedProject(request.query)];
+    const checking = requireRegistered(this.projects, named);
 
-    boundWarm(entries, this.services.log, caller.pluginId);
+    const start = (): Promise<PluginDataState> =>
+      this.start(caller, origin, request);
 
-    return entry.read({
-      ...drawn,
-      fresh: fresh === true || drawn.holder === undefined,
-    });
+    // With no Project named there is nothing to wait for, so the read starts in the same turn.
+    return checking ? checking.then(start) : start();
+  }
+
+  // Begins the read on the entry it is for.
+  private start(
+    caller: Caller,
+    { projectId, drawn }: QueryOrigin,
+    { query, projectId: named, fresh }: ReadRequest,
+  ): Promise<PluginDataState> {
+    const project = projectOf(query, named ?? projectId);
+    const entry = this.entry(caller, project, query);
+
+    return entry.read(drawn ? drawnRead(drawn, fresh) : { fresh: false });
   }
 
   private entry(
@@ -90,15 +149,15 @@ export class PluginData {
     query: PluginQuery,
   ): QueryEntry {
     const entries = this.entriesOf(caller.pluginId);
-    const key = queryKey(projectId, query);
 
-    const existing = entries.get(key);
+    const entry = entryIn(
+      entries,
+      { ...caller, projectId, query },
+      this.services,
+    );
 
-    if (existing) return keepNewest(entries, key, existing);
-    const owner = { ...caller, projectId, query };
-    const entry = new QueryEntry(owner, this.services);
-
-    entries.set(key, entry);
+    // The Plugin keeps a bounded number of warm entries.
+    boundWarm(entries, this.services.log, caller.pluginId);
 
     return entry;
   }

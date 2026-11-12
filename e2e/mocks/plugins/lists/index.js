@@ -1,5 +1,6 @@
-import { List, ListItem, Label, Pill } from '@argo/plugin-kit';
+import { List, ListItem, Label, Pill, Stack } from '@argo/plugin-kit';
 import { defineIssues } from './issues.js';
+import { defineNotes, NotesSwitch } from './notes.js';
 
 const builds = [
   { id: 'web', title: 'Deploy web' },
@@ -30,13 +31,20 @@ const buildRow = (selected, to) => (build) => (
   />
 );
 
+// The builds, with the buttons that fill and empty the Notes card under them.
+const buildsPage = (items, to, { state }) => (
+  <Stack direction="column">
+    <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
+    <NotesSwitch to={to} />
+  </Stack>
+);
+
 export function register(argo) {
   argo.pages.define('/lists', {
     state: { selected: '' },
     load: () => builds,
-    render: (items, to, { state }) => (
-      <List appearance="cards">{items.map(buildRow(state.selected, to))}</List>
-    ),
+    render: buildsPage,
   });
   defineIssues(argo.pages);
+  defineNotes(argo);
 }

@@ -1,12 +1,10 @@
-import { use, type ReactNode } from 'react';
-import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
+import type { ReactNode } from 'react';
 import { List, ListSection } from '#primitives/lists/list';
 import { flattenedChildren } from '../../../flattened-children';
+import { AsideFields, PillFields } from './metadata-aside';
 import type { MetadataDrawing } from './metadata-drawing';
 import {
   MetadataDrawingContext,
-  MetadataWidthContext,
   useResolvedMetadataDrawing,
 } from './metadata-drawing-context';
 import {
@@ -23,8 +21,9 @@ const listOptions = { padding: 0, paddingTop: 0, paddingBottom: 0 } as const;
 const roots = {
   'list-section': ListSectionRoot,
   'grouped-rows': GroupedRows,
-  properties: HeadedColumn,
-  inline: InlineFields,
+  aside: AsideFields,
+  pills: PillFields,
+  icons: PillFields,
 } satisfies Record<
   MetadataDrawing['root'],
   (props: MetadataProps) => ReactNode
@@ -35,7 +34,7 @@ const roots = {
  * such as a Settings page, it is one more section of it.
  */
 function MetadataRoot(props: MetadataProps): ReactNode {
-  const drawing = useResolvedMetadataDrawing(use(MetadataWidthContext));
+  const drawing = useResolvedMetadataDrawing();
   const Root = roots[drawing.root];
 
   if (flattenedChildren(props.children).length === 0) return null;
@@ -57,40 +56,6 @@ function GroupedRows({ title, children }: MetadataProps): ReactNode {
     <List {...listOptions} appearance="grouped">
       <ListSection title={title}>{children}</ListSection>
     </List>
-  );
-}
-
-// The heading starts on the fields' edge, not a List section's inset.
-function HeadedColumn(props: MetadataProps): ReactNode {
-  return (
-    <View>
-      <ColumnHeading title={props.title ?? 'Properties'} />
-      <List {...listOptions} appearance="plain">
-        <ListSection>{props.children}</ListSection>
-      </List>
-    </View>
-  );
-}
-
-function ColumnHeading({ title }: { title: string }): ReactNode {
-  return (
-    <Text
-      role="heading"
-      accessibilityRole="heading"
-      aria-level={2}
-      className="pb-2"
-    >
-      {title}
-    </Text>
-  );
-}
-
-// Inline Metadata is one wrapping line of values; the line itself says what they are, so it needs no heading.
-function InlineFields({ children }: MetadataProps): ReactNode {
-  return (
-    <View className="flex-row flex-wrap items-center gap-x-4 gap-y-2">
-      {children}
-    </View>
   );
 }
 

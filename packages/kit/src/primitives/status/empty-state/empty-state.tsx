@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useListPlace } from '#kit/list-place';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { iconNames } from '../../../symbols/icon-names';
@@ -11,6 +12,14 @@ import type { EmptyStateProps } from './empty-state-props';
  * holds a Button, pins itself to the start of whatever holds it.
  */
 export function EmptyState(props: EmptyStateProps): React.JSX.Element {
+  return useListPlace() === 'card' ? (
+    <CardEmptyState {...props} />
+  ) : (
+    <PageEmptyState {...props} />
+  );
+}
+
+function PageEmptyState(props: EmptyStateProps): React.JSX.Element {
   return (
     <View
       testID={props.testID}
@@ -19,6 +28,23 @@ export function EmptyState(props: EmptyStateProps): React.JSX.Element {
       {props.icon && <EmptyStateIcon icon={props.icon} />}
       <EmptyStateText {...props} />
       {props.action && <View className="self-center">{props.action}</View>}
+    </View>
+  );
+}
+
+// In a card the empty line is a row, not a page: the row's text role, beside the card's own edge, and no tiles.
+function CardEmptyState(props: EmptyStateProps): React.JSX.Element {
+  return (
+    <View testID={props.testID} className="items-start gap-1 py-2">
+      <Text accessibilityRole="heading" aria-level={2} role="body">
+        {props.title}
+      </Text>
+      {props.description && (
+        <Text role="secondary" tone="muted">
+          {props.description}
+        </Text>
+      )}
+      {props.action && <View className="self-start">{props.action}</View>}
     </View>
   );
 }

@@ -46,6 +46,8 @@ const placedForPreview = (
   placeSessionHeaderActions(declared.map(withoutPress), {
     phone: compact,
     shows,
+    // The preview lists the declared actions; whether a card has something to show belongs to a Session.
+    filled: () => true,
   });
 
 /*

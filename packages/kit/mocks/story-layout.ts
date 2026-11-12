@@ -84,6 +84,11 @@ export function columnWidth(): number {
   return tokenWidth('--container-column');
 }
 
+// The inset a Screen's column keeps below wide; a wide window keeps --spacing-8 or the aside's lane edges.
+export function phoneInset(): number {
+  return tokenWidth('--spacing-4');
+}
+
 export function contentWideMin(): number {
   return tokenWidth('--container-content-wide');
 }

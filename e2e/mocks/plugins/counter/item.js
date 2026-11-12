@@ -16,11 +16,11 @@ const metadata = (
   </Metadata>
 );
 
-// An item page: Detail with every Metadata field kind.
+// An item page: Detail with its content, and every Metadata field kind in the Screen's aside.
 export function Item() {
   return (
-    <Screen title="Fixture item">
-      <Detail markdown="Fixture item content." metadata={metadata} />
+    <Screen title="Fixture item" aside={metadata}>
+      <Detail markdown="Fixture item content." />
     </Screen>
   );
 }

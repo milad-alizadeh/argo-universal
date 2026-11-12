@@ -7,6 +7,7 @@ import {
   type PluginSettingValue,
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
+import { MemoryKeychain } from '@repo/engine/mocks/keychain';
 import {
   PluginService,
   PluginStorage,
@@ -16,9 +17,9 @@ import { PageClock } from './page-clock';
 import { itemsConnection, testConnection } from './test-connection';
 import { testOperations, testPages } from './test-operations';
 import { TestProjects } from './test-projects';
-import { configureTest, runtimeFor, type ConfiguredTest } from './test-runtime';
-import { serviceFor } from './test-services';
+import { configureTest, type ConfiguredTest } from './test-runtime';
 import type { PluginTest, PluginTestOptions } from './test-types';
+import { wireTest, type Wiring } from './test-wiring';
 
 export type { PluginTest, PluginTestOptions } from './test-types';
 
@@ -55,8 +56,7 @@ class HostedPlugin implements PluginTest {
     this.service.badges(signal);
   readonly failures: PluginTest['failures'] = (signal) =>
     this.service.failures(signal);
-  private readonly runtime: PluginRuntime;
-  private readonly service: PluginService;
+  private readonly wired: Wiring;
   readonly pages: PluginTest['pages'];
   readonly projects;
   readonly session = testSession;
@@ -85,14 +85,29 @@ class HostedPlugin implements PluginTest {
     private readonly home: string,
     private readonly options: ConfiguredTest,
   ) {
-    this.runtime = runtimeFor(home, options);
-    this.projects = new TestProjects(options, this.runtime);
-    this.service = serviceFor(home, options, this.runtime);
+    const wired = wireTest(home, options, new MemoryKeychain());
+
+    this.wired = wired;
+    this.projects = new TestProjects(options, wired.runtime, () =>
+      wired.accountStore.syncProjects(options.projects),
+    );
     this.pages = testPages(
-      { service: this.service, runtime: this.runtime },
+      { service: wired.service, runtime: wired.runtime },
       options.pluginId,
       this.pageClock,
     );
+  }
+
+  private get runtime(): PluginRuntime {
+    return this.wired.runtime;
+  }
+
+  private get service(): PluginService {
+    return this.wired.service;
+  }
+
+  get accounts(): PluginTest['accounts'] {
+    return this.wired.accountStore.accounts;
   }
 
   get settings(): Map<string, PluginSettingValue> {
@@ -140,6 +155,7 @@ class HostedPlugin implements PluginTest {
     try {
       await this.runtime.close();
     } finally {
+      this.wired.accountStore.close();
       await rm(this.home, { recursive: true, force: true });
     }
   }

@@ -58,6 +58,19 @@ const listedProject: TargetRule<OperationParams<'session.list'>> = (
   };
 };
 
+// A new Plugin goes in the calling Session's Checkout unless it names another Session.
+const pluginNewTarget: TargetRule<OperationParams<'plugin.new'>> = (
+  params,
+  caller,
+) => {
+  const sessionId = params.sessionId ?? caller.sessionId;
+
+  return {
+    target: { kind: 'session', sessionId, opening: false },
+    params: { ...params, sessionId },
+  };
+};
+
 type OpenedDestination = OperationParams<'app.open'>['destination'];
 
 // A Session's or a Project's Screen reaches that one; the lists, Agents, Settings and Plugin Pages reach nothing in particular.
@@ -116,6 +129,8 @@ const targetRules = {
   'agent.setAccess': global,
   'agent.installInstructions': global,
   'plugin.list': global,
+  'plugin.guide': global,
+  'plugin.new': pluginNewTarget,
   'plugin.activate': global,
   'plugin.setEnabled': global,
   'plugin.getSettings': global,

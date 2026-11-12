@@ -1,5 +1,7 @@
 # Write, validate and test a Plugin
 
+An Agent asked to build a Plugin starts from the Operations `plugin.guide`, which answers the blueprint and a component reference read from the kit's schemas, and `plugin.new`, which writes a working Plugin into the Session's Checkout. This page is the API they point to. `pnpm check` in a Plugin's folder runs every check on that Plugin alone: its Operation types, `tsc`, validation and its harness tests.
+
 A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-kit` alone, which provides the components, the `Argo` type of the Plugin API, the test kit and the `argo-plugin` command. Plugins in this repository take the kit from the workspace:
 
 ```json
@@ -228,6 +230,29 @@ Storage Queries are never polled. A committed Plugin storage write marks them du
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
 
+## Page frames
+
+A page is a `Screen`. Its props say what the page holds, and the App lays it out at every width; a Plugin sets no sizes.
+
+- `width` is `content` (the reading column, the default), `full` or `bleed`. A `bleed` page has no column and no inset: its body fills the page, and a `Canvas` in it fills that body, as a board or a map does.
+- `aside` takes one `Metadata` of the page's properties, as an Issue's status, labels and assignee. When the window leaves room beside the column it is a column of its own at the trailing edge; otherwise it is a row of Pills under the title, and below medium those Pills show their icon alone. The aside never moves the title or changes the column's width.
+- `footer` stays pinned under the body and rises with the keyboard, as a chat's input does. The footer takes a `TextArea`, a `Stack` or a `Button`. `TextArea` is a multi-line input that grows to six lines and has an optional trailing action, such as a Send `IconButton`. The body does not scroll by itself, so a body longer than the screen goes in a `ScrollView` or a `List`, which then scrolls above the footer.
+
+```tsx
+<Screen
+  title="#42"
+  aside={
+    <Metadata>
+      <Metadata.StatusDot title="Status" text="Open" tone="success" />
+    </Metadata>
+  }
+>
+  <Detail markdown={body} />
+</Screen>
+```
+
+`Detail` holds the page's body only; its properties go in the `Screen`'s `aside`. A failed read shows a `Callout` in the body with `tone="danger"` and a Button that tries again, so empty and error read differently. While the page's loader reads for the first time, the App draws the page's Screen with its title and a blank body, and a revisit draws the kept tree at once and asks again behind it, so a page never builds a loading state for its own first read and its render never sees one. `isLoading` draws the body's skeleton, and a `Spinner` marks work with no body to sketch, only for a part the page itself marks pending inside a render, such as a body the loader left unread.
+
 ## Session row items
 
 A Session row's meta line takes items, not a kit tree. Argo asks each Plugin that declares `argo/session/row/v1` once per list, with every row's `{ sessionId, projectId }`, and the Plugin answers with items keyed by Session id (ADR-0035):
@@ -338,7 +363,12 @@ A card is `{ id, title, icon, page, tab? }`: `title` is at most 40 characters an
 
 Give a card a `tab` and pressing its body opens that page in full as an Inspector tab; leave it out and the card stays a card. A phone has no Workbench column, so the card opens as the Inspector's sheet instead.
 
-Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`. A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
+Both pages are drawn for the Session whose Workbench they are in, so their `load` reads `context.sessionId` and `context.projectId`.
+
+A card with nothing to show is not drawn. Return `null` from the card page's `render` when there is nothing, as Argo's own cards do: the page answers the empty root, and Argo draws no card, no Inspector tab, no row in a phone's Workbench and no header action that targets the card. Argo draws the page when a Session opens and shows no card, nor a frame for one, until the first answer; a card seen before draws from its kept answer. Attaching something while the Session is open brings the card in, and removing it takes the card away, and an open tab of it closes, without a reload. Return `null` for "no Session", "still loading" and "nothing attached", and keep drawing for a failure, so the person sees the card say so instead of reading its absence as "nothing". A tree you draw, even an empty `Stack`, draws a card.
+
+Three things follow from how Argo asks. Every declared card's page is drawn for each open Session, whether or not the card is shown, so a card page with `every`, or a live one, keeps running while the Session is mounted: keep a card page cheap. A Render draws nothing when it returns `null`, `[]` or a Fragment of nothing; anything else, even an empty `Stack`, draws a card. And a tree the Server could not draw, such as a Render that throws or a refused component, also answers the empty root, so a broken card disappears like an empty one. The Server logs why. An App older than this rule still draws an empty root as nothing, as it always did for a failed tree, but it has no card logic and still draws the card's frame.
+ A header action with the target `{ type: "card", cardId }` closes that card when it is open and opens it again when it is not; the manifest is refused if it names a card the Plugin does not declare. Settings › Plugins › Workbench cards turns each Plugin's card off on that Device.
 
 ## Pages on a clock and live pages
 
@@ -433,7 +463,7 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`plugins/examples/github-sign-in` is a complete reference: a sign-in page with the signed-out, waiting, signed-in, continue-on-the-Server-Device and port-in-use states, and GitHub's sign-in through the kit's OAuth flow. Copy it for a new service.
+`plugins/examples/github-sign-in` is a complete reference: GitHub's sign-in through the kit's device flow, with its sign-in page drawn by the kit. Copy it for a new service. GitHub's web flow needs a client secret, which the kit's flows do not send, so the example uses the device flow GitHub offers instead.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Define that page with `argo.pages.define` before registration completes; an Account's page is a Loader page.
@@ -475,6 +505,7 @@ A call without a Project returns no Account, such as one made while the Plugin r
 
 Use `argo.fetch(url, { account: host })` to borrow the Account.
 A fetch Query uses the same field and the Project its page is drawn for.
+A direct `argo.fetch` call may also name a registered Project with `projectId`, which decides the Account it borrows; a page whose path names a Project reads this way from a named read. An unregistered Project is refused.
 Argo checks the Grant, calls the provider, and sets its header. The borrower receives no credential value from Argo.
 The URL must name the Account’s exact host and port. A redirect away from that host drops the provider header.
 Argo removes any borrower header with the same name first. Network-reserved headers cannot provide authentication.
@@ -482,7 +513,7 @@ First-party Plugins receive unset Grants silently until consent screens exist. A
 
 ### The OAuth flow
 
-`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that uses OAuth's authorization code grant with PKCE, such as GitHub, Linear, GitLab or Slack. Give it the service's URLs:
+`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that takes OAuth's authorization code grant with PKCE from a public client, with no client secret, such as Linear or GitLab. GitHub's web flow needs its client secret even with PKCE, so GitHub uses `deviceFlow`. Give it the service's URLs:
 
 ```tsx
 import { oauthFlow } from '@argo/plugin-kit';
@@ -521,6 +552,32 @@ await signIn.provide();
 `start()` answers as soon as the browser opens, normally with `waiting`, so the Operation that calls it returns at once. The flow then waits up to five minutes for the person, exchanges the code, adds the Account and keeps its token under the Account's id. `cancel()` ends the wait; a callback from the browser tab still open is ignored. `provide()` registers the provider handler that hands borrowers the kept token.
 
 Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
+
+### The sign-in pattern
+
+The kit has two flows and one page that draws either: `deviceFlow` (RFC 8628: the page shows a code, the person enters it on any device, and the Plugin polls) and `oauthFlow` above (redirect with PKCE, on the Server Device). Neither sends a client secret. A Plugin never writes polling, token storage or a sign-in page, and never holds a token:
+
+```tsx
+import { deviceFlow, provideSignIn, signInGate, SignInRequired, type Argo } from '@argo/plugin-kit';
+
+const flow = deviceFlow(argo, {
+  host: 'api.github.com',
+  name: 'GitHub',
+  clientId: 'Ov23livvjnJww4D3CYGd',
+  deviceUrl: 'https://github.com/login/device/code',
+  tokenUrl: 'https://github.com/login/oauth/access_token',
+  label: { url: 'https://api.github.com/user', field: 'login' },
+});
+
+await provideSignIn(argo, flow, { name: 'GitHub' });
+argo.pages.define('/', signInGate(flow, { name: 'GitHub' }, { load, render }));
+```
+
+- `provideSignIn` registers the `signIn` and `cancelSignIn` Operations (declare both in `contributes.operations`, tier `act`), defines the sign-in page at `/sign-in` (the page `contributes.accounts` names) and registers the Account's provider.
+- `signInGate(flow, options, page)` takes an ordinary Loader page whose `load` answers once. When a read finds no Account, or the service rejects the Account's token (a 401), `load` throws `SignInRequired`, and the gate draws the sign-in in the page's place. Signing in again rewrites the same Account's token. The page reads again every minute unless it says `every`, so a sign-out or a revoked token is noticed within it, and a sign-in redraws it at once.
+- `deviceFlow`'s `label` names the person: the kit calls `url` with the token and reads `field`, so the Plugin never sees the token. A person who signs in again with the same label keeps one Account.
+- The sign-in page draws every step: asking for a code, the code with where to enter it and a countdown length, denied, expired and failed, and the redirect flow's wait for the browser. A redirect flow on a Device that is not the Server Device says to continue there; a device flow does not need it, and `argo.accounts.add` is not refused to a paired Device.
+- A read for a Project the page's path names, rather than the page's own, passes `projectId` to `argo.fetch`.
 
 ### `argo.oauth`
 

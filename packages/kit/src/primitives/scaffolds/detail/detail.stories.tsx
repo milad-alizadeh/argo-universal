@@ -8,8 +8,8 @@ import {
   agentDetail,
   contentAndMetadataDetail,
   emptyDetail,
+  errorDetail,
   loadingDetail,
-  narrowContainerDetail,
 } from './detail-fixtures';
 import { agent, issue } from './detail.mocks';
 
@@ -18,13 +18,16 @@ const meta = {
   component: Detail,
   argTypes: kitArgTypes('Detail'),
   /*
-   * A Detail fills the Screen that holds it, so each story draws it inside one. A story names its own
-   * page with `parameters.screenTitle`, and asks for the narrow container with `parameters.narrow`.
+   * A Detail fills the Screen that holds it, so each story draws it inside one, with the Issue's Metadata in the
+   * Screen's aside. A story names its own page with `parameters.screenTitle` and `parameters.aside`.
    */
   decorators: [
     (Story, { parameters }): React.JSX.Element => (
-      <View className={parameters.narrow ? 'h-120 w-90' : 'h-96'}>
-        <Screen title={parameters.screenTitle ?? issue.title}>
+      <View className="h-96">
+        <Screen
+          title={parameters.screenTitle ?? issue.title}
+          aside={parameters.aside ?? issue.aside}
+        >
           <Story />
         </Screen>
       </View>
@@ -40,12 +43,7 @@ export const ContentAndMetadata: Story = { args: contentAndMetadataDetail };
 
 export const Agent: Story = {
   args: agentDetail,
-  parameters: { screenTitle: agent.title },
-};
-
-export const NarrowContainer: Story = {
-  args: narrowContainerDetail,
-  parameters: { narrow: true },
+  parameters: { screenTitle: agent.title, aside: agent.aside },
 };
 
 export const Loading: Story = {
@@ -54,4 +52,8 @@ export const Loading: Story = {
 
 export const Empty: Story = {
   args: emptyDetail,
+};
+
+export const Failed: Story = {
+  args: errorDetail,
 };

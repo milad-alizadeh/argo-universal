@@ -117,6 +117,100 @@ export const ACardCollapsesBesideTheOthers: Story = {
   },
 };
 
+const handleOf = (canvas: Canvas, name: string): HTMLElement =>
+  canvas.getByRole('button', { name: `Reorder ${name}` });
+
+export const AHandleIsHiddenAtRest: Story = {
+  play: async ({ canvas }) => {
+    await expect(handleOf(canvas, 'First')).not.toBeVisible();
+  },
+};
+
+export const HoveringACardShowsItsHandleOnly: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).toBeVisible());
+    await expect(handleOf(canvas, 'Second')).not.toBeVisible();
+  },
+};
+
+export const LeavingACardHidesItsHandle: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).toBeVisible());
+    await userEvent.unhover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).not.toBeVisible());
+  },
+};
+
+export const FocusingAHandleShowsIt: Story = {
+  play: async ({ canvas }) => {
+    handleOf(canvas, 'Third').focus();
+    await waitFor(() => expect(handleOf(canvas, 'Third')).toBeVisible());
+  },
+};
+
+export const PressingAHandleThenLeavingHidesIt: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(canvas.getByText('One line.'));
+    await userEvent.click(handleOf(canvas, 'First'));
+    await userEvent.unhover(canvas.getByText('One line.'));
+    await waitFor(() => expect(handleOf(canvas, 'First')).not.toBeVisible());
+  },
+};
+
+// A touch is not a hover: the same enter, from a finger, shows no grip. A mouse over the next card, which does show its grip, marks the touch as handled.
+export const ATouchOverACardShowsNoHandle: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const card = canvas.getByText('One line.');
+
+    for (const type of ['pointerover', 'pointerenter']) {
+      card.dispatchEvent(
+        new PointerEvent(type, {
+          pointerType: 'touch',
+          bubbles: type === 'pointerover',
+        }),
+      );
+    }
+
+    await userEvent.hover(
+      canvas.getByText('A body of two lines, so the cards differ in height.'),
+    );
+    await waitFor(() => expect(handleOf(canvas, 'Second')).toBeVisible());
+    await expect(handleOf(canvas, 'First')).not.toBeVisible();
+  },
+};
+
+// While a card is held, only its grip shows, wherever the pointer passes.
+export const HoveringAnotherCardWhileDraggingShowsOnlyTheHeldGrip: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const grip = handleOf(canvas, 'First');
+
+    await userEvent.hover(canvas.getByText('One line.'));
+    await waitFor(() => expect(grip).toBeVisible());
+    await userEvent.pointer([
+      { keys: '[MouseLeft>]', target: grip },
+      {
+        target: canvas.getByText(
+          'A body of two lines, so the cards differ in height.',
+        ),
+      },
+    ]);
+    await expect(grip).toBeVisible();
+    await expect(handleOf(canvas, 'Second')).not.toBeVisible();
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+  },
+};
+
+// A Workbench with no card to draw is an empty column: no heading, no handle, nothing to press.
+export const NoCardsIsAnEmptyColumn: Story = {
+  args: { cards: [] },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryAllByRole('heading')).toHaveLength(0);
+    await expect(canvas.queryAllByRole('button')).toHaveLength(0);
+  },
+};
+
 export const ALoneCardHasNoHandle: Story = {
   args: { cards: oneCard },
   play: async ({ canvas }) => {

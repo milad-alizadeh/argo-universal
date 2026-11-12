@@ -15,7 +15,7 @@ const redirect =
 
 /*
  * `/big` is over the cap, `/same` redirects home, `/see-other` answers 303, `/loop` redirects to
- * itself, `/headers` echoes the credentials it got, `/to/<url>` redirects to the URL; anything else
+ * itself, `/user-agent` echoes the User-Agent it got, `/headers` echoes the credentials it got, `/to/<url>` redirects to the URL; anything else
  * echoes the method and path.
  */
 const routes = new Map<string, Route>([
@@ -23,6 +23,11 @@ const routes = new Map<string, Route>([
   ['/same', redirect(302, '/')],
   ['/see-other', redirect(303, '/')],
   ['/loop', redirect(302, '/loop')],
+  [
+    '/user-agent',
+    (response, { headers }): void =>
+      void response.end(JSON.stringify(nullIfMissing(headers['user-agent']))),
+  ],
   [
     '/headers',
     (response, { headers }): void =>

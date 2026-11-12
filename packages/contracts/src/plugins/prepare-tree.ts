@@ -9,6 +9,7 @@ import {
 } from './prepare-slots';
 import { refusedBelowRoot, rootSlotComponents } from './root-only';
 import { WireJson, type WireNode } from './wire';
+import { emptyPage } from './wire-empty-page';
 
 const jsonProps = z.record(z.string(), WireJson);
 
@@ -112,15 +113,7 @@ function prepare(node: WireNode): WireNode | null {
 
 // Every tree is checked against the one current schema set before it reaches an App.
 export function prepareWireTree(root: WireNode): WireNode {
-  return (
-    prepare(root) ?? {
-      type: '#empty',
-      key: root.key,
-      props: {},
-      children: [],
-      slots: {},
-    }
-  );
+  return prepare(root) ?? emptyPage(root.key);
 }
 
 export function supportsWireNode(node: WireNode): boolean {

@@ -1,7 +1,8 @@
 import {
   Action,
+  Button,
+  Callout,
   Detail,
-  EmptyState,
   Screen,
   type PageTo,
 } from '@argo/plugin-kit';
@@ -29,15 +30,31 @@ type ShownProps = Omit<IssueDetailProps, 'data'> & {
 export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
   const { data } = props;
 
-  if (!data.ok)
-    return (
-      <Screen title={`#${props.number}`}>
-        <EmptyState title={data.message} />
-      </Screen>
-    );
+  if (!data.ok) return <Unreadable {...props} message={data.message} />;
 
   return <IssueDetail {...props} issue={data.issue} sessions={data.sessions} />;
 }
+
+// An Issue that cannot be read says why, and offers to read it again.
+function Unreadable(props: UnreadableProps): JSX.Element {
+  return (
+    <Screen title={`#${props.number}`}>
+      <Callout
+        tone="danger"
+        title="Couldn’t load this Issue"
+        description={props.message}
+        actions={readAgain(props)}
+      />
+    </Screen>
+  );
+}
+
+type UnreadableProps = Omit<IssueDetailProps, 'data'> & { message: string };
+
+// Any Operation that runs makes Argo read the Issue again, so this one does nothing else.
+const readAgain = ({ projectId, to }: UnreadableProps): JSX.Element => (
+  <Button label="Check again" onPress={to.run('checkAgain', { projectId })} />
+);
 
 function IssueDetail(props: ShownProps): JSX.Element {
   return (
@@ -45,6 +62,7 @@ function IssueDetail(props: ShownProps): JSX.Element {
       title={props.issue.title}
       primaryAction={<StartSessionAction {...props} />}
       actions={<StatusAction {...props} />}
+      aside={<IssueMetadata issue={props.issue} />}
     >
       <IssueBody {...props} />
     </Screen>
@@ -54,10 +72,7 @@ function IssueDetail(props: ShownProps): JSX.Element {
 // The description, the Issue's own properties beside it, and the work under both.
 function IssueBody({ issue, projectId, sessions }: ShownProps): JSX.Element {
   return (
-    <Detail
-      markdown={issue.body || 'No description.'}
-      metadata={<IssueMetadata issue={issue} />}
-    >
+    <Detail markdown={issue.body || 'No description.'}>
       <SubIssues
         issue={issue}
         issuePath={(number) => issuePath(projectId, number)}
@@ -91,7 +106,7 @@ const statusActionKey = (number: number): string => `status-${number}`;
 
 /*
  * Closes or reopens the Issue as the `setStatus` Operation; the status and the Action show the new status at
- * once, and the old one again when gh refuses it.
+ * once, and the old one again when GitHub refuses it.
  */
 function StatusAction({ issue, projectId, to }: ShownProps): JSX.Element {
   const { label, icon, to: next } = statuses[issue.status].change;

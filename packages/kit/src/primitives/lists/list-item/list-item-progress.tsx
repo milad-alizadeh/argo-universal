@@ -7,9 +7,8 @@ import type { ListItemProps } from './list-item-props';
 export function ItemProgress({
   progress,
   sidebar,
-}: Pick<ListItemProps, 'progress' | 'sidebar'>): ReactNode {
-  if (!progress) return null;
-
+}: Required<Pick<ListItemProps, 'progress'>> &
+  Pick<ListItemProps, 'sidebar'>): ReactNode {
   return sidebar ? (
     <View className="absolute bottom-1 left-9.5 right-3">
       <ProgressBar {...progress} track="hairline" />

@@ -3,7 +3,9 @@ import { validatePlugin } from '@repo/engine/plugin-validation';
 import { readPluginManifest } from '@repo/engine/plugins';
 import { z } from 'zod';
 import {
+  fixtureServices,
   startPluginTest,
+  type FixtureRequest,
   type PluginTest,
   type PluginTestCase,
 } from '../testing';
@@ -129,10 +131,10 @@ async function requireTestFiles(directory: string): Promise<string[]> {
 }
 
 async function runTest(input: TestRun, test: PluginTestCase): Promise<number> {
-  const kit = await startTest(input);
+  const { kit, requests } = await startTest(input, test);
 
   try {
-    await withinPluginTestBudget(Promise.resolve(test.run(kit)));
+    await withinPluginTestBudget(Promise.resolve(test.run(kit, requests)));
     input.write(`PASS ${test.name}`);
 
     return 0;
@@ -145,13 +147,29 @@ async function runTest(input: TestRun, test: PluginTestCase): Promise<number> {
   }
 }
 
-function startTest(input: TestRun): Promise<PluginTest> {
-  return startPluginTest({
+// One Project stands in for the Project a page is opened for: an Account is borrowed for a Project.
+const testProjects = [{ id: 'test-project', name: 'Test', originUrl: null }];
+
+type StartedTest = { kit: PluginTest; requests: FixtureRequest[] };
+
+const noServices = { network: undefined, requests: [] };
+
+async function startTest(
+  input: TestRun,
+  { services }: PluginTestCase,
+): Promise<StartedTest> {
+  const fixture = services ? await fixtureServices(services) : noServices;
+
+  const kit = await startPluginTest({
     directory: input.directory,
     pluginId: input.pluginId,
     version: '0.0.0',
     clockStart: 0,
+    projects: testProjects,
+    network: fixture.network,
   });
+
+  return { kit, requests: fixture.requests };
 }
 
 async function requireTests(file: string): Promise<PluginTestCase[]> {

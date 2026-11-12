@@ -1,4 +1,4 @@
-import type { ProjectDetailsItem } from '@argo/plugin-kit';
+import type { Argo, ProjectDetailsItem } from '@argo/plugin-kit';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
@@ -11,6 +11,7 @@ export const trackerPath = '/tracker';
 export const noTracker = 'None';
 
 export type TrackerDeps = {
+  listProjects: Argo['projects']['list'];
   storage: TrackerStorage;
   trackers: TrackerRegistry;
 };

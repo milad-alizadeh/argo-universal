@@ -17,6 +17,7 @@ import {
   dangerSubtitle,
   dimmedMark,
   plainMark,
+  longValue,
 } from './field-link-fixtures';
 
 // A row's stories draw it as the one row of a FieldGroup section, where Expo UI draws it.
@@ -91,3 +92,6 @@ export const MarkedWarning: Story = { args: markedWarning };
 
 // A plain outcome glyph has no tinted background.
 export const PlainMark: Story = { args: plainMark };
+
+// A title and a value too long for the row together: the value truncates and keeps its gap from the title.
+export const LongValue: Story = { args: longValue };

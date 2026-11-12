@@ -1,35 +1,29 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { ListItem, ListItemFrame } from '#primitives/lists/list-item';
 import type { MetadataFieldLayout } from './metadata-drawing';
 import { useMetadataDrawing } from './metadata-drawing-context';
 import { BesideField } from './metadata-field-beside';
+import { PillField, IconField } from './metadata-field-pill';
+import type { FieldProps, MetadataFieldProps } from './metadata-field-props';
 import { groupProps } from './metadata-group';
 
-export interface MetadataFieldProps {
-  title: string;
-  // What the value says, for the field's spoken label.
-  valueLabel: string;
-  accessibilityLabel?: string;
-  // Whether the field reads as one element; a Link value stays its own, so it can be focused and activated.
-  grouped?: boolean;
-  // The read-only value: text, or text beside an icon, dot, avatar or Pills.
-  children: ReactNode;
-}
-
-type FieldProps = MetadataFieldProps & { label: string };
+export type { MetadataFieldProps } from './metadata-field-props';
 
 const layouts = {
   stacked: StackedField,
   under: UnderField,
   beside: BesideField,
-  inline: InlineField,
+  value: ValueField,
+  pill: PillField,
+  icon: IconField,
 } satisfies Record<MetadataFieldLayout, (props: FieldProps) => ReactElement>;
 
 /*
  * A read-only label/value field of a detail view's Metadata, drawn in the layout its Metadata's drawing names: stacked
- * (label above the value), beside (iOS's LabeledContent), under (Android's one-line row) or inline (the value alone).
+ * (label above the value), beside (iOS's LabeledContent), under (Android's one-line row), its value alone under its
+ * group's heading in an aside, or one Pill under the title.
  */
 export function MetadataField(props: MetadataFieldProps): ReactElement {
   const Field = layouts[useMetadataDrawing().field];
@@ -62,27 +56,25 @@ function StackedGroup(props: FieldProps): ReactElement {
   );
 }
 
-/*
- * Inline, a field is its name and its value on one line: a value such as a blocker's number says nothing on its own,
- * and the line is read left to right, so each pair names itself as the stacked column's label does.
- */
-function InlineField(props: FieldProps): ReactElement {
-  return (
-    <View
-      {...groupProps(props)}
-      className="min-w-0 max-w-full flex-row items-center gap-1.5 select-none"
-    >
-      <StackedLabel title={props.title} />
-      {props.children}
-    </View>
-  );
-}
-
 function StackedLabel({ title }: { title: string }): ReactElement {
   return (
     <Text role="secondary" tone="muted" numberOfLines={1}>
       {title}
     </Text>
+  );
+}
+
+// In an aside the group's heading names the value, or its glyph does, so the row holds the value alone.
+function ValueField(props: FieldProps): ReactElement {
+  return (
+    <TextClassContext value={undefined}>
+      <View
+        {...groupProps(props)}
+        className="min-h-8 min-w-0 justify-center select-none"
+      >
+        {props.children}
+      </View>
+    </TextClassContext>
   );
 }
 

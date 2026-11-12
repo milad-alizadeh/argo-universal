@@ -37,6 +37,12 @@ declare module '@argo/plugin-kit' {
         "project"
       ]
     };
+    checkAgain: {
+      "params": {},
+      "caller": [
+        "project"
+      ]
+    };
     setStatus: {
       "params": {
         "number": {
@@ -55,6 +61,12 @@ declare module '@argo/plugin-kit' {
       "caller": [
         "project"
       ]
+    };
+    signIn: {
+      "params": {}
+    };
+    cancelSignIn: {
+      "params": {}
     };
   }
 }

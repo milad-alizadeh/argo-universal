@@ -67,8 +67,8 @@
       ]
     },
     "packages/plugin-kit": {
-      // The `argo-plugin` bin runs this entry by path through tsx.
-      "entry": ["cli/main.ts"]
+      // The `argo-plugin` bin runs this entry by path through tsx; the sign-in fixtures are copied or read by folder.
+      "entry": ["cli/main.ts", "mocks/sign-in-plugins/*/index.tsx"]
     },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
@@ -99,9 +99,11 @@
       // The story render checker selects this Vitest config by path.
       "entry": ["vitest.renders.config.ts"],
       // Peers of @repo/kit's primitives, listed here so the Storybook Vite build resolves them.
+      // babel-plugin-react-compiler is named by a string in .storybook/react-compiler.ts, which @vitejs/plugin-react resolves.
       // @repo/kit is listed so Turborepo hashes the kit into the Storybook tasks; its stories reach the build through the stories globs, not an import.
       "ignoreDependencies": [
         "@repo/kit",
+        "babel-plugin-react-compiler",
         "expo",
         "react-native-gesture-handler",
         "react-native-safe-area-context",

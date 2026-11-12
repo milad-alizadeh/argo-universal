@@ -38,6 +38,7 @@
     "@types/react": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "playwright": "catalog:",
     "react-native-worklets": "catalog:",
     "storybook": "catalog:",

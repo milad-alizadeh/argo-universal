@@ -1,6 +1,6 @@
-import type { Argo } from '@argo/plugin-kit';
+import type { Argo, DeviceFlow } from '@argo/plugin-kit';
+import type { GitHubReads } from './github-reads';
 import type { IssueChanges } from './issue-changes';
-import type { OverviewQuery } from './overview';
 import type { TrackerRegistry } from './tracker-registry';
 import type { TrackerStorage } from './tracker-storage';
 
@@ -12,6 +12,10 @@ export type IssueDeps = {
   storage: TrackerStorage;
   trackers: TrackerRegistry;
   changes: IssueChanges;
-  // A Project's overview, as the named read Argo keeps.
-  overview: OverviewQuery;
+  // The GitHub sign-in the pages draw in place of themselves when no Account answers.
+  signIn: DeviceFlow;
+  // The remote reads Argo keeps, as named reads.
+  reads: GitHubReads;
+  // Reads a named Query for a Slot, through the entry the pages read.
+  readQuery: Argo['queries']['read'];
 };

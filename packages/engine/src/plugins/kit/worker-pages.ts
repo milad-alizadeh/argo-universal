@@ -12,6 +12,7 @@ import type { DataCall } from './draw-reads';
 import { stopper, type Stop } from './live-loads';
 import type { OperationAnswering, OperationSend } from './operation-handlers';
 import { operationMarks } from './operation-marks';
+import { outsideReads } from './outside-reads';
 import {
   pageDrawer,
   type DrawEvent,
@@ -86,7 +87,7 @@ export function loaderPages(calls: LoaderCalls): WorkerPages {
 
   return {
     api: { define: defining(pages) },
-    queries: reads.api,
+    queries: Object.freeze({ ...reads.api, ...outsideReads(calls.data) }),
     ...operationMarks(calls),
     answer: (event) => {
       if (event.type === 'read') return reads.answer(event);

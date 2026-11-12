@@ -1,9 +1,10 @@
 packages:
   - apps/*
   - packages/*
-  - plugins/issue-tracker
-  - plugins/code-map
-  - plugins/examples/github-sign-in
+  # Every Plugin folder, so a Plugin `plugin.new` writes resolves the kit after `pnpm install`.
+  - plugins/*
+  - plugins/examples/*
+  - "!plugins/examples"
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e
@@ -150,6 +151,8 @@ catalog:
   # ~0.21.4 excludes 0.21.3: Uniwind 1.12.1 crashes on web start with it (uni-stack/uniwind#704).
   react-native-web: ~0.21.4
   react-native-worklets: 0.13.0
+  # Storybook compiles with the React Compiler the App gets from babel-preset-expo, so render counts measure what ships.
+  babel-plugin-react-compiler: 1.0.0
   # Finds the Server on the local network by name, over Bonjour on iOS and NSD on Android (ADR-0045).
   react-native-zeroconf: 0.17.7
   sf-symbols-typescript: 2.2.0

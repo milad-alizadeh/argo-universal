@@ -4,7 +4,7 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import { LineEnd } from './list-item-line-end';
-import { CompactMeta, Meta } from './list-item-meta';
+import { CompactMeta, hasMeta, Meta } from './list-item-meta';
 import {
   hasAccessories,
   InertLane,
@@ -175,9 +175,9 @@ export function CompactContent(props: PlacedContentProps): ReactElement {
   );
 }
 
-// Beside accessories the title keeps at least half the line; they give up their width first.
+// Beside meta or accessories the title keeps at least half the line; they give up their width first.
 const compactTitleClass = (props: PlacedContentProps): string =>
   cn(
     'min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch',
-    hasAccessories(props) && 'min-w-1/2',
+    (hasAccessories(props) || hasMeta(props)) && 'min-w-1/2',
   );
