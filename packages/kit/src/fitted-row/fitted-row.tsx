@@ -50,15 +50,22 @@ type LineProps = Omit<FittedRowProps, 'children'> & {
   onLayout?: (event: LayoutChangeEvent) => void;
 };
 
+/*
+ * The line clips at its sides, but leaves room above and below, so a mark an item draws past its own top, such as a
+ * running count's dot, shows whole without making the line taller.
+ */
+const bleed = '-my-1 py-1';
+
+const lineClass = `min-w-0 shrink flex-row items-center overflow-hidden ${bleed}`;
+
+const fittingClass = `max-w-full min-w-0 shrink flex-row overflow-hidden ${bleed}`;
+
 function Line(props: LineProps): ReactElement {
   return (
     <View
       testID={props.testID}
       onLayout={props.onLayout}
-      className={cn(
-        'min-w-0 shrink flex-row items-center overflow-hidden',
-        props.className,
-      )}
+      className={cn(lineClass, props.className)}
       style={{ gap: props.gap, width: props.width }}
     >
       {props.children}
@@ -99,7 +106,7 @@ function FittingLine(props: FittingProps): ReactElement {
   const fit = useFit(props);
 
   return (
-    <View className="max-w-full min-w-0 shrink flex-row overflow-hidden">
+    <View className={fittingClass}>
       <Line {...props} width={fit.width} onLayout={fit.onLayout}>
         <ShownItems items={fit.shown} />
         {fit.hidden > 0 ? <Pill text={countKey(fit.hidden)} /> : null}

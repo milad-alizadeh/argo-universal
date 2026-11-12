@@ -16,7 +16,7 @@ interface RunningWorkCountProps {
 
 function dotClassName(selected: boolean): string {
   return cn(
-    'absolute -right-0.75 -top-0.75 rounded-full border-2 border-card bg-card',
+    'absolute right-0 -top-0.75 rounded-full border-2 border-card bg-card',
     selected && 'web:wide:border-content web:wide:bg-content',
   );
 }
@@ -32,12 +32,15 @@ function RunningStatus({
   );
 }
 
-// Completed work leaves the row; each active count carries its own running dot.
+/*
+ * Completed work leaves the row; each active count carries its own running dot. The dot ends inside the count's right
+ * edge, as the row's meta line clips at its sides.
+ */
 function RunningWorkCount(props: RunningWorkCountProps): React.ReactNode {
   return props.count > 0 ? (
     <View
       accessibilityLabel={`${props.label}: ${props.count} running`}
-      className="relative shrink-0 pr-2"
+      className="relative shrink-0 pr-2.75"
     >
       <Label
         icon={props.icon}
