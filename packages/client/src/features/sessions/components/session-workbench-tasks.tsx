@@ -2,6 +2,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
+import type { StackedSummaryIcon } from '../../../lib/product/stacked-summary';
 import { shellElapsed, shellTitle } from './shell-list/shell-format';
 import type { ShellEntry, ShellListProps } from './shell-list/shell-list-types';
 import { ShellMark } from './shell-list/shell-mark';
@@ -38,9 +39,16 @@ export function WorkbenchMoreTasks({
   onOpen: () => void;
 }): ReactElement | null {
   const { more, done } = activePreview(shells, isRunning);
+  const icons = done > 0 ? [shellSummaryMark] : [];
 
-  return <WorkbenchShowMore more={more} done={done} onOpen={onOpen} />;
+  return <WorkbenchShowMore {...{ more, done, icons, onOpen }} />;
 }
+
+// Every Background Task draws the same mark, so the settled ones stack as one.
+const shellSummaryMark: StackedSummaryIcon = {
+  icon: 'terminal',
+  tone: 'neutral',
+};
 
 const rowPressable = ({ shell, onOpen }: RowProps) =>
   ({
