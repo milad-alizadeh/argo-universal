@@ -3,7 +3,7 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PermissionRequest } from '#features/requests';
+import { ElicitationSheet, PermissionRequest } from '#features/requests';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
@@ -71,11 +71,19 @@ function composerRequestContent({ props }: ComposerLayout): React.ReactNode {
   if (props.permissionRequest)
     return <PermissionRequest {...props.permissionRequest} />;
 
+  if (props.elicitation)
+    return (
+      <ElicitationSheet
+        key={props.elicitation.request.requestId}
+        {...props.elicitation}
+      />
+    );
+
   return props.callout;
 }
 
 function hasComposerRequest({ props }: ComposerLayout): boolean {
-  return Boolean(props.permissionRequest || props.callout);
+  return Boolean(props.permissionRequest || props.elicitation || props.callout);
 }
 
 function ComposerRequestSurface(layout: ComposerLayout): React.ReactNode {

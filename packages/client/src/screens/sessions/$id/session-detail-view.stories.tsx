@@ -3,12 +3,16 @@ import type * as React from 'react';
 import { fn } from 'storybook/test';
 import {
   elicitationProps,
+  longQuestionRequest,
   questionsRequest,
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
-import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
+import {
+  ElicitationPreview,
+  elicitationSession,
+} from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import {
@@ -110,23 +114,16 @@ export const Failed: Story = { args: { state: 'failed' } };
 
 // The Elicitation's sheet takes the Composer's place until the reader answers.
 export const Elicitation: Story = {
-  args: {
-    state: 'open',
-    ...runningSession,
-    header: { ...runningSession.header, status: 'needs_input' },
-    composer: {
-      ...runningSession.composer,
-      configuration: runningSession.composer.configuration && {
-        ...runningSession.composer.configuration,
-        turnRunning: true,
-      },
-    },
-    elicitation: elicitationProps({
-      request: questionsRequest,
-      values: questionsValues,
-    }),
-  },
+  args: elicitationSession(
+    elicitationProps({ request: questionsRequest, values: questionsValues }),
+  ),
   render: (args): React.JSX.Element => <ElicitationPreview {...args} />,
+};
+
+// A question taller than the Composer's tray scrolls its choices inside it, its title and actions in view.
+export const LongElicitation: Story = {
+  args: elicitationSession(elicitationProps({ request: longQuestionRequest })),
+  render: Elicitation.render,
 };
 
 // The header opens the same Subagents list as the phone Composer, inside the Frame's Inspector.

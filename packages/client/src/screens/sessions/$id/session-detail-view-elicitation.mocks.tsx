@@ -8,6 +8,7 @@ import {
   SessionDetailView,
   type SessionDetailViewProps,
 } from './session-detail-view';
+import { runningSession } from './session-detail-view.mocks';
 
 // The Session page with an Elicitation that closes once answered, inside the Frame on a wide window.
 export function ElicitationPreview(
@@ -60,5 +61,26 @@ function closableElicitation(
       props.onAnswer(answer);
       close();
     },
+  };
+}
+
+const turnRunningComposer: typeof runningSession.composer = {
+  ...runningSession.composer,
+  configuration: runningSession.composer.configuration && {
+    ...runningSession.composer.configuration,
+    turnRunning: true,
+  },
+};
+
+// A running Session waiting on the reader's answer to an Elicitation.
+export function elicitationSession(
+  elicitation: ElicitationFormProps,
+): SessionDetailViewProps {
+  return {
+    state: 'open',
+    ...runningSession,
+    header: { ...runningSession.header, status: 'needs_input' },
+    composer: turnRunningComposer,
+    elicitation,
   };
 }
