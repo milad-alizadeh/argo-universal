@@ -13,6 +13,28 @@ const workOptions = [buildFeature, 'Fix a bug', exploreIdea].map((label) => ({
   title: label,
 }));
 
+const areas = [
+  'The header',
+  'The Composer',
+  'The Feed',
+  'The Workbench',
+  'The Inspector',
+  'The rail',
+  'The Session list',
+  'Settings',
+  'Plugins',
+  'Background Tasks',
+  'Subagents',
+  'Attachments',
+  'Slash commands',
+  'Notifications',
+  'The phone sheet',
+  'Keyboard shortcuts',
+];
+
+const choices = (labels: string[]): { const: string; title: string }[] =>
+  labels.map((label) => ({ const: label, title: label }));
+
 export const questionsRequest: PendingElicitation = {
   ...elicitationRequest,
   message: workQuestion,
@@ -31,11 +53,7 @@ export const questionsRequest: PendingElicitation = {
       priority: {
         type: 'string',
         description: 'Which part should I start with?',
-        oneOf: [
-          { const: 'The header', title: 'The header' },
-          { const: 'The Composer', title: 'The Composer' },
-          { const: 'The Feed', title: 'The Feed' },
-        ],
+        oneOf: choices(areas.slice(0, 3)),
       },
     },
     required: ['goal', 'work', 'priority'],
@@ -61,6 +79,22 @@ export const nextWorkValues: ElicitationValues = {
 export const questionsValues: ElicitationValues = {
   goal: buildFeature,
   work: [buildFeature, exploreIdea],
+};
+
+// One question with more choices than the Composer's tray shows at once.
+export const longQuestionRequest: PendingElicitation = {
+  ...elicitationRequest,
+  message: 'Which part of Argo should I polish next?',
+  requestedSchema: {
+    properties: {
+      area: {
+        type: 'string',
+        description: 'Which part of Argo should I polish next?',
+        oneOf: choices(areas),
+      },
+    },
+    required: ['area'],
+  },
 };
 
 export const questionPlan: PlanEntry[] = [

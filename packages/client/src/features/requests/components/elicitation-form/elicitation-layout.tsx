@@ -1,4 +1,3 @@
-import { Surface } from '@repo/kit/primitives/layout/surface';
 import { cn } from '@repo/kit/utils';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
@@ -17,7 +16,7 @@ import { ElicitationSheetLayout } from './elicitation-sheet-layout';
 
 export type { ElicitationView } from './elicitation-body';
 
-// Where the card draws: in a Feed's request frame, in the wide Composer's tray, or in a phone's sheet.
+// Where the card draws: in a Feed's request frame, in the wide Composer's request tray, or in a phone's sheet.
 export type ElicitationPlacement = 'card' | 'tray' | 'sheet';
 
 type ViewProps = { view: ElicitationView };
@@ -30,7 +29,7 @@ export function ElicitationLayout({
 }: LayoutProps): ReactElement {
   if (placement === 'sheet') return <ElicitationSheetLayout view={view} />;
 
-  const card = <ElicitationCard view={view} />;
+  const card = <ElicitationCard view={view} scroll={placement === 'tray'} />;
 
   return placement === 'tray' ? (
     <ElicitationTray>{card}</ElicitationTray>
@@ -39,21 +38,25 @@ export function ElicitationLayout({
   );
 }
 
-function ElicitationCard({ view }: ViewProps): ReactElement {
+type CardProps = ViewProps & { scroll: boolean };
+
+function ElicitationCard({ view, scroll }: CardProps): ReactElement {
   return (
     <RequestCard
       appearance="embedded"
       {...cardRequest(view)}
       footerClassName={useFooterClassName()}
-      actions={
-        <ElicitationActions {...view.actions} inactive={view.inactive} />
-      }
+      actions={cardActions(view)}
     >
-      <ElicitationBody view={view} />
+      <ElicitationBody view={view} scroll={scroll} />
       {view.validation}
     </RequestCard>
   );
 }
+
+const cardActions = (view: ElicitationView): ReactElement => (
+  <ElicitationActions {...view.actions} inactive={view.inactive} />
+);
 
 type CardRequest = Pick<
   RequestCardProps,
@@ -74,14 +77,11 @@ function useFooterClassName(): string {
   );
 }
 
+// The Composer's request tray draws the surface around it.
 function ElicitationTray({ children }: { children: ReactNode }): ReactElement {
   return (
-    <View
-      role="region"
-      aria-label="Elicitation questions"
-      className="self-stretch mx-1.75 -mb-3 pb-3"
-    >
-      <Surface kind="muted">{children}</Surface>
+    <View role="region" aria-label="Elicitation questions">
+      {children}
     </View>
   );
 }

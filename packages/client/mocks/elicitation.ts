@@ -3,4 +3,8 @@ export {
   elicitationProps,
 } from '../src/features/requests/components/request.mocks';
 
-export { questionsRequest, questionsValues } from './elicitation-questions';
+export {
+  longQuestionRequest,
+  questionsRequest,
+  questionsValues,
+} from './elicitation-questions';

@@ -13,7 +13,7 @@ import {
   type SessionDetailViewProps,
 } from './session-detail-view';
 import { idleSession, runningSession } from './session-detail-view.mocks';
-import { Elicitation } from './session-detail-view.stories';
+import { Elicitation, LongElicitation } from './session-detail-view.stories';
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Elicitation',
@@ -33,6 +33,48 @@ type Agent = (typeof elicitationMocks)[number]['agent'];
 export const ClaudeKeepsComposer: Story = anchoredSession('agent-1');
 
 export const CodexKeepsComposer: Story = anchoredSession('agent-2');
+
+// The tray holds a long question at its cap: the choices scroll, the title and actions stay in view.
+export const LongQuestionScrollsInTray: Story = {
+  args: LongElicitation.args,
+  beforeEach: async (): Promise<void> => {
+    await settleLayout('wide');
+  },
+  play: async ({ canvas }) => {
+    const region = await canvas.findByRole('region', {
+      name: 'Elicitation questions',
+    });
+
+    const tray = within(region);
+    const rows = tray.getByTestId('elicitation-rows');
+    const last = tray.getByRole('radio', { name: 'Keyboard shortcuts' });
+    await expect(rows.contains(last)).toBe(true);
+    await expect(isInside(last, rows)).toBe(false);
+    await expect(rows.scrollHeight).toBeGreaterThan(rows.clientHeight);
+    await expectPinned(region, ['Dismiss', 'Skip']);
+    await expect(
+      canvas.getByRole('textbox', { name: 'Message' }),
+    ).toBeVisible();
+  },
+};
+
+// Each control sits within the tray's region, in view while the rows scroll.
+async function expectPinned(
+  region: HTMLElement,
+  names: string[],
+): Promise<void> {
+  for (const name of names) {
+    const control = within(region).getByRole('button', { name });
+    await expect(isInside(control, region)).toBe(true);
+  }
+}
+
+function isInside(element: HTMLElement, frame: HTMLElement): boolean {
+  const box = element.getBoundingClientRect();
+  const bounds = frame.getBoundingClientRect();
+
+  return box.top >= bounds.top && box.bottom <= bounds.bottom;
+}
 
 function anchoredSession(agent: Agent): Story {
   const onAnswer = fn();

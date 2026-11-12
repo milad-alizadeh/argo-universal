@@ -2,6 +2,7 @@ import { cn } from '@repo/kit/utils';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
+import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import type { ElicitationActionsProps } from './elicitation-actions';
 import type { ElicitationFormProps } from './elicitation-form-props';
 import {
@@ -28,11 +29,12 @@ type ViewProps = { view: ElicitationView };
 export const cancel = (view: ElicitationView): void =>
   view.props.onAnswer({ action: 'cancel' });
 
-// The header, then the rows, which inset themselves; only the header pads on a phone.
+// The header, then the rows, which inset themselves; only the header pads on a phone. In the Composer's tray the rows scroll under the written plan's cap, between the header and the actions.
 export function ElicitationBody({
   view,
   fill = false,
-}: ViewProps & { fill?: boolean }): ReactElement {
+  scroll,
+}: ViewProps & { fill?: boolean; scroll?: boolean }): ReactElement {
   const wide = useContentWide();
 
   return (
@@ -40,8 +42,24 @@ export function ElicitationBody({
       className={cn(bodyClassName(wide, fill), pointerEvents(view.inactive))}
     >
       <BodyHeader view={view} />
-      {view.rows}
+      <BodyRows rows={view.rows} scroll={scroll} />
     </View>
+  );
+}
+
+function BodyRows({
+  rows,
+  scroll,
+}: {
+  rows: ReactElement;
+  scroll?: boolean;
+}): ReactElement {
+  if (!scroll) return rows;
+
+  return (
+    <ScrollFadeView fitContent testID="elicitation-rows" className="max-h-70">
+      {rows}
+    </ScrollFadeView>
   );
 }
 
