@@ -79,6 +79,26 @@ export const WideTablesKeepEveryColumnReachable: Story = {
   },
 };
 
+// Inline code is drawn as its own box, so a prose cell that holds some is the case that once widened the grid.
+const codeCell = `The card measured its rows before \`useWholeLineClamp\` settled, so \`ClampedBlock\` cut the last line of every row in half`;
+
+export const ProseTablesFitTheColumn: Story = {
+  args: {
+    text: `| Problem | Cause | Fix |\n| --- | --- | --- |\n| Rows inside cards clipped | ${codeCell} | Keep rows whole |\n| Footer has no icon | Short | ${longCell} Final fix |`,
+  },
+  play: async ({ canvas }) => {
+    for (const layout of ['wide', 'tablet'] as const) {
+      await settleLayout(layout);
+      const last = canvas.getByText(/Final fix/);
+      const scroller = horizontalScroller(last);
+      await waitFor(() =>
+        expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth),
+      );
+      await waitFor(() => expect(canPointAt(last)).toBe(true));
+    }
+  },
+};
+
 // Whether a header's drawn text is cut short: text that overflows its own box is what an ellipsis hides.
 function truncatedTexts(header: HTMLElement): HTMLElement[] {
   return [header, ...header.querySelectorAll<HTMLElement>('*')].filter(
