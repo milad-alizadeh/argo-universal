@@ -88,17 +88,21 @@ function describeColumn(content: Element): string {
 const fitsColumn = (content: Element): boolean =>
   content.getBoundingClientRect().width <= columnWidth();
 
+// Inside the 15 s ceiling the Vitest config sets for the largest waitFor; a lane settles in a handful of frames.
+const settleBudgetMs = 5000;
+
+function expectFits(content: Element): void {
+  if (!fitsColumn(content)) {
+    throw new Error(`Content runs past the column: ${describeColumn(content)}`);
+  }
+}
+
+// A fit has to hold: two more frames on, the lane has not moved the content again.
 async function expectCapped(content: Element): Promise<void> {
-  await waitFor(
-    () => {
-      if (!fitsColumn(content)) {
-        throw new Error(
-          `Content runs past the column: ${describeColumn(content)}`,
-        );
-      }
-    },
-    { timeout: 5000 },
-  );
+  await waitFor(() => expectFits(content), { timeout: settleBudgetMs });
+  await new Promise(requestAnimationFrame);
+  await new Promise(requestAnimationFrame);
+  expectFits(content);
 }
 
 async function expectUncapped(content: Element): Promise<void> {
