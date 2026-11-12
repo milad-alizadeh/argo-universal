@@ -29,7 +29,7 @@ function TasksCard(): ReactElement {
 }
 
 const meta = {
-  title: 'Tests/Sessions/WorkbenchTasks',
+  title: 'Tests/Sessions/SessionWorkbenchTasks',
   component: TasksCard,
 } satisfies Meta<typeof TasksCard>;
 
