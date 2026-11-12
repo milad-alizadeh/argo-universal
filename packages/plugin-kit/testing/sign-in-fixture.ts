@@ -10,7 +10,7 @@ import { startPluginTest } from './host';
 import type { OpenPage } from './open-page';
 import type { PluginTest, PluginTestOptions } from './test-types';
 
-export const projects = [{ id: 'one', name: 'One', originUrl: null }];
+const projects = [{ id: 'one', name: 'One', originUrl: null }];
 
 export const signInLabel = 'Sign in to Service';
 

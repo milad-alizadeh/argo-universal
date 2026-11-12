@@ -5,6 +5,7 @@ import type {
 } from '@repo/contracts/plugins/oauth-flow-api';
 import { z } from 'zod';
 import { oneLine } from '../runtime/render-fallback';
+import { form } from './form-body';
 
 // What Argo's redirect answered when it started listening, with the client ID the sign-in read.
 export type Waiting = NonNullable<
@@ -21,11 +22,6 @@ export const failed = (message: string): OAuthFlowState => ({
   reason: 'failed',
   message,
 });
-
-const form = (fields: Record<string, string>): string =>
-  Object.entries(fields)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&');
 
 export function authorizeLocation(
   options: OAuthFlowOptions,

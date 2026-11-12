@@ -11,15 +11,15 @@ import { WorkerCalls } from '../src/plugins/runtime/worker-calls';
 export const pluginId = 'tracker';
 
 // Named reads run in the worker, so no Server service is asked.
-export const refused: PluginReply = { ok: false, error: 'No services' };
+const refused: PluginReply = { ok: false, error: 'No services' };
 
-export const clock: PluginClock = {
+const clock: PluginClock = {
   now: () => 0,
   delay: async () => {},
   schedule: () => () => null,
 };
 
-export type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
+type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
 
 export type Harness = {
   data: PluginData;
@@ -109,10 +109,10 @@ export function harness(): Harness {
   };
 }
 
-export const Answered = z.object({ data: z.json().optional() });
+const Answered = z.object({ data: z.json().optional() });
 
 // The data a read answered, or why it failed.
-export function newest(reads: ReadEvent[]): ReadEvent {
+function newest(reads: ReadEvent[]): ReadEvent {
   const read = reads.at(-1);
 
   if (!read) throw new Error('No named read asked yet');

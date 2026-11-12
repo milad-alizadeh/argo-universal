@@ -51,7 +51,7 @@ function CardWithDialog(): ReactElement {
 }
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Layout/Card',
+  title: 'Tests/Design System/Primitives/Layout/Card/Overlays',
 } satisfies Meta;
 
 export default meta;

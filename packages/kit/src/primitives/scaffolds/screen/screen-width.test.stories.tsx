@@ -1,6 +1,6 @@
 import type { ScreenWidth } from '@repo/contracts/kit-tokens';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { columnWidth } from '#mocks/story-layout';
 import { Screen } from './index';
 import { widthContent, WidthExample } from './screen-width.mocks';
@@ -45,16 +45,22 @@ export const FullWidthTablet = atWidth(widths.Tablet, sharedEdge('full'));
 
 export const FullWidthWide = atWidth(widths.Wide, sharedEdge('full'));
 
-// On a wide window the reading column holds the content to its width, and a full Screen lets it run past.
+/*
+ * On a wide window the reading column holds the content to its width, and a full Screen lets it run past. The size
+ * class reaches the Screen a render after the viewport does, so a loaded machine can measure the first frame, drawn
+ * before the window was wide and so uncapped. The claim is about the settled drawing, so it waits for it.
+ */
 function columnCap(width: ScreenWidth, capped: boolean): Story {
   return atWidth(widths.Wide, {
     render: () => <WidthExample width={width} />,
     play: async ({ canvas }) => {
-      const runs = canvas
-        .getByTestId(widthContent)
-        .getBoundingClientRect().width;
+      await waitFor(async () => {
+        const runs = canvas
+          .getByTestId(widthContent)
+          .getBoundingClientRect().width;
 
-      await expect(runs <= columnWidth()).toBe(capped);
+        await expect(runs <= columnWidth()).toBe(capped);
+      });
     },
   });
 }

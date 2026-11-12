@@ -59,9 +59,9 @@ type Source = Pick<ClientSource, 'storage' | 'trackers'> & {
 
 type Target = { projectId: string };
 
-export type IssuesTarget = Target & { search: string; limit: number };
+type IssuesTarget = Target & { search: string; limit: number };
 
-export type IssueTarget = Target & { number: number };
+type IssueTarget = Target & { number: number };
 
 export type GitHubReads = {
   // A Project's labels and counts: one GitHub call.

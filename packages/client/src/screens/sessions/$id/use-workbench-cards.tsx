@@ -26,7 +26,7 @@ import type { ToggleWorkbenchCard } from './use-plugin-header-actions';
 type DeclaredCard = DeclaredItemOf<typeof sessionWorkbenchSlot>;
 
 // Whether a Plugin's card has something to show for this Session.
-export type CardFilled = (pluginId: string, cardId: string) => boolean;
+type CardFilled = (pluginId: string, cardId: string) => boolean;
 
 // The Session's Plugin cards, and what a header action does to one.
 export interface WorkbenchCards {

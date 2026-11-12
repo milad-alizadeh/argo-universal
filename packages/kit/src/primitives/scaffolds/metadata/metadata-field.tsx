@@ -9,7 +9,7 @@ import { PillField, IconField } from './metadata-field-pill';
 import type { FieldProps, MetadataFieldProps } from './metadata-field-props';
 import { groupProps } from './metadata-group';
 
-export type { MetadataFace, MetadataFieldProps } from './metadata-field-props';
+export type { MetadataFieldProps } from './metadata-field-props';
 
 const layouts = {
   stacked: StackedField,
