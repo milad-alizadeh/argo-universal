@@ -146,6 +146,8 @@ export {
 
 export { type SessionPullRequest } from './components/session-pull-request';
 
+export { type CheckDetail } from './components/pull-request-checks';
+
 export { type ChangeState } from './components/change-stage/change-stage-model';
 
 export { type SessionConfigChange } from './hooks/use-session-config-change';

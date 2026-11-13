@@ -129,6 +129,21 @@
           }
         },
         "caller": ["project", "session"]
+      },
+      {
+        "name": "refresh",
+        "label": "Read the Session's pull requests again",
+        "description": "Ask GitHub again for the pull requests attached to the calling Session, now: the retry after signing in again or after a failed read. Returns what list does.",
+        "tier": "read",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "retry",
+          "refresh",
+          "checks"
+        ],
+        "caller": ["project", "session"]
       }
     ]
   },

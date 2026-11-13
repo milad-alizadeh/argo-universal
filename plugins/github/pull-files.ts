@@ -1,12 +1,6 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { valueAt, type Json } from './pull-info';
-import {
-  githubGet,
-  okStatus,
-  refusalOf,
-  signInMessage,
-  type PullTarget,
-} from './pull-reads';
+import { bodyOf, call, type PullTarget } from './pull-reads';
 
 // One changed file of a pull request, as the App's file list draws it; `patch` is the hunks GitHub gives, if any.
 export type PullFile = {
@@ -22,11 +16,6 @@ export type PullFile = {
 export const filesPerPage = 50;
 
 export type FilesTarget = PullTarget & { page: number };
-
-// What a read answers: the files of one page, or why there are none. Argo keeps it, so a failure is never an empty page.
-export type SettledFiles =
-  | { ok: true; value: PullFile[] }
-  | { ok: false; message: string };
 
 const invalid = 'GitHub returned an invalid list of files.';
 
@@ -84,57 +73,31 @@ export function parseFiles(body: string): PullFile[] {
 
 type Fetch = Argo['fetch'];
 
+// One page of a pull request's files as the signed-in person sees it; a missing Account, a refusal or a failed call throws.
 async function fetchFiles(
   fetch: Fetch,
-  target: FilesTarget,
+  { repository, number, page, projectId }: FilesTarget,
 ): Promise<PullFile[]> {
-  const { repository, number, page, projectId } = target;
+  const path = `/repos/${repository}/pulls/${number}/files?per_page=${filesPerPage}&page=${page}`;
 
-  const reply = await fetch(
-    ...githubGet(
-      `/repos/${repository}/pulls/${number}/files?per_page=${filesPerPage}&page=${page}`,
-      projectId,
-    ),
+  return parseFiles(
+    await bodyOf(fetch, call(path, projectId), `${repository}#${number}`),
   );
-
-  if (!reply) throw new Error(signInMessage);
-
-  if (reply.status !== okStatus) throw refusalOf(reply.status, target);
-
-  return parseFiles(await reply.text());
-}
-
-async function settle(
-  fetch: Fetch,
-  target: FilesTarget,
-): Promise<SettledFiles> {
-  try {
-    return { ok: true, value: await fetchFiles(fetch, target) };
-  } catch (cause) {
-    return {
-      ok: false,
-      message: cause instanceof Error ? cause.message : String(cause),
-    };
-  }
 }
 
 export type FilesReads = {
   // One page of one pull request's files, shared by every Operation that asks for it.
-  files: (target: FilesTarget) => NamedQuery<SettledFiles>;
+  files: (target: FilesTarget) => NamedQuery<PullFile[]>;
 };
 
-// A named read (ADR-0037) of one page of a pull request's files; it only reads.
+/*
+ * A named read (ADR-0037) of one page of a pull request's files. It only reads, and a failed read throws, so Argo
+ * keeps the failure instead of an empty page.
+ */
 export const defineFilesReads = (argo: Argo): FilesReads => ({
   files: argo.queries.define(
     'pullFiles',
-    (target: FilesTarget) => settle(argo.fetch, target),
+    (target: FilesTarget) => fetchFiles(argo.fetch, target),
     { projectOf: ({ projectId }: FilesTarget) => projectId },
   ),
 });
-
-// The files of the page, or the reason there are none, as an Error the caller's own failure handling reports.
-export function unwrapFiles(settled: SettledFiles): PullFile[] {
-  if (settled.ok) return settled.value;
-
-  throw new Error(settled.message);
-}

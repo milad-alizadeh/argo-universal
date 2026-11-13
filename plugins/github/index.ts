@@ -6,7 +6,7 @@ import {
 } from './pull-changes';
 import { diffOf, filesOf, type FileSource } from './pull-file-operations';
 import { defineFilesReads } from './pull-files';
-import { attach, detach, discoverFor, list } from './pull-operations';
+import { attach, detach, discoverFor, list, refresh } from './pull-operations';
 import { definePullReads } from './pull-reads';
 import { createPullStore } from './pull-store';
 
@@ -14,7 +14,7 @@ function sourceOf(argo: Argo): ChangesSource {
   return {
     store: createPullStore(argo),
     reads: definePullReads(argo),
-    readQuery: argo.queries.read,
+    readState: argo.queries.readState,
   };
 }
 
@@ -34,6 +34,7 @@ function registerFiles(argo: Argo, source: ChangesSource): void {
   const reading: FileSource = {
     ...source,
     files: defineFilesReads(argo),
+    read: argo.queries.read,
     scope: { ...argo, store: source.store },
   };
 
@@ -58,6 +59,9 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
     ...(await detach({ ...argo, store: source.store }, reference, caller)),
   }));
   argo.operations.register('list', (_params, caller) => list(source, caller));
+  argo.operations.register('refresh', (_params, caller) =>
+    refresh(source, argo, caller),
+  );
 }
 
 export function register(argo: Argo): void {

@@ -6,7 +6,7 @@ import {
   projectDetailsRowLimit,
 } from '#plugin-project-details-item';
 import { SessionBarItem } from '#plugin-session-bar-item';
-import { Change, sessionChangesLimit } from '#session-change';
+import { Change, sessionChangesSlot } from '#session-change';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
@@ -43,6 +43,11 @@ export type ItemsContent<Key extends string, Item extends z.ZodObject> = {
    * the user chose, or Argo's own while none is chosen (ADR-0035).
    */
   owners?: 'one';
+  /*
+   * How often, in milliseconds, Argo asks the Plugins again while a list is open: the Plugin's Queries are made due and
+   * its provider asked. The clock is Argo's and lasts as long as an App has the list open (ADR-0052); a Plugin runs none.
+   */
+  refreshMs?: number;
 };
 
 // The cap on how many contexts one batched call names: a list longer than this asks again.
@@ -198,7 +203,7 @@ export const addOnlySlots = [
   itemsSlotEntry(sessionChangesSlotId, SessionRowContext, {
     key: 'sessionId',
     item: Change,
-    limit: sessionChangesLimit,
+    ...sessionChangesSlot,
   }),
 ] as const;
 

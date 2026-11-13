@@ -1,9 +1,19 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
-import type { FixturePull, GitHubFixture } from './github-fixture';
+import type {
+  FixtureCheck,
+  FixturePull,
+  GitHubFixture,
+} from './github-fixture';
 
 export type Held = Pick<
   GitHubFixture,
-  'pulls' | 'files' | 'accepted' | 'parents' | 'failWith'
+  | 'pulls'
+  | 'files'
+  | 'accepted'
+  | 'parents'
+  | 'failWith'
+  | 'checks'
+  | 'checksFailWith'
 >;
 
 const notFound = 404;
@@ -36,6 +46,25 @@ function filesAnswer(
   const all = files.get(`${repository}#${number}`) ?? [];
 
   return { json: all.slice((page - 1) * size, page * size) };
+}
+
+export const checksPath =
+  /^\/repos\/([^/]+\/[^/]+)\/commits\/([0-9a-f]+)\/check-runs(\?.*)?$/;
+
+const runsOf = (
+  { checks }: Held,
+  repository: string | undefined,
+  head: string | undefined,
+): FixtureCheck[] => checks.get(`${repository}@${head}`) ?? [];
+
+function checksAnswer(held: Held, path: string): FixtureAnswer {
+  const [, repository, head] = checksPath.exec(path) ?? [];
+  const { status } = held.checksFailWith;
+  const runs = runsOf(held, repository, head);
+
+  return status
+    ? refusal('Server Error', status)
+    : { json: { total_count: runs.length, check_runs: runs } };
 }
 
 export const listPath = /^\/repos\/([^/]+\/[^/?]+)\/pulls\?(.*)$/;
@@ -88,6 +117,9 @@ function repoAnswer(held: Held, repository: string): FixtureAnswer {
   };
 }
 
+const pullOrChecks = (held: Held, path: string): FixtureAnswer =>
+  checksPath.test(path) ? checksAnswer(held, path) : pullAnswer(held, path);
+
 function route(held: Held, path: string): FixtureAnswer {
   const filed = filesPath.exec(path);
 
@@ -99,7 +131,7 @@ function route(held: Held, path: string): FixtureAnswer {
 
   const repo = repoPath.exec(path);
 
-  return repo ? repoAnswer(held, String(repo[1])) : pullAnswer(held, path);
+  return repo ? repoAnswer(held, String(repo[1])) : pullOrChecks(held, path);
 }
 
 // The repository endpoints of `api.github.com`; while `failWith` is set, each one fails with that status.

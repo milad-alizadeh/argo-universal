@@ -30,6 +30,30 @@ export const sessionChangesLimit = {
   perPlugin: changesShown,
 };
 
+// How often Argo asks the Plugins for a Session's Changes again while an App has them open (ADR-0052).
+export const sessionChangesRefreshMs = 30_000;
+
+// How the Changes Slot is drawn and kept: its limits, and how often Argo asks again while an App has it open (ADR-0052).
+export const sessionChangesSlot = {
+  limit: sessionChangesLimit,
+  refreshMs: sessionChangesRefreshMs,
+};
+
+// How one Check stands: still queued or running, passed, or failed. A Check that is not known is not listed.
+export const changeCheckStates = ['running', 'passed', 'failed'] as const;
+
+export type ChangeCheckState = (typeof changeCheckStates)[number];
+
+const ChangeCheck = z.strictObject({
+  name: z.string().trim().min(1).max(identityLimit),
+  state: z.enum(changeCheckStates),
+});
+
+// Why a Change shows what it last knew: its latest read failed, because the person must sign in or for any other reason.
+export const changeStaleReasons = ['signIn', 'failed'] as const;
+
+export type ChangeStaleReason = (typeof changeStaleReasons)[number];
+
 /*
  * The pull request behind a Change, where it has one. Its repository is the Change's `repository`, so a PR is
  * always identified by repository plus number, never by number alone (ADR-0052).
@@ -69,6 +93,13 @@ export const Change = z
     draft: z.boolean().optional(),
     conflict: z.boolean().optional(),
     totals: ChangeTotals.optional(),
+    /*
+     * The individual Checks of the head commit. Absent means they are not known, which is never the same as passed;
+     * an empty list means the code host reports none.
+     */
+    checks: z.array(ChangeCheck).max(changesShown).optional(),
+    // Set when the latest read of this Change failed: everything else is what was last known, and why it is out of date.
+    stale: z.enum(changeStaleReasons).optional(),
   })
   .refine(({ pullRequest, repository }) => !pullRequest || !!repository, {
     message: 'A pull request is identified by its repository and number',

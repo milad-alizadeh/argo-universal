@@ -29,6 +29,17 @@ async function fillingPlugins(
   return running;
 }
 
+// What a list calls back: a contribution left out is reported, and Plugins that fill the Slot are started when asked.
+const hooksOf = (
+  deps: PluginServiceDeps,
+  input: SlotItemsInput,
+): Pick<Contributors, 'failed' | 'start'> => ({
+  failed: failedOf(deps),
+  start: async (): Promise<void> => {
+    await fillingPlugins(deps, input);
+  },
+});
+
 /*
  * One list's Plugin items for an items Slot, merged and limited for the App's surface (ADR-0035).
  * When no Plugin declares the Slot nothing is started and nothing reaches the Plugin host; an App
@@ -47,7 +58,7 @@ export async function* slotItemsFor(
 
   if (!pluginIds.length) return yield {};
 
-  const contributors = { pluginIds, input, surface, failed: failedOf(deps) };
+  const contributors = { pluginIds, input, surface, ...hooksOf(deps, input) };
 
   yield* watchSlotItems(deps.pluginRuntime.items, contributors, signal);
 }

@@ -11,6 +11,7 @@ import {
   refusal,
   rest,
   type Held,
+  checksPath,
 } from './github-fixture-rest';
 
 // One pull request as GitHub's REST API answers it, with the fields the Plugin reads.
@@ -39,7 +40,24 @@ export type FixtureFile = {
   previous_filename?: string;
 };
 
+// One Check run of a commit as GitHub's REST API answers it.
+export type FixtureCheck = {
+  name: string;
+  status: 'queued' | 'in_progress' | 'completed';
+  conclusion:
+    | 'success'
+    | 'failure'
+    | 'neutral'
+    | 'skipped'
+    | 'cancelled'
+    | null;
+};
+
 export type GitHubFixture = FixtureServices & {
+  // The Check runs of a commit, by `owner/repository@sha`; a commit with none listed has none.
+  checks: Map<string, FixtureCheck[]>;
+  // Set to make the Checks endpoint alone fail with this status.
+  checksFailWith: { status: number | null };
   // The pull requests GitHub knows, by `owner/repository#number`.
   pulls: Map<string, FixturePull>;
   // The files each pull request changes, by `owner/repository#number`.
@@ -55,6 +73,7 @@ export type GitHubFixture = FixtureServices & {
   pullReads: () => FixtureRequest[];
   // Calls listing a pull request's files.
   fileReads: () => FixtureRequest[];
+  checkReads: () => FixtureRequest[];
 };
 
 export const sha = '0123456789abcdef0123456789abcdef01234567';
@@ -139,6 +158,8 @@ const heldOf = (): Held => ({
   accepted: new Set(['token-1']),
   parents: new Map(),
   failWith: { status: null },
+  checks: new Map(),
+  checksFailWith: { status: null },
 });
 
 /*
@@ -158,5 +179,6 @@ export async function githubFixture(): Promise<GitHubFixture> {
     listReads: reads(listPath),
     pullReads: reads(pullPath),
     fileReads: reads(filesPath),
+    checkReads: reads(checksPath),
   };
 }

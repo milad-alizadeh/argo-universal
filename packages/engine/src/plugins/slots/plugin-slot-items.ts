@@ -1,5 +1,6 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
+import type { PluginClock } from '../clock';
 import type {
   Caller,
   CallOutcome,
@@ -16,6 +17,7 @@ import {
   type SlotWorker,
 } from './kept-items';
 import { SlotItemChanges } from './slot-item-changes';
+import { refreshFor, type SlotRefresh } from './slot-refresh';
 
 // How long one batched call may take before its Plugin is left out of that answer.
 const slotItemsLimitMs = 2000;
@@ -46,8 +48,15 @@ export class PluginSlotItems {
   readonly changes = new SlotItemChanges();
   private readonly kept = new Map<string, SlotWorker>();
   private readonly calls: KindCalls<SlotItemsInput, SlotCall, Reply>;
+  // The clock of the lists that are open: one per Plugin, held for as long as an App has a list open (ADR-0052).
+  readonly refresh: SlotRefresh;
 
-  constructor(private readonly workers: WorkerCalls) {
+  constructor(
+    private readonly workers: WorkerCalls,
+    clock: PluginClock,
+    data: { written: (pluginId: string) => void },
+  ) {
+    this.refresh = refreshFor(workers, { clock, data, items: this });
     this.calls = workers.kind({
       event: (id, input) => ({ type: 'slotItems', id, input }),
       limitMs: slotItemsLimitMs,
@@ -59,6 +68,7 @@ export class PluginSlotItems {
   // A generation that runs or ends keeps nothing of the last one, and open lists ask again.
   private generationChanged(pluginId: string): void {
     this.kept.delete(pluginId);
+    this.refresh.restarted(pluginId);
     this.changes.bump();
   }
 
@@ -105,6 +115,7 @@ export class PluginSlotItems {
 
   close(): void {
     this.kept.clear();
+    this.refresh.close();
     this.changes.close();
   }
 }

@@ -50,13 +50,14 @@ const ThemedCircle = withUniwind(Circle, {
   },
 });
 
-function checksState({
-  failing,
-  running,
-}: PullRequestChecksProps): ChecksState {
-  if (failing > 0) return 'failing';
+// Passed only when every Check passed: Checks that are missing, or not all in, are never read as passed.
+const allPassed = ({ passed, total }: PullRequestChecksProps): boolean =>
+  total > 0 && passed === total;
 
-  return running > 0 ? 'running' : 'passed';
+function checksState(checks: PullRequestChecksProps): ChecksState {
+  if (checks.failing > 0) return 'failing';
+
+  return allPassed(checks) ? 'passed' : 'running';
 }
 
 function stateText(checks: PullRequestChecksProps, state: ChecksState): string {

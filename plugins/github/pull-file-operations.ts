@@ -1,19 +1,18 @@
+import type { Argo } from '@argo/plugin-kit';
 import type { ChangesSource } from './pull-changes';
-import {
-  filesPerPage,
-  unwrapFiles,
-  type FilesReads,
-  type PullFile,
-} from './pull-files';
+import { filesPerPage, type FilesReads, type PullFile } from './pull-files';
 import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
-import { unwrap } from './pull-reads';
 import type { PullReference } from './pull-reference';
 
 type Caller = { projectId: string; sessionId: string };
 
 // What the file Operations read through: the Plugin's associations and named reads, and the Operation scope.
-export type FileSource = ChangesSource & { files: FilesReads; scope: Scope };
+export type FileSource = ChangesSource & {
+  files: FilesReads;
+  scope: Scope;
+  read: Argo['queries']['read'];
+};
 
 // The most files GitHub lists for one pull request, so a scan for a file stops there.
 const filesListed = 3000;
@@ -73,10 +72,7 @@ async function readPull(
 
   const pull = source.reads.pull({ ...named, projectId });
 
-  return {
-    pull: unwrap(await source.readQuery(pull, { projectId })),
-    projectId,
-  };
+  return { pull: await source.read(pull, { projectId }), projectId };
 }
 
 async function readPage(
@@ -87,11 +83,7 @@ async function readPage(
   const { repository, number } = pull;
   const target = { repository, number, projectId, page };
 
-  const settled = await source.readQuery(source.files.files(target), {
-    projectId,
-  });
-
-  return unwrapFiles(settled);
+  return source.read(source.files.files(target), { projectId });
 }
 
 const listedOf = ({ patch: _patch, ...file }: PullFile): ListedFile => file;

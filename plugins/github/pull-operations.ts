@@ -1,7 +1,13 @@
 import type { Argo } from '@argo/plugin-kit';
 import { changeOf, type ChangeItem } from './pull-change';
-import { readLinks, type ChangesSource, type LinkRead } from './pull-changes';
+import {
+  readLinks,
+  refreshOf,
+  type ChangesSource,
+  type LinkRead,
+} from './pull-changes';
 import { discover, type Checkout, type Discovered } from './pull-discovery';
+import { failureMessage } from './pull-known';
 import { fetchPull } from './pull-reads';
 import { parseReference, type PullReference } from './pull-reference';
 
@@ -111,15 +117,37 @@ export type Listed =
   | ChangeItem
   | { repository: string; number: number; error: string };
 
-const described = ({ link, read }: LinkRead): Listed =>
-  read instanceof Error
-    ? { repository: link.repository, number: link.number, error: read.message }
-    : changeOf(read);
+const described = (read: LinkRead): Listed =>
+  read.pull.data
+    ? changeOf(read.pull.data, refreshOf(read))
+    : {
+        repository: read.link.repository,
+        number: read.link.number,
+        error: failureMessage(read.pull),
+      };
 
-// The Session's pull requests: each as GitHub reports it, or with why it could not be read, never silently left out.
+/*
+ * The Session's pull requests: each as GitHub reports it, one that could not be refreshed marked stale with what was
+ * last known, and one never read with why, never silently left out.
+ */
 export async function list(
   source: ChangesSource,
   { sessionId }: Caller,
 ): Promise<{ changes: Listed[] }> {
   return { changes: (await readLinks(source, [sessionId])).map(described) };
+}
+
+/*
+ * Asks GitHub again for the Session's pull requests, now rather than when the Slot next does: the retry a person or an
+ * Agent runs after restoring access or the network. Everything the Plugin kept is made due first, so a failed read is
+ * read again and what answers is what GitHub says.
+ */
+export async function refresh(
+  source: ChangesSource,
+  scope: Pick<Scope, 'changed'>,
+  caller: Caller,
+): Promise<{ changes: Listed[] }> {
+  scope.changed();
+
+  return list(source, caller);
 }

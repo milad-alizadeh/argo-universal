@@ -9,6 +9,8 @@
     "journey-calls.ts",
     "journey-files.ts",
     "journey-fixture.ts",
+    "journey-watch.ts",
+    "open-change.ts",
     "vitest.config.ts"
   ]
 }
