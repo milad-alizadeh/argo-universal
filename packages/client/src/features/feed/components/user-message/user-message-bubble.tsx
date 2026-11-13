@@ -37,7 +37,7 @@ function ShowMore({ onPress }: { onPress: () => void }): React.JSX.Element {
  * gutter that tells your message from the Agent's.
  */
 const bubbleClassName =
-  'max-w-7/10 wide:max-w-lg gap-0.5 rounded-2xl bg-foreground/4 dark:bg-foreground/8 px-3.5 py-2.5 wide:px-3 wide:py-2';
+  'min-w-0 max-w-7/10 wide:max-w-lg wrap-anywhere gap-0.5 rounded-2xl bg-foreground/4 dark:bg-foreground/8 px-3.5 py-2.5 wide:px-3 wide:py-2';
 
 interface BubbleProps {
   text: string;
