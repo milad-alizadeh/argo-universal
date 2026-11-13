@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 import { z } from 'zod';
 import { type App, expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
+import { navigation } from './plugins';
 import { query, mutate } from './server-query';
 
 const PluginList = z.object({
@@ -25,7 +26,7 @@ const manifest = {
   version: '1.0.0',
   engines: { argo: '>=0.0.0 <2' },
   main: 'index.mjs',
-  icon: {},
+  icon: { sf: 'person.crop.circle' },
   capabilities: [{ kind: 'fetch', host }],
   contributes: { nav: [], accounts: [{ host, page: '/sign-in' }] },
 };
@@ -83,7 +84,11 @@ Given('an Account Plugin is {word}', async ({ app, page }, state: string) => {
 });
 
 When('I open the Account Plugin settings', async ({ page }) => {
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: 'Settings', exact: true })
+    .click();
   await page.getByRole('link', { name: /^Plugins(?:,|$)/ }).click();
   await page.getByRole('link', { name: 'Account probe', exact: true }).click();
 });
