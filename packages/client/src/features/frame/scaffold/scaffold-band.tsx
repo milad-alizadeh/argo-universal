@@ -15,7 +15,7 @@ import type {
   ScaffoldLayout,
   ScaffoldPartProps,
 } from './use-scaffold-layout';
-import { useWindowHistory, type WindowHistory } from './window-history';
+import { type HistoryStep, useWindowHistory } from './window-history';
 
 interface SidebarToggleProps {
   layout: Pick<ScaffoldLayout, 'list' | 'requestSidebar'>;
@@ -35,30 +35,25 @@ function SidebarBandToggle({ layout }: SidebarToggleProps): ReactElement {
   );
 }
 
-// Each step's glyph, label, and the history it reads and moves.
+// Each step's glyph and label.
 const historySteps = {
   back: { icon: 'chevron-left', label: 'Back' },
   forward: { icon: 'chevron-right', label: 'Forward' },
 } as const;
 
-type HistoryStep = keyof typeof historySteps;
-
-const stepEnabled = (history: WindowHistory, step: HistoryStep): boolean =>
-  step === 'back' ? history.canGoBack : history.canGoForward;
-
 function HistoryButton(props: {
-  history: WindowHistory;
   step: HistoryStep;
+  kind: keyof typeof historySteps;
 }): ReactElement {
-  const { icon, label } = historySteps[props.step];
+  const { icon, label } = historySteps[props.kind];
 
   return (
     <IconButton
       {...bandControlAppearance}
       icon={icon}
       accessibilityLabel={label}
-      disabled={!stepEnabled(props.history, props.step)}
-      onPress={props.history[props.step]}
+      disabled={!props.step.enabled}
+      onPress={props.step.go}
     />
   );
 }
@@ -71,8 +66,8 @@ function BandHistory(): ReactElement | null {
 
   return (
     <>
-      <HistoryButton history={history} step="back" />
-      <HistoryButton history={history} step="forward" />
+      <HistoryButton step={history.back} kind="back" />
+      <HistoryButton step={history.forward} kind="forward" />
     </>
   );
 }
