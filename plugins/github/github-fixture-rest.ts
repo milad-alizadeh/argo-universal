@@ -1,5 +1,9 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
-import type { FixturePull, GitHubFixture } from './github-fixture';
+import type {
+  FixtureCheck,
+  FixturePull,
+  GitHubFixture,
+} from './github-fixture';
 
 export type Held = Pick<
   GitHubFixture,
@@ -25,15 +29,20 @@ function pullAnswer({ pulls }: Held, path: string): FixtureAnswer {
 export const checksPath =
   /^\/repos\/([^/]+\/[^/]+)\/commits\/([0-9a-f]+)\/check-runs(\?.*)?$/;
 
+const runsOf = (
+  { checks }: Held,
+  repository: string | undefined,
+  head: string | undefined,
+): FixtureCheck[] => checks.get(`${repository}@${head}`) ?? [];
+
 function checksAnswer(held: Held, path: string): FixtureAnswer {
   const [, repository, head] = checksPath.exec(path) ?? [];
+  const { status } = held.checksFailWith;
+  const runs = runsOf(held, repository, head);
 
-  if (held.checksFailWith.status)
-    return refusal('Server Error', held.checksFailWith.status);
-
-  const runs = held.checks.get(`${repository}@${head}`) ?? [];
-
-  return { json: { total_count: runs.length, check_runs: runs } };
+  return status
+    ? refusal('Server Error', status)
+    : { json: { total_count: runs.length, check_runs: runs } };
 }
 
 export const listPath = /^\/repos\/([^/]+\/[^/?]+)\/pulls\?(.*)$/;
@@ -86,16 +95,17 @@ function repoAnswer(held: Held, repository: string): FixtureAnswer {
   };
 }
 
-function route(held: Held, path: string): FixtureAnswer {
-  if (checksPath.test(path)) return checksAnswer(held, path);
+const pullOrChecks = (held: Held, path: string): FixtureAnswer =>
+  checksPath.test(path) ? checksAnswer(held, path) : pullAnswer(held, path);
 
+function route(held: Held, path: string): FixtureAnswer {
   const listed = listPath.exec(path);
 
   if (listed) return listAnswer(held, String(listed[1]), String(listed[2]));
 
   const repo = repoPath.exec(path);
 
-  return repo ? repoAnswer(held, String(repo[1])) : pullAnswer(held, path);
+  return repo ? repoAnswer(held, String(repo[1])) : pullOrChecks(held, path);
 }
 
 // The repository endpoints of `api.github.com`; while `failWith` is set, each one fails with that status.

@@ -1,9 +1,8 @@
 import { drawsPluginWire } from '@repo/contracts/plugins/kit';
-import {
-  itemsSlot,
-  type AddOnlySlotId,
-  type SlotItems,
-  type SlotItemsInput,
+import type {
+  AddOnlySlotId,
+  SlotItems,
+  SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { fillsSlot } from '../discovery/plugin-contributions';
@@ -30,6 +29,17 @@ async function fillingPlugins(
   return running;
 }
 
+// What a list calls back: a contribution left out is reported, and Plugins that fill the Slot are started when asked.
+const hooksOf = (
+  deps: PluginServiceDeps,
+  input: SlotItemsInput,
+): Pick<Contributors, 'failed' | 'start'> => ({
+  failed: failedOf(deps),
+  start: async (): Promise<void> => {
+    await fillingPlugins(deps, input);
+  },
+});
+
 /*
  * One list's Plugin items for an items Slot, merged and limited for the App's surface (ADR-0035).
  * When no Plugin declares the Slot nothing is started and nothing reaches the Plugin host; an App
@@ -48,16 +58,7 @@ export async function* slotItemsFor(
 
   if (!pluginIds.length) return yield {};
 
-  const contributors = {
-    pluginIds,
-    input,
-    surface,
-    failed: failedOf(deps),
-    // Only a list on a clock starts Plugins again: the clock is what notices one turned back on.
-    ...(itemsSlot(input.slotId)?.content.refreshMs !== undefined && {
-      start: () => fillingPlugins(deps, input),
-    }),
-  };
+  const contributors = { pluginIds, input, surface, ...hooksOf(deps, input) };
 
   yield* watchSlotItems(deps.pluginRuntime.items, contributors, signal);
 }

@@ -33,6 +33,12 @@ export const sessionChangesLimit = {
 // How often Argo asks the Plugins for a Session's Changes again while an App has them open (ADR-0052).
 export const sessionChangesRefreshMs = 30_000;
 
+// How the Changes Slot is drawn and kept: its limits, and how often Argo asks again while an App has it open (ADR-0052).
+export const sessionChangesSlot = {
+  limit: sessionChangesLimit,
+  refreshMs: sessionChangesRefreshMs,
+};
+
 // How one Check stands: still queued or running, passed, or failed. A Check that is not known is not listed.
 export const changeCheckStates = ['running', 'passed', 'failed'] as const;
 

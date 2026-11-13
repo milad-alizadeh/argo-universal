@@ -28,32 +28,46 @@ function stateOf(run: { [key: string]: Json }): CheckInfo['state'] {
   return passing.has(run.conclusion) ? 'passed' : 'failed';
 }
 
+const nameOf = ({ name }: { [key: string]: Json }): string => {
+  if (typeof name === 'string' && name !== '') return name;
+
+  throw new Error(invalid);
+};
+
 function checkOf(run: Json): CheckInfo {
   if (!isObject(run)) throw new Error(invalid);
 
-  const { name } = run;
-
-  if (typeof name !== 'string' || name === '') throw new Error(invalid);
-
-  return { name, state: stateOf(run) };
+  return { name: nameOf(run), state: stateOf(run) };
 }
 
-/*
- * The individual Checks out of GitHub's reply. More Checks than one read returns is refused: a list that may leave out
- * a failing Check must not pass for the whole.
- */
-export function parseChecks(body: string): CheckInfo[] {
-  const reply: Json = JSON.parse(body);
+const runsOf = (reply: Json): Json[] => {
+  if (isObject(reply) && Array.isArray(reply.check_runs))
+    return reply.check_runs;
 
-  if (!isObject(reply) || !Array.isArray(reply.check_runs))
-    throw new Error(invalid);
+  throw new Error(invalid);
+};
 
-  const total = reply.total_count;
+const totalOf = (reply: Json): number =>
+  isObject(reply) && typeof reply.total_count === 'number'
+    ? reply.total_count
+    : 0;
 
-  if (typeof total === 'number' && total > reply.check_runs.length)
+// A list that is shorter than GitHub's own count may leave out a failing Check, so it is refused.
+function refuseTruncated(reply: Json, runs: readonly Json[]): void {
+  const total = totalOf(reply);
+
+  if (total > runs.length)
     throw new Error(
       `${total} Checks is more than Argo reads for one commit (${checksPageSize}).`,
     );
+}
 
-  return reply.check_runs.map(checkOf);
+// The individual Checks out of GitHub's reply.
+export function parseChecks(body: string): CheckInfo[] {
+  const reply: Json = JSON.parse(body);
+  const runs = runsOf(reply);
+
+  refuseTruncated(reply, runs);
+
+  return runs.map(checkOf);
 }

@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { sha } from './github-fixture';
 import {
   attach,
   attributedChangesOf,
@@ -14,29 +13,13 @@ import {
   secondSessionId,
   signedOutJourney,
 } from './journey-fixture';
+import { openChange } from './open-change';
 
 const slow = 30_000;
 
 const pullReference = 'owner/repository#12';
 
 const notAPullRequest = 'is not a pull request';
-
-const openChange = {
-  id: 'github:owner/repository#12',
-  stage: 'open',
-  title: 'Add the thing',
-  provider: 'github',
-  repository: 'owner/repository',
-  branch: 'feature-12',
-  base: 'main',
-  head: sha,
-  pullRequest: {
-    number: 12,
-    url: 'https://github.com/owner/repository/pull/12',
-  },
-  totals: { files: 3, additions: 10, deletions: 2 },
-  checks: [],
-};
 
 it(
   'shows an attached pull request as a Change with its GitHub number, title, stage and totals',

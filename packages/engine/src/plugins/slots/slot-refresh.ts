@@ -45,6 +45,7 @@ export class SlotRefresh {
 
     hold.count += 1;
     this.holds.set(key, hold);
+
     if (hold.count === 1) this.arm(hold);
 
     return hold;
@@ -52,6 +53,7 @@ export class SlotRefresh {
 
   private release(hold: Hold): void {
     hold.count -= 1;
+
     if (hold.count > 0) return;
 
     hold.cancel?.();
@@ -62,7 +64,6 @@ export class SlotRefresh {
   // One tick away. A Plugin that is not running still ticks, so a list that stays open notices it start again.
   private arm(hold: Hold): void {
     hold.cancel?.();
-    hold.cancel = undefined;
     hold.cancel = this.refreshing.clock.schedule(
       () => this.tick(hold),
       hold.ms,
@@ -90,3 +91,25 @@ export class SlotRefresh {
     this.holds.clear();
   }
 }
+
+// What the clock of one runtime's open lists is built from: its clock, the Queries it makes due, and the Slots it asks again.
+type RefreshParts = {
+  clock: PluginClock;
+  data: { written: (pluginId: string) => void };
+  items: { changed: (pluginId: string) => void };
+};
+
+/*
+ * The clock of one runtime's open lists: a Plugin counts as running while it has a worker generation, and a tick makes
+ * its Queries due before the Slots ask it again.
+ */
+export const refreshFor = (
+  workers: { generation: (pluginId: string) => number | undefined },
+  { clock, data, items }: RefreshParts,
+): SlotRefresh =>
+  new SlotRefresh({
+    clock,
+    due: (pluginId): void => data.written(pluginId),
+    ask: (pluginId): void => items.changed(pluginId),
+    running: (pluginId): boolean => workers.generation(pluginId) !== undefined,
+  });

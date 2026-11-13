@@ -1,5 +1,6 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
+import type { PluginClock } from '../clock';
 import type {
   Caller,
   CallOutcome,
@@ -16,7 +17,7 @@ import {
   type SlotWorker,
 } from './kept-items';
 import { SlotItemChanges } from './slot-item-changes';
-import { SlotRefresh, type Refreshing } from './slot-refresh';
+import { refreshFor, type SlotRefresh } from './slot-refresh';
 
 // How long one batched call may take before its Plugin is left out of that answer.
 const slotItemsLimitMs = 2000;
@@ -52,13 +53,10 @@ export class PluginSlotItems {
 
   constructor(
     private readonly workers: WorkerCalls,
-    refreshing: Pick<Refreshing, 'clock' | 'due'>,
+    clock: PluginClock,
+    data: { written: (pluginId: string) => void },
   ) {
-    this.refresh = new SlotRefresh({
-      ...refreshing,
-      running: (pluginId) => workers.generation(pluginId) !== undefined,
-      ask: (pluginId) => this.changed(pluginId),
-    });
+    this.refresh = refreshFor(workers, { clock, data, items: this });
     this.calls = workers.kind({
       event: (id, input) => ({ type: 'slotItems', id, input }),
       limitMs: slotItemsLimitMs,

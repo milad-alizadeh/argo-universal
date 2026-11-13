@@ -8,6 +8,8 @@ export const githubHost = 'api.github.com';
 
 const okStatus = 200;
 
+const shortHead = 7;
+
 const unauthorizedStatus = 401;
 
 const notFoundStatus = 404;
@@ -93,7 +95,7 @@ export async function fetchChecks(
         `/repos/${repository}/commits/${head}/check-runs?per_page=${checksPageSize}`,
         projectId,
       ),
-      `The Checks of ${repository}@${head.slice(0, 7)}`,
+      `The Checks of ${repository}@${head.slice(0, shortHead)}`,
     ),
   );
 }

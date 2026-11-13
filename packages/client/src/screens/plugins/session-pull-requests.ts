@@ -75,7 +75,9 @@ const modifiersOf = ({
 const staleOf = ({ stale }: Change): Pick<SessionPullRequest, 'stale'> =>
   stale ? { stale } : {};
 
-const factsOf = (change: Change): Partial<SessionPullRequest> => ({
+const factsOf = (
+  change: Change,
+): Pick<SessionPullRequest, 'draft' | 'conflict' | 'stale'> => ({
   ...modifiersOf(change),
   ...staleOf(change),
 });

@@ -15,9 +15,9 @@ export type Contributors = {
   failed: (pluginId: string, slotId: string, reason: string) => void;
   /*
    * Starts the Plugins that fill the Slot and are enabled. A list on a refresh clock calls it for a Plugin that is not
-   * running, so one turned off and on again while the list stays open comes back into it.
+   * running, so one turned off and on again while the list stays open comes back into it; a list without a clock never does.
    */
-  start?: () => Promise<unknown>;
+  start: () => Promise<void>;
 };
 
 /*
@@ -30,20 +30,16 @@ export async function* watchSlotItems(
   signal: AbortSignal,
 ): AsyncGenerator<SlotItems> {
   let last: string | undefined;
-  const release = refreshing(slotItems, contributors);
 
-  try {
-    for await (const merged of merges(slotItems, contributors, signal)) {
-      const text = JSON.stringify(merged);
+  for await (const merged of merges(slotItems, contributors, signal)) {
+    const text = JSON.stringify(merged);
 
-      if (text !== last) yield merged;
-      last = text;
-    }
-  } finally {
-    // The list is closed, so nothing asks its Plugins again for it (ADR-0052).
-    release();
+    if (text !== last) yield merged;
+    last = text;
   }
 }
+
+const noRefresh = (): void => {};
 
 // Holds the Slot's refresh clock for as long as this list is open, if the Slot has one.
 function refreshing(
@@ -52,12 +48,25 @@ function refreshing(
 ): () => void {
   const ms = itemsSlot(input.slotId)?.content.refreshMs;
 
-  return ms === undefined
-    ? () => undefined
-    : slotItems.refresh.hold(pluginIds, ms);
+  return ms === undefined ? noRefresh : slotItems.refresh.hold(pluginIds, ms);
 }
 
 async function* merges(
+  slotItems: PluginSlotItems,
+  contributors: Contributors,
+  signal: AbortSignal,
+): AsyncGenerator<SlotItems> {
+  const release = refreshing(slotItems, contributors);
+
+  try {
+    yield* mergesOf(slotItems, contributors, signal);
+  } finally {
+    // The list is closed, so nothing asks its Plugins again for it (ADR-0052).
+    release();
+  }
+}
+
+async function* mergesOf(
   slotItems: PluginSlotItems,
   contributors: Contributors,
   signal: AbortSignal,
@@ -112,6 +121,12 @@ async function contribution(
   return [];
 }
 
+const refreshes = ({ slotId }: SlotItemsInput): boolean =>
+  itemsSlot(slotId)?.content.refreshMs !== undefined;
+
+const notRunning = (answer: ItemsAnswer): boolean =>
+  !answer.ok && answer.reason === itemsLeftOut.notRunning;
+
 // A Plugin that is not running is started once if the list has a clock, then asked again.
 async function askedAgain(
   slotItems: PluginSlotItems,
@@ -120,8 +135,7 @@ async function askedAgain(
 ): Promise<ItemsAnswer> {
   const answer = await slotItems.items(pluginId, input);
 
-  if (answer.ok || answer.reason !== itemsLeftOut.notRunning || !start)
-    return answer;
+  if (!refreshes(input) || !notRunning(answer)) return answer;
   await start();
 
   return slotItems.items(pluginId, input);

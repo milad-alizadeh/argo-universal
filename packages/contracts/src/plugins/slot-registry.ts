@@ -6,11 +6,7 @@ import {
   projectDetailsRowLimit,
 } from '#plugin-project-details-item';
 import { SessionBarItem } from '#plugin-session-bar-item';
-import {
-  Change,
-  sessionChangesLimit,
-  sessionChangesRefreshMs,
-} from '#session-change';
+import { Change, sessionChangesSlot } from '#session-change';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
@@ -207,8 +203,7 @@ export const addOnlySlots = [
   itemsSlotEntry(sessionChangesSlotId, SessionRowContext, {
     key: 'sessionId',
     item: Change,
-    limit: sessionChangesLimit,
-    refreshMs: sessionChangesRefreshMs,
+    ...sessionChangesSlot,
   }),
 ] as const;
 

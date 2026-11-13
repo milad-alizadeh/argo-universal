@@ -1,4 +1,7 @@
-import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
+import type {
+  PluginDataState,
+  PluginQuery,
+} from '@repo/contracts/plugins/argo-calls';
 import type {
   NamedQuery,
   QueriesApi,
@@ -34,6 +37,21 @@ async function readNamed(
   return queryResult(query.api, state.data);
 }
 
+type KeptState = {
+  data?: QueryResult<PluginQuery>;
+  error?: string;
+  stale: boolean;
+};
+
+const keptState = (
+  query: PluginQuery,
+  { data, error, stale }: PluginDataState,
+): KeptState => ({
+  stale,
+  ...(data !== undefined && { data: queryResult(query.api, data) }),
+  ...(error !== undefined && { error }),
+});
+
 // What Argo keeps for the Query, a failure included: the last good answer, if there is one, and why the latest read failed.
 async function stateNamed<Value>(
   call: DataCall,
@@ -44,23 +62,11 @@ async function stateNamed(
   call: DataCall,
   query: PluginQuery,
   projectId?: string,
-): Promise<{
-  data?: QueryResult<PluginQuery>;
-  error?: string;
-  stale: boolean;
-}> {
-  const { data, error, stale } = await call({
-    api: 'data',
-    action: 'read',
+): Promise<KeptState> {
+  return keptState(
     query,
-    projectId,
-  });
-
-  return {
-    stale,
-    ...(data !== undefined && { data: queryResult(query.api, data) }),
-    ...(error !== undefined && { error }),
-  };
+    await call({ api: 'data', action: 'read', query, projectId }),
+  );
 }
 
 /*

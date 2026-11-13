@@ -40,11 +40,10 @@ const modifiersOf = ({
   ...(conflict && { conflict: true as const }),
 });
 
-// A pull request's identity is its repository plus number (ADR-0052).
-export const changeOf = (
+// Where the pull request is and what it is called; its identity is its repository plus number (ADR-0052).
+const factsOf = (
   pull: PullInfo,
-  { checks, stale }: Refresh = {},
-): ChangeItem => ({
+): Omit<ChangeItem, 'totals' | keyof Refresh> => ({
   id: changeId(pull),
   stage: pull.stage,
   title: pull.title,
@@ -55,7 +54,18 @@ export const changeOf = (
   head: pull.head,
   pullRequest: { number: pull.number, url: pull.url },
   ...modifiersOf(pull),
-  totals: totalsOf(pull),
+});
+
+const refreshFields = ({ checks, stale }: Refresh): Refresh => ({
   ...(checks && { checks }),
   ...(stale && { stale }),
+});
+
+export const changeOf = (
+  pull: PullInfo,
+  refresh: Refresh = {},
+): ChangeItem => ({
+  ...factsOf(pull),
+  totals: totalsOf(pull),
+  ...refreshFields(refresh),
 });

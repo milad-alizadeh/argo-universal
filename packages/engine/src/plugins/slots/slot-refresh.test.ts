@@ -4,9 +4,19 @@ import { SlotRefresh } from './slot-refresh';
 
 const every = 30_000;
 
+const asking = 'ask github';
+
 type Timer = { callback: () => void; ms: number };
 
-function refresh() {
+type Harness = {
+  refreshing: SlotRefresh;
+  timers: Set<Timer>;
+  tick: () => void;
+  asked: string[];
+  running: Set<string>;
+};
+
+function refresh(): Harness {
   const timers = new Set<Timer>();
   const asked: string[] = [];
   const running = new Set(['github']);
@@ -50,12 +60,7 @@ it('makes the Plugin due and asks it again on each tick while a list holds the c
   tick();
   tick();
 
-  expect(asked).toEqual([
-    'due github',
-    'ask github',
-    'due github',
-    'ask github',
-  ]);
+  expect(asked).toEqual(['due github', asking, 'due github', asking]);
 });
 
 it('runs one clock for every list that holds it, and stops when the last lets go', () => {
@@ -79,7 +84,7 @@ it('only asks again, and makes nothing due, while the Plugin is not running', ()
   refreshing.hold(['github'], every);
   tick();
 
-  expect(asked).toEqual(['ask github']);
+  expect(asked).toEqual([asking]);
 });
 
 it('sets the timer afresh when the Plugin stops or starts, never keeping two', () => {
