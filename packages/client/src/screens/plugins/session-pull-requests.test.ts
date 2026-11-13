@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { sessionPullRequests } from './session-pull-requests';
 import type { ReadItem, SlotReading } from './slot-items';
 
+const ownedId = 'github:owner/repository#12';
+
 const owned = 'owner/repository';
 
 const pullRequest = {
@@ -12,7 +14,7 @@ const pullRequest = {
 };
 
 const open: Change = {
-  id: 'github:owner/repository#12',
+  id: ownedId,
   stage: 'open',
   title: 'Add the thing',
   repository: owned,
@@ -37,7 +39,7 @@ describe('sessionPullRequests', () => {
   it('draws a PR-backed Change with its number, title, stage and totals', () => {
     expect(sessionPullRequests(reading(open))).toEqual([
       {
-        id: 'github:owner/repository#12',
+        id: ownedId,
         stage: 'open',
         number: 12,
         title: 'Add the thing',
@@ -85,6 +87,6 @@ describe('sessionPullRequests', () => {
 
     expect(
       sessionPullRequests(reading(open, fork)).map(({ id }) => id),
-    ).toEqual(['github:owner/repository#12', 'github:fork/repository#12']);
+    ).toEqual([ownedId, 'github:fork/repository#12']);
   });
 });

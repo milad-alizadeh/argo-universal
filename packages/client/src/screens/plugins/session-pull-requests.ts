@@ -1,5 +1,5 @@
 import type { Change } from '@repo/contracts';
-import type { SessionPullRequest } from '#features/sessions';
+import type { ChangeState, SessionPullRequest } from '#features/sessions';
 import type { SlotReading } from './slot-items';
 
 type PullRequestChange = Change & {
@@ -19,14 +19,13 @@ const modifierOf = ({
   return draft ? 'draft' : undefined;
 };
 
-const stateOf = (
-  change: Change,
-): Pick<SessionPullRequest, 'stage' | 'modifier'> => {
+const stateOf = (change: Change): ChangeState => {
   const modifier = modifierOf(change);
 
-  return change.stage === 'open' && modifier
-    ? { stage: 'open', modifier }
-    : { stage: change.stage };
+  if (change.stage === 'open')
+    return modifier ? { stage: 'open', modifier } : { stage: 'open' };
+
+  return { stage: change.stage };
 };
 
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
