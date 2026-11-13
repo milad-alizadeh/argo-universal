@@ -3,11 +3,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { agentRow as agent } from '../registry-icons.mocks';
 import { AgentListItem } from './agent-list-item';
+import { configureLabel } from './agent-meta';
 
 const meta = {
   title: 'Tests/Agents/AgentListItem/CardActions',
   component: AgentListItem,
-  args: { agent, onInstall: fn(), onRemove: fn() },
+  args: { agent, onInstall: fn(), onRemove: fn(), onConfigure: fn() },
 } satisfies Meta<typeof AgentListItem>;
 
 export default meta;
@@ -142,6 +143,29 @@ export const UnavailableWide: Story = {
     await expect(canvas.getByText(unsupported)).toBeVisible();
     await expect(
       canvas.queryByRole('button', { name: anyAction }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+const environmentName = `${configureLabel} of ${agent.name}`;
+
+export const AnInstalledAgentOpensItsEnvironment: Story = {
+  args: { agent: { ...agent, installed: true } },
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(
+      canvas.getByRole('button', { name: environmentName }),
+    );
+    await expect(args.onConfigure).toHaveBeenCalledWith(agent.id);
+  },
+};
+
+export const AnAgentNotInstalledHasNoEnvironment: Story = {
+  args: { agent: { ...agent, installed: false } },
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    await expect(
+      canvas.queryByRole('button', { name: environmentName }),
     ).not.toBeInTheDocument();
   },
 };

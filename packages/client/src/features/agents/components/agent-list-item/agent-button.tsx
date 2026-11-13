@@ -10,6 +10,8 @@ import type { AgentRowEntry } from '../../utils/agent-rows';
 export type AgentActions = {
   onInstall: (id: string) => void;
   onRemove: (id: string) => void;
+  // Opens an Installed Agent's own page, where its launch environment is set.
+  onConfigure: (id: string) => void;
 };
 
 type AgentCardProps = AgentActions & { agent: AgentRowEntry };

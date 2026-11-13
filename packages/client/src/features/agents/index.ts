@@ -32,4 +32,6 @@ export { AgentLoginTerminal } from './components/agent-login-terminal/agent-logi
 
 export { type LoginTerminalProps } from './components/agent-login-terminal/terminal-props';
 
+export { useAgentEnvironmentChange } from './hooks/use-agent-changes';
+
 export { useRememberedAgent } from './hooks/use-remembered-agent';

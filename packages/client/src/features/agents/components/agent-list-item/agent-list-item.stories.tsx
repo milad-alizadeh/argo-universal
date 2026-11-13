@@ -22,11 +22,17 @@ const meta = {
       </List>
     ),
   ],
-  args: { ...installableAgent, onInstall: fn(), onRemove: fn() },
+  args: {
+    ...installableAgent,
+    onInstall: fn(),
+    onRemove: fn(),
+    onConfigure: fn(),
+  },
   argTypes: {
     agent: { control: false },
     onInstall: { control: false },
     onRemove: { control: false },
+    onConfigure: { control: false },
   },
 } satisfies Meta<typeof AgentListItem>;
 

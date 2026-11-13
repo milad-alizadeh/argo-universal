@@ -36,6 +36,8 @@ export { AccountDetailScreen } from './screens/settings/accounts/$id/account-det
 
 export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
+export { AgentDetailScreen } from './screens/settings/agents/$id/agent-detail-screen';
+
 export { useRestoredThemeChoice } from '#features/settings';
 
 export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';

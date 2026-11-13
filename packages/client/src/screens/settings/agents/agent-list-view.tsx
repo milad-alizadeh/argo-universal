@@ -20,6 +20,7 @@ export type AgentListViewProps = {
   agents: AgentRows;
   onInstall: (id: string) => void;
   onRemove: (id: string) => void;
+  onConfigure: (id: string) => void;
   onRetry: () => void;
   initialSearch?: string;
   initialFilter?: AgentsFilter;
