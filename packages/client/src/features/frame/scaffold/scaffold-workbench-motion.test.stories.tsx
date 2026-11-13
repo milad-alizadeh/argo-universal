@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { SessionSwitchScaffold } from './scaffold-session-switch.mocks';
 import { sampleMotionFrames } from './scaffold-workbench-motion.test.mocks';
 import { WorkbenchScaffold } from './scaffold-workbench.mocks';
 
@@ -64,5 +65,32 @@ export const WorkbenchSlidesWhenTheExpandedInspectorRestores: Story = {
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
     await assertSliding(canvas, 'Restore Inspector');
+  },
+};
+
+export const WorkbenchTakesItsPlaceAtOnceOnASessionSwitch: Story = {
+  render: () => <SessionSwitchScaffold />,
+  beforeEach: (): Promise<void> => settleLayout(1856),
+  play: async ({ canvas }) => {
+    const workbench = await canvas.findByTestId(workbenchId);
+
+    const button = canvas.getByRole('button', {
+      name: 'Open another Session',
+    });
+
+    const left = (): number => workbench.getBoundingClientRect().left;
+    const start = left();
+
+    const positions = await sampleMotionFrames(
+      () => button.click(),
+      left,
+      motionFrames,
+    );
+
+    const end = positions.at(-1);
+    const between = positions.filter((at) => at !== start && at !== end);
+
+    await expect(end).not.toBe(start);
+    await expect(between).toEqual([]);
   },
 };
