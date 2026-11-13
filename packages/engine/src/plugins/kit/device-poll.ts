@@ -6,6 +6,7 @@ import type {
 } from '@repo/contracts/plugins/device-flow-api';
 import type { z } from 'zod';
 import { postForm, TokenAnswer } from './device-http';
+import { keptFrom, type KeptToken } from './device-token';
 
 const deviceGrant = 'urn:ietf:params:oauth:grant-type:device_code';
 
@@ -28,7 +29,7 @@ export const expired = ({ name }: DeviceFlowOptions): DeviceFlowState =>
 
 // What one poll found: the token, a reason to wait longer, or the end of the sign-in.
 export type Polled =
-  | { kind: 'token'; token: string }
+  | { kind: 'token'; token: KeptToken }
   | { kind: 'wait'; slower: boolean }
   | { kind: 'ended'; state: DeviceFlowState };
 
@@ -74,9 +75,16 @@ export async function pollOnce(
     fields: tokenFields(options, device),
   };
 
-  const reply = await postForm(fetch, target, TokenAnswer);
+  return polledOf(options, await postForm(fetch, target, TokenAnswer));
+}
 
-  if (reply.access_token) return { kind: 'token', token: reply.access_token };
+function polledOf(
+  options: DeviceFlowOptions,
+  reply: z.infer<typeof TokenAnswer>,
+): Polled {
+  const token = keptFrom(reply);
+
+  if (token) return { kind: 'token', token };
 
   return waits.has(String(reply.error))
     ? { kind: 'wait', slower: reply.error === 'slow_down' }

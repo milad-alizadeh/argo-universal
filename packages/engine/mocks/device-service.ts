@@ -58,7 +58,11 @@ export type FakeDevice = {
   added: { host: string; label: string }[];
   secrets: Map<string, string>;
   changes: () => number;
+  // What the provider the flow registered answers a borrow of the Account; nothing until it registered.
+  borrow: (id: string) => Promise<string | null>;
 };
+
+type TokenHandler = Parameters<DeviceFlowArgo['accounts']['provide']>[2];
 
 // The next scripted answer for a URL; the last one repeats.
 const nextFor = (
@@ -83,13 +87,18 @@ const fetching =
 
 const accountsOf = (
   added: FakeDevice['added'],
+  handlers: TokenHandler[],
 ): DeviceFlowArgo['accounts'] => ({
   add: (host, { label }) => {
     added.push({ host, label });
 
     return Promise.resolve('account-1');
   },
-  provide: () => Promise.resolve(),
+  provide: (_host, _header, handler) => {
+    handlers.push(handler);
+
+    return Promise.resolve();
+  },
 });
 
 const secretsOf = (kept: Map<string, string>): DeviceFlowArgo['secrets'] => ({
@@ -97,24 +106,57 @@ const secretsOf = (kept: Map<string, string>): DeviceFlowArgo['secrets'] => ({
   set: (id, value) => Promise.resolve(void kept.set(id, value)),
 });
 
+// Borrows through the provider registered last, as Argo would for any borrowing Plugin.
+const borrowing =
+  (handlers: TokenHandler[]) =>
+  async (id: string): Promise<string | null> => {
+    const handler = handlers.at(-1);
+    const account = { id, host: 'api.github.com', label: '', providedBy: '' };
+
+    return handler ? ((await handler(account)) ?? null) : null;
+  };
+
 /*
  * The calls a device flow makes, over a service that answers each URL with what the test scripted for it, and
  * the Accounts and secrets Argo keeps.
  */
 export function fakeDevice(script: Record<string, Reply[]>): FakeDevice {
-  const calls: FakeDevice['calls'] = [];
-  const added: FakeDevice['added'] = [];
-  const secrets = new Map<string, string>();
-  const changes = { count: 0 };
+  const kept = emptyKept();
 
-  const argo: DeviceFlowArgo = {
-    fetch: fetching(new Map(Object.entries(script)), calls),
-    accounts: accountsOf(added),
-    secrets: secretsOf(secrets),
-    changed: () => {
-      changes.count += 1;
-    },
+  return {
+    argo: argoOf(script, kept),
+    calls: kept.calls,
+    added: kept.added,
+    secrets: kept.secrets,
+    changes: () => kept.changes.count,
+    borrow: borrowing(kept.handlers),
   };
-
-  return { argo, calls, added, secrets, changes: () => changes.count };
 }
+
+const emptyKept = (): Kept => ({
+  calls: [],
+  added: [],
+  secrets: new Map(),
+  handlers: [],
+  changes: { count: 0 },
+});
+
+type Kept = {
+  calls: FakeDevice['calls'];
+  added: FakeDevice['added'];
+  secrets: Map<string, string>;
+  handlers: TokenHandler[];
+  changes: { count: number };
+};
+
+const argoOf = (
+  script: Record<string, Reply[]>,
+  kept: Kept,
+): DeviceFlowArgo => ({
+  fetch: fetching(new Map(Object.entries(script)), kept.calls),
+  accounts: accountsOf(kept.added, kept.handlers),
+  secrets: secretsOf(kept.secrets),
+  changed: () => {
+    kept.changes.count += 1;
+  },
+});
