@@ -33,15 +33,40 @@ export function AgentMeta({ agent }: AgentMetaProps): React.JSX.Element {
 }
 
 // The links are buttons of their own, so the row draws them beside its press, where a screen reader reaches each.
-export function AgentLinks({ agent }: AgentMetaProps): React.JSX.Element {
+export function AgentLinks(props: AgentLinksProps): React.JSX.Element {
   return (
     <>
-      {linksOf(agent).map((link) => (
+      {linksOf(props.agent).map((link) => (
         <AgentLink key={link.label} link={link} />
       ))}
+      <ConfigureButton {...props} />
     </>
   );
 }
+
+type AgentLinksProps = AgentMetaProps & { onConfigure: (id: string) => void };
+
+export const configureLabel = 'Environment';
+
+// Only an Installed Agent has a launch environment to set.
+function ConfigureButton(props: AgentLinksProps): React.JSX.Element | null {
+  if (!props.agent.installed) return null;
+
+  return <Tooltip label={configureLabel}>{configureButton(props)}</Tooltip>;
+}
+
+const configureButton = ({
+  agent,
+  onConfigure,
+}: AgentLinksProps): React.JSX.Element => (
+  <IconButton
+    icon="filters"
+    size="sm"
+    variant="ghost"
+    accessibilityLabel={`${configureLabel} of ${agent.name}`}
+    onPress={() => onConfigure(agent.id)}
+  />
+);
 
 // Phones say it with the trailing status icon's label instead; desktop draws the same icon beside the words.
 function UnsupportedNote({ agent }: AgentMetaProps): React.JSX.Element | null {

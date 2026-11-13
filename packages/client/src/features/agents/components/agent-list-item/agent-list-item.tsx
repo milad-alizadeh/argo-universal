@@ -11,6 +11,7 @@ export interface AgentListItemProps {
   agent: AgentRowEntry;
   onInstall: (id: string) => void;
   onRemove: (id: string) => void;
+  onConfigure: (id: string) => void;
 }
 
 export function AgentListItem(props: AgentListItemProps): React.JSX.Element {
@@ -18,7 +19,9 @@ export function AgentListItem(props: AgentListItemProps): React.JSX.Element {
     <ListItem
       {...cardContent(props.agent)}
       trailingAccessories={<AgentButton {...props} />}
-      metaAccessories={<AgentLinks agent={props.agent} />}
+      metaAccessories={
+        <AgentLinks agent={props.agent} onConfigure={props.onConfigure} />
+      }
     />
   );
 }

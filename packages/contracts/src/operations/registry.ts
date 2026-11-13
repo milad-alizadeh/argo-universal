@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RegistryAgentId } from '../agents/servers';
+import { AgentServerEnvironment, RegistryAgentId } from '../agents/servers';
 import type { OperationDefinition } from './index';
 import { InstalledAgentResult, RegistryResult } from './registry-results';
 
@@ -62,5 +62,15 @@ export const registryOperations = {
     result: z.null(),
     tier: 'confirm',
     keywords: ['uninstall', 'delete', 'registry'],
+  },
+  'agent.setEnvironment': {
+    id: 'agent.setEnvironment',
+    label: 'Set Agent Environment',
+    description:
+      'Replace an Installed Agent’s saved launch environment and close its pooled Agent connections, so its next Session starts with it.',
+    params: RegistryAgentId.extend({ env: AgentServerEnvironment }),
+    result: z.null(),
+    tier: 'confirm',
+    keywords: ['env', 'variables', 'launch', 'settings'],
   },
 } as const satisfies Record<string, OperationDefinition>;

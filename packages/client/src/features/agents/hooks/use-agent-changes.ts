@@ -1,4 +1,4 @@
-import type { RegistryAgentId } from '@repo/contracts';
+import type { AgentServerEnvironment, RegistryAgentId } from '@repo/contracts';
 import { errorToast } from '@repo/kit/error-toast';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import {
@@ -54,4 +54,20 @@ export function useAgentChanges(
     install: (id) => install.mutate({ id }),
     remove: (id) => remove.mutate({ id }),
   };
+}
+
+// Replaces an Installed Agent's saved launch environment on the Server; a failure shows one toast.
+export function useAgentEnvironmentChange(): (
+  id: string,
+  env: AgentServerEnvironment,
+) => void {
+  const onSuccess = useInstalledInvalidation();
+
+  const change = useMutation(
+    useTRPC().agent.setEnvironment.mutationOptions({ onSuccess }),
+  );
+
+  useErrorToast(errorToast('Could not save the environment', change.error));
+
+  return (id, env) => change.mutate({ id, env });
 }

@@ -24,7 +24,12 @@ const meta = {
       options: ['all', 'installed', notInstalled],
     },
   },
-  args: { onInstall: fn(), onRemove: fn(), onRetry: fn() },
+  args: {
+    onInstall: fn(),
+    onRemove: fn(),
+    onConfigure: fn(),
+    onRetry: fn(),
+  },
 } satisfies Meta<typeof AgentListView>;
 
 export default meta;

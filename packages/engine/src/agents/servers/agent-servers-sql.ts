@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
 import { createRegistryReader } from '../registry/registry-reader';
+import { seededEnvironment } from '../vendor';
 import type { InstalledAgent } from './installed-agents';
 
 export const readAgentServers = (database: Database): AgentServer[] => {
@@ -42,8 +43,26 @@ export class AgentServerChangeJob implements WriterJob {
 
     transaction
       .insert(agentServers)
-      .values({ id: this.id })
+      .values({ id: this.id, env: JSON.stringify(seededEnvironment(this.id)) })
       .onConflictDoNothing()
+      .run();
+  }
+}
+
+// Replaces an Installed Agent's saved launch environment whole; an Agent that is not installed keeps none.
+export class AgentServerEnvironmentJob implements WriterJob {
+  public constructor(
+    private readonly id: string,
+    private readonly env: AgentServerEnvironment,
+  ) {}
+  public describe(): string {
+    return `set launch environment of Registry Agent ${this.id}`;
+  }
+  public commit(transaction: StorageTransaction): void {
+    transaction
+      .update(agentServers)
+      .set({ env: JSON.stringify(this.env) })
+      .where(eq(agentServers.id, this.id))
       .run();
   }
 }

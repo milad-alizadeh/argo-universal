@@ -332,6 +332,10 @@ _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), ca
 A Registry Agent the user installed on a Server, stored in `agent_servers` and downloaded on first launch.
 _Avoid_: Saved Agent, configured Agent, catalog
 
+**Launch environment**:
+The environment variables an Installed Agent starts with, saved with it on the Server and edited on the Agent's page in Settings. Installing an Agent seeds it; a change applies from the Agent's next Session.
+_Avoid_: Agent settings, env config
+
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.
 _Avoid_: Exit status, finish reason, interrupted (as a Stop reason)

@@ -1,9 +1,13 @@
+import type { AgentServerEnvironment } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import { AgentServerChangeJob } from '../servers/agent-servers-sql';
+import {
+  AgentServerChangeJob,
+  AgentServerEnvironmentJob,
+} from '../servers/agent-servers-sql';
 import { readRegistry } from './registry-cache';
 import { requestRegistry, type RegistryActor } from './registry-machine';
 
@@ -23,6 +27,20 @@ export const changeAgentServer = async (
   await writeDatabaseJobAndWaitForCommit(
     deps.databaseWriter,
     new AgentServerChangeJob(id, operation),
+    true,
+  );
+  deps.dropAgentConnections(id);
+};
+
+// The Agent's connections drop too, so its next Session starts with the new environment.
+export const setAgentEnvironment = async (
+  deps: Pick<RegistryDeps, 'databaseWriter' | 'dropAgentConnections'>,
+  id: string,
+  env: AgentServerEnvironment,
+): Promise<void> => {
+  await writeDatabaseJobAndWaitForCommit(
+    deps.databaseWriter,
+    new AgentServerEnvironmentJob(id, env),
     true,
   );
   deps.dropAgentConnections(id);
