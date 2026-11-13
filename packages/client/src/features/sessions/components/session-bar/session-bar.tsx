@@ -33,7 +33,7 @@ export interface SessionBarProps {
 export function SessionBar(props: SessionBarProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-2">
-      <LineContent entry={props.shown} />
+      <SessionBarLine entry={props.shown} />
       <HiddenLines hidden={props.hidden} onOpen={props.onOpen} />
       <OpenButton entry={props.shown} onOpen={props.onOpen} />
     </View>
@@ -42,7 +42,12 @@ export function SessionBar(props: SessionBarProps): React.JSX.Element {
 
 type LineProps = Pick<SessionBarProps, 'onOpen'> & { entry: SessionBarEntry };
 
-function LineContent({ entry }: { entry: SessionBarEntry }): React.JSX.Element {
+// A line's icon and text, on the bar's strip and in its Workbench card alike.
+export function SessionBarLine({
+  entry,
+}: {
+  entry: SessionBarEntry;
+}): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-2">
       {entry.icon && <Icon name={entry.icon} tone="muted" />}

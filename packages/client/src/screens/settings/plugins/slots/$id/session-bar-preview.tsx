@@ -2,9 +2,8 @@ import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { sessionBarSlotId } from '@repo/contracts/plugins/wire';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
-import { SessionBar } from '#features/sessions';
+import { SessionWorkbenchColumn, sessionBarCards } from '#features/sessions';
 import type { SlotVisibility } from '#features/settings';
-import { SessionBarStrip } from '#lib/product/session-bar-row';
 import { sessionBarLines } from '../../../../plugins/session-bar-lines';
 import {
   itemsSlotEntry,
@@ -27,12 +26,12 @@ type PreviewProps = { data: SessionBarPreviewData; visibility: SlotVisibility };
 
 export const noBarLine = 'No Plugin left on sends a line for this Session.';
 
-// The preview shows the bar only; Open does nothing here.
+// The preview shows the cards only; pressing one does nothing here.
 const ignore = (): void => undefined;
 
 /*
- * The Session page's own bar from what the reader read: the first Plugin left on shows, and the rest wait behind
- * "+N". With none left on, the page says so, as the Session page draws no bar.
+ * The Session page's own Workbench cards from what the reader read: one card for each Plugin left on, in Slot order
+ * (#2012). With none left on, the page says so, as the Session page draws no card.
  */
 function BarPreview({
   reading,
@@ -44,9 +43,9 @@ function BarPreview({
   if (!lines) return <Text role="secondary">{noBarLine}</Text>;
 
   return (
-    <SessionBarStrip inset>
-      <SessionBar {...lines} onOpen={ignore} />
-    </SessionBarStrip>
+    <SessionWorkbenchColumn
+      sections={sessionBarCards({ ...lines, onOpen: ignore })}
+    />
   );
 }
 

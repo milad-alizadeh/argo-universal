@@ -65,7 +65,7 @@ export const LongFeedInFrame: Story = {
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
-// The Plugins' Session bar under the header: the first Plugin in Slot order shows; two more wait behind "+2".
+// The Plugins' Session bar lines: a Workbench card each on a wide window; under the header on a narrow one, the first Plugin shown and two more behind "+2".
 export const SessionBar: Story = {
   args: {
     state: 'open',

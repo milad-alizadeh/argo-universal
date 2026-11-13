@@ -11,9 +11,13 @@ Then(
 When(
   'I press Open for the {word} Plugin on the Session bar',
   async ({ page }, name: string): Promise<void> => {
-    // The bar sits in the Session's layout; the header's own actions live in the window band.
+    /*
+     * A wide window draws the line as a Workbench card, a phone on the strip in the Session's layout (#2012); the
+     * header's own actions live in the window band, outside both.
+     */
     await page
-      .getByTestId('session-layout')
+      .getByTestId('desktop-workbench')
+      .or(page.getByTestId('session-layout'))
       .getByRole('button', { name: `Open ${name}`, exact: true })
       .click();
   },

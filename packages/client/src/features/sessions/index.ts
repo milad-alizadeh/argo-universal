@@ -249,3 +249,5 @@ export {
   type SessionBarEntry,
   type SessionBarProps,
 } from './components/session-bar/session-bar';
+
+export { sessionBarCards } from './components/session-bar/session-bar-cards';

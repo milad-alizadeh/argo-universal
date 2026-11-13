@@ -52,13 +52,12 @@ function Live(): React.JSX.Element {
   );
 }
 
-export const PreviewsTheFirstPluginWithTheRestBehindMore: Story = {
+// Each Plugin's line is its own Workbench card, as the Session's Workbench draws it (#2012).
+export const PreviewsACardForEachPlugin: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText(issueTrackerBar)).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: '2 more Plugin lines' }),
-    ).toBeVisible();
-    await expect(canvas.queryByText(previewReady)).toBeNull();
+    await expect(canvas.getByText(previewReady)).toBeVisible();
+    await expect(canvas.getByText(coverageBar)).toBeVisible();
   },
 };
 
@@ -70,7 +69,7 @@ export const HasASwitchPerPluginAndNoOwnerChoice: Story = {
   },
 };
 
-export const TurningOffTheShownPluginGivesTheLineToTheNext: Story = {
+export const TurningAPluginOffDropsItsCard: Story = {
   render: () => <Live />,
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
@@ -78,9 +77,6 @@ export const TurningOffTheShownPluginGivesTheLineToTheNext: Story = {
     );
     await expect(canvas.getByText(previewReady)).toBeVisible();
     await expect(canvas.queryByText(issueTrackerBar)).toBeNull();
-    await expect(
-      canvas.getByRole('button', { name: '1 more Plugin line' }),
-    ).toBeVisible();
   },
 };
 
