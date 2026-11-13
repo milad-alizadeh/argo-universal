@@ -91,28 +91,38 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
   expect(overviewCalls(github)).toHaveLength(1);
 }, 20_000);
 
-it('keeps the selected Project in the sidebar across filter and Issue routes', async () => {
+it('groups only the Projects with a Tracker, and keeps the filter selected across its routes', async () => {
   const other = { ...project, id: 'project-2', name: 'Other Project' };
   const test = await tracker([project, other]);
   await chooseGithub(await trackerPage(test, other.id));
   const root = await test.pages.open({ path: '/' });
-  expect(root.findText(other.name)).toBeDefined();
 
-  const projectPage = await root.press(other.name);
-  expect(shownValue(projectPage, 'Open')).toBe('2');
-  expect(selected(projectPage, other.name)).toBe(true);
-  expect(linkedPage(projectPage, 'Open')).toBe(
-    '/projects/project-2/filters/open',
-  );
+  expect(root.findText(project.name)).toBeUndefined();
+  expect(root.findText(other.name)?.node).toMatchObject({
+    type: 'List.Section',
+    props: { collapsible: true },
+  });
+  expect(shownValue(root, 'Open')).toBe('2');
+  expect(linkedPage(root, 'Open')).toBe('/projects/project-2/filters/open');
 
-  const list = await projectPage.press('Open');
+  const list = await root.press('Open');
   expect(list.findText(issueTitle)).toBeDefined();
-  expect(selected(list, other.name)).toBe(true);
+  expect(selected(list, 'Open')).toBe(true);
 
   const detail = await list.press(issueTitle);
   expect(detail.findText('Start Session')).toBeDefined();
-  expect(selected(detail, other.name)).toBe(true);
   expect(linkedPage(detail, 'Open')).toBe('/projects/project-2/filters/open');
+}, 20_000);
+
+it('says no Project has an Issue tracker where none chose one', async () => {
+  const test = await tracker();
+  const root = await test.pages.open({ path: '/' });
+
+  expect(
+    root.findText(
+      'No Project has an Issue tracker. Choose one in Project details.',
+    ),
+  ).toBeDefined();
 }, 20_000);
 
 it('shows an empty list for a filter with no Issues', async () => {

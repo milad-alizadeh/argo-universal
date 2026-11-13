@@ -12,7 +12,7 @@ import {
 import type { MoveSection, RowId } from './list-move-model';
 import { moveSectionsOf, rowTitles } from './list-move-reading';
 import type { ListSectionProps } from './list-props';
-import { prepareSection, type SectionState } from './list-section-state';
+import { preparedSection, type SectionState } from './list-section-folding';
 import { holdsTree, type TreeFolding } from './list-tree-rows';
 
 export type ListBlock = ItemBlock | SectionBlock;
@@ -166,7 +166,7 @@ function sectionBlock(
   key: string,
   level: Level,
 ): SectionBlock {
-  const section = prepareSection(child.props, key, level.tree.footerShown);
+  const section = preparedSection(child.props, key, level.tree);
   const blocks = readLevel(section.children, sectionLevel(level, key, section));
 
   return { key, kind: 'section', section, blocks };

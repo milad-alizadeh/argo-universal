@@ -16,7 +16,7 @@ export type IssueFilter = {
   counted: boolean;
 };
 
-export type FilterGroup = { title: string; filters: IssueFilter[] };
+type FilterGroup = { title: string; filters: IssueFilter[] };
 
 const filter = (
   fields: Omit<IssueFilter, 'counted'> & { counted?: boolean },
@@ -64,7 +64,7 @@ const yoursGroup: FilterGroup = {
   ],
 };
 
-export const builtInGroups: readonly FilterGroup[] = [statusGroup, yoursGroup];
+const builtInGroups: readonly FilterGroup[] = [statusGroup, yoursGroup];
 
 // A quoted label name keeps its spaces; GitHub label names never hold a quote worth keeping.
 export const labelFilter = (name: string): IssueFilter =>
@@ -75,15 +75,6 @@ export const labelFilter = (name: string): IssueFilter =>
     icon: { sf: 'tag', material: 'label' },
     counted: false,
   });
-
-export function filterGroups(labels: readonly string[]): FilterGroup[] {
-  if (labels.length === 0) return [...builtInGroups];
-
-  return [
-    ...builtInGroups,
-    { title: 'Labels', filters: labels.map(labelFilter) },
-  ];
-}
 
 export const builtInFilters = (): IssueFilter[] =>
   builtInGroups.flatMap((group) => group.filters);

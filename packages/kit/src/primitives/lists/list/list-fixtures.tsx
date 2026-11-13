@@ -113,3 +113,41 @@ export const compactList = {
   maxHeight: 400,
   children: compactChildren,
 } satisfies ListProps<unknown>;
+
+// Sections whose titles fold their rows, after an open or closed folder.
+const collapsibleChildren = (
+  <>
+    <List.Section key="one" title="Section one" collapsible>
+      <ListItem
+        key="a"
+        title="Item one"
+        leading={<Icon name="agent" />}
+        value="2"
+        selected
+        onPress={onSelect}
+      />
+      <ListItem
+        key="b"
+        title="Item two"
+        leading={<Icon name="agent" />}
+        value="0"
+        onPress={onSelect}
+      />
+    </List.Section>
+    <List.Section key="two" title="Section two" collapsible>
+      <ListItem
+        key="c"
+        title="Item three"
+        leading={<Icon name="agent" />}
+        onPress={onSelect}
+      />
+    </List.Section>
+  </>
+);
+
+export const collapsibleList = {
+  appearance: 'plain',
+  density: 'compact',
+  maxHeight: 400,
+  children: collapsibleChildren,
+} satisfies ListProps<unknown>;
