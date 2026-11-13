@@ -42,6 +42,8 @@ export {
 export type ComposerMockProps = ComposerProps & {
   initialAgent?: AgentServer['id'];
   sessionStarted?: boolean;
+  // A started Session's worktree, named by its folder and branch; `session` when unset.
+  worktree?: string;
   running?: boolean;
   plan?: PlanEntry[];
 };
@@ -88,7 +90,10 @@ function sessionStatus(
 }
 
 function defaultConfiguration(
-  props: Pick<ComposerMockProps, 'initialAgent' | 'running' | 'sessionStarted'>,
+  props: Pick<
+    ComposerMockProps,
+    'initialAgent' | 'running' | 'sessionStarted' | 'worktree'
+  >,
 ): ComposerProps['configuration'] {
   const agent = props.initialAgent ?? availableAgent();
 
@@ -97,7 +102,7 @@ function defaultConfiguration(
     configOptions: recordedOptions(agent),
     turnRunning: props.running ?? false,
     onConfigChange: (): void => {},
-    checkout: checkout(props.sessionStarted),
+    checkout: checkout(props.sessionStarted, props.worktree),
   };
 }
 
@@ -114,16 +119,23 @@ type Configuration = NonNullable<ComposerProps['configuration']>;
 
 function checkout(
   sessionStarted: boolean | undefined,
+  name: string | undefined,
 ): Configuration['checkout'] {
-  const worktree: Configuration['checkout'] = {
+  if (sessionStarted) return startedCheckout(name);
+
+  return {
     branch: currentBranch(),
     newWorktree: true,
-    onNewWorktreeChange: sessionStarted ? undefined : (): void => {},
+    onNewWorktreeChange: (): void => {},
   };
+}
 
-  if (sessionStarted) worktree.path = '/Developer/project/.worktrees/session';
-
-  return worktree;
+function startedCheckout(name: string | undefined): Configuration['checkout'] {
+  return {
+    branch: name ?? currentBranch(),
+    newWorktree: true,
+    path: `/Developer/project/.worktrees/${name ?? 'session'}`,
+  };
 }
 
 function cameraCallback(

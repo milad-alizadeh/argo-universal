@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { action } from 'storybook/actions';
+import { ContentLayout } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
 import { SessionLayout } from '#lib/product/session-layout';
 import {
@@ -15,6 +16,7 @@ import {
   attachedImageComposer,
   disabledComposer,
   emptyComposer,
+  longWorktreeComposer,
   multiLineComposer,
   oversizedAttachmentComposer,
   planlessSessionComposer,
@@ -147,6 +149,18 @@ export const OversizedAttachment: Story = {
 
 // Inside a Session: the Plan tray sits above the card and the status tray below it.
 export const InSession: Story = { args: startedSessionComposer };
+
+// Beside a Workbench or Inspector the column can sit at the narrowest wide width: a long worktree name truncates in the tray.
+export const LongWorktree: Story = {
+  args: longWorktreeComposer,
+  render: (args) => (
+    <SessionColumn>
+      <ContentLayout className="flex-none w-full max-w-content-wide self-center">
+        <Composer {...composerProps(args)} />
+      </ContentLayout>
+    </SessionColumn>
+  ),
+};
 
 // A Session with no Plan: the tray above the card goes.
 export const NoPlan: Story = { args: planlessSessionComposer };
