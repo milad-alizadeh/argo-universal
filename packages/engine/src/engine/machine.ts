@@ -163,7 +163,7 @@ export const engineMachine = engineSetup.createMachine({
           },
         },
         stopping: {
-          entry: ['closeCommandAdmission', 'stopRegistry'],
+          entry: ['closeCommandAdmission', 'stopTurns', 'stopRegistry'],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {

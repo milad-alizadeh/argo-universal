@@ -81,6 +81,7 @@ export const events: OpenSessionsEvent[] = [
     },
   ]),
   { type: 'sessions.stopAll' },
+  { type: 'sessions.stopTurns' },
   {
     type: 'xstate.error.actor.unrelated:worker',
     actorId: 'unrelated:worker',

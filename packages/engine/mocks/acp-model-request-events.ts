@@ -59,6 +59,7 @@ export const modelRequestEvents = [
   { type: 'acp.requestWithdrawn', requestId: modelRequest },
   { type: 'agent.messageRejected', reason: 'Malformed model question' },
   { type: 'session.storageFailing' },
+  { type: 'session.serverStopping' },
   { type: 'session.close' },
   { type: 'acp.failed', error: new Error('connection failed') },
 ] satisfies AcpModelEvent[];

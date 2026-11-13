@@ -48,6 +48,7 @@ const userEvents = new Set([
   'session.cancel',
   'session.setConfigOption',
   'session.storageFailing',
+  'session.serverStopping',
   'session.answerPermission',
   'session.answerElicitation',
 ]);
@@ -97,6 +98,7 @@ type UserEvent = Extract<
       | 'session.cancel'
       | 'session.setConfigOption'
       | 'session.storageFailing'
+      | 'session.serverStopping'
       | 'session.answerPermission'
       | 'session.answerElicitation';
   }

@@ -19,7 +19,7 @@ import type { SessionSources } from './session-sources';
 
 type SessionOpening = Exclude<
   OpenSessionsCommand,
-  { type: 'sessions.stopAll' }
+  { type: 'sessions.stopAll' | 'sessions.stopTurns' }
 >;
 
 type QueuedSession = ReturnType<ReturnType<typeof createQueuedSessionReader>>;

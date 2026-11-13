@@ -156,6 +156,8 @@ export const engineSetup = setup({
   },
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
+    // Before HTTP closes, so no Agent output from the shutdown reaches a running Turn's Feed (#2008).
+    stopTurns: sendTo('sessions', { type: 'sessions.stopTurns' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     stopRegistry: sendTo('registry', { type: 'STOP' }),
     closeCommandAdmission: ({ context }): void =>

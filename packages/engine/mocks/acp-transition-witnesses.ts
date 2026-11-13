@@ -129,6 +129,7 @@ function cancellationWitnesses(states: AcpModelSnapshot[]): Sent[] {
   return [
     { state, event: nativePermission(state) },
     { state, event: { type: 'session.cancel' } },
+    { state, event: { type: 'session.serverStopping' } },
     { state, event: commands },
     { state, event: title },
   ];
