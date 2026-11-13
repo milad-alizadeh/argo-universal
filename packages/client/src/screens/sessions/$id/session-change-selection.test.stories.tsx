@@ -279,7 +279,9 @@ export const RefusalShowsTheFailureToast: Story = {
       panel.getByRole('button', { name: 'Attach' }),
     );
 
-    await expect(await screen.findByText('That did not work')).toBeVisible();
+    const toast = await screen.findByText('That did not work');
+
+    await waitFor(() => expect(toast).toBeVisible());
     await expect(panel.getByRole('textbox', referenceField)).toHaveValue(typed);
   },
 };
