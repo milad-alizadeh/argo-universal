@@ -1,3 +1,4 @@
+import { ScreenBackInBand } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
@@ -15,6 +16,11 @@ import {
 import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldSidebarColumn } from './scaffold-sidebar';
 import { usePageContentWide } from './use-page-content-wide';
+import { useWindowHistory } from './window-history';
+
+// A framed window whose band carries Back and Forward: its pages draw no Back of their own.
+const useBackInBand = ({ framed }: ScaffoldParts): boolean =>
+  useWindowHistory() !== null && framed;
 
 export type { InspectorState, WorkbenchIntent } from './frame-layout';
 
@@ -86,9 +92,11 @@ function PageContent({
 
   return (
     <ContentWidthProvider wide={usePageContentWide(parts)} shift={shift}>
-      <SlidingContent shift={shift} motion={parts.layout.motion}>
-        {children}
-      </SlidingContent>
+      <ScreenBackInBand value={useBackInBand(parts)}>
+        <SlidingContent shift={shift} motion={parts.layout.motion}>
+          {children}
+        </SlidingContent>
+      </ScreenBackInBand>
     </ContentWidthProvider>
   );
 }

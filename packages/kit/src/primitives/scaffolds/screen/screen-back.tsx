@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useWide } from '#kit/use-wide/use-wide';
 import { IconButton } from '#primitives/actions/icon-button';
 import {
+  ScreenBackInBand,
   ScreenBesideList,
   ScreenDefaultBack,
 } from './screen-navigation-context';
@@ -29,16 +30,23 @@ export function ScreenBack({
 /*
  * A Screen's own Back on a wide drill-in page, as before; otherwise the host's default, which is there only for a page
  * the host pushed, so it is drawn beside a list too — drilling inside the detail pane is still something to come back
- * from. A phone's stack header draws its own either way.
+ * from. A phone's stack header draws its own either way, and a window band that carries Back leaves the page none.
  */
 function useBack(onBack: ScreenProps['onBack']): (() => void) | null {
-  const wide = useWide();
+  const drawn = useDrawsBack();
   const besideList = use(ScreenBesideList);
   const host = use(ScreenDefaultBack);
 
-  if (!wide) return null;
+  if (!drawn) return null;
 
   return onBack ? ownBack(onBack, besideList) : host;
+}
+
+// Only a wide page draws its Back, and none where the window band carries one.
+function useDrawsBack(): boolean {
+  const wide = useWide();
+
+  return wide && !use(ScreenBackInBand);
 }
 
 // Beside a list, a page's own Back belongs to the list, so the page draws none of its own.
