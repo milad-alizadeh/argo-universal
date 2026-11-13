@@ -19,6 +19,7 @@ export {
   sessionActivitySlotId,
   SessionActivityItem,
   sessionBarSlotId,
+  sessionChangesSlotId,
   sessionRowSlotId,
   slotItemsListLimit,
   slotRegistry,

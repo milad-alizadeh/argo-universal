@@ -7,17 +7,21 @@ import {
 } from '#plugin-slot-registry';
 
 export {
+  ProjectDetailsItem,
+  projectDetailsRowLimit,
+} from '#plugin-project-details-item';
+
+export {
   addOnlySlots,
   itemsSlotEntry,
   mergedItems,
   replaceableSlots,
   messageSlotId,
-  ProjectDetailsItem,
-  projectDetailsRowLimit,
   projectDetailsSlotId,
   sessionActivitySlotId,
   SessionActivityItem,
   sessionBarSlotId,
+  sessionChangesSlotId,
   sessionRowSlotId,
   SessionRowItem,
   slotItemsListLimit,

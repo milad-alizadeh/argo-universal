@@ -21,6 +21,7 @@ import {
 } from './use-session-commands';
 import { useSessionReadOptions } from './use-session-read-options';
 import { useWithSessionBar } from './use-with-session-bar';
+import { useWithSessionPullRequests } from './use-with-session-pull-requests';
 import {
   type CardSession,
   type WorkbenchCards,
@@ -119,8 +120,9 @@ function useSessionViewProps(
   const props = pageProps(sessionId, sources, { ...surroundings, ...reads });
   const changed = useChangedSession({ sessionId, props, feed: sources.feed });
   const bar = useWithSessionBar(sessionId, sources.feed, changed);
+  const changes = useWithSessionPullRequests(sessionId, sources.feed, bar);
 
-  return withPluginCards(withAgentFeed(bar), cards);
+  return withPluginCards(withAgentFeed(changes), cards);
 }
 
 // What the view draws, from the Session's own sources and everything the page read around it.

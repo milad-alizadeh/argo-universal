@@ -20,16 +20,20 @@ interface ChangeSplit {
   rest: SessionPullRequest[];
 }
 
+// Two repositories can share a number, so a supplied identity tells Changes apart before the number does.
+export const changeKey = (change: SessionPullRequest): string =>
+  change.id ?? String(change.number);
+
 function splitChanges(changes: readonly SessionPullRequest[]): ChangeSplit {
   const preview = changes
     .filter((change) => change.stage === 'open')
     .slice(0, previewLimit);
 
-  const shown = new Set(preview.map((change) => change.number));
+  const shown = new Set(preview.map(changeKey));
 
   return {
     preview,
-    rest: changes.filter((change) => !shown.has(change.number)),
+    rest: changes.filter((change) => !shown.has(changeKey(change))),
   };
 }
 
@@ -54,7 +58,7 @@ const previewRows = (
   onOpen: () => void,
 ): ReactElement[] =>
   changes.map((change) => (
-    <ChangeRow key={change.number} change={change} onOpen={onOpen} />
+    <ChangeRow key={changeKey(change)} change={change} onOpen={onOpen} />
   ));
 
 function MoreChanges({ changes, onOpen }: Props): ReactElement {

@@ -5,6 +5,7 @@ import { ChangeStage } from './change-stage/change-stage';
 import { PullRequestChecks } from './pull-request-checks';
 import type { SessionHeaderProps } from './session-header-props';
 import type { SessionPullRequest } from './session-pull-request';
+import { changeKey } from './session-workbench-changes';
 
 type ChangeProps = SessionHeaderProps & { change: SessionPullRequest };
 
@@ -27,7 +28,7 @@ export function SessionChangeDetail(props: SessionHeaderProps): ReactElement {
   return (
     <Stack direction="column" gap={4}>
       {props.pullRequests?.map((change) => (
-        <ChangeDetail key={change.number} {...props} change={change} />
+        <ChangeDetail key={changeKey(change)} {...props} change={change} />
       ))}
     </Stack>
   );

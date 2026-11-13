@@ -8,6 +8,8 @@ export * from './archive';
 
 export * from './cancel';
 
+export * from './change';
+
 export * from './changes';
 
 export * from './close';

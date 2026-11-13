@@ -1,0 +1,11 @@
+{
+  "extends": "@argo/plugin-kit/tsconfig.json",
+  // The journeys' fixture and the Vitest config run in Node, so they are checked with the tests.
+  "exclude": [
+    "**/*.test.ts",
+    "**/node_modules",
+    "github-fixture.ts",
+    "journey-fixture.ts",
+    "vitest.config.ts"
+  ]
+}

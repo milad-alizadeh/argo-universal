@@ -1,0 +1,78 @@
+{
+  "id": "github",
+  "name": "GitHub",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.ts",
+  "icon": {
+    "sf": "arrow.triangle.pull",
+    "material": "merge_type"
+  },
+  "contributes": {
+    "nav": [],
+    "slots": ["argo/session/changes/v1"],
+    "instructions": "instructions.md",
+    "operations": [
+      {
+        "name": "attach",
+        "label": "Attach a pull request to Session",
+        "description": "Connect the calling Session to a GitHub pull request it produced, so the Session's Changes show it. Attaching it again changes nothing.",
+        "tier": "act",
+        "keywords": ["github", "pull request", "pr", "change", "session"],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          }
+        },
+        "caller": ["project", "session"]
+      },
+      {
+        "name": "list",
+        "label": "List the Session's pull requests",
+        "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",
+        "tier": "read",
+        "keywords": ["github", "pull request", "pr", "change", "session"],
+        "caller": ["project", "session"]
+      },
+      {
+        "name": "signIn",
+        "label": "Sign in to GitHub",
+        "description": "Asks GitHub for a sign-in code, shows it on the sign-in page, and adds the Account once the person approves it on GitHub.",
+        "tier": "act",
+        "keywords": ["github", "account", "sign in"]
+      },
+      {
+        "name": "cancelSignIn",
+        "label": "Cancel GitHub sign-in",
+        "description": "Stops waiting for the GitHub sign-in code to be approved.",
+        "tier": "act",
+        "keywords": ["github", "account", "sign in"]
+      }
+    ],
+    "accounts": [
+      {
+        "host": "api.github.com",
+        "page": "/sign-in"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "sessions:read"
+    },
+    {
+      "kind": "fetch",
+      "host": "api.github.com",
+      "reason": "Reads pull requests as the signed-in person, and is the host of the Account this Plugin can provide."
+    },
+    {
+      "kind": "fetch",
+      "host": "github.com",
+      "reason": "Asks for the device sign-in code and exchanges it for a token."
+    }
+  ]
+}

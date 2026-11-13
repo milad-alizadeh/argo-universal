@@ -6,6 +6,7 @@ import {
   projectDetailsSlotId,
   sessionActivitySlotId,
   sessionBarSlotId,
+  sessionChangesSlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { sessionBarSlot } from './session-bar-slot';
@@ -25,6 +26,8 @@ const declared = {
   // Chosen on the Session rows page, as its Activity line.
   [sessionActivitySlotId]: null,
   [sessionBarSlotId]: sessionBarSlot,
+  // Argo's Changes card and Inspector draw these; there is nothing to choose.
+  [sessionChangesSlotId]: null,
   [sessionHeaderSlotId]: sessionHeaderSlot,
   [sessionWorkbenchSlotId]: sessionWorkbenchSlot,
 } satisfies Record<SlotDetailId, SlotDetail | null>;

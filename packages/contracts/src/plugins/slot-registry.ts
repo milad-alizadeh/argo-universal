@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { tones } from '#kit-tokens';
 import { PluginIcon, PluginPath } from '#plugin-manifest-fields';
+import {
+  ProjectDetailsItem,
+  projectDetailsRowLimit,
+} from '#plugin-project-details-item';
 import { SessionBarItem } from '#plugin-session-bar-item';
+import { Change, sessionChangesLimit } from '#session-change';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
@@ -11,6 +16,8 @@ export const sessionRowSlotId = 'argo/session/row/v1';
 export const sessionActivitySlotId = 'argo/session/activity/v1';
 
 export const sessionBarSlotId = 'argo/session/bar/v1';
+
+export const sessionChangesSlotId = 'argo/session/changes/v1';
 
 export const toolCallSlotId = 'argo/feed/tool-call/v1';
 
@@ -152,28 +159,6 @@ const SessionRowContext = z.strictObject({
   projectId: z.string().min(1),
 });
 
-// A Project details row's label and its trailing value both stay short: it is a settings row, not a paragraph.
-export const projectDetailsTextLimit = 40;
-
-// How many rows one Plugin may add to a Project.
-export const projectDetailsRowLimit = 6;
-
-/*
- * One row a Plugin adds to Project details. Argo draws it; a Plugin never sends a kit tree here (ADR-0046).
- * A row that writes carries an `action` and the Plugin draws the choice on the page it opens.
- */
-export const ProjectDetailsItem = z.strictObject({
-  icon: PluginIcon.optional(),
-  title: z.string().trim().min(1).max(projectDetailsTextLimit),
-  // The trailing value a settings row shows, such as the Tracker this Project chose.
-  value: z.string().trim().min(1).max(projectDetailsTextLimit).optional(),
-  tone: z.enum(tones).optional(),
-  // Opens this Plugin page when the row is pressed.
-  action: z.strictObject({ path: PluginPath }).optional(),
-});
-
-export type ProjectDetailsItem = z.infer<typeof ProjectDetailsItem>;
-
 // A Project details context: the Project's id, which is also the key one batched call answers by.
 const ProjectDetailsContext = z.strictObject({
   projectId: z.string().min(1),
@@ -208,6 +193,12 @@ export const addOnlySlots = [
     key: 'sessionId',
     item: SessionBarItem,
     limit: { phone: 1, desktop: 1, perPlugin: 1 },
+  }),
+  // A Session's Changes, such as the PRs a Plugin attached (ADR-0052); Argo's Changes card and Inspector draw them.
+  itemsSlotEntry(sessionChangesSlotId, SessionRowContext, {
+    key: 'sessionId',
+    item: Change,
+    limit: sessionChangesLimit,
   }),
 ] as const;
 
