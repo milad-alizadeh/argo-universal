@@ -1,10 +1,10 @@
 import { hasLiquidGlass } from '@repo/kit/native-header';
 import { useWide } from '@repo/kit/use-wide/use-wide';
-import { cn } from '@repo/kit/utils';
 import { HeaderHeightContext } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactNode, useContext } from 'react';
 import { View } from 'react-native';
+import { useWorkbenchDrawn } from './content-layout';
 import { SessionColumn } from './session-column';
 
 // Only a narrow page's Liquid Glass header floats over it; an opaque header, or a wide window's own, sits above the page.
@@ -20,26 +20,22 @@ export function useFloatingHeaderHeight(): number {
   return headerFloats(useWide()) ? (headerHeight ?? 0) : 0;
 }
 
-/*
- * The bar's tinted strip, edge to edge. On the Session page the Session column sets the line's sides; the Settings
- * preview, with no column, asks for its own `inset`.
- */
+// The bar's tinted strip, edge to edge; the Session column sets the line's sides.
 export function SessionBarStrip(props: {
   children: ReactNode;
-  inset?: boolean;
 }): React.JSX.Element {
-  return (
-    <View className={cn('w-full bg-muted py-2', props.inset && 'px-4')}>
-      {props.children}
-    </View>
-  );
+  return <View className="w-full bg-muted py-2">{props.children}</View>;
 }
 
-// One tinted strip under the Session's header, its line on the Session column's leading edge; nothing while there is none.
+/*
+ * One tinted strip under the Session's header, its line on the Session column's leading edge; nothing while there is
+ * none. While the Frame draws the Workbench, the lines are its cards instead (#2012).
+ */
 export function SessionBarRow(props: { children: ReactNode }): React.ReactNode {
+  const inWorkbench = useWorkbenchDrawn();
   const top = useFloatingHeaderHeight();
 
-  if (!props.children) return null;
+  if (inWorkbench || !props.children) return null;
 
   return (
     <View style={{ paddingTop: top }}>

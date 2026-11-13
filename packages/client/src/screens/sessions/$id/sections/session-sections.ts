@@ -1,7 +1,9 @@
-import type {
-  SessionPanels,
-  SessionWorkbench,
-  WorkbenchSection,
+import {
+  type SessionBarProps,
+  type SessionPanels,
+  type SessionWorkbench,
+  sessionBarCards,
+  type WorkbenchSection,
 } from '#features/sessions';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { agentsSection } from './agents-section';
@@ -95,12 +97,17 @@ function openInspector(
   return () => first && panels.reopen(first);
 }
 
+// Argo's cards, the Plugins' cards, then a card for each Plugin's Session bar line (#2012).
 export const sessionWorkbench = (
   content: SessionInspectorContent,
   panels: SessionPanels,
+  bar?: SessionBarProps,
 ): SessionWorkbench => ({
-  sections: sessionSections(content).flatMap((section) =>
-    workbenchCard(content, panels, section),
-  ),
+  sections: [
+    ...sessionSections(content).flatMap((section) =>
+      workbenchCard(content, panels, section),
+    ),
+    ...sessionBarCards(bar),
+  ],
   onOpenInspector: openInspector(content, panels),
 });

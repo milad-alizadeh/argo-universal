@@ -21,6 +21,14 @@ const ContentShift = createContext(0);
 // How far the column sits from its pane's centre, towards the leading edge: the Frame moves it aside for a Workbench in the gutter; elsewhere it is centred.
 export const useContentShift = (): number => useContext(ContentShift);
 
+const WorkbenchDrawn = createContext(false);
+
+// Whether the Frame draws the Session's Workbench beside this page, in the gutter or over it; elsewhere there is none.
+export const useWorkbenchDrawn = (): boolean => useContext(WorkbenchDrawn);
+
+// The Frame's page says whether it draws the Workbench; anything else has none.
+export const WorkbenchDrawnProvider = WorkbenchDrawn.Provider;
+
 export const contentFill = 'flex-1 min-h-0 min-w-0';
 
 // The measuring host: a View that learns its own width, for Storybook and any host that draws no Frame.
