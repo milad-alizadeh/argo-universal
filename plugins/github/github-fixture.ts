@@ -4,6 +4,13 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
+import {
+  listPath,
+  pullPath,
+  refusal,
+  rest,
+  type Held,
+} from './github-fixture-rest';
 
 // One pull request as GitHub's REST API answers it, with the fields the Plugin reads.
 export type FixturePull = {
@@ -79,13 +86,6 @@ export const pullOf = (
 
 const unauthorized = 401;
 
-const notFound = 404;
-
-const refusal = (message: string, status: number): FixtureAnswer => ({
-  status,
-  json: { message },
-});
-
 const deviceCode = (): FixtureAnswer => ({
   json: {
     device_code: 'device-1',
@@ -99,80 +99,13 @@ const deviceCode = (): FixtureAnswer => ({
 const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
   String(headers.authorization).replace(/^Bearer /, '');
 
-const pullPath = /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)$/;
-
-type Held = Pick<GitHubFixture, 'pulls' | 'accepted' | 'parents' | 'failWith'>;
-
-function pullAnswer({ pulls }: Held, path: string): FixtureAnswer {
-  const [, repository, number] = pullPath.exec(path) ?? [];
-  const pull = pulls.get(`${repository}#${number}`);
-
-  return pull ? { json: pull } : refusal('Not Found', notFound);
-}
-
-const listPath = /^\/repos\/([^/]+\/[^/?]+)\/pulls\?(.*)$/;
-
-const repoPath = /^\/repos\/([^/?]+\/[^/?]+)$/;
-
-/*
- * GitHub's list of a repository's pull requests with the branch asked for, by `state` (open unless asked). It
- * deliberately ignores the owner in `head=owner:branch`, so the Plugin must tell a fork's same-named branch apart itself.
- */
-function listAnswer(
-  { pulls }: Held,
-  repository: string,
-  query: string,
-): FixtureAnswer {
-  const params = new URLSearchParams(query);
-  const state = params.get('state') ?? 'open';
-  const branch = (params.get('head') ?? '').split(':').slice(1).join(':');
-
-  const wanted = (pull: FixturePull): boolean =>
-    (state === 'all' || pull.state === state) &&
-    pull.base.repo.full_name === repository &&
-    pull.head.ref === branch;
-
-  return { json: [...pulls.values()].filter(wanted) };
-}
-
-const known = ({ pulls, parents }: Held, repository: string): boolean =>
-  [...pulls.values()].some(({ base }) => base.repo.full_name === repository) ||
-  parents.has(repository) ||
-  [...parents.values()].includes(repository);
-
-function repoAnswer(held: Held, repository: string): FixtureAnswer {
-  if (!known(held, repository)) return refusal('Not Found', notFound);
-
-  const parent = held.parents.get(repository);
-
-  return {
-    json: {
-      full_name: repository,
-      parent: parent ? { full_name: parent } : null,
-    },
-  };
-}
-
-function route(held: Held, path: string): FixtureAnswer {
-  const listed = listPath.exec(path);
-
-  if (listed) return listAnswer(held, String(listed[1]), String(listed[2]));
-
-  const repo = repoPath.exec(path);
-
-  return repo ? repoAnswer(held, String(repo[1])) : pullAnswer(held, path);
-}
-
 function api(held: Held, request: FixtureRequest): FixtureAnswer {
   if (!held.accepted.has(bearerOf(request)))
     return refusal('Bad credentials', unauthorized);
 
-  if (held.failWith.status)
-    return refusal('Server Error', held.failWith.status);
-
   return request.path === '/user'
     ? { json: { login: 'octocat' } }
-    : route(held, request.path);
+    : rest(held, request.path);
 }
 
 const githubCom = (request: FixtureRequest): FixtureAnswer =>

@@ -16,6 +16,8 @@ const own = 'github:owner/repository#12';
 
 const ownRepository = 'owner/repository';
 
+const laterBranch = 'feature-20';
+
 const upstream = 'upstream/repository';
 
 const ownReference = { repository: ownRepository, number: 12 };
@@ -77,18 +79,18 @@ it(
     const merged = pullOf(ownRepository, 20, {
       state: 'closed',
       merged: true,
-      head: headFrom('owner', 'feature-20'),
+      head: headFrom('owner', laterBranch),
     });
 
     const abandoned = pullOf(ownRepository, 21, {
       state: 'closed',
-      head: headFrom('owner', 'feature-20'),
+      head: headFrom('owner', laterBranch),
     });
 
     run.github.pulls.set(...merged);
     run.github.pulls.set(...abandoned);
     await discover(run);
-    switchBranch(run, 'feature-20');
+    switchBranch(run, laterBranch);
     await discover(run);
     switchBranch(run, 'no-pull-request-here');
 

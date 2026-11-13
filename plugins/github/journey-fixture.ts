@@ -91,6 +91,12 @@ async function pluginsFolder(): Promise<string> {
   return folder;
 }
 
+const gitlabSession: SessionState = {
+  projectId: gitlabProject.id,
+  branch: 'feature-12',
+  title: 'GitLab',
+};
+
 const sessionsOf = (): Sessions => ({
   [sessionId]: {
     projectId: project.id,
@@ -103,11 +109,7 @@ const sessionsOf = (): Sessions => ({
     branch: null,
     title: 'Elsewhere',
   },
-  [gitlabSessionId]: {
-    projectId: gitlabProject.id,
-    branch: 'feature-12',
-    title: 'GitLab',
-  },
+  [gitlabSessionId]: { ...gitlabSession },
 });
 
 type SessionState = { projectId: string; branch: string | null; title: string };

@@ -127,16 +127,24 @@ export async function* watchChanges(
   for await (const answer of answers) yield itemsOfAnswer(answer, session);
 }
 
+async function nextRedraw(
+  redraws: AsyncGenerator<object[]>,
+): Promise<object[]> {
+  const { value, done } = await redraws.next();
+
+  if (done) throw new Error('The Slot ended before it showed the Changes.');
+
+  return value;
+}
+
 // Each redraw until one has this many Changes; the watch stays open for the next call.
 export async function untilChanges(
   redraws: AsyncGenerator<object[]>,
   count: number,
 ): Promise<object[]> {
   for (;;) {
-    const { value, done } = await redraws.next();
+    const changes = await nextRedraw(redraws);
 
-    if (done) throw new Error('The Slot ended before it showed the Changes.');
-
-    if (value.length >= count) return value;
+    if (changes.length >= count) return changes;
   }
 }
