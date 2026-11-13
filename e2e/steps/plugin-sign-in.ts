@@ -1,6 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import type { Page } from '@playwright/test';
 import { z } from 'zod';
+import { type App, expect } from '../fixtures';
+import { Given, When, Then } from './fixtures';
+import { query, mutate } from './server-query';
 
 const PluginList = z.object({
   plugins: z.array(
@@ -10,11 +14,6 @@ const PluginList = z.object({
     }),
   ),
 });
-
-import type { Page } from '@playwright/test';
-import { type App, expect } from '../fixtures';
-import { Given, When, Then } from './fixtures';
-import { query, mutate } from './server-query';
 
 const pluginId = 'account-settings-probe';
 
@@ -78,9 +77,9 @@ const changePlugin = (
   input: { pluginId: string; enabled?: boolean },
 ): Promise<void> => mutate({ page, httpUrl: app.httpUrl, procedure, input });
 
-Given('an Account Plugin is {word}', async (server, state: string) => {
-  await installAccountPlugin(server.app.projectPath, state);
-  await prepareState(server, state);
+Given('an Account Plugin is {word}', async ({ app, page }, state: string) => {
+  await installAccountPlugin(app.projectPath, state);
+  await prepareState({ app, page }, state);
 });
 
 When('I open the Account Plugin settings', async ({ page }) => {
