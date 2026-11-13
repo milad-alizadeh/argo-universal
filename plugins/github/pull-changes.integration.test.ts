@@ -5,17 +5,15 @@ import {
   caller,
   changesOf,
   journey,
-  project,
-  secondSessionId,
-  sessionId,
-  type Journey,
+  listed,
+  restart,
 } from './journey-fixture';
 
 const slow = 30_000;
 
 const repository = 'owner/repository';
 
-const secondSession = { sessionId: secondSessionId, projectId: project.id };
+const pullReference = `${repository}#12`;
 
 it(
   'tells Open, draft, conflicting, Merged and Closed pull requests apart',
@@ -42,75 +40,106 @@ it(
 );
 
 it(
-  "lists the Session's pull requests for an Agent through a read Operation",
+  'lists a Session with nothing attached as an empty list, which a failed read is told apart from',
   async () => {
     const run = await journey();
 
-    await attach(run, `${repository}#12`);
-
-    expect(
-      await run.test.operations.run({ name: 'list', caller }),
-    ).toMatchObject({ changes: [{ id: 'github:owner/repository#12' }] });
+    expect(await listed(run)).toEqual({ changes: [] });
   },
   slow,
 );
 
 it(
-  "keeps the association in the Plugin's own storage by repository and number",
+  'keeps an attached pull request across a Server restart, in the Slot and in the list',
   async () => {
     const run = await journey();
 
-    await attach(run, `${repository}#12`);
+    await attach(run, pullReference);
+    await restart(run);
 
-    const [stored] = run.test.storage.execute([
-      {
-        sql: 'SELECT project_id, session_id, repository, number FROM pull_associations',
-        params: [],
-        method: 'all',
-      },
+    expect(await changesOf(run)).toMatchObject([
+      { id: 'github:owner/repository#12', title: 'Add the thing' },
     ]);
-
-    expect(stored?.rows).toEqual([[project.id, sessionId, repository, 12]]);
-  },
-  slow,
-);
-
-// An association an earlier Server run stored, whose pull request GitHub cannot answer for now.
-async function associateUnreadable(run: Journey): Promise<void> {
-  await attach(run, `${repository}#12`);
-  run.test.storage.execute([
-    {
-      sql: "INSERT INTO pull_associations VALUES ('project-1', 'session-2', 'owner/repository', 13, '2026-01-01')",
-      params: [],
-      method: 'run',
-    },
-  ]);
-}
-
-it(
-  'leaves a failed first read out and says why, instead of answering no Changes',
-  async () => {
-    const run = await journey();
-
-    await associateUnreadable(run);
-
-    expect(await changesOf(run, secondSession)).toEqual([]);
-    expect(await run.test.log()).toContain('items provider threw');
+    expect(await listed(run)).toMatchObject({
+      changes: [{ id: 'github:owner/repository#12' }],
+    });
   },
   slow,
 );
 
 it(
-  'lists the pull request it could not read with the reason, never leaving it out',
+  'keeps an earlier association when the Session starts work on another pull request',
   async () => {
     const run = await journey();
 
-    await associateUnreadable(run);
+    await attach(run, pullReference);
+    await attach(run, 'fork-owner/repository#12');
+    await restart(run);
 
-    expect(
-      await run.test.operations.run({ name: 'list', caller: secondSession }),
-    ).toMatchObject({
-      changes: [{ number: 13, error: expect.stringContaining('not found') }],
+    expect(await changesOf(run)).toHaveLength(2);
+  },
+  slow,
+);
+
+it(
+  'lists the pull request it could not read after a restart with the reason, which is not an empty list',
+  async () => {
+    const run = await journey();
+
+    await attach(run, pullReference);
+    run.github.pulls.delete(pullReference);
+    await restart(run);
+
+    const failed = await listed(run);
+
+    expect(failed).toEqual({
+      changes: [
+        {
+          repository,
+          number: 12,
+          error: expect.stringContaining('not found'),
+        },
+      ],
+    });
+    expect(failed).not.toEqual(
+      await listed(run, { ...caller, sessionId: 'session-2' }),
+    );
+    expect(await changesOf(run)).toEqual([]);
+  },
+  slow,
+);
+
+it(
+  'degrades to a sign-in error, not to an empty list, when the Account stops being accepted after attaching',
+  async () => {
+    const run = await journey();
+
+    await attach(run, pullReference);
+    await restart(run);
+    run.github.accepted.clear();
+
+    expect(await listed(run)).toEqual({
+      changes: [
+        { repository, number: 12, error: expect.stringContaining('Sign in') },
+      ],
+    });
+    expect(await changesOf(run)).toEqual([]);
+  },
+  slow,
+);
+
+it(
+  'leaves out a Change the Changes Slot rejects while the Plugin still lists it',
+  async () => {
+    const run = await journey();
+    const oversized = 'x'.repeat(400);
+
+    run.github.pulls.set(...pullOf(repository, 5, { title: oversized }));
+    await attach(run, '#5');
+
+    expect(await changesOf(run)).toEqual([]);
+    expect(await listed(run)).toMatchObject({
+      changes: [{ title: oversized }],
     });
   },
   slow,

@@ -2,9 +2,12 @@ import { expect, it } from 'vitest';
 import { sha } from './github-fixture';
 import {
   attach,
+  caller,
+  attributedChangesOf,
   changesOf,
   foreignSessionId,
   journey,
+  listed,
   otherProject,
   project,
   secondSessionId,
@@ -43,6 +46,9 @@ it(
     await attach(run, pullReference);
 
     expect(await changesOf(run)).toEqual([openChange]);
+    expect(await attributedChangesOf(run)).toEqual([
+      { pluginId: 'github', item: openChange },
+    ]);
   },
   slow,
 );
@@ -67,6 +73,7 @@ it(
     await attach(run, '12');
 
     expect(await changesOf(run)).toEqual([openChange]);
+    expect(await listed(run)).toEqual({ changes: [openChange] });
   },
   slow,
 );

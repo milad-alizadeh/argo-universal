@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  MemorySecretStore,
   startPluginTest,
   type PluginTest,
   type PluginTestOptions,
@@ -30,7 +31,11 @@ export const foreignSessionId = 'foreign-session';
 
 export const changesSlot = 'argo/session/changes/v1';
 
-export type Journey = { test: PluginTest; github: GitHubFixture };
+export type Journey = {
+  test: PluginTest;
+  github: GitHubFixture;
+  keep: Keep;
+};
 
 export type Caller = { sessionId: string; projectId: string };
 
@@ -89,7 +94,21 @@ const sessions = {
   },
 } satisfies PluginTestOptions['sessions'];
 
-async function startOver(github: GitHubFixture): Promise<PluginTest> {
+type Keep = Required<Pick<PluginTestOptions, 'home' | 'secretStore'>>;
+
+const closed = new WeakSet<PluginTest>();
+
+const closeOnce = async (test: PluginTest): Promise<void> => {
+  if (closed.has(test)) return;
+
+  closed.add(test);
+  await test.close();
+};
+
+async function startOver(
+  github: GitHubFixture,
+  keep: Keep,
+): Promise<PluginTest> {
   const test = await startPluginTest({
     directory: await pluginsFolder(),
     pluginId: 'github',
@@ -98,11 +117,20 @@ async function startOver(github: GitHubFixture): Promise<PluginTest> {
     network: github.network,
     clockStart: 0,
     sessions,
+    ...keep,
   });
 
-  onTestFinished(() => test.close());
+  onTestFinished(() => closeOnce(test));
 
   return test;
+}
+
+async function keepFolder(): Promise<Keep> {
+  const home = await mkdtemp(join(tmpdir(), 'argo-github-home-'));
+
+  onTestFinished(() => rm(home, { recursive: true, force: true }));
+
+  return { home, secretStore: new MemorySecretStore() };
 }
 
 // The Plugin over a fixture GitHub, nobody signed in.
@@ -111,7 +139,9 @@ export async function signedOutJourney(): Promise<Journey> {
 
   for (const [key, pull] of defaultPulls) github.pulls.set(key, pull);
 
-  return { test: await startOver(github), github };
+  const keep = await keepFolder();
+
+  return { test: await startOver(github, keep), github, keep };
 }
 
 // The same, with the person already signed in.
@@ -121,6 +151,14 @@ export async function journey(): Promise<Journey> {
   await signIn(run.test);
 
   return run;
+}
+
+// A Server restart: the Plugin starts again over the same storage, Accounts and GitHub, with nothing kept in memory.
+export async function restart(run: Journey): Promise<void> {
+  await closeOnce(run.test);
+  run.test = await startOver(run.github, run.keep);
+  // The Server starts every Plugin at launch; this host starts one when it is first used, so wake the provider.
+  await run.test.operations.run({ name: 'cancelSignIn', pluginId: provider });
 }
 
 // What an Agent's `argo run github.attach` does for the calling Session.
@@ -157,14 +195,44 @@ async function firstAnswer(
   return (await answers.next()).value;
 }
 
-// The Changes Argo would draw for one Session: the Slot's first merged answer, its items in Slot order.
+// What the Slot answers for one Session: each Change with the Plugin that sent it, in Slot order.
+export async function attributedChangesOf(
+  run: Journey,
+  session: Caller = caller,
+): Promise<{ pluginId: string; item: object }[]> {
+  const answer = await firstAnswer(run, session);
+
+  return Object.values(answer ?? {}).flatMap(({ items }) => items);
+}
+
+// The Changes Argo would draw for one Session.
 export async function changesOf(
   run: Journey,
   session: Caller = caller,
 ): Promise<object[]> {
-  const answer = await firstAnswer(run, session);
+  return (await attributedChangesOf(run, session)).map(({ item }) => item);
+}
 
-  return Object.values(answer ?? {}).flatMap(({ items }) =>
-    items.map(({ item }) => item),
-  );
+// What an Agent reads with `argo run github.list`: each PR as GitHub reports it, or with why it could not be read.
+export async function listed(
+  { test }: Journey,
+  as: Caller = caller,
+): Promise<unknown> {
+  return test.operations.run({ name: 'list', caller: as });
+}
+
+// Each Project picks its own Account; this gives another Project the one that is signed in.
+export async function giveAccountTo(
+  { test }: Journey,
+  projectId: string,
+): Promise<void> {
+  const [account] = test.accounts.list();
+
+  if (!account) throw new Error('Nobody is signed in');
+
+  await test.accounts.choose({
+    projectId,
+    host: 'api.github.com',
+    account: account.id,
+  });
 }
