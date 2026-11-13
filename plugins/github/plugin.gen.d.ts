@@ -15,6 +15,13 @@ declare module '@argo/plugin-kit' {
         "session"
       ]
     };
+    discover: {
+      "params": {},
+      "caller": [
+        "project",
+        "session"
+      ]
+    };
     detach: {
       "params": {
         "reference": {

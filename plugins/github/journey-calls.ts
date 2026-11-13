@@ -3,6 +3,8 @@ import { onTestFinished } from 'vitest';
 import {
   caller,
   changesSlot,
+  project,
+  sessionId,
   type Caller,
   type Journey,
 } from './journey-fixture';
@@ -101,6 +103,14 @@ export async function listed(
   return test.operations.run({ name: 'list', caller: as });
 }
 
+// What an Agent's `argo run github.discover` does for the calling Session.
+export async function discover(
+  { test }: Journey,
+  as: Caller = caller,
+): Promise<OperationAnswer> {
+  return test.operations.run({ name: 'discover', caller: as });
+}
+
 // Each Project picks its own Account; this gives another Project the one that is signed in.
 export async function giveAccountTo(
   { test }: Journey,
@@ -115,4 +125,54 @@ export async function giveAccountTo(
     host: 'api.github.com',
     account: account.id,
   });
+}
+
+// The Engine now reports this Session on another branch, or on none.
+export function switchBranch(
+  { sessions }: Journey,
+  branch: string | null,
+): void {
+  sessions[sessionId] = { projectId: project.id, title: 'Work', branch };
+}
+
+const itemsOfAnswer = (answer: Answer, session: Caller): object[] =>
+  (answer[session.sessionId]?.items ?? []).map(({ item }) => item);
+
+// The Changes Argo would redraw one Session with, each time the Plugin says they changed.
+export async function* watchChanges(
+  { test }: Journey,
+  session: Caller = caller,
+): AsyncGenerator<object[]> {
+  const controller = new AbortController();
+
+  onTestFinished(() => controller.abort());
+
+  const answers = test.slotItems(
+    { slotId: changesSlot, contexts: [session] },
+    { signal: controller.signal },
+  );
+
+  for await (const answer of answers) yield itemsOfAnswer(answer, session);
+}
+
+async function nextRedraw(
+  redraws: AsyncGenerator<object[]>,
+): Promise<object[]> {
+  const { value, done } = await redraws.next();
+
+  if (done) throw new Error('The Slot ended before it showed the Changes.');
+
+  return value;
+}
+
+// Each redraw until one has this many Changes; the watch stays open for the next call.
+export async function untilChanges(
+  redraws: AsyncGenerator<object[]>,
+  count: number,
+): Promise<object[]> {
+  for (;;) {
+    const changes = await nextRedraw(redraws);
+
+    if (changes.length >= count) return changes;
+  }
 }

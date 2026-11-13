@@ -1,9 +1,15 @@
 import { expect, it } from 'vitest';
 import { pullOf } from './github-fixture';
 import { attach, changesOf, detach, idsOf } from './journey-calls';
-import { journey, restart } from './journey-fixture';
+import { journey, restart, sessionId, type Journey } from './journey-fixture';
 
 const slow = 30_000;
+
+// The Session checks out another branch while the Server is down, then the Server starts again.
+async function restartOn(run: Journey, branch: string | null): Promise<void> {
+  run.sessions[sessionId].branch = branch;
+  await restart(run);
+}
 
 const repository = 'owner/repository';
 
@@ -20,11 +26,11 @@ it(
 
     await attach(run, owned);
     await attach(run, forked);
-    await restart(run, 'another-branch');
+    await restartOn(run, 'another-branch');
 
     expect(await idsOf(run)).toEqual([ownedId, `github:${forked}`]);
 
-    await restart(run, null);
+    await restartOn(run, null);
 
     expect(await idsOf(run)).toHaveLength(2);
   },
@@ -57,7 +63,7 @@ it(
 
     for (const number of [12, 2, 3]) await attach(run, `#${number}`);
 
-    await restart(run, 'next-change');
+    await restartOn(run, 'next-change');
 
     expect(await changesOf(run)).toMatchObject([
       { stage: 'open' },

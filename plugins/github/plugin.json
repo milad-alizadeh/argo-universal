@@ -31,6 +31,22 @@
         "caller": ["project", "session"]
       },
       {
+        "name": "discover",
+        "label": "Find the pull requests of the Session's branch",
+        "description": "Look on GitHub for the pull requests, open, merged or closed, opened from the calling Session's current branch, and attach each one found. Safe to repeat: earlier attached pull requests stay. Answers found, no-match, branchless, not-github or unavailable.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "branch",
+          "discover",
+          "find",
+          "session"
+        ],
+        "caller": ["project", "session"]
+      },
+      {
         "name": "detach",
         "label": "Detach a pull request from Session",
         "description": "Remove one pull request from the calling Session's Changes, for one that does not belong to it. The Session's other pull requests stay, and the pull request itself is untouched on GitHub.",
