@@ -5,6 +5,7 @@ import type { ReactElement } from 'react';
 import { View, type ViewProps } from 'react-native';
 import {
   changeDescription,
+  changeModifiers,
   resolveChangeStage,
   type ChangeState,
 } from './change-stage-model';
@@ -36,13 +37,19 @@ function stageAccessibilityLabel(props: ChangeStageProps): string {
 }
 
 export function ChangeStageModifier(props: ChangeState): ReactElement | null {
-  const appearance = resolveChangeStage(props);
+  const modifiers = changeModifiers(props);
 
-  return appearance.modifier ? (
-    <Text role="secondary" tone={appearance.modifier.tone}>
-      {appearance.modifier.label}
-    </Text>
-  ) : null;
+  if (modifiers.length === 0) return null;
+
+  return (
+    <>
+      {modifiers.map(({ label, tone }) => (
+        <Text key={label} role="secondary" tone={tone}>
+          {label}
+        </Text>
+      ))}
+    </>
+  );
 }
 
 type StageContainerProps = Pick<

@@ -35,7 +35,9 @@ type Story = StoryObj<typeof meta>;
 const firstChangeLabel = 'Open files of Change #45';
 
 // The Inspector's own glyph label for the same Changes.
-const stageLabels = ['Open Change #45', 'Open Change #46'];
+const backLabel = 'Back to Changes';
+
+const stageLabels = ['Open Change #45', 'Open Change #46'] as const;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
@@ -210,8 +212,17 @@ export const SeveralPullRequestsInInspector: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
     const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
-    for (const label of stageLabels) {
-      await expect(panel.getByLabelText(label)).toBeVisible();
+    // The row opened its own Change: the other waits in the list.
+    await expect(panel.getByLabelText(stageLabels[0])).toBeVisible();
+    await expect(panel.queryByLabelText(stageLabels[1])).toBeNull();
+    await userEvent.click(panel.getByRole('button', { name: backLabel }));
+
+    for (const number of [45, 46]) {
+      await expect(
+        panel.getByRole('button', {
+          name: new RegExp(`^Show Change #${number},`),
+        }),
+      ).toBeVisible();
     }
   },
 };

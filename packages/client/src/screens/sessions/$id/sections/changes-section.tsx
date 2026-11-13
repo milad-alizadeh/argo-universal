@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChangesFiles, ChangesSheetHeader } from '#features/changes';
 import {
+  type SessionPullRequest,
   WorkbenchChangesSummary,
   WorkbenchMoreChanges,
 } from '#features/sessions';
@@ -13,6 +14,28 @@ import type {
   SessionSection,
 } from './session-section';
 
+// The list, started over: no Change selected.
+const openList = (
+  { changeSelection }: SessionInspectorContent,
+  tab: SectionTabHandle,
+): (() => void) => {
+  return () => {
+    changeSelection?.back();
+    tab.request();
+  };
+};
+
+// A row's own Change, selected by its identity and shown in full.
+const openChange =
+  (
+    { changeSelection }: SessionInspectorContent,
+    tab: SectionTabHandle,
+  ): ((change: SessionPullRequest) => void) =>
+  (change) => {
+    changeSelection?.select(change);
+    tab.request();
+  };
+
 const changesSummary = (
   content: SessionInspectorContent,
   tab: SectionTabHandle,
@@ -20,7 +43,8 @@ const changesSummary = (
   <WorkbenchChangesSummary
     pullRequests={pullRequestsOf(content)}
     summary={summaryOf(content)}
-    onOpen={tab.request}
+    onOpen={openList(content, tab)}
+    onOpenChange={openChange(content, tab)}
   />
 );
 
@@ -37,7 +61,10 @@ const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
   return {
     summary,
     footer: (
-      <WorkbenchMoreChanges changes={pullRequests} onOpen={tab.request} />
+      <WorkbenchMoreChanges
+        changes={pullRequests}
+        onOpen={openList(content, tab)}
+      />
     ),
   };
 };
@@ -46,21 +73,37 @@ const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
 const changesSheetHeader = (content: SessionInspectorContent): ReactNode =>
   pullRequestsOf(content).length ? undefined : <ChangesSheetHeader />;
 
+const changesBody = (
+  content: SessionInspectorContent,
+  tab: SectionTabHandle,
+): ReactNode => (
+  <SessionChangesTab
+    changes={content.changes}
+    header={content.header}
+    changesRequest={tab.requested}
+    selection={content.changeSelection}
+    actions={content.changeActions}
+  />
+);
+
+// With Changes, a phone gets the same list, detail and Files as the Inspector; without, the changed files.
+const phoneBody = (
+  content: SessionInspectorContent,
+  tab: SectionTabHandle,
+): ReactNode =>
+  pullRequestsOf(content).length
+    ? changesBody(content, tab)
+    : content.changes && <ChangesFiles {...content.changes} />;
+
 export const changesSection: SessionSection = {
   ...changesFacts,
   card: changesCard,
   tab: (content, tab) => ({
-    body: (
-      <SessionChangesTab
-        changes={content.changes}
-        header={content.header}
-        changesRequest={tab.requested}
-      />
-    ),
+    body: changesBody(content, tab),
     sheetHeader: changesSheetHeader(content),
   }),
-  phone: ({ changes }) => ({
-    sheetHeader: <ChangesSheetHeader />,
-    body: changes && <ChangesFiles {...changes} />,
+  phone: (content, tab) => ({
+    sheetHeader: changesSheetHeader(content),
+    body: phoneBody(content, tab),
   }),
 };

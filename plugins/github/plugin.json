@@ -31,6 +31,28 @@
         "caller": ["project", "session"]
       },
       {
+        "name": "detach",
+        "label": "Detach a pull request from Session",
+        "description": "Remove one pull request from the calling Session's Changes, for one that does not belong to it. The Session's other pull requests stay, and the pull request itself is untouched on GitHub.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "change",
+          "session",
+          "remove"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          }
+        },
+        "caller": ["project", "session"]
+      },
+      {
         "name": "list",
         "label": "List the Session's pull requests",
         "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",

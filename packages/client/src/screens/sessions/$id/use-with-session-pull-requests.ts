@@ -1,4 +1,5 @@
 import type { useSessionFeed } from '#features/feed';
+import { useChangeAssociations } from '../../plugins/use-change-associations';
 import {
   type ChangesContext,
   useSessionPullRequests,
@@ -21,8 +22,11 @@ export function useWithSessionPullRequests(
   feed: SessionFeed,
   props: SessionDetailViewProps,
 ): SessionDetailViewProps {
+  const context = changesContext(sessionId, feed);
+
   return withSessionPullRequests(
     props,
-    useSessionPullRequests(changesContext(sessionId, feed)),
+    useSessionPullRequests(context),
+    useChangeAssociations(context),
   );
 }

@@ -130,14 +130,23 @@ export const MenuOpensStage: Story = {
   },
 };
 
-export const RemainderOpensStage: Story = {
+// The remainder opens the full list, which holds every associated Change, whatever its stage.
+export const RemainderOpensList: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', {
         name: '1 more open, 1 merged, 1 closed',
       }),
     );
-    await expectPrDetails({ canvas });
+    const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
+
+    for (const number of [41, 42, 43, 44, 45, 46]) {
+      await expect(
+        await panel.findByRole('button', {
+          name: new RegExp(`^Show Change #${number},`),
+        }),
+      ).toBeVisible();
+    }
   },
 };
 

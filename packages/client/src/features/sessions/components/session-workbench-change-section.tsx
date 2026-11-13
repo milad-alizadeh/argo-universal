@@ -9,16 +9,18 @@ interface Props {
   pullRequests?: readonly SessionPullRequest[];
   summary?: ChangesSummary;
   onOpen: () => void;
+  // A Change's row opens that Change; without it every row opens the list.
+  onOpenChange?: (change: SessionPullRequest) => void;
 }
 
 // The Changes card's body: the open Changes as rows, or, with no pull request, the diff total.
 export function WorkbenchChangesSummary({
   pullRequests = [],
   summary,
-  onOpen,
+  ...opening
 }: Props): ReactElement {
   if (pullRequests.length)
-    return <WorkbenchChangeRows changes={pullRequests} onOpen={onOpen} />;
+    return <WorkbenchChangeRows changes={pullRequests} {...opening} />;
 
   return <DiffTotal summary={summary} />;
 }

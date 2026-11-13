@@ -233,6 +233,16 @@ export { archivedToast } from './components/archive-session/archived-toast';
 
 export { SessionChangeDetail } from './components/session-change-detail';
 
+export { SessionChangeList } from './components/session-change-list';
+
+export { changeKey, findChange } from './components/change-identity';
+
+export {
+  type ChangeActions,
+  type ChangeSelection,
+  useChangeSelection,
+} from './hooks/use-change-selection';
+
 export { SessionRow } from './components/session-row/session-row';
 
 export {

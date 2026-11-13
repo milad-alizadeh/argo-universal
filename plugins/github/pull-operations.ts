@@ -64,6 +64,24 @@ export async function attach(
   return changeOf(pull);
 }
 
+/*
+ * Removes the calling Session's association with the pull request a reference names, and nothing else: its other
+ * associations stay. GitHub is not asked, so a pull request that is gone can still be detached, and detaching one that
+ * is not attached changes nothing.
+ */
+export async function detach(
+  scope: Scope,
+  reference: string,
+  caller: Caller,
+): Promise<{ repository: string; number: number }> {
+  const named = parseReference(reference, await originOf(scope, caller));
+
+  await scope.store.detach({ ...named, ...caller });
+  scope.changed();
+
+  return named;
+}
+
 // A read pull request, or the reason it could not be read, as an Agent sees it.
 export type Listed =
   | ChangeItem

@@ -20,6 +20,36 @@ export async function attach(
   });
 }
 
+type Identified = { id: string };
+
+const hasId = (item: { id?: unknown }): item is Identified =>
+  typeof item.id === 'string';
+
+// The identities of the Changes Argo would draw for one Session, in order.
+export async function idsOf(
+  run: Journey,
+  session: Caller = caller,
+): Promise<string[]> {
+  const changes = await changesOf(run, session);
+
+  return changes.flatMap((item) => (hasId(item) ? [item.id] : []));
+}
+
+type OperationAnswer = Awaited<ReturnType<PluginTest['operations']['run']>>;
+
+// What an Agent's `argo run github.detach` does for the calling Session.
+export async function detach(
+  { test }: Journey,
+  reference: string,
+  as: Caller = caller,
+): Promise<OperationAnswer> {
+  return test.operations.run({
+    name: 'detach',
+    params: { reference },
+    caller: as,
+  });
+}
+
 type Answer =
   ReturnType<PluginTest['slotItems']> extends AsyncGenerator<infer Item>
     ? Item
@@ -62,8 +92,6 @@ export async function changesOf(
 ): Promise<object[]> {
   return (await attributedChangesOf(run, session)).map(({ item }) => item);
 }
-
-type OperationAnswer = Awaited<ReturnType<PluginTest['operations']['run']>>;
 
 // What an Agent reads with `argo run github.list`: each PR as GitHub reports it, or with why it could not be read.
 export async function listed(

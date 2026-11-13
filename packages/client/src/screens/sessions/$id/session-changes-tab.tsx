@@ -7,23 +7,34 @@ import {
   type InspectorSegment,
 } from '#features/changes';
 import {
+  type ChangeActions,
+  type ChangeSelection,
   SessionChangeDetail,
+  SessionChangeList,
   type SessionHeaderProps,
+  type SessionPullRequest,
+  useChangeSelection,
 } from '#features/sessions';
 
 type Props = {
   changesRequest?: number;
   changes?: ChangesViewProps;
   header?: SessionHeaderProps;
+  // Which Change shows in full; the tab keeps its own where the Session supplies none.
+  selection?: ChangeSelection;
+  actions?: ChangeActions;
 };
 
 type Page = Props & {
+  selection: ChangeSelection;
   segment: InspectorSegment;
   onSelect: (segment: InspectorSegment) => void;
 };
 
-const hasChange = (props: Props): boolean =>
-  !!props.header?.pullRequests?.length;
+const changesOf = (props: Props): readonly SessionPullRequest[] =>
+  props.header?.pullRequests ?? [];
+
+const hasChange = (props: Props): boolean => changesOf(props).length > 0;
 
 const ignore = (): void => {};
 
@@ -31,11 +42,33 @@ function Files({ changes }: Props): ReactElement | null {
   return changes ? <ChangesFiles {...changes} /> : null;
 }
 
-function ChangesContent(props: Page): ReactElement | null {
-  if (props.segment === 'change' && props.header)
-    return <SessionChangeDetail {...props.header} />;
+const detachOf = (
+  actions: ChangeActions | undefined,
+): ComponentProps<typeof SessionChangeDetail>['onDetach'] =>
+  actions && ((change) => void actions.detach(change));
 
-  return <Files {...props} />;
+// The full list of Changes, or the one the Session has selected, with Back to the list.
+function Changes(props: Page): ReactElement {
+  const { selected, back, select } = props.selection;
+
+  if (!selected)
+    return <SessionChangeList changes={changesOf(props)} onSelect={select} />;
+
+  return (
+    <SessionChangeDetail
+      change={selected}
+      onBack={back}
+      onDetach={detachOf(props.actions)}
+    />
+  );
+}
+
+function ChangesContent(props: Page): ReactElement | null {
+  return props.segment === 'change' ? (
+    <Changes {...props} />
+  ) : (
+    <Files {...props} />
+  );
 }
 
 const changesToolbar = (props: Page): ReactElement => (
@@ -64,16 +97,19 @@ export function SessionChangesTab(props: Props): ReactElement {
   return <ChangesTabPage key={props.changesRequest} {...props} />;
 }
 
-function ChangesTabPage(props: Props): ReactElement {
+// A Session with no Change has only its files; asked to start over, the tab opens on the Changes.
+function useSegment(props: Props): Pick<Page, 'segment' | 'onSelect'> {
   const [selected, onSelect] = useState<InspectorSegment>(
     props.changesRequest ? 'change' : 'files',
   );
 
-  const page = {
-    ...props,
-    segment: hasChange(props) ? selected : 'files',
-    onSelect,
-  };
+  return { segment: hasChange(props) ? selected : 'files', onSelect };
+}
+
+function ChangesTabPage(props: Props): ReactElement {
+  const own = useChangeSelection(changesOf(props));
+  const segment = useSegment(props);
+  const page = { ...props, ...segment, selection: props.selection ?? own };
 
   return (
     <InspectorBody {...changesFrame(page)}>

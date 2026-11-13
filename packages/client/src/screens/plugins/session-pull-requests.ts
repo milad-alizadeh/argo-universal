@@ -9,8 +9,14 @@ type PullRequestChange = Change & {
 const hasPullRequest = (change: Change): change is PullRequestChange =>
   change.pullRequest !== undefined;
 
-// The App draws one modifier on an Open Change: a conflict is what blocks it, so it shows ahead of draft.
-const modifierOf = ({
+// Draft and conflict are separate facts, so a Change that has both keeps both.
+const modifiersOf = ({ conflict, draft }: Change): ('conflict' | 'draft')[] => [
+  ...(draft ? (['draft'] as const) : []),
+  ...(conflict ? (['conflict'] as const) : []),
+];
+
+// The mark a Change draws on its own: a conflict is what blocks it, so it shows ahead of draft.
+const markOf = ({
   conflict,
   draft,
 }: Change): 'conflict' | 'draft' | undefined => {
@@ -20,22 +26,37 @@ const modifierOf = ({
 };
 
 const stateOf = (change: Change): ChangeState => {
-  const modifier = modifierOf(change);
+  const modifier = markOf(change);
 
-  if (change.stage === 'open')
-    return modifier ? { stage: 'open', modifier } : { stage: 'open' };
+  if (change.stage !== 'open') return { stage: change.stage };
 
-  return { stage: change.stage };
+  return modifier
+    ? { stage: 'open', modifier, modifiers: modifiersOf(change) }
+    : { stage: 'open' };
 };
+
+// The branches GitHub named, where it did.
+const branchesOf = ({
+  branch,
+  base,
+}: Change): Pick<SessionPullRequest, 'branch' | 'base'> => ({
+  ...(branch && { branch }),
+  ...(base && { base }),
+});
+
+const totalsOf = ({ totals }: Change): Pick<SessionPullRequest, 'summary'> =>
+  totals ? { summary: totals } : {};
 
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
+  ...branchesOf(change),
+  ...totalsOf(change),
   id: change.id,
+  repository: change.repository,
   url: change.pullRequest.url,
   number: change.pullRequest.number,
   title: change.title,
   mergeable: !change.conflict,
-  ...(change.totals && { summary: change.totals }),
 });
 
 /*
