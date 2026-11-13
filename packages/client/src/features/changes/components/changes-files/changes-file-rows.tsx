@@ -134,8 +134,21 @@ function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
   );
 }
 
-const emptyDiffText = (file: ChangedFile): string =>
+// Git shows every line of a deleted text file, so a deleted one with no removed lines was empty.
+const deletedTextDiff = (file: ChangedFile): string | undefined =>
+  file.removed === 0 ? 'Empty file deleted' : undefined;
+
+function deletedDiffText(file: ChangedFile): string | undefined {
+  if (file.operation !== 'delete') return undefined;
+
+  return file.binary ? 'Binary file deleted' : deletedTextDiff(file);
+}
+
+const keptDiffText = (file: ChangedFile): string =>
   file.binary ? "Binary file, can't be previewed" : 'No lines to show';
+
+const emptyDiffText = (file: ChangedFile): string =>
+  deletedDiffText(file) ?? keptDiffText(file);
 
 // Drawn under an opened file whose load failed or that has no lines to show.
 function StatusRow({

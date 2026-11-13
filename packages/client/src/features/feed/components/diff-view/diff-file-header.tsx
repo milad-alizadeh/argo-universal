@@ -9,6 +9,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 import type { FileDiff } from '../../view/file-diff';
 import { ChangeCounts } from './diff-change-counts';
+import { DeletedPill, isDeleted } from './diff-deleted-pill';
 import { ViewedMark } from './diff-viewed-mark';
 
 export interface FileHeaderProps {
@@ -63,10 +64,14 @@ const isRenamed = (
   file.operation === 'move' && !!file.oldPath && file.oldPath !== file.path;
 
 // What a screen reader says for the toggle: a moved file's old path too, since a sighted reader is shown both.
-const toggleName = (file: FileHeaderProps['file']): string =>
-  isRenamed(file)
-    ? `Diff for ${file.path}, renamed from ${file.oldPath}`
+function toggleName(file: FileHeaderProps['file']): string {
+  if (isRenamed(file))
+    return `Diff for ${file.path}, renamed from ${file.oldPath}`;
+
+  return isDeleted(file)
+    ? `Diff for ${file.path}, deleted`
     : `Diff for ${file.path}`;
+}
 
 const toggleOf = (props: FileHeaderProps): Omit<ToggleProps, 'children'> => ({
   open: props.open,
@@ -146,13 +151,14 @@ function WidePathToggle(props: FileHeaderProps): React.JSX.Element {
 type RowProps = FileHeaderProps & { compact?: boolean };
 
 /*
- * One row at every width: the path (scrolling sideways on a phone), the counts and the Viewed mark, 16 in from each
+ * One row at every width: the path (scrolling sideways on a phone), a Deleted Pill, the counts and the Viewed mark, 16 in from each
  * side. A phone draws the mark as a bare circle; a wider window adds its "Viewed" label and a tooltip.
  */
 function FileHeaderRow(props: RowProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-2 bg-muted px-4 py-2">
       <PathToggle {...props} scroll={props.compact} />
+      <DeletedPill file={props.file} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} compact={props.compact} />
     </View>
