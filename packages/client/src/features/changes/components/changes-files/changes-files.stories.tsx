@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { ChangesFiles } from './changes-files';
 import {
   binaryFile,
+  deletedFiles,
   loadingDiffs,
   renamedFile,
 } from './changes-files-fixtures';
@@ -40,6 +41,9 @@ export const RenamedFile: Story = {};
 
 // A binary file says it cannot be previewed, not that it has no lines.
 export const BinaryFile: Story = { args: binaryFile };
+
+// A deleted file is marked Deleted in its header, and its body says so when it has no lines to show.
+export const DeletedFiles: Story = { args: deletedFiles };
 
 // One spinner at the end of the list says diffs are coming, however many files wait for one.
 export const LoadingDiffs: Story = { args: loadingDiffs };

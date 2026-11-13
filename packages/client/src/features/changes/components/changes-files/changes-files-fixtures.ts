@@ -48,6 +48,30 @@ export const binaryFile = {
   diffs: { 'assets/logo.png': { pages: [[]] } },
 } satisfies ChangesViewProps;
 
+// Git counts no lines for either, so only the operation says they are gone.
+export const deletedFiles = {
+  ...base,
+  files: [
+    {
+      path: '.playwright-mcp/page.yml',
+      operation: 'delete',
+      added: 0,
+      removed: 0,
+    },
+    {
+      path: '.playwright-mcp/page.png',
+      operation: 'delete',
+      added: 0,
+      removed: 0,
+      binary: true,
+    },
+  ],
+  diffs: {
+    '.playwright-mcp/page.yml': { pages: [[]] },
+    '.playwright-mcp/page.png': { pages: [[]] },
+  },
+} satisfies ChangesViewProps;
+
 // Diffs still on their way: their files show as headers alone, over one spinner at the end of the list.
 export const loadingDiffs = {
   ...base,
