@@ -20,6 +20,8 @@ export { PluginRuntime } from './runtime/plugin-runtime';
 
 export { HookPort } from './hooks/hook-port';
 
+export { HeldSecrets } from './services/held-secrets';
+
 export {
   pluginSettingsSecretService,
   type SecretStore,

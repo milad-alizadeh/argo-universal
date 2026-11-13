@@ -32,7 +32,7 @@ export function createPluginRuntime(
   options: PluginRuntimeOptions,
 ): PluginRuntime {
   const { clockStart, locate, ...rest } = options;
-  const held = heldLog(home);
+  const held = heldLog(home, options.heldSecrets);
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
@@ -72,12 +72,11 @@ function createServices(
   });
 }
 
-// The log never writes a secret param of an Operation running now (ADR-0051).
+// The log never writes a held secret value (ADR-0051).
 function heldLog(
   home: string,
+  heldSecrets = new HeldSecrets(),
 ): Required<Pick<PluginServiceOptions, 'heldSecrets' | 'log'>> {
-  const heldSecrets = new HeldSecrets();
-
   return { heldSecrets, log: heldSecrets.scrubbing(pluginLog(home)) };
 }
 

@@ -1,16 +1,19 @@
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { redactedSecret } from '@repo/contracts/plugins/plugin-operations';
+import type { SecretStore } from './secret-store';
 
 const isRecord = (value: Json): value is { [key: string]: Json } =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /*
- * The secret param values of the Operations running now (ADR-0051). While one runs, each is replaced in
- * every line the Plugin log writes and in what the run answers, so a Plugin that names its token in a
- * logged call, a result or an error never lands it in a log, a Session's history or `argo` CLI output.
+ * The secret values the Server must never show (ADR-0051): the secret params of the Operations running now, and every
+ * Secret read from or written to the OS secret store since it started. Each is replaced in every line the Plugin log
+ * writes and in what a run answers, so a Plugin that names a token in a logged call, a result or an error never lands
+ * it in a log, a Session's history or `argo` CLI output, and no call answers a Secret's value.
  */
 export class HeldSecrets {
   private readonly held = new Map<string, number>();
+  private readonly kept = new Set<string>();
 
   // Holds the values until the run ends, however it ends.
   public async during<T>(
@@ -28,9 +31,22 @@ export class HeldSecrets {
     }
   }
 
+  // A secret store whose every value read or written is held from then on.
+  public keeping(store: SecretStore): SecretStore {
+    return {
+      get: async (service, account) =>
+        this.keep(await store.get(service, account)),
+      set: async (service, account, value) => {
+        this.keep(value);
+        await store.set(service, account, value);
+      },
+      delete: (service, account) => store.delete(service, account),
+    };
+  }
+
   // The longest first, so a secret inside another is never left half shown.
   public scrub(text: string): string {
-    return [...this.held.keys()]
+    return this.shown()
       .toSorted((a, b) => b.length - a.length)
       .reduce(
         (scrubbed, value) => scrubbed.replaceAll(value, redactedSecret),
@@ -64,6 +80,19 @@ export class HeldSecrets {
     );
   }
 
+  // Each value as written, and as a JSON string or a URL would escape it.
+  private shown(): string[] {
+    const values = [...this.held.keys(), ...this.kept];
+
+    return [...new Set(values.flatMap(escapedForms))];
+  }
+
+  private keep(value: string | null): string | null {
+    if (value) this.kept.add(value);
+
+    return value;
+  }
+
   private hold(value: string): void {
     this.held.set(value, (this.held.get(value) ?? 0) + 1);
   }
@@ -75,3 +104,9 @@ export class HeldSecrets {
     else this.held.delete(value);
   }
 }
+
+const escapedForms = (value: string): string[] => [
+  value,
+  JSON.stringify(value).slice(1, -1),
+  encodeURIComponent(value),
+];

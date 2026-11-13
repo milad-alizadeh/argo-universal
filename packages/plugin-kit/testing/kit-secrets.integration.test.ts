@@ -8,6 +8,7 @@ import {
 } from '@argo/plugin-kit/testing';
 import type { PluginManifest } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { redactedSecret } from '@repo/contracts/plugins/plugin-operations';
 import {
   absentSecretStore,
   MemorySecretStore,
@@ -98,19 +99,23 @@ async function start(
 const run = (kit: PluginTest, name: string, pluginId = 'one'): Promise<Json> =>
   kit.operations.run({ name, pluginId });
 
-it("keeps each Plugin's Secrets apart from every other Plugin's", async () => {
-  const kit = await start();
+// A run answers no Secret's value, only that one is there (ADR-0051).
+it("keeps each Plugin's Secrets apart from every other Plugin's, and answers none of them", async () => {
+  const secretStore = new MemorySecretStore();
+  const kit = await start({ secretStore });
 
   await run(kit, 'keep', 'one');
 
-  expect(await run(kit, 'read', 'one')).toBe('kept by one');
+  expect(await run(kit, 'read', 'one')).toBe(redactedSecret);
   expect(await run(kit, 'read', 'two')).toBeNull();
 
   await run(kit, 'keep', 'two');
   await run(kit, 'drop', 'one');
 
   expect(await run(kit, 'read', 'one')).toBeNull();
-  expect(await run(kit, 'read', 'two')).toBe('kept by two');
+  expect(await run(kit, 'read', 'two')).toBe(redactedSecret);
+  expect([...secretStore.entries.values()]).toEqual(['kept by two']);
+  expect(await kit.log()).not.toContain('kept by');
 }, 30_000);
 
 const apiKey = 'key-for-one';
@@ -123,7 +128,7 @@ it("reads a secret Setting from the secret store, apart from the Plugin's own Se
     settings: new Map([['api-key', apiKey]]),
   });
 
-  expect(await run(kit, 'readSetting', 'one')).toBe(apiKey);
+  expect(await run(kit, 'readSetting', 'one')).toBe(redactedSecret);
   expect(await run(kit, 'readSetting', 'two')).toBeNull();
   expect(await run(kit, 'readApiKeySecret', 'one')).toBeNull();
   expect([...secretStore.entries.values()]).toEqual([apiKey]);

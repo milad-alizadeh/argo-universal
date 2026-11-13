@@ -13,6 +13,7 @@ import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
+import { HeldSecrets } from './services/held-secrets';
 import type { PluginNetwork } from './services/plugin-fetch';
 import { osSecretStore, type SecretStore } from './services/secret-store';
 import { PluginSettings } from './settings/plugin-settings';
@@ -50,6 +51,7 @@ export type Assembled = {
 };
 
 type Foundations = {
+  heldSecrets: HeldSecrets;
   secretStore: SecretStore;
   listChanges: PluginListChanges;
   discovery: Discovery;
@@ -90,8 +92,10 @@ function settingsFor(
   });
 }
 
+// Every Secret the store reads or writes is held, so no log line or call answer carries it (ADR-0051).
 function foundations(options: PluginsOptions): Foundations {
-  const secretStore = options.secretStore ?? osSecretStore;
+  const heldSecrets = new HeldSecrets();
+  const secretStore = heldSecrets.keeping(options.secretStore ?? osSecretStore);
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const discovery = { home, version, firstPartyPluginsDirectory };
@@ -99,6 +103,7 @@ function foundations(options: PluginsOptions): Foundations {
 
   return {
     ...parts,
+    heldSecrets,
     hookPort: options.hookPort ?? new HookPort(),
     settings: settingsFor(options, parts),
     accounts: accountsFor(options, { secretStore, discovery }),
@@ -122,11 +127,12 @@ function runtimeFor(
   options: PluginsOptions,
   parts: Foundations,
 ): PluginRuntime {
-  const { accounts, secretStore, settings } = parts;
+  const { accounts, secretStore, settings, heldSecrets } = parts;
 
   return createPluginRuntime(options.home, {
     accounts,
     secretStore,
+    heldSecrets,
     ...runtimePorts(options),
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,
