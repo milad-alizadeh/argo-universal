@@ -78,27 +78,9 @@ const checksOf = ({ checks }: Change): Pick<SessionPullRequest, 'checks'> => {
   };
 };
 
-/*
- * What the Plugin said that the Change's one drawn modifier cannot show: both draft and conflict, and that the latest
- * refresh failed. The data is kept for the views that draw them.
- */
-const flagsOf = ({
-  draft,
-  conflict,
-}: Change): Pick<SessionPullRequest, 'draft' | 'conflict'> => ({
-  ...(draft && { draft: true }),
-  ...(conflict && { conflict: true }),
-});
-
+// That the latest refresh failed and the rest is what was last known; kept for the views that draw it.
 const staleOf = ({ stale }: Change): Pick<SessionPullRequest, 'stale'> =>
   stale ? { stale } : {};
-
-const factsOf = (
-  change: Change,
-): Pick<SessionPullRequest, 'draft' | 'conflict' | 'stale'> => ({
-  ...flagsOf(change),
-  ...staleOf(change),
-});
 
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
@@ -111,7 +93,7 @@ const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   mergeable: !change.conflict,
   ...(change.totals && { summary: change.totals }),
   ...checksOf(change),
-  ...factsOf(change),
+  ...staleOf(change),
 });
 
 /*
