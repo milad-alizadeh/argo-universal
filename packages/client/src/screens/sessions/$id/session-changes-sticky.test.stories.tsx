@@ -175,3 +175,78 @@ export const FarDiffWaitsForTheReader: Story = {
     await spinnersGone();
   },
 };
+
+type Box = { path: string; top: number; bottom: number };
+
+// The list's cell a header is drawn in, the whole row the reader sees, not the toggle inside it.
+function cellOf(header: HTMLElement): HTMLElement {
+  const cell = header.closest<HTMLElement>('[style*="z-index"]');
+
+  return cell ?? header;
+}
+
+const boxOf = (header: HTMLElement): Box => {
+  const box = cellOf(header).getBoundingClientRect();
+
+  return {
+    path: header.getAttribute('aria-label') ?? '',
+    top: Math.round(box.top),
+    bottom: Math.round(box.bottom),
+  };
+};
+
+// The headers drawn over another: each pair that shares rows of pixels.
+function overlapping(scroller: HTMLElement): string[] {
+  const view = scroller.getBoundingClientRect();
+
+  const shown = headers()
+    .map(boxOf)
+    .filter((box) => box.bottom > view.top && box.top < view.bottom)
+    .sort((a, b) => a.top - b.top);
+
+  return shown.flatMap((box, index) => {
+    const next = shown[index + 1];
+
+    return next && next.top < box.bottom ? [`${box.path} / ${next.path}`] : [];
+  });
+}
+
+// Steps of a third of a wheel's, so a header is caught partway through giving way.
+const fineStep = wheelStep / 3;
+
+const lastStretch = 2400;
+
+// Each step from the last stretch's top down to the end, where two headers overlap.
+async function overlapsToEnd(scroller: HTMLElement): Promise<string[]> {
+  const seen = new Set<string>();
+
+  scroller.scrollTop = scroller.scrollHeight;
+  await spinnersGone();
+  scroller.scrollTop = scroller.scrollHeight - lastStretch;
+  await pause(upPauseMs);
+
+  while (!atEnd(scroller)) {
+    scroller.scrollTop += fineStep;
+    await pause(downPauseMs);
+
+    for (const pair of overlapping(scroller)) seen.add(pair);
+  }
+
+  return [...seen];
+}
+
+// A stuck header gives way to the next one, the last file's too: no header is ever drawn over another.
+export const NextHeaderPushesTheStuckOne: Story = {
+  args: {
+    catalog: {
+      ...manyChanges,
+      files: (): (typeof recorded)[] => [...fileLines, 47, 69].map(fileOf),
+    },
+  },
+  play: async () => {
+    await findFileHeader('/repo/src/file-0.ts');
+    const scroller = scrollerOf(changedFiles());
+
+    await expect(await overlapsToEnd(scroller)).toEqual([]);
+  },
+};
