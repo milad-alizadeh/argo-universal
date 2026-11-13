@@ -32,19 +32,18 @@ function decoded(link: string): string | undefined {
   }
 }
 
-// An address inside the App: a path from its root, never another site's (`https:`, `//host`) nor a relative one.
-const isAppAddress = (link: string): link is Extract<Href, string> =>
-  link.startsWith('/') && !link.startsWith('//');
+// An address inside the App, which the router can go to; a link out of it (`https:`, `//host`) is no page to go back to.
+type AppPath = Extract<Href, string>;
 
-const appAddress = (link: string): Href | undefined => {
-  const address = decoded(link);
+const isAppPath = (link: string | undefined): link is AppPath =>
+  /^\/(?!\/)/u.test(link ?? '');
 
-  return address !== undefined && isAppAddress(address) ? address : undefined;
-};
+const carriedLink = ({ returnTo }: Carried = {}): string | undefined =>
+  typeof returnTo === 'string' ? decoded(returnTo) : undefined;
 
 // The page a page was opened from, when it was opened from another section.
-export function returnToOf(params?: Carried): Href | undefined {
-  const link = params?.returnTo;
+export function returnToOf(params?: Carried): AppPath | undefined {
+  const path = carriedLink(params);
 
-  return typeof link === 'string' ? appAddress(link) : undefined;
+  return isAppPath(path) ? path : undefined;
 }

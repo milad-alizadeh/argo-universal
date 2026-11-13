@@ -32,7 +32,10 @@ const bodyStyle = ({ content, motion }: BodyProps): StyleProp<ViewStyle> => [
   { height: motion.height },
 ];
 
-// Caller padding is measured inside the moving box, so closing can reach zero.
+/*
+ * Caller padding is measured inside the moving box, so closing can reach zero. The box clips only along the height
+ * it animates: a row that reaches past the body's sides, as a card's rows do with their hover tile, stays whole.
+ */
 function WebBody(props: BodyProps): ReactElement {
   const open = useContext(OpenContext);
   const own = props.motion.mounted ? props.content : {};
@@ -42,7 +45,7 @@ function WebBody(props: BodyProps): ReactElement {
       {...own}
       {...contentAccessibility(open)}
       style={bodyStyle(props)}
-      className="overflow-hidden transition-height duration-200 ease-out motion-reduce:transition-none"
+      className="overflow-x-visible overflow-y-clip transition-height duration-200 ease-out motion-reduce:transition-none"
     >
       <MeasuredBody {...props} />
     </View>

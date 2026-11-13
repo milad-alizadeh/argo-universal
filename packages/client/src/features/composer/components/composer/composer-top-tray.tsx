@@ -115,5 +115,5 @@ function hasWork({ props }: Pick<LivePlanLayout, 'props'>): boolean {
 }
 
 function hasRequest({ props }: Pick<PlanLayout, 'props'>): boolean {
-  return Boolean(props.permissionRequest || props.callout);
+  return Boolean(props.permissionRequest || props.elicitation || props.callout);
 }

@@ -50,8 +50,8 @@ describe('returnToOf with a malformed link', () => {
   });
 });
 
-describe('returnToOf with a link that is not an App address', () => {
-  it.each(['https://example.com/sessions', 'sessions/abc', '//example.com'])(
+describe('returnToOf with a link out of the App', () => {
+  it.each(['https://example.com/', '//example.com/', 'sessions/abc'])(
     'has no page to return to from %s',
     (link) => {
       expect(

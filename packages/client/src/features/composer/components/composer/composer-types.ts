@@ -5,7 +5,10 @@ import type {
   SuggestionSource,
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type { ReactNode, RefCallback } from 'react';
-import type { PermissionRequestProps } from '#features/requests';
+import type {
+  ElicitationFormProps,
+  PermissionRequestProps,
+} from '#features/requests';
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import type { ComposerStatusProps } from '../composer-status/composer-status';
@@ -24,6 +27,8 @@ export interface ComposerProps {
   // Sources after the Agent's Slash commands, in the order their results are grouped.
   suggestionSources?: readonly SuggestionSource[];
   permissionRequest?: PermissionRequestProps;
+  // An open Elicitation, in the request's tray on a wide window and a sheet on a phone; a Permission request takes its place while one is open.
+  elicitation?: ElicitationFormProps;
   // A Session's sign-in or launch callout, in the request's tray; a request takes its place while one is open.
   callout?: ReactNode;
   writtenPlan?: WrittenPlanValue;

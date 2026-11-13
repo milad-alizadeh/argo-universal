@@ -13,8 +13,8 @@ import {
   subscribePushedScreens,
 } from './pushed-screen-store';
 
-// The not-found page, which the App's Frame and a story's stack both route, so typed routes accept the address.
-const notFound = '/+not-found';
+// The router's own not-found page, where any address no route answers goes.
+const unknownAddress = '/+not-found';
 
 /*
  * The one route (`/screen/[id]`) every pushed page uses: the App's `app/screen/[id].tsx` and a story's `withStack` both
@@ -25,7 +25,7 @@ export function PushedScreenRoute(): ReactNode {
   // Read once, as the page mounts: an opener that unmounts while its page leaves must not send the leaving page away.
   const [isPushed] = useState(() => hasPushedScreen(id));
 
-  if (!isPushed) return <Redirect href={notFound} />;
+  if (!isPushed) return <Redirect href={unknownAddress} />;
 
   return <PushedPage id={id} />;
 }

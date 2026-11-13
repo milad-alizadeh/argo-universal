@@ -166,6 +166,29 @@ export const CardOpensTheInspectorWithoutClosingTheOverview: Story = {
   },
 };
 
+// A mask between the cards and the Feed would make it the glass's backdrop, and the cards would blur nothing behind them.
+export const CardsGlassSeesTheContentBehindTheWorkbench: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1920),
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+    const frame = canvas.getByTestId('wide-frame');
+    const masked: string[] = [];
+    const scroll = canvas.getByRole('region', { name: 'Workbench overview' });
+
+    for (let node: Element | null = scroll; node && node !== frame;)
+      node = recordMask(node, masked);
+
+    await expect(masked).toEqual([]);
+  },
+};
+
+function recordMask(node: Element, masked: string[]): Element | null {
+  if (getComputedStyle(node).maskImage !== 'none')
+    masked.push(node.className.toString());
+
+  return node.parentElement;
+}
+
 export const OverflowCardsKeepTheirOwnScrollTarget: Story = {
   args: { overflowing: true },
   beforeEach: (): Promise<void> => settleLayout(1920),
