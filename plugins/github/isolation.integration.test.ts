@@ -1,12 +1,9 @@
 import { expect, it } from 'vitest';
+import { attach, changesOf, giveAccountTo, listed } from './journey-calls';
 import {
-  attach,
   caller,
-  changesOf,
   foreignSessionId,
-  giveAccountTo,
   journey,
-  listed,
   otherProject,
   project,
   secondSessionId,

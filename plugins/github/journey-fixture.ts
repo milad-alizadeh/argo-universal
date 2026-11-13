@@ -105,18 +105,24 @@ const closeOnce = async (test: PluginTest): Promise<void> => {
   await test.close();
 };
 
+const baseOptions = (
+  github: GitHubFixture,
+): Omit<PluginTestOptions, 'directory'> => ({
+  pluginId: 'github',
+  version: '0.0.0',
+  projects: [project, otherProject],
+  network: github.network,
+  clockStart: 0,
+  sessions,
+});
+
 async function startOver(
   github: GitHubFixture,
   keep: Keep,
 ): Promise<PluginTest> {
   const test = await startPluginTest({
+    ...baseOptions(github),
     directory: await pluginsFolder(),
-    pluginId: 'github',
-    version: '0.0.0',
-    projects: [project, otherProject],
-    network: github.network,
-    clockStart: 0,
-    sessions,
     ...keep,
   });
 
@@ -159,80 +165,4 @@ export async function restart(run: Journey): Promise<void> {
   run.test = await startOver(run.github, run.keep);
   // The Server starts every Plugin at launch; this host starts one when it is first used, so wake the provider.
   await run.test.operations.run({ name: 'cancelSignIn', pluginId: provider });
-}
-
-// What an Agent's `argo run github.attach` does for the calling Session.
-export async function attach(
-  { test }: Journey,
-  reference: string,
-  as: Caller = caller,
-): Promise<void> {
-  await test.operations.run({
-    name: 'attach',
-    params: { reference },
-    caller: as,
-  });
-}
-
-type Answer =
-  ReturnType<PluginTest['slotItems']> extends AsyncGenerator<infer Item>
-    ? Item
-    : never;
-
-async function firstAnswer(
-  { test }: Journey,
-  session: Caller,
-): Promise<Answer | undefined> {
-  const controller = new AbortController();
-
-  onTestFinished(() => controller.abort());
-
-  const answers = test.slotItems(
-    { slotId: changesSlot, contexts: [session] },
-    { signal: controller.signal },
-  );
-
-  return (await answers.next()).value;
-}
-
-// What the Slot answers for one Session: each Change with the Plugin that sent it, in Slot order.
-export async function attributedChangesOf(
-  run: Journey,
-  session: Caller = caller,
-): Promise<{ pluginId: string; item: object }[]> {
-  const answer = await firstAnswer(run, session);
-
-  return Object.values(answer ?? {}).flatMap(({ items }) => items);
-}
-
-// The Changes Argo would draw for one Session.
-export async function changesOf(
-  run: Journey,
-  session: Caller = caller,
-): Promise<object[]> {
-  return (await attributedChangesOf(run, session)).map(({ item }) => item);
-}
-
-// What an Agent reads with `argo run github.list`: each PR as GitHub reports it, or with why it could not be read.
-export async function listed(
-  { test }: Journey,
-  as: Caller = caller,
-): Promise<unknown> {
-  return test.operations.run({ name: 'list', caller: as });
-}
-
-// Each Project picks its own Account; this gives another Project the one that is signed in.
-export async function giveAccountTo(
-  { test }: Journey,
-  projectId: string,
-): Promise<void> {
-  const [account] = test.accounts.list();
-
-  if (!account) throw new Error('Nobody is signed in');
-
-  await test.accounts.choose({
-    projectId,
-    host: 'api.github.com',
-    account: account.id,
-  });
 }

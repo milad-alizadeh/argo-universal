@@ -2,12 +2,13 @@ import { expect, it } from 'vitest';
 import { sha } from './github-fixture';
 import {
   attach,
-  caller,
   attributedChangesOf,
   changesOf,
+  listed,
+} from './journey-calls';
+import {
   foreignSessionId,
   journey,
-  listed,
   otherProject,
   project,
   secondSessionId,
@@ -17,8 +18,6 @@ import {
 const slow = 30_000;
 
 const pullReference = 'owner/repository#12';
-
-const forkReference = 'fork-owner/repository#12';
 
 const notAPullRequest = 'is not a pull request';
 
@@ -84,7 +83,7 @@ it(
     const run = await journey();
 
     await attach(run, pullReference);
-    await attach(run, forkReference);
+    await attach(run, 'fork-owner/repository#12');
 
     expect(await changesOf(run)).toMatchObject([
       { id: 'github:owner/repository#12', title: 'Add the thing' },

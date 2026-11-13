@@ -5,6 +5,7 @@
     "**/*.test.ts",
     "**/node_modules",
     "github-fixture.ts",
+    "journey-calls.ts",
     "journey-fixture.ts",
     "vitest.config.ts"
   ]
