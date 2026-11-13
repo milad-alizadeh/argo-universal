@@ -99,11 +99,10 @@ function foundations(options: PluginsOptions): Foundations {
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const discovery = { home, version, firstPartyPluginsDirectory };
-  const parts = { secretStore, discovery, listChanges };
+  const parts = { secretStore, heldSecrets, discovery, listChanges };
 
   return {
     ...parts,
-    heldSecrets,
     hookPort: options.hookPort ?? new HookPort(),
     settings: settingsFor(options, parts),
     accounts: accountsFor(options, { secretStore, discovery }),
@@ -127,16 +126,14 @@ function runtimeFor(
   options: PluginsOptions,
   parts: Foundations,
 ): PluginRuntime {
-  const { accounts, secretStore, settings, heldSecrets } = parts;
-
   return createPluginRuntime(options.home, {
-    accounts,
-    secretStore,
-    heldSecrets,
+    accounts: parts.accounts,
+    secretStore: parts.secretStore,
+    heldSecrets: parts.heldSecrets,
     ...runtimePorts(options),
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,
-    settings: async (pluginId, key) => settings.read(pluginId, key),
+    settings: async (pluginId, key) => parts.settings.read(pluginId, key),
     locate: locator(parts),
   });
 }

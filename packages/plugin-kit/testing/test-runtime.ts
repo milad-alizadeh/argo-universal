@@ -6,8 +6,8 @@ import type {
 import type { TestAccounts } from '@repo/engine/mocks/test-accounts';
 import {
   createPluginRuntime,
-  HeldSecrets,
   pluginSettingsSecretService,
+  type HeldSecrets,
   type PluginRuntime,
   type SecretStore,
 } from '@repo/engine/plugins';
@@ -18,26 +18,21 @@ export { configureTest, type ConfiguredTest } from './test-configuration';
 
 export type RuntimeParts = {
   secretStore: SecretStore;
+  heldSecrets: HeldSecrets;
   accounts: TestAccounts['accounts'];
 };
 
-// Every Secret the store reads or writes is held, as the Server holds it (ADR-0051).
 export function runtimeFor(
   home: string,
   options: ConfiguredTest,
-  { accounts, secretStore }: RuntimeParts,
+  parts: RuntimeParts,
 ): PluginRuntime {
-  const heldSecrets = new HeldSecrets();
-  const held = heldSecrets.keeping(secretStore);
-
   return createPluginRuntime(home, {
-    accounts,
-    secretStore: held,
-    heldSecrets,
+    ...parts,
     clockStart: options.clockStart,
     network: options.network,
     oauth: oauthOf(options),
-    settings: settingsOf(options, held),
+    settings: settingsOf(options, parts.secretStore),
     ...projectOptions(options),
     environment: testEnvironment(options),
   });
