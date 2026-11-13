@@ -7,6 +7,7 @@ import { Linking, View } from 'react-native';
 import { ChangeDiffTotal } from './change-diff-total';
 import { changeName } from './change-identity';
 import { ChangeStage } from './change-stage/change-stage';
+import { StaleBar } from './change-stale';
 import { PullRequestChecks } from './pull-request-checks';
 import type { SessionPullRequest } from './session-pull-request';
 
@@ -17,6 +18,8 @@ export interface SessionChangeDetailProps {
   onBack: () => void;
   // Detaches this Change from the Session; absent where the page offers no such control.
   onDetach?: (change: SessionPullRequest) => void;
+  // Reads the Changes again; absent where the page offers no such control.
+  onRefresh?: () => void;
 }
 
 function BackBar({
@@ -93,6 +96,7 @@ function Body(props: SessionChangeDetailProps): ReactElement {
   return (
     <Stack direction="column" gap={3}>
       <ChangeStage {...change} />
+      <StaleBar change={change} onRefresh={props.onRefresh} />
       <Heading title={change.title} />
       <Facts change={change} />
       {change.checks && <PullRequestChecks {...change.checks} />}

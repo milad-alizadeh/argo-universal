@@ -11,6 +11,7 @@ import {
   ChangeStageIcon,
   ChangeStageModifier,
 } from './change-stage/change-stage';
+import { ChangeStale } from './change-stale';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
@@ -54,6 +55,7 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
       )}
       {change.checks && <ChangeChecks checks={change.checks} onOpen={onOpen} />}
       <ChangeStageModifier {...change} />
+      <ChangeStale stale={change.stale} short />
     </View>
   );
 }

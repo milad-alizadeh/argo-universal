@@ -1,15 +1,20 @@
 import { tintTransitionClassName } from '@repo/kit/motion';
+import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
+import type { ChangeActions } from '../hooks/use-change-selection';
 import { changeKey, changeName } from './change-identity';
 import {
   ChangeStageIcon,
   ChangeStageModifier,
 } from './change-stage/change-stage';
 import { changeDescription } from './change-stage/change-stage-model';
+import { ChangeStale } from './change-stale';
 import { SessionChangeAttach } from './session-change-attach';
+import { SessionChangeDiscovery } from './session-change-discovery';
+import { SessionChangeUnread } from './session-change-unread';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface SessionChangeListProps {
@@ -17,8 +22,8 @@ export interface SessionChangeListProps {
   changes: readonly SessionPullRequest[];
   // A row opens that Change's detail.
   onSelect: (change: SessionPullRequest) => void;
-  // Attaches a PR by reference; absent where the page offers no such control.
-  onAttach?: (reference: string) => Promise<boolean>;
+  // What a person can do to the Changes; absent where the page offers none of it.
+  actions?: ChangeActions;
 }
 
 type RowProps = Pick<SessionChangeListProps, 'onSelect'> & {
@@ -39,6 +44,7 @@ function RowText({ change }: Pick<RowProps, 'change'>): ReactElement {
           {changeName(change)}
         </Text>
         <ChangeStageModifier {...change} />
+        <ChangeStale stale={change.stale} short />
       </View>
     </View>
   );
@@ -63,16 +69,62 @@ function Row({ change, onSelect }: RowProps): ReactElement {
   );
 }
 
-// The Inspector's Changes list: every Change the Session has, which a row opens (ADR-0039).
+interface RetryProps {
+  actions: ChangeActions;
+  show: boolean;
+}
+
+function RefreshControl(props: {
+  show: boolean;
+  onRefresh: () => void;
+}): ReactElement | null {
+  if (!props.show) return null;
+
+  return (
+    <View className="flex-row px-3 py-2">
+      <Button size="sm" label="Refresh" onPress={props.onRefresh} />
+    </View>
+  );
+}
+
+function Retrying({ actions, show }: RetryProps): ReactElement {
+  const retry = (): void => void actions.refresh();
+
+  return (
+    <>
+      <SessionChangeUnread unread={actions.unread} onRetry={retry} />
+      <RefreshControl show={show} onRefresh={retry} />
+    </>
+  );
+}
+
+function Controls({
+  actions,
+  changes,
+}: Pick<SessionChangeListProps, 'changes'> & {
+  actions: ChangeActions;
+}): ReactElement {
+  return (
+    <>
+      <Retrying actions={actions} show={changes.length > 0} />
+      <SessionChangeDiscovery onDiscover={actions.discover} />
+      <SessionChangeAttach onAttach={actions.attach} />
+    </>
+  );
+}
+
+// The Inspector's Changes list: every Change the Session has, which a row opens (ADR-0039). With none, it is the way to find or attach the first.
 export function SessionChangeList(props: SessionChangeListProps): ReactElement {
+  const { actions, changes } = props;
+
   const row = (change: SessionPullRequest): ReactElement => (
     <Row key={changeKey(change)} change={change} onSelect={props.onSelect} />
   );
 
   return (
     <View className="p-2" accessibilityLabel="Changes">
-      {props.changes.map(row)}
-      {props.onAttach && <SessionChangeAttach onAttach={props.onAttach} />}
+      {changes.map(row)}
+      {actions && <Controls actions={actions} changes={changes} />}
     </View>
   );
 }
