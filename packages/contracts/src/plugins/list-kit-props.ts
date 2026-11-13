@@ -98,23 +98,6 @@ export const contentListProps = z.object({
 // A row press never holds the row disabled while the Plugin answers.
 export const rowPress = z.undefined().meta({ blocks: false });
 
-export const listSectionProps = z.object({
-  id: z.string().optional().describe('The Section identity a move reports.'),
-  selectionMode: z
-    .enum(['single', 'multiple'])
-    .optional()
-    .describe('The section choice mode.'),
-  selection: z
-    .array(z.string())
-    .readonly()
-    .optional()
-    .describe('Selected row ids.'),
-  onSelectionChange: handler('onSelectionChange').optional(),
-  title: z.string().optional().describe('The row or section title.'),
-  subtitle: z.string().optional().describe('A second line below the title.'),
-  footer: z.string().optional().describe('Supporting text below the section.'),
-});
-
 export const listItemProps = z.object({
   id: z
     .string()

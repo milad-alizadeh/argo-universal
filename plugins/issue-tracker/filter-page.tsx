@@ -27,9 +27,9 @@ import type { Issue } from './github-issues';
 import { repositoryText } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { filterPattern } from './issue-paths';
-import { RootRows, type RootRowsProps } from './issue-root';
+import { RootRows } from './issue-root';
 import { issueTree } from './issue-tree';
-import { loadingIssues } from './loading-issues';
+import { loadSidebar, type Sidebar, type SidebarSelection } from './sidebar';
 
 type To = PageTo<FilterState>;
 
@@ -48,19 +48,33 @@ export function defineFilterPage(argo: Argo, deps: IssueDeps): void {
   );
 }
 
-function filterPage(
-  deps: IssueDeps,
-): GatedPage<FilterState, FilterData, Issue> {
+function filterPage(deps: IssueDeps): GatedPage<FilterState, PageData, Issue> {
   const targetOf = filterTargets(deps);
 
   return {
     state: filterState,
-    load: (input) => loadFilter(deps, input.read, targetOf(input)),
+    load: (input) => loadPage(deps, input, targetOf),
     list: (input, cursor) => listOf({ deps, targetOf, input }, cursor),
-    render: (data, to, { state, list }) => (
-      <FilterPage {...{ data, to, list }} query={state.query} />
+    render: ({ data, sidebar }, to, { state, list }) => (
+      <FilterPage {...{ data, sidebar, to, list }} query={state.query} />
     ),
   };
+}
+
+// The filter's own data, and every Project's group beside it.
+type PageData = { data: FilterData; sidebar: Sidebar };
+
+async function loadPage(
+  deps: IssueDeps,
+  input: LoaderInput<FilterState>,
+  targetOf: Targets,
+): Promise<PageData> {
+  const [data, sidebar] = await Promise.all([
+    loadFilter(deps, input.read, targetOf(input)),
+    loadSidebar(deps, input.read),
+  ]);
+
+  return { data, sidebar };
 }
 
 type Targets = ReturnType<typeof filterTargets>;
@@ -84,6 +98,7 @@ const listOf = (
 
 type PageProps = {
   data: FilterData;
+  sidebar: Sidebar;
   to: To;
   query: string;
   list: PagedList<Issue>;
@@ -93,41 +108,27 @@ function FilterPage(props: PageProps): JSX.Element {
   return (
     <ListDetail
       title="Issues"
-      list={sidebar(props)}
+      list={sidebarRows(props)}
       detail={filterDetail(props)}
       empty={<EmptyState title={noIssuesBecause(props.data)} />}
     />
   );
 }
 
-// What the filters beside the list show: nothing for a page that is gone.
-type Shown = Pick<RootRowsProps, 'selected'> &
-  Pick<RootRowsProps['choice'], 'project'> &
-  Pick<RootRowsProps['state'], 'overview'>;
-
-const shownOf = (data: FilterData): Shown =>
+// The row selected beside the list: none for a page that is gone.
+const selectedOf = (data: FilterData): SidebarSelection | undefined =>
   data.state === 'gone'
-    ? { project: undefined, overview: null, selected: undefined }
-    : {
-        project: data.project,
-        overview: data.overview,
-        selected: data.filter.id,
-      };
+    ? undefined
+    : { projectId: data.project.id, filterId: data.filter.id };
 
-// The Project's filters beside the list; a pull asks again, as the list's own does.
-function sidebar({ data, to }: PageProps): JSX.Element {
-  const message = noIssuesBecause(data) || loadingIssues;
-  const { project, overview, selected } = shownOf(data);
-
-  return (
-    <RootRows
-      choice={{ projects: data.projects, project, message }}
-      state={{ overview, message: '' }}
-      onRefresh={to.set({})}
-      selected={selected}
-    />
-  );
-}
+// Every Project's filters beside the list; a pull asks again, as the list's own does.
+const sidebarRows = ({ data, sidebar, to }: PageProps): JSX.Element => (
+  <RootRows
+    sidebar={sidebar}
+    selected={selectedOf(data)}
+    onRefresh={to.set({})}
+  />
+);
 
 function filterDetail(props: PageProps): JSX.Element | null {
   const { data } = props;

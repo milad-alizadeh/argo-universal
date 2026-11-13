@@ -167,3 +167,38 @@ export const KeyedSectionsKeepState: Story = {
     ).toBeVisible();
   },
 };
+
+const foldedRow = 'Folded row';
+
+const expandedAttribute = 'aria-expanded';
+
+// A collapsible Section starts open; its title folds its rows away and opens them again.
+export const CollapsibleFolds: Story = {
+  render: () => (
+    <List>
+      <List.Section title="Folding group" collapsible>
+        <ListItem title="Folded row" />
+      </List.Section>
+      <List.Section title="Fixed group">
+        <ListItem title="Fixed row" />
+      </List.Section>
+    </List>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const toggle = await canvas.findByRole('button', { name: 'Folding group' });
+
+    await expect(toggle).toHaveAttribute(expandedAttribute, 'true');
+    await expect(canvas.getByText(foldedRow)).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Fixed group' }),
+    ).toBeNull();
+
+    await userEvent.click(toggle);
+    await expect(canvas.queryByText(foldedRow)).toBeNull();
+    await expect(toggle).toHaveAttribute(expandedAttribute, 'false');
+    await expect(canvas.getByText('Fixed row')).toBeVisible();
+
+    await userEvent.click(toggle);
+    await expect(await canvas.findByText(foldedRow)).toBeVisible();
+  },
+};
