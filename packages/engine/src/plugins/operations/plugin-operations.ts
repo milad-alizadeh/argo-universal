@@ -13,6 +13,7 @@ import {
   type KindCalls,
   type WorkerCalls,
 } from '../runtime/worker-calls';
+import type { HeldSecrets } from '../services/held-secrets';
 
 type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 
@@ -20,14 +21,17 @@ type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
  * One run: what the worker is sent, and whether the Connection that asked is the Server Device, which the
  * Server keeps to scope the run's own `argo` calls and never sends the Plugin.
  */
-type Request = Omit<OperationEvent, 'type' | 'id'> & { serverDevice?: boolean };
+type Request = Omit<OperationEvent, 'type' | 'id'> & {
+  serverDevice?: boolean;
+  secrets?: readonly string[];
+};
 
 // What a run's `argo` calls reach: the Project it acts in and whether it was asked from the Server Device.
 export type RunOrigin = { projectId?: string; serverDevice: boolean };
 
 const eventOf = (
   id: number,
-  { serverDevice: _serverDevice, ...request }: Request,
+  { serverDevice: _serverDevice, secrets: _secrets, ...request }: Request,
 ): OperationEvent => ({ type: 'operation', id, ...request });
 
 export type Answer = { ok: true; result: Json } | Failure;
@@ -61,7 +65,10 @@ export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;
   private readonly ranListeners = new Set<(pluginId: string) => void>();
 
-  public constructor(workers: WorkerCalls) {
+  public constructor(
+    workers: WorkerCalls,
+    private readonly secrets: HeldSecrets,
+  ) {
     this.calls = workers.kind({
       event: eventOf,
       limitMs: operationLimitMs,
@@ -69,12 +76,24 @@ export class PluginOperations {
     });
   }
 
+  /*
+   * A run's secret param values are held while it runs, so the log writes none of them, and what it answers is
+   * scrubbed of them before any caller reads it (ADR-0051).
+   */
   public async run(pluginId: string, request: Request): Promise<Answer> {
-    const answer = await this.calls.call(pluginId, request);
+    const answer = await this.secrets.during(request.secrets ?? [], async () =>
+      this.scrubbed(await this.calls.call(pluginId, request)),
+    );
 
     for (const listener of this.ranListeners) listener(pluginId);
 
     return answer;
+  }
+
+  private scrubbed(answer: Answer): Answer {
+    return answer.ok
+      ? { ok: true, result: this.secrets.scrubJson(answer.result) }
+      : failed(this.secrets.scrub(answer.error));
   }
 
   // Called after each Operation run ends, failed or not; the returned function stops it.

@@ -6,6 +6,7 @@ import { AccountServices } from '../accounts/account-services';
 import type { OpenedAsset } from '../assets/plugin-assets';
 import type { SpawnCaller } from '../hooks/spawn-hooks';
 import type { PluginReply, PluginValue } from '../protocol/runtime';
+import { HeldSecrets } from './held-secrets';
 import {
   answerCall,
   failureLine,
@@ -28,6 +29,8 @@ type Held = { generation: number; resources: PluginResources };
 // The Server boundary for Plugin API calls; each Plugin keeps its own storage and secret store namespace.
 export class PluginServices {
   public readonly accountCalls;
+  // The secret params of the Operations running now, which the log these services write leaves out.
+  public readonly heldSecrets;
   private readonly held = new Map<string, Held>();
   private readonly activated = new Map<string, ActivatedPlugin>();
 
@@ -37,6 +40,7 @@ export class PluginServices {
     private readonly options: PluginServiceOptions,
   ) {
     this.accountCalls = new AccountServices(options);
+    this.heldSecrets = options.heldSecrets ?? new HeldSecrets();
   }
 
   onStorageWrite(written: (pluginId: string) => void): void {

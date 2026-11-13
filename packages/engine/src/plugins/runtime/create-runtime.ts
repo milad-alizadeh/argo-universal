@@ -1,6 +1,7 @@
 import { writeLog } from '@repo/machine-log';
 import { PluginAssets } from '../assets/plugin-assets';
 import type { PluginClock } from '../clock';
+import { HeldSecrets } from '../services/held-secrets';
 import {
   PluginServices,
   type PluginServiceOptions,
@@ -31,11 +32,11 @@ export function createPluginRuntime(
   options: PluginRuntimeOptions,
 ): PluginRuntime {
   const { clockStart, locate, ...rest } = options;
-  const log = pluginLog(home);
+  const held = heldLog(home);
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
-  const services = createServices(home, { ...rest, ...back, clock, log });
-  const runtime = new PluginRuntime(log, services, clock);
+  const services = createServices(home, { ...rest, ...back, ...held, clock });
+  const runtime = new PluginRuntime(held.log, services, clock);
 
   return runtime;
 }
@@ -69,6 +70,15 @@ function createServices(
     ...options,
     assets: new PluginAssets(home),
   });
+}
+
+// The log never writes a secret param of an Operation running now (ADR-0051).
+function heldLog(
+  home: string,
+): Required<Pick<PluginServiceOptions, 'heldSecrets' | 'log'>> {
+  const heldSecrets = new HeldSecrets();
+
+  return { heldSecrets, log: heldSecrets.scrubbing(pluginLog(home)) };
 }
 
 function pluginLog(home: string): (line: string) => void {

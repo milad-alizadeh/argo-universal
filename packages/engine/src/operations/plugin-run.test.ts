@@ -2,7 +2,11 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
 import type { PluginOperationService } from '../plugins';
-import type { OperationCard, SessionOperationCall } from '../sessions';
+import type {
+  CalledOperation,
+  OperationCard,
+  SessionOperationCall,
+} from '../sessions';
 import { PluginOperationRouter } from './plugin-run';
 
 const plugin = { id: 'demo:close', pluginId: 'demo', name: 'close' };
@@ -81,4 +85,55 @@ it('hands a Session’s run the way to ask the user, for a Project it names past
 
   expect(fakes.first().caller).toEqual({ sessionId: 's1', projectId: 'p1' });
   expect(fakes.asked).toEqual([{ title: 'Close', description: 'Elsewhere' }]);
+});
+
+it('records a Session’s run in its history with each secret param left out', async () => {
+  const fakes = new Fakes();
+
+  const secretRow: OperationRow = {
+    ...row,
+    params: {
+      type: 'object',
+      properties: {
+        token: { type: 'string', writeOnly: true },
+        label: { type: 'string' },
+      },
+    },
+  };
+
+  const recorded: CalledOperation[] = [];
+
+  const sessions = {
+    call: (
+      _sessionId: string,
+      called: CalledOperation,
+    ): SessionOperationCall => {
+      recorded.push(called);
+
+      return fakes.sessions.call();
+    },
+  };
+
+  const router = new PluginOperationRouter(
+    {
+      operations: {
+        ...fakes.operations,
+        rows: (): Promise<OperationRow[]> => Promise.resolve([secretRow]),
+      },
+    },
+    sessions,
+  );
+
+  await router.runFor(session, plugin, {
+    token: 'pasted-token',
+    label: 'Jira',
+  });
+
+  expect(recorded.map(({ input }) => input)).toEqual([
+    { token: '[secret]', label: 'Jira' },
+  ]);
+  expect(fakes.first().params).toEqual({
+    token: 'pasted-token',
+    label: 'Jira',
+  });
 });

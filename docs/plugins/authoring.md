@@ -129,6 +129,25 @@ argo.operations.register('setStatus', async ({ number, status }, { projectId }) 
 to.run('setStatus', { number, status: 'closed' });
 ```
 
+### Secret params
+
+A value a person types into a `FieldGroup.SecretField`, such as a pasted API token, reaches the Plugin only as an Operation param marked `"secret": true` (ADR-0051). Only a string param is secret, and it lists no `choices`.
+
+```json
+"params": {
+  "token": { "type": "string", "description": "The API token.", "required": true, "secret": true }
+}
+```
+
+```tsx
+<FieldGroup.SecretField title="API token" value="" onChangeText={to.run('saveToken', { token: to.payload() })} />
+```
+
+- The Server refuses, and leaves out of the drawn page, a SecretField whose text goes to Page state (`to.bind` or `to.set`), into `optimistic` props, or to a param not marked secret. The log line names the fix.
+- While the Operation runs, the Server writes `[secret]` in place of the value in the Plugin log, in a Session's history of the run, and in what the run answers: its result, its error, and so `argo` CLI output. `argo operations` lists the param as `writeOnly`.
+- The App forgets the typed text once the run has answered and the field is let go.
+- Keep the value with `argo.secrets`; never put it in storage, Page state or a tree.
+
 `argo-plugin types . --check` and `argo-plugin validate` fail while the file is not the manifest's. A Plugin's `tsconfig.test.json` that sets its own `include` lists `plugin.gen.d.ts` too.
 
 ## Plugin tests

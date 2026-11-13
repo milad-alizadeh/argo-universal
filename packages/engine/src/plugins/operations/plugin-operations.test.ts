@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import type { PluginClock } from '../clock';
 import type { PluginEvent } from '../protocol/runtime';
 import { WorkerCalls } from '../runtime/worker-calls';
+import { HeldSecrets } from '../services/held-secrets';
 import { PluginOperations } from './plugin-operations';
 
 const idleClock: PluginClock = {
@@ -34,7 +35,7 @@ async function runAnswered(
     clock: idleClock,
   });
 
-  const operations = new PluginOperations(workers);
+  const operations = new PluginOperations(workers, new HeldSecrets());
   const heard: string[] = [];
 
   operations.onRan((pluginId) => heard.push(pluginId));

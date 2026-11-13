@@ -7,7 +7,11 @@ import {
 } from '@repo/contracts/plugins/replaceable';
 import type { RpcConnection } from '../../rpc';
 import type { StartedPlugins } from '../located-plugins';
-import { checkedTree, type Checked } from '../pages/checked-tree';
+import {
+  checkedTree,
+  noSecretParams,
+  type Checked,
+} from '../pages/checked-tree';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
 import { belowWireMinimum, type Fallback } from '../runtime/render-fallback';
 
@@ -86,5 +90,5 @@ function drawnAnswer(
 // An App older than the wire minimum draws core's own in every Replaceable Slot (ADR-0034).
 const checkedFor = (connection: RpcConnection, tree: Drawn['tree']): Checked =>
   drawsPluginWire(connection.surface)
-    ? checkedTree(tree, 'replacement')
+    ? checkedTree(tree, 'replacement', noSecretParams)
     : { ok: false, error: belowWireMinimum };

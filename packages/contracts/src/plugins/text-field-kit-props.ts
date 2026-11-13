@@ -8,11 +8,16 @@ type TextChangeEvents<Fields extends TextProps> = {
   onChangeText: z.ZodNonOptional<Fields['value']>;
 };
 
-// Typed text echoes at once and coalesces; Return sends it before submitting.
+// Typed text echoes at once and coalesces; Return sends it before submitting. Secret text is held as a secret.
 export const textChangeEvents = <Fields extends TextProps>(
   props: z.ZodObject<Fields>,
+  rules: { secret?: boolean } = {},
 ): TextChangeEvents<Fields> => ({
-  onChangeText: echoes(props, 'value', { throttleMs: 150, blocks: false }),
+  onChangeText: echoes(props, 'value', {
+    throttleMs: 150,
+    blocks: false,
+    ...rules,
+  }),
 });
 
 export const datePickerProps = z.object({

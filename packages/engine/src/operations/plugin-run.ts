@@ -2,9 +2,11 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { OperationRunResponse } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
+  redactedSecret,
   splitPluginOperationId,
   type PluginOperationCaller,
 } from '@repo/contracts/plugins/plugin-operations';
+import { z } from 'zod';
 import type { PluginOperationService } from '../plugins';
 import type {
   CalledOperation,
@@ -21,12 +23,51 @@ type PluginOperationDeps = {
 
 export type PluginOperation = { id: string; pluginId: string; name: string };
 
-// What a Plugin Operation's Tool call shows: the Operation it ran and the params it was given.
+// What a Plugin Operation's Tool call shows: the Operation it ran and the params it was given, but no secret one's value.
 const pluginOperationCall = (
   { id }: PluginOperation,
   row: OperationRow,
   params: Json,
-): CalledOperation => ({ name: id, label: row.label, input: params });
+): CalledOperation => ({
+  name: id,
+  label: row.label,
+  input: withoutSecrets(row, params),
+});
+
+const WriteOnly = z.object({ writeOnly: z.literal(true) });
+
+const Properties = z.object({
+  properties: z.record(z.string(), z.unknown()),
+});
+
+const GivenParams = z.record(z.string(), z.json());
+
+// The params the row lists as write-only, which are secret (ADR-0051).
+function secretNames(row: OperationRow): Set<string> {
+  const properties = Properties.safeParse(row.params).data?.properties ?? {};
+
+  return new Set(
+    Object.keys(properties).filter(
+      (name) => WriteOnly.safeParse(properties[name]).success,
+    ),
+  );
+}
+
+// A Session's history keeps that a secret param was given, never its value.
+function withoutSecrets(row: OperationRow, params: Json): Json {
+  const given = GivenParams.safeParse(params);
+
+  if (!given.success) return params;
+
+  const secret = secretNames(row);
+
+  return Object.fromEntries(
+    Object.entries(given.data).map(([name, value]) => [
+      name,
+      secret.has(name) ? redactedSecret : value,
+    ]),
+  );
+}
 
 function matches(row: OperationRow, search: string): boolean {
   return [row.id, row.label, ...row.keywords].some((value) =>

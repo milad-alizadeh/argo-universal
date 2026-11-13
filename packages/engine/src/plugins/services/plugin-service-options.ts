@@ -6,6 +6,7 @@ import type { PluginAssets } from '../assets/plugin-assets';
 import type { PluginClock } from '../clock';
 import type { Waiting } from '../hooks/spawn-hooks';
 import type { PluginValue } from '../protocol/runtime';
+import type { HeldSecrets } from './held-secrets';
 import type { PluginNetwork } from './plugin-fetch';
 
 export type PluginServiceOptions = {
@@ -26,4 +27,6 @@ export type PluginServiceOptions = {
   waiting?: Waiting;
   clock?: PluginClock;
   watchProjects?: (changed: () => void) => () => void;
+  // The secret params of the Operations running now, which `log` already leaves out (ADR-0051).
+  heldSecrets?: HeldSecrets;
 };

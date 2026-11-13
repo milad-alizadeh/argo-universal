@@ -36,6 +36,11 @@ const ComponentEventRules = z.object({
   blocks: z.boolean().default(true),
   flush: z.boolean().default(false),
   throttleMs: z.number().default(0),
+  /*
+   * The value is a secret, as a SecretField's text is (ADR-0051): the Server refuses a tree that sends it anywhere
+   * but an Operation param marked secret, and the App forgets it once the field lets it go.
+   */
+  secret: z.boolean().default(false),
 });
 
 export type ComponentEventRules = z.output<typeof ComponentEventRules>;

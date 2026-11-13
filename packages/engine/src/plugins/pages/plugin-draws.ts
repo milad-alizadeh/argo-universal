@@ -6,6 +6,7 @@ import {
   type TreeAnswer,
 } from '@repo/contracts/plugins/page-draw';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
+import type { SecretParams } from '@repo/contracts/plugins/secret-bindings';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Failure } from '../protocol/runtime-status';
 import { failed } from '../protocol/runtime-status';
@@ -46,6 +47,8 @@ type PluginDrawsDeps = {
   log: (line: string) => void;
   changes: PageChanges;
   drawings: Drawings;
+  // The params each of a Plugin's Operations marks secret, as its manifest declares them.
+  secretParams: (pluginId: string) => SecretParams;
 };
 
 /*
@@ -57,22 +60,22 @@ export class PluginDraws {
   private readonly patterns: DefinedPatterns;
   private readonly lives: LiveDraws;
   private readonly sent: SentTrees;
-  private readonly changes: PageChanges;
   private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
-  private readonly log: (line: string) => void;
   private readonly failures: DrawingFailures;
 
-  public constructor({ workers, log, changes, drawings }: PluginDrawsDeps) {
-    const failures = new DrawingFailures(drawings, log);
-    const calls = workers.kind(drawKind);
+  public constructor(private readonly deps: PluginDrawsDeps) {
+    const { workers, log, drawings } = deps;
 
-    this.log = log;
-    this.failures = failures;
-    this.calls = calls;
-    this.changes = changes;
+    this.failures = new DrawingFailures(drawings, log);
+    this.calls = workers.kind(drawKind);
     this.sent = new SentTrees(workers);
     this.patterns = new DefinedPatterns(workers, log);
-    this.lives = new LiveDraws({ calls, clock: workers.clock, log, failures });
+    this.lives = new LiveDraws({
+      ...deps,
+      calls: this.calls,
+      clock: workers.clock,
+      failures: this.failures,
+    });
     workers.watch((pluginId) => this.forgetEnded(pluginId));
   }
 
@@ -88,7 +91,10 @@ export class PluginDraws {
    * Argo" (ADR-0034), and the tree it was not sent is not kept as sent.
    */
   public async answer(page: DrawnFor, known?: string): Promise<DrawAnswer> {
-    const drawn = forApp({ ...page, log: this.log }, await this.draw(page));
+    const drawn = forApp(
+      { ...page, log: this.deps.log },
+      await this.draw(page),
+    );
 
     if (!drawn.ok) return { kind: 'failed', error: drawn.error };
 
@@ -144,7 +150,8 @@ export class PluginDraws {
     const checking = {
       pluginId: page.pluginId,
       path: page.at.path,
-      log: this.log,
+      log: this.deps.log,
+      secretParams: this.deps.secretParams(page.pluginId),
     };
 
     return this.failures.checked(page, checkedPage(checking, answered));
@@ -183,7 +190,7 @@ export class PluginDraws {
   ): void {
     if (call.action === 'defined') return this.patterns.define(caller, call);
 
-    if (call.action === 'changed') return this.changes.changed(caller);
+    if (call.action === 'changed') return this.deps.changes.changed(caller);
 
     this.calls.answer(caller, call);
   }

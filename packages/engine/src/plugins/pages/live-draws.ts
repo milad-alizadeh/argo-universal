@@ -1,5 +1,6 @@
 import type { LoaderPageCall } from '@repo/contracts/plugins/page-address';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
+import type { SecretParams } from '@repo/contracts/plugins/secret-bindings';
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { Caller, KindCalls } from '../runtime/worker-calls';
@@ -28,6 +29,7 @@ type LiveDrawsDeps = {
   clock: PluginClock;
   log: (line: string) => void;
   failures: DrawingFailures;
+  secretParams: (pluginId: string) => SecretParams;
 };
 
 /*
@@ -61,8 +63,14 @@ export class LiveDraws {
 
   // Each tree is checked as a drawn page's is, and a refused one is the page's drawing failure.
   private checked(pluginId: string, address: DrawAt, root: WireJson): Drawn {
-    const { log, failures } = this.deps;
-    const page = { pluginId, path: address.path, log };
+    const { log, failures, secretParams } = this.deps;
+
+    const page = {
+      pluginId,
+      path: address.path,
+      log,
+      secretParams: secretParams(pluginId),
+    };
 
     return failures.checked(
       { pluginId, at: address },

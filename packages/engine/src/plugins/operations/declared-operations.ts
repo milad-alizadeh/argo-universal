@@ -68,10 +68,18 @@ const requiredNames = (params: Params): string[] =>
 
 const paramProperties = (params: Params): OperationRow['params'] =>
   Object.fromEntries(
-    Object.entries(params).map(([name, { type, description, choices }]) => [
-      name,
-      { type, description, ...(choices && { enum: choices }) },
-    ]),
+    Object.entries(params).map(
+      ([name, { type, description, choices, secret }]) => [
+        name,
+        {
+          type,
+          description,
+          ...(choices && { enum: choices }),
+          // JSON Schema's own word for a value that is sent and never shown back.
+          ...(secret && { writeOnly: true }),
+        },
+      ],
+    ),
   );
 
 // The declared params as the JSON Schema `argo operations` prints and `argo run` is checked against.

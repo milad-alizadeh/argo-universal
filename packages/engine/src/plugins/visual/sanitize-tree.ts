@@ -14,16 +14,24 @@ export interface SanitizedTree {
   containsSvg: boolean;
 }
 
+// Why a node the visual checks pass is still refused, as a SecretField bound where its text may not go.
+export type NodeRefusal = (node: WireNode) => string | undefined;
+
 interface VisitState {
   refused: RefusedSvg[];
   containsSvg: boolean;
+  refuse?: NodeRefusal;
 }
 
-export function sanitizeTree(root: WireNode): SanitizedTree {
-  const state: VisitState = { refused: [], containsSvg: false };
+export function sanitizeTree(
+  root: WireNode,
+  refuse?: NodeRefusal,
+): SanitizedTree {
+  const state: VisitState = { refused: [], containsSvg: false, refuse };
   const next = visit(root, [], state);
+  const { refused, containsSvg } = state;
 
-  return { root: next ?? emptyTree(), ...state };
+  return { root: next ?? emptyTree(), refused, containsSvg };
 }
 
 function visit(
@@ -65,12 +73,18 @@ function sanitizeNode(
   return sanitizeSvgNode(node, path, state);
 }
 
+// What the visual checks refuse a node for, or else what the caller's own check does.
+const refusalOf = (
+  node: WireNode,
+  refuse: NodeRefusal | undefined,
+): string | undefined => visualReason(node) ?? refuse?.(node);
+
 function sanitizeVisualNode(
   node: WireNode,
   path: string[],
   state: VisitState,
 ): WireNode | null {
-  const reason = visualReason(node);
+  const reason = refusalOf(node, state.refuse);
 
   return reason ? recordRefusal({ node, path, state, reason }) : node;
 }
