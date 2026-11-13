@@ -4,10 +4,13 @@ import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { offlineRegistry } from '@repo/mocks/registry/catalog';
 import { scriptedRegistry } from '@repo/mocks/registry/scripted';
+import { installGitHubPlugins, writeGitHubFixture } from './github-pulls';
 
 export type InitialServerOptions = {
   noProjects?: boolean;
   registryOffline?: boolean;
+  // The real GitHub Plugin, over a fixture GitHub holding four Open pull requests (github-pulls.ts).
+  githubPulls?: boolean;
   // A registry to serve in place of the scripted Agents. It is on disk before the Engine starts, so the Engine's first read sees it.
   registry?: ReturnType<typeof scriptedRegistry>;
 };
@@ -21,6 +24,8 @@ export type ServerPaths = {
   home: string;
   registryPath: string;
   installationPath: string;
+  // Where a scenario writes the fixture GitHub; the Engine starts it only when the file is there.
+  githubPath: string;
 };
 
 export function serverPaths(directory: string): ServerPaths {
@@ -31,6 +36,7 @@ export function serverPaths(directory: string): ServerPaths {
     home: path.join(directory, 'server-home'),
     registryPath: path.join(directory, 'registry.json'),
     installationPath: path.join(directory, 'installation.json'),
+    githubPath: path.join(directory, 'github-fixture.json'),
   };
 }
 
@@ -53,6 +59,7 @@ export function fixtureEnvironment(
     ARGO_E2E_AGENTS: JSON.stringify(agents),
     ARGO_E2E_REGISTRY_PATH: paths.registryPath,
     ARGO_E2E_INSTALLATION_PATH: paths.installationPath,
+    ARGO_E2E_GITHUB: paths.githubPath,
     ARGO_E2E_REQUEST_LOG: paths.requestLogPath,
   };
 }
@@ -84,6 +91,11 @@ export async function prepareServer(
   await writeInstallation(paths.installationPath);
   await initTestRepository(paths.projectPath, false);
   await installPlugins(paths.home);
+
+  if (initial.githubPulls) {
+    await writeGitHubFixture(paths.githubPath);
+    await installGitHubPlugins(paths.home);
+  }
 
   return paths;
 }

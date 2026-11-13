@@ -44,6 +44,7 @@ async function useWebApp(input: WebAppInput): Promise<void> {
   const server = await startOwnServer(input.directory, input.agents, {
     noProjects: input.tags.includes('@without-projects'),
     registryOffline: input.tags.includes('@registry-offline'),
+    githubPulls: input.tags.includes('@github-pulls'),
   });
 
   try {
