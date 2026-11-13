@@ -74,9 +74,7 @@ function TaskRow(props: RowProps): ReactElement {
 function TaskText({ shell }: { shell: ShellEntry }): ReactElement {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="secondary-code" numberOfLines={1}>
-        {shellTitle(shell)}
-      </Text>
+      <Text numberOfLines={1}>{shellTitle(shell)}</Text>
     </View>
   );
 }
