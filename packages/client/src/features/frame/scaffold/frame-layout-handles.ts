@@ -1,5 +1,10 @@
 import type { PaneSpan } from '../utils/pane-shift';
-import { contentFloor, listMaximum, railZone } from './frame-layout-measures';
+import {
+  contentFloor,
+  contentMinimum,
+  listMaximum,
+  railZone,
+} from './frame-layout-measures';
 import { inspectorLimit } from './frame-layout-trailing';
 import type {
   FrameLayout,
@@ -29,16 +34,17 @@ function listLimit(
     );
   }
 
-  return Math.max(0, list.width + page.width - contentFloor(measures));
+  return Math.max(0, list.width + page.width - contentFloor(input));
 }
 
 // A divider on a pane's trailing edge, which drags that pane's width.
 const trailingEdge = ({
   offset,
   width,
-}: PaneSpan): Pick<ResizeHandle, 'left' | 'value'> => ({
+}: PaneSpan): Pick<ResizeHandle, 'left' | 'value' | 'gap'> => ({
   left: offset + width,
   value: width,
+  gap: 0,
 });
 
 function listHandle(
@@ -65,21 +71,21 @@ const inspectorHandleLeft = (
   { offset, open, expanded }: InspectorRegion,
 ): number => offset + (!open || expanded ? measures.inset : 0);
 
-// The Inspector keeps beside the page up to the content's floor, and expands once a drag leaves the content less than half of it.
+// The Inspector keeps beside the page until a drag leaves the page its minimum, and expands past that.
 function inspectorHandle(
   input: FrameLayoutInput,
   { page, inspector }: PlacedPanes,
 ): ResizeHandle {
-  const { measures } = input;
-  const pageArea = Math.max(0, input.width - page.offset);
+  const maximum = inspectorLimit(input, page.offset, contentMinimum);
 
   return {
     left: inspectorHandleLeft(input, inspector),
     value: inspector.width,
-    reach: pageArea,
-    minimum: measures.inspectorWidth,
-    maximum: inspectorLimit(input, page.offset),
-    expandAbove: pageArea - contentFloor(measures) / 2,
+    reach: Math.max(0, input.width - page.offset),
+    gap: input.measures.paneGap,
+    minimum: input.measures.inspectorWidth,
+    maximum,
+    expandAbove: maximum,
   };
 }
 
@@ -92,6 +98,10 @@ export function resizeHandles(
     inspector: inspectorHandle(input, panes),
   };
 }
+
+// The page's width beside a pane dragged to `width`, rounded down so the layout never finds the page short of it.
+export const widthBeside = (handle: ResizeHandle, width: number): number =>
+  Math.floor(handle.reach - handle.gap - width);
 
 // Where a drag to `width` leaves its pane: closed, expanded, or at a width the layout keeps.
 export function resizeOutcome(
