@@ -44,7 +44,7 @@ export const secretOf = (token: KeptToken): string =>
     : JSON.stringify(token);
 
 // A secret written as JSON; anything else, a secret from before refresh tokens included, is the bare access token.
-export function tokenFromSecret(secret: string): KeptToken {
+function tokenFromSecret(secret: string): KeptToken {
   try {
     const parsed = KeptToken.safeParse(JSON.parse(secret));
 
