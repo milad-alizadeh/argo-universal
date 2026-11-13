@@ -20,10 +20,10 @@ type RowProps = Pick<ShellListProps, 'onSelect'> & {
 const rowClasses =
   'flex-row items-start gap-2.5 rounded-md p-2 web:hover:bg-hover web:active:bg-pressed web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
 
-// A running Shell is still printing, so its supporting line keeps the output's mono; an ended one reads as prose.
+// The supporting line reads in the same type as an Agent's.
 const supportingProps = (shell: ShellEntry) =>
   ({
-    role: shell.status === 'running' ? 'secondary-code' : 'secondary',
+    role: 'secondary',
     tone: shellOutcome(shell).tone === 'danger' ? 'danger' : 'muted',
     numberOfLines: 1,
   }) as const;
@@ -33,7 +33,7 @@ function RowText({ shell }: { shell: ShellEntry }): JSX.Element {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <Text
-        role="secondary-code"
+        role="body"
         tone={shellPassed(shell) ? 'muted' : 'neutral'}
         numberOfLines={1}
       >
