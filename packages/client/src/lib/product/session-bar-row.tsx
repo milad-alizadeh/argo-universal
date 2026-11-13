@@ -32,10 +32,10 @@ export function SessionBarStrip(props: {
  * none. While the Frame draws the Workbench, the lines are its cards instead (#2012).
  */
 export function SessionBarRow(props: { children: ReactNode }): React.ReactNode {
-  const inWorkbench = useWorkbenchDrawn();
+  const workbenchDrawn = useWorkbenchDrawn();
   const top = useFloatingHeaderHeight();
 
-  if (inWorkbench || !props.children) return null;
+  if (workbenchDrawn || !props.children) return null;
 
   return (
     <View style={{ paddingTop: top }}>

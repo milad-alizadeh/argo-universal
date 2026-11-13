@@ -136,7 +136,7 @@ const withWork = (
   subagents: work.subagents,
 });
 
-// The Session bar's lines are Workbench cards on a wide window, and the layout draws them under a narrow one's header.
+// The Session bar's lines are Workbench cards while the Workbench is drawn, and the layout draws them under the header otherwise.
 const sessionParts = (
   props: OpenSessionViewProps,
   panels: SessionPanels,
@@ -155,16 +155,16 @@ const bandClaim = (
 ): React.JSX.Element => (
   <SessionBandClaim
     {...props.header}
-    workbench={sessionWorkbench(props, panels, workbenchBar(props))}
+    workbench={sessionWorkbench(props, panels, barForWorkbench(props))}
   />
 );
 
 // A preview is the Feed alone, so its Workbench has no Session bar cards either.
-const workbenchBar = (
+const barForWorkbench = (
   props: OpenSessionViewProps,
 ): SessionBarProps | undefined => (props.preview ? undefined : props.bar);
 
-// The Plugins' line under a narrow window's header; a preview is the Feed alone.
+// The Plugins' line under the header while there is no Workbench; a preview is the Feed alone.
 const sessionBar = (props: OpenSessionViewProps): React.ReactNode =>
   props.preview || !props.bar ? null : <SessionBar {...props.bar} />;
 
