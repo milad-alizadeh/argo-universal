@@ -87,3 +87,23 @@ Run `pnpm new:story <component-path>`, then edit what it wrote to match [storybo
   - Assert absence as well as presence; never guard an assertion with `if (found)`.
 - SF Symbols on a Mac: a browser Storybook draws Material Symbols, since only macOS can draw SF Symbols. Run `pnpm storybook:mac [port]` (port 6006 by default) to see the icons the macOS desktop app draws: it attaches to the Storybook on that port, or starts one, and opens it in an Electron window with the desktop app's preload, whose bridge the preview iframe reads through `window.parent` (`apps/desktop/scripts/storybook-mac.mts`). It is a local development tool only: Apple's licence keeps SF Symbols to Apple platforms (ADR-0019), so macOS draws each symbol at runtime, and no SF image reaches the web build, a static Storybook build or any packaged app.
 - Compiler: Storybook compiles Argo's own sources with the React Compiler (`apps/storybook/.storybook/react-compiler.ts`, dependencies excluded), as the App does: `reactCompiler: true` in `apps/universal-app/app.json`, run by babel-preset-expo on every file outside `node_modules`, which includes the workspace packages. Render counts therefore measure what ships, and the kit's row stability (`useRowLayout`, `useFolding`, `useKeptRows`) relies on it. A mock or fixture that reads changing state outside React during render must opt out with `'use no memo'`, because the compiler keeps the first answer of a call on unchanged inputs (`useMemoryFiles` does).
+
+## Screenshots for a PR
+
+A PR that changes how the UI looks carries a before and an after screenshot of each changed state (`AGENTS.md`). Capture the before first, while the tree still draws the old look; when the change is already made, capture it from a worktree at the merge base.
+
+Other checkouts serve Storybooks on this Mac, so pick a port nothing listens on (`lsof -nP -iTCP:<port> -sTCP:LISTEN` prints nothing) and shoot the story's iframe, which draws the story without Storybook's chrome:
+
+```sh
+pnpm --filter @repo/storybook exec storybook dev -p <port> --exact-port --ci
+pnpm --filter @repo/storybook exec playwright screenshot --viewport-size "1280,800" \
+  --wait-for-selector "#storybook-root > *" --wait-for-timeout 1000 \
+  "http://localhost:<port>/iframe.html?id=<story-id>&viewMode=story" /tmp/<name>-after.png
+```
+
+- `--exact-port --ci` makes Storybook exit when the port is taken; without them it waits on a prompt while the screenshot shoots the other checkout's Storybook.
+- The two waits hold the shot until the story has drawn; without them it is Storybook's loading spinner. Open each image and check it shows the story.
+- `<story-id>` is the `id` in `http://localhost:<port>/index.json`.
+- Shoot the story that shows the changed state at the width where it changes: 390 wide for a phone, 1280 for a wide window. When no story shows the state, write one first.
+- Write the images outside the checkout, then upload them with `gh pr create --attach` or `gh pr edit --attach`, with the before above the after.
+- Stop your Storybook by the PID listening on your port (`lsof -nP -t -iTCP:<port> -sTCP:LISTEN`), since a `pkill` by name can end another checkout's.
