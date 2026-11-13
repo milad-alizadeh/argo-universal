@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { completedRead, readMocks } from '../tool-call.mocks';
 import { ToolCallRow } from './tool-call-row';
+import { commandWithoutOutput } from './tool-call-row-fixtures';
 
 const meta = {
   title: 'Tests/Feed/ToolCallRow',
@@ -89,3 +90,18 @@ export const ReadFileWideDark: Story = { ...ReadFileWide, ...dark };
 export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
 
 export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
+
+// A command with no output yet shows its command line, not its raw input (#2044).
+export const CommandWithoutOutput: Story = {
+  args: commandWithoutOutput,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(
+      canvas.getByRole('button', { name: /^Verify the build/ }),
+    );
+    await expect(canvas.getByText('Shell')).toBeVisible();
+    await expect(canvas.getByText(/\$ pnpm verify/)).toBeVisible();
+    await expect(canvas.queryByText('Input')).not.toBeInTheDocument();
+    await expect(canvas.queryByText(/timeout/)).not.toBeInTheDocument();
+  },
+};

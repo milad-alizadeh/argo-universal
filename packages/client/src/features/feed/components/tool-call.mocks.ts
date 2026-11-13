@@ -1,5 +1,5 @@
 import type { SessionSnapshot, ToolCallUpdate } from '@repo/contracts';
-import { recordedFeedMocks } from '@repo/mocks/app';
+import { recordedFeedMocks, recordedReports } from '@repo/mocks/app';
 import type { FeedGroup } from '../view/feed-view';
 import {
   type Exploration,
@@ -142,3 +142,15 @@ export const completedRead =
 export const runningRead =
   runningRow(streamedRows(recordedFeedMocks), completedRead.toolCallId) ??
   missingRecordedState('a running file read');
+
+// A Tool call from the scripted report recording, by its id.
+export function recordedToolCall(toolCallId: string): ToolCallUpdate {
+  return required(
+    recordedReports.parent.find(
+      (row): row is ToolCallUpdate =>
+        row.sessionUpdate === 'tool_call_update' &&
+        row.toolCallId === toolCallId,
+    ),
+    `the scripted Tool call ${toolCallId}`,
+  );
+}

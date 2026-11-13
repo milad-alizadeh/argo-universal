@@ -1,22 +1,25 @@
 import type { ToolCallUpdate } from '@repo/contracts';
-import { recordedReports } from '@repo/mocks/app';
-import type { FeedGroup } from '../../view/feed-view';
-import { toolCallGroupMock } from '../tool-call.mocks';
+import type { FeedActivity, FeedGroup } from '../../view/feed-view';
+import { recordedToolCall, toolCallGroupMock } from '../tool-call.mocks';
 
-export function genericGroup(toolCallId: string): FeedGroup {
-  const recorded = recordedReports.parent.find(
-    (row): row is ToolCallUpdate =>
-      row.sessionUpdate === 'tool_call_update' && row.toolCallId === toolCallId,
-  );
+const toolCallActivity = (row: ToolCallUpdate): FeedActivity => ({
+  type: 'tool_call',
+  row,
+  awaitingApproval: false,
+});
 
-  if (!recorded)
-    throw new Error('Scripted recording needs a generic Tool call');
-  const row = recorded;
+// An open group whose live Tool call comes after any earlier calls.
+export function genericGroup(
+  liveId: string,
+  ...earlierIds: string[]
+): FeedGroup {
+  const live = recordedToolCall(liveId);
+  const rows = [...earlierIds.map(recordedToolCall), live];
 
   return {
     ...toolCallGroupMock.running,
     state: 'open',
-    live: { toolCall: row, awaitingApproval: false },
-    items: [{ type: 'tool_call', row, awaitingApproval: false }],
+    live: { toolCall: live, awaitingApproval: false },
+    items: rows.map(toolCallActivity),
   };
 }
