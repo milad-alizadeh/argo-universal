@@ -14,7 +14,7 @@ type Input = LoaderInput;
 
 type To = PageTo;
 
-// What every Issues page draws in its sidebar: each Project's group, and the Project the page is for.
+// What every Issues page draws in its sidebar: each Project's section, and the Project the page is for.
 type RootData = { sidebar: Sidebar; selected?: SidebarSelection };
 
 /*
@@ -53,7 +53,7 @@ const issueLanding = (
 });
 
 const rootPage = (data: RootData, to: To): JSX.Element => (
-  <RootPage rows={sidebar(data, to)} />
+  <RootPage rows={sidebarRows(data, to)} />
 );
 
 const issuePage = (
@@ -61,13 +61,16 @@ const issuePage = (
   to: To,
   { params }: Pick<Input, 'params'>,
 ): JSX.Element => (
-  <RootPage rows={sidebar(data, to)} detail={issueDetail(data, to, params)} />
+  <RootPage
+    rows={sidebarRows(data, to)}
+    detail={issueDetail(data, to, params)}
+  />
 );
 
 const projectOf = ({ params }: Pick<Input, 'params'>): string =>
   pathText(params.project ?? '');
 
-// Every Project's group, and the Project the page is for; a pull reads them again.
+// Every Project's section, and the Project the page is for; a pull reads them again.
 async function loadRoot(
   deps: IssueDeps,
   { read }: Input,
@@ -81,7 +84,7 @@ async function loadRoot(
   };
 }
 
-const sidebar = ({ sidebar, selected }: RootData, to: To): JSX.Element => (
+const sidebarRows = ({ sidebar, selected }: RootData, to: To): JSX.Element => (
   <RootRows sidebar={sidebar} selected={selected} onRefresh={to.set({})} />
 );
 

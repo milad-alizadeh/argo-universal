@@ -61,7 +61,7 @@ function filterPage(deps: IssueDeps): GatedPage<FilterState, PageData, Issue> {
   };
 }
 
-// The filter's own data, and every Project's group beside it.
+// The filter's own data, and every Project's section beside it.
 type PageData = { data: FilterData; sidebar: Sidebar };
 
 async function loadPage(

@@ -176,21 +176,23 @@ const expandedAttribute = 'aria-expanded';
 export const CollapsibleFolds: Story = {
   render: () => (
     <List>
-      <List.Section title="Folding group" collapsible>
+      <List.Section title="Folding section" collapsible>
         <ListItem title="Folded row" />
       </List.Section>
-      <List.Section title="Fixed group">
+      <List.Section title="Fixed section">
         <ListItem title="Fixed row" />
       </List.Section>
     </List>
   ),
   play: async ({ canvas, userEvent }) => {
-    const toggle = await canvas.findByRole('button', { name: 'Folding group' });
+    const toggle = await canvas.findByRole('button', {
+      name: 'Folding section',
+    });
 
     await expect(toggle).toHaveAttribute(expandedAttribute, 'true');
     await expect(canvas.getByText(foldedRow)).toBeVisible();
     await expect(
-      canvas.queryByRole('button', { name: 'Fixed group' }),
+      canvas.queryByRole('button', { name: 'Fixed section' }),
     ).toBeNull();
 
     await userEvent.click(toggle);

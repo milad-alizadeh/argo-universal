@@ -117,7 +117,7 @@ export const compactList = {
 // Sections whose titles fold their rows, after an open or closed folder.
 const collapsibleChildren = (
   <>
-    <List.Section key="one" title="Group one" collapsible>
+    <List.Section key="one" title="Section one" collapsible>
       <ListItem
         key="a"
         title="Item one"
@@ -134,7 +134,7 @@ const collapsibleChildren = (
         onPress={onSelect}
       />
     </List.Section>
-    <List.Section key="two" title="Group two" collapsible>
+    <List.Section key="two" title="Section two" collapsible>
       <ListItem
         key="c"
         title="Item three"

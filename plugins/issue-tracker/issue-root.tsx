@@ -6,7 +6,7 @@ import { builtInFilters, labelFilter, type IssueFilter } from './issue-filters';
 import { filterPath } from './issue-paths';
 import { loadingIssues } from './loading-issues';
 import type { Overview } from './overview';
-import type { ProjectGroup, Sidebar, SidebarSelection } from './sidebar';
+import type { ProjectSection, Sidebar, SidebarSelection } from './sidebar';
 
 type RootView = {
   project: Project;
@@ -47,7 +47,7 @@ export type RootRowsProps = {
 };
 
 /*
- * One folding group per Project with a Tracker, as the Sessions list groups its Sessions: GitHub's own ways to list
+ * One folding List section per Project with a Tracker, as the Sessions list groups its Sessions: GitHub's own ways to list
  * its Issues, by status and by you, then its labels under one row.
  */
 export function RootRows(props: RootRowsProps): JSX.Element {
@@ -58,16 +58,16 @@ export function RootRows(props: RootRowsProps): JSX.Element {
       empty={<EmptyState title={sidebar.message || loadingIssues} />}
       onRefresh={props.onRefresh}
     >
-      {sidebar.groups.map((group) =>
-        projectSection(group, viewOf(group, props.selected)),
+      {sidebar.sections.map((section) =>
+        projectSection(section, viewOf(section, props.selected)),
       )}
     </List>
   );
 }
 
-// A group's rows, with the page's filter selected when the page is for its Project.
+// A section's rows, with the page's filter selected when the page is for its Project.
 const viewOf = (
-  { project, overview }: ProjectGroup,
+  { project, overview }: ProjectSection,
   selected: SidebarSelection | undefined,
 ): RootView => ({
   project,
@@ -75,17 +75,17 @@ const viewOf = (
   selected: selected?.projectId === project.id ? selected.filterId : undefined,
 });
 
-// A group's footer says why its overview could not be read.
-function projectSection(group: ProjectGroup, view: RootView): JSX.Element {
+// A section's footer says why its overview could not be read.
+function projectSection(section: ProjectSection, view: RootView): JSX.Element {
   return (
     <List.Section
-      key={group.project.id}
-      title={group.project.name}
-      footer={group.message || undefined}
+      key={section.project.id}
+      title={section.project.name}
+      footer={section.message || undefined}
       collapsible
     >
       {builtInFilters().map((filter) => filterRow(view, filter))}
-      {labelsRow(view, group.overview?.labels)}
+      {labelsRow(view, section.overview?.labels)}
     </List.Section>
   );
 }
