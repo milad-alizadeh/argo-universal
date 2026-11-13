@@ -102,6 +102,16 @@ export const ASavedNameCannotBeAddedAgain: Story = {
   },
 };
 
+export const ANameWithASpaceCannotBeAdded: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.type(
+      canvas.getByPlaceholderText(namePlaceholder),
+      'NO COLOR',
+    );
+    await expect(canvas.getByRole('button', { name: addLabel })).toBeDisabled();
+  },
+};
+
 export const AMissingAgentSaysSo: Story = {
   args: { title: 'old-agent', agent: { status: 'missing' } },
   play: async ({ canvas }) => {

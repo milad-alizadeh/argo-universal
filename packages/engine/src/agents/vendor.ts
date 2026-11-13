@@ -10,7 +10,7 @@ const environment = new Map<string, Readonly<Record<string, string>>>([
 ]);
 
 // What an Agent's saved launch environment starts as when the user installs it; the user may change or clear it.
-const seeds = new Map<string, Readonly<Record<string, string>>>([
+const installSeeds = new Map<string, Readonly<Record<string, string>>>([
   // Claude Code gives its current models no task tools without the flag, so it reports no Plan.
   [vendorRegistryIds.claude, { CLAUDE_CODE_ENABLE_TODO_TOOLS: '1' }],
   // Codex keeps `update_plan` off unless its config turns it on, so it reports no Plan.
@@ -22,7 +22,7 @@ const seeds = new Map<string, Readonly<Record<string, string>>>([
 
 export const seededEnvironment = (
   registryId: string,
-): Readonly<Record<string, string>> => seeds.get(registryId) ?? {};
+): Readonly<Record<string, string>> => installSeeds.get(registryId) ?? {};
 
 // Terminal sign-in output that means success before the program exits, by Agent then method (Zed `conversation_view.rs`).
 const terminalSuccess = new Map<

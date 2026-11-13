@@ -22,9 +22,11 @@ type NewVariable = {
   onAdd: (() => void) | undefined;
 };
 
-// A name is whatever the shell would take before `=`; one already saved is edited in its own section.
+// A name the shell would take before `=`, and one a plain record can hold; one already saved is edited in its own section.
+const unusable = /[\s=]|^$|^__proto__$/;
+
 const usableName = (env: AgentServerEnvironment, name: string): boolean =>
-  name !== '' && !name.includes('=') && !Object.hasOwn(env, name);
+  !unusable.test(name) && !Object.hasOwn(env, name);
 
 export function useNewVariable(
   env: AgentServerEnvironment,
