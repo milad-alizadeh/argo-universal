@@ -51,5 +51,7 @@ export const Missing: Story = {
 };
 
 export const SignedOut: Story = { args: { plugin: signedOutPlugin } };
+
 export const SignedIn: Story = { args: { plugin: signedInPlugin } };
+
 export const Stopped: Story = { args: { plugin: stoppedPlugin } };

@@ -1,8 +1,22 @@
 import { PluginSignInDetailScreen } from '@repo/client';
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import type * as React from 'react';
+import { z } from 'zod';
+
+const SignInParams = z.object({
+  id: z.string().min(1),
+  page: z.string().startsWith('/'),
+});
 
 export default function PluginSignInRoute(): React.JSX.Element {
-  const { id, page } = useLocalSearchParams<{ id: string; page: string }>();
-  return <PluginSignInDetailScreen pluginId={id} page={page} />;
+  const params = SignInParams.safeParse(useLocalSearchParams());
+
+  return params.success ? (
+    <PluginSignInDetailScreen
+      pluginId={params.data.id}
+      page={params.data.page}
+    />
+  ) : (
+    <Redirect href="/settings/plugins" />
+  );
 }

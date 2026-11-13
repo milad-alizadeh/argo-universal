@@ -219,9 +219,10 @@ export const SignedInOpensAccount: Story = {
     await expect(args.onOpenSignIn).not.toHaveBeenCalled();
   },
 };
+
 export const StoppedStillOffersSignIn: Story = {
   args: { plugin: stoppedPlugin },
-  play: async ({ args, canvas }) => {
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('link', { name: 'api.github.com, Sign in' }),
     ).toBeVisible();

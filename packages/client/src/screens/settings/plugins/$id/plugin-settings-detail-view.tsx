@@ -73,7 +73,7 @@ function pluginSections(
   return (
     <>
       {enabledSection(plugin, props.onEnabledChange)}
-      {accountSections(plugin, props)}
+      {accountSections(plugin.accounts, props)}
       {settingSections(plugin, props.onSettingChange)}
     </>
   );
@@ -115,21 +115,34 @@ const settingSections = (
     }),
   );
 
+type AccountLinks = Pick<BodyProps, 'onOpenAccount' | 'onOpenSignIn'>;
+
 const accountSections = (
-  plugin: LoadedPlugin,
-  props: BodyProps,
+  accounts: readonly PluginSignInRow[],
+  links: AccountLinks,
 ): React.JSX.Element | null =>
-  plugin.accounts.length === 0 ? null : (
+  accounts.length === 0 ? null : (
     <FieldGroup.Section>
-      {plugin.accounts.map(({ host, page, account }) => (
-        <FieldGroup.Link
-          key={account?.id ?? host}
-          title={host}
-          value={account ? `Signed in as ${account.label}` : 'Sign in'}
-          onPress={() =>
-            account ? props.onOpenAccount(account.id) : props.onOpenSignIn(page)
-          }
-        />
-      ))}
+      {accounts.map((row) => accountRow(row, links))}
     </FieldGroup.Section>
   );
+
+const accountRow = (
+  { host, page, account }: PluginSignInRow,
+  links: AccountLinks,
+): React.JSX.Element => (
+  <FieldGroup.Link
+    key={account ? account.id : host}
+    title={host}
+    value={account ? `Signed in as ${account.label}` : 'Sign in'}
+    onPress={() => openAccountRow({ host, page, account }, links)}
+  />
+);
+
+function openAccountRow(
+  { page, account }: PluginSignInRow,
+  links: AccountLinks,
+): void {
+  if (account) links.onOpenAccount(account.id);
+  else links.onOpenSignIn(page);
+}
