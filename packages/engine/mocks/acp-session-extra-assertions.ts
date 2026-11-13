@@ -118,8 +118,12 @@ const expectAcpState = (snapshot: AcpModelSnapshot, lease: Lease): void => {
   expectIdle(snapshot, lease);
 };
 
-const expectStorageFailure = (step: ModelStep): void => {
-  if (step.event.type !== 'session.storageFailing') return;
+const expectEarlyTurnEnd = (step: ModelStep): void => {
+  if (
+    step.event.type !== 'session.storageFailing' &&
+    step.event.type !== 'session.serverStopping'
+  )
+    return;
   expect(
     step.state.matches({ open: { acp: { activeTurn: 'cancelling' } } }),
   ).toBe(true);
@@ -147,7 +151,7 @@ export function checkModelPaths(
   for (const path of paths)
     for (const step of path.steps) {
       expectAcpState(step.state, lease);
-      expectStorageFailure(step);
+      expectEarlyTurnEnd(step);
       expectCheckoutTimeout(step, limit);
       expectFeedTimeout(step);
     }

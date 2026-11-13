@@ -32,11 +32,11 @@ type Story = StoryObj<typeof meta>;
  * offers no Subagent Feed drops the chevron and the button, which is the opener's absence.
  */
 
-// The spawn: the Subagent's role avatar leads, and the prompt it began on follows underneath.
+// The spawn, led by the Agent's role mark as every action is.
 export const Started: Story = { args: startedSubagent };
 
-// A message to the Subagent, led by the message bubble.
+// A message to the Agent, without its words.
 export const Messaged: Story = { args: messagedSubagent };
 
-// The Subagent's reply, led by the reply arrow.
+// The Agent's reply, without its words.
 export const Replied: Story = { args: repliedSubagent };

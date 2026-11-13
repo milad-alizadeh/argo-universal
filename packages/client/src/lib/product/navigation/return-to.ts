@@ -32,11 +32,11 @@ function decoded(link: string): string | undefined {
   }
 }
 
-// An address inside the App, which the router can go to; a link out of it is no page to go back to.
+// An address inside the App, which the router can go to; a link out of it (`https:`, `//host`) is no page to go back to.
 type AppPath = Extract<Href, string>;
 
 const isAppPath = (link: string | undefined): link is AppPath =>
-  link?.startsWith('/') ?? false;
+  /^\/(?!\/)/u.test(link ?? '');
 
 const carriedLink = ({ returnTo }: Carried = {}): string | undefined =>
   typeof returnTo === 'string' ? decoded(returnTo) : undefined;

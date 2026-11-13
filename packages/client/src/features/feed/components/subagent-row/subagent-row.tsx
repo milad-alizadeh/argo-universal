@@ -1,17 +1,14 @@
-import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
 import { TextClassContext } from '@repo/kit/primitives/content/text';
 import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { subagentRoleMark } from '../../../../lib/product/subagents/subagent-role';
-import type { FeedSubagent } from '../../view/feed-view';
 import {
-  rowColour,
-  rowLabel,
-  SpawnPrompt,
-  SubagentLine,
-} from './subagent-line';
+  subagentMarkLabel,
+  subagentRoleMark,
+} from '../../../../lib/product/subagents/subagent-role';
+import type { FeedSubagent } from '../../view/feed-view';
+import { rowColour, rowLabel, SubagentLine } from './subagent-line';
 
 export interface SubagentRowProps {
   item: FeedSubagent;
@@ -19,18 +16,14 @@ export interface SubagentRowProps {
   onOpen?: (subagentSessionId: string) => void;
 }
 
-// A Messaged row leads with the message bubble, a Replied row with the reply arrow.
-const markIcons = { messaged: 'message', replied: 'reply' } as const;
-
-// The leading slot is one line box wide at every kind, so the three rows share a lane.
-function SubagentLead({ item }: { item: FeedSubagent }): React.JSX.Element {
-  if (item.kind === 'started')
-    return <TintedAvatar {...subagentRoleMark(item.role)} size="inline" />;
-
+// Every action leads with the Agent's role mark, the one its Inspector and Workbench rows draw, sized to the line.
+function SubagentLead({ role }: Pick<FeedSubagent, 'role'>): React.JSX.Element {
   return (
-    <IconSlot size="md">
-      <Icon name={markIcons[item.kind]} size="sm" />
-    </IconSlot>
+    <TintedAvatar
+      {...subagentRoleMark(role)}
+      accessibilityLabel={subagentMarkLabel(role)}
+      size="inline"
+    />
   );
 }
 
@@ -39,16 +32,13 @@ interface RowBodyProps {
   opens: boolean;
 }
 
-// The avatar or mark leads the line of words; a Started row's prompt follows underneath.
+// The mark leads one line of words.
 function RowBody({ item, opens }: RowBodyProps): React.JSX.Element {
   return (
-    <>
-      <View className="flex-row items-center gap-1.5">
-        <SubagentLead item={item} />
-        <SubagentLine item={item} opens={opens} />
-      </View>
-      <SpawnPrompt item={item} />
-    </>
+    <View className="flex-row items-center gap-1.5">
+      <SubagentLead role={item.role} />
+      <SubagentLine item={item} opens={opens} />
+    </View>
   );
 }
 
