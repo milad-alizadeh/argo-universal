@@ -30,4 +30,6 @@ export type { FeedViewItem } from './view/feed-view';
 
 export { FileHeader as DiffFileHeader } from './components/diff-view/diff-file-header';
 
+export { isDeleted as isDeletedFile } from './components/diff-view/diff-deleted-pill';
+
 export { permissionDetails } from './view/permission-details';

@@ -3,7 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { DiffFileHeader } from '#features/feed';
+import { DiffFileHeader, isDeletedFile } from '#features/feed';
 import { type ChangesItem, isDiffItem } from '../../view/changes-items';
 import type {
   ChangedFile,
@@ -134,21 +134,18 @@ function statusText(text: string, tone: 'danger' | 'muted'): React.JSX.Element {
   );
 }
 
-// Git shows every line of a deleted text file, so a deleted one with no removed lines was empty.
-const deletedTextDiff = (file: ChangedFile): string | undefined =>
-  file.removed === 0 ? 'Empty file deleted' : undefined;
-
-function deletedDiffText(file: ChangedFile): string | undefined {
-  if (file.operation !== 'delete') return undefined;
-
-  return file.binary ? 'Binary file deleted' : deletedTextDiff(file);
-}
-
-const keptDiffText = (file: ChangedFile): string =>
+const noLinesText = (file: ChangedFile): string =>
   file.binary ? "Binary file, can't be previewed" : 'No lines to show';
 
+// Git counts every line of a deleted text file as removed, so one with none removed was empty.
+function deletedFileText(file: ChangedFile): string {
+  if (file.binary) return 'Binary file deleted';
+
+  return file.removed === 0 ? 'Empty file deleted' : noLinesText(file);
+}
+
 const emptyDiffText = (file: ChangedFile): string =>
-  deletedDiffText(file) ?? keptDiffText(file);
+  isDeletedFile(file) ? deletedFileText(file) : noLinesText(file);
 
 // Drawn under an opened file whose load failed or that has no lines to show.
 function StatusRow({
