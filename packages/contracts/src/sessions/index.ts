@@ -10,6 +10,8 @@ export * from './cancel';
 
 export * from './change';
 
+export * from './change-files';
+
 export * from './changes';
 
 export * from './close';

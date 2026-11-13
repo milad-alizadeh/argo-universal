@@ -3,7 +3,7 @@ import type { FixturePull, GitHubFixture } from './github-fixture';
 
 export type Held = Pick<
   GitHubFixture,
-  'pulls' | 'accepted' | 'parents' | 'failWith'
+  'pulls' | 'files' | 'accepted' | 'parents' | 'failWith'
 >;
 
 const notFound = 404;
@@ -20,6 +20,22 @@ function pullAnswer({ pulls }: Held, path: string): FixtureAnswer {
   const pull = pulls.get(`${repository}#${number}`);
 
   return pull ? { json: pull } : refusal('Not Found', notFound);
+}
+
+export const filesPath =
+  /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)\/files(?:\?(.*))?$/;
+
+// GitHub's pages of a pull request's files; `per_page` and `page` choose the slice, and no files are an empty page.
+function filesAnswer(
+  { files }: Held,
+  [, repository, number, query]: RegExpExecArray,
+): FixtureAnswer {
+  const params = new URLSearchParams(query ?? '');
+  const size = Number(params.get('per_page') ?? 30);
+  const page = Number(params.get('page') ?? 1);
+  const all = files.get(`${repository}#${number}`) ?? [];
+
+  return { json: all.slice((page - 1) * size, page * size) };
 }
 
 export const listPath = /^\/repos\/([^/]+\/[^/?]+)\/pulls\?(.*)$/;
@@ -73,6 +89,10 @@ function repoAnswer(held: Held, repository: string): FixtureAnswer {
 }
 
 function route(held: Held, path: string): FixtureAnswer {
+  const filed = filesPath.exec(path);
+
+  if (filed) return filesAnswer(held, filed);
+
   const listed = listPath.exec(path);
 
   if (listed) return listAnswer(held, String(listed[1]), String(listed[2]));

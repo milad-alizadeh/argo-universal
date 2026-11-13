@@ -41,5 +41,36 @@ declare module '@argo/plugin-kit' {
         "session"
       ]
     };
+    files: {
+      "params": {
+        "reference": {
+          "type": "string",
+          "required": true
+        },
+        "cursor": {
+          "type": "number"
+        }
+      },
+      "caller": [
+        "project",
+        "session"
+      ]
+    };
+    diff: {
+      "params": {
+        "reference": {
+          "type": "string",
+          "required": true
+        },
+        "path": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "caller": [
+        "project",
+        "session"
+      ]
+    };
   }
 }

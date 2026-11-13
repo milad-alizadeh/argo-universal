@@ -3,13 +3,13 @@ import { changeOf, type ChangeItem } from './pull-change';
 import { readLinks, type ChangesSource, type LinkRead } from './pull-changes';
 import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { fetchPull } from './pull-reads';
-import { parseReference } from './pull-reference';
+import { parseReference, type PullReference } from './pull-reference';
 
 type ProjectInfo = Awaited<ReturnType<Argo['projects']['list']>>[number];
 
 type Caller = { projectId: string; sessionId: string };
 
-type Scope = Pick<Argo, 'projects' | 'sessions' | 'fetch' | 'changed'> &
+export type Scope = Pick<Argo, 'projects' | 'sessions' | 'fetch' | 'changed'> &
   Pick<ChangesSource, 'store'>;
 
 async function projectOf(
@@ -42,6 +42,15 @@ async function checkoutOf(
 
 const originOf = async (scope: Scope, caller: Caller): Promise<string | null> =>
   (await checkoutOf(scope, caller)).originUrl;
+
+// The pull request a reference names for the caller's Session, a bare number meaning the Project's own repository.
+export async function namedOf(
+  scope: Scope,
+  reference: string,
+  caller: Caller,
+): Promise<PullReference> {
+  return parseReference(reference, await originOf(scope, caller));
+}
 
 /*
  * Looks for the pull requests of the Session's current branch and stores them, in the repository each one targets.

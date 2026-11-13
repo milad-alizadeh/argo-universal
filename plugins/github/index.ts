@@ -4,6 +4,8 @@ import {
   readLinks,
   type ChangesSource,
 } from './pull-changes';
+import { diffOf, filesOf, type FileSource } from './pull-file-operations';
+import { defineFilesReads } from './pull-files';
 import { attach, detach, discoverFor, list } from './pull-operations';
 import { definePullReads } from './pull-reads';
 import { createPullStore } from './pull-store';
@@ -28,6 +30,21 @@ function registerChanges(argo: Argo, source: ChangesSource): void {
   );
 }
 
+function registerFiles(argo: Argo, source: ChangesSource): void {
+  const reading: FileSource = {
+    ...source,
+    files: defineFilesReads(argo),
+    scope: { ...argo, store: source.store },
+  };
+
+  argo.operations.register('files', (params, caller) =>
+    filesOf(reading, params, caller),
+  );
+  argo.operations.register('diff', (params, caller) =>
+    diffOf(reading, params, caller),
+  );
+}
+
 function registerOperations(argo: Argo, source: ChangesSource): void {
   argo.operations.register('attach', async ({ reference }, caller) => ({
     attached: true,
@@ -47,5 +64,6 @@ export function register(argo: Argo): void {
   const source = sourceOf(argo);
 
   registerOperations(argo, source);
+  registerFiles(argo, source);
   registerChanges(argo, source);
 }

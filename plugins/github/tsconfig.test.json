@@ -5,6 +5,7 @@
     "github-fixture-rest.ts",
     "github-fixture.ts",
     "journey-calls.ts",
+    "journey-files.ts",
     "journey-fixture.ts",
     "plugin.gen.d.ts",
     "vitest.config.ts"

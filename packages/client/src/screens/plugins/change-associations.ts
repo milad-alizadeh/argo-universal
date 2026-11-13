@@ -4,7 +4,7 @@ import type { OperationRunner } from './page-calls-ports';
 import type { ChangesContext } from './use-session-pull-requests';
 
 // The Plugin that supplies PR-backed Changes, and so the one whose Operations connect a Session to them.
-const pluginId = 'github';
+export const changesPluginId = 'github';
 
 type Association = {
   operation: 'attach' | 'detach';
@@ -18,7 +18,12 @@ async function run(
   { operation, scope, reference }: Association,
 ): Promise<boolean> {
   try {
-    await runner.run({ pluginId, operation, args: { reference }, ...scope });
+    await runner.run({
+      pluginId: changesPluginId,
+      operation,
+      args: { reference },
+      ...scope,
+    });
 
     return true;
   } catch (cause) {

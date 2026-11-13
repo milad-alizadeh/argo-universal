@@ -5,6 +5,7 @@ import {
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
 import {
+  filesPath,
   listPath,
   pullPath,
   refusal,
@@ -28,9 +29,21 @@ export type FixturePull = {
   base: { ref: string; repo: { full_name: string } };
 };
 
+// One changed file as GitHub lists a pull request's files; `patch` is absent for a binary or very large file.
+export type FixtureFile = {
+  filename: string;
+  status: 'added' | 'removed' | 'modified' | 'renamed';
+  additions: number;
+  deletions: number;
+  patch?: string;
+  previous_filename?: string;
+};
+
 export type GitHubFixture = FixtureServices & {
   // The pull requests GitHub knows, by `owner/repository#number`.
   pulls: Map<string, FixturePull>;
+  // The files each pull request changes, by `owner/repository#number`.
+  files: Map<string, FixtureFile[]>;
   // Every token GitHub accepts; empty means every call is a 401.
   accepted: Set<string>;
   // Set to make every call to `api.github.com` fail with this status, once signed in.
@@ -40,6 +53,8 @@ export type GitHubFixture = FixtureServices & {
   // Calls asking which pull requests a branch has.
   listReads: () => FixtureRequest[];
   pullReads: () => FixtureRequest[];
+  // Calls listing a pull request's files.
+  fileReads: () => FixtureRequest[];
 };
 
 export const sha = '0123456789abcdef0123456789abcdef01234567';
@@ -120,6 +135,7 @@ const handle =
 
 const heldOf = (): Held => ({
   pulls: new Map(),
+  files: new Map(),
   accepted: new Set(['token-1']),
   parents: new Map(),
   failWith: { status: null },
@@ -141,5 +157,6 @@ export async function githubFixture(): Promise<GitHubFixture> {
     ...held,
     listReads: reads(listPath),
     pullReads: reads(pullPath),
+    fileReads: reads(filesPath),
   };
 }

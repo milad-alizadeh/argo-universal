@@ -83,6 +83,7 @@ const changesBody = (
     changesRequest={tab.requested}
     selection={content.changeSelection}
     actions={content.changeActions}
+    changeFiles={content.changeFiles}
   />
 );
 

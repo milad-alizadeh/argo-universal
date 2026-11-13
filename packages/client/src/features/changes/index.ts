@@ -13,4 +13,9 @@ export { initialChangesState } from './state/changes-state';
 
 export type { ChangesRevision, ChangesSource } from './source/changes-source';
 
+export {
+  type RemoteChange,
+  remoteChanges,
+} from './source/use-remote-changes-query';
+
 export type { ChangesViewProps } from './view/changes-view-props';

@@ -35,13 +35,15 @@ const stateOf = (change: Change): ChangeState => {
     : { stage: 'open' };
 };
 
-// The branches GitHub named, where it did.
+// The branches GitHub named, where it did, and the commit the PR's head is at.
 const branchesOf = ({
   branch,
   base,
-}: Change): Pick<SessionPullRequest, 'branch' | 'base'> => ({
+  head,
+}: Change): Pick<SessionPullRequest, 'branch' | 'base' | 'head'> => ({
   ...(branch && { branch }),
   ...(base && { base }),
+  ...(head && { head }),
 });
 
 const totalsOf = ({ totals }: Change): Pick<SessionPullRequest, 'summary'> =>

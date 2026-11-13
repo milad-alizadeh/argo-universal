@@ -75,6 +75,60 @@
         "tier": "read",
         "keywords": ["github", "pull request", "pr", "change", "session"],
         "caller": ["project", "session"]
+      },
+      {
+        "name": "files",
+        "label": "Read the files of an attached pull request",
+        "description": "Read one page of the files a pull request attached to the calling Session changes, against that pull request's own base and head on GitHub, never the Session's Checkout. Answers the files, the pull request's totals and the cursor of the next page.",
+        "tier": "read",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "files",
+          "diff",
+          "session"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "cursor": {
+            "type": "number",
+            "description": "The page to read, as the previous answer's nextCursor; the first when absent."
+          }
+        },
+        "caller": ["project", "session"]
+      },
+      {
+        "name": "diff",
+        "label": "Read one file's patch of an attached pull request",
+        "description": "Read the patch of one file a pull request attached to the calling Session changes, as a git patch against that pull request's own base, never the Session's Checkout.",
+        "tier": "read",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "file",
+          "diff",
+          "patch",
+          "session"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The file's path in the pull request.",
+            "required": true
+          }
+        },
+        "caller": ["project", "session"]
       }
     ]
   },

@@ -13,6 +13,8 @@ export type SessionPullRequest = ChangeState & {
   // The PR's branch and the one it merges into.
   branch?: string;
   base?: string;
+  // The PR's head commit, which a push moves; what its files were read at.
+  head?: string;
   number: number;
   title: string;
   checks?: PullRequestChecksProps;

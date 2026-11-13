@@ -1,5 +1,6 @@
 import type { useSessionFeed } from '#features/feed';
 import { useChangeAssociations } from '../../plugins/use-change-associations';
+import { useChangeFiles } from '../../plugins/use-change-files';
 import {
   type ChangesContext,
   useSessionPullRequests,
@@ -28,5 +29,6 @@ export function useWithSessionPullRequests(
     props,
     useSessionPullRequests(context),
     useChangeAssociations(context),
+    useChangeFiles(context),
   );
 }

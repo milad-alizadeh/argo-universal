@@ -241,6 +241,14 @@ export {
   useChangeSelection,
 } from './hooks/use-change-selection';
 
+export { SessionChangeFilesUnavailable } from './components/session-change-files-unavailable';
+
+export {
+  changeKey,
+  changeName,
+  findChange,
+} from './components/change-identity';
+
 export { SessionRow } from './components/session-row/session-row';
 
 export {

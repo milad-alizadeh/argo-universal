@@ -3,6 +3,7 @@ import type {
   SessionHeaderProps,
   SessionPullRequest,
 } from '#features/sessions';
+import type { ChangeFilesSource } from '../../plugins/change-files';
 import type { SessionDetailViewProps } from './session-detail-view';
 
 // The header the Workbench and Inspector read their Changes from, with the Plugins' Changes in it.
@@ -17,6 +18,7 @@ export function withSessionPullRequests(
   props: SessionDetailViewProps,
   pullRequests: SessionPullRequest[],
   changeActions?: ChangeActions,
+  changeFiles?: ChangeFilesSource,
 ): SessionDetailViewProps {
   if (props.state !== 'open') return props;
 
@@ -24,5 +26,5 @@ export function withSessionPullRequests(
 
   if (header === props.header) return props;
 
-  return { ...props, header, changeActions };
+  return { ...props, header, changeActions, changeFiles };
 }
