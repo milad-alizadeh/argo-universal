@@ -10,11 +10,12 @@ import { labelRead } from './device-http';
 import {
   ended,
   expired,
+  unnamed,
   pollOnce,
   type Device,
   type Polled,
 } from './device-poll';
-import { stored, tokenSource, type KeptToken } from './device-token';
+import { secretOf, tokenLender, type KeptToken } from './device-token';
 import { sleep } from './scheduler';
 
 const slowDownMs = 5000;
@@ -36,18 +37,17 @@ async function finish(
   { argo, options }: Attempt,
   token: KeptToken,
 ): Promise<DeviceFlowState> {
-  const read = labelRead(argo.fetch, token.access, options.label);
-  const { label, status } = await read;
+  const { label, status } = await labelRead(
+    argo.fetch,
+    token.access,
+    options.label,
+  );
 
-  if (!label)
-    return ended(
-      'failed',
-      `${options.name} answered ${status ?? 'nothing'} and did not say who signed in.`,
-    );
+  if (!label) return unnamed(options, status);
 
   const id = await argo.accounts.add(options.host, { label });
 
-  await argo.secrets.set(id, stored(token));
+  await argo.secrets.set(id, secretOf(token));
 
   return { kind: 'signed-in', label };
 }
@@ -146,12 +146,12 @@ function provide(
   argo: DeviceFlowArgo,
   options: DeviceFlowOptions,
 ): Promise<void> {
-  const tokenOf = tokenSource(argo, options);
+  const lend = tokenLender({ argo, options });
 
   return argo.accounts.provide(
     options.host,
     options.header ?? bearer,
-    (account) => tokenOf(account.id),
+    (account) => lend(account.id),
   );
 }
 

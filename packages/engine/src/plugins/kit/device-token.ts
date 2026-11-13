@@ -7,55 +7,50 @@ import { postForm, TokenAnswer } from './device-http';
 
 /*
  * What the kit keeps under an Account id: the access token, and, when the service gave them, the refresh token and
- * when the access token runs out. A service with expiring tokens, as GitHub's OAuth app has, refuses the access token
- * after `expires_in`; the refresh token gets a new pair without asking the person again.
+ * when the access token runs out, in epoch milliseconds. A service with expiring tokens, as GitHub's OAuth app has,
+ * refuses the access token after `expires_in`; the refresh token gets a new one without asking the person again.
  */
-export type KeptToken = {
-  access: string;
-  refresh?: string;
-  expiresAt?: number;
-};
-
-const Kept = z.object({
+export const KeptToken = z.object({
   access: z.string().min(1),
   refresh: z.string().min(1).optional(),
-  expiresAt: z.number().optional(),
+  expiresAtMs: z.number().optional(),
 });
 
-type Answer = z.infer<typeof TokenAnswer>;
+export type KeptToken = z.infer<typeof KeptToken>;
 
 const msPerSecond = 1000;
 
 // `expires_in` is seconds from now.
-const expiresAtOf = (expiresIn: number | undefined): number | undefined =>
+const expiresAtMsOf = (expiresIn: number | undefined): number | undefined =>
   expiresIn === undefined ? undefined : Date.now() + expiresIn * msPerSecond;
 
-// The pair a token answer gives, or nothing when it gave no access token.
-export function keptFrom(answer: Answer): KeptToken | null {
+// The token a token answer gives, or nothing when it gave no access token.
+export function tokenFromAnswer(
+  answer: z.infer<typeof TokenAnswer>,
+): KeptToken | null {
   if (!answer.access_token) return null;
 
-  // Parsing drops the fields the answer left out, so a token that never runs out keeps none.
-  return Kept.parse({
+  return {
     access: answer.access_token,
     refresh: answer.refresh_token,
-    expiresAt: expiresAtOf(answer.expires_in),
-  });
+    expiresAtMs: expiresAtMsOf(answer.expires_in),
+  };
 }
 
 // A token that never runs out is kept as the bare string, as it was before refresh tokens; anything more as JSON.
-export const stored = (kept: KeptToken): string =>
-  kept.refresh === undefined && kept.expiresAt === undefined
-    ? kept.access
-    : JSON.stringify(kept);
+export const secretOf = (token: KeptToken): string =>
+  token.refresh === undefined && token.expiresAtMs === undefined
+    ? token.access
+    : JSON.stringify(token);
 
-// A secret this kit wrote, either shape; a bare string is a token with no refresh and no expiry.
-export function keptOf(secret: string): KeptToken {
+// A secret written as JSON; anything else, a secret from before refresh tokens included, is the bare access token.
+export function tokenFromSecret(secret: string): KeptToken {
   try {
-    const parsed = Kept.safeParse(JSON.parse(secret));
+    const parsed = KeptToken.safeParse(JSON.parse(secret));
 
     if (parsed.success) return parsed.data;
   } catch {
-    // Not JSON: a bare token.
+    // JSON.parse refuses a bare token.
   }
 
   return { access: secret };
@@ -64,17 +59,25 @@ export function keptOf(secret: string): KeptToken {
 // Refreshed a minute early, so a request made just before it runs out is not refused on the way.
 const marginMs = 60_000;
 
-const runOut = (expiresAt: number | undefined): boolean =>
-  expiresAt !== undefined && Date.now() >= expiresAt - marginMs;
+const runOut = (expiresAtMs: number | undefined): boolean =>
+  expiresAtMs !== undefined && Date.now() >= expiresAtMs - marginMs;
 
 // The refresh token, when the access token has run out and there is one to spend.
-const dueRefresh = ({ refresh, expiresAt }: KeptToken): string | null =>
-  refresh !== undefined && runOut(expiresAt) ? refresh : null;
+const dueRefresh = ({ refresh, expiresAtMs }: KeptToken): string | null =>
+  refresh !== undefined && runOut(expiresAtMs) ? refresh : null;
 
-// RFC 6749 section 6. A device-flow token is refreshed with the client ID alone, no client secret.
-async function refreshed(
-  fetch: DeviceFlowArgo['fetch'],
-  options: DeviceFlowOptions,
+// The service and the calls that reach it and the Account's secret.
+type TokenService = {
+  argo: Pick<DeviceFlowArgo, 'fetch' | 'secrets'>;
+  options: DeviceFlowOptions;
+};
+
+/*
+ * RFC 6749 section 6. A device-flow token is refreshed with the client ID alone, no client secret. A service that
+ * keeps the refresh token answers without one, so the old one is kept; nothing back, or a failed call, is a refusal.
+ */
+async function refreshAt(
+  { argo, options }: TokenService,
   refresh: string,
 ): Promise<KeptToken | null> {
   const fields = {
@@ -83,25 +86,25 @@ async function refreshed(
     refresh_token: refresh,
   };
 
-  return keptFrom(
-    await postForm(fetch, { url: options.tokenUrl, fields }, TokenAnswer),
-  );
+  const target = { url: options.tokenUrl, fields };
+  const answer = await postForm(argo.fetch, target, TokenAnswer);
+  const token = tokenFromAnswer(answer);
+
+  return token && { ...token, refresh: token.refresh ?? refresh };
 }
 
-type Calls = Pick<DeviceFlowArgo, 'fetch' | 'secrets'>;
+// The access token to lend now: the kept one, or a refreshed one kept first when it has run out.
+async function lendable(
+  service: TokenService,
+  id: string,
+): Promise<string | null> {
+  const secret = await service.argo.secrets.get(id);
 
-// The service, and the calls that reach it and the Account's secret.
-type Source = { argo: Calls; options: DeviceFlowOptions };
-
-// The access token to send now, refreshed and kept first when it has run out.
-async function current(source: Source, id: string): Promise<string | null> {
-  const secret = await source.argo.secrets.get(id);
-
-  return secret === null ? null : lent(source, id, keptOf(secret));
+  return secret === null ? null : renewed(service, id, tokenFromSecret(secret));
 }
 
-async function lent(
-  { argo, options }: Source,
+async function renewed(
+  service: TokenService,
   id: string,
   kept: KeptToken,
 ): Promise<string> {
@@ -109,22 +112,22 @@ async function lent(
 
   if (refresh === null) return kept.access;
 
-  // A refused refresh sends the old token; the service's 401 then draws the sign-in.
-  const fresh = await refreshed(argo.fetch, options, refresh);
+  // A refused refresh lends the old token; the service's 401 then draws the sign-in.
+  const fresh = await refreshAt(service, refresh).catch(() => null);
 
   if (!fresh) return kept.access;
-  await argo.secrets.set(id, stored(fresh));
+  await service.argo.secrets.set(id, secretOf(fresh));
 
   return fresh.access;
 }
 
 /*
  * Answers each borrow with the Account's current access token. A refresh token works once, so borrows that find the
- * same Account due share one refresh instead of racing to spend it.
+ * same Account due share one refresh; two refreshes racing would spend it twice, and the second would sign the person
+ * out.
  */
-export function tokenSource(
-  argo: Calls,
-  options: DeviceFlowOptions,
+export function tokenLender(
+  service: TokenService,
 ): (id: string) => Promise<string | null> {
   const inFlight = new Map<string, Promise<string | null>>();
 
@@ -133,9 +136,7 @@ export function tokenSource(
 
     if (running) return running;
 
-    const next = current({ argo, options }, id).finally(() =>
-      inFlight.delete(id),
-    );
+    const next = lendable(service, id).finally(() => inFlight.delete(id));
 
     inFlight.set(id, next);
 

@@ -36,6 +36,9 @@ export const token: Reply = { status: 200, body: { access_token: 'token-1' } };
 
 export const user: Reply = { status: 200, body: { login: 'octocat' } };
 
+// A service that cannot be reached: the call rejects.
+export const unreachable: Reply = { status: 0, body: {} };
+
 export const pending: Reply = {
   status: 200,
   body: { error: 'authorization_pending' },
@@ -80,10 +83,16 @@ const fetching =
   (script: Map<string, Reply[]>, calls: FakeDevice['calls']): Fetching =>
   (url, init) => {
     calls.push({ url, body: init?.body });
-    const reply = nextFor(script, url);
 
-    return Promise.resolve(reply ? answerOf(reply) : null);
+    return replied(nextFor(script, url));
   };
+
+// No script answers nothing; `unreachable` rejects, as a call that never reached the service does.
+function replied(reply: Reply | undefined): Promise<Fetched> {
+  if (reply === unreachable) return Promise.reject(new Error('unreachable'));
+
+  return Promise.resolve(reply ? answerOf(reply) : null);
+}
 
 const accountsOf = (
   added: FakeDevice['added'],
@@ -111,7 +120,13 @@ const borrowing =
   (handlers: TokenHandler[]) =>
   async (id: string): Promise<string | null> => {
     const handler = handlers.at(-1);
-    const account = { id, host: 'api.github.com', label: '', providedBy: '' };
+
+    const account = {
+      id,
+      host: service.host,
+      label: 'octocat',
+      providedBy: 'plugin-1',
+    };
 
     return handler ? ((await handler(account)) ?? null) : null;
   };
@@ -121,19 +136,19 @@ const borrowing =
  * the Accounts and secrets Argo keeps.
  */
 export function fakeDevice(script: Record<string, Reply[]>): FakeDevice {
-  const kept = emptyKept();
+  const state = emptyState();
 
   return {
-    argo: argoOf(script, kept),
-    calls: kept.calls,
-    added: kept.added,
-    secrets: kept.secrets,
-    changes: () => kept.changes.count,
-    borrow: borrowing(kept.handlers),
+    argo: argoOf(script, state),
+    calls: state.calls,
+    added: state.added,
+    secrets: state.secrets,
+    changes: () => state.changes.count,
+    borrow: borrowing(state.handlers),
   };
 }
 
-const emptyKept = (): Kept => ({
+const emptyState = (): FakeState => ({
   calls: [],
   added: [],
   secrets: new Map(),
@@ -141,7 +156,7 @@ const emptyKept = (): Kept => ({
   changes: { count: 0 },
 });
 
-type Kept = {
+type FakeState = {
   calls: FakeDevice['calls'];
   added: FakeDevice['added'];
   secrets: Map<string, string>;
@@ -151,12 +166,12 @@ type Kept = {
 
 const argoOf = (
   script: Record<string, Reply[]>,
-  kept: Kept,
+  state: FakeState,
 ): DeviceFlowArgo => ({
-  fetch: fetching(new Map(Object.entries(script)), kept.calls),
-  accounts: accountsOf(kept.added, kept.handlers),
-  secrets: secretsOf(kept.secrets),
+  fetch: fetching(new Map(Object.entries(script)), state.calls),
+  accounts: accountsOf(state.added, state.handlers),
+  secrets: secretsOf(state.secrets),
   changed: () => {
-    kept.changes.count += 1;
+    state.changes.count += 1;
   },
 });

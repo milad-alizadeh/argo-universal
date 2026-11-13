@@ -5,10 +5,12 @@ import {
   service,
   user,
   userUrl,
+  unreachable,
   type FakeDevice,
   type Reply,
 } from '#mocks/device-service';
 import { deviceFlow } from './device-flow';
+import { KeptToken } from './device-token';
 
 const signedInAt = new Date('2026-11-13T07:10:00Z');
 
@@ -57,37 +59,75 @@ async function signedIn(tokenReplies: Reply[]): Promise<FakeDevice> {
 const refreshCalls = (fake: FakeDevice): FakeDevice['calls'] =>
   fake.calls.filter((call) => call.body?.includes('grant_type=refresh_token'));
 
-it('keeps the refresh token and when the access token runs out', async () => {
+const keptSecret = (fake: FakeDevice): KeptToken =>
+  KeptToken.parse(JSON.parse(fake.secrets.get('account-1') ?? ''));
+
+async function afterEightHours(): Promise<void> {
+  await vi.advanceTimersByTimeAsync(eightHours * 1000);
+}
+
+it('keeps the refresh token beside the access token, with when it runs out', async () => {
   const fake = await signedIn([expiring('access-1', 'refresh-1')]);
 
-  expect(JSON.parse(fake.secrets.get('account-1') ?? '')).toEqual({
+  expect(keptSecret(fake)).toEqual({
     access: 'access-1',
     refresh: 'refresh-1',
-    // Signed in one second after the clock started, at the first poll.
-    expiresAt: signedInAt.getTime() + 1000 + eightHours * 1000,
+    // Signed in at the first poll, one second after the clock started.
+    expiresAtMs: signedInAt.getTime() + 1000 + eightHours * 1000,
   });
+});
+
+it('lends the kept token while it is fresh, without refreshing', async () => {
+  const fake = await signedIn([expiring('access-1', 'refresh-1')]);
+
   expect(await fake.borrow('account-1')).toBe('access-1');
   expect(refreshCalls(fake)).toEqual([]);
 });
 
-it('refreshes a token that has run out, keeps the new pair, and lends the new token', async () => {
+it('refreshes a token that has run out with the client ID and refresh token alone', async () => {
   const fake = await signedIn([
     expiring('access-1', 'refresh-1'),
     expiring('access-2', 'refresh-2'),
   ]);
 
-  await vi.advanceTimersByTimeAsync(eightHours * 1000);
+  await afterEightHours();
 
   expect(await fake.borrow('account-1')).toBe('access-2');
   expect(refreshCalls(fake).map((call) => call.body)).toEqual([
     'client_id=client-1&grant_type=refresh_token&refresh_token=refresh-1',
   ]);
-  expect(JSON.parse(fake.secrets.get('account-1') ?? '')).toMatchObject({
+});
+
+it('keeps the refreshed pair, so the next borrow lends it without refreshing again', async () => {
+  const fake = await signedIn([
+    expiring('access-1', 'refresh-1'),
+    expiring('access-2', 'refresh-2'),
+  ]);
+
+  await afterEightHours();
+  await fake.borrow('account-1');
+
+  expect(keptSecret(fake)).toMatchObject({
     access: 'access-2',
     refresh: 'refresh-2',
   });
   expect(await fake.borrow('account-1')).toBe('access-2');
   expect(refreshCalls(fake)).toHaveLength(1);
+});
+
+it('keeps the old refresh token when the refresh answer gives none', async () => {
+  const fake = await signedIn([
+    expiring('access-1', 'refresh-1'),
+    { status: 200, body: { access_token: 'access-2', expires_in: eightHours } },
+  ]);
+
+  await afterEightHours();
+  await fake.borrow('account-1');
+
+  expect(keptSecret(fake)).toMatchObject({
+    access: 'access-2',
+    refresh: 'refresh-1',
+  });
 });
 
 it('refreshes a minute before the token runs out', async () => {
@@ -107,35 +147,41 @@ it('spends a refresh token once when borrows that find it due arrive together', 
     expiring('access-2', 'refresh-2'),
   ]);
 
-  await vi.advanceTimersByTimeAsync(eightHours * 1000);
+  await afterEightHours();
+  await Promise.all([fake.borrow('account-1'), fake.borrow('account-1')]);
 
-  const borrows = await Promise.all([
-    fake.borrow('account-1'),
-    fake.borrow('account-1'),
-  ]);
-
-  expect(borrows).toEqual(['access-2', 'access-2']);
   expect(refreshCalls(fake)).toHaveLength(1);
 });
 
-it('lends the old token when the service refuses the refresh, so the read finds the person signed out', async () => {
-  const fake = await signedIn([expiring('access-1', 'refresh-1'), badRefresh]);
+it.each([
+  ['refuses the refresh', badRefresh],
+  ['cannot be reached', unreachable],
+])(
+  'lends the old token when the service %s, so the read finds the person signed out',
+  async (_case, refusal) => {
+    const fake = await signedIn([expiring('access-1', 'refresh-1'), refusal]);
 
-  await vi.advanceTimersByTimeAsync(eightHours * 1000);
+    await afterEightHours();
 
-  expect(await fake.borrow('account-1')).toBe('access-1');
-  expect(JSON.parse(fake.secrets.get('account-1') ?? '')).toMatchObject({
-    refresh: 'refresh-1',
-  });
-});
+    expect(await fake.borrow('account-1')).toBe('access-1');
+  },
+);
 
-it('keeps a token that never runs out as the bare string, and lends it as it is', async () => {
+it('keeps a token that never runs out as the bare string', async () => {
   const fake = await signedIn([
     { status: 200, body: { access_token: 'token-1' } },
   ]);
 
   expect(fake.secrets.get('account-1')).toBe('token-1');
-  await vi.advanceTimersByTimeAsync(eightHours * 1000);
+});
+
+it('lends a token that never runs out as it is, however long it was kept', async () => {
+  const fake = await signedIn([
+    { status: 200, body: { access_token: 'token-1' } },
+  ]);
+
+  await afterEightHours();
+
   expect(await fake.borrow('account-1')).toBe('token-1');
   expect(refreshCalls(fake)).toEqual([]);
 });

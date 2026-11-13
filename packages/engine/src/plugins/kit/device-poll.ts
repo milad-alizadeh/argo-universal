@@ -6,7 +6,7 @@ import type {
 } from '@repo/contracts/plugins/device-flow-api';
 import type { z } from 'zod';
 import { postForm, TokenAnswer } from './device-http';
-import { keptFrom, type KeptToken } from './device-token';
+import { tokenFromAnswer, type KeptToken } from './device-token';
 
 const deviceGrant = 'urn:ietf:params:oauth:grant-type:device_code';
 
@@ -23,6 +23,16 @@ const messages = (name: string): Record<DeviceFlowEnd, string> => ({
   expired: `${name} codes run out. Ask for a new one.`,
   failed: `${name} refused the sign-in.`,
 });
+
+// The service gave a token but did not say whose it is.
+export const unnamed = (
+  { name }: DeviceFlowOptions,
+  status: number | null,
+): DeviceFlowState =>
+  ended(
+    'failed',
+    `${name} answered ${status ?? 'nothing'} and did not say who signed in.`,
+  );
 
 export const expired = ({ name }: DeviceFlowOptions): DeviceFlowState =>
   ended('expired', messages(name).expired);
@@ -82,7 +92,7 @@ function polledOf(
   options: DeviceFlowOptions,
   reply: z.infer<typeof TokenAnswer>,
 ): Polled {
-  const token = keptFrom(reply);
+  const token = tokenFromAnswer(reply);
 
   if (token) return { kind: 'token', token };
 
