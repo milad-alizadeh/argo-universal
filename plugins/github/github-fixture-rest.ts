@@ -59,7 +59,7 @@ const runsOf = (
 
 function checksAnswer(held: Held, path: string): FixtureAnswer {
   const [, repository, head] = checksPath.exec(path) ?? [];
-  const { status } = held.checksFailWith;
+  const status = held.checksFailWith.get(`${repository}@${head}`);
   const runs = runsOf(held, repository, head);
 
   return status

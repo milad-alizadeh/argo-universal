@@ -10,9 +10,13 @@ export type Refreshing = {
   ask: (pluginId: string) => void;
 };
 
+// Whether the person left the Plugin on: a Plugin they turned off has no clock.
+type Enabled = (pluginId: string) => boolean;
+
 type Hold = {
   pluginId: string;
   ms: number;
+  enabled: Enabled;
   count: number;
   cancel?: () => void;
 };
@@ -22,7 +26,7 @@ const keyOf = (pluginId: string, ms: number): string => `${pluginId}\n${ms}`;
 /*
  * The clock of a list that is open (ADR-0052): while at least one App holds a list that wants its Plugins asked
  * again, one timer per Plugin and interval makes the Plugin's Queries due and its Slots ask again. It is Argo's, not
- * the Plugin's: nothing runs once the last list closes, and a Plugin that is not running is not read. Every open list shares the
+ * the Plugin's: nothing runs once the last list closes or while the person has the Plugin turned off, and a Plugin that is not running is not read. Every open list shares the
  * one timer, and the answers it asks for come through the Queries the Pages share.
  */
 export class SlotRefresh {
@@ -31,17 +35,17 @@ export class SlotRefresh {
   constructor(private readonly refreshing: Refreshing) {}
 
   // Holds the clock for these Plugins; the returned function lets go of it.
-  hold(pluginIds: readonly string[], ms: number): () => void {
-    const held = pluginIds.map((pluginId) => this.acquire(pluginId, ms));
+  hold(pluginIds: readonly string[], ms: number, enabled: Enabled): () => void {
+    const held = pluginIds.map((id) => this.acquire(id, ms, enabled));
 
     return () => {
       for (const hold of held) this.release(hold);
     };
   }
 
-  private acquire(pluginId: string, ms: number): Hold {
+  private acquire(pluginId: string, ms: number, enabled: Enabled): Hold {
     const key = keyOf(pluginId, ms);
-    const hold = this.holds.get(key) ?? { pluginId, ms, count: 0 };
+    const hold = this.holds.get(key) ?? { pluginId, ms, enabled, count: 0 };
 
     hold.count += 1;
     this.holds.set(key, hold);
@@ -61,9 +65,16 @@ export class SlotRefresh {
     this.holds.delete(keyOf(hold.pluginId, hold.ms));
   }
 
-  // One tick away. A Plugin that is not running still ticks, so a list that stays open notices it start again.
+  /*
+   * One tick away, unless the person turned the Plugin off: that releases the clock until they turn it on. A Plugin that
+   * is on but not running, crashed or stopped, still ticks, so a list that stays open notices it start again.
+   */
   private arm(hold: Hold): void {
     hold.cancel?.();
+    hold.cancel = undefined;
+
+    if (!hold.enabled(hold.pluginId)) return;
+
     hold.cancel = this.refreshing.clock.schedule(
       () => this.tick(hold),
       hold.ms,
@@ -80,7 +91,7 @@ export class SlotRefresh {
     this.arm(hold);
   }
 
-  // A Plugin that stopped or started: the timer is set afresh, so none outlives the generation it was set for.
+  // A Plugin that stopped or started, or was turned off or on: the timer is set afresh, so none outlives that.
   restarted(pluginId: string): void {
     for (const hold of this.holds.values())
       if (hold.pluginId === pluginId) this.arm(hold);

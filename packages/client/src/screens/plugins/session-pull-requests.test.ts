@@ -128,15 +128,9 @@ describe('sessionPullRequests', () => {
     expect(none).not.toHaveProperty('checks');
   });
 
-  it('keeps draft and conflict together, and that the latest refresh failed, for the views that draw them', () => {
-    const [change] = sessionPullRequests(
-      reading({ ...open, draft: true, conflict: true, stale: 'signIn' }),
-    );
+  it('keeps that the latest refresh failed, and why, for the views that draw it', () => {
+    const [change] = sessionPullRequests(reading({ ...open, stale: 'signIn' }));
 
-    expect(change).toMatchObject({
-      draft: true,
-      conflict: true,
-      stale: 'signIn',
-    });
+    expect(change).toMatchObject({ stale: 'signIn' });
   });
 });

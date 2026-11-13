@@ -18,14 +18,46 @@ type Answer =
 export type OpenChanges = {
   // The Changes Argo draws next: the first answer, then each one that differs from the last.
   next: () => Promise<object[]>;
-  // The App leaves the Changes content.
-  close: () => void;
+  // The App leaves the Changes content: the list is aborted and its generator finishes, so what it holds is released.
+  close: () => Promise<void>;
 };
 
 const changesIn = (answer: Answer | undefined): object[] =>
   Object.values(answer ?? {}).flatMap(({ items }) =>
     items.map(({ item }) => item),
   );
+
+// How long a test waits for the list's next answer before saying it never came.
+const answerWaitMs = 20_000;
+
+// The list's next answer, or a failure that says none came, in place of a wait that ends at the test's own timeout.
+async function withinTime<Item>(next: Promise<Item>): Promise<Item> {
+  const { promise, reject } = Promise.withResolvers<never>();
+
+  const timer = setTimeout(
+    () => reject(new Error('The Changes list gave no new answer')),
+    answerWaitMs,
+  );
+
+  try {
+    return await Promise.race([next, promise]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+type Answers = ReturnType<PluginTest['slotItems']>;
+
+const listOf = (
+  answers: Answers,
+  controller: AbortController,
+): OpenChanges => ({
+  next: async () => changesIn((await withinTime(answers.next())).value),
+  close: async () => {
+    controller.abort();
+    await answers.return(null);
+  },
+});
 
 // A list an App keeps open while a Session's Changes are visible, as the Workbench or the Inspector does.
 export function openChanges(
@@ -41,10 +73,7 @@ export function openChanges(
 
   onTestFinished(() => controller.abort());
 
-  return {
-    next: async () => changesIn((await answers.next()).value),
-    close: () => controller.abort(),
-  };
+  return listOf(answers, controller);
 }
 
 // Argo's Changes clock, in milliseconds.

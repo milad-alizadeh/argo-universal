@@ -58,6 +58,10 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
     detached: true,
     ...(await detach({ ...argo, store: source.store }, reference, caller)),
   }));
+}
+
+// What the Session's pull requests look like now, and the retry that asks GitHub again.
+function registerReads(argo: Argo, source: ChangesSource): void {
   argo.operations.register('list', (_params, caller) => list(source, caller));
   argo.operations.register('refresh', (_params, caller) =>
     refresh(source, argo, caller),
@@ -68,6 +72,7 @@ export function register(argo: Argo): void {
   const source = sourceOf(argo);
 
   registerOperations(argo, source);
+  registerReads(argo, source);
   registerFiles(argo, source);
   registerChanges(argo, source);
 }

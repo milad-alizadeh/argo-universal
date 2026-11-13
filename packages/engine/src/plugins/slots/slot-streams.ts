@@ -33,8 +33,9 @@ async function fillingPlugins(
 const hooksOf = (
   deps: PluginServiceDeps,
   input: SlotItemsInput,
-): Pick<Contributors, 'failed' | 'start'> => ({
+): Pick<Contributors, 'failed' | 'start' | 'enabled'> => ({
   failed: failedOf(deps),
+  enabled: (pluginId): boolean => deps.pluginSettings.enabled(pluginId),
   start: async (): Promise<void> => {
     await fillingPlugins(deps, input);
   },

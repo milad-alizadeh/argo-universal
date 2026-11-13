@@ -1,7 +1,7 @@
 import type { Change } from '@repo/contracts';
 import type {
-  CheckDetail,
   ChangeState,
+  CheckDetail,
   SessionPullRequest,
 } from '#features/sessions';
 import type { SlotReading } from './slot-items';
