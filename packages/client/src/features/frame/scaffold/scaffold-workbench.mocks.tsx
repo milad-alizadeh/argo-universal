@@ -68,7 +68,7 @@ function useInspectorState(
   return { inspectorState, onInspectorStateChange };
 }
 
-function useMockState(
+export function useMockState(
   inspectorOpen: boolean,
   initialIntent?: WorkbenchIntent,
 ): MockState {
@@ -87,9 +87,9 @@ type MockPanes = Pick<
   'sidebar' | 'list' | 'page' | 'inspector' | 'band'
 >;
 
-type SetInspectorState = (state: InspectorState) => void;
+export type SetInspectorState = (state: InspectorState) => void;
 
-const mockPage = (
+export const mockPage = (
   <View testID="workbench-feed" className="flex-1">
     <TextInput accessibilityLabel="Draft" defaultValue="Keep my draft" />
     <Text>Feed content beneath the Workbench remains mounted.</Text>
@@ -102,7 +102,7 @@ const sessionsList = (
   </Screen>
 );
 
-function mockPanes(
+export function mockPanes(
   onInspectorStateChange: SetInspectorState,
   overflowing: boolean,
 ): MockPanes {

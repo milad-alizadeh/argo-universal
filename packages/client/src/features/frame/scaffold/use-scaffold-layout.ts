@@ -5,23 +5,19 @@ import { useCSSVariable } from 'uniwind';
 import { bandWorkbench } from '#lib/product/window-band';
 import type { ContentRule } from '../../../lib/product/content-rule';
 import { useContentRule } from '../../../lib/product/use-content-rule';
-import {
-  type FrameMotion,
-  frameTiming,
-  transitionKeyOf,
-} from '../utils/frame-timing';
+import type { FrameMotion } from '../utils/frame-timing';
 import { type BandLeading, useBandLeading } from './band-leading';
 import {
   type FrameLayout,
   type FrameMeasures,
   frameLayout,
 } from './frame-layout';
-import { isFramed } from './is-framed';
 import type { ScaffoldProps } from './scaffold-props';
 import {
   type PreferredWidths,
   usePreferredWidths,
 } from './use-preferred-widths';
+import { useScaffoldMotion } from './use-scaffold-motion';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
 
 interface WindowWidth {
@@ -110,12 +106,6 @@ function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
   };
 }
 
-// The phone shell draws no Frame, so only a change of the sidebar's state moves its page.
-const transitionKey = (scaffold: ScaffoldProps, layout: FrameLayout): string =>
-  isFramed(scaffold.sizeClass)
-    ? layout.transitionKey
-    : transitionKeyOf({ sidebarShown: scaffold.sidebarShown });
-
 const layoutOf = (
   scaffold: ScaffoldProps,
   sizing: ScaffoldSizing,
@@ -131,16 +121,13 @@ const layoutOf = (
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
   const sizing = useScaffoldSizing(scaffold);
   const windowWidth = useWindowWidth();
-  const [resizing, setResizing] = useState(false);
   const layout = layoutOf(scaffold, sizing, windowWidth.width);
-  const key = transitionKey(scaffold, layout);
 
   return {
     ...sizing,
     ...layout,
     ...windowWidth,
     safeTop: useSafeAreaInsets().top,
-    motion: { transitionKey: key, animate: !resizing, timing: frameTiming },
-    setResizing,
+    ...useScaffoldMotion(scaffold, layout),
   };
 }
