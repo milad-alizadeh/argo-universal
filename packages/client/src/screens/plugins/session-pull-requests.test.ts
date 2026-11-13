@@ -89,4 +89,49 @@ describe('sessionPullRequests', () => {
       sessionPullRequests(reading(open, fork)).map(({ id }) => id),
     ).toEqual([ownedId, 'github:fork/repository#12']);
   });
+
+  it('counts each Check by result and keeps them by name', () => {
+    const [change] = sessionPullRequests(
+      reading({
+        ...open,
+        checks: [
+          { name: 'build', state: 'running' },
+          { name: 'lint', state: 'passed' },
+          { name: 'test', state: 'failed' },
+        ],
+      }),
+    );
+
+    expect(change?.checks).toEqual({
+      passed: 1,
+      failing: 1,
+      running: 1,
+      total: 3,
+      details: [
+        { name: 'build', state: 'running' },
+        { name: 'lint', state: 'passed' },
+        { name: 'test', state: 'failing' },
+      ],
+    });
+  });
+
+  it('draws no Checks when they are not known or the host says there are none, never as passed', () => {
+    const [unknown] = sessionPullRequests(reading(open));
+    const [none] = sessionPullRequests(reading({ ...open, checks: [] }));
+
+    expect(unknown).not.toHaveProperty('checks');
+    expect(none).not.toHaveProperty('checks');
+  });
+
+  it('keeps draft and conflict together, and that the latest refresh failed, for the views that draw them', () => {
+    const [change] = sessionPullRequests(
+      reading({ ...open, draft: true, conflict: true, stale: 'signIn' }),
+    );
+
+    expect(change).toMatchObject({
+      draft: true,
+      conflict: true,
+      stale: 'signIn',
+    });
+  });
 });

@@ -26,6 +26,13 @@ export type QueryResult<Query extends PluginQuery> =
 // A bare named read names no answer type, so it answers what its api does.
 type NamedAnswer<Value, ApiAnswer> = unknown extends Value ? ApiAnswer : Value;
 
+// What Argo keeps for a named Query: the last good answer, if any, and why the latest read failed, if it did.
+export type QueryState<Value> = Readonly<{
+  data?: QueryResult<NamedQuery<Value>>;
+  error?: string;
+  stale: boolean;
+}>;
+
 // What a named read is given besides its args: the Project its Query is for, when it is for one.
 export type QueryReadContext = Readonly<{ projectId?: string }>;
 
@@ -52,6 +59,15 @@ export type QueriesApi = Readonly<{
     query: NamedQuery<Value>,
     options?: { projectId?: string },
   ) => Promise<QueryResult<NamedQuery<Value>>>;
+  /*
+   * The same read, but a failure is an answer: what Argo keeps for the Query, its `error` and whether a read is in
+   * flight. A failed refresh still carries the `data` of the last good read, and a first read that failed has none, so a
+   * Slot can tell a failure from nothing. It throws only when the call itself cannot be made.
+   */
+  readState: <Value>(
+    query: NamedQuery<Value>,
+    options?: { projectId?: string },
+  ) => Promise<QueryState<Value>>;
   /*
    * Keeps `value` as the answer of another named Query. Argo cannot check it against a shape, as a named read's
    * answer is the Plugin's own JSON, so the Plugin keeps the two reads in step. A write, or `argo.changed()`, that

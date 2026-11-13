@@ -22,5 +22,12 @@ declare module '@argo/plugin-kit' {
         "session"
       ]
     };
+    refresh: {
+      "params": {},
+      "caller": [
+        "project",
+        "session"
+      ]
+    };
   }
 }

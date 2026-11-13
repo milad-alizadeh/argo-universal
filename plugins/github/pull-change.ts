@@ -1,3 +1,4 @@
+import type { CheckInfo } from './pull-checks';
 import type { PullInfo } from './pull-info';
 import { changeId } from './pull-reference';
 
@@ -15,7 +16,14 @@ export type ChangeItem = {
   draft?: true;
   conflict?: true;
   totals: { files: number; additions: number; deletions: number };
+  // Absent while the Checks are not known, which is never the same as passed.
+  checks?: CheckInfo[];
+  // Set when the latest read failed and the rest is what was last known.
+  stale?: 'signIn' | 'failed';
 };
+
+// What a pull request's Change carries beside what GitHub said of the pull request itself.
+export type Refresh = Pick<ChangeItem, 'checks' | 'stale'>;
 
 const totalsOf = ({
   files,
@@ -33,7 +41,10 @@ const modifiersOf = ({
 });
 
 // A pull request's identity is its repository plus number (ADR-0052).
-export const changeOf = (pull: PullInfo): ChangeItem => ({
+export const changeOf = (
+  pull: PullInfo,
+  { checks, stale }: Refresh = {},
+): ChangeItem => ({
   id: changeId(pull),
   stage: pull.stage,
   title: pull.title,
@@ -45,4 +56,6 @@ export const changeOf = (pull: PullInfo): ChangeItem => ({
   pullRequest: { number: pull.number, url: pull.url },
   ...modifiersOf(pull),
   totals: totalsOf(pull),
+  ...(checks && { checks }),
+  ...(stale && { stale }),
 });

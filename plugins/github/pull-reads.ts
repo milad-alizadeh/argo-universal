@@ -1,4 +1,5 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
+import { checksPageSize, parseChecks, type CheckInfo } from './pull-checks';
 import { parsePull, type PullInfo } from './pull-info';
 import type { PullReference } from './pull-reference';
 
@@ -11,42 +12,38 @@ const unauthorizedStatus = 401;
 
 const notFoundStatus = 404;
 
-/*
- * What a read answers: the value, or why there is none. Argo keeps the answer, so a failed read stays a failure the
- * Slot reports instead of becoming an empty list; a sign-in, which says `argo.changed()`, makes it due again.
- */
-export type Settled =
-  | { ok: true; value: PullInfo }
-  | { ok: false; signIn: boolean; message: string };
-
 export type PullTarget = PullReference & { projectId: string };
+
+// The Checks of one commit of a repository, for the Project whose Account reads them.
+export type ChecksTarget = {
+  repository: string;
+  head: string;
+  projectId: string;
+};
 
 type Fetch = Argo['fetch'];
 
-const signInMessage = 'Sign in to GitHub to read this pull request.';
+// What a missing or refused sign-in says, so a failure that signing in would mend is told apart from the rest.
+export const signInMessage = 'Sign in to GitHub to read this pull request.';
 
 // A missing Account answers null; inside a Query, which cannot ask to sign in, it is refused.
 const unavailable = 'Account is unavailable';
 
-function refusalOf(
-  status: number,
-  { repository, number }: PullReference,
-): Error {
+export const needsSignIn = (message: string): boolean =>
+  message.includes(signInMessage) || message.includes(unavailable);
+
+function refusalOf(status: number, subject: string): Error {
   if (status === unauthorizedStatus) return new Error(signInMessage);
 
   return new Error(
     status === notFoundStatus
-      ? `${repository}#${number} was not found on GitHub, or this account cannot see it.`
+      ? `${subject} was not found on GitHub, or this account cannot see it.`
       : `GitHub answered ${status}.`,
   );
 }
 
-const pullRequest = ({
-  repository,
-  number,
-  projectId,
-}: PullTarget): Parameters<Fetch> => [
-  `https://${githubHost}/repos/${repository}/pulls/${number}`,
+const call = (path: string, projectId: string): Parameters<Fetch> => [
+  `https://${githubHost}${path}`,
   {
     method: 'GET',
     headers: { accept: 'application/vnd.github+json' },
@@ -55,53 +52,73 @@ const pullRequest = ({
   },
 ];
 
-// One pull request as the signed-in person sees it; a missing Account, a refusal or a failed call throws.
-export async function fetchPull(
+// The body of a successful call; a missing Account, a refusal or a failed call throws, never answers as nothing.
+async function bodyOf(
   fetch: Fetch,
-  target: PullTarget,
-): Promise<PullInfo> {
-  const reply = await fetch(...pullRequest(target));
+  request: Parameters<Fetch>,
+  subject: string,
+): Promise<string> {
+  const reply = await fetch(...request);
 
   if (!reply) throw new Error(signInMessage);
 
-  if (reply.status !== okStatus) throw refusalOf(reply.status, target);
+  if (reply.status !== okStatus) throw refusalOf(reply.status, subject);
 
-  return parsePull(await reply.text());
+  return reply.text();
 }
 
-const needsSignIn = (message: string): boolean =>
-  message === signInMessage || message === unavailable;
+// One pull request as the signed-in person sees it.
+export async function fetchPull(
+  fetch: Fetch,
+  { repository, number, projectId }: PullTarget,
+): Promise<PullInfo> {
+  return parsePull(
+    await bodyOf(
+      fetch,
+      call(`/repos/${repository}/pulls/${number}`, projectId),
+      `${repository}#${number}`,
+    ),
+  );
+}
 
-async function settle(run: () => Promise<PullInfo>): Promise<Settled> {
-  try {
-    return { ok: true, value: await run() };
-  } catch (cause) {
-    const message = cause instanceof Error ? cause.message : String(cause);
-
-    return { ok: false, signIn: needsSignIn(message), message };
-  }
+// The Checks of one commit as the signed-in person sees them.
+export async function fetchChecks(
+  fetch: Fetch,
+  { repository, head, projectId }: ChecksTarget,
+): Promise<CheckInfo[]> {
+  return parseChecks(
+    await bodyOf(
+      fetch,
+      call(
+        `/repos/${repository}/commits/${head}/check-runs?per_page=${checksPageSize}`,
+        projectId,
+      ),
+      `The Checks of ${repository}@${head.slice(0, 7)}`,
+    ),
+  );
 }
 
 export type PullReads = {
   // One pull request, shared by every Slot and Operation that asks for it.
-  pull: (target: PullTarget) => NamedQuery<Settled>;
+  pull: (target: PullTarget) => NamedQuery<PullInfo>;
+  // The Checks of one head commit, read once the pull request has said which it is.
+  checks: (target: ChecksTarget) => NamedQuery<CheckInfo[]>;
 };
 
 /*
- * A named read (ADR-0037): the Slot's answer and a later page asking the same question share the one entry Argo keeps,
- * and an Operation run makes it due. It only reads.
+ * Named reads (ADR-0037): the Slot's answer and a later page asking the same question share the one entry Argo keeps,
+ * and an Operation run, or the Slot's refresh, makes it due. They only read, and a failed read throws, so Argo keeps
+ * the last good answer beside the failure instead of replacing it with one.
  */
 export const definePullReads = (argo: Argo): PullReads => ({
   pull: argo.queries.define(
     'pull',
-    (target: PullTarget) => settle(() => fetchPull(argo.fetch, target)),
+    (target: PullTarget) => fetchPull(argo.fetch, target),
     { projectOf: ({ projectId }: PullTarget) => projectId },
   ),
+  checks: argo.queries.define(
+    'checks',
+    (target: ChecksTarget) => fetchChecks(argo.fetch, target),
+    { projectOf: ({ projectId }: ChecksTarget) => projectId },
+  ),
 });
-
-// The pull request, or the reason there is none, as an Error the caller's own failure handling reports.
-export function unwrap(settled: Settled): PullInfo {
-  if (settled.ok) return settled.value;
-
-  throw new Error(settled.message);
-}

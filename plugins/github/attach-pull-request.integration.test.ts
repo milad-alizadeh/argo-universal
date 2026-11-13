@@ -35,6 +35,7 @@ const openChange = {
     url: 'https://github.com/owner/repository/pull/12',
   },
   totals: { files: 3, additions: 10, deletions: 2 },
+  checks: [],
 };
 
 it(

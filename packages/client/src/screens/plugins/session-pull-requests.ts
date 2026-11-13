@@ -1,10 +1,16 @@
 import type { Change } from '@repo/contracts';
-import type { ChangeState, SessionPullRequest } from '#features/sessions';
+import type {
+  CheckDetail,
+  ChangeState,
+  SessionPullRequest,
+} from '#features/sessions';
 import type { SlotReading } from './slot-items';
 
 type PullRequestChange = Change & {
   pullRequest: NonNullable<Change['pullRequest']>;
 };
+
+type Check = NonNullable<Change['checks']>[number];
 
 const hasPullRequest = (change: Change): change is PullRequestChange =>
   change.pullRequest !== undefined;
@@ -28,6 +34,52 @@ const stateOf = (change: Change): ChangeState => {
   return { stage: change.stage };
 };
 
+const detailOf = ({ name, state }: Check): CheckDetail => ({
+  name,
+  state: state === 'failed' ? 'failing' : state,
+});
+
+const countOf = (checks: readonly Check[], state: Check['state']): number =>
+  checks.filter((check) => check.state === state).length;
+
+/*
+ * The Checks the Change carries, counted. Checks that are not known, or that the code host says there are none of,
+ * leave nothing to draw: they are never drawn as passed.
+ */
+const checksOf = ({ checks }: Change): Pick<SessionPullRequest, 'checks'> => {
+  if (!checks?.length) return {};
+
+  return {
+    checks: {
+      passed: countOf(checks, 'passed'),
+      failing: countOf(checks, 'failed'),
+      running: countOf(checks, 'running'),
+      total: checks.length,
+      details: checks.map(detailOf),
+    },
+  };
+};
+
+/*
+ * What the Plugin said that the Change's one drawn modifier cannot show: both draft and conflict, and that the latest
+ * refresh failed. The data is kept for the views that draw them.
+ */
+const modifiersOf = ({
+  draft,
+  conflict,
+}: Change): Pick<SessionPullRequest, 'draft' | 'conflict'> => ({
+  ...(draft && { draft: true }),
+  ...(conflict && { conflict: true }),
+});
+
+const staleOf = ({ stale }: Change): Pick<SessionPullRequest, 'stale'> =>
+  stale ? { stale } : {};
+
+const factsOf = (change: Change): Partial<SessionPullRequest> => ({
+  ...modifiersOf(change),
+  ...staleOf(change),
+});
+
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
   id: change.id,
@@ -36,6 +88,8 @@ const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   title: change.title,
   mergeable: !change.conflict,
   ...(change.totals && { summary: change.totals }),
+  ...checksOf(change),
+  ...factsOf(change),
 });
 
 /*

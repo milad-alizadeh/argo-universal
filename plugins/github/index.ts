@@ -4,7 +4,7 @@ import {
   readLinks,
   type ChangesSource,
 } from './pull-changes';
-import { attach, list } from './pull-operations';
+import { attach, list, refresh } from './pull-operations';
 import { definePullReads } from './pull-reads';
 import { createPullStore } from './pull-store';
 
@@ -12,7 +12,7 @@ function sourceOf(argo: Argo): ChangesSource {
   return {
     store: createPullStore(argo),
     reads: definePullReads(argo),
-    readQuery: argo.queries.read,
+    readState: argo.queries.readState,
   };
 }
 
@@ -34,6 +34,9 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
     change: await attach({ ...argo, store: source.store }, reference, caller),
   }));
   argo.operations.register('list', (_params, caller) => list(source, caller));
+  argo.operations.register('refresh', (_params, caller) =>
+    refresh(source, argo, caller),
+  );
 }
 
 export function register(argo: Argo): void {

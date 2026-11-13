@@ -24,13 +24,31 @@ export async function* watchSlotItems(
   signal: AbortSignal,
 ): AsyncGenerator<SlotItems> {
   let last: string | undefined;
+  const release = refreshing(slotItems, contributors);
 
-  for await (const merged of merges(slotItems, contributors, signal)) {
-    const text = JSON.stringify(merged);
+  try {
+    for await (const merged of merges(slotItems, contributors, signal)) {
+      const text = JSON.stringify(merged);
 
-    if (text !== last) yield merged;
-    last = text;
+      if (text !== last) yield merged;
+      last = text;
+    }
+  } finally {
+    // The list is closed, so nothing asks its Plugins again for it (ADR-0052).
+    release();
   }
+}
+
+// Holds the Slot's refresh clock for as long as this list is open, if the Slot has one.
+function refreshing(
+  slotItems: PluginSlotItems,
+  { input, pluginIds }: Contributors,
+): () => void {
+  const ms = itemsSlot(input.slotId)?.content.refreshMs;
+
+  return ms === undefined
+    ? () => undefined
+    : slotItems.refresh.hold(pluginIds, ms);
 }
 
 async function* merges(

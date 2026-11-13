@@ -48,7 +48,7 @@ function slotItems(): SlotItems {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const calls = new PluginSlotItems(workers);
+  const calls = new PluginSlotItems(workers, { clock, due: () => undefined });
 
   workers.run('counter', 1);
 

@@ -21,12 +21,32 @@ export type FixturePull = {
   base: { ref: string; repo: { full_name: string } };
 };
 
+// One Check run of a commit as GitHub's REST API answers it.
+export type FixtureCheck = {
+  name: string;
+  status: 'queued' | 'in_progress' | 'completed';
+  conclusion:
+    | 'success'
+    | 'failure'
+    | 'neutral'
+    | 'skipped'
+    | 'cancelled'
+    | null;
+};
+
 export type GitHubFixture = FixtureServices & {
   // The pull requests GitHub knows, by `owner/repository#number`.
   pulls: Map<string, FixturePull>;
+  // The Check runs of a commit, by `owner/repository@sha`; a commit with none listed has none.
+  checks: Map<string, FixtureCheck[]>;
+  // While set, every call to the API fails with this status, as a network outage or a server error would.
+  outage: { status: number | undefined };
+  // The same for the Checks endpoint alone.
+  checksOutage: { status: number | undefined };
   // Every token GitHub accepts; empty means every call is a 401.
   accepted: Set<string>;
   pullReads: () => FixtureRequest[];
+  checkReads: () => FixtureRequest[];
 };
 
 export const sha = '0123456789abcdef0123456789abcdef01234567';
@@ -88,7 +108,20 @@ const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
 
 const pullPath = /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)$/;
 
-type Held = Pick<GitHubFixture, 'pulls' | 'accepted'>;
+const checksPath =
+  /^\/repos\/([^/]+\/[^/]+)\/commits\/([0-9a-f]+)\/check-runs(\?.*)?$/;
+
+type Held = Pick<
+  GitHubFixture,
+  'pulls' | 'checks' | 'accepted' | 'outage' | 'checksOutage'
+>;
+
+function checksAnswer({ checks }: Held, path: string): FixtureAnswer {
+  const [, repository, head] = checksPath.exec(path) ?? [];
+  const runs = checks.get(`${repository}@${head}`) ?? [];
+
+  return { json: { total_count: runs.length, check_runs: runs } };
+}
 
 function pullAnswer({ pulls }: Held, path: string): FixtureAnswer {
   const [, repository, number] = pullPath.exec(path) ?? [];
@@ -97,13 +130,28 @@ function pullAnswer({ pulls }: Held, path: string): FixtureAnswer {
   return pull ? { json: pull } : refusal('Not Found', notFound);
 }
 
+// The status an outage fails a call with, if one is on.
+const outageOf = (held: Held, path: string): number | undefined =>
+  held.outage.status ??
+  (checksPath.test(path) ? held.checksOutage.status : undefined);
+
+function resource(held: Held, { path }: FixtureRequest): FixtureAnswer {
+  if (path === '/user') return { json: { login: 'octocat' } };
+
+  return checksPath.test(path)
+    ? checksAnswer(held, path)
+    : pullAnswer(held, path);
+}
+
 function api(held: Held, request: FixtureRequest): FixtureAnswer {
   if (!held.accepted.has(bearerOf(request)))
     return refusal('Bad credentials', unauthorized);
 
-  return request.path === '/user'
-    ? { json: { login: 'octocat' } }
-    : pullAnswer(held, request.path);
+  const outage = outageOf(held, request.path);
+
+  return outage === undefined
+    ? resource(held, request)
+    : refusal('Service Unavailable', outage);
 }
 
 const githubCom = (request: FixtureRequest): FixtureAnswer =>
@@ -121,7 +169,7 @@ const handle =
  * `api.github.com`. A call with a token it does not accept is a 401.
  */
 export async function githubFixture(): Promise<GitHubFixture> {
-  const held: Held = { pulls: new Map(), accepted: new Set(['token-1']) };
+  const held = heldState();
   const services = await fixtureServices(handle(held));
 
   return {
@@ -129,5 +177,15 @@ export async function githubFixture(): Promise<GitHubFixture> {
     ...held,
     pullReads: () =>
       services.requests.filter(({ path }) => pullPath.test(path)),
+    checkReads: () =>
+      services.requests.filter(({ path }) => checksPath.test(path)),
   };
 }
+
+const heldState = (): Held => ({
+  pulls: new Map(),
+  checks: new Map(),
+  accepted: new Set(['token-1']),
+  outage: { status: undefined },
+  checksOutage: { status: undefined },
+});
