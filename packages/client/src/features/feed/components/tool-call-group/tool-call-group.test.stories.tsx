@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
+import { required } from '../recorded-tool-calls.mocks';
 import { scriptedToolCall } from '../tool-call-description.mocks';
 import { toolCallGroupMock, toolCallGroupMocks } from '../tool-call.mocks';
 import { ToolCallGroup } from './tool-call-group';
@@ -86,11 +87,13 @@ function running(width: number): Story {
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
       // The running command is a row of its own behind the read, so its output opens under it (#2044).
-      const titles = canvas.getAllByRole('button', { name: commandTitle });
+      const [, commandRow, ...rest] = canvas.getAllByRole('button', {
+        name: commandTitle,
+      });
 
-      await expect(titles).toHaveLength(2);
+      await expect(rest).toHaveLength(0);
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
-      await userEvent.click(titles[1] as HTMLElement);
+      await userEvent.click(required(commandRow, 'the command’s own row'));
       await expect(canvas.getByText('Shell')).toBeVisible();
       await userEvent.click(group);
       await waitFor(() =>

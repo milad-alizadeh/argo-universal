@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';
+import { required } from '../recorded-tool-calls.mocks';
 import { ToolCallRow } from '../tool-call-row/tool-call-row';
 import { ToolCallGroup } from './tool-call-group';
 import { genericGroup } from './tool-call-group-generic.mocks';
@@ -99,7 +100,7 @@ const verifyTitle = /^Verify the build/;
 
 // With other calls before it, the live call is a row of its own, so its detail opens under its own title (#2044).
 export const LiveCallAfterOthers: Story = {
-  args: { group: genericGroup('mcp-content', 'execute-pending') },
+  args: { group: genericGroup('execute-pending', 'mcp-content') },
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: verifyTitle }));
@@ -107,11 +108,13 @@ export const LiveCallAfterOthers: Story = {
       canvas.getByRole('button', { name: /^Read the issue/ }),
     ).toBeVisible();
 
-    const titles = canvas.getAllByRole('button', { name: verifyTitle });
+    const [, liveRow, ...rest] = canvas.getAllByRole('button', {
+      name: verifyTitle,
+    });
 
-    await expect(titles).toHaveLength(2);
+    await expect(rest).toHaveLength(0);
     await expect(canvas.queryByText(/pnpm verify/)).not.toBeInTheDocument();
-    await userEvent.click(titles[1] as HTMLElement);
+    await userEvent.click(required(liveRow, 'the live call’s own row'));
     await expect(canvas.getByText(/pnpm verify/)).toBeVisible();
   },
 };

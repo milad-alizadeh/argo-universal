@@ -71,10 +71,11 @@ function commandLine(row: ToolCallUpdate): string | undefined {
 
 function RawInput({ row }: { row: ToolCallUpdate }): React.JSX.Element | null {
   const command = commandLine(row);
-  const input = rawText(row, 'rawInput');
 
   if (command !== undefined)
     return <ResourceCode code={`$ ${command}`} title="Shell" />;
+
+  const input = rawText(row, 'rawInput');
 
   return input === undefined ? null : (
     <ResourceCode code={input} title="Input" language="json" />

@@ -1,9 +1,9 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { recordedToolCall } from '../tool-call-group/tool-call-group-generic.mocks';
 import { completedRead, readMocks } from '../tool-call.mocks';
 import { ToolCallRow } from './tool-call-row';
+import { commandWithoutOutput } from './tool-call-row-fixtures';
 
 const meta = {
   title: 'Tests/Feed/ToolCallRow',
@@ -93,7 +93,7 @@ export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
 
 // A command with no output yet shows its command line, not its raw input (#2044).
 export const CommandWithoutOutput: Story = {
-  args: { row: recordedToolCall('execute-pending') },
+  args: commandWithoutOutput,
   play: async ({ canvas, userEvent }) => {
     await settleLayout(layoutWidths.wide);
     await userEvent.click(
