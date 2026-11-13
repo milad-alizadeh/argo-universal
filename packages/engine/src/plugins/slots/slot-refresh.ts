@@ -22,7 +22,7 @@ const keyOf = (pluginId: string, ms: number): string => `${pluginId}\n${ms}`;
 /*
  * The clock of a list that is open (ADR-0052): while at least one App holds a list that wants its Plugins asked
  * again, one timer per Plugin and interval makes the Plugin's Queries due and its Slots ask again. It is Argo's, not
- * the Plugin's: nothing runs once the last list closes or while the Plugin is not running. Every open list shares the
+ * the Plugin's: nothing runs once the last list closes, and a Plugin that is not running is not read. Every open list shares the
  * one timer, and the answers it asks for come through the Queries the Pages share.
  */
 export class SlotRefresh {
@@ -59,13 +59,10 @@ export class SlotRefresh {
     this.holds.delete(keyOf(hold.pluginId, hold.ms));
   }
 
-  // One tick away, and only while the Plugin runs.
+  // One tick away. A Plugin that is not running still ticks, so a list that stays open notices it start again.
   private arm(hold: Hold): void {
     hold.cancel?.();
     hold.cancel = undefined;
-
-    if (!this.refreshing.running(hold.pluginId)) return;
-
     hold.cancel = this.refreshing.clock.schedule(
       () => this.tick(hold),
       hold.ms,
@@ -74,14 +71,15 @@ export class SlotRefresh {
 
   private tick(hold: Hold): void {
     hold.cancel = undefined;
-    if (!this.refreshing.running(hold.pluginId)) return;
 
-    this.refreshing.due(hold.pluginId);
+    // Nothing of a Plugin that is not running is read; the open list only asks again.
+    if (this.refreshing.running(hold.pluginId))
+      this.refreshing.due(hold.pluginId);
     this.refreshing.ask(hold.pluginId);
     this.arm(hold);
   }
 
-  // A Plugin that stopped or started: the timer of the generation that ended is let go, and a running one is armed.
+  // A Plugin that stopped or started: the timer is set afresh, so none outlives the generation it was set for.
   restarted(pluginId: string): void {
     for (const hold of this.holds.values())
       if (hold.pluginId === pluginId) this.arm(hold);

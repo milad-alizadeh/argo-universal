@@ -23,7 +23,16 @@ export const otherProject = {
   originUrl: null,
 };
 
+// A Project that lives on GitLab.
+export const gitlabProject = {
+  id: 'project-4',
+  name: 'GitLab Project',
+  originUrl: 'git@gitlab.com:owner/repository.git',
+};
+
 export const sessionId = 'session-1';
+
+export const gitlabSessionId = 'gitlab-session';
 
 export const secondSessionId = 'session-2';
 
@@ -33,6 +42,8 @@ export const changesSlot = 'argo/session/changes/v1';
 
 export type Journey = {
   test: PluginTest;
+  // What the Engine says of each Session; a test moves a Session to another branch by changing its `branch`.
+  sessions: Sessions;
   github: GitHubFixture;
   keep: Keep;
 };
@@ -80,7 +91,13 @@ async function pluginsFolder(): Promise<string> {
   return folder;
 }
 
-const sessions = {
+const gitlabSession: SessionState = {
+  projectId: gitlabProject.id,
+  branch: 'feature-12',
+  title: 'GitLab',
+};
+
+const sessionsOf = (): Sessions => ({
   [sessionId]: {
     projectId: project.id,
     branch: `feature-${sharedNumber}`,
@@ -92,7 +109,18 @@ const sessions = {
     branch: null,
     title: 'Elsewhere',
   },
-} satisfies PluginTestOptions['sessions'];
+  [gitlabSessionId]: { ...gitlabSession },
+});
+
+type SessionState = { projectId: string; branch: string | null; title: string };
+
+type Sessions = Record<
+  | typeof sessionId
+  | typeof secondSessionId
+  | typeof foreignSessionId
+  | typeof gitlabSessionId,
+  SessionState
+>;
 
 type Keep = Required<Pick<PluginTestOptions, 'home' | 'secretStore'>>;
 
@@ -107,10 +135,11 @@ const closeOnce = async (test: PluginTest): Promise<void> => {
 
 const baseOptions = (
   github: GitHubFixture,
+  sessions: Sessions,
 ): Omit<PluginTestOptions, 'directory'> => ({
   pluginId: 'github',
   version: '0.0.0',
-  projects: [project, otherProject],
+  projects: [project, otherProject, gitlabProject],
   network: github.network,
   clockStart: 0,
   sessions,
@@ -119,9 +148,10 @@ const baseOptions = (
 async function startOver(
   github: GitHubFixture,
   keep: Keep,
+  sessions: Sessions,
 ): Promise<PluginTest> {
   const test = await startPluginTest({
-    ...baseOptions(github),
+    ...baseOptions(github, sessions),
     directory: await pluginsFolder(),
     ...keep,
   });
@@ -146,8 +176,14 @@ export async function signedOutJourney(): Promise<Journey> {
   for (const [key, pull] of defaultPulls) github.pulls.set(key, pull);
 
   const keep = await keepFolder();
+  const sessions = sessionsOf();
 
-  return { test: await startOver(github, keep), github, keep };
+  return {
+    test: await startOver(github, keep, sessions),
+    sessions,
+    github,
+    keep,
+  };
 }
 
 // The same, with the person already signed in.
@@ -162,7 +198,7 @@ export async function journey(): Promise<Journey> {
 // A Server restart: the Plugin starts again over the same storage, Accounts and GitHub, with nothing kept in memory.
 export async function restart(run: Journey): Promise<void> {
   await closeOnce(run.test);
-  run.test = await startOver(run.github, run.keep);
+  run.test = await startOver(run.github, run.keep, run.sessions);
   // The Server starts every Plugin at launch; this host starts one when it is first used, so wake the provider.
   await run.test.operations.run({ name: 'cancelSignIn', pluginId: provider });
 }

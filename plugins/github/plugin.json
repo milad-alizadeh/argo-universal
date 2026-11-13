@@ -31,6 +31,22 @@
         "caller": ["project", "session"]
       },
       {
+        "name": "discover",
+        "label": "Find the pull requests of the Session's branch",
+        "description": "Look on GitHub for the pull requests, open, merged or closed, opened from the calling Session's current branch, and attach each one found. Safe to repeat: earlier attached pull requests stay. Answers found, no-match, branchless, not-github or unavailable.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "branch",
+          "discover",
+          "find",
+          "session"
+        ],
+        "caller": ["project", "session"]
+      },
+      {
         "name": "list",
         "label": "List the Session's pull requests",
         "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",

@@ -44,7 +44,11 @@ async function stateNamed(
   call: DataCall,
   query: PluginQuery,
   projectId?: string,
-): Promise<QueryState<unknown>> {
+): Promise<{
+  data?: QueryResult<PluginQuery>;
+  error?: string;
+  stale: boolean;
+}> {
   const { data, error, stale } = await call({
     api: 'data',
     action: 'read',

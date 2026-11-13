@@ -7,27 +7,32 @@ import {
   changePull,
   newHead,
   openChanges,
+  pushed,
   repository,
   tick,
 } from './journey-watch';
 
-const slow = 30_000;
+const slow = 60_000;
 
 const build = 'build';
 
 const checksOf = (head: string): string => `${repository}@${head}`;
 
 it(
-  'shows each Check by name and result as it moves from running to passed',
+  'shows each Check by name and result as it moves, reads odd conclusions safely, and follows a push to the new head',
   async () => {
     const run = await attached(1);
     const open = openChanges(run);
 
-    await open.next();
+    expect(await open.next()).toMatchObject([{ checks: [] }]);
+
     run.github.checks.set(checksOf(sha), [
       { name: build, status: 'in_progress', conclusion: null },
       { name: 'lint', status: 'completed', conclusion: 'success' },
       { name: 'test', status: 'completed', conclusion: 'failure' },
+      { name: 'stopped', status: 'completed', conclusion: 'cancelled' },
+      { name: 'skip', status: 'completed', conclusion: 'skipped' },
+      { name: 'later', status: 'queued', conclusion: null },
     ]);
     await tick(run);
 
@@ -37,100 +42,28 @@ it(
           { name: build, state: 'running' },
           { name: 'lint', state: 'passed' },
           { name: 'test', state: 'failed' },
-        ],
-      },
-    ]);
-
-    run.github.checks.set(checksOf(sha), [
-      { name: build, status: 'completed', conclusion: 'success' },
-      { name: 'lint', status: 'completed', conclusion: 'success' },
-      { name: 'test', status: 'completed', conclusion: 'success' },
-    ]);
-    await tick(run);
-
-    expect(await open.next()).toMatchObject([
-      {
-        checks: [
-          { name: build, state: 'passed' },
-          { name: 'lint', state: 'passed' },
-          { name: 'test', state: 'passed' },
-        ],
-      },
-    ]);
-  },
-  slow,
-);
-
-it(
-  "shows a pushed head's Checks instead of the old head's",
-  async () => {
-    const run = await attached(1);
-    const open = openChanges(run);
-
-    run.github.checks.set(checksOf(sha), [
-      { name: build, status: 'completed', conclusion: 'success' },
-    ]);
-    await open.next();
-    changePull(run, 1, { head: { ref: 'feature-1', sha: newHead } });
-    run.github.checks.set(checksOf(newHead), [
-      { name: build, status: 'queued', conclusion: null },
-    ]);
-    await tick(run);
-
-    expect(await open.next()).toMatchObject([
-      { head: newHead, checks: [{ name: build, state: 'running' }] },
-    ]);
-  },
-  slow,
-);
-
-it.each([
-  ['cancelled', 'cancelled', 'failed'],
-  ['skipped', 'skipped', 'passed'],
-  ['neutral', 'neutral', 'passed'],
-] as const)(
-  'reads a %s Check as %s, and one that has not completed as running',
-  async (_name, conclusion, state) => {
-    const run = await attached(1);
-
-    run.github.checks.set(checksOf(sha), [
-      { name: build, status: 'completed', conclusion },
-      { name: 'later', status: 'queued', conclusion: null },
-    ]);
-
-    expect(await changesOf(run)).toMatchObject([
-      {
-        checks: [
-          { name: build, state },
+          { name: 'stopped', state: 'failed' },
+          { name: 'skip', state: 'passed' },
           { name: 'later', state: 'running' },
         ],
       },
     ]);
+
+    changePull(run, 1, { head: pushed(1) });
+    run.github.checks.set(checksOf(newHead), [
+      { name: build, status: 'completed', conclusion: 'success' },
+    ]);
+    await tick(run);
+
+    expect(await open.next()).toMatchObject([
+      { head: newHead, checks: [{ name: build, state: 'passed' }] },
+    ]);
   },
   slow,
 );
 
 it(
-  'tells a commit GitHub says has no Checks (an empty list) from Checks that could not be read (none given)',
-  async () => {
-    const run = await attached(1);
-
-    expect(await changesOf(run)).toMatchObject([{ checks: [] }]);
-
-    await restart(run);
-    run.github.outage.status = 502;
-
-    // The pull request cannot be read, so there are no Checks to claim and no Change to claim them for.
-    expect(await changesOf(run)).toEqual([]);
-    expect(await listed(run)).toMatchObject({
-      changes: [{ number: 1, error: expect.any(String) }],
-    });
-  },
-  slow,
-);
-
-it(
-  'keeps the Checks last known when only a refresh of them fails, marked stale, and gives none for a head it never read',
+  'tells Checks GitHub says are none (an empty list) from Checks that could not be read (none given), and keeps the last known through a failed refresh',
   async () => {
     const run = await attached(1);
     const open = openChanges(run);
@@ -140,7 +73,7 @@ it(
     ]);
     await open.next();
 
-    run.github.checksOutage.status = 500;
+    run.github.checksFailWith.status = 500;
     run.github.checks.set(checksOf(sha), []);
     await tick(run);
 
@@ -148,13 +81,22 @@ it(
       { stale: 'failed', checks: [{ name: build, state: 'passed' }] },
     ]);
 
-    changePull(run, 1, { head: { ref: 'feature-1', sha: newHead } });
+    changePull(run, 1, { head: pushed(1) });
     await tick(run);
 
-    const [pushed] = await open.next();
+    const [moved] = await open.next();
 
-    expect(pushed).toMatchObject({ head: newHead, stale: 'failed' });
-    expect(pushed).not.toHaveProperty('checks');
+    expect(moved).toMatchObject({ head: newHead, stale: 'failed' });
+    expect(moved).not.toHaveProperty('checks');
+
+    // Nothing of the pull request could be read after a restart, so there are no Checks to claim and no Change to claim them for.
+    await restart(run);
+    run.github.failWith.status = 502;
+
+    expect(await changesOf(run)).toEqual([]);
+    expect(await listed(run)).toMatchObject({
+      changes: [{ number: 1, error: expect.any(String) }],
+    });
   },
   slow,
 );

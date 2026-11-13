@@ -1,6 +1,6 @@
 import type { PluginTest } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
-import { pullOf, type FixturePull } from './github-fixture';
+import { headFrom, pullOf, type FixturePull } from './github-fixture';
 import { attach } from './journey-calls';
 import {
   caller,
@@ -67,6 +67,12 @@ export const repository = 'owner/repository';
 
 // A head commit a push moves a pull request to.
 export const newHead = 'fedcba9876543210fedcba9876543210fedcba98';
+
+// The head of a pull request after a push moved it to `newHead`.
+export const pushed = (number: number): FixturePull['head'] => ({
+  ...headFrom('owner', `feature-${number}`),
+  sha: newHead,
+});
 
 // The id the Plugin gives the Change of a pull request of the Project's repository.
 export const idOf = (number: number): string =>

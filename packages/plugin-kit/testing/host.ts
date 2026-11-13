@@ -77,6 +77,10 @@ class HostedPlugin implements PluginTest {
       await this.pageClock.advance(ms);
     },
   };
+  readonly plugins: PluginTest['plugins'] = {
+    setEnabled: (pluginId, enabled) =>
+      this.service.setEnabled(pluginId, enabled),
+  };
   readonly storage = {
     execute: (
       queries: Parameters<PluginStorage['execute']>[1],

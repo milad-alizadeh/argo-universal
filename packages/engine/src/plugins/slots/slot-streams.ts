@@ -1,8 +1,9 @@
 import { drawsPluginWire } from '@repo/contracts/plugins/kit';
-import type {
-  AddOnlySlotId,
-  SlotItems,
-  SlotItemsInput,
+import {
+  itemsSlot,
+  type AddOnlySlotId,
+  type SlotItems,
+  type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import { fillsSlot } from '../discovery/plugin-contributions';
@@ -47,7 +48,16 @@ export async function* slotItemsFor(
 
   if (!pluginIds.length) return yield {};
 
-  const contributors = { pluginIds, input, surface, failed: failedOf(deps) };
+  const contributors = {
+    pluginIds,
+    input,
+    surface,
+    failed: failedOf(deps),
+    // Only a list on a clock starts Plugins again: the clock is what notices one turned back on.
+    ...(itemsSlot(input.slotId)?.content.refreshMs !== undefined && {
+      start: () => fillingPlugins(deps, input),
+    }),
+  };
 
   yield* watchSlotItems(deps.pluginRuntime.items, contributors, signal);
 }

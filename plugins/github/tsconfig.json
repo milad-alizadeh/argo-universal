@@ -4,9 +4,11 @@
   "exclude": [
     "**/*.test.ts",
     "**/node_modules",
+    "github-fixture-rest.ts",
     "github-fixture.ts",
     "journey-calls.ts",
     "journey-fixture.ts",
+    "journey-watch.ts",
     "vitest.config.ts"
   ]
 }

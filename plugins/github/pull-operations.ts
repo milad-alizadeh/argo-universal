@@ -6,6 +6,7 @@ import {
   type ChangesSource,
   type LinkRead,
 } from './pull-changes';
+import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { failureMessage } from './pull-known';
 import { fetchPull } from './pull-reads';
 import { parseReference } from './pull-reference';
@@ -32,17 +33,31 @@ async function projectOf(
  * The Project's origin, once the caller's Project exists and the Session belongs to it: an Operation never acts on a
  * Session outside the Project core resolved for the run.
  */
-async function originOf(
+async function checkoutOf(
   scope: Scope,
   { projectId, sessionId }: Caller,
-): Promise<string | null> {
+): Promise<Checkout> {
   const project = await projectOf(scope, projectId);
   const session = await scope.sessions.get(sessionId);
 
   if (session?.projectId !== projectId)
     throw new Error('This Session does not belong to this Project.');
 
-  return project.originUrl;
+  return { originUrl: project.originUrl, branch: session.branch };
+}
+
+const originOf = async (scope: Scope, caller: Caller): Promise<string | null> =>
+  (await checkoutOf(scope, caller)).originUrl;
+
+/*
+ * Looks for the pull requests of the Session's current branch and stores them, in the repository each one targets.
+ * Running it again, or after a branch switch, keeps every earlier association.
+ */
+export async function discoverFor(
+  scope: Scope,
+  caller: Caller,
+): Promise<Discovered> {
+  return discover(scope, await checkoutOf(scope, caller), caller);
 }
 
 export type Attached = ReturnType<typeof changeOf>;

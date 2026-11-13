@@ -15,7 +15,13 @@ export type PullInfo = {
   deletions: number;
 };
 
-type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | Json[]
+  | { [key: string]: Json };
 
 const invalid = 'GitHub returned an invalid pull request.';
 
@@ -25,8 +31,10 @@ const isObject = (value: Json | undefined): value is { [key: string]: Json } =>
 const child = (value: Json | undefined, key: string): Json | undefined =>
   isObject(value) ? value[key] : undefined;
 
-const valueAt = (value: Json, path: readonly string[]): Json | undefined =>
-  path.reduce<Json | undefined>(child, value);
+export const valueAt = (
+  value: Json,
+  path: readonly string[],
+): Json | undefined => path.reduce<Json | undefined>(child, value);
 
 const text = (pull: Json, ...path: string[]): string => {
   const value = valueAt(pull, path);

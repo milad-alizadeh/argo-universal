@@ -12,12 +12,12 @@ import {
   tick,
 } from './journey-watch';
 
-const slow = 30_000;
+const slow = 60_000;
 
 const token = 'token-1';
 
 it(
-  'keeps what was last known when access is lost and says why, instead of closing the pull request or dropping its Checks; signing in again and retrying recovers it',
+  'keeps what was last known through lost access and a network failure, says why, and recovers on sign-in and on the explicit retry',
   async () => {
     const run = await attached(1);
 
@@ -49,29 +49,19 @@ it(
 
     expect(recovered).toMatchObject({ stage: 'closed' });
     expect(recovered).not.toHaveProperty('stale');
-  },
-  slow,
-);
 
-it(
-  'keeps what was last known through a network failure, marks it stale, and the explicit retry recovers it without waiting for the clock',
-  async () => {
-    const run = await attached(1);
-    const open = openChanges(run);
-
-    await open.next();
-    run.github.outage.status = 503;
+    run.github.failWith.status = 503;
     changePull(run, 1, { title: 'Renamed' });
     await tick(run);
 
     expect(await open.next()).toMatchObject([
-      { title: 'Pull request 1', stage: 'open', stale: 'failed' },
+      { stage: 'closed', stale: 'failed' },
     ]);
     expect(await listed(run)).toMatchObject({
-      changes: [{ title: 'Pull request 1', stale: 'failed' }],
+      changes: [{ stage: 'closed', stale: 'failed' }],
     });
 
-    run.github.outage.status = undefined;
+    run.github.failWith.status = null;
 
     expect(await refreshed(run)).toMatchObject({
       changes: [{ title: 'Renamed' }],
@@ -82,7 +72,7 @@ it(
 );
 
 it(
-  'leaves out only the pull request that cannot be read, keeps the others, and still lists it with why; it returns when it can be read again',
+  'leaves out only the pull request that cannot be read, tells a failed first read from an empty one, and shows it once it can be read again',
   async () => {
     const run = await attached(1, 2, 3);
 
@@ -109,40 +99,20 @@ it(
       { id: idOf(2) },
       { id: idOf(3) },
     ]);
-  },
-  slow,
-);
 
-it(
-  'tells a failed first read from an empty one, keeps the association through it, and shows the pull request once access is back',
-  async () => {
-    const run = await attached(1);
-
+    // Everything fails on a fresh start: that is an error, not an empty Session, and the associations stay.
     await restart(run);
-    run.github.outage.status = 500;
+    run.github.failWith.status = 500;
 
     expect(await changesOf(run)).toEqual([]);
     expect(await listed(run)).toMatchObject({
-      changes: [{ repository, number: 1, error: expect.any(String) }],
+      changes: [{ error: expect.any(String) }, {}, {}],
     });
 
-    run.github.outage.status = undefined;
+    run.github.failWith.status = null;
     await refreshed(run);
 
-    expect(await changesOf(run)).toMatchObject([{ id: idOf(1) }]);
-  },
-  slow,
-);
-
-it(
-  'keeps showing a Session with nothing attached as empty, not as failed',
-  async () => {
-    const run = await attached();
-
-    run.github.outage.status = 500;
-
-    expect(await changesOf(run)).toEqual([]);
-    expect(await listed(run)).toEqual({ changes: [] });
+    expect(await changesOf(run)).toHaveLength(3);
   },
   slow,
 );

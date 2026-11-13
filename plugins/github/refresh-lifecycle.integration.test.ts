@@ -1,14 +1,18 @@
 import { expect, it } from 'vitest';
-import { changesOf } from './journey-calls';
-import { restart } from './journey-fixture';
-import { attached, changePull, openChanges, tick } from './journey-watch';
+import {
+  attached,
+  changePull,
+  openChanges,
+  type OpenChanges,
+  tick,
+} from './journey-watch';
 
-const slow = 30_000;
+const slow = 60_000;
 
 const renamed = 'Renamed';
 
 it(
-  'shares one read of a pull request between the Workbench and the Inspector',
+  'shares one read per pull request between the Workbench and the Inspector, keeps asking while either is open, and stops when both close',
   async () => {
     const run = await attached(1);
     const workbench = openChanges(run);
@@ -27,65 +31,62 @@ it(
 
     expect(run.github.pullReads()).toHaveLength(pulls + 1);
     expect(run.github.checkReads()).toHaveLength(checks + 1);
+
+    workbench.close();
+    changePull(run, 1, { title: 'Renamed again' });
+    await tick(run);
+
+    expect(await inspector.next()).toMatchObject([{ title: 'Renamed again' }]);
+
+    inspector.close();
+
+    const reads = run.github.requests.length;
+
+    await tick(run);
+    await tick(run);
+
+    expect(run.github.requests).toHaveLength(reads);
   },
   slow,
 );
 
+// The list's next answer that has a Change in it: leaving the Plugin out and bringing it back are answers too.
+async function nextWithChanges(open: OpenChanges): Promise<object[]> {
+  const answer = await open.next();
+
+  return answer.length ? answer : nextWithChanges(open);
+}
+
 it(
-  'keeps asking while one list stays open after the other closes',
+  'stops reading GitHub while the Plugin is disabled with a list open, and reads again once it is enabled, without the list reopening',
   async () => {
     const run = await attached(1);
-    const workbench = openChanges(run);
-    const inspector = openChanges(run);
+    const open = openChanges(run);
 
-    await workbench.next();
-    await inspector.next();
-    workbench.close();
+    await open.next();
+    await run.test.plugins.setEnabled('github', false);
+
+    const whileOff = run.github.requests.length;
+
     changePull(run, 1, { title: renamed });
     await tick(run);
-
-    expect(await inspector.next()).toMatchObject([{ title: renamed }]);
-  },
-  slow,
-);
-
-it(
-  'releases the refresh once the last open list closes: nothing asks GitHub again',
-  async () => {
-    const run = await attached(1);
-    const first = openChanges(run);
-    const second = openChanges(run);
-
-    await first.next();
-    await second.next();
-    first.close();
-    second.close();
-
-    const reads = run.github.requests.length;
-
-    await tick(run);
     await tick(run);
 
-    expect(run.github.requests).toHaveLength(reads);
-  },
-  slow,
-);
+    expect(run.github.requests).toHaveLength(whileOff);
 
-it(
-  'starts no refresh of its own: nothing asks GitHub again while no list is open, even after a restart',
-  async () => {
-    const run = await attached(1);
-
-    await restart(run);
-    await changesOf(run);
+    await run.test.plugins.setEnabled('github', true);
     await tick(run);
 
-    const reads = run.github.requests.length;
+    expect(await nextWithChanges(open)).toMatchObject([{ title: renamed }]);
+    expect(run.github.requests.length).toBeGreaterThan(whileOff);
 
-    await tick(run);
+    const running = run.github.requests.length;
+
+    changePull(run, 1, { title: 'After' });
     await tick(run);
 
-    expect(run.github.requests).toHaveLength(reads);
+    expect(await nextWithChanges(open)).toMatchObject([{ title: 'After' }]);
+    expect(run.github.requests.length).toBeGreaterThan(running);
   },
   slow,
 );

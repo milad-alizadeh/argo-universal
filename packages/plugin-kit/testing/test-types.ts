@@ -138,6 +138,10 @@ export interface PluginTest {
   close: () => Promise<void>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
   clock: { advance: (ms: number) => Promise<void> };
+  // Turns a Plugin off or on as the Plugin settings do: off stops its worker, on starts it when next asked for.
+  plugins: {
+    setEnabled: (pluginId: string, enabled: boolean) => Promise<void>;
+  };
   settings: Map<string, PluginSettingValue>;
   storage: {
     execute: (

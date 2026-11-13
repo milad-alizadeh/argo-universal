@@ -72,20 +72,24 @@ it('runs one clock for every list that holds it, and stops when the last lets go
   expect(timers.size).toBe(0);
 });
 
-it('runs no clock for a Plugin that is not running, and lets go of it when it stops', () => {
-  const { refreshing, timers, running } = refresh();
+it('only asks again, and makes nothing due, while the Plugin is not running', () => {
+  const { refreshing, tick, asked, running } = refresh();
 
   running.delete('github');
   refreshing.hold(['github'], every);
-  expect(timers.size).toBe(0);
+  tick();
 
-  running.add('github');
+  expect(asked).toEqual(['ask github']);
+});
+
+it('sets the timer afresh when the Plugin stops or starts, never keeping two', () => {
+  const { refreshing, timers } = refresh();
+
+  refreshing.hold(['github'], every);
   refreshing.restarted('github');
+  refreshing.restarted('github');
+
   expect(timers.size).toBe(1);
-
-  running.delete('github');
-  refreshing.restarted('github');
-  expect(timers.size).toBe(0);
 });
 
 it('asks nothing once closed', () => {
