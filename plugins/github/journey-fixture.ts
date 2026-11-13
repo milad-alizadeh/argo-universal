@@ -23,7 +23,16 @@ export const otherProject = {
   originUrl: null,
 };
 
+// A Project that lives on GitLab.
+export const gitlabProject = {
+  id: 'project-4',
+  name: 'GitLab Project',
+  originUrl: 'git@gitlab.com:owner/repository.git',
+};
+
 export const sessionId = 'session-1';
+
+export const gitlabSessionId = 'gitlab-session';
 
 export const secondSessionId = 'session-2';
 
@@ -94,12 +103,20 @@ const sessionsOf = (): Sessions => ({
     branch: null,
     title: 'Elsewhere',
   },
+  [gitlabSessionId]: {
+    projectId: gitlabProject.id,
+    branch: 'feature-12',
+    title: 'GitLab',
+  },
 });
 
 type SessionState = { projectId: string; branch: string | null; title: string };
 
 type Sessions = Record<
-  typeof sessionId | typeof secondSessionId | typeof foreignSessionId,
+  | typeof sessionId
+  | typeof secondSessionId
+  | typeof foreignSessionId
+  | typeof gitlabSessionId,
   SessionState
 >;
 
@@ -120,7 +137,7 @@ const baseOptions = (
 ): Omit<PluginTestOptions, 'directory'> => ({
   pluginId: 'github',
   version: '0.0.0',
-  projects: [project, otherProject],
+  projects: [project, otherProject, gitlabProject],
   network: github.network,
   clockStart: 0,
   sessions,

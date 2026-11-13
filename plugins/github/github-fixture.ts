@@ -26,6 +26,8 @@ export type GitHubFixture = FixtureServices & {
   pulls: Map<string, FixturePull>;
   // Every token GitHub accepts; empty means every call is a 401.
   accepted: Set<string>;
+  // Set to make every call to `api.github.com` fail with this status, once signed in.
+  failWith: { status: number | null };
   // The repository each fork was made from, by `owner/repository`.
   parents: Map<string, string>;
   // Calls asking which pull requests a branch has.
@@ -99,7 +101,7 @@ const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
 
 const pullPath = /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)$/;
 
-type Held = Pick<GitHubFixture, 'pulls' | 'accepted' | 'parents'>;
+type Held = Pick<GitHubFixture, 'pulls' | 'accepted' | 'parents' | 'failWith'>;
 
 function pullAnswer({ pulls }: Held, path: string): FixtureAnswer {
   const [, repository, number] = pullPath.exec(path) ?? [];
@@ -112,28 +114,36 @@ const listPath = /^\/repos\/([^/]+\/[^/?]+)\/pulls\?(.*)$/;
 
 const repoPath = /^\/repos\/([^/?]+\/[^/?]+)$/;
 
-const ownerOf = (repository: string): string => repository.split('/')[0] ?? '';
-
-// GitHub's list of a repository's pull requests, narrowed by `head=owner:branch` as the real one is.
+/*
+ * GitHub's list of a repository's pull requests with the branch asked for, by `state` (open unless asked). It
+ * deliberately ignores the owner in `head=owner:branch`, so the Plugin must tell a fork's same-named branch apart itself.
+ */
 function listAnswer(
   { pulls }: Held,
   repository: string,
   query: string,
 ): FixtureAnswer {
-  const [owner = '', ...branch] = (
-    new URLSearchParams(query).get('head') ?? ''
-  ).split(':');
+  const params = new URLSearchParams(query);
+  const state = params.get('state') ?? 'open';
+  const branch = (params.get('head') ?? '').split(':').slice(1).join(':');
 
   const wanted = (pull: FixturePull): boolean =>
+    (state === 'all' || pull.state === state) &&
     pull.base.repo.full_name === repository &&
-    pull.head.ref === branch.join(':') &&
-    ownerOf(pull.head.repo.full_name) === owner;
+    pull.head.ref === branch;
 
   return { json: [...pulls.values()].filter(wanted) };
 }
 
-function repoAnswer({ parents }: Held, repository: string): FixtureAnswer {
-  const parent = parents.get(repository);
+const known = ({ pulls, parents }: Held, repository: string): boolean =>
+  [...pulls.values()].some(({ base }) => base.repo.full_name === repository) ||
+  parents.has(repository) ||
+  [...parents.values()].includes(repository);
+
+function repoAnswer(held: Held, repository: string): FixtureAnswer {
+  if (!known(held, repository)) return refusal('Not Found', notFound);
+
+  const parent = held.parents.get(repository);
 
   return {
     json: {
@@ -157,6 +167,9 @@ function api(held: Held, request: FixtureRequest): FixtureAnswer {
   if (!held.accepted.has(bearerOf(request)))
     return refusal('Bad credentials', unauthorized);
 
+  if (held.failWith.status)
+    return refusal('Server Error', held.failWith.status);
+
   return request.path === '/user'
     ? { json: { login: 'octocat' } }
     : route(held, request.path);
@@ -176,6 +189,7 @@ const heldOf = (): Held => ({
   pulls: new Map(),
   accepted: new Set(['token-1']),
   parents: new Map(),
+  failWith: { status: null },
 });
 
 /*

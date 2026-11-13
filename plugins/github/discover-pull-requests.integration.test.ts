@@ -1,6 +1,13 @@
 import { expect, it } from 'vitest';
 import { headFrom, pullOf, type FixturePull } from './github-fixture';
-import { attach, changesOf, discover, switchBranch } from './journey-calls';
+import {
+  attach,
+  changesOf,
+  discover,
+  switchBranch,
+  untilChanges,
+  watchChanges,
+} from './journey-calls';
 import { journey } from './journey-fixture';
 
 const slow = 30_000;
@@ -20,26 +27,30 @@ const proposedUpstream = (
   pullOf(upstream, number, { head: headFrom(owner, 'feature-12') });
 
 it(
-  "attaches the pull requests of the Session's branch and shows them without a reload",
+  "attaches the pull requests of the Session's branch and shows them as soon as it runs",
   async () => {
     const run = await journey();
+    const redraws = watchChanges(run);
 
+    expect(await untilChanges(redraws, 0)).toEqual([]);
     expect(await discover(run)).toEqual({
       result: 'found',
       pullRequests: [ownReference],
     });
-    expect(await changesOf(run)).toMatchObject([{ id: own, stage: 'open' }]);
+    expect(await untilChanges(redraws, 1)).toMatchObject([
+      { id: own, stage: 'open' },
+    ]);
   },
   slow,
 );
 
 it(
-  'discovers the same pull request once however often it runs, and never writes to GitHub',
+  'discovers the same pull request once however often it runs, and only ever reads GitHub',
   async () => {
     const run = await journey();
+    const first = await discover(run);
 
-    await discover(run);
-    await discover(run);
+    expect(await discover(run)).toEqual(first);
     await attach(run, 'owner/repository#12');
 
     expect(await changesOf(run)).toMatchObject([{ id: own }]);
@@ -47,7 +58,13 @@ it(
       run.github.requests
         .filter(({ host }) => host === 'api.github.com')
         .map(({ method }) => method),
-    ).not.toContain('POST');
+    ).toEqual(expect.arrayContaining(['GET']));
+    expect(
+      run.github.requests
+        .filter(({ host }) => host === 'api.github.com')
+        .every(({ method }) => method === 'GET'),
+    ).toBe(true);
+    expect(run.github.listReads()[0]?.path).toContain('state=all');
   },
   slow,
 );
@@ -63,7 +80,13 @@ it(
       head: headFrom('owner', 'feature-20'),
     });
 
+    const abandoned = pullOf(ownRepository, 21, {
+      state: 'closed',
+      head: headFrom('owner', 'feature-20'),
+    });
+
     run.github.pulls.set(...merged);
+    run.github.pulls.set(...abandoned);
     await discover(run);
     switchBranch(run, 'feature-20');
     await discover(run);
@@ -73,6 +96,7 @@ it(
     expect(await changesOf(run)).toMatchObject([
       { id: own, stage: 'open' },
       { id: 'github:owner/repository#20', stage: 'merged' },
+      { id: 'github:owner/repository#21', stage: 'closed' },
     ]);
   },
   slow,
@@ -86,15 +110,21 @@ it(
     run.github.parents.set(ownRepository, upstream);
     run.github.pulls.set(...proposedUpstream(7, 'owner'));
     run.github.pulls.set(...proposedUpstream(8, 'other'));
-    run.github.pulls.set(...proposedUpstream(12, 'other'));
+    run.github.pulls.set(...proposedUpstream(9, 'other'));
+    run.github.pulls.set(...proposedUpstream(12, 'owner'));
 
     expect(await discover(run)).toEqual({
       result: 'found',
-      pullRequests: [ownReference, { repository: upstream, number: 7 }],
+      pullRequests: [
+        ownReference,
+        { repository: upstream, number: 7 },
+        { repository: upstream, number: 12 },
+      ],
     });
     expect(await changesOf(run)).toMatchObject([
       { id: own },
       { id: 'github:upstream/repository#7' },
+      { id: 'github:upstream/repository#12' },
     ]);
   },
   slow,

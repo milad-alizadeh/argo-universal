@@ -106,3 +106,37 @@ export function switchBranch(
 ): void {
   sessions[sessionId] = { projectId: project.id, title: 'Work', branch };
 }
+
+const itemsOfAnswer = (answer: Answer, session: Caller): object[] =>
+  (answer[session.sessionId]?.items ?? []).map(({ item }) => item);
+
+// The Changes Argo would redraw one Session with, each time the Plugin says they changed.
+export async function* watchChanges(
+  { test }: Journey,
+  session: Caller = caller,
+): AsyncGenerator<object[]> {
+  const controller = new AbortController();
+
+  onTestFinished(() => controller.abort());
+
+  const answers = test.slotItems(
+    { slotId: changesSlot, contexts: [session] },
+    { signal: controller.signal },
+  );
+
+  for await (const answer of answers) yield itemsOfAnswer(answer, session);
+}
+
+// Each redraw until one has this many Changes; the watch stays open for the next call.
+export async function untilChanges(
+  redraws: AsyncGenerator<object[]>,
+  count: number,
+): Promise<object[]> {
+  for (;;) {
+    const { value, done } = await redraws.next();
+
+    if (done) throw new Error('The Slot ended before it showed the Changes.');
+
+    if (value.length >= count) return value;
+  }
+}

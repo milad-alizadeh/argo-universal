@@ -8,6 +8,8 @@ import {
 } from './journey-calls';
 import {
   foreignSessionId,
+  gitlabProject,
+  gitlabSessionId,
   journey,
   otherProject,
   project,
@@ -18,6 +20,8 @@ import {
 const slow = 30_000;
 
 const own = 'github:owner/repository#12';
+
+const ownReference = 'owner/repository#12';
 
 it(
   'answers branchless without asking GitHub',
@@ -32,17 +36,17 @@ it(
   slow,
 );
 
-it(
-  'answers not-github for a Project whose origin is not on GitHub',
-  async () => {
+it.each([
+  ['has no origin', otherProject.id, foreignSessionId],
+  ['lives on GitLab', gitlabProject.id, gitlabSessionId],
+])(
+  'answers not-github for a Project that %s, without asking GitHub',
+  async (_name, projectId, sessionId) => {
     const run = await journey();
 
-    const elsewhere = {
-      sessionId: foreignSessionId,
-      projectId: otherProject.id,
-    };
-
-    expect(await discover(run, elsewhere)).toEqual({ result: 'not-github' });
+    expect(await discover(run, { sessionId, projectId })).toEqual({
+      result: 'not-github',
+    });
     expect(run.github.listReads()).toEqual([]);
   },
   slow,
@@ -53,7 +57,7 @@ it(
   async () => {
     const run = await journey();
 
-    await attach(run, 'owner/repository#12');
+    await attach(run, ownReference);
     switchBranch(run, 'lonely');
 
     expect(await discover(run)).toEqual({
@@ -81,16 +85,43 @@ it(
 );
 
 it(
-  'answers unavailable when GitHub refuses, without dropping a link or closing a pull request',
+  'answers unavailable once the Project has no GitHub Account, and keeps the links',
   async () => {
     const run = await journey();
 
     await discover(run);
-    run.github.accepted.clear();
 
-    expect(await discover(run)).toMatchObject({ result: 'unavailable' });
+    for (const { id } of run.test.accounts.list())
+      await run.test.accounts.signOut(id);
 
-    run.github.accepted.add('token-1');
+    expect(await discover(run)).toMatchObject({
+      result: 'unavailable',
+      signIn: true,
+    });
+    expect(await listed(run)).toMatchObject({
+      changes: [{ repository: 'owner/repository', number: 12 }],
+    });
+  },
+  slow,
+);
+
+it.each([
+  ['refuses the sign-in', 401, true],
+  ['fails', 500, false],
+])(
+  'answers unavailable when GitHub %s, without dropping a link or closing a pull request',
+  async (_name, status, signIn) => {
+    const run = await journey();
+
+    await discover(run);
+    run.github.failWith.status = status;
+
+    expect(await discover(run)).toMatchObject({
+      result: 'unavailable',
+      signIn,
+    });
+
+    run.github.failWith.status = null;
 
     expect(await listed(run)).toMatchObject({
       changes: [{ id: own, stage: 'open' }],
@@ -106,12 +137,20 @@ it(
     const foreign = { sessionId: foreignSessionId, projectId: project.id };
     const second = { sessionId: secondSessionId, projectId: project.id };
 
-    await expect(discover(run, foreign)).rejects.toThrow('does not belong');
+    run.sessions[secondSessionId] = {
+      projectId: project.id,
+      title: 'Other',
+      branch: 'feature-12',
+    };
+
+    await expect(discover(run, foreign)).rejects.toBeInstanceOf(Error);
+    expect(run.github.listReads()).toEqual([]);
 
     await discover(run);
 
     expect(await changesOf(run, second)).toEqual([]);
-    expect(await discover(run, second)).toEqual({ result: 'branchless' });
+    expect(await discover(run, second)).toMatchObject({ result: 'found' });
+    expect(await changesOf(run, second)).toMatchObject([{ id: own }]);
   },
   slow,
 );
