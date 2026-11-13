@@ -51,9 +51,12 @@ describe('returnToOf with a malformed link', () => {
 });
 
 describe('returnToOf with a link out of the App', () => {
-  it('has no page to return to', () => {
-    expect(
-      returnToOf({ returnTo: encodeURIComponent('https://example.com/') }),
-    ).toBeUndefined();
-  });
+  it.each(['https://example.com/', '//example.com/', 'sessions/abc'])(
+    'has no page to return to from %s',
+    (link) => {
+      expect(
+        returnToOf({ returnTo: encodeURIComponent(link) }),
+      ).toBeUndefined();
+    },
+  );
 });
