@@ -9,7 +9,7 @@ import type * as React from 'react';
 import { SettingsLoading } from '#features/settings';
 import { settingFieldSection } from './plugin-setting-field-row';
 
-export interface PluginSignInRow {
+interface PluginSignInRow {
   host: string;
   page: string;
   account?: { id: string; label: string };
