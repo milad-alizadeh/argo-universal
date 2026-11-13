@@ -51,6 +51,10 @@ export function isPage(path: string): boolean {
   return segments.length > rootDepth(segments);
 }
 
+// The section whose list a page sits under, which Up returns to when no history leads back; a list has none above it.
+export const listAbove = (path: string): Section | null =>
+  isPage(path) ? sectionOf(path) : null;
+
 // A core section's root is one segment deep; a Plugin's is three: `plugins`, the Plugin id and the nav id.
 const coreRootDepth = 1;
 
