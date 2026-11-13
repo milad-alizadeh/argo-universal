@@ -3,6 +3,8 @@ import { onTestFinished } from 'vitest';
 import {
   caller,
   changesSlot,
+  project,
+  sessionId,
   type Caller,
   type Journey,
 } from './journey-fixture';
@@ -73,6 +75,14 @@ export async function listed(
   return test.operations.run({ name: 'list', caller: as });
 }
 
+// What an Agent's `argo run github.discover` does for the calling Session.
+export async function discover(
+  { test }: Journey,
+  as: Caller = caller,
+): Promise<OperationAnswer> {
+  return test.operations.run({ name: 'discover', caller: as });
+}
+
 // Each Project picks its own Account; this gives another Project the one that is signed in.
 export async function giveAccountTo(
   { test }: Journey,
@@ -87,4 +97,12 @@ export async function giveAccountTo(
     host: 'api.github.com',
     account: account.id,
   });
+}
+
+// The Engine now reports this Session on another branch, or on none.
+export function switchBranch(
+  { sessions }: Journey,
+  branch: string | null,
+): void {
+  sessions[sessionId] = { projectId: project.id, title: 'Work', branch };
 }
