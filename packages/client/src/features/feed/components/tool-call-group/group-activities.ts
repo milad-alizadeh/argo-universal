@@ -69,7 +69,7 @@ function activityWithout(
 const drawnActivities = (group: FeedGroup): FeedActivity[] =>
   group.items.filter((activity) => activity.type !== 'thought');
 
-const onlyLive = (activity: FeedActivity, liveId: string): boolean =>
+const drawsOnlyLive = (activity: FeedActivity, liveId: string): boolean =>
   activity.type === 'exploration'
     ? activity.toolCalls.every((row) => row.id === liveId)
     : isLiveToolCall(activity, liveId);
@@ -84,7 +84,7 @@ export function titledLiveCall(group: FeedGroup): LiveToolCall {
   if (!live) return undefined;
 
   return drawnActivities(group).every((activity) =>
-    onlyLive(activity, live.toolCall.id),
+    drawsOnlyLive(activity, live.toolCall.id),
   )
     ? live
     : undefined;
