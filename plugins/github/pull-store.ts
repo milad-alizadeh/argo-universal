@@ -18,6 +18,8 @@ const table =
 export type PullStore = {
   // Attaching twice is the same association, so the first time stands.
   attach: (link: PullLink) => Promise<void>;
+  // Removes only this association; one that is not there is already detached.
+  detach: (link: PullLink) => Promise<void>;
   // The pull requests these Sessions are associated with, the earliest attached first.
   forSessions: (sessionIds: readonly string[]) => Promise<PullLink[]>;
 };
@@ -66,21 +68,45 @@ const insertOf = (
   method: 'run',
 });
 
+const remove =
+  'DELETE FROM pull_associations WHERE project_id = ? AND session_id = ? AND repository = ? AND number = ?';
+
+const deleteOf = (
+  link: PullLink,
+): Parameters<Argo['storage']['execute']>[0] => ({
+  sql: remove,
+  params: [
+    link.projectId,
+    link.sessionId,
+    link.repository.toLowerCase(),
+    link.number,
+  ],
+  method: 'run',
+});
+
+// Each statement waits for the table, then runs.
+const writing =
+  (argo: Storage, ready: () => Promise<StorageResult>) =>
+  async (
+    statement: Parameters<Argo['storage']['execute']>[0],
+  ): Promise<void> => {
+    await ready();
+    await argo.storage.execute(statement);
+  };
+
 export function createPullStore(argo: Storage): PullStore {
   const ready = readyTables(argo);
+  const write = writing(argo, ready);
 
-  const attach: PullStore['attach'] = async (link) => {
-    await ready();
-    await argo.storage.execute(insertOf(link));
+  return {
+    attach: (link) => write(insertOf(link)),
+    detach: (link) => write(deleteOf(link)),
+    forSessions: async (sessionIds) => {
+      await ready();
+
+      return linksOf(await argo.storage.execute(selectFor(sessionIds)));
+    },
   };
-
-  const forSessions: PullStore['forSessions'] = async (sessionIds) => {
-    await ready();
-
-    return linksOf(await argo.storage.execute(selectFor(sessionIds)));
-  };
-
-  return { attach, forSessions };
 }
 
 const selectFor = (

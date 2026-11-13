@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { ChangeStageName } from './change-stage-model';
-import { resolveChangeStage } from './change-stage-model';
+import {
+  changeDescription,
+  changeModifiers,
+  resolveChangeStage,
+} from './change-stage-model';
 
 const stages: ChangeStageName[] = [
   'working',
@@ -41,4 +45,14 @@ it('keeps draft and conflicted Changes Open and describes each modifier separate
     tone: 'success',
     modifier: { label: 'Conflict', tone: 'warning' },
   });
+});
+
+it('describes a draft Change that also conflicts by both facts', () => {
+  const both = { stage: 'open', modifiers: ['conflict', 'draft'] } as const;
+
+  expect(changeModifiers(both).map(({ label }) => label)).toEqual([
+    'Draft',
+    'Conflict',
+  ]);
+  expect(changeDescription(both)).toBe('Open, Draft, Conflict');
 });

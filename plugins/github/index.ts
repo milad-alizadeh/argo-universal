@@ -4,7 +4,7 @@ import {
   readLinks,
   type ChangesSource,
 } from './pull-changes';
-import { attach, discoverFor, list, refresh } from './pull-operations';
+import { attach, detach, discoverFor, list, refresh } from './pull-operations';
 import { definePullReads } from './pull-reads';
 import { createPullStore } from './pull-store';
 
@@ -36,6 +36,10 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
   argo.operations.register('discover', (_params, caller) =>
     discoverFor({ ...argo, store: source.store }, caller),
   );
+  argo.operations.register('detach', async ({ reference }, caller) => ({
+    detached: true,
+    ...(await detach({ ...argo, store: source.store }, reference, caller)),
+  }));
   argo.operations.register('list', (_params, caller) => list(source, caller));
   argo.operations.register('refresh', (_params, caller) =>
     refresh(source, argo, caller),

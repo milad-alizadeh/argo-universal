@@ -1,4 +1,5 @@
 import type {
+  ChangeActions,
   SessionHeaderProps,
   SessionPullRequest,
 } from '#features/sessions';
@@ -15,10 +16,13 @@ export const headerWithPullRequests = (
 export function withSessionPullRequests(
   props: SessionDetailViewProps,
   pullRequests: SessionPullRequest[],
+  changeActions?: ChangeActions,
 ): SessionDetailViewProps {
   if (props.state !== 'open') return props;
 
   const header = headerWithPullRequests(props.header, pullRequests);
 
-  return header === props.header ? props : { ...props, header };
+  if (header === props.header) return props;
+
+  return { ...props, header, changeActions };
 }

@@ -1,7 +1,7 @@
 import type { Change } from '@repo/contracts';
 import type {
-  CheckDetail,
   ChangeState,
+  CheckDetail,
   SessionPullRequest,
 } from '#features/sessions';
 import type { SlotReading } from './slot-items';
@@ -15,8 +15,14 @@ type Check = NonNullable<Change['checks']>[number];
 const hasPullRequest = (change: Change): change is PullRequestChange =>
   change.pullRequest !== undefined;
 
-// The App draws one modifier on an Open Change: a conflict is what blocks it, so it shows ahead of draft.
-const modifierOf = ({
+// Draft and conflict are separate facts, so a Change that has both keeps both.
+const modifiersOf = ({ conflict, draft }: Change): ('conflict' | 'draft')[] => [
+  ...(draft ? (['draft'] as const) : []),
+  ...(conflict ? (['conflict'] as const) : []),
+];
+
+// The mark a Change draws on its own: a conflict is what blocks it, so it shows ahead of draft.
+const markOf = ({
   conflict,
   draft,
 }: Change): 'conflict' | 'draft' | undefined => {
@@ -26,13 +32,26 @@ const modifierOf = ({
 };
 
 const stateOf = (change: Change): ChangeState => {
-  const modifier = modifierOf(change);
+  const modifier = markOf(change);
 
-  if (change.stage === 'open')
-    return modifier ? { stage: 'open', modifier } : { stage: 'open' };
+  if (change.stage !== 'open') return { stage: change.stage };
 
-  return { stage: change.stage };
+  return modifier
+    ? { stage: 'open', modifier, modifiers: modifiersOf(change) }
+    : { stage: 'open' };
 };
+
+// The branches GitHub named, where it did.
+const branchesOf = ({
+  branch,
+  base,
+}: Change): Pick<SessionPullRequest, 'branch' | 'base'> => ({
+  ...(branch && { branch }),
+  ...(base && { base }),
+});
+
+const totalsOf = ({ totals }: Change): Pick<SessionPullRequest, 'summary'> =>
+  totals ? { summary: totals } : {};
 
 const detailOf = ({ name, state }: Check): CheckDetail => ({
   name,
@@ -60,38 +79,22 @@ const checksOf = ({ checks }: Change): Pick<SessionPullRequest, 'checks'> => {
   };
 };
 
-/*
- * What the Plugin said that the Change's one drawn modifier cannot show: both draft and conflict, and that the latest
- * refresh failed. The data is kept for the views that draw them.
- */
-const modifiersOf = ({
-  draft,
-  conflict,
-}: Change): Pick<SessionPullRequest, 'draft' | 'conflict'> => ({
-  ...(draft && { draft: true }),
-  ...(conflict && { conflict: true }),
-});
-
+// That the latest refresh failed and the rest is what was last known; kept for the views that draw it.
 const staleOf = ({ stale }: Change): Pick<SessionPullRequest, 'stale'> =>
   stale ? { stale } : {};
 
-const factsOf = (
-  change: Change,
-): Pick<SessionPullRequest, 'draft' | 'conflict' | 'stale'> => ({
-  ...modifiersOf(change),
-  ...staleOf(change),
-});
-
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
+  ...branchesOf(change),
+  ...totalsOf(change),
+  ...checksOf(change),
+  ...staleOf(change),
   id: change.id,
+  repository: change.repository,
   url: change.pullRequest.url,
   number: change.pullRequest.number,
   title: change.title,
   mergeable: !change.conflict,
-  ...(change.totals && { summary: change.totals }),
-  ...checksOf(change),
-  ...factsOf(change),
 });
 
 /*

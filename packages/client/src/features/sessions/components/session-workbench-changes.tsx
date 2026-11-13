@@ -4,6 +4,7 @@ import {
   StackedSummary,
   type StackedSummaryIcon,
 } from '../../../lib/product/stacked-summary';
+import { changeKey } from './change-identity';
 import { ChangeRow } from './change-row';
 import { resolveChangeStage } from './change-stage/change-stage-model';
 import type { SessionPullRequest } from './session-pull-request';
@@ -11,7 +12,10 @@ import { previewLimit } from './workbench-preview';
 
 interface Props {
   changes: readonly SessionPullRequest[];
+  // The footer, and a row with no Change of its own to open, open the Inspector's list.
   onOpen: () => void;
+  // A row opens its own Change's detail.
+  onOpenChange?: (change: SessionPullRequest) => void;
 }
 
 // The open Changes the card previews, and the rest, which its footer groups by stage.
@@ -19,10 +23,6 @@ interface ChangeSplit {
   preview: SessionPullRequest[];
   rest: SessionPullRequest[];
 }
-
-// Two repositories can share a number, so a supplied identity tells Changes apart before the number does.
-export const changeKey = (change: SessionPullRequest): string =>
-  change.id ?? String(change.number);
 
 function splitChanges(changes: readonly SessionPullRequest[]): ChangeSplit {
   const preview = changes
@@ -37,8 +37,11 @@ function splitChanges(changes: readonly SessionPullRequest[]): ChangeSplit {
   };
 }
 
-export function WorkbenchChangeRows({ changes, onOpen }: Props): ReactElement {
-  return <View>{previewRows(splitChanges(changes).preview, onOpen)}</View>;
+export function WorkbenchChangeRows({
+  changes,
+  ...opening
+}: Props): ReactElement {
+  return <View>{previewRows(splitChanges(changes).preview, opening)}</View>;
 }
 
 // The footer of the Changes card: absent when every Change is already previewed.
@@ -55,22 +58,26 @@ export function WorkbenchMoreChanges({
 
 const previewRows = (
   changes: readonly SessionPullRequest[],
-  onOpen: () => void,
+  { onOpen, onOpenChange }: Pick<Props, 'onOpen' | 'onOpenChange'>,
 ): ReactElement[] =>
   changes.map((change) => (
-    <ChangeRow key={changeKey(change)} change={change} onOpen={onOpen} />
+    <ChangeRow
+      key={changeKey(change)}
+      change={change}
+      onOpen={onOpenChange ? () => onOpenChange(change) : onOpen}
+    />
   ));
 
-function MoreChanges({ changes, onOpen }: Props): ReactElement {
+function MoreChanges(props: Pick<Props, 'changes' | 'onOpen'>): ReactElement {
   return (
     <Pressable
       role="button"
-      onPress={onOpen}
+      onPress={props.onOpen}
       className="rounded-control web:hover:bg-hover web:focus-visible:bg-hover"
     >
       <StackedSummary
-        icons={remainderIcons(changes)}
-        texts={remainderTexts(changes)}
+        icons={remainderIcons(props.changes)}
+        texts={remainderTexts(props.changes)}
       />
     </Pressable>
   );

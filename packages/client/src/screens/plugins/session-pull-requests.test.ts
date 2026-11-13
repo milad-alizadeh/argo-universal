@@ -40,6 +40,7 @@ describe('sessionPullRequests', () => {
     expect(sessionPullRequests(reading(open))).toEqual([
       {
         id: ownedId,
+        repository: expect.any(String),
         stage: 'open',
         number: 12,
         title: 'Add the thing',
@@ -50,12 +51,16 @@ describe('sessionPullRequests', () => {
     ]);
   });
 
-  it('says a conflict when a draft Change also conflicts, because one modifier shows', () => {
+  it('keeps both facts when a draft Change also conflicts', () => {
     const [change] = sessionPullRequests(
       reading({ ...open, draft: true, conflict: true }),
     );
 
-    expect(change).toMatchObject({ modifier: 'conflict', mergeable: false });
+    expect(change).toMatchObject({
+      modifier: 'conflict',
+      modifiers: ['draft', 'conflict'],
+      mergeable: false,
+    });
   });
 
   it('shows draft on an Open Change that only is a draft', () => {
@@ -123,15 +128,9 @@ describe('sessionPullRequests', () => {
     expect(none).not.toHaveProperty('checks');
   });
 
-  it('keeps draft and conflict together, and that the latest refresh failed, for the views that draw them', () => {
-    const [change] = sessionPullRequests(
-      reading({ ...open, draft: true, conflict: true, stale: 'signIn' }),
-    );
+  it('keeps that the latest refresh failed, and why, for the views that draw it', () => {
+    const [change] = sessionPullRequests(reading({ ...open, stale: 'signIn' }));
 
-    expect(change).toMatchObject({
-      draft: true,
-      conflict: true,
-      stale: 'signIn',
-    });
+    expect(change).toMatchObject({ stale: 'signIn' });
   });
 });

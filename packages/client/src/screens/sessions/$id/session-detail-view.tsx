@@ -19,6 +19,7 @@ import {
   type SessionPanels,
   TerminalSignIn,
   type TerminalSignInProps,
+  useChangeSelection,
 } from '#features/sessions';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -88,7 +89,9 @@ export function SessionDetailView(
 }
 
 // The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.
-function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
+function OpenSessionView(open: OpenSessionViewProps): React.JSX.Element {
+  const changeSelection = useChangeSelection(open.header.pullRequests ?? []);
+  const props = { ...open, changeSelection };
   const phone = usePhoneSheet(useInspectorPanels(props));
   const { panels } = phone;
   const work = useWorkPanels(props, panels, phone.visible);
