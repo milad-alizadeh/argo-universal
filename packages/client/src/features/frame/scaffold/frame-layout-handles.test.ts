@@ -5,6 +5,7 @@ import {
   resizeOutcome,
   widthBeside,
 } from './frame-layout';
+import { floorLeftBy, widthAtContentFloor } from './frame-layout-handles';
 import { input } from './frame-layout.mocks';
 
 describe('resize handles', () => {
@@ -129,6 +130,20 @@ describe('the Inspector handle agrees with the layout', () => {
     expect(resizeOutcome(expanded.handles.inspector, maximum + 1)).toBe(
       'expanded',
     );
+  });
+
+  it('lowers no floor for an Inspector left at its default width', () => {
+    const narrow = { ...input, width: 1100, inspectorState: 'open' as const };
+    const { inspector } = frameLayout(narrow).handles;
+
+    expect(frameLayout(narrow).page.width).toBeLessThan(688);
+    expect(floorLeftBy(inspector, inspector.minimum)).toBeUndefined();
+  });
+
+  it('gives up what a drag took under the floor when the Inspector closes', () => {
+    expect(widthAtContentFloor(input.measures, 840, 200)).toBe(352);
+    expect(widthAtContentFloor(input.measures, 900, 500)).toBe(712);
+    expect(widthAtContentFloor(input.measures, 600, 800)).toBe(600);
   });
 
   it('gives the content its floor back once the Inspector closes', () => {

@@ -3,7 +3,8 @@ import type { FrameLayoutInput, FrameMeasures } from './frame-layout-types';
 // The narrowest a drag of the Inspector leaves the page; past it the Inspector expands.
 export const contentMinimum = 200;
 
-const defaultContentFloor = (measures: FrameMeasures): number =>
+// The content's floor before a drag lowers it: the Composer and a gutter on each side.
+export const defaultContentFloor = (measures: FrameMeasures): number =>
   measures.composerWidth + measures.contentGutter * 2;
 
 const draggedFloor = (input: FrameLayoutInput, floor: number): number =>

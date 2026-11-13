@@ -101,6 +101,22 @@ export const DragToCollapseExpandAndReopen: ScaffoldStory = {
   }),
 };
 
+// Closed and opened again, the Inspector sits beside a page that has its floor back.
+export const ClosingTheInspectorRestoresTheContentFloor: ScaffoldStory = {
+  play: controlledPlay(async (context, controlled) => {
+    const { canvas } = context;
+    await settleLayout('wide');
+    await controlled.render({ inspectorState: 'open' });
+    const list = listHidden(canvas);
+    await drag(context, resizeInspectorLabel, 300 - pageWidth(canvas));
+    await waitFor(() => expect(Math.round(pageWidth(canvas))).toBe(300));
+    await controlled.render({ inspectorState: 'closed' });
+    await controlled.render({ inspectorState: 'open' });
+    await waitFor(() => expect(pageWidth(canvas)).toBeGreaterThanOrEqual(688));
+    await expect(listHidden(canvas)).toBe(list);
+  }),
+};
+
 const pageWidth = (canvas: Canvas): number =>
   canvas.getByTestId(detailId).getBoundingClientRect().width;
 

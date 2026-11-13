@@ -105,7 +105,7 @@ function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
   return {
     bandLeading,
     measures,
-    ...usePreferredWidths(measures),
+    ...usePreferredWidths(measures, scaffold.inspectorState === 'closed'),
     ...useSidebarIntent(scaffold),
   };
 }

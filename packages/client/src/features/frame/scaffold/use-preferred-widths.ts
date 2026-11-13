@@ -1,15 +1,17 @@
+import type * as React from 'react';
 import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import type { FrameMeasures } from './frame-layout';
+import { widthAtContentFloor } from './frame-layout-handles';
 import { listWidthForText } from './frame-layout-measures';
 
 export interface PreferredWidths {
   preferredListWidth: number;
   preferredInspectorWidth: number;
   setPreferredListWidth: (width: number) => void;
-  setPreferredInspectorWidth: (width: number) => void;
+  setPreferredInspectorWidth: React.Dispatch<React.SetStateAction<number>>;
   draggedContentFloor: number | undefined;
-  setDraggedContentFloor: (width: number) => void;
+  setDraggedContentFloor: (width: number | undefined) => void;
 }
 
 type InspectorWidths = Pick<
@@ -20,23 +22,42 @@ type InspectorWidths = Pick<
   | 'setDraggedContentFloor'
 >;
 
-// The Inspector's dragged width, and the page's width that drag left.
-function useInspectorWidths(measures: FrameMeasures): InspectorWidths {
-  const [preferredInspectorWidth, setPreferredInspectorWidth] = useState(
-    measures.inspectorWidth,
-  );
+type State<Value> = [Value, React.Dispatch<React.SetStateAction<Value>>];
 
-  const [draggedContentFloor, setDraggedContentFloor] = useState<number>();
+// A closed Inspector gives the content its floor back, and gives up the width its drag took under that floor.
+function restoreContentFloor(
+  measures: FrameMeasures,
+  [, setWidth]: State<number>,
+  [floor, setFloor]: State<number | undefined>,
+): void {
+  if (floor === undefined) return;
+
+  setWidth((width) => widthAtContentFloor(measures, width, floor));
+  setFloor(undefined);
+}
+
+// The Inspector's dragged width, and the page's width that drag left, which it keeps only while it stays open.
+function useInspectorWidths(
+  measures: FrameMeasures,
+  closed: boolean,
+): InspectorWidths {
+  const width = useState(measures.inspectorWidth);
+  const floor = useState<number>();
+
+  if (closed) restoreContentFloor(measures, width, floor);
 
   return {
-    preferredInspectorWidth,
-    setPreferredInspectorWidth,
-    draggedContentFloor,
-    setDraggedContentFloor,
+    preferredInspectorWidth: width[0],
+    setPreferredInspectorWidth: width[1],
+    draggedContentFloor: floor[0],
+    setDraggedContentFloor: floor[1],
   };
 }
 
-export function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
+export function usePreferredWidths(
+  measures: FrameMeasures,
+  inspectorClosed: boolean,
+): PreferredWidths {
   const [draggedListWidth, setPreferredListWidth] = useState<number>();
   const fontScale = useWindowDimensions().fontScale;
 
@@ -46,6 +67,6 @@ export function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
   return {
     preferredListWidth,
     setPreferredListWidth,
-    ...useInspectorWidths(measures),
+    ...useInspectorWidths(measures, inspectorClosed),
   };
 }

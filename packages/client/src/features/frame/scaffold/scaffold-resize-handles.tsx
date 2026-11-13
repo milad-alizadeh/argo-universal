@@ -8,8 +8,8 @@ import {
   type ResizeHandle,
   type ResizeOutcome,
   resizeOutcome,
-  widthBeside,
 } from './frame-layout';
+import { floorLeftBy } from './frame-layout-handles';
 import { inspectorOffered, moveInspector } from './inspector-column';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
@@ -53,7 +53,7 @@ function resizeInspector(
   if (typeof outcome === 'number') {
     layout.setPreferredInspectorWidth(outcome);
     layout.setDraggedContentFloor(
-      widthBeside(layout.handles.inspector, outcome),
+      floorLeftBy(layout.handles.inspector, outcome),
     );
   }
 
