@@ -10,10 +10,12 @@ import { labelRead } from './device-http';
 import {
   ended,
   expired,
+  unnamed,
   pollOnce,
   type Device,
   type Polled,
 } from './device-poll';
+import { secretOf, tokenLender, type KeptToken } from './device-token';
 import { sleep } from './scheduler';
 
 const slowDownMs = 5000;
@@ -33,19 +35,19 @@ type Attempt = {
 // Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it.
 async function finish(
   { argo, options }: Attempt,
-  token: string,
+  token: KeptToken,
 ): Promise<DeviceFlowState> {
-  const { label, status } = await labelRead(argo.fetch, token, options.label);
+  const { label, status } = await labelRead(
+    argo.fetch,
+    token.access,
+    options.label,
+  );
 
-  if (!label)
-    return ended(
-      'failed',
-      `${options.name} answered ${status ?? 'nothing'} and did not say who signed in.`,
-    );
+  if (!label) return unnamed(options, status);
 
   const id = await argo.accounts.add(options.host, { label });
 
-  await argo.secrets.set(id, token);
+  await argo.secrets.set(id, secretOf(token));
 
   return { kind: 'signed-in', label };
 }
@@ -139,14 +141,19 @@ function attemptOf(
   };
 }
 
-// A borrower's request gets the kept token in the header the flow names; Argo sets it.
-const provide = (
+// A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
+function provide(
   argo: DeviceFlowArgo,
   options: DeviceFlowOptions,
-): Promise<void> =>
-  argo.accounts.provide(options.host, options.header ?? bearer, (account) =>
-    argo.secrets.get(account.id),
+): Promise<void> {
+  const lend = tokenLender({ argo, options });
+
+  return argo.accounts.provide(
+    options.host,
+    options.header ?? bearer,
+    (account) => lend(account.id),
   );
+}
 
 /*
  * A kit pattern on the open `argo.fetch`, `argo.accounts` and `argo.secrets` calls: ask for a code, show it, poll

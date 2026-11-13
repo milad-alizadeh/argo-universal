@@ -36,6 +36,9 @@ export const token: Reply = { status: 200, body: { access_token: 'token-1' } };
 
 export const user: Reply = { status: 200, body: { login: 'octocat' } };
 
+// A service that cannot be reached: the call rejects.
+export const unreachable: Reply = { status: 0, body: {} };
+
 export const pending: Reply = {
   status: 200,
   body: { error: 'authorization_pending' },
@@ -58,7 +61,11 @@ export type FakeDevice = {
   added: { host: string; label: string }[];
   secrets: Map<string, string>;
   changes: () => number;
+  // What the provider the flow registered answers a borrow of the Account; nothing until it registered.
+  borrow: (id: string) => Promise<string | null>;
 };
+
+type TokenHandler = Parameters<DeviceFlowArgo['accounts']['provide']>[2];
 
 // The next scripted answer for a URL; the last one repeats.
 const nextFor = (
@@ -76,20 +83,31 @@ const fetching =
   (script: Map<string, Reply[]>, calls: FakeDevice['calls']): Fetching =>
   (url, init) => {
     calls.push({ url, body: init?.body });
-    const reply = nextFor(script, url);
 
-    return Promise.resolve(reply ? answerOf(reply) : null);
+    return replied(nextFor(script, url));
   };
+
+// No script answers nothing; `unreachable` rejects, as a call that never reached the service does.
+function replied(reply: Reply | undefined): Promise<Fetched> {
+  if (reply === unreachable) return Promise.reject(new Error('unreachable'));
+
+  return Promise.resolve(reply ? answerOf(reply) : null);
+}
 
 const accountsOf = (
   added: FakeDevice['added'],
+  handlers: TokenHandler[],
 ): DeviceFlowArgo['accounts'] => ({
   add: (host, { label }) => {
     added.push({ host, label });
 
     return Promise.resolve('account-1');
   },
-  provide: () => Promise.resolve(),
+  provide: (_host, _header, handler) => {
+    handlers.push(handler);
+
+    return Promise.resolve();
+  },
 });
 
 const secretsOf = (kept: Map<string, string>): DeviceFlowArgo['secrets'] => ({
@@ -97,24 +115,63 @@ const secretsOf = (kept: Map<string, string>): DeviceFlowArgo['secrets'] => ({
   set: (id, value) => Promise.resolve(void kept.set(id, value)),
 });
 
+// Borrows through the provider registered last, as Argo would for any borrowing Plugin.
+const borrowing =
+  (handlers: TokenHandler[]) =>
+  async (id: string): Promise<string | null> => {
+    const handler = handlers.at(-1);
+
+    const account = {
+      id,
+      host: service.host,
+      label: 'octocat',
+      providedBy: 'plugin-1',
+    };
+
+    return handler ? ((await handler(account)) ?? null) : null;
+  };
+
 /*
  * The calls a device flow makes, over a service that answers each URL with what the test scripted for it, and
  * the Accounts and secrets Argo keeps.
  */
 export function fakeDevice(script: Record<string, Reply[]>): FakeDevice {
-  const calls: FakeDevice['calls'] = [];
-  const added: FakeDevice['added'] = [];
-  const secrets = new Map<string, string>();
-  const changes = { count: 0 };
+  const state = emptyState();
 
-  const argo: DeviceFlowArgo = {
-    fetch: fetching(new Map(Object.entries(script)), calls),
-    accounts: accountsOf(added),
-    secrets: secretsOf(secrets),
-    changed: () => {
-      changes.count += 1;
-    },
+  return {
+    argo: argoOf(script, state),
+    calls: state.calls,
+    added: state.added,
+    secrets: state.secrets,
+    changes: () => state.changes.count,
+    borrow: borrowing(state.handlers),
   };
-
-  return { argo, calls, added, secrets, changes: () => changes.count };
 }
+
+const emptyState = (): FakeState => ({
+  calls: [],
+  added: [],
+  secrets: new Map(),
+  handlers: [],
+  changes: { count: 0 },
+});
+
+type FakeState = {
+  calls: FakeDevice['calls'];
+  added: FakeDevice['added'];
+  secrets: Map<string, string>;
+  handlers: TokenHandler[];
+  changes: { count: number };
+};
+
+const argoOf = (
+  script: Record<string, Reply[]>,
+  state: FakeState,
+): DeviceFlowArgo => ({
+  fetch: fetching(new Map(Object.entries(script)), state.calls),
+  accounts: accountsOf(state.added, state.handlers),
+  secrets: secretsOf(state.secrets),
+  changed: () => {
+    state.changes.count += 1;
+  },
+});

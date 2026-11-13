@@ -26,8 +26,11 @@ export const CompleteCode = z.object({
   interval: z.number().nonnegative().default(defaultIntervalSeconds),
 });
 
+// RFC 6749 section 5.1; a service with expiring tokens adds the refresh token and the access token's lifetime.
 export const TokenAnswer = z.object({
   access_token: z.string().min(1).optional(),
+  refresh_token: z.string().min(1).optional(),
+  expires_in: z.number().nonnegative().optional(),
   error: z.string().optional(),
   error_description: z.string().optional(),
 });
