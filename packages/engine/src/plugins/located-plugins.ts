@@ -83,12 +83,10 @@ function findLocated(
   return found;
 }
 
-export async function locatePlugin(
+export const locatePlugin = async (
   deps: LocateDeps,
   pluginId: string,
-): Promise<LocatedPlugin> {
-  return findLocated(await locatePlugins(deps), pluginId);
-}
+): Promise<LocatedPlugin> => findLocated(await locatePlugins(deps), pluginId);
 
 // Where the runtime loads a Plugin from; a turned-off Plugin has none.
 export async function pluginLocation(
@@ -128,6 +126,7 @@ function locationFor(
     hooks: manifest.contributes.hooks ?? [],
     navIds: manifest.contributes.nav.map(({ id }) => id),
     background: manifest.contributes.background,
+    operations: manifest.contributes.operations,
   };
 }
 

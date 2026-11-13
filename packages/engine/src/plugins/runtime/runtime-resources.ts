@@ -1,3 +1,4 @@
+import { secretParamNames } from '@repo/contracts/plugins/plugin-operations';
 import type { ActivatedPlugin } from '../access/plugin-access';
 import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
@@ -34,13 +35,21 @@ export class RuntimeResources {
     this.identities.get(pluginId),
   );
   private readonly unwatch;
+  // Each Plugin's secret params, by Operation, from the manifest it was activated with.
+  private readonly secrets = new Map<
+    string,
+    Map<string, ReadonlySet<string>>
+  >();
   private projectUpdates: Promise<void> = Promise.resolve();
 
   constructor(private readonly input: RuntimeInput) {
     this.workers = new WorkerCalls(input);
     this.data = this.pluginData(input);
     this.items = new PluginSlotItems(this.workers);
-    this.operations = new PluginOperations(this.workers);
+    this.operations = new PluginOperations(
+      this.workers,
+      input.services.heldSecrets,
+    );
     this.changes = this.pageChanges();
     this.draws = this.pluginDraws(input);
     this.background = this.backgroundPasses(input);
@@ -60,6 +69,8 @@ export class RuntimeResources {
       log: input.log,
       changes: this.changes,
       drawings: this.failures,
+      secretParams: (pluginId) => (operation) =>
+        this.secrets.get(pluginId)?.get(operation) ?? new Set(),
     });
   }
 
@@ -111,6 +122,7 @@ export class RuntimeResources {
     const { pluginId } = location.entry;
 
     this.identities.set(pluginId, pluginIdentity(location));
+    this.secrets.set(pluginId, secretParamsOf(location));
     this.input.services.activate(pluginId, plugin);
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
   }
@@ -160,3 +172,10 @@ export class RuntimeResources {
     this.items.close();
   }
 }
+
+const secretParamsOf = ({
+  operations = [],
+}: PluginLocation): Map<string, ReadonlySet<string>> =>
+  new Map(
+    operations.map(({ name, params }) => [name, secretParamNames(params)]),
+  );

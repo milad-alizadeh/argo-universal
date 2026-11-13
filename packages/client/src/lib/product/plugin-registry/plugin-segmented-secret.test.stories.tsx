@@ -74,7 +74,7 @@ export const EditSecret: Story = {
     await userEvent.type(field, tokenValue);
     await waitFor(() =>
       expect(onPageCall).toHaveBeenLastCalledWith(
-        { bind: 'token' },
+        { operation: 'saveToken', args: { token: tokenValue } },
         expect.objectContaining({
           key: 'settings/section/token',
           payload: tokenValue,

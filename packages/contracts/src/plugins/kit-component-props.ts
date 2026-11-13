@@ -28,7 +28,7 @@ export function echoes<
 >(
   props: z.ZodObject<Fields>,
   prop: Prop,
-  rules: { blocks?: boolean; throttleMs?: number } = {},
+  rules: { blocks?: boolean; throttleMs?: number; secret?: boolean } = {},
 ): z.ZodNonOptional<Fields[Prop]> {
   return props.shape[prop].nonoptional().meta({ value: prop, ...rules });
 }

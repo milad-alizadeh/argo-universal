@@ -13,6 +13,7 @@ import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
+import { HeldSecrets } from './services/held-secrets';
 import type { PluginNetwork } from './services/plugin-fetch';
 import { osSecretStore, type SecretStore } from './services/secret-store';
 import { PluginSettings } from './settings/plugin-settings';
@@ -50,6 +51,7 @@ export type Assembled = {
 };
 
 type Foundations = {
+  heldSecrets: HeldSecrets;
   secretStore: SecretStore;
   listChanges: PluginListChanges;
   discovery: Discovery;
@@ -90,12 +92,14 @@ function settingsFor(
   });
 }
 
+// Every Secret the store reads or writes is held, so no log line or call answer carries it (ADR-0051).
 function foundations(options: PluginsOptions): Foundations {
-  const secretStore = options.secretStore ?? osSecretStore;
+  const heldSecrets = new HeldSecrets();
+  const secretStore = heldSecrets.keeping(options.secretStore ?? osSecretStore);
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const discovery = { home, version, firstPartyPluginsDirectory };
-  const parts = { secretStore, discovery, listChanges };
+  const parts = { secretStore, heldSecrets, discovery, listChanges };
 
   return {
     ...parts,
@@ -122,15 +126,14 @@ function runtimeFor(
   options: PluginsOptions,
   parts: Foundations,
 ): PluginRuntime {
-  const { accounts, secretStore, settings } = parts;
-
   return createPluginRuntime(options.home, {
-    accounts,
-    secretStore,
+    accounts: parts.accounts,
+    secretStore: parts.secretStore,
+    heldSecrets: parts.heldSecrets,
     ...runtimePorts(options),
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,
-    settings: async (pluginId, key) => settings.read(pluginId, key),
+    settings: async (pluginId, key) => parts.settings.read(pluginId, key),
     locate: locator(parts),
   });
 }

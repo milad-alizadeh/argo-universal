@@ -38,6 +38,11 @@ export class ControlField {
   private stale = false;
   private focused = false;
   private readonly pending = new Map<number, PendingEdit>();
+  /*
+   * A secret field's typed text, held only while the person types in it (ADR-0051): it never becomes the
+   * accepted value, so once its run has answered and the field is let go, the App holds it nowhere.
+   */
+  private draft?: { value: WireJson | undefined };
 
   private constructor(
     public readonly type: string,
@@ -58,13 +63,22 @@ export class ControlField {
     return [...this.pending.values()].some((edit) => edit.blocks);
   }
 
-  // The newest pending edit shows until an edit after it is accepted.
+  // The newest pending edit shows until an edit after it is accepted; a secret field shows its draft until let go.
   public get current(): WireJson | undefined {
+    const newest = this.newestPending();
+
+    return newest ? newest.value : this.shown();
+  }
+
+  // The newest pending edit, while no edit after it is accepted.
+  private newestPending(): PendingEdit | undefined {
     const last = [...this.pending].at(-1);
 
-    return last && last[0] > this.accepted.sequence
-      ? last[1].value
-      : this.accepted.value;
+    return last && last[0] > this.accepted.sequence ? last[1] : undefined;
+  }
+
+  private shown(): WireJson | undefined {
+    return this.draft ? this.draft.value : this.accepted.value;
   }
 
   // The Server's value shows once the field has no focus and no edit pending.
@@ -82,6 +96,7 @@ export class ControlField {
 
   public blur(): void {
     this.focused = false;
+    this.draft = undefined;
   }
 
   // A blocking event waits for the one before it; an echo of the shown value changes nothing.
@@ -101,7 +116,7 @@ export class ControlField {
         this.focused = true;
       },
       onBlur: (): void => {
-        this.focused = false;
+        this.blur();
         update();
       },
     };
@@ -128,6 +143,9 @@ export class ControlField {
     const value = edit.rules.value ? edit.value : this.current;
 
     this.pending.set(sequence, { value, blocks: edit.rules.blocks });
+
+    if (this.rules.secret) this.draft = { value };
+
     update();
 
     this.deliver(edit, { sequence, value }, update);
@@ -145,8 +163,18 @@ export class ControlField {
       });
   }
 
+  // A secret is never the accepted value: the field goes back to the Server's, and drops its draft unless still typed in.
   private accept(value: Value): void {
-    if (value.sequence > this.accepted.sequence) this.accepted = value;
+    if (value.sequence <= this.accepted.sequence) return;
+
+    this.accepted = this.rules.secret ? this.forget(value.sequence) : value;
+  }
+
+  // The Server's value in place of the secret, and no draft once the field is let go.
+  private forget(sequence: number): Value {
+    if (!this.focused) this.draft = undefined;
+
+    return { sequence, value: this.source };
   }
 }
 

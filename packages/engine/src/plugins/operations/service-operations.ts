@@ -1,7 +1,11 @@
 import type { OperationRow } from '@repo/contracts/operations';
 import type { PluginList } from '@repo/contracts/plugins';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import type { PluginOperationCaller } from '@repo/contracts/plugins/plugin-operations';
+import {
+  secretParamNames,
+  type PluginOperationCaller,
+  type PluginOperationContribution,
+} from '@repo/contracts/plugins/plugin-operations';
 import type { OperationCard } from '../../sessions';
 import { checkRun, type CheckedRun } from './checked-run';
 import {
@@ -25,6 +29,8 @@ export type OperationsPort = {
       params: Readonly<Record<string, string | number | boolean>>;
       caller: PluginOperationCaller;
       serverDevice?: boolean;
+      // The secret params' values, which nothing the run writes or answers may show.
+      secrets?: readonly string[];
     },
   ) => Promise<Answer>;
 };
@@ -73,11 +79,22 @@ export async function runDeclaredOperation(
   return answer.result;
 }
 
-// The params and caller the handler is given; a run in another Project is confirmed first.
+// The values of the params the Operation marks secret, as the run was given them.
+const secretValues = (
+  { params }: PluginOperationContribution,
+  given: CheckedRun['params'],
+): string[] =>
+  [...secretParamNames(params)].flatMap((name) => {
+    const value = given[name];
+
+    return typeof value === 'string' ? [value] : [];
+  });
+
+// The params and caller the handler is given, and the secret ones' values; a run in another Project is confirmed first.
 async function checkedRun(
   { operation }: DeclaredOperation,
   input: OperationRun,
-): Promise<Omit<CheckedRun, 'outside'>> {
+): Promise<Omit<CheckedRun, 'outside'> & { secrets: string[] }> {
   const { outside, ...checked } = checkRun(
     operation,
     input.params,
@@ -86,7 +103,7 @@ async function checkedRun(
 
   if (outside) await confirmed(input, operation.label);
 
-  return checked;
+  return { ...checked, secrets: secretValues(operation, checked.params) };
 }
 
 // Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first.

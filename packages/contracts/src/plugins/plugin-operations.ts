@@ -26,6 +26,8 @@ export const PluginOperationName = z
  * A declared param: its type, whether it must be given, and the line `argo operations` prints for it.
  * A string param may list its `choices`, the only values it takes. Core checks the params against these
  * before the Plugin ever sees them.
+ * A string param may be `secret`, as a pasted token is (ADR-0051): the only way a `FieldGroup.SecretField`'s value
+ * reaches a Plugin, and one Argo never logs, records in a Session's history or answers back.
  */
 export const PluginOperationParam = z
   .strictObject({
@@ -33,10 +35,19 @@ export const PluginOperationParam = z
     description: z.string().trim().min(1),
     required: z.boolean().optional(),
     choices: z.array(z.string().min(1)).min(1).optional(),
+    secret: z.boolean().optional(),
   })
   .refine(
     ({ type, choices }) => choices === undefined || type === 'string',
     'Only a string param lists choices',
+  )
+  .refine(
+    ({ type, secret }) => secret !== true || type === 'string',
+    'Only a string param is secret',
+  )
+  .refine(
+    ({ choices, secret }) => secret !== true || choices === undefined,
+    'A secret param lists no choices',
   )
   .refine(
     ({ choices = [] }) => new Set(choices).size === choices.length,
@@ -44,6 +55,19 @@ export const PluginOperationParam = z
   );
 
 export type PluginOperationParam = z.infer<typeof PluginOperationParam>;
+
+// What stands in for a secret param's value wherever Argo would otherwise show or keep it.
+export const redactedSecret = '[secret]';
+
+// The params an Operation marks secret, by name.
+export const secretParamNames = (
+  params: Readonly<Record<string, PluginOperationParam>> = {},
+): ReadonlySet<string> =>
+  new Set(
+    Object.entries(params)
+      .filter(([, param]) => param.secret === true)
+      .map(([name]) => name),
+  );
 
 /*
  * The params one invocation carries: core has already checked them against what the Plugin declared,

@@ -1,6 +1,10 @@
 import type { DrawnTree } from '@repo/contracts/plugins/page-address';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree';
+import {
+  secretBindingReason,
+  type SecretParams,
+} from '@repo/contracts/plugins/secret-bindings';
 import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';
 import {
   pluginMessageBytes,
@@ -23,7 +27,11 @@ type TreeKind = 'page' | 'replacement';
  * refuses and says which, for its caller to log; a Replaceable Slot's replacement is drawn whole or not at
  * all (ADR-0027), so refused SVG or a node that cannot replace core refuses the whole tree.
  */
-export function checkedTree(root: WireJson, kind: TreeKind): Checked {
+export function checkedTree(
+  root: WireJson,
+  kind: TreeKind,
+  secretParams: SecretParams,
+): Checked {
   const tooLarge = sizeReason(root, pluginMessageBytes, `${kind} message`);
 
   if (tooLarge) return failed(tooLarge);
@@ -31,12 +39,22 @@ export function checkedTree(root: WireJson, kind: TreeKind): Checked {
   const parsed = WireNode.safeParse(root);
 
   return parsed.success
-    ? sanitized(parsed.data, kind)
+    ? sanitized(parsed.data, kind, secretParams)
     : failed(`The ${kind} drew an invalid Plugin tree`);
 }
 
-function sanitized(tree: WireNode, kind: TreeKind): Checked {
-  const { root, refused } = sanitizeTree(tree);
+// A tree checked with no manifest knows no secret param, so it sends a secret nowhere.
+export const noSecretParams: SecretParams = () => new Set();
+
+function sanitized(
+  tree: WireNode,
+  kind: TreeKind,
+  secretParams: SecretParams,
+): Checked {
+  const { root, refused } = sanitizeTree(tree, (node) =>
+    secretBindingReason(node, secretParams),
+  );
+
   const refusal = kindReason(kind, tree, refused);
 
   if (refusal) return failed(refusal);
@@ -64,14 +82,20 @@ function replacementReason(
   );
 }
 
-type PageAt = { pluginId: string; path: string; log: (line: string) => void };
+type PageAt = {
+  pluginId: string;
+  path: string;
+  log: (line: string) => void;
+  // The params each of the Plugin's Operations marks secret, the only place a SecretField's text may go.
+  secretParams: SecretParams;
+};
 
-// A page draws without the SVG the sanitiser refused, and the log says what was left out.
+// A page draws without the nodes the Server refused, such as SVG the sanitiser refused, and the log says what was left out.
 export function checkedPage(
-  { pluginId, path, log }: PageAt,
+  { pluginId, path, log, secretParams }: PageAt,
   { root, pages, live }: DrawnTree,
 ): Drawn {
-  const tree = checkedTree(root, 'page');
+  const tree = checkedTree(root, 'page', secretParams);
 
   if (!tree.ok) return tree;
 

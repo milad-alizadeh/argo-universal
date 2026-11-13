@@ -7,6 +7,7 @@ import type { TestAccounts } from '@repo/engine/mocks/test-accounts';
 import {
   createPluginRuntime,
   pluginSettingsSecretService,
+  type HeldSecrets,
   type PluginRuntime,
   type SecretStore,
 } from '@repo/engine/plugins';
@@ -17,6 +18,7 @@ export { configureTest, type ConfiguredTest } from './test-configuration';
 
 export type RuntimeParts = {
   secretStore: SecretStore;
+  heldSecrets: HeldSecrets;
   accounts: TestAccounts['accounts'];
 };
 

@@ -111,6 +111,12 @@ const textEvents = {
   onSubmit: z.undefined().meta({ flush: true }),
 };
 
+// A SecretField's text is a secret: it goes only to an Operation param marked secret (ADR-0051).
+const secretTextEvents = {
+  ...textEvents,
+  ...textChangeEvents(fieldGroupTextFieldProps, { secret: true }),
+};
+
 export const fieldGroupKitComponents = {
   FieldGroup: { props: fieldGroupProps, events: {} },
   'FieldGroup.Section': { props: fieldGroupSectionProps, events: {} },
@@ -126,7 +132,7 @@ export const fieldGroupKitComponents = {
   },
   'FieldGroup.SecretField': {
     props: fieldGroupTextFieldProps,
-    events: textEvents,
+    events: secretTextEvents,
   },
   'FieldGroup.DatePicker': {
     props: fieldGroupDatePickerProps,
