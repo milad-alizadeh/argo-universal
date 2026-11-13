@@ -120,7 +120,8 @@
         "@repo/universal-app",
         // The Engine bundle marks these external and resolves them from E2E.
         "esbuild",
-        "node-pty"
+        "node-pty",
+        "@napi-rs/keyring"
       ]
     },
     "tools": {

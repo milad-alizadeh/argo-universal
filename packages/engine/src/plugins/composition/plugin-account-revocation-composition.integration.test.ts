@@ -1,11 +1,11 @@
 import { expect, it } from 'vitest';
 import { borrow } from '#mocks/account-journey';
 import { startEngineTestHost } from '#mocks/engine';
-import { MemoryKeychain } from '#mocks/memory-keychain';
+import { MemorySecretStore } from '#mocks/memory-secret-store';
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
 
-class RefreshingKeychain extends MemoryKeychain {
+class RefreshingSecretStore extends MemorySecretStore {
   readonly requested = Promise.withResolvers<void>();
   readonly refreshed = Promise.withResolvers<void>();
 
@@ -24,17 +24,17 @@ class RefreshingKeychain extends MemoryKeychain {
 it.each(['revoke', 'signOut'] as const)(
   '%s wins while the provider refreshes its token',
   async (change) => {
-    const keychain = new RefreshingKeychain();
+    const secretStore = new RefreshingSecretStore();
     const prepared = Promise.withResolvers<EngineHost>();
 
     const pending = borrow(
       "argo.fetch('https://api.github.com/done', {account:'api.github.com'})",
       async (host) => prepared.resolve(host),
-      { keychain },
+      { secretStore },
     );
 
     const host = await prepared.promise;
-    await keychain.requested.promise;
+    await secretStore.requested.promise;
     const [account] = await host.caller.plugins.accounts.list();
 
     if (!account) throw new Error('Missing fixture Account');
@@ -47,7 +47,7 @@ it.each(['revoke', 'signOut'] as const)(
           plugin: 'borrower',
           allowed: false,
         }));
-    keychain.refreshed.resolve();
+    secretStore.refreshed.resolve();
     const run = await pending;
     expect(run.result).toEqual({ result: { value: null } });
     expect(run.received).toEqual([]);

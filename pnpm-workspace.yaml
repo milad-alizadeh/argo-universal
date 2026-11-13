@@ -20,6 +20,8 @@ catalog:
   "@xterm/xterm": 6.0.0
   "@xterm/addon-fit": 0.11.0
   node-pty: 1.1.0
+  # Each OS's own secret store, for Plugin Secrets (ADR-0051).
+  "@napi-rs/keyring": 2.1.2
   "@agentclientprotocol/sdk": 1.7.0
   "@legendapp/list": 3.7.1
   # Web primitives draw on Radix directly (ADR-0020).

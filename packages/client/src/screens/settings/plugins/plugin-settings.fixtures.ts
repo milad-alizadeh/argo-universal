@@ -32,7 +32,7 @@ export const settingsSchema = PluginSettingsSchema.parse([
     key: 'token',
     type: 'secret',
     label: 'Token',
-    description: 'Kept in the Keychain on the Server.',
+    description: "Kept in the Server's secret store.",
   },
   {
     key: 'show-closed',

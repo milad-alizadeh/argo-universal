@@ -5,14 +5,14 @@ import { createActor } from 'xstate';
 import { PluginAccounts } from '../src/plugins/accounts/plugin-accounts';
 import { discoverPlugins } from '../src/plugins/discovery/loader';
 import { pluginManifest } from '../src/plugins/located-plugins';
-import type { Keychain } from '../src/plugins/services/keychain';
+import type { SecretStore } from '../src/plugins/services/secret-store';
 import { writerMachine, type WriterActorRef } from '../src/storage';
 
 type Source = {
   home: string;
   version: string;
   firstPartyPluginsDirectory: string;
-  keychain: Keychain;
+  secretStore: SecretStore;
 };
 
 export type { PluginAccounts };
@@ -54,7 +54,7 @@ function accountsOver(store: Store, source: Source): PluginAccounts {
   return new PluginAccounts({
     database: store.database,
     databaseWriter: store.writer,
-    keychain: source.keychain,
+    secretStore: source.secretStore,
     manifest: (pluginId) => pluginManifest(discovery, pluginId),
     firstParty: firstPartyIn(discovery),
   });

@@ -1,6 +1,6 @@
 import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { MemoryKeychain } from '#mocks/memory-keychain';
+import { MemorySecretStore } from '#mocks/memory-secret-store';
 import { scratch } from '#mocks/probe-plugin';
 import { PluginAssets } from '../assets/plugin-assets';
 import type { StateRequest } from './plugin-calls';
@@ -17,7 +17,7 @@ it('keeps no Grants for a Plugin once it is released', async () => {
 
   const services = new PluginServices(
     new PluginStorage(home),
-    new MemoryKeychain(),
+    new MemorySecretStore(),
     {
       assets: new PluginAssets(home),
       log: (): void => {},

@@ -11,6 +11,8 @@ export type ConfiguredTest = PluginTestOptions & {
   projects: PluginProjectInfo[];
   projectPaths: Record<string, string>;
   settingsByPlugin: Map<string, Map<string, PluginSettingValue>>;
+  // The keys of each Plugin's secret Settings, which live in the secret store.
+  secretSettings: Map<string, Set<string>>;
 };
 
 export async function configureTest(
@@ -25,8 +27,25 @@ export async function configureTest(
     ...options,
     ...projectRegistry(options),
     ...settingsRegistry(options, manifests),
+    secretSettings: new Map(manifests.map(secretKeys)),
   };
 }
+
+// Whether a Plugin's Setting is a secret one, which lives in the secret store.
+export const isSecretSetting = (
+  { secretSettings }: ConfiguredTest,
+  pluginId: string,
+  key: string,
+): boolean => secretSettings.get(pluginId)?.has(key) === true;
+
+const secretKeys = (manifest: PluginManifest): [string, Set<string>] => [
+  manifest.id,
+  new Set(
+    (manifest.contributes.settings ?? [])
+      .filter(({ type }) => type === 'secret')
+      .map(({ key }) => key),
+  ),
+];
 
 function settingsRegistry(
   options: PluginTestOptions,

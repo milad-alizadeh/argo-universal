@@ -12,7 +12,7 @@ import type { NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import {
   HookPort,
-  type Keychain,
+  type SecretStore,
   type PluginNetwork,
   type OAuthOptions,
   type PluginClock,
@@ -73,7 +73,7 @@ export interface EngineInput extends Pick<
   port: number;
   version: string;
   firstPartyPluginsDirectory?: string;
-  keychain?: Keychain;
+  secretStore?: SecretStore;
   // Tests trust a fixture certificate authority and resolver for Plugin fetches.
   pluginNetwork?: PluginNetwork;
   pluginOAuth?: OAuthOptions;

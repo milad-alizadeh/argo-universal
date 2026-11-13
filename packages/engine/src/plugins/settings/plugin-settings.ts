@@ -11,9 +11,9 @@ import {
 } from '../../storage';
 import type { PluginListChanges } from '../list-changes';
 import {
-  pluginSettingsKeychainService,
-  type Keychain,
-} from '../services/keychain';
+  pluginSettingsSecretService,
+  type SecretStore,
+} from '../services/secret-store';
 import { readPluginState, PluginStateJob } from './plugin-state';
 import { check, storedEntry, valueOf } from './setting-values';
 
@@ -22,13 +22,13 @@ export type PluginSettingsDeps = {
   // Told when a Plugin is turned on or off, so every connected App reads the list again.
   listChanges: PluginListChanges;
   databaseWriter: WriterActorRef;
-  keychain: Keychain;
+  secretStore: SecretStore;
   manifest: (pluginId: string) => Promise<PluginManifest>;
 };
 
 type Change = { pluginId: string; key: string; value: PluginSettingValue };
 
-// The values of each Plugin's `contributes.settings`: plain values in Argo's database, secrets in the Keychain.
+// The values of each Plugin's `contributes.settings`: plain values in Argo's database, secrets in the secret store.
 export class PluginSettings {
   constructor(private readonly deps: PluginSettingsDeps) {}
 
@@ -104,7 +104,7 @@ export class PluginSettings {
     return field;
   }
 
-  // The keys of the secrets the Keychain holds a value for.
+  // The keys of the secrets the secret store holds a value for.
   private async secretsSet(
     pluginId: string,
     fields: readonly PluginSettingField[],
@@ -121,7 +121,10 @@ export class PluginSettings {
   }
 
   private secret(pluginId: string, key: string): Promise<string | null> {
-    return this.deps.keychain.get(pluginSettingsKeychainService(pluginId), key);
+    return this.deps.secretStore.get(
+      pluginSettingsSecretService(pluginId),
+      key,
+    );
   }
 
   private changeSecret(
@@ -129,10 +132,10 @@ export class PluginSettings {
     key: string,
     value: string,
   ): Promise<void> {
-    const service = pluginSettingsKeychainService(pluginId);
+    const service = pluginSettingsSecretService(pluginId);
 
     return value === ''
-      ? this.deps.keychain.delete(service, key)
-      : this.deps.keychain.set(service, key, value);
+      ? this.deps.secretStore.delete(service, key)
+      : this.deps.secretStore.set(service, key, value);
   }
 }
