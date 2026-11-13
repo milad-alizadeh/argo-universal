@@ -1,11 +1,11 @@
 import type { AgentServerEnvironment } from '@repo/contracts';
-import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import { useState } from 'react';
 import { SettingsLoading } from '#features/settings';
-import { TextRow } from '../../plugins/$id/plugin-text-rows';
-import { newVariableSection, useNewVariable } from './agent-new-variable';
+import { useTextDraft } from '../../plugins/$id/plugin-text-rows';
+import { changeLine, environmentLine } from './agent-environment-lines';
 
 export type AgentLoad =
   | { status: 'loading' }
@@ -21,11 +21,14 @@ export interface AgentDetailViewProps {
   onBack?: () => void;
 }
 
-const valueLabel = 'Value';
+const environmentTitle = 'Environment';
 
-export const removeLabel = (name: string): string => `Remove ${name}`;
+export const environmentFooter =
+  'The variables the Agent starts with, one per line. Clear a line to remove it. A change applies from the Agent’s next Session.';
 
-// One Installed Agent, as iOS Settings shows one App: a section per variable of its launch environment, then the one that adds another.
+export const newLinePlaceholder = 'NAME=value';
+
+// One Installed Agent, as iOS Settings shows one App: its launch environment, a line per variable, as a `.env` file reads.
 export function AgentDetailView(
   props: AgentDetailViewProps,
 ): React.JSX.Element {
@@ -39,8 +42,6 @@ export function AgentDetailView(
 }
 
 type BodyProps = Omit<AgentDetailViewProps, 'onBack'>;
-
-type LoadedAgent = Extract<AgentLoad, { status: 'loaded' }>;
 
 function AgentBody(props: BodyProps): React.JSX.Element {
   const { agent } = props;
@@ -64,60 +65,87 @@ const missingSection = (title: string): React.JSX.Element => (
 );
 
 type EnvironmentProps = {
-  env: LoadedAgent['env'];
+  env: AgentServerEnvironment;
   onChange: BodyProps['onEnvironmentChange'];
 };
 
-const without = (
-  env: AgentServerEnvironment,
-  name: string,
-): AgentServerEnvironment =>
-  Object.fromEntries(Object.entries(env).filter(([key]) => key !== name));
+type OnLine = (current: string | undefined, text: string) => void;
 
-// FieldGroup finds its sections by element type, so each is an element built here, not a component.
+type Lines = { error: string | undefined; onLine: OnLine };
+
+// A line's text is saved when its field loses focus; one the environment cannot take says why in the footer instead.
+function useLines({ env, onChange }: EnvironmentProps): Lines {
+  const [error, setError] = useState<string>();
+
+  const onLine: OnLine = (current, text) => {
+    const change = changeLine(env, current, text);
+    setError(change.saved ? undefined : change.error);
+
+    if (change.saved) onChange(change.env);
+  };
+
+  return { error, onLine };
+}
+
 function Environment(props: EnvironmentProps): React.JSX.Element {
-  const draft = useNewVariable(props.env, props.onChange);
+  const { error, onLine } = useLines(props);
 
   return (
     <FieldGroup>
-      {variableSections(props)}
-      {newVariableSection(draft)}
+      <FieldGroup.Section
+        title={environmentTitle}
+        footer={error ?? environmentFooter}
+      >
+        {savedLines(props.env, onLine)}
+        {newLine(props.env, onLine)}
+      </FieldGroup.Section>
     </FieldGroup>
   );
 }
 
-const variableSections = ({
-  env,
-  onChange,
-}: EnvironmentProps): React.JSX.Element[] =>
-  Object.entries(env).map(([name, value]) =>
-    variableSection({
-      name,
-      value,
-      onSave: (next) => onChange({ ...env, [name]: next }),
-      onRemove: () => onChange(without(env, name)),
-    }),
-  );
+// A line is keyed by its text, so a save resets its draft.
+const savedLines = (
+  env: AgentServerEnvironment,
+  onLine: OnLine,
+): React.JSX.Element[] =>
+  Object.entries(env).map(([name, value]) => (
+    <Line
+      key={environmentLine(name, value)}
+      name={name}
+      text={environmentLine(name, value)}
+      onSave={(text) => onLine(name, text)}
+    />
+  ));
 
-type VariableProps = {
-  name: string;
-  value: string;
-  onSave: (value: string) => void;
-  onRemove: () => void;
+// The empty last line adds a variable, and is a new field once it has.
+const newLine = (
+  env: AgentServerEnvironment,
+  onLine: OnLine,
+): React.JSX.Element => (
+  <Line
+    key={`new:${Object.keys(env).length}`}
+    text=""
+    onSave={(text) => onLine(undefined, text)}
+  />
+);
+
+type LineProps = {
+  // The variable the line shows; none for the empty last line.
+  name?: string;
+  text: string;
+  onSave: (text: string) => void;
 };
 
-const variableSection = (props: VariableProps): React.JSX.Element => (
-  <FieldGroup.Section key={props.name} title={props.name}>
-    <TextRow
-      key={props.value}
-      label={valueLabel}
-      value={props.value}
-      onSave={props.onSave}
+const lineLabel = (name?: string): string =>
+  name ? `Variable ${name}` : 'New variable';
+
+function Line({ name, text, onSave }: LineProps): React.JSX.Element {
+  return (
+    <FieldGroup.TextField
+      title={lineLabel(name)}
+      hideTitle
+      placeholder={newLinePlaceholder}
+      {...useTextDraft(text, onSave)}
     />
-    <Button
-      label={removeLabel(props.name)}
-      variant="text"
-      onPress={props.onRemove}
-    />
-  </FieldGroup.Section>
-);
+  );
+}
