@@ -8,7 +8,9 @@ Owner amendment, 2026-10-19: the vendor module normalizes the Registry Agent `gr
 
 Configuration discovery before Send also surfaces the Agent’s `auth_required` or launch failure in the Composer tray (owner, 2026-10-19). Its sign-in completion and Retry repeat discovery without creating an Argo Session or sending a prompt.
 
-A sign-in belongs to one Agent and Project. Every App watching them sees it pending and can cancel it, and its finish runs the open again. A sign-in after a Turn ended `auth_required` only clears that card; the user resends. That Turn also closes a Session that runs on its own process and that the Agent can resume or load, so the resend opens it on a new process: a process can keep a sign-in the Agent has revoked and still answer `authenticate` as signed in (#2031). A shared process stays. Closing a terminal method's terminal before its command exits cancels the sign-in, which counts as a failure.
+A sign-in belongs to one Agent and Project. Every App watching them sees it pending and can cancel it, and its finish runs the open again. A sign-in after a Turn ended `auth_required` only clears that card; the user resends. Closing a terminal method's terminal before its command exits cancels the sign-in, which counts as a failure.
+
+Owner amendment, 2026-11-13 (#2031): a Turn that ends `auth_required` closes its Session when the Session runs on its own process and the Agent can resume or load it. The resend then opens the Session on a new process. An Agent process can keep a sign-in the Agent has revoked and still answer `authenticate` as signed in, so the same process would end every resend `auth_required`. A shared process stays, as other Sessions run on it.
 
 Owner amendment, 2026-10-28 (#1295): a Session with Agent access to Argo owns its ACP process and connecting promise. Its process receives that Session's `ARGO_TOKEN` and the `argo` CLI on `PATH`; closing the Session revokes its token. ACP supplies environment variables when a process starts, so Sessions sharing a process cannot receive distinct tokens. Tokens must never identify a sibling Session.
 

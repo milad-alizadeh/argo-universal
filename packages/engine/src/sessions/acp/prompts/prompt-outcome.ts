@@ -1,7 +1,6 @@
 import { RequestError } from '@agentclientprotocol/sdk';
 import type { StopReason, TurnError, TurnUsage } from '@repo/contracts';
 import type { AcpSessionLease } from '../../../agents';
-import { sessionCapabilities } from '../../../agents/acp/connection/open-session';
 
 export type AcpTurnOutcome = {
   stopReason: StopReason;
@@ -49,12 +48,11 @@ export const promptFailureOutcome = (
 type ProcessLease = Pick<AcpSessionLease, 'connectionKind' | 'initialization'>;
 
 const resumes = ({ initialization }: ProcessLease): boolean =>
-  !!sessionCapabilities(initialization)?.resume;
+  !!initialization.agentCapabilities?.sessionCapabilities?.resume;
 
 const loads = ({ initialization }: ProcessLease): boolean =>
   !!initialization.agentCapabilities?.loadSession;
 
-// The Session can open again on another process: the Agent resumes or loads it.
 const reopens = (lease: ProcessLease): boolean =>
   resumes(lease) || loads(lease);
 
