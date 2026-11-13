@@ -182,7 +182,9 @@ type Box = { path: string; top: number; bottom: number };
 function cellOf(header: HTMLElement): HTMLElement {
   const cell = header.closest<HTMLElement>('[style*="z-index"]');
 
-  return cell ?? header;
+  if (!cell) throw new Error('A file header is not inside a list cell');
+
+  return cell;
 }
 
 const boxOf = (header: HTMLElement): Box => {
