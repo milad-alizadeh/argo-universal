@@ -45,7 +45,12 @@ it('fills the Session bar with the Issue number and state', async () => {
   );
 
   expect(itemsOf(bar)).toEqual([
-    { icon, text: '#42 · Open', action: { path: issuePage } },
+    {
+      icon,
+      text: '#42 · Open',
+      tone: 'success',
+      action: { path: issuePage },
+    },
   ]);
 }, 20_000);
 

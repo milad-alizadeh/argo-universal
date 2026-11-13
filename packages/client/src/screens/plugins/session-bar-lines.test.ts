@@ -22,6 +22,7 @@ const read = (
 const issues = read('issues', 'Issue tracker', {
   icon: { sf: 'ticket' },
   text: '#412 · In review',
+  tone: 'info',
   action: { path: '/issues/412' },
 });
 
@@ -50,6 +51,7 @@ describe('sessionBarLines', () => {
         pluginName: 'Issue tracker',
         icon: expect.objectContaining({ sf: 'ticket' }),
         text: '#412 · In review',
+        tone: 'info',
         path: '/issues/412',
       },
       hidden: [

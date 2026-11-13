@@ -4,10 +4,11 @@ import { sessionBarSlotId, SlotItemsInput, slotRegistry } from './wire';
 
 const inReview = '#412 · In review';
 
-it('accepts a Session bar item with an icon, text and an action', () => {
+it('accepts a Session bar item with an icon, text, a tone and an action', () => {
   const item = {
     icon: { sf: 'ticket', material: 'confirmation_number' },
     text: inReview,
+    tone: 'info',
     action: { path: '/issues/412' },
   };
 
@@ -15,7 +16,7 @@ it('accepts a Session bar item with an icon, text and an action', () => {
 });
 
 it.each([
-  ['a tone', { text: inReview, tone: 'info' }],
+  ['a tone Argo has no token for', { text: inReview, tone: 'purple' }],
   ['a tooltip', { text: inReview, tooltip: 'Issue 412' }],
   ['oversized text', { text: 'x'.repeat(81) }],
   ['empty text', { text: ' ' }],

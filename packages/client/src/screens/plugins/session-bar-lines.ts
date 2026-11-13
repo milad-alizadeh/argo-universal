@@ -14,6 +14,7 @@ const entryOf = ({
   pluginName,
   ...(item.icon && { icon: pluginSymbol(item.icon) }),
   text: item.text,
+  tone: item.tone,
   ...(item.action && { path: item.action.path }),
 });
 

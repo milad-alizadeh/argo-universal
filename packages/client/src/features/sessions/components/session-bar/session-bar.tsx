@@ -1,4 +1,5 @@
 import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
+import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
@@ -12,6 +13,8 @@ export interface SessionBarEntry {
   pluginName: string;
   icon?: SystemSymbolSource;
   text: string;
+  // The tone the line's icon and text are drawn in, such as an Issue's state.
+  tone?: SessionBarItem['tone'];
   // The Plugin page the line opens, when it has one.
   path?: string;
 }
@@ -42,7 +45,7 @@ export function SessionBar(props: SessionBarProps): React.JSX.Element {
 
 type LineProps = Pick<SessionBarProps, 'onOpen'> & { entry: SessionBarEntry };
 
-// A line's icon and text, on the bar's strip and in its Workbench card alike.
+// A line's icon and text, in its tone when it has one, on the bar's strip and in its Workbench card alike.
 export function SessionBarLine({
   entry,
 }: {
@@ -50,8 +53,8 @@ export function SessionBarLine({
 }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-2">
-      {entry.icon && <Icon name={entry.icon} tone="muted" />}
-      <Text role="secondary" numberOfLines={1}>
+      {entry.icon && <Icon name={entry.icon} tone={entry.tone ?? 'muted'} />}
+      <Text role="secondary" tone={entry.tone} numberOfLines={1}>
         {entry.text}
       </Text>
     </View>

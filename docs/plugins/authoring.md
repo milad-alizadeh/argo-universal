@@ -326,7 +326,7 @@ argo.slots.register('argo/session/bar/v1', ({ contexts }) =>
 );
 ```
 
-An item is `{ icon?, text, action? }`: `text` is at most 80 characters, and `action.path` opens one of the Plugin's own pages. A tone, a tooltip, a kit tree or a second item fails the Slot's schema, and that Plugin is left out alone.
+An item is `{ icon?, text, tone?, action? }`: `text` is at most 80 characters, `tone` is a kit tone the icon and text are drawn in, and `action.path` opens one of the Plugin's own pages. A tooltip, a kit tree or a second item fails the Slot's schema, and that Plugin is left out alone.
 The bar shows the first Plugin in Slot order that answers, after Argo's own banners, on phones and wide windows alike. The other Plugins' lines wait behind "+N", each named with its Plugin. A user can turn a Plugin off for the bar under Settings › Plugins › Session bar on that Device; the next Plugin in order then takes the line. With no answer, the Session draws no bar.
 
 ## Session header actions
