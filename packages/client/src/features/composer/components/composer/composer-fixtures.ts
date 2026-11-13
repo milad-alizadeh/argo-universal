@@ -104,6 +104,14 @@ export const slashSuggestionsComposer = {
   ],
 } satisfies ComposerFixture;
 
+export const skillSuggestionsComposer = {
+  draft: emptyDraft,
+  slashCommands: [
+    { name: '$to-spec', description: 'Write a spec', hint: 'idea' },
+    { name: 'to-spec', description: 'Ordinary command' },
+  ],
+} satisfies ComposerFixture;
+
 // A second source beside the Agent's Slash commands; its result carries a resource to send with the prompt.
 export const seventhItem = {
   id: 'item-7',
