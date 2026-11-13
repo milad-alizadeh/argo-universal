@@ -61,6 +61,45 @@ export const RequestTrayStaysCentred: Story = {
   },
 };
 
+function composerCardOf(element: HTMLElement): HTMLElement {
+  const card = element.closest<HTMLElement>('[class*="backdrop-blur-glass"]');
+
+  if (!card) throw new Error('The Composer needs its card.');
+
+  return card;
+}
+
+/*
+ * A tray tucks under the card, so its sides must sit under the card's flat edge: inset less than the card's
+ * corner radius and its side and hairline show in the rounded corner's cut-out (#2013).
+ */
+async function expectTrayClearsCorners(
+  card: HTMLElement,
+  tray: Element,
+): Promise<void> {
+  const radius = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius);
+  const outer = card.getBoundingClientRect();
+  const inner = tray.getBoundingClientRect();
+
+  await expect(inner.left - outer.left).toBeGreaterThanOrEqual(radius);
+  await expect(outer.right - inner.right).toBeGreaterThanOrEqual(radius);
+}
+
+export const TraysClearCardCorners: Story = {
+  ...ResponsiveLayoutWide,
+  args: { ...ResponsiveLayoutWide.args, callout: <View role="alert" /> },
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    const card = composerCardOf(canvas.getByRole('button', { name: 'Send' }));
+    const statusTray = card.nextElementSibling;
+
+    if (!statusTray)
+      throw new Error('The wide Composer needs its status tray.');
+    await expectTrayClearsCorners(card, statusTray);
+    await expectTrayClearsCorners(card, parentOf(canvas.getByRole('alert')));
+  },
+};
+
 export const WorkSettledFirstAgent = workStatusCounts(0, false);
 
 export const WorkSettledSecondAgent = workStatusCounts(1, false);
