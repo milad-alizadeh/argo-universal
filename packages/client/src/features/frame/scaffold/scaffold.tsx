@@ -5,12 +5,11 @@ import Animated from 'react-native-reanimated';
 import {
   contentFill,
   ContentWidthProvider,
-  WorkbenchDrawnProvider,
+  HasWorkbenchProvider,
 } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
 import { useFrameOffset } from '../hooks/use-frame-offset';
 import type { FrameMotion } from '../utils/frame-timing';
-import { workbenchDrawn } from './frame-layout';
 import {
   type PanePlacement,
   ScaffoldFrame,
@@ -83,10 +82,6 @@ function SlidingContent(
   );
 }
 
-// Only a framed page has the Workbench beside it; a phone's page has none.
-const pageWorkbenchDrawn = ({ layout, framed }: ScaffoldParts): boolean =>
-  framed && workbenchDrawn(layout.workbench.state);
-
 function PageContent({
   parts,
   children,
@@ -110,9 +105,9 @@ export function ScaffoldPage({
   return (
     <View className="flex-1 flex-row">
       <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
-        <WorkbenchDrawnProvider value={pageWorkbenchDrawn(parts)}>
+        <HasWorkbenchProvider value={parts.framed}>
           <PageContent parts={parts}>{children}</PageContent>
-        </WorkbenchDrawnProvider>
+        </HasWorkbenchProvider>
       </FramePane>
     </View>
   );

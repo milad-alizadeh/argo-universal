@@ -4,7 +4,7 @@ import { HeaderHeightContext } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactNode, useContext } from 'react';
 import { View } from 'react-native';
-import { useWorkbenchDrawn } from './content-layout';
+import { useHasWorkbench } from './content-layout';
 import { SessionColumn } from './session-column';
 
 // Only a narrow page's Liquid Glass header floats over it; an opaque header, or a wide window's own, sits above the page.
@@ -28,14 +28,14 @@ export function SessionBarStrip(props: {
 }
 
 /*
- * One tinted strip under the Session's header, its line on the Session column's leading edge; nothing while there is
- * none. While the Frame draws the Workbench, the lines are its cards instead (#2012).
+ * One tinted strip under a phone's Session header, its line on the Session column's leading edge; nothing while there
+ * is none. A page with a Workbench has the lines as its cards instead, and they hide with it (#2012).
  */
 export function SessionBarRow(props: { children: ReactNode }): React.ReactNode {
-  const workbenchDrawn = useWorkbenchDrawn();
+  const hasWorkbench = useHasWorkbench();
   const top = useFloatingHeaderHeight();
 
-  if (workbenchDrawn || !props.children) return null;
+  if (hasWorkbench || !props.children) return null;
 
   return (
     <View style={{ paddingTop: top }}>

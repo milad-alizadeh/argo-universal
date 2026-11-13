@@ -25,7 +25,7 @@ import {
 export interface SessionLayoutProps {
   // Draws nothing itself: the Session's Screen header is the band's on a wide window and the stack's on a phone, and what this holds only claims the band's Workbench.
   header: ReactNode;
-  // One line under the header, the Plugins' Session bar; it stays put while the Feed scrolls. None is drawn while the Workbench holds the lines as cards.
+  // One line under the header, the Plugins' Session bar; it stays put while the Feed scrolls. A page with a Workbench draws none: the lines are its cards.
   bar?: ReactNode;
   // Full pane width, so it scrolls from anywhere in the pane; its rows sit in SessionColumns.
   feed: ReactNode;
