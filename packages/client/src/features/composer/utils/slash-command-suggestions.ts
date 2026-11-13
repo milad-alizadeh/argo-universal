@@ -8,8 +8,11 @@ import type {
 // The Agent reports no kind for a command (its `_meta` carries one only to JetBrains AIR clients), so every command draws this glyph.
 export const slashCommandIcon = 'code';
 
+const matchingName = (name: string): string =>
+  name.toLowerCase().replace(/^\$/, '');
+
 const nameStartsWith = (command: SlashCommand, needle: string): boolean =>
-  command.name.toLowerCase().startsWith(needle);
+  matchingName(command.name).startsWith(matchingName(needle));
 
 function matchingCommands(
   commands: readonly SlashCommand[],

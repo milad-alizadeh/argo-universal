@@ -1,6 +1,7 @@
-import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, screen, waitFor } from 'storybook/test';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import {
   meta as composerMeta,
   type Story,
@@ -8,6 +9,7 @@ import {
 import {
   secondSourceComposer,
   seventhItem,
+  skillSuggestionsComposer,
   slashSuggestionsComposer,
 } from './composer-fixtures';
 import { SuggestionComposer } from './composer-suggestions.mocks';
@@ -147,3 +149,76 @@ export const DeletingTheResultsTextDropsItsResource: Story = {
     );
   },
 };
+
+function chooseSkill(width: number, selection: 'keyboard' | 'pointer'): Story {
+  return {
+    args: skillSuggestionsComposer,
+    render: (args) => <SuggestionComposer {...args} />,
+    play: async ({ canvas, args }) => {
+      await settleLayout(width);
+      const field = canvas.getByRole('textbox', { name: 'Message' });
+      await userEvent.type(field, 'Please later');
+      await userEvent.keyboard('{ArrowLeft>5/}');
+      await userEvent.keyboard('/to-sp');
+
+      await screen.findByRole('option', {
+        name: '/$to-spec Write a spec',
+      });
+
+      await expect(
+        screen.getByRole('option', {
+          name: '/to-spec Ordinary command',
+        }),
+      ).toBeVisible();
+
+      if (selection === 'pointer') {
+        await settleOverlays();
+        await page
+          .getByRole('option', { name: '/$to-spec Write a spec' })
+          .click();
+      } else {
+        await userEvent.keyboard('{Enter}');
+      }
+
+      await expect(args.onSend).not.toHaveBeenCalled();
+      await waitFor(() =>
+        expect(args.onDraftChange).toHaveBeenLastCalledWith({
+          text: 'Please /$to-spec later',
+          attachments: [],
+        }),
+      );
+      await userEvent.keyboard('idea ');
+      await waitFor(() =>
+        expect(args.onDraftChange).toHaveBeenLastCalledWith({
+          text: 'Please /$to-spec idea later',
+          attachments: [],
+        }),
+      );
+      await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+      await expect(args.onSend).toHaveBeenCalledWith({
+        text: 'Please /$to-spec idea later',
+        attachments: [],
+      });
+    },
+  };
+}
+
+export const SkillChosenByKeyboardOnDesktop = chooseSkill(
+  layoutWidths.wide,
+  'keyboard',
+);
+
+export const SkillChosenByPointerOnDesktop = chooseSkill(
+  layoutWidths.wide,
+  'pointer',
+);
+
+export const SkillChosenByKeyboardOnPhone = chooseSkill(
+  layoutWidths.phone,
+  'keyboard',
+);
+
+export const SkillChosenByPointerOnPhone = chooseSkill(
+  layoutWidths.phone,
+  'pointer',
+);
