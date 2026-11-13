@@ -243,7 +243,12 @@ export const SwitchesChangeAndFiles: Story = {
     await expect(
       canvas.getAllByRole('button', { name: /^Diff for/ }).length,
     ).toBeGreaterThan(0);
-    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+    // The window band's Back is screen history; the Change's detail draws none of its own.
+    await expect(
+      within(canvas.getByTestId('desktop-inspector')).queryByRole('button', {
+        name: 'Back',
+      }),
+    ).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
     await expect(
       canvas.queryByRole('button', { name: /^Diff for/ }),

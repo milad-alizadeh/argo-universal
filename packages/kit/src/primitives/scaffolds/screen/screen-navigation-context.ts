@@ -13,6 +13,9 @@ export const ScreenBesideList = createContext(false);
  */
 export const ScreenDefaultBack = createContext<(() => void) | null>(null);
 
+// A host whose window band carries Back and Forward marks the Screens under it, so no Screen draws a Back of its own.
+export const ScreenBackInBand = createContext(false);
+
 // Whether a navigator draws this Screen's narrow header, so the Screen leaves its own heading out.
 export function useScreenNavigator(): boolean {
   const enabled = use(ScreenNavigationEnabled);

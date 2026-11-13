@@ -19,6 +19,7 @@ export {
 export { ScreenMenuContext, type ScreenMenu } from './screen-menu-context';
 
 export {
+  ScreenBackInBand,
   ScreenBesideList,
   ScreenDefaultBack,
   ScreenNavigationEnabled,

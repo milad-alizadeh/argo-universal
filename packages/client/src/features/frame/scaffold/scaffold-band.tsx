@@ -4,7 +4,10 @@ import {
 } from '@repo/kit/primitives/actions/icon-button';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { bandToggleAppearance } from './band-control-appearance';
+import {
+  bandControlAppearance,
+  bandToggleAppearance,
+} from './band-control-appearance';
 import { BandTrailing } from './scaffold-band-controls';
 import { BandTitle } from './scaffold-band-title';
 import type {
@@ -12,6 +15,7 @@ import type {
   ScaffoldLayout,
   ScaffoldPartProps,
 } from './use-scaffold-layout';
+import { useWindowHistory, type WindowHistory } from './window-history';
 
 interface SidebarToggleProps {
   layout: Pick<ScaffoldLayout, 'list' | 'requestSidebar'>;
@@ -28,6 +32,48 @@ function SidebarBandToggle({ layout }: SidebarToggleProps): ReactElement {
       disabled={!shown && !layout.list.available}
       onPress={() => layout.requestSidebar(!shown)}
     />
+  );
+}
+
+// Each step's glyph, label, and the history it reads and moves.
+const historySteps = {
+  back: { icon: 'chevron-left', label: 'Back' },
+  forward: { icon: 'chevron-right', label: 'Forward' },
+} as const;
+
+type HistoryStep = keyof typeof historySteps;
+
+const stepEnabled = (history: WindowHistory, step: HistoryStep): boolean =>
+  step === 'back' ? history.canGoBack : history.canGoForward;
+
+function HistoryButton(props: {
+  history: WindowHistory;
+  step: HistoryStep;
+}): ReactElement {
+  const { icon, label } = historySteps[props.step];
+
+  return (
+    <IconButton
+      {...bandControlAppearance}
+      icon={icon}
+      accessibilityLabel={label}
+      disabled={!stepEnabled(props.history, props.step)}
+      onPress={props.history[props.step]}
+    />
+  );
+}
+
+// Back and Forward step through the window's history, as a browser's own buttons do.
+function BandHistory(): ReactElement | null {
+  const history = useWindowHistory();
+
+  if (!history) return null;
+
+  return (
+    <>
+      <HistoryButton history={history} step="back" />
+      <HistoryButton history={history} step="forward" />
+    </>
   );
 }
 
@@ -52,6 +98,7 @@ function BandLeading(parts: BandLeadingReads): ReactElement {
       style={style}
     >
       {sidebarControl(parts)}
+      <BandHistory />
     </View>
   );
 }

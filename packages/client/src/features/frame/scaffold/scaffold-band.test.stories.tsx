@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
+import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type { Meta } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import type { WindowBandView } from '#lib/product/window-band';
@@ -70,6 +71,42 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     await expect(canvas.getByTestId('desktop-rail')).not.toContainElement(
       toggle,
     );
+  }),
+};
+
+export const BackAndForwardFollowTheSidebarToggle: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await settleLayout('wide');
+    await controlled.render({});
+
+    const band = within(canvas.getByTestId(windowBand));
+
+    const leading = band
+      .getAllByRole('button')
+      .slice(0, 3)
+      .map((button) => button.getAttribute('aria-label'));
+
+    await expect(leading).toEqual(['Hide sidebar', 'Back', 'Forward']);
+  }),
+};
+
+// The band carries Back, so a drill-in page's title hangs none of its own.
+export const PageTitleDrawsNoBack: ScaffoldStory = {
+  play: controlledPlay(async ({ canvas }, controlled) => {
+    await settleLayout('wide');
+    await controlled.render({
+      band: null,
+      children: (
+        <Screen title="Issues" onBack={fn()}>
+          <Text>Body</Text>
+        </Screen>
+      ),
+    });
+
+    const page = within(canvas.getByTestId('desktop-detail'));
+
+    await expect(page.getByText('Body')).toBeVisible();
+    await expect(page.queryByRole('button', { name: 'Back' })).toBeNull();
   }),
 };
 
