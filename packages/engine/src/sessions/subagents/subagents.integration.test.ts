@@ -17,6 +17,16 @@ const association: SessionNotification = {
   },
 };
 
+const withDescription = (description: string): SessionNotification => ({
+  ...association,
+  update: {
+    sessionUpdate: 'subagent_update',
+    sessionId: vendorChild,
+    state: { state: 'running' },
+    description,
+  },
+});
+
 const message: SessionNotification = {
   sessionId: vendorChild,
   update: {
@@ -66,7 +76,7 @@ it('owns the updates of a Subagent it knows and nothing else', (): void => {
   expect(ownsSubagentUpdate(state(), message)).toBe(true);
 });
 
-it('keeps an explicitly reported Claude Agent role through partial updates and reload', async (): Promise<void> => {
+it('keeps the role a standard description reports through partial updates and reload', async (): Promise<void> => {
   const { database, route, settled } = openMemorySubagents();
 
   const snapshot = (): string | null | undefined => {
@@ -90,22 +100,10 @@ it('keeps an explicitly reported Claude Agent role through partial updates and r
     return role;
   };
 
-  route({
-    ...association,
-    update: {
-      ...association.update,
-      _meta: { claudeCode: { subagentRole: 'Explore' } },
-    },
-  });
+  route(withDescription('Explore'));
   route(association);
 
-  route({
-    ...association,
-    update: {
-      ...association.update,
-      _meta: { claudeCode: { subagentRole: '  custom-role  ' } },
-    },
-  });
+  route(withDescription('  custom-role  '));
   route(association);
   await settled();
 

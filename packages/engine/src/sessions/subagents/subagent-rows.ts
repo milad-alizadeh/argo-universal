@@ -4,7 +4,6 @@ import {
   type FeedUpdate,
   type SubagentUpdate,
 } from '@repo/contracts';
-import { z } from 'zod';
 import { type FeedEvent } from '../../feed';
 import type { OpenedChildFeed } from './child-feed';
 import type { SubagentRouting } from './routing-types';
@@ -25,17 +24,9 @@ const titleField = (title: string | null | undefined): { title?: string } =>
 
 type AssociationChange = OpenedChildFeed & { update: Association };
 
-const ClaudeRole = z.object({
-  claudeCode: z.object({
-    subagentRole: z.string().refine((value) => value.trim().length > 0),
-  }),
-});
-
-const roleOf = (update: Association): string | undefined => {
-  const parsed = ClaudeRole.safeParse(update._meta);
-
-  return parsed.success ? parsed.data.claudeCode.subagentRole : undefined;
-};
+// ACP's `description` is the child's role or purpose; claude-agent-acp sends its `subagent_type` there.
+const roleOf = ({ description }: Association): string | undefined =>
+  description?.trim() ? description : undefined;
 
 const wrappedMeta = (
   extension: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>,
