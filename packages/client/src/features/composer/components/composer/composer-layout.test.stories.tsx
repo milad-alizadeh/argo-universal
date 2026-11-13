@@ -6,6 +6,7 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { agentModelLabel } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { responsiveLayout } from '../../../../../mocks/composer/responsive-layout.test.mocks';
+import { composerCard } from '../../../../../mocks/composer/responsive-menu.test.mocks';
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
 import { Composer } from './composer';
 
@@ -58,6 +59,37 @@ export const RequestTrayStaysCentred: Story = {
       inner.left - outer.left,
       0,
     );
+  },
+};
+
+/*
+ * A tray tucks under the card, so its sides must sit under the card's flat edge: inset less than the card's
+ * corner radius and its side and hairline show in the rounded corner's cut-out.
+ */
+async function expectTrayClearsCorners(
+  card: Element,
+  tray: Element,
+): Promise<void> {
+  const radius = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius);
+  const outer = card.getBoundingClientRect();
+  const inner = tray.getBoundingClientRect();
+
+  await expect(inner.left - outer.left).toBeGreaterThanOrEqual(radius);
+  await expect(outer.right - inner.right).toBeGreaterThanOrEqual(radius);
+}
+
+export const TraysClearCardCorners: Story = {
+  ...ResponsiveLayoutWide,
+  args: { ...ResponsiveLayoutWide.args, callout: <View role="alert" /> },
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    const card = composerCard(canvas.getByRole('textbox', { name: 'Message' }));
+    const statusTray = card.nextElementSibling;
+
+    if (!statusTray)
+      throw new Error('The wide Composer needs its status tray.');
+    await expectTrayClearsCorners(card, statusTray);
+    await expectTrayClearsCorners(card, parentOf(canvas.getByRole('alert')));
   },
 };
 
