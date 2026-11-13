@@ -70,6 +70,7 @@ function BuildSplit({ answers, build }: PlanActionsProps): ReactNode {
       actions={build.actions}
       menuLabel="Build options"
       primary
+      size="sm"
       disabled={answers.inactive}
       fullWidth="narrow"
     />

@@ -77,7 +77,13 @@ function OptionGroup({ group, ...props }: GroupProps): ReactNode {
 }
 
 function OptionSplitButton(group: LedGroupProps): ReactNode {
-  return <SplitButton {...splitChoices(group)} fullWidth={!useContentWide()} />;
+  return (
+    <SplitButton
+      {...splitChoices(group)}
+      size="sm"
+      fullWidth={!useContentWide()}
+    />
+  );
 }
 
 // The group in SplitButton's terms: the lead's name and press, option ids as values, the lead as the chosen one.
