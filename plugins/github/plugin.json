@@ -48,7 +48,13 @@
           "find",
           "session"
         ],
-        "caller": ["project", "session"]
+        "caller": ["project"],
+        "params": {
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        }
       },
       {
         "name": "detach",
@@ -82,7 +88,13 @@
         "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",
         "tier": "read",
         "keywords": ["github", "pull request", "pr", "change", "session"],
-        "caller": ["project", "session"]
+        "caller": ["project"],
+        "params": {
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        }
       },
       {
         "name": "files",
@@ -159,7 +171,13 @@
           "refresh",
           "checks"
         ],
-        "caller": ["project", "session"]
+        "caller": ["project"],
+        "params": {
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        }
       }
     ]
   },

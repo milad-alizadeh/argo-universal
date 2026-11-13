@@ -18,10 +18,13 @@ declare module '@argo/plugin-kit' {
       ]
     };
     discover: {
-      "params": {},
+      "params": {
+        "sessionId": {
+          "type": "string"
+        }
+      },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
     detach: {
@@ -39,10 +42,13 @@ declare module '@argo/plugin-kit' {
       ]
     };
     list: {
-      "params": {},
+      "params": {
+        "sessionId": {
+          "type": "string"
+        }
+      },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
     files: {
@@ -81,10 +87,13 @@ declare module '@argo/plugin-kit' {
       ]
     };
     refresh: {
-      "params": {},
+      "params": {
+        "sessionId": {
+          "type": "string"
+        }
+      },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
   }

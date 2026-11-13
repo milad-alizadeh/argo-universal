@@ -124,7 +124,13 @@ export function ChangeFilesSession(): JSX.Element {
         {...view}
         changes={checkout}
         changeFiles={source}
-        changeActions={{ attach: fn(), detach: fn() }}
+        changeActions={{
+          attach: fn(),
+          detach: fn(),
+          discover: fn(),
+          refresh: fn(),
+          unread: [],
+        }}
       />
       {restoreButton(recovery)}
     </>

@@ -39,11 +39,11 @@ function registerFiles(argo: Argo, source: ChangesSource): void {
     scope: { ...argo, store: source.store },
   };
 
-  argo.operations.register('files', (params, caller) =>
-    filesOf(reading, params, sessionCaller(params, caller)),
+  argo.operations.register('files', async (params, caller) =>
+    filesOf(reading, params, await sessionCaller(argo, params, caller)),
   );
-  argo.operations.register('diff', (params, caller) =>
-    diffOf(reading, params, sessionCaller(params, caller)),
+  argo.operations.register('diff', async (params, caller) =>
+    diffOf(reading, params, await sessionCaller(argo, params, caller)),
   );
 }
 
@@ -53,27 +53,32 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
     change: await attach(
       { ...argo, store: source.store },
       params.reference,
-      sessionCaller(params, caller),
+      await sessionCaller(argo, params, caller),
     ),
   }));
-  argo.operations.register('discover', (_params, caller) =>
-    discoverFor({ ...argo, store: source.store }, caller),
+  argo.operations.register('discover', async (params, caller) =>
+    discoverFor(
+      { ...argo, store: source.store },
+      await sessionCaller(argo, params, caller),
+    ),
   );
   argo.operations.register('detach', async (params, caller) => ({
     detached: true,
     ...(await detach(
       { ...argo, store: source.store },
       params.reference,
-      sessionCaller(params, caller),
+      await sessionCaller(argo, params, caller),
     )),
   }));
 }
 
 // What the Session's pull requests look like now, and the retry that asks GitHub again.
 function registerReads(argo: Argo, source: ChangesSource): void {
-  argo.operations.register('list', (_params, caller) => list(source, caller));
-  argo.operations.register('refresh', (_params, caller) =>
-    refresh(source, argo, caller),
+  argo.operations.register('list', async (params, caller) =>
+    list(source, await sessionCaller(argo, params, caller)),
+  );
+  argo.operations.register('refresh', async (params, caller) =>
+    refresh(source, argo, await sessionCaller(argo, params, caller)),
   );
 }
 
