@@ -31,6 +31,12 @@ export const threePlugins: Lines = {
   hidden: [deploysBar, coverageBar],
 };
 
+// A line in its state's tone, as an open Issue's is.
+export const tonedLine: Lines = {
+  shown: { ...issueBar, text: '#412 · Open', tone: 'success' },
+  hidden: [],
+};
+
 export const plainLine: Lines = { shown: coverageBar, hidden: [] };
 
 export const longLine: Lines = {

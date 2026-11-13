@@ -52,7 +52,7 @@ function rowDetails(
   };
 }
 
-// "#412 · Open"; only the number until the state has loaded. The bar has no tone and no tooltip.
+// "#412 · Open" in the state's tone, as the row's item is; only the number until the state has loaded. The bar has no tooltip.
 const barItem = (
   pathOf: PathOf,
   { link, summary }: Linked,
@@ -60,4 +60,5 @@ const barItem = (
   icon: issueIcon,
   text: summary ? `#${link.number} · ${stateText(summary)}` : `#${link.number}`,
   action: { path: pathOf(link) },
+  ...(summary && { tone: statuses[summary.status].tone }),
 });
