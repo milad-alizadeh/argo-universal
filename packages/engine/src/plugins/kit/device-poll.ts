@@ -6,7 +6,8 @@ import type {
 } from '@repo/contracts/plugins/device-flow-api';
 import type { z } from 'zod';
 import { postForm, TokenAnswer } from './device-http';
-import { tokenFromAnswer, type KeptToken } from './device-token';
+import { tokenFromAnswer } from './device-token';
+import type { KeptToken } from './kept-token';
 
 const deviceGrant = 'urn:ietf:params:oauth:grant-type:device_code';
 

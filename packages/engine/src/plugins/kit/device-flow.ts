@@ -15,7 +15,8 @@ import {
   type Device,
   type Polled,
 } from './device-poll';
-import { secretOf, tokenLender, type KeptToken } from './device-token';
+import { deviceRefresh } from './device-token';
+import { secretOf, tokenLender, type KeptToken } from './kept-token';
 import { sleep } from './scheduler';
 
 const slowDownMs = 5000;
@@ -146,7 +147,7 @@ function provide(
   argo: DeviceFlowArgo,
   options: DeviceFlowOptions,
 ): Promise<void> {
-  const lend = tokenLender({ argo, options });
+  const lend = tokenLender(argo.secrets, deviceRefresh(argo.fetch, options));
 
   return argo.accounts.provide(
     options.host,
