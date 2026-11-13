@@ -279,3 +279,37 @@ export const ClampsAgainWhenNarrowed: Story = {
     await expect(lineViews(canvasElement)).toContain('hidden');
   },
 };
+
+// A path with no break in it wraps inside the bubble, rather than running out past its edge.
+const unbrokenPath = `/Users/milad/.argo/worktrees/${'30ec09b7fb1d3cc67de7ecf425cac9c98110099090ef102872a1f449347e509b'}/${'5df0bd25-4be8-41ce-911b-90f3e8e52ab0'}`;
+
+function unbrokenPathPrompt(width: number): Story {
+  return {
+    args: {
+      row: {
+        ...recordedUserMessage('agent-1', 'interrupt'),
+        content: [{ type: 'text', text: `Read ${unbrokenPath}` }],
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleLayout(width);
+
+      const prose = canvas.getByText(new RegExp(unbrokenPath.slice(0, 20)));
+      const container = prose.closest('.w-full');
+
+      if (!container) throw new Error('Expected the Feed row');
+      const bounds = container.getBoundingClientRect();
+      const text = prose.getBoundingClientRect();
+      await expect(text.left).toBeGreaterThanOrEqual(bounds.left);
+      await expect(text.right).toBeLessThanOrEqual(bounds.right);
+    },
+  };
+}
+
+export const UnbrokenPathStaysInBubblePhone = unbrokenPathPrompt(
+  layoutWidths.phone,
+);
+
+export const UnbrokenPathStaysInBubbleWide = unbrokenPathPrompt(
+  layoutWidths.wide,
+);

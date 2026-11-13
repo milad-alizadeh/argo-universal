@@ -31,7 +31,7 @@ export function Prose(props: ProseProps): React.JSX.Element {
       tone={useContext(MarkdownTone)}
       accessibilityRole={headingLevel ? 'heading' : undefined}
       aria-level={headingLevel}
-      className="min-w-0 max-w-full"
+      className="min-w-0 max-w-full wrap-anywhere"
     >
       <InlineTokens tokens={props.tokens} />
       {props.caret && <Caret />}
