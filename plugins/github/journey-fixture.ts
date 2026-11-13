@@ -1,3 +1,6 @@
+import { mkdtemp, rm, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   startPluginTest,
@@ -43,28 +46,33 @@ const defaultPulls = [
   }),
 ];
 
-const signInLabel = 'Sign in to GitHub';
-
-const signedInText = 'Signed in as octocat';
-
 const pollMs = 1000;
 
 const pollLimit = 5;
 
-// Signs in as a person does: asks for the code on the sign-in page, and lets the flow poll until GitHub approves it.
-async function signIn(test: PluginTest): Promise<void> {
-  const page = await test.pages.open({ path: '/sign-in' });
+const provider = 'issue-tracker';
 
-  await page.press(signInLabel);
+// Signs in through the Issue tracker, the Plugin that provides the GitHub Account this Plugin only borrows.
+async function signIn(test: PluginTest): Promise<void> {
+  await test.operations.run({ name: 'signIn', pluginId: provider });
 
   for (let poll = 0; poll < pollLimit; poll += 1) {
-    if (page.findText(signedInText)) break;
-
     await test.clock.advance(pollMs);
-    await page.draw();
   }
 
-  expect(page.findText(signedInText)).toBeDefined();
+  expect(test.accounts.list()).toHaveLength(1);
+}
+
+// Both first-party Plugins, side by side as the Server finds them: this one borrows what the other provides.
+async function pluginsFolder(): Promise<string> {
+  const folder = await mkdtemp(join(tmpdir(), 'argo-github-plugins-'));
+  const here = fileURLToPath(new URL('.', import.meta.url));
+
+  onTestFinished(() => rm(folder, { recursive: true, force: true }));
+  await symlink(here, join(folder, 'github'));
+  await symlink(join(here, '..', provider), join(folder, provider));
+
+  return folder;
 }
 
 const sessions = {
@@ -83,7 +91,7 @@ const sessions = {
 
 async function startOver(github: GitHubFixture): Promise<PluginTest> {
   const test = await startPluginTest({
-    directory: fileURLToPath(new URL('.', import.meta.url)),
+    directory: await pluginsFolder(),
     pluginId: 'github',
     version: '0.0.0',
     projects: [project, otherProject],

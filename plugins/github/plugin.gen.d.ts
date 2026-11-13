@@ -22,11 +22,5 @@ declare module '@argo/plugin-kit' {
         "session"
       ]
     };
-    signIn: {
-      "params": {}
-    };
-    cancelSignIn: {
-      "params": {}
-    };
   }
 }

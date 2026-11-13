@@ -1,5 +1,4 @@
 import type { Argo } from '@argo/plugin-kit';
-import { githubSignIn, provideGitHub } from './github-account';
 import {
   changesBySession,
   readLinks,
@@ -37,10 +36,9 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
   argo.operations.register('list', (_params, caller) => list(source, caller));
 }
 
-export async function register(argo: Argo): Promise<void> {
+export function register(argo: Argo): void {
   const source = sourceOf(argo);
 
-  await provideGitHub(argo, githubSignIn(argo));
   registerOperations(argo, source);
   registerChanges(argo, source);
 }
