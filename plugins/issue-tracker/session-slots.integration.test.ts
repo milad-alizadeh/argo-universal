@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { tracker } from './journey-fixture';
+import { signedInRoot, tracker } from './journey-fixture';
 import {
   attach,
   barSlot,
@@ -13,6 +13,56 @@ import {
 } from './session-slot-fixture';
 
 const icon = { sf: 'record.circle', material: 'adjust' };
+
+const observe = async (
+  answers: ReturnType<typeof watch>,
+  update: (items: unknown[]) => void,
+): Promise<void> => {
+  for await (const answer of answers) update(itemsOf(answer));
+};
+
+it('updates the visible Session row and bar when GitHub closes the attached Issue', async () => {
+  const { test, github } = await signedInRoot();
+  await attach(test, 'attach');
+
+  const rows = watch(test, rowSlot);
+  const bar = watch(test, barSlot);
+
+  let row = itemsOf(
+    await until(rows, (answer) =>
+      JSON.stringify(itemsOf(answer)).includes('Open'),
+    ),
+  );
+
+  let line = itemsOf(
+    await until(bar, (answer) =>
+      JSON.stringify(itemsOf(answer)).includes('Open'),
+    ),
+  );
+
+  void observe(rows, (items) => {
+    row = items;
+  });
+  void observe(bar, (items) => {
+    line = items;
+  });
+
+  github.closeIssue(42);
+  await test.clock.advance(301_000);
+
+  await expect
+    .poll(() => [row, line], { timeout: 2000 })
+    .toMatchObject([
+      [
+        {
+          text: '#42',
+          tone: 'done',
+          tooltip: 'Fixture issue from GitHub · Closed',
+        },
+      ],
+      [{ text: '#42 · Closed' }],
+    ]);
+}, 20_000);
 
 it('fills the Session row with the Issue number once an Agent attaches the Session, and with its state once it loads', async () => {
   const test = await chosenTracker();

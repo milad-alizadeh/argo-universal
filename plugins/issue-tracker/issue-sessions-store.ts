@@ -113,6 +113,9 @@ const isLinkRow = (row: unknown): row is LinkRow =>
 
 // The attachments as the Plugin's storage hands them out, each bound to the store.
 type SessionMethods = {
+  projectIssues: (
+    projectId: string,
+  ) => Promise<{ projectId: string; number: number }[]>;
   attachSession: (link: IssueLink) => Promise<void>;
   detachSession: (link: IssueLink) => Promise<void>;
   issueSessions: (
@@ -121,7 +124,26 @@ type SessionMethods = {
   sessionLinks: (sessionIds: readonly string[]) => Promise<IssueLink[]>;
 };
 
+const projectIssues =
+  (store: SessionStore): SessionMethods['projectIssues'] =>
+  async (projectId) => {
+    await store.ensureTables();
+
+    const result = await store.argo.storage.execute({
+      sql: 'SELECT DISTINCT issue_number FROM issue_sessions WHERE project_id = ?',
+      params: [projectId],
+      method: 'all',
+    });
+
+    return result.rows.flatMap((row) =>
+      Array.isArray(row) && typeof row[0] === 'number'
+        ? [{ projectId, number: row[0] }]
+        : [],
+    );
+  };
+
 export const sessionMethods = (store: SessionStore): SessionMethods => ({
+  projectIssues: projectIssues(store),
   attachSession: (link: IssueLink) => attachSession(store, link),
   detachSession: (link: IssueLink) => detachSession(store, link),
   issueSessions: (issue: Omit<IssueLink, 'sessionId'>) =>

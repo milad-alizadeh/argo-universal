@@ -11,6 +11,7 @@
     "material": "adjust"
   },
   "contributes": {
+    "background": { "path": "/session-issues", "interval": 300000 },
     "nav": [
       {
         "id": "issues",
