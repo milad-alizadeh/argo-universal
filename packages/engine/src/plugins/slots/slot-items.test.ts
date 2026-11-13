@@ -1,3 +1,4 @@
+import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import {
   itemsSlot,
   sessionChangesSlotId,
@@ -67,7 +68,7 @@ function harness(): Harness {
   };
 }
 
-const answer = { action: 'items', id: 0, items: { first: [] } } as const;
+const answer: SlotCall = { action: 'items', id: 0, items: { first: [] } };
 
 // Opens a list and waits for its first answer, so its clock is held.
 async function opened(
