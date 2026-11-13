@@ -7,7 +7,13 @@ import { type SessionPullRequest, useSessionPanels } from '#features/sessions';
 import { repositoryChanges } from '../../../features/sessions/components/session-pull-request.mocks';
 import { SessionInspector } from './session-inspector';
 
-const detach = fn<(change: SessionPullRequest) => Promise<void>>();
+const attach = fn<(reference: string) => Promise<boolean>>(() =>
+  Promise.resolve(true),
+);
+
+const detach = fn<(change: SessionPullRequest) => Promise<boolean>>(() =>
+  Promise.resolve(true),
+);
 
 const header = {
   title: 'Work',
@@ -30,7 +36,7 @@ function PhoneSheet(): JSX.Element {
       <SessionInspector
         panels={panels}
         header={{ ...header, pullRequests: [...repositoryChanges] }}
-        changeActions={{ attach: fn(), detach }}
+        changeActions={{ attach, detach }}
       />
     </View>
   );
@@ -41,6 +47,7 @@ const meta = {
   render: (): JSX.Element => <PhoneSheet />,
   beforeEach: (): Promise<void> => {
     detach.mockClear();
+    attach.mockClear();
 
     return settleLayout('phone');
   },
@@ -107,5 +114,18 @@ export const DetachFromTheSheet: Story = {
     await expect(detach.mock.calls[0]?.[0]).toMatchObject({
       id: 'github:owner/app#9',
     });
+  },
+};
+
+// A phone's sheet attaches a typed reference, as the desktop Inspector does.
+export const AttachFromTheSheet: Story = {
+  play: async ({ userEvent }) => {
+    await showChanges(userEvent);
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: 'Pull request' }),
+      'owner/app#20',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Attach' }));
+    await waitFor(() => expect(attach).toHaveBeenCalledWith('owner/app#20'));
   },
 };

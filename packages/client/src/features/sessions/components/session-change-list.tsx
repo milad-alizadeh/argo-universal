@@ -9,6 +9,7 @@ import {
   ChangeStageModifier,
 } from './change-stage/change-stage';
 import { changeDescription } from './change-stage/change-stage-model';
+import { SessionChangeAttach } from './session-change-attach';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface SessionChangeListProps {
@@ -16,6 +17,8 @@ export interface SessionChangeListProps {
   changes: readonly SessionPullRequest[];
   // A row opens that Change's detail.
   onSelect: (change: SessionPullRequest) => void;
+  // Attaches a PR by reference; absent where the page offers no such control.
+  onAttach?: (reference: string) => Promise<boolean>;
 }
 
 type RowProps = Pick<SessionChangeListProps, 'onSelect'> & {
@@ -69,6 +72,7 @@ export function SessionChangeList(props: SessionChangeListProps): ReactElement {
   return (
     <View className="p-2" accessibilityLabel="Changes">
       {props.changes.map(row)}
+      {props.onAttach && <SessionChangeAttach onAttach={props.onAttach} />}
     </View>
   );
 }

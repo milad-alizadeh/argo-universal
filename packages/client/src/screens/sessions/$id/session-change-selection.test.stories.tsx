@@ -1,8 +1,11 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, screen, waitFor, within } from 'storybook/test';
+import { associationsOf } from '../../plugins/change-associations';
+import { sayOperationFailed } from '../../plugins/say-operation-failed';
 import {
+  attached,
   ChangingSession,
   detached,
   harness,
@@ -14,6 +17,7 @@ const meta = {
   render: (): JSX.Element => <ChangingSession />,
   beforeEach: (): Promise<void> => {
     detached.mockClear();
+    attached.mockClear();
 
     return settleLayout(1920);
   },
@@ -161,6 +165,21 @@ export const RemovedSelectionNeverSelectsAnother: Story = {
   },
 };
 
+// A Change that goes away and comes back is not selected again: the person left it, so the list shows.
+export const ReturnedChangeIsNotReselected: Story = {
+  play: async (context) => {
+    await openList(context);
+    await select(context, ownedName);
+    await press(context, harness.removeLabel);
+    await press(context, harness.restoreLabel);
+
+    const panel = panelOf(context.canvas);
+
+    await expect(await rowIn(panel, ownedName)).toBeVisible();
+    await expect(panel.queryByRole('button', { name: backLabel })).toBeNull();
+  },
+};
+
 // Draft and conflict both hold, and the detail says both, with its own branch and a way to open it on GitHub.
 export const DetailShowsItsOwnFacts: Story = {
   play: async (context) => {
@@ -196,5 +215,71 @@ export const DetachRemovesOnlyTheSelectedChange: Story = {
 
     await expect(await rowIn(panel, forkedName)).toBeVisible();
     await expect(panel.queryByText(ownedTitle)).toBeNull();
+  },
+};
+
+const typed = 'owner/app#20';
+
+const referenceField = { name: 'Pull request' };
+
+// The Inspector's list takes a reference and attaches it through the Session's `attach`.
+export const AttachesTheTypedReference: Story = {
+  play: async (context) => {
+    await openList(context);
+
+    const panel = panelOf(context.canvas);
+
+    await context.userEvent.type(
+      await panel.findByRole('textbox', referenceField),
+      typed,
+    );
+    await context.userEvent.click(
+      panel.getByRole('button', { name: 'Attach' }),
+    );
+
+    await waitFor(() => expect(attached).toHaveBeenCalledWith(typed));
+    await waitFor(() =>
+      expect(panel.getByRole('textbox', referenceField)).toHaveValue(''),
+    );
+  },
+};
+
+// Nothing typed, nothing to attach.
+export const AttachNeedsAReference: Story = {
+  play: async (context) => {
+    await openList(context);
+    await expect(
+      panelOf(context.canvas).getByRole('button', { name: 'Attach' }),
+    ).toBeDisabled();
+    await expect(attached).not.toHaveBeenCalled();
+  },
+};
+
+const refusing = associationsOf(
+  {
+    run: () => Promise.reject(new Error('Pull request not found.')),
+    failed: sayOperationFailed,
+  },
+  { sessionId: 'session', projectId: 'project' },
+);
+
+// A refusal of the Operation shows through the App's failure toast, and the field keeps what was typed.
+export const RefusalShowsTheFailureToast: Story = {
+  render: (): JSX.Element => <ChangingSession actions={refusing} />,
+  play: async (context) => {
+    await openList(context);
+
+    const panel = panelOf(context.canvas);
+
+    await context.userEvent.type(
+      await panel.findByRole('textbox', referenceField),
+      typed,
+    );
+    await context.userEvent.click(
+      panel.getByRole('button', { name: 'Attach' }),
+    );
+
+    await expect(await screen.findByText('That did not work')).toBeVisible();
+    await expect(panel.getByRole('textbox', referenceField)).toHaveValue(typed);
   },
 };

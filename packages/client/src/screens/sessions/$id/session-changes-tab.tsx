@@ -47,12 +47,21 @@ const detachOf = (
 ): ComponentProps<typeof SessionChangeDetail>['onDetach'] =>
   actions && ((change) => void actions.detach(change));
 
+function List(props: Page): ReactElement {
+  return (
+    <SessionChangeList
+      changes={changesOf(props)}
+      onSelect={props.selection.select}
+      onAttach={props.actions?.attach}
+    />
+  );
+}
+
 // The full list of Changes, or the one the Session has selected, with Back to the list.
 function Changes(props: Page): ReactElement {
-  const { selected, back, select } = props.selection;
+  const { selected, back } = props.selection;
 
-  if (!selected)
-    return <SessionChangeList changes={changesOf(props)} onSelect={select} />;
+  if (!selected) return <List {...props} />;
 
   return (
     <SessionChangeDetail

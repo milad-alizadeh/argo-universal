@@ -17,10 +17,13 @@ export interface ChangeSelection {
 
 // What a person can do to the Session's Changes, beside reading them; the page supplies it where the Session's Plugins allow it.
 export interface ChangeActions {
-  // A PR by `owner/name#12`, its URL or, in the Project's own repository, its number.
-  attach: (reference: string) => Promise<void>;
+  /*
+   * A PR by `owner/name#12`, its URL or, in the Project's own repository, its number. Answers whether it was attached;
+   * a refusal is toasted, not thrown.
+   */
+  attach: (reference: string) => Promise<boolean>;
   // Only this Change's association; the others, and the PR on GitHub, stay.
-  detach: (change: SessionPullRequest) => Promise<void>;
+  detach: (change: SessionPullRequest) => Promise<boolean>;
 }
 
 export function useChangeSelection(
