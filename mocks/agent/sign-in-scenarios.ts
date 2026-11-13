@@ -1,8 +1,4 @@
-import {
-  RequestError,
-  type AuthMethod,
-  type ErrorResponse,
-} from '@agentclientprotocol/sdk';
+import type { AuthMethod } from '@agentclientprotocol/sdk';
 import { acpConfiguration } from './acp-configuration.ts';
 import { agentExit } from './process-exit-scenarios.ts';
 import {
@@ -34,11 +30,6 @@ const withMethods = (
 const signedOut = (): Pick<ScriptedScenario, 'authentication'> => ({
   authentication: { credentials: { signedIn: false } },
 });
-
-const authRequired: ErrorResponse = {
-  code: RequestError.authRequired().code,
-  message: 'Your subscription sign-in expired.',
-};
 
 type Steps = readonly ScriptedStep[];
 
@@ -73,11 +64,14 @@ const signInHeld = (steps: Steps): ScriptedScenario => ({
   responses: { authenticate: [{ steps: [{ type: 'hold' }] }] },
 });
 
-// The first prompt ends `auth_required`; the next one answers.
+// A prompt ends `auth_required` until the Agent is signed in, on whichever process the Session then runs.
 const turnAuthRequired = (steps: Steps): ScriptedScenario => ({
   ...base(steps),
   ...withMethods([signIn]),
-  responses: { 'session/prompt': [{ steps: [], error: authRequired }, {}] },
+  authentication: {
+    credentials: { signedIn: false },
+    turns: 'Your subscription sign-in expired.',
+  },
 });
 
 // The first prompt ends `auth_required`, and the Agent signs in through a terminal.
