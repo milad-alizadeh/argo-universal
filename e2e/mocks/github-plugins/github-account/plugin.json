@@ -17,6 +17,14 @@
         "host": "api.github.com",
         "page": "/sign-in"
       }
+    ],
+    "operations": [
+      {
+        "name": "ready",
+        "label": "Wake the fixture account",
+        "description": "Starts this Plugin, so its Account exists before another Plugin borrows it.",
+        "tier": "read"
+      }
     ]
   },
   "capabilities": [

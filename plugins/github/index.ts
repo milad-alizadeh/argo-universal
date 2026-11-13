@@ -9,6 +9,7 @@ import { defineFilesReads } from './pull-files';
 import { attach, detach, discoverFor, list, refresh } from './pull-operations';
 import { definePullReads } from './pull-reads';
 import { createPullStore } from './pull-store';
+import { sessionCaller } from './session-caller';
 
 function sourceOf(argo: Argo): ChangesSource {
   return {
@@ -39,24 +40,32 @@ function registerFiles(argo: Argo, source: ChangesSource): void {
   };
 
   argo.operations.register('files', (params, caller) =>
-    filesOf(reading, params, caller),
+    filesOf(reading, params, sessionCaller(params, caller)),
   );
   argo.operations.register('diff', (params, caller) =>
-    diffOf(reading, params, caller),
+    diffOf(reading, params, sessionCaller(params, caller)),
   );
 }
 
 function registerOperations(argo: Argo, source: ChangesSource): void {
-  argo.operations.register('attach', async ({ reference }, caller) => ({
+  argo.operations.register('attach', async (params, caller) => ({
     attached: true,
-    change: await attach({ ...argo, store: source.store }, reference, caller),
+    change: await attach(
+      { ...argo, store: source.store },
+      params.reference,
+      sessionCaller(params, caller),
+    ),
   }));
   argo.operations.register('discover', (_params, caller) =>
     discoverFor({ ...argo, store: source.store }, caller),
   );
-  argo.operations.register('detach', async ({ reference }, caller) => ({
+  argo.operations.register('detach', async (params, caller) => ({
     detached: true,
-    ...(await detach({ ...argo, store: source.store }, reference, caller)),
+    ...(await detach(
+      { ...argo, store: source.store },
+      params.reference,
+      sessionCaller(params, caller),
+    )),
   }));
 }
 

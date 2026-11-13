@@ -26,9 +26,13 @@
             "type": "string",
             "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
             "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
           }
         },
-        "caller": ["project", "session"]
+        "caller": ["project"]
       },
       {
         "name": "discover",
@@ -64,9 +68,13 @@
             "type": "string",
             "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
             "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
           }
         },
-        "caller": ["project", "session"]
+        "caller": ["project"]
       },
       {
         "name": "list",
@@ -98,9 +106,13 @@
           "cursor": {
             "type": "number",
             "description": "The page to read, as the previous answer's nextCursor; the first when absent."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
           }
         },
-        "caller": ["project", "session"]
+        "caller": ["project"]
       },
       {
         "name": "diff",
@@ -126,9 +138,13 @@
             "type": "string",
             "description": "The file's path in the pull request.",
             "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
           }
         },
-        "caller": ["project", "session"]
+        "caller": ["project"]
       },
       {
         "name": "refresh",

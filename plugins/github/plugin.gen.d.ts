@@ -8,11 +8,13 @@ declare module '@argo/plugin-kit' {
         "reference": {
           "type": "string",
           "required": true
+        },
+        "sessionId": {
+          "type": "string"
         }
       },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
     discover: {
@@ -27,11 +29,13 @@ declare module '@argo/plugin-kit' {
         "reference": {
           "type": "string",
           "required": true
+        },
+        "sessionId": {
+          "type": "string"
         }
       },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
     list: {
@@ -49,11 +53,13 @@ declare module '@argo/plugin-kit' {
         },
         "cursor": {
           "type": "number"
+        },
+        "sessionId": {
+          "type": "string"
         }
       },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
     diff: {
@@ -65,11 +71,13 @@ declare module '@argo/plugin-kit' {
         "path": {
           "type": "string",
           "required": true
+        },
+        "sessionId": {
+          "type": "string"
         }
       },
       "caller": [
-        "project",
-        "session"
+        "project"
       ]
     };
     refresh: {

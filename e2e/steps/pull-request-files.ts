@@ -72,12 +72,22 @@ const attach = (
     input: attachInput(served.page, projectId, number),
   });
 
+// The fixture Account exists once its Plugin has started, which running it does.
+const wakeAccount = (served: Served): Promise<void> =>
+  mutate({
+    ...served,
+    procedure: 'plugins.run',
+    input: { pluginId: 'github-account', operation: 'ready', args: {} },
+  });
+
 // The Session the page has open gets the pull requests the fixture holds, as an Agent would attach them.
 Given(
   'the Session has the four fixture pull requests attached',
   async ({ page, server }): Promise<void> => {
     const served = { page, httpUrl: server.httpUrl };
     const projectId = await firstProjectId(served);
+
+    await wakeAccount(served);
 
     for (const { number } of pullRequests)
       await attach(served, projectId, number);

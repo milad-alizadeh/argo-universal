@@ -12,6 +12,7 @@ export async function register(argo) {
     load: () => null,
     render: () => <Text>Signed in to the fixture GitHub</Text>,
   });
+  argo.operations.register('ready', () => true);
   await argo.accounts.add('api.github.com', { label: 'fixture' });
   await argo.accounts.provide(
     'api.github.com',

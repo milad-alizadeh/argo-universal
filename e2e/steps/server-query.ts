@@ -59,7 +59,7 @@ async function requestMutation(input: MutationInput): Promise<APIResponse> {
     { headers: asTheApp, data: input.input },
   );
 
-  expect(response.ok()).toBe(true);
+  expect(response.ok(), await response.text()).toBe(true);
 
   return response;
 }
