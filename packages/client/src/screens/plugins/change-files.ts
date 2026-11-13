@@ -1,11 +1,7 @@
 import { ChangeFilesPage, SessionDiffOutput } from '@repo/contracts';
 import type { ZodType } from 'zod';
-import {
-  type ChangesSource,
-  type RemoteChange,
-  remoteChanges,
-} from '#features/changes';
-import { changeKey, type SessionPullRequest } from '#features/sessions';
+import type { ChangesSource, RemoteChange } from '#features/changes';
+import type { SessionPullRequest } from '#features/sessions';
 import { changesPluginId } from './change-associations';
 import { referenceOfChange } from './change-reference';
 import type { OperationRunner } from './page-calls-ports';
@@ -41,7 +37,7 @@ async function ask<Answer>(
 const keyOf = (scope: ChangesContext, change: SessionPullRequest): string[] => [
   'change-files',
   scope.sessionId,
-  changeKey(change),
+  referenceOfChange(change),
   change.head ?? '',
 ];
 
@@ -85,8 +81,3 @@ export const remoteOf = (
   readFiles: filesOf({ runner, scope }, referenceOfChange(change)),
   readDiff: diffOf({ runner, scope }, referenceOfChange(change)),
 });
-
-export const changeFilesOf =
-  (runner: Runner, scope: ChangesContext): ChangeFilesSource =>
-  (change) =>
-    remoteChanges(remoteOf(runner, scope, change));
