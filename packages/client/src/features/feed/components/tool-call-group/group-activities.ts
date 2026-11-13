@@ -66,10 +66,34 @@ function activityWithout(
   return keepActivity(activity, liveId) ? [activity] : [];
 }
 
-// The live Tool call is drawn in the group's title, so its activity leaves the list.
-export function visibleActivities(group: FeedGroup): FeedActivity[] {
+const drawnActivities = (group: FeedGroup): FeedActivity[] =>
+  group.items.filter((activity) => activity.type !== 'thought');
+
+const onlyLive = (activity: FeedActivity, liveId: string): boolean =>
+  activity.type === 'exploration'
+    ? activity.toolCalls.every((row) => row.id === liveId)
+    : isLiveToolCall(activity, liveId);
+
+/*
+ * The group's title owns its live Tool call only while that call is all the group draws,
+ * so the call's detail sits right under the title. Behind other rows it is a row of its own (#2044).
+ */
+export function titledLiveCall(group: FeedGroup): LiveToolCall {
   const live = liveToolCall(group);
-  const drawn = group.items.filter((activity) => activity.type !== 'thought');
+
+  if (!live) return undefined;
+
+  return drawnActivities(group).every((activity) =>
+    onlyLive(activity, live.toolCall.id),
+  )
+    ? live
+    : undefined;
+}
+
+// A live Tool call drawn in the group's title leaves the list, but for any detail it has.
+export function visibleActivities(group: FeedGroup): FeedActivity[] {
+  const live = titledLiveCall(group);
+  const drawn = drawnActivities(group);
 
   if (!live) return drawn;
 

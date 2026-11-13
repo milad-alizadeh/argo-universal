@@ -85,11 +85,12 @@ function running(width: number): Story {
       await expect(
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
-      await expect(
-        canvas.getAllByRole('button', {
-          name: commandTitle,
-        }),
-      ).toHaveLength(1);
+      // The running command is a row of its own behind the read, so its output opens under it (#2044).
+      const titles = canvas.getAllByRole('button', { name: commandTitle });
+
+      await expect(titles).toHaveLength(2);
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
+      await userEvent.click(titles[1] as HTMLElement);
       await expect(canvas.getByText('Shell')).toBeVisible();
       await userEvent.click(group);
       await waitFor(() =>

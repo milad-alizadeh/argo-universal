@@ -38,9 +38,10 @@ function parallelCalls(width: number, agentIndex: number): Story {
       await expect(header).toHaveTextContent('23s');
       await expect(header).not.toHaveTextContent(recorded.later.title);
       await userEvent.click(header);
+      // Behind the other call, the live call is a row of its own (#2044).
       await expect(
         canvas.getAllByRole('button', { name: expectedTitle }),
-      ).toHaveLength(1);
+      ).toHaveLength(2);
       await expect(
         canvas.getByRole('button', { name: `Read ${read}` }),
       ).toBeVisible();

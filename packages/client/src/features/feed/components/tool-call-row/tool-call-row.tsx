@@ -57,16 +57,37 @@ const rawText = (
   return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 };
 
-// An MCP or Operation call reports its input and result only raw, with no content blocks.
-function RawToolOutput({ row }: { row: ToolCallUpdate }): React.JSX.Element {
+// A command the Agent has not yet sent output for names its command line only in its raw input.
+function commandLine(row: ToolCallUpdate): string | undefined {
+  if (!toolCallFacts(row).isCommand) return undefined;
+
+  const input: unknown = row.rawInput;
+
+  if (typeof input !== 'object' || input === null || !('command' in input))
+    return undefined;
+
+  return typeof input.command === 'string' ? input.command : undefined;
+}
+
+function RawInput({ row }: { row: ToolCallUpdate }): React.JSX.Element | null {
+  const command = commandLine(row);
   const input = rawText(row, 'rawInput');
+
+  if (command !== undefined)
+    return <ResourceCode code={`$ ${command}`} title="Shell" />;
+
+  return input === undefined ? null : (
+    <ResourceCode code={input} title="Input" language="json" />
+  );
+}
+
+// An MCP or Operation call reports its input and result only raw, with no content blocks; so does a command before its output.
+function RawToolOutput({ row }: { row: ToolCallUpdate }): React.JSX.Element {
   const output = rawText(row, 'rawOutput');
 
   return (
     <View className="gap-2">
-      {input !== undefined && (
-        <ResourceCode code={input} title="Input" language="json" />
-      )}
+      <RawInput row={row} />
       {output !== undefined && (
         <ResourceCode code={output} title="Output" language="json" />
       )}

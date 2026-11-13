@@ -94,3 +94,24 @@ export const LiveMoveRaw: Story = {
     await expect(canvas.getAllByText('Move archive')).toHaveLength(1);
   },
 };
+
+const verifyTitle = /^Verify the build/;
+
+// With other calls before it, the live call is a row of its own, so its detail opens under its own title (#2044).
+export const LiveCallAfterOthers: Story = {
+  args: { group: genericGroup('mcp-content', 'execute-pending') },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: verifyTitle }));
+    await expect(
+      canvas.getByRole('button', { name: /^Read the issue/ }),
+    ).toBeVisible();
+
+    const titles = canvas.getAllByRole('button', { name: verifyTitle });
+
+    await expect(titles).toHaveLength(2);
+    await expect(canvas.queryByText(/pnpm verify/)).not.toBeInTheDocument();
+    await userEvent.click(titles[1] as HTMLElement);
+    await expect(canvas.getByText(/pnpm verify/)).toBeVisible();
+  },
+};
