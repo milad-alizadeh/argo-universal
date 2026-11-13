@@ -19,6 +19,7 @@ import {
 import { sessionOpenError } from '../agents';
 import {
   messageRejectedEvent,
+  restartTurnError,
   turnEndingEvent,
   type FeedEvent,
   type FeedActorRef,
@@ -82,6 +83,7 @@ import {
 import {
   acpUpdateEvent,
   setConfigEvent,
+  serverStoppingEvent,
   storageFailingEvent,
   writeFeedEvent,
   type SessionContext,
@@ -135,6 +137,14 @@ const acpRequestWithdrawnEvent = 'acp.requestWithdrawn';
 const answerElicitationEvent = 'session.answerElicitation';
 
 const configuringState = 'configuring';
+
+const cancellingTarget = '.cancelling';
+
+const cancellingTurn = [
+  'rememberCancellation',
+  'cancelSessionRequests',
+  'publishCancellation',
+] as const;
 
 /*
  * What a state means to the code outside this statechart, so a renamed state never changes admission:
@@ -1360,11 +1370,9 @@ export const sessionMachine = sessionSetup.createMachine({
                   ],
                 },
                 'session.cancel': {
-                  target: '.cancelling',
+                  target: cancellingTarget,
                   actions: [
-                    'rememberCancellation',
-                    'cancelSessionRequests',
-                    'publishCancellation',
+                    ...cancellingTurn,
                     { type: 'endTurn', params: { stopReason: 'cancelled' } },
                   ],
                 },
@@ -1416,13 +1424,22 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: ['answerAcpElicitation', 'removeElicitation'],
                 },
                 [storageFailingEvent]: {
-                  target: '.cancelling',
+                  target: cancellingTarget,
                   actions: [
                     'rememberStorageFailure',
-                    'rememberCancellation',
-                    'cancelSessionRequests',
-                    'publishCancellation',
+                    ...cancellingTurn,
                     { type: 'endTurn', params: { stopReason: 'error' } },
+                  ],
+                },
+                // Stopped by the Server, not the user: the Agent's cancelled answer and `failed` Tool calls that follow are dropped.
+                [serverStoppingEvent]: {
+                  target: cancellingTarget,
+                  actions: [
+                    ...cancellingTurn,
+                    {
+                      type: 'endTurn',
+                      params: { stopReason: 'error', error: restartTurnError },
+                    },
                   ],
                 },
               },
@@ -1455,6 +1472,7 @@ export const sessionMachine = sessionSetup.createMachine({
                       {},
                     ],
                     'session.cancel': {},
+                    [serverStoppingEvent]: {},
                     [storageFailingEvent]: {
                       actions: 'rememberStorageFailure',
                     },

@@ -11,6 +11,7 @@ import {
 import type { AcpResources, InstalledAgents } from '../agents';
 import type { WriterActorRef } from '../storage';
 import { createSessionActorInput } from './session-actor-input';
+import { serverStoppingEvent } from './session-context';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 
@@ -85,7 +86,8 @@ export type OpenSessionsCommand =
       sessionId: string;
       agent: string;
     }
-  | { type: 'sessions.stopAll' };
+  | { type: 'sessions.stopAll' }
+  | { type: 'sessions.stopTurns' };
 
 type OpenSessionsEvent =
   | OpenSessionsCommand
@@ -152,6 +154,10 @@ export const openSessionsMachine = setup({
         `sessions: ${event.actorId} failed: ${String(event.error)}`,
       );
     },
+    stopTurns: enqueueActions(({ context, enqueue }): void => {
+      for (const session of Object.values(context.sessions))
+        enqueue.sendTo(session, { type: serverStoppingEvent });
+    }),
     closeSessions: enqueueActions(({ context, enqueue }): void => {
       for (const session of Object.values(context.sessions))
         enqueue.sendTo(session, closureEvent(session));
@@ -185,6 +191,7 @@ export const openSessionsMachine = setup({
   }),
   initial: 'running',
   on: {
+    'sessions.stopTurns': { actions: 'stopTurns' },
     'xstate.done.actor.*': { actions: 'removeSession' },
     'xstate.error.actor.*': [
       {

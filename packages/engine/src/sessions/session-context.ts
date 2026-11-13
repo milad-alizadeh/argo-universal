@@ -38,6 +38,9 @@ export const setConfigEvent = 'session.setConfigOption';
 
 export const storageFailingEvent = 'session.storageFailing';
 
+// The Engine began to stop, so a running Turn ends before the Agent's own shutdown output reaches the Feed (#2008).
+export const serverStoppingEvent = 'session.serverStopping';
+
 export const acpUpdateEvent = 'acp.update';
 
 export const writeFeedEvent = 'writer.write';
@@ -90,6 +93,7 @@ export type SessionEvent =
   | SessionCommand
   | AcpLifetimeEvent
   | { type: typeof storageFailingEvent }
+  | { type: typeof serverStoppingEvent }
   | { type: 'session.shutdown' }
   | { type: 'agent.shellChanged'; shell: ShellRecord }
   | PermissionHooked
