@@ -21,7 +21,7 @@ export interface AgentDetailViewProps {
   onBack?: () => void;
 }
 
-export const valueLabel = 'Value';
+const valueLabel = 'Value';
 
 export const removeLabel = (name: string): string => `Remove ${name}`;
 
