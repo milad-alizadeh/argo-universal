@@ -25,6 +25,9 @@ export type TrackerStorage = {
   ) => Promise<IssueSession[]>;
   // The Issues these Sessions are attached to, the most recent first.
   sessionLinks: (sessionIds: readonly string[]) => Promise<IssueLink[]>;
+  projectIssues: (
+    projectId: string,
+  ) => Promise<{ projectId: string; number: number }[]>;
 };
 
 type Store = {

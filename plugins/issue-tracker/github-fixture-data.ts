@@ -42,15 +42,31 @@ const titledFor = <Node extends { title: string }>(
 
 const missingNumber = 404;
 
-const issueData = (variables: JsonObject, token: string): string =>
+function issueNode(
+  number: number,
+  closedIssues: ReadonlySet<number>,
+): Omit<ReturnType<typeof parentIssue>, 'state' | 'stateReason'> & {
+  state: string;
+  stateReason: string | null;
+} {
+  const node = number === childNumber ? childIssue() : parentIssue();
+
+  return closedIssues.has(number)
+    ? { ...node, state: 'CLOSED', stateReason: 'COMPLETED' }
+    : node;
+}
+
+const issueData = (
+  variables: JsonObject,
+  token: string,
+  closedIssues: ReadonlySet<number>,
+): string =>
   Number(variables.number) === missingNumber
     ? JSON.stringify({ repository: { issue: null } })
     : JSON.stringify({
         repository: {
           issue: titledFor(
-            Number(variables.number) === childNumber
-              ? childIssue()
-              : parentIssue(),
+            issueNode(Number(variables.number), closedIssues),
             token,
           ),
         },
@@ -64,14 +80,17 @@ const searchData = (variables: JsonObject): string => {
   });
 };
 
-function dataOf(request: FixtureRequest): string {
+function dataOf(
+  request: FixtureRequest,
+  closedIssues: ReadonlySet<number>,
+): string {
   const body = parseJson(request.body);
   const variables = variablesOf(body);
 
   if ('count0' in variables) return overviewData(variables);
 
   if (textOf(pick(body, 'query')).includes('issue(number:'))
-    return issueData(variables, tokenOf(request));
+    return issueData(variables, tokenOf(request), closedIssues);
 
   return searchData(variables);
 }
@@ -82,8 +101,11 @@ export const tokenOf = (request: FixtureRequest): string =>
 const missingIssue = 'Could not resolve to an Issue with the number of 404.';
 
 // GitHub's whole GraphQL answer: its data, and why a part of it is null.
-export function graphqlAnswer(request: FixtureRequest): string {
-  const data = dataOf(request);
+export function graphqlAnswer(
+  request: FixtureRequest,
+  closedIssues: ReadonlySet<number> = new Set(),
+): string {
+  const data = dataOf(request, closedIssues);
   const missing = data.includes('"issue":null');
 
   return missing

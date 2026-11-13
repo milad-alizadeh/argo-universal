@@ -1,4 +1,4 @@
-import type { Argo } from '@argo/plugin-kit';
+import type { Argo, LoaderInput } from '@argo/plugin-kit';
 import type { IssueDeps } from './issue-deps';
 import { issuePath } from './issue-paths';
 import { createIssueSummaries, type IssueSummaries } from './issue-summary';
@@ -30,8 +30,30 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
     announceStatus(summaries, changed, number),
   );
   registerItems(api, { deps, summaries });
+  registerRefresh(api, deps, summaries);
 
   return announcing(deps.storage, changed);
+}
+
+function registerRefresh(
+  api: Argo,
+  deps: IssueDeps,
+  summaries: IssueSummaries,
+): void {
+  api.pages.define('/session-issues', {
+    load: (input) => refreshProject({ deps, summaries }, input),
+    render: () => null,
+  });
+}
+
+async function refreshProject(
+  { deps, summaries }: Fills,
+  { context: { projectId }, read }: LoaderInput,
+): Promise<null> {
+  if (projectId)
+    await summaries.refresh(await deps.storage.projectIssues(projectId), read);
+
+  return null;
 }
 
 type Fills = Omit<Answering, 'toItems'>;
