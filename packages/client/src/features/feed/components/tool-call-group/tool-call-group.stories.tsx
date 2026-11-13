@@ -4,6 +4,7 @@ import {
   allowedOnceGroup,
   awaitingApprovalGroup,
   parallelGroup,
+  runningExpandedGroup,
   runningGroup,
   settledGroup,
 } from './tool-call-group-fixtures';
@@ -27,6 +28,9 @@ type Story = StoryObj<typeof meta>;
 
 // Still running: the live Tool call heads the group and the duration counts up.
 export const Running: Story = { args: runningGroup };
+
+// Opened while running: the command that runs behind the read opens under its own title.
+export const RunningExpanded: Story = { args: runningExpandedGroup };
 
 // Parallel calls: the live command heads the group while the read it overlaps stays in the list.
 export const Parallel: Story = { args: parallelGroup };

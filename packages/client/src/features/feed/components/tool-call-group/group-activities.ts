@@ -75,19 +75,17 @@ const drawsOnlyLive = (activity: FeedActivity, liveId: string): boolean =>
     : isLiveToolCall(activity, liveId);
 
 /*
- * The group's title owns its live Tool call only while that call is all the group draws,
+ * The group's title owns its live Tool call only while that call is the group's first row,
  * so the call's detail sits right under the title. Behind other rows it is a row of its own (#2044).
  */
 export function titledLiveCall(group: FeedGroup): LiveToolCall {
   const live = liveToolCall(group);
 
-  if (!live) return undefined;
+  const leads = drawnActivities(group)
+    .slice(0, 1)
+    .every((first) => live && drawsOnlyLive(first, live.toolCall.id));
 
-  return drawnActivities(group).every((activity) =>
-    drawsOnlyLive(activity, live.toolCall.id),
-  )
-    ? live
-    : undefined;
+  return leads ? live : undefined;
 }
 
 // A live Tool call drawn in the group's title leaves the list, but for any detail it has.
