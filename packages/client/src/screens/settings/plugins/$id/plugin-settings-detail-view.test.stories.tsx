@@ -10,11 +10,16 @@ import {
   enabledLabel,
   PluginSettingsDetailView,
 } from './plugin-settings-detail-view';
+import {
+  signedInPlugin,
+  stoppedPlugin,
+} from './plugin-settings-detail-view-fixtures';
 
 const loaded = {
   status: 'loaded',
   enabled: true,
   fields: settingsSchema,
+  accounts: [],
   settings: savedSettings,
 } as const;
 
@@ -31,6 +36,8 @@ const meta = {
     onEnabledChange: fn(),
     onSettingChange: fn(),
     onBack: fn(),
+    onOpenSignIn: fn(),
+    onOpenAccount: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof PluginSettingsDetailView>;
@@ -181,5 +188,49 @@ export const EachFieldShowsItsDescription: Story = {
     await expect(
       canvas.getByText('Closed and merged pull requests stay in the list.'),
     ).toBeVisible();
+  },
+};
+
+export const SignedOutOpensSignIn: Story = {
+  args: {
+    plugin: {
+      ...loaded,
+      accounts: [{ host: 'api.github.com', page: '/sign-in' }],
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('link', { name: 'api.github.com, Sign in' }),
+    );
+    await expect(args.onOpenSignIn).toHaveBeenCalledWith('/sign-in');
+    await expect(args.onOpenAccount).not.toHaveBeenCalled();
+  },
+};
+
+export const SignedInOpensAccount: Story = {
+  args: { plugin: signedInPlugin },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('link', {
+        name: 'api.github.com, Signed in as milad-alizadeh',
+      }),
+    );
+    await expect(args.onOpenAccount).toHaveBeenCalledWith('acc-github-1');
+    await expect(args.onOpenSignIn).not.toHaveBeenCalled();
+  },
+};
+export const StoppedStillOffersSignIn: Story = {
+  args: { plugin: stoppedPlugin },
+  play: async ({ args, canvas }) => {
+    await expect(
+      canvas.getByRole('link', { name: 'api.github.com, Sign in' }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('switch', { name: enabledLabel }),
+    ).not.toBeChecked();
+    await expect(canvas.getByPlaceholderText('Not set')).toHaveAttribute(
+      'type',
+      'password',
+    );
   },
 };

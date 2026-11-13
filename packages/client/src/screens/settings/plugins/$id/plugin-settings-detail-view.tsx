@@ -9,6 +9,12 @@ import type * as React from 'react';
 import { SettingsLoading } from '#features/settings';
 import { settingFieldSection } from './plugin-setting-field-row';
 
+export interface PluginSignInRow {
+  host: string;
+  page: string;
+  account?: { id: string; label: string };
+}
+
 export type PluginLoad =
   | { status: 'loading' }
   | { status: 'missing' }
@@ -17,6 +23,7 @@ export type PluginLoad =
       enabled: boolean;
       fields: readonly PluginSettingField[];
       settings: PluginSettings;
+      accounts: readonly PluginSignInRow[];
     };
 
 export interface PluginSettingsDetailViewProps {
@@ -26,6 +33,8 @@ export interface PluginSettingsDetailViewProps {
   onEnabledChange: (enabled: boolean) => void;
   onSettingChange: (key: string, value: PluginSettingValue) => void;
   onBack?: () => void;
+  onOpenSignIn: (page: string) => void;
+  onOpenAccount: (id: string) => void;
 }
 
 export const enabledLabel = 'Enabled';
@@ -64,6 +73,7 @@ function pluginSections(
   return (
     <>
       {enabledSection(plugin, props.onEnabledChange)}
+      {accountSections(plugin, props)}
       {settingSections(plugin, props.onSettingChange)}
     </>
   );
@@ -103,4 +113,23 @@ const settingSections = (
       settings: plugin.settings,
       onChange: (value) => onSettingChange(field.key, value),
     }),
+  );
+
+const accountSections = (
+  plugin: LoadedPlugin,
+  props: BodyProps,
+): React.JSX.Element | null =>
+  plugin.accounts.length === 0 ? null : (
+    <FieldGroup.Section>
+      {plugin.accounts.map(({ host, page, account }) => (
+        <FieldGroup.Link
+          key={account?.id ?? host}
+          title={host}
+          value={account ? `Signed in as ${account.label}` : 'Sign in'}
+          onPress={() =>
+            account ? props.onOpenAccount(account.id) : props.onOpenSignIn(page)
+          }
+        />
+      ))}
+    </FieldGroup.Section>
   );

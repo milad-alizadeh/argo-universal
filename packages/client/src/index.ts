@@ -141,3 +141,5 @@ export {
 } from './lib/product/navigation/sections';
 
 export { AgentAccessDetailScreen } from './screens/settings/agent-access/agent-access-detail-screen';
+
+export { PluginSignInDetailScreen } from './screens/settings/plugins/sign-in/$id/plugin-sign-in-detail-screen';
