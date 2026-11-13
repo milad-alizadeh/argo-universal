@@ -74,6 +74,9 @@ export function ChangingSession(props: {
 
   const changeActions = {
     attach: attached,
+    discover: fn<ChangeActions['discover']>(),
+    refresh: fn<ChangeActions['refresh']>(),
+    unread: [],
     detach: async (change: SessionPullRequest): Promise<boolean> => {
       await detached(change);
       setChanges((now) => now.filter((one) => one.id !== change.id));

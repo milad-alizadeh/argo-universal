@@ -38,7 +38,9 @@ type Page = Props & {
 const changesOf = (props: Props): readonly SessionPullRequest[] =>
   props.header?.pullRequests ?? [];
 
-const hasChange = (props: Props): boolean => changesOf(props).length > 0;
+// With none attached, the Change segment is still offered where the Session can find or attach one.
+const hasChange = (props: Props): boolean =>
+  changesOf(props).length > 0 || props.actions !== undefined;
 
 const ignore = (): void => {};
 
@@ -65,12 +67,16 @@ const detachOf = (
 ): ComponentProps<typeof SessionChangeDetail>['onDetach'] =>
   actions && ((change) => void actions.detach(change));
 
+const refreshOf = (
+  actions: ChangeActions | undefined,
+): (() => void) | undefined => actions && (() => void actions.refresh());
+
 function List(props: Page): ReactElement {
   return (
     <SessionChangeList
       changes={changesOf(props)}
       onSelect={props.selection.select}
-      onAttach={props.actions?.attach}
+      actions={props.actions}
     />
   );
 }
@@ -86,6 +92,7 @@ function Changes(props: Page): ReactElement {
       change={selected}
       onBack={back}
       onDetach={detachOf(props.actions)}
+      onRefresh={refreshOf(props.actions)}
     />
   );
 }

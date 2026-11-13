@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import type {
+  DiscoveryResult,
+  UnreadChange,
+} from '../components/change-discovery';
 import { changeKey, findChange } from '../components/change-identity';
 import type { SessionPullRequest } from '../components/session-pull-request';
 
@@ -24,6 +28,12 @@ export interface ChangeActions {
   attach: (reference: string) => Promise<boolean>;
   // Only this Change's association; the others, and the PR on GitHub, stay.
   detach: (change: SessionPullRequest) => Promise<boolean>;
+  // Looks for the PRs of the Session's branch and attaches them; answers what it found, nothing if the Operation was refused.
+  discover: () => Promise<DiscoveryResult | undefined>;
+  // Reads every attached PR again, now; the retry after a failed read or signing in again.
+  refresh: () => Promise<void>;
+  // Attached PRs that were never read, so the list does not hold them; a failed first read is not an empty list.
+  unread: readonly UnreadChange[];
 }
 
 export function useChangeSelection(

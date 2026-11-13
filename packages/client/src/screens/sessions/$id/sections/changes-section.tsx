@@ -69,9 +69,13 @@ const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
   };
 };
 
+// Whether the tab leads with the Changes (the list, or where to find one) rather than the changed files alone.
+const hasChanges = (content: SessionInspectorContent): boolean =>
+  pullRequestsOf(content).length > 0 || content.changeActions !== undefined;
+
 // A Change's own header leads its detail; without one, the files take the Changes header.
 const changesSheetHeader = (content: SessionInspectorContent): ReactNode =>
-  pullRequestsOf(content).length ? undefined : <ChangesSheetHeader />;
+  hasChanges(content) ? undefined : <ChangesSheetHeader />;
 
 const changesBody = (
   content: SessionInspectorContent,
@@ -92,7 +96,7 @@ const phoneBody = (
   content: SessionInspectorContent,
   tab: SectionTabHandle,
 ): ReactNode =>
-  pullRequestsOf(content).length
+  hasChanges(content)
     ? changesBody(content, tab)
     : content.changes && <ChangesFiles {...content.changes} />;
 

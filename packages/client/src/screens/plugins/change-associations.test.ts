@@ -56,4 +56,47 @@ describe('associationsOf', () => {
     ).resolves.toBe(false);
     expect(failing.failed).toHaveBeenCalledWith(refusal);
   });
+
+  it("runs the Plugin's discover for the Session and answers what it found", async () => {
+    const run = vi.fn<OperationRunner['run']>(() =>
+      Promise.resolve({ result: { result: 'branchless' } }),
+    );
+
+    await expect(
+      associationsOf(runner(run), scope).discover?.(),
+    ).resolves.toMatchObject({ result: 'branchless' });
+    expect(run).toHaveBeenCalledWith({
+      pluginId: 'github',
+      operation: 'discover',
+      args: {},
+      ...scope,
+    });
+  });
+
+  it('answers nothing when discover is refused, and says so through the runner', async () => {
+    const failing = runner(() => Promise.reject(new Error('no')));
+
+    await expect(
+      associationsOf(failing, scope).discover?.(),
+    ).resolves.toBeUndefined();
+    expect(failing.failed).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes and reports the pull requests that could not be read', async () => {
+    const set = vi.fn<(unread: unknown[]) => void>();
+
+    const run = vi.fn<OperationRunner['run']>(() =>
+      Promise.resolve({
+        result: { changes: [{ repository: 'o/a', number: 3, error: 'down' }] },
+      }),
+    );
+
+    await associationsOf(runner(run), scope, { unread: [], set }).refresh?.();
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ operation: 'refresh' }),
+    );
+    expect(set).toHaveBeenCalledWith([
+      { repository: 'o/a', number: 3, error: 'down' },
+    ]);
+  });
 });

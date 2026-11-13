@@ -235,6 +235,11 @@ export { archivedToast } from './components/archive-session/archived-toast';
 
 export { SessionChangeDetail } from './components/session-change-detail';
 
+export {
+  type DiscoveryResult,
+  type UnreadChange,
+} from './components/change-discovery';
+
 export { SessionChangeList } from './components/session-change-list';
 
 export {

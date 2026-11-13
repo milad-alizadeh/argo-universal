@@ -3,7 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type JSX, useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
-import { type SessionPullRequest, useSessionPanels } from '#features/sessions';
+import {
+  type ChangeActions,
+  type SessionPullRequest,
+  useSessionPanels,
+} from '#features/sessions';
 import { repositoryChanges } from '../../../features/sessions/components/session-pull-request.mocks';
 import { SessionInspector } from './session-inspector';
 
@@ -36,7 +40,13 @@ function PhoneSheet(): JSX.Element {
       <SessionInspector
         panels={panels}
         header={{ ...header, pullRequests: [...repositoryChanges] }}
-        changeActions={{ attach, detach }}
+        changeActions={{
+          attach,
+          detach,
+          discover: fn<ChangeActions['discover']>(),
+          refresh: fn<ChangeActions['refresh']>(),
+          unread: [],
+        }}
       />
     </View>
   );
