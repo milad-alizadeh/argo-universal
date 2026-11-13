@@ -5,6 +5,7 @@ import { ChangesFiles } from './changes-files';
 import {
   binaryFile,
   loadingDiffs,
+  manyFiles,
   renamedFile,
 } from './changes-files-fixtures';
 
@@ -43,3 +44,6 @@ export const BinaryFile: Story = { args: binaryFile };
 
 // One spinner at the end of the list says diffs are coming, however many files wait for one.
 export const LoadingDiffs: Story = { args: loadingDiffs };
+
+// Each file's header sticks to the top while its diff scrolls under it, then the next header pushes it off.
+export const ManyFiles: Story = { args: manyFiles };

@@ -63,3 +63,28 @@ export const loadingDiffs = {
     'src/row.ts': { pages: [], loading: true },
   },
 } satisfies ChangesViewProps;
+
+const manyPaths = ['src/app.ts', 'src/list.ts', 'src/row.ts', 'src/cell.ts'];
+
+const changedLines = Array.from({ length: 8 }, (_, index) => ({
+  kind: 'added' as const,
+  number: index + 1,
+  text: `export const value${index + 1} = ${index + 1};`,
+}));
+
+// Enough files and lines to scroll, so each header sticks and then gives way to the next.
+export const manyFiles = {
+  ...base,
+  files: manyPaths.map((path) => ({
+    path,
+    operation: 'modify' as const,
+    added: changedLines.length,
+    removed: 0,
+  })),
+  diffs: Object.fromEntries(
+    manyPaths.map((path) => [
+      path,
+      { pages: [[{ header: '@@ -0,0 +1,8 @@', lines: changedLines }]] },
+    ]),
+  ),
+} satisfies ChangesViewProps;

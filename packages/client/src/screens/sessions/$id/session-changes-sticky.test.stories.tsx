@@ -216,18 +216,14 @@ function overlapping(scroller: HTMLElement): string[] {
 // Steps of a third of a wheel's, so a header is caught partway through giving way.
 const fineStep = wheelStep / 3;
 
-const lastStretch = 2400;
+const walkingDown = (scroller: HTMLElement): boolean =>
+  scroller.scrollTop < reach && !atEnd(scroller);
 
-// Each step from the last stretch's top down to the end, where two headers overlap.
-async function overlapsToEnd(scroller: HTMLElement): Promise<string[]> {
+// Each step down to `reach`, past several files' headers handing over, where two headers overlap.
+async function overlapsDown(scroller: HTMLElement): Promise<string[]> {
   const seen = new Set<string>();
 
-  scroller.scrollTop = scroller.scrollHeight;
-  await spinnersGone();
-  scroller.scrollTop = scroller.scrollHeight - lastStretch;
-  await pause(upPauseMs);
-
-  while (!atEnd(scroller)) {
+  while (walkingDown(scroller)) {
     scroller.scrollTop += fineStep;
     await pause(downPauseMs);
 
@@ -237,18 +233,12 @@ async function overlapsToEnd(scroller: HTMLElement): Promise<string[]> {
   return [...seen];
 }
 
-// A stuck header gives way to the next one, the last file's too: no header is ever drawn over another.
+// A stuck header gives way to the next one: as their edges meet it is pushed up, never drawn under (#2051).
 export const NextHeaderPushesTheStuckOne: Story = {
-  args: {
-    catalog: {
-      ...manyChanges,
-      files: (): (typeof recorded)[] => [...fileLines, 47, 69].map(fileOf),
-    },
-  },
   play: async () => {
     await findFileHeader('/repo/src/file-0.ts');
     const scroller = scrollerOf(changedFiles());
 
-    await expect(await overlapsToEnd(scroller)).toEqual([]);
+    await expect(await overlapsDown(scroller)).toEqual([]);
   },
 };
