@@ -4,6 +4,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { use } from 'react';
 import { View } from 'react-native';
+import { z } from 'zod';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import { fileName } from '../../view/file-edit-label';
 import {
@@ -57,16 +58,13 @@ const rawText = (
   return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 };
 
+const CommandInput = z.object({ command: z.string() });
+
 // A command the Agent has not yet sent output for names its command line only in its raw input.
 function commandLine(row: ToolCallUpdate): string | undefined {
   if (!toolCallFacts(row).isCommand) return undefined;
 
-  const input: unknown = row.rawInput;
-
-  if (typeof input !== 'object' || input === null || !('command' in input))
-    return undefined;
-
-  return typeof input.command === 'string' ? input.command : undefined;
+  return CommandInput.safeParse(row.rawInput).data?.command;
 }
 
 function RawInput({ row }: { row: ToolCallUpdate }): React.JSX.Element | null {

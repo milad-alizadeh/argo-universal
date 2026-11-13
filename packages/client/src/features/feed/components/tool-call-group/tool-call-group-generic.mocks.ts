@@ -1,5 +1,12 @@
-import type { FeedGroup } from '../../view/feed-view';
+import type { ToolCallUpdate } from '@repo/contracts';
+import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 import { recordedToolCall, toolCallGroupMock } from '../tool-call.mocks';
+
+const toolCallActivity = (row: ToolCallUpdate): FeedActivity => ({
+  type: 'tool_call',
+  row,
+  awaitingApproval: false,
+});
 
 // An open group whose live Tool call comes after any earlier calls.
 export function genericGroup(
@@ -13,10 +20,6 @@ export function genericGroup(
     ...toolCallGroupMock.running,
     state: 'open',
     live: { toolCall: live, awaitingApproval: false },
-    items: rows.map((row) => ({
-      type: 'tool_call',
-      row,
-      awaitingApproval: false,
-    })),
+    items: rows.map(toolCallActivity),
   };
 }

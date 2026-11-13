@@ -86,6 +86,7 @@ function running(width: number): Story {
       await expect(
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
+
       // The running command is a row of its own behind the read, so its output opens under it (#2044).
       const [, commandRow, ...rest] = canvas.getAllByRole('button', {
         name: commandTitle,
