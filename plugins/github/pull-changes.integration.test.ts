@@ -62,7 +62,7 @@ it(
 
     await attach(run, `${repository}#12`);
 
-    const [stored] = await run.test.storage.execute([
+    const [stored] = run.test.storage.execute([
       {
         sql: 'SELECT project_id, session_id, repository, number FROM pull_associations',
         params: [],
@@ -78,7 +78,7 @@ it(
 // An association an earlier Server run stored, whose pull request GitHub cannot answer for now.
 async function associateUnreadable(run: Journey): Promise<void> {
   await attach(run, `${repository}#12`);
-  await run.test.storage.execute([
+  run.test.storage.execute([
     {
       sql: "INSERT INTO pull_associations VALUES ('project-1', 'session-2', 'owner/repository', 13, '2026-01-01')",
       params: [],
