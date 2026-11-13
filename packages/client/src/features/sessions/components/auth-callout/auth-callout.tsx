@@ -91,7 +91,12 @@ function MethodButton(props: MethodButtonProps): React.JSX.Element {
 
 type MethodSplitProps = AuthCalloutProps & { firstId: string };
 
-const splitDefaults = { primary: true, menuLabel: 'Authentication options' };
+// The split is the callout's action, so it takes CalloutButton's size.
+const splitDefaults = {
+  primary: true,
+  size: 'sm',
+  menuLabel: 'Authentication options',
+} as const;
 
 const methodOptions = (
   methods: readonly AuthCalloutMethod[],

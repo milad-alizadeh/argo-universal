@@ -79,9 +79,10 @@ export type ScriptedScenario = {
   /*
    * The Agent's stored sign-in, shared like a real Agent's credentials: every
    * scripted Agent given the same store sees one sign-in. `session/new` needs
-   * auth until it is signed in.
+   * auth until it is signed in. With `turns`, a Session opens signed out and
+   * each prompt ends `auth_required` with that message until it is signed in.
    */
-  authentication?: { credentials: ScriptedCredentials };
+  authentication?: { credentials: ScriptedCredentials; turns?: string };
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];

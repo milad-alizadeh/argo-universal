@@ -41,6 +41,7 @@ import {
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
 import {
   deniedOutcome,
+  endsStaleProcess,
   promptFailureOutcome,
 } from './acp/prompts/prompt-outcome';
 import type {
@@ -888,6 +889,8 @@ const sessionSetup = setup({
     lostConnectionWhilePublishing: stateIn({
       open: { acp: { publishing: 'disconnected' } },
     }),
+    endsStaleProcess: ({ context }): boolean =>
+      endsStaleProcess(context.acpTurnOutcome, context.acpLease),
   },
   delays: {
     checkoutLimit,
@@ -1528,7 +1531,10 @@ export const sessionMachine = sessionSetup.createMachine({
                 }),
                 onDone: [
                   {
-                    guard: 'lostConnectionWhilePublishing',
+                    guard: or([
+                      'lostConnectionWhilePublishing',
+                      'endsStaleProcess',
+                    ]),
                     target: 'closing',
                     actions: { type: 'endTurn', params: acpTurnOutcome },
                   },
