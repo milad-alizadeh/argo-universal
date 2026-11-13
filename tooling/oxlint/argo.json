@@ -2464,7 +2464,6 @@
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host/connection.ts",
-        "packages/engine/src/plugins/services/keychain.ts",
         "packages/engine/src/plugins/accounts/platform-opener.ts",
         "packages/engine/src/plugins/services/plugin-processes.ts",
         "packages/engine/src/agents/acp/process.ts",

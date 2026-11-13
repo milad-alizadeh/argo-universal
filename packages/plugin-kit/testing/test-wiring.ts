@@ -1,10 +1,13 @@
 import { resolve } from 'node:path';
-import type { MemoryKeychain } from '@repo/engine/mocks/keychain';
 import {
   testAccounts,
   type TestAccounts,
 } from '@repo/engine/mocks/test-accounts';
-import type { PluginRuntime, PluginService } from '@repo/engine/plugins';
+import type {
+  PluginRuntime,
+  PluginService,
+  SecretStore,
+} from '@repo/engine/plugins';
 import type { ConfiguredTest } from './test-configuration';
 import { runtimeFor } from './test-runtime';
 import { serviceFor } from './test-services';
@@ -18,13 +21,13 @@ export type Wiring = {
 function storeFor(
   home: string,
   options: ConfiguredTest,
-  keychain: MemoryKeychain,
+  secretStore: SecretStore,
 ): TestAccounts {
   const store = testAccounts({
     home,
     version: options.version,
     firstPartyPluginsDirectory: resolve(options.directory),
-    keychain,
+    secretStore,
   });
 
   store.syncProjects(options.projects);
@@ -32,15 +35,15 @@ function storeFor(
   return store;
 }
 
-// The Accounts, runtime and service a Plugin's test runs on, sharing one keychain and one set of Projects.
+// The Accounts, runtime and service a Plugin's test runs on, sharing one secret store and one set of Projects.
 export function wireTest(
   home: string,
   options: ConfiguredTest,
-  keychain: MemoryKeychain,
+  secretStore: SecretStore,
 ): Wiring {
-  const accountStore = storeFor(home, options, keychain);
+  const accountStore = storeFor(home, options, secretStore);
   const { accounts } = accountStore;
-  const runtime = runtimeFor(home, options, { keychain, accounts });
+  const runtime = runtimeFor(home, options, { secretStore, accounts });
 
   return {
     accountStore,

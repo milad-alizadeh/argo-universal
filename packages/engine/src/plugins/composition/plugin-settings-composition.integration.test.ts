@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { MemoryKeychain } from '#mocks/memory-keychain';
+import { MemorySecretStore } from '#mocks/memory-secret-store';
 import {
   defaultHost,
   probeSettings,
@@ -51,10 +51,10 @@ it('keeps changed settings across Engine restarts', async () => {
   });
 });
 
-it('keeps a secret setting in the Keychain and tells the App only that it is set', async () => {
-  const keychain = new MemoryKeychain();
+it('keeps a secret setting in the secret store and tells the App only that it is set', async () => {
+  const secretStore = new MemorySecretStore();
   const home = await createRuntimePlugins([settingsProbe]);
-  const { caller } = await startEngineTestHost({ home, keychain });
+  const { caller } = await startEngineTestHost({ home, secretStore });
 
   await caller.plugin.setSetting({
     pluginId: 'probe',
@@ -62,7 +62,7 @@ it('keeps a secret setting in the Keychain and tells the App only that it is set
     value: 'ghp_fixture',
   });
 
-  expect([...keychain.entries.values()]).toEqual(['ghp_fixture']);
+  expect([...secretStore.entries.values()]).toEqual(['ghp_fixture']);
   expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toMatchObject({
     secretsSet: ['token'],
   });
@@ -72,15 +72,15 @@ it('keeps a secret setting in the Keychain and tells the App only that it is set
 });
 
 it('clears a secret setting when it is set to empty', async () => {
-  const keychain = new MemoryKeychain();
+  const secretStore = new MemorySecretStore();
   const home = await createRuntimePlugins([settingsProbe]);
-  const { caller } = await startEngineTestHost({ home, keychain });
+  const { caller } = await startEngineTestHost({ home, secretStore });
   const token = { pluginId: 'probe', key: 'token' };
 
   await caller.plugin.setSetting({ ...token, value: 'ghp_fixture' });
   await caller.plugin.setSetting({ ...token, value: '' });
 
-  expect(keychain.entries.size).toBe(0);
+  expect(secretStore.entries.size).toBe(0);
   expect(await caller.plugin.getSettings({ pluginId: 'probe' })).toMatchObject({
     secretsSet: [],
   });
@@ -110,7 +110,7 @@ it.each([
 );
 
 it('lets the Plugin read its settings, secrets included', async () => {
-  const keychain = new MemoryKeychain();
+  const secretStore = new MemorySecretStore();
 
   const { home, data } = await installed(
     probeSource({
@@ -123,7 +123,7 @@ it('lets the Plugin read its settings, secrets included', async () => {
     { settings: probeSettings },
   );
 
-  const { caller } = await startEngineTestHost({ home, keychain });
+  const { caller } = await startEngineTestHost({ home, secretStore });
 
   await caller.plugin.setSetting({
     pluginId: 'probe',

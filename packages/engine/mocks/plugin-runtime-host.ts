@@ -8,7 +8,7 @@ import {
   type PluginServiceOptions,
 } from '../src/plugins/services/plugin-services';
 import { PluginStorage } from '../src/plugins/services/storage';
-import { MemoryKeychain } from './memory-keychain';
+import { MemorySecretStore } from './memory-secret-store';
 
 export function startPluginRuntime(
   home: string,
@@ -33,7 +33,7 @@ const pluginServices = (
   options: Pick<PluginServiceOptions, 'oauth' | 'clock'>,
   log: (line: string) => void,
 ): PluginServices =>
-  new PluginServices(new PluginStorage(home), new MemoryKeychain(), {
+  new PluginServices(new PluginStorage(home), new MemorySecretStore(), {
     ...options,
     log,
     assets: new PluginAssets(home),

@@ -18,7 +18,7 @@ export const PluginSettingField = z.discriminatedUnion('type', [
     type: z.literal('text'),
     default: z.string().optional(),
   }),
-  // Kept in the Keychain on the Server's Mac; the App only learns whether one is set.
+  // Kept in the Server's OS secret store (ADR-0051); the App only learns whether one is set.
   z.strictObject({ ...settingField, type: z.literal('secret') }),
   z.strictObject({
     ...settingField,
@@ -71,7 +71,7 @@ export const PluginEnablement = z.object({
 export const PluginSettingChange = z.object({
   pluginId: PluginIdentifier,
   key: PluginIdentifier,
-  // An empty secret clears it from the Keychain.
+  // An empty secret clears it from the secret store.
   value: PluginSettingValue,
 });
 

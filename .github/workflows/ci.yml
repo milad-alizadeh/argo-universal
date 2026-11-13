@@ -1,4 +1,4 @@
-# Quality, Engine tests, story tests, the story render gates and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
+# Quality, Engine tests, the macOS secret store contract, story tests, the story render gates and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
 # The jobs run in parallel and the Engine tests, story tests and web e2e are split into shards, so a run takes as long as its slowest job.
 name: CI
 
@@ -153,6 +153,32 @@ jobs:
         env:
           VITEST_MAX_WORKERS: 1
         run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/3
+
+  # The keyring adapter's contract test reads and writes the real OS secret store, and only a macOS runner has the Keychain (ADR-0051).
+  secret-store:
+    name: Secret store contract (macOS)
+    needs: changes
+    if: ${{ needs.changes.outputs.engine-tests == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+
+      # A runner's login keychain can be locked; a throwaway unlocked default keychain, first in the search list, lets the test write without a prompt. Its password is a throwaway, not a Secret.
+      - name: Make an unlocked default keychain
+        run: |
+          security create-keychain -p ci argo-ci.keychain
+          security list-keychains -d user -s argo-ci.keychain login.keychain
+          security default-keychain -s argo-ci.keychain
+          security unlock-keychain -p ci argo-ci.keychain
+          security set-keychain-settings argo-ci.keychain
+
+      - name: Secret store contract test
+        run: pnpm --filter @repo/engine exec vitest run src/plugins/services/secret-store.integration.test.ts
 
   # The story tests alone take minutes, so they run beside Quality in shards; each shard's one runner keeps the config's maxWorkers.
   stories:
@@ -326,6 +352,7 @@ jobs:
         changes,
         quality,
         engine-tests,
+        secret-store,
         stories,
         story-renders,
         e2e-web,

@@ -13,13 +13,13 @@ import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
-import { macKeychain, type Keychain } from './services/keychain';
 import type { PluginNetwork } from './services/plugin-fetch';
+import { osSecretStore, type SecretStore } from './services/secret-store';
 import { PluginSettings } from './settings/plugin-settings';
 
 export type PluginServerOptions = {
   firstPartyPluginsDirectory?: string;
-  keychain?: Keychain;
+  secretStore?: SecretStore;
   pluginNetwork?: PluginNetwork;
   pluginOAuth?: OAuthOptions;
   pluginClock?: PluginClock;
@@ -50,7 +50,7 @@ export type Assembled = {
 };
 
 type Foundations = {
-  keychain: Keychain;
+  secretStore: SecretStore;
   listChanges: PluginListChanges;
   discovery: Discovery;
   hookPort: HookPort;
@@ -60,13 +60,13 @@ type Foundations = {
 
 function accountsFor(
   options: PluginsOptions,
-  parts: Pick<Foundations, 'keychain' | 'discovery'>,
+  parts: Pick<Foundations, 'secretStore' | 'discovery'>,
 ): PluginAccounts {
-  const { keychain, discovery } = parts;
+  const { secretStore, discovery } = parts;
 
   return new PluginAccounts({
     ...options,
-    keychain,
+    secretStore,
     manifest: (pluginId) => pluginManifest(discovery, pluginId),
     firstParty: async (pluginId) =>
       (await discoverPlugins(discovery)).plugins.some(
@@ -78,30 +78,30 @@ function accountsFor(
 // A Plugin's settings, with the Apps that watch the list told whenever one is turned on or off.
 function settingsFor(
   options: PluginsOptions,
-  parts: Pick<Foundations, 'keychain' | 'discovery' | 'listChanges'>,
+  parts: Pick<Foundations, 'secretStore' | 'discovery' | 'listChanges'>,
 ): PluginSettings {
-  const { keychain, discovery, listChanges } = parts;
+  const { secretStore, discovery, listChanges } = parts;
 
   return new PluginSettings({
     ...options,
-    keychain,
+    secretStore,
     listChanges,
     manifest: (pluginId) => pluginManifest(discovery, pluginId),
   });
 }
 
 function foundations(options: PluginsOptions): Foundations {
-  const keychain = options.keychain ?? macKeychain;
+  const secretStore = options.secretStore ?? osSecretStore;
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
   const discovery = { home, version, firstPartyPluginsDirectory };
-  const parts = { keychain, discovery, listChanges };
+  const parts = { secretStore, discovery, listChanges };
 
   return {
     ...parts,
     hookPort: options.hookPort ?? new HookPort(),
     settings: settingsFor(options, parts),
-    accounts: accountsFor(options, { keychain, discovery }),
+    accounts: accountsFor(options, { secretStore, discovery }),
   };
 }
 
@@ -122,11 +122,11 @@ function runtimeFor(
   options: PluginsOptions,
   parts: Foundations,
 ): PluginRuntime {
-  const { accounts, keychain, settings } = parts;
+  const { accounts, secretStore, settings } = parts;
 
   return createPluginRuntime(options.home, {
     accounts,
-    keychain,
+    secretStore,
     ...runtimePorts(options),
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,

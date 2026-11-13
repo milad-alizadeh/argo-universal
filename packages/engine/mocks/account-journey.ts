@@ -3,17 +3,17 @@ import type { PluginClock } from '../src/plugins';
 import { PluginTestClock } from '../src/plugins/worker/test-clock';
 import { accountPlugins, accountNetwork } from './account-plugins';
 import { startEngineTestHost } from './engine';
-import { MemoryKeychain } from './memory-keychain';
+import { MemorySecretStore } from './memory-secret-store';
 import { probeResult, registeredProject } from './probe-plugin';
 
-type BorrowOptions = { keychain?: MemoryKeychain; clock?: PluginClock };
+type BorrowOptions = { secretStore?: MemorySecretStore; clock?: PluginClock };
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
 
 type BorrowJourney = EngineHost &
   Awaited<ReturnType<typeof accountPlugins>> &
   Awaited<ReturnType<typeof accountNetwork>> & {
-    keychain: MemoryKeychain;
+    secretStore: MemorySecretStore;
     result: Awaited<ReturnType<typeof probeResult>>;
     projectId: string;
   };
@@ -38,7 +38,7 @@ type BorrowSetup = {
   host: EngineHost;
   plugins: Awaited<ReturnType<typeof accountPlugins>>;
   network: Awaited<ReturnType<typeof accountNetwork>>;
-  keychain: MemoryKeychain;
+  secretStore: MemorySecretStore;
 };
 
 const borrowSetup = async (
@@ -47,16 +47,16 @@ const borrowSetup = async (
 ): Promise<BorrowSetup> => {
   const plugins = await accountPlugins(expression);
   const network = await accountNetwork();
-  const keychain = options.keychain ?? new MemoryKeychain();
+  const secretStore = options.secretStore ?? new MemorySecretStore();
 
   const host = await startEngineTestHost({
     home: plugins.home,
     pluginNetwork: network.pluginNetwork,
-    keychain,
+    secretStore,
     pluginClock: borrowClock(options),
   });
 
-  return { host, plugins, network, keychain };
+  return { host, plugins, network, secretStore };
 };
 
 const finishBorrow = async (
@@ -66,7 +66,7 @@ const finishBorrow = async (
   ...setup.plugins,
   ...setup.network,
   ...setup.host,
-  keychain: setup.keychain,
+  secretStore: setup.secretStore,
   result: await borrowResult(setup.plugins.borrowerData),
   projectId,
 });

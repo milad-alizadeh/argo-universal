@@ -4,9 +4,9 @@ import { join } from 'node:path';
 import { openReadOnlyDatabase } from '@repo/db/plugin-database';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { GatedKeychain } from '#mocks/gated-keychain';
+import { GatedSecretStore } from '#mocks/gated-secret-store';
 import { journeyMs } from '#mocks/journey-budget';
-import { MemoryKeychain } from '#mocks/memory-keychain';
+import { MemorySecretStore } from '#mocks/memory-secret-store';
 import { pluginHostPids } from '#mocks/plugin-host-log';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
@@ -40,7 +40,7 @@ it('creates a Plugin file only when the Plugin first uses storage', async () => 
 
   const { caller } = await startEngineTestHost({
     home,
-    keychain: new MemoryKeychain(),
+    secretStore: new MemorySecretStore(),
   });
 
   await caller.plugin.activate({ pluginId: 'idle' });
@@ -61,7 +61,7 @@ it('keeps Plugin storage across Engine restarts', async () => {
 
   const first = await startEngineTestHost({
     home,
-    keychain: new MemoryKeychain(),
+    secretStore: new MemorySecretStore(),
   });
 
   await first.caller.plugin.activate({ pluginId: storageId });
@@ -69,7 +69,7 @@ it('keeps Plugin storage across Engine restarts', async () => {
 
   const second = await startEngineTestHost({
     home,
-    keychain: new MemoryKeychain(),
+    secretStore: new MemorySecretStore(),
   });
 
   await second.caller.plugin.activate({ pluginId: storageId });
@@ -82,17 +82,17 @@ it('keeps Plugin storage across Engine restarts', async () => {
   ]);
 });
 
-it('stores secrets in the Keychain keyed by Plugin and account, and deletes them', async () => {
+it('stores secrets in the secret store keyed by Plugin and account, and deletes them', async () => {
   const home = await createRuntimePlugins([storagePlugin]);
-  const keychain = new MemoryKeychain();
-  const { caller } = await startEngineTestHost({ home, keychain });
+  const secretStore = new MemorySecretStore();
+  const { caller } = await startEngineTestHost({ home, secretStore });
 
   await caller.plugin.activate({ pluginId: storageId });
 
-  expect(await keychain.get(`argo.plugin.${storageId}`, 'token')).toBe(
+  expect(await secretStore.get(`argo.plugin.${storageId}`, 'token')).toBe(
     'plugin-secret',
   );
-  expect(await keychain.get(`argo.plugin.${storageId}`, 'temp')).toBeNull();
+  expect(await secretStore.get(`argo.plugin.${storageId}`, 'temp')).toBeNull();
 });
 
 it('keeps Argo own database unchanged when a Plugin stores data', async () => {
@@ -100,7 +100,7 @@ it('keeps Argo own database unchanged when a Plugin stores data', async () => {
 
   const { caller } = await startEngineTestHost({
     home,
-    keychain: new MemoryKeychain(),
+    secretStore: new MemorySecretStore(),
   });
 
   const argo = openReadOnlyDatabase(join(home, 'argo.db'));
@@ -124,7 +124,7 @@ it('answers a malformed storage call with an error for that Plugin only, leaving
 
   const { caller } = await startEngineTestHost({
     home,
-    keychain: new MemoryKeychain(),
+    secretStore: new MemorySecretStore(),
   });
 
   await caller.plugin.activate({ pluginId: 'healthy' });
@@ -145,7 +145,7 @@ it('keeps argo, its results and its errors free of any way out of the Plugin con
 
   const { caller } = await startEngineTestHost({
     home,
-    keychain: new MemoryKeychain(),
+    secretStore: new MemorySecretStore(),
   });
 
   expect(await caller.plugin.activate({ pluginId: 'contained' })).toMatchObject(
@@ -158,16 +158,16 @@ it('drops a reply that belongs to a reloaded Plugin worker', async () => {
     { id: 'echo', fixture: 'secret-echo', dev: true },
   ]);
 
-  const keychain = new GatedKeychain();
-  const { caller } = await startEngineTestHost({ home, keychain });
+  const secretStore = new GatedSecretStore();
+  const { caller } = await startEngineTestHost({ home, secretStore });
   void caller.plugin.activate({ pluginId: 'echo' });
-  await expect.poll(() => keychain.waiting.length, pollOptions).toBe(1);
+  await expect.poll(() => secretStore.waiting.length, pollOptions).toBe(1);
 
   await appendFile(join(home, 'shipped/echo/index.mjs'), '\n// reload\n');
-  await expect.poll(() => keychain.waiting.length, pollOptions).toBe(2);
+  await expect.poll(() => secretStore.waiting.length, pollOptions).toBe(2);
 
-  keychain.waiting[0]?.('stale');
-  keychain.waiting[1]?.('fresh');
+  secretStore.waiting[0]?.('stale');
+  secretStore.waiting[1]?.('fresh');
 
   await expect
     .poll(

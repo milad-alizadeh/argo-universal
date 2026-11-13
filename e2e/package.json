@@ -9,6 +9,7 @@
     "test:web": "bddgen && playwright test --project=web"
   },
   "devDependencies": {
+    "@napi-rs/keyring": "catalog:",
     "@playwright/test": "catalog:",
     "@repo/browser-suite-lock": "workspace:*",
     "@repo/cli": "workspace:*",

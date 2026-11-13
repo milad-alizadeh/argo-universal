@@ -11,7 +11,7 @@ import { project } from '#schema-projects';
 
 /*
  * A row exists once the user changes a Plugin; without one it is on, with every setting at its default.
- * Secret settings live in the Keychain, never here.
+ * Secret settings live in the OS secret store, never here.
  */
 export const pluginState = snakeCase.table('plugin_state', {
   id: text().primaryKey(),

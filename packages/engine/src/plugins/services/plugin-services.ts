@@ -6,7 +6,6 @@ import { AccountServices } from '../accounts/account-services';
 import type { OpenedAsset } from '../assets/plugin-assets';
 import type { SpawnCaller } from '../hooks/spawn-hooks';
 import type { PluginReply, PluginValue } from '../protocol/runtime';
-import type { Keychain } from './keychain';
 import {
   answerCall,
   failureLine,
@@ -15,6 +14,7 @@ import {
 } from './plugin-calls';
 import { PluginResources, supersede } from './plugin-resources';
 import type { PluginServiceOptions } from './plugin-service-options';
+import type { SecretStore } from './secret-store';
 import { serviceAccess } from './service-access';
 import type { PluginStorage } from './storage';
 
@@ -25,7 +25,7 @@ type ServiceRequest = StateRequest &
 
 type Held = { generation: number; resources: PluginResources };
 
-// The Server boundary for Plugin API calls; each Plugin keeps its own storage and Keychain namespace.
+// The Server boundary for Plugin API calls; each Plugin keeps its own storage and secret store namespace.
 export class PluginServices {
   public readonly accountCalls;
   private readonly held = new Map<string, Held>();
@@ -33,7 +33,7 @@ export class PluginServices {
 
   constructor(
     readonly storage: PluginStorage,
-    private readonly keychain: Keychain,
+    private readonly secretStore: SecretStore,
     private readonly options: PluginServiceOptions,
   ) {
     this.accountCalls = new AccountServices(options);
@@ -145,11 +145,11 @@ export class PluginServices {
 
   private ports(): Pick<
     CallReach,
-    'storage' | 'keychain' | 'options' | 'network' | 'accounts' | 'oauth'
+    'storage' | 'secretStore' | 'options' | 'network' | 'accounts' | 'oauth'
   > {
     return {
       storage: this.storage,
-      keychain: this.keychain,
+      secretStore: this.secretStore,
       options: this.options,
       network: this.options.network ?? {},
       ...this.accountCalls.reach(),

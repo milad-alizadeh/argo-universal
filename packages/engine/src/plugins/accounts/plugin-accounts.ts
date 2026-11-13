@@ -16,19 +16,22 @@ import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import { pluginKeychainService, type Keychain } from '../services/keychain';
+import {
+  pluginSecretService,
+  type SecretStore,
+} from '../services/secret-store';
 import { AccountJob, type AccountChange } from './account-job';
 import { requireAccount, requireChoice, sameAccount } from './account-records';
 
 type Dependencies = {
   database: Database;
   databaseWriter: WriterActorRef;
-  keychain: Keychain;
+  secretStore: SecretStore;
   manifest: (pluginId: string) => Promise<PluginManifest>;
   firstParty: (pluginId: string) => Promise<boolean>;
 };
 
-// Durable inventory and Grants. Tokens remain in the providing Plugin's Keychain namespace.
+// Durable inventory and Grants. Tokens remain in the providing Plugin's secret store namespace.
 export class PluginAccounts {
   constructor(private readonly deps: Dependencies) {}
 
@@ -144,8 +147,8 @@ export class PluginAccounts {
     const account = this.list().find((row) => row.id === id);
 
     if (!account) return;
-    await this.deps.keychain.delete(
-      pluginKeychainService(account.providedBy),
+    await this.deps.secretStore.delete(
+      pluginSecretService(account.providedBy),
       id,
     );
     await this.write({ action: 'signOut', id });
@@ -155,8 +158,8 @@ export class PluginAccounts {
     for (const account of this.list().filter(
       (row) => row.providedBy === pluginId,
     ))
-      await this.deps.keychain.delete(
-        pluginKeychainService(pluginId),
+      await this.deps.secretStore.delete(
+        pluginSecretService(pluginId),
         account.id,
       );
     await this.write({ action: 'removePlugin', pluginId });

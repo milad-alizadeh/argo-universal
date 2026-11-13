@@ -493,7 +493,10 @@ await argo.secrets.set(id, token);
 ```
 
 Argo stores Accounts, Grants, and each Project’s choice in its database.
-Tokens stay in the provider’s Keychain namespace, keyed by Account id.
+Tokens stay in the provider’s namespace of the OS secret store, keyed by Account id.
+Each Plugin's Secrets live in the OS's own secret store, under that Plugin's namespace only (ADR-0051).
+When no store answers, as on a headless Linux Server without a Secret Service, `argo.secrets.set` rejects with a message naming what to install, and `argo.secrets.get` answers `null`.
+A manifest that declares `security`, `secret-tool`, `cmdkey` or a PowerShell credential cmdlet as a process command is refused at validation.
 Sign-out deletes the token, Account, Grants, and Project mappings.
 Plugin removal also deletes its Accounts and dependent records when discovery succeeds.
 

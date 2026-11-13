@@ -16,10 +16,10 @@ import {
   answerFs,
   answerProcess,
 } from './checked-calls';
-import { pluginKeychainService, type Keychain } from './keychain';
 import type { PluginNetwork } from './plugin-fetch';
 import type { PluginResources } from './plugin-resources';
 import type { PluginServiceOptions } from './plugin-services';
+import { pluginSecretService, type SecretStore } from './secret-store';
 import { answerSession } from './session-calls';
 import type { PluginStorage } from './storage';
 
@@ -41,7 +41,7 @@ export type CallReach = {
   query?: boolean;
   resources: PluginResources;
   storage: PluginStorage;
-  keychain: Keychain;
+  secretStore: SecretStore;
   options: PluginServiceOptions;
   network: PluginNetwork;
   access: () => PluginAccess;
@@ -157,16 +157,16 @@ async function setting(
 }
 
 async function secrets(
-  { keychain, pluginId }: PluginCall,
+  { secretStore, pluginId }: PluginCall,
   call: SecretCall,
 ): Promise<PluginValue> {
-  const service = pluginKeychainService(pluginId);
+  const service = pluginSecretService(pluginId);
 
-  if (call.action === 'get') return keychain.get(service, call.account);
+  if (call.action === 'get') return secretStore.get(service, call.account);
 
   await (call.action === 'set'
-    ? keychain.set(service, call.account, call.value)
-    : keychain.delete(service, call.account));
+    ? secretStore.set(service, call.account, call.value)
+    : secretStore.delete(service, call.account));
 
   return null;
 }

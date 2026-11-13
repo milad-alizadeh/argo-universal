@@ -20,7 +20,10 @@ export { PluginRuntime } from './runtime/plugin-runtime';
 
 export { HookPort } from './hooks/hook-port';
 
-export type { Keychain } from './services/keychain';
+export {
+  pluginSettingsSecretService,
+  type SecretStore,
+} from './services/secret-store';
 
 export type { OAuthOptions } from './accounts/plugin-oauth';
 

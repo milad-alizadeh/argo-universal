@@ -28,7 +28,11 @@ import type {
 } from '@repo/contracts/plugins/runtime';
 import type { SlotItems, SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginAccounts } from '@repo/engine/mocks/test-accounts';
-import type { PluginStorage, PluginNetwork } from '@repo/engine/plugins';
+import type {
+  PluginStorage,
+  PluginNetwork,
+  SecretStore,
+} from '@repo/engine/plugins';
 import type { OpenPage } from './open-page';
 import type { PageOpening } from './page-server';
 import type { TestProjects } from './test-projects';
@@ -45,7 +49,10 @@ export interface PluginTestOptions {
   network?: PluginNetwork;
   // Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL.
   openBrowser?: (url: string) => Promise<void>;
+  // The Plugin's Setting values; a secret one is put in the secret store before the Plugin starts.
   settings?: Map<string, PluginSettingValue>;
+  // Stands in for the OS secret store; an in-memory one when left out.
+  secretStore?: SecretStore;
   // What `argo.sessions.get` answers, by Session id.
   sessions?: Record<string, PluginSessionInfo>;
 }

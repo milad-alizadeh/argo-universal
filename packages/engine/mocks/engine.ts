@@ -12,7 +12,7 @@ import { fixtureRegistry } from './agent-fixtures';
 import { openTestDatabase } from './database';
 import { readEngineTestHost, type EngineConnections } from './engine-read';
 import { seedTestCommands } from './engine-seed';
-import { MemoryKeychain } from './memory-keychain';
+import { MemorySecretStore } from './memory-secret-store';
 import { shippedFolder } from './runtime-plugins';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -138,7 +138,7 @@ type FixtureServices = Pick<
   | 'fetchAgents'
   | 'installationPorts'
   | 'firstPartyPluginsDirectory'
-  | 'keychain'
+  | 'secretStore'
   | 'userHome'
 >;
 
@@ -149,7 +149,7 @@ const fixtureServices = (
   fetchAgents: fetchFixtureRegistry(options),
   installationPorts: createInstallationPorts(),
   firstPartyPluginsDirectory: join(home, shippedFolder),
-  keychain: new MemoryKeychain(),
+  secretStore: new MemorySecretStore(),
   userHome: join(home, 'user-home'),
 });
 

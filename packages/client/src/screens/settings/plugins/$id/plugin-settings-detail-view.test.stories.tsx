@@ -112,7 +112,9 @@ export const AnUnchangedFieldSavesNothing: Story = {
 export const ASecretIsNeverShown: Story = {
   args: { plugin: { ...loaded, settings: savedSettingsWithToken } },
   play: async ({ args, canvas, userEvent }) => {
-    const token = canvas.getByPlaceholderText('Saved in the Keychain');
+    const token = canvas.getByPlaceholderText(
+      "Saved in the Server's secret store",
+    );
 
     await expect(token).toHaveValue('');
     await userEvent.type(token, 'ghp_new');

@@ -1,11 +1,11 @@
 import { writeLog } from '@repo/machine-log';
 import { PluginAssets } from '../assets/plugin-assets';
 import type { PluginClock } from '../clock';
-import { macKeychain, type Keychain } from '../services/keychain';
 import {
   PluginServices,
   type PluginServiceOptions,
 } from '../services/plugin-services';
+import { osSecretStore, type SecretStore } from '../services/secret-store';
 import { PluginStorage } from '../services/storage';
 import type { PluginLocation } from './plugin-location';
 import { PluginRuntime } from './plugin-runtime';
@@ -15,7 +15,7 @@ export type PluginRuntimeOptions = Omit<
   PluginServiceOptions,
   'log' | 'waiting' | 'wakePlugin' | 'assets' | 'clock'
 > & {
-  keychain?: Keychain;
+  secretStore?: SecretStore;
   clockStart?: number;
   clock?: PluginClock;
   // Where an account provider is found, so a sign-in can wake it; without it, it must already run.
@@ -23,7 +23,7 @@ export type PluginRuntimeOptions = Omit<
 };
 
 type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
-  keychain?: Keychain;
+  secretStore?: SecretStore;
 };
 
 export function createPluginRuntime(
@@ -63,9 +63,9 @@ async function wake(
 
 function createServices(
   home: string,
-  { keychain = macKeychain, ...options }: ServiceOptions,
+  { secretStore = osSecretStore, ...options }: ServiceOptions,
 ): PluginServices {
-  return new PluginServices(new PluginStorage(home), keychain, {
+  return new PluginServices(new PluginStorage(home), secretStore, {
     ...options,
     assets: new PluginAssets(home),
   });

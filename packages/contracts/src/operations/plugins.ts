@@ -59,7 +59,7 @@ export const pluginOperations = {
     id: 'plugin.setSetting',
     label: 'Change Plugin setting',
     description:
-      'Save one Plugin setting. An empty secret clears it from the Keychain.',
+      'Save one Plugin setting. An empty secret clears it from the secret store.',
     params: PluginSettingChange.strict(),
     result: z.strictObject({ ok: z.literal(true) }),
     tier: 'confirm',

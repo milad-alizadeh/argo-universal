@@ -69,7 +69,7 @@ function SecretRow({ label, set, onSave }: SecretRowProps): React.JSX.Element {
   return (
     <FieldGroup.SecretField
       title={label}
-      placeholder={set ? 'Saved in the Keychain' : 'Not set'}
+      placeholder={set ? "Saved in the Server's secret store" : 'Not set'}
       {...useSecretDraft(onSave)}
     />
   );

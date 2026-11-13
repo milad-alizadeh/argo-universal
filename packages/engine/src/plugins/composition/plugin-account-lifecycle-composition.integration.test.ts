@@ -26,7 +26,7 @@ it(
 
     const second = await startEngineTestHost({
       home: run.home,
-      keychain: run.keychain,
+      secretStore: run.secretStore,
       pluginNetwork: run.pluginNetwork,
     });
 
@@ -101,7 +101,9 @@ it(
         host: hostName,
       }),
     ).toBeNull();
-    expect([...run.keychain.entries.values()]).not.toContain('synthetic-token');
+    expect([...run.secretStore.entries.values()]).not.toContain(
+      'synthetic-token',
+    );
   },
   journeyMs,
 );
@@ -138,7 +140,9 @@ it.each(['clean', 'third-party'])(
         host: hostName,
       }),
     ).toBeNull();
-    expect([...run.keychain.entries.values()]).not.toContain('synthetic-token');
+    expect([...run.secretStore.entries.values()]).not.toContain(
+      'synthetic-token',
+    );
   },
   journeyMs,
 );

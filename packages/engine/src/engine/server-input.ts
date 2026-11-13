@@ -21,7 +21,7 @@ type ServerSource = {
     | 'userHome'
     | 'port'
     | 'firstPartyPluginsDirectory'
-    | 'keychain'
+    | 'secretStore'
     | 'pluginNetwork'
     | 'pluginOAuth'
     | 'pluginClock'
@@ -63,7 +63,7 @@ type ServerConfiguration = Pick<
   | 'startedAt'
   | 'notificationOptions'
   | 'firstPartyPluginsDirectory'
-  | 'keychain'
+  | 'secretStore'
   | 'pluginNetwork'
   | 'pluginOAuth'
   | 'pluginClock'
@@ -78,7 +78,7 @@ function serverConfiguration(
     notificationOptions: context.notificationOptions,
     discoveryName: context.discoveryName,
     firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
-    keychain: context.keychain,
+    secretStore: context.secretStore,
     pluginNetwork: context.pluginNetwork,
     ...pluginFlowOptions(context),
   };

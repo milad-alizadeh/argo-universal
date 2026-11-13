@@ -47,22 +47,62 @@ const ArgumentPattern = z
     error: 'An args pattern is *, ** or an exact argument',
   });
 
-const ProcessCapability = z.strictObject({
-  kind: z.literal('process:exec'),
-  // A bare name found on the Server's PATH, or an absolute path; never relative to a working directory.
-  command: z
-    .string()
-    .regex(
-      /^(?:[A-Za-z0-9][\w.+-]*|\/[^\0]+)$/,
-      'command must be a program name or an absolute path',
-    ),
-  args: z
-    .array(ArgumentPattern)
-    .refine((args) => !args.slice(0, -1).includes('**'), {
-      error: '** must be the last args pattern',
-    }),
-  env: z.array(VariableName).optional(),
-});
+// Programs that read the OS secret store, where every Secret on the machine lives; only the Server reaches it (ADR-0051).
+const secretStoreTools = new Set(['security', 'secret-tool', 'cmdkey']);
+
+const powerShells = new Set(['pwsh', 'powershell']);
+
+// The CredentialManager and SecretManagement cmdlets, which read Windows Credential Manager and other vaults.
+const credentialCmdlet =
+  /\b(?:(?:get|new|remove)-storedcredential|(?:get|set|remove)-secret(?:info)?)\b/i;
+
+const programName = (command: string): string =>
+  (command.split('/').at(-1) ?? command).toLowerCase().replace(/\.exe$/, '');
+
+const isStoreProgram = (program: string): boolean =>
+  secretStoreTools.has(program) || credentialCmdlet.test(program);
+
+const runsCredentialCmdlet = (program: string, args: string[]): boolean =>
+  powerShells.has(program) && args.some((arg) => credentialCmdlet.test(arg));
+
+function reachesSecretStore({
+  command,
+  args,
+}: {
+  command: string;
+  args: string[];
+}): boolean {
+  const program = programName(command);
+
+  return isStoreProgram(program) || runsCredentialCmdlet(program, args);
+}
+
+// The command a failing capability names, for its message.
+const CommandOf = z
+  .object({ command: z.string() })
+  .catch({ command: 'This command' });
+
+const ProcessCapability = z
+  .strictObject({
+    kind: z.literal('process:exec'),
+    // A bare name found on the Server's PATH, or an absolute path; never relative to a working directory.
+    command: z
+      .string()
+      .regex(
+        /^(?:[A-Za-z0-9][\w.+-]*|\/[^\0]+)$/,
+        'command must be a program name or an absolute path',
+      ),
+    args: z
+      .array(ArgumentPattern)
+      .refine((args) => !args.slice(0, -1).includes('**'), {
+        error: '** must be the last args pattern',
+      }),
+    env: z.array(VariableName).optional(),
+  })
+  .refine((capability) => !reachesSecretStore(capability), {
+    error: ({ input }) =>
+      `No Plugin may run an OS secret-store tool (ADR-0051): ${CommandOf.parse(input).command} reaches every Secret on this machine. Keep Secrets through argo.secrets or a secret Setting.`,
+  });
 
 export type ProcessCapability = z.infer<typeof ProcessCapability>;
 

@@ -17,6 +17,7 @@
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
     "@jridgewell/trace-mapping": "catalog:",
+    "@napi-rs/keyring": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/executables": "workspace:*",
@@ -69,7 +70,7 @@
     "./mocks/engine-network": "./mocks/engine-network.ts",
     "./mocks/engine-channel": "./mocks/engine-channel.ts",
     "./mocks/app-socket": "./mocks/app-socket.ts",
-    "./mocks/keychain": "./mocks/memory-keychain.ts",
+    "./mocks/secret-store": "./mocks/memory-secret-store.ts",
     "./mocks/test-accounts": "./mocks/test-accounts.ts",
     "./mocks/data-fixture": "./mocks/data-fixture.ts",
     "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",

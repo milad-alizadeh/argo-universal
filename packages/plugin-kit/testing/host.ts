@@ -7,7 +7,6 @@ import {
   type PluginSettingValue,
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
-import { MemoryKeychain } from '@repo/engine/mocks/keychain';
 import {
   PluginService,
   PluginStorage,
@@ -17,7 +16,8 @@ import { PageClock } from './page-clock';
 import { itemsConnection, testConnection } from './test-connection';
 import { testOperations, testPages } from './test-operations';
 import { TestProjects } from './test-projects';
-import { configureTest, type ConfiguredTest } from './test-runtime';
+import { configureTest } from './test-runtime';
+import { secretStoreFor, type HostedTest } from './test-secret-store';
 import type { PluginTest, PluginTestOptions } from './test-types';
 import { wireTest, type Wiring } from './test-wiring';
 
@@ -33,9 +33,8 @@ const testSession = {
 export async function startPluginTest(
   options: PluginTestOptions,
 ): Promise<PluginTest> {
-  const configured = await configureTest(options);
+  const configured = await secretStoreFor(await configureTest(options));
   const home = await mkdtemp(join(tmpdir(), 'argo-plugin-test-'));
-
   const plugin = new HostedPlugin(home, configured);
 
   try {
@@ -83,9 +82,9 @@ class HostedPlugin implements PluginTest {
 
   public constructor(
     private readonly home: string,
-    private readonly options: ConfiguredTest,
+    private readonly options: HostedTest,
   ) {
-    const wired = wireTest(home, options, new MemoryKeychain());
+    const wired = wireTest(home, options, options.secretStore);
 
     this.wired = wired;
     this.projects = new TestProjects(options, wired.runtime, () =>
