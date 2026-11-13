@@ -1,5 +1,5 @@
 import { useSymbolImageRenderer } from '@repo/kit/symbols/symbol-images';
-import { Platform } from 'react-native';
+import { useWindowHistory } from './window-history';
 
 // The band's leading group: its width, and where the sidebar toggle starts in it.
 export interface BandLeading {
@@ -13,16 +13,15 @@ const bandLeadings = {
   other: { width: 44, inset: 8 },
 } as const satisfies Record<string, BandLeading>;
 
-// Back and Forward follow the toggle on web, two `md` IconButtons' 32px boxes.
+// Back and Forward follow the toggle wherever the window has a history, two `md` IconButtons' 32px boxes.
 const historyControlsWidth = 64;
-
-const historyWidth = Platform.OS === 'web' ? historyControlsWidth : 0;
 
 // The desktop app hands over a symbol renderer on macOS only, so having one is how the page knows it runs there.
 const useIsMacOS = (): boolean => useSymbolImageRenderer() !== null;
 
 export function useBandLeading(): BandLeading {
   const { width, inset } = useIsMacOS() ? bandLeadings.mac : bandLeadings.other;
+  const historyWidth = useWindowHistory() ? historyControlsWidth : 0;
 
   return { width: width + historyWidth, inset };
 }

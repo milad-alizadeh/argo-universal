@@ -1,7 +1,7 @@
 import { ScreenBackInBand } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { contentFill, ContentWidthProvider } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
@@ -16,6 +16,11 @@ import {
 import type { ScaffoldProps } from './scaffold-props';
 import { ScaffoldSidebarColumn } from './scaffold-sidebar';
 import { usePageContentWide } from './use-page-content-wide';
+import { useWindowHistory } from './window-history';
+
+// A framed window whose band carries Back and Forward: its pages draw no Back of their own.
+const useBackInBand = ({ framed }: ScaffoldParts): boolean =>
+  useWindowHistory() !== null && framed;
 
 export type { InspectorState, WorkbenchIntent } from './frame-layout';
 
@@ -79,10 +84,6 @@ function SlidingContent(
   );
 }
 
-// A framed web window's band carries Back and Forward, so its pages draw no Back of their own.
-const backInBand = ({ framed }: ScaffoldParts): boolean =>
-  framed && Platform.OS === 'web';
-
 function PageContent({
   parts,
   children,
@@ -91,7 +92,7 @@ function PageContent({
 
   return (
     <ContentWidthProvider wide={usePageContentWide(parts)} shift={shift}>
-      <ScreenBackInBand value={backInBand(parts)}>
+      <ScreenBackInBand value={useBackInBand(parts)}>
         <SlidingContent shift={shift} motion={parts.layout.motion}>
           {children}
         </SlidingContent>
