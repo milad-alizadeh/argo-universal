@@ -45,8 +45,8 @@ export type FixtureCheck = {
 export type GitHubFixture = FixtureServices & {
   // The Check runs of a commit, by `owner/repository@sha`; a commit with none listed has none.
   checks: Map<string, FixtureCheck[]>;
-  // Set to make the Checks endpoint alone fail with this status.
-  checksFailWith: { status: number | null };
+  // The status the Checks endpoint fails with for a commit, by `owner/repository@sha`; the pull request itself still reads.
+  checksFailWith: Map<string, number>;
   // The pull requests GitHub knows, by `owner/repository#number`.
   pulls: Map<string, FixturePull>;
   // Every token GitHub accepts; empty means every call is a 401.
@@ -143,7 +143,7 @@ const heldOf = (): Held => ({
   parents: new Map(),
   failWith: { status: null },
   checks: new Map(),
-  checksFailWith: { status: null },
+  checksFailWith: new Map(),
 });
 
 /*

@@ -14,12 +14,15 @@ type Harness = {
   tick: () => void;
   asked: string[];
   running: Set<string>;
+  off: Set<string>;
+  enabled: (pluginId: string) => boolean;
 };
 
 function refresh(): Harness {
   const timers = new Set<Timer>();
   const asked: string[] = [];
   const running = new Set(['github']);
+  const off = new Set<string>();
 
   const clock: PluginClock = {
     now: (): number => 0,
@@ -50,13 +53,15 @@ function refresh(): Harness {
     }
   };
 
-  return { refreshing, timers, tick, asked, running };
+  const enabled = (pluginId: string): boolean => !off.has(pluginId);
+
+  return { refreshing, timers, tick, asked, running, off, enabled };
 }
 
 it('makes the Plugin due and asks it again on each tick while a list holds the clock', () => {
-  const { refreshing, tick, asked } = refresh();
+  const { refreshing, tick, asked, enabled } = refresh();
 
-  refreshing.hold(['github'], every);
+  refreshing.hold(['github'], every, enabled);
   tick();
   tick();
 
@@ -64,9 +69,9 @@ it('makes the Plugin due and asks it again on each tick while a list holds the c
 });
 
 it('runs one clock for every list that holds it, and stops when the last lets go', () => {
-  const { refreshing, timers } = refresh();
-  const workbench = refreshing.hold(['github'], every);
-  const inspector = refreshing.hold(['github'], every);
+  const { refreshing, timers, enabled } = refresh();
+  const workbench = refreshing.hold(['github'], every, enabled);
+  const inspector = refreshing.hold(['github'], every, enabled);
 
   expect(timers.size).toBe(1);
 
@@ -77,20 +82,40 @@ it('runs one clock for every list that holds it, and stops when the last lets go
   expect(timers.size).toBe(0);
 });
 
-it('only asks again, and makes nothing due, while the Plugin is not running', () => {
-  const { refreshing, tick, asked, running } = refresh();
+it('only asks again, and makes nothing due, while the Plugin is on but not running', () => {
+  const { refreshing, tick, asked, running, enabled } = refresh();
 
   running.delete('github');
-  refreshing.hold(['github'], every);
+  refreshing.hold(['github'], every, enabled);
   tick();
 
   expect(asked).toEqual([asking]);
 });
 
-it('sets the timer afresh when the Plugin stops or starts, never keeping two', () => {
-  const { refreshing, timers } = refresh();
+it('releases the clock of a Plugin the person turns off, and sets it again when they turn it on', () => {
+  const { refreshing, timers, tick, off, enabled } = refresh();
 
-  refreshing.hold(['github'], every);
+  refreshing.hold(['github'], every, enabled);
+  expect(timers.size).toBe(1);
+
+  off.add('github');
+  refreshing.restarted('github');
+  expect(timers.size).toBe(0);
+
+  off.delete('github');
+  refreshing.restarted('github');
+  expect(timers.size).toBe(1);
+
+  // A tick that finds the Plugin turned off since does not set the clock again.
+  off.add('github');
+  tick();
+  expect(timers.size).toBe(0);
+});
+
+it('sets the timer afresh when the Plugin stops or starts, never keeping two', () => {
+  const { refreshing, timers, enabled } = refresh();
+
+  refreshing.hold(['github'], every, enabled);
   refreshing.restarted('github');
   refreshing.restarted('github');
 
@@ -98,9 +123,9 @@ it('sets the timer afresh when the Plugin stops or starts, never keeping two', (
 });
 
 it('asks nothing once closed', () => {
-  const { refreshing, timers } = refresh();
+  const { refreshing, timers, enabled } = refresh();
 
-  refreshing.hold(['github'], every);
+  refreshing.hold(['github'], every, enabled);
   refreshing.close();
 
   expect(timers.size).toBe(0);

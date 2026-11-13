@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { sha } from './github-fixture';
 import { changesOf, listed } from './journey-calls';
-import { restart } from './journey-fixture';
+import { project, restart, secondSessionId } from './journey-fixture';
 import {
   attached,
   changePull,
@@ -15,6 +15,8 @@ import {
 const slow = 60_000;
 
 const token = 'token-1';
+
+const second = { sessionId: secondSessionId, projectId: project.id };
 
 it(
   'keeps what was last known through lost access and a network failure, says why, and recovers on sign-in and on the explicit retry',
@@ -108,6 +110,9 @@ it(
     expect(await listed(run)).toMatchObject({
       changes: [{ error: expect.any(String) }, {}, {}],
     });
+
+    // A Session with nothing attached is empty, not failed, however GitHub is doing.
+    expect(await listed(run, second)).toEqual({ changes: [] });
 
     run.github.failWith.status = null;
     await refreshed(run);

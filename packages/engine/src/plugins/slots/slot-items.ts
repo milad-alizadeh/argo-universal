@@ -18,6 +18,8 @@ export type Contributors = {
    * running, so one turned off and on again while the list stays open comes back into it; a list without a clock never does.
    */
   start: () => Promise<void>;
+  // Whether the person left the Plugin on, so a Plugin they turned off keeps no refresh clock.
+  enabled: (pluginId: string) => boolean;
 };
 
 /*
@@ -44,11 +46,13 @@ const noRefresh = (): void => {};
 // Holds the Slot's refresh clock for as long as this list is open, if the Slot has one.
 function refreshing(
   slotItems: PluginSlotItems,
-  { input, pluginIds }: Contributors,
+  { input, pluginIds, enabled }: Contributors,
 ): () => void {
   const ms = itemsSlot(input.slotId)?.content.refreshMs;
 
-  return ms === undefined ? noRefresh : slotItems.refresh.hold(pluginIds, ms);
+  return ms === undefined
+    ? noRefresh
+    : slotItems.refresh.hold(pluginIds, ms, enabled);
 }
 
 async function* merges(

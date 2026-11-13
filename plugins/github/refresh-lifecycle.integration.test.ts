@@ -32,13 +32,13 @@ it(
     expect(run.github.pullReads()).toHaveLength(pulls + 1);
     expect(run.github.checkReads()).toHaveLength(checks + 1);
 
-    workbench.close();
+    await workbench.close();
     changePull(run, 1, { title: 'Renamed again' });
     await tick(run);
 
     expect(await inspector.next()).toMatchObject([{ title: 'Renamed again' }]);
 
-    inspector.close();
+    await inspector.close();
 
     const reads = run.github.requests.length;
 
@@ -50,11 +50,17 @@ it(
   slow,
 );
 
+const answersTried = 4;
+
 // The list's next answer that has a Change in it: leaving the Plugin out and bringing it back are answers too.
 async function nextWithChanges(open: OpenChanges): Promise<object[]> {
-  const answer = await open.next();
+  for (let tried = 0; tried < answersTried; tried += 1) {
+    const answer = await open.next();
 
-  return answer.length ? answer : nextWithChanges(open);
+    if (answer.length) return answer;
+  }
+
+  throw new Error(`No Change came back in ${answersTried} answers`);
 }
 
 it(
