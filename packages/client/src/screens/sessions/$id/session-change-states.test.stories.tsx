@@ -190,7 +190,7 @@ export const WorkbenchRowShowsStale: Story = {
   render: (): JSX.Element => (
     <ChangingSession initial={[staleChange('signIn')]} />
   ),
-  beforeEach: atWidth('wide'),
+  beforeEach: (): Promise<void> => settleLayout(1920),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(signInText)).toBeVisible();
     await expect(canvas.getByText(title)).toBeVisible();
