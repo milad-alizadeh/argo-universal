@@ -1,5 +1,4 @@
 import type {
-  ContentBlock,
   SessionSnapshot,
   SessionUpdate,
   SubagentUpdate,
@@ -24,65 +23,37 @@ const actionOf = (row: SubagentUpdate): keyof typeof kinds | undefined => {
   return action && action in kinds ? action : undefined;
 };
 
-const resultOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
-  extensionOf(row).result;
-
-const promptOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
-  extensionOf(row).prompt;
-
-const textOf = (blocks: ContentBlock[] | undefined): string =>
-  (blocks ?? [])
-    .flatMap((block) => (block.type === 'text' ? [block.text] : []))
-    .join('');
-
-// One line of the quoted message: the Feed row clamps to the line it sits on.
-function firstLine(blocks: ContentBlock[] | undefined): string {
-  const line = textOf(blocks)
-    .split('\n')
-    .find((value) => value.trim());
-
-  return line?.trim() ?? '';
-}
-
-// The spawn row a later message belongs to, and the message rows those spawn rows swallowed.
-export interface SpawnPrompts {
-  prompts: ReadonlyMap<string, string>;
-  folded: ReadonlySet<string>;
-}
-
 const isSubagentUpdate = (row: SessionUpdate): row is SubagentUpdate =>
   row.sessionUpdate === 'subagent_update';
 
-// The Agent's first message to a child is the prompt it was spawned with, so the Started row carries it.
-export function spawnPrompts(rows: readonly SessionUpdate[]): SpawnPrompts {
-  const prompts = new Map<string, string>();
+/*
+ * The Agent's first message to a child is the prompt it was spawned with, so the Started row stands for it and the
+ * message draws no row of its own.
+ */
+export function foldedPrompts(
+  rows: readonly SessionUpdate[],
+): ReadonlySet<string> {
   const folded = new Set<string>();
-  const spawned = new Map<string, string>();
+  const spawned = new Set<string>();
 
-  for (const row of rows.filter(isSubagentUpdate)) {
-    if (actionOf(row) === 'spawn') {
-      spawned.set(row.subagentSessionId, row.id);
-      continue;
-    }
+  for (const row of rows.filter(isSubagentUpdate))
+    foldPrompt(row, spawned, folded);
 
-    foldPrompt(row, spawned, { prompts, folded });
-  }
-
-  return { prompts, folded };
+  return folded;
 }
 
+// The first message to a spawned child is its prompt, which the Started row stands for.
+const isSpawnPrompt = (row: SubagentUpdate, spawned: Set<string>): boolean =>
+  actionOf(row) === 'message' && spawned.delete(row.subagentSessionId);
+
+// A spawn waits for its prompt; the child's next message is that prompt, and folds.
 function foldPrompt(
   row: SubagentUpdate,
-  spawned: Map<string, string>,
-  into: { prompts: Map<string, string>; folded: Set<string> },
+  spawned: Set<string>,
+  folded: Set<string>,
 ): void {
-  const spawnId = spawned.get(row.subagentSessionId);
-  const prompt = firstLine(promptOf(row));
-
-  if (spawnId === undefined || !prompt) return;
-  spawned.delete(row.subagentSessionId);
-  into.prompts.set(spawnId, prompt);
-  into.folded.add(row.id);
+  if (actionOf(row) === 'spawn') spawned.add(row.subagentSessionId);
+  else if (isSpawnPrompt(row, spawned)) folded.add(row.id);
 }
 
 type Known = SessionSnapshot['subagents'][number] | undefined;
@@ -105,42 +76,32 @@ function identity(
   return { title: titleOf(known, row), role: known?.role ?? null };
 }
 
-type Action = Pick<FeedSubagent, 'kind' | 'text'>;
-
-function rowAction(row: SubagentUpdate, prompts: SpawnPrompts): Action | null {
+/*
+ * A row carrying a `result` is the child's reply, even an empty one; a row with neither an action nor a result is a
+ * state change and draws nothing. The row says only that it happened: the words are in the child's own Feed.
+ */
+function rowKind(row: SubagentUpdate): FeedSubagent['kind'] | null {
   const action = actionOf(row);
 
-  if (action === 'spawn')
-    return { kind: 'started', text: prompts.prompts.get(row.id) };
+  if (action) return kinds[action];
 
-  if (action === 'message') return quoted('messaged', firstLine(promptOf(row)));
-
-  return quoted('replied', firstLine(resultOf(row)));
+  return extensionOf(row).result ? 'replied' : null;
 }
-
-// A message or a reply is nothing but its quote, so an empty one draws no row.
-const quoted = (kind: FeedSubagent['kind'], text: string): Action | null =>
-  text ? { kind, text } : null;
-
-const drawnItem = (
-  row: SubagentUpdate,
-  action: Action,
-  snapshot: SessionSnapshot,
-): FeedSubagent => ({
-  type: 'subagent',
-  id: row.id,
-  subagentSessionId: row.subagentSessionId,
-  ...action,
-  ...identity(row, snapshot),
-});
 
 export function subagentItem(
   row: SubagentUpdate,
-  prompts: SpawnPrompts,
+  folded: ReadonlySet<string>,
   snapshot: SessionSnapshot,
 ): FeedSubagent | null {
-  if (prompts.folded.has(row.id)) return null;
-  const action = rowAction(row, prompts);
+  const kind = rowKind(row);
 
-  return action ? drawnItem(row, action, snapshot) : null;
+  if (!kind || folded.has(row.id)) return null;
+
+  return {
+    type: 'subagent',
+    id: row.id,
+    subagentSessionId: row.subagentSessionId,
+    kind,
+    ...identity(row, snapshot),
+  };
 }

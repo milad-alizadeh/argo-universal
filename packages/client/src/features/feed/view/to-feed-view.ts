@@ -6,17 +6,13 @@ import {
 import type { FeedView, FeedViewItem } from './feed-view';
 import { isGroupRow, startsNewTurn } from './grouping-rules';
 import { OpenGroup } from './open-group';
-import {
-  type SpawnPrompts,
-  spawnPrompts,
-  subagentItem,
-} from './subagent-items';
+import { foldedPrompts, subagentItem } from './subagent-items';
 import { turnEndItem } from './turn-end-item';
 
 interface Pass {
   group: OpenGroup;
   items: FeedViewItem[];
-  prompts: SpawnPrompts;
+  folded: ReadonlySet<string>;
   snapshot: SessionSnapshot;
 }
 
@@ -47,7 +43,7 @@ function appendSubagentRow(
   row: Extract<SessionUpdate, { sessionUpdate: 'subagent_update' }>,
   pass: Pass,
 ): void {
-  const item = subagentItem(row, pass.prompts, pass.snapshot);
+  const item = subagentItem(row, pass.folded, pass.snapshot);
 
   if (!item) return;
 
@@ -61,7 +57,7 @@ const newPass = (
 ): Pass => ({
   group: new OpenGroup(snapshot),
   items: [],
-  prompts: spawnPrompts(rows),
+  folded: foldedPrompts(rows),
   snapshot,
 });
 
