@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { referenceOfChange } from './use-change-associations';
+import { referenceOfChange } from './change-reference';
 
 describe('referenceOfChange', () => {
   it('names a Change by its repository and number, so two repositories never collide', () => {

@@ -1,17 +1,11 @@
-import type { ChangeActions, SessionPullRequest } from '#features/sessions';
+import type { ChangeActions } from '#features/sessions';
+import { referenceOfChange } from './change-reference';
 import type { OperationRunner } from './page-calls-ports';
 import type { ChangesContext } from './use-session-pull-requests';
 import { useOperationRunner } from './use-tree-calls';
 
 // The Plugin that supplies PR-backed Changes, and so the one whose Operations connect a Session to them.
 const pluginId = 'github';
-
-// A PR is named by its repository plus number, never by number alone, so two repositories never collide.
-export const referenceOfChange = ({
-  repository,
-  number,
-}: Pick<SessionPullRequest, 'repository' | 'number'>): string =>
-  repository ? `${repository}#${number}` : String(number);
 
 type Association = {
   operation: 'attach' | 'detach';

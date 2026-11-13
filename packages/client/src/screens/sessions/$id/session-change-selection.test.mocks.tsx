@@ -6,8 +6,6 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { withPullRequests } from './session-detail-view-pull-request.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
-export { repositoryChanges };
-
 // A test-only harness: the Changes the Plugins supplied move on, as the Slot's refresh and a detach make them move.
 export const detached = fn<(change: SessionPullRequest) => Promise<void>>();
 
