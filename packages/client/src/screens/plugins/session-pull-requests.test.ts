@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { sessionPullRequests } from './session-pull-requests';
 import type { ReadItem, SlotReading } from './slot-items';
 
+const owned = 'owner/repository';
+
 const pullRequest = {
   number: 12,
   url: 'https://github.com/owner/repository/pull/12',
@@ -13,7 +15,7 @@ const open: Change = {
   id: 'github:owner/repository#12',
   stage: 'open',
   title: 'Add the thing',
-  repository: 'owner/repository',
+  repository: owned,
   pullRequest,
   totals: { files: 3, additions: 10, deletions: 2 },
 };

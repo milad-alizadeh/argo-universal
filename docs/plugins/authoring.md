@@ -311,6 +311,10 @@ A Plugin that throws, answers off-schema, or takes over two seconds is left out 
 A Session row's Activity line is a Single-owner Slot, `argo/session/activity/v1`. It is asked like the row items, with the same `{ sessionId, projectId }` contexts, and a Plugin answers at most one `{ text }` per Session id, of at most 40 characters.
 A Plugin can declare it with or without the row items Slot. Every Plugin that declares it answers, but a row shows only the line of the Plugin the user chose under Settings › Plugins › Session rows on that Device. While no Plugin is chosen, the chosen Plugin is turned off on Session rows, or it has no line for a Session, the row shows Argo's own activity.
 
+## Session Changes
+
+A Plugin that knows of a Session's pull requests answers `argo/session/changes/v1` (ADR-0052). It is asked like the row items, with `{ sessionId, projectId }` contexts and an answer keyed by Session id. Each item is a Change: `{ id, stage, title, repository?, branch?, base?, head?, pullRequest?: { number, url }, draft?, conflict?, totals? }`. A pull request is identified by `repository` plus `pullRequest.number`, and `id` stays the same for the Change's life. Argo draws the Changes in its Changes card and Inspector; a Plugin sends data, not a card. A provider that throws leaves the Plugin's Changes out and the local Changes stay.
+
 ## Session bar
 
 The Session bar is one line under an open Session's header, `argo/session/bar/v1`. It is asked like the row items, with the same `{ sessionId, projectId }` contexts and an answer keyed by Session id, and a Plugin answers at most one item per Session:
