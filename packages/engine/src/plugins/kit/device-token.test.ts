@@ -10,7 +10,7 @@ import {
   type Reply,
 } from '#mocks/device-service';
 import { deviceFlow } from './device-flow';
-import { KeptToken } from './device-token';
+import { KeptToken } from './kept-token';
 
 const signedInAt = new Date('2026-11-13T07:10:00Z');
 

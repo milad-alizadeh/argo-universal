@@ -4,12 +4,14 @@ import type {
   OAuthFlowPattern,
   OAuthFlowState,
 } from '@repo/contracts/plugins/oauth-flow-api';
+import { tokenLender } from './kept-token';
 import {
   authorizeLocation,
   failed,
   signedIn,
   type Waiting,
 } from './oauth-exchange';
+import { clientIdOf, oauthRefresh } from './oauth-token';
 
 // The one sign-in a flow holds, and the attempt whose answers still count.
 type Held = { state: OAuthFlowState; attempt: symbol | null };
@@ -100,13 +102,6 @@ async function opened(attempt: Attempt): Promise<void> {
   else attempt.settle(failed('Couldn’t start sign-in.'));
 }
 
-async function clientIdOf(options: OAuthFlowOptions): Promise<string | null> {
-  const { clientId } = options;
-  const value = typeof clientId === 'function' ? await clientId() : clientId;
-
-  return value || null;
-}
-
 // Argo's own message when another program holds the fixed callback port.
 function refused(error: Error): OAuthFlowState {
   const message = String(error.message);
@@ -136,11 +131,16 @@ function cancel(held: Held, argo: OAuthFlowArgo): OAuthFlowState {
   return settling(held, argo)(idle);
 }
 
-// A borrower's request gets the kept token in the header the flow names; Argo sets it.
-const provide = (
+// A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
+function provide(
   argo: OAuthFlowArgo,
   options: OAuthFlowOptions,
-): Promise<void> =>
-  argo.accounts.provide(options.host, options.header ?? bearer, (account) =>
-    argo.secrets.get(account.id),
+): Promise<void> {
+  const lend = tokenLender(argo.secrets, oauthRefresh(argo.fetch, options));
+
+  return argo.accounts.provide(
+    options.host,
+    options.header ?? bearer,
+    (account) => lend(account.id),
   );
+}

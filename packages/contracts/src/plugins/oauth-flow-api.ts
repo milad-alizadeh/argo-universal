@@ -54,7 +54,9 @@ export type OAuthFlowState =
  *   an Operation the page runs, on the Server Device.
  * - `cancel()` stops waiting and answers `idle`. The browser tab stays open; a callback from it is ignored.
  * - `provide()` registers the Account's provider, which hands a borrower's request the kept token. Call it
- *   once as the Plugin registers.
+ *   once as the Plugin registers. A token whose answer carried `refresh_token` and `expires_in`, beside the
+ *   access token at `tokenPath`, is refreshed at `tokenUrl` with the client ID alone when a borrow finds it run
+ *   out, so the person stays signed in.
  */
 export type OAuthFlow = Readonly<{
   // The browser and Argo's callback port are the Server Device's, so only it starts this sign-in.
