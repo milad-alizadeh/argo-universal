@@ -58,7 +58,7 @@ Two regions compete with the content column for width: the Sessions list and the
 
 **The Sessions list folds below 1440 with the Inspector open, and below 1072 without it.** Closing the Inspector frees 368px: its 352px panel and 16px gap. Opening the Inspector can auto-hide the Workbench; closing it restores the Workbench when enough room returns. Explicit Show or Hide intent survives these changes.
 
-The content floor is 688px: the Composer's 640px width and a 24px gutter on each side. Pane preferences change these thresholds. The sidebar and Inspector take priority over the Workbench.
+The content floor is 688px: the Composer's 640px width and a 24px gutter on each side, unless a drag of the Inspector lowered it (see [The content column](#the-content-column)). Pane preferences change these thresholds. The sidebar and Inspector take priority over the Workbench.
 
 The Workbench has four effective states. One toggle drives the person’s Show or Hide intent without rewriting it during a resize. Showing or hiding it never narrows the Feed or Composer, and never covers them where the gutters hold it.
 
@@ -94,7 +94,8 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 ## The content column
 
 - `--container-column` is 800. The Feed viewport and the Composer take the same column: `max-width` 848 at a 24 gutter on each side, centred in the page, or moved aside together for a Workbench the trailing gutter alone does not hold.
-- The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. Manual Inspector resizing respects that floor.
+- The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. A window resize or a pane opening never takes the page below it.
+- Dragging the Inspector's divider is the one way under that floor. The page keeps narrowing with the drag down to 200, and a drag past that expands the Inspector over the page. The list does not fold during the drag. The width the drag left is the content's floor until the Inspector closes, so a narrower window then folds the list before the page gives more, and expanding the Inspector keeps the list; closing the Inspector restores 688, and it reopens narrower by what the drag took under that floor. A divider moved while the Inspector is at its default width lowers nothing.
 - The Workbench and the Inspector sit outside the cap. The Inspector is its own region of the window; the Workbench is drawn over the page's gutter.
 - On a wide web or desktop window the Feed's scrollbar stays drawn while the Feed can scroll, at the page's trailing edge, which is the window's edge unless the Inspector is open. Its gutter is kept on both sides, so the Feed's column stays over the Composer's.
 

@@ -8,6 +8,7 @@ import {
   closeInspectorLabel,
   detailId,
   expandInspectorLabel,
+  hiddenAttribute,
   hideSidebarLabel,
   inspectorId,
   moreActionsLabel,
@@ -97,5 +98,50 @@ export const DragToCollapseExpandAndReopen: ScaffoldStory = {
       canvas.getByRole('button', { name: moreActionsLabel }),
     ).toBeVisible();
     await waitForZeroWidth(canvas, inspectorId);
+  }),
+};
+
+// Closed and opened again, the Inspector sits beside a page that has its floor back.
+export const ClosingTheInspectorRestoresTheContentFloor: ScaffoldStory = {
+  play: controlledPlay(async (context, controlled) => {
+    const { canvas } = context;
+    await settleLayout('wide');
+    await controlled.render({ inspectorState: 'open' });
+    const list = listHidden(canvas);
+    await drag(context, resizeInspectorLabel, 300 - pageWidth(canvas));
+    await waitFor(() => expect(Math.round(pageWidth(canvas))).toBe(300));
+    await controlled.render({ inspectorState: 'closed' });
+    await controlled.render({ inspectorState: 'open' });
+    await waitFor(() => expect(pageWidth(canvas)).toBeGreaterThanOrEqual(688));
+    await expect(listHidden(canvas)).toBe(list);
+  }),
+};
+
+const pageWidth = (canvas: Canvas): number =>
+  canvas.getByTestId(detailId).getBoundingClientRect().width;
+
+const listHidden = (canvas: Canvas): string | null =>
+  canvas.getByTestId(sessionListId).getAttribute(hiddenAttribute);
+
+// A drag takes the page under the content's floor, keeps the list as it was, and expands the Inspector only past the page's minimum.
+export const DragNarrowsThePageUntilTheInspectorExpands: ScaffoldStory = {
+  play: controlledPlay(async (context, controlled) => {
+    const { canvas } = context;
+    await settleLayout('wide');
+    await controlled.render({ inspectorState: 'open' });
+    const list = listHidden(canvas);
+    const start = pageWidth(canvas);
+    await expect(start).toBeGreaterThanOrEqual(688);
+    await drag(context, resizeInspectorLabel, 300 - start);
+    await waitFor(() => expect(Math.round(pageWidth(canvas))).toBe(300));
+    await expect(listHidden(canvas)).toBe(list);
+    await expect(controlled.onInspectorStateChange).not.toHaveBeenCalled();
+    await drag(context, resizeInspectorLabel, -99);
+    await waitFor(() => expect(Math.round(pageWidth(canvas))).toBe(201));
+    await drag(context, resizeInspectorLabel, -40);
+    await acceptInspector(controlled, 'expanded');
+    await waitForZeroWidth(canvas, detailId);
+    await expect(listHidden(canvas)).toBe(list);
+    await expect(controlled.onInspectorStateChange).toHaveBeenCalledTimes(1);
   }),
 };

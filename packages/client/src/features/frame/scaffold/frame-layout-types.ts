@@ -46,16 +46,19 @@ export interface FrameLayoutInput extends FrameIntent {
   measures: FrameMeasures;
   preferredListWidth: number;
   preferredInspectorWidth: number;
+  // The page's width a drag of the Inspector left, which lowers the content's floor until the Inspector closes.
+  draggedContentFloor?: number;
 }
 
 /*
  * A divider between two regions. A drag keeps the pane between `minimum` and `maximum`; below half the
- * minimum it closes the pane, and above `expandAbove` it expands it. `reach` is how far the handle itself goes.
+ * minimum it closes the pane, and above `expandAbove` it expands it. `gap` is what the pane keeps beside it. `reach` is how far the handle itself goes.
  */
 export interface ResizeHandle {
   left: number;
   value: number;
   reach: number;
+  gap: number;
   minimum: number;
   maximum: number;
   expandAbove: number;

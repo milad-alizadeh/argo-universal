@@ -43,15 +43,14 @@ function workbenchOffset(
   return Math.max(page.offset, trailingEdge - width);
 }
 
-// The widest the Inspector gets beside the page while the content keeps its floor.
+// The widest the Inspector gets beside the page while the content keeps `floor`: its own floor, or the least a drag leaves it.
 export function inspectorLimit(
   input: FrameLayoutInput,
   contentStart: number,
+  floor = contentFloor(input),
 ): number {
   const { measures } = input;
-
-  const room =
-    input.width - contentStart - measures.paneGap - contentFloor(measures);
+  const room = input.width - contentStart - measures.paneGap - floor;
 
   return Math.max(measures.inspectorWidth, room);
 }

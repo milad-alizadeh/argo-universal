@@ -16,17 +16,13 @@ import {
   type FrameMeasures,
   frameLayout,
 } from './frame-layout';
-import { listWidthForText } from './frame-layout-measures';
 import { isFramed } from './is-framed';
 import type { ScaffoldProps } from './scaffold-props';
+import {
+  type PreferredWidths,
+  usePreferredWidths,
+} from './use-preferred-widths';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
-
-interface PreferredWidths {
-  preferredListWidth: number;
-  preferredInspectorWidth: number;
-  setPreferredListWidth: (width: number) => void;
-  setPreferredInspectorWidth: (width: number) => void;
-}
 
 interface WindowWidth {
   width: number;
@@ -40,6 +36,7 @@ export interface ScaffoldLayout extends FrameLayout, WindowWidth {
   safeTop: number;
   setPreferredListWidth: PreferredWidths['setPreferredListWidth'];
   setPreferredInspectorWidth: PreferredWidths['setPreferredInspectorWidth'];
+  setDraggedContentFloor: PreferredWidths['setDraggedContentFloor'];
   requestSidebar: SidebarIntent['requestSidebar'];
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
@@ -86,25 +83,6 @@ function useFrameMeasures(bandLeading: BandLeading): FrameMeasures {
   };
 }
 
-function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
-  const [draggedListWidth, setPreferredListWidth] = useState<number>();
-  const fontScale = useWindowDimensions().fontScale;
-
-  const preferredListWidth =
-    draggedListWidth ?? listWidthForText(measures.listWidth, fontScale);
-
-  const [preferredInspectorWidth, setPreferredInspectorWidth] = useState(
-    measures.inspectorWidth,
-  );
-
-  return {
-    preferredListWidth,
-    preferredInspectorWidth,
-    setPreferredListWidth,
-    setPreferredInspectorWidth,
-  };
-}
-
 // The window's width until the Scaffold measures itself: a pane first laid out at 0 wide pins the Feed's list to that width.
 function useWindowWidth(): WindowWidth {
   const [width, setWidth] = useState(useWindowDimensions().width);
@@ -127,7 +105,7 @@ function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
   return {
     bandLeading,
     measures,
-    ...usePreferredWidths(measures),
+    ...usePreferredWidths(measures, scaffold.inspectorState === 'closed'),
     ...useSidebarIntent(scaffold),
   };
 }
