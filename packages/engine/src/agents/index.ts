@@ -47,6 +47,7 @@ export { readRegistry } from './registry/registry-cache';
 export {
   changeAgentServer,
   refreshRegistry,
+  setAgentEnvironment,
   syncRegistry,
   type RegistryDeps,
 } from './registry/registry-operations';

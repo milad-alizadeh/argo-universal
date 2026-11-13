@@ -46,6 +46,16 @@ export function generatedOperations(runner: OperationRunner) {
         .mutation(({ input }) =>
           runner.run({ kind: 'app', id: 'agent.remove', params: input }),
         ),
+      setEnvironment: publicProcedure
+        .input(operations['agent.setEnvironment'].params)
+        .output(operations['agent.setEnvironment'].result)
+        .mutation(({ input }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.setEnvironment',
+            params: input,
+          }),
+        ),
     }),
     app: router({
       open: publicProcedure
