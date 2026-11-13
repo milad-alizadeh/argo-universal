@@ -1,6 +1,6 @@
 import type { DeviceFlowArgo } from '@repo/contracts/plugins/device-flow-api';
 import { z } from 'zod';
-import { form } from './form-body';
+import { formPost } from './form-body';
 
 // What a device endpoint may answer; every field is optional, so an answer that is not JSON reads as one with none.
 export const CodeAnswer = z.object({
@@ -49,14 +49,7 @@ export async function postForm<Answer>(
   target: { url: string; fields: Record<string, string> },
   schema: z.ZodType<Answer>,
 ): Promise<Answer> {
-  const response = await fetch(target.url, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: form(target.fields),
-  });
+  const response = await fetch(target.url, formPost(target.fields));
 
   return parsed(schema, response ? await response.text() : '');
 }

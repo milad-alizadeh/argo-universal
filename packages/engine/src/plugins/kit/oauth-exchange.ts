@@ -5,7 +5,7 @@ import type {
 } from '@repo/contracts/plugins/oauth-flow-api';
 import { z } from 'zod';
 import { oneLine } from '../runtime/render-fallback';
-import { form } from './form-body';
+import { form, formPost } from './form-body';
 import { secretOf, type KeptToken } from './kept-token';
 import { keptIn, parsed } from './oauth-token';
 
@@ -94,20 +94,14 @@ async function answered(
     : { token };
 }
 
-const tokenRequest = (grant: Grant): TokenRequest => ({
-  method: 'POST',
-  headers: {
-    accept: 'application/json',
-    'content-type': 'application/x-www-form-urlencoded',
-  },
-  body: form({
+const tokenRequest = (grant: Grant): TokenRequest =>
+  formPost({
     grant_type: 'authorization_code',
     client_id: grant.clientId,
     code: grant.code,
     code_verifier: grant.verifier,
     redirect_uri: grant.redirectUri,
-  }),
-});
+  });
 
 const maxReason = 200;
 

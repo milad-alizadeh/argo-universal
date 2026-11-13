@@ -3,7 +3,7 @@ import type {
   OAuthFlowOptions,
 } from '@repo/contracts/plugins/oauth-flow-api';
 import { z } from 'zod';
-import { form } from './form-body';
+import { formPost } from './form-body';
 import { expiresAtMsOf, type KeptToken, type Refresh } from './kept-token';
 
 const AnswerJson = z.json();
@@ -45,10 +45,24 @@ const objectAt = (answer: AnswerJson, keys: readonly string[]): AnswerJson =>
   );
 
 // RFC 6749 section 5.1: what may sit beside the access token.
-const Beside = z.object({
-  refresh_token: z.string().min(1).optional(),
-  expires_in: z.number().nonnegative().optional(),
-});
+const RefreshToken = z.string().min(1);
+
+const Lifetime = z.number().nonnegative();
+
+type Siblings = { refresh?: string; expiresIn?: number };
+
+/*
+ * The refresh token and lifetime beside the token at `path`. Each is read on its own, so a lifetime sent as a string
+ * still keeps the refresh token; a token with no lifetime is lent until the service refuses it.
+ */
+function siblingsAt(answer: AnswerJson, path: readonly string[]): Siblings {
+  const at = AnswerObject.safeParse(objectAt(answer, path.slice(0, -1))).data;
+
+  return {
+    refresh: RefreshToken.safeParse(at?.refresh_token).data,
+    expiresIn: Lifetime.safeParse(at?.expires_in).data,
+  };
+}
 
 /*
  * The token in a token endpoint's answer, with the refresh token and lifetime that sit beside it, so a service that
@@ -63,13 +77,9 @@ export function keptIn(
 
   if (access === null) return null;
 
-  const beside = Beside.catch({}).parse(objectAt(answer, path.slice(0, -1)));
+  const { refresh, expiresIn } = siblingsAt(answer, path);
 
-  return {
-    access,
-    refresh: beside.refresh_token,
-    expiresAtMs: expiresAtMsOf(beside.expires_in),
-  };
+  return { access, refresh, expiresAtMs: expiresAtMsOf(expiresIn) };
 }
 
 // The client ID as a sign-in or a refresh reads it: given, or read from where the Plugin keeps it.
@@ -82,22 +92,6 @@ export async function clientIdOf(
   return value || null;
 }
 
-const refreshRequest = (
-  clientId: string,
-  refresh: string,
-): NonNullable<Parameters<OAuthFlowArgo['fetch']>[1]> => ({
-  method: 'POST',
-  headers: {
-    accept: 'application/json',
-    'content-type': 'application/x-www-form-urlencoded',
-  },
-  body: form({
-    grant_type: 'refresh_token',
-    client_id: clientId,
-    refresh_token: refresh,
-  }),
-});
-
 // RFC 6749 section 6, as the public client the sign-in was: the client ID and the refresh token, no client secret.
 export const oauthRefresh =
   (fetch: OAuthFlowArgo['fetch'], options: OAuthFlowOptions): Refresh =>
@@ -108,14 +102,18 @@ export const oauthRefresh =
 
     const reply = await fetch(
       options.tokenUrl,
-      refreshRequest(clientId, refresh),
+      formPost({
+        grant_type: 'refresh_token',
+        client_id: clientId,
+        refresh_token: refresh,
+      }),
     );
 
-    return keptFrom(reply, options.tokenPath);
+    return keptFromReply(reply, options.tokenPath);
   };
 
 // A refusal, or no answer at all, gives no token.
-async function keptFrom(
+async function keptFromReply(
   reply: Awaited<ReturnType<OAuthFlowArgo['fetch']>>,
   path: OAuthFlowOptions['tokenPath'],
 ): Promise<KeptToken | null> {
