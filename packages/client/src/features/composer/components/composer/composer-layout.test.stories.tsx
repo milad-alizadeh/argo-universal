@@ -6,6 +6,7 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { agentModelLabel } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { responsiveLayout } from '../../../../../mocks/composer/responsive-layout.test.mocks';
+import { composerCard } from '../../../../../mocks/composer/responsive-menu.test.mocks';
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
 import { Composer } from './composer';
 
@@ -61,20 +62,12 @@ export const RequestTrayStaysCentred: Story = {
   },
 };
 
-function composerCardOf(element: HTMLElement): HTMLElement {
-  const card = element.closest<HTMLElement>('[class*="backdrop-blur-glass"]');
-
-  if (!card) throw new Error('The Composer needs its card.');
-
-  return card;
-}
-
 /*
  * A tray tucks under the card, so its sides must sit under the card's flat edge: inset less than the card's
- * corner radius and its side and hairline show in the rounded corner's cut-out (#2013).
+ * corner radius and its side and hairline show in the rounded corner's cut-out.
  */
 async function expectTrayClearsCorners(
-  card: HTMLElement,
+  card: Element,
   tray: Element,
 ): Promise<void> {
   const radius = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius);
@@ -90,7 +83,7 @@ export const TraysClearCardCorners: Story = {
   args: { ...ResponsiveLayoutWide.args, callout: <View role="alert" /> },
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
-    const card = composerCardOf(canvas.getByRole('button', { name: 'Send' }));
+    const card = composerCard(canvas.getByRole('textbox', { name: 'Message' }));
     const statusTray = card.nextElementSibling;
 
     if (!statusTray)
