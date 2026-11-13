@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
+import { memoryChanges } from '../../../features/changes/source/memory-changes.mocks';
 import { fewChanges, useMemoryChanges } from './session-changes.test.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -227,13 +228,15 @@ export const SeveralPullRequestsInInspector: Story = {
   },
 };
 
-// The Session page with its changed files read from an in-memory Server.
+// The Session page with its changed files, and a selected Change's own, read from an in-memory Server.
 function WithChangedFiles(view: SessionDetailViewProps): JSX.Element {
   const changes = useMemoryChanges(fewChanges);
 
   return (
     <FramedSessionPreview
-      {...(view.state === 'open' ? { ...view, changes } : view)}
+      {...(view.state === 'open'
+        ? { ...view, changes, changeFiles: () => memoryChanges(fewChanges) }
+        : view)}
     />
   );
 }
