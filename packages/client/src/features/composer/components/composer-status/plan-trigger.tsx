@@ -1,10 +1,12 @@
 import type { PlanEntry } from '@repo/contracts';
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
-import { IconSlot } from '@repo/kit/primitives/content/icon';
+import { IconSizeContext, IconSlot } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { completedSteps } from '../../utils/status';
 
 interface PlanTriggerProps {
@@ -42,8 +44,13 @@ function PlanMark({ entry }: { entry: PlanEntry }): JSX.Element {
   );
 }
 
+// A phone floats the Plan above the card as a pill; a wide window draws it as the tray's own row, never a pill.
 export function createPlanTrigger(props: PlanTriggerProps): JSX.Element {
-  return <Pill {...planPillProps(props)} />;
+  return props.wide ? (
+    <PlanRow {...props} />
+  ) : (
+    <Pill {...planPillProps(props)} />
+  );
 }
 
 const planPillProps = (
@@ -53,34 +60,56 @@ const planPillProps = (
   appearance: 'glass',
   accessibilityLabel: 'Plan',
   disabled: props.disabled,
-  text: props.wide
-    ? `Plan ${completedSteps(props.entries)}/${props.entries.length}`
-    : 'Plan',
+  text: 'Plan',
   leading: <PlanProgressMarks entries={props.entries} />,
-  detail: planDetail(props),
-  fill: props.wide,
-  ...planExpansion(props),
 });
 
-function planDetail({ wide, entries }: PlanTriggerProps): string | undefined {
-  return wide
-    ? entries.find((entry) => entry.status === 'in_progress')?.content
-    : undefined;
+const planRowClass =
+  'group w-full min-h-8 flex-row items-center gap-1.5 px-3 rounded-t-2xl web:outline-none web:hover:bg-hover web:focus-visible:ring-2 web:focus-visible:ring-focus';
+
+const planRowPress = (
+  props: PlanTriggerProps,
+): React.ComponentProps<typeof Pressable> => ({
+  role: 'button',
+  accessibilityLabel: 'Plan',
+  'aria-expanded': props.expanded,
+  disabled: props.disabled,
+  onPress: props.toggle,
+  className: cn(planRowClass, props.disabled && 'opacity-35'),
+});
+
+function PlanRow(props: PlanTriggerProps): JSX.Element {
+  return (
+    <Pressable {...planRowPress(props)}>
+      <IconSizeContext value={{ size: 'sm', fixed: true }}>
+        <PlanProgressMarks entries={props.entries} />
+        <PlanRowWords {...props} />
+        <Chevron direction={props.expanded ? 'up' : 'down'} />
+      </IconSizeContext>
+    </Pressable>
+  );
 }
 
-function planExpansion({
-  wide,
-  expanded,
-  toggle,
-}: PlanTriggerProps): Pick<
-  React.ComponentProps<typeof Pill>,
-  'onPress' | 'aria-expanded' | 'disclosure'
-> {
-  if (!wide) return {};
+function PlanRowWords({ entries }: PlanTriggerProps): JSX.Element {
+  const current = entries.find((entry) => entry.status === 'in_progress');
 
-  return {
-    onPress: toggle,
-    'aria-expanded': expanded,
-    disclosure: expanded ? 'up' : 'down',
-  };
+  return (
+    <View className="min-w-0 shrink flex-row items-center gap-1.5">
+      <Text role="control" selectable={false}>
+        {`Plan ${completedSteps(entries)}/${entries.length}`}
+      </Text>
+      {current && <PlanRowStep content={current.content} />}
+    </View>
+  );
+}
+
+// The step under way, cut short before it pushes the chevron off the row.
+function PlanRowStep({ content }: { content: string }): JSX.Element {
+  return (
+    <View className="min-w-0 shrink">
+      <Text role="control" tone="muted" numberOfLines={1} selectable={false}>
+        {content}
+      </Text>
+    </View>
+  );
 }
