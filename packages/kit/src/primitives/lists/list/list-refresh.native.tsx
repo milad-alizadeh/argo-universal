@@ -1,11 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
 import { RefreshControl } from 'react-native';
-import { listRefreshFailure } from './list-refresh-failure';
+import { useListRefreshRequest } from './list-refresh-request';
 import type { ListLoad } from './list-request';
-import { useListRequest } from './list-request';
 
 export function useListRefresh(refresh?: ListLoad): ReactElement | undefined {
-  const request = useListRequest(listRefreshFailure);
+  const request = useListRefreshRequest();
 
   return refresh ? (
     <RefreshControl

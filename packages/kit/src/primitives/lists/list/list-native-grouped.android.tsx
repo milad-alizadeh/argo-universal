@@ -26,8 +26,7 @@ import {
   type NativeRow,
   type NativeSection,
 } from './list-native-sections';
-import { listRefreshFailure } from './list-refresh-failure';
-import { useListRequest } from './list-request';
+import { useListRefreshRequest } from './list-refresh-request';
 
 /*
  * The FieldGroup's layout (field-group-caption-insets.ts) as one lazy column. Every item of the column is a lazy
@@ -140,7 +139,7 @@ const Gap = (): ReactElement => <Column modifiers={gapModifiers} />;
 function RefreshableColumn(
   props: Pick<NativeGroupedProps, 'onRefresh'> & { sections: NativeSection[] },
 ): ReactElement {
-  const request = useListRequest(listRefreshFailure);
+  const request = useListRefreshRequest();
   const refresh = props.onRefresh;
 
   if (!refresh) return groupedColumn(props.sections);

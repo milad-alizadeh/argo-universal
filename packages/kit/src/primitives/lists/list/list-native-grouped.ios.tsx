@@ -16,8 +16,7 @@ import {
   type NativeRow,
   type NativeSection,
 } from './list-native-sections';
-import { listRefreshFailure } from './list-refresh-failure';
-import { useListRequest } from './list-request';
+import { useListRefreshRequest } from './list-refresh-request';
 
 // No background of its own, so the page's shows between the section cards, as the FieldGroup's Form does.
 const modifiers = [
@@ -31,7 +30,7 @@ const modifiers = [
  * SwiftUI views, as in a FieldGroup; React Native content cannot sit in it.
  */
 export function NativeGroupedList(props: NativeGroupedProps): ReactNode {
-  const request = useListRequest(listRefreshFailure);
+  const request = useListRefreshRequest();
   const refresh = props.onRefresh;
 
   const shown = refresh
