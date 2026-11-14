@@ -21,10 +21,11 @@ type Answer =
 export const attach = async (
   test: PluginTest,
   name: 'attach' | 'detach',
+  number = 42,
 ): Promise<void> => {
   await test.operations.run({
     name,
-    params: { number: 42 },
+    params: { number },
     caller: { sessionId, projectId: project.id },
   });
 };
@@ -59,8 +60,13 @@ export function watch(
   return test.slotItems({ slotId, contexts }, { signal: controller.signal });
 }
 
-export const itemsOf = (answer: Answer): unknown[] =>
-  (answer[sessionId]?.items ?? []).map(({ item }) => item);
+export const itemsOf = (answer: Answer): unknown[] => {
+  const context = answer[sessionId];
+
+  return context
+    ? [...context.items, ...context.overflow].map(({ item }) => item)
+    : [];
+};
 
 async function nextAnswer(answers: AsyncGenerator<Answer>): Promise<Answer> {
   const { value, done } = await answers.next();

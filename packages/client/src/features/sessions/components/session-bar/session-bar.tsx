@@ -22,7 +22,7 @@ export interface SessionBarEntry {
 export interface SessionBarProps {
   // The first Plugin's line in Slot order.
   shown: SessionBarEntry;
-  // The other Plugins' lines, behind "+N".
+  // The remaining lines, behind "+N" on a phone and grouped by Plugin in the Workbench.
   hidden: readonly SessionBarEntry[];
   // Opens a line's Plugin page; a line without one never calls it.
   onOpen: (entry: SessionBarEntry) => void;

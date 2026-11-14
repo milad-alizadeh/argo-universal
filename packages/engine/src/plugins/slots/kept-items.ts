@@ -126,8 +126,12 @@ function requested(
   return { ok: true, items: itemsFor(entry, answered, input) };
 }
 
-const answerSchema = ({ content }: AnyItemsSlot): z.ZodType<PluginItems> =>
-  z.record(z.string(), z.array(content.item).max(content.limit.perPlugin));
+const answerSchema = ({ content }: AnyItemsSlot): z.ZodType<PluginItems> => {
+  const items = z.array(content.item);
+  const limit = content.limit.perPlugin;
+
+  return z.record(z.string(), limit === null ? items : items.max(limit));
+};
 
 function entryOf({ slotId }: SlotItemsInput): AnyItemsSlot {
   const entry = itemsSlot(slotId);
