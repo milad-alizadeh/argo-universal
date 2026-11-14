@@ -2,11 +2,14 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import type { SessionBarProps } from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
 import {
+  attachedIssuesBar,
   coverageLine as coverage,
   deploysLine as deploys,
   issueLine as issue,
+  secondIssueLine,
   sessionPageBar,
 } from './session-detail-view-bar.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -30,6 +33,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const lines = [issue, deploys, coverage];
+
+const onOpenOf = (
+  view: SessionDetailViewProps,
+): SessionBarProps['onOpen'] | false | undefined =>
+  view.state === 'open' && view.bar?.onOpen;
 
 const workbenchId = 'desktop-workbench';
 
@@ -55,6 +63,43 @@ export const WideLinesAreWorkbenchCards: Story = {
 
     await expect(canvas.getAllByText(issue.text)).toHaveLength(1);
     await expect(canvas.queryByRole('button', { name: moreLines })).toBeNull();
+  },
+};
+
+export const AttachedIssuesShareOneCard: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...idleSession,
+      bar: { ...attachedIssuesBar, onOpen: fn() },
+    },
+  },
+  beforeEach: (): Promise<void> => settleLayout(1920),
+  play: async ({ args, canvas, userEvent }) => {
+    const workbench = await findWorkbench(canvas);
+
+    const card = within(
+      await workbench.findByRole('group', {
+        name: 'Issue tracker',
+        exact: true,
+      }),
+    );
+
+    await expect(
+      workbench.getAllByRole('group', { name: 'Issue tracker', exact: true }),
+    ).toHaveLength(1);
+
+    for (const line of [issue, secondIssueLine]) {
+      await expect(card.getByText(line.text)).toBeVisible();
+      await userEvent.click(
+        card.getByRole('button', {
+          name: `Open ${line.pluginName}: ${line.text}`,
+        }),
+      );
+      await expect(onOpenOf(args.view)).toHaveBeenLastCalledWith(line);
+    }
+
+    await expect(workbench.getByText(deploys.text)).toBeVisible();
   },
 };
 

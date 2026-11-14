@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { argoInstructions } from '@repo/contracts/agents/argo-instructions';
 import {
   OperationWaitId,
   type PluginInstruction,
@@ -45,11 +46,13 @@ const result = (
   content: [{ type: 'text', text: JSON.stringify(value) }],
 });
 
-// Argo's discovery line, then each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
+// Argo's discovery line, then each Argo instruction and each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
 function mcpInstructions(plugins: PluginInstruction[]): string {
   return [
     discoveryInstructions,
-    ...plugins.map(({ name, text }) => `## ${name}\n\n${text}`),
+    ...[...argoInstructions, ...plugins].map(
+      ({ name, text }) => `## ${name}\n\n${text}`,
+    ),
   ].join('\n\n');
 }
 

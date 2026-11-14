@@ -5,6 +5,7 @@ import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
+import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
@@ -133,12 +134,13 @@ export type FeedListProps = Pick<
   | 'header'
 >;
 
-// With no Composer below, the Feed stays where the reader is.
+// A Feed read from its start, or hidden behind another page, does not follow incoming rows.
 function anchorsOf(
   opensAtStart: boolean | undefined,
+  focused: boolean,
 ): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
   return {
-    maintainScrollAtEnd: opensAtStart ? false : followEnd,
+    maintainScrollAtEnd: opensAtStart || !focused ? false : followEnd,
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
   };
@@ -155,7 +157,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...anchorsOf(props.opensAtStart),
+    ...anchorsOf(props.opensAtStart, useScreenFocused()),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

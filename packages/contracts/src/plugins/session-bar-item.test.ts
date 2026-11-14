@@ -28,7 +28,7 @@ it.each([
   expect(SessionBarItem.safeParse(item).success).toBe(false);
 });
 
-it('asks the Session bar for one item per Plugin and Session, shown one at a time', () => {
+it('accepts multiple lines per Plugin and Session, with one line on the phone strip', () => {
   const input = {
     slotId: sessionBarSlotId,
     contexts: [{ sessionId: 'session', projectId: 'argo' }],
@@ -38,7 +38,7 @@ it('asks the Session bar for one item per Plugin and Session, shown one at a tim
   expect(slotRegistry.find(({ id }) => id === sessionBarSlotId)).toMatchObject({
     content: {
       key: 'sessionId',
-      limit: { phone: 1, desktop: 1, perPlugin: 1 },
+      limit: { phone: 1, desktop: 1, perPlugin: null },
     },
   });
 });

@@ -114,7 +114,7 @@ it.each(liveHeaderMocks)(
           (await context.caller.session.list({ archived: false })).sessions[0]
             ?.activity,
       )
-      .toBe('Allow tests?');
+      .toBe('Awaiting approval');
   },
 );
 

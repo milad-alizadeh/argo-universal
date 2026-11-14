@@ -28,3 +28,15 @@ export const sessionPageBar: SessionBarProps = {
   hidden: [deploysLine, coverageLine],
   onOpen: () => {},
 };
+
+export const secondIssueLine: SessionBarEntry = {
+  ...issueLine,
+  text: '#413 · Open',
+  path: '/issues/413',
+  tone: 'success',
+};
+
+export const attachedIssuesBar: SessionBarProps = {
+  ...sessionPageBar,
+  hidden: [secondIssueLine, ...sessionPageBar.hidden],
+};

@@ -34,7 +34,7 @@ export const rules: {
       information: {
         ...information,
         status: 'needs_input',
-        activity: 'Run the checks',
+        activity: 'Awaiting approval',
       },
       running: true,
     },
