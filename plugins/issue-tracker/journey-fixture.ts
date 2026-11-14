@@ -4,6 +4,7 @@ import {
   startPluginTest,
   type OpenPage,
   type PluginTest,
+  type PluginTestOptions,
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
 import { githubFixture, type GitHubFixture } from './github-fixture';
@@ -47,17 +48,25 @@ export async function chooseGithub(page: OpenPage): Promise<void> {
   expect(chosen(page)).toBe(true);
 }
 
+const issueTracker = {
+  directory: fileURLToPath(new URL('.', import.meta.url)),
+  pluginId: 'issue-tracker',
+  version: '0.0.0',
+};
+
 // The tracker over a fixture GitHub, not signed in; its Plugin clock only moves when the test moves it.
-export async function trackedGitHub(projects = [project]): Promise<Tracked> {
+export async function trackedGitHub(
+  projects = [project],
+  options: Pick<PluginTestOptions, 'secretStore'> = {},
+): Promise<Tracked> {
   const github = await githubFixture();
 
   const test = await startPluginTest({
-    directory: fileURLToPath(new URL('.', import.meta.url)),
-    pluginId: 'issue-tracker',
-    version: '0.0.0',
+    ...issueTracker,
     projects,
     network: github.network,
     clockStart: 0,
+    ...options,
   });
 
   onTestFinished(() => test.close());

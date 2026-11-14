@@ -1,4 +1,5 @@
 import type { PluginClock } from '../clock';
+import { accountUnavailable } from './account-unavailable';
 
 const providerLimitMs = 3000;
 
@@ -6,11 +7,13 @@ const providerLimitMs = 3000;
 export async function providerDeadline<T>(
   clock: PluginClock,
   run: (signal: AbortSignal) => Promise<T>,
-): Promise<T | null> {
+): Promise<T> {
   const deadline = providerTimeout(clock);
 
   try {
-    return await firstResult(run(deadline.signal), deadline.expired);
+    return await Promise.race([run(deadline.signal), deadline.expired]);
+  } catch {
+    throw accountUnavailable();
   } finally {
     deadline.cancel();
   }
@@ -18,16 +21,16 @@ export async function providerDeadline<T>(
 
 type Deadline = {
   signal: AbortSignal;
-  expired: Promise<null>;
+  expired: Promise<never>;
   cancel: () => void;
 };
 
 function providerTimeout(clock: PluginClock): Deadline {
   const controller = new AbortController();
-  const expired = Promise.withResolvers<null>();
+  const expired = Promise.withResolvers<never>();
 
   const cancel = clock.schedule(
-    expire(controller, expired.resolve),
+    expire(controller, expired.reject),
     providerLimitMs,
   );
 
@@ -40,18 +43,13 @@ function providerTimeout(clock: PluginClock): Deadline {
 
 function expire(
   controller: AbortController,
-  resolve: (value: null) => void,
+  reject: (reason: Error) => void,
 ): () => void {
   return () => {
+    reject(accountUnavailable());
     controller.abort();
-    resolve(null);
   };
 }
-
-const firstResult = <T>(
-  work: Promise<T>,
-  expired: Promise<null>,
-): Promise<T | null> => Promise.race([work.catch(() => null), expired]);
 
 const releaseTimeout =
   (cancel: () => void, controller: AbortController): (() => void) =>
