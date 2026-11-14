@@ -226,6 +226,10 @@ _Avoid_: Subscriber, owner, registration
 One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
 _Avoid_: Job, cron, tick
 
+**Watch**:
+One run of a Plugin's declared watch entry on its interval, for one Project, whether or not an App is open. Unlike a Background pass it may act: it reads, and it may prompt or archive the Project's Sessions within the Capabilities its manifest declares.
+_Avoid_: Watcher, poller, Background pass (for one that acts)
+
 **Nav badge**:
 The count a Plugin puts on one of its own nav items with `argo.nav.badge(id, count)`; zero clears it. It belongs to the whole Plugin, not to a Project, so the Plugin sets the total it wants shown.
 _Avoid_: Nav count, badge count, unread count
@@ -295,6 +299,18 @@ _Avoid_: Status, state
 **PR association**:
 A Plugin's own record that a Session produced one pull request, named by its repository and number. It survives a branch switch and a Server restart until detached, and it makes the pull request a Change in that Session.
 _Avoid_: PR link, attachment
+
+**Auto-fix**:
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. It is off until turned on.
+_Avoid_: Babysit, watch, auto-repair
+
+**Auto-merge**:
+The code host's own promise to merge an Open pull request once its required Checks and reviews pass. Argo turns it on or off and reads it back; it keeps no copy.
+_Avoid_: Merge when ready (for the concept), auto-land
+
+**Auto-archive**:
+A person's choice, per PR association, that the Session is archived once that pull request is Merged or Closed and the Session has no other Open Change and no uncommitted files. It is off until turned on.
+_Avoid_: Auto-close, cleanup
 
 **Comparison**:
 What a Checkout's changed files are measured against: `main`, `uncommitted`, or another branch.

@@ -1,6 +1,6 @@
 # The Server owns the Prompt queue
 
-A Session owns its durable, ordered Queued Prompts so prepared work survives Apps disconnecting and the Server restarting. App submission queues while a Turn runs or the queue is paused; existing Agent and Plugin Prompt callers keep their busy behavior. Queue records go through the Writer, never persisted machine snapshots (ADR-0002, ADR-0003).
+A Session owns its durable, ordered Queued Prompts so prepared work survives Apps disconnecting and the Server restarting. App submission queues while a Turn runs or the queue is paused; existing Agent and Plugin Prompt callers keep their busy behavior. Queue records go through the Writer, never persisted machine snapshots (ADR-0002, ADR-0003). [ADR-0055](0055-plugins-prompt-and-archive-sessions-from-a-watch.md) amends this: a Plugin Prompt to a busy or paused Session is appended behind the queued work with its Plugin sender, and a Plugin never edits, moves or resumes the queue.
 
 Normal completion starts one Queued Prompt per Turn in current order. Stop, error and restart preserve remaining work and pause processing until Resume queue; adding work never resumes it. A Prompt that cannot start stays queued and pauses processing. Once its Turn starts it stays in the Feed on failure and is never automatically repeated. Dispatch respects the cancelled request boundary in ADR-0024, applies held configuration, runs prompt Hooks at execution time and preserves attachments and user provenance (ADR-0012).
 

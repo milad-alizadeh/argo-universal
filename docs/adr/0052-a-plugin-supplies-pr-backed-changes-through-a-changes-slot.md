@@ -1,6 +1,6 @@
 # A Plugin supplies PR-backed Changes through a Changes Slot
 
-This amends [ADR-0037](0037-plugins-declare-the-data-they-need.md) and builds on [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md), [ADR-0036](0036-plugins-own-sign-in-and-argo-brokers-their-accounts.md) and [ADR-0039](0039-the-workbench-summarises-sections-and-the-inspector-shows-them-in-full.md) (owner, 2026-11-13, #2025, spec #2024; amended for refresh and failure by #2028; amended by the owner on 2026-11-13, see "The Inspector holds no pull requests"). ADR-0037 said the Session Slot context carries no PR or check and that `SessionInfo.pullRequest` stays null, so core models neither. That line held while nothing supplied pull requests. The Workbench and Inspector already draw several Changes, and a Session can produce several PRs over time, so the data now needs a typed way in that keeps GitHub out of core.
+This amends [ADR-0037](0037-plugins-declare-the-data-they-need.md) and builds on [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md), [ADR-0036](0036-plugins-own-sign-in-and-argo-brokers-their-accounts.md) and [ADR-0039](0039-the-workbench-summarises-sections-and-the-inspector-shows-them-in-full.md) (owner, 2026-11-13, #2025, spec #2024; amended for refresh and failure by #2028; amended by the owner on 2026-11-13, see "The Inspector holds no pull requests"; amended by the owner on 2026-11-14, see "PR automation and the row menu"). ADR-0037 said the Session Slot context carries no PR or check and that `SessionInfo.pullRequest` stays null, so core models neither. That line held while nothing supplied pull requests. The Workbench and Inspector already draw several Changes, and a Session can produce several PRs over time, so the data now needs a typed way in that keeps GitHub out of core.
 
 ## Decision
 
@@ -30,6 +30,20 @@ Decided by the owner on 2026-11-13, replacing the provisional Changes UI that #2
 - **The PR Operations stay for Agents:** `attach`, `detach`, `discover`, `list`, `refresh`, `files` and `diff`, with `files` and `diff` Agent-only. The Plugin, the Slot, the refresh lifecycle, the Checks data, and the `stale` and `onCheckout` data stay. The client's `remoteChanges`, change selection, association, discovery and unread hooks and outcome parsers are removed.
 - **The Checkout's totals are never added to a PR's and never shown as a PR's.**
 - **The Composer's Changes pill is the entry to the Inspector Changes tab.** It shows the Checkout's files and line totals above the Composer, never a PR's, and is hidden while the Checkout has no changes. Pressing it opens the Changes tab in the Inspector, or the Changes sheet on a phone.
+
+## PR automation and the row menu
+
+Decided by the owner on 2026-11-14, for spec #2093, after a grilling and the Paper board "PR automation menu" (Option A). Where this section conflicts with the sections above, this section holds.
+
+- **A PR row has a menu.** "The row has no menu" no longer holds. Each PR-backed Change row has a "…" that opens a menu, and a long-press opens the same menu on phones. Pressing the row still opens the PR on GitHub. The menu holds, in three groups: Open on GitHub and Copy link; Auto-fix, Auto-merge and Auto-archive as checkmark items; and Detach from Session, which runs `github.detach`. Core draws the menu and its words; the Plugin supplies only data.
+- **Phones list PRs.** The phone Changes sheet shows the Session's PR rows, with the same menu, above the Checkout's files. The wide Inspector's Changes tab still holds no PRs.
+- **The Change carries its automation as typed data.** An optional `automation` field holds `fix`, `merge` and `archive`, each `{ on, available, reason? }`. `reason` explains an unavailable item or a stopped Auto-fix, and the App draws it as the item's subtitle. An absent field means the Plugin offers no automation and the menu shows none of the three.
+- **Toggles run one Operation.** `github.automation.set({ reference, kind, on })` (`act`, caller Project and Session) sets one toggle on one attached PR. A person's tap applies at once. An Agent may call it at the `confirm` tier.
+- **Auto-fix and Auto-archive are the Plugin's own data.** They are columns on the PR association row, off by default, and they act from the Plugin's Watch through `sessions:prompt` and `sessions:archive` ([ADR-0055](0055-plugins-prompt-and-archive-sessions-from-a-watch.md)).
+  - **Auto-fix** prompts the Session once per new failed Check, review comment or merge conflict, naming the PR and what failed. After three Prompts on one head commit with no new push, it turns itself off and gives the reason "Stopped after 3 tries on `<sha>`".
+  - **Auto-archive** archives the Session once its PR is Merged or Closed and the Session has no other Open Change and no uncommitted files.
+- **Auto-merge is GitHub's own and is the one GitHub write.** "No Operation changes a PR on GitHub" no longer holds for Auto-merge alone. `github.automation.set` with `kind: 'merge'` enables or disables GitHub's auto-merge through `api.github.com/graphql`, choosing the first method the repository allows in the order squash, merge, rebase. The Plugin stores nothing: `on` is read back from the pull request, so auto-merge turned on in GitHub shows as on. It is unavailable, with a reason, when the repository does not allow auto-merge, the PR is a draft, or the PR is not Open. Every other GitHub write stays out of scope.
+- **New reads.** The Plugin reads each attached PR's review comments, its auto-merge state and the repository's merge settings, through named reads as above.
 
 ## Reconciling #1300
 
