@@ -4,7 +4,7 @@ import { z } from 'zod';
  * What a Plugin's manifest declares it needs from the machine (ADR-0030). The Server checks every
  * `argo.fs`, `argo.process`, `argo.fetch` and `argo.sessions` call: `argo.fs` reaches only the
  * registered Projects, read-only, and the Plugin's own data folder, which need no Capability;
- * `argo.process`, `argo.fetch` and `argo.sessions` reach only what these declare.
+ * `argo.process`, `argo.fetch` and `argo.sessions` reach only what these declare (`sessions:read`, `sessions:archive`).
  */
 
 // Variables that load code or name a program bypass any command allowlist, so no Plugin may set them (ADR-0030).
@@ -194,11 +194,36 @@ const HookCapability = z.strictObject({
 // `argo.sessions.get` tells a Plugin which branch the user works on in each Session, so it is declared too.
 const SessionsCapability = z.strictObject({ kind: z.literal('sessions:read') });
 
+// `argo.sessions.archive` archives a Session as the App does, with no confirm tier: the person's choice in the Plugin is the consent (ADR-0055).
+const SessionsArchiveCapability = z.strictObject({
+  kind: z.literal('sessions:archive'),
+});
+
 export const PluginCapability = z.discriminatedUnion('kind', [
   ProcessCapability,
   FetchCapability,
   HookCapability,
   SessionsCapability,
+  SessionsArchiveCapability,
 ]);
 
 export type PluginCapability = z.infer<typeof PluginCapability>;
+
+/*
+ * What turning on a Plugin that declares a Capability tells the person it may do (ADR-0030, ADR-0055).
+ * `sessions:archive` names the act, since it carries no confirm tier of its own.
+ */
+export function consentCopy(capability: PluginCapability): string {
+  switch (capability.kind) {
+    case 'sessions:archive':
+      return 'May archive Sessions in its Projects';
+    case 'sessions:read':
+      return 'May read the branch and Project of your Sessions';
+    case 'process:exec':
+      return `May run ${capability.command}`;
+    case 'fetch':
+      return `May reach ${capability.host}`;
+    case 'hook':
+      return 'May hook the commands other Plugins run';
+  }
+}

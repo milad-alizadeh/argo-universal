@@ -2,13 +2,15 @@ import { z } from 'zod';
 import { AccountCall, OAuthCall } from '#plugin-account-calls';
 import { PluginAssetRequest } from '#plugin-assets';
 import { FsCall } from '#plugin-fs-calls';
-import { SessionGet } from '#plugin-session-calls';
+import { SessionCall, SessionGet } from '#plugin-session-calls';
 import { SlotCall } from '#plugin-slot-calls';
 import { WireJson } from '#plugin-wire-json';
 
 export {
   PluginProjectInfo,
   PluginSessionInfo,
+  SessionArchive,
+  SessionCall,
   SessionGet,
 } from '#plugin-session-calls';
 
@@ -206,7 +208,7 @@ export const ArgoRequest = z.discriminatedUnion('api', [
   PluginNavBadge,
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('projects'), action: z.literal('list') }),
-  SessionGet,
+  SessionCall,
   z.object({ api: z.literal('slots'), call: SlotCall }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
   z.object({ api: z.literal('settings'), key: z.string() }),

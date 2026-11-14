@@ -92,7 +92,7 @@ const calls: CallKinds = {
     (call, request) => secrets(call, request.call),
   ),
   sessions: {
-    describe: ({ sessionId }) => `argo.sessions.get ${sessionId}`,
+    describe: ({ action, sessionId }) => `argo.sessions.${action} ${sessionId}`,
     answer: answerSession,
   },
   assets: {
