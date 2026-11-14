@@ -69,14 +69,17 @@ const actImplementations = (
   'session.setConfigOption': (input) => configureSession(sources.open, input),
   'session.rename': (input) => renameSession(sources.open, input),
   ...agentRoleImplementations(sources),
-  'shell.stop': async (input) => stopShell(sources, input),
 });
 
 const agentRoleImplementations = (
   sources: SessionHandlerSources,
-): Pick<SessionOperationImplementations, 'session.declareSubagentRole'> => ({
+): Pick<
+  SessionOperationImplementations,
+  'session.declareSubagentRole' | 'shell.stop'
+> => ({
   'session.declareSubagentRole': (input) =>
     declareSubagentRole(sources.open, input),
+  'shell.stop': async (input) => stopShell(sources, input),
 });
 
 function feedReads(
