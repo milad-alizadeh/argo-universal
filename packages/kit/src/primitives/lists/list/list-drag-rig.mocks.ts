@@ -49,14 +49,28 @@ const queued =
     return (): void => {};
   };
 
-export function rigFor(sections: readonly MoveSection[], lanes: boolean): Rig {
+// Whether a row may land in a Section; a List's rows land anywhere, a board's only where their card names.
+export type Allows = (id: string, sectionKey: SectionKey) => boolean;
+
+const anywhere: Allows = () => true;
+
+export function rigFor(
+  sections: readonly MoveSection[],
+  lanes: boolean,
+  allows: Allows = anywhere,
+): Rig {
   const ghost: Point[] = [];
   const frames: (() => void)[] = [];
   const move = vi.fn<(move: ListMove) => void>();
 
   const drag = new ListDrag(
     async () => layer,
-    { sections, lanes, move: (resolved): void => move(resolved.move) },
+    {
+      sections,
+      lanes,
+      allows,
+      move: (resolved): void => move(resolved.move),
+    },
     {
       ghostAt: (point): number => ghost.push(point),
       slides: true,
@@ -82,8 +96,8 @@ export const cardRect = (lane: number, index: number): Rect => ({
   height: 50,
 });
 
-export function boardRig(): Rig {
-  const rig = rigFor(board, true);
+export function boardRig(allows?: Allows): Rig {
+  const rig = rigFor(board, true, allows);
 
   for (const [lane, section] of board.entries()) {
     rig.drag.registerZone(section.key, async () => ({

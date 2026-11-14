@@ -1,14 +1,12 @@
+import { nodeEventCall } from '@repo/contracts/plugins/board-moves';
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
 import {
   PageCalls,
   type PageCallsPorts,
-  type PageEvent,
   type ScopedRun,
 } from '@repo/contracts/plugins/page-calls';
 import {
   type Action,
-  type PageCall,
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
@@ -147,13 +145,14 @@ export class OpenPage {
 
     if ('action' in handler) return this.actOn(handler);
 
-    await this.call(handler, pageEventOf(node, { key, name: event, value }));
+    const reported = pageEventOf(node, { key, name: event, value });
+
+    await this.calls.call(
+      nodeEventCall(node, event, handler, reported.payload),
+      reported,
+    );
 
     return this;
-  }
-
-  private call(handler: PageCall, event: PageEvent): Promise<void> {
-    return this.calls.call(madePageCall(handler, event.payload), event);
   }
 
   // A navigation opens the page it names for the same Project, Session and App; other Actions stay in the App.

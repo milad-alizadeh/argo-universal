@@ -1,5 +1,5 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useSyncExternalStore, type RefObject } from 'react';
 import type { ViewInstance } from 'react-native';
 import { legendScroller } from './list-column-scroll';
 import type { ListDrag } from './list-drag-controller';
@@ -56,4 +56,17 @@ export function useLaneDrag(key: SectionKey, views: LaneViews): void {
   useEffect(() => {
     return drag && moving ? registerLane(drag, key, views) : undefined;
   }, [drag, moving, key, views]);
+}
+
+const unsubscribed = (): (() => void) => () => {};
+
+// While a board's card is dragged, whether lane `key` refuses it, so the lane draws as unavailable.
+export function useLaneRefuses(key: SectionKey): boolean {
+  const moves = useListMoves();
+
+  return useSyncExternalStore(moves?.drag.subscribe ?? unsubscribed, () => {
+    const lifted = moves?.drag.current()?.id;
+
+    return lifted !== undefined && moves?.order.refuses(lifted, key) === true;
+  });
 }

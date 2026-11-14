@@ -1,4 +1,4 @@
-import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
+import { nodeEventCall } from '@repo/contracts/plugins/board-moves';
 import {
   Handler,
   componentEventHandler,
@@ -140,7 +140,10 @@ async function runInApp(
   const checked = componentEventPayload(schema, sent(schema, payload));
   const from = { key: input.context.key, name, schema, payload: checked };
 
-  return pageCallOf(input)(madePageCall(handler, checked), from);
+  return pageCallOf(input)(
+    nodeEventCall(input.node, name, handler, checked),
+    from,
+  );
 }
 
 // A press reports a native event object; its call carries no payload.

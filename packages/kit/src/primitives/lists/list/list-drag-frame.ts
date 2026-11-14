@@ -14,7 +14,10 @@ import type { Schedule } from './list-next-frame';
 import { slideOffset, type Slide } from './list-slide';
 
 // What a List's drag works on: the order the List shows, read as the drag aims and drops, and how a drop moves.
-export type DragOrder = Pick<MoveOrder, 'sections' | 'lanes' | 'move'>;
+export type DragOrder = Pick<
+  MoveOrder,
+  'sections' | 'lanes' | 'move' | 'allows'
+>;
 
 // A lifted row, in the drag layer's own coordinates, and where it would land.
 export interface DragFrame {
@@ -116,8 +119,18 @@ const slidesFor = (
     ? slides(input.measured, slideFor(input.measured.source, aim))
     : still;
 
-const aimFor = ({ measured, order, point }: FrameInput): DropAim | undefined =>
-  aimAt({ ...measured, sections: order.sections, lanes: order.lanes, point });
+// Where the row would land, unless that Section refuses it, as a board's column the card does not name does.
+function aimFor(input: FrameInput): DropAim | undefined {
+  const { measured, order, point, lift } = input;
+  const aim = aimAt({
+    ...measured,
+    sections: order.sections,
+    lanes: order.lanes,
+    point,
+  });
+
+  return aim && order.allows(lift.id, aim.place.sectionKey) ? aim : undefined;
+}
 
 // What a drag draws for the pointer at `point`: the lifted row, its insertion line, and the rows moved aside.
 export function dragFrame(input: FrameInput): DragFrame {

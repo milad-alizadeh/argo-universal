@@ -190,6 +190,10 @@ _Avoid_: Local state, `useState`, params (for what the App keeps)
 A named handler prop on a kit component, such as `onPress`. In a Plugin tree it holds a value, never a function: a navigation, a Page state change, or an Operation with its arguments.
 _Avoid_: Interaction, action (Action is a kit component), handler
 
+**Board**:
+A kit component of columns of cards that a person moves between columns, by drag or from a card's menu. Each card names the columns it may move to, and a move fills an Operation call with the card and its new column. The kit draws a Board's columns as a List's lanes, so "lane" is the kit's word inside and "column" the Plugin's.
+_Avoid_: Kanban, lanes (for the Plugin's columns)
+
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
 _Avoid_: Permission (that is the Agent's Permission request), scope, entitlement
