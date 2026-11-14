@@ -11,6 +11,7 @@ import {
   productCompatibility,
 } from '@repo/contracts/product-identity';
 import { z } from 'zod';
+import { argoInstructions } from './argo-instructions';
 import type { ControlClient, RunRequest } from './control-client';
 
 const mcpWaitMs = 30_000;
@@ -45,11 +46,13 @@ const result = (
   content: [{ type: 'text', text: JSON.stringify(value) }],
 });
 
-// Argo's discovery line, then each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
+// Argo's discovery line, then each Argo instruction and each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
 function mcpInstructions(plugins: PluginInstruction[]): string {
   return [
     discoveryInstructions,
-    ...plugins.map(({ name, text }) => `## ${name}\n\n${text}`),
+    ...[...argoInstructions, ...plugins].map(
+      ({ name, text }) => `## ${name}\n\n${text}`,
+    ),
   ].join('\n\n');
 }
 
