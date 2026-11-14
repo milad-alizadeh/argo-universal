@@ -1,3 +1,4 @@
+import type { ChangeStaleReason } from '@repo/contracts';
 import { type JSX, useState } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
@@ -30,10 +31,11 @@ export const said = (
 
 export const refresh = fn<() => Promise<void>>(() => Promise.resolve());
 
+// Opens the Account's sign-in, as the App's Issue tracker page.
+export const signIn = fn<() => void>();
+
 // The Changes of a Session whose attached PR could not be refreshed; what it shows is what was last known.
-export const staleChange = (
-  stale: 'signIn' | 'failed',
-): SessionPullRequest => ({
+export const staleChange = (stale: ChangeStaleReason): SessionPullRequest => ({
   stage: 'open',
   id: 'github:owner/app#12',
   repository: 'owner/app',
@@ -55,6 +57,8 @@ const header = { title: 'Work', status: 'idle', startedAt: null } as const;
 function Tab(props: {
   changes: readonly SessionPullRequest[];
   unread?: readonly UnreadChange[];
+  // Replaces the harness's Refresh, as a read that then succeeds.
+  onRefresh?: () => Promise<void>;
 }): JSX.Element {
   const panels = useSessionPanels(['changes']);
   const [shown, setShown] = useState(false);
@@ -73,7 +77,8 @@ function Tab(props: {
           attach,
           detach,
           discover,
-          refresh,
+          refresh: props.onRefresh ?? refresh,
+          signIn,
           unread: props.unread ?? [],
         }}
       />
@@ -82,3 +87,27 @@ function Tab(props: {
 }
 
 export const ChangesTab = Tab;
+
+// The attached pull requests were never read for want of a sign-in; a Retry that succeeds reads them.
+export function RetryingTab(): JSX.Element {
+  const [unread, setUnread] = useState<readonly UnreadChange[]>(signInUnread);
+
+  return (
+    <Tab
+      changes={[]}
+      unread={unread}
+      onRefresh={async () => {
+        await refresh();
+        setUnread([]);
+      }}
+    />
+  );
+}
+
+export const signInUnread: UnreadChange[] = [
+  {
+    repository: 'owner/app',
+    number: 31,
+    error: 'Sign in to GitHub to read this pull request.',
+  },
+];

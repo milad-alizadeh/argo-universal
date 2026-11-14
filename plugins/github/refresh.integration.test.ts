@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { attach } from './journey-calls';
+import { attach } from './journey-calls-fixture';
 import {
   attached,
   changePull,
@@ -7,7 +7,7 @@ import {
   openChanges,
   pushed,
   tick,
-} from './journey-watch';
+} from './journey-watch-fixture';
 
 const slow = 60_000;
 

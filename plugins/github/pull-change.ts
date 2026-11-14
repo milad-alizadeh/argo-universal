@@ -10,11 +10,14 @@ export type ChangeItem = {
   provider: 'github';
   repository: string;
   branch: string;
+  headRepository?: string;
   base: string;
   head: string;
   pullRequest: { number: number; url: string };
   draft?: true;
   conflict?: true;
+  // Set when this pull request is the line of work the Session's Checkout is on (see `pull-checkout.ts`).
+  onCheckout?: true;
   totals: { files: number; additions: number; deletions: number };
   // Absent while the Checks are not known, which is never the same as passed.
   checks?: CheckInfo[];
@@ -50,6 +53,7 @@ const factsOf = (
   provider: 'github',
   repository: pull.repository,
   branch: pull.branch,
+  ...(pull.headRepository && { headRepository: pull.headRepository }),
   base: pull.base,
   head: pull.head,
   pullRequest: { number: pull.number, url: pull.url },

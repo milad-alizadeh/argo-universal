@@ -1,12 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTRPC } from '#features/connection';
 import type { ChangeActions, UnreadChange } from '#features/sessions';
-import { associationsOf } from './change-associations';
-import { unreadOf } from './change-outcomes';
-import type { OperationRunner } from './page-calls-ports';
+import { associationsOf, type UnreadReading } from './change-associations';
+import { createUnreadReader, readUnread } from './unread-reader';
+import { useOpenPluginPage } from './use-plugin-opener';
 import type { ChangesContext } from './use-session-pull-requests';
 import { useOperationRunner } from './use-tree-calls';
+
+// The Plugin that provides the GitHub Account, whose sign-in page is where the App leads a person to sign in again.
+const accountPluginId = 'issue-tracker';
+
+const signInPath = '/sign-in';
 
 // Whether the GitHub Plugin is on: without it there is nothing to find, attach or retry.
 function useGithubEnabled(): boolean {
@@ -17,44 +22,48 @@ function useGithubEnabled(): boolean {
   );
 }
 
-// `github.list` for the Session; a failed read says nothing, so what is known stays.
-async function readUnread(
-  run: OperationRunner['run'],
-  session: ChangesContext,
-): Promise<UnreadChange[] | undefined> {
-  try {
-    const list = { pluginId: 'github', operation: 'list', args: {} };
-
-    return unreadOf((await run({ ...list, ...session })).result);
-  } catch {
-    return undefined;
-  }
-}
-
 const noSession: ChangesContext = { sessionId: '', projectId: '' };
 
-type Unread = [UnreadChange[], (unread: UnreadChange[]) => void];
-
 /*
- * The attached pull requests that were never read, from `github.list` once when the Session opens. A failed read of
- * that list is not shown as none: it leaves what is known, and the page's Retry reads again.
+ * The attached pull requests that were never read, from `github.list` when the Session opens and again after each
+ * Operation that changes what is attached. A failed read of that list is not shown as none: it leaves what is known, and
+ * the page's Retry reads again. Another Session starts from none, and its own answer alone may fill it.
  */
-function useUnread(session: ChangesContext): Unread {
+function useUnread(session: ChangesContext): UnreadReading {
   const { run } = useOperationRunner();
   const [unread, setUnread] = useState<UnreadChange[]>([]);
+  const latestRun = useRef(run);
   const { sessionId, projectId } = session;
 
   useEffect(() => {
-    if (!sessionId || !projectId) return;
+    latestRun.current = run;
+  });
 
-    void readUnread(run, { sessionId, projectId }).then(
-      (read) => read && setUnread(read),
-    );
-    // The runner is new each render; the Session is what changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, projectId]);
+  const reader = useMemo(
+    () =>
+      createUnreadReader(
+        () =>
+          readUnread((call) => latestRun.current(call), {
+            sessionId,
+            projectId,
+          }),
+        setUnread,
+      ),
+    [sessionId, projectId],
+  );
 
-  return [unread, setUnread];
+  useEffect(() => {
+    setUnread([]);
+
+    if (sessionId && projectId) void reader.reload();
+
+    return reader.cancel;
+  }, [reader, sessionId, projectId]);
+
+  return useMemo(
+    () => ({ unread, set: reader.set, reload: reader.reload }),
+    [unread, reader],
+  );
 }
 
 // The Session, only while the GitHub Plugin is on.
@@ -64,13 +73,25 @@ function useScope(
   return useGithubEnabled() ? session : undefined;
 }
 
-// The Session's association controls over the App's Operation runner; none while the Session has not loaded or the GitHub Plugin is off.
+/*
+ * The Session's association controls over the App's Operation runner; none while the Session has not loaded or the
+ * GitHub Plugin is off. They keep one identity until the Session, what is unread or the runner changes, so the header
+ * that holds them does not redraw for nothing.
+ */
 export function useChangeAssociations(
   session: ChangesContext | undefined,
 ): ChangeActions | undefined {
   const runner = useOperationRunner();
   const scope = useScope(session);
-  const [unread, set] = useUnread(scope ?? noSession);
+  const reading = useUnread(scope ?? noSession);
+  const openPage = useOpenPluginPage();
 
-  return scope && associationsOf(runner, scope, { unread, set });
+  return useMemo(
+    () =>
+      scope &&
+      associationsOf(runner, scope, reading, () =>
+        openPage(accountPluginId, signInPath),
+      ),
+    [runner, scope, reading, openPage],
+  );
 }

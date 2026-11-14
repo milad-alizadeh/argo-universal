@@ -1,20 +1,17 @@
+import type {
+  ChangeDiscovery,
+  ChangeStaleReason,
+  ChangeUnread,
+} from '@repo/contracts';
+
 // What looking for the Session's pull requests answered (`github.discover`), as the person is told it.
-export interface DiscoveryResult {
-  result: 'found' | 'no-match' | 'branchless' | 'not-github' | 'unavailable';
+export interface DiscoveryResult extends Omit<ChangeDiscovery, 'pullRequests'> {
   // How many pull requests it found and attached (found).
   count: number;
-  // The branch nothing was opened from (no-match).
-  branch: string;
-  // Whether signing in to GitHub again would let it look (unavailable).
-  signIn: boolean;
 }
 
 // An attached pull request GitHub could not be asked about yet, so the Changes list does not hold it.
-export interface UnreadChange {
-  repository: string;
-  number: number;
-  error: string;
-}
+export type UnreadChange = ChangeUnread;
 
 const plural = (count: number): string =>
   count === 1 ? '1 pull request' : `${count} pull requests`;
@@ -47,7 +44,7 @@ export const discoveryMessage = (found: DiscoveryResult): string =>
 export const unreadMessage = (count: number): string =>
   `${plural(count)} could not be read`;
 
-export const staleMessage = (stale: 'signIn' | 'failed'): string =>
+export const staleMessage = (stale: ChangeStaleReason): string =>
   stale === 'signIn'
     ? 'Sign in to GitHub again to refresh. Showing what was last known.'
     : 'Could not refresh. Showing what was last known.';

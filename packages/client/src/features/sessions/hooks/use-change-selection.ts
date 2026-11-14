@@ -32,6 +32,8 @@ export interface ChangeActions {
   discover: () => Promise<DiscoveryResult | undefined>;
   // Reads every attached PR again, now; the retry after a failed read or signing in again.
   refresh: () => Promise<void>;
+  // Opens the Account's sign-in, where Argo signs in to GitHub; absent where the page cannot lead there.
+  signIn?: () => void;
   // Attached PRs that were never read, so the list does not hold them; a failed first read is not an empty list.
   unread: readonly UnreadChange[];
 }

@@ -1,6 +1,7 @@
 import { tintTransitionClassName } from '@repo/kit/motion';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
+import { List } from '@repo/kit/primitives/lists/list';
 import { cn } from '@repo/kit/utils';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
@@ -11,7 +12,7 @@ import {
   ChangeStageModifier,
 } from './change-stage/change-stage';
 import { changeDescription } from './change-stage/change-stage-model';
-import { ChangeStale } from './change-stale';
+import { ChangeStale, SignInButton } from './change-stale';
 import { SessionChangeAttach } from './session-change-attach';
 import { SessionChangeDiscovery } from './session-change-discovery';
 import { SessionChangeUnread } from './session-change-unread';
@@ -72,6 +73,8 @@ function Row({ change, onSelect }: RowProps): ReactElement {
 interface RetryProps {
   actions: ChangeActions;
   show: boolean;
+  // Some Change is stale because the person must sign in.
+  signIn: boolean;
 }
 
 function RefreshControl(props: {
@@ -87,11 +90,16 @@ function RefreshControl(props: {
   );
 }
 
-function Retrying({ actions, show }: RetryProps): ReactElement {
+function Retrying({ actions, show, signIn }: RetryProps): ReactElement {
   const retry = (): void => void actions.refresh();
 
   return (
     <>
+      {signIn && actions.signIn && (
+        <View className="flex-row px-3 py-2">
+          <SignInButton onSignIn={actions.signIn} />
+        </View>
+      )}
       <SessionChangeUnread unread={actions.unread} onRetry={retry} />
       <RefreshControl show={show} onRefresh={retry} />
     </>
@@ -106,8 +114,15 @@ function Controls({
 }): ReactElement {
   return (
     <>
-      <Retrying actions={actions} show={changes.length > 0} />
-      <SessionChangeDiscovery onDiscover={actions.discover} />
+      <Retrying
+        actions={actions}
+        show={changes.length > 0}
+        signIn={changes.some(({ stale }) => stale === 'signIn')}
+      />
+      <SessionChangeDiscovery
+        onDiscover={actions.discover}
+        onSignIn={actions.signIn}
+      />
       <SessionChangeAttach onAttach={actions.attach} />
     </>
   );
@@ -115,16 +130,17 @@ function Controls({
 
 // The Inspector's Changes list: every Change the Session has, which a row opens (ADR-0039). With none, it is the way to find or attach the first.
 export function SessionChangeList(props: SessionChangeListProps): ReactElement {
-  const { actions, changes } = props;
+  const { actions, changes, onSelect } = props;
 
-  const row = (change: SessionPullRequest): ReactElement => (
-    <Row key={changeKey(change)} change={change} onSelect={props.onSelect} />
-  );
-
+  // A virtualised list (CODING_STANDARDS.md "App"), since a Session's Changes grow with each PR it opens; the controls end it.
   return (
-    <View className="p-2" accessibilityLabel="Changes">
-      {changes.map(row)}
-      {actions && <Controls actions={actions} changes={changes} />}
-    </View>
+    <List<SessionPullRequest>
+      appearance="plain"
+      accessibilityLabel="Changes"
+      items={[...changes]}
+      keyExtractor={changeKey}
+      renderItem={(change) => <Row change={change} onSelect={onSelect} />}
+      endContent={actions && <Controls actions={actions} changes={changes} />}
+    />
   );
 }

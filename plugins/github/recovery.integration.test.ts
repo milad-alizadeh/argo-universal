@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { sha } from './github-fixture';
-import { changesOf, listed } from './journey-calls';
+import { changesOf, listed } from './journey-calls-fixture';
 import { project, restart, secondSessionId } from './journey-fixture';
 import {
   attached,
@@ -10,7 +10,7 @@ import {
   refreshed,
   repository,
   tick,
-} from './journey-watch';
+} from './journey-watch-fixture';
 
 const slow = 60_000;
 

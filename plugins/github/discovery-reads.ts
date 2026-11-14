@@ -1,5 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
-import { valueAt, type Json } from './pull-info';
+import { valueAt, type Json } from './json';
 import { githubHost } from './pull-reads';
 import type { PullReference } from './pull-reference';
 

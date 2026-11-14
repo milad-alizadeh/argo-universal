@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { fileOf, setFiles } from './journey-files';
+import { fileOf, setFiles } from './journey-files-fixture';
 import {
   foreignSessionId,
   journey,

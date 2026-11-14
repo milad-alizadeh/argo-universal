@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { useSessionFeed } from '#features/feed';
 import { useChangeAssociations } from '../../plugins/use-change-associations';
 import { useChangeFiles } from '../../plugins/use-change-files';
@@ -10,12 +11,18 @@ import { withSessionPullRequests } from './with-session-pull-requests';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
-// The Session the Plugins' Changes answer for, once its Project is known.
-const changesContext = (
+// The Session the Plugins' Changes answer for, once its Project is known; one object until either changes.
+function useChangesContext(
   sessionId: string,
   { snapshot }: SessionFeed,
-): ChangesContext | undefined =>
-  snapshot ? { sessionId, projectId: snapshot.projectId } : undefined;
+): ChangesContext | undefined {
+  const projectId = snapshot?.projectId;
+
+  return useMemo(
+    () => (projectId ? { sessionId, projectId } : undefined),
+    [sessionId, projectId],
+  );
+}
 
 // An open Session with the Changes the Plugins supply, which its Workbench and Inspector draw.
 export function useWithSessionPullRequests(
@@ -23,7 +30,7 @@ export function useWithSessionPullRequests(
   feed: SessionFeed,
   props: SessionDetailViewProps,
 ): SessionDetailViewProps {
-  const context = changesContext(sessionId, feed);
+  const context = useChangesContext(sessionId, feed);
 
   return withSessionPullRequests(props, useSessionPullRequests(context), {
     changeActions: useChangeAssociations(context),

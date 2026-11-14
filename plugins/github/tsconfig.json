@@ -6,11 +6,11 @@
     "**/node_modules",
     "github-fixture-rest.ts",
     "github-fixture.ts",
-    "journey-calls.ts",
-    "journey-files.ts",
+    "journey-calls-fixture.ts",
+    "journey-files-fixture.ts",
     "journey-fixture.ts",
-    "journey-watch.ts",
-    "open-change.ts",
+    "journey-watch-fixture.ts",
+    "open-change-fixture.ts",
     "vitest.config.ts"
   ]
 }

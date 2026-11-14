@@ -1,7 +1,12 @@
 import { expect, it } from 'vitest';
 import { sha } from './github-fixture';
-import { attach } from './journey-calls';
-import { diffOfPull, fileOf, filesOfPull, setFiles } from './journey-files';
+import { attach } from './journey-calls-fixture';
+import {
+  diffOfPull,
+  fileOf,
+  filesOfPull,
+  setFiles,
+} from './journey-files-fixture';
 import { journey } from './journey-fixture';
 
 const slow = 30_000;
@@ -106,6 +111,39 @@ it(
     expect(
       await diffOfPull(run, { reference: forkReference, path: 'forked.ts' }),
     ).toMatchObject({ file: { path: 'forked.ts' } });
+  },
+  slow,
+);
+
+it(
+  'refuses a list holding a file whose status it does not know, rather than drawing it as modified',
+  async () => {
+    const run = await journey();
+
+    setFiles(run.github, reference, [
+      fileOf(changed),
+      fileOf(added, { status: 'teleported' }),
+    ]);
+    await attach(run, reference);
+
+    await expect(filesOfPull(run, { reference })).rejects.toThrow(
+      'GitHub returned an invalid list of files.',
+    );
+  },
+  slow,
+);
+
+it(
+  'refuses a list holding a file whose line counts are not numbers, rather than counting them as none',
+  async () => {
+    const run = await journey();
+
+    setFiles(run.github, reference, [fileOf(changed, { additions: 'many' })]);
+    await attach(run, reference);
+
+    await expect(filesOfPull(run, { reference })).rejects.toThrow(
+      'GitHub returned an invalid list of files.',
+    );
   },
   slow,
 );

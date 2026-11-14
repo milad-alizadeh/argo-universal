@@ -4,7 +4,7 @@ import {
   attributedChangesOf,
   changesOf,
   listed,
-} from './journey-calls';
+} from './journey-calls-fixture';
 import {
   foreignSessionId,
   journey,
@@ -13,7 +13,7 @@ import {
   secondSessionId,
   signedOutJourney,
 } from './journey-fixture';
-import { openChange } from './open-change';
+import { openChange } from './open-change-fixture';
 
 const slow = 30_000;
 
@@ -91,6 +91,24 @@ it.each([
     const run = await journey();
 
     await expect(attach(run, reference)).rejects.toThrow(why);
+    expect(await changesOf(run)).toEqual([]);
+  },
+  slow,
+);
+
+it(
+  'refuses a pull request whose counts GitHub gives as something other than numbers, and stores nothing',
+  async () => {
+    const run = await journey();
+    const pull = run.github.pulls.get(pullReference);
+
+    if (!pull) throw new Error('The fixture holds no such pull request.');
+
+    run.github.pulls.set(pullReference, { ...pull, additions: 'many' });
+
+    await expect(attach(run, pullReference)).rejects.toThrow(
+      'GitHub returned an invalid pull request.',
+    );
     expect(await changesOf(run)).toEqual([]);
   },
   slow,

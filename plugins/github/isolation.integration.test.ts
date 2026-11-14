@@ -1,5 +1,10 @@
 import { expect, it } from 'vitest';
-import { attach, changesOf, giveAccountTo, listed } from './journey-calls';
+import {
+  attach,
+  changesOf,
+  giveAccountTo,
+  listed,
+} from './journey-calls-fixture';
 import {
   caller,
   foreignSessionId,

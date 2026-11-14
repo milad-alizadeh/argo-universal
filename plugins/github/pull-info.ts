@@ -1,3 +1,5 @@
+import { count, text, valueAt, type Json } from './json';
+
 // What the Plugin keeps of a pull request GitHub described; JSON all through, so a Query can hold it.
 export type PullInfo = {
   repository: string;
@@ -8,6 +10,8 @@ export type PullInfo = {
   conflict: boolean;
   url: string;
   branch: string;
+  // The repository the branch is in; a fork's, for a pull request from a fork. Absent when GitHub no longer names it.
+  headRepository?: string;
   base: string;
   head: string;
   files: number;
@@ -15,40 +19,7 @@ export type PullInfo = {
   deletions: number;
 };
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | Json[]
-  | { [key: string]: Json };
-
 const invalid = 'GitHub returned an invalid pull request.';
-
-const isObject = (value: Json | undefined): value is { [key: string]: Json } =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const child = (value: Json | undefined, key: string): Json | undefined =>
-  isObject(value) ? value[key] : undefined;
-
-export const valueAt = (
-  value: Json,
-  path: readonly string[],
-): Json | undefined => path.reduce<Json | undefined>(child, value);
-
-const text = (pull: Json, ...path: string[]): string => {
-  const value = valueAt(pull, path);
-
-  if (typeof value === 'string' && value !== '') return value;
-
-  throw new Error(invalid);
-};
-
-const count = (pull: Json, key: string): number => {
-  const value = valueAt(pull, [key]);
-
-  return typeof value === 'number' ? value : 0;
-};
 
 const stageOf = (pull: Json): PullInfo['stage'] => {
   if (valueAt(pull, ['merged']) === true) return 'merged';
@@ -68,18 +39,28 @@ function numberOf(pull: Json): number {
   throw new Error(invalid);
 }
 
+// A fork that was deleted leaves the pull request with no head repository, which is told, not guessed.
+const headRepositoryOf = (pull: Json): Pick<PullInfo, 'headRepository'> => {
+  const name = valueAt(pull, ['head', 'repo', 'full_name']);
+
+  return typeof name === 'string' && name !== ''
+    ? { headRepository: name }
+    : {};
+};
+
 // The names and numbers GitHub gives a pull request.
 const facts = (pull: Json): Omit<PullInfo, 'stage' | 'draft' | 'conflict'> => ({
-  repository: text(pull, 'base', 'repo', 'full_name'),
+  ...headRepositoryOf(pull),
+  repository: text(pull, invalid, 'base', 'repo', 'full_name'),
   number: numberOf(pull),
-  title: text(pull, 'title'),
-  url: text(pull, 'html_url'),
-  branch: text(pull, 'head', 'ref'),
-  base: text(pull, 'base', 'ref'),
-  head: text(pull, 'head', 'sha'),
-  files: count(pull, 'changed_files'),
-  additions: count(pull, 'additions'),
-  deletions: count(pull, 'deletions'),
+  title: text(pull, invalid, 'title'),
+  url: text(pull, invalid, 'html_url'),
+  branch: text(pull, invalid, 'head', 'ref'),
+  base: text(pull, invalid, 'base', 'ref'),
+  head: text(pull, invalid, 'head', 'sha'),
+  files: count(pull, invalid, 'changed_files'),
+  additions: count(pull, invalid, 'additions'),
+  deletions: count(pull, invalid, 'deletions'),
 });
 
 // The pull request out of GitHub's reply; anything that is not one is refused, never guessed at.

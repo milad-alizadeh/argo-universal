@@ -5,7 +5,7 @@ import {
   openChanges,
   type OpenChanges,
   tick,
-} from './journey-watch';
+} from './journey-watch-fixture';
 
 const slow = 60_000;
 

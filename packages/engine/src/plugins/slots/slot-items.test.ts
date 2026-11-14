@@ -24,23 +24,29 @@ type Harness = {
   calls: PluginSlotItems;
   // What the Plugin was asked.
   sent: PluginEvent[];
-  // The refresh timers set and not yet cancelled or fired.
+  // How many refresh timers are set and not yet cancelled, so a second timer for the same list shows as two.
   refreshTimers: () => number;
   contributors: Contributors;
 };
 
 // One Plugin that fills the Changes Slot, over a clock that only counts what is scheduled.
 function harness(): Harness {
-  const timers = new Set<number>();
+  let live = 0;
   const sent: PluginEvent[] = [];
 
   const clock: PluginClock = {
     now: (): number => 0,
     delay: async (): Promise<void> => {},
     schedule: (_callback, ms): (() => void) => {
-      timers.add(ms);
+      const counted = ms === refreshMs;
+      let cancelled = false;
 
-      return (): void => void timers.delete(ms);
+      live += counted ? 1 : 0;
+
+      return (): void => {
+        live -= counted && !cancelled ? 1 : 0;
+        cancelled = true;
+      };
     },
   };
 
@@ -56,7 +62,7 @@ function harness(): Harness {
   return {
     calls,
     sent,
-    refreshTimers: () => (refreshMs === undefined ? 0 : +timers.has(refreshMs)),
+    refreshTimers: () => live,
     contributors: {
       pluginIds: ['github'],
       input,

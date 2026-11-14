@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { pullOf } from './github-fixture';
-import { attach, changesOf, detach, idsOf } from './journey-calls';
+import { attach, changesOf, detach, idsOf } from './journey-calls-fixture';
 import { journey, restart, sessionId, type Journey } from './journey-fixture';
 
 const slow = 30_000;

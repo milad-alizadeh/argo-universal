@@ -45,24 +45,54 @@ async function run(
 // The attached pull requests that were never read, held by the page, and told of each new reading.
 export interface UnreadReading {
   unread: readonly UnreadChange[];
-  set: (unread: UnreadChange[]) => void;
+  // A reading in hand, such as a refresh's; an answer that says nothing leaves what is known.
+  set: (unread: UnreadChange[] | undefined) => void;
+  // Asks `github.list` again, for what an Operation may have changed.
+  reload: () => Promise<void>;
 }
 
-const nothingUnread: UnreadReading = { unread: [], set: () => {} };
+const nothingUnread: UnreadReading = {
+  unread: [],
+  set: () => {},
+  reload: () => Promise.resolve(),
+};
 
 type Runs = Pick<ChangeActions, 'attach' | 'detach' | 'discover'>;
 
-const runsOf = (runner: OperationRunner, scope: ChangesContext): Runs => ({
+// Attaching, detaching and discovering each change what is attached, so what was never read is asked again.
+async function changing(
+  reading: UnreadReading,
+  answer: Answer | undefined,
+): Promise<Answer | undefined> {
+  if (answer) await reading.reload();
+
+  return answer;
+}
+
+const runsOf = (
+  runner: OperationRunner,
+  scope: ChangesContext,
+  reading: UnreadReading,
+): Runs => ({
   attach: async (reference) =>
-    !!(await run(runner, { operation: 'attach', scope, reference })),
+    !!(await changing(
+      reading,
+      await run(runner, { operation: 'attach', scope, reference }),
+    )),
   detach: async (change) =>
-    !!(await run(runner, {
-      operation: 'detach',
-      scope,
-      reference: referenceOfChange(change),
-    })),
+    !!(await changing(
+      reading,
+      await run(runner, {
+        operation: 'detach',
+        scope,
+        reference: referenceOfChange(change),
+      }),
+    )),
   discover: async () => {
-    const answer = await run(runner, { operation: 'discover', scope });
+    const answer = await changing(
+      reading,
+      await run(runner, { operation: 'discover', scope }),
+    );
 
     return answer && discoveryOf(answer.result);
   },
@@ -77,8 +107,10 @@ export const associationsOf = (
   runner: OperationRunner,
   scope: ChangesContext,
   reading: UnreadReading = nothingUnread,
+  signIn?: () => void,
 ): ChangeActions => ({
-  ...runsOf(runner, scope),
+  ...runsOf(runner, scope, reading),
+  ...(signIn && { signIn }),
   refresh: async () => {
     const answer = await run(runner, { operation: 'refresh', scope });
 

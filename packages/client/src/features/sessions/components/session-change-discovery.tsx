@@ -3,6 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { type DiscoveryResult, discoveryMessage } from './change-discovery';
+import { SignInButton } from './change-stale';
 
 export interface SessionChangeDiscoveryProps {
   /*
@@ -10,6 +11,8 @@ export interface SessionChangeDiscoveryProps {
    * Operation itself was refused, which the App toasts.
    */
   onDiscover: () => Promise<DiscoveryResult | undefined>;
+  // Opens the Account's sign-in, offered when the look failed because the person must sign in.
+  onSignIn?: () => void;
 }
 
 interface Looking {
@@ -39,13 +42,22 @@ const labelOf = (pending: boolean): string =>
 const toneOf = ({ result }: DiscoveryResult): 'warning' | 'muted' =>
   result === 'unavailable' ? 'warning' : 'muted';
 
-function Answer({ result }: Pick<Looking, 'result'>): ReactElement | null {
+function Answer({
+  result,
+  onSignIn,
+}: Pick<Looking, 'result'> &
+  Pick<SessionChangeDiscoveryProps, 'onSignIn'>): ReactElement | null {
   if (!result) return null;
 
   return (
-    <Text role="secondary" tone={toneOf(result)} accessibilityRole="alert">
-      {discoveryMessage(result)}
-    </Text>
+    <>
+      <Text role="secondary" tone={toneOf(result)} accessibilityRole="alert">
+        {discoveryMessage(result)}
+      </Text>
+      {result.result === 'unavailable' && result.signIn && onSignIn && (
+        <SignInButton onSignIn={onSignIn} />
+      )}
+    </>
   );
 }
 
@@ -69,7 +81,7 @@ export function SessionChangeDiscovery(
   return (
     <View className="gap-2 px-3 py-2">
       <FindButton {...discovery} />
-      <Answer result={discovery.state.result} />
+      <Answer result={discovery.state.result} onSignIn={props.onSignIn} />
     </View>
   );
 }

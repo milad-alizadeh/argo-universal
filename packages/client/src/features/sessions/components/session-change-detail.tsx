@@ -20,6 +20,8 @@ export interface SessionChangeDetailProps {
   onDetach?: (change: SessionPullRequest) => void;
   // Reads the Changes again; absent where the page offers no such control.
   onRefresh?: () => void;
+  // Opens the Account's sign-in for a Change that is stale because the person must sign in.
+  onSignIn?: () => void;
 }
 
 function BackBar({
@@ -96,7 +98,11 @@ function Body(props: SessionChangeDetailProps): ReactElement {
   return (
     <Stack direction="column" gap={3}>
       <ChangeStage {...change} />
-      <StaleBar change={change} onRefresh={props.onRefresh} />
+      <StaleBar
+        change={change}
+        onRefresh={props.onRefresh}
+        onSignIn={props.onSignIn}
+      />
       <Heading title={change.title} />
       <Facts change={change} />
       {change.checks && <PullRequestChecks {...change.checks} />}

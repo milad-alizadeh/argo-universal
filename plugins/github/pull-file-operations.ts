@@ -4,8 +4,7 @@ import { filesPerPage, type FilesReads, type PullFile } from './pull-files';
 import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
 import type { PullReference } from './pull-reference';
-
-type Caller = { projectId: string; sessionId: string };
+import type { SessionCaller } from './session-caller';
 
 // What the file Operations read through: the Plugin's associations and named reads, and the Operation scope.
 export type FileSource = ChangesSource & {
@@ -34,7 +33,7 @@ const sameRepository = (left: string, right: string): boolean =>
   left.toLowerCase() === right.toLowerCase();
 
 const isLinkOf =
-  (named: PullReference, { projectId }: Caller) =>
+  (named: PullReference, { projectId }: SessionCaller) =>
   (link: PullReference & { projectId: string }): boolean =>
     link.projectId === projectId &&
     link.number === named.number &&
@@ -47,7 +46,7 @@ const isLinkOf =
 async function requireAttached(
   { store }: FileSource,
   named: PullReference,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<void> {
   const links = await store.forSessions([caller.sessionId]);
 
@@ -63,7 +62,7 @@ type Read = { pull: PullInfo; projectId: string };
 async function readPull(
   source: FileSource,
   reference: string,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<Read> {
   const { projectId } = caller;
   const named = await namedOf(source.scope, reference, caller);
@@ -125,7 +124,7 @@ const pageOf = (
 export async function filesOf(
   source: FileSource,
   params: { reference: string; cursor?: number },
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<FilesPage> {
   const read = await readPull(source, params.reference, caller);
   const page = params.cursor ?? 1;
@@ -184,7 +183,7 @@ const patchOf = (file: PullFile): DiffPage['patch'] => ({
 export async function diffOf(
   source: FileSource,
   params: { reference: string; path: string },
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<DiffPage> {
   const read = await readPull(source, params.reference, caller);
   const file = await findFile(source, read, params.path);

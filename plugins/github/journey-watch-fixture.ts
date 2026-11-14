@@ -1,7 +1,7 @@
 import type { PluginTest } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
 import { headFrom, pullOf, type FixturePull } from './github-fixture';
-import { attach } from './journey-calls';
+import { attach } from './journey-calls-fixture';
 import {
   caller,
   changesSlot,

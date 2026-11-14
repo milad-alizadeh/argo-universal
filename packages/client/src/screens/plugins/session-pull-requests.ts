@@ -83,6 +83,12 @@ const checksOf = ({ checks }: Change): Pick<SessionPullRequest, 'checks'> => {
 const staleOf = ({ stale }: Change): Pick<SessionPullRequest, 'stale'> =>
   stale ? { stale } : {};
 
+// That the Plugin named this Change as the Checkout's own line of work, by repository and branch.
+const onCheckoutOf = ({
+  onCheckout,
+}: Change): Pick<SessionPullRequest, 'onCheckout'> =>
+  onCheckout ? { onCheckout } : {};
+
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
   ...branchesOf(change),
@@ -96,6 +102,7 @@ const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...(change.totals && { summary: change.totals }),
   ...checksOf(change),
   ...staleOf(change),
+  ...onCheckoutOf(change),
 });
 
 /*

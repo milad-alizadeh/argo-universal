@@ -1,5 +1,5 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
-import { valueAt, type Json } from './pull-info';
+import { count, text, valueAt, type Json } from './json';
 import { bodyOf, call, type PullTarget } from './pull-reads';
 
 // One changed file of a pull request, as the App's file list draws it; `patch` is the hunks GitHub gives, if any.
@@ -21,24 +21,12 @@ const invalid = 'GitHub returned an invalid list of files.';
 
 const operations = new Map<string, PullFile['operation']>([
   ['added', 'add'],
+  ['modified', 'modify'],
+  ['changed', 'modify'],
   ['copied', 'add'],
   ['removed', 'delete'],
   ['renamed', 'move'],
 ]);
-
-const text = (file: Json, key: string): string => {
-  const value = valueAt(file, [key]);
-
-  if (typeof value === 'string') return value;
-
-  throw new Error(invalid);
-};
-
-const count = (file: Json, key: string): number => {
-  const value = valueAt(file, [key]);
-
-  return typeof value === 'number' ? value : 0;
-};
 
 const oldPathOf = (file: Json): Pick<PullFile, 'oldPath'> => {
   const previous = valueAt(file, ['previous_filename']);
@@ -53,12 +41,22 @@ const patchOf = (file: Json): string => {
   return typeof patch === 'string' ? patch : '';
 };
 
+// A status GitHub gives that is not listed here is refused rather than drawn as a modification.
+function operationOf(file: Json): PullFile['operation'] {
+  const status = text(file, invalid, 'status');
+  const operation = operations.get(status);
+
+  if (!operation) throw new Error(`${invalid} Its status is '${status}'.`);
+
+  return operation;
+}
+
 const fileOf = (file: Json): PullFile => ({
-  operation: operations.get(text(file, 'status')) ?? 'modify',
-  path: text(file, 'filename'),
+  operation: operationOf(file),
+  path: text(file, invalid, 'filename'),
   ...oldPathOf(file),
-  additions: count(file, 'additions'),
-  deletions: count(file, 'deletions'),
+  additions: count(file, invalid, 'additions'),
+  deletions: count(file, invalid, 'deletions'),
   patch: patchOf(file),
 });
 

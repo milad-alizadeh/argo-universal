@@ -23,14 +23,19 @@ function sessionIdOf(params: { sessionId?: string }, caller: Given): string {
   return params.sessionId;
 }
 
-async function requireInProject(
+type SessionInfo = NonNullable<Awaited<ReturnType<Argo['sessions']['get']>>>;
+
+// The caller's Session, which must belong to the caller's Project.
+export async function sessionInProject(
   { sessions }: Pick<Argo, 'sessions'>,
   { projectId, sessionId }: SessionCaller,
-): Promise<void> {
+): Promise<SessionInfo> {
   const session = await sessions.get(sessionId);
 
   if (session?.projectId !== projectId)
     throw new Error('This Session does not belong to this Project.');
+
+  return session;
 }
 
 /*
@@ -48,7 +53,7 @@ export async function sessionCaller(
     sessionId: sessionIdOf(params, caller),
   };
 
-  await requireInProject(argo, acting);
+  await sessionInProject(argo, acting);
 
   return acting;
 }

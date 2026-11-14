@@ -6,14 +6,18 @@ import {
   type ChangesSource,
   type LinkRead,
 } from './pull-changes';
+import {
+  checkoutIdentity,
+  markedOf,
+  type CheckoutIdentity,
+} from './pull-checkout';
 import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { failureMessage } from './pull-known';
 import { fetchPull } from './pull-reads';
 import { parseReference, type PullReference } from './pull-reference';
+import { sessionInProject, type SessionCaller } from './session-caller';
 
 type ProjectInfo = Awaited<ReturnType<Argo['projects']['list']>>[number];
-
-type Caller = { projectId: string; sessionId: string };
 
 export type Scope = Pick<Argo, 'projects' | 'sessions' | 'fetch' | 'changed'> &
   Pick<ChangesSource, 'store'>;
@@ -35,27 +39,21 @@ async function projectOf(
  */
 async function checkoutOf(
   scope: Scope,
-  { projectId, sessionId }: Caller,
+  caller: SessionCaller,
 ): Promise<Checkout> {
-  const project = await projectOf(scope, projectId);
-  const session = await scope.sessions.get(sessionId);
-
-  if (session?.projectId !== projectId)
-    throw new Error('This Session does not belong to this Project.');
+  const project = await projectOf(scope, caller.projectId);
+  const session = await sessionInProject(scope, caller);
 
   return { originUrl: project.originUrl, branch: session.branch };
 }
-
-const originOf = async (scope: Scope, caller: Caller): Promise<string | null> =>
-  (await checkoutOf(scope, caller)).originUrl;
 
 // The pull request a reference names for the caller's Session, a bare number meaning the Project's own repository.
 export async function namedOf(
   scope: Scope,
   reference: string,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<PullReference> {
-  return parseReference(reference, await originOf(scope, caller));
+  return parseReference(reference, (await checkoutOf(scope, caller)).originUrl);
 }
 
 /*
@@ -64,7 +62,7 @@ export async function namedOf(
  */
 export async function discoverFor(
   scope: Scope,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<Discovered> {
   return discover(scope, await checkoutOf(scope, caller), caller);
 }
@@ -79,9 +77,12 @@ export type Attached = ReturnType<typeof changeOf>;
 export async function attach(
   scope: Scope,
   reference: string,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<Attached> {
-  const named = parseReference(reference, await originOf(scope, caller));
+  const named = parseReference(
+    reference,
+    (await checkoutOf(scope, caller)).originUrl,
+  );
   const pull = await fetchPull(scope.fetch, { ...named, ...caller });
 
   await scope.store.attach({
@@ -102,9 +103,12 @@ export async function attach(
 export async function detach(
   scope: Scope,
   reference: string,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<{ repository: string; number: number }> {
-  const named = parseReference(reference, await originOf(scope, caller));
+  const named = parseReference(
+    reference,
+    (await checkoutOf(scope, caller)).originUrl,
+  );
 
   await scope.store.detach({ ...named, ...caller });
   scope.changed();
@@ -116,6 +120,9 @@ export async function detach(
 export type Listed =
   | ChangeItem
   | { repository: string; number: number; error: string };
+
+const markedListed = (entry: Listed, checkout: CheckoutIdentity): Listed =>
+  'error' in entry ? entry : markedOf(entry, checkout);
 
 const described = (read: LinkRead): Listed =>
   read.pull.data
@@ -132,22 +139,13 @@ const described = (read: LinkRead): Listed =>
  */
 export async function list(
   source: ChangesSource,
-  { sessionId }: Caller,
+  scope: Pick<Scope, 'projects' | 'sessions'>,
+  caller: SessionCaller,
 ): Promise<{ changes: Listed[] }> {
-  return { changes: (await readLinks(source, [sessionId])).map(described) };
-}
+  const checkout = await checkoutIdentity(scope, caller);
+  const reads = await readLinks(source, [caller.sessionId]);
 
-/*
- * Asks GitHub again for the Session's pull requests, now rather than when the Slot next does: the retry a person or an
- * Agent runs after restoring access or the network. Everything the Plugin kept is made due first, so a failed read is
- * read again and what answers is what GitHub says.
- */
-export async function refresh(
-  source: ChangesSource,
-  scope: Pick<Scope, 'changed'>,
-  caller: Caller,
-): Promise<{ changes: Listed[] }> {
-  scope.changed();
-
-  return list(source, caller);
+  return {
+    changes: reads.map(described).map((entry) => markedListed(entry, checkout)),
+  };
 }

@@ -1,18 +1,15 @@
+import { isObject, type Json } from './json';
+
 // One Check of a commit as the Plugin keeps it; JSON all through, so a Query can hold it.
 export type CheckInfo = {
   name: string;
   state: 'running' | 'passed' | 'failed';
 };
 
-type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
-
 const invalid = 'GitHub returned invalid Checks.';
 
 // GitHub reads at most this many Checks of a commit in one call.
 export const checksPageSize = 100;
-
-const isObject = (value: Json | undefined): value is { [key: string]: Json } =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 // A conclusion that did not block the commit; anything else, a timeout or a cancel included, did.
 const passing: ReadonlySet<Json | undefined> = new Set([

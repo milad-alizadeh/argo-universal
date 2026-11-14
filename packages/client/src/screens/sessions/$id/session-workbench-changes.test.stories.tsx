@@ -4,11 +4,13 @@ import type { ReactElement } from 'react';
 import {
   type MockInstance,
   expect,
+  fn,
   screen,
   spyOn,
   within,
   waitFor,
 } from 'storybook/test';
+import type { SessionPullRequest } from '#features/sessions';
 import { pullRequestMocks } from '../../../features/sessions/components/session-pull-request.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -192,5 +194,69 @@ export const PreviewRestoresPrDetails: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Files' }));
     await userEvent.click(canvas.getByRole('button', firstChange));
     await expectPrDetails({ canvas });
+  },
+};
+
+const checkoutOwn = { files: 7, additions: 70, deletions: 7 };
+
+// The Session's Checkout reads these totals itself; they are never a pull request's.
+const withCheckoutTotals = (
+  pullRequests: SessionPullRequest[],
+): SessionDetailViewProps => ({
+  state: 'open',
+  ...withPullRequests(
+    {
+      ...idleSession,
+      header: {
+        ...idleSession.header,
+        changes: { open: false, onOpenChange: fn(), summary: checkoutOwn },
+      },
+    },
+    pullRequests,
+  ),
+});
+
+// Work in the Checkout that no pull request holds is said apart, as the Checkout's, and never as a pull request's totals.
+export const CheckoutTotalsShownApart: Story = {
+  args: { view: withCheckoutTotals([pullRequestMocks.checksRunning]) },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText('Not in a pull request'),
+    ).toBeVisible();
+    await expect(canvas.getByText('7 files')).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Open files of Change #45' }),
+    ).toBeVisible();
+  },
+};
+
+// The pull request that is the Checkout's own line of work carries its own totals; the Checkout's are not added beside it.
+export const CheckoutTotalsNotAddedToItsPullRequest: Story = {
+  args: {
+    view: withCheckoutTotals([
+      { ...pullRequestMocks.checksRunning, onCheckout: true },
+    ]),
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
+    await expect(canvas.queryByText('Not in a pull request')).toBeNull();
+    await expect(canvas.queryByText('7 files')).toBeNull();
+  },
+};
+
+// A Change out of date that the preview leaves out is still counted in the footer.
+export const FooterCountsOutOfDateChanges: Story = {
+  args: {
+    view: withCheckoutTotals([
+      ...severalPullRequests.slice(0, 4),
+      { ...pullRequestMocks.merged, stale: 'failed' },
+    ]),
+  },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole('button', {
+        name: '1 more open, 1 merged, 1 out of date',
+      }),
+    ).toBeVisible();
   },
 };

@@ -7,7 +7,7 @@ import {
   switchBranch,
   untilChanges,
   watchChanges,
-} from './journey-calls';
+} from './journey-calls-fixture';
 import { journey } from './journey-fixture';
 
 const slow = 30_000;

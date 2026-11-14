@@ -93,6 +93,7 @@ function Changes(props: Page): ReactElement {
       onBack={back}
       onDetach={detachOf(props.actions)}
       onRefresh={refreshOf(props.actions)}
+      onSignIn={props.actions?.signIn}
     />
   );
 }
@@ -123,8 +124,8 @@ function changesFrame(props: Page): ComponentProps<typeof InspectorBody> {
     onOpenChange: ignore,
     surface: 'bg-transparent',
     toolbar: changesToolbar(props),
-    // The files are their own virtualised list; the change detail scrolls in the Inspector's.
-    contentScrolls: props.segment === 'files',
+    // The files and the Changes list are their own virtualised lists; one Change's detail scrolls in the Inspector's.
+    contentScrolls: props.segment === 'files' || !props.selection.selected,
   };
 }
 

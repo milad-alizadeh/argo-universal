@@ -9,11 +9,13 @@ export const openChange = {
   repository: 'owner/repository',
   branch: 'feature-12',
   base: 'main',
+  headRepository: 'owner/repository',
   head: sha,
   pullRequest: {
     number: 12,
     url: 'https://github.com/owner/repository/pull/12',
   },
+  onCheckout: true,
   totals: { files: 3, additions: 10, deletions: 2 },
   checks: [],
 };

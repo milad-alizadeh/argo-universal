@@ -28,6 +28,19 @@ it('accepts a PR-backed Change with draft and conflict both set', () => {
   expect(Change.parse(pullRequest)).toEqual(pullRequest);
 });
 
+it("accepts the head repository and the mark of the Checkout's own line of work, and only as true", () => {
+  const marked = {
+    ...pullRequest,
+    headRepository: 'fork-owner/repository',
+    onCheckout: true,
+  };
+
+  expect(Change.parse(marked)).toEqual(marked);
+  expect(Change.safeParse({ ...marked, onCheckout: false }).success).toBe(
+    false,
+  );
+});
+
 it.each(['working', 'branch'])(
   'accepts a %s Change with no PR number, repository or provider',
   (stage) => {

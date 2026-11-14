@@ -1,3 +1,4 @@
+import type { ChangeStaleReason } from '@repo/contracts';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
@@ -10,7 +11,9 @@ import {
   ChangesTab,
   discover,
   refresh,
+  RetryingTab,
   said,
+  signIn,
   staleChange,
   unreadChanges,
 } from './session-change-states.test.mocks';
@@ -22,6 +25,7 @@ const meta = {
     discover.mockReset();
     refresh.mockClear();
     attach.mockClear();
+    signIn.mockClear();
   },
 } satisfies Meta;
 
@@ -48,6 +52,23 @@ async function find(context: Context): Promise<void> {
     await screen.findByRole('button', findPullRequests),
   );
 }
+
+// A failure that signing in would mend leads to the Account's existing sign-in; any other has no such button.
+async function leadsToSignIn(
+  { userEvent }: Context,
+  expected: boolean,
+): Promise<void> {
+  const button = screen.queryByRole('button', { name: 'Sign in to GitHub' });
+
+  if (!expected) return expect(button).toBeNull();
+
+  await userEvent.click(
+    button ?? (await screen.findByRole('button', signInButton)),
+  );
+  await expect(signIn).toHaveBeenCalledTimes(1);
+}
+
+const signInButton = { name: 'Sign in to GitHub' };
 
 const atWidth =
   (width: 'phone' | 'wide'): (() => Promise<void>) =>
@@ -120,6 +141,8 @@ function answers(
         await expect(screen.queryByText(/No pull request/)).toBeNull();
         await expect(screen.queryByText(/Closed/)).toBeNull();
       }
+
+      await leadsToSignIn(context, result.signIn);
     },
   };
 }
@@ -199,7 +222,7 @@ export const WorkbenchRowShowsStale: Story = {
 
 // A Change that could not be refreshed keeps its last data in the list and its detail, and says why.
 function staleChange_(
-  stale: 'signIn' | 'failed',
+  stale: ChangeStaleReason,
   short: string,
   width: 'phone' | 'wide',
 ): Story {
@@ -223,6 +246,7 @@ function staleChange_(
       ).toBeVisible();
       await expect(screen.getByText(title)).toBeVisible();
       await expect(screen.queryByText('Closed')).toBeNull();
+      await leadsToSignIn(context, stale === 'signIn');
 
       await context.userEvent.click(
         screen.getByRole('button', { name: 'Refresh' }),
@@ -285,3 +309,29 @@ function unreadNotice(width: 'phone' | 'wide'): Story {
 export const UnreadNoticeDesktop = unreadNotice('wide');
 
 export const UnreadNoticePhone = unreadNotice('phone');
+
+// A first read that failed for want of a sign-in is said, and a Retry that succeeds takes the notice away.
+function retryClears(width: 'phone' | 'wide'): Story {
+  return {
+    render: (): JSX.Element => <RetryingTab />,
+    beforeEach: atWidth(width),
+    play: async (context) => {
+      await showChanges(context);
+      await expect(
+        await screen.findByText('1 pull request could not be read'),
+      ).toBeVisible();
+      await expect(screen.getByText('owner/app#31')).toBeVisible();
+      await context.userEvent.click(
+        screen.getByRole('button', { name: 'Retry' }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByText(/could not be read/)).toBeNull(),
+      );
+      await expect(refresh).toHaveBeenCalledTimes(1);
+    },
+  };
+}
+
+export const UnreadNoticeClearsOnRetryDesktop = retryClears('wide');
+
+export const UnreadNoticeClearsOnRetryPhone = retryClears('phone');

@@ -23,7 +23,8 @@ export type FixturePull = {
   draft: boolean;
   mergeable_state: string;
   html_url: string;
-  additions: number;
+  // Numbers; a test may send anything else to see it refused.
+  additions: number | string;
   deletions: number;
   changed_files: number;
   head: { ref: string; sha: string; repo: { full_name: string } };
@@ -33,9 +34,11 @@ export type FixturePull = {
 // One changed file as GitHub lists a pull request's files; `patch` is absent for a binary or very large file.
 export type FixtureFile = {
   filename: string;
-  status: 'added' | 'removed' | 'modified' | 'renamed';
-  additions: number;
-  deletions: number;
+  // GitHub's statuses are added, removed, modified, renamed, copied, changed and unchanged; a test may send any other.
+  status: string;
+  // A number; a test may send anything else to see it refused.
+  additions: number | string;
+  deletions: number | string;
   patch?: string;
   previous_filename?: string;
 };

@@ -92,9 +92,23 @@ function remainderIcons(
 function remainderTexts(changes: readonly SessionPullRequest[]): string[] {
   const stages = ['open', 'merged', 'closed', 'branch', 'working'] as const;
 
+  return [...stageTexts(changes, stages), ...staleText(changes)];
+}
+
+function stageTexts(
+  changes: readonly SessionPullRequest[],
+  stages: readonly SessionPullRequest['stage'][],
+): string[] {
   return stages.flatMap((stage) => {
     const count = changes.filter((change) => change.stage === stage).length;
 
     return count ? [`${count} ${stage === 'open' ? 'more open' : stage}`] : [];
   });
+}
+
+// Changes that show what was last known say so in the footer too, since their rows may be out of the preview.
+function staleText(changes: readonly SessionPullRequest[]): string[] {
+  const stale = changes.filter((change) => change.stale).length;
+
+  return stale ? [`${stale} out of date`] : [];
 }

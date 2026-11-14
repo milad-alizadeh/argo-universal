@@ -4,8 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { expect, it, onTestFinished } from 'vitest';
-import { attach } from './journey-calls';
-import { diffOfPull, fileOf, filesOfPull, setFiles } from './journey-files';
+import { attach } from './journey-calls-fixture';
+import {
+  diffOfPull,
+  fileOf,
+  filesOfPull,
+  setFiles,
+} from './journey-files-fixture';
 import {
   foreignSessionId,
   journey,

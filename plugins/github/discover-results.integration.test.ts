@@ -5,7 +5,7 @@ import {
   discover,
   listed,
   switchBranch,
-} from './journey-calls';
+} from './journey-calls-fixture';
 import {
   foreignSessionId,
   gitlabProject,

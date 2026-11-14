@@ -7,8 +7,7 @@ import {
 } from './discovery-reads';
 import { repositoryOfOrigin, type PullReference } from './pull-reference';
 import type { PullStore } from './pull-store';
-
-type Caller = { projectId: string; sessionId: string };
+import type { SessionCaller } from './session-caller';
 
 type Scope = Pick<Argo, 'fetch' | 'changed'> & { store: PullStore };
 
@@ -56,7 +55,7 @@ async function look(
 async function remember(
   { store, changed }: Scope,
   found: readonly PullReference[],
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<void> {
   await Promise.all(found.map((pull) => store.attach({ ...caller, ...pull })));
   changed();
@@ -65,7 +64,7 @@ async function remember(
 async function lookAndRemember(
   scope: Scope,
   ready: Ready,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<Discovered> {
   const { found, looked } = await look({
     ...ready,
@@ -89,7 +88,7 @@ async function lookAndRemember(
 export async function discover(
   scope: Scope,
   checkout: Checkout,
-  caller: Caller,
+  caller: SessionCaller,
 ): Promise<Discovered> {
   const ready = readyOf(checkout);
 

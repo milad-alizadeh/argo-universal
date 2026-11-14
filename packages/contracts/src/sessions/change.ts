@@ -86,9 +86,13 @@ export const Change = z
     // The repository the Change belongs to, such as `owner/name`; for a fork PR, the repository it targets.
     repository: z.string().trim().min(1).max(nameLimit).optional(),
     branch: z.string().min(1).max(nameLimit).optional(),
+    // The repository `branch` is in: a fork's, for a pull request from a fork. With `branch` it is the Change's head identity.
+    headRepository: z.string().trim().min(1).max(nameLimit).optional(),
     base: z.string().min(1).max(nameLimit).optional(),
     head: z.string().min(shortestHead).max(longestHead).optional(),
     pullRequest: ChangePullRequest.optional(),
+    // Set when this is the same line of work as the Session's Checkout: its head is the Checkout's repository and branch (ADR-0052).
+    onCheckout: z.literal(true).optional(),
     // Both can hold at once: a draft PR may also conflict.
     draft: z.boolean().optional(),
     conflict: z.boolean().optional(),

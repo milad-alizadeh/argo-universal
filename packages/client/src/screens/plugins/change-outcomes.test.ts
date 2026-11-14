@@ -40,7 +40,8 @@ describe('unreadOf', () => {
     ).toEqual([{ repository: 'o/a', number: 2, error: 'down' }]);
   });
 
-  it('finds none in an answer of another shape', () => {
-    expect(unreadOf(null)).toEqual([]);
+  it('finds an empty answer to hold none, and an answer of another shape to say nothing', () => {
+    expect(unreadOf({ changes: [] })).toEqual([]);
+    expect(unreadOf(null)).toBeUndefined();
   });
 });
