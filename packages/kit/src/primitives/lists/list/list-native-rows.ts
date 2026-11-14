@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ListLook } from '../../../list-look';
 import { isNativeRow } from './list-native-row-mark';
 import { nativeSections } from './list-native-sections';
 import type { ListProps } from './list-props';
@@ -22,5 +23,23 @@ const unhonouredProps = [
   'maxHeight',
 ] as const satisfies (keyof ListProps<never>)[];
 
-export const asksNothingNativeLacks = (props: ListProps<never>): boolean =>
+type NativeCandidate = Pick<
+  ListProps<never>,
+  'children' | (typeof unhonouredProps)[number]
+> & { items?: readonly unknown[] };
+
+export const asksNothingNativeLacks = (props: NativeCandidate): boolean =>
   unhonouredProps.every((name) => props[name] === undefined);
+
+// Decide before loading decorates a React Native list with a RefreshControl.
+export const drawsNativeGroupedList = (
+  look: ListLook,
+  props: NativeCandidate,
+): boolean =>
+  look.phone !== undefined &&
+  asksNothingNativeLacks(props) &&
+  hasNativeChildren(props);
+
+const hasNativeChildren = (
+  props: Pick<NativeCandidate, 'items' | 'children'>,
+): boolean => props.items === undefined && holdsNativeRows(props.children);

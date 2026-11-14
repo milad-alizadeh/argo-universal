@@ -13,23 +13,17 @@ import { ChildRows } from './list-child-rows';
 import { DataList } from './list-data-list';
 import { ListMenuRows } from './list-menu-rows';
 import { NativeGroupedList } from './list-native-grouped';
-import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
+import { drawsNativeGroupedList } from './list-native-rows';
 import { hasNoRows, placeholderChildren } from './list-placeholder';
 import type { ListProps, MovesOrItems } from './list-props';
 import { ListSection } from './list-section';
-
-// iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042), unless it sets a prop that list cannot draw.
-const drawsNatively = (look: ListLook, props: ListProps<never>): boolean =>
-  look.phone !== undefined &&
-  asksNothingNativeLacks(props) &&
-  holdsNativeRows(props.children);
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();
 
   if (props.items !== undefined) return <DataList {...props} />;
 
-  if (drawsNatively(look, props))
+  if (drawsNativeGroupedList(look, props))
     return <NativeGroupedList {...props}>{props.children}</NativeGroupedList>;
 
   return <ChildRows {...props} />;
