@@ -1,5 +1,7 @@
-import type { LiveHeader } from '@repo/contracts';
+import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
+import { groupTitle } from '../../view/group-title';
+import { toolCallTitle } from '../../view/tool-call-title';
 
 type LiveToolCall = Extract<FeedGroup, { state: 'open' }>['live'];
 
@@ -11,12 +13,79 @@ export const activityKey = (activity: FeedActivity): string =>
 const openLive = (group: FeedGroup): LiveToolCall =>
   group.state === 'open' ? group.live : undefined;
 
-export const liveHeaderOf = (group: FeedGroup): LiveHeader | undefined =>
-  group.liveHeader;
+function activityCalls(activity: FeedActivity): ToolCallUpdate[] {
+  if (activity.type === 'exploration') return activity.toolCalls;
 
-// A group titled by the live header lists its live Tool call like any other.
+  return activity.type === 'tool_call' ? [activity.row] : [];
+}
+
+const groupCalls = (group: FeedGroup): ToolCallUpdate[] =>
+  group.items.flatMap(activityCalls);
+
+export const groupSummary = (group: FeedGroup): string =>
+  group.state === 'settled' ? group.title : groupTitle(groupCalls(group));
+
+function headerCall(group: FeedGroup): LiveToolCall {
+  const header = group.liveHeader;
+
+  return header ? matchingHeaderCall(group, header) : undefined;
+}
+
+function matchingHeaderCall(
+  group: FeedGroup,
+  header: LiveHeader,
+): LiveToolCall {
+  const live = callForSource(group, header.source);
+
+  if (!live) return undefined;
+
+  const title = toolCallTitle(
+    live.toolCall,
+    live.awaitingApproval,
+    group.state === 'settled',
+  );
+
+  return header.text.trim() === title.trim() ? live : undefined;
+}
+
+function callForSource(
+  group: FeedGroup,
+  source: LiveHeader['source'],
+): LiveToolCall {
+  if (source.type !== 'tool_call') return undefined;
+
+  const toolCall = groupCalls(group).find(
+    (row) => row.toolCallId === source.toolCallId,
+  );
+
+  return toolCall
+    ? { toolCall, awaitingApproval: callAwaitsApproval(group, toolCall) }
+    : undefined;
+}
+
+function callAwaitsApproval(group: FeedGroup, row: ToolCallUpdate): boolean {
+  const live = openLive(group);
+
+  return live?.toolCall.id === row.id && live.awaitingApproval;
+}
+
+function mayTitleHeader(
+  group: FeedGroup,
+  live: NonNullable<LiveToolCall>,
+): boolean {
+  return leadsGroup(group, live.toolCall.id) && !live.awaitingApproval;
+}
+
+export function liveHeaderOf(group: FeedGroup): LiveHeader | undefined {
+  const live = headerCall(group);
+
+  if (live && !mayTitleHeader(group, live)) return undefined;
+
+  return group.liveHeader;
+}
+
 export const liveToolCall = (group: FeedGroup): LiveToolCall =>
-  liveHeaderOf(group) ? undefined : openLive(group);
+  group.liveHeader ? headerCall(group) : openLive(group);
 
 const awaitsApproval = (group: FeedGroup): boolean =>
   openLive(group)?.awaitingApproval === true;
@@ -78,14 +147,18 @@ const drawsOnlyLive = (activity: FeedActivity, liveId: string): boolean =>
  * The group's title owns its live Tool call only while that call is the group's first row,
  * so the call's detail sits right under the title. Behind other rows it is a row of its own (#2044).
  */
+function leadsGroup(group: FeedGroup, liveId: string): boolean {
+  const first = drawnActivities(group)[0];
+
+  return first ? drawsOnlyLive(first, liveId) : true;
+}
+
 export function titledLiveCall(group: FeedGroup): LiveToolCall {
   const live = liveToolCall(group);
 
-  const leads = drawnActivities(group)
-    .slice(0, 1)
-    .every((first) => live && drawsOnlyLive(first, live.toolCall.id));
+  if (!live) return undefined;
 
-  return leads ? live : undefined;
+  return leadsGroup(group, live.toolCall.id) ? live : undefined;
 }
 
 // A live Tool call drawn in the group's title leaves the list, but for any detail it has.

@@ -3,6 +3,7 @@ import {
   type ToolCallTerminal,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { toolCallFacts } from '../../view/feed-row-facts';
 
 type ExitCode = NonNullable<ToolCallTerminal['exitStatus']>['exitCode'];
 
@@ -36,8 +37,7 @@ const statusOutcomes = new Map<ToolCallUpdate['status'], string>([
   ['failed', 'Failed'],
 ]);
 
-const isFailed = ({ row, exitCode }: CommandFacts): boolean =>
-  row.status === 'failed' || (exitCode !== undefined && exitCode !== 0);
+const isFailed = ({ row }: CommandFacts): boolean => toolCallFacts(row).failed;
 
 const exitOutcome = ({
   exitCode,

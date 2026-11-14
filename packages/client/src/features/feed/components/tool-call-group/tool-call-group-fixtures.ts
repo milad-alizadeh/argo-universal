@@ -1,3 +1,4 @@
+import { recordedFeedMocks } from '@repo/mocks/app';
 import { permissionMock } from '../../../../../mocks/requests/recorded-requests';
 import type { FeedGroup } from '../../view/feed-view';
 import { toFeedView } from '../../view/to-feed-view';
@@ -30,9 +31,9 @@ export const settledGroup = {
   group: toolCallGroupMock.group,
 } satisfies ToolCallGroupFixture;
 
-type RecordedPermission = (typeof permissionMock)['pending'];
+type RecordedGroup = (typeof permissionMock)['pending'];
 
-function permissionGroup({ rows, snapshot }: RecordedPermission): FeedGroup {
+function recordedGroup({ rows, snapshot }: RecordedGroup): FeedGroup {
   const group = toFeedView(rows, snapshot).items.find(
     (item): item is FeedGroup => item.type === 'group',
   );
@@ -44,10 +45,44 @@ function permissionGroup({ rows, snapshot }: RecordedPermission): FeedGroup {
 
 // The Tool call waits on the user: the group carries the Awaiting approval notice.
 export const awaitingApprovalGroup = {
-  group: permissionGroup(permissionMock.pending),
+  group: recordedGroup(permissionMock.pending),
 } satisfies ToolCallGroupFixture;
 
 // The user allowed it once: the recorded outcome closes the group.
 export const allowedOnceGroup = {
-  group: permissionGroup(permissionMock.answered),
+  group: recordedGroup(permissionMock.answered),
+} satisfies ToolCallGroupFixture;
+
+// A recorded non-zero exit changes the group's collapsed summary.
+const commandOutcomes = recordedFeedMocks.find(
+  (mock) => mock.recording === 'command-outcomes',
+);
+
+if (!commandOutcomes)
+  throw new Error('Recorded catalog needs command outcomes');
+
+export const failedCommandsGroup = {
+  group: recordedGroup(commandOutcomes),
+} satisfies ToolCallGroupFixture;
+
+const allowedCall = allowedOnceGroup.group.items
+  .flatMap((item) => (item.type === 'tool_call' ? [item.row] : []))
+  .find((row) => row._meta?.argo?.permissionOutcome);
+
+if (!allowedCall)
+  throw new Error('Recorded catalog needs an answered Tool call');
+
+export const allowedOnceHeaderGroup = {
+  group: {
+    ...allowedOnceGroup.group,
+    items: [{ type: 'tool_call' as const, row: allowedCall }],
+    liveHeader: {
+      text: allowedCall.title,
+      source: {
+        type: 'tool_call' as const,
+        toolCallId: allowedCall.toolCallId,
+      },
+      startedAt: null,
+    },
+  },
 } satisfies ToolCallGroupFixture;

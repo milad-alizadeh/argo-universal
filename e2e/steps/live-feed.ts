@@ -7,6 +7,8 @@ const feedScroll = 'feed-scroll';
 
 const commandTitle = 'Check greeting';
 
+const commandLine = 'cat greeting.txt';
+
 const groupTitle = 'Ran 1 command, Edited 1 file';
 
 Given(
@@ -18,8 +20,17 @@ Given(
   },
 );
 
+async function openGroup(feed: Locator): Promise<void> {
+  const group = feed.getByRole('button', { name: groupTitle, exact: true });
+
+  if ((await group.getAttribute('aria-expanded')) !== 'true')
+    await group.click();
+
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+}
+
 async function openEdit(feed: Locator): Promise<void> {
-  const edit = feed.getByRole('button', { name: /greeting.txt/ });
+  const edit = feed.getByRole('button', { name: /^Edited greeting\.txt/ });
   await expect(edit).toContainText('+1');
   await expect(edit).toContainText('−1');
   await edit.click();
@@ -33,9 +44,9 @@ Then(
     await expect(
       feed.getByText('The greeting is updated.', { exact: true }),
     ).toBeVisible();
-    await feed.getByRole('button', { name: groupTitle, exact: true }).click();
+    await openGroup(feed);
     await openEdit(feed);
-    await feed.getByRole('button', { name: commandTitle, exact: true }).click();
+    await feed.getByRole('button', { name: commandLine, exact: true }).click();
     await expect(
       feed.getByText('Greeting check passed', { exact: true }),
     ).toBeVisible();
@@ -44,6 +55,8 @@ Then(
 
 // The unfinished command's Turn is running, its Stop shown.
 export async function expectRunningCommand(page: Page): Promise<void> {
+  await openGroup(page.getByTestId(feedScroll));
+
   await expect(
     page
       .getByTestId(feedScroll)
@@ -97,11 +110,11 @@ Then(
 );
 
 async function openStoppedCommand(feed: Locator): Promise<void> {
-  await feed.getByRole('button', { name: groupTitle, exact: true }).click();
+  await openGroup(feed);
   await expect(
-    feed.getByRole('button', { name: /greeting.txt/ }),
+    feed.getByRole('button', { name: /^Edited greeting\.txt/ }),
   ).toBeVisible();
-  await feed.getByRole('button', { name: commandTitle, exact: true }).click();
+  await feed.getByRole('button', { name: commandLine, exact: true }).click();
   await expect(feed.getByText('Stopped', { exact: true })).toBeVisible();
   await expect(
     feed.getByText('Greeting check passed', { exact: true }),
