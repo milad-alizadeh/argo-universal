@@ -53,6 +53,8 @@ export async function detach(
   });
 }
 
+type SlotId = typeof changesSlot | typeof rowSlot;
+
 type Answer =
   ReturnType<PluginTest['slotItems']> extends AsyncGenerator<infer Item>
     ? Item
@@ -61,7 +63,7 @@ type Answer =
 async function firstAnswer(
   { test }: Journey,
   session: Caller,
-  slotId: string,
+  slotId: SlotId,
 ): Promise<Answer | undefined> {
   const controller = new AbortController();
 
@@ -80,7 +82,7 @@ type Attributed = { pluginId: string; item: object };
 async function attributedOf(
   run: Journey,
   session: Caller,
-  slotId: string,
+  slotId: SlotId,
 ): Promise<Attributed[]> {
   const answer = await firstAnswer(run, session, slotId);
 
