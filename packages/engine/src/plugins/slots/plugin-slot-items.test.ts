@@ -11,6 +11,8 @@ import { WorkerCalls } from '../runtime/worker-calls';
 import { itemsLeftOut } from './kept-items';
 import { PluginSlotItems } from './plugin-slot-items';
 
+const nothing = (): void => {};
+
 const input: SlotItemsInput = {
   slotId: sessionRowSlotId,
   contexts: [{ sessionId: 'first', projectId: 'argo' }],
@@ -49,7 +51,7 @@ function slotItems(): SlotItems {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const calls = new PluginSlotItems(workers);
+  const calls = new PluginSlotItems(workers, clock, { written: nothing });
 
   workers.run('counter', 1);
 

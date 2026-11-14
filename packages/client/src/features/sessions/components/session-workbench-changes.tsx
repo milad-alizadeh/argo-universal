@@ -1,89 +1,58 @@
-import type { ReactElement } from 'react';
+import { Text } from '@repo/kit/primitives/content/text';
+import { useState, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import {
-  StackedSummary,
-  type StackedSummaryIcon,
-} from '../../../lib/product/stacked-summary';
 import { ChangeRow } from './change-row';
-import { resolveChangeStage } from './change-stage/change-stage-model';
 import type { SessionPullRequest } from './session-pull-request';
 import { previewLimit } from './workbench-preview';
 
 interface Props {
   changes: readonly SessionPullRequest[];
-  onOpen: () => void;
+  // A row opens its own Change on its code host.
+  onOpenChange: (change: SessionPullRequest) => void;
 }
 
-// The open Changes the card previews, and the rest, which its footer groups by stage.
-interface ChangeSplit {
-  preview: SessionPullRequest[];
-  rest: SessionPullRequest[];
-}
+// Equal numbers in two repositories are two Changes; the Plugin's id tells them apart where it gave one.
+const keyOf = (change: SessionPullRequest): string =>
+  change.id ?? String(change.number);
 
-function splitChanges(changes: readonly SessionPullRequest[]): ChangeSplit {
-  const preview = changes
-    .filter((change) => change.stage === 'open')
-    .slice(0, previewLimit);
-
-  const shown = new Set(preview.map((change) => change.number));
-
-  return {
-    preview,
-    rest: changes.filter((change) => !shown.has(change.number)),
-  };
-}
-
-export function WorkbenchChangeRows({ changes, onOpen }: Props): ReactElement {
-  return <View>{previewRows(splitChanges(changes).preview, onOpen)}</View>;
-}
-
-// The footer of the Changes card: absent when every Change is already previewed.
-export function WorkbenchMoreChanges({
-  changes,
-  onOpen,
-}: Props): ReactElement | null {
-  const { rest } = splitChanges(changes);
-
-  return rest.length > 0 ? (
-    <MoreChanges changes={rest} onOpen={onOpen} />
-  ) : null;
-}
-
-const previewRows = (
-  changes: readonly SessionPullRequest[],
-  onOpen: () => void,
-): ReactElement[] =>
-  changes.map((change) => (
-    <ChangeRow key={change.number} change={change} onOpen={onOpen} />
-  ));
-
-function MoreChanges({ changes, onOpen }: Props): ReactElement {
+// "Show more" and "Show less" take the Feed's "Show more" look: plain muted text, pressed as a button.
+function Toggle(props: {
+  expanded: boolean;
+  onPress: () => void;
+}): ReactElement {
   return (
-    <Pressable
-      role="button"
-      onPress={onOpen}
-      className="rounded-control web:hover:bg-hover web:focus-visible:bg-hover"
-    >
-      <StackedSummary
-        icons={remainderIcons(changes)}
-        texts={remainderTexts(changes)}
-      />
+    <Pressable role="button" onPress={props.onPress} className="px-1 py-2">
+      <Text role="body" tone="muted">
+        {props.expanded ? 'Show less' : 'Show more'}
+      </Text>
     </Pressable>
   );
 }
 
-function remainderIcons(
+const rowsOf = (
   changes: readonly SessionPullRequest[],
-): StackedSummaryIcon[] {
-  return changes.map(({ stage }) => resolveChangeStage({ stage }));
-}
+  onOpenChange: Props['onOpenChange'],
+): ReactElement[] =>
+  changes.map((change) => (
+    <ChangeRow
+      key={keyOf(change)}
+      change={change}
+      onOpen={() => onOpenChange(change)}
+    />
+  ));
 
-function remainderTexts(changes: readonly SessionPullRequest[]): string[] {
-  const stages = ['open', 'merged', 'closed', 'branch', 'working'] as const;
+// Up to three Changes, then Show more for all of them and Show less to go back.
+export function WorkbenchChangeRows(props: Props): ReactElement {
+  const [expanded, setExpanded] = useState(false);
+  const { changes } = props;
+  const shown = expanded ? changes : changes.slice(0, previewLimit);
 
-  return stages.flatMap((stage) => {
-    const count = changes.filter((change) => change.stage === stage).length;
-
-    return count ? [`${count} ${stage === 'open' ? 'more open' : stage}`] : [];
-  });
+  return (
+    <View>
+      {rowsOf(shown, props.onOpenChange)}
+      {changes.length > previewLimit && (
+        <Toggle expanded={expanded} onPress={() => setExpanded(!expanded)} />
+      )}
+    </View>
+  );
 }

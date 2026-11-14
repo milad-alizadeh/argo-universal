@@ -1,0 +1,15 @@
+{
+  "extends": "@argo/plugin-kit/tsconfig.test.json",
+  "include": [
+    "**/*.test.ts",
+    "github-fixture-rest.ts",
+    "github-fixture.ts",
+    "journey-calls-fixture.ts",
+    "journey-files-fixture.ts",
+    "journey-fixture.ts",
+    "journey-watch-fixture.ts",
+    "open-change-fixture.ts",
+    "plugin.gen.d.ts",
+    "vitest.config.ts"
+  ]
+}

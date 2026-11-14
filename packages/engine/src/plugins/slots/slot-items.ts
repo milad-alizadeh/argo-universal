@@ -4,6 +4,7 @@ import {
   SlotItems,
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
+import { itemsLeftOut, type ItemsAnswer } from './kept-items';
 import { mergeItems, type Contribution } from './merge-items';
 import type { PluginSlotItems } from './plugin-slot-items';
 
@@ -12,6 +13,13 @@ export type Contributors = {
   input: SlotItemsInput;
   surface: PluginSurface | undefined;
   failed: (pluginId: string, slotId: string, reason: string) => void;
+  /*
+   * Starts the Plugins that fill the Slot and are enabled. A list on a refresh clock calls it for a Plugin that is not
+   * running, so one turned off and on again while the list stays open comes back into it; a list without a clock never does.
+   */
+  start: () => Promise<void>;
+  // Whether the person left the Plugin on, so a Plugin they turned off keeps no refresh clock.
+  enabled: (pluginId: string) => boolean;
 };
 
 /*
@@ -33,7 +41,36 @@ export async function* watchSlotItems(
   }
 }
 
+const noRefresh = (): void => {};
+
+// Holds the Slot's refresh clock for as long as this list is open, if the Slot has one.
+function refreshing(
+  slotItems: PluginSlotItems,
+  { input, pluginIds, enabled }: Contributors,
+): () => void {
+  const ms = itemsSlot(input.slotId)?.content.refreshMs;
+
+  return ms === undefined
+    ? noRefresh
+    : slotItems.refresh.hold(pluginIds, ms, enabled);
+}
+
 async function* merges(
+  slotItems: PluginSlotItems,
+  contributors: Contributors,
+  signal: AbortSignal,
+): AsyncGenerator<SlotItems> {
+  const release = refreshing(slotItems, contributors);
+
+  try {
+    yield* mergesOf(slotItems, contributors, signal);
+  } finally {
+    // The list is closed, so nothing asks its Plugins again for it (ADR-0052).
+    release();
+  }
+}
+
+async function* mergesOf(
   slotItems: PluginSlotItems,
   contributors: Contributors,
   signal: AbortSignal,
@@ -77,13 +114,33 @@ async function answered(
 
 async function contribution(
   slotItems: PluginSlotItems,
-  { input, failed }: Contributors,
+  { input, failed, start }: Contributors,
   pluginId: string,
 ): Promise<Contribution[]> {
-  const answer = await slotItems.items(pluginId, input);
+  const answer = await askedAgain(slotItems, { input, start }, pluginId);
 
   if (answer.ok) return [{ pluginId, items: answer.items }];
   failed(pluginId, input.slotId, answer.reason);
 
   return [];
+}
+
+const refreshes = ({ slotId }: SlotItemsInput): boolean =>
+  itemsSlot(slotId)?.content.refreshMs !== undefined;
+
+const notRunning = (answer: ItemsAnswer): boolean =>
+  !answer.ok && answer.reason === itemsLeftOut.notRunning;
+
+// A Plugin that is not running is started once if the list has a clock, then asked again.
+async function askedAgain(
+  slotItems: PluginSlotItems,
+  { input, start }: Pick<Contributors, 'input' | 'start'>,
+  pluginId: string,
+): Promise<ItemsAnswer> {
+  const answer = await slotItems.items(pluginId, input);
+
+  if (!refreshes(input) || !notRunning(answer)) return answer;
+  await start();
+
+  return slotItems.items(pluginId, input);
 }

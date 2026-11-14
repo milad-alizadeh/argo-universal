@@ -84,6 +84,8 @@ export class PluginService {
   async setEnabled(pluginId: string, enabled: boolean): Promise<void> {
     await locatePlugin(this.deps, pluginId);
     await this.deps.pluginSettings.setEnabled(pluginId, enabled);
+    // An open list's refresh clock follows the setting: off releases it, on sets it again.
+    this.deps.pluginRuntime.items.refresh.restarted(pluginId);
 
     if (!enabled) return this.deps.pluginRuntime.deactivate(pluginId);
 

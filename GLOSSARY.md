@@ -288,6 +288,14 @@ _Avoid_: Workspace, worktree (when the main checkout is also possible)
 One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
 _Avoid_: PR, pull request, diff, branch (for the work)
 
+**Stage**:
+How far a Change has come: Working, Branch, Open, Merged or Closed. A draft or a conflict describes an Open Change; it is not a Stage of its own.
+_Avoid_: Status, state
+
+**PR association**:
+A Plugin's own record that a Session produced one pull request, named by its repository and number. It survives a branch switch and a Server restart until detached, and it makes the pull request a Change in that Session.
+_Avoid_: PR link, attachment
+
 **Comparison**:
 What a Checkout's changed files are measured against: `main`, `uncommitted`, or another branch.
 _Avoid_: Base, diff target

@@ -299,11 +299,12 @@ export function generatedOperations(runner: OperationRunner) {
       declareSubagentRole: publicProcedure
         .input(operations['session.declareSubagentRole'].params)
         .output(operations['session.declareSubagentRole'].result)
-        .mutation(({ input }) =>
+        .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
             id: 'session.declareSubagentRole',
             params: input,
+            connectionSignal: ctx.connection.signal,
           }),
         ),
       rename: publicProcedure

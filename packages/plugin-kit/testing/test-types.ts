@@ -51,7 +51,9 @@ export interface PluginTestOptions {
   openBrowser?: (url: string) => Promise<void>;
   // The Plugin's Setting values; a secret one is put in the secret store before the Plugin starts.
   settings?: Map<string, PluginSettingValue>;
-  // Stands in for the OS secret store; an in-memory one when left out.
+  // A folder to keep storage and Accounts in, so a second start over the same folder is a Server restart. The caller removes it.
+  home?: string;
+  // Stands in for the OS secret store; an in-memory one when left out. Share one across starts to keep Account tokens.
   secretStore?: SecretStore;
   // What `argo.sessions.get` answers, by Session id.
   sessions?: Record<string, PluginSessionInfo>;
@@ -136,6 +138,10 @@ export interface PluginTest {
   close: () => Promise<void>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
   clock: { advance: (ms: number) => Promise<void> };
+  // Turns a Plugin off or on as the Plugin settings do: off stops its worker, on starts it when next asked for.
+  plugins: {
+    setEnabled: (pluginId: string, enabled: boolean) => Promise<void>;
+  };
   settings: Map<string, PluginSettingValue>;
   storage: {
     execute: (

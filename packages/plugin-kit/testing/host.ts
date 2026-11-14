@@ -29,12 +29,17 @@ const testSession = {
   agent: 'test-agent',
 };
 
+// The folder the Plugin keeps its storage in: the test's own, so a second start sees it, or a fresh one.
+const homeFor = ({ home }: PluginTestOptions): Promise<string> | string =>
+  home ?? mkdtemp(join(tmpdir(), 'argo-plugin-test-'));
+
 // Starts the production loader, host, worker and SQLite without the composed Engine or an App.
 export async function startPluginTest(
   options: PluginTestOptions,
 ): Promise<PluginTest> {
   const configured = await secretStoreFor(await configureTest(options));
-  const home = await mkdtemp(join(tmpdir(), 'argo-plugin-test-'));
+  const home = await homeFor(configured);
+
   const plugin = new HostedPlugin(home, configured);
 
   try {
@@ -71,6 +76,10 @@ class HostedPlugin implements PluginTest {
 
       await this.pageClock.advance(ms);
     },
+  };
+  readonly plugins: PluginTest['plugins'] = {
+    setEnabled: (pluginId, enabled) =>
+      this.service.setEnabled(pluginId, enabled),
   };
   readonly storage = {
     execute: (
@@ -155,7 +164,9 @@ class HostedPlugin implements PluginTest {
       await this.runtime.close();
     } finally {
       this.wired.accountStore.close();
-      await rm(this.home, { recursive: true, force: true });
+
+      if (!this.options.home)
+        await rm(this.home, { recursive: true, force: true });
     }
   }
 }

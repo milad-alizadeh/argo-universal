@@ -1,63 +1,46 @@
 import type { ReactNode } from 'react';
+import { Linking } from 'react-native';
 import { ChangesFiles, ChangesSheetHeader } from '#features/changes';
 import {
+  type SessionPullRequest,
   WorkbenchChangesSummary,
-  WorkbenchMoreChanges,
 } from '#features/sessions';
 import { SessionChangesTab } from '../session-changes-tab';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { changesFacts, pullRequestsOf, summaryOf } from './changes-facts';
-import type {
-  SectionCard,
-  SectionTabHandle,
-  SessionSection,
-} from './session-section';
+import type { SectionCard, SessionSection } from './session-section';
 
-const changesSummary = (
-  content: SessionInspectorContent,
-  tab: SectionTabHandle,
-): ReactNode => (
+// A pull request's row opens it on its code host, through the App's external-link opener.
+const openPullRequest = ({ url }: SessionPullRequest): void => {
+  if (url) void Linking.openURL(url);
+};
+
+const changesSummary = (content: SessionInspectorContent): ReactNode => (
   <WorkbenchChangesSummary
     pullRequests={pullRequestsOf(content)}
     summary={summaryOf(content)}
-    onOpen={tab.request}
+    onOpenChange={openPullRequest}
   />
 );
 
 /*
- * With pull requests, the card's rows and its footer each open their Change's detail, even after Files was picked;
- * without, the whole body opens the changed files.
+ * With pull requests, each row opens its own pull request and the card opens nothing; without, the whole body opens the
+ * Checkout's changed files.
  */
 const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
-  const pullRequests = pullRequestsOf(content);
-  const summary = changesSummary(content, tab);
+  const summary = changesSummary(content);
 
-  if (!pullRequests.length) return { summary, onOpen: tab.open };
-
-  return {
-    summary,
-    footer: (
-      <WorkbenchMoreChanges changes={pullRequests} onOpen={tab.request} />
-    ),
-  };
+  return pullRequestsOf(content).length
+    ? { summary }
+    : { summary, onOpen: tab.open };
 };
-
-// A Change's own header leads its detail; without one, the files take the Changes header.
-const changesSheetHeader = (content: SessionInspectorContent): ReactNode =>
-  pullRequestsOf(content).length ? undefined : <ChangesSheetHeader />;
 
 export const changesSection: SessionSection = {
   ...changesFacts,
   card: changesCard,
-  tab: (content, tab) => ({
-    body: (
-      <SessionChangesTab
-        changes={content.changes}
-        header={content.header}
-        changesRequest={tab.requested}
-      />
-    ),
-    sheetHeader: changesSheetHeader(content),
+  tab: ({ changes }) => ({
+    body: <SessionChangesTab changes={changes} />,
+    sheetHeader: <ChangesSheetHeader />,
   }),
   phone: ({ changes }) => ({
     sheetHeader: <ChangesSheetHeader />,

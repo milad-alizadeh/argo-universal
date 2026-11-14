@@ -1,0 +1,37 @@
+{
+  "id": "github-account",
+  "name": "GitHub account (fixture)",
+  "version": "1.0.0",
+  "engines": {
+    "argo": ">=0.0.0 <2"
+  },
+  "main": "index.js",
+  "icon": {
+    "sf": "key",
+    "material": "key"
+  },
+  "contributes": {
+    "nav": [],
+    "accounts": [
+      {
+        "host": "api.github.com",
+        "page": "/sign-in"
+      }
+    ],
+    "operations": [
+      {
+        "name": "ready",
+        "label": "Wake the fixture account",
+        "description": "Starts this Plugin, so its Account exists before another Plugin borrows it.",
+        "tier": "read"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.github.com",
+      "reason": "Provides the fixture Account that the GitHub Plugin borrows."
+    }
+  ]
+}

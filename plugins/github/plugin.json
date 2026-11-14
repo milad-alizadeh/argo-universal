@@ -1,0 +1,194 @@
+{
+  "id": "github",
+  "name": "GitHub",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.ts",
+  "icon": {
+    "sf": "arrow.triangle.pull",
+    "material": "merge_type"
+  },
+  "contributes": {
+    "nav": [],
+    "slots": ["argo/session/changes/v1", "argo/session/row/v1"],
+    "instructions": "instructions.md",
+    "operations": [
+      {
+        "name": "attach",
+        "label": "Attach a pull request to Session",
+        "description": "Connect the calling Session to a GitHub pull request it produced, so the Session's Changes show it. Attaching it again changes nothing.",
+        "tier": "act",
+        "keywords": ["github", "pull request", "pr", "change", "session"],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "discover",
+        "label": "Find the pull requests of the Session's branch",
+        "description": "Look on GitHub for the pull requests, open, merged or closed, opened from the calling Session's current branch, and attach each one found. Safe to repeat: earlier attached pull requests stay. Answers found, no-match, branchless, not-github or unavailable.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "branch",
+          "discover",
+          "find",
+          "session"
+        ],
+        "caller": ["project"],
+        "params": {
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        }
+      },
+      {
+        "name": "detach",
+        "label": "Detach a pull request from Session",
+        "description": "Remove one pull request from the calling Session's Changes, for one that does not belong to it. The Session's other pull requests stay, and the pull request itself is untouched on GitHub.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "change",
+          "session",
+          "remove"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "list",
+        "label": "List the Session's pull requests",
+        "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",
+        "tier": "read",
+        "keywords": ["github", "pull request", "pr", "change", "session"],
+        "caller": ["project"],
+        "params": {
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        }
+      },
+      {
+        "name": "files",
+        "label": "Read the files of an attached pull request",
+        "description": "Read one page of the files a pull request attached to the calling Session changes, against that pull request's own base and head on GitHub, never the Session's Checkout. Answers the files, the pull request's totals and the cursor of the next page.",
+        "tier": "read",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "files",
+          "diff",
+          "session"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "cursor": {
+            "type": "number",
+            "description": "The page to read, as the previous answer's nextCursor; the first when absent."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "diff",
+        "label": "Read one file's patch of an attached pull request",
+        "description": "Read the patch of one file a pull request attached to the calling Session changes, as a git patch against that pull request's own base, never the Session's Checkout.",
+        "tier": "read",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "file",
+          "diff",
+          "patch",
+          "session"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "path": {
+            "type": "string",
+            "description": "The file's path in the pull request.",
+            "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "refresh",
+        "label": "Read the Session's pull requests again",
+        "description": "Ask GitHub again for the pull requests attached to the calling Session, now: the retry after signing in again or after a failed read. Returns what list does.",
+        "tier": "read",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "retry",
+          "refresh",
+          "checks"
+        ],
+        "caller": ["project"],
+        "params": {
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        }
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "sessions:read"
+    },
+    {
+      "kind": "fetch",
+      "host": "api.github.com",
+      "reason": "Reads pull requests as the signed-in person, through the Account the Issue tracker provides."
+    }
+  ]
+}

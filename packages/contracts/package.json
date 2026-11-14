@@ -8,6 +8,8 @@
     "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
     "#plugin-assets": "./src/plugins/assets.ts",
     "#plugin-slot-registry": "./src/plugins/slot-registry.ts",
+    "#session-change": "./src/sessions/change.ts",
+    "#plugin-project-details-item": "./src/plugins/project-details-item.ts",
     "#plugin-session-bar-item": "./src/plugins/session-bar-item.ts",
     "#plugin-session-header-action": "./src/plugins/session-header-action.ts",
     "#plugin-session-workbench-card": "./src/plugins/session-workbench-card.ts",

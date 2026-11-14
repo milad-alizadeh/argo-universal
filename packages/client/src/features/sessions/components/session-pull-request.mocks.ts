@@ -9,6 +9,7 @@ const passedChecks = [
 
 // A Session's PR with its checks running, failing or passed.
 const sessionPullRequest = {
+  url: 'https://github.com/owner/app/pull/45',
   number: 45,
   title: 'Build the Session layout from spec 0003',
   stage: 'open',
@@ -63,25 +64,38 @@ export const pullRequestMocks = {
     mergeable: true,
   },
   followUp: {
+    url: 'https://github.com/owner/app/pull/46',
     number: 46,
     title: 'Wire the Inspector to the changed files',
     stage: 'open',
     modifier: 'draft',
     mergeable: false,
   },
-  merged: { ...sessionPullRequest, number: 42, stage: 'merged' },
-  closed: { ...sessionPullRequest, number: 41, stage: 'closed' },
+  merged: {
+    ...sessionPullRequest,
+    url: 'https://github.com/owner/app/pull/42',
+    number: 42,
+    stage: 'merged',
+  },
+  closed: {
+    ...sessionPullRequest,
+    url: 'https://github.com/owner/app/pull/41',
+    number: 41,
+    stage: 'closed',
+  },
 } satisfies Record<string, SessionPullRequest>;
 
 export const severalPullRequests: SessionPullRequest[] = [
   pullRequestMocks.checksRunning,
   {
     ...pullRequestMocks.checksFailing,
+    url: 'https://github.com/owner/app/pull/44',
     number: 44,
     title: 'Draw the Shell output',
   },
   {
     ...pullRequestMocks.checksPassed,
+    url: 'https://github.com/owner/app/pull/43',
     number: 43,
     title: 'Add the Inspector tab strip',
   },

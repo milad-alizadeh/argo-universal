@@ -36,8 +36,6 @@ export {
 
 export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
 
-export { WorkbenchMoreChanges } from './components/session-workbench-changes';
-
 export {
   WorkbenchMoreTasks,
   WorkbenchTasks,
@@ -146,6 +144,10 @@ export {
 
 export { type SessionPullRequest } from './components/session-pull-request';
 
+export { type CheckDetail } from './components/pull-request-checks';
+
+export { type ChangeState } from './components/change-stage/change-stage-model';
+
 export { type SessionConfigChange } from './hooks/use-session-config-change';
 
 export { liveUpdatesStopped } from './utils/live-updates-stopped';
@@ -228,8 +230,6 @@ export {
 } from './components/archive-session/archive-session-alert';
 
 export { archivedToast } from './components/archive-session/archived-toast';
-
-export { SessionChangeDetail } from './components/session-change-detail';
 
 export { SessionRow } from './components/session-row/session-row';
 

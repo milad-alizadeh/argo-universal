@@ -9,6 +9,7 @@ import {
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
+import { changedSession } from './session-detail-view-changes-pill.mocks';
 import {
   ElicitationPreview,
   elicitationSession,
@@ -141,5 +142,11 @@ export const PluginActions: Story = {
 // As iOS and Android place them: every Plugin action inside "…".
 export const PluginActionsOnPhone: Story = {
   args: pluginActionsSession(phonePluginActions()),
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// The Checkout has changes: the Composer's Changes pill shows their files and lines, centred above it.
+export const ChangesPill: Story = {
+  args: changedSession,
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };

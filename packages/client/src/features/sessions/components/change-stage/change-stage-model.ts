@@ -13,10 +13,21 @@ export const changeModifierNames = ['draft', 'conflict'] as const;
 
 type ChangeModifier = (typeof changeModifierNames)[number];
 
-// Draft and conflict describe an Open Change, without replacing its stage.
+/*
+ * Draft and conflict describe an Open Change, without replacing its stage. `modifier` is the one a single mark draws;
+ * `modifiers` holds every fact that holds, so a draft PR that also conflicts keeps both.
+ */
 export type ChangeState =
-  | { stage: 'open'; modifier?: ChangeModifier }
-  | { stage: Exclude<ChangeStageName, 'open'>; modifier?: never };
+  | {
+      stage: 'open';
+      modifier?: ChangeModifier;
+      modifiers?: readonly ChangeModifier[];
+    }
+  | {
+      stage: Exclude<ChangeStageName, 'open'>;
+      modifier?: never;
+      modifiers?: never;
+    };
 
 const stages = {
   working: { label: 'Working', icon: 'pencil', tone: 'neutral' },
@@ -31,23 +42,31 @@ const modifiers = {
   conflict: { label: 'Conflict', tone: 'warning' },
 } as const;
 
+type ModifierAppearance = (typeof modifiers)[ChangeModifier];
+
 type StageAppearance = (typeof stages)[ChangeStageName] & {
-  modifier?: (typeof modifiers)[keyof typeof modifiers];
+  // The first modifier that holds.
+  modifier?: ModifierAppearance;
 };
+
+// Every modifier that holds, draft before conflict, whichever way the state names them.
+export function changeModifiers(state: ChangeState): ModifierAppearance[] {
+  const named = new Set([...(state.modifiers ?? []), state.modifier]);
+
+  return changeModifierNames.flatMap((name) =>
+    named.has(name) ? [modifiers[name]] : [],
+  );
+}
 
 // Shared by every drawing: a modifier never changes the Open stage's glyph or tone.
 export function resolveChangeStage(state: ChangeState): StageAppearance {
-  const appearance = stages[state.stage];
+  const [modifier] = changeModifiers(state);
 
-  return state.modifier
-    ? { ...appearance, modifier: modifiers[state.modifier] }
-    : appearance;
+  return modifier ? { ...stages[state.stage], modifier } : stages[state.stage];
 }
 
 export function changeDescription(state: ChangeState): string {
-  const appearance = resolveChangeStage(state);
+  const { label } = resolveChangeStage(state);
 
-  return appearance.modifier
-    ? `${appearance.label}, ${appearance.modifier.label}`
-    : appearance.label;
+  return [label, ...changeModifiers(state).map((one) => one.label)].join(', ');
 }

@@ -4,7 +4,7 @@ import {
 } from '@repo/kit/primitives/overlays/toast';
 import type * as React from 'react';
 import type { ComposerProps } from '#features/composer';
-import { Feed, type FeedProps } from '#features/feed';
+import type { FeedProps } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
 import {
   ArchivedBanner,
@@ -24,6 +24,7 @@ import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
 import { sessionWorkbench } from './sections/session-sections';
+import { sessionFeed } from './session-changes-pill';
 import { SessionComposer } from './session-composer';
 import {
   SessionInspector,
@@ -143,7 +144,7 @@ const sessionParts = (
 ): React.ComponentProps<typeof SessionLayout> => ({
   header: bandClaim(props, panels),
   bar: sessionBar(props),
-  feed: <Feed {...props.feed} />,
+  feed: sessionFeed(props, panels),
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,

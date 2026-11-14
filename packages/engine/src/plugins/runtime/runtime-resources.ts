@@ -45,7 +45,7 @@ export class RuntimeResources {
   constructor(private readonly input: RuntimeInput) {
     this.workers = new WorkerCalls(input);
     this.data = this.pluginData(input);
-    this.items = new PluginSlotItems(this.workers);
+    this.items = new PluginSlotItems(this.workers, input.clock, this.data);
     this.operations = new PluginOperations(
       this.workers,
       input.services.heldSecrets,

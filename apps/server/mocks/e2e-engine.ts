@@ -21,6 +21,7 @@ import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
 import { scriptedDownloads } from '@repo/mocks/registry/scripted';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
+import { startGitHubFixture } from './e2e-github';
 
 const home = resolveRuntimeDirectory();
 
@@ -72,12 +73,21 @@ for (const identity of fixtureAgents) {
 
 seed.$client.close();
 
+// A scenario that needs GitHub writes its fixture beside the Server; every other scenario reaches the real network.
+const githubFixture = process.env.ARGO_E2E_GITHUB;
+
+const pluginNetwork =
+  githubFixture && existsSync(githubFixture)
+    ? await startGitHubFixture(githubFixture)
+    : undefined;
+
 const engine = composeEngine({
   cliEntry: fileURLToPath(new URL('../../cli/bin/argo.mjs', import.meta.url)),
   home,
   port,
   version,
   firstPartyPluginsDirectory: join(home, 'shipped-plugins'),
+  pluginNetwork,
   startedAt,
   now: Date.now,
   createId: randomUUID,

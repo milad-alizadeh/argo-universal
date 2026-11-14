@@ -8,17 +8,20 @@ import { WorkbenchChangeRows } from './session-workbench-changes';
 interface Props {
   pullRequests?: readonly SessionPullRequest[];
   summary?: ChangesSummary;
-  onOpen: () => void;
+  // A pull request's row opens that pull request on its code host.
+  onOpenChange: (change: SessionPullRequest) => void;
 }
 
-// The Changes card's body: the open Changes as rows, or, with no pull request, the diff total.
+// The Changes card's body: the pull requests as rows, or, with none, the Checkout's diff total.
 export function WorkbenchChangesSummary({
   pullRequests = [],
   summary,
-  onOpen,
+  onOpenChange,
 }: Props): ReactElement {
   if (pullRequests.length)
-    return <WorkbenchChangeRows changes={pullRequests} onOpen={onOpen} />;
+    return (
+      <WorkbenchChangeRows changes={pullRequests} onOpenChange={onOpenChange} />
+    );
 
   return <DiffTotal summary={summary} />;
 }
