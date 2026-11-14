@@ -14,6 +14,7 @@ import {
   ChecksDot,
   type ChecksState,
   PullRequestChecks,
+  checksState,
   type PullRequestChecksProps,
 } from './pull-request-checks';
 
@@ -52,7 +53,7 @@ export function ChangeChecks(props: ChangeChecksProps): ReactElement {
 
 function ChecksPress({ checks, onOpen }: ChangeChecksProps): ReactElement {
   return (
-    <ChangePart onPress={onOpen}>
+    <ChangePart tone={checksState(checks)} onPress={onOpen}>
       <PullRequestChecks {...checks} compact />
     </ChangePart>
   );
@@ -64,7 +65,7 @@ function ChecksPopover({ checks, details }: PopoverProps): ReactElement {
   return (
     <Popover openOnHover>
       <PopoverTrigger>
-        <ChangePart aria-haspopup="dialog">
+        <ChangePart tone={checksState(checks)} aria-haspopup="dialog">
           <PullRequestChecks {...checks} compact />
         </ChangePart>
       </PopoverTrigger>

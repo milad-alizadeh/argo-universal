@@ -36,7 +36,7 @@ const stateDot = {
 const allPassed = ({ passed, total }: PullRequestChecksProps): boolean =>
   total > 0 && passed === total;
 
-function checksState(checks: PullRequestChecksProps): ChecksState {
+export function checksState(checks: PullRequestChecksProps): ChecksState {
   if (checks.failing > 0) return 'failing';
 
   return allPassed(checks) ? 'passed' : 'running';

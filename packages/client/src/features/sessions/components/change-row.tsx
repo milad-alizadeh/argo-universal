@@ -63,7 +63,7 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
       {change.checks && (
-        <View className="pointer-events-auto">
+        <View className="pointer-events-auto ml-0.5">
           <ChangeChecks checks={change.checks} onOpen={onOpen} />
         </View>
       )}
