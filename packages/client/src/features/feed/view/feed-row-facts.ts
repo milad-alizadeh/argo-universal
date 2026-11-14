@@ -27,6 +27,8 @@ export interface ToolCallFacts {
   description: string | undefined;
   // Whether the call runs a command.
   isCommand: boolean;
+  // Whether the call failed, including a non-zero terminal exit.
+  failed: boolean;
   // The file the call works on: the first action's path, else its first location; an unclassified action still names it.
   path: string | undefined;
   // The first location the Agent named.
@@ -122,6 +124,14 @@ const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   isEdit: editKinds.has(row.kind),
   editedPaths: editedPathsOf(row),
   isCommand: row.kind === 'execute',
+  failed:
+    row.status === 'failed' ||
+    row.content.some(
+      (block) =>
+        block.type === 'terminal' &&
+        block.exitStatus?.exitCode != null &&
+        block.exitStatus.exitCode !== 0,
+    ),
   description: descriptionOf(row),
   location: firstLocation(row),
   permissionOutcome: extensionOf(row)?.permissionOutcome,

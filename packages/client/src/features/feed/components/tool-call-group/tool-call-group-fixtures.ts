@@ -1,3 +1,4 @@
+import { recordedFeedMocks } from '@repo/mocks/app';
 import { permissionMock } from '../../../../../mocks/requests/recorded-requests';
 import type { FeedGroup } from '../../view/feed-view';
 import { toFeedView } from '../../view/to-feed-view';
@@ -50,4 +51,16 @@ export const awaitingApprovalGroup = {
 // The user allowed it once: the recorded outcome closes the group.
 export const allowedOnceGroup = {
   group: permissionGroup(permissionMock.answered),
+} satisfies ToolCallGroupFixture;
+
+// A recorded non-zero exit changes the group's collapsed summary.
+const commandOutcomes = recordedFeedMocks.find(
+  (mock) => mock.recording === 'command-outcomes',
+);
+
+if (!commandOutcomes)
+  throw new Error('Recorded catalog needs command outcomes');
+
+export const failedCommandsGroup = {
+  group: permissionGroup(commandOutcomes),
 } satisfies ToolCallGroupFixture;

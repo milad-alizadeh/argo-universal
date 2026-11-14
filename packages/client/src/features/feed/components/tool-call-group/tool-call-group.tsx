@@ -23,6 +23,7 @@ import {
   visibleActivities,
 } from './group-activities';
 import { GroupLiveId } from './group-live-id';
+import { SettledGroup } from './settled-group';
 import { useGrowthAbove } from './use-growth-above';
 
 const idleHeader: LiveHeader = {
@@ -128,7 +129,14 @@ function GroupBody(props: ToolCallGroupProps): React.JSX.Element {
 
   return (
     <GroupLiveId value={live?.toolCall.id}>
-      <GroupActivities {...activities} renderActivity={props.renderActivity} />
+      <SettledGroup value={props.group.state === 'settled'}>
+        <View className={props.group.state === 'settled' ? 'ps-5' : undefined}>
+          <GroupActivities
+            {...activities}
+            renderActivity={props.renderActivity}
+          />
+        </View>
+      </SettledGroup>
     </GroupLiveId>
   );
 }

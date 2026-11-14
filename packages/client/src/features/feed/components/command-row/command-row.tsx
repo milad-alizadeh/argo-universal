@@ -16,6 +16,7 @@ import {
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
 import { GroupLiveId } from '../tool-call-group/group-live-id';
+import { SettledGroup } from '../tool-call-group/settled-group';
 import { ToolOutput } from '../tool-output';
 import {
   type CommandFooterState,
@@ -91,12 +92,21 @@ function CommandOutput(
 function CommandDisclosure(props: CommandDisclosureProps): React.JSX.Element {
   const state = commandState(props);
   const titleInGroup = use(GroupLiveId) === props.row.id;
+  const settledGroup = use(SettledGroup);
+  const disclosure = toolCallDisclosureProps(props.row, props.awaitingApproval);
+  const command =
+    settledGroup && !props.awaitingApproval
+      ? props.terminal.command.trim()
+      : '';
+  const label = command || disclosure.label;
 
   if (titleInGroup) return <CommandOutput {...props} state={state} />;
 
   return (
     <ToolCallDisclosure
-      {...toolCallDisclosureProps(props.row, props.awaitingApproval)}
+      {...disclosure}
+      label={label}
+      paths={command ? [command] : disclosure.paths}
       {...state.disclosure}
       icon="terminal"
       initialOpen={props.initialOpen}

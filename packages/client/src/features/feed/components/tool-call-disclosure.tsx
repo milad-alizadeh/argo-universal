@@ -44,7 +44,7 @@ export function ToolCallDisclosure({
   ...props
 }: ToolCallDisclosureProps): React.JSX.Element {
   return (
-    <View className="gap-1">
+    <View className="max-w-full gap-1">
       <FeedDisclosure {...props} denied={isRejected(permissionOutcome)} />
       <ToolCallPermissionOutcome outcome={permissionOutcome} />
     </View>

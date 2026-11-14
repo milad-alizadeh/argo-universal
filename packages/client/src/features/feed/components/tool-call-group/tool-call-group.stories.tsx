@@ -7,6 +7,7 @@ import {
   runningExpandedGroup,
   runningGroup,
   settledGroup,
+  failedCommandsGroup,
 } from './tool-call-group-fixtures';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
@@ -43,3 +44,5 @@ export const AwaitingApproval: Story = { args: awaitingApprovalGroup };
 
 // The permission was answered with Allow once.
 export const AllowedOnce: Story = { args: allowedOnceGroup };
+
+export const FailedCommands: Story = { args: failedCommandsGroup };

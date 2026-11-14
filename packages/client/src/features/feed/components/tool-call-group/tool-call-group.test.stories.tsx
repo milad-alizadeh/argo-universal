@@ -5,8 +5,13 @@ import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
 import { required } from '../recorded-tool-calls.mocks';
 import { scriptedToolCall } from '../tool-call-description.mocks';
-import { toolCallGroupMock, toolCallGroupMocks } from '../tool-call.mocks';
+import {
+  failedCommand,
+  toolCallGroupMock,
+  toolCallGroupMocks,
+} from '../tool-call.mocks';
 import { ToolCallGroup } from './tool-call-group';
+import { failedCommandsGroup } from './tool-call-group-fixtures';
 import {
   commandAndFileSummary,
   commandTitle,
@@ -49,7 +54,7 @@ function settled(width: number): Story {
       ).toBeVisible();
       await expect(
         canvas.getAllByRole('button', {
-          name: commandTitle,
+          name: 'cat hello.txt && git status --short',
         }),
       ).toHaveLength(1);
       await userEvent.click(group);
@@ -301,3 +306,41 @@ export const RunningCommandShowsOutput: Story = {
     await expect(canvas.getByText('Shell')).toBeVisible();
   },
 };
+
+function failedCommands(width: number): Story {
+  return {
+    args: failedCommandsGroup,
+    play: async ({ canvas, userEvent }) => {
+      await settleLayout(width);
+      const group = canvas.getByRole('button', {
+        name: 'Ran 2 commands · 1 failed',
+      });
+      await expect(group).toBeVisible();
+      const command = failedCommand.content.find(
+        (block) => block.type === 'terminal',
+      )?.command;
+      if (!command)
+        throw new Error('Recorded catalog needs the failed shell command');
+      await expect(
+        canvas.queryByRole('button', { name: command }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(group);
+      const row = canvas.getByRole('button', { name: command });
+      await expect(row).toBeVisible();
+      await expect(
+        canvas.queryByRole('button', { name: 'Ran command' }),
+      ).not.toBeInTheDocument();
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
+      await userEvent.click(row);
+      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(canvas.getByText('Exit 2')).toBeVisible();
+      await userEvent.click(row);
+      await waitFor(() =>
+        expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
+      );
+    },
+  };
+}
+
+export const FailedCommandsPhone = failedCommands(layoutWidths.phone);
+export const FailedCommandsWide = failedCommands(layoutWidths.wide);
