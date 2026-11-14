@@ -78,12 +78,12 @@ function running(width: number): Story {
       await settleLayout(width);
 
       const group = canvas.getByRole('button', {
-        name: commandTitle,
+        name: commandAndFileSummary,
       });
 
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expect(group).toHaveTextContent('short git status 23s');
+      await expect(group).toHaveTextContent('Ran 1 command, Read 1 file 23s');
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),
       ).toHaveLength(0);
@@ -93,7 +93,7 @@ function running(width: number): Story {
       ).toBeVisible();
 
       // The running command is a row of its own behind the read, so its output opens under it (#2044).
-      const [, commandRow, ...rest] = canvas.getAllByRole('button', {
+      const [commandRow, ...rest] = canvas.getAllByRole('button', {
         name: commandTitle,
       });
 

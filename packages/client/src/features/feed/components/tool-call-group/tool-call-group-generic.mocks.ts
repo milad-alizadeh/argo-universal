@@ -23,3 +23,20 @@ export function genericGroup(
     items: rows.map(toolCallActivity),
   };
 }
+
+export function genericHeaderGroup(
+  liveId: string,
+  ...earlierIds: string[]
+): FeedGroup {
+  const group = genericGroup(liveId, ...earlierIds);
+  const row = recordedToolCall(liveId);
+
+  return {
+    ...group,
+    liveHeader: {
+      text: row.title,
+      source: { type: 'tool_call', toolCallId: row.toolCallId },
+      startedAt: null,
+    },
+  };
+}

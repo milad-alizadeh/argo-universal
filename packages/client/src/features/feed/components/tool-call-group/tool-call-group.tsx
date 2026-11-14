@@ -16,6 +16,7 @@ import {
 import { toolCallIcon } from '../tool-call-icon';
 import {
   activityKey,
+  groupSummary,
   liveHeaderOf,
   liveToolCall,
   showsDuration,
@@ -56,7 +57,7 @@ type GroupDisclosureProps = Pick<
 >;
 
 function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
-  const live = liveToolCall(group);
+  const live = titledLiveCall(group);
   const running = group.state === 'open';
 
   return live
@@ -65,7 +66,17 @@ function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
         icon: toolCallIcon(live.toolCall),
         running,
       }
-    : { label: group.title, paths: [], icon: 'terminal' as const, running };
+    : groupSummaryProps(group);
+}
+
+function groupSummaryProps(group: FeedGroup): GroupDisclosureProps {
+  return {
+    label: groupSummary(group),
+    paths: [],
+    icon: 'terminal',
+    running: group.state === 'open',
+    awaitingApproval: liveToolCall(group)?.awaitingApproval,
+  };
 }
 
 function useGroupTrailing(group: FeedGroup, now?: number): string | undefined {
