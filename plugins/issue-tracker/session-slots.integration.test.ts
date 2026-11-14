@@ -104,6 +104,26 @@ it('fills the Session bar with the Issue number and state', async () => {
   ]);
 }, 20_000);
 
+it('keeps every attached Issue in the Session bar with its own page', async () => {
+  const test = await trackerWithAttachedIssue();
+  await attach(test, 'attach', 43);
+
+  const bar = await until(
+    watch(test, barSlot),
+    (answer) => itemsOf(answer).length === 2,
+  );
+
+  expect(itemsOf(bar)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ action: { path: issuePage } }),
+      expect.objectContaining({
+        action: { path: issuePage.replace('/42', '/43') },
+      }),
+    ]),
+  );
+  expect(itemsOf(bar)).toHaveLength(2);
+}, 20_000);
+
 it('leaves the row and the bar empty again once the Session is detached', async () => {
   const test = await trackerWithAttachedIssue();
   const rows = watch(test, rowSlot);

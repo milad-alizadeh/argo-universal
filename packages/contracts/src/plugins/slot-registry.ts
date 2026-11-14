@@ -203,11 +203,11 @@ export const addOnlySlots = [
     limit: { phone: 1, desktop: 1, perPlugin: 1 },
     owners: 'one',
   }),
-  // One line under the Session header: the first Plugin in Slot order shows, the rest wait behind "+N" (ADR-0035).
+  // One Plugin card holds its lines on desktop; the phone strip keeps the rest behind "+N" (ADR-0035).
   itemsSlotEntry(sessionBarSlotId, SessionRowContext, {
     key: 'sessionId',
     item: SessionBarItem,
-    limit: { phone: 1, desktop: 1, perPlugin: 1 },
+    limit: { phone: 1, desktop: 1, perPlugin: 500 },
   }),
 ] as const;
 

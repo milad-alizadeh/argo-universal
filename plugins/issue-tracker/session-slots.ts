@@ -19,7 +19,7 @@ type ToItems = (entries: Linked[]) => ReturnType<typeof rowItems>;
 
 /*
  * The Issue tracker's fills for a Session (ADR-0035): the Issues a Session is attached to (`attach`, ADR-0044) show as
- * items on its row and as one line in its Session bar. The link is this
+ * items on its row and as individual lines in its Session bar. The link is this
  * Plugin's own `issue_sessions` store. Returns the attachments wrapped so attaching or detaching refreshes the Slots.
  */
 export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
