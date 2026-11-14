@@ -28,12 +28,6 @@ export const PopulatedDark: Story = {
   globals: { mode: 'dark' },
 };
 
-// A phone draws every column at its full width; the board scrolls sideways to reach the rest.
-export const PopulatedOnAPhone: Story = {
-  render: () => <BoardExample />,
-  globals: { viewport: { value: 'phone' } },
-};
-
 // Where the pointer goes, as a mouse event places it.
 const at = (x: number, y: number): MouseEventInit => ({
   clientX: x,
