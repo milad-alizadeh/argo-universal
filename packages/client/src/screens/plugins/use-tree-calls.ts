@@ -2,7 +2,7 @@ import {
   PageCalls,
   type PageCallsPorts,
 } from '@repo/contracts/plugins/page-calls';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTRPCClient } from '#features/connection';
 import type { OnPageCall } from '../../lib/product/plugin-registry';
 import type { OperationRunner } from './page-calls-ports';
@@ -20,14 +20,7 @@ export function useTreeCalls(ports: PageCallsPorts): OnPageCall {
 
 // The App's Operation run over tRPC, and the toast that says why one failed.
 export function useOperationRunner(): OperationRunner {
-  const client = useTRPCClient();
+  const run = useTRPCClient().plugins.run;
 
-  // One runner for as long as the connection's client stands, so what holds it keeps its identity.
-  return useMemo(
-    () => ({
-      run: (scoped) => client.plugins.run.mutate(scoped),
-      failed: sayOperationFailed,
-    }),
-    [client],
-  );
+  return { run: (scoped) => run.mutate(scoped), failed: sayOperationFailed };
 }

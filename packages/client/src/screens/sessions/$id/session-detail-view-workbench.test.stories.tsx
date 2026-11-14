@@ -3,7 +3,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
-import { memoryChanges } from '../../../features/changes/source/memory-changes.mocks';
 import { fewChanges, useMemoryChanges } from './session-changes.test.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -33,12 +32,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const firstChangeLabel = 'Open files of Change #45';
-
-// The Inspector's own glyph label for the same Changes.
-const backLabel = 'Back to Changes';
-
-const stageLabels = ['Open Change #45', 'Open Change #46'] as const;
+// A pull request's row opens it on GitHub, so the Inspector is opened from the band.
+const inspectorToggle = { name: 'Show Inspector' };
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
@@ -93,9 +88,7 @@ export const CardsAutoHideBelowTheIndependentBoundary: Story = {
 export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
   beforeEach: (): Promise<void> => settleLayout(2224),
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: firstChangeLabel }),
-    );
+    await userEvent.click(await canvas.findByRole('button', inspectorToggle));
     await expectSeparateCards(canvas);
     await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
     await expectSeparateCards(canvas);
@@ -205,67 +198,31 @@ export const NarrowGuttersMoveTheConversationAside: Story = {
   },
 };
 
-export const SeveralPullRequestsInInspector: Story = {
+// The Inspector's Changes tab holds the Checkout's files alone: no pull request, and no Change segment.
+export const PullRequestsStayOutOfInspector: Story = {
+  render: ({ view }): JSX.Element => <WithChangedFiles {...view} />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: firstChangeLabel }),
-    );
-    await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
+    await userEvent.click(await canvas.findByRole('button', inspectorToggle));
     const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
 
-    // The row opened its own Change: the other waits in the list.
-    await expect(panel.getByLabelText(stageLabels[0])).toBeVisible();
-    await expect(panel.queryByLabelText(stageLabels[1])).toBeNull();
-    await userEvent.click(panel.getByRole('button', { name: backLabel }));
-
-    for (const number of [45, 46]) {
-      await expect(
-        panel.getByRole('button', {
-          name: new RegExp(`^Show Change #${number},`),
-        }),
-      ).toBeVisible();
-    }
+    await waitFor(() =>
+      expect(
+        panel.getAllByRole('button', { name: /^Diff for/ }).length,
+      ).toBeGreaterThan(0),
+    );
+    await expect(panel.queryByRole('button', { name: 'Change' })).toBeNull();
+    await expect(panel.queryByRole('button', { name: 'Files' })).toBeNull();
+    await expect(panel.queryByLabelText('Open Change #45')).toBeNull();
   },
 };
 
-// The Session page with its changed files, and a selected Change's own, read from an in-memory Server.
+// The Session page with its changed files read from an in-memory Server.
 function WithChangedFiles(view: SessionDetailViewProps): JSX.Element {
   const changes = useMemoryChanges(fewChanges);
 
   return (
     <FramedSessionPreview
-      {...(view.state === 'open'
-        ? { ...view, changes, changeFiles: () => memoryChanges(fewChanges) }
-        : view)}
+      {...(view.state === 'open' ? { ...view, changes } : view)}
     />
   );
 }
-
-export const SwitchesChangeAndFiles: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-    },
-  },
-  render: ({ view }): JSX.Element => <WithChangedFiles {...view} />,
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: firstChangeLabel }),
-    );
-    await userEvent.click(canvas.getByRole('button', { name: 'Files' }));
-    await expect(
-      canvas.getAllByRole('button', { name: /^Diff for/ }).length,
-    ).toBeGreaterThan(0);
-    // The window band's Back is screen history; the Change's detail draws none of its own.
-    await expect(
-      within(canvas.getByTestId('desktop-inspector')).queryByRole('button', {
-        name: 'Back',
-      }),
-    ).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Change' }));
-    await expect(
-      canvas.queryByRole('button', { name: /^Diff for/ }),
-    ).toBeNull();
-  },
-};

@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import type { useSessionFeed } from '#features/feed';
-import { useChangeAssociations } from '../../plugins/use-change-associations';
-import { useChangeFiles } from '../../plugins/use-change-files';
 import {
   type ChangesContext,
   useSessionPullRequests,
@@ -24,7 +22,7 @@ function useChangesContext(
   );
 }
 
-// An open Session with the Changes the Plugins supply, which its Workbench and Inspector draw.
+// An open Session with the Changes the Plugins supply, which its Workbench draws.
 export function useWithSessionPullRequests(
   sessionId: string,
   feed: SessionFeed,
@@ -32,8 +30,5 @@ export function useWithSessionPullRequests(
 ): SessionDetailViewProps {
   const context = useChangesContext(sessionId, feed);
 
-  return withSessionPullRequests(props, useSessionPullRequests(context), {
-    changeActions: useChangeAssociations(context),
-    changeFiles: useChangeFiles(context),
-  });
+  return withSessionPullRequests(props, useSessionPullRequests(context));
 }

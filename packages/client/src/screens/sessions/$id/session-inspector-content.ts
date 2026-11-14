@@ -1,12 +1,9 @@
 import type { ChangesViewProps } from '#features/changes';
 import type {
-  ChangeActions,
-  ChangeSelection,
   SessionHeaderProps,
   ShellPanelProps,
   SubagentListProps,
 } from '#features/sessions';
-import type { ChangeFilesSource } from '../../plugins/change-files';
 import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { AgentFeedSlot } from './session-agents-tab';
 
@@ -26,12 +23,6 @@ export interface SessionInspectorContent {
   shells?: ShellPanelProps;
   // The Session's changed files; absent until the page loads them.
   changes?: ChangesViewProps;
-  // Which Change the Changes tab shows in full; absent, it shows the list.
-  changeSelection?: ChangeSelection;
-  // Connecting and disconnecting Changes; absent, the Inspector only reads them.
-  changeActions?: ChangeActions;
-  // Where a selected Change's own files are read from, never the Checkout (ADR-0052); absent, a Change shows none.
-  changeFiles?: ChangeFilesSource;
   // The Plugin cards the Session has open, which the Workbench stacks after Argo's own (ADR-0035).
   pluginCards?: readonly SessionPluginCard[];
 }

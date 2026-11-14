@@ -78,7 +78,7 @@ function SessionPage({ title }: { title: string }): React.JSX.Element {
             {
               key: 'changes',
               title: 'Changes',
-              summary: <WorkbenchChangesSummary onOpen={toggleChanges} />,
+              summary: <WorkbenchChangesSummary onOpenChange={toggleChanges} />,
               onOpen: toggleChanges,
             },
           ],

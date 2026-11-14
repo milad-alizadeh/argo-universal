@@ -4,13 +4,11 @@ import type { ReactElement } from 'react';
 import {
   type MockInstance,
   expect,
-  fn,
   screen,
   spyOn,
   within,
   waitFor,
 } from 'storybook/test';
-import type { SessionPullRequest } from '#features/sessions';
 import { pullRequestMocks } from '../../../features/sessions/components/session-pull-request.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -19,6 +17,9 @@ import {
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
 import { idleSession } from './session-detail-view.mocks';
+
+// The page opens a pull request in a new window; the story records the address instead of leaving.
+let opened: MockInstance<typeof window.open>;
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/WorkbenchChanges',
@@ -30,32 +31,44 @@ const meta = {
     },
   },
   render: ({ view }): ReactElement => <FramedSessionPreview {...view} />,
-  beforeEach: (): Promise<void> => settleLayout(1920),
+  beforeEach: async (): Promise<() => void> => {
+    await settleLayout(1920);
+    opened = spyOn(window, 'open').mockReturnValue(null);
+
+    return (): void => opened.mockRestore();
+  },
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The Inspector's own glyph label for the same Change.
-const stageLabel = 'Open Change #45';
+interface RowQuery {
+  name: string;
+}
 
-const firstChange = { name: 'Open files of Change #45' };
+const rowOf = (number: number): RowQuery => ({
+  name: `Open Change #${number} on GitHub`,
+});
+
+const firstChange = rowOf(45);
+
+const showMore = { name: 'Show more' };
+
+const showLess = { name: 'Show less' };
+
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
+// The Feed has its own "Show more" for a long message; the card's is the one in the Workbench.
+const workbench = (canvas: Canvas): ReturnType<typeof within> =>
+  within(canvas.getByTestId('session-workbench'));
 
 const { title: firstTitle, checks: firstPullRequestChecks } =
   pullRequestMocks.checksRunning;
 
 const firstChecks = firstPullRequestChecks.details;
 
-type Context = Parameters<NonNullable<Story['play']>>[0];
-
-async function expectPrDetails({
-  canvas,
-}: Pick<Context, 'canvas'>): Promise<void> {
-  const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
-
-  await expect(await panel.findByLabelText(stageLabel)).toBeVisible();
-}
+const hiddenRows = [46, 42, 41];
 
 let consoleErrors: MockInstance<typeof console.error>;
 
@@ -67,21 +80,14 @@ export const BoundedPreview: Story = {
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Open files of Change #44' }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Open files of Change #43' }),
-    ).toBeVisible();
-    await expect(
-      canvas.queryByRole('button', { name: 'Open files of Change #46' }),
-    ).toBeNull();
-    await expect(
-      canvas.queryByRole('button', { name: 'Open files of Change #42' }),
-    ).toBeNull();
-    await expect(
-      canvas.getByText('1 more open, 1 merged, 1 closed'),
-    ).toBeVisible();
+    await expect(canvas.getByRole('button', rowOf(44))).toBeVisible();
+    await expect(canvas.getByRole('button', rowOf(43))).toBeVisible();
+
+    for (const number of hiddenRows) {
+      await expect(canvas.queryByRole('button', rowOf(number))).toBeNull();
+    }
+
+    await expect(workbench(canvas).getByRole('button', showMore)).toBeVisible();
     await expect(
       canvas.getByLabelText('CI Checks 3/5, 2 running'),
     ).toBeVisible();
@@ -101,6 +107,53 @@ export const BoundedPreview: Story = {
   },
 };
 
+export const ShowMoreRevealsEveryChange: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await workbench(canvas).findByRole('button', showMore),
+    );
+
+    for (const number of [45, 44, 43, ...hiddenRows]) {
+      await expect(canvas.getByRole('button', rowOf(number))).toBeVisible();
+    }
+
+    await expect(workbench(canvas).queryByRole('button', showMore)).toBeNull();
+    await expect(workbench(canvas).getByRole('button', showLess)).toBeVisible();
+  },
+};
+
+export const ShowLessGoesBackToThree: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await workbench(canvas).findByRole('button', showMore),
+    );
+    await userEvent.click(
+      await workbench(canvas).findByRole('button', showLess),
+    );
+
+    await expect(canvas.getByRole('button', firstChange)).toBeVisible();
+
+    for (const number of hiddenRows) {
+      await expect(canvas.queryByRole('button', rowOf(number))).toBeNull();
+    }
+
+    await expect(workbench(canvas).getByRole('button', showMore)).toBeVisible();
+  },
+};
+
+export const FewChangesNeedNoShowMore: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(idleSession, severalPullRequests.slice(0, 3)),
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
+    await expect(workbench(canvas).queryByRole('button', showMore)).toBeNull();
+  },
+};
+
 export const DisclosureKeepsInspectorClosed: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
@@ -117,54 +170,28 @@ export const DisclosureKeepsInspectorClosed: Story = {
   },
 };
 
-export const MenuOpensStage: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Change #45 actions' }),
-    );
-    await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
-    await userEvent.click(
-      await screen.findByRole('menuitem', {
-        name: 'Open Changes in Inspector',
-      }),
-    );
-    await expectPrDetails({ canvas });
-  },
-};
-
-// The remainder opens the full list, which holds every associated Change, whatever its stage.
-export const RemainderOpensList: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', {
-        name: '1 more open, 1 merged, 1 closed',
-      }),
-    );
-    const panel = within(canvas.getByRole('tabpanel', { name: 'Changes' }));
-
-    for (const number of [41, 42, 43, 44, 45, 46]) {
-      await expect(
-        await panel.findByRole('button', {
-          name: new RegExp(`^Show Change #${number},`),
-        }),
-      ).toBeVisible();
-    }
-  },
-};
-
-export const FilesOpenStage: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('button', firstChange));
-    await expectPrDetails({ canvas });
-  },
-};
-
-// The row is not a control: the title is plain text, and only its parts press.
-export const RowIsNotPressable: Story = {
+// A row opens its own pull request on GitHub, and nothing in the Inspector.
+export const RowPressOpensGitHub: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByText(firstTitle));
+    await waitFor(() => expect(opened).toHaveBeenCalledTimes(1));
+    await expect(opened.mock.calls[0]?.[0]).toBe(
+      'https://github.com/owner/app/pull/45',
+    );
     await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: firstTitle })).toBeNull();
+  },
+};
+
+export const RevealedRowPressOpensItsOwnAddress: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await workbench(canvas).findByRole('button', showMore),
+    );
+    await userEvent.click(await canvas.findByRole('button', rowOf(46)));
+    await waitFor(() => expect(opened).toHaveBeenCalledTimes(1));
+    await expect(opened.mock.calls[0]?.[0]).toBe(
+      'https://github.com/owner/app/pull/46',
+    );
   },
 };
 
@@ -182,81 +209,6 @@ export const ChecksPopoverListsEachCheck: Story = {
     }
 
     await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
-  },
-};
-
-// The Workbench stays beside the open Inspector only where the gutter still holds it.
-export const PreviewRestoresPrDetails: Story = {
-  beforeEach: (): Promise<void> => settleLayout(2224),
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByRole('button', firstChange));
-    await expectPrDetails({ canvas });
-    await userEvent.click(canvas.getByRole('button', { name: 'Files' }));
-    await userEvent.click(canvas.getByRole('button', firstChange));
-    await expectPrDetails({ canvas });
-  },
-};
-
-const checkoutOwn = { files: 7, additions: 70, deletions: 7 };
-
-// The Session's Checkout reads these totals itself; they are never a pull request's.
-const withCheckoutTotals = (
-  pullRequests: SessionPullRequest[],
-): SessionDetailViewProps => ({
-  state: 'open',
-  ...withPullRequests(
-    {
-      ...idleSession,
-      header: {
-        ...idleSession.header,
-        changes: { open: false, onOpenChange: fn(), summary: checkoutOwn },
-      },
-    },
-    pullRequests,
-  ),
-});
-
-// Work in the Checkout that no pull request holds is said apart, as the Checkout's, and never as a pull request's totals.
-export const CheckoutTotalsShownApart: Story = {
-  args: { view: withCheckoutTotals([pullRequestMocks.checksRunning]) },
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('Not in a pull request'),
-    ).toBeVisible();
-    await expect(canvas.getByText('7 files')).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Open files of Change #45' }),
-    ).toBeVisible();
-  },
-};
-
-// The pull request that is the Checkout's own line of work carries its own totals; the Checkout's are not added beside it.
-export const CheckoutTotalsNotAddedToItsPullRequest: Story = {
-  args: {
-    view: withCheckoutTotals([
-      { ...pullRequestMocks.checksRunning, onCheckout: true },
-    ]),
-  },
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
-    await expect(canvas.queryByText('Not in a pull request')).toBeNull();
-    await expect(canvas.queryByText('7 files')).toBeNull();
-  },
-};
-
-// A Change out of date that the preview leaves out is still counted in the footer.
-export const FooterCountsOutOfDateChanges: Story = {
-  args: {
-    view: withCheckoutTotals([
-      ...severalPullRequests.slice(0, 4),
-      { ...pullRequestMocks.merged, stale: 'failed' },
-    ]),
-  },
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByRole('button', {
-        name: '1 more open, 1 merged, 1 out of date',
-      }),
-    ).toBeVisible();
+    await expect(opened).not.toHaveBeenCalled();
   },
 };

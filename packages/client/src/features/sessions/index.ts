@@ -36,8 +36,6 @@ export {
 
 export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
 
-export { WorkbenchMoreChanges } from './components/session-workbench-changes';
-
 export {
   WorkbenchMoreTasks,
   WorkbenchTasks,
@@ -232,29 +230,6 @@ export {
 } from './components/archive-session/archive-session-alert';
 
 export { archivedToast } from './components/archive-session/archived-toast';
-
-export { SessionChangeDetail } from './components/session-change-detail';
-
-export {
-  type DiscoveryResult,
-  type UnreadChange,
-} from './components/change-discovery';
-
-export { SessionChangeList } from './components/session-change-list';
-
-export {
-  type ChangeActions,
-  type ChangeSelection,
-  useChangeSelection,
-} from './hooks/use-change-selection';
-
-export { SessionChangeFilesUnavailable } from './components/session-change-files-unavailable';
-
-export {
-  changeKey,
-  changeName,
-  findChange,
-} from './components/change-identity';
 
 export { SessionRow } from './components/session-row/session-row';
 

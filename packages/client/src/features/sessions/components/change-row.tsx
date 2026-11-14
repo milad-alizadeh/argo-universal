@@ -1,34 +1,40 @@
-import type { ChangesSummary } from '@repo/contracts';
-import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
-import { Menu } from '@repo/kit/primitives/overlays/menu';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { ChangeChecks } from './change-checks-popover';
 import { ChangeDiffTotal } from './change-diff-total';
-import { ChangePart } from './change-part';
 import {
   ChangeStageIcon,
   ChangeStageModifier,
 } from './change-stage/change-stage';
-import { ChangeStale } from './change-stale';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
   change: SessionPullRequest;
-  // Open the Change in the Inspector.
+  // Open the Change on its code host.
   onOpen: () => void;
 }
 
+const rowClassName =
+  'flex-row items-start gap-2 rounded-xl px-1 py-2 web:hover:bg-hover web:focus-visible:bg-hover';
+
+const stageCell = (change: SessionPullRequest): ReactElement => (
+  <View className="w-7 shrink-0 items-center pt-0.5">
+    <ChangeStageIcon {...change} />
+  </View>
+);
+
 export function ChangeRow(props: ChangeRowProps): ReactElement {
   return (
-    <View className="flex-row items-start gap-2 rounded-xl px-1 py-2">
-      <View className="w-7 shrink-0 items-center pt-0.5">
-        <ChangeStageIcon {...props.change} />
-      </View>
+    <Pressable
+      role="button"
+      accessibilityLabel={`Open Change #${props.change.number} on GitHub`}
+      onPress={props.onOpen}
+      className={rowClassName}
+    >
+      {stageCell(props.change)}
       <ChangeText {...props} />
-      <ChangeMenu {...props} />
-    </View>
+    </Pressable>
   );
 }
 
@@ -46,54 +52,13 @@ function ChangeText({ change, onOpen }: ChangeRowProps): ReactElement {
   );
 }
 
-// Only these parts press: the files open the Change in the Inspector, the checks list each check.
+// The checks list each check on the web; every other part of the row opens the Change.
 function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
-      {change.summary && (
-        <ChangeFiles {...change.summary} change={change} onOpen={onOpen} />
-      )}
+      {change.summary && <ChangeDiffTotal {...change.summary} icon />}
       {change.checks && <ChangeChecks checks={change.checks} onOpen={onOpen} />}
       <ChangeStageModifier {...change} />
-      <ChangeStale stale={change.stale} short />
     </View>
   );
 }
-
-function ChangeFiles({
-  change,
-  onOpen,
-  ...summary
-}: ChangesSummary & ChangeRowProps): ReactElement {
-  return (
-    <ChangePart
-      accessibilityLabel={`Open files of Change #${change.number}`}
-      onPress={onOpen}
-    >
-      <ChangeDiffTotal {...summary} icon />
-    </ChangePart>
-  );
-}
-
-function ChangeMenu({ change, onOpen }: ChangeRowProps): ReactElement {
-  const label = `Change #${change.number} actions`;
-
-  return (
-    <View className="h-5 w-8 shrink-0 items-center justify-center">
-      <Menu
-        accessibilityLabel={label}
-        trigger={menuTrigger(label)}
-        actions={[{ label: 'Open Changes in Inspector', onPress: onOpen }]}
-      />
-    </View>
-  );
-}
-
-const menuTrigger = (label: string): ReactElement => (
-  <IconButton
-    icon="more"
-    accessibilityLabel={label}
-    variant="ghost"
-    size="sm"
-  />
-);

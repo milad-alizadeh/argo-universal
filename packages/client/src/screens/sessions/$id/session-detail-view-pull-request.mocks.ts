@@ -17,14 +17,30 @@ export function withPullRequests(
     header: {
       ...session.header,
       pullRequests,
-      changes: session.header.changes ?? changesHeader(),
+      changes: session.header.changes ?? changesHeader(pullRequests),
     },
   };
 }
 
-// The Checkout's own totals are its own: a pull request's totals are never added into them.
-function changesHeader(): NonNullable<
-  OpenSessionViewProps['header']['changes']
-> {
-  return { open: false, onOpenChange: fn() };
+function changesHeader(
+  changes: SessionPullRequest[],
+): NonNullable<OpenSessionViewProps['header']['changes']> {
+  const summaries = changes.flatMap(({ summary }) =>
+    summary ? [summary] : [],
+  );
+
+  return {
+    open: false,
+    onOpenChange: fn(),
+    summary: summaries.length ? summaries.reduce(addSummary) : undefined,
+  };
 }
+
+const addSummary = (
+  total: NonNullable<SessionPullRequest['summary']>,
+  next: NonNullable<SessionPullRequest['summary']>,
+): NonNullable<SessionPullRequest['summary']> => ({
+  files: total.files + next.files,
+  additions: total.additions + next.additions,
+  deletions: total.deletions + next.deletions,
+});

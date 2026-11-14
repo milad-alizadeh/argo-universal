@@ -82,7 +82,7 @@ function useServerFiles(query: ChangesQuery): FilesPages {
   );
 }
 
-export function toDiffPage(output: SessionDiffOutput): DiffPage {
+function toDiffPage(output: SessionDiffOutput): DiffPage {
   const { operation, path, oldPath } = output.file;
 
   const [file] = toFileDiffs({
