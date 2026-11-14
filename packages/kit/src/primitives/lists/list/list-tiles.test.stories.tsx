@@ -9,7 +9,7 @@ import {
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
-import { List } from './list';
+import { List } from '../list';
 import { GridExample } from './list-tiles.stories';
 
 const meta = {

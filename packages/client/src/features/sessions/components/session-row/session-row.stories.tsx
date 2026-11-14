@@ -60,7 +60,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // The time leads the meta line, the activity reads in the foreground, and a Plan bar fills under the row.
-export const Running: Story = { args: runningSession };
+export const Running: Story = {
+  args: runningSession,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.unhover(canvas.getByRole('button'));
+  },
+};
 
 // Waiting on you: the activity takes the warning tone.
 export const NeedsInput: Story = { args: needsInputSession };

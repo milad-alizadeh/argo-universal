@@ -1,6 +1,8 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type { SubagentRole } from '@repo/contracts';
 import type { FeedActorRef, FeedInput } from '../../feed';
 import type { SessionData } from '../session-data';
+import { declaredRoleQueue } from './declared-roles';
 import { flushSubagents, routeSubagents, type Subagents } from './routing';
 import type { SubagentRouting } from './routing-types';
 
@@ -33,7 +35,17 @@ export const subagentFeed = (input: FeedInput): SubagentFeedOptions => ({
 export const noSubagents: Subagents = {
   children: new Map(),
   pendingMessages: [],
+  declaredRoles: [],
 };
+
+// The Session declares the role of the next Agent it spawns; spawns take them in order.
+export const declareSubagentRole = (
+  subagents: Subagents,
+  role: SubagentRole,
+): Subagents => ({
+  ...subagents,
+  declaredRoles: [...subagents.declaredRoles, role],
+});
 
 // Updates whose names say they concern a Subagent, and anything sent under the id of one already known.
 const subagentUpdates = new Set<string>([
@@ -74,6 +86,7 @@ const sessionStorage = ({
 const routing = (
   { parent, spawn, storageFailing }: SubagentSession,
   parentFeed: FeedActorRef,
+  takeDeclaredRole: SubagentRouting['takeDeclaredRole'],
 ): SubagentRouting => ({
   ...sessionStorage(parent.input),
   parent,
@@ -81,22 +94,29 @@ const routing = (
   spawn,
   parentFeed,
   storageFailing,
+  takeDeclaredRole,
 });
 
 // Throws rather than drop the update when the Session has no Feed to attach the Subagent to.
+function requireParentFeed(session: SubagentSession): FeedActorRef {
+  if (session.parentFeed) return session.parentFeed;
+  throw new Error(
+    `Session ${session.parent.sessionId} has no Feed to route a Subagent update to`,
+  );
+}
+
 export const routeSubagentUpdate = (
   session: SubagentSession,
   subagents: Subagents,
   notification: SessionNotification,
 ): Subagents => {
-  if (!session.parentFeed)
-    throw new Error(
-      `Session ${session.parent.sessionId} has no Feed to route a Subagent update to`,
-    );
+  const declared = declaredRoleQueue(subagents.declaredRoles);
 
-  return routeSubagents(
-    routing(session, session.parentFeed),
+  const routed = routeSubagents(
+    routing(session, requireParentFeed(session), declared.take),
     subagents,
     notification,
   );
+
+  return { ...routed, declaredRoles: declared.remaining() };
 };

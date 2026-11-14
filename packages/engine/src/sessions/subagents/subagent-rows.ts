@@ -5,7 +5,7 @@ import {
   type SubagentUpdate,
 } from '@repo/contracts';
 import { type FeedEvent } from '../../feed';
-import type { OpenedChildFeed } from './child-feed';
+import type { AssociatedChild } from './declared-roles';
 import type { SubagentRouting } from './routing-types';
 
 type Association = Extract<
@@ -22,45 +22,56 @@ const stateField = (
 const titleField = (title: string | null | undefined): { title?: string } =>
   title === undefined ? {} : { title: title ?? '' };
 
-type AssociationChange = OpenedChildFeed & { update: Association };
+type AssociationChange = AssociatedChild & { update: Association };
+
+type ArgoExtension = NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>;
 
 // ACP's `description` is the child's role or purpose; claude-agent-acp sends its `subagent_type` there.
 const roleOf = ({ description }: Association): string | undefined =>
   description?.trim() ? description : undefined;
 
 const wrappedMeta = (
-  extension: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']>,
+  extension: ArgoExtension,
 ): Pick<SubagentUpdate, '_meta'> =>
   Object.keys(extension).length ? { _meta: { argo: extension } } : {};
 
-// The first update for a new child is its `spawn` (#930).
-const associationMeta = (
-  spawned: boolean,
-  update: Association,
-): Pick<SubagentUpdate, '_meta'> => {
+// The role the Agent reports, and the one its Session declared before the spawn.
+function roleFields({
+  update,
+  declaredRole,
+}: AssociationChange): ArgoExtension {
+  const fields: ArgoExtension = {};
   const role = roleOf(update);
 
-  const extension: NonNullable<NonNullable<SubagentUpdate['_meta']>['argo']> =
-    {};
+  if (role) fields.role = role;
 
-  if (spawned) extension.action = 'spawn';
+  if (declaredRole) fields.declaredRole = declaredRole;
 
-  if (role) extension.role = role;
+  return fields;
+}
+
+// The first update for a new child is its `spawn` (#930).
+const associationMeta = (
+  association: AssociationChange,
+): Pick<SubagentUpdate, '_meta'> => {
+  const extension = roleFields(association);
+
+  if (association.spawned) extension.action = 'spawn';
 
   return wrappedMeta(extension);
 };
 
 const associationRow = (
   input: SubagentRouting,
-  { child, spawned, update }: AssociationChange,
+  association: AssociationChange,
 ): FeedUpdate => ({
   id: input.createId(),
   sessionUpdate: 'subagent_update',
   state: 'settled',
-  subagentSessionId: child.sessionId,
-  ...titleField(update.title),
-  ...stateField(update.state?.state),
-  ...associationMeta(spawned, update),
+  subagentSessionId: association.child.sessionId,
+  ...titleField(association.update.title),
+  ...stateField(association.update.state?.state),
+  ...associationMeta(association),
 });
 
 export const associationEvent = (

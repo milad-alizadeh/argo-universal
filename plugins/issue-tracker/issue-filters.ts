@@ -1,7 +1,7 @@
 import type { PluginProps } from '@argo/plugin-kit';
 import { pathSegment, pathText } from './issue-paths';
 
-type IconName = NonNullable<PluginProps['Icon']['name']>;
+type IconName = NonNullable<PluginProps['FieldGroup.Link']['leading']>;
 
 /*
  * A navigational entry on the Issues page: its own list of Issues, named by a GitHub search. Built-in

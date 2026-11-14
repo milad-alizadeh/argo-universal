@@ -1,3 +1,5 @@
+export { keepDeviceApp, type DeviceApp } from './device-app';
+
 import type { PairingClaim, PairingRegistration } from '@repo/contracts';
 import type { TRPCClient } from '@trpc/client';
 import type { AppRouter } from '../src/engine/router';

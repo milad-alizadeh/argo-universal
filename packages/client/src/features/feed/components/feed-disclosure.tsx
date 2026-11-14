@@ -1,3 +1,4 @@
+import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import {
   Collapsible,
@@ -6,6 +7,7 @@ import {
   useCollapsibleHovered,
 } from '@repo/kit/primitives/layout/collapsible';
 import type { IconName } from '@repo/kit/symbols/icon-names';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
@@ -48,15 +50,25 @@ function FeedDisclosureTitle(
   );
 }
 
+function feedDisclosureIcon(
+  props: Pick<FeedDisclosureProps, 'icon' | 'failed'>,
+): ReactNode {
+  if (!props.icon) return undefined;
+
+  return (
+    <IconSlot size="sm">
+      <Icon name={props.icon} className={cn({ 'text-danger': props.failed })} />
+    </IconSlot>
+  );
+}
+
 function FeedDisclosureHeader(
   props: Omit<FeedDisclosureProps, 'children'>,
 ): React.JSX.Element {
   return (
     <CollapsibleHeader
       label={props.label}
-      icon={props.icon}
-      leading={props.leading}
-      iconTone={props.failed ? 'danger' : undefined}
+      leading={props.leading ?? feedDisclosureIcon(props)}
     >
       <FeedDisclosureTitle {...props} />
     </CollapsibleHeader>

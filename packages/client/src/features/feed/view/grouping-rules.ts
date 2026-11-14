@@ -21,7 +21,32 @@ export function needsGroupHeader(
 ): boolean {
   if (!toolCalls.length) return false;
 
+  return visibleGroupHeader(activities, toolCalls, liveTitle);
+}
+
+function visibleGroupHeader(
+  activities: FeedActivity[],
+  toolCalls: ToolCallUpdate[],
+  liveTitle: string | undefined,
+): boolean {
+  if (isSingleCommand(activities)) return Boolean(liveTitle);
+
   return activities.length !== 1 || hasGroupWork(toolCalls, liveTitle);
+}
+
+function isCommandActivity(activity: FeedActivity | undefined): boolean {
+  if (activity?.type !== 'tool_call') return false;
+
+  return toolCallFacts(activity.row).isCommand;
+}
+
+function isSingleCommand(activities: FeedActivity[]): boolean {
+  const visible = activities.filter((activity) => activity.type !== 'thought');
+  const first = visible[0];
+
+  if (visible.length !== 1) return false;
+
+  return isCommandActivity(first);
 }
 
 function hasGroupWork(

@@ -37,3 +37,14 @@ function chooseTheme(props: ThemeProps, value: string): void {
 
   if (choice) props.onThemeChange(choice.value);
 }
+
+export const composerSection = (props: SettingsListViewProps): ReactElement => (
+  <FieldGroup.Section title="Composer">
+    <FieldGroup.Toggle
+      title="Follow-up suggestions"
+      value={props.followUpSuggestions === true}
+      disabled={props.followUpSuggestions === undefined}
+      onValueChange={(enabled) => props.onFollowUpSuggestionsChange?.(enabled)}
+    />
+  </FieldGroup.Section>
+);

@@ -2,43 +2,29 @@ import { listDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
-import type { ListLook } from '../../../list-look';
+import type { ListLook } from '../../list-look';
 import {
   ListLookContext,
   useDeclaredListLook,
   useListLook,
-} from '../../../list-look-context';
-import { ListBehaviours } from './list-behaviours';
-import { ChildRows } from './list-child-rows';
-import { DataList } from './list-data-list';
-import { ListMenuRows } from './list-menu-rows';
-import { NativeGroupedList } from './list-native-grouped';
-import { asksNothingNativeLacks, holdsNativeRows } from './list-native-rows';
-import { hasNoRows, placeholderChildren } from './list-placeholder';
-import type { ListProps, MovesOrItems } from './list-props';
-import { ListSection } from './list-section';
-
-// iOS and Android draw a grouped List of FieldGroup rows as their own grouped list, at every width (ADR-0042), unless it sets a prop that list cannot draw.
-const drawsNatively = (look: ListLook, props: ListProps<never>): boolean =>
-  look.phone !== undefined &&
-  asksNothingNativeLacks(props) &&
-  holdsNativeRows(props.children);
+} from '../../list-look-context';
+import { ListBehaviours } from './list/list-behaviours';
+import { ChildRows } from './list/list-child-rows';
+import { DataList } from './list/list-data-list';
+import { ListMenuRows } from './list/list-menu-rows';
+import { NativeGroupedList } from './list/list-native-grouped';
+import { drawsNativeGroupedList } from './list/list-native-rows';
+import { hasNoRows, placeholderChildren } from './list/list-placeholder';
+import type { ListProps, MovesOrItems } from './list/list-props';
+import { ListSection } from './list/list-section';
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();
 
   if (props.items !== undefined) return <DataList {...props} />;
 
-  if (drawsNatively(look, props))
-    return (
-      <NativeGroupedList
-        empty={props.empty}
-        onMove={props.onMove}
-        accessibilityLabel={props.accessibilityLabel}
-      >
-        {props.children}
-      </NativeGroupedList>
-    );
+  if (drawsNativeGroupedList(look, props))
+    return <NativeGroupedList {...props}>{props.children}</NativeGroupedList>;
 
   return <ChildRows {...props} />;
 }

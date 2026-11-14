@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { SessionQueueInput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -6,6 +8,10 @@ import {
 } from '../sessions/archive';
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
+import {
+  SessionDeclareSubagentRoleInput,
+  SessionDeclareSubagentRoleOutput,
+} from '../sessions/declare-subagent-role';
 import { SessionNewInput, SessionNewOutput } from '../sessions/new';
 import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
@@ -24,6 +30,25 @@ import {
 import type { OperationDefinition } from './index';
 
 export const sessionOperations = {
+  'session.submit': {
+    id: 'session.submit',
+    label: 'Submit Prompt',
+    description:
+      'Submit a user Prompt from an App, queuing it while the Session is busy or paused.',
+    params: SessionPromptInput,
+    result: z.strictObject({}),
+    tier: 'act',
+    keywords: ['prompt', 'queue'],
+  },
+  'session.queue': {
+    id: 'session.queue',
+    label: 'Manage Prompt queue',
+    description: 'Append, edit, delete, reorder or resume Queued Prompts.',
+    params: SessionQueueInput,
+    result: z.strictObject({}),
+    tier: 'act',
+    keywords: ['queue', 'prompt'],
+  },
   'session.new': {
     id: 'session.new',
     label: 'Start Session',
@@ -110,6 +135,16 @@ export const sessionOperations = {
     result: SessionSavePlanOutput,
     tier: 'act',
     keywords: ['plan', 'markdown', 'file'],
+  },
+  'session.declareSubagentRole': {
+    id: 'session.declareSubagentRole',
+    label: 'Declare Agent role',
+    description:
+      'Before spawning a subagent, name its role; each spawn takes the next declared role, and Argo draws that role for the Agent.',
+    params: SessionDeclareSubagentRoleInput,
+    result: SessionDeclareSubagentRoleOutput,
+    tier: 'act',
+    keywords: ['subagent', 'spawn', 'role', 'agent', 'type'],
   },
   'session.rename': {
     id: 'session.rename',

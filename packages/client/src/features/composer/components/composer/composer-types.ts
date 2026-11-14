@@ -12,6 +12,7 @@ import type {
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import type { ComposerStatusProps } from '../composer-status/composer-status';
+import type { PromptQueueProps } from '../prompt-queue/prompt-queue';
 import type { WrittenPlanValue } from '../written-plan/written-plan';
 
 export interface ComposerDraft {
@@ -23,6 +24,16 @@ export interface ComposerDraft {
 
 export interface ComposerProps {
   draft: ComposerDraft;
+  promptQueue?: PromptQueueProps;
+  queueWhileRunning?: boolean;
+  followUpSuggestion?: {
+    sessionId: string;
+    turnId: string;
+    text: string | null;
+    enabled?: boolean;
+    dismissed?: boolean;
+    onDismiss?: () => void;
+  };
   slashCommands?: readonly SlashCommand[];
   // Sources after the Agent's Slash commands, in the order their results are grouped.
   suggestionSources?: readonly SuggestionSource[];

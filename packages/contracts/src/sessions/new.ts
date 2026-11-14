@@ -32,6 +32,7 @@ export const SessionNewInput = z.strictObject({
   agent: sessionColumns.shape.agent,
   checkout: SessionCheckoutChoice,
   configOptions: z.array(InitialConfigOption),
+  followUpSuggestions: z.boolean().optional(),
   prompt: z
     .array(
       // A link is an uploaded file (its blob set) or a chosen suggestion's resource (ADR-0023).

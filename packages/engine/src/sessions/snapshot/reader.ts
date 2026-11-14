@@ -1,3 +1,4 @@
+import { PromptQueue } from '@repo/contracts';
 import type {
   ChangesSummary,
   SessionSnapshot,
@@ -78,6 +79,7 @@ export class SessionSnapshotReader {
   ): StoredSnapshot {
     return {
       ...stored,
+      promptQueue: PromptQueue.parse(stored.promptQueue),
       subagents: this.readSubagents(sessionId),
       shells: storedShells(this.deps.database, sessionId),
     };

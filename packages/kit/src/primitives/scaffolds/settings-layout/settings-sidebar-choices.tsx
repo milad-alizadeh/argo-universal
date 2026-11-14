@@ -18,7 +18,7 @@ import { Menu } from '#primitives/overlays/menu';
  * The wide web sidebar draws a last section of single-choice Pickers as one more group of its rows: each row shows its
  * choice and opens the menu of options, so Theme reads as part of the list above it. Any other last section is undefined.
  */
-export function sidebarChoices(section: ReactNode): ReactElement | undefined {
+function sidebarChoice(section: ReactNode): ReactElement | undefined {
   if (!isSection(section)) return undefined;
 
   const rows = flattenedChildren(section.props.children);
@@ -26,7 +26,7 @@ export function sidebarChoices(section: ReactNode): ReactElement | undefined {
   if (!rows.every(isSinglePicker)) return undefined;
 
   return (
-    <ListSection title={section.props.title}>
+    <ListSection key={section.key} title={section.props.title}>
       {rows.map((row) => (
         <ChoiceRow key={row.key} {...row.props} />
       ))}
@@ -79,3 +79,19 @@ function choiceTrigger(props: FieldPickerSingle): ReactElement {
 
 const leadingIcon = (icon: FieldPickerSingle['leading']): ReactNode =>
   icon && isStockIconName(icon) ? <Icon name={icon} /> : undefined;
+
+export function sidebarChoices(sections: ReactNode): ReactNode[] | undefined {
+  const choices = flattenedChildren(sections)
+    .map(sidebarChoice)
+    .filter(Boolean);
+
+  return choices.length ? choices : undefined;
+}
+
+export function sidebarRemainder(sections: ReactNode): ReactNode {
+  const remaining = flattenedChildren(sections).filter(
+    (section) => !sidebarChoice(section),
+  );
+
+  return remaining.length ? remaining : undefined;
+}

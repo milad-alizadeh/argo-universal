@@ -40,16 +40,23 @@ function updateState(
 const roleOf = (update: SubagentUpdate): string | undefined =>
   update._meta?.argo?.role;
 
+const declaredRoleOf = (update: SubagentUpdate): string | undefined =>
+  update._meta?.argo?.declaredRole;
+
+// The role the Session declared at the spawn outranks the latest one the Agent reports.
 function updateRole(
   id: string,
   updates: readonly SubagentUpdate[],
 ): string | null {
-  const roles = updates
+  const own = updates
     .filter((update) => update.subagentSessionId === id)
-    .toSorted((first, second) => second.position - first.position)
-    .map(roleOf);
+    .toSorted((first, second) => second.position - first.position);
 
-  return roles.find((role) => role !== undefined) ?? null;
+  return (
+    own.map(declaredRoleOf).find((role) => role !== undefined) ??
+    own.map(roleOf).find((role) => role !== undefined) ??
+    null
+  );
 }
 
 type TurnDetails = Pick<

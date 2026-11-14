@@ -6,6 +6,7 @@ import { ContentBlock } from '../feed/content-block';
 export const SessionPromptInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   prompt: z.array(ContentBlock).min(1),
+  followUpSuggestions: z.boolean().optional(),
 });
 
 export type SessionPromptInput = z.infer<typeof SessionPromptInput>;

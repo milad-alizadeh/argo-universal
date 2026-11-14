@@ -58,11 +58,11 @@ const listedProject: TargetRule<OperationParams<'session.list'>> = (
   };
 };
 
-// A new Plugin goes in the calling Session's Checkout unless it names another Session.
-const pluginNewTarget: TargetRule<OperationParams<'plugin.new'>> = (
-  params,
-  caller,
-) => {
+// A Plugin's Checkout, or the Session that declares an Agent role: the calling Session unless the params name another.
+const callerSessionParam = <Params extends { sessionId?: string }>(
+  params: Params,
+  caller: SessionCaller,
+): Targeted<Params & { sessionId: string }> => {
   const sessionId = params.sessionId ?? caller.sessionId;
 
   return {
@@ -110,11 +110,14 @@ const targetRules = {
   'session.listShells': sessionParam,
   'session.listBranches': sessionParam,
   'session.new': projectParam,
+  'session.queue': sessionParam,
+  'session.submit': sessionParam,
   'session.prompt': sessionParam,
   'session.cancel': sessionParam,
   'session.rename': sessionParam,
   'session.setConfigOption': sessionParam,
   'session.savePlan': sessionParam,
+  'session.declareSubagentRole': callerSessionParam,
   'session.close': openingSessionParam,
   'shell.stop': sessionParam,
   'session.archive': sessionParam,
@@ -131,7 +134,7 @@ const targetRules = {
   'agent.installInstructions': global,
   'plugin.list': global,
   'plugin.guide': global,
-  'plugin.new': pluginNewTarget,
+  'plugin.new': callerSessionParam,
   'plugin.activate': global,
   'plugin.setEnabled': global,
   'plugin.getSettings': global,

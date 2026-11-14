@@ -46,7 +46,7 @@ it('walks every declared Session event transition, including guarded branches', 
   expect(
     unwalkedDeclaredTransitions(sessionMachine, {
       walks: pathWalks(paths),
-      witnesses: extraTransitionWitnesses(paths),
+      witnesses: extraTransitionWitnesses(paths, actor.getSnapshot()),
     }),
   ).toEqual([]);
   await host.caller.session.close(created);

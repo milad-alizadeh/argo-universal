@@ -1,3 +1,4 @@
+import type { SubagentRole } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import type { FeedActorRef, FeedInput } from '../../feed';
 import type { WriterActorRef, WriterJob } from '../../storage';
@@ -14,4 +15,6 @@ export type SubagentRouting = {
   spawn: (input: FeedInput) => FeedActorRef;
   parentFeed: FeedActorRef;
   storageFailing: () => void;
+  // The oldest role the Session declared and no spawn took yet.
+  takeDeclaredRole: () => SubagentRole | undefined;
 };

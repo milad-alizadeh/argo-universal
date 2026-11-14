@@ -16,7 +16,7 @@ const routers = nouns
       .map(({ id, tier }) => {
         const verb = id.split('.')[1];
 
-        return `'${verb}': publicProcedure.input(operations['${id}'].params).output(operations['${id}'].result).${tier === 'read' ? 'query' : 'mutation'}(({ input }) => runner.run({ kind: 'app', id: '${id}', params: input })),`;
+        return `'${verb}': publicProcedure.input(operations['${id}'].params).output(operations['${id}'].result).${tier === 'read' ? 'query' : 'mutation'}(({ input, ctx }) => runner.run({ kind: 'app', id: '${id}', params: input, connectionSignal: ctx.connection.signal })),`;
       })
       .join('\n');
 

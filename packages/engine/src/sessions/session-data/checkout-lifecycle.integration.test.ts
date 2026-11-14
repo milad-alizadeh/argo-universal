@@ -92,7 +92,12 @@ it.each([
         sessionId: newSessionId,
         kind: 'existing',
       }),
-    ).toEqual({ ...created, vendorSessionId: 'vendor-1', kept: true });
+    ).toEqual({
+      ...created,
+      vendorSessionId: 'vendor-1',
+      kept: true,
+      promptQueue: { items: [], pauseReason: null },
+    });
     expect(created).toMatchObject({
       kept: false,
       sessionId: newSessionId,

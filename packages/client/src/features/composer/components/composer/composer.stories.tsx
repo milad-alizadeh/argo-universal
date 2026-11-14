@@ -22,9 +22,11 @@ import {
   planlessSessionComposer,
   readyComposer,
   runningTurnComposer,
+  queueReadyComposer,
   scrollableDraftComposer,
   sendingComposer,
   startedSessionComposer,
+  predictedReplyComposer,
   slashSuggestionsComposer,
 } from './composer-fixtures';
 import { SuggestionComposer } from './composer-suggestions.mocks';
@@ -102,6 +104,10 @@ const meta = {
       control: 'boolean',
       description: 'The Connection can take a prompt.',
     },
+    queueWhileRunning: {
+      control: 'boolean',
+      description: 'Send queues the draft while a Turn is running.',
+    },
     error: { control: 'text', description: 'Raised as an error toast.' },
     errorKey: { control: 'text' },
     onDraftChange: { control: false },
@@ -138,6 +144,8 @@ export const Disabled: Story = { args: disabledComposer };
 
 // The Turn is running, so Send becomes Stop.
 export const TurnRunning: Story = { args: runningTurnComposer };
+
+export const QueueReady: Story = { args: queueReadyComposer };
 
 // An attachment grows a row of tiles above the field.
 export const Attachments: Story = { args: attachedImageComposer };
@@ -190,5 +198,14 @@ export const Suggestions: Story = {
       feed={null}
       composer={<SuggestionComposer {...composerProps(args)} />}
     />
+  ),
+};
+
+export const PredictedReply: Story = {
+  args: predictedReplyComposer,
+  render: (args) => (
+    <SessionColumn>
+      <SuggestionComposer {...composerProps(args)} />
+    </SessionColumn>
   ),
 };

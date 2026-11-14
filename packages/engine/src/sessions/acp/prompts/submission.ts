@@ -5,12 +5,14 @@ import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
 import { promptMessageChange, type FeedActorRef } from '../../../feed';
 import type { WriterCommit } from '../../../storage';
+import { followUpPromptMeta } from './follow-up-suggestions';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {
   turnId: string;
   content: ContentBlock[];
   sender?: PromptSender;
+  followUpSuggestions?: boolean;
   committed?: WriterCommit;
 };
 
@@ -115,5 +117,9 @@ export const commitLocalPrompt = async (
   await enqueuePromptAndWaitForCommit(input, signal);
   signal.throwIfAborted();
 
-  return { sessionId: input.lease.sessionId, prompt };
+  return {
+    sessionId: input.lease.sessionId,
+    prompt,
+    ...followUpPromptMeta(input.lease.initialization, input.submission),
+  };
 };

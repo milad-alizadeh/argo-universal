@@ -9,6 +9,7 @@ type TurnState = Pick<
   | 'activeTurnId'
   | 'activeTurnStartedAt'
   | 'usage'
+  | 'followUpSuggestion'
   | 'permissionQueue'
   | 'nativePermissions'
   | 'hookedPermissions'
@@ -20,6 +21,7 @@ export const initialTurnState = (): TurnState => ({
   activeTurnId: null,
   activeTurnStartedAt: null,
   usage: null,
+  followUpSuggestion: null,
   permissionQueue: [],
   nativePermissions: new NativePermissions(),
   hookedPermissions: {},
@@ -62,6 +64,7 @@ type AcpState = Pick<
   | 'subagents'
   | 'acpPrompt'
   | 'acpResponseReaders'
+  | 'acpSuggestionRejections'
   | 'acpConfigurationRejections'
   | 'acpTurnOutcome'
   | 'turnEnding'
@@ -72,12 +75,17 @@ type AcpState = Pick<
 
 type AcpReaders = Pick<
   AcpState,
-  'acpResponseReaders' | 'acpConfigurationRejections'
+  | 'acpResponseReaders'
+  | 'acpConfigurationRejections'
+  | 'acpSuggestionRejections'
 >;
 
 const acpReaders = (input: SessionMachineInput): AcpReaders => ({
   acpResponseReaders: createAcpResponseReaders(
     createRejectionCounter(`ACP Session ${input.sessionId}`),
+  ),
+  acpSuggestionRejections: createRejectionCounter(
+    `ACP suggestions ${input.sessionId}`,
   ),
   acpConfigurationRejections: createRejectionCounter(
     `ACP configuration ${input.sessionId}`,

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { MoveAnswer } from './list-move-order';
+import type { ListLoad } from './list-request';
 
 // What a native grouped list holds: `List.Section`s of FieldGroup rows (ADR-0042), which move by menu with `onMove`.
 export type NativeGroupedProps = {
@@ -7,4 +8,5 @@ export type NativeGroupedProps = {
   accessibilityLabel?: string;
   empty?: ReactNode;
   onMove?: MoveAnswer;
+  onRefresh?: ListLoad;
 };

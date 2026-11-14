@@ -1,6 +1,7 @@
 import { pathStates, type Sent } from '@repo/vitest/model-audit';
 import { getNextSnapshot, type EventFromLogic } from 'xstate';
 import { sessionMachine } from '../src/sessions';
+import { queueTransitionWitnesses } from './acp-queue-witnesses';
 import type {
   AcpModelSnapshot,
   createAcpSessionModel,
@@ -151,7 +152,10 @@ function closeWitnesses(states: AcpModelSnapshot[]): Sent[] {
   }));
 }
 
-export function extraTransitionWitnesses(paths: Paths): Sent[] {
+export function extraTransitionWitnesses(
+  paths: Paths,
+  initial: AcpModelSnapshot,
+): Sent[] {
   const states = pathStates(paths);
 
   return [
@@ -160,5 +164,6 @@ export function extraTransitionWitnesses(paths: Paths): Sent[] {
     ...permissionWitnesses(states),
     ...cancellationWitnesses(states),
     ...closeWitnesses(states),
+    ...queueTransitionWitnesses(initial),
   ];
 }

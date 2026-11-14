@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { expect } from 'storybook/test';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { List } from '../list';
 import { ListItem } from '../list-item';
-import { List } from './list';
 import presentationMeta, { Grouped, Plain } from './list.stories';
 
 const meta = {

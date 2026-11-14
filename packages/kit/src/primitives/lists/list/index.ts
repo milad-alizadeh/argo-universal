@@ -1,4 +1,4 @@
-export { List, PluginList } from './list';
+export { List, PluginList } from '../list';
 
 export { useListItemGroup } from './list-item-grouping';
 

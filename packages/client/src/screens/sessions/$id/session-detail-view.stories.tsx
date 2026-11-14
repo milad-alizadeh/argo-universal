@@ -8,10 +8,7 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
-import {
-  attachedIssuesBar,
-  sessionPageBar,
-} from './session-detail-view-bar.mocks';
+import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
 import {
   ElicitationPreview,
@@ -76,11 +73,6 @@ export const SessionBar: Story = {
     ...longSession,
     bar: sessionPageBar,
   },
-  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
-};
-
-export const AttachedIssues: Story = {
-  args: { state: 'open', ...longSession, bar: attachedIssuesBar },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 

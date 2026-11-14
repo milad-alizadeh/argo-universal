@@ -16,6 +16,8 @@ import {
   toSendError,
 } from '#features/sessions';
 import { type Navigate } from '#lib/product/navigation/navigation';
+import { followUpProps } from './follow-up-composer-props';
+import { queueComposerProps } from './use-prompt-queue';
 import type { SessionCommands } from './use-session-commands';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -125,18 +127,17 @@ const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
 
 // The Composer of an open Session: its draft, its commands and its configuration.
 export function sessionComposerProps(open: OpenSession): ComposerProps {
-  const { commands, sessionId, snapshot, view } = open;
+  const { commands, sessionId } = open;
 
   return {
     ...draftProps(commands),
+    ...queueComposerProps(open),
+    followUpSuggestion: followUpProps(open),
     slashCommands: slashCommandsOf(open),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
-    sending: isSending(open),
-    sendable: isSendable(open),
+    ...sendingProps(open),
     ...sendError(commands),
-    permissionRequest: open.permission,
-    writtenPlan: writtenPlan(view.plan),
-    status: composerStatus(view.plan, snapshot.usage ?? undefined),
+    ...sessionStatusProps(open),
     configuration: configurationProps(open),
   };
 }
@@ -148,4 +149,25 @@ function composerOptions({
   if (!options) return { configOptions: snapshot.configOptions };
 
   return { configOptions: options.configOptions, opening: options.loading };
+}
+
+function sendingProps(
+  open: OpenSession,
+): Pick<ComposerProps, 'sending' | 'sendable'> {
+  return { sending: isSending(open), sendable: isSendable(open) };
+}
+
+function sessionStatusProps({
+  permission,
+  view,
+  snapshot,
+}: OpenSession): Pick<
+  ComposerProps,
+  'permissionRequest' | 'writtenPlan' | 'status'
+> {
+  return {
+    permissionRequest: permission,
+    writtenPlan: writtenPlan(view.plan),
+    status: composerStatus(view.plan, snapshot.usage ?? undefined),
+  };
 }

@@ -6,8 +6,8 @@ import { Action } from '#primitives/actions/action';
 import { primaryModifier } from '#primitives/content/kbd';
 import { Text } from '#primitives/content/text';
 import { dismissToasts } from '#primitives/overlays/toast';
+import { List } from '../list';
 import { ListItem } from '../list-item';
-import { List } from './list';
 import {
   completeList,
   logList,

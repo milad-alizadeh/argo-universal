@@ -23,14 +23,12 @@ function proseRole(level: number | undefined): 'body' | 'title' | 'heading' {
 }
 
 export function Prose(props: ProseProps): React.JSX.Element {
-  const { headingLevel } = props;
-
   return (
     <ClampText
-      role={proseRole(headingLevel)}
+      role={proseRole(props.headingLevel)}
       tone={useContext(MarkdownTone)}
-      accessibilityRole={headingLevel ? 'heading' : undefined}
-      aria-level={headingLevel}
+      accessibilityRole={props.headingLevel ? 'heading' : undefined}
+      aria-level={props.headingLevel}
       className="min-w-0 max-w-full wrap-anywhere"
     >
       <InlineTokens tokens={props.tokens} />

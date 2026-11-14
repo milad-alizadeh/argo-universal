@@ -83,10 +83,26 @@ export const runningTurnComposer = {
   running: true,
 } satisfies ComposerFixture;
 
+export const queueReadyComposer = {
+  ...runningTurnComposer,
+  draft: readyComposer.draft,
+  queueWhileRunning: true,
+} satisfies ComposerFixture;
+
 // Inside a Session: the Plan tray sits above the card and the status tray below it.
 export const startedSessionComposer = {
   draft: emptyDraft,
   sessionStarted: true,
+} satisfies ComposerFixture;
+
+export const predictedReplyComposer = {
+  ...startedSessionComposer,
+  followUpSuggestion: {
+    sessionId: 'suggested-session',
+    turnId: 'suggested-turn',
+    text: 'Run the regression tests',
+    enabled: true,
+  },
 } satisfies ComposerFixture;
 
 // A Session in a worktree named for its id: the name gives up its width in a narrow column.

@@ -1,10 +1,12 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type { SubagentRole } from '@repo/contracts';
 import { SessionRowUpdateJob } from '../session-storage';
 import {
   openChildFeed,
   type ChildFeed,
   type OpenedChildFeed,
 } from './child-feed';
+import { withDeclaredRole, type AssociatedChild } from './declared-roles';
 import type { SubagentRouting } from './routing-types';
 import { deliverSubagentMessage, isSubagentMessage } from './subagent-messages';
 import { associationEvent } from './subagent-rows';
@@ -14,7 +16,12 @@ import { updateSubagentWork } from './work';
 export type Subagents = {
   children: ReadonlyMap<string, ChildFeed>;
   pendingMessages: readonly SessionNotification[];
+  // Roles the Session declared for the Agents it spawns next, oldest first (#2075).
+  declaredRoles: readonly SubagentRole[];
 };
+
+// Routing settles the children and held messages; the caller settles the declared roles.
+type RoutedSubagents = Omit<Subagents, 'declaredRoles'>;
 
 type Association = Extract<
   SessionNotification['update'],
@@ -37,13 +44,13 @@ function associate(
   input: SubagentRouting,
   children: Map<string, ChildFeed>,
   vendorId: string,
-): OpenedChildFeed | undefined {
+): AssociatedChild | undefined {
   const association = openOrKnown(input, children, vendorId);
 
   if (association.child.parentId !== input.parentId) return undefined;
   children.set(vendorId, association.child);
 
-  return association;
+  return withDeclaredRole(input, association);
 }
 
 function titleUpdate(
@@ -103,7 +110,7 @@ export function routeSubagents(
   input: SubagentRouting,
   previous: Subagents,
   notification: SessionNotification,
-): Subagents {
+): RoutedSubagents {
   const children = new Map(previous.children);
   const routing = routingSource(input, children.get(notification.sessionId));
 

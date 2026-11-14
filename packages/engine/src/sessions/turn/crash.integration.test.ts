@@ -12,7 +12,7 @@ const failed = crashed(new Error('Agent exited'));
 const crashContext = (overrides: Partial<CrashContext> = {}): CrashContext => ({
   activeTurnId: 'turn-1',
   turnEnding: { kind: 'completion' },
-  subagents: { children: new Map(), pendingMessages: [] },
+  subagents: { children: new Map(), pendingMessages: [], declaredRoles: [] },
   input: { now: () => 200 },
   ...overrides,
 });

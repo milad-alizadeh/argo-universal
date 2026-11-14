@@ -1,6 +1,7 @@
 import { pathStates, pathWalks, type Sent } from '@repo/vitest/model-audit';
 import { sessionMachine } from '../src/sessions';
 import { modelShellChanged } from './acp-model-start-events';
+import { queueAutomaticWalk } from './acp-queue-witnesses';
 import type {
   AcpModelSnapshot,
   createAcpSessionModel,
@@ -71,5 +72,6 @@ export function automaticWalks(
     ...entryWalks(initial),
     archiveWalk(initial),
     heldWalk(states, initial),
+    queueAutomaticWalk(initial),
   ];
 }

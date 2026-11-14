@@ -264,6 +264,10 @@ _Avoid_: Draft Session, pending Session
 A Session that another Session's Agent started over ACP to do delegated work. Only that parent drives it: it takes no prompt from the person, and it is shown in its parent's Workbench and Inspector, never as a row in the Sessions list. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so; the code still says `Subagent` and `parentSessionId`. The owner split off Started Session on 2026-11-10.
 _Avoid_: Subagent, child agent, task agent
 
+**Agent role**:
+What an Agent (the second sense) is for: Explore, Plan, Review, Test or General. Its parent's Agent declares it through `session.declareSubagentRole` before the spawn, since most Agents' spawn tools cannot carry one; a role the Agent itself reports counts only when none was declared, and an Agent with neither is General. Argo draws each role with its own mark in the Feed and the Agents list.
+_Avoid_: Agent type, subagent type
+
 **Started Session**:
 A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`.
 _Avoid_: Agent, Subagent, child Session, delegated Session
@@ -320,6 +324,10 @@ _Avoid_: Command (alone), shortcut, action
 An item offered in the Composer's `/` menu, from an Agent or a Plugin. An Agent's Composer suggestion represents a Slash command, which it states with `command`; a Plugin result is never one, whatever it inserts.
 _Avoid_: Slash command (for a Plugin result), autocomplete item
 
+**Follow-up suggestion**:
+A proposed next Prompt based on the conversation, offered in the Composer when what the user would naturally say next is clear. It becomes a draft only when the user accepts it.
+_Avoid_: Composer suggestion (for this), autocomplete, next step
+
 **Issue reference**:
 An Issue named in a prompt as `#` and its number.
 _Avoid_: Mention, issue link, tag
@@ -327,6 +335,10 @@ _Avoid_: Mention, issue link, tag
 **Prompt**:
 What is sent to a Session's Agent to start a Turn. It comes from the user, from another Session or from a Plugin, and the Feed shows which; only the user's is the user's own message.
 _Avoid_: Message (alone), input, instruction
+
+**Queued Prompt**:
+A user Prompt waiting in a Session’s ordered queue for a Turn of its own. It is future work, outside the Feed until it starts.
+_Avoid_: Pending message, draft Prompt
 
 **Turn**:
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.

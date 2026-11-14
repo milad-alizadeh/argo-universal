@@ -8,6 +8,7 @@ const LoggedRequest = z.object({
   id: MessageId.optional(),
   params: z
     .object({
+      prompt: z.unknown().optional(),
       cwd: z.string().optional(),
       configId: z.string().optional(),
       value: z.unknown().optional(),

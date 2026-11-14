@@ -1,4 +1,5 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type { ReactElement } from 'react';
@@ -56,9 +57,7 @@ function LaunchStatus(props: KindProps<'launch'>): ReactElement {
       <Text role="body" tone="muted">
         Couldn’t load configuration.
       </Text>
-      <Text role="secondary" tone="muted">
-        {props.message}
-      </Text>
+      <Markdown text={props.message} tone="muted" selectable />
       <View className="items-start">
         <Button size="sm" label="Retry" onPress={props.onRetry} />
       </View>

@@ -52,17 +52,19 @@ const issueLanding = (
   render: issuePage,
 });
 
-const rootPage = (data: RootData, to: To): JSX.Element => (
-  <RootPage rows={sidebarRows(data, to)} />
-);
+const rootPage = (
+  data: RootData,
+  to: To,
+  { context }: Pick<Input, 'context'>,
+): JSX.Element => <RootPage rows={sidebarRows(data, to, context)} />;
 
 const issuePage = (
   data: IssuePageData,
   to: To,
-  { params }: Pick<Input, 'params'>,
+  { params, context }: Pick<Input, 'params' | 'context'>,
 ): JSX.Element => (
   <RootPage
-    rows={sidebarRows(data, to)}
+    rows={sidebarRows(data, to, context)}
     detail={issueDetail(data, to, params)}
   />
 );
@@ -84,8 +86,17 @@ async function loadRoot(
   };
 }
 
-const sidebarRows = ({ sidebar, selected }: RootData, to: To): JSX.Element => (
-  <RootRows sidebar={sidebar} selected={selected} onRefresh={to.set({})} />
+const sidebarRows = (
+  { sidebar, selected }: RootData,
+  to: To,
+  context: Input['context'],
+): JSX.Element => (
+  <RootRows
+    sidebar={sidebar}
+    selected={selected}
+    onRefresh={to.set({})}
+    platform={context.surface?.platform}
+  />
 );
 
 type IssuePageData = RootData & {

@@ -4,6 +4,7 @@ import { PermissionOptionKind } from '../feed/tool-call';
 import { ChangesSummary } from './changes';
 import { PendingElicitation } from './elicitation';
 import { SessionInfo } from './list';
+import { PromptQueue, emptyPromptQueue } from './prompt-queue';
 import { SessionConfigOption } from './set-config-option';
 import { Shell } from './shells';
 import { Subagent } from './subagent';
@@ -88,6 +89,15 @@ export const LiveHeader = z.strictObject({
 
 export type LiveHeader = z.infer<typeof LiveHeader>;
 
+const maximumFollowUpLength = 1000;
+
+export const FollowUpSuggestion = z.strictObject({
+  turnId: turnColumns.shape.id,
+  text: z.string().max(maximumFollowUpLength).nullable(),
+});
+
+export type FollowUpSuggestion = z.infer<typeof FollowUpSuggestion>;
+
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
 export const SessionSnapshot = z.strictObject({
   ...SessionInfo.pick({
@@ -99,9 +109,12 @@ export const SessionSnapshot = z.strictObject({
     checkout: true,
   }).shape,
   startedBySessionId: sessionColumns.shape.startedBySessionId.default(null),
+  promptQueue: PromptQueue.default(emptyPromptQueue),
+  queueHolds: z.array(z.string()).default([]),
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),
+  followUpSuggestion: FollowUpSuggestion.nullable().optional(),
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),

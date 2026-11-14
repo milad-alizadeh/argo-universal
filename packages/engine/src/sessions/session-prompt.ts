@@ -15,6 +15,7 @@ type PromptSources = HandlerSources<
 type PromptTurn = {
   turnId: string;
   sender: PromptSender;
+  followUpSuggestions?: boolean;
   signal?: AbortSignal;
 };
 
@@ -44,10 +45,15 @@ export type AcceptedSessionPrompt =
 
 async function submitAcceptedPrompt(
   sessionActor: SessionActorRef,
-  { turnId, sender }: PromptTurn,
+  { turnId, sender, followUpSuggestions }: PromptTurn,
   content: SessionPromptInput['prompt'],
 ): Promise<AcceptedSessionPrompt> {
-  await submitSessionPrompt(sessionActor, { turnId, content, sender });
+  await submitSessionPrompt(sessionActor, {
+    turnId,
+    content,
+    sender,
+    followUpSuggestions,
+  });
 
   return { messageId: promptMessageId(turnId, sender), turnId };
 }
@@ -87,7 +93,7 @@ async function readyPromptSession(
 
 async function admitPrompt(
   sources: PromptSources,
-  { sessionId, prompt }: SessionPromptInput,
+  { sessionId, prompt, followUpSuggestions }: SessionPromptInput,
   { turnId, sender, signal }: PromptTurn,
 ): Promise<AcceptedSessionPrompt> {
   const sessionActor = await readyPromptSession(sources, sessionId, signal);
@@ -97,5 +103,7 @@ async function admitPrompt(
 
   sources.open.admit(signal);
 
-  return submitAcceptedPrompt(sessionActor, { turnId, sender }, answer.prompt);
+  const turn = { turnId, sender, followUpSuggestions };
+
+  return submitAcceptedPrompt(sessionActor, turn, answer.prompt);
 }

@@ -1,11 +1,15 @@
 import type {
   ContextUsage,
+  PromptQueue,
+  QueueCommand,
+  FollowUpSuggestion,
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
   SlashCommand,
   SessionOpenError,
   ShellRecord,
+  SubagentRole,
 } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
@@ -30,6 +34,10 @@ import type {
   NativePermissions,
 } from './native-permissions';
 import type { PermissionHooked } from './permission-hooks';
+import type {
+  QueueHoldConnections,
+  QueueEditDisconnected,
+} from './queue-hold-connections';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
 import type { Subagents } from './subagents';
@@ -84,13 +92,21 @@ export type SessionCommand =
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
     }
+  | {
+      type: 'session.queue';
+      connectionSignal?: AbortSignal;
+      command: QueueCommand;
+      committed: PromiseWithResolvers<void>;
+    }
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
+  | { type: 'session.declareSubagentRole'; role: SubagentRole }
   | { type: 'session.close' };
 
 export type SessionEvent =
   | SessionCommand
+  | QueueEditDisconnected
   | AcpLifetimeEvent
   | { type: typeof storageFailingEvent }
   | { type: typeof serverStoppingEvent }
@@ -102,11 +118,17 @@ export type SessionEvent =
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
+  promptQueue: PromptQueue;
+  queueHolds: Record<string, string>;
+  queueHoldConnections: QueueHoldConnections;
+  queueCommitted: Promise<void>;
+  dispatchingQueueId: string | null;
   archiveRequested: boolean;
   activeTurnId: string | null;
   // When the running Turn started, in epoch milliseconds.
   activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
+  followUpSuggestion: FollowUpSuggestion | null;
   permissionQueue: PendingPermission[];
   nativePermissions: NativePermissions;
   // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
@@ -128,6 +150,7 @@ export interface SessionContext extends SessionData {
   pendingSubmission: LocalSubmission | null;
   acpPrompt: PromptRequest | null;
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
+  acpSuggestionRejections: ReturnType<typeof createRejectionCounter>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
   acpTurnOutcome: AcpTurnOutcome | null;
   turnEnding: FeedTurnEnding;

@@ -11,6 +11,7 @@ export type FeedSnapshot = Pick<
 
 export type StoredSnapshot = Pick<
   SessionSnapshot,
+  | 'promptQueue'
   | 'projectId'
   | 'startedBySessionId'
   | 'agent'
@@ -25,6 +26,7 @@ export type StoredSnapshot = Pick<
 type SessionDisplayContext = Pick<
   SessionState['context'],
   | 'usage'
+  | 'followUpSuggestion'
   | 'permissionQueue'
   | 'elicitationQueue'
   | 'configOptions'
@@ -45,11 +47,16 @@ type StoredFields = Pick<
 
 type SessionFields = Pick<
   SessionSnapshot,
-  'usage' | 'pendingPermission' | 'pendingElicitation' | 'configOptions'
+  | 'usage'
+  | 'pendingPermission'
+  | 'pendingElicitation'
+  | 'configOptions'
+  | 'followUpSuggestion'
 >;
 
 const idleContext: SessionDisplayContext = {
   usage: null,
+  followUpSuggestion: null,
   permissionQueue: [],
   elicitationQueue: [],
   configOptions: [],
@@ -63,11 +70,11 @@ export function toSessionSnapshot(
 ): SessionSnapshot {
   return {
     ...storedFields(stored),
+    ...queueFields(session, stored),
     ...sessionFields(session),
     ...activeTurnFields(session, feed),
     changes: feed.changes ?? emptyChangesSummary,
-    maxRevision: feed.maxRevision,
-    epoch: feed.epoch,
+    ...revisionFields(feed),
     shells: session ? liveShells(session) : stored.shells,
   };
 }
@@ -102,6 +109,7 @@ function sessionFields(session: SessionState | null): SessionFields {
 
   return {
     usage: context.usage,
+    followUpSuggestion: context.followUpSuggestion,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,
     configOptions: withHeldConfiguration(
@@ -122,4 +130,22 @@ function liveShells(session: SessionState): SessionSnapshot['shells'] {
       terminalAvailable: session.context.shellRuntime.canStop(record.id),
     }),
   );
+}
+
+function queueFields(
+  session: SessionState | null,
+  stored: StoredSnapshot,
+): Pick<SessionSnapshot, 'promptQueue' | 'queueHolds'> {
+  return session
+    ? {
+        promptQueue: session.context.promptQueue,
+        queueHolds: Object.keys(session.context.queueHolds),
+      }
+    : { promptQueue: stored.promptQueue, queueHolds: [] };
+}
+
+function revisionFields(
+  feed: FeedSnapshot,
+): Pick<SessionSnapshot, 'maxRevision' | 'epoch'> {
+  return { maxRevision: feed.maxRevision, epoch: feed.epoch };
 }
