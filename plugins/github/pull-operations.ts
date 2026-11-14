@@ -79,10 +79,7 @@ export async function attach(
   reference: string,
   caller: SessionCaller,
 ): Promise<Attached> {
-  const named = parseReference(
-    reference,
-    (await checkoutOf(scope, caller)).originUrl,
-  );
+  const named = await namedOf(scope, reference, caller);
   const pull = await fetchPull(scope.fetch, { ...named, ...caller });
 
   await scope.store.attach({
@@ -105,10 +102,7 @@ export async function detach(
   reference: string,
   caller: SessionCaller,
 ): Promise<{ repository: string; number: number }> {
-  const named = parseReference(
-    reference,
-    (await checkoutOf(scope, caller)).originUrl,
-  );
+  const named = await namedOf(scope, reference, caller);
 
   await scope.store.detach({ ...named, ...caller });
   scope.changed();

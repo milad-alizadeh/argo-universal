@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ChangeActions } from '#features/sessions';
-import { associationsOf, type UnreadReading } from './change-associations';
+import { associationsOf } from './change-associations';
 import type { OperationRunner } from './page-calls-ports';
 
 const scope = { sessionId: 'session-1', projectId: 'project-1' };
@@ -95,9 +94,7 @@ describe('associationsOf', () => {
     );
 
     await associationsOf(runner(run), scope, {
-      unread: [],
-      set,
-      reload,
+      reading: { unread: [], set, reload },
     }).refresh?.();
     expect(run).toHaveBeenCalledWith(
       expect.objectContaining({ operation: 'refresh' }),
@@ -105,56 +102,5 @@ describe('associationsOf', () => {
     expect(set).toHaveBeenCalledWith([
       { repository: 'o/a', number: 3, error: 'down' },
     ]);
-  });
-
-  it('wraps a refusal that is not an Error in one, so the failure toast always has an Error to say', async () => {
-    const failing = runner(() => Promise.reject('offline'));
-
-    await associationsOf(failing, scope).attach('owner/repo#99');
-
-    expect(failing.failed).toHaveBeenCalledWith(new Error('offline'));
-  });
-
-  it.each([
-    ['attach', (actions: ChangeActions) => actions.attach('owner/repo#1')],
-    ['discover', (actions: ChangeActions) => actions.discover()],
-    [
-      'detach',
-      (actions: ChangeActions) =>
-        actions.detach({
-          stage: 'open',
-          repository: 'o/a',
-          number: 1,
-          title: 'x',
-          mergeable: true,
-        }),
-    ],
-  ])(
-    'reads the unread list again after %s, which changes what is attached, but not after a refusal',
-    async (_name, act) => {
-      const again = vi.fn<UnreadReading['reload']>(reload);
-      const reading: UnreadReading = {
-        unread: [],
-        set: vi.fn(),
-        reload: again,
-      };
-      const ok = runner(() =>
-        Promise.resolve({ result: { result: 'branchless' } }),
-      );
-      const refused = runner(() => Promise.reject(new Error('no')));
-
-      await act(associationsOf(refused, scope, reading));
-      expect(again).not.toHaveBeenCalled();
-      await act(associationsOf(ok, scope, reading));
-      expect(again).toHaveBeenCalledTimes(1);
-    },
-  );
-
-  it('offers the way to the Account sign-in only when the page gave one', () => {
-    const signIn = vi.fn<() => void>();
-
-    expect(associationsOf(runner(vi.fn()), scope).signIn).toBeUndefined();
-    associationsOf(runner(vi.fn()), scope, undefined, signIn).signIn?.();
-    expect(signIn).toHaveBeenCalledTimes(1);
   });
 });

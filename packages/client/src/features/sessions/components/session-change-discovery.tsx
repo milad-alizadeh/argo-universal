@@ -42,11 +42,16 @@ const labelOf = (pending: boolean): string =>
 const toneOf = ({ result }: DiscoveryResult): 'warning' | 'muted' =>
   result === 'unavailable' ? 'warning' : 'muted';
 
-function Answer({
-  result,
-  onSignIn,
-}: Pick<Looking, 'result'> &
-  Pick<SessionChangeDiscoveryProps, 'onSignIn'>): ReactElement | null {
+// A failed look that signing in would mend.
+const needsSignIn = ({ result, signIn }: DiscoveryResult): boolean =>
+  result === 'unavailable' && signIn;
+
+function Answer(
+  props: Pick<Looking, 'result'> &
+    Pick<SessionChangeDiscoveryProps, 'onSignIn'>,
+): ReactElement | null {
+  const { result } = props;
+
   if (!result) return null;
 
   return (
@@ -54,9 +59,7 @@ function Answer({
       <Text role="secondary" tone={toneOf(result)} accessibilityRole="alert">
         {discoveryMessage(result)}
       </Text>
-      {result.result === 'unavailable' && result.signIn && onSignIn && (
-        <SignInButton onSignIn={onSignIn} />
-      )}
+      <SignInButton needed={needsSignIn(result)} onSignIn={props.onSignIn} />
     </>
   );
 }

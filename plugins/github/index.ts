@@ -27,23 +27,30 @@ function sourceOf(argo: Argo): ChangesSource {
   };
 }
 
+async function markedOne(
+  argo: Argo,
+  context: SessionCaller,
+  changes: readonly ChangeItem[],
+): Promise<[string, ChangeItem[]]> {
+  return [
+    context.sessionId,
+    markCheckout(changes, await checkoutIdentity(argo, context)),
+  ];
+}
+
 // Each Session's Changes, the one on its Checkout's own line of work marked.
 async function markedBySession(
   argo: Argo,
   contexts: readonly SessionCaller[],
   answered: Readonly<Record<string, ChangeItem[]>>,
 ): Promise<Record<string, ChangeItem[]>> {
-  const marked = await Promise.all(
-    contexts.map(async (context): Promise<[string, ChangeItem[]]> => [
-      context.sessionId,
-      markCheckout(
-        answered[context.sessionId] ?? [],
-        await checkoutIdentity(argo, context),
+  return Object.fromEntries(
+    await Promise.all(
+      contexts.map((context) =>
+        markedOne(argo, context, answered[context.sessionId] ?? []),
       ),
-    ]),
+    ),
   );
-
-  return Object.fromEntries(marked);
 }
 
 function registerChanges(argo: Argo, source: ChangesSource): void {

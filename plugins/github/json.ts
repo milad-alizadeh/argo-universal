@@ -32,11 +32,13 @@ export function text(value: Json, invalid: string, ...path: string[]): string {
   throw new Error(invalid);
 }
 
+const isCount = (found: Json | undefined): found is number =>
+  typeof found === 'number' && Number.isSafeInteger(found) && found >= 0;
+
 export function count(value: Json, invalid: string, key: string): number {
   const found = valueAt(value, [key]);
 
-  if (typeof found === 'number' && Number.isSafeInteger(found) && found >= 0)
-    return found;
+  if (isCount(found)) return found;
 
   throw new Error(invalid);
 }

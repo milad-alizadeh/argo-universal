@@ -32,8 +32,9 @@ describe('createUnreadReader', () => {
 
   it('leaves what is known when an answer says nothing', async () => {
     const published = vi.fn<(unread: unknown[]) => void>();
+
     const reader = createUnreadReader(
-      () => Promise.resolve(undefined),
+      () => readUnread(answering(null), session),
       published,
     );
 
@@ -62,6 +63,7 @@ describe('a first read that failed', () => {
     const shown: unknown[][] = [];
     const lists = answering({ changes: [signInFailure] });
     const refreshes = answering({ changes: [{ id: 'github:owner/app#31' }] });
+
     const reader = createUnreadReader(
       () => readUnread(lists, session),
       (unread) => shown.push(unread),
@@ -71,9 +73,11 @@ describe('a first read that failed', () => {
     expect(shown.at(-1)).toEqual([signInFailure]);
 
     const actions = associationsOf(
-      { run: refreshes, failed: vi.fn() },
+      { run: refreshes, failed: vi.fn<OperationRunner['failed']>() },
       session,
-      { unread: [], set: reader.set, reload: reader.reload },
+      {
+        reading: { unread: [], set: reader.set, reload: reader.reload },
+      },
     );
 
     await actions.refresh();
@@ -82,9 +86,11 @@ describe('a first read that failed', () => {
 
   it('keeps the notice when the read of the list itself fails or is unreadable', async () => {
     const shown: unknown[][] = [];
+
     const failing = vi.fn<OperationRunner['run']>(() =>
       Promise.reject(new Error('down')),
     );
+
     const reader = createUnreadReader(
       () => readUnread(failing, session),
       (unread) => shown.push(unread),

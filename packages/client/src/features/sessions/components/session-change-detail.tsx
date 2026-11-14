@@ -93,16 +93,12 @@ function Heading({ title }: { title: string }): ReactElement {
 }
 
 function Body(props: SessionChangeDetailProps): ReactElement {
-  const { change } = props;
+  const { change, onRefresh, onSignIn } = props;
 
   return (
     <Stack direction="column" gap={3}>
       <ChangeStage {...change} />
-      <StaleBar
-        change={change}
-        onRefresh={props.onRefresh}
-        onSignIn={props.onSignIn}
-      />
+      <StaleBar change={change} onRefresh={onRefresh} onSignIn={onSignIn} />
       <Heading title={change.title} />
       <Facts change={change} />
       {change.checks && <PullRequestChecks {...change.checks} />}

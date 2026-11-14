@@ -1,9 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTRPC } from '#features/connection';
 import type { ChangeActions, UnreadChange } from '#features/sessions';
 import { associationsOf, type UnreadReading } from './change-associations';
-import { createUnreadReader, readUnread } from './unread-reader';
+import type { OperationRunner } from './page-calls-ports';
+import {
+  createUnreadReader,
+  readUnread,
+  type UnreadReader,
+} from './unread-reader';
 import { useOpenPluginPage } from './use-plugin-opener';
 import type { ChangesContext } from './use-session-pull-requests';
 import { useOperationRunner } from './use-tree-calls';
@@ -24,46 +29,77 @@ function useGithubEnabled(): boolean {
 
 const noSession: ChangesContext = { sessionId: '', projectId: '' };
 
+const none: UnreadChange[] = [];
+
+// What was read, and for which Session: another Session never shows it.
+interface Held {
+  key: string;
+  unread: UnreadChange[];
+}
+
+const keyOf = ({ projectId, sessionId }: ChangesContext): string =>
+  `${projectId}/${sessionId}`;
+
+interface Reading {
+  run: OperationRunner['run'];
+  session: ChangesContext;
+  publish: (held: Held) => void;
+}
+
+const readerOf = ({ run, session, publish }: Reading): UnreadReader =>
+  createUnreadReader(
+    () => readUnread(run, session),
+    (unread) => publish({ key: keyOf(session), unread }),
+  );
+
+// One reader per Session: it reads when the Session opens, and a Session that goes drops what it still has in flight.
+function useReader(
+  session: ChangesContext,
+  publish: (held: Held) => void,
+): UnreadReader {
+  const { run } = useOperationRunner();
+
+  const reader = useMemo(
+    () => readerOf({ run, session, publish }),
+    [run, session, publish],
+  );
+
+  useReading(reader, session);
+
+  return reader;
+}
+
+// It reads once the Session is known, and drops a reading still in flight when the Session goes.
+function useReading(reader: UnreadReader, session: ChangesContext): void {
+  useEffect(() => {
+    if (session.sessionId && session.projectId) void reader.reload();
+
+    return reader.cancel;
+  }, [reader, session]);
+}
+
 /*
  * The attached pull requests that were never read, from `github.list` when the Session opens and again after each
  * Operation that changes what is attached. A failed read of that list is not shown as none: it leaves what is known, and
  * the page's Retry reads again. Another Session starts from none, and its own answer alone may fill it.
  */
 function useUnread(session: ChangesContext): UnreadReading {
-  const { run } = useOperationRunner();
-  const [unread, setUnread] = useState<UnreadChange[]>([]);
-  const latestRun = useRef(run);
-  const { sessionId, projectId } = session;
-
-  useEffect(() => {
-    latestRun.current = run;
-  });
-
-  const reader = useMemo(
-    () =>
-      createUnreadReader(
-        () =>
-          readUnread((call) => latestRun.current(call), {
-            sessionId,
-            projectId,
-          }),
-        setUnread,
-      ),
-    [sessionId, projectId],
-  );
-
-  useEffect(() => {
-    setUnread([]);
-
-    if (sessionId && projectId) void reader.reload();
-
-    return reader.cancel;
-  }, [reader, sessionId, projectId]);
+  const key = keyOf(session);
+  const [held, setHeld] = useState<Held>({ key, unread: none });
+  const reader = useReader(session, setHeld);
+  const unread = held.key === key ? held.unread : none;
 
   return useMemo(
     () => ({ unread, set: reader.set, reload: reader.reload }),
     [unread, reader],
   );
+}
+
+// The way to the Account's own sign-in, which this page does not draw.
+function useSignIn(): () => void {
+  const openPage = useOpenPluginPage();
+
+  return useCallback(() => openPage(accountPluginId, signInPath), [openPage]);
 }
 
 // The Session, only while the GitHub Plugin is on.
@@ -84,14 +120,10 @@ export function useChangeAssociations(
   const runner = useOperationRunner();
   const scope = useScope(session);
   const reading = useUnread(scope ?? noSession);
-  const openPage = useOpenPluginPage();
+  const signIn = useSignIn();
 
   return useMemo(
-    () =>
-      scope &&
-      associationsOf(runner, scope, reading, () =>
-        openPage(accountPluginId, signInPath),
-      ),
-    [runner, scope, reading, openPage],
+    () => scope && associationsOf(runner, scope, { reading, signIn }),
+    [runner, scope, reading, signIn],
   );
 }

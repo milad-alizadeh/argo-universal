@@ -60,43 +60,74 @@ const nothingUnread: UnreadReading = {
 type Runs = Pick<ChangeActions, 'attach' | 'detach' | 'discover'>;
 
 // Attaching, detaching and discovering each change what is attached, so what was never read is asked again.
-async function changing(
+async function change(
+  runner: OperationRunner,
   reading: UnreadReading,
-  answer: Answer | undefined,
+  association: Association,
 ): Promise<Answer | undefined> {
+  const answer = await run(runner, association);
+
   if (answer) await reading.reload();
 
   return answer;
 }
 
-const runsOf = (
-  runner: OperationRunner,
-  scope: ChangesContext,
-  reading: UnreadReading,
-): Runs => ({
-  attach: async (reference) =>
-    !!(await changing(
-      reading,
-      await run(runner, { operation: 'attach', scope, reference }),
-    )),
-  detach: async (change) =>
-    !!(await changing(
-      reading,
-      await run(runner, {
-        operation: 'detach',
-        scope,
-        reference: referenceOfChange(change),
-      }),
-    )),
-  discover: async () => {
-    const answer = await changing(
-      reading,
-      await run(runner, { operation: 'discover', scope }),
-    );
+interface Acting {
+  runner: OperationRunner;
+  scope: ChangesContext;
+  reading: UnreadReading;
+}
+
+const attaching =
+  ({ runner, scope, reading }: Acting): Runs['attach'] =>
+  async (reference) =>
+    !!(await change(runner, reading, {
+      operation: 'attach',
+      scope,
+      reference,
+    }));
+
+const detaching =
+  ({ runner, scope, reading }: Acting): Runs['detach'] =>
+  async (changed) =>
+    !!(await change(runner, reading, {
+      operation: 'detach',
+      scope,
+      reference: referenceOfChange(changed),
+    }));
+
+const discovering =
+  ({ runner, scope, reading }: Acting): Runs['discover'] =>
+  async () => {
+    const answer = await change(runner, reading, {
+      operation: 'discover',
+      scope,
+    });
 
     return answer && discoveryOf(answer.result);
-  },
+  };
+
+const runsOf = (acting: Acting): Runs => ({
+  attach: attaching(acting),
+  detach: detaching(acting),
+  discover: discovering(acting),
 });
+
+// What the page adds to the controls: where the unread list is kept, and the way to the Account's sign-in.
+export interface AssociationExtras {
+  reading: UnreadReading;
+  signIn?: () => void;
+}
+
+const bare: AssociationExtras = { reading: nothingUnread };
+
+const refreshing =
+  (runner: OperationRunner, scope: ChangesContext, reading: UnreadReading) =>
+  async (): Promise<void> => {
+    const answer = await run(runner, { operation: 'refresh', scope });
+
+    if (answer) reading.set(unreadOf(answer.result));
+  };
 
 /*
  * The Operations behind the Session's association controls. They are the Agent's own `github.attach`, `github.detach`,
@@ -106,15 +137,10 @@ const runsOf = (
 export const associationsOf = (
   runner: OperationRunner,
   scope: ChangesContext,
-  reading: UnreadReading = nothingUnread,
-  signIn?: () => void,
+  { reading, signIn }: AssociationExtras = bare,
 ): ChangeActions => ({
-  ...runsOf(runner, scope, reading),
+  ...runsOf({ runner, scope, reading }),
   ...(signIn && { signIn }),
-  refresh: async () => {
-    const answer = await run(runner, { operation: 'refresh', scope });
-
-    if (answer) reading.set(unreadOf(answer.result));
-  },
+  refresh: refreshing(runner, scope, reading),
   unread: reading.unread,
 });

@@ -95,35 +95,41 @@ function Retrying({ actions, show, signIn }: RetryProps): ReactElement {
 
   return (
     <>
-      {signIn && actions.signIn && (
-        <View className="flex-row px-3 py-2">
-          <SignInButton onSignIn={actions.signIn} />
-        </View>
-      )}
+      <View className="flex-row px-3">
+        <SignInButton needed={signIn} onSignIn={actions.signIn} />
+      </View>
       <SessionChangeUnread unread={actions.unread} onRetry={retry} />
       <RefreshControl show={show} onRefresh={retry} />
     </>
   );
 }
 
-function Controls({
-  actions,
-  changes,
-}: Pick<SessionChangeListProps, 'changes'> & {
-  actions: ChangeActions;
-}): ReactElement {
+const needSignIn = (changes: readonly SessionPullRequest[]): boolean =>
+  changes.some(({ stale }) => stale === 'signIn');
+
+function Finding({ actions }: { actions: ChangeActions }): ReactElement {
   return (
     <>
-      <Retrying
-        actions={actions}
-        show={changes.length > 0}
-        signIn={changes.some(({ stale }) => stale === 'signIn')}
-      />
       <SessionChangeDiscovery
         onDiscover={actions.discover}
         onSignIn={actions.signIn}
       />
       <SessionChangeAttach onAttach={actions.attach} />
+    </>
+  );
+}
+
+type ControlsProps = Pick<SessionChangeListProps, 'changes'> & {
+  actions: ChangeActions;
+};
+
+function Controls({ actions, changes }: ControlsProps): ReactElement {
+  const signIn = needSignIn(changes);
+
+  return (
+    <>
+      <Retrying actions={actions} show={changes.length > 0} signIn={signIn} />
+      <Finding actions={actions} />
     </>
   );
 }

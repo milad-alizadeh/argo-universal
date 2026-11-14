@@ -33,10 +33,15 @@ export function ChangeStale({
 
 // Provisional: leads into the Account's existing sign-in, which the Issue tracker Plugin draws; it takes no token itself.
 export function SignInButton({
+  needed,
   onSignIn,
 }: {
-  onSignIn: () => void;
-}): ReactElement {
+  // Whether signing in would mend what failed.
+  needed: boolean;
+  onSignIn?: () => void;
+}): ReactElement | null {
+  if (!needed || !onSignIn) return null;
+
   return <Button size="sm" label="Sign in to GitHub" onPress={onSignIn} />;
 }
 
@@ -47,21 +52,27 @@ interface StaleBarProps {
   onSignIn?: () => void;
 }
 
-// The detail's notice that its Change is what was last known, with the Refresh that reads it again.
-export function StaleBar({
+function StaleActions({
   change,
   onRefresh,
   onSignIn,
-}: StaleBarProps): ReactElement | null {
-  if (!change.stale) return null;
+}: StaleBarProps): ReactElement {
+  return (
+    <>
+      <SignInButton needed={change.stale === 'signIn'} onSignIn={onSignIn} />
+      {onRefresh && <Button size="sm" label="Refresh" onPress={onRefresh} />}
+    </>
+  );
+}
+
+// The detail's notice that its Change is what was last known, with the Refresh that reads it again.
+export function StaleBar(props: StaleBarProps): ReactElement | null {
+  if (!props.change.stale) return null;
 
   return (
     <View className="items-start gap-2">
-      <ChangeStale stale={change.stale} />
-      {change.stale === 'signIn' && onSignIn && (
-        <SignInButton onSignIn={onSignIn} />
-      )}
-      {onRefresh && <Button size="sm" label="Refresh" onPress={onRefresh} />}
+      <ChangeStale stale={props.change.stale} />
+      <StaleActions {...props} />
     </View>
   );
 }

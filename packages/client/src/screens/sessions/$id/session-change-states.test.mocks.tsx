@@ -53,6 +53,19 @@ export const unreadChanges: UnreadChange[] = [
 
 const header = { title: 'Work', status: 'idle', startedAt: null } as const;
 
+// The controls the GitHub Plugin gives the Changes tab; a Retry may be a read that then succeeds.
+const actionsOf = (props: {
+  unread?: readonly UnreadChange[];
+  onRefresh?: () => Promise<void>;
+}): ChangeActions => ({
+  attach,
+  detach,
+  discover,
+  refresh: props.onRefresh ?? refresh,
+  signIn,
+  unread: props.unread ?? [],
+});
+
 // The Session's Inspector on its Changes tab, with the controls the GitHub Plugin gives it; the width sets desktop or phone.
 function Tab(props: {
   changes: readonly SessionPullRequest[];
@@ -73,14 +86,7 @@ function Tab(props: {
       <SessionInspector
         panels={panels}
         header={{ ...header, pullRequests: [...props.changes] }}
-        changeActions={{
-          attach,
-          detach,
-          discover,
-          refresh: props.onRefresh ?? refresh,
-          signIn,
-          unread: props.unread ?? [],
-        }}
+        changeActions={actionsOf(props)}
       />
     </View>
   );
