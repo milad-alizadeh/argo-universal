@@ -69,6 +69,8 @@ export type GitHubFixture = FixtureServices & {
   accepted: Set<string>;
   // Set to make every call to `api.github.com` fail with this status, once signed in.
   failWith: { status: number | null };
+  // Set to hold every call to `api.github.com` until the promise settles: a GitHub that answers slowly.
+  stall: { until: Promise<void> | null };
   // The repository each fork was made from, by `owner/repository`.
   parents: Map<string, string>;
   // Calls asking which pull requests a branch has.
@@ -136,13 +138,15 @@ const deviceCode = (): FixtureAnswer => ({
 const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
   String(headers.authorization).replace(/^Bearer /, '');
 
-function api(held: Held, request: FixtureRequest): FixtureAnswer {
-  if (!held.accepted.has(bearerOf(request)))
+async function api(held: Held, call: FixtureRequest): Promise<FixtureAnswer> {
+  await held.stall.until;
+
+  if (!held.accepted.has(bearerOf(call)))
     return refusal('Bad credentials', unauthorized);
 
-  return request.path === '/user'
+  return call.path === '/user'
     ? { json: { login: 'octocat' } }
-    : rest(held, request.path);
+    : rest(held, call.path);
 }
 
 const githubCom = (request: FixtureRequest): FixtureAnswer =>
@@ -152,7 +156,7 @@ const githubCom = (request: FixtureRequest): FixtureAnswer =>
 
 const handle =
   (held: Held) =>
-  (request: FixtureRequest): FixtureAnswer =>
+  (request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> =>
     request.host === 'github.com' ? githubCom(request) : api(held, request);
 
 const heldOf = (): Held => ({
@@ -161,6 +165,7 @@ const heldOf = (): Held => ({
   accepted: new Set(['token-1']),
   parents: new Map(),
   failWith: { status: null },
+  stall: { until: null },
   checks: new Map(),
   checksFailWith: new Map(),
 });
