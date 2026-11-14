@@ -1,5 +1,7 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactNode } from 'react';
-import { Pressable, View, type PressableProps } from 'react-native';
 import type { WorkbenchSection } from '../session-workbench';
 import {
   openLabel,
@@ -64,6 +66,7 @@ const pluginCard = (
     : {
         ...lineCard(first, onOpen),
         onOpen: undefined,
+        noRows: false,
         summary: <CardLines lines={[first, ...rest]} onOpen={onOpen} />,
       };
 
@@ -72,27 +75,34 @@ function CardLines({
   onOpen,
 }: Pick<SessionBarProps, 'onOpen'> & { lines: Lines }): ReactNode {
   return (
-    <View className="gap-2">
-      {lines.map((entry) => (
-        <BarRow key={entry.path ?? entry.text} entry={entry} onOpen={onOpen} />
-      ))}
-    </View>
+    <List appearance="plain" density="compact" padding={0} fit>
+      <ListSection>
+        {lines.map((entry) => (
+          <BarRow key={rowKey(entry)} entry={entry} onOpen={onOpen} />
+        ))}
+      </ListSection>
+    </List>
   );
 }
 
 function BarRow({ entry, onOpen }: RowProps): ReactNode {
-  const line = <SessionBarLine entry={entry} />;
-
-  if (entry.path === undefined) return line;
-
-  return <Pressable {...rowOpenProps(entry, onOpen)}>{line}</Pressable>;
+  return (
+    <ListItem
+      title={entry.text}
+      leading={
+        entry.icon && <Icon name={entry.icon} tone={entry.tone ?? 'muted'} />
+      }
+      accessibilityLabel={`${openLabel(entry)}: ${entry.text}`}
+      onPress={openRow(entry, onOpen)}
+    />
+  );
 }
 
-const rowOpenProps = (
+const openRow = (
   entry: SessionBarEntry,
   onOpen: SessionBarProps['onOpen'],
-): Pick<PressableProps, 'role' | 'accessibilityLabel' | 'onPress'> => ({
-  role: 'button',
-  accessibilityLabel: `${openLabel(entry)}: ${entry.text}`,
-  onPress: (): void => onOpen(entry),
-});
+): (() => void) | undefined =>
+  entry.path === undefined ? undefined : (): void => onOpen(entry);
+
+const rowKey = ({ path, text }: SessionBarEntry): string =>
+  JSON.stringify([path, text]);

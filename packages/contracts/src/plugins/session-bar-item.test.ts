@@ -38,7 +38,7 @@ it('accepts multiple lines per Plugin and Session, with one line on the phone st
   expect(slotRegistry.find(({ id }) => id === sessionBarSlotId)).toMatchObject({
     content: {
       key: 'sessionId',
-      limit: { phone: 1, desktop: 1, perPlugin: 500 },
+      limit: { phone: 1, desktop: 1, perPlugin: null },
     },
   });
 });

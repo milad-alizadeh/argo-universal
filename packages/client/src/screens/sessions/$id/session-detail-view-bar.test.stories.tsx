@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 
 const lines = [issue, deploys, coverage];
 
-const opened = (
+const onOpenOf = (
   view: SessionDetailViewProps,
 ): SessionBarProps['onOpen'] | false | undefined =>
   view.state === 'open' && view.bar?.onOpen;
@@ -79,11 +79,14 @@ export const AttachedIssuesShareOneCard: Story = {
     const workbench = await findWorkbench(canvas);
 
     const card = within(
-      await workbench.findByTestId('workbench-bar:issue-tracker'),
+      await workbench.findByRole('group', {
+        name: 'Issue tracker',
+        exact: true,
+      }),
     );
 
     await expect(
-      workbench.getAllByTestId('workbench-bar:issue-tracker'),
+      workbench.getAllByRole('group', { name: 'Issue tracker', exact: true }),
     ).toHaveLength(1);
 
     for (const line of [issue, secondIssueLine]) {
@@ -93,7 +96,7 @@ export const AttachedIssuesShareOneCard: Story = {
           name: `Open ${line.pluginName}: ${line.text}`,
         }),
       );
-      await expect(opened(args.view)).toHaveBeenLastCalledWith(line);
+      await expect(onOpenOf(args.view)).toHaveBeenLastCalledWith(line);
     }
 
     await expect(workbench.getByText(deploys.text)).toBeVisible();

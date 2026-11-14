@@ -1,5 +1,6 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import {
+  sessionBarSlotId,
   sessionRowSlotId,
   type PluginEvent,
   type SlotItemsInput,
@@ -59,6 +60,30 @@ const answer = (id: number, text: string): SlotCall => ({
   action: 'items',
   id,
   items: { first: [{ text }] },
+});
+
+it('keeps all Session bar lines when a Session has more than 500 attachments', async () => {
+  const { calls } = slotItems();
+
+  const items = Array.from({ length: 501 }, (_, index) => ({
+    text: `#${index + 1} · Open`,
+    action: { path: `/issues/${index + 1}` },
+  }));
+
+  const pending = calls.items('counter', {
+    ...input,
+    slotId: sessionBarSlotId,
+  });
+
+  calls.receive(
+    { pluginId: 'counter', generation: 1 },
+    {
+      action: 'items',
+      id: 0,
+      items: { first: items },
+    },
+  );
+  expect(await pending).toEqual({ ok: true, items: { first: items } });
 });
 
 it('keeps an answer for its worker generation and asks a new generation again', async () => {
