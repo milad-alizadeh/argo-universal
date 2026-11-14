@@ -77,6 +77,21 @@ import {
   toolCallHooks,
   toolCallHooksId,
 } from './permission-hooks';
+import { prepareQueuedPrompt } from './prepare-queued-prompt';
+import { queueWrite } from './prompt-queue';
+import { queueCommandStep } from './queue-command-step';
+import {
+  disconnectedQueueHold,
+  stopQueueHolds,
+} from './queue-hold-connections';
+import {
+  selectQueuedPrompt,
+  removeQueuedPrompt,
+  startQueuedTurn,
+  withQueuePause,
+  endQueuedTurn,
+  hasQueuedPrompt,
+} from './queue-steps';
 import {
   cancelRequests,
   hookedAnswer,
@@ -318,6 +333,9 @@ const sessionSetup = setup({
     tags: {} as SessionTag,
   },
   actors: {
+    prepareQueuedPrompt: fromPromise(({ input }: { input: SessionContext }) =>
+      prepareQueuedPrompt(input),
+    ),
     toolCallHooks,
     saveArchive: fromPromise<
       void,
@@ -373,6 +391,39 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    changePromptQueue: enqueueActions(({ context, event, enqueue, self }) => {
+      assertEvent(event, 'session.queue');
+      enqueueTurnStep(
+        enqueue,
+        context,
+        queueCommandStep(context, event, (disconnected) =>
+          self.send(disconnected),
+        ),
+      );
+    }),
+    releaseDisconnectedQueueHold: assign(({ context, event }) => {
+      assertEvent(event, 'session.queueEditDisconnected');
+
+      return disconnectedQueueHold(context, event);
+    }),
+    stopQueueHolds: ({ context }): void => stopQueueHolds(context),
+    selectQueuedPrompt: assign(({ context }) => selectQueuedPrompt(context)),
+    removeQueuedPrompt: enqueueActions(({ context, enqueue }) =>
+      enqueueTurnStep(enqueue, context, removeQueuedPrompt(context)),
+    ),
+    pausePromptQueue: enqueueActions(({ context, enqueue }, reason: string) => {
+      const promptQueue = { ...context.promptQueue, pauseReason: reason };
+      enqueue.assign({ promptQueue });
+      enqueue.sendTo(writer, {
+        type: writeFeedEvent,
+        job: queueWrite(context.sessionId, promptQueue),
+      });
+    }),
+    abandonQueuedDispatch: assign({
+      dispatchingQueueId: null,
+      pendingSubmission: null,
+    }),
+
     rememberCreationReceipt: assign(({ event }) => {
       assertEvent(event, creationSettledEvent);
 
@@ -639,7 +690,7 @@ const sessionSetup = setup({
         enqueueTurnStep(
           enqueue,
           context,
-          sessionTurn.start(
+          startQueuedTurn(
             context,
             params.turnId,
             wantsFollowUpSuggestions(context),
@@ -648,9 +699,8 @@ const sessionSetup = setup({
       },
     ),
     endTurn: enqueueActions(
-      ({ context, enqueue }, ended: EndTurnParameters): void => {
-        enqueueTurnStep(enqueue, context, sessionTurn.end(context, ended));
-      },
+      ({ context, enqueue }, ended: EndTurnParameters): void =>
+        enqueueTurnStep(enqueue, context, endQueuedTurn(context, ended)),
     ),
     queuePermission: assign(
       ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
@@ -790,10 +840,11 @@ const sessionSetup = setup({
     recordCrash: enqueueActions(
       ({ context, event, enqueue }, params: CrashNoticeParameters): void => {
         assertEvent(event, 'acp.failed');
+        const step = sessionTurn.crash(context, event, crashDuringTurn(params));
         enqueueTurnStep(
           enqueue,
           context,
-          sessionTurn.crash(context, event, crashDuringTurn(params)),
+          withQueuePause(context, step, 'Agent connection failed'),
         );
       },
     ),
@@ -872,6 +923,8 @@ const sessionSetup = setup({
         context.vendorSessionId,
         event.notification.update.sessionUpdate,
       ),
+    hasQueuedPrompt: ({ context }) => hasQueuedPrompt(context),
+    hasQueuedSubmission: ({ context }) => context.dispatchingQueueId !== null,
     hasAcpConfig: ({ context }) => context.configQueue.length > 0,
     hasSubmission: ({ context }) => context.pendingSubmission !== null,
     hasHeldSubmission: ({ context }): boolean =>
@@ -1067,6 +1120,13 @@ export const sessionMachine = sessionSetup.createMachine({
       },
     },
     open: {
+      exit: 'stopQueueHolds',
+      on: {
+        'session.queue': { actions: 'changePromptQueue' },
+        'session.queueEditDisconnected': {
+          actions: 'releaseDisconnectedQueueHold',
+        },
+      },
       invoke: {
         id: 'feed',
         src: 'feed',
@@ -1248,13 +1308,63 @@ export const sessionMachine = sessionSetup.createMachine({
               always: [
                 { guard: 'hasAcpConfig', target: configuringState },
                 { guard: 'hasHeldSubmission', actions: 'releaseHeldConfig' },
+                { guard: 'hasQueuedSubmission', target: 'preparingQueue' },
                 { guard: 'hasSubmission', target: 'committing' },
+                { guard: 'hasQueuedPrompt', target: 'selectingQueue' },
               ],
               on: {
                 'acp.failed': { target: 'closing', actions: 'recordCrash' },
                 'session.close': { target: 'closing' },
                 'session.prompt': {
                   actions: ['rememberSubmission', 'releaseHeldConfig'],
+                },
+              },
+            },
+            selectingQueue: {
+              entry: 'selectQueuedPrompt',
+              always: 'idle',
+            },
+            preparingQueue: {
+              tags: ['ready', 'running'],
+              invoke: {
+                id: 'prepareQueuedPrompt',
+                src: 'prepareQueuedPrompt',
+                input: ({ context }): SessionContext => context,
+                onDone: [
+                  {
+                    guard: ({ event }): boolean => event.output === null,
+                    target: 'idle',
+                    actions: 'removeQueuedPrompt',
+                  },
+                  {
+                    target: 'committing',
+                    actions: assign({
+                      pendingSubmission: ({ event }) => event.output,
+                    }),
+                  },
+                ],
+                onError: {
+                  target: 'idle',
+                  actions: [
+                    {
+                      type: 'pausePromptQueue',
+                      params: 'Prompt could not start',
+                    },
+                    'abandonQueuedDispatch',
+                  ],
+                },
+              },
+              on: {
+                'session.cancel': {
+                  target: 'idle',
+                  actions: [
+                    { type: 'pausePromptQueue', params: 'Turn stopped' },
+                    'abandonQueuedDispatch',
+                  ],
+                },
+                'session.close': {
+                  target: 'closing',
+                  actions: ['abandonQueuedDispatch'],
                 },
               },
             },
@@ -1287,6 +1397,11 @@ export const sessionMachine = sessionSetup.createMachine({
                         error: event.error,
                       }),
                     },
+                    {
+                      type: 'pausePromptQueue',
+                      params: 'Configuration could not be applied',
+                    },
+                    'abandonQueuedDispatch',
                   ],
                 },
               },

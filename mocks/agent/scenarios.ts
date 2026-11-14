@@ -18,6 +18,7 @@ import { notificationScenarios } from './notification-scenarios.ts';
 import { permissionScenarios } from './permission-command-scenario.ts';
 import { planModeScenarios } from './plan-mode-scenario.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
+import { queueScenarios } from './queue-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
 import { signInScenarios } from './sign-in-scenarios.ts';
@@ -96,6 +97,7 @@ export const scenarios = {
       'session/prompt': [{ steps: [{ type: 'wait-for-release' }] }, {}],
     },
   },
+  ...queueScenarios(scenario, reply),
   ...exitScenarios,
   ...signInScenarios([reply]),
   'exit-with-stderr': {

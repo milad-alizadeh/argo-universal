@@ -53,6 +53,9 @@ export const session = snakeCase.table('session', {
   configValues: text({ mode: 'json' })
     .notNull()
     .default(sql`'[]'`),
+  promptQueue: text({ mode: 'json' })
+    .notNull()
+    .default(sql`'{"items":[],"pauseReason":null}'`),
   heldConfig: text({ mode: 'json' })
     .notNull()
     .default(sql`'[]'`),

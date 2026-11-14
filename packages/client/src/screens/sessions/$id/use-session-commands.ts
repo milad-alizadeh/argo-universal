@@ -11,9 +11,10 @@ import {
   useSessionConfigChange,
 } from '#features/sessions';
 import { useFollowUpSuggestionsPreference } from '#features/settings';
+import { useQueueCommand, type QueueCommandSender } from './use-prompt-queue';
 import { useRetryPrompt } from './use-retry-prompt';
 
-type SessionMutation<Name extends 'prompt' | 'cancel'> = ServerMutation<
+type SessionMutation<Name extends 'submit' | 'cancel'> = ServerMutation<
   TRPC['session'][Name]
 >;
 
@@ -26,10 +27,11 @@ export type SessionCommands = Omit<
   followUpSuggestions?: boolean;
   dismissedFollowUpTurnId?: string;
   dismissFollowUp?: (turnId: string) => void;
-  promptSession: SessionMutation<'prompt'>;
+  promptSession: SessionMutation<'submit'>;
   cancelTurn: SessionMutation<'cancel'>;
   setConfigOption: SessionConfigChange['setConfigOption'];
   changeConfig: SessionConfigChange['change'];
+  queueCommand: QueueCommandSender;
   sendDraft: (sent: ComposerDraft) => Promise<void>;
   // Sends a stopped Turn's prompt again and leaves the draft as it is.
   retryPrompt: (prompt: ContentBlock[]) => void;
@@ -43,7 +45,7 @@ interface SessionCommandTarget {
 
 type DraftCommands = Omit<
   SessionCommands,
-  'cancelTurn' | 'setConfigOption' | 'changeConfig'
+  'cancelTurn' | 'setConfigOption' | 'changeConfig' | 'queueCommand'
 >;
 
 interface PromptFollowUp {
@@ -57,6 +59,7 @@ export function useSessionCommands(
 ): SessionCommands {
   return {
     ...useDraftCommands(target),
+    queueCommand: useQueueCommand(target),
     cancelTurn: useCancelTurn(target.resumeAfterCommand),
     ...useConfigCommands(target),
   };
@@ -127,7 +130,7 @@ function usePromptDraft(
 function usePromptSession({
   clearDraft,
   resumeAfterCommand,
-}: PromptFollowUp): SessionMutation<'prompt'> {
+}: PromptFollowUp): SessionMutation<'submit'> {
   const trpc = useTRPC();
 
   const onSuccess = (): void => {
@@ -135,7 +138,7 @@ function usePromptSession({
     resumeAfterCommand();
   };
 
-  return useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
+  return useMutation(trpc.session.submit.mutationOptions({ onSuccess }));
 }
 
 function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {
@@ -146,7 +149,7 @@ function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {
 
 type DraftSendTarget = {
   sessionId: string;
-  promptSession: SessionMutation<'prompt'>;
+  promptSession: SessionMutation<'submit'>;
   followUpSuggestions: boolean;
 };
 

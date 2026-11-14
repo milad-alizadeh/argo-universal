@@ -1,3 +1,4 @@
+import { PromptQueue } from '@repo/contracts';
 import {
   InitialConfigOption,
   TurnError,
@@ -13,6 +14,7 @@ import {
   readQueuedFeed,
 } from '../feed';
 import type { WriterActorRef } from '../storage';
+import type { SessionContext } from './session-context';
 import type { SessionData, SessionInput } from './session-data';
 import { readSessionRow } from './session-record';
 
@@ -113,13 +115,13 @@ function requireStoredSession(
 export async function loadSession(
   input: SessionInput,
   writer?: WriterActorRef,
-): Promise<SessionData> {
+): Promise<SessionData & Pick<SessionContext, 'promptQueue'>> {
   const row = requireStoredSession(input, writer);
-  const position = nextPosition(input, writer);
 
   return {
     ...storedValues(row),
-    nextPosition: position,
+    promptQueue: PromptQueue.parse(row.promptQueue),
+    nextPosition: nextPosition(input, writer),
     kept: true,
     undisclosedInterruptedTurnId: interruptionFor(input),
   };

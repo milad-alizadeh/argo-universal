@@ -17,6 +17,7 @@ import {
   writeDatabaseJobAndWaitForCommit,
 } from '../storage';
 import { BlobMetadataUpsertJob, storedBlobIds } from './blob-storage';
+import { noQueuedBlobReference } from './queued-blob-reference';
 
 export const unusedBlobAge = 86_400_000;
 
@@ -130,7 +131,13 @@ const deleteUnusedBlobRows = (
 ): { id: string }[] =>
   database
     .delete(blob)
-    .where(and(lt(blob.createdAt, cutoff), noReference(database)))
+    .where(
+      and(
+        lt(blob.createdAt, cutoff),
+        noReference(database),
+        noQueuedBlobReference(),
+      ),
+    )
     .returning({ id: blob.id })
     .all();
 

@@ -43,6 +43,14 @@ const checkedApart = [
   'session.permissionRequested',
 ];
 
+// Queue behavior is exercised through the real App scenarios; this model walks the ACP lifecycle.
+const appQueueEvents = [
+  'session.queue',
+  'session.queueEditDisconnected',
+  'xstate.done.actor.prepareQueuedPrompt',
+  'xstate.error.actor.prepareQueuedPrompt',
+];
+
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
   entry: ModelEntry = 'opened',
@@ -67,7 +75,7 @@ const modelVertex = (snapshot: AcpModelSnapshot): Vertex => ({
 
 // What every ACP walk shares; only its start differs.
 const walkRules = {
-  omitted: checkedApart,
+  omitted: [...checkedApart, ...appQueueEvents],
   vertex: modelVertex,
   accepts: canApplyLifecycleEvent,
   eventKey: acpModelEventKey,

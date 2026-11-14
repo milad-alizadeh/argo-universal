@@ -42,6 +42,9 @@ export type PlainOperationId = Exclude<OperationId, NativeStartId>;
 export type PlainImplementations = {
   [Id in PlainOperationId]: (
     params: ParamsById[Id],
+    ...connection: Id extends 'session.queue'
+      ? [connectionSignal?: AbortSignal]
+      : []
   ) => Promise<ResultsById[Id]>;
 };
 

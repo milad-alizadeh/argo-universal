@@ -14,6 +14,7 @@ import { readSessionChanges, readSessionDiff } from './change-readers';
 import { applySessionConfig } from './configuration';
 import type { SessionList } from './list/session-list';
 import type { OpenSessions } from './open-sessions';
+import { managePromptQueue, submitAppPrompt } from './queue-commands';
 import { createSessionAgentReader, listSessionBranches } from './readers';
 import { cancelSession, closeSession } from './session-closure';
 import { createPlugin } from './session-new-plugin';
@@ -33,6 +34,7 @@ type SessionOperationId = Exclude<
 export type SessionOperationImplementations = {
   [Id in SessionOperationId]: (
     params: z.output<(typeof operations)[Id]['params']>,
+    connectionSignal?: AbortSignal,
   ) => Promise<z.output<(typeof operations)[Id]['result']>>;
 };
 
@@ -55,6 +57,7 @@ export const sessionOperationImplementations = (
 const actImplementations = (
   sources: SessionHandlerSources,
 ): Pick<SessionOperationImplementations, ActId> => ({
+  ...queueImplementations(sources),
   'session.cancel': async ({ sessionId }) =>
     cancelSession(sources.open, sessionId),
   'session.archive': ({ sessionId }) => archiveSession(sources, sessionId),
@@ -104,4 +107,14 @@ async function configureSession(
   const configOptions = await applySessionConfig(session, input);
 
   return { configOptions };
+}
+
+function queueImplementations(
+  sources: SessionHandlerSources,
+): Pick<SessionOperationImplementations, 'session.queue' | 'session.submit'> {
+  return {
+    'session.queue': (input, connectionSignal) =>
+      managePromptQueue(sources, input, connectionSignal),
+    'session.submit': (input) => submitAppPrompt(sources, input),
+  };
 }

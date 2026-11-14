@@ -18,7 +18,7 @@ export function useRetryPrompt(
 ): SessionCommands['retryPrompt'] {
   const trpc = useTRPC();
   const { enabled } = useFollowUpSuggestionsPreference();
-  const retry = useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
+  const retry = useMutation(trpc.session.submit.mutationOptions({ onSuccess }));
 
   useErrorToast(retry.isError ? retryFailed : undefined);
 

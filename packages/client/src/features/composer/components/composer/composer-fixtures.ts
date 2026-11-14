@@ -83,6 +83,12 @@ export const runningTurnComposer = {
   running: true,
 } satisfies ComposerFixture;
 
+export const queueReadyComposer = {
+  ...runningTurnComposer,
+  draft: readyComposer.draft,
+  queueWhileRunning: true,
+} satisfies ComposerFixture;
+
 // Inside a Session: the Plan tray sits above the card and the status tray below it.
 export const startedSessionComposer = {
   draft: emptyDraft,

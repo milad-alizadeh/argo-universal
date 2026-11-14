@@ -1,3 +1,4 @@
+import { emptyPromptQueue } from '@repo/contracts';
 import { AcpSessionLifetime } from './acp/acp-lifetime';
 import { initialSessionData } from './initial-session-data';
 import {
@@ -46,6 +47,7 @@ export const initialSessionContext = (
 
   return {
     input,
+    ...initialQueueState(),
     ...initialSessionData(input),
     ...initialTurnState(),
     ...initialAdmissionState(input),
@@ -53,3 +55,22 @@ export const initialSessionContext = (
     ...initialAcpState(input),
   };
 };
+
+type InitialQueueState = Pick<
+  SessionContext,
+  | 'promptQueue'
+  | 'queueHolds'
+  | 'queueCommitted'
+  | 'dispatchingQueueId'
+  | 'queueHoldConnections'
+>;
+
+function initialQueueState(): InitialQueueState {
+  return {
+    promptQueue: emptyPromptQueue(),
+    queueHolds: {},
+    queueHoldConnections: {},
+    queueCommitted: Promise.resolve(),
+    dispatchingQueueId: null,
+  };
+}

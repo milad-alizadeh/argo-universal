@@ -23,6 +23,7 @@ const sessionFieldColumns = {
   agent: session.agent,
   parentSessionId: session.parentSessionId,
   startedBySessionId: session.startedBySessionId,
+  promptQueue: session.promptQueue,
   epoch: session.epoch,
   maxRevision: session.maxRevision,
   id: session.id,

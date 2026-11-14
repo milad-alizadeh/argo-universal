@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { SessionQueueInput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -24,6 +26,25 @@ import {
 import type { OperationDefinition } from './index';
 
 export const sessionOperations = {
+  'session.submit': {
+    id: 'session.submit',
+    label: 'Submit Prompt',
+    description:
+      'Submit a user Prompt from an App, queuing it while the Session is busy or paused.',
+    params: SessionPromptInput,
+    result: z.strictObject({}),
+    tier: 'act',
+    keywords: ['prompt', 'queue'],
+  },
+  'session.queue': {
+    id: 'session.queue',
+    label: 'Manage Prompt queue',
+    description: 'Append, edit, delete, reorder or resume Queued Prompts.',
+    params: SessionQueueInput,
+    result: z.strictObject({}),
+    tier: 'act',
+    keywords: ['queue', 'prompt'],
+  },
   'session.new': {
     id: 'session.new',
     label: 'Start Session',

@@ -20,6 +20,7 @@ export const stored = SessionRecord.parse({
   vendorRef: null,
   configValues: [],
   heldConfig: [],
+  promptQueue: { items: [], pauseReason: null },
   epoch: 0,
   projectionVersion: 1,
   maxRevision: 0,

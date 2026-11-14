@@ -45,7 +45,7 @@ export class PromptChains {
   }
   // The user in the loop: the Session their Prompt reaches counts from zero, and no other Operation clears one.
   public clearedByUser({ id, params }: RanOperation): void {
-    if (id !== 'session.prompt') return;
+    if (!['session.prompt', 'session.submit'].includes(id)) return;
 
     this.cleared(SessionPromptInput.parse(params).sessionId);
   }

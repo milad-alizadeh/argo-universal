@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 import {
   connectAsDevice,
+  keepDeviceApp,
+  type DeviceApp,
   type ChannelTestHost,
   type TestDevice,
 } from '@repo/engine/mocks/engine-channel';
@@ -17,6 +19,14 @@ import {
  * A second App on this computer: the Engine's own channel client, which opens a real socket to the Server's real address and runs the shipped handshake.
  * The first App is the page the scenario already has; this one is what a phone is to it, a Device that is paired and then reads through the channel only (ADR-0045).
  */
+type PromptQueue = Awaited<
+  ReturnType<TestDevice['caller']['session']['get']['query']>
+>['promptQueue'];
+
+type QueueCommand = Parameters<
+  TestDevice['caller']['session']['queue']['mutate']
+>[0]['command'];
+
 export class SecondApp {
   readonly name = 'Second App';
 
@@ -24,7 +34,7 @@ export class SecondApp {
   private readonly httpUrl: string;
   private readonly port: number;
   private address: string | undefined;
-  private device: TestDevice | undefined;
+  private device: DeviceApp | undefined;
   private asking: Asking | undefined;
 
   constructor(httpUrl: string) {
@@ -43,12 +53,17 @@ export class SecondApp {
     const { invite } = await this.owner.client.pairing.mint.mutate();
     this.asking = await watchForDevice(this.owner);
 
-    this.device = await connectAsDevice(this.hostFor(invite.key, this.asking), {
-      ticket: invite.ticket,
-      name: this.name,
-      platform: 'android',
-      host: this.address ?? noAddress(),
-    });
+    const device = await connectAsDevice(
+      this.hostFor(invite.key, this.asking),
+      {
+        ticket: invite.ticket,
+        name: this.name,
+        platform: 'android',
+        host: this.address ?? noAddress(),
+      },
+    );
+
+    this.device = await keepDeviceApp(device);
   }
 
   async sessionTitles(): Promise<string[]> {
@@ -57,6 +72,37 @@ export class SecondApp {
     ).caller.session.list.query({ archived: false });
 
     return sessions.map((session) => session.title);
+  }
+
+  async submitPrompt(sessionId: string, text: string): Promise<void> {
+    await (this.device ?? noDevice()).caller.session.submit.mutate({
+      sessionId,
+      prompt: [{ type: 'text', text }],
+    });
+  }
+
+  async promptQueue(sessionId: string): Promise<PromptQueue> {
+    const snapshot = await (this.device ?? noDevice()).caller.session.get.query(
+      { sessionId },
+    );
+
+    return snapshot.promptQueue;
+  }
+
+  async changeQueue(sessionId: string, command: QueueCommand): Promise<void> {
+    await (this.device ?? noDevice()).caller.session.queue.mutate({
+      sessionId,
+      command,
+    });
+  }
+
+  async completedTurns(sessionId: string): Promise<number> {
+    const { rows } = await (this.device ?? noDevice()).caller.feed.page.query({
+      sessionId,
+      direction: 'tail',
+    });
+
+    return rows.filter((row) => 'turnEnd' in (row._meta?.argo ?? {})).length;
   }
 
   async pairedDeviceNames(): Promise<string[]> {
@@ -87,6 +133,7 @@ export class SecondApp {
 
   // Closes what the owner opened; safe to call twice.
   close(): void {
+    this.device?.close();
     this.asking?.stop();
     this.owner.close();
   }

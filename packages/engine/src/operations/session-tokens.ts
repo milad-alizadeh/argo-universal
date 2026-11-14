@@ -11,7 +11,7 @@ export type SessionCaller = {
 export type UserCaller = { kind: 'user' };
 
 // The App calls Operations from its own procedures, with neither a token nor a Tool call.
-export type AppCaller = { kind: 'app' };
+export type AppCaller = { kind: 'app'; connectionSignal?: AbortSignal };
 
 // Every kind of caller an Operation has.
 type OperationCaller = AppCaller | UserCaller | SessionCaller;

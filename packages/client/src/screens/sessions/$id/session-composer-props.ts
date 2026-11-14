@@ -17,6 +17,7 @@ import {
 } from '#features/sessions';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
+import { queueComposerProps } from './use-prompt-queue';
 import type { SessionCommands } from './use-session-commands';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -130,11 +131,11 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
 
   return {
     ...draftProps(commands),
+    ...queueComposerProps(open),
     followUpSuggestion: followUpProps(open),
     slashCommands: slashCommandsOf(open),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
-    sending: isSending(open),
-    sendable: isSendable(open),
+    ...sendingProps(open),
     ...sendError(commands),
     ...sessionStatusProps(open),
     configuration: configurationProps(open),
@@ -148,6 +149,12 @@ function composerOptions({
   if (!options) return { configOptions: snapshot.configOptions };
 
   return { configOptions: options.configOptions, opening: options.loading };
+}
+
+function sendingProps(
+  open: OpenSession,
+): Pick<ComposerProps, 'sending' | 'sendable'> {
+  return { sending: isSending(open), sendable: isSendable(open) };
 }
 
 function sessionStatusProps({

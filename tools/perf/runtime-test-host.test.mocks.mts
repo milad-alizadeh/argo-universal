@@ -52,6 +52,7 @@ export async function runtimeTestHost(
     ],
   });
 
+  await disableCounterPlugin(caller);
   const project = await fixtureProject(caller);
   const created = await createSession(caller, project, seed);
   const identity = z.object({ sessionId: z.string() }).parse(created.result);
@@ -72,6 +73,17 @@ function fixtureAgent(): string {
   if (!id) throw new Error('Runtime fixture needs an Agent');
 
   return id;
+}
+
+// The App fixture's Counter Plugin adds a queue Hook; runtime samples isolate the Agent's work.
+async function disableCounterPlugin(
+  caller: ReturnType<typeof createTRPCUntypedClient>,
+): Promise<void> {
+  await caller.mutation('operations.run', {
+    id: 'plugin.setEnabled',
+    params: { pluginId: 'counter', enabled: false },
+    wait: true,
+  });
 }
 
 async function fixtureProject(

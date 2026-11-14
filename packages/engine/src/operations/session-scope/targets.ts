@@ -110,6 +110,8 @@ const targetRules = {
   'session.listShells': sessionParam,
   'session.listBranches': sessionParam,
   'session.new': projectParam,
+  'session.queue': sessionParam,
+  'session.submit': sessionParam,
   'session.prompt': sessionParam,
   'session.cancel': sessionParam,
   'session.rename': sessionParam,

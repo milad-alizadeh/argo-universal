@@ -48,7 +48,7 @@ export function sendButtonState(
 }
 
 function isConnectionSendable(props: ComposerProps): boolean {
-  return (props.sendable ?? true) && !isTurnRunning(props);
+  return (props.sendable ?? true) && allowsSubmission(props);
 }
 
 function isTurnRunning({ configuration }: ComposerProps): boolean {
@@ -56,5 +56,11 @@ function isTurnRunning({ configuration }: ComposerProps): boolean {
 }
 
 function hasStopAction(props: ComposerProps): boolean {
-  return isTurnRunning(props) && Boolean(props.onStop);
+  return (
+    isTurnRunning(props) && Boolean(props.onStop) && !props.queueWhileRunning
+  );
+}
+
+function allowsSubmission(props: ComposerProps): boolean {
+  return !isTurnRunning(props) || props.queueWhileRunning === true;
 }

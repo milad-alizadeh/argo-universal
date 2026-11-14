@@ -1,0 +1,1 @@
+ALTER TABLE `session` ADD `prompt_queue` text DEFAULT '{"items":[],"pauseReason":null}' NOT NULL;
