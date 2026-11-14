@@ -43,6 +43,7 @@
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/manifest-fields": "./src/plugins/manifest-fields.ts",
+    "./agents/argo-instructions": "./src/agents/argo-instructions.ts",
     "./plugins/plugin-contributions": "./src/plugins/plugin-contributions.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
