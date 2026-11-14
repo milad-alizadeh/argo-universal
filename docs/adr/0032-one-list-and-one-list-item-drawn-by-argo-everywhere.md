@@ -53,7 +53,8 @@ What the native rows give that Argo's can't match is small:
   - `ListItem.Button` (`tone`: `accent` or `danger`, `onPress`): an action row. Copies `Button(role:)`.
 
   A plain `ListItem` with `value` and no `href` is a read-only value row, as `LabeledContent`. Choice is not a row type: `List.Section` takes `selectionMode` (`single` or `multiple`), `selection` and `onSelectionChange`, as SwiftUI `List(selection:)`, and the kit draws the check, radio or checkbox in each row's `accessory`. A page can hold several choice groups, one per Section.
-- **Platform placement lives in the kit, never in screens or Plugins.** Server-side Plugin JSX never sees the platform, so every platform difference in ADR-0033 is drawn from one tree:
+- **Issues filter navigation is a narrow platform exception** (owner, 2026-11-14). The Issues Plugin may read the App's reported platform from its render context to use a grouped List of FieldGroup navigation rows on iOS and Android, while keeping its existing ListItem sidebar on web and desktop. It uses the existing native row components and preserves navigation, icons, counts, error footers and refresh. Other Plugin data rows keep the rule below; this adds no wire component or platform-dependent query.
+- **Platform placement otherwise lives in the kit, never in screens or Plugins.** Server-side Plugin JSX never sees the platform, so every platform difference in ADR-0033 is drawn from one tree:
   - a row's `description` is the section footer on iOS, and the row's subtitle, under its title, on desktop, web and Android (amended by the owner on 2026-10-19, Paper "Settings · Porcelain");
   - `value` is trailing text before the chevron on iOS and desktop, and the subtitle on Android;
   - a Section holding only `ListItem.TextField`s renders as stacked Material fields on Android;

@@ -77,11 +77,14 @@ function pluralNoun(noun: string, count: number): string {
 export function groupTitle(toolCalls: ToolCallUpdate[]): string {
   const counts = categoryCounts(toolCalls);
 
-  return (
+  const title =
     summaryOrder
       .flatMap((category) =>
         countedTitles(categoryLabels[category], counts[category]),
       )
-      .join(', ') || 'Worked'
-  );
+      .join(', ') || 'Worked';
+
+  const failures = toolCalls.filter((row) => toolCallFacts(row).failed).length;
+
+  return failures ? `${title} · ${failures} failed` : title;
 }

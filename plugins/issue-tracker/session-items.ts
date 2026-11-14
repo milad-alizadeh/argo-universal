@@ -23,11 +23,9 @@ const stateText = ({ status, closedAs }: IssueSummary): string =>
 export const rowItems = (pathOf: PathOf, entries: Linked[]): SessionRowItem[] =>
   entries.slice(0, rowItemLimit).map((entry) => rowItem(pathOf, entry));
 
-// The Session bar holds one line: the Issue attached most recently.
-export const barItems = (
-  pathOf: PathOf,
-  [latest]: Linked[],
-): SessionRowItem[] => (latest ? [barItem(pathOf, latest)] : []);
+// Each attached Issue keeps its own state and page in the Session bar's Plugin card.
+export const barItems = (pathOf: PathOf, entries: Linked[]): SessionRowItem[] =>
+  entries.map((entry) => barItem(pathOf, entry));
 
 // The Issue's number, in the state's tone; its title and state are the tooltip once they have loaded.
 const rowItem = (

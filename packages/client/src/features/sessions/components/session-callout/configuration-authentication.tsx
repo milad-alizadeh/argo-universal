@@ -1,4 +1,5 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type { ReactElement } from 'react';
@@ -22,13 +23,11 @@ function Actions(props: Authentication): ReactElement {
 }
 
 function Message(props: Authentication): ReactElement | null {
-  if (![props.failure, props.message].some(Boolean)) return null;
+  const text = props.failure ?? props.message;
 
-  return (
-    <Text role="secondary" tone="muted">
-      {props.failure ?? props.message}
-    </Text>
-  );
+  if (!text) return null;
+
+  return <Markdown text={text} tone="muted" selectable />;
 }
 
 function Heading({ pending }: Authentication): ReactElement {

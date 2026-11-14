@@ -2,11 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ToolCallGroup } from './tool-call-group';
 import {
   allowedOnceGroup,
+  allowedOnceHeaderGroup,
   awaitingApprovalGroup,
   parallelGroup,
   runningExpandedGroup,
   runningGroup,
   settledGroup,
+  failedCommandsGroup,
 } from './tool-call-group-fixtures';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
@@ -43,3 +45,7 @@ export const AwaitingApproval: Story = { args: awaitingApprovalGroup };
 
 // The permission was answered with Allow once.
 export const AllowedOnce: Story = { args: allowedOnceGroup };
+
+export const FailedCommands: Story = { args: failedCommandsGroup };
+
+export const AnsweredLiveHeader: Story = { args: allowedOnceHeaderGroup };

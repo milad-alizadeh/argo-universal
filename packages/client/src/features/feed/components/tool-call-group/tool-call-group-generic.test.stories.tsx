@@ -1,17 +1,24 @@
-import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';
 import { required } from '../recorded-tool-calls.mocks';
 import { ToolCallRow } from '../tool-call-row/tool-call-row';
 import { ToolCallGroup } from './tool-call-group';
-import { genericGroup } from './tool-call-group-generic.mocks';
+import {
+  genericGroup,
+  genericHeaderGroup,
+} from './tool-call-group-generic.mocks';
+
+const pendingCall = 'execute-pending';
+
+const priorCall = 'mcp-content';
 
 const meta = {
   title: 'Tests/Feed/ToolCallGroup/Generic',
   component: ToolCallGroup,
   args: {
-    group: genericGroup('mcp-content'),
+    group: genericGroup(priorCall),
     renderActivity: (activity): React.JSX.Element | null =>
       activity.type === 'tool_call' ? <ToolCallRow row={activity.row} /> : null,
   },
@@ -100,15 +107,17 @@ const verifyTitle = /^Verify the build/;
 
 // With other calls before it, the live call is a row of its own, so its detail opens under its own title (#2044).
 export const LiveCallAfterOthers: Story = {
-  args: { group: genericGroup('execute-pending', 'mcp-content') },
+  args: { group: genericGroup(pendingCall, priorCall) },
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.click(canvas.getByRole('button', { name: verifyTitle }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Ran 1 command, Called 1 tool' }),
+    );
     await expect(
       canvas.getByRole('button', { name: /^Read the issue/ }),
     ).toBeVisible();
 
-    const [, liveRow, ...rest] = canvas.getAllByRole('button', {
+    const [liveRow, ...rest] = canvas.getAllByRole('button', {
       name: verifyTitle,
     });
 
@@ -118,3 +127,48 @@ export const LiveCallAfterOthers: Story = {
     await expect(canvas.getByText(/pnpm verify/)).toBeVisible();
   },
 };
+
+function headerOwnership(width: number, followsOthers: boolean): Story {
+  return {
+    args: {
+      group: followsOthers
+        ? genericHeaderGroup(pendingCall, priorCall)
+        : genericHeaderGroup(pendingCall),
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleLayout(width);
+      const name = followsOthers ? 'Ran 1 command, Called 1 tool' : verifyTitle;
+
+      await userEvent.click(canvas.getByRole('button', { name }));
+      await expect(
+        canvas.getAllByRole('button', { name: verifyTitle }),
+      ).toHaveLength(1);
+
+      if (followsOthers)
+        await userEvent.click(
+          canvas.getByRole('button', { name: verifyTitle }),
+        );
+      await expect(canvas.getByText(/pnpm verify/)).toBeVisible();
+    },
+  };
+}
+
+export const LiveHeaderOwnsLeadingCallPhone = headerOwnership(
+  layoutWidths.phone,
+  false,
+);
+
+export const LiveHeaderOwnsLeadingCallWide = headerOwnership(
+  layoutWidths.wide,
+  false,
+);
+
+export const LiveHeaderAfterOthersPhone = headerOwnership(
+  layoutWidths.phone,
+  true,
+);
+
+export const LiveHeaderAfterOthersWide = headerOwnership(
+  layoutWidths.wide,
+  true,
+);

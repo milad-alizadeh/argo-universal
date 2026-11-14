@@ -1,8 +1,10 @@
 import { List as SwiftList, Section } from '@expo/ui/swift-ui';
 import {
   listStyle,
+  refreshable,
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
+import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement, ReactNode } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { NativeGroupedFrame } from './list-native-host';
@@ -14,6 +16,7 @@ import {
   type NativeRow,
   type NativeSection,
 } from './list-native-sections';
+import { useListRefreshRequest } from './list-refresh-request';
 
 // No background of its own, so the page's shows between the section cards, as the FieldGroup's Form does.
 const modifiers = [
@@ -27,11 +30,25 @@ const modifiers = [
  * SwiftUI views, as in a FieldGroup; React Native content cannot sit in it.
  */
 export function NativeGroupedList(props: NativeGroupedProps): ReactNode {
-  return <NativeGroupedFrame list={props}>{groupedList}</NativeGroupedFrame>;
+  const request = useListRefreshRequest();
+  const refresh = props.onRefresh;
+
+  const shown = refresh
+    ? [...modifiers, refreshable(() => request.run(refresh))]
+    : modifiers;
+
+  return (
+    <NativeGroupedFrame list={props}>
+      {(sections) => groupedList(sections, shown)}
+    </NativeGroupedFrame>
+  );
 }
 
-const groupedList = (sections: NativeSection[]): ReactElement => (
-  <SwiftList modifiers={modifiers}>
+const groupedList = (
+  sections: NativeSection[],
+  shown: ModifierConfig[],
+): ReactElement => (
+  <SwiftList modifiers={shown}>
     {sections.map((section) => (
       <GroupedSection key={section.key} section={section} />
     ))}

@@ -1,6 +1,9 @@
 import type { PlanEntry } from '@repo/contracts';
-import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
-import { IconSizeContext, IconSlot } from '@repo/kit/primitives/content/icon';
+import {
+  Icon,
+  IconSizeContext,
+  IconSlot,
+} from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
 import { Pill } from '@repo/kit/primitives/status/pill';
@@ -17,30 +20,11 @@ interface PlanTriggerProps {
   toggle: () => void;
 }
 
-function PlanProgressMarks({
-  entries,
-}: Pick<PlanTriggerProps, 'entries'>): JSX.Element {
+function PlanIcon(): JSX.Element {
   return (
     <IconSlot>
-      <View className="size-full flex-row items-center gap-0.5">
-        {withOccurrenceKeys(entries, (entry) => entry.content).map(
-          ({ item, key }) => (
-            <PlanMark key={key} entry={item} />
-          ),
-        )}
-      </View>
+      <Icon name="checklist" />
     </IconSlot>
-  );
-}
-
-function PlanMark({ entry }: { entry: PlanEntry }): JSX.Element {
-  return (
-    <View
-      className={cn(
-        'h-1 min-w-0 flex-1 rounded-xs',
-        entry.status === 'completed' ? 'bg-foreground' : 'bg-border',
-      )}
-    />
   );
 }
 
@@ -61,7 +45,7 @@ const planPillProps = (
   accessibilityLabel: 'Plan',
   disabled: props.disabled,
   text: 'Plan',
-  leading: <PlanProgressMarks entries={props.entries} />,
+  leading: <PlanIcon />,
 });
 
 const planRowClass =
@@ -82,9 +66,9 @@ function PlanRow(props: PlanTriggerProps): JSX.Element {
   return (
     <Pressable {...planRowPress(props)}>
       <IconSizeContext value={{ size: 'sm', fixed: true }}>
-        <PlanProgressMarks entries={props.entries} />
+        <PlanIcon />
         <PlanRowWords {...props} />
-        <Chevron direction={props.expanded ? 'up' : 'down'} />
+        <Chevron direction="up" />
       </IconSizeContext>
     </Pressable>
   );

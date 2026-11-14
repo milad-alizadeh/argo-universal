@@ -1,8 +1,8 @@
 import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
 import { useState, type ReactElement } from 'react';
 import { FieldGroup } from '#primitives/fields/field-group';
+import { List } from '../list';
 import { ListItem } from '../list-item';
-import { List } from './list';
 import {
   board,
   boardLanes,

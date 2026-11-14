@@ -4,7 +4,6 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { use } from 'react';
 import { View } from 'react-native';
-import { z } from 'zod';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import { fileName } from '../../view/file-edit-label';
 import {
@@ -12,6 +11,7 @@ import {
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
 import { GroupLiveId } from '../tool-call-group/group-live-id';
+import { SettledGroup } from '../tool-call-group/settled-group';
 import { toolCallIcon } from '../tool-call-icon';
 import { ToolOutput } from '../tool-output';
 
@@ -58,17 +58,8 @@ const rawText = (
   return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 };
 
-const CommandInput = z.object({ command: z.string() });
-
-// A command the Agent has not yet sent output for names its command line only in its raw input.
-function commandLine(row: ToolCallUpdate): string | undefined {
-  if (!toolCallFacts(row).isCommand) return undefined;
-
-  return CommandInput.safeParse(row.rawInput).data?.command;
-}
-
 function RawInput({ row }: { row: ToolCallUpdate }): React.JSX.Element | null {
-  const command = commandLine(row);
+  const command = toolCallFacts(row).command;
 
   if (command !== undefined)
     return <ResourceCode code={`$ ${command}`} title="Shell" />;
@@ -117,10 +108,11 @@ function ToolCallRowOutput({
 
 function ToolCallRowDisclosure(props: ToolCallRowProps): React.JSX.Element {
   const { row } = props;
+  const settledGroup = use(SettledGroup);
 
   return (
     <ToolCallDisclosure
-      {...toolCallDisclosureProps(row, props.awaitingApproval)}
+      {...toolCallDisclosureProps(row, props.awaitingApproval, settledGroup)}
       icon={toolCallIcon(row)}
       running={isToolCallRunning(row)}
       failed={row.status === 'failed'}

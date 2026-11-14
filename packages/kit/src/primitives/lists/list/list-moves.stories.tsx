@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { List } from './list';
+import { List } from '../list';
 import { board, column, type MovesProps } from './list-moves-fixtures';
 import { GroupedMovesExample, MovesExample } from './list-moves.mocks';
 import type { ListProps } from './list-props';

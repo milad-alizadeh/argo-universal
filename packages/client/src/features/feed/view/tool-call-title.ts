@@ -20,13 +20,28 @@ function readPath(row: ToolCallUpdate): string | undefined {
 export function toolCallTitlePaths(
   row: ToolCallUpdate,
   awaitingApproval = false,
+  showCommand?: boolean,
 ): string[] {
   if (awaitingApproval) return [];
 
-  return pathsFor(row);
+  return pathsFor(row, showCommand);
 }
 
-function pathsFor(row: ToolCallUpdate): string[] {
+function commandLabel(row: ToolCallUpdate): string | undefined {
+  const facts = toolCallFacts(row);
+
+  if (facts.explores) return undefined;
+
+  return facts.command?.trim();
+}
+
+function pathsFor(row: ToolCallUpdate, showCommand?: boolean): string[] {
+  const command = showCommand ? commandLabel(row) : undefined;
+
+  return command ? [command] : activityTitlePaths(row);
+}
+
+function activityTitlePaths(row: ToolCallUpdate): string[] {
   const { actions } = toolCallFacts(row);
 
   return actions.length ? actions.flatMap(actionPaths) : impliedReadPaths(row);
@@ -86,8 +101,15 @@ const approvalTitle = (row: ToolCallUpdate): string =>
 export function toolCallTitle(
   row: ToolCallUpdate,
   awaitingApproval = false,
+  showCommand?: boolean,
 ): string {
-  return awaitingApproval ? approvalTitle(row) : titleFor(row);
+  return awaitingApproval
+    ? approvalTitle(row)
+    : shownToolTitle(row, showCommand);
+}
+
+function shownToolTitle(row: ToolCallUpdate, showCommand?: boolean): string {
+  return (showCommand ? commandLabel(row) : undefined) || titleFor(row);
 }
 
 function titleFor(row: ToolCallUpdate): string {

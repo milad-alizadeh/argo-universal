@@ -5,7 +5,7 @@ import { expect, waitFor } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
-import { List } from './list';
+import { List } from '../list';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/ShelfRegressions',

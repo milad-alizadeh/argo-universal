@@ -84,7 +84,7 @@ it('sends live list changes and attention/running counts through request and Tur
   const pending = await caller.session.list({ archived: false });
   expect(pending.sessions[0]).toMatchObject({
     status: 'needs_input',
-    activity: 'Run a command',
+    activity: 'Awaiting approval',
   });
   await requireScriptedProcessAt(input.agent.processes).play(
     [

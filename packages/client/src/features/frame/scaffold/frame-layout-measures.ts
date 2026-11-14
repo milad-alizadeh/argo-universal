@@ -4,7 +4,7 @@ import type { FrameLayoutInput, FrameMeasures } from './frame-layout-types';
 export const contentMinimum = 200;
 
 // The content's floor before a drag lowers it: the Composer and a gutter on each side.
-export const defaultContentFloor = (measures: FrameMeasures): number =>
+const defaultContentFloor = (measures: FrameMeasures): number =>
   measures.composerWidth + measures.contentGutter * 2;
 
 const draggedFloor = (input: FrameLayoutInput, floor: number): number =>

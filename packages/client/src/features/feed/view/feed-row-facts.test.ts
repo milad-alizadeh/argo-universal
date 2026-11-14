@@ -100,3 +100,13 @@ describe('toolCallFacts command', () => {
     expect(toolCallFacts(withActions([unknown])).path).toBe('a.ts');
   });
 });
+
+it.each([
+  { rawInput: { command: 'pnpm test' }, expected: 'pnpm test' },
+  { rawInput: { command: 42 }, expected: undefined },
+  { rawInput: null, expected: undefined },
+])('reads available raw command data: $expected', ({ rawInput, expected }) => {
+  expect(toolCallFacts(call({ kind: 'execute', rawInput })).command).toBe(
+    expected,
+  );
+});

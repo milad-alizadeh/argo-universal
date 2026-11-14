@@ -2,7 +2,6 @@ import type { PaneSpan } from '../utils/pane-shift';
 import {
   contentFloor,
   contentMinimum,
-  defaultContentFloor,
   listMaximum,
   railZone,
 } from './frame-layout-measures';
@@ -10,7 +9,6 @@ import { inspectorLimit } from './frame-layout-trailing';
 import type {
   FrameLayout,
   FrameLayoutInput,
-  FrameMeasures,
   InspectorRegion,
   ResizeHandle,
   ResizeOutcome,
@@ -111,17 +109,6 @@ export const floorLeftBy = (
   width: number,
 ): number | undefined =>
   width > handle.minimum ? widthBeside(handle, width) : undefined;
-
-// The Inspector's width once the page beside it has its own floor back: what the drag took under that floor is given up.
-export function widthAtContentFloor(
-  measures: FrameMeasures,
-  width: number,
-  floor: number,
-): number {
-  const taken = Math.max(0, defaultContentFloor(measures) - floor);
-
-  return Math.max(measures.inspectorWidth, width - taken);
-}
 
 // Where a drag to `width` leaves its pane: closed, expanded, or at a width the layout keeps.
 export function resizeOutcome(

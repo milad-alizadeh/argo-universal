@@ -4,7 +4,7 @@ import { kitArgTypes } from '#kit/kit-arg-types';
 import { Image } from '#primitives/content/image';
 import { ListItem } from '#primitives/lists/list-item';
 import { Svg } from '#primitives/visual';
-import { List } from './list';
+import { List } from '../list';
 import {
   autoColumnsList,
   image,

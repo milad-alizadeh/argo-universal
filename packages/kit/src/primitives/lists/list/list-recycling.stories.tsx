@@ -11,7 +11,7 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button } from '#primitives/actions/button';
 import { ListItem } from '#primitives/lists/list-item';
-import { List } from './list';
+import { List } from '../list';
 import type { ListProps } from './list-props';
 import { recyclingList } from './list-recycling-fixtures';
 

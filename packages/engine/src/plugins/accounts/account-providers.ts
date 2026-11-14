@@ -1,7 +1,11 @@
-import type { AccountInvocation } from '@repo/contracts/plugins/account-calls';
+import type {
+  AccountInvocation,
+  AccountTokenResult,
+} from '@repo/contracts/plugins/account-calls';
 import type { PluginAccount } from '@repo/contracts/plugins/accounts';
 import type { PluginClock } from '../clock';
 import type { SpawnCaller } from '../hooks/spawn-hooks';
+import { accountUnavailable } from './account-unavailable';
 import { providerDeadline } from './provider-deadline';
 
 type Provider = SpawnCaller & { host: string; header: string; prefix: string };
@@ -10,7 +14,11 @@ type Credential = { header: string; value: string };
 
 type TokenWait = { promise: Promise<string | null>; release: () => void };
 
-type Waiting = { provider: Provider; settle: (token: string | null) => void };
+type Waiting = {
+  provider: Provider;
+  settle: (token: string | null) => void;
+  fail: () => void;
+};
 
 export type AccountTransport = {
   wake: (pluginId: string) => Promise<void>;
@@ -60,7 +68,7 @@ export class AccountProviders {
       providerKey(account.providedBy, account.host),
     );
 
-    if (!provider) return null;
+    if (!provider) throw accountUnavailable();
     const token = await this.wait(provider, account, signal);
 
     return credentialValue(provider, token);
@@ -96,9 +104,9 @@ export class AccountProviders {
     id: number,
     signal: AbortSignal,
   ): TokenWait {
-    const { promise, resolve } = Promise.withResolvers<string | null>();
-    const cancel = (): void => resolve(null);
-    this.pending.set(id, { provider, settle: resolve });
+    const { promise, resolve, reject } = Promise.withResolvers<string | null>();
+    const cancel = (): void => reject(accountUnavailable());
+    this.pending.set(id, { provider, settle: resolve, fail: cancel });
     signal.addEventListener('abort', cancel, { once: true });
 
     return {
@@ -109,7 +117,7 @@ export class AccountProviders {
 
   settle(
     caller: SpawnCaller,
-    reply: { id: number; token: string | null },
+    reply: { id: number; result: AccountTokenResult },
   ): void {
     const pending = this.pending.get(reply.id);
 
@@ -117,7 +125,7 @@ export class AccountProviders {
 
     if (!sameWorker(pending.provider, caller)) return;
     this.pending.delete(reply.id);
-    pending.settle(reply.token);
+    settleToken(pending, reply.result);
   }
 
   release(pluginId: string): void {
@@ -130,12 +138,12 @@ export class AccountProviders {
     for (const [id, pending] of this.pending)
       if (pending.provider.pluginId === pluginId) {
         this.pending.delete(id);
-        pending.settle(null);
+        pending.fail();
       }
   }
 
   close(): void {
-    for (const pending of this.pending.values()) pending.settle(null);
+    for (const pending of this.pending.values()) pending.fail();
     this.pending.clear();
     this.providers.clear();
   }
@@ -156,3 +164,9 @@ const credentialValue = (
   provider: Provider,
   token: string | null,
 ): Credential | null => (token === null ? null : credential(provider, token));
+
+// A provider's missing credential and failed read have different borrowing outcomes.
+function settleToken(pending: Waiting, reply: AccountTokenResult): void {
+  if (reply.kind === 'unavailable') pending.fail();
+  else pending.settle(reply.token);
+}
