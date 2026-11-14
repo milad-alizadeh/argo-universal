@@ -24,7 +24,7 @@ const pluginLines = async (home: string): Promise<string[]> =>
     .split('\n')
     .filter((line) => line.includes(sessionBarSlotId));
 
-it('shows the first Plugin in Slot order on the Session bar, keeps the rest attributed for "+N", and leaves out a Plugin that sends two lines', async () => {
+it('shows the first line in Slot order, keeps every remaining line attributed for "+N", and rejects malformed items', async () => {
   const home = await createRuntimePlugins([]);
 
   await writeHookPlugins(home, [
@@ -52,6 +52,12 @@ it('shows the first Plugin in Slot order on the Session bar, keeps the rest attr
       order: 0,
       source: provider(JSON.stringify([{ text: 'one' }, { text: 'two' }])),
     },
+    {
+      id: 'malformed',
+      slots: [sessionBarSlotId],
+      order: 4,
+      source: provider(JSON.stringify([{ text: '' }])),
+    },
   ]);
   const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
@@ -67,8 +73,10 @@ it('shows the first Plugin in Slot order on the Session bar, keeps the rest attr
 
   const merged: SlotItems = {
     first: {
-      items: [{ pluginId: 'issues', item: { text: '#412 · In review' } }],
+      items: [{ pluginId: 'chatty', item: { text: 'one' } }],
       overflow: [
+        { pluginId: 'chatty', item: { text: 'two' } },
+        { pluginId: 'issues', item: { text: '#412 · In review' } },
         { pluginId: 'deploys', item: { text: 'Preview ready' } },
         { pluginId: 'coverage', item: { text: '78% covered' } },
       ],
@@ -78,7 +86,7 @@ it('shows the first Plugin in Slot order on the Session bar, keeps the rest attr
   expect(first.value).toEqual(merged);
   expect(await pluginLines(home)).toEqual([
     expect.stringContaining(
-      'Plugin chatty: core fallback argo/session/bar/v1: items failed the Slot schema',
+      'Plugin malformed: core fallback argo/session/bar/v1: items failed the Slot schema',
     ),
   ]);
 }, 30_000);
