@@ -36,7 +36,14 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   deps.plugins.sessionActs.attach({
-    archive: (sessionId) => sessions.implementations['session.archive']({ sessionId }),
+    archive: (sessionId) =>
+      sessions.implementations['session.archive']({ sessionId }),
+    prompt: async (sessionId, text, { pluginId, title }) => ({
+      status: await sessions.promptFromPlugin(
+        { sessionId, prompt: [{ type: 'text', text }] },
+        { type: 'plugin', pluginId, title },
+      ),
+    }),
   });
 
   const operations = createOperationProcedures({ ...deps, sessions });

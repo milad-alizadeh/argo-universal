@@ -22,8 +22,10 @@ export type PluginLocation = {
 
 export const activatedPlugin = ({
   entry,
+  name,
   capabilities = [],
 }: PluginLocation): ActivatedPlugin => ({
+  title: name,
   grants: capabilities,
   codeFolder: entry.directory,
 });

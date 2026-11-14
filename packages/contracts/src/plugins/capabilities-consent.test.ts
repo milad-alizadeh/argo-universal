@@ -7,6 +7,12 @@ it('names archiving Sessions in the consent copy of sessions:archive', () => {
   expect(consentCopy(capability)).toBe('May archive Sessions in its Projects');
 });
 
+it('names starting Turns in the consent copy of sessions:prompt', () => {
+  const capability = PluginCapability.parse({ kind: 'sessions:prompt' });
+
+  expect(consentCopy(capability)).toBe('May start Turns in its Projects');
+});
+
 it('accepts sessions:archive only with no other keys', () => {
   expect(
     PluginCapability.safeParse({ kind: 'sessions:archive', extra: 1 }).success,
