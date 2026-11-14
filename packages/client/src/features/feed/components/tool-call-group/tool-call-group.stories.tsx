@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ToolCallGroup } from './tool-call-group';
 import {
   allowedOnceGroup,
+  allowedOnceHeaderGroup,
   awaitingApprovalGroup,
   parallelGroup,
   runningExpandedGroup,
@@ -46,3 +47,5 @@ export const AwaitingApproval: Story = { args: awaitingApprovalGroup };
 export const AllowedOnce: Story = { args: allowedOnceGroup };
 
 export const FailedCommands: Story = { args: failedCommandsGroup };
+
+export const AnsweredLiveHeader: Story = { args: allowedOnceHeaderGroup };

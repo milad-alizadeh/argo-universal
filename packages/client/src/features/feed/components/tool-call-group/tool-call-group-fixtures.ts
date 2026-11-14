@@ -64,3 +64,25 @@ if (!commandOutcomes)
 export const failedCommandsGroup = {
   group: recordedGroup(commandOutcomes),
 } satisfies ToolCallGroupFixture;
+
+const allowedCall = allowedOnceGroup.group.items
+  .flatMap((item) => (item.type === 'tool_call' ? [item.row] : []))
+  .find((row) => row._meta?.argo?.permissionOutcome);
+
+if (!allowedCall)
+  throw new Error('Recorded catalog needs an answered Tool call');
+
+export const allowedOnceHeaderGroup = {
+  group: {
+    ...allowedOnceGroup.group,
+    items: [{ type: 'tool_call' as const, row: allowedCall }],
+    liveHeader: {
+      text: allowedCall.title,
+      source: {
+        type: 'tool_call' as const,
+        toolCallId: allowedCall.toolCallId,
+      },
+      startedAt: null,
+    },
+  },
+} satisfies ToolCallGroupFixture;

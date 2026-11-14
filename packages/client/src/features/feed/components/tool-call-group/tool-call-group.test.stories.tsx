@@ -11,7 +11,10 @@ import {
   toolCallGroupMocks,
 } from '../tool-call.mocks';
 import { ToolCallGroup } from './tool-call-group';
-import { failedCommandsGroup } from './tool-call-group-fixtures';
+import {
+  failedCommandsGroup,
+  allowedOnceHeaderGroup,
+} from './tool-call-group-fixtures';
 import {
   commandAndFileSummary,
   commandTitle,
@@ -350,3 +353,27 @@ function failedCommands(width: number): Story {
 export const FailedCommandsPhone = failedCommands(layoutWidths.phone);
 
 export const FailedCommandsWide = failedCommands(layoutWidths.wide);
+
+function answeredHeader(width: number): Story {
+  return {
+    args: allowedOnceHeaderGroup,
+    play: async ({ canvas, userEvent }) => {
+      await settleLayout(width);
+      await expect(canvas.getAllByText('You allowed this once')).toHaveLength(
+        1,
+      );
+      await userEvent.click(
+        canvas.getByRole('button', {
+          name: allowedOnceHeaderGroup.group.liveHeader.text,
+        }),
+      );
+      await expect(canvas.getAllByText('You allowed this once')).toHaveLength(
+        1,
+      );
+    },
+  };
+}
+
+export const AnsweredLiveHeaderPhone = answeredHeader(layoutWidths.phone);
+
+export const AnsweredLiveHeaderWide = answeredHeader(layoutWidths.wide);

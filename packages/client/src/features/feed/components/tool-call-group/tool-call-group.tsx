@@ -128,9 +128,11 @@ function groupHeaderProps(
 ):
   | ReturnType<typeof groupDisclosureProps>
   | ReturnType<typeof liveHeaderDisclosureProps> {
+  const disclosure = groupDisclosureProps(group);
+
   return liveHeader
-    ? liveHeaderDisclosureProps(liveHeader, title)
-    : groupDisclosureProps(group);
+    ? { ...disclosure, ...liveHeaderDisclosureProps(liveHeader, title) }
+    : disclosure;
 }
 
 // One component whether or not a live header titles the group, so the header coming and going keeps the open state.
