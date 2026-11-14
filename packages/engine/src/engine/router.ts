@@ -34,6 +34,11 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
+
+  deps.plugins.sessionActs.attach({
+    archive: (sessionId) => sessions.implementations['session.archive']({ sessionId }),
+  });
+
   const operations = createOperationProcedures({ ...deps, sessions });
 
   return router({

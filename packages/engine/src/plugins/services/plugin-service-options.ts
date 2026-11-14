@@ -21,6 +21,8 @@ export type PluginServiceOptions = {
   projectPath?: (projectId: string) => Promise<string | undefined>;
   // Answers `argo.sessions.get`; without it every Session reads as unknown.
   sessionInfo?: (sessionId: string) => Promise<PluginSessionInfo | null>;
+  // Archives a Session as the App's archive does, and throws when the Session may not be archived; without it no Session archives.
+  archiveSession?: (sessionId: string) => Promise<void>;
   network?: PluginNetwork;
   settings?: (pluginId: string, key: string) => Promise<PluginValue>;
   hooks?: CoreHooks;

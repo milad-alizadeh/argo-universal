@@ -13,6 +13,7 @@ import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
+import type { SessionActs } from './session-acts';
 import { HeldSecrets } from './services/held-secrets';
 import type { PluginNetwork } from './services/plugin-fetch';
 import { osSecretStore, type SecretStore } from './services/secret-store';
@@ -35,6 +36,8 @@ export type PluginsOptions = PluginServerOptions & {
   sessions: OpenSessionsActorRef;
   // Where Sessions reach Plugin Hooks; the runtime attaches to it while the server runs.
   hookPort?: HookPort;
+  // What `argo.sessions.archive` reaches; the Engine attaches the App's archive to it.
+  sessionActs?: SessionActs;
 };
 
 type Discovery = Pick<
@@ -113,9 +116,10 @@ function runtimePorts(
   options: PluginsOptions,
 ): Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'network' | 'oauth' | 'clock'
+  'network' | 'oauth' | 'clock' | 'archiveSession'
 > {
   return {
+    archiveSession: options.sessionActs?.archive,
     network: options.pluginNetwork,
     oauth: options.pluginOAuth,
     clock: options.pluginClock,
