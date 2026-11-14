@@ -4,6 +4,7 @@ import {
   foreignSessionId,
   journey,
   project,
+  secondSessionId,
   sessionId,
   type Journey,
 } from './journey-fixture';
@@ -80,7 +81,52 @@ it(
     await expect(
       asPerson(run, 'diff', { ...outside, path: 'a.ts' }),
     ).rejects.toThrow(outsideMessage);
-    await expect(asPerson(run, 'list', {})).rejects.toThrow('sessionId');
+  },
+  slow,
+);
+
+const everyOperation = [
+  'attach',
+  'detach',
+  'list',
+  'refresh',
+  'discover',
+  'files',
+  'diff',
+];
+
+const paramsFor = (name: string): Record<string, string> => {
+  if (name === 'diff') return { reference, path: 'a.ts' };
+
+  return ['list', 'refresh', 'discover'].includes(name) ? {} : { reference };
+};
+
+it(
+  'refuses a person who names no Session, for every Operation',
+  async () => {
+    const run = await journey();
+
+    for (const name of everyOperation)
+      await expect(asPerson(run, name, paramsFor(name))).rejects.toThrow(
+        'sessionId',
+      );
+  },
+  slow,
+);
+
+it(
+  'refuses an Agent that names another Session of the same Project, for every Operation',
+  async () => {
+    const run = await journey();
+
+    for (const name of everyOperation)
+      await expect(
+        run.test.operations.run({
+          name,
+          params: { ...paramsFor(name), sessionId: secondSessionId },
+          caller: { projectId: project.id, sessionId },
+        }),
+      ).rejects.toThrow('only act for itself');
   },
   slow,
 );

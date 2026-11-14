@@ -6,11 +6,17 @@ type Given = { projectId: string; sessionId?: string };
 export type SessionCaller = { projectId: string; sessionId: string };
 
 function sessionIdOf(params: { sessionId?: string }, caller: Given): string {
-  const sessionId = params.sessionId ?? caller.sessionId;
+  if (caller.sessionId !== undefined) {
+    if (params.sessionId !== undefined && params.sessionId !== caller.sessionId)
+      throw new Error('A Session can only act for itself.');
 
-  if (!sessionId) throw new Error('This needs a Session: pass its sessionId.');
+    return caller.sessionId;
+  }
 
-  return sessionId;
+  if (!params.sessionId)
+    throw new Error('This needs a Session: pass its sessionId.');
+
+  return params.sessionId;
 }
 
 async function requireInProject(
@@ -25,7 +31,7 @@ async function requireInProject(
 
 /*
  * The App runs these Operations as a person, who core never lets run a Session-only Operation, so the Session is a
- * param there; an Agent's own run carries its Session. Whichever it is, core has set the Project, and the Session must
+ * param there; an Agent's own run carries its Session, and may name no other. Whichever it is, core has set the Project, and the Session must
  * belong to it: a Session outside the Project is refused.
  */
 export async function sessionCaller(
