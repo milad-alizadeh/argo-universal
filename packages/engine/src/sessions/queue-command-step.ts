@@ -79,7 +79,11 @@ function acceptQueueCommand(
   requireQueueConnection(event);
   const command = event.command;
   const createId = context.input.createId;
-  const change = changePromptQueue(context, command, createId);
+  const change = changePromptQueue(
+    context,
+    { ...command, sender: event.sender },
+    createId,
+  );
 
   event.committed.promise.catch(() => {});
 

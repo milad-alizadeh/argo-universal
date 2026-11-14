@@ -1,5 +1,10 @@
 import { QueuedPromptId } from '@repo/contracts';
-import type { PromptQueue, QueuedPrompt, QueueCommand } from '@repo/contracts';
+import type {
+  NonUserPromptSender,
+  PromptQueue,
+  QueuedPrompt,
+  QueueCommand,
+} from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { SessionContext } from './session-context';
 import { SessionRowUpdateJob } from './session-storage';
@@ -26,7 +31,7 @@ const conflict = (message: string): never => {
 
 export function changePromptQueue(
   context: QueueContext,
-  command: QueueCommand,
+  command: QueueCommand & { sender?: NonUserPromptSender },
   createId: () => string,
 ): QueueChange {
   if (command.action === 'append')
@@ -148,7 +153,9 @@ function insertRow(
 
 function appendRow(
   context: QueueContext,
-  command: Extract<QueueCommand, { action: 'append' }>,
+  command: Extract<QueueCommand, { action: 'append' }> & {
+    sender?: NonUserPromptSender;
+  },
   id: string,
 ): QueueChange {
   return withItems(context, [
@@ -157,6 +164,7 @@ function appendRow(
       id: QueuedPromptId.parse(id),
       prompt: command.prompt,
       followUpSuggestions: command.followUpSuggestions,
+      ...(command.sender && { sender: command.sender }),
       revision: 0,
     },
   ]);

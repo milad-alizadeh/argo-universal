@@ -1,5 +1,6 @@
 import type {
   ContextUsage,
+  NonUserPromptSender,
   PromptQueue,
   QueueCommand,
   FollowUpSuggestion,
@@ -96,6 +97,8 @@ export type SessionCommand =
       type: 'session.queue';
       connectionSignal?: AbortSignal;
       command: QueueCommand;
+      // Set by the Server for a Plugin's Prompt; an App's command never carries one (ADR-0055).
+      sender?: NonUserPromptSender;
       committed: PromiseWithResolvers<void>;
     }
   | { type: 'session.archive' }
