@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { argoInstructions } from '@repo/contracts/agents/argo-instructions';
 import {
   OperationWaitId,
   type PluginInstruction,
@@ -11,7 +12,6 @@ import {
   productCompatibility,
 } from '@repo/contracts/product-identity';
 import { z } from 'zod';
-import { argoInstructions } from './argo-instructions';
 import type { ControlClient, RunRequest } from './control-client';
 
 const mcpWaitMs = 30_000;

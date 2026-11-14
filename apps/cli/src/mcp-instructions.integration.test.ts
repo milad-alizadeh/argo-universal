@@ -1,5 +1,6 @@
 import { cp, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { argoInstructions } from '@repo/contracts/agents/argo-instructions';
 import {
   createRuntimePlugins,
   shippedFolder,
@@ -7,7 +8,6 @@ import {
 import { expect, it, vi } from 'vitest';
 import { connectMcp, mcpStderr } from '../mocks/mcp-client';
 import { startCliHost } from '../mocks/operations-cli';
-import { argoInstructions } from './argo-instructions';
 
 const discoveryLine =
   'Discover: call operation_list with a task-specific filter. ' +
