@@ -26,6 +26,7 @@ import {
   scrollableDraftComposer,
   sendingComposer,
   startedSessionComposer,
+  predictedReplyComposer,
   slashSuggestionsComposer,
 } from './composer-fixtures';
 import { SuggestionComposer } from './composer-suggestions.mocks';
@@ -197,5 +198,14 @@ export const Suggestions: Story = {
       feed={null}
       composer={<SuggestionComposer {...composerProps(args)} />}
     />
+  ),
+};
+
+export const PredictedReply: Story = {
+  args: predictedReplyComposer,
+  render: (args) => (
+    <SessionColumn>
+      <SuggestionComposer {...composerProps(args)} />
+    </SessionColumn>
   ),
 };

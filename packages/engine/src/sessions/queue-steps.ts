@@ -25,6 +25,7 @@ export function selectQueuedPrompt(
       turnId: context.input.createId(),
       content: row.prompt,
       sender: { type: 'user' },
+      followUpSuggestions: row.followUpSuggestions,
     },
   };
 }
@@ -58,8 +59,9 @@ export function startQueuedTurn(
   context: Parameters<typeof sessionTurn.start>[0] &
     Pick<SessionContext, 'promptQueue' | 'dispatchingQueueId'>,
   turnId: string,
+  followUpSuggestions = false,
 ): TurnStep {
-  const step = sessionTurn.start(context, turnId);
+  const step = sessionTurn.start(context, turnId, followUpSuggestions);
 
   if (!context.dispatchingQueueId) return step;
   const promptQueue = remainingQueue(context);

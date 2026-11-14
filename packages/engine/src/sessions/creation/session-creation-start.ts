@@ -59,9 +59,21 @@ const submitInitialAcpPrompt = async (
 
   if ('drop' in answer) return;
 
-  return submitInitialTurn(session, {
-    turnId: context.input.turnId,
-    content: answer.prompt,
-    sender,
-  });
+  return submitInitialTurn(
+    session,
+    initialSubmission(context, answer.prompt, sender),
+  );
 };
+
+function initialSubmission(
+  context: PromptReady,
+  content: Parameters<typeof submitSessionPrompt>[1]['content'],
+  sender: PromptSender,
+): Parameters<typeof submitSessionPrompt>[1] {
+  return {
+    turnId: context.input.turnId,
+    content,
+    followUpSuggestions: context.input.followUpSuggestions,
+    sender,
+  };
+}

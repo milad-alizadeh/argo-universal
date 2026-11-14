@@ -89,6 +89,15 @@ export const LiveHeader = z.strictObject({
 
 export type LiveHeader = z.infer<typeof LiveHeader>;
 
+const maximumFollowUpLength = 1000;
+
+export const FollowUpSuggestion = z.strictObject({
+  turnId: turnColumns.shape.id,
+  text: z.string().max(maximumFollowUpLength).nullable(),
+});
+
+export type FollowUpSuggestion = z.infer<typeof FollowUpSuggestion>;
+
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
 export const SessionSnapshot = z.strictObject({
   ...SessionInfo.pick({
@@ -105,6 +114,7 @@ export const SessionSnapshot = z.strictObject({
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),
+  followUpSuggestion: FollowUpSuggestion.nullable().optional(),
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),

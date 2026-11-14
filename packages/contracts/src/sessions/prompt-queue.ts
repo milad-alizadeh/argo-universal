@@ -13,6 +13,7 @@ export const QueuedPrompt = z.strictObject({
   id: QueuedPromptId,
   prompt: SessionPromptInput.shape.prompt,
   revision: z.int().nonnegative(),
+  followUpSuggestions: SessionPromptInput.shape.followUpSuggestions,
 });
 
 export type QueuedPrompt = z.infer<typeof QueuedPrompt>;
@@ -33,6 +34,7 @@ export const QueueCommand = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('append'),
     prompt: SessionPromptInput.shape.prompt,
+    followUpSuggestions: SessionPromptInput.shape.followUpSuggestions,
   }),
   z.strictObject({
     action: z.literal('hold'),

@@ -30,7 +30,7 @@ export function changePromptQueue(
   createId: () => string,
 ): QueueChange {
   if (command.action === 'append')
-    return appendRow(context, command.prompt, createId());
+    return appendRow(context, command, createId());
 
   if (command.action === 'resume')
     return {
@@ -148,12 +148,17 @@ function insertRow(
 
 function appendRow(
   context: QueueContext,
-  prompt: QueuedPrompt['prompt'],
+  command: Extract<QueueCommand, { action: 'append' }>,
   id: string,
 ): QueueChange {
   return withItems(context, [
     ...context.promptQueue.items,
-    { id: QueuedPromptId.parse(id), prompt, revision: 0 },
+    {
+      id: QueuedPromptId.parse(id),
+      prompt: command.prompt,
+      followUpSuggestions: command.followUpSuggestions,
+      revision: 0,
+    },
   ]);
 }
 

@@ -16,7 +16,7 @@ import type {
   SettingsGroup,
   SettingsListViewProps,
 } from './settings-list-props';
-import { themeSection } from './settings-list-theme';
+import { themeSection, composerSection } from './settings-list-theme';
 
 export type { SettingsListViewProps } from './settings-list-props';
 
@@ -38,8 +38,30 @@ export function SettingsListView(
 }
 
 // The Theme group, unless the search leaves out its one row.
-const shownTheme = (props: SettingsListViewProps): ReactNode =>
+function shownTheme(props: SettingsListViewProps): ReactNode {
+  const appearance = shownAppearance(props);
+  const composer = shownComposer(props);
+
+  if (!appearance && !composer) return undefined;
+
+  return (
+    <>
+      {appearance}
+      {composer}
+    </>
+  );
+}
+
+const shownAppearance = (props: SettingsListViewProps): ReactNode =>
   matchesSearch('Appearance', props.query) ? themeSection(props) : undefined;
+
+function shownComposer(props: SettingsListViewProps): ReactNode {
+  if (!props.onFollowUpSuggestionsChange) return undefined;
+
+  return matchesSearch('Follow-up suggestions', props.query)
+    ? composerSection(props)
+    : undefined;
+}
 
 const sectionsOf = (groups: SettingsGroup[]): SettingsLayoutSections =>
   groups.map((group) => ({

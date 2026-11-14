@@ -9,11 +9,20 @@ type StartingSession = Pick<SessionContext, 'sessionId' | 'configOptions'> & {
 
 type StartChange = Pick<
   SessionContext,
-  'activeTurnId' | 'activeTurnStartedAt' | 'turnEnding' | 'kept'
+  | 'activeTurnId'
+  | 'activeTurnStartedAt'
+  | 'turnEnding'
+  | 'kept'
+  | 'followUpSuggestion'
 >;
 
-const startChange = (turnId: string, startedAt: number): StartChange => ({
+const startChange = (
+  turnId: string,
+  startedAt: number,
+  followUpSuggestions: boolean,
+): StartChange => ({
   activeTurnId: turnId,
+  followUpSuggestion: followUpSuggestions ? { turnId, text: null } : null,
   activeTurnStartedAt: startedAt,
   turnEnding: { kind: 'completion' },
   kept: true,
@@ -39,11 +48,12 @@ const startWrite = (
 export const startTurn = (
   context: StartingSession,
   turnId: string,
+  followUpSuggestions = false,
 ): TurnStep<StartChange> => {
   const startedAt = context.input.now();
 
   return turnStep({
-    change: startChange(turnId, startedAt),
+    change: startChange(turnId, startedAt, followUpSuggestions),
     writes: [startWrite(context, turnId, startedAt)],
   });
 };

@@ -15,7 +15,7 @@ import type {
   SettingsLayoutSections,
   SettingsPagesProps,
 } from './settings-layout-props';
-import { sidebarChoices } from './settings-sidebar-choices';
+import { sidebarChoices, sidebarRemainder } from './settings-sidebar-choices';
 
 /*
  * Settings' pages as a list alone, with no page beside it: a wide web window draws the groups as sidebar rows, flat on
@@ -76,17 +76,15 @@ function PlacedScreens({
     return <LastSection>{lastSection}</LastSection>;
 
   return (
-    <List appearance="plain" endContent={afterGroups(choices, lastSection)}>
+    <List appearance="plain" endContent={sectionEnd(lastSection)}>
       {settingsGroups(sections, props)}
       {choices}
     </List>
   );
 }
 
-const afterGroups = (choices: ReactNode, lastSection: ReactNode): ReactNode =>
-  choices || !lastSection ? undefined : (
-    <LastSection>{lastSection}</LastSection>
-  );
+const afterGroups = (remaining: ReactNode): ReactNode =>
+  remaining ? <LastSection>{remaining}</LastSection> : undefined;
 
 // The last section's rows are tiles flat on the glass, as the groups' rows above it are, with no card of their own.
 const LastSection = (props: { children: ReactNode }): ReactElement => (
@@ -139,4 +137,8 @@ function SettingsScreenRow({
       onPress={onSelect && (() => onSelect(row.href))}
     />
   );
+}
+
+function sectionEnd(sections: ReactNode): ReactNode {
+  return afterGroups(sidebarRemainder(sections));
 }

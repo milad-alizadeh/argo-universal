@@ -26,6 +26,14 @@ export interface ComposerProps {
   draft: ComposerDraft;
   promptQueue?: PromptQueueProps;
   queueWhileRunning?: boolean;
+  followUpSuggestion?: {
+    sessionId: string;
+    turnId: string;
+    text: string | null;
+    enabled?: boolean;
+    dismissed?: boolean;
+    onDismiss?: () => void;
+  };
   slashCommands?: readonly SlashCommand[];
   // Sources after the Agent's Slash commands, in the order their results are grouped.
   suggestionSources?: readonly SuggestionSource[];

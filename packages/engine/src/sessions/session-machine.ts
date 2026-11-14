@@ -40,6 +40,10 @@ import {
 } from './acp-operations';
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
 import {
+  parseFollowUpSuggestion,
+  supportsFollowUpSuggestions,
+} from './acp/prompts/follow-up-suggestions';
+import {
   deniedOutcome,
   endsStaleProcess,
   promptFailureOutcome,
@@ -519,6 +523,20 @@ const sessionSetup = setup({
         };
       },
     ),
+    rememberFollowUpSuggestion: assign(({ context, event }) => {
+      assertEvent(event, acpUpdateEvent);
+
+      if (!supportsFollowUpSuggestions(context.acpLease?.initialization))
+        return {};
+
+      return {
+        followUpSuggestion: parseFollowUpSuggestion(
+          context.followUpSuggestion,
+          event.notification.update,
+          context.acpSuggestionRejections,
+        ),
+      };
+    }),
     applyAcpTitle: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, acpUpdateEvent);
       const title = titleFrom(event.notification.update);
@@ -555,10 +573,12 @@ const sessionSetup = setup({
       }),
     ),
     rememberSubmission: assign(
-      ({ event }): Pick<SessionContext, 'pendingSubmission'> => {
+      ({
+        event,
+      }): Pick<SessionContext, 'pendingSubmission' | 'followUpSuggestion'> => {
         assertEvent(event, 'session.prompt');
 
-        return { pendingSubmission: event };
+        return { pendingSubmission: event, followUpSuggestion: null };
       },
     ),
     acknowledgeLocalPromptCommit: assign(
@@ -670,7 +690,11 @@ const sessionSetup = setup({
         enqueueTurnStep(
           enqueue,
           context,
-          startQueuedTurn(context, params.turnId),
+          startQueuedTurn(
+            context,
+            params.turnId,
+            wantsFollowUpSuggestions(context),
+          ),
         );
       },
     ),
@@ -1168,7 +1192,10 @@ export const sessionMachine = sessionSetup.createMachine({
                   event.notification.update.sessionUpdate === 'usage_update',
                 actions: 'rememberAcpUsage',
               },
-              { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
+              {
+                guard: 'isTitleUpdate',
+                actions: ['applyAcpTitle', 'rememberFollowUpSuggestion'],
+              },
               { actions: 'forwardAcpUpdate' },
             ],
             [setConfigEvent]: [
@@ -1586,7 +1613,13 @@ export const sessionMachine = sessionSetup.createMachine({
                       },
                       { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },
                       { guard: 'isCommandsUpdate', actions: 'reportAcpConfig' },
-                      { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
+                      {
+                        guard: 'isTitleUpdate',
+                        actions: [
+                          'applyAcpTitle',
+                          'rememberFollowUpSuggestion',
+                        ],
+                      },
                       {},
                     ],
                     'session.cancel': {},
@@ -1806,3 +1839,14 @@ export const sessionMachine = sessionSetup.createMachine({
 });
 
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;
+
+function wantsFollowUpSuggestions(context: SessionContext): boolean {
+  return (
+    context.pendingSubmission?.followUpSuggestions === true &&
+    negotiatedSuggestions(context)
+  );
+}
+
+function negotiatedSuggestions(context: SessionContext): boolean {
+  return supportsFollowUpSuggestions(context.acpLease?.initialization);
+}

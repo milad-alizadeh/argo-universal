@@ -2,6 +2,7 @@ import type {
   ContextUsage,
   PromptQueue,
   QueueCommand,
+  FollowUpSuggestion,
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
@@ -125,6 +126,7 @@ export interface SessionContext extends SessionData {
   // When the running Turn started, in epoch milliseconds.
   activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
+  followUpSuggestion: FollowUpSuggestion | null;
   permissionQueue: PendingPermission[];
   nativePermissions: NativePermissions;
   // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
@@ -146,6 +148,7 @@ export interface SessionContext extends SessionData {
   pendingSubmission: LocalSubmission | null;
   acpPrompt: PromptRequest | null;
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
+  acpSuggestionRejections: ReturnType<typeof createRejectionCounter>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
   acpTurnOutcome: AcpTurnOutcome | null;
   turnEnding: FeedTurnEnding;

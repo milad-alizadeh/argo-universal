@@ -43,6 +43,10 @@ export async function submitAppPrompt(
 ): Promise<Record<string, never>> {
   return managePromptQueue(sources, {
     sessionId: input.sessionId,
-    command: { action: 'append', prompt: input.prompt },
+    command: {
+      action: 'append',
+      prompt: input.prompt,
+      followUpSuggestions: input.followUpSuggestions,
+    },
   });
 }

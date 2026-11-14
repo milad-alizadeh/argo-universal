@@ -5,7 +5,9 @@ import {
 } from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback } from 'react';
+import type { ComposerProps } from '#features/composer';
 import { type ServerMutation, type TRPC, useTRPC } from '#features/connection';
+import type { OpenSession } from './session-composer-props';
 
 type QueueMutation = ServerMutation<TRPC['session']['queue']>;
 
@@ -41,4 +43,18 @@ function useQueueSender(
 
 function queueError(error: { message: string }): ErrorToast {
   return { title: 'Queue change failed', message: error.message };
+}
+
+export function queueComposerProps({
+  snapshot,
+  commands,
+}: OpenSession): Pick<ComposerProps, 'queueWhileRunning' | 'promptQueue'> {
+  return {
+    queueWhileRunning: true,
+    promptQueue: {
+      queue: snapshot.promptQueue,
+      holds: snapshot.queueHolds,
+      command: commands.queueCommand,
+    },
+  };
 }
