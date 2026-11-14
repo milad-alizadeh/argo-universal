@@ -69,8 +69,11 @@ const archiveFor = async (
 };
 
 const archivedAt = (host: Host, sessionId: string): number | null | undefined =>
-  host.database.select().from(session).where(eq(session.id, sessionId)).get()
-    ?.archivedAt;
+  host.database
+    .select()
+    .from(session)
+    .where(eq(session.id, sessionId))
+    .get()?.archivedAt;
 
 const pluginLog = (host: Host): Promise<string> =>
   readFile(join(host.home, 'logs/plugins.log'), 'utf8');

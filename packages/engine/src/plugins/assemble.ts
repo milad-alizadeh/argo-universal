@@ -13,10 +13,10 @@ import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
+import type { SessionActs } from './session-acts';
 import { HeldSecrets } from './services/held-secrets';
 import type { PluginNetwork } from './services/plugin-fetch';
 import { osSecretStore, type SecretStore } from './services/secret-store';
-import type { SessionActs } from './session-acts';
 import { PluginSettings } from './settings/plugin-settings';
 
 export type PluginServerOptions = {

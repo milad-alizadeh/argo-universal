@@ -36,8 +36,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   deps.plugins.sessionActs.attach({
-    archive: (sessionId) =>
-      sessions.implementations['session.archive']({ sessionId }),
+    archive: (sessionId) => sessions.implementations['session.archive']({ sessionId }),
   });
 
   const operations = createOperationProcedures({ ...deps, sessions });
