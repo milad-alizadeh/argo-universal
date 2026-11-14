@@ -24,7 +24,6 @@ export class PluginRuntime {
   readonly items: RuntimeResources['items'];
   readonly operations: RuntimeResources['operations'];
   readonly draws: RuntimeResources['draws'];
-  readonly background: RuntimeResources['passes']['background'];
   private readonly plugins: RuntimePlugins;
   private readonly resources: RuntimeResources;
   private readonly host: HostConnection;
@@ -42,7 +41,6 @@ export class PluginRuntime {
     this.resources = new RuntimeResources(this.resourceInput());
     ({ data: this.data } = this.resources);
     ({ items: this.items } = this.resources);
-    this.background = this.resources.passes.background;
     ({ operations: this.operations, draws: this.draws } = this.resources);
     this.plugins = new RuntimePlugins(this.pluginInput());
   }

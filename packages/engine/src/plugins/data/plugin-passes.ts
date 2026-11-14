@@ -15,7 +15,7 @@ export class PluginPasses {
     this.watching = new PluginBackground({
       ...services,
       kind: 'watch',
-      projectRemoved: () => {},
+      projectRemoved: (): void => {},
     });
   }
 
