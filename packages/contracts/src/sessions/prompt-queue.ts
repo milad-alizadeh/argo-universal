@@ -1,8 +1,16 @@
 import { z } from 'zod';
 import { SessionPromptInput } from './prompt';
 
+export const QueuedPromptId = z.string().min(1).brand<'QueuedPromptId'>();
+
+export type QueuedPromptId = z.infer<typeof QueuedPromptId>;
+
+export const QueueEditToken = z.string().min(1).brand<'QueueEditToken'>();
+
+export type QueueEditToken = z.infer<typeof QueueEditToken>;
+
 export const QueuedPrompt = z.strictObject({
-  id: z.string(),
+  id: QueuedPromptId,
   prompt: SessionPromptInput.shape.prompt,
   revision: z.int().nonnegative(),
 });
@@ -28,32 +36,32 @@ export const QueueCommand = z.discriminatedUnion('action', [
   }),
   z.strictObject({
     action: z.literal('hold'),
-    id: z.string(),
+    id: QueuedPromptId,
     revision: z.int(),
-    token: z.string().min(1),
+    token: QueueEditToken,
   }),
   z.strictObject({
     action: z.literal('save'),
-    id: z.string(),
+    id: QueuedPromptId,
     revision: z.int(),
-    token: z.string(),
+    token: QueueEditToken,
     prompt: SessionPromptInput.shape.prompt,
   }),
   z.strictObject({
     action: z.literal('release'),
-    id: z.string(),
-    token: z.string(),
+    id: QueuedPromptId,
+    token: QueueEditToken,
   }),
   z.strictObject({
     action: z.literal('delete'),
-    id: z.string(),
+    id: QueuedPromptId,
     revision: z.int(),
   }),
   z.strictObject({
     action: z.literal('move'),
-    id: z.string(),
+    id: QueuedPromptId,
     revision: z.int(),
-    beforeId: z.string().nullable(),
+    beforeId: QueuedPromptId.nullable(),
   }),
   z.strictObject({ action: z.literal('resume') }),
 ]);

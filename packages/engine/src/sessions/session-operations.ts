@@ -34,6 +34,7 @@ type SessionOperationId = Exclude<
 export type SessionOperationImplementations = {
   [Id in SessionOperationId]: (
     params: z.output<(typeof operations)[Id]['params']>,
+    connectionSignal?: AbortSignal,
   ) => Promise<z.output<(typeof operations)[Id]['result']>>;
 };
 
@@ -112,7 +113,8 @@ function queueImplementations(
   sources: SessionHandlerSources,
 ): Pick<SessionOperationImplementations, 'session.queue' | 'session.submit'> {
   return {
-    'session.queue': (input) => managePromptQueue(sources, input),
+    'session.queue': (input, connectionSignal) =>
+      managePromptQueue(sources, input, connectionSignal),
     'session.submit': (input) => submitAppPrompt(sources, input),
   };
 }

@@ -56,13 +56,20 @@ export const initialSessionContext = (
   };
 };
 
-function initialQueueState(): Pick<
+type InitialQueueState = Pick<
   SessionContext,
-  'promptQueue' | 'queueHolds' | 'queueCommitted' | 'dispatchingQueueId'
-> {
+  | 'promptQueue'
+  | 'queueHolds'
+  | 'queueCommitted'
+  | 'dispatchingQueueId'
+  | 'queueHoldConnections'
+>;
+
+function initialQueueState(): InitialQueueState {
   return {
     promptQueue: emptyPromptQueue(),
     queueHolds: {},
+    queueHoldConnections: {},
     queueCommitted: Promise.resolve(),
     dispatchingQueueId: null,
   };

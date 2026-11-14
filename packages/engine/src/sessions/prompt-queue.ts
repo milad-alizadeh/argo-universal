@@ -1,3 +1,4 @@
+import { QueuedPromptId } from '@repo/contracts';
 import type { PromptQueue, QueuedPrompt, QueueCommand } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { SessionContext } from './session-context';
@@ -37,7 +38,7 @@ export function changePromptQueue(
       queueHolds: context.queueHolds,
     };
 
-  return changeRow(context, command, requireRow(context, command));
+  return changeExistingRow(context, command);
 }
 
 function withItems(context: QueueChange, items: QueuedPrompt[]): QueueChange {
@@ -152,10 +153,20 @@ function appendRow(
 ): QueueChange {
   return withItems(context, [
     ...context.promptQueue.items,
-    { id, prompt, revision: 0 },
+    { id: QueuedPromptId.parse(id), prompt, revision: 0 },
   ]);
 }
 
 function isOrderCommand(command: RowCommand): command is OrderCommand {
   return command.action === 'delete' || command.action === 'move';
+}
+
+function changeExistingRow(
+  context: QueueContext,
+  command: RowCommand,
+): QueueChange {
+  if (command.action === 'release' && !context.queueHolds[command.id])
+    return { promptQueue: context.promptQueue, queueHolds: context.queueHolds };
+
+  return changeRow(context, command, requireRow(context, command));
 }

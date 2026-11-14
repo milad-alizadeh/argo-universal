@@ -1,9 +1,11 @@
 import { expect } from '../fixtures';
 import type { SecondApp } from '../second-app';
 import { requests } from './agent-requests';
+import { readFeed } from './feed';
 import { sessionId } from './feed';
 import { Then, When } from './fixtures';
 import { textOf } from './queue-observations';
+import { mutate } from './server-query';
 
 Then(
   'the second App reads Queued Prompts {string}',
@@ -84,5 +86,42 @@ Then(
     await expect.poll(() => secondApp.completedTurns(id)).toBe(2);
     expect(requests(app.requestLogPath, 'session/prompt')).toHaveLength(2);
     expect((await secondApp.promptQueue(id)).items).toEqual([]);
+  },
+);
+
+When(
+  'both Apps submit follow-up Prompts together',
+  async ({ page, server, secondApp }): Promise<void> => {
+    const id = sessionId(page);
+    await Promise.all([
+      mutate({
+        page,
+        httpUrl: server.httpUrl,
+        procedure: 'session.submit',
+        input: {
+          sessionId: id,
+          prompt: [{ type: 'text', text: 'From first App' }],
+        },
+      }),
+      secondApp.submitPrompt(id, 'From second App'),
+    ]);
+  },
+);
+
+Then(
+  'both follow-ups finish as separate Turns',
+  async ({ page, server, secondApp }): Promise<void> => {
+    await expect.poll(() => secondApp.completedTurns(sessionId(page))).toBe(3);
+
+    const prompts = (await readFeed(page, server.httpUrl)).filter(
+      (row) => row.sessionUpdate === 'user_message',
+    );
+
+    expect(prompts.map((row) => textOf(row.content ?? [])).sort()).toEqual([
+      'First prompt',
+      'From first App',
+      'From second App',
+    ]);
+    expect(new Set(prompts.map((row) => row.turnId)).size).toBe(3);
   },
 );

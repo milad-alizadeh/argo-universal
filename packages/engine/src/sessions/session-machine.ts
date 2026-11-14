@@ -75,8 +75,12 @@ import {
 } from './permission-hooks';
 import { prepareQueuedPrompt } from './prepare-queued-prompt';
 import { queueWrite } from './prompt-queue';
+import { queueCommandStep } from './queue-command-step';
 import {
-  queueCommandStep,
+  disconnectedQueueHold,
+  stopQueueHolds,
+} from './queue-hold-connections';
+import {
   selectQueuedPrompt,
   removeQueuedPrompt,
   startQueuedTurn,
@@ -383,10 +387,22 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
-    changePromptQueue: enqueueActions(({ context, event, enqueue }) => {
+    changePromptQueue: enqueueActions(({ context, event, enqueue, self }) => {
       assertEvent(event, 'session.queue');
-      enqueueTurnStep(enqueue, context, queueCommandStep(context, event));
+      enqueueTurnStep(
+        enqueue,
+        context,
+        queueCommandStep(context, event, (disconnected) =>
+          self.send(disconnected),
+        ),
+      );
     }),
+    releaseDisconnectedQueueHold: assign(({ context, event }) => {
+      assertEvent(event, 'session.queueEditDisconnected');
+
+      return disconnectedQueueHold(context, event);
+    }),
+    stopQueueHolds: ({ context }): void => stopQueueHolds(context),
     selectQueuedPrompt: assign(({ context }) => selectQueuedPrompt(context)),
     removeQueuedPrompt: enqueueActions(({ context, enqueue }) =>
       enqueueTurnStep(enqueue, context, removeQueuedPrompt(context)),
@@ -1080,7 +1096,13 @@ export const sessionMachine = sessionSetup.createMachine({
       },
     },
     open: {
-      on: { 'session.queue': { actions: 'changePromptQueue' } },
+      exit: 'stopQueueHolds',
+      on: {
+        'session.queue': { actions: 'changePromptQueue' },
+        'session.queueEditDisconnected': {
+          actions: 'releaseDisconnectedQueueHold',
+        },
+      },
       invoke: {
         id: 'feed',
         src: 'feed',

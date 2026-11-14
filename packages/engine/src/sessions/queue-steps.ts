@@ -1,30 +1,19 @@
 import { AtomicWriterJob } from '../storage';
-import { changePromptQueue, queueWrite } from './prompt-queue';
-import type { SessionContext, SessionCommand } from './session-context';
-import { sessionTurn, type EndTurnParameters, type TurnStep } from './turn';
-import { turnStep } from './turn';
+import { queueWrite } from './prompt-queue';
+import type { SessionContext } from './session-context';
+import {
+  sessionTurn,
+  turnStep,
+  type EndTurnParameters,
+  type TurnStep,
+} from './turn';
 
-type QueueEvent = Extract<SessionCommand, { type: 'session.queue' }>;
-
-export function queueCommandStep(
-  context: SessionContext,
-  event: QueueEvent,
-): TurnStep {
-  try {
-    const change = applyQueueCommand(context, event);
-
-    event.committed.promise.catch(() => {});
-
-    return committedQueueStep(context, event, change);
-  } catch (error) {
-    event.committed.reject(error);
-
-    return turnStep({});
-  }
-}
+type QueueSelection = Pick<SessionContext, 'promptQueue'> & {
+  input: Pick<SessionContext['input'], 'createId'>;
+};
 
 export function selectQueuedPrompt(
-  context: SessionContext,
+  context: QueueSelection,
 ): Partial<SessionContext> {
   const row = context.promptQueue.items[0];
 
@@ -40,7 +29,12 @@ export function selectQueuedPrompt(
   };
 }
 
-export function removeQueuedPrompt(context: SessionContext): TurnStep {
+export function removeQueuedPrompt(
+  context: Pick<
+    SessionContext,
+    'sessionId' | 'promptQueue' | 'dispatchingQueueId'
+  >,
+): TurnStep {
   const promptQueue = remainingQueue(context);
 
   return turnStep({
@@ -50,7 +44,7 @@ export function removeQueuedPrompt(context: SessionContext): TurnStep {
 }
 
 function remainingQueue(
-  context: SessionContext,
+  context: Pick<SessionContext, 'promptQueue' | 'dispatchingQueueId'>,
 ): SessionContext['promptQueue'] {
   return {
     ...context.promptQueue,
@@ -61,7 +55,8 @@ function remainingQueue(
 }
 
 export function startQueuedTurn(
-  context: SessionContext,
+  context: Parameters<typeof sessionTurn.start>[0] &
+    Pick<SessionContext, 'promptQueue' | 'dispatchingQueueId'>,
   turnId: string,
 ): TurnStep {
   const step = sessionTurn.start(context, turnId);
@@ -92,7 +87,7 @@ function atomicStart(
 }
 
 export function withQueuePause(
-  context: SessionContext,
+  context: Pick<SessionContext, 'sessionId' | 'promptQueue'>,
   step: TurnStep,
   reason: string | null,
 ): TurnStep {
@@ -110,47 +105,32 @@ export function endQueueReason(ended: EndTurnParameters): string | null {
     : 'Turn did not complete normally';
 }
 
-export function hasQueuedPrompt(context: SessionContext): boolean {
+export function hasQueuedPrompt(
+  context: Pick<
+    SessionContext,
+    'pendingSubmission' | 'promptQueue' | 'queueHolds'
+  >,
+): boolean {
   return context.pendingSubmission === null && canDispatchQueue(context);
 }
 
-function canDispatchQueue(context: SessionContext): boolean {
+function canDispatchQueue(
+  context: Pick<SessionContext, 'promptQueue' | 'queueHolds'>,
+): boolean {
   if (context.promptQueue.pauseReason !== null) return false;
   const first = context.promptQueue.items[0];
 
   return first !== undefined && !context.queueHolds[first.id];
 }
 
-function committedQueueStep(
-  context: SessionContext,
-  event: QueueEvent,
-  change: ReturnType<typeof changePromptQueue>,
-): TurnStep {
-  return turnStep({
-    change: { ...change, queueCommitted: event.committed.promise },
-    writes: [
-      {
-        job: queueWrite(context.sessionId, change.promptQueue),
-        committed: event.committed,
-      },
-    ],
-  });
-}
-
 export function endQueuedTurn(
-  context: SessionContext,
+  context: Parameters<typeof sessionTurn.end>[0] &
+    Pick<SessionContext, 'sessionId' | 'promptQueue'>,
   ended: EndTurnParameters,
 ): TurnStep {
   const reason = context.activeTurnId ? endQueueReason(ended) : null;
 
   return withQueuePause(context, sessionTurn.end(context, ended), reason);
-}
-
-function applyQueueCommand(
-  context: SessionContext,
-  event: QueueEvent,
-): ReturnType<typeof changePromptQueue> {
-  return changePromptQueue(context, event.command, context.input.createId);
 }
 
 function pausedQueueStep(

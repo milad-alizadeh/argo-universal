@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { fn } from 'storybook/test';
 import { PromptQueue } from './prompt-queue';
 import {
   queuedPrompts,
@@ -9,7 +10,7 @@ import {
 const meta = {
   title: 'Composer/PromptQueue',
   component: PromptQueue,
-  args: queuedPrompts,
+  args: { ...queuedPrompts, command: fn(async (): Promise<void> => {}) },
 } satisfies Meta<typeof PromptQueue>;
 
 export default meta;

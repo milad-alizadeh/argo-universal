@@ -61,13 +61,12 @@ type RunnerPorts = {
 export class OperationRunner {
   private readonly plain: PlainImplementations;
   private readonly native: NativeStartImplementations;
-  private readonly app: CallerImplementations;
+  private readonly app: CallerImplementations<[signal?: AbortSignal]>;
   public constructor(
     implementations: OperationImplementations,
     private readonly ports: RunnerPorts,
   ) {
-    this.plain = implementations;
-    this.native = implementations;
+    this.plain = this.native = implementations;
     this.app = {
       ...implementations,
       ...eachNativeStart((id, params) =>
@@ -95,7 +94,7 @@ export class OperationRunner {
   ): Promise<OperationResult<Id>> {
     this.ports.chains.clearedByUser(run);
 
-    return this.app[run.id](run.params);
+    return this.app[run.id](run.params, run.connectionSignal);
   }
   private async runUser(run: UserRun): Promise<OperationRunResult> {
     const { id, params, admission } = run;
@@ -127,6 +126,7 @@ export class OperationRunner {
   private invokeSession(context: SessionContext): SessionInvoke {
     const implementations: CallerImplementations<[NewSessionId]> = {
       ...this.plain,
+      'session.queue': (params) => this.plain['session.queue'](params),
       ...eachNativeStart((id, params, start: NewSessionId) =>
         this.startFromSession(context, { id, params }, start),
       ),

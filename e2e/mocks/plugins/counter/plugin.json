@@ -66,8 +66,6 @@
         }
       ]
     },
-    "hooks": [
-      "prompt.submit"
-    ]
+    "hooks": ["prompt.submit"]
   }
 }

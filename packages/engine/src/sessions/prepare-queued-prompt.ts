@@ -4,8 +4,22 @@ import { readAcpPromptContent } from './acp/prompts/prompt-content';
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { SessionContext } from './session-context';
 
+type Preparation = Pick<
+  SessionContext,
+  | 'queueCommitted'
+  | 'pendingSubmission'
+  | 'sessionId'
+  | 'projectId'
+  | 'acpLease'
+> & {
+  input: Pick<
+    SessionContext['input'],
+    'hooks' | 'database' | 'runtimeDirectory'
+  >;
+};
+
 export async function prepareQueuedPrompt(
-  context: SessionContext,
+  context: Preparation,
 ): Promise<LocalSubmission | null> {
   await context.queueCommitted;
   const submission = requireSubmission(context);
@@ -17,14 +31,16 @@ export async function prepareQueuedPrompt(
   return { ...submission, content: answer.prompt };
 }
 
-function requireSubmission(context: SessionContext): LocalSubmission {
+function requireSubmission(
+  context: Pick<SessionContext, 'pendingSubmission'>,
+): LocalSubmission {
   if (!context.pendingSubmission) throw new Error('No Queued Prompt selected');
 
   return context.pendingSubmission;
 }
 
 function runHook(
-  context: SessionContext,
+  context: Pick<Preparation, 'sessionId' | 'projectId' | 'input'>,
   submission: LocalSubmission,
 ): ReturnType<SessionContext['input']['hooks']['prompt.submit']> {
   return context.input.hooks['prompt.submit']({
@@ -35,7 +51,7 @@ function runHook(
 }
 
 async function validateQueuedContent(
-  context: SessionContext,
+  context: Pick<Preparation, 'acpLease' | 'input'>,
   content: ContentBlock[],
 ): Promise<void> {
   if (!context.acpLease) throw new Error('The Agent is unavailable');
@@ -48,7 +64,9 @@ async function validateQueuedContent(
 
 function queueStorage({
   input,
-}: SessionContext): Parameters<typeof readAcpPromptContent>[0]['storage'] {
+}: Pick<Preparation, 'input'>): Parameters<
+  typeof readAcpPromptContent
+>[0]['storage'] {
   return {
     database: input.database,
     blobsFolder: blobsFolderIn(input.runtimeDirectory),

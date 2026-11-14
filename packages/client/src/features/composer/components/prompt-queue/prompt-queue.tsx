@@ -1,8 +1,9 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
-import { ScrollView, View } from 'react-native';
-import { QueueRow } from './queue-row';
+import { View } from 'react-native';
+import { QueueEditorsProvider } from './queue-editors';
+import { QueueRows } from './queue-rows';
 import type { PromptQueueProps } from './queue-types';
 
 export type { PromptQueueProps } from './queue-types';
@@ -10,7 +11,11 @@ export type { PromptQueueProps } from './queue-types';
 export function PromptQueue(props: PromptQueueProps): ReactElement | null {
   if (!props.queue.items.length) return null;
 
-  return <QueueSurface {...props} />;
+  return (
+    <QueueEditorsProvider command={props.command}>
+      <QueueSurface {...props} />
+    </QueueEditorsProvider>
+  );
 }
 
 function QueueSurface(props: PromptQueueProps): ReactElement {
@@ -20,11 +25,7 @@ function QueueSurface(props: PromptQueueProps): ReactElement {
       className="w-full rounded-t-2xl bg-card p-3 gap-2"
     >
       <QueueHeading {...props} />
-      <ScrollView className="max-h-60" keyboardShouldPersistTaps="handled">
-        {props.queue.items.map((row, index) => (
-          <QueueRow key={row.id} {...props} row={row} index={index} />
-        ))}
-      </ScrollView>
+      <QueueRows {...props} />
     </View>
   );
 }

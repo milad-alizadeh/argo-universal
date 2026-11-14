@@ -11,12 +11,13 @@ import {
   requests,
   requestsIn,
 } from './agent-requests';
-import { expectListedAgent } from './agents';
 import { readFeed } from './feed';
-import { Given, When, Then } from './fixtures';
+import { When, Then } from './fixtures';
 import { expectMessage, messageLabel } from './new-session';
 
 const promptMethod = 'session/prompt';
+
+const promptQueue = 'prompt-queue';
 
 const feedScroll = 'feed-scroll';
 
@@ -34,8 +35,6 @@ const promptPair = (messages: LoggedMessage[]): PromptPair => {
 
 const stopButton = (page: Page): Locator =>
   page.getByRole('button', { name: 'Stop', exact: true });
-
-Given('Agent {int} holds its first Turn until released', expectListedAgent);
 
 When('I stop the Turn', async ({ page }): Promise<void> => {
   await stopButton(page).click();
@@ -83,12 +82,12 @@ Then(
 
 // The Send waits for the stopped prompt's answer: the prompt stays in the Composer and never reaches the Agent.
 Then(
-  'the Composer holds {string} until the Agent answers',
+  'the Composer queues {string} until the Agent answers',
   async ({ page, app }, prompt: string): Promise<void> => {
     await expect(
-      page.getByRole('button', { name: 'Send', exact: true }),
-    ).toBeDisabled();
-    await expectMessage(page, prompt);
+      page.getByTestId(promptQueue).getByText(prompt, { exact: true }),
+    ).toBeVisible();
+    await expectMessage(page, '');
     expect(requests(app.requestLogPath, promptMethod)).toHaveLength(1);
   },
 );
@@ -151,7 +150,7 @@ Then(
   '{string} is queued above the Composer',
   async ({ page }, prompt: string): Promise<void> => {
     await expect(
-      page.getByTestId('prompt-queue').getByText(prompt, { exact: true }),
+      page.getByTestId(promptQueue).getByText(prompt, { exact: true }),
     ).toBeVisible();
     await expectMessage(page, '');
     await expect(stopButton(page)).toBeVisible();
@@ -182,6 +181,6 @@ Then(
     ]);
     expect(new Set(prompts.map((row) => row.turnId)).size).toBe(2);
     expect(requests(app.requestLogPath, promptMethod)).toHaveLength(2);
-    await expect(page.getByTestId('prompt-queue')).toHaveCount(0);
+    await expect(page.getByTestId(promptQueue)).toHaveCount(0);
   },
 );

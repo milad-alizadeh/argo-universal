@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 import {
   connectAsDevice,
+  keepDeviceApp,
+  type DeviceApp,
   type ChannelTestHost,
   type TestDevice,
 } from '@repo/engine/mocks/engine-channel';
@@ -32,7 +34,7 @@ export class SecondApp {
   private readonly httpUrl: string;
   private readonly port: number;
   private address: string | undefined;
-  private device: TestDevice | undefined;
+  private device: DeviceApp | undefined;
   private asking: Asking | undefined;
 
   constructor(httpUrl: string) {
@@ -51,12 +53,17 @@ export class SecondApp {
     const { invite } = await this.owner.client.pairing.mint.mutate();
     this.asking = await watchForDevice(this.owner);
 
-    this.device = await connectAsDevice(this.hostFor(invite.key, this.asking), {
-      ticket: invite.ticket,
-      name: this.name,
-      platform: 'android',
-      host: this.address ?? noAddress(),
-    });
+    const device = await connectAsDevice(
+      this.hostFor(invite.key, this.asking),
+      {
+        ticket: invite.ticket,
+        name: this.name,
+        platform: 'android',
+        host: this.address ?? noAddress(),
+      },
+    );
+
+    this.device = await keepDeviceApp(device);
   }
 
   async sessionTitles(): Promise<string[]> {
@@ -65,6 +72,13 @@ export class SecondApp {
     ).caller.session.list.query({ archived: false });
 
     return sessions.map((session) => session.title);
+  }
+
+  async submitPrompt(sessionId: string, text: string): Promise<void> {
+    await (this.device ?? noDevice()).caller.session.submit.mutate({
+      sessionId,
+      prompt: [{ type: 'text', text }],
+    });
   }
 
   async promptQueue(sessionId: string): Promise<PromptQueue> {
@@ -88,7 +102,7 @@ export class SecondApp {
       direction: 'tail',
     });
 
-    return rows.filter((row) => row._meta?.argo?.turnEnd).length;
+    return rows.filter((row) => 'turnEnd' in (row._meta?.argo ?? {})).length;
   }
 
   async pairedDeviceNames(): Promise<string[]> {
@@ -119,6 +133,7 @@ export class SecondApp {
 
   // Closes what the owner opened; safe to call twice.
   close(): void {
+    this.device?.close();
     this.asking?.stop();
     this.owner.close();
   }

@@ -9,51 +9,78 @@ export function generatedOperations(runner: OperationRunner) {
       getAccess: publicProcedure
         .input(operations['agent.getAccess'].params)
         .output(operations['agent.getAccess'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'agent.getAccess', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.getAccess',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       setAccess: publicProcedure
         .input(operations['agent.setAccess'].params)
         .output(operations['agent.setAccess'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'agent.setAccess', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.setAccess',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       installInstructions: publicProcedure
         .input(operations['agent.installInstructions'].params)
         .output(operations['agent.installInstructions'].result)
-        .mutation(({ input }) =>
+        .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
             id: 'agent.installInstructions',
             params: input,
+            connectionSignal: ctx.connection.signal,
           }),
         ),
       list: publicProcedure
         .input(operations['agent.list'].params)
         .output(operations['agent.list'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'agent.list', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.list',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       install: publicProcedure
         .input(operations['agent.install'].params)
         .output(operations['agent.install'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'agent.install', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.install',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       remove: publicProcedure
         .input(operations['agent.remove'].params)
         .output(operations['agent.remove'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'agent.remove', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.remove',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       setEnvironment: publicProcedure
         .input(operations['agent.setEnvironment'].params)
         .output(operations['agent.setEnvironment'].result)
-        .mutation(({ input }) =>
+        .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
             id: 'agent.setEnvironment',
             params: input,
+            connectionSignal: ctx.connection.signal,
           }),
         ),
     }),
@@ -61,245 +88,418 @@ export function generatedOperations(runner: OperationRunner) {
       open: publicProcedure
         .input(operations['app.open'].params)
         .output(operations['app.open'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'app.open', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'app.open',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
     }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)
         .output(operations['session.diff'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.diff', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.diff',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       changes: publicProcedure
         .input(operations['session.changes'].params)
         .output(operations['session.changes'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.changes', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.changes',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       feed: publicProcedure
         .input(operations['session.feed'].params)
         .output(operations['session.feed'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.feed', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.feed',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       get: publicProcedure
         .input(operations['session.get'].params)
         .output(operations['session.get'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.get', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.get',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       list: publicProcedure
         .input(operations['session.list'].params)
         .output(operations['session.list'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.list', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.list',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       listAgents: publicProcedure
         .input(operations['session.listAgents'].params)
         .output(operations['session.listAgents'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.listAgents', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.listAgents',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       listShells: publicProcedure
         .input(operations['session.listShells'].params)
         .output(operations['session.listShells'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.listShells', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.listShells',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       listBranches: publicProcedure
         .input(operations['session.listBranches'].params)
         .output(operations['session.listBranches'].result)
-        .query(({ input }) =>
+        .query(({ input, ctx }) =>
           runner.run({
             kind: 'app',
             id: 'session.listBranches',
             params: input,
+            connectionSignal: ctx.connection.signal,
           }),
         ),
       submit: publicProcedure
         .input(operations['session.submit'].params)
         .output(operations['session.submit'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.submit', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.submit',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       queue: publicProcedure
         .input(operations['session.queue'].params)
         .output(operations['session.queue'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.queue', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.queue',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       new: publicProcedure
         .input(operations['session.new'].params)
         .output(operations['session.new'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.new', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.new',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       prompt: publicProcedure
         .input(operations['session.prompt'].params)
         .output(operations['session.prompt'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.prompt', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.prompt',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       cancel: publicProcedure
         .input(operations['session.cancel'].params)
         .output(operations['session.cancel'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.cancel', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.cancel',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       archive: publicProcedure
         .input(operations['session.archive'].params)
         .output(operations['session.archive'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.archive', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.archive',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       unarchive: publicProcedure
         .input(operations['session.unarchive'].params)
         .output(operations['session.unarchive'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.unarchive', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.unarchive',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       setConfigOption: publicProcedure
         .input(operations['session.setConfigOption'].params)
         .output(operations['session.setConfigOption'].result)
-        .mutation(({ input }) =>
+        .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
             id: 'session.setConfigOption',
             params: input,
+            connectionSignal: ctx.connection.signal,
           }),
         ),
       close: publicProcedure
         .input(operations['session.close'].params)
         .output(operations['session.close'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.close', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.close',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       savePlan: publicProcedure
         .input(operations['session.savePlan'].params)
         .output(operations['session.savePlan'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.savePlan', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.savePlan',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       rename: publicProcedure
         .input(operations['session.rename'].params)
         .output(operations['session.rename'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'session.rename', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.rename',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
     }),
     shell: router({
       stop: publicProcedure
         .input(operations['shell.stop'].params)
         .output(operations['shell.stop'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'shell.stop', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'shell.stop',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
     }),
     plugin: router({
       list: publicProcedure
         .input(operations['plugin.list'].params)
         .output(operations['plugin.list'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.list', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.list',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       activate: publicProcedure
         .input(operations['plugin.activate'].params)
         .output(operations['plugin.activate'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.activate', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.activate',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       setEnabled: publicProcedure
         .input(operations['plugin.setEnabled'].params)
         .output(operations['plugin.setEnabled'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.setEnabled', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.setEnabled',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       getSettings: publicProcedure
         .input(operations['plugin.getSettings'].params)
         .output(operations['plugin.getSettings'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.getSettings', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.getSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       setSetting: publicProcedure
         .input(operations['plugin.setSetting'].params)
         .output(operations['plugin.setSetting'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.setSetting', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.setSetting',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       guide: publicProcedure
         .input(operations['plugin.guide'].params)
         .output(operations['plugin.guide'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.guide', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.guide',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       new: publicProcedure
         .input(operations['plugin.new'].params)
         .output(operations['plugin.new'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'plugin.new', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'plugin.new',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
     }),
     registry: router({
       get: publicProcedure
         .input(operations['registry.get'].params)
         .output(operations['registry.get'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'registry.get', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'registry.get',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       refresh: publicProcedure
         .input(operations['registry.refresh'].params)
         .output(operations['registry.refresh'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'registry.refresh', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'registry.refresh',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       sync: publicProcedure
         .input(operations['registry.sync'].params)
         .output(operations['registry.sync'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'registry.sync', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'registry.sync',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
     }),
     project: router({
       list: publicProcedure
         .input(operations['project.list'].params)
         .output(operations['project.list'].result)
-        .query(({ input }) =>
-          runner.run({ kind: 'app', id: 'project.list', params: input }),
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.list',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       add: publicProcedure
         .input(operations['project.add'].params)
         .output(operations['project.add'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'project.add', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.add',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       clone: publicProcedure
         .input(operations['project.clone'].params)
         .output(operations['project.clone'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'project.clone', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.clone',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       create: publicProcedure
         .input(operations['project.create'].params)
         .output(operations['project.create'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'project.create', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.create',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       update: publicProcedure
         .input(operations['project.update'].params)
         .output(operations['project.update'].result)
-        .mutation(({ input }) =>
-          runner.run({ kind: 'app', id: 'project.update', params: input }),
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.update',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
         ),
       listBranches: publicProcedure
         .input(operations['project.listBranches'].params)
         .output(operations['project.listBranches'].result)
-        .query(({ input }) =>
+        .query(({ input, ctx }) =>
           runner.run({
             kind: 'app',
             id: 'project.listBranches',
             params: input,
+            connectionSignal: ctx.connection.signal,
           }),
         ),
     }),

@@ -23,7 +23,7 @@ Feature: Turns
     And I stop the Turn
     Then the Composer is ready while the Agent still holds the stopped prompt
     When I try to send the prompt "Second prompt"
-    Then the Composer holds "Second prompt" until the Agent answers
+    Then the Composer queues "Second prompt" until the Agent answers
     When the Agent answers its held prompt
     Then the Agent receives the next prompt only after answering the held one
 
@@ -65,10 +65,10 @@ Feature: Turns
       | wide  |
       | phone |
 
-  Scenario: Editing, cancelling, reordering and deleting Queued Prompts preserves a separate Composer draft
-    Given a phone Frame
-    And Agent 2 holds its first Turn until released
-    And a New Session with Agent 2
+  Scenario Outline: Editing, cancelling, reordering and deleting Queued Prompts preserves a separate Composer draft
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Second prompt"
     And I send the prompt "Third prompt"
@@ -85,10 +85,14 @@ Feature: Turns
     Then the Feed has completed Prompts in order "First prompt|Third prompt|Edited prompt"
     And the Message box shows "Separate draft"
 
-  Scenario: An edit holds the first Queued Prompt after normal completion
-    Given a wide Frame
-    And Agent 1 holds its first Turn until released
-    And a New Session with Agent 1
+    Examples:
+      | frame | agent |
+      | phone  | 2     |
+
+  Scenario Outline: An edit holds the first Queued Prompt after normal completion
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Second prompt"
     And I begin editing Queued Prompt "Second prompt"
@@ -97,10 +101,14 @@ Feature: Turns
     When I cancel the queue edit
     Then the queued Prompt starts a separate completed Turn
 
-  Scenario: Stop pauses the queue and Resume waits for the cancelled request
-    Given a phone Frame
-    And Agent 1 holds its first Turn until released
-    And a New Session with Agent 1
+    Examples:
+      | frame | agent |
+      | wide  | 1     |
+
+  Scenario Outline: Stop pauses the queue and Resume waits for the cancelled request
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Second prompt"
     And I stop the Turn
@@ -113,10 +121,14 @@ Feature: Turns
     When the Agent answers its held prompt
     Then the Feed has completed Prompts in order "First prompt|Second prompt|Third prompt"
 
-  Scenario: Restart retains Queued Prompts and requires explicit resume
-    Given a wide Frame
-    And Agent 2 holds its first Turn until released
-    And a New Session with Agent 2
+    Examples:
+      | frame | agent |
+      | phone  | 1     |
+
+  Scenario Outline: Restart retains Queued Prompts and requires explicit resume
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Second prompt"
     And I send the prompt "Third prompt"
@@ -127,11 +139,14 @@ Feature: Turns
     And I resume the queue
     Then the Feed has completed Prompts in order "First prompt|Second prompt|Third prompt"
 
+    Examples:
+      | frame | agent |
+      | wide  | 2     |
 
-  Scenario: A Queued Prompt uses the model chosen before it starts
-    Given a phone Frame
-    And Agent 2 holds its first Turn until released
-    And a New Session with Agent 2
+  Scenario Outline: A Queued Prompt uses the model chosen before it starts
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I choose model "Small"
     And I send the prompt "Second prompt"
@@ -139,10 +154,14 @@ Feature: Turns
     Then the Agent switches to model "small" before the next prompt
     And the Feed has completed Prompts in order "First prompt|Second prompt"
 
-  Scenario: Paired Apps observe and edit one Server-owned Prompt queue
-    Given a wide Frame
-    And Agent 1 holds its first Turn until released
-    And a New Session with Agent 1
+    Examples:
+      | frame | agent |
+      | phone  | 2     |
+
+  Scenario Outline: Paired Apps observe and edit one Server-owned Prompt queue
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     And the Server accepts Devices from the local network
     When a second App pairs with a Pairing Ticket and the owner presses Allow
     And I send the prompt "First prompt"
@@ -155,11 +174,14 @@ Feature: Turns
     Then the Feed has completed Prompts in order "First prompt|Edited from another App"
     And the second App cannot overwrite the Prompt that already started
 
+    Examples:
+      | frame | agent |
+      | wide  | 1     |
 
-  Scenario: A failed queued Turn stays in the Feed and pauses the remaining queue
-    Given a wide Frame
-    And Agent 1 fails its second queued Turn
-    And a New Session with Agent 1
+  Scenario Outline: A failed queued Turn stays in the Feed and pauses the remaining queue
+    Given a <frame> Frame
+    And Agent <agent> fails its second queued Turn
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Second prompt"
     And I send the prompt "Third prompt"
@@ -169,10 +191,14 @@ Feature: Turns
     When I resume the queue
     Then the Feed has completed Prompts in order "First prompt|Second prompt|Third prompt"
 
-  Scenario: A Queued Prompt that cannot start remains available to edit or delete
-    Given a phone Frame
-    And Agent 2 refuses queued images
-    And a New Session with Agent 2
+    Examples:
+      | frame | agent |
+      | wide  | 1     |
+
+  Scenario Outline: A Queued Prompt that cannot start remains available to edit or delete
+    Given a <frame> Frame
+    And Agent <agent> refuses queued images
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I attach the red square image
     And I send the prompt "Image prompt"
@@ -183,11 +209,14 @@ Feature: Turns
     When I delete Queued Prompt "Image prompt"
     Then the Message box shows ""
 
+    Examples:
+      | frame | agent |
+      | phone  | 2     |
 
-  Scenario: Queued attachment content survives a restart and reaches the Agent unchanged
-    Given a phone Frame
-    And Agent 1 holds its first Turn until released
-    And a New Session with Agent 1
+  Scenario Outline: Queued attachment content survives a restart and reaches the Agent unchanged
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I attach the red square image
     And I send the prompt "Image prompt"
@@ -199,21 +228,28 @@ Feature: Turns
     And the Session Feed contains the prompt "Image prompt" with the red square image
     And the queued image reaches the Agent with its original bytes
 
+    Examples:
+      | frame | agent |
+      | phone  | 1     |
 
-  Scenario: Prompt Hooks run when queued work starts
-    Given a wide Frame
-    And Agent 2 holds its first Turn until released
-    And a New Session with Agent 2
+  Scenario Outline: Prompt Hooks run when queued work starts
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Rewrite this queued Prompt"
     Then the queued Prompts read "Rewrite this queued Prompt"
     When the Agent answers its held prompt
     Then the Feed has completed Prompts in order "First prompt|Hook ran before this Turn"
 
-  Scenario: Queued Prompt controls have tooltips and unsupported Agents offer no steering
-    Given a wide Frame
-    And Agent 1 holds its first Turn until released
-    And a New Session with Agent 1
+    Examples:
+      | frame | agent |
+      | wide  | 2     |
+
+  Scenario Outline: Queued Prompt controls have tooltips and unsupported Agents offer no steering
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     When I send the prompt "First prompt"
     And I send the prompt "Second prompt"
     And I send the prompt "Third prompt"
@@ -222,11 +258,14 @@ Feature: Turns
     When the Agent answers its held prompt
     Then the Feed has completed Prompts in order "First prompt|Second prompt|Third prompt"
 
+    Examples:
+      | frame | agent |
+      | wide  | 1     |
 
-  Scenario: Queued work continues after the App closes
-    Given a phone Frame
-    And Agent 2 holds its first Turn until released
-    And a New Session with Agent 2
+  Scenario Outline: Queued work continues after the App closes
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
     And the Server accepts Devices from the local network
     When a second App pairs with a Pairing Ticket and the owner presses Allow
     And I send the prompt "First prompt"
@@ -234,3 +273,36 @@ Feature: Turns
     And I close the App while its queued work waits
     And the Agent answers its held prompt
     Then the queued Turns finish while that App is closed
+
+    Examples:
+      | frame | agent |
+      | phone  | 2     |
+
+  Scenario Outline: Closing an editing App releases its held Queued Prompt
+    Given a <frame> Frame
+    And Agent <agent> holds its first Turn until released
+    And a New Session with Agent <agent>
+    And the Server accepts Devices from the local network
+    When a second App pairs with a Pairing Ticket and the owner presses Allow
+    And I send the prompt "First prompt"
+    And I send the prompt "Second prompt"
+    And I begin editing Queued Prompt "Second prompt"
+    And I close the App while its queued work waits
+    And the Agent answers its held prompt
+    Then the queued Turns finish while that App is closed
+
+    Examples:
+      | frame | agent |
+      | phone  | 1     |
+
+  Scenario Outline: Concurrent App submissions to an idle Session both become Turns
+    Given a <frame> Frame
+    And a Session with one completed Turn
+    And the Server accepts Devices from the local network
+    When a second App pairs with a Pairing Ticket and the owner presses Allow
+    And both Apps submit follow-up Prompts together
+    Then both follow-ups finish as separate Turns
+
+    Examples:
+      | frame |
+      | wide  |

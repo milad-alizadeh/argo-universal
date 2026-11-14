@@ -136,3 +136,5 @@ Then(
 Given('Agent {int} fails its second queued Turn', expectListedAgent);
 
 Given('Agent {int} refuses queued images', expectListedAgent);
+
+Given('Agent {int} holds its first Turn until released', expectListedAgent);

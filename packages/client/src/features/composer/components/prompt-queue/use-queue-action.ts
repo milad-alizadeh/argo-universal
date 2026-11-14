@@ -8,8 +8,11 @@ const idleAction: ActionState = { pending: false, error: null };
 
 type SetState = (state: ActionState) => void;
 
+type Work = () => Promise<void>;
+
 type QueueAction = ActionState & {
   run: (command: QueueCommand, done?: () => void) => void;
+  perform: (work: Work) => void;
 };
 
 export function useQueueAction(
@@ -17,22 +20,28 @@ export function useQueueAction(
 ): QueueAction {
   const [state, setState] = useState<ActionState>(idleAction);
 
-  const run: QueueAction['run'] = (action, done): void => {
-    setState({ pending: true, error: null });
-    void command(action)
-      .then(() => finishAction(setState, done))
-      .catch((error: Error) =>
-        setState({ pending: false, error: error.message }),
-      );
-  };
-
-  return { ...state, run };
+  return { ...state, ...queueActions(command, setState) };
 }
 
-function finishAction(
+function queueActions(
+  command: PromptQueueProps['command'],
   setState: SetState,
-  done: (() => void) | undefined,
-): void {
-  setState({ pending: false, error: null });
-  done?.();
+): Pick<QueueAction, 'run' | 'perform'> {
+  return {
+    run: (action, done) =>
+      perform(setState, async () => {
+        await command(action);
+        done?.();
+      }),
+    perform: (work) => perform(setState, work),
+  };
+}
+
+function perform(setState: SetState, work: Work): void {
+  setState({ pending: true, error: null });
+  void work()
+    .then(() => setState(idleAction))
+    .catch((error: Error) =>
+      setState({ pending: false, error: error.message }),
+    );
 }
