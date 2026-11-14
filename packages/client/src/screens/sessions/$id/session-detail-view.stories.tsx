@@ -150,9 +150,3 @@ export const ChangesPill: Story = {
   args: changedSession,
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
-
-// The same pill on a phone, above the Composer.
-export const ChangesPillOnPhone: Story = {
-  ...ChangesPill,
-  globals: { viewport: { value: 'phone' } },
-};
