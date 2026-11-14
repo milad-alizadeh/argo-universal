@@ -94,7 +94,7 @@ function PlanRowWords({ entries }: PlanTriggerProps): JSX.Element {
   const current = entries.find((entry) => entry.status === 'in_progress');
 
   return (
-    <View className="min-w-0 shrink flex-row items-center gap-1.5">
+    <View className="min-w-0 flex-1 flex-row items-center gap-1.5">
       <Text role="control" selectable={false}>
         {`Plan ${completedSteps(entries)}/${entries.length}`}
       </Text>
@@ -103,7 +103,7 @@ function PlanRowWords({ entries }: PlanTriggerProps): JSX.Element {
   );
 }
 
-// The step under way, cut short before it pushes the chevron off the row.
+// The step under way, cut short before it reaches the chevron at the row's end.
 function PlanRowStep({ content }: { content: string }): JSX.Element {
   return (
     <View className="min-w-0 shrink">
