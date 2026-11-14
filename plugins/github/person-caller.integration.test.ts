@@ -95,7 +95,9 @@ const everyOperation = [
   'diff',
 ];
 
-const paramsFor = (name: string): { reference?: string; path?: string } => {
+type Params = { reference?: string; path?: string };
+
+const paramsFor = (name: string): Params => {
   if (name === 'diff') return { reference, path: 'a.ts' };
 
   return ['list', 'refresh', 'discover'].includes(name) ? {} : { reference };
