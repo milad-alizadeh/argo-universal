@@ -62,7 +62,7 @@ const upPauseMs = 60;
 
 const reach = 8000;
 
-// How far a stuck header can sit from the list's top: the list's own top padding.
+// How far a stuck header's row can sit from the list's top: the list's own top padding.
 const stuckWithin = 12;
 
 const changedFiles = (): HTMLElement => screen.getByTestId('changes-files');
@@ -83,8 +83,9 @@ const headers = (): HTMLElement[] =>
 const holdsStuckHeader = (scroller: HTMLElement): boolean => {
   const top = scroller.getBoundingClientRect().top;
 
+  // The row, not its toggle: a header being pushed off still covers the top with its lower part.
   return headers().some((header) => {
-    const box = header.getBoundingClientRect();
+    const box = cellOf(header).getBoundingClientRect();
 
     return box.top - top <= stuckWithin && box.bottom > top;
   });
@@ -126,6 +127,14 @@ async function walk(
 const pause = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
+  });
+
+// Two frames: a scroll's event, and what it moves, are drawn by the second.
+const nextFrames = (): Promise<void> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
   });
 
 const walkDown = (scroller: HTMLElement): Promise<number[]> =>
@@ -173,5 +182,75 @@ export const FarDiffWaitsForTheReader: Story = {
     await waitFor(() => expect(spinners().length).toBeGreaterThan(0));
     await expect(fileHeader(lastFile)).toBeInTheDocument();
     await spinnersGone();
+  },
+};
+
+type Box = { path: string; top: number; bottom: number };
+
+// The list's cell a header is drawn in, the whole row the reader sees, not the toggle inside it.
+function cellOf(header: HTMLElement): HTMLElement {
+  const cell = header.closest<HTMLElement>('[style*="z-index"]');
+
+  if (!cell) throw new Error('A file header is not inside a list cell');
+
+  return cell;
+}
+
+const boxOf = (header: HTMLElement): Box => {
+  const box = cellOf(header).getBoundingClientRect();
+
+  return {
+    path: header.getAttribute('aria-label') ?? '',
+    top: Math.round(box.top),
+    bottom: Math.round(box.bottom),
+  };
+};
+
+// The headers drawn over another: each pair that shares rows of pixels.
+function overlapping(scroller: HTMLElement): string[] {
+  const view = scroller.getBoundingClientRect();
+
+  const shown = headers()
+    .map(boxOf)
+    .filter((box) => box.bottom > view.top && box.top < view.bottom)
+    .sort((a, b) => a.top - b.top);
+
+  return shown.flatMap((box, index) => {
+    const next = shown[index + 1];
+
+    return next && next.top < box.bottom ? [`${box.path} / ${next.path}`] : [];
+  });
+}
+
+// Steps of a third of a wheel's, so a header is caught partway through giving way.
+const fineStep = wheelStep / 3;
+
+// Past the first files' headers, stacked before their diffs land, and the handoff after a diff has: two frames a step is slow on a CI runner.
+const handoffReach = 2400;
+
+const walkingDown = (scroller: HTMLElement): boolean =>
+  scroller.scrollTop < handoffReach && !atEnd(scroller);
+
+// Each step down to `handoffReach`, past several files' headers handing over, where two headers overlap.
+async function overlapsDown(scroller: HTMLElement): Promise<string[]> {
+  const seen = new Set<string>();
+
+  while (walkingDown(scroller)) {
+    scroller.scrollTop += fineStep;
+    await nextFrames();
+
+    for (const pair of overlapping(scroller)) seen.add(pair);
+  }
+
+  return [...seen];
+}
+
+// A stuck header gives way to the next one: as their edges meet it is pushed up, never drawn under (#2051).
+export const NextHeaderPushesTheStuckOne: Story = {
+  play: async () => {
+    await findFileHeader('/repo/src/file-0.ts');
+    const scroller = scrollerOf(changedFiles());
+
+    await expect(await overlapsDown(scroller)).toEqual([]);
   },
 };

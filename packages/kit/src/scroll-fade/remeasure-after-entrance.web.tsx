@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { usePushedStickyHeaders } from './pushed-sticky-headers.web';
 
 type RenderItem<T> = LegendListProps<T>['renderItem'];
 
@@ -117,6 +118,8 @@ export function MeasuredLegendList<T>({
 }: ListProps<T>): ReactNode {
   const [list, bothRefs] = useListRef(ref);
   const renderItem = useRemeasuredRenderItem(props.renderItem);
+
+  usePushedStickyHeaders(list, !!props.stickyHeaderIndices?.length);
 
   return (
     <OverlayEntrances value={useOverlayEntrances(list)}>

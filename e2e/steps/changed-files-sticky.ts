@@ -79,12 +79,17 @@ const readScroll = (page: Page): Promise<ListScroll> =>
     };
   });
 
-// Whether a drawn file header covers the list's top edge; the list's top padding is 12.
+/*
+ * Whether a drawn file header's row covers the list's top edge; the list's top padding is 12. The row, not its toggle:
+ * a header being pushed off by the next one still covers the top with its lower part. The list draws each header in a
+ * cell with an inline z-index.
+ */
 const headerIsStuck = (page: Page, top: number): Promise<boolean> =>
   page.getByRole('button', { name: /^Diff for / }).evaluateAll(
     (headers, listTop) =>
       headers.some((header) => {
-        const box = header.getBoundingClientRect();
+        const row = header.closest('[style*="z-index"]') ?? header;
+        const box = row.getBoundingClientRect();
 
         return box.top - listTop <= 12 && box.bottom > listTop;
       }),
