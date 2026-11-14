@@ -24,3 +24,9 @@ export const noSubagents = {
   subagents: subagentStates.none,
   now: subagentNow,
 } satisfies SubagentListFixture;
+
+// Agents that reported no role, marked from their titles.
+export const unreportedRoleSubagents = {
+  subagents: subagentStates.unreportedRoles,
+  now: subagentNow,
+} satisfies SubagentListFixture;
