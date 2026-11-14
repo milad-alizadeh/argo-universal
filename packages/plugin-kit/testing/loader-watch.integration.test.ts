@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Contributions } from '@repo/engine/mocks/data-fixture';
 import { expect, it } from 'vitest';
+import { z } from 'zod';
 import { dataFixture, dataPluginId, processWait } from '../mocks/data-fixture';
 
 const note = {
@@ -44,7 +45,10 @@ export function register(argo) {
 const ran = async (
   fixture: Awaited<ReturnType<typeof dataFixture>>,
 ): Promise<string[][]> =>
-  (await fixture.requests()).map((line) => JSON.parse(line).args as string[]);
+  (await fixture.requests()).map(
+    (line) =>
+      z.object({ args: z.array(z.string()) }).parse(JSON.parse(line)).args,
+  );
 
 const watches = async (
   kit: { log: () => Promise<string> },
@@ -54,6 +58,7 @@ const watches = async (
 
 it('runs a Watch once per Project each interval with no App connected, and lets it call its own Operation', async () => {
   const fixture = await dataFixture(watchPlugin(), watching());
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect.poll(() => watches(kit), processWait).toBe(1);
@@ -69,6 +74,7 @@ it('runs a Watch once per Project each interval with no App connected, and lets 
 
 it('clamps a Watch interval and logs it', async () => {
   const fixture = await dataFixture(watchPlugin(), watching(1000));
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect.poll(() => watches(kit), processWait).toBe(1);
@@ -86,6 +92,7 @@ it('stops a Watch that overruns its budget, logs it, and still runs the next', a
     ),
     watching(),
   );
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect
@@ -101,6 +108,7 @@ it('stops a Watch that overruns its budget, logs it, and still runs the next', a
 
 it('stops a Watch when its Plugin is turned off and resumes it when turned on', async () => {
   const fixture = await dataFixture(watchPlugin(), watching());
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect.poll(() => watches(kit), processWait).toBe(1);
@@ -116,6 +124,7 @@ it('runs a crashed Plugin Watch again once the Plugin starts', async () => {
     "export function register() { throw new Error('cannot start'); }",
     watching(),
   );
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect.poll(() => kit.log(), processWait).toContain('watch failed');
@@ -126,6 +135,7 @@ it('runs a crashed Plugin Watch again once the Plugin starts', async () => {
 
 it('gives a Loader no way to act', async () => {
   const fixture = await dataFixture(watchPlugin(), watching());
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect.poll(() => watches(kit), processWait).toBe(1);
@@ -138,6 +148,7 @@ it('refuses a Watch path no Watch defined', async () => {
     ...watching(),
     watch: { path: '/missing', interval: 60000 },
   });
+
   const kit = await fixture.start({ projectPaths: { one: fixture.directory } });
 
   await expect
