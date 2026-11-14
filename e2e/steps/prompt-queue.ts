@@ -62,6 +62,7 @@ When('I cancel the queue edit', async ({ page }): Promise<void> => {
 When(
   'I delete Queued Prompt {string}',
   async ({ page }, text: string): Promise<void> => {
+    await page.mouse.move(0, 0);
     await rowNamed(page, text)
       .getByRole('button', { name: 'Delete Queued Prompt' })
       .click();
