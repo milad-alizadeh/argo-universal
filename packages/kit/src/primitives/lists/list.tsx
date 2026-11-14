@@ -2,21 +2,21 @@ import { listDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
-import type { ListLook } from '../../../list-look';
+import type { ListLook } from '../../list-look';
 import {
   ListLookContext,
   useDeclaredListLook,
   useListLook,
-} from '../../../list-look-context';
-import { ListBehaviours } from './list-behaviours';
-import { ChildRows } from './list-child-rows';
-import { DataList } from './list-data-list';
-import { ListMenuRows } from './list-menu-rows';
-import { NativeGroupedList } from './list-native-grouped';
-import { drawsNativeGroupedList } from './list-native-rows';
-import { hasNoRows, placeholderChildren } from './list-placeholder';
-import type { ListProps, MovesOrItems } from './list-props';
-import { ListSection } from './list-section';
+} from '../../list-look-context';
+import { ListBehaviours } from './list/list-behaviours';
+import { ChildRows } from './list/list-child-rows';
+import { DataList } from './list/list-data-list';
+import { ListMenuRows } from './list/list-menu-rows';
+import { NativeGroupedList } from './list/list-native-grouped';
+import { drawsNativeGroupedList } from './list/list-native-rows';
+import { hasNoRows, placeholderChildren } from './list/list-placeholder';
+import type { ListProps, MovesOrItems } from './list/list-props';
+import { ListSection } from './list/list-section';
 
 function ListRows<Item>(props: ListProps<Item>): ReactElement {
   const look = useListLook();

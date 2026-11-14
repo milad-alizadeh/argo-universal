@@ -1,8 +1,8 @@
 import { useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Action } from '#primitives/actions/action';
 import { Screen } from '#primitives/scaffolds/screen';
+import { List } from '../list';
 import { ListItem } from '../list-item';
-import { List } from './list';
 import type { ListProps } from './list-props';
 
 // Lists of `items`, which cannot move their rows.

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
-import { List } from './list';
+import { List } from '../list';
 import {
   logList,
   pagedList,

@@ -5,7 +5,7 @@ import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
 import { Screen } from '#primitives/scaffolds/screen';
 import { Pill } from '#primitives/status/pill';
-import { List } from './list';
+import { List } from '../list';
 
 const viewportHeight = 900;
 

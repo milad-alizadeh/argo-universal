@@ -932,7 +932,10 @@
     },
     {
       // Primitives use one another through their indexes. Contracts supplies only their shared kit tokens, never domain types.
-      "files": ["packages/kit/src/primitives/*/*/*"],
+      "files": [
+        "packages/kit/src/primitives/*/*",
+        "packages/kit/src/primitives/*/*/*"
+      ],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/*-fixtures.*"],
       "rules": {
         "no-restricted-imports": [

@@ -16,12 +16,12 @@ ruleTester.run('kit-styling', kitStyling, {
       filename: '/repo/packages/client/src/features/sessions/view.tsx',
     },
     {
-      code: 'import { Button } from \'../../actions/button\'; <Button className="mt-2" />;',
-      filename: '/repo/packages/kit/src/primitives/lists/list/list.tsx',
+      code: 'import { Button } from \'../actions/button\'; <Button className="mt-2" />;',
+      filename: '/repo/packages/kit/src/primitives/lists/list.tsx',
     },
     {
       code: 'import { Button } from \'#primitives/actions/button\'; <Button className="mt-2" />;',
-      filename: '/repo/packages/kit/src/primitives/lists/list/list.tsx',
+      filename: '/repo/packages/kit/src/primitives/lists/list.tsx',
     },
     'import { type Button } from \'@repo/kit/primitives/actions/button\'; <Button className="x" />;',
     'import type { ButtonProps } from \'@repo/kit/primitives/actions/button\'; <ButtonProps className="x" />;',
