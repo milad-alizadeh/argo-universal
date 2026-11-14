@@ -1,4 +1,9 @@
-import type { AgentThought, Notice, TurnEnd } from '@repo/contracts';
+import type {
+  AgentThought,
+  Notice,
+  TurnEnd,
+  ToolCallUpdate,
+} from '@repo/contracts';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -16,7 +21,8 @@ const thought = recordedFeedMocks
   .find((row) => row.sessionUpdate === 'agent_thought');
 
 const command = recording.rows.find(
-  (row) => row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
+  (row): row is ToolCallUpdate =>
+    row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
 );
 
 if (!thought || !command)
