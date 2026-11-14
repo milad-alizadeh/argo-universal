@@ -42,9 +42,10 @@ export function ChangeRow(props: ChangeRowProps): ReactElement {
   );
 }
 
+// Above the press layer so the Checks' own button takes the pointer; the rest of the text lets it through to the layer.
 function ChangeText({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
-    <View className="min-w-0 flex-1 gap-0.5">
+    <View className="pointer-events-none z-10 min-w-0 flex-1 gap-0.5">
       <View className="flex-row items-center gap-1.5">
         <Text tone="muted">#{change.number}</Text>
         <View className="min-w-0 flex-1">
@@ -62,7 +63,7 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
       {change.checks && (
-        <View className="relative z-10">
+        <View className="pointer-events-auto">
           <ChangeChecks checks={change.checks} onOpen={onOpen} />
         </View>
       )}
