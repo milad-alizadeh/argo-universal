@@ -25,6 +25,7 @@ export type StoredSnapshot = Pick<
 type SessionDisplayContext = Pick<
   SessionState['context'],
   | 'usage'
+  | 'followUpSuggestion'
   | 'permissionQueue'
   | 'elicitationQueue'
   | 'configOptions'
@@ -45,11 +46,16 @@ type StoredFields = Pick<
 
 type SessionFields = Pick<
   SessionSnapshot,
-  'usage' | 'pendingPermission' | 'pendingElicitation' | 'configOptions'
+  | 'usage'
+  | 'pendingPermission'
+  | 'pendingElicitation'
+  | 'configOptions'
+  | 'followUpSuggestion'
 >;
 
 const idleContext: SessionDisplayContext = {
   usage: null,
+  followUpSuggestion: null,
   permissionQueue: [],
   elicitationQueue: [],
   configOptions: [],
@@ -102,6 +108,7 @@ function sessionFields(session: SessionState | null): SessionFields {
 
   return {
     usage: context.usage,
+    followUpSuggestion: context.followUpSuggestion,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,
     configOptions: withHeldConfiguration(

@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import {
   RichTextarea,
@@ -5,6 +6,7 @@ import {
 } from '@repo/kit/primitives/controls/rich-textarea';
 import type * as React from 'react';
 import { Platform, View, ScrollView } from 'react-native';
+import { useFollowUpSuggestion } from '../../hooks/use-follow-up-suggestion';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
@@ -96,18 +98,49 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
   };
 }
 
-function ComposerText({
-  field: { attach },
-  ...layout
-}: TextLayout): React.JSX.Element {
+type MessageField = React.ComponentProps<typeof RichTextarea>;
+
+function useComposerText(layout: TextLayout): MessageField {
   const suggestions = useSuggestionSources(layout.props);
+  const followUp = useFollowUpSuggestion(layout.props, layout.inactive);
+  const props = { ...layout.props, onDraftChange: followUp.changeDraft };
+
+  return {
+    ...textInputProps({ ...layout, props }),
+    inlineSuggestion: followUp.inlineSuggestion,
+    ref: layout.field.attach,
+    suggestions,
+  };
+}
+
+function ComposerText(layout: TextLayout): React.JSX.Element {
+  const field = useComposerText(layout);
 
   return (
-    <RichTextarea
-      {...textInputProps(layout)}
-      ref={attach}
-      suggestions={suggestions}
-    />
+    <>
+      <RichTextarea {...field} />
+      <FollowUpAcceptance suggestion={field.inlineSuggestion} />
+    </>
+  );
+}
+
+const acceptanceLook = {
+  label: 'Use suggestion',
+  variant: 'text',
+  size: 'sm',
+} as const;
+
+function FollowUpAcceptance({
+  suggestion,
+}: {
+  suggestion: React.ComponentProps<typeof RichTextarea>['inlineSuggestion'];
+}): React.JSX.Element | null {
+  if (!suggestion) return null;
+
+  return (
+    <View className="items-end px-4 pb-2">
+      <Button {...acceptanceLook} onPress={suggestion.onAccept} />
+    </View>
   );
 }
 

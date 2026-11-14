@@ -27,6 +27,11 @@ export interface RichTextareaProps {
   // Called when Return asks to send; ⇧Return adds a line. The phone drawing adds a line on Return.
   onSubmit?: () => void;
   placeholder?: string;
+  inlineSuggestion?: {
+    text: string;
+    onAccept: () => void;
+    onDismiss: () => void;
+  };
   disabled?: boolean;
   accessibilityLabel: string;
   // The Issues and pull requests `#` offers; the web editor only, as the phone area has no tokens.

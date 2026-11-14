@@ -89,6 +89,16 @@ export const startedSessionComposer = {
   sessionStarted: true,
 } satisfies ComposerFixture;
 
+export const predictedReplyComposer = {
+  ...startedSessionComposer,
+  followUpSuggestion: {
+    sessionId: 'suggested-session',
+    turnId: 'suggested-turn',
+    text: 'Run the regression tests',
+    enabled: true,
+  },
+} satisfies ComposerFixture;
+
 // A Session in a worktree named for its id: the name gives up its width in a narrow column.
 export const longWorktreeComposer = {
   draft: emptyDraft,

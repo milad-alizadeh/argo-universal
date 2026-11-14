@@ -308,6 +308,10 @@ _Avoid_: Command (alone), shortcut, action
 An item offered in the Composer's `/` menu, from an Agent or a Plugin. An Agent's Composer suggestion represents a Slash command, which it states with `command`; a Plugin result is never one, whatever it inserts.
 _Avoid_: Slash command (for a Plugin result), autocomplete item
 
+**Follow-up suggestion**:
+A proposed next Prompt based on the conversation, offered in the Composer when what the user would naturally say next is clear. It becomes a draft only when the user accepts it.
+_Avoid_: Composer suggestion (for this), autocomplete, next step
+
 **Issue reference**:
 An Issue named in a prompt as `#` and its number.
 _Avoid_: Mention, issue link, tag

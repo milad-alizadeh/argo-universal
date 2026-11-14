@@ -14,7 +14,7 @@ const clientCapabilities: ClientCapabilities = {
   // Without it, claude-agent-acp and codex-acp draw a child Session's work as plain tool calls.
   subagents: {},
   // Without it, claude-agent-acp does not report when a command it put in the background ends.
-  _meta: { terminal_output_delta: true },
+  _meta: { terminal_output_delta: true, promptSuggestions: { version: 1 } },
 };
 
 const negotiate = async (

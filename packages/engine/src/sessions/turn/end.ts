@@ -7,7 +7,10 @@ import { turnStep, type EndTurnParameters, type TurnStep } from './step';
 type EndingSession = Pick<
   SessionContext,
   'activeTurnId' | 'activeTurnStartedAt' | 'feedEnded' | 'storageFailedTurn'
-> & { input: Pick<SessionContext['input'], 'now'> };
+> & {
+  input: Pick<SessionContext['input'], 'now'>;
+  followUpSuggestion?: SessionContext['followUpSuggestion'];
+};
 
 type CompleteTurn = Extract<FeedEvent, { type: 'feed.completeTurn' }>;
 
@@ -33,10 +36,12 @@ type ClearedTurn = Pick<
   | 'permissionDenied'
   | 'elicitationQueue'
   | 'storageFailedTurn'
+  | 'followUpSuggestion'
 >;
 
 const clearedTurn = (): ClearedTurn => ({
   activeTurnId: null,
+  followUpSuggestion: null,
   activeTurnStartedAt: null,
   permissionQueue: [],
   hookedPermissions: {},
@@ -107,7 +112,7 @@ export const endTurn = (
   context: EndingSession,
   ended: EndTurnParameters,
 ): TurnStep<ClearedTurn> => {
-  const change = clearedTurn();
+  const change = endedChange(context, ended);
 
   const turnId = context.activeTurnId;
 
@@ -122,3 +127,19 @@ export const endTurn = (
     ...finishTurn({ context, params, endedAt, turnId }),
   });
 };
+
+function successfulEnding(params: EndTurnParameters): boolean {
+  return params.stopReason === 'end_turn' && !params.error;
+}
+
+function endedChange(
+  context: EndingSession,
+  ended: EndTurnParameters,
+): ClearedTurn {
+  const change = clearedTurn();
+
+  if (successfulEnding(endParameters(context, ended)))
+    change.followUpSuggestion = context.followUpSuggestion ?? null;
+
+  return change;
+}
