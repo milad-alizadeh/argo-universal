@@ -106,6 +106,18 @@ const comparisonOf = ({
   head,
 }: PullInfo): FilesPage['comparison'] => ({ repository, base, head });
 
+const pageOf = (
+  pull: PullInfo,
+  page: number,
+  files: PullFile[],
+): FilesPage => ({
+  mainBranch: null,
+  summary: summaryOf(pull),
+  comparison: comparisonOf(pull),
+  files: files.map(listedOf),
+  nextCursor: nextOf(pull, page),
+});
+
 /*
  * One page of the files the selected pull request changes, against its own repository, base and head as GitHub
  * reports them: the Session's Checkout is never read, switched or written.
@@ -116,17 +128,9 @@ export async function filesOf(
   caller: Caller,
 ): Promise<FilesPage> {
   const read = await readPull(source, params.reference, caller);
-  const { pull } = read;
   const page = params.cursor ?? 1;
-  const files = await readPage(source, read, page);
 
-  return {
-    mainBranch: null,
-    summary: summaryOf(pull),
-    comparison: comparisonOf(pull),
-    files: files.map(listedOf),
-    nextCursor: nextOf(pull, page),
-  };
+  return pageOf(read.pull, page, await readPage(source, read, page));
 }
 
 export type DiffPage = {

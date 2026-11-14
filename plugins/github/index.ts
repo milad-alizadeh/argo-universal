@@ -47,7 +47,7 @@ function registerFiles(argo: Argo, source: ChangesSource): void {
   );
 }
 
-function registerAssociations(argo: Argo, source: ChangesSource): void {
+function registerAttach(argo: Argo, source: ChangesSource): void {
   argo.operations.register('attach', async (params, caller) => ({
     attached: true,
     change: await attach(
@@ -56,6 +56,9 @@ function registerAssociations(argo: Argo, source: ChangesSource): void {
       await sessionCaller(argo, params, caller),
     ),
   }));
+}
+
+function registerDetach(argo: Argo, source: ChangesSource): void {
   argo.operations.register('detach', async (params, caller) => ({
     detached: true,
     ...(await detach(
@@ -67,7 +70,8 @@ function registerAssociations(argo: Argo, source: ChangesSource): void {
 }
 
 function registerOperations(argo: Argo, source: ChangesSource): void {
-  registerAssociations(argo, source);
+  registerAttach(argo, source);
+  registerDetach(argo, source);
   argo.operations.register('discover', async (params, caller) =>
     discoverFor(
       { ...argo, store: source.store },

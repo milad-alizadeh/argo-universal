@@ -3,42 +3,10 @@ import type { ServerResponse } from 'node:http';
 import { createServer, request } from 'node:https';
 import { fixtureTls } from '@repo/engine/mocks/fixture-tls';
 import type { PluginNetwork } from '@repo/engine/plugins';
-import { z } from 'zod';
+import { Fixture, type Pull } from './e2e-github-pulls';
 
 // The token the fixture Account hands out, which the fixture GitHub accepts.
 const token = 'fixture-token';
-
-const Pull = z.object({
-  repository: z.string(),
-  number: z.number(),
-  title: z.string(),
-  branch: z.string(),
-  head: z.string(),
-  base: z.string(),
-  additions: z.number(),
-  deletions: z.number(),
-  files: z.array(
-    z.object({
-      filename: z.string(),
-      status: z.enum(['added', 'removed', 'modified', 'renamed']),
-      additions: z.number(),
-      deletions: z.number(),
-      patch: z.string().optional(),
-    }),
-  ),
-  checks: z.array(
-    z.object({
-      name: z.string(),
-      status: z.enum(['queued', 'in_progress', 'completed']),
-      conclusion: z.string().nullable(),
-    }),
-  ),
-});
-
-type Pull = z.infer<typeof Pull>;
-
-// What the fixture GitHub knows: pull requests with their files and Checks.
-const Fixture = z.object({ pulls: z.array(Pull) });
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 

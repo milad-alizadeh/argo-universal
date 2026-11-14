@@ -84,6 +84,7 @@ const sourceFor = (recovery: Recovery): ChangeFilesSource => {
 
   return (change: SessionPullRequest) => {
     const key = changeKey(change);
+
     const source =
       sources.get(key) ?? memoryChanges(catalogs.get(key) ?? owned);
 

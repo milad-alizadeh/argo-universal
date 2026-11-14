@@ -30,7 +30,7 @@ export type PluginSources = {
 export function withSessionPullRequests(
   props: SessionDetailViewProps,
   pullRequests: SessionPullRequest[],
-  { changeActions, changeFiles }: PluginSources = {},
+  { changeActions, changeFiles }: PluginSources,
 ): SessionDetailViewProps {
   if (props.state !== 'open') return props;
 

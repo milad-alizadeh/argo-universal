@@ -61,6 +61,14 @@ const countsOf = (
   deletions: files.length,
 });
 
+const refsOf = (
+  number: number,
+): Pick<FixturePullRequest, 'branch' | 'head' | 'base'> => ({
+  branch: `feature-${number}`,
+  head: headOf(String(number % 10)),
+  base: 'main',
+});
+
 const pullRequestOf = ({
   number,
   title,
@@ -70,9 +78,7 @@ const pullRequestOf = ({
   repository,
   number,
   title,
-  branch: `feature-${number}`,
-  head: headOf(String(number % 10)),
-  base: 'main',
+  ...refsOf(number),
   ...countsOf(files),
   files: files.map(fileOf),
   checks,
