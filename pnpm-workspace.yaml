@@ -257,6 +257,3 @@ allowBuilds:
 # pnpm's default, written out: Electron Forge refuses to start unless node-linker is hoisted or a hoist pattern is set.
 hoistPattern:
   - "*"
-
-patchedDependencies:
-  "@legendapp/list@3.7.1": patches/@legendapp__list@3.7.1.patch
