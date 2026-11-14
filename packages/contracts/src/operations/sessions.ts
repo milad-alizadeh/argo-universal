@@ -6,6 +6,10 @@ import {
 } from '../sessions/archive';
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
+import {
+  SessionDeclareSubagentRoleInput,
+  SessionDeclareSubagentRoleOutput,
+} from '../sessions/declare-subagent-role';
 import { SessionNewInput, SessionNewOutput } from '../sessions/new';
 import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
@@ -110,6 +114,16 @@ export const sessionOperations = {
     result: SessionSavePlanOutput,
     tier: 'act',
     keywords: ['plan', 'markdown', 'file'],
+  },
+  'session.declareSubagentRole': {
+    id: 'session.declareSubagentRole',
+    label: 'Declare Agent role',
+    description:
+      'Before spawning a subagent, name its role; each spawn takes the next declared role, and Argo draws that role for the Agent.',
+    params: SessionDeclareSubagentRoleInput,
+    result: SessionDeclareSubagentRoleOutput,
+    tier: 'act',
+    keywords: ['subagent', 'spawn', 'role', 'agent', 'type'],
   },
   'session.rename': {
     id: 'session.rename',

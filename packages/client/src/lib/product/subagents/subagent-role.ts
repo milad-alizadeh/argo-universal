@@ -15,6 +15,9 @@ const roles = {
   test: { icon: 'flask', tone: 'success' },
 } as const satisfies Record<string, SubagentRoleMark>;
 
+const namedRole = (name: string): SubagentRoleMark | undefined =>
+  Object.entries(roles).find(([key]) => key === name)?.[1];
+
 // Agents name their roles as they please, so Argo matches them case for case.
 const normalisedRole = (role: string | null): string =>
   role?.trim().toLowerCase() ?? '';
@@ -25,59 +28,13 @@ const roleKey = (role: string | null): string => {
   return key === 'general-purpose' ? 'general' : key;
 };
 
-// The Agent's own words for itself: the role it reports, and its title.
-export type AgentIdentity = Pick<Subagent, 'role' | 'title'>;
+// A role Argo does not know, and a child with none, take the General mark.
+export const subagentRoleMark = (role: string | null): SubagentRoleMark =>
+  namedRole(roleKey(role)) ?? roles.general;
 
-type RoleName = keyof typeof roles;
-
-// Own keys only, so `constructor` and the like are no role.
-const isRoleName = (key: string): key is RoleName =>
-  Object.keys(roles).includes(key);
-
-// The words in a title that name a role; the spawn tool cannot set one, so a title is all many children carry (#2075).
-const roleWords: [RoleName, RegExp][] = [
-  ['explore', /\bexplor(?:e|er|ing|ation)\b/i],
-  ['plan', /\bplan(?:s|ner|ning)?\b/i],
-  ['review', /\breview(?:s|er|ing)?\b/i],
-  ['test', /\btest(?:s|er|ing)?\b/i],
-];
-
-interface RoleWordAt {
-  role: RoleName;
-  at: number;
-}
-
-const roleWordAt =
-  (title: string) =>
-  ([role, word]: [RoleName, RegExp]): RoleWordAt[] => {
-    const at = word.exec(title)?.index;
-
-    return at === undefined ? [] : [{ role, at }];
-  };
-
-// The first role a title names; the guess draws a mark only and never becomes the child's role.
-const guessedRole = (title: string): RoleName | undefined =>
-  roleWords
-    .flatMap(roleWordAt(title))
-    .sort((first, second) => first.at - second.at)[0]?.role;
-
-const capitalised = (word: string): string =>
-  word.charAt(0).toUpperCase() + word.slice(1);
-
-const markRole = ({ role, title }: AgentIdentity): RoleName => {
-  const reported = roleKey(role);
-
-  if (isRoleName(reported)) return reported;
-
-  return guessedRole(title) ?? 'general';
-};
-
-export const subagentRoleMark = (agent: AgentIdentity): SubagentRoleMark =>
-  roles[markRole(agent)];
-
-// What assistive technology calls an Agent's mark, wherever it is drawn: the role it reports, else the one its mark shows.
-export const subagentMarkLabel = (agent: AgentIdentity): string =>
-  `${agent.role?.trim() || capitalised(markRole(agent))} Agent`;
+// What assistive technology calls an Agent's mark, wherever it is drawn.
+export const subagentMarkLabel = (role: string | null): string =>
+  `${role ?? 'General'} Agent`;
 
 const statusMarks = {
   running: { tone: 'success', label: 'Running' },
@@ -94,8 +51,8 @@ type AgentMark = SubagentRoleMark & {
 // Both Agent row renderers use the same role, status and emphasis.
 export function subagentMarkDescriptor(subagent: Subagent): AgentMark {
   return {
-    ...subagentRoleMark(subagent),
-    label: subagentMarkLabel(subagent),
+    ...subagentRoleMark(subagent.role),
+    label: subagentMarkLabel(subagent.role),
     status: statusMarks[subagent.state],
     dimmed: subagent.state === 'idle',
   };

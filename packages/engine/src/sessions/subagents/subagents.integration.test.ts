@@ -8,8 +8,10 @@ import { ownsSubagentUpdate } from '.';
 
 const vendorChild = 'vendor-child';
 
+const acpSessionId = 'acp-session';
+
 const association: SessionNotification = {
-  sessionId: 'acp-session',
+  sessionId: acpSessionId,
   update: {
     sessionUpdate: 'subagent_update',
     sessionId: vendorChild,
@@ -108,4 +110,62 @@ it('keeps the role a standard description reports through partial updates and re
   await settled();
 
   expect(snapshot()).toBe('  custom-role  ');
+});
+
+const spawnOf = (vendorId: string): SessionNotification => ({
+  sessionId: acpSessionId,
+  update: {
+    sessionUpdate: 'subagent_update',
+    sessionId: vendorId,
+    state: { state: 'running' },
+  },
+});
+
+const reportedSpawnOf = (
+  vendorId: string,
+  description: string,
+): SessionNotification => ({
+  sessionId: acpSessionId,
+  update: {
+    sessionUpdate: 'subagent_update',
+    sessionId: vendorId,
+    state: { state: 'running' },
+    description,
+  },
+});
+
+const roleSnapshot = (
+  database: ReturnType<typeof openMemorySubagents>['database'],
+): (string | null)[] => {
+  let roles: (string | null)[] = [];
+
+  const watch = createSessionSnapshotWatcher({
+    database,
+    findFeed: vi.fn<() => undefined>(),
+    findWriter: vi.fn<() => undefined>(),
+    findSession: vi.fn<() => undefined>(),
+  });
+
+  watch('session-1', {
+    next: (event) => {
+      if (event.type === 'snapshot')
+        roles = event.snapshot.subagents.map((subagent) => subagent.role);
+    },
+  }).unsubscribe();
+
+  return roles;
+};
+
+it('gives each spawned Subagent the next role its Session declared, over any role the Agent reports', async (): Promise<void> => {
+  const { database, declare, route, settled } = openMemorySubagents();
+
+  declare('review');
+  declare('test');
+  route(reportedSpawnOf('first', 'general-purpose'));
+  route(spawnOf('second'));
+  route(reportedSpawnOf('third', 'Explore'));
+  route(reportedSpawnOf('first', 'general-purpose'));
+  await settled();
+
+  expect(roleSnapshot(database)).toEqual(['review', 'test', 'Explore']);
 });

@@ -170,6 +170,16 @@ export function generatedOperations(runner: OperationRunner) {
         .mutation(({ input }) =>
           runner.run({ kind: 'app', id: 'session.savePlan', params: input }),
         ),
+      declareSubagentRole: publicProcedure
+        .input(operations['session.declareSubagentRole'].params)
+        .output(operations['session.declareSubagentRole'].result)
+        .mutation(({ input }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.declareSubagentRole',
+            params: input,
+          }),
+        ),
       rename: publicProcedure
         .input(operations['session.rename'].params)
         .output(operations['session.rename'].result)

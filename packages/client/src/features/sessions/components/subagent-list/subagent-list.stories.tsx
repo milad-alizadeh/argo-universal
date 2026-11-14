@@ -8,7 +8,6 @@ import {
   noSubagents,
   oneRunningSubagent,
   severalMixedSubagents,
-  unreportedRoleSubagents,
 } from './subagent-list-fixtures';
 
 const meta = {
@@ -51,9 +50,6 @@ export const SeveralMixed: Story = { args: severalMixedSubagents };
 export const OneRunning: Story = { args: oneRunningSubagent };
 
 export const AllFinished: Story = { args: allFinishedSubagents };
-
-// Without a reported role, a reviewer's title draws the Review mark; a title that names no role draws General.
-export const UnreportedRoles: Story = { args: unreportedRoleSubagents };
 
 // With no Subagents the list returns null, so this story draws nothing.
 export const None: Story = { args: noSubagents };

@@ -11,7 +11,18 @@ const plan: ArgoInstruction = {
     'Skip it for one-step work and for questions.',
 };
 
-export const argoInstructions: readonly ArgoInstruction[] = [plan];
+// The spawn tools of most Agents cannot carry a role, so the Agent declares it to Argo first (#2075).
+const agents: ArgoInstruction = {
+  name: 'Agents',
+  text:
+    'Before you spawn a subagent, run the Argo Operation session.declareSubagentRole with its role: ' +
+    'explore to search or read code, plan to design an approach, review to check work against a spec or standards, ' +
+    'test to write or run tests, or general for anything else. ' +
+    'Declare one role per subagent, in the order you spawn them; leave sessionId out. ' +
+    'Argo draws that role for the Agent in the Feed and the Agents list.',
+};
+
+export const argoInstructions: readonly ArgoInstruction[] = [plan, agents];
 
 // Each Argo instruction under its name, as one block of Markdown.
 export const argoInstructionsMarkdown = (): string =>

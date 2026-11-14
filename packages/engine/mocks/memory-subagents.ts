@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import type { SessionUpdate } from '@repo/contracts';
+import type { SessionUpdate, SubagentRole } from '@repo/contracts';
 import { feedRow, session as sessionRow } from '@repo/db/schema';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { and, asc, eq } from 'drizzle-orm';
@@ -7,6 +7,7 @@ import { onTestFinished } from 'vitest';
 import { waitFor } from 'xstate';
 import { hydrateStoredFeedRow, storedFeedColumns } from '../src/feed';
 import {
+  declareSubagentRole,
   flushSubagents,
   noSubagents,
   ownsSubagentUpdate,
@@ -26,11 +27,12 @@ type Database = ReturnType<typeof openTestDatabase>['database'];
 
 const parentId = 'session-1';
 
-// A Session's Subagents with a real Writer and real Feeds over a test database. `route` hands them an ACP update and keeps the state they return; `withoutFeed` routes as a Session that has no Feed; `play` routes the updates of scripted steps the Session would hand them, as the Agent's ACP Session `acpSessionId`; `settled` flushes every Feed and waits for the Writer; `rows` reads the stored Feed of the parent, or of the Subagent the Agent names.
+// A Session's Subagents with a real Writer and real Feeds over a test database. `route` hands them an ACP update and keeps the state they return; `declare` queues the role of the next Agent the Session spawns; `withoutFeed` routes as a Session that has no Feed; `play` routes the updates of scripted steps the Session would hand them, as the Agent's ACP Session `acpSessionId`; `settled` flushes every Feed and waits for the Writer; `rows` reads the stored Feed of the parent, or of the Subagent the Agent names.
 export type MemorySubagents = {
   database: Database;
   state: () => Subagents;
   route: (notification: SessionNotification) => void;
+  declare: (role: SubagentRole) => void;
   withoutFeed: (notification: SessionNotification) => void;
   play: (steps: readonly ScriptedStep[]) => void;
   flush: () => void;
@@ -106,6 +108,10 @@ class SubagentFixture implements MemorySubagents {
       this.subagents,
       notification,
     );
+  };
+
+  public readonly declare = (role: SubagentRole): void => {
+    this.subagents = declareSubagentRole(this.subagents, role);
   };
 
   public readonly withoutFeed = (notification: SessionNotification): void => {

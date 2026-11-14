@@ -12,6 +12,8 @@ This amends [ADR-0044](0044-argo-is-driven-through-one-operation-registry-and-th
 
 Owner amendment, 2026-11-14: Codex keeps MCP server instructions from its model, so a Codex Session never saw them and kept no Plan. Codex's install seed (ADR-0004) now carries the Argo instructions as `developer_instructions` in its `CODEX_CONFIG`, beside `update_plan`. Only the Codex seed does this: it is a seed, not a per-Session ACP field, so the person still edits or clears it in Settings, and it is fixed at install, as the rest of the seed is. A Codex installed earlier keeps its saved environment until the person sets it or installs Codex again. Drop it when Codex gives its model MCP server instructions.
 
+Owner amendment, 2026-11-14 (#2075): the second Argo instruction is **Agents**. Most Agents' spawn tools cannot carry a role (Codex's `spawn_agent` is told to omit its `agent_type`), so every spawned Agent drew the General mark. The instruction asks the Agent to run `session.declareSubagentRole` with an Agent role before each spawn. The live Session queues the roles; each Agent its Agent spawns takes the next one, stored on its spawn row, where it outranks any role the Agent reports. Argo does not guess a role from an Agent's title: the owner rejected that, since an Agent may be called anything. An Agent that skips the call draws the role it reports, or General. The queue lives only in the open Session, so a role declared and never spent is dropped when the Session closes.
+
 ## Considered options
 
 - **A built-in Plugin that holds only instructions.** Rejected: a person could disable it, and it would make a core behaviour look optional.

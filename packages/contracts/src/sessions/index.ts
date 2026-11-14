@@ -46,4 +46,6 @@ export * from './snapshot';
 
 export * from './turn';
 
+export * from './declare-subagent-role';
+
 export * from './subagent';

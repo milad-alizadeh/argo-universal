@@ -103,6 +103,7 @@ import { loadSession } from './session-load';
 import { SessionRowUpdateJob, SessionTitleJob } from './session-storage';
 import { withShell } from './shells';
 import {
+  declareSubagentRole,
   flushSubagents,
   ownsSubagentUpdate,
   routeSubagentUpdate,
@@ -395,6 +396,13 @@ const sessionSetup = setup({
           context.subagents,
           event.notification,
         ),
+      };
+    }),
+    declareSubagentRole: assign(({ context, event }) => {
+      assertEvent(event, 'session.declareSubagentRole');
+
+      return {
+        subagents: declareSubagentRole(context.subagents, event.role),
       };
     }),
     flushSubagents: ({ context }) => flushSubagents(context.subagents),
@@ -999,6 +1007,8 @@ export const sessionMachine = sessionSetup.createMachine({
     'agent.shellChanged': {
       actions: 'rememberShell',
     },
+    // A declared role waits for the next spawn, whatever the Session is doing.
+    'session.declareSubagentRole': { actions: 'declareSubagentRole' },
   },
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,

@@ -264,6 +264,10 @@ _Avoid_: Draft Session, pending Session
 A Session that another Session's Agent started over ACP to do delegated work. Only that parent drives it: it takes no prompt from the person, and it is shown in its parent's Workbench and Inspector, never as a row in the Sessions list. This is the second sense of the word and not the one above: that Agent is a program Argo runs, this one is a Session. The owner dropped Subagent on 2026-10-21 and coined no second name, so which sense is meant is read from the sentence, and a doc that would be ambiguous says so; the code still says `Subagent` and `parentSessionId`. The owner split off Started Session on 2026-11-10.
 _Avoid_: Subagent, child agent, task agent
 
+**Agent role**:
+What an Agent (the second sense) is for: Explore, Plan, Review, Test or General. Its parent's Agent declares it through `session.declareSubagentRole` before the spawn, since most Agents' spawn tools cannot carry one; a role the Agent itself reports counts only when none was declared, and an Agent with neither is General. Argo draws each role with its own mark in the Feed and the Agents list.
+_Avoid_: Agent type, subagent type
+
 **Started Session**:
 A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`.
 _Avoid_: Agent, Subagent, child Session, delegated Session

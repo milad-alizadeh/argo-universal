@@ -58,37 +58,11 @@ const cancelled: Subagent = {
   tokens: 1_300,
 };
 
-// Children whose Agent reported no role: the mark comes from each title, and a title that names none stays General (#2075).
-const specReview: Subagent = {
-  ...runningSubagent,
-  sessionId: 'subagent-spec-review',
-  toolCallId: 'tool-spec-review',
-  title: 'Follow up spec review',
-  role: null,
-};
-
-const standardsReview: Subagent = {
-  ...finished,
-  sessionId: 'subagent-standards-review',
-  toolCallId: 'tool-standards-review',
-  title: 'Follow up standards review',
-  role: null,
-};
-
-const untitledRole: Subagent = {
-  ...cancelled,
-  sessionId: 'subagent-tokens-unreported',
-  toolCallId: 'tool-tokens-unreported',
-  title: 'Migrate tokens to kit roles',
-  role: null,
-};
-
 export const subagentStates = {
   none: [] satisfies Subagent[],
   oneRunning: [runningSubagent],
   severalMixed: [runningSubagent, requiresAction, finished, cancelled],
   allFinished: [finished, cancelled],
-  unreportedRoles: [specReview, standardsReview, untitledRole],
 };
 
 export const interleavedSubagents = [
