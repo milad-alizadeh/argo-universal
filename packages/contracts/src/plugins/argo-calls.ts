@@ -8,10 +8,12 @@ import { WireJson } from '#plugin-wire-json';
 
 export {
   PluginProjectInfo,
+  PluginPromptAnswer,
   PluginSessionInfo,
   SessionArchive,
   SessionCall,
   SessionGet,
+  SessionPrompt,
 } from '#plugin-session-calls';
 
 export { SlotCall } from '#plugin-slot-calls';

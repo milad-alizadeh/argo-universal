@@ -8,6 +8,9 @@ export function answerSession(
   call: PluginCall,
   request: SessionRequest,
 ): Promise<PluginValue> {
+  if (request.action === 'prompt')
+    return promptSession(call, request.sessionId, request.text);
+
   return request.action === 'get'
     ? readSession(call, request.sessionId)
     : archiveSession(call, request.sessionId);
@@ -37,10 +40,7 @@ async function archiveSession(
 
   const info = await call.options.sessionInfo?.(sessionId);
 
-  if (!call.projectId || info?.projectId !== call.projectId)
-    throw new CapabilityRefusal(
-      `Session ${sessionId} is not in the Project this call runs for`,
-    );
+  requireProjectSession(call, sessionId, info);
 
   if (!call.options.archiveSession)
     throw new Error('Archiving Sessions is not available');
@@ -48,4 +48,41 @@ async function archiveSession(
   await call.options.archiveSession(sessionId);
 
   return null;
+}
+
+/*
+ * `argo.sessions.prompt` sends the Plugin's text to a Session of the Project the call runs for, with the Plugin as
+ * sender (ADR-0055). An idle Session starts a Turn; a busy or paused one queues it.
+ */
+async function promptSession(
+  call: PluginCall,
+  sessionId: string,
+  text: string,
+): Promise<PluginValue> {
+  call.access().checkSessionsPrompt();
+  call.logCall();
+  requireProjectSession(
+    call,
+    sessionId,
+    await call.options.sessionInfo?.(sessionId),
+  );
+
+  if (!call.options.promptSession)
+    throw new Error('Prompting Sessions is not available');
+
+  return call.options.promptSession(sessionId, text, {
+    pluginId: call.pluginId,
+    title: call.activated()?.title || call.pluginId,
+  });
+}
+
+function requireProjectSession(
+  call: PluginCall,
+  sessionId: string,
+  info: { projectId: string } | null | undefined,
+): void {
+  if (!call.projectId || info?.projectId !== call.projectId)
+    throw new CapabilityRefusal(
+      `Session ${sessionId} is not in the Project this call runs for`,
+    );
 }

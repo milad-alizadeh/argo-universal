@@ -194,6 +194,11 @@ const HookCapability = z.strictObject({
 // `argo.sessions.get` tells a Plugin which branch the user works on in each Session, so it is declared too.
 const SessionsCapability = z.strictObject({ kind: z.literal('sessions:read') });
 
+// `argo.sessions.prompt` starts Turns in the Plugin's Projects with the Plugin as sender (ADR-0055).
+const SessionsPromptCapability = z.strictObject({
+  kind: z.literal('sessions:prompt'),
+});
+
 // `argo.sessions.archive` archives a Session as the App does, with no confirm tier: the person's choice in the Plugin is the consent (ADR-0055).
 const SessionsArchiveCapability = z.strictObject({
   kind: z.literal('sessions:archive'),
@@ -205,6 +210,7 @@ export const PluginCapability = z.discriminatedUnion('kind', [
   HookCapability,
   SessionsCapability,
   SessionsArchiveCapability,
+  SessionsPromptCapability,
 ]);
 
 export type PluginCapability = z.infer<typeof PluginCapability>;
@@ -215,6 +221,8 @@ export type PluginCapability = z.infer<typeof PluginCapability>;
  */
 export function consentCopy(capability: PluginCapability): string {
   switch (capability.kind) {
+    case 'sessions:prompt':
+      return 'May start Turns in its Projects';
     case 'sessions:archive':
       return 'May archive Sessions in its Projects';
     case 'sessions:read':

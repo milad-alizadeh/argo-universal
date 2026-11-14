@@ -24,6 +24,8 @@ import { allowWrite } from './plugin-write-rules';
 
 // What the Server holds for an activated Plugin: its Grants, and its code folder, which `argo.fs` never writes.
 export type ActivatedPlugin = {
+  // The Plugin's name, which the Feed shows as the sender of its Prompts.
+  title?: string;
   grants: readonly PluginCapability[];
   codeFolder: string;
 };
@@ -116,6 +118,14 @@ export class PluginAccess {
     if (!this.scope.grants.some(({ kind }) => kind === 'sessions:read'))
       throw new CapabilityRefusal(
         'sessions:read is not a declared Capability. Add { "kind": "sessions:read" } to capabilities in plugin.json.',
+      );
+  }
+
+  // `argo.sessions.prompt` starts Turns, so it needs a `sessions:prompt` Grant (ADR-0055).
+  checkSessionsPrompt(): void {
+    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:prompt'))
+      throw new CapabilityRefusal(
+        'sessions:prompt is not a declared Capability. Add { "kind": "sessions:prompt" } to capabilities in plugin.json.',
       );
   }
 
