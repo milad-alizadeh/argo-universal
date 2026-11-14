@@ -56,6 +56,7 @@
     "./plugins/page-call-payload": "./src/plugins/page-call-payload.ts",
     "./plugins/optimistic-tree": "./src/plugins/optimistic-tree.ts",
     "./plugins/page-calls": "./src/plugins/page-calls.ts",
+    "./plugins/board-moves": "./src/plugins/board-moves.ts",
     "./plugins/secret-bindings": "./src/plugins/secret-bindings.ts",
     "./plugins/page-draw": "./src/plugins/page-draw.ts",
     "./plugins/page-live": "./src/plugins/page-live.ts",

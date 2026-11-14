@@ -1,5 +1,4 @@
 import type { PageState } from '@repo/contracts/plugins/page-address';
-import { madePageCall } from '@repo/contracts/plugins/page-call-payload';
 import {
   PageCalls,
   type PageCallsPorts,
@@ -18,6 +17,7 @@ import {
   findByText,
   findEntry,
   findNode,
+  madeEventCall,
   handlerOf,
   pageEventOf,
   type FoundNode,
@@ -153,7 +153,7 @@ export class OpenPage {
   }
 
   private call(handler: PageCall, event: PageEvent): Promise<void> {
-    return this.calls.call(madePageCall(handler, event.payload), event);
+    return this.calls.call(madeEventCall(this.tree, handler, event), event);
   }
 
   // A navigation opens the page it names for the same Project, Session and App; other Actions stay in the App.

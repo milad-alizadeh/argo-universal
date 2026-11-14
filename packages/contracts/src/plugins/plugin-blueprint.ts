@@ -22,7 +22,8 @@ A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\
 | --- | --- | --- |
 | A list | \`Screen\` holding a \`List\` of \`ListItem\`; many rows: a \`list\` loader and \`pagination\` | \`plugins/issue-tracker/filter-rows.tsx\` |
 | One thing in full | \`Screen\` holding a \`Detail\`; its properties in the Screen's \`aside\` | \`plugins/issue-tracker/issue-detail.tsx\` |
-| A board, a canvas, a chat | \`Screen width="bleed"\`, \`List layout="lanes"\` with \`onMove\`, \`footer\` for an input | \`docs/plugins/authoring.md\`, "Page frames" |
+| Cards a person moves between columns | \`Screen width="bleed"\` holding a \`Board\` of \`Board.Column\` and \`Board.Card\`, each card's \`movesTo\` naming where it may go; \`onMove\` fills an Operation call | \`docs/plugins/authoring.md\`, "Boards" |
+| A canvas, a chat | \`Screen width="bleed"\`, \`footer\` for an input | \`docs/plugins/authoring.md\`, "Page frames" |
 | Data from a URL or a command | a Query: \`read({ api: 'fetch', url })\`, with the \`fetch\` or \`process:exec\` Capability in \`plugin.json\` | \`docs/plugins/authoring.md\`, "Declared data" |
 | Data two pages or a Slot share | a named read: \`argo.queries.define\`, \`projectOf\`, then \`argo.queries.read\` and \`seed\` | \`plugins/issue-tracker/github-reads.ts\` |
 | A person's login at a service | \`deviceFlow\` + \`provideSignIn\` + \`signInGate\`; read as that person with \`accountFetch(argo, host)(url)\`, which throws \`SignInRequired\` for the gate to draw | \`plugins/examples/github-sign-in\`, \`plugins/issue-tracker/github-account.ts\` |

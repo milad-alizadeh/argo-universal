@@ -1,11 +1,11 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useSyncExternalStore, type RefObject } from 'react';
 import type { ViewInstance } from 'react-native';
 import { legendScroller } from './list-column-scroll';
 import type { ListDrag } from './list-drag-controller';
 import type { MeasureZone } from './list-drag-measure';
 import { measureView } from './list-geometry';
-import { useListMoves } from './list-move-context';
+import { useListMoves, type ListMoves } from './list-move-context';
 import type { SectionKey } from './list-move-model';
 import { useMoveOrder } from './list-move-order';
 
@@ -56,4 +56,20 @@ export function useLaneDrag(key: SectionKey, views: LaneViews): void {
   useEffect(() => {
     return drag && moving ? registerLane(drag, key, views) : undefined;
   }, [drag, moving, key, views]);
+}
+
+const unsubscribed = (): (() => void) => () => {};
+
+// While a board's card is dragged, whether lane `key` refuses it, so the lane draws as unavailable.
+export function useLaneRefuses(key: SectionKey): boolean {
+  const moves = useListMoves();
+  const read = (): boolean => (moves ? refusedNow(moves, key) : false);
+
+  return useSyncExternalStore(moves?.drag.subscribe ?? unsubscribed, read);
+}
+
+function refusedNow({ drag, order }: ListMoves, key: SectionKey): boolean {
+  const lifted = drag.current()?.id;
+
+  return lifted !== undefined && order.refuses(lifted, key);
 }

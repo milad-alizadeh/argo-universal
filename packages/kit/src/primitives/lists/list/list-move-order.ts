@@ -1,7 +1,15 @@
-import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { useSyncExternalStore } from 'react';
 import { listenerSet } from '../../../listener-set';
+import {
+  boardAllows,
+  boardRefuses,
+  menuKeyOf,
+  type MenuKey,
+  type MoveTargets,
+} from './list-board-rules';
 import { RowFocus, type FocusRow, type MoveNotice } from './list-move-feedback';
+import { shownSections, type HeldMove } from './list-move-held';
 import {
   placeOf,
   resolveMove,
@@ -16,58 +24,26 @@ import {
 // A Plugin's `onMove` answers once its dispatch settles; an App owner's answers at once.
 export type MoveAnswer = (move: ListMove) => void | Promise<void>;
 
-// What the List's owner last drew: its order, its answer to a move, whether its Sections draw as lanes, and each movable row's title.
+export type { MenuKey, MenuSteps, MoveTargets } from './list-board-rules';
+
+export { shownSections, type HeldMove } from './list-move-held';
+
+/*
+ * What the List's owner last drew: its order, its answer to a move, whether its Sections draw as lanes, and each
+ * movable row's title. With `targets` the List is a board: a row moves only to another Section, one its targets name.
+ */
 export interface MoveOwner {
   base: readonly MoveSection[];
   onMove: MoveAnswer;
   lanes: boolean;
   titles: ReadonlyMap<RowId, string>;
+  targets?: MoveTargets;
 }
-
-// Which steps a row's Move menu offers: up, down, both or neither. Its Move to… entry is always there.
-export type MenuSteps = 'up' | 'down' | 'both' | 'none';
-
-const withUp = (down: boolean): MenuSteps => (down ? 'both' : 'up');
-
-const withoutUp = (down: boolean): MenuSteps => (down ? 'down' : 'none');
-
-const stepsOf = (index: number, length: number): MenuSteps =>
-  (index > 0 ? withUp : withoutUp)(index < length - 1);
 
 export interface MoveEffects {
   // Runs the owner's answer, and reports a refusal with one error toast.
   report: (answer: () => void | Promise<void>) => Promise<void>;
   frame: (step: () => void) => void;
-}
-
-// A move the List shows before its owner answers it, and the owner's order it was made on.
-export interface HeldMove {
-  move: RowMove;
-  base: readonly MoveSection[];
-}
-
-const sameRows = (a: readonly RowId[], b: readonly RowId[]): boolean =>
-  a.length === b.length && a.every((id, index) => id === b[index]);
-
-const sameSection = (a: MoveSection, b: MoveSection | undefined): boolean =>
-  b !== undefined && a.key === b.key && sameRows(a.rows, b.rows);
-
-// The owner has not drawn another order: the same Sections, holding the same rows in the same order.
-const sameOrder = (
-  a: readonly MoveSection[],
-  b: readonly MoveSection[],
-): boolean =>
-  a.length === b.length &&
-  a.every((section, index) => sameSection(section, b[index]));
-
-// The order the List shows over its owner's: the held move's, until the owner draws another order.
-export function shownSections(
-  held: HeldMove | null,
-  base: readonly MoveSection[],
-): readonly MoveSection[] {
-  if (!held || !sameOrder(held.base, base)) return base;
-
-  return applyListMove(base, held.move);
 }
 
 const nextNotice = (last: MoveNotice | null, text: string): MoveNotice => ({
@@ -172,11 +148,36 @@ export class MoveOrder {
     return this.shown.some((section) => section.key === sectionKey);
   }
 
-  // Which steps row `id`'s Move menu offers; none while the List does not hold the row.
-  public menuOf(id: RowId | undefined): MenuSteps | undefined {
+  // The List is a board: its rows move between Sections only, each to the ones its targets name.
+  public get board(): boolean {
+    return this.owner.targets !== undefined;
+  }
+
+  // Whether row `id` may land in Section `sectionKey`: anywhere in a List; on a board, another Section it names.
+  public allows(id: RowId, sectionKey: SectionKey): boolean {
+    const { targets } = this.owner;
+
+    return (
+      !targets ||
+      boardAllows({ sections: this.shown, targets }, { id, sectionKey })
+    );
+  }
+
+  // On a board, a lane that would refuse row `id` while it is dragged: neither its own column nor one it names.
+  public refuses(id: RowId, sectionKey: SectionKey): boolean {
+    const { targets } = this.owner;
+
+    return (
+      targets !== undefined &&
+      boardRefuses({ sections: this.shown, targets }, { id, sectionKey })
+    );
+  }
+
+  // What row `id`'s Move menu offers; none while the List does not hold the row.
+  public menuOf(id: RowId | undefined): MenuKey | undefined {
     const place = id === undefined ? undefined : placeOf(this.shown, id);
 
-    return place && stepsOf(place.index, place.own.rows.length);
+    return place && menuKeyOf(place, this.board);
   }
 
   // Lets go of a move once its answer settles, unless a later move has replaced it.

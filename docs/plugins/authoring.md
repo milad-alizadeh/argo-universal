@@ -85,6 +85,26 @@ pnpm test
 
 `argo-plugin <validate|types|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|types|test> <dir>` runs the same command.
 
+## Boards
+
+A `Board` draws columns of cards that a person moves between columns: by drag, or from a card's menu, which offers the same moves for touch and keyboard. The Plugin writes no drag logic. Each `Board.Column` has an `id`, a `title` and an optional `count`, which defaults to the cards it shows. Each `Board.Card` has an `id`, a `title`, an optional `subtitle` and `meta`, and `movesTo`, the ids of the columns it may move to; only those accept its drop, the others fade while it is dragged, and a card without `movesTo` does not move. A card's `onPress` opens it, as a row's does; a card that moves but opens nothing is still a focus stop, whose context-menu key offers its moves.
+
+A move reports the card's `id` and the `column` it lands in, which fill an Operation call:
+
+```tsx
+<Board accessibilityLabel="Issues" onMove={to.run('transition', { issue: to.payload('id'), status: to.payload('column') })}>
+  {columns.map((column) => (
+    <Board.Column key={column.id} id={column.id} title={column.name}>
+      {issuesIn(column).map((issue) => (
+        <Board.Card key={issue.key} id={issue.key} title={issue.summary} subtitle={issue.key} movesTo={issue.transitions} />
+      ))}
+    </Board.Column>
+  ))}
+</Board>
+```
+
+The move shows at once: the App sets the card's `column` and `pending` as optimistic props, so it draws in its new column with a spinner until the Operation answers, and goes back with an error toast when it fails. A move to a column the card does not name, or to the one it is in, is refused before any call is made; a page test sees that refusal from `page.act(board, 'onMove', { id, column })`. The board scrolls sideways when its columns do not fit, at every width, and never narrows a column.
+
 ## Source validation
 
 `argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
