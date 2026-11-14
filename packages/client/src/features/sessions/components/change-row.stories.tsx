@@ -25,8 +25,18 @@ const meta = {
       </View>
     ),
   ],
-  argTypes: { change: { control: false }, onOpen: { control: false } },
-  args: { ...checksRunningChangeRow, onOpen: fn() },
+  argTypes: {
+    change: { control: false },
+    onOpen: { control: false },
+    onCopyLink: { control: false },
+    onDetach: { control: false },
+  },
+  args: {
+    ...checksRunningChangeRow,
+    onOpen: fn(),
+    onCopyLink: fn(),
+    onDetach: fn(),
+  },
 } satisfies Meta<typeof ChangeRow>;
 
 export default meta;
@@ -47,3 +57,12 @@ export const Draft: Story = { args: draftChangeRow };
 export const Merged: Story = { args: mergedChangeRow };
 
 export const Closed: Story = { args: closedChangeRow };
+
+// The … opens a menu: Open on GitHub and Copy link, then Detach from Session.
+export const MenuOpen: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: /^Actions for Change #/ }),
+    );
+  },
+};
