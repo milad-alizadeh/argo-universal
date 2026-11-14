@@ -13,10 +13,28 @@ import {
 } from './board-columns';
 import type { BoardProps } from './board-props';
 
-// A card drawn as a kit row; a pending move shows a spinner at its end.
+// A pending move shows a spinner at the card's end.
+const pendingMark = (pending: boolean | undefined): ReactElement | undefined =>
+  pending ? <Spinner accessibilityLabel="Moving" /> : undefined;
+
+/*
+ * A card that moves but opens nothing is still a focus stop: a menu button, whose context-menu key opens its moves,
+ * so the moves a drag makes reach the keyboard too.
+ */
+type CardMoves = Pick<BoardCard, 'onPress' | 'movesTo'>;
+
+const opensOnlyMenu = ({ onPress, movesTo = [] }: CardMoves): boolean =>
+  onPress === undefined && movesTo.length > 0;
+
+const asMenuButton = { role: 'button', 'aria-haspopup': 'menu' } as const;
+
+const menuButton = (card: CardMoves): Partial<typeof asMenuButton> =>
+  opensOnlyMenu(card) ? asMenuButton : {};
+
+// A card drawn as a kit row.
 const cardRow = ({
   key,
-  movesTo: _movesTo,
+  movesTo,
   column: _column,
   pending,
   ...card
@@ -24,7 +42,8 @@ const cardRow = ({
   <ListItem
     key={key}
     {...card}
-    trailing={pending ? <Spinner accessibilityLabel="Moving" /> : undefined}
+    {...menuButton({ onPress: card.onPress, movesTo })}
+    trailing={pendingMark(pending)}
   />
 );
 

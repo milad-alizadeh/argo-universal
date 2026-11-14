@@ -87,7 +87,7 @@ pnpm test
 
 ## Boards
 
-A `Board` draws columns of cards that a person moves between columns: by drag, or from a card's menu, which offers the same moves for touch and keyboard. The Plugin writes no drag logic. Each `Board.Column` has an `id`, a `title` and an optional `count`, which defaults to the cards it shows. Each `Board.Card` has an `id`, a `title`, an optional `subtitle` and `meta`, and `movesTo`, the ids of the columns it may move to; only those accept its drop, the others fade while it is dragged, and a card without `movesTo` does not move. A card's `onPress` opens it, as a row's does.
+A `Board` draws columns of cards that a person moves between columns: by drag, or from a card's menu, which offers the same moves for touch and keyboard. The Plugin writes no drag logic. Each `Board.Column` has an `id`, a `title` and an optional `count`, which defaults to the cards it shows. Each `Board.Card` has an `id`, a `title`, an optional `subtitle` and `meta`, and `movesTo`, the ids of the columns it may move to; only those accept its drop, the others fade while it is dragged, and a card without `movesTo` does not move. A card's `onPress` opens it, as a row's does; a card that moves but opens nothing is still a focus stop, whose context-menu key offers its moves.
 
 A move reports the card's `id` and the `column` it lands in, which fill an Operation call:
 

@@ -79,7 +79,7 @@ const cardOf =
     <Board.Card
       key={card.id}
       {...card}
-      onPress={() => onOpen?.(card.id)}
+      onPress={onOpen && (() => onOpen(card.id))}
       meta={label ? <Pill text={label} /> : undefined}
     />
   );

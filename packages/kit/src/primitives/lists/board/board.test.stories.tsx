@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, waitFor, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import {
   centre,
@@ -26,6 +26,8 @@ type Width = 'phone' | 'wide';
 
 const onMove = fn();
 
+const onOpen = fn();
+
 // Recorded catalog: Sketch the layout sits In progress and may go back to Backlog or on to In review.
 const sketch = boardCards.find((card) => card.id === 'c');
 
@@ -48,7 +50,7 @@ function at(width: Width, play: Play): Story {
       onMove.mockClear();
       await settleLayout(width);
     },
-    render: () => <BoardExample onMove={onMove} />,
+    render: () => <BoardExample onMove={onMove} onOpen={onOpen} />,
     play,
   };
 }
@@ -159,3 +161,28 @@ export const ColumnsCountTheirCards = at('wide', async ({ canvasElement }) => {
 
   await expect(within(backlog).getByText('2')).toBeVisible();
 });
+
+// A card that opens nothing is still a focus stop, and the context-menu key offers its moves.
+export const KeyboardReachesACardThatOpensNothing: Story = {
+  beforeEach: async () => {
+    onMove.mockClear();
+    await settleLayout('wide');
+  },
+  render: () => <BoardExample onMove={onMove} />,
+  play: async ({ canvasElement, userEvent }) => {
+    const card = rowNamed(canvasElement, sketchTitle);
+
+    await expect(card).toHaveAttribute('aria-haspopup', 'menu');
+
+    card.focus();
+    await expect(card).toHaveFocus();
+    await fireEvent.contextMenu(card);
+
+    const menu = await within(card.ownerDocument.body).findByRole('menu');
+
+    await userEvent.click(
+      within(menu).getByRole('menuitem', { name: 'Move to Backlog' }),
+    );
+    await expect(onMove).toHaveBeenCalledWith({ id: 'c', column: 'backlog' });
+  },
+};
