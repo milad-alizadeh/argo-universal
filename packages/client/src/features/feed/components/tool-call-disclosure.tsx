@@ -13,48 +13,20 @@ type ToolCallDisclosureProps = Omit<FeedDisclosureProps, 'denied'> & {
   permissionOutcome?: Outcome;
 };
 
-const groupedCommand = (row: ToolCallUpdate): string | undefined =>
-  toolCallFacts(row).explores ? undefined : toolCallFacts(row).command;
-
-function commandLabelProps(
-  row: ToolCallUpdate,
-): Pick<ToolCallDisclosureProps, 'label' | 'paths'> | undefined {
-  const command = groupedCommand(row)?.trim();
-
-  return command ? { label: command, paths: [command] } : undefined;
-}
-
-type DisclosureProps = Pick<
-  ToolCallDisclosureProps,
-  'label' | 'paths' | 'awaitingApproval' | 'permissionOutcome'
->;
-
-const standardDisclosureProps = (
-  row: ToolCallUpdate,
-  awaitingApproval: boolean,
-): DisclosureProps => ({
-  label: toolCallTitle(row, awaitingApproval),
-  paths: toolCallTitlePaths(row, awaitingApproval),
-  awaitingApproval,
-  permissionOutcome: toolCallFacts(row).permissionOutcome,
-});
-
-const groupedLabelProps = (
-  row: ToolCallUpdate,
-  showCommand?: boolean,
-): ReturnType<typeof commandLabelProps> =>
-  showCommand ? commandLabelProps(row) : undefined;
-
 export function toolCallDisclosureProps(
   row: ToolCallUpdate,
   awaitingApproval = false,
   showCommand?: boolean,
-): DisclosureProps {
-  const props = standardDisclosureProps(row, awaitingApproval);
-
-  return awaitingApproval
-    ? props
-    : { ...props, ...groupedLabelProps(row, showCommand) };
+): Pick<
+  ToolCallDisclosureProps,
+  'label' | 'paths' | 'awaitingApproval' | 'permissionOutcome'
+> {
+  return {
+    label: toolCallTitle(row, awaitingApproval, showCommand),
+    paths: toolCallTitlePaths(row, awaitingApproval, showCommand),
+    awaitingApproval,
+    permissionOutcome: toolCallFacts(row).permissionOutcome,
+  };
 }
 
 const isRejected = (outcome?: Outcome): boolean | undefined =>

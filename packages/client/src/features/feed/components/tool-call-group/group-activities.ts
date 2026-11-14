@@ -1,6 +1,7 @@
 import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 import { groupTitle } from '../../view/group-title';
+import { toolCallTitle } from '../../view/tool-call-title';
 
 type LiveToolCall = Extract<FeedGroup, { state: 'open' }>['live'];
 
@@ -27,7 +28,24 @@ export const groupSummary = (group: FeedGroup): string =>
 function headerCall(group: FeedGroup): LiveToolCall {
   const header = group.liveHeader;
 
-  return header ? callForSource(group, header.source) : undefined;
+  return header ? matchingHeaderCall(group, header) : undefined;
+}
+
+function matchingHeaderCall(
+  group: FeedGroup,
+  header: LiveHeader,
+): LiveToolCall {
+  const live = callForSource(group, header.source);
+
+  if (!live) return undefined;
+
+  const title = toolCallTitle(
+    live.toolCall,
+    live.awaitingApproval,
+    group.state === 'settled',
+  );
+
+  return header.text.trim() === title.trim() ? live : undefined;
 }
 
 function callForSource(
