@@ -59,7 +59,7 @@ const sameRepository = (
  * Checkout's repository. It is explicit identity, repository plus branch (ADR-0052), never a title and never a branch
  * name alone, so another fork's same-named branch is not the Checkout's.
  */
-export const isOnCheckout = (
+const isOnCheckout = (
   change: ChangeItem,
   checkout: CheckoutIdentity,
 ): boolean => sameBranch(change, checkout) && sameRepository(change, checkout);

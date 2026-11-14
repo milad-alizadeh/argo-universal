@@ -17,7 +17,7 @@ export type FileSource = ChangesSource & {
 const filesListed = 3000;
 
 // A changed file as the App's list draws it; the patch is read with `github.diff`.
-export type ListedFile = Omit<PullFile, 'patch'>;
+type ListedFile = Omit<PullFile, 'patch'>;
 
 export type FilesPage = {
   mainBranch: null;

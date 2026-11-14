@@ -1,14 +1,14 @@
 import { needsSignIn } from './pull-reads';
 
 // Why a read failed, and whether signing in would mend it.
-export type Failure = { reason: 'signIn' | 'failed'; message: string };
+type Failure = { reason: 'signIn' | 'failed'; message: string };
 
 // What Argo keeps for one named read: the last good answer, and why the latest read failed, either or both.
 export type Known<Value> = { data?: Value; failure?: Failure };
 
 type State<Value> = { data?: Value; error?: string };
 
-export const noAnswer = 'GitHub gave no answer.';
+const noAnswer = 'GitHub gave no answer.';
 
 const failureOf = (message: string): Failure => ({
   reason: needsSignIn(message) ? 'signIn' : 'failed',

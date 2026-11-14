@@ -112,7 +112,11 @@
     },
     "e2e": {
       // playwright-bdd discovers steps by glob; the E2E Server loads Plugins by manifest.
-      "entry": ["steps/**/*.ts", "mocks/plugins/*/*.js"],
+      "entry": [
+        "steps/**/*.ts",
+        "mocks/plugins/*/*.js",
+        "mocks/github-plugins/*/*.js"
+      ],
       // Listed so Turborepo hashes the Server, App, and Desktop into the e2e tasks; the specs reach them over HTTP and Electron, not imports.
       "ignoreDependencies": [
         "@repo/desktop",

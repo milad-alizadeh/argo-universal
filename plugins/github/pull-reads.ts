@@ -26,7 +26,7 @@ export type ChecksTarget = {
 type Fetch = Argo['fetch'];
 
 // What a missing or refused sign-in says, so a failure that signing in would mend is told apart from the rest.
-export const signInMessage = 'Sign in to GitHub to read this pull request.';
+const signInMessage = 'Sign in to GitHub to read this pull request.';
 
 // A missing Account answers null; inside a Query, which cannot ask to sign in, it is refused.
 const unavailable = 'Account is unavailable';
@@ -84,7 +84,7 @@ export async function fetchPull(
 }
 
 // The Checks of one commit as the signed-in person sees them.
-export async function fetchChecks(
+async function fetchChecks(
   fetch: Fetch,
   { repository, head, projectId }: ChecksTarget,
 ): Promise<CheckInfo[]> {

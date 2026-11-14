@@ -61,7 +61,7 @@ const fileOf = (file: Json): PullFile => ({
 });
 
 // The files out of GitHub's reply; anything that is not a list of files is refused, never guessed at.
-export function parseFiles(body: string): PullFile[] {
+function parseFiles(body: string): PullFile[] {
   const files: Json = JSON.parse(body);
 
   if (!Array.isArray(files)) throw new Error(invalid);
