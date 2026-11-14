@@ -46,11 +46,11 @@ export function rowItemsBySession(
   reads: readonly LinkRead[],
 ): Record<string, SessionRowItem[]> {
   return Object.fromEntries(
-    Object.entries(
-      Object.groupBy(reads, ({ link }) => link.sessionId),
-    ).map(([sessionId, group]) => [
-      sessionId,
-      (group ?? []).slice(0, rowItemLimit).map(rowItem),
-    ]),
+    Object.entries(Object.groupBy(reads, ({ link }) => link.sessionId)).map(
+      ([sessionId, group]) => [
+        sessionId,
+        (group ?? []).slice(0, rowItemLimit).map(rowItem),
+      ],
+    ),
   );
 }
