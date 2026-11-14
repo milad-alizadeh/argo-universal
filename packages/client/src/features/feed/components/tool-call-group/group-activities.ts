@@ -40,13 +40,28 @@ function callForSource(
     (row) => row.toolCallId === source.toolCallId,
   );
 
-  return toolCall ? { toolCall, awaitingApproval: false } : undefined;
+  return toolCall
+    ? { toolCall, awaitingApproval: callAwaitsApproval(group, toolCall) }
+    : undefined;
+}
+
+function callAwaitsApproval(group: FeedGroup, row: ToolCallUpdate): boolean {
+  const live = openLive(group);
+
+  return live?.toolCall.id === row.id && live.awaitingApproval;
+}
+
+function mayTitleHeader(
+  group: FeedGroup,
+  live: NonNullable<LiveToolCall>,
+): boolean {
+  return leadsGroup(group, live.toolCall.id) && !live.awaitingApproval;
 }
 
 export function liveHeaderOf(group: FeedGroup): LiveHeader | undefined {
   const live = headerCall(group);
 
-  if (live && !leadsGroup(group, live.toolCall.id)) return undefined;
+  if (live && !mayTitleHeader(group, live)) return undefined;
 
   return group.liveHeader;
 }
