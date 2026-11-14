@@ -22,3 +22,24 @@ export const WebListTakesNoNativeProps: Story = {
     ).toBeNull();
   },
 };
+
+export const CompactStackedRows: Story = {
+  play: async ({ canvas }) => {
+    const rows = await canvas.findAllByRole('group');
+    const [first, second] = rows;
+
+    if (!first || !second) throw new Error('Expected two queued rows');
+
+    const top = first.getBoundingClientRect();
+    const bottom = second.getBoundingClientRect();
+    await expect(bottom.top).toBeGreaterThanOrEqual(top.bottom);
+    await expect(bottom.top - top.bottom).toBeLessThan(8);
+    await expect(canvas.queryByText('Queued Prompts')).toBeNull();
+    await expect(
+      canvas.getAllByRole('button', { name: 'Edit Queued Prompt' }),
+    ).toHaveLength(2);
+    await expect(
+      canvas.getAllByRole('button', { name: 'Delete Queued Prompt' }),
+    ).toHaveLength(2);
+  },
+};

@@ -24,10 +24,24 @@ export function Composer(props: ComposerProps): React.JSX.Element {
 
   return (
     <View nativeID={layout.composerId} className={useComposerClass()}>
-      {props.promptQueue && <PromptQueue {...props.promptQueue} />}
       <ComposerTopTray {...layout} />
+      <ComposerQueue queue={props.promptQueue} />
       <ComposerRequest {...layout} />
       <ComposerControls {...layout} />
+    </View>
+  );
+}
+
+function ComposerQueue({
+  queue,
+}: {
+  queue: ComposerProps['promptQueue'];
+}): React.JSX.Element | null {
+  if (!queue?.queue.items.length) return null;
+
+  return (
+    <View className={requestTrayClass}>
+      <PromptQueue {...queue} />
     </View>
   );
 }
