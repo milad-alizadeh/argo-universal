@@ -31,9 +31,9 @@ export const settledGroup = {
   group: toolCallGroupMock.group,
 } satisfies ToolCallGroupFixture;
 
-type RecordedPermission = (typeof permissionMock)['pending'];
+type RecordedGroup = (typeof permissionMock)['pending'];
 
-function permissionGroup({ rows, snapshot }: RecordedPermission): FeedGroup {
+function recordedGroup({ rows, snapshot }: RecordedGroup): FeedGroup {
   const group = toFeedView(rows, snapshot).items.find(
     (item): item is FeedGroup => item.type === 'group',
   );
@@ -45,12 +45,12 @@ function permissionGroup({ rows, snapshot }: RecordedPermission): FeedGroup {
 
 // The Tool call waits on the user: the group carries the Awaiting approval notice.
 export const awaitingApprovalGroup = {
-  group: permissionGroup(permissionMock.pending),
+  group: recordedGroup(permissionMock.pending),
 } satisfies ToolCallGroupFixture;
 
 // The user allowed it once: the recorded outcome closes the group.
 export const allowedOnceGroup = {
-  group: permissionGroup(permissionMock.answered),
+  group: recordedGroup(permissionMock.answered),
 } satisfies ToolCallGroupFixture;
 
 // A recorded non-zero exit changes the group's collapsed summary.
@@ -62,5 +62,5 @@ if (!commandOutcomes)
   throw new Error('Recorded catalog needs command outcomes');
 
 export const failedCommandsGroup = {
-  group: permissionGroup(commandOutcomes),
+  group: recordedGroup(commandOutcomes),
 } satisfies ToolCallGroupFixture;

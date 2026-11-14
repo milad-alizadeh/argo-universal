@@ -9,7 +9,7 @@ import {
 import { toFeedView } from './to-feed-view';
 
 it.each(workMocks)(
-  'leaves the Tool call group settled while the Live header owns thinking for $agent',
+  'leaves a single command unwrapped while the Live header owns thinking for $agent',
   ({ rows, snapshot }) => {
     const source = recordedFeedMocks
       .flatMap((mock) => mock.rows)
@@ -20,16 +20,8 @@ it.each(workMocks)(
     const row = commandRow(rows);
     const view = toFeedView([row, thought], snapshot);
     expect(view.items).toEqual([
-      {
-        type: 'group',
-        id: row.id,
-        title: 'Ran 1 command',
-        state: 'settled',
-        items: [
-          { type: 'tool_call', row },
-          { type: 'thought', row: thought },
-        ],
-      },
+      { type: 'tool_call', row },
+      { type: 'thought', row: thought },
     ]);
   },
 );

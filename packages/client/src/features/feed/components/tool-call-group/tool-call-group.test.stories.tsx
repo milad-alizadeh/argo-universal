@@ -307,25 +307,30 @@ export const RunningCommandShowsOutput: Story = {
   },
 };
 
+const command = failedCommand.content.find(
+  (block) => block.type === 'terminal',
+)?.command;
+
+if (!command)
+  throw new Error('Recorded catalog needs the failed shell command');
+
 function failedCommands(width: number): Story {
   return {
     args: failedCommandsGroup,
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
+
       const group = canvas.getByRole('button', {
         name: 'Ran 2 commands · 1 failed',
       });
+
       await expect(group).toBeVisible();
-      const command = failedCommand.content.find(
-        (block) => block.type === 'terminal',
-      )?.command;
-      if (!command)
-        throw new Error('Recorded catalog needs the failed shell command');
       await expect(
         canvas.queryByRole('button', { name: command }),
       ).not.toBeInTheDocument();
       await userEvent.click(group);
       const row = canvas.getByRole('button', { name: command });
+
       await expect(row).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: 'Ran command' }),
@@ -343,4 +348,5 @@ function failedCommands(width: number): Story {
 }
 
 export const FailedCommandsPhone = failedCommands(layoutWidths.phone);
+
 export const FailedCommandsWide = failedCommands(layoutWidths.wide);

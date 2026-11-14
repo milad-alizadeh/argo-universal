@@ -89,28 +89,27 @@ function CommandOutput(
   );
 }
 
+function useCommandDisclosureProps(
+  props: CommandDisclosureProps,
+): Omit<React.ComponentProps<typeof ToolCallDisclosure>, 'children'> {
+  const labels = toolCallDisclosureProps(
+    props.row,
+    props.awaitingApproval,
+    use(SettledGroup),
+  );
+
+  return { ...labels, icon: 'terminal', initialOpen: props.initialOpen };
+}
+
 function CommandDisclosure(props: CommandDisclosureProps): React.JSX.Element {
   const state = commandState(props);
+  const disclosure = useCommandDisclosureProps(props);
   const titleInGroup = use(GroupLiveId) === props.row.id;
-  const settledGroup = use(SettledGroup);
-  const disclosure = toolCallDisclosureProps(props.row, props.awaitingApproval);
-  const command =
-    settledGroup && !props.awaitingApproval
-      ? props.terminal.command.trim()
-      : '';
-  const label = command || disclosure.label;
 
   if (titleInGroup) return <CommandOutput {...props} state={state} />;
 
   return (
-    <ToolCallDisclosure
-      {...disclosure}
-      label={label}
-      paths={command ? [command] : disclosure.paths}
-      {...state.disclosure}
-      icon="terminal"
-      initialOpen={props.initialOpen}
-    >
+    <ToolCallDisclosure {...disclosure} {...state.disclosure}>
       <CommandOutput {...props} state={state} />
     </ToolCallDisclosure>
   );

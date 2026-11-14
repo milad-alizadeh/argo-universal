@@ -1,6 +1,7 @@
 import type { LiveHeader } from '@repo/contracts';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
@@ -82,13 +83,16 @@ function useGroupActivities(
   return { items, onLayout: useGrowthAbove(group.id, items.map(activityKey)) };
 }
 
+const useGroupClassName = (): string =>
+  cn('gap-2 pb-1 wide-type:gap-1.5', use(SettledGroup) && 'ps-5');
+
 function GroupActivities({
   items,
   onLayout,
   renderActivity,
 }: GroupActivitiesProps): React.JSX.Element {
   return (
-    <View className="gap-2 pb-1 wide-type:gap-1.5" onLayout={onLayout}>
+    <View className={useGroupClassName()} onLayout={onLayout}>
       {items.map((activity) => (
         <View key={activityKey(activity)}>{renderActivity(activity)}</View>
       ))}
@@ -130,12 +134,10 @@ function GroupBody(props: ToolCallGroupProps): React.JSX.Element {
   return (
     <GroupLiveId value={live?.toolCall.id}>
       <SettledGroup value={props.group.state === 'settled'}>
-        <View className={props.group.state === 'settled' ? 'ps-5' : undefined}>
-          <GroupActivities
-            {...activities}
-            renderActivity={props.renderActivity}
-          />
-        </View>
+        <GroupActivities
+          {...activities}
+          renderActivity={props.renderActivity}
+        />
       </SettledGroup>
     </GroupLiveId>
   );

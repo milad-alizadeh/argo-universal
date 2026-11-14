@@ -83,6 +83,7 @@ export function groupTitle(toolCalls: ToolCallUpdate[]): string {
         countedTitles(categoryLabels[category], counts[category]),
       )
       .join(', ') || 'Worked';
+
   const failures = toolCalls.filter((row) => toolCallFacts(row).failed).length;
 
   return failures ? `${title} · ${failures} failed` : title;

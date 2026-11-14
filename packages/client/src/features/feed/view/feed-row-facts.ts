@@ -3,8 +3,11 @@ import {
   type Notice,
   type PermissionOutcome,
   type ToolCallUpdate,
+  type ToolCallContent,
+  type ToolCallTerminal,
   type TurnEnd,
 } from '@repo/contracts';
+import { z } from 'zod';
 
 type ToolMetadata = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
@@ -27,6 +30,8 @@ export interface ToolCallFacts {
   description: string | undefined;
   // Whether the call runs a command.
   isCommand: boolean;
+  // The available shell command, from terminal content or raw input.
+  command: string | undefined;
   // Whether the call failed, including a non-zero terminal exit.
   failed: boolean;
   // The file the call works on: the first action's path, else its first location; an unclassified action still names it.
@@ -108,10 +113,18 @@ const descriptionOf = (row: ToolCallUpdate): string | undefined =>
   extensionOf(row)?.description?.trim();
 
 const isPlaceholder = (row: ToolCallUpdate): boolean =>
-  [commandOf(row), adapterPlaceholderTitle, ''].includes(row.title);
+  [terminalCommandOf(row), adapterPlaceholderTitle, ''].includes(row.title);
+
+const CommandInput = z.object({ command: z.string() });
+
+const rawCommandOf = (row: ToolCallUpdate): string | undefined =>
+  CommandInput.safeParse(row.rawInput).data?.command;
+
+const terminalCommandOf = (row: ToolCallUpdate): string | undefined =>
+  row.content.find((block) => block.type === 'terminal')?.command;
 
 const commandOf = (row: ToolCallUpdate): string | undefined =>
-  row.content.find((block) => block.type === 'terminal')?.command;
+  terminalCommandOf(row) || rawCommandOf(row);
 
 const titleOf = (row: ToolCallUpdate): string | undefined =>
   isPlaceholder(row) ? undefined : row.title;
@@ -119,19 +132,25 @@ const titleOf = (row: ToolCallUpdate): string | undefined =>
 const agentTitleOf = (row: ToolCallUpdate): string | undefined =>
   extensionOf(row)?.description || titleOf(row);
 
+const nonzeroExit = (status: ToolCallTerminal['exitStatus']): boolean =>
+  (status?.exitCode ?? 0) !== 0;
+
+const terminalFailed = (block: ToolCallContent): boolean =>
+  block.type === 'terminal' && nonzeroExit(block.exitStatus);
+
+const commandFacts = (
+  row: ToolCallUpdate,
+): Pick<ToolCallFacts, 'isCommand' | 'command' | 'failed'> => ({
+  isCommand: row.kind === 'execute',
+  command: row.kind === 'execute' ? commandOf(row) : undefined,
+  failed: row.status === 'failed' || row.content.some(terminalFailed),
+});
+
 const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   ...decodeActions(row),
+  ...commandFacts(row),
   isEdit: editKinds.has(row.kind),
   editedPaths: editedPathsOf(row),
-  isCommand: row.kind === 'execute',
-  failed:
-    row.status === 'failed' ||
-    row.content.some(
-      (block) =>
-        block.type === 'terminal' &&
-        block.exitStatus?.exitCode != null &&
-        block.exitStatus.exitCode !== 0,
-    ),
   description: descriptionOf(row),
   location: firstLocation(row),
   permissionOutcome: extensionOf(row)?.permissionOutcome,
