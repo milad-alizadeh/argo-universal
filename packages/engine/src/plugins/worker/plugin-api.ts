@@ -138,6 +138,9 @@ const pluginApi: Argo = frozen({
   }),
   sessions: frozen({
     get: (sessionId) => call({ api: 'sessions', action: 'get', sessionId }),
+    archive: async (sessionId) => {
+      await call({ api: 'sessions', action: 'archive', sessionId });
+    },
   }),
   secrets: frozen({
     get: (account) => secret({ action: 'get', account }),

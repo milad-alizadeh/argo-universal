@@ -119,6 +119,14 @@ export class PluginAccess {
       );
   }
 
+  // `argo.sessions.archive` needs a `sessions:archive` Grant; there is no confirm tier (ADR-0055).
+  checkSessionsArchive(): void {
+    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:archive'))
+      throw new CapabilityRefusal(
+        'sessions:archive is not a declared Capability. Add { "kind": "sessions:archive" } to capabilities in plugin.json.',
+      );
+  }
+
   checkHost(url: URL): HostRule {
     if (url.protocol !== 'https:')
       throw new CapabilityRefusal(`${url.protocol} is not HTTPS`);

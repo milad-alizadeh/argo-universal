@@ -320,7 +320,7 @@ export function register(argo: Argo): void {
 
 An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 characters, `tone` is a kit tone, and `action.path` opens one of the Plugin's own pages. Anything else fails the Slot's schema.
 A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
-The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session.
+The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session. `argo.sessions.archive(sessionId)` archives a Session as the App's archive does (the branch is kept, the worktree removed) and needs the `{ "kind": "sessions:archive" }` Capability. It has no confirm tier: the person's earlier choice in the Plugin is the consent (ADR-0055). It is refused for a Session outside the Project the call runs for, while a Turn runs, and for a Session that is not top level. Turning on the Plugin says it may archive Sessions in its Projects.
 
 Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.changed()` or one of its Operations runs, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".

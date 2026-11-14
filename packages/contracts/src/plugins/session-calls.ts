@@ -24,3 +24,15 @@ export const SessionGet = z.object({
   action: z.literal('get'),
   sessionId: z.string().min(1),
 });
+
+// `argo.sessions.archive`; needs `sessions:archive` and a Session of the Project the call runs for (ADR-0055).
+export const SessionArchive = z.object({
+  api: z.literal('sessions'),
+  action: z.literal('archive'),
+  sessionId: z.string().min(1),
+});
+
+export const SessionCall = z.discriminatedUnion('action', [
+  SessionGet,
+  SessionArchive,
+]);
