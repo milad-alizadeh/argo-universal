@@ -28,7 +28,7 @@ export function WorkbenchChangesSummary({
 
 function DiffTotal({ summary }: Pick<Props, 'summary'>): ReactElement {
   return (
-    <View className="gap-2 px-1">
+    <View className="min-h-6 wide-type:min-h-5 justify-center px-1">
       {summary && <ChangeDiffTotal {...summary} />}
     </View>
   );
