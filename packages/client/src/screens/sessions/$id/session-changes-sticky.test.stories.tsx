@@ -62,7 +62,7 @@ const upPauseMs = 60;
 
 const reach = 8000;
 
-// How far a stuck header can sit from the list's top: the list's own top padding.
+// How far a stuck header's row can sit from the list's top: the list's own top padding.
 const stuckWithin = 12;
 
 const changedFiles = (): HTMLElement => screen.getByTestId('changes-files');
@@ -83,8 +83,9 @@ const headers = (): HTMLElement[] =>
 const holdsStuckHeader = (scroller: HTMLElement): boolean => {
   const top = scroller.getBoundingClientRect().top;
 
+  // The row, not its toggle: a header being pushed off still covers the top with its lower part.
   return headers().some((header) => {
-    const box = header.getBoundingClientRect();
+    const box = cellOf(header).getBoundingClientRect();
 
     return box.top - top <= stuckWithin && box.bottom > top;
   });
@@ -126,6 +127,14 @@ async function walk(
 const pause = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
+  });
+
+// Two frames: a scroll's event, and what it moves, are drawn by the second.
+const nextFrames = (): Promise<void> =>
+  new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
   });
 
 const walkDown = (scroller: HTMLElement): Promise<number[]> =>
@@ -225,7 +234,7 @@ async function overlapsDown(scroller: HTMLElement): Promise<string[]> {
 
   while (walkingDown(scroller)) {
     scroller.scrollTop += fineStep;
-    await pause(downPauseMs);
+    await nextFrames();
 
     for (const pair of overlapping(scroller)) seen.add(pair);
   }
