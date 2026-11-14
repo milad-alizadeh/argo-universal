@@ -10,6 +10,17 @@ import {
 const meta = {
   title: 'Composer/PromptQueue',
   component: PromptQueue,
+  argTypes: {
+    queue: {
+      control: false,
+      description: 'Queued Prompts and the reason execution is paused.',
+    },
+    holds: {
+      control: false,
+      description: 'Queued Prompts held for editing in an App.',
+    },
+    command: { control: false },
+  },
   args: { ...queuedPrompts, command: fn(async (): Promise<void> => {}) },
 } satisfies Meta<typeof PromptQueue>;
 
