@@ -116,3 +116,10 @@ export const WebLinkKeepsItsHref: Story = {
     );
   },
 };
+
+export const SelectableText: Story = {
+  args: { text: 'Run `npm install -g pi`', selectable: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('npm install -g pi')).toBeVisible();
+  },
+};

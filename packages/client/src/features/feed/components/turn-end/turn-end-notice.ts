@@ -38,7 +38,7 @@ function errorDetails(error: TurnError | null): NoticeMessageProps {
     severity: 'error',
     title: 'The Turn ended with an error',
     description: error?.message,
-    inlineDescription: true,
+    markdownDescription: true,
   };
 }
 

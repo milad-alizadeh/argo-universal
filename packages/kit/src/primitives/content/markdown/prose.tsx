@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { Caret } from './caret';
 import { ClampText } from './clamp-text';
 import { InlineTokens } from './inline-tokens';
-import { MarkdownTone } from './markdown-tone';
+import { MarkdownSelectable, MarkdownTone } from './markdown-tone';
 
 interface ProseProps {
   tokens: Token[] | undefined;
@@ -23,14 +23,13 @@ function proseRole(level: number | undefined): 'body' | 'title' | 'heading' {
 }
 
 export function Prose(props: ProseProps): React.JSX.Element {
-  const { headingLevel } = props;
-
   return (
     <ClampText
-      role={proseRole(headingLevel)}
+      role={proseRole(props.headingLevel)}
       tone={useContext(MarkdownTone)}
-      accessibilityRole={headingLevel ? 'heading' : undefined}
-      aria-level={headingLevel}
+      selectable={useContext(MarkdownSelectable)}
+      accessibilityRole={props.headingLevel ? 'heading' : undefined}
+      aria-level={props.headingLevel}
       className="min-w-0 max-w-full wrap-anywhere"
     >
       <InlineTokens tokens={props.tokens} />
