@@ -29,8 +29,6 @@ export interface NoticeMessageProps {
   severity: string;
   title: string;
   description?: string;
-  // Turn-end reasons follow the title and wrap with it on narrow windows.
-  inlineDescription?: boolean;
   // The description is Agent-provided Markdown: drawn below the title, selectable.
   markdownDescription?: boolean;
   excerpt?: string;
@@ -63,30 +61,17 @@ function NoticeIcon({ icon, color }: Appearance): React.JSX.Element {
   );
 }
 
-type NoticeTitleProps = Pick<
-  NoticeMessageProps,
-  'title' | 'live' | 'description' | 'inlineDescription'
-> & {
+type NoticeTitleProps = Pick<NoticeMessageProps, 'title' | 'live'> & {
   color: string;
 };
-
-function InlineDescription(props: NoticeTitleProps): React.JSX.Element | null {
-  if (!props.inlineDescription || !props.description) return null;
-
-  return <Text tone="muted">{` · ${props.description}`}</Text>;
-}
 
 function NoticeTitle(props: NoticeTitleProps): React.JSX.Element {
   if (props.live)
     return <ShimmerText text={props.title} className="type-body" />;
 
   return (
-    <Text
-      numberOfLines={props.inlineDescription ? undefined : 1}
-      className={props.color}
-    >
+    <Text numberOfLines={1} className={props.color}>
       {props.title}
-      <InlineDescription {...props} />
     </Text>
   );
 }
@@ -129,7 +114,7 @@ function NoticeBody(
   return (
     <View className="min-w-0 shrink gap-0.5">
       <NoticeTitle {...props} />
-      {!props.inlineDescription && <NoticeDescription {...props} />}
+      <NoticeDescription {...props} />
       <NoticeExcerpt excerpt={props.excerpt} />
     </View>
   );
