@@ -8,6 +8,7 @@ import {
   type PagedList,
   type PageTo,
   type PluginProps,
+  type PluginSurface,
 } from '@argo/plugin-kit';
 import { signInGate, type GatedPage } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
@@ -21,6 +22,7 @@ import {
   type FilterData,
   type FilterState,
 } from './filter-loader';
+import { filterScreenProps } from './filter-page-header';
 import { issueRow } from './filter-rows';
 import { signInOptions } from './github-account';
 import type { Issue } from './github-issues';
@@ -55,8 +57,12 @@ function filterPage(deps: IssueDeps): GatedPage<FilterState, PageData, Issue> {
     state: filterState,
     load: (input) => loadPage(deps, input, targetOf),
     list: (input, cursor) => listOf({ deps, targetOf, input }, cursor),
-    render: ({ data, sidebar }, to, { state, list }) => (
-      <FilterPage {...{ data, sidebar, to, list }} query={state.query} />
+    render: ({ data, sidebar }, to, { state, list, context }) => (
+      <FilterPage
+        {...{ data, sidebar, to, list }}
+        query={state.query}
+        platform={context.surface?.platform}
+      />
     ),
   };
 }
@@ -102,6 +108,7 @@ type PageProps = {
   to: To;
   query: string;
   list: PagedList<Issue>;
+  platform?: PluginSurface['platform'];
 };
 
 function FilterPage(props: PageProps): JSX.Element {
@@ -122,9 +129,15 @@ const selectedOf = (data: FilterData): SidebarSelection | undefined =>
     : { projectId: data.project.id, filterId: data.filter.id };
 
 // Every Project's filters beside the list; a pull asks again, as the list's own does.
-const sidebarRows = ({ data, sidebar, to }: PageProps): JSX.Element => (
+const sidebarRows = ({
+  data,
+  sidebar,
+  to,
+  platform,
+}: PageProps): JSX.Element => (
   <RootRows
     sidebar={sidebar}
+    platform={platform}
     selected={selectedOf(data)}
     onRefresh={to.set({})}
   />
@@ -147,7 +160,7 @@ function FilterDetail(props: DetailProps): JSX.Element {
   const { data, to, list } = props;
 
   return (
-    <Screen {...screenProps(props)}>
+    <Screen {...filterScreenProps(props)}>
       <List appearance="plain" density="compact" {...listProps(props)}>
         {issueTree(list.items).map((node) =>
           issueRow({ project: data.project, to }, node),
@@ -156,18 +169,6 @@ function FilterDetail(props: DetailProps): JSX.Element {
     </Screen>
   );
 }
-
-type ScreenProps = Pick<
-  PluginProps['Screen'],
-  'title' | 'search' | 'value' | 'onChangeText'
->;
-
-const screenProps = ({ data, to, query }: DetailProps): ScreenProps => ({
-  title: data.filter.title,
-  search: { label: 'Search Issues' },
-  value: query,
-  onChangeText: to.bind('query'),
-});
 
 type ListProps = Pick<
   PluginProps['List'],

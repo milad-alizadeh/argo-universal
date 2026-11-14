@@ -1,5 +1,5 @@
 import { getFieldItemPosition } from '@expo/ui';
-import { Column, LazyColumn } from '@expo/ui/jetpack-compose';
+import { Column, LazyColumn, PullToRefreshBox } from '@expo/ui/jetpack-compose';
 import {
   fillMaxSize,
   fillMaxWidth,
@@ -26,6 +26,8 @@ import {
   type NativeRow,
   type NativeSection,
 } from './list-native-sections';
+import { listRefreshFailure } from './list-refresh-failure';
+import { useListRequest } from './list-request';
 
 /*
  * The FieldGroup's layout (field-group-caption-insets.ts) as one lazy column. Every item of the column is a lazy
@@ -39,7 +41,13 @@ const listModifiers = [fillMaxSize(), imePadding()];
  * gaps; each row clips itself by the position it is given). Its rows are FieldGroup rows, as in a FieldGroup.
  */
 export function NativeGroupedList(props: NativeGroupedProps): ReactNode {
-  return <NativeGroupedFrame list={props}>{groupedColumn}</NativeGroupedFrame>;
+  return (
+    <NativeGroupedFrame list={props}>
+      {(sections) => (
+        <RefreshableColumn sections={sections} onRefresh={props.onRefresh} />
+      )}
+    </NativeGroupedFrame>
+  );
 }
 
 const groupedColumn = (sections: NativeSection[]): ReactElement => (
@@ -128,3 +136,21 @@ function SectionRows({ section }: { section: NativeSection }): ReactElement {
 const gapModifiers = [fillMaxWidth(), height(sectionBreakHeight)];
 
 const Gap = (): ReactElement => <Column modifiers={gapModifiers} />;
+
+function RefreshableColumn(
+  props: Pick<NativeGroupedProps, 'onRefresh'> & { sections: NativeSection[] },
+): ReactElement {
+  const request = useListRequest(listRefreshFailure);
+  const refresh = props.onRefresh;
+
+  if (!refresh) return groupedColumn(props.sections);
+
+  return (
+    <PullToRefreshBox
+      isRefreshing={request.loading}
+      onRefresh={() => void request.run(refresh)}
+    >
+      {groupedColumn(props.sections)}
+    </PullToRefreshBox>
+  );
+}

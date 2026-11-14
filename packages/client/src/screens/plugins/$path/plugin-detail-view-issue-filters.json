@@ -1,0 +1,843 @@
+{
+  "loaded": {
+    "desktop": {
+      "type": "ListDetail",
+      "key": "0",
+      "props": {
+        "title": "Issues"
+      },
+      "children": [],
+      "slots": {
+        "list": [
+          {
+            "type": "List",
+            "key": "0",
+            "props": {
+              "onRefresh": {
+                "pageState": {}
+              }
+            },
+            "children": [
+              {
+                "type": "List.Section",
+                "key": "project-1",
+                "props": {
+                  "title": "Fixture Project",
+                  "collapsible": true
+                },
+                "children": [
+                  {
+                    "type": "ListItem",
+                    "key": "open",
+                    "props": {
+                      "title": "Open",
+                      "value": "2",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/open"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": "issue",
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "closed",
+                    "props": {
+                      "title": "Closed",
+                      "value": "0",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/closed"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "checkmark.circle",
+                              "material": "check_circle"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "assigned",
+                    "props": {
+                      "title": "Assigned to you",
+                      "value": "2",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/assigned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "person",
+                              "material": "person"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "created",
+                    "props": {
+                      "title": "Created by you",
+                      "value": "2",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/created"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "square.and.pencil",
+                              "material": "edit_square"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "mentioned",
+                    "props": {
+                      "title": "Mentioning you",
+                      "value": "2",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/mentioned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "at",
+                              "material": "alternate_email"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "labels",
+                    "props": {
+                      "title": "Labels"
+                    },
+                    "children": [
+                      {
+                        "type": "ListItem",
+                        "key": "label-fixture",
+                        "props": {
+                          "title": "fixture",
+                          "selected": false,
+                          "onPress": {
+                            "action": "navigate",
+                            "path": "/projects/project-1/filters/label-fixture"
+                          }
+                        },
+                        "children": [],
+                        "slots": {
+                          "leading": [
+                            {
+                              "type": "Icon",
+                              "key": "0",
+                              "props": {
+                                "name": {
+                                  "sf": "tag",
+                                  "material": "label"
+                                },
+                                "size": "md"
+                              },
+                              "children": [],
+                              "slots": {}
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "type": "ListItem",
+                        "key": "label-good_20_first_20_issue",
+                        "props": {
+                          "title": "good first issue",
+                          "selected": false,
+                          "onPress": {
+                            "action": "navigate",
+                            "path": "/projects/project-1/filters/label-good_20_first_20_issue"
+                          }
+                        },
+                        "children": [],
+                        "slots": {
+                          "leading": [
+                            {
+                              "type": "Icon",
+                              "key": "0",
+                              "props": {
+                                "name": {
+                                  "sf": "tag",
+                                  "material": "label"
+                                },
+                                "size": "md"
+                              },
+                              "children": [],
+                              "slots": {}
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "tag",
+                              "material": "label"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {
+              "empty": [
+                {
+                  "type": "EmptyState",
+                  "key": "0",
+                  "props": {
+                    "title": "Loading Issues\u2026"
+                  },
+                  "children": [],
+                  "slots": {}
+                }
+              ]
+            }
+          }
+        ],
+        "empty": [
+          {
+            "type": "EmptyState",
+            "key": "0",
+            "props": {
+              "title": "Select a filter",
+              "description": "Choose a group from the sidebar."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ]
+      }
+    },
+    "native": {
+      "type": "ListDetail",
+      "key": "0",
+      "props": {
+        "title": "Issues"
+      },
+      "children": [],
+      "slots": {
+        "list": [
+          {
+            "type": "List",
+            "key": "0",
+            "props": {
+              "onRefresh": {
+                "pageState": {}
+              },
+              "appearance": "grouped"
+            },
+            "children": [
+              {
+                "type": "List.Section",
+                "key": "project-1",
+                "props": {
+                  "title": "Fixture Project"
+                },
+                "children": [
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "open",
+                    "props": {
+                      "title": "Open",
+                      "leading": "issue",
+                      "value": "2",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/open"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "closed",
+                    "props": {
+                      "title": "Closed",
+                      "leading": {
+                        "sf": "checkmark.circle",
+                        "material": "check_circle"
+                      },
+                      "value": "0",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/closed"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "assigned",
+                    "props": {
+                      "title": "Assigned to you",
+                      "leading": {
+                        "sf": "person",
+                        "material": "person"
+                      },
+                      "value": "2",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/assigned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "created",
+                    "props": {
+                      "title": "Created by you",
+                      "leading": {
+                        "sf": "square.and.pencil",
+                        "material": "edit_square"
+                      },
+                      "value": "2",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/created"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "mentioned",
+                    "props": {
+                      "title": "Mentioning you",
+                      "leading": {
+                        "sf": "at",
+                        "material": "alternate_email"
+                      },
+                      "value": "2",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/mentioned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Value",
+                    "key": "5",
+                    "props": {
+                      "title": "Labels",
+                      "leading": "tag",
+                      "value": ""
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "label-fixture",
+                    "props": {
+                      "title": "fixture",
+                      "leading": {
+                        "sf": "tag",
+                        "material": "label"
+                      },
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/label-fixture"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "label-good_20_first_20_issue",
+                    "props": {
+                      "title": "good first issue",
+                      "leading": {
+                        "sf": "tag",
+                        "material": "label"
+                      },
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/label-good_20_first_20_issue"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {
+              "empty": [
+                {
+                  "type": "EmptyState",
+                  "key": "0",
+                  "props": {
+                    "title": "Loading Issues\u2026"
+                  },
+                  "children": [],
+                  "slots": {}
+                }
+              ]
+            }
+          }
+        ],
+        "empty": [
+          {
+            "type": "EmptyState",
+            "key": "0",
+            "props": {
+              "title": "Select a filter",
+              "description": "Choose a group from the sidebar."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ]
+      }
+    }
+  },
+  "unavailable": {
+    "desktop": {
+      "type": "ListDetail",
+      "key": "0",
+      "props": {
+        "title": "Issues"
+      },
+      "children": [],
+      "slots": {
+        "list": [
+          {
+            "type": "List",
+            "key": "0",
+            "props": {
+              "onRefresh": {
+                "pageState": {}
+              }
+            },
+            "children": [
+              {
+                "type": "List.Section",
+                "key": "project-1",
+                "props": {
+                  "title": "Fixture Project",
+                  "footer": "Account is temporarily unavailable. Try again.",
+                  "collapsible": true
+                },
+                "children": [
+                  {
+                    "type": "ListItem",
+                    "key": "open",
+                    "props": {
+                      "title": "Open",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/open"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": "issue",
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "closed",
+                    "props": {
+                      "title": "Closed",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/closed"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "checkmark.circle",
+                              "material": "check_circle"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "assigned",
+                    "props": {
+                      "title": "Assigned to you",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/assigned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "person",
+                              "material": "person"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "created",
+                    "props": {
+                      "title": "Created by you",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/created"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "square.and.pencil",
+                              "material": "edit_square"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "ListItem",
+                    "key": "mentioned",
+                    "props": {
+                      "title": "Mentioning you",
+                      "selected": false,
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/mentioned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {
+                      "leading": [
+                        {
+                          "type": "Icon",
+                          "key": "0",
+                          "props": {
+                            "name": {
+                              "sf": "at",
+                              "material": "alternate_email"
+                            },
+                            "size": "md"
+                          },
+                          "children": [],
+                          "slots": {}
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {
+              "empty": [
+                {
+                  "type": "EmptyState",
+                  "key": "0",
+                  "props": {
+                    "title": "Loading Issues\u2026"
+                  },
+                  "children": [],
+                  "slots": {}
+                }
+              ]
+            }
+          }
+        ],
+        "empty": [
+          {
+            "type": "EmptyState",
+            "key": "0",
+            "props": {
+              "title": "Select a filter",
+              "description": "Choose a group from the sidebar."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ]
+      }
+    },
+    "native": {
+      "type": "ListDetail",
+      "key": "0",
+      "props": {
+        "title": "Issues"
+      },
+      "children": [],
+      "slots": {
+        "list": [
+          {
+            "type": "List",
+            "key": "0",
+            "props": {
+              "onRefresh": {
+                "pageState": {}
+              },
+              "appearance": "grouped"
+            },
+            "children": [
+              {
+                "type": "List.Section",
+                "key": "project-1",
+                "props": {
+                  "title": "Fixture Project",
+                  "footer": "Account is temporarily unavailable. Try again."
+                },
+                "children": [
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "open",
+                    "props": {
+                      "title": "Open",
+                      "leading": "issue",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/open"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "closed",
+                    "props": {
+                      "title": "Closed",
+                      "leading": {
+                        "sf": "checkmark.circle",
+                        "material": "check_circle"
+                      },
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/closed"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "assigned",
+                    "props": {
+                      "title": "Assigned to you",
+                      "leading": {
+                        "sf": "person",
+                        "material": "person"
+                      },
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/assigned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "created",
+                    "props": {
+                      "title": "Created by you",
+                      "leading": {
+                        "sf": "square.and.pencil",
+                        "material": "edit_square"
+                      },
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/created"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup.Link",
+                    "key": "mentioned",
+                    "props": {
+                      "title": "Mentioning you",
+                      "leading": {
+                        "sf": "at",
+                        "material": "alternate_email"
+                      },
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/filters/mentioned"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {
+              "empty": [
+                {
+                  "type": "EmptyState",
+                  "key": "0",
+                  "props": {
+                    "title": "Loading Issues\u2026"
+                  },
+                  "children": [],
+                  "slots": {}
+                }
+              ]
+            }
+          }
+        ],
+        "empty": [
+          {
+            "type": "EmptyState",
+            "key": "0",
+            "props": {
+              "title": "Select a filter",
+              "description": "Choose a group from the sidebar."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ]
+      }
+    }
+  }
+}

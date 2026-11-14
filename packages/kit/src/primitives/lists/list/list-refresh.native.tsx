@@ -1,15 +1,11 @@
 import type { ReactElement, ReactNode } from 'react';
 import { RefreshControl } from 'react-native';
+import { listRefreshFailure } from './list-refresh-failure';
 import type { ListLoad } from './list-request';
 import { useListRequest } from './list-request';
 
-const failure = {
-  title: "Couldn't refresh",
-  message: 'Pull down to try again.',
-};
-
 export function useListRefresh(refresh?: ListLoad): ReactElement | undefined {
-  const request = useListRequest(failure);
+  const request = useListRequest(listRefreshFailure);
 
   return refresh ? (
     <RefreshControl
