@@ -41,7 +41,7 @@ const hiddenReasoning = 'Reasoning must never appear in the Feed.';
 
 const thoughtTitle = 'Checking how rows merge after a reconnect';
 
-// The group's own counts summary, which the live header's title replaces while the Turn runs.
+// A single command never adds a counts summary, even alongside hidden reasoning.
 const summaryTitle = 'Ran 1 command';
 
 const thoughtContent = (text: string): AgentThought['content'] =>
@@ -84,17 +84,18 @@ async function expectThought(
   ).not.toBeInTheDocument();
 
   if (state === 'open') {
-    // The settled group takes the live header as its title, the one line the Session row shows (#1410).
+    // With no redundant group, thinking remains an independent live status.
     await expect(
-      canvas.getByRole('button', { name: `${thoughtTitle} 18s` }),
+      canvas.getByRole('status', { name: `${thoughtTitle} 18s` }),
     ).toBeVisible();
     await expect(canvas.queryByText(summaryTitle)).not.toBeInTheDocument();
     await expect(canvas.getByTestId('icon-thinking')).toBeVisible();
   } else {
     await expect(
-      canvas.getByRole('button', { name: summaryTitle }),
+      canvas.getByRole('button', { name: commandRow.title }),
     ).toBeVisible();
     await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+    await expect(canvas.queryByText(summaryTitle)).not.toBeInTheDocument();
   }
 }
 

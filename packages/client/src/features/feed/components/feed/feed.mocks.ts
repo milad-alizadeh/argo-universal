@@ -1,4 +1,8 @@
-import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+import type {
+  SessionSnapshot,
+  SessionUpdate,
+  ToolCallUpdate,
+} from '@repo/contracts';
 import { type FeedMock, recordedFeedMocks } from '@repo/mocks/app';
 import {
   recordedFeedMock,
@@ -88,6 +92,11 @@ const {
   ...commandArgo
 } = completedCommand._meta?.argo ?? {};
 
+const stepContent = (step: number): ToolCallUpdate['content'] =>
+  completedCommand.content.map((block) =>
+    block.type === 'terminal' ? { ...block, command: `Step ${step}` } : block,
+  );
+
 const splitGroupSteps = Array.from(
   { length: splitGroupSize },
   (_unused, index): SessionUpdate => ({
@@ -96,6 +105,7 @@ const splitGroupSteps = Array.from(
     toolCallId: `split-step-${index + 1}`,
     turnId: 'turn-split-group',
     title: `Step ${index + 1}`,
+    content: stepContent(index + 1),
     _meta: { ...completedCommand._meta, argo: commandArgo },
   }),
 );
