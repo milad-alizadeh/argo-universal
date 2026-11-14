@@ -1283,7 +1283,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 { guard: 'hasHeldSubmission', actions: 'releaseHeldConfig' },
                 { guard: 'hasQueuedSubmission', target: 'preparingQueue' },
                 { guard: 'hasSubmission', target: 'committing' },
-                { guard: 'hasQueuedPrompt', actions: 'selectQueuedPrompt' },
+                { guard: 'hasQueuedPrompt', target: 'selectingQueue' },
               ],
               on: {
                 'acp.failed': { target: 'closing', actions: 'recordCrash' },
@@ -1293,9 +1293,14 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
               },
             },
+            selectingQueue: {
+              entry: 'selectQueuedPrompt',
+              always: 'idle',
+            },
             preparingQueue: {
               tags: ['ready', 'running'],
               invoke: {
+                id: 'prepareQueuedPrompt',
                 src: 'prepareQueuedPrompt',
                 input: ({ context }): SessionContext => context,
                 onDone: [

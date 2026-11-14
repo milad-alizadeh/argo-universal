@@ -26,6 +26,7 @@ const sessionDefaults = {
   vendorRef: null,
   configValues: [],
   heldConfig: [],
+  promptQueue: { items: [], pauseReason: null },
   epoch: 0,
   maxRevision: 0,
   createdAt: 0,
