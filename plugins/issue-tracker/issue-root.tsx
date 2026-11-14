@@ -1,9 +1,11 @@
 import { EmptyState, Icon, List, ListDetail, ListItem } from '@argo/plugin-kit';
-import type { PluginProps } from '@argo/plugin-kit';
+import type { PluginProps, PluginSurface } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Project } from './issue-client';
+import { filterCountText } from './issue-filter-value';
 import { builtInFilters, labelFilter, type IssueFilter } from './issue-filters';
 import { filterPath } from './issue-paths';
+import { NativeRootRows } from './issue-root-native';
 import { loadingIssues } from './loading-issues';
 import type { Overview } from './overview';
 import type { ProjectSection, Sidebar, SidebarSelection } from './sidebar';
@@ -44,6 +46,7 @@ export type RootRowsProps = {
   sidebar: Sidebar;
   onRefresh: PluginProps['List']['onRefresh'];
   selected?: SidebarSelection;
+  platform?: PluginSurface['platform'];
 };
 
 /*
@@ -51,6 +54,16 @@ export type RootRowsProps = {
  * its Issues, by status and by you, then its labels under one row.
  */
 export function RootRows(props: RootRowsProps): JSX.Element {
+  const native = props.platform === 'ios' || props.platform === 'android';
+
+  return native ? (
+    <NativeRootRows {...props} />
+  ) : (
+    <DesktopRootRows {...props} />
+  );
+}
+
+function DesktopRootRows(props: RootRowsProps): JSX.Element {
   const { sidebar } = props;
 
   return (
@@ -108,15 +121,6 @@ function labelsRow(
   );
 }
 
-const countText = (
-  overview: Overview | null,
-  filter: IssueFilter,
-): string | undefined => {
-  const count = overview?.counts[filter.id];
-
-  return count === undefined ? undefined : String(count);
-};
-
 // A keyed ListItem itself, as a List draws its children, not a component that returns one.
 function filterRow(view: RootView, filter: IssueFilter): JSX.Element {
   const path = filterPath(view.project.id, filter);
@@ -126,7 +130,7 @@ function filterRow(view: RootView, filter: IssueFilter): JSX.Element {
       key={filter.id}
       title={filter.title}
       selected={filter.id === view.selected}
-      value={countText(view.overview, filter)}
+      value={filterCountText(view.overview, filter)}
       leading={<Icon name={filter.icon} size="md" />}
       onPress={{ action: 'navigate', path }}
     />

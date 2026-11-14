@@ -2,7 +2,7 @@ import { Icon } from '#primitives/content/icon';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { ListItem } from '#primitives/lists/list-item';
 import { Pill } from '#primitives/status/pill';
-import { List } from './list';
+import { List } from '../list';
 import type { ListProps } from './list-props';
 
 const children = (

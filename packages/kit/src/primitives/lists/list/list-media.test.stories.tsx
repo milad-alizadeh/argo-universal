@@ -4,7 +4,7 @@ import { expect, waitFor } from 'storybook/test';
 import { Avatar } from '#primitives/content/avatar';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
-import { List } from './list';
+import { List } from '../list';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Media',

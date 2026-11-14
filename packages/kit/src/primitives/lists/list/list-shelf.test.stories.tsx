@@ -10,7 +10,7 @@ import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
-import { List } from './list';
+import { List } from '../list';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Lists/List/Shelf',
