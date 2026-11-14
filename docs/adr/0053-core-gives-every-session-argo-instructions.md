@@ -8,7 +8,8 @@ This amends [ADR-0044](0044-argo-is-driven-through-one-operation-registry-and-th
 - **Argo instructions ship in `argo mcp`.** They are fixed text in the CLI, as the discovery line is, so they need no Server read and still arrive when the Server will not give Plugin instructions.
 - **Each is at most 1,000 characters,** the Plugin instructions limit, and a test holds it.
 - **They reach the same Sessions Plugin instructions do:** every Session with Agent access, unfiltered by Project, fixed for the life of the MCP connection.
-- **The first is the Plan.** It asks the Agent to keep a Plan for work of three or more steps with its own checklist tool, so the Feed and the Sessions list show progress. It names no tool: Claude Code reports `TodoWrite` as a Plan once its install seed turns it on, and Codex reports `update_plan`.
+- **The first is the Plan.** It asks the Agent to keep a Plan for work of three or more steps with its own checklist tool, so the Feed and the Sessions list show progress. It names each Agent's tool: Claude Code reports `TaskCreate`, `TaskUpdate` and `TodoWrite` as a Plan once its install seed turns them on, and Codex reports `update_plan`. Claude Code defers its task tools behind `ToolSearch`, and while the Plan named no tool, no Session loaded them, so it names the tools and says to load a deferred one first.
+- **An install seed reaches Agents installed before it.** A migration adds each seed key an Installed Agent's saved launch environment lacks, and leaves keys the person set alone.
 
 ## Considered options
 
