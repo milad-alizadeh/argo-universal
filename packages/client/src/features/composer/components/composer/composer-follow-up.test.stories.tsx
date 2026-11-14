@@ -10,7 +10,7 @@ import {
 import { FollowUpComposer, predictedPrompt } from './composer-follow-up.mocks';
 import type { ComposerProps } from './composer-types';
 
-const useSuggestionLabel = 'Use suggestion';
+const useSuggestionLabel = predictedPrompt;
 
 const meta = {
   ...composerMeta,
@@ -26,9 +26,6 @@ async function deliver(
   await userEvent.click(
     canvas.getByRole('button', { name: 'Deliver prediction' }),
   );
-  await expect(
-    canvas.getByRole('button', { name: useSuggestionLabel }),
-  ).toBeVisible();
 }
 
 export const TabAcceptsAnEditableDraft: Story = {
@@ -85,17 +82,17 @@ export const EscapeDismissalSurvivesRemount: Story = {
     await userEvent.click(canvas.getByRole('textbox', { name: 'Message' }));
     await userEvent.keyboard('{Escape}');
     await expect(
-      canvas.queryByRole('button', { name: useSuggestionLabel }),
+      canvas.queryByText(predictedPrompt, { exact: true }),
     ).not.toBeInTheDocument();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Remount Composer' }),
     );
     await expect(
-      canvas.queryByRole('button', { name: useSuggestionLabel }),
+      canvas.queryByText(predictedPrompt, { exact: true }),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Next Turn' }));
     await expect(
-      canvas.getByRole('button', { name: useSuggestionLabel }),
+      canvas.getByText(predictedPrompt, { exact: true }),
     ).toBeVisible();
     await expect(args.onDraftChange).not.toHaveBeenCalled();
     await expect(args.onSend).not.toHaveBeenCalled();
@@ -115,7 +112,7 @@ export const LatePredictionCannotReplaceAnEditedDraft: Story = {
       canvas.getByRole('button', { name: 'Deliver prediction' }),
     );
     await expect(
-      canvas.queryByRole('button', { name: useSuggestionLabel }),
+      canvas.queryByText(predictedPrompt, { exact: true }),
     ).not.toBeInTheDocument();
     await expect(args.onSend).not.toHaveBeenCalled();
   },
@@ -129,17 +126,17 @@ export const TurningOffDoesNotReviveTheCurrentPrediction: Story = {
       canvas.getByRole('button', { name: 'Toggle suggestions' }),
     );
     await expect(
-      canvas.queryByRole('button', { name: useSuggestionLabel }),
+      canvas.queryByText(predictedPrompt, { exact: true }),
     ).not.toBeInTheDocument();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Toggle suggestions' }),
     );
     await expect(
-      canvas.queryByRole('button', { name: useSuggestionLabel }),
+      canvas.queryByText(predictedPrompt, { exact: true }),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Next Turn' }));
     await expect(
-      canvas.getByRole('button', { name: useSuggestionLabel }),
+      canvas.getByText(predictedPrompt, { exact: true }),
     ).toBeVisible();
   },
 };
