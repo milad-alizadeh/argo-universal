@@ -21,6 +21,10 @@ export function ComposerBottomTray(
   return <ComposerWideStatus {...layout} />;
 }
 
+// A pill's hairline border sits inside its padding, so 5px puts its icon on the Plan's 16px edge.
+const statusRowClass =
+  'flex-1 min-h-0 flex-row items-center pl-1.25 pr-1.5 gap-1';
+
 function ComposerWideStatus(
   layout: WideStatusLayout,
 ): React.JSX.Element | null {
@@ -28,8 +32,9 @@ function ComposerWideStatus(
 
   return (
     <View className={cn(composerTrayClass, 'h-11 -mt-3 pt-3 rounded-b-2xl')}>
-      <View className="flex-1 min-h-0 flex-row items-center px-1.5 gap-1">
+      <View className={statusRowClass}>
         <ComposerTrayStatus {...layout} />
+        {/* The Checkout's name gives up its width first, so the status controls keep theirs. */}
         <View className="flex-1" />
         <ComposerTrayCheckout {...layout} />
       </View>
@@ -42,7 +47,7 @@ function ComposerTrayStatus({
   inactive,
 }: StatusLayout): React.JSX.Element | null {
   return props.status ? (
-    <View>
+    <View className="shrink-0">
       <ComposerStatusControls status={props.status} disabled={inactive} />
     </View>
   ) : null;
@@ -53,7 +58,7 @@ function ComposerTrayCheckout({
   inactive,
 }: CheckoutLayout): React.JSX.Element | null {
   return props.configuration ? (
-    <View>
+    <View className="min-w-0 shrink">
       <TrayCheckout
         checkout={props.configuration.checkout}
         disabled={inactive}
