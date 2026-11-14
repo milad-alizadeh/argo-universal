@@ -95,7 +95,7 @@ const everyOperation = [
   'diff',
 ];
 
-const paramsFor = (name: string): Record<string, string> => {
+const paramsFor = (name: string): { reference?: string; path?: string } => {
   if (name === 'diff') return { reference, path: 'a.ts' };
 
   return ['list', 'refresh', 'discover'].includes(name) ? {} : { reference };

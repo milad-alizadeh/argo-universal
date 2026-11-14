@@ -5,13 +5,17 @@ type Given = { projectId: string; sessionId?: string };
 // The Project and Session an Operation acts for.
 export type SessionCaller = { projectId: string; sessionId: string };
 
-function sessionIdOf(params: { sessionId?: string }, caller: Given): string {
-  if (caller.sessionId !== undefined) {
-    if (params.sessionId !== undefined && params.sessionId !== caller.sessionId)
-      throw new Error('A Session can only act for itself.');
+// An Agent acts for the Session it runs in and may name no other.
+function agentSession(named: string | undefined, own: string): string {
+  if (named !== undefined && named !== own)
+    throw new Error('A Session can only act for itself.');
 
-    return caller.sessionId;
-  }
+  return own;
+}
+
+function sessionIdOf(params: { sessionId?: string }, caller: Given): string {
+  if (caller.sessionId !== undefined)
+    return agentSession(params.sessionId, caller.sessionId);
 
   if (!params.sessionId)
     throw new Error('This needs a Session: pass its sessionId.');
