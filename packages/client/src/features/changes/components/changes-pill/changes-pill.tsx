@@ -2,6 +2,7 @@ import type { ChangesSummary } from '@repo/contracts';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import { Text } from '@repo/kit/primitives/content/text';
+import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
 
@@ -35,30 +36,41 @@ export interface ChangesPillProps {
   onPress: () => void;
 }
 
-// The Composer's entry to the Changes: the Checkout's files and line totals, one press from the Inspector's Changes tab.
-export function ChangesPill({
+// The added and removed lines, in the Workbench's colours.
+function LineTotals({ summary }: { summary: ChangesSummary }): ReactElement {
+  return (
+    <>
+      <Text role="control" tone="success">
+        +{count(summary.additions)}
+      </Text>
+      <Text role="control" tone="danger">
+        −{count(summary.deletions)}
+      </Text>
+    </>
+  );
+}
+
+const pressableProps = ({
   summary,
   onPress,
-}: ChangesPillProps): ReactElement {
+}: ChangesPillProps): React.ComponentProps<typeof Pressable> => ({
+  role: 'button',
+  hitSlop: 6,
+  accessibilityLabel: pillLabel(summary),
+  onPress,
+  className: pillClassName,
+});
+
+// The Composer's entry to the Changes: the Checkout's files and line totals, one press from the Inspector's Changes tab.
+export function ChangesPill(props: ChangesPillProps): ReactElement {
   return (
     <LiquidGlass {...pillSurface}>
-      <Pressable
-        role="button"
-        hitSlop={6}
-        accessibilityLabel={pillLabel(summary)}
-        onPress={onPress}
-        className={pillClassName}
-      >
+      <Pressable {...pressableProps(props)}>
         <Icon name="diff" tone="neutral" />
         <Text role="control" tone="muted">
-          {filesLabel(summary.files)}
+          {filesLabel(props.summary.files)}
         </Text>
-        <Text role="control" tone="success">
-          +{count(summary.additions)}
-        </Text>
-        <Text role="control" tone="danger">
-          −{count(summary.deletions)}
-        </Text>
+        <LineTotals summary={props.summary} />
       </Pressable>
     </LiquidGlass>
   );
