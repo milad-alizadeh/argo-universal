@@ -86,13 +86,16 @@ const movedFrom = (file: FileHeaderProps['file']): string | undefined =>
     ? file.oldPath
     : undefined;
 
+// The toggle owns the tooltip; one around the path would nest a button in it.
+const noTip = { showTooltip: false } as const;
+
 function OldPathParts(props: {
   path: string;
   scroll?: boolean;
 }): React.JSX.Element {
   return (
     <>
-      <PathText path={props.path} quiet scroll={props.scroll} />
+      <PathText path={props.path} quiet scroll={props.scroll} {...noTip} />
       <Text selectable={false} aria-hidden>
         →
       </Text>
