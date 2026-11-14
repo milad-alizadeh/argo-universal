@@ -225,10 +225,13 @@ function overlapping(scroller: HTMLElement): string[] {
 // Steps of a third of a wheel's, so a header is caught partway through giving way.
 const fineStep = wheelStep / 3;
 
-const walkingDown = (scroller: HTMLElement): boolean =>
-  scroller.scrollTop < reach && !atEnd(scroller);
+// Past the first files' headers, stacked before their diffs land, and the handoff after a diff has: two frames a step is slow on a CI runner.
+const handoffReach = 2400;
 
-// Each step down to `reach`, past several files' headers handing over, where two headers overlap.
+const walkingDown = (scroller: HTMLElement): boolean =>
+  scroller.scrollTop < handoffReach && !atEnd(scroller);
+
+// Each step down to `handoffReach`, past several files' headers handing over, where two headers overlap.
 async function overlapsDown(scroller: HTMLElement): Promise<string[]> {
   const seen = new Set<string>();
 
