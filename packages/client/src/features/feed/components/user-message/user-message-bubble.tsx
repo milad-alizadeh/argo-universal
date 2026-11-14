@@ -48,7 +48,7 @@ export function UserMessageBubble({ text }: BubbleProps): React.JSX.Element {
 
   return (
     <View className={bubbleClassName}>
-      <Markdown text={text} {...markdown} />
+      <Markdown text={text} selectable {...markdown} />
       {clamped && <ShowMore onPress={expand} />}
     </View>
   );
